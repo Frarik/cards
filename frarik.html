@@ -7,7 +7,7 @@
 <script>
 /* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260602005;
+window.FRARIK_APP_VERSION = 20260603001;
 /* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
    (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
@@ -2573,6 +2573,7 @@ select.ntf-field-inp option{background:#1a2035;color:#e2e8f0}
       <button class="hbtn" id="reload-btn" onclick="hardReload()" title="Ricarica pagina e svuota cache" style="flex-shrink:0;padding:5px 8px;font-size:14px;border-radius:8px">⟳</button>
       <button class="hbtn" id="settings-btn" onclick="openOikSettings()" title="Impostazioni" style="flex-shrink:0;padding:5px 8px;font-size:13px;border-radius:8px">⚙️</button>
       <button class="hbtn" id="hasidebar-btn" onclick="toggleHASidebar()" title="Mostra/nascondi barra laterale di Home Assistant" style="flex-shrink:0;padding:5px 8px;font-size:14px;border-radius:8px">☰</button>
+      <button class="hbtn" id="sun-test-btn" onclick="showToast('☀️ Aggiornamento ricevuto!')" title="Test aggiornamento" style="flex-shrink:0;padding:5px 8px;font-size:14px;border-radius:8px">☀️</button>
       <button class="hbtn" id="edit-btn" onclick="toggleEdit()" title="Modifica dashboard" style="flex-shrink:0;padding:5px 8px;font-size:12px;border-radius:8px">✏️</button>
     </div>
     <div id="page-tabs-wrap"></div>
