@@ -7,7 +7,7 @@
 <script>
 /* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260602003;
+window.FRARIK_APP_VERSION = 20260602004;
 /* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
    (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
@@ -20,6 +20,8 @@ window.FRARIK_APP_VERSION = 20260602003;
     }
   }catch(e){}
 })();
+/* Se sei già autenticato, nascondi SUBITO il login (prima che il body venga disegnato) → niente flash di login a ogni ricarica. */
+try{ if(localStorage.getItem('ha_auth')==='1'||sessionStorage.getItem('ha_auth')==='1') document.documentElement.classList.add('frk-authed'); }catch(e){}
 </script>
 <script>
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -411,6 +413,7 @@ select.finp option{background:#1a1e30}
 /* ═══ LOGIN OVERLAY ═══ */
 #lov{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:900}
 #lov.off{display:none}
+html.frk-authed #lov{display:none}   /* già autenticato: login nascosto fin dal primo frame (niente flash) */
 .login-box{background:rgba(12,14,28,0.92);border:1px solid var(--bd2);border-radius:24px;padding:40px 36px;width:340px;display:flex;flex-direction:column;align-items:center;gap:0;
   box-shadow:0 32px 80px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.05);
   backdrop-filter:blur(20px);animation:sup .25s ease}
@@ -3364,6 +3367,11 @@ function _onResume(){
   } else if(ws.readyState===1){
     _haLoadCfg();
   }
+  // controllo aggiornamento plancia quando torni sulla pagina (throttle 3 min) → la notifica arriva quasi subito
+  try{
+    var now=Date.now();
+    if(now-(window._appUpdLastChk||0)>180000){ window._appUpdLastChk=now; if(typeof _appUpdateCheck==='function') _appUpdateCheck(); }
+  }catch(e){}
 }
 document.addEventListener('visibilitychange',_onResume);
 window.addEventListener('focus',_onResume);
@@ -9961,6 +9969,7 @@ function doLogout(){
   // Esci da kiosk se attivo
   if(_kioskOn) toggleKiosk();
   // Mostra login con credenziali pre-riempite
+  document.documentElement.classList.remove('frk-authed');  // riattiva la visibilità del login
   const lov=document.getElementById('lov');
   lov.classList.remove('off');
   const savedU=localStorage.getItem('hadb_user')||'';
