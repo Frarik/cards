@@ -7,7 +7,7 @@
 <script>
 /* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260602001;
+window.FRARIK_APP_VERSION = 20260602002;
 /* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
    (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
@@ -1385,6 +1385,10 @@ body.kiosk .kiosk-reload-fab:hover{background:rgba(255,255,255,0.18);color:#fff}
 .ntfc-msg{font-size:11px;color:var(--muted);line-height:1.35;margin-top:1px}
 .ntfc-time{font-size:9px;color:rgba(148,163,184,.6);margin-top:3px}
 .ntfc-empty{padding:26px 14px;text-align:center;font-size:12px;color:var(--muted)}
+/* notifica cliccabile (aggiornamento card/plancia) */
+.ntfc-item.ntfc-action{cursor:pointer;border:1px solid rgba(99,102,241,.25);background:rgba(99,102,241,.10)}
+.ntfc-item.ntfc-action:hover{background:rgba(99,102,241,.2);border-color:rgba(99,102,241,.5)}
+.ntfc-go{align-self:center;flex-shrink:0;font-size:10px;font-weight:800;color:#a5b4fc;background:rgba(99,102,241,.2);padding:4px 8px;border-radius:8px;white-space:nowrap}
 /* Banner aggiornamento plancia (stesso stile, colore verde) */
 #app-update-notif{display:none;position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:9550;
   align-items:center;gap:10px;max-width:92vw;padding:10px 12px 10px 16px;border-radius:14px;cursor:pointer;
@@ -3492,7 +3496,7 @@ async function _ghCheck(force){
                                     :(_ghPending.length+' card aggiornate — clicca per aggiornare');
     document.getElementById('gh-notif-txt').textContent=txt;
     document.getElementById('gh-notif').classList.add('on');
-    if(sig!==_ghLastSig){ try{ _ntfPushLog('🔄 Aggiornamento card', txt, '🔄'); }catch(e){} _ghLastSig=sig; }   // anche nel centro notifiche
+    if(sig!==_ghLastSig){ try{ _ntfPushLog('🔄 Aggiornamento card', txt, '🔄', 'gh'); }catch(e){} _ghLastSig=sig; }   // anche nel centro notifiche (cliccabile)
   } else if(!_ghPending.length){
     document.getElementById('gh-notif').classList.remove('on');
   }
@@ -3554,7 +3558,7 @@ async function _appUpdateCheck(){
       _appUpdHtml=html; _appUpdVer=rv;
       const b=document.getElementById('app-update-notif'); if(b) b.classList.add('on');
       if(_appUpdVer!==parseInt(localStorage.getItem('frarik_app_notified')||'0',10)){
-        try{ _ntfPushLog('📥 Aggiornamento plancia','Nuova versione della plancia disponibile — clicca per aggiornare','📥'); }catch(e){}
+        try{ _ntfPushLog('📥 Aggiornamento plancia','Nuova versione della plancia disponibile — clicca per aggiornare','📥','app'); }catch(e){}
         try{ localStorage.setItem('frarik_app_notified',String(_appUpdVer)); }catch(e){}
       }
     }
@@ -11008,8 +11012,11 @@ function closeNotifCfg(){
 let _ntfLog=[];
 try{ _ntfLog=JSON.parse(localStorage.getItem('frarik_ntflog')||'[]'); }catch(e){ _ntfLog=[]; }
 function _ntfSaveLog(){ try{ localStorage.setItem('frarik_ntflog',JSON.stringify(_ntfLog.slice(0,60))); }catch(e){} }
-function _ntfPushLog(title,msg,icon){
-  _ntfLog.unshift({ts:Date.now(), title:title||'Notifica', msg:msg||'', icon:icon||'🔔', read:false});
+function _ntfPushLog(title,msg,icon,action){
+  // action: 'gh' (aggiorna card) | 'app' (aggiorna plancia) | undefined. Se c'è già una notifica
+  // della stessa azione non ancora applicata, aggiornala invece di accodarne un'altra.
+  if(action){ const ex=_ntfLog.find(n=>n.action===action); if(ex){ ex.ts=Date.now(); ex.title=title; ex.msg=msg; ex.icon=icon; ex.read=false; _ntfSaveLog(); _ntfUpdateBell(); const c0=document.getElementById('notif-center'); if(c0&&c0.classList.contains('on')) renderNotifCenter(); return; } }
+  _ntfLog.unshift({ts:Date.now(), title:title||'Notifica', msg:msg||'', icon:icon||'🔔', read:false, action:action||null});
   _ntfLog=_ntfLog.slice(0,60); _ntfSaveLog(); _ntfUpdateBell();
   const c=document.getElementById('notif-center'); if(c&&c.classList.contains('on')) renderNotifCenter();
 }
@@ -11027,10 +11034,26 @@ function _ntfRelTime(ts){
 function renderNotifCenter(){
   const el=document.getElementById('notif-center-list'); if(!el) return;
   if(!_ntfLog.length){ el.innerHTML='<div class="ntfc-empty">Nessuna notifica</div>'; return; }
-  el.innerHTML=_ntfLog.map(n=>`<div class="ntfc-item${n.read?'':' unread'}">
-    <div class="ntfc-ico">${n.icon||'🔔'}</div>
-    <div class="ntfc-body"><div class="ntfc-title">${eh(n.title||'')}</div>${n.msg?`<div class="ntfc-msg">${eh(n.msg)}</div>`:''}<div class="ntfc-time">${_ntfRelTime(n.ts)}</div></div>
-  </div>`).join('');
+  el.innerHTML=_ntfLog.map((n,i)=>{
+    const act=n.action?` ntfc-action" onclick="_ntfAction('${n.action}')` : '"';
+    const hint=n.action?'<span class="ntfc-go">Aggiorna ›</span>':'';
+    return `<div class="ntfc-item${n.read?'':' unread'}${act}">
+      <div class="ntfc-ico">${n.icon||'🔔'}</div>
+      <div class="ntfc-body"><div class="ntfc-title">${eh(n.title||'')}</div>${n.msg?`<div class="ntfc-msg">${eh(n.msg)}</div>`:''}<div class="ntfc-time">${_ntfRelTime(n.ts)}</div></div>
+      ${hint}
+    </div>`;
+  }).join('');
+}
+/* clic diretto sulla notifica per applicare l'aggiornamento */
+function _ntfAction(key){
+  if(key==='gh'){
+    closeNotifCenter();
+    if(_ghPending&&_ghPending.length) _ghInstallAll();
+    else { showToast('🔄 Controllo aggiornamenti card…'); _ghCheck(true).then(()=>{ if(_ghPending.length) _ghInstallAll(); else showToast('✅ Card già aggiornate'); }); }
+  } else if(key==='app'){
+    if(_appUpdHtml){ applyAppUpdate(); }
+    else { showToast('📥 Controllo aggiornamento plancia…'); _appUpdateCheck().then(()=>{ if(_appUpdHtml) applyAppUpdate(); else showToast('✅ Plancia già aggiornata'); }); }
+  }
 }
 function toggleNotifCenter(ev){
   if(ev) ev.stopPropagation();
