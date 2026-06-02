@@ -25,17 +25,28 @@ try{ if(localStorage.getItem('ha_auth')==='1'||sessionStorage.getItem('ha_auth')
 </script>
 <script>
 /* ═══════════════════════════════════════════════════════════════════════════
-   ⚙️  IMPOSTAZIONI PERSONALI — CAMBIA SOLO QUESTE 3 RIGHE PER LA TUA INSTALLAZIONE
-   (se passi questo file a un amico, lui deve mettere QUI i SUOI dati di Home Assistant)
+   ⚙️  PROFILI MULTI-UTENTE — rilevamento automatico in base all'URL
+   Ogni utente usa il proprio Nabu Casa → il profilo giusto viene scelto in automatico.
    ═══════════════════════════════════════════════════════════════════════════ */
-window.FRARIK_CFG = {
-  // 1) Token di accesso a lunga durata (Home Assistant → Profilo → Token a lunga durata → Crea)
-  token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIxYzE0ZjkzYmJkYWQ0ZWQyOTliNDczNWRlZDVmZDY2OSIsImlhdCI6MTc4MDQxMzYzNiwiZXhwIjoyMDk1NzczNjM2fQ.JLWwWsRrrycH6jqcgims-u0SImMwyQA048mw3syY5qE',
-  // 2) Indirizzo remoto (Nabu Casa o tuo dominio) — usato come riserva quando l'IP locale non è raggiungibile (es. 4G)
-  remoteUrl: 'https://cvkvlnpaokb2r0pedlqjlq06f5zsd3fl.ui.nabu.casa',
-  // 3) IP locale di Home Assistant (serve solo se apri il file come file locale, non da /local/)
-  localFallback: '192.168.1.189:8123'
-};
+(function(){
+  var PROFILES = {
+    // ── Profilo 1 (utente originale) ──
+    'cvkvlnpaokb2r0pedlqjlq06f5zsd3fl.ui.nabu.casa': {
+      token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIxYzE0ZjkzYmJkYWQ0ZWQyOTliNDczNWRlZDVmZDY2OSIsImlhdCI6MTc4MDQxMzYzNiwiZXhwIjoyMDk1NzczNjM2fQ.JLWwWsRrrycH6jqcgims-u0SImMwyQA048mw3syY5qE',
+      remoteUrl: 'https://cvkvlnpaokb2r0pedlqjlq06f5zsd3fl.ui.nabu.casa',
+      localFallback: '192.168.1.189:8123'
+    },
+    // ── Profilo 2 (secondo utente) ──
+    'mzlej5bjgutlujw3go5vsanafnf1bom1.ui.nabu.casa': {
+      token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIwYWU3ZTgxMWI5YWQ0Y2I0YmI4ZDViNGFkMzM4YWI2OSIsImlhdCI6MTc4MDQ0MDMwNiwiZXhwIjoyMDk1ODAwMzA2fQ.MtPfpfm2_Vo1rBinnvnN-g-pkbZRc1-qrmsSU-2W6KI',
+      remoteUrl: 'https://mzlej5bjgutlujw3go5vsanafnf1bom1.ui.nabu.casa',
+      localFallback: '192.168.1.64:8123'
+    }
+  };
+  var host = location.hostname;
+  var key = Object.keys(PROFILES).find(function(k){ return host.indexOf(k) !== -1; });
+  window.FRARIK_CFG = key ? PROFILES[key] : PROFILES['cvkvlnpaokb2r0pedlqjlq06f5zsd3fl.ui.nabu.casa'];
+})();
 /* ── Redirect automatico se aperto come file locale ── */
 if(location.protocol==='file:'){
   location.replace(window.FRARIK_CFG.remoteUrl.replace(/\/$/,'') + '/local/frarik.html');
