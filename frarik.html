@@ -7,7 +7,7 @@
 <script>
 /* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260602004;
+window.FRARIK_APP_VERSION = 20260602005;
 /* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
    (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
@@ -10022,6 +10022,10 @@ if(localStorage.getItem('ha_auth')==='1' || sessionStorage.getItem('ha_auth')===
 } else {
   document.getElementById('l-user').focus();
 }
+
+/* Controllo aggiornamento plancia INDIPENDENTE dalla connessione a Home Assistant
+   (basta internet per raggiungere GitHub) → la notifica arriva anche se HA non è connesso. */
+try{ _appUpdSchedule(); setTimeout(()=>{ try{ _appUpdateCheck(); }catch(e){} }, 2500); }catch(e){}
 
 /* ══════════════════════════════════════════════════════════════
    SOS
