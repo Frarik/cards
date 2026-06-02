@@ -5,21 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Frarik</title>
 <script>
-/* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
-   Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260603006;
-/* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
-   (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
-(function(){
-  try{
-    if(/[?&]noupd/.test(location.search)){ localStorage.removeItem('frarik_app_html'); localStorage.removeItem('frarik_app_ver'); return; }
-    var ov=localStorage.getItem('frarik_app_html');
-    var ovv=parseInt(localStorage.getItem('frarik_app_ver')||'0',10);
-    if(ov && ovv>window.FRARIK_APP_VERSION && ov.length>5000 && ov.indexOf('FRARIK_APP_VERSION')>-1 && ov.indexOf('</html>')>-1){
-      document.open(); document.write(ov); document.close();
-    }
-  }catch(e){}
-})();
+/* ═══ VERSIONE APP ═══
+   Gli aggiornamenti vengono distribuiti automaticamente tramite GitHub Actions → Home Assistant.
+   Il vecchio sistema di auto-aggiornamento via localStorage è stato rimosso. */
+window.FRARIK_APP_VERSION = 20260603010;
+/* Pulizia localStorage da eventuali versioni vecchie scaricate dal sistema precedente */
+try{ localStorage.removeItem('frarik_app_html'); localStorage.removeItem('frarik_app_ver'); }catch(e){}
 /* Se sei già autenticato, nascondi SUBITO il login (prima che il body venga disegnato) → niente flash di login a ogni ricarica. */
 try{ if(localStorage.getItem('ha_auth')==='1'||sessionStorage.getItem('ha_auth')==='1') document.documentElement.classList.add('frk-authed'); }catch(e){}
 </script>
@@ -32,7 +23,7 @@ try{ if(localStorage.getItem('ha_auth')==='1'||sessionStorage.getItem('ha_auth')
   var PROFILES = {
     // ── Profilo 1 (utente originale) ──
     'cvkvlnpaokb2r0pedlqjlq06f5zsd3fl.ui.nabu.casa': {
-      token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIxYzE0ZjkzYmJkYWQ0ZWQyOTliNDczNWRlZDVmZDY2OSIsImlhdCI6MTc4MDQxMzYzNiwiZXhwIjoyMDk1NzczNjM2fQ.JLWwWsRrrycH6jqcgims-u0SImMwyQA048mw3syY5qE',
+      token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJmNDZjMTIzYjU4MWU0NGQ2OGRlMTEyNzAwOGQyZDY1ZiIsImlhdCI6MTc4MDQ0MjU5MCwiZXhwIjoyMDk1ODAyNTkwfQ.lbUkWPhKwf4qr4tVnwcPKeON90ZcvEJPyRfogc5ldU8',
       remoteUrl: 'https://cvkvlnpaokb2r0pedlqjlq06f5zsd3fl.ui.nabu.casa',
       localFallback: '192.168.1.189:8123'
     },
