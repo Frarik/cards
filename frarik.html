@@ -7,7 +7,7 @@
 <script>
 /* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260603001;
+window.FRARIK_APP_VERSION = 20260603002;
 /* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
    (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
@@ -2696,6 +2696,9 @@ select.ntf-field-inp option{background:#1a2035;color:#e2e8f0}
           <button onclick="openGitHubCfg()" style="width:100%;padding:7px;border-radius:8px;background:rgba(148,163,184,.15);border:1px solid rgba(148,163,184,.3);color:#cbd5e1;font-size:11px;font-weight:700;cursor:pointer">
             🐙 Card da GitHub (aggiornamenti automatici)
           </button>
+          <button onclick="appCheckNow()" style="width:100%;padding:7px;border-radius:8px;background:rgba(96,165,250,.15);border:1px solid rgba(96,165,250,.3);color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer">
+            📥 Controlla aggiornamenti plancia <span id="ep-appver" style="opacity:.6;font-weight:600"></span>
+          </button>
         </div>
       </div>
 
@@ -3573,6 +3576,29 @@ async function _appUpdateCheck(){
       }
     }
   }catch(e){}
+}
+/* Controllo MANUALE con messaggi espliciti (per diagnosi: dice sempre cosa succede) */
+async function appCheckNow(){
+  const cur=window.FRARIK_APP_VERSION||0;
+  showToast('📥 Controllo aggiornamenti plancia… (la tua: '+cur+')');
+  let r;
+  try{ r=await fetch(APP_REPO_RAW+'?_='+Date.now(),{cache:'no-store'}); }
+  catch(e){ showToast('❌ Errore di rete: il dispositivo NON riesce a raggiungere GitHub'); return; }
+  if(!r.ok){ showToast('⚠️ GitHub ha risposto con errore HTTP '+r.status); return; }
+  let html; try{ html=await r.text(); }catch(e){ showToast('❌ Errore nel leggere il file da GitHub'); return; }
+  const m=/FRARIK_APP_VERSION\s*=\s*(\d+)/.exec(html);
+  if(!m){ showToast('⚠️ Il file su GitHub non sembra valido (manca la versione)'); return; }
+  const rv=parseInt(m[1],10);
+  if(rv>cur && html.length>5000 && html.indexOf('</html>')>-1){
+    _appUpdHtml=html; _appUpdVer=rv;
+    const b=document.getElementById('app-update-notif'); if(b) b.classList.add('on');
+    try{ _ntfPushLog('📥 Aggiornamento plancia','Nuova versione '+rv+' disponibile — clicca per aggiornare','📥','app'); }catch(e){}
+    if(confirm('🎉 Trovato aggiornamento!\n\nVersione su GitHub: '+rv+'\nLa tua versione: '+cur+'\n\nVuoi aggiornare adesso?')){ applyAppUpdate(); }
+  } else if(rv===cur){
+    showToast('✅ Sei già aggiornato (versione '+cur+')');
+  } else {
+    showToast('ℹ️ La tua versione ('+cur+') è più recente di GitHub ('+rv+')');
+  }
 }
 function applyAppUpdate(){
   if(!_appUpdHtml){ return; }
@@ -10027,6 +10053,7 @@ if(localStorage.getItem('ha_auth')==='1' || sessionStorage.getItem('ha_auth')===
 /* Controllo aggiornamento plancia INDIPENDENTE dalla connessione a Home Assistant
    (basta internet per raggiungere GitHub) → la notifica arriva anche se HA non è connesso. */
 try{ _appUpdSchedule(); setTimeout(()=>{ try{ _appUpdateCheck(); }catch(e){} }, 2500); }catch(e){}
+try{ var _av=document.getElementById('ep-appver'); if(_av) _av.textContent='(v'+(window.FRARIK_APP_VERSION||'?')+')'; }catch(e){}
 
 /* ══════════════════════════════════════════════════════════════
    SOS
