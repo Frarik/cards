@@ -1,0 +1,34 @@
+name: Deploy frarik.html su Home Assistant
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'frarik.html'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # ── Dice ad HA di Frarik di scaricare il file aggiornato da GitHub ──
+      - name: Aggiorna HA Frarik
+        run: |
+          curl -s -o /dev/null -w "%{http_code}" -X POST \
+            "https://cvkvlnpaokb2r0pedlqjlq06f5zsd3fl.ui.nabu.casa/api/services/shell_command/aggiorna_frarik" \
+            -H "Authorization: Bearer ${{ secrets.HA_TOKEN_FRARIK }}" \
+            -H "Content-Type: application/json" \
+            -d '{}'
+
+      # ── Dice ad HA di Frazic95 di scaricare il file aggiornato da GitHub ──
+      - name: Aggiorna HA Frazic95
+        run: |
+          curl -s -o /dev/null -w "%{http_code}" -X POST \
+            "https://mzlej5bjgutlujw3go5vsanafnf1bom1.ui.nabu.casa/api/services/shell_command/aggiorna_frarik" \
+            -H "Authorization: Bearer ${{ secrets.HA_TOKEN_FRAZIC95 }}" \
+            -H "Content-Type: application/json" \
+            -d '{}'
