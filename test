@@ -1,0 +1,4 @@
+shell_command:
+  aggiorna_frarik: >
+    curl -s -o /config/www/frarik.html
+    "https://raw.githubusercontent.com/Frarik/cards/{{sha}}/frarik.html"
