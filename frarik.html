@@ -10,7 +10,7 @@
 <script>
 /* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260603970;
+window.FRARIK_APP_VERSION = 20260603990;
 /* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
    (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
@@ -2712,27 +2712,13 @@ select.ntf-field-inp option{background:#1a2035;color:#e2e8f0}
         </div>
       </div>
 
-      <!-- ── Card JS Store ── -->
-      <button class="cfg-open-btn" onclick="_epToggleGroup('jsstore')" id="ep-jsstore-btn"
-        style="background:rgba(99,102,241,.08);border-color:rgba(99,102,241,.2);color:#a5b4fc">
-        📦 <span style="flex:1">Card JS</span>
-        <span id="ep-jsstore-count" style="font-size:10px;color:rgba(165,180,252,.6)"></span>
-        <span id="ep-jsstore-arrow" style="color:rgba(255,255,255,.2);font-size:14px;transition:transform .2s">▾</span>
+      <!-- ── Store ── -->
+      <button class="cfg-open-btn" onclick="openGhStore()"
+        style="background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:#86efac">
+        🛒 <span style="flex:1">Store</span>
+        <span id="ep-jsstore-count" style="font-size:10px;color:rgba(134,239,172,.6)"></span>
+        <span style="color:rgba(255,255,255,.2);font-size:16px">›</span>
       </button>
-      <div id="ep-jsstore-group" style="display:none;background:rgba(99,102,241,.04);border:1px solid rgba(99,102,241,.12);border-radius:10px;overflow:hidden">
-        <div id="ep-jsstore-list" style="max-height:280px;overflow-y:auto;scrollbar-width:thin;padding:6px 8px"></div>
-        <div style="padding:6px 8px 8px;border-top:1px solid rgba(255,255,255,.05);display:flex;flex-direction:column;gap:6px">
-          <button onclick="openGhStore()" style="width:100%;padding:8px;border-radius:8px;background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.35);color:#86efac;font-size:11px;font-weight:700;cursor:pointer">
-            🛒 Store da GitHub (sfoglia e installa)
-          </button>
-          <button onclick="openJsStore()" style="width:100%;padding:7px;border-radius:8px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#a5b4fc;font-size:11px;font-weight:700;cursor:pointer">
-            ➕ Gestisci Store (card installate)
-          </button>
-          <button onclick="openGitHubCfg()" style="width:100%;padding:7px;border-radius:8px;background:rgba(148,163,184,.15);border:1px solid rgba(148,163,184,.3);color:#cbd5e1;font-size:11px;font-weight:700;cursor:pointer">
-            🐙 Impostazioni GitHub (aggiornamenti automatici)
-          </button>
-        </div>
-      </div>
 
       <!-- ── Barra inferiore (footer + navigazione = una sola barra) ── -->
       <button class="cfg-open-btn" onclick="openFBM()" style="background:rgba(20,184,166,.08);border-color:rgba(20,184,166,.2);color:#2dd4bf">
@@ -3212,9 +3198,9 @@ function _updatePasteBtn(){
 function _epRenderJsStore(){
   const items = _jsStoreList();
   const countEl = document.getElementById('ep-jsstore-count');
+  if(countEl) countEl.textContent = items.length ? items.length+' card' : '';
   const listEl  = document.getElementById('ep-jsstore-list');
   if(!listEl) return;
-  if(countEl) countEl.textContent = items.length ? items.length : '';
 
   if(!items.length){
     listEl.innerHTML='<div style="padding:12px 4px;text-align:center;font-size:11px;color:var(--muted)">Nessuna card installata.<br>Usa "Gestisci Store" per caricare.</div>';
@@ -3544,6 +3530,7 @@ async function _ghInstallFile(file){
   const card=id?window.FratechCardRegistry[id]:null;
   if(card&&card.id){
     _jsStoreSave(card.id,{id:card.id,name:card.name||card.id,icon:card.icon||'📦',version:card.version||'1.0',desc:card.desc||''},code);
+    try{ const g=_ghCfg(); g.idFile=g.idFile||{}; g.idFile[card.id]=file.name; }catch(e){}   // mappa id↔file per liberare lo sha all'eliminazione
   }
   _ghCfg().shas[file.name]=file.sha;
   return card;
@@ -3615,9 +3602,11 @@ async function _ghImportAll(){
 
 /* ════════ STORE da GitHub (sfoglia le cartelle del repo, con ricerca per sezione) ════════ */
 const _GHS_FOLDERS={
-  js:  {path:'card-js',  ext:/\.js$/i,    ico:'⚡', exclude:/^frarik[-.]/i},
-  yaml:{path:'card-yaml',ext:/\.ya?ml$/i, ico:'📄'},
-  pkg: {path:'pkg',      ext:/\.ya?ml$/i, ico:'📦'},
+  js:        {path:'card-js',         ext:/\.js$/i,    ico:'⚡',  kind:'install', exclude:/^frarik[-.]/i},
+  chips:     {path:'card-chips',      ext:/\.js$/i,    ico:'🔹',  kind:'install'},
+  distintivi:{path:'card-distintivi', ext:/\.js$/i,    ico:'🏷️', kind:'install'},
+  yaml:      {path:'card-yaml',       ext:/\.ya?ml$/i, ico:'📄',  kind:'copy'},
+  pkg:       {path:'pkg',             ext:/\.ya?ml$/i, ico:'📦',  kind:'copy'},
 };
 let _ghsTab='js', _ghsCache={};
 async function _ghListFolder(path){
@@ -3639,9 +3628,12 @@ function openGhStore(){
 function closeGhStore(){ document.getElementById('gh-store-modal').classList.add('off'); }
 function ghStoreTab(tab){
   _ghsTab=tab;
-  ['js','yaml','pkg','html'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
+  ['js','chips','distintivi','yaml','pkg','installed'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
   const s=document.getElementById('ghs-search'); if(s) s.value='';
-  if(tab==='html' || _ghsCache[tab]){ _ghStoreRender(); return; }
+  // la zona "carica file .js" compare solo nella scheda Installate
+  const loadEl=document.getElementById('ghs-load'); if(loadEl) loadEl.style.display=(tab==='installed')?'':'none';
+  if(tab==='installed'){ _ghStoreRender(); _ghStoreInitDropzone(); return; }
+  if(_ghsCache[tab]){ _ghStoreRender(); return; }
   document.getElementById('ghs-status').textContent='⏳ Carico da GitHub…';
   document.getElementById('ghs-list').innerHTML='';
   const f=_GHS_FOLDERS[tab];
@@ -3653,33 +3645,63 @@ function ghStoreTab(tab){
 function _ghStoreRender(){
   const tab=_ghsTab, list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
   const q=(document.getElementById('ghs-search').value||'').toLowerCase().trim();
-  if(tab==='html'){
-    status.textContent='';
-    list.innerHTML=`<div class="ghs-row"><div class="ghs-ico">🖥️</div>
-      <div class="ghs-info"><div class="ghs-name">Plancia (frarik.html)</div><div class="ghs-sub">Versione installata: ${window.FRARIK_APP_VERSION||'?'}</div></div>
-      <div class="ghs-acts"><button class="ghs-btn ghs-btn-upd" onclick="ghCheckPlancia()">Controlla aggiornamenti</button></div></div>
-      <div class="ghs-sub" style="margin-top:8px;padding:0 4px;line-height:1.5">La plancia si aggiorna da sola quando pubblichi una nuova versione: arriva una notifica informativa. Qui puoi forzare il controllo.</div>`;
-    return;
-  }
-  const g=_ghCfg();
+  if(tab==='installed'){ _ghStoreRenderInstalled(q); return; }
+  const folder=_GHS_FOLDERS[tab]; const g=_ghCfg();
   let files=(_ghsCache[tab]||[]).slice();
   if(q) files=files.filter(f=>f.name.toLowerCase().includes(q));
   status.textContent=(_ghsCache[tab]||[]).length+' file'+(q?(' · '+files.length+' trovati'):'');
   if(!files.length){ list.innerHTML=`<div class="ghs-empty">${q?'Nessun risultato per "'+eh(q)+'"':'Nessun file in questa cartella su GitHub'}</div>`; return; }
-  const ico=_GHS_FOLDERS[tab].ico;
+  const ico=folder.ico;
   list.innerHTML=files.sort((a,b)=>a.name.localeCompare(b.name)).map(f=>{
     const nm=f.name.replace(/\.(js|ya?ml)$/i,'');
+    const enc=encodeURIComponent(f.name);
     let acts;
-    if(tab==='js'){
+    if(folder.kind==='install'){
       const known=g.shas[f.name];
-      if(known===f.sha) acts=`<button class="ghs-btn ghs-btn-ok">✓ Installata</button>`;
-      else if(known) acts=`<button class="ghs-btn ghs-btn-upd" onclick="_ghsInstall('${encodeURIComponent(f.name)}')">↻ Aggiorna</button>`;
-      else acts=`<button class="ghs-btn ghs-btn-inst" onclick="_ghsInstall('${encodeURIComponent(f.name)}')">⬇️ Installa</button>`;
+      if(known===f.sha) acts=`<button class="ghs-btn ghs-btn-ok" onclick="_ghsInstall('${enc}')" title="Reinstalla">✓ Installata</button>`;
+      else if(known) acts=`<button class="ghs-btn ghs-btn-upd" onclick="_ghsInstall('${enc}')">↻ Aggiorna</button>`;
+      else acts=`<button class="ghs-btn ghs-btn-inst" onclick="_ghsInstall('${enc}')">⬇️ Installa</button>`;
     } else {
-      acts=`<button class="ghs-btn ghs-btn-cp" onclick="_ghsCopy('${encodeURIComponent(f.name)}')">📋 Copia</button><button class="ghs-btn ghs-btn-cp" onclick="_ghsDownload('${encodeURIComponent(f.name)}')">⬇️</button>`;
+      acts=`<button class="ghs-btn ghs-btn-cp" onclick="_ghsCopy('${enc}')">📋 Copia</button><button class="ghs-btn ghs-btn-cp" onclick="_ghsDownload('${enc}')">⬇️</button>`;
     }
     return `<div class="ghs-row"><div class="ghs-ico">${ico}</div><div class="ghs-info"><div class="ghs-name">${eh(nm)}</div><div class="ghs-sub">${eh(f.name)}</div></div><div class="ghs-acts">${acts}</div></div>`;
   }).join('');
+}
+/* Scheda "Installate": gestisci le card già installate (aggiungi in dashboard / elimina) */
+function _ghStoreRenderInstalled(q){
+  const list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
+  let items=_jsStoreList();
+  const all=items.length;
+  if(q) items=items.filter(i=>((i.meta||{}).name||(i.meta||{}).id||'').toLowerCase().includes(q));
+  status.textContent=all+' card installate'+(q?(' · '+items.length+' trovate'):'');
+  if(!items.length){ list.innerHTML=`<div class="ghs-empty">${q?'Nessun risultato':'Nessuna card installata.<br>Usa la zona qui sotto per caricare un file .js, o installale dalle altre schede.'}</div>`; return; }
+  const usedIds=new Set(); (cfg.pages||[]).forEach(pg=>(pg.cards||[]).forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedIds.add(c.jsCardId); }));
+  list.innerHTML=items.sort((a,b)=>((a.meta||{}).name||'').localeCompare((b.meta||{}).name||'')).map(i=>{
+    const m=i.meta||{}; const inUse=usedIds.has(m.id); const id=m.id||'';
+    const act = inUse ? `<span style="font-size:10px;color:#4ade80;font-weight:700">✓ in dashboard</span>`
+                      : `<button class="ghs-btn ghs-btn-inst" onclick="jsStoreAddCard('${id}');setTimeout(_ghStoreRender,50)">➕ Aggiungi</button>`;
+    return `<div class="ghs-row"><div class="ghs-ico">${m.icon||'📦'}</div>
+      <div class="ghs-info"><div class="ghs-name">${eh(m.name||id||'Card')}</div><div class="ghs-sub">ID: ${eh(id||'?')} · v${eh(m.version||'?')}</div></div>
+      <div class="ghs-acts">${act}<button class="ghs-btn ghs-btn-cp" style="background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.3);color:#f87171" onclick="_ghsDeleteInstalled('${id}')">🗑</button></div></div>`;
+  }).join('');
+}
+function _ghsDeleteInstalled(id){
+  if(!id) return;
+  const it=_jsStoreList().find(i=>(i.meta||{}).id===id); const nm=(it&&it.meta&&it.meta.name)||id;
+  showConfirm(`Eliminare la card <b>${eh(nm)}</b> dalle installate?<br><span style="font-size:11px;opacity:.7">Le card di questo tipo già messe in dashboard mostreranno un errore.</span>`, ()=>{
+    _jsStoreDelete(id);
+    try{ delete window.FratechCardRegistry[id]; }catch(e){}
+    // libera lo sha del file corrispondente, così ricompare come "Installa" nello store
+    try{ const g=_ghCfg(); if(g.idFile&&g.idFile[id]){ delete g.shas[g.idFile[id]]; delete g.idFile[id]; } }catch(e){}
+    if(typeof _epRenderJsStore==='function') _epRenderJsStore();
+    _ghsCache={}; renderDash(); _ghStoreRender(); showToast('🗑 Card eliminata');
+  }, 'Elimina');
+}
+function _ghStoreInitDropzone(){
+  const dz=document.getElementById('ghs-dropzone'); if(!dz||dz._init) return; dz._init=true;
+  dz.ondragover=e=>{ e.preventDefault(); dz.classList.add('drag-over'); };
+  dz.ondragleave=()=>dz.classList.remove('drag-over');
+  dz.ondrop=e=>{ e.preventDefault(); dz.classList.remove('drag-over'); if(e.dataTransfer.files[0]) jsStoreLoadFile(e.dataTransfer.files[0]); };
 }
 function _ghsFind(name){ name=decodeURIComponent(name); return (_ghsCache[_ghsTab]||[]).find(f=>f.name===name); }
 async function _ghsInstall(name){
@@ -8406,6 +8428,8 @@ function jsStoreLoadFile(file){
     status.innerHTML=`<span style="color:#4ade80">✅ Card <b>${card.name||card.id}</b> installata!${card._lovelace?' <span style="opacity:.6">(Lovelace)</span>':''} (v${card.version||'?'})</span>`;
     document.getElementById('jsst-count').textContent = _jsStoreList().length;
     setTimeout(()=>{ jsStoreTab('installed'); }, 900);
+    // se è aperto il nuovo "Store da GitHub", aggiorna la scheda Installate
+    try{ if(!document.getElementById('gh-store-modal').classList.contains('off')){ showToast('✅ Card caricata'); _ghsTab='installed'; ghStoreTab('installed'); } }catch(e){}
   };
   reader.onerror = () => { status.innerHTML='<span style="color:#f87171">⚠️ Impossibile leggere il file.</span>'; };
   reader.readAsText(file);
@@ -11868,7 +11892,7 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
 </div>
 
 <!-- CONFIG GITHUB CARD -->
-<div class="mbg off" id="ghmod">
+<div class="mbg off" id="ghmod" style="z-index:260">
   <div class="mbox" style="width:460px">
     <div class="mhdr"><span class="mtitle">🐙 Card da GitHub</span><button class="mx" onclick="closeGitHubCfg()">✕</button></div>
     <div class="fscroll" style="padding:14px">
@@ -11988,17 +12012,30 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
 <!-- STORE GITHUB (a sezioni + ricerca) -->
 <div class="mbg off" id="gh-store-modal">
   <div class="mbox" style="max-width:680px;width:96vw">
-    <div class="mhdr"><span class="mtitle">🛒 Store da GitHub</span><button class="mx" onclick="closeGhStore()">✕</button></div>
+    <div class="mhdr"><span class="mtitle">🛒 Store da GitHub</span>
+      <button class="mx" onclick="closeGhStore()">✕</button></div>
     <div class="fscroll" style="padding:14px 16px">
-      <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
-        <button class="jsst-tab on" id="ghs-tab-js"   onclick="ghStoreTab('js')">⚡ Card JS</button>
-        <button class="jsst-tab"    id="ghs-tab-yaml" onclick="ghStoreTab('yaml')">📄 Card YAML</button>
-        <button class="jsst-tab"    id="ghs-tab-pkg"  onclick="ghStoreTab('pkg')">📦 Pacchetti</button>
-        <button class="jsst-tab"    id="ghs-tab-html" onclick="ghStoreTab('html')">🖥️ Plancia</button>
+      <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+        <button class="jsst-tab on" id="ghs-tab-js"         onclick="ghStoreTab('js')">⚡ Card JS</button>
+        <button class="jsst-tab"    id="ghs-tab-chips"      onclick="ghStoreTab('chips')">🔹 Chips</button>
+        <button class="jsst-tab"    id="ghs-tab-distintivi" onclick="ghStoreTab('distintivi')">🏷️ Distintivi</button>
+        <button class="jsst-tab"    id="ghs-tab-yaml"       onclick="ghStoreTab('yaml')">📄 YAML</button>
+        <button class="jsst-tab"    id="ghs-tab-pkg"        onclick="ghStoreTab('pkg')">📦 Pacchetti</button>
+        <button class="jsst-tab"    id="ghs-tab-installed"  onclick="ghStoreTab('installed')">📋 Installate</button>
+        <button class="jsst-tab"    onclick="openGitHubCfg()" title="Impostazioni GitHub (aggiornamenti automatici)" style="margin-left:auto">⚙️</button>
       </div>
       <input id="ghs-search" class="ghs-search" placeholder="🔍 Cerca per nome…" oninput="_ghStoreRender()" autocomplete="off">
       <div id="ghs-status" style="font-size:11px;color:var(--muted);margin:8px 2px;min-height:16px"></div>
       <div id="ghs-list"></div>
+      <div id="ghs-load" style="display:none;margin-top:10px">
+        <div id="ghs-dropzone" class="jsst-dropzone" onclick="document.getElementById('ghs-file-inp').click()">
+          <div class="jsst-dz-ico">📂</div>
+          <div class="jsst-dz-lbl">Clicca o trascina un file <code>.js</code></div>
+          <div class="jsst-dz-sub">per installare una card manualmente (max 2 MB)</div>
+          <input type="file" id="ghs-file-inp" accept=".js" style="display:none" onchange="jsStoreLoadFile(this.files[0])">
+        </div>
+        <button onclick="jsStoreDownloadTemplate()" style="margin-top:8px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.35);color:#a5b4fc;border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer">⬇️ Scarica template.js</button>
+      </div>
     </div>
   </div>
 </div>
