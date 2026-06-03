@@ -18,9 +18,10 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # ── Aspetta che GitHub aggiorni la CDN ──
-      - name: Attendi propagazione CDN
-        run: sleep 30
+      # ── Recupera il commit SHA ──
+      - name: Ottieni commit SHA
+        id: sha
+        run: echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
       # ── Aggiorna HA Frarik (3 tentativi) ──
       - name: Aggiorna HA Frarik
@@ -30,10 +31,10 @@ jobs:
               "https://cvkvlnpaokb2r0pedlqjlq06f5zsd3fl.ui.nabu.casa/api/services/shell_command/aggiorna_frarik" \
               -H "Authorization: Bearer ${{ secrets.HA_TOKEN_FRARIK }}" \
               -H "Content-Type: application/json" \
-              -d '{}')
+              -d '{"sha": "${{ steps.sha.outputs.sha }}"}')
             echo "Tentativo $i: HTTP $CODE"
             if [ "$CODE" = "200" ]; then
-              echo "OK - HA Frarik aggiornato"
+              echo "OK - HA Frarik aggiornato (SHA: ${{ steps.sha.outputs.sha }})"
               break
             fi
             echo "Riprovo tra 10 secondi..."
@@ -52,10 +53,10 @@ jobs:
               "https://mzlej5bjgutlujw3go5vsanafnf1bom1.ui.nabu.casa/api/services/shell_command/aggiorna_frarik" \
               -H "Authorization: Bearer ${{ secrets.HA_TOKEN_FRAZIC95 }}" \
               -H "Content-Type: application/json" \
-              -d '{}')
+              -d '{"sha": "${{ steps.sha.outputs.sha }}"}')
             echo "Tentativo $i: HTTP $CODE"
             if [ "$CODE" = "200" ]; then
-              echo "OK - HA Frazic95 aggiornato"
+              echo "OK - HA Frazic95 aggiornato (SHA: ${{ steps.sha.outputs.sha }})"
               break
             fi
             echo "Riprovo tra 10 secondi..."
