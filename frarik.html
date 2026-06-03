@@ -7,7 +7,7 @@
 <script>
 /* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260603110;
+window.FRARIK_APP_VERSION = 20260603150;
 /* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
    (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
@@ -3370,10 +3370,12 @@ function _onResume(){
   } else if(ws.readyState===1){
     _haLoadCfg();
   }
-  // controllo aggiornamento plancia quando torni sulla pagina (throttle 3 min) → la notifica arriva quasi subito
+  // controllo aggiornamento plancia quando torni sulla pagina (throttle 30 sec) → la notifica arriva quasi subito
   try{
     var now=Date.now();
-    if(now-(window._appUpdLastChk||0)>180000){ window._appUpdLastChk=now; if(typeof _appUpdateCheck==='function') _appUpdateCheck(); }
+    if(now-(window._appUpdLastChk||0)>30000){ window._appUpdLastChk=now; if(typeof _appUpdateCheck==='function') _appUpdateCheck(); }
+    // card GitHub: check sempre al resume (è una chiamata leggera, solo SHA)
+    if(typeof _ghCheck==='function') _ghCheck(false);
   }catch(e){}
 }
 document.addEventListener('visibilitychange',_onResume);
@@ -3506,7 +3508,7 @@ async function _ghCheck(force){
   if(_ghPending.length && sig!==_ghDismissedSig){
     const txt=_ghPending.length===1?('Card aggiornata: '+_ghPending[0].name.replace(/\.js$/,'')+' — clicca per aggiornare')
                                     :(_ghPending.length+' card aggiornate — clicca per aggiornare');
-    if(sig!==_ghLastSig){ try{ _ntfPushLog('🔄 Aggiornamento card', txt, '🔄', 'gh'); }catch(e){} _ghLastSig=sig; }
+    if(sig!==_ghLastSig){ try{ _ntfPushLog('Aggiornamento card', txt, '🔄', 'gh'); }catch(e){} _ghLastSig=sig; }
   }
 }
 function _ghDismiss(){
@@ -3544,7 +3546,7 @@ function _ghSchedule(){
   clearInterval(_ghTimer);
   const g=_ghCfg();
   if(g.owner&&g.repo&&g.auto!==false){
-    _ghTimer=setInterval(()=>{ if(!document.hidden) _ghCheck(false); }, 5*60*1000);
+    _ghTimer=setInterval(()=>{ if(!document.hidden) _ghCheck(false); }, 2*60*1000);
   }
 }
 
@@ -3564,7 +3566,7 @@ async function _appUpdateCheck(){
       _appUpdHtml=html; _appUpdVer=rv;
       try{ localStorage.setItem('frarik_app_html',html); localStorage.setItem('frarik_app_ver',String(rv)); }catch(e){}
       if(_appUpdVer!==parseInt(localStorage.getItem('frarik_app_notified')||'0',10)){
-        try{ _ntfPushLog('📥 Plancia aggiornata','Nuova versione '+rv+' installata — la pagina si ricaricherà tra pochi secondi','📥','app'); }catch(e){}
+        try{ _ntfPushLog('Plancia aggiornata','Nuova versione '+rv+' installata — la pagina si ricaricherà tra pochi secondi','📥','app'); }catch(e){}
         try{ localStorage.setItem('frarik_app_notified',String(_appUpdVer)); }catch(e){}
         // Ricarica automatica dopo 3 secondi (obbligatoria e istantanea)
         setTimeout(()=>location.reload(), 3000);
@@ -3586,7 +3588,7 @@ async function appCheckNow(){
   const rv=parseInt(m[1],10);
   if(rv>cur && html.length>5000 && html.indexOf('</html>')>-1){
     _appUpdHtml=html; _appUpdVer=rv;
-    try{ _ntfPushLog('📥 Aggiornamento plancia','Nuova versione '+rv+' trovata — aggiornamento in corso…','📥','app'); }catch(e){}
+    try{ _ntfPushLog('Aggiornamento plancia','Nuova versione '+rv+' trovata — aggiornamento in corso…','📥','app'); }catch(e){}
     showToast('📥 Nuova versione '+rv+' trovata — aggiorno…');
     applyAppUpdate();
   } else if(rv===cur){
@@ -3604,7 +3606,7 @@ function applyAppUpdate(){
 function _appUpdDismiss(){ const b=document.getElementById('app-update-notif'); if(b) b.classList.remove('on'); }
 function _appUpdSchedule(){
   clearInterval(_appUpdTimer);
-  _appUpdTimer=setInterval(()=>{ if(!document.hidden) _appUpdateCheck(); }, 30*60*1000);  // ogni 30 min
+  _appUpdTimer=setInterval(()=>{ if(!document.hidden) _appUpdateCheck(); }, 5*60*1000);  // ogni 5 min
 }
 
 /* ═══ WEBSOCKET ═══ */
@@ -11048,6 +11050,8 @@ function closeNotifCfg(){
 /* ═══ CENTRO NOTIFICHE (campanella in alto) ═══ */
 let _ntfLog=[];
 try{ _ntfLog=JSON.parse(localStorage.getItem('frarik_ntflog')||'[]'); }catch(e){ _ntfLog=[]; }
+// Pulizia notifiche con testo rotto da versioni precedenti (apostrofo unicode mal codificato)
+try{ _ntfLog=_ntfLog.filter(n=>!(n.msg||'').includes('2019')); }catch(e){}
 function _ntfSaveLog(){ try{ localStorage.setItem('frarik_ntflog',JSON.stringify(_ntfLog.slice(0,60))); }catch(e){} }
 function _ntfPushLog(title,msg,icon,action){
   // action: 'gh' (aggiorna card) | 'app' (aggiorna plancia) | undefined. Se c'è già una notifica
