@@ -7,7 +7,7 @@
 <script>
 /* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260603150;
+window.FRARIK_APP_VERSION = 20260603155;
 /* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
    (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
@@ -16,6 +16,7 @@ window.FRARIK_APP_VERSION = 20260603150;
     var ov=localStorage.getItem('frarik_app_html');
     var ovv=parseInt(localStorage.getItem('frarik_app_ver')||'0',10);
     if(ov && ovv>window.FRARIK_APP_VERSION && ov.length>5000 && ov.indexOf('FRARIK_APP_VERSION')>-1 && ov.indexOf('</html>')>-1){
+      try{ sessionStorage.setItem('frarik_just_updated', ovv); }catch(e){}
       document.open(); document.write(ov); document.close();
     }
   }catch(e){}
@@ -2695,9 +2696,6 @@ select.ntf-field-inp option{background:#1a2035;color:#e2e8f0}
           <button onclick="openGitHubCfg()" style="width:100%;padding:7px;border-radius:8px;background:rgba(148,163,184,.15);border:1px solid rgba(148,163,184,.3);color:#cbd5e1;font-size:11px;font-weight:700;cursor:pointer">
             🐙 Card da GitHub (aggiornamenti automatici)
           </button>
-          <button onclick="appCheckNow()" style="width:100%;padding:7px;border-radius:8px;background:rgba(96,165,250,.15);border:1px solid rgba(96,165,250,.3);color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer">
-            📥 Controlla aggiornamenti plancia <span id="ep-appver" style="opacity:.6;font-weight:600"></span>
-          </button>
         </div>
       </div>
 
@@ -3564,46 +3562,16 @@ async function _appUpdateCheck(){
     const rv=parseInt(m[1],10);
     if(rv>(window.FRARIK_APP_VERSION||0) && html.length>5000 && html.indexOf('</html>')>-1){
       _appUpdHtml=html; _appUpdVer=rv;
+      // Salva subito in localStorage così al prossimo reload parte già la nuova versione
       try{ localStorage.setItem('frarik_app_html',html); localStorage.setItem('frarik_app_ver',String(rv)); }catch(e){}
-      if(_appUpdVer!==parseInt(localStorage.getItem('frarik_app_notified')||'0',10)){
-        try{ _ntfPushLog('Plancia aggiornata','Nuova versione '+rv+' installata — la pagina si ricaricherà tra pochi secondi','📥','app'); }catch(e){}
-        try{ localStorage.setItem('frarik_app_notified',String(_appUpdVer)); }catch(e){}
-        // Ricarica automatica dopo 3 secondi (obbligatoria e istantanea)
-        setTimeout(()=>location.reload(), 3000);
+      // Notifica nella campanella — l'aggiornamento parte al prossimo caricamento della pagina
+      if(rv!==parseInt(localStorage.getItem('frarik_app_notified')||'0',10)){
+        try{ localStorage.setItem('frarik_app_notified',String(rv)); }catch(e){}
+        try{ _ntfPushLog('Aggiornamento disponibile','Versione '+rv+' scaricata — ricarica la pagina per installarla','📥','app'); }catch(e){}
       }
     }
   }catch(e){}
 }
-/* Controllo MANUALE con messaggi espliciti (per diagnosi: dice sempre cosa succede) */
-async function appCheckNow(){
-  const cur=window.FRARIK_APP_VERSION||0;
-  showToast('📥 Controllo aggiornamenti plancia… (la tua: '+cur+')');
-  let r;
-  try{ r=await fetch(APP_REPO_RAW+'?_='+Date.now(),{cache:'no-store'}); }
-  catch(e){ showToast('❌ Errore di rete: il dispositivo NON riesce a raggiungere GitHub'); return; }
-  if(!r.ok){ showToast('⚠️ GitHub ha risposto con errore HTTP '+r.status); return; }
-  let html; try{ html=await r.text(); }catch(e){ showToast('❌ Errore nel leggere il file da GitHub'); return; }
-  const m=/FRARIK_APP_VERSION\s*=\s*(\d+)/.exec(html);
-  if(!m){ showToast('⚠️ Il file su GitHub non sembra valido (manca la versione)'); return; }
-  const rv=parseInt(m[1],10);
-  if(rv>cur && html.length>5000 && html.indexOf('</html>')>-1){
-    _appUpdHtml=html; _appUpdVer=rv;
-    try{ _ntfPushLog('Aggiornamento plancia','Nuova versione '+rv+' trovata — aggiornamento in corso…','📥','app'); }catch(e){}
-    showToast('📥 Nuova versione '+rv+' trovata — aggiorno…');
-    applyAppUpdate();
-  } else if(rv===cur){
-    showToast('✅ Sei già aggiornato (versione '+cur+')');
-  } else {
-    showToast('ℹ️ La tua versione ('+cur+') è più recente di GitHub ('+rv+')');
-  }
-}
-function applyAppUpdate(){
-  if(!_appUpdHtml){ return; }
-  try{ localStorage.setItem('frarik_app_html',_appUpdHtml); localStorage.setItem('frarik_app_ver',String(_appUpdVer)); }catch(e){}
-  showToast('📥 Aggiorno la plancia…');
-  setTimeout(()=>location.reload(),500);
-}
-function _appUpdDismiss(){ const b=document.getElementById('app-update-notif'); if(b) b.classList.remove('on'); }
 function _appUpdSchedule(){
   clearInterval(_appUpdTimer);
   _appUpdTimer=setInterval(()=>{ if(!document.hidden) _appUpdateCheck(); }, 5*60*1000);  // ogni 5 min
@@ -10050,7 +10018,14 @@ if(localStorage.getItem('ha_auth')==='1' || sessionStorage.getItem('ha_auth')===
 /* Controllo aggiornamento plancia INDIPENDENTE dalla connessione a Home Assistant
    (basta internet per raggiungere GitHub) → la notifica arriva anche se HA non è connesso. */
 try{ _appUpdSchedule(); setTimeout(()=>{ try{ _appUpdateCheck(); }catch(e){} }, 2500); }catch(e){}
-try{ var _av=document.getElementById('ep-appver'); if(_av) _av.textContent='(v'+(window.FRARIK_APP_VERSION||'?')+')'; }catch(e){}
+// Se questa sessione è partita con una versione aggiornata dal localStorage, mostra notifica
+try{
+  var _juv=sessionStorage.getItem('frarik_just_updated');
+  if(_juv){
+    sessionStorage.removeItem('frarik_just_updated');
+    setTimeout(function(){ try{ _ntfPushLog('Plancia aggiornata','Versione '+(window.FRARIK_APP_VERSION||_juv)+' installata automaticamente da GitHub','📥','app'); }catch(e){}; }, 1500);
+  }
+}catch(e){}
 
 /* ══════════════════════════════════════════════════════════════
    SOS
@@ -11094,7 +11069,8 @@ function _ntfAction(key){
     if(_ghPending&&_ghPending.length) _ghInstallAll();
     else { showToast('🔄 Controllo aggiornamenti card…'); _ghCheck(true).then(()=>{ if(_ghPending.length) _ghInstallAll(); else showToast('✅ Card già aggiornate'); }); }
   } else if(key==='app'){
-    showToast('✅ Plancia aggiornata automaticamente');
+    closeNotifCenter();
+    location.reload();
   }
 }
 function toggleNotifCenter(ev){
