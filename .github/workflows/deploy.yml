@@ -18,6 +18,15 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      # ── Aspetta che GitHub aggiorni la CDN ──
+      - name: Attendi propagazione CDN
+        run: sleep 15
+
+      # ── Verifica che il file su GitHub sia aggiornato ──
+      - name: Verifica file su GitHub
+        run: |
+          curl -s "https://raw.githubusercontent.com/Frarik/cards/main/frarik.html" | grep -o 'FRARIK_APP_VERSION = [0-9]*' | head -1
+
       # ── Dice ad HA di Frarik di scaricare il file aggiornato da GitHub ──
       - name: Aggiorna HA Frarik
         run: |
