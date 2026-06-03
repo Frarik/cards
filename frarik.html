@@ -10,7 +10,7 @@
 <script>
 /* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260603900;
+window.FRARIK_APP_VERSION = 20260603970;
 /* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
    (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
@@ -281,10 +281,13 @@ body.kiosk #page-tabs-wrap{display:none!important}
 /* (uses existing chart-wrap) */
 
 /* ═══ EDIT OVERLAYS ═══ */
-.card-ov{display:none;position:absolute;inset:0;border-radius:var(--card-r,20px);background:rgba(6,8,16,0.55);flex-direction:column;align-items:center;justify-content:center;gap:8px;pointer-events:none;opacity:0;transition:opacity .15s}
+.card-ov{display:none;position:absolute;inset:0;border-radius:var(--card-r,20px);background:rgba(6,8,16,0.55);flex-direction:column;align-items:center;justify-content:center;gap:8px;pointer-events:none;opacity:0;transition:opacity .15s;z-index:30}
 /* In modifica l'overlay compare solo passando il mouse sulla card (non copre tutto) */
 body.editing .card:hover>.card-ov,
 body.editing .dash-card-wrap:hover .card-ov{display:flex;pointer-events:auto;opacity:1}
+/* In MODIFICA il contenuto della card NON cattura i clic: così i pulsanti dell'overlay rispondono sempre,
+   anche sulle card speciali (grafici, telecamera, web component…) che riempiono tutta la card. */
+body.editing .card>*:not(.card-ov):not(.resize-handle):not(.hbar-ctrl){pointer-events:none}
 body.editing .card{cursor:default;border-style:dashed!important}
 body.editing .dash-card-wrap{outline:1px dashed rgba(99,102,241,.25);outline-offset:2px;border-radius:20px}
 .ov-row{display:flex;gap:6px}
@@ -295,7 +298,7 @@ body.editing .dash-card-wrap{outline:1px dashed rgba(99,102,241,.25);outline-off
 .ovb-sm{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);transition:all .12s}
 .ovb-sm:hover{background:rgba(255,255,255,0.22);color:#fff}
 .ov-size{display:flex;align-items:center;gap:4px;font-size:9px;color:rgba(255,255,255,0.35);font-weight:600;letter-spacing:.5px}
-.resize-handle{display:none;position:absolute;bottom:4px;right:4px;width:16px;height:16px;cursor:se-resize;opacity:.4;transition:opacity .2s;z-index:5}
+.resize-handle{display:none;position:absolute;bottom:4px;right:4px;width:16px;height:16px;cursor:se-resize;opacity:.4;transition:opacity .2s;z-index:40}
 .resize-handle::before,.resize-handle::after{content:'';position:absolute;background:rgba(255,255,255,0.5);border-radius:2px}
 .resize-handle::before{width:2px;height:10px;right:0;bottom:0}
 .resize-handle::after{width:10px;height:2px;right:0;bottom:0}
@@ -802,6 +805,25 @@ body.editing .col-add-btn{display:flex}
 .jsst-btn-add:hover{background:rgba(99,102,241,.35)}
 .jsst-btn-del{padding:5px 10px;border-radius:8px;font-size:10px;font-weight:700;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.25);color:#f87171;cursor:pointer;transition:all .15s}
 .jsst-btn-del:hover{background:rgba(248,113,113,.25)}
+/* ═══ STORE GITHUB (a sezioni + ricerca) ═══ */
+.ghs-search{width:100%;box-sizing:border-box;padding:9px 12px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid var(--bd2);color:#fff;font-size:12px;outline:none;margin-bottom:4px}
+.ghs-search:focus{border-color:rgba(99,102,241,.5);background:rgba(99,102,241,.06)}
+.ghs-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid var(--bd);border-radius:12px;margin-bottom:8px}
+.ghs-row:hover{background:rgba(255,255,255,.07)}
+.ghs-ico{font-size:22px;width:34px;text-align:center;flex-shrink:0}
+.ghs-info{flex:1;min-width:0}
+.ghs-name{font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ghs-sub{font-size:10px;color:var(--muted);margin-top:1px}
+.ghs-acts{display:flex;gap:6px;flex-shrink:0}
+.ghs-btn{padding:6px 12px;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap}
+.ghs-btn-inst{background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#a5b4fc}
+.ghs-btn-inst:hover{background:rgba(99,102,241,.35)}
+.ghs-btn-upd{background:rgba(251,191,36,.18);border:1px solid rgba(251,191,36,.4);color:#fbbf24}
+.ghs-btn-upd:hover{background:rgba(251,191,36,.32)}
+.ghs-btn-ok{background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);color:#86efac;cursor:default}
+.ghs-btn-cp{background:rgba(148,163,184,.15);border:1px solid rgba(148,163,184,.3);color:#cbd5e1}
+.ghs-btn-cp:hover{background:rgba(148,163,184,.3)}
+.ghs-empty{padding:26px 14px;text-align:center;font-size:12px;color:var(--muted)}
 
 /* ═══ TOAST ═══ */
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#1e293b;border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:8px 18px;font-size:11px;font-weight:600;color:#fff;z-index:13000;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap}
@@ -1263,15 +1285,18 @@ body.editing #page-view-header>*{width:auto!important;align-self:auto!important}
 #hbar-zone:empty{display:none}
 #hbar-zone>.card-hbar{pointer-events:all}
 /* ── Header Bar Card ── */
-.card-hbar{padding:0!important;overflow:visible!important;background:transparent!important;border:none!important;box-shadow:none!important;height:auto!important;min-height:unset!important;position:relative}
-.card-hbar .c-top,.card-hbar .cglow{display:none!important}
-.card-hbar .card-inner{padding:0!important;overflow:visible!important}
-body.editing .card-hbar{border:1px dashed rgba(99,102,241,.35)!important;transform:none!important;border-radius:10px!important}
-body.editing .card-hbar .card-ov{display:none!important}
-/* Barra controlli dedicata per header-bar in edit mode */
-.hbar-ctrl{display:none;position:absolute;top:4px;right:6px;z-index:200;gap:4px;align-items:center}
-body.editing .card-hbar .hbar-ctrl{display:flex}
-.hbar-ctrl .ovb{width:30px;height:30px;border-radius:8px;font-size:12px}
+.card-hbar,.card-fbar{padding:0!important;overflow:visible!important;background:transparent!important;border:none!important;box-shadow:none!important;height:auto!important;min-height:unset!important;position:relative}
+.card-hbar .c-top,.card-hbar .cglow,.card-fbar .c-top,.card-fbar .cglow{display:none!important}
+.card-hbar .card-inner,.card-fbar .card-inner{padding:0!important;overflow:visible!important}
+body.editing .card-hbar,body.editing .card-fbar{border:1px dashed rgba(99,102,241,.35)!important;transform:none!important;border-radius:10px!important}
+body.editing .card-hbar .card-ov,body.editing .card-fbar .card-ov{display:none!important}
+/* In MODIFICA il contenuto della barra NON cattura i clic (così i pulsanti di controllo rispondono
+   e si può trascinare la card afferrandola ovunque). I pulsanti restano cliccabili. */
+body.editing .card-hbar .card-inner,body.editing .card-fbar .card-inner{pointer-events:none!important}
+/* Barra controlli dedicata per header-bar / footer-bar in edit mode */
+.hbar-ctrl{display:none;position:absolute;top:4px;right:6px;z-index:400;gap:4px;align-items:center;pointer-events:auto}
+body.editing .card-hbar .hbar-ctrl,body.editing .card-fbar .hbar-ctrl{display:flex}
+.hbar-ctrl .ovb{width:30px;height:30px;border-radius:8px;font-size:12px;pointer-events:auto;cursor:pointer}
 .hbar-inner{width:100%;display:flex;flex-direction:column;justify-content:center}
 .hbar-wrap{display:flex;align-items:center;padding:4px 6px;gap:5px;flex-wrap:wrap;row-gap:4px}
 .hbar-sect{display:flex;align-items:center;gap:5px;flex-wrap:nowrap;min-width:0}
@@ -1437,9 +1462,16 @@ body.kiosk .kiosk-reload-fab:hover{background:rgba(255,255,255,0.18);color:#fff}
 #gh-notif.on{display:flex}
 @keyframes ghIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
 #gh-notif:hover{filter:brightness(1.08)}
-/* Hide all chrome in kiosk mode */
-body.kiosk #hdr,
-body.kiosk #page-tabs,body.kiosk #page-tabs-wrap{display:none!important}
+/* In KIOSK: l'header RESTA visibile, ma mostra SOLO "esci kiosk" + "ricarica".
+   (Prima l'header era nascosto e i pulsanti flottanti venivano coperti dalle card.) */
+body.kiosk #page-tabs,body.kiosk #page-tabs-wrap,body.kiosk #conn-lbl{display:none!important}
+body.kiosk #hdr > #conn-wrap,
+body.kiosk #hdr > #notif-bell,
+body.kiosk #hdr > #settings-btn,
+body.kiosk #hdr > #hasidebar-btn,
+body.kiosk #hdr > #edit-btn{display:none!important}
+/* niente più pulsanti flottanti (le card li coprivano): si usano quelli dell'header */
+body.kiosk .kiosk-exit-fab,body.kiosk .kiosk-reload-fab{display:none!important}
 body.kiosk #epanel{display:none!important;width:0!important}
 body.kiosk #root{align-items:stretch}
 
@@ -2690,11 +2722,14 @@ select.ntf-field-inp option{background:#1a2035;color:#e2e8f0}
       <div id="ep-jsstore-group" style="display:none;background:rgba(99,102,241,.04);border:1px solid rgba(99,102,241,.12);border-radius:10px;overflow:hidden">
         <div id="ep-jsstore-list" style="max-height:280px;overflow-y:auto;scrollbar-width:thin;padding:6px 8px"></div>
         <div style="padding:6px 8px 8px;border-top:1px solid rgba(255,255,255,.05);display:flex;flex-direction:column;gap:6px">
+          <button onclick="openGhStore()" style="width:100%;padding:8px;border-radius:8px;background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.35);color:#86efac;font-size:11px;font-weight:700;cursor:pointer">
+            🛒 Store da GitHub (sfoglia e installa)
+          </button>
           <button onclick="openJsStore()" style="width:100%;padding:7px;border-radius:8px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#a5b4fc;font-size:11px;font-weight:700;cursor:pointer">
-            ➕ Gestisci Store
+            ➕ Gestisci Store (card installate)
           </button>
           <button onclick="openGitHubCfg()" style="width:100%;padding:7px;border-radius:8px;background:rgba(148,163,184,.15);border:1px solid rgba(148,163,184,.3);color:#cbd5e1;font-size:11px;font-weight:700;cursor:pointer">
-            🐙 Card da GitHub (aggiornamenti automatici)
+            🐙 Impostazioni GitHub (aggiornamenti automatici)
           </button>
         </div>
       </div>
@@ -3095,10 +3130,15 @@ function addCardToCol(secId, col, triggerEl){
   menu.id='add-col-menu';
   menu.style.cssText='position:fixed;z-index:15000;background:#1a1f35;border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:8px;box-shadow:0 12px 40px rgba(0,0,0,.75);display:flex;flex-direction:column;gap:6px;min-width:190px;animation:popIn .12s ease';
   const btnStyle='background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:rgba(255,255,255,.8);font-size:12px;padding:9px 12px;cursor:pointer;text-align:left;transition:background .12s';
+  const pasteBtn = _cardClipboard ? `
+    <div style="height:1px;background:rgba(255,255,255,.08);margin:3px 0"></div>
+    <button style="${btnStyle};background:rgba(74,222,128,.12);border-color:rgba(74,222,128,.3);color:#86efac" onmouseover="this.style.background='rgba(74,222,128,.25)'" onmouseout="this.style.background='rgba(74,222,128,.12)'" onclick="document.getElementById('add-col-menu')?.remove();pasteCardTo('${secId}',${col})">📋 Incolla "${eh(_cardClipboard.label||_cardClipboard.type||'Card')}"</button>
+  ` : '';
   menu.innerHTML=`
     <div style="font-size:9px;color:rgba(255,255,255,.3);padding:2px 4px 4px;letter-spacing:.5px;text-transform:uppercase">Aggiungi card</div>
     <button style="${btnStyle}" onmouseover="this.style.background='rgba(99,102,241,.25)'" onmouseout="this.style.background='rgba(255,255,255,.05)'" onclick="document.getElementById('add-col-menu')?.remove();openEM()">➕ Sensore / Entità</button>
     <button style="${btnStyle}" onmouseover="this.style.background='rgba(99,102,241,.25)'" onmouseout="this.style.background='rgba(255,255,255,.05)'" onclick="document.getElementById('add-col-menu')?.remove();openSM()">✨ Card Speciali</button>
+    ${pasteBtn}
   `;
   // Position near the trigger element
   const rect=triggerEl?triggerEl.getBoundingClientRect():{left:window.innerWidth/2-95,bottom:window.innerHeight/2};
@@ -3444,8 +3484,13 @@ function importBackupFile(file){
    in alto che, cliccata, scarica e aggiorna la card (e la sincronizza su tutti i dispositivi). */
 let _ghPending=[], _ghDismissedSig='', _ghTimer=null, _ghLastSig='';
 function _ghCfg(){
-  if(!cfg.githubSync) cfg.githubSync={owner:'Frarik',repo:'cards',path:'',branch:'main',auto:true,shas:{}};
+  if(!cfg.githubSync) cfg.githubSync={owner:'Frarik',repo:'cards',path:'card-js',branch:'main',auto:true,shas:{}};
   if(!cfg.githubSync.shas) cfg.githubSync.shas={};
+  // migrazione una-tantum: il repo ora usa cartelle → le card .js stanno in card-js/
+  if(!cfg.githubSync._foldersMigrated){
+    if(!cfg.githubSync.path) cfg.githubSync.path='card-js';
+    cfg.githubSync._foldersMigrated=true;
+  }
   return cfg.githubSync;
 }
 function openGitHubCfg(){
@@ -3539,6 +3584,18 @@ async function _ghInstallAll(){
   if(typeof _epRenderJsStore==='function') _epRenderJsStore();
   showToast('✅ '+ok+' card aggiornate'+(err?(' · '+err+' errori'):''));
 }
+/* Chiede CONFERMA prima di aggiornare le card JS, poi installa (aggiorna anche le card già in plancia). */
+function _ghAskInstall(){
+  const run=()=>{ _ntfLog=_ntfLog.filter(n=>n.action!=='gh'); _ntfSaveLog(); _ntfUpdateBell(); if(typeof renderNotifCenter==='function') renderNotifCenter(); closeNotifCenter(); _ghInstallAll(); };
+  if(_ghPending&&_ghPending.length){
+    const names=_ghPending.map(f=>f.name.replace(/\.js$/,'')).join(', ');
+    const q=_ghPending.length===1 ? ('Vuoi aggiornare la card <b>'+names+'</b>?') : ('Vuoi aggiornare <b>'+_ghPending.length+' card</b>?<br><span style="font-size:11px;opacity:.7">'+names+'</span>');
+    showConfirm(q+'<br><span style="font-size:11px;opacity:.7">Si aggiorneranno subito, anche se già presenti nella plancia.</span>', run, 'Aggiorna');
+  } else {
+    showToast('🔄 Controllo aggiornamenti card…');
+    _ghCheck(true).then(()=>{ if(_ghPending.length) _ghAskInstall(); else showToast('✅ Card già aggiornate'); });
+  }
+}
 async function _ghImportAll(){
   let files;
   try{ files=await _ghApiList(); }
@@ -3554,6 +3611,120 @@ async function _ghImportAll(){
   _ghPending=[]; document.getElementById('gh-notif').classList.remove('on');
   _ghStatus('✅ '+ok+' card importate'+(err?(' · '+err+' errori'):''));
   showToast('✅ '+ok+' card importate da GitHub');
+}
+
+/* ════════ STORE da GitHub (sfoglia le cartelle del repo, con ricerca per sezione) ════════ */
+const _GHS_FOLDERS={
+  js:  {path:'card-js',  ext:/\.js$/i,    ico:'⚡', exclude:/^frarik[-.]/i},
+  yaml:{path:'card-yaml',ext:/\.ya?ml$/i, ico:'📄'},
+  pkg: {path:'pkg',      ext:/\.ya?ml$/i, ico:'📦'},
+};
+let _ghsTab='js', _ghsCache={};
+async function _ghListFolder(path){
+  const g=_ghCfg(); if(!g.owner||!g.repo) throw new Error('Configura GitHub (proprietario/repository)');
+  const p=path?path.split('/').map(encodeURIComponent).join('/'):'';
+  const url=`https://api.github.com/repos/${g.owner}/${g.repo}/contents/${p}?ref=${encodeURIComponent(g.branch||'main')}`;
+  const r=await fetch(url,{headers:{'Accept':'application/vnd.github.v3+json'}});
+  if(r.status===404) return [];   // cartella non ancora creata su GitHub
+  if(r.status===403) throw new Error('Limite richieste GitHub raggiunto, riprova tra poco');
+  if(!r.ok) throw new Error('GitHub HTTP '+r.status);
+  const j=await r.json();
+  return Array.isArray(j) ? j.filter(f=>f.type==='file') : [];
+}
+function openGhStore(){
+  try{ closeJsStore(); }catch(e){}
+  document.getElementById('gh-store-modal').classList.remove('off');
+  _ghsCache={}; ghStoreTab('js');
+}
+function closeGhStore(){ document.getElementById('gh-store-modal').classList.add('off'); }
+function ghStoreTab(tab){
+  _ghsTab=tab;
+  ['js','yaml','pkg','html'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
+  const s=document.getElementById('ghs-search'); if(s) s.value='';
+  if(tab==='html' || _ghsCache[tab]){ _ghStoreRender(); return; }
+  document.getElementById('ghs-status').textContent='⏳ Carico da GitHub…';
+  document.getElementById('ghs-list').innerHTML='';
+  const f=_GHS_FOLDERS[tab];
+  _ghListFolder(f.path).then(files=>{
+    _ghsCache[tab]=files.filter(x=>f.ext.test(x.name)&&!(f.exclude&&f.exclude.test(x.name)));
+    if(_ghsTab===tab) _ghStoreRender();
+  }).catch(e=>{ document.getElementById('ghs-status').textContent='⚠️ '+e.message; });
+}
+function _ghStoreRender(){
+  const tab=_ghsTab, list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
+  const q=(document.getElementById('ghs-search').value||'').toLowerCase().trim();
+  if(tab==='html'){
+    status.textContent='';
+    list.innerHTML=`<div class="ghs-row"><div class="ghs-ico">🖥️</div>
+      <div class="ghs-info"><div class="ghs-name">Plancia (frarik.html)</div><div class="ghs-sub">Versione installata: ${window.FRARIK_APP_VERSION||'?'}</div></div>
+      <div class="ghs-acts"><button class="ghs-btn ghs-btn-upd" onclick="ghCheckPlancia()">Controlla aggiornamenti</button></div></div>
+      <div class="ghs-sub" style="margin-top:8px;padding:0 4px;line-height:1.5">La plancia si aggiorna da sola quando pubblichi una nuova versione: arriva una notifica informativa. Qui puoi forzare il controllo.</div>`;
+    return;
+  }
+  const g=_ghCfg();
+  let files=(_ghsCache[tab]||[]).slice();
+  if(q) files=files.filter(f=>f.name.toLowerCase().includes(q));
+  status.textContent=(_ghsCache[tab]||[]).length+' file'+(q?(' · '+files.length+' trovati'):'');
+  if(!files.length){ list.innerHTML=`<div class="ghs-empty">${q?'Nessun risultato per "'+eh(q)+'"':'Nessun file in questa cartella su GitHub'}</div>`; return; }
+  const ico=_GHS_FOLDERS[tab].ico;
+  list.innerHTML=files.sort((a,b)=>a.name.localeCompare(b.name)).map(f=>{
+    const nm=f.name.replace(/\.(js|ya?ml)$/i,'');
+    let acts;
+    if(tab==='js'){
+      const known=g.shas[f.name];
+      if(known===f.sha) acts=`<button class="ghs-btn ghs-btn-ok">✓ Installata</button>`;
+      else if(known) acts=`<button class="ghs-btn ghs-btn-upd" onclick="_ghsInstall('${encodeURIComponent(f.name)}')">↻ Aggiorna</button>`;
+      else acts=`<button class="ghs-btn ghs-btn-inst" onclick="_ghsInstall('${encodeURIComponent(f.name)}')">⬇️ Installa</button>`;
+    } else {
+      acts=`<button class="ghs-btn ghs-btn-cp" onclick="_ghsCopy('${encodeURIComponent(f.name)}')">📋 Copia</button><button class="ghs-btn ghs-btn-cp" onclick="_ghsDownload('${encodeURIComponent(f.name)}')">⬇️</button>`;
+    }
+    return `<div class="ghs-row"><div class="ghs-ico">${ico}</div><div class="ghs-info"><div class="ghs-name">${eh(nm)}</div><div class="ghs-sub">${eh(f.name)}</div></div><div class="ghs-acts">${acts}</div></div>`;
+  }).join('');
+}
+function _ghsFind(name){ name=decodeURIComponent(name); return (_ghsCache[_ghsTab]||[]).find(f=>f.name===name); }
+async function _ghsInstall(name){
+  const f=_ghsFind(name); if(!f) return;
+  showToast('⬇️ Installo '+f.name+'…');
+  try{
+    await _ghInstallFile(f); saveCfg(); _haSaveCfg(); renderDash();
+    if(typeof _jsStoreRenderList==='function') _jsStoreRenderList();
+    if(typeof _epRenderJsStore==='function') _epRenderJsStore();
+    showToast('✅ '+f.name+' installata'); _ghStoreRender();
+  }catch(e){ showToast('⚠️ Errore: '+e.message); }
+}
+async function _ghsCopy(name){
+  const f=_ghsFind(name); if(!f) return;
+  let txt; try{ txt=await _ghDownload(f); }catch(e){ showToast('⚠️ '+e.message); return; }
+  if(navigator.clipboard && window.isSecureContext){
+    try{ await navigator.clipboard.writeText(txt); showToast('📋 "'+f.name+'" copiata negli appunti'); return; }catch(e){}
+  }
+  // fallback per HTTP locale (contesto non sicuro): textarea + execCommand
+  try{
+    const ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.top='-1000px'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.focus(); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    showToast('📋 "'+f.name+'" copiata negli appunti');
+  }catch(e){ showToast('⚠️ Copia non riuscita — usa ⬇️ per scaricare il file'); }
+}
+async function _ghsDownload(name){
+  const f=_ghsFind(name); if(!f) return;
+  try{ const txt=await _ghDownload(f); const b=new Blob([txt],{type:'text/plain'}); const u=URL.createObjectURL(b);
+    const a=document.createElement('a'); a.href=u; a.download=f.name; a.click(); setTimeout(()=>URL.revokeObjectURL(u),1000);
+    showToast('⬇️ Scarico '+f.name);
+  }catch(e){ showToast('⚠️ Download non riuscito: '+e.message); }
+}
+/* Controllo manuale plancia con messaggio esplicito (per la sezione Plancia dello store) */
+async function ghCheckPlancia(){
+  const cur=window.FRARIK_APP_VERSION||0;
+  showToast('🔍 Controllo plancia su GitHub… (tua: '+cur+')');
+  let r; try{ r=await fetch(APP_REPO_RAW+'?_='+Date.now(),{cache:'no-store'}); }
+  catch(e){ showToast('❌ Impossibile raggiungere GitHub (rete)'); return; }
+  if(!r.ok){ showToast('⚠️ GitHub ha risposto HTTP '+r.status); return; }
+  const html=await r.text();
+  const m=/FRARIK_APP_VERSION\s*=\s*(\d+)/.exec(html);
+  const rv=m?parseInt(m[1],10):0;
+  if(rv>cur){ showToast('📥 Trovata versione '+rv+', aggiorno…'); _appUpdateCheck(); }
+  else if(rv===cur) showToast('✅ Plancia già aggiornata (versione '+cur+')');
+  else showToast('ℹ️ La tua versione ('+cur+') è più recente di GitHub ('+rv+')');
 }
 function _ghSchedule(){
   clearInterval(_ghTimer);
@@ -3577,7 +3748,16 @@ async function _appUpdateCheck(){
     const rv=parseInt(m[1],10);
     if(rv>(window.FRARIK_APP_VERSION||0) && html.length>200000 && html.indexOf('</html>')>-1 && html.indexOf('</style>')>-1 && html.indexOf('</'+'script>')>-1){
       _appUpdHtml=html; _appUpdVer=rv;
-      try{ localStorage.setItem('frarik_app_html',html); localStorage.setItem('frarik_app_ver',String(rv)); localStorage.setItem('frarik_app_ts',String(Date.now())); }catch(e){}
+      // AUTO-AGGIORNAMENTO plancia (richiesta utente: solo informativo, niente conferma).
+      // Salva la nuova versione, segna la notifica post-reload "aggiornata alla versione X", poi ricarica.
+      try{
+        localStorage.setItem('frarik_app_html',html);
+        localStorage.setItem('frarik_app_ver',String(rv));
+        localStorage.setItem('frarik_app_ts',String(Date.now()));
+        localStorage.setItem('frarik_app_pending_notify',String(rv));
+      }catch(e){}
+      showToast('📥 Plancia aggiornata alla versione '+rv+' — ricarico…');
+      setTimeout(()=>location.reload(),1800);
     }
   }catch(e){}
 }
@@ -5312,11 +5492,14 @@ function buildCard(card){
       <div class="card-inner">${inner}</div>
       <div class="hbar-ctrl">
         <button class="ovb ovb-edit" onclick="openCM('${card.id}')" title="Modifica">✏️</button>
+        <button class="ovb ovb-dup"  onclick="dupCard('${card.id}')" title="Duplica">⧉</button>
+        <button class="ovb ovb-cpy"  onclick="copyCard('${card.id}')" title="Copia">📋</button>
+        <button class="ovb ovb-cut"  onclick="cutCard('${card.id}')" title="Taglia">✂️</button>
         <button class="ovb ovb-del"  onclick="delCard('${card.id}')" title="Elimina">🗑</button>
       </div>
       <div class="resize-handle" id="rh-${card.id}"></div>`;
     el.draggable=true;
-    el.addEventListener('dragstart',e=>{ if(!editMode){ e.preventDefault(); showToast('✏️ Abilita la modalità modifica per spostare le card'); return; } dragSrc=card.id; el.style.opacity='.4'; e.dataTransfer.effectAllowed='move'; });
+    el.addEventListener('dragstart',e=>{ if(e.target.closest('.hbar-ctrl')){ e.preventDefault(); return; } if(!editMode){ e.preventDefault(); showToast('✏️ Abilita la modalità modifica per spostare le card'); return; } dragSrc=card.id; el.style.opacity='.4'; e.dataTransfer.effectAllowed='move'; });
     el.addEventListener('dragend',()=>{ el.style.opacity='1'; dragSrc=null; });
     el.addEventListener('dragover',e=>{ if(dragSrc&&dragSrc!==card.id){ e.preventDefault(); el.classList.add('dov'); }});
     el.addEventListener('dragleave',()=>el.classList.remove('dov'));
@@ -5331,7 +5514,7 @@ function buildCard(card){
     el.style.cssText+='padding:0;cursor:default;';
     el.innerHTML=`
       ${inner}
-      <div class="card-ov" style="z-index:10">
+      <div class="card-ov" style="z-index:30">
         <div class="ov-row">
           <button class="ovb ovb-dup"  onclick="dupCard('${card.id}')" title="Duplica">⧉</button>
           <button class="ovb ovb-cpy"  onclick="copyCard('${card.id}')" title="Copia">📋</button>
@@ -5355,7 +5538,7 @@ function buildCard(card){
   if(t==='weather'||t==='weather-forecast'){
     el.innerHTML=`
       ${inner}${_renderCardBadgesHTML(card)}
-      <div class="card-ov" style="z-index:10">
+      <div class="card-ov" style="z-index:30">
         <div class="ov-row">
           <button class="ovb ovb-edit" onclick="openCM('${card.id}')" title="Modifica">✏️</button>
           <button class="ovb ovb-dup"  onclick="dupCard('${card.id}')" title="Duplica">⧉</button>
@@ -7855,9 +8038,25 @@ function pasteCard(){
   if(!_cardClipboard) return;
   const page=curPage();
   const newCard=JSON.parse(JSON.stringify(_cardClipboard));
-  newCard.id=uid(); _assignSection(page,newCard);
+  newCard.id=uid();
+  delete newCard.secId; delete newCard.secCol; delete newCard.secOrder;
+  _assignSection(page,newCard);
   page.cards.push(newCard);
   saveCfg(); renderDash(); openCM(newCard.id);
+}
+/* Incolla la card degli appunti in una colonna PRECISA (dal menu "+ Card"). Non riapre la config. */
+function pasteCardTo(secId, col){
+  if(!_cardClipboard){ showToast('📋 Nessuna card negli appunti'); return; }
+  const page=curPage();
+  const newCard=JSON.parse(JSON.stringify(_cardClipboard));
+  newCard.id=uid();
+  // azzera la posizione vecchia, altrimenti _assignSection la rimette nella colonna originale
+  delete newCard.secId; delete newCard.secCol; delete newCard.secOrder;
+  _pendingDropSec=secId; _pendingDropCol=col;
+  _assignSection(page,newCard);
+  page.cards.push(newCard);
+  saveCfg(); renderDash();
+  showToast(`📋 "${newCard.label||newCard.type}" incollata!`);
 }
 
 /* ═══ TOAST ═══ */
@@ -10081,6 +10280,14 @@ async function _haLocalCheck(){
 
 /* Controllo aggiornamento plancia in background (salva silenziosamente in localStorage) */
 try{ _appUpdSchedule(); setTimeout(()=>{ try{ _appUpdateCheck(); }catch(e){} }, 2500); }catch(e){}
+/* Se la plancia è appena stata auto-aggiornata, mostra la notifica informativa "aggiornata alla versione X" */
+try{
+  var _pn=parseInt(localStorage.getItem('frarik_app_pending_notify')||'0',10);
+  if(_pn && _pn<=(window.FRARIK_APP_VERSION||0)){
+    localStorage.removeItem('frarik_app_pending_notify');
+    setTimeout(()=>{ try{ _ntfPushLog('✅ Plancia aggiornata','La plancia è stata aggiornata alla versione '+(window.FRARIK_APP_VERSION||''),'✅'); }catch(e){} }, 1500);
+  }
+}catch(e){}
 /* Controllo versione HA locale al primo caricamento (dopo 3s, per non rallentare l'avvio) */
 try{ setTimeout(()=>{ try{ _haLocalCheck(); }catch(e){} }, 3000); }catch(e){}
 try{ var _vl=document.getElementById('ep-ver-label'); if(_vl) _vl.textContent=(window.FRARIK_APP_VERSION||'?'); }catch(e){}
@@ -11116,15 +11323,9 @@ function renderNotifCenter(){
     </div>`;
   }).join('');
 }
-/* clic diretto sulla notifica per applicare l'aggiornamento → la notifica viene RIMOSSA dal pannello */
+/* clic sulla notifica card → chiede conferma e aggiorna (la notifica si rimuove solo dopo conferma) */
 function _ntfAction(key){
-  _ntfLog=_ntfLog.filter(n=>n.action!==key);   // rimuovi la notifica cliccata
-  _ntfSaveLog(); _ntfUpdateBell(); renderNotifCenter();
-  if(key==='gh'){
-    closeNotifCenter();
-    if(_ghPending&&_ghPending.length) _ghInstallAll();
-    else { showToast('🔄 Controllo aggiornamenti card…'); _ghCheck(true).then(()=>{ if(_ghPending.length) _ghInstallAll(); else showToast('✅ Card già aggiornate'); }); }
-  }
+  if(key==='gh'){ _ghAskInstall(); }
 }
 function toggleNotifCenter(ev){
   if(ev) ev.stopPropagation();
@@ -11660,7 +11861,7 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
 </div>
 
 <!-- Notifica aggiornamenti card da GitHub -->
-<div id="gh-notif" onclick="_ghInstallAll()" title="Clicca per aggiornare le card">
+<div id="gh-notif" onclick="_ghAskInstall()" title="Clicca per aggiornare le card">
   <span style="font-size:15px">🔄</span>
   <span id="gh-notif-txt" style="flex:1">Aggiornamenti card disponibili</span>
   <button onclick="event.stopPropagation();_ghDismiss()" title="Ignora" style="background:rgba(255,255,255,.12);border:none;color:#fff;width:22px;height:22px;border-radius:6px;cursor:pointer;font-size:11px">✕</button>
@@ -11780,6 +11981,24 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
           <button onclick="jsStoreDownloadTemplate()" style="margin-top:8px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.35);color:#a5b4fc;border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer">⬇️ Scarica template.js</button>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- STORE GITHUB (a sezioni + ricerca) -->
+<div class="mbg off" id="gh-store-modal">
+  <div class="mbox" style="max-width:680px;width:96vw">
+    <div class="mhdr"><span class="mtitle">🛒 Store da GitHub</span><button class="mx" onclick="closeGhStore()">✕</button></div>
+    <div class="fscroll" style="padding:14px 16px">
+      <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+        <button class="jsst-tab on" id="ghs-tab-js"   onclick="ghStoreTab('js')">⚡ Card JS</button>
+        <button class="jsst-tab"    id="ghs-tab-yaml" onclick="ghStoreTab('yaml')">📄 Card YAML</button>
+        <button class="jsst-tab"    id="ghs-tab-pkg"  onclick="ghStoreTab('pkg')">📦 Pacchetti</button>
+        <button class="jsst-tab"    id="ghs-tab-html" onclick="ghStoreTab('html')">🖥️ Plancia</button>
+      </div>
+      <input id="ghs-search" class="ghs-search" placeholder="🔍 Cerca per nome…" oninput="_ghStoreRender()" autocomplete="off">
+      <div id="ghs-status" style="font-size:11px;color:var(--muted);margin:8px 2px;min-height:16px"></div>
+      <div id="ghs-list"></div>
     </div>
   </div>
 </div>
