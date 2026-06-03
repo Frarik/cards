@@ -7,7 +7,7 @@
 <script>
 /* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260603053;
+window.FRARIK_APP_VERSION = 20260603060;
 /* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
    (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
@@ -3575,7 +3575,7 @@ async function _appUpdateCheck(){
       _appUpdHtml=html; _appUpdVer=rv;
       try{ localStorage.setItem('frarik_app_html',html); localStorage.setItem('frarik_app_ver',String(rv)); }catch(e){}
       if(_appUpdVer!==parseInt(localStorage.getItem('frarik_app_notified')||'0',10)){
-        try{ _ntfPushLog('📥 Dashboard aggiornata','La dashboard è stata aggiornata all'ultima versione','📥','app'); }catch(e){}
+        try{ _ntfPushLog('📥 Dashboard aggiornata','La dashboard è stata aggiornata allu2019ultima versione','📥','app'); }catch(e){}
         try{ localStorage.setItem('frarik_app_notified',String(_appUpdVer)); }catch(e){}
       }
     }
@@ -3595,6 +3595,7 @@ async function appCheckNow(){
   const rv=parseInt(m[1],10);
   if(rv>cur && html.length>5000 && html.indexOf('</html>')>-1){
     _appUpdHtml=html; _appUpdVer=rv;
+    const b=document.getElementById('app-update-notif'); if(b) b.classList.add('on');
     try{ _ntfPushLog('📥 Aggiornamento plancia','Nuova versione '+rv+' disponibile — clicca per aggiornare','📥','app'); }catch(e){}
     if(confirm('🎉 Trovato aggiornamento!\n\nVersione su GitHub: '+rv+'\nLa tua versione: '+cur+'\n\nVuoi aggiornare adesso?')){ applyAppUpdate(); }
   } else if(rv===cur){
@@ -3609,6 +3610,7 @@ function applyAppUpdate(){
   showToast('📥 Aggiorno la plancia…');
   setTimeout(()=>location.reload(),500);
 }
+function _appUpdDismiss(){ const b=document.getElementById('app-update-notif'); if(b) b.classList.remove('on'); }
 function _appUpdSchedule(){
   clearInterval(_appUpdTimer);
   _appUpdTimer=setInterval(()=>{ if(!document.hidden) _appUpdateCheck(); }, 30*60*1000);  // ogni 30 min
