@@ -7,7 +7,7 @@
 <script>
 /* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260603051;
+window.FRARIK_APP_VERSION = 20260603052;
 /* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
    (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
@@ -3573,8 +3573,9 @@ async function _appUpdateCheck(){
     const rv=parseInt(m[1],10);
     if(rv>(window.FRARIK_APP_VERSION||0) && html.length>5000 && html.indexOf('</html>')>-1){
       _appUpdHtml=html; _appUpdVer=rv;
+      try{ localStorage.setItem('frarik_app_html',html); localStorage.setItem('frarik_app_ver',String(rv)); }catch(e){}
       if(_appUpdVer!==parseInt(localStorage.getItem('frarik_app_notified')||'0',10)){
-        try{ _ntfPushLog('📥 Dashboard aggiornata','La dashboard è stata aggiornata allultima versione','📥','app'); }catch(e){}
+        try{ _ntfPushLog('📥 Dashboard aggiornata','La dashboard è stata aggiornata allu2019ultima versione','📥','app'); }catch(e){}
         try{ localStorage.setItem('frarik_app_notified',String(_appUpdVer)); }catch(e){}
       }
     }
