@@ -7,7 +7,7 @@
 <script>
 /* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260603052;
+window.FRARIK_APP_VERSION = 20260603053;
 /* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
    (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
@@ -32,7 +32,7 @@ try{ if(localStorage.getItem('ha_auth')==='1'||sessionStorage.getItem('ha_auth')
   var PROFILES = {
     // ── Profilo 1 (utente originale) ──
     'cvkvlnpaokb2r0pedlqjlq06f5zsd3fl.ui.nabu.casa': {
-      token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIxYzE0ZjkzYmJkYWQ0ZWQyOTliNDczNWRlZDVmZDY2OSIsImlhdCI6MTc4MDQxMzYzNiwiZXhwIjoyMDk1NzczNjM2fQ.JLWwWsRrrycH6jqcgims-u0SImMwyQA048mw3syY5qE',
+      token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJjOTg4OGRlYmJmNmQ0NjNiODdkNDg1OTlmZjc1ZTRjZiIsImlhdCI6MTc4MDQ0MzQ4MCwiZXhwIjoyMDk1ODAzNDgwfQ.hyz6GFhQvycih8cn2oG7djSwXWMAg6Vthd_VyX8KPcY',
       remoteUrl: 'https://cvkvlnpaokb2r0pedlqjlq06f5zsd3fl.ui.nabu.casa',
       localFallback: '192.168.1.189:8123'
     },
@@ -3575,7 +3575,7 @@ async function _appUpdateCheck(){
       _appUpdHtml=html; _appUpdVer=rv;
       try{ localStorage.setItem('frarik_app_html',html); localStorage.setItem('frarik_app_ver',String(rv)); }catch(e){}
       if(_appUpdVer!==parseInt(localStorage.getItem('frarik_app_notified')||'0',10)){
-        try{ _ntfPushLog('📥 Dashboard aggiornata','La dashboard è stata aggiornata allu2019ultima versione','📥','app'); }catch(e){}
+        try{ _ntfPushLog('📥 Dashboard aggiornata','La dashboard è stata aggiornata all'ultima versione','📥','app'); }catch(e){}
         try{ localStorage.setItem('frarik_app_notified',String(_appUpdVer)); }catch(e){}
       }
     }
@@ -3595,7 +3595,6 @@ async function appCheckNow(){
   const rv=parseInt(m[1],10);
   if(rv>cur && html.length>5000 && html.indexOf('</html>')>-1){
     _appUpdHtml=html; _appUpdVer=rv;
-    const b=document.getElementById('app-update-notif'); if(b) b.classList.add('on');
     try{ _ntfPushLog('📥 Aggiornamento plancia','Nuova versione '+rv+' disponibile — clicca per aggiornare','📥','app'); }catch(e){}
     if(confirm('🎉 Trovato aggiornamento!\n\nVersione su GitHub: '+rv+'\nLa tua versione: '+cur+'\n\nVuoi aggiornare adesso?')){ applyAppUpdate(); }
   } else if(rv===cur){
@@ -3610,7 +3609,6 @@ function applyAppUpdate(){
   showToast('📥 Aggiorno la plancia…');
   setTimeout(()=>location.reload(),500);
 }
-function _appUpdDismiss(){ const b=document.getElementById('app-update-notif'); if(b) b.classList.remove('on'); }
 function _appUpdSchedule(){
   clearInterval(_appUpdTimer);
   _appUpdTimer=setInterval(()=>{ if(!document.hidden) _appUpdateCheck(); }, 30*60*1000);  // ogni 30 min
