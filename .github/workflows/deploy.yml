@@ -7,10 +7,13 @@ on:
     paths:
       - 'frarik.html'
 
+concurrency:
+  group: deploy-frarik
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
