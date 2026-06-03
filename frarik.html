@@ -10,7 +10,7 @@
 <script>
 /* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260603500;
+window.FRARIK_APP_VERSION = 20260603600;
 /* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
    (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
@@ -131,21 +131,13 @@ body::before{
 #edit-btn{color:#4ade80;font-size:14px}
 #edit-btn.on{color:#fff;background:rgba(74,222,128,.2)}
 #kiosk-btn.on{color:#fff;background:rgba(192,132,252,.2)}
-/* Header left: clock + chips */
-#hdr-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0;overflow:hidden}
-#hdr-clock{display:flex;align-items:center;gap:5px;flex-shrink:0}
-#hdr-clock-time{display:flex;align-items:baseline;gap:0;line-height:1}
-#hdr-hh,#hdr-mm{font-size:19px;font-weight:900;color:#fff;letter-spacing:-1px}
-#hdr-sep{font-size:15px;font-weight:400;color:rgba(255,255,255,.3);margin:0 1px;animation:blink-sep 2s step-end infinite}
-@keyframes blink-sep{0%,49%{opacity:1}50%,100%{opacity:.15}}
-#hdr-date{font-size:8px;color:var(--muted);font-weight:600;letter-spacing:.3px;margin-top:1px}
-/* Header chips */
-#hdr-chips{display:flex;align-items:center;gap:5px;overflow:hidden;flex:1;min-width:0}
-.hdr-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px 3px 6px;border-radius:999px;font-size:10px;font-weight:700;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.8);white-space:nowrap;flex-shrink:0;position:relative;transition:all .15s}
-.hdr-chip:hover{border-color:rgba(255,255,255,.2)}
-#hdr-chip-add{display:none;align-items:center;justify-content:center;width:22px;height:22px;border-radius:7px;font-size:15px;line-height:1;color:rgba(255,255,255,.3);border:1px dashed rgba(255,255,255,.2);background:none;transition:all .15s;flex-shrink:0;padding:0}
-#hdr-chip-add:hover{color:var(--acc2);border-color:var(--acc)}
-body.editing #hdr-chip-add{display:inline-flex}
+/* Header left: hbar items */
+#hdr-left{display:flex;align-items:center;flex:1;min-width:0;overflow:hidden;height:100%}
+#hdr-bar-inner{flex:1;min-width:0;height:100%}
+#hdr-bar-inner .hbar-wrap{padding:0 4px}
+#hdr-bar-edit{display:none}
+body.editing #hdr-bar-edit{display:inline-flex}
+#hdr-bar-edit:hover{color:var(--acc2)!important;border-color:var(--acc)!important}
 .hclock{text-align:right}
 
 /* ═══ PAGE TABS ═══ */
@@ -2565,16 +2557,10 @@ select.ntf-field-inp option{background:#1a2035;color:#e2e8f0}
   <div id="main">
     <div id="hdr">
       <span id="conn-lbl" style="display:none">In attesa</span>
-      <!-- LEFT: clock + chips -->
+      <!-- LEFT: header-bar items (stesso sistema della card header-bar) -->
       <div id="hdr-left">
-        <div id="hdr-clock">
-          <div id="hdr-clock-time">
-            <span id="hdr-hh">--</span><span id="hdr-sep">:</span><span id="hdr-mm">--</span>
-          </div>
-          <div id="hdr-date"></div>
-        </div>
-        <div id="hdr-chips"></div>
-        <button id="hdr-chip-add" onclick="_hdrChipAdd()" title="Aggiungi chip">+</button>
+        <div class="hbar-inner" id="hdr-bar-inner" data-id="__hdrbar__"></div>
+        <button id="hdr-bar-edit" onclick="openHBM_HDR()" title="Configura elementi header" style="display:none;align-items:center;justify-content:center;width:20px;height:20px;border-radius:6px;font-size:11px;color:rgba(255,255,255,.35);border:1px dashed rgba(255,255,255,.2);background:none;flex-shrink:0;transition:all .15s"><i class="mdi mdi-pencil-outline"></i></button>
       </div>
       <!-- page-tabs rimane nel DOM per renderPageTabs() ma nascosto -->
       <div id="page-tabs" style="display:none"></div>
@@ -3334,7 +3320,7 @@ function loadCfg(){
       if(!p.theme) p.theme='dark';
       if(!p.font)  p.font='Inter';
       if(!p.footerBar) p.footerBar={enabled:false,buttons:[]};
-      if(!p.hdrChips) p.hdrChips=[];
+      if(!p.hdrBar) p.hdrBar={left:[{id:uid(),type:'clock'}],center:[],right:[]};
       return p;
     }
   }catch(e){}
@@ -3784,7 +3770,7 @@ function onMsg(m){
     } else {
       // RICONNESSIONE: la dashboard è già costruita → aggiorna i VALORI in posto, niente rebuild (niente "scatto")
       try{ (curPage().cards||[]).forEach(c=>{ try{ updateCardEl(c); }catch(e){} }); }catch(e){}
-      try{ renderBadgesAll(); renderHdrChips(); }catch(e){}
+      try{ renderBadgesAll(); }catch(e){}
     }
     _subscribeAllForecasts(); // subscribe after cfg+entities are loaded
   }
@@ -5203,6 +5189,7 @@ function startClockTick(){
     });
     document.querySelectorAll('.hbar-inner[data-id]').forEach(el=>{
       const cid=el.dataset.id;
+      if(cid==='__hdrbar__'){ el.innerHTML=hbarInner(cfg.hdrBar||{left:[],center:[],right:[]}); return; }
       const card=curPage().cards?.find(c=>c.id===cid);
       if(card) el.innerHTML=hbarInner(card);
     });
@@ -5500,7 +5487,6 @@ let _badgeVisMode='always';
 let _editBadgeIdx=null;      // null = nuovo, altrimenti indice in modifica
 
 function _getBadgeArr(){
-  if(_badgeZone==='hdrbar') return cfg.hdrChips||(cfg.hdrChips=[]);
   if(_badgeZone==='header') return curPage().headerBadges||(curPage().headerBadges=[]);
   if(_badgeZone==='footer') return curPage().footerBadges||(curPage().footerBadges=[]);
   const cid=_badgeZone.replace('card:','');
@@ -5518,14 +5504,14 @@ function openBM(zone, mode){
   modal.classList.toggle('bmod-new',_bmMode==='new');
   const alignRow=document.getElementById('bm-align');
   if(_bmMode==='new'){
-    document.getElementById('bmod-title').textContent=zone==='hdrbar'?'➕ Nuovo chip header':'🏷️ Nuovo distintivo';
+    document.getElementById('bmod-title').textContent='🏷️ Nuovo distintivo';
     if(listEl) listEl.style.display='none';
     if(addRow) addRow.style.display='none';
     if(alignRow) alignRow.style.display='none';
     modal.classList.remove('off');
     showBadgeForm();
   } else {
-    const titles={hdrbar:'Chip Header',header:'Intestazione',footer:'Piè di pagina'};
+    const titles={header:'Intestazione',footer:'Piè di pagina'};
     document.getElementById('bmod-title').textContent='🏷️ Gestione · '+(titles[zone]||(zone.startsWith('card:')?'Card':''));
     if(listEl) listEl.style.display='';
     if(addRow) addRow.style.display='';
@@ -5552,7 +5538,7 @@ function _bmSetAlign(a){
 }
 function closeBM(){
   document.getElementById('bmod').classList.add('off');
-  saveCfg(); renderBadgesAll(); if(_badgeZone==='hdrbar') renderHdrChips();
+  saveCfg(); renderBadgesAll();
   if(editingId) _updateCMBadgePreview();
   // If section editor is open, refresh its badge list
   if(!document.getElementById('sectmod').classList.contains('off')){
@@ -5599,7 +5585,7 @@ function moveBadge(i,dir){
   [arr[i],arr[j]]=[arr[j],arr[i]];
   renderBadgeList();
 }
-function delBadge(i){ _getBadgeArr().splice(i,1); saveCfg(); renderBadgeList(); if(_badgeZone==='hdrbar') renderHdrChips(); }
+function delBadge(i){ _getBadgeArr().splice(i,1); saveCfg(); renderBadgeList(); }
 
 function _fillNavPageSelect(sel){
   const s=document.getElementById('bf-navpage'); if(!s) return;
@@ -5757,7 +5743,7 @@ function saveBadgeForm(){
   hideBadgeForm();
   renderBadgeList();
   saveCfg();
-  if(_badgeZone==='hdrbar') renderHdrChips(); else renderBadgesAll();
+  renderBadgesAll();
 }
 
 /* ── Distintivi: helper colore / visibilità / azioni ── */
@@ -7064,9 +7050,19 @@ function openHBM(cardId){
   hbCancelChip();
   document.getElementById('hbmod').classList.remove('off');
 }
-function closeHBM(){ document.getElementById('hbmod').classList.add('off'); _hbCardId=null; }
+function closeHBM(){
+  document.getElementById('hbmod').classList.add('off');
+  // ripristina sezione label/colonne se era nascosta per __hdrbar__
+  const cardSect=document.getElementById('hb-label')?.closest('.sect-section');
+  if(cardSect) cardSect.style.display='';
+  _hbCardId=null;
+}
 
 function saveHBM(){
+  if(_hbCardId==='__hdrbar__'){
+    cfg.hdrBar={left:_hbChips.left,center:_hbChips.center,right:_hbChips.right};
+    saveCfg(); renderHdrChips(); closeHBM(); return;
+  }
   const card=curPage().cards.find(c=>c.id===_hbCardId); if(!card) return;
   card.label=document.getElementById('hb-label').value.trim()||'Header Personalizzato';
   card.colSpan=parseInt(document.getElementById('hb-colspan').value)||4;
@@ -10014,39 +10010,24 @@ function doLogout(){
   document.getElementById(id)?.addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
 });
 
-/* ═══ HEADER CLOCK + CHIPS ═══ */
-(function _hdrClock(){
-  const DAYS=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
-  const MONTHS=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
-  function tick(){
-    const n=new Date();
-    const hh=document.getElementById('hdr-hh'); if(hh) hh.textContent=String(n.getHours()).padStart(2,'0');
-    const mm=document.getElementById('hdr-mm'); if(mm) mm.textContent=String(n.getMinutes()).padStart(2,'0');
-    const dt=document.getElementById('hdr-date'); if(dt) dt.textContent=DAYS[n.getDay()]+' '+n.getDate()+' '+MONTHS[n.getMonth()];
-  }
-  tick(); setInterval(tick,1000);
-})();
+/* ═══ HEADER BAR (left section) ═══ */
 
 function renderHdrChips(){
-  const wrap=document.getElementById('hdr-chips'); if(!wrap) return;
-  const chips=cfg.hdrChips||[];
-  if(!chips.length){ wrap.innerHTML=''; return; }
-  wrap.innerHTML=chips.filter(b=>!editMode?_badgeVisible(b):true).map((b,i)=>{
-    if(editMode){
-      return `<div class="hbadge-wrap" style="flex-shrink:0">
-        ${_badgeItemHTML(b,'hbadge','badge-sep')}
-        <div class="hbadge-actions"><div class="hbadge-actions-inner">
-          <button class="hba-btn hba-edit" onclick="event.stopPropagation();_hdrChipEdit(${i})" title="Modifica">✏️</button>
-          <button class="hba-btn hba-del" onclick="event.stopPropagation();_hdrChipDel(${i})" title="Rimuovi">✕</button>
-        </div></div>
-      </div>`;
-    }
-    return `<span style="flex-shrink:0">${_badgeItemHTML(b,'hbadge','badge-sep')}</span>`;
-  }).join('');
+  const el=document.getElementById('hdr-bar-inner'); if(!el) return;
+  el.innerHTML=hbarInner(cfg.hdrBar||{left:[],center:[],right:[]});
 }
-function _hdrChipAdd(){ openBM('hdrbar','new'); }
-function _hdrChipEdit(i){ _badgeZone='hdrbar'; openBM('hdrbar','manage'); setTimeout(()=>editBadgeAt(i),60); }
-function _hdrChipDel(i){ if(!cfg.hdrChips) return; cfg.hdrChips.splice(i,1); saveCfg(); renderHdrChips(); }
+function openHBM_HDR(){
+  if(!cfg.hdrBar) cfg.hdrBar={left:[{id:uid(),type:'clock'}],center:[],right:[]};
+  _hbCardId='__hdrbar__';
+  _hbChips=JSON.parse(JSON.stringify(cfg.hdrBar));
+  document.getElementById('hbmod-title').textContent='⊞ Configura Header';
+  // nascondi i campi specifici della card (label, colonne, righe)
+  const cardSect=document.getElementById('hb-label')?.closest('.sect-section');
+  if(cardSect) cardSect.style.display='none';
+  hbRenderAllLists();
+  hbCancelChip();
+  document.getElementById('hbmod').classList.remove('off');
+}
 
 /* ═══ INIT ═══ */
 /* Apply saved theme and font before first render to avoid flash */
