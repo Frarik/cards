@@ -7,7 +7,7 @@
 <script>
 /* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260603108;
+window.FRARIK_APP_VERSION = 20260603110;
 /* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
    (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
@@ -1403,14 +1403,9 @@ body.kiosk .kiosk-reload-fab:hover{background:rgba(255,255,255,0.18);color:#fff}
 .ntfc-item.ntfc-action{cursor:pointer;border:1px solid rgba(99,102,241,.25);background:rgba(99,102,241,.10)}
 .ntfc-item.ntfc-action:hover{background:rgba(99,102,241,.2);border-color:rgba(99,102,241,.5)}
 .ntfc-go{align-self:center;flex-shrink:0;font-size:10px;font-weight:800;color:#a5b4fc;background:rgba(99,102,241,.2);padding:4px 8px;border-radius:8px;white-space:nowrap}
-/* Banner aggiornamento plancia (stesso stile, colore verde) */
-#gh-notif{display:none;position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:9500;
-  align-items:center;gap:10px;max-width:92vw;padding:10px 12px 10px 16px;border-radius:14px;cursor:pointer;
-  background:linear-gradient(135deg,rgba(99,102,241,.96),rgba(139,92,246,.96));color:#fff;font-size:12px;font-weight:700;
-  border:1px solid rgba(255,255,255,.18);box-shadow:0 12px 36px -8px rgba(99,102,241,.7);animation:ghIn .25s ease}
-#gh-notif.on{display:flex}
+/* Banner aggiornamento card/plancia — DISABILITATO: tutte le notifiche vanno nella campanella */
+#gh-notif{display:none!important}
 @keyframes ghIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
-#gh-notif:hover{filter:brightness(1.08)}
 /* Hide all chrome in kiosk mode */
 body.kiosk #hdr,
 body.kiosk #page-tabs,body.kiosk #page-tabs-wrap{display:none!important}
@@ -3511,24 +3506,18 @@ async function _ghCheck(force){
   if(_ghPending.length && sig!==_ghDismissedSig){
     const txt=_ghPending.length===1?('Card aggiornata: '+_ghPending[0].name.replace(/\.js$/,'')+' — clicca per aggiornare')
                                     :(_ghPending.length+' card aggiornate — clicca per aggiornare');
-    document.getElementById('gh-notif-txt').textContent=txt;
-    document.getElementById('gh-notif').classList.add('on');
-    if(sig!==_ghLastSig){ try{ _ntfPushLog('🔄 Aggiornamento card', txt, '🔄', 'gh'); }catch(e){} _ghLastSig=sig; }   // anche nel centro notifiche (cliccabile)
-  } else if(!_ghPending.length){
-    document.getElementById('gh-notif').classList.remove('on');
+    if(sig!==_ghLastSig){ try{ _ntfPushLog('🔄 Aggiornamento card', txt, '🔄', 'gh'); }catch(e){} _ghLastSig=sig; }
   }
 }
 function _ghDismiss(){
   _ghDismissedSig=_ghPending.map(f=>f.name+':'+f.sha).sort().join('|');
-  document.getElementById('gh-notif').classList.remove('on');
 }
 async function _ghInstallAll(){
-  if(!_ghPending.length){ document.getElementById('gh-notif').classList.remove('on'); return; }
+  if(!_ghPending.length){ return; }
   showToast('⬇️ Aggiorno '+_ghPending.length+' card…');
   let ok=0,err=0;
   for(const f of _ghPending.slice()){ try{ await _ghInstallFile(f); ok++; }catch(e){ err++; console.warn('[GitHub]',f.name,e.message); } }
   _ghPending=[]; _ghDismissedSig='';
-  document.getElementById('gh-notif').classList.remove('on');
   saveCfg(); _haSaveCfg();
   renderDash();
   if(typeof _jsStoreRenderList==='function') _jsStoreRenderList();
@@ -3547,7 +3536,7 @@ async function _ghImportAll(){
   renderDash();
   if(typeof _jsStoreRenderList==='function') _jsStoreRenderList();
   if(typeof _epRenderJsStore==='function') _epRenderJsStore();
-  _ghPending=[]; document.getElementById('gh-notif').classList.remove('on');
+  _ghPending=[]; 
   _ghStatus('✅ '+ok+' card importate'+(err?(' · '+err+' errori'):''));
   showToast('✅ '+ok+' card importate da GitHub');
 }
@@ -3575,8 +3564,10 @@ async function _appUpdateCheck(){
       _appUpdHtml=html; _appUpdVer=rv;
       try{ localStorage.setItem('frarik_app_html',html); localStorage.setItem('frarik_app_ver',String(rv)); }catch(e){}
       if(_appUpdVer!==parseInt(localStorage.getItem('frarik_app_notified')||'0',10)){
-        try{ _ntfPushLog('📥 Dashboard aggiornata','La dashboard è stata aggiornata allu2019ultima versione','📥','app'); }catch(e){}
+        try{ _ntfPushLog('📥 Plancia aggiornata','Nuova versione '+rv+' installata — la pagina si ricaricherà tra pochi secondi','📥','app'); }catch(e){}
         try{ localStorage.setItem('frarik_app_notified',String(_appUpdVer)); }catch(e){}
+        // Ricarica automatica dopo 3 secondi (obbligatoria e istantanea)
+        setTimeout(()=>location.reload(), 3000);
       }
     }
   }catch(e){}
@@ -3595,9 +3586,9 @@ async function appCheckNow(){
   const rv=parseInt(m[1],10);
   if(rv>cur && html.length>5000 && html.indexOf('</html>')>-1){
     _appUpdHtml=html; _appUpdVer=rv;
-    const b=document.getElementById('app-update-notif'); if(b) b.classList.add('on');
-    try{ _ntfPushLog('📥 Aggiornamento plancia','Nuova versione '+rv+' disponibile — clicca per aggiornare','📥','app'); }catch(e){}
-    if(confirm('🎉 Trovato aggiornamento!\n\nVersione su GitHub: '+rv+'\nLa tua versione: '+cur+'\n\nVuoi aggiornare adesso?')){ applyAppUpdate(); }
+    try{ _ntfPushLog('📥 Aggiornamento plancia','Nuova versione '+rv+' trovata — aggiornamento in corso…','📥','app'); }catch(e){}
+    showToast('📥 Nuova versione '+rv+' trovata — aggiorno…');
+    applyAppUpdate();
   } else if(rv===cur){
     showToast('✅ Sei già aggiornato (versione '+cur+')');
   } else {
@@ -11099,8 +11090,7 @@ function _ntfAction(key){
     if(_ghPending&&_ghPending.length) _ghInstallAll();
     else { showToast('🔄 Controllo aggiornamenti card…'); _ghCheck(true).then(()=>{ if(_ghPending.length) _ghInstallAll(); else showToast('✅ Card già aggiornate'); }); }
   } else if(key==='app'){
-    if(_appUpdHtml){ applyAppUpdate(); }
-    else { showToast('📥 Controllo aggiornamento plancia…'); _appUpdateCheck().then(()=>{ if(_appUpdHtml) applyAppUpdate(); else showToast('✅ Plancia già aggiornata'); }); }
+    showToast('✅ Plancia aggiornata automaticamente');
   }
 }
 function toggleNotifCenter(ev){
