@@ -20,7 +20,7 @@ jobs:
 
       # ── Aspetta che GitHub aggiorni la CDN ──
       - name: Attendi propagazione CDN
-        run: sleep 15
+        run: sleep 30
 
       # ── Aggiorna HA Frarik (3 tentativi) ──
       - name: Aggiorna HA Frarik
