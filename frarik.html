@@ -10,7 +10,7 @@
 <script>
 /* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260604040;
+window.FRARIK_APP_VERSION = 20260604110;
 /* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
    (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
@@ -613,6 +613,17 @@ body.editing .sect-add-row:hover{filter:brightness(1.15);transform:translateY(-1
   .mbox{width:95vw !important;max-width:95vw !important}
   #epanel.open .ep-hdr,#epanel.open #ep-body,#epanel.open .ep-footer{max-width:100% !important}
   #notif-center{right:6px;left:6px;width:auto}
+  /* MOBILE: le icone dell'header spariscono e finiscono nel FAB a destra; in alto restano solo chip/orologio. */
+  #mfab{display:flex!important}
+  #hdr>#conn-wrap,#hdr>#views-btn,#hdr>#notif-bell,#hdr>#kiosk-btn,#hdr>#reload-btn,#hdr>#settings-btn,#hdr>#hasidebar-btn,#hdr>#edit-btn{display:none!important}
+  #hdr{height:auto!important;min-height:46px;flex-wrap:wrap;padding:6px 10px;row-gap:6px;align-items:center}
+  #hdr-left{flex:1 1 100%;width:100%;overflow:visible!important;height:auto}
+  #hdr-bar-inner{height:auto;flex:1}
+  #hdr-bar-inner .hbar-clk-time{font-size:17px!important;letter-spacing:-.5px}
+  .hbar-sect{flex-wrap:wrap!important;overflow:visible!important}
+  .hbar-left,.hbar-right{overflow:visible!important}
+  .hbar-wrap{flex-wrap:wrap;padding:2px 0!important}
+  .view-badges-row{flex-wrap:wrap!important}
 }
 body.mobcol-always .dash-section{grid-template-columns:1fr !important}
 body.mobcol-always .dash-section>*{grid-column:1 / -1 !important}
@@ -1466,6 +1477,7 @@ body.kiosk .kiosk-reload-fab:hover{background:rgba(255,255,255,0.18);color:#fff}
    (Prima l'header era nascosto e i pulsanti flottanti venivano coperti dalle card.) */
 body.kiosk #page-tabs,body.kiosk #page-tabs-wrap,body.kiosk #conn-lbl{display:none!important}
 body.kiosk #hdr > #conn-wrap,
+body.kiosk #hdr > #views-btn,
 body.kiosk #hdr > #notif-bell,
 body.kiosk #hdr > #settings-btn,
 body.kiosk #hdr > #hasidebar-btn,
@@ -1743,6 +1755,35 @@ select.ntf-field-inp option{background:#1a2035;color:#e2e8f0}
 .ep-picker-group-lbl{padding:8px 10px 4px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.25)}
 .ep-picker-item{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:11px;cursor:pointer;transition:background .1s;margin-bottom:2px}
 .ep-picker-item:hover,.ep-picker-item:focus{background:rgba(99,102,241,.18);outline:none}
+/* Autocompletamento entità inline */
+.entac-it{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:8px;cursor:pointer}
+.entac-it:hover{background:rgba(99,102,241,.22)}
+.entac-nm{display:block;font-size:12px;font-weight:600;color:#e8ebf5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.entac-eid{display:block;font-size:10px;color:rgba(148,163,184,.7);font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Menù a tendina VISTE (icona header) */
+.views-menu{position:fixed;z-index:9600;min-width:210px;max-width:280px;max-height:70vh;overflow-y:auto;background:var(--panel,#141a2e);border:1px solid var(--bd2,rgba(255,255,255,.14));border-radius:14px;box-shadow:0 18px 50px rgba(0,0,0,.6);padding:6px;animation:ghIn .16s ease;scrollbar-width:thin}
+.vm-hdr{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:6px 8px 4px}
+.vm-item{display:flex;align-items:center;gap:4px;width:100%;border-radius:9px;transition:background .12s}
+.vm-item:hover{background:rgba(255,255,255,.07)}
+.vm-item.on{background:rgba(99,102,241,.18)}
+.vm-go{flex:1;min-width:0;display:flex;align-items:center;gap:9px;padding:9px 10px;cursor:pointer;color:#e2e8f0;font-size:13px;font-weight:600}
+.vm-item.on .vm-go{color:#a5b4fc}
+.vm-edit{flex-shrink:0;width:30px;height:30px;margin-right:5px;border:none;background:rgba(255,255,255,.06);border-radius:7px;color:var(--muted);cursor:pointer;font-size:12px}
+.vm-edit:hover{background:rgba(255,255,255,.15);color:#fff}
+.vm-ico{flex-shrink:0;display:flex;align-items:center;justify-content:center;width:20px}
+.vm-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vm-chk{flex-shrink:0;color:#4ade80;font-weight:800}
+.vm-sep{height:1px;background:rgba(255,255,255,.08);margin:5px 4px}
+.vm-add{display:flex;align-items:center;gap:8px;width:100%;padding:9px 10px;border:1px solid rgba(74,222,128,.3);background:rgba(74,222,128,.1);border-radius:9px;color:#86efac;font-size:12px;font-weight:700;cursor:pointer;transition:background .12s}
+.vm-add:hover{background:rgba(74,222,128,.22)}
+/* Pulsante menù mobile DENTRO la barra in alto (solo su cellulare): contiene tutte le icone spostate */
+#mfab{display:none;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;flex-shrink:0;padding:0;cursor:pointer;font-size:20px;color:#fff;border:1px solid rgba(255,255,255,.22);background:linear-gradient(135deg,rgba(99,102,241,.92),rgba(139,92,246,.92))}
+#mfab:active{filter:brightness(1.12)}
+.mfab-menu{position:fixed;z-index:12001;min-width:206px;max-height:84vh;overflow-y:auto;background:var(--panel,#141a2e);border:1px solid var(--bd2,rgba(255,255,255,.14));border-radius:14px;box-shadow:0 18px 50px rgba(0,0,0,.65);padding:6px;animation:ghIn .16s ease;scrollbar-width:thin}
+.mfab-item{display:flex;align-items:center;gap:11px;width:100%;padding:11px 12px;border:none;background:none;border-radius:10px;color:#e2e8f0;font-size:13px;font-weight:600;cursor:pointer;text-align:left}
+.mfab-item:hover,.mfab-item:active{background:rgba(255,255,255,.08)}
+.mfab-ic{flex-shrink:0;width:24px;text-align:center;font-size:17px}
+.mfab-item.danger{color:#f87171}
 .ep-picker-ico{font-size:18px;width:28px;text-align:center;flex-shrink:0;line-height:1}
 .ep-picker-info{flex:1;min-width:0}
 .ep-picker-name{font-size:12px;font-weight:600;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -2196,7 +2237,7 @@ select.ntf-field-inp option{background:#1a2035;color:#e2e8f0}
         <div id="hbf-entity-row">
           <div class="flbl">Entità Home Assistant</div>
           <div class="finp-row" style="margin-bottom:6px">
-            <input class="finp" id="hbf-entity" type="text" placeholder="es. lock.porta, alarm_control_panel.casa" oninput="hbAutoFill()">
+            <input class="finp entac" id="hbf-entity" type="text" placeholder="es. lock.porta, alarm_control_panel.casa" oninput="hbAutoFill()">
             <button class="fbtn" onclick="browseField('hbf-entity')" title="Cerca entità">🔍</button>
           </div>
           <!-- hint auto-rilevato -->
@@ -2466,7 +2507,7 @@ select.ntf-field-inp option{background:#1a2035;color:#e2e8f0}
         <div id="fbf-climate-row">
           <div class="flbl">Entità clima</div>
           <div class="finp-row" style="margin-bottom:6px">
-            <input class="finp" id="fbf-entity" type="text" placeholder="es. climate.soggiorno">
+            <input class="finp entac" id="fbf-entity" type="text" placeholder="es. climate.soggiorno">
             <button class="fbtn" onclick="browseField('fbf-entity')">🔍</button>
           </div>
           <div style="display:flex;gap:8px;margin-bottom:8px">
@@ -2601,6 +2642,7 @@ select.ntf-field-inp option{background:#1a2035;color:#e2e8f0}
       <div id="page-tabs" style="display:none"></div>
       <!-- RIGHT: icone colorate -->
       <div id="conn-wrap" title="Stato connessione — clicca per riavviare Home Assistant" onclick="confirmRestartHA()"><div id="conn-dot"></div></div>
+      <button class="hbtn" id="views-btn" onclick="toggleViewsMenu(event)" title="Viste / pagine"><i class="mdi mdi-view-dashboard"></i></button>
       <button class="hbtn" id="notif-bell" onclick="toggleNotifCenter(event)" title="Notifiche" style="position:relative"><i class="mdi mdi-bell"></i><span id="notif-bell-badge"></span></button>
       <button class="hbtn" id="kiosk-btn" onclick="toggleKiosk()" title="Modalità Kiosk"><i class="mdi mdi-fullscreen"></i></button>
       <button class="hbtn" id="reload-btn" onclick="hardReload()" title="Svuota cache e ricarica"><i class="mdi mdi-refresh"></i></button>
@@ -5188,11 +5230,6 @@ function renderDash(){
   // Mostra sempre le sezioni (con placeholder "Trascina qui") — nasconde empty solo se non ci sono sezioni
   if(page.sections&&page.sections.length){
     empty.style.display='none';
-    // Banner istruzioni (stile Oikos) — solo in modifica via CSS
-    const hint=document.createElement('div');
-    hint.className='sect-hint';
-    hint.innerHTML='↔ Trascina le card tra colonne e righe · sposta le righe · ←→ allarga le colonne';
-    sectionsEl.appendChild(hint);
     page.sections.forEach(sec=>{
       const secEl=_buildSectionEl(sec,page);
       sectionsEl.appendChild(secEl);
@@ -9344,7 +9381,101 @@ function setActivePage(idx){
   }
 }
 
-function openTM(){ document.getElementById('tmod').classList.remove('off'); }
+/* ═══ MENÙ A TENDINA VISTE (icona header, disponibile in tutte le viste) ═══ */
+function toggleViewsMenu(ev){
+  if(ev) ev.stopPropagation();
+  if(document.getElementById('views-menu')){ closeViewsMenu(); return; }
+  const menu=document.createElement('div');
+  menu.id='views-menu'; menu.className='views-menu';
+  const items=(cfg.pages||[]).map((p,i)=>`<div class="vm-item${i===cfg.activePage?' on':''}">
+      <div class="vm-go" onclick="closeViewsMenu();setActivePage(${i})">
+        <span class="vm-ico">${_renderIcon(p.icon||'📄',16)}</span>
+        <span class="vm-name">${eh(p.name||('Vista '+(i+1)))}</span>
+        ${i===cfg.activePage?'<span class="vm-chk">✓</span>':''}
+      </div>
+      <button class="vm-edit" onclick="event.stopPropagation();editView(${i})" title="Rinomina / icona / elimina">✏️</button>
+    </div>`).join('');
+  menu.innerHTML=`<div class="vm-hdr">Viste (${(cfg.pages||[]).length})</div>${items}<div class="vm-sep"></div>`+
+    `<button class="vm-add" onclick="closeViewsMenu();openTM()"><i class="mdi mdi-plus"></i> Aggiungi vista</button>`;
+  document.body.appendChild(menu);
+  const btn=document.getElementById('views-btn');
+  if(btn && btn.offsetParent!==null){   // bottone visibile (desktop): posiziona sotto di esso
+    const r=btn.getBoundingClientRect();
+    menu.style.top=(r.bottom+6)+'px';
+    menu.style.right=Math.max(8,(window.innerWidth-r.right))+'px';
+  } else {                               // bottone nascosto (mobile, aperto dal FAB): posiziona a destra in alto
+    menu.style.top='60px'; menu.style.right='14px';
+  }
+  setTimeout(()=>document.addEventListener('click',_viewsOutside),0);
+}
+function closeViewsMenu(){ const m=document.getElementById('views-menu'); if(m) m.remove(); document.removeEventListener('click',_viewsOutside); }
+function _viewsOutside(e){ const m=document.getElementById('views-menu'),b=document.getElementById('views-btn'); if(m&&!m.contains(e.target)&&b&&!b.contains(e.target)) closeViewsMenu(); }
+/* ═══ FAB MOBILE: un'unica icona a destra con dentro tutte le azioni dell'header ═══ */
+function toggleMobileMenu(ev){
+  if(ev) ev.stopPropagation();
+  if(document.getElementById('mfab-menu')){ closeMobileMenu(); return; }
+  closeViewsMenu(); closeNotifCenter && closeNotifCenter();
+  const menu=document.createElement('div');
+  menu.id='mfab-menu'; menu.className='mfab-menu';
+  const it=(ico,lbl,fn,cls='')=>`<button class="mfab-item ${cls}" onclick="closeMobileMenu();${fn}"><span class="mfab-ic">${ico}</span><span>${lbl}</span></button>`;
+  const editing=document.body.classList.contains('editing');
+  const kioskOn=document.body.classList.contains('kiosk');
+  menu.innerHTML=
+    it('<i class="mdi mdi-view-dashboard"></i>','Viste','_mfabViews()')+
+    it('<i class="mdi mdi-bell"></i>','Notifiche','toggleNotifCenter()')+
+    it('<i class="mdi mdi-pencil"></i>',editing?'Esci da modifica':'Modifica','toggleEdit()')+
+    it('<i class="mdi mdi-fullscreen"></i>',kioskOn?'Esci da Kiosk':'Kiosk','toggleKiosk()')+
+    it('<i class="mdi mdi-refresh"></i>','Ricarica','hardReload()')+
+    it('<i class="mdi mdi-cog"></i>','Impostazioni','openOikSettings()')+
+    it('<i class="mdi mdi-menu"></i>','Barra laterale HA','toggleHASidebar()')+
+    it('<i class="mdi mdi-restart"></i>','Riavvia Home Assistant','confirmRestartHA()','danger');
+  document.body.appendChild(menu);
+  setTimeout(()=>document.addEventListener('click',_mfabOutside),0);
+}
+function closeMobileMenu(){ const m=document.getElementById('mfab-menu'); if(m) m.remove(); document.removeEventListener('click',_mfabOutside); }
+function _mfabOutside(e){ const m=document.getElementById('mfab-menu'),b=document.getElementById('mfab'); if(m&&!m.contains(e.target)&&b&&!b.contains(e.target)) closeMobileMenu(); }
+function _mfabViews(){ setTimeout(()=>toggleViewsMenu(),10); }
+/* Editor di una vista: nome, icona, elimina */
+let _vmodIdx=null;
+function editView(idx){
+  closeViewsMenu();
+  const p=cfg.pages[idx]; if(!p) return;
+  _vmodIdx=idx;
+  document.getElementById('vmod-name').value=p.name||'';
+  document.getElementById('vmod-ico').value=p.icon||'';
+  document.getElementById('vmod-del').style.display=cfg.pages.length>1?'':'none';
+  document.getElementById('vmod').classList.remove('off');
+  setTimeout(()=>{ const n=document.getElementById('vmod-name'); if(n){ n.focus(); n.select(); } },80);
+}
+function closeViewEdit(){ document.getElementById('vmod').classList.add('off'); _vmodIdx=null; }
+function saveViewEdit(){
+  const p=cfg.pages[_vmodIdx]; if(!p){ closeViewEdit(); return; }
+  const nm=(document.getElementById('vmod-name').value||'').trim();
+  const ic=(document.getElementById('vmod-ico').value||'').trim();
+  p.name=nm||p.name||'Vista';
+  p.icon=ic||p.icon||'📄';
+  saveCfg(); renderDash(); try{ renderPageTabs(); }catch(e){}
+  // aggiorna i campi del pannello modifica se è la pagina corrente
+  if(_vmodIdx===cfg.activePage && editMode){ try{ document.getElementById('ep-page-name').value=p.name; document.getElementById('ep-page-ico').value=p.icon; }catch(e){} }
+  closeViewEdit(); showToast('✅ Vista aggiornata');
+}
+function deleteViewFromEdit(){
+  if(cfg.pages.length<=1){ showToast('⚠️ Non puoi eliminare l\'unica vista'); return; }
+  const idx=_vmodIdx, p=cfg.pages[idx]; if(!p) return;
+  showConfirm(`Eliminare la vista <b>${eh(p.name||'senza nome')}</b>?<br><span style="font-size:11px;opacity:.7">Verranno eliminate anche le card al suo interno.</span>`, ()=>{
+    cfg.pages.splice(idx,1);
+    cfg.activePage=Math.min(cfg.activePage,cfg.pages.length-1);
+    saveCfg(); renderDash(); try{ renderPageTabs(); }catch(e){}
+    closeViewEdit(); showToast('🗑 Vista eliminata');
+  }, 'Elimina');
+}
+/* "Aggiungi vista" crea DIRETTAMENTE una vista vuota (niente più scelta template) e ci entra in modifica */
+function addEmptyView(){
+  _createPageWithCols('vuota','Nuova vista',1);   // 1 colonna / 1 riga — poi l'utente aumenta come vuole
+  if(!editMode) toggleEdit();
+  setTimeout(()=>editView(cfg.activePage), 60);   // apri subito l'editor per nome/icona
+}
+function openTM(){ addEmptyView(); }   // alias: ogni "aggiungi vista" ora crea una vista vuota
 function closeTM(){
   document.getElementById('tmod').classList.add('off');
   // Resetta sempre allo step 1
@@ -11552,6 +11683,56 @@ function _epPickerSelect(eid){
   _epPickerClose();
 }
 
+/* ═══ AUTOCOMPLETAMENTO ENTITÀ INLINE (su tutti i campi entità delle config) ═══
+   Scrivi nel campo → sotto compare la lista filtrata di tutte le entità; clicchi e si compila.
+   Si attiva sui campi col bottone 🔍 (browseField) o con classe "entac". */
+let _entacBox=null, _entacInput=null;
+function _entacEnsure(){
+  if(_entacBox) return _entacBox;
+  _entacBox=document.createElement('div');
+  _entacBox.id='entac-box';
+  _entacBox.style.cssText='position:fixed;z-index:30000;display:none;max-height:240px;overflow-y:auto;background:#1a1f35;border:1px solid rgba(255,255,255,.15);border-radius:10px;box-shadow:0 14px 44px rgba(0,0,0,.75);min-width:220px;padding:4px;scrollbar-width:thin';
+  document.body.appendChild(_entacBox);
+  return _entacBox;
+}
+function _isEntInput(el){
+  if(!el||el.tagName!=='INPUT'||el.type==='checkbox'||el.type==='color'||el.type==='number') return false;
+  if(el.classList.contains('entac')) return true;
+  const row=el.closest('.finp-row');
+  return !!(row && row.querySelector('button[onclick*="browseField"]'));
+}
+function _entacRender(){
+  const input=_entacInput; if(!input) return;
+  const box=_entacEnsure();
+  const q=(input.value||'').toLowerCase().trim();
+  let ents=Object.keys(hs||{});
+  if(q) ents=ents.filter(e=>e.toLowerCase().includes(q)||(((ha[e]||{}).friendly_name||'').toLowerCase().includes(q)));
+  ents.sort((a,b)=>(((ha[a]||{}).friendly_name)||a).localeCompare(((ha[b]||{}).friendly_name)||b,'it'));
+  const tot=ents.length; ents=ents.slice(0,50);
+  if(!ents.length){ box.style.display='none'; return; }
+  box.innerHTML=ents.map(e=>{
+    const nm=(ha[e]||{}).friendly_name||e;
+    const dom=e.split('.')[0]; const ico=(_epDomIco&&_epDomIco[dom])||'🔹';
+    return `<div class="entac-it" onmousedown="event.preventDefault();_entacPick('${e}')"><span style="flex-shrink:0">${ico}</span><span style="flex:1;min-width:0"><span class="entac-nm">${eh(nm)}</span><span class="entac-eid">${e}</span></span></div>`;
+  }).join('') + (tot>50?`<div style="padding:6px 9px;font-size:10px;color:var(--muted);text-align:center">…e altre ${tot-50}. Scrivi per filtrare.</div>`:'');
+  const r=input.getBoundingClientRect();
+  box.style.left=r.left+'px'; box.style.width=Math.max(r.width,220)+'px';
+  // se non c'è spazio sotto, aprila sopra
+  const below=window.innerHeight-r.bottom;
+  if(below<180 && r.top>below){ box.style.top=''; box.style.bottom=(window.innerHeight-r.top+4)+'px'; }
+  else { box.style.bottom=''; box.style.top=(r.bottom+4)+'px'; }
+  box.style.display='block';
+}
+function _entacPick(e){
+  if(_entacInput){ _entacInput.value=e; _entacInput.dispatchEvent(new Event('input',{bubbles:true})); _entacInput.dispatchEvent(new Event('change',{bubbles:true})); }
+  _entacHide();
+}
+function _entacHide(){ if(_entacBox) _entacBox.style.display='none'; _entacInput=null; }
+document.addEventListener('focusin',e=>{ if(_isEntInput(e.target)){ _entacInput=e.target; _entacRender(); } });
+document.addEventListener('input',e=>{ if(e.target===_entacInput) _entacRender(); });
+document.addEventListener('click',e=>{ if(_entacInput && e.target!==_entacInput && !(_entacBox&&_entacBox.contains(e.target))) _entacHide(); });
+document.addEventListener('scroll',()=>{ if(_entacInput) _entacHide(); }, true);
+
 /* Close picker on Escape */
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&document.getElementById('ep-picker')?.classList.contains('open')) _epPickerClose();
@@ -11921,6 +12102,9 @@ document.addEventListener('fullscreenchange',_syncKioskFromFS);
 document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
 </script>
 
+<!-- FAB MOBILE: menù con tutte le icone, sempre visibile a destra (anche in kiosk/impostazioni/modifica) -->
+<button id="mfab" onclick="toggleMobileMenu(event)" aria-label="Menu" title="Menu"><i class="mdi mdi-dots-vertical"></i></button>
+
 <!-- TOAST -->
 <div id="toast"></div>
 <!-- CONFIRM DIALOG -->
@@ -12036,6 +12220,26 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
       <div style="display:flex;gap:6px">
         <button class="btn1" onclick="_ghPublishDo()">📤 Pubblica</button>
         <button class="btn2" onclick="closeGhPub()">Annulla</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDITOR VISTA (nome / icona / elimina) -->
+<div class="mbg off" id="vmod" style="z-index:240">
+  <div class="mbox" style="width:360px">
+    <div class="mhdr"><span class="mtitle">✏️ Modifica vista</span><button class="mx" onclick="closeViewEdit()">✕</button></div>
+    <div class="fscroll" style="padding:14px">
+      <div class="flbl">Nome vista</div>
+      <input class="finp" id="vmod-name" placeholder="es. Soggiorno" style="margin-bottom:10px" autocomplete="off">
+      <div class="flbl">Icona</div>
+      <div class="finp-row" style="margin-bottom:14px">
+        <input class="finp" id="vmod-ico" placeholder="🏠 oppure mdi:home" autocomplete="off">
+        <button class="fbtn" title="Scegli icona" onclick="openIconPicker(v=>{document.getElementById('vmod-ico').value=v;},this,event)">🎨</button>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn1" onclick="saveViewEdit()" style="flex:1">💾 Salva</button>
+        <button class="btn2" id="vmod-del" onclick="deleteViewFromEdit()" style="color:#f87171;border-color:rgba(248,113,113,.35)">🗑 Elimina</button>
       </div>
     </div>
   </div>
