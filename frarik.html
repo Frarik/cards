@@ -140,10 +140,6 @@ body::before{
 #hdr-chips{display:flex;align-items:center;gap:5px;overflow:hidden;flex:1;min-width:0}
 .hdr-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px 3px 6px;border-radius:999px;font-size:10px;font-weight:700;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.8);white-space:nowrap;flex-shrink:0;position:relative;transition:all .15s}
 .hdr-chip:hover{border-color:rgba(255,255,255,.2)}
-.hdr-chip-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.hdr-chip-rm{display:none;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;font-size:9px;color:rgba(255,255,255,.4);background:rgba(255,255,255,.1);margin-left:2px;cursor:pointer;transition:all .15s;border:none;padding:0;flex-shrink:0}
-.hdr-chip-rm:hover{background:rgba(248,113,113,.35);color:#f87171}
-body.editing .hdr-chip-rm{display:inline-flex}
 #hdr-chip-add{display:none;align-items:center;justify-content:center;width:22px;height:22px;border-radius:7px;font-size:15px;line-height:1;color:rgba(255,255,255,.3);border:1px dashed rgba(255,255,255,.2);background:none;transition:all .15s;flex-shrink:0;padding:0}
 #hdr-chip-add:hover{color:var(--acc2);border-color:var(--acc)}
 body.editing #hdr-chip-add{display:inline-flex}
@@ -5496,6 +5492,7 @@ let _badgeVisMode='always';
 let _editBadgeIdx=null;      // null = nuovo, altrimenti indice in modifica
 
 function _getBadgeArr(){
+  if(_badgeZone==='hdrbar') return cfg.hdrChips||(cfg.hdrChips=[]);
   if(_badgeZone==='header') return curPage().headerBadges||(curPage().headerBadges=[]);
   if(_badgeZone==='footer') return curPage().footerBadges||(curPage().footerBadges=[]);
   const cid=_badgeZone.replace('card:','');
@@ -5513,15 +5510,15 @@ function openBM(zone, mode){
   modal.classList.toggle('bmod-new',_bmMode==='new');
   const alignRow=document.getElementById('bm-align');
   if(_bmMode==='new'){
-    document.getElementById('bmod-title').textContent='🏷️ Nuovo distintivo';
+    document.getElementById('bmod-title').textContent=zone==='hdrbar'?'➕ Nuovo chip header':'🏷️ Nuovo distintivo';
     if(listEl) listEl.style.display='none';
     if(addRow) addRow.style.display='none';
     if(alignRow) alignRow.style.display='none';
     modal.classList.remove('off');
     showBadgeForm();
   } else {
-    const titles={header:'Intestazione',footer:'Piè di pagina'};
-    document.getElementById('bmod-title').textContent='🏷️ Gestione distintivi · '+(titles[zone]||(zone.startsWith('card:')?'Card':''));
+    const titles={hdrbar:'Chip Header',header:'Intestazione',footer:'Piè di pagina'};
+    document.getElementById('bmod-title').textContent='🏷️ Gestione · '+(titles[zone]||(zone.startsWith('card:')?'Card':''));
     if(listEl) listEl.style.display='';
     if(addRow) addRow.style.display='';
     // allineamento solo per intestazione/piè (non per i badge nelle card)
@@ -5547,7 +5544,7 @@ function _bmSetAlign(a){
 }
 function closeBM(){
   document.getElementById('bmod').classList.add('off');
-  saveCfg(); renderBadgesAll();
+  saveCfg(); renderBadgesAll(); if(_badgeZone==='hdrbar') renderHdrChips();
   if(editingId) _updateCMBadgePreview();
   // If section editor is open, refresh its badge list
   if(!document.getElementById('sectmod').classList.contains('off')){
@@ -5594,7 +5591,7 @@ function moveBadge(i,dir){
   [arr[i],arr[j]]=[arr[j],arr[i]];
   renderBadgeList();
 }
-function delBadge(i){ _getBadgeArr().splice(i,1); renderBadgeList(); }
+function delBadge(i){ _getBadgeArr().splice(i,1); saveCfg(); renderBadgeList(); if(_badgeZone==='hdrbar') renderHdrChips(); }
 
 function _fillNavPageSelect(sel){
   const s=document.getElementById('bf-navpage'); if(!s) return;
@@ -5751,7 +5748,8 @@ function saveBadgeForm(){
   _editBadgeIdx=null;
   hideBadgeForm();
   renderBadgeList();
-  saveCfg(); renderBadgesAll();
+  saveCfg();
+  if(_badgeZone==='hdrbar') renderHdrChips(); else renderBadgesAll();
 }
 
 /* ── Distintivi: helper colore / visibilità / azioni ── */
@@ -6552,12 +6550,6 @@ function renderEL(q){
     : '<div style="padding:20px;text-align:center;font-size:11px;color:rgba(255,255,255,0.25)">Nessun risultato</div>';
 }
 function eitClick(entityId,name,unit,domain){
-  if(_hdrChipPicking){
-    _hdrChipPicking=false; closeEM();
-    if(!cfg.hdrChips) cfg.hdrChips=[];
-    cfg.hdrChips.push({entity:entityId,label:name||'',showState:false});
-    saveCfg(); renderHdrChips(); return;
-  }
   if(emTarget){
     document.getElementById(emTarget).value=entityId;
     emTarget=null;
@@ -10029,36 +10021,24 @@ function doLogout(){
 
 function renderHdrChips(){
   const wrap=document.getElementById('hdr-chips'); if(!wrap) return;
-  const chips=(cfg.hdrChips||[]);
-  wrap.innerHTML=chips.map((c,i)=>{
-    const st=hs[c.entity]||''; const at=ha[c.entity]||{};
-    const on=['on','home','connected','active','open','unlocked','playing','true','1'].includes(String(st).toLowerCase());
-    const unavail=['unavailable','unknown',''].includes(String(st).toLowerCase());
-    const dotCol=unavail?'#475569':on?'#4ade80':'#f87171';
-    const label=c.label||(at.friendly_name||c.entity.split('.')[1]||c.entity);
-    const stateStr=c.showState&&st?' '+st:'';
-    return `<span class="hdr-chip" title="${c.entity}: ${st}">
-      <span class="hdr-chip-dot" style="background:${dotCol};box-shadow:0 0 5px ${dotCol}88"></span>
-      ${label}${stateStr?`<span style="opacity:.55;font-size:9px">${stateStr}</span>`:''}
-      <button class="hdr-chip-rm" onclick="event.stopPropagation();_hdrChipRemove(${i})" title="Rimuovi">✕</button>
-    </span>`;
+  const chips=cfg.hdrChips||[];
+  if(!chips.length){ wrap.innerHTML=''; return; }
+  wrap.innerHTML=chips.filter(b=>!editMode?_badgeVisible(b):true).map((b,i)=>{
+    if(editMode){
+      return `<div class="hbadge-wrap" style="flex-shrink:0">
+        ${_badgeItemHTML(b,'hbadge','badge-sep')}
+        <div class="hbadge-actions"><div class="hbadge-actions-inner">
+          <button class="hba-btn hba-edit" onclick="event.stopPropagation();_hdrChipEdit(${i})" title="Modifica">✏️</button>
+          <button class="hba-btn hba-del" onclick="event.stopPropagation();_hdrChipDel(${i})" title="Rimuovi">✕</button>
+        </div></div>
+      </div>`;
+    }
+    return `<span style="flex-shrink:0">${_badgeItemHTML(b,'hbadge','badge-sep')}</span>`;
   }).join('');
 }
-
-let _hdrChipPicking=false;
-function _hdrChipAdd(){
-  _hdrChipPicking=true;
-  document.getElementById('emod-title').textContent='➕ Aggiungi Chip Header';
-  document.getElementById('emod').classList.remove('off');
-  document.getElementById('esearch').value='';
-  renderEL('');
-  setTimeout(()=>document.getElementById('esearch').focus(),80);
-}
-function _hdrChipRemove(i){
-  if(!cfg.hdrChips) return;
-  cfg.hdrChips.splice(i,1);
-  saveCfg(); renderHdrChips();
-}
+function _hdrChipAdd(){ openBM('hdrbar','new'); }
+function _hdrChipEdit(i){ _badgeZone='hdrbar'; openBM('hdrbar','manage'); setTimeout(()=>editBadgeAt(i),60); }
+function _hdrChipDel(i){ if(!cfg.hdrChips) return; cfg.hdrChips.splice(i,1); saveCfg(); renderHdrChips(); }
 
 /* ═══ INIT ═══ */
 /* Apply saved theme and font before first render to avoid flash */
