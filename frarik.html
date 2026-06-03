@@ -3,11 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Frarik</title>
 <script>
 /* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260603400;
+window.FRARIK_APP_VERSION = 20260603500;
 /* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
    (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
@@ -3382,10 +3385,15 @@ function _onResume(){
   } else if(ws.readyState===1){
     _haLoadCfg();
   }
-  // controllo aggiornamento plancia quando torni sulla pagina (throttle 3 min) → la notifica arriva quasi subito
+  // controllo aggiornamento plancia quando torni sulla pagina (throttle 3 min)
   try{
     var now=Date.now();
     if(now-(window._appUpdLastChk||0)>180000){ window._appUpdLastChk=now; if(typeof _appUpdateCheck==='function') _appUpdateCheck(); }
+  }catch(e){}
+  // controlla se il file su HA è più recente di quello in esecuzione (throttle 60s)
+  try{
+    var now2=Date.now();
+    if(now2-(window._haLocalLastChk||0)>60000){ window._haLocalLastChk=now2; _haLocalCheck(); }
   }catch(e){}
 }
 document.addEventListener('visibilitychange',_onResume);
@@ -10076,8 +10084,27 @@ if(localStorage.getItem('ha_auth')==='1' || sessionStorage.getItem('ha_auth')===
   document.getElementById('l-user').focus();
 }
 
+/* Controlla se il file servito da HA è più recente di quello in esecuzione.
+   Fetch con cache-bust diretto sul pathname (es. /local/frarik.html) → nessuna cache browser. */
+async function _haLocalCheck(){
+  if(location.protocol==='file:') return; // aperto come file locale, salta
+  try{
+    const r=await fetch(location.pathname+'?_hcb='+Date.now(),{cache:'no-store'});
+    if(!r.ok) return;
+    const html=await r.text();
+    const m=/FRARIK_APP_VERSION\s*=\s*(\d+)/.exec(html); if(!m) return;
+    const rv=parseInt(m[1],10);
+    if(rv>(window.FRARIK_APP_VERSION||0) && html.length>200000 && html.indexOf('</'+'script>')>-1){
+      try{ localStorage.setItem('frarik_app_html',html); localStorage.setItem('frarik_app_ver',String(rv)); localStorage.setItem('frarik_app_ts',String(Date.now())); }catch(e){}
+      location.reload();
+    }
+  }catch(e){}
+}
+
 /* Controllo aggiornamento plancia in background (salva silenziosamente in localStorage) */
 try{ _appUpdSchedule(); setTimeout(()=>{ try{ _appUpdateCheck(); }catch(e){} }, 2500); }catch(e){}
+/* Controllo versione HA locale al primo caricamento (dopo 3s, per non rallentare l'avvio) */
+try{ setTimeout(()=>{ try{ _haLocalCheck(); }catch(e){} }, 3000); }catch(e){}
 try{ var _vl=document.getElementById('ep-ver-label'); if(_vl) _vl.textContent=(window.FRARIK_APP_VERSION||'?'); }catch(e){}
 
 /* ══════════════════════════════════════════════════════════════
