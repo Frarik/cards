@@ -10,7 +10,7 @@
 <script>
 /* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260603990;
+window.FRARIK_APP_VERSION = 20260604020;
 /* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
    (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
@@ -3448,7 +3448,7 @@ function importBackupFile(file){
     showConfirm('Ripristinare questo backup?<br><span style="font-size:11px;opacity:.7">La configurazione attuale verrà sostituita ('+ (c.pages||[]).length +' pagine, '+ (Array.isArray(p.js)?p.js.length:0) +' card JS).</span>', ()=>{
       // 1) ripristina le card JS
       if(Array.isArray(p.js)){
-        p.js.forEach(it=>{ try{ if(it&&it.meta&&it.meta.id){ _jsStoreSave(it.meta.id,it.meta,it.code); try{ _installCardCode(it.code); }catch(_){} } }catch(_){} });
+        p.js.forEach(it=>{ try{ if(it&&it.meta&&it.meta.id){ _jsStoreSave(it.meta.id,it.meta,it.code,it.origin); try{ _installCardCode(it.code); }catch(_){} } }catch(_){} });
       }
       // 2) ripristina il layout
       cfg=c; cfg._ts=Date.now();
@@ -3485,6 +3485,7 @@ function openGitHubCfg(){
   document.getElementById('gh-repo').value=g.repo||'';
   document.getElementById('gh-path').value=g.path||'';
   document.getElementById('gh-branch').value=g.branch||'main';
+  document.getElementById('gh-token').value=g.token||'';
   document.getElementById('gh-auto').checked=g.auto!==false;
   document.getElementById('gh-status').textContent='';
   document.getElementById('ghmod').classList.remove('off');
@@ -3496,6 +3497,7 @@ function saveGitHubCfg(){
   g.repo=(document.getElementById('gh-repo').value||'').trim();
   g.path=(document.getElementById('gh-path').value||'').trim().replace(/^\/|\/$/g,'');
   g.branch=(document.getElementById('gh-branch').value||'main').trim()||'main';
+  g.token=(document.getElementById('gh-token').value||'').trim();
   g.auto=document.getElementById('gh-auto').checked;
   saveCfg(); _haSaveCfg();
   _ghSchedule();
@@ -3516,6 +3518,22 @@ async function _ghApiList(){
   // solo file .js, ESCLUSI i file dell'app (non sono card): frarik-panel.js, frarik-app.js, ecc.
   return j.filter(f=>f.type==='file'&&/\.js$/i.test(f.name)&&!/^frarik[-.]/i.test(f.name));
 }
+/* Lista TUTTE le card .js da tutte le cartelle installabili (card-js, card-chips, card-distintivi)
+   con UNA sola richiesta (git tree), così il controllo automatico copre ogni cartella senza esaurire il limite. */
+async function _ghApiListAll(){
+  const g=_ghCfg(); if(!g.owner||!g.repo) throw new Error('Configura proprietario e repository');
+  const branch=g.branch||'main';
+  const H={'Accept':'application/vnd.github.v3+json'}; if(g.token) H['Authorization']='token '+g.token;
+  const r=await fetch(`https://api.github.com/repos/${g.owner}/${g.repo}/git/trees/${encodeURIComponent(branch)}?recursive=1`,{headers:H});
+  if(r.status===403) throw new Error('Limite richieste GitHub raggiunto, riprova tra poco');
+  if(r.status===404) throw new Error('Repo o branch non trovati');
+  if(!r.ok) throw new Error('GitHub HTTP '+r.status);
+  const j=await r.json();
+  const folders=Object.values(_GHS_FOLDERS).filter(f=>f.kind==='install').map(f=>f.path);
+  return ((j&&j.tree)||[]).filter(t=>t.type==='blob' && /\.js$/i.test(t.path) && folders.some(p=>t.path.startsWith(p+'/')) && !/^frarik[-.]/i.test(t.path.split('/').pop()))
+    .map(t=>({ name:t.path.split('/').pop(), sha:t.sha, path:t.path,
+      download_url:`https://raw.githubusercontent.com/${g.owner}/${g.repo}/${branch}/${t.path.split('/').map(encodeURIComponent).join('/')}` }));
+}
 async function _ghDownload(file){
   const r=await fetch(file.download_url);
   if(!r.ok) throw new Error('download '+r.status);
@@ -3529,7 +3547,7 @@ async function _ghInstallFile(file){
   const id=(res.newCards&&res.newCards[0])||(res.tags&&res.tags[0]);
   const card=id?window.FratechCardRegistry[id]:null;
   if(card&&card.id){
-    _jsStoreSave(card.id,{id:card.id,name:card.name||card.id,icon:card.icon||'📦',version:card.version||'1.0',desc:card.desc||''},code);
+    _jsStoreSave(card.id,{id:card.id,name:card.name||card.id,icon:card.icon||'📦',version:card.version||'1.0',desc:card.desc||''},code,'github');
     try{ const g=_ghCfg(); g.idFile=g.idFile||{}; g.idFile[card.id]=file.name; }catch(e){}   // mappa id↔file per liberare lo sha all'eliminazione
   }
   _ghCfg().shas[file.name]=file.sha;
@@ -3539,7 +3557,7 @@ async function _ghInstallFile(file){
 async function _ghCheck(force){
   const g=_ghCfg(); if(!g.owner||!g.repo){ if(force) _ghStatus('Configura proprietario e repository'); return; }
   let files;
-  try{ files=await _ghApiList(); }
+  try{ files=await _ghApiListAll(); }
   catch(e){ if(force){ _ghStatus('⚠️ '+e.message); showToast('⚠️ GitHub: '+e.message);} return; }
   _ghPending = files.filter(f=> g.shas[f.name]!==f.sha);
   if(force) _ghStatus(files.length+' card nel repo · '+_ghPending.length+' da aggiornare');
@@ -3585,7 +3603,7 @@ function _ghAskInstall(){
 }
 async function _ghImportAll(){
   let files;
-  try{ files=await _ghApiList(); }
+  try{ files=await _ghApiListAll(); }
   catch(e){ _ghStatus('⚠️ '+e.message); showToast('⚠️ '+e.message); return; }
   if(!files.length){ _ghStatus('Nessun file .js nel repo'); return; }
   _ghStatus('Importazione di '+files.length+' card…');
@@ -3613,7 +3631,8 @@ async function _ghListFolder(path){
   const g=_ghCfg(); if(!g.owner||!g.repo) throw new Error('Configura GitHub (proprietario/repository)');
   const p=path?path.split('/').map(encodeURIComponent).join('/'):'';
   const url=`https://api.github.com/repos/${g.owner}/${g.repo}/contents/${p}?ref=${encodeURIComponent(g.branch||'main')}`;
-  const r=await fetch(url,{headers:{'Accept':'application/vnd.github.v3+json'}});
+  const H={'Accept':'application/vnd.github.v3+json'}; if(g.token) H['Authorization']='token '+g.token;
+  const r=await fetch(url,{headers:H});
   if(r.status===404) return [];   // cartella non ancora creata su GitHub
   if(r.status===403) throw new Error('Limite richieste GitHub raggiunto, riprova tra poco');
   if(!r.ok) throw new Error('GitHub HTTP '+r.status);
@@ -3628,11 +3647,11 @@ function openGhStore(){
 function closeGhStore(){ document.getElementById('gh-store-modal').classList.add('off'); }
 function ghStoreTab(tab){
   _ghsTab=tab;
-  ['js','chips','distintivi','yaml','pkg','installed'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
+  ['js','chips','distintivi','yaml','pkg','installed','local'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
   const s=document.getElementById('ghs-search'); if(s) s.value='';
-  // la zona "carica file .js" compare solo nella scheda Installate
-  const loadEl=document.getElementById('ghs-load'); if(loadEl) loadEl.style.display=(tab==='installed')?'':'none';
-  if(tab==='installed'){ _ghStoreRender(); _ghStoreInitDropzone(); return; }
+  // la zona "carica file .js" compare solo nella scheda Card locali (lì finiscono i file caricati da PC)
+  const loadEl=document.getElementById('ghs-load'); if(loadEl) loadEl.style.display=(tab==='local')?'':'none';
+  if(tab==='installed'||tab==='local'){ _ghStoreRender(); if(tab==='local') _ghStoreInitDropzone(); return; }
   if(_ghsCache[tab]){ _ghStoreRender(); return; }
   document.getElementById('ghs-status').textContent='⏳ Carico da GitHub…';
   document.getElementById('ghs-list').innerHTML='';
@@ -3645,7 +3664,8 @@ function ghStoreTab(tab){
 function _ghStoreRender(){
   const tab=_ghsTab, list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
   const q=(document.getElementById('ghs-search').value||'').toLowerCase().trim();
-  if(tab==='installed'){ _ghStoreRenderInstalled(q); return; }
+  if(tab==='installed'){ _ghStoreRenderInstalled(q,'github'); return; }
+  if(tab==='local'){ _ghStoreRenderInstalled(q,'local'); return; }
   const folder=_GHS_FOLDERS[tab]; const g=_ghCfg();
   let files=(_ghsCache[tab]||[]).slice();
   if(q) files=files.filter(f=>f.name.toLowerCase().includes(q));
@@ -3667,22 +3687,30 @@ function _ghStoreRender(){
     return `<div class="ghs-row"><div class="ghs-ico">${ico}</div><div class="ghs-info"><div class="ghs-name">${eh(nm)}</div><div class="ghs-sub">${eh(f.name)}</div></div><div class="ghs-acts">${acts}</div></div>`;
   }).join('');
 }
-/* Scheda "Installate": gestisci le card già installate (aggiungi in dashboard / elimina) */
-function _ghStoreRenderInstalled(q){
+/* Schede "Installate" (origine github) e "Card locali" (origine local): gestisci le card installate */
+function _ghStoreRenderInstalled(q, originFilter){
   const list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
-  let items=_jsStoreList();
+  // origine: 'github' = installata dallo store · 'local' = caricata da PC · vecchie senza tag → 'github'
+  let items=_jsStoreList().filter(i=>((i.origin||'github')===originFilter));
   const all=items.length;
   if(q) items=items.filter(i=>((i.meta||{}).name||(i.meta||{}).id||'').toLowerCase().includes(q));
-  status.textContent=all+' card installate'+(q?(' · '+items.length+' trovate'):'');
-  if(!items.length){ list.innerHTML=`<div class="ghs-empty">${q?'Nessun risultato':'Nessuna card installata.<br>Usa la zona qui sotto per caricare un file .js, o installale dalle altre schede.'}</div>`; return; }
+  const lbl=originFilter==='local'?'card locali':'card da GitHub';
+  status.textContent=all+' '+lbl+(q?(' · '+items.length+' trovate'):'');
+  if(!items.length){
+    const msg = originFilter==='local'
+      ? (q?'Nessun risultato':'Nessuna card locale.<br>Usa la zona qui sotto per caricare un file <code>.js</code> dal PC.')
+      : (q?'Nessun risultato':'Nessuna card installata da GitHub.<br>Installale dalle schede ⚡ Card JS · 🔹 Chips · 🏷️ Distintivi.');
+    list.innerHTML=`<div class="ghs-empty">${msg}</div>`; return;
+  }
   const usedIds=new Set(); (cfg.pages||[]).forEach(pg=>(pg.cards||[]).forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedIds.add(c.jsCardId); }));
   list.innerHTML=items.sort((a,b)=>((a.meta||{}).name||'').localeCompare((b.meta||{}).name||'')).map(i=>{
     const m=i.meta||{}; const inUse=usedIds.has(m.id); const id=m.id||'';
     const act = inUse ? `<span style="font-size:10px;color:#4ade80;font-weight:700">✓ in dashboard</span>`
                       : `<button class="ghs-btn ghs-btn-inst" onclick="jsStoreAddCard('${id}');setTimeout(_ghStoreRender,50)">➕ Aggiungi</button>`;
+    const pub = originFilter==='local' ? `<button class="ghs-btn ghs-btn-upd" onclick="_ghsPublish('${id}')" title="Pubblica su GitHub">📤 Pubblica</button>` : '';
     return `<div class="ghs-row"><div class="ghs-ico">${m.icon||'📦'}</div>
       <div class="ghs-info"><div class="ghs-name">${eh(m.name||id||'Card')}</div><div class="ghs-sub">ID: ${eh(id||'?')} · v${eh(m.version||'?')}</div></div>
-      <div class="ghs-acts">${act}<button class="ghs-btn ghs-btn-cp" style="background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.3);color:#f87171" onclick="_ghsDeleteInstalled('${id}')">🗑</button></div></div>`;
+      <div class="ghs-acts">${pub}${act}<button class="ghs-btn ghs-btn-cp" style="background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.3);color:#f87171" onclick="_ghsDeleteInstalled('${id}')">🗑</button></div></div>`;
   }).join('');
 }
 function _ghsDeleteInstalled(id){
@@ -3703,6 +3731,67 @@ function _ghStoreInitDropzone(){
   dz.ondragleave=()=>dz.classList.remove('drag-over');
   dz.ondrop=e=>{ e.preventDefault(); dz.classList.remove('drag-over'); if(e.dataTransfer.files[0]) jsStoreLoadFile(e.dataTransfer.files[0]); };
 }
+
+/* ════════ PUBBLICA una card locale su GitHub (richiede token con scrittura) ════════ */
+let _ghPubId=null;
+function _ghsPublish(id){
+  const it=_jsStoreList().find(i=>(i.meta||{}).id===id);
+  if(!it){ showToast('⚠️ Card non trovata'); return; }
+  if(!_ghCfg().token){ showToast('🔑 Manca il token GitHub — aprilo con l\'⚙️ e incollalo'); openGitHubCfg(); return; }
+  _ghPubId=id;
+  document.getElementById('ghpub-name').value=(it.meta||{}).name||id;
+  const base=(id||(it.meta||{}).name||'card').toLowerCase().replace(/[^a-z0-9._-]+/g,'-').replace(/^-+|-+$/g,'');
+  document.getElementById('ghpub-file').value=/\.js$/i.test(base)?base:base+'.js';
+  document.getElementById('ghpub-folder').value='card-js';
+  document.getElementById('ghpub-status').textContent='';
+  document.getElementById('ghpub').classList.remove('off');
+}
+function closeGhPub(){ document.getElementById('ghpub').classList.add('off'); }
+async function _ghPublishDo(){
+  const id=_ghPubId; if(!id) return;
+  const it=_jsStoreList().find(i=>(i.meta||{}).id===id); if(!it){ showToast('⚠️ Card non trovata'); return; }
+  const st=document.getElementById('ghpub-status');
+  if(!_ghCfg().token){ st.innerHTML='<span style="color:#f87171">Manca il token GitHub (⚙️)</span>'; return; }
+  const folder=document.getElementById('ghpub-folder').value;
+  let file=(document.getElementById('ghpub-file').value||'').trim();
+  if(!file){ st.innerHTML='<span style="color:#f87171">Inserisci il nome del file</span>'; return; }
+  if(!/\.js$/i.test(file)) file+='.js';
+  file=file.replace(/\s+/g,'-');
+  const path=folder+'/'+file;
+  st.innerHTML='<span style="color:#fbbf24">⏳ Pubblico su GitHub…</span>';
+  try{
+    await _ghPut(path, it.code, 'Pubblica '+file+' da Frarik');
+    // ora è su GitHub → diventa una card "github" (esce da Card locali, entra in Installate)
+    try{
+      _jsStoreSave(id, it.meta, it.code, 'github');
+      const g=_ghCfg(); g.idFile=g.idFile||{}; g.idFile[id]=file; saveCfg(); _haSaveCfg();
+    }catch(e){}
+    _ghsCache={};
+    st.innerHTML='<span style="color:#4ade80">✅ Pubblicata in '+folder+'/'+file+'</span>';
+    showToast('📤 Card pubblicata su GitHub!');
+    setTimeout(()=>{ closeGhPub(); if(!document.getElementById('gh-store-modal').classList.contains('off')) ghStoreTab('local'); }, 1000);
+  }catch(e){ st.innerHTML='<span style="color:#f87171">⚠️ '+e.message+'</span>'; }
+}
+/* Crea o aggiorna un file nel repo via GitHub API (PUT). Serve il token in g.token. */
+async function _ghPut(path, content, message){
+  const g=_ghCfg();
+  if(!g.owner||!g.repo) throw new Error('Configura proprietario/repository');
+  if(!g.token) throw new Error('Manca il token GitHub');
+  const branch=g.branch||'main';
+  const base=`https://api.github.com/repos/${g.owner}/${g.repo}/contents/${path.split('/').map(encodeURIComponent).join('/')}`;
+  const H={'Authorization':'token '+g.token,'Accept':'application/vnd.github.v3+json'};
+  // se il file esiste già serve il suo sha per aggiornarlo
+  let sha=null;
+  try{ const gr=await fetch(base+'?ref='+encodeURIComponent(branch),{headers:H}); if(gr.ok){ const gj=await gr.json(); sha=gj.sha||null; } }catch(e){}
+  const body={ message:message||('Aggiorna '+path), content:_b64utf8(content), branch };
+  if(sha) body.sha=sha;
+  const r=await fetch(base,{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},H),body:JSON.stringify(body)});
+  if(r.status===401||r.status===403) throw new Error('Token non valido o senza permesso di scrittura (Contents: Read and write)');
+  if(r.status===404) throw new Error('Repo non trovato o token senza accesso al repo');
+  if(!r.ok){ let m=''; try{ m=(await r.json()).message; }catch(e){} throw new Error('GitHub HTTP '+r.status+(m?' — '+m:'')); }
+  return await r.json();
+}
+function _b64utf8(str){ return btoa(unescape(encodeURIComponent(str))); }   // base64 UTF-8 per l'API GitHub
 function _ghsFind(name){ name=decodeURIComponent(name); return (_ghsCache[_ghsTab]||[]).find(f=>f.name===name); }
 async function _ghsInstall(name){
   const f=_ghsFind(name); if(!f) return;
@@ -3944,7 +4033,7 @@ function onMsg(m){
       _cfgSyncing=true;
       // 1) ripristina le card JS mancanti (codice) e registrale
       if(remoteJs && remoteJs.length && typeof _jsStoreSave==='function'){
-        remoteJs.forEach(it=>{ try{ if(it&&it.meta&&it.meta.id){ _jsStoreSave(it.meta.id,it.meta,it.code); try{ _installCardCode(it.code); }catch(e){} } }catch(e){} });
+        remoteJs.forEach(it=>{ try{ if(it&&it.meta&&it.meta.id){ _jsStoreSave(it.meta.id,it.meta,it.code,it.origin); try{ _installCardCode(it.code); }catch(e){} } }catch(e){} });
       }
       // 2) adotta il layout
       cfg=remoteCfg; cfg._ts=remoteTs;
@@ -8313,8 +8402,12 @@ const JS_TEMPLATE = `/**
 
 function _jsStoreKey(id){ return 'fratech_jscard_' + id; }
 
-function _jsStoreSave(id, meta, code){
-  try { localStorage.setItem(_jsStoreKey(id), JSON.stringify({meta, code, ts: Date.now()})); } catch(e){}
+function _jsStoreSave(id, meta, code, origin){
+  try {
+    let prev=null; try{ prev=JSON.parse(localStorage.getItem(_jsStoreKey(id))||'null'); }catch(e){}
+    const org = origin || (prev&&prev.origin) || 'github';   // 'github' = installata dallo store · 'local' = caricata da PC
+    localStorage.setItem(_jsStoreKey(id), JSON.stringify({meta, code, ts: Date.now(), origin: org}));
+  } catch(e){}
   if(typeof _cfgTouchAndPush==='function') _cfgTouchAndPush();   // propaga la card su HA (auto-sync)
 }
 function _jsStoreDelete(id){
@@ -8424,12 +8517,12 @@ function jsStoreLoadFile(file){
     let card = cardId ? window.FratechCardRegistry[cardId] : null;
     if(!card){ const all=Object.values(window.FratechCardRegistry); card=all[all.length-1]; }
     if(!card || !card.id){ status.innerHTML='<span style="color:#f87171">⚠️ Nessuna card valida trovata nel file (né FratechStore né Lovelace).</span>'; return; }
-    _jsStoreSave(card.id, {id:card.id, name:card.name||card.id, icon:card.icon||'📦', version:card.version||'1.0', desc:card.desc||''}, code);
+    _jsStoreSave(card.id, {id:card.id, name:card.name||card.id, icon:card.icon||'📦', version:card.version||'1.0', desc:card.desc||''}, code, 'local');
     status.innerHTML=`<span style="color:#4ade80">✅ Card <b>${card.name||card.id}</b> installata!${card._lovelace?' <span style="opacity:.6">(Lovelace)</span>':''} (v${card.version||'?'})</span>`;
     document.getElementById('jsst-count').textContent = _jsStoreList().length;
     setTimeout(()=>{ jsStoreTab('installed'); }, 900);
-    // se è aperto il nuovo "Store da GitHub", aggiorna la scheda Installate
-    try{ if(!document.getElementById('gh-store-modal').classList.contains('off')){ showToast('✅ Card caricata'); _ghsTab='installed'; ghStoreTab('installed'); } }catch(e){}
+    // se è aperto il nuovo "Store da GitHub", aggiorna la scheda Card locali (lì finiscono i file caricati da PC)
+    try{ if(!document.getElementById('gh-store-modal').classList.contains('off')){ showToast('✅ Card locale caricata'); _ghsTab='local'; ghStoreTab('local'); } }catch(e){}
   };
   reader.onerror = () => { status.innerHTML='<span style="color:#f87171">⚠️ Impossibile leggere il file.</span>'; };
   reader.readAsText(file);
@@ -11909,6 +12002,9 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
       <input class="finp" id="gh-path" placeholder="(vuoto)" style="margin-bottom:8px">
       <div class="flbl">Ramo (branch)</div>
       <input class="finp" id="gh-branch" placeholder="main" style="margin-bottom:10px">
+      <div class="flbl">Token GitHub <span style="opacity:.5;font-weight:400">(solo per PUBBLICARE — facoltativo)</span></div>
+      <input class="finp" id="gh-token" type="password" placeholder="github_pat_… oppure ghp_…" style="margin-bottom:4px" autocomplete="off">
+      <div style="font-size:10px;color:var(--muted);line-height:1.45;margin-bottom:12px">Serve solo per <b>caricare</b> card su GitHub dalla plancia. Crea un token su GitHub → Settings → Developer settings → <i>Fine-grained tokens</i>, con permesso <b>Contents: Read and write</b> solo sul repo <code>cards</code>.</div>
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:12px">
         <input type="checkbox" id="gh-auto" checked style="width:16px;height:16px;accent-color:#6366f1">
         <span style="font-size:12px;font-weight:600;color:#e2e8f0">Controlla automaticamente (ogni 5 min)</span>
@@ -11918,6 +12014,31 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
         <button class="btn1" onclick="saveGitHubCfg()">💾 Salva</button>
         <button class="btn2" onclick="_ghCheck(true)">🔄 Controlla ora</button>
         <button class="btn2" onclick="_ghImportAll()">⬇️ Importa tutte</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PUBBLICA CARD SU GITHUB -->
+<div class="mbg off" id="ghpub" style="z-index:280">
+  <div class="mbox" style="width:420px">
+    <div class="mhdr"><span class="mtitle">📤 Pubblica su GitHub</span><button class="mx" onclick="closeGhPub()">✕</button></div>
+    <div class="fscroll" style="padding:14px">
+      <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px">Invia questa card al tuo repository GitHub nella cartella scelta. Da lì potrà aggiornarsi su tutti i dispositivi (tuoi e del tuo amico).</div>
+      <div class="flbl">Card</div>
+      <input class="finp" id="ghpub-name" readonly style="margin-bottom:8px;opacity:.7">
+      <div class="flbl">Cartella di destinazione</div>
+      <select class="finp" id="ghpub-folder" style="margin-bottom:8px">
+        <option value="card-js">⚡ card-js (card normali)</option>
+        <option value="card-chips">🔹 card-chips (chips)</option>
+        <option value="card-distintivi">🏷️ card-distintivi (distintivi)</option>
+      </select>
+      <div class="flbl">Nome file</div>
+      <input class="finp" id="ghpub-file" placeholder="nome-card.js" style="margin-bottom:10px" autocomplete="off">
+      <div id="ghpub-status" style="font-size:11px;color:var(--muted);min-height:16px;margin-bottom:10px"></div>
+      <div style="display:flex;gap:6px">
+        <button class="btn1" onclick="_ghPublishDo()">📤 Pubblica</button>
+        <button class="btn2" onclick="closeGhPub()">Annulla</button>
       </div>
     </div>
   </div>
@@ -12022,6 +12143,7 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
         <button class="jsst-tab"    id="ghs-tab-yaml"       onclick="ghStoreTab('yaml')">📄 YAML</button>
         <button class="jsst-tab"    id="ghs-tab-pkg"        onclick="ghStoreTab('pkg')">📦 Pacchetti</button>
         <button class="jsst-tab"    id="ghs-tab-installed"  onclick="ghStoreTab('installed')">📋 Installate</button>
+        <button class="jsst-tab"    id="ghs-tab-local"      onclick="ghStoreTab('local')">📁 Card locali</button>
         <button class="jsst-tab"    onclick="openGitHubCfg()" title="Impostazioni GitHub (aggiornamenti automatici)" style="margin-left:auto">⚙️</button>
       </div>
       <input id="ghs-search" class="ghs-search" placeholder="🔍 Cerca per nome…" oninput="_ghStoreRender()" autocomplete="off">
