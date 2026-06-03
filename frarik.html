@@ -7,7 +7,7 @@
 <script>
 /* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260603050;
+window.FRARIK_APP_VERSION = 20260603051;
 /* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
    (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
@@ -32,7 +32,7 @@ try{ if(localStorage.getItem('ha_auth')==='1'||sessionStorage.getItem('ha_auth')
   var PROFILES = {
     // ── Profilo 1 (utente originale) ──
     'cvkvlnpaokb2r0pedlqjlq06f5zsd3fl.ui.nabu.casa': {
-      token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJjOTg4OGRlYmJmNmQ0NjNiODdkNDg1OTlmZjc1ZTRjZiIsImlhdCI6MTc4MDQ0MzQ4MCwiZXhwIjoyMDk1ODAzNDgwfQ.hyz6GFhQvycih8cn2oG7djSwXWMAg6Vthd_VyX8KPcY',
+      token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIxYzE0ZjkzYmJkYWQ0ZWQyOTliNDczNWRlZDVmZDY2OSIsImlhdCI6MTc4MDQxMzYzNiwiZXhwIjoyMDk1NzczNjM2fQ.JLWwWsRrrycH6jqcgims-u0SImMwyQA048mw3syY5qE',
       remoteUrl: 'https://cvkvlnpaokb2r0pedlqjlq06f5zsd3fl.ui.nabu.casa',
       localFallback: '192.168.1.189:8123'
     },
@@ -1404,12 +1404,6 @@ body.kiosk .kiosk-reload-fab:hover{background:rgba(255,255,255,0.18);color:#fff}
 .ntfc-item.ntfc-action:hover{background:rgba(99,102,241,.2);border-color:rgba(99,102,241,.5)}
 .ntfc-go{align-self:center;flex-shrink:0;font-size:10px;font-weight:800;color:#a5b4fc;background:rgba(99,102,241,.2);padding:4px 8px;border-radius:8px;white-space:nowrap}
 /* Banner aggiornamento plancia (stesso stile, colore verde) */
-#app-update-notif{display:none;position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:9550;
-  align-items:center;gap:10px;max-width:92vw;padding:10px 12px 10px 16px;border-radius:14px;cursor:pointer;
-  background:linear-gradient(135deg,rgba(34,197,94,.96),rgba(16,185,129,.96));color:#fff;font-size:12px;font-weight:700;
-  border:1px solid rgba(255,255,255,.18);box-shadow:0 12px 36px -8px rgba(16,185,129,.7);animation:ghIn .25s ease}
-#app-update-notif.on{display:flex}
-#app-update-notif:hover{filter:brightness(1.08)}
 #gh-notif{display:none;position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:9500;
   align-items:center;gap:10px;max-width:92vw;padding:10px 12px 10px 16px;border-radius:14px;cursor:pointer;
   background:linear-gradient(135deg,rgba(99,102,241,.96),rgba(139,92,246,.96));color:#fff;font-size:12px;font-weight:700;
@@ -3579,9 +3573,8 @@ async function _appUpdateCheck(){
     const rv=parseInt(m[1],10);
     if(rv>(window.FRARIK_APP_VERSION||0) && html.length>5000 && html.indexOf('</html>')>-1){
       _appUpdHtml=html; _appUpdVer=rv;
-      const b=document.getElementById('app-update-notif'); if(b) b.classList.add('on');
       if(_appUpdVer!==parseInt(localStorage.getItem('frarik_app_notified')||'0',10)){
-        try{ _ntfPushLog('📥 Aggiornamento plancia','Nuova versione della plancia disponibile — clicca per aggiornare','📥','app'); }catch(e){}
+        try{ _ntfPushLog('📥 Dashboard aggiornata','La dashboard è stata aggiornata allultima versione','📥','app'); }catch(e){}
         try{ localStorage.setItem('frarik_app_notified',String(_appUpdVer)); }catch(e){}
       }
     }
@@ -11640,13 +11633,6 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
     </div>
   </div>
   <div id="notif-center-list"></div>
-</div>
-
-<!-- Notifica aggiornamento PLANCIA da GitHub -->
-<div id="app-update-notif" onclick="applyAppUpdate()" title="Clicca per aggiornare la plancia">
-  <span style="font-size:15px">📥</span>
-  <span style="flex:1">Nuova versione della plancia disponibile — clicca per aggiornare</span>
-  <button onclick="event.stopPropagation();_appUpdDismiss()" title="Più tardi" style="background:rgba(255,255,255,.12);border:none;color:#fff;width:22px;height:22px;border-radius:6px;cursor:pointer;font-size:11px">✕</button>
 </div>
 
 <!-- Notifica aggiornamenti card da GitHub -->
