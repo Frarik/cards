@@ -48,23 +48,6 @@ app.get('/api/frarik/version', (_req, res) => {
   res.json({ version: manifest.version, build: manifest.build, ok: true });
 });
 
-// Fornisce un token HA valido al browser — usa il token Supervisor iniettato da HA OS
-app.get('/api/frarik/token', async (_req, res) => {
-  try {
-    const supToken = process.env.SUPERVISOR_TOKEN;
-    if (!supToken) { res.json({ token: null }); return; }
-    // Chiede a HA Core un token a lunga durata via Supervisor
-    const resp = await fetch('http://supervisor/core/api/config', {
-      headers: { Authorization: 'Bearer ' + supToken }
-    });
-    if (!resp.ok) { res.json({ token: null }); return; }
-    // Il supervisor token è già valido per le API HA, lo passiamo direttamente
-    res.json({ token: supToken });
-  } catch(e) {
-    res.json({ token: null });
-  }
-});
-
 app.use((_req, res) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.sendFile(path.join(PANEL, 'index.html'));

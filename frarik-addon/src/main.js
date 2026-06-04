@@ -881,35 +881,51 @@ async function _ghCheck(force){
   const sig=_ghPending.map(f=>f.name+':'+f.sha).sort().join('|');
   if(_ghPending.length && sig!==_ghDismissedSig){
     // Testo notifica differenziato: nuova vs aggiornata
-    let ntfTitle, ntfMsg;
+    let txt;
     if(_ghNew.length && !_ghUpdated.length){
-      ntfTitle = _ghNew.length===1 ? '📦 Nuova card disponibile' : '📦 '+_ghNew.length+' nuove card disponibili';
-      ntfMsg   = _ghNew.length===1 ? _ghNew[0].name.replace(/\.js$/,'')+' è stata aggiunta al repository'
-                                   : _ghNew.map(f=>f.name.replace(/\.js$/,'')).join(', ')+' aggiunte al repository';
+      txt = _ghNew.length===1 ? 'Nuova card: '+_ghNew[0].name.replace(/\.js$/,'')+' — clicca per installare'
+                              : _ghNew.length+' nuove card disponibili — clicca per installare';
     } else if(_ghUpdated.length && !_ghNew.length){
-      ntfTitle = _ghUpdated.length===1 ? '🔄 Card aggiornata' : '🔄 '+_ghUpdated.length+' card aggiornate';
-      ntfMsg   = _ghUpdated.length===1 ? _ghUpdated[0].name.replace(/\.js$/,'')+' ha una nuova versione disponibile'
-                                       : _ghUpdated.map(f=>f.name.replace(/\.js$/,'')).join(', ')+' hanno nuove versioni';
+      txt = _ghUpdated.length===1 ? 'Card aggiornata: '+_ghUpdated[0].name.replace(/\.js$/,'')+' — clicca per aggiornare'
+                                  : _ghUpdated.length+' card aggiornate — clicca per aggiornare';
     } else {
-      ntfTitle = '📦 Card aggiornate su GitHub';
-      ntfMsg   = _ghNew.length+' nuove, '+_ghUpdated.length+' aggiornate nel repository';
+      txt = _ghPending.length+' card da installare/aggiornare — clicca';
     }
-    if(sig!==_ghLastSig){ try{ _ntfPushLog(ntfTitle, ntfMsg, '📦', 'gh'); _ntfUpdateBell(); }catch(e){} _ghLastSig=sig; }
+    document.getElementById('gh-notif-txt').textContent=txt;
+    document.getElementById('gh-notif').classList.add('on');
+    if(sig!==_ghLastSig){ try{ _ntfPushLog('📦 Card GitHub', txt, '📦', 'gh'); _ntfUpdateBell(); }catch(e){} _ghLastSig=sig; }
+  } else if(!_ghPending.length){
+    document.getElementById('gh-notif').classList.remove('on');
   }
 }
+function _ghDismiss(){
+  _ghDismissedSig=_ghPending.map(f=>f.name+':'+f.sha).sort().join('|');
+  document.getElementById('gh-notif').classList.remove('on');
+}
 async function _ghInstallAll(){
-  if(!_ghPending.length) return;
-  showToast('⬇️ Installo '+_ghPending.length+' card…');
+  if(!_ghPending.length){ document.getElementById('gh-notif').classList.remove('on'); return; }
+  showToast('⬇️ Aggiorno '+_ghPending.length+' card…');
   let ok=0,err=0;
   for(const f of _ghPending.slice()){ try{ await _ghInstallFile(f); ok++; }catch(e){ err++; console.warn('[GitHub]',f.name,e.message); } }
   _ghPending=[]; _ghDismissedSig='';
-  saveCfg(); _haSaveCfg(); renderDash();
+  document.getElementById('gh-notif').classList.remove('on');
+  saveCfg(); _haSaveCfg();
+  renderDash();
   if(typeof _jsStoreRenderList==='function') _jsStoreRenderList();
   if(typeof _epRenderJsStore==='function') _epRenderJsStore();
-  const msg='✅ '+ok+' card installate'+(err?(' · '+err+' errori'):'');
-  showToast(msg);
-  _ntfPushLog('✅ Card installate', ok+' card installate dallo store GitHub'+(err?' ('+err+' errori)':''), '✅');
-  _ntfUpdateBell();
+  showToast('✅ '+ok+' card aggiornate'+(err?(' · '+err+' errori'):''));
+}
+/* Chiede CONFERMA prima di aggiornare le card JS, poi installa (aggiorna anche le card già in plancia). */
+function _ghAskInstall(){
+  const run=()=>{ _ntfLog=_ntfLog.filter(n=>n.action!=='gh'); _ntfSaveLog(); _ntfUpdateBell(); if(typeof renderNotifCenter==='function') renderNotifCenter(); closeNotifCenter(); _ghInstallAll(); };
+  if(_ghPending&&_ghPending.length){
+    const names=_ghPending.map(f=>f.name.replace(/\.js$/,'')).join(', ');
+    const q=_ghPending.length===1 ? ('Vuoi aggiornare la card <b>'+names+'</b>?') : ('Vuoi aggiornare <b>'+_ghPending.length+' card</b>?<br><span style="font-size:11px;opacity:.7">'+names+'</span>');
+    showConfirm(q+'<br><span style="font-size:11px;opacity:.7">Si aggiorneranno subito, anche se già presenti nella plancia.</span>', run, 'Aggiorna');
+  } else {
+    showToast('🔄 Controllo aggiornamenti card…');
+    _ghCheck(true).then(()=>{ if(_ghPending.length) _ghAskInstall(); else showToast('✅ Card già aggiornate'); });
+  }
 }
 async function _ghImportAll(){
   let files;
@@ -923,7 +939,7 @@ async function _ghImportAll(){
   renderDash();
   if(typeof _jsStoreRenderList==='function') _jsStoreRenderList();
   if(typeof _epRenderJsStore==='function') _epRenderJsStore();
-  _ghPending=[];
+  _ghPending=[]; document.getElementById('gh-notif').classList.remove('on');
   _ghStatus('✅ '+ok+' card importate'+(err?(' · '+err+' errori'):''));
   showToast('✅ '+ok+' card importate da GitHub');
 }
@@ -1283,7 +1299,7 @@ function _connFail(){
   const cm=document.getElementById('cmsg'); if(cm) cm.innerHTML='⚠️ Home Assistant non raggiungibile<br><span style="font-size:10px;opacity:.6">ultimo tentativo: '+(_lastTriedHost||'?')+'</span>';
   const skip=document.getElementById('cov-skip'); if(skip) skip.style.display='';
   const rbox=document.getElementById('cov-remote-box'); if(rbox) rbox.style.display='';
-  const cov=document.getElementById('cov'); if(cov){ cov.classList.remove('off'); cov.classList.add('blocking'); }
+  const cov=document.getElementById('cov'); if(cov) cov.classList.remove('off');
   reconn=setTimeout(connect,8000);
 }
 function saveRemoteAndRetry(){
@@ -1340,10 +1356,9 @@ function onMsg(m){
   if(m.type==='auth_required') ws.send(JSON.stringify({type:'auth',access_token:TOKEN}));
   else if(m.type==='auth_ok'){
     clearTimeout(covTimer);
-    _connBusy=false; _connOk=true; _everConnected=true;
+    _connBusy=false; _connOk=true; _everConnected=true;   // connessione attiva → riconnessioni future in background
     setC('on');
-    const covEl=document.getElementById('cov');
-    if(covEl){ covEl.classList.add('off'); covEl.classList.remove('blocking'); }
+    document.getElementById('cov').classList.add('off');
     const rbox=document.getElementById('cov-remote-box'); if(rbox) rbox.style.display='none';
     send({type:'get_states'});
     send({type:'subscribe_events',event_type:'state_changed'});
@@ -1364,7 +1379,7 @@ function onMsg(m){
     const cm=document.getElementById('cmsg'); if(cm) cm.innerHTML='🔑 Token di accesso non valido<br><span style="font-size:10px;opacity:.6">Crea un token in Profilo HA → Token a lunga durata e incollalo qui sotto</span>';
     const skip=document.getElementById('cov-skip'); if(skip) skip.style.display='';
     const rbox=document.getElementById('cov-remote-box'); if(rbox) rbox.style.display='';
-    const cov=document.getElementById('cov'); if(cov){ cov.classList.remove('off'); cov.classList.add('blocking'); }
+    const cov=document.getElementById('cov'); if(cov) cov.classList.remove('off');
   }
   // Esito salvataggio config su HA (frontend/set_user_data)
   else if(m.type==='result'&&m.id===_cfgSetId){
@@ -1407,8 +1422,8 @@ function onMsg(m){
     // l'invio su HA avviene solo col pulsante "Sincronizza" (evita sovrascritture accidentali).
   }
   else if(m.type==='result'&&Array.isArray(m.result)){
-    m.result.filter(e=>e&&e.entity_id).forEach(e=>{ hs[e.entity_id]=e.state; ha[e.entity_id]=e.attributes||{}; });
-    allE=m.result.filter(e=>e&&e.entity_id).sort((a,b)=>a.entity_id.localeCompare(b.entity_id));
+    m.result.forEach(e=>{ hs[e.entity_id]=e.state; ha[e.entity_id]=e.attributes||{}; });
+    allE=m.result.sort((a,b)=>a.entity_id.localeCompare(b.entity_id));
     if(!_dashBuilt){
       // PRIMA costruzione della dashboard
       _dashBuilt=true;
@@ -5700,6 +5715,8 @@ function addSaved(idx){
   newCard.id=uid(); delete newCard._savedAt; _assignSection(page,newCard);
   page.cards.push(newCard);
   saveCfg();
+  const smOpen=!document.getElementById('smod').classList.contains('off');
+  if(smOpen) closeSM();
   renderDash(); openCM(newCard.id);
 }
 
@@ -8124,12 +8141,102 @@ function tick(){
 }
 tick(); setInterval(tick,30000);
 
+/* ═══ LOGIN ═══ */
+let _loginMode = localStorage.getItem('hadb_loginmode') || 'local';
+
+function setLoginMode(mode){
+  _loginMode = mode;
+  localStorage.setItem('hadb_loginmode', mode);
+  document.getElementById('lmode-local').classList.toggle('on', mode==='local');
+  document.getElementById('lmode-remote').classList.toggle('on', mode==='remote');
+  document.getElementById('l-remote-section').style.display = mode==='remote' ? 'flex' : 'none';
+}
+
+function toggleLoginAdv(){
+  const el = document.getElementById('l-adv');
+  el.classList.toggle('open');
+  document.querySelector('.login-adv-toggle').textContent =
+    el.classList.contains('open') ? '🔧 Token avanzato ▴' : '🔧 Token avanzato ▾';
+}
+
+function doLogin(){
+  const u=document.getElementById('l-user').value.trim();
+  const p=document.getElementById('l-pass').value;
+  const savedU=localStorage.getItem('hadb_user')||'admin';
+  const savedP=localStorage.getItem('hadb_pass')||'admin';
+  if(u===savedU && p===savedP){
+    if(_loginMode==='remote'){
+      // Leggi e salva URL Nabu Casa
+      const rawUrl = document.getElementById('l-haurl').value.trim();
+      if(!rawUrl){
+        const err=document.getElementById('l-err');
+        err.textContent='Inserisci l\'URL Nabu Casa';
+        setTimeout(()=>err.textContent='',2500);
+        return;
+      }
+      try{
+        const u2=new URL(rawUrl.startsWith('http')?rawUrl:'https://'+rawUrl);
+        HA_HOST=u2.host; BASE=u2.origin;
+      }catch(e){
+        HA_HOST=rawUrl.replace(/^https?:\/\//,'').replace(/\/$/,'');
+        BASE='https://'+HA_HOST;
+      }
+      localStorage.setItem('hadb_haurl', rawUrl);
+      // Token personalizzato
+      const customToken = document.getElementById('l-token').value.trim();
+      if(customToken){ TOKEN=customToken; localStorage.setItem('hadb_token', customToken); }
+      else { TOKEN=localStorage.getItem('hadb_token')||TOKEN_DEFAULT; }
+    } else {
+      // Locale/automatico: connessione alla STESSA origine (funziona sia in locale sia da remoto)
+      if(location.protocol==='http:'||location.protocol==='https:'){ HA_HOST=location.host; BASE=location.origin; }
+      else { HA_HOST=LOCAL_FALLBACK; BASE='http://'+HA_HOST; }
+      TOKEN=localStorage.getItem('hadb_token')||TOKEN_DEFAULT;
+      localStorage.removeItem('hadb_haurl');
+    }
+    // Salva credenziali in localStorage
+    localStorage.setItem('hadb_user', u);
+    localStorage.setItem('hadb_pass', p);
+    localStorage.setItem('ha_auth','1');   // ricorda l'accesso anche dopo chiusura (niente login ogni volta)
+    document.getElementById('lov').classList.add('off');
+    _jsStoreBootAll();
+    renderDash();
+    _connTargets=[]; _connIdx=0; _connBusy=false;
+    connect();
+  } else {
+    const err=document.getElementById('l-err');
+    err.textContent='Credenziali non valide';
+    document.getElementById('l-pass').value='';
+    document.getElementById('l-pass').focus();
+    setTimeout(()=>err.textContent='',2500);
+  }
+}
+
 function doLogout(){
+  localStorage.removeItem('ha_auth');
+  sessionStorage.removeItem('ha_auth');
+  // Chiudi WebSocket
   if(ws){ try{ ws.close(); }catch(e){} ws=null; }
   clearTimeout(reconn);
+  // Esci da kiosk se attivo
   if(_kioskOn) toggleKiosk();
-  location.reload();
+  // Mostra login con credenziali pre-riempite
+  document.documentElement.classList.remove('frk-authed');  // riattiva la visibilità del login
+  const lov=document.getElementById('lov');
+  lov.classList.remove('off');
+  const savedU=localStorage.getItem('hadb_user')||'';
+  const savedP=localStorage.getItem('hadb_pass')||'';
+  document.getElementById('l-user').value=savedU;
+  document.getElementById('l-pass').value=savedP;
+  document.getElementById('l-err').textContent='';
+  document.getElementById('l-user').focus();
+  // Reset connessione
+  setC('off');
+  document.getElementById('cmsg').textContent='Connessione a Home Assistant…';
+  document.getElementById('cov-skip').style.display='none';
 }
+['l-user','l-pass','l-haurl'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
+});
 
 /* ═══ HEADER BAR (left section) ═══ */
 
@@ -8163,24 +8270,44 @@ function openHBM_HDR(){
     if(ct){ const r=document.documentElement.style; r.setProperty('--acc',ct.acc); r.setProperty('--acc2',ct.acc2); r.setProperty('--glow1',ct.g[0]); r.setProperty('--glow2',ct.g[1]); r.setProperty('--glow3',ct.g[2]); if(t!=='light'){ r.setProperty('--bg',ct.bg); r.setProperty('--panel',ct.panel); r.setProperty('--panel2',ct.panel2); } }
   }catch(e){}
 })();
+/* Ripristina modalità e campi login salvati */
 (function(){
+  // Servita da HA (http/https) → sempre "locale" = stessa origine (vale per accesso locale E remoto).
+  // La modalità "remoto" con URL fisso ha senso solo se la pagina è aperta come file (file://).
+  const mode = (location.protocol==='file:') ? (localStorage.getItem('hadb_loginmode')||'local') : 'local';
+  setLoginMode(mode);
+  const savedUrl = localStorage.getItem('hadb_haurl')||'';
+  if(savedUrl) document.getElementById('l-haurl').value = savedUrl;
+  const savedU = localStorage.getItem('hadb_user')||'';
+  const savedP = localStorage.getItem('hadb_pass')||'';
+  if(savedU) document.getElementById('l-user').value = savedU;
+  if(savedP) document.getElementById('l-pass').value = savedP;
+  const savedToken = localStorage.getItem('hadb_token')||'';
+  if(savedToken){ document.getElementById('l-token').value = savedToken; }
   const savedRemote = localStorage.getItem('hadb_remote')||REMOTE_URL_DEFAULT;
   const cre=document.getElementById('cov-remote-url'); if(cre) cre.value=savedRemote;
 })();
 
-// Boot diretto — recupera token da server se non salvato, poi connetti
-_jsStoreBootAll();
-renderDash();
-(async function(){
-  if(!TOKEN){
-    try{
-      const r=await fetch('./api/frarik/token');
-      const d=await r.json();
-      if(d&&d.token){ TOKEN=d.token; localStorage.setItem('hadb_token',d.token); }
-    }catch(e){}
-  }
+if(localStorage.getItem('ha_auth')==='1' || sessionStorage.getItem('ha_auth')==='1'){
+  document.getElementById('lov').classList.add('off');
+  _jsStoreBootAll();
+  renderDash();
   connect();
-})();
+} else {
+  document.getElementById('l-user').focus();
+}
+
+/* Se la plancia è appena stata auto-aggiornata, mostra la notifica informativa "aggiornata alla versione X" */
+try{
+  var _pn=parseInt(localStorage.getItem('frarik_app_pending_notify')||'0',10);
+  if(_pn && _pn<=(window.FRARIK_APP_VERSION||0)){
+    localStorage.removeItem('frarik_app_pending_notify');
+    setTimeout(()=>{ try{
+      var _cl=(window.FRARIK_CHANGELOG&&window.FRARIK_CHANGELOG.length)?window.FRARIK_CHANGELOG:null;
+      _ntfPushLog('✅ Plancia aggiornata alla versione '+(window.FRARIK_APP_VERSION||''), _cl?'Ecco cosa è cambiato:':'La plancia è stata aggiornata.', '📋', null, {changelog:_cl});
+    }catch(e){} }, 1500);
+  }
+}catch(e){}
 try{
   var _vl=document.getElementById('ep-ver-label');
   // Mostra versione add-on dal server (config.yaml), fallback al numero interno
@@ -9216,16 +9343,23 @@ function _ntfRelTime(ts){
 function renderNotifCenter(){
   const el=document.getElementById('notif-center-list'); if(!el) return;
   if(!_ntfLog.length){ el.innerHTML='<div class="ntfc-empty">Nessuna notifica</div>'; return; }
-  el.innerHTML=_ntfLog.map(n=>`
-    <div class="ntfc-item${n.read?'':' unread'}">
+  el.innerHTML=_ntfLog.map((n,i)=>{
+    const hasChangelog=Array.isArray(n.changelog)&&n.changelog.length;
+    // le notifiche con changelog NON sono cliccabili tutte: hanno il tasto "Ho capito"
+    const act=(n.action&&!hasChangelog)?` ntfc-action" onclick="_ntfAction('${n.action}')` : '"';
+    const hint=(n.action&&!hasChangelog)?'<span class="ntfc-go">Aggiorna ›</span>':'';
+    const clHtml=hasChangelog?`<ul class="ntfc-changelog">${n.changelog.map(li=>`<li>${eh(li)}</li>`).join('')}</ul>`:'';
+    const okBtn=hasChangelog?`<button class="ntfc-ok" onclick="event.stopPropagation();_ntfDismissById('${n.id}')">Ho capito</button>`:'';
+    return `<div class="ntfc-item${n.read?'':' unread'}${act}">
       <div class="ntfc-ico">${n.icon||'🔔'}</div>
-      <div class="ntfc-body">
-        <div class="ntfc-title">${eh(n.title||'')}</div>
-        ${n.msg?`<div class="ntfc-msg">${eh(n.msg)}</div>`:''}
-        <div class="ntfc-time">${_ntfRelTime(n.ts)}</div>
-      </div>
-      <button class="ntfc-dismiss-btn" onclick="event.stopPropagation();_ntfDismissById('${n.id}')" title="Rimuovi">✕</button>
-    </div>`).join('');
+      <div class="ntfc-body"><div class="ntfc-title">${eh(n.title||'')}</div>${n.msg?`<div class="ntfc-msg">${eh(n.msg)}</div>`:''}${clHtml}${okBtn}<div class="ntfc-time">${_ntfRelTime(n.ts)}</div></div>
+      ${hint}
+    </div>`;
+  }).join('');
+}
+/* clic sulla notifica card → chiede conferma e aggiorna (la notifica si rimuove solo dopo conferma) */
+function _ntfAction(key){
+  if(key==='gh'){ _ghAskInstall(); }
 }
 function toggleNotifCenter(ev){
   if(ev) ev.stopPropagation();
@@ -9903,268 +10037,273 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
 })();
 
 // ── Esponi funzioni per handler HTML inline ──────────────────────────────────
-// Espone tutte le funzioni su window per gli handler HTML inline
-try{window._addColorRule=_addColorRule}catch(_){}
-try{window._badgeClick=_badgeClick}catch(_){}
-try{window._badgeDragEnd=_badgeDragEnd}catch(_){}
-try{window._badgeDragOver=_badgeDragOver}catch(_){}
-try{window._badgeDragStart=_badgeDragStart}catch(_){}
-try{window._badgeDrop=_badgeDrop}catch(_){}
-try{window._bmSetAlign=_bmSetAlign}catch(_){}
-try{window._cmVisToggle=_cmVisToggle}catch(_){}
-try{window._delColorRule=_delColorRule}catch(_){}
-try{window._entacPick=_entacPick}catch(_){}
-try{window._epPickerClose=_epPickerClose}catch(_){}
-try{window._epPickerOpen=_epPickerOpen}catch(_){}
-try{window._epPickerSearch=_epPickerSearch}catch(_){}
-try{window._epPickerSelect=_epPickerSelect}catch(_){}
-try{window._epToggleGroup=_epToggleGroup}catch(_){}
-try{window._fbPickPreset=_fbPickPreset}catch(_){}
-try{window._fbPreviewIcon=_fbPreviewIcon}catch(_){}
-try{window._feClick=_feClick}catch(_){}
-try{window._feEpSearch=_feEpSearch}catch(_){}
-try{window._ghCheck=_ghCheck}catch(_){}
-try{window._ghImportAll=_ghImportAll}catch(_){}
-try{window._ghPublishDo=_ghPublishDo}catch(_){}
-try{window._ghStoreRender=_ghStoreRender}catch(_){}
-try{window._ghsCopy=_ghsCopy}catch(_){}
-try{window._ghsDeleteInstalled=_ghsDeleteInstalled}catch(_){}
-try{window._ghsDownload=_ghsDownload}catch(_){}
-try{window._ghsInstall=_ghsInstall}catch(_){}
-try{window._ghsPreview=_ghsPreview}catch(_){}
-try{window._ghsPublish=_ghsPublish}catch(_){}
-try{window._ghsReloadTab=_ghsReloadTab}catch(_){}
-try{window._hbOptionsPopup=_hbOptionsPopup}catch(_){}
-try{window._hbPickClockColor=_hbPickClockColor}catch(_){}
-try{window._hbPickCmapColor=_hbPickCmapColor}catch(_){}
-try{window._hbRenderOptions=_hbRenderOptions}catch(_){}
-try{window._hbSelBg=_hbSelBg}catch(_){}
-try{window._hbSelTxt=_hbSelTxt}catch(_){}
-try{window._hbSmartClick=_hbSmartClick}catch(_){}
-try{window._iconPickerClose=_iconPickerClose}catch(_){}
-try{window._iconPickerPick=_iconPickerPick}catch(_){}
-try{window._iconPickerRenderTab=_iconPickerRenderTab}catch(_){}
-try{window._inViewCopyBadge=_inViewCopyBadge}catch(_){}
-try{window._inViewCutBadge=_inViewCutBadge}catch(_){}
-try{window._inViewDelBadge=_inViewDelBadge}catch(_){}
-try{window._inViewEditBadge=_inViewEditBadge}catch(_){}
-try{window._inViewPasteBadge=_inViewPasteBadge}catch(_){}
-try{window._ntfAction=_ntfAction}catch(_){}
-try{window._ntfDelRule=_ntfDelRule}catch(_){}
-try{window._ntfDismiss=_ntfDismiss}catch(_){}
-try{window._ntfDismissById=_ntfDismissById}catch(_){}
-try{window._ntfDoAction=_ntfDoAction}catch(_){}
-try{window._ntfEntitySuggest=_ntfEntitySuggest}catch(_){}
-try{window._ntfIconHtml=_ntfIconHtml}catch(_){}
-try{window._ntfOpenActionPicker=_ntfOpenActionPicker}catch(_){}
-try{window._ntfPickEntity=_ntfPickEntity}catch(_){}
-try{window._ntfSet=_ntfSet}catch(_){}
-try{window._ntfSetActionEntity=_ntfSetActionEntity}catch(_){}
-try{window._ntfSetActionType=_ntfSetActionType}catch(_){}
-try{window._ntfToggle=_ntfToggle}catch(_){}
-try{window._ntfToggleCard=_ntfToggleCard}catch(_){}
-try{window._pgMarkDirty=_pgMarkDirty}catch(_){}
-try{window._pgWarnCancelAndProceed=_pgWarnCancelAndProceed}catch(_){}
-try{window._pgWarnSaveAndProceed=_pgWarnSaveAndProceed}catch(_){}
-try{window._pickColor=_pickColor}catch(_){}
-try{window._pickEmoji=_pickEmoji}catch(_){}
-try{window._sectEditBadge=_sectEditBadge}catch(_){}
-try{window._selBAction=_selBAction}catch(_){}
-try{window._selBC=_selBC}catch(_){}
-try{window._selColMode=_selColMode}catch(_){}
-try{window._selDisp=_selDisp}catch(_){}
-try{window._selSectColor=_selSectColor}catch(_){}
-try{window._selVis=_selVis}catch(_){}
-try{window._setNewPageCols=_setNewPageCols}catch(_){}
-try{window._setRule=_setRule}catch(_){}
-try{window._sosPickPerson=_sosPickPerson}catch(_){}
-try{window._yamlLivePreview=_yamlLivePreview}catch(_){}
-try{window.addSaved=addSaved}catch(_){}
-try{window.adjH=adjH}catch(_){}
-try{window.adjSecSpan=adjSecSpan}catch(_){}
-try{window.adjSpan=adjSpan}catch(_){}
-try{window.adjustClimate=adjustClimate}catch(_){}
-try{window.appAddRow=appAddRow}catch(_){}
-try{window.appChipPopup=appChipPopup}catch(_){}
-try{window.appGroupAdd=appGroupAdd}catch(_){}
-try{window.applyColorTheme=applyColorTheme}catch(_){}
-try{window.applyFont=applyFont}catch(_){}
-try{window.applyTheme=applyTheme}catch(_){}
-try{window.browseField=browseField}catch(_){}
-try{window.callSvc=callSvc}catch(_){}
-try{window.cancelPageSettings=cancelPageSettings}catch(_){}
-try{window.clearClipboard=clearClipboard}catch(_){}
-try{window.closeBM=closeBM}catch(_){}
-try{window.closeCM=closeCM}catch(_){}
-try{window.closeEM=closeEM}catch(_){}
-try{window.closeFBM=closeFBM}catch(_){}
-try{window.closeFE=closeFE}catch(_){}
-try{window.closeGhPub=closeGhPub}catch(_){}
-try{window.closeGhStore=closeGhStore}catch(_){}
-try{window.closeGhsPreview=closeGhsPreview}catch(_){}
-try{window.closeGitHubCfg=closeGitHubCfg}catch(_){}
-try{window.closeHBM=closeHBM}catch(_){}
-try{window.closeIM=closeIM}catch(_){}
-try{window.closeJsStore=closeJsStore}catch(_){}
-try{window.closeMobileMenu=closeMobileMenu}catch(_){}
-try{window.closeNotifCenter=closeNotifCenter}catch(_){}
-try{window.closeNotifCfg=closeNotifCfg}catch(_){}
-try{window.closeOikSettings=closeOikSettings}catch(_){}
-try{window.closeSOS=closeSOS}catch(_){}
-try{window.closeSOS2=closeSOS2}catch(_){}
-try{window.closeSOSCfg=closeSOSCfg}catch(_){}
-try{window.closeSectMod=closeSectMod}catch(_){}
-try{window.closeTM=closeTM}catch(_){}
-try{window.closeTModStep2=closeTModStep2}catch(_){}
-try{window.closeViewEdit=closeViewEdit}catch(_){}
-try{window.closeViewsMenu=closeViewsMenu}catch(_){}
-try{window.closeWM=closeWM}catch(_){}
-try{window.closeYamlImport=closeYamlImport}catch(_){}
-try{window.confirmPage=confirmPage}catch(_){}
-try{window.confirmPageSettings=confirmPageSettings}catch(_){}
-try{window.confirmRestartHA=confirmRestartHA}catch(_){}
-try{window.copyCard=copyCard}catch(_){}
-try{window.copySectBadge=copySectBadge}catch(_){}
-try{window.cutCard=cutCard}catch(_){}
-try{window.cutSectBadge=cutSectBadge}catch(_){}
-try{window.delBadge=delBadge}catch(_){}
-try{window.delCard=delCard}catch(_){}
-try{window.delPage=delPage}catch(_){}
-try{window.delPageByIdx=delPageByIdx}catch(_){}
-try{window.delSectBadge=delSectBadge}catch(_){}
-try{window.delSectTitle=delSectTitle}catch(_){}
-try{window.deleteSaved=deleteSaved}catch(_){}
-try{window.deleteViewFromEdit=deleteViewFromEdit}catch(_){}
-try{window.doLogin=doLogin}catch(_){}
-try{window.doLogout=doLogout}catch(_){}
-try{window.doToggle=doToggle}catch(_){}
-try{window.dupCard=dupCard}catch(_){}
-try{window.ea=ea}catch(_){}
-try{window.editBadgeAt=editBadgeAt}catch(_){}
-try{window.editView=editView}catch(_){}
-try{window.eitClick=eitClick}catch(_){}
-try{window.exportBackup=exportBackup}catch(_){}
-try{window.fbAddBtn=fbAddBtn}catch(_){}
-try{window.fbCancelBtn=fbCancelBtn}catch(_){}
-try{window.fbDelBtn=fbDelBtn}catch(_){}
-try{window.fbEditBtn=fbEditBtn}catch(_){}
-try{window.fbMoveBtn=fbMoveBtn}catch(_){}
-try{window.fbSaveBtn=fbSaveBtn}catch(_){}
-try{window.fbSelType=fbSelType}catch(_){}
-try{window.fbarBtnClick=fbarBtnClick}catch(_){}
-try{window.fbarZoneBtnClick=fbarZoneBtnClick}catch(_){}
-try{window.feAddEl=feAddEl}catch(_){}
-try{window.feAddEntity=feAddEntity}catch(_){}
-try{window.feDelEl=feDelEl}catch(_){}
-try{window.feOpenEP=feOpenEP}catch(_){}
-try{window.feUp=feUp}catch(_){}
-try{window.feUpdCard=feUpdCard}catch(_){}
-try{window.filterE=filterE}catch(_){}
-try{window.ghStoreTab=ghStoreTab}catch(_){}
-try{window.hardReload=hardReload}catch(_){}
-try{window.hbAddChip=hbAddChip}catch(_){}
-try{window.hbAddOption=hbAddOption}catch(_){}
-try{window.hbAutoFill=hbAutoFill}catch(_){}
-try{window.hbCancelChip=hbCancelChip}catch(_){}
-try{window.hbDelChip=hbDelChip}catch(_){}
-try{window.hbEditChip=hbEditChip}catch(_){}
-try{window.hbMoveChip=hbMoveChip}catch(_){}
-try{window.hbSaveChip=hbSaveChip}catch(_){}
-try{window.hbSelClickAct=hbSelClickAct}catch(_){}
-try{window.hbSelClockFormat=hbSelClockFormat}catch(_){}
-try{window.hbSelClockSize=hbSelClockSize}catch(_){}
-try{window.hbSelClockStyle=hbSelClockStyle}catch(_){}
-try{window.hbSelShape=hbSelShape}catch(_){}
-try{window.hbSelSize=hbSelSize}catch(_){}
-try{window.hbSelType=hbSelType}catch(_){}
-try{window.hideBadgeForm=hideBadgeForm}catch(_){}
-try{window.importBackupFile=importBackupFile}catch(_){}
-try{window.importYamlCard=importYamlCard}catch(_){}
-try{window.jsStoreAddCard=jsStoreAddCard}catch(_){}
-try{window.jsStoreDeleteCard=jsStoreDeleteCard}catch(_){}
-try{window.jsStoreDownloadTemplate=jsStoreDownloadTemplate}catch(_){}
-try{window.jsStoreLoadFile=jsStoreLoadFile}catch(_){}
-try{window.jsStoreTab=jsStoreTab}catch(_){}
-try{window.moveBadge=moveBadge}catch(_){}
-try{window.moveSectBadge=moveSectBadge}catch(_){}
-try{window.ntfAddRule=ntfAddRule}catch(_){}
-try{window.ntfClearAll=ntfClearAll}catch(_){}
-try{window.ntfMarkAllRead=ntfMarkAllRead}catch(_){}
-try{window.oikSaveConfig=oikSaveConfig}catch(_){}
-try{window.onClickActionChange=onClickActionChange}catch(_){}
-try{window.onCustomColorToggle=onCustomColorToggle}catch(_){}
-try{window.onTypeChange=onTypeChange}catch(_){}
-try{window.openBM=openBM}catch(_){}
-try{window.openCM=openCM}catch(_){}
-try{window.openColorPicker=openColorPicker}catch(_){}
-try{window.openFBM=openFBM}catch(_){}
-try{window.openGhStore=openGhStore}catch(_){}
-try{window.openGitHubCfg=openGitHubCfg}catch(_){}
-try{window.openHBM_HDR=openHBM_HDR}catch(_){}
-try{window.openIM=openIM}catch(_){}
-try{window.openIconPicker=openIconPicker}catch(_){}
-try{window.openNotifCfg=openNotifCfg}catch(_){}
-try{window.openOikSettings=openOikSettings}catch(_){}
-try{window.openPageCfg=openPageCfg}catch(_){}
-try{window.openSOS=openSOS}catch(_){}
-try{window.openSOSCfg=openSOSCfg}catch(_){}
-try{window.openSectBadges=openSectBadges}catch(_){}
-try{window.openSectMod=openSectMod}catch(_){}
-try{window.openTM=openTM}catch(_){}
-try{window.openYamlImport=openYamlImport}catch(_){}
-try{window.pasteCard=pasteCard}catch(_){}
-try{window.pasteCardTo=pasteCardTo}catch(_){}
-try{window.pasteSectBadge=pasteSectBadge}catch(_){}
-try{window.previewSect=previewSect}catch(_){}
-try{window.redoEdit=redoEdit}catch(_){}
-try{window.renderAppGroups=renderAppGroups}catch(_){}
-try{window.renderAppItems=renderAppItems}catch(_){}
-try{window.renderSOSCfgList=renderSOSCfgList}catch(_){}
-try{window.saveBadgeForm=saveBadgeForm}catch(_){}
-try{window.saveCard=saveCard}catch(_){}
-try{window.saveCfg=saveCfg}catch(_){}
-try{window.saveFBM=saveFBM}catch(_){}
-try{window.saveGitHubCfg=saveGitHubCfg}catch(_){}
-try{window.saveHBM=saveHBM}catch(_){}
-try{window.saveRemoteAndRetry=saveRemoteAndRetry}catch(_){}
-try{window.saveSectMod=saveSectMod}catch(_){}
-try{window.saveViewEdit=saveViewEdit}catch(_){}
-try{window.saveWizard=saveWizard}catch(_){}
-try{window.selBT=selBT}catch(_){}
-try{window.selColor=selColor}catch(_){}
-try{window.selShape=selShape}catch(_){}
-try{window.send=send}catch(_){}
-try{window.setActivePage=setActivePage}catch(_){}
-try{window.setLoginMode=setLoginMode}catch(_){}
-try{window.setSectBadgesAlign=setSectBadgesAlign}catch(_){}
-try{window.setSectColor=setSectColor}catch(_){}
-try{window.setSectSize=setSectSize}catch(_){}
-try{window.setSectTitleAlign=setSectTitleAlign}catch(_){}
-try{window.setSectionCols=setSectionCols}catch(_){}
-try{window.setSectionRowH=setSectionRowH}catch(_){}
-try{window.showBadgeForm=showBadgeForm}catch(_){}
-try{window.showToast=showToast}catch(_){}
-try{window.sosAddContact=sosAddContact}catch(_){}
-try{window.sosAddPerson=sosAddPerson}catch(_){}
-try{window.sosAlertAll=sosAlertAll}catch(_){}
-try{window.sosCall=sosCall}catch(_){}
-try{window.sosDeleteContact=sosDeleteContact}catch(_){}
-try{window.sosNotify=sosNotify}catch(_){}
-try{window.sosRemovePerson=sosRemovePerson}catch(_){}
-try{window.sosUpdateContact=sosUpdateContact}catch(_){}
-try{window.syncCfgToHA=syncCfgToHA}catch(_){}
-try{window.toggleEdit=toggleEdit}catch(_){}
-try{window.toggleEntity=toggleEntity}catch(_){}
-try{window.toggleFbarEnabled=toggleFbarEnabled}catch(_){}
-try{window.toggleFontPop=toggleFontPop}catch(_){}
-try{window.toggleHASidebar=toggleHASidebar}catch(_){}
-try{window.toggleKiosk=toggleKiosk}catch(_){}
-try{window.toggleLoginAdv=toggleLoginAdv}catch(_){}
-try{window.toggleMobileMenu=toggleMobileMenu}catch(_){}
-try{window.toggleNotifCenter=toggleNotifCenter}catch(_){}
-try{window.toggleSectBold=toggleSectBold}catch(_){}
-try{window.toggleSectItalic=toggleSectItalic}catch(_){}
-try{window.toggleViewsMenu=toggleViewsMenu}catch(_){}
-try{window.undoEdit=undoEdit}catch(_){}
-try{window.yamlImportAdd=yamlImportAdd}catch(_){}
-try{window.yamlImportParse=yamlImportParse}catch(_){}
+Object.assign(window, {
+  _addColorRule,
+  _badgeClick,
+  _badgeDragEnd,
+  _badgeDragOver,
+  _badgeDragStart,
+  _badgeDrop,
+  _bmSetAlign,
+  _cmVisToggle,
+  _delColorRule,
+  _entacPick,
+  _epPickerClose,
+  _epPickerOpen,
+  _epPickerSearch,
+  _epPickerSelect,
+  _epToggleGroup,
+  _fbPickPreset,
+  _fbPreviewIcon,
+  _feClick,
+  _feEpSearch,
+  _ghAskInstall,
+  _ghCheck,
+  _ghDismiss,
+  _ghImportAll,
+  _ghPublishDo,
+  _ghStoreRender,
+  _ghsCopy,
+  _ghsDeleteInstalled,
+  _ghsDownload,
+  _ghsInstall,
+  _ghsPreview,
+  _ghsPublish,
+  _ghsReloadTab,
+  _hbOptionsPopup,
+  _hbPickClockColor,
+  _hbPickCmapColor,
+  _hbRenderOptions,
+  _hbSelBg,
+  _hbSelTxt,
+  _hbSmartClick,
+  _iconPickerClose,
+  _iconPickerPick,
+  _iconPickerRenderTab,
+  _inViewCopyBadge,
+  _inViewCutBadge,
+  _inViewDelBadge,
+  _inViewEditBadge,
+  _inViewPasteBadge,
+  _ntfAction,
+  _ntfDelRule,
+  _ntfDismiss,
+  _ntfDismissById,
+  _ntfDoAction,
+  _ntfEntitySuggest,
+  _ntfIconHtml,
+  _ntfOpenActionPicker,
+  _ntfPickEntity,
+  _ntfSet,
+  _ntfSetActionEntity,
+  _ntfSetActionType,
+  _ntfToggle,
+  _ntfToggleCard,
+  _pgMarkDirty,
+  _pgWarnCancelAndProceed,
+  _pgWarnSaveAndProceed,
+  _pickColor,
+  _pickEmoji,
+  _sectEditBadge,
+  _selBAction,
+  _selBC,
+  _selColMode,
+  _selDisp,
+  _selSectColor,
+  _selVis,
+  _setNewPageCols,
+  _setRule,
+  _sosPickPerson,
+  _yamlLivePreview,
+  addSaved,
+  addSpecial,
+  adjH,
+  adjSecSpan,
+  adjSpan,
+  adjustClimate,
+  appAddRow,
+  appChipPopup,
+  appGroupAdd,
+  applyColorTheme,
+  applyFont,
+  applyTheme,
+  browseField,
+  callSvc,
+  cancelPageSettings,
+  clearClipboard,
+  closeBM,
+  closeCM,
+  closeEM,
+  closeFBM,
+  closeFE,
+  closeGhPub,
+  closeGhStore,
+  closeGhsPreview,
+  closeGitHubCfg,
+  closeHBM,
+  closeIM,
+  closeJsStore,
+  closeMobileMenu,
+  closeNotifCenter,
+  closeNotifCfg,
+  closeOikSettings,
+  closeSM,
+  closeSOS,
+  closeSOS2,
+  closeSOSCfg,
+  closeSectMod,
+  closeTM,
+  closeTModStep2,
+  closeViewEdit,
+  closeViewsMenu,
+  closeWM,
+  closeYamlImport,
+  confirmPage,
+  confirmPageSettings,
+  confirmRestartHA,
+  copyCard,
+  copySectBadge,
+  cutCard,
+  cutSectBadge,
+  delBadge,
+  delCard,
+  delPage,
+  delPageByIdx,
+  delSectBadge,
+  delSectTitle,
+  deleteSaved,
+  deleteViewFromEdit,
+  doLogin,
+  doLogout,
+  doToggle,
+  dupCard,
+  ea,
+  editBadgeAt,
+  editView,
+  eitClick,
+  exportBackup,
+  fbAddBtn,
+  fbCancelBtn,
+  fbDelBtn,
+  fbEditBtn,
+  fbMoveBtn,
+  fbSaveBtn,
+  fbSelType,
+  fbarBtnClick,
+  fbarZoneBtnClick,
+  feAddEl,
+  feAddEntity,
+  feDelEl,
+  feOpenEP,
+  feUp,
+  feUpdCard,
+  filterE,
+  ghStoreTab,
+  hardReload,
+  hbAddChip,
+  hbAddOption,
+  hbAutoFill,
+  hbCancelChip,
+  hbDelChip,
+  hbEditChip,
+  hbMoveChip,
+  hbSaveChip,
+  hbSelClickAct,
+  hbSelClockFormat,
+  hbSelClockSize,
+  hbSelClockStyle,
+  hbSelShape,
+  hbSelSize,
+  hbSelType,
+  hideBadgeForm,
+  importBackupFile,
+  importYamlCard,
+  jsStoreAddCard,
+  jsStoreDeleteCard,
+  jsStoreDownloadTemplate,
+  jsStoreLoadFile,
+  jsStoreTab,
+  moveBadge,
+  moveSectBadge,
+  ntfAddRule,
+  ntfClearAll,
+  ntfMarkAllRead,
+  oikSaveConfig,
+  onClickActionChange,
+  onCustomColorToggle,
+  onTypeChange,
+  openBM,
+  openCM,
+  openColorPicker,
+  openFBM,
+  openGhStore,
+  openGitHubCfg,
+  openHBM_HDR,
+  openIM,
+  openIconPicker,
+  openNotifCfg,
+  openOikSettings,
+  openPageCfg,
+  openSOS,
+  openSOSCfg,
+  openSectBadges,
+  openSectMod,
+  openTM,
+  openYamlImport,
+  pasteCard,
+  pasteCardTo,
+  pasteSectBadge,
+  previewSect,
+  redoEdit,
+  renderAppGroups,
+  renderAppItems,
+  renderSOSCfgList,
+  saveBadgeForm,
+  saveCard,
+  saveCfg,
+  saveFBM,
+  saveGitHubCfg,
+  saveHBM,
+  saveRemoteAndRetry,
+  saveSectMod,
+  saveViewEdit,
+  saveWizard,
+  selBT,
+  selColor,
+  selShape,
+  send,
+  setActivePage,
+  setLoginMode,
+  setSectBadgesAlign,
+  setSectColor,
+  setSectSize,
+  setSectTitleAlign,
+  setSectionCols,
+  setSectionRowH,
+  showBadgeForm,
+  showToast,
+  sosAddContact,
+  sosAddPerson,
+  sosAlertAll,
+  sosCall,
+  sosDeleteContact,
+  sosNotify,
+  sosRemovePerson,
+  sosUpdateContact,
+  syncCfgToHA,
+  toggleEdit,
+  toggleEntity,
+  toggleFbarEnabled,
+  toggleFontPop,
+  toggleHASidebar,
+  toggleKiosk,
+  toggleLoginAdv,
+  toggleMobileMenu,
+  toggleNotifCenter,
+  toggleSectBold,
+  toggleSectItalic,
+  toggleViewsMenu,
+  undoEdit,
+  yamlImportAdd,
+  yamlImportParse,
+});

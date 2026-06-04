@@ -1,6 +1,6 @@
 name: "Frarik Dashboard"
 description: "Dashboard personalizzata per Home Assistant — sviluppata da Fratech & Rizzahc"
-version: "1.1.9"
+version: "1.1.1"
 slug: frarik_dashboard
 url: "https://github.com/Frarik/cards"
 
@@ -21,9 +21,9 @@ ingress_stream: false
 panel_icon: mdi:view-dashboard
 panel_title: Frarik
 
-homeassistant_api: true
+homeassistant_api: false
 auth_api: false
-hassio_api: true
+hassio_api: false
 hassio_role: default
 
 map:

@@ -378,6 +378,39 @@ select.finp option{background:#1a1e30}
 .btn2:hover{color:#fff}
 
 
+/* ═══ LOGIN OVERLAY ═══ */
+#lov{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:900}
+#lov.off{display:none}
+html.frk-authed #lov{display:none}   /* già autenticato: login nascosto fin dal primo frame (niente flash) */
+.login-box{background:rgba(12,14,28,0.92);border:1px solid var(--bd2);border-radius:24px;padding:40px 36px;width:340px;display:flex;flex-direction:column;align-items:center;gap:0;
+  box-shadow:0 32px 80px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.05);
+  backdrop-filter:blur(20px);animation:sup .25s ease}
+.login-logo{font-size:40px;margin-bottom:8px;filter:drop-shadow(0 0 18px #6366f188)}
+.login-title{font-size:18px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px}
+.login-sub{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:28px}
+.login-inp{width:100%;padding:11px 14px;background:rgba(255,255,255,0.04);border:1px solid var(--bd2);border-radius:11px;font-size:13px;color:#fff;margin-bottom:12px;transition:border-color .2s}
+.login-inp:focus{border-color:var(--acc);background:rgba(99,102,241,0.06)}
+.login-inp::placeholder{color:var(--dim)}
+.login-btn{width:100%;padding:12px;border-radius:11px;background:var(--acc);color:#fff;font-size:13px;font-weight:700;letter-spacing:.3px;margin-top:4px;transition:background .2s;border:none}
+.login-btn:hover{background:var(--acc2)}
+.login-btn:active{transform:none}
+.login-err{font-size:11px;color:#f87171;min-height:18px;margin-top:8px;font-weight:600;letter-spacing:.3px;text-align:center}
+.login-sep{width:100%;height:1px;background:rgba(255,255,255,0.07);margin:10px 0}
+.login-adv-toggle{font-size:10px;color:var(--dim);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px;margin-bottom:6px;transition:color .2s}
+.login-adv-toggle:hover{color:rgba(255,255,255,0.6)}
+.login-adv{width:100%;display:none;flex-direction:column;gap:0}
+.login-adv.open{display:flex}
+.login-hint{font-size:9px;color:var(--dim);margin-top:-8px;margin-bottom:10px;padding:0 2px;line-height:1.5;width:100%;text-align:left}
+.login-inp-mode{display:flex;gap:6px;margin-bottom:12px;width:100%}
+.lmode-btn{flex:1;padding:7px 6px;border-radius:9px;font-size:10px;font-weight:700;border:1px solid var(--bd2);color:var(--muted);background:rgba(255,255,255,0.03);transition:all .2s;text-align:center;cursor:pointer}
+.lmode-btn:hover{color:#fff;border-color:var(--acc)}
+.lmode-btn.on{background:rgba(99,102,241,0.18);border-color:var(--acc);color:var(--acc2)}
+[data-theme="light"] .login-sep{background:rgba(15,23,42,0.08)}
+[data-theme="light"] .login-adv-toggle{color:#718096}
+[data-theme="light"] .login-adv-toggle:hover{color:#0f172a}
+[data-theme="light"] .login-hint{color:#94a3b8}
+[data-theme="light"] .lmode-btn{background:rgba(15,23,42,0.05);border-color:rgba(15,23,42,0.14);color:#4a5568}
+[data-theme="light"] .lmode-btn.on{background:rgba(99,102,241,0.12);border-color:var(--acc);color:var(--acc)}
 
 /* ═══ INFO MODAL (more-info) ═══ */
 #imod .mbox{width:420px}
@@ -826,9 +859,8 @@ body.editing .col-add-btn{display:flex}
 .acp-state{font-size:9px;font-weight:700;padding:2px 7px;border-radius:8px;border:1px solid;white-space:nowrap}
 
 /* ═══ CONN OVERLAY ═══ */
-#cov{position:fixed;inset:0;background:rgba(6,8,16,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:500;transition:opacity .4s;pointer-events:none}
+#cov{position:fixed;inset:0;background:rgba(6,8,16,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:500;transition:opacity .4s}
 #cov.off{opacity:0;pointer-events:none}
-#cov.blocking{pointer-events:all}
 .spin{width:40px;height:40px;border-radius:50%;border:3px solid rgba(255,255,255,0.07);border-top-color:var(--acc);animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 #cmsg{font-size:12px;color:var(--muted);font-weight:500}
@@ -1403,11 +1435,26 @@ body.kiosk .kiosk-reload-fab:hover{background:rgba(255,255,255,0.18);color:#fff}
 .ntfc-title{font-size:12px;font-weight:700;color:#e8ebf5}
 .ntfc-msg{font-size:11px;color:var(--muted);line-height:1.35;margin-top:1px}
 .ntfc-time{font-size:9px;color:rgba(148,163,184,.6);margin-top:3px}
+/* elenco modifiche (changelog) nella notifica + tasto "Ho capito" */
+.ntfc-changelog{margin:6px 0 4px;padding-left:16px;display:flex;flex-direction:column;gap:3px}
+.ntfc-changelog li{font-size:11px;color:#cbd5e1;line-height:1.4}
+.ntfc-ok{margin-top:6px;padding:6px 14px;border-radius:8px;background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.4);color:#86efac;font-size:11px;font-weight:700;cursor:pointer}
+.ntfc-ok:hover{background:rgba(74,222,128,.28)}
 .ntfc-empty{padding:26px 14px;text-align:center;font-size:12px;color:var(--muted)}
-.ntfc-dismiss-btn{flex-shrink:0;align-self:flex-start;margin-top:1px;background:transparent;border:none;color:rgba(148,163,184,.5);font-size:13px;cursor:pointer;padding:2px 4px;border-radius:4px;line-height:1;transition:color .15s}
-.ntfc-dismiss-btn:hover{color:#f87171;background:rgba(248,113,113,.1)}
+/* notifica cliccabile (aggiornamento card/plancia) */
+.ntfc-item.ntfc-action{cursor:pointer;border:1px solid rgba(99,102,241,.25);background:rgba(99,102,241,.10)}
+.ntfc-item.ntfc-action:hover{background:rgba(99,102,241,.2);border-color:rgba(99,102,241,.5)}
+.ntfc-go{align-self:center;flex-shrink:0;font-size:10px;font-weight:800;color:#a5b4fc;background:rgba(99,102,241,.2);padding:4px 8px;border-radius:8px;white-space:nowrap}
+/* Banner aggiornamento plancia (stesso stile, colore verde) */
+#gh-notif{display:none;position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:9500;
+  align-items:center;gap:10px;max-width:92vw;padding:10px 12px 10px 16px;border-radius:14px;cursor:pointer;
+  background:linear-gradient(135deg,rgba(99,102,241,.96),rgba(139,92,246,.96));color:#fff;font-size:12px;font-weight:700;
+  border:1px solid rgba(255,255,255,.18);box-shadow:0 12px 36px -8px rgba(99,102,241,.7);animation:ghIn .25s ease}
+#gh-notif.on{display:flex}
+@keyframes ghIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
 /* per i menù a tendina laterali (viste, FAB, notifiche): niente translate-50% → non "scattano" a destra */
 @keyframes dropIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+#gh-notif:hover{filter:brightness(1.08)}
 /* In KIOSK: l'header RESTA visibile, ma mostra SOLO "esci kiosk" + "ricarica".
    (Prima l'header era nascosto e i pulsanti flottanti venivano coperti dalle card.) */
 body.kiosk #page-tabs,body.kiosk #page-tabs-wrap,body.kiosk #conn-lbl{display:none!important}
