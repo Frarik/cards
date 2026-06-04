@@ -10,7 +10,7 @@
 <script>
 /* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260604270;
+window.FRARIK_APP_VERSION = 20260604280;
 /* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
    (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
@@ -5764,8 +5764,8 @@ function buildCard(card){
   } else if(t==='entities'){
     inner=`<div class="ents-wrap" id="v-${card.id}">${entitiesInner(card)}</div>`;
   } else if(t==='yaml-card'){
-    inner=`<div id="v-${card.id}" class="jsc-wrap" style="height:100%;width:100%"><div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:11px">⏳</div></div>`;
-    setTimeout(()=>{ const _w=document.getElementById('v-'+card.id); if(_w) _mountYamlCard(card,_w); },120);
+    inner=`<div id="v-${card.id}" class="jsc-wrap" style="height:100%;width:100%"></div>`;
+    setTimeout(()=>{ const _w=document.getElementById('v-'+card.id); if(_w) _mountYamlCard(card,_w); },200);
   } else if(t==='js-custom'){
     const _jcReg=window.FratechCardRegistry||{};
     const _jcDef=_jcReg[card.jsCardId];
@@ -8506,48 +8506,64 @@ window.FratechCardRegistry = {};
 ═══════════════════════════════════════════════════════════════ */
 window.customCards = window.customCards || [];
 
-/* Restituisce il miglior oggetto hass disponibile: prima cerca il vero hass di HA dalla parent window */
+/* Restituisce il miglior oggetto hass disponibile */
 function _getBestHass(){
-  try{
-    if(window.parent&&window.parent!==window){
-      const ha=window.parent.document.querySelector('home-assistant');
-      if(ha&&ha.hass) return ha.hass;
-    }
-  }catch(e){}
+  const wins=[window.parent,window.top].filter(w=>{ try{ return w&&w!==window; }catch(e){ return false; } });
+  for(const w of wins){
+    try{ const ha=w.document.querySelector('home-assistant'); if(ha&&ha.hass) return ha.hass; }catch(e){}
+  }
   return _haHassObj();
 }
-/* Monta una yaml-card usando il custom element dalla parent window di HA */
-function _mountYamlCard(card, container){
-  container.innerHTML='';
-  if(!card.lovelaceConfig) return;
+/* Importa la classe di un custom element dalla finestra HA e la registra nel nostro documento */
+function _importHAElement(tag){
+  if(customElements.get(tag)) return true;
+  const wins=[window.parent,window.top].filter(w=>{ try{ return w&&w!==window; }catch(e){ return false; } });
+  for(const w of wins){
+    try{
+      const klass=w.customElements&&w.customElements.get(tag);
+      if(klass){ try{ customElements.define(tag,klass); return true; }catch(e){ return !!customElements.get(tag); } }
+    }catch(e){}
+  }
+  return false;
+}
+/* Monta una yaml-card — importa elementi da HA, aspetta risorse HACS */
+async function _mountYamlCard(card, container){
+  container.innerHTML='<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px">⏳</div>';
+  // Aspetta risorse HACS
+  if(!_lovelaceResourcesLoaded){
+    try{ await _loadLovelaceResources(); }catch(e){}
+    await new Promise(r=>setTimeout(r,600));
+  }
+  if(!container.isConnected||!card.lovelaceConfig){ return; }
   let yamlCfg;
-  try{ yamlCfg=typeof jsyaml!=='undefined'?jsyaml.load(card.lovelaceConfig):JSON.parse(card.lovelaceConfig); }
+  try{ yamlCfg=jsyaml.load(card.lovelaceConfig); }
   catch(e){ container.innerHTML='<div style="padding:12px;color:#f87171;font-size:11px">YAML: '+eh(e.message)+'</div>'; return; }
   const type=(yamlCfg.type||'').trim();
   const isCustom=type.startsWith('custom:');
   const tag=isCustom?type.replace('custom:','').trim():'hui-'+type+'-card';
-  // Crea elemento dalla parent window (HA ha già tutto caricato) oppure localmente
+  // Importa la classe se non già registrata
+  _importHAElement(tag);
+  // Verifica disponibilità
+  if(!customElements.get(tag)){
+    container.innerHTML=`<div style="padding:14px;color:#fbbf24;font-size:11px;line-height:1.6">
+      ⚠️ <b>${eh(tag)}</b> non disponibile.<br>
+      <span style="font-size:10px;opacity:.7">Apri Frarik come pannello HA per caricare tutti gli elementi.</span>
+    </div>`;
+    return;
+  }
+  // Crea e configura l'elemento
   let cel;
-  try{
-    if(window.parent&&window.parent!==window){
-      const pce=window.parent.customElements;
-      if(pce&&pce.get(tag)){
-        cel=document.adoptNode(window.parent.document.createElement(tag));
-      }
-    }
-  }catch(e){}
-  if(!cel) cel=_createLovelaceEl(tag);
-  // setConfig
+  try{ cel=document.createElement(tag); }
+  catch(e){ container.innerHTML='<div style="padding:12px;color:#f87171;font-size:11px">'+eh(e.message)+'</div>'; return; }
   try{ if(typeof cel.setConfig==='function') cel.setConfig(yamlCfg); }
   catch(e){ container.innerHTML='<div style="padding:10px;color:#fbbf24;font-size:11px">setConfig: '+eh(e.message)+'</div>'; return; }
-  // Passa il vero hass di HA
   try{ cel.hass=_getBestHass(); }catch(e){}
   cel.style.cssText='display:block;width:100%;height:100%';
   cel.classList.add('frarik-yaml-el');
+  container.innerHTML='';
   container.appendChild(cel);
-  // Aggiorna hass ogni secondo con il vero oggetto di HA
   if(container._yamlTimer) clearInterval(container._yamlTimer);
-  container._yamlTimer=setInterval(()=>{ try{ cel.hass=_getBestHass(); }catch(e){}},1000);
+  container._yamlTimer=setInterval(()=>{ try{ cel.hass=_getBestHass(); }catch(e){}},800);
 }
 function _stopYamlCard(cardId){
   const w=document.getElementById('v-'+cardId);
