@@ -10,7 +10,7 @@
 <script>
 /* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260604110;
+window.FRARIK_APP_VERSION = 20260604120;
 /* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
    (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
@@ -3686,11 +3686,10 @@ function openGhStore(){
 function closeGhStore(){ document.getElementById('gh-store-modal').classList.add('off'); }
 function ghStoreTab(tab){
   _ghsTab=tab;
-  ['js','chips','distintivi','yaml','pkg','installed','local'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
+  ['js','chips','distintivi','yaml','pkg','local'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
   const s=document.getElementById('ghs-search'); if(s) s.value='';
-  // la zona "carica file .js" compare solo nella scheda Card locali (lì finiscono i file caricati da PC)
   const loadEl=document.getElementById('ghs-load'); if(loadEl) loadEl.style.display=(tab==='local')?'':'none';
-  if(tab==='installed'||tab==='local'){ _ghStoreRender(); if(tab==='local') _ghStoreInitDropzone(); return; }
+  if(tab==='local'){ _ghStoreRender(); _ghStoreInitDropzone(); return; }
   if(_ghsCache[tab]){ _ghStoreRender(); return; }
   document.getElementById('ghs-status').textContent='⏳ Carico da GitHub…';
   document.getElementById('ghs-list').innerHTML='';
@@ -3703,7 +3702,6 @@ function ghStoreTab(tab){
 function _ghStoreRender(){
   const tab=_ghsTab, list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
   const q=(document.getElementById('ghs-search').value||'').toLowerCase().trim();
-  if(tab==='installed'){ _ghStoreRenderInstalled(q,'github'); return; }
   if(tab==='local'){ _ghStoreRenderInstalled(q,'local'); return; }
   const folder=_GHS_FOLDERS[tab]; const g=_ghCfg();
   let files=(_ghsCache[tab]||[]).slice();
@@ -3711,15 +3709,26 @@ function _ghStoreRender(){
   status.textContent=(_ghsCache[tab]||[]).length+' file'+(q?(' · '+files.length+' trovati'):'');
   if(!files.length){ list.innerHTML=`<div class="ghs-empty">${q?'Nessun risultato per "'+eh(q)+'"':'Nessun file in questa cartella su GitHub'}</div>`; return; }
   const ico=folder.ico;
+  const usedIds=new Set(); (cfg.pages||[]).forEach(pg=>(pg.cards||[]).forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedIds.add(c.jsCardId); }));
   list.innerHTML=files.sort((a,b)=>a.name.localeCompare(b.name)).map(f=>{
     const nm=f.name.replace(/\.(js|ya?ml)$/i,'');
     const enc=encodeURIComponent(f.name);
     let acts;
     if(folder.kind==='install'){
       const known=g.shas[f.name];
-      if(known===f.sha) acts=`<button class="ghs-btn ghs-btn-ok" onclick="_ghsInstall('${enc}')" title="Reinstalla">✓ Installata</button>`;
-      else if(known) acts=`<button class="ghs-btn ghs-btn-upd" onclick="_ghsInstall('${enc}')">↻ Aggiorna</button>`;
-      else acts=`<button class="ghs-btn ghs-btn-inst" onclick="_ghsInstall('${enc}')">⬇️ Installa</button>`;
+      const idFile=g.idFile||{};
+      const cardId=Object.keys(idFile).find(k=>idFile[k]===f.name)||null;
+      const inDash=!!(cardId&&usedIds.has(cardId));
+      const rawUrl=`https://raw.githubusercontent.com/${g.owner||'Frarik'}/${g.repo||'cards'}/${g.branch||'main'}/${folder.path}/${f.name}`;
+      const ghLink=`<a class="ghs-btn ghs-btn-cp" href="${rawUrl}" target="_blank" rel="noopener" title="Vedi su GitHub" style="text-decoration:none">🔗 GitHub</a>`;
+      if(!known){
+        acts=`${ghLink}<button class="ghs-btn ghs-btn-inst" onclick="_ghsInstall('${enc}')">⬇️ Installa</button>`;
+      } else {
+        const updateBtn=(known!==f.sha)?`<button class="ghs-btn ghs-btn-upd" onclick="_ghsInstall('${enc}')">↻ Aggiorna</button>`:'';
+        const addBtn=cardId?(inDash?`<span style="font-size:10px;color:#4ade80;font-weight:700;white-space:nowrap">✓ in dashboard</span>`:`<button class="ghs-btn ghs-btn-inst" onclick="jsStoreAddCard('${cardId}');setTimeout(_ghStoreRender,50)">➕ Aggiungi</button>`):'';
+        const delBtn=cardId?`<button class="ghs-btn" style="background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);color:#f87171" onclick="_ghsDeleteInstalled('${cardId}')">🗑</button>`:'';
+        acts=`${ghLink}${updateBtn}${addBtn}${delBtn}`;
+      }
     } else {
       acts=`<button class="ghs-btn ghs-btn-cp" onclick="_ghsCopy('${enc}')">📋 Copia</button><button class="ghs-btn ghs-btn-cp" onclick="_ghsDownload('${enc}')">⬇️</button>`;
     }
@@ -12343,7 +12352,6 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
         <button class="jsst-tab"    id="ghs-tab-distintivi" onclick="ghStoreTab('distintivi')">🏷️ Distintivi</button>
         <button class="jsst-tab"    id="ghs-tab-yaml"       onclick="ghStoreTab('yaml')">📄 YAML</button>
         <button class="jsst-tab"    id="ghs-tab-pkg"        onclick="ghStoreTab('pkg')">📦 Pacchetti</button>
-        <button class="jsst-tab"    id="ghs-tab-installed"  onclick="ghStoreTab('installed')">📋 Installate</button>
         <button class="jsst-tab"    id="ghs-tab-local"      onclick="ghStoreTab('local')">📁 Card locali</button>
         <button class="jsst-tab"    onclick="openGitHubCfg()" title="Impostazioni GitHub (aggiornamenti automatici)" style="margin-left:auto">⚙️</button>
       </div>
