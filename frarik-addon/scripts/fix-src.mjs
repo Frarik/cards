@@ -151,8 +151,10 @@ for (const source of [html, js]) {
 // Passo C: intersezione — solo nomi che sono sia usati negli handler SIA definiti nel JS
 const inlineFns = [...calledInHandlers].filter(n => definedFns.has(n)).sort();
 
+// Usa try/catch per singola funzione: se una non è in scope viene saltata
+// senza bloccare le altre (evita ReferenceError su funzioni dentro IIFE/card)
 js += `\n\n// ── Esponi funzioni per handler HTML inline ──────────────────────────────────
-Object.assign(window, {\n${inlineFns.map(f => `  ${f},`).join('\n')}\n});\n`;
+['${inlineFns.join("','")}'].forEach(n=>{try{window[n]=eval(n)}catch(e){}});\n`;
 console.log(`✓ window.assign (${inlineFns.length} funzioni)`);
 
 fs.writeFileSync(path.join(srcDir, 'main.js'), js, 'utf8');

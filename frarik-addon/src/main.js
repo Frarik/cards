@@ -824,7 +824,7 @@ function importBackupFile(file){
     showConfirm('Ripristinare questo backup?<br><span style="font-size:11px;opacity:.7">La configurazione attuale verrà sostituita ('+ (c.pages||[]).length +' pagine, '+ (Array.isArray(p.js)?p.js.length:0) +' card JS).</span>', ()=>{
       // 1) ripristina le card JS
       if(Array.isArray(p.js)){
-        p.js.forEach(it=>{ try{ if(it&&it.meta&&it.meta.id){ _jsStoreSave(it.meta.id,it.meta,it.code,it.origin); try{ _installCardCode(it.code); }catch(_){} } }catch(_){} });
+        p.js.forEach(it=>{ try{ if(it&&it.meta&&it.meta.id){ _jsStoreSave(it.meta.id,it.meta,it.code,it.origin); if(!window.FratechCardRegistry[it.meta.id]) try{ _installCardCode(it.code); }catch(_){} } }catch(_){} });
       }
       // 2) ripristina il layout
       cfg=c; cfg._ts=Date.now();
@@ -1512,7 +1512,7 @@ function onMsg(m){
       _cfgSyncing=true;
       // 1) ripristina le card JS mancanti (codice) e registrale
       if(remoteJs && remoteJs.length && typeof _jsStoreSave==='function'){
-        remoteJs.forEach(it=>{ try{ if(it&&it.meta&&it.meta.id){ _jsStoreSave(it.meta.id,it.meta,it.code,it.origin); try{ _installCardCode(it.code); }catch(e){} } }catch(e){} });
+        remoteJs.forEach(it=>{ try{ if(it&&it.meta&&it.meta.id){ _jsStoreSave(it.meta.id,it.meta,it.code,it.origin); if(!window.FratechCardRegistry[it.meta.id]) try{ _installCardCode(it.code); }catch(e){} } }catch(e){} });
       }
       // 2) adotta il layout
       cfg=remoteCfg; cfg._ts=remoteTs;
