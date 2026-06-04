@@ -112,25 +112,26 @@ window.jsyaml = jsyaml;
 js = imports + js;
 
 // ── 5. Append window.assign per inline handlers ───────────────────────────────
-const reserved = new Set(['if','else','for','while','do','return','var','let','const',
-  'function','class','new','delete','typeof','void','throw','try','catch','finally',
-  'switch','case','break','continue','import','export','default','true','false','null',
-  'undefined','this','super','yield','await','async','document','event','window',
-  'setTimeout','setInterval','clearTimeout','clearInterval','console','Math','Object',
-  'Array','String','Number','Boolean','JSON','Promise','Error','Date']);
+// Passo A: trova le funzioni DEFINITE globalmente in main.js
+const definedFns = new Set();
+for (const m of js.matchAll(/^(?:async\s+)?function\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/gm)) {
+  definedFns.add(m[1]);
+}
+console.log(`  funzioni definite trovate: ${definedFns.size}`);
 
-// Scansiona SIA l'HTML statico SIA i template string nel JS
-// Cerca TUTTE le funzioni in ogni valore on*="..." (anche dopo ; o &&)
-const allHandlerFns = new Set();
+// Passo B: trova i nomi usati negli handler inline (HTML statico + template JS)
+const calledInHandlers = new Set();
 const attrRe = /on\w+="([^"]+)"/g;
 for (const source of [html, js]) {
   for (const m of source.matchAll(attrRe)) {
     for (const call of m[1].matchAll(/([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/g)) {
-      allHandlerFns.add(call[1]);
+      calledInHandlers.add(call[1]);
     }
   }
 }
-const inlineFns = [...allHandlerFns].filter(n => !reserved.has(n)).sort();
+
+// Passo C: intersezione — solo nomi che sono sia usati negli handler SIA definiti nel JS
+const inlineFns = [...calledInHandlers].filter(n => definedFns.has(n)).sort();
 
 js += `\n\n// ── Esponi funzioni per handler HTML inline ──────────────────────────────────
 Object.assign(window, {\n${inlineFns.map(f => `  ${f},`).join('\n')}\n});\n`;

@@ -885,10 +885,9 @@ function _ghStatus(t){ const e=document.getElementById('gh-status'); if(e) e.tex
 async function _ghApiList(){
   const g=_ghCfg(); if(!g.owner||!g.repo) throw new Error('Configura proprietario e repository');
   const url=`https://api.github.com/repos/${g.owner}/${g.repo}/contents/${g.path?encodeURIComponent(g.path).replace(/%2F/g,'/'):''}?ref=${encodeURIComponent(g.branch||'main')}`;
-  const H={'Accept':'application/vnd.github.v3+json'}; if(g.token) H['Authorization']='token '+g.token;
-  const r=await fetch(url,{headers:H});
+  const r=await fetch(url,{headers:{'Accept':'application/vnd.github.v3+json'}});
   if(r.status===403) throw new Error('Limite richieste GitHub raggiunto, riprova tra poco');
-  if(r.status===404) throw new Error('Repo o cartella non trovati (controlla nome/branch — se privato aggiungi token)');
+  if(r.status===404) throw new Error('Repo o cartella non trovati (controlla nome/branch)');
   if(!r.ok) throw new Error('GitHub HTTP '+r.status);
   const j=await r.json();
   if(!Array.isArray(j)) throw new Error('Percorso non valido');
@@ -10284,13 +10283,7 @@ Object.assign(window, {
   _setNewPageCols,
   _setRule,
   _sosPickPerson,
-  _sysLoad,
-  _sysSaveMob,
-  _sysSaveSS,
-  _sysSaveTH,
-  _sysToggle,
   _yamlLivePreview,
-  add,
   addSaved,
   addSpecial,
   adjH,
@@ -10307,7 +10300,6 @@ Object.assign(window, {
   callSvc,
   cancelPageSettings,
   clearClipboard,
-  click,
   closeBM,
   closeCM,
   closeEM,
@@ -10374,9 +10366,7 @@ Object.assign(window, {
   feOpenEP,
   feUp,
   feUpdCard,
-  filter,
   filterE,
-  getElementById,
   ghStoreTab,
   hardReload,
   hbAddChip,
@@ -10402,7 +10392,6 @@ Object.assign(window, {
   jsStoreDownloadTemplate,
   jsStoreLoadFile,
   jsStoreTab,
-  map,
   moveBadge,
   moveSectBadge,
   ntfAddRule,
@@ -10433,16 +10422,11 @@ Object.assign(window, {
   pasteCard,
   pasteCardTo,
   pasteSectBadge,
-  preventDefault,
   previewSect,
-  querySelector,
   redoEdit,
-  remove,
   renderAppGroups,
   renderAppItems,
   renderSOSCfgList,
-  replace,
-  rgba,
   saveBadgeForm,
   saveCard,
   saveCfg,
@@ -10475,10 +10459,6 @@ Object.assign(window, {
   sosNotify,
   sosRemovePerson,
   sosUpdateContact,
-  splice,
-  split,
-  stopPropagation,
-  stringify,
   syncCfgToHA,
   toggleEdit,
   toggleEntity,
@@ -10492,7 +10472,6 @@ Object.assign(window, {
   toggleSectBold,
   toggleSectItalic,
   toggleViewsMenu,
-  trim,
   undoEdit,
   yamlImportAdd,
   yamlImportParse,
