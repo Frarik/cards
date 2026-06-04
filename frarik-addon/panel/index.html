@@ -2225,7 +2225,7 @@ select.ntf-field-inp option{background:#1a2035;color:#e2e8f0}
         </div>
         <div id="bf-text-row" style="display:none">
           <div class="flbl">Testo da mostrare</div>
-          <input class="finp" id="bf-text" type="text" placeholder="es. Casa Riccardo" style="margin-bottom:8px">
+          <input class="finp" id="bf-text" type="text" placeholder="es. Casa Mia" style="margin-bottom:8px">
         </div>
         <div id="bf-details-row">
           <div style="display:flex;gap:8px;margin-bottom:8px">
@@ -11445,7 +11445,7 @@ function openSOS2(){
     const cn=(contactName||'').trim().toLowerCase();
     if(!cn||!personName) return false;
     if(cn===personName) return true;                         // match esatto
-    if(cn.startsWith(personFirst+' ')) return true;         // "Riccardo Rizzardi" → "riccardo"
+    if(cn.startsWith(personFirst+' ')) return true;         // es. "Mario Rossi" → "mario"
     if(personName.startsWith(cn.split(/\s+/)[0]+' ')) return true;
     if(cn.includes(personFirst) || personName.includes(cn.split(/\s+/)[0])) return true;
     return false;

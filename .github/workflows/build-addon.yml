@@ -60,7 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: prepare
     steps:
-      - name: Notifica HA Frarik (Francesco)
+      - name: Notifica HA Frarik (Fratech)
         continue-on-error: true
         run: |
           for i in 1 2 3; do
@@ -72,7 +72,7 @@ jobs:
             [ "$CODE" = "200" ] && break || sleep 10
           done
 
-      - name: Notifica HA Riccardo (amico)
+      - name: Notifica HA Rizzahc (amico)
         continue-on-error: true
         run: |
           for i in 1 2 3; do
