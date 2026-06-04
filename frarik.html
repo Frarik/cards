@@ -10,7 +10,7 @@
 <script>
 /* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260604160;
+window.FRARIK_APP_VERSION = 20260604170;
 /* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
    (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
@@ -819,22 +819,32 @@ body.editing .col-add-btn{display:flex}
 /* ═══ STORE GITHUB (a sezioni + ricerca) ═══ */
 .ghs-search{width:100%;box-sizing:border-box;padding:9px 12px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid var(--bd2);color:#fff;font-size:12px;outline:none;margin-bottom:4px}
 .ghs-search:focus{border-color:rgba(99,102,241,.5);background:rgba(99,102,241,.06)}
-.ghs-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid var(--bd);border-radius:12px;margin-bottom:8px}
-.ghs-row:hover{background:rgba(255,255,255,.07)}
-.ghs-ico{font-size:22px;width:34px;text-align:center;flex-shrink:0}
+.ghs-row{display:flex;align-items:center;gap:12px;padding:11px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;margin-bottom:7px;transition:background .15s,border-color .15s}
+.ghs-row:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12)}
+.ghs-ico{width:36px;height:36px;border-radius:10px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.25);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
 .ghs-info{flex:1;min-width:0}
-.ghs-name{font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ghs-sub{font-size:10px;color:var(--muted);margin-top:1px}
-.ghs-acts{display:flex;gap:6px;flex-shrink:0}
-.ghs-btn{padding:6px 12px;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap}
-.ghs-btn-inst{background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#a5b4fc}
-.ghs-btn-inst:hover{background:rgba(99,102,241,.35)}
-.ghs-btn-upd{background:rgba(251,191,36,.18);border:1px solid rgba(251,191,36,.4);color:#fbbf24}
-.ghs-btn-upd:hover{background:rgba(251,191,36,.32)}
-.ghs-btn-ok{background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);color:#86efac;cursor:default}
-.ghs-btn-cp{background:rgba(148,163,184,.15);border:1px solid rgba(148,163,184,.3);color:#cbd5e1}
-.ghs-btn-cp:hover{background:rgba(148,163,184,.3)}
-.ghs-empty{padding:26px 14px;text-align:center;font-size:12px;color:var(--muted)}
+.ghs-name{font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px}
+.ghs-sub{font-size:10px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ghs-acts{display:flex;gap:5px;flex-shrink:0;align-items:center}
+/* bottone azione primaria */
+.ghs-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap;border:1px solid transparent}
+.ghs-btn-inst{background:rgba(99,102,241,.18);border-color:rgba(99,102,241,.4);color:#a5b4fc}
+.ghs-btn-inst:hover{background:rgba(99,102,241,.32);border-color:rgba(99,102,241,.6)}
+.ghs-btn-upd{background:rgba(251,191,36,.15);border-color:rgba(251,191,36,.4);color:#fbbf24}
+.ghs-btn-upd:hover{background:rgba(251,191,36,.28)}
+.ghs-btn-cp{background:rgba(148,163,184,.1);border-color:rgba(148,163,184,.25);color:#94a3b8}
+.ghs-btn-cp:hover{background:rgba(148,163,184,.22);color:#cbd5e1}
+/* icona-bottone quadrato (preview, delete) */
+.ghs-ibtn{width:30px;height:30px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;transition:all .15s;border:1px solid transparent;flex-shrink:0}
+.ghs-ibtn-eye{background:rgba(99,102,241,.1);border-color:rgba(99,102,241,.2);color:#818cf8}
+.ghs-ibtn-eye:hover{background:rgba(99,102,241,.25);color:#a5b4fc;border-color:rgba(99,102,241,.45)}
+.ghs-ibtn-del{background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.2);color:#f87171}
+.ghs-ibtn-del:hover{background:rgba(248,113,113,.2);border-color:rgba(248,113,113,.4)}
+/* badge stato */
+.ghs-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}
+.ghs-badge-dash{background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);color:#4ade80}
+.ghs-badge-dash::before{content:'';width:6px;height:6px;border-radius:50%;background:#4ade80;flex-shrink:0}
+.ghs-empty{padding:32px 14px;text-align:center;font-size:12px;color:var(--muted)}
 /* ═══ STORE PREVIEW MODAL ═══ */
 #ghs-prev-modal{position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
 #ghs-prev-modal.off{display:none}
@@ -3784,23 +3794,22 @@ function _ghStoreRender(){
     let acts;
     const prevEnc=enc.replace(/'/g,"\\'");
     const prevNm=nm.replace(/'/g,"\\'");
-    const prevBtn=`<button class="ghs-btn ghs-btn-cp" onclick="_ghsPreview('${prevEnc}','${prevNm}',${null})" title="Anteprima">👁</button>`;
+    const eyeBtn=(cid)=>`<button class="ghs-ibtn ghs-ibtn-eye" onclick="_ghsPreview('${prevEnc}','${prevNm}',${cid?`'${cid}'`:'null'})" title="Anteprima"><i class="mdi mdi-eye-outline"></i></button>`;
     if(folder.kind==='install'){
       const known=g.shas[f.name];
       const idFile=g.idFile||{};
       const cardId=Object.keys(idFile).find(k=>idFile[k]===f.name)||null;
       const inDash=!!(cardId&&usedIds.has(cardId));
-      const prevBtnInst=cardId?`<button class="ghs-btn ghs-btn-cp" onclick="_ghsPreview('${prevEnc}','${prevNm}','${cardId}')" title="Anteprima">👁</button>`:prevBtn;
       if(!known){
-        acts=`${prevBtn}<button class="ghs-btn ghs-btn-inst" onclick="_ghsInstall('${enc}')">⬇️ Installa</button>`;
+        acts=`${eyeBtn(null)}<button class="ghs-btn ghs-btn-inst" onclick="_ghsInstall('${enc}')"><i class="mdi mdi-download"></i> Installa</button>`;
       } else {
-        const updateBtn=(known!==f.sha)?`<button class="ghs-btn ghs-btn-upd" onclick="_ghsInstall('${enc}')">↻ Aggiorna</button>`:'';
-        const addBtn=cardId?(inDash?`<span style="font-size:10px;color:#4ade80;font-weight:700;white-space:nowrap">✓ in dashboard</span>`:`<button class="ghs-btn ghs-btn-inst" onclick="jsStoreAddCard('${cardId}');setTimeout(_ghStoreRender,50)">➕ Aggiungi</button>`):'';
-        const delBtn=cardId?`<button class="ghs-btn" style="background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);color:#f87171" onclick="_ghsDeleteInstalled('${cardId}')">🗑</button>`:'';
-        acts=`${prevBtnInst}${updateBtn}${addBtn}${delBtn}`;
+        const updateBtn=(known!==f.sha)?`<button class="ghs-btn ghs-btn-upd" onclick="_ghsInstall('${enc}')"><i class="mdi mdi-update"></i> Aggiorna</button>`:'';
+        const addBtn=cardId?(inDash?`<span class="ghs-badge ghs-badge-dash">In dashboard</span>`:`<button class="ghs-btn ghs-btn-inst" onclick="jsStoreAddCard('${cardId}');setTimeout(_ghStoreRender,50)"><i class="mdi mdi-plus"></i> Aggiungi</button>`):'';
+        const delBtn=cardId?`<button class="ghs-ibtn ghs-ibtn-del" onclick="_ghsDeleteInstalled('${cardId}')" title="Disinstalla"><i class="mdi mdi-delete-outline"></i></button>`:'';
+        acts=`${eyeBtn(cardId)}${updateBtn}${addBtn}${delBtn}`;
       }
     } else {
-      acts=`${prevBtn}<button class="ghs-btn ghs-btn-cp" onclick="_ghsCopy('${enc}')">📋 Copia</button><button class="ghs-btn ghs-btn-cp" onclick="_ghsDownload('${enc}')">⬇️</button>`;
+      acts=`${eyeBtn(null)}<button class="ghs-btn ghs-btn-cp" onclick="_ghsCopy('${enc}')"><i class="mdi mdi-content-copy"></i> Copia</button><button class="ghs-btn ghs-btn-cp" onclick="_ghsDownload('${enc}')"><i class="mdi mdi-download"></i></button>`;
     }
     return `<div class="ghs-row"><div class="ghs-ico">${ico}</div><div class="ghs-info"><div class="ghs-name">${eh(nm)}</div><div class="ghs-sub">${eh(f.name)}</div></div><div class="ghs-acts">${acts}</div></div>`;
   }).join('');
@@ -3823,12 +3832,13 @@ function _ghStoreRenderInstalled(q, originFilter){
   const usedIds=new Set(); (cfg.pages||[]).forEach(pg=>(pg.cards||[]).forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedIds.add(c.jsCardId); }));
   list.innerHTML=items.sort((a,b)=>((a.meta||{}).name||'').localeCompare((b.meta||{}).name||'')).map(i=>{
     const m=i.meta||{}; const inUse=usedIds.has(m.id); const id=m.id||'';
-    const act = inUse ? `<span style="font-size:10px;color:#4ade80;font-weight:700">✓ in dashboard</span>`
-                      : `<button class="ghs-btn ghs-btn-inst" onclick="jsStoreAddCard('${id}');setTimeout(_ghStoreRender,50)">➕ Aggiungi</button>`;
-    const pub = originFilter==='local' ? `<button class="ghs-btn ghs-btn-upd" onclick="_ghsPublish('${id}')" title="Pubblica su GitHub">📤 Pubblica</button>` : '';
+    const act = inUse ? `<span class="ghs-badge ghs-badge-dash">In dashboard</span>`
+                      : `<button class="ghs-btn ghs-btn-inst" onclick="jsStoreAddCard('${id}');setTimeout(_ghStoreRender,50)"><i class="mdi mdi-plus"></i> Aggiungi</button>`;
+    const pub = originFilter==='local' ? `<button class="ghs-btn ghs-btn-upd" onclick="_ghsPublish('${id}')" title="Pubblica su GitHub"><i class="mdi mdi-upload"></i> Pubblica</button>` : '';
+    const previewBtn=`<button class="ghs-ibtn ghs-ibtn-eye" onclick="_ghsPreview('',${JSON.stringify(m.name||id)},'${id}')" title="Anteprima"><i class="mdi mdi-eye-outline"></i></button>`;
     return `<div class="ghs-row"><div class="ghs-ico">${m.icon||'📦'}</div>
       <div class="ghs-info"><div class="ghs-name">${eh(m.name||id||'Card')}</div><div class="ghs-sub">ID: ${eh(id||'?')} · v${eh(m.version||'?')}</div></div>
-      <div class="ghs-acts">${pub}${act}<button class="ghs-btn ghs-btn-cp" style="background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.3);color:#f87171" onclick="_ghsDeleteInstalled('${id}')">🗑</button></div></div>`;
+      <div class="ghs-acts">${previewBtn}${pub}${act}<button class="ghs-ibtn ghs-ibtn-del" onclick="_ghsDeleteInstalled('${id}')" title="Disinstalla"><i class="mdi mdi-delete-outline"></i></button></div></div>`;
   }).join('');
 }
 function _ghsDeleteInstalled(id){
