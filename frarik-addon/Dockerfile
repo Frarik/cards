@@ -14,8 +14,7 @@ RUN npm ci --only=production
 COPY server.js ./
 COPY panel/ ./panel/
 
-# Startup script
-COPY run.sh /run.sh
-RUN chmod a+x /run.sh
-
-CMD ["/run.sh"]
+# Registra run.sh come servizio s6-overlay (non sovrascrivere CMD/ENTRYPOINT del base image)
+RUN mkdir -p /etc/services.d/frarik
+COPY run.sh /etc/services.d/frarik/run
+RUN chmod a+x /etc/services.d/frarik/run
