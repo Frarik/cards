@@ -1,65 +1,64 @@
-﻿// â”€â”€ Dipendenze npm (sostituite i CDN) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Dipendenze npm ───────────────────────────────────────────────────────────
 import './style.css';
-import Chart   from 'chart.js/auto';
-import jsyaml  from 'js-yaml';
-// Esponi come globali per compatibilitÃ  con handler inline nel HTML
+import Chart  from 'chart.js/auto';
+import jsyaml from 'js-yaml';
 window.Chart  = Chart;
 window.jsyaml = jsyaml;
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   ðŸ“Œ ISTRUZIONI PER CLAUDE CODE â€” LEGGERE PRIMA DI MODIFICARE QUESTO FILE
-   Questa plancia "Frarik" Ã¨ sviluppata in 2 persone, su PC diversi, condividendo il
+/* ══════════════════════════════════════════════════════════════════════════════
+   📌 ISTRUZIONI PER CLAUDE CODE — LEGGERE PRIMA DI MODIFICARE QUESTO FILE
+   Questa plancia "Frarik" è sviluppata in 2 persone, su PC diversi, condividendo il
    file via GitHub (repo github.com/Frarik/cards). Ogni utente la modifica con Claude Code.
 
-   âš™ï¸ A OGNI MODIFICA DEL FILE, SEMPRE (3 cose obbligatorie):
-   1) Aumenta window.FRARIK_APP_VERSION di +10 (es. ...460 â†’ ...470). NON di 1.
+   ⚙️ A OGNI MODIFICA DEL FILE, SEMPRE (3 cose obbligatorie):
+   1) Aumenta window.FRARIK_APP_VERSION di +10 (es. ...460 → ...470). NON di 1.
    2) Aggiorna FRARIK_VER in /config/www/frarik-panel.js con LO STESSO numero
       (formato 'AAAAMMGG-NNN', es. '20260604-470'): busta la cache dell'iframe.
    3) Aggiungi a window.FRARIK_CHANGELOG (qui sotto) una riga per OGNI modifica fatta
-      (emoji: ðŸ› fix Â· âœ¨ aggiunto Â· ðŸ—‘ rimosso Â· ðŸ”§ modificato). Quell'elenco viene
+      (emoji: 🐛 fix · ✨ aggiunto · 🗑 rimosso · 🔧 modificato). Quell'elenco viene
       mostrato all'altro utente nella notifica "Plancia aggiornata" (tasto "Ho capito").
-      â†’ ACCUMULA le voci finchÃ© l'utente non dice "caricato su GitHub"; poi RICOMINCIA
-        l'elenco da zero con solo le novitÃ  del nuovo giro.
+      → ACCUMULA le voci finché l'utente non dice "caricato su GitHub"; poi RICOMINCIA
+        l'elenco da zero con solo le novità del nuovo giro.
 
-   ðŸ§  DA SAPERE (per non perdere tempo su cose impossibili/giÃ  fatte):
-   â€¢ Il file Ã¨ GRANDE (~700KB): leggi/modifica SEZIONI MIRATE (Grep/Edit), non riscriverlo.
-   â€¢ La plancia gira DENTRO UN IFRAME (panel_custom + frarik-panel.js). Quindi NON si
+   🧠 DA SAPERE (per non perdere tempo su cose impossibili/già fatte):
+   • Il file è GRANDE (~700KB): leggi/modifica SEZIONI MIRATE (Grep/Edit), non riscriverlo.
+   • La plancia gira DENTRO UN IFRAME (panel_custom + frarik-panel.js). Quindi NON si
      possono renderizzare card Lovelace native/HACS complesse qui dentro (realm separato,
      muro tecnico verificato). Per quelle si usa  type: iframe  che incorpora una vera
-     dashboard HA. Le card semplici (entities/sensori) sÃ¬, via renderer interno.
-   â€¢ Repo github.com/Frarik/cards:  ROOT â†’ frarik.html (QUESTA plancia, l'auto-update la
+     dashboard HA. Le card semplici (entities/sensori) sì, via renderer interno.
+   • Repo github.com/Frarik/cards:  ROOT → frarik.html (QUESTA plancia, l'auto-update la
      cerca qui) + frarik-panel.js.  Cartelle:  card-js/ card-chips/ card-distintivi/
      (card .js installabili),  card-yaml/ pkg/ (config HA da copiare/scaricare).
-   â€¢ Token/Nabu Casa/credenziali stanno in localStorage del browser â†’ gli aggiornamenti
+   • Token/Nabu Casa/credenziali stanno in localStorage del browser → gli aggiornamenti
      del file NON le toccano. NON scrivere token nel file. L'undo/redo NON tocca githubSync.
-   â€¢ Connessione same-origin (funziona in locale E da remoto Nabu Casa). Config
+   • Connessione same-origin (funziona in locale E da remoto Nabu Casa). Config
      sincronizzata tra i dispositivi via HA user_data (last-write-wins).
-   â€¢ L'utente Ã¨ NON tecnico e italiano: spiegare semplice, UNA modifica alla volta,
+   • L'utente è NON tecnico e italiano: spiegare semplice, UNA modifica alla volta,
      e far testare con Ctrl+F5 / riapertura del pannello.
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
-/* â•â•â• VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB â•â•â•
+   ══════════════════════════════════════════════════════════════════════════════ */
+/* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
 window.FRARIK_APP_VERSION = 20260604490;
-/* â•â•â• CHANGELOG â€” modifica QUESTO elenco ad ogni pubblicazione su GitHub â•â•â•
-   Ogni riga Ã¨ un punto dell'elenco mostrato nella notifica "plancia aggiornata".
-   Usa pure emoji: ðŸ› fix Â· âœ¨ aggiunto Â· ðŸ—‘ rimosso Â· ðŸ”§ modificato. */
+/* ═══ CHANGELOG — modifica QUESTO elenco ad ogni pubblicazione su GitHub ═══
+   Ogni riga è un punto dell'elenco mostrato nella notifica "plancia aggiornata".
+   Usa pure emoji: 🐛 fix · ✨ aggiunto · 🗑 rimosso · 🔧 modificato. */
 window.FRARIK_CHANGELOG = [
-  "â†©ï¸ ANNULLA / RIPETI: pulsanti â†¶ â†· in alto (in modalitÃ  modifica) e scorciatoie Ctrl+Z / Ctrl+Y. Tiene le ultime 60 modifiche; non tocca token GitHub nÃ© card salvate.",
-  "ðŸ›¡ CARD A PROVA DI ERRORE: se una card (specie JS/YAML) va in errore mostra un riquadrino âš ï¸ e NON rompe piÃ¹ tutta la vista.",
-  "ðŸ‘ VISIBILITÃ€ CONDIZIONALE DELLE CARD: nel config di ogni card puoi farla apparire solo se una condizione Ã¨ vera (es. card telecamere solo se allarme inserito).",
-  "ðŸŽ¨ 9 TEMI COLORATI (Indaco, Oceano, Menta, Smeraldo, Oro, Tramonto, Cremisi, Rosa, Viola): cambiano accento E sfondo della plancia. Impostazioni â†’ Aspetto.",
-  "âœ¨ NOTIFICHE DI AGGIORNAMENTO con l'elenco dettagliato delle modifiche (questo changelog) e tasto \"Ho capito\" per chiuderle.",
-  "ðŸ“± CELLULARE: tutte le icone in alto raccolte in un unico menÃ¹ â‹® a destra, sempre accessibile (anche in kiosk/impostazioni/modifica).",
-  "ðŸ“± CELLULARE: chip e distintivi in alto ora vanno a capo su piÃ¹ righe partendo da sinistra, senza uscire dallo schermo nÃ© coprire il menÃ¹ â‹®.",
-  "ðŸ› Eliminato il FLASH della barra in alto ogni secondo (l'orologio si aggiorna sul posto, niente piÃ¹ ridisegno di tutti i chip).",
-  "ðŸ› Eliminato il FLASH dei distintivi a colore automatico ogni secondo (aggiornati sul posto).",
-  "ðŸ› Sistemato il menÃ¹ a tendina che appariva al centro e poi 'saltava' a destra.",
-  "ðŸ”§ Sistema IMPORTA YAML: anteprima allineata al risultato reale, card HACS piÃ¹ robuste, rimossi doppioni di funzioni.",
-  "âœ¨ Supporto  type: iframe  nell'importa YAML â†’ per le card HA molto complesse si incorpora una vera dashboard di Home Assistant (popup inclusi).",
-  "ðŸ“ Aggiunte in cima al file le note per Claude Code (regole versioni/changelog per chi modifica il file in 2)."
+  "↩️ ANNULLA / RIPETI: pulsanti ↶ ↷ in alto (in modalità modifica) e scorciatoie Ctrl+Z / Ctrl+Y. Tiene le ultime 60 modifiche; non tocca token GitHub né card salvate.",
+  "🛡 CARD A PROVA DI ERRORE: se una card (specie JS/YAML) va in errore mostra un riquadrino ⚠️ e NON rompe più tutta la vista.",
+  "👁 VISIBILITÀ CONDIZIONALE DELLE CARD: nel config di ogni card puoi farla apparire solo se una condizione è vera (es. card telecamere solo se allarme inserito).",
+  "🎨 9 TEMI COLORATI (Indaco, Oceano, Menta, Smeraldo, Oro, Tramonto, Cremisi, Rosa, Viola): cambiano accento E sfondo della plancia. Impostazioni → Aspetto.",
+  "✨ NOTIFICHE DI AGGIORNAMENTO con l'elenco dettagliato delle modifiche (questo changelog) e tasto \"Ho capito\" per chiuderle.",
+  "📱 CELLULARE: tutte le icone in alto raccolte in un unico menù ⋮ a destra, sempre accessibile (anche in kiosk/impostazioni/modifica).",
+  "📱 CELLULARE: chip e distintivi in alto ora vanno a capo su più righe partendo da sinistra, senza uscire dallo schermo né coprire il menù ⋮.",
+  "🐛 Eliminato il FLASH della barra in alto ogni secondo (l'orologio si aggiorna sul posto, niente più ridisegno di tutti i chip).",
+  "🐛 Eliminato il FLASH dei distintivi a colore automatico ogni secondo (aggiornati sul posto).",
+  "🐛 Sistemato il menù a tendina che appariva al centro e poi 'saltava' a destra.",
+  "🔧 Sistema IMPORTA YAML: anteprima allineata al risultato reale, card HACS più robuste, rimossi doppioni di funzioni.",
+  "✨ Supporto  type: iframe  nell'importa YAML → per le card HA molto complesse si incorpora una vera dashboard di Home Assistant (popup inclusi).",
+  "📝 Aggiunte in cima al file le note per Claude Code (regole versioni/changelog per chi modifica il file in 2)."
 ];
-/* Se nel browser c'Ã¨ una versione PIÃ™ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
-   (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser â†’ non si toccano.) */
+/* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
+   (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
   try{
     if(/[?&]noupd/.test(location.search)){ localStorage.removeItem('frarik_app_html'); localStorage.removeItem('frarik_app_ver'); return; }
@@ -74,22 +73,22 @@ window.FRARIK_CHANGELOG = [
     }
   }catch(e){}
 })();
-/* Se sei giÃ  autenticato, nascondi SUBITO il login (prima che il body venga disegnato) â†’ niente flash di login a ogni ricarica. */
+/* Se sei già autenticato, nascondi SUBITO il login (prima che il body venga disegnato) → niente flash di login a ogni ricarica. */
 try{ if(localStorage.getItem('ha_auth')==='1'||sessionStorage.getItem('ha_auth')==='1') document.documentElement.classList.add('frk-authed'); }catch(e){}
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   âš™ï¸  PROFILI MULTI-UTENTE â€” rilevamento automatico in base all'URL
-   Ogni utente usa il proprio Nabu Casa â†’ il profilo giusto viene scelto in automatico.
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ═══════════════════════════════════════════════════════════════════════════
+   ⚙️  PROFILI MULTI-UTENTE — rilevamento automatico in base all'URL
+   Ogni utente usa il proprio Nabu Casa → il profilo giusto viene scelto in automatico.
+   ═══════════════════════════════════════════════════════════════════════════ */
 (function(){
   var PROFILES = {
-    // â”€â”€ Profilo 1 (utente originale) â”€â”€
+    // ── Profilo 1 (utente originale) ──
     'cvkvlnpaokb2r0pedlqjlq06f5zsd3fl.ui.nabu.casa': {
       token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJjOTg4OGRlYmJmNmQ0NjNiODdkNDg1OTlmZjc1ZTRjZiIsImlhdCI6MTc4MDQ0MzQ4MCwiZXhwIjoyMDk1ODAzNDgwfQ.hyz6GFhQvycih8cn2oG7djSwXWMAg6Vthd_VyX8KPcY',
       remoteUrl: 'https://cvkvlnpaokb2r0pedlqjlq06f5zsd3fl.ui.nabu.casa',
       localFallback: '192.168.1.189:8123'
     },
-    // â”€â”€ Profilo 2 (secondo utente) â”€â”€
+    // ── Profilo 2 (secondo utente) ──
     'mzlej5bjgutlujw3go5vsanafnf1bom1.ui.nabu.casa': {
       token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIwYWU3ZTgxMWI5YWQ0Y2I0YmI4ZDViNGFkMzM4YWI2OSIsImlhdCI6MTc4MDQ0MDMwNiwiZXhwIjoyMDk1ODAwMzA2fQ.MtPfpfm2_Vo1rBinnvnN-g-pkbZRc1-qrmsSU-2W6KI',
       remoteUrl: 'https://mzlej5bjgutlujw3go5vsanafnf1bom1.ui.nabu.casa',
@@ -100,14 +99,14 @@ try{ if(localStorage.getItem('ha_auth')==='1'||sessionStorage.getItem('ha_auth')
   var key = Object.keys(PROFILES).find(function(k){ return host.indexOf(k) !== -1; });
   window.FRARIK_CFG = key ? PROFILES[key] : PROFILES['cvkvlnpaokb2r0pedlqjlq06f5zsd3fl.ui.nabu.casa'];
 })();
-/* â”€â”€ Redirect automatico se aperto come file locale â”€â”€ */
+/* ── Redirect automatico se aperto come file locale ── */
 if(location.protocol==='file:'){
   location.replace(window.FRARIK_CFG.remoteUrl.replace(/\/$/,'') + '/local/frarik.html');
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ═══════════════════════════════════════════════════════
    CONFIG
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+═══════════════════════════════════════════════════════ */
 /* Token e host sono variabili: vengono aggiornati al login */
 /* Token e indirizzi presi dal blocco IMPOSTAZIONI PERSONALI in cima al file (window.FRARIK_CFG) */
 const TOKEN_DEFAULT = (window.FRARIK_CFG&&window.FRARIK_CFG.token) || '';
@@ -116,12 +115,12 @@ const LOCAL_FALLBACK = (window.FRARIK_CFG&&window.FRARIK_CFG.localFallback) || '
 let TOKEN   = localStorage.getItem('hadb_token') || TOKEN_DEFAULT;
 let HA_HOST, BASE;
 /* ACCESSO LOCALE + REMOTO:
-   la pagina Ã¨ servita da Home Assistant (/local/...), quindi ci si connette alla STESSA origine
-   da cui viene aperta. CosÃ¬:
-     â€¢ apri http://192.168.1.189:8123/local/...  â†’ si connette in LOCALE
-     â€¢ apri https://tuo-dominio/local/...        â†’ si connette da REMOTO
-   automaticamente, senza configurare nulla. Un URL fisso salvato si usa SOLO se la pagina Ã¨ aperta
-   come file locale (file://) dove non c'Ã¨ un'origine HA valida. */
+   la pagina è servita da Home Assistant (/local/...), quindi ci si connette alla STESSA origine
+   da cui viene aperta. Così:
+     • apri http://192.168.1.189:8123/local/...  → si connette in LOCALE
+     • apri https://tuo-dominio/local/...        → si connette da REMOTO
+   automaticamente, senza configurare nulla. Un URL fisso salvato si usa SOLO se la pagina è aperta
+   come file locale (file://) dove non c'è un'origine HA valida. */
 (function(){
   const isHttp = (location.protocol==='http:'||location.protocol==='https:') && location.host;
   const saved = localStorage.getItem('hadb_haurl');
@@ -136,19 +135,19 @@ let HA_HOST, BASE;
   }
 })();
 
-/* â•â•â• COLORS â•â•â• */
+/* ═══ COLORS ═══ */
 const COLORS = [
   '#f59e0b','#fb923c','#f87171','#4ade80','#22d3ee',
   '#60a5fa','#818cf8','#a78bfa','#c084fc','#f472b6',
   '#facc15','#2dd4bf','#34d399','#38bdf8','#fb7185','#e2e8f0'
 ];
 
-/* â•â•â• WEATHER ICONS â•â•â• */
+/* ═══ WEATHER ICONS ═══ */
 const WI = {
-  sunny:'â˜€ï¸','clear-night':'ðŸŒ™',cloudy:'â˜ï¸',partlycloudy:'â›…',fog:'ðŸŒ«ï¸',
-  rainy:'ðŸŒ§ï¸',pouring:'â›ˆï¸',lightning:'âš¡','lightning-rainy':'ðŸŒ©ï¸',
-  snowy:'â„ï¸','snowy-rainy':'ðŸŒ¨ï¸',windy:'ðŸ’¨','windy-variant':'ðŸŒ¬ï¸',
-  hail:'ðŸŒ¨ï¸',exceptional:'âš ï¸'
+  sunny:'☀️','clear-night':'🌙',cloudy:'☁️',partlycloudy:'⛅',fog:'🌫️',
+  rainy:'🌧️',pouring:'⛈️',lightning:'⚡','lightning-rainy':'🌩️',
+  snowy:'❄️','snowy-rainy':'🌨️',windy:'💨','windy-variant':'🌬️',
+  hail:'🌨️',exceptional:'⚠️'
 };
 // MDI icons per weather-compact
 const WI_MDI={
@@ -170,49 +169,49 @@ const WI_MDI={
   exceptional:'mdi:alert-circle-outline',
 };
 
-/* â•â•â• DEFAULT CONFIG â•â•â• */
+/* ═══ DEFAULT CONFIG ═══ */
 const DEF = {
   columns:4, rowH:150,
   cards:[
-    {id:uid(),entity:'sensor.inverter_r5s1152j2118e25819_power',label:'Fotovoltaico',icon:'â˜€ï¸',unit:'W',type:'big',color:'#fbbf24',colSpan:1,rowSpan:1,max:3000,min:0,sub:'Produzione solare',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
-    {id:uid(),entity:'sensor.consumo_solo_positivo',label:'Carico Casa',icon:'ðŸ ',unit:'W',type:'big',color:'#818cf8',colSpan:1,rowSpan:1,max:6000,min:0,sub:'Consumo attuale',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
-    {id:uid(),entity:'sensor.fascia_energetica_attuale',label:'Fascia',icon:'âš¡',unit:'',type:'text',color:'#fbbf24',colSpan:1,rowSpan:1,max:0,min:0,sub:'',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
-    {id:uid(),entity:'sensor.costo_consumo_mensile_casa',label:'Bolletta',icon:'ðŸ’°',unit:'â‚¬',type:'compact',color:'#4ade80',colSpan:1,rowSpan:1,max:300,min:0,sub:'Mese corrente',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
+    {id:uid(),entity:'sensor.inverter_r5s1152j2118e25819_power',label:'Fotovoltaico',icon:'☀️',unit:'W',type:'big',color:'#fbbf24',colSpan:1,rowSpan:1,max:3000,min:0,sub:'Produzione solare',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
+    {id:uid(),entity:'sensor.consumo_solo_positivo',label:'Carico Casa',icon:'🏠',unit:'W',type:'big',color:'#818cf8',colSpan:1,rowSpan:1,max:6000,min:0,sub:'Consumo attuale',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
+    {id:uid(),entity:'sensor.fascia_energetica_attuale',label:'Fascia',icon:'⚡',unit:'',type:'text',color:'#fbbf24',colSpan:1,rowSpan:1,max:0,min:0,sub:'',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
+    {id:uid(),entity:'sensor.costo_consumo_mensile_casa',label:'Bolletta',icon:'💰',unit:'€',type:'compact',color:'#4ade80',colSpan:1,rowSpan:1,max:300,min:0,sub:'Mese corrente',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
     // Flow bars card
-    {id:uid(),entity:'sensor.inverter_r5s1152j2118e25819_power',label:'Flusso Energia',icon:'âš¡',unit:'W',type:'flowbars',color:'#fbbf24',colSpan:2,rowSpan:2,max:6000,min:0,sub:'',hours:24,
+    {id:uid(),entity:'sensor.inverter_r5s1152j2118e25819_power',label:'Flusso Energia',icon:'⚡',unit:'W',type:'flowbars',color:'#fbbf24',colSpan:2,rowSpan:2,max:6000,min:0,sub:'',hours:24,
      solar:'sensor.inverter_r5s1152j2118e25819_power',
      load:'sensor.consumo_solo_positivo',
      grid:'sensor.inverter_r5s1152j2118e25819_grid_power',
      battery:'',entity2:'',entity3:'',refresh:5},
-    {id:uid(),entity:'sensor.consumo_solo_positivo',label:'Carico Indicatore',icon:'ðŸ ',unit:'W',type:'gauge',color:'#818cf8',colSpan:1,rowSpan:2,max:6000,min:0,sub:'',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
-    {id:uid(),entity:'sensor.fordpass_wf02xxerk1sb53885_soc',label:'Ford EV',icon:'ðŸš—',unit:'%',type:'gauge',color:'#4ade80',colSpan:1,rowSpan:2,max:100,min:0,sub:'Batteria',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
+    {id:uid(),entity:'sensor.consumo_solo_positivo',label:'Carico Indicatore',icon:'🏠',unit:'W',type:'gauge',color:'#818cf8',colSpan:1,rowSpan:2,max:6000,min:0,sub:'',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
+    {id:uid(),entity:'sensor.fordpass_wf02xxerk1sb53885_soc',label:'Ford EV',icon:'🚗',unit:'%',type:'gauge',color:'#4ade80',colSpan:1,rowSpan:2,max:100,min:0,sub:'Batteria',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
     // History chart
-    {id:uid(),entity:'sensor.inverter_r5s1152j2118e25819_power',label:'FV Storico',icon:'ðŸ“ˆ',unit:'W',type:'history',color:'#fbbf24',colSpan:2,rowSpan:2,max:3000,min:0,sub:'',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
+    {id:uid(),entity:'sensor.inverter_r5s1152j2118e25819_power',label:'FV Storico',icon:'📈',unit:'W',type:'history',color:'#fbbf24',colSpan:2,rowSpan:2,max:3000,min:0,sub:'',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
     // Camera
-    {id:uid(),entity:'camera.telecamera_interna_scorrevole',label:'Camera Interna',icon:'ðŸ“·',unit:'',type:'camera',color:'#818cf8',colSpan:1,rowSpan:2,max:0,min:0,sub:'',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
+    {id:uid(),entity:'camera.telecamera_interna_scorrevole',label:'Camera Interna',icon:'📷',unit:'',type:'camera',color:'#818cf8',colSpan:1,rowSpan:2,max:0,min:0,sub:'',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
     // Weather
-    {id:uid(),entity:'weather.home',label:'Meteo',icon:'ðŸŒ¤ï¸',unit:'',type:'weather',color:'#22d3ee',colSpan:1,rowSpan:1,max:0,min:0,sub:'',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
+    {id:uid(),entity:'weather.home',label:'Meteo',icon:'🌤️',unit:'',type:'weather',color:'#22d3ee',colSpan:1,rowSpan:1,max:0,min:0,sub:'',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
     // Energy today
-    {id:uid(),entity:'sensor.energia_oggi_consumo',label:'Oggi',icon:'ðŸ“…',unit:'kWh',type:'compact',color:'#c084fc',colSpan:1,rowSpan:1,max:30,min:0,sub:'',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
-    {id:uid(),entity:'sensor.energia_mese_consumo',label:'Questo Mese',icon:'ðŸ“†',unit:'kWh',type:'compact',color:'#c084fc',colSpan:1,rowSpan:1,max:500,min:0,sub:'',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
-    {id:uid(),entity:'sensor.costo_consumo_giornaliero_casa',label:'Spesa Oggi',icon:'ðŸ’³',unit:'â‚¬',type:'compact',color:'#4ade80',colSpan:1,rowSpan:1,max:15,min:0,sub:'',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
-    {id:uid(),entity:'sensor.costo_consumo_annuale_casa',label:'Spesa Anno',icon:'ðŸ“ˆ',unit:'â‚¬',type:'compact',color:'#4ade80',colSpan:1,rowSpan:1,max:2000,min:0,sub:'',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
+    {id:uid(),entity:'sensor.energia_oggi_consumo',label:'Oggi',icon:'📅',unit:'kWh',type:'compact',color:'#c084fc',colSpan:1,rowSpan:1,max:30,min:0,sub:'',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
+    {id:uid(),entity:'sensor.energia_mese_consumo',label:'Questo Mese',icon:'📆',unit:'kWh',type:'compact',color:'#c084fc',colSpan:1,rowSpan:1,max:500,min:0,sub:'',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
+    {id:uid(),entity:'sensor.costo_consumo_giornaliero_casa',label:'Spesa Oggi',icon:'💳',unit:'€',type:'compact',color:'#4ade80',colSpan:1,rowSpan:1,max:15,min:0,sub:'',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
+    {id:uid(),entity:'sensor.costo_consumo_annuale_casa',label:'Spesa Anno',icon:'📈',unit:'€',type:'compact',color:'#4ade80',colSpan:1,rowSpan:1,max:2000,min:0,sub:'',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
     // Appliances
-    {id:uid(),entity:'sensor.0xbc026efffee1d33b_power',label:'Frigorifero',icon:'â„ï¸',unit:'W',type:'compact',color:'#22d3ee',colSpan:1,rowSpan:1,max:200,min:0,sub:'',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
-    {id:uid(),entity:'sensor.scaldabagno_mss310_power_w_main_channel',label:'Scaldabagno',icon:'ðŸš¿',unit:'W',type:'compact',color:'#fb923c',colSpan:1,rowSpan:1,max:2500,min:0,sub:'',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
-    {id:uid(),entity:'sensor.lavatrice_consumo_di_corrente',label:'Lavatrice',icon:'ðŸ‘•',unit:'W',type:'compact',color:'#818cf8',colSpan:1,rowSpan:1,max:2200,min:0,sub:'',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
-    {id:uid(),entity:'media_player.sfera_piano_terra',label:'Sfera Piano Terra',icon:'ðŸ”Š',unit:'',type:'media',color:'#f472b6',colSpan:2,rowSpan:1,max:0,min:0,sub:'',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
+    {id:uid(),entity:'sensor.0xbc026efffee1d33b_power',label:'Frigorifero',icon:'❄️',unit:'W',type:'compact',color:'#22d3ee',colSpan:1,rowSpan:1,max:200,min:0,sub:'',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
+    {id:uid(),entity:'sensor.scaldabagno_mss310_power_w_main_channel',label:'Scaldabagno',icon:'🚿',unit:'W',type:'compact',color:'#fb923c',colSpan:1,rowSpan:1,max:2500,min:0,sub:'',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
+    {id:uid(),entity:'sensor.lavatrice_consumo_di_corrente',label:'Lavatrice',icon:'👕',unit:'W',type:'compact',color:'#818cf8',colSpan:1,rowSpan:1,max:2200,min:0,sub:'',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
+    {id:uid(),entity:'media_player.sfera_piano_terra',label:'Sfera Piano Terra',icon:'🔊',unit:'',type:'media',color:'#f472b6',colSpan:2,rowSpan:1,max:0,min:0,sub:'',hours:24,entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5},
   ]
 };
 
-/* â•â•â• STATE â•â•â• */
-const hs = {};        // entity_id â†’ state string
-const ha = {};        // entity_id â†’ attributes object
+/* ═══ STATE ═══ */
+const hs = {};        // entity_id → state string
+const ha = {};        // entity_id → attributes object
 let allE = [];
 let cfg  = loadCfg();
 let editMode = false;
 
-/* â•â•â• PAGE HELPER â•â•â• */
+/* ═══ PAGE HELPER ═══ */
 function curPage(){ return cfg.pages[cfg.activePage]||cfg.pages[0]; }
 let editingId = null;
 let ws, mid=1, reconn;
@@ -220,22 +219,22 @@ const charts = {};
 let dragSrc = null;
 let _pendingDropSec = null, _pendingDropCol = 0;
 let emTarget = null;  // browse field target
-const camTimers = {}; // cardId â†’ intervalId
+const camTimers = {}; // cardId → intervalId
 let wizardTpl = null;
 let wizardEditing = false;
 
-/* â•â•â• PERSIST â•â•â• */
+/* ═══ PERSIST ═══ */
 function uid(){ return 'c'+Math.random().toString(36).slice(2,9); }
 
 function _mkCard(overrides){
-  return {id:uid(),type:'compact',entity:'',label:'',icon:'ðŸ“¦',unit:'',color:'#818cf8',
+  return {id:uid(),type:'compact',entity:'',label:'',icon:'📦',unit:'',color:'#818cf8',
     colSpan:1,rowSpan:1,max:0,min:0,sub:'',hours:24,content:'',imageUrl:'',elements:[],threshold:5,items:[],groups:[],
     entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5,clickAction:'info',clickUrl:'',
     secId:'',secCol:0,secOrder:0,height:150,
     ...overrides};
 }
 
-/* â•â•â• SECTIONS â•â•â• */
+/* ═══ SECTIONS ═══ */
 function _secUid(){ return 'sec_'+uid(); }
 
 function _ensureSections(page){
@@ -274,10 +273,10 @@ function addSection(){
   saveCfg(); renderDash(); renderSectionsList();
   _pgMarkDirty(true);
 }
-/* Elimina davvero la riga (e, con conferma, le card al suo interno) â€” usato dal tasto "âœ• riga" in modifica */
+/* Elimina davvero la riga (e, con conferma, le card al suo interno) — usato dal tasto "✕ riga" in modifica */
 function delSectionRow(secId){
   const page=curPage();
-  if(!page.sections||page.sections.length<=1){ showToast('âš ï¸ Deve restare almeno una riga'); return; }
+  if(!page.sections||page.sections.length<=1){ showToast('⚠️ Deve restare almeno una riga'); return; }
   const cards=page.cards.filter(c=>c.secId===secId);
   const doDel=()=>{
     cards.forEach(c=>{ try{destroyChart(c.id);}catch(e){} try{stopCamTimer(c.id);}catch(e){} });
@@ -290,7 +289,7 @@ function delSectionRow(secId){
 }
 function delSection(secId){
   const page=curPage();
-  if(!page.sections||page.sections.length<=1){showToast('âš ï¸ Almeno una sezione richiesta');return;}
+  if(!page.sections||page.sections.length<=1){showToast('⚠️ Almeno una sezione richiesta');return;}
   const keep=page.sections.filter(s=>s.id!==secId);
   const target=keep[0];
   page.cards.filter(c=>c.secId===secId).forEach((c,i)=>{c.secId=target.id;c.secCol=0;c.secOrder=i*10;});
@@ -338,9 +337,9 @@ function setSectionRowH(secId,h){
   _pgMarkDirty(true);
 }
 let _sectionClipboard=null; // {type:'copy'|'cut', sec, cards}
-// â”€â”€ Per-column actions â”€â”€
-let _colDragSrc=null;      // {secId, col} â€” column being dragged
-let _colClipboard=null;    // {cards:[...]} â€” copied column
+// ── Per-column actions ──
+let _colDragSrc=null;      // {secId, col} — column being dragged
+let _colClipboard=null;    // {cards:[...]} — copied column
 
 function setColWidth(secId, col, w){
   const page=curPage();
@@ -377,7 +376,7 @@ function copyCol(secId, col){
   const page=curPage();
   const cards=page.cards.filter(c=>c.secId===secId&&(c.secCol||0)===col);
   _colClipboard=JSON.parse(JSON.stringify(cards));
-  showToast('ðŸ“‹ Colonna copiata â€” clicca ðŸ“‹ su un\'altra colonna per incollarla');
+  showToast('📋 Colonna copiata — clicca 📋 su un\'altra colonna per incollarla');
   // Re-render to show paste buttons
   renderDash();
 }
@@ -398,7 +397,7 @@ function pasteCol(secId, toCol){
   });
   _colClipboard=null;
   saveCfg(); renderDash();
-  showToast('âœ… Colonna incollata');
+  showToast('✅ Colonna incollata');
 }
 function deleteCol(secId, col){
   const page=curPage();
@@ -432,17 +431,17 @@ function deleteCol(secId, col){
 function addCardToCol(secId, col, triggerEl){
   _pendingDropSec=secId; _pendingDropCol=col;
   document.getElementById('add-col-menu')?.remove();
-  // Niente negli appunti â†’ vai DRITTO allo Store
+  // Niente negli appunti → vai DRITTO allo Store
   if(!_cardClipboard){ openGhStore(); return; }
-  // Appunti presenti â†’ piccolo menu: apri lo Store oppure Incolla la card copiata
+  // Appunti presenti → piccolo menu: apri lo Store oppure Incolla la card copiata
   const menu=document.createElement('div');
   menu.id='add-col-menu';
   menu.style.cssText='position:fixed;z-index:15000;background:#1a1f35;border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:8px;box-shadow:0 12px 40px rgba(0,0,0,.75);display:flex;flex-direction:column;gap:6px;min-width:200px;animation:popIn .12s ease';
   const btnStyle='background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:rgba(255,255,255,.8);font-size:12px;padding:9px 12px;cursor:pointer;text-align:left;transition:background .12s';
   menu.innerHTML=`
     <div style="font-size:9px;color:rgba(255,255,255,.3);padding:2px 4px 4px;letter-spacing:.5px;text-transform:uppercase">Aggiungi card</div>
-    <button style="${btnStyle};background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:#86efac" onmouseover="this.style.background='rgba(74,222,128,.22)'" onmouseout="this.style.background='rgba(74,222,128,.1)'" onclick="document.getElementById('add-col-menu')?.remove();openGhStore()">ðŸ›’ Apri lo Store</button>
-    <button style="${btnStyle};background:rgba(99,102,241,.12);border-color:rgba(99,102,241,.3);color:#a5b4fc" onmouseover="this.style.background='rgba(99,102,241,.25)'" onmouseout="this.style.background='rgba(99,102,241,.12)'" onclick="document.getElementById('add-col-menu')?.remove();pasteCardTo('${secId}',${col})">ðŸ“‹ Incolla "${eh(_cardClipboard.label||_cardClipboard.type||'Card')}"</button>
+    <button style="${btnStyle};background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:#86efac" onmouseover="this.style.background='rgba(74,222,128,.22)'" onmouseout="this.style.background='rgba(74,222,128,.1)'" onclick="document.getElementById('add-col-menu')?.remove();openGhStore()">🛒 Apri lo Store</button>
+    <button style="${btnStyle};background:rgba(99,102,241,.12);border-color:rgba(99,102,241,.3);color:#a5b4fc" onmouseover="this.style.background='rgba(99,102,241,.25)'" onmouseout="this.style.background='rgba(99,102,241,.12)'" onclick="document.getElementById('add-col-menu')?.remove();pasteCardTo('${secId}',${col})">📋 Incolla "${eh(_cardClipboard.label||_cardClipboard.type||'Card')}"</button>
   `;
   // Position near the trigger element
   const rect=triggerEl?triggerEl.getBoundingClientRect():{left:window.innerWidth/2-95,bottom:window.innerHeight/2};
@@ -476,7 +475,7 @@ function copySection(secId){
   const sec=page.sections.find(s=>s.id===secId); if(!sec) return;
   const cards=page.cards.filter(c=>c.secId===secId);
   _sectionClipboard={type:'copy', sec:JSON.parse(JSON.stringify(sec)), cards:JSON.parse(JSON.stringify(cards))};
-  showToast('ðŸ“‹ Sezione copiata â€” usa Incolla sezione per aggiungerla');
+  showToast('📋 Sezione copiata — usa Incolla sezione per aggiungerla');
   _updateSectionPasteBtn();
 }
 function cutSection(secId){
@@ -484,7 +483,7 @@ function cutSection(secId){
   const sec=page.sections.find(s=>s.id===secId); if(!sec) return;
   const cards=page.cards.filter(c=>c.secId===secId);
   _sectionClipboard={type:'cut', sec:JSON.parse(JSON.stringify(sec)), cards:JSON.parse(JSON.stringify(cards)), srcId:secId};
-  showToast('âœ‚ï¸ Sezione tagliata â€” usa Incolla sezione per inserirla');
+  showToast('✂️ Sezione tagliata — usa Incolla sezione per inserirla');
   _updateSectionPasteBtn();
 }
 function pasteSection(){
@@ -507,7 +506,7 @@ function pasteSection(){
     _updateSectionPasteBtn();
   }
   saveCfg(); renderDash(); renderSectionsList();
-  showToast(type==='cut'?'âœ… Sezione spostata':'âœ… Sezione incollata');
+  showToast(type==='cut'?'✅ Sezione spostata':'✅ Sezione incollata');
 }
 function _updateSectionPasteBtn(){
   const btn=document.getElementById('paste-sec-btn');
@@ -525,7 +524,7 @@ function _epRenderJsStore(){
     return;
   }
 
-  // Quali card sono giÃ  in dashboard
+  // Quali card sono già in dashboard
   const usedIds = new Set();
   (cfg.pages||[]).forEach(pg=>(pg.cards||[]).forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedIds.add(c.jsCardId); }));
 
@@ -533,14 +532,14 @@ function _epRenderJsStore(){
     const m = item.meta||{};
     const inUse = usedIds.has(m.id);
     return `<div style="display:flex;align-items:center;gap:8px;padding:7px 6px;border-bottom:1px solid rgba(255,255,255,.04)">
-      <span style="font-size:18px;flex-shrink:0">${m.icon||'ðŸ“¦'}</span>
+      <span style="font-size:18px;flex-shrink:0">${m.icon||'📦'}</span>
       <div style="flex:1;min-width:0">
         <div style="font-size:11px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.name||m.id}</div>
-        <div style="font-size:9px;color:var(--muted)">v${m.version||'?'} Â· ${m.id}</div>
+        <div style="font-size:9px;color:var(--muted)">v${m.version||'?'} · ${m.id}</div>
       </div>
       ${inUse
-        ? '<span style="font-size:9px;font-weight:700;color:#4ade80;flex-shrink:0">âœ“ In uso</span>'
-        : `<button onclick="jsStoreAddCard('${m.id||''}')" style="flex-shrink:0;padding:4px 9px;border-radius:7px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#a5b4fc;font-size:10px;font-weight:700;cursor:pointer">âž•</button>`
+        ? '<span style="font-size:9px;font-weight:700;color:#4ade80;flex-shrink:0">✓ In uso</span>'
+        : `<button onclick="jsStoreAddCard('${m.id||''}')" style="flex-shrink:0;padding:4px 9px;border-radius:7px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#a5b4fc;font-size:10px;font-weight:700;cursor:pointer">➕</button>`
       }
     </div>`;
   }).join('');
@@ -570,7 +569,7 @@ function moveToCol(cardId,secId,col){
   const siblings=page.cards.filter(c=>c.secId===secId&&(c.secCol||0)===col&&c.id!==cardId);
   const maxOrd=siblings.length>0?Math.max(...siblings.map(c=>c.secOrder||0))+10:0;
   card.secId=secId; card.secCol=col; card.secOrder=maxOrd;
-  card._origSecCol=col; // User intentionally moved it â€” update home position
+  card._origSecCol=col; // User intentionally moved it — update home position
   const sec=(page.sections||[]).find(s=>s.id===secId);
   if(sec) card.colSpan=Math.min(card.colSpan||1, sec.cols-col);
   saveCfg(); renderDash();
@@ -611,35 +610,35 @@ function _migrateRichPageToCards(pg){
     if(t==='meteo'){
       const wEnt=pg.weatherEntity||'weather.home';
       const hrs=pg.hours||24;
-      pg.cards.push(_mkCard({type:'weather-hero',label:pg.name||'Meteo',icon:'ðŸŒ…',entity:wEnt,entity2:pg.entityTemp||'',entity3:pg.entityHum||'',color:'#22d3ee',colSpan:2,rowSpan:2}));
-      if(pg.entityWind)  pg.cards.push(_mkCard({type:'compact',label:'Vento',icon:'ðŸ’¨',entity:pg.entityWind,unit:'km/h',color:'#4ade80',max:100}));
-      if(pg.entityRain)  pg.cards.push(_mkCard({type:'compact',label:'Pioggia',icon:'ðŸŒ§ï¸',entity:pg.entityRain,unit:'mm',color:'#60a5fa',max:50}));
-      if(pg.entityUV)    pg.cards.push(_mkCard({type:'compact',label:'UV',icon:'â˜€ï¸',entity:pg.entityUV,unit:'',color:'#fbbf24',max:11}));
-      if(pg.entityPres)  pg.cards.push(_mkCard({type:'compact',label:'Pressione',icon:'ðŸŒ¡ï¸',entity:pg.entityPres,unit:'hPa',color:'#a78bfa',max:1050}));
-      pg.cards.push(_mkCard({type:'weather-forecast',label:'Previsioni',icon:'ðŸ“…',entity:wEnt,color:'#818cf8',colSpan:4,rowSpan:1}));
-      if(pg.entityTemp)  pg.cards.push(_mkCard({type:'history',label:'Temperatura',icon:'ðŸŒ¡ï¸',entity:pg.entityTemp,unit:'Â°C',color:'#f97316',hours:hrs,colSpan:2,rowSpan:2}));
-      if(pg.entityHum)   pg.cards.push(_mkCard({type:'history',label:'UmiditÃ ',icon:'ðŸ’§',entity:pg.entityHum,unit:'%',color:'#38bdf8',hours:hrs,colSpan:2,rowSpan:2}));
+      pg.cards.push(_mkCard({type:'weather-hero',label:pg.name||'Meteo',icon:'🌅',entity:wEnt,entity2:pg.entityTemp||'',entity3:pg.entityHum||'',color:'#22d3ee',colSpan:2,rowSpan:2}));
+      if(pg.entityWind)  pg.cards.push(_mkCard({type:'compact',label:'Vento',icon:'💨',entity:pg.entityWind,unit:'km/h',color:'#4ade80',max:100}));
+      if(pg.entityRain)  pg.cards.push(_mkCard({type:'compact',label:'Pioggia',icon:'🌧️',entity:pg.entityRain,unit:'mm',color:'#60a5fa',max:50}));
+      if(pg.entityUV)    pg.cards.push(_mkCard({type:'compact',label:'UV',icon:'☀️',entity:pg.entityUV,unit:'',color:'#fbbf24',max:11}));
+      if(pg.entityPres)  pg.cards.push(_mkCard({type:'compact',label:'Pressione',icon:'🌡️',entity:pg.entityPres,unit:'hPa',color:'#a78bfa',max:1050}));
+      pg.cards.push(_mkCard({type:'weather-forecast',label:'Previsioni',icon:'📅',entity:wEnt,color:'#818cf8',colSpan:4,rowSpan:1}));
+      if(pg.entityTemp)  pg.cards.push(_mkCard({type:'history',label:'Temperatura',icon:'🌡️',entity:pg.entityTemp,unit:'°C',color:'#f97316',hours:hrs,colSpan:2,rowSpan:2}));
+      if(pg.entityHum)   pg.cards.push(_mkCard({type:'history',label:'Umidità',icon:'💧',entity:pg.entityHum,unit:'%',color:'#38bdf8',hours:hrs,colSpan:2,rowSpan:2}));
     } else if(t==='energia'){
       const hrs=pg.hours||24;
-      pg.cards.push(_mkCard({type:'flowmap',label:'Flusso Energia',icon:'ðŸ—ºï¸',solar:pg.solar||'',load:pg.load||'',grid:pg.grid||'',battery:pg.battery||'',color:'#818cf8',colSpan:2,rowSpan:2}));
-      if(pg.solar)  pg.cards.push(_mkCard({type:'compact',label:'Solare',icon:'â˜€ï¸',entity:pg.solar,unit:'W',color:'#fbbf24',max:6000}));
-      if(pg.load)   pg.cards.push(_mkCard({type:'compact',label:'Consumo',icon:'ðŸ ',entity:pg.load,unit:'W',color:'#f87171',max:6000}));
-      if(pg.grid)   pg.cards.push(_mkCard({type:'compact',label:'Rete',icon:'âš¡',entity:pg.grid,unit:'W',color:'#60a5fa',max:6000}));
-      if(pg.battery)pg.cards.push(_mkCard({type:'gauge',label:'Batteria',icon:'ðŸ”‹',entity:pg.battery,unit:'%',color:'#4ade80',max:100,colSpan:1,rowSpan:2}));
-      if(pg.entityEsolar) pg.cards.push(_mkCard({type:'big',label:'Energia Solare',icon:'â˜€ï¸',entity:pg.entityEsolar,unit:'kWh',color:'#fbbf24'}));
-      if(pg.entityEload)  pg.cards.push(_mkCard({type:'big',label:'Energia Casa',icon:'ðŸ ',entity:pg.entityEload,unit:'kWh',color:'#f87171'}));
-      if(pg.entityBill)   pg.cards.push(_mkCard({type:'big',label:'Bolletta',icon:'ðŸ’¶',entity:pg.entityBill,unit:'â‚¬',color:'#a78bfa'}));
-      if(pg.solar)  pg.cards.push(_mkCard({type:'history',label:'Solare',icon:'â˜€ï¸',entity:pg.solar,unit:'W',color:'#fbbf24',hours:hrs,colSpan:2,rowSpan:2}));
-      if(pg.load)   pg.cards.push(_mkCard({type:'history',label:'Consumo',icon:'ðŸ ',entity:pg.load,unit:'W',color:'#f87171',hours:hrs,colSpan:2,rowSpan:2}));
+      pg.cards.push(_mkCard({type:'flowmap',label:'Flusso Energia',icon:'🗺️',solar:pg.solar||'',load:pg.load||'',grid:pg.grid||'',battery:pg.battery||'',color:'#818cf8',colSpan:2,rowSpan:2}));
+      if(pg.solar)  pg.cards.push(_mkCard({type:'compact',label:'Solare',icon:'☀️',entity:pg.solar,unit:'W',color:'#fbbf24',max:6000}));
+      if(pg.load)   pg.cards.push(_mkCard({type:'compact',label:'Consumo',icon:'🏠',entity:pg.load,unit:'W',color:'#f87171',max:6000}));
+      if(pg.grid)   pg.cards.push(_mkCard({type:'compact',label:'Rete',icon:'⚡',entity:pg.grid,unit:'W',color:'#60a5fa',max:6000}));
+      if(pg.battery)pg.cards.push(_mkCard({type:'gauge',label:'Batteria',icon:'🔋',entity:pg.battery,unit:'%',color:'#4ade80',max:100,colSpan:1,rowSpan:2}));
+      if(pg.entityEsolar) pg.cards.push(_mkCard({type:'big',label:'Energia Solare',icon:'☀️',entity:pg.entityEsolar,unit:'kWh',color:'#fbbf24'}));
+      if(pg.entityEload)  pg.cards.push(_mkCard({type:'big',label:'Energia Casa',icon:'🏠',entity:pg.entityEload,unit:'kWh',color:'#f87171'}));
+      if(pg.entityBill)   pg.cards.push(_mkCard({type:'big',label:'Bolletta',icon:'💶',entity:pg.entityBill,unit:'€',color:'#a78bfa'}));
+      if(pg.solar)  pg.cards.push(_mkCard({type:'history',label:'Solare',icon:'☀️',entity:pg.solar,unit:'W',color:'#fbbf24',hours:hrs,colSpan:2,rowSpan:2}));
+      if(pg.load)   pg.cards.push(_mkCard({type:'history',label:'Consumo',icon:'🏠',entity:pg.load,unit:'W',color:'#f87171',hours:hrs,colSpan:2,rowSpan:2}));
     } else if(t==='veicoli'){
       const hrs=pg.hours||72;
-      if(pg.entitySOC)    pg.cards.push(_mkCard({type:'gauge',label:'SOC Batteria',icon:'ðŸ”‹',entity:pg.entitySOC,unit:'%',color:'#4ade80',max:100,colSpan:1,rowSpan:2}));
-      if(pg.entityRange)  pg.cards.push(_mkCard({type:'big',label:'Autonomia',icon:'ðŸ›£ï¸',entity:pg.entityRange,unit:'km',color:'#60a5fa',colSpan:1,rowSpan:2}));
-      if(pg.entityPower)  pg.cards.push(_mkCard({type:'compact',label:'Potenza Carica',icon:'âš¡',entity:pg.entityPower,unit:'kW',color:'#fbbf24',max:22,colSpan:2,rowSpan:1}));
-      if(pg.entityCharge) pg.cards.push(_mkCard({type:'text',label:'Stato Carica',icon:'ðŸ”Œ',entity:pg.entityCharge,color:'#a78bfa'}));
-      if(pg.entityOdo)    pg.cards.push(_mkCard({type:'big',label:'Odometro',icon:'ðŸ“',entity:pg.entityOdo,unit:'km',color:'#94a3b8'}));
-      if(pg.entitySOC)    pg.cards.push(_mkCard({type:'history',label:'SOC',icon:'ðŸ”‹',entity:pg.entitySOC,unit:'%',color:'#4ade80',hours:hrs,colSpan:2,rowSpan:2}));
-      if(pg.entityRange)  pg.cards.push(_mkCard({type:'history',label:'Autonomia',icon:'ðŸ›£ï¸',entity:pg.entityRange,unit:'km',color:'#60a5fa',hours:hrs,colSpan:2,rowSpan:2}));
+      if(pg.entitySOC)    pg.cards.push(_mkCard({type:'gauge',label:'SOC Batteria',icon:'🔋',entity:pg.entitySOC,unit:'%',color:'#4ade80',max:100,colSpan:1,rowSpan:2}));
+      if(pg.entityRange)  pg.cards.push(_mkCard({type:'big',label:'Autonomia',icon:'🛣️',entity:pg.entityRange,unit:'km',color:'#60a5fa',colSpan:1,rowSpan:2}));
+      if(pg.entityPower)  pg.cards.push(_mkCard({type:'compact',label:'Potenza Carica',icon:'⚡',entity:pg.entityPower,unit:'kW',color:'#fbbf24',max:22,colSpan:2,rowSpan:1}));
+      if(pg.entityCharge) pg.cards.push(_mkCard({type:'text',label:'Stato Carica',icon:'🔌',entity:pg.entityCharge,color:'#a78bfa'}));
+      if(pg.entityOdo)    pg.cards.push(_mkCard({type:'big',label:'Odometro',icon:'📍',entity:pg.entityOdo,unit:'km',color:'#94a3b8'}));
+      if(pg.entitySOC)    pg.cards.push(_mkCard({type:'history',label:'SOC',icon:'🔋',entity:pg.entitySOC,unit:'%',color:'#4ade80',hours:hrs,colSpan:2,rowSpan:2}));
+      if(pg.entityRange)  pg.cards.push(_mkCard({type:'history',label:'Autonomia',icon:'🛣️',entity:pg.entityRange,unit:'km',color:'#60a5fa',hours:hrs,colSpan:2,rowSpan:2}));
     }
   }
   delete pg.pageType;
@@ -659,7 +658,7 @@ function loadCfg(){
       const p=JSON.parse(s);
       // Migrate old single-page format (has .cards but no .pages)
       if(p.cards&&!p.pages){
-        return {activePage:0,savedCards:p.savedCards||[],theme:p.theme||'dark',font:p.font||'Inter',pages:[{id:'p'+Math.random().toString(36).slice(2,7),name:'Dashboard',icon:'ðŸ ',columns:p.columns||4,rowH:p.rowH||150,cards:p.cards}]};
+        return {activePage:0,savedCards:p.savedCards||[],theme:p.theme||'dark',font:p.font||'Inter',pages:[{id:'p'+Math.random().toString(36).slice(2,7),name:'Dashboard',icon:'🏠',columns:p.columns||4,rowH:p.rowH||150,cards:p.cards}]};
       }
       // Migrate rich pages (pageType) to regular card pages
       if(p.pages) p.pages.forEach(pg=>_migrateRichPageToCards(pg));
@@ -671,19 +670,19 @@ function loadCfg(){
       return p;
     }
   }catch(e){}
-  return {activePage:0,savedCards:[],theme:'dark',font:'Inter',pages:[{id:'p'+Math.random().toString(36).slice(2,7),name:'Dashboard',icon:'ðŸ ',columns:DEF.columns,rowH:DEF.rowH,cards:JSON.parse(JSON.stringify(DEF.cards))}]};
+  return {activePage:0,savedCards:[],theme:'dark',font:'Inter',pages:[{id:'p'+Math.random().toString(36).slice(2,7),name:'Dashboard',icon:'🏠',columns:DEF.columns,rowH:DEF.rowH,cards:JSON.parse(JSON.stringify(DEF.cards))}]};
 }
-/* â”€â”€ Salvataggio config + SINCRONIZZAZIONE su Home Assistant (dati utente, condivisi tra dispositivi) â”€â”€ */
+/* ── Salvataggio config + SINCRONIZZAZIONE su Home Assistant (dati utente, condivisi tra dispositivi) ── */
 let _cfgGetId=-1, _cfgSetId=-1, _haSaveTimer=null, _cfgSyncing=false, _cfgSynced=false, _lastPull=0;
 function saveCfg(){
-  if(!_cfgSyncing) cfg._ts=Date.now();      // timestamp ultima modifica (per "vince il piÃ¹ recente")
+  if(!_cfgSyncing) cfg._ts=Date.now();      // timestamp ultima modifica (per "vince il più recente")
   localStorage.setItem('hadb_cfg',JSON.stringify(cfg));
-  // AUTO-PUSH su HA: solo dopo il primo caricamento da HA (_cfgSynced) â†’ un dispositivo appena aperto
-  // prima SCARICA la versione su HA, poi puÃ² inviare le sue modifiche (evita di sovrascrivere da vuoto).
+  // AUTO-PUSH su HA: solo dopo il primo caricamento da HA (_cfgSynced) → un dispositivo appena aperto
+  // prima SCARICA la versione su HA, poi può inviare le sue modifiche (evita di sovrascrivere da vuoto).
   if(!_cfgSyncing && _cfgSynced) _haSaveCfgDebounced();
   if(!_cfgSyncing) _histPush();             // cronologia Annulla/Ripeti
 }
-/* â•â•â• CRONOLOGIA ANNULLA / RIPETI (snapshot della configurazione) â•â•â• */
+/* ═══ CRONOLOGIA ANNULLA / RIPETI (snapshot della configurazione) ═══ */
 let _history=[], _histIdx=-1, _histTimer=null, _histRestoring=false;
 const _HIST_KEEP=['githubSync','savedCards','_ts','_foldersMigrated'];  // chiavi NON soggette a undo/redo (token, librerie, metadati)
 function _histSnap(){ try{ const c={}; for(const k in cfg){ if(_HIST_KEEP.indexOf(k)<0) c[k]=cfg[k]; } return JSON.stringify(c); }catch(e){ return ''; } }
@@ -727,8 +726,8 @@ function _histApply(){
   _histRestoring=false;
   _updateUndoBtns();
 }
-function undoEdit(){ if(_histIdx<=0){ showToast('Niente da annullare'); return; } clearTimeout(_histTimer); _histIdx--; _histApply(); showToast('â†¶ Annullato'); }
-function redoEdit(){ if(_histIdx>=_history.length-1){ showToast('Niente da ripetere'); return; } clearTimeout(_histTimer); _histIdx++; _histApply(); showToast('â†· Ripetuto'); }
+function undoEdit(){ if(_histIdx<=0){ showToast('Niente da annullare'); return; } clearTimeout(_histTimer); _histIdx--; _histApply(); showToast('↶ Annullato'); }
+function redoEdit(){ if(_histIdx>=_history.length-1){ showToast('Niente da ripetere'); return; } clearTimeout(_histTimer); _histIdx++; _histApply(); showToast('↷ Ripetuto'); }
 function _updateUndoBtns(){
   const u=document.getElementById('undo-btn'), r=document.getElementById('redo-btn');
   if(u) u.classList.toggle('hbtn-off', _histIdx<=0);
@@ -743,7 +742,7 @@ document.addEventListener('keydown',e=>{
 });
 function _saveCfgLocalOnly(){ localStorage.setItem('hadb_cfg',JSON.stringify(cfg)); }
 function _haSaveCfgDebounced(){ clearTimeout(_haSaveTimer); _haSaveTimer=setTimeout(_haSaveCfg,400); }
-/* da chiamare quando si aggiunge/aggiorna/elimina una card JS â†’ propaga su HA */
+/* da chiamare quando si aggiunge/aggiorna/elimina una card JS → propaga su HA */
 function _cfgTouchAndPush(){ if(_cfgSyncing) return; cfg._ts=Date.now(); _saveCfgLocalOnly(); if(_cfgSynced) _haSaveCfgDebounced(); }
 function _haSaveCfg(){
   try{
@@ -765,12 +764,12 @@ function _haLoadCfg(force){
     send({type:'frontend/get_user_data',key:'frarik_cfg'});
   }catch(e){}
 }
-/* Quando torni sulla pagina/pannello: se la connessione Ã¨ caduta (es. cambio plancia e ritorno) RICONNETTI,
+/* Quando torni sulla pagina/pannello: se la connessione è caduta (es. cambio plancia e ritorno) RICONNETTI,
    altrimenti ricontrolla la config. Evita di dover ricaricare a mano. */
 function _onResume(){
   if(document.hidden) return;
-  // riconnetti SOLO se il WS Ã¨ davvero CHIUSO (3) o assente â€” non se sta connettendo/chiudendo,
-  // cosÃ¬ evitiamo riconnessioni spurie (e lo "scatto" della pagina).
+  // riconnetti SOLO se il WS è davvero CHIUSO (3) o assente — non se sta connettendo/chiudendo,
+  // così evitiamo riconnessioni spurie (e lo "scatto" della pagina).
   if(!ws || ws.readyState===3){
     _connTargets=[]; _connIdx=0; _connBusy=false; clearTimeout(reconn);
     connect();
@@ -782,7 +781,7 @@ function _onResume(){
     var now=Date.now();
     if(now-(window._appUpdLastChk||0)>180000){ window._appUpdLastChk=now; if(typeof _appUpdateCheck==='function') _appUpdateCheck(); }
   }catch(e){}
-  // controlla se il file su HA Ã¨ piÃ¹ recente di quello in esecuzione (throttle 60s)
+  // controlla se il file su HA è più recente di quello in esecuzione (throttle 60s)
   try{
     var now2=Date.now();
     if(now2-(window._haLocalLastChk||0)>60000){ window._haLocalLastChk=now2; _haLocalCheck(); }
@@ -797,11 +796,11 @@ setInterval(()=>{ if(!document.hidden && ws && ws.readyState===1) _haLoadCfg(); 
 function syncCfgToHA(){
   cfg._ts=Date.now(); _saveCfgLocalOnly();
   const ok=_haSaveCfg();
-  if(ok) showToast('â˜ï¸ Invio a Home Assistantâ€¦');
-  else showToast('âš ï¸ Non connesso a Home Assistant');
+  if(ok) showToast('☁️ Invio a Home Assistant…');
+  else showToast('⚠️ Non connesso a Home Assistant');
 }
 
-/* â”€â”€ BACKUP: esporta/ripristina TUTTO (layout + card JS) in un file .json â”€â”€ */
+/* ── BACKUP: esporta/ripristina TUTTO (layout + card JS) in un file .json ── */
 function exportBackup(){
   try{
     const payload={ app:'frarik', exportedAt:new Date().toISOString(), _ts:cfg._ts||Date.now(),
@@ -812,17 +811,17 @@ function exportBackup(){
     a.download='frarik-backup-'+new Date().toISOString().slice(0,16).replace(/[:T]/g,'-')+'.json';
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(()=>URL.revokeObjectURL(a.href),3000);
-    showToast('â¬‡ï¸ Backup esportato ('+(cfg.pages||[]).length+' pagine, '+(_jsStoreList().length)+' card JS)');
-  }catch(e){ showToast('âš ï¸ Errore export: '+(e.message||e)); }
+    showToast('⬇️ Backup esportato ('+(cfg.pages||[]).length+' pagine, '+(_jsStoreList().length)+' card JS)');
+  }catch(e){ showToast('⚠️ Errore export: '+(e.message||e)); }
 }
 function importBackupFile(file){
   if(!file) return;
   const r=new FileReader();
   r.onload=e=>{
-    let p; try{ p=JSON.parse(e.target.result); }catch(err){ showToast('âš ï¸ File di backup non valido'); return; }
+    let p; try{ p=JSON.parse(e.target.result); }catch(err){ showToast('⚠️ File di backup non valido'); return; }
     const c = (p.cfg&&p.cfg.pages) ? p.cfg : (p.pages ? p : null);
-    if(!c){ showToast('âš ï¸ Backup non valido (nessuna configurazione)'); return; }
-    showConfirm('Ripristinare questo backup?<br><span style="font-size:11px;opacity:.7">La configurazione attuale verrÃ  sostituita ('+ (c.pages||[]).length +' pagine, '+ (Array.isArray(p.js)?p.js.length:0) +' card JS).</span>', ()=>{
+    if(!c){ showToast('⚠️ Backup non valido (nessuna configurazione)'); return; }
+    showConfirm('Ripristinare questo backup?<br><span style="font-size:11px;opacity:.7">La configurazione attuale verrà sostituita ('+ (c.pages||[]).length +' pagine, '+ (Array.isArray(p.js)?p.js.length:0) +' card JS).</span>', ()=>{
       // 1) ripristina le card JS
       if(Array.isArray(p.js)){
         p.js.forEach(it=>{ try{ if(it&&it.meta&&it.meta.id){ _jsStoreSave(it.meta.id,it.meta,it.code,it.origin); try{ _installCardCode(it.code); }catch(_){} } }catch(_){} });
@@ -835,21 +834,21 @@ function importBackupFile(file){
       try{ applyTheme(cfg.theme); }catch(_){}
       renderDash(); renderPageTabs(); renderBadgesAll();
       _haSaveCfg();   // propaga su HA / altri dispositivi
-      showToast('âœ… Backup ripristinato');
+      showToast('✅ Backup ripristinato');
     });
   };
-  r.onerror=()=>showToast('âš ï¸ Impossibile leggere il file');
+  r.onerror=()=>showToast('⚠️ Impossibile leggere il file');
   r.readAsText(file);
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• SINCRONIZZAZIONE CARD DA GITHUB â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ════════════════════ SINCRONIZZAZIONE CARD DA GITHUB ════════════════════
    Controlla un repo GitHub; quando una card cambia (SHA diverso) mostra una notifica
    in alto che, cliccata, scarica e aggiorna la card (e la sincronizza su tutti i dispositivi). */
 let _ghPending=[], _ghDismissedSig='', _ghTimer=null, _ghLastSig='';
 function _ghCfg(){
   if(!cfg.githubSync) cfg.githubSync={owner:'Frarik',repo:'cards',path:'card-js',branch:'main',auto:true,shas:{}};
   if(!cfg.githubSync.shas) cfg.githubSync.shas={};
-  // migrazione una-tantum: il repo ora usa cartelle â†’ le card .js stanno in card-js/
+  // migrazione una-tantum: il repo ora usa cartelle → le card .js stanno in card-js/
   if(!cfg.githubSync._foldersMigrated){
     if(!cfg.githubSync.path) cfg.githubSync.path='card-js';
     cfg.githubSync._foldersMigrated=true;
@@ -879,7 +878,7 @@ function saveGitHubCfg(){
   saveCfg(); _haSaveCfg();
   _ghSchedule();
   closeGitHubCfg();           // chiude il popup automaticamente
-  showToast('ðŸ’¾ GitHub salvato â€” controllo aggiornamentiâ€¦');
+  showToast('💾 GitHub salvato — controllo aggiornamenti…');
   _ghCheck(true);
 }
 function _ghStatus(t){ const e=document.getElementById('gh-status'); if(e) e.textContent=t; }
@@ -896,7 +895,7 @@ async function _ghApiList(){
   return j.filter(f=>f.type==='file'&&/\.js$/i.test(f.name)&&!/^frarik[-.]/i.test(f.name));
 }
 /* Lista TUTTE le card .js da tutte le cartelle installabili (card-js, card-chips, card-distintivi)
-   con UNA sola richiesta (git tree), cosÃ¬ il controllo automatico copre ogni cartella senza esaurire il limite. */
+   con UNA sola richiesta (git tree), così il controllo automatico copre ogni cartella senza esaurire il limite. */
 async function _ghApiListAll(){
   const g=_ghCfg(); if(!g.owner||!g.repo) throw new Error('Configura proprietario e repository');
   const branch=g.branch||'main';
@@ -924,8 +923,8 @@ async function _ghInstallFile(file){
   const id=(res.newCards&&res.newCards[0])||(res.tags&&res.tags[0]);
   const card=id?window.FratechCardRegistry[id]:null;
   if(card&&card.id){
-    _jsStoreSave(card.id,{id:card.id,name:card.name||card.id,icon:card.icon||'ðŸ“¦',version:card.version||'1.0',desc:card.desc||''},code,'github');
-    try{ const g=_ghCfg(); g.idFile=g.idFile||{}; g.idFile[card.id]=file.name; }catch(e){}   // mappa idâ†”file per liberare lo sha all'eliminazione
+    _jsStoreSave(card.id,{id:card.id,name:card.name||card.id,icon:card.icon||'📦',version:card.version||'1.0',desc:card.desc||''},code,'github');
+    try{ const g=_ghCfg(); g.idFile=g.idFile||{}; g.idFile[card.id]=file.name; }catch(e){}   // mappa id↔file per liberare lo sha all'eliminazione
   }
   _ghCfg().shas[file.name]=file.sha;
   return card;
@@ -935,16 +934,16 @@ async function _ghCheck(force){
   const g=_ghCfg(); if(!g.owner||!g.repo){ if(force) _ghStatus('Configura proprietario e repository'); return; }
   let files;
   try{ files=await _ghApiListAll(); }
-  catch(e){ if(force){ _ghStatus('âš ï¸ '+e.message); showToast('âš ï¸ GitHub: '+e.message);} return; }
+  catch(e){ if(force){ _ghStatus('⚠️ '+e.message); showToast('⚠️ GitHub: '+e.message);} return; }
   _ghPending = files.filter(f=> g.shas[f.name] && g.shas[f.name]!==f.sha);
-  if(force) _ghStatus(files.length+' card nel repo Â· '+_ghPending.length+' da aggiornare');
+  if(force) _ghStatus(files.length+' card nel repo · '+_ghPending.length+' da aggiornare');
   const sig=_ghPending.map(f=>f.name+':'+f.sha).sort().join('|');
   if(_ghPending.length && sig!==_ghDismissedSig){
-    const txt=_ghPending.length===1?('Card aggiornata: '+_ghPending[0].name.replace(/\.js$/,'')+' â€” clicca per aggiornare')
-                                    :(_ghPending.length+' card aggiornate â€” clicca per aggiornare');
+    const txt=_ghPending.length===1?('Card aggiornata: '+_ghPending[0].name.replace(/\.js$/,'')+' — clicca per aggiornare')
+                                    :(_ghPending.length+' card aggiornate — clicca per aggiornare');
     document.getElementById('gh-notif-txt').textContent=txt;
     document.getElementById('gh-notif').classList.add('on');
-    if(sig!==_ghLastSig){ try{ _ntfPushLog('ðŸ”„ Aggiornamento card', txt, 'ðŸ”„', 'gh'); }catch(e){} _ghLastSig=sig; }   // anche nel centro notifiche (cliccabile)
+    if(sig!==_ghLastSig){ try{ _ntfPushLog('🔄 Aggiornamento card', txt, '🔄', 'gh'); }catch(e){} _ghLastSig=sig; }   // anche nel centro notifiche (cliccabile)
   } else if(!_ghPending.length){
     document.getElementById('gh-notif').classList.remove('on');
   }
@@ -955,7 +954,7 @@ function _ghDismiss(){
 }
 async function _ghInstallAll(){
   if(!_ghPending.length){ document.getElementById('gh-notif').classList.remove('on'); return; }
-  showToast('â¬‡ï¸ Aggiorno '+_ghPending.length+' cardâ€¦');
+  showToast('⬇️ Aggiorno '+_ghPending.length+' card…');
   let ok=0,err=0;
   for(const f of _ghPending.slice()){ try{ await _ghInstallFile(f); ok++; }catch(e){ err++; console.warn('[GitHub]',f.name,e.message); } }
   _ghPending=[]; _ghDismissedSig='';
@@ -964,26 +963,26 @@ async function _ghInstallAll(){
   renderDash();
   if(typeof _jsStoreRenderList==='function') _jsStoreRenderList();
   if(typeof _epRenderJsStore==='function') _epRenderJsStore();
-  showToast('âœ… '+ok+' card aggiornate'+(err?(' Â· '+err+' errori'):''));
+  showToast('✅ '+ok+' card aggiornate'+(err?(' · '+err+' errori'):''));
 }
-/* Chiede CONFERMA prima di aggiornare le card JS, poi installa (aggiorna anche le card giÃ  in plancia). */
+/* Chiede CONFERMA prima di aggiornare le card JS, poi installa (aggiorna anche le card già in plancia). */
 function _ghAskInstall(){
   const run=()=>{ _ntfLog=_ntfLog.filter(n=>n.action!=='gh'); _ntfSaveLog(); _ntfUpdateBell(); if(typeof renderNotifCenter==='function') renderNotifCenter(); closeNotifCenter(); _ghInstallAll(); };
   if(_ghPending&&_ghPending.length){
     const names=_ghPending.map(f=>f.name.replace(/\.js$/,'')).join(', ');
     const q=_ghPending.length===1 ? ('Vuoi aggiornare la card <b>'+names+'</b>?') : ('Vuoi aggiornare <b>'+_ghPending.length+' card</b>?<br><span style="font-size:11px;opacity:.7">'+names+'</span>');
-    showConfirm(q+'<br><span style="font-size:11px;opacity:.7">Si aggiorneranno subito, anche se giÃ  presenti nella plancia.</span>', run, 'Aggiorna');
+    showConfirm(q+'<br><span style="font-size:11px;opacity:.7">Si aggiorneranno subito, anche se già presenti nella plancia.</span>', run, 'Aggiorna');
   } else {
-    showToast('ðŸ”„ Controllo aggiornamenti cardâ€¦');
-    _ghCheck(true).then(()=>{ if(_ghPending.length) _ghAskInstall(); else showToast('âœ… Card giÃ  aggiornate'); });
+    showToast('🔄 Controllo aggiornamenti card…');
+    _ghCheck(true).then(()=>{ if(_ghPending.length) _ghAskInstall(); else showToast('✅ Card già aggiornate'); });
   }
 }
 async function _ghImportAll(){
   let files;
   try{ files=await _ghApiListAll(); }
-  catch(e){ _ghStatus('âš ï¸ '+e.message); showToast('âš ï¸ '+e.message); return; }
+  catch(e){ _ghStatus('⚠️ '+e.message); showToast('⚠️ '+e.message); return; }
   if(!files.length){ _ghStatus('Nessun file .js nel repo'); return; }
-  _ghStatus('Importazione di '+files.length+' cardâ€¦');
+  _ghStatus('Importazione di '+files.length+' card…');
   let ok=0,err=0;
   for(const f of files){ try{ await _ghInstallFile(f); ok++; }catch(e){ err++; } }
   saveCfg(); _haSaveCfg();
@@ -991,17 +990,17 @@ async function _ghImportAll(){
   if(typeof _jsStoreRenderList==='function') _jsStoreRenderList();
   if(typeof _epRenderJsStore==='function') _epRenderJsStore();
   _ghPending=[]; document.getElementById('gh-notif').classList.remove('on');
-  _ghStatus('âœ… '+ok+' card importate'+(err?(' Â· '+err+' errori'):''));
-  showToast('âœ… '+ok+' card importate da GitHub');
+  _ghStatus('✅ '+ok+' card importate'+(err?(' · '+err+' errori'):''));
+  showToast('✅ '+ok+' card importate da GitHub');
 }
 
-/* â•â•â•â•â•â•â•â• STORE da GitHub (sfoglia le cartelle del repo, con ricerca per sezione) â•â•â•â•â•â•â•â• */
+/* ════════ STORE da GitHub (sfoglia le cartelle del repo, con ricerca per sezione) ════════ */
 const _GHS_FOLDERS={
-  js:        {path:'card-js',         ext:/\.js$/i,    ico:'âš¡',  kind:'install', exclude:/^frarik[-.]/i},
-  chips:     {path:'card-chips',      ext:/\.js$/i,    ico:'ðŸ”¹',  kind:'install'},
-  distintivi:{path:'card-distintivi', ext:/\.js$/i,    ico:'ðŸ·ï¸', kind:'install'},
-  yaml:      {path:'card-yaml',       ext:/\.ya?ml$/i, ico:'ðŸ“„',  kind:'copy'},
-  pkg:       {path:'pkg',             ext:/\.ya?ml$/i, ico:'ðŸ“¦',  kind:'copy'},
+  js:        {path:'card-js',         ext:/\.js$/i,    ico:'⚡',  kind:'install', exclude:/^frarik[-.]/i},
+  chips:     {path:'card-chips',      ext:/\.js$/i,    ico:'🔹',  kind:'install'},
+  distintivi:{path:'card-distintivi', ext:/\.js$/i,    ico:'🏷️', kind:'install'},
+  yaml:      {path:'card-yaml',       ext:/\.ya?ml$/i, ico:'📄',  kind:'copy'},
+  pkg:       {path:'pkg',             ext:/\.ya?ml$/i, ico:'📦',  kind:'copy'},
 };
 let _ghsTab='js', _ghsCache={};
 async function _ghListFolder(path){
@@ -1019,7 +1018,7 @@ async function _ghListFolder(path){
 function _ghsReloadTab(){
   delete _ghsCache[_ghsTab];
   ghStoreTab(_ghsTab);
-  showToast('ðŸ”„ Sincronizzazione con GitHubâ€¦');
+  showToast('🔄 Sincronizzazione con GitHub…');
 }
 function openGhStore(){
   try{ closeJsStore(); }catch(e){}
@@ -1036,8 +1035,8 @@ async function _ghsPreview(enc, nm, cardId){
   const modal=document.getElementById('ghs-prev-modal');
   const container=document.getElementById('ghs-prev-card');
   const note=document.getElementById('ghs-prev-note');
-  document.getElementById('ghs-prev-title').textContent='ðŸ‘ '+nm;
-  container.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:160px;color:var(--muted);font-size:12px">â³ Carico anteprimaâ€¦</div>';
+  document.getElementById('ghs-prev-title').textContent='👁 '+nm;
+  container.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:160px;color:var(--muted);font-size:12px">⏳ Carico anteprima…</div>';
   note.textContent='';
   modal.classList.remove('off');
   let regCard=cardId?window.FratechCardRegistry[cardId]:null;
@@ -1064,7 +1063,7 @@ async function _ghsPreview(enc, nm, cardId){
         regCard=id?window.FratechCardRegistry[id]:null;
         isTemp=true;
       }catch(e){
-        container.innerHTML=`<div style="padding:16px;color:#f87171;font-size:12px;text-align:center">âš ï¸ Impossibile caricare l'anteprima:<br>${eh(e.message)}</div>`;
+        container.innerHTML=`<div style="padding:16px;color:#f87171;font-size:12px;text-align:center">⚠️ Impossibile caricare l'anteprima:<br>${eh(e.message)}</div>`;
         return;
       }
     }
@@ -1073,7 +1072,7 @@ async function _ghsPreview(enc, nm, cardId){
     container.innerHTML='<div style="padding:16px;color:var(--muted);font-size:12px;text-align:center">Nessuna card trovata nel file</div>';
     return;
   }
-  const dummyCard={id:'__preview__',type:'js-custom',jsCardId:regCard.id,label:regCard.name||nm,icon:regCard.icon||'ðŸ“¦',color:'#818cf8',entity:'',colSpan:2,rowSpan:2};
+  const dummyCard={id:'__preview__',type:'js-custom',jsCardId:regCard.id,label:regCard.name||nm,icon:regCard.icon||'📦',color:'#818cf8',entity:'',colSpan:2,rowSpan:2};
   container.innerHTML='';
   container.style.minHeight='160px';
   try{
@@ -1093,7 +1092,7 @@ async function _ghsPreview(enc, nm, cardId){
   }catch(e){
     container.innerHTML=`<div style="padding:16px;color:#f87171;font-size:12px;text-align:center">Errore render: ${eh(e.message)}</div>`;
   }
-  note.textContent=isTemp?'Anteprima temporanea â€” non ancora installata':'';
+  note.textContent=isTemp?'Anteprima temporanea — non ancora installata':'';
 }
 function ghStoreTab(tab){
   _ghsTab=tab;
@@ -1102,13 +1101,13 @@ function ghStoreTab(tab){
   const loadEl=document.getElementById('ghs-load'); if(loadEl) loadEl.style.display=(tab==='local')?'':'none';
   if(tab==='local'){ _ghStoreRender(); _ghStoreInitDropzone(); return; }
   if(_ghsCache[tab]){ _ghStoreRender(); return; }
-  document.getElementById('ghs-status').textContent='â³ Carico da GitHubâ€¦';
+  document.getElementById('ghs-status').textContent='⏳ Carico da GitHub…';
   document.getElementById('ghs-list').innerHTML='';
   const f=_GHS_FOLDERS[tab];
   _ghListFolder(f.path).then(files=>{
     _ghsCache[tab]=files.filter(x=>f.ext.test(x.name)&&!(f.exclude&&f.exclude.test(x.name)));
     if(_ghsTab===tab) _ghStoreRender();
-  }).catch(e=>{ document.getElementById('ghs-status').textContent='âš ï¸ '+e.message; });
+  }).catch(e=>{ document.getElementById('ghs-status').textContent='⚠️ '+e.message; });
 }
 function _ghStoreRender(){
   const tab=_ghsTab, list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
@@ -1117,7 +1116,7 @@ function _ghStoreRender(){
   const folder=_GHS_FOLDERS[tab]; const g=_ghCfg();
   let files=(_ghsCache[tab]||[]).slice();
   if(q) files=files.filter(f=>f.name.toLowerCase().includes(q));
-  status.textContent=(_ghsCache[tab]||[]).length+' file'+(q?(' Â· '+files.length+' trovati'):'');
+  status.textContent=(_ghsCache[tab]||[]).length+' file'+(q?(' · '+files.length+' trovati'):'');
   if(!files.length){ list.innerHTML=`<div class="ghs-empty">${q?'Nessun risultato per "'+eh(q)+'"':'Nessun file in questa cartella su GitHub'}</div>`; return; }
   const ico=folder.ico;
   const usedIds=new Set(); (cfg.pages||[]).forEach(pg=>(pg.cards||[]).forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedIds.add(c.jsCardId); }));
@@ -1150,16 +1149,16 @@ function _ghStoreRender(){
 /* Schede "Installate" (origine github) e "Card locali" (origine local): gestisci le card installate */
 function _ghStoreRenderInstalled(q, originFilter){
   const list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
-  // origine: 'github' = installata dallo store Â· 'local' = caricata da PC Â· vecchie senza tag â†’ 'github'
+  // origine: 'github' = installata dallo store · 'local' = caricata da PC · vecchie senza tag → 'github'
   let items=_jsStoreList().filter(i=>((i.origin||'github')===originFilter));
   const all=items.length;
   if(q) items=items.filter(i=>((i.meta||{}).name||(i.meta||{}).id||'').toLowerCase().includes(q));
   const lbl=originFilter==='local'?'card locali':'card da GitHub';
-  status.textContent=all+' '+lbl+(q?(' Â· '+items.length+' trovate'):'');
+  status.textContent=all+' '+lbl+(q?(' · '+items.length+' trovate'):'');
   if(!items.length){
     const msg = originFilter==='local'
       ? (q?'Nessun risultato':'Nessuna card locale.<br>Usa la zona qui sotto per caricare un file <code>.js</code> dal PC.')
-      : (q?'Nessun risultato':'Nessuna card installata da GitHub.<br>Installale dalle schede âš¡ Card JS Â· ðŸ”¹ Chips Â· ðŸ·ï¸ Distintivi.');
+      : (q?'Nessun risultato':'Nessuna card installata da GitHub.<br>Installale dalle schede ⚡ Card JS · 🔹 Chips · 🏷️ Distintivi.');
     list.innerHTML=`<div class="ghs-empty">${msg}</div>`; return;
   }
   const usedIds=new Set(); (cfg.pages||[]).forEach(pg=>(pg.cards||[]).forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedIds.add(c.jsCardId); }));
@@ -1170,22 +1169,22 @@ function _ghStoreRenderInstalled(q, originFilter){
     const pub = originFilter==='local' ? `<button class="ghs-btn ghs-btn-upd" onclick="_ghsPublish('${id}')" title="Pubblica su GitHub"><i class="mdi mdi-upload"></i> Pubblica</button>` : '';
     const safePrevNm=(m.name||id).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
     const previewBtn=`<button class="ghs-ibtn ghs-ibtn-eye" onclick="_ghsPreview('','${safePrevNm}','${id}')" title="Anteprima"><i class="mdi mdi-eye-outline"></i></button>`;
-    return `<div class="ghs-row"><div class="ghs-ico">${m.icon||'ðŸ“¦'}</div>
-      <div class="ghs-info"><div class="ghs-name">${eh(m.name||id||'Card')}</div><div class="ghs-sub">ID: ${eh(id||'?')} Â· v${eh(m.version||'?')}</div></div>
+    return `<div class="ghs-row"><div class="ghs-ico">${m.icon||'📦'}</div>
+      <div class="ghs-info"><div class="ghs-name">${eh(m.name||id||'Card')}</div><div class="ghs-sub">ID: ${eh(id||'?')} · v${eh(m.version||'?')}</div></div>
       <div class="ghs-acts">${previewBtn}${pub}${act}<button class="ghs-ibtn ghs-ibtn-del" onclick="_ghsDeleteInstalled('${id}')" title="Disinstalla"><i class="mdi mdi-delete-outline"></i></button></div></div>`;
   }).join('');
 }
 function _ghsDeleteInstalled(id){
   if(!id) return;
   const it=_jsStoreList().find(i=>(i.meta||{}).id===id); const nm=(it&&it.meta&&it.meta.name)||id;
-  showConfirm(`Eliminare la card <b>${eh(nm)}</b> dalle installate?<br><span style="font-size:11px;opacity:.7">Le card di questo tipo giÃ  messe in dashboard mostreranno un errore.</span>`, ()=>{
+  showConfirm(`Eliminare la card <b>${eh(nm)}</b> dalle installate?<br><span style="font-size:11px;opacity:.7">Le card di questo tipo già messe in dashboard mostreranno un errore.</span>`, ()=>{
     _jsStoreDelete(id);
     try{ delete window.FratechCardRegistry[id]; }catch(e){}
-    // libera lo sha del file corrispondente, cosÃ¬ ricompare come "Installa" nello store
+    // libera lo sha del file corrispondente, così ricompare come "Installa" nello store
     try{ const g=_ghCfg(); if(g.idFile&&g.idFile[id]){ delete g.shas[g.idFile[id]]; delete g.idFile[id]; } saveCfg(); _haSaveCfg(); }catch(e){}
     if(typeof _epRenderJsStore==='function') _epRenderJsStore();
-    // NON svuotiamo _ghsCache: la lista GitHub Ã¨ giÃ  in cache, la card riappare con "Installa"
-    renderDash(); _ghStoreRender(); showToast('ðŸ—‘ Card disinstallata');
+    // NON svuotiamo _ghsCache: la lista GitHub è già in cache, la card riappare con "Installa"
+    renderDash(); _ghStoreRender(); showToast('🗑 Card disinstallata');
   }, 'Elimina');
 }
 function _ghStoreInitDropzone(){
@@ -1195,12 +1194,12 @@ function _ghStoreInitDropzone(){
   dz.ondrop=e=>{ e.preventDefault(); dz.classList.remove('drag-over'); if(e.dataTransfer.files[0]) jsStoreLoadFile(e.dataTransfer.files[0]); };
 }
 
-/* â•â•â•â•â•â•â•â• PUBBLICA una card locale su GitHub (richiede token con scrittura) â•â•â•â•â•â•â•â• */
+/* ════════ PUBBLICA una card locale su GitHub (richiede token con scrittura) ════════ */
 let _ghPubId=null;
 function _ghsPublish(id){
   const it=_jsStoreList().find(i=>(i.meta||{}).id===id);
-  if(!it){ showToast('âš ï¸ Card non trovata'); return; }
-  if(!_ghCfg().token){ showToast('ðŸ”‘ Manca il token GitHub â€” aprilo con l\'âš™ï¸ e incollalo'); openGitHubCfg(); return; }
+  if(!it){ showToast('⚠️ Card non trovata'); return; }
+  if(!_ghCfg().token){ showToast('🔑 Manca il token GitHub — aprilo con l\'⚙️ e incollalo'); openGitHubCfg(); return; }
   _ghPubId=id;
   document.getElementById('ghpub-name').value=(it.meta||{}).name||id;
   const base=(id||(it.meta||{}).name||'card').toLowerCase().replace(/[^a-z0-9._-]+/g,'-').replace(/^-+|-+$/g,'');
@@ -1212,28 +1211,28 @@ function _ghsPublish(id){
 function closeGhPub(){ document.getElementById('ghpub').classList.add('off'); }
 async function _ghPublishDo(){
   const id=_ghPubId; if(!id) return;
-  const it=_jsStoreList().find(i=>(i.meta||{}).id===id); if(!it){ showToast('âš ï¸ Card non trovata'); return; }
+  const it=_jsStoreList().find(i=>(i.meta||{}).id===id); if(!it){ showToast('⚠️ Card non trovata'); return; }
   const st=document.getElementById('ghpub-status');
-  if(!_ghCfg().token){ st.innerHTML='<span style="color:#f87171">Manca il token GitHub (âš™ï¸)</span>'; return; }
+  if(!_ghCfg().token){ st.innerHTML='<span style="color:#f87171">Manca il token GitHub (⚙️)</span>'; return; }
   const folder=document.getElementById('ghpub-folder').value;
   let file=(document.getElementById('ghpub-file').value||'').trim();
   if(!file){ st.innerHTML='<span style="color:#f87171">Inserisci il nome del file</span>'; return; }
   if(!/\.js$/i.test(file)) file+='.js';
   file=file.replace(/\s+/g,'-');
   const path=folder+'/'+file;
-  st.innerHTML='<span style="color:#fbbf24">â³ Pubblico su GitHubâ€¦</span>';
+  st.innerHTML='<span style="color:#fbbf24">⏳ Pubblico su GitHub…</span>';
   try{
     await _ghPut(path, it.code, 'Pubblica '+file+' da Frarik');
-    // ora Ã¨ su GitHub â†’ diventa una card "github" (esce da Card locali, entra in Installate)
+    // ora è su GitHub → diventa una card "github" (esce da Card locali, entra in Installate)
     try{
       _jsStoreSave(id, it.meta, it.code, 'github');
       const g=_ghCfg(); g.idFile=g.idFile||{}; g.idFile[id]=file; saveCfg(); _haSaveCfg();
     }catch(e){}
     _ghsCache={};
-    st.innerHTML='<span style="color:#4ade80">âœ… Pubblicata in '+folder+'/'+file+'</span>';
-    showToast('ðŸ“¤ Card pubblicata su GitHub!');
+    st.innerHTML='<span style="color:#4ade80">✅ Pubblicata in '+folder+'/'+file+'</span>';
+    showToast('📤 Card pubblicata su GitHub!');
     setTimeout(()=>{ closeGhPub(); if(!document.getElementById('gh-store-modal').classList.contains('off')) ghStoreTab('local'); }, 1000);
-  }catch(e){ st.innerHTML='<span style="color:#f87171">âš ï¸ '+e.message+'</span>'; }
+  }catch(e){ st.innerHTML='<span style="color:#f87171">⚠️ '+e.message+'</span>'; }
 }
 /* Crea o aggiorna un file nel repo via GitHub API (PUT). Serve il token in g.token. */
 async function _ghPut(path, content, message){
@@ -1243,62 +1242,62 @@ async function _ghPut(path, content, message){
   const branch=g.branch||'main';
   const base=`https://api.github.com/repos/${g.owner}/${g.repo}/contents/${path.split('/').map(encodeURIComponent).join('/')}`;
   const H={'Authorization':'token '+g.token,'Accept':'application/vnd.github.v3+json'};
-  // se il file esiste giÃ  serve il suo sha per aggiornarlo
+  // se il file esiste già serve il suo sha per aggiornarlo
   let sha=null;
   try{ const gr=await fetch(base+'?ref='+encodeURIComponent(branch),{headers:H}); if(gr.ok){ const gj=await gr.json(); sha=gj.sha||null; } }catch(e){}
   const body={ message:message||('Aggiorna '+path), content:_b64utf8(content), branch };
   if(sha) body.sha=sha;
   const r=await fetch(base,{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},H),body:JSON.stringify(body)});
   if(r.status===401||r.status===403) throw new Error('GitHub ha rifiutato (403). Serve un token "classic" con permesso "repo" E aver accettato l\'invito come collaboratore.');
-  if(r.status===404) throw new Error('Repo non raggiungibile (404): probabilmente l\'invito come collaboratore non Ã¨ stato accettato, o il token non ha accesso al repo.');
-  if(!r.ok){ let m=''; try{ m=(await r.json()).message; }catch(e){} throw new Error('GitHub HTTP '+r.status+(m?' â€” '+m:'')); }
+  if(r.status===404) throw new Error('Repo non raggiungibile (404): probabilmente l\'invito come collaboratore non è stato accettato, o il token non ha accesso al repo.');
+  if(!r.ok){ let m=''; try{ m=(await r.json()).message; }catch(e){} throw new Error('GitHub HTTP '+r.status+(m?' — '+m:'')); }
   return await r.json();
 }
 function _b64utf8(str){ return btoa(unescape(encodeURIComponent(str))); }   // base64 UTF-8 per l'API GitHub
 function _ghsFind(name){ name=decodeURIComponent(name); return (_ghsCache[_ghsTab]||[]).find(f=>f.name===name); }
 async function _ghsInstall(name){
   const f=_ghsFind(name); if(!f) return;
-  showToast('â¬‡ï¸ Installo '+f.name+'â€¦');
+  showToast('⬇️ Installo '+f.name+'…');
   try{
     await _ghInstallFile(f); saveCfg(); _haSaveCfg();
     if(typeof _jsStoreRenderList==='function') _jsStoreRenderList();
     if(typeof _epRenderJsStore==='function') _epRenderJsStore();
-    showToast('âœ… '+f.name+' installata â€” usa âž• Aggiungi per metterla in dashboard'); _ghStoreRender();
-  }catch(e){ showToast('âš ï¸ Errore: '+e.message); }
+    showToast('✅ '+f.name+' installata — usa ➕ Aggiungi per metterla in dashboard'); _ghStoreRender();
+  }catch(e){ showToast('⚠️ Errore: '+e.message); }
 }
 async function _ghsCopy(name){
   const f=_ghsFind(name); if(!f) return;
-  let txt; try{ txt=await _ghDownload(f); }catch(e){ showToast('âš ï¸ '+e.message); return; }
+  let txt; try{ txt=await _ghDownload(f); }catch(e){ showToast('⚠️ '+e.message); return; }
   if(navigator.clipboard && window.isSecureContext){
-    try{ await navigator.clipboard.writeText(txt); showToast('ðŸ“‹ "'+f.name+'" copiata negli appunti'); return; }catch(e){}
+    try{ await navigator.clipboard.writeText(txt); showToast('📋 "'+f.name+'" copiata negli appunti'); return; }catch(e){}
   }
   // fallback per HTTP locale (contesto non sicuro): textarea + execCommand
   try{
     const ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.top='-1000px'; ta.style.opacity='0';
     document.body.appendChild(ta); ta.focus(); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-    showToast('ðŸ“‹ "'+f.name+'" copiata negli appunti');
-  }catch(e){ showToast('âš ï¸ Copia non riuscita â€” usa â¬‡ï¸ per scaricare il file'); }
+    showToast('📋 "'+f.name+'" copiata negli appunti');
+  }catch(e){ showToast('⚠️ Copia non riuscita — usa ⬇️ per scaricare il file'); }
 }
 async function _ghsDownload(name){
   const f=_ghsFind(name); if(!f) return;
   try{ const txt=await _ghDownload(f); const b=new Blob([txt],{type:'text/plain'}); const u=URL.createObjectURL(b);
     const a=document.createElement('a'); a.href=u; a.download=f.name; a.click(); setTimeout(()=>URL.revokeObjectURL(u),1000);
-    showToast('â¬‡ï¸ Scarico '+f.name);
-  }catch(e){ showToast('âš ï¸ Download non riuscito: '+e.message); }
+    showToast('⬇️ Scarico '+f.name);
+  }catch(e){ showToast('⚠️ Download non riuscito: '+e.message); }
 }
 /* Controllo manuale plancia con messaggio esplicito (per la sezione Plancia dello store) */
 async function ghCheckPlancia(){
   const cur=window.FRARIK_APP_VERSION||0;
-  showToast('ðŸ” Controllo plancia su GitHubâ€¦ (tua: '+cur+')');
+  showToast('🔍 Controllo plancia su GitHub… (tua: '+cur+')');
   let r; try{ r=await fetch(APP_REPO_RAW+'?_='+Date.now(),{cache:'no-store'}); }
-  catch(e){ showToast('âŒ Impossibile raggiungere GitHub (rete)'); return; }
-  if(!r.ok){ showToast('âš ï¸ GitHub ha risposto HTTP '+r.status); return; }
+  catch(e){ showToast('❌ Impossibile raggiungere GitHub (rete)'); return; }
+  if(!r.ok){ showToast('⚠️ GitHub ha risposto HTTP '+r.status); return; }
   const html=await r.text();
   const m=/FRARIK_APP_VERSION\s*=\s*(\d+)/.exec(html);
   const rv=m?parseInt(m[1],10):0;
-  if(rv>cur){ showToast('ðŸ“¥ Trovata versione '+rv+', aggiornoâ€¦'); _appUpdateCheck(); }
-  else if(rv===cur) showToast('âœ… Plancia giÃ  aggiornata (versione '+cur+')');
-  else showToast('â„¹ï¸ La tua versione ('+cur+') Ã¨ piÃ¹ recente di GitHub ('+rv+')');
+  if(rv>cur){ showToast('📥 Trovata versione '+rv+', aggiorno…'); _appUpdateCheck(); }
+  else if(rv===cur) showToast('✅ Plancia già aggiornata (versione '+cur+')');
+  else showToast('ℹ️ La tua versione ('+cur+') è più recente di GitHub ('+rv+')');
 }
 function _ghSchedule(){
   clearInterval(_ghTimer);
@@ -1308,9 +1307,9 @@ function _ghSchedule(){
   }
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• AUTO-AGGIORNAMENTO DELLA PLANCIA (file html) DA GITHUB â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   Controlla su GitHub se c'Ã¨ una versione piÃ¹ recente del file; se sÃ¬ mostra la notifica.
-   Cliccando, salva la nuova versione nel browser e ricarica â†’ il controllo in cima al file la esegue. */
+/* ════════════════════ AUTO-AGGIORNAMENTO DELLA PLANCIA (file html) DA GITHUB ════════════════════
+   Controlla su GitHub se c'è una versione più recente del file; se sì mostra la notifica.
+   Cliccando, salva la nuova versione nel browser e ricarica → il controllo in cima al file la esegue. */
 const APP_REPO_RAW='https://raw.githubusercontent.com/Frarik/cards/main/frarik.html';
 let _appUpdHtml=null,_appUpdVer=0,_appUpdTimer=null;
 async function _appUpdateCheck(){
@@ -1330,7 +1329,7 @@ async function _appUpdateCheck(){
         localStorage.setItem('frarik_app_ts',String(Date.now()));
         localStorage.setItem('frarik_app_pending_notify',String(rv));
       }catch(e){}
-      showToast('ðŸ“¥ Plancia aggiornata alla versione '+rv+' â€” ricaricoâ€¦');
+      showToast('📥 Plancia aggiornata alla versione '+rv+' — ricarico…');
       setTimeout(()=>location.reload(),1800);
     }
   }catch(e){}
@@ -1339,21 +1338,28 @@ function applyAppUpdate(){
   if(!_appUpdHtml){ return; }
   // Validazione robusta prima di salvare in cache
   if(_appUpdHtml.length<200000 || _appUpdHtml.indexOf('FRARIK_APP_VERSION')<0 || _appUpdHtml.indexOf('</html>')<0 || _appUpdHtml.indexOf('</style>')<0 || _appUpdHtml.indexOf('</'+'script>')<0){
-    showToast('âš ï¸ File aggiornamento non valido, aggiornamento annullato'); return;
+    showToast('⚠️ File aggiornamento non valido, aggiornamento annullato'); return;
   }
   try{ localStorage.setItem('frarik_app_html',_appUpdHtml); localStorage.setItem('frarik_app_ver',String(_appUpdVer)); localStorage.setItem('frarik_app_ts',String(Date.now())); }catch(e){}
-  showToast('ðŸ“¥ Aggiorno la planciaâ€¦');
+  showToast('📥 Aggiorno la plancia…');
   setTimeout(()=>location.reload(),500);
 }
 function _appUpdSchedule(){
   clearInterval(_appUpdTimer);
   _appUpdTimer=setInterval(()=>{ if(!document.hidden) _appUpdateCheck(); }, 30*60*1000);  // ogni 30 min
 }
-/* â•â•â• WEBSOCKET â•â•â• */
+/* Controlla il file frarik.html sul server HA (non GitHub).
+   - Se il server ha una versione PIÙ NUOVA → salva in localStorage e ricarica.
+   - Se il server ha la STESSA versione ma localStorage è vuoto/vecchio → salva come safety net
+     così il prossimo F5 (che carica la versione HTTP-cached del browser) troverà la versione
+     corretta in localStorage e la userà al posto di quella vecchia. NON ricarica in questo caso. */
+
+
+/* ═══ WEBSOCKET ═══ */
 let covTimer=null;
-/* â”€â”€ Connessione con fallback LOCALE â†’ REMOTO â”€â”€
+/* ── Connessione con fallback LOCALE → REMOTO ──
    Prova prima l'origine da cui apri la pagina (locale). Se non risponde, prova l'indirizzo remoto
-   salvato (es. Nabu Casa). CosÃ¬ la stessa pagina/bookmark funziona a casa (WiFi) e fuori (dati). */
+   salvato (es. Nabu Casa). Così la stessa pagina/bookmark funziona a casa (WiFi) e fuori (dati). */
 let _connTargets=[], _connIdx=0, _connBusy=false, _connOk=false, _lastTriedHost='', _everConnected=false, _dashBuilt=false;
 function _buildConnTargets(){
   const t=[];
@@ -1369,7 +1375,7 @@ function connect(){
   if(_connIdx>=_connTargets.length) _connIdx=0;
   _connBusy=true; _connOk=false;
   const tgt=_connTargets[_connIdx]; HA_HOST=tgt.host; BASE=tgt.base; _lastTriedHost=tgt.host;
-  const cm=document.getElementById('cmsg'); if(cm) cm.textContent='Connessione a '+tgt.host+'â€¦';
+  const cm=document.getElementById('cmsg'); if(cm) cm.textContent='Connessione a '+tgt.host+'…';
   covTimer=setTimeout(_connFail,12000);
   try{
     const proto=BASE.startsWith('https')?'wss':'ws';
@@ -1391,13 +1397,13 @@ function _connFail(){
   // tutti i target falliti
   _connIdx=0;
   if(_everConnected){
-    // giÃ  connesso almeno una volta â†’ riconnessione SILENZIOSA in background (solo pallino),
-    // NON copriamo la plancia/header con l'overlay (cosÃ¬ il tasto â˜° resta sempre visibile)
+    // già connesso almeno una volta → riconnessione SILENZIOSA in background (solo pallino),
+    // NON copriamo la plancia/header con l'overlay (così il tasto ☰ resta sempre visibile)
     reconn=setTimeout(connect,3000);
     return;
   }
-  // prima connessione mai riuscita â†’ mostra overlay con campo indirizzo/token
-  const cm=document.getElementById('cmsg'); if(cm) cm.innerHTML='âš ï¸ Home Assistant non raggiungibile<br><span style="font-size:10px;opacity:.6">ultimo tentativo: '+(_lastTriedHost||'?')+'</span>';
+  // prima connessione mai riuscita → mostra overlay con campo indirizzo/token
+  const cm=document.getElementById('cmsg'); if(cm) cm.innerHTML='⚠️ Home Assistant non raggiungibile<br><span style="font-size:10px;opacity:.6">ultimo tentativo: '+(_lastTriedHost||'?')+'</span>';
   const skip=document.getElementById('cov-skip'); if(skip) skip.style.display='';
   const rbox=document.getElementById('cov-remote-box'); if(rbox) rbox.style.display='';
   const cov=document.getElementById('cov'); if(cov) cov.classList.remove('off');
@@ -1409,13 +1415,13 @@ function saveRemoteAndRetry(){
   const tk=(document.getElementById('cov-token')?.value||'').trim();
   if(tk){ TOKEN=tk; localStorage.setItem('hadb_token',tk); }
   const rbox=document.getElementById('cov-remote-box'); if(rbox) rbox.style.display='none';
-  const cm=document.getElementById('cmsg'); if(cm) cm.textContent='Connessioneâ€¦';
+  const cm=document.getElementById('cmsg'); if(cm) cm.textContent='Connessione…';
   const cov=document.getElementById('cov'); if(cov) cov.classList.remove('off');
   _connTargets=[]; _connIdx=0; _connBusy=false; clearTimeout(reconn);
   connect();
 }
 function send(p){ p.id=mid++; ws.send(JSON.stringify(p)); }
-/* Promise-based WS request â€” usato per lovelace/resources, entity_registry, ecc. */
+/* Promise-based WS request — usato per lovelace/resources, entity_registry, ecc. */
 const _wsCbs={};
 function sendAndWait(p,timeout=10000){
   return new Promise(resolve=>{
@@ -1426,9 +1432,9 @@ function sendAndWait(p,timeout=10000){
   });
 }
 
-/* â•â•â• FORECAST SUBSCRIPTION (HA 2023.9+) â•â•â• */
-const _fcData={}; // entityId â†’ forecast array
-const _fcSubMap={}; // subscriptionId â†’ entityId
+/* ═══ FORECAST SUBSCRIPTION (HA 2023.9+) ═══ */
+const _fcData={}; // entityId → forecast array
+const _fcSubMap={}; // subscriptionId → entityId
 
 function _subscribeForecast(entityId){
   if(!entityId||!ws||ws.readyState!==1) return;
@@ -1457,7 +1463,7 @@ function onMsg(m){
   if(m.type==='auth_required') ws.send(JSON.stringify({type:'auth',access_token:TOKEN}));
   else if(m.type==='auth_ok'){
     clearTimeout(covTimer);
-    _connBusy=false; _connOk=true; _everConnected=true;   // connessione attiva â†’ riconnessioni future in background
+    _connBusy=false; _connOk=true; _everConnected=true;   // connessione attiva → riconnessioni future in background
     setC('on');
     document.getElementById('cov').classList.add('off');
     const rbox=document.getElementById('cov-remote-box'); if(rbox) rbox.style.display='none';
@@ -1466,10 +1472,10 @@ function onMsg(m){
     _haLoadCfg(true);   // sincronizza la configurazione dai dati utente di HA
   }
   else if(m.type==='auth_invalid'){
-    _connBusy=false; _connOk=false;          // ferma fallback/auto-retry (col token sbagliato Ã¨ inutile)
+    _connBusy=false; _connOk=false;          // ferma fallback/auto-retry (col token sbagliato è inutile)
     clearTimeout(covTimer); clearTimeout(reconn);
     // Auto-recupero: se stavamo usando un token SALVATO (magari vecchio/non valido), scartalo e
-    // riprova col token predefinito valido â†’ evita le notifiche "Login attempt failed" ripetute.
+    // riprova col token predefinito valido → evita le notifiche "Login attempt failed" ripetute.
     if(TOKEN!==TOKEN_DEFAULT){
       try{ localStorage.removeItem('hadb_token'); }catch(e){}
       TOKEN=TOKEN_DEFAULT; setC('wait');
@@ -1477,7 +1483,7 @@ function onMsg(m){
       return;
     }
     setC('off');
-    const cm=document.getElementById('cmsg'); if(cm) cm.innerHTML='ðŸ”‘ Token di accesso non valido<br><span style="font-size:10px;opacity:.6">Crea un token in Profilo HA â†’ Token a lunga durata e incollalo qui sotto</span>';
+    const cm=document.getElementById('cmsg'); if(cm) cm.innerHTML='🔑 Token di accesso non valido<br><span style="font-size:10px;opacity:.6">Crea un token in Profilo HA → Token a lunga durata e incollalo qui sotto</span>';
     const skip=document.getElementById('cov-skip'); if(skip) skip.style.display='';
     const rbox=document.getElementById('cov-remote-box'); if(rbox) rbox.style.display='';
     const cov=document.getElementById('cov'); if(cov) cov.classList.remove('off');
@@ -1487,21 +1493,21 @@ function onMsg(m){
     _cfgSetId=-1;
     if(m.success){
       const np=(cfg.pages||[]).length, nj=(typeof _jsStoreList==='function'?_jsStoreList().length:0);
-      showToast('â˜ï¸ Sincronizzato su Home Assistant â€” '+np+' pagine, '+nj+' card JS');
+      showToast('☁️ Sincronizzato su Home Assistant — '+np+' pagine, '+nj+' card JS');
     } else {
-      showToast('âš ï¸ Sincronizzazione fallita: '+((m.error&&m.error.message)||'dati troppo grandi'));
+      showToast('⚠️ Sincronizzazione fallita: '+((m.error&&m.error.message)||'dati troppo grandi'));
     }
   }
   // Risposta sincronizzazione config (frontend/get_user_data)
   else if(m.type==='result'&&m.id===_cfgGetId){
     _cfgGetId=-1; _cfgSynced=true;   // d'ora in poi le modifiche locali si auto-salvano su HA
     const v=(m.success&&m.result&&m.result.value)?m.result.value:null;
-    // formati: nuovo {_ts,cfg,js} Â· vecchio = cfg diretto (con .pages)
+    // formati: nuovo {_ts,cfg,js} · vecchio = cfg diretto (con .pages)
     const remoteCfg = v ? (v.cfg&&v.cfg.pages ? v.cfg : (v.pages ? v : null)) : null;
     const remoteTs  = v ? (v._ts || (remoteCfg&&remoteCfg._ts) || 0) : 0;
     const remoteJs  = (v&&Array.isArray(v.js)) ? v.js : null;
     if(remoteCfg && remoteCfg.pages && remoteTs>(cfg._ts||0)){
-      // HA ha una versione piÃ¹ recente â†’ adottala su questo dispositivo
+      // HA ha una versione più recente → adottala su questo dispositivo
       _cfgSyncing=true;
       // 1) ripristina le card JS mancanti (codice) e registrale
       if(remoteJs && remoteJs.length && typeof _jsStoreSave==='function'){
@@ -1516,10 +1522,10 @@ function onMsg(m){
       renderDash(); renderPageTabs();
       _cfgSyncing=false;
       try{ _histInit(); }catch(e){}   // reset cronologia sullo stato sincronizzato
-      showToast('â˜ï¸ Configurazione e card sincronizzate da Home Assistant');
+      showToast('☁️ Configurazione e card sincronizzate da Home Assistant');
       try{ _ghSchedule(); }catch(e){}   // la config GitHub potrebbe essere arrivata dalla sync
     }
-    // se il locale Ã¨ piÃ¹ recente o HA Ã¨ vuoto NON si fa nulla in automatico:
+    // se il locale è più recente o HA è vuoto NON si fa nulla in automatico:
     // l'invio su HA avviene solo col pulsante "Sincronizza" (evita sovrascritture accidentali).
   }
   else if(m.type==='result'&&Array.isArray(m.result)){
@@ -1535,10 +1541,10 @@ function onMsg(m){
       try{ _ghSchedule(); setTimeout(()=>{ try{ _ghCheck(false); }catch(e){} }, 4000); }catch(e){}  // controllo aggiornamenti card GitHub
       try{ _appUpdSchedule(); setTimeout(()=>{ try{ _appUpdateCheck(); }catch(e){} }, 6000); }catch(e){}  // controllo aggiornamento plancia
       setTimeout(()=>{ try{ _loadLovelaceResources(); }catch(e){} }, 2000);  // carica risorse HACS
-      setTimeout(()=>{ try{ _haLocalCheck(); }catch(e){} }, 3000);  // controlla subito se c'Ã¨ una versione piÃ¹ recente del file su HA
+      setTimeout(()=>{ try{ _haLocalCheck(); }catch(e){} }, 3000);  // controlla subito se c'è una versione più recente del file su HA
       try{ _ntfUpdateBell(); }catch(e){}
     } else {
-      // RICONNESSIONE: la dashboard Ã¨ giÃ  costruita â†’ aggiorna i VALORI in posto, niente rebuild (niente "scatto")
+      // RICONNESSIONE: la dashboard è già costruita → aggiorna i VALORI in posto, niente rebuild (niente "scatto")
       try{ (curPage().cards||[]).forEach(c=>{ try{ updateCardEl(c); }catch(e){} }); }catch(e){}
       try{ renderBadgesAll(); }catch(e){}
     }
@@ -1566,7 +1572,7 @@ function setC(s){
   const lbl=document.getElementById('conn-lbl');
   if(dot) dot.className='';
   if(s==='on'){dot?.classList.add('ok');if(lbl){lbl.textContent='Connesso';lbl.style.color='#4ade80';}}
-  else if(s==='wait'){dot?.classList.add('wait');if(lbl){lbl.textContent='â€¦';lbl.style.color='#fbbf24';}}
+  else if(s==='wait'){dot?.classList.add('wait');if(lbl){lbl.textContent='…';lbl.style.color='#fbbf24';}}
   else{if(lbl){lbl.textContent='Disconnesso';lbl.style.color='#f87171';}}
   // aggiorna chip conn nell'header bar
   document.querySelectorAll('.hbar-inner[data-id]').forEach(el=>{
@@ -1579,7 +1585,7 @@ function callSvc(domain,svc,entityId,data={}){
   send({type:'call_service',domain,service:svc,service_data:{entity_id:entityId,...data}});
 }
 
-/* â•â•â• HISTORY API â•â•â• */
+/* ═══ HISTORY API ═══ */
 async function fetchHistory(entityId,hours=24){
   try{
     const start=new Date(Date.now()-hours*3600000).toISOString();
@@ -1590,7 +1596,7 @@ async function fetchHistory(entityId,hours=24){
   }catch(e){return[];}
 }
 
-/* â•â•â• CAMERA â•â•â• */
+/* ═══ CAMERA ═══ */
 async function refreshCamera(cardId,entityId){
   try{
     const r=await fetch(`${BASE}/api/camera_proxy/${entityId}?_=${Date.now()}`,{headers:{Authorization:`Bearer ${TOKEN}`}});
@@ -1616,7 +1622,7 @@ function startCamTimer(card){
 }
 function stopCamTimer(id){ if(camTimers[id]){ clearInterval(camTimers[id]); delete camTimers[id]; } }
 
-/* â•â•â• GAUGE SVG â•â•â• */
+/* ═══ GAUGE SVG ═══ */
 function gaugeSVG(value,min,max,color,unit){
   const pct=Math.min(1,Math.max(0,(parseFloat(value)-min)/(max-min)));
   const R=42,cx=60,cy=64;
@@ -1628,7 +1634,7 @@ function gaugeSVG(value,min,max,color,unit){
     return `<path d="M${x1},${y1} A${R},${R} 0 ${large} 1 ${x2},${y2}" fill="none" stroke="${col}" stroke-width="${sw}" stroke-linecap="round"/>`;
   }
   const endA=startA+sweepA*pct;
-  const dispV=isNaN(parseFloat(value))?'â€”':(parseFloat(value)%1===0?parseFloat(value):parseFloat(value).toFixed(1));
+  const dispV=isNaN(parseFloat(value))?'—':(parseFloat(value)%1===0?parseFloat(value):parseFloat(value).toFixed(1));
   const isLight=cfg.theme==='light';
   const arcBg=isLight?'rgba(15,23,42,0.1)':'rgba(255,255,255,0.07)';
   const fillMain=isLight?'#0f172a':'white';
@@ -1640,11 +1646,11 @@ function gaugeSVG(value,min,max,color,unit){
     ${pct>0?arc(startA,endA,color):''}
     <text x="${cx}" y="${cy-4}" text-anchor="middle" dominant-baseline="middle" fill="${fillMain}" font-size="19" font-weight="900" font-family="${ff}">${dispV}</text>
     <text x="${cx}" y="${cy+13}" text-anchor="middle" fill="${fillSub}" font-size="9" font-family="${ff}">${unit}</text>
-    <text x="${cx}" y="94" text-anchor="middle" fill="${fillMin}" font-size="7" font-family="${ff}">${min} â€” ${max}</text>
+    <text x="${cx}" y="94" text-anchor="middle" fill="${fillMin}" font-size="7" font-family="${ff}">${min} — ${max}</text>
   </svg>`;
 }
 
-/* â•â•â• FLOW BARS (stile app screenshot) â•â•â• */
+/* ═══ FLOW BARS (stile app screenshot) ═══ */
 function buildFlowBarsRows(card){
   const sVal=parseFloat(hs[card.solar]||0);
   const lVal=parseFloat(hs[card.load]||0);
@@ -1655,22 +1661,22 @@ function buildFlowBarsRows(card){
   const rows=[];
   if(card.solar){
     const v=Math.max(0,sVal);
-    rows.push({ico:'â˜€ï¸',lbl:'Solare',sub:'',val:v,color:'#fbbf24',pct:Math.min(100,(v/mx)*100)});
+    rows.push({ico:'☀️',lbl:'Solare',sub:'',val:v,color:'#fbbf24',pct:Math.min(100,(v/mx)*100)});
   }
   if(card.grid){
     // positive = esportazione (inverter convention), negative = prelievo
     const isExp=gVal>=0;
     const v=Math.abs(gVal);
-    rows.push({ico:isExp?'â†‘':'â†“',lbl:isExp?'Immissione':'Prelievo',sub:isExp?'In rete':'Dalla rete',val:v,color:isExp?'#4ade80':'#f87171',pct:Math.min(100,(v/mx)*100)});
+    rows.push({ico:isExp?'↑':'↓',lbl:isExp?'Immissione':'Prelievo',sub:isExp?'In rete':'Dalla rete',val:v,color:isExp?'#4ade80':'#f87171',pct:Math.min(100,(v/mx)*100)});
   }
   if(card.battery&&bVal!==null){
     const isCh=bVal>=0;
     const v=Math.abs(bVal);
-    rows.push({ico:'ðŸ”‹',lbl:'Batteria',sub:isCh?'In carica':'In scarica',val:v,color:isCh?'#60a5fa':'#fb923c',pct:Math.min(100,(v/mx)*100)});
+    rows.push({ico:'🔋',lbl:'Batteria',sub:isCh?'In carica':'In scarica',val:v,color:isCh?'#60a5fa':'#fb923c',pct:Math.min(100,(v/mx)*100)});
   }
   if(card.load){
     const v=Math.max(0,lVal);
-    rows.push({ico:'ðŸ ',lbl:'Consumo',sub:'',val:v,color:'#818cf8',pct:Math.min(100,(v/mx)*100)});
+    rows.push({ico:'🏠',lbl:'Consumo',sub:'',val:v,color:'#818cf8',pct:Math.min(100,(v/mx)*100)});
   }
 
   return rows.map(r=>`
@@ -1689,7 +1695,7 @@ function buildFlowBarsRows(card){
     </div>`).join('');
 }
 
-/* â•â•â• FLOW MAP SVG (nodi animati) â•â•â• */
+/* ═══ FLOW MAP SVG (nodi animati) ═══ */
 function flowMapSVG(card){
   const solar=Math.max(0,parseFloat(hs[card.solar]||0));
   const load=Math.max(0,parseFloat(hs[card.load]||0));
@@ -1699,10 +1705,10 @@ function flowMapSVG(card){
 
   // Positions: solar(150,28) house(150,108) grid(38,108) bat(150,180)
   const nd={
-    solar:{x:150,y:28,r:22,ico:'â˜€ï¸',col:'#fbbf24',val:solar>0?Math.round(solar)+'W':''},
-    house:{x:150,y:108,r:26,ico:'ðŸ ',col:'#818cf8',val:load>0?Math.round(load)+'W':''},
-    grid: {x:38,y:108,r:22,ico:'âš¡',col:grid>=0?'#4ade80':'#f87171',val:Math.abs(grid)>5?Math.round(Math.abs(grid))+'W':''},
-    ...(bat!==null?{bat:{x:150,y:180,r:22,ico:'ðŸ”‹',col:bat>=0?'#60a5fa':'#fb923c',val:Math.round(Math.abs(bat))+'W'}}:{})
+    solar:{x:150,y:28,r:22,ico:'☀️',col:'#fbbf24',val:solar>0?Math.round(solar)+'W':''},
+    house:{x:150,y:108,r:26,ico:'🏠',col:'#818cf8',val:load>0?Math.round(load)+'W':''},
+    grid: {x:38,y:108,r:22,ico:'⚡',col:grid>=0?'#4ade80':'#f87171',val:Math.abs(grid)>5?Math.round(Math.abs(grid))+'W':''},
+    ...(bat!==null?{bat:{x:150,y:180,r:22,ico:'🔋',col:bat>=0?'#60a5fa':'#fb923c',val:Math.round(Math.abs(bat))+'W'}}:{})
   };
 
   const makeDur=p=>Math.max(0.45,2.4-p/2000).toFixed(2);
@@ -1751,12 +1757,12 @@ function flowMapSVG(card){
   return s;
 }
 
-/* â•â•â• WEATHER HTML â•â•â• */
+/* ═══ WEATHER HTML ═══ */
 function weatherInner(entityId,color){
   const st=hs[entityId]||'unknown';
   const at=ha[entityId]||{};
-  const ico=WI[st]||'ðŸŒ¡ï¸';
-  const temp=at.temperature!==undefined?at.temperature+'Â°':'?Â°';
+  const ico=WI[st]||'🌡️';
+  const temp=at.temperature!==undefined?at.temperature+'°':'?°';
   const hum=at.humidity!==undefined?at.humidity+'%':'';
   const wind=at.wind_speed!==undefined?Math.round(at.wind_speed)+' km/h':'';
   const cond=_stateIt(st);
@@ -1764,20 +1770,20 @@ function weatherInner(entityId,color){
     <div class="wth-temp" style="color:${color}">${temp}</div>
     <div class="wth-cond">${cond}</div>
     <div class="wth-row">
-      ${hum?`<span class="wth-chip">ðŸ’§ ${hum}</span>`:''}
-      ${wind?`<span class="wth-chip">ðŸ’¨ ${wind}</span>`:''}
-      ${at.pressure?`<span class="wth-chip">ðŸŒ¡ ${at.pressure} hPa</span>`:''}
+      ${hum?`<span class="wth-chip">💧 ${hum}</span>`:''}
+      ${wind?`<span class="wth-chip">💨 ${wind}</span>`:''}
+      ${at.pressure?`<span class="wth-chip">🌡 ${at.pressure} hPa</span>`:''}
     </div>`;
 }
 
-/* â•â•â• WEATHER-HERO HTML â•â•â• */
+/* ═══ WEATHER-HERO HTML ═══ */
 function weatherHeroInner(card){
   const eid=card.entity;
   const st=hs[eid]||'unknown';
   const at=ha[eid]||{};
   const color=card.color||wColor(st);
-  const ico=WI[st]||'ðŸŒ¡ï¸';
-  const temp=card.entity2&&hs[card.entity2]!==undefined?hs[card.entity2]+'Â°':(at.temperature!==undefined?at.temperature+'Â°':'?Â°');
+  const ico=WI[st]||'🌡️';
+  const temp=card.entity2&&hs[card.entity2]!==undefined?hs[card.entity2]+'°':(at.temperature!==undefined?at.temperature+'°':'?°');
   const hum=card.entity3&&hs[card.entity3]!==undefined?hs[card.entity3]+'%':(at.humidity!==undefined?at.humidity+'%':'');
   const wind=at.wind_speed!==undefined?Math.round(at.wind_speed)+' km/h':'';
   const cond=_stateIt(st);
@@ -1787,14 +1793,14 @@ function weatherHeroInner(card){
     <div class="wth-hero-temp" style="color:${color}">${temp}</div>
     <div class="wth-hero-cond">${cond}</div>
     <div class="wth-row">
-      ${hum?`<span class="wth-chip">ðŸ’§ ${hum}</span>`:''}
-      ${wind?`<span class="wth-chip">ðŸ’¨ ${wind}</span>`:''}
-      ${at.pressure?`<span class="wth-chip">ðŸŒ¡ ${Math.round(at.pressure)} hPa</span>`:''}
+      ${hum?`<span class="wth-chip">💧 ${hum}</span>`:''}
+      ${wind?`<span class="wth-chip">💨 ${wind}</span>`:''}
+      ${at.pressure?`<span class="wth-chip">🌡 ${Math.round(at.pressure)} hPa</span>`:''}
     </div>
   </div>`;
 }
 
-/* â•â•â• WEATHER-COMPACT HTML â•â•â• */
+/* ═══ WEATHER-COMPACT HTML ═══ */
 function weatherCompactInner(card){
   const eid=card.entity;
   const st=hs[eid]||'unknown';
@@ -1806,7 +1812,7 @@ function weatherCompactInner(card){
   const city=(card.label||'Meteo').toUpperCase();
   const grad=_wtGrad(st);
   const dayNames=['dom','lun','mar','mer','gio','ven','sab'];
-  function _fmtT(v){ const n=parseFloat(v); return isNaN(n)?null:n.toFixed(1).replace('.',',')+'Â°C'; }
+  function _fmtT(v){ const n=parseFloat(v); return isNaN(n)?null:n.toFixed(1).replace('.',',')+'°C'; }
   const temp = card.wfTemp&&hs[card.wfTemp]!==undefined ? _fmtT(hs[card.wfTemp])
               : at.temperature!==undefined ? _fmtT(at.temperature) : null;
   const hum  = card.wfHum&&hs[card.wfHum]!==undefined  ? Math.round(parseFloat(hs[card.wfHum]))+'%'
@@ -1815,9 +1821,9 @@ function weatherCompactInner(card){
               : at.wind_speed!==undefined ? Math.round(at.wind_speed)+' km/h' : null;
   const fcHTML=fc.length?fc.map(d=>{
     const dt=new Date(d.datetime);
-    const ico=WI[d.condition||'unknown']||'ðŸŒ¡ï¸';
-    const hi=d.temperature!==undefined?Math.round(d.temperature)+'Â°C':'';
-    const lo=d.templow!==undefined?Math.round(d.templow)+'Â°C':'';
+    const ico=WI[d.condition||'unknown']||'🌡️';
+    const hi=d.temperature!==undefined?Math.round(d.temperature)+'°C':'';
+    const lo=d.templow!==undefined?Math.round(d.templow)+'°C':'';
     return `<div class="wtc-fc-day">
       <div class="wtc-fc-dname">${dayNames[dt.getDay()]}</div>
       <div class="wtc-fc-ico">${ico}</div>
@@ -1834,9 +1840,9 @@ function weatherCompactInner(card){
           <div class="wtc-cond-lbl">${eh(cond)}</div>
         </div>
         <div class="wtc-stats-row">
-          ${temp?`<span class="wtc-stat-chip">ðŸŒ¡ï¸ ${temp}</span>`:''}
-          ${hum ?`<span class="wtc-stat-chip">ðŸ’§ ${hum}</span>`:''}
-          ${wind?`<span class="wtc-stat-chip">ðŸ’¨ ${wind}</span>`:''}
+          ${temp?`<span class="wtc-stat-chip">🌡️ ${temp}</span>`:''}
+          ${hum ?`<span class="wtc-stat-chip">💧 ${hum}</span>`:''}
+          ${wind?`<span class="wtc-stat-chip">💨 ${wind}</span>`:''}
         </div>
       </div>
       ${fcHTML?`<div class="wtc-sep"></div><div class="wtc-forecast">${fcHTML}</div>`:''}
@@ -1844,7 +1850,7 @@ function weatherCompactInner(card){
   </div>`;
 }
 
-/* â•â•â• WEATHER-FORECAST HTML â•â•â• */
+/* ═══ WEATHER-FORECAST HTML ═══ */
 function weatherForecastInner(card){
   const eid=card.entity;
   const st=hs[eid]||'unknown';
@@ -1852,11 +1858,11 @@ function weatherForecastInner(card){
   const rawFc=_fcData[eid]||at.forecast||[];
   const maxDays=Math.min(parseInt(card.wfDays)||7,rawFc.length||7);
   const fc=rawFc.slice(0,maxDays);
-  if(!fc.length) return `<div style="display:flex;align-items:center;justify-content:center;height:100%;opacity:.35;font-size:12px;gap:6px;color:#fff">ðŸ“… Previsioni non disponibili</div>`;
+  if(!fc.length) return `<div style="display:flex;align-items:center;justify-content:center;height:100%;opacity:.35;font-size:12px;gap:6px;color:#fff">📅 Previsioni non disponibili</div>`;
   const dayNames=['dom','lun','mar','mer','gio','ven','sab'];
   const city=(card.label||'Meteo').toUpperCase();
   const cond=_stateIt(st);
-  function _fmtTemp(v){ const n=parseFloat(v); return isNaN(n)?null:n.toFixed(1).replace('.',',')+'Â°C'; }
+  function _fmtTemp(v){ const n=parseFloat(v); return isNaN(n)?null:n.toFixed(1).replace('.',',')+'°C'; }
   const temp= card.wfTemp&&hs[card.wfTemp]!==undefined ? _fmtTemp(hs[card.wfTemp])
              : at.temperature!==undefined ? _fmtTemp(at.temperature) : null;
   const hum = card.wfHum&&hs[card.wfHum]!==undefined  ? Math.round(parseFloat(hs[card.wfHum]))+'%'
@@ -1870,17 +1876,17 @@ function weatherForecastInner(card){
         <div class="wfc-sub">${eh(cond)}</div>
       </div>
       <div class="wfc-hstats">
-        ${temp?`<span class="wfc-hstat"><span class="wfc-hstat-ico">ðŸŒ¡ï¸</span>${temp}</span>`:''}
-        ${hum ?`<span class="wfc-hstat"><span class="wfc-hstat-ico">ðŸ’§</span>${hum}</span>`:''}
-        ${wind?`<span class="wfc-hstat"><span class="wfc-hstat-ico">ðŸ’¨</span>${wind}</span>`:''}
+        ${temp?`<span class="wfc-hstat"><span class="wfc-hstat-ico">🌡️</span>${temp}</span>`:''}
+        ${hum ?`<span class="wfc-hstat"><span class="wfc-hstat-ico">💧</span>${hum}</span>`:''}
+        ${wind?`<span class="wfc-hstat"><span class="wfc-hstat-ico">💨</span>${wind}</span>`:''}
       </div>
     </div>
     <div class="wfc-sep"></div>
     <div class="wfc-days">`+fc.map(d=>{
       const dt=new Date(d.datetime);
-      const ico=WI[d.condition||'unknown']||'ðŸŒ¡ï¸';
-      const hi=d.temperature!==undefined?Math.round(d.temperature)+'Â°C':'';
-      const lo=d.templow!==undefined?Math.round(d.templow)+'Â°C':'';
+      const ico=WI[d.condition||'unknown']||'🌡️';
+      const hi=d.temperature!==undefined?Math.round(d.temperature)+'°C':'';
+      const lo=d.templow!==undefined?Math.round(d.templow)+'°C':'';
       return `<div class="wfc-day">
         <div class="wfc-dname">${dayNames[dt.getDay()]}</div>
         <div class="wfc-ico">${ico}</div>
@@ -1891,13 +1897,13 @@ function weatherForecastInner(card){
   </div>`;
 }
 
-/* â•â•â• APPLIANCES HTML â•â•â• */
+/* ═══ APPLIANCES HTML ═══ */
 const APP_PALETTE=['#f97316','#60a5fa','#4ade80','#a78bfa','#fbbf24','#f472b6','#34d399','#22d3ee','#fb923c','#818cf8'];
 function _hex2rgba(hex,a){const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return`rgba(${r},${g},${b},${a})`;}
 
 const APP_STATE_IT={
   /* generici on/off */
-  on:'Acceso', off:'Spento', true:'SÃ¬', false:'No',
+  on:'Acceso', off:'Spento', true:'Sì', false:'No',
   open:'Aperta', closed:'Chiusa', opening:'In apertura', closing:'In chiusura',
   locked:'Bloccata', unlocked:'Sbloccata', locking:'Bloccaggio', unlocking:'Sblocco',
   /* clima HVAC */
@@ -1907,7 +1913,7 @@ const APP_STATE_IT={
   heating:'Riscaldamento in corso', cooling:'Raffrescamento in corso',
   drying:'Deumidifica in corso', preheating:'Preriscaldamento',
   defrosting:'Sbrinamento',
-  /* connettivitÃ  */
+  /* connettività */
   unavailable:'Non disponibile', unknown:'Sconosciuto', idle:'Inattivo', none:'Nessuno',
   /* media */
   playing:'In riproduzione', paused:'In pausa', standby:'In attesa', buffering:'Caricamento',
@@ -1925,8 +1931,8 @@ const APP_STATE_IT={
   /* batteria */
   charging:'In carica', discharging:'In scarica', full:'Carica piena', not_charging:'Non in carica',
   /* allarme */
-  armed_home:'Armato â€” Casa', armed_away:'Armato â€” Assenza', armed_night:'Armato â€” Notte',
-  armed_vacation:'Armato â€” Vacanza', armed_custom_bypass:'Armato â€” Personalizzato',
+  armed_home:'Armato — Casa', armed_away:'Armato — Assenza', armed_night:'Armato — Notte',
+  armed_vacation:'Armato — Vacanza', armed_custom_bypass:'Armato — Personalizzato',
   disarmed:'Disarmato', triggered:'Allarme attivato', pending:'In attesa', arming:'Armamento in corso',
   /* condizioni meteo */
   sunny:'Soleggiato', 'clear-night':'Notte serena', partlycloudy:'Parzialmente nuvoloso',
@@ -1947,85 +1953,85 @@ const APP_STATE_IT={
   /* device tracker / source_type */
   not_set:'Non impostato', gps:'GPS', router:'Router',
   bluetooth:'Bluetooth', bluetooth_le:'Bluetooth LE',
-  /* â”€â”€ device_class (sensori numerici) â”€â”€ */
-  apparent_power:'Potenza apparente', aqi:'Indice qualitÃ  aria',
+  /* ── device_class (sensori numerici) ── */
+  apparent_power:'Potenza apparente', aqi:'Indice qualità aria',
   atmospheric_pressure:'Pressione atmosferica', battery:'Batteria',
-  carbon_dioxide:'Anidride carbonica (COâ‚‚)', carbon_monoxide:'Monossido di carbonio (CO)',
-  current:'Corrente', data_rate:'VelocitÃ  dati', data_size:'Dimensione dati',
+  carbon_dioxide:'Anidride carbonica (CO₂)', carbon_monoxide:'Monossido di carbonio (CO)',
+  current:'Corrente', data_rate:'Velocità dati', data_size:'Dimensione dati',
   distance:'Distanza', duration:'Durata', energy:'Energia', energy_storage:'Accumulo energia',
-  frequency:'Frequenza', gas:'Gas', humidity:'UmiditÃ ', illuminance:'LuminositÃ ',
-  irradiance:'Irraggiamento', moisture:'UmiditÃ  suolo', monetary:'Importo',
-  nitrogen_dioxide:'Biossido di azoto (NOâ‚‚)', nitrogen_monoxide:'Monossido di azoto (NO)',
-  nitrous_oxide:'Protossido di azoto (Nâ‚‚O)', ozone:'Ozono (Oâ‚ƒ)',
+  frequency:'Frequenza', gas:'Gas', humidity:'Umidità', illuminance:'Luminosità',
+  irradiance:'Irraggiamento', moisture:'Umidità suolo', monetary:'Importo',
+  nitrogen_dioxide:'Biossido di azoto (NO₂)', nitrogen_monoxide:'Monossido di azoto (NO)',
+  nitrous_oxide:'Protossido di azoto (N₂O)', ozone:'Ozono (O₃)',
   ph:'pH', pm1:'Polveri PM1', pm10:'Polveri PM10', pm25:'Polveri PM2.5',
   power:'Potenza', power_factor:'Fattore di potenza', precipitation:'Precipitazioni',
-  precipitation_intensity:'IntensitÃ  precipitazioni', pressure:'Pressione',
-  reactive_power:'Potenza reattiva', signal_strength:'QualitÃ  segnale',
-  sound_pressure:'Pressione sonora', speed:'VelocitÃ ', sulphur_dioxide:'Biossido di zolfo (SOâ‚‚)',
+  precipitation_intensity:'Intensità precipitazioni', pressure:'Pressione',
+  reactive_power:'Potenza reattiva', signal_strength:'Qualità segnale',
+  sound_pressure:'Pressione sonora', speed:'Velocità', sulphur_dioxide:'Biossido di zolfo (SO₂)',
   temperature:'Temperatura', timestamp:'Data/Ora', volatile_organic_compounds:'COV',
   volatile_organic_compounds_parts:'COV (ppm)', voltage:'Tensione', volume:'Volume',
   volume_flow_rate:'Portata volumetrica', volume_storage:'Volume serbatorio',
-  water:'Acqua', weight:'Peso', wind_speed:'VelocitÃ  vento',
-  /* â”€â”€ device_class (sensori binari) â”€â”€ */
+  water:'Acqua', weight:'Peso', wind_speed:'Velocità vento',
+  /* ── device_class (sensori binari) ── */
   door:'Porta', garage_door:'Portone garage', window:'Finestra',
   motion:'Movimento', occupancy:'Presenza', presence:'Presenza',
   smoke:'Fumo', gas_sensor:'Gas', heat_sensor:'Calore', cold:'Freddo',
   light:'Luce', lock:'Serratura', plug:'Presa', safety:'Sicurezza',
-  sound:'Suono', vibration:'Vibrazione', moisture_binary:'UmiditÃ ',
-  connectivity:'ConnettivitÃ ', moving:'In movimento', opening:'Apertura',
+  sound:'Suono', vibration:'Vibrazione', moisture_binary:'Umidità',
+  connectivity:'Connettività', moving:'In movimento', opening:'Apertura',
   running:'In funzione', tamper:'Manomissione', update:'Aggiornamento disponibile',
-  /* â”€â”€ state_class â”€â”€ */
+  /* ── state_class ── */
   measurement:'Misurazione', total:'Totale', total_increasing:'Totale crescente',
-  /* â”€â”€ preset_mode comuni â”€â”€ */
+  /* ── preset_mode comuni ── */
   boost:'Potenziamento', comfort:'Comfort', eco:'Risparmio', sleep:'Notte',
-  activity:'AttivitÃ ', away:'Assenza', home_preset:'Casa',
-  /* â”€â”€ fan_mode comuni â”€â”€ */
+  activity:'Attività', away:'Assenza', home_preset:'Casa',
+  /* ── fan_mode comuni ── */
   low:'Bassa', medium:'Media', high:'Alta', turbo:'Turbo', silent:'Silenziosa',
   diffuse:'Diffusa', middle:'Media', focus:'Concentrata',
-  /* â”€â”€ swing_mode comuni â”€â”€ */
+  /* ── swing_mode comuni ── */
   both:'Entrambi', horizontal:'Orizzontale', vertical:'Verticale', off_swing:'Spento',
-  /* â”€â”€ update state â”€â”€ */
+  /* ── update state ── */
   up_to_date:'Aggiornato', available:'Disponibile',
-  /* â”€â”€ numero / input â”€â”€ */
+  /* ── numero / input ── */
   slider:'Cursore', box:'Casella',
-  /* â”€â”€ cover â”€â”€ */
+  /* ── cover ── */
   tilt:'Inclinazione',
-  /* â”€â”€ sensori comuni â”€â”€ */
+  /* ── sensori comuni ── */
   normal:'Normale', low_battery:'Batteria scarica', tampered:'Manomesso',
   triggered_sensor:'Attivato', no_motion:'Nessun movimento', motion_detected:'Movimento rilevato'
 };
 
-/* mappa nomi attributi HA â†’ italiano (ordinata per categoria) */
+/* mappa nomi attributi HA → italiano (ordinata per categoria) */
 const _ATTR_KEY_IT={
   /* generici */
   state:'Stato', last_changed:'Ultima modifica', last_updated:'Ultimo aggiornamento',
   restored:'Ripristinato', reachable:'Raggiungibile', tampered:'Manomesso',
-  friendly_name:'Nome', icon:'Icona', unit_of_measurement:'UnitÃ ',
+  friendly_name:'Nome', icon:'Icona', unit_of_measurement:'Unità',
   device_class:'Classe dispositivo', state_class:'Classe stato',
   platform:'Piattaforma', integration:'Integrazione', attribution:'Fonte',
   editable:'Modificabile', initial:'Valore iniziale', options:'Opzioni',
   step:'Incremento', min:'Minimo', max:'Massimo', value:'Valore',
-  pattern:'Schema', unit:'UnitÃ ',
+  pattern:'Schema', unit:'Unità',
   /* sensori ambientali */
   temperature:'Temperatura', current_temperature:'Temp. attuale',
   target_temperature:'Temp. impostata', target_temp_high:'Temp. max', target_temp_low:'Temp. min',
-  humidity:'UmiditÃ ', pressure:'Pressione hPa', dew_point:'Punto di rugiada',
+  humidity:'Umidità', pressure:'Pressione hPa', dew_point:'Punto di rugiada',
   apparent_temperature:'Temp. percepita', feels_like:'Temp. percepita',
   /* vento */
-  wind_speed:'VelocitÃ  vento', wind_bearing:'Direzione vento Â°',
-  wind_gust_speed:'Raffiche vento', wind_speed_unit:'UnitÃ  vento',
+  wind_speed:'Velocità vento', wind_bearing:'Direzione vento °',
+  wind_gust_speed:'Raffiche vento', wind_speed_unit:'Unità vento',
   /* precipitazioni */
-  precipitation:'Precipitazioni', precipitation_unit:'UnitÃ  precipitazioni',
-  precipitation_probability:'Prob. pioggia %', rain_rate:'IntensitÃ  pioggia',
-  /* visibilitÃ , nuvole, UV */
-  visibility:'VisibilitÃ ', visibility_unit:'UnitÃ  visibilitÃ ',
+  precipitation:'Precipitazioni', precipitation_unit:'Unità precipitazioni',
+  precipitation_probability:'Prob. pioggia %', rain_rate:'Intensità pioggia',
+  /* visibilità, nuvole, UV */
+  visibility:'Visibilità', visibility_unit:'Unità visibilità',
   cloud_cover:'Copertura nuvolosa %', cloud_cover_low:'Nuvole basse %',
   cloud_cover_mid:'Nuvole medie %', cloud_cover_high:'Nuvole alte %',
   uv_index:'Indice UV', ozone:'Ozono', cape:'Energia temporali J/kg',
   /* meteo altro */
-  condition:'Condizione', templow:'Temp. minima Â°C', temperature_unit:'UnitÃ  temperatura',
-  pressure_unit:'UnitÃ  pressione', forecast:'Previsioni',
-  next_rising:'Alba', next_setting:'Tramonto', elevation:'Elevazione Â°',
+  condition:'Condizione', templow:'Temp. minima °C', temperature_unit:'Unità temperatura',
+  pressure_unit:'Unità pressione', forecast:'Previsioni',
+  next_rising:'Alba', next_setting:'Tramonto', elevation:'Elevazione °',
   thunderstorm_probability:'Prob. temporale %', snowfall_probability:'Prob. neve %',
   snowfall:'Neve cm', snow_depth:'Spessore neve cm', freezinglevel_height:'Quota gelo m',
   /* batteria */
@@ -2033,7 +2039,7 @@ const _ATTR_KEY_IT={
   is_charging:'In carica', is_plugged_in:'Collegato alla presa',
   charging:'In carica',
   /* segnale */
-  signal_strength:'Segnale dBm', linkquality:'QualitÃ  segnale', lqi:'QualitÃ  link',
+  signal_strength:'Segnale dBm', linkquality:'Qualità segnale', lqi:'Qualità link',
   rssi:'RSSI dBm', snr:'SNR dB',
   /* elettrico */
   voltage:'Tensione V', current:'Corrente A', power:'Potenza W', energy:'Energia kWh',
@@ -2041,13 +2047,13 @@ const _ATTR_KEY_IT={
   total_increasing:'Totale crescente', total:'Totale',
   power_on_behavior:'Comportamento all\'accensione',
   /* clima / HVAC */
-  mode:'ModalitÃ ', hvac_action:'Azione HVAC', hvac_modes:'ModalitÃ  disponibili',
+  mode:'Modalità', hvac_action:'Azione HVAC', hvac_modes:'Modalità disponibili',
   preset_mode:'Preset', preset_modes:'Preset disponibili',
-  fan_mode:'Ventilazione', fan_modes:'VelocitÃ  disponibili',
+  fan_mode:'Ventilazione', fan_modes:'Velocità disponibili',
   swing_mode:'Oscillazione', swing_modes:'Oscillazioni disponibili',
-  away_mode:'ModalitÃ  assenza', operation_list:'ModalitÃ  disponibili',
-  target_humidity:'UmiditÃ  target %', min_temp:'Temp. min', max_temp:'Temp. max',
-  min_humidity:'UmiditÃ  min %', max_humidity:'UmiditÃ  max %',
+  away_mode:'Modalità assenza', operation_list:'Modalità disponibili',
+  target_humidity:'Umidità target %', min_temp:'Temp. min', max_temp:'Temp. max',
+  min_humidity:'Umidità min %', max_humidity:'Umidità max %',
   /* media player */
   volume_level:'Volume', is_volume_muted:'Silenzioso',
   source:'Sorgente', source_list:'Sorgenti disponibili',
@@ -2056,18 +2062,18 @@ const _ATTR_KEY_IT={
   media_position:'Posizione s', media_position_updated_at:'Aggiornamento posizione',
   app_name:'Applicazione',
   /* luci */
-  brightness:'LuminositÃ ', color_temp:'Temp. colore K',
-  color_temp_kelvin:'Temp. colore K', color_mode:'ModalitÃ  colore',
+  brightness:'Luminosità', color_temp:'Temp. colore K',
+  color_temp_kelvin:'Temp. colore K', color_mode:'Modalità colore',
   hs_color:'Colore HS', rgb_color:'Colore RGB', rgbw_color:'Colore RGBW',
   xy_color:'Colore XY', effect:'Effetto', effect_list:'Effetti disponibili',
   min_color_temp_kelvin:'Temp. colore min K', max_color_temp_kelvin:'Temp. colore max K',
-  supported_color_modes:'ModalitÃ  colore', supported_features:'Funzioni supportate',
+  supported_color_modes:'Modalità colore', supported_features:'Funzioni supportate',
   /* posizione */
   latitude:'Latitudine', longitude:'Longitudine', altitude:'Altitudine m',
-  speed:'VelocitÃ ', direction:'Direzione', gps_accuracy:'Precisione GPS m',
+  speed:'Velocità', direction:'Direzione', gps_accuracy:'Precisione GPS m',
   /* sensori binari */
   occupancy:'Presenza', motion:'Movimento', contact:'Contatto', vibration:'Vibrazione',
-  smoke:'Fumo', gas:'Gas', moisture:'UmiditÃ ', cold:'Freddo', heat:'Caldo',
+  smoke:'Fumo', gas:'Gas', moisture:'Umidità', cold:'Freddo', heat:'Caldo',
   sound:'Suono', light:'Luce', plug:'Presa', door:'Porta', window:'Finestra',
   garage_door:'Portone garage', safety:'Sicurezza', power:'Alimentazione',
   /* coperture */
@@ -2093,19 +2099,19 @@ const _ATTR_KEY_IT={
   sw_version:'Versione firmware', hw_version:'Versione hardware',
   serial_number:'Numero seriale', mac_address:'Indirizzo MAC', ip_address:'Indirizzo IP',
   /* sistema */
-  uptime:'Tempo attivitÃ ', load_1m:'Carico 1 min', load_5m:'Carico 5 min',
+  uptime:'Tempo attività', load_1m:'Carico 1 min', load_5m:'Carico 5 min',
   load_15m:'Carico 15 min', memory_use_percent:'RAM %', processor_use:'CPU %',
   disk_use_percent:'Disco %', network_in:'Rete ingresso', network_out:'Rete uscita',
   /* pioggia / stazione meteo */
-  rain_rate_in:'IntensitÃ  pioggia', rain_total:'Pioggia totale mm',
+  rain_rate_in:'Intensità pioggia', rain_total:'Pioggia totale mm',
   event_rain:'Pioggia evento mm', hourly_rain:'Pioggia oraria mm',
   daily_rain:'Pioggia giornaliera mm', weekly_rain:'Pioggia settimanale mm',
   monthly_rain:'Pioggia mensile mm', yearly_rain:'Pioggia annuale mm',
-  dewpoint:'Punto rugiada', winddir:'Direzione vento Â°',
-  windspeedmph:'VelocitÃ  vento mph', windgustmph:'Raffiche mph',
+  dewpoint:'Punto rugiada', winddir:'Direzione vento °',
+  windspeedmph:'Velocità vento mph', windgustmph:'Raffiche mph',
   /* azione Zigbee */
   action:'Azione', action_rate:'Frequenza azione',
-  occupancy_timeout:'Timeout presenza s', sensitivity:'SensibilitÃ ',
+  occupancy_timeout:'Timeout presenza s', sensitivity:'Sensibilità',
   /* allarme */
   code_arm_required:'Codice richiesto', changed_by:'Modificato da',
   open_sensors:'Sensori aperti',
@@ -2120,7 +2126,7 @@ const _ATTR_KEY_IT={
 
 /* traduce uno stato HA in italiano */
 function _stateIt(s){
-  if(s===null||s===undefined||s==='') return 'â€”';
+  if(s===null||s===undefined||s==='') return '—';
   const key=String(s).trim();
   return APP_STATE_IT[key]??APP_STATE_IT[key.toLowerCase()]??key;
 }
@@ -2128,20 +2134,20 @@ function _stateIt(s){
 /* traduce un nome attributo HA in italiano */
 function _attrKeyIt(k){
   if(_ATTR_KEY_IT[k]) return _ATTR_KEY_IT[k];
-  /* prova con underscore â†’ spazio, tutto minuscolo */
+  /* prova con underscore → spazio, tutto minuscolo */
   const normalized=k.toLowerCase().replace(/_/g,' ');
   /* parti comuni in fondo alla chiave */
-  const suffixMap={' unit':'UnitÃ ',' units':'UnitÃ ',' list':'Elenco',' mode':'ModalitÃ ',
-    ' state':'Stato',' status':'Stato',' level':'Livello',' rate':'VelocitÃ ',
+  const suffixMap={' unit':'Unità',' units':'Unità',' list':'Elenco',' mode':'Modalità',
+    ' state':'Stato',' status':'Stato',' level':'Livello',' rate':'Velocità',
     ' time':'Orario',' timeout':'Timeout',' count':'Contatore',' total':'Totale',
     ' percent':'%',' percentage':'%',' angle':'Angolo',' type':'Tipo',
     ' temp':'Temp.',' temperature':'Temperatura',' pressure':'Pressione',
-    ' humidity':'UmiditÃ ',' speed':'VelocitÃ ',' direction':'Direzione',
+    ' humidity':'Umidità',' speed':'Velocità',' direction':'Direzione',
     ' power':'Potenza',' energy':'Energia',' voltage':'Tensione',' current':'Corrente'};
   for(const[sfx,it] of Object.entries(suffixMap)){
     if(normalized.endsWith(sfx)){
       const prefix=k.slice(0,k.length-sfx.replace(' ','_').length).replace(/_/g,' ');
-      if(prefix) return prefix+' â€” '+it;
+      if(prefix) return prefix+' — '+it;
       return it;
     }
   }
@@ -2150,12 +2156,12 @@ function _attrKeyIt(k){
 
 /* traduce un valore attributo in italiano (stati, boolean, device_class, state_class, ecc.) */
 function _attrValIt(v){
-  if(v===null||v===undefined) return 'â€”';
-  if(typeof v==='boolean') return v?'SÃ¬':'No';
+  if(v===null||v===undefined) return '—';
+  if(typeof v==='boolean') return v?'Sì':'No';
   if(typeof v==='number') return v;
   const s=String(v).trim();
-  if(s==='') return 'â€”';
-  /* ricerca diretta nella mappa (chiave esatta, poi lowercase, poi con underscoreâ†’spazio) */
+  if(s==='') return '—';
+  /* ricerca diretta nella mappa (chiave esatta, poi lowercase, poi con underscore→spazio) */
   const kl=s.toLowerCase();
   if(APP_STATE_IT[s]!==undefined) return APP_STATE_IT[s];
   if(APP_STATE_IT[kl]!==undefined) return APP_STATE_IT[kl];
@@ -2165,15 +2171,15 @@ function _attrValIt(v){
   /* parole inglesi singole comuni che appaiono come valori HA */
   const wordMap={
     measurement:'Misurazione',total:'Totale',wind:'Vento',temperature:'Temperatura',
-    humidity:'UmiditÃ ',pressure:'Pressione',precipitation:'Precipitazioni',
+    humidity:'Umidità',pressure:'Pressione',precipitation:'Precipitazioni',
     battery:'Batteria',power:'Potenza',energy:'Energia',current:'Corrente',
     voltage:'Tensione',frequency:'Frequenza',signal:'Segnale',
     motion:'Movimento',occupancy:'Presenza',smoke:'Fumo',gas:'Gas',
     door:'Porta',window:'Finestra',lock:'Serratura',light:'Luce',
-    sound:'Suono',vibration:'Vibrazione',moisture:'UmiditÃ  suolo',
-    connectivity:'ConnettivitÃ ',safety:'Sicurezza',heat:'Calore',cold:'Freddo',
-    speed:'VelocitÃ ',distance:'Distanza',weight:'Peso',volume:'Volume',
-    illuminance:'LuminositÃ ',aqi:'QualitÃ  aria',ozone:'Ozono',
+    sound:'Suono',vibration:'Vibrazione',moisture:'Umidità suolo',
+    connectivity:'Connettività',safety:'Sicurezza',heat:'Calore',cold:'Freddo',
+    speed:'Velocità',distance:'Distanza',weight:'Peso',volume:'Volume',
+    illuminance:'Luminosità',aqi:'Qualità aria',ozone:'Ozono',
     running:'In funzione',update:'Aggiornamento',tamper:'Manomissione',
     opening:'Apertura',moving:'In movimento',plug:'Presa',
     carbon:'Carbonio',nitrogen:'Azoto',sulphur:'Zolfo',
@@ -2202,11 +2208,11 @@ function appliancesInner(card){
   const fmt=v=>v>=1000?(v/1000).toFixed(2)+' kW':Math.round(v)+' W';
   const cardColor=card.color||'#fbbf24';
   const cardLabel=card.label||'Elettrodomestici';
-  const cardIcon=card.icon||'âš¡';
+  const cardIcon=card.icon||'⚡';
 
   const ON_STATES=new Set(['on','open','opening','playing','heat','cool','auto','fan_only','dry','home','true']);
 
-  /* â”€â”€ active consuming items â”€â”€ */
+  /* ── active consuming items ── */
   const active=items.map((item,i)=>({
     ...item,
     val:parseFloat(hs[item.entity]??0)||0,
@@ -2215,7 +2221,7 @@ function appliancesInner(card){
 
   const total=active.reduce((s,d)=>s+d.val,0);
 
-  /* â”€â”€ chips: count active per group â”€â”€ */
+  /* ── chips: count active per group ── */
   const chipHtml=groups.map((g,gi)=>{
     const color=g.color||'#818cf8';
     const ents=g.entities||[];
@@ -2227,18 +2233,18 @@ function appliancesInner(card){
       ${clickable?`onclick="appChipPopup('${card.id}',${gi},event)"`:''}><span class="${dotCls}"></span>${cnt} ${label}</span>`;
   }).join('');
 
-  /* â”€â”€ power device rows â”€â”€ */
+  /* ── power device rows ── */
   const powerRows=active.map(item=>{
     const c=item.color;
     return `<div class="app-row" style="--ac:${c}">
       <span class="app-dot"></span>
-      <span class="app-ico">${_renderIcon(item.icon||'âš¡',18,item.color)}</span>
+      <span class="app-ico">${_renderIcon(item.icon||'⚡',18,item.color)}</span>
       <span class="app-name">${item.name||_friendlyName(item.entity)}</span>
-      <span class="app-val-badge" style="color:${c};background:${_hex2rgba(c,.15)};border-color:${_hex2rgba(c,.35)}">${fmt(item.val)} â–¼</span>
+      <span class="app-val-badge" style="color:${c};background:${_hex2rgba(c,.15)};border-color:${_hex2rgba(c,.35)}">${fmt(item.val)} ▼</span>
     </div>`;
   }).join('');
 
-  /* â”€â”€ state rows: groups with showList=true â”€â”€ */
+  /* ── state rows: groups with showList=true ── */
   const stateGroups=groups.filter(g=>g.showList&&(g.entities||[]).length);
   const stateRows=stateGroups.map(g=>{
     const color=g.color||'#818cf8';
@@ -2252,7 +2258,7 @@ function appliancesInner(card){
       return `<div class="app-state-row" style="--gc:${color}">
         <span class="${dotCls}"></span>
         <span class="app-state-name">${_friendlyName(e)}</span>
-        <span class="app-state-badge" style="color:${badgeColor};background:${badgeBg};border-color:${badgeBorder}">${_stateIt(hs[e]||'â€”')}</span>
+        <span class="app-state-badge" style="color:${badgeColor};background:${badgeBg};border-color:${badgeBorder}">${_stateIt(hs[e]||'—')}</span>
       </div>`;
     }).join('');
   }).join('');
@@ -2260,21 +2266,21 @@ function appliancesInner(card){
   const hasPower=active.length>0;
   const hasState=stateRows.length>0;
   const emptyPower=(!items.length)
-    ?`<div class="app-empty" style="flex:none;padding:8px 0">ðŸ”Œ Aggiungi sensori watt dal âœï¸ editor</div>`
+    ?`<div class="app-empty" style="flex:none;padding:8px 0">🔌 Aggiungi sensori watt dal ✏️ editor</div>`
     :'';
 
   const bodyHtml=`
     ${hasPower?`<div class="app-list" style="${hasState?'flex:none':'flex:1'}">${powerRows}</div>`:emptyPower}
     ${hasPower&&hasState?`<div class="app-sec-sep"></div>`:''}
     ${hasState?`<div class="app-list" style="flex:1">${stateRows}</div>`:''}
-    ${!hasPower&&!hasState&&items.length?`<div class="app-empty">ðŸ’¤ Tutti spenti<br><span style="font-size:9px">Soglia: ${thr}W</span></div>`:''}
+    ${!hasPower&&!hasState&&items.length?`<div class="app-empty">💤 Tutti spenti<br><span style="font-size:9px">Soglia: ${thr}W</span></div>`:''}
   `;
 
   return `<div class="app-wrap">
     <div class="app-hdr">
       <span class="app-hdr-ico" style="color:${cardColor}">${_renderIcon(cardIcon,20,cardColor)}</span>
       <span class="app-hdr-title">${cardLabel}</span>
-      ${total>0?`<span class="app-total-badge">${fmt(total)} â–¼</span>`:''}
+      ${total>0?`<span class="app-total-badge">${fmt(total)} ▼</span>`:''}
     </div>
     ${chipHtml?`<div class="app-chips">${chipHtml}</div>`:''}
     <div class="app-divider"></div>
@@ -2282,8 +2288,8 @@ function appliancesInner(card){
   </div>`;
 }
 
-/* â•â•â• PICTURE-ELEMENTS HTML â•â•â• */
-/* parti dinamiche dell'orologio header (ora + data) â€” usate sia al render che per l'update sul posto */
+/* ═══ PICTURE-ELEMENTS HTML ═══ */
+/* parti dinamiche dell'orologio header (ora + data) — usate sia al render che per l'update sul posto */
 function _clkParts(item){
   const now=new Date();
   const fmt=(item&&item.clockFormat)||'24h';
@@ -2342,12 +2348,12 @@ function hbarInner(card){
       const isWait=dot?.classList.contains('wait');
       const connColor=isOk?'#4ade80':isWait?'#fbbf24':'#f87171';
       const connIcon=isOk?'mdi:wifi':'mdi:wifi-off';
-      const connTxt=isOk?(item.label||'Connesso'):isWait?'Connessioneâ€¦':'Disconnesso';
+      const connTxt=isOk?(item.label||'Connesso'):isWait?'Connessione…':'Disconnesso';
       return `<span class="hbar-chip" style="--hbbg:${_hex2rgba(connColor,.18)};--hbc:${_hex2rgba(connColor,.6)};background:var(--hbbg);border-color:var(--hbc);color:${connColor}">${_renderIcon(connIcon,12,connColor)} <span style="font-weight:700">${connTxt}</span></span>`;
     }
     const col=item.color||'#fff';
-    // â”€â”€ colore: colorMap manuale > bg fisso > auto HA â”€â”€
-    // N.B. 'rgba(255,255,255,0.12)' Ã¨ il vecchio default â†’ trattalo come "nessun colore"
+    // ── colore: colorMap manuale > bg fisso > auto HA ──
+    // N.B. 'rgba(255,255,255,0.12)' è il vecchio default → trattalo come "nessun colore"
     const _isDefaultBg=v=>!v||v==='rgba(255,255,255,0.12)'||v==='rgba(255,255,255,.12)';
     let baseColor;
     if(item.type==='entity'&&item.entity){
@@ -2358,9 +2364,9 @@ function hbarInner(card){
     } else {
       baseColor=(!_isDefaultBg(item.bg)?item.bg:null)||'#818cf8';
     }
-    // shape â†’ border-radius
+    // shape → border-radius
     const shapeR={pill:'20px',rounded:'10px',square:'6px',circle:'50%'}[item.shape||'pill']||'20px';
-    // size â†’ padding + font
+    // size → padding + font
     const sizeMap={sm:'3px 8px|9px',md:'4px 11px|10px',lg:'7px 16px|12px'};
     const [sp,sf]=(sizeMap[item.size||'md']||'4px 11px|10px').split('|');
     const [spy,spx]=sp.split(' ');
@@ -2369,14 +2375,14 @@ function hbarInner(card){
       : `--hbbg:${_hex2rgba(baseColor,.18)};--hbc:${_hex2rgba(baseColor,.6)};background:var(--hbbg);border-color:var(--hbc);--hbr:${shapeR};--hbpy:${spy};--hbpx:${spx};--hbfs:${sf}`;
     let val='';
     if(item.type==='entity'&&item.entity){
-      const raw=hs[item.entity]!==undefined?String(hs[item.entity]):'â€”';
+      const raw=hs[item.entity]!==undefined?String(hs[item.entity]):'—';
       const unit=item.showUnit!==false?(ha[item.entity]?.unit_of_measurement||''):'';
       const translated=_stateIt(raw);
       val=item.showState!==false?(translated+(unit?' '+unit:'')):'';
     } else if(item.type==='text'){
       val=item.text||'';
     }
-    // â”€â”€ icona: iconMap manuale > icona fissa > auto HA â”€â”€
+    // ── icona: iconMap manuale > icona fissa > auto HA ──
     let icon=item.icon||'';
     if(item.type==='entity'&&item.entity){
       const st=String(hs[item.entity]||'');
@@ -2426,9 +2432,9 @@ function hbarInner(card){
 function pictureElementsInner(card){
   const imgUrl=card.imageUrl||'';
   const elements=card.elements||[];
-  if(!imgUrl) return `<div class="pe-empty">ðŸ–¼ï¸ Imposta URL immagine nel card editor</div>`;
+  if(!imgUrl) return `<div class="pe-empty">🖼️ Imposta URL immagine nel card editor</div>`;
   const overlays=elements.map(el=>{
-    const val=el.entity?(hs[el.entity]??'â€”'):(el.text||'');
+    const val=el.entity?(hs[el.entity]??'—'):(el.text||'');
     const color=el.color||'#fff';
     const sz=el.size||12;
     return `<div class="pe-el" style="left:${el.x||50}%;top:${el.y||50}%;color:${color};font-size:${sz}px;border-color:${color}44">
@@ -2442,7 +2448,7 @@ function pictureElementsInner(card){
   </div>`;
 }
 
-/* â•â•â• CLOCK HTML â•â•â• */
+/* ═══ CLOCK HTML ═══ */
 function clockInner(card){
   const now=new Date();
   const timeStr=now.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
@@ -2455,14 +2461,14 @@ function clockInner(card){
   </div>`;
 }
 
-/* â•â•â• MARKDOWN HTML â•â•â• */
+/* ═══ MARKDOWN HTML ═══ */
 function markdownInner(card){
   const content=card.content||'';
-  if(!content) return `<div class="md-empty">âœï¸ Apri modifica per aggiungere testo o HTML</div>`;
+  if(!content) return `<div class="md-empty">✏️ Apri modifica per aggiungere testo o HTML</div>`;
   return `<div class="md-inner">${content}</div>`;
 }
 
-/* â•â•â• MEDIA PLAYER HTML â•â•â• */
+/* ═══ MEDIA PLAYER HTML ═══ */
 function mediaInner(card){
   const st=hs[card.entity]||'off';
   const at=ha[card.entity]||{};
@@ -2474,7 +2480,7 @@ function mediaInner(card){
   const col=card.color||'#6366f1';
   const eid=ea(card.entity);
   return `<div class="med-top">
-    ${pic?`<img class="med-art" src="${BASE}${pic}" onerror="this.style.display='none'">`:'<div class="med-art" style="display:flex;align-items:center;justify-content:center;font-size:20px">ðŸŽµ</div>'}
+    ${pic?`<img class="med-art" src="${BASE}${pic}" onerror="this.style.display='none'">`:'<div class="med-art" style="display:flex;align-items:center;justify-content:center;font-size:20px">🎵</div>'}
     <div class="med-info">
       <div class="med-title" style="color:${col}">${eh(title)}</div>
       ${artist?`<div class="med-artist">${eh(artist)}</div>`:''}
@@ -2482,18 +2488,18 @@ function mediaInner(card){
     </div>
   </div>
   <div class="med-ctrl">
-    <button class="mctrl-btn" onclick="callSvc('media_player','media_previous_track','${eid}')">â®</button>
-    <button class="mctrl-btn mctrl-pp" onclick="callSvc('media_player','media_play_pause','${eid}')" style="background:${col}22;color:${col};border:1px solid ${col}44">${isPlay?'â¸':'â–¶'}</button>
-    <button class="mctrl-btn" onclick="callSvc('media_player','media_next_track','${eid}')">â­</button>
+    <button class="mctrl-btn" onclick="callSvc('media_player','media_previous_track','${eid}')">⏮</button>
+    <button class="mctrl-btn mctrl-pp" onclick="callSvc('media_player','media_play_pause','${eid}')" style="background:${col}22;color:${col};border:1px solid ${col}44">${isPlay?'⏸':'▶'}</button>
+    <button class="mctrl-btn" onclick="callSvc('media_player','media_next_track','${eid}')">⏭</button>
   </div>
   <div class="med-vol">
-    <span class="med-vol-ico">ðŸ”‰</span>
+    <span class="med-vol-ico">🔉</span>
     <div class="med-vol-track"><div class="med-vol-fill" style="width:${vol}%;background:${col}"></div></div>
     <span class="med-vol-pct">${vol}%</span>
   </div>`;
 }
 
-/* â•â•â• CLIMATE HTML â•â•â• */
+/* ═══ CLIMATE HTML ═══ */
 function climateInner(card){
   const st=hs[card.entity]||'off';
   const at=ha[card.entity]||{};
@@ -2501,29 +2507,29 @@ function climateInner(card){
   const tarT=at.temperature!==undefined?at.temperature:'?';
   const col=card.color||'#6366f1';
   const modeCol={heat:'#fb923c',cool:'#22d3ee',off:'#6b7280',auto:'#4ade80','heat_cool':'#f59e0b'}[st]||col;
-  const modeIco={heat:'ðŸ”¥',cool:'â„ï¸',off:'â»',auto:'â™»ï¸','heat_cool':'âš¡'}[st]||'ðŸŒ¡ï¸';
+  const modeIco={heat:'🔥',cool:'❄️',off:'⏻',auto:'♻️','heat_cool':'⚡'}[st]||'🌡️';
   const eid=ea(card.entity);
   const cid=card.id;
   return `<div class="clm-cur">
-    <span class="clm-cur-val" style="color:${col}">${curT}Â°</span>
+    <span class="clm-cur-val" style="color:${col}">${curT}°</span>
     <span class="clm-cur-lbl">Temperatura attuale</span>
   </div>
   <div class="clm-mode" style="color:${modeCol};border:1px solid ${modeCol}33">${modeIco} ${_stateIt(st)}</div>
   <div class="clm-ctrl">
-    <button class="clm-btn" onclick="adjustClimate('${eid}',-0.5,'${cid}')">âˆ’</button>
+    <button class="clm-btn" onclick="adjustClimate('${eid}',-0.5,'${cid}')">−</button>
     <div class="clm-target">
-      <span class="clm-tar-val" id="ctar-${cid}" style="color:${col}">${tarT}</span>Â°
+      <span class="clm-tar-val" id="ctar-${cid}" style="color:${col}">${tarT}</span>°
       <span class="clm-tar-lbl">Imposta</span>
     </div>
     <button class="clm-btn" onclick="adjustClimate('${eid}',+0.5,'${cid}')">+</button>
   </div>`;
 }
 
-/* â•â•â• ENTITIES LIST HTML â•â•â• */
+/* ═══ ENTITIES LIST HTML ═══ */
 function entitiesInner(card){
   const ents=[card.entity,card.entity2,card.entity3].filter(Boolean);
   return ents.map(eid=>{
-    const val=hs[eid]??'â€”';
+    const val=hs[eid]??'—';
     const at=ha[eid]||{};
     const name=at.friendly_name||eid.split('.').pop().replace(/_/g,' ');
     const unit=at.unit_of_measurement||'';
@@ -2539,7 +2545,7 @@ function entitiesInner(card){
   }).join('');
 }
 
-/* â•â•â• CLIMATE CONTROL â•â•â• */
+/* ═══ CLIMATE CONTROL ═══ */
 function adjustClimate(entityId,delta,cardId){
   const cur=ha[entityId]?.temperature;
   if(cur===undefined) return;
@@ -2549,7 +2555,7 @@ function adjustClimate(entityId,delta,cardId){
   callSvc('climate','set_temperature',entityId,{temperature:newT});
 }
 
-/* â•â•â• CHARTS â•â•â• */
+/* ═══ CHARTS ═══ */
 function destroyChart(id){ if(charts[id]){ charts[id].destroy(); delete charts[id]; } }
 function _cTick(){ return cfg.theme==='light'?'rgba(15,23,42,0.3)':'rgba(255,255,255,0.2)'; }
 function _cGrid(){ return cfg.theme==='light'?'rgba(15,23,42,0.07)':'rgba(255,255,255,0.04)'; }
@@ -2638,7 +2644,7 @@ async function initBarChart(card){
   });
 }
 
-/* â•â•â• RENDER DASHBOARD â•â•â• */
+/* ═══ RENDER DASHBOARD ═══ */
 function renderDash(){
   const page=curPage();
   _ensureSections(page);
@@ -2672,14 +2678,14 @@ function renderDash(){
   const normalCards=page.cards.filter(c=>c.type!=='header-bar');
   hbarCards.forEach(c=>hbarZone.appendChild(_safeBuildCard(c)));
 
-  // Mostra sempre le sezioni (con placeholder "Trascina qui") â€” nasconde empty solo se non ci sono sezioni
+  // Mostra sempre le sezioni (con placeholder "Trascina qui") — nasconde empty solo se non ci sono sezioni
   if(page.sections&&page.sections.length){
     empty.style.display='none';
     page.sections.forEach(sec=>{
       const secEl=_buildSectionEl(sec,page);
       sectionsEl.appendChild(secEl);
     });
-    // "+ Aggiungi riga" (stile Oikos) â€” visibile solo in modifica via CSS
+    // "+ Aggiungi riga" (stile Oikos) — visibile solo in modifica via CSS
     const addRow=document.createElement('button');
     addRow.className='sect-add-row';
     addRow.innerHTML='<span style="font-size:16px;line-height:1">+</span> Aggiungi riga';
@@ -2690,18 +2696,18 @@ function renderDash(){
   }
 
   // IN MODIFICA: sposta l'intestazione (titolo/distintivi/pulsanti) DENTRO #dash-sections come primo
-  // elemento, nello STESSO flusso del banner e delle righe â†’ impossibile che si sovrappongano.
+  // elemento, nello STESSO flusso del banner e delle righe → impossibile che si sovrappongano.
   if(editMode){
     sectionsEl.insertBefore(viewHdr, sectionsEl.firstChild);
     // Riquadro dedicato "Barra inferiore" (come il riquadro distintivi in alto)
     const fb=cfg.footerBar||{}; const fbtns=fb.buttons||[];
     const prev=fbtns.length
       ? fbtns.map(b=>b.type==='sep'?'<span class="febx-sep"></span>':`<span class="febx-chip">${_renderIcon(b.icon||'mdi:circle-outline',18,b.color||'#cbd5e1')}${b.label?`<i>${eh(b.label)}</i>`:''}</span>`).join('')
-      : '<span class="febx-empty">Nessun pulsante â€” premi Modifica per aggiungerne</span>';
+      : '<span class="febx-empty">Nessun pulsante — premi Modifica per aggiungerne</span>';
     const fbarBox=document.createElement('div');
     fbarBox.className='fbar-edit-box';
-    fbarBox.innerHTML=`<div class="febx-head"><span class="febx-lbl">â–­ Barra inferiore</span>
-      <button class="febx-mod" onclick="openFBM()">âœï¸ Modifica barra inferiore</button></div>
+    fbarBox.innerHTML=`<div class="febx-head"><span class="febx-lbl">▭ Barra inferiore</span>
+      <button class="febx-mod" onclick="openFBM()">✏️ Modifica barra inferiore</button></div>
       <div class="febx-preview">${prev}</div>`;
     sectionsEl.appendChild(fbarBox);
   }
@@ -2729,13 +2735,13 @@ function _buildSectionEl(sec,page){
   const wrap=document.createElement('div');
   wrap.className='sect-wrap'; wrap.dataset.secId=sec.id;
 
-  // â”€â”€ Oikos-style row header (visibile solo in modifica via CSS) â”€â”€
+  // ── Oikos-style row header (visibile solo in modifica via CSS) ──
   const secIdx=(page.sections||[]).findIndex(s=>s.id===sec.id);
   const head=document.createElement('div');
   head.className='sect-head';
-  head.innerHTML=`<span class="sh-lbl">â‰¡ RIGA ${secIdx+1}${sec.label?' Â· '+eh(sec.label):''}</span>
+  head.innerHTML=`<span class="sh-lbl">≡ RIGA ${secIdx+1}${sec.label?' · '+eh(sec.label):''}</span>
     <button class="sh-btn sh-add" title="Aggiungi colonna">+ colonne</button>
-    <button class="sh-btn sh-del" title="Elimina riga">âœ• riga</button>`;
+    <button class="sh-btn sh-del" title="Elimina riga">✕ riga</button>`;
   head.querySelector('.sh-add').addEventListener('click',()=>setSectionCols(sec.id,(sec.cols||4)+1));
   head.querySelector('.sh-del').addEventListener('click',()=>delSectionRow(sec.id));
   wrap.appendChild(head);
@@ -2806,37 +2812,37 @@ function _buildSectionEl(sec,page){
         _colDragSrc=null;
       });
       tb.appendChild(dragHandle);
-      // Sposta colonna â€¹ â€º (stile Oikos)
+      // Sposta colonna ‹ › (stile Oikos)
       const mvL=document.createElement('button');
-      mvL.className='col-tb-btn'; mvL.title='Sposta a sinistra'; mvL.textContent='â€¹';
+      mvL.className='col-tb-btn'; mvL.title='Sposta a sinistra'; mvL.textContent='‹';
       mvL.style.fontSize='15px';
       if(col<=0){ mvL.disabled=true; mvL.style.opacity='.25'; }
       else mvL.addEventListener('click',()=>moveColTo(sec.id,col,col-1));
       tb.appendChild(mvL);
       const mvR=document.createElement('button');
-      mvR.className='col-tb-btn'; mvR.title='Sposta a destra'; mvR.textContent='â€º';
+      mvR.className='col-tb-btn'; mvR.title='Sposta a destra'; mvR.textContent='›';
       mvR.style.fontSize='15px';
       if(col>=cols-1){ mvR.disabled=true; mvR.style.opacity='.25'; }
       else mvR.addEventListener('click',()=>moveColTo(sec.id,col,col+1));
       tb.appendChild(mvR);
-      // Width control: â—€ Nfr â–¶
+      // Width control: ◀ Nfr ▶
       const cw=colWidths[col]||1;
       const totalUsed=colWidths.reduce((s,v)=>s+v,0);
       const wWrap=document.createElement('div');
       wWrap.style.cssText='display:flex;align-items:center;gap:1px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;overflow:hidden';
       const wDec=document.createElement('button');
       wDec.style.cssText='background:none;border:none;color:rgba(255,255,255,.55);font-size:11px;width:20px;height:26px;cursor:pointer;padding:0;line-height:1;transition:color .12s';
-      wDec.textContent='â—€';
+      wDec.textContent='◀';
       wDec.title='Riduci larghezza';
       wDec.disabled=cw<=1;
       if(cw<=1) wDec.style.opacity='.25';
       wDec.addEventListener('click',()=>setColWidth(sec.id,col,cw-1));
       const wLbl=document.createElement('span');
       wLbl.style.cssText='font-size:9px;color:rgba(255,255,255,.55);min-width:18px;text-align:center;padding:0 1px;font-weight:600';
-      wLbl.textContent=cw+'Ã—';
+      wLbl.textContent=cw+'×';
       const wInc=document.createElement('button');
       wInc.style.cssText='background:none;border:none;color:rgba(255,255,255,.55);font-size:11px;width:20px;height:26px;cursor:pointer;padding:0;line-height:1;transition:color .12s';
-      wInc.textContent='â–¶';
+      wInc.textContent='▶';
       wInc.title='Aumenta larghezza';
       wInc.disabled=cw>=4||(totalUsed>=cols*2&&cw===1);
       if(wInc.disabled) wInc.style.opacity='.25';
@@ -2913,7 +2919,7 @@ function _buildSectionEl(sec,page){
         wrapper.dataset.secId=sec.id; wrapper.dataset.col=col;
         cards.forEach(c=>{
           const vis=_cardVisible(c);
-          if(!vis && !editMode) return;   // nascosta dalla condizione â†’ in vista non si mostra
+          if(!vis && !editMode) return;   // nascosta dalla condizione → in vista non si mostra
           const cw=document.createElement('div');
           cw.className='dash-card-wrap'+(!vis?' card-cond-hidden':'');
           cw.style.height=(c.height||sec.rowH||150)+'px';
@@ -2922,7 +2928,7 @@ function _buildSectionEl(sec,page){
           cw.addEventListener('dragleave',()=>cw.classList.remove('dov'));
           cw.addEventListener('drop',e=>{ e.preventDefault(); cw.classList.remove('dov'); if(dragSrc&&dragSrc!==c.id) swapC(dragSrc,c.id); });
           cw.appendChild(_safeBuildCard(c));
-          if(!vis){ const m=document.createElement('div'); m.className='cond-hidden-mark'; m.textContent='ðŸ‘ nascosta dalla condizione'; cw.appendChild(m); }
+          if(!vis){ const m=document.createElement('div'); m.className='cond-hidden-mark'; m.textContent='👁 nascosta dalla condizione'; cw.appendChild(m); }
           wrapper.appendChild(cw);
         });
         box.appendChild(wrapper);
@@ -2963,7 +2969,7 @@ function startClockTick(){
       const card=curPage().cards?.find(c=>c.id===cid)||{};
       el.innerHTML=clockInner(card);
     });
-    // header bar + barre header-bar: aggiorna SOLO gli orologi sul posto (niente re-render â†’ niente flash dei chip)
+    // header bar + barre header-bar: aggiorna SOLO gli orologi sul posto (niente re-render → niente flash dei chip)
     document.querySelectorAll('.hbar-clk').forEach(clk=>{
       let item={}; try{ item=JSON.parse(decodeURIComponent(clk.dataset.clk||'')); }catch(e){}
       const p=_clkParts(item);
@@ -2973,7 +2979,7 @@ function startClockTick(){
   },1000);
 }
 
-/* â•â•â• BUILD CARD â•â•â• */
+/* ═══ BUILD CARD ═══ */
 /* Card a prova di errore: se buildCard va in errore, mostra un riquadrino invece di rompere tutta la vista */
 function _safeBuildCard(card){
   try{ return buildCard(card); }
@@ -2982,13 +2988,13 @@ function _safeBuildCard(card){
     const el=document.createElement('div');
     el.className='card card-err';
     el.style.cssText='height:100%;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:12px;text-align:center;border:1px solid rgba(248,113,113,.3)';
-    el.innerHTML=`<span style="font-size:26px">âš ï¸</span><div style="font-size:11px;color:#f87171;font-weight:800">Errore nella card</div><div style="font-size:10px;color:var(--muted);max-width:94%;word-break:break-word;line-height:1.4">${eh((card&&(card.label||card.type))||'')}${e&&e.message?(': '+eh(e.message)):''}</div>`;
+    el.innerHTML=`<span style="font-size:26px">⚠️</span><div style="font-size:11px;color:#f87171;font-weight:800">Errore nella card</div><div style="font-size:10px;color:var(--muted);max-width:94%;word-break:break-word;line-height:1.4">${eh((card&&(card.label||card.type))||'')}${e&&e.message?(': '+eh(e.message)):''}</div>`;
     return el;
   }
 }
 function buildCard(card){
   const color=card.color||'#6366f1';
-  const val=hs[card.entity]??'â€”';
+  const val=hs[card.entity]??'—';
   const numV=parseFloat(val);
   const dispV=isNaN(numV)?_stateIt(val):(numV%1===0?numV:numV.toFixed(numV<10?2:1));
   const barPct=card.max>0?Math.min(100,Math.round(numV/card.max*100)):0;
@@ -3039,8 +3045,8 @@ function buildCard(card){
   } else if(t==='camera'){
     inner=`<div class="cam-wrap">
       <img id="cam-${card.id}" alt="Camera" class="cam-img" style="display:none">
-      <div class="cam-badge">âº LIVE</div>
-      <div class="cam-err" id="camer-${card.id}" style="display:none">ðŸ“· Nessun segnale</div>
+      <div class="cam-badge">⏺ LIVE</div>
+      <div class="cam-err" id="camer-${card.id}" style="display:none">📷 Nessun segnale</div>
     </div>`;
   } else if(t==='weather'){
     inner=`<div class="wtc" id="v-${card.id}" style="height:100%">${weatherCompactInner(card)}</div>`;
@@ -3076,9 +3082,9 @@ function buildCard(card){
           if(_w&&typeof _jcDef.mount==='function') _jcDef.mount(card,{states:hs},_w);
         },0);
       }
-      catch(e){ inner=`<div id="v-${card.id}" class="jsc-wrap jsc-err" style="height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px"><span style="font-size:24px">âš ï¸</span><span style="font-size:10px;color:#f87171">${e.message}</span></div>`; }
+      catch(e){ inner=`<div id="v-${card.id}" class="jsc-wrap jsc-err" style="height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px"><span style="font-size:24px">⚠️</span><span style="font-size:10px;color:#f87171">${e.message}</span></div>`; }
     } else {
-      inner=`<div id="v-${card.id}" class="jsc-wrap jsc-err" style="height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px"><span style="font-size:22px">ðŸ“¦</span><span style="font-size:10px;color:var(--muted)">Card JS non trovata:<br>${card.jsCardId||'?'}</span></div>`;
+      inner=`<div id="v-${card.id}" class="jsc-wrap jsc-err" style="height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px"><span style="font-size:22px">📦</span><span style="font-size:10px;color:var(--muted)">Card JS non trovata:<br>${card.jsCardId||'?'}</span></div>`;
     }
   } else if(t==='free'){
     inner=`<div id="v-${card.id}" class="free-canvas">${_freeCanvasViewInner(card)}</div>`;
@@ -3092,23 +3098,23 @@ function buildCard(card){
 
   // Build size control row
   const _ovSize=inSections
-    ?`<button class="ovb-sm" onclick="adjSecSpan('${card.id}',-1)">â—€</button><span id="cs-${card.id}" style="min-width:28px;text-align:center">S:${card.colSpan||1}</span><button class="ovb-sm" onclick="adjSecSpan('${card.id}',+1)">â–¶</button>&nbsp;<button class="ovb-sm" onclick="adjH('${card.id}',-20)">â–²</button><span id="rs-${card.id}" style="min-width:36px;text-align:center">${card.height||150}px</span><button class="ovb-sm" onclick="adjH('${card.id}',+20)">â–¼</button>`
-    :`<button class="ovb-sm" onclick="adjSpan('${card.id}','col',-1)">â—€</button><span id="cs-${card.id}">L:${card.colSpan||1}</span><button class="ovb-sm" onclick="adjSpan('${card.id}','col',+1)">â–¶</button>&nbsp;<button class="ovb-sm" onclick="adjSpan('${card.id}','row',-1)">â–²</button><span id="rs-${card.id}">A:${card.rowSpan||1}</span><button class="ovb-sm" onclick="adjSpan('${card.id}','row',+1)">â–¼</button>`;
+    ?`<button class="ovb-sm" onclick="adjSecSpan('${card.id}',-1)">◀</button><span id="cs-${card.id}" style="min-width:28px;text-align:center">S:${card.colSpan||1}</span><button class="ovb-sm" onclick="adjSecSpan('${card.id}',+1)">▶</button>&nbsp;<button class="ovb-sm" onclick="adjH('${card.id}',-20)">▲</button><span id="rs-${card.id}" style="min-width:36px;text-align:center">${card.height||150}px</span><button class="ovb-sm" onclick="adjH('${card.id}',+20)">▼</button>`
+    :`<button class="ovb-sm" onclick="adjSpan('${card.id}','col',-1)">◀</button><span id="cs-${card.id}">L:${card.colSpan||1}</span><button class="ovb-sm" onclick="adjSpan('${card.id}','col',+1)">▶</button>&nbsp;<button class="ovb-sm" onclick="adjSpan('${card.id}','row',-1)">▲</button><span id="rs-${card.id}">A:${card.rowSpan||1}</span><button class="ovb-sm" onclick="adjSpan('${card.id}','row',+1)">▼</button>`;
 
   // Header-bar / Footer-bar: template semplificato senza c-top/cglow
   if(t==='header-bar'||t==='footer-bar'){
     el.innerHTML=`
       <div class="card-inner">${inner}</div>
       <div class="hbar-ctrl">
-        <button class="ovb ovb-edit" onclick="openCM('${card.id}')" title="Modifica">âœï¸</button>
-        <button class="ovb ovb-dup"  onclick="dupCard('${card.id}')" title="Duplica">â§‰</button>
-        <button class="ovb ovb-cpy"  onclick="copyCard('${card.id}')" title="Copia">ðŸ“‹</button>
-        <button class="ovb ovb-cut"  onclick="cutCard('${card.id}')" title="Taglia">âœ‚ï¸</button>
-        <button class="ovb ovb-del"  onclick="delCard('${card.id}')" title="Elimina">ðŸ—‘</button>
+        <button class="ovb ovb-edit" onclick="openCM('${card.id}')" title="Modifica">✏️</button>
+        <button class="ovb ovb-dup"  onclick="dupCard('${card.id}')" title="Duplica">⧉</button>
+        <button class="ovb ovb-cpy"  onclick="copyCard('${card.id}')" title="Copia">📋</button>
+        <button class="ovb ovb-cut"  onclick="cutCard('${card.id}')" title="Taglia">✂️</button>
+        <button class="ovb ovb-del"  onclick="delCard('${card.id}')" title="Elimina">🗑</button>
       </div>
       <div class="resize-handle" id="rh-${card.id}"></div>`;
     el.draggable=true;
-    el.addEventListener('dragstart',e=>{ if(e.target.closest('.hbar-ctrl')){ e.preventDefault(); return; } if(!editMode){ e.preventDefault(); showToast('âœï¸ Abilita la modalitÃ  modifica per spostare le card'); return; } dragSrc=card.id; el.style.opacity='.4'; e.dataTransfer.effectAllowed='move'; });
+    el.addEventListener('dragstart',e=>{ if(e.target.closest('.hbar-ctrl')){ e.preventDefault(); return; } if(!editMode){ e.preventDefault(); showToast('✏️ Abilita la modalità modifica per spostare le card'); return; } dragSrc=card.id; el.style.opacity='.4'; e.dataTransfer.effectAllowed='move'; });
     el.addEventListener('dragend',()=>{ el.style.opacity='1'; dragSrc=null; });
     el.addEventListener('dragover',e=>{ if(dragSrc&&dragSrc!==card.id){ e.preventDefault(); el.classList.add('dov'); }});
     el.addEventListener('dragleave',()=>el.classList.remove('dov'));
@@ -3125,10 +3131,10 @@ function buildCard(card){
       ${inner}
       <div class="card-ov" style="z-index:30">
         <div class="ov-row">
-          <button class="ovb ovb-dup"  onclick="dupCard('${card.id}')" title="Duplica">â§‰</button>
-          <button class="ovb ovb-cpy"  onclick="copyCard('${card.id}')" title="Copia">ðŸ“‹</button>
-          <button class="ovb ovb-cut"  onclick="cutCard('${card.id}')" title="Taglia">âœ‚ï¸</button>
-          <button class="ovb ovb-del"  onclick="delCard('${card.id}')" title="Elimina">ðŸ—‘</button>
+          <button class="ovb ovb-dup"  onclick="dupCard('${card.id}')" title="Duplica">⧉</button>
+          <button class="ovb ovb-cpy"  onclick="copyCard('${card.id}')" title="Copia">📋</button>
+          <button class="ovb ovb-cut"  onclick="cutCard('${card.id}')" title="Taglia">✂️</button>
+          <button class="ovb ovb-del"  onclick="delCard('${card.id}')" title="Elimina">🗑</button>
         </div>
         <div class="ov-row" style="margin-top:2px"><div class="ov-size">${_ovSize}</div></div>
       </div>
@@ -3143,23 +3149,23 @@ function buildCard(card){
     return el;
   }
 
-  // Weather / weather-forecast: full-bleed â€” no cglow or c-top header
+  // Weather / weather-forecast: full-bleed — no cglow or c-top header
   if(t==='weather'||t==='weather-forecast'){
     el.innerHTML=`
       ${inner}${_renderCardBadgesHTML(card)}
       <div class="card-ov" style="z-index:30">
         <div class="ov-row">
-          <button class="ovb ovb-edit" onclick="openCM('${card.id}')" title="Modifica">âœï¸</button>
-          <button class="ovb ovb-dup"  onclick="dupCard('${card.id}')" title="Duplica">â§‰</button>
-          <button class="ovb ovb-cpy"  onclick="copyCard('${card.id}')" title="Copia">ðŸ“‹</button>
-          <button class="ovb ovb-cut"  onclick="cutCard('${card.id}')" title="Taglia">âœ‚ï¸</button>
-          <button class="ovb ovb-del"  onclick="delCard('${card.id}')" title="Elimina">ðŸ—‘</button>
+          <button class="ovb ovb-edit" onclick="openCM('${card.id}')" title="Modifica">✏️</button>
+          <button class="ovb ovb-dup"  onclick="dupCard('${card.id}')" title="Duplica">⧉</button>
+          <button class="ovb ovb-cpy"  onclick="copyCard('${card.id}')" title="Copia">📋</button>
+          <button class="ovb ovb-cut"  onclick="cutCard('${card.id}')" title="Taglia">✂️</button>
+          <button class="ovb ovb-del"  onclick="delCard('${card.id}')" title="Elimina">🗑</button>
         </div>
         <div class="ov-row" style="margin-top:2px"><div class="ov-size">${_ovSize}</div></div>
       </div>
       <div class="resize-handle" id="rh-${card.id}"></div>`;
     el.draggable=true;
-    el.addEventListener('dragstart',e=>{ if(!editMode){ e.preventDefault(); showToast('âœï¸ Abilita la modalitÃ  modifica per spostare le card'); return; } dragSrc=card.id; el.style.opacity='.4'; e.dataTransfer.effectAllowed='move'; });
+    el.addEventListener('dragstart',e=>{ if(!editMode){ e.preventDefault(); showToast('✏️ Abilita la modalità modifica per spostare le card'); return; } dragSrc=card.id; el.style.opacity='.4'; e.dataTransfer.effectAllowed='move'; });
     el.addEventListener('dragend',()=>{ el.style.opacity='1'; dragSrc=null; });
     el.addEventListener('dragover',e=>{ if(dragSrc&&dragSrc!==card.id){ e.preventDefault(); el.classList.add('dov'); }});
     el.addEventListener('dragleave',()=>el.classList.remove('dov'));
@@ -3177,18 +3183,18 @@ function buildCard(card){
     <div class="card-inner">${inner}${_renderCardBadgesHTML(card)}</div>
     <div class="card-ov">
       <div class="ov-row">
-        <button class="ovb ovb-edit" onclick="openCM('${card.id}')" title="${t==='free'?'Modifica Canvas':'Modifica'}">${t==='free'?'ðŸŽ¨':'âœï¸'}</button>
-        <button class="ovb ovb-dup"  onclick="dupCard('${card.id}')" title="Duplica">â§‰</button>
-        <button class="ovb ovb-cpy"  onclick="copyCard('${card.id}')" title="Copia">ðŸ“‹</button>
-        <button class="ovb ovb-cut"  onclick="cutCard('${card.id}')" title="Taglia">âœ‚ï¸</button>
-        <button class="ovb ovb-del"  onclick="delCard('${card.id}')" title="Elimina">ðŸ—‘</button>
+        <button class="ovb ovb-edit" onclick="openCM('${card.id}')" title="${t==='free'?'Modifica Canvas':'Modifica'}">${t==='free'?'🎨':'✏️'}</button>
+        <button class="ovb ovb-dup"  onclick="dupCard('${card.id}')" title="Duplica">⧉</button>
+        <button class="ovb ovb-cpy"  onclick="copyCard('${card.id}')" title="Copia">📋</button>
+        <button class="ovb ovb-cut"  onclick="cutCard('${card.id}')" title="Taglia">✂️</button>
+        <button class="ovb ovb-del"  onclick="delCard('${card.id}')" title="Elimina">🗑</button>
       </div>
       <div class="ov-row" style="margin-top:2px"><div class="ov-size">${_ovSize}</div></div>
     </div>
     <div class="resize-handle" id="rh-${card.id}"></div>`;
 
   el.draggable=true;
-  el.addEventListener('dragstart',e=>{ if(!editMode){ e.preventDefault(); showToast('âœï¸ Abilita la modalitÃ  modifica per spostare le card'); return; } dragSrc=card.id; el.style.opacity='.4'; e.dataTransfer.effectAllowed='move'; });
+  el.addEventListener('dragstart',e=>{ if(!editMode){ e.preventDefault(); showToast('✏️ Abilita la modalità modifica per spostare le card'); return; } dragSrc=card.id; el.style.opacity='.4'; e.dataTransfer.effectAllowed='move'; });
   el.addEventListener('dragend',()=>{ el.style.opacity='1'; dragSrc=null; });
   el.addEventListener('dragover',e=>{ if(dragSrc&&dragSrc!==card.id){ e.preventDefault(); el.classList.add('dov'); }});
   el.addEventListener('dragleave',()=>el.classList.remove('dov'));
@@ -3198,7 +3204,7 @@ function buildCard(card){
   return el;
 }
 
-/* â•â•â• RESIZE â•â•â• */
+/* ═══ RESIZE ═══ */
 function initResize(cardId){
   const rh=document.getElementById('rh-'+cardId);
   const ce=document.getElementById('card-'+cardId);
@@ -3240,7 +3246,7 @@ function initResize(cardId){
   };
 }
 
-/* â•â•â• LIVE UPDATE â•â•â• */
+/* ═══ LIVE UPDATE ═══ */
 function liveUpdate(entityId){
   // Aggiorna il raw store per le card JS (serve a buildHass)
   if(!window._fratechHassRaw) window._fratechHassRaw={};
@@ -3258,15 +3264,15 @@ function liveUpdate(entityId){
   });
   _refreshChipPopup();
   _liveUpdateBadges(entityId);
-  // visibilitÃ  condizionale card: se una card deve apparire/sparire per questa entitÃ  â†’ ridisegna
+  // visibilità condizionale card: se una card deve apparire/sparire per questa entità → ridisegna
   try{ if(_cardVisChanged(entityId)) renderDash(); }catch(e){}
   // Update footer bar zone if a button uses this entity
   if((cfg.footerBar?.buttons||[]).some(b=>b.entity===entityId)) renderFbarZone();
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ═══════════════════════════════════════════════════════
    BADGE SYSTEM
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+═══════════════════════════════════════════════════════ */
 let _badgeZone='header';
 let _badgeType='entity';
 let _badgeSelColor=COLORS[0];
@@ -3286,7 +3292,7 @@ function _getBadgeArr(){
   return card.cardBadges||(card.cardBadges=[]);
 }
 
-let _bmMode='manage';   // 'manage' = lista distintivi esistenti Â· 'new' = solo form nuovo distintivo
+let _bmMode='manage';   // 'manage' = lista distintivi esistenti · 'new' = solo form nuovo distintivo
 function openBM(zone, mode){
   _badgeZone=zone; _bmMode=mode||'manage';
   const listEl=document.getElementById('badge-list');
@@ -3295,18 +3301,18 @@ function openBM(zone, mode){
   modal.classList.toggle('bmod-new',_bmMode==='new');
   const alignRow=document.getElementById('bm-align');
   if(_bmMode==='new'){
-    document.getElementById('bmod-title').textContent='ðŸ·ï¸ Nuovo distintivo';
+    document.getElementById('bmod-title').textContent='🏷️ Nuovo distintivo';
     if(listEl) listEl.style.display='none';
     if(addRow) addRow.style.display='none';
     if(alignRow) alignRow.style.display='none';
     modal.classList.remove('off');
     showBadgeForm();
   } else {
-    const titles={header:'Intestazione',footer:'PiÃ¨ di pagina'};
-    document.getElementById('bmod-title').textContent='ðŸ·ï¸ Gestione Â· '+(titles[zone]||(zone.startsWith('card:')?'Card':''));
+    const titles={header:'Intestazione',footer:'Piè di pagina'};
+    document.getElementById('bmod-title').textContent='🏷️ Gestione · '+(titles[zone]||(zone.startsWith('card:')?'Card':''));
     if(listEl) listEl.style.display='';
     if(addRow) addRow.style.display='';
-    // allineamento solo per intestazione/piÃ¨ (non per i badge nelle card)
+    // allineamento solo per intestazione/piè (non per i badge nelle card)
     if(alignRow){
       const showAlign=(zone==='header'||zone==='footer');
       alignRow.style.display=showAlign?'flex':'none';
@@ -3343,30 +3349,30 @@ function renderBadgeList(){
   const arr=_getBadgeArr();
   const el=document.getElementById('badge-list');
   if(!arr.length){
-    el.innerHTML=`<div style="padding:14px 0;font-size:11px;opacity:.3;text-align:center">Nessun badge â€” clicca âž• per aggiungerne uno</div>`;
+    el.innerHTML=`<div style="padding:14px 0;font-size:11px;opacity:.3;text-align:center">Nessun badge — clicca ➕ per aggiungerne uno</div>`;
     return;
   }
   el.innerHTML=arr.map((b,i)=>{
-    const typeMap={entity:'EntitÃ ',text:'Testo fisso',sep:'Separatore'};
+    const typeMap={entity:'Entità',text:'Testo fisso',sep:'Separatore'};
     const col=b.color||'rgba(255,255,255,.7)';
     let desc='';
     if(b.type==='entity') desc=(b.icon?b.icon+' ':'')+(b.label?b.label+': ':'')+eh(b.entity||'')+(b.suffix?' ('+b.suffix+')':'');
     else if(b.type==='text') desc=(b.icon?b.icon+' ':'')+eh(b.text||b.label||'');
-    else desc='â”€â”€â”€';
+    else desc='───';
     const tags=[];
-    if(b.colorMode&&b.colorMode!=='fixed') tags.push('ðŸŽ¨auto');
-    if(b.action&&b.action!=='none') tags.push('â–¸azione');
-    if(b.vis&&b.vis.mode==='cond') tags.push('ðŸ‘condizione');
+    if(b.colorMode&&b.colorMode!=='fixed') tags.push('🎨auto');
+    if(b.action&&b.action!=='none') tags.push('▸azione');
+    if(b.vis&&b.vis.mode==='cond') tags.push('👁condizione');
     return `<div class="badge-row">
-      <div class="badge-row-ico">${b.type==='sep'?'â”‚':b.icon||'ðŸ·ï¸'}</div>
+      <div class="badge-row-ico">${b.type==='sep'?'│':b.icon||'🏷️'}</div>
       <div class="badge-row-info" onclick="editBadgeAt(${i})" style="cursor:pointer">
-        <div class="badge-row-type">${typeMap[b.type]||b.type}${tags.length?' Â· <span style="color:var(--muted);font-weight:600">'+tags.join(' ')+'</span>':''}</div>
+        <div class="badge-row-type">${typeMap[b.type]||b.type}${tags.length?' · <span style="color:var(--muted);font-weight:600">'+tags.join(' ')+'</span>':''}</div>
         <div class="badge-row-desc" style="color:${col}">${desc}</div>
       </div>
-      <button class="brow-btn" onclick="editBadgeAt(${i})" title="Modifica">âœï¸</button>
-      <button class="brow-btn brow-mv" onclick="moveBadge(${i},-1)" title="Su">â–²</button>
-      <button class="brow-btn brow-mv" onclick="moveBadge(${i},+1)" title="GiÃ¹">â–¼</button>
-      <button class="brow-btn brow-del" onclick="delBadge(${i})">âœ•</button>
+      <button class="brow-btn" onclick="editBadgeAt(${i})" title="Modifica">✏️</button>
+      <button class="brow-btn brow-mv" onclick="moveBadge(${i},-1)" title="Su">▲</button>
+      <button class="brow-btn brow-mv" onclick="moveBadge(${i},+1)" title="Giù">▼</button>
+      <button class="brow-btn brow-del" onclick="delBadge(${i})">✕</button>
     </div>`;
   }).join('');
 }
@@ -3380,13 +3386,13 @@ function delBadge(i){ _getBadgeArr().splice(i,1); saveCfg(); renderBadgeList(); 
 
 function _fillNavPageSelect(sel){
   const s=document.getElementById('bf-navpage'); if(!s) return;
-  s.innerHTML=(cfg.pages||[]).map((p,i)=>`<option value="${i}"${i===sel?' selected':''}>${(p.icon||'ðŸ“„')+' '+eh(p.name||('Pagina '+(i+1)))}</option>`).join('');
+  s.innerHTML=(cfg.pages||[]).map((p,i)=>`<option value="${i}"${i===sel?' selected':''}>${(p.icon||'📄')+' '+eh(p.name||('Pagina '+(i+1)))}</option>`).join('');
 }
 /* reset completo del form a "nuovo" */
 function showBadgeForm(){
   _editBadgeIdx=null;
   document.getElementById('bf-form-title').textContent='Nuovo distintivo';
-  document.getElementById('bf-save-btn').innerHTML='âž• Aggiungi';
+  document.getElementById('bf-save-btn').innerHTML='➕ Aggiungi';
   document.getElementById('badge-form').style.display='';
   ['bf-entity','bf-suffix','bf-text','bf-icon','bf-label','bf-actentity','bf-url','bf-svc-domain','bf-svc-service','bf-svc-entity','bf-vis-entity','bf-vis-val'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   _badgeSelColor=COLORS[0]; _renderBFColors();
@@ -3404,7 +3410,7 @@ function editBadgeAt(i){
   _editBadgeIdx=i;
   document.getElementById('badge-form').style.display='';
   document.getElementById('bf-form-title').textContent='Modifica distintivo';
-  document.getElementById('bf-save-btn').innerHTML='ðŸ’¾ Salva modifiche';
+  document.getElementById('bf-save-btn').innerHTML='💾 Salva modifiche';
   selBT(b.type||'entity');
   document.getElementById('bf-entity').value=b.entity||'';
   document.getElementById('bf-suffix').value=b.suffix||'';
@@ -3433,12 +3439,12 @@ function editBadgeAt(i){
 function _fillPopupCardSelect(sel){
   const s=document.getElementById('bf-popupcard'); if(!s) return;
   const reg=window.FratechCardRegistry||{};
-  const opts=Object.values(reg).map(c=>`<option value="${c.id}"${c.id===sel?' selected':''}>${(c.icon||'ðŸ“¦')+' '+(c.name||c.id)}</option>`).join('');
-  s.innerHTML='<option value="">â€” nessuna â€”</option>'+opts;
+  const opts=Object.values(reg).map(c=>`<option value="${c.id}"${c.id===sel?' selected':''}>${(c.icon||'📦')+' '+(c.name||c.id)}</option>`).join('');
+  s.innerHTML='<option value="">— nessuna —</option>'+opts;
 }
 function hideBadgeForm(){
   document.getElementById('badge-form').style.display='none'; _editBadgeIdx=null;
-  if(_bmMode==='new'){ closeBM(); }   // in "Nuovo distintivo" non c'Ã¨ lista: chiudi il popup
+  if(_bmMode==='new'){ closeBM(); }   // in "Nuovo distintivo" non c'è lista: chiudi il popup
 }
 
 function selBT(t){
@@ -3448,10 +3454,10 @@ function selBT(t){
   document.getElementById('bf-text-row').style.display=t==='text'?'':'none';
   document.getElementById('bf-details-row').style.display=t==='sep'?'none':'';
 }
-/* â”€â”€ Visualizzazione â”€â”€ */
+/* ── Visualizzazione ── */
 function _selDisp(d){ _badgeDisp=d; _setDispUI(d); }
 function _setDispUI(d){ document.querySelectorAll('#bf-disp .bf-chip').forEach(b=>b.classList.toggle('on',b.dataset.disp===d)); }
-/* â”€â”€ Colore: modalitÃ  + regole â”€â”€ */
+/* ── Colore: modalità + regole ── */
 function _selColMode(m){ _badgeColMode=m; _setColModeUI(m); }
 function _setColModeUI(m){
   ['fixed','auto','rules'].forEach(x=>document.getElementById('bcm-'+x)?.classList.toggle('on',x===m));
@@ -3461,26 +3467,26 @@ function _addColorRule(){ _badgeRules.push({op:'eq',val:'',color:COLORS[0]}); _r
 function _delColorRule(i){ _badgeRules.splice(i,1); _renderColorRules(); }
 function _renderColorRules(){
   const el=document.getElementById('bf-rules-list'); if(!el) return;
-  const ops=[['eq','='],['ne','â‰ '],['gt','>'],['lt','<'],['gte','â‰¥'],['lte','â‰¤'],['between','tra'],['contains','contiene']];
+  const ops=[['eq','='],['ne','≠'],['gt','>'],['lt','<'],['gte','≥'],['lte','≤'],['between','tra'],['contains','contiene']];
   el.innerHTML=_badgeRules.map((r,i)=>`<div class="bf-rule">
     <span class="bf-rule-if">se</span>
     <select class="finp bf-rule-op" onchange="_setRule(${i},'op',this.value,true)">${ops.map(o=>`<option value="${o[0]}"${r.op===o[0]?' selected':''}>${o[1]}</option>`).join('')}</select>
     <input class="finp" style="flex:1;min-width:0" placeholder="valore" value="${eh(r.val||'')}" oninput="_setRule(${i},'val',this.value)">
     ${r.op==='between'?`<input class="finp" style="flex:0 0 56px" placeholder="e" value="${eh(r.val2||'')}" oninput="_setRule(${i},'val2',this.value)">`:''}
     <input type="color" class="bf-rule-col" value="${_hexOf(r.color)}" oninput="_setRule(${i},'color',this.value)">
-    <button class="brow-btn brow-del" onclick="_delColorRule(${i})">âœ•</button>
+    <button class="brow-btn brow-del" onclick="_delColorRule(${i})">✕</button>
   </div>`).join('')||'<div style="font-size:10px;color:var(--muted);padding:2px">Nessuna regola</div>';
 }
 function _setRule(i,field,val,rerender){ if(_badgeRules[i]){ _badgeRules[i][field]=val; if(rerender) _renderColorRules(); } }
 function _hexOf(c){ if(!c) return '#6366f1'; if(/^#[0-9a-f]{6}$/i.test(c)) return c; const m=document.createElement('div'); m.style.color=c; document.body.appendChild(m); const rgb=getComputedStyle(m).color; m.remove(); const n=rgb.match(/\d+/g); if(!n) return '#6366f1'; return '#'+n.slice(0,3).map(x=>(+x).toString(16).padStart(2,'0')).join(''); }
-/* â”€â”€ Azione al clic â”€â”€ */
+/* ── Azione al clic ── */
 function _selBAction(a){
   _badgeAction=a;
   const map={popup:'bfa-popup',more_info:'bfa-entity',toggle:'bfa-entity',navigate:'bfa-nav',service:'bfa-service',url:'bfa-url'};
   ['bfa-popup','bfa-entity','bfa-nav','bfa-service','bfa-url'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
   const show=map[a]; if(show){const e=document.getElementById(show);if(e)e.style.display='';}
 }
-/* â”€â”€ VisibilitÃ  â”€â”€ */
+/* ── Visibilità ── */
 function _selVis(m){ _badgeVisMode=m; _setVisUI(m); }
 function _setVisUI(m){
   document.getElementById('bvis-always')?.classList.toggle('on',m==='always');
@@ -3502,11 +3508,11 @@ function saveBadgeForm(){
   const G=id=>(document.getElementById(id)?.value||'').trim();
   if(_badgeType==='entity'){
     b.entity=G('bf-entity');
-    if(!b.entity){ showToast('âš ï¸ Inserisci un\'entitÃ  HA'); return; }
+    if(!b.entity){ showToast('⚠️ Inserisci un\'entità HA'); return; }
     b.suffix=G('bf-suffix'); b.icon=G('bf-icon'); b.label=G('bf-label');
   } else if(_badgeType==='text'){
     b.text=G('bf-text'); b.icon=G('bf-icon'); b.label=G('bf-label');
-    if(!b.text&&!b.icon&&!b.label){ showToast('âš ï¸ Inserisci del testo'); return; }
+    if(!b.text&&!b.icon&&!b.label){ showToast('⚠️ Inserisci del testo'); return; }
   }
   if(_badgeType!=='sep'){
     // visualizzazione
@@ -3521,7 +3527,7 @@ function saveBadgeForm(){
     else if(_badgeAction==='navigate'){ b.navPage=parseInt(document.getElementById('bf-navpage')?.value||0)||0; }
     else if(_badgeAction==='service'){ b.svcDomain=G('bf-svc-domain'); b.svcService=G('bf-svc-service'); b.svcEntity=G('bf-svc-entity'); }
     else if(_badgeAction==='url'){ b.url=G('bf-url'); }
-    // visibilitÃ 
+    // visibilità
     if(_badgeVisMode==='cond'){
       const ve=G('bf-vis-entity');
       if(ve) b.vis={mode:'cond',entity:ve,op:document.getElementById('bf-vis-op').value,val:G('bf-vis-val')};
@@ -3537,7 +3543,7 @@ function saveBadgeForm(){
   renderBadgesAll();
 }
 
-/* â”€â”€ Distintivi: helper colore / visibilitÃ  / azioni â”€â”€ */
+/* ── Distintivi: helper colore / visibilità / azioni ── */
 const _BADGE_ON=['on','home','open','aperto','acceso','true','heat','cool','heat_cool','auto','playing','active','detected','wet','unlocked','sbloccato','presente','present','running','charging'];
 const _BADGE_OFF=['off','away','closed','chiuso','spento','false','idle','standby','locked','bloccato','clear','not_home','assente','paused','disconnected','unavailable','unknown'];
 function _badgeRuleMatch(st, r){
@@ -3562,7 +3568,7 @@ function _badgeColor(b){
   const mode=b.colorMode||'fixed';
   if(mode==='fixed') return fixed;
   const st=b.entity?String(hs[b.entity]??''):'';
-  // 1) regole personalizzate (prioritÃ )
+  // 1) regole personalizzate (priorità)
   if(b.colorRules&&b.colorRules.length){
     for(const r of b.colorRules){ if(_badgeRuleMatch(st,r)) return r.color||fixed; }
   }
@@ -3580,9 +3586,9 @@ function _badgeVisible(b){
   const st=String(hs[v.entity]??'');
   return _badgeRuleMatch(st,{op:v.op||'eq',val:v.val,val2:v.val2});
 }
-/* visibilitÃ  condizionale delle CARD (stessa logica dei distintivi: legge card.vis) */
+/* visibilità condizionale delle CARD (stessa logica dei distintivi: legge card.vis) */
 function _cardVisible(card){ try{ return _badgeVisible(card); }catch(e){ return true; } }
-/* true se la visibilitÃ  condizionale di QUALCHE card legata a entityId Ã¨ cambiata (per ridisegnare) */
+/* true se la visibilità condizionale di QUALCHE card legata a entityId è cambiata (per ridisegnare) */
 function _cardVisChanged(entityId){
   if(typeof editMode!=='undefined'&&editMode) return false;
   const page=curPage(); if(!page) return false;
@@ -3612,7 +3618,7 @@ function _badgeClick(id, ev){
   else if(act==='service'&&b.svcDomain&&b.svcService) send({type:'call_service',domain:b.svcDomain,service:b.svcService,service_data:b.svcEntity?{entity_id:b.svcEntity}:{}});
   else if(act==='url'&&b.url) window.open(b.url,'_blank','noopener');
 }
-/* quali parti mostrare in base alla modalitÃ  di visualizzazione */
+/* quali parti mostrare in base alla modalità di visualizzazione */
 function _badgeShow(disp,part){
   disp=disp||'full';
   switch(disp){
@@ -3626,7 +3632,7 @@ function _badgeShow(disp,part){
     default: return true;
   }
 }
-/* â”€â”€ Render badge HTML â”€â”€ */
+/* ── Render badge HTML ── */
 function _badgeItemHTML(b, cls='hbadge', sepCls='badge-sep'){
   if(b.type==='sep') return `<div class="${sepCls}"></div>`;
   const col=_badgeColor(b);
@@ -3634,7 +3640,7 @@ function _badgeItemHTML(b, cls='hbadge', sepCls='badge-sep'){
   const clickable=act&&act!=='none';
   const oc=clickable?` onclick="_badgeClick('${b.id}',event)"`:'';
   const cur=clickable?'cursor:pointer;':'';
-  const ind=clickable?'<span style="opacity:.5;margin-left:4px;font-size:.8em">â–¸</span>':'';
+  const ind=clickable?'<span style="opacity:.5;margin-left:4px;font-size:.8em">▸</span>':'';
   const disp=b.display||'full';
   const icoTxt=(_badgeShow(disp,'icon')&&b.icon)?b.icon:'';
   if(b.type==='text'){
@@ -3644,7 +3650,7 @@ function _badgeItemHTML(b, cls='hbadge', sepCls='badge-sep'){
     return `<span class="badge-title" id="bchip-${b.id}" style="${cur}--bc:${col}"${oc}>${inner}${ind}</span>`;
   }
   // entity
-  const rawVal=b.entity?(hs[b.entity]??'â€”'):'';
+  const rawVal=b.entity?(hs[b.entity]??'—'):'';
   const val=isNaN(parseFloat(rawVal))?_stateIt(rawVal):rawVal;
   const ico=icoTxt?`${icoTxt} `:'';
   const showVal=_badgeShow(disp,'value');
@@ -3654,7 +3660,7 @@ function _badgeItemHTML(b, cls='hbadge', sepCls='badge-sep'){
   return `<span class="${cls}" id="bchip-${b.id}" style="${cur}--bc:${col}"${oc}>${ico}${lbl}${valHtml}${sfx}${ind}</span>`;
 }
 
-/* Popup badge â†’ mostra una card dello Store JS */
+/* Popup badge → mostra una card dello Store JS */
 function openBadgePopup(jsCardId, ev){
   if(ev) ev.stopPropagation();
   if(typeof editMode!=='undefined' && editMode) return; // in modifica non aprire
@@ -3666,7 +3672,7 @@ function openBadgePopup(jsCardId, ev){
   const panel=document.createElement('div');
   panel.style.cssText='position:relative;width:min(96vw,840px);max-height:94vh;overflow:auto;border-radius:20px;background:var(--panel);border:1px solid var(--bd2);box-shadow:0 30px 80px rgba(0,0,0,.6)';
   const close=document.createElement('button');
-  close.textContent='âœ•';
+  close.textContent='✕';
   close.style.cssText='position:absolute;top:10px;right:12px;z-index:5;width:32px;height:32px;border-radius:50%;border:none;cursor:pointer;background:rgba(255,255,255,.12);color:#fff;font-size:15px';
   const body=document.createElement('div');
   body.style.cssText='padding:14px';
@@ -3707,7 +3713,7 @@ function _renderViewHeader(){
   el.style.alignItems='stretch'; // children manage own alignment
 
   // IN MODIFICA: forziamo l'header a scorrere IMPILATO con stili inline (battono la regola .has-hbar assoluta),
-  // cosÃ¬ titolo/distintivi/pulsanti non si accavallano col banner sotto. In vista, reset.
+  // così titolo/distintivi/pulsanti non si accavallano col banner sotto. In vista, reset.
   const hdrRow=document.getElementById('page-header-row');
   if(editMode){
     el.style.position='relative'; el.style.top='auto'; el.style.left='auto'; el.style.right='auto'; el.style.bottom='auto';
@@ -3726,7 +3732,7 @@ function _renderViewHeader(){
 
   let html='';
 
-  /* â”€â”€ Title row â”€â”€ */
+  /* ── Title row ── */
   if(title){
     const sizeMap={small:'13px',medium:'18px',large:'24px',xlarge:'34px'};
     const fs=sizeMap[titleStyle.size||'large']||'24px';
@@ -3740,8 +3746,8 @@ function _renderViewHeader(){
       html+=`<div class="view-title-wrap" style="align-self:${selfAlign};${fullW}">
         <div class="view-title-text" style="font-size:${fs};font-weight:${fw};font-style:${fi};color:${fc};text-align:${ta}">${eh(title)}</div>
         <div class="view-title-edit-ov">
-          <button class="hba-btn hba-edit" onclick="openSectMod('header','title')" title="Modifica titolo">âœï¸</button>
-          <button class="hba-btn hba-del" onclick="delSectTitle()" title="Elimina titolo">âœ•</button>
+          <button class="hba-btn hba-edit" onclick="openSectMod('header','title')" title="Modifica titolo">✏️</button>
+          <button class="hba-btn hba-del" onclick="delSectTitle()" title="Elimina titolo">✕</button>
         </div>
       </div>`;
     } else {
@@ -3749,7 +3755,7 @@ function _renderViewHeader(){
     }
   }
 
-  /* â”€â”€ Badges row â”€â”€ */
+  /* ── Badges row ── */
   if(badges.length){
     const just=alignMap[badgesAlign]||'center';
     const badgesHtml=editMode
@@ -3760,10 +3766,10 @@ function _renderViewHeader(){
             ondragstart="_badgeDragStart(event,${i})" ondragover="_badgeDragOver(event)" ondrop="_badgeDrop(event,${i})" ondragend="_badgeDragEnd(event)">
             ${_badgeItemHTML(b,'hbadge','badge-sep')}
             <div class="hbadge-actions"><div class="hbadge-actions-inner">
-              <button class="hba-btn hba-edit" onclick="event.stopPropagation();_inViewEditBadge(${i},'header')" title="Modifica">âœï¸</button>
-              <button class="hba-btn hba-cpy" onclick="event.stopPropagation();_inViewCopyBadge(${i},'header')" title="Copia">ðŸ“‹</button>
-              <button class="hba-btn hba-cut" onclick="event.stopPropagation();_inViewCutBadge(${i},'header')" title="Taglia">âœ‚ï¸</button>
-              <button class="hba-btn hba-del" onclick="event.stopPropagation();_inViewDelBadge(${i},'header')" title="Elimina">âœ•</button>
+              <button class="hba-btn hba-edit" onclick="event.stopPropagation();_inViewEditBadge(${i},'header')" title="Modifica">✏️</button>
+              <button class="hba-btn hba-cpy" onclick="event.stopPropagation();_inViewCopyBadge(${i},'header')" title="Copia">📋</button>
+              <button class="hba-btn hba-cut" onclick="event.stopPropagation();_inViewCutBadge(${i},'header')" title="Taglia">✂️</button>
+              <button class="hba-btn hba-del" onclick="event.stopPropagation();_inViewDelBadge(${i},'header')" title="Elimina">✕</button>
             </div></div>
           </div>`;
         }).join('')
@@ -3771,17 +3777,17 @@ function _renderViewHeader(){
     html+=`<div class="view-badges-row" style="justify-content:${just}">${badgesHtml}</div>`;
   }
 
-  /* â”€â”€ Edit controls â”€â”€ */
+  /* ── Edit controls ── */
   if(editMode){
     html+=`<div class="view-edit-row">`;
     html+=title
-      ? `<button class="view-add-btn" onclick="openSectMod('header','title')">âœï¸ Modifica titolo</button>`
-      : `<button class="view-add-btn" onclick="openSectMod('header','title')">ï¼‹ Aggiungi titolo</button>`;
+      ? `<button class="view-add-btn" onclick="openSectMod('header','title')">✏️ Modifica titolo</button>`
+      : `<button class="view-add-btn" onclick="openSectMod('header','title')">＋ Aggiungi titolo</button>`;
     html+=badges.length
-      ? `<button class="view-add-btn" onclick="openBM('header','manage')">ðŸ·ï¸ Gestione distintivi</button><button class="view-add-btn" onclick="openBM('header','new')">ï¼‹ Nuovo distintivo</button>`
-      : `<button class="view-add-btn" onclick="openBM('header','new')">ï¼‹ Aggiungi distintivo</button>`;
+      ? `<button class="view-add-btn" onclick="openBM('header','manage')">🏷️ Gestione distintivi</button><button class="view-add-btn" onclick="openBM('header','new')">＋ Nuovo distintivo</button>`
+      : `<button class="view-add-btn" onclick="openBM('header','new')">＋ Aggiungi distintivo</button>`;
     if(badges.length && _badgeClipboard){
-      html+=`<button class="view-add-btn" onclick="_inViewPasteBadge('header')">ðŸ“‹ Incolla</button>`;
+      html+=`<button class="view-add-btn" onclick="_inViewPasteBadge('header')">📋 Incolla</button>`;
     }
     html+=`</div>`;
   }
@@ -3789,7 +3795,7 @@ function _renderViewHeader(){
 }
 
 function _renderViewFooter(){
-  // I distintivi / piÃ¨ di pagina vanno SOLO in alto (richiesta utente): nessuna zona distintivi in basso.
+  // I distintivi / piè di pagina vanno SOLO in alto (richiesta utente): nessuna zona distintivi in basso.
   const el=document.getElementById('page-view-footer');
   if(el){ el.style.display='none'; el.innerHTML=''; }
 }
@@ -3803,7 +3809,7 @@ function updateViewTitle(){
   _renderViewHeader();
 }
 
-/* â”€â”€ Section editor â”€â”€ */
+/* ── Section editor ── */
 let _sectZone='header';
 let _sectColor='';
 let _sectBadgesAlign='center';
@@ -3820,7 +3826,7 @@ function openSectMod(zone, mode){
   const badgeEl=document.getElementById('sect-badge-tab');
   if(titleEl) titleEl.style.display=showTitle?'':'none';
   if(badgeEl) badgeEl.style.display=showBadge?'':'none';
-  const modalTitle=mode==='title'?'âœï¸ Titolo':mode==='badge'?'ðŸ·ï¸ Distintivi':(isHeader?'âœï¸ Intestazione':'âœï¸ PiÃ¨ di Pagina');
+  const modalTitle=mode==='title'?'✏️ Titolo':mode==='badge'?'🏷️ Distintivi':(isHeader?'✏️ Intestazione':'✏️ Piè di Pagina');
   document.getElementById('sectmod-title').textContent=modalTitle;
 
   if(isHeader){
@@ -3877,26 +3883,26 @@ function _sectEditBadge(i){
 
 function previewSect(){}
 
-/* â”€â”€ Section badge list (inline in sectmod) â”€â”€ */
+/* ── Section badge list (inline in sectmod) ── */
 function renderSectBadgeList(){
   const page=curPage();
   const arr=_sectZone==='header'?(page.headerBadges||[]):(page.footerBadges||[]);
   const el=document.getElementById('sect-badge-list'); if(!el) return;
   if(!arr.length){
-    el.innerHTML=`<div style="font-size:10px;opacity:.28;padding:4px 0 2px">Nessun distintivo â€” clicca âž• per aggiungerne uno</div>`;
+    el.innerHTML=`<div style="font-size:10px;opacity:.28;padding:4px 0 2px">Nessun distintivo — clicca ➕ per aggiungerne uno</div>`;
     return;
   }
   el.innerHTML=arr.map((b,i)=>{
     const col=b.color||'rgba(255,255,255,.7)';
-    let desc=b.type==='sep'?'â”€â”€â”€':((b.icon?b.icon+' ':'')+(b.label?b.label+': ':'')+(b.type==='entity'?eh(b.entity||''):eh(b.text||''))+(b.suffix?' '+b.suffix:''));
+    let desc=b.type==='sep'?'───':((b.icon?b.icon+' ':'')+(b.label?b.label+': ':'')+(b.type==='entity'?eh(b.entity||''):eh(b.text||''))+(b.suffix?' '+b.suffix:''));
     return `<div class="sect-badge-row">
       <div class="sect-badge-row-info" style="color:${col};cursor:pointer" onclick="_sectEditBadge(${i})">${desc}</div>
-      <button class="sbrow-btn" onclick="_sectEditBadge(${i})" title="Modifica">âœï¸</button>
-      <button class="sbrow-btn sbrow-mv" onclick="moveSectBadge(${i},-1)" title="Su">â–²</button>
-      <button class="sbrow-btn sbrow-mv" onclick="moveSectBadge(${i},+1)" title="GiÃ¹">â–¼</button>
-      <button class="sbrow-btn sbrow-cpy" onclick="copySectBadge(${i})" title="Copia">ðŸ“‹</button>
-      <button class="sbrow-btn sbrow-cut" onclick="cutSectBadge(${i})" title="Taglia">âœ‚ï¸</button>
-      <button class="sbrow-btn sbrow-del" onclick="delSectBadge(${i})" title="Elimina">âœ•</button>
+      <button class="sbrow-btn" onclick="_sectEditBadge(${i})" title="Modifica">✏️</button>
+      <button class="sbrow-btn sbrow-mv" onclick="moveSectBadge(${i},-1)" title="Su">▲</button>
+      <button class="sbrow-btn sbrow-mv" onclick="moveSectBadge(${i},+1)" title="Giù">▼</button>
+      <button class="sbrow-btn sbrow-cpy" onclick="copySectBadge(${i})" title="Copia">📋</button>
+      <button class="sbrow-btn sbrow-cut" onclick="cutSectBadge(${i})" title="Taglia">✂️</button>
+      <button class="sbrow-btn sbrow-del" onclick="delSectBadge(${i})" title="Elimina">✕</button>
     </div>`;
   }).join('');
 }
@@ -3912,7 +3918,7 @@ function copySectBadge(i){
   const arr=_getSectArr(); if(!arr[i]) return;
   _badgeClipboard=JSON.parse(JSON.stringify(arr[i]));
   const pb=document.getElementById('sect-paste-btn'); if(pb) pb.style.display='';
-  showToast('ðŸ“‹ Distintivo copiato');
+  showToast('📋 Distintivo copiato');
 }
 function cutSectBadge(i){
   const arr=_getSectArr(); if(!arr[i]) return;
@@ -3920,20 +3926,20 @@ function cutSectBadge(i){
   arr.splice(i,1);
   const pb=document.getElementById('sect-paste-btn'); if(pb) pb.style.display='';
   renderSectBadgeList(); saveCfg(); renderBadgesAll();
-  showToast('âœ‚ï¸ Distintivo tagliato');
+  showToast('✂️ Distintivo tagliato');
 }
 function pasteSectBadge(){
   if(!_badgeClipboard) return;
   _getSectArr().push({...JSON.parse(JSON.stringify(_badgeClipboard)),id:uid()});
   renderSectBadgeList(); saveCfg(); renderBadgesAll();
-  showToast('ðŸ“‹ Distintivo incollato');
+  showToast('📋 Distintivo incollato');
 }
 function delSectBadge(i){
   const arr=_getSectArr(); arr.splice(i,1);
   renderSectBadgeList(); saveCfg(); renderBadgesAll();
 }
 
-/* â”€â”€ Title alignment (separate from badges) â”€â”€ */
+/* ── Title alignment (separate from badges) ── */
 function setSectTitleAlign(a){
   const page=curPage(); if(!page.viewTitleStyle) page.viewTitleStyle={};
   page.viewTitleStyle.align=a; _setSectTitleAlignUI(a);
@@ -3941,14 +3947,14 @@ function setSectTitleAlign(a){
 function _setSectTitleAlignUI(a){
   ['left','center','right'].forEach(x=>document.getElementById('sta-'+x)?.classList.toggle('on',x===a));
 }
-/* â”€â”€ Badges alignment â”€â”€ */
+/* ── Badges alignment ── */
 function setSectBadgesAlign(a){
   _sectBadgesAlign=a; _setSectBadgesAlignUI(a);
 }
 function _setSectBadgesAlignUI(a){
   ['left','center','right'].forEach(x=>document.getElementById('sba-'+x)?.classList.toggle('on',x===a));
 }
-/* â”€â”€ Size, bold, italic, color â”€â”€ */
+/* ── Size, bold, italic, color ── */
 function setSectSize(s){
   const page=curPage(); if(!page.viewTitleStyle) page.viewTitleStyle={}; page.viewTitleStyle.size=s; _setSectSizeUI(s);
 }
@@ -3975,13 +3981,13 @@ function _setSectItalicUI(on){
 function setSectColor(h){ _sectColor=h; document.getElementById('sect-colors').querySelectorAll('.csw').forEach(el=>el.classList.remove('on')); }
 function _selSectColor(h){ _sectColor=h; document.getElementById('sect-colors').querySelectorAll('.csw').forEach(el=>el.classList.toggle('on',el.style.background===h||el.style.backgroundColor===h)); }
 
-/* â”€â”€ In-view badge actions (hover overlay) â”€â”€ */
+/* ── In-view badge actions (hover overlay) ── */
 function _inViewCopyBadge(i,zone){
   const page=curPage();
   const arr=zone==='header'?(page.headerBadges||[]):(page.footerBadges||[]);
   if(!arr[i]) return;
   _badgeClipboard=JSON.parse(JSON.stringify(arr[i]));
-  showToast('ðŸ“‹ Distintivo copiato');
+  showToast('📋 Distintivo copiato');
 }
 function _inViewCutBadge(i,zone){
   const page=curPage();
@@ -3989,7 +3995,7 @@ function _inViewCutBadge(i,zone){
   if(!arr[i]) return;
   _badgeClipboard=JSON.parse(JSON.stringify(arr[i]));
   arr.splice(i,1); saveCfg(); renderBadgesAll();
-  showToast('âœ‚ï¸ Distintivo tagliato');
+  showToast('✂️ Distintivo tagliato');
 }
 function _inViewDelBadge(i,zone){
   const page=curPage();
@@ -4002,7 +4008,7 @@ function _inViewPasteBadge(zone){
   const arr=zone==='header'?(page.headerBadges||(page.headerBadges=[])):(page.footerBadges||(page.footerBadges=[]));
   arr.push({...JSON.parse(JSON.stringify(_badgeClipboard)),id:uid()});
   saveCfg(); renderBadgesAll();
-  showToast('ðŸ“‹ Distintivo incollato');
+  showToast('📋 Distintivo incollato');
 }
 /* Modifica un distintivo direttamente dalla plancia (apre l'editor su quel distintivo) */
 function _inViewEditBadge(i,zone){
@@ -4044,14 +4050,14 @@ function _liveUpdateBadges(entityId){
     // valore aggiornato SUL POSTO
     if(b.type==='entity'&&b.entity===entityId){
       const el=document.getElementById('bv-'+b.id);
-      if(el){ const rv=hs[entityId]??'â€”'; el.textContent=isNaN(parseFloat(rv))?_stateIt(rv):rv; }
+      if(el){ const rv=hs[entityId]??'—'; el.textContent=isNaN(parseFloat(rv))?_stateIt(rv):rv; }
     }
-    // COLORE-auto aggiornato SUL POSTO (niente re-render â†’ niente flash ogni secondo)
+    // COLORE-auto aggiornato SUL POSTO (niente re-render → niente flash ogni secondo)
     if(b.colorMode&&b.colorMode!=='fixed'&&b.entity===entityId){
       const chip=document.getElementById('bchip-'+b.id);
       if(chip){ try{ chip.style.setProperty('--bc',_badgeColor(b)); }catch(e){} }
     }
-    // VISIBILITÃ€ condizionale: ridisegna SOLO se Ã¨ cambiata davvero (raro), non a ogni secondo
+    // VISIBILITÀ condizionale: ridisegna SOLO se è cambiata davvero (raro), non a ogni secondo
     if(!editing && b.vis&&b.vis.mode==='cond'&&b.vis.entity===entityId){
       const shouldShow=_badgeVisible(b);
       const isShown=!!document.getElementById('bchip-'+b.id);
@@ -4072,7 +4078,7 @@ function _updateCMBadgePreview(){
 
 function updateCardEl(card){
   const t=card.type;
-  const val=hs[card.entity]??'â€”';
+  const val=hs[card.entity]??'—';
   const numV=parseFloat(val);
   const dispV=isNaN(numV)?_stateIt(val):(numV%1===0?numV:numV.toFixed(numV<10?2:1));
   const barPct=card.max>0?Math.min(100,Math.round(numV/card.max*100)):0;
@@ -4145,7 +4151,7 @@ function updateCardEl(card){
     const w=document.getElementById('v-'+card.id);
     if(w) w.innerHTML=entitiesInner(card);
   } else if(t==='yaml-card'){
-    // Il timer interno in _mountYamlCard aggiorna hass â€” niente da fare qui
+    // Il timer interno in _mountYamlCard aggiorna hass — niente da fare qui
   } else if(t==='js-custom'){
     const w=document.getElementById('v-'+card.id);
     if(w){
@@ -4155,7 +4161,7 @@ function updateCardEl(card){
         try{
           if(typeof _jcDef.update==='function'){ _jcDef.update(card,{states:hs},w); }
           else { w.innerHTML=_jcDef.render(card,{states:hs}); }
-        }catch(e){ w.innerHTML=`<div class="jsc-err" style="display:flex;align-items:center;justify-content:center;height:100%"><span style="font-size:10px;color:#f87171">âš ï¸ ${e.message}</span></div>`; }
+        }catch(e){ w.innerHTML=`<div class="jsc-err" style="display:flex;align-items:center;justify-content:center;height:100%"><span style="font-size:10px;color:#f87171">⚠️ ${e.message}</span></div>`; }
       }
     }
   }
@@ -4166,10 +4172,10 @@ function doToggle(entityId,cardId){
   callSvc(domain,'toggle',entityId);
 }
 
-/* â•â•â• EDIT MODE â•â•â• */
+/* ═══ EDIT MODE ═══ */
 function toggleEdit(){
   if(editMode){
-    // closing â€” check for unsaved page settings
+    // closing — check for unsaved page settings
     _pgCheckDirtyAndProceed(()=>{
       editMode=false;
       try{ sessionStorage.removeItem('dash_edit'); sessionStorage.removeItem('dash_settings'); }catch(e){}
@@ -4179,7 +4185,7 @@ function toggleEdit(){
       const btn=document.getElementById('edit-btn');
       btn.classList.remove('on');
       btn.innerHTML='<i class="mdi mdi-pencil"></i>';
-      renderDash(); // ricostruisce l'header in modalitÃ  overlay (has-hbar) per la vista
+      renderDash(); // ricostruisce l'header in modalità overlay (has-hbar) per la vista
       renderPageTabs();
       renderBadgesAll();
       renderFbarZone();
@@ -4193,25 +4199,25 @@ function toggleEdit(){
   btn.classList.add('on');
   btn.innerHTML='<i class="mdi mdi-check"></i>';
   _clipboardLoad(); _updatePasteBtn();
-  renderDash(); // ricostruisce l'header IMPILATO (senza has-hbar) cosÃ¬ non si sovrappone
+  renderDash(); // ricostruisce l'header IMPILATO (senza has-hbar) così non si sovrappone
   renderFbarZone();
   renderPageTabs();
   renderBadgesAll();
   // La plancia resta visibile/modificabile; le impostazioni si aprono a tutto schermo on-demand (stile Oikos)
 }
 
-/* â”€â”€ Riavvio completo di Home Assistant (dal pallino connessione) â”€â”€ */
+/* ── Riavvio completo di Home Assistant (dal pallino connessione) ── */
 function confirmRestartHA(){
-  showConfirm('ðŸ”„ Vuoi <b>riavviare completamente Home Assistant</b>?<br><span style="font-size:11px;opacity:.7">La dashboard si disconnetterÃ  per qualche minuto, poi si riconnetterÃ  da sola.</span>', ()=>{
+  showConfirm('🔄 Vuoi <b>riavviare completamente Home Assistant</b>?<br><span style="font-size:11px;opacity:.7">La dashboard si disconnetterà per qualche minuto, poi si riconnetterà da sola.</span>', ()=>{
     try{ send({type:'call_service',domain:'homeassistant',service:'restart'}); }catch(e){}
-    showToast('ðŸ”„ Riavvio di Home Assistant in corsoâ€¦');
+    showToast('🔄 Riavvio di Home Assistant in corso…');
     try{ setC('wait'); }catch(e){}
   });
 }
 
-/* â”€â”€ Ricarica pagina + svuota cache â”€â”€ */
+/* ── Ricarica pagina + svuota cache ── */
 async function hardReload(){
-  try{ showToast('ðŸ”„ Ricarico e svuoto la cacheâ€¦'); }catch(e){}
+  try{ showToast('🔄 Ricarico e svuoto la cache…'); }catch(e){}
   try{
     if('caches' in window){ const ks=await caches.keys(); await Promise.all(ks.map(k=>caches.delete(k))); }
     if('serviceWorker' in navigator){ const rs=await navigator.serviceWorker.getRegistrations(); await Promise.all(rs.map(r=>r.unregister())); }
@@ -4222,7 +4228,7 @@ async function hardReload(){
   catch(e){ location.reload(); }
 }
 
-/* â”€â”€ Apre/chiude la barra laterale nativa di Home Assistant (la plancia Ã¨ dentro l'iframe del pannello) â”€â”€ */
+/* ── Apre/chiude la barra laterale nativa di Home Assistant (la plancia è dentro l'iframe del pannello) ── */
 function toggleHASidebar(){
   // 1) via elemento iframe nel documento padre (stesso dominio): l'evento risale a home-assistant-main
   try{
@@ -4238,20 +4244,20 @@ function toggleHASidebar(){
   }catch(e){ showToast('Impossibile aprire la sidebar di Home Assistant'); }
 }
 
-/* â”€â”€ Ripristino stato UI dopo reload (modalitÃ  modifica / impostazioni) â”€â”€ */
+/* ── Ripristino stato UI dopo reload (modalità modifica / impostazioni) ── */
 let _uiRestored=false;
 function _restoreUIState(){
   if(_uiRestored) return; _uiRestored=true;
   try{
     if(sessionStorage.getItem('dash_edit')==='1' && !editMode) toggleEdit();
-    // le impostazioni si possono aprire anche fuori dalla modifica (icona âš™ï¸ in alto)
+    // le impostazioni si possono aprire anche fuori dalla modifica (icona ⚙️ in alto)
     if(sessionStorage.getItem('dash_settings')==='1'){
       setTimeout(()=>{ try{ openOikSettings(); }catch(e){} },80);
     }
   }catch(e){}
 }
 
-/* â”€â”€ Schermata impostazioni a tutto schermo (stile Oikos) â€” accessibile sempre dall'icona âš™ï¸ in alto â”€â”€ */
+/* ── Schermata impostazioni a tutto schermo (stile Oikos) — accessibile sempre dall'icona ⚙️ in alto ── */
 function openOikSettings(){
   try{ sessionStorage.setItem('dash_settings','1'); }catch(e){}
   document.body.classList.add('oik-settings-open'); // nasconde la barra inferiore mentre le impostazioni sono aperte
@@ -4263,7 +4269,7 @@ function openOikSettings(){
   _ntfUpdateSidebarBadges();
   renderFbarZone();
   const p=curPage();
-  document.getElementById('ep-page-ico').value=p.icon||'ðŸ“„';
+  document.getElementById('ep-page-ico').value=p.icon||'📄';
   document.getElementById('ep-page-name').value=p.name||'Pagina';
   document.getElementById('ep-view-title').value=p.viewTitle||'';
   document.getElementById('ep-del-page').style.display=cfg.pages.length>1?'block':'none';
@@ -4281,9 +4287,9 @@ function closeOikSettings(){
 }
 function oikSaveConfig(){
   try{ saveCfg(); }catch(e){}
-  try{ syncCfgToHA(); }catch(e){ showToast('ðŸ’¾ Configurazione salvata'); }
+  try{ syncCfgToHA(); }catch(e){ showToast('💾 Configurazione salvata'); }
 }
-/* â”€â”€ Collapsible groups in edit panel â”€â”€ */
+/* ── Collapsible groups in edit panel ── */
 const _epGroupState={pg:false,saved:false};
 function _epToggleGroup(id){
   _epGroupState[id]=!_epGroupState[id];
@@ -4314,14 +4320,14 @@ function renderCList(){
     const secIdx=page.sections?(page.sections.findIndex(s=>s.id===c.secId)+1||'?'):'-';
     const colLbl=c.type!=='header-bar'&&page.sections?` S${secIdx}C${(c.secCol||0)+1}`:'';
     return `<div class="cli">
-      <span class="cli-drag">â ¿</span>
-      <span class="cli-ico">${c.icon||'ðŸ“¦'}</span>
+      <span class="cli-drag">⠿</span>
+      <span class="cli-ico">${c.icon||'📦'}</span>
       <div class="cli-info">
         <div class="cli-name">${eh(c.label)}</div>
         <div class="cli-ent">${eh(c.entity||c.type)}${colLbl?`<span style="opacity:.4;font-size:9px"> ${colLbl}</span>`:''}</div>
       </div>
-      <button class="cli-e" onclick="openCM('${c.id}')">âœï¸</button>
-      <button class="cli-d" onclick="delCard('${c.id}')">âœ•</button>
+      <button class="cli-e" onclick="openCM('${c.id}')">✏️</button>
+      <button class="cli-d" onclick="delCard('${c.id}')">✕</button>
     </div>`;
   }).join('');
 }
@@ -4337,10 +4343,10 @@ function adjSpan(cardId,axis,delta){
   if(['history','multiline','bar'].includes(card.type)) setTimeout(()=>{ if(card.type==='history') initHistoryChart(card); else if(card.type==='multiline') initMultilineChart(card); else initBarChart(card); },100);
 }
 
-/* â•â•â• ENTITY MODAL â•â•â• */
+/* ═══ ENTITY MODAL ═══ */
 function openEM(browseMode=false){
   emTarget=browseMode?emTarget:null;
-  document.getElementById('emod-title').textContent=browseMode?'ðŸ” Seleziona EntitÃ ':'âž• Aggiungi Sensore';
+  document.getElementById('emod-title').textContent=browseMode?'🔍 Seleziona Entità':'➕ Aggiungi Sensore';
   document.getElementById('emod').classList.remove('off');
   document.getElementById('esearch').value='';
   renderEL('');
@@ -4386,7 +4392,7 @@ function browseField(fieldId){
   openEM(true);
 }
 
-/* â•â•â• CARD EDITOR â•â•â• */
+/* ═══ CARD EDITOR ═══ */
 function _cmVisToggle(){
   const mode=document.getElementById('cm-vis-mode')?.value||'always';
   const cond=document.getElementById('cm-vis-cond'); if(cond) cond.style.display=mode==='cond'?'':'none';
@@ -4410,7 +4416,7 @@ function openCM(cardId){
     document.getElementById('yaml-preview').innerHTML='';
     // Override "Aggiungi" per salvare le modifiche
     document.getElementById('yaml-add-btn').className='yaml-act-btn success show';
-    document.getElementById('yaml-add-btn').textContent='ðŸ’¾ Aggiorna card';
+    document.getElementById('yaml-add-btn').textContent='💾 Aggiorna card';
     document.getElementById('yaml-add-btn').onclick=function(){
       const txt=(document.getElementById('yaml-inp').value||'').trim();
       if(!txt) return;
@@ -4420,12 +4426,12 @@ function openCM(cardId){
       document.getElementById('yaml-add-btn').onclick=yamlImportAdd;
       document.getElementById('yaml-add-btn').textContent='';
       document.getElementById('yaml-add-btn').innerHTML='<i class="mdi mdi-plus-circle-outline"></i> Aggiungi alla dashboard';
-      showToast('âœ… Card YAML aggiornata');
+      showToast('✅ Card YAML aggiornata');
     };
     document.getElementById('yaml-modal').classList.remove('off');
     return;
   }
-  document.getElementById('cmod-title').textContent='âœï¸ '+c.label;
+  document.getElementById('cmod-title').textContent='✏️ '+c.label;
   document.getElementById('cm-lbl').value=c.label;
   document.getElementById('cm-ico').value=c.icon||'';
   document.getElementById('cm-entity').value=c.entity||'';
@@ -4455,7 +4461,7 @@ function openCM(cardId){
   renderAppGroups();
   document.getElementById('cm-clickaction').value=c.clickAction||'info';
   document.getElementById('cm-clickurl').value=c.clickUrl||'';
-  // visibilitÃ  condizionale
+  // visibilità condizionale
   const _v=c.vis||{};
   document.getElementById('cm-vis-mode').value=_v.mode==='cond'?'cond':'always';
   document.getElementById('cm-vis-entity').value=_v.entity||'';
@@ -4503,8 +4509,8 @@ function onTypeChange(){
   sf('fr-wf-days',t==='weather'||t==='weather-forecast');
   const e2=document.querySelector('#fr-ent2 .flbl');
   const e3=document.querySelector('#fr-ent3 .flbl');
-  if(e2) e2.textContent=t==='weather-hero'?'Sensore Temperatura (opz.)':'EntitÃ  2';
-  if(e3) e3.textContent=t==='weather-hero'?'Sensore UmiditÃ  (opz.)':'EntitÃ  3';
+  if(e2) e2.textContent=t==='weather-hero'?'Sensore Temperatura (opz.)':'Entità 2';
+  if(e3) e3.textContent=t==='weather-hero'?'Sensore Umidità (opz.)':'Entità 3';
 }
 function sf(id,v){ const el=document.getElementById(id); if(el) el.style.display=v?'block':'none'; }
 function onClickActionChange(){ sf('fr-clickurl',document.getElementById('cm-clickaction').value==='link'); }
@@ -4525,7 +4531,7 @@ function selColor(hex){
   renderSwatches(hex);
 }
 
-/* â•â•â• SHAPE PICKER â•â•â• */
+/* ═══ SHAPE PICKER ═══ */
 const CARD_SHAPES=[
   {id:'rounded', label:'Arrotondata', r:'20px'},
   {id:'soft',    label:'Morbida',     r:'12px'},
@@ -4578,28 +4584,28 @@ function saveCard(){
   c.clickUrl    = document.getElementById('cm-clickurl').value.trim();
   c.bgColor     = document.getElementById('cm-bgOn').checked ? document.getElementById('cm-bgColor').value : '';
   c.textColor   = document.getElementById('cm-textOn').checked ? document.getElementById('cm-textColor').value : '';
-  // visibilitÃ  condizionale
+  // visibilità condizionale
   const _vm=document.getElementById('cm-vis-mode').value;
   if(_vm==='cond'){
     c.vis={mode:'cond', entity:document.getElementById('cm-vis-entity').value.trim(), op:document.getElementById('cm-vis-op').value, val:document.getElementById('cm-vis-val').value.trim(), val2:document.getElementById('cm-vis-val2').value.trim()};
   } else { delete c.vis; }
-  /* shape Ã¨ giÃ  salvato live da selShape() */
+  /* shape è già salvato live da selShape() */
   saveCfg(); closeCM(); renderDash();
   if(c.type==='weather'||c.type==='weather-forecast') _subscribeForecast(c.entity);
 }
 
-/* â•â•â• EMOJI PICKER â•â•â• */
+/* ═══ EMOJI PICKER ═══ */
 const APP_EMOJIS=[
-  'â”€casaâ”€',  'ðŸ ','ðŸ¡','ðŸ¢','ðŸšª','ðŸªŸ','ðŸ›‹ï¸','ðŸ›ï¸','ðŸš¿','ðŸ›','ðŸš½','ðŸ§¹','ðŸ§º','ðŸª£',
-  'â”€luceâ”€',  'ðŸ’¡','ðŸ”†','ðŸ•¯ï¸','ðŸ”¦','ðŸª”','ðŸŒŸ','âœ¨','ðŸ’«',
-  'â”€calore/freddoâ”€','ðŸ”¥','â„ï¸','ðŸŒ¡ï¸','â™¨ï¸','ðŸŒ¬ï¸','ðŸ’¨','ðŸŒ€','â˜€ï¸','ðŸŒ™',
-  'â”€acqua/gasâ”€','ðŸ’§','ðŸš°','â›½','ðŸŒŠ','ðŸ«§',
-  'â”€cucinaâ”€', 'ðŸ³','â˜•','ðŸ§ƒ','ðŸ¶','ðŸ«™','ðŸ¥¤','ðŸ§Š','ðŸ½ï¸','ðŸ¥„','ðŸ”ª',
-  'â”€energiaâ”€','âš¡','ðŸ”Œ','ðŸ”‹','ðŸ”‹','ðŸª«','ðŸ“¡','ðŸ”§','âš™ï¸','ðŸ”©',
-  'â”€veicoliâ”€','ðŸš—','ðŸš™','ðŸŽï¸','ðŸš','ðŸ›»','ðŸš²','ðŸ›µ','âœˆï¸','ðŸš¢',
-  'â”€mediaâ”€',  'ðŸ“º','ðŸ–¥ï¸','ðŸŽµ','ðŸ”Š','ðŸ“»','ðŸ“·','ðŸŽ®','ðŸ’»','ðŸ–¨ï¸','ðŸ“ž',
-  'â”€sicurezzaâ”€','ðŸ”’','ðŸ”‘','ðŸš¨','ðŸ””','ðŸ“³','ðŸ›Žï¸',
-  'â”€sensoriâ”€', 'ðŸŒ¡ï¸','ðŸ’§','ðŸŒ¿','â˜ï¸','ðŸŒ§ï¸','ðŸŒªï¸','â“','ðŸ“Š','ðŸ“ˆ',
+  '─casa─',  '🏠','🏡','🏢','🚪','🪟','🛋️','🛏️','🚿','🛁','🚽','🧹','🧺','🪣',
+  '─luce─',  '💡','🔆','🕯️','🔦','🪔','🌟','✨','💫',
+  '─calore/freddo─','🔥','❄️','🌡️','♨️','🌬️','💨','🌀','☀️','🌙',
+  '─acqua/gas─','💧','🚰','⛽','🌊','🫧',
+  '─cucina─', '🍳','☕','🧃','🍶','🫙','🥤','🧊','🍽️','🥄','🔪',
+  '─energia─','⚡','🔌','🔋','🔋','🪫','📡','🔧','⚙️','🔩',
+  '─veicoli─','🚗','🚙','🏎️','🚐','🛻','🚲','🛵','✈️','🚢',
+  '─media─',  '📺','🖥️','🎵','🔊','📻','📷','🎮','💻','🖨️','📞',
+  '─sicurezza─','🔒','🔑','🚨','🔔','📳','🛎️',
+  '─sensori─', '🌡️','💧','🌿','☁️','🌧️','🌪️','❓','📊','📈',
 ];
 let _emojiTargetCb=null;
 function openEmojiPicker(cb, anchorEl, evt){
@@ -4609,7 +4615,7 @@ function openEmojiPicker(cb, anchorEl, evt){
   _emojiTargetCb=cb;
   let html='<div class="app-emoji-grid">';
   APP_EMOJIS.forEach(e=>{
-    if(e.startsWith('â”€')){ html+=`<span class="app-emoji-cat">${e.replace(/â”€/g,'').trim()}</span>`; }
+    if(e.startsWith('─')){ html+=`<span class="app-emoji-cat">${e.replace(/─/g,'').trim()}</span>`; }
     else { html+=`<button class="app-emoji-btn" onclick="_pickEmoji('${e}')">${e}</button>`; }
   });
   html+='</div>';
@@ -4622,18 +4628,18 @@ function _pickEmoji(e){
   _emojiTargetCb=null;
 }
 
-/* â•â•â• ICON PICKER (Emoji + MDI) â•â•â• */
+/* ═══ ICON PICKER (Emoji + MDI) ═══ */
 const _ICON_EMOJIS=[
-  'â”€â”€Generaleâ”€â”€','ðŸ””','ðŸ”•','ðŸ”Š','ðŸ”‡','ðŸ’¡','ðŸ ','ðŸ¡','ðŸšª','ðŸªŸ','ðŸ›‹ï¸','ðŸ›ï¸','ðŸš¿','ðŸ›','ðŸš½',
-  'â”€â”€Sicurezzaâ”€â”€','ðŸ”’','ðŸ”“','ðŸ”‘','ðŸ—ï¸','ðŸ”','ðŸ›¡ï¸','ðŸš¨','ðŸ“·','ðŸ“¹','ðŸš¦','ðŸš§','âš ï¸',
-  'â”€â”€Energiaâ”€â”€','âš¡','ðŸ”Œ','ðŸ”‹','ðŸª«','ðŸ”†','ðŸŒ‘','â˜€ï¸','ðŸŒ™','ðŸ’«','âœ¨',
-  'â”€â”€Climaâ”€â”€','ðŸŒ¡ï¸','â™¨ï¸','â„ï¸','ðŸ”¥','ðŸ’§','ðŸ’¨','ðŸŒ¬ï¸','ðŸŒ€','ðŸŒŠ','â›…','ðŸŒ§ï¸','ðŸŒªï¸',
-  'â”€â”€Cucina/Casaâ”€â”€','ðŸ³','â˜•','ðŸ§ƒ','ðŸ«™','ðŸ¥¤','ðŸ§Š','ðŸ½ï¸','ðŸ”ª','ðŸ§¹','ðŸ§º','ðŸª£','ðŸ§»','ðŸ§½','ðŸ›’',
-  'â”€â”€Elettrodomesticiâ”€â”€','ðŸ‘•','ðŸ½ï¸','ðŸ‘—','ðŸ¥§','ðŸ“º','ðŸ–¥ï¸','ðŸ’»','ðŸ“»','ðŸŽµ','ðŸ”Š','ðŸŽ®','ðŸ“ ',
-  'â”€â”€Personeâ”€â”€','ðŸ‘¤','ðŸ‘¥','ðŸƒ','ðŸš¶','ðŸ§‘','ðŸ‘¶','ðŸ§’','ðŸ‘´','ðŸ‘µ','ðŸ•','ðŸˆ','ðŸ¾',
-  'â”€â”€Veicoliâ”€â”€','ðŸš—','ðŸš™','ðŸŽï¸','ðŸš','ðŸ›»','ðŸš²','ðŸ›µ','âœˆï¸','ðŸš¢','ðŸš','ðŸ›¸',
-  'â”€â”€Naturaâ”€â”€','ðŸŒ¿','ðŸŒ±','ðŸŒ²','ðŸŒ¸','ðŸŒº','ðŸ€','ðŸ','â­','ðŸŒˆ','ðŸŒž','ðŸŒ','â¤ï¸','ðŸ’š','ðŸ’™','ðŸ’œ',
-  'â”€â”€Varieâ”€â”€','ðŸ“Š','ðŸ“ˆ','ðŸ“‰','âš™ï¸','ðŸ”§','ðŸ”©','ðŸ› ï¸','ðŸª›','ðŸ”¬','ðŸ§ª','ðŸ’Š','ðŸ†','ðŸŽ¯','ðŸŽ‰','âœ…','âŒ','â“','â„¹ï¸',
+  '──Generale──','🔔','🔕','🔊','🔇','💡','🏠','🏡','🚪','🪟','🛋️','🛏️','🚿','🛁','🚽',
+  '──Sicurezza──','🔒','🔓','🔑','🗝️','🔐','🛡️','🚨','📷','📹','🚦','🚧','⚠️',
+  '──Energia──','⚡','🔌','🔋','🪫','🔆','🌑','☀️','🌙','💫','✨',
+  '──Clima──','🌡️','♨️','❄️','🔥','💧','💨','🌬️','🌀','🌊','⛅','🌧️','🌪️',
+  '──Cucina/Casa──','🍳','☕','🧃','🫙','🥤','🧊','🍽️','🔪','🧹','🧺','🪣','🧻','🧽','🛒',
+  '──Elettrodomestici──','👕','🍽️','👗','🥧','📺','🖥️','💻','📻','🎵','🔊','🎮','📠',
+  '──Persone──','👤','👥','🏃','🚶','🧑','👶','🧒','👴','👵','🐕','🐈','🐾',
+  '──Veicoli──','🚗','🚙','🏎️','🚐','🛻','🚲','🛵','✈️','🚢','🚁','🛸',
+  '──Natura──','🌿','🌱','🌲','🌸','🌺','🍀','🍁','⭐','🌈','🌞','🌝','❤️','💚','💙','💜',
+  '──Varie──','📊','📈','📉','⚙️','🔧','🔩','🛠️','🪛','🔬','🧪','💊','🏆','🎯','🎉','✅','❌','❓','ℹ️',
 ];
 const _ICON_MDI_CATS=[
   {cat:'Generale',     icons:['bell','bell-outline','bell-ring','bell-off','alert','alert-circle','alert-outline','information','information-outline','check','check-circle','check-circle-outline','close-circle','home','home-outline','account','account-circle','account-group','star','star-outline','heart','heart-outline','thumb-up','clock','clock-outline','calendar','calendar-outline','cog','cog-outline','wrench','tools','refresh','sync']},
@@ -4709,7 +4715,7 @@ async function _iconPickerRenderTab(tab){
   if(tab==='emoji'){
     let h='<div class="ipm-grid">';
     _ICON_EMOJIS.forEach(e=>{
-      if(e.startsWith('â”€â”€')){ h+=`</div><div class="ipm-cat">${e.replace(/â”€/g,'').trim()}</div><div class="ipm-grid">`; }
+      if(e.startsWith('──')){ h+=`</div><div class="ipm-cat">${e.replace(/─/g,'').trim()}</div><div class="ipm-grid">`; }
       else { h+=`<button class="ipm-btn" onclick="_iconPickerPick('${e}')" title="${e}">${e}</button>`; }
     });
     h+='</div>';
@@ -4718,14 +4724,14 @@ async function _iconPickerRenderTab(tab){
     const q=(document.getElementById('ipm-search')?.value||'').toLowerCase().trim();
     // Carica la libreria se non ancora disponibile
     if(_mdiAllIcons===null){
-      body.innerHTML='<div style="color:var(--muted);padding:30px;text-align:center">â³ Caricamento libreria MDIâ€¦</div>';
+      body.innerHTML='<div style="color:var(--muted);padding:30px;text-align:center">⏳ Caricamento libreria MDI…</div>';
       await _loadMdiAll();
     }
     const allIcons=_mdiAllIcons||[];
     if(!q){
       // Senza ricerca: mostra le categorie curate + conteggio totale
       const tot=allIcons.length;
-      let h=`<div style="font-size:10px;color:rgba(255,255,255,.3);padding:0 2px 8px">${tot>0?tot+' icone disponibili â€” cerca per filtrare':'Categorie suggerite (libreria non caricata)'}</div>`;
+      let h=`<div style="font-size:10px;color:rgba(255,255,255,.3);padding:0 2px 8px">${tot>0?tot+' icone disponibili — cerca per filtrare':'Categorie suggerite (libreria non caricata)'}</div>`;
       _ICON_MDI_CATS.forEach(({cat,icons:catIcons})=>{
         h+=`<div class="ipm-cat">${cat}</div><div class="ipm-grid">`;
         catIcons.forEach(i=>{
@@ -4739,7 +4745,7 @@ async function _iconPickerRenderTab(tab){
     // Con ricerca: filtra su tutta la libreria
     const icons=allIcons.filter(n=>n.includes(q));
     if(!icons.length){
-      body.innerHTML=`<div style="color:var(--muted);padding:20px;text-align:center">Nessun risultato per "<b>${q}</b>"${allIcons.length===0?' â€” libreria non caricata':''}</div>`;
+      body.innerHTML=`<div style="color:var(--muted);padding:20px;text-align:center">Nessun risultato per "<b>${q}</b>"${allIcons.length===0?' — libreria non caricata':''}</div>`;
       return;
     }
     // Risultati ricerca: grid piatta con max 500 risultati
@@ -4754,7 +4760,7 @@ async function _iconPickerRenderTab(tab){
   }
 }
 
-/* â”€â”€ Render icon universale: emoji o mdi:xxx â”€â”€ */
+/* ── Render icon universale: emoji o mdi:xxx ── */
 function _renderIcon(icon, size, color){
   if(!icon) return '';
   if(icon.startsWith('mdi:')){
@@ -4763,9 +4769,9 @@ function _renderIcon(icon, size, color){
   }
   return `<span style="font-size:${size}px;line-height:1;vertical-align:middle">${icon}</span>`;
 }
-function _ntfIconHtml(icon,size){ return _renderIcon(icon,size,'var(--nc,#818cf8)')||`<span style="font-size:${size}px">ðŸ””</span>`; }
+function _ntfIconHtml(icon,size){ return _renderIcon(icon,size,'var(--nc,#818cf8)')||`<span style="font-size:${size}px">🔔</span>`; }
 
-/* â•â•â• COLOR PICKER â•â•â• */
+/* ═══ COLOR PICKER ═══ */
 const APP_CPALS=[
   '#ffffff','#f8fafc','#94a3b8','#64748b','#374151','#1e293b',
   '#fbbf24','#f59e0b','#d97706','#facc15','#eab308','#ca8a04',
@@ -4805,7 +4811,7 @@ function _positionPop(pop, anchorEl){
   pop.style.top=Math.max(6,top)+'px';
 }
 
-/* â•â•â• PLURALIZZAZIONE ITALIANA â•â•â• */
+/* ═══ PLURALIZZAZIONE ITALIANA ═══ */
 const APP_PLURAL_MAP={
   luci:         {s:'Luce',       p:'Luci'},
   luce:         {s:'Luce',       p:'Luci'},
@@ -4834,7 +4840,7 @@ function _pluralizeGroup(name, cnt){
   return cap;
 }
 
-/* â•â•â• TOGGLE ENTITÃ€ HA â•â•â• */
+/* ═══ TOGGLE ENTITÀ HA ═══ */
 const TOGGLE_DOMAINS=new Set(['light','switch','fan','input_boolean','automation','script','cover','climate','lock']);
 function toggleEntity(entityId){
   const domain=entityId.split('.')[0];
@@ -4843,7 +4849,7 @@ function toggleEntity(entityId){
   send({type:'call_service',domain,service:svc,service_data:{entity_id:entityId}});
 }
 
-/* â•â•â• CHIP DETAIL POPUP â•â•â• */
+/* ═══ CHIP DETAIL POPUP ═══ */
 function _chipPopHtml(cardId, gIdx){
   const card=curPage().cards.find(c=>c.id===cardId);
   if(!card) return '';
@@ -4863,7 +4869,7 @@ function _chipPopHtml(cardId, gIdx){
     const bbd=isOn?_hex2rgba(color,.35):'rgba(255,255,255,0.1)';
     return `<div class="acp-row${tgl?'':' readonly'}" onclick="${tgl?`toggleEntity('${e}')`:''}" title="${tgl?'Tocca per accendere/spegnere':''}">
       <span class="acp-name">${_friendlyName(e)}</span>
-      <span class="acp-state" style="color:${bc};background:${bbg};border-color:${bbd}">${_stateIt(hs[e]||'â€”')}</span>
+      <span class="acp-state" style="color:${bc};background:${bbg};border-color:${bbd}">${_stateIt(hs[e]||'—')}</span>
     </div>`;
   }).join('');
   return `
@@ -4873,7 +4879,7 @@ function _chipPopHtml(cardId, gIdx){
       <span class="acp-cnt" style="color:${color};background:${_hex2rgba(color,.15)};border-color:${_hex2rgba(color,.35)}">${cnt} / ${ents.length}</span>
     </div>
     ${canToggle?`<div style="font-size:8px;opacity:.28;text-align:center;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.06)">click per accendere / spegnere</div>`:''}
-    <div class="acp-list">${rows||'<div style="font-size:10px;opacity:.3;padding:8px 4px">Nessuna entitÃ  configurata</div>'}</div>`;
+    <div class="acp-list">${rows||'<div style="font-size:10px;opacity:.3;padding:8px 4px">Nessuna entità configurata</div>'}</div>`;
 }
 
 function _refreshChipPopup(){
@@ -4886,9 +4892,9 @@ function _refreshChipPopup(){
   if(newList&&st>0) newList.scrollTop=st;
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ══════════════════════════════════════════════════════
    HEADER BAR EDITOR
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+══════════════════════════════════════════════════════ */
 const _HB_BG_PRESETS=['#ef4444','#f97316','#f59e0b','#84cc16','#22c55e','#10b981','#06b6d4','#3b82f6','#6366f1','#8b5cf6','#a855f7','#ec4899','#ffffff','#64748b'];
 const _HB_TXT_PRESETS=['#ffffff','#000000','#fbbf24','#34d399','#f87171','#60a5fa','#c084fc','#fb923c'];
 let _hbCardId=null;
@@ -4902,7 +4908,7 @@ function openHBM(cardId){
   const card=curPage().cards.find(c=>c.id===cardId); if(!card) return;
   _hbCardId=cardId;
   _hbChips={left:JSON.parse(JSON.stringify(card.left||[])),center:JSON.parse(JSON.stringify(card.center||[])),right:JSON.parse(JSON.stringify(card.right||[]))};
-  document.getElementById('hbmod-title').textContent='âŠž '+card.label;
+  document.getElementById('hbmod-title').textContent='⊞ '+card.label;
   document.getElementById('hb-label').value=card.label||'Header Personalizzato';
   document.getElementById('hb-colspan').value=card.colSpan||4;
   document.getElementById('hb-rowspan').value=card.rowSpan||1;
@@ -4945,20 +4951,20 @@ function hbRenderList(zone){
     const preview=_hbChipPreview(item);
     return `<div class="hb-row">
       <div class="hb-row-info">${preview}</div>
-      <button class="sbrow-btn sbrow-mv" onclick="hbMoveChip('${zone}',${i},-1)" title="Su">â–²</button>
-      <button class="sbrow-btn sbrow-mv" onclick="hbMoveChip('${zone}',${i},+1)" title="GiÃ¹">â–¼</button>
-      <button class="sbrow-btn hba-edit" onclick="hbEditChip('${zone}',${i})" title="Modifica" style="background:rgba(99,102,241,.2);color:#818cf8">âœï¸</button>
-      <button class="sbrow-btn sbrow-del" onclick="hbDelChip('${zone}',${i})" title="Elimina">âœ•</button>
+      <button class="sbrow-btn sbrow-mv" onclick="hbMoveChip('${zone}',${i},-1)" title="Su">▲</button>
+      <button class="sbrow-btn sbrow-mv" onclick="hbMoveChip('${zone}',${i},+1)" title="Giù">▼</button>
+      <button class="sbrow-btn hba-edit" onclick="hbEditChip('${zone}',${i})" title="Modifica" style="background:rgba(99,102,241,.2);color:#818cf8">✏️</button>
+      <button class="sbrow-btn sbrow-del" onclick="hbDelChip('${zone}',${i})" title="Elimina">✕</button>
     </div>`;
   }).join('');
 }
 
 function _hbChipPreview(item){
-  if(item.type==='clock') return `<span class="hb-chip-prev" style="background:rgba(255,255,255,.1);color:#fff">â° Orologio</span>`;
-  if(item.type==='sep') return `<span style="font-size:10px;opacity:.5">â”‚ Separatore</span>`;
-  if(item.type==='sos')   return `<span class="hb-chip-prev" style="background:rgba(239,68,68,.3);border-color:rgba(248,113,113,.6);color:#fff">ðŸ†˜ ${item.label||'SOS'}</span>`;
-  if(item.type==='kiosk') return `<span class="hb-chip-prev" style="background:rgba(99,102,241,.25);border-color:rgba(129,140,248,.5);color:#a5b4fc">â›¶ ${item.label||'Kiosk'}</span>`;
-  if(item.type==='conn')  return `<span class="hb-chip-prev" style="background:rgba(74,222,128,.2);border-color:rgba(74,222,128,.4);color:#4ade80">ðŸ“¶ Stato connessione</span>`;
+  if(item.type==='clock') return `<span class="hb-chip-prev" style="background:rgba(255,255,255,.1);color:#fff">⏰ Orologio</span>`;
+  if(item.type==='sep') return `<span style="font-size:10px;opacity:.5">│ Separatore</span>`;
+  if(item.type==='sos')   return `<span class="hb-chip-prev" style="background:rgba(239,68,68,.3);border-color:rgba(248,113,113,.6);color:#fff">🆘 ${item.label||'SOS'}</span>`;
+  if(item.type==='kiosk') return `<span class="hb-chip-prev" style="background:rgba(99,102,241,.25);border-color:rgba(129,140,248,.5);color:#a5b4fc">⛶ ${item.label||'Kiosk'}</span>`;
+  if(item.type==='conn')  return `<span class="hb-chip-prev" style="background:rgba(74,222,128,.2);border-color:rgba(74,222,128,.4);color:#4ade80">📶 Stato connessione</span>`;
   const bg=item.bg||'rgba(255,255,255,0.12)';
   const col=item.color||'#fff';
   const iconH=item.icon?_renderIcon(item.icon,10,col):'';
@@ -4976,8 +4982,8 @@ function hbDelChip(zone,i){ _hbChips[zone].splice(i,1); hbRenderList(zone); }
 function hbAddChip(zone){
   _hbEditZone=zone; _hbEditIdx=-1;
   _hbBg=''; _hbTxt='#ffffff';
-  document.getElementById('hb-form-title').textContent='Nuovo elemento â€” '+({left:'Sinistra',center:'Centro',right:'Destra'}[zone]||zone);
-  document.getElementById('hbf-save-btn').textContent='âž• Aggiungi';
+  document.getElementById('hb-form-title').textContent='Nuovo elemento — '+({left:'Sinistra',center:'Centro',right:'Destra'}[zone]||zone);
+  document.getElementById('hbf-save-btn').textContent='➕ Aggiungi';
   hbSelType('entity');
   document.getElementById('hbf-entity').value='';
   document.getElementById('hbf-text').value='';
@@ -5003,7 +5009,7 @@ function hbEditChip(zone,i){
   const item=_hbChips[zone][i]; if(!item) return;
   _hbBg=item.bg||''; _hbTxt=item.color||'#ffffff';
   document.getElementById('hb-form-title').textContent='Modifica elemento';
-  document.getElementById('hbf-save-btn').textContent='ðŸ’¾ Aggiorna';
+  document.getElementById('hbf-save-btn').textContent='💾 Aggiorna';
   hbSelType(item.type||'entity');
   document.getElementById('hbf-entity').value=item.entity||'';
   document.getElementById('hbf-text').value=item.text||'';
@@ -5062,7 +5068,7 @@ function hbSelSize(s){
 function _hbGetShape(){ return ['pill','rounded','square'].find(x=>document.getElementById('hbsh-'+x)?.classList.contains('on'))||'pill'; }
 function _hbGetSize(){  return ['sm','md','lg'].find(x=>document.getElementById('hbsz-'+x)?.classList.contains('on'))||'md'; }
 
-/* â”€â”€ Clock style helpers â”€â”€ */
+/* ── Clock style helpers ── */
 function hbSelClockStyle(s){
   ['default','bold','minimal','digital','neon','slim'].forEach(x=>document.getElementById('hbclks-'+x)?.classList.toggle('on',x===s));
 }
@@ -5105,7 +5111,7 @@ function hbSelClickAct(a){
 }
 function _hbGetClickAct(){ return ['none','more_info','toggle','navigate','service','options'].find(x=>document.getElementById('hbca-'+x)?.classList.contains('on'))||'none'; }
 
-// auto-riempie icona/etichetta + azione consigliata dall'entitÃ  selezionata
+// auto-riempie icona/etichetta + azione consigliata dall'entità selezionata
 function hbAutoFill(){
   const eid=document.getElementById('hbf-entity').value.trim();
   if(!eid) return;
@@ -5117,20 +5123,20 @@ function hbAutoFill(){
   const dom=eid.split('.')[0];
   const hint=document.getElementById('hbf-action-hint');
   const domDefaults={
-    alarm_control_panel:{act:'toggle',msg:'ðŸ’¡ Allarme: click mostrerÃ  popup inserimento/disinserimento automatico'},
-    lock:{act:'toggle',msg:'ðŸ’¡ Serratura: click bloccherÃ /sbloccherÃ  in base allo stato attuale'},
-    cover:{act:'toggle',msg:'ðŸ’¡ Tapparella: click aprirÃ /chiuderÃ  in base allo stato attuale'},
-    light:{act:'toggle',msg:'ðŸ’¡ Luce: click attiverÃ /disattiverÃ '},
-    switch:{act:'toggle',msg:'ðŸ’¡ Interruttore: click attiverÃ /disattiverÃ '},
-    fan:{act:'toggle',msg:'ðŸ’¡ Ventilatore: click attiverÃ /disattiverÃ '},
-    sensor:{act:'more_info',msg:'ðŸ’¡ Sensore: click mostrerÃ  informazioni'},
-    binary_sensor:{act:'more_info',msg:'ðŸ’¡ Sensore binario: click mostrerÃ  informazioni'},
-    weather:{act:'more_info',msg:'ðŸ’¡ Meteo: click mostrerÃ  informazioni'},
-    climate:{act:'more_info',msg:'ðŸ’¡ Clima: click mostrerÃ  informazioni'},
+    alarm_control_panel:{act:'toggle',msg:'💡 Allarme: click mostrerà popup inserimento/disinserimento automatico'},
+    lock:{act:'toggle',msg:'💡 Serratura: click bloccherà/sbloccherà in base allo stato attuale'},
+    cover:{act:'toggle',msg:'💡 Tapparella: click aprirà/chiuderà in base allo stato attuale'},
+    light:{act:'toggle',msg:'💡 Luce: click attiverà/disattiverà'},
+    switch:{act:'toggle',msg:'💡 Interruttore: click attiverà/disattiverà'},
+    fan:{act:'toggle',msg:'💡 Ventilatore: click attiverà/disattiverà'},
+    sensor:{act:'more_info',msg:'💡 Sensore: click mostrerà informazioni'},
+    binary_sensor:{act:'more_info',msg:'💡 Sensore binario: click mostrerà informazioni'},
+    weather:{act:'more_info',msg:'💡 Meteo: click mostrerà informazioni'},
+    climate:{act:'more_info',msg:'💡 Clima: click mostrerà informazioni'},
   };
   const def=domDefaults[dom];
   if(def){
-    // suggerisci solo se l'azione attuale Ã¨ "none" (non sovrascrivere scelte manuali)
+    // suggerisci solo se l'azione attuale è "none" (non sovrascrivere scelte manuali)
     const curAct=_hbGetClickAct();
     if(curAct==='none') hbSelClickAct(def.act);
     if(hint){ hint.textContent=def.msg; hint.style.display='block'; }
@@ -5145,9 +5151,9 @@ function openIM(eid){
   openInfoModal({entity:eid,icon:at.icon||'',label:at.friendly_name||eid,color:'#818cf8',unit:at.unit_of_measurement||''});
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   AUTO COLORE + ICONA  â€”  replica logica HA
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ══════════════════════════════════════════════
+   AUTO COLORE + ICONA  —  replica logica HA
+   ══════════════════════════════════════════════ */
 function _haAutoColor(eid){
   if(!eid) return '#818cf8';
   const dom=eid.split('.')[0];
@@ -5171,9 +5177,9 @@ function _haAutoColor(eid){
       if(state==='armed_night') return '#a78bfa';  // VIOLA  = inserito notte
       if(state==='armed_home')  return '#22c55e';  // verde  = inserito casa
       if(state==='armed_vacation') return '#22d3ee'; // azzurro = vacanza
-      return '#22c55e';   // VERDE = inserito (armed_away, armed_customâ€¦)
+      return '#22c55e';   // VERDE = inserito (armed_away, armed_custom…)
     case 'binary_sensor':
-      // stati pericolosi â†’ rosso ON, verde OFF
+      // stati pericolosi → rosso ON, verde OFF
       if(['moisture','smoke','gas','tamper','safety','carbon_monoxide','carbon_dioxide'].includes(dc))
         return state==='on'?'#ef4444':'#22c55e';
       if(dc==='battery') return state==='on'?'#f59e0b':'#22c55e';
@@ -5315,7 +5321,7 @@ function _hbToggle(eid){
   else send({type:'call_service',domain:'homeassistant',service:'toggle',service_data:{entity_id:eid}});
 }
 
-// click smart per dominio â€” alarm mostra popup, lock togola stato, altri usano _hbToggle
+// click smart per dominio — alarm mostra popup, lock togola stato, altri usano _hbToggle
 function _hbSmartClick(el, eid){
   if(!eid) return;
   const dom=eid.split('.')[0];
@@ -5344,10 +5350,10 @@ function _hbAlarmPopup(el, eid){
   const stColor=_haAutoColor(eid);
   const alarmOpts=[
     {label:'Disinserisci',        icon:'mdi:shield-off-outline',     service:'alarm_disarm',       color:'#ef4444'},
-    {label:'Inserisci â€” Casa',    icon:'mdi:shield-home',            service:'alarm_arm_home',      color:'#22c55e'},
-    {label:'Inserisci â€” Notte',   icon:'mdi:shield-moon',            service:'alarm_arm_night',     color:'#a78bfa'},
-    {label:'Inserisci â€” Assenza', icon:'mdi:shield-lock',            service:'alarm_arm_away',      color:'#22c55e'},
-    {label:'Inserisci â€” Vacanza', icon:'mdi:shield-airplane',        service:'alarm_arm_vacation',  color:'#22d3ee'},
+    {label:'Inserisci — Casa',    icon:'mdi:shield-home',            service:'alarm_arm_home',      color:'#22c55e'},
+    {label:'Inserisci — Notte',   icon:'mdi:shield-moon',            service:'alarm_arm_night',     color:'#a78bfa'},
+    {label:'Inserisci — Assenza', icon:'mdi:shield-lock',            service:'alarm_arm_away',      color:'#22c55e'},
+    {label:'Inserisci — Vacanza', icon:'mdi:shield-airplane',        service:'alarm_arm_vacation',  color:'#22d3ee'},
   ];
   const pop=document.createElement('div');
   pop.id='_hb_opt_pop';
@@ -5371,7 +5377,7 @@ function _hbAlarmPopup(el, eid){
   });
   const closeBtn=document.createElement('button');
   closeBtn.style.cssText='padding:5px 10px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.5);font-size:10px;font-weight:700;cursor:pointer;margin-top:3px';
-  closeBtn.textContent='âœ• Annulla';
+  closeBtn.textContent='✕ Annulla';
   closeBtn.onclick=()=>pop.remove();
   pop.appendChild(closeBtn);
   // posizionamento popup
@@ -5384,12 +5390,12 @@ function _hbAlarmPopup(el, eid){
   setTimeout(()=>document.addEventListener('click',()=>pop.remove(),{once:true}),50);
 }
 
-/* â”€â”€ iconMap + colorMap helpers â”€â”€ */
+/* ── iconMap + colorMap helpers ── */
 let _hbIconMap={};
 let _hbColorMap={};
 let _hbOptions=[];
 
-// preset colori per colorMap (stato â†’ colore)
+// preset colori per colorMap (stato → colore)
 const _HB_CMAP_PRESETS=['#4ade80','#f87171','#facc15','#818cf8','#22d3ee','#fb923c','#e879f9','#94a3b8','#ffffff'];
 
 function hbAddColorMap(){
@@ -5408,8 +5414,8 @@ function _hbRenderColorMap(){
   if(!entries.length){ el.innerHTML=`<div style="font-size:9px;opacity:.35;padding:2px 0">Nessun colore dinamico</div>`; return; }
   el.innerHTML=entries.map(([st,co])=>`<div class="hb-row" style="padding:3px 6px">
     <div style="width:12px;height:12px;border-radius:3px;background:${co};flex-shrink:0;border:1px solid rgba(255,255,255,.2)"></div>
-    <span style="font-size:9px;flex:1">${eh(st)} â†’ <span style="color:${co};font-weight:700">${co}</span></span>
-    <button class="sbrow-btn sbrow-del" onclick="delete _hbColorMap['${st.replace(/'/g,"\\'")}'];_hbRenderColorMap()">âœ•</button>
+    <span style="font-size:9px;flex:1">${eh(st)} → <span style="color:${co};font-weight:700">${co}</span></span>
+    <button class="sbrow-btn sbrow-del" onclick="delete _hbColorMap['${st.replace(/'/g,"\\'")}'];_hbRenderColorMap()">✕</button>
   </div>`).join('');
 }
 function _hbRenderColorMapSwatches(){
@@ -5441,8 +5447,8 @@ function _hbRenderIconMap(){
   const entries=Object.entries(_hbIconMap);
   if(!entries.length){ el.innerHTML=`<div style="font-size:9px;opacity:.35;padding:2px 0">Nessun mapping</div>`; return; }
   el.innerHTML=entries.map(([st,ic])=>`<div class="hb-row" style="padding:3px 6px">
-    <span style="font-size:9px;flex:1">${eh(st)} â†’ ${_renderIcon(ic,12,'#818cf8')} ${ic}</span>
-    <button class="sbrow-btn sbrow-del" onclick="delete _hbIconMap['${st.replace(/'/g,"\\'")}'];_hbRenderIconMap()">âœ•</button>
+    <span style="font-size:9px;flex:1">${eh(st)} → ${_renderIcon(ic,12,'#818cf8')} ${ic}</span>
+    <button class="sbrow-btn sbrow-del" onclick="delete _hbIconMap['${st.replace(/'/g,"\\'")}'];_hbRenderIconMap()">✕</button>
   </div>`).join('');
 }
 
@@ -5463,8 +5469,8 @@ function _hbRenderOptions(){
   const el=document.getElementById('hbf-opts-list'); if(!el) return;
   if(!_hbOptions.length){ el.innerHTML=`<div style="font-size:9px;opacity:.35;padding:2px 0">Nessuna opzione</div>`; return; }
   el.innerHTML=_hbOptions.map((o,i)=>`<div class="hb-row" style="padding:3px 6px">
-    <span style="font-size:9px;flex:1">${o.icon?_renderIcon(o.icon,10,'#818cf8'):''} ${eh(o.label)} â†’ ${o.tapDomain||''}.${o.tapService||''}</span>
-    <button class="sbrow-btn sbrow-del" onclick="_hbOptions.splice(${i},1);_hbRenderOptions()">âœ•</button>
+    <span style="font-size:9px;flex:1">${o.icon?_renderIcon(o.icon,10,'#818cf8'):''} ${eh(o.label)} → ${o.tapDomain||''}.${o.tapService||''}</span>
+    <button class="sbrow-btn sbrow-del" onclick="_hbOptions.splice(${i},1);_hbRenderOptions()">✕</button>
   </div>`).join('');
 }
 
@@ -5492,7 +5498,7 @@ function _hbOptionsPopup(el, options){
     pop.appendChild(btn);
   });
   const closeBtn=document.createElement('button');
-  closeBtn.textContent='âœ• Chiudi';
+  closeBtn.textContent='✕ Chiudi';
   closeBtn.style.cssText='padding:5px 10px;border-radius:8px;background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.3);color:#f87171;font-size:10px;font-weight:700;cursor:pointer;margin-top:2px';
   closeBtn.onclick=()=>pop.remove();
   pop.appendChild(closeBtn);
@@ -5554,7 +5560,7 @@ function hbCancelChip(){ document.getElementById('hb-chip-form').style.display='
 function appChipPopup(cardId, gIdx, evt){
   evt.stopPropagation();
   const pop=document.getElementById('app-chip-pop');
-  /* toggle: riclicca lo stesso chip â†’ chiude */
+  /* toggle: riclicca lo stesso chip → chiude */
   if(pop.classList.contains('show')&&pop._cid===cardId&&pop._gi===gIdx){
     pop.classList.remove('show'); pop._cid=null; pop._gi=null; return;
   }
@@ -5570,7 +5576,7 @@ function appChipPopup(cardId, gIdx, evt){
   pop.style.top=Math.max(6,top)+'px';
 }
 
-/* chiudi picker/popup cliccando altrove â€” azzera sempre _cid/_gi */
+/* chiudi picker/popup cliccando altrove — azzera sempre _cid/_gi */
 document.addEventListener('click',e=>{
   ['app-emoji-pop','app-color-pop','font-pop'].forEach(id=>{
     const el=document.getElementById(id);
@@ -5582,7 +5588,7 @@ document.addEventListener('click',e=>{
   }
 });
 
-/* â•â•â• APPLIANCES EDITOR HELPERS â•â•â• */
+/* ═══ APPLIANCES EDITOR HELPERS ═══ */
 let _appItems=[];
 let _appGroups=[];
 
@@ -5597,14 +5603,14 @@ function renderAppItems(){
     return `<div class="app-ed-row">
       <div style="display:flex;gap:4px;align-items:center">
         <input class="finp" id="app-ent-${i}" style="flex:1;font-size:10px" value="${item.entity||''}" placeholder="sensor.xxx_power" oninput="_appItems[${i}].entity=this.value">
-        <button class="fbtn" onclick="browseField('app-ent-${i}')">ðŸ”</button>
+        <button class="fbtn" onclick="browseField('app-ent-${i}')">🔍</button>
         <button class="fbtn" id="app-ico-btn-${i}" title="Scegli icona"
           style="font-size:16px;width:30px;min-width:30px;padding:2px"
-          onclick="openIconPicker(e=>{_appItems[${i}].icon=e;renderAppItems();},this,event)">${_renderIcon(item.icon||'âš¡',16)}</button>
+          onclick="openIconPicker(e=>{_appItems[${i}].icon=e;renderAppItems();},this,event)">${_renderIcon(item.icon||'⚡',16)}</button>
         <button class="fbtn" id="app-col-btn-${i}" title="Scegli colore"
           style="width:20px;min-width:20px;height:20px;border-radius:50%;background:${effColor};border:2px solid rgba(255,255,255,0.25);padding:0"
           onclick="openColorPicker('${effColor}',c=>{_appItems[${i}].color=c;renderAppItems();},this,event)"></button>
-        <button class="fbtn" onclick="_appItems.splice(${i},1);renderAppItems()" style="color:#f87171;padding:0 7px">âœ•</button>
+        <button class="fbtn" onclick="_appItems.splice(${i},1);renderAppItems()" style="color:#f87171;padding:0 7px">✕</button>
       </div>
       <input class="finp" style="margin-top:4px;font-size:10px" value="${item.name||''}" placeholder="Nome visualizzato (es. Pompa Calore)" oninput="_appItems[${i}].name=this.value">
     </div>`;
@@ -5612,7 +5618,7 @@ function renderAppItems(){
 }
 
 function appAddRow(){
-  _appItems.push({entity:'',name:'',icon:'âš¡',color:''});
+  _appItems.push({entity:'',name:'',icon:'⚡',color:''});
   renderAppItems();
   setTimeout(()=>{ const el=document.getElementById('app-ent-'+(_appItems.length-1)); if(el) el.focus(); },50);
 }
@@ -5631,12 +5637,12 @@ function renderAppGroups(){
           style="width:20px;min-width:20px;height:20px;border-radius:50%;background:${gc};border:2px solid rgba(255,255,255,0.25);padding:0;flex-shrink:0"
           onclick="openColorPicker('${gc}',c=>{_appGroups[${i}].color=c;renderAppGroups();},this,event)"></button>
         <input class="finp" style="flex:1;font-size:10px" value="${g.name||''}" placeholder="Nome gruppo (es. luci)" oninput="_appGroups[${i}].name=this.value">
-        <label style="display:flex;align-items:center;gap:3px;font-size:9px;opacity:.7;white-space:nowrap;cursor:pointer" title="Mostra ogni entitÃ  del gruppo nella lista sotto, con il suo stato">
+        <label style="display:flex;align-items:center;gap:3px;font-size:9px;opacity:.7;white-space:nowrap;cursor:pointer" title="Mostra ogni entità del gruppo nella lista sotto, con il suo stato">
           <input type="checkbox" ${g.showList?'checked':''} onchange="_appGroups[${i}].showList=this.checked"> lista
         </label>
-        <button class="fbtn" onclick="_appGroups.splice(${i},1);renderAppGroups()" style="color:#f87171;padding:0 7px">âœ•</button>
+        <button class="fbtn" onclick="_appGroups.splice(${i},1);renderAppGroups()" style="color:#f87171;padding:0 7px">✕</button>
       </div>
-      <textarea class="finp" rows="2" style="font-size:9px;font-family:monospace;resize:vertical" placeholder="Un'entitÃ  per riga (light.xxx, cover.yyy, climate.zzz...)" oninput="_appGroups[${i}].entities=this.value.split('\\n').map(s=>s.trim()).filter(Boolean)">${(g.entities||[]).join('\n')}</textarea>
+      <textarea class="finp" rows="2" style="font-size:9px;font-family:monospace;resize:vertical" placeholder="Un'entità per riga (light.xxx, cover.yyy, climate.zzz...)" oninput="_appGroups[${i}].entities=this.value.split('\\n').map(s=>s.trim()).filter(Boolean)">${(g.entities||[]).join('\n')}</textarea>
     </div>`;
   }).join('');
 }
@@ -5652,7 +5658,7 @@ function appGroupAdd(){
   renderAppGroups();
 }
 
-/* â•â•â• CARD CLIPBOARD â•â•â• */
+/* ═══ CARD CLIPBOARD ═══ */
 let _cardClipboard=null;
 function _clipboardLoad(){
   try{ const s=localStorage.getItem('hadb_clip'); if(s) _cardClipboard=JSON.parse(s); }catch(e){}
@@ -5671,19 +5677,19 @@ function _updatePasteBtn(){
   const label=_cardClipboard?.label||_cardClipboard?.type||'Card';
   btn.classList.toggle('has-clip',!!_cardClipboard);
   if(clr) clr.classList.toggle('has-clip',!!_cardClipboard);
-  if(_cardClipboard) btn.textContent=`ðŸ“‹ Incolla "${label}"`;
+  if(_cardClipboard) btn.textContent=`📋 Incolla "${label}"`;
 }
 function clearClipboard(){
   _cardClipboard=null;
   try{ localStorage.removeItem('hadb_clip'); }catch(e){}
   _updatePasteBtn();
-  showToast('ðŸ—‘ Appunti svuotati');
+  showToast('🗑 Appunti svuotati');
 }
 function copyCard(id){
   const card=curPage().cards.find(c=>c.id===id);
   if(!card) return;
   _clipboardSave(card);
-  showToast(`ðŸ“‹ "${card.label||card.type}" copiata!`);
+  showToast(`📋 "${card.label||card.type}" copiata!`);
 }
 function cutCard(id){
   const card=curPage().cards.find(c=>c.id===id);
@@ -5692,7 +5698,7 @@ function cutCard(id){
   const cards=curPage().cards;
   cards.splice(cards.findIndex(c=>c.id===id),1);
   saveCfg(); renderDash();
-  showToast(`âœ‚ï¸ "${card.label||card.type}" tagliata!`);
+  showToast(`✂️ "${card.label||card.type}" tagliata!`);
 }
 function _assignSection(page,card){
   if(card.type==='header-bar') return;
@@ -5726,7 +5732,7 @@ function pasteCard(){
 }
 /* Incolla la card degli appunti in una colonna PRECISA (dal menu "+ Card"). Non riapre la config. */
 function pasteCardTo(secId, col){
-  if(!_cardClipboard){ showToast('ðŸ“‹ Nessuna card negli appunti'); return; }
+  if(!_cardClipboard){ showToast('📋 Nessuna card negli appunti'); return; }
   const page=curPage();
   const newCard=JSON.parse(JSON.stringify(_cardClipboard));
   newCard.id=uid();
@@ -5736,10 +5742,10 @@ function pasteCardTo(secId, col){
   _assignSection(page,newCard);
   page.cards.push(newCard);
   saveCfg(); renderDash();
-  showToast(`ðŸ“‹ "${newCard.label||newCard.type}" incollata!`);
+  showToast(`📋 "${newCard.label||newCard.type}" incollata!`);
 }
 
-/* â•â•â• TOAST â•â•â• */
+/* ═══ TOAST ═══ */
 let _toastT=null;
 function showToast(msg,ms=2200){
   const t=document.getElementById('toast');
@@ -5760,17 +5766,17 @@ function showConfirm(msg, onOk, okLabel='Elimina'){
   ov.onclick=e=>{ if(e.target===ov) close(); };
 }
 
-/* â•â•â• SAVED CARDS â•â•â• */
+/* ═══ SAVED CARDS ═══ */
 function saveCardTemplate(id){
   const card=curPage().cards.find(c=>c.id===id);
   if(!card) return;
   if(!cfg.savedCards) cfg.savedCards=[];
   const tpl=JSON.parse(JSON.stringify(card));
-  delete tpl.id;          // verrÃ  rigenerato all'uso
+  delete tpl.id;          // verrà rigenerato all'uso
   tpl._savedAt=Date.now();
   cfg.savedCards.push(tpl);
   saveCfg(); renderSavedCards();
-  showToast(`ðŸ’¾ "${card.label||card.type}" salvata!`);
+  showToast(`💾 "${card.label||card.type}" salvata!`);
 }
 
 function renderSavedCards(){
@@ -5778,30 +5784,30 @@ function renderSavedCards(){
   const badge=document.getElementById('ep-saved-count');
   if(badge) badge.textContent=saved.length?`${saved.length} template`:'';
 
-  /* â”€â”€ pannello laterale â”€â”€ */
+  /* ── pannello laterale ── */
   const panel=document.getElementById('ep-saved-list');
   if(panel){
     if(!saved.length){
-      panel.innerHTML=`<div class="saved-empty">Nessuna card salvata.<br>Clicca ðŸ’¾ su una card per salvarla.</div>`;
+      panel.innerHTML=`<div class="saved-empty">Nessuna card salvata.<br>Clicca 💾 su una card per salvarla.</div>`;
     } else {
       panel.innerHTML=saved.map((t,i)=>`
         <div class="ep-saved-chip" onclick="addSaved(${i})" title="Clicca per aggiungere">
           <span class="ep-saved-chip-name">${t.label||'Card'}</span>
-          <button class="ep-saved-chip-del" onclick="deleteSaved(${i},event)" title="Elimina">âœ•</button>
+          <button class="ep-saved-chip-del" onclick="deleteSaved(${i},event)" title="Elimina">✕</button>
         </div>`).join('');
     }
   }
 
-  /* â”€â”€ modal speciale â”€â”€ */
+  /* ── modal speciale ── */
   const modal=document.getElementById('saved-cards-grid');
   if(modal){
     if(!saved.length){
-      modal.innerHTML=`<div class="saved-empty">Nessuna card salvata. Clicca ðŸ’¾ su una card per salvarla come template.</div>`;
+      modal.innerHTML=`<div class="saved-empty">Nessuna card salvata. Clicca 💾 su una card per salvarla come template.</div>`;
     } else {
       modal.innerHTML=`<div class="saved-grid">${saved.map((t,i)=>`
         <button class="saved-btn" onclick="addSaved(${i})">
-          <button class="saved-btn-del" onclick="deleteSaved(${i},event)" title="Elimina template">âœ•</button>
-          <span class="saved-btn-ico">${t.icon||'ðŸ“¦'}</span>
+          <button class="saved-btn-del" onclick="deleteSaved(${i},event)" title="Elimina template">✕</button>
+          <span class="saved-btn-ico">${t.icon||'📦'}</span>
           <span class="saved-btn-name">${t.label||'Card'}</span>
           <span class="saved-btn-type">${t.type||''}</span>
         </button>`).join('')}</div>`;
@@ -5829,32 +5835,32 @@ function deleteSaved(idx, evt){
   const name=cfg.savedCards[idx]?.label||'Card';
   cfg.savedCards.splice(idx,1);
   saveCfg(); renderSavedCards();
-  showToast(`ðŸ—‘ "${name}" eliminata dai template`);
+  showToast(`🗑 "${name}" eliminata dai template`);
 }
 
-/* â•â•â• SPECIAL CARD MODAL â•â•â• */
+/* ═══ SPECIAL CARD MODAL ═══ */
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   JS CARD STORE â€” carica card .js custom
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ═══════════════════════════════════════════════
+   JS CARD STORE — carica card .js custom
+═══════════════════════════════════════════════ */
 
-/* Registry globale: id â†’ { meta, code } */
+/* Registry globale: id → { meta, code } */
 window.FratechCardRegistry = {};
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ═══════════════════════════════════════════════════════════════
    ADATTATORE CARD LOVELACE (Home Assistant standard)
    Permette di usare card scritte nel formato ufficiale HA
    (class extends HTMLElement + setConfig + set hass + customElements.define),
-   non solo quelle FratechStore. CosÃ¬ funzionano le card dell'amico e quelle HACS.
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+   non solo quelle FratechStore. Così funzionano le card dell'amico e quelle HACS.
+═══════════════════════════════════════════════════════════════ */
 window.customCards = window.customCards || [];
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   YAML CARD RENDERER â€” renderer ricorsivo HA/HACS
-   â€¢ custom:xxx  â†’ usa customElements dopo _loadLovelaceResources()
-   â€¢ entities, stack, section, ecc. â†’ reimplementazione HTML leggera
-   â€¢ hass passato ad ogni custom element (dal parent HA o simulato)
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ════════════════════════════════════════════════════════════════════
+   YAML CARD RENDERER — renderer ricorsivo HA/HACS
+   • custom:xxx  → usa customElements dopo _loadLovelaceResources()
+   • entities, stack, section, ecc. → reimplementazione HTML leggera
+   • hass passato ad ogni custom element (dal parent HA o simulato)
+   ════════════════════════════════════════════════════════════════════ */
 
 function _getBestHass(){
   try{
@@ -5864,8 +5870,8 @@ function _getBestHass(){
   return _haHassObj();
 }
 
-/* â•â•â•â•â•â•â•â• MOTORE UFFICIALE HA: loadCardHelpers().createCardElement() â•â•â•â•â•â•â•â•
-   Costruisce QUALSIASI card Lovelace (nativa, HACS, stack, hui-elementâ€¦) usando lo
+/* ════════ MOTORE UFFICIALE HA: loadCardHelpers().createCardElement() ════════
+   Costruisce QUALSIASI card Lovelace (nativa, HACS, stack, hui-element…) usando lo
    stesso motore di Home Assistant, preso dal frontend di HA (window.parent). */
 let _cardHelpersPromise=null, _cardHelpersWin=null;
 function _loadCardHelpers(){
@@ -5892,7 +5898,7 @@ async function _createHACard(config){
 }
 
 async function _mountYamlCard(card, container){
-  container.innerHTML='<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px">â³ Carico risorseâ€¦</div>';
+  container.innerHTML='<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px">⏳ Carico risorse…</div>';
   if(!_lovelaceResourcesLoaded){ try{ await _loadLovelaceResources(); }catch(e){} await new Promise(r=>setTimeout(r,700)); }
   if(!container.isConnected) return;
   let cfg;
@@ -5951,7 +5957,7 @@ function _yamlCustomEl(tag,cfg){
   } else {
     el=document.createElement('div');
     el.style.cssText='padding:6px 10px;font-size:10px;color:#fbbf24;border:1px dashed rgba(251,191,36,.3);border-radius:6px;margin:2px 0';
-    el.textContent='âš ï¸ '+tag+' non installata su HACS';
+    el.textContent='⚠️ '+tag+' non installata su HACS';
   }
   el.classList.add('fycel');
   el.style.setProperty('display','block');
@@ -5959,7 +5965,7 @@ function _yamlCustomEl(tag,cfg){
   return el;
 }
 
-/* type: iframe â†’ incorpora una pagina/dashboard HA reale (la card complessa funziona al 100% qui dentro) */
+/* type: iframe → incorpora una pagina/dashboard HA reale (la card complessa funziona al 100% qui dentro) */
 function _yamlIframe(cfg){
   const f=document.createElement('iframe');
   f.src=cfg.url||'';
@@ -5990,7 +5996,7 @@ async function _yamlEntitiesCard(cfg){
     if(typeof entry==='string') item=_yamlEntityRow({entity:entry});
     else if(entry.type==='section') item=_yamlSectionEl(entry);
     else if(entry.type==='divider') item=_yamlDivider();
-    else if(entry.type) item=await _yamlCreateEl(entry);   // custom:, hui-element, stackâ€¦ â†’ renderer principale (gestisce l'unwrap)
+    else if(entry.type) item=await _yamlCreateEl(entry);   // custom:, hui-element, stack… → renderer principale (gestisce l'unwrap)
     else if(entry.entity) item=_yamlEntityRow(entry);
     else continue;
     list.appendChild(item);
@@ -6043,7 +6049,7 @@ function _yamlMarkdown(cfg){
 
 function _yamlEntityRow(cfg){
   const eid=cfg.entity||'';
-  const state=hs[eid]??'â€”';
+  const state=hs[eid]??'—';
   const name=cfg.name||ha[eid]?.friendly_name||eid.split('.').pop().replace(/_/g,' ');
   const unit=ha[eid]?.unit_of_measurement||'';
   const el=document.createElement('div');
@@ -6070,7 +6076,7 @@ function _stopYamlCard(cardId){
   if(!w) return;
   if(w._yamlTimer) clearInterval(w._yamlTimer);
 }
-/* â”€â”€ Carica le risorse Lovelace (HACS custom cards) dal server HA â”€â”€ */
+/* ── Carica le risorse Lovelace (HACS custom cards) dal server HA ── */
 let _lovelaceResourcesLoaded=false, _lovelaceResCount=0;
 async function _loadLovelaceResources(){
   if(_lovelaceResourcesLoaded||!ws||ws.readyState!==1) return;
@@ -6126,7 +6132,7 @@ function _haHassObj(){
     config:{
       version:'2024.12.0',state:'RUNNING',
       latitude:0,longitude:0,elevation:0,
-      unit_system:{length:'km',mass:'kg',pressure:'Pa',temperature:'Â°C',volume:'L',wind_speed:'m/s'},
+      unit_system:{length:'km',mass:'kg',pressure:'Pa',temperature:'°C',volume:'L',wind_speed:'m/s'},
       location_name:'Frarik',time_zone:'Europe/Rome',
       components:[],config_dir:'/config',
       whitelist_external_dirs:[],allowlist_external_dirs:[],
@@ -6151,7 +6157,7 @@ function _haHassObj(){
     fireEvent:(node,type,detail)=>{ try{ node.dispatchEvent(new CustomEvent(type,{bubbles:true,composed:true,detail:detail||{}})); }catch(e){} }
   };
 }
-/* â•â•â•â•â•â•â•â• YAML IMPORT â•â•â•â•â•â•â•â• */
+/* ════════ YAML IMPORT ════════ */
 let _yamlCurrentConfig=null;
 function openYamlImport(){
   _yamlCurrentConfig=null;
@@ -6173,14 +6179,14 @@ async function yamlImportParse(){
   const txt=(document.getElementById('yaml-inp').value||'').trim();
   if(!txt){ _yamlStatus('Incolla il codice YAML della card','warn'); return; }
   let config;
-  try{ config=jsyaml.load(txt); }catch(e){ _yamlStatus('âŒ YAML non valido: '+e.message,'error'); return; }
-  if(!config||typeof config!=='object'){ _yamlStatus('âŒ YAML vuoto o non riconosciuto','error'); return; }
+  try{ config=jsyaml.load(txt); }catch(e){ _yamlStatus('❌ YAML non valido: '+e.message,'error'); return; }
+  if(!config||typeof config!=='object'){ _yamlStatus('❌ YAML vuoto o non riconosciuto','error'); return; }
   const type=(config.type||'').trim();
-  if(!type){ _yamlStatus('âŒ Manca il campo "type:" nel YAML','error'); return; }
-  _yamlStatus('â³ Carico risorse e genero anteprimaâ€¦','loading');
+  if(!type){ _yamlStatus('❌ Manca il campo "type:" nel YAML','error'); return; }
+  _yamlStatus('⏳ Carico risorse e genero anteprima…','loading');
   document.getElementById('yaml-add-btn').className='yaml-act-btn success';
   _yamlCurrentConfig={config,yamlStr:jsyaml.dump(config)};
-  // ANTEPRIMA con LO STESSO renderer della dashboard (_yamlCreateEl) â†’ quello che vedi qui Ã¨ ciÃ² che otterrai
+  // ANTEPRIMA con LO STESSO renderer della dashboard (_yamlCreateEl) → quello che vedi qui è ciò che otterrai
   const prev=document.getElementById('yaml-preview');
   prev.innerHTML='';
   prev.className='show';
@@ -6190,10 +6196,10 @@ async function yamlImportParse(){
     el.style.cssText='display:block;width:100%';
     prev.appendChild(el);
     _yamlRefreshHass(prev);
-    _yamlStatus('âœ… Anteprima generata Â· '+((window.customCards||[]).length)+' card HACS rilevate. Le card semplici si vedono; quelle molto complesse no (limite tecnico, vedi sotto).','ok');
+    _yamlStatus('✅ Anteprima generata · '+((window.customCards||[]).length)+' card HACS rilevate. Le card semplici si vedono; quelle molto complesse no (limite tecnico, vedi sotto).','ok');
   }catch(e){
     prev.innerHTML='<div style="padding:12px;color:#f87171;font-size:11px">Errore anteprima: '+eh(e.message)+'</div>';
-    _yamlStatus('âš ï¸ '+e.message,'warn');
+    _yamlStatus('⚠️ '+e.message,'warn');
   }
   document.getElementById('yaml-add-btn').className='yaml-act-btn success show';
 }
@@ -6203,21 +6209,21 @@ function yamlImportAdd(){
   const page=curPage();
   const newCard={
     id:uid(),
-    type:'yaml-card',          // tipo dedicato â€” niente conversione JS
+    type:'yaml-card',          // tipo dedicato — niente conversione JS
     lovelaceConfig:yamlStr,    // YAML originale conservato intatto
     label:(config.name||config.title||config.type||'YAML Card').toString(),
-    icon:'ðŸ§©',color:'#818cf8',
+    icon:'🧩',color:'#818cf8',
     colSpan:2,rowSpan:2
   };
   _assignSection(page,newCard);
   page.cards.push(newCard);
   saveCfg(); renderDash();
   closeYamlImport();
-  showToast('âœ… Card YAML aggiunta alla dashboard');
+  showToast('✅ Card YAML aggiunta alla dashboard');
 }
 /* Registra una card Lovelace (tag custom element) come card FratechStore (wrapper) */
 /* Crea un custom element: prova prima nel documento corrente,
-   poi nel parent (HA ha giÃ  caricato tutto il suo frontend + HACS) */
+   poi nel parent (HA ha già caricato tutto il suo frontend + HACS) */
 function _createLovelaceEl(tag){
   // Prova nel documento corrente
   let cel=document.createElement(tag);
@@ -6232,14 +6238,14 @@ function _createLovelaceEl(tag){
       }
     }
   }catch(e){}
-  return cel; // unknown element â€” tentar non nuoce
+  return cel; // unknown element — tentar non nuoce
 }
 function _registerLovelaceCard(tag, meta){
   if(!tag) return;
   // Le card native HA (hui-*-card) vogliono il tipo originale nel config; le custom vogliono "custom:tag"
   const isNative=tag.startsWith('hui-')&&tag.endsWith('-card');
   window.FratechCardRegistry[tag] = {
-    id:tag, name:(meta&&meta.name)||tag, icon:(meta&&meta.icon)||'ðŸ§©',
+    id:tag, name:(meta&&meta.name)||tag, icon:(meta&&meta.icon)||'🧩',
     version:(meta&&meta.version)||'1.0', desc:(meta&&meta.description)||'Card Lovelace (Home Assistant)',
     _lovelace:true, _tag:tag,
     render(){ return '<div class="lovel-wrap" style="height:100%;width:100%"></div>'; },
@@ -6278,7 +6284,7 @@ function _installCardCode(code){
   let err=null;
   try{ (0,eval)(code); }catch(e){ err=e; }
   customElements.define=orig;
-  // per ogni custom element definito che NON Ã¨ giÃ  una card FratechStore â†’ wrapper Lovelace
+  // per ogni custom element definito che NON è già una card FratechStore → wrapper Lovelace
   tags.forEach(tag=>{
     if(window.FratechCardRegistry[tag]&&!window.FratechCardRegistry[tag]._lovelace) return;
     const meta=(window.customCards||[]).find(c=>c&&c.type===tag);
@@ -6295,7 +6301,7 @@ setInterval(()=>{
 }, 2000);
 
 const JS_TEMPLATE = `/**
- * FratechCard â€” Template
+ * FratechCard — Template
  * Rinomina questo file con l'ID della tua card (es: mia-card.js)
  */
 (function(){
@@ -6304,18 +6310,18 @@ const JS_TEMPLATE = `/**
   const CARD = {
     id:      'mia-card',        // ID univoco, solo a-z, 0-9, trattino
     name:    'La Mia Card',     // Nome mostrato nello store
-    icon:    'ðŸŽ¯',              // Emoji icona
+    icon:    '🎯',              // Emoji icona
     version: '1.0.0',           // Versione
     desc:    'Descrizione breve della card',
 
     /**
-     * render(card, hass) â†’ stringa HTML
+     * render(card, hass) → stringa HTML
      * Chiamato al primo inserimento e a ogni rebuild della dashboard.
      *   card  = oggetto configurazione (card.entity, card.color, ecc.)
-     *   hass  = { states: { 'sensor.xxx': '42', ... } }  (puÃ² essere null)
+     *   hass  = { states: { 'sensor.xxx': '42', ... } }  (può essere null)
      */
     render(card, hass) {
-      const val = hass?.states?.[card.entity] ?? 'â€”';
+      const val = hass?.states?.[card.entity] ?? '—';
       return \`
         <div style="display:flex;flex-direction:column;align-items:center;
                     justify-content:center;height:100%;gap:8px">
@@ -6327,8 +6333,8 @@ const JS_TEMPLATE = `/**
     },
 
     /**
-     * update(card, hass, containerEl) â€” aggiornamento live
-     * Chiamato ad ogni cambio di stato di un'entitÃ  usata dalla card.
+     * update(card, hass, containerEl) — aggiornamento live
+     * Chiamato ad ogni cambio di stato di un'entità usata dalla card.
      * Se non lo implementi, viene chiamato render() e sostituito l'innerHTML.
      */
     update(card, hass, el) {
@@ -6336,7 +6342,7 @@ const JS_TEMPLATE = `/**
     }
   };
 
-  /* â”€â”€ Registrazione (non modificare) â”€â”€ */
+  /* ── Registrazione (non modificare) ── */
   window.FratechCardRegistry[CARD.id] = CARD;
   console.log('[FratechStore] Card registrata:', CARD.id, 'v'+CARD.version);
 })();
@@ -6347,7 +6353,7 @@ function _jsStoreKey(id){ return 'fratech_jscard_' + id; }
 function _jsStoreSave(id, meta, code, origin){
   try {
     let prev=null; try{ prev=JSON.parse(localStorage.getItem(_jsStoreKey(id))||'null'); }catch(e){}
-    const org = origin || (prev&&prev.origin) || 'github';   // 'github' = installata dallo store Â· 'local' = caricata da PC
+    const org = origin || (prev&&prev.origin) || 'github';   // 'github' = installata dallo store · 'local' = caricata da PC
     localStorage.setItem(_jsStoreKey(id), JSON.stringify({meta, code, ts: Date.now(), origin: org}));
   } catch(e){}
   if(typeof _cfgTouchAndPush==='function') _cfgTouchAndPush();   // propaga la card su HA (auto-sync)
@@ -6401,7 +6407,7 @@ function _jsStoreRenderList(){
   if(!items.length){ listEl.innerHTML=''; emptyEl.style.display=''; return; }
   emptyEl.style.display='none';
 
-  // Calcola quali card sono giÃ  in dashboard (su tutte le pagine)
+  // Calcola quali card sono già in dashboard (su tutte le pagine)
   const usedIds = new Set();
   (cfg.pages||[]).forEach(pg => (pg.cards||[]).forEach(c => { if(c.type==='js-custom'&&c.jsCardId) usedIds.add(c.jsCardId); }));
 
@@ -6412,15 +6418,15 @@ function _jsStoreRenderList(){
     const m = item.meta || {};
     const inUse = usedIds.has(m.id);
     return `<div class="jsst-card-row">
-      <div class="jsst-card-ico">${m.icon||'ðŸ“¦'}</div>
+      <div class="jsst-card-ico">${m.icon||'📦'}</div>
       <div class="jsst-card-info">
         <div class="jsst-card-name">${m.name||m.id||'Card'}</div>
-        <div class="jsst-card-id">ID: ${m.id||'?'} &nbsp;Â·&nbsp; v${m.version||'?'}</div>
+        <div class="jsst-card-id">ID: ${m.id||'?'} &nbsp;·&nbsp; v${m.version||'?'}</div>
         <div class="jsst-card-desc">${m.desc||''}</div>
       </div>
       <div class="jsst-card-actions">
-        ${inUse ? '<span style="font-size:10px;color:#4ade80;font-weight:700;">âœ“ In dashboard</span>' : `<button class="jsst-btn-add" onclick="jsStoreAddCard('${m.id||''}')">âž• Aggiungi</button>`}
-        <button class="jsst-btn-del" onclick="jsStoreDeleteCard('${m.id||''}')">ðŸ—‘</button>
+        ${inUse ? '<span style="font-size:10px;color:#4ade80;font-weight:700;">✓ In dashboard</span>' : `<button class="jsst-btn-add" onclick="jsStoreAddCard('${m.id||''}')">➕ Aggiungi</button>`}
+        <button class="jsst-btn-del" onclick="jsStoreDeleteCard('${m.id||''}')">🗑</button>
       </div>
     </div>`;
   }
@@ -6429,11 +6435,11 @@ function _jsStoreRenderList(){
 
   let html = '';
   if(avail.length){
-    html += `<div style="${secStyle}">ðŸ“¦ Disponibili (${avail.length})</div>`;
+    html += `<div style="${secStyle}">📦 Disponibili (${avail.length})</div>`;
     html += avail.map(rowHTML).join('');
   }
   if(inDash.length){
-    html += `<div style="${secStyle};margin-top:${avail.length?'18px':'12px'}">âœ… In dashboard (${inDash.length})</div>`;
+    html += `<div style="${secStyle};margin-top:${avail.length?'18px':'12px'}">✅ In dashboard (${inDash.length})</div>`;
     html += inDash.map(rowHTML).join('');
   }
   listEl.innerHTML = html;
@@ -6442,42 +6448,42 @@ function _jsStoreRenderList(){
 function jsStoreLoadFile(file){
   if(!file) return;
   const status = document.getElementById('jsst-load-status');
-  if(!file.name.endsWith('.js')){ status.innerHTML='<span style="color:#f87171">âš ï¸ Seleziona un file .js</span>'; return; }
-  if(file.size > 2*1024*1024){ status.innerHTML='<span style="color:#f87171">âš ï¸ File troppo grande (max 2 MB)</span>'; return; }
-  status.innerHTML='<span style="color:#fbbf24">â³ Lettura...</span>';
+  if(!file.name.endsWith('.js')){ status.innerHTML='<span style="color:#f87171">⚠️ Seleziona un file .js</span>'; return; }
+  if(file.size > 2*1024*1024){ status.innerHTML='<span style="color:#f87171">⚠️ File troppo grande (max 2 MB)</span>'; return; }
+  status.innerHTML='<span style="color:#fbbf24">⏳ Lettura...</span>';
   const reader = new FileReader();
   reader.onload = e => {
     const code = e.target.result;
     // esegue il codice gestendo SIA formato FratechStore SIA Lovelace standard
     const res = _installCardCode(code);
     if(res.err){
-      status.innerHTML=`<span style="color:#f87171">âš ï¸ Errore nel file: ${res.err.message}</span>`;
+      status.innerHTML=`<span style="color:#f87171">⚠️ Errore nel file: ${res.err.message}</span>`;
       return;
     }
     // id della card appena registrata (nuova in registry), altrimenti l'ultima
     let cardId = (res.newCards&&res.newCards[0]) || (res.tags&&res.tags[0]);
     let card = cardId ? window.FratechCardRegistry[cardId] : null;
     if(!card){ const all=Object.values(window.FratechCardRegistry); card=all[all.length-1]; }
-    if(!card || !card.id){ status.innerHTML='<span style="color:#f87171">âš ï¸ Nessuna card valida trovata nel file (nÃ© FratechStore nÃ© Lovelace).</span>'; return; }
-    _jsStoreSave(card.id, {id:card.id, name:card.name||card.id, icon:card.icon||'ðŸ“¦', version:card.version||'1.0', desc:card.desc||''}, code, 'local');
-    status.innerHTML=`<span style="color:#4ade80">âœ… Card <b>${card.name||card.id}</b> installata!${card._lovelace?' <span style="opacity:.6">(Lovelace)</span>':''} (v${card.version||'?'})</span>`;
+    if(!card || !card.id){ status.innerHTML='<span style="color:#f87171">⚠️ Nessuna card valida trovata nel file (né FratechStore né Lovelace).</span>'; return; }
+    _jsStoreSave(card.id, {id:card.id, name:card.name||card.id, icon:card.icon||'📦', version:card.version||'1.0', desc:card.desc||''}, code, 'local');
+    status.innerHTML=`<span style="color:#4ade80">✅ Card <b>${card.name||card.id}</b> installata!${card._lovelace?' <span style="opacity:.6">(Lovelace)</span>':''} (v${card.version||'?'})</span>`;
     document.getElementById('jsst-count').textContent = _jsStoreList().length;
     setTimeout(()=>{ jsStoreTab('installed'); }, 900);
-    // se Ã¨ aperto il nuovo "Store da GitHub", aggiorna la scheda Card locali (lÃ¬ finiscono i file caricati da PC)
-    try{ if(!document.getElementById('gh-store-modal').classList.contains('off')){ showToast('âœ… Card locale caricata'); _ghsTab='local'; ghStoreTab('local'); } }catch(e){}
+    // se è aperto il nuovo "Store da GitHub", aggiorna la scheda Card locali (lì finiscono i file caricati da PC)
+    try{ if(!document.getElementById('gh-store-modal').classList.contains('off')){ showToast('✅ Card locale caricata'); _ghsTab='local'; ghStoreTab('local'); } }catch(e){}
   };
-  reader.onerror = () => { status.innerHTML='<span style="color:#f87171">âš ï¸ Impossibile leggere il file.</span>'; };
+  reader.onerror = () => { status.innerHTML='<span style="color:#f87171">⚠️ Impossibile leggere il file.</span>'; };
   reader.readAsText(file);
 }
 
 function jsStoreAddCard(id){
   if(!id) return;
   const regCard = window.FratechCardRegistry[id];
-  if(!regCard){ showToast('âš ï¸ Card non trovata nel registry. Ricarica la pagina.'); return; }
+  if(!regCard){ showToast('⚠️ Card non trovata nel registry. Ricarica la pagina.'); return; }
   const page = curPage();
   const newCard = {
     id: uid(), type: 'js-custom', jsCardId: id,
-    label: regCard.name||id, icon: regCard.icon||'ðŸ“¦',
+    label: regCard.name||id, icon: regCard.icon||'📦',
     color: '#818cf8', entity: '',
     colSpan: 2, rowSpan: 2
   };
@@ -6485,18 +6491,18 @@ function jsStoreAddCard(id){
   page.cards.push(newCard);
   saveCfg(); renderDash();
   closeJsStore();
-  showToast('âœ… Card aggiunta!');
+  showToast('✅ Card aggiunta!');
   if(typeof _epRenderJsStore==='function') _epRenderJsStore();
   if(typeof _jsStoreRenderList==='function') _jsStoreRenderList();
 }
 
 function jsStoreDeleteCard(id){
-  if(!confirm('Rimuovere la card "'+id+'" dallo store? Le card giÃ  aggiunte alla dashboard rimarranno ma mostreranno un errore.')) return;
+  if(!confirm('Rimuovere la card "'+id+'" dallo store? Le card già aggiunte alla dashboard rimarranno ma mostreranno un errore.')) return;
   _jsStoreDelete(id);
   delete window.FratechCardRegistry[id];
   _jsStoreRenderList();
   if(typeof _epRenderJsStore==='function') _epRenderJsStore();
-  showToast('ðŸ—‘ Card rimossa');
+  showToast('🗑 Card rimossa');
 }
 
 function jsStoreDownloadTemplate(){
@@ -6509,30 +6515,30 @@ function closeSM(){ document.getElementById('smod').classList.add('off'); }
 function addSpecial(type){
   closeSM();
   const defs={
-    flowbars:{label:'Flusso Energia',icon:'âš¡',solar:'sensor.inverter_r5s1152j2118e25819_power',load:'sensor.consumo_solo_positivo',grid:'sensor.inverter_r5s1152j2118e25819_grid_power',colSpan:2,rowSpan:2,max:6000,color:'#fbbf24'},
-    flowmap: {label:'Flusso Mappa',icon:'ðŸ—ºï¸',solar:'sensor.inverter_r5s1152j2118e25819_power',load:'sensor.consumo_solo_positivo',grid:'sensor.inverter_r5s1152j2118e25819_grid_power',colSpan:2,rowSpan:2,color:'#818cf8'},
-    camera:  {label:'Telecamera',icon:'ðŸ“·',entity:'camera.telecamera_interna_scorrevole',colSpan:2,rowSpan:2,refresh:5,color:'#818cf8'},
-    weather: {label:'Meteo',icon:'ðŸŒ¤ï¸',entity:'weather.home',colSpan:2,rowSpan:1,color:'#22d3ee'},
-    'weather-forecast':{label:'Previsioni',icon:'ðŸ“…',entity:'weather.home',colSpan:4,rowSpan:1,color:'#818cf8'},
-    media:   {label:'Lettore Multimediale',icon:'ðŸŽµ',entity:'media_player.sfera_piano_terra',colSpan:2,rowSpan:1,color:'#f472b6'},
-    climate: {label:'Termostato',icon:'ðŸŒ¡ï¸',colSpan:1,rowSpan:2,color:'#fb923c'},
-    multiline:{label:'Multi-Linea',icon:'ðŸ“ˆ',hours:24,colSpan:2,rowSpan:2,color:'#60a5fa'},
-    bar:     {label:'Grafico Barre',icon:'ðŸ“Š',hours:24,colSpan:2,rowSpan:1,color:'#818cf8'},
-    entities:{label:'Lista EntitÃ ',icon:'ðŸ“‹',colSpan:2,rowSpan:1,color:'#4ade80'},
-    gauge:   {label:'Indicatore',icon:'ðŸ•',colSpan:1,rowSpan:2,max:100,color:'#c084fc'},
-    clock:   {label:'Orologio',icon:'â°',colSpan:2,rowSpan:1,color:'#818cf8'},
-    markdown:{label:'Testo',icon:'ðŸ“',colSpan:2,rowSpan:1,color:'#a78bfa',content:'<b>Titolo</b><br>Testo liberoâ€¦'},
-    appliances:{label:'Elettrodomestici',icon:'âš¡',colSpan:2,rowSpan:2,color:'#fbbf24',threshold:5,items:[],groups:[
+    flowbars:{label:'Flusso Energia',icon:'⚡',solar:'sensor.inverter_r5s1152j2118e25819_power',load:'sensor.consumo_solo_positivo',grid:'sensor.inverter_r5s1152j2118e25819_grid_power',colSpan:2,rowSpan:2,max:6000,color:'#fbbf24'},
+    flowmap: {label:'Flusso Mappa',icon:'🗺️',solar:'sensor.inverter_r5s1152j2118e25819_power',load:'sensor.consumo_solo_positivo',grid:'sensor.inverter_r5s1152j2118e25819_grid_power',colSpan:2,rowSpan:2,color:'#818cf8'},
+    camera:  {label:'Telecamera',icon:'📷',entity:'camera.telecamera_interna_scorrevole',colSpan:2,rowSpan:2,refresh:5,color:'#818cf8'},
+    weather: {label:'Meteo',icon:'🌤️',entity:'weather.home',colSpan:2,rowSpan:1,color:'#22d3ee'},
+    'weather-forecast':{label:'Previsioni',icon:'📅',entity:'weather.home',colSpan:4,rowSpan:1,color:'#818cf8'},
+    media:   {label:'Lettore Multimediale',icon:'🎵',entity:'media_player.sfera_piano_terra',colSpan:2,rowSpan:1,color:'#f472b6'},
+    climate: {label:'Termostato',icon:'🌡️',colSpan:1,rowSpan:2,color:'#fb923c'},
+    multiline:{label:'Multi-Linea',icon:'📈',hours:24,colSpan:2,rowSpan:2,color:'#60a5fa'},
+    bar:     {label:'Grafico Barre',icon:'📊',hours:24,colSpan:2,rowSpan:1,color:'#818cf8'},
+    entities:{label:'Lista Entità',icon:'📋',colSpan:2,rowSpan:1,color:'#4ade80'},
+    gauge:   {label:'Indicatore',icon:'🕐',colSpan:1,rowSpan:2,max:100,color:'#c084fc'},
+    clock:   {label:'Orologio',icon:'⏰',colSpan:2,rowSpan:1,color:'#818cf8'},
+    markdown:{label:'Testo',icon:'📝',colSpan:2,rowSpan:1,color:'#a78bfa',content:'<b>Titolo</b><br>Testo libero…'},
+    appliances:{label:'Elettrodomestici',icon:'⚡',colSpan:2,rowSpan:2,color:'#fbbf24',threshold:5,items:[],groups:[
       {name:'luci',color:'#fbbf24',entities:[],showList:false},
       {name:'elettrodomestici',color:'#f97316',entities:[],showList:false},
       {name:'climatizzatori',color:'#60a5fa',entities:[],showList:true},
       {name:'tapparelle',color:'#818cf8',entities:[],showList:true},
       {name:'porte',color:'#4ade80',entities:[],showList:true}
     ]},
-    'picture-elements':{label:'Casa',icon:'ðŸ ',imageUrl:'casa.png',colSpan:3,rowSpan:2,color:'#818cf8',elements:[]},
-    'free':{label:'Canvas',icon:'ðŸŽ¨',colSpan:2,rowSpan:2,color:'#818cf8',canvasW:360,canvasH:200,canvasBg:'var(--card)',canvasBorderRadius:'16px',canvasBorderStr:'1px solid var(--bd)',canvasPadding:'0px',canvasElements:[]},
-    'header-bar':{label:'Header Personalizzato',icon:'âŠž',colSpan:4,rowSpan:1,color:'#818cf8',left:[{id:uid(),type:'clock'}],center:[],right:[]},
-    'footer-bar':{label:'Footer Bar',icon:'âŠŸ',colSpan:4,rowSpan:1,color:'#2dd4bf',buttons:[
+    'picture-elements':{label:'Casa',icon:'🏠',imageUrl:'casa.png',colSpan:3,rowSpan:2,color:'#818cf8',elements:[]},
+    'free':{label:'Canvas',icon:'🎨',colSpan:2,rowSpan:2,color:'#818cf8',canvasW:360,canvasH:200,canvasBg:'var(--card)',canvasBorderRadius:'16px',canvasBorderStr:'1px solid var(--bd)',canvasPadding:'0px',canvasElements:[]},
+    'header-bar':{label:'Header Personalizzato',icon:'⊞',colSpan:4,rowSpan:1,color:'#818cf8',left:[{id:uid(),type:'clock'}],center:[],right:[]},
+    'footer-bar':{label:'Footer Bar',icon:'⊟',colSpan:4,rowSpan:1,color:'#2dd4bf',buttons:[
       {id:'__fb1',type:'climate',icon:'mdi:thermometer',label:'Clima',color:'#f87171',entity:'',clmMin:16,clmMax:36},
       {id:'__fb2',type:'navigate',icon:'mdi:home',label:'Casa',color:'#818cf8',navPage:0},
       {id:'__fb3',type:'link',icon:'mdi:lightning-bolt',label:'Energia',color:'#fbbf24',url:''},
@@ -6540,7 +6546,7 @@ function addSpecial(type){
   }[type]||{};
   const page=curPage();
   const newCard={
-    id:uid(),type,entity:'',label:'Nuova Card',icon:'ðŸ“¦',unit:'',color:'#818cf8',
+    id:uid(),type,entity:'',label:'Nuova Card',icon:'📦',unit:'',color:'#818cf8',
     colSpan:1,rowSpan:1,max:0,min:0,sub:'',hours:24,content:'',imageUrl:'',elements:[],
     threshold:5,items:[],entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5,
     ...defs
@@ -6551,7 +6557,7 @@ function addSpecial(type){
 }
 
 
-/* â•â•â• CARD ACTIONS â•â•â• */
+/* ═══ CARD ACTIONS ═══ */
 function delCard(id){
   const card=curPage().cards.find(c=>c.id===id);
   const name=card?.label||card?.type||'questa card';
@@ -6582,7 +6588,7 @@ function swapC(fromId,toId){
   const to=page.cards.find(c=>c.id===toId);
   if(!from||!to) return;
   if(page.sections){
-    // In sections: swap position only (secId, secCol, secOrder) â€” keep each card's own colSpan
+    // In sections: swap position only (secId, secCol, secOrder) — keep each card's own colSpan
     const fSec=from.secId,fCol=from.secCol||0,fOrd=from.secOrder||0;
     from.secId=to.secId; from.secCol=to.secCol||0; from.secOrder=to.secOrder||0;
     to.secId=fSec; to.secCol=fCol; to.secOrder=fOrd;
@@ -6596,27 +6602,27 @@ function swapC(fromId,toId){
   saveCfg(); renderDash();
 }
 
-/* â•â•â• GUESSERS â•â•â• */
+/* ═══ GUESSERS ═══ */
 function guessIcon(id,domain){
-  if(domain==='weather') return 'ðŸŒ¤ï¸';
-  if(domain==='camera') return 'ðŸ“·';
-  if(domain==='media_player') return 'ðŸŽµ';
-  if(domain==='climate') return 'ðŸŒ¡ï¸';
-  if(id.includes('solar')||id.includes('inverter')||id.includes('pv')) return 'â˜€ï¸';
-  if(id.includes('battery')||id.includes('soc')) return 'ðŸ”‹';
-  if(id.includes('ford')||id.includes('elveh')) return 'ðŸš—';
-  if(id.includes('frigo')||id.includes('fridge')) return 'â„ï¸';
-  if(id.includes('scaldabagno')||id.includes('boiler')) return 'ðŸš¿';
-  if(id.includes('lavatrice')||id.includes('wash')) return 'ðŸ‘•';
-  if(domain==='light'||id.includes('light')) return 'ðŸ’¡';
-  if(id.includes('temp')) return 'ðŸŒ¡ï¸';
-  if(id.includes('humid')||id.includes('umid')) return 'ðŸ’§';
-  if(id.includes('power')||id.includes('consumo')) return 'âš¡';
-  if(id.includes('cost')||id.includes('costo')||id.includes('bolletta')) return 'ðŸ’°';
-  if(id.includes('door')||id.includes('porta')) return 'ðŸšª';
-  if(id.includes('window')||id.includes('finestra')) return 'ðŸªŸ';
-  if(domain==='switch'||domain==='input_boolean') return 'ðŸ”˜';
-  return 'ðŸ“¦';
+  if(domain==='weather') return '🌤️';
+  if(domain==='camera') return '📷';
+  if(domain==='media_player') return '🎵';
+  if(domain==='climate') return '🌡️';
+  if(id.includes('solar')||id.includes('inverter')||id.includes('pv')) return '☀️';
+  if(id.includes('battery')||id.includes('soc')) return '🔋';
+  if(id.includes('ford')||id.includes('elveh')) return '🚗';
+  if(id.includes('frigo')||id.includes('fridge')) return '❄️';
+  if(id.includes('scaldabagno')||id.includes('boiler')) return '🚿';
+  if(id.includes('lavatrice')||id.includes('wash')) return '👕';
+  if(domain==='light'||id.includes('light')) return '💡';
+  if(id.includes('temp')) return '🌡️';
+  if(id.includes('humid')||id.includes('umid')) return '💧';
+  if(id.includes('power')||id.includes('consumo')) return '⚡';
+  if(id.includes('cost')||id.includes('costo')||id.includes('bolletta')) return '💰';
+  if(id.includes('door')||id.includes('porta')) return '🚪';
+  if(id.includes('window')||id.includes('finestra')) return '🪟';
+  if(domain==='switch'||domain==='input_boolean') return '🔘';
+  return '📦';
 }
 function guessType(id,domain,unit){
   if(domain==='weather') return 'weather';
@@ -6625,16 +6631,16 @@ function guessType(id,domain,unit){
   if(domain==='climate') return 'climate';
   if(domain==='switch'||domain==='light'||domain==='input_boolean') return 'toggle';
   if(unit==='%') return 'gauge';
-  if(unit==='W'||unit==='kWh'||unit==='â‚¬') return 'compact';
+  if(unit==='W'||unit==='kWh'||unit==='€') return 'compact';
   return 'compact';
 }
 function guessMax(unit){
   if(unit==='W') return 3000; if(unit==='kWh') return 500;
-  if(unit==='â‚¬') return 200;  if(unit==='%') return 100;
-  if(unit==='Â°C') return 40;  return 0;
+  if(unit==='€') return 200;  if(unit==='%') return 100;
+  if(unit==='°C') return 40;  return 0;
 }
 
-/* â•â•â• THEME + FONT â•â•â• */
+/* ═══ THEME + FONT ═══ */
 const FONTS=[
   {id:'Inter',              label:'Inter'},
   {id:'Poppins',            label:'Poppins'},
@@ -6667,7 +6673,7 @@ const FONTS=[
   {id:'Rajdhani',           label:'Rajdhani'},
   {id:'Syne',               label:'Syne'},
 ];
-/* â•â•â• TEMI COLORATI (accento + sfondo luminoso) â€” funzionano sia su base scura che chiara â•â•â• */
+/* ═══ TEMI COLORATI (accento + sfondo luminoso) — funzionano sia su base scura che chiara ═══ */
 const COLOR_THEMES=[
   {id:'indaco',  name:'Indaco',   acc:'#6366f1', acc2:'#818cf8', bg:'#060810', panel:'#0c0e1c', panel2:'#12152a', g:['rgba(99,102,241,.30)','rgba(34,211,238,.16)','rgba(168,85,247,.18)']},
   {id:'oceano',  name:'Oceano',   acc:'#0ea5e9', acc2:'#38bdf8', bg:'#04090f', panel:'#0a1420', panel2:'#0e1d2e', g:['rgba(14,165,233,.34)','rgba(34,211,238,.20)','rgba(59,130,246,.18)']},
@@ -6685,7 +6691,7 @@ function applyColorTheme(id){
   const r=document.documentElement.style;
   r.setProperty('--acc',t.acc); r.setProperty('--acc2',t.acc2);
   r.setProperty('--glow1',t.g[0]); r.setProperty('--glow2',t.g[1]); r.setProperty('--glow3',t.g[2]);
-  // sfondo/pannelli tinti SOLO in modalitÃ  scura (in chiaro lascio i colori chiari)
+  // sfondo/pannelli tinti SOLO in modalità scura (in chiaro lascio i colori chiari)
   if(cfg.theme==='light'){ r.removeProperty('--bg'); r.removeProperty('--panel'); r.removeProperty('--panel2'); }
   else { r.setProperty('--bg',t.bg); r.setProperty('--panel',t.panel); r.setProperty('--panel2',t.panel2); }
   document.querySelectorAll('.ep-ctheme').forEach(b=>b.classList.toggle('on',b.dataset.theme===t.id));
@@ -6701,7 +6707,7 @@ function applyTheme(t){
   document.documentElement.dataset.theme=t==='light'?'light':'';
   document.getElementById('ep-theme-dark').classList.toggle('on',t!=='light');
   document.getElementById('ep-theme-light').classList.toggle('on',t==='light');
-  try{ applyColorTheme(cfg.colorTheme||'indaco'); }catch(e){}   // riadatta sfondo tinto alla nuova modalitÃ 
+  try{ applyColorTheme(cfg.colorTheme||'indaco'); }catch(e){}   // riadatta sfondo tinto alla nuova modalità
   saveCfg();
   renderDash();
 }
@@ -6720,7 +6726,7 @@ function _renderFontItems(){
   document.getElementById('font-pop').innerHTML=FONTS.map(f=>
     `<div class="font-item${f.id===cur?' on':''}" onclick="applyFont('${f.id.replace(/'/g,"\\'")}')">
       <span style="font-family:'${f.id}',system-ui;font-size:12px">${f.label}</span>
-      ${f.id===cur?'<span style="font-size:10px;opacity:.6">âœ“</span>':''}
+      ${f.id===cur?'<span style="font-size:10px;opacity:.6">✓</span>':''}
     </div>`
   ).join('');
 }
@@ -6739,7 +6745,7 @@ function renderFontPick(){
   if(lbl){ lbl.textContent=cur; lbl.style.fontFamily=`'${cur}',system-ui`; }
 }
 
-/* â•â•â• UTILS â•â•â• */
+/* ═══ UTILS ═══ */
 function eh(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function ea(s){ return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 function _lightenHex(hex,pct){
@@ -6757,7 +6763,7 @@ function _lightenHex(hex,pct){
   document.getElementById(id).addEventListener('click',e=>{ if(e.target===e.currentTarget) document.getElementById(id).classList.add('off'); });
 });
 
-/* â•â•â• CARD CLICK ACTION â•â•â• */
+/* ═══ CARD CLICK ACTION ═══ */
 function handleCardClick(card, e){
   if(editMode) return;
   if(e.target.closest('button,input,select,.toggle-track,.clm-btn,.mctrl-btn,.resize-handle')) return;
@@ -6767,16 +6773,16 @@ function handleCardClick(card, e){
   if(action==='toggle')       doToggle(card.entity,card.id);
   else if(action==='link'&&card.clickUrl) window.open(card.clickUrl,'_blank');
   else {
-    /* info: apri popup solo se c'Ã¨ un'entitÃ  associata */
+    /* info: apri popup solo se c'è un'entità associata */
     if(card.entity) openInfoModal(card);
   }
 }
 
-/* â•â•â• INFO MODAL â•â•â• */
+/* ═══ INFO MODAL ═══ */
 let _imChart=null;
 function openInfoModal(card){
   const eid=card.entity;
-  const val=hs[eid]??'â€”';
+  const val=hs[eid]??'—';
   const at=ha[eid]||{};
   const unit=at.unit_of_measurement||card.unit||'';
   const name=at.friendly_name||eid;
@@ -6784,7 +6790,7 @@ function openInfoModal(card){
   const numV=parseFloat(val);
   const dispV=isNaN(numV)?_stateIt(val):(numV%1===0?numV:parseFloat(numV.toFixed(2)));
 
-  document.getElementById('imod-title').textContent=(card.icon||'ðŸ“¦')+' '+name;
+  document.getElementById('imod-title').textContent=(card.icon||'📦')+' '+name;
 
   const skip=['friendly_name','unit_of_measurement','icon','entity_picture','attribution','forecast','supported_features','supported_color_modes','hs_color','rgb_color','rgbw_color','xy_color','effect_list','source_list','preset_modes','fan_modes','swing_modes','hvac_modes','options'];
   const atRows=Object.entries(at)
@@ -6827,17 +6833,17 @@ function openInfoModal(card){
 }
 function closeIM(){ document.getElementById('imod').classList.add('off'); }
 
-/* â•â•â• WIZARD â•â•â• */
+/* ═══ WIZARD ═══ */
 const WIZARD_DEFS = {
   meteo:{
-    title:'ðŸŒ¤ï¸ Configura Pagina Meteo',
+    title:'🌤️ Configura Pagina Meteo',
     info:'La pagina meteo mostra icona animata in base alle condizioni, metriche in tempo reale, previsioni a 7 giorni e grafici storici.',
     fields:[
       {id:'wz-name',  label:'Nome pagina',                     type:'text',   ph:'Meteo Casa',              def:'Meteo'},
-      {id:'wz-loc',   label:'Posizione (es. Milano Â· Italia)',  type:'text',   ph:'Casa Â· Italia'},
-      {id:'wz-weather',label:'EntitÃ  Meteo (weather.*) â˜…',     type:'entity', ph:'weather.home'},
-      {id:'wz-temp',  label:'Sensore Temperatura Â°C (opz.)',    type:'entity', ph:'sensor.temperatura_esterna'},
-      {id:'wz-hum',   label:'Sensore UmiditÃ  % (opz.)',         type:'entity', ph:'sensor.umidita_esterna'},
+      {id:'wz-loc',   label:'Posizione (es. Milano · Italia)',  type:'text',   ph:'Casa · Italia'},
+      {id:'wz-weather',label:'Entità Meteo (weather.*) ★',     type:'entity', ph:'weather.home'},
+      {id:'wz-temp',  label:'Sensore Temperatura °C (opz.)',    type:'entity', ph:'sensor.temperatura_esterna'},
+      {id:'wz-hum',   label:'Sensore Umidità % (opz.)',         type:'entity', ph:'sensor.umidita_esterna'},
       {id:'wz-wind',  label:'Sensore Vento km/h (opz.)',        type:'entity', ph:'sensor.vento_velocita'},
       {id:'wz-rain',  label:'Sensore Pioggia mm (opz.)',        type:'entity', ph:'sensor.pioggia_mm'},
       {id:'wz-uv',    label:'Sensore Indice UV (opz.)',         type:'entity', ph:'sensor.uv_index'},
@@ -6846,26 +6852,26 @@ const WIZARD_DEFS = {
     ]
   },
   energia:{
-    title:'âš¡ Configura Pagina Energia',
-    info:'La pagina energia mostra il flusso di potenza (solareâ†’reteâ†’casa), metriche di produzione/consumo e grafici storici.',
+    title:'⚡ Configura Pagina Energia',
+    info:'La pagina energia mostra il flusso di potenza (solare→rete→casa), metriche di produzione/consumo e grafici storici.',
     fields:[
       {id:'wz-name',    label:'Nome pagina',                   type:'text',   ph:'Energia',              def:'Energia'},
-      {id:'wz-solar',   label:'Sensore Solare W â˜…',            type:'entity', ph:'sensor.inverter_power'},
-      {id:'wz-load',    label:'Sensore Carico Casa W â˜…',       type:'entity', ph:'sensor.consumo_power'},
+      {id:'wz-solar',   label:'Sensore Solare W ★',            type:'entity', ph:'sensor.inverter_power'},
+      {id:'wz-load',    label:'Sensore Carico Casa W ★',       type:'entity', ph:'sensor.consumo_power'},
       {id:'wz-grid',    label:'Sensore Rete W (opz., + esporta)',type:'entity',ph:'sensor.grid_power'},
       {id:'wz-battery', label:'Sensore Batteria W (opz.)',      type:'entity', ph:'sensor.battery_power'},
       {id:'wz-esolar',  label:'Energia FV oggi kWh (opz.)',     type:'entity', ph:'sensor.energia_solare_oggi'},
       {id:'wz-eload',   label:'Energia consumo oggi kWh (opz.)',type:'entity', ph:'sensor.energia_consumo_oggi'},
-      {id:'wz-ebill',   label:'Spesa mensile â‚¬ (opz.)',         type:'entity', ph:'sensor.costo_mensile'},
+      {id:'wz-ebill',   label:'Spesa mensile € (opz.)',         type:'entity', ph:'sensor.costo_mensile'},
       {id:'wz-hours',   label:'Ore storico grafici',            type:'sel',    opts:[['6','6 ore'],['12','12 ore'],['24','24 ore',true],['48','48 ore']]},
     ]
   },
   veicoli:{
-    title:'ðŸš— Configura Pagina Veicoli',
+    title:'🚗 Configura Pagina Veicoli',
     info:'La pagina veicoli mostra stato batteria auto elettrica, autonomia, stato ricarica e storico.',
     fields:[
       {id:'wz-name',    label:'Nome pagina',                   type:'text',   ph:'Veicoli',              def:'Veicoli'},
-      {id:'wz-soc',     label:'Sensore Batteria % â˜…',          type:'entity', ph:'sensor.ev_soc'},
+      {id:'wz-soc',     label:'Sensore Batteria % ★',          type:'entity', ph:'sensor.ev_soc'},
       {id:'wz-range',   label:'Sensore Autonomia km (opz.)',    type:'entity', ph:'sensor.ev_range'},
       {id:'wz-charge',  label:'Sensore Stato Ricarica (opz.)', type:'entity', ph:'sensor.ev_charge_status'},
       {id:'wz-power',   label:'Sensore Potenza Ricarica W (opz.)',type:'entity',ph:'sensor.ev_charge_power'},
@@ -6874,20 +6880,20 @@ const WIZARD_DEFS = {
     ]
   },
   casa:{
-    title:'ðŸ  Casa Overview â€” Immagine 3D',
+    title:'🏠 Casa Overview — Immagine 3D',
     info:'Pagina principale con la casa 3D al centro: sensori sovrapposti sull\'immagine, meteo, energia e previsioni.',
     fields:[
       {id:'wz-name',    label:'Nome pagina',                    type:'text',   ph:'Casa',                 def:'Casa'},
-      {id:'wz-weather', label:'EntitÃ  Meteo (weather.*) â˜…',    type:'entity', ph:'weather.home'},
-      {id:'wz-loc',     label:'Posizione (opz.)',               type:'text',   ph:'Milano Â· Italia'},
+      {id:'wz-weather', label:'Entità Meteo (weather.*) ★',    type:'entity', ph:'weather.home'},
+      {id:'wz-loc',     label:'Posizione (opz.)',               type:'text',   ph:'Milano · Italia'},
       {id:'wz-solar',   label:'Solare / FV (W, opz.)',          type:'entity', ph:'sensor.inverter_power'},
       {id:'wz-load',    label:'Consumo Casa (W, opz.)',         type:'entity', ph:'sensor.consumo_power'},
       {id:'wz-grid',    label:'Rete Elettrica (W, opz.)',       type:'entity', ph:'sensor.grid_power'},
       {id:'wz-batt',    label:'Batteria % (opz.)',              type:'entity', ph:'sensor.battery_soc'},
-      {id:'wz-car1',    label:'Auto 1 â€” Ricarica W (opz.)',     type:'entity', ph:'sensor.ev_charge_power'},
-      {id:'wz-car2',    label:'Auto 2 â€” Ricarica W (opz.)',     type:'entity', ph:'sensor.ev2_charge_power'},
+      {id:'wz-car1',    label:'Auto 1 — Ricarica W (opz.)',     type:'entity', ph:'sensor.ev_charge_power'},
+      {id:'wz-car2',    label:'Auto 2 — Ricarica W (opz.)',     type:'entity', ph:'sensor.ev2_charge_power'},
       {id:'wz-temp',    label:'Temperatura esterna (opz.)',     type:'entity', ph:'sensor.temperatura_esterna'},
-      {id:'wz-hum',     label:'UmiditÃ  esterna (opz.)',         type:'entity', ph:'sensor.umidita_esterna'},
+      {id:'wz-hum',     label:'Umidità esterna (opz.)',         type:'entity', ph:'sensor.umidita_esterna'},
     ]
   }
 };
@@ -6903,7 +6909,7 @@ function openWizard(tpl){
   document.getElementById('wmod-body').innerHTML=def.fields.map(f=>{
     let inp='';
     if(f.type==='entity'){
-      inp=`<div class="finp-row"><input class="finp" id="${f.id}" type="text" placeholder="${f.ph||''}"><button class="fbtn" onclick="browseField('${f.id}')">ðŸ”</button></div>`;
+      inp=`<div class="finp-row"><input class="finp" id="${f.id}" type="text" placeholder="${f.ph||''}"><button class="fbtn" onclick="browseField('${f.id}')">🔍</button></div>`;
     } else if(f.type==='sel'){
       inp=`<select class="finp" id="${f.id}">${f.opts.map(o=>`<option value="${o[0]}"${o[2]?' selected':''}>${o[1]}</option>`).join('')}</select>`;
     } else {
@@ -6915,7 +6921,7 @@ function openWizard(tpl){
 }
 function closeWM(){
   document.getElementById('wmod').classList.add('off');
-  document.getElementById('wmod-btn').textContent='âœ¨ Crea Pagina';
+  document.getElementById('wmod-btn').textContent='✨ Crea Pagina';
   wizardTpl=null; wizardEditing=false;
 }
 
@@ -6947,16 +6953,16 @@ function _saveMeteoWizard(){
   const ePres = _wizardVal('wz-pres');
   const hrs   = parseInt(_wizardVal('wz-hours'))||24;
   const cards=[];
-  cards.push(_mkCard({type:'weather-hero',label:'Meteo',icon:'ðŸŒ…',entity:wEnt,entity2:eTemp,entity3:eHum,color:'#22d3ee',colSpan:2,rowSpan:2}));
-  if(eWind)  cards.push(_mkCard({type:'compact',label:'Vento',icon:'ðŸ’¨',entity:eWind,unit:'km/h',color:'#4ade80',max:100}));
-  if(eRain)  cards.push(_mkCard({type:'compact',label:'Pioggia',icon:'ðŸŒ§ï¸',entity:eRain,unit:'mm',color:'#60a5fa',max:50}));
-  if(eUV)    cards.push(_mkCard({type:'compact',label:'Indice UV',icon:'â˜€ï¸',entity:eUV,unit:'',color:'#fbbf24',max:11}));
-  if(ePres)  cards.push(_mkCard({type:'compact',label:'Pressione',icon:'ðŸŒ¡ï¸',entity:ePres,unit:'hPa',color:'#a78bfa',max:1050}));
-  cards.push(_mkCard({type:'weather-forecast',label:'Previsioni 7 giorni',icon:'ðŸ“…',entity:wEnt,color:'#818cf8',colSpan:4,rowSpan:1}));
-  if(eTemp)  cards.push(_mkCard({type:'history',label:'Temperatura',icon:'ðŸŒ¡ï¸',entity:eTemp,unit:'Â°C',color:'#f97316',hours:hrs,colSpan:2,rowSpan:2}));
-  if(eHum)   cards.push(_mkCard({type:'history',label:'UmiditÃ ',icon:'ðŸ’§',entity:eHum,unit:'%',color:'#38bdf8',hours:hrs,colSpan:2,rowSpan:2}));
+  cards.push(_mkCard({type:'weather-hero',label:'Meteo',icon:'🌅',entity:wEnt,entity2:eTemp,entity3:eHum,color:'#22d3ee',colSpan:2,rowSpan:2}));
+  if(eWind)  cards.push(_mkCard({type:'compact',label:'Vento',icon:'💨',entity:eWind,unit:'km/h',color:'#4ade80',max:100}));
+  if(eRain)  cards.push(_mkCard({type:'compact',label:'Pioggia',icon:'🌧️',entity:eRain,unit:'mm',color:'#60a5fa',max:50}));
+  if(eUV)    cards.push(_mkCard({type:'compact',label:'Indice UV',icon:'☀️',entity:eUV,unit:'',color:'#fbbf24',max:11}));
+  if(ePres)  cards.push(_mkCard({type:'compact',label:'Pressione',icon:'🌡️',entity:ePres,unit:'hPa',color:'#a78bfa',max:1050}));
+  cards.push(_mkCard({type:'weather-forecast',label:'Previsioni 7 giorni',icon:'📅',entity:wEnt,color:'#818cf8',colSpan:4,rowSpan:1}));
+  if(eTemp)  cards.push(_mkCard({type:'history',label:'Temperatura',icon:'🌡️',entity:eTemp,unit:'°C',color:'#f97316',hours:hrs,colSpan:2,rowSpan:2}));
+  if(eHum)   cards.push(_mkCard({type:'history',label:'Umidità',icon:'💧',entity:eHum,unit:'%',color:'#38bdf8',hours:hrs,colSpan:2,rowSpan:2}));
   if(!wizardEditing){
-    const p={id:'p'+Math.random().toString(36).slice(2,7),name:_wizardVal('wz-name')||'Meteo',icon:'ðŸŒ¤ï¸',columns:4,rowH:150,cards};
+    const p={id:'p'+Math.random().toString(36).slice(2,7),name:_wizardVal('wz-name')||'Meteo',icon:'🌤️',columns:4,rowH:150,cards};
     _applyWizardCols(p);
     cfg.pages.push(p); cfg.activePage=cfg.pages.length-1;
   } else {
@@ -6975,19 +6981,19 @@ function _saveEnergiaWizard(){
   const eBill   = _wizardVal('wz-ebill');
   const hrs     = parseInt(_wizardVal('wz-hours'))||24;
   const cards=[];
-  cards.push(_mkCard({type:'flowmap',label:'Flusso Energia',icon:'ðŸ—ºï¸',solar:eSolar,load:eLoad,grid:eGrid,battery:eBatt,color:'#818cf8',colSpan:2,rowSpan:2}));
-  if(eSolar) cards.push(_mkCard({type:'compact',label:'Potenza Solare',icon:'â˜€ï¸',entity:eSolar,unit:'W',color:'#fbbf24',max:6000}));
-  if(eLoad)  cards.push(_mkCard({type:'compact',label:'Consumo Casa',icon:'ðŸ ',entity:eLoad,unit:'W',color:'#f87171',max:6000}));
-  if(eGrid)  cards.push(_mkCard({type:'compact',label:'Rete Elettrica',icon:'âš¡',entity:eGrid,unit:'W',color:'#60a5fa',max:6000}));
-  if(eBatt)  cards.push(_mkCard({type:'gauge',label:'Batteria',icon:'ðŸ”‹',entity:eBatt,unit:'%',color:'#4ade80',max:100,colSpan:1,rowSpan:2}));
-  if(eEsolar)cards.push(_mkCard({type:'big',label:'Energia Solare',icon:'â˜€ï¸',entity:eEsolar,unit:'kWh',color:'#fbbf24'}));
-  if(eEload) cards.push(_mkCard({type:'big',label:'Energia Casa',icon:'ðŸ ',entity:eEload,unit:'kWh',color:'#f87171'}));
-  if(eBill)  cards.push(_mkCard({type:'big',label:'Bolletta Est.',icon:'ðŸ’¶',entity:eBill,unit:'â‚¬',color:'#a78bfa'}));
-  if(eSolar) cards.push(_mkCard({type:'history',label:'Solare',icon:'â˜€ï¸',entity:eSolar,unit:'W',color:'#fbbf24',hours:hrs,colSpan:2,rowSpan:2}));
-  if(eLoad)  cards.push(_mkCard({type:'history',label:'Consumo',icon:'ðŸ ',entity:eLoad,unit:'W',color:'#f87171',hours:hrs,colSpan:2,rowSpan:2}));
-  if(eGrid)  cards.push(_mkCard({type:'history',label:'Rete',icon:'âš¡',entity:eGrid,unit:'W',color:'#60a5fa',hours:hrs,colSpan:2,rowSpan:2}));
+  cards.push(_mkCard({type:'flowmap',label:'Flusso Energia',icon:'🗺️',solar:eSolar,load:eLoad,grid:eGrid,battery:eBatt,color:'#818cf8',colSpan:2,rowSpan:2}));
+  if(eSolar) cards.push(_mkCard({type:'compact',label:'Potenza Solare',icon:'☀️',entity:eSolar,unit:'W',color:'#fbbf24',max:6000}));
+  if(eLoad)  cards.push(_mkCard({type:'compact',label:'Consumo Casa',icon:'🏠',entity:eLoad,unit:'W',color:'#f87171',max:6000}));
+  if(eGrid)  cards.push(_mkCard({type:'compact',label:'Rete Elettrica',icon:'⚡',entity:eGrid,unit:'W',color:'#60a5fa',max:6000}));
+  if(eBatt)  cards.push(_mkCard({type:'gauge',label:'Batteria',icon:'🔋',entity:eBatt,unit:'%',color:'#4ade80',max:100,colSpan:1,rowSpan:2}));
+  if(eEsolar)cards.push(_mkCard({type:'big',label:'Energia Solare',icon:'☀️',entity:eEsolar,unit:'kWh',color:'#fbbf24'}));
+  if(eEload) cards.push(_mkCard({type:'big',label:'Energia Casa',icon:'🏠',entity:eEload,unit:'kWh',color:'#f87171'}));
+  if(eBill)  cards.push(_mkCard({type:'big',label:'Bolletta Est.',icon:'💶',entity:eBill,unit:'€',color:'#a78bfa'}));
+  if(eSolar) cards.push(_mkCard({type:'history',label:'Solare',icon:'☀️',entity:eSolar,unit:'W',color:'#fbbf24',hours:hrs,colSpan:2,rowSpan:2}));
+  if(eLoad)  cards.push(_mkCard({type:'history',label:'Consumo',icon:'🏠',entity:eLoad,unit:'W',color:'#f87171',hours:hrs,colSpan:2,rowSpan:2}));
+  if(eGrid)  cards.push(_mkCard({type:'history',label:'Rete',icon:'⚡',entity:eGrid,unit:'W',color:'#60a5fa',hours:hrs,colSpan:2,rowSpan:2}));
   if(!wizardEditing){
-    const p={id:'p'+Math.random().toString(36).slice(2,7),name:_wizardVal('wz-name')||'Energia',icon:'âš¡',columns:4,rowH:150,cards};
+    const p={id:'p'+Math.random().toString(36).slice(2,7),name:_wizardVal('wz-name')||'Energia',icon:'⚡',columns:4,rowH:150,cards};
     _applyWizardCols(p);
     cfg.pages.push(p); cfg.activePage=cfg.pages.length-1;
   } else {
@@ -7004,15 +7010,15 @@ function _saveVeicoliWizard(){
   const eOdo    = _wizardVal('wz-odo');
   const hrs     = parseInt(_wizardVal('wz-hours'))||72;
   const cards=[];
-  if(eSOC)    cards.push(_mkCard({type:'gauge',label:'Batteria',icon:'ðŸ”‹',entity:eSOC,unit:'%',color:'#4ade80',max:100,colSpan:1,rowSpan:2}));
-  if(eRange)  cards.push(_mkCard({type:'big',label:'Autonomia',icon:'ðŸ›£ï¸',entity:eRange,unit:'km',color:'#60a5fa',colSpan:1,rowSpan:2}));
-  if(ePower)  cards.push(_mkCard({type:'compact',label:'Potenza Carica',icon:'âš¡',entity:ePower,unit:'kW',color:'#fbbf24',max:22,colSpan:2,rowSpan:1}));
-  if(eCharge) cards.push(_mkCard({type:'text',label:'Stato Carica',icon:'ðŸ”Œ',entity:eCharge,color:'#a78bfa',colSpan:1,rowSpan:1}));
-  if(eOdo)    cards.push(_mkCard({type:'big',label:'Odometro',icon:'ðŸ“',entity:eOdo,unit:'km',color:'#94a3b8',colSpan:1,rowSpan:1}));
-  if(eSOC)    cards.push(_mkCard({type:'history',label:'SOC Batteria',icon:'ðŸ”‹',entity:eSOC,unit:'%',color:'#4ade80',hours:hrs,colSpan:2,rowSpan:2}));
-  if(eRange)  cards.push(_mkCard({type:'history',label:'Autonomia',icon:'ðŸ›£ï¸',entity:eRange,unit:'km',color:'#60a5fa',hours:hrs,colSpan:2,rowSpan:2}));
+  if(eSOC)    cards.push(_mkCard({type:'gauge',label:'Batteria',icon:'🔋',entity:eSOC,unit:'%',color:'#4ade80',max:100,colSpan:1,rowSpan:2}));
+  if(eRange)  cards.push(_mkCard({type:'big',label:'Autonomia',icon:'🛣️',entity:eRange,unit:'km',color:'#60a5fa',colSpan:1,rowSpan:2}));
+  if(ePower)  cards.push(_mkCard({type:'compact',label:'Potenza Carica',icon:'⚡',entity:ePower,unit:'kW',color:'#fbbf24',max:22,colSpan:2,rowSpan:1}));
+  if(eCharge) cards.push(_mkCard({type:'text',label:'Stato Carica',icon:'🔌',entity:eCharge,color:'#a78bfa',colSpan:1,rowSpan:1}));
+  if(eOdo)    cards.push(_mkCard({type:'big',label:'Odometro',icon:'📍',entity:eOdo,unit:'km',color:'#94a3b8',colSpan:1,rowSpan:1}));
+  if(eSOC)    cards.push(_mkCard({type:'history',label:'SOC Batteria',icon:'🔋',entity:eSOC,unit:'%',color:'#4ade80',hours:hrs,colSpan:2,rowSpan:2}));
+  if(eRange)  cards.push(_mkCard({type:'history',label:'Autonomia',icon:'🛣️',entity:eRange,unit:'km',color:'#60a5fa',hours:hrs,colSpan:2,rowSpan:2}));
   if(!wizardEditing){
-    const p={id:'p'+Math.random().toString(36).slice(2,7),name:_wizardVal('wz-name')||'Veicoli',icon:'ðŸš—',columns:4,rowH:150,cards};
+    const p={id:'p'+Math.random().toString(36).slice(2,7),name:_wizardVal('wz-name')||'Veicoli',icon:'🚗',columns:4,rowH:150,cards};
     _applyWizardCols(p);
     cfg.pages.push(p); cfg.activePage=cfg.pages.length-1;
   } else {
@@ -7034,31 +7040,31 @@ function _saveCasaWizard(){
 
   // Build picture-elements overlays for the house image
   const elements=[];
-  if(eSolar) elements.push({entity:eSolar, x:62, y:10, icon:'â˜€ï¸', suffix:' W',  color:'#FCD34D', size:13});
-  if(eBatt)  elements.push({entity:eBatt,  x:86, y:38, icon:'ðŸ”‹', suffix:'%',   color:'#4ade80', size:13});
-  if(eGrid)  elements.push({entity:eGrid,  x:86, y:58, icon:'âš¡', suffix:' W',  color:'#818cf8', size:12});
-  if(eLoad)  elements.push({entity:eLoad,  x:44, y:70, icon:'ðŸ ', suffix:' W',  color:'#f472b6', size:12});
-  if(eCar1)  elements.push({entity:eCar1,  x:22, y:60, icon:'ðŸš—', suffix:' W',  color:'#22d3ee', size:12});
-  if(eCar2)  elements.push({entity:eCar2,  x:40, y:56, icon:'ðŸš—', suffix:' W',  color:'#60a5fa', size:12});
+  if(eSolar) elements.push({entity:eSolar, x:62, y:10, icon:'☀️', suffix:' W',  color:'#FCD34D', size:13});
+  if(eBatt)  elements.push({entity:eBatt,  x:86, y:38, icon:'🔋', suffix:'%',   color:'#4ade80', size:13});
+  if(eGrid)  elements.push({entity:eGrid,  x:86, y:58, icon:'⚡', suffix:' W',  color:'#818cf8', size:12});
+  if(eLoad)  elements.push({entity:eLoad,  x:44, y:70, icon:'🏠', suffix:' W',  color:'#f472b6', size:12});
+  if(eCar1)  elements.push({entity:eCar1,  x:22, y:60, icon:'🚗', suffix:' W',  color:'#22d3ee', size:12});
+  if(eCar2)  elements.push({entity:eCar2,  x:40, y:56, icon:'🚗', suffix:' W',  color:'#60a5fa', size:12});
 
   const cards=[];
   // Row 1-2, Col 1-2: Weather hero
-  cards.push(_mkCard({type:'weather-hero',label:'Meteo',icon:'ðŸŒ¤ï¸',entity:wEnt,entity2:eTemp,entity3:eHum,color:'#22d3ee',colSpan:2,rowSpan:2}));
+  cards.push(_mkCard({type:'weather-hero',label:'Meteo',icon:'🌤️',entity:wEnt,entity2:eTemp,entity3:eHum,color:'#22d3ee',colSpan:2,rowSpan:2}));
   // Row 1-3, Col 3-5: House picture-elements
-  cards.push(_mkCard({type:'picture-elements',label:'Casa',icon:'ðŸ ',imageUrl:'casa.png',elements,color:'#818cf8',colSpan:3,rowSpan:3}));
+  cards.push(_mkCard({type:'picture-elements',label:'Casa',icon:'🏠',imageUrl:'casa.png',elements,color:'#818cf8',colSpan:3,rowSpan:3}));
   // Row 1-3, Col 6: Energy flowbars (if solar+load configured)
   if(eSolar||eLoad){
-    cards.push(_mkCard({type:'flowbars',label:'Flusso Energia',icon:'âš¡',solar:eSolar,load:eLoad,grid:eGrid,battery:eBatt?'':undefined,color:'#fbbf24',colSpan:1,rowSpan:3}));
+    cards.push(_mkCard({type:'flowbars',label:'Flusso Energia',icon:'⚡',solar:eSolar,load:eLoad,grid:eGrid,battery:eBatt?'':undefined,color:'#fbbf24',colSpan:1,rowSpan:3}));
   }
   // Row 3, Col 1: Solar compact
-  if(eSolar) cards.push(_mkCard({type:'compact',label:'Solare',icon:'â˜€ï¸',entity:eSolar,unit:'W',color:'#FCD34D',max:6000,colSpan:1,rowSpan:1}));
+  if(eSolar) cards.push(_mkCard({type:'compact',label:'Solare',icon:'☀️',entity:eSolar,unit:'W',color:'#FCD34D',max:6000,colSpan:1,rowSpan:1}));
   // Row 3, Col 2: Load compact
-  if(eLoad)  cards.push(_mkCard({type:'compact',label:'Consumo',icon:'ðŸ ',entity:eLoad,unit:'W',color:'#f472b6',max:6000,colSpan:1,rowSpan:1}));
+  if(eLoad)  cards.push(_mkCard({type:'compact',label:'Consumo',icon:'🏠',entity:eLoad,unit:'W',color:'#f472b6',max:6000,colSpan:1,rowSpan:1}));
   // Row 4: Forecast strip
-  cards.push(_mkCard({type:'weather-forecast',label:'Previsioni',icon:'ðŸ“…',entity:wEnt,color:'#818cf8',colSpan:6,rowSpan:1}));
+  cards.push(_mkCard({type:'weather-forecast',label:'Previsioni',icon:'📅',entity:wEnt,color:'#818cf8',colSpan:6,rowSpan:1}));
 
   if(!wizardEditing){
-    const p={id:'p'+Math.random().toString(36).slice(2,7),name:_wizardVal('wz-name')||'Casa',icon:'ðŸ ',columns:6,rowH:160,cards};
+    const p={id:'p'+Math.random().toString(36).slice(2,7),name:_wizardVal('wz-name')||'Casa',icon:'🏠',columns:6,rowH:160,cards};
     _applyWizardCols(p);
     cfg.pages.push(p); cfg.activePage=cfg.pages.length-1;
   } else {
@@ -7067,7 +7073,7 @@ function _saveCasaWizard(){
   wizardEditing=false; saveCfg(); closeWM(); renderDash();
 }
 
-/* â•â•â• WEATHER HELPERS â•â•â• */
+/* ═══ WEATHER HELPERS ═══ */
 const WC={  // weather colors
   sunny:'#FCD34D','clear-night':'#A78BFA',cloudy:'#94A3B8',partlycloudy:'#7DD3FC',
   fog:'#94A3B8',rainy:'#60A5FA',pouring:'#3B82F6',lightning:'#FCD34D',
@@ -7077,7 +7083,7 @@ const WC={  // weather colors
 function wColor(c){ return WC[c]||'#6366f1'; }
 function wClass(c){ return (c||'unknown').replace(/[^a-zA-Z]/g,'').toLowerCase(); }
 
-/* â•â•â• WEATHER ANIMATED BACKGROUND â•â•â• */
+/* ═══ WEATHER ANIMATED BACKGROUND ═══ */
 const WT_GRADIENTS={
   'sunny':           'linear-gradient(160deg,#0d47a1 0%,#1976d2 30%,#e65100 75%,#f57c00 100%)',
   'clear-night':     'linear-gradient(160deg,#050518 0%,#0a1045 45%,#15063a 100%)',
@@ -7118,7 +7124,7 @@ function _initWeatherBG(cardId,cond){
     bg.appendChild(d);
   }
 
-  // â”€â”€ Sunny: light rays â”€â”€
+  // ── Sunny: light rays ──
   if(cond==='sunny'){
     for(let i=0;i<4;i++){
       const ray=document.createElement('div');
@@ -7135,7 +7141,7 @@ function _initWeatherBG(cardId,cond){
     bg.appendChild(glow);
   }
 
-  // â”€â”€ Clear night: stars â”€â”€
+  // ── Clear night: stars ──
   if(cond==='clear-night'){
     N(32,()=>{
       mkP({width:'2px',height:'2px',left:R(2,96)+'%',top:R(3,78)+'%',
@@ -7151,7 +7157,7 @@ function _initWeatherBG(cardId,cond){
     });
   }
 
-  // â”€â”€ Cloud shapes for cloudy conditions â”€â”€
+  // ── Cloud shapes for cloudy conditions ──
   const cloudyConds=['partlycloudy','cloudy','overcast','fog','windy','windy-variant','snowy-rainy'];
   if(cloudyConds.includes(cond)){
     const count=cond==='partlycloudy'?2:cond==='overcast'||cond==='fog'?5:3;
@@ -7170,7 +7176,7 @@ function _initWeatherBG(cardId,cond){
     }
   }
 
-  // â”€â”€ Rain â”€â”€
+  // ── Rain ──
   if(cond==='rainy'||cond==='snowy-rainy'){
     N(36,()=>{ mkP({
       width:'1.5px',height:R(7,13)+'px',
@@ -7180,7 +7186,7 @@ function _initWeatherBG(cardId,cond){
     }); });
   }
 
-  // â”€â”€ Pouring â”€â”€
+  // ── Pouring ──
   if(cond==='pouring'){
     N(60,()=>{ mkP({
       width:'2px',height:R(10,18)+'px',
@@ -7190,7 +7196,7 @@ function _initWeatherBG(cardId,cond){
     }); });
   }
 
-  // â”€â”€ Lightning-rainy: rain + flash â”€â”€
+  // ── Lightning-rainy: rain + flash ──
   if(cond==='lightning-rainy'){
     N(32,()=>{ mkP({
       width:'1.5px',height:R(8,14)+'px',
@@ -7200,7 +7206,7 @@ function _initWeatherBG(cardId,cond){
     }); });
   }
 
-  // â”€â”€ Lightning flash overlay â”€â”€
+  // ── Lightning flash overlay ──
   if(cond==='lightning'||cond==='lightning-rainy'){
     const flash=document.createElement('div');
     flash.className='wt-ltn-flash';
@@ -7225,7 +7231,7 @@ function _initWeatherBG(cardId,cond){
     sched();
   }
 
-  // â”€â”€ Snow â”€â”€
+  // ── Snow ──
   if(cond==='snowy'){
     N(30,()=>{
       const sz=R(3,7);
@@ -7237,7 +7243,7 @@ function _initWeatherBG(cardId,cond){
     });
   }
 
-  // â”€â”€ Hail â”€â”€
+  // ── Hail ──
   if(cond==='hail'){
     N(24,()=>{
       const sz=R(4,8);
@@ -7250,7 +7256,7 @@ function _initWeatherBG(cardId,cond){
     });
   }
 
-  // â”€â”€ Fog shimmer â”€â”€
+  // ── Fog shimmer ──
   if(cond==='fog'){
     for(let i=0;i<4;i++){
       const c=document.createElement('div');
@@ -7266,7 +7272,7 @@ function _initWeatherBG(cardId,cond){
     }
   }
 
-  // â”€â”€ Windy: fast cloud streaks â”€â”€
+  // ── Windy: fast cloud streaks ──
   if(cond==='windy'||cond==='windy-variant'){
     for(let i=0;i<3;i++){
       const c=document.createElement('div');
@@ -7283,16 +7289,16 @@ function _initWeatherBG(cardId,cond){
   }
 }
 
-/* â•â•â• PAGE MANAGEMENT â•â•â• */
+/* ═══ PAGE MANAGEMENT ═══ */
 function renderPageTabs(){
   const tabs=document.getElementById('page-tabs');
   if(!tabs) return;
   tabs.innerHTML=cfg.pages.map((p,i)=>`
     <button class="ptab${i===cfg.activePage?' on':''}" onclick="setActivePage(${i})">
-      <span>${_renderIcon(p.icon||'ðŸ“„',15)}</span>${p.name?`&nbsp;<span>${eh(p.name)}</span>`:''}
-      ${editMode&&cfg.pages.length>1?`<span class="ptab-del" onclick="delPageByIdx(${i},event)" title="Elimina pagina">âœ•</span>`:''}
+      <span>${_renderIcon(p.icon||'📄',15)}</span>${p.name?`&nbsp;<span>${eh(p.name)}</span>`:''}
+      ${editMode&&cfg.pages.length>1?`<span class="ptab-del" onclick="delPageByIdx(${i},event)" title="Elimina pagina">✕</span>`:''}
     </button>`).join('');
-  if(editMode) tabs.innerHTML+=`<button class="ptab-add" onclick="openTM()" title="Nuova pagina">ï¼‹</button>`;
+  if(editMode) tabs.innerHTML+=`<button class="ptab-add" onclick="openTM()" title="Nuova pagina">＋</button>`;
 }
 
 function setActivePage(idx){
@@ -7303,7 +7309,7 @@ function setActivePage(idx){
     renderDash(); // also calls renderPageTabs
     if(editMode){
       const p=curPage();
-      document.getElementById('ep-page-ico').value=p.icon||'ðŸ“„';
+      document.getElementById('ep-page-ico').value=p.icon||'📄';
       document.getElementById('ep-page-name').value=p.name||'Pagina';
       document.getElementById('ep-view-title').value=p.viewTitle||'';
       document.getElementById('ep-del-page').style.display=cfg.pages.length>1?'block':'none';
@@ -7319,7 +7325,7 @@ function setActivePage(idx){
   }
 }
 
-/* â•â•â• MENÃ™ A TENDINA VISTE (icona header, disponibile in tutte le viste) â•â•â• */
+/* ═══ MENÙ A TENDINA VISTE (icona header, disponibile in tutte le viste) ═══ */
 function toggleViewsMenu(ev){
   if(ev) ev.stopPropagation();
   if(document.getElementById('views-menu')){ closeViewsMenu(); return; }
@@ -7327,11 +7333,11 @@ function toggleViewsMenu(ev){
   menu.id='views-menu'; menu.className='views-menu';
   const items=(cfg.pages||[]).map((p,i)=>`<div class="vm-item${i===cfg.activePage?' on':''}">
       <div class="vm-go" onclick="closeViewsMenu();setActivePage(${i})">
-        <span class="vm-ico">${_renderIcon(p.icon||'ðŸ“„',16)}</span>
+        <span class="vm-ico">${_renderIcon(p.icon||'📄',16)}</span>
         <span class="vm-name">${eh(p.name||('Vista '+(i+1)))}</span>
-        ${i===cfg.activePage?'<span class="vm-chk">âœ“</span>':''}
+        ${i===cfg.activePage?'<span class="vm-chk">✓</span>':''}
       </div>
-      <button class="vm-edit" onclick="event.stopPropagation();editView(${i})" title="Rinomina / icona / elimina">âœï¸</button>
+      <button class="vm-edit" onclick="event.stopPropagation();editView(${i})" title="Rinomina / icona / elimina">✏️</button>
     </div>`).join('');
   menu.innerHTML=`<div class="vm-hdr">Viste (${(cfg.pages||[]).length})</div>${items}<div class="vm-sep"></div>`+
     `<button class="vm-add" onclick="closeViewsMenu();openTM()"><i class="mdi mdi-plus"></i> Aggiungi vista</button>`;
@@ -7348,7 +7354,7 @@ function toggleViewsMenu(ev){
 }
 function closeViewsMenu(){ const m=document.getElementById('views-menu'); if(m) m.remove(); document.removeEventListener('click',_viewsOutside); }
 function _viewsOutside(e){ const m=document.getElementById('views-menu'),b=document.getElementById('views-btn'); if(m&&!m.contains(e.target)&&b&&!b.contains(e.target)) closeViewsMenu(); }
-/* â•â•â• FAB MOBILE: un'unica icona a destra con dentro tutte le azioni dell'header â•â•â• */
+/* ═══ FAB MOBILE: un'unica icona a destra con dentro tutte le azioni dell'header ═══ */
 function toggleMobileMenu(ev){
   if(ev) ev.stopPropagation();
   if(document.getElementById('mfab-menu')){ closeMobileMenu(); return; }
@@ -7395,25 +7401,25 @@ function saveViewEdit(){
   const nm=(document.getElementById('vmod-name').value||'').trim();
   const ic=(document.getElementById('vmod-ico').value||'').trim();
   p.name=nm||p.name||'Vista';
-  p.icon=ic||p.icon||'ðŸ“„';
+  p.icon=ic||p.icon||'📄';
   saveCfg(); renderDash(); try{ renderPageTabs(); }catch(e){}
-  // aggiorna i campi del pannello modifica se Ã¨ la pagina corrente
+  // aggiorna i campi del pannello modifica se è la pagina corrente
   if(_vmodIdx===cfg.activePage && editMode){ try{ document.getElementById('ep-page-name').value=p.name; document.getElementById('ep-page-ico').value=p.icon; }catch(e){} }
-  closeViewEdit(); showToast('âœ… Vista aggiornata');
+  closeViewEdit(); showToast('✅ Vista aggiornata');
 }
 function deleteViewFromEdit(){
-  if(cfg.pages.length<=1){ showToast('âš ï¸ Non puoi eliminare l\'unica vista'); return; }
+  if(cfg.pages.length<=1){ showToast('⚠️ Non puoi eliminare l\'unica vista'); return; }
   const idx=_vmodIdx, p=cfg.pages[idx]; if(!p) return;
   showConfirm(`Eliminare la vista <b>${eh(p.name||'senza nome')}</b>?<br><span style="font-size:11px;opacity:.7">Verranno eliminate anche le card al suo interno.</span>`, ()=>{
     cfg.pages.splice(idx,1);
     cfg.activePage=Math.min(cfg.activePage,cfg.pages.length-1);
     saveCfg(); renderDash(); try{ renderPageTabs(); }catch(e){}
-    closeViewEdit(); showToast('ðŸ—‘ Vista eliminata');
+    closeViewEdit(); showToast('🗑 Vista eliminata');
   }, 'Elimina');
 }
-/* "Aggiungi vista" crea DIRETTAMENTE una vista vuota (niente piÃ¹ scelta template) e ci entra in modifica */
+/* "Aggiungi vista" crea DIRETTAMENTE una vista vuota (niente più scelta template) e ci entra in modifica */
 function addEmptyView(){
-  _createPageWithCols('vuota','Nuova vista',1);   // 1 colonna / 1 riga â€” poi l'utente aumenta come vuole
+  _createPageWithCols('vuota','Nuova vista',1);   // 1 colonna / 1 riga — poi l'utente aumenta come vuole
   if(!editMode) toggleEdit();
   setTimeout(()=>editView(cfg.activePage), 60);   // apri subito l'editor per nome/icona
 }
@@ -7423,7 +7429,7 @@ function closeTM(){
   // Resetta sempre allo step 1
   document.getElementById('tmod-step1').style.display='block';
   document.getElementById('tmod-step2').style.display='none';
-  document.getElementById('tmod-title').textContent='ðŸ“„ Nuova Pagina â€” scegli template';
+  document.getElementById('tmod-title').textContent='📄 Nuova Pagina — scegli template';
 }
 
 let _newPageCols=4;
@@ -7435,7 +7441,7 @@ function openPageCfg(tplName){
   _newPageCols=4;
   document.getElementById('tmod-step1').style.display='none';
   document.getElementById('tmod-step2').style.display='block';
-  document.getElementById('tmod-title').textContent='ðŸ“„ Configura Nuova Pagina';
+  document.getElementById('tmod-title').textContent='📄 Configura Nuova Pagina';
   const tpl=PAGE_TEMPLATES[tplName]||PAGE_TEMPLATES.vuota;
   document.getElementById('epw-name').value=tpl.name||'Nuova Pagina';
   _renderColCountBtns();
@@ -7444,7 +7450,7 @@ function openPageCfg(tplName){
 function closeTModStep2(){
   document.getElementById('tmod-step1').style.display='block';
   document.getElementById('tmod-step2').style.display='none';
-  document.getElementById('tmod-title').textContent='ðŸ“„ Nuova Pagina â€” scegli template';
+  document.getElementById('tmod-title').textContent='📄 Nuova Pagina — scegli template';
 }
 function _renderColCountBtns(){
   const wrap=document.getElementById('epw-sec-btns'); if(!wrap) return;
@@ -7510,7 +7516,7 @@ function _applyWizardCols(page){
 function _postPageCreate(){
   if(!editMode) return;
   const p=curPage();
-  document.getElementById('ep-page-ico').value=p.icon||'ðŸ“„';
+  document.getElementById('ep-page-ico').value=p.icon||'📄';
   document.getElementById('ep-page-name').value=p.name;
   document.getElementById('ep-del-page').style.display=cfg.pages.length>1?'block':'none';
   renderSectionsList();
@@ -7519,54 +7525,54 @@ function _postPageCreate(){
 }
 
 const PAGE_TEMPLATES={
-  energia:{name:'Energia',icon:'âš¡',columns:4,rowH:150,cards:[
-    {type:'flowmap',label:'Flusso Energia',icon:'ðŸ—ºï¸',solar:'',load:'',grid:'',battery:'',color:'#fbbf24',colSpan:2,rowSpan:2,max:6000,unit:'W'},
-    {type:'big',label:'Fotovoltaico',icon:'â˜€ï¸',unit:'W',color:'#fbbf24',colSpan:1,rowSpan:1,max:3000},
-    {type:'big',label:'Carico Casa',icon:'ðŸ ',unit:'W',color:'#818cf8',colSpan:1,rowSpan:1,max:6000},
-    {type:'compact',label:'Energia Oggi',icon:'ðŸ“…',unit:'kWh',color:'#c084fc',colSpan:1,rowSpan:1,max:30},
-    {type:'compact',label:'Bolletta Mese',icon:'ðŸ’°',unit:'â‚¬',color:'#4ade80',colSpan:1,rowSpan:1,max:300},
-    {type:'history',label:'Produzione Storico',icon:'ðŸ“ˆ',unit:'W',color:'#fbbf24',colSpan:4,rowSpan:2,hours:24},
+  energia:{name:'Energia',icon:'⚡',columns:4,rowH:150,cards:[
+    {type:'flowmap',label:'Flusso Energia',icon:'🗺️',solar:'',load:'',grid:'',battery:'',color:'#fbbf24',colSpan:2,rowSpan:2,max:6000,unit:'W'},
+    {type:'big',label:'Fotovoltaico',icon:'☀️',unit:'W',color:'#fbbf24',colSpan:1,rowSpan:1,max:3000},
+    {type:'big',label:'Carico Casa',icon:'🏠',unit:'W',color:'#818cf8',colSpan:1,rowSpan:1,max:6000},
+    {type:'compact',label:'Energia Oggi',icon:'📅',unit:'kWh',color:'#c084fc',colSpan:1,rowSpan:1,max:30},
+    {type:'compact',label:'Bolletta Mese',icon:'💰',unit:'€',color:'#4ade80',colSpan:1,rowSpan:1,max:300},
+    {type:'history',label:'Produzione Storico',icon:'📈',unit:'W',color:'#fbbf24',colSpan:4,rowSpan:2,hours:24},
   ]},
-  luci:{name:'Luci',icon:'ðŸ’¡',columns:4,rowH:150,cards:[
-    {type:'toggle',label:'Luce Soggiorno',icon:'ðŸ’¡',color:'#fbbf24',colSpan:1,rowSpan:1},
-    {type:'toggle',label:'Luce Camera da Letto',icon:'ðŸ’¡',color:'#fbbf24',colSpan:1,rowSpan:1},
-    {type:'toggle',label:'Luce Cucina',icon:'ðŸ’¡',color:'#fbbf24',colSpan:1,rowSpan:1},
-    {type:'toggle',label:'Luce Bagno',icon:'ðŸ’¡',color:'#60a5fa',colSpan:1,rowSpan:1},
-    {type:'toggle',label:'Luce Esterno',icon:'ðŸ”¦',color:'#fb923c',colSpan:1,rowSpan:1},
-    {type:'toggle',label:'Presa Smart',icon:'ðŸ”Œ',color:'#4ade80',colSpan:1,rowSpan:1},
-    {type:'entities',label:'Stato Luci',icon:'ðŸ’¡',color:'#fbbf24',colSpan:2,rowSpan:1},
+  luci:{name:'Luci',icon:'💡',columns:4,rowH:150,cards:[
+    {type:'toggle',label:'Luce Soggiorno',icon:'💡',color:'#fbbf24',colSpan:1,rowSpan:1},
+    {type:'toggle',label:'Luce Camera da Letto',icon:'💡',color:'#fbbf24',colSpan:1,rowSpan:1},
+    {type:'toggle',label:'Luce Cucina',icon:'💡',color:'#fbbf24',colSpan:1,rowSpan:1},
+    {type:'toggle',label:'Luce Bagno',icon:'💡',color:'#60a5fa',colSpan:1,rowSpan:1},
+    {type:'toggle',label:'Luce Esterno',icon:'🔦',color:'#fb923c',colSpan:1,rowSpan:1},
+    {type:'toggle',label:'Presa Smart',icon:'🔌',color:'#4ade80',colSpan:1,rowSpan:1},
+    {type:'entities',label:'Stato Luci',icon:'💡',color:'#fbbf24',colSpan:2,rowSpan:1},
   ]},
-  clima:{name:'Clima',icon:'ðŸŒ¡ï¸',columns:4,rowH:150,cards:[
-    {type:'climate',label:'Termostato',icon:'ðŸŒ¡ï¸',color:'#fb923c',colSpan:2,rowSpan:2,unit:'Â°C'},
-    {type:'gauge',label:'Temperatura',icon:'ðŸŒ¡ï¸',unit:'Â°C',color:'#fb923c',colSpan:1,rowSpan:2,max:40,min:0},
-    {type:'gauge',label:'UmiditÃ ',icon:'ðŸ’§',unit:'%',color:'#22d3ee',colSpan:1,rowSpan:2,max:100,min:0},
-    {type:'history',label:'Storico Temperatura',icon:'ðŸ“ˆ',unit:'Â°C',color:'#fb923c',colSpan:2,rowSpan:2,hours:24},
-    {type:'history',label:'Storico UmiditÃ ',icon:'ðŸ“ˆ',unit:'%',color:'#22d3ee',colSpan:2,rowSpan:2,hours:24},
+  clima:{name:'Clima',icon:'🌡️',columns:4,rowH:150,cards:[
+    {type:'climate',label:'Termostato',icon:'🌡️',color:'#fb923c',colSpan:2,rowSpan:2,unit:'°C'},
+    {type:'gauge',label:'Temperatura',icon:'🌡️',unit:'°C',color:'#fb923c',colSpan:1,rowSpan:2,max:40,min:0},
+    {type:'gauge',label:'Umidità',icon:'💧',unit:'%',color:'#22d3ee',colSpan:1,rowSpan:2,max:100,min:0},
+    {type:'history',label:'Storico Temperatura',icon:'📈',unit:'°C',color:'#fb923c',colSpan:2,rowSpan:2,hours:24},
+    {type:'history',label:'Storico Umidità',icon:'📈',unit:'%',color:'#22d3ee',colSpan:2,rowSpan:2,hours:24},
   ]},
-  sicurezza:{name:'Sicurezza',icon:'ðŸ“·',columns:4,rowH:150,cards:[
-    {type:'camera',label:'Camera 1',icon:'ðŸ“·',color:'#818cf8',colSpan:2,rowSpan:2,refresh:5},
-    {type:'camera',label:'Camera 2',icon:'ðŸ“·',color:'#818cf8',colSpan:2,rowSpan:2,refresh:5},
-    {type:'entities',label:'Sensori Porta/Finestra',icon:'ðŸšª',color:'#4ade80',colSpan:2,rowSpan:1},
-    {type:'entities',label:'Sensori Movimento',icon:'ðŸš¶',color:'#f59e0b',colSpan:2,rowSpan:1},
+  sicurezza:{name:'Sicurezza',icon:'📷',columns:4,rowH:150,cards:[
+    {type:'camera',label:'Camera 1',icon:'📷',color:'#818cf8',colSpan:2,rowSpan:2,refresh:5},
+    {type:'camera',label:'Camera 2',icon:'📷',color:'#818cf8',colSpan:2,rowSpan:2,refresh:5},
+    {type:'entities',label:'Sensori Porta/Finestra',icon:'🚪',color:'#4ade80',colSpan:2,rowSpan:1},
+    {type:'entities',label:'Sensori Movimento',icon:'🚶',color:'#f59e0b',colSpan:2,rowSpan:1},
   ]},
-  media:{name:'Media',icon:'ðŸŽµ',columns:4,rowH:150,cards:[
-    {type:'media',label:'Soggiorno',icon:'ðŸ”Š',color:'#f472b6',colSpan:4,rowSpan:2},
-    {type:'media',label:'Camera da Letto',icon:'ðŸ”Š',color:'#a78bfa',colSpan:4,rowSpan:2},
+  media:{name:'Media',icon:'🎵',columns:4,rowH:150,cards:[
+    {type:'media',label:'Soggiorno',icon:'🔊',color:'#f472b6',colSpan:4,rowSpan:2},
+    {type:'media',label:'Camera da Letto',icon:'🔊',color:'#a78bfa',colSpan:4,rowSpan:2},
   ]},
-  meteo:{name:'Meteo',icon:'ðŸŒ¤ï¸',columns:4,rowH:150,cards:[
-    {type:'weather',label:'Meteo Casa',icon:'ðŸŒ¤ï¸',color:'#22d3ee',colSpan:2,rowSpan:2},
-    {type:'gauge',label:'Temperatura Esterna',icon:'ðŸŒ¡ï¸',unit:'Â°C',color:'#fb923c',colSpan:1,rowSpan:2,max:45,min:-10},
-    {type:'gauge',label:'UmiditÃ  Esterna',icon:'ðŸ’§',unit:'%',color:'#22d3ee',colSpan:1,rowSpan:2,max:100,min:0},
-    {type:'history',label:'Temperatura Storico',icon:'ðŸ“ˆ',unit:'Â°C',color:'#fb923c',colSpan:4,rowSpan:2,hours:48},
+  meteo:{name:'Meteo',icon:'🌤️',columns:4,rowH:150,cards:[
+    {type:'weather',label:'Meteo Casa',icon:'🌤️',color:'#22d3ee',colSpan:2,rowSpan:2},
+    {type:'gauge',label:'Temperatura Esterna',icon:'🌡️',unit:'°C',color:'#fb923c',colSpan:1,rowSpan:2,max:45,min:-10},
+    {type:'gauge',label:'Umidità Esterna',icon:'💧',unit:'%',color:'#22d3ee',colSpan:1,rowSpan:2,max:100,min:0},
+    {type:'history',label:'Temperatura Storico',icon:'📈',unit:'°C',color:'#fb923c',colSpan:4,rowSpan:2,hours:48},
   ]},
-  veicoli:{name:'Veicoli',icon:'ðŸš—',columns:4,rowH:150,cards:[
-    {type:'gauge',label:'Batteria EV',icon:'ðŸ”‹',unit:'%',color:'#4ade80',colSpan:1,rowSpan:2,max:100,min:0},
-    {type:'compact',label:'Autonomia',icon:'ðŸ›£ï¸',unit:'km',color:'#60a5fa',colSpan:1,rowSpan:1,max:500},
-    {type:'text',label:'Stato Ricarica',icon:'âš¡',unit:'',color:'#fbbf24',colSpan:1,rowSpan:1},
-    {type:'compact',label:'Energia Ricarica Oggi',icon:'âš¡',unit:'kWh',color:'#4ade80',colSpan:1,rowSpan:1,max:80},
-    {type:'history',label:'Storico Batteria',icon:'ðŸ“ˆ',unit:'%',color:'#4ade80',colSpan:3,rowSpan:2,hours:72},
+  veicoli:{name:'Veicoli',icon:'🚗',columns:4,rowH:150,cards:[
+    {type:'gauge',label:'Batteria EV',icon:'🔋',unit:'%',color:'#4ade80',colSpan:1,rowSpan:2,max:100,min:0},
+    {type:'compact',label:'Autonomia',icon:'🛣️',unit:'km',color:'#60a5fa',colSpan:1,rowSpan:1,max:500},
+    {type:'text',label:'Stato Ricarica',icon:'⚡',unit:'',color:'#fbbf24',colSpan:1,rowSpan:1},
+    {type:'compact',label:'Energia Ricarica Oggi',icon:'⚡',unit:'kWh',color:'#4ade80',colSpan:1,rowSpan:1,max:80},
+    {type:'history',label:'Storico Batteria',icon:'📈',unit:'%',color:'#4ade80',colSpan:3,rowSpan:2,hours:72},
   ]},
-  vuota:{name:'Nuova Pagina',icon:'ðŸ“„',columns:4,rowH:150,cards:[]}
+  vuota:{name:'Nuova Pagina',icon:'📄',columns:4,rowH:150,cards:[]}
 };
 
 function createPageFromTpl(tplName){
@@ -7588,11 +7594,11 @@ function createPageFromTpl(tplName){
   saveCfg(); renderDash();
   if(editMode){
     const p=curPage();
-    document.getElementById('ep-page-ico').value=p.icon||'ðŸ“„';
+    document.getElementById('ep-page-ico').value=p.icon||'📄';
     document.getElementById('ep-page-name').value=p.name;
     document.getElementById('ep-del-page').style.display=cfg.pages.length>1?'block':'none';
     renderSectionsList();
-    // Auto-apre "Impostazioni Pagina" cosÃ¬ l'utente vede subito le sezioni
+    // Auto-apre "Impostazioni Pagina" così l'utente vede subito le sezioni
     if(!_epGroupState.pg) _epToggleGroup('pg');
   }
 }
@@ -7606,7 +7612,7 @@ function delPage(){
   saveCfg(); renderDash();
   if(editMode){
     const p=curPage();
-    document.getElementById('ep-page-ico').value=p.icon||'ðŸ“„';
+    document.getElementById('ep-page-ico').value=p.icon||'📄';
     document.getElementById('ep-page-name').value=p.name;
     document.getElementById('ep-del-page').style.display=cfg.pages.length>1?'block':'none';
     renderSectionsList();
@@ -7624,7 +7630,7 @@ function delPageByIdx(idx,e){
   saveCfg(); renderDash();
   if(editMode){
     const p=curPage();
-    document.getElementById('ep-page-ico').value=p.icon||'ðŸ“„';
+    document.getElementById('ep-page-ico').value=p.icon||'📄';
     document.getElementById('ep-page-name').value=p.name;
     document.getElementById('ep-del-page').style.display=cfg.pages.length>1?'block':'none';
     renderSectionsList();
@@ -7632,14 +7638,14 @@ function delPageByIdx(idx,e){
   }
 }
 
-/* â•â•â• PAGE SETTINGS DIRTY TRACKING â•â•â• */
+/* ═══ PAGE SETTINGS DIRTY TRACKING ═══ */
 let _pgDirty=false;
 let _pgOriginal={};
 
 function _pgSnapshot(){
   const p=curPage();
   _pgOriginal={
-    icon:p.icon||'ðŸ“„',
+    icon:p.icon||'📄',
     name:p.name||'',
     viewTitle:p.viewTitle||'',
     sections:JSON.parse(JSON.stringify(p.sections||[]))
@@ -7677,7 +7683,7 @@ function confirmPageSettings(){
   p.viewTitle=vt;
   saveCfg(); renderPageTabs();
   _pgSnapshot();
-  showToast('âœ“ Impostazioni pagina salvate');
+  showToast('✓ Impostazioni pagina salvate');
 }
 function cancelPageSettings(){
   const p=curPage();
@@ -7689,7 +7695,7 @@ function cancelPageSettings(){
     p.sections=JSON.parse(JSON.stringify(_pgOriginal.sections));
     saveCfg(); renderDash(); renderSectionsList();
   }
-  document.getElementById('ep-page-ico').value=_pgOriginal.icon||'ðŸ“„';
+  document.getElementById('ep-page-ico').value=_pgOriginal.icon||'📄';
   document.getElementById('ep-page-name').value=_pgOriginal.name||'';
   document.getElementById('ep-view-title').value=_pgOriginal.viewTitle||'';
   _pgDirty=false;
@@ -7704,13 +7710,13 @@ function _pgCheckDirtyAndProceed(proceed){
   overlay.className='pg-warn-ov';
   overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)';
   overlay.innerHTML=`<div style="background:var(--panel);border:1px solid var(--bd);border-radius:16px;padding:24px 22px;max-width:300px;width:90%;text-align:center">
-    <div style="font-size:22px;margin-bottom:10px">âš ï¸</div>
+    <div style="font-size:22px;margin-bottom:10px">⚠️</div>
     <div style="font-size:13px;font-weight:700;margin-bottom:6px">Modifiche non salvate</div>
     <div style="font-size:11px;color:var(--muted);margin-bottom:18px">Hai modificato le impostazioni della pagina senza salvare.</div>
     <div style="display:flex;flex-direction:column;gap:7px">
-      <button onclick="_pgWarnSaveAndProceed()" style="padding:9px;border-radius:9px;background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.4);color:#4ade80;font-size:12px;font-weight:700">âœ“ Salva e continua</button>
-      <button onclick="_pgWarnCancelAndProceed()" style="padding:9px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid var(--bd2);color:var(--muted);font-size:12px;font-weight:700">â†© Annulla modifiche e continua</button>
-      <button onclick="document.querySelector('.pg-warn-ov')?.remove();_pgProceedCb=null" style="padding:9px;border-radius:9px;background:transparent;border:none;color:var(--muted);font-size:11px">âœ• Resta qui</button>
+      <button onclick="_pgWarnSaveAndProceed()" style="padding:9px;border-radius:9px;background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.4);color:#4ade80;font-size:12px;font-weight:700">✓ Salva e continua</button>
+      <button onclick="_pgWarnCancelAndProceed()" style="padding:9px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid var(--bd2);color:var(--muted);font-size:12px;font-weight:700">↩ Annulla modifiche e continua</button>
+      <button onclick="document.querySelector('.pg-warn-ov')?.remove();_pgProceedCb=null" style="padding:9px;border-radius:9px;background:transparent;border:none;color:var(--muted);font-size:11px">✕ Resta qui</button>
     </div>
   </div>`;
   document.body.appendChild(overlay);
@@ -7727,14 +7733,14 @@ function _pgWarnCancelAndProceed(){
 }
 
 function updatePageMeta(){
-  // legacy â€“ mantenuto per compatibilitÃ  con chiamate esterne
+  // legacy – mantenuto per compatibilità con chiamate esterne
   _pgMarkDirty();
 }
 
-/* â•â•â• FOOTER BAR â•â•â• */
+/* ═══ FOOTER BAR ═══ */
 function fbarInner(card){
   const btns=card.buttons||[];
-  if(!btns.length) return `<div class="fbar-bar"><div style="font-size:10px;opacity:.3">Clicca âœï¸ per aggiungere pulsanti</div></div>`;
+  if(!btns.length) return `<div class="fbar-bar"><div style="font-size:10px;opacity:.3">Clicca ✏️ per aggiungere pulsanti</div></div>`;
   const html=btns.map(b=>{
     if(b.type==='sep') return `<div class="fbar-sep-v"></div>`;
     const col=b.color||'rgba(255,255,255,.5)';
@@ -7773,7 +7779,7 @@ function fbarBtnClick(cardId,btnId,e){
   else if(btn.type==='popup') _openFbarTextPopup(btn,btnEl);
 }
 
-/* â”€â”€ Footer Bar Modal â”€â”€ */
+/* ── Footer Bar Modal ── */
 let _fbCardId=null, _fbBtns=[], _fbEditIdx=-1;
 
 const _FB_ICON_PRESETS=[
@@ -7817,7 +7823,7 @@ function _fbPickPreset(icon,color){
 }
 function _fbPreviewIcon(){ _fbInitPresets(); }
 
-/* â”€â”€ Footer Bar Zone render â”€â”€ */
+/* ── Footer Bar Zone render ── */
 function renderFbarZone(){
   if(!cfg.footerBar) cfg.footerBar={enabled:false,buttons:[]};
   const fb=cfg.footerBar;
@@ -7830,7 +7836,7 @@ function renderFbarZone(){
   // Update epanel status badge
   const badge=document.getElementById('ep-fbar-status');
   if(badge) badge.textContent=btns.length?`${btns.length} pulsanti`:'Disattivata';
-  // (navigazione pagine rimossa dalla barra: non serve â€” si naviga dalle tab in alto)
+  // (navigazione pagine rimossa dalla barra: non serve — si naviga dalle tab in alto)
   const nc=document.getElementById('fbar-navchips'); if(nc){ nc.remove(); }
   if(!show) return;
   const container=document.getElementById('fbar-zone-btns'); if(!container) return;
@@ -7864,7 +7870,7 @@ function fbarZoneBtnClick(btnId,e){
 function openFBM(){
   if(!cfg.footerBar) cfg.footerBar={enabled:false,buttons:[]};
   _fbBtns=JSON.parse(JSON.stringify(cfg.footerBar.buttons||[]));
-  document.getElementById('fbmod-title').textContent='â–­ Barra inferiore';
+  document.getElementById('fbmod-title').textContent='▭ Barra inferiore';
   // toggle enabled state in label row
   const enCb=document.getElementById('fb-enabled-cb');
   if(enCb) enCb.checked=!!cfg.footerBar.enabled;
@@ -7881,7 +7887,7 @@ function saveFBM(){
   saveCfg();
   renderFbarZone();
   closeFBM();
-  showToast('âœ… Footer Bar salvata');
+  showToast('✅ Footer Bar salvata');
 }
 function toggleFbarEnabled(cb){
   if(!cfg.footerBar) cfg.footerBar={enabled:false,buttons:[]};
@@ -7897,14 +7903,14 @@ function _fbRenderList(){
     const col=b.color||'#fff';
     const typeLabel={climate:'Termostato',link:'Link',navigate:'Naviga',popup:'Popup'}[b.type]||b.type;
     return `<div class="fb-btn-row" onclick="fbEditBtn(${i})">
-      <div class="fb-btn-ico" style="color:${col};border-color:${col}55;background:${col}14">${_renderIcon(b.icon||'âš™ï¸',16)}</div>
+      <div class="fb-btn-ico" style="color:${col};border-color:${col}55;background:${col}14">${_renderIcon(b.icon||'⚙️',16)}</div>
       <div class="fb-btn-info">
         <div class="fb-btn-lbl">${eh(b.label||b.entity||'Pulsante')}</div>
-        <div class="fb-btn-type">${typeLabel}${b.entity?' Â· '+b.entity:''}</div>
+        <div class="fb-btn-type">${typeLabel}${b.entity?' · '+b.entity:''}</div>
       </div>
-      <button class="ovb ovb-del" onclick="event.stopPropagation();fbDelBtn(${i})" style="font-size:11px;width:22px;height:22px">ðŸ—‘</button>
-      ${i>0?`<button class="ovb" onclick="event.stopPropagation();fbMoveBtn(${i},-1)" style="font-size:10px;width:20px;height:20px">â–²</button>`:''}
-      ${i<_fbBtns.length-1?`<button class="ovb" onclick="event.stopPropagation();fbMoveBtn(${i},+1)" style="font-size:10px;width:20px;height:20px">â–¼</button>`:''}
+      <button class="ovb ovb-del" onclick="event.stopPropagation();fbDelBtn(${i})" style="font-size:11px;width:22px;height:22px">🗑</button>
+      ${i>0?`<button class="ovb" onclick="event.stopPropagation();fbMoveBtn(${i},-1)" style="font-size:10px;width:20px;height:20px">▲</button>`:''}
+      ${i<_fbBtns.length-1?`<button class="ovb" onclick="event.stopPropagation();fbMoveBtn(${i},+1)" style="font-size:10px;width:20px;height:20px">▼</button>`:''}
     </div>`;
   }).join('');
 }
@@ -7914,8 +7920,8 @@ function fbMoveBtn(i,dir){ const t=_fbBtns.splice(i,1)[0]; _fbBtns.splice(i+dir,
 function fbAddBtn(){
   _fbEditIdx=-1;
   document.getElementById('fb-form-title').textContent='Nuovo pulsante';
-  document.getElementById('fbf-save-btn').textContent='âž• Aggiungi';
-  document.getElementById('fbf-icon').value='ðŸŒ¡ï¸';
+  document.getElementById('fbf-save-btn').textContent='➕ Aggiungi';
+  document.getElementById('fbf-icon').value='🌡️';
   document.getElementById('fbf-label').value='';
   document.getElementById('fbf-color').value='#f87171';
   document.getElementById('fbf-entity').value='';
@@ -7931,7 +7937,7 @@ function fbEditBtn(i){
   _fbEditIdx=i;
   const b=_fbBtns[i]; if(!b) return;
   document.getElementById('fb-form-title').textContent='Modifica pulsante';
-  document.getElementById('fbf-save-btn').textContent='ðŸ’¾ Aggiorna';
+  document.getElementById('fbf-save-btn').textContent='💾 Aggiorna';
   document.getElementById('fbf-icon').value=b.icon||'';
   document.getElementById('fbf-label').value=b.label||'';
   document.getElementById('fbf-color').value=b.color||'#f87171';
@@ -7950,7 +7956,7 @@ function fbEditBtn(i){
 }
 function _fbPopulateNav(selected){
   const sel=document.getElementById('fbf-navpage'); if(!sel) return;
-  sel.innerHTML=cfg.pages.map((p,i)=>`<option value="${i}"${i===selected?' selected':''}>${eh(p.icon||'ðŸ“„')} ${eh(p.name||'Pagina '+(i+1))}</option>`).join('');
+  sel.innerHTML=cfg.pages.map((p,i)=>`<option value="${i}"${i===selected?' selected':''}>${eh(p.icon||'📄')} ${eh(p.name||'Pagina '+(i+1))}</option>`).join('');
 }
 function fbSelType(t){
   ['climate','link','navigate','popup'].forEach(x=>document.getElementById('fbft-'+x)?.classList.toggle('on',x===t));
@@ -7967,7 +7973,7 @@ function fbSaveBtn(){
   const btn={
     id:_fbEditIdx>=0?(_fbBtns[_fbEditIdx]?.id||uid()):uid(),
     type:t,
-    icon:document.getElementById('fbf-icon').value.trim()||'âš™ï¸',
+    icon:document.getElementById('fbf-icon').value.trim()||'⚙️',
     label:document.getElementById('fbf-label').value.trim(),
     color:document.getElementById('fbf-color').value||'#f87171',
     entity:document.getElementById('fbf-entity').value.trim(),
@@ -7983,7 +7989,7 @@ function fbSaveBtn(){
   fbCancelBtn();
 }
 
-/* â”€â”€ Climate Popup â”€â”€ */
+/* ── Climate Popup ── */
 let _fclmEntity=null, _fclmMin=16, _fclmMax=36, _fclmTarget=22, _fclmDragging=false;
 
 function _openClimatePopup(btn,btnEl){
@@ -7994,14 +8000,14 @@ function _openClimatePopup(btn,btnEl){
   _fclmMax=btn.clmMax??36;
   // Get state from HS
   const attrs=ha[entity]?.attributes||{};
-  const cur=attrs.current_temperature??hs[entity]??'â€”';
+  const cur=attrs.current_temperature??hs[entity]??'—';
   const tgt=attrs.temperature??attrs.target_temp_high??cur;
   const mode=attrs.hvac_action||attrs.preset_mode||attrs.fan_mode||'';
   const name=attrs.friendly_name||entity.split('.').pop().replace(/_/g,' ').toUpperCase();
   _fclmTarget=parseFloat(tgt)||22;
   // Populate popup
   document.getElementById('fcp-name').textContent=name;
-  document.getElementById('fcp-cur').textContent=cur!=='â€”'?`${cur}Â°`:'â€”Â°';
+  document.getElementById('fcp-cur').textContent=cur!=='—'?`${cur}°`:'—°';
   document.getElementById('fcp-mode').textContent=(mode||'').toUpperCase();
   // Build scale
   const scale=document.getElementById('fcp-scale');
@@ -8067,7 +8073,7 @@ function _fclmSetupDrag(){
     _fclmDragging=false;
     _fclmTarget=tempFrom(e.clientY); _fclmSetVisual(_fclmTarget,true);
     if(_fclmEntity) callSvc('climate','set_temperature',_fclmEntity,{temperature:_fclmTarget});
-    showToast(`ðŸŒ¡ï¸ Target: ${_fclmTarget.toFixed(1)}Â°C`);
+    showToast(`🌡️ Target: ${_fclmTarget.toFixed(1)}°C`);
   });
 }
 
@@ -8086,26 +8092,26 @@ function _openFbarTextPopup(btn,btnEl){
   setTimeout(()=>document.addEventListener('click',()=>pop.remove(),{once:true,capture:true}),50);
 }
 
-/* â•â•â• YAML IMPORT â€” reindirizza al nuovo modal HACS-compatibile â•â•â• */
-/* openYamlImport / closeYamlImport sono definite piÃ¹ sopra (versione che azzera _yamlCurrentConfig). */
+/* ═══ YAML IMPORT — reindirizza al nuovo modal HACS-compatibile ═══ */
+/* openYamlImport / closeYamlImport sono definite più sopra (versione che azzera _yamlCurrentConfig). */
 
 const _HA_MDI_EMOJI={
-  'mdi:thermometer':'ðŸŒ¡ï¸','mdi:thermometer-low':'ðŸŒ¡ï¸','mdi:thermometer-high':'ðŸŒ¡ï¸',
-  'mdi:lightning-bolt':'âš¡','mdi:flash':'âš¡','mdi:solar-power':'â˜€ï¸','mdi:solar-panel':'â˜€ï¸',
-  'mdi:home':'ðŸ ','mdi:home-outline':'ðŸ ','mdi:lightbulb':'ðŸ’¡','mdi:lightbulb-outline':'ðŸ’¡',
-  'mdi:water':'ðŸ’§','mdi:water-percent':'ðŸ’§','mdi:fire':'ðŸ”¥','mdi:gas-burner':'ðŸ”¥',
-  'mdi:weather-sunny':'â˜€ï¸','mdi:weather-cloudy':'â˜ï¸','mdi:weather-rainy':'ðŸŒ§ï¸','mdi:weather-snowy':'â„ï¸',
-  'mdi:weather-windy':'ðŸŒ¬ï¸','mdi:weather-fog':'ðŸŒ«ï¸','mdi:weather-night':'ðŸŒ™',
-  'mdi:car':'ðŸš—','mdi:car-electric':'ðŸ”‹','mdi:battery':'ðŸ”‹','mdi:battery-charging':'âš¡',
-  'mdi:wifi':'ðŸ“¶','mdi:lock':'ðŸ”’','mdi:lock-open':'ðŸ”“','mdi:door':'ðŸšª','mdi:door-open':'ðŸšª',
-  'mdi:window-closed':'ðŸªŸ','mdi:window-open':'ðŸªŸ','mdi:motion-sensor':'ðŸ‘ï¸',
-  'mdi:fan':'ðŸŒ€','mdi:air-conditioner':'â„ï¸','mdi:snowflake':'â„ï¸',
-  'mdi:music':'ðŸŽµ','mdi:television':'ðŸ“º','mdi:speaker':'ðŸ”Š','mdi:volume-high':'ðŸ”Š',
-  'mdi:phone':'ðŸ“ž','mdi:alarm':'ðŸš¨','mdi:alarm-light':'ðŸš¨','mdi:security':'ðŸ”',
-  'mdi:power':'â»','mdi:power-plug':'ðŸ”Œ','mdi:power-socket':'ðŸ”Œ',
-  'mdi:gauge':'ðŸ“Š','mdi:chart-line':'ðŸ“ˆ','mdi:chart-bar':'ðŸ“Š',
-  'mdi:coffee':'â˜•','mdi:robot-vacuum':'ðŸ¤–','mdi:dishwasher':'ðŸ½ï¸','mdi:washing-machine':'ðŸ‘•',
-  'mdi:cloud':'â˜ï¸','mdi:sunrise':'ðŸŒ…','mdi:sunset':'ðŸŒ‡','mdi:clock':'ðŸ•',
+  'mdi:thermometer':'🌡️','mdi:thermometer-low':'🌡️','mdi:thermometer-high':'🌡️',
+  'mdi:lightning-bolt':'⚡','mdi:flash':'⚡','mdi:solar-power':'☀️','mdi:solar-panel':'☀️',
+  'mdi:home':'🏠','mdi:home-outline':'🏠','mdi:lightbulb':'💡','mdi:lightbulb-outline':'💡',
+  'mdi:water':'💧','mdi:water-percent':'💧','mdi:fire':'🔥','mdi:gas-burner':'🔥',
+  'mdi:weather-sunny':'☀️','mdi:weather-cloudy':'☁️','mdi:weather-rainy':'🌧️','mdi:weather-snowy':'❄️',
+  'mdi:weather-windy':'🌬️','mdi:weather-fog':'🌫️','mdi:weather-night':'🌙',
+  'mdi:car':'🚗','mdi:car-electric':'🔋','mdi:battery':'🔋','mdi:battery-charging':'⚡',
+  'mdi:wifi':'📶','mdi:lock':'🔒','mdi:lock-open':'🔓','mdi:door':'🚪','mdi:door-open':'🚪',
+  'mdi:window-closed':'🪟','mdi:window-open':'🪟','mdi:motion-sensor':'👁️',
+  'mdi:fan':'🌀','mdi:air-conditioner':'❄️','mdi:snowflake':'❄️',
+  'mdi:music':'🎵','mdi:television':'📺','mdi:speaker':'🔊','mdi:volume-high':'🔊',
+  'mdi:phone':'📞','mdi:alarm':'🚨','mdi:alarm-light':'🚨','mdi:security':'🔐',
+  'mdi:power':'⏻','mdi:power-plug':'🔌','mdi:power-socket':'🔌',
+  'mdi:gauge':'📊','mdi:chart-line':'📈','mdi:chart-bar':'📊',
+  'mdi:coffee':'☕','mdi:robot-vacuum':'🤖','mdi:dishwasher':'🍽️','mdi:washing-machine':'👕',
+  'mdi:cloud':'☁️','mdi:sunrise':'🌅','mdi:sunset':'🌇','mdi:clock':'🕐',
 };
 function _haIconToEmoji(icon){
   if(!icon) return '';
@@ -8115,7 +8121,7 @@ function _haIconToEmoji(icon){
 const _HA_TYPE_LABELS={
   'compact':'Sensore','big':'Valore Grande','toggle':'Interruttore','gauge':'Gauge',
   'history':'Storico','climate':'Clima','weather-forecast':'Meteo','media':'Media Player',
-  'entities':'Lista EntitÃ ','markdown':'Testo Markdown','camera':'Camera'
+  'entities':'Lista Entità','markdown':'Testo Markdown','camera':'Camera'
 };
 
 function _haEntityLabel(entity){
@@ -8134,52 +8140,52 @@ function _haYamlToCards(obj){
 
   function lbl(fb){ return name||_haEntityLabel(entity)||fb; }
 
-  // â”€â”€ single entity types â”€â”€
+  // ── single entity types ──
   if(['sensor','entity','plant-status','input_number','input_text','input_datetime'].includes(type)){
-    cards.push({type:'compact',label:lbl('Sensore'),icon:icon||'ðŸ“Š',entity,unit:obj.unit_of_measurement||obj.unit||'',color:'#818cf8',colSpan:1,rowSpan:1});
+    cards.push({type:'compact',label:lbl('Sensore'),icon:icon||'📊',entity,unit:obj.unit_of_measurement||obj.unit||'',color:'#818cf8',colSpan:1,rowSpan:1});
   }
   else if(['button','input_button'].includes(type)){
-    cards.push({type:'toggle',label:lbl('Pulsante'),icon:icon||'ðŸ”˜',entity,color:'#818cf8',colSpan:1,rowSpan:1});
+    cards.push({type:'toggle',label:lbl('Pulsante'),icon:icon||'🔘',entity,color:'#818cf8',colSpan:1,rowSpan:1});
   }
   else if(['switch','input_boolean'].includes(type)){
-    cards.push({type:'toggle',label:lbl('Interruttore'),icon:icon||'ðŸ”Œ',entity,color:'#4ade80',colSpan:1,rowSpan:1});
+    cards.push({type:'toggle',label:lbl('Interruttore'),icon:icon||'🔌',entity,color:'#4ade80',colSpan:1,rowSpan:1});
   }
   else if(['cover'].includes(type)){
-    cards.push({type:'toggle',label:lbl('Tapparella'),icon:icon||'ðŸªŸ',entity,color:'#94a3b8',colSpan:1,rowSpan:1});
+    cards.push({type:'toggle',label:lbl('Tapparella'),icon:icon||'🪟',entity,color:'#94a3b8',colSpan:1,rowSpan:1});
   }
   else if(type==='light'){
-    cards.push({type:'toggle',label:lbl('Luce'),icon:icon||'ðŸ’¡',entity,color:'#fbbf24',colSpan:1,rowSpan:1});
+    cards.push({type:'toggle',label:lbl('Luce'),icon:icon||'💡',entity,color:'#fbbf24',colSpan:1,rowSpan:1});
   }
   else if(type==='gauge'){
-    cards.push({type:'gauge',label:lbl('Gauge'),icon:icon||'ðŸ“Š',entity,
+    cards.push({type:'gauge',label:lbl('Gauge'),icon:icon||'📊',entity,
       unit:obj.unit||'',min:obj.min??0,max:obj.max??100,
       color:obj.needle?'#818cf8':'#22d3ee',colSpan:1,rowSpan:1});
   }
   else if(['history-graph','statistics-graph'].includes(type)){
     const ents=(entities||[]).map(e=>typeof e==='string'?e:(e.entity||'')).filter(Boolean);
     if(!ents.length&&entity) ents.push(entity);
-    cards.push({type:'history',label:lbl('Storico'),icon:icon||'ðŸ“ˆ',
+    cards.push({type:'history',label:lbl('Storico'),icon:icon||'📈',
       entity:ents[0]||'',unit:'',color:'#818cf8',colSpan:2,rowSpan:2,hours:obj.hours_to_show||24});
   }
   else if(['thermostat','climate','humidifier'].includes(type)){
-    cards.push({type:'climate',label:lbl('Clima'),icon:icon||'ðŸŒ¡ï¸',entity,unit:'Â°C',color:'#fb923c',colSpan:2,rowSpan:2});
+    cards.push({type:'climate',label:lbl('Clima'),icon:icon||'🌡️',entity,unit:'°C',color:'#fb923c',colSpan:2,rowSpan:2});
   }
   else if(type==='weather-forecast'){
-    cards.push({type:'weather-forecast',label:lbl('Meteo'),icon:'ðŸŒ¤ï¸',entity,color:'#60a5fa',colSpan:2,rowSpan:2});
+    cards.push({type:'weather-forecast',label:lbl('Meteo'),icon:'🌤️',entity,color:'#60a5fa',colSpan:2,rowSpan:2});
   }
   else if(type==='media-player'){
-    cards.push({type:'media',label:lbl('Media'),icon:icon||'ðŸŽµ',entity,color:'#a78bfa',colSpan:2,rowSpan:1});
+    cards.push({type:'media',label:lbl('Media'),icon:icon||'🎵',entity,color:'#a78bfa',colSpan:2,rowSpan:1});
   }
   else if(type==='markdown'){
-    cards.push({type:'markdown',label:lbl('Testo'),icon:'ðŸ“',content:obj.content||obj.text||'',color:'#818cf8',colSpan:1,rowSpan:1});
+    cards.push({type:'markdown',label:lbl('Testo'),icon:'📝',content:obj.content||obj.text||'',color:'#818cf8',colSpan:1,rowSpan:1});
   }
   else if(['alarm-panel','alarm-control-panel'].includes(type)){
-    cards.push({type:'compact',label:lbl('Allarme'),icon:'ðŸš¨',entity,color:'#f87171',colSpan:1,rowSpan:1});
+    cards.push({type:'compact',label:lbl('Allarme'),icon:'🚨',entity,color:'#f87171',colSpan:1,rowSpan:1});
   }
   else if(type==='camera'){
-    cards.push({type:'camera',label:lbl('Camera'),icon:'ðŸ“·',entity,color:'#475569',colSpan:2,rowSpan:2});
+    cards.push({type:'camera',label:lbl('Camera'),icon:'📷',entity,color:'#475569',colSpan:2,rowSpan:2});
   }
-  // â”€â”€ entities list â†’ one card per entity if single, or entities card â”€â”€
+  // ── entities list → one card per entity if single, or entities card ──
   else if(type==='entities'){
     const ents=(entities||[]).map(e=>{
       if(typeof e==='string') return {entity:e,label:_haEntityLabel(e)};
@@ -8187,25 +8193,25 @@ function _haYamlToCards(obj){
       return null;
     }).filter(Boolean);
     if(ents.length===1){
-      cards.push({type:'compact',label:ents[0].label||lbl('Sensore'),icon:icon||'ðŸ“¦',entity:ents[0].entity,unit:'',color:'#818cf8',colSpan:1,rowSpan:1});
+      cards.push({type:'compact',label:ents[0].label||lbl('Sensore'),icon:icon||'📦',entity:ents[0].entity,unit:'',color:'#818cf8',colSpan:1,rowSpan:1});
     } else if(ents.length>1){
-      cards.push({type:'entities',label:lbl('Lista'),icon:icon||'ðŸ“‹',entities:ents,color:'#818cf8',colSpan:1,rowSpan:Math.min(ents.length,3)});
+      cards.push({type:'entities',label:lbl('Lista'),icon:icon||'📋',entities:ents,color:'#818cf8',colSpan:1,rowSpan:Math.min(ents.length,3)});
     }
   }
-  // â”€â”€ views: extract nested cards â”€â”€
+  // ── views: extract nested cards ──
   else if(type==='custom:vertical-stack-in-card'||type==='vertical-stack'){
     (obj.cards||[]).forEach(c=>{ _haYamlToCards(c).forEach(r=>cards.push(r)); });
   }
   else if(type==='horizontal-stack'){
     (obj.cards||[]).forEach(c=>{ _haYamlToCards(c).forEach(r=>cards.push(r)); });
   }
-  // â”€â”€ unknown with entity â†’ generic compact â”€â”€
+  // ── unknown with entity → generic compact ──
   else if(entity){
-    cards.push({type:'compact',label:lbl(type||'Card'),icon:icon||'ðŸ“¦',entity,unit:'',color:'#818cf8',colSpan:1,rowSpan:1,_fallback:true,_originalHAType:type});
+    cards.push({type:'compact',label:lbl(type||'Card'),icon:icon||'📦',entity,unit:'',color:'#818cf8',colSpan:1,rowSpan:1,_fallback:true,_originalHAType:type});
   }
   else if(entities&&entities.length){
     const ents=(entities||[]).map(e=>typeof e==='string'?{entity:e,label:_haEntityLabel(e)}:(e&&e.entity?{entity:e.entity,label:e.name||_haEntityLabel(e.entity)}:null)).filter(Boolean);
-    if(ents.length) cards.push({type:'entities',label:lbl('Lista'),icon:'ðŸ“‹',entities:ents,color:'#818cf8',colSpan:1,rowSpan:2,_fallback:true,_originalHAType:type});
+    if(ents.length) cards.push({type:'entities',label:lbl('Lista'),icon:'📋',entities:ents,color:'#818cf8',colSpan:1,rowSpan:2,_fallback:true,_originalHAType:type});
   }
 
   return cards;
@@ -8224,7 +8230,7 @@ function _yamlLivePreview(){
     if(!obj||typeof obj!=='object') throw new Error('YAML non valido o vuoto');
     const cards=_haYamlToCards(obj);
     if(!cards.length){
-      errEl.innerHTML=`<div class="yaml-map-err">âš ï¸ Tipo card "<code>${eh(obj.type||'sconosciuto')}</code>" non supportato o nessuna entitÃ  trovata.</div>`;
+      errEl.innerHTML=`<div class="yaml-map-err">⚠️ Tipo card "<code>${eh(obj.type||'sconosciuto')}</code>" non supportato o nessuna entità trovata.</div>`;
       errEl.style.display='';
       return;
     }
@@ -8233,7 +8239,7 @@ function _yamlLivePreview(){
       const typeLbl=_HA_TYPE_LABELS[c.type]||c.type;
       const fallbackNote=c._fallback?` <span class="yaml-map-warn" style="font-size:9px;padding:2px 6px;border-radius:10px;border:1px solid rgba(251,191,36,.3);background:rgba(251,191,36,.08);color:#fbbf24">approssimato</span>`:'';
       return `<div class="yaml-preview-row">
-        <div class="yaml-preview-icon">${c.icon||'ðŸ“¦'}</div>
+        <div class="yaml-preview-icon">${c.icon||'📦'}</div>
         <div class="yaml-preview-info">
           <div style="display:flex;align-items:center;gap:6px">
             <div class="yaml-preview-label">${eh(c.label)}</div>
@@ -8242,14 +8248,14 @@ function _yamlLivePreview(){
           ${c.entity?`<div class="yaml-preview-entity">${eh(c.entity)}</div>`:''}
           ${c.entities?`<div class="yaml-preview-entity">${c.entities.map(e=>eh(e.entity)).join(', ')}</div>`:''}
         </div>
-        <div style="font-size:9px;color:var(--muted);white-space:nowrap">${c.colSpan}Ã—${c.rowSpan}</div>
+        <div style="font-size:9px;color:var(--muted);white-space:nowrap">${c.colSpan}×${c.rowSpan}</div>
       </div>`;
     }).join('');
     prev.style.display='';
     btn.disabled=false;
-    btn.textContent=cards.length>1?`ðŸ“¥ Importa ${cards.length} card`:'ðŸ“¥ Importa Card';
+    btn.textContent=cards.length>1?`📥 Importa ${cards.length} card`:'📥 Importa Card';
   }catch(err){
-    errEl.innerHTML=`<div class="yaml-map-err">âŒ Errore YAML: ${eh(err.message)}</div>`;
+    errEl.innerHTML=`<div class="yaml-map-err">❌ Errore YAML: ${eh(err.message)}</div>`;
     errEl.style.display='';
   }
 }
@@ -8260,7 +8266,7 @@ function importYamlCard(){
   try{
     const obj=jsyaml.load(txt);
     const cards=_haYamlToCards(obj);
-    if(!cards.length){ showToast('âš ï¸ Nessuna card importabile'); return; }
+    if(!cards.length){ showToast('⚠️ Nessuna card importabile'); return; }
     const page=curPage(); _ensureSections(page);
     const sec=page.sections[0];
     let count=0;
@@ -8273,13 +8279,13 @@ function importYamlCard(){
     saveCfg(); renderDash();
     closeYamlImport();
     closeTM();
-    showToast(`âœ… ${count} card${count>1?' importate':' importata'} con successo`);
+    showToast(`✅ ${count} card${count>1?' importate':' importata'} con successo`);
   }catch(err){
-    showToast('âŒ Errore importazione: '+err.message);
+    showToast('❌ Errore importazione: '+err.message);
   }
 }
 
-/* â•â•â• CLOCK â•â•â• */
+/* ═══ CLOCK ═══ */
 const DY=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
 const MO=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
 function tick(){
@@ -8289,7 +8295,7 @@ function tick(){
 }
 tick(); setInterval(tick,30000);
 
-/* â•â•â• LOGIN â•â•â• */
+/* ═══ LOGIN ═══ */
 let _loginMode = localStorage.getItem('hadb_loginmode') || 'local';
 
 function setLoginMode(mode){
@@ -8304,7 +8310,7 @@ function toggleLoginAdv(){
   const el = document.getElementById('l-adv');
   el.classList.toggle('open');
   document.querySelector('.login-adv-toggle').textContent =
-    el.classList.contains('open') ? 'ðŸ”§ Token avanzato â–´' : 'ðŸ”§ Token avanzato â–¾';
+    el.classList.contains('open') ? '🔧 Token avanzato ▴' : '🔧 Token avanzato ▾';
 }
 
 function doLogin(){
@@ -8368,7 +8374,7 @@ function doLogout(){
   // Esci da kiosk se attivo
   if(_kioskOn) toggleKiosk();
   // Mostra login con credenziali pre-riempite
-  document.documentElement.classList.remove('frk-authed');  // riattiva la visibilitÃ  del login
+  document.documentElement.classList.remove('frk-authed');  // riattiva la visibilità del login
   const lov=document.getElementById('lov');
   lov.classList.remove('off');
   const savedU=localStorage.getItem('hadb_user')||'';
@@ -8379,14 +8385,14 @@ function doLogout(){
   document.getElementById('l-user').focus();
   // Reset connessione
   setC('off');
-  document.getElementById('cmsg').textContent='Connessione a Home Assistantâ€¦';
+  document.getElementById('cmsg').textContent='Connessione a Home Assistant…';
   document.getElementById('cov-skip').style.display='none';
 }
 ['l-user','l-pass','l-haurl'].forEach(id=>{
   document.getElementById(id)?.addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
 });
 
-/* â•â•â• HEADER BAR (left section) â•â•â• */
+/* ═══ HEADER BAR (left section) ═══ */
 
 function renderHdrChips(){
   const el=document.getElementById('hdr-bar-inner'); if(!el) return;
@@ -8396,7 +8402,7 @@ function openHBM_HDR(){
   if(!cfg.hdrBar) cfg.hdrBar={left:[{id:uid(),type:'clock'}],center:[],right:[]};
   _hbCardId='__hdrbar__';
   _hbChips=JSON.parse(JSON.stringify(cfg.hdrBar));
-  document.getElementById('hbmod-title').textContent='âŠž Configura Header';
+  document.getElementById('hbmod-title').textContent='⊞ Configura Header';
   // nascondi i campi specifici della card (label, colonne, righe)
   const cardSect=document.getElementById('hb-label')?.closest('.sect-section');
   if(cardSect) cardSect.style.display='none';
@@ -8405,23 +8411,23 @@ function openHBM_HDR(){
   document.getElementById('hbmod').classList.remove('off');
 }
 
-/* â•â•â• INIT â•â•â• */
+/* ═══ INIT ═══ */
 /* Apply saved theme and font before first render to avoid flash */
 (function(){
   const t=cfg.theme||'dark';
   const f=cfg.font||'Inter';
   document.documentElement.dataset.theme=t==='light'?'light':'';
   document.documentElement.style.setProperty('--font-family',`'${f}',system-ui,sans-serif`);
-  // tema colorato salvato (accento + sfondo) â€” applica le sole variabili, senza ridisegnare
+  // tema colorato salvato (accento + sfondo) — applica le sole variabili, senza ridisegnare
   try{
     const ct=(typeof COLOR_THEMES!=='undefined')&&COLOR_THEMES.find(x=>x.id===(cfg.colorTheme||'indaco'));
     if(ct){ const r=document.documentElement.style; r.setProperty('--acc',ct.acc); r.setProperty('--acc2',ct.acc2); r.setProperty('--glow1',ct.g[0]); r.setProperty('--glow2',ct.g[1]); r.setProperty('--glow3',ct.g[2]); if(t!=='light'){ r.setProperty('--bg',ct.bg); r.setProperty('--panel',ct.panel); r.setProperty('--panel2',ct.panel2); } }
   }catch(e){}
 })();
-/* Ripristina modalitÃ  e campi login salvati */
+/* Ripristina modalità e campi login salvati */
 (function(){
-  // Servita da HA (http/https) â†’ sempre "locale" = stessa origine (vale per accesso locale E remoto).
-  // La modalitÃ  "remoto" con URL fisso ha senso solo se la pagina Ã¨ aperta come file (file://).
+  // Servita da HA (http/https) → sempre "locale" = stessa origine (vale per accesso locale E remoto).
+  // La modalità "remoto" con URL fisso ha senso solo se la pagina è aperta come file (file://).
   const mode = (location.protocol==='file:') ? (localStorage.getItem('hadb_loginmode')||'local') : 'local';
   setLoginMode(mode);
   const savedUrl = localStorage.getItem('hadb_haurl')||'';
@@ -8445,8 +8451,8 @@ if(localStorage.getItem('ha_auth')==='1' || sessionStorage.getItem('ha_auth')===
   document.getElementById('l-user').focus();
 }
 
-/* Controlla se il file servito da HA Ã¨ piÃ¹ recente di quello in esecuzione.
-   Fetch con cache-bust diretto sul pathname (es. /local/frarik.html) â†’ nessuna cache browser. */
+/* Controlla se il file servito da HA è più recente di quello in esecuzione.
+   Fetch con cache-bust diretto sul pathname (es. /local/frarik.html) → nessuna cache browser. */
 async function _haLocalCheck(){
   if(location.protocol==='file:') return; // aperto come file locale, salta
   try{
@@ -8464,14 +8470,14 @@ async function _haLocalCheck(){
 
 /* Controllo aggiornamento plancia in background (salva silenziosamente in localStorage) */
 try{ _appUpdSchedule(); setTimeout(()=>{ try{ _appUpdateCheck(); }catch(e){} }, 2500); }catch(e){}
-/* Se la plancia Ã¨ appena stata auto-aggiornata, mostra la notifica informativa "aggiornata alla versione X" */
+/* Se la plancia è appena stata auto-aggiornata, mostra la notifica informativa "aggiornata alla versione X" */
 try{
   var _pn=parseInt(localStorage.getItem('frarik_app_pending_notify')||'0',10);
   if(_pn && _pn<=(window.FRARIK_APP_VERSION||0)){
     localStorage.removeItem('frarik_app_pending_notify');
     setTimeout(()=>{ try{
       var _cl=(window.FRARIK_CHANGELOG&&window.FRARIK_CHANGELOG.length)?window.FRARIK_CHANGELOG:null;
-      _ntfPushLog('âœ… Plancia aggiornata alla versione '+(window.FRARIK_APP_VERSION||''), _cl?'Ecco cosa Ã¨ cambiato:':'La plancia Ã¨ stata aggiornata.', 'ðŸ“‹', null, {changelog:_cl});
+      _ntfPushLog('✅ Plancia aggiornata alla versione '+(window.FRARIK_APP_VERSION||''), _cl?'Ecco cosa è cambiato:':'La plancia è stata aggiornata.', '📋', null, {changelog:_cl});
     }catch(e){} }, 1500);
   }
 }catch(e){}
@@ -8479,9 +8485,9 @@ try{
 try{ setTimeout(()=>{ try{ _haLocalCheck(); }catch(e){} }, 3000); }catch(e){}
 try{ var _vl=document.getElementById('ep-ver-label'); if(_vl) _vl.textContent=(window.FRARIK_APP_VERSION||'?'); }catch(e){}
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ══════════════════════════════════════════════════════════════
    SOS
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+══════════════════════════════════════════════════════════════ */
 let _sosPerson=null;   // persona selezionata nello step 1
 let _sosPeopleArr=[];  // array persone caricato all'apertura (evita JSON inline in onclick)
 
@@ -8493,7 +8499,7 @@ function _sosCfg(){
   return cfg.sos;
 }
 
-/* â”€â”€ legge le persone da HA (person.*), filtrate per cfg.sos.persons â”€â”€ */
+/* ── legge le persone da HA (person.*), filtrate per cfg.sos.persons ── */
 function _sosGetPeople(){
   const configured=(_sosCfg().persons||[]);
   const all=Object.keys(ha)
@@ -8504,14 +8510,14 @@ function _sosGetPeople(){
       picture: ha[eid]?.entity_picture||null,
       state: hs[eid]||'unknown'
     }));
-  // se nessuna persona configurata â†’ mostra tutte quelle di HA
+  // se nessuna persona configurata → mostra tutte quelle di HA
   if(!configured.length) return all;
   return configured.map(eid=>
     all.find(p=>p.entity_id===eid) || {entity_id:eid, name:eid.split('.')[1].replace(/_/g,' '), picture:null, state:'unknown'}
   );
 }
 
-/* â”€â”€ STEP 1: apri â€” chi sei? â”€â”€ */
+/* ── STEP 1: apri — chi sei? ── */
 function openSOS(){
   _sosPeopleArr=_sosGetPeople();
   const grid=document.getElementById('sos-people-grid');
@@ -8524,8 +8530,8 @@ function openSOS(){
       const stateLabel=_stateIt(p.state);
       const picHTML=p.picture
         ? `<img class="sos-person-pic" src="${BASE}${p.picture}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`+
-          `<div class="sos-person-ico" style="display:none">ðŸ‘¤</div>`
-        : `<div class="sos-person-ico">ðŸ‘¤</div>`;
+          `<div class="sos-person-ico" style="display:none">👤</div>`
+        : `<div class="sos-person-ico">👤</div>`;
       return `<div class="sos-person-card" onclick="_sosPickPerson(${idx})">
         ${picHTML}
         <div class="sos-person-name">${eh(p.name)}</div>
@@ -8546,14 +8552,14 @@ function closeSOS(){
   document.getElementById('sos-mod1').classList.add('off');
 }
 
-/* â”€â”€ STEP 2: apri â€” contatta â”€â”€ */
+/* ── STEP 2: apri — contatta ── */
 function openSOS2(){
   const p=_sosPerson;
-  /* badge identitÃ  */
+  /* badge identità */
   const badge=document.getElementById('sos-who-badge');
-  badge.innerHTML=`<span style="font-size:18px">ðŸ‘¤</span> SOS inviato come: <b>${eh(p.name)}</b>`;
+  badge.innerHTML=`<span style="font-size:18px">👤</span> SOS inviato come: <b>${eh(p.name)}</b>`;
 
-  /* lista contatti â€” escludi la persona che ha fatto la richiesta */
+  /* lista contatti — escludi la persona che ha fatto la richiesta */
   const allContacts=_sosCfg().contacts;
   const personName=(p.name||'').trim().toLowerCase();
   const personFirst=personName.split(/\s+/)[0]; // primo nome
@@ -8561,30 +8567,30 @@ function openSOS2(){
     const cn=(contactName||'').trim().toLowerCase();
     if(!cn||!personName) return false;
     if(cn===personName) return true;                         // match esatto
-    if(cn.startsWith(personFirst+' ')) return true;         // es. "Mario Rossi" â†’ "mario"
+    if(cn.startsWith(personFirst+' ')) return true;         // es. "Mario Rossi" → "mario"
     if(personName.startsWith(cn.split(/\s+/)[0]+' ')) return true;
     if(cn.includes(personFirst) || personName.includes(cn.split(/\s+/)[0])) return true;
     return false;
   }
-  /* filtra per indice originale cosÃ¬ sosCall/sosNotify usano sempre l'indice corretto */
+  /* filtra per indice originale così sosCall/sosNotify usano sempre l'indice corretto */
   const visible=allContacts
     .map((c,i)=>({c,i}))
     .filter(({c})=>!_nameMatch(c.name));
   const list=document.getElementById('sos-contacts-list');
   if(!visible.length){
-    list.innerHTML=`<div class="sos-no-contacts">${allContacts.length?'Nessun altro contatto disponibile.':'Nessun contatto configurato.'}<br><span style="font-size:10px">${allContacts.length?'':'Aggiungili nel pannello Modifica â†’ sezione SOS.'}</span></div>`;
+    list.innerHTML=`<div class="sos-no-contacts">${allContacts.length?'Nessun altro contatto disponibile.':'Nessun contatto configurato.'}<br><span style="font-size:10px">${allContacts.length?'':'Aggiungili nel pannello Modifica → sezione SOS.'}</span></div>`;
   } else {
     list.innerHTML=visible.map(({c,i})=>{
       const hasService=!!c.notifyService;
       const callBtn=hasService
-        ? `<button class="sos-act-btn sos-act-call" onclick="sosCall(${i})">ðŸ“ž Chiama</button>` : '';
+        ? `<button class="sos-act-btn sos-act-call" onclick="sosCall(${i})">📞 Chiama</button>` : '';
       const msgBtn=hasService
-        ? `<button class="sos-act-btn sos-act-notify" onclick="sosNotify(${i})">ðŸ’¬ Messaggio</button>` : '';
+        ? `<button class="sos-act-btn sos-act-notify" onclick="sosNotify(${i})">💬 Messaggio</button>` : '';
       const noSvc=!hasService
         ? `<span style="font-size:10px;color:rgba(255,255,255,.3)">Nessun servizio configurato</span>` : '';
       return `<div class="sos-contact-row">
-        <div class="sos-contact-ico">${c.icon||'ðŸ‘¤'}</div>
-        <div class="sos-contact-name">${eh(c.name||'â€”')}</div>
+        <div class="sos-contact-ico">${c.icon||'👤'}</div>
+        <div class="sos-contact-name">${eh(c.name||'—')}</div>
         <div class="sos-contact-acts" style="flex-wrap:wrap;gap:6px">${callBtn}${msgBtn}${noSvc}</div>
       </div>`;
     }).join('');
@@ -8597,7 +8603,7 @@ function closeSOS2(){
   _sosPerson=null;
 }
 
-/* â”€â”€ CHIAMA â€” alarm stream (bypassa silenzioso, volume massimo) â”€â”€ */
+/* ── CHIAMA — alarm stream (bypassa silenzioso, volume massimo) ── */
 function sosCall(idx){
   const c=_sosCfg().contacts[idx]; if(!c?.notifyService) return;
   const p=_sosPerson;
@@ -8607,10 +8613,10 @@ function sosCall(idx){
     domain:'notify',
     service:c.notifyService.replace(/^notify\./,''),
     service_data:{
-      title:'ðŸ“ž CHIAMATA SOS',
+      title:'📞 CHIAMATA SOS',
       message:`${p.name} ti sta chiamando! Rispondi subito. (${now})`,
       data:{
-        /* Android companion app â€” usa lo stream ALLARME (bypassa silenzioso/DND) */
+        /* Android companion app — usa lo stream ALLARME (bypassa silenzioso/DND) */
         channel:'alarm_stream',
         importance:'high',
         ttl:0,
@@ -8622,7 +8628,7 @@ function sosCall(idx){
         notification_icon:'mdi:phone-alert',
         vibrationPattern:[0,400,200,400,200,400],
         ledColor:'#ef4444',
-        /* iOS â€” critical alert bypassa silenzioso (attiva "Avvisi critici" in Impostazioni â†’ HA â†’ Notifiche) */
+        /* iOS — critical alert bypassa silenzioso (attiva "Avvisi critici" in Impostazioni → HA → Notifiche) */
         push:{
           sound:{name:'default',critical:1,volume:1.0},
           'interruption-level':'critical',
@@ -8631,11 +8637,11 @@ function sosCall(idx){
       }
     }
   });
-  showToast(`ðŸ“ž Chiamata SOS inviata a ${c.name}!`,3000);
+  showToast(`📞 Chiamata SOS inviata a ${c.name}!`,3000);
   document.getElementById('sos-mod2').classList.add('off');
 }
 
-/* â”€â”€ MESSAGGIO â€” notifica normale ad alta prioritÃ  â”€â”€ */
+/* ── MESSAGGIO — notifica normale ad alta priorità ── */
 function sosNotify(idx){
   const c=_sosCfg().contacts[idx]; if(!c?.notifyService) return;
   const p=_sosPerson;
@@ -8645,10 +8651,10 @@ function sosNotify(idx){
     domain:'notify',
     service:c.notifyService.replace(/^notify\./,''),
     service_data:{
-      title:'ðŸ†˜ Messaggio SOS',
+      title:'🆘 Messaggio SOS',
       message:`${p.name} ha bisogno di aiuto! (${now})`,
       data:{
-        /* Android â€” notifica normale alta prioritÃ , suono notifica standard */
+        /* Android — notifica normale alta priorità, suono notifica standard */
         channel:'sos_message',
         importance:'high',
         ttl:0,
@@ -8656,7 +8662,7 @@ function sosNotify(idx){
         color:'#f59e0b',
         notification_icon:'mdi:message-alert',
         vibrationPattern:[0,250,100,250],
-        /* iOS â€” suono notifica normale */
+        /* iOS — suono notifica normale */
         push:{
           sound:'default',
           'interruption-level':'time-sensitive',
@@ -8665,28 +8671,28 @@ function sosNotify(idx){
       }
     }
   });
-  showToast(`ðŸ’¬ Messaggio SOS inviato a ${c.name}`);
+  showToast(`💬 Messaggio SOS inviato a ${c.name}`);
   document.getElementById('sos-mod2').classList.add('off');
 }
 
-/* â”€â”€ Avvisa TUTTI â”€â”€ */
+/* ── Avvisa TUTTI ── */
 function sosAlertAll(){
   const contacts=_sosCfg().contacts;
-  if(!contacts.length){ showToast('âš ï¸ Nessun contatto configurato'); return; }
+  if(!contacts.length){ showToast('⚠️ Nessun contatto configurato'); return; }
   let sent=0;
   contacts.forEach((_,i)=>{ sosCall(i); sent++; });
-  showToast(`ðŸ“ž Chiamata SOS inviata a ${sent} contatt${sent===1?'o':'i'}!`,3000);
+  showToast(`📞 Chiamata SOS inviata a ${sent} contatt${sent===1?'o':'i'}!`,3000);
   document.getElementById('sos-mod2').classList.add('off');
 }
 
-/* â”€â”€ Config contatti SOS nel pannello edit â”€â”€ */
+/* ── Config contatti SOS nel pannello edit ── */
 function renderSOSCfgList(){
   const el=document.getElementById('sos-cfg-list'); if(!el) return;
   const sc=_sosCfg();
   const contacts=sc.contacts;
   const persons=sc.persons||[];
 
-  // â”€â”€ sezione PERSONE â”€â”€
+  // ── sezione PERSONE ──
   const allPeople=Object.keys(ha)
     .filter(eid=>eid.startsWith('person.'))
     .map(eid=>({eid, name:ha[eid]?.friendly_name||eid.split('.')[1].replace(/_/g,' ')}));
@@ -8701,32 +8707,32 @@ function renderSOSCfgList(){
     const inf=allPeople.find(p=>p.eid===eid);
     const name=inf?inf.name:eid;
     return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
-      <span style="font-size:11px;flex:1;color:var(--fg)">ðŸ‘¤ ${eh(name)}</span>
-      <button class="sos-cfg-del" onclick="sosRemovePerson(${i})" title="Rimuovi">âœ•</button>
+      <span style="font-size:11px;flex:1;color:var(--fg)">👤 ${eh(name)}</span>
+      <button class="sos-cfg-del" onclick="sosRemovePerson(${i})" title="Rimuovi">✕</button>
     </div>`;
   }).join('');
 
   const personSec=`
     <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Persone visibili nel popup SOS</div>
-    ${personRows||'<div style="font-size:10px;color:var(--dim);padding:4px 0">Nessuna selezionata â€” verranno mostrate tutte quelle di HA</div>'}
+    ${personRows||'<div style="font-size:10px;color:var(--dim);padding:4px 0">Nessuna selezionata — verranno mostrate tutte quelle di HA</div>'}
     ${availOpts?`<div style="display:flex;gap:6px;margin-top:6px;align-items:center">
       <select id="sos-person-sel" class="sos-cfg-inp" style="flex:1">
-        <option value="">â€” Seleziona persona â€”</option>${availOpts}
+        <option value="">— Seleziona persona —</option>${availOpts}
       </select>
-      <button class="sos-cfg-add" style="padding:4px 10px;margin:0" onclick="sosAddPerson()">âž•</button>
-    </div>`:'<div style="font-size:10px;color:var(--dim);margin-top:4px">Tutte le persone HA sono giÃ  incluse</div>'}
+      <button class="sos-cfg-add" style="padding:4px 10px;margin:0" onclick="sosAddPerson()">➕</button>
+    </div>`:'<div style="font-size:10px;color:var(--dim);margin-top:4px">Tutte le persone HA sono già incluse</div>'}
     <div style="height:12px;border-bottom:1px solid rgba(255,255,255,.06);margin:10px 0 10px"></div>
     <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Contatti di emergenza</div>`;
 
-  // â”€â”€ sezione CONTATTI â”€â”€
+  // ── sezione CONTATTI ──
   const contactRows=contacts.length
     ? contacts.map((c,i)=>`
       <div class="sos-cfg-contact">
         <div style="display:flex;gap:3px;align-items:center">
-          <input class="sos-cfg-ico-inp" type="text" value="${eh(c.icon||'ðŸ‘¤')}" placeholder="ðŸ‘¤"
+          <input class="sos-cfg-ico-inp" type="text" value="${eh(c.icon||'👤')}" placeholder="👤"
             oninput="sosUpdateContact(${i},'icon',this.value)">
           <button class="ntf-pick-btn" style="width:26px;height:26px;border-radius:6px;font-size:12px" title="Scegli icona"
-            onclick="openIconPicker(v=>{sosUpdateContact(${i},'icon',v);renderSOSCfgList();},this,event)">ðŸŽ¨</button>
+            onclick="openIconPicker(v=>{sosUpdateContact(${i},'icon',v);renderSOSCfgList();},this,event)">🎨</button>
         </div>
         <div class="sos-cfg-fields">
           <input class="sos-cfg-inp" type="text" value="${eh(c.name||'')}" placeholder="Nome contatto"
@@ -8735,10 +8741,10 @@ function renderSOSCfgList(){
             <input id="sos-svc-inp-${i}" class="sos-cfg-inp" type="text" value="${eh(c.notifyService||'')}" placeholder="Servizio HA (es. mobile_app_pixel_7)"
               oninput="sosUpdateContact(${i},'notifyService',this.value)" style="flex:1">
             <button class="ntf-pick-btn" style="width:28px;height:28px;border-radius:7px;font-size:13px" title="Sfoglia servizi notify"
-              onclick="_epPickerOpen(v=>{sosUpdateContact(${i},'notifyService',v);const el=document.getElementById('sos-svc-inp-${i}');if(el)el.value=v;},'notify','Seleziona servizio notify')">ðŸ”</button>
+              onclick="_epPickerOpen(v=>{sosUpdateContact(${i},'notifyService',v);const el=document.getElementById('sos-svc-inp-${i}');if(el)el.value=v;},'notify','Seleziona servizio notify')">🔍</button>
           </div>
         </div>
-        <button class="sos-cfg-del" onclick="sosDeleteContact(${i})" title="Elimina">ðŸ—‘</button>
+        <button class="sos-cfg-del" onclick="sosDeleteContact(${i})" title="Elimina">🗑</button>
       </div>`).join('')
     : '<div style="font-size:10px;color:var(--dim);text-align:center;padding:6px 0">Nessun contatto</div>';
 
@@ -8761,7 +8767,7 @@ function sosRemovePerson(i){
 }
 
 function sosAddContact(){
-  _sosCfg().contacts.push({id:uid(),name:'',icon:'ðŸ‘¤',phone:'',notifyService:''});
+  _sosCfg().contacts.push({id:uid(),name:'',icon:'👤',phone:'',notifyService:''});
   saveCfg(); renderSOSCfgList();
 }
 
@@ -8779,9 +8785,9 @@ function sosDeleteContact(i){
 const _origToggleEdit=toggleEdit;
 // (viene chiamata renderSOSCfgList in toggleEdit tramite patch qui sotto)
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ══════════════════════════════════════════════════════════════
    FREE CANVAS CARD EDITOR
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+══════════════════════════════════════════════════════════════ */
 let _feCardId=null, _feSelIdx=null, _feDrag=null, _feResize=null, _feSnap=5;
 
 function _feGetCard(){
@@ -8810,7 +8816,7 @@ function closeFE(){
   renderDash();
 }
 
-/* â”€â”€ Render canvas nel editor â”€â”€ */
+/* ── Render canvas nel editor ── */
 function _feRenderCanvas(){
   const card=_feGetCard(); if(!card) return;
   const frame=document.getElementById('fe-canvas-frame'); if(!frame) return;
@@ -8839,18 +8845,18 @@ function _feRenderCanvas(){
   });
 }
 
-/* â”€â”€ HTML di un singolo elemento nell'editor â”€â”€ */
+/* ── HTML di un singolo elemento nell'editor ── */
 function _feElHTML(el,idx){
   const sel=idx===_feSelIdx;
   const s=`left:${el.x}px;top:${el.y}px;width:${el.w}px;height:${el.h}px`;
   return `<div id="fe-el-${idx}" class="fe-canvas-el${sel?' fe-sel':''}" style="${s}">
     ${_feElContent(el)}
-    <button class="fe-el-del" onclick="feDelEl(${idx});event.stopPropagation()">âœ•</button>
+    <button class="fe-el-del" onclick="feDelEl(${idx});event.stopPropagation()">✕</button>
     <div class="fe-el-resize"></div>
   </div>`;
 }
 
-/* â”€â”€ Contenuto elemento (editor + view) â”€â”€ */
+/* ── Contenuto elemento (editor + view) ── */
 function _feElContent(el){
   switch(el.type){
     case 'text':
@@ -8859,7 +8865,7 @@ function _feElContent(el){
       const v=hs[el.entity]; const a=ha[el.entity]||{};
       const unit=(el.showUnit!==false)?(a.unit_of_measurement||el.unit||''):'';
       const name=(el.showName!==false)?(a.friendly_name||el.entity||''):'';
-      const val=v!==undefined?_stateIt(String(v)):'â€”';
+      const val=v!==undefined?_stateIt(String(v)):'—';
       return `<div style="display:flex;flex-direction:column;justify-content:center;height:100%;padding:2px 6px;overflow:hidden;box-sizing:border-box;pointer-events:none">
         <div style="font-size:${el.valueFontSize||24}px;color:${el.valueColor||'var(--fg)'};font-weight:700;line-height:1.1;white-space:nowrap">${val}${unit?`<span style="font-size:.55em;opacity:.7"> ${unit}</span>`:''}</div>
         ${name?`<div style="font-size:${el.labelFontSize||11}px;color:${el.labelColor||'var(--muted)'};margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(name)}</div>`:''}
@@ -8868,17 +8874,17 @@ function _feElContent(el){
     case 'button':
       return `<button style="width:100%;height:100%;background:${el.bg||'rgba(99,102,241,0.2)'};border:${el.border||'1px solid rgba(99,102,241,0.4)'};border-radius:${el.borderRadius||'10px'};color:${el.color||'#a5b4fc'};font-size:${el.fontSize||13}px;font-weight:700;cursor:pointer;overflow:hidden;box-sizing:border-box">${el.icon?`${_renderIcon(el.icon,el.fontSize||13,el.color||'#a5b4fc')} `:''}${eh(el.label||'Bottone')}</button>`;
     case 'icon':
-      return `<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;pointer-events:none">${_renderIcon(el.icon||'ðŸ ',el.size||32,el.color||'currentColor')}</div>`;
+      return `<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;pointer-events:none">${_renderIcon(el.icon||'🏠',el.size||32,el.color||'currentColor')}</div>`;
     case 'shape':
       return `<div style="width:100%;height:100%;background:${el.bg||'rgba(255,255,255,0.1)'};border:${el.border||'none'};border-radius:${el.borderRadius||'0'};opacity:${el.opacity||1};pointer-events:none"></div>`;
     case 'image':
-      return el.src?`<img src="${el.src}" style="width:100%;height:100%;object-fit:${el.objectFit||'cover'};border-radius:${el.borderRadius||'0'};opacity:${el.opacity||1};display:block;pointer-events:none">`:`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:11px;pointer-events:none">ðŸ–¼ï¸</div>`;
+      return el.src?`<img src="${el.src}" style="width:100%;height:100%;object-fit:${el.objectFit||'cover'};border-radius:${el.borderRadius||'0'};opacity:${el.opacity||1};display:block;pointer-events:none">`:`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:11px;pointer-events:none">🖼️</div>`;
     default:
       return `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:9px">${el.type}</div>`;
   }
 }
 
-/* â”€â”€ Render pannello proprietÃ  â”€â”€ */
+/* ── Render pannello proprietà ── */
 function _feRenderProps(){
   const body=document.getElementById('fe-props-body'); if(!body) return;
   const card=_feGetCard(); if(!card){body.innerHTML='';return;}
@@ -8902,7 +8908,7 @@ function _feRenderProps(){
     <div><div class="fe-prop-lbl">Altezza</div><input class="fe-prop-inp" type="number" value="${el.h}" oninput="feUp('h',+this.value)"></div>
   </div>`;
 
-  // ProprietÃ  specifiche per tipo
+  // Proprietà specifiche per tipo
   switch(el.type){
     case 'text':
       h+=`<div class="fe-sec-lbl">Testo</div>
@@ -8927,7 +8933,7 @@ function _feRenderProps(){
       break;
     case 'sensor':
       h+=`<div class="fe-sec-lbl">Sensore</div>
-      <div class="fe-prop-row"><div class="fe-prop-lbl">EntitÃ  (entity_id)</div><input class="fe-prop-inp" type="text" value="${eh(el.entity||'')}" placeholder="sensor.temperatura" oninput="feUp('entity',this.value)"></div>
+      <div class="fe-prop-row"><div class="fe-prop-lbl">Entità (entity_id)</div><input class="fe-prop-inp" type="text" value="${eh(el.entity||'')}" placeholder="sensor.temperatura" oninput="feUp('entity',this.value)"></div>
       <div class="fe-prop-2">
         <div><div class="fe-prop-lbl">Font valore</div><input class="fe-prop-inp" type="number" value="${el.valueFontSize||24}" oninput="feUp('valueFontSize',+this.value)"></div>
         <div><div class="fe-prop-lbl">Font etichetta</div><input class="fe-prop-inp" type="number" value="${el.labelFontSize||11}" oninput="feUp('labelFontSize',+this.value)"></div>
@@ -8936,34 +8942,34 @@ function _feRenderProps(){
         <div><div class="fe-prop-lbl">Colore valore</div><input class="fe-prop-inp" type="color" value="${el.valueColor||'#f1f5f9'}" oninput="feUp('valueColor',this.value)" style="height:32px;padding:2px"></div>
         <div><div class="fe-prop-lbl">Colore etichetta</div><input class="fe-prop-inp" type="color" value="${el.labelColor||'#94a3b8'}" oninput="feUp('labelColor',this.value)" style="height:32px;padding:2px"></div>
       </div>
-      <label class="fe-prop-check"><input type="checkbox" ${el.showName!==false?'checked':''} onchange="feUp('showName',this.checked)"> Mostra nome entitÃ </label>
-      <label class="fe-prop-check"><input type="checkbox" ${el.showUnit!==false?'checked':''} onchange="feUp('showUnit',this.checked)"> Mostra unitÃ  di misura</label>`;
+      <label class="fe-prop-check"><input type="checkbox" ${el.showName!==false?'checked':''} onchange="feUp('showName',this.checked)"> Mostra nome entità</label>
+      <label class="fe-prop-check"><input type="checkbox" ${el.showUnit!==false?'checked':''} onchange="feUp('showUnit',this.checked)"> Mostra unità di misura</label>`;
       break;
     case 'button':
       h+=`<div class="fe-sec-lbl">Bottone</div>
       <div class="fe-prop-row"><div class="fe-prop-lbl">Etichetta</div><input class="fe-prop-inp" type="text" value="${eh(el.label||'')}" placeholder="Bottone" oninput="feUp('label',this.value)"></div>
       <div class="fe-prop-2">
-        <div><div class="fe-prop-lbl">Icona</div><div style="display:flex;gap:4px"><input class="fe-prop-inp" id="fe-ico-btn-inp" type="text" value="${eh(el.icon||'')}" placeholder="ðŸ’¡ o mdi:home" oninput="feUp('icon',this.value)"><button class="ntf-pick-btn" style="width:28px;height:28px;border-radius:7px;flex-shrink:0;font-size:12px" onclick="openIconPicker(v=>{feUp('icon',v);const el=document.getElementById('fe-ico-btn-inp');if(el)el.value=v;},this,event)">ðŸŽ¨</button></div></div>
+        <div><div class="fe-prop-lbl">Icona</div><div style="display:flex;gap:4px"><input class="fe-prop-inp" id="fe-ico-btn-inp" type="text" value="${eh(el.icon||'')}" placeholder="💡 o mdi:home" oninput="feUp('icon',this.value)"><button class="ntf-pick-btn" style="width:28px;height:28px;border-radius:7px;flex-shrink:0;font-size:12px" onclick="openIconPicker(v=>{feUp('icon',v);const el=document.getElementById('fe-ico-btn-inp');if(el)el.value=v;},this,event)">🎨</button></div></div>
         <div><div class="fe-prop-lbl">Font (px)</div><input class="fe-prop-inp" type="number" value="${el.fontSize||13}" oninput="feUp('fontSize',+this.value)"></div>
       </div>
       <div class="fe-prop-row"><div class="fe-prop-lbl">Azione al clic</div><select class="fe-prop-inp" onchange="feUp('action',this.value)">
-        <option value="toggle"${!el.action||el.action==='toggle'?' selected':''}>Toggle entitÃ </option>
+        <option value="toggle"${!el.action||el.action==='toggle'?' selected':''}>Toggle entità</option>
         <option value="service"${el.action==='service'?' selected':''}>Chiama servizio HA</option>
         <option value="popup"${el.action==='popup'?' selected':''}>Apri popup info</option>
         <option value="navigate"${el.action==='navigate'?' selected':''}>Naviga URL</option>
       </select></div>
-      <div class="fe-prop-row"><div class="fe-prop-lbl">EntitÃ  / Servizio / URL</div><input class="fe-prop-inp" type="text" value="${eh(el.entity||el.url||el.service||'')}" placeholder="light.soggiorno" oninput="feUp('entity',this.value)"></div>
+      <div class="fe-prop-row"><div class="fe-prop-lbl">Entità / Servizio / URL</div><input class="fe-prop-inp" type="text" value="${eh(el.entity||el.url||el.service||'')}" placeholder="light.soggiorno" oninput="feUp('entity',this.value)"></div>
       <div class="fe-sec-lbl">Stile</div>
       <div class="fe-prop-2">
         <div><div class="fe-prop-lbl">Colore testo</div><input class="fe-prop-inp" type="color" value="${el.color||'#a5b4fc'}" oninput="feUp('color',this.value)" style="height:32px;padding:2px"></div>
         <div><div class="fe-prop-lbl">Bordo-raggio</div><input class="fe-prop-inp" type="text" value="${eh(el.borderRadius||'10px')}" oninput="feUp('borderRadius',this.value)"></div>
       </div>
-      <div class="fe-prop-row"><div class="fe-prop-lbl">Sfondo</div><input class="fe-prop-inp" type="text" value="${eh(el.bg||'rgba(99,102,241,0.2)')}" placeholder="rgba(â€¦)" oninput="feUp('bg',this.value)"></div>
-      <div class="fe-prop-row"><div class="fe-prop-lbl">Bordo CSS</div><input class="fe-prop-inp" type="text" value="${eh(el.border||'1px solid rgba(99,102,241,0.4)')}" placeholder="1px solid â€¦" oninput="feUp('border',this.value)"></div>`;
+      <div class="fe-prop-row"><div class="fe-prop-lbl">Sfondo</div><input class="fe-prop-inp" type="text" value="${eh(el.bg||'rgba(99,102,241,0.2)')}" placeholder="rgba(…)" oninput="feUp('bg',this.value)"></div>
+      <div class="fe-prop-row"><div class="fe-prop-lbl">Bordo CSS</div><input class="fe-prop-inp" type="text" value="${eh(el.border||'1px solid rgba(99,102,241,0.4)')}" placeholder="1px solid …" oninput="feUp('border',this.value)"></div>`;
       break;
     case 'icon':
       h+=`<div class="fe-sec-lbl">Icona</div>
-      <div class="fe-prop-row"><div class="fe-prop-lbl">Icona</div><div style="display:flex;gap:4px;align-items:center"><input class="fe-prop-inp" id="fe-ico-el-inp" type="text" value="${eh(el.icon||'ðŸ ')}" oninput="feUp('icon',this.value)" placeholder="ðŸ  o mdi:home"><button class="ntf-pick-btn" style="width:28px;height:28px;border-radius:7px;flex-shrink:0;font-size:12px" onclick="openIconPicker(v=>{feUp('icon',v);const el=document.getElementById('fe-ico-el-inp');if(el)el.value=v;},this,event)">ðŸŽ¨</button></div></div>
+      <div class="fe-prop-row"><div class="fe-prop-lbl">Icona</div><div style="display:flex;gap:4px;align-items:center"><input class="fe-prop-inp" id="fe-ico-el-inp" type="text" value="${eh(el.icon||'🏠')}" oninput="feUp('icon',this.value)" placeholder="🏠 o mdi:home"><button class="ntf-pick-btn" style="width:28px;height:28px;border-radius:7px;flex-shrink:0;font-size:12px" onclick="openIconPicker(v=>{feUp('icon',v);const el=document.getElementById('fe-ico-el-inp');if(el)el.value=v;},this,event)">🎨</button></div></div>
       <div class="fe-prop-2">
         <div><div class="fe-prop-lbl">Dimensione (px)</div><input class="fe-prop-inp" type="number" value="${el.size||32}" oninput="feUp('size',+this.value)"></div>
         <div><div class="fe-prop-lbl">Colore</div><input class="fe-prop-inp" type="color" value="${el.color||'#818cf8'}" oninput="feUp('color',this.value)" style="height:32px;padding:2px"></div>
@@ -8971,11 +8977,11 @@ function _feRenderProps(){
       break;
     case 'shape':
       h+=`<div class="fe-sec-lbl">Forma</div>
-      <div class="fe-prop-row"><div class="fe-prop-lbl">Sfondo</div><input class="fe-prop-inp" type="text" value="${eh(el.bg||'rgba(255,255,255,0.1)')}" placeholder="rgba(â€¦) o #hex" oninput="feUp('bg',this.value)"></div>
+      <div class="fe-prop-row"><div class="fe-prop-lbl">Sfondo</div><input class="fe-prop-inp" type="text" value="${eh(el.bg||'rgba(255,255,255,0.1)')}" placeholder="rgba(…) o #hex" oninput="feUp('bg',this.value)"></div>
       <div class="fe-prop-row"><div class="fe-prop-lbl">Bordo CSS</div><input class="fe-prop-inp" type="text" value="${eh(el.border||'none')}" placeholder="1px solid #fff" oninput="feUp('border',this.value)"></div>
       <div class="fe-prop-2">
         <div><div class="fe-prop-lbl">Bordo-raggio</div><input class="fe-prop-inp" type="text" value="${eh(el.borderRadius||'0')}" oninput="feUp('borderRadius',this.value)"></div>
-        <div><div class="fe-prop-lbl">OpacitÃ </div><input class="fe-prop-inp" type="number" min="0" max="1" step=".05" value="${el.opacity||1}" oninput="feUp('opacity',+this.value)"></div>
+        <div><div class="fe-prop-lbl">Opacità</div><input class="fe-prop-inp" type="number" min="0" max="1" step=".05" value="${el.opacity||1}" oninput="feUp('opacity',+this.value)"></div>
       </div>`;
       break;
     case 'image':
@@ -8983,7 +8989,7 @@ function _feRenderProps(){
       <div class="fe-prop-row"><div class="fe-prop-lbl">URL (es. /local/img.png)</div><input class="fe-prop-inp" type="text" value="${eh(el.src||'')}" placeholder="/local/immagine.png" oninput="feUp('src',this.value)"></div>
       <div class="fe-prop-2">
         <div><div class="fe-prop-lbl">Bordo-raggio</div><input class="fe-prop-inp" type="text" value="${eh(el.borderRadius||'0')}" oninput="feUp('borderRadius',this.value)"></div>
-        <div><div class="fe-prop-lbl">OpacitÃ </div><input class="fe-prop-inp" type="number" min="0" max="1" step=".05" value="${el.opacity||1}" oninput="feUp('opacity',+this.value)"></div>
+        <div><div class="fe-prop-lbl">Opacità</div><input class="fe-prop-inp" type="number" min="0" max="1" step=".05" value="${el.opacity||1}" oninput="feUp('opacity',+this.value)"></div>
       </div>
       <div class="fe-prop-row"><div class="fe-prop-lbl">Adattamento</div><select class="fe-prop-inp" onchange="feUp('objectFit',this.value)">
         <option value="cover"${!el.objectFit||el.objectFit==='cover'?' selected':''}>Cover (riempi)</option>
@@ -8993,11 +8999,11 @@ function _feRenderProps(){
       break;
   }
 
-  h+=`<div style="margin-top:14px"><button onclick="feDelEl(${_feSelIdx})" style="width:100%;padding:7px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:#f87171;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">ðŸ—‘ Elimina elemento</button></div>`;
+  h+=`<div style="margin-top:14px"><button onclick="feDelEl(${_feSelIdx})" style="width:100%;padding:7px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:#f87171;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">🗑 Elimina elemento</button></div>`;
   body.innerHTML=h;
 }
 
-/* â”€â”€ Aggiorna campo elemento â”€â”€ */
+/* ── Aggiorna campo elemento ── */
 function feUp(field, val){
   const card=_feGetCard(); if(!card||_feSelIdx===null) return;
   const el=(card.canvasElements||[])[_feSelIdx]; if(!el) return;
@@ -9015,7 +9021,7 @@ function feUp(field, val){
   if(rh) div.appendChild(rh);
 }
 
-/* â”€â”€ Aggiorna impostazioni canvas â”€â”€ */
+/* ── Aggiorna impostazioni canvas ── */
 function feUpdCard(field, val){
   const card=_feGetCard(); if(!card) return;
   card[field]=val; saveCfg();
@@ -9027,7 +9033,7 @@ function feUpdCard(field, val){
   else if(field==='canvasBorderStr') frame.style.border=val||'1px solid var(--bd)';
 }
 
-/* â”€â”€ Aggiungi elemento â”€â”€ */
+/* ── Aggiungi elemento ── */
 function feAddEl(type){
   const card=_feGetCard(); if(!card) return;
   if(!card.canvasElements) card.canvasElements=[];
@@ -9036,7 +9042,7 @@ function feAddEl(type){
     text:  {type:'text',  w:160,h:38, text:'Testo',fontSize:16,color:'#e2e8f0',fontWeight:'600',textAlign:'left'},
     sensor:{type:'sensor',w:175,h:62, entity:'',showName:true,showUnit:true,valueFontSize:28,labelFontSize:11,valueColor:'#f1f5f9',labelColor:'#94a3b8'},
     button:{type:'button',w:135,h:44, label:'Bottone',icon:'',action:'toggle',entity:'',bg:'rgba(99,102,241,0.2)',color:'#a5b4fc',borderRadius:'10px',fontSize:13,border:'1px solid rgba(99,102,241,0.4)'},
-    icon:  {type:'icon',  w:52, h:52, icon:'ðŸ ',color:'#818cf8',size:36},
+    icon:  {type:'icon',  w:52, h:52, icon:'🏠',color:'#818cf8',size:36},
     shape: {type:'shape', w:200,h:4,  bg:'rgba(255,255,255,0.12)',border:'none',borderRadius:'3px',opacity:1},
     image: {type:'image', w:120,h:100,src:'',objectFit:'cover',borderRadius:'8px',opacity:1},
   };
@@ -9047,7 +9053,7 @@ function feAddEl(type){
   saveCfg(); _feRenderCanvas(); _feRenderProps();
 }
 
-/* â”€â”€ Elimina elemento â”€â”€ */
+/* ── Elimina elemento ── */
 function feDelEl(idx){
   const card=_feGetCard(); if(!card) return;
   (card.canvasElements||[]).splice(idx,1);
@@ -9056,7 +9062,7 @@ function feDelEl(idx){
   saveCfg(); _feRenderCanvas(); _feRenderProps();
 }
 
-/* â”€â”€ Entity Picker â”€â”€ */
+/* ── Entity Picker ── */
 function feOpenEP(){
   const ep=document.getElementById('fe-ep');
   ep.style.display='flex';
@@ -9072,13 +9078,13 @@ function _feEpSearch(q){
     .filter(eid=>!lq||eid.includes(lq)||(ha[eid]?.friendly_name||'').toLowerCase().includes(lq))
     .slice(0,60);
   if(!entries.length){
-    list.innerHTML='<div style="padding:16px;text-align:center;font-size:12px;color:var(--muted)">Nessuna entitÃ  trovata</div>';
+    list.innerHTML='<div style="padding:16px;text-align:center;font-size:12px;color:var(--muted)">Nessuna entità trovata</div>';
     return;
   }
   list.innerHTML=entries.map(eid=>{
     const a=ha[eid]||{};
     const name=a.friendly_name||eid;
-    const val=hs[eid]!==undefined?hs[eid]:'â€”';
+    const val=hs[eid]!==undefined?hs[eid]:'—';
     const unit=a.unit_of_measurement||'';
     const domain=eid.split('.')[0];
     const domainColors={sensor:'#60a5fa',binary_sensor:'#34d399',light:'#fbbf24',switch:'#a78bfa',climate:'#fb923c',media_player:'#f472b6',person:'#4ade80',weather:'#22d3ee',cover:'#94a3b8',automation:'#c084fc',script:'#f87171'};
@@ -9106,10 +9112,10 @@ function feAddEntity(eid){
   let newEl;
   if(domain==='light'||domain==='switch'||domain==='input_boolean'){
     // Toggle button
-    newEl={type:'button',w:140,h:46,label:name,icon:'ðŸ’¡',action:'toggle',entity:eid,
+    newEl={type:'button',w:140,h:46,label:name,icon:'💡',action:'toggle',entity:eid,
       bg:'rgba(251,191,36,0.15)',color:'#fbbf24',borderRadius:'12px',fontSize:13,border:'1px solid rgba(251,191,36,0.35)'};
   } else if(domain==='cover'){
-    newEl={type:'button',w:140,h:46,label:name,icon:'ðŸªŸ',action:'toggle',entity:eid,
+    newEl={type:'button',w:140,h:46,label:name,icon:'🪟',action:'toggle',entity:eid,
       bg:'rgba(148,163,184,0.15)',color:'#94a3b8',borderRadius:'12px',fontSize:13,border:'1px solid rgba(148,163,184,0.3)'};
   } else {
     // Sensor (valore + nome)
@@ -9126,7 +9132,7 @@ function feAddEntity(eid){
   saveCfg(); _feRenderCanvas(); _feRenderProps();
 }
 
-/* â”€â”€ Mouse drag / resize globali â”€â”€ */
+/* ── Mouse drag / resize globali ── */
 document.addEventListener('mousemove',e=>{
   if(_feDrag){
     const card=_feGetCard(); if(!card) return;
@@ -9152,10 +9158,10 @@ document.addEventListener('mouseup',()=>{
   if(_feDrag||_feResize){_feDrag=null;_feResize=null;saveCfg();}
 });
 
-/* â”€â”€ Render card in dashboard (view mode) â”€â”€ */
+/* ── Render card in dashboard (view mode) ── */
 function _freeCanvasViewInner(card){
   const els=card.canvasElements||[];
-  if(!els.length) return `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:11px;flex-direction:column;gap:6px"><div style="font-size:24px">ðŸŽ¨</div>Canvas vuoto<br><span style="font-size:9px">Attiva modifica â†’ ðŸŽ¨ per aggiungere elementi</span></div>`;
+  if(!els.length) return `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:11px;flex-direction:column;gap:6px"><div style="font-size:24px">🎨</div>Canvas vuoto<br><span style="font-size:9px">Attiva modifica → 🎨 per aggiungere elementi</span></div>`;
   const frame=`width:${+(card.canvasW||360)}px;height:${+(card.canvasH||200)}px;background:${card.canvasBg||'transparent'};border-radius:${card.canvasBorderRadius||'0'};`;
   return `<div style="position:relative;${frame}overflow:hidden">` +
     els.map((el,idx)=>{
@@ -9165,7 +9171,7 @@ function _freeCanvasViewInner(card){
     }).join('') + '</div>';
 }
 
-/* â”€â”€ Gestione clic sui bottoni in view mode â”€â”€ */
+/* ── Gestione clic sui bottoni in view mode ── */
 function _feClick(cardId,elIdx){
   if(editMode) return;
   let card=null;
@@ -9180,24 +9186,24 @@ function _feClick(cardId,elIdx){
   }
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ═══════════════════════════════════════════════════════
    SMART NOTIFICATION SYSTEM
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+═══════════════════════════════════════════════════════ */
 
-/* â”€â”€ Config accessor â”€â”€ */
+/* ── Config accessor ── */
 function _ntfCfg(){
   if(!cfg.notifRules) cfg.notifRules=[];
   return cfg.notifRules;
 }
 
-/* â”€â”€ Runtime state â”€â”€ */
+/* ── Runtime state ── */
 let _ntfQueue=[];
 let _ntfActive=null;
-let _ntfStartTimes={};    // entity_id â†’ timestamp when turned on (for duration calc)
-let _ntfDailyCount={};    // ruleId â†’ {date:'YYYY-MM-DD', count:N} â€” incrementi odierni
-let _ntfAutoCloseTimer=null; // timer auto-chiusura quando nessuno Ã¨ in casa
+let _ntfStartTimes={};    // entity_id → timestamp when turned on (for duration calc)
+let _ntfDailyCount={};    // ruleId → {date:'YYYY-MM-DD', count:N} — incrementi odierni
+let _ntfAutoCloseTimer=null; // timer auto-chiusura quando nessuno è in casa
 
-/* â”€â”€ Check rule triggers on every state_changed â”€â”€ */
+/* ── Check rule triggers on every state_changed ── */
 function _notifCheck(eid, prevState, newState){
   if(prevState===undefined) return;
   if(prevState===newState) return;
@@ -9253,12 +9259,12 @@ function _notifCheck(eid, prevState, newState){
       if(qi!==-1){ _ntfQueue[qi]={rule,ctx}; continue; }
     }
     _ntfQueue.push({rule, ctx});
-    try{ _ntfPushLog(ctx.title, ctx.msg, rule.icon||'ðŸ””'); }catch(e){}   // raccogli nel centro notifiche
+    try{ _ntfPushLog(ctx.title, ctx.msg, rule.icon||'🔔'); }catch(e){}   // raccogli nel centro notifiche
     if(!_ntfActive) _ntfShowNext();
   }
 }
 
-/* â”€â”€ Format duration â”€â”€ */
+/* ── Format duration ── */
 function _ntfFmtDuration(ms){
   if(!ms||ms<1000) return '';
   const tot=Math.round(ms/1000);
@@ -9268,27 +9274,27 @@ function _ntfFmtDuration(ms){
   return `${s}s`;
 }
 
-/* â”€â”€ Build context-aware message â”€â”€ */
+/* ── Build context-aware message ── */
 function _ntfBuildContext(rule, newState, prevState, durationMs=0){
   const now=new Date();
   const h=now.getHours();
   let timeCtx='';
-  if(h>=5&&h<12) timeCtx='ðŸŒ… Buongiorno';
-  else if(h>=12&&h<15) timeCtx='â˜€ï¸ Mezzogiorno';
-  else if(h>=15&&h<19) timeCtx='ðŸŒ¤ï¸ Pomeriggio';
-  else if(h>=19&&h<23) timeCtx='ðŸŒ™ Sera';
-  else timeCtx='ðŸŒƒ Notte';
+  if(h>=5&&h<12) timeCtx='🌅 Buongiorno';
+  else if(h>=12&&h<15) timeCtx='☀️ Mezzogiorno';
+  else if(h>=15&&h<19) timeCtx='🌤️ Pomeriggio';
+  else if(h>=19&&h<23) timeCtx='🌙 Sera';
+  else timeCtx='🌃 Notte';
 
   const weatherState=hs['weather.casa']||'';
-  const WM={'sunny':'â˜€ï¸ Soleggiato','clear-night':'ðŸŒ™ Sereno','cloudy':'â˜ï¸ Nuvoloso','partlycloudy':'â›… Parziale','rainy':'ðŸŒ§ï¸ Pioggia','pouring':'â›ˆï¸ Temporale','lightning-rainy':'ðŸŒ©ï¸ Temporale','snowy':'â„ï¸ Neve','fog':'ðŸŒ«ï¸ Nebbia'};
+  const WM={'sunny':'☀️ Soleggiato','clear-night':'🌙 Sereno','cloudy':'☁️ Nuvoloso','partlycloudy':'⛅ Parziale','rainy':'🌧️ Pioggia','pouring':'⛈️ Temporale','lightning-rainy':'🌩️ Temporale','snowy':'❄️ Neve','fog':'🌫️ Nebbia'};
   const weatherCtx=WM[weatherState]||'';
 
   const personEntities=Object.keys(hs).filter(k=>k.startsWith('person.'));
   const home=personEntities.filter(k=>hs[k]==='home').map(k=>(ha[k]?.friendly_name||k.replace('person.','')));
-  const presenceCtx=home.length>0?'ðŸ  '+home.join(', ')+' in casa':'';
+  const presenceCtx=home.length>0?'🏠 '+home.join(', ')+' in casa':'';
 
   const friendly=ha[rule.entity]?.friendly_name||rule.entity||'';
-  // Durata da sensore HA (ha prioritÃ  sul calcolo automatico)
+  // Durata da sensore HA (ha priorità sul calcolo automatico)
   let durationStr=_ntfFmtDuration(durationMs);
   // Sensore aggiuntivo: legge il valore attuale da HA
   let extraSensorVal='';
@@ -9307,7 +9313,7 @@ function _ntfBuildContext(rule, newState, prevState, durationMs=0){
 
   let title=rule.title||rule.name||'Notifica';
   let msg=rule.message||'Valore: {state}';
-  const replacements={'{state}':newState,'{prev}':prevState||'','{entity}':friendly,'{time}':timeCtx,'{weather}':weatherCtx,'{presence}':presenceCtx,'{duration}':durationStr||'â€”','{sensor}':extraSensorVal||'â€”','{count}':String(dailyCount)};
+  const replacements={'{state}':newState,'{prev}':prevState||'','{entity}':friendly,'{time}':timeCtx,'{weather}':weatherCtx,'{presence}':presenceCtx,'{duration}':durationStr||'—','{sensor}':extraSensorVal||'—','{count}':String(dailyCount)};
   for(const [k,v] of Object.entries(replacements)){
     msg=msg.replaceAll(k,v); title=title.replaceAll(k,v);
   }
@@ -9315,17 +9321,17 @@ function _ntfBuildContext(rule, newState, prevState, durationMs=0){
   // Smart auto-messages for appliances (usa {duration} nel messaggio per la durata)
   if(rule.autoMsg&&rule.trigger==='turns_off'){
     const low=(friendly||rule.entity||'').toLowerCase();
-    if(low.includes('lavatrice')) msg='ðŸ§º Il bucato Ã¨ pronto! Ricordati di stendere'+(durationStr?' â€” {duration}':'')+'.';
-    else if(low.includes('lavastoviglie')) msg='ðŸ½ï¸ I piatti sono pronti. Svuota la lavastoviglie'+(durationStr?' â€” {duration}':'')+'.';
-    else if(low.includes('asciugatrice')) msg='ðŸ‘• Asciugatrice terminata. Ritira i vestiti'+(durationStr?' â€” {duration}':'')+'.';
-    else if(low.includes('forno')) msg='ðŸ• Il forno si Ã¨ spento'+(durationStr?' â€” {duration}':'')+'.';
-    else if(low.includes('friggitrice')) msg='ðŸŸ Frittura completata'+(durationStr?' â€” {duration}':'')+'.';
+    if(low.includes('lavatrice')) msg='🧺 Il bucato è pronto! Ricordati di stendere'+(durationStr?' — {duration}':'')+'.';
+    else if(low.includes('lavastoviglie')) msg='🍽️ I piatti sono pronti. Svuota la lavastoviglie'+(durationStr?' — {duration}':'')+'.';
+    else if(low.includes('asciugatrice')) msg='👕 Asciugatrice terminata. Ritira i vestiti'+(durationStr?' — {duration}':'')+'.';
+    else if(low.includes('forno')) msg='🍕 Il forno si è spento'+(durationStr?' — {duration}':'')+'.';
+    else if(low.includes('friggitrice')) msg='🍟 Frittura completata'+(durationStr?' — {duration}':'')+'.';
   }
 
   return {title, msg, timeCtx, weatherCtx, presenceCtx, newState, prevState, friendly, durationStr};
 }
 
-/* â”€â”€ Show next in queue â”€â”€ */
+/* ── Show next in queue ── */
 function _ntfShowNext(){
   if(!_ntfQueue.length){ _ntfActive=null; return; }
   const item=_ntfQueue.shift();
@@ -9333,13 +9339,13 @@ function _ntfShowNext(){
   _ntfRender(item.rule, item.ctx);
 }
 
-/* â”€â”€ Render popup (centered, square, animated image) â”€â”€ */
+/* ── Render popup (centered, square, animated image) ── */
 function _ntfRender(rule, ctx, update=false){
   const wrap=document.getElementById('ntf-wrap');
   if(!wrap) return;
   wrap.classList.add('ntf-active');
   const color=rule.color||'#818cf8';
-  const icon=rule.icon||'ðŸ””';
+  const icon=rule.icon||'🔔';
   const anim=(rule.anim&&rule.anim!=='none')?rule.anim:'bounce';
   const showQueue=_ntfQueue.length>0;
 
@@ -9364,18 +9370,18 @@ function _ntfRender(rule, ctx, update=false){
 
   const durHtml='';
 
-  // Dismiss label â€” custom or smart default
+  // Dismiss label — custom or smart default
   let dismissLabel=rule.dismissLabel||'';
   if(!dismissLabel){
     const low=(ctx.friendly||rule.entity||'').toLowerCase();
-    if(low.includes('posta')||low.includes('mail')||low.includes('postale')) dismissLabel='âœ‰ï¸ Ho ritirato la posta!';
-    else if(low.includes('lavatrice')) dismissLabel='ðŸ§º Vado a stendere!';
-    else if(low.includes('lavastoviglie')) dismissLabel='ðŸ½ï¸ Svuoto subito!';
-    else if(low.includes('asciugatrice')) dismissLabel='ðŸ‘• Ritiro i vestiti!';
-    else if(low.includes('forno')||low.includes('pizza')) dismissLabel='ðŸ• Arrivo!';
-    else if(low.includes('campanello')||low.includes('doorbell')) dismissLabel='ðŸšª Arrivo!';
-    else if(low.includes('temperatura')||low.includes('temp')) dismissLabel='ðŸŒ¡ï¸ Ho visto!';
-    else dismissLabel='âœ“ Ho capito!';
+    if(low.includes('posta')||low.includes('mail')||low.includes('postale')) dismissLabel='✉️ Ho ritirato la posta!';
+    else if(low.includes('lavatrice')) dismissLabel='🧺 Vado a stendere!';
+    else if(low.includes('lavastoviglie')) dismissLabel='🍽️ Svuoto subito!';
+    else if(low.includes('asciugatrice')) dismissLabel='👕 Ritiro i vestiti!';
+    else if(low.includes('forno')||low.includes('pizza')) dismissLabel='🍕 Arrivo!';
+    else if(low.includes('campanello')||low.includes('doorbell')) dismissLabel='🚪 Arrivo!';
+    else if(low.includes('temperatura')||low.includes('temp')) dismissLabel='🌡️ Ho visto!';
+    else dismissLabel='✓ Ho capito!';
   }
 
   // Extra action buttons + snooze
@@ -9386,7 +9392,7 @@ function _ntfRender(rule, ctx, update=false){
   const rowBtns=extraBtns?`<div class="ntf-act-row">${extraBtns}</div>`:'';
 
   wrap.innerHTML=`<div class="ntf-popup${update?' ntf-update':''}" id="ntf-pop" style="--nc:${color}">
-    <button class="ntf-close" onclick="_ntfDismiss()" title="Chiudi">âœ•</button>
+    <button class="ntf-close" onclick="_ntfDismiss()" title="Chiudi">✕</button>
     ${showQueue?`<div class="ntf-queue-badge">+${_ntfQueue.length} in coda</div>`:''}
     ${animZoneHtml}
     <div class="ntf-body">
@@ -9413,7 +9419,7 @@ function _ntfRender(rule, ctx, update=false){
     send({type:'call_service',domain:dom,service:svc,service_data:{message:ttsMsg}});
   }
 
-  // Auto-chiusura quando nessuno Ã¨ in casa (solo counter_increment) â€” soft dismiss, nessun reset
+  // Auto-chiusura quando nessuno è in casa (solo counter_increment) — soft dismiss, nessun reset
   clearTimeout(_ntfAutoCloseTimer); _ntfAutoCloseTimer=null;
   if(rule.trigger==='counter_increment'){
     const anyoneHome=Object.keys(hs).some(k=>k.startsWith('person.')&&hs[k]==='home');
@@ -9423,7 +9429,7 @@ function _ntfRender(rule, ctx, update=false){
   }
 }
 
-/* â”€â”€ Confetti burst â”€â”€ */
+/* ── Confetti burst ── */
 function _ntfConfetti(container){
   const colors=['#818cf8','#4ade80','#fbbf24','#f472b6','#22d3ee','#fb923c'];
   for(let i=0;i<28;i++){
@@ -9435,7 +9441,7 @@ function _ntfConfetti(container){
   }
 }
 
-/* â”€â”€ Dismiss â€” soft=true chiude senza eseguire l'azione (es. auto-chiusura quando fuori casa) â”€â”€ */
+/* ── Dismiss — soft=true chiude senza eseguire l'azione (es. auto-chiusura quando fuori casa) ── */
 function _ntfDismiss(soft=false){
   clearTimeout(_ntfAutoCloseTimer); _ntfAutoCloseTimer=null;
   const rule=_ntfActive?.rule;
@@ -9458,13 +9464,13 @@ function _ntfDismiss(soft=false){
   }, pop?320:0);
 }
 
-/* â”€â”€ Action button handler â”€â”€ */
+/* ── Action button handler ── */
 function _ntfDoAction(domain, service, entityId){
   if(domain&&service) send({type:'call_service',domain,service,service_data:entityId?{entity_id:entityId}:{}});
   _ntfDismiss();
 }
 
-/* â•â•â• MODAL OPEN/CLOSE â•â•â• */
+/* ═══ MODAL OPEN/CLOSE ═══ */
 function openNotifCfg(){
   document.getElementById('ntf-cfg-modal').classList.add('open');
   renderNotifRules();
@@ -9474,20 +9480,20 @@ function closeNotifCfg(){
   document.getElementById('ntf-cfg-modal').classList.remove('open');
 }
 
-/* â•â•â• CENTRO NOTIFICHE (campanella in alto) â•â•â• */
+/* ═══ CENTRO NOTIFICHE (campanella in alto) ═══ */
 let _ntfLog=[];
 try{ _ntfLog=JSON.parse(localStorage.getItem('frarik_ntflog')||'[]'); }catch(e){ _ntfLog=[]; }
 function _ntfSaveLog(){ try{ localStorage.setItem('frarik_ntflog',JSON.stringify(_ntfLog.slice(0,60))); }catch(e){} }
 function _ntfPushLog(title,msg,icon,action,extra){
   extra=extra||{};
-  // action: 'gh' (aggiorna card) | 'app' (aggiorna plancia) | undefined. Se c'Ã¨ giÃ  una notifica
+  // action: 'gh' (aggiorna card) | 'app' (aggiorna plancia) | undefined. Se c'è già una notifica
   // della stessa azione non ancora applicata, aggiornala invece di accodarne un'altra.
   if(action){ const ex=_ntfLog.find(n=>n.action===action); if(ex){ ex.ts=Date.now(); ex.title=title; ex.msg=msg; ex.icon=icon; ex.read=false; if(extra.changelog) ex.changelog=extra.changelog; _ntfSaveLog(); _ntfUpdateBell(); const c0=document.getElementById('notif-center'); if(c0&&c0.classList.contains('on')) renderNotifCenter(); return; } }
-  _ntfLog.unshift({id:'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,6), ts:Date.now(), title:title||'Notifica', msg:msg||'', icon:icon||'ðŸ””', read:false, action:action||null, changelog:extra.changelog||null});
+  _ntfLog.unshift({id:'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,6), ts:Date.now(), title:title||'Notifica', msg:msg||'', icon:icon||'🔔', read:false, action:action||null, changelog:extra.changelog||null});
   _ntfLog=_ntfLog.slice(0,60); _ntfSaveLog(); _ntfUpdateBell();
   const c=document.getElementById('notif-center'); if(c&&c.classList.contains('on')) renderNotifCenter();
 }
-/* "Ho capito" â†’ rimuove la notifica (per id) */
+/* "Ho capito" → rimuove la notifica (per id) */
 function _ntfDismissById(id){
   _ntfLog=_ntfLog.filter(n=>n.id!==id);
   _ntfSaveLog(); _ntfUpdateBell(); renderNotifCenter();
@@ -9510,17 +9516,17 @@ function renderNotifCenter(){
     const hasChangelog=Array.isArray(n.changelog)&&n.changelog.length;
     // le notifiche con changelog NON sono cliccabili tutte: hanno il tasto "Ho capito"
     const act=(n.action&&!hasChangelog)?` ntfc-action" onclick="_ntfAction('${n.action}')` : '"';
-    const hint=(n.action&&!hasChangelog)?'<span class="ntfc-go">Aggiorna â€º</span>':'';
+    const hint=(n.action&&!hasChangelog)?'<span class="ntfc-go">Aggiorna ›</span>':'';
     const clHtml=hasChangelog?`<ul class="ntfc-changelog">${n.changelog.map(li=>`<li>${eh(li)}</li>`).join('')}</ul>`:'';
-    const okBtn=hasChangelog?`<button class="ntfc-ok" onclick="event.stopPropagation();_ntfDismissById('\')">Ho capito</button>`:'';
+    const okBtn=hasChangelog?`<button class="ntfc-ok" onclick="event.stopPropagation();_ntfDismissById('${n.id}')">Ho capito</button>`:'';
     return `<div class="ntfc-item${n.read?'':' unread'}${act}">
-      <div class="ntfc-ico">${n.icon||'ðŸ””'}</div>
+      <div class="ntfc-ico">${n.icon||'🔔'}</div>
       <div class="ntfc-body"><div class="ntfc-title">${eh(n.title||'')}</div>${n.msg?`<div class="ntfc-msg">${eh(n.msg)}</div>`:''}${clHtml}${okBtn}<div class="ntfc-time">${_ntfRelTime(n.ts)}</div></div>
       ${hint}
     </div>`;
   }).join('');
 }
-/* clic sulla notifica card â†’ chiede conferma e aggiorna (la notifica si rimuove solo dopo conferma) */
+/* clic sulla notifica card → chiede conferma e aggiorna (la notifica si rimuove solo dopo conferma) */
 function _ntfAction(key){
   if(key==='gh'){ _ghAskInstall(); }
 }
@@ -9549,20 +9555,20 @@ function _ntfUpdateSidebarBadges(){
   if(sos){ const n=(_sosCfg().contacts||[]).length; sos.textContent=n?`${n} contatti`:''; }
 }
 
-/* â•â•â• UNIVERSAL ENTITY PICKER â•â•â• */
-let _epPickerCb=null, _epPickerDomains=[];  // array â€” empty = all
+/* ═══ UNIVERSAL ENTITY PICKER ═══ */
+let _epPickerCb=null, _epPickerDomains=[];  // array — empty = all
 const _epDomIco={
-  sensor:'ðŸ“Š',binary_sensor:'ðŸ”˜',switch:'ðŸ”Œ',light:'ðŸ’¡',cover:'ðŸªŸ',
-  climate:'ðŸŒ¡ï¸',media_player:'ðŸ”Š',camera:'ðŸ“·',person:'ðŸ‘¤',
-  input_boolean:'âœ…',input_number:'ðŸ”¢',input_text:'âœï¸',input_select:'ðŸ“‹',
-  timer:'â±ï¸',counter:'ðŸ”¢',weather:'â›…',notify:'ðŸ“²',automation:'âš™ï¸',
-  script:'ðŸ“œ',scene:'ðŸŽ¬',device_tracker:'ðŸ“',group:'ðŸ‘¥',number:'ðŸ”¢',
-  select:'ðŸ“‹',button:'ðŸ”²',text:'âœï¸',lock:'ðŸ”’',alarm_control_panel:'ðŸš¨',
-  fan:'ðŸ’¨',vacuum:'ðŸ¤–',water_heater:'ðŸš¿',remote:'ðŸ“¡',sun:'ðŸŒž',
-  zone:'ðŸ“',calendar:'ðŸ“…',todo:'âœ”ï¸'
+  sensor:'📊',binary_sensor:'🔘',switch:'🔌',light:'💡',cover:'🪟',
+  climate:'🌡️',media_player:'🔊',camera:'📷',person:'👤',
+  input_boolean:'✅',input_number:'🔢',input_text:'✏️',input_select:'📋',
+  timer:'⏱️',counter:'🔢',weather:'⛅',notify:'📲',automation:'⚙️',
+  script:'📜',scene:'🎬',device_tracker:'📍',group:'👥',number:'🔢',
+  select:'📋',button:'🔲',text:'✏️',lock:'🔒',alarm_control_panel:'🚨',
+  fan:'💨',vacuum:'🤖',water_heater:'🚿',remote:'📡',sun:'🌞',
+  zone:'📍',calendar:'📅',todo:'✔️'
 };
 
-function _epPickerOpen(cb, domainFilter='', title='Seleziona entitÃ '){
+function _epPickerOpen(cb, domainFilter='', title='Seleziona entità'){
   _epPickerCb=cb;
   // domainFilter can be a string ('camera') or array (['counter','input_number'])
   _epPickerDomains=Array.isArray(domainFilter)?domainFilter:(domainFilter?[domainFilter]:[]);
@@ -9600,7 +9606,7 @@ function _epPickerSearch(q){
     return na.localeCompare(nb,'it');
   });
   if(!entities.length){
-    list.innerHTML=`<div style="text-align:center;padding:40px 0;color:var(--muted)"><div style="font-size:32px;margin-bottom:8px">ðŸ”</div>Nessuna entitÃ  trovata${query?' per "'+query+'"':''}</div>`;
+    list.innerHTML=`<div style="text-align:center;padding:40px 0;color:var(--muted)"><div style="font-size:32px;margin-bottom:8px">🔍</div>Nessuna entità trovata${query?' per "'+query+'"':''}</div>`;
     return;
   }
   // Group by domain
@@ -9610,9 +9616,9 @@ function _epPickerSearch(q){
     if(!groups[dom]) groups[dom]=[];
     groups[dom].push(eid);
   }
-  let html=`<div class="ep-picker-count">${entities.length} entit${entities.length===1?'Ã ':'Ã '} trovate</div>`;
+  let html=`<div class="ep-picker-count">${entities.length} entit${entities.length===1?'à':'à'} trovate</div>`;
   for(const [dom, eids] of Object.entries(groups).sort(([a],[b])=>a.localeCompare(b))){
-    const ico=_epDomIco[dom]||'ðŸ”¹';
+    const ico=_epDomIco[dom]||'🔹';
     if(!query) html+=`<div class="ep-picker-group-lbl">${ico} ${dom} (${eids.length})</div>`;
     for(const eid of eids){
       const name=ha[eid]?.friendly_name||eid.split('.').slice(1).join('.').replace(/_/g,' ');
@@ -9635,9 +9641,9 @@ function _epPickerSelect(eid){
   _epPickerClose();
 }
 
-/* â•â•â• AUTOCOMPLETAMENTO ENTITÃ€ INLINE (su tutti i campi entitÃ  delle config) â•â•â•
-   Scrivi nel campo â†’ sotto compare la lista filtrata di tutte le entitÃ ; clicchi e si compila.
-   Si attiva sui campi col bottone ðŸ” (browseField) o con classe "entac". */
+/* ═══ AUTOCOMPLETAMENTO ENTITÀ INLINE (su tutti i campi entità delle config) ═══
+   Scrivi nel campo → sotto compare la lista filtrata di tutte le entità; clicchi e si compila.
+   Si attiva sui campi col bottone 🔍 (browseField) o con classe "entac". */
 let _entacBox=null, _entacInput=null;
 function _entacEnsure(){
   if(_entacBox) return _entacBox;
@@ -9664,12 +9670,12 @@ function _entacRender(){
   if(!ents.length){ box.style.display='none'; return; }
   box.innerHTML=ents.map(e=>{
     const nm=(ha[e]||{}).friendly_name||e;
-    const dom=e.split('.')[0]; const ico=(_epDomIco&&_epDomIco[dom])||'ðŸ”¹';
+    const dom=e.split('.')[0]; const ico=(_epDomIco&&_epDomIco[dom])||'🔹';
     return `<div class="entac-it" onmousedown="event.preventDefault();_entacPick('${e}')"><span style="flex-shrink:0">${ico}</span><span style="flex:1;min-width:0"><span class="entac-nm">${eh(nm)}</span><span class="entac-eid">${e}</span></span></div>`;
-  }).join('') + (tot>50?`<div style="padding:6px 9px;font-size:10px;color:var(--muted);text-align:center">â€¦e altre ${tot-50}. Scrivi per filtrare.</div>`:'');
+  }).join('') + (tot>50?`<div style="padding:6px 9px;font-size:10px;color:var(--muted);text-align:center">…e altre ${tot-50}. Scrivi per filtrare.</div>`:'');
   const r=input.getBoundingClientRect();
   box.style.left=r.left+'px'; box.style.width=Math.max(r.width,220)+'px';
-  // se non c'Ã¨ spazio sotto, aprila sopra
+  // se non c'è spazio sotto, aprila sopra
   const below=window.innerHeight-r.bottom;
   if(below<180 && r.top>below){ box.style.top=''; box.style.bottom=(window.innerHeight-r.top+4)+'px'; }
   else { box.style.bottom=''; box.style.top=(r.bottom+4)+'px'; }
@@ -9690,7 +9696,7 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&document.getElementById('ep-picker')?.classList.contains('open')) _epPickerClose();
 });
 
-/* â•â•â• ENTITY AUTOCOMPLETE â•â•â• */
+/* ═══ ENTITY AUTOCOMPLETE ═══ */
 function _ntfEntitySuggest(idx, inputEl, dropId){
   const q=(inputEl.value||'').toLowerCase().trim();
   const drop=document.getElementById(dropId);
@@ -9723,28 +9729,28 @@ function _ntfPickEntity(idx, eid, dropId){
   if(inp) inp.value=eid;
 }
 
-/* â•â•â• ACTION TYPE PRESETS â•â•â• */
+/* ═══ ACTION TYPE PRESETS ═══ */
 const _ntfActPresets=[
-  {id:'none',     icon:'ðŸš«', label:'Nessuna',        desc:'',                   domains:[],                                           domainSvc:(e)=>({domain:'',service:''})},
-  {id:'reset',    icon:'ðŸ”„', label:'Reset',           desc:'Azzera contatore, timer o numero',  domains:['counter','input_number','timer'],
+  {id:'none',     icon:'🚫', label:'Nessuna',        desc:'',                   domains:[],                                           domainSvc:(e)=>({domain:'',service:''})},
+  {id:'reset',    icon:'🔄', label:'Reset',           desc:'Azzera contatore, timer o numero',  domains:['counter','input_number','timer'],
     domainSvc:(e)=>{ const d=(e||'').split('.')[0]; return {domain:d||'counter',service:d==='timer'?'cancel':'reset'}; }},
-  {id:'toggle',   icon:'ðŸ”€', label:'Toggle',          desc:'Alterna ON/OFF',     domains:['light','switch','input_boolean','cover','fan','climate','lock'],
+  {id:'toggle',   icon:'🔀', label:'Toggle',          desc:'Alterna ON/OFF',     domains:['light','switch','input_boolean','cover','fan','climate','lock'],
     domainSvc:()=>({domain:'homeassistant',service:'toggle'})},
-  {id:'turn_on',  icon:'ðŸ’¡', label:'Accendi',         desc:'Accende / attiva',   domains:['light','switch','input_boolean','cover','fan','climate'],
+  {id:'turn_on',  icon:'💡', label:'Accendi',         desc:'Accende / attiva',   domains:['light','switch','input_boolean','cover','fan','climate'],
     domainSvc:()=>({domain:'homeassistant',service:'turn_on'})},
-  {id:'turn_off', icon:'ðŸŒ‘', label:'Spegni',          desc:'Spegne / disattiva', domains:['light','switch','input_boolean','cover','fan','climate'],
+  {id:'turn_off', icon:'🌑', label:'Spegni',          desc:'Spegne / disattiva', domains:['light','switch','input_boolean','cover','fan','climate'],
     domainSvc:()=>({domain:'homeassistant',service:'turn_off'})},
-  {id:'script',   icon:'ðŸ“œ', label:'Script',          desc:'Esegui uno script',  domains:['script'],
+  {id:'script',   icon:'📜', label:'Script',          desc:'Esegui uno script',  domains:['script'],
     domainSvc:()=>({domain:'script',service:'turn_on'})},
-  {id:'scene',    icon:'ðŸŽ¬', label:'Scena',           desc:'Attiva una scena',   domains:['scene'],
+  {id:'scene',    icon:'🎬', label:'Scena',           desc:'Attiva una scena',   domains:['scene'],
     domainSvc:()=>({domain:'scene',service:'turn_on'})},
-  {id:'automation',icon:'âš™ï¸',label:'Automazione',    desc:'Avvia automazione',  domains:['automation'],
+  {id:'automation',icon:'⚙️',label:'Automazione',    desc:'Avvia automazione',  domains:['automation'],
     domainSvc:()=>({domain:'automation',service:'trigger'})},
-  {id:'input_select',icon:'ðŸ“‹',label:'Opzione',       desc:'Cambia input_select',domains:['input_select'],
+  {id:'input_select',icon:'📋',label:'Opzione',       desc:'Cambia input_select',domains:['input_select'],
     domainSvc:()=>({domain:'input_select',service:'select_option'})},
-  {id:'notify',   icon:'ðŸ“²', label:'Notifica',        desc:'Manda una notifica', domains:['notify'],
+  {id:'notify',   icon:'📲', label:'Notifica',        desc:'Manda una notifica', domains:['notify'],
     domainSvc:(e)=>{ const parts=(e||'').split('.'); return {domain:'notify',service:parts.slice(1).join('_')||''}; }},
-  {id:'custom',   icon:'âœï¸', label:'Custom',          desc:'Dominio/Servizio libero', domains:[],
+  {id:'custom',   icon:'✏️', label:'Custom',          desc:'Dominio/Servizio libero', domains:[],
     domainSvc:()=>({domain:'',service:''})}
 ];
 
@@ -9784,8 +9790,8 @@ function _ntfOpenActionPicker(idx, inputId){
   const titleMap={reset:'Seleziona contatore / timer / numero',toggle:'Seleziona dispositivo da alternare',
     turn_on:'Seleziona dispositivo da accendere',turn_off:'Seleziona dispositivo da spegnere',
     script:'Seleziona script',scene:'Seleziona scena',automation:'Seleziona automazione',
-    notify:'Seleziona servizio di notifica',input_select:'Seleziona input_select',custom:'Seleziona entitÃ '};
-  const title=titleMap[preset.id]||'Seleziona entitÃ ';
+    notify:'Seleziona servizio di notifica',input_select:'Seleziona input_select',custom:'Seleziona entità'};
+  const title=titleMap[preset.id]||'Seleziona entità';
   _epPickerOpen(v=>{
     _ntfSetActionEntity(idx,v);
     const el=document.getElementById(inputId);
@@ -9793,7 +9799,7 @@ function _ntfOpenActionPicker(idx, inputId){
   }, domains, title);
 }
 
-/* â•â•â• RENDER NOTIFICATION RULES (modal UI) â•â•â• */
+/* ═══ RENDER NOTIFICATION RULES (modal UI) ═══ */
 function renderNotifRules(){
   const list=document.getElementById('ntf-rules-list');
   if(!list) return;
@@ -9801,43 +9807,43 @@ function renderNotifRules(){
   _ntfUpdateSidebarBadges();
   if(!rules.length){
     list.innerHTML=`<div style="text-align:center;padding:30px 0;color:var(--muted)">
-      <div style="font-size:36px;margin-bottom:8px">ðŸ””</div>
+      <div style="font-size:36px;margin-bottom:8px">🔔</div>
       <div style="font-size:13px;font-weight:600">Nessuna regola ancora</div>
-      <div style="font-size:11px;margin-top:4px">Clicca âž• qui sotto per creare la prima notifica automatica</div>
+      <div style="font-size:11px;margin-top:4px">Clicca ➕ qui sotto per creare la prima notifica automatica</div>
     </div>`;
     return;
   }
   list.innerHTML=rules.map((r,i)=>{
-    const trigLabels={any_change:'Qualsiasi cambiamento',turns_on:'Diventa ON / home',turns_off:'Diventa OFF / away',above:'Supera soglia â–²',below:'Scende sotto soglia â–¼',specific_value:'Valore specifico',counter_increment:'Incremento counter â–² (ignora cooldown)'};
+    const trigLabels={any_change:'Qualsiasi cambiamento',turns_on:'Diventa ON / home',turns_off:'Diventa OFF / away',above:'Supera soglia ▲',below:'Scende sotto soglia ▼',specific_value:'Valore specifico',counter_increment:'Incremento counter ▲ (ignora cooldown)'};
     const animOpts=['bounce','pulse','wiggle','shake','spin','glow','none'].map(a=>`<option value="${a}"${r.anim===a?' selected':''}>${a}</option>`).join('');
     const trigOpts=Object.entries(trigLabels).map(([v,l])=>`<option value="${v}"${r.trigger===v?' selected':''}>${l}</option>`).join('');
-    const friendly=ha[r.entity]?.friendly_name||r.entity||'(nessuna entitÃ )';
-    const stateNow=r.entity?` Â· ${hs[r.entity]??'?'}`:'';
+    const friendly=ha[r.entity]?.friendly_name||r.entity||'(nessuna entità)';
+    const stateNow=r.entity?` · ${hs[r.entity]??'?'}`:'';
     const dropId=`ntf-drop-${i}`;
     return `<div class="ntf-rule-card${r._expanded?' expanded':''}" id="ntf-card-${i}">
       <div class="ntf-rule-card-hdr" onclick="_ntfToggleCard(${i})">
-        <div style="font-size:22px;line-height:1;width:28px;text-align:center">${_ntfIconHtml(r.icon||'ðŸ””',22)}</div>
+        <div style="font-size:22px;line-height:1;width:28px;text-align:center">${_ntfIconHtml(r.icon||'🔔',22)}</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:700;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name||'Regola '+(i+1)}</div>
           <div style="font-size:10px;color:var(--muted);margin-top:1px">${friendly}${stateNow}</div>
         </div>
         <button class="ntf-rule-toggle${r.enabled?' on':''}" onclick="event.stopPropagation();_ntfToggle(${i})"></button>
-        <button onclick="event.stopPropagation();_ntfDelRule(${i})" style="background:none;border:none;color:rgba(248,113,113,.4);cursor:pointer;font-size:16px;padding:2px 6px">ðŸ—‘</button>
-        <div style="color:var(--muted);font-size:14px;transition:transform .2s;${r._expanded?'transform:rotate(180deg)':''}">â–¾</div>
+        <button onclick="event.stopPropagation();_ntfDelRule(${i})" style="background:none;border:none;color:rgba(248,113,113,.4);cursor:pointer;font-size:16px;padding:2px 6px">🗑</button>
+        <div style="color:var(--muted);font-size:14px;transition:transform .2s;${r._expanded?'transform:rotate(180deg)':''}">▾</div>
       </div>
       <div class="ntf-rule-card-body">
 
-        <div class="ntf-section-sep">ðŸ“ EntitÃ  & Trigger</div>
+        <div class="ntf-section-sep">📍 Entità & Trigger</div>
         <div class="ntf-field-row">
-          <div class="ntf-field-lbl">EntitÃ </div>
+          <div class="ntf-field-lbl">Entità</div>
           <div class="ntf-ent-wrap" style="flex:1">
-            <input id="ntf-ent-inp-${i}" class="ntf-field-inp" value="${r.entity||''}" placeholder="Cerca o usa ðŸ” per sfogliareâ€¦"
+            <input id="ntf-ent-inp-${i}" class="ntf-field-inp" value="${r.entity||''}" placeholder="Cerca o usa 🔍 per sfogliare…"
               oninput="_ntfSet(${i},'entity',this.value);_ntfEntitySuggest(${i},this,'${dropId}')"
               onfocus="_ntfEntitySuggest(${i},this,'${dropId}')" onblur="setTimeout(()=>{ const d=document.getElementById('${dropId}'); if(d) d.classList.remove('show'); },200)">
             <div class="ntf-ent-drop" id="${dropId}"></div>
           </div>
-          <button class="ntf-pick-btn" title="Sfoglia tutte le entitÃ "
-            onclick="_epPickerOpen(v=>{_ntfSet(${i},'entity',v);const el=document.getElementById('ntf-ent-inp-${i}');if(el)el.value=v;})">ðŸ”</button>
+          <button class="ntf-pick-btn" title="Sfoglia tutte le entità"
+            onclick="_epPickerOpen(v=>{_ntfSet(${i},'entity',v);const el=document.getElementById('ntf-ent-inp-${i}');if(el)el.value=v;})">🔍</button>
         </div>
         <div class="ntf-field-row">
           <div class="ntf-field-lbl">Condizione</div>
@@ -9852,14 +9858,14 @@ function renderNotifRules(){
           <input class="ntf-field-inp" value="${r.triggerValue||''}" placeholder="es. unavailable" oninput="_ntfSet(${i},'triggerValue',this.value)">
         </div>`:''}
 
-        <div class="ntf-section-sep">ðŸ’¬ Contenuto popup</div>
+        <div class="ntf-section-sep">💬 Contenuto popup</div>
         <div class="ntf-field-row">
           <div class="ntf-field-lbl">Nome regola</div>
           <input class="ntf-field-inp" value="${r.name||''}" placeholder="Es. Lavatrice finita" oninput="_ntfSet(${i},'name',this.value)">
         </div>
         <div class="ntf-field-row">
           <div class="ntf-field-lbl">Titolo popup</div>
-          <input class="ntf-field-inp" value="${r.title||''}" placeholder="{entity} â€” usa {entity},{state}" oninput="_ntfSet(${i},'title',this.value)">
+          <input class="ntf-field-inp" value="${r.title||''}" placeholder="{entity} — usa {entity},{state}" oninput="_ntfSet(${i},'title',this.value)">
         </div>
         <div class="ntf-field-row">
           <div class="ntf-field-lbl">Messaggio</div>
@@ -9868,12 +9874,12 @@ function renderNotifRules(){
         <div class="ntf-field-row">
           <div class="ntf-field-lbl">Icona</div>
           <div style="display:flex;align-items:center;gap:6px;flex:none">
-            <div id="ntf-ico-prev-${i}" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.05);border-radius:8px;font-size:18px">${_ntfIconHtml(r.icon||'ðŸ””',20)}</div>
-            <input class="ntf-field-inp" id="ntf-ico-inp-${i}" value="${r.icon||''}" placeholder="ðŸ”” o mdi:bell"
-              oninput="_ntfSet(${i},'icon',this.value);const p=document.getElementById('ntf-ico-prev-${i}');if(p)p.innerHTML=_ntfIconHtml(this.value||'ðŸ””',20);"
+            <div id="ntf-ico-prev-${i}" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.05);border-radius:8px;font-size:18px">${_ntfIconHtml(r.icon||'🔔',20)}</div>
+            <input class="ntf-field-inp" id="ntf-ico-inp-${i}" value="${r.icon||''}" placeholder="🔔 o mdi:bell"
+              oninput="_ntfSet(${i},'icon',this.value);const p=document.getElementById('ntf-ico-prev-${i}');if(p)p.innerHTML=_ntfIconHtml(this.value||'🔔',20);"
               style="width:110px">
             <button class="ntf-pick-btn" title="Scegli emoji o icona MDI"
-              onclick="openIconPicker(v=>{_ntfSet(${i},'icon',v);const el=document.getElementById('ntf-ico-inp-${i}');if(el)el.value=v;const p=document.getElementById('ntf-ico-prev-${i}');if(p)p.innerHTML=_ntfIconHtml(v,20);},this,event)">ðŸŽ¨</button>
+              onclick="openIconPicker(v=>{_ntfSet(${i},'icon',v);const el=document.getElementById('ntf-ico-inp-${i}');if(el)el.value=v;const p=document.getElementById('ntf-ico-prev-${i}');if(p)p.innerHTML=_ntfIconHtml(v,20);},this,event)">🎨</button>
           </div>
           <div style="width:12px"></div>
           <div class="ntf-field-lbl" style="width:auto">Colore</div>
@@ -9883,7 +9889,7 @@ function renderNotifRules(){
           <select class="ntf-field-inp" style="width:90px;flex:none" onchange="_ntfSet(${i},'anim',this.value)">${animOpts}</select>
         </div>
 
-        <div class="ntf-section-sep">âš¡ Azione al click "Ho capito"</div>
+        <div class="ntf-section-sep">⚡ Azione al click "Ho capito"</div>
         <div class="ntf-act-grid">
           ${_ntfActPresets.map(p=>`
             <div class="ntf-act-type${(r.dismissActionType||'none')===p.id?' sel':''}" onclick="_ntfSetActionType(${i},'${p.id}')" title="${p.desc}">
@@ -9893,12 +9899,12 @@ function renderNotifRules(){
         </div>
         ${(()=>{
           const preset=_ntfActPresets.find(p=>p.id===(r.dismissActionType||'none'));
-          if(!preset||preset.id==='none') return '<div style="font-size:10px;color:rgba(255,255,255,.22);margin-bottom:12px;padding:0 2px">Nessuna azione â€” il popup si chiude senza fare nulla.</div>';
+          if(!preset||preset.id==='none') return '<div style="font-size:10px;color:rgba(255,255,255,.22);margin-bottom:12px;padding:0 2px">Nessuna azione — il popup si chiude senza fare nulla.</div>';
           const isCustom=preset.id==='custom';
           const domainsFilter=preset.domains;
-          const entityLabel=preset.id==='notify'?'Destinatario':'EntitÃ ';
+          const entityLabel=preset.id==='notify'?'Destinatario':'Entità';
           const entityPlaceholder=preset.id==='reset'?'counter.posta':preset.id==='script'?'script.nome':preset.id==='scene'?'scene.nome':preset.id==='notify'?'notify.alexa_sala':'light.soggiorno';
-          const pickerTitle=preset.id==='reset'?'Seleziona contatore / timer':preset.id==='toggle'?'Seleziona dispositivo':preset.id==='turn_on'||preset.id==='turn_off'?'Seleziona dispositivo':preset.id==='script'?'Seleziona script':preset.id==='scene'?'Seleziona scena':preset.id==='automation'?'Seleziona automazione':preset.id==='notify'?'Seleziona servizio notify':preset.id==='input_select'?'Seleziona input_select':'Seleziona entitÃ ';
+          const pickerTitle=preset.id==='reset'?'Seleziona contatore / timer':preset.id==='toggle'?'Seleziona dispositivo':preset.id==='turn_on'||preset.id==='turn_off'?'Seleziona dispositivo':preset.id==='script'?'Seleziona script':preset.id==='scene'?'Seleziona scena':preset.id==='automation'?'Seleziona automazione':preset.id==='notify'?'Seleziona servizio notify':preset.id==='input_select'?'Seleziona input_select':'Seleziona entità';
           const friendly=r.dismissEntity?ha[r.dismissEntity]?.friendly_name||r.dismissEntity:'';
           return `<div class="ntf-act-entity-row">
             <div style="font-size:10px;font-weight:600;color:rgba(255,255,255,.45);margin-bottom:8px">${preset.icon} ${preset.desc||preset.label}</div>
@@ -9906,8 +9912,8 @@ function renderNotifRules(){
               <div class="ntf-field-lbl">${entityLabel}</div>
               <input id="ntf-da-inp-${i}" class="ntf-field-inp" value="${r.dismissEntity||''}" placeholder="${entityPlaceholder}"
                 oninput="_ntfSetActionEntity(${i},this.value)">
-              <button class="ntf-pick-btn" title="Sfoglia entitÃ "
-                onclick="_ntfOpenActionPicker(${i},'ntf-da-inp-${i}')">ðŸ”</button>
+              <button class="ntf-pick-btn" title="Sfoglia entità"
+                onclick="_ntfOpenActionPicker(${i},'ntf-da-inp-${i}')">🔍</button>
             </div>
             ${friendly?`<div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:5px;padding-left:88px">${friendly}</div>`:''}
             ${isCustom?`<div class="ntf-field-row" style="margin-top:8px">
@@ -9916,51 +9922,51 @@ function renderNotifRules(){
               <div class="ntf-field-lbl" style="width:auto;margin:0 6px">Servizio</div>
               <input class="ntf-field-inp" value="${r.dismissService||''}" placeholder="es. reset" oninput="_ntfSet(${i},'dismissService',this.value)">
             </div>`:''}
-            ${(!isCustom&&r.dismissDomain)?`<div style="font-size:10px;color:rgba(255,255,255,.22);margin-top:6px;padding-left:88px">â†’ ${r.dismissDomain}.${r.dismissService}</div>`:''}
+            ${(!isCustom&&r.dismissDomain)?`<div style="font-size:10px;color:rgba(255,255,255,.22);margin-top:6px;padding-left:88px">→ ${r.dismissDomain}.${r.dismissService}</div>`:''}
           </div>`;
         })()}
 
-        <div class="ntf-section-sep">âš™ï¸ Opzioni</div>
+        <div class="ntf-section-sep">⚙️ Opzioni</div>
         <div class="ntf-field-row" style="flex-wrap:wrap;gap:14px">
           <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);cursor:pointer">
             <input type="checkbox" ${r.autoMsg?'checked':''} onchange="_ntfSet(${i},'autoMsg',this.checked)"> Auto-messaggio elettrodomestici
           </label>
           <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);cursor:pointer">
-            <input type="checkbox" ${r.confetti?'checked':''} onchange="_ntfSet(${i},'confetti',this.checked)"> ðŸŽ‰ Coriandoli
+            <input type="checkbox" ${r.confetti?'checked':''} onchange="_ntfSet(${i},'confetti',this.checked)"> 🎉 Coriandoli
           </label>
         </div>
 
-        <div class="ntf-section-sep">ðŸ“¡ Sensore aggiuntivo nel messaggio (opzionale)</div>
+        <div class="ntf-section-sep">📡 Sensore aggiuntivo nel messaggio (opzionale)</div>
         <div class="ntf-field-row">
           <div class="ntf-field-lbl">Sensore extra</div>
           <input id="ntf-dur-inp-${i}" class="ntf-field-inp" value="${r.durationEntity||''}" placeholder="es. sensor.lavatrice_durata_ciclo"
             oninput="_ntfSet(${i},'durationEntity',this.value)">
-          <button class="ntf-pick-btn" title="Sfoglia entitÃ "
-            onclick="_epPickerOpen(v=>{_ntfSet(${i},'durationEntity',v);const el=document.getElementById('ntf-dur-inp-${i}');if(el)el.value=v;})">ðŸ”</button>
+          <button class="ntf-pick-btn" title="Sfoglia entità"
+            onclick="_epPickerOpen(v=>{_ntfSet(${i},'durationEntity',v);const el=document.getElementById('ntf-dur-inp-${i}');if(el)el.value=v;})">🔍</button>
         </div>
         <div style="font-size:10px;color:rgba(255,255,255,.25);margin:-4px 0 8px 88px">
-          Usa <b>{sensor}</b> nel messaggio per mostrare il valore di questo sensore (valore + unitÃ ).<br>
+          Usa <b>{sensor}</b> nel messaggio per mostrare il valore di questo sensore (valore + unità).<br>
           Es: <i>Panni pronti per essere ritirati, Durata ciclo: {sensor}</i>
         </div>
 
-        <div class="ntf-section-sep">ðŸ”˜ Testo pulsante conferma</div>
+        <div class="ntf-section-sep">🔘 Testo pulsante conferma</div>
         <div class="ntf-field-row">
           <div class="ntf-field-lbl">Tasto "Ok"</div>
-          <input class="ntf-field-inp" value="${r.dismissLabel||''}" placeholder="Lascia vuoto = auto (es. âœ‰ï¸ Ho ritirato la posta!)" oninput="_ntfSet(${i},'dismissLabel',this.value)">
+          <input class="ntf-field-inp" value="${r.dismissLabel||''}" placeholder="Lascia vuoto = auto (es. ✉️ Ho ritirato la posta!)" oninput="_ntfSet(${i},'dismissLabel',this.value)">
         </div>
 
-        <div class="ntf-section-sep">ðŸ“· Camera & ðŸ”Š Alexa (opzionale)</div>
+        <div class="ntf-section-sep">📷 Camera & 🔊 Alexa (opzionale)</div>
         <div class="ntf-field-row">
           <div class="ntf-field-lbl">Camera</div>
           <input id="ntf-cam-inp-${i}" class="ntf-field-inp" value="${r.camEntity||''}" placeholder="camera.ingresso" oninput="_ntfSet(${i},'camEntity',this.value)">
           <button class="ntf-pick-btn" title="Sfoglia camere"
-            onclick="_epPickerOpen(v=>{_ntfSet(${i},'camEntity',v);const el=document.getElementById('ntf-cam-inp-${i}');if(el)el.value=v;},'camera','Seleziona camera')">ðŸ”</button>
+            onclick="_epPickerOpen(v=>{_ntfSet(${i},'camEntity',v);const el=document.getElementById('ntf-cam-inp-${i}');if(el)el.value=v;},'camera','Seleziona camera')">🔍</button>
         </div>
         <div class="ntf-field-row">
           <div class="ntf-field-lbl">Alexa notify</div>
           <input id="ntf-ax-inp-${i}" class="ntf-field-inp" value="${r.alexaEntity||''}" placeholder="notify.alexa_sala" oninput="_ntfSet(${i},'alexaEntity',this.value)">
           <button class="ntf-pick-btn" title="Sfoglia servizi notify"
-            onclick="_epPickerOpen(v=>{_ntfSet(${i},'alexaEntity',v);const el=document.getElementById('ntf-ax-inp-${i}');if(el)el.value=v;},'notify','Seleziona servizio Alexa/notify')">ðŸ”</button>
+            onclick="_epPickerOpen(v=>{_ntfSet(${i},'alexaEntity',v);const el=document.getElementById('ntf-ax-inp-${i}');if(el)el.value=v;},'notify','Seleziona servizio Alexa/notify')">🔍</button>
         </div>
         ${r.alexaEntity?`<div class="ntf-field-row">
           <div class="ntf-field-lbl">Testo TTS</div>
@@ -9982,7 +9988,7 @@ function _ntfToggleCard(i){
 function ntfAddRule(){
   const rules=_ntfCfg();
   rules.push({id:'ntf_'+Date.now(),name:'Nuova regola',entity:'',trigger:'turns_off',
-    title:'{entity}',message:'Stato: {state}',icon:'ðŸ””',color:'#818cf8',anim:'bounce',
+    title:'{entity}',message:'Stato: {state}',icon:'🔔',color:'#818cf8',anim:'bounce',
     enabled:true,autoMsg:false,confetti:false,actions:[],
     camEntity:'',alexaEntity:'',alexaTts:'',
     dismissActionType:'none',dismissDomain:'',dismissService:'',dismissEntity:'',
@@ -10013,12 +10019,12 @@ function _ntfSet(idx, key, val){
   if(key==='trigger'||key==='alexaEntity') renderNotifRules();
 }
 
-/* â”€â”€ KIOSK MODE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── KIOSK MODE ─────────────────────────────────────────────── */
 let _kioskOn=false;
 function _applyKioskUI(){
   document.body.classList.toggle('kiosk',_kioskOn);
   const btn=document.getElementById('kiosk-btn');
-  if(btn){btn.innerHTML=_kioskOn?'<i class="mdi mdi-fullscreen-exit"></i>':'<i class="mdi mdi-fullscreen"></i>';btn.title=_kioskOn?'Esci da Kiosk':'ModalitÃ  Kiosk (schermo intero)';}
+  if(btn){btn.innerHTML=_kioskOn?'<i class="mdi mdi-fullscreen-exit"></i>':'<i class="mdi mdi-fullscreen"></i>';btn.title=_kioskOn?'Esci da Kiosk':'Modalità Kiosk (schermo intero)';}
 }
 function toggleKiosk(){
   _kioskOn=!_kioskOn;
@@ -10032,14 +10038,14 @@ function toggleKiosk(){
     try{(document.exitFullscreen||document.webkitExitFullscreen||document.mozCancelFullScreen).call(document);}catch(e){}
   }
 }
-/* Ripristina la modalitÃ  kiosk dopo un ricaricamento (il fullscreen richiede un gesto, ma il layout kiosk resta) */
+/* Ripristina la modalità kiosk dopo un ricaricamento (il fullscreen richiede un gesto, ma il layout kiosk resta) */
 (function(){ try{ if(localStorage.getItem('frarik_kiosk')==='1'){ _kioskOn=true; _applyKioskUI(); } }catch(e){} })();
 function togglePageTabs(){
   const wrap=document.getElementById('page-tabs-wrap');
   const btn=document.getElementById('tabs-toggle');
   if(!wrap) return;
   const hidden=wrap.classList.toggle('tabs-hidden');
-  if(btn) btn.textContent=hidden?'â–¼':'â–²';
+  if(btn) btn.textContent=hidden?'▼':'▲';
   if(btn) btn.title=hidden?'Mostra barra pagine':'Nascondi barra pagine';
 }
 function _syncKioskFromFS(){
@@ -10047,7 +10053,7 @@ function _syncKioskFromFS(){
     _kioskOn=false;
     document.body.classList.remove('kiosk');
     const btn=document.getElementById('kiosk-btn');
-    if(btn){btn.innerHTML='â›¶';btn.title='ModalitÃ  Kiosk (schermo intero)';}
+    if(btn){btn.innerHTML='⛶';btn.title='Modalità Kiosk (schermo intero)';}
   }
 }
 document.addEventListener('fullscreenchange',_syncKioskFromFS);
@@ -10058,7 +10064,7 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
   function cfg(){ try{return Object.assign({on:true,sec:300,weather:'',temp:''}, JSON.parse(localStorage.getItem(LS)||'{}'));}catch(e){return {on:true,sec:300};} }
   function save(o){ localStorage.setItem(LS, JSON.stringify(Object.assign(cfg(),o||{}))); }
   window.screensaverCfg=function(o){ if(o) save(o); reset(); return cfg(); };
-  const COND={'sunny':'â˜€ï¸','clear-day':'â˜€ï¸','clear-night':'ðŸŒ™','partlycloudy':'â›…','partly-cloudy-day':'â›…','partly-cloudy-night':'â˜ï¸','cloudy':'â˜ï¸','rainy':'ðŸŒ§ï¸','rain':'ðŸŒ§ï¸','pouring':'ðŸŒ§ï¸','lightning':'â›ˆï¸','lightning-rainy':'â›ˆï¸','thunderstorm':'â›ˆï¸','snowy':'â„ï¸','snow':'â„ï¸','snowy-rainy':'ðŸŒ¨ï¸','hail':'ðŸŒ¨ï¸','fog':'ðŸŒ«ï¸','windy':'ðŸ’¨','windy-variant':'ðŸ’¨','exceptional':'âš ï¸'};
+  const COND={'sunny':'☀️','clear-day':'☀️','clear-night':'🌙','partlycloudy':'⛅','partly-cloudy-day':'⛅','partly-cloudy-night':'☁️','cloudy':'☁️','rainy':'🌧️','rain':'🌧️','pouring':'🌧️','lightning':'⛈️','lightning-rainy':'⛈️','thunderstorm':'⛈️','snowy':'❄️','snow':'❄️','snowy-rainy':'🌨️','hail':'🌨️','fog':'🌫️','windy':'💨','windy-variant':'💨','exceptional':'⚠️'};
   function gv(id){ return (typeof hs!=='undefined'&&hs&&hs[id]!=null)?hs[id]:null; }
   function pickTemp(){ const c=cfg(); if(c.temp&&gv(c.temp)!=null) return gv(c.temp); if(typeof hs==='undefined') return null;
     const k=Object.keys(hs).find(x=>/sensor\..*gw1100a.*outdoor.*temp/i.test(x))||Object.keys(hs).find(x=>/sensor\..*gw1100a.*temperature/i.test(x)); return k?gv(k):null; }
@@ -10082,15 +10088,15 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
     ov.innerHTML='<div id="ss-clock"></div><div id="ss-date"></div><div id="ss-wx"></div><div id="ss-hint">tocca per uscire</div>';
     document.body.appendChild(ov);
   }
-  const G=['Domenica','LunedÃ¬','MartedÃ¬','MercoledÃ¬','GiovedÃ¬','VenerdÃ¬','Sabato'];
+  const G=['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'];
   const M=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
   function tick(){
     if(!ov) return; const d=new Date(),p=n=>String(n).padStart(2,'0');
     ov.querySelector('#ss-clock').innerHTML=p(d.getHours())+':'+p(d.getMinutes())+'<span class="s">'+p(d.getSeconds())+'</span>';
     ov.querySelector('#ss-date').textContent=G[d.getDay()]+' '+d.getDate()+' '+M[d.getMonth()];
     const t=pickTemp(),w=pickWeather();
-    const e=(w&&COND[String(w).toLowerCase()])||'â›…';
-    const tv=(t!=null&&!isNaN(parseFloat(t)))?parseFloat(t).toFixed(1)+'Â°':'';
+    const e=(w&&COND[String(w).toLowerCase()])||'⛅';
+    const tv=(t!=null&&!isNaN(parseFloat(t)))?parseFloat(t).toFixed(1)+'°':'';
     ov.querySelector('#ss-wx').innerHTML=(tv||w)?('<span class="e">'+e+'</span><span>'+tv+'</span>'):'';
   }
   function _open(){ if(!ov) build(); active=true; tick(); ov.classList.add('on'); clearInterval(tickTimer); tickTimer=setInterval(tick,1000); }
@@ -10127,7 +10133,7 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
   window.navbarCfg=function(o){ if(o) localStorage.setItem(LS,JSON.stringify(Object.assign(c(),o))); render(); if(typeof renderFbarZone==='function')try{renderFbarZone();}catch(e){} return c(); };
   let bar;
   function ensureStyle(){ if(document.getElementById('navbar-style'))return; const s=document.createElement('style'); s.id='navbar-style'; s.textContent=`
-    /* navbar standalone (quando NON c'Ã¨ la footer bar): stesso vetro del dock inferiore / plancia */
+    /* navbar standalone (quando NON c'è la footer bar): stesso vetro del dock inferiore / plancia */
     #app-navbar{position:fixed;left:50%;transform:translateX(-50%);z-index:480;display:flex;gap:6px;padding:8px 12px;
       background:linear-gradient(135deg,rgba(99,102,241,.10),rgba(12,14,28,.55));-webkit-backdrop-filter:blur(26px) saturate(170%);backdrop-filter:blur(26px) saturate(170%);
       border:1px solid rgba(255,255,255,.10);border-radius:26px;
@@ -10148,7 +10154,7 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
     document.head.appendChild(s); }
   window._navChipsHTML=function(){
     if(typeof cfg==='undefined'||!cfg.pages) return '';
-    return cfg.pages.map((p,i)=>'<button class="nv-chip'+(i===cfg.activePage?' on':'')+'" onclick="setActivePage('+i+');setTimeout(window._navbarSync,30)"><span class="nv-ic">'+(p.icon||'ðŸ“„')+'</span><span>'+String(p.name||('Pag '+(i+1))).slice(0,12)+'</span></button>').join('');
+    return cfg.pages.map((p,i)=>'<button class="nv-chip'+(i===cfg.activePage?' on':'')+'" onclick="setActivePage('+i+');setTimeout(window._navbarSync,30)"><span class="nv-ic">'+(p.icon||'📄')+'</span><span>'+String(p.name||('Pag '+(i+1))).slice(0,12)+'</span></button>').join('');
   };
   function render(){
     ensureStyle();
@@ -10190,7 +10196,7 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
   window._sysSaveNV=function(){ navbarCfg({pos:$('sys-nv-pos').value}); };
   window._applyMobCol=function(mode){ mode=mode||'auto'; localStorage.setItem('dash_mobcol',mode); document.body.classList.toggle('mobcol-off',mode==='off'); document.body.classList.toggle('mobcol-always',mode==='always'); };
   window._sysSaveMob=function(){ _applyMobCol($('sys-mob').value); };
-  // â”€â”€ Filtro ricerca galleria card â”€â”€
+  // ── Filtro ricerca galleria card ──
   window._smFilter=function(q){
     q=(q||'').trim().toLowerCase();
     document.querySelectorAll('#smod .sc-btn').forEach(b=>{ b.style.display=(!q||b.textContent.toLowerCase().includes(q))?'':'none'; });
@@ -10199,39 +10205,90 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
   (function boot(){ try{ _applyMobCol(localStorage.getItem('dash_mobcol')||'auto'); }catch(e){} })();
 })();
 
-
+// ── Esponi funzioni per handler HTML inline ──────────────────────────────────
 Object.assign(window, {
   _addColorRule,
+  _badgeClick,
+  _badgeDragEnd,
+  _badgeDragOver,
+  _badgeDragStart,
+  _badgeDrop,
   _bmSetAlign,
   _cmVisToggle,
+  _delColorRule,
   _epPickerClose,
+  _epPickerOpen,
   _epPickerSearch,
+  _epPickerSelect,
   _epToggleGroup,
+  _fbPickPreset,
   _fbPreviewIcon,
+  _feClick,
   _feEpSearch,
   _ghAskInstall,
   _ghCheck,
   _ghImportAll,
   _ghPublishDo,
-  _ghsReloadTab,
   _ghStoreRender,
+  _ghsCopy,
+  _ghsDeleteInstalled,
+  _ghsDownload,
+  _ghsInstall,
+  _ghsPreview,
+  _ghsPublish,
+  _ghsReloadTab,
+  _hbPickClockColor,
+  _hbPickCmapColor,
+  _hbSelBg,
+  _hbSelTxt,
   _iconPickerClose,
+  _iconPickerPick,
   _iconPickerRenderTab,
+  _inViewPasteBadge,
+  _ntfAction,
+  _ntfDismiss,
+  _ntfDoAction,
+  _ntfEntitySuggest,
+  _ntfOpenActionPicker,
+  _ntfPickEntity,
+  _ntfSet,
+  _ntfSetActionEntity,
+  _ntfSetActionType,
+  _ntfToggleCard,
   _pgMarkDirty,
+  _pgWarnCancelAndProceed,
+  _pgWarnSaveAndProceed,
+  _pickColor,
+  _pickEmoji,
+  _sectEditBadge,
   _selBAction,
+  _selBC,
   _selColMode,
   _selDisp,
+  _selSectColor,
   _selVis,
+  _setNewPageCols,
+  _setRule,
+  _sosPickPerson,
   _sysSaveMob,
   _sysSaveSS,
   _sysSaveTH,
   _sysToggle,
   _yamlLivePreview,
+  addSaved,
   addSpecial,
+  adjH,
+  adjSecSpan,
+  adjSpan,
+  adjustClimate,
   appAddRow,
+  appChipPopup,
   appGroupAdd,
+  applyColorTheme,
+  applyFont,
   applyTheme,
   browseField,
+  callSvc,
   cancelPageSettings,
   clearClipboard,
   closeBM,
@@ -10240,39 +10297,61 @@ Object.assign(window, {
   closeFBM,
   closeFE,
   closeGhPub,
-  closeGhsPreview,
   closeGhStore,
+  closeGhsPreview,
   closeGitHubCfg,
   closeHBM,
   closeIM,
   closeJsStore,
+  closeMobileMenu,
   closeNotifCenter,
   closeNotifCfg,
   closeOikSettings,
-  closeSectMod,
   closeSM,
   closeSOS,
   closeSOS2,
   closeSOSCfg,
+  closeSectMod,
   closeTM,
   closeTModStep2,
   closeViewEdit,
+  closeViewsMenu,
   closeWM,
   closeYamlImport,
   confirmPage,
   confirmPageSettings,
   confirmRestartHA,
-  deleteViewFromEdit,
+  copyCard,
+  copySectBadge,
+  cutCard,
+  cutSectBadge,
+  delBadge,
+  delCard,
   delPage,
+  delPageByIdx,
+  delSectBadge,
+  delSectTitle,
+  deleteSaved,
+  deleteViewFromEdit,
   doLogin,
   doLogout,
+  doToggle,
+  dupCard,
+  editBadgeAt,
+  eitClick,
   exportBackup,
   fbAddBtn,
   fbCancelBtn,
+  fbEditBtn,
   fbSaveBtn,
   fbSelType,
+  fbarBtnClick,
+  fbarZoneBtnClick,
   feAddEl,
+  feAddEntity,
+  feDelEl,
   feOpenEP,
+  feUp,
   feUpdCard,
   filterE,
   ghStoreTab,
@@ -10281,6 +10360,9 @@ Object.assign(window, {
   hbAddOption,
   hbAutoFill,
   hbCancelChip,
+  hbDelChip,
+  hbEditChip,
+  hbMoveChip,
   hbSaveChip,
   hbSelClickAct,
   hbSelClockFormat,
@@ -10292,9 +10374,13 @@ Object.assign(window, {
   hideBadgeForm,
   importBackupFile,
   importYamlCard,
+  jsStoreAddCard,
+  jsStoreDeleteCard,
   jsStoreDownloadTemplate,
   jsStoreLoadFile,
   jsStoreTab,
+  moveBadge,
+  moveSectBadge,
   ntfAddRule,
   ntfClearAll,
   ntfMarkAllRead,
@@ -10303,6 +10389,8 @@ Object.assign(window, {
   onCustomColorToggle,
   onTypeChange,
   openBM,
+  openCM,
+  openColorPicker,
   openFBM,
   openGhStore,
   openGitHubCfg,
@@ -10311,8 +10399,10 @@ Object.assign(window, {
   openNotifCfg,
   openOikSettings,
   openPageCfg,
-  openSectBadges,
   openSOSCfg,
+  openSectBadges,
+  openSectMod,
+  openTM,
   pasteCard,
   pasteSectBadge,
   previewSect,
@@ -10328,14 +10418,26 @@ Object.assign(window, {
   saveViewEdit,
   saveWizard,
   selBT,
+  selColor,
+  selShape,
+  setActivePage,
   setLoginMode,
   setSectBadgesAlign,
   setSectColor,
   setSectSize,
   setSectTitleAlign,
+  setSectionCols,
+  setSectionRowH,
+  setTimeout,
   showBadgeForm,
   sosAddContact,
+  sosAddPerson,
   sosAlertAll,
+  sosCall,
+  sosDeleteContact,
+  sosNotify,
+  sosRemovePerson,
+  sosUpdateContact,
   syncCfgToHA,
   toggleEdit,
   toggleFbarEnabled,
