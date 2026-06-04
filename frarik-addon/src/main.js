@@ -5,76 +5,8 @@ import jsyaml from 'js-yaml';
 window.Chart  = Chart;
 window.jsyaml = jsyaml;
 
-/* ══════════════════════════════════════════════════════════════════════════════
-   📌 ISTRUZIONI PER CLAUDE CODE — LEGGERE PRIMA DI MODIFICARE QUESTO FILE
-   Questa plancia "Frarik" è sviluppata in 2 persone, su PC diversi, condividendo il
-   file via GitHub (repo github.com/Frarik/cards). Ogni utente la modifica con Claude Code.
-
-   ⚙️ A OGNI MODIFICA DEL FILE, SEMPRE (3 cose obbligatorie):
-   1) Aumenta window.FRARIK_APP_VERSION di +10 (es. ...460 → ...470). NON di 1.
-   2) Aggiorna FRARIK_VER in /config/www/frarik-panel.js con LO STESSO numero
-      (formato 'AAAAMMGG-NNN', es. '20260604-470'): busta la cache dell'iframe.
-   3) Aggiungi a window.FRARIK_CHANGELOG (qui sotto) una riga per OGNI modifica fatta
-      (emoji: 🐛 fix · ✨ aggiunto · 🗑 rimosso · 🔧 modificato). Quell'elenco viene
-      mostrato all'altro utente nella notifica "Plancia aggiornata" (tasto "Ho capito").
-      → ACCUMULA le voci finché l'utente non dice "caricato su GitHub"; poi RICOMINCIA
-        l'elenco da zero con solo le novità del nuovo giro.
-
-   🧠 DA SAPERE (per non perdere tempo su cose impossibili/già fatte):
-   • Il file è GRANDE (~700KB): leggi/modifica SEZIONI MIRATE (Grep/Edit), non riscriverlo.
-   • La plancia gira DENTRO UN IFRAME (panel_custom + frarik-panel.js). Quindi NON si
-     possono renderizzare card Lovelace native/HACS complesse qui dentro (realm separato,
-     muro tecnico verificato). Per quelle si usa  type: iframe  che incorpora una vera
-     dashboard HA. Le card semplici (entities/sensori) sì, via renderer interno.
-   • Repo github.com/Frarik/cards:  ROOT → frarik.html (QUESTA plancia, l'auto-update la
-     cerca qui) + frarik-panel.js.  Cartelle:  card-js/ card-chips/ card-distintivi/
-     (card .js installabili),  card-yaml/ pkg/ (config HA da copiare/scaricare).
-   • Token/Nabu Casa/credenziali stanno in localStorage del browser → gli aggiornamenti
-     del file NON le toccano. NON scrivere token nel file. L'undo/redo NON tocca githubSync.
-   • Connessione same-origin (funziona in locale E da remoto Nabu Casa). Config
-     sincronizzata tra i dispositivi via HA user_data (last-write-wins).
-   • L'utente è NON tecnico e italiano: spiegare semplice, UNA modifica alla volta,
-     e far testare con Ctrl+F5 / riapertura del pannello.
-   ══════════════════════════════════════════════════════════════════════════════ */
-/* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
-   Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260604490;
-/* ═══ CHANGELOG — modifica QUESTO elenco ad ogni pubblicazione su GitHub ═══
-   Ogni riga è un punto dell'elenco mostrato nella notifica "plancia aggiornata".
-   Usa pure emoji: 🐛 fix · ✨ aggiunto · 🗑 rimosso · 🔧 modificato. */
-window.FRARIK_CHANGELOG = [
-  "↩️ ANNULLA / RIPETI: pulsanti ↶ ↷ in alto (in modalità modifica) e scorciatoie Ctrl+Z / Ctrl+Y. Tiene le ultime 60 modifiche; non tocca token GitHub né card salvate.",
-  "🛡 CARD A PROVA DI ERRORE: se una card (specie JS/YAML) va in errore mostra un riquadrino ⚠️ e NON rompe più tutta la vista.",
-  "👁 VISIBILITÀ CONDIZIONALE DELLE CARD: nel config di ogni card puoi farla apparire solo se una condizione è vera (es. card telecamere solo se allarme inserito).",
-  "🎨 9 TEMI COLORATI (Indaco, Oceano, Menta, Smeraldo, Oro, Tramonto, Cremisi, Rosa, Viola): cambiano accento E sfondo della plancia. Impostazioni → Aspetto.",
-  "✨ NOTIFICHE DI AGGIORNAMENTO con l'elenco dettagliato delle modifiche (questo changelog) e tasto \"Ho capito\" per chiuderle.",
-  "📱 CELLULARE: tutte le icone in alto raccolte in un unico menù ⋮ a destra, sempre accessibile (anche in kiosk/impostazioni/modifica).",
-  "📱 CELLULARE: chip e distintivi in alto ora vanno a capo su più righe partendo da sinistra, senza uscire dallo schermo né coprire il menù ⋮.",
-  "🐛 Eliminato il FLASH della barra in alto ogni secondo (l'orologio si aggiorna sul posto, niente più ridisegno di tutti i chip).",
-  "🐛 Eliminato il FLASH dei distintivi a colore automatico ogni secondo (aggiornati sul posto).",
-  "🐛 Sistemato il menù a tendina che appariva al centro e poi 'saltava' a destra.",
-  "🔧 Sistema IMPORTA YAML: anteprima allineata al risultato reale, card HACS più robuste, rimossi doppioni di funzioni.",
-  "✨ Supporto  type: iframe  nell'importa YAML → per le card HA molto complesse si incorpora una vera dashboard di Home Assistant (popup inclusi).",
-  "📝 Aggiunte in cima al file le note per Claude Code (regole versioni/changelog per chi modifica il file in 2)."
-];
-/* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
-   (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
-(function(){
-  try{
-    if(/[?&]noupd/.test(location.search)){ localStorage.removeItem('frarik_app_html'); localStorage.removeItem('frarik_app_ver'); return; }
-    var ov=localStorage.getItem('frarik_app_html');
-    var ovv=parseInt(localStorage.getItem('frarik_app_ver')||'0',10);
-    var ovt=parseInt(localStorage.getItem('frarik_app_ts')||'0',10);
-    var age=ovt ? (Date.now()-ovt) : Infinity;
-    var TTL=30*24*60*60*1000; // 30 giorni
-    if(age>TTL){ localStorage.removeItem('frarik_app_html'); localStorage.removeItem('frarik_app_ver'); localStorage.removeItem('frarik_app_ts'); ov=null; }
-    if(ov && ovv>window.FRARIK_APP_VERSION && ov.length>200000 && ov.indexOf('FRARIK_APP_VERSION')>-1 && ov.indexOf('</html>')>-1 && ov.indexOf('</style>')>-1 && ov.indexOf('</'+'script>')>-1){
-      document.open(); document.write(ov); document.close();
-    }
-  }catch(e){}
-})();
-/* Se sei già autenticato, nascondi SUBITO il login (prima che il body venga disegnato) → niente flash di login a ogni ricarica. */
-try{ if(localStorage.getItem('ha_auth')==='1'||sessionStorage.getItem('ha_auth')==='1') document.documentElement.classList.add('frk-authed'); }catch(e){}
+/* Frarik Dashboard — add-on per Home Assistant
+   Sorgente: frarik-addon/src/main.js */
 
 /* ═══════════════════════════════════════════════════════════════════════════
    ⚙️  PROFILI MULTI-UTENTE — rilevamento automatico in base all'URL
@@ -776,16 +708,6 @@ function _onResume(){
   } else if(ws.readyState===1){
     _haLoadCfg();
   }
-  // controllo aggiornamento plancia quando torni sulla pagina (throttle 3 min)
-  try{
-    var now=Date.now();
-    if(now-(window._appUpdLastChk||0)>180000){ window._appUpdLastChk=now; if(typeof _appUpdateCheck==='function') _appUpdateCheck(); }
-  }catch(e){}
-  // controlla se il file su HA è più recente di quello in esecuzione (throttle 60s)
-  try{
-    var now2=Date.now();
-    if(now2-(window._haLocalLastChk||0)>60000){ window._haLocalLastChk=now2; _haLocalCheck(); }
-  }catch(e){}
 }
 document.addEventListener('visibilitychange',_onResume);
 window.addEventListener('focus',_onResume);
@@ -935,7 +857,7 @@ async function _ghCheck(force){
   let files;
   try{ files=await _ghApiListAll(); }
   catch(e){ if(force){ _ghStatus('⚠️ '+e.message); showToast('⚠️ GitHub: '+e.message);} return; }
-  _ghPending = files.filter(f=> g.shas[f.name] && g.shas[f.name]!==f.sha);
+  _ghPending = files.filter(f=> !g.shas[f.name] || g.shas[f.name]!==f.sha);
   if(force) _ghStatus(files.length+' card nel repo · '+_ghPending.length+' da aggiornare');
   const sig=_ghPending.map(f=>f.name+':'+f.sha).sort().join('|');
   if(_ghPending.length && sig!==_ghDismissedSig){
@@ -943,7 +865,7 @@ async function _ghCheck(force){
                                     :(_ghPending.length+' card aggiornate — clicca per aggiornare');
     document.getElementById('gh-notif-txt').textContent=txt;
     document.getElementById('gh-notif').classList.add('on');
-    if(sig!==_ghLastSig){ try{ _ntfPushLog('🔄 Aggiornamento card', txt, '🔄', 'gh'); }catch(e){} _ghLastSig=sig; }   // anche nel centro notifiche (cliccabile)
+    if(sig!==_ghLastSig){ try{ _ntfPushLog('🔄 Aggiornamento card', txt, '🔄', 'gh'); _ntfUpdateBell(); }catch(e){} _ghLastSig=sig; }   // anche nel centro notifiche (cliccabile)
   } else if(!_ghPending.length){
     document.getElementById('gh-notif').classList.remove('on');
   }
@@ -1096,9 +1018,10 @@ async function _ghsPreview(enc, nm, cardId){
 }
 function ghStoreTab(tab){
   _ghsTab=tab;
-  ['js','chips','distintivi','yaml','pkg','local'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
+  ['js','chips','distintivi','yaml','pkg','local','speciali'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
   const s=document.getElementById('ghs-search'); if(s) s.value='';
   const loadEl=document.getElementById('ghs-load'); if(loadEl) loadEl.style.display=(tab==='local')?'':'none';
+  if(tab==='speciali'){ _ghStoreRenderSpeciali(); return; }
   if(tab==='local'){ _ghStoreRender(); _ghStoreInitDropzone(); return; }
   if(_ghsCache[tab]){ _ghStoreRender(); return; }
   document.getElementById('ghs-status').textContent='⏳ Carico da GitHub…';
@@ -1108,6 +1031,43 @@ function ghStoreTab(tab){
     _ghsCache[tab]=files.filter(x=>f.ext.test(x.name)&&!(f.exclude&&f.exclude.test(x.name)));
     if(_ghsTab===tab) _ghStoreRender();
   }).catch(e=>{ document.getElementById('ghs-status').textContent='⚠️ '+e.message; });
+}
+/* Scheda "Speciali" — card built-in di Frarik (non richiedono GitHub) */
+const _SPECIALI_CARDS = [
+  {type:'flowmap',    label:'Flusso Energia',      icon:'⚡', desc:'Mappa flusso solare/rete/casa'},
+  {type:'camera',     label:'Telecamera',           icon:'📷', desc:'Stream camera con refresh'},
+  {type:'weather',    label:'Meteo',                icon:'🌤️', desc:'Scheda meteo compatta'},
+  {type:'weather-forecast', label:'Previsioni',     icon:'📅', desc:'Previsioni su 5 giorni'},
+  {type:'media',      label:'Lettore Multimediale', icon:'🎵', desc:'Media player con controlli'},
+  {type:'climate',    label:'Termostato',           icon:'🌡️', desc:'Controllo clima/riscaldamento'},
+  {type:'multiline',  label:'Grafico Multi-Linea',  icon:'📈', desc:'Storico più entità'},
+  {type:'bar',        label:'Grafico Barre',        icon:'📊', desc:'Storico a barre'},
+  {type:'entities',   label:'Lista Entità',         icon:'📋', desc:'Elenco sensori/entità'},
+  {type:'gauge',      label:'Indicatore',           icon:'🕐', desc:'Gauge circolare'},
+  {type:'clock',      label:'Orologio',             icon:'⏰', desc:'Orologio digitale/analogico'},
+  {type:'markdown',   label:'Testo/Markdown',       icon:'📝', desc:'Testo libero con HTML'},
+  {type:'appliances', label:'Elettrodomestici',     icon:'🔌', desc:'Pannello luci e dispositivi'},
+  {type:'free',       label:'Canvas Libero',        icon:'🎨', desc:'Area di disegno personalizzata'},
+  {type:'header-bar', label:'Header Personalizzato',icon:'⊞', desc:'Barra header con widget'},
+  {type:'picture-elements', label:'Casa (Immagine)',icon:'🏠', desc:'Immagine con elementi sovrapposti'},
+];
+function _ghStoreRenderSpeciali(){
+  const list=document.getElementById('ghs-list');
+  const status=document.getElementById('ghs-status');
+  const q=(document.getElementById('ghs-search').value||'').toLowerCase().trim();
+  const items=q?_SPECIALI_CARDS.filter(c=>c.label.toLowerCase().includes(q)||c.desc.toLowerCase().includes(q)):_SPECIALI_CARDS;
+  status.textContent=_SPECIALI_CARDS.length+' card built-in'+(q?' · '+items.length+' trovate':'');
+  list.innerHTML=items.map(c=>`
+    <div class="ghs-row">
+      <div class="ghs-ico">${c.icon}</div>
+      <div class="ghs-info">
+        <div class="ghs-name">${c.label}</div>
+        <div class="ghs-sub">${c.desc}</div>
+      </div>
+      <div class="ghs-acts">
+        <button class="ghs-btn ghs-btn-inst" onclick="addSpecial('${c.type}');closeGhStore()"><i class="mdi mdi-plus"></i> Aggiungi</button>
+      </div>
+    </div>`).join('');
 }
 function _ghStoreRender(){
   const tab=_ghsTab, list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
@@ -1286,20 +1246,6 @@ async function _ghsDownload(name){
     showToast('⬇️ Scarico '+f.name);
   }catch(e){ showToast('⚠️ Download non riuscito: '+e.message); }
 }
-/* Controllo manuale plancia con messaggio esplicito (per la sezione Plancia dello store) */
-async function ghCheckPlancia(){
-  const cur=window.FRARIK_APP_VERSION||0;
-  showToast('🔍 Controllo plancia su GitHub… (tua: '+cur+')');
-  let r; try{ r=await fetch(APP_REPO_RAW+'?_='+Date.now(),{cache:'no-store'}); }
-  catch(e){ showToast('❌ Impossibile raggiungere GitHub (rete)'); return; }
-  if(!r.ok){ showToast('⚠️ GitHub ha risposto HTTP '+r.status); return; }
-  const html=await r.text();
-  const m=/FRARIK_APP_VERSION\s*=\s*(\d+)/.exec(html);
-  const rv=m?parseInt(m[1],10):0;
-  if(rv>cur){ showToast('📥 Trovata versione '+rv+', aggiorno…'); _appUpdateCheck(); }
-  else if(rv===cur) showToast('✅ Plancia già aggiornata (versione '+cur+')');
-  else showToast('ℹ️ La tua versione ('+cur+') è più recente di GitHub ('+rv+')');
-}
 function _ghSchedule(){
   clearInterval(_ghTimer);
   const g=_ghCfg();
@@ -1308,52 +1254,6 @@ function _ghSchedule(){
   }
 }
 
-/* ════════════════════ AUTO-AGGIORNAMENTO DELLA PLANCIA (file html) DA GITHUB ════════════════════
-   Controlla su GitHub se c'è una versione più recente del file; se sì mostra la notifica.
-   Cliccando, salva la nuova versione nel browser e ricarica → il controllo in cima al file la esegue. */
-const APP_REPO_RAW='https://raw.githubusercontent.com/Frarik/cards/main/frarik.html';
-let _appUpdHtml=null,_appUpdVer=0,_appUpdTimer=null;
-async function _appUpdateCheck(){
-  try{
-    const r=await fetch(APP_REPO_RAW+'?_='+Date.now(),{cache:'no-store'});
-    if(!r.ok) return;
-    const html=await r.text();
-    const m=/FRARIK_APP_VERSION\s*=\s*(\d+)/.exec(html); if(!m) return;
-    const rv=parseInt(m[1],10);
-    if(rv>(window.FRARIK_APP_VERSION||0) && html.length>200000 && html.indexOf('</html>')>-1 && html.indexOf('</style>')>-1 && html.indexOf('</'+'script>')>-1){
-      _appUpdHtml=html; _appUpdVer=rv;
-      // AUTO-AGGIORNAMENTO plancia (richiesta utente: solo informativo, niente conferma).
-      // Salva la nuova versione, segna la notifica post-reload "aggiornata alla versione X", poi ricarica.
-      try{
-        localStorage.setItem('frarik_app_html',html);
-        localStorage.setItem('frarik_app_ver',String(rv));
-        localStorage.setItem('frarik_app_ts',String(Date.now()));
-        localStorage.setItem('frarik_app_pending_notify',String(rv));
-      }catch(e){}
-      showToast('📥 Plancia aggiornata alla versione '+rv+' — ricarico…');
-      setTimeout(()=>location.reload(),1800);
-    }
-  }catch(e){}
-}
-function applyAppUpdate(){
-  if(!_appUpdHtml){ return; }
-  // Validazione robusta prima di salvare in cache
-  if(_appUpdHtml.length<200000 || _appUpdHtml.indexOf('FRARIK_APP_VERSION')<0 || _appUpdHtml.indexOf('</html>')<0 || _appUpdHtml.indexOf('</style>')<0 || _appUpdHtml.indexOf('</'+'script>')<0){
-    showToast('⚠️ File aggiornamento non valido, aggiornamento annullato'); return;
-  }
-  try{ localStorage.setItem('frarik_app_html',_appUpdHtml); localStorage.setItem('frarik_app_ver',String(_appUpdVer)); localStorage.setItem('frarik_app_ts',String(Date.now())); }catch(e){}
-  showToast('📥 Aggiorno la plancia…');
-  setTimeout(()=>location.reload(),500);
-}
-function _appUpdSchedule(){
-  clearInterval(_appUpdTimer);
-  _appUpdTimer=setInterval(()=>{ if(!document.hidden) _appUpdateCheck(); }, 30*60*1000);  // ogni 30 min
-}
-/* Controlla il file frarik.html sul server HA (non GitHub).
-   - Se il server ha una versione PIÙ NUOVA → salva in localStorage e ricarica.
-   - Se il server ha la STESSA versione ma localStorage è vuoto/vecchio → salva come safety net
-     così il prossimo F5 (che carica la versione HTTP-cached del browser) troverà la versione
-     corretta in localStorage e la userà al posto di quella vecchia. NON ricarica in questo caso. */
 
 
 /* ═══ WEBSOCKET ═══ */
@@ -1540,9 +1440,7 @@ function onMsg(m){
       _restoreUIState();
       try{ _histInit(); }catch(e){}   // inizializza la cronologia Annulla/Ripeti
       try{ _ghSchedule(); setTimeout(()=>{ try{ _ghCheck(false); }catch(e){} }, 4000); }catch(e){}  // controllo aggiornamenti card GitHub
-      try{ _appUpdSchedule(); setTimeout(()=>{ try{ _appUpdateCheck(); }catch(e){} }, 6000); }catch(e){}  // controllo aggiornamento plancia
       setTimeout(()=>{ try{ _loadLovelaceResources(); }catch(e){} }, 2000);  // carica risorse HACS
-      setTimeout(()=>{ try{ _haLocalCheck(); }catch(e){} }, 3000);  // controlla subito se c'è una versione più recente del file su HA
       try{ _ntfUpdateBell(); }catch(e){}
     } else {
       // RICONNESSIONE: la dashboard è già costruita → aggiorna i VALORI in posto, niente rebuild (niente "scatto")
@@ -8452,25 +8350,6 @@ if(localStorage.getItem('ha_auth')==='1' || sessionStorage.getItem('ha_auth')===
   document.getElementById('l-user').focus();
 }
 
-/* Controlla se il file servito da HA è più recente di quello in esecuzione.
-   Fetch con cache-bust diretto sul pathname (es. /local/frarik.html) → nessuna cache browser. */
-async function _haLocalCheck(){
-  if(location.protocol==='file:') return; // aperto come file locale, salta
-  try{
-    const r=await fetch(location.pathname+'?_hcb='+Date.now(),{cache:'no-store'});
-    if(!r.ok) return;
-    const html=await r.text();
-    const m=/FRARIK_APP_VERSION\s*=\s*(\d+)/.exec(html); if(!m) return;
-    const rv=parseInt(m[1],10);
-    if(rv>(window.FRARIK_APP_VERSION||0) && html.length>200000 && html.indexOf('</'+'script>')>-1){
-      try{ localStorage.setItem('frarik_app_html',html); localStorage.setItem('frarik_app_ver',String(rv)); localStorage.setItem('frarik_app_ts',String(Date.now())); }catch(e){}
-      location.reload();
-    }
-  }catch(e){}
-}
-
-/* Controllo aggiornamento plancia in background (salva silenziosamente in localStorage) */
-try{ _appUpdSchedule(); setTimeout(()=>{ try{ _appUpdateCheck(); }catch(e){} }, 2500); }catch(e){}
 /* Se la plancia è appena stata auto-aggiornata, mostra la notifica informativa "aggiornata alla versione X" */
 try{
   var _pn=parseInt(localStorage.getItem('frarik_app_pending_notify')||'0',10);
@@ -8482,8 +8361,6 @@ try{
     }catch(e){} }, 1500);
   }
 }catch(e){}
-/* Controllo versione HA locale al primo caricamento (dopo 3s, per non rallentare l'avvio) */
-try{ setTimeout(()=>{ try{ _haLocalCheck(); }catch(e){} }, 3000); }catch(e){}
 try{
   var _vl=document.getElementById('ep-ver-label');
   // Mostra versione add-on dal server (config.yaml), fallback al numero interno
