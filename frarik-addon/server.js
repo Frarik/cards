@@ -1,13 +1,14 @@
-const express = require('express');
-const path    = require('path');
-const fs      = require('fs');
+import express from 'express';
+import path    from 'path';
+import fs      from 'fs';
+import { fileURLToPath } from 'url';
 
-const app      = express();
-const PORT     = 3000;
-const PANEL    = path.join(__dirname, 'panel');
-const HA_WWW   = '/config/www/frarik';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const app     = express();
+const PORT    = 3000;
+const PANEL   = path.join(__dirname, 'panel');
+const HA_WWW  = '/config/www/frarik';
 
-// ── Copia i file panel in /config/www/frarik/ al primo avvio ──
 function copyDir(src, dest) {
   fs.mkdirSync(dest, { recursive: true });
   for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
@@ -23,11 +24,9 @@ try {
   console.warn('[Frarik] Copia www non riuscita (non bloccante):', e.message);
 }
 
-// ── Versione dal manifest ──
 let manifest = { version: '1.0.0', build: 'dev' };
 try { manifest = JSON.parse(fs.readFileSync(path.join(PANEL, 'manifest.json'), 'utf8')); } catch {}
 
-// ── Cache headers ──
 app.use(express.static(PANEL, {
   etag: true,
   lastModified: true,
@@ -36,7 +35,7 @@ app.use(express.static(PANEL, {
     if (base === 'index.html') {
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.setHeader('Pragma', 'no-cache');
-    } else if (/\.[a-f0-9]{8,}\.(js|css)$/.test(base)) {
+    } else if (/\/assets\//.test(filePath)) {
       res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     } else {
       res.setHeader('Cache-Control', 'public, max-age=604800');
