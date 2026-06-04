@@ -10,7 +10,7 @@
 <script>
 /* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260604120;
+window.FRARIK_APP_VERSION = 20260604140;
 /* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
    (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
@@ -3678,6 +3678,11 @@ async function _ghListFolder(path){
   const j=await r.json();
   return Array.isArray(j) ? j.filter(f=>f.type==='file') : [];
 }
+function _ghsReloadTab(){
+  delete _ghsCache[_ghsTab];
+  ghStoreTab(_ghsTab);
+  showToast('🔄 Sincronizzazione con GitHub…');
+}
 function openGhStore(){
   try{ closeJsStore(); }catch(e){}
   document.getElementById('gh-store-modal').classList.remove('off');
@@ -3719,15 +3724,13 @@ function _ghStoreRender(){
       const idFile=g.idFile||{};
       const cardId=Object.keys(idFile).find(k=>idFile[k]===f.name)||null;
       const inDash=!!(cardId&&usedIds.has(cardId));
-      const rawUrl=`https://raw.githubusercontent.com/${g.owner||'Frarik'}/${g.repo||'cards'}/${g.branch||'main'}/${folder.path}/${f.name}`;
-      const ghLink=`<a class="ghs-btn ghs-btn-cp" href="${rawUrl}" target="_blank" rel="noopener" title="Vedi su GitHub" style="text-decoration:none">🔗 GitHub</a>`;
       if(!known){
-        acts=`${ghLink}<button class="ghs-btn ghs-btn-inst" onclick="_ghsInstall('${enc}')">⬇️ Installa</button>`;
+        acts=`<button class="ghs-btn ghs-btn-inst" onclick="_ghsInstall('${enc}')">⬇️ Installa</button>`;
       } else {
         const updateBtn=(known!==f.sha)?`<button class="ghs-btn ghs-btn-upd" onclick="_ghsInstall('${enc}')">↻ Aggiorna</button>`:'';
         const addBtn=cardId?(inDash?`<span style="font-size:10px;color:#4ade80;font-weight:700;white-space:nowrap">✓ in dashboard</span>`:`<button class="ghs-btn ghs-btn-inst" onclick="jsStoreAddCard('${cardId}');setTimeout(_ghStoreRender,50)">➕ Aggiungi</button>`):'';
         const delBtn=cardId?`<button class="ghs-btn" style="background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);color:#f87171" onclick="_ghsDeleteInstalled('${cardId}')">🗑</button>`:'';
-        acts=`${ghLink}${updateBtn}${addBtn}${delBtn}`;
+        acts=`${updateBtn}${addBtn}${delBtn}`;
       }
     } else {
       acts=`<button class="ghs-btn ghs-btn-cp" onclick="_ghsCopy('${enc}')">📋 Copia</button><button class="ghs-btn ghs-btn-cp" onclick="_ghsDownload('${enc}')">⬇️</button>`;
@@ -3768,9 +3771,10 @@ function _ghsDeleteInstalled(id){
     _jsStoreDelete(id);
     try{ delete window.FratechCardRegistry[id]; }catch(e){}
     // libera lo sha del file corrispondente, così ricompare come "Installa" nello store
-    try{ const g=_ghCfg(); if(g.idFile&&g.idFile[id]){ delete g.shas[g.idFile[id]]; delete g.idFile[id]; } }catch(e){}
+    try{ const g=_ghCfg(); if(g.idFile&&g.idFile[id]){ delete g.shas[g.idFile[id]]; delete g.idFile[id]; } saveCfg(); _haSaveCfg(); }catch(e){}
     if(typeof _epRenderJsStore==='function') _epRenderJsStore();
-    _ghsCache={}; renderDash(); _ghStoreRender(); showToast('🗑 Card eliminata');
+    // NON svuotiamo _ghsCache: la lista GitHub è già in cache, la card riappare con "Installa"
+    renderDash(); _ghStoreRender(); showToast('🗑 Card disinstallata');
   }, 'Elimina');
 }
 function _ghStoreInitDropzone(){
@@ -12353,7 +12357,10 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
         <button class="jsst-tab"    id="ghs-tab-yaml"       onclick="ghStoreTab('yaml')">📄 YAML</button>
         <button class="jsst-tab"    id="ghs-tab-pkg"        onclick="ghStoreTab('pkg')">📦 Pacchetti</button>
         <button class="jsst-tab"    id="ghs-tab-local"      onclick="ghStoreTab('local')">📁 Card locali</button>
-        <button class="jsst-tab"    onclick="openGitHubCfg()" title="Impostazioni GitHub (aggiornamenti automatici)" style="margin-left:auto">⚙️</button>
+        <div style="display:flex;gap:4px;margin-left:auto">
+          <button class="jsst-tab" onclick="_ghsReloadTab()" title="Ricarica dal GitHub" style="font-size:14px;padding:4px 8px">↻</button>
+          <button class="jsst-tab" onclick="openGitHubCfg()" title="Impostazioni GitHub">⚙️</button>
+        </div>
       </div>
       <input id="ghs-search" class="ghs-search" placeholder="🔍 Cerca per nome…" oninput="_ghStoreRender()" autocomplete="off">
       <div id="ghs-status" style="font-size:11px;color:var(--muted);margin:8px 2px;min-height:16px"></div>
