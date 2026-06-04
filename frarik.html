@@ -10,7 +10,7 @@
 <script>
 /* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260604140;
+window.FRARIK_APP_VERSION = 20260604150;
 /* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
    (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
@@ -3598,7 +3598,7 @@ async function _ghCheck(force){
   let files;
   try{ files=await _ghApiListAll(); }
   catch(e){ if(force){ _ghStatus('⚠️ '+e.message); showToast('⚠️ GitHub: '+e.message);} return; }
-  _ghPending = files.filter(f=> g.shas[f.name]!==f.sha);
+  _ghPending = files.filter(f=> g.shas[f.name] && g.shas[f.name]!==f.sha);
   if(force) _ghStatus(files.length+' card nel repo · '+_ghPending.length+' da aggiornare');
   const sig=_ghPending.map(f=>f.name+':'+f.sha).sort().join('|');
   if(_ghPending.length && sig!==_ghDismissedSig){
@@ -3849,10 +3849,10 @@ async function _ghsInstall(name){
   const f=_ghsFind(name); if(!f) return;
   showToast('⬇️ Installo '+f.name+'…');
   try{
-    await _ghInstallFile(f); saveCfg(); _haSaveCfg(); renderDash();
+    await _ghInstallFile(f); saveCfg(); _haSaveCfg();
     if(typeof _jsStoreRenderList==='function') _jsStoreRenderList();
     if(typeof _epRenderJsStore==='function') _epRenderJsStore();
-    showToast('✅ '+f.name+' installata'); _ghStoreRender();
+    showToast('✅ '+f.name+' installata — usa ➕ Aggiungi per metterla in dashboard'); _ghStoreRender();
   }catch(e){ showToast('⚠️ Errore: '+e.message); }
 }
 async function _ghsCopy(name){
