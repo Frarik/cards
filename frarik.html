@@ -10,7 +10,7 @@
 <script>
 /* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260604240;
+window.FRARIK_APP_VERSION = 20260604250;
 /* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
    (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
@@ -8598,18 +8598,20 @@ async function yamlImportParse(){
   // render preview
   const prev=document.getElementById('yaml-preview');
   prev.innerHTML='';
+  const isNativeCard=tag.startsWith('hui-')&&tag.endsWith('-card');
   let renderOk=false;
   try{
-    const cel=document.createElement(tag);
-    const isUnknown=cel.constructor===HTMLElement;
-    if(isUnknown&&!customElements.get(tag)){
+    const cel=_createLovelaceEl(tag);
+    const isUnknown=(cel.constructor===HTMLElement)&&!customElements.get(tag)&&!(window.parent&&window.parent!==window&&window.parent.customElements&&window.parent.customElements.get(tag));
+    if(isUnknown){
       prev.innerHTML='<div style="padding:16px;color:#fbbf24;font-size:11px;line-height:1.6">'
-        +(isCustom?'⚠️ Card "<b>'+eh(tag)+'</b>" non trovata.<br>Assicurati che sia installata su HACS e che venga caricata dalla plancia HA.'
-                  :'⚠️ Elemento "<b>'+eh(tag)+'</b>" non disponibile.<br>Le card native HA (entities, glance…) richiedono che il frontend di HA sia caricato.')
-        +'<br><span style="opacity:.6">Puoi comunque aggiungerla alla dashboard — potrebbe funzionare a runtime.</span></div>';
+        +(isCustom?'⚠️ Card "<b>'+eh(tag)+'</b>" non trovata.<br>Assicurati che sia installata su HACS.'
+                  :'⚠️ "<b>'+eh(tag)+'</b>" non disponibile in questo contesto.<br>La card sarà aggiunta comunque: funzionerà se Frarik è aperta come pannello di HA.')
+        +'</div>';
       prev.className='show';
     } else {
-      try{ cel.setConfig(config); }catch(e){}
+      const cfgForPrev=isNativeCard?config:Object.assign({},config,{type:'custom:'+tag});
+      try{ if(typeof cel.setConfig==='function') cel.setConfig(cfgForPrev); }catch(e){}
       cel.classList.add('frarik-lovel');
       try{ cel.hass=_haHassObj(); }catch(e){}
       cel.style.cssText='display:block;width:100%;min-height:120px';
@@ -8641,28 +8643,50 @@ function yamlImportAdd(){
   showToast('✅ Card YAML aggiunta alla dashboard');
 }
 /* Registra una card Lovelace (tag custom element) come card FratechStore (wrapper) */
+/* Crea un custom element: prova prima nel documento corrente,
+   poi nel parent (HA ha già caricato tutto il suo frontend + HACS) */
+function _createLovelaceEl(tag){
+  // Prova nel documento corrente
+  let cel=document.createElement(tag);
+  if(cel.constructor!==HTMLElement||customElements.get(tag)) return cel;
+  // Fallback: parent window (quando Frarik gira come panel dentro HA)
+  try{
+    if(window.parent&&window.parent!==window){
+      const pce=window.parent.customElements;
+      if(pce&&pce.get(tag)){
+        const pEl=window.parent.document.createElement(tag);
+        return document.adoptNode(pEl);
+      }
+    }
+  }catch(e){}
+  return cel; // unknown element — tentar non nuoce
+}
 function _registerLovelaceCard(tag, meta){
   if(!tag) return;
+  // Le card native HA (hui-*-card) vogliono il tipo originale nel config; le custom vogliono "custom:tag"
+  const isNative=tag.startsWith('hui-')&&tag.endsWith('-card');
   window.FratechCardRegistry[tag] = {
     id:tag, name:(meta&&meta.name)||tag, icon:(meta&&meta.icon)||'🧩',
     version:(meta&&meta.version)||'1.0', desc:(meta&&meta.description)||'Card Lovelace (Home Assistant)',
     _lovelace:true, _tag:tag,
     render(){ return '<div class="lovel-wrap" style="height:100%;width:100%"></div>'; },
     mount(card, _hassIgnored, el){
-      const host = el.querySelector('.lovel-wrap') || el;
+      const host=el.querySelector('.lovel-wrap')||el;
       host.innerHTML='';
-      let cel;
-      try{ cel=document.createElement(tag); }catch(e){ host.innerHTML='<div style="padding:12px;color:#f87171;font-size:12px">Card non valida: '+tag+'</div>'; return; }
-      // config: YAML salvato sulla card, oppure default minimo (molte card non ne hanno bisogno)
-      let cfgObj={type:'custom:'+tag};
+      const cel=_createLovelaceEl(tag);
+      // Costruisce il config corretto
+      let cfgObj=isNative?{}:{type:'custom:'+tag};
       try{
-        if(card.lovelaceConfig){ const y=(typeof jsyaml!=='undefined')?jsyaml.load(card.lovelaceConfig):JSON.parse(card.lovelaceConfig); if(y&&typeof y==='object') cfgObj=Object.assign({},y,{type:'custom:'+tag}); }
-        else if(card.entity){ cfgObj.entity=card.entity; }
+        if(card.lovelaceConfig){
+          const y=(typeof jsyaml!=='undefined')?jsyaml.load(card.lovelaceConfig):JSON.parse(card.lovelaceConfig);
+          if(y&&typeof y==='object') cfgObj=isNative?y:Object.assign({},y,{type:'custom:'+tag});
+        } else if(card.entity){ cfgObj.entity=card.entity; }
       }catch(e){}
       try{ if(typeof cel.setConfig==='function') cel.setConfig(cfgObj); }
-      catch(e){ host.innerHTML='<div style="padding:12px;color:#f87171;font-size:12px">Config non valida: '+(e.message||e)+'</div>'; return; }
+      catch(e){ host.innerHTML='<div style="padding:10px;color:#f87171;font-size:11px">setConfig: '+(e.message||e)+'</div>'; return; }
       cel.classList.add('frarik-lovel');
       try{ cel.hass=_haHassObj(); }catch(e){}
+      cel.style.cssText='display:block;width:100%';
       host.appendChild(cel);
     },
     update(card, _h, el){
