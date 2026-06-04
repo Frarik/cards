@@ -10,7 +10,7 @@
 <script>
 /* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260604260;
+window.FRARIK_APP_VERSION = 20260604270;
 /* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
    (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
@@ -5363,7 +5363,7 @@ function renderDash(){
   const sectionsEl=document.getElementById('dash-sections');
   // Clean up previous cards
   _cleanupWeatherTimers();
-  [...sectionsEl.querySelectorAll('.card')].forEach(c=>{ destroyChart(c.dataset.id); stopCamTimer(c.dataset.id); });
+  [...sectionsEl.querySelectorAll('.card')].forEach(c=>{ destroyChart(c.dataset.id); stopCamTimer(c.dataset.id); _stopYamlCard(c.dataset.id); });
   [...sectionsEl.querySelectorAll('.sect-wrap,.dash-section,.sect-add-row,.sect-hint,.fbar-edit-box')].forEach(s=>s.remove());
   document.getElementById('page-header-row')?.remove();
   document.getElementById('page-view-header')?.remove();
@@ -5763,6 +5763,9 @@ function buildCard(card){
     inner=`<div class="clm-wrap" id="v-${card.id}">${climateInner(card)}</div>`;
   } else if(t==='entities'){
     inner=`<div class="ents-wrap" id="v-${card.id}">${entitiesInner(card)}</div>`;
+  } else if(t==='yaml-card'){
+    inner=`<div id="v-${card.id}" class="jsc-wrap" style="height:100%;width:100%"><div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:11px">⏳</div></div>`;
+    setTimeout(()=>{ const _w=document.getElementById('v-'+card.id); if(_w) _mountYamlCard(card,_w); },120);
   } else if(t==='js-custom'){
     const _jcReg=window.FratechCardRegistry||{};
     const _jcDef=_jcReg[card.jsCardId];
@@ -5815,8 +5818,8 @@ function buildCard(card){
     return el;
   }
 
-  // js-custom: full-bleed, niente c-top, cursor default
-  if(t==='js-custom'){
+  // yaml-card e js-custom: full-bleed, niente c-top, cursor default
+  if(t==='yaml-card'||t==='js-custom'){
     el.classList.add('card-jsc');
     el.style.cssText+='padding:0;cursor:default;';
     el.innerHTML=`
@@ -6818,6 +6821,8 @@ function updateCardEl(card){
   } else if(t==='entities'){
     const w=document.getElementById('v-'+card.id);
     if(w) w.innerHTML=entitiesInner(card);
+  } else if(t==='yaml-card'){
+    // Il timer interno in _mountYamlCard aggiorna hass — niente da fare qui
   } else if(t==='js-custom'){
     const w=document.getElementById('v-'+card.id);
     if(w){
@@ -7065,6 +7070,31 @@ function openCM(cardId){
   if(c.type==='free'){ openFE(cardId); return; }
   if(c.type==='header-bar'){ openHBM(cardId); return; }
   if(c.type==='footer-bar'){ openFBM(); return; }
+  if(c.type==='yaml-card'){
+    // Apre l'editor YAML con la config attuale
+    _yamlCurrentConfig=null;
+    document.getElementById('yaml-inp').value=c.lovelaceConfig||'';
+    document.getElementById('yaml-status').textContent='';
+    document.getElementById('yaml-status').className='';
+    document.getElementById('yaml-preview').className='';
+    document.getElementById('yaml-preview').innerHTML='';
+    // Override "Aggiungi" per salvare le modifiche
+    document.getElementById('yaml-add-btn').className='yaml-act-btn success show';
+    document.getElementById('yaml-add-btn').textContent='💾 Aggiorna card';
+    document.getElementById('yaml-add-btn').onclick=function(){
+      const txt=(document.getElementById('yaml-inp').value||'').trim();
+      if(!txt) return;
+      c.lovelaceConfig=txt;
+      try{ const cfg2=jsyaml.load(txt); c.label=(cfg2.name||cfg2.title||cfg2.type||c.label).toString(); }catch(e){}
+      saveCfg(); renderDash(); closeYamlImport();
+      document.getElementById('yaml-add-btn').onclick=yamlImportAdd;
+      document.getElementById('yaml-add-btn').textContent='';
+      document.getElementById('yaml-add-btn').innerHTML='<i class="mdi mdi-plus-circle-outline"></i> Aggiungi alla dashboard';
+      showToast('✅ Card YAML aggiornata');
+    };
+    document.getElementById('yaml-modal').classList.remove('off');
+    return;
+  }
   document.getElementById('cmod-title').textContent='✏️ '+c.label;
   document.getElementById('cm-lbl').value=c.label;
   document.getElementById('cm-ico').value=c.icon||'';
@@ -8476,6 +8506,53 @@ window.FratechCardRegistry = {};
 ═══════════════════════════════════════════════════════════════ */
 window.customCards = window.customCards || [];
 
+/* Restituisce il miglior oggetto hass disponibile: prima cerca il vero hass di HA dalla parent window */
+function _getBestHass(){
+  try{
+    if(window.parent&&window.parent!==window){
+      const ha=window.parent.document.querySelector('home-assistant');
+      if(ha&&ha.hass) return ha.hass;
+    }
+  }catch(e){}
+  return _haHassObj();
+}
+/* Monta una yaml-card usando il custom element dalla parent window di HA */
+function _mountYamlCard(card, container){
+  container.innerHTML='';
+  if(!card.lovelaceConfig) return;
+  let yamlCfg;
+  try{ yamlCfg=typeof jsyaml!=='undefined'?jsyaml.load(card.lovelaceConfig):JSON.parse(card.lovelaceConfig); }
+  catch(e){ container.innerHTML='<div style="padding:12px;color:#f87171;font-size:11px">YAML: '+eh(e.message)+'</div>'; return; }
+  const type=(yamlCfg.type||'').trim();
+  const isCustom=type.startsWith('custom:');
+  const tag=isCustom?type.replace('custom:','').trim():'hui-'+type+'-card';
+  // Crea elemento dalla parent window (HA ha già tutto caricato) oppure localmente
+  let cel;
+  try{
+    if(window.parent&&window.parent!==window){
+      const pce=window.parent.customElements;
+      if(pce&&pce.get(tag)){
+        cel=document.adoptNode(window.parent.document.createElement(tag));
+      }
+    }
+  }catch(e){}
+  if(!cel) cel=_createLovelaceEl(tag);
+  // setConfig
+  try{ if(typeof cel.setConfig==='function') cel.setConfig(yamlCfg); }
+  catch(e){ container.innerHTML='<div style="padding:10px;color:#fbbf24;font-size:11px">setConfig: '+eh(e.message)+'</div>'; return; }
+  // Passa il vero hass di HA
+  try{ cel.hass=_getBestHass(); }catch(e){}
+  cel.style.cssText='display:block;width:100%;height:100%';
+  cel.classList.add('frarik-yaml-el');
+  container.appendChild(cel);
+  // Aggiorna hass ogni secondo con il vero oggetto di HA
+  if(container._yamlTimer) clearInterval(container._yamlTimer);
+  container._yamlTimer=setInterval(()=>{ try{ cel.hass=_getBestHass(); }catch(e){}},1000);
+}
+function _stopYamlCard(cardId){
+  const w=document.getElementById('v-'+cardId);
+  if(w&&w._yamlTimer){ clearInterval(w._yamlTimer); delete w._yamlTimer; }
+}
 /* ── Carica le risorse Lovelace (HACS custom cards) dal server HA ── */
 let _lovelaceResourcesLoaded=false;
 async function _loadLovelaceResources(){
@@ -8628,13 +8705,15 @@ async function yamlImportParse(){
 }
 function yamlImportAdd(){
   if(!_yamlCurrentConfig){ _yamlStatus('Prima fai "Carica anteprima"','warn'); return; }
-  const {tag,config,yamlStr}=_yamlCurrentConfig;
+  const {config,yamlStr}=_yamlCurrentConfig;
   const page=curPage();
   const newCard={
-    id:uid(),type:'js-custom',jsCardId:tag,
-    label:(config.name||config.title||tag).toString(),
-    icon:'🧩',color:'#818cf8',entity:config.entity||'',
-    lovelaceConfig:yamlStr,colSpan:2,rowSpan:2
+    id:uid(),
+    type:'yaml-card',          // tipo dedicato — niente conversione JS
+    lovelaceConfig:yamlStr,    // YAML originale conservato intatto
+    label:(config.name||config.title||config.type||'YAML Card').toString(),
+    icon:'🧩',color:'#818cf8',
+    colSpan:2,rowSpan:2
   };
   _assignSection(page,newCard);
   page.cards.push(newCard);
