@@ -1283,7 +1283,7 @@ function _connFail(){
   const cm=document.getElementById('cmsg'); if(cm) cm.innerHTML='⚠️ Home Assistant non raggiungibile<br><span style="font-size:10px;opacity:.6">ultimo tentativo: '+(_lastTriedHost||'?')+'</span>';
   const skip=document.getElementById('cov-skip'); if(skip) skip.style.display='';
   const rbox=document.getElementById('cov-remote-box'); if(rbox) rbox.style.display='';
-  const cov=document.getElementById('cov'); if(cov) cov.classList.remove('off');
+  const cov=document.getElementById('cov'); if(cov){ cov.classList.remove('off'); cov.classList.add('blocking'); }
   reconn=setTimeout(connect,8000);
 }
 function saveRemoteAndRetry(){
@@ -1340,9 +1340,10 @@ function onMsg(m){
   if(m.type==='auth_required') ws.send(JSON.stringify({type:'auth',access_token:TOKEN}));
   else if(m.type==='auth_ok'){
     clearTimeout(covTimer);
-    _connBusy=false; _connOk=true; _everConnected=true;   // connessione attiva → riconnessioni future in background
+    _connBusy=false; _connOk=true; _everConnected=true;
     setC('on');
-    document.getElementById('cov').classList.add('off');
+    const covEl=document.getElementById('cov');
+    if(covEl){ covEl.classList.add('off'); covEl.classList.remove('blocking'); }
     const rbox=document.getElementById('cov-remote-box'); if(rbox) rbox.style.display='none';
     send({type:'get_states'});
     send({type:'subscribe_events',event_type:'state_changed'});
@@ -1363,7 +1364,7 @@ function onMsg(m){
     const cm=document.getElementById('cmsg'); if(cm) cm.innerHTML='🔑 Token di accesso non valido<br><span style="font-size:10px;opacity:.6">Crea un token in Profilo HA → Token a lunga durata e incollalo qui sotto</span>';
     const skip=document.getElementById('cov-skip'); if(skip) skip.style.display='';
     const rbox=document.getElementById('cov-remote-box'); if(rbox) rbox.style.display='';
-    const cov=document.getElementById('cov'); if(cov) cov.classList.remove('off');
+    const cov=document.getElementById('cov'); if(cov){ cov.classList.remove('off'); cov.classList.add('blocking'); }
   }
   // Esito salvataggio config su HA (frontend/set_user_data)
   else if(m.type==='result'&&m.id===_cfgSetId){
@@ -1406,8 +1407,8 @@ function onMsg(m){
     // l'invio su HA avviene solo col pulsante "Sincronizza" (evita sovrascritture accidentali).
   }
   else if(m.type==='result'&&Array.isArray(m.result)){
-    m.result.forEach(e=>{ hs[e.entity_id]=e.state; ha[e.entity_id]=e.attributes||{}; });
-    allE=m.result.sort((a,b)=>a.entity_id.localeCompare(b.entity_id));
+    m.result.filter(e=>e&&e.entity_id).forEach(e=>{ hs[e.entity_id]=e.state; ha[e.entity_id]=e.attributes||{}; });
+    allE=m.result.filter(e=>e&&e.entity_id).sort((a,b)=>a.entity_id.localeCompare(b.entity_id));
     if(!_dashBuilt){
       // PRIMA costruzione della dashboard
       _dashBuilt=true;
@@ -8167,10 +8168,19 @@ function openHBM_HDR(){
   const cre=document.getElementById('cov-remote-url'); if(cre) cre.value=savedRemote;
 })();
 
-// Boot diretto — l'autenticazione è gestita da HA ingress
+// Boot diretto — recupera token da server se non salvato, poi connetti
 _jsStoreBootAll();
 renderDash();
-connect();
+(async function(){
+  if(!TOKEN){
+    try{
+      const r=await fetch('./api/frarik/token');
+      const d=await r.json();
+      if(d&&d.token){ TOKEN=d.token; localStorage.setItem('hadb_token',d.token); }
+    }catch(e){}
+  }
+  connect();
+})();
 try{
   var _vl=document.getElementById('ep-ver-label');
   // Mostra versione add-on dal server (config.yaml), fallback al numero interno

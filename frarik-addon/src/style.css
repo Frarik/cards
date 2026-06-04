@@ -826,8 +826,9 @@ body.editing .col-add-btn{display:flex}
 .acp-state{font-size:9px;font-weight:700;padding:2px 7px;border-radius:8px;border:1px solid;white-space:nowrap}
 
 /* ═══ CONN OVERLAY ═══ */
-#cov{position:fixed;inset:0;background:rgba(6,8,16,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:500;transition:opacity .4s}
+#cov{position:fixed;inset:0;background:rgba(6,8,16,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:500;transition:opacity .4s;pointer-events:none}
 #cov.off{opacity:0;pointer-events:none}
+#cov.blocking{pointer-events:all}
 .spin{width:40px;height:40px;border-radius:50%;border:3px solid rgba(255,255,255,0.07);border-top-color:var(--acc);animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 #cmsg{font-size:12px;color:var(--muted);font-weight:500}
