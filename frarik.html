@@ -10,7 +10,7 @@
 <script>
 /* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260604250;
+window.FRARIK_APP_VERSION = 20260604260;
 /* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
    (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
@@ -10479,15 +10479,23 @@ function _openFbarTextPopup(btn,btnEl){
   setTimeout(()=>document.addEventListener('click',()=>pop.remove(),{once:true,capture:true}),50);
 }
 
-/* ═══ YAML IMPORT ═══ */
+/* ═══ YAML IMPORT — reindirizza al nuovo modal HACS-compatibile ═══ */
 function openYamlImport(){
-  document.getElementById('yaml-import-txt').value='';
-  document.getElementById('yaml-import-preview').style.display='none';
-  document.getElementById('yaml-import-error').style.display='none';
-  document.getElementById('yaml-import-btn').disabled=true;
-  document.getElementById('yaml-import-mod').classList.remove('off');
+  // Usa il nuovo modal che supporta custom elements, window.parent e tutte le card HACS
+  const m=document.getElementById('yaml-modal'); if(!m) return;
+  document.getElementById('yaml-inp').value='';
+  document.getElementById('yaml-status').textContent='';
+  document.getElementById('yaml-status').className='';
+  document.getElementById('yaml-preview').className='';
+  document.getElementById('yaml-preview').innerHTML='';
+  document.getElementById('yaml-add-btn').className='yaml-act-btn success';
+  m.classList.remove('off');
+  setTimeout(()=>document.getElementById('yaml-inp').focus(),80);
 }
-function closeYamlImport(){ document.getElementById('yaml-import-mod').classList.add('off'); }
+function closeYamlImport(){
+  document.getElementById('yaml-modal')?.classList.add('off');
+  document.getElementById('yaml-import-mod')?.classList.add('off');
+}
 
 const _HA_MDI_EMOJI={
   'mdi:thermometer':'🌡️','mdi:thermometer-low':'🌡️','mdi:thermometer-high':'🌡️',
