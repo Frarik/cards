@@ -5699,8 +5699,6 @@ function addSaved(idx){
   newCard.id=uid(); delete newCard._savedAt; _assignSection(page,newCard);
   page.cards.push(newCard);
   saveCfg();
-  const smOpen=!document.getElementById('smod').classList.contains('off');
-  if(smOpen) closeSM();
   renderDash(); openCM(newCard.id);
 }
 
@@ -10034,9 +10032,7 @@ Object.assign(window, {
   _fbPreviewIcon,
   _feClick,
   _feEpSearch,
-  _ghAskInstall,
   _ghCheck,
-  _ghDismiss,
   _ghImportAll,
   _ghPublishDo,
   _ghStoreRender,
@@ -10093,7 +10089,6 @@ Object.assign(window, {
   _sosPickPerson,
   _yamlLivePreview,
   addSaved,
-  addSpecial,
   adjH,
   adjSecSpan,
   adjSpan,
@@ -10124,7 +10119,6 @@ Object.assign(window, {
   closeNotifCenter,
   closeNotifCfg,
   closeOikSettings,
-  closeSM,
   closeSOS,
   closeSOS2,
   closeSOSCfg,
