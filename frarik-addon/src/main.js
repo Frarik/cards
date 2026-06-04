@@ -8162,20 +8162,7 @@ function openHBM_HDR(){
     if(ct){ const r=document.documentElement.style; r.setProperty('--acc',ct.acc); r.setProperty('--acc2',ct.acc2); r.setProperty('--glow1',ct.g[0]); r.setProperty('--glow2',ct.g[1]); r.setProperty('--glow3',ct.g[2]); if(t!=='light'){ r.setProperty('--bg',ct.bg); r.setProperty('--panel',ct.panel); r.setProperty('--panel2',ct.panel2); } }
   }catch(e){}
 })();
-/* Ripristina modalità e campi login salvati */
 (function(){
-  // Servita da HA (http/https) → sempre "locale" = stessa origine (vale per accesso locale E remoto).
-  // La modalità "remoto" con URL fisso ha senso solo se la pagina è aperta come file (file://).
-  const mode = (location.protocol==='file:') ? (localStorage.getItem('hadb_loginmode')||'local') : 'local';
-  setLoginMode(mode);
-  const savedUrl = localStorage.getItem('hadb_haurl')||'';
-  if(savedUrl) document.getElementById('l-haurl').value = savedUrl;
-  const savedU = localStorage.getItem('hadb_user')||'';
-  const savedP = localStorage.getItem('hadb_pass')||'';
-  if(savedU) document.getElementById('l-user').value = savedU;
-  if(savedP) document.getElementById('l-pass').value = savedP;
-  const savedToken = localStorage.getItem('hadb_token')||'';
-  if(savedToken){ document.getElementById('l-token').value = savedToken; }
   const savedRemote = localStorage.getItem('hadb_remote')||REMOTE_URL_DEFAULT;
   const cre=document.getElementById('cov-remote-url'); if(cre) cre.value=savedRemote;
 })();
