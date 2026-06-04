@@ -10,7 +10,7 @@
 <script>
 /* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260604150;
+window.FRARIK_APP_VERSION = 20260604160;
 /* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
    (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
@@ -835,6 +835,15 @@ body.editing .col-add-btn{display:flex}
 .ghs-btn-cp{background:rgba(148,163,184,.15);border:1px solid rgba(148,163,184,.3);color:#cbd5e1}
 .ghs-btn-cp:hover{background:rgba(148,163,184,.3)}
 .ghs-empty{padding:26px 14px;text-align:center;font-size:12px;color:var(--muted)}
+/* ═══ STORE PREVIEW MODAL ═══ */
+#ghs-prev-modal{position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+#ghs-prev-modal.off{display:none}
+#ghs-prev-box{background:var(--panel);border:1px solid var(--bd2);border-radius:18px;width:380px;max-width:94vw;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.7)}
+#ghs-prev-hdr{display:flex;align-items:center;padding:14px 16px 10px;gap:8px;border-bottom:1px solid var(--bd)}
+#ghs-prev-title{flex:1;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ghs-prev-body{padding:16px;display:flex;flex-direction:column;gap:10px}
+#ghs-prev-card{width:100%;min-height:160px;border-radius:14px;overflow:hidden;position:relative;background:var(--panel2);border:1px solid var(--bd)}
+#ghs-prev-note{font-size:10px;color:var(--muted);text-align:center;min-height:14px}
 
 /* ═══ TOAST ═══ */
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#1e293b;border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:8px 18px;font-size:11px;font-weight:600;color:#fff;z-index:13000;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap}
@@ -3689,6 +3698,60 @@ function openGhStore(){
   _ghsCache={}; ghStoreTab('js');
 }
 function closeGhStore(){ document.getElementById('gh-store-modal').classList.add('off'); }
+function closeGhsPreview(){
+  document.getElementById('ghs-prev-modal').classList.add('off');
+  document.getElementById('ghs-prev-card').innerHTML='';
+  document.getElementById('ghs-prev-note').textContent='';
+}
+async function _ghsPreview(enc, nm, cardId){
+  const modal=document.getElementById('ghs-prev-modal');
+  const container=document.getElementById('ghs-prev-card');
+  const note=document.getElementById('ghs-prev-note');
+  document.getElementById('ghs-prev-title').textContent='👁 '+nm;
+  container.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:160px;color:var(--muted);font-size:12px">⏳ Carico anteprima…</div>';
+  note.textContent='';
+  modal.classList.remove('off');
+  let regCard=cardId?window.FratechCardRegistry[cardId]:null;
+  let isTemp=false;
+  if(!regCard){
+    try{
+      const f=_ghsFind(enc); if(!f) throw new Error('File non trovato in cache');
+      const code=await _ghDownload(f);
+      const res=_installCardCode(code);
+      const id=(res.newCards&&res.newCards[0])||(res.tags&&res.tags[0]);
+      regCard=id?window.FratechCardRegistry[id]:null;
+      isTemp=true;
+    }catch(e){
+      container.innerHTML=`<div style="padding:16px;color:#f87171;font-size:12px;text-align:center">⚠️ Impossibile caricare l'anteprima:<br>${eh(e.message)}</div>`;
+      return;
+    }
+  }
+  if(!regCard){
+    container.innerHTML='<div style="padding:16px;color:var(--muted);font-size:12px;text-align:center">Nessuna card trovata nel file</div>';
+    return;
+  }
+  const dummyCard={id:'__preview__',type:'js-custom',jsCardId:regCard.id,label:regCard.name||nm,icon:regCard.icon||'📦',color:'#818cf8',entity:'',colSpan:2,rowSpan:2};
+  container.innerHTML='';
+  container.style.minHeight='160px';
+  try{
+    if(regCard._lovelace){
+      const tag=regCard._tag||regCard.id;
+      const cel=document.createElement(tag);
+      try{ cel.setConfig({type:'custom:'+tag}); }catch(e){}
+      cel.classList.add('frarik-lovel');
+      try{ cel.hass=_haHassObj(); }catch(e){}
+      cel.style.cssText='display:block;width:100%;min-height:160px';
+      container.appendChild(cel);
+    } else {
+      const html=regCard.render?regCard.render(dummyCard,_haHassObj()):'';
+      container.innerHTML=`<div style="position:relative;width:100%;min-height:160px">${html}</div>`;
+      if(typeof regCard.mount==='function') try{ regCard.mount(dummyCard,_haHassObj(),container); }catch(e){}
+    }
+  }catch(e){
+    container.innerHTML=`<div style="padding:16px;color:#f87171;font-size:12px;text-align:center">Errore render: ${eh(e.message)}</div>`;
+  }
+  note.textContent=isTemp?'Anteprima temporanea — non ancora installata':'';
+}
 function ghStoreTab(tab){
   _ghsTab=tab;
   ['js','chips','distintivi','yaml','pkg','local'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
@@ -3719,21 +3782,25 @@ function _ghStoreRender(){
     const nm=f.name.replace(/\.(js|ya?ml)$/i,'');
     const enc=encodeURIComponent(f.name);
     let acts;
+    const prevEnc=enc.replace(/'/g,"\\'");
+    const prevNm=nm.replace(/'/g,"\\'");
+    const prevBtn=`<button class="ghs-btn ghs-btn-cp" onclick="_ghsPreview('${prevEnc}','${prevNm}',${null})" title="Anteprima">👁</button>`;
     if(folder.kind==='install'){
       const known=g.shas[f.name];
       const idFile=g.idFile||{};
       const cardId=Object.keys(idFile).find(k=>idFile[k]===f.name)||null;
       const inDash=!!(cardId&&usedIds.has(cardId));
+      const prevBtnInst=cardId?`<button class="ghs-btn ghs-btn-cp" onclick="_ghsPreview('${prevEnc}','${prevNm}','${cardId}')" title="Anteprima">👁</button>`:prevBtn;
       if(!known){
-        acts=`<button class="ghs-btn ghs-btn-inst" onclick="_ghsInstall('${enc}')">⬇️ Installa</button>`;
+        acts=`${prevBtn}<button class="ghs-btn ghs-btn-inst" onclick="_ghsInstall('${enc}')">⬇️ Installa</button>`;
       } else {
         const updateBtn=(known!==f.sha)?`<button class="ghs-btn ghs-btn-upd" onclick="_ghsInstall('${enc}')">↻ Aggiorna</button>`:'';
         const addBtn=cardId?(inDash?`<span style="font-size:10px;color:#4ade80;font-weight:700;white-space:nowrap">✓ in dashboard</span>`:`<button class="ghs-btn ghs-btn-inst" onclick="jsStoreAddCard('${cardId}');setTimeout(_ghStoreRender,50)">➕ Aggiungi</button>`):'';
         const delBtn=cardId?`<button class="ghs-btn" style="background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);color:#f87171" onclick="_ghsDeleteInstalled('${cardId}')">🗑</button>`:'';
-        acts=`${updateBtn}${addBtn}${delBtn}`;
+        acts=`${prevBtnInst}${updateBtn}${addBtn}${delBtn}`;
       }
     } else {
-      acts=`<button class="ghs-btn ghs-btn-cp" onclick="_ghsCopy('${enc}')">📋 Copia</button><button class="ghs-btn ghs-btn-cp" onclick="_ghsDownload('${enc}')">⬇️</button>`;
+      acts=`${prevBtn}<button class="ghs-btn ghs-btn-cp" onclick="_ghsCopy('${enc}')">📋 Copia</button><button class="ghs-btn ghs-btn-cp" onclick="_ghsDownload('${enc}')">⬇️</button>`;
     }
     return `<div class="ghs-row"><div class="ghs-ico">${ico}</div><div class="ghs-info"><div class="ghs-name">${eh(nm)}</div><div class="ghs-sub">${eh(f.name)}</div></div><div class="ghs-acts">${acts}</div></div>`;
   }).join('');
@@ -12374,6 +12441,20 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
         </div>
         <button onclick="jsStoreDownloadTemplate()" style="margin-top:8px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.35);color:#a5b4fc;border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer">⬇️ Scarica template.js</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- STORE CARD PREVIEW -->
+<div class="off" id="ghs-prev-modal">
+  <div id="ghs-prev-box">
+    <div id="ghs-prev-hdr">
+      <span id="ghs-prev-title">Anteprima</span>
+      <button class="mx" onclick="closeGhsPreview()">✕</button>
+    </div>
+    <div id="ghs-prev-body">
+      <div id="ghs-prev-card"></div>
+      <div id="ghs-prev-note"></div>
     </div>
   </div>
 </div>
