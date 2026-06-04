@@ -25,7 +25,8 @@ try {
 }
 
 let manifest = { version: '1.0.0', build: 'dev' };
-try { manifest = JSON.parse(fs.readFileSync(path.join(PANEL, 'manifest.json'), 'utf8')); } catch {}
+try { const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8')); manifest.version = pkg.version; } catch {}
+try { const cfg = fs.readFileSync(path.join(__dirname, 'config.yaml'), 'utf8'); const m = cfg.match(/^version:\s*"?([^"\n]+)"?/m); if(m) manifest.version = m[1].trim(); } catch {}
 
 app.use(express.static(PANEL, {
   etag: true,

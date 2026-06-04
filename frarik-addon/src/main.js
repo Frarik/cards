@@ -8484,7 +8484,13 @@ try{
 }catch(e){}
 /* Controllo versione HA locale al primo caricamento (dopo 3s, per non rallentare l'avvio) */
 try{ setTimeout(()=>{ try{ _haLocalCheck(); }catch(e){} }, 3000); }catch(e){}
-try{ var _vl=document.getElementById('ep-ver-label'); if(_vl) _vl.textContent=(window.FRARIK_APP_VERSION||'?'); }catch(e){}
+try{
+  var _vl=document.getElementById('ep-ver-label');
+  // Mostra versione add-on dal server (config.yaml), fallback al numero interno
+  fetch('./api/frarik/version').then(r=>r.json()).then(d=>{
+    if(_vl) _vl.textContent='v'+d.version+' (add-on)';
+  }).catch(()=>{ if(_vl) _vl.textContent=(window.FRARIK_APP_VERSION||'?'); });
+}catch(e){}
 
 /* ══════════════════════════════════════════════════════════════
    SOS
