@@ -10,7 +10,7 @@
 <script>
 /* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260604220;
+window.FRARIK_APP_VERSION = 20260604230;
 /* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
    (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
@@ -8583,38 +8583,45 @@ async function yamlImportParse(){
   _yamlStatus('⏳ Carico…','loading');
   document.getElementById('yaml-preview').className='';
   document.getElementById('yaml-add-btn').className='yaml-act-btn success';
-  if(type.startsWith('custom:')){
-    const tag=type.replace('custom:','').trim();
-    // carica risorse HA se non già fatto
-    if(!customElements.get(tag)){
-      if(!_lovelaceResourcesLoaded) await _loadLovelaceResources();
-    }
-    if(!customElements.get(tag)){
-      _yamlStatus('⚠️ Card "'+tag+'" non trovata. Assicurati che sia installata in HACS e che la plancia HA la carichi.','warn');
-      return;
-    }
-    if(!window.FratechCardRegistry[tag]){
-      const meta=(window.customCards||[]).find(c=>c&&c.type===tag);
-      _registerLovelaceCard(tag,meta);
-    }
-    _yamlCurrentConfig={tag,config,yamlStr:jsyaml.dump(config)};
-    // render preview
-    const prev=document.getElementById('yaml-preview');
-    prev.innerHTML='';
-    try{
-      const cel=document.createElement(tag);
-      try{ cel.setConfig(config); }catch(e){ prev.innerHTML='<div style="padding:12px;color:#fbbf24;font-size:11px">⚠️ setConfig: '+eh(e.message)+'</div>'; }
+  const isCustom=type.startsWith('custom:');
+  // Per tipi nativi HA (entities, glance, gauge…) → HA li registra come hui-{type}-card
+  const tag=isCustom?type.replace('custom:','').trim():'hui-'+type+'-card';
+  // Carica risorse HA se non ancora fatto (serve sia per HACS che per card native)
+  if(!_lovelaceResourcesLoaded) await _loadLovelaceResources();
+  // Se l'elemento non esiste ancora, prova comunque (potrebbe auto-registrarsi)
+  if(!window.FratechCardRegistry[tag]){
+    const meta=(window.customCards||[]).find(c=>c&&c.type===tag);
+    _registerLovelaceCard(tag,meta||{name:type,type:tag});
+  }
+  _yamlCurrentConfig={tag,config,yamlStr:jsyaml.dump(config)};
+  // render preview
+  const prev=document.getElementById('yaml-preview');
+  prev.innerHTML='';
+  let renderOk=false;
+  try{
+    const cel=document.createElement(tag);
+    const isUnknown=cel.constructor===HTMLElement;
+    if(isUnknown&&!customElements.get(tag)){
+      prev.innerHTML='<div style="padding:16px;color:#fbbf24;font-size:11px;line-height:1.6">'
+        +(isCustom?'⚠️ Card "<b>'+eh(tag)+'</b>" non trovata.<br>Assicurati che sia installata su HACS e che venga caricata dalla plancia HA.'
+                  :'⚠️ Elemento "<b>'+eh(tag)+'</b>" non disponibile.<br>Le card native HA (entities, glance…) richiedono che il frontend di HA sia caricato.')
+        +'<br><span style="opacity:.6">Puoi comunque aggiungerla alla dashboard — potrebbe funzionare a runtime.</span></div>';
+      prev.className='show';
+    } else {
+      try{ cel.setConfig(config); }catch(e){}
       cel.classList.add('frarik-lovel');
       try{ cel.hass=_haHassObj(); }catch(e){}
       cel.style.cssText='display:block;width:100%;min-height:120px';
       prev.appendChild(cel);
       prev.className='show';
-    }catch(e){ prev.innerHTML='<div style="padding:12px;color:#f87171;font-size:11px">Errore: '+eh(e.message)+'</div>'; prev.className='show'; }
-    _yamlStatus('✅ "'+tag+'" pronta — controlla l\'anteprima e aggiungi alla dashboard','ok');
-    document.getElementById('yaml-add-btn').className='yaml-act-btn success show';
-  } else {
-    _yamlStatus('ℹ️ Il tipo "'+type+'" è una card HA nativa, non HACS. Funziona solo con "custom:…"','warn');
+      renderOk=true;
+    }
+  }catch(e){
+    prev.innerHTML='<div style="padding:12px;color:#f87171;font-size:11px">Errore: '+eh(e.message)+'</div>';
+    prev.className='show';
   }
+  _yamlStatus(renderOk?'✅ "'+tag+'" pronta — controlla l\'anteprima':'⚠️ Anteprima non disponibile — puoi comunque aggiungere la card',renderOk?'ok':'warn');
+  document.getElementById('yaml-add-btn').className='yaml-act-btn success show';
 }
 function yamlImportAdd(){
   if(!_yamlCurrentConfig){ _yamlStatus('Prima fai "Carica anteprima"','warn'); return; }
