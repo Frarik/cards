@@ -1,16 +1,22 @@
 {
-  "name": "frarik-addon-server",
-  "version": "1.0.0",
-  "description": "Frarik Dashboard — HA Add-on server",
-  "main": "server.js",
+  "name": "frarik-dashboard",
+  "version": "1.0.2",
+  "type": "module",
   "private": true,
-  "engines": {
-    "node": ">=18.0.0"
-  },
+  "engines": { "node": ">=18.0.0" },
   "scripts": {
-    "start": "node server.js"
+    "dev":     "vite src --open",
+    "build":   "vite build",
+    "preview": "vite preview",
+    "extract": "node scripts/extract-src.mjs",
+    "start":   "node server.js"
   },
   "dependencies": {
-    "express": "^4.19.2"
+    "chart.js":  "^4.4.0",
+    "js-yaml":   "^4.1.0",
+    "express":   "^4.19.2"
+  },
+  "devDependencies": {
+    "vite": "^5.3.0"
   }
 }
