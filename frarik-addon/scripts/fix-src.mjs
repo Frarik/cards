@@ -112,15 +112,25 @@ window.jsyaml = jsyaml;
 js = imports + js;
 
 // ── 5. Append window.assign per inline handlers ───────────────────────────────
-const bodyHtml = html.slice(html.indexOf('<body'), html.lastIndexOf('</body>') + 7);
 const reserved = new Set(['if','else','for','while','do','return','var','let','const',
   'function','class','new','delete','typeof','void','throw','try','catch','finally',
   'switch','case','break','continue','import','export','default','true','false','null',
-  'undefined','this','super','yield','await','async','document','event','window']);
+  'undefined','this','super','yield','await','async','document','event','window',
+  'setTimeout','setInterval','clearTimeout','clearInterval','console','Math','Object',
+  'Array','String','Number','Boolean','JSON','Promise','Error','Date']);
 
-const inlineFns = [...new Set(
-  [...bodyHtml.matchAll(/on\w+="([a-zA-Z_][a-zA-Z0-9_]*)\(/g)].map(m => m[1])
-)].filter(n => !reserved.has(n)).sort();
+// Scansiona SIA l'HTML statico SIA i template string nel JS
+// Cerca TUTTE le funzioni in ogni valore on*="..." (anche dopo ; o &&)
+const allHandlerFns = new Set();
+const attrRe = /on\w+="([^"]+)"/g;
+for (const source of [html, js]) {
+  for (const m of source.matchAll(attrRe)) {
+    for (const call of m[1].matchAll(/([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/g)) {
+      allHandlerFns.add(call[1]);
+    }
+  }
+}
+const inlineFns = [...allHandlerFns].filter(n => !reserved.has(n)).sort();
 
 js += `\n\n// ── Esponi funzioni per handler HTML inline ──────────────────────────────────
 Object.assign(window, {\n${inlineFns.map(f => `  ${f},`).join('\n')}\n});\n`;
