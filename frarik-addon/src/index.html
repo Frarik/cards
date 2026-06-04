@@ -1024,17 +1024,6 @@
         <span style="font-size:9px;color:rgba(34,211,238,.6)">salva su HA</span>
       </button>
 
-      <!-- ── Backup: esporta / ripristina (config + card JS) ── -->
-      <button class="cfg-open-btn" onclick="exportBackup()" style="background:rgba(74,222,128,.08);border-color:rgba(74,222,128,.2);color:#4ade80">
-        ⬇️ <span style="flex:1">Esporta backup</span>
-        <span style="font-size:9px;color:rgba(74,222,128,.6)">file .json</span>
-      </button>
-      <button class="cfg-open-btn" onclick="document.getElementById('backup-file-input').click()" style="background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.2);color:#fbbf24">
-        ⬆️ <span style="flex:1">Ripristina backup</span>
-        <span style="font-size:9px;color:rgba(251,191,36,.6)">da file</span>
-      </button>
-      <input type="file" id="backup-file-input" accept="application/json,.json" style="display:none" onchange="importBackupFile(this.files[0]); this.value='';">
-
       <!-- ── Esci dalla dashboard (stile riga Oikos) ── -->
       <button class="cfg-open-btn" onclick="doLogout()" style="background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.2);color:#f87171">
         ⏻ <span style="flex:1">Esci dalla Dashboard</span>
