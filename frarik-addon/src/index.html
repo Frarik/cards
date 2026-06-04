@@ -1002,42 +1002,19 @@
         <span style="color:rgba(255,255,255,.2);font-size:16px">›</span>
       </button>
 
-      <div class="oik-cat">Dati</div>
-
-      <!-- ── Sincronizza configurazione su tutti i dispositivi ── -->
-      <button class="cfg-open-btn" onclick="syncCfgToHA()" style="background:rgba(34,211,238,.08);border-color:rgba(34,211,238,.2);color:#22d3ee">
-        ☁️ <span style="flex:1">Sincronizza su tutti i dispositivi</span>
-        <span style="font-size:9px;color:rgba(34,211,238,.6)">salva su HA</span>
-      </button>
-
-      <!-- ── Backup: esporta / ripristina (config + card JS) ── -->
-      <button class="cfg-open-btn" onclick="exportBackup()" style="background:rgba(74,222,128,.08);border-color:rgba(74,222,128,.2);color:#4ade80">
-        ⬇️ <span style="flex:1">Esporta backup</span>
-        <span style="font-size:9px;color:rgba(74,222,128,.6)">file .json</span>
-      </button>
-      <button class="cfg-open-btn" onclick="document.getElementById('backup-file-input').click()" style="background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.2);color:#fbbf24">
-        ⬆️ <span style="flex:1">Ripristina backup</span>
-        <span style="font-size:9px;color:rgba(251,191,36,.6)">da file</span>
-      </button>
-      <input type="file" id="backup-file-input" accept="application/json,.json" style="display:none" onchange="importBackupFile(this.files[0]); this.value='';">
-
-      <!-- ── Esci dalla dashboard (stile riga Oikos) ── -->
+      <!-- ── Esci dalla dashboard ── -->
       <button class="cfg-open-btn" onclick="doLogout()" style="background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.2);color:#f87171">
         ⏻ <span style="flex:1">Esci dalla Dashboard</span>
         <span style="color:rgba(255,255,255,.2);font-size:16px">›</span>
       </button>
 
-      <!-- ── Versione plancia ── -->
+      <!-- ── Versione add-on ── -->
       <div style="text-align:center;padding:10px 0 2px;font-size:10px;color:rgba(255,255,255,.22);font-weight:600;letter-spacing:.4px;user-select:none;pointer-events:none">
-        Frarik Dashboard Versione <span id="ep-ver-label"></span>
+        Frarik Dashboard <span id="ep-ver-label"></span>
       </div>
 
     </div><!-- /ep-body -->
-
-    <!-- ── FOOTER fisso: salva (stile Oikos) ── -->
-    <div class="ep-footer">
-      <button class="oik-save" onclick="oikSaveConfig()">⤓ &nbsp;Salva configurazione</button>
-    </div>
+  </div>
 
   </div>
 </div>
@@ -1087,21 +1064,13 @@
 <!-- Centro notifiche (apribile dalla campanella in alto) -->
 <div id="notif-center">
   <div class="ntfc-hdr">
-    <span style="font-weight:800;font-size:13px">🔔 Notifiche</span>
+    <span style="font-weight:800;font-size:13px">🔔 Centro Notifiche FraRik HA</span>
     <div style="display:flex;gap:6px;margin-left:auto">
       <button class="ntfc-act" onclick="ntfMarkAllRead()" title="Segna tutte lette">✓</button>
-      <button class="ntfc-act" onclick="ntfClearAll()" title="Svuota">🗑</button>
-      <button class="ntfc-act" onclick="closeNotifCenter();openNotifCfg()" title="Gestisci regole notifiche">⚙️</button>
+      <button class="ntfc-act" onclick="ntfClearAll()" title="Svuota tutto">🗑</button>
     </div>
   </div>
   <div id="notif-center-list"></div>
-</div>
-
-<!-- Notifica aggiornamenti card da GitHub -->
-<div id="gh-notif" onclick="_ghAskInstall()" title="Clicca per aggiornare le card">
-  <span style="font-size:15px">🔄</span>
-  <span id="gh-notif-txt" style="flex:1">Aggiornamenti card disponibili</span>
-  <button onclick="event.stopPropagation();_ghDismiss()" title="Ignora" style="background:rgba(255,255,255,.12);border:none;color:#fff;width:22px;height:22px;border-radius:6px;cursor:pointer;font-size:11px">✕</button>
 </div>
 
 <!-- CONFIG GITHUB CARD -->

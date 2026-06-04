@@ -881,51 +881,35 @@ async function _ghCheck(force){
   const sig=_ghPending.map(f=>f.name+':'+f.sha).sort().join('|');
   if(_ghPending.length && sig!==_ghDismissedSig){
     // Testo notifica differenziato: nuova vs aggiornata
-    let txt;
+    let ntfTitle, ntfMsg;
     if(_ghNew.length && !_ghUpdated.length){
-      txt = _ghNew.length===1 ? 'Nuova card: '+_ghNew[0].name.replace(/\.js$/,'')+' — clicca per installare'
-                              : _ghNew.length+' nuove card disponibili — clicca per installare';
+      ntfTitle = _ghNew.length===1 ? '📦 Nuova card disponibile' : '📦 '+_ghNew.length+' nuove card disponibili';
+      ntfMsg   = _ghNew.length===1 ? _ghNew[0].name.replace(/\.js$/,'')+' è stata aggiunta al repository'
+                                   : _ghNew.map(f=>f.name.replace(/\.js$/,'')).join(', ')+' aggiunte al repository';
     } else if(_ghUpdated.length && !_ghNew.length){
-      txt = _ghUpdated.length===1 ? 'Card aggiornata: '+_ghUpdated[0].name.replace(/\.js$/,'')+' — clicca per aggiornare'
-                                  : _ghUpdated.length+' card aggiornate — clicca per aggiornare';
+      ntfTitle = _ghUpdated.length===1 ? '🔄 Card aggiornata' : '🔄 '+_ghUpdated.length+' card aggiornate';
+      ntfMsg   = _ghUpdated.length===1 ? _ghUpdated[0].name.replace(/\.js$/,'')+' ha una nuova versione disponibile'
+                                       : _ghUpdated.map(f=>f.name.replace(/\.js$/,'')).join(', ')+' hanno nuove versioni';
     } else {
-      txt = _ghPending.length+' card da installare/aggiornare — clicca';
+      ntfTitle = '📦 Card aggiornate su GitHub';
+      ntfMsg   = _ghNew.length+' nuove, '+_ghUpdated.length+' aggiornate nel repository';
     }
-    document.getElementById('gh-notif-txt').textContent=txt;
-    document.getElementById('gh-notif').classList.add('on');
-    if(sig!==_ghLastSig){ try{ _ntfPushLog('📦 Card GitHub', txt, '📦', 'gh'); _ntfUpdateBell(); }catch(e){} _ghLastSig=sig; }
-  } else if(!_ghPending.length){
-    document.getElementById('gh-notif').classList.remove('on');
+    if(sig!==_ghLastSig){ try{ _ntfPushLog(ntfTitle, ntfMsg, '📦', 'gh'); _ntfUpdateBell(); }catch(e){} _ghLastSig=sig; }
   }
 }
-function _ghDismiss(){
-  _ghDismissedSig=_ghPending.map(f=>f.name+':'+f.sha).sort().join('|');
-  document.getElementById('gh-notif').classList.remove('on');
-}
 async function _ghInstallAll(){
-  if(!_ghPending.length){ document.getElementById('gh-notif').classList.remove('on'); return; }
-  showToast('⬇️ Aggiorno '+_ghPending.length+' card…');
+  if(!_ghPending.length) return;
+  showToast('⬇️ Installo '+_ghPending.length+' card…');
   let ok=0,err=0;
   for(const f of _ghPending.slice()){ try{ await _ghInstallFile(f); ok++; }catch(e){ err++; console.warn('[GitHub]',f.name,e.message); } }
   _ghPending=[]; _ghDismissedSig='';
-  document.getElementById('gh-notif').classList.remove('on');
-  saveCfg(); _haSaveCfg();
-  renderDash();
+  saveCfg(); _haSaveCfg(); renderDash();
   if(typeof _jsStoreRenderList==='function') _jsStoreRenderList();
   if(typeof _epRenderJsStore==='function') _epRenderJsStore();
-  showToast('✅ '+ok+' card aggiornate'+(err?(' · '+err+' errori'):''));
-}
-/* Chiede CONFERMA prima di aggiornare le card JS, poi installa (aggiorna anche le card già in plancia). */
-function _ghAskInstall(){
-  const run=()=>{ _ntfLog=_ntfLog.filter(n=>n.action!=='gh'); _ntfSaveLog(); _ntfUpdateBell(); if(typeof renderNotifCenter==='function') renderNotifCenter(); closeNotifCenter(); _ghInstallAll(); };
-  if(_ghPending&&_ghPending.length){
-    const names=_ghPending.map(f=>f.name.replace(/\.js$/,'')).join(', ');
-    const q=_ghPending.length===1 ? ('Vuoi aggiornare la card <b>'+names+'</b>?') : ('Vuoi aggiornare <b>'+_ghPending.length+' card</b>?<br><span style="font-size:11px;opacity:.7">'+names+'</span>');
-    showConfirm(q+'<br><span style="font-size:11px;opacity:.7">Si aggiorneranno subito, anche se già presenti nella plancia.</span>', run, 'Aggiorna');
-  } else {
-    showToast('🔄 Controllo aggiornamenti card…');
-    _ghCheck(true).then(()=>{ if(_ghPending.length) _ghAskInstall(); else showToast('✅ Card già aggiornate'); });
-  }
+  const msg='✅ '+ok+' card installate'+(err?(' · '+err+' errori'):'');
+  showToast(msg);
+  _ntfPushLog('✅ Card installate', ok+' card installate dallo store GitHub'+(err?' ('+err+' errori)':''), '✅');
+  _ntfUpdateBell();
 }
 async function _ghImportAll(){
   let files;
@@ -939,7 +923,7 @@ async function _ghImportAll(){
   renderDash();
   if(typeof _jsStoreRenderList==='function') _jsStoreRenderList();
   if(typeof _epRenderJsStore==='function') _epRenderJsStore();
-  _ghPending=[]; document.getElementById('gh-notif').classList.remove('on');
+  _ghPending=[];
   _ghStatus('✅ '+ok+' card importate'+(err?(' · '+err+' errori'):''));
   showToast('✅ '+ok+' card importate da GitHub');
 }
@@ -9343,23 +9327,16 @@ function _ntfRelTime(ts){
 function renderNotifCenter(){
   const el=document.getElementById('notif-center-list'); if(!el) return;
   if(!_ntfLog.length){ el.innerHTML='<div class="ntfc-empty">Nessuna notifica</div>'; return; }
-  el.innerHTML=_ntfLog.map((n,i)=>{
-    const hasChangelog=Array.isArray(n.changelog)&&n.changelog.length;
-    // le notifiche con changelog NON sono cliccabili tutte: hanno il tasto "Ho capito"
-    const act=(n.action&&!hasChangelog)?` ntfc-action" onclick="_ntfAction('${n.action}')` : '"';
-    const hint=(n.action&&!hasChangelog)?'<span class="ntfc-go">Aggiorna ›</span>':'';
-    const clHtml=hasChangelog?`<ul class="ntfc-changelog">${n.changelog.map(li=>`<li>${eh(li)}</li>`).join('')}</ul>`:'';
-    const okBtn=hasChangelog?`<button class="ntfc-ok" onclick="event.stopPropagation();_ntfDismissById('${n.id}')">Ho capito</button>`:'';
-    return `<div class="ntfc-item${n.read?'':' unread'}${act}">
+  el.innerHTML=_ntfLog.map(n=>`
+    <div class="ntfc-item${n.read?'':' unread'}">
       <div class="ntfc-ico">${n.icon||'🔔'}</div>
-      <div class="ntfc-body"><div class="ntfc-title">${eh(n.title||'')}</div>${n.msg?`<div class="ntfc-msg">${eh(n.msg)}</div>`:''}${clHtml}${okBtn}<div class="ntfc-time">${_ntfRelTime(n.ts)}</div></div>
-      ${hint}
-    </div>`;
-  }).join('');
-}
-/* clic sulla notifica card → chiede conferma e aggiorna (la notifica si rimuove solo dopo conferma) */
-function _ntfAction(key){
-  if(key==='gh'){ _ghAskInstall(); }
+      <div class="ntfc-body">
+        <div class="ntfc-title">${eh(n.title||'')}</div>
+        ${n.msg?`<div class="ntfc-msg">${eh(n.msg)}</div>`:''}
+        <div class="ntfc-time">${_ntfRelTime(n.ts)}</div>
+      </div>
+      <button class="ntfc-dismiss-btn" onclick="event.stopPropagation();_ntfDismissById('${n.id}')" title="Rimuovi">✕</button>
+    </div>`).join('');
 }
 function toggleNotifCenter(ev){
   if(ev) ev.stopPropagation();
