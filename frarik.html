@@ -10,7 +10,7 @@
 <script>
 /* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260604280;
+window.FRARIK_APP_VERSION = 20260604290;
 /* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
    (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
@@ -8506,19 +8506,45 @@ window.FratechCardRegistry = {};
 ═══════════════════════════════════════════════════════════════ */
 window.customCards = window.customCards || [];
 
-/* Restituisce il miglior oggetto hass disponibile */
+/* Finestre HA disponibili (parent o top se Frarik è dentro un panel iframe) */
+function _haWins(){ return [window.parent,window.top].filter(w=>{ try{ return w&&w!==window; }catch(e){ return false; } }); }
+/* Restituisce il vero hass di HA */
 function _getBestHass(){
-  const wins=[window.parent,window.top].filter(w=>{ try{ return w&&w!==window; }catch(e){ return false; } });
-  for(const w of wins){
+  for(const w of _haWins()){
     try{ const ha=w.document.querySelector('home-assistant'); if(ha&&ha.hass) return ha.hass; }catch(e){}
   }
   return _haHassObj();
 }
-/* Importa la classe di un custom element dalla finestra HA e la registra nel nostro documento */
+/* Attiva il monkey-patch di document.createElement:
+   ogni volta che viene richiesto un custom element sconosciuto (es: hui-generic-entity-row)
+   lo importa automaticamente dal registro di HA. Questo è essenziale per carte native HA
+   che internamente creano sotto-elementi (hui-entity-row, hui-section-row, ecc.). */
+let _ceAutoImportActive=false;
+function _activateHAElementAutoImport(){
+  if(_ceAutoImportActive) return;
+  _ceAutoImportActive=true;
+  const _orig=document.createElement.bind(document);
+  document.createElement=function(tag,...rest){
+    const el=_orig(tag,...rest);
+    if(typeof tag==='string' && tag.includes('-') && !customElements.get(tag) && el.constructor===HTMLElement){
+      // Elemento custom sconosciuto → importa dal registro HA
+      for(const w of _haWins()){
+        try{
+          const klass=w.customElements&&w.customElements.get(tag);
+          if(klass){
+            try{ customElements.define(tag,klass); }catch(e){}
+            return _orig(tag,...rest); // ora è registrato
+          }
+        }catch(e){}
+      }
+    }
+    return el;
+  };
+}
+/* Importa la classe di un custom element dal registro HA e la registra nel nostro documento */
 function _importHAElement(tag){
   if(customElements.get(tag)) return true;
-  const wins=[window.parent,window.top].filter(w=>{ try{ return w&&w!==window; }catch(e){ return false; } });
-  for(const w of wins){
+  for(const w of _haWins()){
     try{
       const klass=w.customElements&&w.customElements.get(tag);
       if(klass){ try{ customElements.define(tag,klass); return true; }catch(e){ return !!customElements.get(tag); } }
@@ -8526,38 +8552,43 @@ function _importHAElement(tag){
   }
   return false;
 }
-/* Monta una yaml-card — importa elementi da HA, aspetta risorse HACS */
+/* Monta una yaml-card:
+   1. Attiva auto-import elementi HA
+   2. Aspetta risorse HACS (button-card, bubble-card, ecc.)
+   3. Importa il top-level element
+   4. Crea, configura e aggiorna con il vero hass di HA */
 async function _mountYamlCard(card, container){
   container.innerHTML='<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px">⏳</div>';
+  // Attiva import automatico sub-elementi
+  _activateHAElementAutoImport();
   // Aspetta risorse HACS
   if(!_lovelaceResourcesLoaded){
     try{ await _loadLovelaceResources(); }catch(e){}
-    await new Promise(r=>setTimeout(r,600));
+    await new Promise(r=>setTimeout(r,800));
   }
-  if(!container.isConnected||!card.lovelaceConfig){ return; }
+  if(!container.isConnected||!card.lovelaceConfig) return;
   let yamlCfg;
   try{ yamlCfg=jsyaml.load(card.lovelaceConfig); }
   catch(e){ container.innerHTML='<div style="padding:12px;color:#f87171;font-size:11px">YAML: '+eh(e.message)+'</div>'; return; }
   const type=(yamlCfg.type||'').trim();
   const isCustom=type.startsWith('custom:');
   const tag=isCustom?type.replace('custom:','').trim():'hui-'+type+'-card';
-  // Importa la classe se non già registrata
+  // Importa il tag principale dal registro HA se non già disponibile
   _importHAElement(tag);
-  // Verifica disponibilità
   if(!customElements.get(tag)){
     container.innerHTML=`<div style="padding:14px;color:#fbbf24;font-size:11px;line-height:1.6">
       ⚠️ <b>${eh(tag)}</b> non disponibile.<br>
-      <span style="font-size:10px;opacity:.7">Apri Frarik come pannello HA per caricare tutti gli elementi.</span>
+      <span style="font-size:10px;opacity:.7">Assicurati che Frarik sia aperta come pannello HA.</span>
     </div>`;
     return;
   }
-  // Crea e configura l'elemento
   let cel;
   try{ cel=document.createElement(tag); }
   catch(e){ container.innerHTML='<div style="padding:12px;color:#f87171;font-size:11px">'+eh(e.message)+'</div>'; return; }
+  // Passa prima hass, poi setConfig (alcune card lo richiedono in questo ordine)
+  try{ cel.hass=_getBestHass(); }catch(e){}
   try{ if(typeof cel.setConfig==='function') cel.setConfig(yamlCfg); }
   catch(e){ container.innerHTML='<div style="padding:10px;color:#fbbf24;font-size:11px">setConfig: '+eh(e.message)+'</div>'; return; }
-  try{ cel.hass=_getBestHass(); }catch(e){}
   cel.style.cssText='display:block;width:100%;height:100%';
   cel.classList.add('frarik-yaml-el');
   container.innerHTML='';
@@ -8567,7 +8598,7 @@ async function _mountYamlCard(card, container){
 }
 function _stopYamlCard(cardId){
   const w=document.getElementById('v-'+cardId);
-  if(w&&w._yamlTimer){ clearInterval(w._yamlTimer); delete w._yamlTimer; }
+  if(w){ if(w._yamlTimer){ clearInterval(w._yamlTimer); delete w._yamlTimer; } }
 }
 /* ── Carica le risorse Lovelace (HACS custom cards) dal server HA ── */
 let _lovelaceResourcesLoaded=false;
