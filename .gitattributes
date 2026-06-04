@@ -1,0 +1,18 @@
+# Force LF for shell scripts (critical for Docker/Linux)
+*.sh text eol=lf
+run.sh text eol=lf
+
+# Force LF for other text files
+*.js text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.md text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.txt text eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.ico binary

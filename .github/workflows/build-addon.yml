@@ -1,0 +1,85 @@
+name: Build & Release Frarik Add-on
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'frarik-addon/**'
+      - '.github/workflows/build-addon.yml'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versione (es. 1.0.1) — lascia vuoto per build dev'
+        required: false
+
+concurrency:
+  group: build-addon
+  cancel-in-progress: true
+
+jobs:
+  # ── Job 1: Aggiorna manifest.json con data/ora del build ──
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+      build:   ${{ steps.ver.outputs.build }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Calcola versione e build ID
+        id: ver
+        run: |
+          # Versione: da input manuale o da config.yaml
+          VERSION=${{ github.event.inputs.version }}
+          if [ -z "$VERSION" ]; then
+            VERSION=$(grep '^version:' frarik-addon/config.yaml | awk '{print $2}' | tr -d '"')
+          fi
+          BUILD="$(date -u +%Y%m%d)-$(git rev-parse --short HEAD)"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "build=$BUILD"     >> $GITHUB_OUTPUT
+          echo "Versione: $VERSION  Build: $BUILD"
+
+      - name: Aggiorna manifest.json
+        run: |
+          VERSION=${{ steps.ver.outputs.version }}
+          BUILD=${{ steps.ver.outputs.build }}
+          NOW=$(date -u +%Y-%m-%dT%H:%M:%S.000Z)
+          jq --arg v "$VERSION" --arg b "$BUILD" --arg t "$NOW" \
+            '.version=$v | .build=$b | .updatedAt=$t' \
+            frarik-addon/panel/manifest.json > /tmp/manifest.json
+          mv /tmp/manifest.json frarik-addon/panel/manifest.json
+
+      - name: Commit manifest aggiornato
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "ci: aggiorna manifest.json → v${{ steps.ver.outputs.version }}+${{ steps.ver.outputs.build }}"
+          file_pattern: frarik-addon/panel/manifest.json
+
+  # ── Job 2: Notifica entrambi gli HA dell'aggiornamento ──
+  notify-ha:
+    runs-on: ubuntu-latest
+    needs: prepare
+    steps:
+      - name: Notifica HA Frarik (Francesco)
+        continue-on-error: true
+        run: |
+          for i in 1 2 3; do
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+              "https://cvkvlnpaokb2r0pedlqjlq06f5zsd3fl.ui.nabu.casa/api/services/homeassistant/reload_custom_templates" \
+              -H "Authorization: Bearer ${{ secrets.HA_TOKEN_FRARIK }}" \
+              -H "Content-Type: application/json" -d '{}')
+            echo "Tentativo $i: HTTP $CODE"
+            [ "$CODE" = "200" ] && break || sleep 10
+          done
+
+      - name: Notifica HA Riccardo (amico)
+        continue-on-error: true
+        run: |
+          for i in 1 2 3; do
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+              "https://mzlej5bjgutlujw3go5vsanafnf1bom1.ui.nabu.casa/api/services/homeassistant/reload_custom_templates" \
+              -H "Authorization: Bearer ${{ secrets.HA_TOKEN_FRAZIC95 }}" \
+              -H "Content-Type: application/json" -d '{}')
+            echo "Tentativo $i: HTTP $CODE"
+            [ "$CODE" = "200" ] && break || sleep 10
+          done

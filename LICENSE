@@ -1,0 +1,34 @@
+Frarik Dashboard — Licenza ad Uso Privato
+==========================================
+
+Copyright (c) 2026 Francesco Ziccheddu & Riccardo Vacca
+Tutti i diritti riservati.
+
+TERMINI DI UTILIZZO
+-------------------
+Questo software ("Frarik Dashboard") è di proprietà esclusiva degli autori
+e concesso in uso esclusivamente a:
+
+  - Francesco Ziccheddu  (francesco.ziccheddu95@gmail.com)
+  - Riccardo Vacca       (riccardo@example.com)   ← aggiorna con la mail reale
+
+È CONSENTITO:
+  ✓ Usare, modificare e distribuire tra i due licenziatari sopra elencati
+  ✓ Eseguire il software su qualsiasi numero di istanze Home Assistant
+    di proprietà esclusiva dei licenziatari
+  ✓ Condividere il codice tramite repository privato o pubblico su GitHub
+    purché il file LICENSE rimanga invariato
+
+È VIETATO:
+  ✗ Vendere, sublicenziare o ridistribuire il software a terzi
+  ✗ Rimuovere o modificare questo avviso di copyright
+  ✗ Usare il marchio "Frarik" per prodotti derivati non autorizzati
+
+NESSUNA GARANZIA
+----------------
+Il software è fornito "così com'è", senza garanzie di alcun tipo.
+Gli autori non sono responsabili per danni derivanti dall'uso del software.
+
+---
+Per autorizzazioni non coperte da questa licenza:
+  francesco.ziccheddu95@gmail.com
