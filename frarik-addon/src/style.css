@@ -377,6 +377,13 @@ select.finp option{background:#1a1e30}
 .btn2{padding:9px 14px;border-radius:9px;background:rgba(255,255,255,0.03);border:1px solid var(--bd2);color:var(--muted);font-size:11px;font-weight:600;transition:all .2s}
 .btn2:hover{color:#fff}
 
+/* Special card modal */
+#smod .mbox{width:400px}
+.scard-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:6px 18px 10px}
+.sc-cat{padding:10px 18px 2px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted)}
+.sc-btn{padding:14px 10px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid var(--bd2);color:rgba(255,255,255,0.7);font-size:11px;font-weight:700;text-align:center;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:6px}
+.sc-btn:hover{background:rgba(99,102,241,0.15);border-color:var(--acc);color:#fff}
+.sc-ico{font-size:22px}
 
 /* ═══ LOGIN OVERLAY ═══ */
 #lov{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:900}
@@ -1020,6 +1027,8 @@ html,body{font-family:var(--font-family)}
 [data-theme="light"] .eit:hover{background:rgba(99,102,241,0.07)}
 [data-theme="light"] .ename{color:#0f172a}
 [data-theme="light"] .estate{color:#718096}
+[data-theme="light"] .sc-btn{background:rgba(15,23,42,0.05);border-color:rgba(15,23,42,0.1);color:#4a5568}
+[data-theme="light"] .sc-btn:hover{background:rgba(99,102,241,0.08);border-color:var(--acc);color:#0f172a}
 /* ── Pickers ── */
 [data-theme="light"] .app-fpop{background:#fff;border-color:rgba(15,23,42,0.12);box-shadow:0 8px 30px rgba(15,23,42,0.14)}
 [data-theme="light"] .app-emoji-cat{color:#718096;opacity:1}

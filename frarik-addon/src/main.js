@@ -857,43 +857,15 @@ async function _ghCheck(force){
   let files;
   try{ files=await _ghApiListAll(); }
   catch(e){ if(force){ _ghStatus('⚠️ '+e.message); showToast('⚠️ GitHub: '+e.message);} return; }
-  // Separa card nuove (mai viste) da card aggiornate (SHA cambiato)
-  const _ghNew     = files.filter(f=> !g.shas[f.name]);
-  const _ghUpdated = files.filter(f=>  g.shas[f.name] && g.shas[f.name]!==f.sha);
-  _ghPending = [..._ghNew, ..._ghUpdated];
-
-  // Sincronizza store locale: rimuovi card GitHub che non esistono più nel repo
-  if(files.length > 0){
-    const repoNames = new Set(files.map(f=>f.name));
-    _jsStoreList().forEach(item=>{
-      if((item.origin||'github')==='github' && item.meta && item.meta.id){
-        const fname = (g.idFile||{})[item.meta.id];
-        if(fname && !repoNames.has(fname)){
-          try{ delete g.shas[fname]; if(g.idFile) delete g.idFile[item.meta.id]; }catch(e){}
-          try{ localStorage.removeItem('fratech_jscard_'+item.meta.id); }catch(e){}
-        }
-      }
-    });
-    _epRenderJsStore();
-  }
-
-  if(force) _ghStatus(files.length+' card nel repo · '+_ghPending.length+' da installare/aggiornare');
+  _ghPending = files.filter(f=> !g.shas[f.name] || g.shas[f.name]!==f.sha);
+  if(force) _ghStatus(files.length+' card nel repo · '+_ghPending.length+' da aggiornare');
   const sig=_ghPending.map(f=>f.name+':'+f.sha).sort().join('|');
   if(_ghPending.length && sig!==_ghDismissedSig){
-    // Testo notifica differenziato: nuova vs aggiornata
-    let txt;
-    if(_ghNew.length && !_ghUpdated.length){
-      txt = _ghNew.length===1 ? 'Nuova card: '+_ghNew[0].name.replace(/\.js$/,'')+' — clicca per installare'
-                              : _ghNew.length+' nuove card disponibili — clicca per installare';
-    } else if(_ghUpdated.length && !_ghNew.length){
-      txt = _ghUpdated.length===1 ? 'Card aggiornata: '+_ghUpdated[0].name.replace(/\.js$/,'')+' — clicca per aggiornare'
-                                  : _ghUpdated.length+' card aggiornate — clicca per aggiornare';
-    } else {
-      txt = _ghPending.length+' card da installare/aggiornare — clicca';
-    }
+    const txt=_ghPending.length===1?('Card aggiornata: '+_ghPending[0].name.replace(/\.js$/,'')+' — clicca per aggiornare')
+                                    :(_ghPending.length+' card aggiornate — clicca per aggiornare');
     document.getElementById('gh-notif-txt').textContent=txt;
     document.getElementById('gh-notif').classList.add('on');
-    if(sig!==_ghLastSig){ try{ _ntfPushLog('📦 Card GitHub', txt, '📦', 'gh'); _ntfUpdateBell(); }catch(e){} _ghLastSig=sig; }
+    if(sig!==_ghLastSig){ try{ _ntfPushLog('🔄 Aggiornamento card', txt, '🔄', 'gh'); _ntfUpdateBell(); }catch(e){} _ghLastSig=sig; }   // anche nel centro notifiche (cliccabile)
   } else if(!_ghPending.length){
     document.getElementById('gh-notif').classList.remove('on');
   }
@@ -1046,10 +1018,10 @@ async function _ghsPreview(enc, nm, cardId){
 }
 function ghStoreTab(tab){
   _ghsTab=tab;
-  ['js','chips','distintivi','yaml','pkg','local'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
+  ['js','chips','distintivi','yaml','pkg','local','speciali'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
   const s=document.getElementById('ghs-search'); if(s) s.value='';
   const loadEl=document.getElementById('ghs-load'); if(loadEl) loadEl.style.display=(tab==='local')?'':'none';
-
+  if(tab==='speciali'){ _ghStoreRenderSpeciali(); return; }
   if(tab==='local'){ _ghStoreRender(); _ghStoreInitDropzone(); return; }
   if(_ghsCache[tab]){ _ghStoreRender(); return; }
   document.getElementById('ghs-status').textContent='⏳ Carico da GitHub…';
@@ -1060,7 +1032,43 @@ function ghStoreTab(tab){
     if(_ghsTab===tab) _ghStoreRender();
   }).catch(e=>{ document.getElementById('ghs-status').textContent='⚠️ '+e.message; });
 }
-
+/* Scheda "Speciali" — card built-in di Frarik (non richiedono GitHub) */
+const _SPECIALI_CARDS = [
+  {type:'flowmap',    label:'Flusso Energia',      icon:'⚡', desc:'Mappa flusso solare/rete/casa'},
+  {type:'camera',     label:'Telecamera',           icon:'📷', desc:'Stream camera con refresh'},
+  {type:'weather',    label:'Meteo',                icon:'🌤️', desc:'Scheda meteo compatta'},
+  {type:'weather-forecast', label:'Previsioni',     icon:'📅', desc:'Previsioni su 5 giorni'},
+  {type:'media',      label:'Lettore Multimediale', icon:'🎵', desc:'Media player con controlli'},
+  {type:'climate',    label:'Termostato',           icon:'🌡️', desc:'Controllo clima/riscaldamento'},
+  {type:'multiline',  label:'Grafico Multi-Linea',  icon:'📈', desc:'Storico più entità'},
+  {type:'bar',        label:'Grafico Barre',        icon:'📊', desc:'Storico a barre'},
+  {type:'entities',   label:'Lista Entità',         icon:'📋', desc:'Elenco sensori/entità'},
+  {type:'gauge',      label:'Indicatore',           icon:'🕐', desc:'Gauge circolare'},
+  {type:'clock',      label:'Orologio',             icon:'⏰', desc:'Orologio digitale/analogico'},
+  {type:'markdown',   label:'Testo/Markdown',       icon:'📝', desc:'Testo libero con HTML'},
+  {type:'appliances', label:'Elettrodomestici',     icon:'🔌', desc:'Pannello luci e dispositivi'},
+  {type:'free',       label:'Canvas Libero',        icon:'🎨', desc:'Area di disegno personalizzata'},
+  {type:'header-bar', label:'Header Personalizzato',icon:'⊞', desc:'Barra header con widget'},
+  {type:'picture-elements', label:'Casa (Immagine)',icon:'🏠', desc:'Immagine con elementi sovrapposti'},
+];
+function _ghStoreRenderSpeciali(){
+  const list=document.getElementById('ghs-list');
+  const status=document.getElementById('ghs-status');
+  const q=(document.getElementById('ghs-search').value||'').toLowerCase().trim();
+  const items=q?_SPECIALI_CARDS.filter(c=>c.label.toLowerCase().includes(q)||c.desc.toLowerCase().includes(q)):_SPECIALI_CARDS;
+  status.textContent=_SPECIALI_CARDS.length+' card built-in'+(q?' · '+items.length+' trovate':'');
+  list.innerHTML=items.map(c=>`
+    <div class="ghs-row">
+      <div class="ghs-ico">${c.icon}</div>
+      <div class="ghs-info">
+        <div class="ghs-name">${c.label}</div>
+        <div class="ghs-sub">${c.desc}</div>
+      </div>
+      <div class="ghs-acts">
+        <button class="ghs-btn ghs-btn-inst" onclick="addSpecial('${c.type}');closeGhStore()"><i class="mdi mdi-plus"></i> Aggiungi</button>
+      </div>
+    </div>`).join('');
+}
 function _ghStoreRender(){
   const tab=_ghsTab, list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
   const q=(document.getElementById('ghs-search').value||'').toLowerCase().trim();
@@ -6401,6 +6409,51 @@ function jsStoreDownloadTemplate(){
   const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='fratech-card-template.js'; a.click();
 }
 
+function openSM(){ document.getElementById('smod').classList.remove('off'); }
+function closeSM(){ document.getElementById('smod').classList.add('off'); }
+function addSpecial(type){
+  closeSM();
+  const defs={
+    flowbars:{label:'Flusso Energia',icon:'⚡',solar:'sensor.inverter_r5s1152j2118e25819_power',load:'sensor.consumo_solo_positivo',grid:'sensor.inverter_r5s1152j2118e25819_grid_power',colSpan:2,rowSpan:2,max:6000,color:'#fbbf24'},
+    flowmap: {label:'Flusso Mappa',icon:'🗺️',solar:'sensor.inverter_r5s1152j2118e25819_power',load:'sensor.consumo_solo_positivo',grid:'sensor.inverter_r5s1152j2118e25819_grid_power',colSpan:2,rowSpan:2,color:'#818cf8'},
+    camera:  {label:'Telecamera',icon:'📷',entity:'camera.telecamera_interna_scorrevole',colSpan:2,rowSpan:2,refresh:5,color:'#818cf8'},
+    weather: {label:'Meteo',icon:'🌤️',entity:'weather.home',colSpan:2,rowSpan:1,color:'#22d3ee'},
+    'weather-forecast':{label:'Previsioni',icon:'📅',entity:'weather.home',colSpan:4,rowSpan:1,color:'#818cf8'},
+    media:   {label:'Lettore Multimediale',icon:'🎵',entity:'media_player.sfera_piano_terra',colSpan:2,rowSpan:1,color:'#f472b6'},
+    climate: {label:'Termostato',icon:'🌡️',colSpan:1,rowSpan:2,color:'#fb923c'},
+    multiline:{label:'Multi-Linea',icon:'📈',hours:24,colSpan:2,rowSpan:2,color:'#60a5fa'},
+    bar:     {label:'Grafico Barre',icon:'📊',hours:24,colSpan:2,rowSpan:1,color:'#818cf8'},
+    entities:{label:'Lista Entità',icon:'📋',colSpan:2,rowSpan:1,color:'#4ade80'},
+    gauge:   {label:'Indicatore',icon:'🕐',colSpan:1,rowSpan:2,max:100,color:'#c084fc'},
+    clock:   {label:'Orologio',icon:'⏰',colSpan:2,rowSpan:1,color:'#818cf8'},
+    markdown:{label:'Testo',icon:'📝',colSpan:2,rowSpan:1,color:'#a78bfa',content:'<b>Titolo</b><br>Testo libero…'},
+    appliances:{label:'Elettrodomestici',icon:'⚡',colSpan:2,rowSpan:2,color:'#fbbf24',threshold:5,items:[],groups:[
+      {name:'luci',color:'#fbbf24',entities:[],showList:false},
+      {name:'elettrodomestici',color:'#f97316',entities:[],showList:false},
+      {name:'climatizzatori',color:'#60a5fa',entities:[],showList:true},
+      {name:'tapparelle',color:'#818cf8',entities:[],showList:true},
+      {name:'porte',color:'#4ade80',entities:[],showList:true}
+    ]},
+    'picture-elements':{label:'Casa',icon:'🏠',imageUrl:'casa.png',colSpan:3,rowSpan:2,color:'#818cf8',elements:[]},
+    'free':{label:'Canvas',icon:'🎨',colSpan:2,rowSpan:2,color:'#818cf8',canvasW:360,canvasH:200,canvasBg:'var(--card)',canvasBorderRadius:'16px',canvasBorderStr:'1px solid var(--bd)',canvasPadding:'0px',canvasElements:[]},
+    'header-bar':{label:'Header Personalizzato',icon:'⊞',colSpan:4,rowSpan:1,color:'#818cf8',left:[{id:uid(),type:'clock'}],center:[],right:[]},
+    'footer-bar':{label:'Footer Bar',icon:'⊟',colSpan:4,rowSpan:1,color:'#2dd4bf',buttons:[
+      {id:'__fb1',type:'climate',icon:'mdi:thermometer',label:'Clima',color:'#f87171',entity:'',clmMin:16,clmMax:36},
+      {id:'__fb2',type:'navigate',icon:'mdi:home',label:'Casa',color:'#818cf8',navPage:0},
+      {id:'__fb3',type:'link',icon:'mdi:lightning-bolt',label:'Energia',color:'#fbbf24',url:''},
+    ]},
+  }[type]||{};
+  const page=curPage();
+  const newCard={
+    id:uid(),type,entity:'',label:'Nuova Card',icon:'📦',unit:'',color:'#818cf8',
+    colSpan:1,rowSpan:1,max:0,min:0,sub:'',hours:24,content:'',imageUrl:'',elements:[],
+    threshold:5,items:[],entity2:'',entity3:'',solar:'',load:'',grid:'',battery:'',refresh:5,
+    ...defs
+  };
+  _assignSection(page,newCard);
+  page.cards.push(newCard);
+  saveCfg(); renderDash(); openCM(newCard.id);
+}
 
 
 /* ═══ CARD ACTIONS ═══ */
