@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   root: 'src',
+  base: './',   // path relativi → funziona con HA ingress (subpath variabile)
   build: {
     outDir: '../panel',
     emptyOutDir: true,
