@@ -10,7 +10,7 @@
 <script>
 /* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260604230;
+window.FRARIK_APP_VERSION = 20260604240;
 /* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
    (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
@@ -4258,6 +4258,7 @@ function onMsg(m){
       try{ _ghSchedule(); setTimeout(()=>{ try{ _ghCheck(false); }catch(e){} }, 4000); }catch(e){}  // controllo aggiornamenti card GitHub
       try{ _appUpdSchedule(); setTimeout(()=>{ try{ _appUpdateCheck(); }catch(e){} }, 6000); }catch(e){}  // controllo aggiornamento plancia
       setTimeout(()=>{ try{ _loadLovelaceResources(); }catch(e){} }, 2000);  // carica risorse HACS
+      setTimeout(()=>{ try{ _haLocalCheck(); }catch(e){} }, 3000);  // controlla subito se c'è una versione più recente del file su HA
       try{ _ntfUpdateBell(); }catch(e){}
     } else {
       // RICONNESSIONE: la dashboard è già costruita → aggiorna i VALORI in posto, niente rebuild (niente "scatto")
