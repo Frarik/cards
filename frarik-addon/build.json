@@ -1,8 +1,0 @@
-{
-  "build_from": {},
-  "labels": {
-    "io.hass.version": "VERSION",
-    "io.hass.type": "addon",
-    "io.hass.arch": "aarch64|amd64|armhf|armv7|i386"
-  }
-}
