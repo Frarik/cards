@@ -10,7 +10,7 @@
 <script>
 /* ═══ VERSIONE APP + AUTO-AGGIORNAMENTO DA GITHUB ═══
    Numero versione di QUESTA plancia. Aumentalo quando pubblichi una nuova versione su GitHub. */
-window.FRARIK_APP_VERSION = 20260604190;
+window.FRARIK_APP_VERSION = 20260604200;
 /* Se nel browser c'è una versione PIÙ RECENTE scaricata da GitHub, esegui quella al posto di questo file.
    (Sincrono: deve girare PRIMA di tutto il resto. Token/Nabu restano nel browser → non si toccano.) */
 (function(){
@@ -4029,6 +4029,27 @@ function _appUpdSchedule(){
   clearInterval(_appUpdTimer);
   _appUpdTimer=setInterval(()=>{ if(!document.hidden) _appUpdateCheck(); }, 30*60*1000);  // ogni 30 min
 }
+/* Salva la versione corrente in localStorage come "safety net" contro la cache HTTP del browser.
+   Se il browser carica una versione vecchia dalla cache HTTP, lo script di avvio trova questa
+   versione più recente in localStorage e la usa al posto di quella cachata. */
+async function _selfCacheVersion(){
+  if(location.protocol==='file:') return;
+  try{
+    const cur=window.FRARIK_APP_VERSION||0;
+    const stored=parseInt(localStorage.getItem('frarik_app_ver')||'0',10);
+    if(stored>=cur) return; // già in cache una versione uguale o più recente
+    const r=await fetch(location.pathname+'?_sc='+Date.now(),{cache:'no-store'});
+    if(!r.ok) return;
+    const html=await r.text();
+    const m=/FRARIK_APP_VERSION\s*=\s*(\d+)/.exec(html); if(!m) return;
+    const rv=parseInt(m[1],10);
+    if(rv>=cur && html.length>200000 && html.indexOf('</'+'script>')>-1){
+      localStorage.setItem('frarik_app_html',html);
+      localStorage.setItem('frarik_app_ver',String(rv));
+      localStorage.setItem('frarik_app_ts',String(Date.now()));
+    }
+  }catch(e){}
+}
 
 /* ═══ WEBSOCKET ═══ */
 let covTimer=null;
@@ -4203,6 +4224,7 @@ function onMsg(m){
       _restoreUIState();
       try{ _ghSchedule(); setTimeout(()=>{ try{ _ghCheck(false); }catch(e){} }, 4000); }catch(e){}  // controllo aggiornamenti card GitHub
       try{ _appUpdSchedule(); setTimeout(()=>{ try{ _appUpdateCheck(); }catch(e){} }, 6000); }catch(e){}  // controllo aggiornamento plancia
+      setTimeout(()=>{ try{ _selfCacheVersion(); }catch(e){} }, 5000);  // salva versione corrente in localStorage (anti cache-browser)
       try{ _ntfUpdateBell(); }catch(e){}
     } else {
       // RICONNESSIONE: la dashboard è già costruita → aggiorna i VALORI in posto, niente rebuild (niente "scatto")
