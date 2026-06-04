@@ -1136,7 +1136,8 @@ function _ghStoreRender(){
         acts=`${eyeBtn(null)}<button class="ghs-btn ghs-btn-inst" onclick="_ghsInstall('${enc}')"><i class="mdi mdi-download"></i> Installa</button>`;
       } else {
         const updateBtn=(known!==f.sha)?`<button class="ghs-btn ghs-btn-upd" onclick="_ghsInstall('${enc}')"><i class="mdi mdi-update"></i> Aggiorna</button>`:'';
-        const addBtn=cardId?(inDash?`<span class="ghs-badge ghs-badge-dash"><i class="mdi mdi-check-circle-outline"></i> In dashboard</span>`:`<button class="ghs-btn ghs-btn-inst" onclick="jsStoreAddCard('${cardId}');setTimeout(_ghStoreRender,50)"><i class="mdi mdi-plus"></i> Aggiungi</button>`):'';
+        const addBtn=cardId?(inDash?`<span class="ghs-badge ghs-badge-dash"><i class="mdi mdi-check-circle-outline"></i> In dashboard</span>`:`<button class="ghs-btn ghs-btn-inst" onclick="jsStoreAddCard('${cardId}');setTimeout(_ghStoreRender,50)"><i class="mdi mdi-plus"></i> Aggiungi</button>`)
+          :`<button class="ghs-btn ghs-btn-inst" onclick="_ghsInstall('${enc}')"><i class="mdi mdi-download"></i> Installa</button>`;
         const delBtn=cardId?`<button class="ghs-ibtn ghs-ibtn-del" onclick="_ghsDeleteInstalled('${cardId}')" title="Disinstalla"><i class="mdi mdi-delete-outline"></i></button>`:'';
         acts=`${eyeBtn(cardId)}${updateBtn}${addBtn}${delBtn}`;
       }

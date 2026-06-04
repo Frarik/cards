@@ -99,6 +99,24 @@ console.log('✓ fix: _ntfDismissById');
   }
 }
 
+// Fix: store mostra "Installa" anche quando SHA è noto ma cardId è null
+js = js.replace(
+  /const addBtn=cardId\?\(inDash\?`[^`]+`:`[^`]+`\):'';/,
+  `const addBtn=cardId?(inDash?\`<span class="ghs-badge ghs-badge-dash"><i class="mdi mdi-check-circle-outline"></i> In dashboard</span>\`:\`<button class="ghs-btn ghs-btn-inst" onclick="jsStoreAddCard('\${cardId}');setTimeout(_ghStoreRender,50)"><i class="mdi mdi-plus"></i> Aggiungi</button>\`):\`<button class="ghs-btn ghs-btn-inst" onclick="_ghsInstall('\${enc}')"><i class="mdi mdi-download"></i> Installa</button>\`;`
+);
+console.log('✓ fix: store Installa quando cardId null');
+
+// Fix: sort con guard null su name/entity_id
+js = js.replace(
+  'files.sort((a,b)=>a.name.localeCompare(b.name))',
+  'files.sort((a,b)=>(a.name||"").localeCompare(b.name||""))'
+);
+js = js.replace(
+  'allE=m.result.sort((a,b)=>a.entity_id.localeCompare(b.entity_id))',
+  'allE=m.result.filter(e=>e&&e.entity_id).sort((a,b)=>a.entity_id.localeCompare(b.entity_id))'
+);
+console.log('✓ fix: localeCompare null-safe');
+
 // ── 4. Prepend import npm ─────────────────────────────────────────────────────
 const imports =
 `// ── Dipendenze npm ───────────────────────────────────────────────────────────
