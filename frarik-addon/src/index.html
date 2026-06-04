@@ -14,34 +14,6 @@
 </head>
 <body>
 
-<!-- LOGIN OVERLAY -->
-<div id="lov">
-  <div class="login-box">
-    <div class="login-logo">⚡</div>
-    <div class="login-title">FRARIK</div>
-    <div class="login-sub">Accesso Richiesto</div>
-    <!-- Modalità connessione -->
-    <div class="login-inp-mode">
-      <button class="lmode-btn on" id="lmode-local" onclick="setLoginMode('local')">🏠 Locale</button>
-      <button class="lmode-btn" id="lmode-remote" onclick="setLoginMode('remote')">🌐 Remoto</button>
-    </div>
-    <input class="login-inp" id="l-user" type="text" placeholder="Utente" autocomplete="username">
-    <input class="login-inp" id="l-pass" type="password" placeholder="Password" autocomplete="current-password">
-    <!-- Sezione remoto (Nabu Casa) -->
-    <div id="l-remote-section" style="width:100%;display:none;flex-direction:column">
-      <div class="login-sep"></div>
-      <input class="login-inp" id="l-haurl" type="url" placeholder="https://xxxxx.ui.nabu.casa" autocomplete="url" style="margin-bottom:4px">
-      <div class="login-hint">📡 Indirizzo Nabu Casa Cloud — es. <code>https://xxxxx.ui.nabu.casa</code></div>
-      <button class="login-adv-toggle" onclick="toggleLoginAdv()">🔧 Token avanzato ▾</button>
-      <div class="login-adv" id="l-adv">
-        <input class="login-inp" id="l-token" type="password" placeholder="Token di accesso a lunga durata" autocomplete="off" style="font-size:10px;font-family:monospace">
-        <div class="login-hint">Lascia vuoto per usare il token predefinito del file</div>
-      </div>
-    </div>
-    <button class="login-btn" onclick="doLogin()">Accedi</button>
-    <div class="login-err" id="l-err"></div>
-  </div>
-</div>
 
 <!-- CONN OVERLAY -->
 <div id="cov"><div class="spin"></div><div id="cmsg">Connessione a Home Assistant…</div>
