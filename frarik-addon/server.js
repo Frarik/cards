@@ -2,47 +2,57 @@ const express = require('express');
 const path    = require('path');
 const fs      = require('fs');
 
-const app  = express();
-const PORT = 3000;
-const PANEL_DIR = path.join(__dirname, 'panel');
+const app      = express();
+const PORT     = 3000;
+const PANEL    = path.join(__dirname, 'panel');
+const HA_WWW   = '/config/www/frarik';
 
-// ── Leggi il manifest per la versione corrente ──
-let manifest = { version: '1.0.0', build: 'dev' };
+// ── Copia i file panel in /config/www/frarik/ al primo avvio ──
+function copyDir(src, dest) {
+  fs.mkdirSync(dest, { recursive: true });
+  for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
+    const s = path.join(src, entry.name);
+    const d = path.join(dest, entry.name);
+    entry.isDirectory() ? copyDir(s, d) : fs.copyFileSync(s, d);
+  }
+}
 try {
-  manifest = JSON.parse(fs.readFileSync(path.join(PANEL_DIR, 'manifest.json'), 'utf8'));
-} catch {}
+  copyDir(PANEL, HA_WWW);
+  console.log('[Frarik] File copiati in', HA_WWW);
+} catch (e) {
+  console.warn('[Frarik] Copia www non riuscita (non bloccante):', e.message);
+}
 
-// ── Cache headers intelligenti ──
-app.use(express.static(PANEL_DIR, {
+// ── Versione dal manifest ──
+let manifest = { version: '1.0.0', build: 'dev' };
+try { manifest = JSON.parse(fs.readFileSync(path.join(PANEL, 'manifest.json'), 'utf8')); } catch {}
+
+// ── Cache headers ──
+app.use(express.static(PANEL, {
   etag: true,
   lastModified: true,
   setHeaders(res, filePath) {
     const base = path.basename(filePath);
     if (base === 'index.html') {
-      // HTML: no cache (sempre aggiornato)
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.setHeader('Pragma', 'no-cache');
-    } else if (/\.\w{8,}\.(js|css)$/.test(base)) {
-      // File con hash nel nome (es. frarik.abc12345.js) → cache 1 anno
+    } else if (/\.[a-f0-9]{8,}\.(js|css)$/.test(base)) {
       res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     } else {
-      // Altri statici (immagini, fonts) → cache 7 giorni
       res.setHeader('Cache-Control', 'public, max-age=604800');
     }
   }
 }));
 
-// ── Health check / info versione ──
 app.get('/api/frarik/version', (_req, res) => {
   res.json({ version: manifest.version, build: manifest.build, ok: true });
 });
 
-// ── Fallback: serve index.html per SPA routing ──
 app.use((_req, res) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.sendFile(path.join(PANEL_DIR, 'index.html'));
+  res.sendFile(path.join(PANEL, 'index.html'));
 });
 
 app.listen(PORT, () => {
-  console.log(`[Frarik] Server in ascolto su porta ${PORT} — v${manifest.version}`);
+  console.log(`[Frarik] Server su porta ${PORT} — v${manifest.version}`);
 });
