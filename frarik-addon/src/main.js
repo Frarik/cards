@@ -8,6 +8,31 @@ import { _ntfPushLog, _ntfDismissById, _ntfUpdateBell, ntfMarkAllRead, ntfClearA
 window.Chart  = Chart;
 window.jsyaml = jsyaml;
 
+// ── Nasconde la barra HA ingress (duplicato del nostro header) ───────────────
+(function(){
+  if(window.parent===window) return;
+  function tryHide(){
+    try{
+      const panel = window.parent.document.querySelector('ha-panel-hassio');
+      if(!panel||!panel.shadowRoot) return false;
+      const hdr = panel.shadowRoot.querySelector('app-header,.header,app-toolbar');
+      if(!hdr) return false;
+      // Risale al contenitore della barra e lo nasconde
+      const target = hdr.closest('app-header')||hdr;
+      target.style.setProperty('display','none','important');
+      // Rimuove il padding-top che HA aggiunge per la barra
+      const iframe = panel.shadowRoot.querySelector('iframe');
+      if(iframe) iframe.style.setProperty('top','0','important');
+      return true;
+    }catch(e){ return false; }
+  }
+  if(!tryHide()){
+    setTimeout(tryHide, 300);
+    setTimeout(tryHide, 1000);
+    setTimeout(tryHide, 3000);
+  }
+})();
+
 // ── Splash screen (ex script inline in index.html) ────────────────────────
 (function(){
   const s = document.getElementById('frk-splash'); if(!s) return;
