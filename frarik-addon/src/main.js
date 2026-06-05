@@ -2,6 +2,9 @@
 import './style.css';
 import Chart  from 'chart.js/auto';
 import jsyaml from 'js-yaml';
+import { uid, eh, ea, _lightenHex, showToast, showConfirm } from './utils.js';
+import { _ntfPushLog, _ntfDismissById, _ntfUpdateBell, ntfMarkAllRead, ntfClearAll,
+         renderNotifCenter, toggleNotifCenter, closeNotifCenter } from './notifications.js';
 window.Chart  = Chart;
 window.jsyaml = jsyaml;
 
@@ -165,7 +168,7 @@ let wizardTpl = null;
 let wizardEditing = false;
 
 /* ═══ PERSIST ═══ */
-function uid(){ return 'c'+Math.random().toString(36).slice(2,9); }
+// uid, eh, ea → utils.js
 
 function _mkCard(overrides){
   return {id:uid(),type:'compact',entity:'',label:'',icon:'📦',unit:'',color:'#818cf8',
@@ -890,7 +893,7 @@ async function _ghInstallAll(){
   if(!_ghPending.length){ document.getElementById('gh-notif').classList.remove('on'); return; }
   showToast('⬇️ Aggiorno '+_ghPending.length+' card…');
   let ok=0,err=0;
-  for(const f of _ghPending.slice()){ try{ await _ghInstallFile(f); ok++; }catch(e){ err++; console.warn('[GitHub]',f.name,e.message); } }
+  for(const f of _ghPending.slice()){ try{ await _ghInstallFile(f); ok++; }catch(e){ err++; console.warn('[GitHub]',f.name,e.message); try{ _ntfPushLog('⚠️ Errore installazione', f.name+': '+e.message, '🐙', null, {}); }catch(_){} } }
   _ghPending=[]; _ghDismissedSig='';
   document.getElementById('gh-notif').classList.remove('on');
   saveCfg(); _haSaveCfg();
@@ -5719,26 +5722,7 @@ function pasteCardTo(secId, col){
   showToast(`📋 "${newCard.label||newCard.type}" incollata!`);
 }
 
-/* ═══ TOAST ═══ */
-let _toastT=null;
-function showToast(msg,ms=2200){
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
-  if(_toastT) clearTimeout(_toastT);
-  _toastT=setTimeout(()=>t.classList.remove('show'),ms);
-}
-function showConfirm(msg, onOk, okLabel='Elimina'){
-  const ov=document.getElementById('confirm-overlay');
-  document.getElementById('confirm-msg').innerHTML=msg;
-  const okBtn=document.getElementById('confirm-ok');
-  okBtn.textContent=okLabel;
-  ov.style.display='flex';
-  const close=()=>{ ov.style.display='none'; okBtn.onclick=null; cancelBtn.onclick=null; };
-  const cancelBtn=document.getElementById('confirm-cancel');
-  okBtn.onclick=()=>{ close(); onOk(); };
-  cancelBtn.onclick=close;
-  ov.onclick=e=>{ if(e.target===ov) close(); };
-}
+/* ═══ TOAST + CONFIRM → utils.js ═══ */
 
 /* ═══ SAVED CARDS ═══ */
 function saveCardTemplate(id){
@@ -6416,7 +6400,10 @@ function _jsStoreBootAll(){
     bad.forEach(k=>{ try{ localStorage.removeItem(k); }catch(e){} });
   }catch(e){}
   _jsStoreList().forEach(item => {
-    try { _installCardCode(item.code); } catch(e){ console.warn('[FratechStore] Errore boot card:', e.message); }
+    try { _installCardCode(item.code); } catch(e){
+      console.warn('[FratechStore] Errore boot card:', e.message);
+      try{ _ntfPushLog('⚠️ Card JS rotta', (item.meta&&item.meta.id||'?')+': '+e.message, '🧩', null, {}); }catch(_){}
+    }
   });
 }
 
@@ -6786,18 +6773,7 @@ function renderFontPick(){
   if(lbl){ lbl.textContent=cur; lbl.style.fontFamily=`'${cur}',system-ui`; }
 }
 
-/* ═══ UTILS ═══ */
-function eh(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function ea(s){ return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
-function _lightenHex(hex,pct){
-  try{
-    const n=parseInt(hex.replace('#',''),16);
-    const r=Math.min(255,((n>>16)&0xff)+Math.round(2.55*pct));
-    const g=Math.min(255,((n>>8)&0xff)+Math.round(2.55*pct));
-    const b=Math.min(255,(n&0xff)+Math.round(2.55*pct));
-    return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
-  }catch(e){return hex;}
-}
+/* ═══ UTILS → utils.js ═══ */
 
 /* Close modals on outside click */
 ['emod','cmod','smod','imod','tmod','wmod'].forEach(id=>{
@@ -8379,6 +8355,21 @@ _jsStoreBootAll();
 renderDash();
 connect();
 
+/* ── Error feedback visibile all'utente ─────────────────────────────────── */
+(function _initErrorFeedback(){
+  // Errori JS non gestiti → notifica nel centro
+  window.onerror = function(msg, src, line){
+    const file = (src||'').split('/').pop();
+    _ntfPushLog('⚠️ Errore JS', file ? file+':'+line+' — '+msg : String(msg), '🔴', null, {});
+    return false;
+  };
+  // Promise rejection non gestite
+  window.addEventListener('unhandledrejection', function(e){
+    const msg = e.reason instanceof Error ? e.reason.message : String(e.reason||'Promise rejection');
+    _ntfPushLog('⚠️ Errore asincrono', msg, '🔴', null, {});
+  });
+})();
+
 /* ── Sistema data-action: gestisce onclick rimossi dall'HTML ───────────── */
 document.addEventListener('click', function(e){
   const el = e.target.closest('[data-action]');
@@ -9528,89 +9519,7 @@ function closeNotifCfg(){
   document.getElementById('ntf-cfg-modal').classList.remove('open');
 }
 
-/* ═══ CENTRO NOTIFICHE ═══ */
-let _ntfLog=[];
-try{ _ntfLog=JSON.parse(localStorage.getItem('frarik_ntflog')||'[]'); }catch(e){ _ntfLog=[]; }
-
-function _ntfSaveLog(){
-  try{ localStorage.setItem('frarik_ntflog', JSON.stringify(_ntfLog.slice(0,60))); }catch(e){}
-}
-function _ntfPushLog(title, msg, icon, action, extra){
-  extra = extra||{};
-  if(action){
-    const ex = _ntfLog.find(n=>n.action===action);
-    if(ex){ ex.ts=Date.now(); ex.title=title; ex.msg=msg; ex.icon=icon; ex.read=false;
-      _ntfSaveLog(); _ntfUpdateBell(); _ntfRenderIfOpen(); return; }
-  }
-  _ntfLog.unshift({ id:'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
-    ts:Date.now(), title:title||'', msg:msg||'', icon:icon||'🔔', read:false, action:action||null });
-  _ntfLog = _ntfLog.slice(0,60);
-  _ntfSaveLog(); _ntfUpdateBell(); _ntfRenderIfOpen();
-}
-function _ntfDismissById(id){
-  _ntfLog = _ntfLog.filter(n=>n.id!==id);
-  _ntfSaveLog(); _ntfUpdateBell(); renderNotifCenter();
-}
-function _ntfUnread(){ return _ntfLog.filter(n=>!n.read).length; }
-function _ntfUpdateBell(){
-  const b=document.getElementById('notif-bell-badge'); if(!b) return;
-  const n=_ntfUnread(); b.textContent=n>9?'9+':String(n); b.classList.toggle('on',n>0);
-}
-function ntfMarkAllRead(){ _ntfLog.forEach(n=>n.read=true); _ntfSaveLog(); _ntfUpdateBell(); }
-function ntfClearAll(){ _ntfLog=[]; _ntfSaveLog(); _ntfUpdateBell(); renderNotifCenter(); }
-function _ntfRelTime(ts){
-  const s=Math.floor((Date.now()-ts)/1000);
-  if(s<60) return 'adesso';
-  if(s<3600) return Math.floor(s/60)+' min fa';
-  if(s<86400) return Math.floor(s/3600)+' h fa';
-  return new Date(ts).toLocaleDateString('it-IT',{day:'numeric',month:'short'});
-}
-function _ntfRenderIfOpen(){
-  const c=document.getElementById('notif-center');
-  if(c&&c.classList.contains('on')) renderNotifCenter();
-}
-function renderNotifCenter(){
-  const el=document.getElementById('notif-center-list'); if(!el) return;
-  // Ricostruisce anche l'header con i pulsanti via JS (no onclick inline)
-  const hdr=document.getElementById('ntfc-hdr-btns');
-  if(hdr&&!hdr.dataset.ready){
-    hdr.dataset.ready='1';
-    const bRead=document.createElement('button'); bRead.className='ntfc-act'; bRead.title='Segna tutte lette'; bRead.textContent='✓';
-    bRead.addEventListener('click',function(ev){ ev.stopPropagation(); ntfMarkAllRead(); renderNotifCenter(); });
-    const bClear=document.createElement('button'); bClear.className='ntfc-act'; bClear.title='Svuota tutto'; bClear.textContent='🗑';
-    bClear.addEventListener('click',function(ev){ ev.stopPropagation(); ntfClearAll(); });
-    hdr.appendChild(bRead); hdr.appendChild(bClear);
-  }
-  while(el.firstChild) el.removeChild(el.firstChild);
-  if(!_ntfLog.length){
-    const empty=document.createElement('div'); empty.className='ntfc-empty'; empty.textContent='Nessuna notifica';
-    el.appendChild(empty); return;
-  }
-  _ntfLog.forEach(function(n){
-    const item=document.createElement('div'); item.className='ntfc-item'+(n.read?'':' unread');
-    const ico=document.createElement('div'); ico.className='ntfc-ico'; ico.textContent=n.icon||'🔔';
-    const body=document.createElement('div'); body.className='ntfc-body';
-    const t=document.createElement('div'); t.className='ntfc-title'; t.textContent=n.title||'';
-    const time=document.createElement('div'); time.className='ntfc-time'; time.textContent=_ntfRelTime(n.ts);
-    body.appendChild(t);
-    if(n.msg){ const m=document.createElement('div'); m.className='ntfc-msg'; m.textContent=n.msg; body.appendChild(m); }
-    body.appendChild(time);
-    const btn=document.createElement('button'); btn.className='ntfc-x'; btn.title='Elimina'; btn.textContent='✕';
-    btn.addEventListener('click',function(ev){ ev.stopPropagation(); _ntfDismissById(n.id); });
-    item.appendChild(ico); item.appendChild(body); item.appendChild(btn);
-    el.appendChild(item);
-  });
-}
-function toggleNotifCenter(ev){
-  if(ev) ev.stopPropagation();
-  const c=document.getElementById('notif-center');
-  if(c.classList.toggle('on')){
-    renderNotifCenter(); ntfMarkAllRead();
-    setTimeout(()=>document.addEventListener('click',_ntfOutside),0);
-  } else { document.removeEventListener('click',_ntfOutside); }
-}
-function closeNotifCenter(){ const c=document.getElementById('notif-center'); if(c) c.classList.remove('on'); document.removeEventListener('click',_ntfOutside); }
-function _ntfOutside(e){ const c=document.getElementById('notif-center'),b=document.getElementById('notif-bell'); if(c&&!c.contains(e.target)&&b&&!b.contains(e.target)) closeNotifCenter(); }
+/* ═══ CENTRO NOTIFICHE → notifications.js ═══ */
 function openSOSCfg(){
   document.getElementById('sos-cfg-modal').classList.add('open');
   renderSOSCfgList();
