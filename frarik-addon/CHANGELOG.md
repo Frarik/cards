@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.56 — 2026-06-05
+
+### Passo 4/16 — Kiosk come scelta
+- Nuovo toggle "⛶ Modalità Kiosk" nelle impostazioni (Plancia → Sistema). Se attivo, mostra l'icona schermo intero in alto; se disattivo, l'icona è nascosta (e se eri in kiosk, esce). Default: disattivato.
+
 ## 1.1.55 — 2026-06-05
 
 ### Passo 3/16 — Orologi

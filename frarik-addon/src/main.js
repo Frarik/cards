@@ -2704,6 +2704,7 @@ async function initBarChart(card){
 
 /* ═══ RENDER DASHBOARD ═══ */
 function renderDash(){
+  try{ _applyKioskAvail(); }catch(e){}   // icona kiosk visibile solo se cfg.kioskEnabled
   const page=curPage();
   _ensureSections(page);
   const dash=document.getElementById('dash');
@@ -10319,6 +10320,13 @@ function _applyKioskUI(){
   const btn=document.getElementById('kiosk-btn');
   if(btn){btn.innerHTML=_kioskOn?'<i class="mdi mdi-fullscreen-exit"></i>':'<i class="mdi mdi-fullscreen"></i>';btn.title=_kioskOn?'Esci da Kiosk':'Modalità Kiosk (schermo intero)';}
 }
+/* Modalità kiosk come scelta: l'icona in alto compare solo se cfg.kioskEnabled è attivo. */
+function _applyKioskAvail(){
+  const on=!!(typeof cfg!=='undefined'&&cfg&&cfg.kioskEnabled);
+  const btn=document.getElementById('kiosk-btn');
+  if(btn) btn.style.display=on?'':'none';
+  if(!on&&_kioskOn){ try{ toggleKiosk(); }catch(e){} }   // se disattivata mentre sei in kiosk → esci
+}
 function toggleKiosk(){
   _kioskOn=!_kioskOn;
   try{ localStorage.setItem('frarik_kiosk', _kioskOn?'1':'0'); }catch(e){}  // persiste tra i ricaricamenti
@@ -10332,7 +10340,7 @@ function toggleKiosk(){
   }
 }
 /* Ripristina la modalità kiosk dopo un ricaricamento (il fullscreen richiede un gesto, ma il layout kiosk resta) */
-(function(){ try{ if(localStorage.getItem('frarik_kiosk')==='1'){ _kioskOn=true; _applyKioskUI(); } }catch(e){} })();
+(function(){ try{ if(localStorage.getItem('frarik_kiosk')==='1'){ _kioskOn=true; _applyKioskUI(); } }catch(e){} try{ _applyKioskAvail(); }catch(e){} })();
 function togglePageTabs(){
   const wrap=document.getElementById('page-tabs-wrap');
   const btn=document.getElementById('tabs-toggle');
@@ -10476,12 +10484,14 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
       const nv=navbarCfg(); _setTog('sys-nv-tog',nv.on);
       if($('sys-nv-pos')) $('sys-nv-pos').value=nv.pos||'bottom';
       if($('sys-mob')) $('sys-mob').value=localStorage.getItem('dash_mobcol')||'auto';
+      _setTog('sys-kiosk-tog', !!(cfg&&cfg.kioskEnabled));
     }catch(e){}
   };
   window._sysToggle=function(w){
     if(w==='ss') screensaverCfg({on:!screensaverCfg().on});
     else if(w==='th') themeScheduleCfg({on:!themeScheduleCfg().on});
     else if(w==='nv') navbarCfg({on:!navbarCfg().on});
+    else if(w==='kiosk'){ cfg.kioskEnabled=!cfg.kioskEnabled; saveCfg(); try{_applyKioskAvail();}catch(e){} }
     _sysLoad();
   };
   window._sysSaveSS=function(){ const m=+(($('sys-ss-min')||{}).value)||0, s=+(($('sys-ss-sec')||{}).value)||0; screensaverCfg({sec:m*60+s}); };
