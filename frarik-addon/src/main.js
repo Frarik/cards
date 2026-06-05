@@ -7349,7 +7349,7 @@ function toggleViewsMenu(ev){
   const menu=document.createElement('div');
   menu.id='views-menu'; menu.className='views-menu';
   const items=(cfg.pages||[]).map((p,i)=>`<div class="vm-item${i===cfg.activePage?' on':''}">
-      <div class="vm-go" data-action="setActivePage" data-action-args='[${i}]' data-pre-action="closeViewsMenu">
+      <div class="vm-go" data-action="_closeViewsAndSetPage" data-action-args='[${i}]'
         <span class="vm-ico">${_renderIcon(p.icon||'📄',16)}</span>
         <span class="vm-name">${eh(p.name||('Vista '+(i+1)))}</span>
         ${i===cfg.activePage?'<span class="vm-chk">✓</span>':''}
@@ -8357,16 +8357,24 @@ connect();
 
 /* ── Error feedback visibile all'utente ─────────────────────────────────── */
 (function _initErrorFeedback(){
-  // Errori JS non gestiti → notifica nel centro
+  let _errBusy=false, _errCount=0, _errReset=0;
+  function _pushErr(title, msg){
+    if(_errBusy) return;
+    const now=Date.now();
+    if(now-_errReset>10000){ _errCount=0; _errReset=now; }
+    if(_errCount++>3) return; // max 3 errori ogni 10s
+    _errBusy=true;
+    try{ _ntfPushLog(title, msg, '🔴', null, {}); }catch(_){}
+    _errBusy=false;
+  }
   window.onerror = function(msg, src, line){
-    const file = (src||'').split('/').pop();
-    _ntfPushLog('⚠️ Errore JS', file ? file+':'+line+' — '+msg : String(msg), '🔴', null, {});
+    const file=(src||'').split('/').pop();
+    _pushErr('⚠️ Errore JS', (file?file+':'+line+' — ':'')+msg);
     return false;
   };
-  // Promise rejection non gestite
   window.addEventListener('unhandledrejection', function(e){
-    const msg = e.reason instanceof Error ? e.reason.message : String(e.reason||'Promise rejection');
-    _ntfPushLog('⚠️ Errore asincrono', msg, '🔴', null, {});
+    const msg=e.reason instanceof Error?e.reason.message:String(e.reason||'Promise rejection');
+    _pushErr('⚠️ Errore asincrono', msg);
   });
 })();
 
@@ -8414,7 +8422,7 @@ document.addEventListener('click', function(e){
     } else if(arg !== undefined){
       window[fn](arg);
     } else {
-      window[fn](e);
+      window[fn](e, el);  // el disponibile per funzioni che leggono dataset
     }
   }
   if(fn2 && typeof window[fn2]==='function') window[fn2](e);
@@ -8430,6 +8438,7 @@ function _appDelGroup(i){ _appGroups.splice(i,1); renderAppGroups(); }
 function _openGhStoreClean(){ document.getElementById('add-col-menu')?.remove(); openGhStore(); }
 function _pasteCardToClean(secId,col){ document.getElementById('add-col-menu')?.remove(); pasteCardTo(secId,col); }
 function _closeViewsAndOpenTM(){ closeViewsMenu(); openTM(); }
+function _closeViewsAndSetPage(i){ closeViewsMenu(); setActivePage(i); }
 function _jsStoreAddAndRefresh(id){ jsStoreAddCard(id); setTimeout(_ghStoreRender,50); }
 function _deleteSavedAt(i){ deleteSaved(i, null); }
 function _appChipPopupAt(cardId, gi){ appChipPopup(cardId, gi, null); }
@@ -8452,9 +8461,9 @@ function _ntfPickAlexa(i){ _epPickerOpen(v=>{_ntfSet(i,'alexaEntity',v);const el
 function _hbDelColorMapEntry(key){ delete _hbColorMap[key]; _hbRenderColorMap(); }
 function _hbDelIconMapEntry(key){ delete _hbIconMap[key]; _hbRenderIconMap(); }
 /* eitClick da elemento: legge i dati dai data-* attribute */
-function _eitClickFromEl(e){ const el=e.target.closest('[data-eid]'); if(!el) return; eitClick(el.dataset.eid,el.dataset.efn,el.dataset.eunit,el.dataset.edom); }
+function _eitClickFromEl(e, el){ if(!el) el=e.target.closest('[data-eid]'); if(!el) return; eitClick(el.dataset.eid,el.dataset.efn,el.dataset.eunit,el.dataset.edom); }
 /* ghsPreview da elemento: legge enc/nm/cid dai data-* */
-function _ghsPreviewEl(e){ const el=e.target.closest('[data-penc]'); if(!el) return; _ghsPreview(el.dataset.penc,el.dataset.pnm,el.dataset.pcid||null); }
+function _ghsPreviewEl(e, el){ if(!el) el=e.target.closest('[data-penc]'); if(!el) return; _ghsPreview(el.dataset.penc,el.dataset.pnm,el.dataset.pcid||null); }
 function _feEpClose(){ const el=document.getElementById('fe-ep'); if(el) el.style.display='none'; }
 function _ntfSaveRules(){ saveCfg(); showToast('✅ Regole salvate'); }
 function _jsDropzoneClick(){ document.getElementById('jsst-file-inp')?.click(); }
