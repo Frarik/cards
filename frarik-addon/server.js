@@ -65,8 +65,9 @@ app.post('/api/frarik/reload-store', async (_req, res) => {
   res.json({ ok });
 });
 
-// Ricarica il registro degli add-on all'avvio così HA vede subito nuove versioni
-reloadHaStore().then(ok => console.log('[Frarik] Store reload:', ok ? 'OK' : 'skip (no supervisor)'));
+// Ricarica il registro all'avvio e poi ogni 5 minuti → HA vede nuove versioni entro 5 min dal push
+reloadHaStore().then(ok => console.log('[Frarik] Store reload avvio:', ok ? 'OK' : 'skip (no supervisor)'));
+setInterval(() => reloadHaStore(), 5 * 60 * 1000);
 
 app.use((_req, res) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
