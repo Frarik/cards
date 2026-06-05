@@ -11,8 +11,8 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@400;600;700;800;900&family=Nunito:wght@400;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="./assets/index-ndQZEx5C.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-BNJ-c2Ds.css">
+  <script type="module" crossorigin src="./assets/index-CXy-_FGZ.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-BdJtB2ax.css">
 </head>
 <body>
 
@@ -394,33 +394,43 @@
 
 <!-- HEADER BAR EDITOR MODAL -->
 <div class="mbg off" id="hbmod">
-  <div class="mbox" style="width:520px">
+  <div class="mbox" style="width:min(700px,97vw)">
     <div class="mhdr"><span class="mtitle" id="hbmod-title">⊞ Header Personalizzato</span><button class="mx" data-action="closeHBM">✕</button></div>
     <div class="fscroll" style="padding:0">
-      <div class="sect-section">
+
+      <!-- Impostazioni card (nascoste per __hdrbar__) -->
+      <div class="sect-section" id="hb-card-settings">
         <div style="display:flex;gap:8px">
           <div style="flex:1"><div class="flbl">Etichetta card</div><input class="finp" id="hb-label" type="text" placeholder="Header Personalizzato" style="margin-bottom:0"></div>
           <div style="flex:0 0 80px"><div class="flbl">Colonne</div><input class="finp" id="hb-colspan" type="number" min="1" max="12" value="4" style="margin-bottom:0"></div>
           <div style="flex:0 0 70px"><div class="flbl">Righe</div><input class="finp" id="hb-rowspan" type="number" min="1" max="6" value="1" style="margin-bottom:0"></div>
         </div>
       </div>
-      <!-- Sinistra -->
-      <div class="sect-section">
-        <span class="sect-section-lbl">⬅ Sinistra</span>
-        <div id="hb-list-left" style="margin-bottom:8px"><div style="font-size:10px;opacity:.3;padding:4px 0">Nessun elemento</div></div>
-        <button class="ep-add" data-action="hbAddChip" data-action-arg="left">➕ Aggiungi elemento</button>
-      </div>
-      <!-- Centro -->
-      <div class="sect-section">
-        <span class="sect-section-lbl">↔ Centro</span>
-        <div id="hb-list-center" style="margin-bottom:8px"><div style="font-size:10px;opacity:.3;padding:4px 0">Nessun elemento</div></div>
-        <button class="ep-add" data-action="hbAddChip" data-action-arg="center">➕ Aggiungi elemento</button>
-      </div>
-      <!-- Destra -->
-      <div class="sect-section">
-        <span class="sect-section-lbl">➡ Destra</span>
-        <div id="hb-list-right" style="margin-bottom:8px"><div style="font-size:10px;opacity:.3;padding:4px 0">Nessun elemento</div></div>
-        <button class="ep-add" data-action="hbAddChip" data-action-arg="right">➕ Aggiungi elemento</button>
+
+      <!-- ── Tre zone side-by-side ── -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;min-height:120px">
+
+        <!-- SINISTRA -->
+        <div class="hbz-col" style="border-right:1px solid var(--bd)">
+          <div class="hbz-hdr">⬅ Sinistra</div>
+          <div class="hbz-drop" id="hb-list-left" data-zone="left"></div>
+          <button class="hbz-add" data-action="hbAddChip" data-action-arg="left">+ Aggiungi</button>
+        </div>
+
+        <!-- CENTRO -->
+        <div class="hbz-col" style="border-right:1px solid var(--bd)">
+          <div class="hbz-hdr">↔ Centro</div>
+          <div class="hbz-drop" id="hb-list-center" data-zone="center"></div>
+          <button class="hbz-add" data-action="hbAddChip" data-action-arg="center">+ Aggiungi</button>
+        </div>
+
+        <!-- DESTRA -->
+        <div class="hbz-col">
+          <div class="hbz-hdr">➡ Destra</div>
+          <div class="hbz-drop" id="hb-list-right" data-zone="right"></div>
+          <button class="hbz-add" data-action="hbAddChip" data-action-arg="right">+ Aggiungi</button>
+        </div>
+
       </div>
       <!-- Chip form — semplice stile HA -->
       <div id="hb-chip-form" style="display:none;padding:0 14px 14px;border-top:1px solid var(--bd)">

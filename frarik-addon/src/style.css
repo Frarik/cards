@@ -1373,6 +1373,28 @@ body.has-fbar #dash::-webkit-scrollbar{width:4px}
 .hb-row-info{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px}
 .hb-type-btns{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap}
 .hb-type-btn{flex:1;min-width:60px}
+/* ── Header editor: zone tre colonne ── */
+.hbz-col{display:flex;flex-direction:column;padding:0}
+.hbz-hdr{padding:8px 10px 6px;font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--bd)}
+.hbz-drop{flex:1;min-height:60px;padding:6px;display:flex;flex-direction:column;gap:4px;transition:background .15s}
+.hbz-drop.drag-over{background:rgba(99,102,241,.08);border-radius:8px;outline:2px dashed rgba(99,102,241,.4)}
+.hbz-add{margin:6px;padding:6px;background:rgba(255,255,255,.04);border:1px dashed rgba(255,255,255,.12);border-radius:8px;color:rgba(255,255,255,.35);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s}
+.hbz-add:hover{background:rgba(99,102,241,.1);border-color:rgba(99,102,241,.4);color:#a5b4fc}
+/* Chip card nell'editor */
+.hbc-item{display:flex;align-items:center;gap:5px;padding:5px 6px;border-radius:8px;background:var(--panel2);border:1px solid var(--bd);cursor:default;transition:border-color .15s}
+.hbc-item:hover{border-color:rgba(255,255,255,.2)}
+.hbc-item.dragging{opacity:.4}
+.hbc-item.drag-target-above{border-top:2px solid #6366f1}
+.hbc-item.drag-target-below{border-bottom:2px solid #6366f1}
+.hbc-item.hidden-chip{opacity:.35}
+.hbc-drag{cursor:grab;color:rgba(255,255,255,.2);font-size:12px;line-height:1;flex-shrink:0;padding:0 2px;user-select:none}
+.hbc-drag:active{cursor:grabbing}
+.hbc-preview{flex:1;min-width:0;overflow:hidden;display:flex;align-items:center}
+.hbc-actions{display:flex;gap:3px;flex-shrink:0}
+.hbc-btn{width:22px;height:22px;border-radius:6px;border:1px solid transparent;background:rgba(255,255,255,.06);color:rgba(255,255,255,.5);font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.hbc-btn:hover{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.2)}
+.hbc-btn.active{background:rgba(239,68,68,.15);color:#f87171;border-color:rgba(239,68,68,.3)}
+.hbz-empty{font-size:10px;opacity:.25;padding:8px 4px;text-align:center;pointer-events:none}
 
 /* ═══ KIOSK MODE ═══ */
 /* Bottone "Esci da Kiosk": nascosto, visibile solo in kiosk (l'header è nascosto in kiosk) */

@@ -2361,6 +2361,7 @@ function _clkParts(item){
 function hbarInner(card){
   function chipHTML(item){
     if(!item) return '';
+    if(item.hidden) return ''; // chip nascosto dall'utente
     if(item.type==='clock'){
       const style=item.clockStyle||'default';
       const sz=item.clockSizeName||'md';
@@ -5075,22 +5076,92 @@ function saveHBM(){
 
 function hbRenderAllLists(){
   hbRenderList('left'); hbRenderList('center'); hbRenderList('right');
+  _hbInitDnD();
 }
 
 function hbRenderList(zone){
   const el=document.getElementById('hb-list-'+zone); if(!el) return;
   const arr=_hbChips[zone]||[];
-  if(!arr.length){ el.innerHTML=`<div style="font-size:10px;opacity:.3;padding:4px 0">Nessun elemento</div>`; return; }
-  el.innerHTML=arr.map((item,i)=>{
-    const preview=_hbChipPreview(item);
-    return `<div class="hb-row">
-      <div class="hb-row-info">${preview}</div>
-      <button class="sbrow-btn sbrow-mv" data-action="hbMoveChip" data-action-args='["${zone}",${i},-1]' title="Su">▲</button>
-      <button class="sbrow-btn sbrow-mv" data-action="hbMoveChip" data-action-args='["${zone}",${i},+1]' title="Giù">▼</button>
-      <button class="sbrow-btn hba-edit" data-action="hbEditChip" data-action-args='["${zone}",${i}]' title="Modifica" style="background:rgba(99,102,241,.2);color:#818cf8">✏️</button>
-      <button class="sbrow-btn sbrow-del" data-action="hbDelChip" data-action-args='["${zone}",${i}]' title="Elimina">✕</button>
-    </div>`;
-  }).join('');
+  el.innerHTML='';
+  if(!arr.length){
+    const emp=document.createElement('div'); emp.className='hbz-empty'; emp.textContent='Trascina qui o aggiungi';
+    el.appendChild(emp); return;
+  }
+  arr.forEach((item,i)=>{
+    const wrap=document.createElement('div');
+    wrap.className='hbc-item'+(item.hidden?' hidden-chip':'');
+    wrap.draggable=true;
+    wrap.dataset.zone=zone; wrap.dataset.idx=i;
+    // Drag handle
+    const dh=document.createElement('div'); dh.className='hbc-drag'; dh.textContent='⋮⋮';
+    // Preview
+    const pv=document.createElement('div'); pv.className='hbc-preview';
+    pv.innerHTML=_hbChipPreview(item);
+    // Toggle visibilità
+    const bt=document.createElement('button'); bt.className='hbc-btn'+(item.hidden?' active':'');
+    bt.title=item.hidden?'Mostra':'Nascondi'; bt.textContent=item.hidden?'🙈':'👁';
+    bt.addEventListener('click',()=>{ item.hidden=!item.hidden; hbRenderList(zone); });
+    // Edit
+    const be=document.createElement('button'); be.className='hbc-btn'; be.title='Modifica'; be.textContent='✏️';
+    be.addEventListener('click',()=>hbEditChip(zone,i));
+    // Delete
+    const bd=document.createElement('button'); bd.className='hbc-btn'; bd.title='Elimina'; bd.textContent='✕';
+    bd.style.cssText='background:rgba(239,68,68,.1);color:#f87171;border-color:rgba(239,68,68,.25)';
+    bd.addEventListener('click',()=>{ _hbChips[zone].splice(i,1); hbRenderAllLists(); });
+    wrap.append(dh,pv,bt,be,bd);
+    el.appendChild(wrap);
+  });
+}
+
+/* ── Drag & Drop tra zone ── */
+let _hbDragZone=null, _hbDragIdx=null, _hbDragEl=null;
+function _hbInitDnD(){
+  document.querySelectorAll('#hbmod .hbc-item').forEach(el=>{
+    el.addEventListener('dragstart',e=>{
+      _hbDragZone=el.dataset.zone; _hbDragIdx=parseInt(el.dataset.idx);
+      _hbDragEl=el; el.classList.add('dragging');
+      e.dataTransfer.effectAllowed='move';
+    });
+    el.addEventListener('dragend',()=>{
+      el.classList.remove('dragging');
+      document.querySelectorAll('.hbc-item').forEach(x=>x.classList.remove('drag-target-above','drag-target-below'));
+    });
+    el.addEventListener('dragover',e=>{
+      e.preventDefault(); e.stopPropagation();
+      document.querySelectorAll('.hbc-item').forEach(x=>x.classList.remove('drag-target-above','drag-target-below'));
+      const mid=el.getBoundingClientRect().top+el.getBoundingClientRect().height/2;
+      el.classList.add(e.clientY<mid?'drag-target-above':'drag-target-below');
+    });
+    el.addEventListener('drop',e=>{
+      e.preventDefault(); e.stopPropagation();
+      if(_hbDragZone===null) return;
+      const tgtZone=el.dataset.zone; const tgtIdx=parseInt(el.dataset.idx);
+      const mid=el.getBoundingClientRect().top+el.getBoundingClientRect().height/2;
+      const insertAfter=e.clientY>=mid;
+      _hbDnDMove(tgtZone, insertAfter?tgtIdx+1:tgtIdx);
+    });
+  });
+  document.querySelectorAll('#hbmod .hbz-drop').forEach(zone=>{
+    zone.addEventListener('dragover',e=>{ e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave',()=>zone.classList.remove('drag-over'));
+    zone.addEventListener('drop',e=>{
+      e.preventDefault(); zone.classList.remove('drag-over');
+      if(_hbDragZone===null) return;
+      const tgtZone=zone.dataset.zone;
+      // Se drop sulla zona (non su un chip) → metti in fondo
+      if(!e.target.closest('.hbc-item')) _hbDnDMove(tgtZone, _hbChips[tgtZone].length);
+    });
+  });
+}
+function _hbDnDMove(tgtZone, tgtIdx){
+  if(_hbDragZone===null) return;
+  const src=_hbChips[_hbDragZone]; const tgt=_hbChips[tgtZone];
+  const [item]=src.splice(_hbDragIdx,1);
+  // Se stessa zona e l'idx di destinazione è dopo la rimozione, aggiusta
+  const adj=(_hbDragZone===tgtZone && tgtIdx>_hbDragIdx)?tgtIdx-1:tgtIdx;
+  tgt.splice(Math.min(adj,tgt.length),0,item);
+  _hbDragZone=null; _hbDragIdx=null;
+  hbRenderAllLists();
 }
 
 function _hbChipPreview(item){
@@ -5111,7 +5182,7 @@ function hbMoveChip(zone,i,dir){
   const arr=_hbChips[zone]; const j=i+dir; if(j<0||j>=arr.length) return;
   [arr[i],arr[j]]=[arr[j],arr[i]]; hbRenderList(zone);
 }
-function hbDelChip(zone,i){ _hbChips[zone].splice(i,1); hbRenderList(zone); }
+function hbDelChip(zone,i){ _hbChips[zone].splice(i,1); hbRenderAllLists(); }
 
 function hbAddChip(zone){
   _hbEditZone=zone; _hbEditIdx=-1;
@@ -5679,9 +5750,14 @@ function hbSaveChip(){
     clockShowSeconds:document.getElementById('hbclk-showsec')?.checked===true,
     clockColor:document.getElementById('hbclk-color')?.value||'#ffffff',
   };
-  if(_hbEditIdx>=0) _hbChips[_hbEditZone][_hbEditIdx]=item;
-  else _hbChips[_hbEditZone].push(item);
-  hbRenderList(_hbEditZone);
+  // preserva il flag hidden se stiamo modificando un chip esistente
+  if(_hbEditIdx>=0){
+    item.hidden = _hbChips[_hbEditZone][_hbEditIdx]?.hidden || false;
+    _hbChips[_hbEditZone][_hbEditIdx]=item;
+  } else {
+    _hbChips[_hbEditZone].push(item);
+  }
+  hbRenderAllLists();
   hbCancelChip();
 }
 function hbCancelChip(){ document.getElementById('hb-chip-form').style.display='none'; _hbEditZone=null; _hbEditIdx=-1; }
