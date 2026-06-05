@@ -8370,20 +8370,19 @@ _jsStoreBootAll();
 renderDash();
 connect();
 
-/* Notifica aggiornamento add-on: confronta versione salvata con quella corrente del server */
+/* Notifica aggiornamento add-on: mostra una volta per ogni nuova versione */
 (async function(){
   try{
     const r=await fetch('./api/frarik/version');
     const d=await r.json();
-    const cur=d&&d.version;
-    if(!cur) return;
+    const cur=d&&d.version; if(!cur) return;
     const prev=localStorage.getItem('frarik_last_version');
     localStorage.setItem('frarik_last_version',cur);
-    if(prev && prev!==cur){
-      setTimeout(()=>{
-        try{ _ntfPushLog('✅ Add-on aggiornato a v'+cur,'La dashboard Frarik è stata aggiornata dalla v'+prev+' alla v'+cur+'.','📋','app',{}); }catch(e){}
-      },1500);
-    }
+    if(cur===prev) return; // stessa versione, nessuna notifica
+    const msg=prev?'Aggiornato dalla v'+prev+' alla v'+cur+'.':'Versione v'+cur+' in esecuzione.';
+    setTimeout(()=>{
+      try{ _ntfPushLog('✅ Frarik Dashboard v'+cur, msg,'📦','app',{}); _ntfUpdateBell(); }catch(e){}
+    },2000);
   }catch(e){}
 })();
 try{
