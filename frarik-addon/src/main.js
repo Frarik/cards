@@ -5815,11 +5815,7 @@ async function _mountYamlCard(card, container){
   catch(e){ container.innerHTML='<div style="padding:12px;color:#f87171;font-size:11px">YAML: '+eh(e.message)+'</div>'; return; }
   container.innerHTML='';
   container.style.cssText='display:block;width:100%;height:100%;overflow:auto';
-  // PRIMA il motore UFFICIALE di HA (createCardElement): rende la card IDENTICA a Home Assistant,
-  // incluse le custom card HACS (button-card, bar-card, multiple-entity-row, swipe-card…).
-  // Fallback al renderer leggero solo se HA non è raggiungibile (es. plancia aperta fuori da HA).
-  let el=null; try{ el=await _createHACard(cfg); }catch(e){}
-  if(!el) el=await _yamlCreateEl(cfg);
+  const el=await _yamlCreateEl(cfg);
   container.appendChild(el);
   if(container._yamlTimer) clearInterval(container._yamlTimer);
   container._yamlTimer=setInterval(()=>_yamlRefreshHass(container),1000);
@@ -6105,16 +6101,11 @@ async function yamlImportParse(){
   prev.className='show';
   try{
     if(!_lovelaceResourcesLoaded){ await _loadLovelaceResources(); await new Promise(r=>setTimeout(r,500)); }
-    // PRIMA il motore ufficiale di HA (createCardElement) → anteprima identica a Home Assistant.
-    let el=null; try{ el=await _createHACard(config); }catch(e){}
-    const usedHA=!!el;
-    if(!el) el=await _yamlCreateEl(config);
+    const el=await _yamlCreateEl(config);
     el.style.cssText='display:block;width:100%';
     prev.appendChild(el);
     _yamlRefreshHass(prev);
-    _yamlStatus(usedHA
-      ? '✅ Anteprima generata con il motore di Home Assistant — la card sarà identica a HA (servono i plugin HACS installati su HA).'
-      : '✅ Anteprima generata (renderer interno) · '+((window.customCards||[]).length)+' card HACS rilevate. Per le card complesse apri la plancia come pannello dentro Home Assistant.','ok');
+    _yamlStatus('✅ Anteprima generata · '+((window.customCards||[]).length)+' card HACS rilevate. Le card semplici si vedono; quelle molto complesse no (limite tecnico, vedi sotto).','ok');
   }catch(e){
     prev.innerHTML='<div style="padding:12px;color:#f87171;font-size:11px">Errore anteprima: '+eh(e.message)+'</div>';
     _yamlStatus('⚠️ '+e.message,'warn');

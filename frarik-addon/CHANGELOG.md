@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.18 — 2026-06-05
+
+### Corretto
+- Ripristinato il renderer YAML interno (la 1.1.17 con il motore di HA via cross-realm rompeva anche l'anteprima delle card semplici). Le card semplici tornano a vedersi; per le card HACS complesse serve l'approccio iframe (in valutazione).
+
 ## 1.1.17 — 2026-06-05
 
 ### Corretto
