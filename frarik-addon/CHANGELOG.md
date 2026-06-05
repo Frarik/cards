@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.57 — 2026-06-05
+
+### Passo 5/16 — Riordino icone barra in alto
+- Nuovo ordine (da destra): barra laterale HA, ✏️ modifica, ⚙️ impostazioni, 🔔 campanella, stato connessione, viste, e per ultima Kiosk (solo se attiva). Pulsante "Ricarica" spostato nel menu ⋮. Undo/Redo (solo in edit) restano a sinistra.
+
 ## 1.1.56 — 2026-06-05
 
 ### Passo 4/16 — Kiosk come scelta
