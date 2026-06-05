@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.66 — 2026-06-05
+
+### Passo 13/16 — Apertura impostazioni dal basso
+- Il pannello impostazioni ora si apre con uno slide dal basso verso l'alto (oikUp) invece dell'espansione da sinistra a destra.
+
 ## 1.1.65 — 2026-06-05
 
 ### Passo 12/16 — Versione più visibile
