@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.9 — 2026-06-05
+
+### Modificato
+- Impostazioni riorganizzate: "Impostazioni Pagina", "Sistema · Plancia" e "Barra inferiore" unite in un unico menù a fisarmonica **Plancia** (sotto-sezioni: Aspetto, Pagina, Sistema, Barra inferiore). Store, Notifiche Smart e Contatti SOS raccolti sotto la categoria **Altro**.
+
 ## 1.1.8 — 2026-06-05
 
 ### Modificato
