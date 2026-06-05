@@ -902,6 +902,31 @@ function _ghAskInstall(){
     _ghCheck(true).then(()=>{ if(_ghPending.length) _ghAskInstall(); else showToast('✅ Card già aggiornate'); });
   }
 }
+/* 🧹 Rimuove le card installate da GitHub diventate "orfane" (id non più prodotto da alcun file del
+   repo): vecchie versioni/duplicati che non compaiono in nessuna scheda e gonfiano il conteggio.
+   Reinstalla prima le card attuali del repo per conoscerne gli id correnti. Le card LOCALI non si toccano. */
+async function _ghCleanOrphans(){
+  showToast('🧹 Controllo card orfane…');
+  let files;
+  try{ files=await _ghApiListAll(); }
+  catch(e){ showToast('⚠️ GitHub: '+(e.message||e)); return; }
+  const repoIds=new Set();
+  for(const f of files){ try{ const card=await _ghInstallFile(f); if(card&&card.id) repoIds.add(card.id); }catch(e){} }
+  let removed=0;
+  _jsStoreList().forEach(i=>{
+    const id=i&&i.meta&&i.meta.id; const org=(i&&i.origin)||'github';
+    if(id && org==='github' && !repoIds.has(id)){
+      _jsStoreDelete(id); try{ delete window.FratechCardRegistry[id]; }catch(e){}
+      try{ const g=_ghCfg(); if(g.idFile&&g.idFile[id]){ delete g.shas[g.idFile[id]]; delete g.idFile[id]; } }catch(e){}
+      removed++;
+    }
+  });
+  saveCfg(); _haSaveCfg();
+  renderDash();
+  if(typeof _epRenderJsStore==='function') _epRenderJsStore();
+  try{ _ghStoreRender(); }catch(e){}
+  showToast(removed ? ('🧹 Rimosse '+removed+' card orfane — restano '+repoIds.size) : '✅ Nessuna card orfana');
+}
 async function _ghImportAll(){
   let files;
   try{ files=await _ghApiListAll(); }
@@ -9979,6 +10004,7 @@ Object.assign(window, {
   _feClick,
   _feEpSearch,
   _ghAskInstall,
+  _ghCleanOrphans,
   _ghCheck,
   _ghDismiss,
   _ghImportAll,

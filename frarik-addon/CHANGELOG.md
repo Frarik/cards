@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.13 — 2026-06-05
+
+### Aggiunto
+- Pulsante 🧹 "Rimuovi card orfane" nello Store: cancella le card installate da GitHub diventate orfane (id non più presente nel repo, invisibili nelle schede) che gonfiavano il conteggio. Reinstalla prima le card attuali del repo; le card locali non vengono toccate.
+
 ## 1.1.12 — 2026-06-05
 
 ### Aggiunto
