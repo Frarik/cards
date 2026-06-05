@@ -22,8 +22,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --only=production
 
-# Server
+# Server e configurazione
 COPY server.js ./
+COPY config.yaml ./
 
 # Output del build
 COPY --from=builder /build/panel ./panel
