@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.41 — 2026-06-05
+## 1.1.42 — 2026-06-05
 
 ### Corretto
 - Rimosso pulsante "Controlla aggiornamenti" dalle impostazioni Frarik
