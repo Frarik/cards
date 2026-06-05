@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.17 — 2026-06-05
+
+### Corretto
+- Card YAML: ora vengono renderizzate con il **motore ufficiale di Home Assistant** (`createCardElement`) sia in anteprima sia in dashboard, quindi appaiono **identiche a HA** incluse le custom card HACS (button-card, bar-card, multiple-entity-row, swipe-card, ecc.). Prima si usava solo un renderer interno leggero che mostrava solo le card semplici. Fallback automatico al renderer interno se la plancia non gira dentro HA.
+
 ## 1.1.16 — 2026-06-05
 
 ### Aggiunto
