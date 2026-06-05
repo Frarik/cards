@@ -718,8 +718,9 @@ setInterval(()=>{ if(!document.hidden && ws && ws.readyState===1) _haLoadCfg(); 
 function syncCfgToHA(){
   cfg._ts=Date.now(); _saveCfgLocalOnly();
   const ok=_haSaveCfg();
-  if(ok) showToast('☁️ Invio a Home Assistant…');
-  else showToast('⚠️ Non connesso a Home Assistant');
+  // La conferma "☁️ Sincronizzato su Home Assistant…" arriva dalla risposta di HA (vedi _cfgSetId).
+  // Qui avvisiamo solo se non c'è connessione (in quel caso la risposta non arriverà mai).
+  if(!ok) showToast('⚠️ Non connesso a Home Assistant');
 }
 
 /* ── BACKUP: esporta/ripristina TUTTO (layout + card JS) in un file .json ── */

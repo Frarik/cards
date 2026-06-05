@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.7 — 2026-06-05
+
+### Modificato
+- "Sincronizza su tutti i dispositivi": rimosso il toast iniziale "Invio…"; ora compare solo la conferma finale di HA (o l'avviso se non connesso)
+
 ## 1.1.6 — 2026-06-05
 
 ### Rimosso
