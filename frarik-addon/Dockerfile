@@ -25,6 +25,7 @@ RUN npm ci --only=production
 # Server e configurazione
 COPY server.js ./
 COPY config.yaml ./
+COPY CHANGELOG.md ./
 
 # Output del build
 COPY --from=builder /build/panel ./panel

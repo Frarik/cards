@@ -44,6 +44,14 @@ app.use(express.static(PANEL, {
   }
 }));
 
+app.get('/api/frarik/changelog', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  try {
+    const md = fs.readFileSync(path.join(__dirname, 'CHANGELOG.md'), 'utf8');
+    res.json({ changelog: md, ok: true });
+  } catch { res.json({ changelog: '', ok: false }); }
+});
+
 app.get('/api/frarik/version', (_req, res) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   // Rilegge config.yaml ogni volta — aggiornamento senza riavvio server

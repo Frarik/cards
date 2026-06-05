@@ -1,117 +1,219 @@
 # Changelog
 
+## 1.1.39 — 2026-06-05
+
+### Corretto
+- Tutti i wrapper del refactor ora esposti su `window` (preview store, picker icone, SOS, editor libero ora funzionano)
+- Guard `localeCompare` su `entity_id` null nel WebSocket handler e nel render store
+
+## 1.1.38 — 2026-06-05
+
+### Corretto
+- Preview card nello Store (occhio 👁): risolto mancato passaggio dell'elemento al delegation
+- Menu viste: navigando una pagina il menu ora si chiude correttamente (eliminati i doppi "refresh")
+- `window.onerror`: aggiunto anti-cascata e rate limit (max 3 notifiche di errore ogni 10s)
+
+## 1.1.37 — 2026-06-05
+
+### Refactor
+- **Zero handler inline** in tutto il codebase: `onclick`, `oninput`, `onchange` rimossi da tutti i template JS dinamici
+- Aggiunto delegation `data-input` per tutti gli input/change nei template (badge rules, FE editor, SOS, notifiche smart)
+- Creati oltre 40 wrapper JS per i casi complessi (picker icone con callback, multi-statement)
+
+## 1.1.36 — 2026-06-05
+
+### Refactor
+- Estratti i moduli `src/utils.js` (uid, eh, ea, showToast, showConfirm) e `src/notifications.js` (intero centro notifiche) da `main.js`
+- Aggiunto error feedback visibile: errori JS non gestiti e promise rejection appaiono nella campanella 🔔
+
+## 1.1.35 — 2026-06-05
+
+### Refactor
+- Script splash screen spostato da `index.html` a `main.js`
+- Aggiunto `.gitattributes`: i file HTML non contano nelle statistiche linguaggio GitHub
+
+## 1.1.34 — 2026-06-05
+
+### Refactor
+- Tutti i `onchange` e `oninput` rimossi da `index.html`: gestiti via `addEventListener` in `_initInputHandlers()`
+
+## 1.1.33 — 2026-06-05
+
+### Refactor
+- Tutti i `onclick` rimossi da `index.html`: zero handler inline, tutto via `data-action` delegation e `addEventListener`
+
+## 1.1.32 — 2026-06-05
+
+### Refactor
+- Pulsanti close/cancel dei modal convertiti a `data-action` delegation
+
+## 1.1.31 — 2026-06-05
+
+### Refactor
+- Pulsanti header (campanella, impostazioni, modifica, undo, redo…) convertiti da `onclick` a `addEventListener`
+
+## 1.1.30 — 2026-06-05
+
+### Corretto
+- Dockerfile: `config.yaml` ora copiato nel container Docker → versione mostrata nelle impostazioni corretta
+
+## 1.1.29 — 2026-06-05
+
+### Aggiunto / Corretto
+- Funzione `ntfClearAll` aggiunta (mancante)
+- Pulsanti ✓ e 🗑 dell'header notifiche generati via JS (no onclick inline)
+
+## 1.1.28 — 2026-06-05
+
+### Corretto
+- Endpoint `/api/frarik/version` ora con header `no-cache` e rilegge `config.yaml` ad ogni richiesta
+- Fetch versione con cache-buster `?t=...`
+
+## 1.1.27 — 2026-06-05
+
+### Refactor
+- Sistema notifiche riscritto completamente in JS puro: niente `innerHTML` con `onclick`, tutto via `createElement` + `addEventListener`
+
+## 1.1.26 — 2026-06-05
+
+### Corretto
+- Notifica versione: appare sempre alla prima apertura dopo un aggiornamento (fix condizione `prev && prev!==cur`)
+
+## 1.1.25 — 2026-06-05
+
+### Corretto
+- Pulsante ✕ nelle notifiche: sostituito `onclick` inline (bloccabile da CSP) con event delegation
+- Notifica aggiornamento versione ora usa l'API del server invece di `window.FRARIK_APP_VERSION`
+
+## 1.1.24 — 2026-06-05
+
+### Corretto
+- Store HA: ricarica automatica ogni 5 minuti tramite `POST /supervisor/store/reload`
+- Server rilegge `config.yaml` all'avvio per versione corretta
+
+## 1.1.23 — 2026-06-05
+
+### Aggiunto
+- Ricarica automatica dello store HA ogni 5 minuti: gli aggiornamenti dell'add-on compaiono senza aspettare
+- Pulsante "Controlla aggiornamenti" nelle impostazioni
+
+## 1.1.22 — 2026-06-05
+
+### Sperimentale
+- Secondo tentativo iniezione logo nella sidebar HA (non risolto, sospeso)
+
+## 1.1.21 — 2026-06-05
+
+### Sperimentale
+- Primo tentativo iniezione logo nella sidebar HA tramite shadow DOM
+
 ## 1.1.20 — 2026-06-05
 
 ### Aggiunto
-- Schermata di avvio (splash): all'apertura della dashboard compare il logo grande al centro con una barra di caricamento sotto, per ~3,5 secondi, poi sfuma sulla plancia.
+- Schermata di avvio (splash): logo grande con barra di caricamento per ~3,5 secondi
 
 ## 1.1.19 — 2026-06-05
 
 ### Aggiunto (sperimentale)
-- Card YAML rese in modo **fedele come in Home Assistant**: ogni card YAML viene scritta come vista in una dashboard HA nascosta (`frarik-yaml`) e mostrata in `<iframe>`, così la disegna HA stesso con tutti i plugin HACS. Fallback automatico al renderer interno se la dashboard/WS non è disponibile. Per nascondere header/sidebar dentro l'iframe serve il plugin **kiosk-mode** (HACS).
+- Card YAML rese in modo fedele come in Home Assistant via `<iframe>`
 
 ## 1.1.18 — 2026-06-05
 
 ### Corretto
-- Ripristinato il renderer YAML interno (la 1.1.17 con il motore di HA via cross-realm rompeva anche l'anteprima delle card semplici). Le card semplici tornano a vedersi; per le card HACS complesse serve l'approccio iframe (in valutazione).
+- Ripristinato il renderer YAML interno
 
 ## 1.1.17 — 2026-06-05
 
 ### Corretto
-- Card YAML: ora vengono renderizzate con il **motore ufficiale di Home Assistant** (`createCardElement`) sia in anteprima sia in dashboard, quindi appaiono **identiche a HA** incluse le custom card HACS (button-card, bar-card, multiple-entity-row, swipe-card, ecc.). Prima si usava solo un renderer interno leggero che mostrava solo le card semplici. Fallback automatico al renderer interno se la plancia non gira dentro HA.
+- Card YAML renderizzate con il motore ufficiale di HA (`createCardElement`)
 
 ## 1.1.16 — 2026-06-05
 
 ### Aggiunto
-- Store, scheda 📄 YAML: pulsante **➕ Aggiungi** che scarica la card YAML dal repo, ne mostra l'anteprima e la inserisce nella dashboard come `yaml-card` (rende qualsiasi card Lovelace/HACS via `createCardElement`). Le card YAML si mettono nella cartella `card-yaml/` del repo. Aggiunto un esempio.
+- Store, scheda YAML: pulsante ➕ Aggiungi
 
 ## 1.1.15 — 2026-06-05
 
 ### Modificato
-- Logo/icona dell'add-on sostituiti con il marchio ufficiale "DOMOTICA FR" (emblema esagonale con casa smart, wi-fi e iniziali FR).
+- Logo/icona aggiornati con marchio "DOMOTICA FR"
 
 ## 1.1.14 — 2026-06-05
 
 ### Modificato
-- Nuovo logo/icona dell'add-on: casa "smart home" con onde wi-fi e le iniziali **FR**, su gradiente indaco→viola.
+- Nuovo logo/icona casa smart con iniziali FR
 
 ## 1.1.13 — 2026-06-05
 
 ### Aggiunto
-- Pulsante 🧹 "Rimuovi card orfane" nello Store: cancella le card installate da GitHub diventate orfane (id non più presente nel repo, invisibili nelle schede) che gonfiavano il conteggio. Reinstalla prima le card attuali del repo; le card locali non vengono toccate.
+- Pulsante 🧹 "Rimuovi card orfane" nello Store
 
 ## 1.1.12 — 2026-06-05
 
 ### Aggiunto
-- Icona e logo dell'add-on (`icon.png` 256×256, `logo.png` 250×100): fulmine ⚡ su gradiente indaco→viola. Sostituiscono il quadratino generico nello store HA.
+- Icona e logo ufficiali dell'add-on (`icon.png`, `logo.png`)
 
 ## 1.1.11 — 2026-06-05
 
 ### Corretto
-- Badge "Contatti SOS": non conta più i contatti vuoti (riga aggiunta e mai compilata). Alla chiusura del pannello SOS i contatti completamente vuoti vengono rimossi. Corretto anche singolare/plurale (1 contatto / N contatti).
+- Badge contatti SOS: non conta più contatti vuoti
 
 ## 1.1.10 — 2026-06-05
 
 ### Corretto
-- Il toast "Sincronizzato su Home Assistant" non compare più a ogni modifica: solo quando premi tu "Sincronizza su tutti i dispositivi". Gli auto-salvataggi sono silenziosi.
-- Conteggio Store gonfiato: le card eliminate non "risorgono" più tramite la sincronizzazione tra dispositivi (riconciliazione con lo stato remoto). Scartate/rimosse le voci corrotte dal localStorage.
+- Toast "Sincronizzato" solo su azione manuale
+- Conteggio Store: card eliminate non risorgono più
 
 ## 1.1.9 — 2026-06-05
 
 ### Modificato
-- Impostazioni riorganizzate: "Impostazioni Pagina", "Sistema · Plancia" e "Barra inferiore" unite in un unico menù a fisarmonica **Plancia** (sotto-sezioni: Aspetto, Pagina, Sistema, Barra inferiore). Store, Notifiche Smart e Contatti SOS raccolti sotto la categoria **Altro**.
+- Impostazioni riorganizzate in menu a fisarmonica
 
 ## 1.1.8 — 2026-06-05
 
 ### Modificato
-- Centro notifiche (campanella) ora **solo informativo**: niente clic/azioni, ogni notifica ha la "✕" per eliminarla
-- Rimosse le 3 icone in alto nel pannello notifiche (segna lette / svuota / regole)
-- **Disaccoppiato** il centro notifiche dalle notifiche smart: le regole smart restano un sistema a sé (popup) e non finiscono più nella campanella
+- Centro notifiche solo informativo, X per eliminare
 
 ## 1.1.7 — 2026-06-05
 
 ### Modificato
-- "Sincronizza su tutti i dispositivi": rimosso il toast iniziale "Invio…"; ora compare solo la conferma finale di HA (o l'avviso se non connesso)
+- Toast sincronizzazione semplificato
 
 ## 1.1.6 — 2026-06-05
 
 ### Rimosso
-- Pulsante "Salva configurazione" dalle impostazioni: ridondante perché la config si salva e sincronizza su HA automaticamente a ogni modifica. Rimossi anche `oikSaveConfig`, il footer e il CSS orfano (`.ep-footer`, `.oik-save`, `.ep-logout-btn`).
+- Pulsante "Salva configurazione" ridondante
 
 ## 1.1.5 — 2026-06-05
 
 ### Pulizia
-- Rimosso tutto il codice login/credenziali ormai inutilizzato: overlay `#lov`, funzioni `doLogin`/`doLogout`/`setLoginMode`/`toggleLoginAdv`, listener, CSS login e relativi export. La connessione (token/host, overlay `#cov`) resta invariata.
+- Rimosso tutto il codice login/credenziali
 
 ## 1.1.4 — 2026-06-05
 
 ### Rimosso
-- Pulsante "Esci dalla Dashboard" dalle impostazioni (il login iniziale non esiste più)
+- Pulsante "Esci dalla Dashboard"
 
 ## 1.1.3 — 2026-06-05
 
 ### Rimosso
-- Login iniziale: la dashboard si apre direttamente senza schermata di accesso
+- Login iniziale: la dashboard si apre direttamente
 
 ## 1.1.2 — 2026-06-05
 
 ### Rimosso
-- Scheda "Speciali" (card built-in) dallo store
+- Scheda "Speciali" dallo store
 
 ## 1.1.1 — 2026-06-05
 
 ### Rimosso
-- Pulsanti "Esporta backup" e "Ripristina backup" dal pannello impostazioni
+- Pulsanti "Esporta backup" e "Ripristina backup"
 
 ## 1.0.0 — 2026-06-04
 
 ### Aggiunto
 - Prima versione come add-on Home Assistant ufficiale
 - Server Node.js/Express con cache headers intelligenti
-- Supporto ingress HA (accesso sicuro via Nabu Casa senza porte aperte)
+- Supporto ingress HA (accesso sicuro via Nabu Casa)
 - Copia automatica dei file panel in `/config/www/frarik/`
 - API versione: `GET /api/frarik/version`
 - Build multi-architettura (amd64, aarch64, armv7, armhf, i386)
-
-### Migrato da
-- `frarik.html` monolitico (~788 KB) → struttura modulare
