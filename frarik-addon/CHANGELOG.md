@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.67 — 2026-06-05
+
+### Passo 14/16 — Anteprima screensaver
+- Aggiunto il pulsante "👁 Anteprima screensaver" nelle impostazioni (Sistema → Screensaver): mostra subito lo screensaver; tocca per uscire.
+
 ## 1.1.66 — 2026-06-05
 
 ### Passo 13/16 — Apertura impostazioni dal basso
