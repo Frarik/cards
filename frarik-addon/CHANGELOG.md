@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.4 — 2026-06-05
+
+### Rimosso
+- Pulsante "Esci dalla Dashboard" dalle impostazioni (il login iniziale non esiste più)
+
 ## 1.1.3 — 2026-06-05
 
 ### Rimosso
