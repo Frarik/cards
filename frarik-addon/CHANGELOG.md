@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.11 — 2026-06-05
+
+### Corretto
+- Badge "Contatti SOS": non conta più i contatti vuoti (riga aggiunta e mai compilata). Alla chiusura del pannello SOS i contatti completamente vuoti vengono rimossi. Corretto anche singolare/plurale (1 contatto / N contatti).
+
 ## 1.1.10 — 2026-06-05
 
 ### Corretto

@@ -9289,6 +9289,14 @@ function openSOSCfg(){
   renderSOSCfgList();
 }
 function closeSOSCfg(){
+  // rimuovi i contatti rimasti completamente vuoti (es. riga aggiunta e mai compilata):
+  // non devono contare nel badge né restare salvati.
+  try{
+    const sc=_sosCfg();
+    const before=sc.contacts.length;
+    sc.contacts=sc.contacts.filter(c=>c&&((c.name||'').trim()||(c.notifyService||'').trim()||(c.phone||'').trim()));
+    if(sc.contacts.length!==before){ saveCfg(); _ntfUpdateSidebarBadges(); }
+  }catch(e){}
   document.getElementById('sos-cfg-modal').classList.remove('open');
 }
 function _ntfUpdateSidebarBadges(){
@@ -9296,7 +9304,7 @@ function _ntfUpdateSidebarBadges(){
   const el=document.getElementById('ntf-ep-count');
   if(el){ const on=rules.filter(r=>r.enabled).length; el.textContent=rules.length?`${on}/${rules.length} attive`:''; }
   const sos=document.getElementById('sos-ep-count');
-  if(sos){ const n=(_sosCfg().contacts||[]).length; sos.textContent=n?`${n} contatti`:''; }
+  if(sos){ const n=(_sosCfg().contacts||[]).filter(c=>c&&((c.name||'').trim()||(c.notifyService||'').trim()||(c.phone||'').trim())).length; sos.textContent=n?`${n} contatt${n===1?'o':'i'}`:''; }
 }
 
 /* ═══ UNIVERSAL ENTITY PICKER ═══ */
