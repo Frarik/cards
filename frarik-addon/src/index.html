@@ -44,7 +44,7 @@
 <div class="mbg off" id="emod">
   <div class="mbox">
     <div class="mhdr"><span class="mtitle" id="emod-title">➕ Aggiungi Sensore</span><button class="mx" data-action="closeEM">✕</button></div>
-    <input id="esearch" type="text" placeholder="Cerca entità…" oninput="filterE()">
+    <input id="esearch" type="text" placeholder="Cerca entità…" >
     <div id="elist"></div>
   </div>
 </div>
@@ -60,7 +60,7 @@
       <div class="fr" id="fr-unit"><div class="flbl">Unità di misura</div><input class="finp" id="cm-unit" type="text" placeholder="W, kWh, %, °C, €…"></div>
       <div class="fr">
         <div class="flbl">Tipo di card</div>
-        <select class="finp" id="cm-type" onchange="onTypeChange()">
+        <select class="finp" id="cm-type" >
           <optgroup label="Numeri">
             <option value="big">🔢 Grande — numero enorme</option>
             <option value="compact">📊 Compatta — numero + barra</option>
@@ -114,7 +114,7 @@
       <!-- Click action -->
       <div class="fr">
         <div class="flbl">Azione al clic</div>
-        <select class="finp" id="cm-clickaction" onchange="onClickActionChange()">
+        <select class="finp" id="cm-clickaction" >
           <option value="info">ℹ️ Mostra dettagli entità</option>
           <option value="toggle">🔘 Interruttore on/off</option>
           <option value="link">🔗 Apri link esterno</option>
@@ -145,15 +145,15 @@
       <div class="fr">
         <div class="flbl">Sfondo card &nbsp;<span style="font-size:9px;opacity:.5">(lascia vuoto = auto)</span></div>
         <div style="display:flex;gap:8px;align-items:center">
-          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:11px;color:var(--muted)"><input type="checkbox" id="cm-bgOn" onchange="onCustomColorToggle()"> Personalizzato</label>
-          <input type="color" id="cm-bgColor" value="#0c0e1c" style="width:32px;height:28px;padding:2px 3px;border-radius:7px;border:1px solid var(--bd2);cursor:pointer;background:none" onchange="onCustomColorToggle()">
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:11px;color:var(--muted)"><input type="checkbox" id="cm-bgOn" > Personalizzato</label>
+          <input type="color" id="cm-bgColor" value="#0c0e1c" style="width:32px;height:28px;padding:2px 3px;border-radius:7px;border:1px solid var(--bd2);cursor:pointer;background:none" >
         </div>
       </div>
       <div class="fr">
         <div class="flbl">Colore testo / etichette &nbsp;<span style="font-size:9px;opacity:.5">(lascia vuoto = auto)</span></div>
         <div style="display:flex;gap:8px;align-items:center">
-          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:11px;color:var(--muted)"><input type="checkbox" id="cm-textOn" onchange="onCustomColorToggle()"> Personalizzato</label>
-          <input type="color" id="cm-textColor" value="#ffffff" style="width:32px;height:28px;padding:2px 3px;border-radius:7px;border:1px solid var(--bd2);cursor:pointer;background:none" onchange="onCustomColorToggle()">
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:11px;color:var(--muted)"><input type="checkbox" id="cm-textOn" > Personalizzato</label>
+          <input type="color" id="cm-textColor" value="#ffffff" style="width:32px;height:28px;padding:2px 3px;border-radius:7px;border:1px solid var(--bd2);cursor:pointer;background:none" >
         </div>
       </div>
       <div class="fr">
@@ -168,14 +168,14 @@
       </div>
       <div class="fr">
         <div class="flbl">👁 Visibilità della card</div>
-        <select class="finp" id="cm-vis-mode" onchange="_cmVisToggle()" style="margin-bottom:6px">
+        <select class="finp" id="cm-vis-mode"  style="margin-bottom:6px">
           <option value="always">Sempre visibile</option>
           <option value="cond">Mostra solo se… (condizione)</option>
         </select>
         <div id="cm-vis-cond" style="display:none">
           <div class="finp-row" style="margin-bottom:6px"><input class="finp entac" id="cm-vis-entity" type="text" placeholder="entità (es. alarm_control_panel.casa)"><button class="fbtn" data-action="browseField" data-action-arg="cm-vis-entity">🔍</button></div>
           <div style="display:flex;gap:6px;margin-bottom:6px">
-            <select class="finp" id="cm-vis-op" onchange="_cmVisToggle()" style="flex:1.1">
+            <select class="finp" id="cm-vis-op"  style="flex:1.1">
               <option value="eq">è uguale a</option>
               <option value="ne">è diverso da</option>
               <option value="gt">maggiore di</option>
@@ -226,7 +226,7 @@
         <div class="sect-section">
           <span class="sect-section-lbl">📝 Titolo</span>
           <div class="flbl">Testo</div>
-          <input class="finp" id="sect-title-text" type="text" placeholder="es. Casa, Energia…" style="margin-bottom:10px" oninput="previewSect()">
+          <input class="finp" id="sect-title-text" type="text" placeholder="es. Casa, Energia…" style="margin-bottom:10px" >
           <div class="flbl">Allineamento titolo</div>
           <div class="sect-align-pick" style="margin-bottom:10px">
             <button class="sect-align-btn" id="sta-left"   data-action="setSectTitleAlign" data-action-arg="left">⬅ Sinistra</button>
@@ -339,7 +339,7 @@
           </div>
 
           <div class="flbl bf-seclbl">▸ Al clic (interazione)</div>
-          <select class="finp" id="bf-action" onchange="_selBAction(this.value)" style="margin-bottom:8px">
+          <select class="finp" id="bf-action"  style="margin-bottom:8px">
             <option value="none">Niente</option>
             <option value="popup">Apri popup con una card (Store JS)</option>
             <option value="more_info">Dettagli entità (more-info)</option>
@@ -449,7 +449,7 @@
         <div id="hbf-entity-row">
           <div class="flbl">Entità Home Assistant</div>
           <div class="finp-row" style="margin-bottom:6px">
-            <input class="finp entac" id="hbf-entity" type="text" placeholder="es. lock.porta, alarm_control_panel.casa" oninput="hbAutoFill()">
+            <input class="finp entac" id="hbf-entity" type="text" placeholder="es. lock.porta, alarm_control_panel.casa" >
             <button class="fbtn" data-action="browseField" data-action-arg="hbf-entity" title="Cerca entità">🔍</button>
           </div>
           <!-- hint auto-rilevato -->
@@ -671,7 +671,7 @@
       <div class="sect-section" id="fb-enabled-row">
         <div style="display:flex;align-items:center;gap:10px">
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex:1">
-            <input type="checkbox" id="fb-enabled-cb" onchange="toggleFbarEnabled(this)" style="width:16px;height:16px;accent-color:#2dd4bf">
+            <input type="checkbox" id="fb-enabled-cb"  style="width:16px;height:16px;accent-color:#2dd4bf">
             <span style="font-size:12px;font-weight:600;color:#e2e8f0">Mostra barra inferiore</span>
           </label>
           <span style="font-size:9px;color:var(--muted)">Dock flottante in basso</span>
@@ -699,7 +699,7 @@
           <div style="flex:0 0 60px">
             <div class="flbl">Icona</div>
             <div class="finp-row" style="gap:2px">
-              <input class="finp" id="fbf-icon" type="text" placeholder="mdi:home" style="text-align:center;font-size:11px;padding:4px" oninput="_fbPreviewIcon()">
+              <input class="finp" id="fbf-icon" type="text" placeholder="mdi:home" style="text-align:center;font-size:11px;padding:4px" >
               <button class="fbtn" id="fbf-icon-picker" title="Scegli">🎨</button>
             </div>
           </div>
@@ -764,7 +764,7 @@
         💡 Incolla il YAML di una card Lovelace di Home Assistant. Tipi supportati: <code style="background:rgba(255,255,255,.08);border-radius:3px;padding:1px 4px">sensor · entity · entities · button · gauge · history-graph · thermostat · weather-forecast · media-player · markdown · light · alarm-panel · input_boolean · switch · cover</code>
       </div>
       <div class="flbl">Codice YAML</div>
-      <textarea id="yaml-import-txt" class="finp yaml-textarea" placeholder="type: sensor&#10;entity: sensor.temperatura_soggiorno&#10;name: Temperatura Soggiorno&#10;icon: mdi:thermometer" oninput="_yamlLivePreview()"></textarea>
+      <textarea id="yaml-import-txt" class="finp yaml-textarea" placeholder="type: sensor&#10;entity: sensor.temperatura_soggiorno&#10;name: Temperatura Soggiorno&#10;icon: mdi:thermometer" ></textarea>
       <div id="yaml-import-preview" style="margin-top:12px;display:none">
         <div class="flbl" style="margin-bottom:6px">Anteprima importazione</div>
         <div id="yaml-import-preview-content"></div>
@@ -921,12 +921,12 @@
         <div style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.05)">
           <div class="ep-sec-title" style="margin-bottom:6px">Pagina corrente</div>
           <div style="display:flex;gap:6px;margin-bottom:6px">
-            <input class="finp" id="ep-page-ico" style="width:44px;flex-shrink:0;text-align:center;font-size:14px" type="text" placeholder="📄" oninput="_pgMarkDirty()">
+            <input class="finp" id="ep-page-ico" style="width:44px;flex-shrink:0;text-align:center;font-size:14px" type="text" placeholder="📄" >
             <button class="fbtn" style="flex-shrink:0;padding:0 5px" title="Scegli icona" id="ep-page-ico-picker">🎨</button>
-            <input class="finp" id="ep-page-name" type="text" placeholder="Nome tab (opzionale)" oninput="_pgMarkDirty()">
+            <input class="finp" id="ep-page-name" type="text" placeholder="Nome tab (opzionale)" >
           </div>
           <div class="ep-sec-title" style="margin-top:2px;margin-bottom:4px">Titolo nella dashboard</div>
-          <input class="finp" id="ep-view-title" type="text" placeholder="es. Casa, Energia…" oninput="_pgMarkDirty()" style="margin-bottom:8px">
+          <input class="finp" id="ep-view-title" type="text" placeholder="es. Casa, Energia…"  style="margin-bottom:8px">
           <button class="ep-add2" id="ep-del-page" data-action="delPage" style="color:#f87171;border-color:rgba(248,113,113,0.25)">🗑 Elimina pagina</button>
         </div>
         <div id="ep-grid-sec" style="padding:10px 12px">
@@ -943,22 +943,22 @@
           <div class="sys-sub">Dopo inattività: orologio + meteo a tutto schermo</div>
           <div class="sys-row" style="margin-top:8px"><span class="sys-lbl2">Attesa</span>
             <div style="display:flex;align-items:center;gap:4px">
-              <input class="sys-num" id="sys-ss-min" type="number" min="0" max="180" oninput="_sysSaveSS()"><span class="sys-u">min</span>
-              <input class="sys-num" id="sys-ss-sec" type="number" min="0" max="59" oninput="_sysSaveSS()"><span class="sys-u">sec</span>
+              <input class="sys-num" id="sys-ss-min" type="number" min="0" max="180" ><span class="sys-u">min</span>
+              <input class="sys-num" id="sys-ss-sec" type="number" min="0" max="59" ><span class="sys-u">sec</span>
             </div></div>
         </div>
         <div style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.05)">
           <div class="sys-row"><span class="sys-lbl">🌗 Tema automatico</span><button class="sys-tog" id="sys-th-tog" data-action="_sysToggle" data-action-arg="th"></button></div>
           <div class="sys-row" style="margin-top:8px"><span class="sys-lbl2">Modalità</span>
-            <select class="sys-sel" id="sys-th-mode" onchange="_sysSaveTH()"><option value="time">Orario</option><option value="sun">Alba/Tramonto</option></select></div>
+            <select class="sys-sel" id="sys-th-mode" ><option value="time">Orario</option><option value="sun">Alba/Tramonto</option></select></div>
           <div class="sys-row" id="sys-th-times" style="margin-top:6px"><span class="sys-lbl2">Chiaro / Scuro</span>
-            <div style="display:flex;gap:4px"><input class="sys-time" id="sys-th-light" type="time" onchange="_sysSaveTH()"><input class="sys-time" id="sys-th-dark" type="time" onchange="_sysSaveTH()"></div></div>
+            <div style="display:flex;gap:4px"><input class="sys-time" id="sys-th-light" type="time" ><input class="sys-time" id="sys-th-dark" type="time" ></div></div>
         </div>
         <div style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.05)">
           <div class="sys-row"><span class="sys-lbl">📱 Colonna singola (cell)</span></div>
           <div class="sys-sub">Su telefono impila tutto in 1 colonna</div>
           <div class="sys-row" style="margin-top:6px"><span class="sys-lbl2">Modo</span>
-            <select class="sys-sel" id="sys-mob" onchange="_sysSaveMob()"><option value="auto">Auto (telefono)</option><option value="always">Sempre</option><option value="off">Mai</option></select></div>
+            <select class="sys-sel" id="sys-mob" ><option value="auto">Auto (telefono)</option><option value="always">Sempre</option><option value="off">Mai</option></select></div>
         </div>
         <!-- Barra inferiore (apre l'editor dedicato) -->
         <div style="padding:10px 12px">
@@ -1037,7 +1037,7 @@
       </div>
       <button data-action="_iconPickerClose" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;margin-left:10px">✕</button>
     </div>
-    <input class="ipm-search" id="ipm-search" placeholder="Cerca icona MDI… (es. bell, home, lock)" oninput="_iconPickerRenderTab('mdi')" style="display:none">
+    <input class="ipm-search" id="ipm-search" placeholder="Cerca icona MDI… (es. bell, home, lock)"  style="display:none">
     <div class="ipm-body"></div>
   </div>
 </div>
@@ -1156,7 +1156,7 @@
   <div id="fe-ep" style="display:none;position:absolute;inset:0;z-index:100;background:rgba(0,0,0,.7);align-items:center;justify-content:center">
     <div style="background:var(--panel);border:1px solid var(--bd);border-radius:16px;width:min(480px,94vw);max-height:80vh;display:flex;flex-direction:column;overflow:hidden">
       <div style="padding:12px 14px;border-bottom:1px solid var(--bd);display:flex;gap:8px;align-items:center">
-        <input id="fe-ep-q" class="fe-prop-inp" placeholder="Cerca entità (es. sensor.temp, light…)" style="flex:1" oninput="_feEpSearch(this.value)" autofocus>
+        <input id="fe-ep-q" class="fe-prop-inp" placeholder="Cerca entità (es. sensor.temp, light…)" style="flex:1"  autofocus>
         <button data-action="_feEpClose" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer">✕</button>
       </div>
       <div id="fe-ep-list" style="overflow-y:auto;max-height:60vh;padding:6px 8px"></div>
@@ -1176,11 +1176,11 @@
     <button class="fe-add-btn" data-action="feAddEl" data-action-arg="image">＋ Immagine</button>
     <div class="fe-vsep"></div>
     <!-- canvas settings -->
-    <span class="fe-cfg-lbl">L:</span><input id="fe-inp-w" class="fe-cfg-inp" type="number" placeholder="400" oninput="feUpdCard('canvasW',+this.value)">
-    <span class="fe-cfg-lbl">A:</span><input id="fe-inp-h" class="fe-cfg-inp" type="number" placeholder="300" oninput="feUpdCard('canvasH',+this.value)">
-    <span class="fe-cfg-lbl">Sfondo:</span><input id="fe-inp-bg" class="fe-cfg-inp fe-cfg-inp-w" type="text" placeholder="var(--card)" oninput="feUpdCard('canvasBg',this.value)">
-    <span class="fe-cfg-lbl">Raggio:</span><input id="fe-inp-br" class="fe-cfg-inp" type="text" placeholder="16px" oninput="feUpdCard('canvasBorderRadius',this.value)">
-    <span class="fe-cfg-lbl">Bordo:</span><input id="fe-inp-bord" class="fe-cfg-inp fe-cfg-inp-w" type="text" placeholder="1px solid var(--bd)" oninput="feUpdCard('canvasBorderStr',this.value)">
+    <span class="fe-cfg-lbl">L:</span><input id="fe-inp-w" class="fe-cfg-inp" type="number" placeholder="400" >
+    <span class="fe-cfg-lbl">A:</span><input id="fe-inp-h" class="fe-cfg-inp" type="number" placeholder="300" >
+    <span class="fe-cfg-lbl">Sfondo:</span><input id="fe-inp-bg" class="fe-cfg-inp fe-cfg-inp-w" type="text" placeholder="var(--card)" >
+    <span class="fe-cfg-lbl">Raggio:</span><input id="fe-inp-br" class="fe-cfg-inp" type="text" placeholder="16px" >
+    <span class="fe-cfg-lbl">Bordo:</span><input id="fe-inp-bord" class="fe-cfg-inp fe-cfg-inp-w" type="text" placeholder="1px solid var(--bd)" >
   </div>
   <div class="fe-body">
     <div class="fe-canvas-area">
@@ -1194,7 +1194,7 @@
     </div>
   </div>
   <div class="fe-bottombar">
-    <div style="font-size:10px;color:var(--dim)">Snap griglia: <input id="fe-inp-snap" class="fe-cfg-inp" type="number" value="5" min="1" max="20" style="width:44px" oninput="_feSnap=+this.value||5"> px &nbsp;|&nbsp; Trascina gli elementi per posizionarli · angolo in basso a destra per ridimensionare</div>
+    <div style="font-size:10px;color:var(--dim)">Snap griglia: <input id="fe-inp-snap" class="fe-cfg-inp" type="number" value="5" min="1" max="20" style="width:44px" > px &nbsp;|&nbsp; Trascina gli elementi per posizionarli · angolo in basso a destra per ridimensionare</div>
     <button class="fe-close-btn" data-action="closeFE">✅ Chiudi editor</button>
   </div>
 </div>
@@ -1223,7 +1223,7 @@
           <div class="jsst-dz-ico">📂</div>
           <div class="jsst-dz-lbl">Clicca o trascina il file <code>.js</code></div>
           <div class="jsst-dz-sub">Massimo 2 MB</div>
-          <input type="file" id="jsst-file-inp" accept=".js" style="display:none" onchange="jsStoreLoadFile(this.files[0])">
+          <input type="file" id="jsst-file-inp" accept=".js" style="display:none" >
         </div>
         <div id="jsst-load-status" style="margin-top:10px;font-size:11px;min-height:18px"></div>
         <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--bd)">
@@ -1256,7 +1256,7 @@
           <button class="jsst-tab" data-action="openGitHubCfg" title="Impostazioni GitHub">⚙️</button>
         </div>
       </div>
-      <input id="ghs-search" class="ghs-search" placeholder="🔍 Cerca per nome…" oninput="_ghStoreRender()" autocomplete="off">
+      <input id="ghs-search" class="ghs-search" placeholder="🔍 Cerca per nome…"  autocomplete="off">
       <div id="ghs-status" style="font-size:11px;color:var(--muted);margin:8px 2px;min-height:16px"></div>
       <div id="ghs-list"></div>
       <div id="ghs-load" style="display:none;margin-top:10px">
@@ -1264,7 +1264,7 @@
           <div class="jsst-dz-ico">📂</div>
           <div class="jsst-dz-lbl">Clicca o trascina un file <code>.js</code></div>
           <div class="jsst-dz-sub">per installare una card manualmente (max 2 MB)</div>
-          <input type="file" id="ghs-file-inp" accept=".js" style="display:none" onchange="jsStoreLoadFile(this.files[0])">
+          <input type="file" id="ghs-file-inp" accept=".js" style="display:none" >
         </div>
         <button data-action="jsStoreDownloadTemplate" style="margin-top:8px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.35);color:#a5b4fc;border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer">⬇️ Scarica template.js</button>
       </div>
@@ -1321,7 +1321,7 @@
       <button class="cfg-modal-close" data-action="_epPickerClose" title="Chiudi">✕</button>
     </div>
     <div class="ep-picker-search">
-      <input class="ep-picker-inp" id="ep-picker-q" placeholder="🔍  Cerca per nome, dominio o ID…" oninput="_epPickerSearch(this.value)" autocomplete="off" spellcheck="false">
+      <input class="ep-picker-inp" id="ep-picker-q" placeholder="🔍  Cerca per nome, dominio o ID…"  autocomplete="off" spellcheck="false">
     </div>
     <div class="ep-picker-list" id="ep-picker-list"></div>
   </div>

@@ -8428,6 +8428,62 @@ function _ghCheckForce(){ _ghCheck(true); }
   m.addEventListener('click',function(e){ if(e.target===m) _iconPickerClose(); });
 })();
 
+/* ── Handler input/change (ex onchange/oninput inline) ──────────────────── */
+(function _initInputHandlers(){
+  function on(id, ev, fn){ const el=document.getElementById(id); if(el) el.addEventListener(ev,fn); }
+
+  // Ricerca entità modal
+  on('esearch',       'input',  ()=>filterE());
+  // Config card
+  on('cm-type',       'change', ()=>onTypeChange());
+  on('cm-clickaction','change', ()=>onClickActionChange());
+  on('cm-bgOn',       'change', ()=>onCustomColorToggle());
+  on('cm-bgColor',    'change', ()=>onCustomColorToggle());
+  on('cm-textOn',     'change', ()=>onCustomColorToggle());
+  on('cm-textColor',  'change', ()=>onCustomColorToggle());
+  on('cm-vis-mode',   'change', ()=>_cmVisToggle());
+  on('cm-vis-op',     'change', ()=>_cmVisToggle());
+  // Sezione
+  on('sect-title-text','input', ()=>previewSect());
+  // Badge form
+  on('bf-action',     'change', function(){ _selBAction(this.value); });
+  // Header bar
+  on('hbf-entity',    'input',  ()=>hbAutoFill());
+  // Footer bar
+  on('fb-enabled-cb', 'change', function(){ toggleFbarEnabled(this); });
+  on('fbf-icon',      'input',  ()=>_fbPreviewIcon());
+  // YAML import
+  on('yaml-import-txt','input', ()=>_yamlLivePreview());
+  // Impostazioni pagina
+  on('ep-page-ico',   'input',  ()=>_pgMarkDirty());
+  on('ep-page-name',  'input',  ()=>_pgMarkDirty());
+  on('ep-view-title', 'input',  ()=>_pgMarkDirty());
+  // Sistema
+  on('sys-ss-min',    'input',  ()=>_sysSaveSS());
+  on('sys-ss-sec',    'input',  ()=>_sysSaveSS());
+  on('sys-th-mode',   'change', ()=>_sysSaveTH());
+  on('sys-th-light',  'change', ()=>_sysSaveTH());
+  on('sys-th-dark',   'change', ()=>_sysSaveTH());
+  on('sys-mob',       'change', ()=>_sysSaveMob());
+  // Store GitHub
+  on('ghs-search',    'input',  ()=>_ghStoreRender());
+  // Icon picker search
+  on('ipm-search',    'input',  ()=>_iconPickerRenderTab('mdi'));
+  // Free editor (canvas)
+  on('fe-ep-q',       'input',  function(){ _feEpSearch(this.value); });
+  on('fe-inp-w',      'input',  function(){ feUpdCard('canvasW', +this.value); });
+  on('fe-inp-h',      'input',  function(){ feUpdCard('canvasH', +this.value); });
+  on('fe-inp-bg',     'input',  function(){ feUpdCard('canvasBg', this.value); });
+  on('fe-inp-br',     'input',  function(){ feUpdCard('canvasBorderRadius', this.value); });
+  on('fe-inp-bord',   'input',  function(){ feUpdCard('canvasBorderStr', this.value); });
+  on('fe-inp-snap',   'input',  function(){ _feSnap = +this.value||5; });
+  // File upload card JS
+  on('jsst-file-inp', 'change', function(){ jsStoreLoadFile(this.files[0]); });
+  on('ghs-file-inp',  'change', function(){ jsStoreLoadFile(this.files[0]); });
+  // Entity picker search
+  on('ep-picker-q',   'input',  function(){ _epPickerSearch(this.value); });
+})();
+
 /* ── Handler header (ex onclick inline) ─────────────────────────────────── */
 (function _initHeaderHandlers(){
   function on(id, ev, fn){ const el=document.getElementById(id); if(el) el.addEventListener(ev,fn); }
