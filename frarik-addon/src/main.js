@@ -384,8 +384,8 @@ function addCardToCol(secId, col, triggerEl){
   const btnStyle='background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:rgba(255,255,255,.8);font-size:12px;padding:9px 12px;cursor:pointer;text-align:left;transition:background .12s';
   menu.innerHTML=`
     <div style="font-size:9px;color:rgba(255,255,255,.3);padding:2px 4px 4px;letter-spacing:.5px;text-transform:uppercase">Aggiungi card</div>
-    <button style="${btnStyle};background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:#86efac" onmouseover="this.style.background='rgba(74,222,128,.22)'" onmouseout="this.style.background='rgba(74,222,128,.1)'" onclick="document.getElementById('add-col-menu')?.remove();openGhStore()">🛒 Apri lo Store</button>
-    <button style="${btnStyle};background:rgba(99,102,241,.12);border-color:rgba(99,102,241,.3);color:#a5b4fc" onmouseover="this.style.background='rgba(99,102,241,.25)'" onmouseout="this.style.background='rgba(99,102,241,.12)'" onclick="document.getElementById('add-col-menu')?.remove();pasteCardTo('${secId}',${col})">📋 Incolla "${eh(_cardClipboard.label||_cardClipboard.type||'Card')}"</button>
+    <button style="${btnStyle};background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:#86efac" onmouseover="this.style.background='rgba(74,222,128,.22)'" onmouseout="this.style.background='rgba(74,222,128,.1)'" data-action="_openGhStoreClean">🛒 Apri lo Store</button>
+    <button style="${btnStyle};background:rgba(99,102,241,.12);border-color:rgba(99,102,241,.3);color:#a5b4fc" onmouseover="this.style.background='rgba(99,102,241,.25)'" onmouseout="this.style.background='rgba(99,102,241,.12)'" data-action="_pasteCardToClean" data-action-args='["${secId}",${col}]'>📋 Incolla "${eh(_cardClipboard.label||_cardClipboard.type||'Card')}"</button>
   `;
   // Position near the trigger element
   const rect=triggerEl?triggerEl.getBoundingClientRect():{left:window.innerWidth/2-95,bottom:window.innerHeight/2};
@@ -483,7 +483,7 @@ function _epRenderJsStore(){
       </div>
       ${inUse
         ? '<span style="font-size:9px;font-weight:700;color:#4ade80;flex-shrink:0">✓ In uso</span>'
-        : `<button onclick="jsStoreAddCard('${m.id||''}')" style="flex-shrink:0;padding:4px 9px;border-radius:7px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#a5b4fc;font-size:10px;font-weight:700;cursor:pointer">➕</button>`
+        : `<button data-action="jsStoreAddCard" data-action-arg="${m.id||''}" style="flex-shrink:0;padding:4px 9px;border-radius:7px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#a5b4fc;font-size:10px;font-weight:700;cursor:pointer">➕</button>`
       }
     </div>`;
   }).join('');
@@ -499,11 +499,11 @@ function renderSectionsList(){
       </div>
       <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap;margin-bottom:4px">
         <span style="font-size:8px;color:var(--muted);min-width:46px">Colonne</span>
-        ${[1,2,3,4].map(n=>`<button class="col-o${(sec.cols||4)===n?' on':''}" onclick="setSectionCols('${sec.id}',${n})">${n}</button>`).join('')}
+        ${[1,2,3,4].map(n=>`<button class="col-o${(sec.cols||4)===n?' on':''}" data-action="setSectionCols" data-action-args='["${sec.id}",${n}]'>${n}</button>`).join('')}
       </div>
       <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap">
         <span style="font-size:8px;color:var(--muted);min-width:46px">Altezza</span>
-        ${[100,130,150,180,200].map(h=>`<button class="col-o${(sec.rowH||150)===h?' on':''}" style="font-size:8px;padding:2px 4px;min-width:28px" onclick="setSectionRowH('${sec.id}',${h})">${h}</button>`).join('')}
+        ${[100,130,150,180,200].map(h=>`<button class="col-o${(sec.rowH||150)===h?' on':''}" style="font-size:8px;padding:2px 4px;min-width:28px" data-action="setSectionRowH" data-action-args='["${sec.id}",${h}]'>${h}</button>`).join('')}
       </div>
     </div>`).join('');
 }
@@ -1088,26 +1088,26 @@ function _ghStoreRender(){
     let acts;
     const prevEnc=enc.replace(/'/g,"\\'");
     const prevNm=nm.replace(/'/g,"\\'");
-    const eyeBtn=(cid)=>`<button class="ghs-ibtn ghs-ibtn-eye" onclick="_ghsPreview('${prevEnc}','${prevNm}',${cid?`'${cid}'`:'null'})" title="Anteprima"><i class="mdi mdi-eye-outline"></i></button>`;
+    const eyeBtn=(cid)=>`<button class="ghs-ibtn ghs-ibtn-eye" data-action="_ghsPreviewEl" data-penc="${prevEnc}" data-pnm="${prevNm}" data-pcid="${cid||''}" title="Anteprima"><i class="mdi mdi-eye-outline"></i></button>`;
     if(folder.kind==='install'){
       const known=g.shas[f.name];
       const idFile=g.idFile||{};
       const cardId=Object.keys(idFile).find(k=>idFile[k]===f.name)||null;
       const inDash=!!(cardId&&usedIds.has(cardId));
       if(!known){
-        acts=`${eyeBtn(null)}<button class="ghs-btn ghs-btn-inst" onclick="_ghsInstall('${enc}')"><i class="mdi mdi-download"></i> Installa</button>`;
+        acts=`${eyeBtn(null)}<button class="ghs-btn ghs-btn-inst" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>`;
       } else {
-        const updateBtn=(known!==f.sha)?`<button class="ghs-btn ghs-btn-upd" onclick="_ghsInstall('${enc}')"><i class="mdi mdi-update"></i> Aggiorna</button>`:'';
-        const addBtn=cardId?(inDash?`<span class="ghs-badge ghs-badge-dash"><i class="mdi mdi-check-circle-outline"></i> In dashboard</span>`:`<button class="ghs-btn ghs-btn-inst" onclick="jsStoreAddCard('${cardId}');setTimeout(_ghStoreRender,50)"><i class="mdi mdi-plus"></i> Aggiungi</button>`)
-          :`<button class="ghs-btn ghs-btn-inst" onclick="_ghsInstall('${enc}')"><i class="mdi mdi-download"></i> Installa</button>`;
-        const delBtn=cardId?`<button class="ghs-ibtn ghs-ibtn-del" onclick="_ghsDeleteInstalled('${cardId}')" title="Disinstalla"><i class="mdi mdi-delete-outline"></i></button>`:'';
+        const updateBtn=(known!==f.sha)?`<button class="ghs-btn ghs-btn-upd" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-update"></i> Aggiorna</button>`:'';
+        const addBtn=cardId?(inDash?`<span class="ghs-badge ghs-badge-dash"><i class="mdi mdi-check-circle-outline"></i> In dashboard</span>`:`<button class="ghs-btn ghs-btn-inst" data-action="_jsStoreAddAndRefresh" data-action-args='["${cardId}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`)
+          :`<button class="ghs-btn ghs-btn-inst" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>`;
+        const delBtn=cardId?`<button class="ghs-ibtn ghs-ibtn-del" data-action="_ghsDeleteInstalled" data-action-arg="${cardId}" title="Disinstalla"><i class="mdi mdi-delete-outline"></i></button>`:'';
         acts=`${eyeBtn(cardId)}${updateBtn}${addBtn}${delBtn}`;
       }
     } else {
       // Scheda YAML: oltre a Copia/Download, "Aggiungi" crea una card YAML e la mette in dashboard.
       // (La scheda Pacchetti resta solo Copia/Download: sono config di backend, non card.)
-      const addYaml = (tab==='yaml') ? `<button class="ghs-btn ghs-btn-inst" onclick="_ghsYamlAdd('${enc}')"><i class="mdi mdi-plus"></i> Aggiungi</button>` : '';
-      acts=`${eyeBtn(null)}${addYaml}<button class="ghs-btn ghs-btn-cp" onclick="_ghsCopy('${enc}')"><i class="mdi mdi-content-copy"></i> Copia</button><button class="ghs-btn ghs-btn-cp" onclick="_ghsDownload('${enc}')"><i class="mdi mdi-download"></i></button>`;
+      const addYaml = (tab==='yaml') ? `<button class="ghs-btn ghs-btn-inst" data-action="_ghsYamlAdd" data-action-arg="${enc}"><i class="mdi mdi-plus"></i> Aggiungi</button>` : '';
+      acts=`${eyeBtn(null)}${addYaml}<button class="ghs-btn ghs-btn-cp" data-action="_ghsCopy" data-action-arg="${enc}"><i class="mdi mdi-content-copy"></i> Copia</button><button class="ghs-btn ghs-btn-cp" data-action="_ghsDownload" data-action-arg="${enc}"><i class="mdi mdi-download"></i></button>`;
     }
     return `<div class="ghs-row"><div class="ghs-ico">${ico}</div><div class="ghs-info"><div class="ghs-name">${eh(nm)}</div><div class="ghs-sub">${eh(f.name)}</div></div><div class="ghs-acts">${acts}</div></div>`;
   }).join('');
@@ -1131,13 +1131,13 @@ function _ghStoreRenderInstalled(q, originFilter){
   list.innerHTML=items.sort((a,b)=>((a.meta||{}).name||'').localeCompare((b.meta||{}).name||'')).map(i=>{
     const m=i.meta||{}; const inUse=usedIds.has(m.id); const id=m.id||'';
     const act = inUse ? `<span class="ghs-badge ghs-badge-dash"><i class="mdi mdi-check-circle-outline"></i> In dashboard</span>`
-                      : `<button class="ghs-btn ghs-btn-inst" onclick="jsStoreAddCard('${id}');setTimeout(_ghStoreRender,50)"><i class="mdi mdi-plus"></i> Aggiungi</button>`;
-    const pub = originFilter==='local' ? `<button class="ghs-btn ghs-btn-upd" onclick="_ghsPublish('${id}')" title="Pubblica su GitHub"><i class="mdi mdi-upload"></i> Pubblica</button>` : '';
+                      : `<button class="ghs-btn ghs-btn-inst" data-action="_jsStoreAddAndRefresh" data-action-args='["${id}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`;
+    const pub = originFilter==='local' ? `<button class="ghs-btn ghs-btn-upd" data-action="_ghsPublish" data-action-arg="${id}" title="Pubblica su GitHub"><i class="mdi mdi-upload"></i> Pubblica</button>` : '';
     const safePrevNm=(m.name||id).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    const previewBtn=`<button class="ghs-ibtn ghs-ibtn-eye" onclick="_ghsPreview('','${safePrevNm}','${id}')" title="Anteprima"><i class="mdi mdi-eye-outline"></i></button>`;
+    const previewBtn=`<button class="ghs-ibtn ghs-ibtn-eye" data-action="_ghsPreview" data-action-args='["","${safePrevNm}","${id}"]' title="Anteprima"><i class="mdi mdi-eye-outline"></i></button>`;
     return `<div class="ghs-row"><div class="ghs-ico">${m.icon||'📦'}</div>
       <div class="ghs-info"><div class="ghs-name">${eh(m.name||id||'Card')}</div><div class="ghs-sub">ID: ${eh(id||'?')} · v${eh(m.version||'?')}</div></div>
-      <div class="ghs-acts">${previewBtn}${pub}${act}<button class="ghs-ibtn ghs-ibtn-del" onclick="_ghsDeleteInstalled('${id}')" title="Disinstalla"><i class="mdi mdi-delete-outline"></i></button></div></div>`;
+      <div class="ghs-acts">${previewBtn}${pub}${act}<button class="ghs-ibtn ghs-ibtn-del" data-action="_ghsDeleteInstalled" data-action-arg="${id}" title="Disinstalla"><i class="mdi mdi-delete-outline"></i></button></div></div>`;
   }).join('');
 }
 function _ghsDeleteInstalled(id){
@@ -2155,7 +2155,7 @@ function appliancesInner(card){
     const clickable=ents.length>0;
     const label=_pluralizeGroup(g.name, cnt);
     return `<span class="app-chip" style="color:${color};border-color:${_hex2rgba(color,.3)};background:${_hex2rgba(color,.1)};${clickable?'cursor:pointer':''}"
-      ${clickable?`onclick="appChipPopup('${card.id}',${gi},event)"`:''}><span class="${dotCls}"></span>${cnt} ${label}</span>`;
+      ${clickable?`data-action="_appChipPopupAt" data-action-args='["${card.id}",${gi}]'`:''}><span class="${dotCls}"></span>${cnt} ${label}</span>`;
   }).join('');
 
   /* ── power device rows ── */
@@ -2259,13 +2259,13 @@ function hbarInner(card){
     if(item.type==='sos'){
       const lbl=item.label||'SOS';
       const ic=item.icon||'mdi:alarm-light';
-      return `<span class="hbar-chip hbar-sos-chip tap" onclick="event.stopPropagation();openSOS()">${_renderIcon(ic,13,'#fff')} <span style="font-weight:900;letter-spacing:.5px">${eh(lbl)}</span></span>`;
+      return `<span class="hbar-chip hbar-sos-chip tap" data-action="openSOS">${_renderIcon(ic,13,'#fff')} <span style="font-weight:900;letter-spacing:.5px">${eh(lbl)}</span></span>`;
     }
     if(item.type==='kiosk'){
       const isK=document.body.classList.contains('kiosk');
       const lbl=item.label||(isK?'Esci Kiosk':'Kiosk');
       const ic=item.icon||(isK?'mdi:fullscreen-exit':'mdi:fullscreen');
-      return `<span class="hbar-chip hbar-kiosk-chip tap" onclick="event.stopPropagation();toggleKiosk()">${_renderIcon(ic,13,'#a5b4fc')} <span style="font-weight:800">${eh(lbl)}</span></span>`;
+      return `<span class="hbar-chip hbar-kiosk-chip tap" data-action="toggleKiosk">${_renderIcon(ic,13,'#a5b4fc')} <span style="font-weight:800">${eh(lbl)}</span></span>`;
     }
     if(item.type==='conn'){
       const dot=document.getElementById('conn-dot');
@@ -2323,20 +2323,20 @@ function hbarInner(card){
     let tapAttr='';
     if(clickAct==='more_info'&&item.entity){
       const e=String(item.entity).replace(/'/g,"\\'");
-      tapAttr=`onclick="event.stopPropagation();openIM('${e}')"`;
+      tapAttr=`data-action="openIM" data-action-arg="${e}"`;
     } else if(clickAct==='toggle'&&item.entity){
       const e=String(item.entity).replace(/'/g,"\\'");
-      tapAttr=`onclick="event.stopPropagation();_hbSmartClick(this,'${e}')"`;
+      tapAttr=`data-action="_hbSmartClick" data-action-arg="${e}"`;
     } else if(clickAct==='navigate'){
       const pi=parseInt(item.navPage||0);
-      tapAttr=`onclick="event.stopPropagation();setActivePage(${pi})"`;
+      tapAttr=`data-action="setActivePage" data-action-args='[${pi}]'`;
     } else if(clickAct==='service'&&item.tapDomain&&item.tapService){
       const d=String(item.tapDomain).replace(/'/g,"\\'");
       const s=String(item.tapService).replace(/'/g,"\\'");
       const e=String(item.tapEntity||item.entity||'').replace(/'/g,"\\'");
-      tapAttr=`onclick="event.stopPropagation();send({type:'call_service',domain:'${d}',service:'${s}',service_data:{entity_id:'${e}'}})"`;
+      tapAttr=`data-action="_sendCallSvc" data-action-args='["${d}","${s}","${e}"]'`;
     } else if(clickAct==='options'&&item.options&&item.options.length){
-      tapAttr=`onclick="event.stopPropagation();_hbOptionsPopup(this,${JSON.stringify(item.options||[]).replace(/"/g,'&quot;')})"`;
+      tapAttr=`data-action="_hbOptionsPopupEl" data-action-args='[${JSON.stringify(item.options||[]).replace(/"/g,'&quot;')}]'`;
     }
     const isClickable=!!tapAttr;
     return `<span class="hbar-chip${isClickable?' tap':''}" style="${bgStyle};color:${col}" ${tapAttr}>${parts}</span>`;
@@ -2413,9 +2413,9 @@ function mediaInner(card){
     </div>
   </div>
   <div class="med-ctrl">
-    <button class="mctrl-btn" onclick="callSvc('media_player','media_previous_track','${eid}')">⏮</button>
-    <button class="mctrl-btn mctrl-pp" onclick="callSvc('media_player','media_play_pause','${eid}')" style="background:${col}22;color:${col};border:1px solid ${col}44">${isPlay?'⏸':'▶'}</button>
-    <button class="mctrl-btn" onclick="callSvc('media_player','media_next_track','${eid}')">⏭</button>
+    <button class="mctrl-btn" data-action="callSvc" data-action-args='["media_player","media_previous_track","${eid}"]'>⏮</button>
+    <button class="mctrl-btn mctrl-pp" data-action="callSvc" data-action-args='["media_player","media_play_pause","${eid}"]' style="background:${col}22;color:${col};border:1px solid ${col}44">${isPlay?'⏸':'▶'}</button>
+    <button class="mctrl-btn" data-action="callSvc" data-action-args='["media_player","media_next_track","${eid}"]'>⏭</button>
   </div>
   <div class="med-vol">
     <span class="med-vol-ico">🔉</span>
@@ -2441,12 +2441,12 @@ function climateInner(card){
   </div>
   <div class="clm-mode" style="color:${modeCol};border:1px solid ${modeCol}33">${modeIco} ${_stateIt(st)}</div>
   <div class="clm-ctrl">
-    <button class="clm-btn" onclick="adjustClimate('${eid}',-0.5,'${cid}')">−</button>
+    <button class="clm-btn" data-action="adjustClimate" data-action-args='["${eid}",-0.5,"${cid}"]'>−</button>
     <div class="clm-target">
       <span class="clm-tar-val" id="ctar-${cid}" style="color:${col}">${tarT}</span>°
       <span class="clm-tar-lbl">Imposta</span>
     </div>
-    <button class="clm-btn" onclick="adjustClimate('${eid}',+0.5,'${cid}')">+</button>
+    <button class="clm-btn" data-action="adjustClimate" data-action-args='["${eid}",0.5,"${cid}"]'>+</button>
   </div>`;
 }
 
@@ -2632,7 +2632,7 @@ function renderDash(){
     const fbarBox=document.createElement('div');
     fbarBox.className='fbar-edit-box';
     fbarBox.innerHTML=`<div class="febx-head"><span class="febx-lbl">▭ Barra inferiore</span>
-      <button class="febx-mod" onclick="openFBM()">✏️ Modifica barra inferiore</button></div>
+      <button class="febx-mod" data-action="openFBM">✏️ Modifica barra inferiore</button></div>
       <div class="febx-preview">${prev}</div>`;
     sectionsEl.appendChild(fbarBox);
   }
@@ -2962,7 +2962,7 @@ function buildCard(card){
     inner=`<div class="chart-wrap"><canvas id="ch-${card.id}"></canvas></div>`;
   } else if(t==='toggle'){
     const ts=isOn?`background:${color}`:'background:rgba(255,255,255,0.1)';
-    inner=`<div class="toggle-wrap" id="v-${card.id}"><div style="text-align:center"><div class="toggle-track${isOn?' on':''}" id="tt-${card.id}" style="${ts}" onclick="doToggle('${ea(card.entity)}','${card.id}')"><div class="toggle-thumb"></div></div><div class="toggle-lbl" id="tl-${card.id}" style="color:${isOn?color:'rgba(255,255,255,0.25)'}">${isOn?'Acceso':'Spento'}</div></div></div>`;
+    inner=`<div class="toggle-wrap" id="v-${card.id}"><div style="text-align:center"><div class="toggle-track${isOn?' on':''}" id="tt-${card.id}" style="${ts}" data-action="doToggle" data-action-args='["${ea(card.entity)}","${card.id}"]'><div class="toggle-thumb"></div></div><div class="toggle-lbl" id="tl-${card.id}" style="color:${isOn?color:'rgba(255,255,255,0.25)'}">${isOn?'Acceso':'Spento'}</div></div></div>`;
   } else if(t==='flowbars'){
     inner=`<div class="fb-wrap" id="v-${card.id}">${buildFlowBarsRows(card)}</div>`;
   } else if(t==='flowmap'){
@@ -3023,19 +3023,19 @@ function buildCard(card){
 
   // Build size control row
   const _ovSize=inSections
-    ?`<button class="ovb-sm" onclick="adjSecSpan('${card.id}',-1)">◀</button><span id="cs-${card.id}" style="min-width:28px;text-align:center">S:${card.colSpan||1}</span><button class="ovb-sm" onclick="adjSecSpan('${card.id}',+1)">▶</button>&nbsp;<button class="ovb-sm" onclick="adjH('${card.id}',-20)">▲</button><span id="rs-${card.id}" style="min-width:36px;text-align:center">${card.height||150}px</span><button class="ovb-sm" onclick="adjH('${card.id}',+20)">▼</button>`
-    :`<button class="ovb-sm" onclick="adjSpan('${card.id}','col',-1)">◀</button><span id="cs-${card.id}">L:${card.colSpan||1}</span><button class="ovb-sm" onclick="adjSpan('${card.id}','col',+1)">▶</button>&nbsp;<button class="ovb-sm" onclick="adjSpan('${card.id}','row',-1)">▲</button><span id="rs-${card.id}">A:${card.rowSpan||1}</span><button class="ovb-sm" onclick="adjSpan('${card.id}','row',+1)">▼</button>`;
+    ?`<button class="ovb-sm" data-action="adjSecSpan" data-action-args='["${card.id}",-1]'>◀</button><span id="cs-${card.id}" style="min-width:28px;text-align:center">S:${card.colSpan||1}</span><button class="ovb-sm" data-action="adjSecSpan" data-action-args='["${card.id}",1]'>▶</button>&nbsp;<button class="ovb-sm" data-action="adjH" data-action-args='["${card.id}",-20]'>▲</button><span id="rs-${card.id}" style="min-width:36px;text-align:center">${card.height||150}px</span><button class="ovb-sm" data-action="adjH" data-action-args='["${card.id}",20]'>▼</button>`
+    :`<button class="ovb-sm" data-action="adjSpan" data-action-args='["${card.id}","col",-1]'>◀</button><span id="cs-${card.id}">L:${card.colSpan||1}</span><button class="ovb-sm" data-action="adjSpan" data-action-args='["${card.id}","col",1]'>▶</button>&nbsp;<button class="ovb-sm" data-action="adjSpan" data-action-args='["${card.id}","row",-1]'>▲</button><span id="rs-${card.id}">A:${card.rowSpan||1}</span><button class="ovb-sm" data-action="adjSpan" data-action-args='["${card.id}","row",1]'>▼</button>`;
 
   // Header-bar / Footer-bar: template semplificato senza c-top/cglow
   if(t==='header-bar'||t==='footer-bar'){
     el.innerHTML=`
       <div class="card-inner">${inner}</div>
       <div class="hbar-ctrl">
-        <button class="ovb ovb-edit" onclick="openCM('${card.id}')" title="Modifica">✏️</button>
-        <button class="ovb ovb-dup"  onclick="dupCard('${card.id}')" title="Duplica">⧉</button>
-        <button class="ovb ovb-cpy"  onclick="copyCard('${card.id}')" title="Copia">📋</button>
-        <button class="ovb ovb-cut"  onclick="cutCard('${card.id}')" title="Taglia">✂️</button>
-        <button class="ovb ovb-del"  onclick="delCard('${card.id}')" title="Elimina">🗑</button>
+        <button class="ovb ovb-edit" data-action="openCM" data-action-arg="${card.id}" title="Modifica">✏️</button>
+        <button class="ovb ovb-dup"  data-action="dupCard" data-action-arg="${card.id}" title="Duplica">⧉</button>
+        <button class="ovb ovb-cpy"  data-action="copyCard" data-action-arg="${card.id}" title="Copia">📋</button>
+        <button class="ovb ovb-cut"  data-action="cutCard" data-action-arg="${card.id}" title="Taglia">✂️</button>
+        <button class="ovb ovb-del"  data-action="delCard" data-action-arg="${card.id}" title="Elimina">🗑</button>
       </div>
       <div class="resize-handle" id="rh-${card.id}"></div>`;
     el.draggable=true;
@@ -3056,10 +3056,10 @@ function buildCard(card){
       ${inner}
       <div class="card-ov" style="z-index:30">
         <div class="ov-row">
-          <button class="ovb ovb-dup"  onclick="dupCard('${card.id}')" title="Duplica">⧉</button>
-          <button class="ovb ovb-cpy"  onclick="copyCard('${card.id}')" title="Copia">📋</button>
-          <button class="ovb ovb-cut"  onclick="cutCard('${card.id}')" title="Taglia">✂️</button>
-          <button class="ovb ovb-del"  onclick="delCard('${card.id}')" title="Elimina">🗑</button>
+          <button class="ovb ovb-dup"  data-action="dupCard" data-action-arg="${card.id}" title="Duplica">⧉</button>
+          <button class="ovb ovb-cpy"  data-action="copyCard" data-action-arg="${card.id}" title="Copia">📋</button>
+          <button class="ovb ovb-cut"  data-action="cutCard" data-action-arg="${card.id}" title="Taglia">✂️</button>
+          <button class="ovb ovb-del"  data-action="delCard" data-action-arg="${card.id}" title="Elimina">🗑</button>
         </div>
         <div class="ov-row" style="margin-top:2px"><div class="ov-size">${_ovSize}</div></div>
       </div>
@@ -3080,11 +3080,11 @@ function buildCard(card){
       ${inner}${_renderCardBadgesHTML(card)}
       <div class="card-ov" style="z-index:30">
         <div class="ov-row">
-          <button class="ovb ovb-edit" onclick="openCM('${card.id}')" title="Modifica">✏️</button>
-          <button class="ovb ovb-dup"  onclick="dupCard('${card.id}')" title="Duplica">⧉</button>
-          <button class="ovb ovb-cpy"  onclick="copyCard('${card.id}')" title="Copia">📋</button>
-          <button class="ovb ovb-cut"  onclick="cutCard('${card.id}')" title="Taglia">✂️</button>
-          <button class="ovb ovb-del"  onclick="delCard('${card.id}')" title="Elimina">🗑</button>
+          <button class="ovb ovb-edit" data-action="openCM" data-action-arg="${card.id}" title="Modifica">✏️</button>
+          <button class="ovb ovb-dup"  data-action="dupCard" data-action-arg="${card.id}" title="Duplica">⧉</button>
+          <button class="ovb ovb-cpy"  data-action="copyCard" data-action-arg="${card.id}" title="Copia">📋</button>
+          <button class="ovb ovb-cut"  data-action="cutCard" data-action-arg="${card.id}" title="Taglia">✂️</button>
+          <button class="ovb ovb-del"  data-action="delCard" data-action-arg="${card.id}" title="Elimina">🗑</button>
         </div>
         <div class="ov-row" style="margin-top:2px"><div class="ov-size">${_ovSize}</div></div>
       </div>
@@ -3108,11 +3108,11 @@ function buildCard(card){
     <div class="card-inner">${inner}${_renderCardBadgesHTML(card)}</div>
     <div class="card-ov">
       <div class="ov-row">
-        <button class="ovb ovb-edit" onclick="openCM('${card.id}')" title="${t==='free'?'Modifica Canvas':'Modifica'}">${t==='free'?'🎨':'✏️'}</button>
-        <button class="ovb ovb-dup"  onclick="dupCard('${card.id}')" title="Duplica">⧉</button>
-        <button class="ovb ovb-cpy"  onclick="copyCard('${card.id}')" title="Copia">📋</button>
-        <button class="ovb ovb-cut"  onclick="cutCard('${card.id}')" title="Taglia">✂️</button>
-        <button class="ovb ovb-del"  onclick="delCard('${card.id}')" title="Elimina">🗑</button>
+        <button class="ovb ovb-edit" data-action="openCM" data-action-arg="${card.id}" title="${t==='free'?'Modifica Canvas':'Modifica'}">${t==='free'?'🎨':'✏️'}</button>
+        <button class="ovb ovb-dup"  data-action="dupCard" data-action-arg="${card.id}" title="Duplica">⧉</button>
+        <button class="ovb ovb-cpy"  data-action="copyCard" data-action-arg="${card.id}" title="Copia">📋</button>
+        <button class="ovb ovb-cut"  data-action="cutCard" data-action-arg="${card.id}" title="Taglia">✂️</button>
+        <button class="ovb ovb-del"  data-action="delCard" data-action-arg="${card.id}" title="Elimina">🗑</button>
       </div>
       <div class="ov-row" style="margin-top:2px"><div class="ov-size">${_ovSize}</div></div>
     </div>
@@ -3290,14 +3290,14 @@ function renderBadgeList(){
     if(b.vis&&b.vis.mode==='cond') tags.push('👁condizione');
     return `<div class="badge-row">
       <div class="badge-row-ico">${b.type==='sep'?'│':b.icon||'🏷️'}</div>
-      <div class="badge-row-info" onclick="editBadgeAt(${i})" style="cursor:pointer">
+      <div class="badge-row-info" data-action="editBadgeAt" data-action-args='[${i}]' style="cursor:pointer">
         <div class="badge-row-type">${typeMap[b.type]||b.type}${tags.length?' · <span style="color:var(--muted);font-weight:600">'+tags.join(' ')+'</span>':''}</div>
         <div class="badge-row-desc" style="color:${col}">${desc}</div>
       </div>
-      <button class="brow-btn" onclick="editBadgeAt(${i})" title="Modifica">✏️</button>
-      <button class="brow-btn brow-mv" onclick="moveBadge(${i},-1)" title="Su">▲</button>
-      <button class="brow-btn brow-mv" onclick="moveBadge(${i},+1)" title="Giù">▼</button>
-      <button class="brow-btn brow-del" onclick="delBadge(${i})">✕</button>
+      <button class="brow-btn" data-action="editBadgeAt" data-action-args='[${i}]' title="Modifica">✏️</button>
+      <button class="brow-btn brow-mv" data-action="moveBadge" data-action-args='[${i},-1]' title="Su">▲</button>
+      <button class="brow-btn brow-mv" data-action="moveBadge" data-action-args='[${i},1]' title="Giù">▼</button>
+      <button class="brow-btn brow-del" data-action="delBadge" data-action-args='[${i}]'>✕</button>
     </div>`;
   }).join('');
 }
@@ -3395,11 +3395,11 @@ function _renderColorRules(){
   const ops=[['eq','='],['ne','≠'],['gt','>'],['lt','<'],['gte','≥'],['lte','≤'],['between','tra'],['contains','contiene']];
   el.innerHTML=_badgeRules.map((r,i)=>`<div class="bf-rule">
     <span class="bf-rule-if">se</span>
-    <select class="finp bf-rule-op" onchange="_setRule(${i},'op',this.value,true)">${ops.map(o=>`<option value="${o[0]}"${r.op===o[0]?' selected':''}>${o[1]}</option>`).join('')}</select>
-    <input class="finp" style="flex:1;min-width:0" placeholder="valore" value="${eh(r.val||'')}" oninput="_setRule(${i},'val',this.value)">
-    ${r.op==='between'?`<input class="finp" style="flex:0 0 56px" placeholder="e" value="${eh(r.val2||'')}" oninput="_setRule(${i},'val2',this.value)">`:''}
-    <input type="color" class="bf-rule-col" value="${_hexOf(r.color)}" oninput="_setRule(${i},'color',this.value)">
-    <button class="brow-btn brow-del" onclick="_delColorRule(${i})">✕</button>
+    <select class="finp bf-rule-op" data-input="_setRule" data-input-args='[${i},"op",true]'>${ops.map(o=>`<option value="${o[0]}"${r.op===o[0]?' selected':''}>${o[1]}</option>`).join('')}</select>
+    <input class="finp" style="flex:1;min-width:0" placeholder="valore" value="${eh(r.val||'')}" data-input="_setRule" data-input-args='[${i},"val"]'>
+    ${r.op==='between'?`<input class="finp" style="flex:0 0 56px" placeholder="e" value="${eh(r.val2||'')}" data-input="_setRule" data-input-args='[${i},"val2"]'>`:''}
+    <input type="color" class="bf-rule-col" value="${_hexOf(r.color)}" data-input="_setRule" data-input-args='[${i},"color"]'>
+    <button class="brow-btn brow-del" data-action="_delColorRule" data-action-args='[${i}]'>✕</button>
   </div>`).join('')||'<div style="font-size:10px;color:var(--muted);padding:2px">Nessuna regola</div>';
 }
 function _setRule(i,field,val,rerender){ if(_badgeRules[i]){ _badgeRules[i][field]=val; if(rerender) _renderColorRules(); } }
@@ -3420,7 +3420,7 @@ function _setVisUI(m){
 }
 function _renderBFColors(){
   document.getElementById('bf-colors').innerHTML=COLORS.map(h=>
-    `<div class="csw${h===_badgeSelColor?' on':''}" style="background:${h}" onclick="_selBC('${h}')"></div>`).join('');
+    `<div class="csw${h===_badgeSelColor?' on':''}" style="background:${h}" data-action="_selBC" data-action-arg="${h}"></div>`).join('');
 }
 function _selBC(h){
   _badgeSelColor=h;
@@ -3563,7 +3563,7 @@ function _badgeItemHTML(b, cls='hbadge', sepCls='badge-sep'){
   const col=_badgeColor(b);
   const act=b.action||(b.popupCard?'popup':'none');
   const clickable=act&&act!=='none';
-  const oc=clickable?` onclick="_badgeClick('${b.id}',event)"`:'';
+  const oc=clickable?` data-action="_badgeClick" data-action-arg="${b.id}"`:'';
   const cur=clickable?'cursor:pointer;':'';
   const ind=clickable?'<span style="opacity:.5;margin-left:4px;font-size:.8em">▸</span>':'';
   const disp=b.display||'full';
@@ -3671,8 +3671,8 @@ function _renderViewHeader(){
       html+=`<div class="view-title-wrap" style="align-self:${selfAlign};${fullW}">
         <div class="view-title-text" style="font-size:${fs};font-weight:${fw};font-style:${fi};color:${fc};text-align:${ta}">${eh(title)}</div>
         <div class="view-title-edit-ov">
-          <button class="hba-btn hba-edit" onclick="openSectMod('header','title')" title="Modifica titolo">✏️</button>
-          <button class="hba-btn hba-del" onclick="delSectTitle()" title="Elimina titolo">✕</button>
+          <button class="hba-btn hba-edit" data-action="openSectMod" data-action-args='["header","title"]' title="Modifica titolo">✏️</button>
+          <button class="hba-btn hba-del" data-action="delSectTitle" title="Elimina titolo">✕</button>
         </div>
       </div>`;
     } else {
@@ -3691,10 +3691,10 @@ function _renderViewHeader(){
             ondragstart="_badgeDragStart(event,${i})" ondragover="_badgeDragOver(event)" ondrop="_badgeDrop(event,${i})" ondragend="_badgeDragEnd(event)">
             ${_badgeItemHTML(b,'hbadge','badge-sep')}
             <div class="hbadge-actions"><div class="hbadge-actions-inner">
-              <button class="hba-btn hba-edit" onclick="event.stopPropagation();_inViewEditBadge(${i},'header')" title="Modifica">✏️</button>
-              <button class="hba-btn hba-cpy" onclick="event.stopPropagation();_inViewCopyBadge(${i},'header')" title="Copia">📋</button>
-              <button class="hba-btn hba-cut" onclick="event.stopPropagation();_inViewCutBadge(${i},'header')" title="Taglia">✂️</button>
-              <button class="hba-btn hba-del" onclick="event.stopPropagation();_inViewDelBadge(${i},'header')" title="Elimina">✕</button>
+              <button class="hba-btn hba-edit" data-action="_inViewEditBadge" data-action-args='[${i},"header"]' title="Modifica">✏️</button>
+              <button class="hba-btn hba-cpy" data-action="_inViewCopyBadge" data-action-args='[${i},"header"]' title="Copia">📋</button>
+              <button class="hba-btn hba-cut" data-action="_inViewCutBadge" data-action-args='[${i},"header"]' title="Taglia">✂️</button>
+              <button class="hba-btn hba-del" data-action="_inViewDelBadge" data-action-args='[${i},"header"]' title="Elimina">✕</button>
             </div></div>
           </div>`;
         }).join('')
@@ -3706,13 +3706,13 @@ function _renderViewHeader(){
   if(editMode){
     html+=`<div class="view-edit-row">`;
     html+=title
-      ? `<button class="view-add-btn" onclick="openSectMod('header','title')">✏️ Modifica titolo</button>`
-      : `<button class="view-add-btn" onclick="openSectMod('header','title')">＋ Aggiungi titolo</button>`;
+      ? `<button class="view-add-btn" data-action="openSectMod" data-action-args='["header","title"]'>✏️ Modifica titolo</button>`
+      : `<button class="view-add-btn" data-action="openSectMod" data-action-args='["header","title"]'>＋ Aggiungi titolo</button>`;
     html+=badges.length
-      ? `<button class="view-add-btn" onclick="openBM('header','manage')">🏷️ Gestione distintivi</button><button class="view-add-btn" onclick="openBM('header','new')">＋ Nuovo distintivo</button>`
-      : `<button class="view-add-btn" onclick="openBM('header','new')">＋ Aggiungi distintivo</button>`;
+      ? `<button class="view-add-btn" data-action="openBM" data-action-args='["header","manage"]'>🏷️ Gestione distintivi</button><button class="view-add-btn" data-action="openBM" data-action-args='["header","new"]'>＋ Nuovo distintivo</button>`
+      : `<button class="view-add-btn" data-action="openBM" data-action-args='["header","new"]'>＋ Aggiungi distintivo</button>`;
     if(badges.length && _badgeClipboard){
-      html+=`<button class="view-add-btn" onclick="_inViewPasteBadge('header')">📋 Incolla</button>`;
+      html+=`<button class="view-add-btn" data-action="_inViewPasteBadge" data-action-arg="header">📋 Incolla</button>`;
     }
     html+=`</div>`;
   }
@@ -3769,7 +3769,7 @@ function openSectMod(zone, mode){
   _setSectBadgesAlignUI(_sectBadgesAlign);
 
   document.getElementById('sect-colors').innerHTML=COLORS.map(h=>
-    `<div class="csw${h===_sectColor?' on':''}" style="background:${h}" onclick="_selSectColor('${h}')"></div>`).join('');
+    `<div class="csw${h===_sectColor?' on':''}" style="background:${h}" data-action="_selSectColor" data-action-arg="${h}"></div>`).join('');
 
   renderSectBadgeList();
   const pb=document.getElementById('sect-paste-btn');
@@ -3821,13 +3821,13 @@ function renderSectBadgeList(){
     const col=b.color||'rgba(255,255,255,.7)';
     let desc=b.type==='sep'?'───':((b.icon?b.icon+' ':'')+(b.label?b.label+': ':'')+(b.type==='entity'?eh(b.entity||''):eh(b.text||''))+(b.suffix?' '+b.suffix:''));
     return `<div class="sect-badge-row">
-      <div class="sect-badge-row-info" style="color:${col};cursor:pointer" onclick="_sectEditBadge(${i})">${desc}</div>
-      <button class="sbrow-btn" onclick="_sectEditBadge(${i})" title="Modifica">✏️</button>
-      <button class="sbrow-btn sbrow-mv" onclick="moveSectBadge(${i},-1)" title="Su">▲</button>
-      <button class="sbrow-btn sbrow-mv" onclick="moveSectBadge(${i},+1)" title="Giù">▼</button>
-      <button class="sbrow-btn sbrow-cpy" onclick="copySectBadge(${i})" title="Copia">📋</button>
-      <button class="sbrow-btn sbrow-cut" onclick="cutSectBadge(${i})" title="Taglia">✂️</button>
-      <button class="sbrow-btn sbrow-del" onclick="delSectBadge(${i})" title="Elimina">✕</button>
+      <div class="sect-badge-row-info" style="color:${col};cursor:pointer" data-action="_sectEditBadge" data-action-args='[${i}]'>${desc}</div>
+      <button class="sbrow-btn" data-action="_sectEditBadge" data-action-args='[${i}]' title="Modifica">✏️</button>
+      <button class="sbrow-btn sbrow-mv" data-action="moveSectBadge" data-action-args='[${i},-1]' title="Su">▲</button>
+      <button class="sbrow-btn sbrow-mv" data-action="moveSectBadge" data-action-args='[${i},1]' title="Giù">▼</button>
+      <button class="sbrow-btn sbrow-cpy" data-action="copySectBadge" data-action-args='[${i}]' title="Copia">📋</button>
+      <button class="sbrow-btn sbrow-cut" data-action="cutSectBadge" data-action-args='[${i}]' title="Taglia">✂️</button>
+      <button class="sbrow-btn sbrow-del" data-action="delSectBadge" data-action-args='[${i}]' title="Elimina">✕</button>
     </div>`;
   }).join('');
 }
@@ -4303,8 +4303,8 @@ function renderCList(){
         <div class="cli-name">${eh(c.label)}</div>
         <div class="cli-ent">${eh(c.entity||c.type)}${colLbl?`<span style="opacity:.4;font-size:9px"> ${colLbl}</span>`:''}</div>
       </div>
-      <button class="cli-e" onclick="openCM('${c.id}')">✏️</button>
-      <button class="cli-d" onclick="delCard('${c.id}')">✕</button>
+      <button class="cli-e" data-action="openCM" data-action-arg="${c.id}">✏️</button>
+      <button class="cli-d" data-action="delCard" data-action-arg="${c.id}">✕</button>
     </div>`;
   }).join('');
 }
@@ -4335,7 +4335,7 @@ function renderEL(q){
   const lq=q.toLowerCase();
   const filtered=allE.filter(e=>e.entity_id.toLowerCase().includes(lq)||(e.attributes?.friendly_name||'').toLowerCase().includes(lq)).slice(0,120);
   document.getElementById('elist').innerHTML=filtered.length
-    ? filtered.map(e=>`<div class="eit" onclick="eitClick('${ea(e.entity_id)}','${ea(e.attributes?.friendly_name||e.entity_id)}','${ea(e.attributes?.unit_of_measurement||'')}','${ea(e.entity_id.split('.')[0])}')">
+    ? filtered.map(e=>`<div class="eit" data-action="_eitClickFromEl" data-eid="${e.entity_id}" data-efn="${eh(e.attributes?.friendly_name||e.entity_id)}" data-eunit="${eh(e.attributes?.unit_of_measurement||'')}" data-edom="${e.entity_id.split('.')[0]}">
         <span class="edom">${eh(e.entity_id.split('.')[0])}</span>
         <span class="ename">${eh(e.attributes?.friendly_name||e.entity_id)}</span>
         <span class="estate">${eh(e.state)} ${eh(e.attributes?.unit_of_measurement||'')}</span>
@@ -4501,7 +4501,7 @@ function onCustomColorToggle(){
 
 function renderSwatches(sel){
   document.getElementById('cm-colors').innerHTML=COLORS.map(h=>`
-    <div class="csw${h===sel?' on':''}" style="background:${h}" onclick="selColor('${h}')"></div>`).join('');
+    <div class="csw${h===sel?' on':''}" style="background:${h}" data-action="selColor" data-action-arg="${h}"></div>`).join('');
 }
 function selColor(hex){
   const c=curPage().cards.find(x=>x.id===editingId); if(c) c.color=hex;
@@ -4521,7 +4521,7 @@ function _shapeRadius(shape){ return (CARD_SHAPES.find(s=>s.id===shape)||CARD_SH
 function renderShapePick(sel){
   const wrap=document.getElementById('cm-shapes'); if(!wrap) return;
   wrap.innerHTML=CARD_SHAPES.map(s=>`
-    <button type="button" class="shp-btn${(sel||'rounded')===s.id?' on':''}" onclick="selShape('${s.id}')">
+    <button type="button" class="shp-btn${(sel||'rounded')===s.id?' on':''}" data-action="selShape" data-action-arg="${s.id}">
       <div class="shp-prev" style="border-radius:${s.r}"></div>
       ${s.label}
     </button>`).join('');
@@ -4593,7 +4593,7 @@ function openEmojiPicker(cb, anchorEl, evt){
   let html='<div class="app-emoji-grid">';
   APP_EMOJIS.forEach(e=>{
     if(e.startsWith('─')){ html+=`<span class="app-emoji-cat">${e.replace(/─/g,'').trim()}</span>`; }
-    else { html+=`<button class="app-emoji-btn" onclick="_pickEmoji('${e}')">${e}</button>`; }
+    else { html+=`<button class="app-emoji-btn" data-action="_pickEmoji" data-action-arg="${e}">${e}</button>`; }
   });
   html+='</div>';
   pop.innerHTML=html;
@@ -4693,7 +4693,7 @@ async function _iconPickerRenderTab(tab){
     let h='<div class="ipm-grid">';
     _ICON_EMOJIS.forEach(e=>{
       if(e.startsWith('──')){ h+=`</div><div class="ipm-cat">${e.replace(/─/g,'').trim()}</div><div class="ipm-grid">`; }
-      else { h+=`<button class="ipm-btn" onclick="_iconPickerPick('${e}')" title="${e}">${e}</button>`; }
+      else { h+=`<button class="ipm-btn" data-action="_iconPickerPick" data-action-arg="${e}" title="${e}">${e}</button>`; }
     });
     h+='</div>';
     body.innerHTML=h;
@@ -4712,7 +4712,7 @@ async function _iconPickerRenderTab(tab){
       _ICON_MDI_CATS.forEach(({cat,icons:catIcons})=>{
         h+=`<div class="ipm-cat">${cat}</div><div class="ipm-grid">`;
         catIcons.forEach(i=>{
-          h+=`<button class="ipm-btn ipm-mdi" onclick="_iconPickerPick('mdi:${i}')" title="mdi:${i}"><span class="mdi mdi-${i}"></span><span class="ipm-mdi-lbl">${i}</span></button>`;
+          h+=`<button class="ipm-btn ipm-mdi" data-action="_iconPickerPick" data-action-arg="mdi:${i}" title="mdi:${i}"><span class="mdi mdi-${i}"></span><span class="ipm-mdi-lbl">${i}</span></button>`;
         });
         h+='</div>';
       });
@@ -4730,7 +4730,7 @@ async function _iconPickerRenderTab(tab){
     let h=`<div style="font-size:10px;color:rgba(255,255,255,.3);padding:0 2px 8px">${icons.length} icone trovate${icons.length>500?' (prime 500)':''}</div>`;
     h+='<div class="ipm-grid">';
     shown.forEach(i=>{
-      h+=`<button class="ipm-btn ipm-mdi" onclick="_iconPickerPick('mdi:${i}')" title="mdi:${i}"><span class="mdi mdi-${i}"></span><span class="ipm-mdi-lbl">${i}</span></button>`;
+      h+=`<button class="ipm-btn ipm-mdi" data-action="_iconPickerPick" data-action-arg="mdi:${i}" title="mdi:${i}"><span class="mdi mdi-${i}"></span><span class="ipm-mdi-lbl">${i}</span></button>`;
     });
     h+='</div>';
     body.innerHTML=h;
@@ -4768,7 +4768,7 @@ function openColorPicker(currentColor, cb, anchorEl, evt){
   if(pop.classList.contains('show')){ pop.classList.remove('show'); _colorTargetCb=null; return; }
   _colorTargetCb=cb;
   _colorCurSel=currentColor||'';
-  pop.innerHTML=`<div class="app-color-grid">${APP_CPALS.map(c=>`<span class="app-csw${c===_colorCurSel?' sel':''}" style="background:${c}" onclick="_pickColor('${c}')"></span>`).join('')}</div>`;
+  pop.innerHTML=`<div class="app-color-grid">${APP_CPALS.map(c=>`<span class="app-csw${c===_colorCurSel?' sel':''}" style="background:${c}" data-action="_pickColor" data-action-arg="${c}"></span>`).join('')}</div>`;
   _positionPop(pop, anchorEl);
 }
 function _pickColor(c){
@@ -4844,7 +4844,7 @@ function _chipPopHtml(cardId, gIdx){
     const bc=isOn?color:'rgba(255,255,255,0.25)';
     const bbg=isOn?_hex2rgba(color,.15):'rgba(255,255,255,0.04)';
     const bbd=isOn?_hex2rgba(color,.35):'rgba(255,255,255,0.1)';
-    return `<div class="acp-row${tgl?'':' readonly'}" onclick="${tgl?`toggleEntity('${e}')`:''}" title="${tgl?'Tocca per accendere/spegnere':''}">
+    return `<div class="acp-row${tgl?'':' readonly'}" data-action-cond="toggleEntity" data-action-arg="${e}" title="${tgl?'Tocca per accendere/spegnere':''}">
       <span class="acp-name">${_friendlyName(e)}</span>
       <span class="acp-state" style="color:${bc};background:${bbg};border-color:${bbd}">${_stateIt(hs[e]||'—')}</span>
     </div>`;
@@ -4928,10 +4928,10 @@ function hbRenderList(zone){
     const preview=_hbChipPreview(item);
     return `<div class="hb-row">
       <div class="hb-row-info">${preview}</div>
-      <button class="sbrow-btn sbrow-mv" onclick="hbMoveChip('${zone}',${i},-1)" title="Su">▲</button>
-      <button class="sbrow-btn sbrow-mv" onclick="hbMoveChip('${zone}',${i},+1)" title="Giù">▼</button>
-      <button class="sbrow-btn hba-edit" onclick="hbEditChip('${zone}',${i})" title="Modifica" style="background:rgba(99,102,241,.2);color:#818cf8">✏️</button>
-      <button class="sbrow-btn sbrow-del" onclick="hbDelChip('${zone}',${i})" title="Elimina">✕</button>
+      <button class="sbrow-btn sbrow-mv" data-action="hbMoveChip" data-action-args='["${zone}",${i},-1]' title="Su">▲</button>
+      <button class="sbrow-btn sbrow-mv" data-action="hbMoveChip" data-action-args='["${zone}",${i},+1]' title="Giù">▼</button>
+      <button class="sbrow-btn hba-edit" data-action="hbEditChip" data-action-args='["${zone}",${i}]' title="Modifica" style="background:rgba(99,102,241,.2);color:#818cf8">✏️</button>
+      <button class="sbrow-btn sbrow-del" data-action="hbDelChip" data-action-args='["${zone}",${i}]' title="Elimina">✕</button>
     </div>`;
   }).join('');
 }
@@ -5062,8 +5062,8 @@ const _HB_CLK_PALETTE=['#ffffff','#f0f9ff','#fbbf24','#4ade80','#22d3ee','#818cf
 function _hbRenderClockColors(){
   const wrap=document.getElementById('hbclk-colors'); if(!wrap) return;
   const cur=document.getElementById('hbclk-color')?.value||'#ffffff';
-  wrap.innerHTML=_HB_CLK_PALETTE.map(c=>`<div class="hbclk-color-sw${c===cur?' on':''}" style="background:${c}" onclick="_hbPickClockColor('${c}')" title="${c}"></div>`).join('')
-    +`<input type="text" class="finp" id="hbclk-color-txt" value="${cur}" placeholder="#ffffff" style="width:70px;font-size:10px;padding:3px 6px;margin-left:2px" oninput="_hbPickClockColor(this.value)">`;
+  wrap.innerHTML=_HB_CLK_PALETTE.map(c=>`<div class="hbclk-color-sw${c===cur?' on':''}" style="background:${c}" data-action="_hbPickClockColor" data-action-arg="${c}" title="${c}"></div>`).join('')
+    +`<input type="text" class="finp" id="hbclk-color-txt" value="${cur}" placeholder="#ffffff" style="width:70px;font-size:10px;padding:3px 6px;margin-left:2px" data-input="_hbPickClockColor">`;
 }
 function _hbPickClockColor(c){
   const inp=document.getElementById('hbclk-color'); if(inp) inp.value=c;
@@ -5392,12 +5392,12 @@ function _hbRenderColorMap(){
   el.innerHTML=entries.map(([st,co])=>`<div class="hb-row" style="padding:3px 6px">
     <div style="width:12px;height:12px;border-radius:3px;background:${co};flex-shrink:0;border:1px solid rgba(255,255,255,.2)"></div>
     <span style="font-size:9px;flex:1">${eh(st)} → <span style="color:${co};font-weight:700">${co}</span></span>
-    <button class="sbrow-btn sbrow-del" onclick="delete _hbColorMap['${st.replace(/'/g,"\\'")}'];_hbRenderColorMap()">✕</button>
+    <button class="sbrow-btn sbrow-del" data-action="_hbDelColorMapEntry" data-action-arg="${st}">✕</button>
   </div>`).join('');
 }
 function _hbRenderColorMapSwatches(){
   const el=document.getElementById('hbf-cmap-swatches'); if(!el) return;
-  el.innerHTML=_HB_CMAP_PRESETS.map(c=>`<div style="width:18px;height:18px;border-radius:4px;background:${c};cursor:pointer;border:2px solid transparent;transition:border-color .1s" onclick="_hbPickCmapColor('${c}')" title="${c}"></div>`).join('');
+  el.innerHTML=_HB_CMAP_PRESETS.map(c=>`<div style="width:18px;height:18px;border-radius:4px;background:${c};cursor:pointer;border:2px solid transparent;transition:border-color .1s" data-action="_hbPickCmapColor" data-action-arg="${c}" title="${c}"></div>`).join('');
 }
 function _hbPickCmapColor(c){
   const el=document.getElementById('hbf-cmap-color'); if(el) el.value=c;
@@ -5425,7 +5425,7 @@ function _hbRenderIconMap(){
   if(!entries.length){ el.innerHTML=`<div style="font-size:9px;opacity:.35;padding:2px 0">Nessun mapping</div>`; return; }
   el.innerHTML=entries.map(([st,ic])=>`<div class="hb-row" style="padding:3px 6px">
     <span style="font-size:9px;flex:1">${eh(st)} → ${_renderIcon(ic,12,'#818cf8')} ${ic}</span>
-    <button class="sbrow-btn sbrow-del" onclick="delete _hbIconMap['${st.replace(/'/g,"\\'")}'];_hbRenderIconMap()">✕</button>
+    <button class="sbrow-btn sbrow-del" data-action="_hbDelIconMapEntry" data-action-arg="${st}">✕</button>
   </div>`).join('');
 }
 
@@ -5447,7 +5447,7 @@ function _hbRenderOptions(){
   if(!_hbOptions.length){ el.innerHTML=`<div style="font-size:9px;opacity:.35;padding:2px 0">Nessuna opzione</div>`; return; }
   el.innerHTML=_hbOptions.map((o,i)=>`<div class="hb-row" style="padding:3px 6px">
     <span style="font-size:9px;flex:1">${o.icon?_renderIcon(o.icon,10,'#818cf8'):''} ${eh(o.label)} → ${o.tapDomain||''}.${o.tapService||''}</span>
-    <button class="sbrow-btn sbrow-del" onclick="_hbOptions.splice(${i},1);_hbRenderOptions()">✕</button>
+    <button class="sbrow-btn sbrow-del" data-action="_hbDelOption" data-action-args='[${i}]'>✕</button>
   </div>`).join('');
 }
 
@@ -5489,8 +5489,8 @@ function _hbOptionsPopup(el, options){
 function _hbRenderColorPickers(){
   const bgEl=document.getElementById('hbf-bg-colors');
   const txtEl=document.getElementById('hbf-text-colors');
-  if(bgEl) bgEl.innerHTML=_HB_BG_PRESETS.map(c=>`<div class="csw${c===_hbBg?' on':''}" style="background:${c}" onclick="_hbSelBg('${c}')"></div>`).join('');
-  if(txtEl) txtEl.innerHTML=_HB_TXT_PRESETS.map(c=>`<div class="csw${c===_hbTxt?' on':''}" style="background:${c}" onclick="_hbSelTxt('${c}')"></div>`).join('');
+  if(bgEl) bgEl.innerHTML=_HB_BG_PRESETS.map(c=>`<div class="csw${c===_hbBg?' on':''}" style="background:${c}" data-action="_hbSelBg" data-action-arg="${c}"></div>`).join('');
+  if(txtEl) txtEl.innerHTML=_HB_TXT_PRESETS.map(c=>`<div class="csw${c===_hbTxt?' on':''}" style="background:${c}" data-action="_hbSelTxt" data-action-arg="${c}"></div>`).join('');
 }
 function _hbSelBg(c){ _hbBg=c; document.getElementById('hbf-bg-custom').value=c; _hbRenderColorPickers(); }
 function _hbSelTxt(c){ _hbTxt=c; const el=document.getElementById('hbf-text-custom'); if(el) el.value=c; _hbRenderColorPickers(); }
@@ -5579,17 +5579,17 @@ function renderAppItems(){
     const effColor=item.color||APP_PALETTE[i%APP_PALETTE.length];
     return `<div class="app-ed-row">
       <div style="display:flex;gap:4px;align-items:center">
-        <input class="finp" id="app-ent-${i}" style="flex:1;font-size:10px" value="${item.entity||''}" placeholder="sensor.xxx_power" oninput="_appItems[${i}].entity=this.value">
-        <button class="fbtn" onclick="browseField('app-ent-${i}')">🔍</button>
+        <input class="finp" id="app-ent-${i}" style="flex:1;font-size:10px" value="${item.entity||''}" placeholder="sensor.xxx_power" data-input="_appSetItemEntity" data-input-args='[${i}]'>
+        <button class="fbtn" data-action="browseField" data-action-arg="app-ent-${i}">🔍</button>
         <button class="fbtn" id="app-ico-btn-${i}" title="Scegli icona"
           style="font-size:16px;width:30px;min-width:30px;padding:2px"
-          onclick="openIconPicker(e=>{_appItems[${i}].icon=e;renderAppItems();},this,event)">${_renderIcon(item.icon||'⚡',16)}</button>
+          data-action="_appItemPickIcon" data-action-args='[${i}]' data-action-el="true">${_renderIcon(item.icon||'⚡',16)}</button>
         <button class="fbtn" id="app-col-btn-${i}" title="Scegli colore"
           style="width:20px;min-width:20px;height:20px;border-radius:50%;background:${effColor};border:2px solid rgba(255,255,255,0.25);padding:0"
-          onclick="openColorPicker('${effColor}',c=>{_appItems[${i}].color=c;renderAppItems();},this,event)"></button>
-        <button class="fbtn" onclick="_appItems.splice(${i},1);renderAppItems()" style="color:#f87171;padding:0 7px">✕</button>
+          data-action="_appItemPickColor" data-action-args='["${effColor}",${i}]' data-action-el="true"></button>
+        <button class="fbtn" data-action="_appDelItem" data-action-args='[${i}]' style="color:#f87171;padding:0 7px">✕</button>
       </div>
-      <input class="finp" style="margin-top:4px;font-size:10px" value="${item.name||''}" placeholder="Nome visualizzato (es. Pompa Calore)" oninput="_appItems[${i}].name=this.value">
+      <input class="finp" style="margin-top:4px;font-size:10px" value="${item.name||''}" placeholder="Nome visualizzato (es. Pompa Calore)" data-input="_appSetItemName" data-input-args='[${i}]'>
     </div>`;
   }).join('');
 }
@@ -5612,14 +5612,14 @@ function renderAppGroups(){
       <div style="display:flex;gap:4px;align-items:center;margin-bottom:4px">
         <button class="fbtn" title="Scegli colore"
           style="width:20px;min-width:20px;height:20px;border-radius:50%;background:${gc};border:2px solid rgba(255,255,255,0.25);padding:0;flex-shrink:0"
-          onclick="openColorPicker('${gc}',c=>{_appGroups[${i}].color=c;renderAppGroups();},this,event)"></button>
-        <input class="finp" style="flex:1;font-size:10px" value="${g.name||''}" placeholder="Nome gruppo (es. luci)" oninput="_appGroups[${i}].name=this.value">
+          data-action="_appGroupPickColor" data-action-args='["${gc}",${i}]' data-action-el="true"></button>
+        <input class="finp" style="flex:1;font-size:10px" value="${g.name||''}" placeholder="Nome gruppo (es. luci)" data-input="_appSetGroupName" data-input-args='[${i}]'>
         <label style="display:flex;align-items:center;gap:3px;font-size:9px;opacity:.7;white-space:nowrap;cursor:pointer" title="Mostra ogni entità del gruppo nella lista sotto, con il suo stato">
-          <input type="checkbox" ${g.showList?'checked':''} onchange="_appGroups[${i}].showList=this.checked"> lista
+          <input type="checkbox" ${g.showList?'checked':''} data-input="_appSetGroupShowList" data-input-args='[${i}]'> lista
         </label>
-        <button class="fbtn" onclick="_appGroups.splice(${i},1);renderAppGroups()" style="color:#f87171;padding:0 7px">✕</button>
+        <button class="fbtn" data-action="_appDelGroup" data-action-args='[${i}]' style="color:#f87171;padding:0 7px">✕</button>
       </div>
-      <textarea class="finp" rows="2" style="font-size:9px;font-family:monospace;resize:vertical" placeholder="Un'entità per riga (light.xxx, cover.yyy, climate.zzz...)" oninput="_appGroups[${i}].entities=this.value.split('\\n').map(s=>s.trim()).filter(Boolean)">${(g.entities||[]).join('\n')}</textarea>
+      <textarea class="finp" rows="2" style="font-size:9px;font-family:monospace;resize:vertical" placeholder="Un'entità per riga (light.xxx, cover.yyy, climate.zzz...)" data-input="_appSetGroupEntities" data-input-args='[${i}]'>${(g.entities||[]).join('\n')}</textarea>
     </div>`;
   }).join('');
 }
@@ -5749,9 +5749,9 @@ function renderSavedCards(){
       panel.innerHTML=`<div class="saved-empty">Nessuna card salvata.<br>Clicca 💾 su una card per salvarla.</div>`;
     } else {
       panel.innerHTML=saved.map((t,i)=>`
-        <div class="ep-saved-chip" onclick="addSaved(${i})" title="Clicca per aggiungere">
+        <div class="ep-saved-chip" data-action="addSaved" data-action-args='[${i}]' title="Clicca per aggiungere">
           <span class="ep-saved-chip-name">${t.label||'Card'}</span>
-          <button class="ep-saved-chip-del" onclick="deleteSaved(${i},event)" title="Elimina">✕</button>
+          <button class="ep-saved-chip-del" data-action="_deleteSavedAt" data-action-args='[${i}]' title="Elimina">✕</button>
         </div>`).join('');
     }
   }
@@ -5763,8 +5763,8 @@ function renderSavedCards(){
       modal.innerHTML=`<div class="saved-empty">Nessuna card salvata. Clicca 💾 su una card per salvarla come template.</div>`;
     } else {
       modal.innerHTML=`<div class="saved-grid">${saved.map((t,i)=>`
-        <button class="saved-btn" onclick="addSaved(${i})">
-          <button class="saved-btn-del" onclick="deleteSaved(${i},event)" title="Elimina template">✕</button>
+        <button class="saved-btn" data-action="addSaved" data-action-args='[${i}]'>
+          <button class="saved-btn-del" data-action="_deleteSavedAt" data-action-args='[${i}]' title="Elimina template">✕</button>
           <span class="saved-btn-ico">${t.icon||'📦'}</span>
           <span class="saved-btn-name">${t.label||'Card'}</span>
           <span class="saved-btn-type">${t.type||''}</span>
@@ -6453,8 +6453,8 @@ function _jsStoreRenderList(){
         <div class="jsst-card-desc">${m.desc||''}</div>
       </div>
       <div class="jsst-card-actions">
-        ${inUse ? '<span style="font-size:10px;color:#4ade80;font-weight:700;">✓ In dashboard</span>' : `<button class="jsst-btn-add" onclick="jsStoreAddCard('${m.id||''}')">➕ Aggiungi</button>`}
-        <button class="jsst-btn-del" onclick="jsStoreDeleteCard('${m.id||''}')">🗑</button>
+        ${inUse ? '<span style="font-size:10px;color:#4ade80;font-weight:700;">✓ In dashboard</span>' : `<button class="jsst-btn-add" data-action="jsStoreAddCard" data-action-arg="${m.id||''}">➕ Aggiungi</button>`}
+        <button class="jsst-btn-del" data-action="jsStoreDeleteCard" data-action-arg="${m.id||''}">🗑</button>
       </div>
     </div>`;
   }
@@ -6728,7 +6728,7 @@ function applyColorTheme(id){
 function _renderColorThemes(){
   const el=document.getElementById('ep-ctheme-row'); if(!el) return;
   const cur=cfg.colorTheme||'indaco';
-  el.innerHTML=COLOR_THEMES.map(t=>`<button class="ep-ctheme${t.id===cur?' on':''}" data-theme="${t.id}" title="${t.name}" onclick="applyColorTheme('${t.id}')" style="background:linear-gradient(135deg,${t.acc},${t.acc2})"></button>`).join('');
+  el.innerHTML=COLOR_THEMES.map(t=>`<button class="ep-ctheme${t.id===cur?' on':''}" data-theme="${t.id}" title="${t.name}" data-action="applyColorTheme" data-action-arg="${t.id}" style="background:linear-gradient(135deg,${t.acc},${t.acc2})"></button>`).join('');
 }
 function applyTheme(t){
   cfg.theme=t;
@@ -6752,7 +6752,7 @@ function applyFont(fid){
 function _renderFontItems(){
   const cur=cfg.font||'Inter';
   document.getElementById('font-pop').innerHTML=FONTS.map(f=>
-    `<div class="font-item${f.id===cur?' on':''}" onclick="applyFont('${f.id.replace(/'/g,"\\'")}')">
+    `<div class="font-item${f.id===cur?' on':''}" data-action="applyFont" data-action-arg="${f.id}">
       <span style="font-family:'${f.id}',system-ui;font-size:12px">${f.label}</span>
       ${f.id===cur?'<span style="font-size:10px;opacity:.6">✓</span>':''}
     </div>`
@@ -6926,7 +6926,7 @@ function openWizard(tpl){
   document.getElementById('wmod-body').innerHTML=def.fields.map(f=>{
     let inp='';
     if(f.type==='entity'){
-      inp=`<div class="finp-row"><input class="finp" id="${f.id}" type="text" placeholder="${f.ph||''}"><button class="fbtn" onclick="browseField('${f.id}')">🔍</button></div>`;
+      inp=`<div class="finp-row"><input class="finp" id="${f.id}" type="text" placeholder="${f.ph||''}"><button class="fbtn" data-action="browseField" data-action-arg="${f.id}">🔍</button></div>`;
     } else if(f.type==='sel'){
       inp=`<select class="finp" id="${f.id}">${f.opts.map(o=>`<option value="${o[0]}"${o[2]?' selected':''}>${o[1]}</option>`).join('')}</select>`;
     } else {
@@ -7311,11 +7311,11 @@ function renderPageTabs(){
   const tabs=document.getElementById('page-tabs');
   if(!tabs) return;
   tabs.innerHTML=cfg.pages.map((p,i)=>`
-    <button class="ptab${i===cfg.activePage?' on':''}" onclick="setActivePage(${i})">
+    <button class="ptab${i===cfg.activePage?' on':''}" data-action="setActivePage" data-action-args='[${i}]'>
       <span>${_renderIcon(p.icon||'📄',15)}</span>${p.name?`&nbsp;<span>${eh(p.name)}</span>`:''}
-      ${editMode&&cfg.pages.length>1?`<span class="ptab-del" onclick="delPageByIdx(${i},event)" title="Elimina pagina">✕</span>`:''}
+      ${editMode&&cfg.pages.length>1?`<span class="ptab-del" data-action="delPageByIdx" data-action-args='[${i}]' title="Elimina pagina">✕</span>`:''}
     </button>`).join('');
-  if(editMode) tabs.innerHTML+=`<button class="ptab-add" onclick="openTM()" title="Nuova pagina">＋</button>`;
+  if(editMode) tabs.innerHTML+=`<button class="ptab-add" data-action="openTM" title="Nuova pagina">＋</button>`;
 }
 
 function setActivePage(idx){
@@ -7349,15 +7349,15 @@ function toggleViewsMenu(ev){
   const menu=document.createElement('div');
   menu.id='views-menu'; menu.className='views-menu';
   const items=(cfg.pages||[]).map((p,i)=>`<div class="vm-item${i===cfg.activePage?' on':''}">
-      <div class="vm-go" onclick="closeViewsMenu();setActivePage(${i})">
+      <div class="vm-go" data-action="setActivePage" data-action-args='[${i}]' data-pre-action="closeViewsMenu">
         <span class="vm-ico">${_renderIcon(p.icon||'📄',16)}</span>
         <span class="vm-name">${eh(p.name||('Vista '+(i+1)))}</span>
         ${i===cfg.activePage?'<span class="vm-chk">✓</span>':''}
       </div>
-      <button class="vm-edit" onclick="event.stopPropagation();editView(${i})" title="Rinomina / icona / elimina">✏️</button>
+      <button class="vm-edit" data-action="editView" data-action-args='[${i}]' title="Rinomina / icona / elimina">✏️</button>
     </div>`).join('');
   menu.innerHTML=`<div class="vm-hdr">Viste (${(cfg.pages||[]).length})</div>${items}<div class="vm-sep"></div>`+
-    `<button class="vm-add" onclick="closeViewsMenu();openTM()"><i class="mdi mdi-plus"></i> Aggiungi vista</button>`;
+    `<button class="vm-add" data-action="_closeViewsAndOpenTM"><i class="mdi mdi-plus"></i> Aggiungi vista</button>`;
   document.body.appendChild(menu);
   const btn=document.getElementById('views-btn');
   if(btn && btn.offsetParent!==null){   // bottone visibile (desktop): posiziona sotto di esso
@@ -7378,7 +7378,7 @@ function toggleMobileMenu(ev){
   closeViewsMenu(); closeNotifCenter && closeNotifCenter();
   const menu=document.createElement('div');
   menu.id='mfab-menu'; menu.className='mfab-menu';
-  const it=(ico,lbl,fn,cls='')=>`<button class="mfab-item ${cls}" onclick="closeMobileMenu();${fn}"><span class="mfab-ic">${ico}</span><span>${lbl}</span></button>`;
+  const it=(ico,lbl,fn,cls='')=>`<button class="mfab-item ${cls}" data-action="closeMobileMenu" data-action2="${fn.replace(/\(\)$/,'')}"><span class="mfab-ic">${ico}</span><span>${lbl}</span></button>`;
   const editing=document.body.classList.contains('editing');
   const kioskOn=document.body.classList.contains('kiosk');
   menu.innerHTML=
@@ -7472,7 +7472,7 @@ function closeTModStep2(){
 function _renderColCountBtns(){
   const wrap=document.getElementById('epw-sec-btns'); if(!wrap) return;
   wrap.innerHTML=[1,2,3,4].map(n=>
-    `<button class="epw-scnt${n===_newPageCols?' on':''}" onclick="_setNewPageCols(${n})">${n}</button>`
+    `<button class="epw-scnt${n===_newPageCols?' on':''}" data-action="_setNewPageCols" data-action-args='[${n}]'>${n}</button>`
   ).join('');
 }
 function _setNewPageCols(n){ _newPageCols=n; _renderColCountBtns(); _renderColPreview(); }
@@ -7731,9 +7731,9 @@ function _pgCheckDirtyAndProceed(proceed){
     <div style="font-size:13px;font-weight:700;margin-bottom:6px">Modifiche non salvate</div>
     <div style="font-size:11px;color:var(--muted);margin-bottom:18px">Hai modificato le impostazioni della pagina senza salvare.</div>
     <div style="display:flex;flex-direction:column;gap:7px">
-      <button onclick="_pgWarnSaveAndProceed()" style="padding:9px;border-radius:9px;background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.4);color:#4ade80;font-size:12px;font-weight:700">✓ Salva e continua</button>
-      <button onclick="_pgWarnCancelAndProceed()" style="padding:9px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid var(--bd2);color:var(--muted);font-size:12px;font-weight:700">↩ Annulla modifiche e continua</button>
-      <button onclick="document.querySelector('.pg-warn-ov')?.remove();_pgProceedCb=null" style="padding:9px;border-radius:9px;background:transparent;border:none;color:var(--muted);font-size:11px">✕ Resta qui</button>
+      <button data-action="_pgWarnSaveAndProceed" style="padding:9px;border-radius:9px;background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.4);color:#4ade80;font-size:12px;font-weight:700">✓ Salva e continua</button>
+      <button data-action="_pgWarnCancelAndProceed" style="padding:9px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid var(--bd2);color:var(--muted);font-size:12px;font-weight:700">↩ Annulla modifiche e continua</button>
+      <button data-action="_pgWarnClose" style="padding:9px;border-radius:9px;background:transparent;border:none;color:var(--muted);font-size:11px">✕ Resta qui</button>
     </div>
   </div>`;
   document.body.appendChild(overlay);
@@ -7770,7 +7770,7 @@ function fbarInner(card){
       const st=hs[b.entity]||'';
       active=st==='heat'||st==='cool'||st==='auto'||st==='heat_cool';
     }
-    return `<div class="fbar-ibtn${active?' fbar-active':''}" style="${style}" onclick="fbarBtnClick('${card.id}','${b.id}',event)" data-cid="${card.id}" data-bid="${b.id}">
+    return `<div class="fbar-ibtn${active?' fbar-active':''}" style="${style}" data-action="fbarBtnClick" data-action-args='["${card.id}","${b.id}"]' data-cid="${card.id}" data-bid="${b.id}">
       <div class="fbar-ibtn-ring">${_renderIcon(b.icon||'mdi:circle-outline',22,col)}</div>
       ${b.label?`<div class="fbar-ibtn-lbl">${eh(b.label)}</div>`:''}
     </div>`;
@@ -7829,7 +7829,7 @@ function _fbInitPresets(){
   const wrap=document.getElementById('fb-icon-preset'); if(!wrap) return;
   const cur=document.getElementById('fbf-icon')?.value||'';
   wrap.innerHTML=_FB_ICON_PRESETS.map(p=>`
-    <button class="fb-icon-btn${p.icon===cur?' on':''}" title="${p.label}" onclick="_fbPickPreset('${p.icon}','${p.color}')" style="${p.icon===cur?'--fbi-col:'+p.color:''}">
+    <button class="fb-icon-btn${p.icon===cur?' on':''}" title="${p.label}" data-action="_fbPickPreset" data-action-args='["${p.icon}","${p.color}"]' style="${p.icon===cur?'--fbi-col:'+p.color:''}">
       ${_renderIcon(p.icon,18)}
     </button>`).join('');
 }
@@ -7867,7 +7867,7 @@ function renderFbarZone(){
       const st=hs[b.entity]||'';
       active=st==='heat'||st==='cool'||st==='auto'||st==='heat_cool';
     }
-    return `<div class="fbar-ibtn${active?' fbar-active':''}" style="${style}" onclick="fbarZoneBtnClick('${b.id}',event)">
+    return `<div class="fbar-ibtn${active?' fbar-active':''}" style="${style}" data-action="fbarZoneBtnClick" data-action-arg="${b.id}">
       <div class="fbar-ibtn-ring">${_renderIcon(b.icon||'mdi:circle-outline',22)}</div>
       ${b.label?`<div class="fbar-ibtn-lbl">${eh(b.label)}</div>`:''}
     </div>`;
@@ -7919,15 +7919,15 @@ function _fbRenderList(){
   el.innerHTML=_fbBtns.map((b,i)=>{
     const col=b.color||'#fff';
     const typeLabel={climate:'Termostato',link:'Link',navigate:'Naviga',popup:'Popup'}[b.type]||b.type;
-    return `<div class="fb-btn-row" onclick="fbEditBtn(${i})">
+    return `<div class="fb-btn-row" data-action="fbEditBtn" data-action-args='[${i}]'>
       <div class="fb-btn-ico" style="color:${col};border-color:${col}55;background:${col}14">${_renderIcon(b.icon||'⚙️',16)}</div>
       <div class="fb-btn-info">
         <div class="fb-btn-lbl">${eh(b.label||b.entity||'Pulsante')}</div>
         <div class="fb-btn-type">${typeLabel}${b.entity?' · '+b.entity:''}</div>
       </div>
-      <button class="ovb ovb-del" onclick="event.stopPropagation();fbDelBtn(${i})" style="font-size:11px;width:22px;height:22px">🗑</button>
-      ${i>0?`<button class="ovb" onclick="event.stopPropagation();fbMoveBtn(${i},-1)" style="font-size:10px;width:20px;height:20px">▲</button>`:''}
-      ${i<_fbBtns.length-1?`<button class="ovb" onclick="event.stopPropagation();fbMoveBtn(${i},+1)" style="font-size:10px;width:20px;height:20px">▼</button>`:''}
+      <button class="ovb ovb-del" data-action="fbDelBtn" data-action-args='[${i}]' style="font-size:11px;width:22px;height:22px">🗑</button>
+      ${i>0?`<button class="ovb" data-action="fbMoveBtn" data-action-args='[${i},-1]' style="font-size:10px;width:20px;height:20px">▲</button>`:''}
+      ${i<_fbBtns.length-1?`<button class="ovb" data-action="fbMoveBtn" data-action-args='[${i},+1]' style="font-size:10px;width:20px;height:20px">▼</button>`:''}
     </div>`;
   }).join('');
 }
@@ -8370,22 +8370,91 @@ connect();
   });
 })();
 
-/* ── Sistema data-action: gestisce onclick rimossi dall'HTML ───────────── */
+/* ── Delegation input/change (ex oninput/onchange nei template) ────────────── */
+(function(){
+  function _inputDelegate(e){
+    const el = e.target;
+    const fn  = el.dataset.input;   if(!fn) return;
+    const arg = el.dataset.inputArgs;
+    const num = el.dataset.inputNum;
+    const val = el.type==='checkbox' ? el.checked : (num ? +el.value : el.value);
+    if(typeof window[fn]==='function'){
+      arg ? window[fn](...JSON.parse(arg), val) : window[fn](val);
+    }
+  }
+  document.addEventListener('input',  _inputDelegate);
+  document.addEventListener('change', _inputDelegate);
+})();
+
+/* ── Wrapper per input/change con this.value nei template ──────────────────── */
+function _appSetItemEntity(i,v){ _appItems[i].entity=v; }
+function _appSetItemName(i,v){ _appItems[i].name=v; }
+function _appSetGroupName(i,v){ _appGroups[i].name=v; }
+function _appSetGroupShowList(i,v){ _appGroups[i].showList=v; }
+function _appSetGroupEntities(i,v){ _appGroups[i].entities=v.split('\n').map(s=>s.trim()).filter(Boolean); }
+function _ntfSetAndSuggest(i,dropId,v){ _ntfSet(i,'entity',v); _ntfEntitySuggest(i,document.getElementById('ntf-ent-inp-'+i),dropId); }
+function _ntfSetIcon(i,v){ _ntfSet(i,'icon',v); const p=document.getElementById('ntf-ico-prev-'+i); if(p) p.innerHTML=_ntfIconHtml(v||'🔔',20); }
+
+/* ── Sistema data-action: gestisce onclick rimossi dall'HTML e dai template ─ */
 document.addEventListener('click', function(e){
   const el = e.target.closest('[data-action]');
   if(!el) return;
-  const fn = el.dataset.action;
+  const fn  = el.dataset.action;
   const fn2 = el.dataset.action2;
-  const arg = el.dataset.actionArg;  // argomento stringa opzionale
+  const arg      = el.dataset.actionArg;   // singolo arg stringa
+  const argsJson = el.dataset.actionArgs;  // array arg JSON (tipi preservati)
   if(typeof window[fn]==='function'){
     e.stopPropagation();
-    window[fn](arg !== undefined ? arg : e);
+    if(argsJson !== undefined){
+      try{
+        const args = JSON.parse(argsJson);
+        // data-action-el="true" → aggiunge (el, event) dopo gli args per i picker
+        el.dataset.actionEl ? window[fn](...args, el, e) : window[fn](...args);
+      }catch(_){}
+    } else if(arg !== undefined){
+      window[fn](arg);
+    } else {
+      window[fn](e);
+    }
   }
   if(fn2 && typeof window[fn2]==='function') window[fn2](e);
 });
 
 /* ── Funzioni helper per handler ex-inline ──────────────────────────────── */
 function _covSkip(){ const c=document.getElementById('cov'); if(c) c.classList.add('off'); }
+
+/* Wrapper per handler multi-statement nei template dinamici */
+function _hbDelOption(i){ _hbOptions.splice(i,1); _hbRenderOptions(); }
+function _appDelItem(i){ _appItems.splice(i,1); renderAppItems(); }
+function _appDelGroup(i){ _appGroups.splice(i,1); renderAppGroups(); }
+function _openGhStoreClean(){ document.getElementById('add-col-menu')?.remove(); openGhStore(); }
+function _pasteCardToClean(secId,col){ document.getElementById('add-col-menu')?.remove(); pasteCardTo(secId,col); }
+function _closeViewsAndOpenTM(){ closeViewsMenu(); openTM(); }
+function _jsStoreAddAndRefresh(id){ jsStoreAddCard(id); setTimeout(_ghStoreRender,50); }
+function _deleteSavedAt(i){ deleteSaved(i, null); }
+function _appChipPopupAt(cardId, gi){ appChipPopup(cardId, gi, null); }
+function _setActivePageAndSync(i){ setActivePage(i); setTimeout(window._navbarSync,30); }
+function _pgWarnClose(){ document.querySelector('.pg-warn-ov')?.remove(); _pgProceedCb=null; }
+function _sendCallSvc(d,s,e){ send({type:'call_service',domain:d,service:s,service_data:e?{entity_id:e}:{}}); }
+/* Wrapper picker con elemento trigger (btn = elemento cliccato passato dal delegation) */
+function _appItemPickIcon(i,btn,ev){ openIconPicker(v=>{_appItems[i].icon=v;renderAppItems();},btn,ev); }
+function _appItemPickColor(effColor,i,btn,ev){ openColorPicker(effColor,c=>{_appItems[i].color=c;renderAppItems();},btn,ev); }
+function _appGroupPickColor(gc,i,btn,ev){ openColorPicker(gc,c=>{_appGroups[i].color=c;renderAppGroups();},btn,ev); }
+function _sosPickIcon(i,btn,ev){ openIconPicker(v=>{sosUpdateContact(i,'icon',v);renderSOSCfgList();},btn,ev); }
+function _sosPickService(i){ _epPickerOpen(v=>{sosUpdateContact(i,'notifyService',v);const el=document.getElementById('sos-svc-inp-'+i);if(el)el.value=v;},'notify','Seleziona servizio notify'); }
+function _fePickIconBtn(btn,ev){ openIconPicker(v=>{feUp('icon',v);const el=document.getElementById('fe-ico-btn-inp');if(el)el.value=v;},btn,ev); }
+function _fePickIconEl(btn,ev){ openIconPicker(v=>{feUp('icon',v);const el=document.getElementById('fe-ico-el-inp');if(el)el.value=v;},btn,ev); }
+function _ntfPickEntityFor(i){ _epPickerOpen(v=>{_ntfSet(i,'entity',v);const el=document.getElementById('ntf-ent-inp-'+i);if(el)el.value=v;}); }
+function _ntfPickIcon(i,btn,ev){ openIconPicker(v=>{_ntfSet(i,'icon',v);const inp=document.getElementById('ntf-ico-inp-'+i);if(inp)inp.value=v;const p=document.getElementById('ntf-ico-prev-'+i);if(p)p.innerHTML=_ntfIconHtml(v,20);},btn,ev); }
+function _ntfPickDuration(i){ _epPickerOpen(v=>{_ntfSet(i,'durationEntity',v);const el=document.getElementById('ntf-dur-inp-'+i);if(el)el.value=v;}); }
+function _ntfPickCam(i){ _epPickerOpen(v=>{_ntfSet(i,'camEntity',v);const el=document.getElementById('ntf-cam-inp-'+i);if(el)el.value=v;},'camera','Seleziona camera'); }
+function _ntfPickAlexa(i){ _epPickerOpen(v=>{_ntfSet(i,'alexaEntity',v);const el=document.getElementById('ntf-ax-inp-'+i);if(el)el.value=v;},'notify','Seleziona servizio Alexa/notify'); }
+function _hbDelColorMapEntry(key){ delete _hbColorMap[key]; _hbRenderColorMap(); }
+function _hbDelIconMapEntry(key){ delete _hbIconMap[key]; _hbRenderIconMap(); }
+/* eitClick da elemento: legge i dati dai data-* attribute */
+function _eitClickFromEl(e){ const el=e.target.closest('[data-eid]'); if(!el) return; eitClick(el.dataset.eid,el.dataset.efn,el.dataset.eunit,el.dataset.edom); }
+/* ghsPreview da elemento: legge enc/nm/cid dai data-* */
+function _ghsPreviewEl(e){ const el=e.target.closest('[data-penc]'); if(!el) return; _ghsPreview(el.dataset.penc,el.dataset.pnm,el.dataset.pcid||null); }
 function _feEpClose(){ const el=document.getElementById('fe-ep'); if(el) el.style.display='none'; }
 function _ntfSaveRules(){ saveCfg(); showToast('✅ Regole salvate'); }
 function _jsDropzoneClick(){ document.getElementById('jsst-file-inp')?.click(); }
@@ -8570,7 +8639,7 @@ function openSOS(){
         ? `<img class="sos-person-pic" src="${BASE}${p.picture}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`+
           `<div class="sos-person-ico" style="display:none">👤</div>`
         : `<div class="sos-person-ico">👤</div>`;
-      return `<div class="sos-person-card" onclick="_sosPickPerson(${idx})">
+      return `<div class="sos-person-card" data-action="_sosPickPerson" data-action-args='[${idx}]'>
         ${picHTML}
         <div class="sos-person-name">${eh(p.name)}</div>
         <div class="sos-person-state">${stateLabel}</div>
@@ -8621,9 +8690,9 @@ function openSOS2(){
     list.innerHTML=visible.map(({c,i})=>{
       const hasService=!!c.notifyService;
       const callBtn=hasService
-        ? `<button class="sos-act-btn sos-act-call" onclick="sosCall(${i})">📞 Chiama</button>` : '';
+        ? `<button class="sos-act-btn sos-act-call" data-action="sosCall" data-action-args='[${i}]'>📞 Chiama</button>` : '';
       const msgBtn=hasService
-        ? `<button class="sos-act-btn sos-act-notify" onclick="sosNotify(${i})">💬 Messaggio</button>` : '';
+        ? `<button class="sos-act-btn sos-act-notify" data-action="sosNotify" data-action-args='[${i}]'>💬 Messaggio</button>` : '';
       const noSvc=!hasService
         ? `<span style="font-size:10px;color:rgba(255,255,255,.3)">Nessun servizio configurato</span>` : '';
       return `<div class="sos-contact-row">
@@ -8746,7 +8815,7 @@ function renderSOSCfgList(){
     const name=inf?inf.name:eid;
     return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
       <span style="font-size:11px;flex:1;color:var(--fg)">👤 ${eh(name)}</span>
-      <button class="sos-cfg-del" onclick="sosRemovePerson(${i})" title="Rimuovi">✕</button>
+      <button class="sos-cfg-del" data-action="sosRemovePerson" data-action-args='[${i}]' title="Rimuovi">✕</button>
     </div>`;
   }).join('');
 
@@ -8757,7 +8826,7 @@ function renderSOSCfgList(){
       <select id="sos-person-sel" class="sos-cfg-inp" style="flex:1">
         <option value="">— Seleziona persona —</option>${availOpts}
       </select>
-      <button class="sos-cfg-add" style="padding:4px 10px;margin:0" onclick="sosAddPerson()">➕</button>
+      <button class="sos-cfg-add" style="padding:4px 10px;margin:0" data-action="sosAddPerson">➕</button>
     </div>`:'<div style="font-size:10px;color:var(--dim);margin-top:4px">Tutte le persone HA sono già incluse</div>'}
     <div style="height:12px;border-bottom:1px solid rgba(255,255,255,.06);margin:10px 0 10px"></div>
     <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Contatti di emergenza</div>`;
@@ -8768,21 +8837,21 @@ function renderSOSCfgList(){
       <div class="sos-cfg-contact">
         <div style="display:flex;gap:3px;align-items:center">
           <input class="sos-cfg-ico-inp" type="text" value="${eh(c.icon||'👤')}" placeholder="👤"
-            oninput="sosUpdateContact(${i},'icon',this.value)">
+            data-input="sosUpdateContact" data-input-args='[${i},"icon"]'>
           <button class="ntf-pick-btn" style="width:26px;height:26px;border-radius:6px;font-size:12px" title="Scegli icona"
-            onclick="openIconPicker(v=>{sosUpdateContact(${i},'icon',v);renderSOSCfgList();},this,event)">🎨</button>
+            data-action="_sosPickIcon" data-action-args='[${i}]' data-action-el="true">🎨</button>
         </div>
         <div class="sos-cfg-fields">
           <input class="sos-cfg-inp" type="text" value="${eh(c.name||'')}" placeholder="Nome contatto"
-            oninput="sosUpdateContact(${i},'name',this.value)">
+            data-input="sosUpdateContact" data-input-args='[${i},"name"]'>
           <div style="display:flex;gap:5px;align-items:center">
             <input id="sos-svc-inp-${i}" class="sos-cfg-inp" type="text" value="${eh(c.notifyService||'')}" placeholder="Servizio HA (es. mobile_app_pixel_7)"
-              oninput="sosUpdateContact(${i},'notifyService',this.value)" style="flex:1">
+              data-input="sosUpdateContact" data-input-args='[${i},"notifyService"]' style="flex:1">
             <button class="ntf-pick-btn" style="width:28px;height:28px;border-radius:7px;font-size:13px" title="Sfoglia servizi notify"
-              onclick="_epPickerOpen(v=>{sosUpdateContact(${i},'notifyService',v);const el=document.getElementById('sos-svc-inp-${i}');if(el)el.value=v;},'notify','Seleziona servizio notify')">🔍</button>
+              data-action="_sosPickService" data-action-args='[${i}]'>🔍</button>
           </div>
         </div>
-        <button class="sos-cfg-del" onclick="sosDeleteContact(${i})" title="Elimina">🗑</button>
+        <button class="sos-cfg-del" data-action="sosDeleteContact" data-action-args='[${i}]' title="Elimina">🗑</button>
       </div>`).join('')
     : '<div style="font-size:10px;color:var(--dim);text-align:center;padding:6px 0">Nessun contatto</div>';
 
@@ -8889,7 +8958,7 @@ function _feElHTML(el,idx){
   const s=`left:${el.x}px;top:${el.y}px;width:${el.w}px;height:${el.h}px`;
   return `<div id="fe-el-${idx}" class="fe-canvas-el${sel?' fe-sel':''}" style="${s}">
     ${_feElContent(el)}
-    <button class="fe-el-del" onclick="feDelEl(${idx});event.stopPropagation()">✕</button>
+    <button class="fe-el-del" data-action="feDelEl" data-action-args='[${idx}]'>✕</button>
     <div class="fe-el-resize"></div>
   </div>`;
 }
@@ -8938,22 +9007,22 @@ function _feRenderProps(){
   // Posizione e dimensioni
   h+=`<div class="fe-sec-lbl">Posizione e dimensioni</div>
   <div class="fe-prop-2">
-    <div><div class="fe-prop-lbl">X</div><input class="fe-prop-inp" type="number" value="${el.x}" oninput="feUp('x',+this.value)"></div>
-    <div><div class="fe-prop-lbl">Y</div><input class="fe-prop-inp" type="number" value="${el.y}" oninput="feUp('y',+this.value)"></div>
+    <div><div class="fe-prop-lbl">X</div><input class="fe-prop-inp" type="number" value="${el.x}" data-input="feUp" data-input-args='["x"]' data-input-num="true"></div>
+    <div><div class="fe-prop-lbl">Y</div><input class="fe-prop-inp" type="number" value="${el.y}" data-input="feUp" data-input-args='["y"]' data-input-num="true"></div>
   </div>
   <div class="fe-prop-2">
-    <div><div class="fe-prop-lbl">Larghezza</div><input class="fe-prop-inp" type="number" value="${el.w}" oninput="feUp('w',+this.value)"></div>
-    <div><div class="fe-prop-lbl">Altezza</div><input class="fe-prop-inp" type="number" value="${el.h}" oninput="feUp('h',+this.value)"></div>
+    <div><div class="fe-prop-lbl">Larghezza</div><input class="fe-prop-inp" type="number" value="${el.w}" data-input="feUp" data-input-args='["w"]' data-input-num="true"></div>
+    <div><div class="fe-prop-lbl">Altezza</div><input class="fe-prop-inp" type="number" value="${el.h}" data-input="feUp" data-input-args='["h"]' data-input-num="true"></div>
   </div>`;
 
   // Proprietà specifiche per tipo
   switch(el.type){
     case 'text':
       h+=`<div class="fe-sec-lbl">Testo</div>
-      <div class="fe-prop-row"><div class="fe-prop-lbl">Contenuto</div><textarea class="fe-prop-inp" rows="3" oninput="feUp('text',this.value)">${eh(el.text||'')}</textarea></div>
+      <div class="fe-prop-row"><div class="fe-prop-lbl">Contenuto</div><textarea class="fe-prop-inp" rows="3" data-input="feUp" data-input-args='["text"]'>${eh(el.text||'')}</textarea></div>
       <div class="fe-prop-2">
-        <div><div class="fe-prop-lbl">Dimensione</div><input class="fe-prop-inp" type="number" value="${el.fontSize||16}" oninput="feUp('fontSize',+this.value)"></div>
-        <div><div class="fe-prop-lbl">Peso</div><select class="fe-prop-inp" onchange="feUp('fontWeight',this.value)">
+        <div><div class="fe-prop-lbl">Dimensione</div><input class="fe-prop-inp" type="number" value="${el.fontSize||16}" data-input="feUp" data-input-args='["fontSize"]' data-input-num="true"></div>
+        <div><div class="fe-prop-lbl">Peso</div><select class="fe-prop-inp" data-input="feUp" data-input-args='["fontWeight"]'>
           <option value="400"${el.fontWeight==='400'?' selected':''}>Normale</option>
           <option value="600"${(el.fontWeight||'600')==='600'?' selected':''}>Semibold</option>
           <option value="700"${el.fontWeight==='700'?' selected':''}>Bold</option>
@@ -8961,8 +9030,8 @@ function _feRenderProps(){
         </select></div>
       </div>
       <div class="fe-prop-2">
-        <div><div class="fe-prop-lbl">Colore</div><input class="fe-prop-inp" type="color" value="${el.color||'#e2e8f0'}" oninput="feUp('color',this.value)" style="height:32px;padding:2px"></div>
-        <div><div class="fe-prop-lbl">Allineamento</div><select class="fe-prop-inp" onchange="feUp('textAlign',this.value)">
+        <div><div class="fe-prop-lbl">Colore</div><input class="fe-prop-inp" type="color" value="${el.color||'#e2e8f0'}" data-input="feUp" data-input-args='["color"]' style="height:32px;padding:2px"></div>
+        <div><div class="fe-prop-lbl">Allineamento</div><select class="fe-prop-inp" data-input="feUp" data-input-args='["textAlign"]'>
           <option value="left"${!el.textAlign||el.textAlign==='left'?' selected':''}>Sin</option>
           <option value="center"${el.textAlign==='center'?' selected':''}>Centro</option>
           <option value="right"${el.textAlign==='right'?' selected':''}>Des</option>
@@ -8971,65 +9040,65 @@ function _feRenderProps(){
       break;
     case 'sensor':
       h+=`<div class="fe-sec-lbl">Sensore</div>
-      <div class="fe-prop-row"><div class="fe-prop-lbl">Entità (entity_id)</div><input class="fe-prop-inp" type="text" value="${eh(el.entity||'')}" placeholder="sensor.temperatura" oninput="feUp('entity',this.value)"></div>
+      <div class="fe-prop-row"><div class="fe-prop-lbl">Entità (entity_id)</div><input class="fe-prop-inp" type="text" value="${eh(el.entity||'')}" placeholder="sensor.temperatura" data-input="feUp" data-input-args='["entity"]'></div>
       <div class="fe-prop-2">
-        <div><div class="fe-prop-lbl">Font valore</div><input class="fe-prop-inp" type="number" value="${el.valueFontSize||24}" oninput="feUp('valueFontSize',+this.value)"></div>
-        <div><div class="fe-prop-lbl">Font etichetta</div><input class="fe-prop-inp" type="number" value="${el.labelFontSize||11}" oninput="feUp('labelFontSize',+this.value)"></div>
+        <div><div class="fe-prop-lbl">Font valore</div><input class="fe-prop-inp" type="number" value="${el.valueFontSize||24}" data-input="feUp" data-input-args='["valueFontSize"]' data-input-num="true"></div>
+        <div><div class="fe-prop-lbl">Font etichetta</div><input class="fe-prop-inp" type="number" value="${el.labelFontSize||11}" data-input="feUp" data-input-args='["labelFontSize"]' data-input-num="true"></div>
       </div>
       <div class="fe-prop-2">
-        <div><div class="fe-prop-lbl">Colore valore</div><input class="fe-prop-inp" type="color" value="${el.valueColor||'#f1f5f9'}" oninput="feUp('valueColor',this.value)" style="height:32px;padding:2px"></div>
-        <div><div class="fe-prop-lbl">Colore etichetta</div><input class="fe-prop-inp" type="color" value="${el.labelColor||'#94a3b8'}" oninput="feUp('labelColor',this.value)" style="height:32px;padding:2px"></div>
+        <div><div class="fe-prop-lbl">Colore valore</div><input class="fe-prop-inp" type="color" value="${el.valueColor||'#f1f5f9'}" data-input="feUp" data-input-args='["valueColor"]' style="height:32px;padding:2px"></div>
+        <div><div class="fe-prop-lbl">Colore etichetta</div><input class="fe-prop-inp" type="color" value="${el.labelColor||'#94a3b8'}" data-input="feUp" data-input-args='["labelColor"]' style="height:32px;padding:2px"></div>
       </div>
-      <label class="fe-prop-check"><input type="checkbox" ${el.showName!==false?'checked':''} onchange="feUp('showName',this.checked)"> Mostra nome entità</label>
-      <label class="fe-prop-check"><input type="checkbox" ${el.showUnit!==false?'checked':''} onchange="feUp('showUnit',this.checked)"> Mostra unità di misura</label>`;
+      <label class="fe-prop-check"><input type="checkbox" ${el.showName!==false?'checked':''} data-input="feUp" data-input-args='["showName"]'> Mostra nome entità</label>
+      <label class="fe-prop-check"><input type="checkbox" ${el.showUnit!==false?'checked':''} data-input="feUp" data-input-args='["showUnit"]'> Mostra unità di misura</label>`;
       break;
     case 'button':
       h+=`<div class="fe-sec-lbl">Bottone</div>
-      <div class="fe-prop-row"><div class="fe-prop-lbl">Etichetta</div><input class="fe-prop-inp" type="text" value="${eh(el.label||'')}" placeholder="Bottone" oninput="feUp('label',this.value)"></div>
+      <div class="fe-prop-row"><div class="fe-prop-lbl">Etichetta</div><input class="fe-prop-inp" type="text" value="${eh(el.label||'')}" placeholder="Bottone" data-input="feUp" data-input-args='["label"]'></div>
       <div class="fe-prop-2">
-        <div><div class="fe-prop-lbl">Icona</div><div style="display:flex;gap:4px"><input class="fe-prop-inp" id="fe-ico-btn-inp" type="text" value="${eh(el.icon||'')}" placeholder="💡 o mdi:home" oninput="feUp('icon',this.value)"><button class="ntf-pick-btn" style="width:28px;height:28px;border-radius:7px;flex-shrink:0;font-size:12px" onclick="openIconPicker(v=>{feUp('icon',v);const el=document.getElementById('fe-ico-btn-inp');if(el)el.value=v;},this,event)">🎨</button></div></div>
-        <div><div class="fe-prop-lbl">Font (px)</div><input class="fe-prop-inp" type="number" value="${el.fontSize||13}" oninput="feUp('fontSize',+this.value)"></div>
+        <div><div class="fe-prop-lbl">Icona</div><div style="display:flex;gap:4px"><input class="fe-prop-inp" id="fe-ico-btn-inp" type="text" value="${eh(el.icon||'')}" placeholder="💡 o mdi:home" data-input="feUp" data-input-args='["icon"]'><button class="ntf-pick-btn" style="width:28px;height:28px;border-radius:7px;flex-shrink:0;font-size:12px" data-action="_fePickIconBtn" data-action-el="true">🎨</button></div></div>
+        <div><div class="fe-prop-lbl">Font (px)</div><input class="fe-prop-inp" type="number" value="${el.fontSize||13}" data-input="feUp" data-input-args='["fontSize"]' data-input-num="true"></div>
       </div>
-      <div class="fe-prop-row"><div class="fe-prop-lbl">Azione al clic</div><select class="fe-prop-inp" onchange="feUp('action',this.value)">
+      <div class="fe-prop-row"><div class="fe-prop-lbl">Azione al clic</div><select class="fe-prop-inp" data-input="feUp" data-input-args='["action"]'>
         <option value="toggle"${!el.action||el.action==='toggle'?' selected':''}>Toggle entità</option>
         <option value="service"${el.action==='service'?' selected':''}>Chiama servizio HA</option>
         <option value="popup"${el.action==='popup'?' selected':''}>Apri popup info</option>
         <option value="navigate"${el.action==='navigate'?' selected':''}>Naviga URL</option>
       </select></div>
-      <div class="fe-prop-row"><div class="fe-prop-lbl">Entità / Servizio / URL</div><input class="fe-prop-inp" type="text" value="${eh(el.entity||el.url||el.service||'')}" placeholder="light.soggiorno" oninput="feUp('entity',this.value)"></div>
+      <div class="fe-prop-row"><div class="fe-prop-lbl">Entità / Servizio / URL</div><input class="fe-prop-inp" type="text" value="${eh(el.entity||el.url||el.service||'')}" placeholder="light.soggiorno" data-input="feUp" data-input-args='["entity"]'></div>
       <div class="fe-sec-lbl">Stile</div>
       <div class="fe-prop-2">
-        <div><div class="fe-prop-lbl">Colore testo</div><input class="fe-prop-inp" type="color" value="${el.color||'#a5b4fc'}" oninput="feUp('color',this.value)" style="height:32px;padding:2px"></div>
-        <div><div class="fe-prop-lbl">Bordo-raggio</div><input class="fe-prop-inp" type="text" value="${eh(el.borderRadius||'10px')}" oninput="feUp('borderRadius',this.value)"></div>
+        <div><div class="fe-prop-lbl">Colore testo</div><input class="fe-prop-inp" type="color" value="${el.color||'#a5b4fc'}" data-input="feUp" data-input-args='["color"]' style="height:32px;padding:2px"></div>
+        <div><div class="fe-prop-lbl">Bordo-raggio</div><input class="fe-prop-inp" type="text" value="${eh(el.borderRadius||'10px')}" data-input="feUp" data-input-args='["borderRadius"]'></div>
       </div>
-      <div class="fe-prop-row"><div class="fe-prop-lbl">Sfondo</div><input class="fe-prop-inp" type="text" value="${eh(el.bg||'rgba(99,102,241,0.2)')}" placeholder="rgba(…)" oninput="feUp('bg',this.value)"></div>
-      <div class="fe-prop-row"><div class="fe-prop-lbl">Bordo CSS</div><input class="fe-prop-inp" type="text" value="${eh(el.border||'1px solid rgba(99,102,241,0.4)')}" placeholder="1px solid …" oninput="feUp('border',this.value)"></div>`;
+      <div class="fe-prop-row"><div class="fe-prop-lbl">Sfondo</div><input class="fe-prop-inp" type="text" value="${eh(el.bg||'rgba(99,102,241,0.2)')}" placeholder="rgba(…)" data-input="feUp" data-input-args='["bg"]'></div>
+      <div class="fe-prop-row"><div class="fe-prop-lbl">Bordo CSS</div><input class="fe-prop-inp" type="text" value="${eh(el.border||'1px solid rgba(99,102,241,0.4)')}" placeholder="1px solid …" data-input="feUp" data-input-args='["border"]'></div>`;
       break;
     case 'icon':
       h+=`<div class="fe-sec-lbl">Icona</div>
-      <div class="fe-prop-row"><div class="fe-prop-lbl">Icona</div><div style="display:flex;gap:4px;align-items:center"><input class="fe-prop-inp" id="fe-ico-el-inp" type="text" value="${eh(el.icon||'🏠')}" oninput="feUp('icon',this.value)" placeholder="🏠 o mdi:home"><button class="ntf-pick-btn" style="width:28px;height:28px;border-radius:7px;flex-shrink:0;font-size:12px" onclick="openIconPicker(v=>{feUp('icon',v);const el=document.getElementById('fe-ico-el-inp');if(el)el.value=v;},this,event)">🎨</button></div></div>
+      <div class="fe-prop-row"><div class="fe-prop-lbl">Icona</div><div style="display:flex;gap:4px;align-items:center"><input class="fe-prop-inp" id="fe-ico-el-inp" type="text" value="${eh(el.icon||'🏠')}" data-input="feUp" data-input-args='["icon"]' placeholder="🏠 o mdi:home"><button class="ntf-pick-btn" style="width:28px;height:28px;border-radius:7px;flex-shrink:0;font-size:12px" data-action="_fePickIconEl" data-action-el="true">🎨</button></div></div>
       <div class="fe-prop-2">
-        <div><div class="fe-prop-lbl">Dimensione (px)</div><input class="fe-prop-inp" type="number" value="${el.size||32}" oninput="feUp('size',+this.value)"></div>
-        <div><div class="fe-prop-lbl">Colore</div><input class="fe-prop-inp" type="color" value="${el.color||'#818cf8'}" oninput="feUp('color',this.value)" style="height:32px;padding:2px"></div>
+        <div><div class="fe-prop-lbl">Dimensione (px)</div><input class="fe-prop-inp" type="number" value="${el.size||32}" data-input="feUp" data-input-args='["size"]' data-input-num="true"></div>
+        <div><div class="fe-prop-lbl">Colore</div><input class="fe-prop-inp" type="color" value="${el.color||'#818cf8'}" data-input="feUp" data-input-args='["color"]' style="height:32px;padding:2px"></div>
       </div>`;
       break;
     case 'shape':
       h+=`<div class="fe-sec-lbl">Forma</div>
-      <div class="fe-prop-row"><div class="fe-prop-lbl">Sfondo</div><input class="fe-prop-inp" type="text" value="${eh(el.bg||'rgba(255,255,255,0.1)')}" placeholder="rgba(…) o #hex" oninput="feUp('bg',this.value)"></div>
-      <div class="fe-prop-row"><div class="fe-prop-lbl">Bordo CSS</div><input class="fe-prop-inp" type="text" value="${eh(el.border||'none')}" placeholder="1px solid #fff" oninput="feUp('border',this.value)"></div>
+      <div class="fe-prop-row"><div class="fe-prop-lbl">Sfondo</div><input class="fe-prop-inp" type="text" value="${eh(el.bg||'rgba(255,255,255,0.1)')}" placeholder="rgba(…) o #hex" data-input="feUp" data-input-args='["bg"]'></div>
+      <div class="fe-prop-row"><div class="fe-prop-lbl">Bordo CSS</div><input class="fe-prop-inp" type="text" value="${eh(el.border||'none')}" placeholder="1px solid #fff" data-input="feUp" data-input-args='["border"]'></div>
       <div class="fe-prop-2">
-        <div><div class="fe-prop-lbl">Bordo-raggio</div><input class="fe-prop-inp" type="text" value="${eh(el.borderRadius||'0')}" oninput="feUp('borderRadius',this.value)"></div>
-        <div><div class="fe-prop-lbl">Opacità</div><input class="fe-prop-inp" type="number" min="0" max="1" step=".05" value="${el.opacity||1}" oninput="feUp('opacity',+this.value)"></div>
+        <div><div class="fe-prop-lbl">Bordo-raggio</div><input class="fe-prop-inp" type="text" value="${eh(el.borderRadius||'0')}" data-input="feUp" data-input-args='["borderRadius"]'></div>
+        <div><div class="fe-prop-lbl">Opacità</div><input class="fe-prop-inp" type="number" min="0" max="1" step=".05" value="${el.opacity||1}" data-input="feUp" data-input-args='["opacity"]' data-input-num="true"></div>
       </div>`;
       break;
     case 'image':
       h+=`<div class="fe-sec-lbl">Immagine</div>
-      <div class="fe-prop-row"><div class="fe-prop-lbl">URL (es. /local/img.png)</div><input class="fe-prop-inp" type="text" value="${eh(el.src||'')}" placeholder="/local/immagine.png" oninput="feUp('src',this.value)"></div>
+      <div class="fe-prop-row"><div class="fe-prop-lbl">URL (es. /local/img.png)</div><input class="fe-prop-inp" type="text" value="${eh(el.src||'')}" placeholder="/local/immagine.png" data-input="feUp" data-input-args='["src"]'></div>
       <div class="fe-prop-2">
-        <div><div class="fe-prop-lbl">Bordo-raggio</div><input class="fe-prop-inp" type="text" value="${eh(el.borderRadius||'0')}" oninput="feUp('borderRadius',this.value)"></div>
-        <div><div class="fe-prop-lbl">Opacità</div><input class="fe-prop-inp" type="number" min="0" max="1" step=".05" value="${el.opacity||1}" oninput="feUp('opacity',+this.value)"></div>
+        <div><div class="fe-prop-lbl">Bordo-raggio</div><input class="fe-prop-inp" type="text" value="${eh(el.borderRadius||'0')}" data-input="feUp" data-input-args='["borderRadius"]'></div>
+        <div><div class="fe-prop-lbl">Opacità</div><input class="fe-prop-inp" type="number" min="0" max="1" step=".05" value="${el.opacity||1}" data-input="feUp" data-input-args='["opacity"]' data-input-num="true"></div>
       </div>
-      <div class="fe-prop-row"><div class="fe-prop-lbl">Adattamento</div><select class="fe-prop-inp" onchange="feUp('objectFit',this.value)">
+      <div class="fe-prop-row"><div class="fe-prop-lbl">Adattamento</div><select class="fe-prop-inp" data-input="feUp" data-input-args='["objectFit"]'>
         <option value="cover"${!el.objectFit||el.objectFit==='cover'?' selected':''}>Cover (riempi)</option>
         <option value="contain"${el.objectFit==='contain'?' selected':''}>Contain (adatta)</option>
         <option value="fill"${el.objectFit==='fill'?' selected':''}>Fill (stira)</option>
@@ -9037,7 +9106,7 @@ function _feRenderProps(){
       break;
   }
 
-  h+=`<div style="margin-top:14px"><button onclick="feDelEl(${_feSelIdx})" style="width:100%;padding:7px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:#f87171;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">🗑 Elimina elemento</button></div>`;
+  h+=`<div style="margin-top:14px"><button data-action="feDelEl" data-action-args='[${_feSelIdx}]' style="width:100%;padding:7px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:#f87171;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">🗑 Elimina elemento</button></div>`;
   body.innerHTML=h;
 }
 
@@ -9127,7 +9196,7 @@ function _feEpSearch(q){
     const domain=eid.split('.')[0];
     const domainColors={sensor:'#60a5fa',binary_sensor:'#34d399',light:'#fbbf24',switch:'#a78bfa',climate:'#fb923c',media_player:'#f472b6',person:'#4ade80',weather:'#22d3ee',cover:'#94a3b8',automation:'#c084fc',script:'#f87171'};
     const col=domainColors[domain]||'#818cf8';
-    return `<div onclick="feAddEntity('${eid}')" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;cursor:pointer;transition:background .12s" onmouseover="this.style.background='rgba(99,102,241,.12)'" onmouseout="this.style.background=''">
+    return `<div data-action="feAddEntity" data-action-arg="${eid}" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;cursor:pointer;transition:background .12s" onmouseover="this.style.background='rgba(99,102,241,.12)'" onmouseout="this.style.background=''">
       <div style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0"></div>
       <div style="flex:1;min-width:0">
         <div style="font-size:12px;font-weight:600;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(name)}</div>
@@ -9204,7 +9273,7 @@ function _freeCanvasViewInner(card){
   return `<div style="position:relative;${frame}overflow:hidden">` +
     els.map((el,idx)=>{
       const style=`position:absolute;left:${el.x}px;top:${el.y}px;width:${el.w}px;height:${el.h}px;box-sizing:border-box;overflow:hidden`;
-      const onclick=el.type==='button'?` onclick="_feClick('${card.id}',${idx})"` : '';
+      const onclick=el.type==='button'?` data-action="_feClick" data-action-args='["${card.id}",${idx}]'` : '';
       return `<div style="${style}" class="free-el-v"${onclick}>${_feElContent(el)}</div>`;
     }).join('') + '</div>';
 }
@@ -9426,12 +9495,12 @@ function _ntfRender(rule, ctx, update=false){
   // Extra action buttons + snooze
   let extraBtns='';
   for(const act of (rule.actions||[])){
-    extraBtns+=`<button class="ntf-act-btn ntf-act-row ${act.primary?'ntf-act-primary':''}" onclick="_ntfDoAction('${act.domain||''}','${act.service||''}','${act.entity||''}')">${act.label||'Azione'}</button>`;
+    extraBtns+=`<button class="ntf-act-btn ntf-act-row ${act.primary?'ntf-act-primary':''}" data-action="_ntfDoAction" data-action-args='["${act.domain||''}","${act.service||''}","${act.entity||''}"]'>${act.label||'Azione'}</button>`;
   }
   const rowBtns=extraBtns?`<div class="ntf-act-row">${extraBtns}</div>`:'';
 
   wrap.innerHTML=`<div class="ntf-popup${update?' ntf-update':''}" id="ntf-pop" style="--nc:${color}">
-    <button class="ntf-close" onclick="_ntfDismiss()" title="Chiudi">✕</button>
+    <button class="ntf-close" data-action="_ntfDismiss" title="Chiudi">✕</button>
     ${showQueue?`<div class="ntf-queue-badge">+${_ntfQueue.length} in coda</div>`:''}
     ${animZoneHtml}
     <div class="ntf-body">
@@ -9444,7 +9513,7 @@ function _ntfRender(rule, ctx, update=false){
     </div>
     <div class="ntf-footer">
       ${rowBtns}
-      <button class="ntf-act-btn ntf-act-primary" onclick="_ntfDismiss()">${dismissLabel}</button>
+      <button class="ntf-act-btn ntf-act-primary" data-action="_ntfDismiss">${dismissLabel}</button>
     </div>
   </div>`;
 
@@ -9611,7 +9680,7 @@ function _epPickerSearch(q){
     for(const eid of eids){
       const name=ha[eid]?.friendly_name||eid.split('.').slice(1).join('.').replace(/_/g,' ');
       const state=hs[eid]??'';
-      html+=`<div class="ep-picker-item" tabindex="0" onclick="_epPickerSelect('${eid}')">
+      html+=`<div class="ep-picker-item" tabindex="0" data-action="_epPickerSelect" data-action-arg="${eid}">
         <div class="ep-picker-ico">${ico}</div>
         <div class="ep-picker-info">
           <div class="ep-picker-name">${name}</div>
@@ -9809,14 +9878,14 @@ function renderNotifRules(){
     const stateNow=r.entity?` · ${hs[r.entity]??'?'}`:'';
     const dropId=`ntf-drop-${i}`;
     return `<div class="ntf-rule-card${r._expanded?' expanded':''}" id="ntf-card-${i}">
-      <div class="ntf-rule-card-hdr" onclick="_ntfToggleCard(${i})">
+      <div class="ntf-rule-card-hdr" data-action="_ntfToggleCard" data-action-args='[${i}]'>
         <div style="font-size:22px;line-height:1;width:28px;text-align:center">${_ntfIconHtml(r.icon||'🔔',22)}</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:700;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name||'Regola '+(i+1)}</div>
           <div style="font-size:10px;color:var(--muted);margin-top:1px">${friendly}${stateNow}</div>
         </div>
-        <button class="ntf-rule-toggle${r.enabled?' on':''}" onclick="event.stopPropagation();_ntfToggle(${i})"></button>
-        <button onclick="event.stopPropagation();_ntfDelRule(${i})" style="background:none;border:none;color:rgba(248,113,113,.4);cursor:pointer;font-size:16px;padding:2px 6px">🗑</button>
+        <button class="ntf-rule-toggle${r.enabled?' on':''}" data-action="_ntfToggle" data-action-args='[${i}]'></button>
+        <button data-action="_ntfDelRule" data-action-args='[${i}]' style="background:none;border:none;color:rgba(248,113,113,.4);cursor:pointer;font-size:16px;padding:2px 6px">🗑</button>
         <div style="color:var(--muted);font-size:14px;transition:transform .2s;${r._expanded?'transform:rotate(180deg)':''}">▾</div>
       </div>
       <div class="ntf-rule-card-body">
@@ -9826,61 +9895,61 @@ function renderNotifRules(){
           <div class="ntf-field-lbl">Entità</div>
           <div class="ntf-ent-wrap" style="flex:1">
             <input id="ntf-ent-inp-${i}" class="ntf-field-inp" value="${r.entity||''}" placeholder="Cerca o usa 🔍 per sfogliare…"
-              oninput="_ntfSet(${i},'entity',this.value);_ntfEntitySuggest(${i},this,'${dropId}')"
+              data-input="_ntfSetAndSuggest" data-input-args='[${i},"${dropId}"]'
               onfocus="_ntfEntitySuggest(${i},this,'${dropId}')" onblur="setTimeout(()=>{ const d=document.getElementById('${dropId}'); if(d) d.classList.remove('show'); },200)">
             <div class="ntf-ent-drop" id="${dropId}"></div>
           </div>
           <button class="ntf-pick-btn" title="Sfoglia tutte le entità"
-            onclick="_epPickerOpen(v=>{_ntfSet(${i},'entity',v);const el=document.getElementById('ntf-ent-inp-${i}');if(el)el.value=v;})">🔍</button>
+            data-action="_ntfPickEntityFor" data-action-args='[${i}]'>🔍</button>
         </div>
         <div class="ntf-field-row">
           <div class="ntf-field-lbl">Condizione</div>
-          <select class="ntf-field-inp" onchange="_ntfSet(${i},'trigger',this.value)">${trigOpts}</select>
+          <select class="ntf-field-inp" data-input="_ntfSet" data-input-args='[${i},"trigger"]'>${trigOpts}</select>
         </div>
         ${(r.trigger==='above'||r.trigger==='below')?`<div class="ntf-field-row">
           <div class="ntf-field-lbl">Soglia</div>
-          <input class="ntf-field-inp" type="number" value="${r.threshold||0}" oninput="_ntfSet(${i},'threshold',this.value)">
+          <input class="ntf-field-inp" type="number" value="${r.threshold||0}" data-input="_ntfSet" data-input-args='[${i},"threshold"]'>
         </div>`:''}
         ${r.trigger==='specific_value'?`<div class="ntf-field-row">
           <div class="ntf-field-lbl">Valore</div>
-          <input class="ntf-field-inp" value="${r.triggerValue||''}" placeholder="es. unavailable" oninput="_ntfSet(${i},'triggerValue',this.value)">
+          <input class="ntf-field-inp" value="${r.triggerValue||''}" placeholder="es. unavailable" data-input="_ntfSet" data-input-args='[${i},"triggerValue"]'>
         </div>`:''}
 
         <div class="ntf-section-sep">💬 Contenuto popup</div>
         <div class="ntf-field-row">
           <div class="ntf-field-lbl">Nome regola</div>
-          <input class="ntf-field-inp" value="${r.name||''}" placeholder="Es. Lavatrice finita" oninput="_ntfSet(${i},'name',this.value)">
+          <input class="ntf-field-inp" value="${r.name||''}" placeholder="Es. Lavatrice finita" data-input="_ntfSet" data-input-args='[${i},"name"]'>
         </div>
         <div class="ntf-field-row">
           <div class="ntf-field-lbl">Titolo popup</div>
-          <input class="ntf-field-inp" value="${r.title||''}" placeholder="{entity} — usa {entity},{state}" oninput="_ntfSet(${i},'title',this.value)">
+          <input class="ntf-field-inp" value="${r.title||''}" placeholder="{entity} — usa {entity},{state}" data-input="_ntfSet" data-input-args='[${i},"title"]'>
         </div>
         <div class="ntf-field-row">
           <div class="ntf-field-lbl">Messaggio</div>
-          <input class="ntf-field-inp" value="${r.message||''}" placeholder="Usa {state},{entity},{time},{sensor},{duration},{count}" oninput="_ntfSet(${i},'message',this.value)">
+          <input class="ntf-field-inp" value="${r.message||''}" placeholder="Usa {state},{entity},{time},{sensor},{duration},{count}" data-input="_ntfSet" data-input-args='[${i},"message"]'>
         </div>
         <div class="ntf-field-row">
           <div class="ntf-field-lbl">Icona</div>
           <div style="display:flex;align-items:center;gap:6px;flex:none">
             <div id="ntf-ico-prev-${i}" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.05);border-radius:8px;font-size:18px">${_ntfIconHtml(r.icon||'🔔',20)}</div>
             <input class="ntf-field-inp" id="ntf-ico-inp-${i}" value="${r.icon||''}" placeholder="🔔 o mdi:bell"
-              oninput="_ntfSet(${i},'icon',this.value);const p=document.getElementById('ntf-ico-prev-${i}');if(p)p.innerHTML=_ntfIconHtml(this.value||'🔔',20);"
+              data-input="_ntfSetIcon" data-input-args='[${i}]'
               style="width:110px">
             <button class="ntf-pick-btn" title="Scegli emoji o icona MDI"
-              onclick="openIconPicker(v=>{_ntfSet(${i},'icon',v);const el=document.getElementById('ntf-ico-inp-${i}');if(el)el.value=v;const p=document.getElementById('ntf-ico-prev-${i}');if(p)p.innerHTML=_ntfIconHtml(v,20);},this,event)">🎨</button>
+              data-action="_ntfPickIcon" data-action-args='[${i}]' data-action-el="true">🎨</button>
           </div>
           <div style="width:12px"></div>
           <div class="ntf-field-lbl" style="width:auto">Colore</div>
-          <input type="color" value="${r.color||'#818cf8'}" onchange="_ntfSet(${i},'color',this.value)" style="width:40px;height:32px;border:none;background:none;cursor:pointer;padding:0;flex:none">
+          <input type="color" value="${r.color||'#818cf8'}" data-input="_ntfSet" data-input-args='[${i},"color"]' style="width:40px;height:32px;border:none;background:none;cursor:pointer;padding:0;flex:none">
           <div style="width:12px"></div>
           <div class="ntf-field-lbl" style="width:auto">Anim.</div>
-          <select class="ntf-field-inp" style="width:90px;flex:none" onchange="_ntfSet(${i},'anim',this.value)">${animOpts}</select>
+          <select class="ntf-field-inp" style="width:90px;flex:none" data-input="_ntfSet" data-input-args='[${i},"anim"]'>${animOpts}</select>
         </div>
 
         <div class="ntf-section-sep">⚡ Azione al click "Ho capito"</div>
         <div class="ntf-act-grid">
           ${_ntfActPresets.map(p=>`
-            <div class="ntf-act-type${(r.dismissActionType||'none')===p.id?' sel':''}" onclick="_ntfSetActionType(${i},'${p.id}')" title="${p.desc}">
+            <div class="ntf-act-type${(r.dismissActionType||'none')===p.id?' sel':''}" data-action="_ntfSetActionType" data-action-args='[${i},"${p.id}"]' title="${p.desc}">
               <div class="ntf-act-type-ico">${p.icon}</div>
               <div class="ntf-act-type-lbl">${p.label}</div>
             </div>`).join('')}
@@ -9899,16 +9968,16 @@ function renderNotifRules(){
             <div class="ntf-field-row" style="margin-bottom:0">
               <div class="ntf-field-lbl">${entityLabel}</div>
               <input id="ntf-da-inp-${i}" class="ntf-field-inp" value="${r.dismissEntity||''}" placeholder="${entityPlaceholder}"
-                oninput="_ntfSetActionEntity(${i},this.value)">
+                data-input="_ntfSetActionEntity" data-input-args='[${i}]'>
               <button class="ntf-pick-btn" title="Sfoglia entità"
-                onclick="_ntfOpenActionPicker(${i},'ntf-da-inp-${i}')">🔍</button>
+                data-action="_ntfOpenActionPicker" data-action-args='[${i},"ntf-da-inp-${i}"]'>🔍</button>
             </div>
             ${friendly?`<div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:5px;padding-left:88px">${friendly}</div>`:''}
             ${isCustom?`<div class="ntf-field-row" style="margin-top:8px">
               <div class="ntf-field-lbl">Dominio</div>
-              <input class="ntf-field-inp" value="${r.dismissDomain||''}" placeholder="es. counter" oninput="_ntfSet(${i},'dismissDomain',this.value)" style="width:110px;flex:none">
+              <input class="ntf-field-inp" value="${r.dismissDomain||''}" placeholder="es. counter" data-input="_ntfSet" data-input-args='[${i},"dismissDomain"]' style="width:110px;flex:none">
               <div class="ntf-field-lbl" style="width:auto;margin:0 6px">Servizio</div>
-              <input class="ntf-field-inp" value="${r.dismissService||''}" placeholder="es. reset" oninput="_ntfSet(${i},'dismissService',this.value)">
+              <input class="ntf-field-inp" value="${r.dismissService||''}" placeholder="es. reset" data-input="_ntfSet" data-input-args='[${i},"dismissService"]'>
             </div>`:''}
             ${(!isCustom&&r.dismissDomain)?`<div style="font-size:10px;color:rgba(255,255,255,.22);margin-top:6px;padding-left:88px">→ ${r.dismissDomain}.${r.dismissService}</div>`:''}
           </div>`;
@@ -9917,10 +9986,10 @@ function renderNotifRules(){
         <div class="ntf-section-sep">⚙️ Opzioni</div>
         <div class="ntf-field-row" style="flex-wrap:wrap;gap:14px">
           <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);cursor:pointer">
-            <input type="checkbox" ${r.autoMsg?'checked':''} onchange="_ntfSet(${i},'autoMsg',this.checked)"> Auto-messaggio elettrodomestici
+            <input type="checkbox" ${r.autoMsg?'checked':''} data-input="_ntfSet" data-input-args='[${i},"autoMsg"]'> Auto-messaggio elettrodomestici
           </label>
           <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);cursor:pointer">
-            <input type="checkbox" ${r.confetti?'checked':''} onchange="_ntfSet(${i},'confetti',this.checked)"> 🎉 Coriandoli
+            <input type="checkbox" ${r.confetti?'checked':''} data-input="_ntfSet" data-input-args='[${i},"confetti"]'> 🎉 Coriandoli
           </label>
         </div>
 
@@ -9928,9 +9997,9 @@ function renderNotifRules(){
         <div class="ntf-field-row">
           <div class="ntf-field-lbl">Sensore extra</div>
           <input id="ntf-dur-inp-${i}" class="ntf-field-inp" value="${r.durationEntity||''}" placeholder="es. sensor.lavatrice_durata_ciclo"
-            oninput="_ntfSet(${i},'durationEntity',this.value)">
+            data-input="_ntfSet" data-input-args='[${i},"durationEntity"]'>
           <button class="ntf-pick-btn" title="Sfoglia entità"
-            onclick="_epPickerOpen(v=>{_ntfSet(${i},'durationEntity',v);const el=document.getElementById('ntf-dur-inp-${i}');if(el)el.value=v;})">🔍</button>
+            data-action="_ntfPickDuration" data-action-args='[${i}]'>🔍</button>
         </div>
         <div style="font-size:10px;color:rgba(255,255,255,.25);margin:-4px 0 8px 88px">
           Usa <b>{sensor}</b> nel messaggio per mostrare il valore di questo sensore (valore + unità).<br>
@@ -9940,25 +10009,25 @@ function renderNotifRules(){
         <div class="ntf-section-sep">🔘 Testo pulsante conferma</div>
         <div class="ntf-field-row">
           <div class="ntf-field-lbl">Tasto "Ok"</div>
-          <input class="ntf-field-inp" value="${r.dismissLabel||''}" placeholder="Lascia vuoto = auto (es. ✉️ Ho ritirato la posta!)" oninput="_ntfSet(${i},'dismissLabel',this.value)">
+          <input class="ntf-field-inp" value="${r.dismissLabel||''}" placeholder="Lascia vuoto = auto (es. ✉️ Ho ritirato la posta!)" data-input="_ntfSet" data-input-args='[${i},"dismissLabel"]'>
         </div>
 
         <div class="ntf-section-sep">📷 Camera & 🔊 Alexa (opzionale)</div>
         <div class="ntf-field-row">
           <div class="ntf-field-lbl">Camera</div>
-          <input id="ntf-cam-inp-${i}" class="ntf-field-inp" value="${r.camEntity||''}" placeholder="camera.ingresso" oninput="_ntfSet(${i},'camEntity',this.value)">
+          <input id="ntf-cam-inp-${i}" class="ntf-field-inp" value="${r.camEntity||''}" placeholder="camera.ingresso" data-input="_ntfSet" data-input-args='[${i},"camEntity"]'>
           <button class="ntf-pick-btn" title="Sfoglia camere"
-            onclick="_epPickerOpen(v=>{_ntfSet(${i},'camEntity',v);const el=document.getElementById('ntf-cam-inp-${i}');if(el)el.value=v;},'camera','Seleziona camera')">🔍</button>
+            data-action="_ntfPickCam" data-action-args='[${i}]'>🔍</button>
         </div>
         <div class="ntf-field-row">
           <div class="ntf-field-lbl">Alexa notify</div>
-          <input id="ntf-ax-inp-${i}" class="ntf-field-inp" value="${r.alexaEntity||''}" placeholder="notify.alexa_sala" oninput="_ntfSet(${i},'alexaEntity',this.value)">
+          <input id="ntf-ax-inp-${i}" class="ntf-field-inp" value="${r.alexaEntity||''}" placeholder="notify.alexa_sala" data-input="_ntfSet" data-input-args='[${i},"alexaEntity"]'>
           <button class="ntf-pick-btn" title="Sfoglia servizi notify"
-            onclick="_epPickerOpen(v=>{_ntfSet(${i},'alexaEntity',v);const el=document.getElementById('ntf-ax-inp-${i}');if(el)el.value=v;},'notify','Seleziona servizio Alexa/notify')">🔍</button>
+            data-action="_ntfPickAlexa" data-action-args='[${i}]'>🔍</button>
         </div>
         ${r.alexaEntity?`<div class="ntf-field-row">
           <div class="ntf-field-lbl">Testo TTS</div>
-          <input class="ntf-field-inp" value="${r.alexaTts||''}" placeholder="Es. La lavatrice ha finito, durata {duration}" oninput="_ntfSet(${i},'alexaTts',this.value)">
+          <input class="ntf-field-inp" value="${r.alexaTts||''}" placeholder="Es. La lavatrice ha finito, durata {duration}" data-input="_ntfSet" data-input-args='[${i},"alexaTts"]'>
         </div>`:''}
 
       </div>
@@ -10142,7 +10211,7 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
     document.head.appendChild(s); }
   window._navChipsHTML=function(){
     if(typeof cfg==='undefined'||!cfg.pages) return '';
-    return cfg.pages.map((p,i)=>'<button class="nv-chip'+(i===cfg.activePage?' on':'')+'" onclick="setActivePage('+i+');setTimeout(window._navbarSync,30)"><span class="nv-ic">'+(p.icon||'📄')+'</span><span>'+String(p.name||('Pag '+(i+1))).slice(0,12)+'</span></button>').join('');
+    return cfg.pages.map((p,i)=>'<button class="nv-chip'+(i===cfg.activePage?' on':'')+'" data-action="_setActivePageAndSync" data-action-args="['+i+']"><span class="nv-ic">'+(p.icon||'📄')+'</span><span>'+String(p.name||('Pag '+(i+1))).slice(0,12)+'</span></button>').join('');
   };
   function render(){
     ensureStyle();
