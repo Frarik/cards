@@ -1,5 +1,6 @@
 // ── Dipendenze npm ───────────────────────────────────────────────────────────
 import './style.css';
+import { _buildDOM } from './dom.js';
 import Chart  from 'chart.js/auto';
 import jsyaml from 'js-yaml';
 window.Chart  = Chart;
@@ -8364,6 +8365,9 @@ function openHBM_HDR(){
   const savedRemote = localStorage.getItem('hadb_remote')||REMOTE_URL_DEFAULT;
   const cre=document.getElementById('cov-remote-url'); if(cre) cre.value=savedRemote;
 })();
+
+/* Costruisce tutto il DOM (ex index.html) prima del boot */
+_buildDOM();
 
 /* Login rimosso: si entra sempre direttamente nella dashboard */
 _jsStoreBootAll();

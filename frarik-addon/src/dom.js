@@ -1,47 +1,8 @@
-<!DOCTYPE html>
-<html lang="it">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
-<title>Frarik</title>
-<!-- MDI icons (Material Design Icons) -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
-<!-- Google Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@400;600;700;800;900&family=Nunito:wght@400;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="./assets/index-Et7pBdOF.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-BqN42jQp.css">
-</head>
-<body>
-
-<!-- SPLASH / SCHERMATA DI AVVIO (logo + barra di caricamento, ~3.5s) -->
-<div id="frk-splash">
-  <img id="frk-splash-logo" src="./logo.png" alt="Frarik Domotica">
-  <div class="frk-splash-bar"><div class="frk-splash-bar-fill"></div></div>
-</div>
-<script>
-  (function(){
-    var s=document.getElementById('frk-splash'); if(!s) return;
-    setTimeout(function(){
-      s.classList.add('hide');
-      setTimeout(function(){ if(s&&s.parentNode) s.parentNode.removeChild(s); }, 650);
-    }, 3500);
-  })();
-</script>
-
-<!-- CONN OVERLAY -->
-<div id="cov"><div class="spin"></div><div id="cmsg">Connessione a Home Assistant…</div>
-  <div id="cov-remote-box" style="display:none;margin-top:16px;width:min(92vw,360px);text-align:center">
-    <div style="font-size:11px;color:rgba(255,255,255,.65);margin-bottom:8px;line-height:1.45">Indirizzo <b>remoto</b> (Nabu Casa o dominio):</div>
-    <input id="cov-remote-url" placeholder="xxxxxxxx.ui.nabu.casa" autocapitalize="off" autocorrect="off" spellcheck="false" style="width:100%;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:12px;text-align:center;margin-bottom:10px">
-    <div style="font-size:11px;color:rgba(255,255,255,.65);margin-bottom:8px;line-height:1.45"><b>Token di accesso</b> (Profilo HA → Token a lunga durata → Crea):</div>
-    <input id="cov-token" placeholder="incolla qui il token…" autocapitalize="off" autocorrect="off" spellcheck="false" style="width:100%;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:11px;text-align:center;margin-bottom:10px;font-family:monospace">
-    <button data-action="saveRemoteAndRetry" style="width:100%;padding:10px;border-radius:10px;background:#6366f1;border:none;color:#fff;font-size:12px;font-weight:700;cursor:pointer">Salva e riprova</button>
-  </div>
-  <button id="cov-skip" style="display:none;margin-top:10px;padding:8px 20px;border-radius:20px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);font-size:11px;font-weight:600;cursor:pointer" data-action="_covSkip">Continua senza connessione</button></div>
-
+// Struttura DOM — generata da _buildDOM() al boot
+// Questo file sostituisce il contenuto HTML di index.html
+export function _buildDOM(){
+  const t = document.createElement('template');
+  t.innerHTML = `
 <!-- ENTITY MODAL -->
 <div class="mbg off" id="emod">
   <div class="mbox">
@@ -1406,6 +1367,6 @@
 
 
 <!-- ═══ PANNELLO SISTEMA: collega i controlli ai moduli ═══ -->
-
-
-</body>
+  `;
+  document.body.appendChild(t.content);
+}
