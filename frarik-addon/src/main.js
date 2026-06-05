@@ -8,6 +8,76 @@ import { _ntfPushLog, _ntfDismissById, _ntfUpdateBell, ntfMarkAllRead, ntfClearA
 window.Chart  = Chart;
 window.jsyaml = jsyaml;
 
+// ── License key check ────────────────────────────────────────────────────────
+const LICENSE_API = 'https://frarik-license.frarik.workers.dev/api/validate';
+const LIC_KEY     = 'frarik_license';
+const LIC_TS_KEY  = 'frarik_license_ts';
+const LIC_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24h
+
+(function _initLicenseCheck(){
+  const overlay = document.getElementById('lic-overlay');
+  const input   = document.getElementById('lic-input');
+  const btn     = document.getElementById('lic-btn');
+  const err     = document.getElementById('lic-err');
+  if(!overlay) return;
+
+  function showOverlay(){ overlay.style.display='flex'; if(input) input.focus(); }
+  function hideOverlay(){ overlay.style.display='none'; }
+
+  async function validate(key){
+    err.style.display='none';
+    btn.textContent='Verifica…'; btn.disabled=true;
+    try{
+      const r = await fetch(LICENSE_API, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({key: key.toUpperCase().trim()})
+      });
+      const d = await r.json();
+      if(d.valid){
+        localStorage.setItem(LIC_KEY, key.toUpperCase().trim());
+        localStorage.setItem(LIC_TS_KEY, Date.now().toString());
+        hideOverlay();
+      } else {
+        err.textContent = d.error || 'Chiave non valida.';
+        err.style.display = 'block';
+      }
+    } catch(e){
+      err.textContent = 'Errore di connessione. Riprova.';
+      err.style.display = 'block';
+    }
+    btn.textContent='Attiva'; btn.disabled=false;
+  }
+
+  btn.addEventListener('click', ()=> validate(input.value));
+  input.addEventListener('keydown', e=>{ if(e.key==='Enter') validate(input.value); });
+  input.addEventListener('input', ()=>{ input.value=input.value.toUpperCase().replace(/[^A-Z0-9-]/g,''); });
+
+  // Controlla chiave salvata
+  const saved  = localStorage.getItem(LIC_KEY);
+  const savedTs= parseInt(localStorage.getItem(LIC_TS_KEY)||'0');
+  const needsCheck = !savedTs || (Date.now()-savedTs > LIC_CHECK_INTERVAL);
+
+  if(!saved){
+    showOverlay();
+  } else if(needsCheck){
+    // Ri-valida silenziosamente, se fallisce mostra overlay
+    fetch(LICENSE_API, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({key: saved})})
+      .then(r=>r.json())
+      .then(d=>{
+        if(d.valid){
+          localStorage.setItem(LIC_TS_KEY, Date.now().toString());
+        } else {
+          localStorage.removeItem(LIC_KEY);
+          localStorage.removeItem(LIC_TS_KEY);
+          showOverlay();
+        }
+      })
+      .catch(()=>{ /* se offline, lascia passare */ });
+  }
+  // Se salvata e non scaduta il controllo non blocca l'avvio
+})();
+
 // ── Nasconde la barra HA ingress (ha-panel-app) ──────────────────────────────
 (function(){
   if(window.parent===window) return;
