@@ -8469,29 +8469,6 @@ function _ntfSaveRules(){ saveCfg(); showToast('✅ Regole salvate'); }
 function _jsDropzoneClick(){ document.getElementById('jsst-file-inp')?.click(); }
 function _ghsDropzoneClick(){ document.getElementById('ghs-file-inp')?.click(); }
 function _ghCheckForce(){ _ghCheck(true); }
-function _epToggleChangelog(){
-  const el=document.getElementById('ep-changelog'); if(!el) return;
-  if(el.style.display!=='none'){ el.style.display='none'; return; }
-  el.style.display='block';
-  if(el.dataset.loaded){ return; }
-  el.textContent='⏳ Carico…';
-  fetch('./api/frarik/changelog?t='+Date.now())
-    .then(r=>r.json())
-    .then(d=>{
-      el.dataset.loaded='1';
-      if(!d.changelog){ el.textContent='Nessun changelog disponibile.'; return; }
-      // Converti Markdown minimale in HTML
-      el.innerHTML = d.changelog
-        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-        .replace(/^## (.+)$/gm,'<strong style="color:#e2e8f0;font-size:12px">$1</strong>')
-        .replace(/^### (.+)$/gm,'<span style="color:#94a3b8;font-size:10px;font-weight:700">$1</span>')
-        .replace(/^- (.+)$/gm,'<span style="padding-left:8px;display:block">• $1</span>')
-        .replace(/^# .+$/gm,'')
-        .replace(/\n{3,}/g,'\n\n')
-        .split('\n').map(l=>l||'<br>').join('\n');
-    })
-    .catch(()=>{ el.textContent='Errore nel caricamento del changelog.'; });
-}
 
 /* ── Listener icona picker (ex lambda inline) ────────────────────────────── */
 (function _initIconPickers(){
@@ -10561,7 +10538,7 @@ Object.assign(window, {
   yamlImportParse,
   // ── Wrapper aggiunti nel refactor handler ──
   _covSkip, _feEpClose, _ntfSaveRules, _jsDropzoneClick, _ghsDropzoneClick,
-  _ghCheckForce, _epToggleChangelog, _hbDelOption, _appDelItem, _appDelGroup,
+  _ghCheckForce, _hbDelOption, _appDelItem, _appDelGroup,
   _openGhStoreClean, _pasteCardToClean, _closeViewsAndOpenTM, _closeViewsAndSetPage,
   _jsStoreAddAndRefresh, _deleteSavedAt, _appChipPopupAt, _setActivePageAndSync,
   _pgWarnClose, _sendCallSvc,
