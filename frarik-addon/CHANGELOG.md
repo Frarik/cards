@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.54 — 2026-06-05
+
+### Passo 2/16 — Header: chip entità "smart"
+- I chip entità dell'header ora scelgono **da soli** il controllo giusto leggendo il dominio: toggle (luci/switch/fan/input_boolean…), apri/chiudi (cover), blocca/sblocca (lock), premi/attiva (button/scene/script), popup (allarme), info (sensori e tutto il resto). Cliccabili-smart di default.
+- Corretto bug runtime: `_hbSmartClick` aveva i parametri invertiti → l'azione toggle non funzionava.
+- Editor header: riconoscimento dominio esteso a tutti i tipi di entità.
+
 ## 1.1.53 — 2026-06-05
 
 ### Aggiunto (passo 1/16)

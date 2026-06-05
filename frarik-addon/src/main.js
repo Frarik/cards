@@ -2445,15 +2445,15 @@ function hbarInner(card){
     const labelHtml=item.label?`<span style="opacity:.65">${eh(item.label)}</span>`:'';
     const valHtml=val?`<span style="font-weight:800">${eh(val)}</span>`:'';
     const parts=[iconHtml,labelHtml,valHtml].filter(Boolean).join(' ');
-    // azione al click
-    const clickAct=item.clickAction||'none';
+    // azione al click — per le entità, default "auto" (smart per dominio); 'none' resta non cliccabile
+    const clickAct=item.clickAction || (item.type==='entity'&&item.entity ? 'auto' : 'none');
     let tapAttr='';
     if(clickAct==='more_info'&&item.entity){
       const e=String(item.entity).replace(/'/g,"\\'");
       tapAttr=`data-action="openIM" data-action-arg="${e}"`;
-    } else if(clickAct==='toggle'&&item.entity){
-      const e=String(item.entity).replace(/'/g,"\\'");
-      tapAttr=`data-action="_hbSmartClick" data-action-arg="${e}"`;
+    } else if((clickAct==='toggle'||clickAct==='auto')&&item.entity){
+      // router smart: legge il dominio e fa toggle / premi / apri-chiudi / blocca-sblocca / info
+      tapAttr=`data-action="_hbSmartClick" data-action-el="true" data-action-args='["${item.entity}"]'`;
     } else if(clickAct==='navigate'){
       const pi=parseInt(item.navPage||0);
       tapAttr=`data-action="setActivePage" data-action-args='[${pi}]'`;
@@ -5223,30 +5223,21 @@ function hbAutoFill(){
   if(at.friendly_name&&!document.getElementById('hbf-label').value){
     document.getElementById('hbf-label').value=at.friendly_name;
   }
-  // auto-imposta azione in base al dominio
+  // auto-imposta azione in base al dominio (il runtime _hbSmartClick fa la scelta vera)
   const dom=eid.split('.')[0];
   const hint=document.getElementById('hbf-action-hint');
-  const domDefaults={
-    alarm_control_panel:{act:'toggle',msg:'💡 Allarme: click mostrerà popup inserimento/disinserimento automatico'},
-    lock:{act:'toggle',msg:'💡 Serratura: click bloccherà/sbloccherà in base allo stato attuale'},
-    cover:{act:'toggle',msg:'💡 Tapparella: click aprirà/chiuderà in base allo stato attuale'},
-    light:{act:'toggle',msg:'💡 Luce: click attiverà/disattiverà'},
-    switch:{act:'toggle',msg:'💡 Interruttore: click attiverà/disattiverà'},
-    fan:{act:'toggle',msg:'💡 Ventilatore: click attiverà/disattiverà'},
-    sensor:{act:'more_info',msg:'💡 Sensore: click mostrerà informazioni'},
-    binary_sensor:{act:'more_info',msg:'💡 Sensore binario: click mostrerà informazioni'},
-    weather:{act:'more_info',msg:'💡 Meteo: click mostrerà informazioni'},
-    climate:{act:'more_info',msg:'💡 Clima: click mostrerà informazioni'},
-  };
-  const def=domDefaults[dom];
-  if(def){
-    // suggerisci solo se l'azione attuale è "none" (non sovrascrivere scelte manuali)
-    const curAct=_hbGetClickAct();
-    if(curAct==='none') hbSelClickAct(def.act);
-    if(hint){ hint.textContent=def.msg; hint.style.display='block'; }
-  } else {
-    if(hint) hint.style.display='none';
-  }
+  const STATE={cover:'aprirà/chiuderà',lock:'bloccherà/sbloccherà',alarm_control_panel:'inserirà/disinserirà'};
+  const PRESS={button:'eseguirà',input_button:'eseguirà',scene:'attiverà la scena',script:'eseguirà lo script'};
+  const TOGGLE=['light','switch','input_boolean','fan','siren','humidifier','remote','automation','group'];
+  let def;
+  if(PRESS[dom])        def={act:'toggle',msg:'💡 Il click '+PRESS[dom]};
+  else if(STATE[dom])   def={act:'toggle',msg:'💡 Il click '+STATE[dom]+' in base allo stato'};
+  else if(TOGGLE.includes(dom)) def={act:'toggle',msg:'💡 Il click accenderà/spegnerà'};
+  else                  def={act:'more_info',msg:'💡 Il click mostrerà le informazioni'};
+  // suggerisci solo se l'azione attuale è "none" (non sovrascrivere scelte manuali)
+  const curAct=_hbGetClickAct();
+  if(curAct==='none') hbSelClickAct(def.act);
+  if(hint){ hint.textContent=def.msg; hint.style.display='block'; }
 }
 
 // apri info modale per entityId diretto
@@ -5426,23 +5417,25 @@ function _hbToggle(eid){
 }
 
 // click smart per dominio — alarm mostra popup, lock togola stato, altri usano _hbToggle
-function _hbSmartClick(el, eid){
+/* Router "auto": sceglie il controllo giusto leggendo il dominio dell'entità.
+   Firma (eid, el): il dispatcher chiama window[fn](...args, el, e) con data-action-el. */
+function _hbSmartClick(eid, el){
   if(!eid) return;
-  const dom=eid.split('.')[0];
+  const dom=String(eid).split('.')[0];
   const state=String(hs[eid]||'');
-  if(dom==='alarm_control_panel'){
-    _hbAlarmPopup(el, eid);
-  } else if(dom==='lock'){
-    // lock/unlock in base allo stato attuale
-    const svc=state==='locked'?'unlock':'lock';
-    send({type:'call_service',domain:'lock',service:svc,service_data:{entity_id:eid}});
-  } else if(dom==='cover'){
-    // apri/chiudi tapparella in base allo stato
-    const svc=(state==='closed'||state==='closing')?'open_cover':'close_cover';
-    send({type:'call_service',domain:'cover',service:svc,service_data:{entity_id:eid}});
-  } else {
-    _hbToggle(eid);
-  }
+  // ── PREMI / ATTIVA (azioni one-shot) ──
+  if(dom==='button'||dom==='input_button'){ send({type:'call_service',domain:dom,service:'press',service_data:{entity_id:eid}}); return; }
+  if(dom==='scene'){ send({type:'call_service',domain:'scene',service:'turn_on',service_data:{entity_id:eid}}); return; }
+  if(dom==='script'){ send({type:'call_service',domain:'script',service:'turn_on',service_data:{entity_id:eid}}); return; }
+  // ── CONTROLLI A STATO ──
+  if(dom==='alarm_control_panel'){ _hbAlarmPopup(el, eid); return; }
+  if(dom==='lock'){ const svc=state==='locked'?'unlock':'lock'; send({type:'call_service',domain:'lock',service:svc,service_data:{entity_id:eid}}); return; }
+  if(dom==='cover'){ const svc=(state==='closed'||state==='closing')?'open_cover':'close_cover'; send({type:'call_service',domain:'cover',service:svc,service_data:{entity_id:eid}}); return; }
+  // ── ACCENDI / SPEGNI (toggle) ──
+  const toggleable=['light','switch','input_boolean','fan','siren','humidifier','remote','automation','group'];
+  if(toggleable.includes(dom)){ _hbToggle(eid); return; }
+  // ── RESTO (sensor, binary_sensor, climate, media_player, vacuum, weather, person, number, select…) → INFO ──
+  try{ openIM(eid); }catch(e){}
 }
 
 // popup modale allarme con opzioni inserimento/disinserimento
