@@ -2463,7 +2463,7 @@ function hbarInner(card){
       const e=String(item.tapEntity||item.entity||'').replace(/'/g,"\\'");
       tapAttr=`data-action="_sendCallSvc" data-action-args='["${d}","${s}","${e}"]'`;
     } else if(clickAct==='options'&&item.options&&item.options.length){
-      tapAttr=`data-action="_hbOptionsPopupEl" data-action-args='[${JSON.stringify(item.options||[]).replace(/"/g,'&quot;')}]'`;
+      tapAttr=`data-action="_hbOptionsPopupEl" data-action-el="true" data-action-args='[${JSON.stringify(item.options||[]).replace(/"/g,'&quot;')}]'`;
     }
     const isClickable=!!tapAttr;
     return `<span class="hbar-chip${isClickable?' tap':''}" style="${bgStyle};color:${col}" ${tapAttr}>${parts}</span>`;
@@ -5579,6 +5579,8 @@ function _hbRenderOptions(){
 }
 
 /* popup opzioni al click su chip */
+/* Wrapper per il dispatcher data-action (riceve args poi (el,e) grazie a data-action-el="true") */
+function _hbOptionsPopupEl(options, el){ _hbOptionsPopup(el, options); }
 function _hbOptionsPopup(el, options){
   // Rimuovi popup esistente
   document.getElementById('_hb_opt_pop')?.remove();
@@ -10500,6 +10502,7 @@ Object.assign(window, {
   _ghsReloadTab,
   _ghsYamlAdd,
   _hbOptionsPopup,
+  _hbOptionsPopupEl,
   _hbPickClockColor,
   _hbPickCmapColor,
   _hbRenderOptions,

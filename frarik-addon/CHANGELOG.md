@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.52 — 2026-06-05
+
+### Corretto
+- Controllo generale post-refactor: corretto pulsante "opzioni" dei chip header-bar (data-action `_hbOptionsPopupEl` non esisteva → non apriva il popup). Aggiunto wrapper + `data-action-el`.
+
 ## 1.1.44 — 2026-06-05
 
 ### Corretto
