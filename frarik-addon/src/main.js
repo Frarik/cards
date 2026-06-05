@@ -38,6 +38,7 @@ const LIC_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24h
         localStorage.setItem(LIC_KEY, key.toUpperCase().trim());
         localStorage.setItem(LIC_TS_KEY, Date.now().toString());
         localStorage.setItem('frarik_lic_name', d.name||'');
+        localStorage.setItem('frarik_lic_note', d.note||'');
         localStorage.setItem('frarik_lic_expires', d.expires||'');
         hideOverlay();
       } else {
@@ -70,6 +71,7 @@ const LIC_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24h
         if(d.valid){
           localStorage.setItem(LIC_TS_KEY, Date.now().toString());
           localStorage.setItem('frarik_lic_name', d.name||'');
+          localStorage.setItem('frarik_lic_note', d.note||'');
           localStorage.setItem('frarik_lic_expires', d.expires||'');
         } else {
           localStorage.removeItem(LIC_KEY);
@@ -8615,18 +8617,40 @@ function _epToggleLicense(){
 }
 
 function _epLicFill(){
-  const key     = localStorage.getItem('frarik_license') || '';
-  const name    = localStorage.getItem('frarik_lic_name') || '—';
-  const expires = localStorage.getItem('frarik_lic_expires');
-  const masked  = key ? key.slice(0,5) + '****-****-' + key.slice(-4) : '—';
-  const expFmt  = expires && expires !== 'null' && expires !== ''
-    ? new Date(parseInt(expires)).toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'})
-    : 'Nessuna scadenza';
+  const key = localStorage.getItem('frarik_license') || '';
+  if(!key) return;
+  const masked = key.slice(0,5) + '****-****-' + key.slice(-4);
   const el = id => document.getElementById(id);
-  if(el('ep-lic-key'))     el('ep-lic-key').textContent     = masked;
-  if(el('ep-lic-name'))    el('ep-lic-name').textContent    = name;
-  if(el('ep-lic-expires')) el('ep-lic-expires').textContent = expFmt;
-  if(el('ep-lic-level'))   el('ep-lic-level').textContent   = name.toLowerCase().includes('admin') ? '👑 Admin' : '⭐ Standard';
+  if(el('ep-lic-key')) el('ep-lic-key').textContent = masked;
+
+  // Fetch live per dati sempre aggiornati
+  fetch(LICENSE_API, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({key})})
+    .then(r => r.json())
+    .then(d => {
+      if(!d.valid){ if(el('ep-lic-status')){ el('ep-lic-status').textContent='● REVOCATO'; el('ep-lic-status').style.cssText='font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;background:rgba(248,113,113,.1);color:#f87171'; } return; }
+      // Salva dati aggiornati
+      localStorage.setItem('frarik_lic_name', d.name||'');
+      localStorage.setItem('frarik_lic_note', d.note||'');
+      localStorage.setItem('frarik_lic_expires', d.expires||'');
+      const note    = d.note || '';
+      const expires = d.expires;
+      const expFmt  = expires ? new Date(expires).toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'}) : 'Nessuna scadenza';
+      const level   = note ? ('👑 ' + note.charAt(0).toUpperCase() + note.slice(1)) : '⭐ Standard';
+      if(el('ep-lic-name'))    el('ep-lic-name').textContent    = d.name || '—';
+      if(el('ep-lic-expires')) el('ep-lic-expires').textContent = expFmt;
+      if(el('ep-lic-level'))   el('ep-lic-level').textContent   = level;
+    })
+    .catch(() => {
+      // Offline: usa dati salvati
+      const name    = localStorage.getItem('frarik_lic_name') || '—';
+      const note    = localStorage.getItem('frarik_lic_note') || '';
+      const expires = localStorage.getItem('frarik_lic_expires');
+      const expFmt  = expires && expires !== 'null' ? new Date(parseInt(expires)).toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'}) : 'Nessuna scadenza';
+      const level   = note ? ('👑 ' + note.charAt(0).toUpperCase() + note.slice(1)) : '⭐ Standard';
+      if(el('ep-lic-name'))    el('ep-lic-name').textContent    = name;
+      if(el('ep-lic-expires')) el('ep-lic-expires').textContent = expFmt;
+      if(el('ep-lic-level'))   el('ep-lic-level').textContent   = level;
+    });
 }
 
 function _epLicLogout(){
