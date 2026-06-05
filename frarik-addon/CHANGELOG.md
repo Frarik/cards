@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.60 — 2026-06-05
+
+### Passo 7/16 — Rimosso "Layout griglia"
+- Tolto l'editor "Layout griglia" dal sotto-menù Pagina delle impostazioni (rinominato da "Pagina & Griglia" a "Pagina"). La configurazione righe/colonne resta disponibile inline in modalità modifica.
+
 ## 1.1.59 — 2026-06-05
 
 ### Migliorato — Impostazioni Plancia riorganizzate
