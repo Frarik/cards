@@ -5039,7 +5039,212 @@ let _hbEditIdx=-1;
 let _hbBg='rgba(255,255,255,0.12)';
 let _hbTxt='#ffffff';
 
+/* ── Genera il modal #hbmod al primo utilizzo ── */
+function _hbCreateModal(){
+  if(document.getElementById('hbmod')) return;
+  const el=document.createElement('div');
+  el.className='mbg off'; el.id='hbmod';
+  el.innerHTML=`
+  <div class="mbox" style="width:min(700px,97vw)">
+    <div class="mhdr"><span class="mtitle" id="hbmod-title">⊞ Header Personalizzato</span><button class="mx" data-action="closeHBM">✕</button></div>
+    <div class="fscroll" style="padding:0">
+
+      <!-- Impostazioni card (nascosto per __hdrbar__) -->
+      <div class="sect-section" id="hb-card-settings">
+        <div style="display:flex;gap:8px">
+          <div style="flex:1"><div class="flbl">Etichetta card</div><input class="finp" id="hb-label" type="text" placeholder="Header Personalizzato" style="margin-bottom:0"></div>
+          <div style="flex:0 0 80px"><div class="flbl">Colonne</div><input class="finp" id="hb-colspan" type="number" min="1" max="12" value="4" style="margin-bottom:0"></div>
+          <div style="flex:0 0 70px"><div class="flbl">Righe</div><input class="finp" id="hb-rowspan" type="number" min="1" max="6" value="1" style="margin-bottom:0"></div>
+        </div>
+      </div>
+
+      <!-- Tre zone side-by-side -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;min-height:120px">
+        <div class="hbz-col" style="border-right:1px solid var(--bd)">
+          <div class="hbz-hdr">⬅ Sinistra</div>
+          <div class="hbz-drop" id="hb-list-left" data-zone="left"></div>
+          <button class="hbz-add" data-action="hbAddChip" data-action-arg="left">+ Aggiungi</button>
+        </div>
+        <div class="hbz-col" style="border-right:1px solid var(--bd)">
+          <div class="hbz-hdr">↔ Centro</div>
+          <div class="hbz-drop" id="hb-list-center" data-zone="center"></div>
+          <button class="hbz-add" data-action="hbAddChip" data-action-arg="center">+ Aggiungi</button>
+        </div>
+        <div class="hbz-col">
+          <div class="hbz-hdr">➡ Destra</div>
+          <div class="hbz-drop" id="hb-list-right" data-zone="right"></div>
+          <button class="hbz-add" data-action="hbAddChip" data-action-arg="right">+ Aggiungi</button>
+        </div>
+      </div>
+
+      <!-- Form editor chip -->
+      <div id="hb-chip-form" style="display:none;padding:0 14px 14px;border-top:1px solid var(--bd)">
+        <div style="padding:10px 0 6px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted)" id="hb-form-title">Nuovo elemento</div>
+
+        <!-- TIPO -->
+        <div class="flbl">Tipo</div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:12px">
+          <button class="sect-align-btn on" id="hbft-entity"  data-action="hbSelType" data-action-arg="entity"  style="font-size:10px;padding:8px 3px">📦<br><span style="font-size:7px">Entità HA</span></button>
+          <button class="sect-align-btn"    id="hbft-text"    data-action="hbSelType" data-action-arg="text"    style="font-size:10px;padding:8px 3px">🔤<br><span style="font-size:7px">Testo</span></button>
+          <button class="sect-align-btn"    id="hbft-clock"   data-action="hbSelType" data-action-arg="clock"   style="font-size:10px;padding:8px 3px">⏰<br><span style="font-size:7px">Orologio</span></button>
+          <button class="sect-align-btn"    id="hbft-sep"     data-action="hbSelType" data-action-arg="sep"     style="font-size:10px;padding:8px 3px">│<br><span style="font-size:7px">Separatore</span></button>
+          <button class="sect-align-btn"    id="hbft-sos"     data-action="hbSelType" data-action-arg="sos"     style="font-size:10px;padding:8px 3px;color:#f87171;border-color:rgba(248,113,113,.4)">🆘<br><span style="font-size:7px">SOS</span></button>
+          <button class="sect-align-btn"    id="hbft-kiosk"   data-action="hbSelType" data-action-arg="kiosk"   style="font-size:10px;padding:8px 3px;color:#a5b4fc;border-color:rgba(129,140,248,.4)">⛶<br><span style="font-size:7px">Kiosk</span></button>
+          <button class="sect-align-btn"    id="hbft-conn"    data-action="hbSelType" data-action-arg="conn"    style="font-size:10px;padding:8px 3px;color:#4ade80;border-color:rgba(74,222,128,.4)">📶<br><span style="font-size:7px">Stato WS</span></button>
+        </div>
+
+        <!-- ENTITÀ -->
+        <div id="hbf-entity-row">
+          <div class="flbl">Entità Home Assistant</div>
+          <div class="finp-row" style="margin-bottom:6px">
+            <input class="finp entac" id="hbf-entity" type="text" placeholder="es. lock.porta, light.salotto">
+            <button class="fbtn" data-action="browseField" data-action-arg="hbf-entity" title="Cerca">🔍</button>
+          </div>
+          <div id="hbf-action-hint" style="display:none;font-size:9px;padding:5px 8px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:7px;color:#a5b4fc;margin-bottom:6px;line-height:1.4"></div>
+          <div style="display:flex;gap:8px;margin-bottom:10px">
+            <label style="font-size:10px;display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="hbf-showstate" checked> Mostra stato</label>
+            <label style="font-size:10px;display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="hbf-showunit" checked> Unità misura</label>
+          </div>
+        </div>
+
+        <!-- TESTO FISSO -->
+        <div id="hbf-text-row" style="display:none">
+          <div class="flbl">Testo</div>
+          <input class="finp" id="hbf-text" type="text" placeholder="es. Casa, Allarme, Benvenuto…" style="margin-bottom:10px">
+        </div>
+
+        <!-- OROLOGIO -->
+        <div id="hbf-clock-row" style="display:none">
+          <div class="flbl">Stile</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:11px">
+            <button class="hbclk-style-btn on" id="hbclks-default"  data-action="hbSelClockStyle" data-action-arg="default"><span style="font-size:14px;font-weight:900;letter-spacing:-1px;font-family:'Inter',sans-serif">12:34</span><span style="font-size:7px;opacity:.45;font-weight:600">Default</span></button>
+            <button class="hbclk-style-btn"    id="hbclks-bold"     data-action="hbSelClockStyle" data-action-arg="bold"><span style="font-size:15px;font-weight:900;letter-spacing:-2px;font-family:'Poppins',sans-serif">12:34</span><span style="font-size:7px;opacity:.45;font-weight:600">Bold</span></button>
+            <button class="hbclk-style-btn"    id="hbclks-minimal"  data-action="hbSelClockStyle" data-action-arg="minimal"><span style="font-size:13px;font-weight:300;letter-spacing:2px">12:34</span><span style="font-size:7px;opacity:.45;font-weight:600">Minimal</span></button>
+            <button class="hbclk-style-btn"    id="hbclks-digital"  data-action="hbSelClockStyle" data-action-arg="digital"><span style="font-size:12px;font-weight:700;letter-spacing:3px;font-family:monospace">12:34</span><span style="font-size:7px;opacity:.45;font-weight:600">Digital</span></button>
+            <button class="hbclk-style-btn"    id="hbclks-neon"     data-action="hbSelClockStyle" data-action-arg="neon" style="color:#4ade80"><span style="font-size:12px;font-weight:700;letter-spacing:3px;font-family:monospace;text-shadow:0 0 8px #4ade80">12:34</span><span style="font-size:7px;opacity:.6;font-weight:600">Neon</span></button>
+            <button class="hbclk-style-btn"    id="hbclks-slim"     data-action="hbSelClockStyle" data-action-arg="slim"><span style="font-size:13px;font-weight:300;letter-spacing:5px">12:34</span><span style="font-size:7px;opacity:.45;font-weight:600">Slim</span></button>
+            <button class="hbclk-style-btn"    id="hbclks-mono"     data-action="hbSelClockStyle" data-action-arg="mono"><span style="font-size:13px;font-weight:600;letter-spacing:2px;font-family:monospace">12:34</span><span style="font-size:7px;opacity:.45;font-weight:600">Mono</span></button>
+            <button class="hbclk-style-btn"    id="hbclks-elegant"  data-action="hbSelClockStyle" data-action-arg="elegant"><span style="font-size:14px;font-weight:700;font-family:Georgia,serif">12:34</span><span style="font-size:7px;opacity:.45;font-weight:600">Elegant</span></button>
+            <button class="hbclk-style-btn"    id="hbclks-glow"     data-action="hbSelClockStyle" data-action-arg="glow"><span style="font-size:13px;font-weight:800;text-shadow:0 0 8px #fff,0 0 16px rgba(255,255,255,.6)">12:34</span><span style="font-size:7px;opacity:.45;font-weight:600">Glow</span></button>
+            <button class="hbclk-style-btn"    id="hbclks-shadow3d" data-action="hbSelClockStyle" data-action-arg="shadow3d"><span style="font-size:14px;font-weight:900;font-family:'Poppins',sans-serif;text-shadow:1px 1px 0 #0006,2px 2px 0 #0005">12:34</span><span style="font-size:7px;opacity:.45;font-weight:600">3D</span></button>
+            <button class="hbclk-style-btn"    id="hbclks-outline"  data-action="hbSelClockStyle" data-action-arg="outline"><span style="font-size:14px;font-weight:900;font-family:'Poppins',sans-serif;-webkit-text-stroke:1px #fff;-webkit-text-fill-color:transparent">12:34</span><span style="font-size:7px;opacity:.45;font-weight:600">Outline</span></button>
+            <button class="hbclk-style-btn"    id="hbclks-gradient" data-action="hbSelClockStyle" data-action-arg="gradient"><span style="font-size:14px;font-weight:900;font-family:'Poppins',sans-serif;background:linear-gradient(90deg,#818cf8,#22d3ee);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">12:34</span><span style="font-size:7px;opacity:.45;font-weight:600">Gradient</span></button>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:9px">
+            <div style="flex:1"><div class="flbl">Formato</div><div style="display:flex;gap:3px">
+              <button class="sect-size-btn on" id="hbclkf-24h" data-action="hbSelClockFormat" data-action-arg="24h" style="flex:1;font-size:9px">24h</button>
+              <button class="sect-size-btn"    id="hbclkf-12h" data-action="hbSelClockFormat" data-action-arg="12h" style="flex:1;font-size:9px">12h</button>
+            </div></div>
+            <div style="flex:1"><div class="flbl">Dimensione</div><div style="display:flex;gap:3px">
+              <button class="sect-size-btn"    id="hbclksz-sm" data-action="hbSelClockSize" data-action-arg="sm" style="flex:1;font-size:9px">S</button>
+              <button class="sect-size-btn on" id="hbclksz-md" data-action="hbSelClockSize" data-action-arg="md" style="flex:1;font-size:9px">M</button>
+              <button class="sect-size-btn"    id="hbclksz-lg" data-action="hbSelClockSize" data-action-arg="lg" style="flex:1;font-size:9px">L</button>
+              <button class="sect-size-btn"    id="hbclksz-xl" data-action="hbSelClockSize" data-action-arg="xl" style="flex:1;font-size:9px">XL</button>
+            </div></div>
+          </div>
+          <div style="display:flex;gap:14px;margin-bottom:9px">
+            <label style="font-size:10px;display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="hbclk-showdate" checked> Mostra data</label>
+            <label style="font-size:10px;display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="hbclk-showsec"> Secondi</label>
+          </div>
+          <div class="flbl">Colore</div>
+          <div id="hbclk-colors" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px;align-items:center"></div>
+          <input type="hidden" id="hbclk-color" value="">
+        </div>
+
+        <!-- CHIP ASPETTO -->
+        <div id="hbf-chip-row">
+          <div style="display:flex;gap:6px;margin-bottom:8px">
+            <div style="flex:1"><div class="flbl">Etichetta <span style="font-weight:400;opacity:.5">(opz.)</span></div><input class="finp" id="hbf-label" type="text" placeholder="es. Porta, Allarme"></div>
+            <div style="flex:0 0 72px"><div class="flbl">Icona <span style="font-weight:400;opacity:.5">(auto)</span></div>
+              <div class="finp-row" style="gap:2px">
+                <input class="finp" id="hbf-icon" type="text" placeholder="auto" style="text-align:center;font-size:11px;min-width:0">
+                <button class="fbtn" id="hbf-icon-picker" title="Scegli icona">🎨</button>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;margin-bottom:10px">
+            <div style="flex:1"><div class="flbl">Forma</div><div style="display:flex;gap:3px">
+              <button class="sect-size-btn on" id="hbsh-pill"    data-action="hbSelShape" data-action-arg="pill"    style="flex:1;font-size:9px">Pill</button>
+              <button class="sect-size-btn"    id="hbsh-rounded" data-action="hbSelShape" data-action-arg="rounded" style="flex:1;font-size:9px">Tondo</button>
+              <button class="sect-size-btn"    id="hbsh-square"  data-action="hbSelShape" data-action-arg="square"  style="flex:1;font-size:9px">Quadro</button>
+            </div></div>
+            <div style="flex:0 0 80px"><div class="flbl">Dim.</div><div style="display:flex;gap:3px">
+              <button class="sect-size-btn"    id="hbsz-sm" data-action="hbSelSize" data-action-arg="sm" style="flex:1">S</button>
+              <button class="sect-size-btn on" id="hbsz-md" data-action="hbSelSize" data-action-arg="md" style="flex:1">M</button>
+              <button class="sect-size-btn"    id="hbsz-lg" data-action="hbSelSize" data-action-arg="lg" style="flex:1">L</button>
+            </div></div>
+          </div>
+          <!-- Azione al click -->
+          <div class="flbl">Al click…</div>
+          <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-bottom:8px">
+            <button class="sect-align-btn on" id="hbca-none"      data-action="hbSelClickAct" data-action-arg="none"      style="font-size:9px;padding:7px 4px">🚫<br>Niente</button>
+            <button class="sect-align-btn"    id="hbca-more_info" data-action="hbSelClickAct" data-action-arg="more_info" style="font-size:9px;padding:7px 4px">ℹ️<br>Info</button>
+            <button class="sect-align-btn"    id="hbca-toggle"    data-action="hbSelClickAct" data-action-arg="toggle"    style="font-size:9px;padding:7px 4px">🔀<br>Attiva</button>
+            <button class="sect-align-btn"    id="hbca-navigate"  data-action="hbSelClickAct" data-action-arg="navigate"  style="font-size:9px;padding:7px 4px">🧭<br>Naviga</button>
+            <button class="sect-align-btn"    id="hbca-service"   data-action="hbSelClickAct" data-action-arg="service"   style="font-size:9px;padding:7px 4px">⚡<br>Servizio</button>
+            <button class="sect-align-btn"    id="hbca-options"   data-action="hbSelClickAct" data-action-arg="options"   style="font-size:9px;padding:7px 4px">☰<br>Menu</button>
+          </div>
+          <div id="hbf-navigate-row" style="display:none">
+            <div class="flbl">Pagina</div><select class="finp" id="hbf-navpage" style="margin-bottom:8px"></select>
+          </div>
+          <div id="hbf-service-row" style="display:none">
+            <div style="display:flex;gap:6px;margin-bottom:6px">
+              <div style="flex:1"><div class="flbl">Dominio</div><input class="finp" id="hbf-tapdom" type="text" placeholder="es. light"></div>
+              <div style="flex:1"><div class="flbl">Servizio</div><input class="finp" id="hbf-tapsvc" type="text" placeholder="es. turn_on"></div>
+            </div>
+            <div class="finp-row" style="margin-bottom:8px">
+              <input class="finp" id="hbf-tapent" type="text" placeholder="Entità target (vuoto = stessa entità)">
+              <button class="fbtn" data-action="browseField" data-action-arg="hbf-tapent">🔍</button>
+            </div>
+          </div>
+          <div id="hbf-options-row" style="display:none">
+            <div id="hbf-opts-list" style="margin-bottom:5px"></div>
+            <div style="background:rgba(255,255,255,.04);border-radius:8px;padding:7px 8px;border:1px solid var(--bd)">
+              <div style="font-size:9px;color:var(--muted);margin-bottom:5px;font-weight:700">+ AGGIUNGI VOCE MENU</div>
+              <div style="display:flex;gap:4px;margin-bottom:4px">
+                <input class="finp" id="hbf-opt-lbl"  type="text" placeholder="Nome (es. Disinserisci)" style="flex:2">
+                <input class="finp" id="hbf-opt-icon" type="text" placeholder="icona" style="flex:0 0 46px;text-align:center">
+                <button class="fbtn" id="hbf-opt-icon-picker">🎨</button>
+              </div>
+              <div style="display:flex;gap:4px">
+                <input class="finp" id="hbf-opt-dom" type="text" placeholder="dominio" style="flex:1">
+                <input class="finp" id="hbf-opt-svc" type="text" placeholder="servizio" style="flex:1">
+                <button class="ep-add" data-action="hbAddOption">+</button>
+              </div>
+            </div>
+          </div>
+          <!-- Campi hidden per compatibilità salvataggio -->
+          <div id="hbf-colormap-row" style="display:none">
+            <div id="hbf-cmap-list"></div>
+            <input id="hbf-cmap-state" type="hidden"><input id="hbf-cmap-color" type="hidden">
+            <div id="hbf-cmap-preview" style="display:none"></div>
+            <div id="hbf-cmap-swatches" style="display:none"></div>
+          </div>
+          <div id="hbf-iconmap-row" style="display:none">
+            <div id="hbf-imap-list"></div>
+            <input id="hbf-imap-state" type="hidden"><input id="hbf-imap-icon" type="hidden">
+          </div>
+          <input id="hbf-bg-custom" type="hidden" value="">
+          <div id="hbf-bg-colors"  style="display:none"></div>
+          <div id="hbf-auto-badge" style="display:none"></div>
+        </div>
+
+        <div style="display:flex;gap:6px;margin-top:12px">
+          <button class="btn1" id="hbf-save-btn" data-action="hbSaveChip" style="flex:1">✅ Salva</button>
+          <button class="btn2" data-action="hbCancelChip" style="flex:0 0 80px">Annulla</button>
+        </div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn2" data-action="closeHBM">Annulla</button>
+      <button class="btn1" data-action="saveHBM">💾 Salva</button>
+    </div>
+  </div>`;
+  document.body.appendChild(el);
+}
+
 function openHBM(cardId){
+  _hbCreateModal(); // genera il modal la prima volta
   const card=curPage().cards.find(c=>c.id===cardId); if(!card) return;
   _hbCardId=cardId;
   _hbChips={left:JSON.parse(JSON.stringify(card.left||[])),center:JSON.parse(JSON.stringify(card.center||[])),right:JSON.parse(JSON.stringify(card.right||[]))};
@@ -5053,8 +5258,7 @@ function openHBM(cardId){
 }
 function closeHBM(){
   document.getElementById('hbmod').classList.add('off');
-  // ripristina sezione label/colonne se era nascosta per __hdrbar__
-  const cardSect=document.getElementById('hb-label')?.closest('.sect-section');
+  const cardSect=document.getElementById('hb-card-settings');
   if(cardSect) cardSect.style.display='';
   _hbCardId=null;
 }
@@ -8547,12 +8751,12 @@ function renderHdrChips(){
   el.innerHTML=hbarInner(cfg.hdrBar||{left:[],center:[],right:[]});
 }
 function openHBM_HDR(){
+  _hbCreateModal(); // genera il modal la prima volta
   if(!cfg.hdrBar) cfg.hdrBar={left:[{id:uid(),type:'clock'}],center:[],right:[]};
   _hbCardId='__hdrbar__';
   _hbChips=JSON.parse(JSON.stringify(cfg.hdrBar));
   document.getElementById('hbmod-title').textContent='⊞ Configura Header';
-  // nascondi i campi specifici della card (label, colonne, righe)
-  const cardSect=document.getElementById('hb-label')?.closest('.sect-section');
+  const cardSect=document.getElementById('hb-card-settings');
   if(cardSect) cardSect.style.display='none';
   hbRenderAllLists();
   hbCancelChip();
