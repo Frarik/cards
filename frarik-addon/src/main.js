@@ -8795,6 +8795,40 @@ try{
   }).catch(()=>{ if(_vl) _vl.textContent=(window.FRARIK_APP_VERSION||'?'); });
 }catch(e){}
 
+/* ── Controllo "nuova versione dashboard disponibile" sul repo GitHub ──────────
+   Confronta la versione INSTALLATA (config.yaml via server) con quella nel repo.
+   Se il repo è più avanti: 1) notifica in campanella con la nuova versione,
+   2) forza HA a rileggere subito lo store (l'aggiornamento compare immediatamente). */
+function _verCmp(a,b){
+  const pa=String(a).split('.').map(n=>parseInt(n,10)||0), pb=String(b).split('.').map(n=>parseInt(n,10)||0);
+  for(let i=0;i<3;i++){ if((pa[i]||0)>(pb[i]||0)) return 1; if((pa[i]||0)<(pb[i]||0)) return -1; }
+  return 0;
+}
+let _appUpdNotified='';
+async function _checkDashboardUpdate(){
+  try{
+    const vr=await fetch('./api/frarik/version?t='+Date.now()).then(r=>r.json()).catch(()=>null);
+    const installed=vr&&vr.version; if(!installed) return;
+    const g=(typeof _ghCfg==='function')?_ghCfg():{};
+    const owner=g.owner||'Frarik', repo=g.repo||'cards', branch=g.branch||'main';
+    const url='https://raw.githubusercontent.com/'+owner+'/'+repo+'/'+branch+'/frarik-addon/config.yaml?t='+Date.now();
+    const txt=await fetch(url,{cache:'no-store'}).then(r=>r.ok?r.text():null).catch(()=>null); if(!txt) return;
+    const m=txt.match(/^version:\s*"?([^"\n]+)"?/m); const latest=m&&m[1].trim(); if(!latest) return;
+    if(_verCmp(latest, installed)>0){
+      if(_appUpdNotified!==latest){
+        _appUpdNotified=latest;
+        try{ _ntfPushLog('⬆️ Disponibile nuova versione dashboard',
+          'Versione v'+latest+' (installata v'+installed+') — aggiornala da Impostazioni → Add-on di Home Assistant.',
+          '⬆️', 'app_avail'); _ntfUpdateBell(); }catch(e){}
+      }
+      // forza il Supervisor a rileggere il repo → l'update appare subito in HA
+      try{ fetch('./api/frarik/reload-store',{method:'POST'}); }catch(e){}
+    }
+  }catch(e){}
+}
+setTimeout(_checkDashboardUpdate, 4000);
+setInterval(_checkDashboardUpdate, 5*60*1000);
+
 /* ══════════════════════════════════════════════════════════════
    SOS
 ══════════════════════════════════════════════════════════════ */

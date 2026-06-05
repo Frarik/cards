@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.53 — 2026-06-05
+
+### Aggiunto (passo 1/16)
+- Controllo automatico nuova versione: la plancia confronta la versione installata con quella nel repo GitHub. Se è disponibile una versione più recente → notifica in campanella "⬆️ Disponibile nuova versione dashboard vX.Y.Z" e forza HA a rileggere subito lo store (l'aggiornamento compare immediatamente). Check al boot e ogni 5 minuti.
+
 ## 1.1.52 — 2026-06-05
 
 ### Corretto
