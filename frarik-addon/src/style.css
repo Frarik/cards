@@ -268,6 +268,9 @@ body.editing .resize-handle{display:block}
   background:radial-gradient(1100px 700px at 80% -10%,rgba(99,102,241,.10),transparent 60%),radial-gradient(900px 600px at 0% 110%,rgba(34,211,238,.07),transparent 55%),#070912;
   animation:oikUp .28s cubic-bezier(.22,.8,.2,1)}
 @keyframes oikUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:none}}
+/* chiusura: slide verso il basso */
+#epanel.open.closing{animation:oikDown .28s cubic-bezier(.4,0,.7,.4) forwards}
+@keyframes oikDown{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(100%)}}
 #epanel.open .ep-hdr{max-width:840px;width:100%;margin:0 auto;padding:20px 22px 14px;border-bottom:none}
 #epanel.open .ep-title{font-size:19px;letter-spacing:.2px}
 #epanel.open .ep-x{width:34px;height:34px;font-size:15px;border-radius:10px}

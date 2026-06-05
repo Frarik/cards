@@ -4398,9 +4398,10 @@ function openOikSettings(){
 function closeOikSettings(){
   _pgCheckDirtyAndProceed(()=>{
     try{ sessionStorage.removeItem('dash_settings'); }catch(e){}
-    document.body.classList.remove('oik-settings-open');
-    document.getElementById('epanel').classList.remove('open');
-    renderFbarZone();
+    const ep=document.getElementById('epanel');
+    const finish=()=>{ document.body.classList.remove('oik-settings-open'); if(ep){ ep.classList.remove('open'); ep.classList.remove('closing'); } renderFbarZone(); };
+    if(ep && ep.classList.contains('open')){ ep.classList.add('closing'); setTimeout(finish,270); }  // slide-down poi chiudi
+    else finish();
   });
 }
 /* ── Collapsible groups in edit panel ── */

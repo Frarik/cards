@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.68 — 2026-06-05
+
+### Migliorato
+- Il pannello impostazioni ora si chiude con uno slide dall'alto verso il basso (coerente con l'apertura dal basso).
+
 ## 1.1.67 — 2026-06-05
 
 ### Passo 14/16 — Anteprima screensaver
