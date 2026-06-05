@@ -4142,6 +4142,41 @@ async function hardReload(){
 }
 
 /* ── Apre/chiude la barra laterale nativa di Home Assistant (la plancia è dentro l'iframe del pannello) ── */
+function _injectSidebarLogo(){
+  try{
+    const p=window.parent; if(!p||p===window) return;
+    const ha=p.document.querySelector('home-assistant'); if(!ha||!ha.shadowRoot) return;
+    const haMain=ha.shadowRoot.querySelector('home-assistant-main'); if(!haMain||!haMain.shadowRoot) return;
+    const sidebar=haMain.shadowRoot.querySelector('ha-sidebar'); if(!sidebar||!sidebar.shadowRoot) return;
+    // Cerca la voce Frarik nella sidebar (href contiene frarik)
+    const link=sidebar.shadowRoot.querySelector('a[href*="frarik"],paper-icon-item[data-panel*="frarik"]');
+    if(!link) return;
+    const icon=link.querySelector('ha-icon');
+    if(!icon||link.querySelector('.frk-sidebar-logo')) return; // già iniettato
+    // URL logo: stessa origine, percorso ingress + /logo.png
+    const logoUrl=window.location.href.replace(/\/+$/,'').split('?')[0]+'/logo.png';
+    const img=p.document.createElement('img');
+    img.className='frk-sidebar-logo';
+    img.src=logoUrl;
+    img.style.cssText='width:24px;height:24px;object-fit:contain;border-radius:4px;flex-shrink:0;';
+    icon.style.display='none';
+    icon.parentElement.insertBefore(img,icon);
+  }catch(e){}
+}
+// Tenta l'iniezione ogni 500ms finché non riesce (la sidebar HA carica in ritardo)
+(function _sidebarLogoLoop(attempt){
+  if(attempt>20) return;
+  try{
+    const p=window.parent; if(!p||p===window) return;
+    const ha=p.document.querySelector('home-assistant');
+    const haMain=ha&&ha.shadowRoot&&ha.shadowRoot.querySelector('home-assistant-main');
+    const sidebar=haMain&&haMain.shadowRoot&&haMain.shadowRoot.querySelector('ha-sidebar');
+    const link=sidebar&&sidebar.shadowRoot&&sidebar.shadowRoot.querySelector('a[href*="frarik"],paper-icon-item[data-panel*="frarik"]');
+    if(link){ _injectSidebarLogo(); return; }
+  }catch(e){}
+  setTimeout(()=>_sidebarLogoLoop(attempt+1), 500);
+})(0);
+
 function toggleHASidebar(){
   // 1) via elemento iframe nel documento padre (stesso dominio): l'evento risale a home-assistant-main
   try{
