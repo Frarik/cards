@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.5 — 2026-06-05
+
+### Pulizia
+- Rimosso tutto il codice login/credenziali ormai inutilizzato: overlay `#lov`, funzioni `doLogin`/`doLogout`/`setLoginMode`/`toggleLoginAdv`, listener, CSS login e relativi export. La connessione (token/host, overlay `#cov`) resta invariata.
+
 ## 1.1.4 — 2026-06-05
 
 ### Rimosso

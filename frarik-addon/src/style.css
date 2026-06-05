@@ -385,40 +385,6 @@ select.finp option{background:#1a1e30}
 .sc-btn:hover{background:rgba(99,102,241,0.15);border-color:var(--acc);color:#fff}
 .sc-ico{font-size:22px}
 
-/* ═══ LOGIN OVERLAY ═══ */
-#lov{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:900}
-#lov.off{display:none}
-html.frk-authed #lov{display:none}   /* già autenticato: login nascosto fin dal primo frame (niente flash) */
-.login-box{background:rgba(12,14,28,0.92);border:1px solid var(--bd2);border-radius:24px;padding:40px 36px;width:340px;display:flex;flex-direction:column;align-items:center;gap:0;
-  box-shadow:0 32px 80px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.05);
-  backdrop-filter:blur(20px);animation:sup .25s ease}
-.login-logo{font-size:40px;margin-bottom:8px;filter:drop-shadow(0 0 18px #6366f188)}
-.login-title{font-size:18px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px}
-.login-sub{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:28px}
-.login-inp{width:100%;padding:11px 14px;background:rgba(255,255,255,0.04);border:1px solid var(--bd2);border-radius:11px;font-size:13px;color:#fff;margin-bottom:12px;transition:border-color .2s}
-.login-inp:focus{border-color:var(--acc);background:rgba(99,102,241,0.06)}
-.login-inp::placeholder{color:var(--dim)}
-.login-btn{width:100%;padding:12px;border-radius:11px;background:var(--acc);color:#fff;font-size:13px;font-weight:700;letter-spacing:.3px;margin-top:4px;transition:background .2s;border:none}
-.login-btn:hover{background:var(--acc2)}
-.login-btn:active{transform:none}
-.login-err{font-size:11px;color:#f87171;min-height:18px;margin-top:8px;font-weight:600;letter-spacing:.3px;text-align:center}
-.login-sep{width:100%;height:1px;background:rgba(255,255,255,0.07);margin:10px 0}
-.login-adv-toggle{font-size:10px;color:var(--dim);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px;margin-bottom:6px;transition:color .2s}
-.login-adv-toggle:hover{color:rgba(255,255,255,0.6)}
-.login-adv{width:100%;display:none;flex-direction:column;gap:0}
-.login-adv.open{display:flex}
-.login-hint{font-size:9px;color:var(--dim);margin-top:-8px;margin-bottom:10px;padding:0 2px;line-height:1.5;width:100%;text-align:left}
-.login-inp-mode{display:flex;gap:6px;margin-bottom:12px;width:100%}
-.lmode-btn{flex:1;padding:7px 6px;border-radius:9px;font-size:10px;font-weight:700;border:1px solid var(--bd2);color:var(--muted);background:rgba(255,255,255,0.03);transition:all .2s;text-align:center;cursor:pointer}
-.lmode-btn:hover{color:#fff;border-color:var(--acc)}
-.lmode-btn.on{background:rgba(99,102,241,0.18);border-color:var(--acc);color:var(--acc2)}
-[data-theme="light"] .login-sep{background:rgba(15,23,42,0.08)}
-[data-theme="light"] .login-adv-toggle{color:#718096}
-[data-theme="light"] .login-adv-toggle:hover{color:#0f172a}
-[data-theme="light"] .login-hint{color:#94a3b8}
-[data-theme="light"] .lmode-btn{background:rgba(15,23,42,0.05);border-color:rgba(15,23,42,0.14);color:#4a5568}
-[data-theme="light"] .lmode-btn.on{background:rgba(99,102,241,0.12);border-color:var(--acc);color:var(--acc)}
-
 /* ═══ INFO MODAL (more-info) ═══ */
 #imod .mbox{width:420px}
 .im-hero{display:flex;align-items:baseline;gap:8px;margin-bottom:4px}
@@ -1065,13 +1031,6 @@ html,body{font-family:var(--font-family)}
 [data-theme="light"] .app-row:hover,[data-theme="light"] .app-state-row:hover{background:rgba(15,23,42,0.04)}
 /* ── Scrollbar ── */
 [data-theme="light"] ::-webkit-scrollbar-thumb{background:rgba(15,23,42,0.12)}
-/* ── Login ── */
-[data-theme="light"] .login-box{background:rgba(255,255,255,0.94);border-color:rgba(15,23,42,0.1);box-shadow:0 16px 48px rgba(15,23,42,0.12)}
-[data-theme="light"] .login-title{color:#0f172a}
-[data-theme="light"] .login-sub{color:#718096}
-[data-theme="light"] .login-inp{background:rgba(15,23,42,0.04);border-color:rgba(15,23,42,0.13);color:#0f172a}
-[data-theme="light"] .login-inp::placeholder{color:#a0aec0}
-[data-theme="light"] .login-inp:focus{background:rgba(99,102,241,0.05)}
 /* ── Saved cards ── */
 [data-theme="light"] .saved-btn{background:rgba(15,23,42,0.04);border-color:rgba(15,23,42,0.09);color:#0f172a}
 [data-theme="light"] .saved-btn-type{color:#718096}

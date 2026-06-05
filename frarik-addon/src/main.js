@@ -8156,103 +8156,6 @@ function tick(){
 }
 tick(); setInterval(tick,30000);
 
-/* ═══ LOGIN ═══ */
-let _loginMode = localStorage.getItem('hadb_loginmode') || 'local';
-
-function setLoginMode(mode){
-  _loginMode = mode;
-  localStorage.setItem('hadb_loginmode', mode);
-  document.getElementById('lmode-local').classList.toggle('on', mode==='local');
-  document.getElementById('lmode-remote').classList.toggle('on', mode==='remote');
-  document.getElementById('l-remote-section').style.display = mode==='remote' ? 'flex' : 'none';
-}
-
-function toggleLoginAdv(){
-  const el = document.getElementById('l-adv');
-  el.classList.toggle('open');
-  document.querySelector('.login-adv-toggle').textContent =
-    el.classList.contains('open') ? '🔧 Token avanzato ▴' : '🔧 Token avanzato ▾';
-}
-
-function doLogin(){
-  const u=document.getElementById('l-user').value.trim();
-  const p=document.getElementById('l-pass').value;
-  const savedU=localStorage.getItem('hadb_user')||'admin';
-  const savedP=localStorage.getItem('hadb_pass')||'admin';
-  if(u===savedU && p===savedP){
-    if(_loginMode==='remote'){
-      // Leggi e salva URL Nabu Casa
-      const rawUrl = document.getElementById('l-haurl').value.trim();
-      if(!rawUrl){
-        const err=document.getElementById('l-err');
-        err.textContent='Inserisci l\'URL Nabu Casa';
-        setTimeout(()=>err.textContent='',2500);
-        return;
-      }
-      try{
-        const u2=new URL(rawUrl.startsWith('http')?rawUrl:'https://'+rawUrl);
-        HA_HOST=u2.host; BASE=u2.origin;
-      }catch(e){
-        HA_HOST=rawUrl.replace(/^https?:\/\//,'').replace(/\/$/,'');
-        BASE='https://'+HA_HOST;
-      }
-      localStorage.setItem('hadb_haurl', rawUrl);
-      // Token personalizzato
-      const customToken = document.getElementById('l-token').value.trim();
-      if(customToken){ TOKEN=customToken; localStorage.setItem('hadb_token', customToken); }
-      else { TOKEN=localStorage.getItem('hadb_token')||TOKEN_DEFAULT; }
-    } else {
-      // Locale/automatico: connessione alla STESSA origine (funziona sia in locale sia da remoto)
-      if(location.protocol==='http:'||location.protocol==='https:'){ HA_HOST=location.host; BASE=location.origin; }
-      else { HA_HOST=LOCAL_FALLBACK; BASE='http://'+HA_HOST; }
-      TOKEN=localStorage.getItem('hadb_token')||TOKEN_DEFAULT;
-      localStorage.removeItem('hadb_haurl');
-    }
-    // Salva credenziali in localStorage
-    localStorage.setItem('hadb_user', u);
-    localStorage.setItem('hadb_pass', p);
-    localStorage.setItem('ha_auth','1');   // ricorda l'accesso anche dopo chiusura (niente login ogni volta)
-    document.getElementById('lov').classList.add('off');
-    _jsStoreBootAll();
-    renderDash();
-    _connTargets=[]; _connIdx=0; _connBusy=false;
-    connect();
-  } else {
-    const err=document.getElementById('l-err');
-    err.textContent='Credenziali non valide';
-    document.getElementById('l-pass').value='';
-    document.getElementById('l-pass').focus();
-    setTimeout(()=>err.textContent='',2500);
-  }
-}
-
-function doLogout(){
-  localStorage.removeItem('ha_auth');
-  sessionStorage.removeItem('ha_auth');
-  // Chiudi WebSocket
-  if(ws){ try{ ws.close(); }catch(e){} ws=null; }
-  clearTimeout(reconn);
-  // Esci da kiosk se attivo
-  if(_kioskOn) toggleKiosk();
-  // Mostra login con credenziali pre-riempite
-  document.documentElement.classList.remove('frk-authed');  // riattiva la visibilità del login
-  const lov=document.getElementById('lov');
-  lov.classList.remove('off');
-  const savedU=localStorage.getItem('hadb_user')||'';
-  const savedP=localStorage.getItem('hadb_pass')||'';
-  document.getElementById('l-user').value=savedU;
-  document.getElementById('l-pass').value=savedP;
-  document.getElementById('l-err').textContent='';
-  document.getElementById('l-user').focus();
-  // Reset connessione
-  setC('off');
-  document.getElementById('cmsg').textContent='Connessione a Home Assistant…';
-  document.getElementById('cov-skip').style.display='none';
-}
-['l-user','l-pass','l-haurl'].forEach(id=>{
-  document.getElementById(id)?.addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
-});
-
 /* ═══ HEADER BAR (left section) ═══ */
 
 function renderHdrChips(){
@@ -8285,27 +8188,13 @@ function openHBM_HDR(){
     if(ct){ const r=document.documentElement.style; r.setProperty('--acc',ct.acc); r.setProperty('--acc2',ct.acc2); r.setProperty('--glow1',ct.g[0]); r.setProperty('--glow2',ct.g[1]); r.setProperty('--glow3',ct.g[2]); if(t!=='light'){ r.setProperty('--bg',ct.bg); r.setProperty('--panel',ct.panel); r.setProperty('--panel2',ct.panel2); } }
   }catch(e){}
 })();
-/* Ripristina modalità e campi login salvati */
+/* Ripristina l'indirizzo remoto salvato nell'overlay di connessione */
 (function(){
-  // Servita da HA (http/https) → sempre "locale" = stessa origine (vale per accesso locale E remoto).
-  // La modalità "remoto" con URL fisso ha senso solo se la pagina è aperta come file (file://).
-  const mode = (location.protocol==='file:') ? (localStorage.getItem('hadb_loginmode')||'local') : 'local';
-  setLoginMode(mode);
-  const savedUrl = localStorage.getItem('hadb_haurl')||'';
-  if(savedUrl) document.getElementById('l-haurl').value = savedUrl;
-  const savedU = localStorage.getItem('hadb_user')||'';
-  const savedP = localStorage.getItem('hadb_pass')||'';
-  if(savedU) document.getElementById('l-user').value = savedU;
-  if(savedP) document.getElementById('l-pass').value = savedP;
-  const savedToken = localStorage.getItem('hadb_token')||'';
-  if(savedToken){ document.getElementById('l-token').value = savedToken; }
   const savedRemote = localStorage.getItem('hadb_remote')||REMOTE_URL_DEFAULT;
   const cre=document.getElementById('cov-remote-url'); if(cre) cre.value=savedRemote;
 })();
 
-/* Login iniziale rimosso: si entra sempre direttamente nella dashboard */
-localStorage.setItem('ha_auth','1');
-document.getElementById('lov')?.classList.add('off');
+/* Login rimosso: si entra sempre direttamente nella dashboard */
 _jsStoreBootAll();
 renderDash();
 connect();
@@ -10186,8 +10075,6 @@ Object.assign(window, {
   delSectTitle,
   deleteSaved,
   deleteViewFromEdit,
-  doLogin,
-  doLogout,
   doToggle,
   dupCard,
   ea,
@@ -10286,7 +10173,6 @@ Object.assign(window, {
   selShape,
   send,
   setActivePage,
-  setLoginMode,
   setSectBadgesAlign,
   setSectColor,
   setSectSize,
@@ -10310,7 +10196,6 @@ Object.assign(window, {
   toggleFontPop,
   toggleHASidebar,
   toggleKiosk,
-  toggleLoginAdv,
   toggleMobileMenu,
   toggleNotifCenter,
   toggleSectBold,
