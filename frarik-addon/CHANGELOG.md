@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.3 — 2026-06-05
+
+### Rimosso
+- Login iniziale: la dashboard si apre direttamente senza schermata di accesso
+
 ## 1.1.2 — 2026-06-05
 
 ### Rimosso

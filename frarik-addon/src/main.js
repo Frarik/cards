@@ -8303,14 +8303,12 @@ function openHBM_HDR(){
   const cre=document.getElementById('cov-remote-url'); if(cre) cre.value=savedRemote;
 })();
 
-if(localStorage.getItem('ha_auth')==='1' || sessionStorage.getItem('ha_auth')==='1'){
-  document.getElementById('lov').classList.add('off');
-  _jsStoreBootAll();
-  renderDash();
-  connect();
-} else {
-  document.getElementById('l-user').focus();
-}
+/* Login iniziale rimosso: si entra sempre direttamente nella dashboard */
+localStorage.setItem('ha_auth','1');
+document.getElementById('lov')?.classList.add('off');
+_jsStoreBootAll();
+renderDash();
+connect();
 
 /* Se la plancia è appena stata auto-aggiornata, mostra la notifica informativa "aggiornata alla versione X" */
 try{
