@@ -9,6 +9,3 @@ Thumbs.db
 # Sorgente originale monolitico — usato solo localmente da fix-src.mjs
 # La sorgente canonica è ora frarik-addon/src/
 frarik.html
-
-# Build output — generato dal Dockerfile, non serve nel repo
-frarik-addon/panel/
