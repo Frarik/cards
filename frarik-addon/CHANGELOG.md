@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.20 — 2026-06-05
+
+### Aggiunto
+- Schermata di avvio (splash): all'apertura della dashboard compare il logo grande al centro con una barra di caricamento sotto, per ~3,5 secondi, poi sfuma sulla plancia.
+
 ## 1.1.19 — 2026-06-05
 
 ### Aggiunto (sperimentale)

@@ -1,3 +1,14 @@
+/* ═══ SPLASH / SCHERMATA DI AVVIO ═══ */
+#frk-splash{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:30px;
+  background:radial-gradient(circle at 50% 38%, #ffffff 0%, #e9ebf0 78%);transition:opacity .6s ease}
+#frk-splash.hide{opacity:0;pointer-events:none}
+#frk-splash-logo{width:min(74vw,360px);max-height:46vh;object-fit:contain;animation:frkSplashPop .7s cubic-bezier(.2,.85,.25,1)}
+@keyframes frkSplashPop{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+.frk-splash-bar{width:min(66vw,240px);height:6px;border-radius:99px;background:rgba(30,40,90,.12);overflow:hidden}
+.frk-splash-bar-fill{height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#1f6feb,#13b6c9);
+  box-shadow:0 0 12px rgba(31,111,235,.5);animation:frkSplashLoad 3.4s ease forwards}
+@keyframes frkSplashLoad{0%{width:0}100%{width:100%}}
+
 /* ═══ RESET + VARS ═══ */
 :root{
   --bg:#060810; --panel:#0c0e1c; --panel2:#12152a;

@@ -11,10 +11,25 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@400;600;700;800;900&family=Nunito:wght@400;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="./assets/index-B74Cps-Q.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-KD92feF7.css">
+  <script type="module" crossorigin src="./assets/index-DGOLUYbF.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-BqN42jQp.css">
 </head>
 <body>
+
+<!-- SPLASH / SCHERMATA DI AVVIO (logo + barra di caricamento, ~3.5s) -->
+<div id="frk-splash">
+  <img id="frk-splash-logo" src="./logo.png" alt="Frarik Domotica">
+  <div class="frk-splash-bar"><div class="frk-splash-bar-fill"></div></div>
+</div>
+<script>
+  (function(){
+    var s=document.getElementById('frk-splash'); if(!s) return;
+    setTimeout(function(){
+      s.classList.add('hide');
+      setTimeout(function(){ if(s&&s.parentNode) s.parentNode.removeChild(s); }, 650);
+    }, 3500);
+  })();
+</script>
 
 <!-- CONN OVERLAY -->
 <div id="cov"><div class="spin"></div><div id="cmsg">Connessione a Home Assistant…</div>
