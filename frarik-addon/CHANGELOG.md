@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.65 — 2026-06-05
+
+### Passo 12/16 — Versione più visibile
+- La versione a fine pannello impostazioni è ora un badge ben visibile (icona + nome + numero versione ingrandito, accento indaco), invece della scritta piccola e sbiadita.
+
 ## 1.1.64 — 2026-06-05
 
 ### Passo 11/16 — Configurazione SOS rifatta
