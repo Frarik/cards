@@ -9389,62 +9389,103 @@ function closeNotifCfg(){
   document.getElementById('ntf-cfg-modal').classList.remove('open');
 }
 
-/* ═══ CENTRO NOTIFICHE (campanella in alto) ═══ */
+/* ═══ CENTRO NOTIFICHE ═══ */
 let _ntfLog=[];
 try{ _ntfLog=JSON.parse(localStorage.getItem('frarik_ntflog')||'[]'); }catch(e){ _ntfLog=[]; }
-function _ntfSaveLog(){ try{ localStorage.setItem('frarik_ntflog',JSON.stringify(_ntfLog.slice(0,60))); }catch(e){} }
-function _ntfPushLog(title,msg,icon,action,extra){
-  extra=extra||{};
-  // action: 'gh' (aggiorna card) | 'app' (aggiorna plancia) | undefined. Se c'è già una notifica
-  // della stessa azione non ancora applicata, aggiornala invece di accodarne un'altra.
-  if(action){ const ex=_ntfLog.find(n=>n.action===action); if(ex){ ex.ts=Date.now(); ex.title=title; ex.msg=msg; ex.icon=icon; ex.read=false; if(extra.changelog) ex.changelog=extra.changelog; _ntfSaveLog(); _ntfUpdateBell(); const c0=document.getElementById('notif-center'); if(c0&&c0.classList.contains('on')) renderNotifCenter(); return; } }
-  _ntfLog.unshift({id:'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,6), ts:Date.now(), title:title||'Notifica', msg:msg||'', icon:icon||'🔔', read:false, action:action||null, changelog:extra.changelog||null});
-  _ntfLog=_ntfLog.slice(0,60); _ntfSaveLog(); _ntfUpdateBell();
-  const c=document.getElementById('notif-center'); if(c&&c.classList.contains('on')) renderNotifCenter();
+
+function _ntfSaveLog(){
+  try{ localStorage.setItem('frarik_ntflog', JSON.stringify(_ntfLog.slice(0,60))); }catch(e){}
 }
-/* "Ho capito" → rimuove la notifica (per id) */
+function _ntfPushLog(title, msg, icon, action, extra){
+  extra = extra||{};
+  if(action){
+    const ex = _ntfLog.find(n=>n.action===action);
+    if(ex){ ex.ts=Date.now(); ex.title=title; ex.msg=msg; ex.icon=icon; ex.read=false;
+      _ntfSaveLog(); _ntfUpdateBell(); _ntfRenderIfOpen(); return; }
+  }
+  _ntfLog.unshift({ id:'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+    ts:Date.now(), title:title||'', msg:msg||'', icon:icon||'🔔', read:false, action:action||null });
+  _ntfLog = _ntfLog.slice(0,60);
+  _ntfSaveLog(); _ntfUpdateBell(); _ntfRenderIfOpen();
+}
 function _ntfDismissById(id){
-  _ntfLog=_ntfLog.filter(n=>n.id!==id);
+  _ntfLog = _ntfLog.filter(n=>n.id!==id);
   _ntfSaveLog(); _ntfUpdateBell(); renderNotifCenter();
 }
 function _ntfUnread(){ return _ntfLog.filter(n=>!n.read).length; }
 function _ntfUpdateBell(){
-  const b=document.getElementById('notif-bell-badge'); if(!b) return;
-  const n=_ntfUnread(); b.textContent=n>9?'9+':String(n); b.classList.toggle('on', n>0);
+  const b = document.getElementById('notif-bell-badge'); if(!b) return;
+  const n = _ntfUnread(); b.textContent = n>9?'9+':String(n); b.classList.toggle('on', n>0);
 }
 function _ntfRelTime(ts){
-  const s=Math.floor((Date.now()-ts)/1000);
-  if(s<60) return 'adesso'; if(s<3600) return Math.floor(s/60)+' min fa';
+  const s = Math.floor((Date.now()-ts)/1000);
+  if(s<60) return 'adesso';
+  if(s<3600) return Math.floor(s/60)+' min fa';
   if(s<86400) return Math.floor(s/3600)+' h fa';
-  return new Date(ts).toLocaleDateString('it-IT',{day:'numeric',month:'short'})+' '+new Date(ts).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+  return new Date(ts).toLocaleDateString('it-IT',{day:'numeric',month:'short'});
+}
+function _ntfRenderIfOpen(){
+  const c = document.getElementById('notif-center');
+  if(c && c.classList.contains('on')) renderNotifCenter();
 }
 function renderNotifCenter(){
-  const el=document.getElementById('notif-center-list'); if(!el) return;
-  if(!_ntfLog.length){ el.innerHTML='<div class="ntfc-empty">Nessuna notifica</div>'; return; }
-  el.innerHTML=_ntfLog.map((n)=>{
-    const hasChangelog=Array.isArray(n.changelog)&&n.changelog.length;
-    const clHtml=hasChangelog?`<ul class="ntfc-changelog">${n.changelog.map(li=>`<li>${eh(li)}</li>`).join('')}</ul>`:'';
-    return `<div class="ntfc-item${n.read?'':' unread'}">
-      <div class="ntfc-ico">${n.icon||'🔔'}</div>
-      <div class="ntfc-body"><div class="ntfc-title">${eh(n.title||'')}</div>${n.msg?`<div class="ntfc-msg">${eh(n.msg)}</div>`:''}${clHtml}<div class="ntfc-time">${_ntfRelTime(n.ts)}</div></div>
-      <button class="ntfc-x" data-dismiss-id="${n.id}" title="Elimina notifica">✕</button>
-    </div>`;
-  }).join('');
-  // Event delegation: evita onclick inline che CSP di HA potrebbe bloccare
-  el._ntfBound && el.removeEventListener('click',el._ntfBound);
-  el._ntfBound=function(ev){
-    const btn=ev.target.closest('[data-dismiss-id]');
-    if(!btn) return;
-    ev.stopPropagation();
-    _ntfDismissById(btn.dataset.dismissId);
-  };
-  el.addEventListener('click',el._ntfBound);
+  const el = document.getElementById('notif-center-list'); if(!el) return;
+  // Svuota con DOM (no innerHTML) per evitare problemi CSP
+  while(el.firstChild) el.removeChild(el.firstChild);
+  if(!_ntfLog.length){
+    const empty = document.createElement('div');
+    empty.className = 'ntfc-empty';
+    empty.textContent = 'Nessuna notifica';
+    el.appendChild(empty); return;
+  }
+  _ntfLog.forEach(function(n){
+    const item = document.createElement('div');
+    item.className = 'ntfc-item' + (n.read?'':' unread');
+
+    const ico = document.createElement('div');
+    ico.className = 'ntfc-ico';
+    ico.textContent = n.icon||'🔔';
+
+    const body = document.createElement('div');
+    body.className = 'ntfc-body';
+
+    const title = document.createElement('div');
+    title.className = 'ntfc-title';
+    title.textContent = n.title||'';
+
+    const time = document.createElement('div');
+    time.className = 'ntfc-time';
+    time.textContent = _ntfRelTime(n.ts);
+
+    body.appendChild(title);
+    if(n.msg){ const m=document.createElement('div'); m.className='ntfc-msg'; m.textContent=n.msg; body.appendChild(m); }
+    body.appendChild(time);
+
+    const btn = document.createElement('button');
+    btn.className = 'ntfc-x';
+    btn.title = 'Elimina';
+    btn.textContent = '✕';
+    btn.addEventListener('click', function(ev){
+      ev.stopPropagation();
+      _ntfDismissById(n.id);
+    });
+
+    item.appendChild(ico);
+    item.appendChild(body);
+    item.appendChild(btn);
+    el.appendChild(item);
+  });
 }
 function toggleNotifCenter(ev){
   if(ev) ev.stopPropagation();
-  const c=document.getElementById('notif-center');
-  if(c.classList.toggle('on')){ renderNotifCenter(); ntfMarkAllRead(); setTimeout(()=>document.addEventListener('click',_ntfOutside),0); }
-  else document.removeEventListener('click',_ntfOutside);
+  const c = document.getElementById('notif-center');
+  if(c.classList.toggle('on')){
+    renderNotifCenter();
+    ntfMarkAllRead();
+    setTimeout(()=>document.addEventListener('click',_ntfOutside), 0);
+  } else {
+    document.removeEventListener('click',_ntfOutside);
+  }
 }
 function closeNotifCenter(){ const c=document.getElementById('notif-center'); if(c) c.classList.remove('on'); document.removeEventListener('click',_ntfOutside); }
 function _ntfOutside(e){ const c=document.getElementById('notif-center'),b=document.getElementById('notif-bell'); if(c&&!c.contains(e.target)&&b&&!b.contains(e.target)) closeNotifCenter(); }
