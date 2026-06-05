@@ -4234,22 +4234,32 @@ function doToggle(entityId,cardId){
 }
 
 /* ═══ EDIT MODE ═══ */
+function _exitEditMode(){
+  editMode=false;
+  try{ sessionStorage.removeItem('dash_edit'); sessionStorage.removeItem('dash_settings'); }catch(e){}
+  document.body.classList.remove('editing');
+  document.body.classList.remove('oik-settings-open');
+  const ep=document.getElementById('epanel');
+  if(ep){
+    ep.style.transition='none';
+    ep.classList.remove('open');
+    ep.classList.remove('closing');
+    requestAnimationFrame(()=>{ ep.style.transition=''; });
+  }
+  const btn=document.getElementById('edit-btn');
+  if(btn){ btn.classList.remove('on'); btn.innerHTML='<i class="mdi mdi-pencil"></i>'; }
+  renderDash(); renderPageTabs(); renderBadgesAll(); renderFbarZone();
+}
+
 function toggleEdit(){
   if(editMode){
-    // closing — check for unsaved page settings
     _pgCheckDirtyAndProceed(()=>{
-      editMode=false;
-      try{ sessionStorage.removeItem('dash_edit'); sessionStorage.removeItem('dash_settings'); }catch(e){}
-      document.body.classList.remove('editing');
-      document.body.classList.remove('oik-settings-open');
-      document.getElementById('epanel').classList.remove('open');
-      const btn=document.getElementById('edit-btn');
-      btn.classList.remove('on');
-      btn.innerHTML='<i class="mdi mdi-pencil"></i>';
-      renderDash(); // ricostruisce l'header in modalità overlay (has-hbar) per la vista
-      renderPageTabs();
-      renderBadgesAll();
-      renderFbarZone();
+      showConfirm(
+        '✏️ Sei sicuro di voler uscire dalla modifica?<br><span style="font-size:12px;color:rgba(255,255,255,.5)">Tutte le modifiche sono già state salvate automaticamente.</span>',
+        ()=> _exitEditMode(),
+        'Chiudi modifica',
+        'Continua a modificare'
+      );
     });
     return;
   }
@@ -4258,7 +4268,7 @@ function toggleEdit(){
   document.body.classList.add('editing');
   const btn=document.getElementById('edit-btn');
   btn.classList.add('on');
-  btn.innerHTML='<i class="mdi mdi-check"></i>';
+  btn.innerHTML='<i class="mdi mdi-close"></i>';
   _clipboardLoad(); _updatePasteBtn();
   renderDash(); // ricostruisce l'header IMPILATO (senza has-hbar) così non si sovrappone
   renderFbarZone();

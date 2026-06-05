@@ -30,16 +30,17 @@ export function showToast(msg, ms=2200){
 }
 
 /* ── Confirm dialog ─────────────────────────────────────────────────────── */
-export function showConfirm(msg, onOk, okLabel='Elimina'){
+export function showConfirm(msg, onOk, okLabel='Elimina', cancelLabel='Annulla', onCancel=null){
   const ov = document.getElementById('confirm-overlay');
   if(!ov) return;
   document.getElementById('confirm-msg').innerHTML = msg;
   const okBtn     = document.getElementById('confirm-ok');
   const cancelBtn = document.getElementById('confirm-cancel');
-  okBtn.textContent = okLabel;
+  okBtn.textContent     = okLabel;
+  cancelBtn.textContent = cancelLabel;
   ov.style.display = 'flex';
-  const close = ()=>{ ov.style.display='none'; okBtn.onclick=null; cancelBtn.onclick=null; };
+  const close = ()=>{ ov.style.display='none'; okBtn.onclick=null; cancelBtn.onclick=null; cancelBtn.textContent='Annulla'; };
   okBtn.onclick     = ()=>{ close(); onOk(); };
-  cancelBtn.onclick = close;
-  ov.onclick        = e=>{ if(e.target===ov) close(); };
+  cancelBtn.onclick = ()=>{ close(); if(onCancel) onCancel(); };
+  ov.onclick        = e=>{ if(e.target===ov){ close(); if(onCancel) onCancel(); } };
 }
