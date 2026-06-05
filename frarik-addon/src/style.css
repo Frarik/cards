@@ -1,3 +1,14 @@
+/* ═══ SPLASH / SCHERMATA DI AVVIO ═══ */
+#frk-splash{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:30px;
+  background:radial-gradient(circle at 50% 38%, #ffffff 0%, #e9ebf0 78%);transition:opacity .6s ease}
+#frk-splash.hide{opacity:0;pointer-events:none}
+#frk-splash-logo{width:min(74vw,360px);max-height:46vh;object-fit:contain;animation:frkSplashPop .7s cubic-bezier(.2,.85,.25,1)}
+@keyframes frkSplashPop{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+.frk-splash-bar{width:min(66vw,240px);height:6px;border-radius:99px;background:rgba(30,40,90,.12);overflow:hidden}
+.frk-splash-bar-fill{height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#1f6feb,#13b6c9);
+  box-shadow:0 0 12px rgba(31,111,235,.5);animation:frkSplashLoad 3.4s ease forwards}
+@keyframes frkSplashLoad{0%{width:0}100%{width:100%}}
+
 /* ═══ RESET + VARS ═══ */
 :root{
   --bg:#060810; --panel:#0c0e1c; --panel2:#12152a;
@@ -260,7 +271,6 @@ body.editing .resize-handle{display:block}
 #epanel.open .ep-title{font-size:19px;letter-spacing:.2px}
 #epanel.open .ep-x{width:34px;height:34px;font-size:15px;border-radius:10px}
 #epanel.open #ep-body{max-width:840px;width:100%;margin:0 auto;padding:2px 22px 28px;gap:9px}
-#epanel.open .ep-footer{max-width:840px;width:100%;margin:0 auto;padding:12px 22px 16px;background:transparent}
 /* Righe impostazioni UNIFORMI scure (identico a Oikos: niente colori, solo dark + chevron) */
 #epanel.open .cfg-open-btn{padding:15px 18px!important;font-size:13px!important;font-weight:600!important;border-radius:12px!important;
   background:#0d101c!important;border:1px solid rgba(255,255,255,.06)!important;color:#e8ebf5!important;box-shadow:none!important}
@@ -276,10 +286,6 @@ body.editing .resize-handle{display:block}
 /* category header (uppercase muto, come Oikos) */
 .oik-cat{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:rgba(148,163,184,.65);margin:16px 2px 4px}
 .oik-cat:first-of-type{margin-top:6px}
-/* orange "Salva config" come Oikos */
-.oik-save{width:100%;padding:14px;border-radius:12px;cursor:pointer;font-size:13px;font-weight:800;letter-spacing:.3px;
-  color:#fb923c;border:1px solid rgba(251,146,60,.55);background:rgba(251,146,60,.1);transition:all .15s;text-align:center}
-.oik-save:hover{background:rgba(251,146,60,.18);border-color:#fb923c}
 /* primary Aggiungi Card button */
 .oik-add{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:16px;border-radius:16px;cursor:pointer;font-size:14px;font-weight:800;letter-spacing:.3px;color:#fff;border:1px solid rgba(99,102,241,.5);
   background:linear-gradient(135deg,rgba(99,102,241,.95),rgba(139,92,246,.95));box-shadow:0 8px 26px -8px rgba(99,102,241,.6);transition:transform .15s,box-shadow .15s}
@@ -289,16 +295,12 @@ body.editing .resize-handle{display:block}
 body.oik-settings-open #fbar-zone,
 body.oik-settings-open #app-navbar{display:none!important}
 #ep-body{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:7px;padding:12px 10px 8px;scrollbar-width:thin}
-.ep-footer{flex-shrink:0;padding:10px 10px 12px;border-top:1px solid var(--bd)}
-.ep-logout-btn{width:100%;padding:10px;border-radius:10px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);color:rgba(248,113,113,.7);font-size:11px;font-weight:700;letter-spacing:.4px;transition:all .2s;text-transform:uppercase}
-.ep-logout-btn:hover{background:rgba(248,113,113,.18);border-color:#f87171;color:#f87171}
 .ep-pg-scroll{max-height:420px;overflow-y:auto;scrollbar-width:thin}
 .ep-saved-chip{display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:9px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);cursor:pointer;transition:background .12s;margin-bottom:4px}
 .ep-saved-chip:hover{background:rgba(99,102,241,.1);border-color:rgba(99,102,241,.25)}
 .ep-saved-chip-name{flex:1;font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff}
 .ep-saved-chip-del{width:18px;height:18px;border-radius:5px;background:rgba(248,113,113,.1);color:#f87171;font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .12s}
 .ep-saved-chip-del:hover{background:rgba(248,113,113,.3)}
-.ep-logout-btn:hover{background:rgba(248,113,113,.18);border-color:#f87171;color:#f87171}
 .ep-pg-confirm-btn{flex:1;padding:7px 4px;border-radius:9px;font-size:11px;font-weight:700;border:1px solid rgba(74,222,128,.15);background:rgba(74,222,128,.05);color:rgba(74,222,128,.3);transition:all .2s;cursor:default}
 .ep-pg-confirm-btn.dirty{border-color:rgba(74,222,128,.45);background:rgba(74,222,128,.12);color:#4ade80;cursor:pointer}
 .ep-pg-confirm-btn.dirty:hover{background:rgba(74,222,128,.22)}
@@ -384,40 +386,6 @@ select.finp option{background:#1a1e30}
 .sc-btn{padding:14px 10px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid var(--bd2);color:rgba(255,255,255,0.7);font-size:11px;font-weight:700;text-align:center;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:6px}
 .sc-btn:hover{background:rgba(99,102,241,0.15);border-color:var(--acc);color:#fff}
 .sc-ico{font-size:22px}
-
-/* ═══ LOGIN OVERLAY ═══ */
-#lov{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:900}
-#lov.off{display:none}
-html.frk-authed #lov{display:none}   /* già autenticato: login nascosto fin dal primo frame (niente flash) */
-.login-box{background:rgba(12,14,28,0.92);border:1px solid var(--bd2);border-radius:24px;padding:40px 36px;width:340px;display:flex;flex-direction:column;align-items:center;gap:0;
-  box-shadow:0 32px 80px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.05);
-  backdrop-filter:blur(20px);animation:sup .25s ease}
-.login-logo{font-size:40px;margin-bottom:8px;filter:drop-shadow(0 0 18px #6366f188)}
-.login-title{font-size:18px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px}
-.login-sub{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:28px}
-.login-inp{width:100%;padding:11px 14px;background:rgba(255,255,255,0.04);border:1px solid var(--bd2);border-radius:11px;font-size:13px;color:#fff;margin-bottom:12px;transition:border-color .2s}
-.login-inp:focus{border-color:var(--acc);background:rgba(99,102,241,0.06)}
-.login-inp::placeholder{color:var(--dim)}
-.login-btn{width:100%;padding:12px;border-radius:11px;background:var(--acc);color:#fff;font-size:13px;font-weight:700;letter-spacing:.3px;margin-top:4px;transition:background .2s;border:none}
-.login-btn:hover{background:var(--acc2)}
-.login-btn:active{transform:none}
-.login-err{font-size:11px;color:#f87171;min-height:18px;margin-top:8px;font-weight:600;letter-spacing:.3px;text-align:center}
-.login-sep{width:100%;height:1px;background:rgba(255,255,255,0.07);margin:10px 0}
-.login-adv-toggle{font-size:10px;color:var(--dim);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px;margin-bottom:6px;transition:color .2s}
-.login-adv-toggle:hover{color:rgba(255,255,255,0.6)}
-.login-adv{width:100%;display:none;flex-direction:column;gap:0}
-.login-adv.open{display:flex}
-.login-hint{font-size:9px;color:var(--dim);margin-top:-8px;margin-bottom:10px;padding:0 2px;line-height:1.5;width:100%;text-align:left}
-.login-inp-mode{display:flex;gap:6px;margin-bottom:12px;width:100%}
-.lmode-btn{flex:1;padding:7px 6px;border-radius:9px;font-size:10px;font-weight:700;border:1px solid var(--bd2);color:var(--muted);background:rgba(255,255,255,0.03);transition:all .2s;text-align:center;cursor:pointer}
-.lmode-btn:hover{color:#fff;border-color:var(--acc)}
-.lmode-btn.on{background:rgba(99,102,241,0.18);border-color:var(--acc);color:var(--acc2)}
-[data-theme="light"] .login-sep{background:rgba(15,23,42,0.08)}
-[data-theme="light"] .login-adv-toggle{color:#718096}
-[data-theme="light"] .login-adv-toggle:hover{color:#0f172a}
-[data-theme="light"] .login-hint{color:#94a3b8}
-[data-theme="light"] .lmode-btn{background:rgba(15,23,42,0.05);border-color:rgba(15,23,42,0.14);color:#4a5568}
-[data-theme="light"] .lmode-btn.on{background:rgba(99,102,241,0.12);border-color:var(--acc);color:var(--acc)}
 
 /* ═══ INFO MODAL (more-info) ═══ */
 #imod .mbox{width:420px}
@@ -550,7 +518,7 @@ body.editing .sect-add-row:hover{filter:brightness(1.15);transform:translateY(-1
   .has-hbar #page-view-header{padding:0 78px}
   /* tutti i popup/modali si adattano allo schermo del cellulare */
   .mbox{width:95vw !important;max-width:95vw !important}
-  #epanel.open .ep-hdr,#epanel.open #ep-body,#epanel.open .ep-footer{max-width:100% !important}
+  #epanel.open .ep-hdr,#epanel.open #ep-body{max-width:100% !important}
   #notif-center{right:6px;left:6px;width:auto}
   /* MOBILE: le icone dell'header spariscono e finiscono nel FAB a destra; in alto restano solo chip/orologio. */
   #mfab{display:flex!important}
@@ -1065,13 +1033,6 @@ html,body{font-family:var(--font-family)}
 [data-theme="light"] .app-row:hover,[data-theme="light"] .app-state-row:hover{background:rgba(15,23,42,0.04)}
 /* ── Scrollbar ── */
 [data-theme="light"] ::-webkit-scrollbar-thumb{background:rgba(15,23,42,0.12)}
-/* ── Login ── */
-[data-theme="light"] .login-box{background:rgba(255,255,255,0.94);border-color:rgba(15,23,42,0.1);box-shadow:0 16px 48px rgba(15,23,42,0.12)}
-[data-theme="light"] .login-title{color:#0f172a}
-[data-theme="light"] .login-sub{color:#718096}
-[data-theme="light"] .login-inp{background:rgba(15,23,42,0.04);border-color:rgba(15,23,42,0.13);color:#0f172a}
-[data-theme="light"] .login-inp::placeholder{color:#a0aec0}
-[data-theme="light"] .login-inp:focus{background:rgba(99,102,241,0.05)}
 /* ── Saved cards ── */
 [data-theme="light"] .saved-btn{background:rgba(15,23,42,0.04);border-color:rgba(15,23,42,0.09);color:#0f172a}
 [data-theme="light"] .saved-btn-type{color:#718096}
@@ -1433,8 +1394,6 @@ body.kiosk .kiosk-reload-fab:hover{background:rgba(255,255,255,0.18);color:#fff}
   background:var(--panel);border:1px solid var(--bd2);border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.6);overflow:hidden;flex-direction:column;animation:dropIn .18s ease}
 #notif-center.on{display:flex}
 .ntfc-hdr{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--bd)}
-.ntfc-act{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid var(--bd2);color:var(--muted);cursor:pointer;font-size:12px}
-.ntfc-act:hover{background:rgba(255,255,255,.12);color:#fff}
 #notif-center-list{overflow-y:auto;padding:6px;scrollbar-width:thin}
 .ntfc-item{display:flex;gap:10px;padding:10px 10px;border-radius:10px;align-items:flex-start}
 .ntfc-item:hover{background:rgba(255,255,255,.04)}
@@ -1444,16 +1403,13 @@ body.kiosk .kiosk-reload-fab:hover{background:rgba(255,255,255,0.18);color:#fff}
 .ntfc-title{font-size:12px;font-weight:700;color:#e8ebf5}
 .ntfc-msg{font-size:11px;color:var(--muted);line-height:1.35;margin-top:1px}
 .ntfc-time{font-size:9px;color:rgba(148,163,184,.6);margin-top:3px}
-/* elenco modifiche (changelog) nella notifica + tasto "Ho capito" */
+/* elenco modifiche (changelog) nella notifica */
 .ntfc-changelog{margin:6px 0 4px;padding-left:16px;display:flex;flex-direction:column;gap:3px}
 .ntfc-changelog li{font-size:11px;color:#cbd5e1;line-height:1.4}
-.ntfc-ok{margin-top:6px;padding:6px 14px;border-radius:8px;background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.4);color:#86efac;font-size:11px;font-weight:700;cursor:pointer}
-.ntfc-ok:hover{background:rgba(74,222,128,.28)}
 .ntfc-empty{padding:26px 14px;text-align:center;font-size:12px;color:var(--muted)}
-/* notifica cliccabile (aggiornamento card/plancia) */
-.ntfc-item.ntfc-action{cursor:pointer;border:1px solid rgba(99,102,241,.25);background:rgba(99,102,241,.10)}
-.ntfc-item.ntfc-action:hover{background:rgba(99,102,241,.2);border-color:rgba(99,102,241,.5)}
-.ntfc-go{align-self:center;flex-shrink:0;font-size:10px;font-weight:800;color:#a5b4fc;background:rgba(99,102,241,.2);padding:4px 8px;border-radius:8px;white-space:nowrap}
+/* "✕" per eliminare la singola notifica */
+.ntfc-x{flex-shrink:0;align-self:flex-start;width:22px;height:22px;border-radius:7px;background:transparent;border:none;color:rgba(148,163,184,.55);cursor:pointer;font-size:12px;line-height:1;transition:all .15s}
+.ntfc-x:hover{background:rgba(248,113,113,.15);color:#f87171}
 /* Banner aggiornamento plancia (stesso stile, colore verde) */
 #gh-notif{display:none;position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:9500;
   align-items:center;gap:10px;max-width:92vw;padding:10px 12px 10px 16px;border-radius:14px;cursor:pointer;

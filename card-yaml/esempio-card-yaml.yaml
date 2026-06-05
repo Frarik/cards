@@ -1,0 +1,10 @@
+type: markdown
+title: Esempio Card YAML
+content: |
+  ## 👋 Card YAML dallo Store
+  Questa card è stata **aggiunta dallo store** (scheda 📄 YAML) con il
+  pulsante **➕ Aggiungi**, senza scrivere codice.
+
+  Per pubblicare le tue card: metti un file `.yaml` (una qualsiasi card
+  Lovelace, anche con custom card HACS) nella cartella **`card-yaml/`**
+  del repository e comparirà qui, pronta da aggiungere alla dashboard.

@@ -606,6 +606,7 @@ function loadCfg(){
 }
 /* ── Salvataggio config + SINCRONIZZAZIONE su Home Assistant (dati utente, condivisi tra dispositivi) ── */
 let _cfgGetId=-1, _cfgSetId=-1, _haSaveTimer=null, _cfgSyncing=false, _cfgSynced=false, _lastPull=0;
+let _cfgManualSyncId=-1;   // id del salvataggio avviato dal pulsante "Sincronizza" → mostra il toast SOLO per quello
 function saveCfg(){
   if(!_cfgSyncing) cfg._ts=Date.now();      // timestamp ultima modifica (per "vince il più recente")
   localStorage.setItem('hadb_cfg',JSON.stringify(cfg));
@@ -718,7 +719,9 @@ setInterval(()=>{ if(!document.hidden && ws && ws.readyState===1) _haLoadCfg(); 
 function syncCfgToHA(){
   cfg._ts=Date.now(); _saveCfgLocalOnly();
   const ok=_haSaveCfg();
-  if(ok) showToast('☁️ Invio a Home Assistant…');
+  // Segna QUESTO salvataggio come "manuale": solo per lui mostriamo la conferma (vedi handler _cfgSetId).
+  // Gli auto-salvataggi a ogni modifica restano silenziosi.
+  if(ok){ _cfgManualSyncId=_cfgSetId; }
   else showToast('⚠️ Non connesso a Home Assistant');
 }
 
@@ -899,6 +902,31 @@ function _ghAskInstall(){
     _ghCheck(true).then(()=>{ if(_ghPending.length) _ghAskInstall(); else showToast('✅ Card già aggiornate'); });
   }
 }
+/* 🧹 Rimuove le card installate da GitHub diventate "orfane" (id non più prodotto da alcun file del
+   repo): vecchie versioni/duplicati che non compaiono in nessuna scheda e gonfiano il conteggio.
+   Reinstalla prima le card attuali del repo per conoscerne gli id correnti. Le card LOCALI non si toccano. */
+async function _ghCleanOrphans(){
+  showToast('🧹 Controllo card orfane…');
+  let files;
+  try{ files=await _ghApiListAll(); }
+  catch(e){ showToast('⚠️ GitHub: '+(e.message||e)); return; }
+  const repoIds=new Set();
+  for(const f of files){ try{ const card=await _ghInstallFile(f); if(card&&card.id) repoIds.add(card.id); }catch(e){} }
+  let removed=0;
+  _jsStoreList().forEach(i=>{
+    const id=i&&i.meta&&i.meta.id; const org=(i&&i.origin)||'github';
+    if(id && org==='github' && !repoIds.has(id)){
+      _jsStoreDelete(id); try{ delete window.FratechCardRegistry[id]; }catch(e){}
+      try{ const g=_ghCfg(); if(g.idFile&&g.idFile[id]){ delete g.shas[g.idFile[id]]; delete g.idFile[id]; } }catch(e){}
+      removed++;
+    }
+  });
+  saveCfg(); _haSaveCfg();
+  renderDash();
+  if(typeof _epRenderJsStore==='function') _epRenderJsStore();
+  try{ _ghStoreRender(); }catch(e){}
+  showToast(removed ? ('🧹 Rimosse '+removed+' card orfane — restano '+repoIds.size) : '✅ Nessuna card orfana');
+}
 async function _ghImportAll(){
   let files;
   try{ files=await _ghApiListAll(); }
@@ -1018,10 +1046,9 @@ async function _ghsPreview(enc, nm, cardId){
 }
 function ghStoreTab(tab){
   _ghsTab=tab;
-  ['js','chips','distintivi','yaml','pkg','local','speciali'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
+  ['js','chips','distintivi','yaml','pkg','local'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
   const s=document.getElementById('ghs-search'); if(s) s.value='';
   const loadEl=document.getElementById('ghs-load'); if(loadEl) loadEl.style.display=(tab==='local')?'':'none';
-  if(tab==='speciali'){ _ghStoreRenderSpeciali(); return; }
   if(tab==='local'){ _ghStoreRender(); _ghStoreInitDropzone(); return; }
   if(_ghsCache[tab]){ _ghStoreRender(); return; }
   document.getElementById('ghs-status').textContent='⏳ Carico da GitHub…';
@@ -1031,43 +1058,6 @@ function ghStoreTab(tab){
     _ghsCache[tab]=files.filter(x=>f.ext.test(x.name)&&!(f.exclude&&f.exclude.test(x.name)));
     if(_ghsTab===tab) _ghStoreRender();
   }).catch(e=>{ document.getElementById('ghs-status').textContent='⚠️ '+e.message; });
-}
-/* Scheda "Speciali" — card built-in di Frarik (non richiedono GitHub) */
-const _SPECIALI_CARDS = [
-  {type:'flowmap',    label:'Flusso Energia',      icon:'⚡', desc:'Mappa flusso solare/rete/casa'},
-  {type:'camera',     label:'Telecamera',           icon:'📷', desc:'Stream camera con refresh'},
-  {type:'weather',    label:'Meteo',                icon:'🌤️', desc:'Scheda meteo compatta'},
-  {type:'weather-forecast', label:'Previsioni',     icon:'📅', desc:'Previsioni su 5 giorni'},
-  {type:'media',      label:'Lettore Multimediale', icon:'🎵', desc:'Media player con controlli'},
-  {type:'climate',    label:'Termostato',           icon:'🌡️', desc:'Controllo clima/riscaldamento'},
-  {type:'multiline',  label:'Grafico Multi-Linea',  icon:'📈', desc:'Storico più entità'},
-  {type:'bar',        label:'Grafico Barre',        icon:'📊', desc:'Storico a barre'},
-  {type:'entities',   label:'Lista Entità',         icon:'📋', desc:'Elenco sensori/entità'},
-  {type:'gauge',      label:'Indicatore',           icon:'🕐', desc:'Gauge circolare'},
-  {type:'clock',      label:'Orologio',             icon:'⏰', desc:'Orologio digitale/analogico'},
-  {type:'markdown',   label:'Testo/Markdown',       icon:'📝', desc:'Testo libero con HTML'},
-  {type:'appliances', label:'Elettrodomestici',     icon:'🔌', desc:'Pannello luci e dispositivi'},
-  {type:'free',       label:'Canvas Libero',        icon:'🎨', desc:'Area di disegno personalizzata'},
-  {type:'header-bar', label:'Header Personalizzato',icon:'⊞', desc:'Barra header con widget'},
-  {type:'picture-elements', label:'Casa (Immagine)',icon:'🏠', desc:'Immagine con elementi sovrapposti'},
-];
-function _ghStoreRenderSpeciali(){
-  const list=document.getElementById('ghs-list');
-  const status=document.getElementById('ghs-status');
-  const q=(document.getElementById('ghs-search').value||'').toLowerCase().trim();
-  const items=q?_SPECIALI_CARDS.filter(c=>c.label.toLowerCase().includes(q)||c.desc.toLowerCase().includes(q)):_SPECIALI_CARDS;
-  status.textContent=_SPECIALI_CARDS.length+' card built-in'+(q?' · '+items.length+' trovate':'');
-  list.innerHTML=items.map(c=>`
-    <div class="ghs-row">
-      <div class="ghs-ico">${c.icon}</div>
-      <div class="ghs-info">
-        <div class="ghs-name">${c.label}</div>
-        <div class="ghs-sub">${c.desc}</div>
-      </div>
-      <div class="ghs-acts">
-        <button class="ghs-btn ghs-btn-inst" onclick="addSpecial('${c.type}');closeGhStore()"><i class="mdi mdi-plus"></i> Aggiungi</button>
-      </div>
-    </div>`).join('');
 }
 function _ghStoreRender(){
   const tab=_ghsTab, list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
@@ -1102,7 +1092,10 @@ function _ghStoreRender(){
         acts=`${eyeBtn(cardId)}${updateBtn}${addBtn}${delBtn}`;
       }
     } else {
-      acts=`${eyeBtn(null)}<button class="ghs-btn ghs-btn-cp" onclick="_ghsCopy('${enc}')"><i class="mdi mdi-content-copy"></i> Copia</button><button class="ghs-btn ghs-btn-cp" onclick="_ghsDownload('${enc}')"><i class="mdi mdi-download"></i></button>`;
+      // Scheda YAML: oltre a Copia/Download, "Aggiungi" crea una card YAML e la mette in dashboard.
+      // (La scheda Pacchetti resta solo Copia/Download: sono config di backend, non card.)
+      const addYaml = (tab==='yaml') ? `<button class="ghs-btn ghs-btn-inst" onclick="_ghsYamlAdd('${enc}')"><i class="mdi mdi-plus"></i> Aggiungi</button>` : '';
+      acts=`${eyeBtn(null)}${addYaml}<button class="ghs-btn ghs-btn-cp" onclick="_ghsCopy('${enc}')"><i class="mdi mdi-content-copy"></i> Copia</button><button class="ghs-btn ghs-btn-cp" onclick="_ghsDownload('${enc}')"><i class="mdi mdi-download"></i></button>`;
     }
     return `<div class="ghs-row"><div class="ghs-ico">${ico}</div><div class="ghs-info"><div class="ghs-name">${eh(nm)}</div><div class="ghs-sub">${eh(f.name)}</div></div><div class="ghs-acts">${acts}</div></div>`;
   }).join('');
@@ -1245,6 +1238,17 @@ async function _ghsDownload(name){
     const a=document.createElement('a'); a.href=u; a.download=f.name; a.click(); setTimeout(()=>URL.revokeObjectURL(u),1000);
     showToast('⬇️ Scarico '+f.name);
   }catch(e){ showToast('⚠️ Download non riuscito: '+e.message); }
+}
+/* Scheda YAML dello store → "Aggiungi alla dashboard": scarica il file YAML dal repo, apre l'import
+   precompilato e genera l'anteprima. L'utente conferma con "Aggiungi" (riusa il flusso yaml-card). */
+async function _ghsYamlAdd(name){
+  const f=_ghsFind(name); if(!f){ showToast('⚠️ File non trovato'); return; }
+  showToast('⬇️ Carico '+f.name+'…');
+  let txt; try{ txt=await _ghDownload(f); }catch(e){ showToast('⚠️ '+(e.message||e)); return; }
+  try{ closeGhStore(); }catch(e){}
+  openYamlImport();
+  const inp=document.getElementById('yaml-inp'); if(inp) inp.value=txt;
+  try{ await yamlImportParse(); }catch(e){}   // genera l'anteprima; poi l'utente preme "Aggiungi"
 }
 function _ghSchedule(){
   clearInterval(_ghTimer);
@@ -1392,9 +1396,13 @@ function onMsg(m){
   // Esito salvataggio config su HA (frontend/set_user_data)
   else if(m.type==='result'&&m.id===_cfgSetId){
     _cfgSetId=-1;
+    const isManual=(m.id===_cfgManualSyncId); if(isManual) _cfgManualSyncId=-1;
     if(m.success){
-      const np=(cfg.pages||[]).length, nj=(typeof _jsStoreList==='function'?_jsStoreList().length:0);
-      showToast('☁️ Sincronizzato su Home Assistant — '+np+' pagine, '+nj+' card JS');
+      // Conferma SOLO per la sincronizzazione manuale; gli auto-salvataggi sono silenziosi.
+      if(isManual){
+        const np=(cfg.pages||[]).length, nj=(typeof _jsStoreList==='function'?_jsStoreList().length:0);
+        showToast('☁️ Sincronizzato su Home Assistant — '+np+' pagine, '+nj+' card');
+      }
     } else {
       showToast('⚠️ Sincronizzazione fallita: '+((m.error&&m.error.message)||'dati troppo grandi'));
     }
@@ -1410,9 +1418,15 @@ function onMsg(m){
     if(remoteCfg && remoteCfg.pages && remoteTs>(cfg._ts||0)){
       // HA ha una versione più recente → adottala su questo dispositivo
       _cfgSyncing=true;
-      // 1) ripristina le card JS mancanti (codice) e registrale
-      if(remoteJs && remoteJs.length && typeof _jsStoreSave==='function'){
+      // 1) RICONCILIA le card allo stato remoto. Stiamo adottando la versione più recente "per
+      //    intero", quindi oltre ad aggiungere/aggiornare le card remote rimuoviamo anche quelle
+      //    locali che NON esistono più nel set remoto: così una card eliminata su un dispositivo
+      //    non "risorge" sugli altri (causa principale del conteggio gonfiato). Lo facciamo SOLO se
+      //    il remoto porta davvero la lista js (Array): col formato vecchio (js assente) non si tocca nulla.
+      if(Array.isArray(remoteJs) && typeof _jsStoreSave==='function'){
         remoteJs.forEach(it=>{ try{ if(it&&it.meta&&it.meta.id){ _jsStoreSave(it.meta.id,it.meta,it.code,it.origin); if(!window.FratechCardRegistry[it.meta.id]) try{ _installCardCode(it.code); }catch(e){} } }catch(e){} });
+        const remoteIds=new Set(remoteJs.map(it=>it&&it.meta&&it.meta.id).filter(Boolean));
+        try{ _jsStoreList().forEach(it=>{ const id=it&&it.meta&&it.meta.id; if(id && !remoteIds.has(id)){ _jsStoreDelete(id); try{ delete window.FratechCardRegistry[id]; }catch(e){} } }); }catch(e){}
       }
       // 2) adotta il layout
       cfg=remoteCfg; cfg._ts=remoteTs;
@@ -4184,10 +4198,6 @@ function closeOikSettings(){
     renderFbarZone();
   });
 }
-function oikSaveConfig(){
-  try{ saveCfg(); }catch(e){}
-  try{ syncCfgToHA(); }catch(e){ showToast('💾 Configurazione salvata'); }
-}
 /* ── Collapsible groups in edit panel ── */
 const _epGroupState={pg:false,saved:false};
 function _epToggleGroup(id){
@@ -5796,13 +5806,71 @@ async function _createHACard(config){
   }catch(e){ console.warn('[Frarik] createCardElement:',e&&e.message); return null; }
 }
 
+/* ════════ RENDER FEDELE "alla Oikos": dashboard HA dedicata + iframe ════════
+   Per ogni card YAML scriviamo una VISTA in una dashboard HA nascosta (frarik-yaml) e la
+   mostriamo in un <iframe>: così è Home Assistant stesso a disegnare la card → identica,
+   con TUTTI i plugin HACS. Se la dashboard/WS non è disponibile → fallback renderer interno. */
+const _FY_DASH='frarik-yaml';
+let _fyDashEnsured=false, _fyLock=Promise.resolve();
+function _fyPath(cardId){ return 'c'+String(cardId||'').toLowerCase().replace(/[^a-z0-9_-]/g,''); }
+async function _fyWS(msg,timeout){ try{ return await sendAndWait(msg,timeout||10000); }catch(e){ return null; } }
+async function _fyEnsureDashboard(){
+  if(_fyDashEnsured) return true;
+  const list=await _fyWS({type:'lovelace/dashboards/list'});
+  if(!list||!list.success) return false;
+  const ex=Array.isArray(list.result)&&list.result.find(d=>d.url_path===_FY_DASH);
+  if(!ex){
+    const cr=await _fyWS({type:'lovelace/dashboards/create',url_path:_FY_DASH,mode:'storage',title:'Frarik YAML',icon:'mdi:code-braces',show_in_sidebar:false,require_admin:false});
+    if(!cr||!cr.success) return false;
+  }
+  _fyDashEnsured=true; return true;
+}
+async function _fyGetConfig(){
+  const r=await _fyWS({type:'lovelace/config',url_path:_FY_DASH});
+  return (r&&r.success&&r.result&&typeof r.result==='object') ? r.result : {views:[]};
+}
+/* scrive/aggiorna la vista (path=cardId) con dentro la card YAML — serializzato per evitare race */
+function _fyUpsertView(cardId, cardCfg){
+  const job=_fyLock.then(async()=>{
+    if(!(ws&&ws.readyState===1)) return false;
+    if(!await _fyEnsureDashboard()) return false;
+    const cfg=await _fyGetConfig(); cfg.views=cfg.views||[];
+    const path=_fyPath(cardId);
+    const view={path, title:path, cards:[cardCfg]};
+    const i=cfg.views.findIndex(v=>v&&v.path===path);
+    if(i>=0) cfg.views[i]=view; else cfg.views.push(view);
+    const sv=await _fyWS({type:'lovelace/config/save',url_path:_FY_DASH,config:cfg});
+    return !!(sv&&sv.success);
+  });
+  _fyLock=job.catch(()=>{});
+  return job;
+}
 async function _mountYamlCard(card, container){
-  container.innerHTML='<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px">⏳ Carico risorse…</div>';
-  if(!_lovelaceResourcesLoaded){ try{ await _loadLovelaceResources(); }catch(e){} await new Promise(r=>setTimeout(r,700)); }
-  if(!container.isConnected) return;
+  container.innerHTML='<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px">⏳ Carico…</div>';
   let cfg;
   try{ cfg=jsyaml.load(card.lovelaceConfig); }
   catch(e){ container.innerHTML='<div style="padding:12px;color:#f87171;font-size:11px">YAML: '+eh(e.message)+'</div>'; return; }
+  // 1) Tentativo FEDELE: dashboard HA dedicata + iframe (render nativo di HA)
+  let iframed=false;
+  try{
+    if(await _fyUpsertView(card.id, cfg)){
+      if(!container.isConnected) return;
+      container.innerHTML='';
+      container.style.cssText='display:block;width:100%;height:100%';
+      const f=document.createElement('iframe');
+      // root-relative → risolve sull'origine di HA (la plancia gira sotto il dominio HA via ingress).
+      // ?kiosk nasconde header/sidebar se è installato kiosk-mode (HACS).
+      f.src='/'+_FY_DASH+'/'+encodeURIComponent(_fyPath(card.id))+'?kiosk';
+      f.setAttribute('allow','fullscreen; autoplay; camera; microphone; clipboard-write');
+      f.style.cssText='display:block;width:100%;height:100%;min-height:200px;border:0;border-radius:10px;background:transparent';
+      container.appendChild(f);
+      iframed=true;
+    }
+  }catch(e){ console.warn('[Frarik] yaml iframe:',e&&e.message); }
+  if(iframed) return;
+  // 2) Fallback: renderer interno leggero (card semplici)
+  if(!_lovelaceResourcesLoaded){ try{ await _loadLovelaceResources(); }catch(e){} await new Promise(r=>setTimeout(r,700)); }
+  if(!container.isConnected) return;
   container.innerHTML='';
   container.style.cssText='display:block;width:100%;height:100%;overflow:auto';
   const el=await _yamlCreateEl(cfg);
@@ -6266,13 +6334,22 @@ function _jsStoreList(){
   for(let i=0; i<localStorage.length; i++){
     const k = localStorage.key(i);
     if(!k || !k.startsWith('fratech_jscard_')) continue;
-    try { out.push(JSON.parse(localStorage.getItem(k))); } catch(e){}
+    let v=null; try { v=JSON.parse(localStorage.getItem(k)); } catch(e){}
+    // scarta voci corrotte/vuote: una card valida ha sempre meta.id e codice
+    if(v && v.meta && v.meta.id && v.code) out.push(v);
   }
   return out;
 }
 
 /* Carica tutti i .js salvati al boot */
 function _jsStoreBootAll(){
+  // pulizia: rimuovi dal localStorage eventuali chiavi corrotte/vuote (senza meta.id o codice),
+  // così non restano a gonfiare il conteggio dello Store.
+  try{
+    const bad=[];
+    for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(!k||!k.startsWith('fratech_jscard_')) continue; let v=null; try{ v=JSON.parse(localStorage.getItem(k)); }catch(e){} if(!(v&&v.meta&&v.meta.id&&v.code)) bad.push(k); }
+    bad.forEach(k=>{ try{ localStorage.removeItem(k); }catch(e){} });
+  }catch(e){}
   _jsStoreList().forEach(item => {
     try { _installCardCode(item.code); } catch(e){ console.warn('[FratechStore] Errore boot card:', e.message); }
   });
@@ -8194,103 +8271,6 @@ function tick(){
 }
 tick(); setInterval(tick,30000);
 
-/* ═══ LOGIN ═══ */
-let _loginMode = localStorage.getItem('hadb_loginmode') || 'local';
-
-function setLoginMode(mode){
-  _loginMode = mode;
-  localStorage.setItem('hadb_loginmode', mode);
-  document.getElementById('lmode-local').classList.toggle('on', mode==='local');
-  document.getElementById('lmode-remote').classList.toggle('on', mode==='remote');
-  document.getElementById('l-remote-section').style.display = mode==='remote' ? 'flex' : 'none';
-}
-
-function toggleLoginAdv(){
-  const el = document.getElementById('l-adv');
-  el.classList.toggle('open');
-  document.querySelector('.login-adv-toggle').textContent =
-    el.classList.contains('open') ? '🔧 Token avanzato ▴' : '🔧 Token avanzato ▾';
-}
-
-function doLogin(){
-  const u=document.getElementById('l-user').value.trim();
-  const p=document.getElementById('l-pass').value;
-  const savedU=localStorage.getItem('hadb_user')||'admin';
-  const savedP=localStorage.getItem('hadb_pass')||'admin';
-  if(u===savedU && p===savedP){
-    if(_loginMode==='remote'){
-      // Leggi e salva URL Nabu Casa
-      const rawUrl = document.getElementById('l-haurl').value.trim();
-      if(!rawUrl){
-        const err=document.getElementById('l-err');
-        err.textContent='Inserisci l\'URL Nabu Casa';
-        setTimeout(()=>err.textContent='',2500);
-        return;
-      }
-      try{
-        const u2=new URL(rawUrl.startsWith('http')?rawUrl:'https://'+rawUrl);
-        HA_HOST=u2.host; BASE=u2.origin;
-      }catch(e){
-        HA_HOST=rawUrl.replace(/^https?:\/\//,'').replace(/\/$/,'');
-        BASE='https://'+HA_HOST;
-      }
-      localStorage.setItem('hadb_haurl', rawUrl);
-      // Token personalizzato
-      const customToken = document.getElementById('l-token').value.trim();
-      if(customToken){ TOKEN=customToken; localStorage.setItem('hadb_token', customToken); }
-      else { TOKEN=localStorage.getItem('hadb_token')||TOKEN_DEFAULT; }
-    } else {
-      // Locale/automatico: connessione alla STESSA origine (funziona sia in locale sia da remoto)
-      if(location.protocol==='http:'||location.protocol==='https:'){ HA_HOST=location.host; BASE=location.origin; }
-      else { HA_HOST=LOCAL_FALLBACK; BASE='http://'+HA_HOST; }
-      TOKEN=localStorage.getItem('hadb_token')||TOKEN_DEFAULT;
-      localStorage.removeItem('hadb_haurl');
-    }
-    // Salva credenziali in localStorage
-    localStorage.setItem('hadb_user', u);
-    localStorage.setItem('hadb_pass', p);
-    localStorage.setItem('ha_auth','1');   // ricorda l'accesso anche dopo chiusura (niente login ogni volta)
-    document.getElementById('lov').classList.add('off');
-    _jsStoreBootAll();
-    renderDash();
-    _connTargets=[]; _connIdx=0; _connBusy=false;
-    connect();
-  } else {
-    const err=document.getElementById('l-err');
-    err.textContent='Credenziali non valide';
-    document.getElementById('l-pass').value='';
-    document.getElementById('l-pass').focus();
-    setTimeout(()=>err.textContent='',2500);
-  }
-}
-
-function doLogout(){
-  localStorage.removeItem('ha_auth');
-  sessionStorage.removeItem('ha_auth');
-  // Chiudi WebSocket
-  if(ws){ try{ ws.close(); }catch(e){} ws=null; }
-  clearTimeout(reconn);
-  // Esci da kiosk se attivo
-  if(_kioskOn) toggleKiosk();
-  // Mostra login con credenziali pre-riempite
-  document.documentElement.classList.remove('frk-authed');  // riattiva la visibilità del login
-  const lov=document.getElementById('lov');
-  lov.classList.remove('off');
-  const savedU=localStorage.getItem('hadb_user')||'';
-  const savedP=localStorage.getItem('hadb_pass')||'';
-  document.getElementById('l-user').value=savedU;
-  document.getElementById('l-pass').value=savedP;
-  document.getElementById('l-err').textContent='';
-  document.getElementById('l-user').focus();
-  // Reset connessione
-  setC('off');
-  document.getElementById('cmsg').textContent='Connessione a Home Assistant…';
-  document.getElementById('cov-skip').style.display='none';
-}
-['l-user','l-pass','l-haurl'].forEach(id=>{
-  document.getElementById(id)?.addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
-});
-
 /* ═══ HEADER BAR (left section) ═══ */
 
 function renderHdrChips(){
@@ -8323,32 +8303,16 @@ function openHBM_HDR(){
     if(ct){ const r=document.documentElement.style; r.setProperty('--acc',ct.acc); r.setProperty('--acc2',ct.acc2); r.setProperty('--glow1',ct.g[0]); r.setProperty('--glow2',ct.g[1]); r.setProperty('--glow3',ct.g[2]); if(t!=='light'){ r.setProperty('--bg',ct.bg); r.setProperty('--panel',ct.panel); r.setProperty('--panel2',ct.panel2); } }
   }catch(e){}
 })();
-/* Ripristina modalità e campi login salvati */
+/* Ripristina l'indirizzo remoto salvato nell'overlay di connessione */
 (function(){
-  // Servita da HA (http/https) → sempre "locale" = stessa origine (vale per accesso locale E remoto).
-  // La modalità "remoto" con URL fisso ha senso solo se la pagina è aperta come file (file://).
-  const mode = (location.protocol==='file:') ? (localStorage.getItem('hadb_loginmode')||'local') : 'local';
-  setLoginMode(mode);
-  const savedUrl = localStorage.getItem('hadb_haurl')||'';
-  if(savedUrl) document.getElementById('l-haurl').value = savedUrl;
-  const savedU = localStorage.getItem('hadb_user')||'';
-  const savedP = localStorage.getItem('hadb_pass')||'';
-  if(savedU) document.getElementById('l-user').value = savedU;
-  if(savedP) document.getElementById('l-pass').value = savedP;
-  const savedToken = localStorage.getItem('hadb_token')||'';
-  if(savedToken){ document.getElementById('l-token').value = savedToken; }
   const savedRemote = localStorage.getItem('hadb_remote')||REMOTE_URL_DEFAULT;
   const cre=document.getElementById('cov-remote-url'); if(cre) cre.value=savedRemote;
 })();
 
-if(localStorage.getItem('ha_auth')==='1' || sessionStorage.getItem('ha_auth')==='1'){
-  document.getElementById('lov').classList.add('off');
-  _jsStoreBootAll();
-  renderDash();
-  connect();
-} else {
-  document.getElementById('l-user').focus();
-}
+/* Login rimosso: si entra sempre direttamente nella dashboard */
+_jsStoreBootAll();
+renderDash();
+connect();
 
 /* Se la plancia è appena stata auto-aggiornata, mostra la notifica informativa "aggiornata alla versione X" */
 try{
@@ -9143,7 +9107,8 @@ function _notifCheck(eid, prevState, newState){
       if(qi!==-1){ _ntfQueue[qi]={rule,ctx}; continue; }
     }
     _ntfQueue.push({rule, ctx});
-    try{ _ntfPushLog(ctx.title, ctx.msg, rule.icon||'🔔'); }catch(e){}   // raccogli nel centro notifiche
+    // Le notifiche smart restano un sistema a sé (popup a regole): NON finiscono nel centro notifiche,
+    // che è riservato alle notifiche informative (aggiornamenti, nuove card, ecc.).
     if(!_ntfActive) _ntfShowNext();
   }
 }
@@ -9396,23 +9361,16 @@ function _ntfRelTime(ts){
 function renderNotifCenter(){
   const el=document.getElementById('notif-center-list'); if(!el) return;
   if(!_ntfLog.length){ el.innerHTML='<div class="ntfc-empty">Nessuna notifica</div>'; return; }
-  el.innerHTML=_ntfLog.map((n,i)=>{
+  // Notifiche SOLO informative: nessuna azione/clic, ogni voce ha la "✕" per eliminarla.
+  el.innerHTML=_ntfLog.map((n)=>{
     const hasChangelog=Array.isArray(n.changelog)&&n.changelog.length;
-    // le notifiche con changelog NON sono cliccabili tutte: hanno il tasto "Ho capito"
-    const act=(n.action&&!hasChangelog)?` ntfc-action" onclick="_ntfAction('${n.action}')` : '"';
-    const hint=(n.action&&!hasChangelog)?'<span class="ntfc-go">Aggiorna ›</span>':'';
     const clHtml=hasChangelog?`<ul class="ntfc-changelog">${n.changelog.map(li=>`<li>${eh(li)}</li>`).join('')}</ul>`:'';
-    const okBtn=hasChangelog?`<button class="ntfc-ok" onclick="event.stopPropagation();_ntfDismissById('${n.id}')">Ho capito</button>`:'';
-    return `<div class="ntfc-item${n.read?'':' unread'}${act}">
+    return `<div class="ntfc-item${n.read?'':' unread'}">
       <div class="ntfc-ico">${n.icon||'🔔'}</div>
-      <div class="ntfc-body"><div class="ntfc-title">${eh(n.title||'')}</div>${n.msg?`<div class="ntfc-msg">${eh(n.msg)}</div>`:''}${clHtml}${okBtn}<div class="ntfc-time">${_ntfRelTime(n.ts)}</div></div>
-      ${hint}
+      <div class="ntfc-body"><div class="ntfc-title">${eh(n.title||'')}</div>${n.msg?`<div class="ntfc-msg">${eh(n.msg)}</div>`:''}${clHtml}<div class="ntfc-time">${_ntfRelTime(n.ts)}</div></div>
+      <button class="ntfc-x" onclick="event.stopPropagation();_ntfDismissById('${n.id}')" title="Elimina notifica">✕</button>
     </div>`;
   }).join('');
-}
-/* clic sulla notifica card → chiede conferma e aggiorna (la notifica si rimuove solo dopo conferma) */
-function _ntfAction(key){
-  if(key==='gh'){ _ghAskInstall(); }
 }
 function toggleNotifCenter(ev){
   if(ev) ev.stopPropagation();
@@ -9423,12 +9381,19 @@ function toggleNotifCenter(ev){
 function closeNotifCenter(){ const c=document.getElementById('notif-center'); if(c) c.classList.remove('on'); document.removeEventListener('click',_ntfOutside); }
 function _ntfOutside(e){ const c=document.getElementById('notif-center'),b=document.getElementById('notif-bell'); if(c&&!c.contains(e.target)&&b&&!b.contains(e.target)) closeNotifCenter(); }
 function ntfMarkAllRead(){ _ntfLog.forEach(n=>n.read=true); _ntfSaveLog(); _ntfUpdateBell(); }
-function ntfClearAll(){ _ntfLog=[]; _ntfSaveLog(); _ntfUpdateBell(); renderNotifCenter(); }
 function openSOSCfg(){
   document.getElementById('sos-cfg-modal').classList.add('open');
   renderSOSCfgList();
 }
 function closeSOSCfg(){
+  // rimuovi i contatti rimasti completamente vuoti (es. riga aggiunta e mai compilata):
+  // non devono contare nel badge né restare salvati.
+  try{
+    const sc=_sosCfg();
+    const before=sc.contacts.length;
+    sc.contacts=sc.contacts.filter(c=>c&&((c.name||'').trim()||(c.notifyService||'').trim()||(c.phone||'').trim()));
+    if(sc.contacts.length!==before){ saveCfg(); _ntfUpdateSidebarBadges(); }
+  }catch(e){}
   document.getElementById('sos-cfg-modal').classList.remove('open');
 }
 function _ntfUpdateSidebarBadges(){
@@ -9436,7 +9401,7 @@ function _ntfUpdateSidebarBadges(){
   const el=document.getElementById('ntf-ep-count');
   if(el){ const on=rules.filter(r=>r.enabled).length; el.textContent=rules.length?`${on}/${rules.length} attive`:''; }
   const sos=document.getElementById('sos-ep-count');
-  if(sos){ const n=(_sosCfg().contacts||[]).length; sos.textContent=n?`${n} contatti`:''; }
+  if(sos){ const n=(_sosCfg().contacts||[]).filter(c=>c&&((c.name||'').trim()||(c.notifyService||'').trim()||(c.phone||'').trim())).length; sos.textContent=n?`${n} contatt${n===1?'o':'i'}`:''; }
 }
 
 /* ═══ UNIVERSAL ENTITY PICKER ═══ */
@@ -10111,6 +10076,7 @@ Object.assign(window, {
   _feClick,
   _feEpSearch,
   _ghAskInstall,
+  _ghCleanOrphans,
   _ghCheck,
   _ghDismiss,
   _ghImportAll,
@@ -10123,6 +10089,7 @@ Object.assign(window, {
   _ghsPreview,
   _ghsPublish,
   _ghsReloadTab,
+  _ghsYamlAdd,
   _hbOptionsPopup,
   _hbPickClockColor,
   _hbPickCmapColor,
@@ -10138,7 +10105,6 @@ Object.assign(window, {
   _inViewDelBadge,
   _inViewEditBadge,
   _inViewPasteBadge,
-  _ntfAction,
   _ntfDelRule,
   _ntfDismiss,
   _ntfDismissById,
@@ -10226,8 +10192,6 @@ Object.assign(window, {
   delSectTitle,
   deleteSaved,
   deleteViewFromEdit,
-  doLogin,
-  doLogout,
   doToggle,
   dupCard,
   ea,
@@ -10279,9 +10243,7 @@ Object.assign(window, {
   moveBadge,
   moveSectBadge,
   ntfAddRule,
-  ntfClearAll,
   ntfMarkAllRead,
-  oikSaveConfig,
   onClickActionChange,
   onCustomColorToggle,
   onTypeChange,
@@ -10326,7 +10288,6 @@ Object.assign(window, {
   selShape,
   send,
   setActivePage,
-  setLoginMode,
   setSectBadgesAlign,
   setSectColor,
   setSectSize,
@@ -10350,7 +10311,6 @@ Object.assign(window, {
   toggleFontPop,
   toggleHASidebar,
   toggleKiosk,
-  toggleLoginAdv,
   toggleMobileMenu,
   toggleNotifCenter,
   toggleSectBold,

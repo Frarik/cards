@@ -11,39 +11,25 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@400;600;700;800;900&family=Nunito:wght@400;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="./assets/index-BrM6lMqg.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-B7B8Cun2.css">
+  <script type="module" crossorigin src="./assets/index-DGOLUYbF.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-BqN42jQp.css">
 </head>
 <body>
 
-<!-- LOGIN OVERLAY -->
-<div id="lov">
-  <div class="login-box">
-    <div class="login-logo">⚡</div>
-    <div class="login-title">FRARIK</div>
-    <div class="login-sub">Accesso Richiesto</div>
-    <!-- Modalità connessione -->
-    <div class="login-inp-mode">
-      <button class="lmode-btn on" id="lmode-local" onclick="setLoginMode('local')">🏠 Locale</button>
-      <button class="lmode-btn" id="lmode-remote" onclick="setLoginMode('remote')">🌐 Remoto</button>
-    </div>
-    <input class="login-inp" id="l-user" type="text" placeholder="Utente" autocomplete="username">
-    <input class="login-inp" id="l-pass" type="password" placeholder="Password" autocomplete="current-password">
-    <!-- Sezione remoto (Nabu Casa) -->
-    <div id="l-remote-section" style="width:100%;display:none;flex-direction:column">
-      <div class="login-sep"></div>
-      <input class="login-inp" id="l-haurl" type="url" placeholder="https://xxxxx.ui.nabu.casa" autocomplete="url" style="margin-bottom:4px">
-      <div class="login-hint">📡 Indirizzo Nabu Casa Cloud — es. <code>https://xxxxx.ui.nabu.casa</code></div>
-      <button class="login-adv-toggle" onclick="toggleLoginAdv()">🔧 Token avanzato ▾</button>
-      <div class="login-adv" id="l-adv">
-        <input class="login-inp" id="l-token" type="password" placeholder="Token di accesso a lunga durata" autocomplete="off" style="font-size:10px;font-family:monospace">
-        <div class="login-hint">Lascia vuoto per usare il token predefinito del file</div>
-      </div>
-    </div>
-    <button class="login-btn" onclick="doLogin()">Accedi</button>
-    <div class="login-err" id="l-err"></div>
-  </div>
+<!-- SPLASH / SCHERMATA DI AVVIO (logo + barra di caricamento, ~3.5s) -->
+<div id="frk-splash">
+  <img id="frk-splash-logo" src="./logo.png" alt="Frarik Domotica">
+  <div class="frk-splash-bar"><div class="frk-splash-bar-fill"></div></div>
 </div>
+<script>
+  (function(){
+    var s=document.getElementById('frk-splash'); if(!s) return;
+    setTimeout(function(){
+      s.classList.add('hide');
+      setTimeout(function(){ if(s&&s.parentNode) s.parentNode.removeChild(s); }, 650);
+    }, 3500);
+  })();
+</script>
 
 <!-- CONN OVERLAY -->
 <div id="cov"><div class="spin"></div><div id="cmsg">Connessione a Home Assistant…</div>
@@ -912,12 +898,12 @@
         <button id="ep-btn-paste-clr" class="ep-paste-clr" onclick="clearClipboard()" title="Svuota appunti">✕</button>
       </div>
 
-      <div class="oik-cat">Aspetto</div>
+      <div class="oik-cat">Plancia</div>
 
-      <!-- ── Impostazioni Pagina ── -->
+      <!-- ── Plancia (Pagina + Sistema + Barra inferiore in un unico menù) ── -->
       <button class="cfg-open-btn" onclick="_epToggleGroup('pg')" id="ep-pg-btn"
         style="background:rgba(99,102,241,.08);border-color:rgba(99,102,241,.2);color:#a5b4fc">
-        ⚙️ <span style="flex:1">Impostazioni Pagina</span>
+        🖥 <span style="flex:1">Plancia</span>
         <span id="ep-pg-arrow" style="color:rgba(255,255,255,.2);font-size:14px;transition:transform .2s">▾</span>
       </button>
       <div id="ep-pg-group" style="display:none;flex-direction:column;gap:0;background:rgba(99,102,241,.05);border:1px solid rgba(99,102,241,.15);border-radius:10px;overflow:hidden;max-height:420px;overflow-y:auto;scrollbar-width:thin">
@@ -952,18 +938,9 @@
           <button id="ep-pg-confirm" class="ep-pg-confirm-btn" onclick="confirmPageSettings()" disabled>✓ Conferma</button>
           <button id="ep-pg-cancel" class="ep-pg-cancel-btn" onclick="cancelPageSettings()">↩ Annulla</button>
         </div>
-      </div>
-
-      <div class="oik-cat">Layout</div>
-
-      <!-- ── Sistema / Plancia ── -->
-      <button class="cfg-open-btn" onclick="_epToggleGroup('sys');_sysLoad()" id="ep-sys-btn"
-        style="background:rgba(34,211,238,.08);border-color:rgba(34,211,238,.2);color:#22d3ee">
-        🖥 <span style="flex:1">Sistema · Plancia</span>
-        <span id="ep-sys-arrow" style="color:rgba(255,255,255,.2);font-size:14px;transition:transform .2s">▾</span>
-      </button>
-      <div id="ep-sys-group" style="display:none;flex-direction:column;background:rgba(34,211,238,.04);border:1px solid rgba(34,211,238,.12);border-radius:10px;overflow:hidden">
-        <div style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.05)">
+        <!-- Sistema (screensaver, tema automatico, colonna singola) -->
+        <div style="padding:10px 12px;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.05)">
+          <div class="ep-sec-title" style="margin-bottom:6px">Sistema</div>
           <div class="sys-row"><span class="sys-lbl">🖼 Screensaver</span><button class="sys-tog" id="sys-ss-tog" onclick="_sysToggle('ss')"></button></div>
           <div class="sys-sub">Dopo inattività: orologio + meteo a tutto schermo</div>
           <div class="sys-row" style="margin-top:8px"><span class="sys-lbl2">Attesa</span>
@@ -979,13 +956,20 @@
           <div class="sys-row" id="sys-th-times" style="margin-top:6px"><span class="sys-lbl2">Chiaro / Scuro</span>
             <div style="display:flex;gap:4px"><input class="sys-time" id="sys-th-light" type="time" onchange="_sysSaveTH()"><input class="sys-time" id="sys-th-dark" type="time" onchange="_sysSaveTH()"></div></div>
         </div>
-        <div style="padding:10px 12px">
+        <div style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.05)">
           <div class="sys-row"><span class="sys-lbl">📱 Colonna singola (cell)</span></div>
           <div class="sys-sub">Su telefono impila tutto in 1 colonna</div>
           <div class="sys-row" style="margin-top:6px"><span class="sys-lbl2">Modo</span>
             <select class="sys-sel" id="sys-mob" onchange="_sysSaveMob()"><option value="auto">Auto (telefono)</option><option value="always">Sempre</option><option value="off">Mai</option></select></div>
         </div>
+        <!-- Barra inferiore (apre l'editor dedicato) -->
+        <div style="padding:10px 12px">
+          <div class="ep-sec-title" style="margin-bottom:6px">Barra inferiore</div>
+          <button class="ep-add2" onclick="openFBM()">▭ Configura barra inferiore <span id="ep-fbar-status" style="font-size:10px;opacity:.55"></span></button>
+        </div>
       </div>
+
+      <div class="oik-cat">Altro</div>
 
       <!-- ── Store ── -->
       <button class="cfg-open-btn" onclick="openGhStore()"
@@ -994,15 +978,6 @@
         <span id="ep-jsstore-count" style="font-size:10px;color:rgba(134,239,172,.6)"></span>
         <span style="color:rgba(255,255,255,.2);font-size:16px">›</span>
       </button>
-
-      <!-- ── Barra inferiore (footer + navigazione = una sola barra) ── -->
-      <button class="cfg-open-btn" onclick="openFBM()" style="background:rgba(20,184,166,.08);border-color:rgba(20,184,166,.2);color:#2dd4bf">
-        ▭ <span style="flex:1">Barra inferiore</span>
-        <span id="ep-fbar-status" style="font-size:10px;color:rgba(45,212,191,.6)"></span>
-        <span style="color:rgba(255,255,255,.2);font-size:16px">›</span>
-      </button>
-
-      <div class="oik-cat">Comportamento</div>
 
       <!-- ── Notifiche Smart ── -->
       <button class="cfg-open-btn" onclick="openNotifCfg()" style="background:rgba(129,140,248,.1);border-color:rgba(129,140,248,.3);color:#818cf8">
@@ -1026,23 +1001,12 @@
         <span style="font-size:9px;color:rgba(34,211,238,.6)">salva su HA</span>
       </button>
 
-      <!-- ── Esci dalla dashboard (stile riga Oikos) ── -->
-      <button class="cfg-open-btn" onclick="doLogout()" style="background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.2);color:#f87171">
-        ⏻ <span style="flex:1">Esci dalla Dashboard</span>
-        <span style="color:rgba(255,255,255,.2);font-size:16px">›</span>
-      </button>
-
       <!-- ── Versione plancia ── -->
       <div style="text-align:center;padding:10px 0 2px;font-size:10px;color:rgba(255,255,255,.22);font-weight:600;letter-spacing:.4px;user-select:none;pointer-events:none">
         Frarik Dashboard Versione <span id="ep-ver-label"></span>
       </div>
 
     </div><!-- /ep-body -->
-
-    <!-- ── FOOTER fisso: salva (stile Oikos) ── -->
-    <div class="ep-footer">
-      <button class="oik-save" onclick="oikSaveConfig()">⤓ &nbsp;Salva configurazione</button>
-    </div>
 
   </div>
 </div>
@@ -1093,11 +1057,6 @@
 <div id="notif-center">
   <div class="ntfc-hdr">
     <span style="font-weight:800;font-size:13px">🔔 Notifiche</span>
-    <div style="display:flex;gap:6px;margin-left:auto">
-      <button class="ntfc-act" onclick="ntfMarkAllRead()" title="Segna tutte lette">✓</button>
-      <button class="ntfc-act" onclick="ntfClearAll()" title="Svuota">🗑</button>
-      <button class="ntfc-act" onclick="closeNotifCenter();openNotifCfg()" title="Gestisci regole notifiche">⚙️</button>
-    </div>
   </div>
   <div id="notif-center-list"></div>
 </div>
@@ -1288,10 +1247,10 @@
         <button class="jsst-tab"    id="ghs-tab-yaml"       onclick="ghStoreTab('yaml')">📄 YAML</button>
         <button class="jsst-tab"    id="ghs-tab-pkg"        onclick="ghStoreTab('pkg')">📦 Pacchetti</button>
         <button class="jsst-tab"    id="ghs-tab-local"      onclick="ghStoreTab('local')">📁 Card locali</button>
-        <button class="jsst-tab"    id="ghs-tab-speciali"   onclick="ghStoreTab('speciali')">✨ Speciali</button>
         <div style="display:flex;gap:4px;margin-left:auto">
           <button class="jsst-tab" onclick="closeGhStore();openYamlImport()" title="Incolla YAML da HACS" style="color:#818cf8;font-size:11px;padding:4px 10px;font-weight:700"><i class="mdi mdi-code-braces"></i> YAML</button>
           <button class="jsst-tab" onclick="_ghsReloadTab()" title="Ricarica da GitHub" style="font-size:14px;padding:4px 8px">↻</button>
+          <button class="jsst-tab" onclick="_ghCleanOrphans()" title="Rimuovi card orfane (installate non più nel repo)" style="font-size:13px;padding:4px 8px">🧹</button>
           <button class="jsst-tab" onclick="openGitHubCfg()" title="Impostazioni GitHub">⚙️</button>
         </div>
       </div>
