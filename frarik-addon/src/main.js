@@ -1092,7 +1092,10 @@ function _ghStoreRender(){
         acts=`${eyeBtn(cardId)}${updateBtn}${addBtn}${delBtn}`;
       }
     } else {
-      acts=`${eyeBtn(null)}<button class="ghs-btn ghs-btn-cp" onclick="_ghsCopy('${enc}')"><i class="mdi mdi-content-copy"></i> Copia</button><button class="ghs-btn ghs-btn-cp" onclick="_ghsDownload('${enc}')"><i class="mdi mdi-download"></i></button>`;
+      // Scheda YAML: oltre a Copia/Download, "Aggiungi" crea una card YAML e la mette in dashboard.
+      // (La scheda Pacchetti resta solo Copia/Download: sono config di backend, non card.)
+      const addYaml = (tab==='yaml') ? `<button class="ghs-btn ghs-btn-inst" onclick="_ghsYamlAdd('${enc}')"><i class="mdi mdi-plus"></i> Aggiungi</button>` : '';
+      acts=`${eyeBtn(null)}${addYaml}<button class="ghs-btn ghs-btn-cp" onclick="_ghsCopy('${enc}')"><i class="mdi mdi-content-copy"></i> Copia</button><button class="ghs-btn ghs-btn-cp" onclick="_ghsDownload('${enc}')"><i class="mdi mdi-download"></i></button>`;
     }
     return `<div class="ghs-row"><div class="ghs-ico">${ico}</div><div class="ghs-info"><div class="ghs-name">${eh(nm)}</div><div class="ghs-sub">${eh(f.name)}</div></div><div class="ghs-acts">${acts}</div></div>`;
   }).join('');
@@ -1235,6 +1238,17 @@ async function _ghsDownload(name){
     const a=document.createElement('a'); a.href=u; a.download=f.name; a.click(); setTimeout(()=>URL.revokeObjectURL(u),1000);
     showToast('⬇️ Scarico '+f.name);
   }catch(e){ showToast('⚠️ Download non riuscito: '+e.message); }
+}
+/* Scheda YAML dello store → "Aggiungi alla dashboard": scarica il file YAML dal repo, apre l'import
+   precompilato e genera l'anteprima. L'utente conferma con "Aggiungi" (riusa il flusso yaml-card). */
+async function _ghsYamlAdd(name){
+  const f=_ghsFind(name); if(!f){ showToast('⚠️ File non trovato'); return; }
+  showToast('⬇️ Carico '+f.name+'…');
+  let txt; try{ txt=await _ghDownload(f); }catch(e){ showToast('⚠️ '+(e.message||e)); return; }
+  try{ closeGhStore(); }catch(e){}
+  openYamlImport();
+  const inp=document.getElementById('yaml-inp'); if(inp) inp.value=txt;
+  try{ await yamlImportParse(); }catch(e){}   // genera l'anteprima; poi l'utente preme "Aggiungi"
 }
 function _ghSchedule(){
   clearInterval(_ghTimer);
@@ -10017,6 +10031,7 @@ Object.assign(window, {
   _ghsPreview,
   _ghsPublish,
   _ghsReloadTab,
+  _ghsYamlAdd,
   _hbOptionsPopup,
   _hbPickClockColor,
   _hbPickCmapColor,

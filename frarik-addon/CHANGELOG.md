@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.16 — 2026-06-05
+
+### Aggiunto
+- Store, scheda 📄 YAML: pulsante **➕ Aggiungi** che scarica la card YAML dal repo, ne mostra l'anteprima e la inserisce nella dashboard come `yaml-card` (rende qualsiasi card Lovelace/HACS via `createCardElement`). Le card YAML si mettono nella cartella `card-yaml/` del repo. Aggiunto un esempio.
+
 ## 1.1.15 — 2026-06-05
 
 ### Modificato
