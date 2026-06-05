@@ -1383,8 +1383,6 @@ body.kiosk .kiosk-reload-fab:hover{background:rgba(255,255,255,0.18);color:#fff}
   background:var(--panel);border:1px solid var(--bd2);border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.6);overflow:hidden;flex-direction:column;animation:dropIn .18s ease}
 #notif-center.on{display:flex}
 .ntfc-hdr{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--bd)}
-.ntfc-act{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid var(--bd2);color:var(--muted);cursor:pointer;font-size:12px}
-.ntfc-act:hover{background:rgba(255,255,255,.12);color:#fff}
 #notif-center-list{overflow-y:auto;padding:6px;scrollbar-width:thin}
 .ntfc-item{display:flex;gap:10px;padding:10px 10px;border-radius:10px;align-items:flex-start}
 .ntfc-item:hover{background:rgba(255,255,255,.04)}
@@ -1394,16 +1392,13 @@ body.kiosk .kiosk-reload-fab:hover{background:rgba(255,255,255,0.18);color:#fff}
 .ntfc-title{font-size:12px;font-weight:700;color:#e8ebf5}
 .ntfc-msg{font-size:11px;color:var(--muted);line-height:1.35;margin-top:1px}
 .ntfc-time{font-size:9px;color:rgba(148,163,184,.6);margin-top:3px}
-/* elenco modifiche (changelog) nella notifica + tasto "Ho capito" */
+/* elenco modifiche (changelog) nella notifica */
 .ntfc-changelog{margin:6px 0 4px;padding-left:16px;display:flex;flex-direction:column;gap:3px}
 .ntfc-changelog li{font-size:11px;color:#cbd5e1;line-height:1.4}
-.ntfc-ok{margin-top:6px;padding:6px 14px;border-radius:8px;background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.4);color:#86efac;font-size:11px;font-weight:700;cursor:pointer}
-.ntfc-ok:hover{background:rgba(74,222,128,.28)}
 .ntfc-empty{padding:26px 14px;text-align:center;font-size:12px;color:var(--muted)}
-/* notifica cliccabile (aggiornamento card/plancia) */
-.ntfc-item.ntfc-action{cursor:pointer;border:1px solid rgba(99,102,241,.25);background:rgba(99,102,241,.10)}
-.ntfc-item.ntfc-action:hover{background:rgba(99,102,241,.2);border-color:rgba(99,102,241,.5)}
-.ntfc-go{align-self:center;flex-shrink:0;font-size:10px;font-weight:800;color:#a5b4fc;background:rgba(99,102,241,.2);padding:4px 8px;border-radius:8px;white-space:nowrap}
+/* "✕" per eliminare la singola notifica */
+.ntfc-x{flex-shrink:0;align-self:flex-start;width:22px;height:22px;border-radius:7px;background:transparent;border:none;color:rgba(148,163,184,.55);cursor:pointer;font-size:12px;line-height:1;transition:all .15s}
+.ntfc-x:hover{background:rgba(248,113,113,.15);color:#f87171}
 /* Banner aggiornamento plancia (stesso stile, colore verde) */
 #gh-notif{display:none;position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:9500;
   align-items:center;gap:10px;max-width:92vw;padding:10px 12px 10px 16px;border-radius:14px;cursor:pointer;

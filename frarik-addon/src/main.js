@@ -8989,7 +8989,8 @@ function _notifCheck(eid, prevState, newState){
       if(qi!==-1){ _ntfQueue[qi]={rule,ctx}; continue; }
     }
     _ntfQueue.push({rule, ctx});
-    try{ _ntfPushLog(ctx.title, ctx.msg, rule.icon||'🔔'); }catch(e){}   // raccogli nel centro notifiche
+    // Le notifiche smart restano un sistema a sé (popup a regole): NON finiscono nel centro notifiche,
+    // che è riservato alle notifiche informative (aggiornamenti, nuove card, ecc.).
     if(!_ntfActive) _ntfShowNext();
   }
 }
@@ -9242,23 +9243,16 @@ function _ntfRelTime(ts){
 function renderNotifCenter(){
   const el=document.getElementById('notif-center-list'); if(!el) return;
   if(!_ntfLog.length){ el.innerHTML='<div class="ntfc-empty">Nessuna notifica</div>'; return; }
-  el.innerHTML=_ntfLog.map((n,i)=>{
+  // Notifiche SOLO informative: nessuna azione/clic, ogni voce ha la "✕" per eliminarla.
+  el.innerHTML=_ntfLog.map((n)=>{
     const hasChangelog=Array.isArray(n.changelog)&&n.changelog.length;
-    // le notifiche con changelog NON sono cliccabili tutte: hanno il tasto "Ho capito"
-    const act=(n.action&&!hasChangelog)?` ntfc-action" onclick="_ntfAction('${n.action}')` : '"';
-    const hint=(n.action&&!hasChangelog)?'<span class="ntfc-go">Aggiorna ›</span>':'';
     const clHtml=hasChangelog?`<ul class="ntfc-changelog">${n.changelog.map(li=>`<li>${eh(li)}</li>`).join('')}</ul>`:'';
-    const okBtn=hasChangelog?`<button class="ntfc-ok" onclick="event.stopPropagation();_ntfDismissById('${n.id}')">Ho capito</button>`:'';
-    return `<div class="ntfc-item${n.read?'':' unread'}${act}">
+    return `<div class="ntfc-item${n.read?'':' unread'}">
       <div class="ntfc-ico">${n.icon||'🔔'}</div>
-      <div class="ntfc-body"><div class="ntfc-title">${eh(n.title||'')}</div>${n.msg?`<div class="ntfc-msg">${eh(n.msg)}</div>`:''}${clHtml}${okBtn}<div class="ntfc-time">${_ntfRelTime(n.ts)}</div></div>
-      ${hint}
+      <div class="ntfc-body"><div class="ntfc-title">${eh(n.title||'')}</div>${n.msg?`<div class="ntfc-msg">${eh(n.msg)}</div>`:''}${clHtml}<div class="ntfc-time">${_ntfRelTime(n.ts)}</div></div>
+      <button class="ntfc-x" onclick="event.stopPropagation();_ntfDismissById('${n.id}')" title="Elimina notifica">✕</button>
     </div>`;
   }).join('');
-}
-/* clic sulla notifica card → chiede conferma e aggiorna (la notifica si rimuove solo dopo conferma) */
-function _ntfAction(key){
-  if(key==='gh'){ _ghAskInstall(); }
 }
 function toggleNotifCenter(ev){
   if(ev) ev.stopPropagation();
@@ -9269,7 +9263,6 @@ function toggleNotifCenter(ev){
 function closeNotifCenter(){ const c=document.getElementById('notif-center'); if(c) c.classList.remove('on'); document.removeEventListener('click',_ntfOutside); }
 function _ntfOutside(e){ const c=document.getElementById('notif-center'),b=document.getElementById('notif-bell'); if(c&&!c.contains(e.target)&&b&&!b.contains(e.target)) closeNotifCenter(); }
 function ntfMarkAllRead(){ _ntfLog.forEach(n=>n.read=true); _ntfSaveLog(); _ntfUpdateBell(); }
-function ntfClearAll(){ _ntfLog=[]; _ntfSaveLog(); _ntfUpdateBell(); renderNotifCenter(); }
 function openSOSCfg(){
   document.getElementById('sos-cfg-modal').classList.add('open');
   renderSOSCfgList();
@@ -9984,7 +9977,6 @@ Object.assign(window, {
   _inViewDelBadge,
   _inViewEditBadge,
   _inViewPasteBadge,
-  _ntfAction,
   _ntfDelRule,
   _ntfDismiss,
   _ntfDismissById,
@@ -10123,7 +10115,6 @@ Object.assign(window, {
   moveBadge,
   moveSectBadge,
   ntfAddRule,
-  ntfClearAll,
   ntfMarkAllRead,
   onClickActionChange,
   onCustomColorToggle,

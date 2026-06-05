@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.8 — 2026-06-05
+
+### Modificato
+- Centro notifiche (campanella) ora **solo informativo**: niente clic/azioni, ogni notifica ha la "✕" per eliminarla
+- Rimosse le 3 icone in alto nel pannello notifiche (segna lette / svuota / regole)
+- **Disaccoppiato** il centro notifiche dalle notifiche smart: le regole smart restano un sistema a sé (popup) e non finiscono più nella campanella
+
 ## 1.1.7 — 2026-06-05
 
 ### Modificato
