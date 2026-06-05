@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.64 — 2026-06-05
+
+### Passo 11/16 — Configurazione SOS rifatta
+- **Telefonata vera**: campo numero di telefono per contatto + pulsante "📞 Chiama" che apre il dialer (tel:).
+- **Editor più ricco**: riordino contatti (▲▼), messaggio personalizzato per contatto, campo numero, picker icona.
+- **Avvisa tutti / SOS rapido**: pulsante "📢 Avvisa TUTTI" nel popup; toggle "⚡ SOS rapido" che salta la scelta "chi sei".
+- **Posizione**: le notifiche SOS allegano il link Google Maps della posizione della persona (se disponibile) e usano il messaggio personalizzato del contatto.
+
 ## 1.1.63 — 2026-06-05
 
 ### Passo 10/16 — Notifiche smart potenziate

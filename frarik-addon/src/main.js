@@ -8868,6 +8868,7 @@ function _sosGetPeople(){
 
 /* ── STEP 1: apri — chi sei? ── */
 function openSOS(){
+  if(_sosCfg().quickMode){ _sosPerson={name:'SOS',entity_id:null}; openSOS2(); return; }  // SOS rapido
   _sosPeopleArr=_sosGetPeople();
   const grid=document.getElementById('sos-people-grid');
   const noP=document.getElementById('sos-no-people');
@@ -8929,18 +8930,22 @@ function openSOS2(){
   if(!visible.length){
     list.innerHTML=`<div class="sos-no-contacts">${allContacts.length?'Nessun altro contatto disponibile.':'Nessun contatto configurato.'}<br><span style="font-size:10px">${allContacts.length?'':'Aggiungili nel pannello Modifica → sezione SOS.'}</span></div>`;
   } else {
-    list.innerHTML=visible.map(({c,i})=>{
+    const anyService=visible.some(({c})=>c.notifyService);
+    const allBtn=anyService?`<button class="sos-act-btn sos-act-call" style="width:100%;margin-bottom:10px;justify-content:center;font-weight:800" data-action="sosAlertAll">📢 Avvisa TUTTI i contatti</button>`:'';
+    list.innerHTML=allBtn+visible.map(({c,i})=>{
       const hasService=!!c.notifyService;
       const callBtn=hasService
-        ? `<button class="sos-act-btn sos-act-call" data-action="sosCall" data-action-args='[${i}]'>📞 Chiama</button>` : '';
+        ? `<button class="sos-act-btn sos-act-call" data-action="sosCall" data-action-args='[${i}]'>🔔 Avvisa</button>` : '';
+      const telBtn=c.phone
+        ? `<a class="sos-act-btn sos-act-call" href="tel:${eh(c.phone)}" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center">📞 Chiama</a>` : '';
       const msgBtn=hasService
         ? `<button class="sos-act-btn sos-act-notify" data-action="sosNotify" data-action-args='[${i}]'>💬 Messaggio</button>` : '';
-      const noSvc=!hasService
-        ? `<span style="font-size:10px;color:rgba(255,255,255,.3)">Nessun servizio configurato</span>` : '';
+      const noSvc=(!hasService&&!c.phone)
+        ? `<span style="font-size:10px;color:rgba(255,255,255,.3)">Nessun servizio/numero</span>` : '';
       return `<div class="sos-contact-row">
         <div class="sos-contact-ico">${c.icon||'👤'}</div>
         <div class="sos-contact-name">${eh(c.name||'—')}</div>
-        <div class="sos-contact-acts" style="flex-wrap:wrap;gap:6px">${callBtn}${msgBtn}${noSvc}</div>
+        <div class="sos-contact-acts" style="flex-wrap:wrap;gap:6px">${telBtn}${callBtn}${msgBtn}${noSvc}</div>
       </div>`;
     }).join('');
   }
@@ -8963,7 +8968,7 @@ function sosCall(idx){
     service:c.notifyService.replace(/^notify\./,''),
     service_data:{
       title:'📞 CHIAMATA SOS',
-      message:`${p.name} ti sta chiamando! Rispondi subito. (${now})`,
+      message:(c.message||`${p.name} ti sta chiamando! Rispondi subito.`)+` (${now})`+(_sosLocLink()?`\n📍 ${_sosLocLink()}`:''),
       data:{
         /* Android companion app — usa lo stream ALLARME (bypassa silenzioso/DND) */
         channel:'alarm_stream',
@@ -9001,7 +9006,7 @@ function sosNotify(idx){
     service:c.notifyService.replace(/^notify\./,''),
     service_data:{
       title:'🆘 Messaggio SOS',
-      message:`${p.name} ha bisogno di aiuto! (${now})`,
+      message:(c.message||`${p.name} ha bisogno di aiuto!`)+` (${now})`+(_sosLocLink()?`\n📍 ${_sosLocLink()}`:''),
       data:{
         /* Android — notifica normale alta priorità, suono notifica standard */
         channel:'sos_message',
@@ -9070,13 +9075,20 @@ function renderSOSCfgList(){
       </select>
       <button class="sos-cfg-add" style="padding:4px 10px;margin:0" data-action="sosAddPerson">➕</button>
     </div>`:'<div style="font-size:10px;color:var(--dim);margin-top:4px">Tutte le persone HA sono già incluse</div>'}
-    <div style="height:12px;border-bottom:1px solid rgba(255,255,255,.06);margin:10px 0 10px"></div>
+    <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);cursor:pointer;margin:8px 0">
+      <input type="checkbox" ${sc.quickMode?'checked':''} data-input="_sosSetQuick"> ⚡ SOS rapido (salta la scelta "chi sei", vai diretto ai contatti)
+    </label>
+    <div style="height:12px;border-bottom:1px solid rgba(255,255,255,.06);margin:6px 0 10px"></div>
     <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Contatti di emergenza</div>`;
 
   // ── sezione CONTATTI ──
   const contactRows=contacts.length
     ? contacts.map((c,i)=>`
       <div class="sos-cfg-contact">
+        <div style="display:flex;flex-direction:column;gap:1px">
+          <button class="sos-cfg-del" data-action="sosMoveContact" data-action-args='[${i},-1]' title="Su" style="font-size:10px;padding:0 4px;${i===0?'opacity:.25;pointer-events:none':''}">▲</button>
+          <button class="sos-cfg-del" data-action="sosMoveContact" data-action-args='[${i},1]' title="Giù" style="font-size:10px;padding:0 4px;${i===contacts.length-1?'opacity:.25;pointer-events:none':''}">▼</button>
+        </div>
         <div style="display:flex;gap:3px;align-items:center">
           <input class="sos-cfg-ico-inp" type="text" value="${eh(c.icon||'👤')}" placeholder="👤"
             data-input="sosUpdateContact" data-input-args='[${i},"icon"]'>
@@ -9087,11 +9099,15 @@ function renderSOSCfgList(){
           <input class="sos-cfg-inp" type="text" value="${eh(c.name||'')}" placeholder="Nome contatto"
             data-input="sosUpdateContact" data-input-args='[${i},"name"]'>
           <div style="display:flex;gap:5px;align-items:center">
-            <input id="sos-svc-inp-${i}" class="sos-cfg-inp" type="text" value="${eh(c.notifyService||'')}" placeholder="Servizio HA (es. mobile_app_pixel_7)"
+            <input id="sos-svc-inp-${i}" class="sos-cfg-inp" type="text" value="${eh(c.notifyService||'')}" placeholder="Servizio HA notify (es. mobile_app_pixel_7)"
               data-input="sosUpdateContact" data-input-args='[${i},"notifyService"]' style="flex:1">
             <button class="ntf-pick-btn" style="width:28px;height:28px;border-radius:7px;font-size:13px" title="Sfoglia servizi notify"
               data-action="_sosPickService" data-action-args='[${i}]'>🔍</button>
           </div>
+          <input class="sos-cfg-inp" type="tel" value="${eh(c.phone||'')}" placeholder="📞 Numero di telefono (opzionale)"
+            data-input="sosUpdateContact" data-input-args='[${i},"phone"]'>
+          <input class="sos-cfg-inp" type="text" value="${eh(c.message||'')}" placeholder="💬 Messaggio personalizzato (opzionale)"
+            data-input="sosUpdateContact" data-input-args='[${i},"message"]'>
         </div>
         <button class="sos-cfg-del" data-action="sosDeleteContact" data-action-args='[${i}]' title="Elimina">🗑</button>
       </div>`).join('')
@@ -9116,7 +9132,7 @@ function sosRemovePerson(i){
 }
 
 function sosAddContact(){
-  _sosCfg().contacts.push({id:uid(),name:'',icon:'👤',phone:'',notifyService:''});
+  _sosCfg().contacts.push({id:uid(),name:'',icon:'👤',phone:'',message:'',notifyService:''});
   saveCfg(); renderSOSCfgList();
 }
 
@@ -9129,6 +9145,22 @@ function sosDeleteContact(i){
   _sosCfg().contacts.splice(i,1);
   saveCfg(); renderSOSCfgList();
 }
+
+function sosMoveContact(i,dir){
+  const arr=_sosCfg().contacts, j=i+dir;
+  if(j<0||j>=arr.length) return;
+  [arr[i],arr[j]]=[arr[j],arr[i]];
+  saveCfg(); renderSOSCfgList();
+}
+function _sosSetQuick(val){ _sosCfg().quickMode=!!val; saveCfg(); }
+
+/* link Google Maps dalla posizione GPS della persona che ha lanciato l'SOS (se disponibile) */
+function _sosLocLink(){
+  try{ const eid=_sosPerson&&_sosPerson.entity_id; const a=eid?(ha[eid]||{}):{};
+    if(a.latitude!=null&&a.longitude!=null) return 'https://maps.google.com/?q='+a.latitude+','+a.longitude;
+  }catch(e){} return '';
+}
+
 
 /* hook: renderizza lista SOS quando si apre il pannello edit */
 const _origToggleEdit=toggleEdit;
@@ -10935,6 +10967,7 @@ Object.assign(window, {
   sosAlertAll,
   sosCall,
   sosDeleteContact,
+  sosMoveContact,
   sosNotify,
   sosRemovePerson,
   sosUpdateContact,
@@ -10960,7 +10993,7 @@ Object.assign(window, {
   _jsStoreAddAndRefresh, _deleteSavedAt, _appChipPopupAt, _setActivePageAndSync,
   _pgWarnClose, _sendCallSvc,
   _appItemPickIcon, _appItemPickColor, _appGroupPickColor,
-  _sosPickIcon, _sosPickService,
+  _sosPickIcon, _sosPickService, _sosSetQuick,
   _fePickIconBtn, _fePickIconEl,
   _ntfPickEntityFor, _ntfPickIcon, _ntfPickDuration, _ntfPickCam, _ntfPickAlexa, _ntfPickCond, _ntfPickMobile,
   _hbDelColorMapEntry, _hbDelIconMapEntry,
