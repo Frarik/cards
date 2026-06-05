@@ -8,7 +8,7 @@ import { _ntfPushLog, _ntfDismissById, _ntfUpdateBell, ntfMarkAllRead, ntfClearA
 window.Chart  = Chart;
 window.jsyaml = jsyaml;
 
-// ── Nasconde la barra HA ingress ─────────────────────────────────────────────
+// ── Nasconde la barra HA ingress (ha-panel-app) ──────────────────────────────
 (function(){
   if(window.parent===window) return;
 
@@ -22,51 +22,41 @@ window.jsyaml = jsyaml;
     return null;
   }
 
-  function injectCSS(sr, css){
+  function hideInShadow(sr){
+    if(!sr) return false;
+    // Inietta CSS nella shadow root (penetra l'encapsulation)
     try{
-      // adoptedStyleSheets: inietta CSS direttamente nella shadow root
       const sheet=new window.parent.CSSStyleSheet();
-      sheet.replaceSync(css);
+      sheet.replaceSync(`
+        app-header,app-toolbar,ha-top-app-bar-fixed,
+        [slot="header"],.header,header{display:none!important;height:0!important}
+        app-header-layout,app-drawer-layout,:host{padding-top:0!important;--header-height:0px}
+        iframe{top:0!important;height:100%!important}
+      `);
       sr.adoptedStyleSheets=[...sr.adoptedStyleSheets, sheet];
-      return true;
-    }catch(e){ return false; }
+    }catch(e){}
+    // Rimozione diretta come backup
+    for(const s of ['app-header','ha-top-app-bar-fixed','[slot="header"]','header']){
+      const el=sr.querySelector(s); if(el){ el.remove(); break; }
+    }
+    return true;
   }
 
   function tryHide(){
     try{
       const pd=window.parent.document;
-      let found=false;
-
-      // Candidati in ordine di probabilità per diverse versioni HA
-      for(const tag of ['hassio-addon-ingress-view','hassio-ingress-view','ha-panel-hassio']){
+      // HA 2024+: ha-panel-app è il wrapper ingress
+      // HA precedente: hassio-addon-ingress-view o ha-panel-hassio
+      for(const tag of ['ha-panel-app','hassio-addon-ingress-view','hassio-ingress-view','ha-panel-hassio']){
         const el=shadowQuery(pd, tag);
-        if(!el) continue;
-        const sr=el.shadowRoot; if(!sr) continue;
-
-        // 1. adoptedStyleSheets (miglior metodo, penetra shadow DOM)
-        injectCSS(sr, `
-          app-header,app-toolbar,[slot="header"],.header{display:none!important;height:0!important;min-height:0!important}
-          app-header-layout,#ingress,.ingress-frame,iframe{padding-top:0!important;top:0!important;height:100%!important}
-        `);
-
-        // 2. Manipolazione diretta come backup
-        for(const sel of ['app-header','app-toolbar','[slot="header"]']){
-          const hdr=sr.querySelector(sel);
-          if(hdr){ hdr.remove(); found=true; break; }
-        }
-
-        // 3. Fix iframe
-        const ifr=sr.querySelector('iframe');
-        if(ifr){ ifr.style.cssText+='top:0!important;height:100vh!important'; }
-
-        found=true; break;
+        if(el?.shadowRoot){ hideInShadow(el.shadowRoot); return true; }
       }
-      return found;
+      return false;
     }catch(e){ return false; }
   }
 
   let done=false;
-  [0,50,200,500,1200,3000].forEach(d=>setTimeout(()=>{ if(!done) done=tryHide(); },d));
+  [0,50,150,400,900,2000].forEach(d=>setTimeout(()=>{ if(!done) done=tryHide(); },d));
 })();
 
 // ── Splash screen (ex script inline in index.html) ────────────────────────
