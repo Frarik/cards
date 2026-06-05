@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.61 — 2026-06-05
+
+### Passo 8/16 — Viste
+- Sotto-menù "Pagina" rinominato in "Viste"; "Pagina corrente" → "Vista corrente"; "Elimina pagina" → "Elimina vista".
+- Rimosso il campo "Titolo nella dashboard" dalle impostazioni (il titolo si può mettere nell'header). Riferimenti JS resi null-safe.
+- I campi della vista (icona/nome) seguono la vista corrente: si aggiornano all'apertura e quando cambi vista.
+
 ## 1.1.60 — 2026-06-05
 
 ### Passo 7/16 — Rimosso "Layout griglia"

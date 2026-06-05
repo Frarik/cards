@@ -3863,7 +3863,8 @@ function _renderViewFooter(){
 function focusViewTitle(){ openSectMod('header'); }
 
 function updateViewTitle(){
-  const val=document.getElementById('ep-view-title').value;
+  const _vt=document.getElementById('ep-view-title'); if(!_vt) return;
+  const val=_vt.value;
   curPage().viewTitle=val;
   saveCfg();
   _renderViewHeader();
@@ -3922,7 +3923,7 @@ function saveSectMod(){
     page.viewTitle=document.getElementById('sect-title-text').value.trim();
     if(!page.viewTitleStyle) page.viewTitleStyle={};
     page.viewTitleStyle.color=_sectColor;
-    document.getElementById('ep-view-title').value=page.viewTitle;
+    { const _e=document.getElementById('ep-view-title'); if(_e) _e.value=page.viewTitle; }
     if(!page.headerBadgesStyle) page.headerBadgesStyle={};
     page.headerBadgesStyle.align=_sectBadgesAlign;
   } else {
@@ -4387,7 +4388,7 @@ function openOikSettings(){
   const p=curPage();
   document.getElementById('ep-page-ico').value=p.icon||'📄';
   document.getElementById('ep-page-name').value=p.name||'Pagina';
-  document.getElementById('ep-view-title').value=p.viewTitle||'';
+  { const _e=document.getElementById('ep-view-title'); if(_e) _e.value=p.viewTitle||''; }
   document.getElementById('ep-del-page').style.display=cfg.pages.length>1?'block':'none';
   _updateEditPanelForPage(p);
   _pgSnapshot();
@@ -7459,7 +7460,7 @@ function setActivePage(idx){
       const p=curPage();
       document.getElementById('ep-page-ico').value=p.icon||'📄';
       document.getElementById('ep-page-name').value=p.name||'Pagina';
-      document.getElementById('ep-view-title').value=p.viewTitle||'';
+      { const _e=document.getElementById('ep-view-title'); if(_e) _e.value=p.viewTitle||''; }
       document.getElementById('ep-del-page').style.display=cfg.pages.length>1?'block':'none';
       renderSectionsList();
       _updateEditPanelForPage(p);
@@ -7825,10 +7826,10 @@ function confirmPageSettings(){
   const p=curPage();
   const ico=document.getElementById('ep-page-ico').value.trim();
   const nm=document.getElementById('ep-page-name').value.trim();
-  const vt=document.getElementById('ep-view-title').value.trim();
+  const _vtEl=document.getElementById('ep-view-title');
   if(ico) p.icon=ico;
   p.name=nm;
-  p.viewTitle=vt;
+  if(_vtEl) p.viewTitle=_vtEl.value.trim();
   saveCfg(); renderPageTabs();
   _pgSnapshot();
   showToast('✓ Impostazioni pagina salvate');
@@ -7845,7 +7846,7 @@ function cancelPageSettings(){
   }
   document.getElementById('ep-page-ico').value=_pgOriginal.icon||'📄';
   document.getElementById('ep-page-name').value=_pgOriginal.name||'';
-  document.getElementById('ep-view-title').value=_pgOriginal.viewTitle||'';
+  { const _e=document.getElementById('ep-view-title'); if(_e) _e.value=_pgOriginal.viewTitle||''; }
   _pgDirty=false;
   _pgUpdateConfirmBtn();
   renderPageTabs();
