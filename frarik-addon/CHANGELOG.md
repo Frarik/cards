@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.19 — 2026-06-05
+
+### Aggiunto (sperimentale)
+- Card YAML rese in modo **fedele come in Home Assistant**: ogni card YAML viene scritta come vista in una dashboard HA nascosta (`frarik-yaml`) e mostrata in `<iframe>`, così la disegna HA stesso con tutti i plugin HACS. Fallback automatico al renderer interno se la dashboard/WS non è disponibile. Per nascondere header/sidebar dentro l'iframe serve il plugin **kiosk-mode** (HACS).
+
 ## 1.1.18 — 2026-06-05
 
 ### Corretto

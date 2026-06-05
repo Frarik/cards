@@ -5806,13 +5806,71 @@ async function _createHACard(config){
   }catch(e){ console.warn('[Frarik] createCardElement:',e&&e.message); return null; }
 }
 
+/* ════════ RENDER FEDELE "alla Oikos": dashboard HA dedicata + iframe ════════
+   Per ogni card YAML scriviamo una VISTA in una dashboard HA nascosta (frarik-yaml) e la
+   mostriamo in un <iframe>: così è Home Assistant stesso a disegnare la card → identica,
+   con TUTTI i plugin HACS. Se la dashboard/WS non è disponibile → fallback renderer interno. */
+const _FY_DASH='frarik-yaml';
+let _fyDashEnsured=false, _fyLock=Promise.resolve();
+function _fyPath(cardId){ return 'c'+String(cardId||'').toLowerCase().replace(/[^a-z0-9_-]/g,''); }
+async function _fyWS(msg,timeout){ try{ return await sendAndWait(msg,timeout||10000); }catch(e){ return null; } }
+async function _fyEnsureDashboard(){
+  if(_fyDashEnsured) return true;
+  const list=await _fyWS({type:'lovelace/dashboards/list'});
+  if(!list||!list.success) return false;
+  const ex=Array.isArray(list.result)&&list.result.find(d=>d.url_path===_FY_DASH);
+  if(!ex){
+    const cr=await _fyWS({type:'lovelace/dashboards/create',url_path:_FY_DASH,mode:'storage',title:'Frarik YAML',icon:'mdi:code-braces',show_in_sidebar:false,require_admin:false});
+    if(!cr||!cr.success) return false;
+  }
+  _fyDashEnsured=true; return true;
+}
+async function _fyGetConfig(){
+  const r=await _fyWS({type:'lovelace/config',url_path:_FY_DASH});
+  return (r&&r.success&&r.result&&typeof r.result==='object') ? r.result : {views:[]};
+}
+/* scrive/aggiorna la vista (path=cardId) con dentro la card YAML — serializzato per evitare race */
+function _fyUpsertView(cardId, cardCfg){
+  const job=_fyLock.then(async()=>{
+    if(!(ws&&ws.readyState===1)) return false;
+    if(!await _fyEnsureDashboard()) return false;
+    const cfg=await _fyGetConfig(); cfg.views=cfg.views||[];
+    const path=_fyPath(cardId);
+    const view={path, title:path, cards:[cardCfg]};
+    const i=cfg.views.findIndex(v=>v&&v.path===path);
+    if(i>=0) cfg.views[i]=view; else cfg.views.push(view);
+    const sv=await _fyWS({type:'lovelace/config/save',url_path:_FY_DASH,config:cfg});
+    return !!(sv&&sv.success);
+  });
+  _fyLock=job.catch(()=>{});
+  return job;
+}
 async function _mountYamlCard(card, container){
-  container.innerHTML='<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px">⏳ Carico risorse…</div>';
-  if(!_lovelaceResourcesLoaded){ try{ await _loadLovelaceResources(); }catch(e){} await new Promise(r=>setTimeout(r,700)); }
-  if(!container.isConnected) return;
+  container.innerHTML='<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px">⏳ Carico…</div>';
   let cfg;
   try{ cfg=jsyaml.load(card.lovelaceConfig); }
   catch(e){ container.innerHTML='<div style="padding:12px;color:#f87171;font-size:11px">YAML: '+eh(e.message)+'</div>'; return; }
+  // 1) Tentativo FEDELE: dashboard HA dedicata + iframe (render nativo di HA)
+  let iframed=false;
+  try{
+    if(await _fyUpsertView(card.id, cfg)){
+      if(!container.isConnected) return;
+      container.innerHTML='';
+      container.style.cssText='display:block;width:100%;height:100%';
+      const f=document.createElement('iframe');
+      // root-relative → risolve sull'origine di HA (la plancia gira sotto il dominio HA via ingress).
+      // ?kiosk nasconde header/sidebar se è installato kiosk-mode (HACS).
+      f.src='/'+_FY_DASH+'/'+encodeURIComponent(_fyPath(card.id))+'?kiosk';
+      f.setAttribute('allow','fullscreen; autoplay; camera; microphone; clipboard-write');
+      f.style.cssText='display:block;width:100%;height:100%;min-height:200px;border:0;border-radius:10px;background:transparent';
+      container.appendChild(f);
+      iframed=true;
+    }
+  }catch(e){ console.warn('[Frarik] yaml iframe:',e&&e.message); }
+  if(iframed) return;
+  // 2) Fallback: renderer interno leggero (card semplici)
+  if(!_lovelaceResourcesLoaded){ try{ await _loadLovelaceResources(); }catch(e){} await new Promise(r=>setTimeout(r,700)); }
+  if(!container.isConnected) return;
   container.innerHTML='';
   container.style.cssText='display:block;width:100%;height:100%;overflow:auto';
   const el=await _yamlCreateEl(cfg);
