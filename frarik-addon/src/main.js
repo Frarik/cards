@@ -4399,8 +4399,17 @@ function closeOikSettings(){
   _pgCheckDirtyAndProceed(()=>{
     try{ sessionStorage.removeItem('dash_settings'); }catch(e){}
     const ep=document.getElementById('epanel');
-    const finish=()=>{ document.body.classList.remove('oik-settings-open'); if(ep){ ep.classList.remove('open'); ep.classList.remove('closing'); } renderFbarZone(); };
-    if(ep && ep.classList.contains('open')){ ep.classList.add('closing'); setTimeout(finish,270); }  // slide-down poi chiudi
+    const finish=()=>{
+      document.body.classList.remove('oik-settings-open');
+      if(ep){
+        ep.style.transition='none'; // blocca la transizione width (evita slide destra→sinistra)
+        ep.classList.remove('open');
+        ep.classList.remove('closing');
+        requestAnimationFrame(()=>{ ep.style.transition=''; }); // ripristina dopo il reflow
+      }
+      renderFbarZone();
+    };
+    if(ep && ep.classList.contains('open')){ ep.classList.add('closing'); setTimeout(finish,270); }
     else finish();
   });
 }
