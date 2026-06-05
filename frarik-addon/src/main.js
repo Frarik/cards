@@ -4146,10 +4146,6 @@ function closeOikSettings(){
     renderFbarZone();
   });
 }
-function oikSaveConfig(){
-  try{ saveCfg(); }catch(e){}
-  try{ syncCfgToHA(); }catch(e){ showToast('💾 Configurazione salvata'); }
-}
 /* ── Collapsible groups in edit panel ── */
 const _epGroupState={pg:false,saved:false};
 function _epToggleGroup(id){
@@ -10128,7 +10124,6 @@ Object.assign(window, {
   ntfAddRule,
   ntfClearAll,
   ntfMarkAllRead,
-  oikSaveConfig,
   onClickActionChange,
   onCustomColorToggle,
   onTypeChange,

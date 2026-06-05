@@ -260,7 +260,6 @@ body.editing .resize-handle{display:block}
 #epanel.open .ep-title{font-size:19px;letter-spacing:.2px}
 #epanel.open .ep-x{width:34px;height:34px;font-size:15px;border-radius:10px}
 #epanel.open #ep-body{max-width:840px;width:100%;margin:0 auto;padding:2px 22px 28px;gap:9px}
-#epanel.open .ep-footer{max-width:840px;width:100%;margin:0 auto;padding:12px 22px 16px;background:transparent}
 /* Righe impostazioni UNIFORMI scure (identico a Oikos: niente colori, solo dark + chevron) */
 #epanel.open .cfg-open-btn{padding:15px 18px!important;font-size:13px!important;font-weight:600!important;border-radius:12px!important;
   background:#0d101c!important;border:1px solid rgba(255,255,255,.06)!important;color:#e8ebf5!important;box-shadow:none!important}
@@ -276,10 +275,6 @@ body.editing .resize-handle{display:block}
 /* category header (uppercase muto, come Oikos) */
 .oik-cat{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:rgba(148,163,184,.65);margin:16px 2px 4px}
 .oik-cat:first-of-type{margin-top:6px}
-/* orange "Salva config" come Oikos */
-.oik-save{width:100%;padding:14px;border-radius:12px;cursor:pointer;font-size:13px;font-weight:800;letter-spacing:.3px;
-  color:#fb923c;border:1px solid rgba(251,146,60,.55);background:rgba(251,146,60,.1);transition:all .15s;text-align:center}
-.oik-save:hover{background:rgba(251,146,60,.18);border-color:#fb923c}
 /* primary Aggiungi Card button */
 .oik-add{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:16px;border-radius:16px;cursor:pointer;font-size:14px;font-weight:800;letter-spacing:.3px;color:#fff;border:1px solid rgba(99,102,241,.5);
   background:linear-gradient(135deg,rgba(99,102,241,.95),rgba(139,92,246,.95));box-shadow:0 8px 26px -8px rgba(99,102,241,.6);transition:transform .15s,box-shadow .15s}
@@ -289,16 +284,12 @@ body.editing .resize-handle{display:block}
 body.oik-settings-open #fbar-zone,
 body.oik-settings-open #app-navbar{display:none!important}
 #ep-body{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:7px;padding:12px 10px 8px;scrollbar-width:thin}
-.ep-footer{flex-shrink:0;padding:10px 10px 12px;border-top:1px solid var(--bd)}
-.ep-logout-btn{width:100%;padding:10px;border-radius:10px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);color:rgba(248,113,113,.7);font-size:11px;font-weight:700;letter-spacing:.4px;transition:all .2s;text-transform:uppercase}
-.ep-logout-btn:hover{background:rgba(248,113,113,.18);border-color:#f87171;color:#f87171}
 .ep-pg-scroll{max-height:420px;overflow-y:auto;scrollbar-width:thin}
 .ep-saved-chip{display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:9px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);cursor:pointer;transition:background .12s;margin-bottom:4px}
 .ep-saved-chip:hover{background:rgba(99,102,241,.1);border-color:rgba(99,102,241,.25)}
 .ep-saved-chip-name{flex:1;font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff}
 .ep-saved-chip-del{width:18px;height:18px;border-radius:5px;background:rgba(248,113,113,.1);color:#f87171;font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .12s}
 .ep-saved-chip-del:hover{background:rgba(248,113,113,.3)}
-.ep-logout-btn:hover{background:rgba(248,113,113,.18);border-color:#f87171;color:#f87171}
 .ep-pg-confirm-btn{flex:1;padding:7px 4px;border-radius:9px;font-size:11px;font-weight:700;border:1px solid rgba(74,222,128,.15);background:rgba(74,222,128,.05);color:rgba(74,222,128,.3);transition:all .2s;cursor:default}
 .ep-pg-confirm-btn.dirty{border-color:rgba(74,222,128,.45);background:rgba(74,222,128,.12);color:#4ade80;cursor:pointer}
 .ep-pg-confirm-btn.dirty:hover{background:rgba(74,222,128,.22)}
@@ -516,7 +507,7 @@ body.editing .sect-add-row:hover{filter:brightness(1.15);transform:translateY(-1
   .has-hbar #page-view-header{padding:0 78px}
   /* tutti i popup/modali si adattano allo schermo del cellulare */
   .mbox{width:95vw !important;max-width:95vw !important}
-  #epanel.open .ep-hdr,#epanel.open #ep-body,#epanel.open .ep-footer{max-width:100% !important}
+  #epanel.open .ep-hdr,#epanel.open #ep-body{max-width:100% !important}
   #notif-center{right:6px;left:6px;width:auto}
   /* MOBILE: le icone dell'header spariscono e finiscono nel FAB a destra; in alto restano solo chip/orologio. */
   #mfab{display:flex!important}

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.6 — 2026-06-05
+
+### Rimosso
+- Pulsante "Salva configurazione" dalle impostazioni: ridondante perché la config si salva e sincronizza su HA automaticamente a ogni modifica. Rimossi anche `oikSaveConfig`, il footer e il CSS orfano (`.ep-footer`, `.oik-save`, `.ep-logout-btn`).
+
 ## 1.1.5 — 2026-06-05
 
 ### Pulizia
