@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.41 — 2026-06-05
+
+### Corretto
+- Rimosso pulsante "Controlla aggiornamenti" dalle impostazioni Frarik
+- CHANGELOG.md aggiornato e visibile nel tab Changelog dell'add-on in HA
+
+## 1.1.40 — 2026-06-05
+
+### Aggiunto
+- CHANGELOG.md completo dalla versione 1.0.0 → visibile nel tab Changelog dell'add-on in HA
+
 ## 1.1.39 — 2026-06-05
 
 ### Corretto
