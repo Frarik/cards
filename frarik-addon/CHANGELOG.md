@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.55 — 2026-06-05
+
+### Passo 3/16 — Orologi
+- Aggiunti 6 nuovi stili di orologio: Mono, Elegant, Glow, 3D, Outline, Gradient (totale 12). Selezionabili dall'editor del chip orologio con anteprima.
+
 ## 1.1.54 — 2026-06-05
 
 ### Passo 2/16 — Header: chip entità "smart"

@@ -2375,9 +2375,15 @@ function hbarInner(card){
         digital:{ff:"'Orbitron','Oxanium',monospace",fw:700,ls:'3px',ts:'none'},
         neon:{ff:"'Orbitron',monospace",fw:700,ls:'3px',ts:`0 0 8px ${clr},0 0 20px ${clr},0 0 40px ${clr}`},
         slim:{ff:"'Josefin Sans','Raleway',sans-serif",fw:300,ls:'5px',ts:'none'},
+        mono:{ff:"'Oxanium',ui-monospace,monospace",fw:600,ls:'2px',ts:'none'},
+        elegant:{ff:"Georgia,'Times New Roman',serif",fw:700,ls:'0',ts:'0 2px 10px rgba(0,0,0,.35)'},
+        glow:{ff:'inherit',fw:800,ls:'0',ts:`0 0 10px ${clr},0 0 22px ${clr}99`},
+        shadow3d:{ff:"'Poppins','Nunito',sans-serif",fw:900,ls:'-1px',ts:'1px 1px 0 rgba(0,0,0,.35),2px 2px 0 rgba(0,0,0,.3),3px 3px 0 rgba(0,0,0,.25),4px 5px 8px rgba(0,0,0,.35)'},
+        outline:{ff:"'Poppins','Outfit',sans-serif",fw:900,ls:'0',ts:'none',ex:`-webkit-text-stroke:1.4px ${clr};-webkit-text-fill-color:transparent`},
+        gradient:{ff:"'Poppins','Outfit',sans-serif",fw:900,ls:'-1px',ts:'none',ex:`background:linear-gradient(90deg,${clr},#22d3ee);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent`},
       };
       const sp=styleProps[style]||styleProps.default;
-      const timeStyle=`font-size:${fs};font-weight:${sp.fw};font-family:${sp.ff};letter-spacing:${sp.ls};color:${clr};text-shadow:${sp.ts};line-height:1`;
+      const timeStyle=`font-size:${fs};font-weight:${sp.fw};font-family:${sp.ff};letter-spacing:${sp.ls};color:${clr};text-shadow:${sp.ts};line-height:1${sp.ex?';'+sp.ex:''}`;
       const p=_clkParts(item);
       const cfgAttr=encodeURIComponent(JSON.stringify({clockFormat:item.clockFormat||'24h',clockShowSeconds:item.clockShowSeconds===true}));
       return `<div class="hbar-clk" data-clk="${cfgAttr}"><span class="hbar-clk-time" style="${timeStyle}">${p.timeHTML}</span>${showDate?`<span class="hbar-clk-date">${p.dateText}</span>`:''}</div>`;
@@ -5174,7 +5180,7 @@ function _hbGetSize(){  return ['sm','md','lg'].find(x=>document.getElementById(
 
 /* ── Clock style helpers ── */
 function hbSelClockStyle(s){
-  ['default','bold','minimal','digital','neon','slim'].forEach(x=>document.getElementById('hbclks-'+x)?.classList.toggle('on',x===s));
+  ['default','bold','minimal','digital','neon','slim','mono','elegant','glow','shadow3d','outline','gradient'].forEach(x=>document.getElementById('hbclks-'+x)?.classList.toggle('on',x===s));
 }
 function hbSelClockFormat(f){
   ['24h','12h'].forEach(x=>document.getElementById('hbclkf-'+x)?.classList.toggle('on',x===f));
@@ -5182,7 +5188,7 @@ function hbSelClockFormat(f){
 function hbSelClockSize(s){
   ['sm','md','lg','xl'].forEach(x=>document.getElementById('hbclksz-'+x)?.classList.toggle('on',x===s));
 }
-function _hbGetClockStyle(){ return ['default','bold','minimal','digital','neon','slim'].find(x=>document.getElementById('hbclks-'+x)?.classList.contains('on'))||'default'; }
+function _hbGetClockStyle(){ return ['default','bold','minimal','digital','neon','slim','mono','elegant','glow','shadow3d','outline','gradient'].find(x=>document.getElementById('hbclks-'+x)?.classList.contains('on'))||'default'; }
 function _hbGetClockFormat(){ return ['24h','12h'].find(x=>document.getElementById('hbclkf-'+x)?.classList.contains('on'))||'24h'; }
 function _hbGetClockSizeName(){ return ['sm','md','lg','xl'].find(x=>document.getElementById('hbclksz-'+x)?.classList.contains('on'))||'md'; }
 const _HB_CLK_PALETTE=['#ffffff','#f0f9ff','#fbbf24','#4ade80','#22d3ee','#818cf8','#f87171','#e879f9','#fb923c'];
