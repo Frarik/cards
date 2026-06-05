@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.14 — 2026-06-05
+
+### Modificato
+- Nuovo logo/icona dell'add-on: casa "smart home" con onde wi-fi e le iniziali **FR**, su gradiente indaco→viola.
+
 ## 1.1.13 — 2026-06-05
 
 ### Aggiunto
