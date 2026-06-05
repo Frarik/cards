@@ -1453,7 +1453,7 @@ function onMsg(m){
       try{ renderHdrChips(); }catch(e){}
       _restoreUIState();
       try{ _histInit(); }catch(e){}   // inizializza la cronologia Annulla/Ripeti
-      try{ _ghSchedule(); setTimeout(()=>{ try{ _ghCheck(false); }catch(e){} }, 4000); }catch(e){}  // controllo aggiornamenti card GitHub
+      try{ _ghSchedule(); setTimeout(()=>{ try{ _ghCheck(false); }catch(e){} }, 1000); }catch(e){}  // controllo aggiornamenti card GitHub
       setTimeout(()=>{ try{ _loadLovelaceResources(); }catch(e){} }, 2000);  // carica risorse HACS
       try{ _ntfUpdateBell(); }catch(e){}
     } else {
@@ -8370,17 +8370,22 @@ _jsStoreBootAll();
 renderDash();
 connect();
 
-/* Se la plancia è appena stata auto-aggiornata, mostra la notifica informativa "aggiornata alla versione X" */
-try{
-  var _pn=parseInt(localStorage.getItem('frarik_app_pending_notify')||'0',10);
-  if(_pn && _pn<=(window.FRARIK_APP_VERSION||0)){
-    localStorage.removeItem('frarik_app_pending_notify');
-    setTimeout(()=>{ try{
-      var _cl=(window.FRARIK_CHANGELOG&&window.FRARIK_CHANGELOG.length)?window.FRARIK_CHANGELOG:null;
-      _ntfPushLog('✅ Plancia aggiornata alla versione '+(window.FRARIK_APP_VERSION||''), _cl?'Ecco cosa è cambiato:':'La plancia è stata aggiornata.', '📋', null, {changelog:_cl});
-    }catch(e){} }, 1500);
-  }
-}catch(e){}
+/* Notifica aggiornamento add-on: confronta versione salvata con quella corrente del server */
+(async function(){
+  try{
+    const r=await fetch('./api/frarik/version');
+    const d=await r.json();
+    const cur=d&&d.version;
+    if(!cur) return;
+    const prev=localStorage.getItem('frarik_last_version');
+    localStorage.setItem('frarik_last_version',cur);
+    if(prev && prev!==cur){
+      setTimeout(()=>{
+        try{ _ntfPushLog('✅ Add-on aggiornato a v'+cur,'La dashboard Frarik è stata aggiornata dalla v'+prev+' alla v'+cur+'.','📋','app',{}); }catch(e){}
+      },1500);
+    }
+  }catch(e){}
+})();
 try{
   var _vl=document.getElementById('ep-ver-label');
   // Mostra versione add-on dal server (config.yaml), fallback al numero interno
@@ -9417,16 +9422,24 @@ function _ntfRelTime(ts){
 function renderNotifCenter(){
   const el=document.getElementById('notif-center-list'); if(!el) return;
   if(!_ntfLog.length){ el.innerHTML='<div class="ntfc-empty">Nessuna notifica</div>'; return; }
-  // Notifiche SOLO informative: nessuna azione/clic, ogni voce ha la "✕" per eliminarla.
   el.innerHTML=_ntfLog.map((n)=>{
     const hasChangelog=Array.isArray(n.changelog)&&n.changelog.length;
     const clHtml=hasChangelog?`<ul class="ntfc-changelog">${n.changelog.map(li=>`<li>${eh(li)}</li>`).join('')}</ul>`:'';
     return `<div class="ntfc-item${n.read?'':' unread'}">
       <div class="ntfc-ico">${n.icon||'🔔'}</div>
       <div class="ntfc-body"><div class="ntfc-title">${eh(n.title||'')}</div>${n.msg?`<div class="ntfc-msg">${eh(n.msg)}</div>`:''}${clHtml}<div class="ntfc-time">${_ntfRelTime(n.ts)}</div></div>
-      <button class="ntfc-x" onclick="event.stopPropagation();_ntfDismissById('${n.id}')" title="Elimina notifica">✕</button>
+      <button class="ntfc-x" data-dismiss-id="${n.id}" title="Elimina notifica">✕</button>
     </div>`;
   }).join('');
+  // Event delegation: evita onclick inline che CSP di HA potrebbe bloccare
+  el._ntfBound && el.removeEventListener('click',el._ntfBound);
+  el._ntfBound=function(ev){
+    const btn=ev.target.closest('[data-dismiss-id]');
+    if(!btn) return;
+    ev.stopPropagation();
+    _ntfDismissById(btn.dataset.dismissId);
+  };
+  el.addEventListener('click',el._ntfBound);
 }
 function toggleNotifCenter(ev){
   if(ev) ev.stopPropagation();
