@@ -21,7 +21,7 @@ const LIC_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24h
   const err     = document.getElementById('lic-err');
   if(!overlay) return;
 
-  function showOverlay(){ overlay.style.display='flex'; if(input) input.focus(); }
+  function showOverlay(){ overlay.style.cssText+=';display:flex!important'; if(input) setTimeout(()=>input.focus(),50); }
   function hideOverlay(){ overlay.style.display='none'; }
 
   async function validate(key){
