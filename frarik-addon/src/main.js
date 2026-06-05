@@ -8370,6 +8370,22 @@ _jsStoreBootAll();
 renderDash();
 connect();
 
+/* ── Handler header (ex onclick inline) ─────────────────────────────────── */
+(function _initHeaderHandlers(){
+  function on(id, ev, fn){ const el=document.getElementById(id); if(el) el.addEventListener(ev,fn); }
+  on('conn-wrap',   'click', ()=>confirmRestartHA());
+  on('views-btn',   'click', e=>toggleViewsMenu(e));
+  on('notif-bell',  'click', e=>toggleNotifCenter(e));
+  on('kiosk-btn',   'click', ()=>toggleKiosk());
+  on('reload-btn',  'click', ()=>hardReload());
+  on('settings-btn','click', ()=>openOikSettings());
+  on('hasidebar-btn','click',()=>toggleHASidebar());
+  on('undo-btn',    'click', ()=>undoEdit());
+  on('redo-btn',    'click', ()=>redoEdit());
+  on('edit-btn',    'click', ()=>toggleEdit());
+  on('mfab',        'click', e=>toggleMobileMenu(e));
+})();
+
 /* Notifica aggiornamento add-on: mostra una volta per ogni nuova versione */
 (async function(){
   try{
