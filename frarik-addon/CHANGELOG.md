@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.58 — 2026-06-05
+
+### Passo 6/16 — Icone barra in alto personalizzabili
+- Nuova sezione in Impostazioni (Plancia → "🎨 Icone barra in alto"): per ogni icona (sidebar, modifica, impostazioni, campanella, viste, kiosk) si può scegliere l'icona (mdi o emoji) e il colore, con anteprima e ripristino. Si sincronizza tra dispositivi (cfg.topbar).
+
 ## 1.1.57 — 2026-06-05
 
 ### Passo 5/16 — Riordino icone barra in alto

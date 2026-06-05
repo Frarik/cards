@@ -2705,6 +2705,7 @@ async function initBarChart(card){
 /* ═══ RENDER DASHBOARD ═══ */
 function renderDash(){
   try{ _applyKioskAvail(); }catch(e){}   // icona kiosk visibile solo se cfg.kioskEnabled
+  try{ _applyTopbarStyle(); }catch(e){}  // icone/colori barra in alto personalizzati
   const page=curPage();
   _ensureSections(page);
   const dash=document.getElementById('dash');
@@ -4391,6 +4392,7 @@ function openOikSettings(){
   _updateEditPanelForPage(p);
   _pgSnapshot();
   if(window._sysLoad) try{_sysLoad();}catch(e){}
+  try{ _renderTopbarIconsList(); }catch(e){}
 }
 function closeOikSettings(){
   _pgCheckDirtyAndProceed(()=>{
@@ -10318,7 +10320,8 @@ let _kioskOn=false;
 function _applyKioskUI(){
   document.body.classList.toggle('kiosk',_kioskOn);
   const btn=document.getElementById('kiosk-btn');
-  if(btn){btn.innerHTML=_kioskOn?'<i class="mdi mdi-fullscreen-exit"></i>':'<i class="mdi mdi-fullscreen"></i>';btn.title=_kioskOn?'Esci da Kiosk':'Modalità Kiosk (schermo intero)';}
+  if(btn) btn.title=_kioskOn?'Esci da Kiosk':'Modalità Kiosk (schermo intero)';
+  try{ _applyTopbarStyle(); }catch(e){}   // l'icona kiosk (custom/default, on↔off) la gestisce _applyTopbarStyle
 }
 /* Modalità kiosk come scelta: l'icona in alto compare solo se cfg.kioskEnabled è attivo. */
 function _applyKioskAvail(){
@@ -10326,6 +10329,52 @@ function _applyKioskAvail(){
   const btn=document.getElementById('kiosk-btn');
   if(btn) btn.style.display=on?'':'none';
   if(!on&&_kioskOn){ try{ toggleKiosk(); }catch(e){} }   // se disattivata mentre sei in kiosk → esci
+}
+
+/* ── PERSONALIZZAZIONE ICONE BARRA IN ALTO (icona mdi/emoji + colore) ── */
+const _TOPBAR_ICONS=[
+  {key:'sidebar', id:'hasidebar-btn', def:'mdi:menu',           label:'Barra laterale'},
+  {key:'edit',    id:'edit-btn',      def:'mdi:pencil',         label:'Modifica (matita)'},
+  {key:'settings',id:'settings-btn',  def:'mdi:cog',            label:'Impostazioni'},
+  {key:'bell',    id:'notif-bell',    def:'mdi:bell',           label:'Notifiche'},
+  {key:'views',   id:'views-btn',     def:'mdi:view-dashboard', label:'Viste'},
+  {key:'kiosk',   id:'kiosk-btn',     def:'mdi:fullscreen',     label:'Kiosk'},
+];
+function _applyTopbarStyle(){
+  const tb=(typeof cfg!=='undefined'&&cfg&&cfg.topbar)||{};
+  _TOPBAR_ICONS.forEach(it=>{
+    const btn=document.getElementById(it.id); if(!btn) return;
+    const o=tb[it.key]||{};
+    let icon=o.icon||it.def;
+    const color=o.color||'';
+    if(it.key==='kiosk' && _kioskOn && !o.icon) icon='mdi:fullscreen-exit';   // flip solo se icona di default
+    const iconHtml=_renderIcon(icon,16,color||'currentColor');
+    if(it.key==='bell'){
+      btn.innerHTML=iconHtml+'<span id="notif-bell-badge"></span>';
+      try{ _ntfUpdateBell(); }catch(e){}
+    } else {
+      btn.innerHTML=iconHtml;
+    }
+    if(color) btn.style.color=color; else btn.style.removeProperty('color');
+  });
+}
+function _renderTopbarIconsList(){
+  const el=document.getElementById('topbar-icons-list'); if(!el) return;
+  const tb=(typeof cfg!=='undefined'&&cfg&&cfg.topbar)||{};
+  el.innerHTML=_TOPBAR_ICONS.map(it=>{
+    const o=tb[it.key]||{};
+    const icon=o.icon||it.def;
+    const colVal=/^#([0-9a-f]{6})$/i.test(o.color||'')?o.color:'#9aa3b2';
+    return `<div class="sys-row" style="margin-top:7px;gap:8px">
+      <span style="display:flex;align-items:center;gap:9px;flex:1;min-width:0">
+        <span style="width:22px;text-align:center;flex-shrink:0">${_renderIcon(icon,18,o.color||'#cbd5e1')}</span>
+        <span class="sys-lbl2" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.label}</span>
+      </span>
+      <button class="fbtn" style="flex-shrink:0" title="Scegli icona (mdi o emoji)" data-action="_topbarPickIcon" data-action-el="true" data-action-args='["${it.key}"]'>🎨</button>
+      <input type="color" value="${colVal}" title="Colore" data-input="_topbarSetColor" data-input-args='["${it.key}"]' style="width:30px;height:26px;border:none;background:none;cursor:pointer;padding:0;flex-shrink:0">
+      <button class="fbtn" style="flex-shrink:0" title="Ripristina default" data-action="_topbarResetIcon" data-action-arg="${it.key}">↺</button>
+    </div>`;
+  }).join('');
 }
 function toggleKiosk(){
   _kioskOn=!_kioskOn;
@@ -10340,7 +10389,7 @@ function toggleKiosk(){
   }
 }
 /* Ripristina la modalità kiosk dopo un ricaricamento (il fullscreen richiede un gesto, ma il layout kiosk resta) */
-(function(){ try{ if(localStorage.getItem('frarik_kiosk')==='1'){ _kioskOn=true; _applyKioskUI(); } }catch(e){} try{ _applyKioskAvail(); }catch(e){} })();
+(function(){ try{ if(localStorage.getItem('frarik_kiosk')==='1'){ _kioskOn=true; _applyKioskUI(); } }catch(e){} try{ _applyKioskAvail(); }catch(e){} try{ _applyTopbarStyle(); }catch(e){} })();
 function togglePageTabs(){
   const wrap=document.getElementById('page-tabs-wrap');
   const btn=document.getElementById('tabs-toggle');
@@ -10499,6 +10548,12 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
   window._sysSaveNV=function(){ navbarCfg({pos:$('sys-nv-pos').value}); };
   window._applyMobCol=function(mode){ mode=mode||'auto'; localStorage.setItem('dash_mobcol',mode); document.body.classList.toggle('mobcol-off',mode==='off'); document.body.classList.toggle('mobcol-always',mode==='always'); };
   window._sysSaveMob=function(){ _applyMobCol($('sys-mob').value); };
+  // ── Icone barra in alto: icona + colore ──
+  window._topbarPickIcon=function(key, el){
+    openIconPicker(function(v){ if(!cfg.topbar)cfg.topbar={}; cfg.topbar[key]=Object.assign({},cfg.topbar[key],{icon:v}); saveCfg(); _applyTopbarStyle(); _renderTopbarIconsList(); }, el);
+  };
+  window._topbarSetColor=function(key, hex){ if(!cfg.topbar)cfg.topbar={}; cfg.topbar[key]=Object.assign({},cfg.topbar[key],{color:hex}); saveCfg(); _applyTopbarStyle(); _renderTopbarIconsList(); };
+  window._topbarResetIcon=function(key){ if(cfg.topbar&&cfg.topbar[key]){ delete cfg.topbar[key]; saveCfg(); _applyTopbarStyle(); _renderTopbarIconsList(); } };
   // ── Filtro ricerca galleria card ──
   window._smFilter=function(q){
     q=(q||'').trim().toLowerCase();
