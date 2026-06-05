@@ -4120,6 +4120,15 @@ function toggleEdit(){
 }
 
 /* ── Riavvio completo di Home Assistant (dal pallino connessione) ── */
+async function frarikCheckUpdate(){
+  showToast('🔄 Controllo aggiornamenti in corso…');
+  try{
+    const r=await fetch('./api/frarik/reload-store',{method:'POST'});
+    const d=await r.json();
+    if(d&&d.ok) showToast('✅ Registro aggiornato — controlla Impostazioni → Add-on in HA');
+    else showToast('⚠️ Reload non disponibile fuori dall\'add-on');
+  }catch(e){ showToast('⚠️ Errore: '+e.message); }
+}
 function confirmRestartHA(){
   showConfirm('🔄 Vuoi <b>riavviare completamente Home Assistant</b>?<br><span style="font-size:11px;opacity:.7">La dashboard si disconnetterà per qualche minuto, poi si riconnetterà da sola.</span>', ()=>{
     try{ send({type:'call_service',domain:'homeassistant',service:'restart'}); }catch(e){}

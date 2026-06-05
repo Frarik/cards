@@ -48,6 +48,26 @@ app.get('/api/frarik/version', (_req, res) => {
   res.json({ version: manifest.version, build: manifest.build, ok: true });
 });
 
+async function reloadHaStore() {
+  const token = process.env.SUPERVISOR_TOKEN;
+  if (!token) return false;
+  try {
+    const r = await fetch('http://supervisor/store/reload', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    return r.ok;
+  } catch { return false; }
+}
+
+app.post('/api/frarik/reload-store', async (_req, res) => {
+  const ok = await reloadHaStore();
+  res.json({ ok });
+});
+
+// Ricarica il registro degli add-on all'avvio così HA vede subito nuove versioni
+reloadHaStore().then(ok => console.log('[Frarik] Store reload:', ok ? 'OK' : 'skip (no supervisor)'));
+
 app.use((_req, res) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.sendFile(path.join(PANEL, 'index.html'));
