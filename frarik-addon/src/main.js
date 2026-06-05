@@ -8373,7 +8373,7 @@ connect();
 /* Notifica aggiornamento add-on: mostra una volta per ogni nuova versione */
 (async function(){
   try{
-    const r=await fetch('./api/frarik/version');
+    const r=await fetch('./api/frarik/version?t='+Date.now());
     const d=await r.json();
     const cur=d&&d.version; if(!cur) return;
     const prev=localStorage.getItem('frarik_last_version');
@@ -8388,7 +8388,7 @@ connect();
 try{
   var _vl=document.getElementById('ep-ver-label');
   // Mostra versione add-on dal server (config.yaml), fallback al numero interno
-  fetch('./api/frarik/version').then(r=>r.json()).then(d=>{
+  fetch('./api/frarik/version?t='+Date.now()).then(r=>r.json()).then(d=>{
     if(_vl) _vl.textContent='v'+d.version+' (add-on)';
   }).catch(()=>{ if(_vl) _vl.textContent=(window.FRARIK_APP_VERSION||'?'); });
 }catch(e){}

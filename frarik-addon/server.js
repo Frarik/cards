@@ -45,7 +45,14 @@ app.use(express.static(PANEL, {
 }));
 
 app.get('/api/frarik/version', (_req, res) => {
-  res.json({ version: manifest.version, build: manifest.build, ok: true });
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  // Rilegge config.yaml ogni volta — aggiornamento senza riavvio server
+  try {
+    const cfg = fs.readFileSync(path.join(__dirname, 'config.yaml'), 'utf8');
+    const m = cfg.match(/^version:\s*"?([^"\n]+)"?/m);
+    if(m) manifest.version = m[1].trim();
+  } catch {}
+  res.json({ version: manifest.version, ok: true });
 });
 
 async function reloadHaStore() {
