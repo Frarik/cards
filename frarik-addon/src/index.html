@@ -913,15 +913,17 @@
 
       <div class="oik-cat">Plancia</div>
 
-      <!-- ── Plancia (Pagina + Sistema + Barra inferiore in un unico menù) ── -->
-      <button class="cfg-open-btn" data-action="_epToggleGroup" data-action-arg="pg" id="ep-pg-btn"
+      <!-- ════ PLANCIA: sotto-menù separati ════ -->
+
+      <!-- 🎨 Aspetto -->
+      <button class="cfg-open-btn" data-action="_epToggleGroup" data-action-arg="aspetto" id="ep-aspetto-btn"
         style="background:rgba(99,102,241,.08);border-color:rgba(99,102,241,.2);color:#a5b4fc">
-        🖥 <span style="flex:1">Plancia</span>
-        <span id="ep-pg-arrow" style="color:rgba(255,255,255,.2);font-size:14px;transition:transform .2s">▾</span>
+        🎨 <span style="flex:1">Aspetto</span>
+        <span id="ep-aspetto-arrow" style="color:rgba(255,255,255,.2);font-size:14px;transition:transform .2s">▾</span>
       </button>
-      <div id="ep-pg-group" style="display:none;flex-direction:column;gap:0;background:rgba(99,102,241,.05);border:1px solid rgba(99,102,241,.15);border-radius:10px;overflow:hidden;max-height:420px;overflow-y:auto;scrollbar-width:thin">
-        <div style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.05)">
-          <div class="ep-sec-title" style="margin-bottom:6px">Aspetto</div>
+      <div id="ep-aspetto-group" style="display:none;flex-direction:column;background:rgba(99,102,241,.05);border:1px solid rgba(99,102,241,.15);border-radius:10px;overflow:hidden">
+        <div style="padding:10px 12px">
+          <div class="ep-sec-title" style="margin-bottom:6px">Tema</div>
           <div class="ep-theme-row">
             <button id="ep-theme-dark" class="ep-theme-btn on" data-action="applyTheme" data-action-arg="dark">🌙 Scuro</button>
             <button id="ep-theme-light" class="ep-theme-btn" data-action="applyTheme" data-action-arg="light">☀️ Chiaro</button>
@@ -933,6 +935,15 @@
             <span id="ep-font-lbl">Inter</span><span style="opacity:.4;font-size:9px">▾</span>
           </button>
         </div>
+      </div>
+
+      <!-- 📄 Pagina & Griglia -->
+      <button class="cfg-open-btn" data-action="_epToggleGroup" data-action-arg="pgpage" id="ep-pgpage-btn"
+        style="background:rgba(99,102,241,.08);border-color:rgba(99,102,241,.2);color:#a5b4fc">
+        📄 <span style="flex:1">Pagina &amp; Griglia</span>
+        <span id="ep-pgpage-arrow" style="color:rgba(255,255,255,.2);font-size:14px;transition:transform .2s">▾</span>
+      </button>
+      <div id="ep-pgpage-group" style="display:none;flex-direction:column;background:rgba(99,102,241,.05);border:1px solid rgba(99,102,241,.15);border-radius:10px;overflow:hidden">
         <div style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.05)">
           <div class="ep-sec-title" style="margin-bottom:6px">Pagina corrente</div>
           <div style="display:flex;gap:6px;margin-bottom:6px">
@@ -951,9 +962,16 @@
           <button id="ep-pg-confirm" class="ep-pg-confirm-btn" data-action="confirmPageSettings" disabled>✓ Conferma</button>
           <button id="ep-pg-cancel" class="ep-pg-cancel-btn" data-action="cancelPageSettings">↩ Annulla</button>
         </div>
-        <!-- Sistema (screensaver, tema automatico, colonna singola) -->
-        <div style="padding:10px 12px;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.05)">
-          <div class="ep-sec-title" style="margin-bottom:6px">Sistema</div>
+      </div>
+
+      <!-- ⚙️ Sistema -->
+      <button class="cfg-open-btn" data-action="_epToggleGroup" data-action-arg="sys" id="ep-sys-btn"
+        style="background:rgba(99,102,241,.08);border-color:rgba(99,102,241,.2);color:#a5b4fc">
+        ⚙️ <span style="flex:1">Sistema</span>
+        <span id="ep-sys-arrow" style="color:rgba(255,255,255,.2);font-size:14px;transition:transform .2s">▾</span>
+      </button>
+      <div id="ep-sys-group" style="display:none;flex-direction:column;background:rgba(99,102,241,.05);border:1px solid rgba(99,102,241,.15);border-radius:10px;overflow:hidden">
+        <div style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.05)">
           <div class="sys-row"><span class="sys-lbl">⛶ Modalità Kiosk</span><button class="sys-tog" id="sys-kiosk-tog" data-action="_sysToggle" data-action-arg="kiosk"></button></div>
           <div class="sys-sub" style="margin-bottom:8px">Mostra l'icona schermo intero in alto. Disattivata = nessuna icona.</div>
           <div class="sys-row"><span class="sys-lbl">🖼 Screensaver</span><button class="sys-tog" id="sys-ss-tog" data-action="_sysToggle" data-action-arg="ss"></button></div>
@@ -971,24 +989,34 @@
           <div class="sys-row" id="sys-th-times" style="margin-top:6px"><span class="sys-lbl2">Chiaro / Scuro</span>
             <div style="display:flex;gap:4px"><input class="sys-time" id="sys-th-light" type="time" ><input class="sys-time" id="sys-th-dark" type="time" ></div></div>
         </div>
-        <div style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.05)">
+        <div style="padding:10px 12px">
           <div class="sys-row"><span class="sys-lbl">📱 Colonna singola (cell)</span></div>
           <div class="sys-sub">Su telefono impila tutto in 1 colonna</div>
           <div class="sys-row" style="margin-top:6px"><span class="sys-lbl2">Modo</span>
             <select class="sys-sel" id="sys-mob" ><option value="auto">Auto (telefono)</option><option value="always">Sempre</option><option value="off">Mai</option></select></div>
         </div>
-        <!-- Icone barra in alto: icona (mdi/emoji) + colore -->
-        <div style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.05)">
-          <div class="ep-sec-title" style="margin-bottom:2px">🎨 Icone barra in alto</div>
-          <div class="sys-sub" style="margin-bottom:2px">Icona (mdi o emoji) e colore di ogni icona in alto</div>
+      </div>
+
+      <!-- 🔝 Icone barra in alto -->
+      <button class="cfg-open-btn" data-action="_epToggleGroup" data-action-arg="topbar" id="ep-topbar-btn"
+        style="background:rgba(99,102,241,.08);border-color:rgba(99,102,241,.2);color:#a5b4fc">
+        🔝 <span style="flex:1">Icone barra in alto</span>
+        <span id="ep-topbar-arrow" style="color:rgba(255,255,255,.2);font-size:14px;transition:transform .2s">▾</span>
+      </button>
+      <div id="ep-topbar-group" style="display:none;flex-direction:column;background:rgba(99,102,241,.05);border:1px solid rgba(99,102,241,.15);border-radius:10px;overflow:hidden">
+        <div style="padding:10px 12px">
+          <div class="sys-sub" style="margin-bottom:4px">Icona (mdi o emoji) e colore di ogni icona in alto</div>
           <div id="topbar-icons-list"></div>
         </div>
-        <!-- Barra inferiore (apre l'editor dedicato) -->
-        <div style="padding:10px 12px">
-          <div class="ep-sec-title" style="margin-bottom:6px">Barra inferiore</div>
-          <button class="ep-add2" data-action="openFBM">▭ Configura barra inferiore <span id="ep-fbar-status" style="font-size:10px;opacity:.55"></span></button>
-        </div>
       </div>
+
+      <!-- ▭ Barra inferiore (apre l'editor dedicato) -->
+      <button class="cfg-open-btn" data-action="openFBM"
+        style="background:rgba(20,184,166,.08);border-color:rgba(20,184,166,.2);color:#2dd4bf">
+        ▭ <span style="flex:1">Barra inferiore</span>
+        <span id="ep-fbar-status" style="font-size:10px;color:rgba(45,212,191,.6)"></span>
+        <span style="color:rgba(255,255,255,.2);font-size:16px">›</span>
+      </button>
 
       <div class="oik-cat">Altro</div>
 

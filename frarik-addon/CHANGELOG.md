@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.59 — 2026-06-05
+
+### Migliorato — Impostazioni Plancia riorganizzate
+- La sezione Plancia è suddivisa in sotto-menù separati, ognuno apribile per conto suo: 🎨 Aspetto, 📄 Pagina & Griglia, ⚙️ Sistema, 🔝 Icone barra in alto, ▭ Barra inferiore. Niente più tutto impilato in un unico blocco.
+
 ## 1.1.58 — 2026-06-05
 
 ### Passo 6/16 — Icone barra in alto personalizzabili

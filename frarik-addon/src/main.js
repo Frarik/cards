@@ -7668,7 +7668,7 @@ function _postPageCreate(){
   document.getElementById('ep-page-name').value=p.name;
   document.getElementById('ep-del-page').style.display=cfg.pages.length>1?'block':'none';
   renderSectionsList();
-  if(!_epGroupState.pg) _epToggleGroup('pg');
+  if(!_epGroupState.pgpage) _epToggleGroup('pgpage');
   _pgSnapshot();
 }
 
@@ -7746,8 +7746,8 @@ function createPageFromTpl(tplName){
     document.getElementById('ep-page-name').value=p.name;
     document.getElementById('ep-del-page').style.display=cfg.pages.length>1?'block':'none';
     renderSectionsList();
-    // Auto-apre "Impostazioni Pagina" così l'utente vede subito le sezioni
-    if(!_epGroupState.pg) _epToggleGroup('pg');
+    // Auto-apre "Pagina & Griglia" così l'utente vede subito le sezioni
+    if(!_epGroupState.pgpage) _epToggleGroup('pgpage');
   }
 }
 
