@@ -1082,7 +1082,7 @@ function _ghStoreRender(){
   if(!files.length){ list.innerHTML=`<div class="ghs-empty">${q?'Nessun risultato per "'+eh(q)+'"':'Nessun file in questa cartella su GitHub'}</div>`; return; }
   const ico=folder.ico;
   const usedIds=new Set(); (cfg.pages||[]).forEach(pg=>(pg.cards||[]).forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedIds.add(c.jsCardId); }));
-  list.innerHTML=files.sort((a,b)=>a.name.localeCompare(b.name)).map(f=>{
+  list.innerHTML=files.filter(f=>f&&f.name).sort((a,b)=>a.name.localeCompare(b.name)).map(f=>{
     const nm=f.name.replace(/\.(js|ya?ml)$/i,'');
     const enc=encodeURIComponent(f.name);
     let acts;
@@ -1456,8 +1456,8 @@ function onMsg(m){
     // l'invio su HA avviene solo col pulsante "Sincronizza" (evita sovrascritture accidentali).
   }
   else if(m.type==='result'&&Array.isArray(m.result)){
-    m.result.forEach(e=>{ hs[e.entity_id]=e.state; ha[e.entity_id]=e.attributes||{}; });
-    allE=m.result.sort((a,b)=>a.entity_id.localeCompare(b.entity_id));
+    m.result.forEach(e=>{ if(e&&e.entity_id){ hs[e.entity_id]=e.state; ha[e.entity_id]=e.attributes||{}; }});
+    allE=m.result.filter(e=>e&&e.entity_id).sort((a,b)=>a.entity_id.localeCompare(b.entity_id));
     if(!_dashBuilt){
       // PRIMA costruzione della dashboard
       _dashBuilt=true;
@@ -10536,4 +10536,19 @@ Object.assign(window, {
   undoEdit,
   yamlImportAdd,
   yamlImportParse,
+  // ── Wrapper aggiunti nel refactor handler ──
+  _covSkip, _feEpClose, _ntfSaveRules, _jsDropzoneClick, _ghsDropzoneClick,
+  _ghCheckForce, _hbDelOption, _appDelItem, _appDelGroup,
+  _openGhStoreClean, _pasteCardToClean, _closeViewsAndOpenTM, _closeViewsAndSetPage,
+  _jsStoreAddAndRefresh, _deleteSavedAt, _appChipPopupAt, _setActivePageAndSync,
+  _pgWarnClose, _sendCallSvc,
+  _appItemPickIcon, _appItemPickColor, _appGroupPickColor,
+  _sosPickIcon, _sosPickService,
+  _fePickIconBtn, _fePickIconEl,
+  _ntfPickEntityFor, _ntfPickIcon, _ntfPickDuration, _ntfPickCam, _ntfPickAlexa,
+  _hbDelColorMapEntry, _hbDelIconMapEntry,
+  _eitClickFromEl, _ghsPreviewEl,
+  _appSetItemEntity, _appSetItemName, _appSetGroupName,
+  _appSetGroupShowList, _appSetGroupEntities,
+  _ntfSetAndSuggest, _ntfSetIcon,
 });
