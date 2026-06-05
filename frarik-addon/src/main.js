@@ -1018,10 +1018,9 @@ async function _ghsPreview(enc, nm, cardId){
 }
 function ghStoreTab(tab){
   _ghsTab=tab;
-  ['js','chips','distintivi','yaml','pkg','local','speciali'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
+  ['js','chips','distintivi','yaml','pkg','local'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
   const s=document.getElementById('ghs-search'); if(s) s.value='';
   const loadEl=document.getElementById('ghs-load'); if(loadEl) loadEl.style.display=(tab==='local')?'':'none';
-  if(tab==='speciali'){ _ghStoreRenderSpeciali(); return; }
   if(tab==='local'){ _ghStoreRender(); _ghStoreInitDropzone(); return; }
   if(_ghsCache[tab]){ _ghStoreRender(); return; }
   document.getElementById('ghs-status').textContent='⏳ Carico da GitHub…';
@@ -1031,43 +1030,6 @@ function ghStoreTab(tab){
     _ghsCache[tab]=files.filter(x=>f.ext.test(x.name)&&!(f.exclude&&f.exclude.test(x.name)));
     if(_ghsTab===tab) _ghStoreRender();
   }).catch(e=>{ document.getElementById('ghs-status').textContent='⚠️ '+e.message; });
-}
-/* Scheda "Speciali" — card built-in di Frarik (non richiedono GitHub) */
-const _SPECIALI_CARDS = [
-  {type:'flowmap',    label:'Flusso Energia',      icon:'⚡', desc:'Mappa flusso solare/rete/casa'},
-  {type:'camera',     label:'Telecamera',           icon:'📷', desc:'Stream camera con refresh'},
-  {type:'weather',    label:'Meteo',                icon:'🌤️', desc:'Scheda meteo compatta'},
-  {type:'weather-forecast', label:'Previsioni',     icon:'📅', desc:'Previsioni su 5 giorni'},
-  {type:'media',      label:'Lettore Multimediale', icon:'🎵', desc:'Media player con controlli'},
-  {type:'climate',    label:'Termostato',           icon:'🌡️', desc:'Controllo clima/riscaldamento'},
-  {type:'multiline',  label:'Grafico Multi-Linea',  icon:'📈', desc:'Storico più entità'},
-  {type:'bar',        label:'Grafico Barre',        icon:'📊', desc:'Storico a barre'},
-  {type:'entities',   label:'Lista Entità',         icon:'📋', desc:'Elenco sensori/entità'},
-  {type:'gauge',      label:'Indicatore',           icon:'🕐', desc:'Gauge circolare'},
-  {type:'clock',      label:'Orologio',             icon:'⏰', desc:'Orologio digitale/analogico'},
-  {type:'markdown',   label:'Testo/Markdown',       icon:'📝', desc:'Testo libero con HTML'},
-  {type:'appliances', label:'Elettrodomestici',     icon:'🔌', desc:'Pannello luci e dispositivi'},
-  {type:'free',       label:'Canvas Libero',        icon:'🎨', desc:'Area di disegno personalizzata'},
-  {type:'header-bar', label:'Header Personalizzato',icon:'⊞', desc:'Barra header con widget'},
-  {type:'picture-elements', label:'Casa (Immagine)',icon:'🏠', desc:'Immagine con elementi sovrapposti'},
-];
-function _ghStoreRenderSpeciali(){
-  const list=document.getElementById('ghs-list');
-  const status=document.getElementById('ghs-status');
-  const q=(document.getElementById('ghs-search').value||'').toLowerCase().trim();
-  const items=q?_SPECIALI_CARDS.filter(c=>c.label.toLowerCase().includes(q)||c.desc.toLowerCase().includes(q)):_SPECIALI_CARDS;
-  status.textContent=_SPECIALI_CARDS.length+' card built-in'+(q?' · '+items.length+' trovate':'');
-  list.innerHTML=items.map(c=>`
-    <div class="ghs-row">
-      <div class="ghs-ico">${c.icon}</div>
-      <div class="ghs-info">
-        <div class="ghs-name">${c.label}</div>
-        <div class="ghs-sub">${c.desc}</div>
-      </div>
-      <div class="ghs-acts">
-        <button class="ghs-btn ghs-btn-inst" onclick="addSpecial('${c.type}');closeGhStore()"><i class="mdi mdi-plus"></i> Aggiungi</button>
-      </div>
-    </div>`).join('');
 }
 function _ghStoreRender(){
   const tab=_ghsTab, list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');

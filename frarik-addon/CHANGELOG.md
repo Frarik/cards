@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.2 — 2026-06-05
+
+### Rimosso
+- Scheda "Speciali" (card built-in) dallo store
+
 ## 1.1.1 — 2026-06-05
 
 ### Rimosso
