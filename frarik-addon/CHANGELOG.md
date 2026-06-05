@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.10 — 2026-06-05
+
+### Corretto
+- Il toast "Sincronizzato su Home Assistant" non compare più a ogni modifica: solo quando premi tu "Sincronizza su tutti i dispositivi". Gli auto-salvataggi sono silenziosi.
+- Conteggio Store gonfiato: le card eliminate non "risorgono" più tramite la sincronizzazione tra dispositivi (riconciliazione con lo stato remoto). Scartate/rimosse le voci corrotte dal localStorage.
+
 ## 1.1.9 — 2026-06-05
 
 ### Modificato

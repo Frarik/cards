@@ -606,6 +606,7 @@ function loadCfg(){
 }
 /* ── Salvataggio config + SINCRONIZZAZIONE su Home Assistant (dati utente, condivisi tra dispositivi) ── */
 let _cfgGetId=-1, _cfgSetId=-1, _haSaveTimer=null, _cfgSyncing=false, _cfgSynced=false, _lastPull=0;
+let _cfgManualSyncId=-1;   // id del salvataggio avviato dal pulsante "Sincronizza" → mostra il toast SOLO per quello
 function saveCfg(){
   if(!_cfgSyncing) cfg._ts=Date.now();      // timestamp ultima modifica (per "vince il più recente")
   localStorage.setItem('hadb_cfg',JSON.stringify(cfg));
@@ -718,9 +719,10 @@ setInterval(()=>{ if(!document.hidden && ws && ws.readyState===1) _haLoadCfg(); 
 function syncCfgToHA(){
   cfg._ts=Date.now(); _saveCfgLocalOnly();
   const ok=_haSaveCfg();
-  // La conferma "☁️ Sincronizzato su Home Assistant…" arriva dalla risposta di HA (vedi _cfgSetId).
-  // Qui avvisiamo solo se non c'è connessione (in quel caso la risposta non arriverà mai).
-  if(!ok) showToast('⚠️ Non connesso a Home Assistant');
+  // Segna QUESTO salvataggio come "manuale": solo per lui mostriamo la conferma (vedi handler _cfgSetId).
+  // Gli auto-salvataggi a ogni modifica restano silenziosi.
+  if(ok){ _cfgManualSyncId=_cfgSetId; }
+  else showToast('⚠️ Non connesso a Home Assistant');
 }
 
 /* ── BACKUP: esporta/ripristina TUTTO (layout + card JS) in un file .json ── */
@@ -1355,9 +1357,13 @@ function onMsg(m){
   // Esito salvataggio config su HA (frontend/set_user_data)
   else if(m.type==='result'&&m.id===_cfgSetId){
     _cfgSetId=-1;
+    const isManual=(m.id===_cfgManualSyncId); if(isManual) _cfgManualSyncId=-1;
     if(m.success){
-      const np=(cfg.pages||[]).length, nj=(typeof _jsStoreList==='function'?_jsStoreList().length:0);
-      showToast('☁️ Sincronizzato su Home Assistant — '+np+' pagine, '+nj+' card JS');
+      // Conferma SOLO per la sincronizzazione manuale; gli auto-salvataggi sono silenziosi.
+      if(isManual){
+        const np=(cfg.pages||[]).length, nj=(typeof _jsStoreList==='function'?_jsStoreList().length:0);
+        showToast('☁️ Sincronizzato su Home Assistant — '+np+' pagine, '+nj+' card');
+      }
     } else {
       showToast('⚠️ Sincronizzazione fallita: '+((m.error&&m.error.message)||'dati troppo grandi'));
     }
@@ -1373,9 +1379,15 @@ function onMsg(m){
     if(remoteCfg && remoteCfg.pages && remoteTs>(cfg._ts||0)){
       // HA ha una versione più recente → adottala su questo dispositivo
       _cfgSyncing=true;
-      // 1) ripristina le card JS mancanti (codice) e registrale
-      if(remoteJs && remoteJs.length && typeof _jsStoreSave==='function'){
+      // 1) RICONCILIA le card allo stato remoto. Stiamo adottando la versione più recente "per
+      //    intero", quindi oltre ad aggiungere/aggiornare le card remote rimuoviamo anche quelle
+      //    locali che NON esistono più nel set remoto: così una card eliminata su un dispositivo
+      //    non "risorge" sugli altri (causa principale del conteggio gonfiato). Lo facciamo SOLO se
+      //    il remoto porta davvero la lista js (Array): col formato vecchio (js assente) non si tocca nulla.
+      if(Array.isArray(remoteJs) && typeof _jsStoreSave==='function'){
         remoteJs.forEach(it=>{ try{ if(it&&it.meta&&it.meta.id){ _jsStoreSave(it.meta.id,it.meta,it.code,it.origin); if(!window.FratechCardRegistry[it.meta.id]) try{ _installCardCode(it.code); }catch(e){} } }catch(e){} });
+        const remoteIds=new Set(remoteJs.map(it=>it&&it.meta&&it.meta.id).filter(Boolean));
+        try{ _jsStoreList().forEach(it=>{ const id=it&&it.meta&&it.meta.id; if(id && !remoteIds.has(id)){ _jsStoreDelete(id); try{ delete window.FratechCardRegistry[id]; }catch(e){} } }); }catch(e){}
       }
       // 2) adotta il layout
       cfg=remoteCfg; cfg._ts=remoteTs;
@@ -6225,13 +6237,22 @@ function _jsStoreList(){
   for(let i=0; i<localStorage.length; i++){
     const k = localStorage.key(i);
     if(!k || !k.startsWith('fratech_jscard_')) continue;
-    try { out.push(JSON.parse(localStorage.getItem(k))); } catch(e){}
+    let v=null; try { v=JSON.parse(localStorage.getItem(k)); } catch(e){}
+    // scarta voci corrotte/vuote: una card valida ha sempre meta.id e codice
+    if(v && v.meta && v.meta.id && v.code) out.push(v);
   }
   return out;
 }
 
 /* Carica tutti i .js salvati al boot */
 function _jsStoreBootAll(){
+  // pulizia: rimuovi dal localStorage eventuali chiavi corrotte/vuote (senza meta.id o codice),
+  // così non restano a gonfiare il conteggio dello Store.
+  try{
+    const bad=[];
+    for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(!k||!k.startsWith('fratech_jscard_')) continue; let v=null; try{ v=JSON.parse(localStorage.getItem(k)); }catch(e){} if(!(v&&v.meta&&v.meta.id&&v.code)) bad.push(k); }
+    bad.forEach(k=>{ try{ localStorage.removeItem(k); }catch(e){} });
+  }catch(e){}
   _jsStoreList().forEach(item => {
     try { _installCardCode(item.code); } catch(e){ console.warn('[FratechStore] Errore boot card:', e.message); }
   });
