@@ -8599,6 +8599,8 @@ function _ntfPickIcon(i,btn,ev){ openIconPicker(v=>{_ntfSet(i,'icon',v);const in
 function _ntfPickDuration(i){ _epPickerOpen(v=>{_ntfSet(i,'durationEntity',v);const el=document.getElementById('ntf-dur-inp-'+i);if(el)el.value=v;}); }
 function _ntfPickCam(i){ _epPickerOpen(v=>{_ntfSet(i,'camEntity',v);const el=document.getElementById('ntf-cam-inp-'+i);if(el)el.value=v;},'camera','Seleziona camera'); }
 function _ntfPickAlexa(i){ _epPickerOpen(v=>{_ntfSet(i,'alexaEntity',v);const el=document.getElementById('ntf-ax-inp-'+i);if(el)el.value=v;},'notify','Seleziona servizio Alexa/notify'); }
+function _ntfPickCond(i){ _epPickerOpen(v=>{_ntfSet(i,'condEntity',v);const el=document.getElementById('ntf-cond-inp-'+i);if(el)el.value=v;}); }
+function _ntfPickMobile(i){ _epPickerOpen(v=>{_ntfSet(i,'mobileService',v);const el=document.getElementById('ntf-mob-inp-'+i);if(el)el.value=v;},'notify','Seleziona servizio notify (app cellulare)'); }
 function _hbDelColorMapEntry(key){ delete _hbColorMap[key]; _hbRenderColorMap(); }
 function _hbDelIconMapEntry(key){ delete _hbIconMap[key]; _hbRenderIconMap(); }
 /* eitClick da elemento: legge i dati dai data-* attribute */
@@ -9549,6 +9551,27 @@ let _ntfActive=null;
 let _ntfStartTimes={};    // entity_id → timestamp when turned on (for duration calc)
 let _ntfDailyCount={};    // ruleId → {date:'YYYY-MM-DD', count:N} — incrementi odierni
 let _ntfAutoCloseTimer=null; // timer auto-chiusura quando nessuno è in casa
+let _ntfOnForTimers={};      // ruleId → timeout (trigger "acceso da più di X minuti")
+
+/* Guardie comuni: condizione "solo se" (un'altra entità in un dato stato) + fascia oraria */
+function _ntfPassesGuards(rule){
+  // Condizione "solo se"
+  if(rule.condEntity){
+    const cs=String((typeof hs!=='undefined'&&hs[rule.condEntity])??'');
+    const cv=String(rule.condValue??'');
+    const ok=(rule.condOp==='is_not')?(cs!==cv):(cs===cv);
+    if(!ok) return false;
+  }
+  // Fascia oraria
+  if(rule.timeFrom && rule.timeTo){
+    const now=new Date(), mins=now.getHours()*60+now.getMinutes();
+    const toM=t=>{const a=String(t||'0:0').split(':').map(Number);return (a[0]||0)*60+(a[1]||0);};
+    const f=toM(rule.timeFrom), t=toM(rule.timeTo);
+    const inWin = f<=t ? (mins>=f&&mins<=t) : (mins>=f||mins<=t);
+    if(!inWin) return false;
+  }
+  return true;
+}
 
 /* ── Check rule triggers on every state_changed ── */
 function _notifCheck(eid, prevState, newState){
@@ -9563,10 +9586,31 @@ function _notifCheck(eid, prevState, newState){
     if(!rule.enabled) continue;
     if(rule.entity!==eid) continue;
     const trigger=rule.trigger||'any_change';
+    // "Acceso da più di X minuti": timer dedicato, fuori dal flusso a cambio-stato
+    if(trigger==='on_for'){
+      if(isOn && !wasOn){
+        const mins=Math.max(0.1, parseFloat(rule.onForMin||0)||0);
+        clearTimeout(_ntfOnForTimers[rule.id]);
+        _ntfOnForTimers[rule.id]=setTimeout(()=>{
+          const cur=String((typeof hs!=='undefined'&&hs[eid])||'');
+          if((cur==='on'||cur==='true') && _ntfPassesGuards(rule)){
+            const ctx=_ntfBuildContext(rule, cur, 'on', Date.now()-(_ntfStartTimes[eid]||Date.now()));
+            _ntfQueue.push({rule, ctx}); if(!_ntfActive) _ntfShowNext();
+          }
+        }, mins*60000);
+      } else if(wasOn && !isOn){ clearTimeout(_ntfOnForTimers[rule.id]); }
+      continue;
+    }
     let triggered=false;
     if(trigger==='any_change') triggered=true;
     else if(trigger==='turns_on') triggered=(newState==='on'||newState==='true'||newState==='home');
     else if(trigger==='turns_off') triggered=(newState==='off'||newState==='false'||newState==='not_home');
+    else if(trigger==='unavailable') triggered=(newState==='unavailable'||newState==='unknown'||newState==='none');
+    else if(trigger==='changed_to'){
+      const okFrom=!rule.fromValue||prevState===rule.fromValue;
+      const okTo=!rule.toValue||newState===rule.toValue;
+      triggered=okFrom&&okTo;
+    }
     else if(trigger==='above'){
       const v=parseFloat(newState),prev=parseFloat(prevState),th=parseFloat(rule.threshold||0);
       triggered=(!isNaN(v)&&!isNaN(prev)&&v>th&&prev<=th);
@@ -9581,6 +9625,7 @@ function _notifCheck(eid, prevState, newState){
       triggered=(!isNaN(vN)&&!isNaN(vP)&&vN>vP);
     }
     if(!triggered) continue;
+    if(!_ntfPassesGuards(rule)) continue;   // condizione "solo se" + fascia oraria
     // Aggiorna conteggio giornaliero per counter_increment
     if(trigger==='counter_increment'){
       const today=new Date().toISOString().slice(0,10);
@@ -9765,6 +9810,13 @@ function _ntfRender(rule, ctx, update=false){
     const dom=rule.alexaEntity.includes('.')?rule.alexaEntity.split('.')[0]:'notify';
     const ttsMsg=rule.alexaTts.replace('{state}',ctx.newState).replace('{entity}',ctx.friendly).replace('{duration}',ctx.durationStr||'');
     send({type:'call_service',domain:dom,service:svc,service_data:{message:ttsMsg}});
+  }
+
+  // Push su app HA del cellulare (notify.mobile_app_*)
+  if(rule.mobileService && !update){
+    const svc=rule.mobileService.includes('.')?rule.mobileService.split('.').slice(1).join('.'):rule.mobileService;
+    const dom=rule.mobileService.includes('.')?rule.mobileService.split('.')[0]:'notify';
+    send({type:'call_service',domain:dom,service:svc,service_data:{title:(ctx.title||rule.name||'Notifica'), message:(ctx.msg||' ')}});
   }
 
   // Auto-chiusura quando nessuno è in casa (solo counter_increment) — soft dismiss, nessun reset
@@ -10111,7 +10163,7 @@ function renderNotifRules(){
     return;
   }
   list.innerHTML=rules.map((r,i)=>{
-    const trigLabels={any_change:'Qualsiasi cambiamento',turns_on:'Diventa ON / home',turns_off:'Diventa OFF / away',above:'Supera soglia ▲',below:'Scende sotto soglia ▼',specific_value:'Valore specifico',counter_increment:'Incremento counter ▲ (ignora cooldown)'};
+    const trigLabels={any_change:'Qualsiasi cambiamento',turns_on:'Diventa ON / home',turns_off:'Diventa OFF / away',on_for:'Acceso da più di X min ⏱',above:'Supera soglia ▲',below:'Scende sotto soglia ▼',specific_value:'Valore specifico',changed_to:'Cambia da → a',unavailable:'Diventa non disponibile',counter_increment:'Incremento counter ▲ (ignora cooldown)'};
     const animOpts=['bounce','pulse','wiggle','shake','spin','glow','none'].map(a=>`<option value="${a}"${r.anim===a?' selected':''}>${a}</option>`).join('');
     const trigOpts=Object.entries(trigLabels).map(([v,l])=>`<option value="${v}"${r.trigger===v?' selected':''}>${l}</option>`).join('');
     const friendly=ha[r.entity]?.friendly_name||r.entity||'(nessuna entità)';
@@ -10154,6 +10206,38 @@ function renderNotifRules(){
           <div class="ntf-field-lbl">Valore</div>
           <input class="ntf-field-inp" value="${r.triggerValue||''}" placeholder="es. unavailable" data-input="_ntfSet" data-input-args='[${i},"triggerValue"]'>
         </div>`:''}
+        ${r.trigger==='changed_to'?`<div class="ntf-field-row">
+          <div class="ntf-field-lbl">Da → A</div>
+          <input class="ntf-field-inp" value="${r.fromValue||''}" placeholder="da (vuoto=qualsiasi)" data-input="_ntfSet" data-input-args='[${i},"fromValue"]' style="flex:1">
+          <input class="ntf-field-inp" value="${r.toValue||''}" placeholder="a (es. playing)" data-input="_ntfSet" data-input-args='[${i},"toValue"]' style="flex:1">
+        </div>`:''}
+        ${r.trigger==='on_for'?`<div class="ntf-field-row">
+          <div class="ntf-field-lbl">Minuti</div>
+          <input class="ntf-field-inp" type="number" min="0" step="1" value="${r.onForMin||5}" data-input="_ntfSet" data-input-args='[${i},"onForMin"]'>
+        </div>`:''}
+
+        <div class="ntf-section-sep">🔒 Solo se (condizione)</div>
+        <div class="ntf-field-row">
+          <div class="ntf-field-lbl">Entità</div>
+          <input id="ntf-cond-inp-${i}" class="ntf-field-inp" value="${r.condEntity||''}" placeholder="opzionale — es. person.tu" data-input="_ntfSet" data-input-args='[${i},"condEntity"]'>
+          <button class="ntf-pick-btn" title="Sfoglia entità" data-action="_ntfPickCond" data-action-args='[${i}]'>🔍</button>
+        </div>
+        ${r.condEntity?`<div class="ntf-field-row">
+          <div class="ntf-field-lbl">Stato</div>
+          <select class="ntf-field-inp" style="width:80px;flex:none" data-input="_ntfSet" data-input-args='[${i},"condOp"]'>
+            <option value="is"${(r.condOp||'is')==='is'?' selected':''}>è</option>
+            <option value="is_not"${r.condOp==='is_not'?' selected':''}>non è</option>
+          </select>
+          <input class="ntf-field-inp" value="${r.condValue||''}" placeholder="es. home" data-input="_ntfSet" data-input-args='[${i},"condValue"]'>
+        </div>`:''}
+
+        <div class="ntf-section-sep">🕒 Fascia oraria (opzionale)</div>
+        <div class="ntf-field-row">
+          <div class="ntf-field-lbl">Dalle / Alle</div>
+          <input class="ntf-field-inp" type="time" value="${r.timeFrom||''}" data-input="_ntfSet" data-input-args='[${i},"timeFrom"]'>
+          <input class="ntf-field-inp" type="time" value="${r.timeTo||''}" data-input="_ntfSet" data-input-args='[${i},"timeTo"]'>
+        </div>
+        <div style="font-size:10px;color:rgba(255,255,255,.25);margin:-2px 0 6px 88px">Vuoto = sempre. Altrimenti notifica solo in questa fascia.</div>
 
         <div class="ntf-section-sep">💬 Contenuto popup</div>
         <div class="ntf-field-row">
@@ -10252,7 +10336,12 @@ function renderNotifRules(){
           <input class="ntf-field-inp" value="${r.dismissLabel||''}" placeholder="Lascia vuoto = auto (es. ✉️ Ho ritirato la posta!)" data-input="_ntfSet" data-input-args='[${i},"dismissLabel"]'>
         </div>
 
-        <div class="ntf-section-sep">📷 Camera & 🔊 Alexa (opzionale)</div>
+        <div class="ntf-section-sep">📷 Camera · 🔊 Alexa · 📲 Push (opzionale)</div>
+        <div class="ntf-field-row">
+          <div class="ntf-field-lbl">📲 Push cell.</div>
+          <input id="ntf-mob-inp-${i}" class="ntf-field-inp" value="${r.mobileService||''}" placeholder="notify.mobile_app_pixel_7" data-input="_ntfSet" data-input-args='[${i},"mobileService"]'>
+          <button class="ntf-pick-btn" title="Sfoglia servizi notify (app cellulare)" data-action="_ntfPickMobile" data-action-args='[${i}]'>🔍</button>
+        </div>
         <div class="ntf-field-row">
           <div class="ntf-field-lbl">Camera</div>
           <input id="ntf-cam-inp-${i}" class="ntf-field-inp" value="${r.camEntity||''}" placeholder="camera.ingresso" data-input="_ntfSet" data-input-args='[${i},"camEntity"]'>
@@ -10313,7 +10402,7 @@ function _ntfSet(idx, key, val){
   if(!rules[idx]) return;
   rules[idx][key]=val;
   saveCfg();
-  if(key==='trigger'||key==='alexaEntity') renderNotifRules();
+  if(key==='trigger'||key==='alexaEntity'||key==='condEntity') renderNotifRules();
 }
 
 /* ── KIOSK MODE ─────────────────────────────────────────────── */
@@ -10873,7 +10962,7 @@ Object.assign(window, {
   _appItemPickIcon, _appItemPickColor, _appGroupPickColor,
   _sosPickIcon, _sosPickService,
   _fePickIconBtn, _fePickIconEl,
-  _ntfPickEntityFor, _ntfPickIcon, _ntfPickDuration, _ntfPickCam, _ntfPickAlexa,
+  _ntfPickEntityFor, _ntfPickIcon, _ntfPickDuration, _ntfPickCam, _ntfPickAlexa, _ntfPickCond, _ntfPickMobile,
   _hbDelColorMapEntry, _hbDelIconMapEntry,
   _eitClickFromEl, _ghsPreviewEl,
   _appSetItemEntity, _appSetItemName, _appSetGroupName,

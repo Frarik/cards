@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.63 — 2026-06-05
+
+### Passo 10/16 — Notifiche smart potenziate
+- **Condizione "solo se"**: la regola scatta solo se un'altra entità è (o non è) in un certo stato.
+- **Fascia oraria**: notifica solo nell'intervallo orario impostato (ore di silenzio).
+- **Push app cellulare**: invio a `notify.mobile_app_*` oltre/invece dell'Alexa TTS.
+- **Nuovi trigger**: "acceso da più di X minuti" (timer), "cambia da → a", "diventa non disponibile".
+
 ## 1.1.62 — 2026-06-05
 
 ### Passo 9/16 — Screensaver con immagine + fasce giorno/notte
