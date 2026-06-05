@@ -8,50 +8,65 @@ import { _ntfPushLog, _ntfDismissById, _ntfUpdateBell, ntfMarkAllRead, ntfClearA
 window.Chart  = Chart;
 window.jsyaml = jsyaml;
 
-// ── Nasconde la barra HA ingress attraverso shadow DOM multipli ──────────────
+// ── Nasconde la barra HA ingress ─────────────────────────────────────────────
 (function(){
   if(window.parent===window) return;
 
-  // Attraversa ricorsivamente tutte le shadow root per trovare un selettore
   function shadowQuery(root, sel){
-    if(!root) return null;
-    const direct = root.querySelector ? root.querySelector(sel) : null;
-    if(direct) return direct;
-    const all = root.querySelectorAll ? root.querySelectorAll('*') : [];
-    for(const el of all){
-      if(el.shadowRoot){
-        const found = shadowQuery(el.shadowRoot, sel);
-        if(found) return found;
+    try{
+      const d=root.querySelector(sel); if(d) return d;
+      for(const el of root.querySelectorAll('*')){
+        if(el.shadowRoot){ const f=shadowQuery(el.shadowRoot,sel); if(f) return f; }
       }
-    }
+    }catch(e){}
     return null;
   }
 
-  function tryHide(){
+  function injectCSS(sr, css){
     try{
-      const pd = window.parent.document;
-
-      // Cerca app-header dentro hassio-ingress-view (shadow annidato)
-      const hdr = shadowQuery(pd, 'app-header') ||
-                  shadowQuery(pd, 'hassio-ingress-view');
-      if(!hdr) return false;
-
-      // Se è hassio-ingress-view prende l'app-header dentro
-      const target = hdr.tagName==='APP-HEADER' ? hdr
-        : (hdr.shadowRoot ? hdr.shadowRoot.querySelector('app-header') : null);
-      if(!target) return false;
-
-      target.style.setProperty('display','none','important');
-      // Recupera spazio iframe
-      const ifr = shadowQuery(pd,'hassio-ingress-view iframe');
-      if(ifr){ ifr.style.setProperty('top','0','important'); ifr.style.setProperty('height','100%','important'); }
+      // adoptedStyleSheets: inietta CSS direttamente nella shadow root
+      const sheet=new window.parent.CSSStyleSheet();
+      sheet.replaceSync(css);
+      sr.adoptedStyleSheets=[...sr.adoptedStyleSheets, sheet];
       return true;
     }catch(e){ return false; }
   }
 
-  // Prova subito e con ritardi progressivi (HA può caricare lentamente)
+  function tryHide(){
+    try{
+      const pd=window.parent.document;
+      let found=false;
+
+      // Candidati in ordine di probabilità per diverse versioni HA
+      for(const tag of ['hassio-addon-ingress-view','hassio-ingress-view','ha-panel-hassio']){
+        const el=shadowQuery(pd, tag);
+        if(!el) continue;
+        const sr=el.shadowRoot; if(!sr) continue;
+
+        // 1. adoptedStyleSheets (miglior metodo, penetra shadow DOM)
+        injectCSS(sr, `
+          app-header,app-toolbar,[slot="header"],.header{display:none!important;height:0!important;min-height:0!important}
+          app-header-layout,#ingress,.ingress-frame,iframe{padding-top:0!important;top:0!important;height:100%!important}
+        `);
+
+        // 2. Manipolazione diretta come backup
+        for(const sel of ['app-header','app-toolbar','[slot="header"]']){
+          const hdr=sr.querySelector(sel);
+          if(hdr){ hdr.remove(); found=true; break; }
+        }
+
+        // 3. Fix iframe
+        const ifr=sr.querySelector('iframe');
+        if(ifr){ ifr.style.cssText+='top:0!important;height:100vh!important'; }
+
+        found=true; break;
+      }
+      return found;
+    }catch(e){ return false; }
+  }
+
   let done=false;
-  [0,100,300,700,1500,3500].forEach(d=>setTimeout(()=>{ if(!done) done=tryHide(); },d));
+  [0,50,200,500,1200,3000].forEach(d=>setTimeout(()=>{ if(!done) done=tryHide(); },d));
 })();
 
 // ── Splash screen (ex script inline in index.html) ────────────────────────
