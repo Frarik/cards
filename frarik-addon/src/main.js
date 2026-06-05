@@ -8376,9 +8376,57 @@ document.addEventListener('click', function(e){
   if(!el) return;
   const fn = el.dataset.action;
   const fn2 = el.dataset.action2;
-  if(typeof window[fn]==='function'){ e.stopPropagation(); window[fn](e); }
+  const arg = el.dataset.actionArg;  // argomento stringa opzionale
+  if(typeof window[fn]==='function'){
+    e.stopPropagation();
+    window[fn](arg !== undefined ? arg : e);
+  }
   if(fn2 && typeof window[fn2]==='function') window[fn2](e);
 });
+
+/* ── Funzioni helper per handler ex-inline ──────────────────────────────── */
+function _covSkip(){ const c=document.getElementById('cov'); if(c) c.classList.add('off'); }
+function _feEpClose(){ const el=document.getElementById('fe-ep'); if(el) el.style.display='none'; }
+function _ntfSaveRules(){ saveCfg(); showToast('✅ Regole salvate'); }
+function _jsDropzoneClick(){ document.getElementById('jsst-file-inp')?.click(); }
+function _ghsDropzoneClick(){ document.getElementById('ghs-file-inp')?.click(); }
+function _ghCheckForce(){ _ghCheck(true); }
+
+/* ── Listener icona picker (ex lambda inline) ────────────────────────────── */
+(function _initIconPickers(){
+  const picks=[
+    ['cm-ico-picker',   'cm-ico',       null],
+    ['bf-icon-picker',  'bf-icon',       null],
+    ['hbf-icon-picker', 'hbf-icon',      null],
+    ['hbf-opt-icon-picker','hbf-opt-icon',null],
+    ['fbf-icon-picker', 'fbf-icon',      '_fbPreviewIcon'],
+    ['ep-page-ico-picker','ep-page-ico', '_pgMarkDirty'],
+    ['vmod-ico-picker', 'vmod-ico',      null],
+  ];
+  picks.forEach(function([btnId, targetId, afterFn]){
+    const btn=document.getElementById(btnId); if(!btn) return;
+    btn.addEventListener('click',function(e){
+      openIconPicker(function(v){
+        const t=document.getElementById(targetId); if(t) t.value=v;
+        if(afterFn && typeof window[afterFn]==='function') window[afterFn]();
+      }, btn, e);
+    });
+  });
+})();
+
+/* ── Badge btn nel CM modal (usa variabile editingId) ────────────────────── */
+(function(){
+  const btn=document.getElementById('cm-badge-btn'); if(!btn) return;
+  btn.addEventListener('click',function(){
+    if(typeof editingId!=='undefined') openBM('card:'+editingId);
+  });
+})();
+
+/* ── Backdrop click per icon picker modal ────────────────────────────────── */
+(function(){
+  const m=document.getElementById('ntf-icon-modal'); if(!m) return;
+  m.addEventListener('click',function(e){ if(e.target===m) _iconPickerClose(); });
+})();
 
 /* ── Handler header (ex onclick inline) ─────────────────────────────────── */
 (function _initHeaderHandlers(){

@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@400;600;700;800;900&family=Nunito:wght@400;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="./assets/index-Jkp46ksm.js"></script>
+  <script type="module" crossorigin src="./assets/index-CBLxIo0K.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-BqN42jQp.css">
 </head>
 <body>
@@ -38,9 +38,9 @@
     <input id="cov-remote-url" placeholder="xxxxxxxx.ui.nabu.casa" autocapitalize="off" autocorrect="off" spellcheck="false" style="width:100%;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:12px;text-align:center;margin-bottom:10px">
     <div style="font-size:11px;color:rgba(255,255,255,.65);margin-bottom:8px;line-height:1.45"><b>Token di accesso</b> (Profilo HA → Token a lunga durata → Crea):</div>
     <input id="cov-token" placeholder="incolla qui il token…" autocapitalize="off" autocorrect="off" spellcheck="false" style="width:100%;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:11px;text-align:center;margin-bottom:10px;font-family:monospace">
-    <button onclick="saveRemoteAndRetry()" style="width:100%;padding:10px;border-radius:10px;background:#6366f1;border:none;color:#fff;font-size:12px;font-weight:700;cursor:pointer">Salva e riprova</button>
+    <button data-action="saveRemoteAndRetry" style="width:100%;padding:10px;border-radius:10px;background:#6366f1;border:none;color:#fff;font-size:12px;font-weight:700;cursor:pointer">Salva e riprova</button>
   </div>
-  <button id="cov-skip" style="display:none;margin-top:10px;padding:8px 20px;border-radius:20px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);font-size:11px;font-weight:600;cursor:pointer" onclick="document.getElementById('cov').classList.add('off')">Continua senza connessione</button></div>
+  <button id="cov-skip" style="display:none;margin-top:10px;padding:8px 20px;border-radius:20px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);font-size:11px;font-weight:600;cursor:pointer" data-action="_covSkip">Continua senza connessione</button></div>
 
 <!-- ENTITY MODAL -->
 <div class="mbg off" id="emod">
@@ -57,8 +57,8 @@
     <div class="mhdr"><span class="mtitle" id="cmod-title">✏️ Configura Card</span><button class="mx" data-action="closeCM">✕</button></div>
     <div class="fscroll">
       <div class="fr"><div class="flbl">Etichetta</div><input class="finp" id="cm-lbl" type="text" placeholder="es. Fotovoltaico"></div>
-      <div class="fr"><div class="flbl">Icona</div><div class="finp-row"><input class="finp" id="cm-ico" type="text" placeholder="☀️ o mdi:home"><button class="fbtn" title="Scegli icona" onclick="openIconPicker(v=>{document.getElementById('cm-ico').value=v;},this,event)">🎨</button></div></div>
-      <div class="fr" id="fr-entity"><div class="flbl">Entità Home Assistant</div><div class="finp-row"><input class="finp" id="cm-entity" type="text" placeholder="sensor.xxx"><button class="fbtn" onclick="browseField('cm-entity')">🔍</button></div></div>
+      <div class="fr"><div class="flbl">Icona</div><div class="finp-row"><input class="finp" id="cm-ico" type="text" placeholder="☀️ o mdi:home"><button class="fbtn" title="Scegli icona" id="cm-ico-picker">🎨</button></div></div>
+      <div class="fr" id="fr-entity"><div class="flbl">Entità Home Assistant</div><div class="finp-row"><input class="finp" id="cm-entity" type="text" placeholder="sensor.xxx"><button class="fbtn" data-action="browseField" data-action-arg="cm-entity">🔍</button></div></div>
       <div class="fr" id="fr-unit"><div class="flbl">Unità di misura</div><input class="finp" id="cm-unit" type="text" placeholder="W, kWh, %, °C, €…"></div>
       <div class="fr">
         <div class="flbl">Tipo di card</div>
@@ -99,17 +99,17 @@
       <div class="fr" id="fr-min"><div class="flbl">Valore minimo (gauge)</div><input class="finp" id="cm-min" type="number" placeholder="0"></div>
       <div class="fr" id="fr-hours"><div class="flbl">Ore di storico</div><input class="finp" id="cm-hours" type="number" placeholder="24" min="1" max="168"></div>
       <!-- Flow fields -->
-      <div class="fr" id="fr-solar"><div class="flbl">Entità Solare (W)</div><div class="finp-row"><input class="finp" id="cm-solar" type="text" placeholder="sensor.xxx_power"><button class="fbtn" onclick="browseField('cm-solar')">🔍</button></div></div>
-      <div class="fr" id="fr-load"><div class="flbl">Entità Carico Casa (W)</div><div class="finp-row"><input class="finp" id="cm-load" type="text" placeholder="sensor.consumo_xxx"><button class="fbtn" onclick="browseField('cm-load')">🔍</button></div></div>
-      <div class="fr" id="fr-grid"><div class="flbl">Entità Rete (W, + esport.)</div><div class="finp-row"><input class="finp" id="cm-grid" type="text" placeholder="sensor.grid_power"><button class="fbtn" onclick="browseField('cm-grid')">🔍</button></div></div>
-      <div class="fr" id="fr-battery"><div class="flbl">Entità Batteria (W, opz.)</div><div class="finp-row"><input class="finp" id="cm-battery" type="text" placeholder="opzionale"><button class="fbtn" onclick="browseField('cm-battery')">🔍</button></div></div>
+      <div class="fr" id="fr-solar"><div class="flbl">Entità Solare (W)</div><div class="finp-row"><input class="finp" id="cm-solar" type="text" placeholder="sensor.xxx_power"><button class="fbtn" data-action="browseField" data-action-arg="cm-solar">🔍</button></div></div>
+      <div class="fr" id="fr-load"><div class="flbl">Entità Carico Casa (W)</div><div class="finp-row"><input class="finp" id="cm-load" type="text" placeholder="sensor.consumo_xxx"><button class="fbtn" data-action="browseField" data-action-arg="cm-load">🔍</button></div></div>
+      <div class="fr" id="fr-grid"><div class="flbl">Entità Rete (W, + esport.)</div><div class="finp-row"><input class="finp" id="cm-grid" type="text" placeholder="sensor.grid_power"><button class="fbtn" data-action="browseField" data-action-arg="cm-grid">🔍</button></div></div>
+      <div class="fr" id="fr-battery"><div class="flbl">Entità Batteria (W, opz.)</div><div class="finp-row"><input class="finp" id="cm-battery" type="text" placeholder="opzionale"><button class="fbtn" data-action="browseField" data-action-arg="cm-battery">🔍</button></div></div>
       <!-- Multi-entity fields -->
-      <div class="fr" id="fr-ent2"><div class="flbl">Entità 2</div><div class="finp-row"><input class="finp" id="cm-ent2" type="text" placeholder="sensor.xxx"><button class="fbtn" onclick="browseField('cm-ent2')">🔍</button></div></div>
-      <div class="fr" id="fr-ent3"><div class="flbl">Entità 3</div><div class="finp-row"><input class="finp" id="cm-ent3" type="text" placeholder="sensor.xxx (opz.)"><button class="fbtn" onclick="browseField('cm-ent3')">🔍</button></div></div>
+      <div class="fr" id="fr-ent2"><div class="flbl">Entità 2</div><div class="finp-row"><input class="finp" id="cm-ent2" type="text" placeholder="sensor.xxx"><button class="fbtn" data-action="browseField" data-action-arg="cm-ent2">🔍</button></div></div>
+      <div class="fr" id="fr-ent3"><div class="flbl">Entità 3</div><div class="finp-row"><input class="finp" id="cm-ent3" type="text" placeholder="sensor.xxx (opz.)"><button class="fbtn" data-action="browseField" data-action-arg="cm-ent3">🔍</button></div></div>
       <!-- Weather-forecast extra entities -->
-      <div class="fr" id="fr-wf-temp"><div class="flbl">Sensore Temperatura</div><div class="finp-row"><input class="finp" id="cm-wf-temp" type="text" placeholder="sensor.temperatura_esterna"><button class="fbtn" onclick="browseField('cm-wf-temp')">🔍</button></div></div>
-      <div class="fr" id="fr-wf-hum"><div class="flbl">Sensore Umidità</div><div class="finp-row"><input class="finp" id="cm-wf-hum" type="text" placeholder="sensor.umidita_esterna"><button class="fbtn" onclick="browseField('cm-wf-hum')">🔍</button></div></div>
-      <div class="fr" id="fr-wf-wind"><div class="flbl">Sensore Vento (km/h)</div><div class="finp-row"><input class="finp" id="cm-wf-wind" type="text" placeholder="sensor.velocita_vento"><button class="fbtn" onclick="browseField('cm-wf-wind')">🔍</button></div></div>
+      <div class="fr" id="fr-wf-temp"><div class="flbl">Sensore Temperatura</div><div class="finp-row"><input class="finp" id="cm-wf-temp" type="text" placeholder="sensor.temperatura_esterna"><button class="fbtn" data-action="browseField" data-action-arg="cm-wf-temp">🔍</button></div></div>
+      <div class="fr" id="fr-wf-hum"><div class="flbl">Sensore Umidità</div><div class="finp-row"><input class="finp" id="cm-wf-hum" type="text" placeholder="sensor.umidita_esterna"><button class="fbtn" data-action="browseField" data-action-arg="cm-wf-hum">🔍</button></div></div>
+      <div class="fr" id="fr-wf-wind"><div class="flbl">Sensore Vento (km/h)</div><div class="finp-row"><input class="finp" id="cm-wf-wind" type="text" placeholder="sensor.velocita_vento"><button class="fbtn" data-action="browseField" data-action-arg="cm-wf-wind">🔍</button></div></div>
       <div class="fr" id="fr-wf-days"><div class="flbl">Giorni previsioni (1–14)</div><input class="finp" id="cm-wf-days" type="number" min="1" max="14" placeholder="7"></div>
       <!-- Camera refresh -->
       <div class="fr" id="fr-refresh"><div class="flbl">Aggiorna ogni (sec)</div><input class="finp" id="cm-refresh" type="number" min="1" max="60" placeholder="5"></div>
@@ -130,11 +130,11 @@
       <!-- Appliances fields -->
       <div class="fr" id="fr-threshold"><div class="flbl">Soglia minima W (nascondi sotto)</div><input class="finp" id="cm-threshold" type="number" min="0" max="500" placeholder="5" value="5"></div>
       <div class="fr" id="fr-groups">
-        <div class="app-ed-hdr"><div class="flbl" style="margin:0">Gruppi (chips)</div><button class="app-ed-addBtn" onclick="appGroupAdd()">+ Gruppo</button></div>
+        <div class="app-ed-hdr"><div class="flbl" style="margin:0">Gruppi (chips)</div><button class="app-ed-addBtn" data-action="appGroupAdd">+ Gruppo</button></div>
         <div id="cm-groups-list"></div>
       </div>
       <div class="fr" id="fr-items">
-        <div class="app-ed-hdr"><div class="flbl" style="margin:0">Elettrodomestici (sensori watt)</div><button class="app-ed-addBtn" onclick="appAddRow()">+ Aggiungi</button></div>
+        <div class="app-ed-hdr"><div class="flbl" style="margin:0">Elettrodomestici (sensori watt)</div><button class="app-ed-addBtn" data-action="appAddRow">+ Aggiungi</button></div>
         <div id="cm-items-list"></div>
       </div>
       <!-- Picture-elements fields -->
@@ -166,7 +166,7 @@
       <div class="fr">
         <div class="flbl">Badge nella card</div>
         <div id="cm-badges-preview" style="display:flex;flex-wrap:wrap;gap:4px;min-height:20px;margin-bottom:6px"></div>
-        <button class="fbtn" style="width:100%;justify-content:center" onclick="openBM('card:'+editingId)">🏷️ Gestisci badge…</button>
+        <button class="fbtn" style="width:100%;justify-content:center" id="cm-badge-btn">🏷️ Gestisci badge…</button>
       </div>
       <div class="fr">
         <div class="flbl">👁 Visibilità della card</div>
@@ -175,7 +175,7 @@
           <option value="cond">Mostra solo se… (condizione)</option>
         </select>
         <div id="cm-vis-cond" style="display:none">
-          <div class="finp-row" style="margin-bottom:6px"><input class="finp entac" id="cm-vis-entity" type="text" placeholder="entità (es. alarm_control_panel.casa)"><button class="fbtn" onclick="browseField('cm-vis-entity')">🔍</button></div>
+          <div class="finp-row" style="margin-bottom:6px"><input class="finp entac" id="cm-vis-entity" type="text" placeholder="entità (es. alarm_control_panel.casa)"><button class="fbtn" data-action="browseField" data-action-arg="cm-vis-entity">🔍</button></div>
           <div style="display:flex;gap:6px;margin-bottom:6px">
             <select class="finp" id="cm-vis-op" onchange="_cmVisToggle()" style="flex:1.1">
               <option value="eq">è uguale a</option>
@@ -196,7 +196,7 @@
     </div>
     <div class="mfoot">
       <button class="btn2" data-action="closeCM">Annulla</button>
-      <button class="btn1" onclick="saveCard()">💾 Salva Card</button>
+      <button class="btn1" data-action="saveCard">💾 Salva Card</button>
     </div>
   </div>
 </div>
@@ -208,10 +208,10 @@
     <div class="mhdr"><span class="mtitle">✨ Aggiungi Card</span><button class="mx" data-action="closeSM">✕</button></div>
     <div class="fscroll" style="padding:12px 16px">
       <div class="scard-grid">
-        <button class="sc-btn" onclick="addSpecial('appliances')"><span class="sc-ico">🔌</span>Elettrodomestici</button>
-        <button class="sc-btn" onclick="addSpecial('free')" style="border-color:rgba(99,102,241,.4);color:var(--acc2)"><span class="sc-ico">🎨</span>Canvas Libero</button>
-        <button class="sc-btn" onclick="addSpecial('header-bar')" style="border-color:rgba(129,140,248,.4);color:#a5b4fc"><span class="sc-ico">⊞</span>Header Barra</button>
-        <button class="sc-btn" onclick="openFBM()" style="border-color:rgba(20,184,166,.4);color:#2dd4bf"><span class="sc-ico">⊟</span>Footer Barra</button>
+        <button class="sc-btn" data-action="addSpecial" data-action-arg="appliances"><span class="sc-ico">🔌</span>Elettrodomestici</button>
+        <button class="sc-btn" data-action="addSpecial" data-action-arg="free" style="border-color:rgba(99,102,241,.4);color:var(--acc2)"><span class="sc-ico">🎨</span>Canvas Libero</button>
+        <button class="sc-btn" data-action="addSpecial" data-action-arg="header-bar" style="border-color:rgba(129,140,248,.4);color:#a5b4fc"><span class="sc-ico">⊞</span>Header Barra</button>
+        <button class="sc-btn" data-action="openFBM" style="border-color:rgba(20,184,166,.4);color:#2dd4bf"><span class="sc-ico">⊟</span>Footer Barra</button>
       </div>
     </div>
   </div>
@@ -231,24 +231,24 @@
           <input class="finp" id="sect-title-text" type="text" placeholder="es. Casa, Energia…" style="margin-bottom:10px" oninput="previewSect()">
           <div class="flbl">Allineamento titolo</div>
           <div class="sect-align-pick" style="margin-bottom:10px">
-            <button class="sect-align-btn" id="sta-left"   onclick="setSectTitleAlign('left')">⬅ Sinistra</button>
-            <button class="sect-align-btn on" id="sta-center" onclick="setSectTitleAlign('center')">↔ Centro</button>
-            <button class="sect-align-btn" id="sta-right"  onclick="setSectTitleAlign('right')">➡ Destra</button>
+            <button class="sect-align-btn" id="sta-left"   data-action="setSectTitleAlign" data-action-arg="left">⬅ Sinistra</button>
+            <button class="sect-align-btn on" id="sta-center" data-action="setSectTitleAlign" data-action-arg="center">↔ Centro</button>
+            <button class="sect-align-btn" id="sta-right"  data-action="setSectTitleAlign" data-action-arg="right">➡ Destra</button>
           </div>
           <div class="flbl">Dimensione</div>
           <div class="sect-size-pick" style="margin-bottom:10px">
-            <button class="sect-size-btn" id="ss-small"  onclick="setSectSize('small')">S</button>
-            <button class="sect-size-btn" id="ss-medium" onclick="setSectSize('medium')">M</button>
-            <button class="sect-size-btn on" id="ss-large"  onclick="setSectSize('large')">L</button>
-            <button class="sect-size-btn" id="ss-xlarge" onclick="setSectSize('xlarge')">XL</button>
+            <button class="sect-size-btn" id="ss-small"  data-action="setSectSize" data-action-arg="small">S</button>
+            <button class="sect-size-btn" id="ss-medium" data-action="setSectSize" data-action-arg="medium">M</button>
+            <button class="sect-size-btn on" id="ss-large"  data-action="setSectSize" data-action-arg="large">L</button>
+            <button class="sect-size-btn" id="ss-xlarge" data-action="setSectSize" data-action-arg="xlarge">XL</button>
           </div>
           <div class="flbl">Colore testo</div>
           <div class="cpick" id="sect-colors" style="margin-bottom:5px"></div>
-          <button class="fbtn" style="font-size:10px;margin-bottom:10px" onclick="setSectColor('')">↺ Auto (predefinito)</button>
+          <button class="fbtn" style="font-size:10px;margin-bottom:10px" data-action="setSectColor" data-action-arg="">↺ Auto (predefinito)</button>
           <div class="flbl">Stile</div>
           <div style="display:flex;gap:6px">
-            <button class="fbtn" id="sect-bold-btn" onclick="toggleSectBold()" style="font-weight:800;min-width:50px">G</button>
-            <button class="fbtn" id="sect-italic-btn" onclick="toggleSectItalic()" style="font-style:italic;min-width:50px">I</button>
+            <button class="fbtn" id="sect-bold-btn" data-action="toggleSectBold" style="font-weight:800;min-width:50px">G</button>
+            <button class="fbtn" id="sect-italic-btn" data-action="toggleSectItalic" style="font-style:italic;min-width:50px">I</button>
           </div>
         </div>
       </div>
@@ -258,21 +258,21 @@
         <span class="sect-section-lbl">🏷️ Distintivi / Chips</span>
         <div class="flbl">Allineamento distintivi</div>
         <div class="sect-align-pick" style="margin-bottom:10px">
-          <button class="sect-align-btn" id="sba-left"   onclick="setSectBadgesAlign('left')">⬅ Sinistra</button>
-          <button class="sect-align-btn on" id="sba-center" onclick="setSectBadgesAlign('center')">↔ Centro</button>
-          <button class="sect-align-btn" id="sba-right"  onclick="setSectBadgesAlign('right')">➡ Destra</button>
+          <button class="sect-align-btn" id="sba-left"   data-action="setSectBadgesAlign" data-action-arg="left">⬅ Sinistra</button>
+          <button class="sect-align-btn on" id="sba-center" data-action="setSectBadgesAlign" data-action-arg="center">↔ Centro</button>
+          <button class="sect-align-btn" id="sba-right"  data-action="setSectBadgesAlign" data-action-arg="right">➡ Destra</button>
         </div>
         <div id="sect-badge-list" style="margin-bottom:8px"></div>
         <div style="display:flex;gap:5px">
-          <button class="ep-add" style="flex:1" onclick="openSectBadges()">➕ Aggiungi distintivo</button>
-          <button class="fbtn" id="sect-paste-btn" style="display:none" onclick="pasteSectBadge()">📋 Incolla</button>
+          <button class="ep-add" style="flex:1" data-action="openSectBadges">➕ Aggiungi distintivo</button>
+          <button class="fbtn" id="sect-paste-btn" style="display:none" data-action="pasteSectBadge">📋 Incolla</button>
         </div>
       </div>
 
     </div>
     <div class="mfoot">
       <button class="btn2" data-action="closeSectMod">Annulla</button>
-      <button class="btn1" onclick="saveSectMod()">💾 Salva</button>
+      <button class="btn1" data-action="saveSectMod">💾 Salva</button>
     </div>
   </div>
 </div>
@@ -284,25 +284,25 @@
     <div class="fscroll" style="padding:0">
       <div id="bm-align" style="display:flex;align-items:center;gap:6px;padding:12px 14px 6px">
         <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-right:auto">Allineamento</span>
-        <button class="bf-chip" data-al="left" onclick="_bmSetAlign('left')">◧ Sx</button>
-        <button class="bf-chip" data-al="center" onclick="_bmSetAlign('center')">▣ Centro</button>
-        <button class="bf-chip" data-al="right" onclick="_bmSetAlign('right')">◨ Dx</button>
+        <button class="bf-chip" data-al="left" data-action="_bmSetAlign" data-action-arg="left">◧ Sx</button>
+        <button class="bf-chip" data-al="center" data-action="_bmSetAlign" data-action-arg="center">▣ Centro</button>
+        <button class="bf-chip" data-al="right" data-action="_bmSetAlign" data-action-arg="right">◨ Dx</button>
       </div>
       <div class="badgelist" id="badge-list"></div>
       <div id="bm-addrow" style="padding:2px 14px 10px">
-        <button class="ep-add" onclick="showBadgeForm()">➕ Aggiungi distintivo</button>
+        <button class="ep-add" data-action="showBadgeForm">➕ Aggiungi distintivo</button>
       </div>
       <div id="badge-form" style="display:none;padding:0 14px 14px;border-top:1px solid var(--bd)">
         <div id="bf-form-title" style="padding:10px 0 8px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted)">Nuovo distintivo</div>
         <div class="flbl">Tipo</div>
         <div style="display:flex;gap:5px;margin-bottom:10px">
-          <button class="fbtn badge-type-btn on" id="bft-entity" onclick="selBT('entity')">🏷️ Entità HA</button>
-          <button class="fbtn badge-type-btn" id="bft-text" onclick="selBT('text')">🔤 Testo fisso</button>
-          <button class="fbtn badge-type-btn" id="bft-sep" onclick="selBT('sep')">│ Separatore</button>
+          <button class="fbtn badge-type-btn on" id="bft-entity" data-action="selBT" data-action-arg="entity">🏷️ Entità HA</button>
+          <button class="fbtn badge-type-btn" id="bft-text" data-action="selBT" data-action-arg="text">🔤 Testo fisso</button>
+          <button class="fbtn badge-type-btn" id="bft-sep" data-action="selBT" data-action-arg="sep">│ Separatore</button>
         </div>
         <div id="bf-entity-row">
           <div class="flbl">Entità</div>
-          <div class="finp-row" style="margin-bottom:8px"><input class="finp" id="bf-entity" type="text" placeholder="sensor.xxx"><button class="fbtn" onclick="browseField('bf-entity')">🔍</button></div>
+          <div class="finp-row" style="margin-bottom:8px"><input class="finp" id="bf-entity" type="text" placeholder="sensor.xxx"><button class="fbtn" data-action="browseField" data-action-arg="bf-entity">🔍</button></div>
           <div class="flbl">Suffisso / Unità</div>
           <input class="finp" id="bf-suffix" type="text" placeholder="W  kWh  %  °C" style="margin-bottom:8px">
         </div>
@@ -312,32 +312,32 @@
         </div>
         <div id="bf-details-row">
           <div style="display:flex;gap:8px;margin-bottom:8px">
-            <div style="flex:0 0 90px"><div class="flbl">Icona</div><div class="finp-row" style="gap:3px"><input class="finp" id="bf-icon" type="text" placeholder="💡" style="text-align:center;font-size:13px;min-width:0"><button class="fbtn" title="Scegli icona" onclick="openIconPicker(v=>{document.getElementById('bf-icon').value=v;},this,event)" style="padding:0 5px">🎨</button></div></div>
+            <div style="flex:0 0 90px"><div class="flbl">Icona</div><div class="finp-row" style="gap:3px"><input class="finp" id="bf-icon" type="text" placeholder="💡" style="text-align:center;font-size:13px;min-width:0"><button class="fbtn" title="Scegli icona" id="bf-icon-picker" style="padding:0 5px">🎨</button></div></div>
             <div style="flex:1"><div class="flbl">Etichetta (opz.)</div><input class="finp" id="bf-label" type="text" placeholder="es. Solare"></div>
           </div>
 
           <div class="flbl bf-seclbl">👁 Visualizzazione</div>
           <div class="bf-chips" id="bf-disp" style="margin-bottom:10px">
-            <button class="bf-chip on" data-disp="full" onclick="_selDisp('full')">Icona + Nome + Valore</button>
-            <button class="bf-chip" data-disp="iconval" onclick="_selDisp('iconval')">Icona + Valore</button>
-            <button class="bf-chip" data-disp="labelval" onclick="_selDisp('labelval')">Nome + Valore</button>
-            <button class="bf-chip" data-disp="val" onclick="_selDisp('val')">Solo Valore</button>
-            <button class="bf-chip" data-disp="iconlabel" onclick="_selDisp('iconlabel')">Icona + Nome</button>
-            <button class="bf-chip" data-disp="icon" onclick="_selDisp('icon')">Solo Icona</button>
-            <button class="bf-chip" data-disp="label" onclick="_selDisp('label')">Solo Nome</button>
+            <button class="bf-chip on" data-disp="full" data-action="_selDisp" data-action-arg="full">Icona + Nome + Valore</button>
+            <button class="bf-chip" data-disp="iconval" data-action="_selDisp" data-action-arg="iconval">Icona + Valore</button>
+            <button class="bf-chip" data-disp="labelval" data-action="_selDisp" data-action-arg="labelval">Nome + Valore</button>
+            <button class="bf-chip" data-disp="val" data-action="_selDisp" data-action-arg="val">Solo Valore</button>
+            <button class="bf-chip" data-disp="iconlabel" data-action="_selDisp" data-action-arg="iconlabel">Icona + Nome</button>
+            <button class="bf-chip" data-disp="icon" data-action="_selDisp" data-action-arg="icon">Solo Icona</button>
+            <button class="bf-chip" data-disp="label" data-action="_selDisp" data-action-arg="label">Solo Nome</button>
           </div>
 
           <div class="flbl bf-seclbl">🎨 Colore</div>
           <div class="bf-chips" style="margin-bottom:8px">
-            <button class="bf-chip on" id="bcm-fixed" onclick="_selColMode('fixed')">Fisso</button>
-            <button class="bf-chip" id="bcm-auto" onclick="_selColMode('auto')">Auto (acceso/spento)</button>
-            <button class="bf-chip" id="bcm-rules" onclick="_selColMode('rules')">Regole stato</button>
+            <button class="bf-chip on" id="bcm-fixed" data-action="_selColMode" data-action-arg="fixed">Fisso</button>
+            <button class="bf-chip" id="bcm-auto" data-action="_selColMode" data-action-arg="auto">Auto (acceso/spento)</button>
+            <button class="bf-chip" id="bcm-rules" data-action="_selColMode" data-action-arg="rules">Regole stato</button>
           </div>
           <div id="bf-fixed-col"><div class="cpick" id="bf-colors"></div></div>
           <div id="bf-rules-wrap" style="display:none">
             <div style="font-size:9px;color:var(--muted);margin:2px 0 6px">Prima regola soddisfatta → quel colore. Altrimenti acceso=verde / spento=rosso, poi il fisso.</div>
             <div id="bf-rules-list"></div>
-            <button class="ep-add" style="margin-top:4px" onclick="_addColorRule()">➕ Aggiungi regola colore</button>
+            <button class="ep-add" style="margin-top:4px" data-action="_addColorRule">➕ Aggiungi regola colore</button>
           </div>
 
           <div class="flbl bf-seclbl">▸ Al clic (interazione)</div>
@@ -355,7 +355,7 @@
           </div>
           <div id="bfa-entity" class="bfa-row" style="display:none">
             <div class="flbl">Entità (vuoto = quella del distintivo)</div>
-            <div class="finp-row"><input class="finp" id="bf-actentity" type="text" placeholder="light.xxx"><button class="fbtn" onclick="browseField('bf-actentity')">🔍</button></div>
+            <div class="finp-row"><input class="finp" id="bf-actentity" type="text" placeholder="light.xxx"><button class="fbtn" data-action="browseField" data-action-arg="bf-actentity">🔍</button></div>
           </div>
           <div id="bfa-nav" class="bfa-row" style="display:none">
             <div class="flbl">Pagina di destinazione</div>
@@ -363,7 +363,7 @@
           </div>
           <div id="bfa-service" class="bfa-row" style="display:none">
             <div style="display:flex;gap:6px"><input class="finp" id="bf-svc-domain" placeholder="dominio (es. light)"><input class="finp" id="bf-svc-service" placeholder="servizio (es. turn_on)"></div>
-            <div class="finp-row" style="margin-top:6px"><input class="finp" id="bf-svc-entity" placeholder="entity_id (opzionale)"><button class="fbtn" onclick="browseField('bf-svc-entity')">🔍</button></div>
+            <div class="finp-row" style="margin-top:6px"><input class="finp" id="bf-svc-entity" placeholder="entity_id (opzionale)"><button class="fbtn" data-action="browseField" data-action-arg="bf-svc-entity">🔍</button></div>
           </div>
           <div id="bfa-url" class="bfa-row" style="display:none">
             <div class="flbl">URL</div>
@@ -372,11 +372,11 @@
 
           <div class="flbl bf-seclbl">⊙ Visibilità</div>
           <div class="bf-chips" style="margin-bottom:8px">
-            <button class="bf-chip on" id="bvis-always" onclick="_selVis('always')">Sempre</button>
-            <button class="bf-chip" id="bvis-cond" onclick="_selVis('cond')">Solo se…</button>
+            <button class="bf-chip on" id="bvis-always" data-action="_selVis" data-action-arg="always">Sempre</button>
+            <button class="bf-chip" id="bvis-cond" data-action="_selVis" data-action-arg="cond">Solo se…</button>
           </div>
           <div id="bf-vis-cond" style="display:none">
-            <div class="finp-row" style="margin-bottom:6px"><input class="finp" id="bf-vis-entity" placeholder="entità condizione (sensor.xxx)"><button class="fbtn" onclick="browseField('bf-vis-entity')">🔍</button></div>
+            <div class="finp-row" style="margin-bottom:6px"><input class="finp" id="bf-vis-entity" placeholder="entità condizione (sensor.xxx)"><button class="fbtn" data-action="browseField" data-action-arg="bf-vis-entity">🔍</button></div>
             <div style="display:flex;gap:6px">
               <select class="finp" id="bf-vis-op" style="flex:0 0 130px">
                 <option value="eq">= uguale a</option>
@@ -392,8 +392,8 @@
           </div>
         </div>
         <div style="display:flex;gap:6px;margin-top:12px">
-          <button class="btn1" id="bf-save-btn" onclick="saveBadgeForm()">➕ Aggiungi</button>
-          <button class="btn2" onclick="hideBadgeForm()">Annulla</button>
+          <button class="btn1" id="bf-save-btn" data-action="saveBadgeForm">➕ Aggiungi</button>
+          <button class="btn2" data-action="hideBadgeForm">Annulla</button>
         </div>
       </div>
     </div>
@@ -417,19 +417,19 @@
       <div class="sect-section">
         <span class="sect-section-lbl">⬅ Sinistra</span>
         <div id="hb-list-left" style="margin-bottom:8px"><div style="font-size:10px;opacity:.3;padding:4px 0">Nessun elemento</div></div>
-        <button class="ep-add" onclick="hbAddChip('left')">➕ Aggiungi elemento</button>
+        <button class="ep-add" data-action="hbAddChip" data-action-arg="left">➕ Aggiungi elemento</button>
       </div>
       <!-- Centro -->
       <div class="sect-section">
         <span class="sect-section-lbl">↔ Centro</span>
         <div id="hb-list-center" style="margin-bottom:8px"><div style="font-size:10px;opacity:.3;padding:4px 0">Nessun elemento</div></div>
-        <button class="ep-add" onclick="hbAddChip('center')">➕ Aggiungi elemento</button>
+        <button class="ep-add" data-action="hbAddChip" data-action-arg="center">➕ Aggiungi elemento</button>
       </div>
       <!-- Destra -->
       <div class="sect-section">
         <span class="sect-section-lbl">➡ Destra</span>
         <div id="hb-list-right" style="margin-bottom:8px"><div style="font-size:10px;opacity:.3;padding:4px 0">Nessun elemento</div></div>
-        <button class="ep-add" onclick="hbAddChip('right')">➕ Aggiungi elemento</button>
+        <button class="ep-add" data-action="hbAddChip" data-action-arg="right">➕ Aggiungi elemento</button>
       </div>
       <!-- Chip form — semplice stile HA -->
       <div id="hb-chip-form" style="display:none;padding:0 14px 14px;border-top:1px solid var(--bd)">
@@ -438,13 +438,13 @@
         <!-- ① TIPO -->
         <div class="flbl">Tipo</div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:4px;margin-bottom:12px">
-          <button class="sect-align-btn on" id="hbft-entity" onclick="hbSelType('entity')" style="font-size:10px;padding:8px 3px">📦<br><span style="font-size:7px">Entità HA</span></button>
-          <button class="sect-align-btn" id="hbft-text" onclick="hbSelType('text')" style="font-size:10px;padding:8px 3px">🔤<br><span style="font-size:7px">Testo</span></button>
-          <button class="sect-align-btn" id="hbft-clock" onclick="hbSelType('clock')" style="font-size:10px;padding:8px 3px">⏰<br><span style="font-size:7px">Orologio</span></button>
-          <button class="sect-align-btn" id="hbft-sep" onclick="hbSelType('sep')" style="font-size:10px;padding:8px 3px">│<br><span style="font-size:7px">Separatore</span></button>
-          <button class="sect-align-btn" id="hbft-sos" onclick="hbSelType('sos')" style="font-size:10px;padding:8px 3px;color:#f87171;border-color:rgba(248,113,113,.4)">🆘<br><span style="font-size:7px">SOS</span></button>
-          <button class="sect-align-btn" id="hbft-kiosk" onclick="hbSelType('kiosk')" style="font-size:10px;padding:8px 3px;color:#a5b4fc;border-color:rgba(129,140,248,.4)">⛶<br><span style="font-size:7px">Kiosk</span></button>
-          <button class="sect-align-btn" id="hbft-conn" onclick="hbSelType('conn')" style="font-size:10px;padding:8px 3px;color:#4ade80;border-color:rgba(74,222,128,.4)">📶<br><span style="font-size:7px">Stato WS</span></button>
+          <button class="sect-align-btn on" id="hbft-entity" data-action="hbSelType" data-action-arg="entity" style="font-size:10px;padding:8px 3px">📦<br><span style="font-size:7px">Entità HA</span></button>
+          <button class="sect-align-btn" id="hbft-text" data-action="hbSelType" data-action-arg="text" style="font-size:10px;padding:8px 3px">🔤<br><span style="font-size:7px">Testo</span></button>
+          <button class="sect-align-btn" id="hbft-clock" data-action="hbSelType" data-action-arg="clock" style="font-size:10px;padding:8px 3px">⏰<br><span style="font-size:7px">Orologio</span></button>
+          <button class="sect-align-btn" id="hbft-sep" data-action="hbSelType" data-action-arg="sep" style="font-size:10px;padding:8px 3px">│<br><span style="font-size:7px">Separatore</span></button>
+          <button class="sect-align-btn" id="hbft-sos" data-action="hbSelType" data-action-arg="sos" style="font-size:10px;padding:8px 3px;color:#f87171;border-color:rgba(248,113,113,.4)">🆘<br><span style="font-size:7px">SOS</span></button>
+          <button class="sect-align-btn" id="hbft-kiosk" data-action="hbSelType" data-action-arg="kiosk" style="font-size:10px;padding:8px 3px;color:#a5b4fc;border-color:rgba(129,140,248,.4)">⛶<br><span style="font-size:7px">Kiosk</span></button>
+          <button class="sect-align-btn" id="hbft-conn" data-action="hbSelType" data-action-arg="conn" style="font-size:10px;padding:8px 3px;color:#4ade80;border-color:rgba(74,222,128,.4)">📶<br><span style="font-size:7px">Stato WS</span></button>
         </div>
 
         <!-- ② ENTITÀ (solo per type=entity) -->
@@ -452,7 +452,7 @@
           <div class="flbl">Entità Home Assistant</div>
           <div class="finp-row" style="margin-bottom:6px">
             <input class="finp entac" id="hbf-entity" type="text" placeholder="es. lock.porta, alarm_control_panel.casa" oninput="hbAutoFill()">
-            <button class="fbtn" onclick="browseField('hbf-entity')" title="Cerca entità">🔍</button>
+            <button class="fbtn" data-action="browseField" data-action-arg="hbf-entity" title="Cerca entità">🔍</button>
           </div>
           <!-- hint auto-rilevato -->
           <div id="hbf-action-hint" style="display:none;font-size:9px;padding:5px 8px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:7px;color:#a5b4fc;margin-bottom:6px;line-height:1.4"></div>
@@ -472,27 +472,27 @@
         <div id="hbf-clock-row" style="display:none">
           <div class="flbl">Stile</div>
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:11px">
-            <button class="hbclk-style-btn on" id="hbclks-default" onclick="hbSelClockStyle('default')">
+            <button class="hbclk-style-btn on" id="hbclks-default" data-action="hbSelClockStyle" data-action-arg="default">
               <span style="font-size:14px;font-weight:900;letter-spacing:-1px;font-family:'Inter',sans-serif">12:34</span>
               <span style="font-size:7px;opacity:.45;font-weight:600">Default</span>
             </button>
-            <button class="hbclk-style-btn" id="hbclks-bold" onclick="hbSelClockStyle('bold')">
+            <button class="hbclk-style-btn" id="hbclks-bold" data-action="hbSelClockStyle" data-action-arg="bold">
               <span style="font-size:15px;font-weight:900;letter-spacing:-2px;font-family:'Poppins','Nunito',sans-serif">12:34</span>
               <span style="font-size:7px;opacity:.45;font-weight:600">Bold</span>
             </button>
-            <button class="hbclk-style-btn" id="hbclks-minimal" onclick="hbSelClockStyle('minimal')">
+            <button class="hbclk-style-btn" id="hbclks-minimal" data-action="hbSelClockStyle" data-action-arg="minimal">
               <span style="font-size:13px;font-weight:300;letter-spacing:2px;font-family:'Inter',sans-serif">12:34</span>
               <span style="font-size:7px;opacity:.45;font-weight:600">Minimal</span>
             </button>
-            <button class="hbclk-style-btn" id="hbclks-digital" onclick="hbSelClockStyle('digital')">
+            <button class="hbclk-style-btn" id="hbclks-digital" data-action="hbSelClockStyle" data-action-arg="digital">
               <span style="font-size:12px;font-weight:700;letter-spacing:3px;font-family:'Orbitron','Oxanium',monospace">12:34</span>
               <span style="font-size:7px;opacity:.45;font-weight:600">Digital</span>
             </button>
-            <button class="hbclk-style-btn" id="hbclks-neon" onclick="hbSelClockStyle('neon')" style="color:#4ade80">
+            <button class="hbclk-style-btn" id="hbclks-neon" data-action="hbSelClockStyle" data-action-arg="neon" style="color:#4ade80">
               <span style="font-size:12px;font-weight:700;letter-spacing:3px;font-family:'Orbitron',monospace;text-shadow:0 0 8px #4ade80">12:34</span>
               <span style="font-size:7px;opacity:.6;font-weight:600">Neon</span>
             </button>
-            <button class="hbclk-style-btn" id="hbclks-slim" onclick="hbSelClockStyle('slim')">
+            <button class="hbclk-style-btn" id="hbclks-slim" data-action="hbSelClockStyle" data-action-arg="slim">
               <span style="font-size:13px;font-weight:300;letter-spacing:5px;font-family:'Josefin Sans','Raleway',sans-serif">12:34</span>
               <span style="font-size:7px;opacity:.45;font-weight:600">Slim</span>
             </button>
@@ -502,17 +502,17 @@
             <div style="flex:1">
               <div class="flbl">Formato</div>
               <div style="display:flex;gap:3px">
-                <button class="sect-size-btn on" id="hbclkf-24h" onclick="hbSelClockFormat('24h')" style="flex:1;font-size:9px">24h</button>
-                <button class="sect-size-btn" id="hbclkf-12h" onclick="hbSelClockFormat('12h')" style="flex:1;font-size:9px">12h</button>
+                <button class="sect-size-btn on" id="hbclkf-24h" data-action="hbSelClockFormat" data-action-arg="24h" style="flex:1;font-size:9px">24h</button>
+                <button class="sect-size-btn" id="hbclkf-12h" data-action="hbSelClockFormat" data-action-arg="12h" style="flex:1;font-size:9px">12h</button>
               </div>
             </div>
             <div style="flex:1">
               <div class="flbl">Dimensione</div>
               <div style="display:flex;gap:3px">
-                <button class="sect-size-btn" id="hbclksz-sm" onclick="hbSelClockSize('sm')" style="flex:1;font-size:9px">S</button>
-                <button class="sect-size-btn on" id="hbclksz-md" onclick="hbSelClockSize('md')" style="flex:1;font-size:9px">M</button>
-                <button class="sect-size-btn" id="hbclksz-lg" onclick="hbSelClockSize('lg')" style="flex:1;font-size:9px">L</button>
-                <button class="sect-size-btn" id="hbclksz-xl" onclick="hbSelClockSize('xl')" style="flex:1;font-size:9px">XL</button>
+                <button class="sect-size-btn" id="hbclksz-sm" data-action="hbSelClockSize" data-action-arg="sm" style="flex:1;font-size:9px">S</button>
+                <button class="sect-size-btn on" id="hbclksz-md" data-action="hbSelClockSize" data-action-arg="md" style="flex:1;font-size:9px">M</button>
+                <button class="sect-size-btn" id="hbclksz-lg" data-action="hbSelClockSize" data-action-arg="lg" style="flex:1;font-size:9px">L</button>
+                <button class="sect-size-btn" id="hbclksz-xl" data-action="hbSelClockSize" data-action-arg="xl" style="flex:1;font-size:9px">XL</button>
               </div>
             </div>
           </div>
@@ -539,7 +539,7 @@
               <div class="flbl">Icona <span style="font-weight:400;opacity:.5">(auto)</span></div>
               <div class="finp-row" style="gap:2px">
                 <input class="finp" id="hbf-icon" type="text" placeholder="auto" style="text-align:center;font-size:11px;min-width:0">
-                <button class="fbtn" onclick="openIconPicker(v=>{document.getElementById('hbf-icon').value=v;},this,event)" title="Scegli icona">🎨</button>
+                <button class="fbtn" id="hbf-icon-picker" title="Scegli icona">🎨</button>
               </div>
             </div>
           </div>
@@ -549,17 +549,17 @@
             <div style="flex:1">
               <div class="flbl">Forma</div>
               <div style="display:flex;gap:3px">
-                <button class="sect-size-btn on" id="hbsh-pill" onclick="hbSelShape('pill')" style="flex:1;font-size:9px">Pill</button>
-                <button class="sect-size-btn" id="hbsh-rounded" onclick="hbSelShape('rounded')" style="flex:1;font-size:9px">Tondo</button>
-                <button class="sect-size-btn" id="hbsh-square" onclick="hbSelShape('square')" style="flex:1;font-size:9px">Quadro</button>
+                <button class="sect-size-btn on" id="hbsh-pill" data-action="hbSelShape" data-action-arg="pill" style="flex:1;font-size:9px">Pill</button>
+                <button class="sect-size-btn" id="hbsh-rounded" data-action="hbSelShape" data-action-arg="rounded" style="flex:1;font-size:9px">Tondo</button>
+                <button class="sect-size-btn" id="hbsh-square" data-action="hbSelShape" data-action-arg="square" style="flex:1;font-size:9px">Quadro</button>
               </div>
             </div>
             <div style="flex:0 0 80px">
               <div class="flbl">Dim.</div>
               <div style="display:flex;gap:3px">
-                <button class="sect-size-btn" id="hbsz-sm" onclick="hbSelSize('sm')" style="flex:1">S</button>
-                <button class="sect-size-btn on" id="hbsz-md" onclick="hbSelSize('md')" style="flex:1">M</button>
-                <button class="sect-size-btn" id="hbsz-lg" onclick="hbSelSize('lg')" style="flex:1">L</button>
+                <button class="sect-size-btn" id="hbsz-sm" data-action="hbSelSize" data-action-arg="sm" style="flex:1">S</button>
+                <button class="sect-size-btn on" id="hbsz-md" data-action="hbSelSize" data-action-arg="md" style="flex:1">M</button>
+                <button class="sect-size-btn" id="hbsz-lg" data-action="hbSelSize" data-action-arg="lg" style="flex:1">L</button>
               </div>
             </div>
           </div>
@@ -567,12 +567,12 @@
           <!-- ⑤ AZIONE AL CLICK -->
           <div class="flbl">Al click…</div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:8px">
-            <button class="sect-align-btn on" id="hbca-none"      onclick="hbSelClickAct('none')"      style="font-size:9px;padding:7px 4px">🚫<br>Niente</button>
-            <button class="sect-align-btn"    id="hbca-more_info" onclick="hbSelClickAct('more_info')" style="font-size:9px;padding:7px 4px">ℹ️<br>Info</button>
-            <button class="sect-align-btn"    id="hbca-toggle"    onclick="hbSelClickAct('toggle')"    style="font-size:9px;padding:7px 4px">🔀<br>Attiva</button>
-            <button class="sect-align-btn"    id="hbca-navigate"  onclick="hbSelClickAct('navigate')"  style="font-size:9px;padding:7px 4px">🧭<br>Naviga</button>
-            <button class="sect-align-btn"    id="hbca-service"   onclick="hbSelClickAct('service')"   style="font-size:9px;padding:7px 4px">⚡<br>Servizio</button>
-            <button class="sect-align-btn"    id="hbca-options"   onclick="hbSelClickAct('options')"   style="font-size:9px;padding:7px 4px">☰<br>Menu</button>
+            <button class="sect-align-btn on" id="hbca-none"      data-action="hbSelClickAct" data-action-arg="none"      style="font-size:9px;padding:7px 4px">🚫<br>Niente</button>
+            <button class="sect-align-btn"    id="hbca-more_info" data-action="hbSelClickAct" data-action-arg="more_info" style="font-size:9px;padding:7px 4px">ℹ️<br>Info</button>
+            <button class="sect-align-btn"    id="hbca-toggle"    data-action="hbSelClickAct" data-action-arg="toggle"    style="font-size:9px;padding:7px 4px">🔀<br>Attiva</button>
+            <button class="sect-align-btn"    id="hbca-navigate"  data-action="hbSelClickAct" data-action-arg="navigate"  style="font-size:9px;padding:7px 4px">🧭<br>Naviga</button>
+            <button class="sect-align-btn"    id="hbca-service"   data-action="hbSelClickAct" data-action-arg="service"   style="font-size:9px;padding:7px 4px">⚡<br>Servizio</button>
+            <button class="sect-align-btn"    id="hbca-options"   data-action="hbSelClickAct" data-action-arg="options"   style="font-size:9px;padding:7px 4px">☰<br>Menu</button>
           </div>
 
           <!-- Se Naviga -->
@@ -589,7 +589,7 @@
             </div>
             <div class="finp-row" style="margin-bottom:8px">
               <input class="finp" id="hbf-tapent" type="text" placeholder="Entità target (vuoto = stessa entità)">
-              <button class="fbtn" onclick="browseField('hbf-tapent')">🔍</button>
+              <button class="fbtn" data-action="browseField" data-action-arg="hbf-tapent">🔍</button>
             </div>
           </div>
 
@@ -601,12 +601,12 @@
               <div style="display:flex;gap:4px;margin-bottom:4px">
                 <input class="finp" id="hbf-opt-lbl" type="text" placeholder="Nome (es. Disinserisci)" style="flex:2">
                 <input class="finp" id="hbf-opt-icon" type="text" placeholder="icona" style="flex:0 0 46px;text-align:center">
-                <button class="fbtn" onclick="openIconPicker(v=>{document.getElementById('hbf-opt-icon').value=v;},this,event)">🎨</button>
+                <button class="fbtn" id="hbf-opt-icon-picker">🎨</button>
               </div>
               <div style="display:flex;gap:4px">
                 <input class="finp" id="hbf-opt-dom" type="text" placeholder="dominio" style="flex:1">
                 <input class="finp" id="hbf-opt-svc" type="text" placeholder="servizio" style="flex:1">
-                <button class="ep-add" onclick="hbAddOption()">+</button>
+                <button class="ep-add" data-action="hbAddOption">+</button>
               </div>
             </div>
           </div>
@@ -628,14 +628,14 @@
         </div>
 
         <div style="display:flex;gap:6px;margin-top:12px">
-          <button class="btn1" id="hbf-save-btn" onclick="hbSaveChip()" style="flex:1">✅ Salva</button>
-          <button class="btn2" onclick="hbCancelChip()" style="flex:0 0 80px">Annulla</button>
+          <button class="btn1" id="hbf-save-btn" data-action="hbSaveChip" style="flex:1">✅ Salva</button>
+          <button class="btn2" data-action="hbCancelChip" style="flex:0 0 80px">Annulla</button>
         </div>
       </div>
     </div>
     <div class="mfoot">
       <button class="btn2" data-action="closeHBM">Annulla</button>
-      <button class="btn1" onclick="saveHBM()">💾 Salva</button>
+      <button class="btn1" data-action="saveHBM">💾 Salva</button>
     </div>
   </div>
 </div>
@@ -683,7 +683,7 @@
       <div class="sect-section">
         <span class="sect-section-lbl">⊙ Pulsanti</span>
         <div id="fb-list" style="margin-bottom:8px"></div>
-        <button class="ep-add" onclick="fbAddBtn()">➕ Aggiungi pulsante</button>
+        <button class="ep-add" data-action="fbAddBtn">➕ Aggiungi pulsante</button>
       </div>
       <!-- Form inline -->
       <div id="fb-btn-form" style="display:none;padding:0 14px 14px;border-top:1px solid var(--bd)">
@@ -691,10 +691,10 @@
         <!-- Tipo -->
         <div class="flbl">Tipo</div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;margin-bottom:12px">
-          <button class="sect-align-btn on" id="fbft-climate" onclick="fbSelType('climate')" style="font-size:10px;padding:8px 3px">🌡️<br><span style="font-size:7px">Termostato</span></button>
-          <button class="sect-align-btn" id="fbft-link" onclick="fbSelType('link')" style="font-size:10px;padding:8px 3px">🔗<br><span style="font-size:7px">Link URL</span></button>
-          <button class="sect-align-btn" id="fbft-navigate" onclick="fbSelType('navigate')" style="font-size:10px;padding:8px 3px">🧭<br><span style="font-size:7px">Naviga</span></button>
-          <button class="sect-align-btn" id="fbft-popup" onclick="fbSelType('popup')" style="font-size:10px;padding:8px 3px">💬<br><span style="font-size:7px">Popup</span></button>
+          <button class="sect-align-btn on" id="fbft-climate" data-action="fbSelType" data-action-arg="climate" style="font-size:10px;padding:8px 3px">🌡️<br><span style="font-size:7px">Termostato</span></button>
+          <button class="sect-align-btn" id="fbft-link" data-action="fbSelType" data-action-arg="link" style="font-size:10px;padding:8px 3px">🔗<br><span style="font-size:7px">Link URL</span></button>
+          <button class="sect-align-btn" id="fbft-navigate" data-action="fbSelType" data-action-arg="navigate" style="font-size:10px;padding:8px 3px">🧭<br><span style="font-size:7px">Naviga</span></button>
+          <button class="sect-align-btn" id="fbft-popup" data-action="fbSelType" data-action-arg="popup" style="font-size:10px;padding:8px 3px">💬<br><span style="font-size:7px">Popup</span></button>
         </div>
         <!-- Icona + Label + Colore -->
         <div style="display:flex;gap:6px;margin-bottom:8px">
@@ -702,7 +702,7 @@
             <div class="flbl">Icona</div>
             <div class="finp-row" style="gap:2px">
               <input class="finp" id="fbf-icon" type="text" placeholder="mdi:home" style="text-align:center;font-size:11px;padding:4px" oninput="_fbPreviewIcon()">
-              <button class="fbtn" onclick="openIconPicker(v=>{document.getElementById('fbf-icon').value=v;_fbPreviewIcon();},this,event)" title="Scegli">🎨</button>
+              <button class="fbtn" id="fbf-icon-picker" title="Scegli">🎨</button>
             </div>
           </div>
           <div style="flex:1">
@@ -722,7 +722,7 @@
           <div class="flbl">Entità clima</div>
           <div class="finp-row" style="margin-bottom:6px">
             <input class="finp entac" id="fbf-entity" type="text" placeholder="es. climate.soggiorno">
-            <button class="fbtn" onclick="browseField('fbf-entity')">🔍</button>
+            <button class="fbtn" data-action="browseField" data-action-arg="fbf-entity">🔍</button>
           </div>
           <div style="display:flex;gap:8px;margin-bottom:8px">
             <div style="flex:1"><div class="flbl">Temp. min</div><input class="finp" id="fbf-clmmin" type="number" value="16" step="0.5"></div>
@@ -745,14 +745,14 @@
           <textarea class="finp" id="fbf-poptext" placeholder="Testo o HTML…" style="min-height:80px;resize:vertical;margin-bottom:8px"></textarea>
         </div>
         <div style="display:flex;gap:6px;margin-top:4px">
-          <button class="btn1" id="fbf-save-btn" onclick="fbSaveBtn()" style="flex:1">✅ Salva pulsante</button>
-          <button class="btn2" onclick="fbCancelBtn()" style="flex:0 0 80px">Annulla</button>
+          <button class="btn1" id="fbf-save-btn" data-action="fbSaveBtn" style="flex:1">✅ Salva pulsante</button>
+          <button class="btn2" data-action="fbCancelBtn" style="flex:0 0 80px">Annulla</button>
         </div>
       </div>
     </div>
     <div class="mfoot">
       <button class="btn2" data-action="closeFBM">Annulla</button>
-      <button class="btn1" onclick="saveFBM()">💾 Salva</button>
+      <button class="btn1" data-action="saveFBM">💾 Salva</button>
     </div>
   </div>
 </div>
@@ -775,7 +775,7 @@
     </div>
     <div class="mfoot">
       <button class="btn2" data-action="closeYamlImport">Annulla</button>
-      <button class="btn1" id="yaml-import-btn" onclick="importYamlCard()" disabled>📥 Importa Card</button>
+      <button class="btn1" id="yaml-import-btn" data-action="importYamlCard" disabled>📥 Importa Card</button>
     </div>
   </div>
 </div>
@@ -803,7 +803,7 @@
     <div class="fscroll" id="wmod-body" style="padding-top:6px"></div>
     <div class="mfoot">
       <button class="btn2" data-action="closeWM">Annulla</button>
-      <button class="btn1" id="wmod-btn" onclick="saveWizard()">✨ Crea Pagina</button>
+      <button class="btn1" id="wmod-btn" data-action="saveWizard">✨ Crea Pagina</button>
     </div>
   </div>
 </div>
@@ -817,15 +817,15 @@
       <div id="tmod-step1">
         <div style="padding:10px 18px 8px;font-size:11px;color:var(--muted)">Scegli un template preconfigurato oppure parti da una pagina vuota.</div>
         <div class="tpl-grid">
-          <button class="tpl-btn" onclick="openPageCfg('energia')"><span class="tpl-ico">⚡</span><span>Energia</span><span class="tpl-sub">FV, consumi, flussi</span></button>
-          <button class="tpl-btn" onclick="openPageCfg('luci')"><span class="tpl-ico">💡</span><span>Luci</span><span class="tpl-sub">Toggle e interruttori</span></button>
-          <button class="tpl-btn" onclick="openPageCfg('clima')"><span class="tpl-ico">🌡️</span><span>Clima</span><span class="tpl-sub">Termostati e temp.</span></button>
-          <button class="tpl-btn" onclick="openPageCfg('sicurezza')"><span class="tpl-ico">📷</span><span>Sicurezza</span><span class="tpl-sub">Camere e sensori</span></button>
-          <button class="tpl-btn" onclick="openPageCfg('media')"><span class="tpl-ico">🎵</span><span>Media</span><span class="tpl-sub">Lettori multimediali</span></button>
-          <button class="tpl-btn" onclick="openPageCfg('meteo')"><span class="tpl-ico">🌤️</span><span>Meteo</span><span class="tpl-sub">Previsioni e sensori</span></button>
-          <button class="tpl-btn" onclick="openPageCfg('veicoli')"><span class="tpl-ico">🚗</span><span>Veicoli</span><span class="tpl-sub">Auto elettrica / EV</span></button>
-          <button class="tpl-btn" onclick="openPageCfg('casa')"><span class="tpl-ico">🏠</span><span>Casa Overview</span><span class="tpl-sub">Immagine 3D + sensori</span></button>
-          <button class="tpl-btn" onclick="openPageCfg('vuota')"><span class="tpl-ico">📄</span><span>Vuota</span><span class="tpl-sub">Pagina in bianco</span></button>
+          <button class="tpl-btn" data-action="openPageCfg" data-action-arg="energia"><span class="tpl-ico">⚡</span><span>Energia</span><span class="tpl-sub">FV, consumi, flussi</span></button>
+          <button class="tpl-btn" data-action="openPageCfg" data-action-arg="luci"><span class="tpl-ico">💡</span><span>Luci</span><span class="tpl-sub">Toggle e interruttori</span></button>
+          <button class="tpl-btn" data-action="openPageCfg" data-action-arg="clima"><span class="tpl-ico">🌡️</span><span>Clima</span><span class="tpl-sub">Termostati e temp.</span></button>
+          <button class="tpl-btn" data-action="openPageCfg" data-action-arg="sicurezza"><span class="tpl-ico">📷</span><span>Sicurezza</span><span class="tpl-sub">Camere e sensori</span></button>
+          <button class="tpl-btn" data-action="openPageCfg" data-action-arg="media"><span class="tpl-ico">🎵</span><span>Media</span><span class="tpl-sub">Lettori multimediali</span></button>
+          <button class="tpl-btn" data-action="openPageCfg" data-action-arg="meteo"><span class="tpl-ico">🌤️</span><span>Meteo</span><span class="tpl-sub">Previsioni e sensori</span></button>
+          <button class="tpl-btn" data-action="openPageCfg" data-action-arg="veicoli"><span class="tpl-ico">🚗</span><span>Veicoli</span><span class="tpl-sub">Auto elettrica / EV</span></button>
+          <button class="tpl-btn" data-action="openPageCfg" data-action-arg="casa"><span class="tpl-ico">🏠</span><span>Casa Overview</span><span class="tpl-sub">Immagine 3D + sensori</span></button>
+          <button class="tpl-btn" data-action="openPageCfg" data-action-arg="vuota"><span class="tpl-ico">📄</span><span>Vuota</span><span class="tpl-sub">Pagina in bianco</span></button>
         </div>
       </div>
       <!-- Step 2: configura sezioni -->
@@ -836,7 +836,7 @@
         <div class="ep-sec-title" style="margin-bottom:8px">Quante colonne?</div>
         <div id="epw-sec-btns" style="display:flex;gap:7px;margin-bottom:14px"></div>
         <div id="epw-preview"></div>
-        <button class="ep-add" style="width:100%" onclick="confirmPage()">Crea Pagina</button>
+        <button class="ep-add" style="width:100%" data-action="confirmPage">Crea Pagina</button>
       </div>
     </div>
   </div>
@@ -850,7 +850,7 @@
       <!-- LEFT: header-bar items (stesso sistema della card header-bar) -->
       <div id="hdr-left">
         <div class="hbar-inner" id="hdr-bar-inner" data-id="__hdrbar__"></div>
-        <button id="hdr-bar-edit" onclick="openHBM_HDR()" title="Configura elementi header" style="align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;font-size:13px;color:rgba(255,255,255,.4);border:1px dashed rgba(255,255,255,.25);background:none;flex-shrink:0;transition:all .15s"><i class="mdi mdi-pencil-outline"></i></button>
+        <button id="hdr-bar-edit" data-action="openHBM_HDR" title="Configura elementi header" style="align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;font-size:13px;color:rgba(255,255,255,.4);border:1px dashed rgba(255,255,255,.25);background:none;flex-shrink:0;transition:all .15s"><i class="mdi mdi-pencil-outline"></i></button>
       </div>
       <!-- page-tabs rimane nel DOM per renderPageTabs() ma nascosto -->
       <div id="page-tabs" style="display:none"></div>
@@ -894,14 +894,14 @@
 
       <!-- Incolla (visibile solo con clipboard) -->
       <div style="display:flex;gap:5px">
-        <button id="ep-btn-paste" class="ep-paste" onclick="pasteCard()" style="flex:1;margin-top:0">📋 Incolla Card</button>
-        <button id="ep-btn-paste-clr" class="ep-paste-clr" onclick="clearClipboard()" title="Svuota appunti">✕</button>
+        <button id="ep-btn-paste" class="ep-paste" data-action="pasteCard" style="flex:1;margin-top:0">📋 Incolla Card</button>
+        <button id="ep-btn-paste-clr" class="ep-paste-clr" data-action="clearClipboard" title="Svuota appunti">✕</button>
       </div>
 
       <div class="oik-cat">Plancia</div>
 
       <!-- ── Plancia (Pagina + Sistema + Barra inferiore in un unico menù) ── -->
-      <button class="cfg-open-btn" onclick="_epToggleGroup('pg')" id="ep-pg-btn"
+      <button class="cfg-open-btn" data-action="_epToggleGroup" data-action-arg="pg" id="ep-pg-btn"
         style="background:rgba(99,102,241,.08);border-color:rgba(99,102,241,.2);color:#a5b4fc">
         🖥 <span style="flex:1">Plancia</span>
         <span id="ep-pg-arrow" style="color:rgba(255,255,255,.2);font-size:14px;transition:transform .2s">▾</span>
@@ -910,13 +910,13 @@
         <div style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.05)">
           <div class="ep-sec-title" style="margin-bottom:6px">Aspetto</div>
           <div class="ep-theme-row">
-            <button id="ep-theme-dark" class="ep-theme-btn on" onclick="applyTheme('dark')">🌙 Scuro</button>
-            <button id="ep-theme-light" class="ep-theme-btn" onclick="applyTheme('light')">☀️ Chiaro</button>
+            <button id="ep-theme-dark" class="ep-theme-btn on" data-action="applyTheme" data-action-arg="dark">🌙 Scuro</button>
+            <button id="ep-theme-light" class="ep-theme-btn" data-action="applyTheme" data-action-arg="light">☀️ Chiaro</button>
           </div>
           <div class="ep-sec-title" style="margin-top:8px;margin-bottom:4px">Tema colore</div>
           <div class="ep-ctheme-row" id="ep-ctheme-row"></div>
           <div class="ep-sec-title" style="margin-top:8px;margin-bottom:4px">Carattere</div>
-          <button class="ep-font-sel" id="ep-font-btn" onclick="toggleFontPop(event)">
+          <button class="ep-font-sel" id="ep-font-btn" data-action="toggleFontPop">
             <span id="ep-font-lbl">Inter</span><span style="opacity:.4;font-size:9px">▾</span>
           </button>
         </div>
@@ -924,24 +924,24 @@
           <div class="ep-sec-title" style="margin-bottom:6px">Pagina corrente</div>
           <div style="display:flex;gap:6px;margin-bottom:6px">
             <input class="finp" id="ep-page-ico" style="width:44px;flex-shrink:0;text-align:center;font-size:14px" type="text" placeholder="📄" oninput="_pgMarkDirty()">
-            <button class="fbtn" style="flex-shrink:0;padding:0 5px" title="Scegli icona" onclick="openIconPicker(v=>{const el=document.getElementById('ep-page-ico');el.value=v;_pgMarkDirty();},this,event)">🎨</button>
+            <button class="fbtn" style="flex-shrink:0;padding:0 5px" title="Scegli icona" id="ep-page-ico-picker">🎨</button>
             <input class="finp" id="ep-page-name" type="text" placeholder="Nome tab (opzionale)" oninput="_pgMarkDirty()">
           </div>
           <div class="ep-sec-title" style="margin-top:2px;margin-bottom:4px">Titolo nella dashboard</div>
           <input class="finp" id="ep-view-title" type="text" placeholder="es. Casa, Energia…" oninput="_pgMarkDirty()" style="margin-bottom:8px">
-          <button class="ep-add2" id="ep-del-page" onclick="delPage()" style="color:#f87171;border-color:rgba(248,113,113,0.25)">🗑 Elimina pagina</button>
+          <button class="ep-add2" id="ep-del-page" data-action="delPage" style="color:#f87171;border-color:rgba(248,113,113,0.25)">🗑 Elimina pagina</button>
         </div>
         <div id="ep-grid-sec" style="padding:10px 12px">
           <div id="sections-list"></div>
         </div>
         <div style="display:flex;gap:5px;padding:8px 12px 10px">
-          <button id="ep-pg-confirm" class="ep-pg-confirm-btn" onclick="confirmPageSettings()" disabled>✓ Conferma</button>
+          <button id="ep-pg-confirm" class="ep-pg-confirm-btn" data-action="confirmPageSettings" disabled>✓ Conferma</button>
           <button id="ep-pg-cancel" class="ep-pg-cancel-btn" data-action="cancelPageSettings">↩ Annulla</button>
         </div>
         <!-- Sistema (screensaver, tema automatico, colonna singola) -->
         <div style="padding:10px 12px;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.05)">
           <div class="ep-sec-title" style="margin-bottom:6px">Sistema</div>
-          <div class="sys-row"><span class="sys-lbl">🖼 Screensaver</span><button class="sys-tog" id="sys-ss-tog" onclick="_sysToggle('ss')"></button></div>
+          <div class="sys-row"><span class="sys-lbl">🖼 Screensaver</span><button class="sys-tog" id="sys-ss-tog" data-action="_sysToggle" data-action-arg="ss"></button></div>
           <div class="sys-sub">Dopo inattività: orologio + meteo a tutto schermo</div>
           <div class="sys-row" style="margin-top:8px"><span class="sys-lbl2">Attesa</span>
             <div style="display:flex;align-items:center;gap:4px">
@@ -950,7 +950,7 @@
             </div></div>
         </div>
         <div style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.05)">
-          <div class="sys-row"><span class="sys-lbl">🌗 Tema automatico</span><button class="sys-tog" id="sys-th-tog" onclick="_sysToggle('th')"></button></div>
+          <div class="sys-row"><span class="sys-lbl">🌗 Tema automatico</span><button class="sys-tog" id="sys-th-tog" data-action="_sysToggle" data-action-arg="th"></button></div>
           <div class="sys-row" style="margin-top:8px"><span class="sys-lbl2">Modalità</span>
             <select class="sys-sel" id="sys-th-mode" onchange="_sysSaveTH()"><option value="time">Orario</option><option value="sun">Alba/Tramonto</option></select></div>
           <div class="sys-row" id="sys-th-times" style="margin-top:6px"><span class="sys-lbl2">Chiaro / Scuro</span>
@@ -965,14 +965,14 @@
         <!-- Barra inferiore (apre l'editor dedicato) -->
         <div style="padding:10px 12px">
           <div class="ep-sec-title" style="margin-bottom:6px">Barra inferiore</div>
-          <button class="ep-add2" onclick="openFBM()">▭ Configura barra inferiore <span id="ep-fbar-status" style="font-size:10px;opacity:.55"></span></button>
+          <button class="ep-add2" data-action="openFBM">▭ Configura barra inferiore <span id="ep-fbar-status" style="font-size:10px;opacity:.55"></span></button>
         </div>
       </div>
 
       <div class="oik-cat">Altro</div>
 
       <!-- ── Store ── -->
-      <button class="cfg-open-btn" onclick="openGhStore()"
+      <button class="cfg-open-btn" data-action="openGhStore"
         style="background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:#86efac">
         🛒 <span style="flex:1">Store</span>
         <span id="ep-jsstore-count" style="font-size:10px;color:rgba(134,239,172,.6)"></span>
@@ -980,14 +980,14 @@
       </button>
 
       <!-- ── Notifiche Smart ── -->
-      <button class="cfg-open-btn" onclick="openNotifCfg()" style="background:rgba(129,140,248,.1);border-color:rgba(129,140,248,.3);color:#818cf8">
+      <button class="cfg-open-btn" data-action="openNotifCfg" style="background:rgba(129,140,248,.1);border-color:rgba(129,140,248,.3);color:#818cf8">
         🔔 <span style="flex:1">Notifiche Smart</span>
         <span id="ntf-ep-count" style="font-size:10px;color:rgba(129,140,248,.6)"></span>
         <span style="color:rgba(255,255,255,.2);font-size:16px">›</span>
       </button>
 
       <!-- ── Contatti SOS ── -->
-      <button class="cfg-open-btn" onclick="openSOSCfg()" style="background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.3);color:#f87171">
+      <button class="cfg-open-btn" data-action="openSOSCfg" style="background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.3);color:#f87171">
         🆘 <span style="flex:1">Contatti SOS</span>
         <span id="sos-ep-count" style="font-size:10px;color:rgba(248,113,113,.6)"></span>
         <span style="color:rgba(255,255,255,.2);font-size:16px">›</span>
@@ -996,7 +996,7 @@
       <div class="oik-cat">Dati</div>
 
       <!-- ── Sincronizza configurazione su tutti i dispositivi ── -->
-      <button class="cfg-open-btn" onclick="syncCfgToHA()" style="background:rgba(34,211,238,.08);border-color:rgba(34,211,238,.2);color:#22d3ee">
+      <button class="cfg-open-btn" data-action="syncCfgToHA" style="background:rgba(34,211,238,.08);border-color:rgba(34,211,238,.2);color:#22d3ee">
         ☁️ <span style="flex:1">Sincronizza su tutti i dispositivi</span>
         <span style="font-size:9px;color:rgba(34,211,238,.6)">salva su HA</span>
       </button>
@@ -1006,7 +1006,7 @@
         Frarik Dashboard Versione <span id="ep-ver-label"></span>
       </div>
       <div style="text-align:center;padding:0 0 10px">
-        <button onclick="frarikCheckUpdate()" style="background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.35);color:#a5b4fc;border-radius:8px;padding:6px 16px;font-size:11px;font-weight:700;cursor:pointer;transition:background .2s" onmouseover="this.style.background='rgba(99,102,241,.28)'" onmouseout="this.style.background='rgba(99,102,241,.15)'">🔄 Controlla aggiornamenti</button>
+        <button data-action="frarikCheckUpdate" style="background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.35);color:#a5b4fc;border-radius:8px;padding:6px 16px;font-size:11px;font-weight:700;cursor:pointer;transition:background .2s" onmouseover="this.style.background='rgba(99,102,241,.28)'" onmouseout="this.style.background='rgba(99,102,241,.15)'">🔄 Controlla aggiornamenti</button>
       </div>
 
     </div><!-- /ep-body -->
@@ -1029,15 +1029,15 @@
   </div>
 </div>
 <!-- ICON PICKER MODAL (Emoji + MDI) -->
-<div id="ntf-icon-modal" onclick="if(event.target===this)_iconPickerClose()">
+<div id="ntf-icon-modal" id="ntf-icon-modal-inner" data-backdrop-close="_iconPickerClose">
   <div class="ipm-box">
     <div class="ipm-hdr">
       <div class="ipm-hdr-title">🎨 Scegli icona</div>
       <div class="ipm-tabs">
-        <button class="ipm-tab" data-tab="emoji" onclick="_iconPickerRenderTab('emoji')">😀 Emoji</button>
-        <button class="ipm-tab" data-tab="mdi"   onclick="_iconPickerRenderTab('mdi')">󰀍 MDI</button>
+        <button class="ipm-tab" data-tab="emoji" data-action="_iconPickerRenderTab" data-action-arg="emoji">😀 Emoji</button>
+        <button class="ipm-tab" data-tab="mdi"   data-action="_iconPickerRenderTab" data-action-arg="mdi">󰀍 MDI</button>
       </div>
-      <button onclick="_iconPickerClose()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;margin-left:10px">✕</button>
+      <button data-action="_iconPickerClose" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;margin-left:10px">✕</button>
     </div>
     <input class="ipm-search" id="ipm-search" placeholder="Cerca icona MDI… (es. bell, home, lock)" oninput="_iconPickerRenderTab('mdi')" style="display:none">
     <div class="ipm-body"></div>
@@ -1053,8 +1053,8 @@
 <div id="app-chip-pop"></div>
 
 <!-- Esci da kiosk: visibile SOLO in kiosk (l'header con il tasto kiosk è nascosto in kiosk) -->
-<button class="kiosk-reload-fab" id="kiosk-reload" onclick="hardReload()" title="Ricarica">⟳</button>
-<button class="kiosk-exit-fab" id="kiosk-exit" onclick="toggleKiosk()" title="Esci da Kiosk">✕ Esci</button>
+<button class="kiosk-reload-fab" id="kiosk-reload" data-action="hardReload" title="Ricarica">⟳</button>
+<button class="kiosk-exit-fab" id="kiosk-exit" data-action="toggleKiosk" title="Esci da Kiosk">✕ Esci</button>
 
 <!-- Centro notifiche (apribile dalla campanella in alto) -->
 <div id="notif-center">
@@ -1066,10 +1066,10 @@
 </div>
 
 <!-- Notifica aggiornamenti card da GitHub -->
-<div id="gh-notif" onclick="_ghAskInstall()" title="Clicca per aggiornare le card">
+<div id="gh-notif" data-action="_ghAskInstall" title="Clicca per aggiornare le card">
   <span style="font-size:15px">🔄</span>
   <span id="gh-notif-txt" style="flex:1">Aggiornamenti card disponibili</span>
-  <button onclick="event.stopPropagation();_ghDismiss()" title="Ignora" style="background:rgba(255,255,255,.12);border:none;color:#fff;width:22px;height:22px;border-radius:6px;cursor:pointer;font-size:11px">✕</button>
+  <button data-action="_ghDismiss" title="Ignora" style="background:rgba(255,255,255,.12);border:none;color:#fff;width:22px;height:22px;border-radius:6px;cursor:pointer;font-size:11px">✕</button>
 </div>
 
 <!-- CONFIG GITHUB CARD -->
@@ -1099,9 +1099,9 @@
       </label>
       <div id="gh-status" style="font-size:11px;color:var(--muted);min-height:16px;margin-bottom:10px"></div>
       <div style="display:flex;gap:6px">
-        <button class="btn1" onclick="saveGitHubCfg()">💾 Salva</button>
-        <button class="btn2" onclick="_ghCheck(true)">🔄 Controlla ora</button>
-        <button class="btn2" onclick="_ghImportAll()">⬇️ Importa tutte</button>
+        <button class="btn1" data-action="saveGitHubCfg">💾 Salva</button>
+        <button class="btn2" data-action="_ghCheckForce">🔄 Controlla ora</button>
+        <button class="btn2" data-action="_ghImportAll">⬇️ Importa tutte</button>
       </div>
     </div>
   </div>
@@ -1125,7 +1125,7 @@
       <input class="finp" id="ghpub-file" placeholder="nome-card.js" style="margin-bottom:10px" autocomplete="off">
       <div id="ghpub-status" style="font-size:11px;color:var(--muted);min-height:16px;margin-bottom:10px"></div>
       <div style="display:flex;gap:6px">
-        <button class="btn1" onclick="_ghPublishDo()">📤 Pubblica</button>
+        <button class="btn1" data-action="_ghPublishDo">📤 Pubblica</button>
         <button class="btn2" data-action="closeGhPub">Annulla</button>
       </div>
     </div>
@@ -1142,11 +1142,11 @@
       <div class="flbl">Icona</div>
       <div class="finp-row" style="margin-bottom:14px">
         <input class="finp" id="vmod-ico" placeholder="🏠 oppure mdi:home" autocomplete="off">
-        <button class="fbtn" title="Scegli icona" onclick="openIconPicker(v=>{document.getElementById('vmod-ico').value=v;},this,event)">🎨</button>
+        <button class="fbtn" title="Scegli icona" id="vmod-ico-picker">🎨</button>
       </div>
       <div style="display:flex;gap:6px">
-        <button class="btn1" onclick="saveViewEdit()" style="flex:1">💾 Salva</button>
-        <button class="btn2" id="vmod-del" onclick="deleteViewFromEdit()" style="color:#f87171;border-color:rgba(248,113,113,.35)">🗑 Elimina</button>
+        <button class="btn1" data-action="saveViewEdit" style="flex:1">💾 Salva</button>
+        <button class="btn2" id="vmod-del" data-action="deleteViewFromEdit" style="color:#f87171;border-color:rgba(248,113,113,.35)">🗑 Elimina</button>
       </div>
     </div>
   </div>
@@ -1159,7 +1159,7 @@
     <div style="background:var(--panel);border:1px solid var(--bd);border-radius:16px;width:min(480px,94vw);max-height:80vh;display:flex;flex-direction:column;overflow:hidden">
       <div style="padding:12px 14px;border-bottom:1px solid var(--bd);display:flex;gap:8px;align-items:center">
         <input id="fe-ep-q" class="fe-prop-inp" placeholder="Cerca entità (es. sensor.temp, light…)" style="flex:1" oninput="_feEpSearch(this.value)" autofocus>
-        <button onclick="document.getElementById('fe-ep').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer">✕</button>
+        <button data-action="_feEpClose" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer">✕</button>
       </div>
       <div id="fe-ep-list" style="overflow-y:auto;max-height:60vh;padding:6px 8px"></div>
     </div>
@@ -1168,14 +1168,14 @@
     <span class="fe-topbar-title">🎨 Canvas Libero</span>
     <div class="fe-vsep"></div>
     <!-- primary: add entity -->
-    <button class="fe-add-btn" onclick="feOpenEP()" style="background:rgba(99,102,241,.18);border-color:rgba(99,102,241,.5);color:#a5b4fc;font-size:11px;padding:6px 14px">＋ Aggiungi entità</button>
+    <button class="fe-add-btn" data-action="feOpenEP" style="background:rgba(99,102,241,.18);border-color:rgba(99,102,241,.5);color:#a5b4fc;font-size:11px;padding:6px 14px">＋ Aggiungi entità</button>
     <div class="fe-vsep"></div>
     <!-- secondary decorative elements -->
-    <button class="fe-add-btn" onclick="feAddEl('text')">＋ Testo</button>
-    <button class="fe-add-btn" onclick="feAddEl('button')">＋ Bottone</button>
-    <button class="fe-add-btn" onclick="feAddEl('icon')">＋ Icona</button>
-    <button class="fe-add-btn" onclick="feAddEl('shape')">＋ Forma</button>
-    <button class="fe-add-btn" onclick="feAddEl('image')">＋ Immagine</button>
+    <button class="fe-add-btn" data-action="feAddEl" data-action-arg="text">＋ Testo</button>
+    <button class="fe-add-btn" data-action="feAddEl" data-action-arg="button">＋ Bottone</button>
+    <button class="fe-add-btn" data-action="feAddEl" data-action-arg="icon">＋ Icona</button>
+    <button class="fe-add-btn" data-action="feAddEl" data-action-arg="shape">＋ Forma</button>
+    <button class="fe-add-btn" data-action="feAddEl" data-action-arg="image">＋ Immagine</button>
     <div class="fe-vsep"></div>
     <!-- canvas settings -->
     <span class="fe-cfg-lbl">L:</span><input id="fe-inp-w" class="fe-cfg-inp" type="number" placeholder="400" oninput="feUpdCard('canvasW',+this.value)">
@@ -1207,8 +1207,8 @@
     <div class="mhdr"><span class="mtitle">📦 Store Card JS</span><button class="mx" data-action="closeJsStore">✕</button></div>
     <div class="fscroll" style="padding:16px">
       <div style="display:flex;gap:6px;margin-bottom:14px">
-        <button class="jsst-tab on" id="jsst-tab-installed" onclick="jsStoreTab('installed')">📋 Installate (<span id="jsst-count">0</span>)</button>
-        <button class="jsst-tab" id="jsst-tab-load" onclick="jsStoreTab('load')">➕ Carica nuova</button>
+        <button class="jsst-tab on" id="jsst-tab-installed" data-action="jsStoreTab" data-action-arg="installed">📋 Installate (<span id="jsst-count">0</span>)</button>
+        <button class="jsst-tab" id="jsst-tab-load" data-action="jsStoreTab" data-action-arg="load">➕ Carica nuova</button>
       </div>
       <div id="jsst-panel-installed">
         <div id="jsst-list"></div>
@@ -1221,7 +1221,7 @@
           📁 <b>Trascina un file <code>.js</code></b> qui sotto, oppure clicca per selezionarlo.<br>
           Il file deve esportare <code style="color:#fbbf24">window.FratechCards = window.FratechCards || {};</code> e registrare la card con un ID univoco.
         </div>
-        <div id="jsst-dropzone" class="jsst-dropzone" onclick="document.getElementById('jsst-file-inp').click()">
+        <div id="jsst-dropzone" class="jsst-dropzone" data-action="_jsDropzoneClick">
           <div class="jsst-dz-ico">📂</div>
           <div class="jsst-dz-lbl">Clicca o trascina il file <code>.js</code></div>
           <div class="jsst-dz-sub">Massimo 2 MB</div>
@@ -1231,7 +1231,7 @@
         <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--bd)">
           <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px">📝 Template di partenza</div>
           <pre id="jsst-template-pre" style="background:rgba(0,0,0,.4);border:1px solid var(--bd2);border-radius:10px;padding:12px;font-size:10px;color:#a5b4fc;overflow-x:auto;white-space:pre;line-height:1.6;max-height:240px;overflow-y:auto"></pre>
-          <button onclick="jsStoreDownloadTemplate()" style="margin-top:8px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.35);color:#a5b4fc;border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer">⬇️ Scarica template.js</button>
+          <button data-action="jsStoreDownloadTemplate" style="margin-top:8px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.35);color:#a5b4fc;border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer">⬇️ Scarica template.js</button>
         </div>
       </div>
     </div>
@@ -1245,30 +1245,30 @@
       <button class="mx" data-action="closeGhStore">✕</button></div>
     <div class="fscroll" style="padding:14px 16px">
       <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
-        <button class="jsst-tab on" id="ghs-tab-js"         onclick="ghStoreTab('js')">⚡ Card JS</button>
-        <button class="jsst-tab"    id="ghs-tab-chips"      onclick="ghStoreTab('chips')">🔹 Chips</button>
-        <button class="jsst-tab"    id="ghs-tab-distintivi" onclick="ghStoreTab('distintivi')">🏷️ Distintivi</button>
-        <button class="jsst-tab"    id="ghs-tab-yaml"       onclick="ghStoreTab('yaml')">📄 YAML</button>
-        <button class="jsst-tab"    id="ghs-tab-pkg"        onclick="ghStoreTab('pkg')">📦 Pacchetti</button>
-        <button class="jsst-tab"    id="ghs-tab-local"      onclick="ghStoreTab('local')">📁 Card locali</button>
+        <button class="jsst-tab on" id="ghs-tab-js"         data-action="ghStoreTab" data-action-arg="js">⚡ Card JS</button>
+        <button class="jsst-tab"    id="ghs-tab-chips"      data-action="ghStoreTab" data-action-arg="chips">🔹 Chips</button>
+        <button class="jsst-tab"    id="ghs-tab-distintivi" data-action="ghStoreTab" data-action-arg="distintivi">🏷️ Distintivi</button>
+        <button class="jsst-tab"    id="ghs-tab-yaml"       data-action="ghStoreTab" data-action-arg="yaml">📄 YAML</button>
+        <button class="jsst-tab"    id="ghs-tab-pkg"        data-action="ghStoreTab" data-action-arg="pkg">📦 Pacchetti</button>
+        <button class="jsst-tab"    id="ghs-tab-local"      data-action="ghStoreTab" data-action-arg="local">📁 Card locali</button>
         <div style="display:flex;gap:4px;margin-left:auto">
           <button class="jsst-tab" data-action="closeGhStore" data-action2="openYamlImport" title="Incolla YAML da HACS" style="color:#818cf8;font-size:11px;padding:4px 10px;font-weight:700"><i class="mdi mdi-code-braces"></i> YAML</button>
-          <button class="jsst-tab" onclick="_ghsReloadTab()" title="Ricarica da GitHub" style="font-size:14px;padding:4px 8px">↻</button>
-          <button class="jsst-tab" onclick="_ghCleanOrphans()" title="Rimuovi card orfane (installate non più nel repo)" style="font-size:13px;padding:4px 8px">🧹</button>
-          <button class="jsst-tab" onclick="openGitHubCfg()" title="Impostazioni GitHub">⚙️</button>
+          <button class="jsst-tab" data-action="_ghsReloadTab" title="Ricarica da GitHub" style="font-size:14px;padding:4px 8px">↻</button>
+          <button class="jsst-tab" data-action="_ghCleanOrphans" title="Rimuovi card orfane (installate non più nel repo)" style="font-size:13px;padding:4px 8px">🧹</button>
+          <button class="jsst-tab" data-action="openGitHubCfg" title="Impostazioni GitHub">⚙️</button>
         </div>
       </div>
       <input id="ghs-search" class="ghs-search" placeholder="🔍 Cerca per nome…" oninput="_ghStoreRender()" autocomplete="off">
       <div id="ghs-status" style="font-size:11px;color:var(--muted);margin:8px 2px;min-height:16px"></div>
       <div id="ghs-list"></div>
       <div id="ghs-load" style="display:none;margin-top:10px">
-        <div id="ghs-dropzone" class="jsst-dropzone" onclick="document.getElementById('ghs-file-inp').click()">
+        <div id="ghs-dropzone" class="jsst-dropzone" data-action="_ghsDropzoneClick">
           <div class="jsst-dz-ico">📂</div>
           <div class="jsst-dz-lbl">Clicca o trascina un file <code>.js</code></div>
           <div class="jsst-dz-sub">per installare una card manualmente (max 2 MB)</div>
           <input type="file" id="ghs-file-inp" accept=".js" style="display:none" onchange="jsStoreLoadFile(this.files[0])">
         </div>
-        <button onclick="jsStoreDownloadTemplate()" style="margin-top:8px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.35);color:#a5b4fc;border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer">⬇️ Scarica template.js</button>
+        <button data-action="jsStoreDownloadTemplate" style="margin-top:8px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.35);color:#a5b4fc;border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer">⬇️ Scarica template.js</button>
       </div>
     </div>
   </div>
@@ -1291,8 +1291,8 @@
       <div id="yaml-preview"></div>
     </div>
     <div id="yaml-footer">
-      <button class="yaml-act-btn primary" onclick="yamlImportParse()"><i class="mdi mdi-eye-outline"></i> Carica anteprima</button>
-      <button class="yaml-act-btn success" id="yaml-add-btn" onclick="yamlImportAdd()"><i class="mdi mdi-plus-circle-outline"></i> Aggiungi alla dashboard</button>
+      <button class="yaml-act-btn primary" data-action="yamlImportParse"><i class="mdi mdi-eye-outline"></i> Carica anteprima</button>
+      <button class="yaml-act-btn success" id="yaml-add-btn" data-action="yamlImportAdd"><i class="mdi mdi-plus-circle-outline"></i> Aggiungi alla dashboard</button>
     </div>
   </div>
 </div>
@@ -1320,7 +1320,7 @@
     <div class="ep-picker-hdr">
       <div class="ep-picker-hdr-title" id="ep-picker-title">Seleziona entità</div>
       <div id="ep-picker-domain-badge" class="ep-picker-domain-badge" style="display:none"></div>
-      <button class="cfg-modal-close" onclick="_epPickerClose()" title="Chiudi">✕</button>
+      <button class="cfg-modal-close" data-action="_epPickerClose" title="Chiudi">✕</button>
     </div>
     <div class="ep-picker-search">
       <input class="ep-picker-inp" id="ep-picker-q" placeholder="🔍  Cerca per nome, dominio o ID…" oninput="_epPickerSearch(this.value)" autocomplete="off" spellcheck="false">
@@ -1335,7 +1335,7 @@
     <div class="cfg-modal-hdr">
       <div class="cfg-modal-hdr-ico">🔔</div>
       <div class="cfg-modal-hdr-title">Notifiche Smart</div>
-      <button onclick="saveCfg();showToast('✅ Regole salvate')" style="background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.35);color:#4ade80;border-radius:10px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;margin-right:6px">💾 Salva</button>
+      <button data-action="_ntfSaveRules" style="background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.35);color:#4ade80;border-radius:10px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;margin-right:6px">💾 Salva</button>
       <button class="cfg-modal-close" data-action="closeNotifCfg">✕</button>
     </div>
     <div class="cfg-modal-body">
@@ -1344,7 +1344,7 @@
         Supporta durata ciclo elettrodomestici, reset contatori, feed camera, annunci Alexa.
       </div>
       <div id="ntf-rules-list"></div>
-      <button class="ntf-add-rule" onclick="ntfAddRule()">➕ Aggiungi nuova regola</button>
+      <button class="ntf-add-rule" data-action="ntfAddRule">➕ Aggiungi nuova regola</button>
     </div>
   </div>
 </div>
@@ -1364,7 +1364,7 @@
         Servizio: <code>mobile_app_nomeTelefono</code> — trovalo in HA → Impostazioni → App Companion.
       </div>
       <div id="sos-cfg-list"></div>
-      <button class="sos-cfg-add" onclick="sosAddContact()">➕ Aggiungi contatto SOS</button>
+      <button class="sos-cfg-add" data-action="sosAddContact">➕ Aggiungi contatto SOS</button>
     </div>
   </div>
 </div>
@@ -1391,7 +1391,7 @@
     <div class="sos-hdr-title">Chi vuoi contattare?</div>
     <div id="sos-who-badge" class="sos-who-badge"></div>
     <div id="sos-contacts-list"></div>
-    <button class="sos-act-all" onclick="sosAlertAll()">📢 Avvisa TUTTI i contatti</button>
+    <button class="sos-act-all" data-action="sosAlertAll">📢 Avvisa TUTTI i contatti</button>
     <button class="sos-cancel-btn" data-action="closeSOS2">← Torna indietro</button>
   </div>
 </div>
