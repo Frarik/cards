@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.1 — 2026-06-05
+
+### Rimosso
+- Pulsanti "Esporta backup" e "Ripristina backup" dal pannello impostazioni
+
 ## 1.0.0 — 2026-06-04
 
 ### Aggiunto
