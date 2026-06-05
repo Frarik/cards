@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.62 — 2026-06-05
+
+### Passo 9/16 — Screensaver con immagine + fasce giorno/notte
+- Lo screensaver può avere un'immagine di sfondo da URL (https o /local/). Con due immagini (giorno/notte) e gli orari "Giorno/Notte dalle", l'immagine cambia automaticamente all'ora impostata. Con una sola immagine, viene usata sempre.
+
 ## 1.1.61 — 2026-06-05
 
 ### Passo 8/16 — Viste

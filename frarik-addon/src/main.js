@@ -10412,7 +10412,7 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
 
 (function(){
   const LS='dash_screensaver';
-  function cfg(){ try{return Object.assign({on:true,sec:300,weather:'',temp:''}, JSON.parse(localStorage.getItem(LS)||'{}'));}catch(e){return {on:true,sec:300};} }
+  function cfg(){ try{return Object.assign({on:true,sec:300,weather:'',temp:'',imgDay:'',imgNight:'',dayFrom:'07:00',nightFrom:'20:00'}, JSON.parse(localStorage.getItem(LS)||'{}'));}catch(e){return {on:true,sec:300};} }
   function save(o){ localStorage.setItem(LS, JSON.stringify(Object.assign(cfg(),o||{}))); }
   window.screensaverCfg=function(o){ if(o) save(o); reset(); return cfg(); };
   const COND={'sunny':'☀️','clear-day':'☀️','clear-night':'🌙','partlycloudy':'⛅','partly-cloudy-day':'⛅','partly-cloudy-night':'☁️','cloudy':'☁️','rainy':'🌧️','rain':'🌧️','pouring':'🌧️','lightning':'⛈️','lightning-rainy':'⛈️','thunderstorm':'⛈️','snowy':'❄️','snow':'❄️','snowy-rainy':'🌨️','hail':'🌨️','fog':'🌫️','windy':'💨','windy-variant':'💨','exceptional':'⚠️'};
@@ -10449,8 +10449,32 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
     const e=(w&&COND[String(w).toLowerCase()])||'⛅';
     const tv=(t!=null&&!isNaN(parseFloat(t)))?parseFloat(t).toFixed(1)+'°':'';
     ov.querySelector('#ss-wx').innerHTML=(tv||w)?('<span class="e">'+e+'</span><span>'+tv+'</span>'):'';
+    _ssApplyBg();
   }
-  function _open(){ if(!ov) build(); active=true; tick(); ov.classList.add('on'); clearInterval(tickTimer); tickTimer=setInterval(tick,1000); }
+  /* ── Immagine di sfondo screensaver con fasce giorno/notte ── */
+  let _ssCurImg=null;
+  function _ssPickImg(){
+    const c=cfg();
+    const day=(c.imgDay||'').trim(), night=(c.imgNight||'').trim();
+    if(!day && !night) return '';
+    if(!night) return day;
+    if(!day) return night;
+    // entrambe → scegli in base alla fascia oraria
+    const now=new Date(), mins=now.getHours()*60+now.getMinutes();
+    const toM=t=>{const a=String(t||'0:0').split(':').map(Number);return (a[0]||0)*60+(a[1]||0);};
+    const dF=toM(c.dayFrom||'07:00'), nF=toM(c.nightFrom||'20:00');
+    const isDay = dF<nF ? (mins>=dF&&mins<nF) : (mins>=dF||mins<nF);
+    return isDay?day:night;
+  }
+  function _ssApplyBg(){
+    if(!ov) return;
+    const url=_ssPickImg();
+    if(url===_ssCurImg) return;       // niente da fare (evita reload/flicker)
+    _ssCurImg=url;
+    if(url){ ov.style.backgroundImage='linear-gradient(rgba(0,0,0,.4),rgba(0,0,0,.5)), url("'+encodeURI(url)+'")'; ov.style.backgroundSize='cover'; ov.style.backgroundPosition='center'; }
+    else { ov.style.backgroundImage=''; }
+  }
+  function _open(){ if(!ov) build(); active=true; _ssCurImg=null; _ssApplyBg(); tick(); ov.classList.add('on'); clearInterval(tickTimer); tickTimer=setInterval(tick,1000); }
   function show(){ if(active) return; if(typeof editMode!=='undefined'&&editMode) return; _open(); }
   function hide(){ if(!active) return; active=false; if(ov) ov.classList.remove('on'); clearInterval(tickTimer); tickTimer=null; }
   function reset(){ if(active) hide(); clearTimeout(idleTimer); const c=cfg(); if(!c.on) return; idleTimer=setTimeout(show, Math.max(10,c.sec|0)*1000); }
@@ -10526,6 +10550,10 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
       const ss=screensaverCfg(); _setTog('sys-ss-tog',ss.on);
       if($('sys-ss-min')) $('sys-ss-min').value=Math.floor((ss.sec||0)/60);
       if($('sys-ss-sec')) $('sys-ss-sec').value=(ss.sec||0)%60;
+      if($('sys-ss-img-day')) $('sys-ss-img-day').value=ss.imgDay||'';
+      if($('sys-ss-img-night')) $('sys-ss-img-night').value=ss.imgNight||'';
+      if($('sys-ss-day-from')) $('sys-ss-day-from').value=ss.dayFrom||'07:00';
+      if($('sys-ss-night-from')) $('sys-ss-night-from').value=ss.nightFrom||'20:00';
       const th=themeScheduleCfg(); _setTog('sys-th-tog',th.on);
       if($('sys-th-mode')) $('sys-th-mode').value=th.mode||'time';
       if($('sys-th-light')) $('sys-th-light').value=th.light||'07:00';
@@ -10545,6 +10573,12 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
     _sysLoad();
   };
   window._sysSaveSS=function(){ const m=+(($('sys-ss-min')||{}).value)||0, s=+(($('sys-ss-sec')||{}).value)||0; screensaverCfg({sec:m*60+s}); };
+  window._ssSaveImg=function(){ screensaverCfg({
+    imgDay:(($('sys-ss-img-day')||{}).value||'').trim(),
+    imgNight:(($('sys-ss-img-night')||{}).value||'').trim(),
+    dayFrom:($('sys-ss-day-from')||{}).value||'07:00',
+    nightFrom:($('sys-ss-night-from')||{}).value||'20:00'
+  }); };
   window._sysSaveTH=function(){ const mode=$('sys-th-mode').value; if($('sys-th-times'))$('sys-th-times').style.display=(mode==='sun')?'none':''; themeScheduleCfg({mode:mode,light:$('sys-th-light').value,dark:$('sys-th-dark').value}); };
   window._sysSaveNV=function(){ navbarCfg({pos:$('sys-nv-pos').value}); };
   window._applyMobCol=function(mode){ mode=mode||'auto'; localStorage.setItem('dash_mobcol',mode); document.body.classList.toggle('mobcol-off',mode==='off'); document.body.classList.toggle('mobcol-always',mode==='always'); };

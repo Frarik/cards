@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@400;600;700;800;900&family=Nunito:wght@400;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="./assets/index-BS-krqpu.js"></script>
+  <script type="module" crossorigin src="./assets/index-B29Oyzx5.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-BqN42jQp.css">
 </head>
 <body>
@@ -978,6 +978,13 @@
               <input class="sys-num" id="sys-ss-min" type="number" min="0" max="180" ><span class="sys-u">min</span>
               <input class="sys-num" id="sys-ss-sec" type="number" min="0" max="59" ><span class="sys-u">sec</span>
             </div></div>
+          <div class="sys-row" style="margin-top:10px"><span class="sys-lbl2">🖼️ Immagine giorno (URL)</span></div>
+          <input class="finp" id="sys-ss-img-day" type="url" placeholder="https://… oppure /local/…" data-input="_ssSaveImg" style="font-size:10px;margin-top:3px">
+          <div class="sys-row" style="margin-top:6px"><span class="sys-lbl2">🌙 Immagine notte (URL)</span></div>
+          <input class="finp" id="sys-ss-img-night" type="url" placeholder="opzionale — vuoto = sempre quella del giorno" data-input="_ssSaveImg" style="font-size:10px;margin-top:3px">
+          <div class="sys-row" style="margin-top:6px"><span class="sys-lbl2">Giorno / Notte dalle</span>
+            <div style="display:flex;gap:4px"><input class="sys-time" id="sys-ss-day-from" type="time" data-input="_ssSaveImg"><input class="sys-time" id="sys-ss-night-from" type="time" data-input="_ssSaveImg"></div></div>
+          <div class="sys-sub" style="margin-top:4px">2 immagini = cambia automaticamente all'ora impostata · 1 sola = sempre quella</div>
         </div>
         <div style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.05)">
           <div class="sys-row"><span class="sys-lbl">🌗 Tema automatico</span><button class="sys-tog" id="sys-th-tog" data-action="_sysToggle" data-action-arg="th"></button></div>
