@@ -8418,13 +8418,22 @@ connect();
     try{ _ntfPushLog(title, msg, '🔴', null, {}); }catch(_){}
     _errBusy=false;
   }
+  // Ignora errori da script esterni (HACS cards, HA components, ecc.)
+  function isExternal(src){
+    const f=(src||'').toLowerCase();
+    // Solo errori dal bundle Frarik (index-*.js) o senza sorgente
+    return f && !f.includes('index-') && !f.includes('frarik');
+  }
   window.onerror = function(msg, src, line){
+    if(isExternal(src)) return false; // errore da script terzo — ignora
     const file=(src||'').split('/').pop();
     _pushErr('⚠️ Errore JS', (file?file+':'+line+' — ':'')+msg);
     return false;
   };
   window.addEventListener('unhandledrejection', function(e){
     const msg=e.reason instanceof Error?e.reason.message:String(e.reason||'Promise rejection');
+    // Ignora errori comuni da componenti HA (CustomElementRegistry, exitfullscreen, ecc.)
+    if(/CustomElementRegistry|exitFullscreen|exitfullscreen|already been used/i.test(msg)) return;
     _pushErr('⚠️ Errore asincrono', msg);
   });
 })();
