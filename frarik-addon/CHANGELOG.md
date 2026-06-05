@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.44 — 2026-06-05
+
+### Corretto
+- Barra HA ingress nascosta tramite shadow DOM ricorsivo (query multi-livello)
+
+## 1.1.43 — 2026-06-05
+
+### Rimosso / Corretto
+- Primo tentativo nascondere barra HA ingress
+- Rimosso pulsante "Controlla aggiornamenti" dalle impostazioni
+
 ## 1.1.42 — 2026-06-05
 
 ### Corretto

@@ -8,29 +8,50 @@ import { _ntfPushLog, _ntfDismissById, _ntfUpdateBell, ntfMarkAllRead, ntfClearA
 window.Chart  = Chart;
 window.jsyaml = jsyaml;
 
-// ── Nasconde la barra HA ingress (duplicato del nostro header) ───────────────
+// ── Nasconde la barra HA ingress attraverso shadow DOM multipli ──────────────
 (function(){
   if(window.parent===window) return;
+
+  // Attraversa ricorsivamente tutte le shadow root per trovare un selettore
+  function shadowQuery(root, sel){
+    if(!root) return null;
+    const direct = root.querySelector ? root.querySelector(sel) : null;
+    if(direct) return direct;
+    const all = root.querySelectorAll ? root.querySelectorAll('*') : [];
+    for(const el of all){
+      if(el.shadowRoot){
+        const found = shadowQuery(el.shadowRoot, sel);
+        if(found) return found;
+      }
+    }
+    return null;
+  }
+
   function tryHide(){
     try{
-      const panel = window.parent.document.querySelector('ha-panel-hassio');
-      if(!panel||!panel.shadowRoot) return false;
-      const hdr = panel.shadowRoot.querySelector('app-header,.header,app-toolbar');
+      const pd = window.parent.document;
+
+      // Cerca app-header dentro hassio-ingress-view (shadow annidato)
+      const hdr = shadowQuery(pd, 'app-header') ||
+                  shadowQuery(pd, 'hassio-ingress-view');
       if(!hdr) return false;
-      // Risale al contenitore della barra e lo nasconde
-      const target = hdr.closest('app-header')||hdr;
+
+      // Se è hassio-ingress-view prende l'app-header dentro
+      const target = hdr.tagName==='APP-HEADER' ? hdr
+        : (hdr.shadowRoot ? hdr.shadowRoot.querySelector('app-header') : null);
+      if(!target) return false;
+
       target.style.setProperty('display','none','important');
-      // Rimuove il padding-top che HA aggiunge per la barra
-      const iframe = panel.shadowRoot.querySelector('iframe');
-      if(iframe) iframe.style.setProperty('top','0','important');
+      // Recupera spazio iframe
+      const ifr = shadowQuery(pd,'hassio-ingress-view iframe');
+      if(ifr){ ifr.style.setProperty('top','0','important'); ifr.style.setProperty('height','100%','important'); }
       return true;
     }catch(e){ return false; }
   }
-  if(!tryHide()){
-    setTimeout(tryHide, 300);
-    setTimeout(tryHide, 1000);
-    setTimeout(tryHide, 3000);
-  }
+
+  // Prova subito e con ritardi progressivi (HA può caricare lentamente)
+  let done=false;
+  [0,100,300,700,1500,3500].forEach(d=>setTimeout(()=>{ if(!done) done=tryHide(); },d));
 })();
 
 // ── Splash screen (ex script inline in index.html) ────────────────────────
