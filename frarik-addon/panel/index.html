@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@400;600;700;800;900&family=Nunito:wght@400;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="./assets/index-C5m_ucmw.js"></script>
+  <script type="module" crossorigin src="./assets/index-CSaIuOnZ.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-BqN42jQp.css">
 </head>
 <body>
@@ -991,6 +991,35 @@
         ☁️ <span style="flex:1">Sincronizza su tutti i dispositivi</span>
         <span style="font-size:9px;color:rgba(34,211,238,.6)">salva su HA</span>
       </button>
+
+      <!-- ── Licenza ── -->
+      <div class="ep-section-hdr" data-action="_epToggleLicense" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:10px;background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.18);margin-bottom:4px">
+        <span style="font-size:11px;font-weight:700;color:#a5b4fc;letter-spacing:.5px">🔑 Licenza</span>
+        <i id="ep-lic-arrow" class="mdi mdi-chevron-down" style="color:#6366f1;font-size:16px"></i>
+      </div>
+      <div id="ep-lic-box" style="display:none;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:14px;margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <span style="font-size:10px;color:#64748b;letter-spacing:1px;font-weight:700">STATO</span>
+          <span id="ep-lic-status" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;background:rgba(74,222,128,.12);color:#4ade80">● ATTIVO</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:11px;color:#64748b">Livello</span>
+          <span id="ep-lic-level" style="font-size:11px;font-weight:700;color:#a5b4fc">—</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:11px;color:#64748b">Chiave</span>
+          <span id="ep-lic-key" style="font-size:11px;font-weight:700;font-family:monospace;color:#f97316;letter-spacing:1px">—</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:11px;color:#64748b">Intestatario</span>
+          <span id="ep-lic-name" style="font-size:11px;font-weight:700;color:#e2e8f0">—</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:14px">
+          <span style="font-size:11px;color:#64748b">Scadenza</span>
+          <span id="ep-lic-expires" style="font-size:11px;font-weight:700;color:#e2e8f0">—</span>
+        </div>
+        <button data-action="_epLicLogout" style="width:100%;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#f87171;border-radius:8px;padding:8px;font-size:11px;font-weight:700;cursor:pointer">Cambia licenza</button>
+      </div>
 
       <!-- ── Versione plancia ── -->
       <div style="text-align:center;padding:10px 0 4px;font-size:10px;color:rgba(255,255,255,.22);font-weight:600;letter-spacing:.4px;user-select:none;pointer-events:none">

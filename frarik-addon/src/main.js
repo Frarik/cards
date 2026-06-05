@@ -37,6 +37,8 @@ const LIC_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24h
       if(d.valid){
         localStorage.setItem(LIC_KEY, key.toUpperCase().trim());
         localStorage.setItem(LIC_TS_KEY, Date.now().toString());
+        localStorage.setItem('frarik_lic_name', d.name||'');
+        localStorage.setItem('frarik_lic_expires', d.expires||'');
         hideOverlay();
       } else {
         err.textContent = d.error || 'Chiave non valida.';
@@ -67,6 +69,8 @@ const LIC_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24h
       .then(d=>{
         if(d.valid){
           localStorage.setItem(LIC_TS_KEY, Date.now().toString());
+          localStorage.setItem('frarik_lic_name', d.name||'');
+          localStorage.setItem('frarik_lic_expires', d.expires||'');
         } else {
           localStorage.removeItem(LIC_KEY);
           localStorage.removeItem(LIC_TS_KEY);
@@ -8600,6 +8604,40 @@ function _jsDropzoneClick(){ document.getElementById('jsst-file-inp')?.click(); 
 function _ghsDropzoneClick(){ document.getElementById('ghs-file-inp')?.click(); }
 function _ghCheckForce(){ _ghCheck(true); }
 
+function _epToggleLicense(){
+  const box   = document.getElementById('ep-lic-box');
+  const arrow = document.getElementById('ep-lic-arrow');
+  if(!box) return;
+  const open = box.style.display === 'none';
+  box.style.display   = open ? 'block' : 'none';
+  if(arrow) arrow.className = 'mdi mdi-chevron-' + (open ? 'up' : 'down');
+  if(open) _epLicFill();
+}
+
+function _epLicFill(){
+  const key     = localStorage.getItem('frarik_license') || '';
+  const name    = localStorage.getItem('frarik_lic_name') || '—';
+  const expires = localStorage.getItem('frarik_lic_expires');
+  const masked  = key ? key.slice(0,5) + '****-****-' + key.slice(-4) : '—';
+  const expFmt  = expires && expires !== 'null' && expires !== ''
+    ? new Date(parseInt(expires)).toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'})
+    : 'Nessuna scadenza';
+  const el = id => document.getElementById(id);
+  if(el('ep-lic-key'))     el('ep-lic-key').textContent     = masked;
+  if(el('ep-lic-name'))    el('ep-lic-name').textContent    = name;
+  if(el('ep-lic-expires')) el('ep-lic-expires').textContent = expFmt;
+  if(el('ep-lic-level'))   el('ep-lic-level').textContent   = name.toLowerCase().includes('admin') ? '👑 Admin' : '⭐ Standard';
+}
+
+function _epLicLogout(){
+  if(!confirm('Vuoi cambiare la chiave di licenza?\nDovrai reinserirla al prossimo accesso.')) return;
+  localStorage.removeItem('frarik_license');
+  localStorage.removeItem('frarik_license_ts');
+  localStorage.removeItem('frarik_lic_name');
+  localStorage.removeItem('frarik_lic_expires');
+  location.reload();
+}
+
 /* ── Listener icona picker (ex lambda inline) ────────────────────────────── */
 (function _initIconPickers(){
   const picks=[
@@ -10668,7 +10706,7 @@ Object.assign(window, {
   yamlImportParse,
   // ── Wrapper aggiunti nel refactor handler ──
   _covSkip, _feEpClose, _ntfSaveRules, _jsDropzoneClick, _ghsDropzoneClick,
-  _ghCheckForce, _hbDelOption, _appDelItem, _appDelGroup,
+  _ghCheckForce, _epToggleLicense, _epLicLogout, _hbDelOption, _appDelItem, _appDelGroup,
   _openGhStoreClean, _pasteCardToClean, _closeViewsAndOpenTM, _closeViewsAndSetPage,
   _jsStoreAddAndRefresh, _deleteSavedAt, _appChipPopupAt, _setActivePageAndSync,
   _pgWarnClose, _sendCallSvc,
