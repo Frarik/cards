@@ -16,3 +16,7 @@ run.sh text eol=lf
 *.png binary
 *.jpg binary
 *.ico binary
+
+# GitHub Linguist — non conta HTML nelle statistiche linguaggio
+frarik-addon/panel/** linguist-generated=true
+frarik-addon/src/index.html linguist-detectable=false

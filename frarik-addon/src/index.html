@@ -14,20 +14,11 @@
 </head>
 <body>
 
-<!-- SPLASH / SCHERMATA DI AVVIO (logo + barra di caricamento, ~3.5s) -->
+<!-- Splash: gestito da main.js -->
 <div id="frk-splash">
   <img id="frk-splash-logo" src="./logo.png" alt="Frarik Domotica">
   <div class="frk-splash-bar"><div class="frk-splash-bar-fill"></div></div>
 </div>
-<script>
-  (function(){
-    var s=document.getElementById('frk-splash'); if(!s) return;
-    setTimeout(function(){
-      s.classList.add('hide');
-      setTimeout(function(){ if(s&&s.parentNode) s.parentNode.removeChild(s); }, 650);
-    }, 3500);
-  })();
-</script>
 
 <!-- CONN OVERLAY -->
 <div id="cov"><div class="spin"></div><div id="cmsg">Connessione a Home Assistant…</div>

@@ -5,6 +5,15 @@ import jsyaml from 'js-yaml';
 window.Chart  = Chart;
 window.jsyaml = jsyaml;
 
+// ── Splash screen (ex script inline in index.html) ────────────────────────
+(function(){
+  const s = document.getElementById('frk-splash'); if(!s) return;
+  setTimeout(function(){
+    s.classList.add('hide');
+    setTimeout(function(){ if(s && s.parentNode) s.parentNode.removeChild(s); }, 650);
+  }, 3500);
+})();
+
 /* Frarik Dashboard — add-on per Home Assistant
    Sorgente: frarik-addon/src/main.js */
 
