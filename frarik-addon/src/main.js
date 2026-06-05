@@ -8370,6 +8370,16 @@ _jsStoreBootAll();
 renderDash();
 connect();
 
+/* ── Sistema data-action: gestisce onclick rimossi dall'HTML ───────────── */
+document.addEventListener('click', function(e){
+  const el = e.target.closest('[data-action]');
+  if(!el) return;
+  const fn = el.dataset.action;
+  const fn2 = el.dataset.action2;
+  if(typeof window[fn]==='function'){ e.stopPropagation(); window[fn](e); }
+  if(fn2 && typeof window[fn2]==='function') window[fn2](e);
+});
+
 /* ── Handler header (ex onclick inline) ─────────────────────────────────── */
 (function _initHeaderHandlers(){
   function on(id, ev, fn){ const el=document.getElementById(id); if(el) el.addEventListener(ev,fn); }

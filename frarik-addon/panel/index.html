@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@400;600;700;800;900&family=Nunito:wght@400;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="./assets/index-BZnzigw3.js"></script>
+  <script type="module" crossorigin src="./assets/index-Jkp46ksm.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-BqN42jQp.css">
 </head>
 <body>
@@ -45,7 +45,7 @@
 <!-- ENTITY MODAL -->
 <div class="mbg off" id="emod">
   <div class="mbox">
-    <div class="mhdr"><span class="mtitle" id="emod-title">➕ Aggiungi Sensore</span><button class="mx" onclick="closeEM()">✕</button></div>
+    <div class="mhdr"><span class="mtitle" id="emod-title">➕ Aggiungi Sensore</span><button class="mx" data-action="closeEM">✕</button></div>
     <input id="esearch" type="text" placeholder="Cerca entità…" oninput="filterE()">
     <div id="elist"></div>
   </div>
@@ -54,7 +54,7 @@
 <!-- CARD EDITOR MODAL -->
 <div class="mbg off" id="cmod">
   <div class="mbox">
-    <div class="mhdr"><span class="mtitle" id="cmod-title">✏️ Configura Card</span><button class="mx" onclick="closeCM()">✕</button></div>
+    <div class="mhdr"><span class="mtitle" id="cmod-title">✏️ Configura Card</span><button class="mx" data-action="closeCM">✕</button></div>
     <div class="fscroll">
       <div class="fr"><div class="flbl">Etichetta</div><input class="finp" id="cm-lbl" type="text" placeholder="es. Fotovoltaico"></div>
       <div class="fr"><div class="flbl">Icona</div><div class="finp-row"><input class="finp" id="cm-ico" type="text" placeholder="☀️ o mdi:home"><button class="fbtn" title="Scegli icona" onclick="openIconPicker(v=>{document.getElementById('cm-ico').value=v;},this,event)">🎨</button></div></div>
@@ -195,7 +195,7 @@
       </div>
     </div>
     <div class="mfoot">
-      <button class="btn2" onclick="closeCM()">Annulla</button>
+      <button class="btn2" data-action="closeCM">Annulla</button>
       <button class="btn1" onclick="saveCard()">💾 Salva Card</button>
     </div>
   </div>
@@ -205,7 +205,7 @@
 <!-- SPECIAL CARD MODAL -->
 <div class="mbg off" id="smod">
   <div class="mbox" style="max-width:560px;width:95vw">
-    <div class="mhdr"><span class="mtitle">✨ Aggiungi Card</span><button class="mx" onclick="closeSM()">✕</button></div>
+    <div class="mhdr"><span class="mtitle">✨ Aggiungi Card</span><button class="mx" data-action="closeSM">✕</button></div>
     <div class="fscroll" style="padding:12px 16px">
       <div class="scard-grid">
         <button class="sc-btn" onclick="addSpecial('appliances')"><span class="sc-ico">🔌</span>Elettrodomestici</button>
@@ -220,7 +220,7 @@
 <!-- SECTION EDITOR MODAL -->
 <div class="mbg off" id="sectmod">
   <div class="mbox">
-    <div class="mhdr"><span class="mtitle" id="sectmod-title">✏️ Sezione</span><button class="mx" onclick="closeSectMod()">✕</button></div>
+    <div class="mhdr"><span class="mtitle" id="sectmod-title">✏️ Sezione</span><button class="mx" data-action="closeSectMod">✕</button></div>
     <div class="fscroll" style="padding:0">
 
       <!-- ── TITOLO (solo intestazione) ── -->
@@ -271,7 +271,7 @@
 
     </div>
     <div class="mfoot">
-      <button class="btn2" onclick="closeSectMod()">Annulla</button>
+      <button class="btn2" data-action="closeSectMod">Annulla</button>
       <button class="btn1" onclick="saveSectMod()">💾 Salva</button>
     </div>
   </div>
@@ -280,7 +280,7 @@
 <!-- BADGE EDITOR MODAL -->
 <div class="mbg off" id="bmod">
   <div class="mbox">
-    <div class="mhdr"><span class="mtitle" id="bmod-title">🏷️ Badge</span><button class="mx" onclick="closeBM()">✕</button></div>
+    <div class="mhdr"><span class="mtitle" id="bmod-title">🏷️ Badge</span><button class="mx" data-action="closeBM">✕</button></div>
     <div class="fscroll" style="padding:0">
       <div id="bm-align" style="display:flex;align-items:center;gap:6px;padding:12px 14px 6px">
         <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-right:auto">Allineamento</span>
@@ -397,14 +397,14 @@
         </div>
       </div>
     </div>
-    <div class="mfoot"><button class="btn2" onclick="closeBM()">Chiudi</button></div>
+    <div class="mfoot"><button class="btn2" data-action="closeBM">Chiudi</button></div>
   </div>
 </div>
 
 <!-- HEADER BAR EDITOR MODAL -->
 <div class="mbg off" id="hbmod">
   <div class="mbox" style="width:520px">
-    <div class="mhdr"><span class="mtitle" id="hbmod-title">⊞ Header Personalizzato</span><button class="mx" onclick="closeHBM()">✕</button></div>
+    <div class="mhdr"><span class="mtitle" id="hbmod-title">⊞ Header Personalizzato</span><button class="mx" data-action="closeHBM">✕</button></div>
     <div class="fscroll" style="padding:0">
       <div class="sect-section">
         <div style="display:flex;gap:8px">
@@ -634,7 +634,7 @@
       </div>
     </div>
     <div class="mfoot">
-      <button class="btn2" onclick="closeHBM()">Annulla</button>
+      <button class="btn2" data-action="closeHBM">Annulla</button>
       <button class="btn1" onclick="saveHBM()">💾 Salva</button>
     </div>
   </div>
@@ -667,7 +667,7 @@
 <!-- FOOTER BAR MODAL -->
 <div class="mbg off" id="fbmod">
   <div class="mbox" style="width:500px">
-    <div class="mhdr"><span class="mtitle" id="fbmod-title">▭ Barra inferiore</span><button class="mx" onclick="closeFBM()">✕</button></div>
+    <div class="mhdr"><span class="mtitle" id="fbmod-title">▭ Barra inferiore</span><button class="mx" data-action="closeFBM">✕</button></div>
     <div class="fscroll" style="padding:0">
       <!-- Toggle abilitato -->
       <div class="sect-section" id="fb-enabled-row">
@@ -751,7 +751,7 @@
       </div>
     </div>
     <div class="mfoot">
-      <button class="btn2" onclick="closeFBM()">Annulla</button>
+      <button class="btn2" data-action="closeFBM">Annulla</button>
       <button class="btn1" onclick="saveFBM()">💾 Salva</button>
     </div>
   </div>
@@ -760,7 +760,7 @@
 <!-- YAML IMPORT MODAL -->
 <div class="mbg off" id="yaml-import-mod">
   <div class="mbox" style="width:560px">
-    <div class="mhdr"><span class="mtitle">📋 Importa Card da YAML HA</span><button class="mx" onclick="closeYamlImport()">✕</button></div>
+    <div class="mhdr"><span class="mtitle">📋 Importa Card da YAML HA</span><button class="mx" data-action="closeYamlImport">✕</button></div>
     <div class="fscroll" style="padding:14px 16px">
       <div style="font-size:10px;color:#a5b4fc;line-height:1.55;background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:9px;padding:9px 12px;margin-bottom:12px">
         💡 Incolla il YAML di una card Lovelace di Home Assistant. Tipi supportati: <code style="background:rgba(255,255,255,.08);border-radius:3px;padding:1px 4px">sensor · entity · entities · button · gauge · history-graph · thermostat · weather-forecast · media-player · markdown · light · alarm-panel · input_boolean · switch · cover</code>
@@ -774,7 +774,7 @@
       <div id="yaml-import-error" style="display:none;margin-top:10px"></div>
     </div>
     <div class="mfoot">
-      <button class="btn2" onclick="closeYamlImport()">Annulla</button>
+      <button class="btn2" data-action="closeYamlImport">Annulla</button>
       <button class="btn1" id="yaml-import-btn" onclick="importYamlCard()" disabled>📥 Importa Card</button>
     </div>
   </div>
@@ -785,7 +785,7 @@
   <div class="mbox">
     <div class="mhdr">
       <span class="mtitle" id="imod-title">📦 Entità</span>
-      <button class="mx" onclick="closeIM()">✕</button>
+      <button class="mx" data-action="closeIM">✕</button>
     </div>
     <div id="imod-body" class="fscroll" style="padding:18px 20px"></div>
   </div>
@@ -796,13 +796,13 @@
   <div class="mbox">
     <div class="mhdr">
       <span class="mtitle" id="wmod-title">⚙️ Configura Pagina</span>
-      <button class="mx" onclick="closeWM()">✕</button>
+      <button class="mx" data-action="closeWM">✕</button>
     </div>
     <div id="wmod-info" class="wz-info" style="display:none"></div>
     <hr class="wz-sep">
     <div class="fscroll" id="wmod-body" style="padding-top:6px"></div>
     <div class="mfoot">
-      <button class="btn2" onclick="closeWM()">Annulla</button>
+      <button class="btn2" data-action="closeWM">Annulla</button>
       <button class="btn1" id="wmod-btn" onclick="saveWizard()">✨ Crea Pagina</button>
     </div>
   </div>
@@ -811,7 +811,7 @@
 <!-- TEMPLATE (new page) MODAL -->
 <div class="mbg off" id="tmod">
   <div class="mbox">
-    <div class="mhdr"><span class="mtitle" id="tmod-title">📄 Nuova Pagina — scegli template</span><button class="mx" onclick="closeTM()">✕</button></div>
+    <div class="mhdr"><span class="mtitle" id="tmod-title">📄 Nuova Pagina — scegli template</span><button class="mx" data-action="closeTM">✕</button></div>
     <div class="fscroll" style="padding:0">
       <!-- Step 1: scelta template -->
       <div id="tmod-step1">
@@ -830,7 +830,7 @@
       </div>
       <!-- Step 2: configura sezioni -->
       <div id="tmod-step2" style="display:none;padding:16px 18px 20px">
-        <button onclick="closeTModStep2()" style="font-size:11px;color:var(--muted);margin-bottom:14px;padding:3px 8px;border-radius:7px;border:1px solid var(--bd2);background:rgba(255,255,255,.03)">← Indietro</button>
+        <button data-action="closeTModStep2" style="font-size:11px;color:var(--muted);margin-bottom:14px;padding:3px 8px;border-radius:7px;border:1px solid var(--bd2);background:rgba(255,255,255,.03)">← Indietro</button>
         <div class="ep-sec-title" style="margin-bottom:5px">Nome pagina</div>
         <input class="finp" id="epw-name" type="text" placeholder="es. Casa, Luci…" style="margin-bottom:16px">
         <div class="ep-sec-title" style="margin-bottom:8px">Quante colonne?</div>
@@ -886,7 +886,7 @@
         <span style="font-size:18px">⚙️</span>
         <span class="ep-title">Impostazioni</span>
       </div>
-      <button class="ep-x" onclick="closeOikSettings()" title="Torna alla plancia">✕</button>
+      <button class="ep-x" data-action="closeOikSettings" title="Torna alla plancia">✕</button>
     </div>
 
     <!-- ── BODY (scrollabile) ── -->
@@ -936,7 +936,7 @@
         </div>
         <div style="display:flex;gap:5px;padding:8px 12px 10px">
           <button id="ep-pg-confirm" class="ep-pg-confirm-btn" onclick="confirmPageSettings()" disabled>✓ Conferma</button>
-          <button id="ep-pg-cancel" class="ep-pg-cancel-btn" onclick="cancelPageSettings()">↩ Annulla</button>
+          <button id="ep-pg-cancel" class="ep-pg-cancel-btn" data-action="cancelPageSettings">↩ Annulla</button>
         </div>
         <!-- Sistema (screensaver, tema automatico, colonna singola) -->
         <div style="padding:10px 12px;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.05)">
@@ -1075,7 +1075,7 @@
 <!-- CONFIG GITHUB CARD -->
 <div class="mbg off" id="ghmod" style="z-index:260">
   <div class="mbox" style="width:460px">
-    <div class="mhdr"><span class="mtitle">🐙 Card da GitHub</span><button class="mx" onclick="closeGitHubCfg()">✕</button></div>
+    <div class="mhdr"><span class="mtitle">🐙 Card da GitHub</span><button class="mx" data-action="closeGitHubCfg">✕</button></div>
     <div class="fscroll" style="padding:14px">
       <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px">
         La plancia controlla il repository e quando tu o il tuo amico modificate/aggiungete una card, ricevi una <b>notifica</b> in alto: cliccandola la card si aggiorna (e si sincronizza su tutti i tuoi dispositivi).
@@ -1110,7 +1110,7 @@
 <!-- PUBBLICA CARD SU GITHUB -->
 <div class="mbg off" id="ghpub" style="z-index:280">
   <div class="mbox" style="width:420px">
-    <div class="mhdr"><span class="mtitle">📤 Pubblica su GitHub</span><button class="mx" onclick="closeGhPub()">✕</button></div>
+    <div class="mhdr"><span class="mtitle">📤 Pubblica su GitHub</span><button class="mx" data-action="closeGhPub">✕</button></div>
     <div class="fscroll" style="padding:14px">
       <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px">Invia questa card al tuo repository GitHub nella cartella scelta. Da lì potrà aggiornarsi su tutti i dispositivi (tuoi e del tuo amico).</div>
       <div class="flbl">Card</div>
@@ -1126,7 +1126,7 @@
       <div id="ghpub-status" style="font-size:11px;color:var(--muted);min-height:16px;margin-bottom:10px"></div>
       <div style="display:flex;gap:6px">
         <button class="btn1" onclick="_ghPublishDo()">📤 Pubblica</button>
-        <button class="btn2" onclick="closeGhPub()">Annulla</button>
+        <button class="btn2" data-action="closeGhPub">Annulla</button>
       </div>
     </div>
   </div>
@@ -1135,7 +1135,7 @@
 <!-- EDITOR VISTA (nome / icona / elimina) -->
 <div class="mbg off" id="vmod" style="z-index:240">
   <div class="mbox" style="width:360px">
-    <div class="mhdr"><span class="mtitle">✏️ Modifica vista</span><button class="mx" onclick="closeViewEdit()">✕</button></div>
+    <div class="mhdr"><span class="mtitle">✏️ Modifica vista</span><button class="mx" data-action="closeViewEdit">✕</button></div>
     <div class="fscroll" style="padding:14px">
       <div class="flbl">Nome vista</div>
       <input class="finp" id="vmod-name" placeholder="es. Soggiorno" style="margin-bottom:10px" autocomplete="off">
@@ -1197,14 +1197,14 @@
   </div>
   <div class="fe-bottombar">
     <div style="font-size:10px;color:var(--dim)">Snap griglia: <input id="fe-inp-snap" class="fe-cfg-inp" type="number" value="5" min="1" max="20" style="width:44px" oninput="_feSnap=+this.value||5"> px &nbsp;|&nbsp; Trascina gli elementi per posizionarli · angolo in basso a destra per ridimensionare</div>
-    <button class="fe-close-btn" onclick="closeFE()">✅ Chiudi editor</button>
+    <button class="fe-close-btn" data-action="closeFE">✅ Chiudi editor</button>
   </div>
 </div>
 
 <!-- JS CARD STORE MODAL -->
 <div class="mbg off" id="js-store-modal">
   <div class="mbox" style="max-width:620px;width:95vw">
-    <div class="mhdr"><span class="mtitle">📦 Store Card JS</span><button class="mx" onclick="closeJsStore()">✕</button></div>
+    <div class="mhdr"><span class="mtitle">📦 Store Card JS</span><button class="mx" data-action="closeJsStore">✕</button></div>
     <div class="fscroll" style="padding:16px">
       <div style="display:flex;gap:6px;margin-bottom:14px">
         <button class="jsst-tab on" id="jsst-tab-installed" onclick="jsStoreTab('installed')">📋 Installate (<span id="jsst-count">0</span>)</button>
@@ -1242,7 +1242,7 @@
 <div class="mbg off" id="gh-store-modal">
   <div class="mbox" style="max-width:680px;width:96vw">
     <div class="mhdr"><span class="mtitle">🛒 Store da GitHub</span>
-      <button class="mx" onclick="closeGhStore()">✕</button></div>
+      <button class="mx" data-action="closeGhStore">✕</button></div>
     <div class="fscroll" style="padding:14px 16px">
       <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
         <button class="jsst-tab on" id="ghs-tab-js"         onclick="ghStoreTab('js')">⚡ Card JS</button>
@@ -1252,7 +1252,7 @@
         <button class="jsst-tab"    id="ghs-tab-pkg"        onclick="ghStoreTab('pkg')">📦 Pacchetti</button>
         <button class="jsst-tab"    id="ghs-tab-local"      onclick="ghStoreTab('local')">📁 Card locali</button>
         <div style="display:flex;gap:4px;margin-left:auto">
-          <button class="jsst-tab" onclick="closeGhStore();openYamlImport()" title="Incolla YAML da HACS" style="color:#818cf8;font-size:11px;padding:4px 10px;font-weight:700"><i class="mdi mdi-code-braces"></i> YAML</button>
+          <button class="jsst-tab" data-action="closeGhStore" data-action2="openYamlImport" title="Incolla YAML da HACS" style="color:#818cf8;font-size:11px;padding:4px 10px;font-weight:700"><i class="mdi mdi-code-braces"></i> YAML</button>
           <button class="jsst-tab" onclick="_ghsReloadTab()" title="Ricarica da GitHub" style="font-size:14px;padding:4px 8px">↻</button>
           <button class="jsst-tab" onclick="_ghCleanOrphans()" title="Rimuovi card orfane (installate non più nel repo)" style="font-size:13px;padding:4px 8px">🧹</button>
           <button class="jsst-tab" onclick="openGitHubCfg()" title="Impostazioni GitHub">⚙️</button>
@@ -1280,7 +1280,7 @@
     <div class="mhdr">
       <i class="mdi mdi-code-braces" style="font-size:18px;color:#818cf8"></i>
       <span class="mtitle" style="flex:1">Incolla card YAML (HACS)</span>
-      <button class="mx" onclick="closeYamlImport()">✕</button>
+      <button class="mx" data-action="closeYamlImport">✕</button>
     </div>
     <div id="yaml-body">
       <div style="font-size:11px;color:var(--muted);line-height:1.6;background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.18);border-radius:10px;padding:10px 12px">
@@ -1302,7 +1302,7 @@
   <div id="ghs-prev-box">
     <div id="ghs-prev-hdr">
       <span id="ghs-prev-title">Anteprima</span>
-      <button class="mx" onclick="closeGhsPreview()">✕</button>
+      <button class="mx" data-action="closeGhsPreview">✕</button>
     </div>
     <div id="ghs-prev-body">
       <div id="ghs-prev-card"></div>
@@ -1336,7 +1336,7 @@
       <div class="cfg-modal-hdr-ico">🔔</div>
       <div class="cfg-modal-hdr-title">Notifiche Smart</div>
       <button onclick="saveCfg();showToast('✅ Regole salvate')" style="background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.35);color:#4ade80;border-radius:10px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;margin-right:6px">💾 Salva</button>
-      <button class="cfg-modal-close" onclick="closeNotifCfg()">✕</button>
+      <button class="cfg-modal-close" data-action="closeNotifCfg">✕</button>
     </div>
     <div class="cfg-modal-body">
       <div style="font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.6;background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:10px;padding:10px 12px">
@@ -1355,7 +1355,7 @@
     <div class="cfg-modal-hdr">
       <div class="cfg-modal-hdr-ico">🆘</div>
       <div class="cfg-modal-hdr-title">Configurazione SOS</div>
-      <button class="cfg-modal-close" onclick="closeSOSCfg()">✕</button>
+      <button class="cfg-modal-close" data-action="closeSOSCfg">✕</button>
     </div>
     <div class="cfg-modal-body">
       <div style="font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.6;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:10px;padding:10px 12px">
@@ -1380,7 +1380,7 @@
       ⚠️ Nessuna persona trovata in Home Assistant.<br>
       <span style="font-size:10px">Configura le entità <code>person.*</code> in HA oppure aggiungi persone nelle impostazioni SOS.</span>
     </div>
-    <button class="sos-cancel-btn" onclick="closeSOS()">Annulla</button>
+    <button class="sos-cancel-btn" data-action="closeSOS">Annulla</button>
   </div>
 </div>
 
@@ -1392,7 +1392,7 @@
     <div id="sos-who-badge" class="sos-who-badge"></div>
     <div id="sos-contacts-list"></div>
     <button class="sos-act-all" onclick="sosAlertAll()">📢 Avvisa TUTTI i contatti</button>
-    <button class="sos-cancel-btn" onclick="closeSOS2()">← Torna indietro</button>
+    <button class="sos-cancel-btn" data-action="closeSOS2">← Torna indietro</button>
   </div>
 </div>
 
