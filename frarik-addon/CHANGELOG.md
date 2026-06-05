@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.15 — 2026-06-05
+
+### Modificato
+- Logo/icona dell'add-on sostituiti con il marchio ufficiale "DOMOTICA FR" (emblema esagonale con casa smart, wi-fi e iniziali FR).
+
 ## 1.1.14 — 2026-06-05
 
 ### Modificato
