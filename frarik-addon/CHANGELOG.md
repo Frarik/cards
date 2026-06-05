@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.12 — 2026-06-05
+
+### Aggiunto
+- Icona e logo dell'add-on (`icon.png` 256×256, `logo.png` 250×100): fulmine ⚡ su gradiente indaco→viola. Sostituiscono il quadratino generico nello store HA.
+
 ## 1.1.11 — 2026-06-05
 
 ### Corretto
