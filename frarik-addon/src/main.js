@@ -7165,6 +7165,18 @@ function _loadHAScript(url,rtype){
 }
 
 /* Oggetto hass completo passato alle card Lovelace/HACS */
+/* ── Helper globali per gli autori di card (documentati in Istruzioni card/) ──
+   Disponibili a qualunque card (FratechStore o Lovelace), indipendenti dal formato. */
+window.frarikCallService = function(domain, service, data, target){
+  try{ send({type:'call_service', domain, service, service_data:data||{}, target:target||{}}); }catch(e){}
+  return Promise.resolve();
+};
+window.frarikEntity = function(id){
+  if(!id) return null;
+  return { entity_id:id, state:(hs[id]!==undefined?hs[id]:null), attributes:(ha[id]||{}) };
+};
+window.frarikState = function(id){ return id?(hs[id]!==undefined?hs[id]:null):null; };
+
 function _haHassObj(){
   const states={};
   for(const id in hs){ states[id]={entity_id:id,state:hs[id],attributes:(ha[id]||{}),last_changed:'',last_updated:'',context:{id:'frarik'}}; }

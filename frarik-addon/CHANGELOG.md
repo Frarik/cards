@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.2 — 2026-06-06
+
+### Strumenti per autori di card
+- Aggiunti gli **helper globali** `frarikCallService(domain, service, data, target)`, `frarikEntity(id)` e `frarikState(id)`, utilizzabili da qualunque card (FratechStore o Lovelace) per chiamare servizi e leggere stato/attributi delle entità.
+- Aggiunta la guida **`Istruzioni card/CREAZIONE-CARD.md`** nel repo: template ufficiali, API render/mount/update, regole di naming, cartelle dello store, versionamento ed errori comuni.
+
 ## 1.2.1 — 2026-06-06
 
 ### Versione card
