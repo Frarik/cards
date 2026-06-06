@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.4 — 2026-06-06
+
+### Pubblicazione e store
+- **«Pubblica» ora aggiorna davvero il file su GitHub.** Prima la versione incrementata viveva solo nei metadati della dashboard: ripubblicando lo stesso file il contenuto era identico → GitHub non cambiava nulla. Ora, in fase di pubblicazione, la **versione viene impressa nel codice** della card (campo `version:`), così il file cambia e GitHub registra l'aggiornamento; la versione «viaggia» col file anche per le altre dashboard.
+- La pubblicazione **riusa il nome-file reale** della card (se già installata da GitHub) invece di `<id>.js`, evitando di creare un doppione e aggiornando il file giusto.
+- Dopo la pubblicazione la card è subito riconosciuta come installata (niente notifica «nuova card» per la propria pubblicazione).
+- **Store: la versione è ora mostrata sotto il nome** della card anche nelle schede ⚡ Card JS / 🔹 Chips / 🏷️ Distintivi (es. `nome-file.js · v1.2`).
+
 ## 1.2.3 — 2026-06-06
 
 ### API e guida card

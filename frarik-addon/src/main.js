@@ -1320,10 +1320,12 @@ function _ghStoreRender(){
     const prevEnc=enc.replace(/'/g,"\\'");
     const prevNm=nm.replace(/'/g,"\\'");
     const eyeBtn=(cid)=>`<button class="ghs-ibtn ghs-ibtn-eye" data-action="_ghsPreviewEl" data-penc="${prevEnc}" data-pnm="${prevNm}" data-pcid="${cid||''}" title="Anteprima"><i class="mdi mdi-eye-outline"></i></button>`;
+    let verLbl='';   // versione da mostrare sotto il nome
     if(folder.kind==='install'){
       const known=g.shas[f.name];
       const idFile=g.idFile||{};
       const cardId=Object.keys(idFile).find(k=>idFile[k]===f.name)||null;
+      verLbl = g.fileVersions[f.name] || (cardId && _curStoreVersion(cardId)) || '';
       const inDash=!!(cardId&&usedIds.has(cardId));
       if(!known){
         acts=`${eyeBtn(null)}<button class="ghs-btn ghs-btn-inst" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>`;
@@ -1340,7 +1342,8 @@ function _ghStoreRender(){
       const addYaml = (tab==='yaml') ? `<button class="ghs-btn ghs-btn-inst" data-action="_ghsYamlAdd" data-action-arg="${enc}"><i class="mdi mdi-plus"></i> Aggiungi</button>` : '';
       acts=`${eyeBtn(null)}${addYaml}<button class="ghs-btn ghs-btn-cp" data-action="_ghsCopy" data-action-arg="${enc}"><i class="mdi mdi-content-copy"></i> Copia</button><button class="ghs-btn ghs-btn-cp" data-action="_ghsDownload" data-action-arg="${enc}"><i class="mdi mdi-download"></i></button>`;
     }
-    return `<div class="ghs-row"><div class="ghs-ico">${ico}</div><div class="ghs-info"><div class="ghs-name">${eh(nm)}</div><div class="ghs-sub">${eh(f.name)}</div></div><div class="ghs-acts">${acts}</div></div>`;
+    const subTxt = eh(f.name) + (verLbl ? ' · v'+eh(verLbl) : '');
+    return `<div class="ghs-row"><div class="ghs-ico">${ico}</div><div class="ghs-info"><div class="ghs-name">${eh(nm)}</div><div class="ghs-sub">${subTxt}</div></div><div class="ghs-acts">${acts}</div></div>`;
   }).join('');
 }
 /* Schede "Installate" (origine github) e "Card locali" (origine local): gestisci le card installate */
@@ -1400,12 +1403,24 @@ function _ghsPublish(id){
   _ghPubId=id;
   document.getElementById('ghpub-name').value=(it.meta||{}).name||id;
   const base=(id||(it.meta||{}).name||'card').toLowerCase().replace(/[^a-z0-9._-]+/g,'-').replace(/^-+|-+$/g,'');
-  document.getElementById('ghpub-file').value=/\.js$/i.test(base)?base:base+'.js';
+  // se la card era già installata da GitHub, ripubblica SULLO STESSO file (così aggiorna, non duplica)
+  const g0=_ghCfg(); const knownFile=(g0.idFile&&g0.idFile[id])||'';
+  document.getElementById('ghpub-file').value=knownFile||(/\.js$/i.test(base)?base:base+'.js');
   document.getElementById('ghpub-folder').value='card-js';
   document.getElementById('ghpub-status').textContent='';
   document.getElementById('ghpub').classList.remove('off');
 }
 function closeGhPub(){ document.getElementById('ghpub').classList.add('off'); }
+/* Scrive la versione tracciata DENTRO il codice della card, così il file pubblicato
+   riflette davvero la versione (e cambia contenuto → GitHub aggiorna). Aggiorna il
+   primo campo "version: '...'"; se assente, aggiunge un commento header. */
+function _stampVersion(code, ver){
+  if(!ver) return code;
+  if(/version\s*:\s*['"][^'"]*['"]/.test(code)){
+    return code.replace(/version(\s*:\s*)(['"])[^'"]*['"]/, (m, sep, q)=>`version${sep}${q}${ver}${q}`);
+  }
+  return `/* Frarik card · version: ${ver} */\n` + code;
+}
 async function _ghPublishDo(){
   const id=_ghPubId; if(!id) return;
   const it=_jsStoreList().find(i=>(i.meta||{}).id===id); if(!it){ showToast('⚠️ Card non trovata'); return; }
@@ -1417,17 +1432,24 @@ async function _ghPublishDo(){
   if(!/\.js$/i.test(file)) file+='.js';
   file=file.replace(/\s+/g,'-');
   const path=folder+'/'+file;
+  const ver=(it.meta&&it.meta.version)||null;
+  const code=_stampVersion(it.code, ver);   // imprime la versione nel codice prima di pubblicare
   st.innerHTML='<span style="color:#fbbf24">⏳ Pubblico su GitHub…</span>';
   try{
-    await _ghPut(path, it.code, 'Pubblica '+file+' da Frarik');
-    // ora è su GitHub → diventa una card "github" (esce da Card locali, entra in Installate)
+    const res=await _ghPut(path, code, 'Pubblica '+file+(ver?(' v'+ver):'')+' da Frarik');
+    const newSha=res&&res.content&&res.content.sha;
+    // ora è su GitHub → diventa una card "github"; salva il codice STAMPATO e allinea sha/versione
     try{
-      _jsStoreSave(id, it.meta, it.code, 'github');
-      const g=_ghCfg(); g.idFile=g.idFile||{}; g.idFile[id]=file; saveCfg(); _haSaveCfg();
+      _jsStoreSave(id, it.meta, code, 'github');
+      const g=_ghCfg(); g.idFile=g.idFile||{}; g.idFile[id]=file;
+      if(ver) g.fileVersions[file]=ver;
+      // allinea sha + "già notificata": così NON arriva la notifica «nuova card» per il proprio publish
+      if(newSha){ g.shas[file]=newSha; g.notifiedShas[file]=newSha; }
+      saveCfg(); _haSaveCfg();
     }catch(e){}
     _ghsCache={};
-    st.innerHTML='<span style="color:#4ade80">✅ Pubblicata in '+folder+'/'+file+'</span>';
-    showToast('📤 Card pubblicata su GitHub!');
+    st.innerHTML='<span style="color:#4ade80">✅ Pubblicata in '+folder+'/'+file+(ver?(' (v'+ver+')'):'')+'</span>';
+    showToast('📤 Card pubblicata su GitHub'+(ver?(' v'+ver):'')+'!');
     setTimeout(()=>{ closeGhPub(); if(!document.getElementById('gh-store-modal').classList.contains('off')) ghStoreTab('local'); }, 1000);
   }catch(e){ st.innerHTML='<span style="color:#f87171">⚠️ '+e.message+'</span>'; }
 }
