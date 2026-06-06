@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.95 — 2026-06-06
+
+### Correzioni
+- **La notifica "Nuova card" non spariva più**: ora si rimuove automaticamente appena la card viene installata (da store, da GitHub o cliccando la notifica) e il centro notifiche si auto-pulisce dalle card non più in sospeso ad ogni controllo.
+- **Store › Card locali**: corretto il bug per cui al **secondo caricamento** veniva salvata una card a caso. Ora viene riconosciuta sempre la card definita nel file caricato (anche al re-upload dello stesso id), eliminato il ripiego pericoloso su "l'ultima del registro".
+
 ## 1.1.94 — 2026-06-06
 
 ### Notifiche card GitHub

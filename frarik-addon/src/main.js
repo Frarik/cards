@@ -4,7 +4,7 @@ import Chart  from 'chart.js/auto';
 import jsyaml from 'js-yaml';
 import { uid, eh, ea, _lightenHex, showToast, showConfirm } from './utils.js';
 import { _ntfPushLog, _ntfDismissById, _ntfUpdateBell, ntfMarkAllRead, ntfClearAll,
-         _ntfClearGh, renderNotifCenter, toggleNotifCenter, closeNotifCenter } from './notifications.js';
+         _ntfClearGh, _ntfClearGhExcept, renderNotifCenter, toggleNotifCenter, closeNotifCenter } from './notifications.js';
 window.Chart  = Chart;
 window.jsyaml = jsyaml;
 
@@ -1034,6 +1034,7 @@ async function _ghInstallFile(file){
   }
   _ghCfg().shas[file.name]=file.sha;
   try{ saveCfg(); }catch(e){}
+  try{ _ntfClearGh(file.name); }catch(e){}   // la card è installata → via la notifica relativa
   return card;
 }
 /* controllo: confronta gli SHA e mostra la notifica se ci sono cambiamenti */
@@ -1044,6 +1045,8 @@ async function _ghCheck(force){
   catch(e){ if(force){ _ghStatus('⚠️ '+e.message); showToast('⚠️ GitHub: '+e.message);} return; }
   _ghPending = files.filter(f=> !g.shas[f.name] || g.shas[f.name]!==f.sha);
   if(force) _ghStatus(files.length+' card nel repo · '+_ghPending.length+' da aggiornare');
+  // self-heal: togli le notifiche di card non più in sospeso (installate/aggiornate altrove)
+  try{ _ntfClearGhExcept(_ghPending.map(f=>f.name)); }catch(e){}
   const sig=_ghPending.map(f=>f.name+':'+f.sha).sort().join('|');
   // Nessun pop-up flottante: le novità vanno SOLO nel centro notifiche (campanella).
   if(_ghPending.length && sig!==_ghDismissedSig && sig!==_ghLastSig){
@@ -7302,7 +7305,10 @@ function _registerLovelaceCard(tag, meta){
 }
 /* Esegue il codice di una card .js gestendo SIA il formato FratechStore SIA quello Lovelace */
 function _installCardCode(code){
-  const before=new Set(Object.keys(window.FratechCardRegistry));
+  // snapshot dei RIFERIMENTI esistenti: così riconosciamo non solo le card nuove
+  // ma anche quelle RI-CARICATE (stesso id → l'oggetto viene riassegnato).
+  const beforeRefs={};
+  Object.keys(window.FratechCardRegistry).forEach(k=>{ beforeRefs[k]=window.FratechCardRegistry[k]; });
   const tags=[];
   const orig=customElements.define.bind(customElements);
   customElements.define=function(name,ctor,opts){ try{ if(!customElements.get(name)) orig(name,ctor,opts); }catch(e){} tags.push(name); };
@@ -7315,7 +7321,11 @@ function _installCardCode(code){
     const meta=(window.customCards||[]).find(c=>c&&c.type===tag);
     _registerLovelaceCard(tag, meta);
   });
-  return {err, tags, newCards:Object.keys(window.FratechCardRegistry).filter(k=>!before.has(k))};
+  // card "toccate" da questo file: chiavi nuove OPPURE riassegnate (riferimento cambiato).
+  // Risolve il bug "al secondo caricamento prende una card a caso": al re-upload
+  // la chiave esiste già, ma il riferimento cambia → la riconosciamo correttamente.
+  const touched=Object.keys(window.FratechCardRegistry).filter(k=> beforeRefs[k]!==window.FratechCardRegistry[k]);
+  return {err, tags, newCards:touched};
 }
 /* Refresh periodico delle card Lovelace montate (ricevono hass su qualsiasi cambio stato) */
 setInterval(()=>{
@@ -7497,10 +7507,10 @@ function jsStoreLoadFile(file){
       status.innerHTML=`<span style="color:#f87171">⚠️ Errore nel file: ${res.err.message}</span>`;
       return;
     }
-    // id della card appena registrata (nuova in registry), altrimenti l'ultima
+    // id della card definita/aggiornata da QUESTO file (mai ripiegare su "l'ultima
+    // del registro": pescherebbe una card a caso al secondo caricamento)
     let cardId = (res.newCards&&res.newCards[0]) || (res.tags&&res.tags[0]);
     let card = cardId ? window.FratechCardRegistry[cardId] : null;
-    if(!card){ const all=Object.values(window.FratechCardRegistry); card=all[all.length-1]; }
     if(!card || !card.id){ status.innerHTML='<span style="color:#f87171">⚠️ Nessuna card valida trovata nel file (né FratechStore né Lovelace).</span>'; return; }
     _jsStoreSave(card.id, {id:card.id, name:card.name||card.id, icon:card.icon||'📦', version:card.version||'1.0', desc:card.desc||''}, code, 'local');
     status.innerHTML=`<span style="color:#4ade80">✅ Card <b>${card.name||card.id}</b> installata!${card._lovelace?' <span style="opacity:.6">(Lovelace)</span>':''} (v${card.version||'?'})</span>`;

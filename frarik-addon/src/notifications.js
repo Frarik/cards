@@ -38,6 +38,20 @@ export function _ntfClearGh(fileName){
   _ntfSaveLog(); _ntfUpdateBell(); _ntfRenderIfOpen();
 }
 
+/* Tiene SOLO le notifiche card relative ai file ancora in sospeso; rimuove tutte
+   le altre (card ormai installate/aggiornate). Una sola passata, niente flicker. */
+export function _ntfClearGhExcept(keepFiles){
+  const keep = new Set((keepFiles||[]).map(n=>'gh:'+n));
+  let changed=false;
+  const next = _ntfLog.filter(n=>{
+    if(!n.action) return true;
+    if(n.action==='gh'){ changed=true; return false; }                       // formato legacy
+    if(n.action.indexOf('gh:')===0 && !keep.has(n.action)){ changed=true; return false; }
+    return true;
+  });
+  if(changed){ _ntfLog=next; _ntfSaveLog(); _ntfUpdateBell(); _ntfRenderIfOpen(); }
+}
+
 function _ntfUnread(){ return _ntfLog.filter(n=>!n.read).length; }
 
 export function _ntfUpdateBell(){
