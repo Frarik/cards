@@ -1,3 +1,4 @@
+/* Frarik card · version: 1.0.4 */
 /**
  * meteo+previsioni.js v1.2
  * type: custom:meteo-card
