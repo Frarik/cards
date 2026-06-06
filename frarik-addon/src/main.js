@@ -2484,7 +2484,19 @@ function hbarInner(card){
       tapAttr=`data-action="_hbOptionsPopupEl" data-action-el="true" data-action-args='[${JSON.stringify(item.options||[]).replace(/"/g,'&quot;')}]'`;
     }
     const isClickable=!!tapAttr;
-    return `<span class="hbar-chip${isClickable?' tap':''}" style="${bgStyle};color:${col}" ${tapAttr}>${parts}</span>`;
+    // Entità secondaria
+    let ent2Html='';
+    if(item.entity2){
+      const st2=String(hs[item.entity2]??'—');
+      const unit2=item.entity2showUnit!==false?(ha[item.entity2]?.unit_of_measurement||''):'';
+      const ico2=item.entity2icon||_haAutoIcon(item.entity2)||'';
+      const v2=_stateIt(st2)+(unit2?' '+unit2:'');
+      ent2Html=`<span style="opacity:.75;font-size:.85em;display:inline-flex;align-items:center;gap:3px;border-left:1px solid rgba(255,255,255,.2);padding-left:5px;margin-left:2px">${ico2?_renderIcon(ico2,9,col):''}<span>${eh(v2)}</span></span>`;
+    }
+    const mainChip=item.entity2pos==='left'
+      ? ent2Html+parts
+      : parts+ent2Html;
+    return `<span class="hbar-chip${isClickable?' tap':''}" style="${bgStyle};color:${col}" ${tapAttr}>${mainChip}</span>`;
   }
   // kiosk e conn vanno SEMPRE a destra, ovunque siano stati messi
   const _pin=it=>it&&(it.type==='kiosk'||it.type==='conn');
@@ -5187,8 +5199,8 @@ function _hbCreateModal(){
             <div style="flex:1"><div class="flbl">Etichetta <span style="font-weight:400;opacity:.5">(opz.)</span></div><input class="finp" id="hbf-label" type="text" placeholder="es. Porta, Allarme"></div>
             <div style="flex:0 0 72px"><div class="flbl">Icona <span style="font-weight:400;opacity:.5">(auto)</span></div>
               <div class="finp-row" style="gap:2px">
-                <input class="finp" id="hbf-icon" type="text" placeholder="auto" style="text-align:center;font-size:11px;min-width:0">
-                <button class="fbtn" id="hbf-icon-picker" title="Scegli icona">🎨</button>
+                <input class="finp" id="hbf-icon" type="text" placeholder="auto" style="text-align:center;font-size:11px;min-width:0" data-input="_hbIconInput">
+                <button class="fbtn" data-action="_hbPickChipIcon" data-action-el="true" title="Scegli icona">🎨</button>
               </div>
             </div>
           </div>
@@ -5204,6 +5216,42 @@ function _hbCreateModal(){
               <button class="sect-size-btn"    id="hbsz-lg" data-action="hbSelSize" data-action-arg="lg" style="flex:1">L</button>
             </div></div>
           </div>
+          <!-- ENTITÀ SECONDARIA -->
+          <div style="border-top:1px solid var(--bd);margin:10px 0 10px;padding-top:10px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <div class="flbl" style="margin:0">Entità secondaria <span style="font-weight:400;opacity:.5">(opzionale)</span></div>
+              <label style="font-size:10px;display:flex;align-items:center;gap:5px;cursor:pointer;color:rgba(255,255,255,.6)">
+                <input type="checkbox" id="hbf-entity2-on"> Abilita
+              </label>
+            </div>
+            <div id="hbf-entity2-fields" style="display:none">
+              <div style="display:flex;gap:6px;margin-bottom:6px">
+                <div style="flex:1">
+                  <div class="flbl">Entità</div>
+                  <div class="finp-row" style="gap:2px">
+                    <input class="finp entac" id="hbf-entity2" type="text" placeholder="es. sensor.batteria">
+                    <button class="fbtn" data-action="browseField" data-action-arg="hbf-entity2" title="Cerca">🔍</button>
+                  </div>
+                </div>
+                <div style="flex:0 0 60px">
+                  <div class="flbl">Icona</div>
+                  <div class="finp-row" style="gap:2px">
+                    <input class="finp" id="hbf-icon2" type="text" placeholder="auto" style="text-align:center;font-size:11px;min-width:0" data-input="_hbIcon2Input">
+                    <button class="fbtn" data-action="_hbPickChipIcon2" data-action-el="true" title="Scegli icona">🎨</button>
+                  </div>
+                </div>
+              </div>
+              <div class="flbl">Posizione</div>
+              <div style="display:flex;gap:4px;margin-bottom:8px">
+                <button class="sect-size-btn on" id="hbent2-left"  data-action="_hbSelEnt2Pos" data-action-arg="left"  style="flex:1;font-size:10px">◀ Sinistra</button>
+                <button class="sect-size-btn"    id="hbent2-right" data-action="_hbSelEnt2Pos" data-action-arg="right" style="flex:1;font-size:10px">Destra ▶</button>
+              </div>
+              <label style="font-size:10px;display:flex;align-items:center;gap:5px;cursor:pointer;margin-bottom:8px">
+                <input type="checkbox" id="hbf-entity2-showunit" checked> Mostra unità
+              </label>
+            </div>
+          </div>
+
           <!-- Azione al click — solo le principali -->
           <div class="flbl">Al click…</div>
           <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:8px">
@@ -5501,6 +5549,14 @@ function hbEditChip(zone,i){
   document.getElementById('hbf-bg-custom').value=_hbBg;
   document.getElementById('hbf-text-custom')?.value!=null&&(document.getElementById('hbf-text-custom').value=_hbTxt);
   const bdEl=document.getElementById('hbf-border-color'); if(bdEl) bdEl.value=item.borderColor||'';
+  // Entità secondaria
+  const ent2On=document.getElementById('hbf-entity2-on');
+  const ent2Fields=document.getElementById('hbf-entity2-fields');
+  if(ent2On){ ent2On.checked=!!(item.entity2); if(ent2Fields) ent2Fields.style.display=item.entity2?'':'none'; }
+  const ent2El=document.getElementById('hbf-entity2'); if(ent2El) ent2El.value=item.entity2||'';
+  const ico2El=document.getElementById('hbf-icon2'); if(ico2El) ico2El.value=item.entity2icon||'';
+  const su2El=document.getElementById('hbf-entity2-showunit'); if(su2El) su2El.checked=item.entity2showUnit!==false;
+  _hbSelEnt2Pos(item.entity2pos||'right');
   document.getElementById('hbf-showstate').checked=item.showState!==false;
   document.getElementById('hbf-showunit').checked=item.showUnit!==false;
   hbSelShape(item.shape||'pill'); hbSelSize(item.size||'md');
@@ -5527,6 +5583,13 @@ function hbEditChip(zone,i){
   const bgTxt=document.getElementById('hbf-bg-custom'); if(bgTxt) { const pick=document.getElementById('hbf-col-bg-pick'); if(pick&&bgTxt.value&&/^#/.test(bgTxt.value)) pick.value=bgTxt.value; }
   const bdTxt=document.getElementById('hbf-border-color'); if(bdTxt) { const pick=document.getElementById('hbf-col-border-pick'); if(pick&&bdTxt.value&&/^#/.test(bdTxt.value)) pick.value=bdTxt.value; }
   const txTxt=document.getElementById('hbf-text-custom'); if(txTxt) { const pick=document.getElementById('hbf-col-text-pick'); if(pick&&txTxt.value&&/^#/.test(txTxt.value)) pick.value=txTxt.value; }
+  // Toggle entity2 fields
+  const ent2ChkAdd=document.getElementById('hbf-entity2-on');
+  const ent2FldAdd=document.getElementById('hbf-entity2-fields');
+  if(ent2ChkAdd && ent2FldAdd && !ent2ChkAdd._bound){
+    ent2ChkAdd._bound=true;
+    ent2ChkAdd.addEventListener('change',()=>{ ent2FldAdd.style.display=ent2ChkAdd.checked?'':'none'; _hbUpdatePreview(); });
+  }
   document.getElementById('hb-chip-form').style.display='';
   _hbInitColorPickers(); _hbUpdatePreview();
 }
@@ -5906,6 +5969,29 @@ function hbAddColorMap(){
 }
 function hbAddColorMapEntry(){ hbAddColorMap(); }
 
+/* ── Icon picker per il form chip ── */
+function _hbPickChipIcon(e, btn){
+  openIconPicker(v=>{
+    const el=document.getElementById('hbf-icon'); if(el) el.value=v;
+    _hbUpdatePreview();
+  }, btn, e);
+}
+function _hbPickChipIcon2(e, btn){
+  openIconPicker(v=>{
+    const el=document.getElementById('hbf-icon2'); if(el) el.value=v;
+    _hbUpdatePreview();
+  }, btn, e);
+}
+function _hbIconInput(v){ _hbUpdatePreview(); }
+function _hbIcon2Input(v){ _hbUpdatePreview(); }
+
+/* ── Entità secondaria: toggle e posizione ── */
+function _hbSelEnt2Pos(pos){
+  ['left','right'].forEach(x=>document.getElementById('hbent2-'+x)?.classList.toggle('on',x===pos));
+  _hbUpdatePreview();
+}
+function _hbGetEnt2Pos(){ return ['left','right'].find(x=>document.getElementById('hbent2-'+x)?.classList.contains('on'))||'right'; }
+
 /* ── Reset colore → auto ── */
 function _hbResetColor(field){
   const map={bg:'hbf-bg-custom', border:'hbf-border-color', text:'hbf-text-custom'};
@@ -5923,38 +6009,75 @@ function _hbRenderOneChip(item){
   }catch(e){ return _hbChipPreview(item); }
 }
 
-/* ── Render store cards nel form ── */
+/* ── Store browser nel form: fetcha card-chips e card-distintivi da GitHub ── */
+let _hbStoreTab='chips'; // 'chips' | 'distintivi'
+
 function _hbRenderStoreList(){
+  const row=document.getElementById('hbf-store-row'); if(!row) return;
+  // Costruisci UI tab se non esiste
+  if(!row.querySelector('.hbstore-tabs')){
+    const tabs=document.createElement('div'); tabs.className='hbstore-tabs';
+    tabs.style.cssText='display:flex;gap:4px;margin-bottom:8px';
+    ['chips','distintivi'].forEach(t=>{
+      const b=document.createElement('button');
+      b.className='sect-size-btn'+(t===_hbStoreTab?' on':'');
+      b.style.cssText='flex:1;font-size:10px;padding:7px';
+      b.textContent=t==='chips'?'🔹 Chip':'🏷️ Distintivi';
+      b.addEventListener('click',()=>{ _hbStoreTab=t; row.querySelectorAll('.hbstore-tabs .sect-size-btn').forEach(x=>x.classList.remove('on')); b.classList.add('on'); _hbFetchStoreTab(); });
+      tabs.appendChild(b);
+    });
+    const list=document.getElementById('hbf-store-list');
+    row.insertBefore(tabs, list);
+  }
+  _hbFetchStoreTab();
+}
+
+async function _hbFetchStoreTab(){
   const list=document.getElementById('hbf-store-list');
   const empty=document.getElementById('hbf-store-empty');
   if(!list) return;
-  const cards=_jsStoreList();
-  list.innerHTML='';
-  if(!cards.length){
-    if(empty) empty.style.display='';
-    return;
-  }
+  list.innerHTML='<div style="font-size:10px;color:var(--muted);padding:8px 0;text-align:center">Carico…</div>';
   if(empty) empty.style.display='none';
-  cards.forEach(c=>{
-    const meta=c.meta||{};
-    const row=document.createElement('div');
-    row.style.cssText='display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;background:var(--panel2);border:1px solid var(--bd);cursor:pointer;transition:border-color .15s';
-    row.innerHTML=`<span style="font-size:16px">${meta.icon||'📦'}</span><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(meta.name||meta.id)}</div><div style="font-size:9px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${meta.id}</div></div><span style="font-size:9px;color:rgba(99,102,241,.7);font-weight:700">v${meta.version||'1.0'}</span>`;
-    row.addEventListener('mouseenter',()=>row.style.borderColor='rgba(99,102,241,.5)');
-    row.addEventListener('mouseleave',()=>row.style.borderColor='var(--bd)');
-    row.addEventListener('click',()=>{
-      // Seleziona questa card dallo store
-      document.querySelectorAll('#hbf-store-list > div').forEach(r=>r.style.background='var(--panel2)');
-      row.style.background='rgba(99,102,241,.15)'; row.style.borderColor='rgba(99,102,241,.5)';
-      // Salva la selezione in un campo hidden
-      let sel=document.getElementById('hbf-store-selected');
-      if(!sel){ sel=document.createElement('input'); sel.type='hidden'; sel.id='hbf-store-selected'; row.parentElement.appendChild(sel); }
-      sel.value=meta.id;
-      sel.dataset.name=meta.name||meta.id; sel.dataset.icon=meta.icon||'📦';
-      _hbUpdatePreview();
+  try{
+    const folderKey=_hbStoreTab==='chips'?'chips':'distintivi';
+    const folder=_GHS_FOLDERS[folderKey];
+    const files=await _ghListFolder(folder.path);
+    list.innerHTML='';
+    if(!files.length){ list.innerHTML='<div style="font-size:10px;color:var(--muted);padding:8px 0;text-align:center">Nessuna card trovata</div>'; return; }
+    // Mostra installate + store
+    const installed=new Map(_jsStoreList().map(c=>[c.meta?.id,c]));
+    files.forEach(f=>{
+      const name=f.name.replace(/\.js$/i,'');
+      const isInst=installed.has(name);
+      const meta=installed.get(name)?.meta||{};
+      const row=document.createElement('div');
+      row.style.cssText='display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:var(--panel2);border:1px solid '+(isInst?'rgba(74,222,128,.3)':'var(--bd)')+';cursor:pointer;transition:border-color .15s;margin-bottom:4px';
+      row.innerHTML=`<span style="font-size:15px">${meta.icon||(_hbStoreTab==='chips'?'🔹':'🏷️')}</span><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(meta.name||name)}</div><div style="font-size:9px;color:var(--muted)">${name}</div></div>${isInst?'<span style="font-size:9px;color:#4ade80;font-weight:700">✓</span>':'<span style="font-size:9px;color:var(--muted)">Non installata</span>'}`;
+      row.addEventListener('mouseenter',()=>{ if(!row._sel) row.style.borderColor='rgba(99,102,241,.5)'; });
+      row.addEventListener('mouseleave',()=>{ if(!row._sel) row.style.borderColor=isInst?'rgba(74,222,128,.3)':'var(--bd)'; });
+      row.addEventListener('click',async ()=>{
+        document.querySelectorAll('#hbf-store-list > div').forEach(r=>{ r._sel=false; r.style.background='var(--panel2)'; });
+        row._sel=true; row.style.background='rgba(99,102,241,.15)'; row.style.borderColor='rgba(99,102,241,.5)';
+        // Se non installata, installa prima
+        let cardId=name; let cardIcon=meta.icon||(_hbStoreTab==='chips'?'🔹':'🏷️'); let cardName=meta.name||name;
+        if(!isInst){
+          row.lastElementChild.textContent='⬇️…';
+          try{
+            const card=await _ghInstallFile(f);
+            if(card){ cardId=card.id||name; cardIcon=card.icon||cardIcon; cardName=card.name||cardName; }
+            row.lastElementChild.textContent='✓'; row.lastElementChild.style.color='#4ade80';
+          }catch(e){ row.lastElementChild.textContent='❌'; return; }
+        }
+        let sel=document.getElementById('hbf-store-selected');
+        if(!sel){ sel=document.createElement('input'); sel.type='hidden'; sel.id='hbf-store-selected'; list.parentElement.appendChild(sel); }
+        sel.value=cardId; sel.dataset.name=cardName; sel.dataset.icon=cardIcon;
+        _hbUpdatePreview();
+      });
+      list.appendChild(row);
     });
-    list.appendChild(row);
-  });
+  }catch(e){
+    list.innerHTML=`<div style="font-size:10px;color:#f87171;padding:8px 0">Errore: ${eh(e.message||String(e))}<br><span style="opacity:.6">Configura GitHub nelle impostazioni</span></div>`;
+  }
 }
 function _hbRenderColorMap(){
   const el=document.getElementById('hbf-cmap-list'); if(!el) return;
@@ -6089,6 +6212,10 @@ function hbSaveChip(){
     icon:document.getElementById('hbf-icon').value.trim(),
     label:document.getElementById('hbf-label').value.trim(),
     bg, color:col, borderColor:document.getElementById('hbf-border-color')?.value.trim()||'',
+    entity2: document.getElementById('hbf-entity2-on')?.checked ? (document.getElementById('hbf-entity2')?.value.trim()||'') : '',
+    entity2pos: _hbGetEnt2Pos(),
+    entity2icon: document.getElementById('hbf-icon2')?.value.trim()||'',
+    entity2showUnit: document.getElementById('hbf-entity2-showunit')?.checked!==false,
     showState:document.getElementById('hbf-showstate').checked,
     showUnit:document.getElementById('hbf-showunit').checked,
     shape:_hbGetShape(),
@@ -11504,7 +11631,8 @@ Object.assign(window, {
   yamlImportParse,
   // ── Wrapper aggiunti nel refactor handler ──
   _covSkip, _feEpClose, _ntfSaveRules, _jsDropzoneClick, _ghsDropzoneClick,
-  _ghCheckForce, _epToggleLicense, _epLicLogout, hbAddColorMapEntry, _hbResetColor, _hbDelOption, _appDelItem, _appDelGroup,
+  _ghCheckForce, _epToggleLicense, _epLicLogout, hbAddColorMapEntry, _hbResetColor,
+  _hbPickChipIcon, _hbPickChipIcon2, _hbIconInput, _hbIcon2Input, _hbSelEnt2Pos, _hbDelOption, _appDelItem, _appDelGroup,
   _openGhStoreClean, _pasteCardToClean, _closeViewsAndOpenTM, _closeViewsAndSetPage,
   _jsStoreAddAndRefresh, _deleteSavedAt, _appChipPopupAt, _setActivePageAndSync,
   _pgWarnClose, _sendCallSvc,
