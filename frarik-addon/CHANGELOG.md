@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.94 — 2026-06-06
+
+### Notifiche card GitHub
+- **Eliminato il pop-up flottante** di aggiornamento card (la barra viola in alto): le novità arrivano ora **solo** nel centro notifiche (campanella).
+- **Distinzione nuova card / aggiornamento**: una card mai installata mostra «➕ Nuova card», una card già presente che cambia mostra «🔄 Card aggiornata».
+- **Versione automatica**: ogni volta che un file viene sostituito sul repo (es. `bolletta.js`), la versione si incrementa da sola (1.0.0 → 1.0.1 → …) e la notifica indica «aggiornata dalla vX alla vY».
+- Le notifiche sono ora **cliccabili**: un clic installa/aggiorna direttamente quella card (con conferma).
+- Una notifica **per ogni card**, così si vede il dettaglio di ciascuna.
+
 ## 1.1.93 — 2026-06-06
 
 ### Migliorato

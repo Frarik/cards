@@ -4,7 +4,7 @@ import Chart  from 'chart.js/auto';
 import jsyaml from 'js-yaml';
 import { uid, eh, ea, _lightenHex, showToast, showConfirm } from './utils.js';
 import { _ntfPushLog, _ntfDismissById, _ntfUpdateBell, ntfMarkAllRead, ntfClearAll,
-         renderNotifCenter, toggleNotifCenter, closeNotifCenter } from './notifications.js';
+         _ntfClearGh, renderNotifCenter, toggleNotifCenter, closeNotifCenter } from './notifications.js';
 window.Chart  = Chart;
 window.jsyaml = jsyaml;
 
@@ -912,6 +912,7 @@ let _ghPending=[], _ghDismissedSig='', _ghTimer=null, _ghLastSig='';
 function _ghCfg(){
   if(!cfg.githubSync) cfg.githubSync={owner:'Frarik',repo:'cards',path:'card-js',branch:'main',auto:true,shas:{}};
   if(!cfg.githubSync.shas) cfg.githubSync.shas={};
+  if(!cfg.githubSync.fileVersions) cfg.githubSync.fileVersions={};   // versione installata per file (auto-versioning)
   // migrazione una-tantum: il repo ora usa cartelle → le card .js stanno in card-js/
   if(!cfg.githubSync._foldersMigrated){
     if(!cfg.githubSync.path) cfg.githubSync.path='card-js';
@@ -979,6 +980,33 @@ async function _ghDownload(file){
   if(!r.ok) throw new Error('download '+r.status);
   return await r.text();
 }
+/* ── Auto-versioning delle card GitHub ─────────────────────────────────────
+   Ogni file (es. bolletta.js) ha una versione tracciata. Alla prima installazione
+   parte dalla versione dichiarata nella card (o 1.0.0); ad ogni sostituzione del
+   file sul repo (lo sha cambia) la patch viene incrementata: 1.0.0 → 1.0.1 → … */
+function _bumpVer(v){
+  const parts=String(v||'1.0.0').split('.').map(x=>parseInt(x,10));
+  while(parts.length<3) parts.push(0);
+  if(parts.some(n=>isNaN(n))) return '1.0.1';
+  parts[parts.length-1]++;
+  return parts.join('.');
+}
+function _curStoreVersion(id){
+  try{ const it=_jsStoreList().find(i=>(i.meta||{}).id===id); return (it&&it.meta&&it.meta.version)||null; }catch(e){ return null; }
+}
+/* versione attualmente installata per un file (fileVersions → idFile→store → 1.0.0) */
+function _ghFileVersion(g, fileName){
+  if(g.fileVersions && g.fileVersions[fileName]) return g.fileVersions[fileName];
+  const id=Object.keys(g.idFile||{}).find(k=>g.idFile[k]===fileName);
+  if(id){ const v=_curStoreVersion(id); if(v) return v; }
+  return '1.0.0';
+}
+/* nome leggibile di una card a partire dal file (store meta → nome file) */
+function _ghCardName(g, fileName){
+  const id=Object.keys(g.idFile||{}).find(k=>g.idFile[k]===fileName);
+  if(id){ try{ const it=_jsStoreList().find(i=>(i.meta||{}).id===id); if(it&&it.meta&&it.meta.name) return it.meta.name; }catch(e){} }
+  return fileName.replace(/\.js$/i,'');
+}
 /* installa/aggiorna una singola card dal repo */
 async function _ghInstallFile(file){
   const code=await _ghDownload(file);
@@ -987,10 +1015,25 @@ async function _ghInstallFile(file){
   const id=(res.newCards&&res.newCards[0])||(res.tags&&res.tags[0]);
   const card=id?window.FratechCardRegistry[id]:null;
   if(card&&card.id){
-    _jsStoreSave(card.id,{id:card.id,name:card.name||card.id,icon:card.icon||'📦',version:card.version||'1.0',desc:card.desc||''},code,'github');
-    try{ const g=_ghCfg(); g.idFile=g.idFile||{}; g.idFile[card.id]=file.name; }catch(e){}   // mappa id↔file per liberare lo sha all'eliminazione
+    const g=_ghCfg();
+    const oldSha=g.shas[file.name];
+    let version;
+    if(!oldSha){
+      // prima installazione → versione dichiarata nella card, oppure 1.0.0
+      version=(card.version && /\d/.test(String(card.version))) ? String(card.version) : '1.0.0';
+    } else if(oldSha!==file.sha){
+      // il file è cambiato sul repo → incrementa la versione (auto-versioning)
+      version=_bumpVer(_ghFileVersion(g, file.name));
+    } else {
+      // stesso file (reinstallazione es. pulizia orfane) → mantieni la versione
+      version=_ghFileVersion(g, file.name);
+    }
+    g.fileVersions[file.name]=version;
+    _jsStoreSave(card.id,{id:card.id,name:card.name||card.id,icon:card.icon||'📦',version:version,desc:card.desc||''},code,'github');
+    g.idFile=g.idFile||{}; g.idFile[card.id]=file.name;   // mappa id↔file per liberare lo sha all'eliminazione
   }
   _ghCfg().shas[file.name]=file.sha;
+  try{ saveCfg(); }catch(e){}
   return card;
 }
 /* controllo: confronta gli SHA e mostra la notifica se ci sono cambiamenti */
@@ -1002,44 +1045,89 @@ async function _ghCheck(force){
   _ghPending = files.filter(f=> !g.shas[f.name] || g.shas[f.name]!==f.sha);
   if(force) _ghStatus(files.length+' card nel repo · '+_ghPending.length+' da aggiornare');
   const sig=_ghPending.map(f=>f.name+':'+f.sha).sort().join('|');
-  if(_ghPending.length && sig!==_ghDismissedSig){
-    const txt=_ghPending.length===1?('Card aggiornata: '+_ghPending[0].name.replace(/\.js$/,'')+' — clicca per aggiornare')
-                                    :(_ghPending.length+' card aggiornate — clicca per aggiornare');
-    document.getElementById('gh-notif-txt').textContent=txt;
-    document.getElementById('gh-notif').classList.add('on');
-    if(sig!==_ghLastSig){ try{ _ntfPushLog('🔄 Aggiornamento card', txt, '🔄', 'gh'); _ntfUpdateBell(); }catch(e){} _ghLastSig=sig; }   // anche nel centro notifiche (cliccabile)
-  } else if(!_ghPending.length){
-    document.getElementById('gh-notif').classList.remove('on');
+  // Nessun pop-up flottante: le novità vanno SOLO nel centro notifiche (campanella).
+  if(_ghPending.length && sig!==_ghDismissedSig && sig!==_ghLastSig){
+    try{
+      _ghPending.forEach(f=>{
+        const nm=_ghCardName(g, f.name);
+        if(!g.shas[f.name]){
+          // file mai installato → NUOVA card
+          _ntfPushLog('➕ Nuova card', 'La card "'+nm+'" è disponibile nello store — clicca per installare', '➕', 'gh:'+f.name);
+        } else {
+          // file già installato ma sha cambiato → AGGIORNAMENTO con diff di versione
+          const oldV=_ghFileVersion(g, f.name);
+          const newV=_bumpVer(oldV);
+          _ntfPushLog('🔄 Card aggiornata', 'La card "'+nm+'" è stata aggiornata dalla v'+oldV+' alla v'+newV+' — clicca per installare', '🔄', 'gh:'+f.name);
+        }
+      });
+      _ntfUpdateBell();
+    }catch(e){}
+    _ghLastSig=sig;
   }
 }
 function _ghDismiss(){
   _ghDismissedSig=_ghPending.map(f=>f.name+':'+f.sha).sort().join('|');
-  document.getElementById('gh-notif').classList.remove('on');
 }
-async function _ghInstallAll(){
-  if(!_ghPending.length){ document.getElementById('gh-notif').classList.remove('on'); return; }
-  showToast('⬇️ Aggiorno '+_ghPending.length+' card…');
-  let ok=0,err=0;
-  for(const f of _ghPending.slice()){ try{ await _ghInstallFile(f); ok++; }catch(e){ err++; console.warn('[GitHub]',f.name,e.message); try{ _ntfPushLog('⚠️ Errore installazione', f.name+': '+e.message, '🐙', null, {}); }catch(_){} } }
-  _ghPending=[]; _ghDismissedSig='';
-  document.getElementById('gh-notif').classList.remove('on');
+/* ricarica dashboard/store dopo un'installazione */
+function _ghAfterInstall(){
   saveCfg(); _haSaveCfg();
   renderDash();
   if(typeof _jsStoreRenderList==='function') _jsStoreRenderList();
   if(typeof _epRenderJsStore==='function') _epRenderJsStore();
-  showToast('✅ '+ok+' card aggiornate'+(err?(' · '+err+' errori'):''));
 }
-/* Chiede CONFERMA prima di aggiornare le card JS, poi installa (aggiorna anche le card già in plancia). */
-function _ghAskInstall(){
-  const run=()=>{ _ntfLog=_ntfLog.filter(n=>n.action!=='gh'); _ntfSaveLog(); _ntfUpdateBell(); if(typeof renderNotifCenter==='function') renderNotifCenter(); closeNotifCenter(); _ghInstallAll(); };
+async function _ghInstallAll(){
+  if(!_ghPending.length){ return; }
+  showToast('⬇️ Installo '+_ghPending.length+' card…');
+  let ok=0,err=0;
+  for(const f of _ghPending.slice()){ try{ await _ghInstallFile(f); ok++; }catch(e){ err++; console.warn('[GitHub]',f.name,e.message); try{ _ntfPushLog('⚠️ Errore installazione', f.name+': '+e.message, '🐙', null, {}); }catch(_){} } }
+  _ghPending=[]; _ghDismissedSig=''; _ghLastSig='';
+  _ghAfterInstall();
+  showToast('✅ '+ok+' card installate'+(err?(' · '+err+' errori'):''));
+}
+/* installa una SINGOLA card (per click su notifica specifica) */
+async function _ghInstallOne(file){
+  showToast('⬇️ Installo "'+_ghCardName(_ghCfg(), file.name)+'"…');
+  try{ await _ghInstallFile(file); }
+  catch(e){ showToast('⚠️ Errore: '+(e.message||e)); return; }
+  _ghPending=_ghPending.filter(p=>p.name!==file.name);
+  if(!_ghPending.length) _ghLastSig='';
+  _ghAfterInstall();
+  showToast('✅ Card "'+_ghCardName(_ghCfg(), file.name)+'" installata');
+}
+/* Chiede CONFERMA prima di installare/aggiornare le card JS (aggiorna anche quelle già in plancia).
+   Con fileName installa solo quella card (click su una notifica specifica). */
+function _ghAskInstall(fileName){
+  // singola card (click su notifica "gh:<file>")
+  if(fileName){
+    const f=(_ghPending||[]).find(p=>p.name===fileName);
+    if(!f){   // pending non in memoria (es. dopo reload): rifai il check e riprova
+      showToast('🔄 Controllo aggiornamenti card…');
+      _ghCheck(true).then(()=>{ const ff=(_ghPending||[]).find(p=>p.name===fileName); if(ff) _ghAskInstall(fileName); else { _ntfClearGh(fileName); showToast('✅ Card già aggiornata'); } });
+      return;
+    }
+    const g=_ghCfg(); const nm=_ghCardName(g, f.name);
+    const isNew=!g.shas[f.name];
+    const q=isNew ? ('Vuoi installare la card <b>'+eh(nm)+'</b>?')
+                  : ('Vuoi aggiornare la card <b>'+eh(nm)+'</b> alla v'+_bumpVer(_ghFileVersion(g,f.name))+'?');
+    showConfirm(q, ()=>{ _ntfClearGh(f.name); closeNotifCenter(); _ghInstallOne(f); }, isNew?'Installa':'Aggiorna');
+    return;
+  }
+  // batch (tutte le pendenti)
+  const run=()=>{ _ntfClearGh(); closeNotifCenter(); _ghInstallAll(); };
   if(_ghPending&&_ghPending.length){
-    const names=_ghPending.map(f=>f.name.replace(/\.js$/,'')).join(', ');
-    const q=_ghPending.length===1 ? ('Vuoi aggiornare la card <b>'+names+'</b>?') : ('Vuoi aggiornare <b>'+_ghPending.length+' card</b>?<br><span style="font-size:11px;opacity:.7">'+names+'</span>');
-    showConfirm(q+'<br><span style="font-size:11px;opacity:.7">Si aggiorneranno subito, anche se già presenti nella plancia.</span>', run, 'Aggiorna');
+    const names=_ghPending.map(f=>_ghCardName(_ghCfg(), f.name)).join(', ');
+    const q=_ghPending.length===1 ? ('Vuoi installare la card <b>'+eh(names)+'</b>?') : ('Vuoi installare/aggiornare <b>'+_ghPending.length+' card</b>?<br><span style="font-size:11px;opacity:.7">'+eh(names)+'</span>');
+    showConfirm(q+'<br><span style="font-size:11px;opacity:.7">Verranno applicate subito, anche se già presenti nella plancia.</span>', run, 'Installa');
   } else {
     showToast('🔄 Controllo aggiornamenti card…');
     _ghCheck(true).then(()=>{ if(_ghPending.length) _ghAskInstall(); else showToast('✅ Card già aggiornate'); });
   }
+}
+/* router click notifiche centro (campanella) */
+function _ntfHandleAction(action){
+  if(!action) return;
+  if(action==='gh'){ _ghAskInstall(); return; }
+  if(action.indexOf('gh:')===0){ _ghAskInstall(action.slice(3)); return; }
 }
 /* 🧹 Rimuove le card installate da GitHub diventate "orfane" (id non più prodotto da alcun file del
    repo): vecchie versioni/duplicati che non compaiono in nessuna scheda e gonfiano il conteggio.
@@ -1078,7 +1166,7 @@ async function _ghImportAll(){
   renderDash();
   if(typeof _jsStoreRenderList==='function') _jsStoreRenderList();
   if(typeof _epRenderJsStore==='function') _epRenderJsStore();
-  _ghPending=[]; document.getElementById('gh-notif').classList.remove('on');
+  _ghPending=[]; _ghLastSig=''; try{ _ntfClearGh(); }catch(e){}
   _ghStatus('✅ '+ok+' card importate'+(err?(' · '+err+' errori'):''));
   showToast('✅ '+ok+' card importate da GitHub');
 }
@@ -11620,6 +11708,7 @@ Object.assign(window, {
   _ntfDismiss,
   _ntfDismissById,
   _ntfDoAction,
+  _ntfHandleAction,
   _ntfEntitySuggest,
   _ntfIconHtml,
   _ntfOpenActionPicker,

@@ -25,6 +25,19 @@ export function _ntfDismissById(id){
   _ntfSaveLog(); _ntfUpdateBell(); renderNotifCenter();
 }
 
+/* Rimuove le notifiche relative alle card GitHub.
+   - senza argomenti: tutte (action 'gh' legacy + 'gh:<file>')
+   - con fileName: solo quella card */
+export function _ntfClearGh(fileName){
+  _ntfLog = _ntfLog.filter(n=>{
+    if(!n.action) return true;
+    if(n.action==='gh') return false;
+    if(fileName) return n.action !== 'gh:'+fileName;
+    return n.action.indexOf('gh:') !== 0;
+  });
+  _ntfSaveLog(); _ntfUpdateBell(); _ntfRenderIfOpen();
+}
+
 function _ntfUnread(){ return _ntfLog.filter(n=>!n.read).length; }
 
 export function _ntfUpdateBell(){
@@ -79,6 +92,11 @@ export function renderNotifCenter(){
     const btn = document.createElement('button'); btn.className='ntfc-x'; btn.title='Elimina'; btn.textContent='✕';
     btn.addEventListener('click', ev=>{ ev.stopPropagation(); _ntfDismissById(n.id); });
     item.appendChild(ico); item.appendChild(body); item.appendChild(btn);
+    // notifica cliccabile: instrada l'azione (es. installazione card GitHub)
+    if(n.action){
+      item.classList.add('clickable'); item.style.cursor='pointer';
+      item.addEventListener('click', ()=>{ try{ if(typeof window._ntfHandleAction==='function') window._ntfHandleAction(n.action, n); }catch(e){} });
+    }
     el.appendChild(item);
   });
 }
