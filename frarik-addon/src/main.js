@@ -3330,6 +3330,16 @@ function liveUpdate(entityId){
   });
   _refreshChipPopup();
   _liveUpdateBadges(entityId);
+  // Aggiorna header bar chips che usano questa entità
+  const hdrAllChips=[...(cfg.hdrBar?.left||[]),...(cfg.hdrBar?.center||[]),...(cfg.hdrBar?.right||[])];
+  if(hdrAllChips.some(ch=>ch?.entity===entityId)) try{ renderHdrChips(); }catch(e){}
+  // Aggiorna header-bar card chips nella dashboard
+  document.querySelectorAll('.hbar-inner[data-id]').forEach(el=>{
+    const card=curPage()?.cards?.find(c=>c.id===el.dataset.id);
+    if(!card) return;
+    const chips=[...(card.left||[]),...(card.center||[]),...(card.right||[])];
+    if(chips.some(ch=>ch?.entity===entityId)) el.innerHTML=hbarInner(card);
+  });
   // visibilità condizionale card: se una card deve apparire/sparire per questa entità → ridisegna
   try{ if(_cardVisChanged(entityId)) renderDash(); }catch(e){}
   // Update footer bar zone if a button uses this entity
@@ -5244,13 +5254,23 @@ function _hbCreateModal(){
             </div>
           </div>
 
-          <!-- Campi hidden per compatibilità salvataggio -->
-          <div id="hbf-colormap-row" style="display:none">
-            <div id="hbf-cmap-list"></div>
-            <input id="hbf-cmap-state" type="hidden"><input id="hbf-cmap-color" type="hidden">
-            <div id="hbf-cmap-preview" style="display:none"></div>
-            <div id="hbf-cmap-swatches" style="display:none"></div>
+          <!-- COLORI PER STATO -->
+          <div class="flbl" style="margin-top:10px">Colore per stato <span style="opacity:.5;font-weight:400">(sovrascrive il colore base)</span></div>
+          <div id="hbf-cmap-list" style="margin-bottom:5px"></div>
+          <div style="display:flex;gap:4px;margin-bottom:10px;align-items:center">
+            <input class="finp" id="hbf-cmap-state" type="text" placeholder="stato (es. locked, on, armed_away…)" style="flex:2;font-size:11px">
+            <input type="color" id="hbf-cmap-color-pick" value="#4ade80" style="width:32px;height:32px;border:none;background:none;padding:0;cursor:pointer;border-radius:6px;flex-shrink:0">
+            <input class="finp" id="hbf-cmap-color" type="text" placeholder="#4ade80" style="flex:1;font-size:11px">
+            <button class="fbtn" data-action="hbAddColorMapEntry" title="Aggiungi">+</button>
           </div>
+          <!-- Hint stati comuni -->
+          <div style="font-size:9px;color:rgba(148,163,184,.5);margin-bottom:8px;line-height:1.7">
+            💡 Stati comuni: <span style="color:#4ade80">locked / on / armed_away / home / closed</span> →
+            <span style="color:#f87171">unlocked / off / disarmed / away / open</span> →
+            <span style="color:#a78bfa">armed_night / armed_home</span>
+          </div>
+          <!-- Campi hidden compat -->
+          <div id="hbf-colormap-row" style="display:none"><div id="hbf-cmap-preview" style="display:none"></div><div id="hbf-cmap-swatches" style="display:none"></div></div>
           <div id="hbf-iconmap-row" style="display:none">
             <div id="hbf-imap-list"></div>
             <input id="hbf-imap-state" type="hidden"><input id="hbf-imap-icon" type="hidden">
@@ -5851,12 +5871,13 @@ function hbAddColorMap(){
   const stEl=document.getElementById('hbf-cmap-state');
   const coEl=document.getElementById('hbf-cmap-color');
   if(!stEl||!coEl) return;
-  const st=stEl.value.trim(); const co=coEl.value.trim();
+  const st=stEl.value.trim(); const co=coEl.value.trim()||document.getElementById('hbf-cmap-color-pick')?.value||'';
   if(!st||!co) return;
   _hbColorMap[st]=co;
   stEl.value=''; coEl.value='';
-  _hbRenderColorMap();
+  _hbRenderColorMap(); _hbUpdatePreview();
 }
+function hbAddColorMapEntry(){ hbAddColorMap(); }
 function _hbRenderColorMap(){
   const el=document.getElementById('hbf-cmap-list'); if(!el) return;
   const entries=Object.entries(_hbColorMap);
@@ -6018,17 +6039,18 @@ function hbSaveChip(){
 }
 function hbCancelChip(){ document.getElementById('hb-chip-form').style.display='none'; _hbEditZone=null; _hbEditIdx=-1; }
 
-/* ── Anteprima live chip nel form ── */
+/* ── Anteprima live chip nel form — usa lo stesso render di hbarInner ── */
 function _hbUpdatePreview(){
   const box=document.getElementById('hb-chip-preview-box'); if(!box) return;
   const t=['entity','clock','sos'].find(x=>document.getElementById('hbft-'+x)?.classList.contains('on'))||'entity';
-  const bg=document.getElementById('hbf-bg-custom')?.value||'';
-  const col=document.getElementById('hbf-text-custom')?.value||'#ffffff';
-  const border=document.getElementById('hbf-border-color')?.value||'';
-  const icon=document.getElementById('hbf-icon')?.value||'';
-  const label=document.getElementById('hbf-label')?.value||'';
-  const entity=document.getElementById('hbf-entity')?.value||'';
-  const fakeItem={type:t,bg,color:col,borderColor:border,icon,label,entity,
+  const fakeItem={
+    type:t,
+    bg:document.getElementById('hbf-bg-custom')?.value||'',
+    color:document.getElementById('hbf-text-custom')?.value||'#ffffff',
+    borderColor:document.getElementById('hbf-border-color')?.value||'',
+    icon:document.getElementById('hbf-icon')?.value||'',
+    label:document.getElementById('hbf-label')?.value||'',
+    entity:document.getElementById('hbf-entity')?.value?.trim()||'',
     shape:_hbGetShape(), size:_hbGetSize(),
     showState:document.getElementById('hbf-showstate')?.checked!==false,
     showUnit:document.getElementById('hbf-showunit')?.checked!==false,
@@ -6037,12 +6059,26 @@ function _hbUpdatePreview(){
     clockShowDate:document.getElementById('hbclk-showdate')?.checked!==false,
     clockShowSeconds:document.getElementById('hbclk-showsec')?.checked===true,
     clockColor:document.getElementById('hbclk-color')?.value||'#ffffff',
+    iconMap:{}, colorMap:{}, options:[],
   };
-  box.innerHTML=_hbChipPreview(fakeItem)||'<span style="font-size:10px;opacity:.35">Configura i campi per vedere l\'anteprima</span>';
+  // Usa hbarInner su un oggetto finto con solo questo chip nella sinistra
+  const fakeCard={left:[fakeItem],center:[],right:[]};
+  const html=hbarInner(fakeCard);
+  // Estrae solo la parte sinistra (il chip) dal risultato
+  const tmp=document.createElement('div'); tmp.innerHTML=html;
+  const chipEl=tmp.querySelector('.hbar-chip,.hbar-clk,.hbar-sep,.hbar-chip.sos');
+  box.innerHTML=chipEl?chipEl.outerHTML:'<span style="font-size:10px;opacity:.35">Configura i campi per vedere l\'anteprima</span>';
 }
 
 /* ── Sync color pickers (picker↔text input) ── */
 function _hbInitColorPickers(){
+  // Sync color picker stato
+  const cmapPick=document.getElementById('hbf-cmap-color-pick');
+  const cmapTxt=document.getElementById('hbf-cmap-color');
+  if(cmapPick&&cmapTxt){
+    cmapPick.addEventListener('input',()=>{ cmapTxt.value=cmapPick.value; });
+    cmapTxt.addEventListener('input',()=>{ if(/^#[0-9a-fA-F]{6}$/.test(cmapTxt.value)) cmapPick.value=cmapTxt.value; });
+  }
   [['hbf-col-bg-pick','hbf-bg-custom'],['hbf-col-border-pick','hbf-border-color'],['hbf-col-text-pick','hbf-text-custom']].forEach(([pickId,txtId])=>{
     const pick=document.getElementById(pickId);
     const txt=document.getElementById(txtId);
@@ -11381,7 +11417,7 @@ Object.assign(window, {
   yamlImportParse,
   // ── Wrapper aggiunti nel refactor handler ──
   _covSkip, _feEpClose, _ntfSaveRules, _jsDropzoneClick, _ghsDropzoneClick,
-  _ghCheckForce, _epToggleLicense, _epLicLogout, _hbDelOption, _appDelItem, _appDelGroup,
+  _ghCheckForce, _epToggleLicense, _epLicLogout, hbAddColorMapEntry, _hbDelOption, _appDelItem, _appDelGroup,
   _openGhStoreClean, _pasteCardToClean, _closeViewsAndOpenTM, _closeViewsAndSetPage,
   _jsStoreAddAndRefresh, _deleteSavedAt, _appChipPopupAt, _setActivePageAndSync,
   _pgWarnClose, _sendCallSvc,
