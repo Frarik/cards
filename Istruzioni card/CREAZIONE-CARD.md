@@ -441,7 +441,33 @@ nella cartella giusta (o `git push`). Le altre dashboard ricevono la notifica.
 
 ---
 
-## 10. Note / fonti
+## 10. "Imparare" dalle card esistenti (catalogo auto-generato)
+
+Il file `CATALOGO-CARD.md` (in questa cartella) viene **generato automaticamente** dalle
+card realmente presenti nel repo, con lo script:
+
+```
+node scripts/build-card-catalog.mjs
+```
+
+Elenca id, nome, versione, formato e i **pattern/API** che ogni card usa. Va rigenerato
+quando si aggiungono/aggiornano card (a mano col comando sopra, oppure via un git hook —
+opzionale).
+
+**Come usarlo quando si crea una nuova card** (regola per l'assistente):
+1. Leggere questo file (`CREAZIONE-CARD.md`) per regole, API e design system.
+2. Consultare `CATALOGO-CARD.md` per vedere quali card esistono e che tecniche usano.
+3. **Aprire 1–2 card reali** simili in `card-js/` (o `card-chips/`, `card-distintivi/`)
+   e riusarne stile/struttura. Questo è il modo in cui le istruzioni "apprendono" dalle
+   vostre card: il riferimento sono sempre i file `.js` più recenti del repo.
+
+> Nota onesta: il `.md` non si modifica «da solo» e non c'è apprendimento automatico nel
+> repo. L'effetto «impara dalle nostre card» si ottiene così: lo script tiene il catalogo
+> allineato, e in fase di creazione si leggono direttamente le card reali come esempi.
+
+---
+
+## 11. Note / fonti
 
 - Card **belle graficamente** (riferimento estetico): la dashboard *Oikos* usa React+SDK
   con un design-system a token. Concetti riusati qui (non il codice): non hardcodare
