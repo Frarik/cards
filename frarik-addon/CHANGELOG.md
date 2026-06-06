@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.97 — 2026-06-06
+
+### Correzioni
+- **Caricamento manuale di una card già presente su GitHub**: ora si carica correttamente. Le card Lovelace con guardia anti-doppia-registrazione (`if (!customElements.get('x'))`, es. meteo-card) al re-caricamento saltavano il `define`, così la card non veniva riconosciuta e l'upload falliva. Ora il tag viene individuato anche tramite la guardia, quindi puoi ricaricare la card per testarla e ripubblicarla su GitHub.
+
 ## 1.1.96 — 2026-06-06
 
 ### Notifiche card

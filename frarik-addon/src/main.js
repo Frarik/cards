@@ -7319,23 +7319,32 @@ function _installCardCode(code){
   // ma anche quelle RI-CARICATE (stesso id → l'oggetto viene riassegnato).
   const beforeRefs={};
   Object.keys(window.FratechCardRegistry).forEach(k=>{ beforeRefs[k]=window.FratechCardRegistry[k]; });
-  const tags=[];
-  const orig=customElements.define.bind(customElements);
-  customElements.define=function(name,ctor,opts){ try{ if(!customElements.get(name)) orig(name,ctor,opts); }catch(e){} tags.push(name); };
+  const tags=[];      // tag passati a customElements.define dal file
+  const queried=[];   // tag interrogati con customElements.get (guardie anti-doppia-registrazione)
+  const origDefine=customElements.define.bind(customElements);
+  const origGet=customElements.get.bind(customElements);
+  customElements.define=function(name,ctor,opts){ try{ if(!origGet(name)) origDefine(name,ctor,opts); }catch(e){} tags.push(name); };
+  customElements.get=function(name){ try{ if(typeof name==='string') queried.push(name); }catch(e){} return origGet(name); };
   let err=null;
   try{ (0,eval)(code); }catch(e){ err=e; }
-  customElements.define=orig;
-  // per ogni custom element definito che NON è già una card FratechStore → wrapper Lovelace
-  tags.forEach(tag=>{
+  customElements.define=origDefine;
+  customElements.get=origGet;
+  // tag candidati = quelli definiti dal file; se il file usa una GUARDIA
+  // (if(!customElements.get('x')) ... ) al re-caricamento il define viene saltato,
+  // quindi come fallback usiamo i tag interrogati (è il pattern di meteo-card & co.).
+  const defineTags=[...new Set(tags)].filter(t=>origGet(t));
+  const guardTags = defineTags.length ? [] : [...new Set(queried)].filter(t=>origGet(t));
+  const candidates=[...new Set([...defineTags, ...guardTags])];
+  // per ogni custom element del file che NON è una card FratechStore nativa → (ri)wrappa Lovelace
+  candidates.forEach(tag=>{
     if(window.FratechCardRegistry[tag]&&!window.FratechCardRegistry[tag]._lovelace) return;
     const meta=(window.customCards||[]).find(c=>c&&c.type===tag);
-    _registerLovelaceCard(tag, meta);
+    _registerLovelaceCard(tag, meta);   // crea un nuovo oggetto wrapper → cambia il riferimento
   });
   // card "toccate" da questo file: chiavi nuove OPPURE riassegnate (riferimento cambiato).
-  // Risolve il bug "al secondo caricamento prende una card a caso": al re-upload
-  // la chiave esiste già, ma il riferimento cambia → la riconosciamo correttamente.
+  // Risolve sia "al 2° caricamento prende una card a caso" sia "card con stesso nome non si carica".
   const touched=Object.keys(window.FratechCardRegistry).filter(k=> beforeRefs[k]!==window.FratechCardRegistry[k]);
-  return {err, tags, newCards:touched};
+  return {err, tags:candidates, newCards:touched};
 }
 /* Refresh periodico delle card Lovelace montate (ricevono hass su qualsiasi cambio stato) */
 setInterval(()=>{
