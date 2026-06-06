@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.1 — 2026-06-06
+
+### Versione card
+- **Le card Lovelace (es. `meteo-card.js`) restavano bloccate a 1.0.** Non dichiarano una versione propria, e con la logica "incrementa solo se il contenuto cambia" non salivano mai. Ora il versionamento del caricamento manuale è semplice e prevedibile: la prima volta parte dalla versione dichiarata (o 1.0.0), poi **ogni ricaricamento dello stesso file incrementa la patch** (1.0.0 → 1.0.1 → …), per qualsiasi tipo di card. La versione resta persistente per nome-file (non torna a 1.0 dopo un'eliminazione) ed è identica selezionando o trascinando il file.
+
 ## 1.2.0 — 2026-06-06
 
 ### Correzioni caricamento manuale

@@ -7548,19 +7548,17 @@ function jsStoreLoadFile(file){
     let cardId = (res.newCards&&res.newCards[0]) || (res.tags&&res.tags[0]);
     let card = cardId ? window.FratechCardRegistry[cardId] : null;
     if(!card || !card.id){ status.innerHTML='<span style="color:#f87171">⚠️ Nessuna card valida trovata nel file (né FratechStore né Lovelace).</span>'; return; }
-    // auto-versioning PERSISTENTE per nome-file (come per GitHub): la versione vive in
-    // g.fileVersions[<nome file>], che NON viene azzerato eliminando la card. La patch
-    // si incrementa SOLO se il contenuto è cambiato (come lo sha su GitHub), così:
-    //  • il numero resta coerente sia selezionando il file sia trascinandolo;
-    //  • dopo un'eliminazione non torna a 1.0.0;
-    //  • ricaricare lo stesso identico file non gonfia la versione.
+    // auto-versioning PERSISTENTE per nome-file (vale per qualunque formato di card,
+    // incluse quelle Lovelace tipo meteo-card che non dichiarano una versione):
+    // la versione vive in g.fileVersions[<nome file>] e NON viene azzerata eliminando
+    // la card. La PRIMA volta parte dalla versione dichiarata (o da quella già
+    // installata, o 1.0.0); a OGNI ricaricamento successivo dello stesso file la patch
+    // si incrementa (1.0.0 → 1.0.1 → …). Coerente sia selezionando sia trascinando.
     const _g=_ghCfg();
     const fname=(file.name||(card.id+'.js'));
     const declared=(card.version && /\d/.test(String(card.version))) ? String(card.version) : null;
-    const existing=_jsStoreList().find(i=>(i.meta||{}).id===card.id);
-    const baseV=_g.fileVersions[fname] || (existing&&existing.meta&&existing.meta.version) || declared || '1.0.0';
-    const changed = existing ? (existing.code!==code) : false;   // senza riferimento (card eliminata) non si gonfia
-    const ver = changed ? _bumpVer(baseV) : baseV;
+    const known=_g.fileVersions[fname] || _curStoreVersion(card.id) || null;
+    const ver = known ? _bumpVer(known) : (declared || '1.0.0');
     _g.fileVersions[fname]=ver; try{ saveCfg(); }catch(e){}
     _jsStoreSave(card.id, {id:card.id, name:card.name||card.id, icon:card.icon||'📦', version:ver, desc:card.desc||''}, code, 'local');
     status.innerHTML=`<span style="color:#4ade80">✅ Card <b>${card.name||card.id}</b> installata!${card._lovelace?' <span style="opacity:.6">(Lovelace)</span>':''} (v${ver})</span>`;
