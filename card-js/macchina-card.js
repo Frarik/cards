@@ -836,7 +836,7 @@ class MacchinaCard extends HTMLElement {
 customElements.define('macchina-card', MacchinaCard)
 
 window.customCards = window.customCards || []
-window.customCards.push({
+window.customCards.push({ version: '1.0',
   type:        'macchina-card',
   name:        'Centro Controllo Ford Puma',
   description: 'Controllo completo Ford Puma con Wallbox.',

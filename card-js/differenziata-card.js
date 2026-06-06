@@ -425,7 +425,7 @@ class DifferenziataCard extends HTMLElement {
 customElements.define('differenziata-card', DifferenziataCard)
 
 window.customCards = window.customCards || []
-window.customCards.push({
+window.customCards.push({ version: '1.0',
   type:        'differenziata-card',
   name:        'Raccolta Differenziata',
   description: 'Bidoni, programmazione settimanale, notifiche push e Alexa.',

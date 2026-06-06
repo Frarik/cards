@@ -894,7 +894,7 @@ class IrrigazioneCard extends HTMLElement {
 customElements.define('irrigazione-card', IrrigazioneCard)
 
 window.customCards = window.customCards || []
-window.customCards.push({
+window.customCards.push({ version: '1.0',
   type:        'irrigazione-card',
   name:        'Irrigazione Smart',
   description: 'Controllo irrigazione: schedule, timer animato, meteo e storico settimanale.',

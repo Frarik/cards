@@ -374,7 +374,7 @@
     id: 'person-card',
     name: 'Persona',
     icon: '👤',
-    version: '1.0.0',
+    version: '1.0',
     desc: 'Foto persona, stato zona colorato, mappa live e storico spostamenti 24h. Entità configurabili.',
     render, mount, update
   };
