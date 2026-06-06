@@ -2457,7 +2457,11 @@ function hbarInner(card){
     let icon=item.icon||'';
     if(item.type==='entity'&&item.entity){
       const st=String(hs[item.entity]||'');
-      if(item.iconMap&&item.iconMap[st]) icon=item.iconMap[st];                 // override manuale per stato
+      if(item.iconMap&&item.iconMap[st]){
+        const mapVal=item.iconMap[st];
+        if(typeof mapVal==='object'){ icon=mapVal.icon; if(mapVal.color) col=mapVal.color; }
+        else icon=mapVal;
+      } // override manuale per stato
       else if(!icon) icon=_haAutoIcon(item.entity);                             // AUTO come HA
     }
     const icoCol=item.iconColor&&item.iconColor!=='#ffffff'?item.iconColor:col;
@@ -5146,8 +5150,8 @@ function _hbCreateModal(){
         <div id="hbf-entity-row">
           <div class="flbl">Entità Home Assistant</div>
           <div class="finp-row" style="margin-bottom:6px">
-            <input class="finp entac" id="hbf-entity" type="text" placeholder="es. lock.porta, light.salotto">
-            <button class="fbtn" data-action="browseField" data-action-arg="hbf-entity" title="Cerca">🔍</button>
+            <input class="finp entac" id="hbf-entity" type="text" placeholder="es. lock.porta, light.salotto" data-input="_hbEntityChanged">
+            <button class="fbtn" data-action="_hbBrowseEntity" data-action-el="true" title="Cerca entità">🔍</button>
           </div>
           <div id="hbf-action-hint" style="display:none;font-size:9px;padding:5px 8px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:7px;color:#a5b4fc;margin-bottom:6px;line-height:1.4"></div>
           <div style="display:flex;gap:8px;margin-bottom:10px">
@@ -5234,15 +5238,22 @@ function _hbCreateModal(){
               <input type="hidden" id="hbf-icon">
             </div>
           </div>
-          <!-- ICONA PER STATO -->
+          <!-- ICONE CONDIZIONALI PER STATO -->
           <div id="hbf-iconmap-section" style="margin-bottom:10px">
-            <div class="flbl">Icona per stato <span style="font-weight:400;opacity:.5">(opz.)</span></div>
-            <div id="hbf-imap-list" style="margin-bottom:5px"></div>
-            <div style="display:flex;gap:4px;align-items:center">
-              <input class="finp" id="hbf-imap-state" type="text" placeholder="stato (es. on, locked…)" style="flex:2;font-size:11px">
-              <span id="hbf-imap-icon-prev" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:14px;background:rgba(255,255,255,.06);border:1px solid var(--bd);border-radius:6px;flex-shrink:0;cursor:pointer" title="Scegli icona stato" data-action="_hbPickImapIcon" data-action-el="true">?</span>
-              <input type="hidden" id="hbf-imap-icon">
-              <button class="fbtn" data-action="hbAddIconMap" title="Aggiungi">+</button>
+            <div class="flbl">Icone condizionali <span style="font-weight:400;opacity:.5">— cambia icona in base allo stato</span></div>
+            <div id="hbf-imap-list" style="margin-bottom:6px"></div>
+            <div style="background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:6px">
+              <div style="font-size:9px;color:var(--muted);font-weight:700;letter-spacing:.5px">+ AGGIUNGI REGOLA</div>
+              <div style="display:flex;gap:4px;align-items:center">
+                <input class="finp" id="hbf-imap-state" type="text" placeholder="stato (es. on, locked, playing…)" style="flex:1;font-size:11px">
+                <span id="hbf-imap-icon-prev" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px;background:rgba(255,255,255,.06);border:1px solid var(--bd);border-radius:6px;flex-shrink:0;cursor:pointer" title="Scegli icona" data-action="_hbPickImapIcon" data-action-el="true">?</span>
+                <input type="color" id="hbf-imap-color" value="#ffffff" title="Colore icona" style="width:26px;height:28px;border:none;background:none;padding:0;cursor:pointer;border-radius:5px;flex-shrink:0">
+                <input type="hidden" id="hbf-imap-icon">
+                <button class="fbtn" data-action="hbAddIconMap" title="Aggiungi regola" style="flex-shrink:0">+</button>
+              </div>
+              <div style="font-size:9px;color:rgba(148,163,184,.45);line-height:1.6">
+                💡 Es.: stato <span style="color:#4ade80">on</span> → 💡 giallo · stato <span style="color:#94a3b8">off</span> → 💡 grigio
+              </div>
             </div>
           </div>
           <div style="display:flex;gap:6px;margin-bottom:10px">
@@ -5295,11 +5306,11 @@ function _hbCreateModal(){
 
           <!-- Azione al click — solo le principali -->
           <div class="flbl">Al click…</div>
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:8px">
-            <button class="sect-align-btn on" id="hbca-none"      data-action="hbSelClickAct" data-action-arg="none"      style="font-size:9px;padding:8px 4px">🚫<br>Niente</button>
-            <button class="sect-align-btn"    id="hbca-more_info" data-action="hbSelClickAct" data-action-arg="more_info" style="font-size:9px;padding:8px 4px">ℹ️<br>Più info</button>
-            <button class="sect-align-btn"    id="hbca-toggle"    data-action="hbSelClickAct" data-action-arg="toggle"    style="font-size:9px;padding:8px 4px">🔀<br>Toggle</button>
-            <button class="sect-align-btn"    id="hbca-options"   data-action="hbSelClickAct" data-action-arg="options"   style="font-size:9px;padding:8px 4px">☰<br>Opzioni</button>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:10px">
+            <button class="sect-align-btn on" id="hbca-none"      data-action="hbSelClickAct" data-action-arg="none"      style="font-size:11px;padding:10px 6px">🚫<br><span style="font-size:9px">Niente</span></button>
+            <button class="sect-align-btn"    id="hbca-more_info" data-action="hbSelClickAct" data-action-arg="more_info" style="font-size:11px;padding:10px 6px">ℹ️<br><span style="font-size:9px">Più info</span></button>
+            <button class="sect-align-btn"    id="hbca-toggle"    data-action="hbSelClickAct" data-action-arg="toggle"    style="font-size:11px;padding:10px 6px">🔀<br><span style="font-size:9px">Toggle</span></button>
+            <button class="sect-align-btn"    id="hbca-options"   data-action="hbSelClickAct" data-action-arg="options"   style="font-size:11px;padding:10px 6px">☰<br><span style="font-size:9px">Opzioni</span></button>
           </div>
           <!-- Navigate e Service nascosti per compatibilità -->
           <div id="hbf-navigate-row" style="display:none">
@@ -6016,6 +6027,17 @@ function hbAddColorMap(){
 function hbAddColorMapEntry(){ hbAddColorMap(); }
 
 /* ── Icon picker per il form chip ── */
+function _hbEntityChanged(val){
+  hbAutoFill();
+  _hbRefreshIconPrev();
+  _hbUpdatePreview();
+}
+function _hbBrowseEntity(e, btn){
+  _epPickerOpen(v=>{
+    const el=document.getElementById('hbf-entity'); if(el){ el.value=v; el.dispatchEvent(new Event('input',{bubbles:true})); }
+    hbAutoFill(); _hbRefreshIconPrev(); _hbUpdatePreview();
+  });
+}
 function _hbSetIcon(v){
   const el=document.getElementById('hbf-icon'); if(el) el.value=v;
   _hbRefreshIconPrev();
@@ -6063,26 +6085,32 @@ function _hbRefreshIcon2Prev(){
   if(prev) prev.innerHTML=ico?_renderIcon(ico,12,'#94a3b8'):'?';
 }
 
-/* ── SOS: mostra persone configurabili ── */
+/* ── SOS: mostra persone configurabili nel chip ──
+   Usa la whitelist cfg.sos.persons: se vuota = mostra tutte.
+   Nascondere una persona = rimuoverla dalla whitelist (dopo aver inizializzato la lista con tutti tranne quella).
+── */
 function _hbRenderSosPersons(){
   const el=document.getElementById('hbf-sos-persons'); if(!el) return;
-  const persons=Object.keys(hs||{}).filter(e=>e.startsWith('person.'));
-  const sosCfg=cfg.sos||{}; const hidden=sosCfg.hiddenPersons||[];
-  if(!persons.length){ el.innerHTML='<div style="font-size:10px;color:var(--muted)">Nessuna persona trovata</div>'; return; }
-  el.innerHTML=persons.map(p=>{
+  const allPersons=Object.keys(ha||{}).filter(e=>e.startsWith('person.'));
+  if(!allPersons.length){ el.innerHTML='<div style="font-size:10px;color:var(--muted)">Nessuna persona trovata in HA</div>'; return; }
+  const sc=_sosCfg();
+  // Se whitelist vuota, tutti visibili
+  const visibles=sc.persons&&sc.persons.length?sc.persons:allPersons.slice();
+  el.innerHTML='';
+  allPersons.forEach(p=>{
     const nm=(ha[p]?.friendly_name)||p.split('.')[1];
-    const checked=hidden.includes(p);
-    return `<label style="font-size:11px;display:flex;align-items:center;gap:6px;cursor:pointer;padding:3px 0">
-      <input type="checkbox" ${checked?'checked':''} data-entity="${p}" class="hbsos-hide-person"> ${eh(nm)}</label>`;
-  }).join('');
-  el.querySelectorAll('.hbsos-hide-person').forEach(cb=>{
-    cb.addEventListener('change',()=>{
-      if(!cfg.sos) cfg.sos={};
-      if(!cfg.sos.hiddenPersons) cfg.sos.hiddenPersons=[];
-      const e=cb.dataset.entity;
-      if(cb.checked){ if(!cfg.sos.hiddenPersons.includes(e)) cfg.sos.hiddenPersons.push(e); }
-      else { cfg.sos.hiddenPersons=cfg.sos.hiddenPersons.filter(x=>x!==e); }
+    const isVisible=visibles.includes(p);
+    const lbl=document.createElement('label');
+    lbl.style.cssText='font-size:11px;display:flex;align-items:center;gap:6px;cursor:pointer;padding:4px 0';
+    lbl.innerHTML=`<input type="checkbox" ${isVisible?'checked':''}> <span>${eh(nm)}</span> <span style="font-size:9px;color:var(--muted)">${p}</span>`;
+    lbl.querySelector('input').addEventListener('change',e=>{
+      // Inizializza whitelist con tutti se era vuota
+      if(!sc.persons||!sc.persons.length) sc.persons=allPersons.slice();
+      if(e.target.checked){ if(!sc.persons.includes(p)) sc.persons.push(p); }
+      else { sc.persons=sc.persons.filter(x=>x!==p); }
+      saveCfg();
     });
+    el.appendChild(lbl);
   });
 }
 
@@ -6209,22 +6237,31 @@ function _hbCmapColorInput(){
 function hbAddIconMap(){
   const stEl=document.getElementById('hbf-imap-state');
   const icEl=document.getElementById('hbf-imap-icon');
-  if(!stEl||!icEl) return;
-  const st=stEl.value.trim(); const ic=icEl.value.trim();
-  if(!st||!ic) return;
-  _hbIconMap[st]=ic;
-  stEl.value=''; icEl.value='';
+  if(!stEl) return;
+  const st=stEl.value.trim();
+  if(!st){ stEl.style.borderColor='#f87171'; setTimeout(()=>stEl.style.borderColor='',1500); return; }
+  const ic=icEl?.value?.trim()||'';
+  const col=document.getElementById('hbf-imap-color')?.value||'#ffffff';
+  if(!ic){ document.getElementById('hbf-imap-icon-prev')?.animate([{transform:'scale(1)'},{transform:'scale(1.2)'},{transform:'scale(1)'}],200); return; }
+  // Salva come {icon, color} se c'è un colore personalizzato
+  _hbIconMap[st]=col&&col!=='#ffffff'?{icon:ic,color:col}:ic;
+  stEl.value=''; if(icEl) icEl.value='';
   const prev=document.getElementById('hbf-imap-icon-prev'); if(prev) prev.innerHTML='?';
   _hbRenderIconMap(); _hbUpdatePreview();
 }
 function _hbRenderIconMap(){
   const el=document.getElementById('hbf-imap-list'); if(!el) return;
   const entries=Object.entries(_hbIconMap);
-  if(!entries.length){ el.innerHTML=`<div style="font-size:9px;opacity:.35;padding:2px 0">Nessun mapping</div>`; return; }
-  el.innerHTML=entries.map(([st,ic])=>`<div class="hb-row" style="padding:3px 6px">
-    <span style="font-size:9px;flex:1">${eh(st)} → ${_renderIcon(ic,12,'#818cf8')} ${ic}</span>
-    <button class="sbrow-btn sbrow-del" data-action="_hbDelIconMapEntry" data-action-arg="${st}">✕</button>
-  </div>`).join('');
+  if(!entries.length){ el.innerHTML='<div style="font-size:9px;opacity:.3;padding:2px 0">Nessuna regola</div>'; return; }
+  el.innerHTML=entries.map(([st,val])=>{
+    const ic=typeof val==='object'?val.icon:val;
+    const col=typeof val==='object'?val.color:'#818cf8';
+    return `<div class="hb-row" style="padding:4px 8px;gap:6px">
+      <div style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06);border-radius:5px">${_renderIcon(ic,13,col)}</div>
+      <span style="font-size:10px;flex:1;color:rgba(255,255,255,.7)"><span style="color:#a5b4fc;font-weight:700">${eh(st)}</span> → ${ic}</span>
+      <button class="hbc-btn" data-action="_hbDelIconMapEntry" data-action-arg="${st}" title="Elimina">✕</button>
+    </div>`;
+  }).join('');
 }
 
 function hbAddOption(){
@@ -9210,7 +9247,7 @@ function openHBM_HDR(){
   if(!cfg.hdrBar) cfg.hdrBar={left:[{id:uid(),type:'clock'}],center:[],right:[]};
   _hbCardId='__hdrbar__';
   _hbChips=JSON.parse(JSON.stringify(cfg.hdrBar));
-  document.getElementById('hbmod-title').textContent='⊞ Configura Header';
+  document.getElementById('hbmod-title').textContent='⊞ Configurazione Header';
   const cardSect=document.getElementById('hb-card-settings');
   if(cardSect) cardSect.style.display='none';
   hbRenderAllLists();
@@ -11745,7 +11782,7 @@ Object.assign(window, {
   _covSkip, _feEpClose, _ntfSaveRules, _jsDropzoneClick, _ghsDropzoneClick,
   _ghCheckForce, _epToggleLicense, _epLicLogout, hbAddColorMapEntry, _hbResetColor,
   _hbPickChipIcon, _hbPickChipIcon2, _hbPickImapIcon, _hbIconInput, _hbIcon2Input,
-  _hbSelEnt2Pos, _hbResetIcon, openSOSCfgModal, _hbDelOption, _appDelItem, _appDelGroup,
+  _hbSelEnt2Pos, _hbResetIcon, openSOSCfgModal, _hbEntityChanged, _hbBrowseEntity, _hbDelOption, _appDelItem, _appDelGroup,
   _openGhStoreClean, _pasteCardToClean, _closeViewsAndOpenTM, _closeViewsAndSetPage,
   _jsStoreAddAndRefresh, _deleteSavedAt, _appChipPopupAt, _setActivePageAndSync,
   _pgWarnClose, _sendCallSvc,
