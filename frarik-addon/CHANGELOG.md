@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.99 — 2026-06-06
+
+### Correzioni notifiche
+- **La notifica «Nuova card» ora appare una sola volta.** Prima riappariva ad ogni refresh e dopo i cicli pubblica → elimina → reinserisci → rielimina, perché l'anti-doppione era solo in memoria e l'eliminazione rendeva la card di nuovo «in sospeso». Ora la coppia (file, versione) già notificata viene **salvata in modo permanente**: niente più ricomparse. Una versione davvero nuova sul repo (sha diverso) genera invece una nuova notifica, come dev'essere. Installare una card la segna subito come «conosciuta», così non genera notifiche se poi la elimini.
+
 ## 1.1.98 — 2026-06-06
 
 ### Correzioni store

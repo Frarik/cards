@@ -913,6 +913,7 @@ function _ghCfg(){
   if(!cfg.githubSync) cfg.githubSync={owner:'Frarik',repo:'cards',path:'card-js',branch:'main',auto:true,shas:{}};
   if(!cfg.githubSync.shas) cfg.githubSync.shas={};
   if(!cfg.githubSync.fileVersions) cfg.githubSync.fileVersions={};   // versione installata per file (auto-versioning)
+  if(!cfg.githubSync.notifiedShas) cfg.githubSync.notifiedShas={};   // (file→sha) già notificati: una notifica sola, persistita tra i reload
   // migrazione una-tantum: il repo ora usa cartelle → le card .js stanno in card-js/
   if(!cfg.githubSync._foldersMigrated){
     if(!cfg.githubSync.path) cfg.githubSync.path='card-js';
@@ -1033,6 +1034,7 @@ async function _ghInstallFile(file){
     g.idFile=g.idFile||{}; g.idFile[card.id]=file.name;   // mappa id↔file per liberare lo sha all'eliminazione
   }
   _ghCfg().shas[file.name]=file.sha;
+  _ghCfg().notifiedShas[file.name]=file.sha;   // installata = già "conosciuta": niente notifica al successivo delete
   try{ saveCfg(); }catch(e){}
   try{ _ntfClearGh(file.name); }catch(e){}   // la card è installata → via la notifica relativa
   return card;
@@ -1047,26 +1049,27 @@ async function _ghCheck(force){
   if(force) _ghStatus(files.length+' card nel repo · '+_ghPending.length+' da aggiornare');
   // self-heal: togli le notifiche di card non più in sospeso (installate/aggiornate altrove)
   try{ _ntfClearGhExcept(_ghPending.map(f=>f.name)); }catch(e){}
-  const sig=_ghPending.map(f=>f.name+':'+f.sha).sort().join('|');
-  // Nessun pop-up flottante: le novità vanno SOLO nel centro notifiche (campanella).
-  if(_ghPending.length && sig!==_ghDismissedSig && sig!==_ghLastSig){
-    try{
-      _ghPending.forEach(f=>{
-        const nm=_ghCardName(g, f.name);
-        if(!g.shas[f.name]){
-          // file mai installato → NUOVA card (non installiamo da soli: apri lo store)
-          _ntfPushLog('➕ Nuova card', 'È presente una nuova card «'+nm+'» — vuoi installarla? Premi ✓ per aprire lo store.', '➕', 'gh:'+f.name);
-        } else {
-          // file già installato ma sha cambiato → AGGIORNAMENTO con diff di versione
-          const oldV=_ghFileVersion(g, f.name);
-          const newV=_bumpVer(oldV);
-          _ntfPushLog('🔄 Card aggiornata', 'La card «'+nm+'» è passata dalla v'+oldV+' alla v'+newV+' — premi ✓ per aprire lo store e aggiornarla.', '🔄', 'gh:'+f.name);
-        }
-      });
-      _ntfUpdateBell();
-    }catch(e){}
-    _ghLastSig=sig;
-  }
+  // Notifica UNA SOLA VOLTA per ciascun (file, sha): la coppia viene memorizzata in
+  // g.notifiedShas e persistita. Così la notifica NON riappare al reload né dopo i
+  // cicli pubblica/elimina/reinserisci/rielimina. Un nuovo sha (card davvero
+  // aggiornata sul repo) produce invece una nuova notifica. Nessun pop-up flottante:
+  // tutto va solo nel centro notifiche (campanella).
+  try{
+    let any=false;
+    _ghPending.forEach(f=>{
+      if(g.notifiedShas[f.name]===f.sha) return;   // questa versione è già stata notificata
+      const nm=_ghCardName(g, f.name);
+      if(!g.shas[f.name]){
+        _ntfPushLog('➕ Nuova card', 'È presente una nuova card «'+nm+'» — vuoi installarla? Premi ✓ per aprire lo store.', '➕', 'gh:'+f.name);
+      } else {
+        const oldV=_ghFileVersion(g, f.name);
+        const newV=_bumpVer(oldV);
+        _ntfPushLog('🔄 Card aggiornata', 'La card «'+nm+'» è passata dalla v'+oldV+' alla v'+newV+' — premi ✓ per aprire lo store e aggiornarla.', '🔄', 'gh:'+f.name);
+      }
+      g.notifiedShas[f.name]=f.sha; any=true;
+    });
+    if(any){ _ntfUpdateBell(); saveCfg(); }
+  }catch(e){}
 }
 function _ghDismiss(){
   _ghDismissedSig=_ghPending.map(f=>f.name+':'+f.sha).sort().join('|');
