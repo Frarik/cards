@@ -2459,7 +2459,8 @@ function hbarInner(card){
       if(item.iconMap&&item.iconMap[st]) icon=item.iconMap[st];                 // override manuale per stato
       else if(!icon) icon=_haAutoIcon(item.entity);                             // AUTO come HA
     }
-    const iconHtml=icon?_renderIcon(icon,11,col):'';
+    const icoCol=item.iconColor&&item.iconColor!=='#ffffff'?item.iconColor:col;
+    const iconHtml=icon?_renderIcon(icon,11,icoCol):'';
     const labelHtml=item.label?`<span style="opacity:.65">${eh(item.label)}</span>`:'';
     const valHtml=val?`<span style="font-weight:800">${eh(val)}</span>`:'';
     const parts=[iconHtml,labelHtml,valHtml].filter(Boolean).join(' ');
@@ -4798,16 +4799,28 @@ function _pickEmoji(e){
 
 /* ═══ ICON PICKER (Emoji + MDI) ═══ */
 const _ICON_EMOJIS=[
-  '──Generale──','🔔','🔕','🔊','🔇','💡','🏠','🏡','🚪','🪟','🛋️','🛏️','🚿','🛁','🚽',
-  '──Sicurezza──','🔒','🔓','🔑','🗝️','🔐','🛡️','🚨','📷','📹','🚦','🚧','⚠️',
-  '──Energia──','⚡','🔌','🔋','🪫','🔆','🌑','☀️','🌙','💫','✨',
-  '──Clima──','🌡️','♨️','❄️','🔥','💧','💨','🌬️','🌀','🌊','⛅','🌧️','🌪️',
-  '──Cucina/Casa──','🍳','☕','🧃','🫙','🥤','🧊','🍽️','🔪','🧹','🧺','🪣','🧻','🧽','🛒',
-  '──Elettrodomestici──','👕','🍽️','👗','🥧','📺','🖥️','💻','📻','🎵','🔊','🎮','📠',
-  '──Persone──','👤','👥','🏃','🚶','🧑','👶','🧒','👴','👵','🐕','🐈','🐾',
-  '──Veicoli──','🚗','🚙','🏎️','🚐','🛻','🚲','🛵','✈️','🚢','🚁','🛸',
-  '──Natura──','🌿','🌱','🌲','🌸','🌺','🍀','🍁','⭐','🌈','🌞','🌝','❤️','💚','💙','💜',
-  '──Varie──','📊','📈','📉','⚙️','🔧','🔩','🛠️','🪛','🔬','🧪','💊','🏆','🎯','🎉','✅','❌','❓','ℹ️',
+  '──Casa e stanze──','🏠','🏡','🏘️','🏗️','🏢','🚪','🪟','🛋️','🛏️','🚿','🛁','🚽','🪑','🪞','🖼️','🪴','🧸','🪆','🎎','🧺','🪣','🗄️','🗑️','📦','📫','📬','🔦','🕯️','🪔',
+  '──Sicurezza──','🔒','🔓','🔑','🗝️','🔐','🛡️','🚨','📷','📹','🎥','🔭','🚦','🚧','⚠️','🚫','⛔','🔇','📵','🔕','💂','👮','🚒','🚑','🚓',
+  '──Energia──','⚡','🔌','🔋','🪫','🔆','🌑','☀️','🌙','💫','✨','🌤️','⛅','🌥️','🌦️','🌧️','⛈️','🌩️','🌨️','🌪️','🌊','💥','🔥','☄️',
+  '──Clima e temperatura──','🌡️','♨️','❄️','💧','💨','🌬️','🌀','🌈','🌫️','🧊','🫧','🌂','☂️','☔','⛱️','🏔️','🗻','🌋',
+  '──Luci e illuminazione──','💡','🔦','🕯️','🪔','🔆','🔅','🌟','⭐','🌠','🎇','🎆','🪄','✨','🌟','💥',
+  '──Cucina e cibo──','🍳','☕','🍵','🧃','🥤','🍺','🍻','🥂','🍷','🧋','🫖','🍵','🥛','🧉','🍽️','🥄','🍴','🔪','🫙','🧊','🥘','🫕','🥗','🍱','🥡','🧁','🎂','🍰','🍫','🍭','🍬','🍦','🍨','🍧',
+  '──Elettrodomestici──','📺','🖥️','💻','⌨️','🖨️','📱','☎️','📞','📠','📻','🎙️','🎚️','🎛️','📡','🔌','🔋','💾','💿','📀','🎮','🕹️','📷','📸','📹','🎞️','📽️','🎬','🔬','🔭','🔊','📢','📣','🔔','🔕',
+  '──Lavatrice e pulizie──','👕','👗','👔','🧥','👘','🧤','🧹','🪣','🧺','🧻','🧽','🪥','🧼','🫧','🪒','🧴','🧷','🪡','🧵','🧶',
+  '──Persone e famiglia──','👤','👥','🏃','🚶','🧑','👶','🧒','👦','👧','👨','👩','🧔','👴','👵','👪','👨‍👩‍👦','👩‍👧','🤰','🍼','🎒','🏫',
+  '──Animali──','🐕','🐈','🐾','🐠','🐟','🐬','🐳','🦜','🦚','🦩','🦋','🐝','🌸','🪲','🐢','🦎','🐍','🦎',
+  '──Veicoli e trasporti──','🚗','🚙','🏎️','🚐','🛻','🚌','🚎','🚑','🚒','🚓','🚕','🛺','🚲','🛵','🏍️','🛴','🛹','🛼','🚁','✈️','🛩️','🚀','🛸','🚢','⛵','🛥️','🚞','🚂','🚆','🚇','🚃','🚋',
+  '──Natura──','🌿','🌱','🌲','🌳','🌴','🎋','🎍','🍃','🍂','🍁','🍄','🌾','🌵','🌸','🌺','🌻','🌹','💐','🌼','🌷','🌏','🌍','🌎','🏔️','🗻','🏝️','🌊','🌅','🌄','🌠','🌌','🌃','🏙️',
+  '──Salute e medicina──','💊','💉','🩺','🩻','🩹','🩼','🦽','🦼','🩸','🧬','🔬','🧪','🧫','⚕️','🏥','🚑',
+  '──Sport e attività──','⚽','🏀','🏈','⚾','🎾','🏐','🏉','🎱','🏓','🏸','🥊','🎮','🕹️','🎯','🏹','🎿','⛷️','🏂','🤿','🏊','🚴','🧘','🤸','🏋️','🤼','🤺','🥋','🤼','🏇','🧗',
+  '──Lavoro e ufficio──','💼','📁','📂','🗂️','📋','📌','📎','🖇️','✂️','🖊️','✏️','🖋️','🖊️','📝','📒','📔','📕','📗','📘','📙','📚','📖','🔖','🏷️','💰','💳','🏧','🤑','💵','💶','💷','💴',
+  '──Simboli──','✅','❌','❓','❕','❗','⁉️','ℹ️','🔴','🟠','🟡','🟢','🔵','🟣','⚫','⚪','🟤','🔶','🔷','🔸','🔹','🔺','🔻','💠','🔘','🔲','🔳','▶️','⏩','⏭️','⏯️','🔼','⏫','⏪','⏮️','⏬','🔽','⏸️','⏹️','⏺️','🔁','🔂','🔃','🔄',
+  '──Frecce e navigazione──','➡️','⬅️','⬆️','⬇️','↩️','↪️','🔙','🔚','🔛','🔜','🔝','↕️','↔️','🔀','♻️','🔃','🔄','⏩','⏪','📍','📌','🗺️','🧭','🗺️',
+  '──Numeri e matematica──','0️⃣','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟','#️⃣','*️⃣','➕','➖','✖️','➗','♾️','💯','📊','📈','📉','🔢','🔣','🔤','🔡','🔠',
+  '──Tempo e calendario──','⏰','⌚','⏱️','⏲️','🕐','🕑','🕒','🕓','🕔','🕕','🕖','🕗','🕘','🕙','🕚','🕛','📅','📆','🗓️','📇','🗒️','⌛','⏳','⌛',
+  '──Celebrazioni──','🎉','🎊','🎈','🎁','🎀','🎗️','🎟️','🏆','🥇','🥈','🥉','🎖️','🏅','🎯','🎪','🎠','🎡','🎢','🎭','🎨','🖌️','🎬','🎤','🎧','🎼','🎹','🎸','🎺','🎻','🥁','🪘',
+  '──Cuori e emozioni──','❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❤️‍🔥','❤️‍🩹','💕','💞','💓','💗','💖','💝','💘','💟','☮️','✌️','🙏','👍','👎','👊','✊','🤜','🤛','🙌','👏','🤲',
+  '──Varie──','⚙️','🔧','🔩','🛠️','🪛','🔨','⛏️','🪚','🔬','🧲','🔭','📡','💎','💍','👑','🏺','🪬','🪩','🎭','🎪','🎨','🖼️','🧩','🎲','🎰','🃏','🀄','🎴',
 ];
 const _ICON_MDI_CATS=[
   {cat:'Generale',     icons:['bell','bell-outline','bell-ring','bell-off','alert','alert-circle','alert-outline','information','information-outline','check','check-circle','check-circle-outline','close-circle','home','home-outline','account','account-circle','account-group','star','star-outline','heart','heart-outline','thumb-up','clock','clock-outline','calendar','calendar-outline','cog','cog-outline','wrench','tools','refresh','sync']},
@@ -5195,12 +5208,14 @@ function _hbCreateModal(){
 
         <!-- CHIP ASPETTO -->
         <div id="hbf-chip-row">
-          <div style="display:flex;gap:6px;margin-bottom:8px">
-            <div style="flex:1"><div class="flbl">Etichetta <span style="font-weight:400;opacity:.5">(opz.)</span></div><input class="finp" id="hbf-label" type="text" placeholder="es. Porta, Allarme"></div>
-            <div style="flex:0 0 72px"><div class="flbl">Icona <span style="font-weight:400;opacity:.5">(auto)</span></div>
-              <div class="finp-row" style="gap:2px">
-                <input class="finp" id="hbf-icon" type="text" placeholder="auto" style="text-align:center;font-size:11px;min-width:0" data-input="_hbIconInput">
-                <button class="fbtn" data-action="_hbPickChipIcon" data-action-el="true" title="Scegli icona">🎨</button>
+          <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:8px;align-items:end">
+            <div><div class="flbl">Etichetta <span style="font-weight:400;opacity:.5">(opz.)</span></div>
+              <input class="finp" id="hbf-label" type="text" placeholder="es. Porta, Allarme"></div>
+            <div style="min-width:100px"><div class="flbl">Icona <span style="font-weight:400;opacity:.5">(auto)</span></div>
+              <div style="display:flex;gap:3px;align-items:center">
+                <input class="finp" id="hbf-icon" type="text" placeholder="auto" style="width:58px;text-align:center;font-size:11px" data-input="_hbIconInput">
+                <input type="color" id="hbf-icon-color" value="#ffffff" title="Colore icona MDI" style="width:26px;height:28px;border:none;background:none;padding:0;cursor:pointer;border-radius:5px;flex-shrink:0">
+                <button class="fbtn" data-action="_hbPickChipIcon" data-action-el="true" title="Scegli icona" style="flex-shrink:0">🎨</button>
               </div>
             </div>
           </div>
@@ -5545,6 +5560,7 @@ function hbEditChip(zone,i){
   document.getElementById('hbf-entity').value=item.entity||'';
   document.getElementById('hbf-text').value=item.text||'';
   document.getElementById('hbf-icon').value=item.icon||'';
+  const icoPick=document.getElementById('hbf-icon-color'); if(icoPick) icoPick.value=item.iconColor||'#ffffff';
   document.getElementById('hbf-label').value=item.label||'';
   document.getElementById('hbf-bg-custom').value=_hbBg;
   document.getElementById('hbf-text-custom')?.value!=null&&(document.getElementById('hbf-text-custom').value=_hbTxt);
@@ -6210,6 +6226,7 @@ function hbSaveChip(){
     entity:document.getElementById('hbf-entity').value.trim(),
     text:document.getElementById('hbf-text').value.trim(),
     icon:document.getElementById('hbf-icon').value.trim(),
+    iconColor:document.getElementById('hbf-icon-color')?.value||'',
     label:document.getElementById('hbf-label').value.trim(),
     bg, color:col, borderColor:document.getElementById('hbf-border-color')?.value.trim()||'',
     entity2: document.getElementById('hbf-entity2-on')?.checked ? (document.getElementById('hbf-entity2')?.value.trim()||'') : '',
@@ -6263,6 +6280,7 @@ function _hbUpdatePreview(){
     color:document.getElementById('hbf-text-custom')?.value||'#ffffff',
     borderColor:document.getElementById('hbf-border-color')?.value||'',
     icon:document.getElementById('hbf-icon')?.value||'',
+    iconColor:document.getElementById('hbf-icon-color')?.value||'',
     label:document.getElementById('hbf-label')?.value||'',
     entity:document.getElementById('hbf-entity')?.value?.trim()||'',
     shape:_hbGetShape(), size:_hbGetSize(),
@@ -6290,6 +6308,8 @@ function _hbUpdatePreview(){
 
 /* ── Sync color pickers (picker↔text input) ── */
 function _hbInitColorPickers(){
+  // Sync colore icona → preview
+  document.getElementById('hbf-icon-color')?.addEventListener('input', _hbUpdatePreview);
   // Sync color picker stato
   const cmapPick=document.getElementById('hbf-cmap-color-pick');
   const cmapTxt=document.getElementById('hbf-cmap-color');
