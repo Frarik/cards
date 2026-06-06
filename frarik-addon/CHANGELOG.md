@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.98 — 2026-06-06
+
+### Correzioni store
+- **Dopo l'eliminazione di una card** il tasto «Installa» riappariva ma non faceva nulla finché non si premeva ↻. Ora l'installazione ricarica da sola la lista del repo se la cache è vuota/scaduta, quindi funziona subito.
+- **Caricamento manuale di una card**: la sincronizzazione è ora **immediata e automatica** — la card compare subito tra le «Card locali» e nella dashboard, senza dover premere ↻ (la rotellina resta comunque per ricaricare a mano quando vuoi).
+
 ## 1.1.97 — 2026-06-06
 
 ### Correzioni

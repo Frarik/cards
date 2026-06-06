@@ -1449,13 +1449,27 @@ async function _ghPut(path, content, message){
 }
 function _b64utf8(str){ return btoa(unescape(encodeURIComponent(str))); }   // base64 UTF-8 per l'API GitHub
 function _ghsFind(name){ name=decodeURIComponent(name); return (_ghsCache[_ghsTab]||[]).find(f=>f.name===name); }
+/* ricarica (se serve) la lista file della cartella corrente e ritrova il file:
+   evita il caso "dopo l'eliminazione il tasto Installa non fa nulla" (cache vuota/stale) */
+async function _ghsEnsureFile(name){
+  let f=_ghsFind(name);
+  if(f) return f;
+  const fol=_GHS_FOLDERS[_ghsTab]; if(!fol) return null;
+  try{
+    const files=await _ghListFolder(fol.path);
+    _ghsCache[_ghsTab]=files.filter(x=>fol.ext.test(x.name)&&!(fol.exclude&&fol.exclude.test(x.name)));
+  }catch(e){ return null; }
+  return _ghsFind(name);
+}
 async function _ghsInstall(name){
-  const f=_ghsFind(name); if(!f) return;
+  let f=await _ghsEnsureFile(name);
+  if(!f){ showToast('⚠️ File non trovato su GitHub — premi ↻ per ricaricare'); return; }
   showToast('⬇️ Installo '+f.name+'…');
   try{
     await _ghInstallFile(f); saveCfg(); _haSaveCfg();
     if(typeof _jsStoreRenderList==='function') _jsStoreRenderList();
     if(typeof _epRenderJsStore==='function') _epRenderJsStore();
+    renderDash();
     showToast('✅ '+f.name+' installata — usa ➕ Aggiungi per metterla in dashboard'); _ghStoreRender();
   }catch(e){ showToast('⚠️ Errore: '+e.message); }
 }
@@ -7537,10 +7551,15 @@ function jsStoreLoadFile(file){
     const ver = prevV ? _bumpVer(prevV) : ((card.version && /\d/.test(String(card.version))) ? String(card.version) : '1.0.0');
     _jsStoreSave(card.id, {id:card.id, name:card.name||card.id, icon:card.icon||'📦', version:ver, desc:card.desc||''}, code, 'local');
     status.innerHTML=`<span style="color:#4ade80">✅ Card <b>${card.name||card.id}</b> installata!${card._lovelace?' <span style="opacity:.6">(Lovelace)</span>':''} (v${ver})</span>`;
-    document.getElementById('jsst-count').textContent = _jsStoreList().length;
-    setTimeout(()=>{ jsStoreTab('installed'); }, 900);
-    // se è aperto il nuovo "Store da GitHub", aggiorna la scheda Card locali (lì finiscono i file caricati da PC)
-    try{ if(!document.getElementById('gh-store-modal').classList.contains('off')){ showToast('✅ Card locale caricata'); _ghsTab='local'; ghStoreTab('local'); } }catch(e){}
+    // sincronizzazione IMMEDIATA: aggiorna subito tutte le viste store + dashboard (niente ↻ manuale)
+    try{ const c=document.getElementById('jsst-count'); if(c) c.textContent=_jsStoreList().length; }catch(e){}
+    try{ _jsStoreRenderList(); }catch(e){}
+    try{ if(typeof _epRenderJsStore==='function') _epRenderJsStore(); }catch(e){}
+    try{ renderDash(); }catch(e){}
+    // se è aperto il "Store da GitHub", mostra subito la card tra le "Card locali"
+    try{ if(!document.getElementById('gh-store-modal').classList.contains('off')){ _ghsTab='local'; ghStoreTab('local'); showToast('✅ Card locale caricata'); } }catch(e){}
+    // se è aperto il vecchio modale Store JS, passa alla scheda "Installate"
+    try{ if(!document.getElementById('js-store-modal').classList.contains('off')) jsStoreTab('installed'); }catch(e){}
   };
   reader.onerror = () => { status.innerHTML='<span style="color:#f87171">⚠️ Impossibile leggere il file.</span>'; };
   reader.readAsText(file);
