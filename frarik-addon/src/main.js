@@ -2361,7 +2361,13 @@ function _clkParts(item){
 function hbarInner(card){
   function chipHTML(item){
     if(!item) return '';
-    if(item.hidden) return ''; // chip nascosto dall'utente
+    if(item.hidden) return '';
+    if(item.type==='store'){
+      const meta=(window.FratechCardRegistry?.[item.cardId]?.meta)||{};
+      const ico=item.icon||meta.icon||'📦';
+      const lbl=item.label||meta.name||item.cardId||'Card';
+      return `<span class="hbar-chip" style="background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.35);color:#fbbf24">${_renderIcon(ico,11,'#fbbf24')} <span style="font-weight:700">${eh(lbl)}</span></span>`;
+    }
     if(item.type==='clock'){
       const style=item.clockStyle||'default';
       const sz=item.clockSizeName||'md';
@@ -5096,12 +5102,13 @@ function _hbCreateModal(){
       <div id="hb-chip-form" style="display:none;padding:0 14px 14px;border-top:1px solid var(--bd)">
         <div style="padding:10px 0 6px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted)" id="hb-form-title">Nuovo elemento</div>
 
-        <!-- TIPO — solo i tipi utili -->
+        <!-- TIPO -->
         <div class="flbl">Tipo</div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:12px">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:12px">
           <button class="sect-align-btn on" id="hbft-entity" data-action="hbSelType" data-action-arg="entity" style="font-size:11px;padding:10px 4px">📦<br><span style="font-size:8px">Entità HA</span></button>
           <button class="sect-align-btn"    id="hbft-clock"  data-action="hbSelType" data-action-arg="clock"  style="font-size:11px;padding:10px 4px">⏰<br><span style="font-size:8px">Orologio</span></button>
           <button class="sect-align-btn"    id="hbft-sos"    data-action="hbSelType" data-action-arg="sos"    style="font-size:11px;padding:10px 4px;color:#f87171;border-color:rgba(248,113,113,.4)">🆘<br><span style="font-size:8px">SOS</span></button>
+          <button class="sect-align-btn"    id="hbft-store"  data-action="hbSelType" data-action-arg="store"  style="font-size:11px;padding:10px 4px;color:#fbbf24;border-color:rgba(251,191,36,.4)">📦<br><span style="font-size:8px">Store</span></button>
         </div>
         <!-- Campi nascosti per compatibilità con tipi rimossi -->
         <input type="hidden" id="hbft-text-val">
@@ -5121,6 +5128,13 @@ function _hbCreateModal(){
             <label style="font-size:10px;display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="hbf-showstate" checked> Mostra stato</label>
             <label style="font-size:10px;display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="hbf-showunit" checked> Unità misura</label>
           </div>
+        </div>
+
+        <!-- STORE -->
+        <div id="hbf-store-row" style="display:none">
+          <div class="flbl">Card dallo Store</div>
+          <div id="hbf-store-list" style="max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;margin-bottom:8px"></div>
+          <div id="hbf-store-empty" style="display:none;font-size:10px;color:rgba(148,163,184,.5);padding:8px 0">Nessuna card installata nello store</div>
         </div>
 
         <!-- TESTO FISSO -->
@@ -5236,6 +5250,7 @@ function _hbCreateModal(){
               <div class="hb-color-wrap">
                 <input type="color" id="hbf-col-bg-pick" value="#1e293b">
                 <input class="finp" type="text" id="hbf-bg-custom" placeholder="auto" style="font-size:9px;padding:4px 6px">
+                <button class="hbc-btn" title="Reset auto" data-action="_hbResetColor" data-action-arg="bg" style="flex-shrink:0">↺</button>
               </div>
             </div>
             <div class="hb-color-cell">
@@ -5243,13 +5258,15 @@ function _hbCreateModal(){
               <div class="hb-color-wrap">
                 <input type="color" id="hbf-col-border-pick" value="#334155">
                 <input class="finp" type="text" id="hbf-border-color" placeholder="auto" style="font-size:9px;padding:4px 6px">
+                <button class="hbc-btn" title="Reset auto" data-action="_hbResetColor" data-action-arg="border" style="flex-shrink:0">↺</button>
               </div>
             </div>
             <div class="hb-color-cell">
               <label>TESTO</label>
               <div class="hb-color-wrap">
                 <input type="color" id="hbf-col-text-pick" value="#ffffff">
-                <input class="finp" type="text" id="hbf-text-custom" placeholder="#ffffff" style="font-size:9px;padding:4px 6px">
+                <input class="finp" type="text" id="hbf-text-custom" placeholder="auto" style="font-size:9px;padding:4px 6px">
+                <button class="hbc-btn" title="Reset auto" data-action="_hbResetColor" data-action-arg="text" style="flex-shrink:0">↺</button>
               </div>
             </div>
           </div>
@@ -5354,9 +5371,9 @@ function hbRenderList(zone){
     wrap.dataset.zone=zone; wrap.dataset.idx=i;
     // Drag handle
     const dh=document.createElement('div'); dh.className='hbc-drag'; dh.textContent='⋮⋮';
-    // Preview
+    // Preview visivo reale
     const pv=document.createElement('div'); pv.className='hbc-preview';
-    pv.innerHTML=_hbChipPreview(item);
+    pv.innerHTML=_hbRenderOneChip(item);
     // Toggle visibilità
     const bt=document.createElement('button'); bt.className='hbc-btn'+(item.hidden?' active':'');
     bt.title=item.hidden?'Mostra':'Nascondi'; bt.textContent=item.hidden?'🙈':'👁';
@@ -5515,17 +5532,25 @@ function hbEditChip(zone,i){
 }
 
 function hbSelType(t){
-  ['entity','text','clock','sep','sos','kiosk','conn'].forEach(x=>document.getElementById('hbft-'+x)?.classList.toggle('on',x===t));
-  const sf2=(id,v)=>{const e=document.getElementById(id);if(e)e.style.display=v?'':'none';};
-  sf2('hbf-entity-row',t==='entity');
-  sf2('hbf-text-row',t==='text');
-  sf2('hbf-clock-row',t==='clock');
+  ['entity','text','clock','sep','sos','kiosk','conn','store'].forEach(x=>document.getElementById('hbft-'+x)?.classList.toggle('on',x===t));
+  const sf=(id,v)=>{const e=document.getElementById(id);if(e)e.style.display=v?'':'none';};
+  const isStore=t==='store';
+  sf('hbf-entity-row', t==='entity');
+  sf('hbf-text-row',   t==='text');
+  sf('hbf-clock-row',  t==='clock');
+  sf('hbf-store-row',  isStore);
   if(t==='clock') _hbRenderClockColors();
-  // SOS mostra solo aspetto chip (etichetta/icona/forma/dim) senza interazione
-  sf2('hbf-chip-row',t!=='clock'&&t!=='sep');
-  // per SOS nasconde la sezione interazione (non necessaria)
-  const actRow=document.getElementById('hbf-chip-row')?.querySelector('[id^="hbca-none"]')?.closest('div');
-  if(t==='sos'){
+  if(isStore){ _hbRenderStoreList(); }
+  // Nascondi aspetto chip e colori per store/clock/sep
+  sf('hbf-chip-row',   !isStore && t!=='clock' && t!=='sep');
+  const colorSection=document.getElementById('hbf-bg-custom')?.closest('.hb-color-row')?.parentElement;
+  // Nascondi sezione colori per store
+  document.querySelectorAll('#hbf-chip-form .flbl').forEach(lbl=>{
+    if(lbl.textContent.startsWith('Colori')) lbl.style.display=isStore?'none':'';
+  });
+  const colorRow=document.getElementById('hbf-col-bg-pick')?.closest('.hb-color-row');
+  if(colorRow) colorRow.style.display=isStore?'none':'';
+  if(t==='sos'||isStore){
     document.getElementById('hbf-navigate-row') &&(document.getElementById('hbf-navigate-row').style.display='none');
     document.getElementById('hbf-service-row')  &&(document.getElementById('hbf-service-row').style.display='none');
     document.getElementById('hbf-options-row')  &&(document.getElementById('hbf-options-row').style.display='none');
@@ -5870,14 +5895,67 @@ const _HB_CMAP_PRESETS=['#4ade80','#f87171','#facc15','#818cf8','#22d3ee','#fb92
 function hbAddColorMap(){
   const stEl=document.getElementById('hbf-cmap-state');
   const coEl=document.getElementById('hbf-cmap-color');
-  if(!stEl||!coEl) return;
-  const st=stEl.value.trim(); const co=coEl.value.trim()||document.getElementById('hbf-cmap-color-pick')?.value||'';
-  if(!st||!co) return;
+  const pickEl=document.getElementById('hbf-cmap-color-pick');
+  if(!stEl) return;
+  const st=stEl.value.trim();
+  if(!st){ stEl.style.borderColor='#f87171'; setTimeout(()=>stEl.style.borderColor='',1500); return; }
+  const co=(coEl?.value||'').trim()||pickEl?.value||'#4ade80';
   _hbColorMap[st]=co;
-  stEl.value=''; coEl.value='';
+  stEl.value=''; if(coEl) coEl.value='';
   _hbRenderColorMap(); _hbUpdatePreview();
 }
 function hbAddColorMapEntry(){ hbAddColorMap(); }
+
+/* ── Reset colore → auto ── */
+function _hbResetColor(field){
+  const map={bg:'hbf-bg-custom', border:'hbf-border-color', text:'hbf-text-custom'};
+  const el=document.getElementById(map[field]); if(el) el.value='';
+  _hbUpdatePreview();
+}
+
+/* ── Render singolo chip (visivo, uguale a hbarInner) ── */
+function _hbRenderOneChip(item){
+  try{
+    const tmp=document.createElement('div');
+    tmp.innerHTML=hbarInner({left:[item],center:[],right:[]});
+    const chip=tmp.querySelector('.hbar-chip,.hbar-clk,.hbar-sep');
+    return chip?chip.outerHTML:_hbChipPreview(item);
+  }catch(e){ return _hbChipPreview(item); }
+}
+
+/* ── Render store cards nel form ── */
+function _hbRenderStoreList(){
+  const list=document.getElementById('hbf-store-list');
+  const empty=document.getElementById('hbf-store-empty');
+  if(!list) return;
+  const cards=_jsStoreList();
+  list.innerHTML='';
+  if(!cards.length){
+    if(empty) empty.style.display='';
+    return;
+  }
+  if(empty) empty.style.display='none';
+  cards.forEach(c=>{
+    const meta=c.meta||{};
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;background:var(--panel2);border:1px solid var(--bd);cursor:pointer;transition:border-color .15s';
+    row.innerHTML=`<span style="font-size:16px">${meta.icon||'📦'}</span><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(meta.name||meta.id)}</div><div style="font-size:9px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${meta.id}</div></div><span style="font-size:9px;color:rgba(99,102,241,.7);font-weight:700">v${meta.version||'1.0'}</span>`;
+    row.addEventListener('mouseenter',()=>row.style.borderColor='rgba(99,102,241,.5)');
+    row.addEventListener('mouseleave',()=>row.style.borderColor='var(--bd)');
+    row.addEventListener('click',()=>{
+      // Seleziona questa card dallo store
+      document.querySelectorAll('#hbf-store-list > div').forEach(r=>r.style.background='var(--panel2)');
+      row.style.background='rgba(99,102,241,.15)'; row.style.borderColor='rgba(99,102,241,.5)';
+      // Salva la selezione in un campo hidden
+      let sel=document.getElementById('hbf-store-selected');
+      if(!sel){ sel=document.createElement('input'); sel.type='hidden'; sel.id='hbf-store-selected'; row.parentElement.appendChild(sel); }
+      sel.value=meta.id;
+      sel.dataset.name=meta.name||meta.id; sel.dataset.icon=meta.icon||'📦';
+      _hbUpdatePreview();
+    });
+    list.appendChild(row);
+  });
+}
 function _hbRenderColorMap(){
   const el=document.getElementById('hbf-cmap-list'); if(!el) return;
   const entries=Object.entries(_hbColorMap);
@@ -5991,7 +6069,16 @@ function _hbSelBg(c){ _hbBg=c; document.getElementById('hbf-bg-custom').value=c;
 function _hbSelTxt(c){ _hbTxt=c; const el=document.getElementById('hbf-text-custom'); if(el) el.value=c; _hbRenderColorPickers(); }
 
 function hbSaveChip(){
-  const t=['entity','text','clock','sep','sos','kiosk','conn'].find(x=>document.getElementById('hbft-'+x)?.classList.contains('on'))||'entity';
+  const t=['entity','text','clock','sep','sos','kiosk','conn','store'].find(x=>document.getElementById('hbft-'+x)?.classList.contains('on'))||'entity';
+  // Tipo store: salva la card selezionata
+  if(t==='store'){
+    const sel=document.getElementById('hbf-store-selected');
+    if(!sel?.value){ showToast('Seleziona una card dallo store'); return; }
+    const item={id:(_hbEditIdx>=0?_hbChips[_hbEditZone][_hbEditIdx]?.id:null)||uid(), type:'store', cardId:sel.value, label:sel.dataset.name||sel.value, icon:sel.dataset.icon||'📦', hidden:false};
+    if(_hbEditIdx>=0) _hbChips[_hbEditZone][_hbEditIdx]=item;
+    else _hbChips[_hbEditZone].push(item);
+    hbRenderAllLists(); hbCancelChip(); return;
+  }
   const bg=document.getElementById('hbf-bg-custom').value||_hbBg;
   const col=document.getElementById('hbf-text-custom')?.value||_hbTxt;
   const item={
@@ -11417,7 +11504,7 @@ Object.assign(window, {
   yamlImportParse,
   // ── Wrapper aggiunti nel refactor handler ──
   _covSkip, _feEpClose, _ntfSaveRules, _jsDropzoneClick, _ghsDropzoneClick,
-  _ghCheckForce, _epToggleLicense, _epLicLogout, hbAddColorMapEntry, _hbDelOption, _appDelItem, _appDelGroup,
+  _ghCheckForce, _epToggleLicense, _epLicLogout, hbAddColorMapEntry, _hbResetColor, _hbDelOption, _appDelItem, _appDelGroup,
   _openGhStoreClean, _pasteCardToClean, _closeViewsAndOpenTM, _closeViewsAndSetPage,
   _jsStoreAddAndRefresh, _deleteSavedAt, _appChipPopupAt, _setActivePageAndSync,
   _pgWarnClose, _sendCallSvc,
