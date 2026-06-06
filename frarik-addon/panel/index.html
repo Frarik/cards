@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@400;600;700;800;900&family=Nunito:wght@400;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="./assets/index-B0oW685d.js"></script>
+  <script type="module" crossorigin src="./assets/index-N1tyfe1p.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-BNJ-c2Ds.css">
 </head>
 <body>
@@ -985,6 +985,21 @@
           <div class="sys-row" style="margin-top:6px"><span class="sys-lbl2">Giorno / Notte dalle</span>
             <div style="display:flex;gap:4px"><input class="sys-time" id="sys-ss-day-from" type="time" data-input="_ssSaveImg"><input class="sys-time" id="sys-ss-night-from" type="time" data-input="_ssSaveImg"></div></div>
           <div class="sys-sub" style="margin-top:4px">2 immagini = cambia automaticamente all'ora impostata · 1 sola = sempre quella</div>
+          <div class="sys-row" style="margin-top:10px"><span class="sys-lbl2">📊 Entità (max 3, centrate)</span></div>
+          <div style="display:flex;gap:4px;align-items:center;margin-top:3px">
+            <input class="sos-cfg-inp" id="sys-ss-e1" type="text" placeholder="es. sensor.temperatura" data-input="_ssSaveEnt" style="flex:1;font-size:10px">
+            <button class="ntf-pick-btn" style="width:26px;height:26px;border-radius:6px;font-size:12px" data-action="_ssPickEnt" data-action-arg="1" title="Sfoglia">🔍</button>
+          </div>
+          <div style="display:flex;gap:4px;align-items:center;margin-top:3px">
+            <input class="sos-cfg-inp" id="sys-ss-e2" type="text" placeholder="entità 2 (opzionale)" data-input="_ssSaveEnt" style="flex:1;font-size:10px">
+            <button class="ntf-pick-btn" style="width:26px;height:26px;border-radius:6px;font-size:12px" data-action="_ssPickEnt" data-action-arg="2" title="Sfoglia">🔍</button>
+          </div>
+          <div style="display:flex;gap:4px;align-items:center;margin-top:3px">
+            <input class="sos-cfg-inp" id="sys-ss-e3" type="text" placeholder="entità 3 (opzionale)" data-input="_ssSaveEnt" style="flex:1;font-size:10px">
+            <button class="ntf-pick-btn" style="width:26px;height:26px;border-radius:6px;font-size:12px" data-action="_ssPickEnt" data-action-arg="3" title="Sfoglia">🔍</button>
+          </div>
+          <div class="sys-row" style="margin-top:10px"><span class="sys-lbl2">🃏 Card al posto dell'orologio</span></div>
+          <select class="sys-sel" id="sys-ss-card" data-input="_ssSaveCard" style="margin-top:3px;width:100%"></select>
           <button class="ep-add2" data-action="screensaverNow" style="margin-top:10px">👁 Anteprima screensaver</button>
         </div>
         <div style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.05)">

@@ -10534,7 +10534,7 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
 
 (function(){
   const LS='dash_screensaver';
-  function cfg(){ try{return Object.assign({on:true,sec:300,weather:'',temp:'',imgDay:'',imgNight:'',dayFrom:'07:00',nightFrom:'20:00'}, JSON.parse(localStorage.getItem(LS)||'{}'));}catch(e){return {on:true,sec:300};} }
+  function cfg(){ try{return Object.assign({on:true,sec:300,weather:'',temp:'',imgDay:'',imgNight:'',dayFrom:'07:00',nightFrom:'20:00',ssEnt1:'',ssEnt2:'',ssEnt3:'',ssCardId:''}, JSON.parse(localStorage.getItem(LS)||'{}'));}catch(e){return {on:true,sec:300};} }
   function save(o){ localStorage.setItem(LS, JSON.stringify(Object.assign(cfg(),o||{}))); }
   window.screensaverCfg=function(o){ if(o) save(o); reset(); return cfg(); };
   const COND={'sunny':'☀️','clear-day':'☀️','clear-night':'🌙','partlycloudy':'⛅','partly-cloudy-day':'⛅','partly-cloudy-night':'☁️','cloudy':'☁️','rainy':'🌧️','rain':'🌧️','pouring':'🌧️','lightning':'⛈️','lightning-rainy':'⛈️','thunderstorm':'⛈️','snowy':'❄️','snow':'❄️','snowy-rainy':'🌨️','hail':'🌨️','fog':'🌫️','windy':'💨','windy-variant':'💨','exceptional':'⚠️'};
@@ -10552,13 +10552,20 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
     #screensaver.on{opacity:1;pointer-events:auto}
     #ss-clock{font-size:clamp(72px,16vw,210px);font-weight:800;letter-spacing:-4px;line-height:1;text-shadow:0 0 60px rgba(99,102,241,.4)}
     #ss-clock .s{font-size:.38em;font-weight:600;opacity:.5;vertical-align:top;margin-left:4px}
+    #ss-card{display:none;width:min(92vw,680px);max-height:62vh;overflow:hidden}
+    #ss-card .card{margin:0 auto}
     #ss-date{font-size:clamp(16px,3vw,30px);font-weight:600;color:rgba(255,255,255,.6);text-transform:capitalize}
     #ss-wx{display:flex;align-items:center;gap:14px;font-size:clamp(22px,4.4vw,42px);font-weight:700;margin-top:8px}
     #ss-wx .e{font-size:1.25em}
+    #ss-entities{display:flex;flex-wrap:wrap;justify-content:center;gap:clamp(20px,5vw,52px);margin-top:22px}
+    .ss-ent{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:90px}
+    .ss-ent .ic{font-size:clamp(26px,4vw,40px);line-height:1}
+    .ss-ent .vl{font-size:clamp(20px,2.8vw,32px);font-weight:800;line-height:1.1}
+    .ss-ent .nm{font-size:clamp(11px,1.5vw,15px);font-weight:600;color:rgba(255,255,255,.55)}
     #ss-hint{position:absolute;bottom:32px;font-size:11px;letter-spacing:1.5px;color:rgba(255,255,255,.22);text-transform:uppercase}`;
     document.head.appendChild(st);
     ov=document.createElement('div'); ov.id='screensaver';
-    ov.innerHTML='<div id="ss-clock"></div><div id="ss-date"></div><div id="ss-wx"></div><div id="ss-hint">tocca per uscire</div>';
+    ov.innerHTML='<div id="ss-card"></div><div id="ss-clock"></div><div id="ss-date"></div><div id="ss-wx"></div><div id="ss-entities"></div><div id="ss-hint">tocca per uscire</div>';
     document.body.appendChild(ov);
   }
   const G=['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'];
@@ -10571,7 +10578,38 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
     const e=(w&&COND[String(w).toLowerCase()])||'⛅';
     const tv=(t!=null&&!isNaN(parseFloat(t)))?parseFloat(t).toFixed(1)+'°':'';
     ov.querySelector('#ss-wx').innerHTML=(tv||w)?('<span class="e">'+e+'</span><span>'+tv+'</span>'):'';
+    _ssRenderEntities();
     _ssApplyBg();
+  }
+  /* Fino a 3 entità centrate sotto l'orologio (icona + valore + nome) */
+  function _ssRenderEntities(){
+    const el=ov&&ov.querySelector('#ss-entities'); if(!el) return;
+    const c=cfg(); const ids=[c.ssEnt1,c.ssEnt2,c.ssEnt3].map(x=>(x||'').trim()).filter(Boolean).slice(0,3);
+    if(!ids.length){ el.innerHTML=''; return; }
+    el.innerHTML=ids.map(eid=>{
+      const a=(typeof ha!=='undefined'&&ha[eid])||{};
+      const stRaw=(typeof hs!=='undefined'&&hs[eid]!=null)?hs[eid]:'—';
+      const unit=a.unit_of_measurement||'';
+      const name=a.friendly_name||eid.split('.').slice(1).join('.').replace(/_/g,' ');
+      let icHtml=''; try{ icHtml=_renderIcon(a.icon||(typeof _haAutoIcon==='function'?_haAutoIcon(eid):''),34,'#fff'); }catch(e){}
+      const val=(typeof _stateIt==='function'?_stateIt(stRaw):stRaw)+(unit?' '+unit:'');
+      return `<div class="ss-ent">${icHtml?`<div class="ic">${icHtml}</div>`:''}<div class="vl">${eh(val)}</div><div class="nm">${eh(name)}</div></div>`;
+    }).join('');
+  }
+  /* Trova una card della dashboard per id (per "card al posto dell'orologio") */
+  function _ssFindCard(id){ if(!id) return null; try{ for(const pg of (cfg.pages||[])){ const c=(pg.cards||[]).find(x=>x.id===id); if(c) return c; } }catch(e){} return null; }
+  function _ssClearCard(){ const ce=ov&&ov.querySelector('#ss-card'); if(!ce) return; try{ const cur=cfg().ssCardId; if(cur) _stopYamlCard(cur+'_ss'); }catch(e){} ce.innerHTML=''; ce.style.display='none'; }
+  function _ssApplyCard(){
+    const ce=ov&&ov.querySelector('#ss-card'), clk=ov&&ov.querySelector('#ss-clock'); if(!ce||!clk) return;
+    const card=_ssFindCard(cfg().ssCardId);
+    if(card && typeof buildCard==='function'){
+      try{
+        ce.innerHTML='';
+        const el=buildCard(Object.assign({}, card, {id:card.id+'_ss', colSpan:1, rowSpan:1}));
+        ce.appendChild(el); ce.style.display=''; clk.style.display='none'; return;
+      }catch(e){ console.warn('[Frarik] screensaver card:',e&&e.message); }
+    }
+    ce.style.display='none'; clk.style.display='';   // fallback: orologio
   }
   /* ── Immagine di sfondo screensaver con fasce giorno/notte ── */
   let _ssCurImg=null;
@@ -10596,9 +10634,9 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
     if(url){ ov.style.backgroundImage='linear-gradient(rgba(0,0,0,.4),rgba(0,0,0,.5)), url("'+encodeURI(url)+'")'; ov.style.backgroundSize='cover'; ov.style.backgroundPosition='center'; }
     else { ov.style.backgroundImage=''; }
   }
-  function _open(){ if(!ov) build(); active=true; _ssCurImg=null; _ssApplyBg(); tick(); ov.classList.add('on'); clearInterval(tickTimer); tickTimer=setInterval(tick,1000); }
+  function _open(){ if(!ov) build(); active=true; _ssCurImg=null; _ssApplyBg(); _ssApplyCard(); tick(); ov.classList.add('on'); clearInterval(tickTimer); tickTimer=setInterval(tick,1000); }
   function show(){ if(active) return; if(typeof editMode!=='undefined'&&editMode) return; _open(); }
-  function hide(){ if(!active) return; active=false; if(ov) ov.classList.remove('on'); clearInterval(tickTimer); tickTimer=null; }
+  function hide(){ if(!active) return; active=false; if(ov) ov.classList.remove('on'); clearInterval(tickTimer); tickTimer=null; _ssClearCard(); }
   function reset(){ if(active) hide(); clearTimeout(idleTimer); const c=cfg(); if(!c.on) return; idleTimer=setTimeout(show, Math.max(10,c.sec|0)*1000); }
   ['mousemove','mousedown','keydown','touchstart','wheel','scroll'].forEach(ev=>document.addEventListener(ev,reset,{passive:true,capture:true}));
   if(document.readyState!=='loading') reset(); else document.addEventListener('DOMContentLoaded',reset);
@@ -10676,6 +10714,13 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
       if($('sys-ss-img-night')) $('sys-ss-img-night').value=ss.imgNight||'';
       if($('sys-ss-day-from')) $('sys-ss-day-from').value=ss.dayFrom||'07:00';
       if($('sys-ss-night-from')) $('sys-ss-night-from').value=ss.nightFrom||'20:00';
+      if($('sys-ss-e1')) $('sys-ss-e1').value=ss.ssEnt1||'';
+      if($('sys-ss-e2')) $('sys-ss-e2').value=ss.ssEnt2||'';
+      if($('sys-ss-e3')) $('sys-ss-e3').value=ss.ssEnt3||'';
+      const _scard=$('sys-ss-card');
+      if(_scard){ const o=['<option value="">— Orologio (default) —</option>'];
+        (cfg.pages||[]).forEach(pg=>(pg.cards||[]).forEach(c=>{ if(c.type==='header-bar'||c.type==='footer-bar') return; o.push('<option value="'+c.id+'"'+(ss.ssCardId===c.id?' selected':'')+'>'+eh(c.label||c.type||c.id)+'</option>'); }));
+        _scard.innerHTML=o.join(''); }
       const th=themeScheduleCfg(); _setTog('sys-th-tog',th.on);
       if($('sys-th-mode')) $('sys-th-mode').value=th.mode||'time';
       if($('sys-th-light')) $('sys-th-light').value=th.light||'07:00';
@@ -10701,6 +10746,13 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
     dayFrom:($('sys-ss-day-from')||{}).value||'07:00',
     nightFrom:($('sys-ss-night-from')||{}).value||'20:00'
   }); };
+  window._ssSaveEnt=function(){ screensaverCfg({
+    ssEnt1:(($('sys-ss-e1')||{}).value||'').trim(),
+    ssEnt2:(($('sys-ss-e2')||{}).value||'').trim(),
+    ssEnt3:(($('sys-ss-e3')||{}).value||'').trim()
+  }); };
+  window._ssSaveCard=function(){ screensaverCfg({ ssCardId:($('sys-ss-card')||{}).value||'' }); };
+  window._ssPickEnt=function(n){ _epPickerOpen(function(v){ const inp=document.getElementById('sys-ss-e'+n); if(inp) inp.value=v; window._ssSaveEnt(); }); };
   window._sysSaveTH=function(){ const mode=$('sys-th-mode').value; if($('sys-th-times'))$('sys-th-times').style.display=(mode==='sun')?'none':''; themeScheduleCfg({mode:mode,light:$('sys-th-light').value,dark:$('sys-th-dark').value}); };
   window._sysSaveNV=function(){ navbarCfg({pos:$('sys-nv-pos').value}); };
   window._applyMobCol=function(mode){ mode=mode||'auto'; localStorage.setItem('dash_mobcol',mode); document.body.classList.toggle('mobcol-off',mode==='off'); document.body.classList.toggle('mobcol-always',mode==='always'); };
