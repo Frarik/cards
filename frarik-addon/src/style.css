@@ -3,7 +3,7 @@
   background:radial-gradient(ellipse at 20% 80%, #0d1b2e 0%, #060c18 40%, #04090f 100%),radial-gradient(ellipse at 80% 20%, #0a1628 0%, transparent 60%);
   background-color:#060c18;transition:opacity .6s ease}
 #frk-splash.hide{opacity:0;pointer-events:none}
-#frk-splash-logo{width:min(60vw,480px);max-height:50vh;object-fit:contain;animation:frkSplashPop .7s cubic-bezier(.2,.85,.25,1);filter:drop-shadow(0 0 24px rgba(56,189,248,.3)) drop-shadow(0 0 48px rgba(99,102,241,.2))}
+#frk-splash-logo{width:min(55vw,440px);max-height:52vh;object-fit:contain;animation:frkSplashPop .7s cubic-bezier(.2,.85,.25,1);filter:drop-shadow(0 2px 32px rgba(56,189,248,.4)) drop-shadow(0 0 64px rgba(99,102,241,.25))}
 @keyframes frkSplashPop{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
 .frk-splash-bar{width:min(66vw,240px);height:6px;border-radius:99px;background:rgba(30,40,90,.12);overflow:hidden}
 .frk-splash-bar-fill{height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#1f6feb,#13b6c9);
