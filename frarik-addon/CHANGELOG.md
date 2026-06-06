@@ -1,5 +1,84 @@
 # Changelog
 
+## 1.1.93 — 2026-06-06
+
+### Migliorato
+- **Logo**: sfondo completamente trasparente fuori dal cerchio (rimosso il "bagliore" esterno in alto a destra), partendo dal file sorgente originale in alta qualità. Stesso identico logo su splash, icona add-on, header impostazioni e sidebar.
+- Reinserita l'icona **Ricarica** (svuota cache) nella barra in alto.
+- Il changelog dell'add-on viene ora aggiornato a ogni versione.
+
+## 1.1.92 — 2026-06-06
+- Logo ricostruito dal file originale pulito con trasparenza reale (niente più scacchiera).
+
+## 1.1.91 — 2026-06-06
+- Logo: eliminata la scacchiera residua nella zona alta e sopra il testo.
+
+## 1.1.90 — 2026-06-06
+- Logo: rimozione completa della scacchiera (erosione aloni) + cache-busting.
+
+## 1.1.89 — 2026-06-06
+- Logo: rimozione scacchiera con rilevatore di pattern (testo preservato); loghi unificati.
+
+## 1.1.88 — 2026-06-06
+- Logo splash: primo tentativo di rimozione della scacchiera con trasparenza.
+
+## 1.1.87 — 2026-06-06
+- Logo: flood-fill dai bordi per rimuovere la scacchiera.
+
+## 1.1.86 — 2026-06-06
+- Logo: sfondo trasparente (rimozione del pattern a scacchiera).
+
+## 1.1.85 — 2026-06-06
+- Logo aggiornato (sfondo trasparente).
+
+## 1.1.84 — 2026-06-06
+- Logo rinominato (logo-v2.png) per bypassare la cache del browser.
+
+## 1.1.83 — 2026-06-06
+- Nuovo logo nello splash, badge versione e icona add-on.
+
+## 1.1.82 — 2026-06-06
+- Nuovo logo "Frarik Dashboard — Smart Home Ecosystem".
+
+## 1.1.81 — 2026-06-06
+- Splash con sfondo scuro; icona X rossa in modalità modifica.
+
+## 1.1.80 — 2026-06-06
+- SOS persone, ricerca entità, icone condizionali e azione "al click", rinomina header.
+
+## 1.1.79 — 2026-06-06
+- Anteprima icona live, icona per stato, SOS semplificato, fix forma SOS.
+
+## 1.1.78 — 2026-06-06
+- Layout icona, catalogo emoji ampliato, colore icona MDI.
+
+## 1.1.77 — 2026-06-06
+- Scroll entità, anteprima entity2, allineamento chip secondario.
+
+## 1.1.76 — 2026-06-06
+- Icon picker, store chip/badge nel browser, entità secondaria.
+
+## 1.1.75 — 2026-06-06
+- Editor header: colori per stato, reset automatico, chip visivi, tipo store.
+
+## 1.1.74 — 2026-06-06
+- Aggiornamento real-time dei chip header, anteprima e colori per stato.
+
+## 1.1.73 — 2026-06-06
+- Editor header: tipi semplificati, azioni, colori, anteprima live.
+
+## 1.1.72 — 2026-06-06
+- Refactor: modale editor header completamente in JS.
+
+## 1.1.71 — 2026-06-06
+- Editor header ridisegnato: 3 colonne, drag&drop, toggle visibilità.
+
+## 1.1.70 — 2026-06-06
+- Icona X in modalità modifica + popup conferma uscita.
+
+## 1.1.69 — 2026-06-06
+- Chiusura impostazioni senza doppia animazione.
+
 ## 1.1.68 — 2026-06-05
 
 ### Migliorato

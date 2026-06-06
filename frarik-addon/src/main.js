@@ -4370,7 +4370,7 @@ function _injectSidebarLogo(){
                sr.querySelector('a[href*="frarik"]')||
                sr.querySelector('[data-panel*="frarik"]');
     if(!link||link.querySelector('.frk-sidebar-logo')) return;
-    const logoUrl=window.location.href.replace(/[?#].*/,'').replace(/\/+$/,'')+'/logo.png?v=1.1.92';
+    const logoUrl=window.location.href.replace(/[?#].*/,'').replace(/\/+$/,'')+'/logo.png?v=1.1.93';
     const icon=link.querySelector('ha-icon,ha-svg-icon');
     const img=p.document.createElement('img');
     img.className='frk-sidebar-logo';

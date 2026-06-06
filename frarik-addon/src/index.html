@@ -16,7 +16,7 @@
 
 <!-- Splash: gestito da main.js -->
 <div id="frk-splash">
-  <img id="frk-splash-logo" src="./logo-v2.png?v=1.1.92" alt="Frarik Dashboard">
+  <img id="frk-splash-logo" src="./logo-v2.png?v=1.1.93" alt="Frarik Dashboard">
   <div class="frk-splash-bar"><div class="frk-splash-bar-fill"></div></div>
 </div>
 
@@ -606,10 +606,11 @@
       </div>
       <!-- page-tabs rimane nel DOM per renderPageTabs() ma nascosto -->
       <div id="page-tabs" style="display:none"></div>
-      <!-- RIGHT: icone colorate — ordine da DESTRA: sidebar, matita, impostazioni, campanella, conn, viste, kiosk.
-           (reload spostato nel menu ⋮; undo/redo solo in edit, restano a sinistra) -->
+      <!-- RIGHT: icone colorate — ordine da DESTRA: sidebar, matita, impostazioni, campanella, conn, viste, kiosk, reload.
+           (undo/redo solo in edit, restano a sinistra) -->
       <button class="hbtn hbtn-edit-only" id="undo-btn" title="Annulla (Ctrl+Z)"><i class="mdi mdi-undo-variant"></i></button>
       <button class="hbtn hbtn-edit-only" id="redo-btn" title="Ripeti (Ctrl+Y)"><i class="mdi mdi-redo-variant"></i></button>
+      <button class="hbtn" id="reload-btn" title="Svuota cache e ricarica"><i class="mdi mdi-refresh"></i></button>
       <button class="hbtn" id="kiosk-btn" title="Modalità Kiosk"><i class="mdi mdi-fullscreen"></i></button>
       <button class="hbtn" id="views-btn" title="Viste / pagine"><i class="mdi mdi-view-dashboard"></i></button>
       <div id="conn-wrap" title="Stato connessione — clicca per riavviare Home Assistant"><div id="conn-dot"></div></div>
@@ -841,7 +842,7 @@
         <div style="display:inline-flex;align-items:center;gap:10px;padding:9px 18px;border-radius:16px;
           background:linear-gradient(135deg,rgba(99,102,241,.16),rgba(139,92,246,.12));
           border:1px solid rgba(129,140,248,.35);box-shadow:0 6px 20px -6px rgba(99,102,241,.35)">
-          <img src="./logo-v2.png?v=1.1.92" alt="Frarik" style="height:44px;width:auto;object-fit:contain;filter:drop-shadow(0 0 8px rgba(99,102,241,.5))">
+          <img src="./logo-v2.png?v=1.1.93" alt="Frarik" style="height:44px;width:auto;object-fit:contain;filter:drop-shadow(0 0 8px rgba(99,102,241,.5))">
           <span style="display:flex;flex-direction:column;line-height:1.2">
             <span style="font-size:13px;font-weight:800;color:#c7d2fe;letter-spacing:.3px">Frarik Dashboard</span>
             <span style="font-size:14px;font-weight:800;color:#a5b4fc" id="ep-ver-label">…</span>
