@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.3 — 2026-06-06
+
+### API e guida card
+- Esposte alle card altre **API globali** già usate internamente: `window.hs`, `window.ha`, `callSvc(domain, service, entityId, data)`, `fetchHistory(entityId, hours)` (oltre agli alias `frarikCallService/frarikEntity/frarikState`). `BASE`/`TOKEN` restano **non** esposti per sicurezza.
+- Aggiornata e ampliata la guida `Istruzioni card/CREAZIONE-CARD.md`: aggiunto il **design system Frarik** completo (palette, header, pannelli, barre, pulsanti, chip, badge), i pattern grafici **SVG inline** (mini-grafico a barre, icone), le regole di layout fluido e un esempio completo di card complessa.
+
 ## 1.2.2 — 2026-06-06
 
 ### Strumenti per autori di card

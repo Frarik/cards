@@ -1,280 +1,422 @@
-# Creazione card JS per Frarik Dashboard / FratechStore
+---
+name: frarik-card-skill
+description: >
+  Guida unica e autorevole per creare card JS per la Frarik Dashboard / FratechStore.
+  Le card sono script vanilla JS registrati in window.FratechCardRegistry.
+  Quando l'utente chiede "creami una card per Frarik", leggere PRIMA questo file e seguirlo.
+---
 
-Guida unica e autorevole per creare card JavaScript per la **Frarik Dashboard**.
-Questo file è la **base di riferimento**: quando si chiede all'assistente «creami una card»,
-deve leggere questo documento e seguirne le regole e i template.
+# Creazione card JS — Frarik Dashboard / FratechStore
 
-> ℹ️ Le sezioni «Altre soluzioni» in fondo raccolgono pattern aggiuntivi: vanno
-> aggiornate man mano (incollare qui i contenuti del file esterno con le soluzioni).
+Guida di riferimento. Quando si chiede all'assistente «creami una card», deve
+**leggere questo documento** e seguirne regole, API e design system.
+
+> Sintesi delle fonti unite qui: template ufficiale dell'add-on, API reali della
+> dashboard (verificate nel codice `frarik-addon/src/main.js`), il design system
+> Frarik e alcuni pattern grafici riutilizzabili (grafici/icone SVG inline).
 
 ---
 
-## 1. I due formati supportati
+## 0. Regole fondamentali
 
-La dashboard sa eseguire **due** tipi di file `.js`:
+1. Produci **un singolo file `.js`** — niente build, niente npm, niente React.
+2. Solo **vanilla JS + HTML inline + CSS inline**.
+3. Wrappa sempre in IIFE: `(function(){ 'use strict'; … })();`
+4. Registra con `window.FratechCardRegistry[CARD.id] = CARD;`
+5. **Niente `<style>` globale** — solo CSS inline sugli elementi (le card condividono il DOM).
+6. **Nome file = `id`** della card (es. `id:'bolletta-card'` → `bolletta-card.js`), minuscolo, solo `a-z 0-9 -`.
+7. Per le card complesse **replica il design system §4** — non inventare palette/spaziature diverse.
+8. Le card girano in scope **globale**: usano solo ciò che è su `window` (vedi §3 API).
 
-| Formato | Quando usarlo | Come si registra |
+---
+
+## 1. I due formati
+
+| Formato | Quando | Registrazione |
 |---|---|---|
-| **FratechStore** (consigliato) | Card semplici/medie: display di stato, mini-grafici, pulsanti, layout custom. È il formato nativo, più leggero e veloce. | `window.FratechCardRegistry[CARD.id] = CARD` |
-| **Lovelace** (avanzato) | Card complesse che servono l'oggetto `hass` completo di Home Assistant (chiamate servizi ricche, attributi, websocket, mappe meteo, ecc.). | `customElements.define('tag', Classe)` + `window.customCards.push(...)` |
+| **FratechStore** (consigliato) | Display, pannelli, controlli, grafici: il 95% dei casi. | `window.FratechCardRegistry[CARD.id] = CARD` |
+| **Lovelace** (avanzato) | Serve l'`hass` completo di HA (oggetti stato con attributi, websocket). | `customElements.define('tag', Classe)` + `window.customCards.push(...)` |
 
-Regola pratica: **parti sempre dal formato FratechStore.** Passa al Lovelace solo se
-ti serve l'`hass` completo (attributi entità, `callService`, websocket).
-
----
-
-## 2. Formato FratechStore — template ufficiale
-
-Salva il file con lo **stesso nome dell'`id`** (es. `id: 'bolletta-card'` → file `bolletta-card.js`).
+### 1a. Template FratechStore
 
 ```js
-/**
- * FratechCard — Template
- * Nome file = id della card (es: bolletta-card.js)
- */
 (function () {
   'use strict';
 
   const CARD = {
-    id:      'mia-card',      // ID univoco: solo a-z, 0-9, trattino. = nome file
-    name:    'La Mia Card',   // Nome mostrato nello store
-    icon:    '🎯',            // Emoji o 'mdi:nome-icona'
-    version: '1.0.0',         // Versione (vedi §6: la dashboard la incrementa da sola)
+    id:      'mia-card',      // = nome file, solo a-z 0-9 -
+    name:    'La Mia Card',   // nome nello store
+    icon:    '🎯',            // emoji o 'mdi:nome'
+    version: '1.0.0',         // la dashboard la incrementa da sola (vedi §6)
     desc:    'Descrizione breve mostrata nello store',
 
-    /**
-     * render(card, hass) → STRINGA HTML
-     * Chiamata al primo inserimento e ad ogni rebuild della dashboard.
-     *   card  = configurazione dell'istanza (card.entity, card.color, card.label, …)
-     *   hass  = { states: { 'sensor.x': '42', 'light.y': 'on', … } }   (può essere null)
-     *           ATTENZIONE: hass.states[id] è una STRINGA (lo stato), non un oggetto.
-     */
+    // render(card, hass) → STRINGA HTML.  hass = { states: { 'sensor.x':'42', ... } }
+    //   ATTENZIONE: hass.states[id] è una STRINGA. Per gli attributi usa window.ha[id].
     render(card, hass) {
-      const val = (hass && hass.states && hass.states[card.entity]) ?? '—';
-      return `
-        <div style="display:flex;flex-direction:column;align-items:center;
-                    justify-content:center;height:100%;gap:8px">
-          <div style="font-size:40px">${this.icon}</div>
-          <div style="font-size:28px;font-weight:900;color:${card.color || '#818cf8'}">${val}</div>
-          <div style="font-size:11px;opacity:.5">${card.label || this.name}</div>
-        </div>`;
+      const v = hass?.states?.[card.entity] ?? '—';
+      return `<div style="height:100%;display:flex;align-items:center;justify-content:center;
+                          color:${card.color||'#38bdf8'};font-size:28px;font-weight:800">${v}</div>`;
     },
 
-    /**
-     * mount(card, hass, el)  — OPZIONALE
-     * Chiamata UNA volta dopo che render() è stato inserito nel DOM.
-     * Usala per: attaccare event listener, inizializzare mappe/grafici, timer.
-     *   el = elemento contenitore (l'HTML di render() è già dentro).
-     */
-    mount(card, hass, el) {
-      el.querySelectorAll('[data-act]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const act = btn.getAttribute('data-act');
-          // esempio: toggle di una luce (vedi §4 per le interazioni)
-          if (act === 'toggle' && card.entity) frarikCallService('homeassistant', 'toggle', { entity_id: card.entity });
-        });
-      });
-    },
+    // update(card, hass, el) — refresh live ad ogni cambio stato. el = container nel DOM.
+    update(card, hass, el) { el.innerHTML = this.render(card, hass); this.mount?.(card, hass, el); },
 
-    /**
-     * update(card, hass, el)  — OPZIONALE
-     * Chiamata periodicamente e ad ogni cambio stato. Aggiornamento "live".
-     * Se NON la implementi, la dashboard richiama render() e sostituisce l'innerHTML.
-     * Implementala per aggiornare solo le parti che cambiano (più fluido, niente flicker).
-     */
-    update(card, hass, el) {
-      const val = (hass && hass.states && hass.states[card.entity]) ?? '—';
-      const out = el.querySelector('.val');
-      if (out) out.textContent = val; else el.innerHTML = this.render(card, hass);
-    }
+    // mount(card, hass, el) — dopo render(): event listener, Chart.js, timer.
+    mount(card, hass, el) {}
   };
 
-  /* ── Registrazione (NON modificare) ── */
   window.FratechCardRegistry = window.FratechCardRegistry || {};
   window.FratechCardRegistry[CARD.id] = CARD;
-  try { console.log('[FratechStore] Card registrata:', CARD.id, 'v' + CARD.version); } catch (e) {}
 })();
 ```
 
-### API FratechStore in breve
-- **`render(card, hass)`** → ritorna una **stringa HTML**. Obbligatoria.
-- **`mount(card, hass, el)`** → opzionale, listener/init dopo il primo render.
-- **`update(card, hass, el)`** → opzionale, refresh live. Senza, viene rifatto `render()`.
-- **`hass.states['entity_id']`** = **stringa** dello stato (`'on'`, `'23.5'`, `'locked'`).
-  Per leggere gli **attributi** di un'entità usa `frarikEntity('sensor.x')` (vedi §4).
-- **`card`** = oggetto configurazione dell'istanza. Campi tipici: `card.entity`,
-  `card.label`, `card.color`, `card.icon`, più qualunque campo custom impostato
-  dall'editor della card.
+### 1b. Template Lovelace (avanzato)
+
+```js
+class MiaCard extends HTMLElement {
+  setConfig(config){ this._config = config; }
+  set hass(hass){                                   // hass.states[id] = OGGETTO {state, attributes}
+    const st = hass.states[this._config.entity];
+    this.innerHTML = `<div style="padding:12px">${this._config.entity}: <b>${st?st.state:'—'}</b></div>`;
+  }
+  getCardSize(){ return 2; }
+}
+if (!customElements.get('mia-card')) customElements.define('mia-card', MiaCard);  // guardia (vedi §7)
+window.customCards = window.customCards || [];
+window.customCards = window.customCards.filter(c => c && c.type !== 'mia-card');  // push SINCRONO, non deferito
+window.customCards.push({ type:'mia-card', name:'Mia Card', description:'…', version:'1.0.0' });
+```
 
 ---
 
-## 3. Formato Lovelace — per card avanzate
+## 2. Oggetto `card` — campi configurabili dall'utente (pannello ✏️)
 
-Usalo solo se ti serve l'`hass` completo di Home Assistant. La dashboard imposta
-`element.hass = <hass completo>` ad ogni aggiornamento, e con `hass.states[id]` ottieni
-l'**oggetto** `{ state, attributes, … }` (non la sola stringa).
+| Campo | Tipo | Descrizione |
+|---|---|---|
+| `card.id` | string | ID istanza nella dashboard |
+| `card.label` | string | Etichetta/titolo |
+| `card.icon` | string | Emoji o `mdi:` icona |
+| `card.entity` | string | Entità HA principale (`sensor.x`) |
+| `card.entity2`, `card.entity3` | string | Entità aggiuntive |
+| `card.color` | string | Colore hex accento (`#6366f1`) |
+| `card.unit` | string | Unità di misura |
+| `card.sub` | string | Testo secondario / sottotitolo |
+| `card.hours` | number | Ore di storia (default 24) |
+| `card.max`, `card.min` | number | Valori massimo/minimo |
+| `card.bgColor`, `card.textColor` | string | Sfondo/testo personalizzati |
+
+Accesso allo stato: **`hass?.states?.[card.entity] ?? '—'`** (mai accesso non protetto).
+
+---
+
+## 3. API globali disponibili nelle card (verificate nel codice)
 
 ```js
-class MiaCardAvanzata extends HTMLElement {
-  setConfig(config) { this._config = config; }           // chiamata con la config YAML/oggetto
-  set hass(hass) {                                       // chiamata ad ogni aggiornamento stato
-    this._hass = hass;
-    const eid = this._config.entity;
-    const st  = hass.states[eid];                        // OGGETTO: st.state, st.attributes
-    this.innerHTML = `<div style="padding:12px">
-      ${this._config.title || eid}: <b>${st ? st.state : '—'}</b>
-      ${st && st.attributes.unit_of_measurement || ''}
-    </div>`;
-  }
-  // chiamare un servizio: this._hass.callService('light','toggle',{ entity_id: eid })
-  getCardSize() { return 2; }
-}
+window.hs            // { 'entity_id': 'stato_stringa', ... }  — tutti gli stati HA (live)
+window.ha            // { 'entity_id': { attributi... } }      — attributi HA (live)
 
-// Guardia anti-doppia-registrazione (IMPORTANTE, vedi §7)
-if (!customElements.get('mia-card-avanzata')) {
-  customElements.define('mia-card-avanzata', MiaCardAvanzata);
-}
+// Chiamare un servizio HA
+callSvc(domain, service, entityId, data = {})
+//   callSvc('light', 'turn_on', 'light.salotto', { brightness: 200 })
+//   callSvc('switch', 'toggle', 'switch.x')
+//   callSvc('input_boolean', 'turn_on', 'input_boolean.x')
 
-// Metadati per lo store (push semplice, NON deferito — vedi §7)
-window.customCards = window.customCards || [];
-window.customCards = window.customCards.filter(c => c && c.type !== 'mia-card-avanzata');
-window.customCards.push({
-  type:        'mia-card-avanzata',
-  name:        'Mia Card Avanzata',
-  description: 'Descrizione per lo store',
-  version:     '1.0.0',     // se presente, lo store la mostra
+// Storia di un'entità → Promise<[{ t: Date, v: number }]>
+fetchHistory(entityId, hours = 24)
+
+// Alias espliciti equivalenti
+frarikCallService(domain, service, data, target)   // data = { entity_id, ... }
+frarikEntity(id)    // → { entity_id, state, attributes }
+frarikState(id)     // → stringa stato | null
+```
+
+> 🔒 **Sicurezza:** `BASE`/`TOKEN` (URL e token HA) **non** sono esposti alle card di
+> proposito — un token non deve mai essere accessibile al codice di una card. Per la
+> cronologia usa `fetchHistory()`, che usa il token internamente senza esporlo.
+> Per leggere gli **attributi** di un'entità: `window.ha['sensor.x'].unit_of_measurement`.
+
+---
+
+## 4. Design System Frarik — replicare questo stile
+
+Le card complesse Frarik seguono uno stile coerente. Usa **questi valori esatti**.
+
+### 4a. Palette
+
+```
+Sfondo card:        rgba(10,14,26,1)         oppure rgba(255,255,255,.04)
+Pannelli interni:   rgba(255,255,255,.04)  + bordo rgba(255,255,255,.08)
+Pannelli hover:     rgba(255,255,255,.07)
+Bordo card:         rgba(255,255,255,.08)  /  rgba(255,255,255,.12)
+
+Accento blu:        #38bdf8   — sensori, info, stato attivo
+Accento indigo:     #6366f1   — azioni primarie
+Accento viola:      #a78bfa   — secondary accent
+Accento verde:      #4ade80   — stato ON/ok
+Accento arancio:    #fb923c   — warning, timer
+Accento rosso:      #f87171   — errore, allarme, OFF
+
+Testo primario:     #ffffff
+Testo secondario:   rgba(255,255,255,.55)
+Testo muted:        rgba(255,255,255,.28)   — label uppercase
+Font:               var(--primary-font-family, 'Inter', system-ui, sans-serif)
+```
+
+### 4b. Container principale (wrapper di ogni card)
+
+```js
+`<div style="height:100%;width:100%;box-sizing:border-box;display:flex;flex-direction:column;
+  background:rgba(10,14,26,1);border-radius:inherit;
+  font-family:var(--primary-font-family,'Inter',system-ui,sans-serif);
+  color:#fff;overflow:hidden;">…</div>`
+```
+
+### 4c. Header (icon-box + titolo + sottotitolo + badge stato)
+
+```js
+function _header(icon, title, subtitle, statusText, statusColor) {
+  return `<div style="display:flex;align-items:center;gap:12px;padding:16px 18px 14px;
+              border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0;">
+    <div style="width:42px;height:42px;border-radius:12px;flex-shrink:0;
+                background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.3);
+                display:flex;align-items:center;justify-content:center;font-size:20px;">${icon}</div>
+    <div style="flex:1;min-width:0;">
+      <div style="font-size:15px;font-weight:700;color:#fff;overflow:hidden;
+                  text-overflow:ellipsis;white-space:nowrap;">${title}</div>
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;
+                  color:rgba(255,255,255,.35);margin-top:2px;">${subtitle}</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;padding:5px 11px;border-radius:99px;
+                border:1px solid ${statusColor}55;background:${statusColor}18;flex-shrink:0;">
+      <div style="width:7px;height:7px;border-radius:50%;background:${statusColor};
+                  box-shadow:0 0 6px ${statusColor};"></div>
+      <span style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;
+                   color:${statusColor};">${statusText}</span>
+    </div>
+  </div>`;
+}
+```
+
+### 4d. Pannello dati (griglia glassmorphism)
+
+```js
+// contenitore: <div style="display:grid;grid-template-columns:repeat(N,1fr);gap:8px;padding:14px 16px;">
+function _panel(label, value, hint, accent) {
+  return `<div style="background:rgba(255,255,255,.04);border-radius:12px;
+              border:1px solid rgba(255,255,255,.08);padding:12px 14px;">
+    <div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+                color:${accent||'rgba(255,255,255,.35)'};margin-bottom:8px;">${label}</div>
+    <div style="font-size:28px;font-weight:800;color:#fff;line-height:1;letter-spacing:-1px;">${value}</div>
+    ${hint?`<div style="font-size:9px;color:rgba(255,255,255,.35);margin-top:4px;">${hint}</div>`:''}
+  </div>`;
+}
+```
+
+### 4e. Barra progresso
+
+```js
+function _progressBar(label, current, max, color) {
+  const pct = Math.min(100, Math.round(current / max * 100));
+  return `<div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,.07);">
+    <div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+                color:rgba(255,255,255,.35);margin-bottom:6px;">${label}</div>
+    <div style="font-size:15px;font-weight:800;color:#fff;margin-bottom:8px;">
+      ${current} <span style="font-size:11px;color:rgba(255,255,255,.35);">/ ${max}</span></div>
+    <div style="height:4px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden;">
+      <div style="height:100%;width:${pct}%;background:${color};border-radius:99px;transition:width .6s;"></div>
+    </div>
+  </div>`;
+}
+```
+
+### 4f. Pulsanti
+
+```js
+function _btnPrimary(label, id, color='#6366f1') {
+  return `<button id="${id}" style="width:100%;padding:14px;border-radius:12px;border:none;
+    background:linear-gradient(135deg,${color},${color}cc);color:#fff;font-size:13px;font-weight:700;
+    cursor:pointer;letter-spacing:.3px;display:flex;align-items:center;justify-content:center;gap:8px;
+    box-shadow:0 6px 20px ${color}44;">${label}</button>`;
+}
+function _btnGhost(label, id) {
+  return `<button id="${id}" style="padding:8px 16px;border-radius:10px;
+    border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);
+    color:rgba(255,255,255,.7);font-size:12px;font-weight:700;cursor:pointer;">${label}</button>`;
+}
+function _btnIcon(label, id) {
+  return `<button id="${id}" style="width:34px;height:34px;border-radius:10px;
+    border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff;
+    font-size:18px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;">${label}</button>`;
+}
+```
+
+### 4g. Chip selezionabili e badge stato
+
+```js
+function _chips(items, active, idPrefix) {
+  return items.map((item,i)=>`<button id="${idPrefix}-${i}" style="padding:5px 10px;border-radius:8px;
+    font-size:10px;font-weight:700;cursor:pointer;
+    ${active.includes(i)
+      ? 'background:rgba(56,189,248,.2);border:1px solid rgba(56,189,248,.5);color:#38bdf8;'
+      : 'background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.4);'}
+  ">${item}</button>`).join('');
+}
+function _badge(text, color) {  // ● Aperta / ● Chiusa
+  return `<span style="display:inline-flex;align-items:center;gap:6px;font-size:15px;font-weight:700;color:${color};">
+    <span style="width:9px;height:9px;border-radius:50%;background:${color};box-shadow:0 0 8px ${color};"></span>
+    ${text}</span>`;
+}
+```
+
+---
+
+## 5. Pattern grafici riutilizzabili (senza librerie)
+
+### 5a. Icone SVG (stile lucide, `stroke="currentColor"`)
+
+```js
+const SVG_THERM = (sz=14) => `<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none"
+  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>`;
+// Colore controllato dal parent: style="color:#38bdf8"
+```
+
+### 5b. Mini grafico a barre SVG inline (24h)
+
+```js
+function buildBarChart(hist, colorFn, n=48) {        // hist = [{t,v}] da fetchHistory()
+  const bkts = Array.from({length:n}, () => ({s:0,c:0}));
+  const now = Date.now(), start = now - 24*3600_000, size = (24*3600_000)/n;
+  hist.forEach(({t,v}) => { const i = Math.floor((+t - start)/size); if(i>=0&&i<n){ bkts[i].s+=v; bkts[i].c++; } });
+  const data = bkts.map(b => b.c ? b.s/b.c : null);
+  const valid = data.filter(v => v!==null); if(!valid.length) return '';
+  const minV = Math.min(...valid), maxV = Math.max(...valid), range = (maxV-minV)||1, H=56, bw=100/n;
+  const bars = data.map((v,i)=> v==null ? '' : (() => {
+    const h = Math.max(2, ((v-minV)/range)*(H-4));
+    return `<rect x="${(i*bw).toFixed(2)}" y="${(H-h).toFixed(2)}" width="${(bw-0.4).toFixed(2)}"
+      height="${h.toFixed(2)}" fill="${colorFn?colorFn(v):'#38bdf8'}" fill-opacity=".9" rx="1.5"/>`;
+  })()).join('');
+  return `<svg viewBox="0 0 100 ${H}" preserveAspectRatio="none" style="width:100%;height:56px;display:block">${bars}</svg>`;
+}
+```
+
+### 5c. Auto-scoperta sensori per device_class
+
+```js
+Object.entries(window.ha).forEach(([id, attrs]) => {
+  if (attrs?.device_class === 'temperature') { /* … */ }
+  if (attrs?.device_class === 'humidity')    { /* … */ }
 });
 ```
 
----
+### 5d. Rebuild vs patch (anti-flicker) — opzionale per card pesanti
 
-## 4. Interazioni: chiamare servizi e leggere attributi
-
-Per evitare differenze tra i due formati, la dashboard espone alcuni **helper globali**
-utilizzabili da qualunque card (sia FratechStore sia Lovelace):
-
-```js
-// chiamare un servizio HA
-frarikCallService('light', 'turn_on', { entity_id: 'light.salotto', brightness: 200 });
-frarikCallService('homeassistant', 'toggle', { entity_id: card.entity });
-
-// leggere stato + attributi di un'entità (oggetto { entity_id, state, attributes })
-const e = frarikEntity('sensor.temperatura');   // { state:'21.4', attributes:{ unit_of_measurement:'°C', … } }
-const unita = e?.attributes?.unit_of_measurement || '';
-
-// solo lo stato (stringa) di un'entità
-const stato = frarikState('binary_sensor.porta');   // 'on' | 'off' | null
-```
-
-Questi tre helper — `frarikCallService(domain, service, data, target)`, `frarikEntity(id)`,
-`frarikState(id)` — sono **globali** e disponibili a qualunque card, sia FratechStore sia
-Lovelace. Sono il modo consigliato per interagire.
-
-> In alternativa, nel formato **Lovelace** puoi usare `this._hass.callService(...)` e
-> `this._hass.states[id]` (oggetto con `state` e `attributes`).
-
-### Pattern click consigliato (delega eventi)
-Nel render usa attributi `data-…`, nel `mount` un solo listener delegato:
-```js
-render(card){ return `<button data-act="toggle">Accendi/Spegni</button>`; },
-mount(card, hass, el){
-  el.addEventListener('click', e => {
-    const b = e.target.closest('[data-act]'); if (!b) return;
-    if (b.dataset.act === 'toggle') frarikCallService('homeassistant','toggle',{entity_id:card.entity});
-  });
-}
-```
-
----
-
-## 5. Regole di naming e cartelle dello store
-
-- **Nome file = `id`** della card, in minuscolo, solo `a-z 0-9 -` (es. `meteo-card.js`).
-- L'`id` deve essere **univoco** in tutto lo store.
-- Le card vanno caricate su GitHub in **una** di queste cartelle (lo store le legge da lì):
-
-| Cartella | Scheda nello store | Uso |
-|---|---|---|
-| `card-js/` | ⚡ Card JS | Card generiche (display, grafici, pannelli) |
-| `card-chips/` | 🔹 Chips | Chip piccoli per la barra header |
-| `card-distintivi/` | 🏷️ Distintivi | Badge/distintivi |
-| `card-yaml/` | 📄 YAML | Config YAML (solo copia, non card JS) |
-| `pkg/` | 📦 Pacchetti | Package YAML di backend |
-
-> I file il cui nome inizia con `frarik` (es. `frarik-panel.js`) sono **esclusi**:
-> sono file dell'app, non card.
+In `update()` ricostruisci l'HTML solo se cambia la **struttura**; altrimenti aggiorna
+i singoli nodi con `el.querySelector('[data-field="x"]').textContent = …`. Usa attributi
+`data-field` come hook. Per la maggior parte delle card basta `update = render+mount`.
 
 ---
 
 ## 6. Versionamento
 
-- Dichiara sempre `version: '1.0.0'` nel codice (formato `x.y.z`).
-- La dashboard tiene una **versione automatica per nome-file**, persistente:
-  - **Caricamento manuale** (carico un `.js` dal PC): la prima volta usa la versione
-    dichiarata, poi **ad ogni ricaricamento dello stesso file la patch sale**
-    (1.0.0 → 1.0.1 → …).
-  - **GitHub**: quando sostituisci il file sul repo (lo `sha` cambia), la patch sale
-    automaticamente e arriva la notifica «Card aggiornata da vX a vY».
-- Quindi **non sei obbligato** ad aggiornare a mano `version` ad ogni modifica: serve
-  solo come valore di partenza/etichetta.
+- Dichiara `version: '1.0.0'` nel codice (formato `x.y.z`).
+- La dashboard tiene una **versione automatica persistente per nome-file**:
+  - **Upload manuale**: prima volta = versione dichiarata, poi **ogni ricaricamento dello
+    stesso file incrementa la patch** (1.0.0 → 1.0.1 → …); resta tale anche dopo
+    un'eliminazione ed è identica sia selezionando sia trascinando il file.
+  - **GitHub**: quando il file cambia sul repo (sha diverso) la patch sale e arriva la
+    notifica «Card aggiornata da vX a vY».
 
 ---
 
-## 7. Errori comuni da evitare (checklist)
+## 7. Errori comuni (checklist)
 
-- ✅ **Guardia anti-doppia-registrazione** (solo formato Lovelace):
-  `if (!customElements.get('tag')) customElements.define('tag', Classe)`.
-  Ridefinire un custom element già definito lancia un errore.
-- ✅ **`window.customCards.push` NON deferito**: fai il push **sincrono** subito dopo
-  `define`. Evita `setTimeout(...)`: la dashboard legge `customCards`
-  immediatamente dopo l'`eval`, un push ritardato può non essere visto.
-- ✅ **`render()` ritorna una stringa**, non manipolare il DOM dentro `render`
-  (fallo in `mount`/`update`).
-- ✅ **`hass` può essere `null`**: proteggi sempre gli accessi
-  (`hass && hass.states && hass.states[id]`).
-- ✅ **FratechStore: `hass.states[id]` è una STRINGA.** Per gli attributi usa
-  `frarikEntity(id)` (o il formato Lovelace).
-- ✅ **CSS inline o `<style>` scoping**: dai classi con prefisso (es. `.mc-…`) per non
-  collidere con altre card.
-- ✅ **Niente dipendenze esterne** se non strettamente necessarie; se servono (es. una
-  libreria mappe), caricala on-demand e una sola volta (cache su `window`).
-- ✅ **Pulizia**: in `mount` salva timer/handler e ricreali in modo idempotente
-  (la card può essere montata più volte).
+- ✅ IIFE + `window.FratechCardRegistry[CARD.id] = CARD;` alla fine.
+- ✅ `render()` ritorna **stringa HTML**; manipola il DOM solo in `mount`/`update`.
+- ✅ Event listener **solo in `mount()`**, mai in `render()`.
+- ✅ Accesso stati protetto: `hass?.states?.[eid] ?? '—'`. Attributi: `window.ha[eid]`.
+- ✅ `hass` può essere `null`.
+- ✅ **Lovelace**: guardia `if(!customElements.get('tag')) customElements.define(...)`;
+  push su `window.customCards` **sincrono** (NON `setTimeout` — la dashboard legge subito
+  dopo l'eval).
+- ✅ **Chart.js / canvas / mappe**: distruggi prima di ricreare in `mount`
+  (`if(el._chart) el._chart.destroy();`) — `mount` può essere chiamato più volte.
+- ✅ Niente `<style>` globale; CSS inline. Classi con prefisso per non collidere.
+- ✅ Fluido: contenitori `width:100%; min-width:0`, testo con
+  `overflow:hidden;text-overflow:ellipsis;white-space:nowrap`, niente larghezze fisse in px.
+- ✅ Nessuna libreria/CDN esterna se evitabile; se serve, caricala on-demand una sola volta
+  (cache su `window`).
 
 ---
 
-## 8. Esempio completo: card «Temperatura» (FratechStore)
+## 8. Esempio completo — card stile Frarik (header + griglia + azione)
 
-`temperatura-card.js`
 ```js
-(function () {
+/**
+ * frarik-example-card.js v1.0.0 — Card con header, griglia pannelli, stato e azione.
+ * Installazione: Store → ⚡ Card JS → Carica File
+ */
+(function(){
   'use strict';
-  const CARD = {
-    id: 'temperatura-card',
-    name: 'Temperatura',
-    icon: 'mdi:thermometer',
-    version: '1.0.0',
-    desc: 'Mostra la temperatura di un sensore con colore dinamico.',
 
-    render(card, hass) {
-      const v = parseFloat((hass && hass.states && hass.states[card.entity]) ?? 'NaN');
-      const col = isNaN(v) ? '#94a3b8' : v >= 26 ? '#f87171' : v <= 18 ? '#38bdf8' : '#4ade80';
-      const txt = isNaN(v) ? '—' : v.toFixed(1) + '°';
-      return `<div class="tc-wrap" style="height:100%;display:flex;flex-direction:column;
-                  align-items:center;justify-content:center;gap:6px">
-        <div class="tc-val" style="font-size:34px;font-weight:900;color:${col}">${txt}</div>
-        <div style="font-size:11px;opacity:.6">${card.label || 'Temperatura'}</div>
-      </div>`;
+  function _header(icon, title, subtitle, statusText, statusColor){
+    return `<div style="display:flex;align-items:center;gap:12px;padding:16px 18px 14px;
+        border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0;">
+      <div style="width:42px;height:42px;border-radius:12px;flex-shrink:0;background:rgba(56,189,248,.15);
+        border:1px solid rgba(56,189,248,.3);display:flex;align-items:center;justify-content:center;font-size:20px;">${icon}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:15px;font-weight:700;color:#fff;">${title}</div>
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;
+          color:rgba(255,255,255,.35);margin-top:2px;">${subtitle}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;padding:5px 11px;border-radius:99px;
+        border:1px solid ${statusColor}55;background:${statusColor}18;">
+        <div style="width:7px;height:7px;border-radius:50%;background:${statusColor};box-shadow:0 0 6px ${statusColor};"></div>
+        <span style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:${statusColor};">${statusText}</span>
+      </div></div>`;
+  }
+  function _panel(label, value, hint, accent){
+    return `<div style="background:rgba(255,255,255,.04);border-radius:12px;border:1px solid rgba(255,255,255,.08);padding:12px 14px;">
+      <div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+        color:${accent||'rgba(255,255,255,.35)'};margin-bottom:8px;">${label}</div>
+      <div style="font-size:28px;font-weight:800;color:#fff;line-height:1;letter-spacing:-1px;">${value}</div>
+      ${hint?`<div style="font-size:9px;color:rgba(255,255,255,.35);margin-top:4px;">${hint}</div>`:''}</div>`;
+  }
+
+  const CARD = {
+    id:'frarik-example-card', name:'Card Esempio', icon:'📊', version:'1.0.0',
+    desc:'Esempio con header, griglia e azione',
+
+    render(card, hass){
+      const v1 = hass?.states?.[card.entity]  ?? '—';
+      const v2 = hass?.states?.[card.entity2] ?? '—';
+      const isOn = hass?.states?.[card.entity] === 'on';
+      const statusColor = isOn ? '#4ade80' : 'rgba(255,255,255,.4)';
+      const statusText  = isOn ? 'ATTIVO' : 'SPENTO';
+      return `<div style="height:100%;width:100%;box-sizing:border-box;display:flex;flex-direction:column;
+          background:rgba(10,14,26,1);border-radius:inherit;
+          font-family:var(--primary-font-family,'Inter',system-ui);color:#fff;overflow:hidden;">
+        ${_header(card.icon||'📊', card.label||'Card Esempio', card.sub||'SOTTOTITOLO', statusText, statusColor)}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px 16px;flex:1;">
+          ${_panel('VALORE PRINCIPALE', v1, card.unit||'', card.color||'#38bdf8')}
+          ${_panel('SECONDO VALORE', v2, 'descrizione', '#a78bfa')}
+        </div>
+        <div style="padding:0 16px 16px;">
+          <button id="act-${card.id}" style="width:100%;padding:14px;border-radius:12px;border:none;
+            background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;font-size:13px;font-weight:700;
+            cursor:pointer;box-shadow:0 6px 20px rgba(99,102,241,.4);">▶ Azione</button>
+        </div></div>`;
     },
 
-    update(card, hass, el) {
-      const v = parseFloat((hass && hass.states && hass.states[card.entity]) ?? 'NaN');
-      const out = el.querySelector('.tc-val'); if (!out) return el.innerHTML = this.render(card, hass);
-      const col = isNaN(v) ? '#94a3b8' : v >= 26 ? '#f87171' : v <= 18 ? '#38bdf8' : '#4ade80';
-      out.textContent = isNaN(v) ? '—' : v.toFixed(1) + '°';
-      out.style.color = col;
+    update(card, hass, el){ el.innerHTML = this.render(card, hass); this.mount(card, hass, el); },
+
+    mount(card, hass, el){
+      el.querySelector('#act-'+card.id)?.addEventListener('click', ()=>{
+        if(card.entity) callSvc(card.entity.split('.')[0], 'toggle', card.entity);
+      });
     }
   };
+
   window.FratechCardRegistry = window.FratechCardRegistry || {};
   window.FratechCardRegistry[CARD.id] = CARD;
 })();
@@ -282,19 +424,29 @@ mount(card, hass, el){
 
 ---
 
-## 9. Flusso di pubblicazione
+## 9. Cartelle store e installazione
 
-1. Crea/modifica il file `.js` (nome = id).
-2. Caricalo nello store (Card locali → trascina/seleziona) per **provarlo** in dashboard.
-3. **Pubblica** dallo store nella cartella giusta (`card-js`/`card-chips`/`card-distintivi`)
-   — oppure fai `git push` del file nella cartella su GitHub.
-4. Le altre dashboard riceveranno la notifica «Nuova card / Card aggiornata».
+| Cartella repo | Scheda store | Uso |
+|---|---|---|
+| `card-js/` | ⚡ Card JS | card generiche |
+| `card-chips/` | 🔹 Chips | chip header |
+| `card-distintivi/` | 🏷️ Distintivi | badge |
+| `card-yaml/` | 📄 YAML | config YAML (solo copia) |
+| `pkg/` | 📦 Pacchetti | package YAML backend |
+
+> I file che iniziano con `frarik` sono esclusi (sono file dell'app, non card).
+
+**Flusso:** crea il `.js` → caricalo (Store → Card locali) per provarlo → **Pubblica**
+nella cartella giusta (o `git push`). Le altre dashboard ricevono la notifica.
 
 ---
 
-## 10. Altre soluzioni / pattern aggiuntivi
+## 10. Note / fonti
 
-> *(Sezione da completare: incollare qui i contenuti del file esterno con le altre
-> soluzioni. Mantenere lo stesso stile: titolo del pattern → quando usarlo → snippet.)*
-
-- _… (da aggiungere)_
+- Card **belle graficamente** (riferimento estetico): la dashboard *Oikos* usa React+SDK
+  con un design-system a token. Concetti riusati qui (non il codice): non hardcodare
+  scala tipografica/spaziature, layout fluido per mobile (`width:100%`, `min-width:0`,
+  niente larghezze fisse), grafici responsive. La realizzazione in Frarik è **vanilla JS**
+  come sopra.
+- Pattern vanilla riusati: grafici/icone **SVG inline**, rebuild-vs-patch anti-flicker,
+  auto-scoperta per `device_class`.

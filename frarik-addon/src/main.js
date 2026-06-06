@@ -7165,8 +7165,16 @@ function _loadHAScript(url,rtype){
 }
 
 /* Oggetto hass completo passato alle card Lovelace/HACS */
-/* ── Helper globali per gli autori di card (documentati in Istruzioni card/) ──
-   Disponibili a qualunque card (FratechStore o Lovelace), indipendenti dal formato. */
+/* ── API globali per gli autori di card (documentate in Istruzioni card/) ──
+   Le card girano via eval in scope GLOBALE: vedono SOLO ciò che è su window.
+   Espongo qui le funzioni/oggetti utili. NON espongo BASE/TOKEN (un token HA
+   non deve mai finire nelle mani del codice di una card). Per la history usare
+   fetchHistory(), che usa il token internamente senza esporlo. */
+window.hs = hs;                 // { entity_id: 'stato_stringa' }   (riferimento live)
+window.ha = ha;                 // { entity_id: { attributi… } }    (riferimento live)
+window.callSvc = callSvc;       // callSvc(domain, service, entityId, data={})
+window.fetchHistory = fetchHistory;  // fetchHistory(entityId, hours=24) → Promise<[{t:Date,v:number}]>
+// Helper "frarik*" (alias comodi, stessa cosa con nomi espliciti)
 window.frarikCallService = function(domain, service, data, target){
   try{ send({type:'call_service', domain, service, service_data:data||{}, target:target||{}}); }catch(e){}
   return Promise.resolve();
