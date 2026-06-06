@@ -2491,7 +2491,7 @@ function hbarInner(card){
       const unit2=item.entity2showUnit!==false?(ha[item.entity2]?.unit_of_measurement||''):'';
       const ico2=item.entity2icon||_haAutoIcon(item.entity2)||'';
       const v2=_stateIt(st2)+(unit2?' '+unit2:'');
-      ent2Html=`<span style="opacity:.75;font-size:.85em;display:inline-flex;align-items:center;gap:3px;border-left:1px solid rgba(255,255,255,.2);padding-left:5px;margin-left:2px">${ico2?_renderIcon(ico2,9,col):''}<span>${eh(v2)}</span></span>`;
+      ent2Html=`<span style="border-left:1px solid rgba(255,255,255,.22);margin-left:6px;padding-left:6px;white-space:nowrap">${ico2?_renderIcon(ico2,10,col)+' ':''}<span style="font-weight:700">${eh(v2)}</span></span>`;
     }
     const mainChip=item.entity2pos==='left'
       ? ent2Html+parts
@@ -6274,6 +6274,10 @@ function _hbUpdatePreview(){
     clockShowSeconds:document.getElementById('hbclk-showsec')?.checked===true,
     clockColor:document.getElementById('hbclk-color')?.value||'#ffffff',
     iconMap:{}, colorMap:{}, options:[],
+    entity2: (document.getElementById('hbf-entity2-on')?.checked && document.getElementById('hbf-entity2')?.value?.trim()) || '',
+    entity2pos: _hbGetEnt2Pos(),
+    entity2icon: document.getElementById('hbf-icon2')?.value?.trim()||'',
+    entity2showUnit: document.getElementById('hbf-entity2-showunit')?.checked!==false,
   };
   // Usa hbarInner su un oggetto finto con solo questo chip nella sinistra
   const fakeCard={left:[fakeItem],center:[],right:[]};
@@ -10713,7 +10717,7 @@ function _entacHide(){ if(_entacBox) _entacBox.style.display='none'; _entacInput
 document.addEventListener('focusin',e=>{ if(_isEntInput(e.target)){ _entacInput=e.target; _entacRender(); } });
 document.addEventListener('input',e=>{ if(e.target===_entacInput) _entacRender(); });
 document.addEventListener('click',e=>{ if(_entacInput && e.target!==_entacInput && !(_entacBox&&_entacBox.contains(e.target))) _entacHide(); });
-document.addEventListener('scroll',()=>{ if(_entacInput) _entacHide(); }, true);
+document.addEventListener('scroll',e=>{ if(_entacInput && !(_entacBox&&_entacBox.contains(e.target))) _entacHide(); }, true);
 
 /* Close picker on Escape */
 document.addEventListener('keydown',e=>{
