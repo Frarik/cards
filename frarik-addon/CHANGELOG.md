@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0 — 2026-06-06
+
+### Correzioni caricamento manuale
+- **Riselezionando lo stesso file non si caricava.** Il campo file ora si azzera dopo ogni scelta, quindi puoi selezionare di nuovo lo stesso file (es. `bolletta.js`) e viene ricaricato (prima funzionava solo trascinandolo).
+- **Versione coerente tra "Seleziona file" e "Trascina".** La versione è ora tracciata in modo persistente per nome-file e non torna più a 1.0.0 dopo un'eliminazione. La patch si incrementa **solo se il contenuto del file è cambiato** (come lo sha su GitHub): ricaricare lo stesso identico file mantiene la versione, modificarlo la incrementa.
+
 ## 1.1.99 — 2026-06-06
 
 ### Correzioni notifiche

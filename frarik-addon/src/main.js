@@ -7548,10 +7548,20 @@ function jsStoreLoadFile(file){
     let cardId = (res.newCards&&res.newCards[0]) || (res.tags&&res.tags[0]);
     let card = cardId ? window.FratechCardRegistry[cardId] : null;
     if(!card || !card.id){ status.innerHTML='<span style="color:#f87171">⚠️ Nessuna card valida trovata nel file (né FratechStore né Lovelace).</span>'; return; }
-    // auto-versioning anche per i caricamenti locali: prima volta = versione dichiarata
-    // (o 1.0.0); ad ogni ri-caricamento dello stesso id la patch si incrementa.
-    const prevV=_curStoreVersion(card.id);
-    const ver = prevV ? _bumpVer(prevV) : ((card.version && /\d/.test(String(card.version))) ? String(card.version) : '1.0.0');
+    // auto-versioning PERSISTENTE per nome-file (come per GitHub): la versione vive in
+    // g.fileVersions[<nome file>], che NON viene azzerato eliminando la card. La patch
+    // si incrementa SOLO se il contenuto è cambiato (come lo sha su GitHub), così:
+    //  • il numero resta coerente sia selezionando il file sia trascinandolo;
+    //  • dopo un'eliminazione non torna a 1.0.0;
+    //  • ricaricare lo stesso identico file non gonfia la versione.
+    const _g=_ghCfg();
+    const fname=(file.name||(card.id+'.js'));
+    const declared=(card.version && /\d/.test(String(card.version))) ? String(card.version) : null;
+    const existing=_jsStoreList().find(i=>(i.meta||{}).id===card.id);
+    const baseV=_g.fileVersions[fname] || (existing&&existing.meta&&existing.meta.version) || declared || '1.0.0';
+    const changed = existing ? (existing.code!==code) : false;   // senza riferimento (card eliminata) non si gonfia
+    const ver = changed ? _bumpVer(baseV) : baseV;
+    _g.fileVersions[fname]=ver; try{ saveCfg(); }catch(e){}
     _jsStoreSave(card.id, {id:card.id, name:card.name||card.id, icon:card.icon||'📦', version:ver, desc:card.desc||''}, code, 'local');
     status.innerHTML=`<span style="color:#4ade80">✅ Card <b>${card.name||card.id}</b> installata!${card._lovelace?' <span style="opacity:.6">(Lovelace)</span>':''} (v${ver})</span>`;
     // sincronizzazione IMMEDIATA: aggiorna subito tutte le viste store + dashboard (niente ↻ manuale)
@@ -9687,8 +9697,10 @@ function _epLicLogout(){
   on('fe-inp-bord',   'input',  function(){ feUpdCard('canvasBorderStr', this.value); });
   on('fe-inp-snap',   'input',  function(){ _feSnap = +this.value||5; });
   // File upload card JS
-  on('jsst-file-inp', 'change', function(){ jsStoreLoadFile(this.files[0]); });
-  on('ghs-file-inp',  'change', function(){ jsStoreLoadFile(this.files[0]); });
+  // NB: azzeriamo subito .value così riselezionando LO STESSO file il change riparte
+  // (altrimenti il browser non rilancia l'evento e "non carica" la card già caricata prima)
+  on('jsst-file-inp', 'change', function(){ const f=this.files[0]; this.value=''; jsStoreLoadFile(f); });
+  on('ghs-file-inp',  'change', function(){ const f=this.files[0]; this.value=''; jsStoreLoadFile(f); });
   // Entity picker search
   on('ep-picker-q',   'input',  function(){ _epPickerSearch(this.value); });
 })();
