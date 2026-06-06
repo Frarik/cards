@@ -6,7 +6,7 @@
  *   1. Copia in /config/www/meteo+previsioni.js
  *   2. Aggiungi risorsa: /local/meteo+previsioni.js  (tipo: Modulo)
  *   3. Dashboard YAML:  type: custom:meteo-card
- *   4. Clicca ⚙ nella card per configurare entità e nome città
+ *   4. Clicca ⚙ nella card per configurare entità e nome cittàa
  */
 
 // ── Icone meteo (emoji) ───────────────────────────────────────────────────────
