@@ -4286,8 +4286,7 @@ function _exitEditMode(){
     ep.classList.remove('closing');
     requestAnimationFrame(()=>{ ep.style.transition=''; });
   }
-  const btn=document.getElementById('edit-btn');
-  if(btn){ btn.classList.remove('on'); btn.innerHTML='<i class="mdi mdi-pencil"></i>'; }
+  document.getElementById('edit-btn')?.classList.remove('on');
   renderDash(); renderPageTabs(); renderBadgesAll(); renderFbarZone();
 }
 
@@ -4306,9 +4305,7 @@ function toggleEdit(){
   editMode=true;
   try{ sessionStorage.setItem('dash_edit','1'); }catch(e){}
   document.body.classList.add('editing');
-  const btn=document.getElementById('edit-btn');
-  btn.classList.add('on');
-  btn.innerHTML='<i class="mdi mdi-close"></i>';
+  document.getElementById('edit-btn')?.classList.add('on');
   _clipboardLoad(); _updatePasteBtn();
   renderDash(); // ricostruisce l'header IMPILATO (senza has-hbar) così non si sovrappone
   renderFbarZone();
@@ -11260,8 +11257,12 @@ function _applyTopbarStyle(){
     const btn=document.getElementById(it.id); if(!btn) return;
     const o=tb[it.key]||{};
     let icon=o.icon||it.def;
-    const color=o.color||'';
-    if(it.key==='kiosk' && _kioskOn && !o.icon) icon='mdi:fullscreen-exit';   // flip solo se icona di default
+    let color=o.color||'';
+    if(it.key==='kiosk' && _kioskOn && !o.icon) icon='mdi:fullscreen-exit';
+    // In edit mode: il bottone edit diventa una X rossa
+    if(it.key==='edit' && typeof editMode!=='undefined' && editMode){
+      icon='mdi:close'; color='#f87171';
+    }
     const iconHtml=_renderIcon(icon,16,color||'currentColor');
     if(it.key==='bell'){
       btn.innerHTML=iconHtml+'<span id="notif-bell-badge"></span>';
