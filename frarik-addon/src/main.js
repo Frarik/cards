@@ -1054,13 +1054,13 @@ async function _ghCheck(force){
       _ghPending.forEach(f=>{
         const nm=_ghCardName(g, f.name);
         if(!g.shas[f.name]){
-          // file mai installato → NUOVA card
-          _ntfPushLog('➕ Nuova card', 'La card "'+nm+'" è disponibile nello store — clicca per installare', '➕', 'gh:'+f.name);
+          // file mai installato → NUOVA card (non installiamo da soli: apri lo store)
+          _ntfPushLog('➕ Nuova card', 'È presente una nuova card «'+nm+'» — vuoi installarla? Premi ✓ per aprire lo store.', '➕', 'gh:'+f.name);
         } else {
           // file già installato ma sha cambiato → AGGIORNAMENTO con diff di versione
           const oldV=_ghFileVersion(g, f.name);
           const newV=_bumpVer(oldV);
-          _ntfPushLog('🔄 Card aggiornata', 'La card "'+nm+'" è stata aggiornata dalla v'+oldV+' alla v'+newV+' — clicca per installare', '🔄', 'gh:'+f.name);
+          _ntfPushLog('🔄 Card aggiornata', 'La card «'+nm+'» è passata dalla v'+oldV+' alla v'+newV+' — premi ✓ per aprire lo store e aggiornarla.', '🔄', 'gh:'+f.name);
         }
       });
       _ntfUpdateBell();
@@ -1126,11 +1126,21 @@ function _ghAskInstall(fileName){
     _ghCheck(true).then(()=>{ if(_ghPending.length) _ghAskInstall(); else showToast('✅ Card già aggiornate'); });
   }
 }
-/* router click notifiche centro (campanella) */
+/* router click notifiche centro (campanella).
+   Per le card GitHub NON installiamo automaticamente (potrebbero essere centinaia):
+   apriamo lo store della dashboard, dove l'utente sceglie cosa installare. */
 function _ntfHandleAction(action){
   if(!action) return;
-  if(action==='gh'){ _ghAskInstall(); return; }
-  if(action.indexOf('gh:')===0){ _ghAskInstall(action.slice(3)); return; }
+  if(action==='gh' || action.indexOf('gh:')===0){
+    try{ closeNotifCenter(); }catch(e){}
+    let tab='js';
+    if(action.indexOf('gh:')===0){   // apri la scheda giusta in base alla cartella del file
+      const f=(_ghPending||[]).find(p=>p.name===action.slice(3));
+      if(f&&f.path){ if(f.path.indexOf('card-chips/')===0) tab='chips'; else if(f.path.indexOf('card-distintivi/')===0) tab='distintivi'; }
+    }
+    try{ openGhStore(); if(tab!=='js') setTimeout(()=>{ try{ ghStoreTab(tab); }catch(e){} }, 60); }catch(e){}
+    return;
+  }
 }
 /* 🧹 Rimuove le card installate da GitHub diventate "orfane" (id non più prodotto da alcun file del
    repo): vecchie versioni/duplicati che non compaiono in nessuna scheda e gonfiano il conteggio.
@@ -7512,8 +7522,12 @@ function jsStoreLoadFile(file){
     let cardId = (res.newCards&&res.newCards[0]) || (res.tags&&res.tags[0]);
     let card = cardId ? window.FratechCardRegistry[cardId] : null;
     if(!card || !card.id){ status.innerHTML='<span style="color:#f87171">⚠️ Nessuna card valida trovata nel file (né FratechStore né Lovelace).</span>'; return; }
-    _jsStoreSave(card.id, {id:card.id, name:card.name||card.id, icon:card.icon||'📦', version:card.version||'1.0', desc:card.desc||''}, code, 'local');
-    status.innerHTML=`<span style="color:#4ade80">✅ Card <b>${card.name||card.id}</b> installata!${card._lovelace?' <span style="opacity:.6">(Lovelace)</span>':''} (v${card.version||'?'})</span>`;
+    // auto-versioning anche per i caricamenti locali: prima volta = versione dichiarata
+    // (o 1.0.0); ad ogni ri-caricamento dello stesso id la patch si incrementa.
+    const prevV=_curStoreVersion(card.id);
+    const ver = prevV ? _bumpVer(prevV) : ((card.version && /\d/.test(String(card.version))) ? String(card.version) : '1.0.0');
+    _jsStoreSave(card.id, {id:card.id, name:card.name||card.id, icon:card.icon||'📦', version:ver, desc:card.desc||''}, code, 'local');
+    status.innerHTML=`<span style="color:#4ade80">✅ Card <b>${card.name||card.id}</b> installata!${card._lovelace?' <span style="opacity:.6">(Lovelace)</span>':''} (v${ver})</span>`;
     document.getElementById('jsst-count').textContent = _jsStoreList().length;
     setTimeout(()=>{ jsStoreTab('installed'); }, 900);
     // se è aperto il nuovo "Store da GitHub", aggiorna la scheda Card locali (lì finiscono i file caricati da PC)

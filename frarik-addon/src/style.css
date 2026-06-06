@@ -1444,6 +1444,10 @@ body.kiosk .kiosk-reload-fab:hover{background:rgba(255,255,255,0.18);color:#fff}
 .ntfc-changelog{margin:6px 0 4px;padding-left:16px;display:flex;flex-direction:column;gap:3px}
 .ntfc-changelog li{font-size:11px;color:#cbd5e1;line-height:1.4}
 .ntfc-empty{padding:26px 14px;text-align:center;font-size:12px;color:var(--muted)}
+/* pulsanti azione a destra della notifica (✓ apri store · ✕ elimina) */
+.ntfc-btns{flex-shrink:0;display:flex;flex-direction:column;gap:4px;align-items:center}
+.ntfc-go{flex-shrink:0;width:22px;height:22px;border-radius:7px;background:rgba(74,222,128,.12);border:none;color:#4ade80;cursor:pointer;font-size:12px;line-height:1;transition:all .15s;display:flex;align-items:center;justify-content:center}
+.ntfc-go:hover{background:rgba(74,222,128,.25)}
 /* "✕" per eliminare la singola notifica */
 .ntfc-x{flex-shrink:0;align-self:flex-start;width:22px;height:22px;border-radius:7px;background:transparent;border:none;color:rgba(148,163,184,.55);cursor:pointer;font-size:12px;line-height:1;transition:all .15s}
 .ntfc-x:hover{background:rgba(248,113,113,.15);color:#f87171}

@@ -103,12 +103,21 @@ export function renderNotifCenter(){
     body.appendChild(t);
     if(n.msg){ const m=document.createElement('div'); m.className='ntfc-msg'; m.textContent=n.msg; body.appendChild(m); }
     body.appendChild(time);
+    item.appendChild(ico); item.appendChild(body);
+    // colonna pulsanti a destra: ✓ (apri store) quando c'è un'azione, ✕ (elimina) sempre
+    const btns = document.createElement('div'); btns.className='ntfc-btns';
+    if(n.action){
+      const go = document.createElement('button'); go.className='ntfc-go'; go.title='Apri lo store'; go.textContent='✓';
+      go.addEventListener('click', ev=>{ ev.stopPropagation(); try{ if(typeof window._ntfHandleAction==='function') window._ntfHandleAction(n.action, n); }catch(e){} });
+      btns.appendChild(go);
+    }
     const btn = document.createElement('button'); btn.className='ntfc-x'; btn.title='Elimina'; btn.textContent='✕';
     btn.addEventListener('click', ev=>{ ev.stopPropagation(); _ntfDismissById(n.id); });
-    item.appendChild(ico); item.appendChild(body); item.appendChild(btn);
-    // notifica cliccabile: instrada l'azione (es. installazione card GitHub)
+    btns.appendChild(btn);
+    item.appendChild(btns);
+    // tutta la riga è cliccabile: instrada l'azione (es. apri store)
     if(n.action){
-      item.classList.add('clickable'); item.style.cursor='pointer';
+      item.style.cursor='pointer';
       item.addEventListener('click', ()=>{ try{ if(typeof window._ntfHandleAction==='function') window._ntfHandleAction(n.action, n); }catch(e){} });
     }
     el.appendChild(item);

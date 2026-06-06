@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.96 — 2026-06-06
+
+### Notifiche card
+- La notifica di una **nuova card** ora chiede «È presente una nuova card «X» — vuoi installarla?»: **non installa più da sola** (in futuro saranno centinaia di card).
+- **✓ apre lo store** della dashboard (sulla scheda giusta: Card JS / Chips / Distintivi); **✕ elimina** la notifica. Tutta la riga è cliccabile.
+- **Auto-versioning anche per i caricamenti locali**: ricaricando lo stesso file la versione si incrementa da sola (1.0.0 → 1.0.1 …). I caricamenti locali **non** generano notifiche (le notifiche servono solo per le novità dal repo GitHub).
+
 ## 1.1.95 — 2026-06-06
 
 ### Correzioni
