@@ -2399,7 +2399,8 @@ function hbarInner(card){
     if(item.type==='sos'){
       const lbl=item.label||'SOS';
       const ic=item.icon||'mdi:alarm-light';
-      return `<span class="hbar-chip hbar-sos-chip tap" data-action="openSOS">${_renderIcon(ic,13,'#fff')} <span style="font-weight:900;letter-spacing:.5px">${eh(lbl)}</span></span>`;
+      const shapeR={pill:'20px',rounded:'10px',square:'6px'}[item.shape||'pill']||'20px';
+      return `<span class="hbar-chip hbar-sos-chip tap" style="--hbr:${shapeR}" data-action="openSOS">${_renderIcon(ic,13,'#fff')} <span style="font-weight:900;letter-spacing:.5px">${eh(lbl)}</span></span>`;
     }
     if(item.type==='kiosk'){
       const isK=document.body.classList.contains('kiosk');
@@ -5155,6 +5156,16 @@ function _hbCreateModal(){
           </div>
         </div>
 
+        <!-- SOS semplificato -->
+        <div id="hbf-sos-row" style="display:none">
+          <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:12px;margin-bottom:10px">
+            <div style="font-size:12px;font-weight:700;color:#f87171;margin-bottom:10px">🆘 Chip SOS</div>
+            <div class="flbl">Nascondi persone dal SOS</div>
+            <div id="hbf-sos-persons" style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px;max-height:120px;overflow-y:auto"></div>
+            <button class="btn2" style="width:100%;font-size:11px" data-action="openSOSCfgModal">⚙️ Configura SOS nelle impostazioni</button>
+          </div>
+        </div>
+
         <!-- STORE -->
         <div id="hbf-store-row" style="display:none">
           <div class="flbl">Card dallo Store</div>
@@ -5208,15 +5219,30 @@ function _hbCreateModal(){
 
         <!-- CHIP ASPETTO -->
         <div id="hbf-chip-row">
-          <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:8px;align-items:end">
-            <div><div class="flbl">Etichetta <span style="font-weight:400;opacity:.5">(opz.)</span></div>
+          <div style="display:flex;gap:8px;margin-bottom:8px;align-items:end">
+            <div style="flex:1"><div class="flbl">Etichetta <span style="font-weight:400;opacity:.5">(opz.)</span></div>
               <input class="finp" id="hbf-label" type="text" placeholder="es. Porta, Allarme"></div>
-            <div style="min-width:100px"><div class="flbl">Icona <span style="font-weight:400;opacity:.5">(auto)</span></div>
+            <div><div class="flbl">Icona <span style="font-weight:400;opacity:.5">(auto)</span></div>
               <div style="display:flex;gap:3px;align-items:center">
-                <input class="finp" id="hbf-icon" type="text" placeholder="auto" style="width:58px;text-align:center;font-size:11px" data-input="_hbIconInput">
-                <input type="color" id="hbf-icon-color" value="#ffffff" title="Colore icona MDI" style="width:26px;height:28px;border:none;background:none;padding:0;cursor:pointer;border-radius:5px;flex-shrink:0">
-                <button class="fbtn" data-action="_hbPickChipIcon" data-action-el="true" title="Scegli icona" style="flex-shrink:0">🎨</button>
+                <!-- Anteprima icona live -->
+                <span id="hbf-icon-prev" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(255,255,255,.06);border:1px solid var(--bd);border-radius:6px;flex-shrink:0;cursor:pointer" title="Anteprima icona" data-action="_hbPickChipIcon" data-action-el="true">?</span>
+                <!-- Colore icona -->
+                <input type="color" id="hbf-icon-color" value="#ffffff" title="Colore icona" style="width:26px;height:28px;border:none;background:none;padding:0;cursor:pointer;border-radius:5px;flex-shrink:0">
+                <!-- Reset -->
+                <button class="hbc-btn" title="Reset auto" data-action="_hbResetIcon" style="flex-shrink:0">↺</button>
               </div>
+              <input type="hidden" id="hbf-icon">
+            </div>
+          </div>
+          <!-- ICONA PER STATO -->
+          <div id="hbf-iconmap-section" style="margin-bottom:10px">
+            <div class="flbl">Icona per stato <span style="font-weight:400;opacity:.5">(opz.)</span></div>
+            <div id="hbf-imap-list" style="margin-bottom:5px"></div>
+            <div style="display:flex;gap:4px;align-items:center">
+              <input class="finp" id="hbf-imap-state" type="text" placeholder="stato (es. on, locked…)" style="flex:2;font-size:11px">
+              <span id="hbf-imap-icon-prev" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:14px;background:rgba(255,255,255,.06);border:1px solid var(--bd);border-radius:6px;flex-shrink:0;cursor:pointer" title="Scegli icona stato" data-action="_hbPickImapIcon" data-action-el="true">?</span>
+              <input type="hidden" id="hbf-imap-icon">
+              <button class="fbtn" data-action="hbAddIconMap" title="Aggiungi">+</button>
             </div>
           </div>
           <div style="display:flex;gap:6px;margin-bottom:10px">
@@ -5351,10 +5377,7 @@ function _hbCreateModal(){
           </div>
           <!-- Campi hidden compat -->
           <div id="hbf-colormap-row" style="display:none"><div id="hbf-cmap-preview" style="display:none"></div><div id="hbf-cmap-swatches" style="display:none"></div></div>
-          <div id="hbf-iconmap-row" style="display:none">
-            <div id="hbf-imap-list"></div>
-            <input id="hbf-imap-state" type="hidden"><input id="hbf-imap-icon" type="hidden">
-          </div>
+          <div id="hbf-iconmap-row" style="display:none"></div>
           <div id="hbf-bg-colors"  style="display:none"></div>
           <div id="hbf-auto-badge" style="display:none"></div>
         </div>
@@ -5613,27 +5636,33 @@ function hbEditChip(zone,i){
 function hbSelType(t){
   ['entity','text','clock','sep','sos','kiosk','conn','store'].forEach(x=>document.getElementById('hbft-'+x)?.classList.toggle('on',x===t));
   const sf=(id,v)=>{const e=document.getElementById(id);if(e)e.style.display=v?'':'none';};
-  const isStore=t==='store';
-  sf('hbf-entity-row', t==='entity');
-  sf('hbf-text-row',   t==='text');
-  sf('hbf-clock-row',  t==='clock');
-  sf('hbf-store-row',  isStore);
+  const isStore=t==='store', isSos=t==='sos', isSimple=isStore||isSos||t==='clock'||t==='sep';
+  sf('hbf-entity-row',       t==='entity');
+  sf('hbf-text-row',         t==='text');
+  sf('hbf-clock-row',        t==='clock');
+  sf('hbf-store-row',        isStore);
+  sf('hbf-sos-row',          isSos);
+  if(isSos) _hbRenderSosPersons();
   if(t==='clock') _hbRenderClockColors();
-  if(isStore){ _hbRenderStoreList(); }
-  // Nascondi aspetto chip e colori per store/clock/sep
-  sf('hbf-chip-row',   !isStore && t!=='clock' && t!=='sep');
-  const colorSection=document.getElementById('hbf-bg-custom')?.closest('.hb-color-row')?.parentElement;
-  // Nascondi sezione colori per store
-  document.querySelectorAll('#hbf-chip-form .flbl').forEach(lbl=>{
-    if(lbl.textContent.startsWith('Colori')) lbl.style.display=isStore?'none':'';
-  });
+  if(isStore) _hbRenderStoreList();
+  // Chip row visibile solo per entity/text
+  sf('hbf-chip-row',         t==='entity'||t==='text');
+  sf('hbf-iconmap-section',  t==='entity');
+  // Colori solo per entity/text
   const colorRow=document.getElementById('hbf-col-bg-pick')?.closest('.hb-color-row');
-  if(colorRow) colorRow.style.display=isStore?'none':'';
-  if(t==='sos'||isStore){
-    document.getElementById('hbf-navigate-row') &&(document.getElementById('hbf-navigate-row').style.display='none');
-    document.getElementById('hbf-service-row')  &&(document.getElementById('hbf-service-row').style.display='none');
-    document.getElementById('hbf-options-row')  &&(document.getElementById('hbf-options-row').style.display='none');
-  }
+  if(colorRow) colorRow.parentElement && (colorRow.style.display=(t==='entity'||t==='text')?'':'none');
+  document.querySelectorAll('#hbf-chip-form .flbl').forEach(lbl=>{
+    if(lbl.textContent.startsWith('Colori')) lbl.style.display=(t==='entity'||t==='text')?'':'none';
+  });
+  // Entità secondaria
+  const ent2Sec=document.getElementById('hbf-entity2-on')?.closest('[style*="border-top"]');
+  if(ent2Sec) ent2Sec.style.display=t==='entity'?'':'none';
+  // Azioni
+  sf('hbf-navigate-row', false); sf('hbf-service-row', false); sf('hbf-options-row', false);
+  const actGrid=document.getElementById('hbca-none')?.closest('div[style*="grid"]');
+  const actLbl=actGrid?.previousElementSibling;
+  if(actGrid) actGrid.style.display=t==='entity'?'':'none';
+  if(actLbl)  actLbl.style.display=t==='entity'?'':'none';
   _hbUpdatePreview();
 }
 function hbSelShape(s){
@@ -5714,6 +5743,7 @@ function hbAutoFill(){
   const curAct=_hbGetClickAct();
   if(curAct==='none') hbSelClickAct(def.act);
   if(hint){ hint.textContent=def.msg; hint.style.display='block'; }
+  _hbRefreshIconPrev();
 }
 
 // apri info modale per entityId diretto
@@ -5986,20 +6016,77 @@ function hbAddColorMap(){
 function hbAddColorMapEntry(){ hbAddColorMap(); }
 
 /* ── Icon picker per il form chip ── */
+function _hbSetIcon(v){
+  const el=document.getElementById('hbf-icon'); if(el) el.value=v;
+  _hbRefreshIconPrev();
+  _hbUpdatePreview();
+}
 function _hbPickChipIcon(e, btn){
-  openIconPicker(v=>{
-    const el=document.getElementById('hbf-icon'); if(el) el.value=v;
-    _hbUpdatePreview();
-  }, btn, e);
+  openIconPicker(v=>{ _hbSetIcon(v); }, btn, e);
 }
 function _hbPickChipIcon2(e, btn){
   openIconPicker(v=>{
     const el=document.getElementById('hbf-icon2'); if(el) el.value=v;
+    _hbRefreshIcon2Prev();
     _hbUpdatePreview();
   }, btn, e);
 }
-function _hbIconInput(v){ _hbUpdatePreview(); }
-function _hbIcon2Input(v){ _hbUpdatePreview(); }
+function _hbPickImapIcon(e, btn){
+  openIconPicker(v=>{
+    const el=document.getElementById('hbf-imap-icon'); if(el) el.value=v;
+    const prev=document.getElementById('hbf-imap-icon-prev');
+    if(prev) prev.innerHTML=_renderIcon(v,14,'#a5b4fc')||v;
+  }, btn, e);
+}
+function _hbIconInput(v){ _hbRefreshIconPrev(); _hbUpdatePreview(); }
+function _hbIcon2Input(v){ _hbRefreshIcon2Prev(); _hbUpdatePreview(); }
+function _hbResetIcon(){
+  const el=document.getElementById('hbf-icon'); if(el) el.value='';
+  const col=document.getElementById('hbf-icon-color'); if(col) col.value='#ffffff';
+  _hbRefreshIconPrev(); _hbUpdatePreview();
+}
+function _hbRefreshIconPrev(){
+  const iconEl=document.getElementById('hbf-icon');
+  const prev=document.getElementById('hbf-icon-prev');
+  if(!prev) return;
+  const icon=(iconEl?.value||'').trim();
+  const col=document.getElementById('hbf-icon-color')?.value||'#ffffff';
+  const entity=document.getElementById('hbf-entity')?.value?.trim()||'';
+  const autoIcon=entity?_haAutoIcon(entity):'';
+  const displayIcon=icon||autoIcon||'';
+  prev.innerHTML=displayIcon?_renderIcon(displayIcon,14,col):'?';
+  prev.title=displayIcon||'Clicca per scegliere icona';
+}
+function _hbRefreshIcon2Prev(){
+  const ico=document.getElementById('hbf-icon2')?.value?.trim()||'';
+  const prev=document.getElementById('hbf-icon2-prev');
+  if(prev) prev.innerHTML=ico?_renderIcon(ico,12,'#94a3b8'):'?';
+}
+
+/* ── SOS: mostra persone configurabili ── */
+function _hbRenderSosPersons(){
+  const el=document.getElementById('hbf-sos-persons'); if(!el) return;
+  const persons=Object.keys(hs||{}).filter(e=>e.startsWith('person.'));
+  const sosCfg=cfg.sos||{}; const hidden=sosCfg.hiddenPersons||[];
+  if(!persons.length){ el.innerHTML='<div style="font-size:10px;color:var(--muted)">Nessuna persona trovata</div>'; return; }
+  el.innerHTML=persons.map(p=>{
+    const nm=(ha[p]?.friendly_name)||p.split('.')[1];
+    const checked=hidden.includes(p);
+    return `<label style="font-size:11px;display:flex;align-items:center;gap:6px;cursor:pointer;padding:3px 0">
+      <input type="checkbox" ${checked?'checked':''} data-entity="${p}" class="hbsos-hide-person"> ${eh(nm)}</label>`;
+  }).join('');
+  el.querySelectorAll('.hbsos-hide-person').forEach(cb=>{
+    cb.addEventListener('change',()=>{
+      if(!cfg.sos) cfg.sos={};
+      if(!cfg.sos.hiddenPersons) cfg.sos.hiddenPersons=[];
+      const e=cb.dataset.entity;
+      if(cb.checked){ if(!cfg.sos.hiddenPersons.includes(e)) cfg.sos.hiddenPersons.push(e); }
+      else { cfg.sos.hiddenPersons=cfg.sos.hiddenPersons.filter(x=>x!==e); }
+    });
+  });
+}
+
+function openSOSCfgModal(){ closeHBM(); setTimeout(()=>{ try{ openOikSettings(); const btn=document.getElementById('ep-sos-btn'); if(btn) btn.click(); }catch(e){} },100); }
 
 /* ── Entità secondaria: toggle e posizione ── */
 function _hbSelEnt2Pos(pos){
@@ -6127,7 +6214,8 @@ function hbAddIconMap(){
   if(!st||!ic) return;
   _hbIconMap[st]=ic;
   stEl.value=''; icEl.value='';
-  _hbRenderIconMap();
+  const prev=document.getElementById('hbf-imap-icon-prev'); if(prev) prev.innerHTML='?';
+  _hbRenderIconMap(); _hbUpdatePreview();
 }
 function _hbRenderIconMap(){
   const el=document.getElementById('hbf-imap-list'); if(!el) return;
@@ -6309,7 +6397,7 @@ function _hbUpdatePreview(){
 /* ── Sync color pickers (picker↔text input) ── */
 function _hbInitColorPickers(){
   // Sync colore icona → preview
-  document.getElementById('hbf-icon-color')?.addEventListener('input', _hbUpdatePreview);
+  document.getElementById('hbf-icon-color')?.addEventListener('input', ()=>{ _hbRefreshIconPrev(); _hbUpdatePreview(); });
   // Sync color picker stato
   const cmapPick=document.getElementById('hbf-cmap-color-pick');
   const cmapTxt=document.getElementById('hbf-cmap-color');
@@ -11656,7 +11744,8 @@ Object.assign(window, {
   // ── Wrapper aggiunti nel refactor handler ──
   _covSkip, _feEpClose, _ntfSaveRules, _jsDropzoneClick, _ghsDropzoneClick,
   _ghCheckForce, _epToggleLicense, _epLicLogout, hbAddColorMapEntry, _hbResetColor,
-  _hbPickChipIcon, _hbPickChipIcon2, _hbIconInput, _hbIcon2Input, _hbSelEnt2Pos, _hbDelOption, _appDelItem, _appDelGroup,
+  _hbPickChipIcon, _hbPickChipIcon2, _hbPickImapIcon, _hbIconInput, _hbIcon2Input,
+  _hbSelEnt2Pos, _hbResetIcon, openSOSCfgModal, _hbDelOption, _appDelItem, _appDelGroup,
   _openGhStoreClean, _pasteCardToClean, _closeViewsAndOpenTM, _closeViewsAndSetPage,
   _jsStoreAddAndRefresh, _deleteSavedAt, _appChipPopupAt, _setActivePageAndSync,
   _pgWarnClose, _sendCallSvc,
