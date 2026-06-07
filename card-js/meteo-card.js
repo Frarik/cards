@@ -601,7 +601,7 @@ setTimeout(function() {
     window.customCards = window.customCards.filter(function(c) { return c && c.type !== 'meteo-card' })
     window.customCards.push({
       type:        'meteo-card',
-      name:        'Meteo + Previsioni',
+      name:        'Card Meteo',
       description: 'Card meteo con previsioni 5 giorni, tema notte/giorno e impostazioni inline.',
       preview:     false,
     })
