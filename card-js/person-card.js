@@ -1,5 +1,5 @@
 /**
- * person-card.js v1.1 — FratechStore Card "Persona"
+ * person-card.js v1.3 — FratechStore Card "Persona"
  * Foto entità + tracker · sfondo Google Maps con segnaposto live · badge LIVE.
  * Affianco al nome: In Casa (verde) / Fuori Casa (rosso) / nome zona HA (azzurro) + "X min fa".
  * Tap sulla card → popup mappa intera con lo storico dei tracciati delle ultime 24h.
@@ -121,7 +121,6 @@
           <div class="pc-ago">${ago || ''}</div>
         </div>
       </div>
-      ${cfgPanel(rid, H, personId, getGps(card))}
     </div>`;
   }
 
@@ -134,7 +133,6 @@
         <div style="opacity:.7;font-size:11px;margin-top:2px">Tocca ⚙️ per scegliere l'entità <b>person</b> e il <b>GPS</b>.</div>
       </div>
       <div class="pc-gear" data-pc="gear" title="Impostazioni">⚙️</div>
-      ${cfgPanel(rid, H, personId, gpsId)}
     </div>`;
   }
 
@@ -187,24 +185,52 @@
 `;
   }
 
-  function cfgPanel(rid, H, personId, gpsId) {
+  // ── config: modale a tutto schermo (non vincolato dalla dimensione della card) ──
+  function openConfig(card, el, hass) {
+    const H = bestHass();
+    const personId = getPerson(card), gpsId = getGps(card);
     const opts = (prefix, sel) => {
       const states = (H && H.states) || {};
       const list = Object.keys(states).filter(id => id.startsWith(prefix)).sort().map(id => {
         const fn = (states[id].attributes && states[id].attributes.friendly_name) || id;
-        return `<option value="${id}" ${id === sel ? 'selected' : ''}>${fn}</option>`;
+        return `<option value="${id}" ${id === sel ? 'selected' : ''}>${fn} (${id})</option>`;
       });
       return `<option value="">— nessuna —</option>` + list.join('');
     };
-    return `<div class="pc-cfg" data-pc="cfg">
-      <h4>Configura card persona</h4>
-      <div><label>Entità Person</label><select data-pc="sel-person">${opts('person.', personId)}</select></div>
-      <div><label>Entità GPS (device_tracker)</label><select data-pc="sel-gps">${opts('device_tracker.', gpsId)}</select></div>
-      <div class="pc-crow">
-        <button class="pc-close" data-pc="cfg-close">Annulla</button>
-        <button class="pc-save" data-pc="cfg-save">Salva</button>
-      </div>
-    </div>`;
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(2,6,16,.74);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
+    ov.innerHTML = `
+      <div style="width:min(440px,94vw);max-height:90vh;overflow:auto;background:#0b1220;border:1px solid rgba(255,255,255,.14);
+        border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.6);padding:20px;color:#f1f5f9">
+        <style>
+          .pccfg-sel{width:100%;margin-top:6px;padding:11px 12px;border-radius:11px;background:#0f1830;color:#f1f5f9;
+            border:1px solid rgba(255,255,255,.20);font-size:13px;font-family:inherit}
+          .pccfg-sel option,.pccfg-sel optgroup{background:#0f1830;color:#f1f5f9}
+          .pccfg-lbl{display:block;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8}
+        </style>
+        <div style="font-size:16px;font-weight:800;margin-bottom:16px">👤 Configura card persona</div>
+        <label class="pccfg-lbl">Entità Person</label>
+        <select id="pccfg-person" class="pccfg-sel">${opts('person.', personId)}</select>
+        <label class="pccfg-lbl" style="margin-top:14px">Entità GPS (device_tracker) — opzionale</label>
+        <select id="pccfg-gps" class="pccfg-sel">${opts('device_tracker.', gpsId)}</select>
+        <div style="font-size:11px;color:#64748b;margin-top:8px;line-height:1.5">Se lasci il GPS vuoto, la posizione viene presa dalla person stessa o dal suo tracker attivo.</div>
+        <div style="display:flex;gap:10px;margin-top:20px">
+          <button id="pccfg-cancel" style="flex:1;padding:12px;border-radius:11px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#e2e8f0">Annulla</button>
+          <button id="pccfg-save" style="flex:1;padding:12px;border-radius:11px;border:none;cursor:pointer;font-weight:800;background:#22c55e;color:#04210f">Salva</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    const close = () => { try { document.body.removeChild(ov); } catch (e) {} };
+    ov.addEventListener('click', e => { if (e.target === ov) close(); });
+    ov.querySelector('#pccfg-cancel').addEventListener('click', close);
+    ov.querySelector('#pccfg-save').addEventListener('click', () => {
+      const p = ov.querySelector('#pccfg-person').value;
+      const g = ov.querySelector('#pccfg-gps').value;
+      saveCfg(card, { person: p, gps: g });
+      card.person = p; card.gps = g;
+      close();
+      try { el.innerHTML = render(card, hass); mount(card, hass, el); } catch (e) {}
+    });
   }
 
   // ── mount: interazioni ──────────────────────────────────────────────────────────
@@ -220,16 +246,9 @@
         el.addEventListener('click', (e) => {
           const t = e.target.closest('[data-pc]');
           const act = t && t.getAttribute('data-pc');
-          if (act === 'gear') { e.stopPropagation(); const c = el.querySelector('[data-pc="cfg"]'); if (c) c.classList.add('open'); return; }
-          if (act === 'cfg-close') { const c = el.querySelector('[data-pc="cfg"]'); if (c) c.classList.remove('open'); return; }
-          if (act === 'cfg-save') {
-            const p = el.querySelector('[data-pc="sel-person"]'); const g = el.querySelector('[data-pc="sel-gps"]');
-            saveCfg(card, { person: p ? p.value : '', gps: g ? g.value : '' });
-            card.person = p ? p.value : ''; card.gps = g ? g.value : '';
-            el.innerHTML = render(card, hass); mount(card, hass, el); return;
-          }
-          // tap sulla card (non sui controlli) → popup storico
-          if (!el.querySelector('[data-pc="cfg"]')?.classList.contains('open')) openHistory(card);
+          if (act === 'gear') { e.stopPropagation(); openConfig(card, el, hass); return; }
+          // tap sulla card: se configurata → storico 24h, altrimenti → config
+          if (getPerson(card)) openHistory(card); else openConfig(card, el, hass);
         });
       }
     } catch (e) {}
@@ -238,9 +257,6 @@
   // ── update: live senza ricostruire (e senza chiudere il pannello ⚙️) ────────────
   function update(card, hass, el) {
     try {
-      // mentre il pannello impostazioni è aperto NON toccare il DOM (altrimenti si richiude)
-      if (el.querySelector('[data-pc="cfg"]') && el.querySelector('[data-pc="cfg"]').classList.contains('open')) return;
-
       const personId = getPerson(card);
       const renderedEmpty = !!el.querySelector('.pc-empty');
 
@@ -359,7 +375,7 @@
     id: 'person-card',
     name: 'Persona',
     icon: '👤',
-    version: '1.2',
+    version: '1.3',
     desc: 'Foto persona + tracker, sfondo Google Maps live, stato zona colorato e storico spostamenti 24h. Entità configurabili.',
     render, mount, update
   };
