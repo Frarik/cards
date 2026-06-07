@@ -1,5 +1,5 @@
 /**
- * person-card.js v1.7 — FratechStore Card "Persona"
+ * person-card.js v1.8 — FratechStore Card "Persona"
  * Foto entità + tracker · sfondo Google Maps con segnaposto live.
  * Affianco al nome: A casa (verde) / Fuori casa (rosso) / nome zona HA (azzurro) + "X min fa".
  * Tap sulla card → popup mappa intera con lo storico dei tracciati delle ultime 24h.
@@ -77,7 +77,7 @@
     if (h < 24) return h + (h === 1 ? ' ora fa' : ' ore fa');
     return Math.floor(h / 24) + ' g fa';
   }
-  function gmapUrl(lat, lon) { return `https://maps.google.com/maps?q=${lat},${lon}&z=16&hl=it&output=embed`; }
+  function gmapUrl(lat, lon) { return `https://maps.google.com/maps?q=${lat},${lon}&z=17&t=k&hl=it&output=embed`; }
 
   const ST = (window.__pcState = window.__pcState || {});
 
@@ -120,10 +120,8 @@
       <div class="pc-stage"><div class="pc-content">
         <div class="pc-ava" style="${avaStyle}">${avaInner}</div>
         <div class="pc-info">
-          <div class="pc-row1">
-            <span class="pc-name">${nm}</span>
-            <span class="pc-pill"><span class="pc-pilltxt">${zi.label}</span></span>
-          </div>
+          <div class="pc-name">${nm}</div>
+          <div class="pc-row2"><span class="pc-pill"><span class="pc-pilltxt">${zi.label}</span></span></div>
           <div class="pc-ago">${ago || ''}</div>
         </div>
       </div></div>
@@ -161,13 +159,13 @@
   box-shadow:0 0 0 3px var(--pc-glow),0 0 14px var(--pc-glow),0 6px 16px rgba(0,0,0,.5);
   display:flex;align-items:center;justify-content:center;font-weight:800;font-size:21px;color:#fff;}
 #${rid} .pc-info{min-width:0;}
-#${rid} .pc-row1{display:flex;align-items:center;gap:9px;}
-#${rid} .pc-name{font-size:21px;font-weight:800;letter-spacing:-.3px;white-space:nowrap;max-width:260px;overflow:hidden;
+#${rid} .pc-name{font-size:21px;font-weight:800;letter-spacing:-.3px;white-space:nowrap;max-width:300px;overflow:hidden;
   text-overflow:ellipsis;text-shadow:0 1px 4px rgba(0,0,0,.7);}
-#${rid} .pc-pill{display:inline-flex;align-items:center;flex-shrink:0;padding:3px 12px;border-radius:999px;
+#${rid} .pc-row2{margin-top:7px;}
+#${rid} .pc-pill{display:inline-flex;align-items:center;padding:3px 12px;border-radius:999px;
   font-size:12px;font-weight:800;line-height:1;white-space:nowrap;background:color-mix(in srgb,var(--pc-col) 22%,transparent);
   border:1px solid var(--pc-col);color:var(--pc-col);}
-#${rid} .pc-ago{font-size:12px;color:rgba(255,255,255,.62);margin-top:5px;white-space:nowrap;}
+#${rid} .pc-ago{font-size:12px;color:rgba(255,255,255,.62);margin-top:6px;white-space:nowrap;}
 /* ingranaggio impostazioni: in alto a destra, grigio chiaro discreto (NON scalato) */
 #${rid} .pc-gear{position:absolute;top:6px;right:7px;z-index:5;width:24px;height:24px;border-radius:7px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;background:rgba(8,12,22,.4);color:#cbd5e1;
@@ -321,7 +319,8 @@
         <div id="pc-hist-map" style="flex:1;min-height:0;background:#0b1220"></div>
       </div>`;
     document.body.appendChild(ov);
-    const close = () => { try { document.body.removeChild(ov); } catch (e) {} };
+    let liveTimer = null;
+    const close = () => { if (liveTimer) { clearInterval(liveTimer); liveTimer = null; } try { document.body.removeChild(ov); } catch (e) {} };
     ov.addEventListener('click', e => { if (e.target === ov) close(); });
     ov.querySelector('#pc-hist-x').addEventListener('click', close);
     const sub = ov.querySelector('#pc-hist-sub');
@@ -341,19 +340,32 @@
     const mapDiv = ov.querySelector('#pc-hist-map');
     try {
       const map = L.map(mapDiv, { zoomControl: true, attributionControl: false });
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+      // tile SATELLITE (Esri World Imagery, senza chiave)
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 }).addTo(map);
       if (pts.length) {
-        L.polyline(pts, { color: '#38bdf8', weight: 4, opacity: .85 }).addTo(map);
+        L.polyline(pts, { color: '#38bdf8', weight: 4, opacity: .9 }).addTo(map);
         L.circleMarker(pts[0], { radius: 7, color: '#22c55e', fillColor: '#22c55e', fillOpacity: 1 }).addTo(map).bindTooltip('Inizio 24h');
-        L.circleMarker(pts[pts.length - 1], { radius: 8, color: '#ef4444', fillColor: '#ef4444', fillOpacity: 1 }).addTo(map).bindTooltip('Ora');
-        map.fitBounds(L.latLngBounds(pts).pad(0.15));
-        if (sub) sub.textContent = pts.length + ' punti negli ultimi 24h';
-      } else {
-        const cur = latlon(H, personId, getGps(card));
-        if (cur) { map.setView([cur[0], cur[1]], 14); L.marker([cur[0], cur[1]]).addTo(map); }
-        else map.setView([41.9, 12.5], 5);
-        if (sub) sub.textContent = 'Nessuno storico posizione (il device_tracker deve registrare lat/lon nel recorder)';
       }
+      const mkIcon = (zi) => markerIcon(L, zi.color, picUrl(H, personId), initials(nameOf(H, personId)));
+      const cur0 = latlon(H, personId, getGps(card));
+      let liveMk = null;
+      if (cur0) {
+        liveMk = L.marker([cur0[0], cur0[1]], { icon: mkIcon(zoneInfo(stateOf(H, personId))), zIndexOffset: 1000 }).addTo(map);
+        if (pts.length) map.fitBounds(L.latLngBounds(pts.concat([[cur0[0], cur0[1]]])).pad(0.2));
+        else map.setView([cur0[0], cur0[1]], 16);
+      } else if (pts.length) {
+        map.fitBounds(L.latLngBounds(pts).pad(0.15));
+      } else { map.setView([41.9, 12.5], 5); }
+      if (sub) sub.textContent = (pts.length ? pts.length + ' punti 24h · ' : '') + (cur0 ? 'posizione live ●' : 'nessuna posizione');
+      // aggiornamento in TEMPO REALE del segnaposto attuale
+      liveTimer = setInterval(() => {
+        try {
+          const H2 = bestHass(); const c = latlon(H2, personId, getGps(card)); if (!c) return;
+          const zi2 = zoneInfo(stateOf(H2, personId));
+          if (liveMk) { liveMk.setLatLng([c[0], c[1]]); liveMk.setIcon(mkIcon(zi2)); }
+          else { liveMk = L.marker([c[0], c[1]], { icon: mkIcon(zi2), zIndexOffset: 1000 }).addTo(map); }
+        } catch (e) {}
+      }, 4000);
       setTimeout(() => { try { map.invalidateSize(); } catch (e) {} }, 80);
     } catch (e) { if (sub) sub.textContent = 'Errore mappa: ' + (e && e.message || e); }
   }
@@ -362,7 +374,7 @@
     id: 'person-card',
     name: 'Persona',
     icon: '👤',
-    version: '1.7',
+    version: '1.8',
     desc: 'Foto persona + tracker, sfondo Google Maps live, stato zona colorato e storico 24h. Contenuto che scala con la dimensione della card.',
     noAutoFit: true,   // ha già il suo scaling interno (mappa a tutto sfondo) → niente auto-fit del core
     render, mount, update
