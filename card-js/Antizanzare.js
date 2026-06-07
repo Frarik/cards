@@ -1,3 +1,4 @@
+/* frarik-version: 1.1 */
 /**
  * antizanzare-card.js v2.1
  */
@@ -72,7 +73,7 @@ const I = {
 }
 
 const CSS = `
-:host { display:block; }
+:host { display:flex; align-items:center; justify-content:center; height:100%; overflow:hidden; }
 * { box-sizing:border-box; margin:0; padding:0; }
 .card {
   background:var(--ha-card-background,#111827);
@@ -82,6 +83,7 @@ const CSS = `
   font-family:var(--primary-font-family,system-ui,sans-serif);
   box-shadow:0 8px 40px rgba(0,0,0,.35);
   transition:border-color .3s,box-shadow .3s;
+  transform-origin:center center;will-change:transform;
 }
 .card.st-ciclo  { border-color:rgba(34,197,94,.4);  box-shadow:0 8px 40px rgba(34,197,94,.12); }
 .card.st-manual { border-color:rgba(249,115,22,.4);  box-shadow:0 8px 40px rgba(249,115,22,.12); }
@@ -236,12 +238,29 @@ class AntiZanzareCard extends HTMLElement {
   connectedCallback() {
     this.shadowRoot.addEventListener('click', this._onClick)
     this.shadowRoot.addEventListener('change', this._onChange)
+    try { if (!this._frkRO && 'ResizeObserver' in window) { this._frkRO = new ResizeObserver(() => this._frkFit()); this._frkRO.observe(this) } } catch (e) {}
   }
 
   disconnectedCallback() {
     this.shadowRoot.removeEventListener('click', this._onClick)
     this.shadowRoot.removeEventListener('change', this._onChange)
     this._stopTick()
+    try { if (this._frkRO) this._frkRO.disconnect() } catch (e) {}
+  }
+
+  /* riempie sempre tutta la card scalando il contenuto (come la person-card) */
+  _frkFit() {
+    try {
+      const card = this.shadowRoot && this.shadowRoot.querySelector('.card')
+      if (!card) return
+      const HW = this.clientWidth, HH = this.clientHeight
+      if (!HW || !HH) return
+      const BW = 360
+      card.style.transform = 'none'
+      card.style.width = BW + 'px'
+      const BH = card.offsetHeight || HH
+      card.style.transform = 'scale(' + (HW / BW) + ',' + (HH / BH) + ')'
+    } catch (e) {}
   }
 
   set hass(hass) {
@@ -262,6 +281,7 @@ class AntiZanzareCard extends HTMLElement {
     } else {
       this._patch()
     }
+    try { requestAnimationFrame(() => this._frkFit()) } catch (e) {}
   }
 
   _startTick() {
@@ -726,7 +746,7 @@ class AntiZanzareCard extends HTMLElement {
 customElements.define('antizanzare-card', AntiZanzareCard)
 
 window.customCards = window.customCards || []
-window.customCards.push({ version: '1.0',
+window.customCards.push({ version: '1.1',
   type:        'antizanzare-card',
   name:        'Anti Zanzare',
   description: 'Controllo sistema anti zanzare: schedule, timer, statistiche mensili.',

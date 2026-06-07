@@ -12,7 +12,7 @@ esistenti (in `card-js/`, `card-chips/`, `card-distintivi/`) per riusarne stile 
 
 | Cartella | File | ID | Nome | Versione | Formato |
 |---|---|---|---|---|---|
-| card-js | `Antizanzare.js` | `antizanzare-card` | Anti Zanzare | 1.0 | Lovelace |
+| card-js | `Antizanzare.js` | `antizanzare-card` | Anti Zanzare | 1.1 | Lovelace |
 | card-js | `Differenziata.js` | `differenziata-card` | Raccolta Differenziata | 1.0 | Lovelace |
 | card-js | `Irrigazione.js` | `irrigazione-card` | Irrigazione Smart | 1.0 | Lovelace |
 | card-js | `Meteo.js` | `meteo-card` | Meteo + Previsioni | — | Lovelace |
@@ -21,9 +21,9 @@ esistenti (in `card-js/`, `card-chips/`, `card-distintivi/`) per riusarne stile 
 ## Dettaglio
 
 ### Anti Zanzare  ·  `Antizanzare.js`
-- **ID:** `antizanzare-card` · **versione:** 1.0 · **formato:** Lovelace
+- **ID:** `antizanzare-card` · **versione:** 1.1 · **formato:** Lovelace
 - **Descrizione:** Controllo sistema anti zanzare: schedule, timer, statistiche mensili.
-- **Hooks:** — · **righe:** 734
+- **Hooks:** — · **righe:** 754
 - **Pattern/API usati:** hass completo (Lovelace) · grafica SVG inline · timer · interazione (listener)
 
 ### Raccolta Differenziata  ·  `Differenziata.js`
