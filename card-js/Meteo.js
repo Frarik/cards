@@ -1,4 +1,4 @@
-/* frarik-version: 1.4 */
+/* frarik-version: 1.5 */
 /**
  * meteo+previsioni.js v1.3
  * type: custom:meteo-card
@@ -215,7 +215,7 @@ class MeteoCard extends HTMLElement {
     this._se = false         // search open
     this._te = ''            // temp entityId in settings
     this._tc = ''            // temp cityName in settings
-    this._tx = []            // temp entità extra in settings ([{e,l}])
+    this._ts = {}            // temp override entità delle 4 stat in settings ({hum,pres,wind,dir})
     this._fs = null          // forecast subscription
     this._bk = null          // build key (per evitare rebuild inutili)
     this._nh = true          // flag primo hass
@@ -241,7 +241,7 @@ class MeteoCard extends HTMLElement {
   _saveStore() {
     try {
       localStorage.setItem(this._lsKey(),
-        JSON.stringify({ entityId: this._c.entityId, cityName: this._c.cityName, extras: this._c.extras || [] }))
+        JSON.stringify({ entityId: this._c.entityId, cityName: this._c.cityName, statEnts: this._c.statEnts || {} }))
     } catch {}
   }
 
@@ -257,11 +257,11 @@ class MeteoCard extends HTMLElement {
     this._c = {
       entityId: stored.entityId || cfg.entityId || '',
       cityName: (stored.cityName != null ? stored.cityName : (cfg.cityName || '')),
-      extras: stored.extras || cfg.extras || [],
+      statEnts: stored.statEnts || cfg.statEnts || {},
     }
     this._te = this._c.entityId
     this._tc = this._c.cityName
-    this._tx = (this._c.extras || []).map(x => ({ e: x.e, l: x.l }))
+    this._ts = Object.assign({}, this._c.statEnts)
     if (prev !== this._c.entityId && this._h) this._getForecast()
     this._bk = null; this._build()
   }
@@ -300,8 +300,8 @@ class MeteoCard extends HTMLElement {
       body.style.transform = 'none'
       body.style.width = BW + 'px'
       const BH = body.offsetHeight || HH
-      const s = Math.min(HW / BW, HH / BH)  // scala uniforme (zoom-to-fit), centrata
-      body.style.transform = 'scale(' + s + ')'
+      // riempie SEMPRE tutta la card (larghezza E altezza): scala non uniforme
+      body.style.transform = 'scale(' + (HW / BW) + ',' + (HH / BH) + ')'
     } catch (e) {}
   }
 
@@ -498,7 +498,8 @@ class MeteoCard extends HTMLElement {
     const st = this._h.states?.[this._c.entityId]
     if (!st) return 'NOT_FOUND:' + this._c.entityId
     const a = st.attributes
-    const ex = (this._c.extras||[]).map(x=>x.e+'='+(this._h.states?.[x.e]?.state??'')+':'+(x.l||'')).join(',')
+    const se = this._c.statEnts||{}
+    const ex = Object.keys(se).map(k=>k+'='+se[k]+':'+(this._h.states?.[se[k]]?.state??'')).join(',')
     return [st.state, a.temperature, a.humidity, a.pressure,
             a.wind_speed, a.wind_bearing, this._fo, this._so,
             this._se, this._fc.length, this._c.cityName, ex].join('|')
@@ -522,34 +523,31 @@ class MeteoCard extends HTMLElement {
         this._se=!this._se; this._renderModal(); break
       case 'sel':
         this._te=t.dataset.id; this._se=false; this._renderModal(); break
-      case 'addExtra':
-        (this._tx=this._tx||[]).push({ e:'', l:'' }); this._renderModal(); break
-      case 'delExtra':
-        this._tx.splice(parseInt(t.dataset.i,10)||0,1); this._renderModal(); break
-      case 'save':
-        this._c={ entityId:this._te, cityName:this._tc, extras:(this._tx||[]).filter(x=>x.e) }
+      case 'save': {
+        const se={}; ['hum','pres','wind','dir'].forEach(k=>{ if(this._ts[k]) se[k]=this._ts[k] })
+        this._c={ entityId:this._te, cityName:this._tc, statEnts:se }
         this._saveStore()       // persiste in localStorage → sopravvive a refresh/cache
         this._fc=[]; this._getForecast()
         this._closeSettings()
         this.dispatchEvent(new CustomEvent('config-changed',
-          { detail:{ config:{ entityId:this._c.entityId, cityName:this._c.cityName, extras:this._c.extras } },
+          { detail:{ config:{ entityId:this._c.entityId, cityName:this._c.cityName, statEnts:this._c.statEnts } },
             bubbles:true, composed:true }))
         break
+      }
     }
   }
 
   _onInput(e) {
     const f = e.target.dataset.f
     if (f === 'city') this._tc = e.target.value
-    else if (f === 'exlbl') { const i=parseInt(e.target.dataset.i,10); if(this._tx[i]) this._tx[i].l = e.target.value }
-    else if (f === 'exent') { const i=parseInt(e.target.dataset.i,10); if(this._tx[i]) this._tx[i].e = e.target.value }
+    else if (f && f.indexOf('st_') === 0) this._ts[f.slice(3)] = e.target.value
   }
 
   // ── Modal impostazioni (montato su document.body, fuori dalla card) ─────────
   _openSettings() {
     this._so = true; this._se = false
     this._te = this._c.entityId; this._tc = this._c.cityName
-    this._tx = (this._c.extras || []).map(x => ({ e: x.e, l: x.l }))
+    this._ts = Object.assign({}, this._c.statEnts)
     this._renderModal()
     this._bk = null; this._build()   // aggiorna stato attivo del gear
   }
@@ -557,7 +555,7 @@ class MeteoCard extends HTMLElement {
   _closeSettings() {
     this._so = false
     this._te = this._c.entityId; this._tc = this._c.cityName
-    this._tx = (this._c.extras || []).map(x => ({ e: x.e, l: x.l }))
+    this._ts = Object.assign({}, this._c.statEnts)
     this._destroyModal()
     this._bk = null; this._build()
   }
@@ -621,18 +619,16 @@ class MeteoCard extends HTMLElement {
     const city  = this._c.cityName || a.friendly_name || this._c.entityId
     const today = _fmtDate()
 
-    // riquadri "entità extra" configurati dall'utente (oltre ai 4 standard)
-    const extrasHtml = (this._c.extras||[]).filter(x=>x.e).map(x=>{
-      const s = this._h.states?.[x.e]
-      const raw = s ? s.state : '--'
-      const u = (s && s.attributes && s.attributes.unit_of_measurement) || ''
-      const val = (raw==null||raw===''||isNaN(parseFloat(raw))) ? (raw||'--') : _n(raw)
-      const lbl = x.l || (s && s.attributes && s.attributes.friendly_name) || x.e
-      return `<div class="stl" style="background:${th.tb};border:1px solid ${th.tbr};">
-        <div class="sic" style="color:${th.accent};">${_IC.co}</div>
-        <div class="sv">${val}${u?`<span style="font-size:11px;opacity:.7"> ${u}</span>`:''}</div><div class="sl">${lbl}</div>
-      </div>`
-    }).join('')
+    // override delle 4 statistiche: se l'utente ha scelto un'entità, usa quella al posto del dato meteo
+    const se = this._c.statEnts || {}
+    const ov = (k, def) => {
+      const id = se[k]; if (!id) return def
+      const s = this._h.states?.[id]; if (!s) return def
+      const u = (s.attributes && s.attributes.unit_of_measurement) || ''
+      const raw = s.state
+      const v = (raw==null||raw===''||isNaN(parseFloat(raw))) ? (raw||'--') : _n(raw)
+      return v + (u ? ('<span style="font-size:11px;opacity:.7"> ' + u + '</span>') : '')
+    }
 
     // forecast HTML
     let fcH = ''
@@ -696,21 +692,20 @@ class MeteoCard extends HTMLElement {
     <div class="stats">
       <div class="stl" style="background:${th.tb};border:1px solid ${th.tbr};">
         <div class="sic" style="color:${th.accent};">${_IC.hu}</div>
-        <div class="sv">${hum}%</div><div class="sl">Umidità</div>
+        <div class="sv">${ov('hum', hum+'%')}</div><div class="sl">Umidità</div>
       </div>
       <div class="stl" style="background:${th.tb};border:1px solid ${th.tbr};">
         <div class="sic" style="color:${th.accent};">${_IC.pr}</div>
-        <div class="sv">${pres}</div><div class="sl">Pressione</div>
+        <div class="sv">${ov('pres', pres)}</div><div class="sl">Pressione</div>
       </div>
       <div class="stl" style="background:${th.tb};border:1px solid ${th.tbr};">
         <div class="sic" style="color:${th.accent};">${_IC.wi}</div>
-        <div class="sv">${wsp}k/h</div><div class="sl">Vento</div>
+        <div class="sv">${ov('wind', wsp+'k/h')}</div><div class="sl">Vento</div>
       </div>
       <div class="stl" style="background:${th.tb};border:1px solid ${th.tbr};">
         <div class="sic" style="color:${th.accent};">${_IC.co}</div>
-        <div class="sv">${wdir}</div><div class="sl">Direzione</div>
+        <div class="sv">${ov('dir', wdir)}</div><div class="sl">Direzione</div>
       </div>
-      ${extrasHtml}
     </div>
 
     <div class="fct" data-a="fc" style="color:${th.accent};">
@@ -730,11 +725,10 @@ class MeteoCard extends HTMLElement {
     const city  = this._tc
     const wents = Object.keys(this._h?.states||{}).filter(k=>k.startsWith('weather.'))
     const exEnts = Object.keys(this._h?.states||{}).filter(k=>/^(sensor|binary_sensor|number|input_number)\./.test(k)).sort()
-    const exOpts = (sel)=>`<option value="">— scegli —</option>`+exEnts.map(id=>`<option value="${id}" ${id===sel?'selected':''}>${(this._h.states[id].attributes&&this._h.states[id].attributes.friendly_name)||id}</option>`).join('')
-    const exRows = (this._tx||[]).map((x,i)=>`<div style="display:flex;gap:6px;margin-top:7px;align-items:center">
-        <select data-f="exent" data-i="${i}" style="flex:1;min-width:0;height:34px;border-radius:9px;border:1px solid rgba(255,255,255,.15);background:#0f1830;color:#fff;font-size:12px;padding:0 8px">${exOpts(x.e)}</select>
-        <input data-f="exlbl" data-i="${i}" type="text" value="${(x.l||'').replace(/"/g,'&quot;')}" placeholder="Etichetta" style="width:92px;height:34px;border-radius:9px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;font-size:12px;padding:0 8px"/>
-        <button class="cbtn" data-a="delExtra" data-i="${i}" style="flex-shrink:0">${_IC.x}</button>
+    const exOpts = (sel)=>`<option value="">— dal meteo —</option>`+exEnts.map(id=>`<option value="${id}" ${id===sel?'selected':''}>${(this._h.states[id].attributes&&this._h.states[id].attributes.friendly_name)||id}</option>`).join('')
+    const statRows = [['hum','Umidità'],['pres','Pressione'],['wind','Vento'],['dir','Direzione']].map(([k,lbl])=>`<div style="display:flex;gap:8px;margin-top:7px;align-items:center">
+        <span style="width:80px;flex-shrink:0;font-size:11px;color:#94a3b8">${lbl}</span>
+        <select data-f="st_${k}" style="flex:1;min-width:0;height:34px;border-radius:9px;border:1px solid rgba(255,255,255,.15);background:#0f1830;color:#fff;font-size:12px;padding:0 8px">${exOpts(this._ts[k]||'')}</select>
       </div>`).join('')
 
     return `
@@ -770,10 +764,9 @@ class MeteoCard extends HTMLElement {
       <input class="ci" type="text" value="${city}" placeholder="Es: Selargius" data-f="city"/>
       <div class="ht">Se vuoto, usa il nome dell'entità HA</div>
 
-      <div class="fl" style="margin-top:16px;">Entità extra</div>
-      <div class="ht">Riquadri aggiuntivi oltre ai 4 standard (es. PM2.5, indice UV, pioggia…). Lascia l'etichetta vuota per usare il nome dell'entità.</div>
-      ${exRows}
-      <button class="cbtn" data-a="addExtra" style="margin-top:9px">+ Aggiungi entità</button>
+      <div class="fl" style="margin-top:16px;">Entità delle statistiche</div>
+      <div class="ht">Scegli quale entità usare per ogni riquadro. Se lasci "dal meteo", usa il dato dell'entità weather.</div>
+      ${statRows}
     </div>
     <div class="sft">
       <button class="sav" data-a="save">${_IC.ok} Salva</button>

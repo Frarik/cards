@@ -16,7 +16,7 @@ esistenti (in `card-js/`, `card-chips/`, `card-distintivi/`) per riusarne stile 
 | card-js | `Differenziata.js` | `differenziata-card` | Raccolta Differenziata | 1.0 | Lovelace |
 | card-js | `Irrigazione.js` | `irrigazione-card` | Irrigazione Smart | 1.0 | Lovelace |
 | card-js | `Meteo.js` | `meteo-card` | Meteo + Previsioni | — | Lovelace |
-| card-js | `person-card.js` | `person-card` | 👤 Persona | 1.8 | FratechStore |
+| card-js | `person-card.js` | `person-card` | 👤 Persona | 1.9 | FratechStore |
 
 ## Dettaglio
 
@@ -41,13 +41,13 @@ esistenti (in `card-js/`, `card-chips/`, `card-distintivi/`) per riusarne stile 
 ### Meteo + Previsioni  ·  `Meteo.js`
 - **ID:** `meteo-card` · **versione:** — · **formato:** Lovelace
 - **Descrizione:** Card meteo con previsioni 5 giorni, tema notte/giorno e impostazioni inline.
-- **Hooks:** — · **righe:** 809
+- **Hooks:** — · **righe:** 802
 - **Pattern/API usati:** grafica SVG inline · timer · interazione (listener) · popup/overlay
 
 ### 👤 Persona  ·  `person-card.js`
-- **ID:** `person-card` · **versione:** 1.8 · **formato:** FratechStore
+- **ID:** `person-card` · **versione:** 1.9 · **formato:** FratechStore
 - **Descrizione:** Foto persona + tracker, sfondo Google Maps live, stato zona colorato e storico 24h. Contenuto che scala con la dimensione della card.
-- **Hooks:** mount, update · **righe:** 388
+- **Hooks:** mount, update · **righe:** 404
 - **Pattern/API usati:** timer · interazione (listener) · mappa Leaflet · popup/overlay
 
 ---
