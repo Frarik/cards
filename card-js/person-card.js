@@ -1,6 +1,6 @@
 /**
- * person-card.js v1.3 — FratechStore Card "Persona"
- * Foto entità + tracker · sfondo Google Maps con segnaposto live · badge LIVE.
+ * person-card.js v1.4 — FratechStore Card "Persona"
+ * Foto entità + tracker · sfondo Google Maps con segnaposto live.
  * Affianco al nome: In Casa (verde) / Fuori Casa (rosso) / nome zona HA (azzurro) + "X min fa".
  * Tap sulla card → popup mappa intera con lo storico dei tracciati delle ultime 24h.
  * Config interna (⚙️): entità person + entità GPS (device_tracker).
@@ -109,7 +109,6 @@
     return `<style>${css}</style><div id="${rid}" class="pc-root" style="--pc-col:${zi.color};--pc-glow:${zi.glow}">
       ${mapHtml}
       <div class="pc-scrim"></div>
-      <div class="pc-live"><span class="pc-live-dot"></span>LIVE</div>
       <div class="pc-gear" data-pc="gear" title="Impostazioni">⚙️</div>
       <div class="pc-glass">
         <div class="pc-ava" style="${avaStyle}">${avaInner}</div>
@@ -130,7 +129,7 @@
       <div class="pc-empty">
         <div style="font-size:32px">👤</div>
         <div style="font-weight:800;margin-top:4px">Card Persona</div>
-        <div style="opacity:.7;font-size:11px;margin-top:2px">Tocca ⚙️ per scegliere l'entità <b>person</b> e il <b>GPS</b>.</div>
+        <div style="opacity:.7;font-size:11px;margin-top:2px">Tocca per scegliere l'entità <b>person</b> e il <b>GPS</b>.</div>
       </div>
       <div class="pc-gear" data-pc="gear" title="Impostazioni">⚙️</div>
     </div>`;
@@ -141,7 +140,8 @@
 #${rid}.pc-root{position:relative;width:100%;height:100%;min-height:96px;border-radius:18px;overflow:hidden;
   font-family:var(--primary-font-family,'Inter',system-ui,-apple-system,sans-serif);color:#f1f5f9;
   background:#0b1220;border:1px solid rgba(255,255,255,.10);}
-#${rid} .pc-map{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:0;pointer-events:none;filter:saturate(1.05);}
+/* mappa estesa oltre il bordo e ritagliata (overflow:hidden della root) per nascondere la barra "Google / Termini" in basso, mantenendo il segnaposto centrato */
+#${rid} .pc-map{position:absolute;left:0;right:0;top:-24px;width:100%;height:calc(100% + 48px);border:0;z-index:0;pointer-events:none;filter:saturate(1.05);}
 #${rid} .pc-map-empty{background:radial-gradient(120% 120% at 75% 30%,#27364b,#0b1220);}
 #${rid} .pc-scrim{position:absolute;inset:0;z-index:1;pointer-events:none;
   background:linear-gradient(90deg,rgba(8,12,22,.94) 0%,rgba(8,12,22,.82) 32%,rgba(8,12,22,.30) 62%,rgba(8,12,22,0) 88%);}
@@ -159,15 +159,11 @@
   font-size:clamp(10px,3.2cqw,12px);font-weight:800;line-height:1;background:color-mix(in srgb,var(--pc-col) 22%,transparent);
   border:1px solid var(--pc-col);color:var(--pc-col);}
 #${rid} .pc-ago{font-size:clamp(9px,2.8cqw,12px);color:rgba(255,255,255,.6);margin-top:5px;white-space:nowrap;}
-#${rid} .pc-live{position:absolute;top:10px;right:10px;z-index:3;display:flex;align-items:center;gap:6px;
-  padding:4px 9px;border-radius:8px;background:rgba(8,12,22,.62);backdrop-filter:blur(6px);
-  border:1px solid rgba(34,197,94,.45);color:#4ade80;font-size:10px;font-weight:900;letter-spacing:.08em;}
-#${rid} .pc-live-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px #22c55e;animation:pcblink 1.6s infinite;}
-@keyframes pcblink{0%,100%{opacity:1}50%{opacity:.35}}
-#${rid} .pc-gear{position:absolute;top:10px;left:10px;z-index:4;width:28px;height:28px;border-radius:8px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;background:rgba(8,12,22,.55);backdrop-filter:blur(6px);
-  border:1px solid rgba(255,255,255,.15);color:#cbd5e1;font-size:14px;transition:.15s;}
-#${rid} .pc-gear:hover{background:rgba(8,12,22,.85);color:#fff;}
+/* ingranaggio impostazioni: in alto a destra, quasi invisibile finché non ci passi sopra */
+#${rid} .pc-gear{position:absolute;top:6px;right:7px;z-index:5;width:22px;height:22px;border-radius:7px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;background:transparent;color:rgba(255,255,255,.4);
+  font-size:12px;opacity:.45;transition:opacity .15s,background .15s,color .15s;}
+#${rid} .pc-gear:hover{opacity:1;background:rgba(8,12,22,.75);color:#fff;}
 #${rid} .pc-empty{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;
   text-align:center;padding:16px;color:#cbd5e1;}
 #${rid} .pc-cfg{position:absolute;inset:0;z-index:5;display:none;flex-direction:column;gap:9px;justify-content:center;
@@ -375,7 +371,7 @@
     id: 'person-card',
     name: 'Persona',
     icon: '👤',
-    version: '1.3',
+    version: '1.4',
     desc: 'Foto persona + tracker, sfondo Google Maps live, stato zona colorato e storico spostamenti 24h. Entità configurabili.',
     render, mount, update
   };
