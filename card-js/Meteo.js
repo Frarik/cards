@@ -1,4 +1,4 @@
-/* frarik-version: 1.2 */
+/* frarik-version: 1.3 */
 /**
  * meteo+previsioni.js v1.3
  * type: custom:meteo-card
@@ -291,12 +291,13 @@ class MeteoCard extends HTMLElement {
       const HW = this.clientWidth, HH = this.clientHeight
       if (!HW || !HH) return
       // lo SFONDO (.card) riempie il contenitore; scaliamo SOLO il contenuto (.body),
-      // così non compare nessun riquadro dietro (come la person-card).
-      const BW = Math.max(HW, 320)          // impaginazione del contenuto: mai sotto 320px
+      // così non compare riquadro dietro. Larghezza di DESIGN fissa (come la person-card):
+      // così il contenuto si INGRANDISCE sulle card grandi e si rimpicciolisce su quelle piccole.
+      const BW = 340
       body.style.transform = 'none'
       body.style.width = BW + 'px'
       const BH = body.offsetHeight || HH
-      const s = Math.min(HW / BW, HH / BH)  // 1 a dimensione normale; <1 quando stringi/abbassi
+      const s = Math.min(HW / BW, HH / BH)  // scala uniforme (zoom-to-fit), centrata
       body.style.transform = 'scale(' + s + ')'
     } catch (e) {}
   }
