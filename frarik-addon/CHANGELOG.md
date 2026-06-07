@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.6 — 2026-06-07
+
+### Versioni: unica fonte di verità = il file
+Riscritta la logica delle versioni per eliminare le incoerenze (es. la stessa card mostrata a 1.0.8 in una vista e 1.0 in un'altra). Ora:
+- **Card in locale** (in prova): versione **sempre `1.0`** — ricaricarla quante volte vuoi non la cambia.
+- **Pubblicazione su GitHub**: legge la versione **realmente presente su GitHub** e **incrementa il minore** (1.0 → 1.1 → 1.2 …); la versione viene impressa nel file. Prima pubblicazione di un file nuovo = `1.0`.
+- **Store** (⚡ Card JS / 🔹 Chips / 🏷️ Distintivi): mostra la versione **letta dal file su GitHub** (non più un contatore locale che derivava).
+- L'installazione adotta la versione dichiarata nel file (niente più incrementi "fantasma").
+
 ## 1.2.5 — 2026-06-07
 
 ### Pubblicazione e versioni

@@ -981,17 +981,38 @@ async function _ghDownload(file){
   if(!r.ok) throw new Error('download '+r.status);
   return await r.text();
 }
-/* ── Auto-versioning delle card GitHub ─────────────────────────────────────
-   Ogni file (es. bolletta.js) ha una versione tracciata. Alla prima installazione
-   parte dalla versione dichiarata nella card (o 1.0.0); ad ogni sostituzione del
-   file sul repo (lo sha cambia) la patch viene incrementata: 1.0.0 → 1.0.1 → … */
-function _bumpVer(v){
-  const parts=String(v||'1.0.0').split('.').map(x=>parseInt(x,10));
-  while(parts.length<3) parts.push(0);
-  if(parts.some(n=>isNaN(n))) return '1.0.1';
-  parts[parts.length-1]++;
-  return parts.join('.');
+/* ── Versionamento card ────────────────────────────────────────────────────
+   UNICA FONTE DI VERITÀ: la versione scritta nel file (campo `version:`), che
+   viene impressa al momento della PUBBLICAZIONE.
+   • card LOCALE (in prova): sempre "1.0"
+   • PUBBLICAZIONE: legge la versione su GitHub e incrementa il minore (1.0→1.1→…)
+   • INSTALL / STORE: leggono la versione dichiarata nel file (quella su GitHub) */
+function _parseCardVersion(code){
+  const m=String(code||'').match(/version\s*:\s*['"]([^'"]+)['"]/);
+  return (m && /\d/.test(m[1])) ? m[1].trim() : null;
 }
+function _bumpMinor(v){
+  const p=String(v||'1.0').split('.').map(n=>parseInt(n,10));
+  const maj=isNaN(p[0])?1:p[0];
+  const min=isNaN(p[1])?0:p[1];
+  return maj+'.'+(min+1);
+}
+function _verGt(a,b){   // a > b ? (confronto numerico per componenti)
+  const pa=String(a||'0').split('.').map(n=>parseInt(n,10)||0);
+  const pb=String(b||'0').split('.').map(n=>parseInt(n,10)||0);
+  for(let i=0;i<Math.max(pa.length,pb.length);i++){ const x=pa[i]||0,y=pb[i]||0; if(x!==y) return x>y; }
+  return false;
+}
+/* legge la versione attualmente presente nel file su GitHub (null se non esiste) */
+async function _ghReadRemoteVersion(path){
+  const g=_ghCfg(); const branch=g.branch||'main';
+  const url=`https://raw.githubusercontent.com/${g.owner}/${g.repo}/${branch}/${path.split('/').map(encodeURIComponent).join('/')}?_t=${Date.now()}`;
+  try{ const r=await fetch(url,{cache:'no-store'}); if(!r.ok) return null; return _parseCardVersion(await r.text()); }
+  catch(e){ return null; }
+}
+/* compat: _bumpVer (vecchia patch) mantenuto per sicurezza, non più usato per il publish */
+function _bumpVer(v){ return _bumpMinor(v); }
+let _ghVerCache={};   // sha → versione letta dal file (per mostrarla nello store)
 function _curStoreVersion(id){
   try{ const it=_jsStoreList().find(i=>(i.meta||{}).id===id); return (it&&it.meta&&it.meta.version)||null; }catch(e){ return null; }
 }
@@ -1000,7 +1021,7 @@ function _ghFileVersion(g, fileName){
   if(g.fileVersions && g.fileVersions[fileName]) return g.fileVersions[fileName];
   const id=Object.keys(g.idFile||{}).find(k=>g.idFile[k]===fileName);
   if(id){ const v=_curStoreVersion(id); if(v) return v; }
-  return '1.0.0';
+  return '1.0';
 }
 /* nome leggibile di una card a partire dal file (store meta → nome file) */
 function _ghCardName(g, fileName){
@@ -1017,21 +1038,12 @@ async function _ghInstallFile(file){
   const card=id?window.FratechCardRegistry[id]:null;
   if(card&&card.id){
     const g=_ghCfg();
-    const oldSha=g.shas[file.name];
-    let version;
-    if(!oldSha){
-      // prima installazione → versione dichiarata nella card, oppure 1.0.0
-      version=(card.version && /\d/.test(String(card.version))) ? String(card.version) : '1.0.0';
-    } else if(oldSha!==file.sha){
-      // il file è cambiato sul repo → incrementa la versione (auto-versioning)
-      version=_bumpVer(_ghFileVersion(g, file.name));
-    } else {
-      // stesso file (reinstallazione es. pulizia orfane) → mantieni la versione
-      version=_ghFileVersion(g, file.name);
-    }
+    // la versione è quella IMPRESSA nel file su GitHub (no bump all'installazione)
+    const version=_parseCardVersion(code)||'1.0';
     g.fileVersions[file.name]=version;
+    g.idFile=g.idFile||{}; g.idFile[card.id]=file.name;
+    _ghVerCache[file.sha]=version;
     _jsStoreSave(card.id,{id:card.id,name:card.name||card.id,icon:card.icon||'📦',version:version,desc:card.desc||''},code,'github');
-    g.idFile=g.idFile||{}; g.idFile[card.id]=file.name;   // mappa id↔file per liberare lo sha all'eliminazione
   }
   _ghCfg().shas[file.name]=file.sha;
   _ghCfg().notifiedShas[file.name]=file.sha;   // installata = già "conosciuta": niente notifica al successivo delete
@@ -1063,8 +1075,7 @@ async function _ghCheck(force){
         _ntfPushLog('➕ Nuova card', 'È presente una nuova card «'+nm+'» — vuoi installarla? Premi ✓ per aprire lo store.', '➕', 'gh:'+f.name);
       } else {
         const oldV=_ghFileVersion(g, f.name);
-        const newV=_bumpVer(oldV);
-        _ntfPushLog('🔄 Card aggiornata', 'La card «'+nm+'» è passata dalla v'+oldV+' alla v'+newV+' — premi ✓ per aprire lo store e aggiornarla.', '🔄', 'gh:'+f.name);
+        _ntfPushLog('🔄 Card aggiornata', 'La card «'+nm+'» è stata aggiornata su GitHub (avevi la v'+oldV+') — premi ✓ per aprire lo store e aggiornarla.', '🔄', 'gh:'+f.name);
       }
       g.notifiedShas[f.name]=f.sha; any=true;
     });
@@ -1300,7 +1311,24 @@ function ghStoreTab(tab){
   _ghListFolder(f.path).then(files=>{
     _ghsCache[tab]=files.filter(x=>f.ext.test(x.name)&&!(f.exclude&&f.exclude.test(x.name)));
     if(_ghsTab===tab) _ghStoreRender();
+    if(f.kind==='install') _ghFetchVerLabels(tab);   // legge le versioni reali dai file su GitHub
   }).catch(e=>{ document.getElementById('ghs-status').textContent='⚠️ '+e.message; });
+}
+/* Scarica e legge la versione (campo version:) dai file della cartella, con cache per
+   sha (un solo fetch per versione di file). Aggiorna le etichette nello store. */
+async function _ghFetchVerLabels(tab){
+  const files=(_ghsCache[tab]||[]).filter(x=>x&&x.sha&&x.download_url&&!(x.sha in _ghVerCache));
+  if(!files.length) return;
+  let i=0; const CONC=5;
+  async function worker(){
+    while(i<files.length){
+      const x=files[i++];
+      try{ const r=await fetch(x.download_url,{cache:'no-store'}); _ghVerCache[x.sha]= r.ok ? (_parseCardVersion(await r.text())||'') : ''; }
+      catch(e){ _ghVerCache[x.sha]=''; }
+    }
+  }
+  await Promise.all(Array.from({length:Math.min(CONC,files.length)}, worker));
+  if(_ghsTab===tab) _ghStoreRender();
 }
 function _ghStoreRender(){
   const tab=_ghsTab, list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
@@ -1325,7 +1353,7 @@ function _ghStoreRender(){
       const known=g.shas[f.name];
       const idFile=g.idFile||{};
       const cardId=Object.keys(idFile).find(k=>idFile[k]===f.name)||null;
-      verLbl = g.fileVersions[f.name] || (cardId && _curStoreVersion(cardId)) || '';
+      verLbl = _ghVerCache[f.sha] || g.fileVersions[f.name] || (cardId && _curStoreVersion(cardId)) || '';
       const inDash=!!(cardId&&usedIds.has(cardId));
       if(!known){
         acts=`${eyeBtn(null)}<button class="ghs-btn ghs-btn-inst" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>`;
@@ -1433,12 +1461,15 @@ async function _ghPublishDo(){
   file=file.replace(/\s+/g,'-');
   const path=folder+'/'+file;
   const g0=_ghCfg();
-  // La versione sale SOLO alla pubblicazione. La PRIMA pubblicazione di un file mantiene
-  // la versione corrente (es. 1.0); ogni pubblicazione SUCCESSIVA dello stesso file
-  // incrementa la patch (1.0 → 1.0.1 → …).
-  const cur=(it.meta&&it.meta.version) || g0.fileVersions[file] || '1.0';
-  const alreadyPublished=!!g0.shas[file];
-  const ver=alreadyPublished ? _bumpVer(cur) : cur;
+  st.innerHTML='<span style="color:#fbbf24">⏳ Leggo la versione su GitHub…</span>';
+  // Legge la versione ATTUALE su GitHub e incrementa il minore (1.0 → 1.1 → 1.2 …).
+  // Prima pubblicazione (file non presente su GitHub) → 1.0.
+  const remoteVer=await _ghReadRemoteVersion(path);
+  const localTracked=g0.fileVersions[file];
+  let base=remoteVer;
+  if(!base) base=localTracked||null;                                   // niente su GitHub → usa il tracciato locale
+  else if(localTracked && _verGt(localTracked, base)) base=localTracked; // GitHub "stantio" → usa il più alto
+  const ver = base ? _bumpMinor(base) : '1.0';
   const code=_stampVersion(it.code, ver);   // imprime la versione nel codice prima di pubblicare
   st.innerHTML='<span style="color:#fbbf24">⏳ Pubblico su GitHub…</span>';
   try{
@@ -1449,8 +1480,9 @@ async function _ghPublishDo(){
       _jsStoreSave(id, Object.assign({}, it.meta, {version:ver}), code, 'github');
       const g=_ghCfg(); g.idFile=g.idFile||{}; g.idFile[id]=file;
       g.fileVersions[file]=ver;
-      // allinea sha + "già notificata": così NON arriva la notifica «nuova card» per il proprio publish
-      if(newSha){ g.shas[file]=newSha; g.notifiedShas[file]=newSha; }
+      // allinea sha + "già notificata" + cache versione: così lo store mostra subito la
+      // versione pubblicata e NON arriva la notifica «nuova card» per il proprio publish
+      if(newSha){ g.shas[file]=newSha; g.notifiedShas[file]=newSha; _ghVerCache[newSha]=ver; }
       saveCfg(); _haSaveCfg();
     }catch(e){}
     _ghsCache={};
@@ -7611,15 +7643,12 @@ function jsStoreLoadFile(file){
     let cardId = (res.newCards&&res.newCards[0]) || (res.tags&&res.tags[0]);
     let card = cardId ? window.FratechCardRegistry[cardId] : null;
     if(!card || !card.id){ status.innerHTML='<span style="color:#f87171">⚠️ Nessuna card valida trovata nel file (né FratechStore né Lovelace).</span>'; return; }
-    // VERSIONE: il caricamento locale NON incrementa la versione (così durante le prove
-    // si può ricaricare lo stesso file all'infinito senza farla salire). La versione
-    // sale SOLO quando si pubblica su GitHub (vedi _ghPublishDo). Qui si usa la versione
-    // già tracciata per quel file (persistente), oppure quella dichiarata nel codice,
-    // oppure 1.0 di default.
+    // VERSIONE: una card caricata in LOCALE è sempre "1.0" (copia di lavoro/prova).
+    // La versione "vera" nasce solo con la pubblicazione su GitHub (vedi _ghPublishDo),
+    // dove si legge la versione su GitHub e si incrementa il minore (1.0→1.1→…).
     const _g=_ghCfg();
     const fname=(file.name||(card.id+'.js'));
-    const declared=(card.version && /\d/.test(String(card.version))) ? String(card.version) : null;
-    const ver = _g.fileVersions[fname] || _curStoreVersion(card.id) || declared || '1.0';
+    const ver = '1.0';
     _g.fileVersions[fname]=ver; try{ saveCfg(); }catch(e){}
     _jsStoreSave(card.id, {id:card.id, name:card.name||card.id, icon:card.icon||'📦', version:ver, desc:card.desc||''}, code, 'local');
     status.innerHTML=`<span style="color:#4ade80">✅ Card <b>${card.name||card.id}</b> installata!${card._lovelace?' <span style="opacity:.6">(Lovelace)</span>':''} (v${ver})</span>`;
