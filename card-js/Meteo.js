@@ -1,4 +1,4 @@
-/* frarik-version: 1.6 */
+/* frarik-version: 1.7 */
 /**
  * meteo+previsioni.js v1.3
  * type: custom:meteo-card
@@ -300,14 +300,10 @@ class MeteoCard extends HTMLElement {
       body.style.transform = 'none'
       body.style.width = BW + 'px'
       const BH = body.offsetHeight || HH
-      // Forecast chiuso → riempie tutta la card (scala non uniforme L+H).
-      // Forecast aperto → scala UNIFORME (zoom-to-fit) così la tendina non viene "stirata"/ridimensionata male.
-      if (this._fo) {
-        const s = Math.min(HW / BW, HH / BH)
-        body.style.transform = 'scale(' + s + ')'
-      } else {
-        body.style.transform = 'scale(' + (HW / BW) + ',' + (HH / BH) + ')'
-      }
+      // scala UNIFORME (zoom-to-fit): il contenuto si adatta SENZA deformarsi;
+      // lo sfondo gradiente della .card riempie eventuali bordi.
+      const s = Math.min(HW / BW, HH / BH)
+      body.style.transform = 'scale(' + s + ')'
     } catch (e) {}
   }
 
@@ -731,10 +727,12 @@ class MeteoCard extends HTMLElement {
     const city  = this._tc
     const wents = Object.keys(this._h?.states||{}).filter(k=>k.startsWith('weather.'))
     const exEnts = Object.keys(this._h?.states||{}).filter(k=>/^(sensor|binary_sensor|number|input_number)\./.test(k)).sort()
-    const exOpts = (sel)=>`<option value="">— dal meteo —</option>`+exEnts.map(id=>`<option value="${id}" ${id===sel?'selected':''}>${(this._h.states[id].attributes&&this._h.states[id].attributes.friendly_name)||id}</option>`).join('')
+    // datalist condivisa: campo di testo con filtro mentre si scrive (autocomplete nativo)
+    const exDatalist = `<datalist id="meteo-ent-list">${exEnts.map(id=>`<option value="${id}">${(this._h.states[id].attributes&&this._h.states[id].attributes.friendly_name)||id}</option>`).join('')}</datalist>`
     const statRows = [['hum','Umidità'],['pres','Pressione'],['wind','Vento'],['dir','Direzione']].map(([k,lbl])=>`<div style="display:flex;gap:8px;margin-top:7px;align-items:center">
         <span style="width:80px;flex-shrink:0;font-size:11px;color:#94a3b8">${lbl}</span>
-        <select data-f="st_${k}" style="flex:1;min-width:0;height:34px;border-radius:9px;border:1px solid rgba(255,255,255,.15);background:#0f1830;color:#fff;font-size:12px;padding:0 8px">${exOpts(this._ts[k]||'')}</select>
+        <input data-f="st_${k}" list="meteo-ent-list" value="${(this._ts[k]||'').replace(/"/g,'&quot;')}" placeholder="— dal meteo — (scrivi per filtrare)"
+          style="flex:1;min-width:0;height:34px;border-radius:9px;border:1px solid rgba(255,255,255,.15);background:#0f1830;color:#fff;font-size:12px;padding:0 10px;font-family:inherit"/>
       </div>`).join('')
 
     return `
@@ -771,7 +769,8 @@ class MeteoCard extends HTMLElement {
       <div class="ht">Se vuoto, usa il nome dell'entità HA</div>
 
       <div class="fl" style="margin-top:16px;">Entità delle statistiche</div>
-      <div class="ht">Scegli quale entità usare per ogni riquadro. Se lasci "dal meteo", usa il dato dell'entità weather.</div>
+      <div class="ht">Scrivi nel campo per filtrare le entità; lascia vuoto per usare il dato del meteo.</div>
+      ${exDatalist}
       ${statRows}
     </div>
     <div class="sft">

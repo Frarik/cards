@@ -345,12 +345,20 @@
     try {
       L = await loadLeaflet();
       const start = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+      // interroga TUTTE le entità candidate (GPS configurato + tracker della person + person)
+      // e unisce i punti lat/lon: massimizza il tracciato (il device_tracker GPS ha lo storico fine).
+      const cand = [...new Set([getGps(card), attrs(H, personId).source, ent, personId].filter(Boolean))];
       let data = null;
       if (H && typeof H.callApi === 'function') {
-        data = await H.callApi('GET', `history/period/${start}?filter_entity_id=${encodeURIComponent(ent)}&minimal_response=false&significant_changes_only=false`);
+        data = await H.callApi('GET', `history/period/${start}?filter_entity_id=${cand.map(encodeURIComponent).join(',')}&minimal_response=false&significant_changes_only=false`);
       }
-      const series = (data && data[0]) || [];
-      series.forEach(s => { const a = s.attributes || {}; if (a.latitude != null && a.longitude != null) pts.push([a.latitude, a.longitude]); });
+      const raw = [];
+      (data || []).forEach(series => (series || []).forEach(s => {
+        const a = s.attributes || {};
+        if (a.latitude != null && a.longitude != null) raw.push({ lat: +a.latitude, lon: +a.longitude, t: +new Date(s.last_changed || s.last_updated || 0) });
+      }));
+      raw.sort((x, y) => x.t - y.t);
+      pts = raw.map(p => [p.lat, p.lon]);
     } catch (e) {}
 
     const mapDiv = ov.querySelector('#pc-hist-map');
@@ -390,7 +398,7 @@
     id: 'person-card',
     name: 'Persona',
     icon: '👤',
-    version: '1.10',
+    version: '1.11',
     desc: 'Foto persona + tracker, sfondo Google Maps live, stato zona colorato e storico 24h. Contenuto che scala con la dimensione della card.',
     noAutoFit: true,   // ha già il suo scaling interno (mappa a tutto sfondo) → niente auto-fit del core
     render, mount, update

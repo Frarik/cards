@@ -1,4 +1,4 @@
-/* frarik-version: 1.1 */
+/* frarik-version: 1.2 */
 /**
  * antizanzare-card.js v2.1
  */
@@ -73,7 +73,7 @@ const I = {
 }
 
 const CSS = `
-:host { display:flex; align-items:center; justify-content:center; height:100%; overflow:hidden; }
+:host { display:block; height:100%; overflow:hidden; }
 * { box-sizing:border-box; margin:0; padding:0; }
 .card {
   background:var(--ha-card-background,#111827);
@@ -83,8 +83,9 @@ const CSS = `
   font-family:var(--primary-font-family,system-ui,sans-serif);
   box-shadow:0 8px 40px rgba(0,0,0,.35);
   transition:border-color .3s,box-shadow .3s;
-  transform-origin:center center;will-change:transform;
+  height:100%;display:flex;align-items:center;justify-content:center;
 }
+.az-body { transform-origin:center center; will-change:transform; }
 .card.st-ciclo  { border-color:rgba(34,197,94,.4);  box-shadow:0 8px 40px rgba(34,197,94,.12); }
 .card.st-manual { border-color:rgba(249,115,22,.4);  box-shadow:0 8px 40px rgba(249,115,22,.12); }
 .card.st-wait   { border-color:rgba(6,182,212,.3);   box-shadow:0 8px 40px rgba(6,182,212,.08); }
@@ -251,15 +252,17 @@ class AntiZanzareCard extends HTMLElement {
   /* riempie sempre tutta la card scalando il contenuto (come la person-card) */
   _frkFit() {
     try {
-      const card = this.shadowRoot && this.shadowRoot.querySelector('.card')
-      if (!card) return
+      const body = this.shadowRoot && this.shadowRoot.querySelector('.az-body')
+      if (!body) return
       const HW = this.clientWidth, HH = this.clientHeight
       if (!HW || !HH) return
       const BW = 360
-      card.style.transform = 'none'
-      card.style.width = BW + 'px'
-      const BH = card.offsetHeight || HH
-      card.style.transform = 'scale(' + (HW / BW) + ',' + (HH / BH) + ')'
+      body.style.transform = 'none'
+      body.style.width = BW + 'px'
+      const BH = body.offsetHeight || HH
+      // scala UNIFORME (no deformazione); lo sfondo della .card riempie i bordi
+      const s = Math.min(HW / BW, HH / BH)
+      body.style.transform = 'scale(' + s + ')'
     } catch (e) {}
   }
 
@@ -646,6 +649,7 @@ class AntiZanzareCard extends HTMLElement {
 
     this.shadowRoot.innerHTML = `<style>${CSS}</style>
 <div class="card ${cardClass}">
+  <div class="az-body">
 
   <div class="hdr">
     <div class="hdr-icon">${I.bug}</div>
@@ -732,6 +736,7 @@ class AntiZanzareCard extends HTMLElement {
 
   ${settingsHTML}
 
+  </div>
 </div>`
   }
 
@@ -746,7 +751,7 @@ class AntiZanzareCard extends HTMLElement {
 customElements.define('antizanzare-card', AntiZanzareCard)
 
 window.customCards = window.customCards || []
-window.customCards.push({ version: '1.1',
+window.customCards.push({ version: '1.2',
   type:        'antizanzare-card',
   name:        'Anti Zanzare',
   description: 'Controllo sistema anti zanzare: schedule, timer, statistiche mensili.',
