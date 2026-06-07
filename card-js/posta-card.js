@@ -419,7 +419,7 @@ if (!customElements.get('posta-card')) {
 /* ── Fratech Store Registration ── */
 window.FratechCardRegistry = window.FratechCardRegistry || {}
 window.FratechCardRegistry['posta-card'] = {
-  id: 'posta-card', name: 'Cassetta della Posta', icon: '📬', version: '1.0',
+  id: 'posta-card', name: 'Cassetta della Posta 2', icon: '📬', version: '1.0',
   desc: 'Centro Controllo Posta DomHouse v1.4 — counter, notifiche push/alexa/google, orari',
 
   _makeHass() {
