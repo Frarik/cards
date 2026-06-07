@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.7 — 2026-06-07
+
+### Card Lovelace: previsioni meteo e sottoscrizioni
+- L'oggetto `hass` fornito alle card Lovelace ora ha un `connection` **funzionante**: `subscribeMessage` sottoscrive davvero (es. `weather/subscribe_forecast`) e instrada gli eventi al callback; `sendMessagePromise`/`callWS`/`sendWS` restituiscono il solo `result` (e rifiutano in errore) come l'HA reale. Risolve le card meteo che restavano su «Previsioni in caricamento…» perché non ricevevano mai i dati del forecast.
+
 ## 1.2.6 — 2026-06-07
 
 ### Versioni: unica fonte di verità = il file

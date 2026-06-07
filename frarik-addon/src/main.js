@@ -1660,6 +1660,7 @@ function saveRemoteAndRetry(){
 function send(p){ p.id=mid++; ws.send(JSON.stringify(p)); }
 /* Promise-based WS request — usato per lovelace/resources, entity_registry, ecc. */
 const _wsCbs={};
+const _wsSubs={};   // id sottoscrizione → callback (per le card Lovelace: subscribeMessage)
 function sendAndWait(p,timeout=10000){
   return new Promise(resolve=>{
     const id=mid++; const msg=Object.assign({},p,{id});
@@ -1801,6 +1802,8 @@ function onMsg(m){
     const fc=m.event?.forecast;
     if(Array.isArray(fc)){ _fcData[eid]=fc; _refreshWeatherCards(eid); }
   }
+  // eventi di sottoscrizione delle card Lovelace (connection.subscribeMessage)
+  else if(m.type==='event'&&_wsSubs[m.id]){ try{ _wsSubs[m.id](m.event); }catch(e){} }
   else if(m.type==='event'&&m.event?.event_type==='state_changed'){
     const d=m.event.data;
     const prevState=hs[d.entity_id];
@@ -7272,8 +7275,8 @@ function _haHassObj(){
     callApi(method,path,data){
       return fetch(BASE+'/api/'+path,{method:method||'GET',headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'},body:data?JSON.stringify(data):undefined}).then(r=>r.json()).catch(()=>null);
     },
-    sendWS(msg){ return sendAndWait(Object.assign({},msg)); },
-    callWS(msg){ return sendAndWait(Object.assign({},msg)); },
+    sendWS(msg){ return sendAndWait(Object.assign({},msg)).then(m=> (m&&m.success)?m.result:Promise.reject((m&&m.error)||new Error('ws error'))); },
+    callWS(msg){ return sendAndWait(Object.assign({},msg)).then(m=> (m&&m.success)?m.result:Promise.reject((m&&m.error)||new Error('ws error'))); },
     language:'it', selectedLanguage:'it',
     locale:{language:'it',number_format:'language',time_format:'24',date_format:'DMY',first_weekday:'monday'},
     themes:{darkMode:true,default_theme:'default',themes:{}},
@@ -7294,8 +7297,21 @@ function _haHassObj(){
     connection:{
       haVersion:'2024.12.0',
       subscribeEvents(cb,eventType){ return Promise.resolve(()=>{}); },
-      subscribeMessage(cb,msg){ return Promise.resolve(()=>{}); },
-      sendMessagePromise:(msg)=>sendAndWait(Object.assign({},msg)),
+      // sottoscrizione REALE (es. weather/subscribe_forecast): invia la richiesta e
+      // instrada gli eventi al callback. Ritorna la funzione di unsubscribe.
+      subscribeMessage(cb,msg){
+        if(!ws||ws.readyState!==1) return Promise.resolve(()=>{});
+        const sid=mid++;
+        _wsSubs[sid]=cb;
+        try{ ws.send(JSON.stringify(Object.assign({},msg,{id:sid}))); }catch(e){}
+        return Promise.resolve(()=>{
+          delete _wsSubs[sid];
+          try{ ws.send(JSON.stringify({id:mid++,type:'unsubscribe_events',subscription:sid})); }catch(e){}
+        });
+      },
+      // come l'HA reale: risolve col solo "result" (non col messaggio intero) e
+      // rifiuta in caso di errore → le card Lovelace estraggono i dati correttamente
+      sendMessagePromise:(msg)=>sendAndWait(Object.assign({},msg)).then(m=> (m&&m.success)?m.result:Promise.reject((m&&m.error)||new Error('ws error'))),
     },
     services:{}, areas:{}, devices:{}, entities:{},
     panels:{lovelace:{component_name:'lovelace',icon:null,title:null,config:null,url_path:'lovelace',require_admin:false}},
