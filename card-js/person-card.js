@@ -1,14 +1,14 @@
 /**
- * person-card.js v1.5 — FratechStore Card "Persona"
+ * person-card.js v1.6 — FratechStore Card "Persona"
  * Foto entità + tracker · sfondo Google Maps con segnaposto live.
- * Affianco al nome: In Casa (verde) / Fuori Casa (rosso) / nome zona HA (azzurro) + "X min fa".
+ * Affianco al nome: A casa (verde) / Fuori casa (rosso) / nome zona HA (azzurro) + "X min fa".
  * Tap sulla card → popup mappa intera con lo storico dei tracciati delle ultime 24h.
  * Config interna (⚙️): entità person + entità GPS (device_tracker).
+ * Il contenuto scala (transform) per adattarsi alla dimensione della card, mantenendo le posizioni.
  */
 (function () {
   'use strict';
 
-  // ── hass completo di HA (stati con attributi + callApi) ────────────────────────
   function bestHass() {
     try { if (typeof window.frarikHass === 'function') { const h = window.frarikHass(); if (h && h.states) return h; } } catch (e) {}
     try {
@@ -19,14 +19,12 @@
     return null;
   }
 
-  // ── config per-card (localStorage, no modifiche al core) ────────────────────────
   function cfgKey(card) { return 'fratech_personcard_' + (card.id || 'x'); }
   function loadCfg(card) { try { return JSON.parse(localStorage.getItem(cfgKey(card)) || '{}') || {}; } catch (e) { return {}; } }
   function saveCfg(card, o) { try { localStorage.setItem(cfgKey(card), JSON.stringify(o)); } catch (e) {} }
   function getPerson(card) { const c = loadCfg(card); return c.person || card.person || card.entity || ''; }
   function getGps(card) { const c = loadCfg(card); return c.gps || card.gps || ''; }
 
-  // ── helpers stato/attributi ─────────────────────────────────────────────────────
   function attrs(H, id) { const s = H && H.states && H.states[id]; return (s && s.attributes) || {}; }
   function stateOf(H, id) { const s = H && H.states && H.states[id]; return s ? s.state : null; }
   function lastChanged(H, id) { const s = H && H.states && H.states[id]; return s && (s.last_changed || s.last_updated); }
@@ -36,7 +34,7 @@
     if (s === 'home') return { label: 'A casa', color: '#22c55e', glow: 'rgba(34,197,94,.55)' };
     if (s === 'not_home') return { label: 'Fuori casa', color: '#ef4444', glow: 'rgba(239,68,68,.55)' };
     if (!s || s === 'unknown' || s === 'unavailable') return { label: '—', color: '#64748b', glow: 'rgba(100,116,139,.4)' };
-    return { label: s, color: '#38bdf8', glow: 'rgba(56,189,248,.55)' }; // zona assegnata da HA
+    return { label: s, color: '#38bdf8', glow: 'rgba(56,189,248,.55)' };
   }
 
   function latlon(H, personId, gpsId) {
@@ -79,18 +77,30 @@
     if (h < 24) return h + (h === 1 ? ' ora fa' : ' ore fa');
     return Math.floor(h / 24) + ' g fa';
   }
-  function gmapUrl(lat, lon) {
-    return `https://maps.google.com/maps?q=${lat},${lon}&z=16&hl=it&output=embed`;
-  }
+  function gmapUrl(lat, lon) { return `https://maps.google.com/maps?q=${lat},${lon}&z=16&hl=it&output=embed`; }
 
   const ST = (window.__pcState = window.__pcState || {});
 
-  // ── render ──────────────────────────────────────────────────────────────────────
+  // ── scala il contenuto per adattarlo alla card (zoom-to-fit, posizioni invariate) ──
+  function fit(el) {
+    try {
+      const root = el.querySelector('.pc-root'); if (!root) return;
+      const content = root.querySelector('.pc-content'); if (!content) return;
+      content.style.transform = 'scale(1)';
+      const bw = content.offsetWidth || 1, bh = content.offsetHeight || 1;
+      const availW = Math.max(30, root.clientWidth - 14 - 42); // padding sx + spazio per il gear a dx
+      const availH = Math.max(16, root.clientHeight - 14);
+      let s = Math.min(availW / bw, availH / bh);
+      s = Math.max(0.4, Math.min(2.6, s));
+      content.style.transform = 'scale(' + s + ')';
+    } catch (e) {}
+  }
+
   function render(card, hass) {
     const H = bestHass();
     const rid = 'pc' + (card.id || Math.random().toString(36).slice(2));
     const personId = getPerson(card);
-    if (!personId) return emptyView(rid, H, '', '');
+    if (!personId) return emptyView(rid);
 
     const zi = zoneInfo(stateOf(H, personId));
     const nm = nameOf(H, personId);
@@ -98,19 +108,16 @@
     const ll = latlon(H, personId, getGps(card));
     const ago = agoText(lastChanged(H, getGps(card)) || lastChanged(H, personId));
 
-    const css = baseCss(rid);
     const mapHtml = ll
-      ? `<iframe class="pc-map" id="${rid}-map" src="${gmapUrl(ll[0], ll[1])}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allow="" frameborder="0"></iframe>`
+      ? `<iframe class="pc-map" id="${rid}-map" src="${gmapUrl(ll[0], ll[1])}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" frameborder="0"></iframe>`
       : `<div class="pc-map pc-map-empty"></div>`;
-
     const avaInner = pic ? '' : initials(nm);
     const avaStyle = pic ? `background-image:url('${pic}')` : '';
 
-    return `<style>${css}</style><div id="${rid}" class="pc-root" style="--pc-col:${zi.color};--pc-glow:${zi.glow}">
+    return `<style>${baseCss(rid)}</style><div id="${rid}" class="pc-root" style="--pc-col:${zi.color};--pc-glow:${zi.glow}">
       ${mapHtml}
       <div class="pc-scrim"></div>
-      <div class="pc-gear" data-pc="gear" title="Impostazioni">⚙️</div>
-      <div class="pc-glass">
+      <div class="pc-stage"><div class="pc-content">
         <div class="pc-ava" style="${avaStyle}">${avaInner}</div>
         <div class="pc-info">
           <div class="pc-row1">
@@ -119,69 +126,113 @@
           </div>
           <div class="pc-ago">${ago || ''}</div>
         </div>
-      </div>
+      </div></div>
+      <div class="pc-gear" data-pc="gear" title="Impostazioni">⚙️</div>
     </div>`;
   }
 
-  function emptyView(rid, H, personId, gpsId) {
+  function emptyView(rid) {
     return `<style>${baseCss(rid)}</style><div id="${rid}" class="pc-root" style="--pc-col:#38bdf8;--pc-glow:rgba(56,189,248,.4)">
       <div class="pc-map pc-map-empty"></div>
-      <div class="pc-empty">
-        <div style="font-size:32px">👤</div>
-        <div style="font-weight:800;margin-top:4px">Card Persona</div>
-        <div style="opacity:.7;font-size:11px;margin-top:2px">Tocca per scegliere l'entità <b>person</b> e il <b>GPS</b>.</div>
-      </div>
+      <div class="pc-stage" style="justify-content:center"><div class="pc-content" style="flex-direction:column;text-align:center;gap:4px">
+        <div style="font-size:30px">👤</div>
+        <div style="font-weight:800;font-size:15px">Card Persona</div>
+        <div style="opacity:.7;font-size:11px">Tocca per scegliere l'entità <b>person</b> e il <b>GPS</b>.</div>
+      </div></div>
       <div class="pc-gear" data-pc="gear" title="Impostazioni">⚙️</div>
     </div>`;
   }
 
   function baseCss(rid) {
     return `
-#${rid}.pc-root{position:relative;width:100%;height:100%;min-height:96px;border-radius:18px;overflow:hidden;
+#${rid}.pc-root{position:relative;width:100%;height:100%;min-height:64px;border-radius:18px;overflow:hidden;
   font-family:var(--primary-font-family,'Inter',system-ui,-apple-system,sans-serif);color:#f1f5f9;
   background:#0b1220;border:1px solid rgba(255,255,255,.10);}
-/* mappa estesa oltre il bordo e ritagliata (overflow:hidden della root) per nascondere la barra "Google / Termini" in basso, mantenendo il segnaposto centrato */
+/* mappa estesa e ritagliata per nascondere la barra "Google / Termini" in basso, segnaposto centrato */
 #${rid} .pc-map{position:absolute;left:0;right:0;top:-24px;width:100%;height:calc(100% + 48px);border:0;z-index:0;pointer-events:none;filter:saturate(1.05);}
 #${rid} .pc-map-empty{background:radial-gradient(120% 120% at 75% 30%,#27364b,#0b1220);}
 #${rid} .pc-scrim{position:absolute;inset:0;z-index:1;pointer-events:none;
   background:linear-gradient(90deg,rgba(8,12,22,.94) 0%,rgba(8,12,22,.82) 32%,rgba(8,12,22,.30) 62%,rgba(8,12,22,0) 88%);}
-#${rid} .pc-glass{position:absolute;left:0;top:0;bottom:0;right:36px;z-index:2;display:flex;align-items:center;gap:13px;
-  padding:0 14px 0 18px;pointer-events:none;}
-#${rid} .pc-ava{width:clamp(46px,15cqw,64px);height:clamp(46px,15cqw,64px);aspect-ratio:1;border-radius:50%;flex-shrink:0;
-  background-size:cover;background-position:center;background-color:rgba(56,189,248,.25);
-  border:3px solid var(--pc-col,#38bdf8);box-shadow:0 0 0 3px var(--pc-glow),0 0 14px var(--pc-glow),0 6px 16px rgba(0,0,0,.5);
-  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#fff;}
+/* stage: centra verticalmente il contenuto; il contenuto è a dimensione BASE e viene scalato via JS */
+#${rid} .pc-stage{position:absolute;inset:0;z-index:2;display:flex;align-items:center;padding-left:14px;pointer-events:none;}
+#${rid} .pc-content{width:max-content;display:flex;align-items:center;gap:13px;transform-origin:left center;will-change:transform;}
+#${rid} .pc-ava{width:56px;height:56px;border-radius:50%;flex-shrink:0;background-size:cover;background-position:center;
+  background-color:rgba(56,189,248,.25);border:3px solid var(--pc-col,#38bdf8);
+  box-shadow:0 0 0 3px var(--pc-glow),0 0 14px var(--pc-glow),0 6px 16px rgba(0,0,0,.5);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:21px;color:#fff;}
 #${rid} .pc-info{min-width:0;}
-#${rid} .pc-row1{display:flex;align-items:center;gap:9px;min-width:0;}
-#${rid} .pc-name{flex:0 1 auto;min-width:0;font-size:clamp(15px,5cqw,21px);font-weight:800;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;
+#${rid} .pc-row1{display:flex;align-items:center;gap:9px;}
+#${rid} .pc-name{font-size:21px;font-weight:800;letter-spacing:-.3px;white-space:nowrap;max-width:260px;overflow:hidden;
   text-overflow:ellipsis;text-shadow:0 1px 4px rgba(0,0,0,.7);}
-#${rid} .pc-pill{display:inline-flex;align-items:center;flex-shrink:0;padding:3px 11px;border-radius:999px;
-  font-size:clamp(10px,3.2cqw,12px);font-weight:800;line-height:1;background:color-mix(in srgb,var(--pc-col) 22%,transparent);
+#${rid} .pc-pill{display:inline-flex;align-items:center;flex-shrink:0;padding:3px 12px;border-radius:999px;
+  font-size:12px;font-weight:800;line-height:1;white-space:nowrap;background:color-mix(in srgb,var(--pc-col) 22%,transparent);
   border:1px solid var(--pc-col);color:var(--pc-col);}
-#${rid} .pc-ago{font-size:clamp(9px,2.8cqw,12px);color:rgba(255,255,255,.6);margin-top:5px;white-space:nowrap;}
-/* ingranaggio impostazioni: in alto a destra, grigio chiaro discreto */
+#${rid} .pc-ago{font-size:12px;color:rgba(255,255,255,.62);margin-top:5px;white-space:nowrap;}
+/* ingranaggio impostazioni: in alto a destra, grigio chiaro discreto (NON scalato) */
 #${rid} .pc-gear{position:absolute;top:6px;right:7px;z-index:5;width:24px;height:24px;border-radius:7px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;background:rgba(8,12,22,.4);color:#cbd5e1;
   font-size:13px;transition:background .15s,color .15s;}
 #${rid} .pc-gear:hover{background:rgba(8,12,22,.8);color:#fff;}
-#${rid} .pc-empty{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  text-align:center;padding:16px;color:#cbd5e1;}
-#${rid} .pc-cfg{position:absolute;inset:0;z-index:5;display:none;flex-direction:column;gap:9px;justify-content:center;
-  padding:18px;background:rgba(8,12,22,.94);backdrop-filter:blur(16px);}
-#${rid} .pc-cfg.open{display:flex;}
-#${rid} .pc-cfg h4{font-size:13px;font-weight:800;margin:0 0 2px;}
-#${rid} .pc-cfg label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;}
-#${rid} .pc-cfg select{width:100%;margin-top:4px;padding:9px 10px;border-radius:10px;background:#0f1830;
-  color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:12px;font-family:inherit;-webkit-appearance:menulist;appearance:menulist;}
-#${rid} .pc-cfg select option,#${rid} .pc-cfg select optgroup{background:#0f1830 !important;color:#f1f5f9 !important;}
-#${rid} .pc-cfg .pc-crow{display:flex;gap:8px;margin-top:6px;}
-#${rid} .pc-cfg button{flex:1;padding:9px;border-radius:10px;border:none;cursor:pointer;font-weight:700;font-size:12px;}
-#${rid} .pc-save{background:#22c55e;color:#04210f;}
-#${rid} .pc-close{background:rgba(255,255,255,.1);color:#e2e8f0;}
 `;
   }
 
-  // ── config: modale a tutto schermo (non vincolato dalla dimensione della card) ──
+  function mount(card, hass, el) {
+    try {
+      ST[card.id] = ST[card.id] || {};
+      const st = ST[card.id];
+      const H = bestHass();
+      st.lastLL = latlon(H, getPerson(card), getGps(card));
+
+      // scala il contenuto ora e ad ogni cambio di dimensione della card
+      const root = el.querySelector('.pc-root');
+      fit(el);
+      requestAnimationFrame(() => fit(el));
+      if (st.ro) { try { st.ro.disconnect(); } catch (e) {} }
+      if (root && 'ResizeObserver' in window) {
+        st.ro = new ResizeObserver(() => fit(el));
+        st.ro.observe(root);
+      }
+
+      if (!el._pcBound) {
+        el._pcBound = true;
+        el.addEventListener('click', (e) => {
+          const t = e.target.closest('[data-pc]');
+          const act = t && t.getAttribute('data-pc');
+          if (act === 'gear') { e.stopPropagation(); openConfig(card, el, hass); return; }
+          if (getPerson(card)) openHistory(card); else openConfig(card, el, hass);
+        });
+      }
+    } catch (e) {}
+  }
+
+  function update(card, hass, el) {
+    try {
+      const personId = getPerson(card);
+      const renderedEmpty = !el.querySelector('.pc-stage .pc-name');
+      if (!personId) { if (!el.querySelector('.pc-root')) { el.innerHTML = render(card, hass); mount(card, hass, el); } return; }
+      if (renderedEmpty) { el.innerHTML = render(card, hass); mount(card, hass, el); return; }
+
+      const H = bestHass();
+      const zi = zoneInfo(stateOf(H, personId));
+      const root = el.querySelector('.pc-root');
+      if (root) { root.style.setProperty('--pc-col', zi.color); root.style.setProperty('--pc-glow', zi.glow); }
+      const pill = el.querySelector('.pc-pilltxt'); if (pill) pill.textContent = zi.label;
+      const ago = el.querySelector('.pc-ago'); if (ago) ago.textContent = agoText(lastChanged(H, getGps(card)) || lastChanged(H, personId)) || '';
+      const ll = latlon(H, personId, getGps(card));
+      const st = ST[card.id] || (ST[card.id] = {});
+      const iframe = el.querySelector('.pc-map');
+      if (ll && iframe && iframe.tagName === 'IFRAME') {
+        const prev = st.lastLL;
+        const moved = !prev || Math.abs(prev[0] - ll[0]) > 0.0002 || Math.abs(prev[1] - ll[1]) > 0.0002;
+        if (moved) { iframe.src = gmapUrl(ll[0], ll[1]); st.lastLL = ll; }
+      } else if (ll && (!iframe || iframe.tagName !== 'IFRAME')) {
+        el.innerHTML = render(card, hass); mount(card, hass, el); return;
+      }
+      fit(el); // il nome può essere cambiato → riscala
+    } catch (e) {}
+  }
+
+  // ── config: modale a tutto schermo ─────────────────────────────────────────────
   function openConfig(card, el, hass) {
     const H = bestHass();
     const personId = getPerson(card), gpsId = getGps(card);
@@ -229,61 +280,6 @@
     });
   }
 
-  // ── mount: interazioni ──────────────────────────────────────────────────────────
-  function mount(card, hass, el) {
-    try {
-      ST[card.id] = ST[card.id] || {};
-      const H = bestHass();
-      const ll = latlon(H, getPerson(card), getGps(card));
-      ST[card.id].lastLL = ll;
-
-      if (!el._pcBound) {
-        el._pcBound = true;
-        el.addEventListener('click', (e) => {
-          const t = e.target.closest('[data-pc]');
-          const act = t && t.getAttribute('data-pc');
-          if (act === 'gear') { e.stopPropagation(); openConfig(card, el, hass); return; }
-          // tap sulla card: se configurata → storico 24h, altrimenti → config
-          if (getPerson(card)) openHistory(card); else openConfig(card, el, hass);
-        });
-      }
-    } catch (e) {}
-  }
-
-  // ── update: live senza ricostruire (e senza chiudere il pannello ⚙️) ────────────
-  function update(card, hass, el) {
-    try {
-      const personId = getPerson(card);
-      const renderedEmpty = !!el.querySelector('.pc-empty');
-
-      if (!personId) {
-        // non configurata: ricostruisci SOLO se non è già la vista vuota (niente flicker continuo)
-        if (!renderedEmpty) { el.innerHTML = render(card, hass); mount(card, hass, el); }
-        return;
-      }
-      if (renderedEmpty) { // appena configurata → passa alla vista mappa
-        el.innerHTML = render(card, hass); mount(card, hass, el); return;
-      }
-
-      const H = bestHass();
-      const zi = zoneInfo(stateOf(H, personId));
-      const root = el.querySelector('.pc-root');
-      if (root) { root.style.setProperty('--pc-col', zi.color); root.style.setProperty('--pc-glow', zi.glow); }
-      const pill = el.querySelector('.pc-pilltxt'); if (pill) pill.textContent = zi.label;
-      const ago = el.querySelector('.pc-ago'); if (ago) ago.textContent = agoText(lastChanged(H, getGps(card)) || lastChanged(H, personId)) || '';
-      const ll = latlon(H, personId, getGps(card));
-      const st = ST[card.id] || (ST[card.id] = {});
-      const iframe = el.querySelector('.pc-map');
-      if (ll && iframe && iframe.tagName === 'IFRAME') {
-        const prev = st.lastLL;
-        const moved = !prev || Math.abs(prev[0] - ll[0]) > 0.0002 || Math.abs(prev[1] - ll[1]) > 0.0002;
-        if (moved) { iframe.src = gmapUrl(ll[0], ll[1]); st.lastLL = ll; }
-      } else if (ll && (!iframe || iframe.tagName !== 'IFRAME')) {
-        el.innerHTML = render(card, hass); mount(card, hass, el);
-      }
-    } catch (e) {}
-  }
-
   // ── Leaflet on-demand (solo per il popup storico) ───────────────────────────────
   function loadLeaflet() {
     if (window.L) return Promise.resolve(window.L);
@@ -302,7 +298,6 @@
     return window.__pcLeaflet;
   }
 
-  // ── popup storico 24h ───────────────────────────────────────────────────────────
   async function openHistory(card) {
     const H = bestHass();
     const personId = getPerson(card);
@@ -340,10 +335,7 @@
         data = await H.callApi('GET', `history/period/${start}?filter_entity_id=${encodeURIComponent(ent)}&minimal_response=false`);
       }
       const series = (data && data[0]) || [];
-      series.forEach(s => {
-        const a = s.attributes || {};
-        if (a.latitude != null && a.longitude != null) pts.push([a.latitude, a.longitude]);
-      });
+      series.forEach(s => { const a = s.attributes || {}; if (a.latitude != null && a.longitude != null) pts.push([a.latitude, a.longitude]); });
     } catch (e) {}
 
     const mapDiv = ov.querySelector('#pc-hist-map');
@@ -366,13 +358,12 @@
     } catch (e) { if (sub) sub.textContent = 'Errore mappa: ' + (e && e.message || e); }
   }
 
-  // ── registrazione FratechStore ─────────────────────────────────────────────────
   const CARD = {
     id: 'person-card',
     name: 'Persona',
     icon: '👤',
-    version: '1.5',
-    desc: 'Foto persona + tracker, sfondo Google Maps live, stato zona colorato e storico spostamenti 24h. Entità configurabili.',
+    version: '1.6',
+    desc: 'Foto persona + tracker, sfondo Google Maps live, stato zona colorato e storico 24h. Contenuto che scala con la dimensione della card.',
     render, mount, update
   };
   window.FratechCardRegistry = window.FratechCardRegistry || {};
