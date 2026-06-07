@@ -786,6 +786,13 @@
         <span style="color:rgba(255,255,255,.2);font-size:16px">›</span>
       </button>
 
+      <!-- ── Impostazioni Nomi Store ── -->
+      <button class="cfg-open-btn" data-action="openRenameStore"
+        style="background:rgba(168,85,247,.1);border-color:rgba(168,85,247,.3);color:#c084fc">
+        ✏️ <span style="flex:1">Impostazioni Nomi Store</span>
+        <span style="color:rgba(255,255,255,.2);font-size:16px">›</span>
+      </button>
+
       <!-- ── Notifiche Smart ── -->
       <button class="cfg-open-btn" data-action="openNotifCfg" style="background:rgba(129,140,248,.1);border-color:rgba(129,140,248,.3);color:#818cf8">
         🔔 <span style="flex:1">Notifiche Smart</span>
@@ -1097,6 +1104,18 @@
 </div>
 
 <!-- STORE GITHUB (a sezioni + ricerca) -->
+<!-- ── Modal: Impostazioni Nomi Store (rinomina card) ── -->
+<div class="mbg off" id="rename-store-modal">
+  <div class="mbox" style="max-width:520px;width:96vw">
+    <div class="mhdr"><span class="mtitle">✏️ Impostazioni Nomi Store</span>
+      <button class="mx" data-action="closeRenameStore">✕</button></div>
+    <div class="fscroll" style="padding:12px 16px">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5">Rinomina le card installate. Il nuovo nome viene applicato subito; per le card su GitHub viene propagato anche lì (la versione non cambia).</div>
+      <div id="rename-store-list"></div>
+    </div>
+  </div>
+</div>
+
 <div class="mbg off" id="gh-store-modal">
   <div class="mbox" style="max-width:680px;width:96vw">
     <div class="mhdr"><span class="mtitle">🛒 Store da GitHub</span>

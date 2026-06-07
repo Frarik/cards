@@ -608,7 +608,6 @@ function _epRenderJsStore(){
         <div style="font-size:11px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.name||m.id}</div>
         <div style="font-size:9px;color:var(--muted)">v${m.version||'?'} · ${m.id}</div>
       </div>
-      <button data-action="_jsRename" data-action-arg="${m.id||''}" title="Rinomina" style="flex-shrink:0;padding:4px 8px;border-radius:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#cbd5e1;font-size:11px;cursor:pointer">✏️</button>
       ${inUse
         ? '<span style="font-size:9px;font-weight:700;color:#4ade80;flex-shrink:0">✓ In uso</span>'
         : `<button data-action="jsStoreAddCard" data-action-arg="${m.id||''}" style="flex-shrink:0;padding:4px 9px;border-radius:7px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#a5b4fc;font-size:10px;font-weight:700;cursor:pointer">➕</button>`
@@ -1398,10 +1397,9 @@ function _ghStoreRenderInstalled(q, originFilter){
     const pub = originFilter==='local' ? `<button class="ghs-btn ghs-btn-upd" data-action="_ghsPublish" data-action-arg="${id}" title="Pubblica su GitHub"><i class="mdi mdi-upload"></i> Pubblica</button>` : '';
     const safePrevNm=(m.name||id).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
     const previewBtn=`<button class="ghs-ibtn ghs-ibtn-eye" data-action="_ghsPreview" data-action-args='["","${safePrevNm}","${id}"]' title="Anteprima"><i class="mdi mdi-eye-outline"></i></button>`;
-    const renameBtn=`<button class="ghs-ibtn" data-action="_jsRename" data-action-arg="${id}" title="Rinomina"><i class="mdi mdi-pencil-outline"></i></button>`;
     return `<div class="ghs-row"><div class="ghs-ico">${m.icon||'📦'}</div>
       <div class="ghs-info"><div class="ghs-name">${eh(m.name||id||'Card')}</div><div class="ghs-sub">ID: ${eh(id||'?')} · v${eh(m.version||'?')}</div></div>
-      <div class="ghs-acts">${previewBtn}${renameBtn}${pub}${act}<button class="ghs-ibtn ghs-ibtn-del" data-action="_ghsDeleteInstalled" data-action-arg="${id}" title="Disinstalla"><i class="mdi mdi-delete-outline"></i></button></div></div>`;
+      <div class="ghs-acts">${previewBtn}${pub}${act}<button class="ghs-ibtn ghs-ibtn-del" data-action="_ghsDeleteInstalled" data-action-arg="${id}" title="Disinstalla"><i class="mdi mdi-delete-outline"></i></button></div></div>`;
   }).join('');
 }
 function _ghsDeleteInstalled(id){
@@ -1449,6 +1447,7 @@ async function _jsRenameDo(id, newName){
   // refresh immediato di tutte le viste + dashboard
   try{ if(typeof _epRenderJsStore==='function') _epRenderJsStore(); }catch(e){}
   try{ if(typeof _jsStoreRenderList==='function') _jsStoreRenderList(); }catch(e){}
+  try{ _renderRenameStore(); }catch(e){}
   try{ _ghStoreRender(); }catch(e){}
   try{ renderDash(); }catch(e){}
   // propaga il nuovo nome su GitHub (stesso file, versione invariata)
@@ -1468,6 +1467,45 @@ async function _jsRenameDo(id, newName){
   } else {
     showToast('✅ Card rinominata in «'+newName+'»'+(file?' — pubblica per aggiornarla su GitHub':''));
   }
+}
+/* ════════ Pannello "Impostazioni Nomi Store" — rinomina rapida di tutte le card ════════ */
+function openRenameStore(){
+  const m=document.getElementById('rename-store-modal'); if(!m) return;
+  m.classList.remove('off');
+  _renderRenameStore();
+}
+function closeRenameStore(){ document.getElementById('rename-store-modal')?.classList.add('off'); }
+function _renderRenameStore(){
+  const el=document.getElementById('rename-store-list'); if(!el) return;
+  const items=_jsStoreList();
+  if(!items.length){ el.innerHTML='<div style="padding:26px;text-align:center;color:var(--muted);font-size:12px">Nessuna card installata.</div>'; return; }
+  const g=_ghCfg();
+  el.innerHTML=items.slice().sort((a,b)=>((a.meta||{}).name||'').localeCompare((b.meta||{}).name||'')).map(it=>{
+    const mm=it.meta||{}; const id=mm.id||'';
+    const onGh=!!((g.idFile||{})[id]) || (it.origin==='github');
+    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid rgba(255,255,255,.05)">
+      <span style="font-size:20px;flex-shrink:0">${mm.icon||'📦'}</span>
+      <div style="flex:1;min-width:0">
+        <input id="rns-inp-${id}" type="text" value="${eh(mm.name||id)}" placeholder="Nome card" data-rns="${id}"
+          style="width:100%;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#fff;font-size:13px;font-weight:600;outline:none">
+        <div style="font-size:9px;color:var(--muted);margin-top:3px">${eh(id)} · v${eh(mm.version||'1.0')} · ${onGh?'☁️ GitHub':'📁 locale'}</div>
+      </div>
+      <button data-action="_jsRenameInline" data-action-arg="${id}" title="Salva nome"
+        style="flex-shrink:0;width:34px;height:34px;border-radius:9px;background:rgba(74,222,128,.16);border:1px solid rgba(74,222,128,.35);color:#4ade80;font-size:15px;cursor:pointer">✓</button>
+    </div>`;
+  }).join('');
+  // Invio nel campo = salva
+  el.querySelectorAll('input[data-rns]').forEach(inp=>{
+    inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); _jsRenameInline(inp.dataset.rns); } });
+  });
+}
+function _jsRenameInline(id){
+  const inp=document.getElementById('rns-inp-'+id);
+  const v=((inp&&inp.value)||'').trim();
+  if(!v){ showToast('Inserisci un nome'); return; }
+  const it=_jsStoreList().find(i=>(i.meta||{}).id===id);
+  if(it && ((it.meta||{}).name||'')===v){ showToast('Nome invariato'); return; }
+  _jsRenameDo(id, v);
 }
 function _ghStoreInitDropzone(){
   const dz=document.getElementById('ghs-dropzone'); if(!dz||dz._init) return; dz._init=true;
@@ -12151,7 +12189,8 @@ Object.assign(window, {
   _hbPickChipIcon, _hbPickChipIcon2, _hbPickImapIcon, _hbIconInput, _hbIcon2Input,
   _hbSelEnt2Pos, _hbResetIcon, openSOSCfgModal, _hbEntityChanged, _hbBrowseEntity, _hbDelOption, _appDelItem, _appDelGroup,
   _openGhStoreClean, _pasteCardToClean, _closeViewsAndOpenTM, _closeViewsAndSetPage,
-  _jsStoreAddAndRefresh, _jsRename, _jsRenameDo, _deleteSavedAt, _appChipPopupAt, _setActivePageAndSync,
+  _jsStoreAddAndRefresh, _jsRename, _jsRenameDo, _jsRenameInline, openRenameStore, closeRenameStore,
+  _deleteSavedAt, _appChipPopupAt, _setActivePageAndSync,
   _pgWarnClose, _sendCallSvc,
   _appItemPickIcon, _appItemPickColor, _appGroupPickColor,
   _sosPickIcon, _sosPickService, _sosSetQuick,

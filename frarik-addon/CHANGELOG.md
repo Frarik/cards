@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.9 — 2026-06-07
+
+### Sezione dedicata "Impostazioni Nomi Store"
+- Nuova voce **✏️ Impostazioni Nomi Store** in **Impostazioni → Altro**: apre un pannello con l'elenco di tutte le card installate, ognuna con un **campo nome modificabile** + ✓ per salvare (o Invio).
+- Rinominando: il nome si aggiorna ovunque all'istante e, per le card su GitHub (con token), viene propagato anche lì senza cambiare la versione.
+- Rimossi i pulsanti rinomina sparsi (store modal / lista impostazioni): la rinomina è ora centralizzata in questo pannello.
+
 ## 1.2.8 — 2026-06-07
 
 ### Rinomina card
