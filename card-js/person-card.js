@@ -1,5 +1,5 @@
 /**
- * person-card.js v1.8 — FratechStore Card "Persona"
+ * person-card.js v1.9 — FratechStore Card "Persona"
  * Foto entità + tracker · sfondo Google Maps con segnaposto live.
  * Affianco al nome: A casa (verde) / Fuori casa (rosso) / nome zona HA (azzurro) + "X min fa".
  * Tap sulla card → popup mappa intera con lo storico dei tracciati delle ultime 24h.
@@ -79,6 +79,18 @@
   }
   function gmapUrl(lat, lon) { return `https://maps.google.com/maps?q=${lat},${lon}&z=17&t=k&hl=it&output=embed`; }
 
+  // icona segnaposto Leaflet (foto nel cerchio del colore zona) — usata nel popup storico
+  function markerIcon(L, color, pic, ini) {
+    const inner = pic
+      ? `<div style="width:100%;height:100%;background-size:cover;background-position:center;background-image:url('${pic}')"></div>`
+      : `<div style="color:#fff;font-weight:800;font-size:15px;font-family:system-ui,sans-serif">${ini}</div>`;
+    return L.divIcon({
+      className: 'pc-mk',
+      html: `<div style="width:40px;height:40px;border-radius:50%;border:3px solid ${color};overflow:hidden;background:#0b1220;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 4px ${color}33,0 4px 12px rgba(0,0,0,.5)">${inner}</div>`,
+      iconSize: [40, 40], iconAnchor: [20, 20]
+    });
+  }
+
   const ST = (window.__pcState = window.__pcState || {});
 
   // ── scala il contenuto per adattarlo alla card (zoom-to-fit, posizioni invariate) ──
@@ -117,6 +129,7 @@
     return `<style>${baseCss(rid)}</style><div id="${rid}" class="pc-root" style="--pc-col:${zi.color};--pc-glow:${zi.glow}">
       ${mapHtml}
       <div class="pc-scrim"></div>
+      <div class="pc-mapmask"></div>
       <div class="pc-stage"><div class="pc-content">
         <div class="pc-ava" style="${avaStyle}">${avaInner}</div>
         <div class="pc-info">
@@ -149,6 +162,9 @@
 /* mappa estesa e ritagliata per nascondere la barra "Google / Termini" in basso, segnaposto centrato */
 #${rid} .pc-map{position:absolute;left:0;right:0;top:-24px;width:100%;height:calc(100% + 48px);border:0;z-index:0;pointer-events:none;filter:saturate(1.05);}
 #${rid} .pc-map-empty{background:radial-gradient(120% 120% at 75% 30%,#27364b,#0b1220);}
+/* maschera angolo in basso a dx: nasconde il controllo "schermo intero" (freccette) dell'embed Google */
+#${rid} .pc-mapmask{position:absolute;right:0;bottom:0;width:64px;height:50px;z-index:1;pointer-events:none;
+  background:radial-gradient(130% 130% at 100% 100%,rgba(8,12,22,.95),rgba(8,12,22,0) 72%);}
 #${rid} .pc-scrim{position:absolute;inset:0;z-index:1;pointer-events:none;
   background:linear-gradient(90deg,rgba(8,12,22,.94) 0%,rgba(8,12,22,.82) 32%,rgba(8,12,22,.30) 62%,rgba(8,12,22,0) 88%);}
 /* stage: centra verticalmente il contenuto; il contenuto è a dimensione BASE e viene scalato via JS */
@@ -374,7 +390,7 @@
     id: 'person-card',
     name: 'Persona',
     icon: '👤',
-    version: '1.8',
+    version: '1.9',
     desc: 'Foto persona + tracker, sfondo Google Maps live, stato zona colorato e storico 24h. Contenuto che scala con la dimensione della card.',
     noAutoFit: true,   // ha già il suo scaling interno (mappa a tutto sfondo) → niente auto-fit del core
     render, mount, update
