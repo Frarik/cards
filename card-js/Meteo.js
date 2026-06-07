@@ -1,4 +1,4 @@
-/* frarik-version: 1.7 */
+/* frarik-version: 1.8 */
 /**
  * meteo+previsioni.js v1.3
  * type: custom:meteo-card
@@ -221,6 +221,7 @@ class MeteoCard extends HTMLElement {
     this._nh = true          // flag primo hass
     this._sk = 'default'      // storage key per localStorage
     this._modalHost = null    // host del modal impostazioni (montato su document.body)
+    this._savedH = null       // altezza wrap salvata prima di espandere la previsione
     this._fch = []            // forecast ORARIO (per il dettaglio giorno)
     this._fhs = null          // sottoscrizione forecast orario
     this._dh  = null          // host del foglio dettaglio (montato su document.body)
@@ -304,6 +305,34 @@ class MeteoCard extends HTMLElement {
       // lo sfondo gradiente della .card riempie eventuali bordi.
       const s = Math.min(HW / BW, HH / BH)
       body.style.transform = 'scale(' + s + ')'
+    } catch (e) {}
+  }
+
+  /* Apertura della previsione: la CARD cresce in altezza da sola per contenerla
+     (mantenendo la larghezza impostata), e torna alla dimensione precedente alla chiusura.
+     Funziona sulle card a dimensione fissa (ridimensionate dall'utente). */
+  _adjustHeight() {
+    try {
+      const wrap = this.closest('.dash-card-wrap')
+      if (!wrap) return
+      if (this._fo) {
+        if (this._savedH == null) this._savedH = wrap.style.height || ''
+        const body = this.shadowRoot && this.shadowRoot.querySelector('.body')
+        if (!body) return
+        const HW = this.clientWidth || 320
+        const prevT = body.style.transform
+        body.style.transform = 'none'; body.style.width = '340px'
+        const BH = body.offsetHeight || 220
+        body.style.transform = prevT
+        const baseH = parseFloat(this._savedH) || this.clientHeight || BH
+        const needed = Math.ceil(BH * Math.min(HW / 340, 1)) + 6   // altezza per mostrare il contenuto a scala-larghezza
+        wrap.style.setProperty('height', Math.max(needed, baseH) + 'px', 'important')
+      } else if (this._savedH != null) {
+        if (this._savedH) wrap.style.setProperty('height', this._savedH, 'important')
+        else wrap.style.removeProperty('height')
+        this._savedH = null
+      }
+      this._frkFit()
     } catch (e) {}
   }
 
@@ -520,7 +549,8 @@ class MeteoCard extends HTMLElement {
       case 'day':   this._openDay(parseInt(t.dataset.i,10)||0); break
       case 'dayclose': this._closeDay(); break
       case 'fc':
-        this._fo=!this._fo; this._bk=null; this._build(); break
+        this._fo=!this._fo; this._bk=null; this._build()
+        requestAnimationFrame(()=>this._adjustHeight()); break
       case 'srch':
         this._se=!this._se; this._renderModal(); break
       case 'sel':
