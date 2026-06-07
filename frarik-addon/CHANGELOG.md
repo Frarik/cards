@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.11 — 2026-06-07
+
+### Store e card persona
+- **Store**: sotto il nome della card ora compare **solo la versione** (rimosso il nome-file).
+- **person-card**: risolto il bug per cui le impostazioni erano vuote e il gear faceva crashare. La card ora prende l'hass da Frarik (nuovo `window.frarikHass()`), così i menu entità (person / device_tracker), la foto, la mappa e lo storico funzionano dentro la dashboard. Aggiorna la card dallo store per ricevere il fix.
+- **Robustezza**: un errore in `mount()` di una card non può più propagarsi e bloccare la dashboard (tutti i percorsi render/mount/update sono ora protetti).
+
 ## 1.2.10 — 2026-06-07
 
 ### Versione leggibile e coerente

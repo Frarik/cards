@@ -9,6 +9,9 @@
 
   // ── hass reale di Home Assistant (stati con attributi + callApi) ───────────────
   function bestHass() {
+    // 1) Frarik dashboard: hass completo (states con attributi, callApi, hassUrl)
+    try { if (typeof window.frarikHass === 'function') { const h = window.frarikHass(); if (h && h.states) return h; } } catch (e) {}
+    // 2) Home Assistant reale (card caricata nel frontend HA via /local/)
     try {
       for (const w of [window.parent, window.top]) {
         try { const ha = w.document.querySelector('home-assistant'); if (ha && ha.hass) return ha.hass; } catch (e) {}

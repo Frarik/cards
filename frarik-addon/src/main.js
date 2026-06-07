@@ -1376,7 +1376,7 @@ function _ghStoreRender(){
       const addYaml = (tab==='yaml') ? `<button class="ghs-btn ghs-btn-inst" data-action="_ghsYamlAdd" data-action-arg="${enc}"><i class="mdi mdi-plus"></i> Aggiungi</button>` : '';
       acts=`${eyeBtn(null)}${addYaml}<button class="ghs-btn ghs-btn-cp" data-action="_ghsCopy" data-action-arg="${enc}"><i class="mdi mdi-content-copy"></i> Copia</button><button class="ghs-btn ghs-btn-cp" data-action="_ghsDownload" data-action-arg="${enc}"><i class="mdi mdi-download"></i></button>`;
     }
-    const subTxt = eh(f.name) + (verLbl ? ' · v'+eh(verLbl) : '');
+    const subTxt = verLbl ? 'v'+eh(verLbl) : eh(f.name);
     return `<div class="ghs-row"><div class="ghs-ico">${ico}</div><div class="ghs-info"><div class="ghs-name">${eh(nm)}</div><div class="ghs-sub">${subTxt}</div></div><div class="ghs-acts">${acts}</div></div>`;
   }).join('');
 }
@@ -3470,7 +3470,7 @@ function buildCard(card){
         inner=`<div id="v-${card.id}" class="jsc-wrap" style="height:100%;width:100%">${_jcDef.render(card,{states:hs})}</div>`;
         setTimeout(()=>{
           const _w=document.getElementById('v-'+card.id);
-          if(_w&&typeof _jcDef.mount==='function') _jcDef.mount(card,{states:hs},_w);
+          if(_w&&typeof _jcDef.mount==='function'){ try{ _jcDef.mount(card,{states:hs},_w); }catch(e){ console.warn('[card mount]',card.jsCardId,e&&e.message); } }
         },0);
       }
       catch(e){ inner=`<div id="v-${card.id}" class="jsc-wrap jsc-err" style="height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px"><span style="font-size:24px">⚠️</span><span style="font-size:10px;color:#f87171">${e.message}</span></div>`; }
@@ -7367,6 +7367,9 @@ window.frarikEntity = function(id){
   return { entity_id:id, state:(hs[id]!==undefined?hs[id]:null), attributes:(ha[id]||{}) };
 };
 window.frarikState = function(id){ return id?(hs[id]!==undefined?hs[id]:null):null; };
+// hass COMPLETO in stile Home Assistant (states come oggetti con attributi, callApi,
+// hassUrl, callService, ecc.) per le card che ne hanno bisogno (es. person-card)
+window.frarikHass = function(){ return _haHassObj(); };
 
 function _haHassObj(){
   const states={};
