@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.19 — 2026-06-07
+
+### Store: doppio sottomenu + eliminazione da GitHub
+- Le cartelle **Card JS / Chips / Distintivi** ora mostrano due sezioni: **Installate** e **Da installare**.
+- Nello stato "Da installare" è comparso un **cestino "Elimina da GitHub"**: rimuove **definitivamente** il file dal repo. Richiede **conferma + chiave di accesso**.
+
 ## 1.2.18 — 2026-06-07
 
 ### Pulizia notifiche e impostazioni

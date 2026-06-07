@@ -1347,38 +1347,54 @@ function _ghStoreRender(){
   if(!files.length){ list.innerHTML=`<div class="ghs-empty">${q?'Nessun risultato per "'+eh(q)+'"':'Nessun file in questa cartella su GitHub'}</div>`; return; }
   const ico=folder.ico;
   const usedIds=new Set(); (cfg.pages||[]).forEach(pg=>(pg.cards||[]).forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedIds.add(c.jsCardId); }));
-  list.innerHTML=files.filter(f=>f&&f.name).sort((a,b)=>a.name.localeCompare(b.name)).map(f=>{
-    const nm=f.name.replace(/\.(js|ya?ml)$/i,'');
-    const enc=encodeURIComponent(f.name);
-    let acts;
-    const prevEnc=enc.replace(/'/g,"\\'");
-    const prevNm=nm.replace(/'/g,"\\'");
-    const eyeBtn=(cid)=>`<button class="ghs-ibtn ghs-ibtn-eye" data-action="_ghsPreviewEl" data-penc="${prevEnc}" data-pnm="${prevNm}" data-pcid="${cid||''}" title="Anteprima"><i class="mdi mdi-eye-outline"></i></button>`;
-    let verLbl='';   // versione da mostrare sotto il nome
-    if(folder.kind==='install'){
-      const known=g.shas[f.name];
-      const idFile=g.idFile||{};
-      const cardId=Object.keys(idFile).find(k=>idFile[k]===f.name)||null;
-      verLbl = _ghVerCache[f.sha] || g.fileVersions[f.name] || (cardId && _curStoreVersion(cardId)) || '';
-      const inDash=!!(cardId&&usedIds.has(cardId));
-      if(!known){
-        acts=`${eyeBtn(null)}<button class="ghs-btn ghs-btn-inst" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>`;
-      } else {
-        const updateBtn=(known!==f.sha)?`<button class="ghs-btn ghs-btn-upd" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-update"></i> Aggiorna</button>`:'';
-        const addBtn=cardId?(inDash?`<span class="ghs-badge ghs-badge-dash"><i class="mdi mdi-check-circle-outline"></i> In dashboard</span>`:`<button class="ghs-btn ghs-btn-inst" data-action="_jsStoreAddAndRefresh" data-action-args='["${cardId}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`)
-          :`<button class="ghs-btn ghs-btn-inst" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>`;
-        const delBtn=cardId?`<button class="ghs-ibtn ghs-ibtn-del" data-action="_ghsDeleteInstalled" data-action-arg="${cardId}" title="Disinstalla"><i class="mdi mdi-delete-outline"></i></button>`:'';
-        acts=`${eyeBtn(cardId)}${updateBtn}${addBtn}${delBtn}`;
-      }
-    } else {
-      // Scheda YAML: oltre a Copia/Download, "Aggiungi" crea una card YAML e la mette in dashboard.
-      // (La scheda Pacchetti resta solo Copia/Download: sono config di backend, non card.)
-      const addYaml = (tab==='yaml') ? `<button class="ghs-btn ghs-btn-inst" data-action="_ghsYamlAdd" data-action-arg="${enc}"><i class="mdi mdi-plus"></i> Aggiungi</button>` : '';
-      acts=`${eyeBtn(null)}${addYaml}<button class="ghs-btn ghs-btn-cp" data-action="_ghsCopy" data-action-arg="${enc}"><i class="mdi mdi-content-copy"></i> Copia</button><button class="ghs-btn ghs-btn-cp" data-action="_ghsDownload" data-action-arg="${enc}"><i class="mdi mdi-download"></i></button>`;
-    }
-    const subTxt = verLbl ? 'v'+eh(verLbl) : eh(f.name);
+  const sorted=files.filter(f=>f&&f.name).sort((a,b)=>a.name.localeCompare(b.name));
+  const eyeBtn=(enc,nm,cid)=>`<button class="ghs-ibtn ghs-ibtn-eye" data-action="_ghsPreviewEl" data-penc="${enc.replace(/'/g,"\\'")}" data-pnm="${nm.replace(/'/g,"\\'")}" data-pcid="${cid||''}" title="Anteprima"><i class="mdi mdi-eye-outline"></i></button>`;
+  const rowHtml=(nm,verLbl,name,acts)=>{
+    const subTxt = verLbl ? 'v'+eh(verLbl) : eh(name);
     return `<div class="ghs-row"><div class="ghs-ico">${ico}</div><div class="ghs-info"><div class="ghs-name">${eh(nm)}</div><div class="ghs-sub">${subTxt}</div></div><div class="ghs-acts">${acts}</div></div>`;
-  }).join('');
+  };
+
+  // ── Cartelle non-card (YAML/Pacchetti): lista semplice ──
+  if(folder.kind!=='install'){
+    list.innerHTML=sorted.map(f=>{
+      const nm=f.name.replace(/\.(js|ya?ml)$/i,''); const enc=encodeURIComponent(f.name);
+      const addYaml=(tab==='yaml')?`<button class="ghs-btn ghs-btn-inst" data-action="_ghsYamlAdd" data-action-arg="${enc}"><i class="mdi mdi-plus"></i> Aggiungi</button>`:'';
+      const acts=`${eyeBtn(enc,nm,null)}${addYaml}<button class="ghs-btn ghs-btn-cp" data-action="_ghsCopy" data-action-arg="${enc}"><i class="mdi mdi-content-copy"></i> Copia</button><button class="ghs-btn ghs-btn-cp" data-action="_ghsDownload" data-action-arg="${enc}"><i class="mdi mdi-download"></i></button>`;
+      return rowHtml(nm,'',f.name,acts);
+    }).join('');
+    return;
+  }
+
+  // ── Cartelle card (Card JS / Chips / Distintivi): doppio sottomenu Installate / Da installare ──
+  const idFile=g.idFile||{};
+  const installed=[], toInstall=[];
+  sorted.forEach(f=>{ (g.shas[f.name]?installed:toInstall).push(f); });
+
+  const rowInstalled=(f)=>{
+    const nm=f.name.replace(/\.(js|ya?ml)$/i,''); const enc=encodeURIComponent(f.name);
+    const cardId=Object.keys(idFile).find(k=>idFile[k]===f.name)||null;
+    const verLbl=_ghVerCache[f.sha]||g.fileVersions[f.name]||(cardId&&_curStoreVersion(cardId))||'';
+    const inDash=!!(cardId&&usedIds.has(cardId));
+    const updateBtn=(g.shas[f.name]!==f.sha)?`<button class="ghs-btn ghs-btn-upd" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-update"></i> Aggiorna</button>`:'';
+    const addBtn=cardId?(inDash?`<span class="ghs-badge ghs-badge-dash"><i class="mdi mdi-check-circle-outline"></i> In dashboard</span>`:`<button class="ghs-btn ghs-btn-inst" data-action="_jsStoreAddAndRefresh" data-action-args='["${cardId}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`)
+      :`<button class="ghs-btn ghs-btn-inst" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>`;
+    const delBtn=cardId?`<button class="ghs-ibtn ghs-ibtn-del" data-action="_ghsDeleteInstalled" data-action-arg="${cardId}" title="Disinstalla"><i class="mdi mdi-delete-outline"></i></button>`:'';
+    return rowHtml(nm,verLbl,f.name,`${eyeBtn(enc,nm,cardId)}${updateBtn}${addBtn}${delBtn}`);
+  };
+  const rowToInstall=(f)=>{
+    const nm=f.name.replace(/\.(js|ya?ml)$/i,''); const enc=encodeURIComponent(f.name);
+    const verLbl=_ghVerCache[f.sha]||g.fileVersions[f.name]||'';
+    const instBtn=`<button class="ghs-btn ghs-btn-inst" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>`;
+    // cestino: elimina DEFINITIVAMENTE da GitHub (richiede conferma + chiave)
+    const ghDel=`<button class="ghs-ibtn ghs-ibtn-del" data-action="_ghsDeleteFromGithub" data-action-arg="${enc}" title="Elimina da GitHub"><i class="mdi mdi-delete-forever-outline"></i></button>`;
+    return rowHtml(nm,verLbl,f.name,`${eyeBtn(enc,nm,null)}${instBtn}${ghDel}`);
+  };
+
+  list.innerHTML =
+    `<div class="ghs-subhdr"><i class="mdi mdi-check-circle-outline"></i> Installate · ${installed.length}</div>` +
+    (installed.length ? installed.map(rowInstalled).join('') : `<div class="ghs-subempty">Nessuna card installata da questa cartella</div>`) +
+    `<div class="ghs-subhdr"><i class="mdi mdi-download"></i> Da installare · ${toInstall.length}</div>` +
+    (toInstall.length ? toInstall.map(rowToInstall).join('') : `<div class="ghs-subempty">Tutte le card di questa cartella sono installate</div>`);
 }
 /* Schede "Installate" (origine github) e "Card locali" (origine local): gestisci le card installate */
 function _ghStoreRenderInstalled(q, originFilter){
@@ -1631,6 +1647,53 @@ async function _ghPut(path, content, message){
   throw new Error(lastErr||'GitHub: conflitto sha persistente (409). Riprova tra qualche secondo.');
 }
 function _b64utf8(str){ return btoa(unescape(encodeURIComponent(str))); }   // base64 UTF-8 per l'API GitHub
+
+/* Elimina un file dal repo via GitHub API (DELETE). Serve il token in g.token. */
+async function _ghDelete(path, message){
+  const g=_ghCfg();
+  if(!g.owner||!g.repo) throw new Error('Configura proprietario/repository');
+  if(!g.token) throw new Error('Manca il token GitHub');
+  const branch=g.branch||'main';
+  const base=`https://api.github.com/repos/${g.owner}/${g.repo}/contents/${path.split('/').map(encodeURIComponent).join('/')}`;
+  const H={'Authorization':'token '+g.token,'Accept':'application/vnd.github.v3+json'};
+  const gr=await fetch(base+'?ref='+encodeURIComponent(branch)+'&_t='+Date.now(),{headers:H,cache:'no-store'});
+  if(gr.status===404) throw new Error('File già assente su GitHub');
+  if(!gr.ok) throw new Error('GitHub HTTP '+gr.status+' (lettura sha)');
+  const sha=(await gr.json()).sha;
+  const r=await fetch(base,{method:'DELETE',headers:Object.assign({'Content-Type':'application/json'},H),body:JSON.stringify({message:message||('Elimina '+path),sha,branch})});
+  if(r.status===401||r.status===403) throw new Error('GitHub ha rifiutato (token senza permesso "repo"?)');
+  if(!r.ok){ let m=''; try{ m=(await r.json()).message; }catch(e){} throw new Error('GitHub HTTP '+r.status+(m?' — '+m:'')); }
+  return await r.json();
+}
+
+/* Cestino "Elimina da GitHub" (nello stato Da installare): conferma + CHIAVE di accesso. */
+const _GHDEL_KEY='FRKD-HVEM-JJR7-5DAN';
+async function _ghsDeleteFromGithub(enc){
+  const name=decodeURIComponent(enc);
+  const nm=name.replace(/\.(js|ya?ml)$/i,'');
+  const f=(await _ghsEnsureFile(enc).catch(()=>null)) || _ghsFind(enc);
+  const folder=_GHS_FOLDERS[_ghsTab];
+  const path=(f&&f.path) || (folder?folder.path+'/'+name:name);
+  showConfirm(
+    `Eliminare <b>DEFINITIVAMENTE</b> «${eh(nm)}» da GitHub?<br>`+
+    `<span style="font-size:11px;opacity:.7;display:block;margin:6px 0 4px">Operazione irreversibile. Inserisci la chiave di accesso:</span>`+
+    `<input id="ghdel-key" type="text" autocomplete="off" placeholder="Chiave di accesso" style="width:100%;padding:9px 11px;border-radius:9px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;font-size:13px;font-family:inherit;letter-spacing:.5px">`,
+    async ()=>{
+      const key=((document.getElementById('ghdel-key')||{}).value||'').trim();
+      if(key!==_GHDEL_KEY){ showToast('🔑 Chiave errata — eliminazione annullata'); return; }
+      try{
+        showToast('🗑 Elimino «'+nm+'» da GitHub…');
+        await _ghDelete(path, 'Elimina '+name+' dallo store (chiave verificata)');
+        try{ const g=_ghCfg(); if(g.shas) delete g.shas[name]; if(g.fileVersions) delete g.fileVersions[name];
+             if(g.idFile){ for(const id in g.idFile){ if(g.idFile[id]===name) delete g.idFile[id]; } } saveCfg(); _haSaveCfg&&_haSaveCfg(); }catch(e){}
+        if(_ghsCache[_ghsTab]) _ghsCache[_ghsTab]=_ghsCache[_ghsTab].filter(x=>x.name!==name);
+        _ghStoreRender();
+        showToast('✅ «'+nm+'» eliminata definitivamente da GitHub');
+      }catch(e){ showToast('⚠️ Errore eliminazione GitHub: '+(e.message||e)); }
+    },
+    'Elimina da GitHub', 'Annulla'
+  );
+}
 function _ghsFind(name){ name=decodeURIComponent(name); return (_ghsCache[_ghsTab]||[]).find(f=>f.name===name); }
 /* ricarica (se serve) la lista file della cartella corrente e ritrova il file:
    evita il caso "dopo l'eliminazione il tasto Installa non fa nulla" (cache vuota/stale) */
@@ -11977,6 +12040,7 @@ Object.assign(window, {
   _ghStoreRender,
   _ghsCopy,
   _ghsDeleteInstalled,
+  _ghsDeleteFromGithub,
   _ghsDownload,
   _ghsInstall,
   _ghsPreview,

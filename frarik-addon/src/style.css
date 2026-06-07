@@ -763,6 +763,10 @@ body.editing .col-add-btn{display:flex}
 .ghs-badge{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:8px;font-size:11px;font-weight:700;white-space:nowrap;border:1px solid transparent}
 .ghs-badge-dash{background:rgba(74,222,128,.15);border-color:rgba(74,222,128,.35);color:#4ade80}
 .ghs-empty{padding:32px 14px;text-align:center;font-size:12px;color:var(--muted)}
+/* sottomenu store: intestazioni "Installate" / "Da installare" */
+.ghs-subhdr{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.5);margin:14px 2px 8px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,.08)}
+.ghs-subhdr:first-child{margin-top:2px}
+.ghs-subempty{padding:10px 14px;font-size:11px;color:var(--muted);opacity:.7;margin-bottom:6px}
 /* ═══ YAML IMPORT MODAL ═══ */
 #yaml-modal{position:fixed;inset:0;z-index:9600;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
 #yaml-modal.off{display:none}
