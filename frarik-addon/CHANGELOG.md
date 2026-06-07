@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.18 — 2026-06-07
+
+### Pulizia notifiche e impostazioni
+- **Notifiche**: rimosse "Frarik Dashboard aggiornato alla vX" e "Disponibile nuova versione dashboard". Resta solo la notifica di **aggiornamento card** nello store.
+- **Impostazioni**: rimossa la sezione **"Impostazioni Nomi Store"** (non più necessaria: il nome della card viene impostato automaticamente).
+
 ## 1.2.17 — 2026-06-07
 
 ### Resize: si ridimensiona la card, non una cornice

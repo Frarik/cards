@@ -9963,11 +9963,9 @@ function _epLicLogout(){
     const cur=d&&d.version; if(!cur) return;
     const prev=localStorage.getItem('frarik_last_version');
     localStorage.setItem('frarik_last_version',cur);
-    if(cur===prev) return; // stessa versione, nessuna notifica
-    const msg=prev?'Aggiornato dalla v'+prev+' alla v'+cur+'.':'Versione v'+cur+' in esecuzione.';
-    setTimeout(()=>{
-      try{ _ntfPushLog('✅ Frarik Dashboard v'+cur, msg,'📦','app',{}); _ntfUpdateBell(); }catch(e){}
-    },2000);
+    if(cur===prev) return; // stessa versione
+    // Notifica "Frarik Dashboard aggiornato" rimossa su richiesta: si tiene solo
+    // quella di aggiornamento delle card nello store.
   }catch(e){}
 })();
 try{
@@ -9998,12 +9996,8 @@ async function _checkDashboardUpdate(){
     const txt=await fetch(url,{cache:'no-store'}).then(r=>r.ok?r.text():null).catch(()=>null); if(!txt) return;
     const m=txt.match(/^version:\s*"?([^"\n]+)"?/m); const latest=m&&m[1].trim(); if(!latest) return;
     if(_verCmp(latest, installed)>0){
-      if(_appUpdNotified!==latest){
-        _appUpdNotified=latest;
-        try{ _ntfPushLog('⬆️ Disponibile nuova versione dashboard',
-          'Versione v'+latest+' (installata v'+installed+') — aggiornala da Impostazioni → Add-on di Home Assistant.',
-          '⬆️', 'app_avail'); _ntfUpdateBell(); }catch(e){}
-      }
+      // Notifica "Disponibile nuova versione dashboard" rimossa su richiesta.
+      _appUpdNotified=latest;
       // forza il Supervisor a rileggere il repo → l'update appare subito in HA
       try{ fetch('./api/frarik/reload-store',{method:'POST'}); }catch(e){}
     }
