@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.8 — 2026-06-07
+
+### Rinomina card
+- Aggiunto il pulsante **✏️ Rinomina** alle card installate, sia in **Impostazioni → Store** sia nello **Store → Card locali/Installate**.
+- Rinominando una card: il nuovo nome viene aggiornato **subito** in tutte le viste e impresso nel codice della card; se la card è su GitHub (e il token è configurato) viene **propagato anche su GitHub** in automatico, **senza cambiare la versione**. Le card locali non ancora pubblicate prendono il nuovo nome alla prossima pubblicazione.
+
 ## 1.2.7 — 2026-06-07
 
 ### Card Lovelace: previsioni meteo e sottoscrizioni
