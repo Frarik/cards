@@ -713,6 +713,9 @@ body.editing .col-add-btn{display:flex}
 .dash-card-wrap.card-fixed-h:has(.card-jsc),
 .dash-card-wrap.card-fixed-h:has(.card-jsc) .card-jsc,
 .dash-card-wrap.card-fixed-h:has(.card-jsc) .jsc-wrap{height:100%!important;min-height:0!important;}
+/* AUTO-FIT: il contenuto (.jsc-fit-in) è a dimensione base e viene scalato via transform per riempire la card */
+.jsc-wrap.jsc-autofit{position:relative;overflow:hidden;}
+.jsc-wrap.jsc-autofit>.jsc-fit-in{position:absolute;top:0;left:0;transform-origin:top left;will-change:transform;}
 .jsc-err{background:rgba(248,113,113,.05)!important;border-color:rgba(248,113,113,.2)!important}
 /* ═══ JS STORE ═══ */
 .jsst-tab{padding:6px 14px;border-radius:8px;font-size:11px;font-weight:700;border:1px solid var(--bd2);color:var(--muted);cursor:pointer;transition:all .15s;background:none}

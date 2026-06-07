@@ -3469,10 +3469,15 @@ function buildCard(card){
     const _jcDef=_jcReg[card.jsCardId];
     if(_jcDef){
       try{
-        inner=`<div id="v-${card.id}" class="jsc-wrap" style="height:100%;width:100%">${_jcDef.render(card,{states:hs})}</div>`;
+        const _af=_jcIsAutoFit(card);
+        inner=_af
+          ? `<div id="v-${card.id}" class="jsc-wrap jsc-autofit" style="height:100%;width:100%"><div id="vf-${card.id}" class="jsc-fit-in">${_jcDef.render(card,{states:hs})}</div></div>`
+          : `<div id="v-${card.id}" class="jsc-wrap" style="height:100%;width:100%">${_jcDef.render(card,{states:hs})}</div>`;
         setTimeout(()=>{
           const _w=document.getElementById('v-'+card.id);
-          if(_w&&typeof _jcDef.mount==='function'){ try{ _jcDef.mount(card,{states:hs},_w); }catch(e){ console.warn('[card mount]',card.jsCardId,e&&e.message); } }
+          const _host=_af?(document.getElementById('vf-'+card.id)||_w):_w;
+          if(_host&&typeof _jcDef.mount==='function'){ try{ _jcDef.mount(card,{states:hs},_host); }catch(e){ console.warn('[card mount]',card.jsCardId,e&&e.message); } }
+          if(_af){ card._fitW=card._fitH=null; _jcAutoFit(card); }
         },0);
       }
       catch(e){ inner=`<div id="v-${card.id}" class="jsc-wrap jsc-err" style="height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px"><span style="font-size:24px">⚠️</span><span style="font-size:10px;color:#f87171">${e.message}</span></div>`; }
@@ -3597,6 +3602,36 @@ function buildCard(card){
   return el;
 }
 
+/* ═══ AUTO-FIT card JS ═══
+   Scala il contenuto di una card JS per riempire la sua dimensione (zoom-to-fit),
+   mantenendo le posizioni. Si attiva solo per card RIDIMENSIONATE (card.width||card.fixedH)
+   e non opt-out (CARD.noAutoFit). Il contenuto sta in #vf-<id> (.jsc-fit-in), scalato
+   dentro #v-<id> (.jsc-wrap.jsc-autofit). */
+function _jcIsAutoFit(card){
+  try{ const d=(window.FratechCardRegistry||{})[card.jsCardId]; return !!(card&&card.type==='js-custom'&&(card.width||card.fixedH)&&d&&!d.noAutoFit); }catch(e){ return false; }
+}
+function _jcAutoFit(card){
+  try{
+    const wrap=document.getElementById('v-'+card.id);
+    if(!wrap||!wrap.classList.contains('jsc-autofit')) return;
+    const inner=document.getElementById('vf-'+card.id);
+    if(!inner) return;
+    if(!card._fitW||!card._fitH){            // misura la dimensione "base" del contenuto
+      inner.style.transform='none';
+      inner.style.width=(wrap.clientWidth||300)+'px';
+      inner.style.height='auto';
+      card._fitW=Math.max(1,inner.offsetWidth);
+      card._fitH=Math.max(1,inner.offsetHeight);
+    }
+    inner.style.width=card._fitW+'px';
+    inner.style.height=card._fitH+'px';
+    const W=wrap.clientWidth||card._fitW, H=wrap.clientHeight||card._fitH;
+    const s=Math.min(W/card._fitW, H/card._fitH);
+    inner.style.transform='scale('+s+')';
+    if(!card.fixedH){ wrap.style.setProperty('height',(card._fitH*s)+'px','important'); } // evita il collasso (contenuto absolute)
+  }catch(e){}
+}
+
 /* ═══ RESIZE ═══ */
 function initResize(cardId){
   const rh=document.getElementById('rh-'+cardId);
@@ -3625,6 +3660,7 @@ function initResize(cardId){
         const nw=Math.max(80, Math.min(maxW, sw+cx-sx));
         card.width=Math.round(nw); ce.style.width=card.width+'px'; ce.style.maxWidth='100%';
         const cs=document.getElementById('cs-'+cardId); if(cs) cs.textContent=card.width+'px';
+        _jcAutoFit(card);   // scaling live del contenuto (se card JS auto-fit)
       };
     } else {
       const sx=clientX,sy=clientY,sw=ce.offsetWidth,sh=ce.offsetHeight;
@@ -4582,10 +4618,13 @@ function updateCardEl(card){
       const _jcReg=window.FratechCardRegistry||{};
       const _jcDef=_jcReg[card.jsCardId];
       if(_jcDef){
+        const _af=w.classList.contains('jsc-autofit');
+        const _host=_af?(document.getElementById('vf-'+card.id)||w):w;
         try{
-          if(typeof _jcDef.update==='function'){ _jcDef.update(card,{states:hs},w); }
-          else { w.innerHTML=_jcDef.render(card,{states:hs}); }
-        }catch(e){ w.innerHTML=`<div class="jsc-err" style="display:flex;align-items:center;justify-content:center;height:100%"><span style="font-size:10px;color:#f87171">⚠️ ${e.message}</span></div>`; }
+          if(typeof _jcDef.update==='function'){ _jcDef.update(card,{states:hs},_host); }
+          else { _host.innerHTML=_jcDef.render(card,{states:hs}); }
+          if(_af) _jcAutoFit(card);
+        }catch(e){ _host.innerHTML=`<div class="jsc-err" style="display:flex;align-items:center;justify-content:center;height:100%"><span style="font-size:10px;color:#f87171">⚠️ ${e.message}</span></div>`; }
       }
     }
   }

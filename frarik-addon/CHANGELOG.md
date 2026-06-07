@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.16 — 2026-06-07
+
+### Auto-fit del contenuto per le card JS (sperimentale)
+- Quando ridimensioni una card JS dall'angolo, il suo **contenuto ora si adatta in scala** alla nuova dimensione (zoom-to-fit, posizioni invariate) — gestito dal **core**, senza codice per ogni card. Si attiva solo sulle card ridimensionate (le altre restano identiche) e una card può disattivarlo con `noAutoFit:true` (la person-card ha già il suo scaling, quindi è opt-out).
+
 ## 1.2.15 — 2026-06-07
 
 ### Resize larghezza: la colonna resta fissa

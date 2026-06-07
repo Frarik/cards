@@ -1,5 +1,5 @@
 /**
- * person-card.js v1.6 — FratechStore Card "Persona"
+ * person-card.js v1.7 — FratechStore Card "Persona"
  * Foto entità + tracker · sfondo Google Maps con segnaposto live.
  * Affianco al nome: A casa (verde) / Fuori casa (rosso) / nome zona HA (azzurro) + "X min fa".
  * Tap sulla card → popup mappa intera con lo storico dei tracciati delle ultime 24h.
@@ -362,8 +362,9 @@
     id: 'person-card',
     name: 'Persona',
     icon: '👤',
-    version: '1.6',
+    version: '1.7',
     desc: 'Foto persona + tracker, sfondo Google Maps live, stato zona colorato e storico 24h. Contenuto che scala con la dimensione della card.',
+    noAutoFit: true,   // ha già il suo scaling interno (mappa a tutto sfondo) → niente auto-fit del core
     render, mount, update
   };
   window.FratechCardRegistry = window.FratechCardRegistry || {};
