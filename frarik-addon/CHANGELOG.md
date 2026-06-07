@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.15 — 2026-06-07
+
+### Resize larghezza: la colonna resta fissa
+- Ridimensionando la larghezza dall'angolo ora cambia **solo la card** (allineata a sinistra) **dentro la sua colonna**, che resta fissa. Prima si "muoveva" anche la colonna perché la larghezza era applicata al contenitore di colonna; ora è applicata alla card stessa.
+
 ## 1.2.14 — 2026-06-07
 
 ### Resize altezza anche per le card JS

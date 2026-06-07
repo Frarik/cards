@@ -3315,12 +3315,12 @@ function _buildSectionEl(sec,page){
           cw.className='dash-card-wrap'+(!vis?' card-cond-hidden':'')+(c.fixedH?' card-fixed-h':'');
           cw.style.height=(c.height||sec.rowH||150)+'px';
           if(c.fixedH) cw.style.setProperty('height',(c.height||sec.rowH||150)+'px','important'); // altezza fissa anche per le card JS (auto di default)
-          if(c.width){ cw.style.width=c.width+'px'; cw.style.maxWidth='100%'; }  // larghezza per-card dentro la colonna
           cw.dataset.cardId=c.id; cw.dataset.secId=sec.id; cw.dataset.col=col;
           cw.addEventListener('dragover',e=>{ if(dragSrc&&dragSrc!==c.id){e.preventDefault();cw.classList.add('dov');}});
           cw.addEventListener('dragleave',()=>cw.classList.remove('dov'));
           cw.addEventListener('drop',e=>{ e.preventDefault(); cw.classList.remove('dov'); if(dragSrc&&dragSrc!==c.id) swapC(dragSrc,c.id); });
           cw.appendChild(_safeBuildCard(c));
+          if(c.width){ const _cel=cw.querySelector('.card'); if(_cel){ _cel.style.width=c.width+'px'; _cel.style.maxWidth='100%'; } }  // larghezza per-card dentro la colonna fissa
           if(!vis){ const m=document.createElement('div'); m.className='cond-hidden-mark'; m.textContent='👁 nascosta dalla condizione'; cw.appendChild(m); }
           wrapper.appendChild(cw);
         });
@@ -3613,15 +3613,17 @@ function initResize(cardId){
       const wrap=ce.closest('.dash-card-wrap');
       const colWrap=ce.closest('.dash-col-outer');
       const sy=clientY, sh=wrap?wrap.offsetHeight:ce.offsetHeight;
-      const sx=clientX, sw=wrap?wrap.offsetWidth:ce.offsetWidth;
-      const maxW=colWrap?colWrap.clientWidth:sw;   // non superare la larghezza della colonna
+      const sx=clientX, sw=ce.offsetWidth;
+      const maxW=colWrap?colWrap.clientWidth:sw;   // la colonna resta fissa: la card non può superarla
       return (cx,cy)=>{
+        // altezza → sul contenitore (per card)
         const nh=Math.max(80, sh+cy-sy);
-        card.height=nh; card.fixedH=true;   // altezza fissa: serve a battere height:auto delle card JS
+        card.height=nh; card.fixedH=true;   // altezza fissa: batte height:auto delle card JS
         if(wrap){ wrap.classList.add('card-fixed-h'); wrap.style.setProperty('height',nh+'px','important'); }
         const rs=document.getElementById('rs-'+cardId); if(rs) rs.textContent=nh+'px';
+        // larghezza → sulla CARD (dentro la colonna, che resta fissa); la card si allinea a sinistra
         const nw=Math.max(80, Math.min(maxW, sw+cx-sx));
-        card.width=Math.round(nw); if(wrap){ wrap.style.width=card.width+'px'; wrap.style.maxWidth='100%'; }
+        card.width=Math.round(nw); ce.style.width=card.width+'px'; ce.style.maxWidth='100%';
         const cs=document.getElementById('cs-'+cardId); if(cs) cs.textContent=card.width+'px';
       };
     } else {
