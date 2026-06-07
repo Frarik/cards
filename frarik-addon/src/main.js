@@ -3312,8 +3312,9 @@ function _buildSectionEl(sec,page){
           const vis=_cardVisible(c);
           if(!vis && !editMode) return;   // nascosta dalla condizione → in vista non si mostra
           const cw=document.createElement('div');
-          cw.className='dash-card-wrap'+(!vis?' card-cond-hidden':'');
+          cw.className='dash-card-wrap'+(!vis?' card-cond-hidden':'')+(c.fixedH?' card-fixed-h':'');
           cw.style.height=(c.height||sec.rowH||150)+'px';
+          if(c.fixedH) cw.style.setProperty('height',(c.height||sec.rowH||150)+'px','important'); // altezza fissa anche per le card JS (auto di default)
           if(c.width){ cw.style.width=c.width+'px'; cw.style.maxWidth='100%'; }  // larghezza per-card dentro la colonna
           cw.dataset.cardId=c.id; cw.dataset.secId=sec.id; cw.dataset.col=col;
           cw.addEventListener('dragover',e=>{ if(dragSrc&&dragSrc!==c.id){e.preventDefault();cw.classList.add('dov');}});
@@ -3616,7 +3617,8 @@ function initResize(cardId){
       const maxW=colWrap?colWrap.clientWidth:sw;   // non superare la larghezza della colonna
       return (cx,cy)=>{
         const nh=Math.max(80, sh+cy-sy);
-        card.height=nh; if(wrap) wrap.style.height=nh+'px';
+        card.height=nh; card.fixedH=true;   // altezza fissa: serve a battere height:auto delle card JS
+        if(wrap){ wrap.classList.add('card-fixed-h'); wrap.style.setProperty('height',nh+'px','important'); }
         const rs=document.getElementById('rs-'+cardId); if(rs) rs.textContent=nh+'px';
         const nw=Math.max(80, Math.min(maxW, sw+cx-sx));
         card.width=Math.round(nw); if(wrap){ wrap.style.width=card.width+'px'; wrap.style.maxWidth='100%'; }

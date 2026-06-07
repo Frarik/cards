@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.14 — 2026-06-07
+
+### Resize altezza anche per le card JS
+- Le card JS (FratechStore/Lovelace) avevano `height:auto` forzato → trascinando l'angolo si poteva cambiare solo la larghezza, non l'altezza. Ora, quando ridimensioni l'altezza dall'angolo, la card viene marcata ad **altezza fissa** e rispetta l'altezza impostata (alzare/abbassare funziona anche su queste card; il contenuto si adatta).
+
 ## 1.2.13 — 2026-06-07
 
 ### Resize larghezza dentro la colonna
