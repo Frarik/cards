@@ -1,4 +1,4 @@
-/* frarik-version: 1.1 */
+/* frarik-version: 1.2 */
 /**
  * meteo+previsioni.js v1.3
  * type: custom:meteo-card
@@ -96,13 +96,13 @@ const _IC = {
 const _CSS = `
 :host{display:block;height:100%;overflow:hidden;}
 *{box-sizing:border-box;margin:0;padding:0;}
-.card{border-radius:20px;overflow:hidden;font-family:var(--primary-font-family,system-ui,sans-serif);color:#fff;position:relative;box-shadow:0 12px 48px rgba(0,0,0,.55);transform-origin:top left;will-change:transform;}
+.card{border-radius:20px;overflow:hidden;font-family:var(--primary-font-family,system-ui,sans-serif);color:#fff;position:relative;box-shadow:0 12px 48px rgba(0,0,0,.55);height:100%;display:flex;align-items:center;justify-content:center;}
 .dots{position:absolute;inset:0;pointer-events:none;z-index:0;}
 .dot{position:absolute;border-radius:50%;background:rgba(255,255,255,.55);}
 .d1{width:2.5px;height:2.5px;top:10%;left:52%;}.d2{width:1.5px;height:1.5px;top:7%;right:28%;}
 .d3{width:2px;height:2px;top:25%;right:14%;}.d4{width:1.5px;height:1.5px;top:40%;left:38%;}
 .d5{width:2px;height:2px;top:18%;left:25%;}.d6{width:1.5px;height:1.5px;bottom:38%;right:22%;}
-.body{position:relative;z-index:1;padding:16px 16px 0;}
+.body{position:relative;z-index:1;padding:16px 16px;flex:0 0 auto;transform-origin:center center;will-change:transform;}
 /* header */
 .hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;}
 .city{font-size:32px;font-weight:900;letter-spacing:-.5px;line-height:1.1;text-shadow:0 2px 12px rgba(0,0,0,.3);}
@@ -286,17 +286,18 @@ class MeteoCard extends HTMLElement {
   _frkFit() {
     try {
       const card = this.shadowRoot && this.shadowRoot.querySelector('.card')
-      if (!card) return
+      const body = card && card.querySelector('.body')
+      if (!body) return
       const HW = this.clientWidth, HH = this.clientHeight
       if (!HW || !HH) return
-      // larghezza di impaginazione: mai sotto 320px (così sotto i 320 il contenuto NON si
-      // riflette/taglia ma viene scalato). A dimensione normale (>=320) la card resta identica.
-      const BW = Math.max(HW, 320)
-      card.style.transform = 'none'
-      card.style.width = BW + 'px'
-      const BH = card.offsetHeight || HH
+      // lo SFONDO (.card) riempie il contenitore; scaliamo SOLO il contenuto (.body),
+      // così non compare nessun riquadro dietro (come la person-card).
+      const BW = Math.max(HW, 320)          // impaginazione del contenuto: mai sotto 320px
+      body.style.transform = 'none'
+      body.style.width = BW + 'px'
+      const BH = body.offsetHeight || HH
       const s = Math.min(HW / BW, HH / BH)  // 1 a dimensione normale; <1 quando stringi/abbassi
-      card.style.transform = 'scale(' + s + ')'
+      body.style.transform = 'scale(' + s + ')'
     } catch (e) {}
   }
 

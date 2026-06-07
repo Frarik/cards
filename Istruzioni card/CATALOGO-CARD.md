@@ -41,7 +41,7 @@ esistenti (in `card-js/`, `card-chips/`, `card-distintivi/`) per riusarne stile 
 ### Meteo + Previsioni  ·  `Meteo.js`
 - **ID:** `meteo-card` · **versione:** — · **formato:** Lovelace
 - **Descrizione:** Card meteo con previsioni 5 giorni, tema notte/giorno e impostazioni inline.
-- **Hooks:** — · **righe:** 766
+- **Hooks:** — · **righe:** 769
 - **Pattern/API usati:** grafica SVG inline · timer · interazione (listener) · popup/overlay
 
 ### 👤 Persona  ·  `person-card.js`
