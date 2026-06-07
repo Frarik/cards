@@ -1,4 +1,4 @@
-/* frarik-version: 1.0 */
+/* frarik-version: 1.1 */
 /**
  * meteo+previsioni.js v1.3
  * type: custom:meteo-card
@@ -94,9 +94,9 @@ const _IC = {
 
 // ── CSS ───────────────────────────────────────────────────────────────────────
 const _CSS = `
-:host{display:block;}
+:host{display:block;height:100%;overflow:hidden;}
 *{box-sizing:border-box;margin:0;padding:0;}
-.card{border-radius:20px;overflow:hidden;font-family:var(--primary-font-family,system-ui,sans-serif);color:#fff;position:relative;box-shadow:0 12px 48px rgba(0,0,0,.55);}
+.card{border-radius:20px;overflow:hidden;font-family:var(--primary-font-family,system-ui,sans-serif);color:#fff;position:relative;box-shadow:0 12px 48px rgba(0,0,0,.55);transform-origin:top left;will-change:transform;}
 .dots{position:absolute;inset:0;pointer-events:none;z-index:0;}
 .dot{position:absolute;border-radius:50%;background:rgba(255,255,255,.55);}
 .d1{width:2.5px;height:2.5px;top:10%;left:52%;}.d2{width:1.5px;height:1.5px;top:7%;right:28%;}
@@ -269,6 +269,7 @@ class MeteoCard extends HTMLElement {
     this.shadowRoot.addEventListener('click', this._click)
     this.shadowRoot.addEventListener('input', this._inp)
     if (this._h && this._c.entityId) this._getForecast()
+    try { if (!this._frkRO && 'ResizeObserver' in window) { this._frkRO = new ResizeObserver(() => this._frkFit()); this._frkRO.observe(this) } } catch (e) {}
   }
 
   disconnectedCallback() {
@@ -277,6 +278,26 @@ class MeteoCard extends HTMLElement {
     this._destroyModal()
     this._destroyDetail()
     this._unsub()
+    try { if (this._frkRO) this._frkRO.disconnect() } catch (e) {}
+  }
+
+  /* Adatta il contenuto alla dimensione della card (zoom-to-fit, posizioni invariate),
+     come la person-card. Misura la dimensione base una volta e scala con transform. */
+  _frkFit() {
+    try {
+      const card = this.shadowRoot && this.shadowRoot.querySelector('.card')
+      if (!card) return
+      const HW = this.clientWidth, HH = this.clientHeight
+      if (!HW || !HH) return
+      // larghezza di impaginazione: mai sotto 320px (così sotto i 320 il contenuto NON si
+      // riflette/taglia ma viene scalato). A dimensione normale (>=320) la card resta identica.
+      const BW = Math.max(HW, 320)
+      card.style.transform = 'none'
+      card.style.width = BW + 'px'
+      const BH = card.offsetHeight || HH
+      const s = Math.min(HW / BW, HH / BH)  // 1 a dimensione normale; <1 quando stringi/abbassi
+      card.style.transform = 'scale(' + s + ')'
+    } catch (e) {}
   }
 
   set hass(h) {
@@ -549,10 +570,13 @@ class MeteoCard extends HTMLElement {
   _build() {
     if (!this._h) return
     const eid = this._c.entityId
-    if (!eid) { this._renderEmpty('Clicca ⚙ per configurare l\'entità meteo'); return }
-    const st = this._h.states?.[eid]
-    if (!st)  { this._renderEmpty('Entità non trovata: ' + eid); return }
-    this._renderCard(st)
+    if (!eid) { this._renderEmpty('Clicca ⚙ per configurare l\'entità meteo') }
+    else {
+      const st = this._h.states?.[eid]
+      if (!st) { this._renderEmpty('Entità non trovata: ' + eid) }
+      else { this._renderCard(st) }
+    }
+    try { requestAnimationFrame(() => this._frkFit()) } catch (e) {}
   }
 
   _renderEmpty(msg) {
