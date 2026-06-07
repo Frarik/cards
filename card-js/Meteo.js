@@ -1,4 +1,4 @@
-/* frarik-version: 1.8 */
+/* frarik-version: 1.9 */
 /**
  * meteo+previsioni.js v1.3
  * type: custom:meteo-card
@@ -96,13 +96,13 @@ const _IC = {
 const _CSS = `
 :host{display:block;height:100%;overflow:hidden;}
 *{box-sizing:border-box;margin:0;padding:0;}
-.card{border-radius:20px;overflow:hidden;font-family:var(--primary-font-family,system-ui,sans-serif);color:#fff;position:relative;box-shadow:0 12px 48px rgba(0,0,0,.55);height:100%;display:flex;align-items:center;justify-content:center;}
+.card{border-radius:20px;overflow:hidden;font-family:var(--primary-font-family,system-ui,sans-serif);color:#fff;position:relative;box-shadow:0 12px 48px rgba(0,0,0,.55);height:100%;}
 .dots{position:absolute;inset:0;pointer-events:none;z-index:0;}
 .dot{position:absolute;border-radius:50%;background:rgba(255,255,255,.55);}
 .d1{width:2.5px;height:2.5px;top:10%;left:52%;}.d2{width:1.5px;height:1.5px;top:7%;right:28%;}
 .d3{width:2px;height:2px;top:25%;right:14%;}.d4{width:1.5px;height:1.5px;top:40%;left:38%;}
 .d5{width:2px;height:2px;top:18%;left:25%;}.d6{width:1.5px;height:1.5px;bottom:38%;right:22%;}
-.body{position:relative;z-index:1;padding:16px 16px;flex:0 0 auto;transform-origin:center center;will-change:transform;}
+.body{position:relative;z-index:1;padding:16px 16px 0;}
 /* header */
 .hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;}
 .city{font-size:32px;font-weight:900;letter-spacing:-.5px;line-height:1.1;text-shadow:0 2px 12px rgba(0,0,0,.3);}
@@ -287,54 +287,15 @@ class MeteoCard extends HTMLElement {
 
   /* Adatta il contenuto alla dimensione della card (zoom-to-fit, posizioni invariate),
      come la person-card. Misura la dimensione base una volta e scala con transform. */
+  // Nessun ridimensionamento automatico: la dimensione si imposta dall'editor (px).
   _frkFit() {
-    try {
-      const card = this.shadowRoot && this.shadowRoot.querySelector('.card')
-      const body = card && card.querySelector('.body')
-      if (!body) return
-      const HW = this.clientWidth, HH = this.clientHeight
-      if (!HW || !HH) return
-      // lo SFONDO (.card) riempie il contenitore; scaliamo SOLO il contenuto (.body),
-      // così non compare riquadro dietro. Larghezza di DESIGN fissa (come la person-card):
-      // così il contenuto si INGRANDISCE sulle card grandi e si rimpicciolisce su quelle piccole.
-      const BW = 340
-      body.style.transform = 'none'
-      body.style.width = BW + 'px'
-      const BH = body.offsetHeight || HH
-      // scala UNIFORME (zoom-to-fit): il contenuto si adatta SENZA deformarsi;
-      // lo sfondo gradiente della .card riempie eventuali bordi.
-      const s = Math.min(HW / BW, HH / BH)
-      body.style.transform = 'scale(' + s + ')'
-    } catch (e) {}
+    try { const b = this.shadowRoot && this.shadowRoot.querySelector('.body'); if (b) { b.style.transform = 'none'; b.style.width = '' } } catch (e) {}
   }
 
   /* Apertura della previsione: la CARD cresce in altezza da sola per contenerla
      (mantenendo la larghezza impostata), e torna alla dimensione precedente alla chiusura.
      Funziona sulle card a dimensione fissa (ridimensionate dall'utente). */
-  _adjustHeight() {
-    try {
-      const wrap = this.closest('.dash-card-wrap')
-      if (!wrap) return
-      if (this._fo) {
-        if (this._savedH == null) this._savedH = wrap.style.height || ''
-        const body = this.shadowRoot && this.shadowRoot.querySelector('.body')
-        if (!body) return
-        const HW = this.clientWidth || 320
-        const prevT = body.style.transform
-        body.style.transform = 'none'; body.style.width = '340px'
-        const BH = body.offsetHeight || 220
-        body.style.transform = prevT
-        const baseH = parseFloat(this._savedH) || this.clientHeight || BH
-        const needed = Math.ceil(BH * Math.min(HW / 340, 1)) + 6   // altezza per mostrare il contenuto a scala-larghezza
-        wrap.style.setProperty('height', Math.max(needed, baseH) + 'px', 'important')
-      } else if (this._savedH != null) {
-        if (this._savedH) wrap.style.setProperty('height', this._savedH, 'important')
-        else wrap.style.removeProperty('height')
-        this._savedH = null
-      }
-      this._frkFit()
-    } catch (e) {}
-  }
+  _adjustHeight() { /* disattivato: niente crescita automatica, la dimensione è impostata dall'editor */ }
 
   set hass(h) {
     const first = this._nh; this._nh = false

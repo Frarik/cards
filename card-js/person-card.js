@@ -93,19 +93,9 @@
 
   const ST = (window.__pcState = window.__pcState || {});
 
-  // ── scala il contenuto per adattarlo alla card (zoom-to-fit, posizioni invariate) ──
+  // Nessun ridimensionamento automatico: la dimensione si imposta dall'editor (px).
   function fit(el) {
-    try {
-      const root = el.querySelector('.pc-root'); if (!root) return;
-      const content = root.querySelector('.pc-content'); if (!content) return;
-      content.style.transform = 'scale(1)';
-      const bw = content.offsetWidth || 1, bh = content.offsetHeight || 1;
-      const availW = Math.max(30, root.clientWidth - 14 - 42); // padding sx + spazio per il gear a dx
-      const availH = Math.max(16, root.clientHeight - 14);
-      let s = Math.min(availW / bw, availH / bh);
-      s = Math.max(0.4, Math.min(2.6, s));
-      content.style.transform = 'scale(' + s + ')';
-    } catch (e) {}
+    try { const c = el.querySelector('.pc-content'); if (c) c.style.transform = 'none'; } catch (e) {}
   }
 
   function render(card, hass) {
@@ -398,7 +388,7 @@
     id: 'person-card',
     name: 'Persona',
     icon: '👤',
-    version: '1.11',
+    version: '1.12',
     desc: 'Foto persona + tracker, sfondo Google Maps live, stato zona colorato e storico 24h. Contenuto che scala con la dimensione della card.',
     noAutoFit: true,   // ha già il suo scaling interno (mappa a tutto sfondo) → niente auto-fit del core
     render, mount, update

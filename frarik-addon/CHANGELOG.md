@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.20 — 2026-06-07
+
+### Dimensioni card manuali (px)
+- Nell'editor della card ci sono due nuovi campi **Larghezza/Altezza in px** (vuoto = automatico), come una card YAML.
+- Tolto il ridimensionamento/scaling automatico del contenuto dalle card (person, Meteo, Antizanzare): ora rendono al naturale dentro la dimensione impostata.
+
 ## 1.2.19 — 2026-06-07
 
 ### Store: doppio sottomenu + eliminazione da GitHub
