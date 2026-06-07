@@ -1,7 +1,9 @@
-/* Frarik card · version: 1.0.8 */
+/* frarik-version: 1.1 */
 /**
- * meteo+previsioni.js v1.2
+ * meteo+previsioni.js v1.3
  * type: custom:meteo-card
+ * Novità v1.3: clic su un giorno → foglio dettaglio con previsione ORARIA
+ *              (ora, icona, temperatura, pioggia, vento).
  *
  * Installazione:
  *   1. Copia in /config/www/meteo+previsioni.js
@@ -129,7 +131,8 @@ const _CSS = `
 .fct:hover{opacity:.75;}
 .fcg{display:none;grid-template-columns:repeat(5,1fr);gap:6px;padding-bottom:14px;}
 .fcg.open{display:grid;}
-.fcc{border-radius:12px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.04);padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.fcc{border-radius:12px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.04);padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;transition:background .15s,border-color .15s;}
+.fcc:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.18);}
 .fdn{font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;}
 .fi{font-size:28px;line-height:1;margin:3px 0 2px;}
 .fm{font-size:18px;font-weight:800;letter-spacing:-.5px;line-height:1;}
@@ -171,6 +174,28 @@ const _CSS = `
 /* placeholder */
 .ph{padding:32px 20px;text-align:center;color:rgba(255,255,255,.35);font-size:12px;display:flex;flex-direction:column;align-items:center;gap:10px;}
 .phi{font-size:38px;opacity:.3;}
+/* foglio dettaglio giorno (orario) — montato su document.body */
+.dov{position:fixed;inset:0;z-index:99998;display:none;flex-direction:column;background:rgba(8,10,18,.985);color:#e8ebf5;font-family:var(--primary-font-family,system-ui,sans-serif);}
+.dov.open{display:flex;}
+.dhdr{display:flex;align-items:flex-start;gap:14px;padding:18px 20px 16px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;}
+.dhl{flex:1;min-width:0;}
+.ddate{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;}
+.dcond{font-size:24px;font-weight:900;letter-spacing:-.5px;margin-top:3px;}
+.dmm{font-size:13px;font-weight:700;color:rgba(255,255,255,.6);margin-top:5px;}
+.dico{font-size:52px;line-height:1;flex-shrink:0;}
+.dcls{flex-shrink:0;width:30px;height:30px;border-radius:8px;border:none;background:rgba(255,255,255,.08);color:#94a3b8;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.dcls:hover{background:rgba(255,255,255,.16);color:#fff;}
+.dcolh{display:grid;grid-template-columns:60px 1fr 92px 96px;gap:8px;padding:8px 20px;font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.35);border-bottom:1px solid rgba(255,255,255,.06);}
+.dlist{flex:1;overflow-y:auto;padding:2px 0 14px;}
+.dr{display:grid;grid-template-columns:60px 1fr 92px 96px;gap:8px;align-items:center;padding:9px 20px;border-bottom:1px solid rgba(255,255,255,.04);}
+.dr-t{font-size:13px;font-weight:700;color:rgba(255,255,255,.75);}
+.dr-w{display:flex;align-items:center;gap:7px;}
+.dr-ic{font-size:18px;line-height:1;}
+.dr-tp{font-size:14px;font-weight:800;letter-spacing:-.3px;}
+.dr-bar{height:3px;border-radius:99px;margin-top:3px;}
+.dr-rn{font-size:11px;color:rgba(255,255,255,.5);}
+.dr-wd{font-size:11px;color:rgba(255,255,255,.55);text-align:right;white-space:nowrap;}
+.dempty{padding:40px 20px;text-align:center;color:rgba(255,255,255,.35);font-size:12px;line-height:1.5;}
 `
 
 // ── MeteoCard ─────────────────────────────────────────────────────────────────
@@ -195,6 +220,10 @@ class MeteoCard extends HTMLElement {
     this._nh = true          // flag primo hass
     this._sk = 'default'      // storage key per localStorage
     this._modalHost = null    // host del modal impostazioni (montato su document.body)
+    this._fch = []            // forecast ORARIO (per il dettaglio giorno)
+    this._fhs = null          // sottoscrizione forecast orario
+    this._dh  = null          // host del foglio dettaglio (montato su document.body)
+    this._dday = -1           // indice giorno aperto nel dettaglio (-1 = chiuso)
     this._click = this._onClick.bind(this)
     this._inp   = this._onInput.bind(this)
   }
@@ -246,6 +275,7 @@ class MeteoCard extends HTMLElement {
     this.shadowRoot.removeEventListener('click', this._click)
     this.shadowRoot.removeEventListener('input', this._inp)
     this._destroyModal()
+    this._destroyDetail()
     this._unsub()
   }
 
@@ -330,9 +360,110 @@ class MeteoCard extends HTMLElement {
   }
 
   _unsub() {
-    if (!this._fs) return
-    Promise.resolve(this._fs).then(u => { if (typeof u === 'function') u() }).catch(() => {})
-    this._fs = null
+    if (this._fs) { Promise.resolve(this._fs).then(u => { if (typeof u === 'function') u() }).catch(() => {}); this._fs = null }
+    if (this._fhs) { Promise.resolve(this._fhs).then(u => { if (typeof u === 'function') u() }).catch(() => {}); this._fhs = null }
+  }
+
+  // ── Forecast ORARIO (per il dettaglio del giorno) ───────────────────────────
+  async _getHourly() {
+    const eid = this._c?.entityId
+    if (!this._h || !eid) return
+    const onH = fc => { if (!Array.isArray(fc) || fc.length === 0) return false; this._fch = fc; if (this._dday >= 0) this._renderDetail(); return true }
+    const extract = r => r?.response?.[eid]?.forecast ?? r?.[eid]?.forecast ?? r?.forecast ?? (Array.isArray(r) ? r : null)
+    const conn = this._h.connection
+    // 1. subscribe orario (real-time)
+    if (conn?.subscribeMessage) {
+      try {
+        this._fhs = conn.subscribeMessage(
+          ev => onH(ev?.forecast ?? ev?.event?.forecast ?? []),
+          { type:'weather/subscribe_forecast', forecast_type:'hourly', entity_id:eid })
+      } catch (e) {}
+    }
+    if (this._fch.length > 0) return
+    // 2. get_forecasts (plurale)
+    try { const r = await conn?.sendMessagePromise?.({ type:'call_service', domain:'weather', service:'get_forecasts', service_data:{ entity_id:eid, type:'hourly' }, return_response:true }).catch(() => null); if (onH(extract(r))) return } catch (e) {}
+    // 3. get_forecast (singolare)
+    try { const r = await conn?.sendMessagePromise?.({ type:'call_service', domain:'weather', service:'get_forecast', service_data:{ entity_id:eid, type:'hourly' }, return_response:true }).catch(() => null); if (onH(extract(r))) return } catch (e) {}
+  }
+
+  // ── Dettaglio giorno (foglio orario, montato su document.body) ──────────────
+  _openDay(i) {
+    if (!this._fc[i]) return
+    this._dday = i
+    this._renderDetail()
+    if (!this._fch.length) this._getHourly()
+  }
+  _closeDay() { this._dday = -1; this._destroyDetail() }
+  _renderDetail() {
+    if (this._dday < 0) return
+    if (!this._dh) {
+      this._dh = document.createElement('div')
+      this._dh.attachShadow({ mode:'open' })
+      this._dh.shadowRoot.addEventListener('click', this._click)
+      document.body.appendChild(this._dh)
+    }
+    this._dh.shadowRoot.innerHTML = this._detailHTML()
+  }
+  _destroyDetail() {
+    if (!this._dh) return
+    this._dh.shadowRoot.removeEventListener('click', this._click)
+    this._dh.remove()
+    this._dh = null
+  }
+  _detailHTML() {
+    const d = this._fc[this._dday]
+    if (!d) return ''
+    const date = new Date(d.datetime)
+    const th   = _theme(d.condition)
+    const cond = _CI[d.condition] || String(d.condition || '').replace(/-/g, ' ')
+    const ico  = _WI[d.condition] || '🌡️'
+    const mx   = _n(d.temperature)
+    const mn   = _n(d.templow ?? (parseFloat(d.temperature) - 4))
+    const dayKey = date.toDateString()
+    const hours = (this._fch || []).filter(h => new Date(h.datetime).toDateString() === dayKey)
+    let rows
+    if (!hours.length) {
+      rows = `<div class="dempty">${(this._fch && this._fch.length)
+        ? 'Nessun dato orario per questo giorno.<br>Le previsioni orarie coprono di solito solo le prossime 24–48 ore.'
+        : 'Dati orari in caricamento…'}</div>`
+    } else {
+      const temps = hours.map(h => parseFloat(h.temperature) || 0)
+      const mxT = Math.max(...temps), mnT = Math.min(...temps), rng = (mxT - mnT) || 1
+      rows = hours.map(h => {
+        const t  = new Date(h.datetime)
+        const hh = String(t.getHours()).padStart(2, '0') + ':00'
+        const hi = _WI[h.condition] || ico
+        const tp = _n(h.temperature)
+        const col = _tempCol(h.temperature)
+        const bw = Math.round(((parseFloat(h.temperature) || 0) - mnT) / rng * 70 + 30)
+        const rn = (parseFloat(h.precipitation) || 0).toFixed(1)
+        const ws = h.wind_speed != null ? Math.round(parseFloat(h.wind_speed)) : '--'
+        const wd = _windDir(h.wind_bearing)
+        return `<div class="dr">
+          <div class="dr-t">${hh}</div>
+          <div>
+            <div class="dr-w"><span class="dr-ic">${hi}</span><span class="dr-tp" style="color:${col};">${tp}°</span></div>
+            <div class="dr-bar" style="background:${col};width:${bw}%;"></div>
+          </div>
+          <div class="dr-rn">💧 ${rn}mm</div>
+          <div class="dr-wd">${ws}km/h ${wd}</div>
+        </div>`
+      }).join('')
+    }
+    return `<style>${_CSS}</style>
+<div class="dov open">
+  <div class="dhdr" style="background:linear-gradient(135deg,${th.tb},transparent);">
+    <div class="dhl">
+      <div class="ddate" style="color:${th.accent};">${_fmtDate(date).toUpperCase()}</div>
+      <div class="dcond">${cond}</div>
+      <div class="dmm">↑ ${mx}°&nbsp;&nbsp;↓ ${mn}°</div>
+    </div>
+    <div class="dico">${ico}</div>
+    <button class="dcls" data-a="dayclose">${_IC.x}</button>
+  </div>
+  <div class="dcolh"><div>Ora</div><div>Temp</div><div>Pioggia</div><div style="text-align:right;">Vento</div></div>
+  <div class="dlist">${rows}</div>
+</div>`
   }
 
   _key() {
@@ -348,13 +479,16 @@ class MeteoCard extends HTMLElement {
 
   // ── Click ──────────────────────────────────────────────────────────────────
   _onClick(e) {
-    // click sul backdrop scuro (fuori dal modal) → chiude
+    // click sul backdrop scuro (fuori dal modal/foglio) → chiude
     if (e.target.classList?.contains('sov')) { this._closeSettings(); return }
+    if (e.target.classList?.contains('dov')) { this._closeDay(); return }
     const t = e.target.closest('[data-a]')
     if (!t) return
     switch (t.dataset.a) {
       case 'gear':  this._openSettings(); break
       case 'close': this._closeSettings(); break
+      case 'day':   this._openDay(parseInt(t.dataset.i,10)||0); break
+      case 'dayclose': this._closeDay(); break
       case 'fc':
         this._fo=!this._fo; this._bk=null; this._build(); break
       case 'srch':
@@ -464,7 +598,7 @@ class MeteoCard extends HTMLElement {
         const col = _tempCol(f.temperature)
         const bw  = Math.round(((parseFloat(f.temperature)||0)-minT)/rng*75+25)
         const nc  = i===0 ? th.accent : 'rgba(255,255,255,.65)'
-        return `<div class="fcc">
+        return `<div class="fcc" data-a="day" data-i="${i}">
           <div class="fdn" style="color:${nc};">${nm}</div>
           <div class="fi">${fi}</div>
           <div class="fm">${mx}°</div>
@@ -601,7 +735,7 @@ setTimeout(function() {
     window.customCards = window.customCards.filter(function(c) { return c && c.type !== 'meteo-card' })
     window.customCards.push({
       type:        'meteo-card',
-      name:        'Meteo dio',
+      name:        'Meteo + Previsioni',
       description: 'Card meteo con previsioni 5 giorni, tema notte/giorno e impostazioni inline.',
       preview:     false,
     })
