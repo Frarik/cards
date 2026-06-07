@@ -1,4 +1,4 @@
-/* frarik-version: 1.5 */
+/* frarik-version: 1.6 */
 /**
  * meteo+previsioni.js v1.3
  * type: custom:meteo-card
@@ -300,8 +300,14 @@ class MeteoCard extends HTMLElement {
       body.style.transform = 'none'
       body.style.width = BW + 'px'
       const BH = body.offsetHeight || HH
-      // riempie SEMPRE tutta la card (larghezza E altezza): scala non uniforme
-      body.style.transform = 'scale(' + (HW / BW) + ',' + (HH / BH) + ')'
+      // Forecast chiuso → riempie tutta la card (scala non uniforme L+H).
+      // Forecast aperto → scala UNIFORME (zoom-to-fit) così la tendina non viene "stirata"/ridimensionata male.
+      if (this._fo) {
+        const s = Math.min(HW / BW, HH / BH)
+        body.style.transform = 'scale(' + s + ')'
+      } else {
+        body.style.transform = 'scale(' + (HW / BW) + ',' + (HH / BH) + ')'
+      }
     } catch (e) {}
   }
 

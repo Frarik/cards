@@ -347,7 +347,7 @@
       const start = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
       let data = null;
       if (H && typeof H.callApi === 'function') {
-        data = await H.callApi('GET', `history/period/${start}?filter_entity_id=${encodeURIComponent(ent)}&minimal_response=false`);
+        data = await H.callApi('GET', `history/period/${start}?filter_entity_id=${encodeURIComponent(ent)}&minimal_response=false&significant_changes_only=false`);
       }
       const series = (data && data[0]) || [];
       series.forEach(s => { const a = s.attributes || {}; if (a.latitude != null && a.longitude != null) pts.push([a.latitude, a.longitude]); });
@@ -390,7 +390,7 @@
     id: 'person-card',
     name: 'Persona',
     icon: '👤',
-    version: '1.9',
+    version: '1.10',
     desc: 'Foto persona + tracker, sfondo Google Maps live, stato zona colorato e storico 24h. Contenuto che scala con la dimensione della card.',
     noAutoFit: true,   // ha già il suo scaling interno (mappa a tutto sfondo) → niente auto-fit del core
     render, mount, update
