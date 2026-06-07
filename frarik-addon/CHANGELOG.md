@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.10 — 2026-06-07
+
+### Versione leggibile e coerente
+- La versione impressa nel file è ora **sempre leggibile**: `_parseCardVersion` riconosce sia il campo `version:` sia un marcatore commento, e lo stamp aggiorna il campo (o un marcatore canonico) **senza accumulare commenti**. Risolve il caso in cui una card pubblicata mostrava sempre `v1.0` perché la versione era solo in un commento non interpretato.
+- Tutte le card del repo riportate a una **baseline `1.0` leggibile** (campo `version: '1.0'`), così lo store mostra la versione corretta e i futuri "Aggiorna"/pubblicazioni partono puliti.
+
 ## 1.2.9 — 2026-06-07
 
 ### Sezione dedicata "Impostazioni Nomi Store"

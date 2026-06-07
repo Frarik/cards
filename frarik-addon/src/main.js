@@ -988,8 +988,14 @@ async function _ghDownload(file){
    • PUBBLICAZIONE: legge la versione su GitHub e incrementa il minore (1.0→1.1→…)
    • INSTALL / STORE: leggono la versione dichiarata nel file (quella su GitHub) */
 function _parseCardVersion(code){
-  const m=String(code||'').match(/version\s*:\s*['"]([^'"]+)['"]/);
-  return (m && /\d/.test(m[1])) ? m[1].trim() : null;
+  const s=String(code||'');
+  // 1) campo version: '...' / "..." (preferito)
+  let m=s.match(/version\s*:\s*['"]([^'"]+)['"]/);
+  if(m && /\d/.test(m[1])) return m[1].trim();
+  // 2) marcatore/commento "version: 1.2.3" senza apici (es. /* frarik-version: 1.1 */)
+  m=s.match(/version\s*[:=]\s*v?([0-9]+(?:\.[0-9]+)+)/i);
+  if(m) return m[1].trim();
+  return null;
 }
 function _bumpMinor(v){
   const p=String(v||'1.0').split('.').map(n=>parseInt(n,10));
@@ -1536,10 +1542,17 @@ function closeGhPub(){ document.getElementById('ghpub').classList.add('off'); }
    primo campo "version: '...'"; se assente, aggiunge un commento header. */
 function _stampVersion(code, ver){
   if(!ver) return code;
+  // 1) se c'è un campo version: '...' → aggiornalo (preferito, sempre leggibile)
   if(/version\s*:\s*['"][^'"]*['"]/.test(code)){
     return code.replace(/version(\s*:\s*)(['"])[^'"]*['"]/, (m, sep, q)=>`version${sep}${q}${ver}${q}`);
   }
-  return `/* Frarik card · version: ${ver} */\n` + code;
+  // 2) se c'è già un marcatore canonico → aggiornalo
+  if(/\/\*\s*frarik-version:[^*]*\*\//i.test(code)){
+    return code.replace(/\/\*\s*frarik-version:[^*]*\*\//i, `/* frarik-version: ${ver} */`);
+  }
+  // 3) altrimenti rimuovi vecchi commenti "Frarik card · version: …" (evita accumuli) e premetti il marcatore canonico
+  const cleaned=code.replace(/\/\*\s*Frarik card[^*]*version[^*]*\*\/\s*\n?/ig, '');
+  return `/* frarik-version: ${ver} */\n` + cleaned;
 }
 async function _ghPublishDo(){
   const id=_ghPubId; if(!id) return;
