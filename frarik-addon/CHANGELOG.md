@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.5 — 2026-06-07
+
+### Pubblicazione e versioni
+- **Risolto l'errore `GitHub HTTP 409 … does not match`** in ripubblicazione: l'API contents di GitHub poteva restituire uno SHA "stantio" subito dopo un commit. Ora la pubblicazione rilegge lo SHA aggiornato (cache-busting) e **riprova automaticamente** in caso di conflitto.
+- **La versione sale SOLO quando pubblichi**, non più ad ogni caricamento locale: durante le prove puoi ricaricare lo stesso file quante volte vuoi senza farla salire. La prima pubblicazione mantiene la versione corrente (es. 1.0); ogni pubblicazione successiva dello stesso file incrementa la patch (1.0 → 1.0.1 → …).
+
 ## 1.2.4 — 2026-06-06
 
 ### Pubblicazione e store

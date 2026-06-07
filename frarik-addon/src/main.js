@@ -1432,7 +1432,13 @@ async function _ghPublishDo(){
   if(!/\.js$/i.test(file)) file+='.js';
   file=file.replace(/\s+/g,'-');
   const path=folder+'/'+file;
-  const ver=(it.meta&&it.meta.version)||null;
+  const g0=_ghCfg();
+  // La versione sale SOLO alla pubblicazione. La PRIMA pubblicazione di un file mantiene
+  // la versione corrente (es. 1.0); ogni pubblicazione SUCCESSIVA dello stesso file
+  // incrementa la patch (1.0 → 1.0.1 → …).
+  const cur=(it.meta&&it.meta.version) || g0.fileVersions[file] || '1.0';
+  const alreadyPublished=!!g0.shas[file];
+  const ver=alreadyPublished ? _bumpVer(cur) : cur;
   const code=_stampVersion(it.code, ver);   // imprime la versione nel codice prima di pubblicare
   st.innerHTML='<span style="color:#fbbf24">⏳ Pubblico su GitHub…</span>';
   try{
@@ -1440,9 +1446,9 @@ async function _ghPublishDo(){
     const newSha=res&&res.content&&res.content.sha;
     // ora è su GitHub → diventa una card "github"; salva il codice STAMPATO e allinea sha/versione
     try{
-      _jsStoreSave(id, it.meta, code, 'github');
+      _jsStoreSave(id, Object.assign({}, it.meta, {version:ver}), code, 'github');
       const g=_ghCfg(); g.idFile=g.idFile||{}; g.idFile[id]=file;
-      if(ver) g.fileVersions[file]=ver;
+      g.fileVersions[file]=ver;
       // allinea sha + "già notificata": così NON arriva la notifica «nuova card» per il proprio publish
       if(newSha){ g.shas[file]=newSha; g.notifiedShas[file]=newSha; }
       saveCfg(); _haSaveCfg();
@@ -1461,16 +1467,31 @@ async function _ghPut(path, content, message){
   const branch=g.branch||'main';
   const base=`https://api.github.com/repos/${g.owner}/${g.repo}/contents/${path.split('/').map(encodeURIComponent).join('/')}`;
   const H={'Authorization':'token '+g.token,'Accept':'application/vnd.github.v3+json'};
-  // se il file esiste già serve il suo sha per aggiornarlo
-  let sha=null;
-  try{ const gr=await fetch(base+'?ref='+encodeURIComponent(branch),{headers:H}); if(gr.ok){ const gj=await gr.json(); sha=gj.sha||null; } }catch(e){}
-  const body={ message:message||('Aggiorna '+path), content:_b64utf8(content), branch };
-  if(sha) body.sha=sha;
-  const r=await fetch(base,{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},H),body:JSON.stringify(body)});
-  if(r.status===401||r.status===403) throw new Error('GitHub ha rifiutato (403). Serve un token "classic" con permesso "repo" E aver accettato l\'invito come collaboratore.');
-  if(r.status===404) throw new Error('Repo non raggiungibile (404): probabilmente l\'invito come collaboratore non è stato accettato, o il token non ha accesso al repo.');
-  if(!r.ok){ let m=''; try{ m=(await r.json()).message; }catch(e){} throw new Error('GitHub HTTP '+r.status+(m?' — '+m:'')); }
-  return await r.json();
+  // legge lo sha CORRENTE del file (cache-busting: l'API contents di GitHub può servire
+  // uno sha stantio subito dopo un commit → causa del 409 "does not match")
+  const getSha=async()=>{
+    try{
+      const gr=await fetch(base+'?ref='+encodeURIComponent(branch)+'&_t='+Date.now(),{headers:H,cache:'no-store'});
+      if(gr.ok){ const gj=await gr.json(); return gj.sha||null; }
+    }catch(e){}
+    return null;
+  };
+  let sha=await getSha();
+  let lastErr='';
+  for(let i=0;i<3;i++){
+    const body={ message:message||('Aggiorna '+path), content:_b64utf8(content), branch };
+    if(sha) body.sha=sha;
+    const r=await fetch(base,{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},H),body:JSON.stringify(body)});
+    if(r.ok) return await r.json();
+    if(r.status===401||r.status===403) throw new Error('GitHub ha rifiutato (403). Serve un token "classic" con permesso "repo" E aver accettato l\'invito come collaboratore.');
+    if(r.status===404) throw new Error('Repo non raggiungibile (404): probabilmente l\'invito come collaboratore non è stato accettato, o il token non ha accesso al repo.');
+    let m=''; try{ m=(await r.json()).message; }catch(e){}
+    lastErr='GitHub HTTP '+r.status+(m?' — '+m:'');
+    // 409/422 = sha non aggiornato (conflitto): aspetta, rileggi lo sha fresco e riprova
+    if(r.status===409||r.status===422){ await new Promise(res=>setTimeout(res,600*(i+1))); sha=await getSha(); continue; }
+    throw new Error(lastErr);
+  }
+  throw new Error(lastErr||'GitHub: conflitto sha persistente (409). Riprova tra qualche secondo.');
 }
 function _b64utf8(str){ return btoa(unescape(encodeURIComponent(str))); }   // base64 UTF-8 per l'API GitHub
 function _ghsFind(name){ name=decodeURIComponent(name); return (_ghsCache[_ghsTab]||[]).find(f=>f.name===name); }
@@ -7590,17 +7611,15 @@ function jsStoreLoadFile(file){
     let cardId = (res.newCards&&res.newCards[0]) || (res.tags&&res.tags[0]);
     let card = cardId ? window.FratechCardRegistry[cardId] : null;
     if(!card || !card.id){ status.innerHTML='<span style="color:#f87171">⚠️ Nessuna card valida trovata nel file (né FratechStore né Lovelace).</span>'; return; }
-    // auto-versioning PERSISTENTE per nome-file (vale per qualunque formato di card,
-    // incluse quelle Lovelace tipo meteo-card che non dichiarano una versione):
-    // la versione vive in g.fileVersions[<nome file>] e NON viene azzerata eliminando
-    // la card. La PRIMA volta parte dalla versione dichiarata (o da quella già
-    // installata, o 1.0.0); a OGNI ricaricamento successivo dello stesso file la patch
-    // si incrementa (1.0.0 → 1.0.1 → …). Coerente sia selezionando sia trascinando.
+    // VERSIONE: il caricamento locale NON incrementa la versione (così durante le prove
+    // si può ricaricare lo stesso file all'infinito senza farla salire). La versione
+    // sale SOLO quando si pubblica su GitHub (vedi _ghPublishDo). Qui si usa la versione
+    // già tracciata per quel file (persistente), oppure quella dichiarata nel codice,
+    // oppure 1.0 di default.
     const _g=_ghCfg();
     const fname=(file.name||(card.id+'.js'));
     const declared=(card.version && /\d/.test(String(card.version))) ? String(card.version) : null;
-    const known=_g.fileVersions[fname] || _curStoreVersion(card.id) || null;
-    const ver = known ? _bumpVer(known) : (declared || '1.0.0');
+    const ver = _g.fileVersions[fname] || _curStoreVersion(card.id) || declared || '1.0';
     _g.fileVersions[fname]=ver; try{ saveCfg(); }catch(e){}
     _jsStoreSave(card.id, {id:card.id, name:card.name||card.id, icon:card.icon||'📦', version:ver, desc:card.desc||''}, code, 'local');
     status.innerHTML=`<span style="color:#4ade80">✅ Card <b>${card.name||card.id}</b> installata!${card._lovelace?' <span style="opacity:.6">(Lovelace)</span>':''} (v${ver})</span>`;
