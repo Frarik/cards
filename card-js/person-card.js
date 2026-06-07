@@ -177,8 +177,9 @@
 #${rid} .pc-cfg.open{display:flex;}
 #${rid} .pc-cfg h4{font-size:13px;font-weight:800;margin:0 0 2px;}
 #${rid} .pc-cfg label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;}
-#${rid} .pc-cfg select{width:100%;margin-top:4px;padding:9px 10px;border-radius:10px;background:rgba(255,255,255,.06);
-  color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:12px;font-family:inherit;}
+#${rid} .pc-cfg select{width:100%;margin-top:4px;padding:9px 10px;border-radius:10px;background:#0f1830;
+  color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:12px;font-family:inherit;-webkit-appearance:menulist;appearance:menulist;}
+#${rid} .pc-cfg select option,#${rid} .pc-cfg select optgroup{background:#0f1830 !important;color:#f1f5f9 !important;}
 #${rid} .pc-cfg .pc-crow{display:flex;gap:8px;margin-top:6px;}
 #${rid} .pc-cfg button{flex:1;padding:9px;border-radius:10px;border:none;cursor:pointer;font-weight:700;font-size:12px;}
 #${rid} .pc-save{background:#22c55e;color:#04210f;}
@@ -234,11 +235,24 @@
     } catch (e) {}
   }
 
-  // ── update: live senza ricostruire ──────────────────────────────────────────────
+  // ── update: live senza ricostruire (e senza chiudere il pannello ⚙️) ────────────
   function update(card, hass, el) {
     try {
+      // mentre il pannello impostazioni è aperto NON toccare il DOM (altrimenti si richiude)
+      if (el.querySelector('[data-pc="cfg"]') && el.querySelector('[data-pc="cfg"]').classList.contains('open')) return;
+
       const personId = getPerson(card);
-      if (!personId) { el.innerHTML = render(card, hass); mount(card, hass, el); return; }
+      const renderedEmpty = !!el.querySelector('.pc-empty');
+
+      if (!personId) {
+        // non configurata: ricostruisci SOLO se non è già la vista vuota (niente flicker continuo)
+        if (!renderedEmpty) { el.innerHTML = render(card, hass); mount(card, hass, el); }
+        return;
+      }
+      if (renderedEmpty) { // appena configurata → passa alla vista mappa
+        el.innerHTML = render(card, hass); mount(card, hass, el); return;
+      }
+
       const H = bestHass();
       const zi = zoneInfo(stateOf(H, personId));
       const root = el.querySelector('.pc-root');
@@ -248,13 +262,11 @@
       const ll = latlon(H, personId, getGps(card));
       const st = ST[card.id] || (ST[card.id] = {});
       const iframe = el.querySelector('.pc-map');
-      // aggiorna la mappa solo se spostato (evita reload/flicker continui)
       if (ll && iframe && iframe.tagName === 'IFRAME') {
         const prev = st.lastLL;
         const moved = !prev || Math.abs(prev[0] - ll[0]) > 0.0002 || Math.abs(prev[1] - ll[1]) > 0.0002;
         if (moved) { iframe.src = gmapUrl(ll[0], ll[1]); st.lastLL = ll; }
       } else if (ll && (!iframe || iframe.tagName !== 'IFRAME')) {
-        // prima posizione disponibile dopo un render "empty" → ricostruisci
         el.innerHTML = render(card, hass); mount(card, hass, el);
       }
     } catch (e) {}
@@ -347,7 +359,7 @@
     id: 'person-card',
     name: 'Persona',
     icon: '👤',
-    version: '1.1',
+    version: '1.2',
     desc: 'Foto persona + tracker, sfondo Google Maps live, stato zona colorato e storico spostamenti 24h. Entità configurabili.',
     render, mount, update
   };
