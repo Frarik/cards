@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.13 — 2026-06-07
+
+### Resize larghezza dentro la colonna
+- Trascinando l'angolo, la **larghezza ora ridimensiona la singola card DENTRO la sua colonna** (in pixel), invece di cambiare il numero di colonne (colSpan). Così puoi rendere una card più stretta/larga indipendentemente, senza toccare le altre card della colonna. L'altezza continua a regolarsi liberamente; lo span di colonne resta disponibile dai pulsanti ◀▶.
+
 ## 1.2.12 — 2026-06-07
 
 ### Ridimensionamento card dall'angolo

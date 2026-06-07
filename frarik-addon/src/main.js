@@ -3314,6 +3314,7 @@ function _buildSectionEl(sec,page){
           const cw=document.createElement('div');
           cw.className='dash-card-wrap'+(!vis?' card-cond-hidden':'');
           cw.style.height=(c.height||sec.rowH||150)+'px';
+          if(c.width){ cw.style.width=c.width+'px'; cw.style.maxWidth='100%'; }  // larghezza per-card dentro la colonna
           cw.dataset.cardId=c.id; cw.dataset.secId=sec.id; cw.dataset.col=col;
           cw.addEventListener('dragover',e=>{ if(dragSrc&&dragSrc!==c.id){e.preventDefault();cw.classList.add('dov');}});
           cw.addEventListener('dragleave',()=>cw.classList.remove('dov'));
@@ -3607,27 +3608,19 @@ function initResize(cardId){
     const card=page.cards.find(c=>c.id===cardId);
     if(!card) return null;
     if(page.sections){
+      // Sezioni: ridimensiona la SINGOLA card dentro la sua colonna (larghezza px + altezza px).
       const wrap=ce.closest('.dash-card-wrap');
       const colWrap=ce.closest('.dash-col-outer');
-      const sec=(page.sections||[]).find(s=>s.id===card.secId);
       const sy=clientY, sh=wrap?wrap.offsetHeight:ce.offsetHeight;
-      const sx=clientX, sw=colWrap?colWrap.offsetWidth:ce.offsetWidth;
-      const startSpan=card.colSpan||1, colUnit=sw/Math.max(1,startSpan);
+      const sx=clientX, sw=wrap?wrap.offsetWidth:ce.offsetWidth;
+      const maxW=colWrap?colWrap.clientWidth:sw;   // non superare la larghezza della colonna
       return (cx,cy)=>{
-        // altezza (per card)
         const nh=Math.max(80, sh+cy-sy);
         card.height=nh; if(wrap) wrap.style.height=nh+'px';
         const rs=document.getElementById('rs-'+cardId); if(rs) rs.textContent=nh+'px';
-        // larghezza (per colonna → colSpan)
-        if(sec){
-          const maxCols=(sec.cols||4)-(card.secCol||0);
-          const ns=Math.max(1,Math.min(maxCols, Math.round((sw+cx-sx)/colUnit)));
-          if(ns!==card.colSpan){
-            page.cards.filter(c=>c.secId===card.secId&&(c.secCol||0)===(card.secCol||0)).forEach(c=>c.colSpan=ns);
-            if(colWrap) colWrap.style.gridColumn=`${(card.secCol||0)+1} / span ${ns}`;
-            const cs=document.getElementById('cs-'+cardId); if(cs) cs.textContent='S:'+ns;
-          }
-        }
+        const nw=Math.max(80, Math.min(maxW, sw+cx-sx));
+        card.width=Math.round(nw); if(wrap){ wrap.style.width=card.width+'px'; wrap.style.maxWidth='100%'; }
+        const cs=document.getElementById('cs-'+cardId); if(cs) cs.textContent=card.width+'px';
       };
     } else {
       const sx=clientX,sy=clientY,sw=ce.offsetWidth,sh=ce.offsetHeight;
