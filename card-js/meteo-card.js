@@ -1,4 +1,4 @@
-/* Frarik card · version: 1.0.4 */
+/* Frarik card · version: 1.0.7 */
 /**
  * meteo+previsioni.js v1.2
  * type: custom:meteo-card
@@ -599,7 +599,7 @@ setTimeout(function() {
     window.customCards = window.customCards || []
     // Rimuove eventuali duplicati
     window.customCards = window.customCards.filter(function(c) { return c && c.type !== 'meteo-card' })
-    window.customCards.push({ version: '1.0',
+    window.customCards.push({
       type:        'meteo-card',
       name:        'Meteo + Previsioni',
       description: 'Card meteo con previsioni 5 giorni, tema notte/giorno e impostazioni inline.',
