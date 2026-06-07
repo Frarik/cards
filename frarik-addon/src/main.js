@@ -3600,30 +3600,41 @@ function initResize(cardId){
   const rh=document.getElementById('rh-'+cardId);
   const ce=document.getElementById('card-'+cardId);
   if(!rh||!ce) return;
-  rh.onmousedown=e=>{
-    e.preventDefault(); e.stopPropagation();
+  // Restituisce una funzione move(cx,cy) che applica il resize, oppure null.
+  // Sezioni: larghezza = colSpan (per colonna), altezza = card.height (px). Legacy: colSpan/rowSpan.
+  const begin=(clientX,clientY)=>{
     const page=curPage();
     const card=page.cards.find(c=>c.id===cardId);
-    if(!card) return;
+    if(!card) return null;
     if(page.sections){
-      // Sections mode: resize height only
       const wrap=ce.closest('.dash-card-wrap');
-      const sy=e.clientY, sh=wrap?wrap.offsetHeight:ce.offsetHeight;
-      const mm=ev=>{
-        const nh=Math.max(80,sh+ev.clientY-sy);
-        card.height=nh;
-        if(wrap) wrap.style.height=nh+'px';
+      const colWrap=ce.closest('.dash-col-outer');
+      const sec=(page.sections||[]).find(s=>s.id===card.secId);
+      const sy=clientY, sh=wrap?wrap.offsetHeight:ce.offsetHeight;
+      const sx=clientX, sw=colWrap?colWrap.offsetWidth:ce.offsetWidth;
+      const startSpan=card.colSpan||1, colUnit=sw/Math.max(1,startSpan);
+      return (cx,cy)=>{
+        // altezza (per card)
+        const nh=Math.max(80, sh+cy-sy);
+        card.height=nh; if(wrap) wrap.style.height=nh+'px';
         const rs=document.getElementById('rs-'+cardId); if(rs) rs.textContent=nh+'px';
+        // larghezza (per colonna → colSpan)
+        if(sec){
+          const maxCols=(sec.cols||4)-(card.secCol||0);
+          const ns=Math.max(1,Math.min(maxCols, Math.round((sw+cx-sx)/colUnit)));
+          if(ns!==card.colSpan){
+            page.cards.filter(c=>c.secId===card.secId&&(c.secCol||0)===(card.secCol||0)).forEach(c=>c.colSpan=ns);
+            if(colWrap) colWrap.style.gridColumn=`${(card.secCol||0)+1} / span ${ns}`;
+            const cs=document.getElementById('cs-'+cardId); if(cs) cs.textContent='S:'+ns;
+          }
+        }
       };
-      const mu=()=>{ document.removeEventListener('mousemove',mm); document.removeEventListener('mouseup',mu); saveCfg(); };
-      document.addEventListener('mousemove',mm); document.addEventListener('mouseup',mu);
     } else {
-      // Legacy grid mode
-      const sx=e.clientX,sy=e.clientY,sw=ce.offsetWidth,sh=ce.offsetHeight;
+      const sx=clientX,sy=clientY,sw=ce.offsetWidth,sh=ce.offsetHeight;
       const colW=sw/(card.colSpan||1),rowH=sh/(card.rowSpan||1);
-      const mm=ev=>{
-        const nc=Math.max(1,Math.min(page.columns,Math.round((sw+ev.clientX-sx)/colW)));
-        const nr=Math.max(1,Math.min(6,Math.round((sh+ev.clientY-sy)/rowH)));
+      return (cx,cy)=>{
+        const nc=Math.max(1,Math.min(page.columns,Math.round((sw+cx-sx)/colW)));
+        const nr=Math.max(1,Math.min(6,Math.round((sh+cy-sy)/rowH)));
         if(nc!==card.colSpan||nr!==card.rowSpan){
           card.colSpan=nc; card.rowSpan=nr;
           ce.style.gridColumn=`span ${nc}`; ce.style.gridRow=`span ${nr}`;
@@ -3631,9 +3642,23 @@ function initResize(cardId){
           const rs=document.getElementById('rs-'+cardId); if(rs) rs.textContent='A:'+nr;
         }
       };
-      const mu=()=>{ document.removeEventListener('mousemove',mm); document.removeEventListener('mouseup',mu); saveCfg(); };
-      document.addEventListener('mousemove',mm); document.addEventListener('mouseup',mu);
     }
+  };
+  const finish=()=>{ saveCfg(); try{ if(typeof renderDash==='function') renderDash(); }catch(e){} };
+  rh.onmousedown=e=>{
+    e.preventDefault(); e.stopPropagation();
+    const move=begin(e.clientX,e.clientY); if(!move) return;
+    const mm=ev=>move(ev.clientX,ev.clientY);
+    const mu=()=>{ document.removeEventListener('mousemove',mm); document.removeEventListener('mouseup',mu); finish(); };
+    document.addEventListener('mousemove',mm); document.addEventListener('mouseup',mu);
+  };
+  rh.ontouchstart=e=>{
+    const t=e.touches&&e.touches[0]; if(!t) return;
+    e.preventDefault(); e.stopPropagation();
+    const move=begin(t.clientX,t.clientY); if(!move) return;
+    const tm=ev=>{ const p=ev.touches&&ev.touches[0]; if(p) move(p.clientX,p.clientY); };
+    const te=()=>{ document.removeEventListener('touchmove',tm); document.removeEventListener('touchend',te); finish(); };
+    document.addEventListener('touchmove',tm,{passive:false}); document.addEventListener('touchend',te);
   };
 }
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.12 — 2026-06-07
+
+### Ridimensionamento card dall'angolo
+- Ogni card ha ora una **maniglia di resize sempre visibile** nell'angolo in basso a destra (prima compariva solo in modalità modifica): si afferra e si trascina per **allargare/stringere e alzare/abbassare** la card; il contenuto si adatta in automatico.
+- In **modalità sezioni** il trascinamento dell'angolo ora cambia **sia larghezza (colonne) sia altezza** (prima solo l'altezza).
+- Aggiunto il supporto **touch** (tablet/telefono) al ridimensionamento.
+
 ## 1.2.11 — 2026-06-07
 
 ### Store e card persona

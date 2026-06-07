@@ -1,5 +1,5 @@
 /**
- * person-card.js v1.4 — FratechStore Card "Persona"
+ * person-card.js v1.5 — FratechStore Card "Persona"
  * Foto entità + tracker · sfondo Google Maps con segnaposto live.
  * Affianco al nome: In Casa (verde) / Fuori Casa (rosso) / nome zona HA (azzurro) + "X min fa".
  * Tap sulla card → popup mappa intera con lo storico dei tracciati delle ultime 24h.
@@ -145,25 +145,25 @@
 #${rid} .pc-map-empty{background:radial-gradient(120% 120% at 75% 30%,#27364b,#0b1220);}
 #${rid} .pc-scrim{position:absolute;inset:0;z-index:1;pointer-events:none;
   background:linear-gradient(90deg,rgba(8,12,22,.94) 0%,rgba(8,12,22,.82) 32%,rgba(8,12,22,.30) 62%,rgba(8,12,22,0) 88%);}
-#${rid} .pc-glass{position:absolute;left:0;top:0;bottom:0;z-index:2;display:flex;align-items:center;gap:13px;
-  padding:0 18px;max-width:78%;pointer-events:none;}
+#${rid} .pc-glass{position:absolute;left:0;top:0;bottom:0;right:36px;z-index:2;display:flex;align-items:center;gap:13px;
+  padding:0 14px 0 18px;pointer-events:none;}
 #${rid} .pc-ava{width:clamp(46px,15cqw,64px);height:clamp(46px,15cqw,64px);aspect-ratio:1;border-radius:50%;flex-shrink:0;
   background-size:cover;background-position:center;background-color:rgba(56,189,248,.25);
   border:3px solid var(--pc-col,#38bdf8);box-shadow:0 0 0 3px var(--pc-glow),0 0 14px var(--pc-glow),0 6px 16px rgba(0,0,0,.5);
   display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#fff;}
 #${rid} .pc-info{min-width:0;}
 #${rid} .pc-row1{display:flex;align-items:center;gap:9px;min-width:0;}
-#${rid} .pc-name{font-size:clamp(15px,5cqw,21px);font-weight:800;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;
+#${rid} .pc-name{flex:0 1 auto;min-width:0;font-size:clamp(15px,5cqw,21px);font-weight:800;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;
   text-overflow:ellipsis;text-shadow:0 1px 4px rgba(0,0,0,.7);}
 #${rid} .pc-pill{display:inline-flex;align-items:center;flex-shrink:0;padding:3px 11px;border-radius:999px;
   font-size:clamp(10px,3.2cqw,12px);font-weight:800;line-height:1;background:color-mix(in srgb,var(--pc-col) 22%,transparent);
   border:1px solid var(--pc-col);color:var(--pc-col);}
 #${rid} .pc-ago{font-size:clamp(9px,2.8cqw,12px);color:rgba(255,255,255,.6);margin-top:5px;white-space:nowrap;}
-/* ingranaggio impostazioni: in alto a destra, quasi invisibile finché non ci passi sopra */
-#${rid} .pc-gear{position:absolute;top:6px;right:7px;z-index:5;width:22px;height:22px;border-radius:7px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;background:transparent;color:rgba(255,255,255,.4);
-  font-size:12px;opacity:.45;transition:opacity .15s,background .15s,color .15s;}
-#${rid} .pc-gear:hover{opacity:1;background:rgba(8,12,22,.75);color:#fff;}
+/* ingranaggio impostazioni: in alto a destra, grigio chiaro discreto */
+#${rid} .pc-gear{position:absolute;top:6px;right:7px;z-index:5;width:24px;height:24px;border-radius:7px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;background:rgba(8,12,22,.4);color:#cbd5e1;
+  font-size:13px;transition:background .15s,color .15s;}
+#${rid} .pc-gear:hover{background:rgba(8,12,22,.8);color:#fff;}
 #${rid} .pc-empty{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;
   text-align:center;padding:16px;color:#cbd5e1;}
 #${rid} .pc-cfg{position:absolute;inset:0;z-index:5;display:none;flex-direction:column;gap:9px;justify-content:center;
@@ -371,7 +371,7 @@
     id: 'person-card',
     name: 'Persona',
     icon: '👤',
-    version: '1.4',
+    version: '1.5',
     desc: 'Foto persona + tracker, sfondo Google Maps live, stato zona colorato e storico spostamenti 24h. Entità configurabili.',
     render, mount, update
   };
