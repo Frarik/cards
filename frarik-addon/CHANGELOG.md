@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.17 — 2026-06-07
+
+### Resize: si ridimensiona la card, non una cornice
+- Rimosso l'auto-fit sperimentale che creava un riquadro separato attorno alla card e tagliava il contenuto. Ora trascinando l'angolo si ridimensiona **direttamente la card** (il suo contenitore), dentro la colonna che resta fissa. Il contenuto delle card fluide (es. person-card) si adatta da solo.
+
 ## 1.2.16 — 2026-06-07
 
 ### Auto-fit del contenuto per le card JS (sperimentale)
