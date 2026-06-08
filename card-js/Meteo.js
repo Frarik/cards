@@ -1,4 +1,4 @@
-/* frarik-version: 1.9 */
+/* frarik-version: 1.10 */
 /**
  * meteo+previsioni.js v1.3
  * type: custom:meteo-card
@@ -96,13 +96,13 @@ const _IC = {
 const _CSS = `
 :host{display:block;height:100%;overflow:hidden;}
 *{box-sizing:border-box;margin:0;padding:0;}
-.card{border-radius:20px;overflow:hidden;font-family:var(--primary-font-family,system-ui,sans-serif);color:#fff;position:relative;box-shadow:0 12px 48px rgba(0,0,0,.55);height:100%;}
+.card{border-radius:20px;overflow:hidden;font-family:var(--primary-font-family,system-ui,sans-serif);color:#fff;position:relative;box-shadow:0 12px 48px rgba(0,0,0,.55);height:100%;display:flex;align-items:center;justify-content:center;}
 .dots{position:absolute;inset:0;pointer-events:none;z-index:0;}
 .dot{position:absolute;border-radius:50%;background:rgba(255,255,255,.55);}
 .d1{width:2.5px;height:2.5px;top:10%;left:52%;}.d2{width:1.5px;height:1.5px;top:7%;right:28%;}
 .d3{width:2px;height:2px;top:25%;right:14%;}.d4{width:1.5px;height:1.5px;top:40%;left:38%;}
 .d5{width:2px;height:2px;top:18%;left:25%;}.d6{width:1.5px;height:1.5px;bottom:38%;right:22%;}
-.body{position:relative;z-index:1;padding:16px 16px 0;}
+.body{position:relative;z-index:1;padding:16px 16px;flex:0 0 auto;transform-origin:center center;will-change:transform;}
 /* header */
 .hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;}
 .city{font-size:32px;font-weight:900;letter-spacing:-.5px;line-height:1.1;text-shadow:0 2px 12px rgba(0,0,0,.3);}
@@ -221,7 +221,6 @@ class MeteoCard extends HTMLElement {
     this._nh = true          // flag primo hass
     this._sk = 'default'      // storage key per localStorage
     this._modalHost = null    // host del modal impostazioni (montato su document.body)
-    this._savedH = null       // altezza wrap salvata prima di espandere la previsione
     this._fch = []            // forecast ORARIO (per il dettaglio giorno)
     this._fhs = null          // sottoscrizione forecast orario
     this._dh  = null          // host del foglio dettaglio (montato su document.body)
@@ -287,15 +286,23 @@ class MeteoCard extends HTMLElement {
 
   /* Adatta il contenuto alla dimensione della card (zoom-to-fit, posizioni invariate),
      come la person-card. Misura la dimensione base una volta e scala con transform. */
-  // Nessun ridimensionamento automatico: la dimensione si imposta dall'editor (px).
   _frkFit() {
-    try { const b = this.shadowRoot && this.shadowRoot.querySelector('.body'); if (b) { b.style.transform = 'none'; b.style.width = '' } } catch (e) {}
+    try {
+      const card = this.shadowRoot && this.shadowRoot.querySelector('.card')
+      const body = card && card.querySelector('.body')
+      if (!body) return
+      const HW = this.clientWidth, HH = this.clientHeight
+      if (!HW || !HH) return
+      // lo SFONDO (.card) riempie il contenitore; scaliamo SOLO il contenuto (.body),
+      // così non compare nessun riquadro dietro (come la person-card).
+      const BW = Math.max(HW, 320)          // impaginazione del contenuto: mai sotto 320px
+      body.style.transform = 'none'
+      body.style.width = BW + 'px'
+      const BH = body.offsetHeight || HH
+      const s = Math.min(HW / BW, HH / BH)  // 1 a dimensione normale; <1 quando stringi/abbassi
+      body.style.transform = 'scale(' + s + ')'
+    } catch (e) {}
   }
-
-  /* Apertura della previsione: la CARD cresce in altezza da sola per contenerla
-     (mantenendo la larghezza impostata), e torna alla dimensione precedente alla chiusura.
-     Funziona sulle card a dimensione fissa (ridimensionate dall'utente). */
-  _adjustHeight() { /* disattivato: niente crescita automatica, la dimensione è impostata dall'editor */ }
 
   set hass(h) {
     const first = this._nh; this._nh = false
@@ -510,8 +517,7 @@ class MeteoCard extends HTMLElement {
       case 'day':   this._openDay(parseInt(t.dataset.i,10)||0); break
       case 'dayclose': this._closeDay(); break
       case 'fc':
-        this._fo=!this._fo; this._bk=null; this._build()
-        requestAnimationFrame(()=>this._adjustHeight()); break
+        this._fo=!this._fo; this._bk=null; this._build(); break
       case 'srch':
         this._se=!this._se; this._renderModal(); break
       case 'sel':
@@ -718,7 +724,6 @@ class MeteoCard extends HTMLElement {
     const city  = this._tc
     const wents = Object.keys(this._h?.states||{}).filter(k=>k.startsWith('weather.'))
     const exEnts = Object.keys(this._h?.states||{}).filter(k=>/^(sensor|binary_sensor|number|input_number)\./.test(k)).sort()
-    // datalist condivisa: campo di testo con filtro mentre si scrive (autocomplete nativo)
     const exDatalist = `<datalist id="meteo-ent-list">${exEnts.map(id=>`<option value="${id}">${(this._h.states[id].attributes&&this._h.states[id].attributes.friendly_name)||id}</option>`).join('')}</datalist>`
     const statRows = [['hum','Umidità'],['pres','Pressione'],['wind','Vento'],['dir','Direzione']].map(([k,lbl])=>`<div style="display:flex;gap:8px;margin-top:7px;align-items:center">
         <span style="width:80px;flex-shrink:0;font-size:11px;color:#94a3b8">${lbl}</span>

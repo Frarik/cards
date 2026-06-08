@@ -4993,7 +4993,6 @@ function openCM(cardId){
   document.getElementById('cm-ico').value=c.icon||'';
   document.getElementById('cm-entity').value=c.entity||'';
   document.getElementById('cm-unit').value=c.unit||'';
-  { const w=document.getElementById('cm-width'); if(w) w.value=c.width||''; const h=document.getElementById('cm-height'); if(h) h.value=c.fixedH?(c.height||''):''; }
   document.getElementById('cm-type').value=c.type||'big';
   document.getElementById('cm-max').value=c.max||'';
   document.getElementById('cm-min').value=c.min||'';
@@ -5117,11 +5116,6 @@ function saveCard(){
   c.icon   = document.getElementById('cm-ico').value.trim();
   c.entity = document.getElementById('cm-entity').value.trim()||c.entity;
   c.unit   = document.getElementById('cm-unit').value.trim();
-  // Dimensioni manuali (px): vuoto = automatico
-  const _wv=parseInt(document.getElementById('cm-width')?.value,10);
-  const _hv=parseInt(document.getElementById('cm-height')?.value,10);
-  if(_wv>0) c.width=_wv; else delete c.width;
-  if(_hv>0){ c.height=_hv; c.fixedH=true; } else { c.fixedH=false; }
   c.type   = document.getElementById('cm-type').value;
   c.max    = parseFloat(document.getElementById('cm-max').value)||0;
   c.min    = parseFloat(document.getElementById('cm-min').value)||0;

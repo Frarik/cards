@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.21 — 2026-06-08
+
+### Ripristino ridimensionamento card
+- Annullati tutti gli esperimenti di ridimensionamento/scaling di questa serie: le card tornano al comportamento precedente (v1.2.19). Rimossi i campi px nell'editor.
+- Mantenuti: **person-card** mappe satellite + stato sotto il nome + popup con tutto il tracciato delle 2 entità (no limite 24h); **Meteo** scelta entità delle 4 statistiche; **Store** sottomenu installate/da installare + eliminazione definitiva da GitHub.
+
 ## 1.2.20 — 2026-06-07
 
 ### Dimensioni card manuali (px)
