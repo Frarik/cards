@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.26 — 2026-06-08
+
+### Contenitori stile HA (fase B): pila orizzontale, verticale, griglia
+- Dal pulsante **"+ Card"** di una colonna ora puoi aggiungere, oltre alle card normali, dei **contenitori**: **Pila orizzontale**, **Pila verticale**, **Griglia**.
+- Dentro un contenitore premi **"+ card"** per aggiungere card (dallo Store o incollate): si dispongono affiancate / impilate / a griglia.
+- La griglia ha un'icona **▦** per impostare il numero di colonne; il **🗑** elimina il contenitore (e le card dentro).
+- Le card figlie restano modificabili come le altre (matita/duplica/elimina).
+
 ## 1.2.25 — 2026-06-08
 
 ### Colonne per pagina, fluide (verso il layout stile HA)

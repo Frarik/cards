@@ -288,7 +288,7 @@ let editingId = null;
 let ws, mid=1, reconn;
 const charts = {};
 let dragSrc = null;
-let _pendingDropSec = null, _pendingDropCol = 0;
+let _pendingDropSec = null, _pendingDropCol = 0, _pendingDropParent = null;
 let emTarget = null;  // browse field target
 const camTimers = {}; // cardId → intervalId
 let wizardTpl = null;
@@ -507,35 +507,63 @@ function deleteCol(secId, col){
     _pgMarkDirty(true);
   });
 }
-function addCardToCol(secId, col, triggerEl){
-  _pendingDropSec=secId; _pendingDropCol=col;
+function addCardToCol(secId, col, triggerEl, parentId){
+  _pendingDropSec=secId; _pendingDropCol=col; _pendingDropParent=parentId||null;
   document.getElementById('add-col-menu')?.remove();
-  // Niente negli appunti → vai DRITTO allo Store
-  if(!_cardClipboard){ openGhStore(); return; }
-  // Appunti presenti → piccolo menu: apri lo Store oppure Incolla la card copiata
   const menu=document.createElement('div');
   menu.id='add-col-menu';
-  menu.style.cssText='position:fixed;z-index:15000;background:#1a1f35;border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:8px;box-shadow:0 12px 40px rgba(0,0,0,.75);display:flex;flex-direction:column;gap:6px;min-width:200px;animation:popIn .12s ease';
-  const btnStyle='background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:rgba(255,255,255,.8);font-size:12px;padding:9px 12px;cursor:pointer;text-align:left;transition:background .12s';
+  menu.style.cssText='position:fixed;z-index:15000;background:#1a1f35;border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:8px;box-shadow:0 12px 40px rgba(0,0,0,.75);display:flex;flex-direction:column;gap:6px;min-width:210px;animation:popIn .12s ease';
+  const bs='background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:rgba(255,255,255,.85);font-size:12px;padding:9px 12px;cursor:pointer;text-align:left;transition:background .12s';
+  // dentro un contenitore non si annidano altri contenitori (per ora)
+  const contBtns=parentId?'':`
+    <div style="font-size:9px;color:rgba(255,255,255,.3);padding:6px 4px 2px;letter-spacing:.5px;text-transform:uppercase">Contenitori</div>
+    <button style="${bs}" data-action="addContainer" data-action-args='["${secId}",${col},"hstack"]'>↔️ Pila orizzontale</button>
+    <button style="${bs}" data-action="addContainer" data-action-args='["${secId}",${col},"vstack"]'>↕️ Pila verticale</button>
+    <button style="${bs}" data-action="addContainer" data-action-args='["${secId}",${col},"grid"]'>▦ Griglia</button>`;
+  const pasteBtn=_cardClipboard?`<button style="${bs};background:rgba(99,102,241,.12);border-color:rgba(99,102,241,.3);color:#a5b4fc" data-action="${parentId?'_pasteCardToContainer':'_pasteCardToClean'}" data-action-args='${parentId?`["${parentId}"]`:`["${secId}",${col}]`}'>📋 Incolla "${eh(_cardClipboard.label||_cardClipboard.type||'Card')}"</button>`:'';
   menu.innerHTML=`
-    <div style="font-size:9px;color:rgba(255,255,255,.3);padding:2px 4px 4px;letter-spacing:.5px;text-transform:uppercase">Aggiungi card</div>
-    <button style="${btnStyle};background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:#86efac" onmouseover="this.style.background='rgba(74,222,128,.22)'" onmouseout="this.style.background='rgba(74,222,128,.1)'" data-action="_openGhStoreClean">🛒 Apri lo Store</button>
-    <button style="${btnStyle};background:rgba(99,102,241,.12);border-color:rgba(99,102,241,.3);color:#a5b4fc" onmouseover="this.style.background='rgba(99,102,241,.25)'" onmouseout="this.style.background='rgba(99,102,241,.12)'" data-action="_pasteCardToClean" data-action-args='["${secId}",${col}]'>📋 Incolla "${eh(_cardClipboard.label||_cardClipboard.type||'Card')}"</button>
-  `;
-  // Position near the trigger element
-  const rect=triggerEl?triggerEl.getBoundingClientRect():{left:window.innerWidth/2-95,bottom:window.innerHeight/2};
-  let left=rect.left;
-  let top=rect.bottom+6;
-  // Keep inside viewport
-  if(left+200>window.innerWidth) left=window.innerWidth-208;
-  if(top+130>window.innerHeight) top=rect.top-136;
-  menu.style.left=left+'px';
-  menu.style.top=top+'px';
+    <div style="font-size:9px;color:rgba(255,255,255,.3);padding:2px 4px 4px;letter-spacing:.5px;text-transform:uppercase">Aggiungi</div>
+    <button style="${bs};background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:#86efac" data-action="_openGhStoreClean">🛒 Apri lo Store</button>
+    ${pasteBtn}${contBtns}`;
+  const rect=triggerEl?triggerEl.getBoundingClientRect():{left:window.innerWidth/2-105,bottom:window.innerHeight/2,top:window.innerHeight/2};
+  let left=rect.left, top=rect.bottom+6;
+  if(left+220>window.innerWidth) left=window.innerWidth-228;
+  if(top+230>window.innerHeight) top=Math.max(8,rect.top-236);
+  menu.style.left=left+'px'; menu.style.top=top+'px';
   document.body.appendChild(menu);
-  // Close on outside click
   setTimeout(()=>document.addEventListener('click',function _h(e){
     if(!menu.contains(e.target)){menu.remove();document.removeEventListener('click',_h);}
   }),80);
+}
+// crea un contenitore (pila/griglia) come card nella colonna
+function addContainer(secId,col,type){
+  document.getElementById('add-col-menu')?.remove();
+  const page=curPage(); _ensureSections(page);
+  const c={ id:uid(), type:type, label:'', secId:secId, secCol:col, gcols:2, rowSpan:1, colSpan:1 };
+  const sib=page.cards.filter(x=>x.secId===secId&&(x.secCol||0)===col&&!x.parentId);
+  c.secOrder=sib.length>0?Math.max(...sib.map(x=>x.secOrder||0))+10:0;
+  page.cards.push(c);
+  saveCfg(); renderDash();
+}
+// "+ card" dentro un contenitore → riusa il menu Aggiungi puntando al contenitore
+function addCardToContainer(containerId,btn){
+  const cont=curPage().cards.find(c=>c.id===containerId); if(!cont) return;
+  addCardToCol(cont.secId, cont.secCol||0, btn, containerId);
+}
+// incolla la card copiata dentro un contenitore
+function _pasteCardToContainer(parentId){
+  document.getElementById('add-col-menu')?.remove();
+  const cont=curPage().cards.find(c=>c.id===parentId); if(!cont) return;
+  _pendingDropParent=parentId;
+  pasteCardTo(cont.secId, cont.secCol||0);
+}
+// impostazioni contenitore griglia (numero colonne)
+function openContSettings(containerId){
+  const c=curPage().cards.find(x=>x.id===containerId); if(!c) return;
+  const n=prompt('Colonne della griglia (1-4):', c.gcols||2);
+  if(n==null) return;
+  c.gcols=Math.max(1,Math.min(4,parseInt(n,10)||2));
+  saveCfg(); renderDash();
 }
 function moveSectionUp(secId){
   const page=curPage(); _ensureSections(page);
@@ -3230,7 +3258,7 @@ function _buildSectionEl(sec,page){
 
   // Sort cards: by starting column, then by order within column
   const secCards=page.cards
-    .filter(c=>c.type!=='header-bar'&&c.secId===sec.id)
+    .filter(c=>c.type!=='header-bar'&&c.secId===sec.id&&!c.parentId)   // le figlie di contenitori NON vanno in colonna
     .sort((a,b)=>{
       const ca=a.secCol||0, cb=b.secCol||0;
       if(ca!==cb) return ca-cb;
@@ -3498,6 +3526,45 @@ function buildCard(card){
   el.style.setProperty('--card-r', radius);
   // Weather/forecast: override height to fill wrap
   if(t==='weather'||t==='weather-forecast') el.style.height='100%';
+
+  // ── CONTENITORI layout (stile HA): pila orizzontale / verticale / griglia ──
+  if(t==='hstack'||t==='vstack'||t==='grid'){
+    el.style.cssText='background:transparent;border:none;box-shadow:none;padding:0;border-radius:0;cursor:default;position:relative;width:100%;height:100%;backdrop-filter:none;-webkit-backdrop-filter:none';
+    el.classList.add('card-cont');
+    const kids=(curPage().cards||[]).filter(c=>c.parentId===card.id).sort((a,b)=>(a.parentOrder||0)-(b.parentOrder||0));
+    const lay=document.createElement('div');
+    lay.style.gap='10px'; lay.style.width='100%';
+    if(t==='grid'){ lay.style.display='grid'; lay.style.gridTemplateColumns=`repeat(${card.gcols||2},1fr)`; }
+    else if(t==='hstack'){ lay.style.display='flex'; lay.style.flexDirection='row'; lay.style.alignItems='stretch'; }
+    else { lay.style.display='flex'; lay.style.flexDirection='column'; }
+    if(!kids.length && editMode){
+      const empty=document.createElement('div');
+      empty.style.cssText='padding:16px;text-align:center;font-size:10px;color:rgba(255,255,255,.4);border:1.5px dashed rgba(99,102,241,.35);border-radius:12px';
+      empty.textContent=(t==='hstack'?'Pila orizzontale':t==='grid'?'Griglia':'Pila verticale')+' vuota — premi "+ card"';
+      lay.appendChild(empty);
+    }
+    kids.forEach(kid=>{
+      const slot=document.createElement('div');
+      slot.style.minWidth='0';
+      if(t==='hstack') slot.style.flex='1';
+      slot.style.height=(kid.height||(kid.rowSpan||1)*150)+'px';
+      const kel=_safeBuildCard(kid); kel.style.height='100%'; kel.style.width='100%';
+      slot.appendChild(kel);
+      lay.appendChild(slot);
+    });
+    el.appendChild(lay);
+    if(editMode){
+      const addb=document.createElement('div');
+      addb.className='col-add-btn'; addb.style.marginTop='8px';
+      addb.innerHTML='<span style="font-size:17px;line-height:1">+</span> card';
+      addb.addEventListener('click',()=>addCardToContainer(card.id,addb));
+      el.appendChild(addb);
+      const ov=document.createElement('div'); ov.className='card-ov'; ov.style.zIndex='32';
+      ov.innerHTML=`<div class="ov-row">${t==='grid'?`<button class="ovb ovb-edit" data-action="openContSettings" data-action-arg="${card.id}" title="Colonne griglia">▦</button>`:''}<button class="ovb ovb-del" data-action="delCard" data-action-arg="${card.id}" title="Elimina contenitore">🗑</button></div>`;
+      el.appendChild(ov);
+    }
+    return el;
+  }
 
   const txtSt=card.textColor?`style="color:${card.textColor}"` :'';
   let inner='';
@@ -7012,10 +7079,17 @@ function _assignSection(page,card){
     // Use pending col target if set (from addCardToCol)
     const targetSecId=_pendingDropSec||page.sections[0].id;
     const targetCol=_pendingDropSec?_pendingDropCol:0;
-    _pendingDropSec=null; _pendingDropCol=0;
+    const targetParent=_pendingDropParent;
+    _pendingDropSec=null; _pendingDropCol=0; _pendingDropParent=null;
     const sec=page.sections.find(s=>s.id===targetSecId)||page.sections[0];
-    const siblings=page.cards.filter(c=>c.secId===sec.id&&(c.secCol||0)===targetCol);
     card.secId=sec.id; card.secCol=targetCol;
+    if(targetParent){
+      // card figlia di un contenitore (pila/griglia): non va in colonna, vive dentro il contenitore
+      card.parentId=targetParent;
+      const ksib=page.cards.filter(c=>c.parentId===targetParent);
+      card.parentOrder=ksib.length>0?Math.max(...ksib.map(c=>c.parentOrder||0))+10:0;
+    }
+    const siblings=page.cards.filter(c=>c.secId===sec.id&&(c.secCol||0)===targetCol&&!c.parentId);
     card.secOrder=siblings.length>0?Math.max(...siblings.map(c=>c.secOrder||0))+10:0;
     if(!card.height){
       const baseH=(card.rowSpan||1)*(sec.rowH||150);
@@ -7981,9 +8055,11 @@ function addSpecial(type){
 function delCard(id){
   const card=curPage().cards.find(c=>c.id===id);
   const name=card?.label||card?.type||'questa card';
-  showConfirm(`Eliminare <b>${name}</b>?`, ()=>{
+  const isCont=card&&(card.type==='hstack'||card.type==='vstack'||card.type==='grid');
+  showConfirm(`Eliminare <b>${name}</b>${isCont?' e le card al suo interno':''}?`, ()=>{
     destroyChart(id); stopCamTimer(id);
-    curPage().cards=curPage().cards.filter(c=>c.id!==id);
+    // se è un contenitore, elimina anche le card figlie
+    curPage().cards=curPage().cards.filter(c=>c.id!==id && c.parentId!==id);
     saveCfg(); renderDash();
   });
 }
@@ -12307,6 +12383,7 @@ Object.assign(window, {
   _hbPickChipIcon, _hbPickChipIcon2, _hbPickImapIcon, _hbIconInput, _hbIcon2Input,
   _hbSelEnt2Pos, _hbResetIcon, openSOSCfgModal, _hbEntityChanged, _hbBrowseEntity, _hbDelOption, _appDelItem, _appDelGroup,
   _openGhStoreClean, _pasteCardToClean, _closeViewsAndOpenTM, _closeViewsAndSetPage,
+  addContainer, addCardToContainer, _pasteCardToContainer, openContSettings,
   _jsStoreAddAndRefresh, _jsRename, _jsRenameDo, _jsRenameInline, openRenameStore, closeRenameStore,
   _deleteSavedAt, _appChipPopupAt, _setActivePageAndSync,
   _pgWarnClose, _sendCallSvc,
