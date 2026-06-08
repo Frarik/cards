@@ -557,6 +557,10 @@ body.editing .dash-col-box{border:1.5px dashed rgba(99,102,241,.3)}
 .dash-col-box.drop-col-target{outline:2px solid var(--acc);outline-offset:2px;border-radius:14px}
 /* Card stack inside box */
 .dash-col-wrap{display:flex;flex-direction:column;gap:10px}
+/* maniglia per spostare liberamente la card nella colonna (solo in modifica) */
+.free-grip{position:absolute;top:5px;left:5px;z-index:40;width:22px;height:22px;border-radius:7px;background:rgba(8,12,22,.72);color:#fff;display:none;align-items:center;justify-content:center;cursor:move;font-size:13px;opacity:.55;user-select:none;transition:opacity .15s}
+body.editing .free-grip{display:flex}
+body.editing .dash-card-wrap:hover .free-grip{opacity:.95}
 /* Empty column placeholder inside the box */
 .dash-col-empty{display:none;min-height:0;align-items:center;justify-content:center;border-radius:10px;font-size:9px;color:rgba(99,102,241,.4);transition:all .15s;cursor:default}
 body.editing .dash-col-empty{display:flex;min-height:40px}

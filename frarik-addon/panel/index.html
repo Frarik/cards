@@ -11,8 +11,8 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@400;600;700;800;900&family=Nunito:wght@400;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="./assets/index-Dccg5asX.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-DlYA7mqx.css">
+  <script type="module" crossorigin src="./assets/index-XZwoeIF8.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-BdKJ7Ml1.css">
 </head>
 <body>
 
@@ -51,6 +51,12 @@
       <div class="fr"><div class="flbl">Icona</div><div class="finp-row"><input class="finp" id="cm-ico" type="text" placeholder="☀️ o mdi:home"><button class="fbtn" title="Scegli icona" id="cm-ico-picker">🎨</button></div></div>
       <div class="fr" id="fr-entity"><div class="flbl">Entità Home Assistant</div><div class="finp-row"><input class="finp" id="cm-entity" type="text" placeholder="sensor.xxx"><button class="fbtn" data-action="browseField" data-action-arg="cm-entity">🔍</button></div></div>
       <div class="fr" id="fr-unit"><div class="flbl">Unità di misura</div><input class="finp" id="cm-unit" type="text" placeholder="W, kWh, %, °C, €…"></div>
+      <div class="fr"><div class="flbl">Dimensioni card (px) — vuoto = automatico</div>
+        <div class="finp-row">
+          <input class="finp" id="cm-width" type="number" min="0" step="10" placeholder="Larghezza px">
+          <input class="finp" id="cm-height" type="number" min="0" step="10" placeholder="Altezza px">
+        </div>
+      </div>
       <div class="fr">
         <div class="flbl">Tipo di card</div>
         <select class="finp" id="cm-type" >

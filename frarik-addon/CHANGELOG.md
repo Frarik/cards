@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.30 — 2026-06-09
+
+### Px su tutte le card + posizionamento libero nella colonna
+- Nell'editor di **ogni card** ci sono i campi **Larghezza/Altezza in px** (vuoto = automatico).
+- In modifica, ogni card ha una **maniglia ✥** in alto a sinistra: trascinala per **posizionare la card dove vuoi** nella colonna (senza vincoli, anche affiancate/sovrapposte). **Doppio clic** sulla maniglia = rimetti la card nella pila.
+
 ## 1.2.29 — 2026-06-08
 
 ### Rimossi i contenitori
