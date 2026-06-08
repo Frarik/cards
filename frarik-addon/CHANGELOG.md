@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.25 — 2026-06-08
+
+### Colonne per pagina, fluide (verso il layout stile HA)
+- Annullate le colonne a px fisso della 1.2.24: le colonne tornano **fluide** e si **distribuiscono sulla larghezza dello schermo**.
+- Nel pannello configurazione c'è il selettore **"Colonne pagina" (1-4)** che imposta le colonne dell'intera pagina/vista; aggiungi/togli colonne e la larghezza si adatta.
+- (Prossima fase: contenitori **pila verticale / orizzontale / griglia** dentro le colonne, come HA.)
+
 ## 1.2.24 — 2026-06-08
 
 ### Colonne a larghezza fissa (fase 1 layout)

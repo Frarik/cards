@@ -543,7 +543,7 @@ body.editing .sect-add-row:hover{filter:brightness(1.15);transform:translateY(-1
 body.mobcol-always .dash-section{grid-template-columns:1fr !important}
 body.mobcol-always .dash-section>*{grid-column:1 / -1 !important}
 /* Column outer: toolbar above + dashed content box */
-.dash-col-outer{display:flex;flex-direction:column;gap:0;overflow:hidden}  /* colonna a larghezza fissa: una card più larga viene tagliata */
+.dash-col-outer{display:flex;flex-direction:column;gap:0}
 /* Per-column toolbar — hidden outside edit mode */
 .col-toolbar{display:none;align-items:center;justify-content:flex-end;gap:3px;padding-bottom:4px;padding-right:2px;min-height:0}
 body.editing .col-toolbar{display:flex}

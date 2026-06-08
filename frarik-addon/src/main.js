@@ -399,6 +399,14 @@ function setSectionCols(secId,n){
   saveCfg(); renderDash(); renderSectionsList();
   _pgMarkDirty(true);
 }
+// Colonne PER PAGINA (1-4): le applica a tutte le righe della pagina; larghezza fluida sulla pagina
+function setPageCols(n){
+  n=Math.max(1,Math.min(4,n));
+  const page=curPage();
+  page.cols=n;
+  (page.sections||[]).forEach(sec=>setSectionCols(sec.id,n));   // applica + clamp ad ogni riga
+  saveCfg(); renderDash(); renderSectionsList();
+}
 function setSectionRowH(secId,h){
   const page=curPage();
   const sec=(page.sections||[]).find(s=>s.id===secId); if(!sec) return;
@@ -619,15 +627,26 @@ function _epRenderJsStore(){
 function renderSectionsList(){
   const page=curPage(); _ensureSections(page);
   const el=document.getElementById('sections-list'); if(!el) return;
-  el.innerHTML=(page.sections||[]).map((sec,i)=>`
+  const multi=(page.sections||[]).length>1;
+  const pcols=page.cols||(page.sections&&page.sections[0]&&page.sections[0].cols)||4;
+  // Selettore COLONNE PER PAGINA (1-4): distribuite sulla larghezza della pagina
+  const pageColsHtml=`
+    <div class="sec-item">
+      <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap">
+        <span style="font-size:9px;font-weight:700;color:rgba(255,255,255,.65);min-width:90px">Colonne pagina</span>
+        ${[1,2,3,4].map(n=>`<button class="col-o${pcols===n?' on':''}" data-action="setPageCols" data-action-args='[${n}]'>${n}</button>`).join('')}
+      </div>
+      <div style="font-size:8px;color:var(--muted);margin-top:4px">Si distribuiscono sulla larghezza della pagina (max 4).</div>
+    </div>`;
+  el.innerHTML=pageColsHtml+(page.sections||[]).map((sec,i)=>`
     <div class="sec-item">
       <div class="sec-item-title">
-        <span style="flex:1;font-size:10px;font-weight:700;color:rgba(255,255,255,.5)">${page.sections.length>1?`Riga ${i+1}`:'Layout griglia'}</span>
+        <span style="flex:1;font-size:10px;font-weight:700;color:rgba(255,255,255,.5)">${multi?`Riga ${i+1}`:'Layout griglia'}</span>
       </div>
-      <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap;margin-bottom:4px">
+      ${multi?`<div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap;margin-bottom:4px">
         <span style="font-size:8px;color:var(--muted);min-width:46px">Colonne</span>
         ${[1,2,3,4].map(n=>`<button class="col-o${(sec.cols||4)===n?' on':''}" data-action="setSectionCols" data-action-args='["${sec.id}",${n}]'>${n}</button>`).join('')}
-      </div>
+      </div>`:''}
       <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap">
         <span style="font-size:8px;color:var(--muted);min-width:46px">Altezza</span>
         ${[100,130,150,180,200].map(h=>`<button class="col-o${(sec.rowH||150)===h?' on':''}" style="font-size:8px;padding:2px 4px;min-width:28px" data-action="setSectionRowH" data-action-args='["${sec.id}",${h}]'>${h}</button>`).join('')}
@@ -3205,9 +3224,8 @@ function _buildSectionEl(sec,page){
   const cols=sec.cols||4;
   // Fixed base grid of `cols` equal columns; each column outer uses span W to widen
   const colWidths=Array.from({length:cols},(_,i)=>(sec.colWidths&&sec.colWidths[i])||1);
-  // colonne a LARGHEZZA FISSA (px): la pagina non si allarga/stringe; oltre la colonna la card si taglia
-  el.style.gridTemplateColumns=`repeat(${cols},var(--frk-colw,300px))`;
-  el.style.justifyContent='start';
+  // colonne FLUIDE: si distribuiscono equamente sulla larghezza della pagina
+  el.style.gridTemplateColumns=`repeat(${cols},1fr)`;
   el.style.gridAutoRows='auto'; // allow rows to wrap naturally
 
   // Sort cards: by starting column, then by order within column
@@ -12255,6 +12273,7 @@ Object.assign(window, {
   setSectSize,
   setSectTitleAlign,
   setSectionCols,
+  setPageCols,
   setSectionRowH,
   showBadgeForm,
   showToast,
