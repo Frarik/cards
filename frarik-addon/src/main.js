@@ -535,7 +535,7 @@ function addCardToCol(secId, col, triggerEl, parentId){
     if(!menu.contains(e.target)){menu.remove();document.removeEventListener('click',_h);}
   }),80);
 }
-// crea un contenitore (pila/griglia) come card nella colonna
+// crea un contenitore (pila/griglia) come card nella colonna e apre il popup di configurazione
 function addContainer(secId,col,type){
   document.getElementById('add-col-menu')?.remove();
   const page=curPage(); _ensureSections(page);
@@ -543,27 +543,108 @@ function addContainer(secId,col,type){
   const sib=page.cards.filter(x=>x.secId===secId&&(x.secCol||0)===col&&!x.parentId);
   c.secOrder=sib.length>0?Math.max(...sib.map(x=>x.secOrder||0))+10:0;
   page.cards.push(c);
-  saveCfg(); renderDash();
+  saveCfg(); renderDash(); openContEditor(c.id);
 }
-// "+ card" dentro un contenitore → riusa il menu Aggiungi puntando al contenitore
 function addCardToContainer(containerId,btn){
   const cont=curPage().cards.find(c=>c.id===containerId); if(!cont) return;
   addCardToCol(cont.secId, cont.secCol||0, btn, containerId);
 }
-// incolla la card copiata dentro un contenitore
 function _pasteCardToContainer(parentId){
   document.getElementById('add-col-menu')?.remove();
   const cont=curPage().cards.find(c=>c.id===parentId); if(!cont) return;
   _pendingDropParent=parentId;
   pasteCardTo(cont.secId, cont.secCol||0);
+  openContEditor(parentId);
 }
-// impostazioni contenitore griglia (numero colonne)
-function openContSettings(containerId){
+
+// ── Popup editor del contenitore (stile HA): titolo, colonne, lista card ──
+let _contEditorId=null;
+function _cardTypeIcon(t){
+  return ({big:'🔢',compact:'📊',gauge:'⏲️',text:'🔤',toggle:'🎛️',history:'📈',multiline:'📈',bar:'📊',weather:'🌤️','weather-forecast':'🌦️',camera:'📷',media:'🎵',clock:'🕐',entities:'📋','js-custom':'🧩','yaml-card':'📄',markdown:'📝',hstack:'↔️',vstack:'↕️',grid:'▦'})[t]||'🃏';
+}
+function openContEditor(containerId){
+  const page=curPage();
+  const c=page.cards.find(x=>x.id===containerId); if(!c) return;
+  _contEditorId=containerId;
+  document.getElementById('cont-editor')?.remove();
+  const typeName=c.type==='hstack'?'Pila orizzontale':c.type==='grid'?'Griglia':'Pila verticale';
+  const kids=page.cards.filter(x=>x.parentId===containerId).sort((a,b)=>(a.parentOrder||0)-(b.parentOrder||0));
+  const inp='width:100%;padding:10px 12px;border-radius:10px;background:#0f1830;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:13px;font-family:inherit;box-sizing:border-box';
+  const cb='width:28px;height:28px;border:none;border-radius:8px;background:rgba(255,255,255,.08);color:#cbd5e1;cursor:pointer;font-size:12px;flex-shrink:0';
+  const ov=document.createElement('div');
+  ov.id='cont-editor';
+  ov.style.cssText='position:fixed;inset:0;z-index:16000;background:rgba(2,6,16,.78);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:18px;font-family:system-ui,sans-serif';
+  ov.innerHTML=`
+    <div style="width:min(560px,96vw);max-height:90vh;overflow:auto;background:#0b1220;border:1px solid rgba(255,255,255,.14);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.6);padding:20px;color:#f1f5f9">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <div style="font-size:16px;font-weight:800;flex:1">${_cardTypeIcon(c.type)} ${typeName}</div>
+        <button data-action="_closeContEditor" style="width:32px;height:32px;border:none;border-radius:9px;background:rgba(255,255,255,.1);color:#e2e8f0;cursor:pointer;font-size:16px">✕</button>
+      </div>
+      <label style="font-size:10px;font-weight:800;text-transform:uppercase;color:#94a3b8">Titolo (opzionale)</label>
+      <input id="cont-title" type="text" value="${eh(c.label||'')}" placeholder="Titolo" style="${inp};margin-top:5px">
+      ${c.type==='grid'?`
+        <div style="display:flex;gap:12px;margin-top:12px;align-items:flex-end">
+          <div style="flex:1"><label style="font-size:10px;font-weight:800;text-transform:uppercase;color:#94a3b8">Colonne</label>
+            <input id="cont-gcols" type="number" min="1" max="6" value="${c.gcols||2}" style="${inp};margin-top:5px"></div>
+          <label style="flex:1;display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;padding-bottom:9px">
+            <input id="cont-square" type="checkbox" ${c.square?'checked':''}> Schede quadrate</label>
+        </div>`:''}
+      <div style="display:flex;align-items:center;margin:18px 0 8px">
+        <div style="flex:1;font-size:11px;font-weight:800;color:#cbd5e1">Card nel contenitore (${kids.length})</div>
+        <button data-action="_contAddCard" data-action-arg="${containerId}" style="border:none;border-radius:9px;background:#6366f1;color:#fff;font-weight:700;font-size:12px;padding:8px 13px;cursor:pointer">+ Aggiungi card</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        ${kids.length?kids.map((k,i)=>`
+          <div style="display:flex;align-items:center;gap:7px;background:#0f1830;border:1px solid rgba(255,255,255,.1);border-radius:11px;padding:9px 11px">
+            <span style="font-size:15px">${_cardTypeIcon(k.type)}</span>
+            <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(k.label||k.type)}</div><div style="font-size:9px;color:#64748b">${eh(k.type)}</div></div>
+            <button data-action="_contMoveKid" data-action-args='["${k.id}",-1]' style="${cb};opacity:${i===0?'.35':'1'}">↑</button>
+            <button data-action="_contMoveKid" data-action-args='["${k.id}",1]' style="${cb};opacity:${i===kids.length-1?'.35':'1'}">↓</button>
+            <button data-action="_contEditKid" data-action-arg="${k.id}" style="${cb}" title="Modifica">✏️</button>
+            <button data-action="_contDelKid" data-action-arg="${k.id}" style="${cb}" title="Elimina">🗑</button>
+          </div>`).join(''):'<div style="font-size:11px;color:#64748b;text-align:center;padding:16px;border:1.5px dashed rgba(255,255,255,.12);border-radius:12px">Nessuna card. Premi "+ Aggiungi card".</div>'}
+      </div>
+      <div style="display:flex;gap:10px;margin-top:20px">
+        <button data-action="_closeContEditor" style="flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#e2e8f0">Chiudi</button>
+        <button data-action="_saveContEditor" data-action-arg="${containerId}" style="flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;background:#22c55e;color:#04210f">Salva</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click',e=>{ if(e.target===ov){ _saveContEditorVals(containerId); _closeContEditor(); } });
+}
+function _saveContEditorVals(containerId){
   const c=curPage().cards.find(x=>x.id===containerId); if(!c) return;
-  const n=prompt('Colonne della griglia (1-4):', c.gcols||2);
-  if(n==null) return;
-  c.gcols=Math.max(1,Math.min(4,parseInt(n,10)||2));
+  const t=document.getElementById('cont-title'); if(t) c.label=t.value.trim();
+  const g=document.getElementById('cont-gcols'); if(g) c.gcols=Math.max(1,Math.min(6,parseInt(g.value,10)||2));
+  const s=document.getElementById('cont-square'); if(s) c.square=s.checked;
+}
+function _saveContEditor(containerId){ _saveContEditorVals(containerId); saveCfg(); renderDash(); _closeContEditor(); }
+function _closeContEditor(){ document.getElementById('cont-editor')?.remove(); _contEditorId=null; saveCfg(); renderDash(); }
+function _contAddCard(containerId){
+  _saveContEditorVals(containerId);
+  document.getElementById('cont-editor')?.remove();
+  const cont=curPage().cards.find(c=>c.id===containerId); if(!cont) return;
+  addCardToCol(cont.secId, cont.secCol||0, null, containerId);
+}
+function _contMoveKid(kidId,dir){
+  const page=curPage();
+  const kid=page.cards.find(c=>c.id===kidId); if(!kid) return;
+  const sibs=page.cards.filter(c=>c.parentId===kid.parentId).sort((a,b)=>(a.parentOrder||0)-(b.parentOrder||0));
+  const idx=sibs.findIndex(c=>c.id===kidId); const j=idx+dir;
+  if(j<0||j>=sibs.length) return;
+  const a=sibs[idx], b=sibs[j];
+  const tmp=a.parentOrder||0; a.parentOrder=b.parentOrder||0; b.parentOrder=tmp;
+  saveCfg(); renderDash(); openContEditor(kid.parentId);
+}
+function _contEditKid(kidId){
+  document.getElementById('cont-editor')?.remove();
+  openCM(kidId);   // closeCM riapre il popup del contenitore (la card ha parentId)
+}
+function _contDelKid(kidId){
+  const page=curPage(); const kid=page.cards.find(c=>c.id===kidId); const pid=kid&&kid.parentId;
+  page.cards=page.cards.filter(c=>c.id!==kidId);
   saveCfg(); renderDash();
+  if(pid) openContEditor(pid);
 }
 function moveSectionUp(secId){
   const page=curPage(); _ensureSections(page);
@@ -3540,27 +3621,23 @@ function buildCard(card){
     if(!kids.length && editMode){
       const empty=document.createElement('div');
       empty.style.cssText='padding:16px;text-align:center;font-size:10px;color:rgba(255,255,255,.4);border:1.5px dashed rgba(99,102,241,.35);border-radius:12px';
-      empty.textContent=(t==='hstack'?'Pila orizzontale':t==='grid'?'Griglia':'Pila verticale')+' vuota — premi "+ card"';
+      empty.textContent=(t==='hstack'?'Pila orizzontale':t==='grid'?'Griglia':'Pila verticale')+' vuota — apri ⚙ per aggiungere card';
       lay.appendChild(empty);
     }
     kids.forEach(kid=>{
       const slot=document.createElement('div');
       slot.style.minWidth='0';
       if(t==='hstack') slot.style.flex='1';
-      slot.style.height=(kid.height||(kid.rowSpan||1)*150)+'px';
+      if(t==='grid'&&card.square) slot.style.aspectRatio='1';
+      else slot.style.height=(kid.height||(kid.rowSpan||1)*150)+'px';
       const kel=_safeBuildCard(kid); kel.style.height='100%'; kel.style.width='100%';
       slot.appendChild(kel);
       lay.appendChild(slot);
     });
     el.appendChild(lay);
     if(editMode){
-      const addb=document.createElement('div');
-      addb.className='col-add-btn'; addb.style.marginTop='8px';
-      addb.innerHTML='<span style="font-size:17px;line-height:1">+</span> card';
-      addb.addEventListener('click',()=>addCardToContainer(card.id,addb));
-      el.appendChild(addb);
       const ov=document.createElement('div'); ov.className='card-ov'; ov.style.zIndex='32';
-      ov.innerHTML=`<div class="ov-row">${t==='grid'?`<button class="ovb ovb-edit" data-action="openContSettings" data-action-arg="${card.id}" title="Colonne griglia">▦</button>`:''}<button class="ovb ovb-del" data-action="delCard" data-action-arg="${card.id}" title="Elimina contenitore">🗑</button></div>`;
+      ov.innerHTML=`<div class="ov-row"><button class="ovb ovb-edit" data-action="openContEditor" data-action-arg="${card.id}" title="Configura contenitore">⚙️</button><button class="ovb ovb-del" data-action="delCard" data-action-arg="${card.id}" title="Elimina contenitore">🗑</button></div>`;
       el.appendChild(ov);
     }
     return el;
@@ -5124,7 +5201,13 @@ function openCM(cardId){
   _updateCMBadgePreview();
   document.getElementById('cmod').classList.remove('off');
 }
-function closeCM(){ document.getElementById('cmod').classList.add('off'); editingId=null; }
+function closeCM(){
+  // se la card modificata è figlia di un contenitore, riapri il popup del contenitore
+  const card=curPage().cards.find(c=>c.id===editingId);
+  const pid=card&&card.parentId;
+  document.getElementById('cmod').classList.add('off'); editingId=null;
+  if(pid) setTimeout(()=>openContEditor(pid),60);
+}
 
 function onTypeChange(){
   const t=document.getElementById('cm-type').value;
@@ -12383,7 +12466,8 @@ Object.assign(window, {
   _hbPickChipIcon, _hbPickChipIcon2, _hbPickImapIcon, _hbIconInput, _hbIcon2Input,
   _hbSelEnt2Pos, _hbResetIcon, openSOSCfgModal, _hbEntityChanged, _hbBrowseEntity, _hbDelOption, _appDelItem, _appDelGroup,
   _openGhStoreClean, _pasteCardToClean, _closeViewsAndOpenTM, _closeViewsAndSetPage,
-  addContainer, addCardToContainer, _pasteCardToContainer, openContSettings,
+  addContainer, addCardToContainer, _pasteCardToContainer,
+  openContEditor, _closeContEditor, _saveContEditor, _contAddCard, _contMoveKid, _contEditKid, _contDelKid,
   _jsStoreAddAndRefresh, _jsRename, _jsRenameDo, _jsRenameInline, openRenameStore, closeRenameStore,
   _deleteSavedAt, _appChipPopupAt, _setActivePageAndSync,
   _pgWarnClose, _sendCallSvc,

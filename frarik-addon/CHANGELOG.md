@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.27 — 2026-06-08
+
+### Contenitori con editor a popup (come HA)
+- Creando un contenitore (pila orizzontale/verticale/griglia) si apre un **popup di configurazione** in stile Home Assistant: **titolo**, (griglia) **colonne** + **schede quadrate**, e la **lista delle card** dentro.
+- Dal popup: **+ Aggiungi card** (Store/incolla), **✏️ modifica**, **↑↓ riordina**, **🗑 elimina** ogni card; **Salva**.
+- Sul contenitore nel dashboard l'icona **⚙️** riapre il popup.
+
 ## 1.2.26 — 2026-06-08
 
 ### Contenitori stile HA (fase B): pila orizzontale, verticale, griglia
