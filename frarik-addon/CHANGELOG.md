@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.22 — 2026-06-08
+
+### Card originali + niente ridimensionamento manuale
+- Le card tornano **100% originali** (person, Meteo v1.0.8, Antizanzare) senza nessuna delle aggiunte/scaling.
+- **Rimossa la maniglia d'angolo**: le card non sono più trascinabili/ridimensionabili a mano.
+- Le card vanno a **grandezza naturale dalla griglia** (colSpan × rowSpan): la dimensione si regola solo dall'editor con righe/colonne.
+
 ## 1.2.21 — 2026-06-08
 
 ### Ripristino ridimensionamento card

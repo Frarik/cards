@@ -1,9 +1,7 @@
-/* frarik-version: 1.10 */
+/* frarik-version: 1.11 */
 /**
- * meteo+previsioni.js v1.3
+ * meteo+previsioni.js v1.2
  * type: custom:meteo-card
- * Novità v1.3: clic su un giorno → foglio dettaglio con previsione ORARIA
- *              (ora, icona, temperatura, pioggia, vento).
  *
  * Installazione:
  *   1. Copia in /config/www/meteo+previsioni.js
@@ -94,15 +92,15 @@ const _IC = {
 
 // ── CSS ───────────────────────────────────────────────────────────────────────
 const _CSS = `
-:host{display:block;height:100%;overflow:hidden;}
+:host{display:block;}
 *{box-sizing:border-box;margin:0;padding:0;}
-.card{border-radius:20px;overflow:hidden;font-family:var(--primary-font-family,system-ui,sans-serif);color:#fff;position:relative;box-shadow:0 12px 48px rgba(0,0,0,.55);height:100%;display:flex;align-items:center;justify-content:center;}
+.card{border-radius:20px;overflow:hidden;font-family:var(--primary-font-family,system-ui,sans-serif);color:#fff;position:relative;box-shadow:0 12px 48px rgba(0,0,0,.55);}
 .dots{position:absolute;inset:0;pointer-events:none;z-index:0;}
 .dot{position:absolute;border-radius:50%;background:rgba(255,255,255,.55);}
 .d1{width:2.5px;height:2.5px;top:10%;left:52%;}.d2{width:1.5px;height:1.5px;top:7%;right:28%;}
 .d3{width:2px;height:2px;top:25%;right:14%;}.d4{width:1.5px;height:1.5px;top:40%;left:38%;}
 .d5{width:2px;height:2px;top:18%;left:25%;}.d6{width:1.5px;height:1.5px;bottom:38%;right:22%;}
-.body{position:relative;z-index:1;padding:16px 16px;flex:0 0 auto;transform-origin:center center;will-change:transform;}
+.body{position:relative;z-index:1;padding:16px 16px 0;}
 /* header */
 .hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;}
 .city{font-size:32px;font-weight:900;letter-spacing:-.5px;line-height:1.1;text-shadow:0 2px 12px rgba(0,0,0,.3);}
@@ -131,8 +129,7 @@ const _CSS = `
 .fct:hover{opacity:.75;}
 .fcg{display:none;grid-template-columns:repeat(5,1fr);gap:6px;padding-bottom:14px;}
 .fcg.open{display:grid;}
-.fcc{border-radius:12px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.04);padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;transition:background .15s,border-color .15s;}
-.fcc:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.18);}
+.fcc{border-radius:12px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.04);padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;}
 .fdn{font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;}
 .fi{font-size:28px;line-height:1;margin:3px 0 2px;}
 .fm{font-size:18px;font-weight:800;letter-spacing:-.5px;line-height:1;}
@@ -174,28 +171,6 @@ const _CSS = `
 /* placeholder */
 .ph{padding:32px 20px;text-align:center;color:rgba(255,255,255,.35);font-size:12px;display:flex;flex-direction:column;align-items:center;gap:10px;}
 .phi{font-size:38px;opacity:.3;}
-/* foglio dettaglio giorno (orario) — montato su document.body */
-.dov{position:fixed;inset:0;z-index:99998;display:none;flex-direction:column;background:rgba(8,10,18,.985);color:#e8ebf5;font-family:var(--primary-font-family,system-ui,sans-serif);}
-.dov.open{display:flex;}
-.dhdr{display:flex;align-items:flex-start;gap:14px;padding:18px 20px 16px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;}
-.dhl{flex:1;min-width:0;}
-.ddate{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;}
-.dcond{font-size:24px;font-weight:900;letter-spacing:-.5px;margin-top:3px;}
-.dmm{font-size:13px;font-weight:700;color:rgba(255,255,255,.6);margin-top:5px;}
-.dico{font-size:52px;line-height:1;flex-shrink:0;}
-.dcls{flex-shrink:0;width:30px;height:30px;border-radius:8px;border:none;background:rgba(255,255,255,.08);color:#94a3b8;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-.dcls:hover{background:rgba(255,255,255,.16);color:#fff;}
-.dcolh{display:grid;grid-template-columns:60px 1fr 92px 96px;gap:8px;padding:8px 20px;font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.35);border-bottom:1px solid rgba(255,255,255,.06);}
-.dlist{flex:1;overflow-y:auto;padding:2px 0 14px;}
-.dr{display:grid;grid-template-columns:60px 1fr 92px 96px;gap:8px;align-items:center;padding:9px 20px;border-bottom:1px solid rgba(255,255,255,.04);}
-.dr-t{font-size:13px;font-weight:700;color:rgba(255,255,255,.75);}
-.dr-w{display:flex;align-items:center;gap:7px;}
-.dr-ic{font-size:18px;line-height:1;}
-.dr-tp{font-size:14px;font-weight:800;letter-spacing:-.3px;}
-.dr-bar{height:3px;border-radius:99px;margin-top:3px;}
-.dr-rn{font-size:11px;color:rgba(255,255,255,.5);}
-.dr-wd{font-size:11px;color:rgba(255,255,255,.55);text-align:right;white-space:nowrap;}
-.dempty{padding:40px 20px;text-align:center;color:rgba(255,255,255,.35);font-size:12px;line-height:1.5;}
 `
 
 // ── MeteoCard ─────────────────────────────────────────────────────────────────
@@ -215,16 +190,11 @@ class MeteoCard extends HTMLElement {
     this._se = false         // search open
     this._te = ''            // temp entityId in settings
     this._tc = ''            // temp cityName in settings
-    this._ts = {}            // temp override entità delle 4 stat in settings ({hum,pres,wind,dir})
     this._fs = null          // forecast subscription
     this._bk = null          // build key (per evitare rebuild inutili)
     this._nh = true          // flag primo hass
     this._sk = 'default'      // storage key per localStorage
     this._modalHost = null    // host del modal impostazioni (montato su document.body)
-    this._fch = []            // forecast ORARIO (per il dettaglio giorno)
-    this._fhs = null          // sottoscrizione forecast orario
-    this._dh  = null          // host del foglio dettaglio (montato su document.body)
-    this._dday = -1           // indice giorno aperto nel dettaglio (-1 = chiuso)
     this._click = this._onClick.bind(this)
     this._inp   = this._onInput.bind(this)
   }
@@ -241,7 +211,7 @@ class MeteoCard extends HTMLElement {
   _saveStore() {
     try {
       localStorage.setItem(this._lsKey(),
-        JSON.stringify({ entityId: this._c.entityId, cityName: this._c.cityName, statEnts: this._c.statEnts || {} }))
+        JSON.stringify({ entityId: this._c.entityId, cityName: this._c.cityName }))
     } catch {}
   }
 
@@ -257,11 +227,9 @@ class MeteoCard extends HTMLElement {
     this._c = {
       entityId: stored.entityId || cfg.entityId || '',
       cityName: (stored.cityName != null ? stored.cityName : (cfg.cityName || '')),
-      statEnts: stored.statEnts || cfg.statEnts || {},
     }
     this._te = this._c.entityId
     this._tc = this._c.cityName
-    this._ts = Object.assign({}, this._c.statEnts)
     if (prev !== this._c.entityId && this._h) this._getForecast()
     this._bk = null; this._build()
   }
@@ -272,36 +240,13 @@ class MeteoCard extends HTMLElement {
     this.shadowRoot.addEventListener('click', this._click)
     this.shadowRoot.addEventListener('input', this._inp)
     if (this._h && this._c.entityId) this._getForecast()
-    try { if (!this._frkRO && 'ResizeObserver' in window) { this._frkRO = new ResizeObserver(() => this._frkFit()); this._frkRO.observe(this) } } catch (e) {}
   }
 
   disconnectedCallback() {
     this.shadowRoot.removeEventListener('click', this._click)
     this.shadowRoot.removeEventListener('input', this._inp)
     this._destroyModal()
-    this._destroyDetail()
     this._unsub()
-    try { if (this._frkRO) this._frkRO.disconnect() } catch (e) {}
-  }
-
-  /* Adatta il contenuto alla dimensione della card (zoom-to-fit, posizioni invariate),
-     come la person-card. Misura la dimensione base una volta e scala con transform. */
-  _frkFit() {
-    try {
-      const card = this.shadowRoot && this.shadowRoot.querySelector('.card')
-      const body = card && card.querySelector('.body')
-      if (!body) return
-      const HW = this.clientWidth, HH = this.clientHeight
-      if (!HW || !HH) return
-      // lo SFONDO (.card) riempie il contenitore; scaliamo SOLO il contenuto (.body),
-      // così non compare nessun riquadro dietro (come la person-card).
-      const BW = Math.max(HW, 320)          // impaginazione del contenuto: mai sotto 320px
-      body.style.transform = 'none'
-      body.style.width = BW + 'px'
-      const BH = body.offsetHeight || HH
-      const s = Math.min(HW / BW, HH / BH)  // 1 a dimensione normale; <1 quando stringi/abbassi
-      body.style.transform = 'scale(' + s + ')'
-    } catch (e) {}
   }
 
   set hass(h) {
@@ -385,110 +330,9 @@ class MeteoCard extends HTMLElement {
   }
 
   _unsub() {
-    if (this._fs) { Promise.resolve(this._fs).then(u => { if (typeof u === 'function') u() }).catch(() => {}); this._fs = null }
-    if (this._fhs) { Promise.resolve(this._fhs).then(u => { if (typeof u === 'function') u() }).catch(() => {}); this._fhs = null }
-  }
-
-  // ── Forecast ORARIO (per il dettaglio del giorno) ───────────────────────────
-  async _getHourly() {
-    const eid = this._c?.entityId
-    if (!this._h || !eid) return
-    const onH = fc => { if (!Array.isArray(fc) || fc.length === 0) return false; this._fch = fc; if (this._dday >= 0) this._renderDetail(); return true }
-    const extract = r => r?.response?.[eid]?.forecast ?? r?.[eid]?.forecast ?? r?.forecast ?? (Array.isArray(r) ? r : null)
-    const conn = this._h.connection
-    // 1. subscribe orario (real-time)
-    if (conn?.subscribeMessage) {
-      try {
-        this._fhs = conn.subscribeMessage(
-          ev => onH(ev?.forecast ?? ev?.event?.forecast ?? []),
-          { type:'weather/subscribe_forecast', forecast_type:'hourly', entity_id:eid })
-      } catch (e) {}
-    }
-    if (this._fch.length > 0) return
-    // 2. get_forecasts (plurale)
-    try { const r = await conn?.sendMessagePromise?.({ type:'call_service', domain:'weather', service:'get_forecasts', service_data:{ entity_id:eid, type:'hourly' }, return_response:true }).catch(() => null); if (onH(extract(r))) return } catch (e) {}
-    // 3. get_forecast (singolare)
-    try { const r = await conn?.sendMessagePromise?.({ type:'call_service', domain:'weather', service:'get_forecast', service_data:{ entity_id:eid, type:'hourly' }, return_response:true }).catch(() => null); if (onH(extract(r))) return } catch (e) {}
-  }
-
-  // ── Dettaglio giorno (foglio orario, montato su document.body) ──────────────
-  _openDay(i) {
-    if (!this._fc[i]) return
-    this._dday = i
-    this._renderDetail()
-    if (!this._fch.length) this._getHourly()
-  }
-  _closeDay() { this._dday = -1; this._destroyDetail() }
-  _renderDetail() {
-    if (this._dday < 0) return
-    if (!this._dh) {
-      this._dh = document.createElement('div')
-      this._dh.attachShadow({ mode:'open' })
-      this._dh.shadowRoot.addEventListener('click', this._click)
-      document.body.appendChild(this._dh)
-    }
-    this._dh.shadowRoot.innerHTML = this._detailHTML()
-  }
-  _destroyDetail() {
-    if (!this._dh) return
-    this._dh.shadowRoot.removeEventListener('click', this._click)
-    this._dh.remove()
-    this._dh = null
-  }
-  _detailHTML() {
-    const d = this._fc[this._dday]
-    if (!d) return ''
-    const date = new Date(d.datetime)
-    const th   = _theme(d.condition)
-    const cond = _CI[d.condition] || String(d.condition || '').replace(/-/g, ' ')
-    const ico  = _WI[d.condition] || '🌡️'
-    const mx   = _n(d.temperature)
-    const mn   = _n(d.templow ?? (parseFloat(d.temperature) - 4))
-    const dayKey = date.toDateString()
-    const hours = (this._fch || []).filter(h => new Date(h.datetime).toDateString() === dayKey)
-    let rows
-    if (!hours.length) {
-      rows = `<div class="dempty">${(this._fch && this._fch.length)
-        ? 'Nessun dato orario per questo giorno.<br>Le previsioni orarie coprono di solito solo le prossime 24–48 ore.'
-        : 'Dati orari in caricamento…'}</div>`
-    } else {
-      const temps = hours.map(h => parseFloat(h.temperature) || 0)
-      const mxT = Math.max(...temps), mnT = Math.min(...temps), rng = (mxT - mnT) || 1
-      rows = hours.map(h => {
-        const t  = new Date(h.datetime)
-        const hh = String(t.getHours()).padStart(2, '0') + ':00'
-        const hi = _WI[h.condition] || ico
-        const tp = _n(h.temperature)
-        const col = _tempCol(h.temperature)
-        const bw = Math.round(((parseFloat(h.temperature) || 0) - mnT) / rng * 70 + 30)
-        const rn = (parseFloat(h.precipitation) || 0).toFixed(1)
-        const ws = h.wind_speed != null ? Math.round(parseFloat(h.wind_speed)) : '--'
-        const wd = _windDir(h.wind_bearing)
-        return `<div class="dr">
-          <div class="dr-t">${hh}</div>
-          <div>
-            <div class="dr-w"><span class="dr-ic">${hi}</span><span class="dr-tp" style="color:${col};">${tp}°</span></div>
-            <div class="dr-bar" style="background:${col};width:${bw}%;"></div>
-          </div>
-          <div class="dr-rn">💧 ${rn}mm</div>
-          <div class="dr-wd">${ws}km/h ${wd}</div>
-        </div>`
-      }).join('')
-    }
-    return `<style>${_CSS}</style>
-<div class="dov open">
-  <div class="dhdr" style="background:linear-gradient(135deg,${th.tb},transparent);">
-    <div class="dhl">
-      <div class="ddate" style="color:${th.accent};">${_fmtDate(date).toUpperCase()}</div>
-      <div class="dcond">${cond}</div>
-      <div class="dmm">↑ ${mx}°&nbsp;&nbsp;↓ ${mn}°</div>
-    </div>
-    <div class="dico">${ico}</div>
-    <button class="dcls" data-a="dayclose">${_IC.x}</button>
-  </div>
-  <div class="dcolh"><div>Ora</div><div>Temp</div><div>Pioggia</div><div style="text-align:right;">Vento</div></div>
-  <div class="dlist">${rows}</div>
-</div>`
+    if (!this._fs) return
+    Promise.resolve(this._fs).then(u => { if (typeof u === 'function') u() }).catch(() => {})
+    this._fs = null
   }
 
   _key() {
@@ -497,56 +341,46 @@ class MeteoCard extends HTMLElement {
     const st = this._h.states?.[this._c.entityId]
     if (!st) return 'NOT_FOUND:' + this._c.entityId
     const a = st.attributes
-    const se = this._c.statEnts||{}
-    const ex = Object.keys(se).map(k=>k+'='+se[k]+':'+(this._h.states?.[se[k]]?.state??'')).join(',')
     return [st.state, a.temperature, a.humidity, a.pressure,
             a.wind_speed, a.wind_bearing, this._fo, this._so,
-            this._se, this._fc.length, this._c.cityName, ex].join('|')
+            this._se, this._fc.length, this._c.cityName].join('|')
   }
 
   // ── Click ──────────────────────────────────────────────────────────────────
   _onClick(e) {
-    // click sul backdrop scuro (fuori dal modal/foglio) → chiude
+    // click sul backdrop scuro (fuori dal modal) → chiude
     if (e.target.classList?.contains('sov')) { this._closeSettings(); return }
-    if (e.target.classList?.contains('dov')) { this._closeDay(); return }
     const t = e.target.closest('[data-a]')
     if (!t) return
     switch (t.dataset.a) {
       case 'gear':  this._openSettings(); break
       case 'close': this._closeSettings(); break
-      case 'day':   this._openDay(parseInt(t.dataset.i,10)||0); break
-      case 'dayclose': this._closeDay(); break
       case 'fc':
         this._fo=!this._fo; this._bk=null; this._build(); break
       case 'srch':
         this._se=!this._se; this._renderModal(); break
       case 'sel':
         this._te=t.dataset.id; this._se=false; this._renderModal(); break
-      case 'save': {
-        const se={}; ['hum','pres','wind','dir'].forEach(k=>{ if(this._ts[k]) se[k]=this._ts[k] })
-        this._c={ entityId:this._te, cityName:this._tc, statEnts:se }
+      case 'save':
+        this._c={ entityId:this._te, cityName:this._tc }
         this._saveStore()       // persiste in localStorage → sopravvive a refresh/cache
         this._fc=[]; this._getForecast()
         this._closeSettings()
         this.dispatchEvent(new CustomEvent('config-changed',
-          { detail:{ config:{ entityId:this._c.entityId, cityName:this._c.cityName, statEnts:this._c.statEnts } },
+          { detail:{ config:{ entityId:this._c.entityId, cityName:this._c.cityName } },
             bubbles:true, composed:true }))
         break
-      }
     }
   }
 
   _onInput(e) {
-    const f = e.target.dataset.f
-    if (f === 'city') this._tc = e.target.value
-    else if (f && f.indexOf('st_') === 0) this._ts[f.slice(3)] = e.target.value
+    if (e.target.dataset.f === 'city') this._tc = e.target.value
   }
 
   // ── Modal impostazioni (montato su document.body, fuori dalla card) ─────────
   _openSettings() {
     this._so = true; this._se = false
     this._te = this._c.entityId; this._tc = this._c.cityName
-    this._ts = Object.assign({}, this._c.statEnts)
     this._renderModal()
     this._bk = null; this._build()   // aggiorna stato attivo del gear
   }
@@ -554,7 +388,6 @@ class MeteoCard extends HTMLElement {
   _closeSettings() {
     this._so = false
     this._te = this._c.entityId; this._tc = this._c.cityName
-    this._ts = Object.assign({}, this._c.statEnts)
     this._destroyModal()
     this._bk = null; this._build()
   }
@@ -582,13 +415,10 @@ class MeteoCard extends HTMLElement {
   _build() {
     if (!this._h) return
     const eid = this._c.entityId
-    if (!eid) { this._renderEmpty('Clicca ⚙ per configurare l\'entità meteo') }
-    else {
-      const st = this._h.states?.[eid]
-      if (!st) { this._renderEmpty('Entità non trovata: ' + eid) }
-      else { this._renderCard(st) }
-    }
-    try { requestAnimationFrame(() => this._frkFit()) } catch (e) {}
+    if (!eid) { this._renderEmpty('Clicca ⚙ per configurare l\'entità meteo'); return }
+    const st = this._h.states?.[eid]
+    if (!st)  { this._renderEmpty('Entità non trovata: ' + eid); return }
+    this._renderCard(st)
   }
 
   _renderEmpty(msg) {
@@ -618,17 +448,6 @@ class MeteoCard extends HTMLElement {
     const city  = this._c.cityName || a.friendly_name || this._c.entityId
     const today = _fmtDate()
 
-    // override delle 4 statistiche: se l'utente ha scelto un'entità, usa quella al posto del dato meteo
-    const se = this._c.statEnts || {}
-    const ov = (k, def) => {
-      const id = se[k]; if (!id) return def
-      const s = this._h.states?.[id]; if (!s) return def
-      const u = (s.attributes && s.attributes.unit_of_measurement) || ''
-      const raw = s.state
-      const v = (raw==null||raw===''||isNaN(parseFloat(raw))) ? (raw||'--') : _n(raw)
-      return v + (u ? ('<span style="font-size:11px;opacity:.7"> ' + u + '</span>') : '')
-    }
-
     // forecast HTML
     let fcH = ''
     if (this._fo && this._fc.length) {
@@ -645,7 +464,7 @@ class MeteoCard extends HTMLElement {
         const col = _tempCol(f.temperature)
         const bw  = Math.round(((parseFloat(f.temperature)||0)-minT)/rng*75+25)
         const nc  = i===0 ? th.accent : 'rgba(255,255,255,.65)'
-        return `<div class="fcc" data-a="day" data-i="${i}">
+        return `<div class="fcc">
           <div class="fdn" style="color:${nc};">${nm}</div>
           <div class="fi">${fi}</div>
           <div class="fm">${mx}°</div>
@@ -691,19 +510,19 @@ class MeteoCard extends HTMLElement {
     <div class="stats">
       <div class="stl" style="background:${th.tb};border:1px solid ${th.tbr};">
         <div class="sic" style="color:${th.accent};">${_IC.hu}</div>
-        <div class="sv">${ov('hum', hum+'%')}</div><div class="sl">Umidità</div>
+        <div class="sv">${hum}%</div><div class="sl">Umidità</div>
       </div>
       <div class="stl" style="background:${th.tb};border:1px solid ${th.tbr};">
         <div class="sic" style="color:${th.accent};">${_IC.pr}</div>
-        <div class="sv">${ov('pres', pres)}</div><div class="sl">Pressione</div>
+        <div class="sv">${pres}</div><div class="sl">Pressione</div>
       </div>
       <div class="stl" style="background:${th.tb};border:1px solid ${th.tbr};">
         <div class="sic" style="color:${th.accent};">${_IC.wi}</div>
-        <div class="sv">${ov('wind', wsp+'k/h')}</div><div class="sl">Vento</div>
+        <div class="sv">${wsp}k/h</div><div class="sl">Vento</div>
       </div>
       <div class="stl" style="background:${th.tb};border:1px solid ${th.tbr};">
         <div class="sic" style="color:${th.accent};">${_IC.co}</div>
-        <div class="sv">${ov('dir', wdir)}</div><div class="sl">Direzione</div>
+        <div class="sv">${wdir}</div><div class="sl">Direzione</div>
       </div>
     </div>
 
@@ -723,13 +542,6 @@ class MeteoCard extends HTMLElement {
     const enm   = ent?.attributes?.friendly_name || eid || '—'
     const city  = this._tc
     const wents = Object.keys(this._h?.states||{}).filter(k=>k.startsWith('weather.'))
-    const exEnts = Object.keys(this._h?.states||{}).filter(k=>/^(sensor|binary_sensor|number|input_number)\./.test(k)).sort()
-    const exDatalist = `<datalist id="meteo-ent-list">${exEnts.map(id=>`<option value="${id}">${(this._h.states[id].attributes&&this._h.states[id].attributes.friendly_name)||id}</option>`).join('')}</datalist>`
-    const statRows = [['hum','Umidità'],['pres','Pressione'],['wind','Vento'],['dir','Direzione']].map(([k,lbl])=>`<div style="display:flex;gap:8px;margin-top:7px;align-items:center">
-        <span style="width:80px;flex-shrink:0;font-size:11px;color:#94a3b8">${lbl}</span>
-        <input data-f="st_${k}" list="meteo-ent-list" value="${(this._ts[k]||'').replace(/"/g,'&quot;')}" placeholder="— dal meteo — (scrivi per filtrare)"
-          style="flex:1;min-width:0;height:34px;border-radius:9px;border:1px solid rgba(255,255,255,.15);background:#0f1830;color:#fff;font-size:12px;padding:0 10px;font-family:inherit"/>
-      </div>`).join('')
 
     return `
 <div class="sov open">
@@ -763,11 +575,6 @@ class MeteoCard extends HTMLElement {
       <div class="fl" style="margin-top:14px;">Nome città</div>
       <input class="ci" type="text" value="${city}" placeholder="Es: Selargius" data-f="city"/>
       <div class="ht">Se vuoto, usa il nome dell'entità HA</div>
-
-      <div class="fl" style="margin-top:16px;">Entità delle statistiche</div>
-      <div class="ht">Scrivi nel campo per filtrare le entità; lascia vuoto per usare il dato del meteo.</div>
-      ${exDatalist}
-      ${statRows}
     </div>
     <div class="sft">
       <button class="sav" data-a="save">${_IC.ok} Salva</button>

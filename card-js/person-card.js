@@ -77,19 +77,7 @@
     if (h < 24) return h + (h === 1 ? ' ora fa' : ' ore fa');
     return Math.floor(h / 24) + ' g fa';
   }
-  function gmapUrl(lat, lon) { return `https://maps.google.com/maps?q=${lat},${lon}&z=17&t=k&hl=it&output=embed`; }
-
-  // icona segnaposto Leaflet (foto nel cerchio del colore zona) — usata nel popup
-  function markerIcon(L, color, pic, ini) {
-    const inner = pic
-      ? `<div style="width:100%;height:100%;background-size:cover;background-position:center;background-image:url('${pic}')"></div>`
-      : `<div style="color:#fff;font-weight:800;font-size:15px;font-family:system-ui,sans-serif">${ini}</div>`;
-    return L.divIcon({
-      className: 'pc-mk',
-      html: `<div style="width:40px;height:40px;border-radius:50%;border:3px solid ${color};overflow:hidden;background:#0b1220;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 4px ${color}33,0 4px 12px rgba(0,0,0,.5)">${inner}</div>`,
-      iconSize: [40, 40], iconAnchor: [20, 20]
-    });
-  }
+  function gmapUrl(lat, lon) { return `https://maps.google.com/maps?q=${lat},${lon}&z=16&hl=it&output=embed`; }
 
   const ST = (window.__pcState = window.__pcState || {});
 
@@ -132,8 +120,10 @@
       <div class="pc-stage"><div class="pc-content">
         <div class="pc-ava" style="${avaStyle}">${avaInner}</div>
         <div class="pc-info">
-          <div class="pc-name">${nm}</div>
-          <div class="pc-row2"><span class="pc-pill"><span class="pc-pilltxt">${zi.label}</span></span></div>
+          <div class="pc-row1">
+            <span class="pc-name">${nm}</span>
+            <span class="pc-pill"><span class="pc-pilltxt">${zi.label}</span></span>
+          </div>
           <div class="pc-ago">${ago || ''}</div>
         </div>
       </div></div>
@@ -171,10 +161,10 @@
   box-shadow:0 0 0 3px var(--pc-glow),0 0 14px var(--pc-glow),0 6px 16px rgba(0,0,0,.5);
   display:flex;align-items:center;justify-content:center;font-weight:800;font-size:21px;color:#fff;}
 #${rid} .pc-info{min-width:0;}
-#${rid} .pc-name{font-size:21px;font-weight:800;letter-spacing:-.3px;white-space:nowrap;max-width:300px;overflow:hidden;
+#${rid} .pc-row1{display:flex;align-items:center;gap:9px;}
+#${rid} .pc-name{font-size:21px;font-weight:800;letter-spacing:-.3px;white-space:nowrap;max-width:260px;overflow:hidden;
   text-overflow:ellipsis;text-shadow:0 1px 4px rgba(0,0,0,.7);}
-#${rid} .pc-row2{margin-top:7px;}
-#${rid} .pc-pill{display:inline-flex;align-items:center;padding:3px 12px;border-radius:999px;
+#${rid} .pc-pill{display:inline-flex;align-items:center;flex-shrink:0;padding:3px 12px;border-radius:999px;
   font-size:12px;font-weight:800;line-height:1;white-space:nowrap;background:color-mix(in srgb,var(--pc-col) 22%,transparent);
   border:1px solid var(--pc-col);color:var(--pc-col);}
 #${rid} .pc-ago{font-size:12px;color:rgba(255,255,255,.62);margin-top:5px;white-space:nowrap;}
@@ -323,7 +313,7 @@
         <div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.08);color:#f1f5f9">
           <span style="font-size:18px">🗺️</span>
           <div style="flex:1;min-width:0">
-            <div style="font-size:15px;font-weight:800">${nm} — tracciati</div>
+            <div style="font-size:15px;font-weight:800">${nm} — spostamenti 24h</div>
             <div style="font-size:11px;opacity:.6" id="pc-hist-sub">Caricamento percorso…</div>
           </div>
           <button id="pc-hist-x" style="width:34px;height:34px;border-radius:10px;border:none;cursor:pointer;background:rgba(255,255,255,.08);color:#e2e8f0;font-size:18px">✕</button>
@@ -339,39 +329,30 @@
     let L, pts = [];
     try {
       L = await loadLeaflet();
-      // TUTTO lo storico disponibile (nessun limite 24h), dalle 2 entità (person + GPS): una o l'altra
-      const cand = [...new Set([getGps(card), attrs(H, personId).source, ent, personId].filter(Boolean))];
-      const start = new Date(Date.now() - 365 * 24 * 3600 * 1000).toISOString();
+      const start = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
       let data = null;
       if (H && typeof H.callApi === 'function') {
-        data = await H.callApi('GET', `history/period/${start}?filter_entity_id=${cand.map(encodeURIComponent).join(',')}&minimal_response=false&significant_changes_only=false`);
+        data = await H.callApi('GET', `history/period/${start}?filter_entity_id=${encodeURIComponent(ent)}&minimal_response=false`);
       }
-      const raw = [];
-      (data || []).forEach(series => (series || []).forEach(s => {
-        const a = s.attributes || {};
-        if (a.latitude != null && a.longitude != null) raw.push({ lat: +a.latitude, lon: +a.longitude, t: +new Date(s.last_changed || s.last_updated || 0) });
-      }));
-      raw.sort((x, y) => x.t - y.t);
-      pts = raw.map(p => [p.lat, p.lon]);
+      const series = (data && data[0]) || [];
+      series.forEach(s => { const a = s.attributes || {}; if (a.latitude != null && a.longitude != null) pts.push([a.latitude, a.longitude]); });
     } catch (e) {}
 
     const mapDiv = ov.querySelector('#pc-hist-map');
     try {
       const map = L.map(mapDiv, { zoomControl: true, attributionControl: false });
-      // tile SATELLITE (Esri World Imagery, senza chiave)
-      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 }).addTo(map);
-      const mkIcon = () => markerIcon(L, zoneInfo(stateOf(H, personId)).color, picUrl(H, personId), initials(nameOf(H, personId)));
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
       if (pts.length) {
-        L.polyline(pts, { color: '#38bdf8', weight: 4, opacity: .9 }).addTo(map);
-        L.circleMarker(pts[0], { radius: 7, color: '#22c55e', fillColor: '#22c55e', fillOpacity: 1 }).addTo(map).bindTooltip('Inizio');
-        L.marker(pts[pts.length - 1], { icon: mkIcon(), zIndexOffset: 1000 }).addTo(map);   // posizione attuale
+        L.polyline(pts, { color: '#38bdf8', weight: 4, opacity: .85 }).addTo(map);
+        L.circleMarker(pts[0], { radius: 7, color: '#22c55e', fillColor: '#22c55e', fillOpacity: 1 }).addTo(map).bindTooltip('Inizio 24h');
+        L.circleMarker(pts[pts.length - 1], { radius: 8, color: '#ef4444', fillColor: '#ef4444', fillOpacity: 1 }).addTo(map).bindTooltip('Ora');
         map.fitBounds(L.latLngBounds(pts).pad(0.15));
-        if (sub) sub.textContent = pts.length + ' punti registrati';
+        if (sub) sub.textContent = pts.length + ' punti negli ultimi 24h';
       } else {
         const cur = latlon(H, personId, getGps(card));
-        if (cur) { map.setView([cur[0], cur[1]], 16); L.marker([cur[0], cur[1]], { icon: mkIcon() }).addTo(map); }
+        if (cur) { map.setView([cur[0], cur[1]], 14); L.marker([cur[0], cur[1]]).addTo(map); }
         else map.setView([41.9, 12.5], 5);
-        if (sub) sub.textContent = 'Nessuno storico posizione (serve un device_tracker GPS che registri lat/lon)';
+        if (sub) sub.textContent = 'Nessuno storico posizione (il device_tracker deve registrare lat/lon nel recorder)';
       }
       setTimeout(() => { try { map.invalidateSize(); } catch (e) {} }, 80);
     } catch (e) { if (sub) sub.textContent = 'Errore mappa: ' + (e && e.message || e); }
@@ -381,7 +362,7 @@
     id: 'person-card',
     name: 'Persona',
     icon: '👤',
-    version: '1.13',
+    version: '1.14',
     desc: 'Foto persona + tracker, sfondo Google Maps live, stato zona colorato e storico 24h. Contenuto che scala con la dimensione della card.',
     noAutoFit: true,   // ha già il suo scaling interno (mappa a tutto sfondo) → niente auto-fit del core
     render, mount, update
