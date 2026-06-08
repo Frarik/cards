@@ -151,12 +151,12 @@
 #${rid}.pc-root{position:relative;width:100%;height:100%;min-height:64px;border-radius:18px;overflow:hidden;
   font-family:var(--primary-font-family,'Inter',system-ui,-apple-system,sans-serif);color:#f1f5f9;
   background:#0b1220;border:1px solid rgba(255,255,255,.10);}
-/* mappa estesa e ritagliata per nascondere la barra "Google / Termini" in basso, segnaposto centrato */
-#${rid} .pc-map{position:absolute;left:0;right:0;top:-24px;width:100%;height:calc(100% + 48px);border:0;z-index:0;pointer-events:none;filter:saturate(1.05);}
+/* mappa estesa e ritagliata (44px sopra+sotto) per nascondere barra Google + controlli, segnaposto centrato */
+#${rid} .pc-map{position:absolute;left:0;right:0;top:-44px;width:100%;height:calc(100% + 88px);border:0;z-index:0;pointer-events:none;filter:saturate(1.05);}
 #${rid} .pc-map-empty{background:radial-gradient(120% 120% at 75% 30%,#27364b,#0b1220);}
-/* maschera angolo in basso a dx: nasconde il controllo "schermo intero" (le freccette) dell'embed Google */
-#${rid} .pc-mapmask{position:absolute;right:0;bottom:0;width:64px;height:50px;z-index:1;pointer-events:none;
-  background:radial-gradient(130% 130% at 100% 100%,rgba(8,12,22,.95),rgba(8,12,22,0) 72%);}
+/* sfumatura piena in basso: copre la scritta "Google" e il controllo schermo-intero (le freccette) */
+#${rid} .pc-mapmask{position:absolute;left:0;right:0;bottom:0;height:34px;z-index:1;pointer-events:none;
+  background:linear-gradient(to top,rgba(8,12,22,.92) 0%,rgba(8,12,22,.55) 55%,rgba(8,12,22,0) 100%);}
 #${rid} .pc-scrim{position:absolute;inset:0;z-index:1;pointer-events:none;
   background:linear-gradient(90deg,rgba(8,12,22,.94) 0%,rgba(8,12,22,.82) 32%,rgba(8,12,22,.30) 62%,rgba(8,12,22,0) 88%);}
 /* stage: centra verticalmente il contenuto; il contenuto è a dimensione BASE e viene scalato via JS */
@@ -381,7 +381,7 @@
     id: 'person-card',
     name: 'Persona',
     icon: '👤',
-    version: '1.16',
+    version: '1.17',
     desc: 'Foto persona + tracker, sfondo Google Maps live, stato zona colorato e storico 24h. Contenuto che scala con la dimensione della card.',
     noAutoFit: true,   // ha già il suo scaling interno (mappa a tutto sfondo) → niente auto-fit del core
     render, mount, update
