@@ -122,6 +122,7 @@
       ${mapHtml}
       <div class="pc-scrim"></div>
       <div class="pc-mapmask"></div>
+      <div class="pc-mapmask-tr"></div>
       <div class="pc-stage"><div class="pc-content">
         <div class="pc-ava" style="${avaStyle}">${avaInner}</div>
         <div class="pc-info">
@@ -157,6 +158,9 @@
 /* sfumatura piena in basso: copre la scritta "Google" e il controllo schermo-intero (le freccette) */
 #${rid} .pc-mapmask{position:absolute;left:0;right:0;bottom:0;height:34px;z-index:1;pointer-events:none;
   background:linear-gradient(to top,rgba(8,12,22,.92) 0%,rgba(8,12,22,.55) 55%,rgba(8,12,22,0) 100%);}
+/* maschera angolo in alto a dx: nasconde l'eventuale controllo (freccette) dell'embed Google */
+#${rid} .pc-mapmask-tr{position:absolute;right:0;top:0;width:58px;height:46px;z-index:1;pointer-events:none;
+  background:radial-gradient(125% 125% at 100% 0%,rgba(8,12,22,.96),rgba(8,12,22,.6) 45%,rgba(8,12,22,0) 75%);}
 #${rid} .pc-scrim{position:absolute;inset:0;z-index:1;pointer-events:none;
   background:linear-gradient(90deg,rgba(8,12,22,.94) 0%,rgba(8,12,22,.82) 32%,rgba(8,12,22,.30) 62%,rgba(8,12,22,0) 88%);}
 /* stage: centra verticalmente il contenuto; il contenuto è a dimensione BASE e viene scalato via JS */
@@ -186,6 +190,20 @@
     try {
       ST[card.id] = ST[card.id] || {};
       const st = ST[card.id];
+
+      // rende trasparente la cornice base ".card" del dashboard: la card è solo la .pc-root
+      // (così stringendola non resta il "riquadro" attorno)
+      try {
+        const cardEl = el.closest && el.closest('.card');
+        if (cardEl) {
+          cardEl.style.background = 'transparent';
+          cardEl.style.boxShadow = 'none';
+          cardEl.style.padding = '0';
+          cardEl.style.border = 'none';
+          cardEl.style.backdropFilter = 'none';
+          cardEl.style.webkitBackdropFilter = 'none';
+        }
+      } catch (e) {}
       const H = bestHass();
       st.lastLL = latlon(H, getPerson(card), getGps(card));
 
@@ -381,7 +399,7 @@
     id: 'person-card',
     name: 'Persona',
     icon: '👤',
-    version: '1.17',
+    version: '1.18',
     desc: 'Foto persona + tracker, sfondo Google Maps live, stato zona colorato e storico 24h. Contenuto che scala con la dimensione della card.',
     noAutoFit: true,   // ha già il suo scaling interno (mappa a tutto sfondo) → niente auto-fit del core
     render, mount, update
