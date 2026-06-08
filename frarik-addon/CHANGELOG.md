@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.24 — 2026-06-08
+
+### Colonne a larghezza fissa (fase 1 layout)
+- Le colonne delle sezioni ora hanno **larghezza fissa** (300px, regolabile via `--frk-colw`): la pagina **non si allarga né si stringe**.
+- **Massimo 4 colonne** per sezione (anche dal pulsante "+ colonne").
+- Una card più larga della colonna viene **tagliata**, così si vede il limite della colonna.
+- (Prossima fase: contenitori griglia / pila orizzontale / verticale dentro le colonne.)
+
 ## 1.2.23 — 2026-06-08
 
 ### Card JS ad altezza automatica (niente più tagli)

@@ -114,7 +114,7 @@ body.kiosk #page-tabs-wrap{display:none!important}
 .hbtn-logout:hover{background:rgba(248,113,113,0.12);border-color:#f87171;color:#f87171}
 
 /* ═══ DASHBOARD GRID ═══ */
-#dash{flex:1;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:10px}
+#dash{flex:1;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:10px;--frk-colw:300px}  /* larghezza FISSA di una colonna (max 4) */
 /* Cards in sections fill their wrap */
 .dash-card-wrap>.card{height:100%;width:100%}
 
@@ -543,7 +543,7 @@ body.editing .sect-add-row:hover{filter:brightness(1.15);transform:translateY(-1
 body.mobcol-always .dash-section{grid-template-columns:1fr !important}
 body.mobcol-always .dash-section>*{grid-column:1 / -1 !important}
 /* Column outer: toolbar above + dashed content box */
-.dash-col-outer{display:flex;flex-direction:column;gap:0}
+.dash-col-outer{display:flex;flex-direction:column;gap:0;overflow:hidden}  /* colonna a larghezza fissa: una card più larga viene tagliata */
 /* Per-column toolbar — hidden outside edit mode */
 .col-toolbar{display:none;align-items:center;justify-content:flex-end;gap:3px;padding-bottom:4px;padding-right:2px;min-height:0}
 body.editing .col-toolbar{display:flex}

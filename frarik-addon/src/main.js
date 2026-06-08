@@ -3196,7 +3196,7 @@ function _buildSectionEl(sec,page){
   head.innerHTML=`<span class="sh-lbl">≡ RIGA ${secIdx+1}${sec.label?' · '+eh(sec.label):''}</span>
     <button class="sh-btn sh-add" title="Aggiungi colonna">+ colonne</button>
     <button class="sh-btn sh-del" title="Elimina riga">✕ riga</button>`;
-  head.querySelector('.sh-add').addEventListener('click',()=>setSectionCols(sec.id,(sec.cols||4)+1));
+  head.querySelector('.sh-add').addEventListener('click',()=>setSectionCols(sec.id,Math.min(4,(sec.cols||4)+1)));  // max 4 colonne
   head.querySelector('.sh-del').addEventListener('click',()=>delSectionRow(sec.id));
   wrap.appendChild(head);
 
@@ -3205,7 +3205,9 @@ function _buildSectionEl(sec,page){
   const cols=sec.cols||4;
   // Fixed base grid of `cols` equal columns; each column outer uses span W to widen
   const colWidths=Array.from({length:cols},(_,i)=>(sec.colWidths&&sec.colWidths[i])||1);
-  el.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+  // colonne a LARGHEZZA FISSA (px): la pagina non si allarga/stringe; oltre la colonna la card si taglia
+  el.style.gridTemplateColumns=`repeat(${cols},var(--frk-colw,300px))`;
+  el.style.justifyContent='start';
   el.style.gridAutoRows='auto'; // allow rows to wrap naturally
 
   // Sort cards: by starting column, then by order within column
