@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.29 — 2026-06-08
+
+### Rimossi i contenitori
+- Tolte pila orizzontale/verticale e griglia: si torna alle colonne semplici (come 1.2.25).
+
 ## 1.2.28 — 2026-06-08
 
 ### Contenitori: comportamento corretto come HA
