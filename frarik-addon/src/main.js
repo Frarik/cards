@@ -539,7 +539,7 @@ function addCardToCol(secId, col, triggerEl, parentId){
 function addContainer(secId,col,type){
   document.getElementById('add-col-menu')?.remove();
   const page=curPage(); _ensureSections(page);
-  const c={ id:uid(), type:type, label:'', secId:secId, secCol:col, gcols:2, rowSpan:1, colSpan:1 };
+  const c={ id:uid(), type:type, label:'', secId:secId, secCol:col, gcols:3, square:true, rowSpan:1, colSpan:1 };
   const sib=page.cards.filter(x=>x.secId===secId&&(x.secCol||0)===col&&!x.parentId);
   c.secOrder=sib.length>0?Math.max(...sib.map(x=>x.secOrder||0))+10:0;
   page.cards.push(c);
@@ -585,9 +585,9 @@ function openContEditor(containerId){
       ${c.type==='grid'?`
         <div style="display:flex;gap:12px;margin-top:12px;align-items:flex-end">
           <div style="flex:1"><label style="font-size:10px;font-weight:800;text-transform:uppercase;color:#94a3b8">Colonne</label>
-            <input id="cont-gcols" type="number" min="1" max="6" value="${c.gcols||2}" style="${inp};margin-top:5px"></div>
+            <input id="cont-gcols" type="number" min="1" max="6" value="${c.gcols||3}" style="${inp};margin-top:5px"></div>
           <label style="flex:1;display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;padding-bottom:9px">
-            <input id="cont-square" type="checkbox" ${c.square?'checked':''}> Schede quadrate</label>
+            <input id="cont-square" type="checkbox" ${c.square!==false?'checked':''}> Schede quadrate</label>
         </div>`:''}
       <div style="display:flex;align-items:center;margin:18px 0 8px">
         <div style="flex:1;font-size:11px;font-weight:800;color:#cbd5e1">Card nel contenitore (${kids.length})</div>
@@ -598,6 +598,7 @@ function openContEditor(containerId){
           <div style="display:flex;align-items:center;gap:7px;background:#0f1830;border:1px solid rgba(255,255,255,.1);border-radius:11px;padding:9px 11px">
             <span style="font-size:15px">${_cardTypeIcon(k.type)}</span>
             <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(k.label||k.type)}</div><div style="font-size:9px;color:#64748b">${eh(k.type)}</div></div>
+            ${(c.type!=='grid'||c.square===false)?`<input class="cont-kid-h" data-kid="${k.id}" type="number" min="40" value="${k.height||150}" title="Altezza (px)" style="width:54px;height:28px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:#0b1322;color:#fff;font-size:11px;text-align:center;padding:0 4px;flex-shrink:0">`:''}
             <button data-action="_contMoveKid" data-action-args='["${k.id}",-1]' style="${cb};opacity:${i===0?'.35':'1'}">↑</button>
             <button data-action="_contMoveKid" data-action-args='["${k.id}",1]' style="${cb};opacity:${i===kids.length-1?'.35':'1'}">↓</button>
             <button data-action="_contEditKid" data-action-arg="${k.id}" style="${cb}" title="Modifica">✏️</button>
@@ -610,6 +611,12 @@ function openContEditor(containerId){
       </div>
     </div>`;
   document.body.appendChild(ov);
+  ov.querySelectorAll('.cont-kid-h').forEach(inp=>{
+    inp.addEventListener('change',()=>{
+      const kid=curPage().cards.find(c=>c.id===inp.dataset.kid);
+      if(kid){ kid.height=Math.max(40,parseInt(inp.value,10)||150); saveCfg(); renderDash(); }
+    });
+  });
   ov.addEventListener('click',e=>{ if(e.target===ov){ _saveContEditorVals(containerId); _closeContEditor(); } });
 }
 function _saveContEditorVals(containerId){
@@ -3615,7 +3622,7 @@ function buildCard(card){
     const kids=(curPage().cards||[]).filter(c=>c.parentId===card.id).sort((a,b)=>(a.parentOrder||0)-(b.parentOrder||0));
     const lay=document.createElement('div');
     lay.style.gap='10px'; lay.style.width='100%';
-    if(t==='grid'){ lay.style.display='grid'; lay.style.gridTemplateColumns=`repeat(${card.gcols||2},1fr)`; }
+    if(t==='grid'){ lay.style.display='grid'; lay.style.gridTemplateColumns=`repeat(${card.gcols||3},1fr)`; }
     else if(t==='hstack'){ lay.style.display='flex'; lay.style.flexDirection='row'; lay.style.alignItems='stretch'; }
     else { lay.style.display='flex'; lay.style.flexDirection='column'; }
     if(!kids.length && editMode){
@@ -3628,9 +3635,10 @@ function buildCard(card){
       const slot=document.createElement('div');
       slot.style.minWidth='0';
       if(t==='hstack') slot.style.flex='1';
-      if(t==='grid'&&card.square) slot.style.aspectRatio='1';
-      else slot.style.height=(kid.height||(kid.rowSpan||1)*150)+'px';
-      const kel=_safeBuildCard(kid); kel.style.height='100%'; kel.style.width='100%';
+      if(t==='grid'&&card.square!==false) slot.style.aspectRatio='1';   // griglia quadrata (default HA)
+      else slot.style.height=(kid.height||150)+'px';                    // pile: altezza per ogni card
+      slot.style.overflow='hidden';
+      const kel=_safeBuildCard(kid); kel.style.height='100%'; kel.style.width='100%'; kel.draggable=false;
       slot.appendChild(kel);
       lay.appendChild(slot);
     });

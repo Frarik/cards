@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.28 — 2026-06-08
+
+### Contenitori: comportamento corretto come HA
+- **Griglia**: celle **quadrate** di default (square=true) e **colonne decise da te** (default 3); riempie da sinistra a destra andando a capo.
+- **Pile (verticale/orizzontale)**: ogni card ha la **propria altezza** regolabile (campo px nella lista del popup); la verticale a larghezza piena, l'orizzontale a larghezza uguale.
+
 ## 1.2.27 — 2026-06-08
 
 ### Contenitori con editor a popup (come HA)
