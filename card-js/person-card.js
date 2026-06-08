@@ -24,6 +24,8 @@
   function saveCfg(card, o) { try { localStorage.setItem(cfgKey(card), JSON.stringify(o)); } catch (e) {} }
   function getPerson(card) { const c = loadCfg(card); return c.person || card.person || card.entity || ''; }
   function getGps(card) { const c = loadCfg(card); return c.gps || card.gps || ''; }
+  function getW(card) { const c = loadCfg(card); return parseInt(c.w, 10) || 0; }   // larghezza px (0 = automatica)
+  function getH(card) { const c = loadCfg(card); return parseInt(c.h, 10) || 0; }   // altezza px (0 = automatica)
 
   function attrs(H, id) { const s = H && H.states && H.states[id]; return (s && s.attributes) || {}; }
   function stateOf(H, id) { const s = H && H.states && H.states[id]; return s ? s.state : null; }
@@ -113,8 +115,10 @@
       : `<div class="pc-map pc-map-empty"></div>`;
     const avaInner = pic ? '' : initials(nm);
     const avaStyle = pic ? `background-image:url('${pic}')` : '';
+    const _W = getW(card), _H = getH(card);
+    const _sz = (_W ? `width:${_W}px;max-width:100%;` : '') + (_H ? `height:${_H}px;` : '');
 
-    return `<style>${baseCss(rid)}</style><div id="${rid}" class="pc-root" style="--pc-col:${zi.color};--pc-glow:${zi.glow}">
+    return `<style>${baseCss(rid)}</style><div id="${rid}" class="pc-root" style="--pc-col:${zi.color};--pc-glow:${zi.glow};${_sz}">
       ${mapHtml}
       <div class="pc-scrim"></div>
       <div class="pc-stage"><div class="pc-content">
@@ -261,6 +265,11 @@
         <label class="pccfg-lbl" style="margin-top:14px">Entità GPS (device_tracker) — opzionale</label>
         <select id="pccfg-gps" class="pccfg-sel">${opts('device_tracker.', gpsId)}</select>
         <div style="font-size:11px;color:#64748b;margin-top:8px;line-height:1.5">Se lasci il GPS vuoto, la posizione viene presa dalla person stessa o dal suo tracker attivo.</div>
+        <label class="pccfg-lbl" style="margin-top:16px">Dimensioni card (px) — vuoto = automatica</label>
+        <div style="display:flex;gap:10px;margin-top:6px">
+          <input id="pccfg-w" type="number" min="0" step="10" placeholder="Larghezza" value="${getW(card)||''}" class="pccfg-sel" style="margin-top:0;flex:1">
+          <input id="pccfg-h" type="number" min="0" step="10" placeholder="Altezza" value="${getH(card)||''}" class="pccfg-sel" style="margin-top:0;flex:1">
+        </div>
         <div style="display:flex;gap:10px;margin-top:20px">
           <button id="pccfg-cancel" style="flex:1;padding:12px;border-radius:11px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#e2e8f0">Annulla</button>
           <button id="pccfg-save" style="flex:1;padding:12px;border-radius:11px;border:none;cursor:pointer;font-weight:800;background:#22c55e;color:#04210f">Salva</button>
@@ -273,7 +282,9 @@
     ov.querySelector('#pccfg-save').addEventListener('click', () => {
       const p = ov.querySelector('#pccfg-person').value;
       const g = ov.querySelector('#pccfg-gps').value;
-      saveCfg(card, { person: p, gps: g });
+      const w = parseInt(ov.querySelector('#pccfg-w').value, 10) || 0;
+      const h = parseInt(ov.querySelector('#pccfg-h').value, 10) || 0;
+      saveCfg(card, Object.assign({}, loadCfg(card), { person: p, gps: g, w: w, h: h }));
       card.person = p; card.gps = g;
       close();
       try { el.innerHTML = render(card, hass); mount(card, hass, el); } catch (e) {}
@@ -362,7 +373,7 @@
     id: 'person-card',
     name: 'Persona',
     icon: '👤',
-    version: '1.14',
+    version: '1.15',
     desc: 'Foto persona + tracker, sfondo Google Maps live, stato zona colorato e storico 24h. Contenuto che scala con la dimensione della card.',
     noAutoFit: true,   // ha già il suo scaling interno (mappa a tutto sfondo) → niente auto-fit del core
     render, mount, update
