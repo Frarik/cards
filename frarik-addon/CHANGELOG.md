@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.23 — 2026-06-08
+
+### Card JS ad altezza automatica (niente più tagli)
+- Le card JS (Meteo, Antizanzare, ecc.) ora vanno ad **altezza automatica del contenuto**: mostrano tutto senza essere tagliate.
+- Quando si apre un **menù a tendina o una configurazione** sotto la card (es. "Prossimi giorni" del Meteo), la card **si allunga da sola**; richiudendolo **torna normale**.
+
 ## 1.2.22 — 2026-06-08
 
 ### Card originali + niente ridimensionamento manuale

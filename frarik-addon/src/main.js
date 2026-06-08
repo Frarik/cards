@@ -3375,11 +3375,11 @@ function _buildSectionEl(sec,page){
           const vis=_cardVisible(c);
           if(!vis && !editMode) return;   // nascosta dalla condizione → in vista non si mostra
           const cw=document.createElement('div');
-          // grandezza NATURALE dalla griglia (colSpan × rowSpan): niente ridimensionamento manuale (no width/fixedH per-card)
-          cw.className='dash-card-wrap'+(!vis?' card-cond-hidden':'')+' card-fixed-h';
-          const _gh=((c.rowSpan||1)*(sec.rowH||150));
-          cw.style.height=_gh+'px';
-          cw.style.setProperty('height',_gh+'px','important'); // altezza dalla griglia anche per le card JS (così non collassano)
+          // grandezza NATURALE: niente ridimensionamento manuale (no width/fixedH per-card).
+          // Le card JS vanno ad ALTEZZA AUTOMATICA del contenuto (CSS .dash-card-wrap:has(.card-jsc){height:auto}):
+          // mostrano tutto senza tagli e crescono/si accorciano da sole all'apertura/chiusura di menù o configurazioni.
+          cw.className='dash-card-wrap'+(!vis?' card-cond-hidden':'');
+          cw.style.height=((c.rowSpan||1)*(sec.rowH||150))+'px'; // altezza di griglia per le card normali (ignorata dalle card JS, che sono auto)
           cw.dataset.cardId=c.id; cw.dataset.secId=sec.id; cw.dataset.col=col;
           cw.addEventListener('dragover',e=>{ if(dragSrc&&dragSrc!==c.id){e.preventDefault();cw.classList.add('dov');}});
           cw.addEventListener('dragleave',()=>cw.classList.remove('dov'));
