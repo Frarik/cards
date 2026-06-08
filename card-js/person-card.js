@@ -79,7 +79,7 @@
     if (h < 24) return h + (h === 1 ? ' ora fa' : ' ore fa');
     return Math.floor(h / 24) + ' g fa';
   }
-  function gmapUrl(lat, lon) { return `https://maps.google.com/maps?q=${lat},${lon}&z=16&hl=it&output=embed`; }
+  function gmapUrl(lat, lon) { return `https://maps.google.com/maps?q=${lat},${lon}&z=17&t=k&hl=it&output=embed`; }
 
   const ST = (window.__pcState = window.__pcState || {});
 
@@ -121,13 +121,12 @@
     return `<style>${baseCss(rid)}</style><div id="${rid}" class="pc-root" style="--pc-col:${zi.color};--pc-glow:${zi.glow};${_sz}">
       ${mapHtml}
       <div class="pc-scrim"></div>
+      <div class="pc-mapmask"></div>
       <div class="pc-stage"><div class="pc-content">
         <div class="pc-ava" style="${avaStyle}">${avaInner}</div>
         <div class="pc-info">
-          <div class="pc-row1">
-            <span class="pc-name">${nm}</span>
-            <span class="pc-pill"><span class="pc-pilltxt">${zi.label}</span></span>
-          </div>
+          <div class="pc-name">${nm}</div>
+          <div class="pc-row2"><span class="pc-pill"><span class="pc-pilltxt">${zi.label}</span></span></div>
           <div class="pc-ago">${ago || ''}</div>
         </div>
       </div></div>
@@ -155,6 +154,9 @@
 /* mappa estesa e ritagliata per nascondere la barra "Google / Termini" in basso, segnaposto centrato */
 #${rid} .pc-map{position:absolute;left:0;right:0;top:-24px;width:100%;height:calc(100% + 48px);border:0;z-index:0;pointer-events:none;filter:saturate(1.05);}
 #${rid} .pc-map-empty{background:radial-gradient(120% 120% at 75% 30%,#27364b,#0b1220);}
+/* maschera angolo in basso a dx: nasconde il controllo "schermo intero" (le freccette) dell'embed Google */
+#${rid} .pc-mapmask{position:absolute;right:0;bottom:0;width:64px;height:50px;z-index:1;pointer-events:none;
+  background:radial-gradient(130% 130% at 100% 100%,rgba(8,12,22,.95),rgba(8,12,22,0) 72%);}
 #${rid} .pc-scrim{position:absolute;inset:0;z-index:1;pointer-events:none;
   background:linear-gradient(90deg,rgba(8,12,22,.94) 0%,rgba(8,12,22,.82) 32%,rgba(8,12,22,.30) 62%,rgba(8,12,22,0) 88%);}
 /* stage: centra verticalmente il contenuto; il contenuto è a dimensione BASE e viene scalato via JS */
@@ -165,10 +167,10 @@
   box-shadow:0 0 0 3px var(--pc-glow),0 0 14px var(--pc-glow),0 6px 16px rgba(0,0,0,.5);
   display:flex;align-items:center;justify-content:center;font-weight:800;font-size:21px;color:#fff;}
 #${rid} .pc-info{min-width:0;}
-#${rid} .pc-row1{display:flex;align-items:center;gap:9px;}
-#${rid} .pc-name{font-size:21px;font-weight:800;letter-spacing:-.3px;white-space:nowrap;max-width:260px;overflow:hidden;
+#${rid} .pc-name{font-size:21px;font-weight:800;letter-spacing:-.3px;white-space:nowrap;max-width:300px;overflow:hidden;
   text-overflow:ellipsis;text-shadow:0 1px 4px rgba(0,0,0,.7);}
-#${rid} .pc-pill{display:inline-flex;align-items:center;flex-shrink:0;padding:3px 12px;border-radius:999px;
+#${rid} .pc-row2{margin-top:7px;}
+#${rid} .pc-pill{display:inline-flex;align-items:center;padding:3px 12px;border-radius:999px;
   font-size:12px;font-weight:800;line-height:1;white-space:nowrap;background:color-mix(in srgb,var(--pc-col) 22%,transparent);
   border:1px solid var(--pc-col);color:var(--pc-col);}
 #${rid} .pc-ago{font-size:12px;color:rgba(255,255,255,.62);margin-top:5px;white-space:nowrap;}
@@ -267,8 +269,14 @@
         <div style="font-size:11px;color:#64748b;margin-top:8px;line-height:1.5">Se lasci il GPS vuoto, la posizione viene presa dalla person stessa o dal suo tracker attivo.</div>
         <label class="pccfg-lbl" style="margin-top:16px">Dimensioni card (px) — vuoto = automatica</label>
         <div style="display:flex;gap:10px;margin-top:6px">
-          <input id="pccfg-w" type="number" min="0" step="10" placeholder="Larghezza" value="${getW(card)||''}" class="pccfg-sel" style="margin-top:0;flex:1">
-          <input id="pccfg-h" type="number" min="0" step="10" placeholder="Altezza" value="${getH(card)||''}" class="pccfg-sel" style="margin-top:0;flex:1">
+          <div style="flex:1">
+            <input id="pccfg-w" type="number" min="0" step="10" placeholder="es. 400" value="${getW(card)||''}" class="pccfg-sel" style="margin-top:0;width:100%">
+            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-align:center;margin-top:4px">Larghezza</div>
+          </div>
+          <div style="flex:1">
+            <input id="pccfg-h" type="number" min="0" step="10" placeholder="es. 260" value="${getH(card)||''}" class="pccfg-sel" style="margin-top:0;width:100%">
+            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-align:center;margin-top:4px">Altezza</div>
+          </div>
         </div>
         <div style="display:flex;gap:10px;margin-top:20px">
           <button id="pccfg-cancel" style="flex:1;padding:12px;border-radius:11px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#e2e8f0">Annulla</button>
@@ -373,7 +381,7 @@
     id: 'person-card',
     name: 'Persona',
     icon: '👤',
-    version: '1.15',
+    version: '1.16',
     desc: 'Foto persona + tracker, sfondo Google Maps live, stato zona colorato e storico 24h. Contenuto che scala con la dimensione della card.',
     noAutoFit: true,   // ha già il suo scaling interno (mappa a tutto sfondo) → niente auto-fit del core
     render, mount, update
