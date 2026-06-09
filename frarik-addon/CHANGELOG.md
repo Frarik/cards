@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.37 — 2026-06-09
+
+### Installa card da URL
+- Dal menu "+ Card" → **🔗 Installa card da URL**: incolla l'URL (GitHub raw o blob) di un file `.js` in formato FratechStore e la card viene scaricata, registrata e installata nello store locale. Utile per le card community esterne.
+
 ## 1.2.36 — 2026-06-09
 
 ### Popup Panel

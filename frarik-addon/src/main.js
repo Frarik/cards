@@ -519,6 +519,7 @@ function addCardToCol(secId, col, triggerEl){
     <div style="font-size:9px;color:rgba(255,255,255,.3);padding:2px 4px 4px;letter-spacing:.5px;text-transform:uppercase">Aggiungi</div>
     <button style="${btnStyle};background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:#86efac" data-action="_openGhStoreClean">🛒 Apri lo Store</button>
     <button style="${btnStyle};background:rgba(168,85,247,.12);border-color:rgba(168,85,247,.3);color:#c4b5fd" data-action="addPopupPanel" data-action-args='["${secId}",${col}]'>🪟 Popup (apre una vista)</button>
+    <button style="${btnStyle};background:rgba(34,211,238,.1);border-color:rgba(34,211,238,.3);color:#67e8f9" data-action="_installFromUrlPrompt">🔗 Installa card da URL</button>
     ${pasteBtn}
   `;
   // Position near the trigger element
@@ -535,6 +536,32 @@ function addCardToCol(secId, col, triggerEl){
   setTimeout(()=>document.addEventListener('click',function _h(e){
     if(!menu.contains(e.target)){menu.remove();document.removeEventListener('click',_h);}
   }),80);
+}
+/* ── INSTALLA CARD DA URL (GitHub raw/blob) — per card community esterne ── */
+function _installFromUrlPrompt(){
+  document.getElementById('add-col-menu')?.remove();
+  const url=prompt('Incolla l\'URL del file .js della card (GitHub raw o blob):');
+  if(url) installCardFromUrl(url);
+}
+async function installCardFromUrl(url){
+  if(!url) return; url=String(url).trim();
+  url=url.replace('://github.com/','://raw.githubusercontent.com/').replace('/blob/','/');
+  showToast('⬇️ Scarico la card…');
+  let code;
+  try{ const r=await fetch(url); if(!r.ok) throw new Error('HTTP '+r.status); code=await r.text(); }
+  catch(e){ showToast('⚠️ Download fallito: '+(e.message||e)); return; }
+  if(!/FratechCardRegistry|window\.customCards/.test(code)){ showToast('⚠️ Non sembra una card valida'); return; }
+  window.FratechCardRegistry=window.FratechCardRegistry||{};
+  const before=new Set(Object.keys(window.FratechCardRegistry));
+  try{ _installCardCode(code); }catch(e){ showToast('⚠️ Errore nella card: '+(e.message||e)); return; }
+  const newId=Object.keys(window.FratechCardRegistry).find(id=>!before.has(id));
+  if(!newId){ showToast('⚠️ La card non si è registrata (formato non supportato)'); return; }
+  const def=window.FratechCardRegistry[newId]||{};
+  const ver=(code.match(/frarik-version:\s*([0-9.]+)/)||[])[1]||def.version||'1.0';
+  _jsStoreSave(newId,{id:newId,name:def.name||newId,icon:def.icon||'📦',version:ver,desc:def.desc||''},code,'url');
+  try{ if(typeof _epRenderJsStore==='function') _epRenderJsStore(); }catch(e){}
+  try{ renderDash(); }catch(e){}
+  showToast('✅ Installata: '+(def.name||newId));
 }
 /* ── POPUP PANEL: card-pulsante che apre una VISTA come finestra modale ── */
 function addPopupPanel(secId,col){
@@ -12437,6 +12464,8 @@ Object.assign(window, {
   _popupPickView,
   _ppSetTarget,
   openPopupView,
+  _installFromUrlPrompt,
+  installCardFromUrl,
   eitClick,
   exportBackup,
   fbAddBtn,
