@@ -996,6 +996,66 @@ function _initAutoScale(){
   run();
 }
 
+/* ── PULIZIA ENTITÀ (HA): rimuove entità non disponibili / orfane dal registro ── */
+let _ecEntities=[];
+async function openEntityCleanup(){
+  document.getElementById('ent-cleanup')?.remove();
+  const ov=document.createElement('div');
+  ov.id='ent-cleanup';
+  ov.style.cssText='position:fixed;inset:0;z-index:16000;background:rgba(2,6,16,.8);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:18px;font-family:system-ui,sans-serif';
+  ov.innerHTML='<div style="width:min(640px,96vw);height:min(720px,90vh);background:#0b1220;border:1px solid rgba(255,255,255,.14);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.6);display:flex;flex-direction:column;color:#f1f5f9;overflow:hidden">'+
+    '<div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.08)"><div style="flex:1;font-size:15px;font-weight:800">🧹 Pulizia entità</div><button data-action="_closeEntCleanup" style="width:32px;height:32px;border:none;border-radius:9px;background:rgba(255,255,255,.1);color:#e2e8f0;cursor:pointer;font-size:16px">✕</button></div>'+
+    '<div style="padding:12px 16px;display:flex;gap:8px;align-items:center;border-bottom:1px solid rgba(255,255,255,.06)">'+
+      '<input id="ec-filter" type="text" placeholder="Filtra per nome / id…" style="flex:1;height:34px;border-radius:9px;border:1px solid rgba(255,255,255,.15);background:#0f1830;color:#fff;font-size:12px;padding:0 10px">'+
+      '<label style="display:flex;align-items:center;gap:6px;font-size:11px;cursor:pointer;white-space:nowrap"><input type="checkbox" id="ec-onlyun" checked> solo non disponibili</label>'+
+    '</div>'+
+    '<div id="ec-list" style="flex:1;overflow:auto;padding:6px 12px"><div style="padding:20px;text-align:center;color:#64748b;font-size:12px">Caricamento…</div></div>'+
+    '<div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,.08);display:flex;gap:10px;align-items:center"><div id="ec-count" style="flex:1;font-size:11px;color:#94a3b8"></div><button data-action="_ecRemoveSel" style="border:none;border-radius:10px;background:#ef4444;color:#fff;font-weight:800;font-size:12px;padding:10px 16px;cursor:pointer">🗑 Rimuovi selezionate</button></div>'+
+  '</div>';
+  document.body.appendChild(ov);
+  ov.addEventListener('click',e=>{ if(e.target===ov) _closeEntCleanup(); });
+  const res=await sendAndWait({type:'config/entity_registry/list'});
+  _ecEntities=(res&&res.result)||[];
+  ov.querySelector('#ec-filter').addEventListener('input',_ecRender);
+  ov.querySelector('#ec-onlyun').addEventListener('change',_ecRender);
+  _ecRender();
+}
+function _ecRender(){
+  const list=document.getElementById('ec-list'); if(!list) return;
+  const q=(document.getElementById('ec-filter').value||'').toLowerCase();
+  const onlyUn=document.getElementById('ec-onlyun').checked;
+  const rows=_ecEntities.filter(e=>{
+    const id=e.entity_id; const st=hs[id];
+    const un=(st==null||st==='unavailable'||st==='unknown');
+    if(onlyUn && !un) return false;
+    if(q){ const nm=(e.name||e.original_name||id).toLowerCase(); if(!nm.includes(q)&&!id.toLowerCase().includes(q)) return false; }
+    return true;
+  });
+  document.getElementById('ec-count').textContent=rows.length+' entità';
+  list.innerHTML=rows.length?rows.map(e=>{
+    const id=e.entity_id; const st=hs[id]; const un=(st==null||st==='unavailable'||st==='unknown');
+    const nm=e.name||e.original_name||id;
+    return '<label style="display:flex;align-items:center;gap:9px;padding:8px 6px;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer">'+
+      '<input type="checkbox" class="ec-cb" data-id="'+eh(id)+'" '+(un?'checked':'')+'>'+
+      '<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+eh(nm)+'</div><div style="font-size:9px;color:#64748b">'+eh(id)+'</div></div>'+
+      '<span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:6px;background:'+(un?'rgba(239,68,68,.15)':'rgba(34,197,94,.12)')+';color:'+(un?'#f87171':'#4ade80')+'">'+(un?'non disp.':'ok')+'</span>'+
+    '</label>';
+  }).join(''):'<div style="padding:20px;text-align:center;color:#64748b;font-size:12px">Nessuna entità</div>';
+}
+function _closeEntCleanup(){ document.getElementById('ent-cleanup')?.remove(); }
+async function _ecRemoveSel(){
+  const cbs=[...document.querySelectorAll('.ec-cb:checked')];
+  if(!cbs.length){ showToast('Nessuna entità selezionata'); return; }
+  const ids=cbs.map(c=>c.dataset.id);
+  showConfirm('🗑 Rimuovere <b>'+ids.length+'</b> entità dal registro di Home Assistant?<br><span style="font-size:11px;opacity:.7">Operazione irreversibile. Viene scaricato prima un backup dell\'elenco.</span>', async ()=>{
+    try{ const blob=new Blob([JSON.stringify(_ecEntities.filter(e=>ids.includes(e.entity_id)),null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='frarik-entita-rimosse-'+Date.now()+'.json'; a.click(); }catch(e){}
+    let ok=0,fail=0;
+    for(const id of ids){ const r=await sendAndWait({type:'config/entity_registry/remove',entity_id:id}); if(r&&r.success) ok++; else fail++; }
+    showToast('🧹 Rimosse '+ok+(fail?(' · '+fail+' non rimovibili'):''));
+    const res=await sendAndWait({type:'config/entity_registry/list'}); _ecEntities=(res&&res.result)||[]; _ecRender();
+  });
+}
+
 /* ════════════════════ SINCRONIZZAZIONE CARD DA GITHUB ════════════════════
    Controlla un repo GitHub; quando una card cambia (SHA diverso) mostra una notifica
    in alto che, cliccata, scarica e aggiorna la card (e la sincronizza su tutti i dispositivi). */
@@ -12259,6 +12319,9 @@ Object.assign(window, {
   _importBackupPick,
   copyCardToPage,
   _copyCardToPageDo,
+  openEntityCleanup,
+  _closeEntCleanup,
+  _ecRemoveSel,
   eitClick,
   exportBackup,
   fbAddBtn,

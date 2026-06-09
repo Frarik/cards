@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.34 — 2026-06-09
+
+### Pulizia entità (HA)
+- Nuovo strumento (Pannello → Dati → 🧹 Pulizia entità): elenca le entità del registro HA, filtro per nome/id, toggle "solo non disponibili" (preselezionate), rimozione massiva via `config/entity_registry/remove` con **backup automatico** dell'elenco rimosso e conteggio di quelle non rimovibili.
+
 ## 1.2.33 — 2026-06-09
 
 ### Copia card su un'altra vista + Auto-scale
