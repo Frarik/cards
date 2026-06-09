@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.39 — 2026-06-09
+
+### Fix: pulsante "mappa icona per stato" nell'editor header
+- `hbAddIconMap` non era esposta su `window` → il pulsante "+" per aggiungere una regola icona-per-stato (editor chip dell'header) non faceva nulla. Ora è esposta e funziona.
+
 ## 1.2.38 — 2026-06-09
 
 ### Fix: auto-scale disattivato (loop / errore JS)

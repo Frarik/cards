@@ -12488,6 +12488,7 @@ Object.assign(window, {
   ghStoreTab,
   hardReload,
   hbAddChip,
+  hbAddIconMap,
   hbAddOption,
   hbAutoFill,
   hbCancelChip,
