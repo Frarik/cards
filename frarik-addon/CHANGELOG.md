@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.40 — 2026-06-10
+
+### feat: le card JS possono suggerire la dimensione
+- Quando si aggiunge una card dallo store, ora rispetta `colSpan`/`rowSpan` dichiarati dalla card (default 2×2). Es. la card Tapparella nasce alta.
+
 ## 1.2.39 — 2026-06-09
 
 ### Fix: pulsante "mappa icona per stato" nell'editor header

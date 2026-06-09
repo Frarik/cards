@@ -69,7 +69,7 @@
 
     return `<div style="position:relative;height:100%;display:flex;flex-direction:column;min-height:0;gap:9px">${gear}
       <!-- TELAIO finestra -->
-      <div style="position:relative;flex:1;min-height:175px;border-radius:12px;padding:7px;box-sizing:border-box;
+      <div style="position:relative;flex:1;min-height:260px;border-radius:12px;padding:7px;box-sizing:border-box;
         background:linear-gradient(145deg,#525a66 0%,#363c46 55%,#262b33 100%);
         box-shadow:0 12px 28px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.14)">
         <!-- vano vetro -->
@@ -112,27 +112,46 @@
     </div>`;
   }
 
+  // applica posizione+stato alla tapparella (87 = 100 - ROLL(13))
+  function applyState(card, el) {
+    const h = H(), id = entOf(card);
+    const sh = el.querySelector('[data-sh]'); if (!sh) return;
+    const s = h && h.states && h.states[id];
+    const st = s ? s.state : null, pos = getPos(h, id);
+    const hasPos = !!(s && s.attributes && s.attributes.current_position != null);
+    let dH, dur;
+    if (!hasPos && st === 'opening') { dH = 0; dur = '13s'; }        // cover senza posizione → spingi verso aperto
+    else if (!hasPos && st === 'closing') { dH = 87; dur = '13s'; }  // …verso chiuso
+    else { dH = (pos == null ? 87 : (100 - pos) * 87 / 100); dur = '.6s'; }  // segue current_position live
+    const tr = 'height ' + dur + ' linear';
+    if (sh.style.transition !== tr) sh.style.transition = tr;
+    sh.style.height = dH + '%';
+    const pe = el.querySelector('[data-pct]'); if (pe) pe.textContent = pos == null ? '—' : pos + '%';
+    const se = el.querySelector('[data-st]'); if (se) { se.textContent = statusLabel(st, pos); se.style.color = statusColor(st, pos); }
+  }
+
   function update(card, hass, el) {
-    try {
-      if (!el.querySelector('[data-sh]')) { el.innerHTML = render(card); return; }
-      const h = H(), id = entOf(card);
-      const pos = getPos(h, id), st = stateOf(h, id);
-      const sh = el.querySelector('[data-sh]'); if (sh) sh.style.height = (pos == null ? 87 : (100 - pos) * 87 / 100) + '%';  // 87 = 100 - ROLL(13)
-      const pe = el.querySelector('[data-pct]'); if (pe) pe.textContent = pos == null ? '—' : pos + '%';
-      const se = el.querySelector('[data-st]'); if (se) { se.textContent = statusLabel(st, pos); se.style.color = statusColor(st, pos); }
-    } catch (e) {}
+    try { if (!el.querySelector('[data-sh]')) { el.innerHTML = render(card); return; } applyState(card, el); } catch (e) {}
   }
 
   function mount(card, hass, el) {
-    if (el._tapWired) return; el._tapWired = true;
-    el.addEventListener('click', e => {
-      const g = e.target.closest('[data-tap="gear"]'); if (g) { e.stopPropagation(); openCfg(card, el); return; }
-      const b = e.target.closest('[data-cov]'); if (!b) return;
-      const id = entOf(card); if (!id) { openCfg(card, el); return; }
-      const act = b.getAttribute('data-cov');
-      const svc = act === 'open' ? 'open_cover' : act === 'close' ? 'close_cover' : 'stop_cover';
-      try { window.callSvc('cover', svc, id); } catch (e2) {}
-    });
+    if (!el._tapWired) {
+      el._tapWired = true;
+      el.addEventListener('click', e => {
+        const g = e.target.closest('[data-tap="gear"]'); if (g) { e.stopPropagation(); openCfg(card, el); return; }
+        const b = e.target.closest('[data-cov]'); if (!b) return;
+        const id = entOf(card); if (!id) { openCfg(card, el); return; }
+        const act = b.getAttribute('data-cov');
+        const svc = act === 'open' ? 'open_cover' : act === 'close' ? 'close_cover' : 'stop_cover';
+        try { window.callSvc('cover', svc, id); } catch (e2) {}
+      });
+    }
+    // TEMPO REALE: segue la posizione live ~2 volte/sec (con transizione che la rende fluida)
+    if (el._tapTick) clearInterval(el._tapTick);
+    el._tapTick = setInterval(() => {
+      if (!el.isConnected) { clearInterval(el._tapTick); el._tapTick = null; return; }
+      if (el.querySelector('[data-sh]')) { try { applyState(card, el); } catch (e) {} }
+    }, 500);
   }
 
   function openCfg(card, el) {
@@ -167,8 +186,9 @@
   }
 
   const CARD = {
-    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '1.3',
-    desc: 'Tapparella animata sincronizzata con la cover — Apri/Ferma/Chiudi, % e stato. ⚙ per scegliere l\'entità.',
+    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '1.4',
+    desc: 'Tapparella animata in tempo reale sincronizzata con la cover — Apri/Ferma/Chiudi, % e stato. ⚙ per scegliere l\'entità.',
+    colSpan: 2, rowSpan: 4,
     render, update, mount
   };
   window.FratechCardRegistry = window.FratechCardRegistry || {};

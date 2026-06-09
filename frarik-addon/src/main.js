@@ -8142,7 +8142,7 @@ function jsStoreAddCard(id){
     id: uid(), type: 'js-custom', jsCardId: id,
     label: regCard.name||id, icon: regCard.icon||'📦',
     color: '#818cf8', entity: '',
-    colSpan: 2, rowSpan: 2
+    colSpan: regCard.colSpan||2, rowSpan: regCard.rowSpan||2   // la card può suggerire la dimensione
   };
   _assignSection(page, newCard);
   page.cards.push(newCard);
