@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.31 — 2026-06-09
+
+### Annullati px su tutte le card e spostamento libero
+- Rimossi i campi px nell'editor e il posizionamento libero delle card: si torna alle card a dimensione naturale/colonna (come 1.2.29). La person-card mantiene i suoi px.
+
 ## 1.2.30 — 2026-06-09
 
 ### Px su tutte le card + posizionamento libero nella colonna

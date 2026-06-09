@@ -3387,44 +3387,27 @@ function _buildSectionEl(sec,page){
       box.addEventListener('drop',e=>{ e.preventDefault(); box.classList.remove('drop-col-target'); if(dragSrc) moveToCol(dragSrc,sec.id,col); });
 
       if(isOccupied){
-        // Canvas colonna: le card normali si impilano, quelle con posizione libera (fx,fy) si posizionano dove vuoi
+        // Card stack
         const wrapper=document.createElement('div');
         wrapper.className='dash-col-wrap';
-        wrapper.style.position='relative';
         wrapper.dataset.secId=sec.id; wrapper.dataset.col=col;
-        let _maxFreeBottom=0;
         cards.forEach(c=>{
           const vis=_cardVisible(c);
           if(!vis && !editMode) return;   // nascosta dalla condizione → in vista non si mostra
           const cw=document.createElement('div');
-          // dimensioni manuali in px (larghezza/altezza dall'editor); se non impostate, naturali/griglia
-          const _hpx=(c.fixedH&&c.height)?c.height:((c.rowSpan||1)*(sec.rowH||150));
-          cw.className='dash-card-wrap'+(!vis?' card-cond-hidden':'')+((c.fixedH&&c.height)?' card-fixed-h':'');
-          cw.style.height=_hpx+'px';
-          if(c.fixedH&&c.height) cw.style.setProperty('height',c.height+'px','important');
-          if(c.width){ cw.style.width=c.width+'px'; cw.style.maxWidth='100%'; }
-          // posizionamento LIBERO x/y nella colonna (senza vincoli)
-          if(c.fx!=null&&c.fy!=null){
-            cw.style.position='absolute'; cw.style.left=c.fx+'px'; cw.style.top=c.fy+'px';
-            if(c.width) cw.style.width=c.width+'px';
-            _maxFreeBottom=Math.max(_maxFreeBottom, c.fy+_hpx);
-          }
+          // grandezza NATURALE: niente ridimensionamento manuale (no width/fixedH per-card).
+          // Le card JS vanno ad ALTEZZA AUTOMATICA del contenuto (CSS .dash-card-wrap:has(.card-jsc){height:auto}):
+          // mostrano tutto senza tagli e crescono/si accorciano da sole all'apertura/chiusura di menù o configurazioni.
+          cw.className='dash-card-wrap'+(!vis?' card-cond-hidden':'');
+          cw.style.height=((c.rowSpan||1)*(sec.rowH||150))+'px'; // altezza di griglia per le card normali (ignorata dalle card JS, che sono auto)
           cw.dataset.cardId=c.id; cw.dataset.secId=sec.id; cw.dataset.col=col;
           cw.addEventListener('dragover',e=>{ if(dragSrc&&dragSrc!==c.id){e.preventDefault();cw.classList.add('dov');}});
           cw.addEventListener('dragleave',()=>cw.classList.remove('dov'));
           cw.addEventListener('drop',e=>{ e.preventDefault(); cw.classList.remove('dov'); if(dragSrc&&dragSrc!==c.id) swapC(dragSrc,c.id); });
           cw.appendChild(_safeBuildCard(c));
-          if(editMode){
-            const grip=document.createElement('div');
-            grip.className='free-grip'; grip.title='Trascina per posizionare liberamente · doppio clic = rimetti nella pila'; grip.textContent='✥';
-            grip.addEventListener('mousedown',e=>_freeDragStart(e,cw,c,wrapper));
-            grip.addEventListener('dblclick',e=>{ e.stopPropagation(); delete c.fx; delete c.fy; saveCfg(); renderDash(); });
-            cw.appendChild(grip);
-          }
           if(!vis){ const m=document.createElement('div'); m.className='cond-hidden-mark'; m.textContent='👁 nascosta dalla condizione'; cw.appendChild(m); }
           wrapper.appendChild(cw);
         });
-        if(_maxFreeBottom>0) wrapper.style.minHeight=(_maxFreeBottom+12)+'px';
         box.appendChild(wrapper);
       } else {
         // Empty placeholder (only shown in edit mode)
@@ -3485,29 +3468,6 @@ function _safeBuildCard(card){
     el.innerHTML=`<span style="font-size:26px">⚠️</span><div style="font-size:11px;color:#f87171;font-weight:800">Errore nella card</div><div style="font-size:10px;color:var(--muted);max-width:94%;word-break:break-word;line-height:1.4">${eh((card&&(card.label||card.type))||'')}${e&&e.message?(': '+eh(e.message)):''}</div>`;
     return el;
   }
-}
-// Trascinamento LIBERO di una card dentro la sua colonna (imposta fx,fy in px)
-function _freeDragStart(e, cw, card, wrapper){
-  if(!editMode) return;
-  e.preventDefault(); e.stopPropagation();
-  const wrect=wrapper.getBoundingClientRect();
-  const crect=cw.getBoundingClientRect();
-  const offX=e.clientX-crect.left, offY=e.clientY-crect.top;
-  const w=card.width||cw.offsetWidth;
-  if(!card.width) card.width=w;   // l'assoluto richiede una larghezza definita
-  cw.style.position='absolute'; cw.style.width=w+'px'; cw.style.zIndex='60'; cw.style.opacity='.92';
-  const move=(ev)=>{
-    const x=Math.max(0, Math.round(ev.clientX-wrect.left-offX));
-    const y=Math.max(0, Math.round(ev.clientY-wrect.top-offY));
-    cw.style.left=x+'px'; cw.style.top=y+'px';
-    card.fx=x; card.fy=y;
-  };
-  const up=()=>{
-    document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up);
-    cw.style.zIndex=''; cw.style.opacity='';
-    saveCfg(); renderDash();
-  };
-  document.addEventListener('mousemove',move); document.addEventListener('mouseup',up);
 }
 function buildCard(card){
   const color=card.color||'#6366f1';
@@ -5054,7 +5014,6 @@ function openCM(cardId){
   document.getElementById('cm-ico').value=c.icon||'';
   document.getElementById('cm-entity').value=c.entity||'';
   document.getElementById('cm-unit').value=c.unit||'';
-  { const w=document.getElementById('cm-width'); if(w) w.value=c.width||''; const h=document.getElementById('cm-height'); if(h) h.value=(c.fixedH?(c.height||''):''); }
   document.getElementById('cm-type').value=c.type||'big';
   document.getElementById('cm-max').value=c.max||'';
   document.getElementById('cm-min').value=c.min||'';
@@ -5178,11 +5137,6 @@ function saveCard(){
   c.icon   = document.getElementById('cm-ico').value.trim();
   c.entity = document.getElementById('cm-entity').value.trim()||c.entity;
   c.unit   = document.getElementById('cm-unit').value.trim();
-  // Dimensioni manuali in px (vuoto = automatico)
-  const _wv=parseInt(document.getElementById('cm-width')?.value,10);
-  const _hv=parseInt(document.getElementById('cm-height')?.value,10);
-  if(_wv>0) c.width=_wv; else delete c.width;
-  if(_hv>0){ c.height=_hv; c.fixedH=true; } else { c.fixedH=false; }
   c.type   = document.getElementById('cm-type').value;
   c.max    = parseFloat(document.getElementById('cm-max').value)||0;
   c.min    = parseFloat(document.getElementById('cm-min').value)||0;
