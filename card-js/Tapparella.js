@@ -68,19 +68,37 @@
         <span style="font-size:15px;line-height:1">${ico}</span>${lbl}</button>`;
 
     return `<div style="position:relative;height:100%;display:flex;flex-direction:column;min-height:0;gap:9px">${gear}
-      <div style="position:relative;flex:1;min-height:90px;border-radius:11px;overflow:hidden;
-        background:linear-gradient(to bottom,#16314f 0%,#27567f 42%,#5b93c9 100%);
-        border:3px solid #3a4252;box-shadow:inset 0 0 14px rgba(0,0,0,.45),inset 0 0 0 2px rgba(0,0,0,.25)">
-        <div style="position:absolute;inset:0;background:radial-gradient(120% 60% at 70% 90%,rgba(255,255,255,.18),transparent 60%);pointer-events:none"></div>
-        <!-- rullo/cassonetto: SEMPRE visibile -->
-        <div style="position:absolute;top:0;left:0;right:0;height:${ROLL}%;z-index:2;border-radius:0 0 7px 7px;
-          background:repeating-linear-gradient(to bottom,#9aa3b2 0px,#7c8492 2px,#4b525e 3px,#7c8492 4px);
-          border-bottom:3px solid #3a4252;box-shadow:0 5px 11px rgba(0,0,0,.55)"></div>
-        <!-- tapparella deployata sotto il rullo -->
-        <div data-sh style="position:absolute;left:0;right:0;top:${ROLL}%;height:${dH}%;
-          transition:height .6s cubic-bezier(.4,0,.2,1);
-          background:repeating-linear-gradient(to bottom,#c4ccd8 0px,#b3bcc9 6px,#7e8796 7px,#b3bcc9 8px);
-          border-bottom:4px solid #5b6472;box-shadow:0 7px 12px rgba(0,0,0,.5),inset 0 2px 0 rgba(255,255,255,.25)"></div>
+      <!-- TELAIO finestra -->
+      <div style="position:relative;flex:1;min-height:175px;border-radius:12px;padding:7px;box-sizing:border-box;
+        background:linear-gradient(145deg,#525a66 0%,#363c46 55%,#262b33 100%);
+        box-shadow:0 12px 28px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.14)">
+        <!-- vano vetro -->
+        <div style="position:relative;height:100%;border-radius:6px;overflow:hidden;
+          background:linear-gradient(to bottom,#13345a 0%,#2c5f93 45%,#6fa6da 100%);
+          box-shadow:inset 0 0 20px rgba(0,0,0,.55),inset 0 0 0 1px rgba(0,0,0,.4)">
+          <!-- riflesso vetro -->
+          <div style="position:absolute;inset:0;pointer-events:none;
+            background:linear-gradient(118deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,.04) 26%,transparent 46%,transparent 72%,rgba(255,255,255,.07) 100%)"></div>
+          <!-- rullo/cassonetto (cilindro) — SEMPRE visibile -->
+          <div style="position:absolute;top:0;left:0;right:0;height:${ROLL}%;z-index:3;border-radius:0 0 8px 8px;
+            background:linear-gradient(to bottom,#8d95a2 0%,#aeb6c2 22%,#6b7280 60%,#3c424c 100%);
+            box-shadow:0 6px 13px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.4)"></div>
+          <!-- tapparella deployata (stecche realistiche) -->
+          <div data-sh style="position:absolute;left:0;right:0;top:${ROLL}%;height:${dH}%;z-index:2;
+            transition:height .6s cubic-bezier(.4,0,.2,1);
+            background:repeating-linear-gradient(180deg,
+              rgba(255,255,255,.45) 0px, #c8d0db 1px, #b0b8c5 5px, #8c94a2 8px, rgba(0,0,0,.42) 9px, #b0b8c5 10px);
+            box-shadow:0 8px 14px rgba(0,0,0,.5)">
+            <!-- stecca finale con fori di presa -->
+            <div style="position:absolute;bottom:0;left:0;right:0;height:10px;
+              background:linear-gradient(to bottom,#aeb6c2,#7c8492 45%,#3f444d);box-shadow:0 -1px 0 rgba(0,0,0,.3),0 3px 7px rgba(0,0,0,.55)">
+              <div style="position:absolute;left:30%;top:3.5px;width:16px;height:3px;border-radius:2px;background:rgba(0,0,0,.5)"></div>
+              <div style="position:absolute;right:30%;top:3.5px;width:16px;height:3px;border-radius:2px;background:rgba(0,0,0,.5)"></div>
+            </div>
+          </div>
+          <!-- davanzale -->
+          <div style="position:absolute;bottom:0;left:0;right:0;height:6px;z-index:1;background:linear-gradient(to bottom,#5b626e,#363c46)"></div>
+        </div>
       </div>
       <div style="display:flex;align-items:baseline;justify-content:space-between;padding:0 2px">
         <span data-pct style="font-size:24px;font-weight:800;color:${acc}">${pos == null ? '—' : pos + '%'}</span>
@@ -149,7 +167,7 @@
   }
 
   const CARD = {
-    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '1.2',
+    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '1.3',
     desc: 'Tapparella animata sincronizzata con la cover — Apri/Ferma/Chiudi, % e stato. ⚙ per scegliere l\'entità.',
     render, update, mount
   };
