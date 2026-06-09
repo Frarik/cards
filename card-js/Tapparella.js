@@ -19,7 +19,7 @@
     const id = entOf(card), s = h && h.states && h.states[id];
     return (s && s.attributes && s.attributes.friendly_name) || 'Tapparella';
   }
-  function learnedTravel(card) { const t = parseFloat(load(card).travel); return (t >= 1 && t <= 180) ? t : 18; }  // sec corsa intera (default finché non impara)
+  function learnedTravel(card) { const t = parseFloat(load(card).travel); return (t >= 1 && t <= 180) ? t : 22; }  // sec corsa intera (default finché non impara)
   function learn(card, sec) { if (sec >= 1 && sec <= 180) save(card, { travel: Math.round(sec * 10) / 10 }); }
 
   function getPos(h, id) {
@@ -79,7 +79,7 @@
 
     return `<div style="height:100%;display:flex;flex-direction:column;min-height:0;gap:8px">${header(nm)}
       <!-- TELAIO -->
-      <div style="position:relative;flex:1;min-height:200px;border-radius:12px;box-sizing:border-box;
+      <div style="position:relative;flex:1;min-height:260px;border-radius:12px;box-sizing:border-box;
         background:linear-gradient(145deg,#525a66 0%,#363c46 55%,#262b33 100%);
         box-shadow:0 12px 28px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.14)">
         <!-- vetro (assoluto = altezza definita) -->
@@ -130,13 +130,16 @@
 
     if (st === 'opening' || st === 'closing') {
       if (prev !== st) {
-        // inizio movimento → memorizza partenza e avvia l'animazione verso il finecorsa
+        // inizio movimento → memorizza partenza e avvia l'animazione verso il finecorsa,
+        // ma fermandosi al 92% della corsa: NON mostra "tutto chiuso/aperto" finché HA non conferma.
         const start = pos == null ? (st === 'opening' ? 0 : 100) : pos;
         el._tapStart = { pos: start, ts: Date.now() };
         el._tapLive = start;
-        const frac = st === 'opening' ? (100 - start) / 100 : start / 100;
+        const startDH = (100 - start) * 87 / 100;
+        const targetDH = st === 'opening' ? 0 : 87;
+        const frac = Math.abs(targetDH - startDH) / 87;
         sh.style.transition = 'height ' + Math.max(0.4, learnedTravel(card) * frac).toFixed(1) + 's linear';
-        sh.style.height = (st === 'opening' ? 0 : 87) + '%';
+        sh.style.height = (startDH + (targetDH - startDH) * 0.92) + '%';
       } else if (pos != null && pos !== el._tapLive) {
         // la cover riporta la posizione LIVE → seguila (più preciso)
         el._tapLive = pos;
@@ -223,7 +226,7 @@
   }
 
   const CARD = {
-    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '2.0',
+    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '2.1',
     desc: 'Tapparella realistica che sale/scende in tempo reale con la cover (velocità automatica). Apri/Ferma/Chiudi, % e stato. Nome ed entità dal ⚙.',
     colSpan: 2, rowSpan: 3,
     render, update, mount
