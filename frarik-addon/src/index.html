@@ -809,6 +809,20 @@
         <span style="font-size:9px;color:rgba(34,211,238,.6)">salva su HA</span>
       </button>
 
+      <!-- Backup / Ripristina / Reset layout -->
+      <button class="cfg-open-btn" data-action="exportBackup" style="background:rgba(99,102,241,.08);border-color:rgba(99,102,241,.2);color:#a5b4fc">
+        💾 <span style="flex:1">Esporta backup</span>
+        <span style="font-size:9px;color:rgba(165,180,252,.6)">file .json</span>
+      </button>
+      <button class="cfg-open-btn" data-action="_importBackupPick" style="background:rgba(99,102,241,.08);border-color:rgba(99,102,241,.2);color:#a5b4fc">
+        📥 <span style="flex:1">Ripristina backup</span>
+      </button>
+      <input type="file" id="backup-file-input" accept=".json,application/json" style="display:none">
+      <button class="cfg-open-btn" data-action="resetLayout" style="background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.22);color:#f87171">
+        ♻️ <span style="flex:1">Reset layout (vista corrente)</span>
+        <span style="font-size:9px;color:rgba(248,113,113,.6)">torna a vuoto</span>
+      </button>
+
       <!-- ── Licenza ── -->
       <div class="ep-section-hdr" data-action="_epToggleLicense" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:10px;background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.18);margin-bottom:4px">
         <span style="font-size:11px;font-weight:700;color:#a5b4fc;letter-spacing:.5px">🔑 Licenza</span>

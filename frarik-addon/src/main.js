@@ -923,6 +923,20 @@ function importBackupFile(file){
   r.onerror=()=>showToast('⚠️ Impossibile leggere il file');
   r.readAsText(file);
 }
+/* apre il selettore file per ripristinare un backup */
+function _importBackupPick(){ const i=document.getElementById('backup-file-input'); if(i){ i.value=''; i.click(); } }
+/* RESET LAYOUT: svuota la vista corrente e la riporta a un layout vuoto di partenza
+   (scarica prima un backup automatico). Tiene header-bar, temi e altre viste. */
+function resetLayout(){
+  showConfirm('♻️ <b>Reset layout</b><br><span style="font-size:11px;opacity:.7">La vista corrente viene svuotata e riportata a un layout vuoto di partenza. Altre viste, temi e impostazioni restano. Prima viene scaricato un backup automatico.</span>', ()=>{
+    try{ exportBackup(); }catch(e){}
+    const page=curPage();
+    page.cards=(page.cards||[]).filter(c=>c.type==='header-bar');   // conserva solo la barra in alto
+    page.sections=[{id:'s'+Math.random().toString(36).slice(2,7),cols:page.cols||4,rowH:150,label:''}];
+    saveCfg(); renderDash(); try{ renderSectionsList(); }catch(e){}
+    showToast('♻️ Layout della vista resettato');
+  });
+}
 
 /* ════════════════════ SINCRONIZZAZIONE CARD DA GITHUB ════════════════════
    Controlla un repo GitHub; quando una card cambia (SHA diverso) mostra una notifica
@@ -10030,6 +10044,7 @@ function _epLicLogout(){
   on('views-btn',   'click', e=>toggleViewsMenu(e));
   on('notif-bell',  'click', e=>toggleNotifCenter(e));
   on('kiosk-btn',   'click', ()=>toggleKiosk());
+  on('backup-file-input','change',e=>{ const f=e.target.files&&e.target.files[0]; if(f) importBackupFile(f); });
   on('reload-btn',  'click', ()=>hardReload());
   on('settings-btn','click', ()=>openOikSettings());
   on('hasidebar-btn','click',()=>toggleHASidebar());
@@ -12177,6 +12192,8 @@ Object.assign(window, {
   ea,
   editBadgeAt,
   editView,
+  resetLayout,
+  _importBackupPick,
   eitClick,
   exportBackup,
   fbAddBtn,

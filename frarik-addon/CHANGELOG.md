@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.32 — 2026-06-09
+
+### Dati: Reset layout + Backup/Ripristina esposti
+- Nuova sezione "Dati" nel pannello: **Esporta backup**, **Ripristina backup** (prima erano funzioni non collegate a pulsanti) e **Reset layout (vista corrente)**.
+- **Reset layout**: svuota la vista corrente riportandola a un layout vuoto di partenza (scarica prima un backup automatico). Altre viste, temi e impostazioni restano.
+
 ## 1.2.31 — 2026-06-09
 
 ### Annullati px su tutte le card e spostamento libero
