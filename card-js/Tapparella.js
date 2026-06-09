@@ -1,9 +1,10 @@
-/* frarik-version: 1.1 */
+/* frarik-version: 2.0 */
 /**
  * Tapparella.js — FratechStore card "Tapparella" (cover)
- * Disegno di una tapparella reale sincronizzato con la posizione dell'entità cover,
- * pulsanti Apri / Ferma / Chiudi, percentuale e stato (Aperta/Chiusa/…).
- * Entità configurabile dall'icona ⚙ nella card (oppure dal campo Entità del ✏️) — dominio `cover`.
+ * Disegno realistico di una tapparella sincronizzato in TEMPO REALE con la cover:
+ * sale/scende mentre apre/chiude. Pulsanti Apri/Ferma/Chiudi, percentuale e stato.
+ * La velocità è AUTOMATICA: la card impara da sola il tempo di corsa osservando i movimenti
+ * (e se la cover riporta la posizione live, la segue). Nome ed entità configurabili dal ⚙ (dominio cover).
  */
 (function () {
   'use strict';
@@ -12,8 +13,14 @@
   function keyOf(card) { return 'frarik_tapparellacard_' + (card.id || 'x'); }
   function load(card) { try { return JSON.parse(localStorage.getItem(keyOf(card)) || '{}') || {}; } catch (e) { return {}; } }
   function save(card, o) { try { localStorage.setItem(keyOf(card), JSON.stringify(Object.assign(load(card), o))); } catch (e) {} }
-  // entità: prima la config interna (⚙), poi il campo Entità del ✏️
   function entOf(card) { const c = load(card); return String(c.entity || card.entity || '').trim(); }
+  function nameOf(card, h) {
+    const c = load(card); if (c.name) return c.name;
+    const id = entOf(card), s = h && h.states && h.states[id];
+    return (s && s.attributes && s.attributes.friendly_name) || 'Tapparella';
+  }
+  function learnedTravel(card) { const t = parseFloat(load(card).travel); return (t >= 1 && t <= 180) ? t : 18; }  // sec corsa intera (default finché non impara)
+  function learn(card, sec) { if (sec >= 1 && sec <= 180) save(card, { travel: Math.round(sec * 10) / 10 }); }
 
   function getPos(h, id) {
     const s = h && h.states && h.states[id]; if (!s) return null;
@@ -43,23 +50,26 @@
     return out.sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  const gear = `<div data-tap="gear" title="Impostazioni" style="position:absolute;top:7px;right:7px;width:24px;height:24px;border-radius:7px;
-    display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;z-index:3;
-    color:rgba(255,255,255,.5);background:rgba(255,255,255,.08)">⚙️</div>`;
+  function header(nm) {
+    return `<div style="display:flex;align-items:center;gap:7px;flex-shrink:0">
+      <span style="font-size:15px;line-height:1">🪟</span>
+      <span style="flex:1;min-width:0;font-size:13px;font-weight:800;color:#e8ebf5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nm}</span>
+      <div data-tap="gear" title="Impostazioni" style="width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:rgba(255,255,255,.65);background:rgba(255,255,255,.1);flex-shrink:0">⚙️</div>
+    </div>`;
+  }
 
   function render(card) {
-    const h = H(), id = entOf(card), acc = card.color || '#38bdf8';
+    const h = H(), id = entOf(card), acc = card.color || '#38bdf8', nm = nameOf(card, h);
     if (!id || id.split('.')[0] !== 'cover') {
-      return `<div style="position:relative;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
-        color:rgba(255,255,255,.55);text-align:center;padding:14px">${gear}
-        <div style="font-size:34px">🪟</div>
-        <div style="font-size:12px;font-weight:700;color:#e2e8f0">Tapparella</div>
-        <div style="font-size:11px">Tocca il <b style="color:${acc}">⚙️</b> per scegliere l'entità <b style="color:${acc}">cover</b></div>
-      </div>`;
+      return `<div style="height:100%;display:flex;flex-direction:column;min-height:0;gap:8px">${header(nm)}
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:rgba(255,255,255,.55);text-align:center;padding:10px">
+          <div style="font-size:34px">🪟</div>
+          <div style="font-size:11px">Tocca il <b style="color:${acc}">⚙️</b> per scegliere l'entità <b style="color:${acc}">cover</b></div>
+        </div></div>`;
     }
     const pos = getPos(h, id), st = stateOf(h, id);
-    const ROLL = 13;                                                  // rullo/cassonetto: sempre visibile in alto
-    const dH = pos == null ? (100 - ROLL) : (100 - pos) * (100 - ROLL) / 100;  // tapparella avvolta sotto il rullo
+    const ROLL = 13;
+    const dH = pos == null ? (100 - ROLL) : (100 - pos) * (100 - ROLL) / 100;
     const btn = (act, ico, lbl, col) =>
       `<button data-cov="${act}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
         padding:8px 4px;border-radius:11px;cursor:pointer;border:1px solid ${col}44;background:${col}1a;
@@ -67,36 +77,33 @@
         onmouseover="this.style.background='${col}2e'" onmouseout="this.style.background='${col}1a'">
         <span style="font-size:15px;line-height:1">${ico}</span>${lbl}</button>`;
 
-    return `<div style="position:relative;height:100%;display:flex;flex-direction:column;min-height:0;gap:9px">${gear}
-      <!-- TELAIO finestra -->
-      <div style="position:relative;flex:1;min-height:210px;border-radius:12px;box-sizing:border-box;
+    return `<div style="height:100%;display:flex;flex-direction:column;min-height:0;gap:8px">${header(nm)}
+      <!-- TELAIO -->
+      <div style="position:relative;flex:1;min-height:200px;border-radius:12px;box-sizing:border-box;
         background:linear-gradient(145deg,#525a66 0%,#363c46 55%,#262b33 100%);
         box-shadow:0 12px 28px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.14)">
-        <!-- vano vetro: riempie il telaio in assoluto (altezza sempre definita) -->
+        <!-- vetro (assoluto = altezza definita) -->
         <div style="position:absolute;inset:7px;border-radius:6px;overflow:hidden;
           background:linear-gradient(to bottom,#13345a 0%,#2c5f93 45%,#6fa6da 100%);
           box-shadow:inset 0 0 20px rgba(0,0,0,.55),inset 0 0 0 1px rgba(0,0,0,.4)">
-          <!-- riflesso vetro -->
           <div style="position:absolute;inset:0;pointer-events:none;
             background:linear-gradient(118deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,.04) 26%,transparent 46%,transparent 72%,rgba(255,255,255,.07) 100%)"></div>
-          <!-- rullo/cassonetto (cilindro) — SEMPRE visibile -->
+          <!-- rullo/cassonetto -->
           <div style="position:absolute;top:0;left:0;right:0;height:${ROLL}%;z-index:3;border-radius:0 0 8px 8px;
             background:linear-gradient(to bottom,#8d95a2 0%,#aeb6c2 22%,#6b7280 60%,#3c424c 100%);
             box-shadow:0 6px 13px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.4)"></div>
-          <!-- tapparella deployata (stecche realistiche) -->
+          <!-- tapparella -->
           <div data-sh style="position:absolute;left:0;right:0;top:${ROLL}%;height:${dH}%;z-index:2;
-            transition:height .6s cubic-bezier(.4,0,.2,1);
+            transition:height .5s linear;
             background:repeating-linear-gradient(180deg,
               rgba(255,255,255,.45) 0px, #c8d0db 1px, #b0b8c5 5px, #8c94a2 8px, rgba(0,0,0,.42) 9px, #b0b8c5 10px);
             box-shadow:0 8px 14px rgba(0,0,0,.5)">
-            <!-- stecca finale con fori di presa -->
             <div style="position:absolute;bottom:0;left:0;right:0;height:10px;
               background:linear-gradient(to bottom,#aeb6c2,#7c8492 45%,#3f444d);box-shadow:0 -1px 0 rgba(0,0,0,.3),0 3px 7px rgba(0,0,0,.55)">
               <div style="position:absolute;left:30%;top:3.5px;width:16px;height:3px;border-radius:2px;background:rgba(0,0,0,.5)"></div>
               <div style="position:absolute;right:30%;top:3.5px;width:16px;height:3px;border-radius:2px;background:rgba(0,0,0,.5)"></div>
             </div>
           </div>
-          <!-- davanzale -->
           <div style="position:absolute;bottom:0;left:0;right:0;height:6px;z-index:1;background:linear-gradient(to bottom,#5b626e,#363c46)"></div>
         </div>
       </div>
@@ -112,33 +119,43 @@
     </div>`;
   }
 
-  // applica posizione+stato alla tapparella (87% = 100 - ROLL(13))
+  // applica posizione/movimento (87% = 100 - ROLL(13))
   function applyState(card, el) {
     const h = H(), id = entOf(card);
     const sh = el.querySelector('[data-sh]'); if (!sh) return;
     const s = h && h.states && h.states[id];
     const st = s ? s.state : null, pos = getPos(h, id);
     const prev = el._tapPrev; el._tapPrev = st;
-    const travel = Math.max(1, parseFloat(load(card).travel) || 20);   // secondi per la corsa intera
     const pe = el.querySelector('[data-pct]'), se = el.querySelector('[data-st]');
 
     if (st === 'opening' || st === 'closing') {
-      // la maggior parte delle cover NON aggiorna la posizione durante il moto:
-      // animiamo verso il finecorsa per un tempo proporzionale alla corsa rimanente.
       if (prev !== st) {
+        // inizio movimento → memorizza partenza e avvia l'animazione verso il finecorsa
         const start = pos == null ? (st === 'opening' ? 0 : 100) : pos;
+        el._tapStart = { pos: start, ts: Date.now() };
+        el._tapLive = start;
         const frac = st === 'opening' ? (100 - start) / 100 : start / 100;
-        sh.style.transition = 'height ' + Math.max(0.4, travel * frac).toFixed(1) + 's linear';
+        sh.style.transition = 'height ' + Math.max(0.4, learnedTravel(card) * frac).toFixed(1) + 's linear';
         sh.style.height = (st === 'opening' ? 0 : 87) + '%';
+      } else if (pos != null && pos !== el._tapLive) {
+        // la cover riporta la posizione LIVE → seguila (più preciso)
+        el._tapLive = pos;
+        sh.style.transition = 'height .7s linear';
+        sh.style.height = (100 - pos) * 87 / 100 + '%';
       }
-      // % "live" calcolata dall'altezza realmente animata
+      // % live dall'altezza realmente animata
       if (pe) {
         const vt = sh.parentElement, vh = vt ? vt.getBoundingClientRect().height : 0;
         if (vh) { const cov = sh.getBoundingClientRect().height / vh;
           pe.textContent = Math.max(0, Math.min(100, Math.round(100 - cov * 100 / 0.87))) + '%'; }
       }
     } else {
-      // fermo / aperto / chiuso / parziale → posizione reale
+      // fermo → IMPARA la velocità dal movimento appena concluso, poi posizione reale
+      if ((prev === 'opening' || prev === 'closing') && el._tapStart && pos != null) {
+        const dp = Math.abs(pos - el._tapStart.pos), dt = (Date.now() - el._tapStart.ts) / 1000;
+        if (dp >= 8 && dt >= 0.6) learn(card, dt / (dp / 100));
+        el._tapStart = null;
+      }
       sh.style.transition = 'height .5s linear';
       sh.style.height = (pos == null ? 87 : (100 - pos) * 87 / 100) + '%';
       if (pe) pe.textContent = pos == null ? '—' : pos + '%';
@@ -162,31 +179,29 @@
         try { window.callSvc('cover', svc, id); } catch (e2) {}
       });
     }
-    // TEMPO REALE: segue la posizione live ~2 volte/sec (con transizione che la rende fluida)
+    // TEMPO REALE: ~2 volte/sec aggiorna la tapparella (movimento + % live)
     if (el._tapTick) clearInterval(el._tapTick);
     el._tapTick = setInterval(() => {
       if (!el.isConnected) { clearInterval(el._tapTick); el._tapTick = null; return; }
       if (el.querySelector('[data-sh]')) { try { applyState(card, el); } catch (e) {} }
-    }, 500);
+    }, 450);
   }
 
   function openCfg(card, el) {
     const h = H(), cur = entOf(card), covers = listCovers(h);
-    const travel = Math.max(1, parseFloat(load(card).travel) || 20);
     const ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(2,6,16,.74);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
     const opts = ['<option value="">— Seleziona tapparella —</option>']
       .concat(covers.map(c => `<option value="${c.id}"${c.id === cur ? ' selected' : ''}>${c.name}</option>`)).join('');
+    const inp = 'width:100%;padding:11px;border-radius:11px;background:#0f1830;color:#f1f5f9;border:1px solid rgba(255,255,255,.2);font-size:13px;box-sizing:border-box';
     ov.innerHTML = `<div style="width:min(440px,94vw);background:#0b1220;border:1px solid rgba(255,255,255,.14);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.6);padding:20px;color:#f1f5f9">
-        <div style="font-size:16px;font-weight:800;margin-bottom:4px">🪟 Tapparella</div>
-        <div style="font-size:11px;color:#64748b;margin-bottom:12px">Scegli l'entità <b>cover</b> (${covers.length} trovate). Oppure scrivila a mano.</div>
-        <select id="tap-sel" style="width:100%;padding:11px;border-radius:11px;background:#0f1830;color:#f1f5f9;border:1px solid rgba(255,255,255,.2);font-size:13px;margin-bottom:8px">${opts}</select>
-        <input id="tap-man" placeholder="cover.tapparella_salotto" value="${cur}" style="width:100%;padding:11px;border-radius:11px;background:#0f1830;color:#f1f5f9;border:1px solid rgba(255,255,255,.2);font-size:12px;font-family:monospace;box-sizing:border-box">
-        <div style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12px;color:#cbd5e1">
-          <span style="flex:1">⏱ Tempo corsa completa</span>
-          <input id="tap-travel" type="number" min="1" max="180" value="${travel}" style="width:66px;padding:8px;border-radius:9px;background:#0f1830;color:#f1f5f9;border:1px solid rgba(255,255,255,.2);font-size:12px;text-align:center"><span>sec</span>
-        </div>
-        <div style="font-size:10px;color:#64748b;margin-top:5px">Quanti secondi impiega la tua tapparella ad aprirsi/chiudersi del tutto (per l'animazione in tempo reale).</div>
+        <div style="font-size:16px;font-weight:800;margin-bottom:12px">🪟 Tapparella</div>
+        <div style="font-size:11px;color:#94a3b8;margin-bottom:5px">Nome (per riconoscerla)</div>
+        <input id="tap-name" placeholder="es. Tapparella salotto" value="${(load(card).name || '').replace(/"/g, '&quot;')}" style="${inp};margin-bottom:12px">
+        <div style="font-size:11px;color:#94a3b8;margin-bottom:5px">Entità cover (${covers.length} trovate)</div>
+        <select id="tap-sel" style="${inp};margin-bottom:8px">${opts}</select>
+        <input id="tap-man" placeholder="oppure scrivila: cover.tapparella_salotto" value="${cur}" style="${inp};font-size:12px;font-family:monospace">
+        <div style="font-size:10px;color:#64748b;margin-top:10px">⚡ La velocità è automatica: la card impara da sola il tempo di salita/discesa osservando i movimenti.</div>
         <div style="display:flex;gap:10px;margin-top:16px">
           <button id="tap-cancel" style="flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#e2e8f0">Annulla</button>
           <button id="tap-save" style="flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;background:#22c55e;color:#04210f">Salva</button>
@@ -194,23 +209,22 @@
       </div>`;
     document.body.appendChild(ov);
     const close = () => { try { document.body.removeChild(ov); } catch (e) {} };
-    // selezionando dal menu, aggiorna il campo manuale
     ov.querySelector('#tap-sel').addEventListener('change', function () { if (this.value) ov.querySelector('#tap-man').value = this.value; });
     ov.addEventListener('click', e => { if (e.target === ov) close(); });
     ov.querySelector('#tap-cancel').addEventListener('click', close);
     ov.querySelector('#tap-save').addEventListener('click', () => {
       const man = ov.querySelector('#tap-man').value.trim();
       const entity = man || ov.querySelector('#tap-sel').value || '';
-      const tv = Math.max(1, parseFloat(ov.querySelector('#tap-travel').value) || 20);
-      save(card, { entity: entity, travel: tv });
+      const name = ov.querySelector('#tap-name').value.trim();
+      save(card, { entity: entity, name: name });
       close();
       try { el.innerHTML = render(card); } catch (e) {}   // il listener delegato su `el` resta valido
     });
   }
 
   const CARD = {
-    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '1.7',
-    desc: 'Tapparella animata in tempo reale sincronizzata con la cover — Apri/Ferma/Chiudi, % e stato. ⚙ per scegliere l\'entità.',
+    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '2.0',
+    desc: 'Tapparella realistica che sale/scende in tempo reale con la cover (velocità automatica). Apri/Ferma/Chiudi, % e stato. Nome ed entità dal ⚙.',
     colSpan: 2, rowSpan: 3,
     render, update, mount
   };
