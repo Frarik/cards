@@ -57,7 +57,9 @@
         <div style="font-size:11px">Tocca il <b style="color:${acc}">⚙️</b> per scegliere l'entità <b style="color:${acc}">cover</b></div>
       </div>`;
     }
-    const pos = getPos(h, id), st = stateOf(h, id), shutterH = pos == null ? 0 : (100 - pos);
+    const pos = getPos(h, id), st = stateOf(h, id);
+    const ROLL = 13;                                                  // rullo/cassonetto: sempre visibile in alto
+    const dH = pos == null ? (100 - ROLL) : (100 - pos) * (100 - ROLL) / 100;  // tapparella avvolta sotto il rullo
     const btn = (act, ico, lbl, col) =>
       `<button data-cov="${act}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
         padding:8px 4px;border-radius:11px;cursor:pointer;border:1px solid ${col}44;background:${col}1a;
@@ -66,11 +68,16 @@
         <span style="font-size:15px;line-height:1">${ico}</span>${lbl}</button>`;
 
     return `<div style="position:relative;height:100%;display:flex;flex-direction:column;min-height:0;gap:9px">${gear}
-      <div style="position:relative;flex:1;min-height:60px;border-radius:11px;overflow:hidden;
+      <div style="position:relative;flex:1;min-height:90px;border-radius:11px;overflow:hidden;
         background:linear-gradient(to bottom,#16314f 0%,#27567f 42%,#5b93c9 100%);
         border:3px solid #3a4252;box-shadow:inset 0 0 14px rgba(0,0,0,.45),inset 0 0 0 2px rgba(0,0,0,.25)">
         <div style="position:absolute;inset:0;background:radial-gradient(120% 60% at 70% 90%,rgba(255,255,255,.18),transparent 60%);pointer-events:none"></div>
-        <div data-sh style="position:absolute;top:0;left:0;right:0;height:${shutterH}%;
+        <!-- rullo/cassonetto: SEMPRE visibile -->
+        <div style="position:absolute;top:0;left:0;right:0;height:${ROLL}%;z-index:2;border-radius:0 0 7px 7px;
+          background:repeating-linear-gradient(to bottom,#9aa3b2 0px,#7c8492 2px,#4b525e 3px,#7c8492 4px);
+          border-bottom:3px solid #3a4252;box-shadow:0 5px 11px rgba(0,0,0,.55)"></div>
+        <!-- tapparella deployata sotto il rullo -->
+        <div data-sh style="position:absolute;left:0;right:0;top:${ROLL}%;height:${dH}%;
           transition:height .6s cubic-bezier(.4,0,.2,1);
           background:repeating-linear-gradient(to bottom,#c4ccd8 0px,#b3bcc9 6px,#7e8796 7px,#b3bcc9 8px);
           border-bottom:4px solid #5b6472;box-shadow:0 7px 12px rgba(0,0,0,.5),inset 0 2px 0 rgba(255,255,255,.25)"></div>
@@ -92,7 +99,7 @@
       if (!el.querySelector('[data-sh]')) { el.innerHTML = render(card); return; }
       const h = H(), id = entOf(card);
       const pos = getPos(h, id), st = stateOf(h, id);
-      const sh = el.querySelector('[data-sh]'); if (sh) sh.style.height = (pos == null ? 0 : (100 - pos)) + '%';
+      const sh = el.querySelector('[data-sh]'); if (sh) sh.style.height = (pos == null ? 87 : (100 - pos) * 87 / 100) + '%';  // 87 = 100 - ROLL(13)
       const pe = el.querySelector('[data-pct]'); if (pe) pe.textContent = pos == null ? '—' : pos + '%';
       const se = el.querySelector('[data-st]'); if (se) { se.textContent = statusLabel(st, pos); se.style.color = statusColor(st, pos); }
     } catch (e) {}
@@ -142,7 +149,7 @@
   }
 
   const CARD = {
-    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '1.1',
+    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '1.2',
     desc: 'Tapparella animata sincronizzata con la cover — Apri/Ferma/Chiudi, % e stato. ⚙ per scegliere l\'entità.',
     render, update, mount
   };
