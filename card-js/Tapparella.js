@@ -112,22 +112,38 @@
     </div>`;
   }
 
-  // applica posizione+stato alla tapparella (87 = 100 - ROLL(13))
+  // applica posizione+stato alla tapparella (87% = 100 - ROLL(13))
   function applyState(card, el) {
     const h = H(), id = entOf(card);
     const sh = el.querySelector('[data-sh]'); if (!sh) return;
     const s = h && h.states && h.states[id];
     const st = s ? s.state : null, pos = getPos(h, id);
-    const hasPos = !!(s && s.attributes && s.attributes.current_position != null);
-    let dH, dur;
-    if (!hasPos && st === 'opening') { dH = 0; dur = '13s'; }        // cover senza posizione → spingi verso aperto
-    else if (!hasPos && st === 'closing') { dH = 87; dur = '13s'; }  // …verso chiuso
-    else { dH = (pos == null ? 87 : (100 - pos) * 87 / 100); dur = '.6s'; }  // segue current_position live
-    const tr = 'height ' + dur + ' linear';
-    if (sh.style.transition !== tr) sh.style.transition = tr;
-    sh.style.height = dH + '%';
-    const pe = el.querySelector('[data-pct]'); if (pe) pe.textContent = pos == null ? '—' : pos + '%';
-    const se = el.querySelector('[data-st]'); if (se) { se.textContent = statusLabel(st, pos); se.style.color = statusColor(st, pos); }
+    const prev = el._tapPrev; el._tapPrev = st;
+    const travel = Math.max(1, parseFloat(load(card).travel) || 20);   // secondi per la corsa intera
+    const pe = el.querySelector('[data-pct]'), se = el.querySelector('[data-st]');
+
+    if (st === 'opening' || st === 'closing') {
+      // la maggior parte delle cover NON aggiorna la posizione durante il moto:
+      // animiamo verso il finecorsa per un tempo proporzionale alla corsa rimanente.
+      if (prev !== st) {
+        const start = pos == null ? (st === 'opening' ? 0 : 100) : pos;
+        const frac = st === 'opening' ? (100 - start) / 100 : start / 100;
+        sh.style.transition = 'height ' + Math.max(0.4, travel * frac).toFixed(1) + 's linear';
+        sh.style.height = (st === 'opening' ? 0 : 87) + '%';
+      }
+      // % "live" calcolata dall'altezza realmente animata
+      if (pe) {
+        const vt = sh.parentElement, vh = vt ? vt.getBoundingClientRect().height : 0;
+        if (vh) { const cov = sh.getBoundingClientRect().height / vh;
+          pe.textContent = Math.max(0, Math.min(100, Math.round(100 - cov * 100 / 0.87))) + '%'; }
+      }
+    } else {
+      // fermo / aperto / chiuso / parziale → posizione reale
+      sh.style.transition = 'height .5s linear';
+      sh.style.height = (pos == null ? 87 : (100 - pos) * 87 / 100) + '%';
+      if (pe) pe.textContent = pos == null ? '—' : pos + '%';
+    }
+    if (se) { se.textContent = statusLabel(st, pos); se.style.color = statusColor(st, pos); }
   }
 
   function update(card, hass, el) {
@@ -156,6 +172,7 @@
 
   function openCfg(card, el) {
     const h = H(), cur = entOf(card), covers = listCovers(h);
+    const travel = Math.max(1, parseFloat(load(card).travel) || 20);
     const ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(2,6,16,.74);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
     const opts = ['<option value="">— Seleziona tapparella —</option>']
@@ -165,6 +182,11 @@
         <div style="font-size:11px;color:#64748b;margin-bottom:12px">Scegli l'entità <b>cover</b> (${covers.length} trovate). Oppure scrivila a mano.</div>
         <select id="tap-sel" style="width:100%;padding:11px;border-radius:11px;background:#0f1830;color:#f1f5f9;border:1px solid rgba(255,255,255,.2);font-size:13px;margin-bottom:8px">${opts}</select>
         <input id="tap-man" placeholder="cover.tapparella_salotto" value="${cur}" style="width:100%;padding:11px;border-radius:11px;background:#0f1830;color:#f1f5f9;border:1px solid rgba(255,255,255,.2);font-size:12px;font-family:monospace;box-sizing:border-box">
+        <div style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12px;color:#cbd5e1">
+          <span style="flex:1">⏱ Tempo corsa completa</span>
+          <input id="tap-travel" type="number" min="1" max="180" value="${travel}" style="width:66px;padding:8px;border-radius:9px;background:#0f1830;color:#f1f5f9;border:1px solid rgba(255,255,255,.2);font-size:12px;text-align:center"><span>sec</span>
+        </div>
+        <div style="font-size:10px;color:#64748b;margin-top:5px">Quanti secondi impiega la tua tapparella ad aprirsi/chiudersi del tutto (per l'animazione in tempo reale).</div>
         <div style="display:flex;gap:10px;margin-top:16px">
           <button id="tap-cancel" style="flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#e2e8f0">Annulla</button>
           <button id="tap-save" style="flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;background:#22c55e;color:#04210f">Salva</button>
@@ -179,14 +201,15 @@
     ov.querySelector('#tap-save').addEventListener('click', () => {
       const man = ov.querySelector('#tap-man').value.trim();
       const entity = man || ov.querySelector('#tap-sel').value || '';
-      save(card, { entity: entity });
+      const tv = Math.max(1, parseFloat(ov.querySelector('#tap-travel').value) || 20);
+      save(card, { entity: entity, travel: tv });
       close();
       try { el.innerHTML = render(card); } catch (e) {}   // il listener delegato su `el` resta valido
     });
   }
 
   const CARD = {
-    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '1.6',
+    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '1.7',
     desc: 'Tapparella animata in tempo reale sincronizzata con la cover — Apri/Ferma/Chiudi, % e stato. ⚙ per scegliere l\'entità.',
     colSpan: 2, rowSpan: 3,
     render, update, mount
