@@ -937,6 +937,64 @@ function resetLayout(){
     showToast('♻️ Layout della vista resettato');
   });
 }
+/* COPIA card su un'altra vista/pagina: menu con le altre viste, poi clona la card lì */
+function copyCardToPage(cardId){
+  document.getElementById('copy-page-menu')?.remove();
+  const card=curPage().cards.find(c=>c.id===cardId); if(!card) return;
+  const cur=cfg.activePage;
+  const others=(cfg.pages||[]).map((p,i)=>({p,i})).filter(x=>x.i!==cur);
+  if(!others.length){ showToast('⚠️ Crea prima un\'altra vista'); return; }
+  const menu=document.createElement('div');
+  menu.id='copy-page-menu';
+  menu.style.cssText='position:fixed;z-index:15000;left:50%;top:80px;transform:translateX(-50%);background:#1a1f35;border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:8px;box-shadow:0 12px 40px rgba(0,0,0,.75);display:flex;flex-direction:column;gap:6px;min-width:220px;max-height:70vh;overflow:auto';
+  const bs='background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:#e2e8f0;font-size:12px;padding:9px 12px;cursor:pointer;text-align:left';
+  menu.innerHTML='<div style="font-size:9px;color:rgba(255,255,255,.4);padding:2px 4px 4px;text-transform:uppercase">Copia "'+eh(card.label||card.type)+'" su…</div>'+
+    others.map(x=>`<button style="${bs}" data-action="_copyCardToPageDo" data-action-args='["${cardId}",${x.i}]'>${eh(x.p.icon||'📄')} ${eh(x.p.name||('Vista '+(x.i+1)))}</button>`).join('');
+  document.body.appendChild(menu);
+  setTimeout(()=>document.addEventListener('click',function _h(e){ if(!menu.contains(e.target)){menu.remove();document.removeEventListener('click',_h);} }),80);
+}
+function _copyCardToPageDo(cardId, pageIdx){
+  document.getElementById('copy-page-menu')?.remove();
+  const src=curPage().cards.find(c=>c.id===cardId); if(!src) return;
+  const tp=cfg.pages[pageIdx]; if(!tp) return;
+  _ensureSections(tp);
+  const nc=JSON.parse(JSON.stringify(src)); nc.id=uid();
+  delete nc.secId; delete nc.secCol; delete nc.secOrder;
+  const sec=tp.sections[0]; nc.secId=sec.id; nc.secCol=0;
+  const sib=(tp.cards||[]).filter(c=>c.secId===sec.id&&(c.secCol||0)===0&&!c.parentId);
+  nc.secOrder=sib.length?Math.max(...sib.map(c=>c.secOrder||0))+10:0;
+  (tp.cards=tp.cards||[]).push(nc);
+  saveCfg(); showToast('📑 Copiata su "'+(tp.name||'vista')+'"');
+}
+/* AUTO-SCALE: se il CONTENUTO di una card sborda in larghezza dal contenitore,
+   la rimpicciolisce (scale) per farla rientrare. Le card che ci stanno già NON vengono toccate.
+   Disattivo in modalità modifica per non disturbare l'editing. */
+function _autoScaleAll(){
+  try{
+    if(document.body.classList.contains('editing')) return;
+    document.querySelectorAll('#dash-sections .dash-card-wrap').forEach(cw=>{
+      const el=cw.querySelector(':scope > .card'); if(!el) return;
+      el.style.transform=''; el.style.transformOrigin=''; el.style.width='';
+      const avail=cw.clientWidth; if(!avail) return;
+      const natural=el.scrollWidth;
+      if(natural>avail+4){
+        const r=avail/natural;
+        el.style.transformOrigin='top left';
+        el.style.width=Math.round(natural)+'px';
+        el.style.transform='scale('+r+')';
+      }
+    });
+  }catch(e){}
+}
+let _autoScaleObs=null;
+function _initAutoScale(){
+  const target=document.getElementById('dash-sections'); if(!target||_autoScaleObs) return;
+  let t=null; const run=()=>{ clearTimeout(t); t=setTimeout(_autoScaleAll,90); };
+  _autoScaleObs=new MutationObserver(run);
+  _autoScaleObs.observe(target,{childList:true,subtree:true});
+  window.addEventListener('resize',run);
+  run();
+}
 
 /* ════════════════════ SINCRONIZZAZIONE CARD DA GITHUB ════════════════════
    Controlla un repo GitHub; quando una card cambia (SHA diverso) mostra una notifica
@@ -3599,6 +3657,7 @@ function buildCard(card){
       <div class="hbar-ctrl">
         <button class="ovb ovb-edit" data-action="openCM" data-action-arg="${card.id}" title="Modifica">✏️</button>
         <button class="ovb ovb-dup"  data-action="dupCard" data-action-arg="${card.id}" title="Duplica">⧉</button>
+          <button class="ovb ovb-cpp" data-action="copyCardToPage" data-action-arg="${card.id}" title="Copia su un'altra vista">📑</button>
         <button class="ovb ovb-cpy"  data-action="copyCard" data-action-arg="${card.id}" title="Copia">📋</button>
         <button class="ovb ovb-cut"  data-action="cutCard" data-action-arg="${card.id}" title="Taglia">✂️</button>
         <button class="ovb ovb-del"  data-action="delCard" data-action-arg="${card.id}" title="Elimina">🗑</button>
@@ -3623,6 +3682,7 @@ function buildCard(card){
       <div class="card-ov" style="z-index:30">
         <div class="ov-row">
           <button class="ovb ovb-dup"  data-action="dupCard" data-action-arg="${card.id}" title="Duplica">⧉</button>
+          <button class="ovb ovb-cpp" data-action="copyCardToPage" data-action-arg="${card.id}" title="Copia su un'altra vista">📑</button>
           <button class="ovb ovb-cpy"  data-action="copyCard" data-action-arg="${card.id}" title="Copia">📋</button>
           <button class="ovb ovb-cut"  data-action="cutCard" data-action-arg="${card.id}" title="Taglia">✂️</button>
           <button class="ovb ovb-del"  data-action="delCard" data-action-arg="${card.id}" title="Elimina">🗑</button>
@@ -3648,6 +3708,7 @@ function buildCard(card){
         <div class="ov-row">
           <button class="ovb ovb-edit" data-action="openCM" data-action-arg="${card.id}" title="Modifica">✏️</button>
           <button class="ovb ovb-dup"  data-action="dupCard" data-action-arg="${card.id}" title="Duplica">⧉</button>
+          <button class="ovb ovb-cpp" data-action="copyCardToPage" data-action-arg="${card.id}" title="Copia su un'altra vista">📑</button>
           <button class="ovb ovb-cpy"  data-action="copyCard" data-action-arg="${card.id}" title="Copia">📋</button>
           <button class="ovb ovb-cut"  data-action="cutCard" data-action-arg="${card.id}" title="Taglia">✂️</button>
           <button class="ovb ovb-del"  data-action="delCard" data-action-arg="${card.id}" title="Elimina">🗑</button>
@@ -3676,6 +3737,7 @@ function buildCard(card){
       <div class="ov-row">
         <button class="ovb ovb-edit" data-action="openCM" data-action-arg="${card.id}" title="${t==='free'?'Modifica Canvas':'Modifica'}">${t==='free'?'🎨':'✏️'}</button>
         <button class="ovb ovb-dup"  data-action="dupCard" data-action-arg="${card.id}" title="Duplica">⧉</button>
+          <button class="ovb ovb-cpp" data-action="copyCardToPage" data-action-arg="${card.id}" title="Copia su un'altra vista">📑</button>
         <button class="ovb ovb-cpy"  data-action="copyCard" data-action-arg="${card.id}" title="Copia">📋</button>
         <button class="ovb ovb-cut"  data-action="cutCard" data-action-arg="${card.id}" title="Taglia">✂️</button>
         <button class="ovb ovb-del"  data-action="delCard" data-action-arg="${card.id}" title="Elimina">🗑</button>
@@ -10045,6 +10107,7 @@ function _epLicLogout(){
   on('notif-bell',  'click', e=>toggleNotifCenter(e));
   on('kiosk-btn',   'click', ()=>toggleKiosk());
   on('backup-file-input','change',e=>{ const f=e.target.files&&e.target.files[0]; if(f) importBackupFile(f); });
+  try{ _initAutoScale(); }catch(e){}
   on('reload-btn',  'click', ()=>hardReload());
   on('settings-btn','click', ()=>openOikSettings());
   on('hasidebar-btn','click',()=>toggleHASidebar());
@@ -12194,6 +12257,8 @@ Object.assign(window, {
   editView,
   resetLayout,
   _importBackupPick,
+  copyCardToPage,
+  _copyCardToPageDo,
   eitClick,
   exportBackup,
   fbAddBtn,

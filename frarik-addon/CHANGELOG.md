@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.33 — 2026-06-09
+
+### Copia card su un'altra vista + Auto-scale
+- **Copia card su un'altra vista**: nuovo pulsante 📑 nell'overlay della card (in modifica) → menu con le altre viste, clona la card lì.
+- **Auto-scale**: se il contenuto di una card **sborda** in larghezza dal suo contenitore, viene rimpicciolito per rientrare (le card che ci stanno già non vengono toccate; disattivo in modalità modifica).
+
 ## 1.2.32 — 2026-06-09
 
 ### Dati: Reset layout + Backup/Ripristina esposti
