@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.38 — 2026-06-09
+
+### Fix: auto-scale disattivato (loop / errore JS)
+- L'auto-scale (1.2.33) entrava in loop con le card che hanno un proprio ResizeObserver (es. person card), causando re-render continui ed errori `getBoundingClientRect`. Disattivato. Le card tornano stabili.
+
 ## 1.2.37 — 2026-06-09
 
 ### Installa card da URL

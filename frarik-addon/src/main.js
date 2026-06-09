@@ -10303,7 +10303,8 @@ function _epLicLogout(){
   on('backup-file-input','change',e=>{ const f=e.target.files&&e.target.files[0]; if(f) importBackupFile(f); });
   on('theme-file-input','change',e=>{ const f=e.target.files&&e.target.files[0]; if(f) importThemeFile(f); });
   on('ep-custom-acc','input',e=>applyCustomAccent(e.target.value));
-  try{ _initAutoScale(); }catch(e){}
+  /* auto-scale DISATTIVATO: causava un loop con le card che hanno un proprio ResizeObserver */
+  /* try{ _initAutoScale(); }catch(e){} */
   on('reload-btn',  'click', ()=>hardReload());
   on('settings-btn','click', ()=>openOikSettings());
   on('hasidebar-btn','click',()=>toggleHASidebar());
