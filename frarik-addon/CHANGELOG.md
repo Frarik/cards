@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.35 — 2026-06-09
+
+### Temi: colore personalizzato + import/export
+- Pannello → Aspetto → Tema colore: oltre ai preset, **colore personalizzato** (color picker, deriva accento/glow) e **Esporta/Importa tema** come file `.json`.
+
 ## 1.2.34 — 2026-06-09
 
 ### Pulizia entità (HA)

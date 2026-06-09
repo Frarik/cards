@@ -807,7 +807,7 @@ function _histApply(){
       const rs=document.documentElement.style, light=(cfg.theme==='light');
       document.documentElement.dataset.theme=light?'light':'';
       if(cfg.font) rs.setProperty('--font-family',`'${cfg.font}',system-ui,sans-serif`);
-      const ct=(typeof COLOR_THEMES!=='undefined')&&COLOR_THEMES.find(x=>x.id===(cfg.colorTheme||'indaco'));
+      const ct=(typeof COLOR_THEMES!=='undefined')&&_themeObj(cfg.colorTheme||'indaco');
       if(ct){ rs.setProperty('--acc',ct.acc); rs.setProperty('--acc2',ct.acc2); rs.setProperty('--glow1',ct.g[0]); rs.setProperty('--glow2',ct.g[1]); rs.setProperty('--glow3',ct.g[2]);
         if(light){ rs.removeProperty('--bg'); rs.removeProperty('--panel'); rs.removeProperty('--panel2'); }
         else { rs.setProperty('--bg',ct.bg); rs.setProperty('--panel',ct.panel); rs.setProperty('--panel2',ct.panel2); } }
@@ -8241,8 +8241,12 @@ const COLOR_THEMES=[
   {id:'rosa',    name:'Rosa',     acc:'#ec4899', acc2:'#f472b6', bg:'#100510', panel:'#1c0b1c', panel2:'#280f28', g:['rgba(236,72,153,.32)','rgba(244,114,182,.18)','rgba(168,85,247,.16)']},
   {id:'viola',   name:'Viola',    acc:'#a855f7', acc2:'#c084fc', bg:'#0b0510', panel:'#150b1c', panel2:'#1e0f28', g:['rgba(168,85,247,.34)','rgba(192,132,252,.18)','rgba(99,102,241,.16)']},
 ];
+function _themeObj(id){
+  if(id==='custom' && cfg.customTheme) return Object.assign({id:'custom',name:'Personalizzato'}, cfg.customTheme);
+  return COLOR_THEMES.find(x=>x.id===id);
+}
 function applyColorTheme(id){
-  const t=COLOR_THEMES.find(x=>x.id===id)||COLOR_THEMES[0];
+  const t=_themeObj(id)||COLOR_THEMES[0];
   cfg.colorTheme=t.id;
   const r=document.documentElement.style;
   r.setProperty('--acc',t.acc); r.setProperty('--acc2',t.acc2);
@@ -8266,6 +8270,35 @@ function applyTheme(t){
   try{ applyColorTheme(cfg.colorTheme||'indaco'); }catch(e){}   // riadatta sfondo tinto alla nuova modalità
   saveCfg();
   renderDash();
+}
+/* Tema colore PERSONALIZZATO da un singolo colore accento (deriva acc2 + glow) */
+function applyCustomAccent(hex){
+  if(!hex) return; if(hex[0]!=='#') hex='#'+hex;
+  if(!/^#[0-9a-fA-F]{6}$/.test(hex)) return;
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  cfg.customTheme={ acc:hex, acc2:_lightenHex(hex,0.28), bg:'#060810', panel:'#0c0e1c', panel2:'#12152a',
+    g:[`rgba(${r},${g},${b},.30)`,`rgba(${r},${g},${b},.16)`,`rgba(${r},${g},${b},.18)`] };
+  applyColorTheme('custom');
+}
+/* Esporta/Importa il tema come file .json */
+function exportTheme(){
+  try{
+    const obj={ app:'frarik-theme', theme:cfg.theme||'dark', colorTheme:cfg.colorTheme||'indaco', customTheme:cfg.customTheme||null };
+    const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(obj,null,2)],{type:'application/json'}));
+    a.download='frarik-tema.json'; a.click();
+  }catch(e){ showToast('⚠️ Errore export tema'); }
+}
+function _importThemePick(){ const i=document.getElementById('theme-file-input'); if(i){ i.value=''; i.click(); } }
+function importThemeFile(file){
+  if(!file) return; const r=new FileReader();
+  r.onload=e=>{ try{ const p=JSON.parse(e.target.result);
+    if(p.customTheme) cfg.customTheme=p.customTheme;
+    if(p.theme) applyTheme(p.theme);
+    applyColorTheme(p.colorTheme||(p.customTheme?'custom':'indaco'));
+    try{ _renderColorThemes(); }catch(_){}
+    showToast('🎨 Tema importato');
+  }catch(err){ showToast('⚠️ File tema non valido'); } };
+  r.readAsText(file);
 }
 function applyFont(fid){
   cfg.font=fid;
@@ -10167,6 +10200,8 @@ function _epLicLogout(){
   on('notif-bell',  'click', e=>toggleNotifCenter(e));
   on('kiosk-btn',   'click', ()=>toggleKiosk());
   on('backup-file-input','change',e=>{ const f=e.target.files&&e.target.files[0]; if(f) importBackupFile(f); });
+  on('theme-file-input','change',e=>{ const f=e.target.files&&e.target.files[0]; if(f) importThemeFile(f); });
+  on('ep-custom-acc','input',e=>applyCustomAccent(e.target.value));
   try{ _initAutoScale(); }catch(e){}
   on('reload-btn',  'click', ()=>hardReload());
   on('settings-btn','click', ()=>openOikSettings());
@@ -12322,6 +12357,8 @@ Object.assign(window, {
   openEntityCleanup,
   _closeEntCleanup,
   _ecRemoveSel,
+  exportTheme,
+  _importThemePick,
   eitClick,
   exportBackup,
   fbAddBtn,

@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@400;600;700;800;900&family=Nunito:wght@400;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="./assets/index-kBRI2TPQ.js"></script>
+  <script type="module" crossorigin src="./assets/index-By5Vhufb.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-DlYA7mqx.css">
 </head>
 <body>
@@ -672,6 +672,15 @@
           </div>
           <div class="ep-sec-title" style="margin-top:8px;margin-bottom:4px">Tema colore</div>
           <div class="ep-ctheme-row" id="ep-ctheme-row"></div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+            <label style="font-size:11px;color:#94a3b8;flex:1">Colore personalizzato</label>
+            <input type="color" id="ep-custom-acc" value="#6366f1" style="width:36px;height:28px;border:none;border-radius:7px;background:none;cursor:pointer">
+          </div>
+          <div style="display:flex;gap:6px;margin-top:8px">
+            <button class="ep-add2" data-action="exportTheme" style="flex:1">⬇ Esporta tema</button>
+            <button class="ep-add2" data-action="_importThemePick" style="flex:1">⬆ Importa tema</button>
+          </div>
+          <input type="file" id="theme-file-input" accept=".json,application/json" style="display:none">
           <div class="ep-sec-title" style="margin-top:8px;margin-bottom:4px">Carattere</div>
           <button class="ep-font-sel" id="ep-font-btn" data-action="toggleFontPop">
             <span id="ep-font-lbl">Inter</span><span style="opacity:.4;font-size:9px">▾</span>
