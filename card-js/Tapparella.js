@@ -69,7 +69,7 @@
 
     return `<div style="position:relative;height:100%;display:flex;flex-direction:column;min-height:0;gap:9px">${gear}
       <!-- TELAIO finestra -->
-      <div style="position:relative;flex:1;min-height:260px;border-radius:12px;padding:7px;box-sizing:border-box;
+      <div style="position:relative;flex:1;min-height:210px;border-radius:12px;padding:7px;box-sizing:border-box;
         background:linear-gradient(145deg,#525a66 0%,#363c46 55%,#262b33 100%);
         box-shadow:0 12px 28px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.14)">
         <!-- vano vetro -->
@@ -186,9 +186,9 @@
   }
 
   const CARD = {
-    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '1.4',
+    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '1.5',
     desc: 'Tapparella animata in tempo reale sincronizzata con la cover — Apri/Ferma/Chiudi, % e stato. ⚙ per scegliere l\'entità.',
-    colSpan: 2, rowSpan: 4,
+    colSpan: 2, rowSpan: 3,
     render, update, mount
   };
   window.FratechCardRegistry = window.FratechCardRegistry || {};
