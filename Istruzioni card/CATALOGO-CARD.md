@@ -2,7 +2,7 @@
 
 > ⚠️ **File generato automaticamente** da `scripts/build-card-catalog.mjs` — non modificarlo a mano.
 > Rigenera con: `node scripts/build-card-catalog.mjs`
-> Ultima generazione: 2026-06-09 · Card trovate: 6
+> Ultima generazione: 2026-06-09 · Card trovate: 7
 
 Questo catalogo elenca le card realmente presenti nel repo e i pattern/API che usano.
 Serve come **riferimento vivo**: quando si crea una nuova card si possono leggere quelle
@@ -14,6 +14,7 @@ esistenti (in `card-js/`, `card-chips/`, `card-distintivi/`) per riusarne stile 
 |---|---|---|---|---|---|
 | card-js | `Antizanzare.js` | `antizanzare-card` | Anti Zanzare | 1.5 | Lovelace |
 | card-js | `Differenziata.js` | `differenziata-card` | Raccolta Differenziata | 1.0 | Lovelace |
+| card-js | `DoorsWindows.js` | `doors-windows` | 🚪 Porte e Finestre | 1.0 | FratechStore |
 | card-js | `Irrigazione.js` | `irrigazione-card` | Irrigazione Smart | 1.0 | Lovelace |
 | card-js | `Meteo.js` | `meteo-card` | Meteo + Previsioni | — | Lovelace |
 | card-js | `person-card.js` | `person-card` | 👤 Persona | 1.18 | FratechStore |
@@ -32,6 +33,12 @@ esistenti (in `card-js/`, `card-chips/`, `card-distintivi/`) per riusarne stile 
 - **Descrizione:** Bidoni, programmazione settimanale, notifiche push e Alexa.
 - **Hooks:** — · **righe:** 433
 - **Pattern/API usati:** hass completo (Lovelace) · grafica SVG inline · interazione (listener)
+
+### 🚪 Porte e Finestre  ·  `DoorsWindows.js`
+- **ID:** `doors-windows` · **versione:** 1.0 · **formato:** FratechStore
+- **Descrizione:** Sensori apertura (porte/finestre/garage) auto-rilevati: quanti aperti, da quanto,
+- **Hooks:** mount, update · **righe:** 138
+- **Pattern/API usati:** interazione (listener) · auto-scoperta device_class · popup/overlay
 
 ### Irrigazione Smart  ·  `Irrigazione.js`
 - **ID:** `irrigazione-card` · **versione:** 1.0 · **formato:** Lovelace
