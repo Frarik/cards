@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.36 — 2026-06-09
+
+### Popup Panel
+- Nuova card **🪟 Popup** (dal menu "+ Card"): è un pulsante che **apre una vista come finestra modale** con dentro tutte le card di quella vista. In modifica scegli quale vista apre (🪟), in vista normale il click la apre. Così "contieni" le card in una vista e le richiami in popup da qualsiasi pagina.
+
 ## 1.2.35 — 2026-06-09
 
 ### Temi: colore personalizzato + import/export

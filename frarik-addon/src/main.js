@@ -510,17 +510,16 @@ function deleteCol(secId, col){
 function addCardToCol(secId, col, triggerEl){
   _pendingDropSec=secId; _pendingDropCol=col;
   document.getElementById('add-col-menu')?.remove();
-  // Niente negli appunti → vai DRITTO allo Store
-  if(!_cardClipboard){ openGhStore(); return; }
-  // Appunti presenti → piccolo menu: apri lo Store oppure Incolla la card copiata
   const menu=document.createElement('div');
   menu.id='add-col-menu';
-  menu.style.cssText='position:fixed;z-index:15000;background:#1a1f35;border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:8px;box-shadow:0 12px 40px rgba(0,0,0,.75);display:flex;flex-direction:column;gap:6px;min-width:200px;animation:popIn .12s ease';
-  const btnStyle='background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:rgba(255,255,255,.8);font-size:12px;padding:9px 12px;cursor:pointer;text-align:left;transition:background .12s';
+  menu.style.cssText='position:fixed;z-index:15000;background:#1a1f35;border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:8px;box-shadow:0 12px 40px rgba(0,0,0,.75);display:flex;flex-direction:column;gap:6px;min-width:210px;animation:popIn .12s ease';
+  const btnStyle='background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:rgba(255,255,255,.85);font-size:12px;padding:9px 12px;cursor:pointer;text-align:left;transition:background .12s';
+  const pasteBtn=_cardClipboard?`<button style="${btnStyle};background:rgba(99,102,241,.12);border-color:rgba(99,102,241,.3);color:#a5b4fc" data-action="_pasteCardToClean" data-action-args='["${secId}",${col}]'>📋 Incolla "${eh(_cardClipboard.label||_cardClipboard.type||'Card')}"</button>`:'';
   menu.innerHTML=`
-    <div style="font-size:9px;color:rgba(255,255,255,.3);padding:2px 4px 4px;letter-spacing:.5px;text-transform:uppercase">Aggiungi card</div>
-    <button style="${btnStyle};background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:#86efac" onmouseover="this.style.background='rgba(74,222,128,.22)'" onmouseout="this.style.background='rgba(74,222,128,.1)'" data-action="_openGhStoreClean">🛒 Apri lo Store</button>
-    <button style="${btnStyle};background:rgba(99,102,241,.12);border-color:rgba(99,102,241,.3);color:#a5b4fc" onmouseover="this.style.background='rgba(99,102,241,.25)'" onmouseout="this.style.background='rgba(99,102,241,.12)'" data-action="_pasteCardToClean" data-action-args='["${secId}",${col}]'>📋 Incolla "${eh(_cardClipboard.label||_cardClipboard.type||'Card')}"</button>
+    <div style="font-size:9px;color:rgba(255,255,255,.3);padding:2px 4px 4px;letter-spacing:.5px;text-transform:uppercase">Aggiungi</div>
+    <button style="${btnStyle};background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:#86efac" data-action="_openGhStoreClean">🛒 Apri lo Store</button>
+    <button style="${btnStyle};background:rgba(168,85,247,.12);border-color:rgba(168,85,247,.3);color:#c4b5fd" data-action="addPopupPanel" data-action-args='["${secId}",${col}]'>🪟 Popup (apre una vista)</button>
+    ${pasteBtn}
   `;
   // Position near the trigger element
   const rect=triggerEl?triggerEl.getBoundingClientRect():{left:window.innerWidth/2-95,bottom:window.innerHeight/2};
@@ -536,6 +535,63 @@ function addCardToCol(secId, col, triggerEl){
   setTimeout(()=>document.addEventListener('click',function _h(e){
     if(!menu.contains(e.target)){menu.remove();document.removeEventListener('click',_h);}
   }),80);
+}
+/* ── POPUP PANEL: card-pulsante che apre una VISTA come finestra modale ── */
+function addPopupPanel(secId,col){
+  document.getElementById('add-col-menu')?.remove();
+  const page=curPage(); _ensureSections(page);
+  const c={ id:uid(), type:'popup-panel', label:'Popup', icon:'🪟', targetPage:'', secId, secCol:col, rowSpan:1, colSpan:1, height:90, fixedH:true };
+  const sib=page.cards.filter(x=>x.secId===secId&&(x.secCol||0)===col);
+  c.secOrder=sib.length?Math.max(...sib.map(x=>x.secOrder||0))+10:0;
+  page.cards.push(c);
+  saveCfg(); renderDash();
+  _popupPickView(c.id);
+}
+/* sceglie quale vista apre il popup */
+function _popupPickView(cardId){
+  document.getElementById('pp-view-menu')?.remove();
+  const card=curPage().cards.find(c=>c.id===cardId); if(!card) return;
+  const menu=document.createElement('div'); menu.id='pp-view-menu';
+  menu.style.cssText='position:fixed;z-index:15500;left:50%;top:80px;transform:translateX(-50%);background:#1a1f35;border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:8px;box-shadow:0 12px 40px rgba(0,0,0,.75);display:flex;flex-direction:column;gap:6px;min-width:240px;max-height:70vh;overflow:auto';
+  const bs='background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:#e2e8f0;font-size:12px;padding:9px 12px;cursor:pointer;text-align:left';
+  menu.innerHTML='<div style="font-size:9px;color:rgba(255,255,255,.4);padding:2px 4px 4px;text-transform:uppercase">Quale vista apre il popup?</div>'+
+    (cfg.pages||[]).map((p,i)=>`<button style="${bs}${p.id===card.targetPage?';border-color:var(--acc)':''}" data-action="_ppSetTarget" data-action-args='["${cardId}","${p.id}"]'>${eh(p.icon||'📄')} ${eh(p.name||('Vista '+(i+1)))}</button>`).join('');
+  document.body.appendChild(menu);
+  setTimeout(()=>document.addEventListener('click',function _h(e){ if(!menu.contains(e.target)){menu.remove();document.removeEventListener('click',_h);} }),80);
+}
+function _ppSetTarget(cardId,pageId){
+  document.getElementById('pp-view-menu')?.remove();
+  const card=curPage().cards.find(c=>c.id===cardId); if(!card) return;
+  card.targetPage=pageId;
+  const pg=(cfg.pages||[]).find(p=>p.id===pageId);
+  if(pg){ if(!card.label||card.label==='Popup') card.label=pg.name||'Popup'; if(card.icon==='🪟'&&pg.icon) card.icon=pg.icon; }
+  saveCfg(); renderDash();
+  showToast('🪟 Popup → "'+((pg&&pg.name)||'vista')+'"');
+}
+/* apre la vista target come modale */
+function openPopupView(pageId){
+  const pg=(cfg.pages||[]).find(p=>p.id===pageId);
+  if(!pg){ showToast('🪟 Imposta prima la vista del popup (in modifica)'); return; }
+  document.getElementById('popup-view')?.remove();
+  const ov=document.createElement('div'); ov.id='popup-view';
+  ov.style.cssText='position:fixed;inset:0;z-index:16000;background:rgba(2,6,16,.8);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:18px';
+  const inner=document.createElement('div');
+  inner.style.cssText='width:min(1000px,96vw);max-height:90vh;overflow:auto;background:var(--panel,#0c0e1c);border:1px solid rgba(255,255,255,.12);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.6);padding:16px;color:#fff';
+  const hdr=document.createElement('div');
+  hdr.style.cssText='display:flex;align-items:center;gap:10px;margin-bottom:12px';
+  hdr.innerHTML='<div style="flex:1;font-size:15px;font-weight:800">'+(/^mdi:/.test(pg.icon||'')?'':eh(pg.icon||'🪟'))+' '+eh(pg.name||'Popup')+'</div>';
+  const x=document.createElement('button'); x.textContent='✕'; x.style.cssText='width:32px;height:32px;border:none;border-radius:9px;background:rgba(255,255,255,.1);color:#fff;cursor:pointer;font-size:16px';
+  x.addEventListener('click',()=>ov.remove()); hdr.appendChild(x);
+  const grid=document.createElement('div');
+  grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px';
+  (pg.cards||[]).filter(c=>c.type!=='header-bar').forEach(c=>{
+    const w=document.createElement('div'); w.className='dash-card-wrap';
+    w.style.height=((c.fixedH&&c.height)?c.height:((c.rowSpan||1)*150))+'px';
+    if(c.width){ w.style.width=c.width+'px'; w.style.maxWidth='100%'; }
+    w.appendChild(_safeBuildCard(c)); grid.appendChild(w);
+  });
+  inner.appendChild(hdr); inner.appendChild(grid); ov.appendChild(inner); document.body.appendChild(ov);
+  ov.addEventListener('click',e=>{ if(e.target===ov) ov.remove(); });
 }
 function moveSectionUp(secId){
   const page=curPage(); _ensureSections(page);
@@ -3630,6 +3686,24 @@ function buildCard(card){
   el.style.setProperty('--card-r', radius);
   // Weather/forecast: override height to fill wrap
   if(t==='weather'||t==='weather-forecast') el.style.height='100%';
+
+  // ── POPUP PANEL: pulsante che apre una vista come modale ──
+  if(t==='popup-panel'){
+    el.style.cssText+=';cursor:pointer;height:100%;display:flex;align-items:center;justify-content:center;position:relative';
+    const ico=/^mdi:/.test(card.icon||'')?_renderIcon(card.icon,28,'var(--acc2)'):eh(card.icon||'🪟');
+    el.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px;pointer-events:none">
+        <div style="font-size:28px;line-height:1">${ico}</div>
+        <div style="font-size:13px;font-weight:700">${eh(card.label||'Popup')}</div>
+        ${card.targetPage?'':'<div style="font-size:9px;color:#f59e0b">⚙ scegli una vista</div>'}
+      </div>
+      <div class="card-ov" style="z-index:30"><div class="ov-row">
+        <button class="ovb ovb-edit" data-action="_popupPickView" data-action-arg="${card.id}" title="Scegli vista">🪟</button>
+        <button class="ovb ovb-dup"  data-action="dupCard" data-action-arg="${card.id}" title="Duplica">⧉</button>
+        <button class="ovb ovb-del"  data-action="delCard" data-action-arg="${card.id}" title="Elimina">🗑</button>
+      </div></div>`;
+    el.addEventListener('click',e=>{ if(e.target.closest('.card-ov')) return; if(editMode){ _popupPickView(card.id); } else { openPopupView(card.targetPage); } });
+    return el;
+  }
 
   const txtSt=card.textColor?`style="color:${card.textColor}"` :'';
   let inner='';
@@ -12359,6 +12433,10 @@ Object.assign(window, {
   _ecRemoveSel,
   exportTheme,
   _importThemePick,
+  addPopupPanel,
+  _popupPickView,
+  _ppSetTarget,
+  openPopupView,
   eitClick,
   exportBackup,
   fbAddBtn,
