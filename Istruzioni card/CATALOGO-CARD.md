@@ -2,7 +2,7 @@
 
 > ⚠️ **File generato automaticamente** da `scripts/build-card-catalog.mjs` — non modificarlo a mano.
 > Rigenera con: `node scripts/build-card-catalog.mjs`
-> Ultima generazione: 2026-06-08 · Card trovate: 5
+> Ultima generazione: 2026-06-09 · Card trovate: 6
 
 Questo catalogo elenca le card realmente presenti nel repo e i pattern/API che usano.
 Serve come **riferimento vivo**: quando si crea una nuova card si possono leggere quelle
@@ -17,6 +17,7 @@ esistenti (in `card-js/`, `card-chips/`, `card-distintivi/`) per riusarne stile 
 | card-js | `Irrigazione.js` | `irrigazione-card` | Irrigazione Smart | 1.0 | Lovelace |
 | card-js | `Meteo.js` | `meteo-card` | Meteo + Previsioni | — | Lovelace |
 | card-js | `person-card.js` | `person-card` | 👤 Persona | 1.18 | FratechStore |
+| card-js | `System.js` | `system-card` | 🖥️ Sistema | 1.0 | FratechStore |
 
 ## Dettaglio
 
@@ -49,6 +50,12 @@ esistenti (in `card-js/`, `card-chips/`, `card-distintivi/`) per riusarne stile 
 - **Descrizione:** Foto persona + tracker, sfondo Google Maps live, stato zona colorato e storico 24h. Contenuto che scala con la dimensione della card.
 - **Hooks:** mount, update · **righe:** 413
 - **Pattern/API usati:** timer · interazione (listener) · mappa Leaflet · popup/overlay
+
+### 🖥️ Sistema  ·  `System.js`
+- **ID:** `system-card` · **versione:** 1.0 · **formato:** FratechStore
+- **Descrizione:** CPU, RAM, disco, temperatura, uptime e numero di aggiornamenti disponibili.
+- **Hooks:** mount, update · **righe:** 150
+- **Pattern/API usati:** interazione (listener) · popup/overlay
 
 ---
 _Per le regole e i template di creazione vedi `CREAZIONE-CARD.md` in questa cartella._
