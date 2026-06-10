@@ -5217,7 +5217,17 @@ function cardMenu(cardId, ev){
     const a=b.getAttribute('data-cm');
     if(a==='close'){ close(); return; }
     close();
-    if(a==='cfg') openCM(cardId);
+    if(a==='cfg'){
+      // Per card js-custom con configure() propria, apre la config interna della card
+      if(c.type==='js-custom'&&c.jsCardId){
+        const _reg=(window.FratechCardRegistry||{})[c.jsCardId];
+        if(_reg&&typeof _reg.configure==='function'){
+          const _el=document.getElementById('v-'+cardId);
+          if(_el){ _reg.configure(c,_el); return; }
+        }
+      }
+      openCM(cardId);
+    }
     else if(a==='dup') dupCard(cardId);
     else if(a==='copy') copyCard(cardId);
     else if(a==='cut') cutCard(cardId);

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.42 — 2026-06-10
+
+### fix: Tapparella — configurazione spostata nel popup ✏️
+- Rimossa l'icona ⚙️ dall'interno della card Tapparella.
+- Il popup "Configura" (✏️ → ⚙️) ora apre direttamente la configurazione interna della card (nome + entità).
+- Le card JS custom che espongono `configure` nel loro oggetto usano d'ora in poi questa logica in automatico.
+
 ## 1.2.41 — 2026-06-10
 
 ### feat: modalità modifica — una sola icona ✏️ con popup azioni

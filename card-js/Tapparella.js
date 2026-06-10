@@ -1,10 +1,10 @@
-/* frarik-version: 2.0 */
+/* frarik-version: 2.3 */
 /**
  * Tapparella.js — FratechStore card "Tapparella" (cover)
  * Disegno realistico di una tapparella sincronizzato in TEMPO REALE con la cover:
  * sale/scende mentre apre/chiude. Pulsanti Apri/Ferma/Chiudi, percentuale e stato.
  * La velocità è AUTOMATICA: la card impara da sola il tempo di corsa osservando i movimenti
- * (e se la cover riporta la posizione live, la segue). Nome ed entità configurabili dal ⚙ (dominio cover).
+ * (e se la cover riporta la posizione live, la segue). Nome ed entità configurabili dal popup ✏️ → ⚙️.
  */
 (function () {
   'use strict';
@@ -54,7 +54,6 @@
     return `<div style="display:flex;align-items:center;gap:7px;flex-shrink:0">
       <span style="font-size:15px;line-height:1">🪟</span>
       <span style="flex:1;min-width:0;font-size:13px;font-weight:800;color:#e8ebf5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nm}</span>
-      <div data-tap="gear" title="Impostazioni" style="width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:rgba(255,255,255,.65);background:rgba(255,255,255,.1);flex-shrink:0">⚙️</div>
     </div>`;
   }
 
@@ -64,7 +63,7 @@
       return `<div style="height:100%;display:flex;flex-direction:column;min-height:0;gap:8px">${header(nm)}
         <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:rgba(255,255,255,.55);text-align:center;padding:10px">
           <div style="font-size:34px">🪟</div>
-          <div style="font-size:11px">Tocca il <b style="color:${acc}">⚙️</b> per scegliere l'entità <b style="color:${acc}">cover</b></div>
+          <div style="font-size:11px">Tocca <b style="color:${acc}">✏️ → ⚙️ Configura</b> per scegliere l'entità <b style="color:${acc}">cover</b></div>
         </div></div>`;
     }
     const pos = getPos(h, id), st = stateOf(h, id);
@@ -174,7 +173,6 @@
     if (!el._tapWired) {
       el._tapWired = true;
       el.addEventListener('click', e => {
-        const g = e.target.closest('[data-tap="gear"]'); if (g) { e.stopPropagation(); openCfg(card, el); return; }
         const b = e.target.closest('[data-cov]'); if (!b) return;
         const id = entOf(card); if (!id) { openCfg(card, el); return; }
         const act = b.getAttribute('data-cov');
@@ -226,10 +224,11 @@
   }
 
   const CARD = {
-    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '2.2',
-    desc: 'Tapparella realistica che sale/scende in tempo reale con la cover (velocità automatica). Apri/Ferma/Chiudi, % e stato. Nome ed entità dal ⚙.',
+    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '2.3',
+    desc: 'Tapparella realistica che sale/scende in tempo reale con la cover (velocità automatica). Apri/Ferma/Chiudi, % e stato. Nome ed entità da ✏️ → ⚙️ Configura.',
     colSpan: 2, rowSpan: 3,
-    render, update, mount
+    render, update, mount,
+    configure: openCfg
   };
   window.FratechCardRegistry = window.FratechCardRegistry || {};
   window.FratechCardRegistry[CARD.id] = CARD;
