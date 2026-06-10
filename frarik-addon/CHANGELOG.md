@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.41 — 2026-06-10
+
+### feat: modalità modifica — una sola icona ✏️ con popup azioni
+- In modifica ogni card mostra ora **una sola icona ✏️**. Cliccandola si apre un popup con: **Configura, Duplica, Copia, Taglia, Copia su vista, Elimina** e i controlli di **dimensione**. Niente più fila di pulsantini sulla card.
+
 ## 1.2.40 — 2026-06-10
 
 ### feat: le card JS possono suggerire la dimensione

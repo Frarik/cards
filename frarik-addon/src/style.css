@@ -10,6 +10,25 @@
   box-shadow:0 0 12px rgba(31,111,235,.5);animation:frkSplashLoad 3.4s ease forwards}
 @keyframes frkSplashLoad{0%{width:0}100%{width:100%}}
 
+/* ═══ MENU MODIFICA CARD (popup unica icona ✏️) ═══ */
+.cardmenu-ov{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(2,6,16,.6);backdrop-filter:blur(4px);animation:cmFade .15s ease}
+@keyframes cmFade{from{opacity:0}to{opacity:1}}
+.cardmenu{width:min(330px,92vw);background:#0d1424;border:1px solid rgba(255,255,255,.12);border-radius:18px;box-shadow:0 30px 70px rgba(0,0,0,.6);padding:14px;color:#e8ebf5;animation:cmPop .18s cubic-bezier(.2,.8,.3,1)}
+@keyframes cmPop{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
+.cardmenu-hd{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800;margin-bottom:12px}
+.cardmenu-hd>span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cardmenu-close{width:26px;height:26px;border:none;border-radius:8px;background:rgba(255,255,255,.08);color:#cbd5e1;cursor:pointer;font-size:12px;flex-shrink:0}
+.cardmenu-close:hover{background:rgba(255,255,255,.16);color:#fff}
+.cardmenu-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.cmi{display:flex;flex-direction:column;align-items:center;gap:5px;padding:13px 4px;border:1px solid rgba(255,255,255,.1);border-radius:13px;background:rgba(255,255,255,.04);color:#e8ebf5;cursor:pointer;font-size:10px;font-weight:700;transition:all .14s}
+.cmi b{font-size:20px;font-weight:400;line-height:1}
+.cmi:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.22);transform:translateY(-1px)}
+.cmi-cfg{background:rgba(99,102,241,.16);border-color:rgba(129,140,248,.4);color:#c7d2fe}
+.cmi-cfg:hover{background:rgba(99,102,241,.28)}
+.cmi-del{background:rgba(239,68,68,.13);border-color:rgba(248,113,113,.4);color:#fca5a5}
+.cmi-del:hover{background:rgba(239,68,68,.26)}
+.cardmenu-size{display:flex;align-items:center;justify-content:center;gap:3px;flex-wrap:wrap;margin-top:12px;padding-top:11px;border-top:1px solid rgba(255,255,255,.08);font-size:12px;color:#94a3b8}
+
 /* ═══ RESET + VARS ═══ */
 :root{
   --bg:#060810; --panel:#0c0e1c; --panel2:#12152a;

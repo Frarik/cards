@@ -3816,12 +3816,7 @@ function buildCard(card){
     el.innerHTML=`
       <div class="card-inner">${inner}</div>
       <div class="hbar-ctrl">
-        <button class="ovb ovb-edit" data-action="openCM" data-action-arg="${card.id}" title="Modifica">✏️</button>
-        <button class="ovb ovb-dup"  data-action="dupCard" data-action-arg="${card.id}" title="Duplica">⧉</button>
-          <button class="ovb ovb-cpp" data-action="copyCardToPage" data-action-arg="${card.id}" title="Copia su un'altra vista">📑</button>
-        <button class="ovb ovb-cpy"  data-action="copyCard" data-action-arg="${card.id}" title="Copia">📋</button>
-        <button class="ovb ovb-cut"  data-action="cutCard" data-action-arg="${card.id}" title="Taglia">✂️</button>
-        <button class="ovb ovb-del"  data-action="delCard" data-action-arg="${card.id}" title="Elimina">🗑</button>
+        <button class="ovb ovb-edit ovb-menu" data-action="cardMenu" data-action-arg="${card.id}" title="Modifica card">✏️</button>
       </div>
       <div class="resize-handle" id="rh-${card.id}"></div>`;
     el.draggable=true;
@@ -3840,16 +3835,9 @@ function buildCard(card){
     el.style.cssText+='padding:0;cursor:default;';
     el.innerHTML=`
       ${inner}
-      <div class="card-ov" style="z-index:30">
-        <div class="ov-row">
-          <button class="ovb ovb-dup"  data-action="dupCard" data-action-arg="${card.id}" title="Duplica">⧉</button>
-          <button class="ovb ovb-cpp" data-action="copyCardToPage" data-action-arg="${card.id}" title="Copia su un'altra vista">📑</button>
-          <button class="ovb ovb-cpy"  data-action="copyCard" data-action-arg="${card.id}" title="Copia">📋</button>
-          <button class="ovb ovb-cut"  data-action="cutCard" data-action-arg="${card.id}" title="Taglia">✂️</button>
-          <button class="ovb ovb-del"  data-action="delCard" data-action-arg="${card.id}" title="Elimina">🗑</button>
-        </div>
-        <div class="ov-row" style="margin-top:2px"><div class="ov-size">${_ovSize}</div></div>
-      </div>
+      <div class="card-ov" style="z-index:30"><div class="ov-row">
+          <button class="ovb ovb-edit ovb-menu" data-action="cardMenu" data-action-arg="${card.id}" title="Modifica card">✏️</button>
+        </div></div>
       <div class="resize-handle" id="rh-${card.id}"></div>`;
     el.draggable=true;
     el.addEventListener('dragstart',e=>{ if(!editMode){ e.preventDefault(); return; } dragSrc=card.id; el.style.opacity='.4'; e.dataTransfer.effectAllowed='move'; });
@@ -3865,17 +3853,9 @@ function buildCard(card){
   if(t==='weather'||t==='weather-forecast'){
     el.innerHTML=`
       ${inner}${_renderCardBadgesHTML(card)}
-      <div class="card-ov" style="z-index:30">
-        <div class="ov-row">
-          <button class="ovb ovb-edit" data-action="openCM" data-action-arg="${card.id}" title="Modifica">✏️</button>
-          <button class="ovb ovb-dup"  data-action="dupCard" data-action-arg="${card.id}" title="Duplica">⧉</button>
-          <button class="ovb ovb-cpp" data-action="copyCardToPage" data-action-arg="${card.id}" title="Copia su un'altra vista">📑</button>
-          <button class="ovb ovb-cpy"  data-action="copyCard" data-action-arg="${card.id}" title="Copia">📋</button>
-          <button class="ovb ovb-cut"  data-action="cutCard" data-action-arg="${card.id}" title="Taglia">✂️</button>
-          <button class="ovb ovb-del"  data-action="delCard" data-action-arg="${card.id}" title="Elimina">🗑</button>
-        </div>
-        <div class="ov-row" style="margin-top:2px"><div class="ov-size">${_ovSize}</div></div>
-      </div>
+      <div class="card-ov" style="z-index:30"><div class="ov-row">
+          <button class="ovb ovb-edit ovb-menu" data-action="cardMenu" data-action-arg="${card.id}" title="Modifica card">✏️</button>
+        </div></div>
       <div class="resize-handle" id="rh-${card.id}"></div>`;
     el.draggable=true;
     el.addEventListener('dragstart',e=>{ if(!editMode){ e.preventDefault(); showToast('✏️ Abilita la modalità modifica per spostare le card'); return; } dragSrc=card.id; el.style.opacity='.4'; e.dataTransfer.effectAllowed='move'; });
@@ -3896,14 +3876,8 @@ function buildCard(card){
     <div class="card-inner">${inner}${_renderCardBadgesHTML(card)}</div>
     <div class="card-ov">
       <div class="ov-row">
-        <button class="ovb ovb-edit" data-action="openCM" data-action-arg="${card.id}" title="${t==='free'?'Modifica Canvas':'Modifica'}">${t==='free'?'🎨':'✏️'}</button>
-        <button class="ovb ovb-dup"  data-action="dupCard" data-action-arg="${card.id}" title="Duplica">⧉</button>
-          <button class="ovb ovb-cpp" data-action="copyCardToPage" data-action-arg="${card.id}" title="Copia su un'altra vista">📑</button>
-        <button class="ovb ovb-cpy"  data-action="copyCard" data-action-arg="${card.id}" title="Copia">📋</button>
-        <button class="ovb ovb-cut"  data-action="cutCard" data-action-arg="${card.id}" title="Taglia">✂️</button>
-        <button class="ovb ovb-del"  data-action="delCard" data-action-arg="${card.id}" title="Elimina">🗑</button>
+        <button class="ovb ovb-edit ovb-menu" data-action="cardMenu" data-action-arg="${card.id}" title="${t==='free'?'Modifica Canvas':'Modifica card'}">${t==='free'?'🎨':'✏️'}</button>
       </div>
-      <div class="ov-row" style="margin-top:2px"><div class="ov-size">${_ovSize}</div></div>
     </div>
     <div class="resize-handle" id="rh-${card.id}"></div>`;
 
@@ -5214,6 +5188,46 @@ function _cmVisToggle(){
   const op=document.getElementById('cm-vis-op')?.value; const v2=document.getElementById('cm-vis-val2');
   if(v2) v2.style.display=(mode==='cond'&&op==='between')?'':'none';
 }
+/* Menu modifica card: una sola icona ✏️ → popup con azioni + dimensione + configura */
+function cardMenu(cardId, ev){
+  if(ev&&ev.stopPropagation) ev.stopPropagation();
+  const c=curPage().cards.find(x=>x.id===cardId); if(!c) return;
+  const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+  const inSec=!!curPage().sections;
+  const sizeRow=inSec
+    ?`<button class="ovb-sm" data-action="adjSecSpan" data-action-args='["${cardId}",-1]'>◀</button><span id="cs-${cardId}" style="min-width:30px;text-align:center">S:${c.colSpan||1}</span><button class="ovb-sm" data-action="adjSecSpan" data-action-args='["${cardId}",1]'>▶</button>&nbsp;&nbsp;<button class="ovb-sm" data-action="adjH" data-action-args='["${cardId}",-20]'>▲</button><span id="rs-${cardId}" style="min-width:42px;text-align:center">${c.height||150}px</span><button class="ovb-sm" data-action="adjH" data-action-args='["${cardId}",20]'>▼</button>`
+    :`<button class="ovb-sm" data-action="adjSpan" data-action-args='["${cardId}","col",-1]'>◀</button><span id="cs-${cardId}">L:${c.colSpan||1}</span><button class="ovb-sm" data-action="adjSpan" data-action-args='["${cardId}","col",1]'>▶</button>&nbsp;&nbsp;<button class="ovb-sm" data-action="adjSpan" data-action-args='["${cardId}","row",-1]'>▲</button><span id="rs-${cardId}">A:${c.rowSpan||1}</span><button class="ovb-sm" data-action="adjSpan" data-action-args='["${cardId}","row",1]'>▼</button>`;
+  const ov=document.createElement('div'); ov.className='cardmenu-ov';
+  ov.innerHTML=`<div class="cardmenu">
+      <div class="cardmenu-hd"><span>${esc(c.icon||'📦')} ${esc(c.label||c.type||'Card')}</span><button class="cardmenu-close" data-cm="close">✕</button></div>
+      <div class="cardmenu-grid">
+        <button class="cmi cmi-cfg" data-cm="cfg"><b>⚙️</b><span>Configura</span></button>
+        <button class="cmi" data-cm="dup"><b>⧉</b><span>Duplica</span></button>
+        <button class="cmi" data-cm="copy"><b>📋</b><span>Copia</span></button>
+        <button class="cmi" data-cm="cut"><b>✂️</b><span>Taglia</span></button>
+        <button class="cmi" data-cm="page"><b>📑</b><span>Copia su vista</span></button>
+        <button class="cmi cmi-del" data-cm="del"><b>🗑</b><span>Elimina</span></button>
+      </div>
+      <div class="cardmenu-size">${sizeRow}</div>
+    </div>`;
+  const close=()=>{ try{document.body.removeChild(ov);}catch(e){} };
+  ov.addEventListener('click', e=>{ if(e.target===ov) close(); });
+  ov.querySelector('.cardmenu').addEventListener('click', e=>{
+    const b=e.target.closest('[data-cm]'); if(!b) return;   // i pulsanti dimensione usano data-action (li gestisce il dispatcher globale)
+    const a=b.getAttribute('data-cm');
+    if(a==='close'){ close(); return; }
+    close();
+    if(a==='cfg') openCM(cardId);
+    else if(a==='dup') dupCard(cardId);
+    else if(a==='copy') copyCard(cardId);
+    else if(a==='cut') cutCard(cardId);
+    else if(a==='page') copyCardToPage(cardId);
+    else if(a==='del') delCard(cardId);
+  });
+  document.body.appendChild(ov);
+}
+window.cardMenu=cardMenu;
+
 function openCM(cardId){
   editingId=cardId;
   const c=curPage().cards.find(x=>x.id===cardId); if(!c) return;
