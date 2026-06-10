@@ -69,7 +69,7 @@
     }
     const pos = getPos(h, id), st = stateOf(h, id);
     const ROLL = 13;
-    const dH = pos == null ? (100 - ROLL) : (100 - pos) * (100 - ROLL) / 100;
+    const ty = -(pos == null ? 0 : pos);   // translateY% della tenda: 0 = chiusa (giù), -100 = aperta (su nel cassonetto)
     const btn = (act, ico, lbl, col) =>
       `<button data-cov="${act}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
         padding:8px 4px;border-radius:11px;cursor:pointer;border:1px solid ${col}44;background:${col}1a;
@@ -88,22 +88,26 @@
           box-shadow:inset 0 0 20px rgba(0,0,0,.55),inset 0 0 0 1px rgba(0,0,0,.4)">
           <div style="position:absolute;inset:0;pointer-events:none;
             background:linear-gradient(118deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,.04) 26%,transparent 46%,transparent 72%,rgba(255,255,255,.07) 100%)"></div>
-          <!-- rullo/cassonetto -->
+          <!-- vano sotto il cassonetto: la tenda ci scorre dentro (overflow nasconde la parte avvolta) -->
+          <div data-open style="position:absolute;left:0;right:0;top:${ROLL}%;bottom:0;overflow:hidden;z-index:2">
+            <!-- TENDA di stecche: scende/sale scorrendo (translateY), come una vera tapparella -->
+            <div data-sh style="position:absolute;left:0;right:0;top:0;height:100%;
+              transform:translateY(${ty}%);transition:transform .5s linear;
+              background:repeating-linear-gradient(180deg,
+                rgba(255,255,255,.45) 0px, #c8d0db 1px, #b0b8c5 5px, #8c94a2 8px, rgba(0,0,0,.42) 9px, #b0b8c5 10px);
+              box-shadow:0 8px 14px rgba(0,0,0,.5)">
+              <!-- stecca finale (in fondo alla tenda) -->
+              <div style="position:absolute;bottom:0;left:0;right:0;height:10px;
+                background:linear-gradient(to bottom,#aeb6c2,#7c8492 45%,#3f444d);box-shadow:0 -1px 0 rgba(0,0,0,.3),0 3px 7px rgba(0,0,0,.55)">
+                <div style="position:absolute;left:30%;top:3.5px;width:16px;height:3px;border-radius:2px;background:rgba(0,0,0,.5)"></div>
+                <div style="position:absolute;right:30%;top:3.5px;width:16px;height:3px;border-radius:2px;background:rgba(0,0,0,.5)"></div>
+              </div>
+            </div>
+          </div>
+          <!-- cassonetto SOPRA (la tenda ci sparisce dentro quando si avvolge) -->
           <div style="position:absolute;top:0;left:0;right:0;height:${ROLL}%;z-index:3;border-radius:0 0 8px 8px;
             background:linear-gradient(to bottom,#8d95a2 0%,#aeb6c2 22%,#6b7280 60%,#3c424c 100%);
             box-shadow:0 6px 13px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.4)"></div>
-          <!-- tapparella -->
-          <div data-sh style="position:absolute;left:0;right:0;top:${ROLL}%;height:${dH}%;z-index:2;
-            transition:height .5s linear;
-            background:repeating-linear-gradient(180deg,
-              rgba(255,255,255,.45) 0px, #c8d0db 1px, #b0b8c5 5px, #8c94a2 8px, rgba(0,0,0,.42) 9px, #b0b8c5 10px);
-            box-shadow:0 8px 14px rgba(0,0,0,.5)">
-            <div style="position:absolute;bottom:0;left:0;right:0;height:10px;
-              background:linear-gradient(to bottom,#aeb6c2,#7c8492 45%,#3f444d);box-shadow:0 -1px 0 rgba(0,0,0,.3),0 3px 7px rgba(0,0,0,.55)">
-              <div style="position:absolute;left:30%;top:3.5px;width:16px;height:3px;border-radius:2px;background:rgba(0,0,0,.5)"></div>
-              <div style="position:absolute;right:30%;top:3.5px;width:16px;height:3px;border-radius:2px;background:rgba(0,0,0,.5)"></div>
-            </div>
-          </div>
           <div style="position:absolute;bottom:0;left:0;right:0;height:6px;z-index:1;background:linear-gradient(to bottom,#5b626e,#363c46)"></div>
         </div>
       </div>
@@ -119,7 +123,7 @@
     </div>`;
   }
 
-  // applica posizione/movimento (87% = 100 - ROLL(13))
+  // applica posizione/movimento alla TENDA (translateY%: 0 = chiusa giù, -100 = aperta su)
   function applyState(card, el) {
     const h = H(), id = entOf(card);
     const sh = el.querySelector('[data-sh]'); if (!sh) return;
@@ -127,30 +131,27 @@
     const st = s ? s.state : null, pos = getPos(h, id);
     const prev = el._tapPrev; el._tapPrev = st;
     const pe = el.querySelector('[data-pct]'), se = el.querySelector('[data-st]');
+    const setY = (y, dur) => { sh.style.transition = 'transform ' + dur + ' linear'; sh.style.transform = 'translateY(' + y + '%)'; };
 
     if (st === 'opening' || st === 'closing') {
       if (prev !== st) {
-        // inizio movimento → memorizza partenza e avvia l'animazione verso il finecorsa,
-        // ma fermandosi al 92% della corsa: NON mostra "tutto chiuso/aperto" finché HA non conferma.
+        // inizio movimento → la tenda scorre verso il finecorsa, fermandosi al 92%
+        // finché HA non conferma lo stato finale (così non "arriva prima" del reale).
         const start = pos == null ? (st === 'opening' ? 0 : 100) : pos;
         el._tapStart = { pos: start, ts: Date.now() };
         el._tapLive = start;
-        const startDH = (100 - start) * 87 / 100;
-        const targetDH = st === 'opening' ? 0 : 87;
-        const frac = Math.abs(targetDH - startDH) / 87;
-        sh.style.transition = 'height ' + Math.max(0.4, learnedTravel(card) * frac).toFixed(1) + 's linear';
-        sh.style.height = (startDH + (targetDH - startDH) * 0.92) + '%';
+        const startY = -start, targetY = st === 'opening' ? -100 : 0;
+        const frac = Math.abs(targetY - startY) / 100;
+        setY((startY + (targetY - startY) * 0.92).toFixed(1), Math.max(0.4, learnedTravel(card) * frac).toFixed(1) + 's');
       } else if (pos != null && pos !== el._tapLive) {
-        // la cover riporta la posizione LIVE → seguila (più preciso)
-        el._tapLive = pos;
-        sh.style.transition = 'height .7s linear';
-        sh.style.height = (100 - pos) * 87 / 100 + '%';
+        el._tapLive = pos;   // la cover riporta la posizione LIVE → seguila
+        setY(-pos, '.7s');
       }
-      // % live dall'altezza realmente animata
+      // % live dalla posizione visiva reale della tenda
       if (pe) {
-        const vt = sh.parentElement, vh = vt ? vt.getBoundingClientRect().height : 0;
-        if (vh) { const cov = sh.getBoundingClientRect().height / vh;
-          pe.textContent = Math.max(0, Math.min(100, Math.round(100 - cov * 100 / 0.87))) + '%'; }
+        const op = el.querySelector('[data-open]');
+        if (op) { const oR = op.getBoundingClientRect(), sR = sh.getBoundingClientRect();
+          pe.textContent = Math.max(0, Math.min(100, Math.round(-(sR.top - oR.top) / (oR.height || 1) * 100))) + '%'; }
       }
     } else {
       // fermo → IMPARA la velocità dal movimento appena concluso, poi posizione reale
@@ -159,8 +160,7 @@
         if (dp >= 8 && dt >= 0.6) learn(card, dt / (dp / 100));
         el._tapStart = null;
       }
-      sh.style.transition = 'height .5s linear';
-      sh.style.height = (pos == null ? 87 : (100 - pos) * 87 / 100) + '%';
+      setY(-(pos == null ? 0 : pos), '.5s');
       if (pe) pe.textContent = pos == null ? '—' : pos + '%';
     }
     if (se) { se.textContent = statusLabel(st, pos); se.style.color = statusColor(st, pos); }
@@ -226,7 +226,7 @@
   }
 
   const CARD = {
-    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '2.1',
+    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '2.2',
     desc: 'Tapparella realistica che sale/scende in tempo reale con la cover (velocità automatica). Apri/Ferma/Chiudi, % e stato. Nome ed entità dal ⚙.',
     colSpan: 2, rowSpan: 3,
     render, update, mount
