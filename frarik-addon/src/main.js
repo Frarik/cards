@@ -1408,7 +1408,14 @@ async function _ghCleanOrphans(){
   try{ files=await _ghApiListAll(); }
   catch(e){ showToast('⚠️ GitHub: '+(e.message||e)); return; }
   const repoIds=new Set();
-  for(const f of files){ try{ const card=await _ghInstallFile(f); if(card&&card.id) repoIds.add(card.id); }catch(e){} }
+  for(const f of files){
+    try{
+      const code=await _ghDownload(f);
+      const res=_installCardCode(code);
+      const ids=res.newCards&&res.newCards.length?res.newCards:res.tags;
+      ids.forEach(id=>repoIds.add(id));
+    }catch(e){}
+  }
   let removed=0;
   _jsStoreList().forEach(i=>{
     const id=i&&i.meta&&i.meta.id; const org=(i&&i.origin)||'github';
