@@ -260,39 +260,38 @@
   function openConfig(card, el, hass) {
     const H = bestHass();
     const personId = getPerson(card), gpsId = getGps(card);
-    const opts = (prefix, sel) => {
-      const states = (H && H.states) || {};
-      const list = Object.keys(states).filter(id => id.startsWith(prefix)).sort().map(id => {
-        const fn = (states[id].attributes && states[id].attributes.friendly_name) || id;
-        return `<option value="${id}" ${id === sel ? 'selected' : ''}>${fn} (${id})</option>`;
-      });
-      return `<option value="">— nessuna —</option>` + list.join('');
-    };
+    const states = (H && H.states) || {};
+    const allIds = Object.keys(states).sort();
+    const stInp = 'width:100%;padding:11px 12px;border-radius:11px;background:#0f1830;color:#f1f5f9;border:1px solid rgba(255,255,255,.20);font-size:13px;font-family:monospace;box-sizing:border-box;outline:none';
+    const stDrop = 'position:absolute;left:0;right:0;top:100%;z-index:10;max-height:180px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 11px 11px;display:none';
+    const stLbl = 'display:block;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8';
     const ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(2,6,16,.74);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
     ov.innerHTML = `
       <div style="width:min(440px,94vw);max-height:90vh;overflow:auto;background:#0b1220;border:1px solid rgba(255,255,255,.14);
         border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.6);padding:20px;color:#f1f5f9">
-        <style>
-          .pccfg-sel{width:100%;margin-top:6px;padding:11px 12px;border-radius:11px;background:#0f1830;color:#f1f5f9;
-            border:1px solid rgba(255,255,255,.20);font-size:13px;font-family:inherit}
-          .pccfg-sel option,.pccfg-sel optgroup{background:#0f1830;color:#f1f5f9}
-          .pccfg-lbl{display:block;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8}
-        </style>
         <div style="font-size:16px;font-weight:800;margin-bottom:16px">👤 Configura card persona</div>
-        <label class="pccfg-lbl">Entità Person</label>
-        <select id="pccfg-person" class="pccfg-sel">${opts('person.', personId)}</select>
-        <label class="pccfg-lbl" style="margin-top:14px">Entità GPS (device_tracker) — opzionale</label>
-        <select id="pccfg-gps" class="pccfg-sel">${opts('device_tracker.', gpsId)}</select>
-        <div style="font-size:11px;color:#64748b;margin-top:8px;line-height:1.5">Se lasci il GPS vuoto, la posizione viene presa dalla person stessa o dal suo tracker attivo.</div>
-        <label class="pccfg-lbl" style="margin-top:16px">Dimensioni card (px) — vuoto = automatica</label>
+        <label style="${stLbl}">Entità Person</label>
+        <div style="position:relative;margin-top:6px;margin-bottom:14px">
+          <input id="pccfg-person" type="text" value="${personId}" autocomplete="off"
+            placeholder="Clicca per scegliere oppure scrivi per filtrare…" style="${stInp}">
+          <div id="pccfg-person-d" style="${stDrop}"></div>
+        </div>
+        <label style="${stLbl}">Entità GPS (device_tracker) — opzionale</label>
+        <div style="position:relative;margin-top:6px;margin-bottom:8px">
+          <input id="pccfg-gps" type="text" value="${gpsId}" autocomplete="off"
+            placeholder="Clicca per scegliere oppure scrivi per filtrare…" style="${stInp}">
+          <div id="pccfg-gps-d" style="${stDrop}"></div>
+        </div>
+        <div style="font-size:11px;color:#64748b;margin-bottom:14px;line-height:1.5">Se lasci il GPS vuoto, la posizione viene presa dalla person stessa o dal suo tracker attivo.</div>
+        <label style="${stLbl}">Dimensioni card (px) — vuoto = automatica</label>
         <div style="display:flex;gap:10px;margin-top:6px">
           <div style="flex:1">
-            <input id="pccfg-w" type="number" min="0" step="10" placeholder="es. 400" value="${getW(card)||''}" class="pccfg-sel" style="margin-top:0;width:100%">
+            <input id="pccfg-w" type="number" min="0" step="10" placeholder="es. 400" value="${getW(card)||''}" style="${stInp};font-family:system-ui">
             <div style="font-size:10px;font-weight:700;color:#94a3b8;text-align:center;margin-top:4px">Larghezza</div>
           </div>
           <div style="flex:1">
-            <input id="pccfg-h" type="number" min="0" step="10" placeholder="es. 260" value="${getH(card)||''}" class="pccfg-sel" style="margin-top:0;width:100%">
+            <input id="pccfg-h" type="number" min="0" step="10" placeholder="es. 260" value="${getH(card)||''}" style="${stInp};font-family:system-ui">
             <div style="font-size:10px;font-weight:700;color:#94a3b8;text-align:center;margin-top:4px">Altezza</div>
           </div>
         </div>
@@ -305,6 +304,39 @@
     const close = () => { try { document.body.removeChild(ov); } catch (e) {} };
     ov.addEventListener('click', e => { if (e.target === ov) close(); });
     ov.querySelector('#pccfg-cancel').addEventListener('click', close);
+
+    // Combobox helper
+    function attachCombo(inpId, dropId) {
+      const inp2 = ov.querySelector('#' + inpId);
+      const drop = ov.querySelector('#' + dropId);
+      if (!inp2 || !drop) return;
+      function showDrop() {
+        const q = inp2.value.toLowerCase().trim();
+        const hits = (q
+          ? allIds.filter(id => id.toLowerCase().includes(q) || ((states[id]?.attributes?.friendly_name||'').toLowerCase().includes(q)))
+          : allIds
+        ).slice(0, 50);
+        if (!hits.length) { drop.style.display = 'none'; return; }
+        drop.style.display = 'block';
+        drop.innerHTML = hits.map(id => {
+          const fn = states[id]?.attributes?.friendly_name || '';
+          return `<div data-pick="${id}" style="padding:6px 11px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04)">
+            <span style="color:#e2e8f0">${id}</span>${fn ? `<span style="color:#475569;margin-left:7px;font-family:system-ui;font-size:10px">${fn}</span>` : ''}
+          </div>`;
+        }).join('');
+        drop.querySelectorAll('[data-pick]').forEach(row => {
+          row.addEventListener('mousedown', ev => { ev.preventDefault(); inp2.value = row.getAttribute('data-pick'); drop.style.display = 'none'; });
+          row.addEventListener('mouseover', () => { row.style.background = 'rgba(255,255,255,.08)'; });
+          row.addEventListener('mouseout',  () => { row.style.background = ''; });
+        });
+      }
+      inp2.addEventListener('focus', showDrop);
+      inp2.addEventListener('input', showDrop);
+      inp2.addEventListener('blur',  () => setTimeout(() => { drop.style.display = 'none'; }, 200));
+    }
+    attachCombo('pccfg-person', 'pccfg-person-d');
+    attachCombo('pccfg-gps',    'pccfg-gps-d');
+
     ov.querySelector('#pccfg-save').addEventListener('click', () => {
       const p = ov.querySelector('#pccfg-person').value;
       const g = ov.querySelector('#pccfg-gps').value;
@@ -399,7 +431,7 @@
     id: 'person-card',
     name: 'Persona',
     icon: '👤',
-    version: '1.18',
+    version: '1.19',
     desc: 'Foto persona + tracker, sfondo Google Maps live, stato zona colorato e storico 24h. Contenuto che scala con la dimensione della card.',
     noAutoFit: true,   // ha già il suo scaling interno (mappa a tutto sfondo) → niente auto-fit del core
     render, mount, update

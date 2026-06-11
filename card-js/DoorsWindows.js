@@ -1,4 +1,4 @@
-/* frarik-version: 1.0 */
+/* frarik-version: 1.1 */
 /**
  * DoorsWindows.js — FratechStore card "Porte e Finestre"
  * Rileva automaticamente i sensori apertura (device_class door/window/garage_door/opening),
@@ -101,11 +101,19 @@
     const cur = (Array.isArray(c.entities) && c.entities.length) ? c.entities : auto;
     const ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(2,6,16,.74);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
+    const states = (h && h.states) || {};
+    const allIds = Object.keys(states).sort();
+    const stInp = 'width:100%;padding:10px 11px;border-radius:11px;background:#0f1830;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none';
+    const stDrop = 'position:absolute;left:0;right:0;top:100%;z-index:10;max-height:180px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 11px 11px;display:none';
     ov.innerHTML = `<div style="width:min(460px,94vw);max-height:90vh;overflow:auto;background:#0b1220;border:1px solid rgba(255,255,255,.14);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.6);padding:20px;color:#f1f5f9">
         <div style="font-size:16px;font-weight:800;margin-bottom:6px">🚪 Porte e Finestre</div>
-        <div style="font-size:11px;color:#64748b;margin-bottom:10px">Sensori (un id per riga). Lascia <b>vuoto</b> per il rilevamento automatico (${auto.length} trovati per device_class porta/finestra).</div>
-        <textarea id="dw-ents" style="width:100%;height:180px;border-radius:10px;background:#0f1830;color:#f1f5f9;border:1px solid rgba(255,255,255,.2);font-size:12px;font-family:monospace;padding:10px;resize:vertical">${cur.join('\n')}</textarea>
-        <div style="display:flex;gap:10px;margin-top:16px">
+        <div style="font-size:11px;color:#64748b;margin-bottom:10px">Aggiungi sensori dalla lista oppure digitali direttamente. Lascia <b>vuoto</b> per rilevamento automatico (${auto.length} trovati).</div>
+        <div style="position:relative;margin-bottom:8px">
+          <input id="dw-pick" type="text" autocomplete="off" placeholder="Cerca e aggiungi un'entità…" style="${stInp}">
+          <div id="dw-pick-d" style="${stDrop}"></div>
+        </div>
+        <textarea id="dw-ents" style="width:100%;height:150px;border-radius:10px;background:#0f1830;color:#f1f5f9;border:1px solid rgba(255,255,255,.2);font-size:12px;font-family:monospace;padding:10px;resize:vertical;box-sizing:border-box">${cur.join('\n')}</textarea>
+        <div style="display:flex;gap:10px;margin-top:12px">
           <button id="dw-auto" style="flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:700;background:rgba(99,102,241,.18);color:#a5b4fc">↻ Auto</button>
           <button id="dw-cancel" style="flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#e2e8f0">Annulla</button>
           <button id="dw-save" style="flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;background:#22c55e;color:#04210f">Salva</button>
@@ -116,6 +124,40 @@
     ov.addEventListener('click', e => { if (e.target === ov) close(); });
     ov.querySelector('#dw-cancel').addEventListener('click', close);
     ov.querySelector('#dw-auto').addEventListener('click', () => { ov.querySelector('#dw-ents').value = ''; });
+
+    // Combobox picker → aggiunge alla textarea
+    const pickInp = ov.querySelector('#dw-pick');
+    const pickDrop = ov.querySelector('#dw-pick-d');
+    function showPickDrop() {
+      const q = pickInp.value.toLowerCase().trim();
+      const hits = (q
+        ? allIds.filter(id => id.toLowerCase().includes(q) || ((states[id]?.attributes?.friendly_name||'').toLowerCase().includes(q)))
+        : allIds
+      ).slice(0, 50);
+      if (!hits.length) { pickDrop.style.display = 'none'; return; }
+      pickDrop.style.display = 'block';
+      pickDrop.innerHTML = hits.map(id => {
+        const fn = states[id]?.attributes?.friendly_name || '';
+        return `<div data-pick="${id}" style="padding:6px 11px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04)">
+          <span style="color:#e2e8f0">${id}</span>${fn ? `<span style="color:#475569;margin-left:7px;font-family:system-ui;font-size:10px">${fn}</span>` : ''}
+        </div>`;
+      }).join('');
+      pickDrop.querySelectorAll('[data-pick]').forEach(row => {
+        row.addEventListener('mousedown', ev => {
+          ev.preventDefault();
+          const ta = ov.querySelector('#dw-ents');
+          const v = ta.value.trim();
+          const id = row.getAttribute('data-pick');
+          ta.value = v ? v + '\n' + id : id;
+          pickInp.value = ''; pickDrop.style.display = 'none';
+        });
+        row.addEventListener('mouseover', () => { row.style.background = 'rgba(255,255,255,.08)'; });
+        row.addEventListener('mouseout',  () => { row.style.background = ''; });
+      });
+    }
+    pickInp.addEventListener('focus', showPickDrop);
+    pickInp.addEventListener('input', showPickDrop);
+    pickInp.addEventListener('blur',  () => setTimeout(() => { pickDrop.style.display = 'none'; }, 200));
     ov.querySelector('#dw-save').addEventListener('click', () => {
       const ids = ov.querySelector('#dw-ents').value.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
       save(card, { entities: ids });   // vuoto = auto (detect ignora array vuoto)
@@ -125,7 +167,7 @@
   }
 
   const CARD = {
-    id: 'doors-windows', name: 'Porte e Finestre', icon: '🚪', version: '1.0',
+    id: 'doors-windows', name: 'Porte e Finestre', icon: '🚪', version: '1.1',
     desc: 'Sensori apertura (porte/finestre/garage) auto-rilevati: quanti aperti, da quanto, "tutto chiuso".',
     render, mount, update
   };

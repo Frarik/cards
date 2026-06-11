@@ -1,4 +1,4 @@
-/* frarik-version: 4.3 */
+/* frarik-version: 4.4 */
 (function () {
   'use strict';
 
@@ -472,7 +472,7 @@
   function openCfg(card, el) {
     const h = H(), cur = entOf(card), curType = typeOf(card), covers = listCovers(h);
     const states = (h && h.states) || {};
-    const allCovers = Object.keys(states).filter(id => id.startsWith('cover.')).sort();
+    const allEntities = Object.keys(states).sort();
     const ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(2,6,16,.74);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
     const stInp = 'width:100%;padding:11px;border-radius:11px;background:#0f1830;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:13px;box-sizing:border-box;outline:none';
@@ -492,7 +492,7 @@
       <div id="tap-types" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">${typeBtns}</div>
       <div style="font-size:11px;color:#94a3b8;margin-bottom:5px">Nome</div>
       <input id="tap-name" placeholder="es. Tapparella salotto" value="${(load(card).name || '').replace(/"/g, '&quot;')}" style="${stInp};margin-bottom:12px">
-      <div style="font-size:11px;color:#94a3b8;margin-bottom:5px">Entità cover (${allCovers.length} trovate)</div>
+      <div style="font-size:11px;color:#94a3b8;margin-bottom:5px">Entità</div>
       <div style="position:relative;margin-bottom:4px">
         <input id="tap-entity" type="text" value="${cur}" autocomplete="off"
           placeholder="Clicca per scegliere oppure scrivi per filtrare…"
@@ -523,8 +523,8 @@
     function showCoverDrop() {
       const q = entInp.value.toLowerCase().trim();
       const hits = (q
-        ? allCovers.filter(id => id.toLowerCase().includes(q) || ((states[id]?.attributes?.friendly_name||'').toLowerCase().includes(q)))
-        : allCovers
+        ? allEntities.filter(id => id.toLowerCase().includes(q) || ((states[id]?.attributes?.friendly_name||'').toLowerCase().includes(q)))
+        : allEntities
       ).slice(0, 50);
       if (!hits.length) { entDrop.style.display = 'none'; return; }
       entDrop.style.display = 'block';
@@ -555,7 +555,7 @@
   }
 
   const CARD = {
-    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '4.3',
+    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '4.4',
     desc: 'Tapparella finestra/porta finestra, tenda interna grigio tortora con brezza, tenda da sole, basculante, tenda a rullo — animazioni real-time.',
     colSpan: 2, rowSpan: 3,
     render, update, mount, configure: openCfg
