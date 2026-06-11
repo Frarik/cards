@@ -175,85 +175,83 @@
   }
 
   // ─── TENDA DA SOLE ────────────────────────────────────────────────────────
-  // Vista frontale dal basso: cassone full-width in alto, bracci ai lati (±90°→0°),
-  // telo strisce orizzontali che si srotola verso il basso, stecca in fondo.
   function drawTendaSole(pos) {
     const p = pos == null ? 0 : pos;
     const ty = p - 100;
-    // chiuso: bracci a ±90° (orizzontali → fuori dal card, coperti dal cassone)
-    // aperto: bracci a 0° (verticali → montanti laterali visibili)
-    const aL = (-90 + p * 0.9).toFixed(1);
-    const aR = ( 90 - p * 0.9).toFixed(1);
+    // chiuso: -90°/+90° (piegati nel cassone), aperto: -15°/+15° (estesi con inclinazione)
+    const aL = (-90 + p * 0.75).toFixed(1);
+    const aR = ( 90 - p * 0.75).toFixed(1);
     return `<div style="position:relative;flex:1;min-height:260px;border-radius:8px;overflow:hidden;
-      background:linear-gradient(to bottom,#4888c0 0%,#6aaad8 45%,#98cce8 75%,#c4e4f4 100%);
+      background:linear-gradient(to bottom,#5ea8d8 0%,#80bce4 50%,#b8daf2 100%);
       box-shadow:0 12px 28px rgba(0,0,0,.55)">
       <!-- sole -->
-      <div style="position:absolute;top:5%;right:11%;width:26px;height:26px;border-radius:50%;
-        background:radial-gradient(circle,#fffce0,#ffd840);
-        box-shadow:0 0 26px 10px rgba(255,210,0,.22)"></div>
-      <!-- FACCIATA EDIFICIO (intonaco con texture) -->
-      <div style="position:absolute;top:0;left:0;right:0;height:18%;
-        background:linear-gradient(to bottom,#ddd0b4,#cec0a0);
-        box-shadow:0 4px 12px rgba(0,0,0,.32)">
-        <div style="position:absolute;inset:0;opacity:.09;
-          background:repeating-linear-gradient(0deg,transparent,transparent 8px,rgba(0,0,0,.5) 8px,rgba(0,0,0,.5) 9px),
-          repeating-linear-gradient(90deg,transparent,transparent 20px,rgba(0,0,0,.3) 20px,rgba(0,0,0,.3) 21px)"></div>
-        <div style="position:absolute;bottom:0;left:0;right:0;height:5px;
-          background:linear-gradient(to bottom,rgba(0,0,0,.2),transparent)"></div>
+      <div style="position:absolute;top:5%;right:10%;width:28px;height:28px;border-radius:50%;
+        background:radial-gradient(circle,#fffce8,#ffe040);
+        box-shadow:0 0 30px 12px rgba(255,215,0,.28)"></div>
+      <!-- muro edificio (intonaco sottile in cima) -->
+      <div style="position:absolute;top:0;left:0;right:0;height:15%;
+        background:linear-gradient(to bottom,#e0d4bc,#d4c8aa);
+        box-shadow:0 3px 10px rgba(0,0,0,.28)">
+        <div style="position:absolute;bottom:0;left:0;right:0;height:4px;
+          background:linear-gradient(to bottom,rgba(0,0,0,.14),transparent)"></div>
       </div>
-      <!-- CASSONE full-width (z-index:9 — nasconde i pivot dei bracci quando chiusi) -->
-      <div style="position:absolute;left:0;right:0;top:16%;height:11%;z-index:9;
-        background:linear-gradient(to bottom,#5c6474,#3e4858 42%,#626e7c 72%,#2e3848);
-        box-shadow:0 6px 18px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.2),inset 0 -1px 0 rgba(0,0,0,.3)">
-        <div style="position:absolute;top:18%;left:3%;right:3%;height:2px;border-radius:1px;background:rgba(255,255,255,.13)"></div>
-        <div style="position:absolute;top:55%;left:3%;right:3%;height:1px;background:rgba(0,0,0,.2)"></div>
-        <!-- motore centrale -->
-        <div style="position:absolute;top:15%;left:42%;right:42%;bottom:15%;border-radius:2px;
-          background:linear-gradient(to bottom,#4a5268,#2e3848);box-shadow:inset 0 1px 3px rgba(0,0,0,.4)"></div>
+      <!-- CASSONE (bianco/grigio chiaro, come nella foto) -->
+      <div style="position:absolute;left:8%;right:8%;top:13%;height:10%;z-index:9;border-radius:5px;
+        background:linear-gradient(to bottom,#f2f2f2,#d8d8d8 55%,#eaeaea);
+        box-shadow:0 5px 16px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.95),inset 0 -1px 0 rgba(0,0,0,.12)">
+        <div style="position:absolute;top:28%;left:6%;right:6%;height:2px;background:rgba(0,0,0,.09);border-radius:1px"></div>
+        <div style="position:absolute;top:55%;left:6%;right:6%;height:2px;background:rgba(0,0,0,.06);border-radius:1px"></div>
       </div>
-      <!-- BRACCIO SINISTRO: pivot al bottom del cassone (top:27%), ruota da -90° a 0° -->
-      <div data-arm-l style="position:absolute;left:0;top:27%;width:9px;height:64%;z-index:8;
+      <!-- BRACCIO SINISTRO (bianco, pivot fondo cassone sx) z-index:8 -->
+      <div data-arm-l style="position:absolute;left:12%;top:23%;width:9px;height:56%;z-index:8;
         transform-origin:top center;transform:rotate(${aL}deg);transition:transform .5s linear;
-        background:linear-gradient(to right,#3a4252,#626e7e 32%,#7a8898 50%,#626e7e 68%,#3a4252);
-        box-shadow:2px 0 8px rgba(0,0,0,.45)">
+        border-radius:4px;
+        background:linear-gradient(to right,#c0c0c0,#f0f0f0 35%,#fafafa 50%,#f0f0f0 65%,#c0c0c0);
+        box-shadow:2px 2px 7px rgba(0,0,0,.28)">
+        <!-- giunto a gomito (cerchio bianco/grigio con highlight) -->
         <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
           width:15px;height:15px;border-radius:50%;
-          background:radial-gradient(circle at 36% 36%,#98a8b8,#2e3848);
-          box-shadow:0 2px 6px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.18)"></div>
+          background:radial-gradient(circle at 35% 35%,#ffffff,#c8c8c8);
+          box-shadow:0 2px 6px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.9)"></div>
       </div>
-      <!-- BRACCIO DESTRO: pivot al bottom del cassone, ruota da +90° a 0° -->
-      <div data-arm-r style="position:absolute;right:0;top:27%;width:9px;height:64%;z-index:8;
+      <!-- BRACCIO DESTRO z-index:8 -->
+      <div data-arm-r style="position:absolute;right:12%;top:23%;width:9px;height:56%;z-index:8;
         transform-origin:top center;transform:rotate(${aR}deg);transition:transform .5s linear;
-        background:linear-gradient(to left,#3a4252,#626e7e 32%,#7a8898 50%,#626e7e 68%,#3a4252);
-        box-shadow:-2px 0 8px rgba(0,0,0,.45)">
+        border-radius:4px;
+        background:linear-gradient(to left,#c0c0c0,#f0f0f0 35%,#fafafa 50%,#f0f0f0 65%,#c0c0c0);
+        box-shadow:-2px 2px 7px rgba(0,0,0,.28)">
         <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
           width:15px;height:15px;border-radius:50%;
-          background:radial-gradient(circle at 36% 36%,#98a8b8,#2e3848);
-          box-shadow:0 2px 6px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.18)"></div>
+          background:radial-gradient(circle at 35% 35%,#ffffff,#c8c8c8);
+          box-shadow:0 2px 6px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.9)"></div>
       </div>
-      <!-- TELO (z-index:5, tra bracci: left/right:9px per i montanti) -->
-      <div data-open style="position:absolute;left:9px;right:9px;top:27%;bottom:6%;overflow:hidden;z-index:5">
+      <!-- TELO (z-index:5, tra i due bracci) -->
+      <div data-open style="position:absolute;left:8%;right:8%;top:23%;bottom:8%;overflow:hidden;z-index:5">
         <div data-sh style="position:absolute;left:0;right:0;top:0;height:100%;
           transform:translateY(${ty}%);transition:transform .5s linear">
-          <!-- STRISCE ORIZZONTALI bianco + terracotta (le strisce reali corrono larghezza→fronte) -->
-          <div style="position:absolute;inset:0 0 10px 0;
-            background:repeating-linear-gradient(180deg,
-              #f4ece0 0px,#f4ece0 16px,
-              #c04018 16px,#c04018 28px);
-            box-shadow:inset 0 0 16px rgba(0,0,0,.10)">
-            <!-- ombra rolling dal cassone -->
-            <div style="position:absolute;top:0;left:0;right:0;height:22%;
-              background:linear-gradient(to bottom,rgba(0,0,0,.18),transparent)"></div>
-            <!-- riflessione luce -->
-            <div style="position:absolute;inset:0;
-              background:linear-gradient(135deg,rgba(255,255,255,.08) 0%,transparent 55%)"></div>
+          <!-- STRISCE diagonali ~-25° giallo brillante + bianco (come nella foto) -->
+          <div style="position:absolute;inset:0 0 20px 0;
+            background:repeating-linear-gradient(-25deg,
+              #f8f8f8 0px,#f8f8f8 16px,
+              #f5c200 16px,#f5c200 30px);
+            box-shadow:0 6px 20px rgba(0,0,0,.22)">
+            <!-- ombra superiore (rolling dal cassone) -->
+            <div style="position:absolute;top:0;left:0;right:0;height:18%;
+              background:linear-gradient(to bottom,rgba(0,0,0,.16),transparent)"></div>
+            <!-- luce riflessa in cima (telo teso) -->
+            <div style="position:absolute;top:0;left:0;right:0;height:8%;
+              background:linear-gradient(to bottom,rgba(255,255,255,.3),transparent)"></div>
           </div>
-          <!-- STECCA FRONTALE -->
-          <div style="position:absolute;bottom:0;left:0;right:0;height:10px;z-index:2;
-            background:linear-gradient(to bottom,#5c6474,#3e4858 55%,#2e3848);
-            box-shadow:0 4px 14px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.16)">
-            <div style="position:absolute;top:3px;left:5%;right:5%;height:2px;border-radius:1px;
-              background:rgba(255,255,255,.10)"></div>
+          <!-- STECCA FRONTALE (bianca, come nella foto) -->
+          <div style="position:absolute;bottom:0;left:0;right:0;height:20px;z-index:2;
+            background:linear-gradient(to bottom,#f4f4f4,#dcdcdc 55%,#ebebeb);
+            box-shadow:0 5px 14px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.95),inset 0 -1px 0 rgba(0,0,0,.1)">
+            <div style="position:absolute;top:5px;left:3%;right:3%;height:2px;background:rgba(0,0,0,.07);border-radius:1px"></div>
+            <div style="position:absolute;top:11px;left:3%;right:3%;height:2px;background:rgba(0,0,0,.05);border-radius:1px"></div>
+            <!-- valance dentellata: piccole gocce in fondo alla stecca -->
+            <div style="position:absolute;bottom:-6px;left:0;right:0;height:8px;
+              background:radial-gradient(ellipse 10px 8px at 10px 0,#f5c200 60%,transparent 60%) 0 0 / 20px 8px,
+                          radial-gradient(ellipse 10px 8px at 10px 0,#f8f8f8 60%,transparent 60%) 10px 0 / 20px 8px;"></div>
           </div>
         </div>
       </div>
@@ -440,8 +438,8 @@
       if (!rev) return;
       const aL = el.querySelector('[data-arm-l]'), aR = el.querySelector('[data-arm-r]');
       const dur = '.5s linear';
-      if (aL) { aL.style.transition = `transform ${dur}`; aL.style.transform = `rotate(${(-90 + p * 0.9).toFixed(1)}deg)`; }
-      if (aR) { aR.style.transition = `transform ${dur}`; aR.style.transform = `rotate(${(90  - p * 0.9).toFixed(1)}deg)`; }
+      if (aL) { aL.style.transition = `transform ${dur}`; aL.style.transform = `rotate(${(-90 + p * 0.75).toFixed(1)}deg)`; }
+      if (aR) { aR.style.transition = `transform ${dur}`; aR.style.transform = `rotate(${(90  - p * 0.75).toFixed(1)}deg)`; }
     }
 
     const setY = (y, dur) => { sh.style.transition = `transform ${dur} linear`; sh.style.transform = `translateY(${y}%)`; };
@@ -563,7 +561,7 @@
   }
 
   const CARD = {
-    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '3.6',
+    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '3.7',
     desc: 'Tapparella finestra/porta finestra, tenda interna grigio tortora con brezza, tenda da sole, basculante, tenda a rullo — animazioni real-time.',
     colSpan: 2, rowSpan: 3,
     render, update, mount, configure: openCfg
