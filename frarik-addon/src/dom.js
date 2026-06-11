@@ -159,6 +159,7 @@ export function _buildDOM(){
       <button class="btn2" data-action="closeCM">Annulla</button>
       <button class="btn1" data-action="saveCard">💾 Salva Card</button>
     </div>
+    <div id="cm-actions-row" style="display:none;border-top:1px solid rgba(255,255,255,.07);padding:10px 16px 8px"></div>
   </div>
 </div>
 

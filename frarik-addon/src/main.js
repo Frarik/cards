@@ -5191,53 +5191,88 @@ function _cmVisToggle(){
   const op=document.getElementById('cm-vis-op')?.value; const v2=document.getElementById('cm-vis-val2');
   if(v2) v2.style.display=(mode==='cond'&&op==='between')?'':'none';
 }
-/* Menu modifica card: una sola icona ✏️ → popup con azioni + dimensione + configura */
-function cardMenu(cardId, ev){
-  if(ev&&ev.stopPropagation) ev.stopPropagation();
-  const c=curPage().cards.find(x=>x.id===cardId); if(!c) return;
-  const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+/* ── Helpers per iniettare azioni (dimensione + copia/taglia/elimina) nel popup di config ── */
+function _cfgActionsHTML(cardId){
+  const c=curPage().cards.find(x=>x.id===cardId); if(!c) return '';
   const inSec=!!curPage().sections;
-  const sizeRow=inSec
-    ?`<button class="ovb-sm" data-action="adjSecSpan" data-action-args='["${cardId}",-1]'>◀</button><span id="cs-${cardId}" style="min-width:30px;text-align:center">S:${c.colSpan||1}</span><button class="ovb-sm" data-action="adjSecSpan" data-action-args='["${cardId}",1]'>▶</button>&nbsp;&nbsp;<button class="ovb-sm" data-action="adjH" data-action-args='["${cardId}",-20]'>▲</button><span id="rs-${cardId}" style="min-width:42px;text-align:center">${c.height||150}px</span><button class="ovb-sm" data-action="adjH" data-action-args='["${cardId}",20]'>▼</button>`
-    :`<button class="ovb-sm" data-action="adjSpan" data-action-args='["${cardId}","col",-1]'>◀</button><span id="cs-${cardId}">L:${c.colSpan||1}</span><button class="ovb-sm" data-action="adjSpan" data-action-args='["${cardId}","col",1]'>▶</button>&nbsp;&nbsp;<button class="ovb-sm" data-action="adjSpan" data-action-args='["${cardId}","row",-1]'>▲</button><span id="rs-${cardId}">A:${c.rowSpan||1}</span><button class="ovb-sm" data-action="adjSpan" data-action-args='["${cardId}","row",1]'>▼</button>`;
-  const ov=document.createElement('div'); ov.className='cardmenu-ov';
-  ov.innerHTML=`<div class="cardmenu">
-      <div class="cardmenu-hd"><span>${esc(c.icon||'📦')} ${esc(c.label||c.type||'Card')}</span><button class="cardmenu-close" data-cm="close">✕</button></div>
-      <div class="cardmenu-grid">
-        <button class="cmi cmi-cfg" data-cm="cfg"><b>⚙️</b><span>Configura</span></button>
-        <button class="cmi" data-cm="dup"><b>⧉</b><span>Duplica</span></button>
-        <button class="cmi" data-cm="copy"><b>📋</b><span>Copia</span></button>
-        <button class="cmi" data-cm="cut"><b>✂️</b><span>Taglia</span></button>
-        <button class="cmi" data-cm="page"><b>📑</b><span>Copia su vista</span></button>
-        <button class="cmi cmi-del" data-cm="del"><b>🗑</b><span>Elimina</span></button>
-      </div>
-      <div class="cardmenu-size">${sizeRow}</div>
-    </div>`;
-  const close=()=>{ try{document.body.removeChild(ov);}catch(e){} };
-  ov.addEventListener('click', e=>{ if(e.target===ov) close(); });
-  ov.querySelector('.cardmenu').addEventListener('click', e=>{
-    const b=e.target.closest('[data-cm]'); if(!b) return;   // i pulsanti dimensione usano data-action (li gestisce il dispatcher globale)
-    const a=b.getAttribute('data-cm');
-    if(a==='close'){ close(); return; }
-    close();
-    if(a==='cfg'){
-      // Per card js-custom con configure() propria, apre la config interna della card
-      if(c.type==='js-custom'&&c.jsCardId){
-        const _reg=(window.FratechCardRegistry||{})[c.jsCardId];
-        if(_reg&&typeof _reg.configure==='function'){
-          const _el=document.getElementById('v-'+cardId);
-          if(_el){ _reg.configure(c,_el); return; }
-        }
-      }
-      openCM(cardId);
-    }
-    else if(a==='dup') dupCard(cardId);
+  const sr=inSec
+    ?`<button class="ovb-sm" data-action="adjSecSpan" data-action-args='["${cardId}",-1]'>◀</button><span id="cs-${cardId}" style="min-width:30px;text-align:center;font-size:12px">S:${c.colSpan||1}</span><button class="ovb-sm" data-action="adjSecSpan" data-action-args='["${cardId}",1]'>▶</button>&nbsp;<button class="ovb-sm" data-action="adjH" data-action-args='["${cardId}",-20]'>▲</button><span id="rs-${cardId}" style="min-width:44px;text-align:center;font-size:12px">${c.height||150}px</span><button class="ovb-sm" data-action="adjH" data-action-args='["${cardId}",20]'>▼</button>`
+    :`<button class="ovb-sm" data-action="adjSpan" data-action-args='["${cardId}","col",-1]'>◀</button><span id="cs-${cardId}" style="min-width:28px;text-align:center;font-size:12px">L:${c.colSpan||1}</span><button class="ovb-sm" data-action="adjSpan" data-action-args='["${cardId}","col",1]'>▶</button>&nbsp;<button class="ovb-sm" data-action="adjSpan" data-action-args='["${cardId}","row",-1]'>▲</button><span id="rs-${cardId}" style="min-width:28px;text-align:center;font-size:12px">A:${c.rowSpan||1}</span><button class="ovb-sm" data-action="adjSpan" data-action-args='["${cardId}","row",1]'>▼</button>`;
+  const ab=(a,ico,lbl,del=false)=>`<button data-cfgact="${a}" style="flex:1;min-width:0;padding:8px 4px;border-radius:8px;border:none;cursor:pointer;font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:3px;background:${del?'rgba(239,68,68,.15)':'rgba(255,255,255,.08)'};color:${del?'#fca5a5':'rgba(255,255,255,.7)'}"><span style="font-size:15px">${ico}</span>${lbl}</button>`;
+  return `<div style="display:flex;justify-content:center;align-items:center;gap:5px;padding:5px 6px;border-radius:8px;background:rgba(255,255,255,.04);margin-bottom:8px">${sr}</div><div style="display:flex;gap:5px">${ab('dup','⧉','Duplica')}${ab('copy','📋','Copia')}${ab('cut','✂️','Taglia')}${ab('page','📑','Copia su vista')}${ab('del','🗑','Elimina',true)}</div>`;
+}
+function _attachCfgActions(cardId, container, closeFn){
+  if(!container) return;
+  container.style.display='block';
+  container.innerHTML=_cfgActionsHTML(cardId);
+  container.onclick=function(e){
+    const b=e.target.closest('[data-cfgact]'); if(!b) return;
+    const a=b.getAttribute('data-cfgact');
+    if(closeFn) closeFn();
+    if(a==='dup') dupCard(cardId);
+    else if(a==='copy') copyCard(cardId);
+    else if(a==='cut') cutCard(cardId);
+    else if(a==='page') copyCardToPage(cardId);
+    else if(a==='del') delCard(cardId);
+  };
+}
+function _injectActionsIntoLastOverlay(cardId){
+  const ovs=[...document.body.children].filter(el=>el.style&&el.style.position==='fixed');
+  const ov=ovs[ovs.length-1]; if(!ov) return;
+  const inner=ov.firstElementChild; if(!inner) return;
+  const actDiv=document.createElement('div');
+  actDiv.style.cssText='margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.12)';
+  actDiv.innerHTML=_cfgActionsHTML(cardId);
+  inner.appendChild(actDiv);
+  actDiv.addEventListener('click',e=>{
+    const b=e.target.closest('[data-cfgact]'); if(!b) return;
+    const a=b.getAttribute('data-cfgact');
+    try{document.body.removeChild(ov);}catch(er){}
+    if(a==='dup') dupCard(cardId);
     else if(a==='copy') copyCard(cardId);
     else if(a==='cut') cutCard(cardId);
     else if(a==='page') copyCardToPage(cardId);
     else if(a==='del') delCard(cardId);
   });
-  document.body.appendChild(ov);
+}
+function _injectActionsIntoYaml(cardId){
+  const old=document.getElementById('yaml-act-row'); if(old) old.remove();
+  const yfoot=document.getElementById('yaml-footer'); if(!yfoot) return;
+  const actDiv=document.createElement('div');
+  actDiv.id='yaml-act-row';
+  actDiv.style.cssText='padding:10px 16px 4px;border-top:1px solid rgba(255,255,255,.07)';
+  actDiv.innerHTML=_cfgActionsHTML(cardId);
+  yfoot.insertAdjacentElement('afterend',actDiv);
+  actDiv.addEventListener('click',e=>{
+    const b=e.target.closest('[data-cfgact]'); if(!b) return;
+    const a=b.getAttribute('data-cfgact');
+    closeYamlImport();
+    if(a==='dup') dupCard(cardId);
+    else if(a==='copy') copyCard(cardId);
+    else if(a==='cut') cutCard(cardId);
+    else if(a==='page') copyCardToPage(cardId);
+    else if(a==='del') delCard(cardId);
+  });
+}
+
+/* Menu modifica card: apre direttamente la configurazione, con azioni in fondo */
+function cardMenu(cardId, ev){
+  if(ev&&ev.stopPropagation) ev.stopPropagation();
+  const c=curPage().cards.find(x=>x.id===cardId); if(!c) return;
+  // js-custom con configure() propria
+  if(c.type==='js-custom'&&c.jsCardId){
+    const _reg=(window.FratechCardRegistry||{})[c.jsCardId];
+    if(_reg&&typeof _reg.configure==='function'){
+      const _el=document.getElementById('v-'+cardId);
+      if(_el){ _reg.configure(c,_el); setTimeout(()=>_injectActionsIntoLastOverlay(cardId),0); return; }
+    }
+  }
+  // Tutti gli altri tipi
+  openCM(cardId);
+  if(c.type==='yaml-card'){ _injectActionsIntoYaml(cardId); }
+  else if(c.type!=='free'&&c.type!=='header-bar'&&c.type!=='footer-bar'){
+    _attachCfgActions(cardId, document.getElementById('cm-actions-row'), ()=>closeCM());
+  }
 }
 window.cardMenu=cardMenu;
 
@@ -5321,7 +5356,11 @@ function openCM(cardId){
   _updateCMBadgePreview();
   document.getElementById('cmod').classList.remove('off');
 }
-function closeCM(){ document.getElementById('cmod').classList.add('off'); editingId=null; }
+function closeCM(){
+  document.getElementById('cmod').classList.add('off'); editingId=null;
+  const row=document.getElementById('cm-actions-row');
+  if(row){ row.style.display='none'; row.innerHTML=''; row.onclick=null; }
+}
 
 function onTypeChange(){
   const t=document.getElementById('cm-type').value;
@@ -7814,7 +7853,10 @@ function openYamlImport(){
   document.getElementById('yaml-modal').classList.remove('off');
   setTimeout(()=>document.getElementById('yaml-inp').focus(),80);
 }
-function closeYamlImport(){ document.getElementById('yaml-modal').classList.add('off'); }
+function closeYamlImport(){
+  document.getElementById('yaml-modal').classList.add('off');
+  const old=document.getElementById('yaml-act-row'); if(old) old.remove();
+}
 function _yamlStatus(msg,type){
   const el=document.getElementById('yaml-status');
   el.textContent=msg; el.className=type||'';
