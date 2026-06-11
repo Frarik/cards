@@ -1,4 +1,4 @@
-/* frarik-version: 3.1 */
+/* frarik-version: 3.2 */
 (function () {
   'use strict';
 
@@ -45,12 +45,12 @@
   }
 
   const COVER_TYPES = [
-    { id: 'tapparella',     icon: '🪟', label: 'Tapparella',     desc: 'Finestra a stecche metalliche' },
-    { id: 'porta_finestra', icon: '🚪', label: 'Porta finestra', desc: 'Tapparella su porta-finestra' },
-    { id: 'tenda_interna',  icon: '🏠', label: 'Tenda interna',  desc: 'Tende scorrevoli da interno' },
-    { id: 'tenda_sole',     icon: '☀️', label: 'Tenda da sole',  desc: 'Cappottina con bracci motorizzati' },
-    { id: 'basculante',     icon: '🚗', label: 'Basculante',     desc: 'Porta basculante garage' },
-    { id: 'tenda_rullo',    icon: '📜', label: 'Tenda a rullo',  desc: 'Roller blind, tessuto liscio' },
+    { id: 'tapparella',     icon: '🪟', label: 'Tapp. finestra',       desc: 'Tapparella finestra a stecche' },
+    { id: 'porta_finestra', icon: '🚪', label: 'Tapp. porta finestra', desc: 'Tapparella porta-finestra' },
+    { id: 'tenda_interna',  icon: '🎭', label: 'Tenda interna',        desc: 'Tendaggio a due pannelli' },
+    { id: 'tenda_sole',     icon: '☀️', label: 'Tenda da sole',        desc: 'Cappottina con bracci motorizzati' },
+    { id: 'basculante',     icon: '🚗', label: 'Basculante',           desc: 'Porta basculante garage' },
+    { id: 'tenda_rullo',    icon: '📜', label: 'Tenda a rullo',        desc: 'Roller blind, tessuto liscio' },
   ];
   function coverIcon(type) { const t = COVER_TYPES.find(x => x.id === type); return t ? t.icon : '🪟'; }
   function header(nm, type) {
@@ -60,13 +60,14 @@
     </div>`;
   }
 
-  // clip-path a onda per bordo delle tende scorrevoli
+  // clip-path a onda morbida per il bordo interno delle tende
   function wavyClip(side, steps) {
     const pts = side === 'right' ? ['0 0'] : ['100% 0'];
     for (let i = 0; i <= steps; i++) {
       const y = (i / steps * 100).toFixed(1) + '%';
-      if (side === 'right') { pts.push((i % 2 === 0 ? '88' : '96') + '% ' + y); }
-      else                  { pts.push((i % 2 === 0 ? '12' : '4')  + '% ' + y); }
+      // ampiezza 4%: 90–94% (bordo dx) o 6–10% (bordo sx)
+      if (side === 'right') { pts.push((i % 2 === 0 ? 90 : 94) + '% ' + y); }
+      else                  { pts.push((i % 2 === 0 ? 10 : 6)  + '% ' + y); }
     }
     pts.push(side === 'right' ? '0 100%' : '100% 100%');
     return 'polygon(' + pts.join(',') + ')';
@@ -153,57 +154,69 @@
     </div>`;
   }
 
-  // ─── TENDA DA INTERNO (due pannelli scorrevoli orizzontali, ondulati) ──────
+  // ─── TENDA DA INTERNO (tendaggio elegante a due pannelli) ────────────────
   function drawTendaInterna(pos) {
-    const p = pos == null ? 0 : pos;
-    const txL = -p; // pannello sinistro: scorre a sinistra quando apre
-    const txR = p;  // pannello destro: scorre a destra quando apre
-    const wL = wavyClip('right', 18);
-    const wR = wavyClip('left', 18);
+    const p  = pos == null ? 0 : pos;
+    // pannelli si ritirano al 78%: resta 22% di drappeggio visibile ai lati
+    const txL = -(p * 0.78);
+    const txR =  (p * 0.78);
+    const wR = wavyClip('right', 14);
+    const wL = wavyClip('left',  14);
+    // palette borgogna/vino — pieghe verticali
+    const v0='#130208',v1='#5a1020',v2='#8c2040',v3='#b83060',v4='#cc4878';
+    const folds=`repeating-linear-gradient(90deg,${v0} 0px,${v1} 4px,${v2} 9px,${v3} 13px,${v4} 16px,${v3} 19px,${v2} 24px,${v1} 28px,${v0} 31px)`;
+    const silk='linear-gradient(150deg,rgba(255,255,255,.09) 0%,transparent 35%,rgba(255,255,255,.05) 62%,transparent 100%)';
+    const edgeDark='linear-gradient(to right,rgba(0,0,0,.5) 0px,transparent 12px,transparent calc(100% - 12px),rgba(0,0,0,.5) 100%)';
     return `<div style="position:relative;flex:1;min-height:260px;border-radius:8px;overflow:hidden;
-      background:linear-gradient(to bottom,#f0e8d8,#e8dcc8 50%,#d8cbb8);
-      box-shadow:0 12px 28px rgba(0,0,0,.45)">
-      <!-- finestra dietro -->
-      <div style="position:absolute;inset:30px 10px 10px 10px;border-radius:4px;
-        background:linear-gradient(to bottom,#13345a,#2c5f93 45%,#6fa6da);
-        box-shadow:inset 0 0 20px rgba(0,0,0,.5)">
-        <div style="position:absolute;inset:0;pointer-events:none;
-          background:linear-gradient(118deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,.04) 26%,transparent 50%,rgba(255,255,255,.07) 100%)"></div>
+      background:linear-gradient(to bottom,#13345a,#2c5f93 45%,#6fa6da);
+      box-shadow:0 12px 28px rgba(0,0,0,.55)">
+      <!-- luce finestra dietro le tende -->
+      <div style="position:absolute;inset:0;pointer-events:none;
+        background:linear-gradient(118deg,rgba(255,255,255,.13) 0%,rgba(255,255,255,.03) 28%,transparent 52%,rgba(255,255,255,.05) 100%)"></div>
+      <!-- CORNICIONE / PELMET -->
+      <div style="position:absolute;top:0;left:0;right:0;height:13%;z-index:9;
+        background:linear-gradient(to bottom,#7a4820 0%,#b06830 25%,#9a5828 55%,#7a4020 80%,#5a2c10 100%);
+        box-shadow:0 7px 18px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.2)">
+        <div style="position:absolute;top:20%;left:0;right:0;height:2px;background:rgba(255,255,255,.18)"></div>
+        <div style="position:absolute;top:44%;left:3%;right:3%;height:20%;
+          background:linear-gradient(to bottom,rgba(0,0,0,.15),rgba(255,255,255,.07),rgba(0,0,0,.15));border-radius:2px"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;height:3px;
+          background:linear-gradient(to right,#4a2010,#8a5020 20%,#c07030 50%,#8a5020 80%,#4a2010)"></div>
       </div>
-      <!-- bastone / binario -->
-      <div style="position:absolute;top:22px;left:4px;right:4px;height:8px;z-index:5;border-radius:4px;
-        background:linear-gradient(to bottom,#c8c0b0,#a09080 40%,#808070);
-        box-shadow:0 3px 8px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.3)"></div>
-      <!-- terminali bastone -->
-      <div style="position:absolute;top:18px;left:2px;width:12px;height:16px;border-radius:6px;
-        background:linear-gradient(to bottom,#d8d0c0,#909080);box-shadow:0 2px 4px rgba(0,0,0,.4)"></div>
-      <div style="position:absolute;top:18px;right:2px;width:12px;height:16px;border-radius:6px;
-        background:linear-gradient(to bottom,#d8d0c0,#909080);box-shadow:0 2px 4px rgba(0,0,0,.4)"></div>
-      <!-- area tende -->
-      <div data-open style="position:absolute;left:10px;right:10px;top:30px;bottom:10px;overflow:hidden;z-index:3">
+      <!-- BINARIO DORATO -->
+      <div style="position:absolute;top:13%;left:1%;right:1%;height:4px;z-index:8;border-radius:2px;
+        background:linear-gradient(to bottom,#e8d090,#c0a050 40%,#a08030);
+        box-shadow:0 2px 6px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.35)"></div>
+      <!-- AREA TENDE -->
+      <div data-open style="position:absolute;left:0;right:0;top:17%;bottom:0;overflow:hidden;z-index:4">
         <!-- PANNELLO SINISTRO -->
-        <div data-sh style="position:absolute;left:0;top:0;width:54%;height:100%;
-          transform:translateX(${txL}%);transition:transform .5s linear;
-          clip-path:${wL};
-          background:repeating-linear-gradient(90deg,#c8b89a 0px,#ddd0b8 4px,#ede0c8 9px,#ddd0b8 13px,#c8b89a 16px);
-          box-shadow:4px 0 12px rgba(0,0,0,.3)">
-          <!-- anelli -->
-          <div style="position:absolute;top:0;left:0;right:0;height:8px;
-            background:repeating-linear-gradient(90deg,transparent 0,transparent 12px,rgba(160,128,80,.7) 12px,rgba(160,128,80,.7) 16px)"></div>
-          <!-- peso in basso -->
-          <div style="position:absolute;bottom:0;left:0;right:16px;height:8px;
-            background:linear-gradient(to bottom,#a09070,#706050);border-radius:0 0 0 3px"></div>
+        <div data-sh style="position:absolute;left:0;top:0;width:57%;height:100%;
+          transform:translateX(${txL.toFixed(1)}%);transition:transform .5s linear;
+          clip-path:${wR};
+          background:${silk},${edgeDark},${folds};
+          box-shadow:10px 0 28px rgba(0,0,0,.55)">
+          <!-- anelli sul binario -->
+          <div style="position:absolute;top:-1px;left:2%;right:10%;height:6px;pointer-events:none;
+            background:repeating-linear-gradient(90deg,rgba(220,185,80,.95) 0px,rgba(220,185,80,.95) 4px,transparent 4px,transparent 24px)"></div>
+          <!-- ombra pieghe in cima -->
+          <div style="position:absolute;top:0;left:0;right:0;height:8%;pointer-events:none;
+            background:repeating-linear-gradient(180deg,rgba(0,0,0,.22) 0px,transparent 3px,transparent 9px,rgba(0,0,0,.1) 10px)"></div>
+          <!-- orlo pesante in basso -->
+          <div style="position:absolute;bottom:0;left:0;right:10%;height:5px;
+            background:linear-gradient(to bottom,${v1},${v0});border-radius:0 0 0 2px"></div>
         </div>
         <!-- PANNELLO DESTRO -->
-        <div data-sh2 style="position:absolute;right:0;top:0;width:54%;height:100%;
-          transform:translateX(${txR}%);transition:transform .5s linear;
-          clip-path:${wR};
-          background:repeating-linear-gradient(90deg,#c8b89a 0px,#ddd0b8 4px,#ede0c8 9px,#ddd0b8 13px,#c8b89a 16px);
-          box-shadow:-4px 0 12px rgba(0,0,0,.3)">
-          <div style="position:absolute;top:0;left:0;right:0;height:8px;
-            background:repeating-linear-gradient(90deg,transparent 0,transparent 12px,rgba(160,128,80,.7) 12px,rgba(160,128,80,.7) 16px)"></div>
-          <div style="position:absolute;bottom:0;left:16px;right:0;height:8px;
-            background:linear-gradient(to bottom,#a09070,#706050);border-radius:0 0 3px 0"></div>
+        <div data-sh2 style="position:absolute;right:0;top:0;width:57%;height:100%;
+          transform:translateX(${txR.toFixed(1)}%);transition:transform .5s linear;
+          clip-path:${wL};
+          background:${silk},${edgeDark},${folds};
+          box-shadow:-10px 0 28px rgba(0,0,0,.55)">
+          <div style="position:absolute;top:-1px;left:10%;right:2%;height:6px;pointer-events:none;
+            background:repeating-linear-gradient(90deg,rgba(220,185,80,.95) 0px,rgba(220,185,80,.95) 4px,transparent 4px,transparent 24px)"></div>
+          <div style="position:absolute;top:0;left:0;right:0;height:8%;pointer-events:none;
+            background:repeating-linear-gradient(180deg,rgba(0,0,0,.22) 0px,transparent 3px,transparent 9px,rgba(0,0,0,.1) 10px)"></div>
+          <div style="position:absolute;bottom:0;left:10%;right:0;height:5px;
+            background:linear-gradient(to bottom,${v1},${v0});border-radius:0 0 2px 0"></div>
         </div>
       </div>
     </div>`;
@@ -584,8 +597,8 @@
   }
 
   const CARD = {
-    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '3.1',
-    desc: 'Tapparella, porta finestra, tenda interna, tenda da sole (bracci motorizzati), basculante, tenda a rullo — animazioni real-time.',
+    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '3.2',
+    desc: 'Tapparella finestra/porta finestra, tendaggio interno (borgogna), tenda da sole, basculante, tenda a rullo — animazioni real-time.',
     colSpan: 2, rowSpan: 3,
     render, update, mount, configure: openCfg
   };
