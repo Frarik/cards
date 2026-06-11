@@ -1,4 +1,4 @@
-/* frarik-version: 2.0 */
+/* frarik-version: 2.1 */
 (function () {
   'use strict';
 
@@ -23,9 +23,10 @@
   function cfgFor(card) {
     const c = load(card), a = autodetect(H());
     return {
-      cpu: c.cpu || a.cpu, ram: c.ram || a.ram, disk: c.disk || a.disk,
-      temp: c.temp || a.temp, boot: c.boot || a.boot,
-      netin: c.netin || '', netout: c.netout || '',
+      cpu: c.cpu||a.cpu, ram: c.ram||a.ram, disk: c.disk||a.disk,
+      temp: c.temp||a.temp, boot: c.boot||a.boot,
+      netin: c.netin||'', netout: c.netout||'',
+      diskr: c.diskr||'', diskw: c.diskw||'',
     };
   }
 
@@ -56,16 +57,22 @@
     for (const id in st) { if (id.startsWith('update.') && st[id].state === 'on') n++; }
     return n;
   }
+  function netFmt(h, id) {
+    const v = num(S(h, id)); if (v == null || !id) return null;
+    if (v >= 1048576) return (v / 1048576).toFixed(1) + ' MB/s';
+    if (v >= 1024) return (v / 1024).toFixed(1) + ' KB/s';
+    return Math.round(v) + ' B/s';
+  }
 
   function pushBuf(el, key, val, max) {
     el._sycBuf = el._sycBuf || {};
     el._sycBuf[key] = el._sycBuf[key] || [];
     if (val != null) el._sycBuf[key].push(val);
-    if (el._sycBuf[key].length > (max || 30)) el._sycBuf[key].shift();
+    if (el._sycBuf[key].length > (max || 40)) el._sycBuf[key].shift();
   }
 
-  function sparklineSVG(data, w, h, col, gid) {
-    if (!data || data.length < 2) return `<svg width="${w}" height="${h}"></svg>`;
+  function sparkSVG(data, w, h, col, gid) {
+    if (!data || data.length < 2) return '<svg width="' + w + '" height="' + h + '"></svg>';
     const mx = Math.max(1, ...data);
     const pts = data.map((v, i) => {
       const x = (i / (data.length - 1)) * w;
@@ -75,25 +82,26 @@
     const area = pts.join(' ') + ' ' + w + ',' + h + ' 0,' + h;
     return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="display:block;overflow:hidden">
       <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="${col}" stop-opacity=".45"/>
+        <stop offset="0%" stop-color="${col}" stop-opacity=".5"/>
         <stop offset="100%" stop-color="${col}" stop-opacity="0"/>
       </linearGradient></defs>
       <polygon points="${area}" fill="url(#${gid})"/>
-      <polyline points="${pts.join(' ')}" fill="none" stroke="${col}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      <polyline points="${pts.join(' ')}" fill="none" stroke="${col}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>`;
   }
 
-  function ringHTML(rid, key, pct, col, label) {
-    const sz = 80, r = 28, cx = 40, cy = 40;
+  function ringHTML(key, pct, col, label) {
+    const sz = 82, r = 29, cx = 41, cy = 41;
     const circ = +(2 * Math.PI * r).toFixed(2);
-    const dash = +((Math.max(0, Math.min(100, pct || 0)) / 100) * circ).toFixed(2);
-    return `<div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+    const p = Math.max(0, Math.min(100, pct || 0));
+    const dash = +((p / 100) * circ).toFixed(2);
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px">
       <svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}">
         <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="7"/>
         <circle data-arc="${key}" cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${col}" stroke-width="7"
           stroke-dasharray="${dash} ${circ}" stroke-linecap="round"
           transform="rotate(-90 ${cx} ${cy})"
-          style="transition:stroke-dasharray .7s ease-in-out,stroke .5s"/>
+          style="transition:stroke-dasharray .8s ease-in-out,stroke .5s"/>
         <text data-txt="${key}" x="${cx}" y="${cy + 1}" text-anchor="middle" dominant-baseline="middle"
           fill="${col}" font-size="13px" font-weight="800" font-family="system-ui,sans-serif">
           ${pct == null ? '—' : Math.round(pct) + '%'}
@@ -107,20 +115,12 @@
     const arc = el.querySelector('[data-arc="' + key + '"]');
     const txt = el.querySelector('[data-txt="' + key + '"]');
     if (!arc || !txt) return;
-    const r = 28, circ = +(2 * Math.PI * r).toFixed(2);
+    const r = 29, circ = +(2 * Math.PI * r).toFixed(2);
     const dash = +((Math.max(0, Math.min(100, pct || 0)) / 100) * circ).toFixed(2);
     arc.setAttribute('stroke-dasharray', dash + ' ' + circ);
     arc.setAttribute('stroke', col);
     txt.setAttribute('fill', col);
     txt.textContent = pct == null ? '—' : Math.round(pct) + '%';
-  }
-
-  function netVal(h, id) {
-    if (!id) return null;
-    const v = num(S(h, id)); if (v == null) return null;
-    if (v >= 1048576) return (v / 1048576).toFixed(1) + ' MB/s';
-    if (v >= 1024) return (v / 1024).toFixed(1) + ' KB/s';
-    return Math.round(v) + ' B/s';
   }
 
   function render(card) {
@@ -131,55 +131,77 @@
     const tmpV = num(S(h, c.temp)), upd = updatesCount(h);
     const tCol = tempColor(tmpV);
     const cpuC = usageColor(cpuV ?? 0), ramC = '#a78bfa', dskC = usageColor(dskV ?? 0);
-    const ni = netVal(h, c.netin), no = netVal(h, c.netout);
-    const hasNet = c.netin || c.netout;
+    const ni = netFmt(h, c.netin), no = netFmt(h, c.netout);
+    const dr = netFmt(h, c.diskr), dw = netFmt(h, c.diskw);
     const hotAnim = tmpV != null && tmpV >= 70
-      ? `@keyframes ${rid}pulse{0%,100%{text-shadow:0 0 8px ${tCol}88}50%{text-shadow:0 0 22px ${tCol}cc,0 0 40px ${tCol}44}}`
+      ? `@keyframes ${rid}p{0%,100%{text-shadow:0 0 10px ${tCol}99}50%{text-shadow:0 0 28px ${tCol}dd,0 0 50px ${tCol}44}}`
       : '';
+    const scanAnim = `@keyframes ${rid}s{0%{background-position:0% 0%}100%{background-position:200% 0%}}`;
 
     return `<style>
-      #${rid}{position:relative;width:100%;height:100%;min-height:220px;border-radius:18px;overflow:hidden;padding:14px 16px;box-sizing:border-box;
-        font-family:system-ui,sans-serif;color:#e8ebf5;display:flex;flex-direction:column;gap:10px;
+      @keyframes ${rid}blink{0%,100%{opacity:1}50%{opacity:.25}}
+      ${hotAnim}
+      ${scanAnim}
+      #${rid}{position:relative;width:100%;height:100%;min-height:240px;border-radius:18px;
+        padding:14px 15px;box-sizing:border-box;font-family:system-ui,sans-serif;color:#e8ebf5;
+        display:flex;flex-direction:column;gap:9px;overflow:hidden;
         background:linear-gradient(150deg,#0c1322 0%,#090e1a 55%,#0c1626 100%);
         border:1px solid rgba(99,102,241,.22);}
-      ${hotAnim}
-      #${rid} .syc-hot{animation:${rid}pulse 1.8s ease-in-out infinite;}
-      #${rid} .syc-spark-box{flex:1;background:rgba(255,255,255,.03);border-radius:10px;padding:5px 8px;}
-      #${rid} .syc-spark-lbl{font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-bottom:3px;}
+      #${rid}::before{content:'';position:absolute;inset:0;pointer-events:none;
+        background:linear-gradient(105deg,transparent 40%,rgba(99,102,241,.04) 50%,transparent 60%);
+        background-size:200% 100%;
+        animation:${rid}s 6s linear infinite;border-radius:inherit;}
+      #${rid} .syk-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c55e;
+        margin-right:6px;animation:${rid}blink 2s ease-in-out infinite;}
+      #${rid} .syk-hot{animation:${rid}p 1.8s ease-in-out infinite;}
+      #${rid} .syk-sp{flex:1;background:rgba(255,255,255,.03);border-radius:10px;padding:5px 8px;}
+      #${rid} .syk-spl{font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-bottom:3px;}
     </style>
     <div id="${rid}">
-      <div style="text-align:center;font-size:22px;font-weight:800;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nm}</div>
+
+      <div style="text-align:center;font-size:22px;font-weight:800;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+        <span class="syk-dot"></span>${nm}
+      </div>
 
       <div style="display:flex;justify-content:space-around;align-items:flex-start">
-        ${ringHTML(rid, 'cpu', cpuV, cpuC, 'CPU')}
-        ${ringHTML(rid, 'ram', ramV, ramC, 'RAM')}
-        ${ringHTML(rid, 'dsk', dskV, dskC, 'Disco')}
+        ${ringHTML('cpu', cpuV, cpuC, 'CPU')}
+        ${ringHTML('ram', ramV, ramC, 'RAM')}
+        ${ringHTML('dsk', dskV, dskC, 'Disco')}
       </div>
 
       <div style="display:flex;align-items:stretch;gap:8px">
-        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,.05);border-radius:12px;padding:8px 16px;min-width:72px">
-          <div data-syv="temp" class="${tmpV != null && tmpV >= 70 ? 'syc-hot' : ''}" style="font-size:30px;font-weight:800;line-height:1;color:${tCol}">${tmpV == null ? '—' : Math.round(tmpV) + '°'}</div>
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,.05);border-radius:12px;padding:8px 16px;min-width:74px;flex-shrink:0">
+          <div data-syv="temp" class="${tmpV != null && tmpV >= 70 ? 'syk-hot' : ''}" style="font-size:30px;font-weight:800;line-height:1;color:${tCol}">${tmpV == null ? '—' : Math.round(tmpV) + '°'}</div>
           <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em;margin-top:3px">Temp</div>
         </div>
         <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:5px">
           <div data-syv="uptime" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:99px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)">⏱ ${uptimeText(h, c.boot)}</div>
-          <div data-syv="updates" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:99px;background:${upd ? 'rgba(34,197,94,.12)' : 'rgba(255,255,255,.06)'};border:1px solid ${upd ? 'rgba(34,197,94,.3)' : 'rgba(255,255,255,.1)'};color:${upd ? '#86efac' : 'rgba(255,255,255,.8)'}">⬆ ${upd} aggiorn.</div>
-          ${hasNet ? `<div data-syv="net" style="font-size:10px;font-weight:700;padding:5px 10px;border-radius:99px;background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.2);color:#7dd3fc">↓${ni || '—'}  ↑${no || '—'}</div>` : ''}
+          <div data-syv="updates" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:99px;background:${upd ? 'rgba(34,197,94,.12)' : 'rgba(255,255,255,.06)'};border:1px solid ${upd ? 'rgba(34,197,94,.3)' : 'rgba(255,255,255,.1)'};color:${upd ? '#86efac' : 'rgba(255,255,255,.8)'}">⬆ ${upd} aggiornamenti</div>
         </div>
       </div>
 
-      <div style="display:flex;gap:8px">
-        <div class="syc-spark-box">
-          <div class="syc-spark-lbl" style="color:${cpuC}">CPU</div>
-          <div data-syv="cpu-spark" style="height:28px"></div>
+      <div style="display:flex;gap:7px">
+        <div class="syk-sp">
+          <div class="syk-spl" style="color:${cpuC}">▸ CPU</div>
+          <div data-syv="cpu-sp" style="height:32px"></div>
         </div>
-        <div class="syc-spark-box">
-          <div class="syc-spark-lbl" style="color:${ramC}">RAM</div>
-          <div data-syv="ram-spark" style="height:28px"></div>
+        <div class="syk-sp">
+          <div class="syk-spl" style="color:${ramC}">▸ RAM</div>
+          <div data-syv="ram-sp" style="height:32px"></div>
         </div>
       </div>
 
-      <div data-syc="gear" style="position:absolute;top:11px;right:11px;width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:rgba(255,255,255,.35);background:rgba(255,255,255,.06);user-select:none">⚙️</div>
+      ${(c.netin || c.netout) ? `<div style="display:flex;align-items:center;gap:7px;padding:6px 10px;border-radius:10px;background:rgba(56,189,248,.07);border:1px solid rgba(56,189,248,.18)">
+        <div style="font-size:11px;color:#7dd3fc;font-weight:700;flex-shrink:0">🌐 Rete</div>
+        <div data-syv="net" style="flex:1;font-size:11px;font-weight:700;color:#bae6fd">↓ ${ni || '—'} &nbsp; ↑ ${no || '—'}</div>
+        <div data-syv="net-sp" style="width:80px;height:22px"></div>
+      </div>` : ''}
+
+      ${(c.diskr || c.diskw) ? `<div style="display:flex;align-items:center;gap:7px;padding:6px 10px;border-radius:10px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.16)">
+        <div style="font-size:11px;color:#fcd34d;font-weight:700;flex-shrink:0">💾 Disco I/O</div>
+        <div data-syv="diskio" style="flex:1;font-size:11px;font-weight:700;color:#fde68a">R: ${dr || '—'} &nbsp; W: ${dw || '—'}</div>
+      </div>` : ''}
+
     </div>`;
   }
 
@@ -192,44 +214,37 @@
 
     pushBuf(el, 'cpu', cpuV);
     pushBuf(el, 'ram', ramV);
+    if (c.netin) pushBuf(el, 'net', num(S(h, c.netin)));
 
     updateRing(el, 'cpu', cpuV, cpuC);
     updateRing(el, 'ram', ramV, ramC);
     updateRing(el, 'dsk', dskV, dskC);
 
-    const tempEl = el.querySelector('[data-syv="temp"]');
-    if (tempEl) {
-      tempEl.textContent = tmpV == null ? '—' : Math.round(tmpV) + '°';
-      tempEl.style.color = tCol;
-      const hot = tmpV != null && tmpV >= 70;
-      tempEl.className = hot ? 'syc-hot' : '';
+    const te = el.querySelector('[data-syv="temp"]');
+    if (te) { te.textContent = tmpV == null ? '—' : Math.round(tmpV) + '°'; te.style.color = tCol; te.className = (tmpV != null && tmpV >= 70) ? 'syk-hot' : ''; }
+    const ue = el.querySelector('[data-syv="uptime"]');
+    if (ue) ue.textContent = '⏱ ' + uptimeText(h, c.boot);
+    const ude = el.querySelector('[data-syv="updates"]');
+    if (ude) {
+      ude.textContent = '⬆ ' + upd + ' aggiornamenti';
+      ude.style.background = upd ? 'rgba(34,197,94,.12)' : 'rgba(255,255,255,.06)';
+      ude.style.borderColor = upd ? 'rgba(34,197,94,.3)' : 'rgba(255,255,255,.1)';
+      ude.style.color = upd ? '#86efac' : 'rgba(255,255,255,.8)';
     }
-    const upEl = el.querySelector('[data-syv="uptime"]');
-    if (upEl) upEl.textContent = '⏱ ' + uptimeText(h, c.boot);
-    const updEl = el.querySelector('[data-syv="updates"]');
-    if (updEl) {
-      updEl.textContent = '⬆ ' + upd + ' aggiorn.';
-      updEl.style.background = upd ? 'rgba(34,197,94,.12)' : 'rgba(255,255,255,.06)';
-      updEl.style.borderColor = upd ? 'rgba(34,197,94,.3)' : 'rgba(255,255,255,.1)';
-      updEl.style.color = upd ? '#86efac' : 'rgba(255,255,255,.8)';
-    }
-    const netEl = el.querySelector('[data-syv="net"]');
-    if (netEl && (c.netin || c.netout)) {
-      const ni = netVal(h, c.netin), no = netVal(h, c.netout);
-      netEl.textContent = '↓' + (ni || '—') + '  ↑' + (no || '—');
-    }
+    const ne = el.querySelector('[data-syv="net"]');
+    if (ne) { const ni = netFmt(h, c.netin), no = netFmt(h, c.netout); ne.innerHTML = '↓ ' + (ni || '—') + ' &nbsp; ↑ ' + (no || '—'); }
+    const de = el.querySelector('[data-syv="diskio"]');
+    if (de) { const dr = netFmt(h, c.diskr), dw = netFmt(h, c.diskw); de.innerHTML = 'R: ' + (dr || '—') + ' &nbsp; W: ' + (dw || '—'); }
 
-    const rid = (el.querySelector('[id^="syc"]') || {}).id || '';
-    const cpuSp = el.querySelector('[data-syv="cpu-spark"]');
-    if (cpuSp) {
-      const buf = (el._sycBuf && el._sycBuf.cpu) || [];
-      cpuSp.innerHTML = sparklineSVG(buf, cpuSp.offsetWidth || 80, 28, cpuC, rid + 'gc');
+    const rid = (el.querySelector('[id^="syc"]') || {}).id || 'sycx';
+    function redrawSp(key, col, sfx) {
+      const sp = el.querySelector('[data-syv="' + key + '-sp"]'); if (!sp) return;
+      const buf = (el._sycBuf && el._sycBuf[key]) || [];
+      sp.innerHTML = sparkSVG(buf, sp.offsetWidth || 80, parseInt(sp.style.height) || 32, col, rid + sfx);
     }
-    const ramSp = el.querySelector('[data-syv="ram-spark"]');
-    if (ramSp) {
-      const buf = (el._sycBuf && el._sycBuf.ram) || [];
-      ramSp.innerHTML = sparklineSVG(buf, ramSp.offsetWidth || 80, 28, ramC, rid + 'gr');
-    }
+    redrawSp('cpu', cpuC, 'gc');
+    redrawSp('ram', ramC, 'gr');
+    redrawSp('net', '#38bdf8', 'gn');
   }
 
   function update(card, hass, el) {
@@ -239,28 +254,27 @@
 
   function mount(card, hass, el) {
     if (el._sycBound) return; el._sycBound = true;
-    el.addEventListener('click', e => {
-      const t = e.target.closest('[data-syc]');
-      if (t && t.getAttribute('data-syc') === 'gear') { e.stopPropagation(); openCfg(card, el); }
-    });
     setTimeout(() => _patch(card, el), 60);
   }
 
+  /* ── CONFIG POPUP ── */
   function openCfg(card, el) {
     const h = H(); const c = load(card);
     const states = (h && h.states) || {};
-    const allSensors = Object.keys(states).sort();
+    const allIds = Object.keys(states).sort();
 
-    const inp = 'width:100%;padding:11px;border-radius:11px;background:#0f1830;color:#f1f5f9;border:1px solid rgba(255,255,255,.2);font-size:13px;box-sizing:border-box';
-    const lbl = 'font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:4px;display:block';
-    const listSt = 'max-height:130px;overflow-y:auto;margin-top:2px;border-radius:9px;background:#0f1830;border:1px solid rgba(255,255,255,.12);display:none';
+    const stInp = 'width:100%;padding:10px 11px;border-radius:11px;background:#0f1830;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none';
+    const stDrop = 'position:absolute;left:0;right:0;top:100%;z-index:10;max-height:180px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 10px 10px;display:none';
+    const stLbl = 'font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:4px;display:block';
+    const stInpBase = 'width:100%;padding:11px;border-radius:11px;background:#0f1830;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:13px;box-sizing:border-box';
 
-    function field(fid, label, val) {
-      return `<div style="margin-bottom:10px">
-        <label for="${fid}" style="${lbl}">${label}</label>
+    function field(fid, lbl2, val) {
+      return `<div style="margin-bottom:10px;position:relative">
+        <label style="${stLbl}">${lbl2}</label>
         <input id="${fid}" type="text" value="${(val || '').replace(/"/g, '&quot;')}" autocomplete="off"
-          placeholder="sensor.xxx  oppure lascia vuoto" style="${inp};font-family:monospace;font-size:12px">
-        <div id="${fid}-drop" style="${listSt}"></div>
+          placeholder="Clicca per scegliere oppure scrivi per filtrare…"
+          style="${stInp}">
+        <div id="${fid}-d" style="${stDrop}"></div>
       </div>`;
     }
 
@@ -268,64 +282,57 @@
     ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(2,6,16,.74);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
     ov.innerHTML = `<div style="width:min(460px,95vw);background:#0b1220;border:1px solid rgba(255,255,255,.14);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.6);padding:20px;color:#f1f5f9;max-height:90vh;overflow-y:auto">
       <div style="font-size:16px;font-weight:800;margin-bottom:14px">🖥️ Configura Sistema</div>
-
       <div style="margin-bottom:12px">
-        <label style="${lbl}">Nome</label>
-        <input id="sy-name" type="text" value="${(c.name || '').replace(/"/g, '&quot;')}" placeholder="es. Mini PC, NAS, Server…" style="${inp}">
+        <label style="${stLbl}">Nome</label>
+        <input id="sy-name" type="text" value="${(c.name||'').replace(/"/g,'&quot;')}" placeholder="es. Mini PC, NAS, Server…" style="${stInpBase}">
       </div>
-
-      ${field('sy-cpu',    'CPU (%)',              c.cpu    || '')}
-      ${field('sy-ram',    'RAM (%)',              c.ram    || '')}
-      ${field('sy-disk',   'Disco (%)',            c.disk   || '')}
-      ${field('sy-temp',   'Temperatura (°C)',     c.temp   || '')}
-      ${field('sy-boot',   'Uptime / last boot',   c.boot   || '')}
-      ${field('sy-netin',  'Network In (opz.)',    c.netin  || '')}
-      ${field('sy-netout', 'Network Out (opz.)',   c.netout || '')}
-
+      ${field('sy-cpu',    'CPU (%)',               c.cpu    ||'')}
+      ${field('sy-ram',    'RAM (%)',               c.ram    ||'')}
+      ${field('sy-disk',   'Disco (%)',             c.disk   ||'')}
+      ${field('sy-temp',   'Temperatura (°C)',      c.temp   ||'')}
+      ${field('sy-boot',   'Uptime / last boot',    c.boot   ||'')}
+      ${field('sy-netin',  'Network In  (opz.)',    c.netin  ||'')}
+      ${field('sy-netout', 'Network Out (opz.)',    c.netout ||'')}
+      ${field('sy-diskr',  'Disco Read  (opz.)',    c.diskr  ||'')}
+      ${field('sy-diskw',  'Disco Write (opz.)',    c.diskw  ||'')}
       <div style="display:flex;gap:10px;margin-top:16px">
         <button id="sy-cancel" style="flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#e2e8f0">Annulla</button>
         <button id="sy-save"   style="flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;background:#22c55e;color:#04210f">Salva</button>
       </div>
     </div>`;
-
     document.body.appendChild(ov);
     const close = () => { try { document.body.removeChild(ov); } catch (e) {} };
     ov.addEventListener('click', e => { if (e.target === ov) close(); });
 
-    // Search-as-you-type for every entity field
-    ['sy-cpu','sy-ram','sy-disk','sy-temp','sy-boot','sy-netin','sy-netout'].forEach(fid => {
+    // Combobox: show all on focus, filter on type
+    ['sy-cpu','sy-ram','sy-disk','sy-temp','sy-boot','sy-netin','sy-netout','sy-diskr','sy-diskw'].forEach(fid => {
       const inp2 = ov.querySelector('#' + fid);
-      const drop = ov.querySelector('#' + fid + '-drop');
+      const drop = ov.querySelector('#' + fid + '-d');
       if (!inp2 || !drop) return;
-      function filter() {
+
+      function showDrop() {
         const q = inp2.value.toLowerCase().trim();
-        if (!q) { drop.style.display = 'none'; return; }
-        const hits = allSensors.filter(id => {
-          if (!id.toLowerCase().includes(q)) {
-            const fn = ((states[id] && states[id].attributes && states[id].attributes.friendly_name) || '').toLowerCase();
-            return fn.includes(q);
-          }
-          return true;
-        }).slice(0, 25);
+        const hits = (q
+          ? allIds.filter(id => id.toLowerCase().includes(q) || ((states[id]?.attributes?.friendly_name || '').toLowerCase().includes(q)))
+          : allIds
+        ).slice(0, 50);
         if (!hits.length) { drop.style.display = 'none'; return; }
         drop.style.display = 'block';
         drop.innerHTML = hits.map(id => {
-          const fn = (states[id] && states[id].attributes && states[id].attributes.friendly_name) || '';
-          return `<div data-pick="${id}" style="padding:6px 10px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.05)">${id}${fn ? `<span style="font-family:system-ui;color:#64748b;margin-left:6px">${fn}</span>` : ''}</div>`;
+          const fn = states[id]?.attributes?.friendly_name || '';
+          return `<div data-pick="${id}" style="padding:6px 10px;cursor:pointer;font-size:11px;border-bottom:1px solid rgba(255,255,255,.04)">
+            <span style="color:#e2e8f0">${id}</span>${fn ? `<span style="color:#475569;margin-left:7px;font-family:system-ui;font-size:10px">${fn}</span>` : ''}
+          </div>`;
         }).join('');
         drop.querySelectorAll('[data-pick]').forEach(row => {
-          row.addEventListener('mousedown', ev => {
-            ev.preventDefault();
-            inp2.value = row.getAttribute('data-pick');
-            drop.style.display = 'none';
-          });
+          row.addEventListener('mousedown', ev => { ev.preventDefault(); inp2.value = row.getAttribute('data-pick'); drop.style.display = 'none'; });
           row.addEventListener('mouseover', () => { row.style.background = 'rgba(255,255,255,.08)'; });
           row.addEventListener('mouseout',  () => { row.style.background = ''; });
         });
       }
-      inp2.addEventListener('input', filter);
-      inp2.addEventListener('focus', () => { if (inp2.value) filter(); });
-      inp2.addEventListener('blur',  () => setTimeout(() => { drop.style.display = 'none'; }, 180));
+      inp2.addEventListener('focus', showDrop);
+      inp2.addEventListener('input', showDrop);
+      inp2.addEventListener('blur',  () => setTimeout(() => { drop.style.display = 'none'; }, 200));
     });
 
     ov.querySelector('#sy-cancel').addEventListener('click', close);
@@ -339,6 +346,8 @@
         boot:   ov.querySelector('#sy-boot').value.trim(),
         netin:  ov.querySelector('#sy-netin').value.trim(),
         netout: ov.querySelector('#sy-netout').value.trim(),
+        diskr:  ov.querySelector('#sy-diskr').value.trim(),
+        diskw:  ov.querySelector('#sy-diskw').value.trim(),
       });
       close();
       try { el.innerHTML = render(card); el._sycBound = false; mount(card, H(), el); } catch (e) {}
@@ -346,8 +355,8 @@
   }
 
   const CARD = {
-    id: 'system-card', name: 'Sistema', icon: '🖥️', version: '2.0',
-    desc: 'CPU, RAM, disco, temperatura, uptime con ring gauge animati e sparkline live.',
+    id: 'system-card', name: 'Sistema', icon: '🖥️', version: '2.1',
+    desc: 'CPU, RAM, disco, temperatura e rete con ring gauge animati, sparkline live e scan background.',
     colSpan: 2, rowSpan: 3,
     render, mount, update, configure: openCfg,
   };

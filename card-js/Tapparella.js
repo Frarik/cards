@@ -1,4 +1,4 @@
-/* frarik-version: 4.2 */
+/* frarik-version: 4.3 */
 (function () {
   'use strict';
 
@@ -471,11 +471,12 @@
   // ─── CONFIG POPUP ─────────────────────────────────────────────────────────
   function openCfg(card, el) {
     const h = H(), cur = entOf(card), curType = typeOf(card), covers = listCovers(h);
+    const states = (h && h.states) || {};
+    const allCovers = Object.keys(states).filter(id => id.startsWith('cover.')).sort();
     const ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(2,6,16,.74);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
-    const opts = ['<option value="">— Seleziona —</option>']
-      .concat(covers.map(c => `<option value="${c.id}"${c.id === cur ? ' selected' : ''}>${c.name}</option>`)).join('');
-    const inp = 'width:100%;padding:11px;border-radius:11px;background:#0f1830;color:#f1f5f9;border:1px solid rgba(255,255,255,.2);font-size:13px;box-sizing:border-box';
+    const stInp = 'width:100%;padding:11px;border-radius:11px;background:#0f1830;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:13px;box-sizing:border-box;outline:none';
+    const stDrop = 'position:absolute;left:0;right:0;top:100%;z-index:10;max-height:180px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 11px 11px;display:none';
     const typeBtns = COVER_TYPES.map(t =>
       `<button data-type-btn="${t.id}" style="padding:10px 4px;border-radius:10px;cursor:pointer;
         border:2px solid ${t.id === curType ? '#38bdf8' : 'rgba(255,255,255,.12)'};
@@ -490,11 +491,15 @@
       <div style="font-size:11px;color:#94a3b8;margin-bottom:7px">Tipo di copertura</div>
       <div id="tap-types" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">${typeBtns}</div>
       <div style="font-size:11px;color:#94a3b8;margin-bottom:5px">Nome</div>
-      <input id="tap-name" placeholder="es. Tapparella salotto" value="${(load(card).name || '').replace(/"/g, '&quot;')}" style="${inp};margin-bottom:12px">
-      <div style="font-size:11px;color:#94a3b8;margin-bottom:5px">Entità cover (${covers.length} trovate)</div>
-      <select id="tap-sel" style="${inp};margin-bottom:8px">${opts}</select>
-      <input id="tap-man" placeholder="oppure: cover.tapparella_salotto" value="${cur}" style="${inp};font-size:12px;font-family:monospace">
-      <div style="font-size:10px;color:#64748b;margin-top:10px">⚡ La velocità è automatica: la card impara il tempo di corsa dai movimenti reali.</div>
+      <input id="tap-name" placeholder="es. Tapparella salotto" value="${(load(card).name || '').replace(/"/g, '&quot;')}" style="${stInp};margin-bottom:12px">
+      <div style="font-size:11px;color:#94a3b8;margin-bottom:5px">Entità cover (${allCovers.length} trovate)</div>
+      <div style="position:relative;margin-bottom:4px">
+        <input id="tap-entity" type="text" value="${cur}" autocomplete="off"
+          placeholder="Clicca per scegliere oppure scrivi per filtrare…"
+          style="${stInp};font-family:monospace;font-size:12px">
+        <div id="tap-entity-d" style="${stDrop}"></div>
+      </div>
+      <div style="font-size:10px;color:#64748b;margin-top:8px">⚡ La velocità è automatica: la card impara il tempo di corsa dai movimenti reali.</div>
       <div style="display:flex;gap:10px;margin-top:16px">
         <button id="tap-cancel" style="flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#e2e8f0">Annulla</button>
         <button id="tap-save" style="flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;background:#22c55e;color:#04210f">Salva</button>
@@ -512,12 +517,36 @@
         btn.style.background = on ? 'rgba(56,189,248,.15)' : 'rgba(255,255,255,.05)';
       });
     });
-    ov.querySelector('#tap-sel').addEventListener('change', function () { if (this.value) ov.querySelector('#tap-man').value = this.value; });
+    // Combobox entità cover
+    const entInp = ov.querySelector('#tap-entity');
+    const entDrop = ov.querySelector('#tap-entity-d');
+    function showCoverDrop() {
+      const q = entInp.value.toLowerCase().trim();
+      const hits = (q
+        ? allCovers.filter(id => id.toLowerCase().includes(q) || ((states[id]?.attributes?.friendly_name||'').toLowerCase().includes(q)))
+        : allCovers
+      ).slice(0, 50);
+      if (!hits.length) { entDrop.style.display = 'none'; return; }
+      entDrop.style.display = 'block';
+      entDrop.innerHTML = hits.map(id => {
+        const fn = states[id]?.attributes?.friendly_name || '';
+        return `<div data-pick="${id}" style="padding:7px 11px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04)">
+          <span style="color:#e2e8f0">${id}</span>${fn ? `<span style="color:#475569;margin-left:7px;font-family:system-ui;font-size:10px">${fn}</span>` : ''}
+        </div>`;
+      }).join('');
+      entDrop.querySelectorAll('[data-pick]').forEach(row => {
+        row.addEventListener('mousedown', ev => { ev.preventDefault(); entInp.value = row.getAttribute('data-pick'); entDrop.style.display = 'none'; });
+        row.addEventListener('mouseover', () => { row.style.background = 'rgba(255,255,255,.08)'; });
+        row.addEventListener('mouseout',  () => { row.style.background = ''; });
+      });
+    }
+    entInp.addEventListener('focus', showCoverDrop);
+    entInp.addEventListener('input', showCoverDrop);
+    entInp.addEventListener('blur',  () => setTimeout(() => { entDrop.style.display = 'none'; }, 200));
     ov.addEventListener('click', e => { if (e.target === ov) close(); });
     ov.querySelector('#tap-cancel').addEventListener('click', close);
     ov.querySelector('#tap-save').addEventListener('click', () => {
-      const man = ov.querySelector('#tap-man').value.trim();
-      const entity = man || ov.querySelector('#tap-sel').value || '';
+      const entity = ov.querySelector('#tap-entity').value.trim();
       const name = ov.querySelector('#tap-name').value.trim();
       save(card, { entity: entity, name: name, coverType: selType });
       close();
@@ -526,7 +555,7 @@
   }
 
   const CARD = {
-    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '4.2',
+    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '4.3',
     desc: 'Tapparella finestra/porta finestra, tenda interna grigio tortora con brezza, tenda da sole, basculante, tenda a rullo — animazioni real-time.',
     colSpan: 2, rowSpan: 3,
     render, update, mount, configure: openCfg
