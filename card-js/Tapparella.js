@@ -1,4 +1,4 @@
-/* frarik-version: 3.2 */
+/* frarik-version: 3.8 */
 (function () {
   'use strict';
 
@@ -74,7 +74,7 @@
           background:linear-gradient(118deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,.04) 26%,transparent 46%,rgba(255,255,255,.07) 100%)"></div>
         <div data-open style="position:absolute;left:0;right:0;top:13%;bottom:0;overflow:hidden;z-index:2">
           <div data-sh style="position:absolute;left:0;right:0;top:0;height:100%;
-            transform:translateY(${ty}%);transition:transform .5s linear;
+            transform:translateY(${ty}%);transition:transform .5s ease-in-out;
             background:repeating-linear-gradient(180deg,rgba(255,255,255,.45) 0px,#c8d0db 1px,#b0b8c5 5px,#8c94a2 8px,rgba(0,0,0,.42) 9px,#b0b8c5 10px);
             box-shadow:0 8px 14px rgba(0,0,0,.5)">
             <div style="position:absolute;bottom:0;left:0;right:0;height:10px;
@@ -105,7 +105,7 @@
           background:linear-gradient(118deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,.04) 26%,transparent 46%,rgba(255,255,255,.07) 100%)"></div>
         <div data-open style="position:absolute;left:0;right:0;top:7%;bottom:0;overflow:hidden;z-index:2">
           <div data-sh style="position:absolute;left:0;right:0;top:0;height:100%;
-            transform:translateY(${ty}%);transition:transform .5s linear;
+            transform:translateY(${ty}%);transition:transform .5s ease-in-out;
             background:repeating-linear-gradient(180deg,rgba(255,255,255,.45) 0px,#c8d0db 1px,#b0b8c5 5px,#8c94a2 8px,rgba(0,0,0,.42) 9px,#b0b8c5 10px);
             box-shadow:0 8px 14px rgba(0,0,0,.5)">
             <div style="position:absolute;bottom:0;left:0;right:0;height:10px;
@@ -174,84 +174,60 @@
     document.head.appendChild(s);
   }
 
-  // ─── TENDA DA SOLE ────────────────────────────────────────────────────────
+  // ─── TENDA DA SOLE (vista prospettica da sotto, bracci non visibili) ────────
   function drawTendaSole(pos) {
     const p = pos == null ? 0 : pos;
-    const ty = p - 100;
-    // chiuso: -90°/+90° (piegati nel cassone), aperto: -15°/+15° (estesi con inclinazione)
-    const aL = (-90 + p * 0.75).toFixed(1);
-    const aR = ( 90 - p * 0.75).toFixed(1);
-    return `<div style="position:relative;flex:1;min-height:260px;border-radius:8px;overflow:hidden;
-      background:linear-gradient(to bottom,#5ea8d8 0%,#80bce4 50%,#b8daf2 100%);
+    const ty = (p - 100).toFixed(1);
+    return `<div style="position:relative;flex:1;min-height:260px;border-radius:12px;overflow:hidden;
+      background:linear-gradient(to bottom,#5ea8d8,#88c4e8 45%,#c4dff0 75%,#dde8f4);
       box-shadow:0 12px 28px rgba(0,0,0,.55)">
       <!-- sole -->
-      <div style="position:absolute;top:5%;right:10%;width:28px;height:28px;border-radius:50%;
+      <div style="position:absolute;top:5%;right:9%;width:30px;height:30px;border-radius:50%;
         background:radial-gradient(circle,#fffce8,#ffe040);
-        box-shadow:0 0 30px 12px rgba(255,215,0,.28)"></div>
-      <!-- muro edificio (intonaco sottile in cima) -->
-      <div style="position:absolute;top:0;left:0;right:0;height:15%;
-        background:linear-gradient(to bottom,#e0d4bc,#d4c8aa);
-        box-shadow:0 3px 10px rgba(0,0,0,.28)">
+        box-shadow:0 0 32px 12px rgba(255,215,0,.32)"></div>
+      <!-- muro (striscia intonaco in cima, z-index alto così resta sopra alla prospettiva) -->
+      <div style="position:absolute;top:0;left:0;right:0;height:16%;z-index:10;
+        background:linear-gradient(to bottom,#e8dcc8,#d4c8aa);
+        box-shadow:0 4px 12px rgba(0,0,0,.26)">
         <div style="position:absolute;bottom:0;left:0;right:0;height:4px;
-          background:linear-gradient(to bottom,rgba(0,0,0,.14),transparent)"></div>
+          background:linear-gradient(to bottom,rgba(0,0,0,.18),transparent)"></div>
       </div>
-      <!-- CASSONE (bianco/grigio chiaro, come nella foto) -->
-      <div style="position:absolute;left:8%;right:8%;top:13%;height:10%;z-index:9;border-radius:5px;
-        background:linear-gradient(to bottom,#f2f2f2,#d8d8d8 55%,#eaeaea);
-        box-shadow:0 5px 16px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.95),inset 0 -1px 0 rgba(0,0,0,.12)">
-        <div style="position:absolute;top:28%;left:6%;right:6%;height:2px;background:rgba(0,0,0,.09);border-radius:1px"></div>
-        <div style="position:absolute;top:55%;left:6%;right:6%;height:2px;background:rgba(0,0,0,.06);border-radius:1px"></div>
-      </div>
-      <!-- BRACCIO SINISTRO (bianco, pivot fondo cassone sx) z-index:8 -->
-      <div data-arm-l style="position:absolute;left:12%;top:23%;width:9px;height:56%;z-index:8;
-        transform-origin:top center;transform:rotate(${aL}deg);transition:transform .5s linear;
-        border-radius:4px;
-        background:linear-gradient(to right,#c0c0c0,#f0f0f0 35%,#fafafa 50%,#f0f0f0 65%,#c0c0c0);
-        box-shadow:2px 2px 7px rgba(0,0,0,.28)">
-        <!-- giunto a gomito (cerchio bianco/grigio con highlight) -->
-        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-          width:15px;height:15px;border-radius:50%;
-          background:radial-gradient(circle at 35% 35%,#ffffff,#c8c8c8);
-          box-shadow:0 2px 6px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.9)"></div>
-      </div>
-      <!-- BRACCIO DESTRO z-index:8 -->
-      <div data-arm-r style="position:absolute;right:12%;top:23%;width:9px;height:56%;z-index:8;
-        transform-origin:top center;transform:rotate(${aR}deg);transition:transform .5s linear;
-        border-radius:4px;
-        background:linear-gradient(to left,#c0c0c0,#f0f0f0 35%,#fafafa 50%,#f0f0f0 65%,#c0c0c0);
-        box-shadow:-2px 2px 7px rgba(0,0,0,.28)">
-        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-          width:15px;height:15px;border-radius:50%;
-          background:radial-gradient(circle at 35% 35%,#ffffff,#c8c8c8);
-          box-shadow:0 2px 6px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.9)"></div>
-      </div>
-      <!-- TELO (z-index:5, tra i due bracci) -->
-      <div data-open style="position:absolute;left:8%;right:8%;top:23%;bottom:8%;overflow:hidden;z-index:5">
-        <div data-sh style="position:absolute;left:0;right:0;top:0;height:100%;
-          transform:translateY(${ty}%);transition:transform .5s linear">
-          <!-- STRISCE diagonali ~-25° giallo brillante + bianco (come nella foto) -->
-          <div style="position:absolute;inset:0 0 20px 0;
-            background:repeating-linear-gradient(-25deg,
-              #f8f8f8 0px,#f8f8f8 16px,
-              #f5c200 16px,#f5c200 30px);
-            box-shadow:0 6px 20px rgba(0,0,0,.22)">
-            <!-- ombra superiore (rolling dal cassone) -->
-            <div style="position:absolute;top:0;left:0;right:0;height:18%;
-              background:linear-gradient(to bottom,rgba(0,0,0,.16),transparent)"></div>
-            <!-- luce riflessa in cima (telo teso) -->
-            <div style="position:absolute;top:0;left:0;right:0;height:8%;
-              background:linear-gradient(to bottom,rgba(255,255,255,.3),transparent)"></div>
+      <!-- CONTENITORE PROSPETTIVA: tutta la tenda è inclinata di rotateX per simulare la vista dall'alto verso il basso -->
+      <div style="position:absolute;left:0;right:0;top:14%;bottom:0;
+        perspective:500px;perspective-origin:50% 0%">
+        <!-- PIANO TENDA ruotato: bordo superiore = cassone (vicino al muro), bordo inferiore = stecca (verso lo spettatore) -->
+        <div style="position:absolute;inset:0;
+          transform:rotateX(-28deg);transform-origin:top center">
+          <!-- CASSONE (bordo posteriore, più in basso nella card ma lontano dallo spettatore) -->
+          <div style="position:absolute;top:0;left:0;right:0;height:13%;z-index:3;
+            border-radius:4px 4px 0 0;
+            background:linear-gradient(to bottom,#f4f4f4,#d8d8d8 55%,#ebebeb);
+            box-shadow:0 5px 18px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.9),inset 0 -1px 0 rgba(0,0,0,.1)">
+            <div style="position:absolute;top:30%;left:5%;right:5%;height:2px;background:rgba(0,0,0,.1);border-radius:1px"></div>
+            <div style="position:absolute;top:62%;left:5%;right:5%;height:2px;background:rgba(0,0,0,.07);border-radius:1px"></div>
           </div>
-          <!-- STECCA FRONTALE (bianca, come nella foto) -->
-          <div style="position:absolute;bottom:0;left:0;right:0;height:20px;z-index:2;
-            background:linear-gradient(to bottom,#f4f4f4,#dcdcdc 55%,#ebebeb);
-            box-shadow:0 5px 14px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.95),inset 0 -1px 0 rgba(0,0,0,.1)">
-            <div style="position:absolute;top:5px;left:3%;right:3%;height:2px;background:rgba(0,0,0,.07);border-radius:1px"></div>
-            <div style="position:absolute;top:11px;left:3%;right:3%;height:2px;background:rgba(0,0,0,.05);border-radius:1px"></div>
-            <!-- valance dentellata: piccole gocce in fondo alla stecca -->
-            <div style="position:absolute;bottom:-6px;left:0;right:0;height:8px;
-              background:radial-gradient(ellipse 10px 8px at 10px 0,#f5c200 60%,transparent 60%) 0 0 / 20px 8px,
-                          radial-gradient(ellipse 10px 8px at 10px 0,#f8f8f8 60%,transparent 60%) 10px 0 / 20px 8px;"></div>
+          <!-- AREA TELO: overflow:hidden per animazione avvolgimento -->
+          <div data-open style="position:absolute;top:13%;left:0;right:0;bottom:0;overflow:hidden;z-index:1">
+            <div data-sh style="position:absolute;left:0;right:0;top:0;height:100%;
+              transform:translateY(${ty}%);transition:transform .5s ease-in-out">
+              <!-- TESSUTO: strisce orizzontali giallo+bianco, la prospettiva le fa convergere verso il cassone -->
+              <div style="position:absolute;inset:0 0 22px 0;
+                background:repeating-linear-gradient(180deg,
+                  #f8f8f8 0px,#f8f8f8 13px,
+                  #f5c200 13px,#f5c200 25px);
+                box-shadow:0 3px 16px rgba(0,0,0,.18)">
+                <!-- ombra uscita dal cassone (telo arrotolato) -->
+                <div style="position:absolute;top:0;left:0;right:0;height:20%;
+                  background:linear-gradient(to bottom,rgba(0,0,0,.22),transparent)"></div>
+              </div>
+              <!-- STECCA FRONTALE (bordo anteriore, appare più vicino/grande grazie alla prospettiva) -->
+              <div style="position:absolute;bottom:0;left:0;right:0;height:22px;z-index:2;
+                background:linear-gradient(to bottom,#f4f4f4,#d8d8d8 55%,#ebebeb);
+                box-shadow:0 8px 24px rgba(0,0,0,.44),inset 0 1px 0 rgba(255,255,255,.95),inset 0 -1px 0 rgba(0,0,0,.1)">
+                <div style="position:absolute;top:6px;left:3%;right:3%;height:2px;background:rgba(0,0,0,.08);border-radius:1px"></div>
+                <div style="position:absolute;top:13px;left:3%;right:3%;height:2px;background:rgba(0,0,0,.05);border-radius:1px"></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -321,11 +297,9 @@
           background:linear-gradient(118deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,.04) 26%,transparent 46%,rgba(255,255,255,.07) 100%)"></div>
         <div data-open style="position:absolute;left:0;right:0;top:${rollerH}%;bottom:0;overflow:hidden;z-index:2">
           <div data-sh style="position:absolute;left:0;right:0;top:0;height:100%;
-            transform:translateY(${ty}%);transition:transform .5s linear;
-            background:linear-gradient(to bottom,#2a2a3a,#1e1e2e);
+            transform:translateY(${ty}%);transition:transform .5s ease-in-out;
+            background:linear-gradient(to right,#252535,#2e2e40 45%,#252535);
             box-shadow:0 4px 12px rgba(0,0,0,.5)">
-            <div style="position:absolute;inset:0;background:repeating-linear-gradient(180deg,
-              transparent 0px,transparent 7px,rgba(255,255,255,.04) 7px,rgba(255,255,255,.04) 8px)"></div>
             <div style="position:absolute;bottom:0;left:0;right:0;height:13px;
               background:linear-gradient(to bottom,#4a4a5a,#2a2a3a 40%,#1a1a28);
               box-shadow:0 -1px 0 rgba(255,255,255,.1),0 4px 10px rgba(0,0,0,.6)">
@@ -354,12 +328,13 @@
     const pos = getPos(h, id), st = stateOf(h, id);
     const draws = { tapparella: drawTapparella, porta_finestra: drawPortaFinestra, tenda_interna: drawTendaInterna, tenda_sole: drawTendaSole, basculante: drawBasculante, tenda_rullo: drawTendaRullo };
     const draw = (draws[type] || drawTapparella)(pos);
-    const btn = (act, ico, lbl, col) =>
-      `<button data-cov="${act}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
-        padding:8px 4px;border-radius:11px;cursor:pointer;border:1px solid ${col}44;background:${col}1a;
-        color:${col};font-weight:800;font-size:11px;transition:all .15s"
-        onmouseover="this.style.background='${col}2e'" onmouseout="this.style.background='${col}1a'">
-        <span style="font-size:15px;line-height:1">${ico}</span>${lbl}</button>`;
+    const btn = (act, ico) =>
+      `<button data-cov="${act}" style="flex:1;padding:10px 0;border-radius:10px;cursor:pointer;border:none;
+        background:rgba(0,0,0,.32);
+        box-shadow:inset 0 2px 6px rgba(0,0,0,.6),inset 0 0 0 1px rgba(255,255,255,.07),0 1px 0 rgba(255,255,255,.07);
+        color:rgba(255,255,255,.82);font-size:16px;line-height:1;transition:background .12s"
+        onmouseover="this.style.background='rgba(255,255,255,.11)'"
+        onmouseout="this.style.background='rgba(0,0,0,.32)'">${ico}</button>`;
     return `<div style="height:100%;display:flex;flex-direction:column;min-height:0;gap:8px">${header(nm, type)}
       ${draw}
       <div style="display:flex;align-items:baseline;justify-content:space-between;padding:0 2px">
@@ -367,9 +342,9 @@
         <span data-st style="font-size:12px;font-weight:800;letter-spacing:.3px;color:${statusColor(st, pos)}">${statusLabel(st, pos)}</span>
       </div>
       <div style="display:flex;gap:6px">
-        ${btn('open', '▲', 'Apri', '#4ade80')}
-        ${btn('stop', '■', 'Ferma', '#fb923c')}
-        ${btn('close', '▼', 'Chiudi', '#f87171')}
+        ${btn('open', '▲')}
+        ${btn('stop', '■')}
+        ${btn('close', '▼')}
       </div>
     </div>`;
   }
@@ -437,12 +412,12 @@
     function applyArms(p) {
       if (!rev) return;
       const aL = el.querySelector('[data-arm-l]'), aR = el.querySelector('[data-arm-r]');
-      const dur = '.5s linear';
+      const dur = '.5s ease-in-out';
       if (aL) { aL.style.transition = `transform ${dur}`; aL.style.transform = `rotate(${(-90 + p * 0.75).toFixed(1)}deg)`; }
       if (aR) { aR.style.transition = `transform ${dur}`; aR.style.transform = `rotate(${(90  - p * 0.75).toFixed(1)}deg)`; }
     }
 
-    const setY = (y, dur) => { sh.style.transition = `transform ${dur} linear`; sh.style.transform = `translateY(${y}%)`; };
+    const setY = (y, dur) => { sh.style.transition = `transform ${dur} ease-in-out`; sh.style.transform = `translateY(${y}%)`; };
 
     if (st === 'opening' || st === 'closing') {
       if (prev !== st) {
@@ -453,14 +428,7 @@
         setY((startY + (targetY - startY) * 0.92).toFixed(1), Math.max(0.4, learnedTravel(card) * frac).toFixed(1) + 's');
       } else if (pos != null && pos !== el._tapLive) { el._tapLive = pos; setY(calcY(pos), '.7s'); }
       applyArms(el._tapLive != null ? el._tapLive : pos != null ? pos : (st === 'opening' ? 100 : 0));
-      if (pe) {
-        const op = el.querySelector('[data-open]');
-        if (op) {
-          const oR = op.getBoundingClientRect(), sR = sh.getBoundingClientRect();
-          const raw = Math.round(-(sR.top - oR.top) / (oR.height || 1) * 100);
-          pe.textContent = Math.max(0, Math.min(100, rev ? 100 - raw : raw)) + '%';
-        }
-      }
+      if (pe) pe.textContent = (el._tapLive != null ? el._tapLive : pos != null ? pos : (st === 'opening' ? 100 : 0)) + '%';
     } else {
       if ((prev === 'opening' || prev === 'closing') && el._tapStart && pos != null) {
         const dp = Math.abs(pos - el._tapStart.pos), dt = (Date.now() - el._tapStart.ts) / 1000;
@@ -561,7 +529,7 @@
   }
 
   const CARD = {
-    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '3.7',
+    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '3.8',
     desc: 'Tapparella finestra/porta finestra, tenda interna grigio tortora con brezza, tenda da sole, basculante, tenda a rullo — animazioni real-time.',
     colSpan: 2, rowSpan: 3,
     render, update, mount, configure: openCfg
@@ -595,7 +563,7 @@
           background:linear-gradient(118deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,.04) 26%,transparent 46%,rgba(255,255,255,.07) 100%)"></div>
         <div data-open style="position:absolute;left:0;right:0;top:7%;bottom:0;overflow:hidden;z-index:2">
           <div data-sh style="position:absolute;left:0;right:0;top:0;height:100%;
-            transform:translateY(${ty}%);transition:transform .5s linear;
+            transform:translateY(${ty}%);transition:transform .5s ease-in-out;
             background:repeating-linear-gradient(180deg,rgba(255,255,255,.45) 0px,#c8d0db 1px,#b0b8c5 5px,#8c94a2 8px,rgba(0,0,0,.42) 9px,#b0b8c5 10px);
             box-shadow:0 8px 14px rgba(0,0,0,.5)">
             <div style="position:absolute;bottom:0;left:0;right:0;height:10px;
@@ -611,20 +579,21 @@
         <div style="position:absolute;bottom:0;left:0;right:0;height:6px;z-index:1;background:linear-gradient(to bottom,#5b626e,#363c46)"></div>
       </div>
     </div>`;
-    const col = acc, btn = (act, ico, lbl, c) =>
-      `<button data-cov="${act}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
-        padding:8px 4px;border-radius:11px;cursor:pointer;border:1px solid ${c}44;background:${c}1a;
-        color:${c};font-weight:800;font-size:11px;transition:all .15s"
-        onmouseover="this.style.background='${c}2e'" onmouseout="this.style.background='${c}1a'">
-        <span style="font-size:15px;line-height:1">${ico}</span>${lbl}</button>`;
+    const btn = (act, ico) =>
+      `<button data-cov="${act}" style="flex:1;padding:10px 0;border-radius:10px;cursor:pointer;border:none;
+        background:rgba(0,0,0,.32);
+        box-shadow:inset 0 2px 6px rgba(0,0,0,.6),inset 0 0 0 1px rgba(255,255,255,.07),0 1px 0 rgba(255,255,255,.07);
+        color:rgba(255,255,255,.82);font-size:16px;line-height:1;transition:background .12s"
+        onmouseover="this.style.background='rgba(255,255,255,.11)'"
+        onmouseout="this.style.background='rgba(0,0,0,.32)'">${ico}</button>`;
     return `<div style="height:100%;display:flex;flex-direction:column;min-height:0;gap:8px">
       ${header(nm, 'porta_finestra')}${draw}
       <div style="display:flex;align-items:baseline;justify-content:space-between;padding:0 2px">
-        <span data-pct style="font-size:24px;font-weight:800;color:${col}">${pos == null ? '—' : pos + '%'}</span>
+        <span data-pct style="font-size:24px;font-weight:800;color:${acc}">${pos == null ? '—' : pos + '%'}</span>
         <span data-st style="font-size:12px;font-weight:800;letter-spacing:.3px;color:${statusColor(st, pos)}">${statusLabel(st, pos)}</span>
       </div>
       <div style="display:flex;gap:6px">
-        ${btn('open', '▲', 'Apri', '#4ade80')}${btn('stop', '■', 'Ferma', '#fb923c')}${btn('close', '▼', 'Chiudi', '#f87171')}
+        ${btn('open', '▲')}${btn('stop', '■')}${btn('close', '▼')}
       </div></div>`;
   }
   function updatePorta(card, hass, el) {
