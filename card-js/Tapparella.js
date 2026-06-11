@@ -1,4 +1,4 @@
-/* frarik-version: 4.1 */
+/* frarik-version: 4.2 */
 (function () {
   'use strict';
 
@@ -54,10 +54,7 @@
   ];
   function coverIcon(type) { const t = COVER_TYPES.find(x => x.id === type); return t ? t.icon : '🪟'; }
   function header(nm, type) {
-    return `<div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
-      <span style="font-size:26px;line-height:1">${coverIcon(type)}</span>
-      <span style="flex:1;min-width:0;font-size:26px;font-weight:800;color:#e8ebf5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nm}</span>
-    </div>`;
+    return `<div style="flex-shrink:0;text-align:center;font-size:26px;font-weight:800;color:#e8ebf5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nm}</div>`;
   }
 
 
@@ -529,7 +526,7 @@
   }
 
   const CARD = {
-    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '4.1',
+    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '4.2',
     desc: 'Tapparella finestra/porta finestra, tenda interna grigio tortora con brezza, tenda da sole, basculante, tenda a rullo — animazioni real-time.',
     colSpan: 2, rowSpan: 3,
     render, update, mount, configure: openCfg
