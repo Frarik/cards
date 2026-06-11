@@ -46,6 +46,7 @@
 
   const COVER_TYPES = [
     { id: 'tapparella',     icon: '🪟', label: 'Tapp. finestra',       desc: 'Tapparella finestra a stecche' },
+    { id: 'porta_finestra', icon: '🚪', label: 'Tapp. porta finestra', desc: 'Tapparella porta-finestra (doppia altezza)' },
     { id: 'tenda_interna',  icon: '🎪', label: 'Tenda interna',        desc: 'Tendaggio a due pannelli' },
     { id: 'tenda_sole',     icon: '☀️', label: 'Tenda da sole',        desc: 'Cappottina con bracci motorizzati' },
     { id: 'basculante',     icon: '🚗', label: 'Basculante',           desc: 'Porta basculante garage' },
@@ -91,22 +92,64 @@
     </div>`;
   }
 
-  // ─── TENDA DA INTERNO (tendaggio grigio tortora, pieghe lisce, senza clip-path) ─
+  // ─── PORTA FINESTRA (identica a tapparella finestra, solo più alta) ─────────
+  function drawPortaFinestra(pos) {
+    const ty = -(pos == null ? 0 : pos);
+    return `<div style="position:relative;flex:1;min-height:520px;border-radius:12px;
+      background:linear-gradient(145deg,#525a66,#363c46 55%,#262b33);
+      box-shadow:0 12px 28px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.14)">
+      <div style="position:absolute;inset:7px;border-radius:6px;overflow:hidden;
+        background:linear-gradient(to bottom,#13345a,#2c5f93 45%,#6fa6da);
+        box-shadow:inset 0 0 20px rgba(0,0,0,.55),inset 0 0 0 1px rgba(0,0,0,.4)">
+        <div style="position:absolute;inset:0;pointer-events:none;
+          background:linear-gradient(118deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,.04) 26%,transparent 46%,rgba(255,255,255,.07) 100%)"></div>
+        <div data-open style="position:absolute;left:0;right:0;top:7%;bottom:0;overflow:hidden;z-index:2">
+          <div data-sh style="position:absolute;left:0;right:0;top:0;height:100%;
+            transform:translateY(${ty}%);transition:transform .5s linear;
+            background:repeating-linear-gradient(180deg,rgba(255,255,255,.45) 0px,#c8d0db 1px,#b0b8c5 5px,#8c94a2 8px,rgba(0,0,0,.42) 9px,#b0b8c5 10px);
+            box-shadow:0 8px 14px rgba(0,0,0,.5)">
+            <div style="position:absolute;bottom:0;left:0;right:0;height:10px;
+              background:linear-gradient(to bottom,#aeb6c2,#7c8492 45%,#3f444d);box-shadow:0 -1px 0 rgba(0,0,0,.3),0 3px 7px rgba(0,0,0,.55)">
+              <div style="position:absolute;left:30%;top:3.5px;width:16px;height:3px;border-radius:2px;background:rgba(0,0,0,.5)"></div>
+              <div style="position:absolute;right:30%;top:3.5px;width:16px;height:3px;border-radius:2px;background:rgba(0,0,0,.5)"></div>
+            </div>
+          </div>
+        </div>
+        <div style="position:absolute;top:0;left:0;right:0;height:7%;z-index:3;border-radius:0 0 8px 8px;
+          background:linear-gradient(to bottom,#8d95a2,#aeb6c2 22%,#6b7280 60%,#3c424c);
+          box-shadow:0 6px 13px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.4)"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;height:6px;z-index:1;background:linear-gradient(to bottom,#5b626e,#363c46)"></div>
+      </div>
+    </div>`;
+  }
+
+  // ─── TENDA DA INTERNO (grigio tortora, pannelli 50%+50%, brezza animata) ────
   function drawTendaInterna(pos) {
     const p = pos == null ? 0 : pos;
-    const txL = -(p * 0.78);
-    const txR =  (p * 0.78);
-    // grigio tortora: toni caldi neutri
+    const txL = -p, txR = p;
     const v0='#3c3830',v1='#6e6860',v2='#9a9288',v3='#bcb4aa',v4='#d4ccc4';
     const folds=`repeating-linear-gradient(90deg,${v0} 0px,${v1} 5px,${v2} 10px,${v3} 15px,${v4} 18px,${v3} 21px,${v2} 26px,${v1} 30px,${v0} 34px)`;
     const silk='linear-gradient(150deg,rgba(255,255,255,.11) 0%,transparent 38%,rgba(255,255,255,.06) 65%,transparent 100%)';
-    const edgeDark='linear-gradient(to right,rgba(0,0,0,.42) 0px,transparent 16px,transparent calc(100% - 16px),rgba(0,0,0,.42) 100%)';
+    const edgeDark='linear-gradient(to right,rgba(0,0,0,.38) 0px,transparent 14px,transparent calc(100% - 14px),rgba(0,0,0,.38) 100%)';
+    const panel = (side, tx, rings) => `
+      <div data-${side==='left'?'sh':'sh2'} style="position:absolute;${side==='left'?'left:0':'right:0'};top:0;width:50%;height:100%;
+        transform:translateX(${tx.toFixed(1)}%);transition:transform .5s ease-in-out;overflow:hidden">
+        <div data-${side==='left'?'shi':'shi2'} style="position:absolute;inset:0;transform-origin:top center;
+          background:${silk},${edgeDark},${folds};
+          box-shadow:${side==='left'?'8px 0 22px':'−8px 0 22px'} rgba(0,0,0,.48)">
+          <div style="position:absolute;top:0;${rings};height:5px;pointer-events:none;
+            background:repeating-linear-gradient(90deg,rgba(160,155,150,.88) 0px,rgba(160,155,150,.88) 3px,transparent 3px,transparent 20px)"></div>
+          <div style="position:absolute;top:0;left:0;right:0;height:8%;pointer-events:none;
+            background:linear-gradient(to bottom,rgba(0,0,0,.28),transparent)"></div>
+          <div style="position:absolute;bottom:0;left:0;right:0;height:5px;
+            background:linear-gradient(to bottom,${v1},${v0})"></div>
+        </div>
+      </div>`;
     return `<div style="position:relative;flex:1;min-height:260px;border-radius:8px;overflow:hidden;
       background:linear-gradient(to bottom,#13345a,#2c5f93 45%,#6fa6da);
       box-shadow:0 12px 28px rgba(0,0,0,.55)">
       <div style="position:absolute;inset:0;pointer-events:none;
         background:linear-gradient(118deg,rgba(255,255,255,.13) 0%,rgba(255,255,255,.03) 28%,transparent 52%,rgba(255,255,255,.05) 100%)"></div>
-      <!-- CORNICIONE grigio scuro -->
       <div style="position:absolute;top:0;left:0;right:0;height:13%;z-index:9;
         background:linear-gradient(to bottom,#6a6460 0%,#908880 25%,#787068 55%,#585048 80%,#403830 100%);
         box-shadow:0 7px 18px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.16)">
@@ -114,44 +157,20 @@
         <div style="position:absolute;bottom:0;left:0;right:0;height:3px;
           background:linear-gradient(to right,#282420,#504840 20%,#807870 50%,#504840 80%,#282420)"></div>
       </div>
-      <!-- BINARIO (cromo satinato) -->
       <div style="position:absolute;top:13%;left:1%;right:1%;height:3px;z-index:8;border-radius:1px;
         background:linear-gradient(to bottom,#d8d4d0,#a8a4a0 40%,#888480);
         box-shadow:0 2px 5px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.28)"></div>
-      <!-- AREA TENDE -->
       <div data-open style="position:absolute;left:0;right:0;top:16%;bottom:0;overflow:hidden;z-index:4">
-        <!-- PANNELLO SINISTRO -->
-        <div data-sh style="position:absolute;left:0;top:0;width:57%;height:100%;
-          transform:translateX(${txL.toFixed(1)}%);transition:transform .5s ease-in-out;
-          background:${silk},${edgeDark},${folds};
-          box-shadow:9px 0 26px rgba(0,0,0,.5)">
-          <div style="position:absolute;top:0;left:3%;right:7%;height:5px;pointer-events:none;
-            background:repeating-linear-gradient(90deg,rgba(160,155,150,.9) 0px,rgba(160,155,150,.9) 3px,transparent 3px,transparent 22px)"></div>
-          <div style="position:absolute;top:0;left:0;right:0;height:7%;pointer-events:none;
-            background:linear-gradient(to bottom,rgba(0,0,0,.26),transparent)"></div>
-          <div style="position:absolute;bottom:0;left:0;right:7%;height:5px;
-            background:linear-gradient(to bottom,${v1},${v0});border-radius:0 0 0 2px"></div>
-        </div>
-        <!-- PANNELLO DESTRO -->
-        <div data-sh2 style="position:absolute;right:0;top:0;width:57%;height:100%;
-          transform:translateX(${txR.toFixed(1)}%);transition:transform .5s ease-in-out;
-          background:${silk},${edgeDark},${folds};
-          box-shadow:-9px 0 26px rgba(0,0,0,.5)">
-          <div style="position:absolute;top:0;left:7%;right:3%;height:5px;pointer-events:none;
-            background:repeating-linear-gradient(90deg,rgba(160,155,150,.9) 0px,rgba(160,155,150,.9) 3px,transparent 3px,transparent 22px)"></div>
-          <div style="position:absolute;top:0;left:0;right:0;height:7%;pointer-events:none;
-            background:linear-gradient(to bottom,rgba(0,0,0,.26),transparent)"></div>
-          <div style="position:absolute;bottom:0;left:7%;right:0;height:5px;
-            background:linear-gradient(to bottom,${v1},${v0});border-radius:0 0 2px 0"></div>
-        </div>
+        ${panel('left',  txL, 'left:3%;right:1%')}
+        ${panel('right', txR, 'left:1%;right:3%')}
       </div>
     </div>`;
   }
 
-  function ensureRippleAnim() {
-    if (document.getElementById('ti-ripple')) return;
-    const s = document.createElement('style'); s.id = 'ti-ripple';
-    s.textContent = '@keyframes tiRipple{0%,100%{filter:brightness(1) contrast(1)}30%{filter:brightness(1.09) contrast(.93)}65%{filter:brightness(.94) contrast(1.04)}}';
+  function ensureBreezeAnim() {
+    if (document.getElementById('ti-breeze')) return;
+    const s = document.createElement('style'); s.id = 'ti-breeze';
+    s.textContent = '@keyframes tiBreeze{0%,100%{transform:skewX(0deg)}18%{transform:skewX(2.2deg)}50%{transform:skewX(-1.4deg)}76%{transform:skewX(0.7deg)}}';
     document.head.appendChild(s);
   }
 
@@ -326,7 +345,7 @@
         </div></div>`;
     }
     const pos = getPos(h, id), st = stateOf(h, id);
-    const draws = { tapparella: drawTapparella, tenda_interna: drawTendaInterna, tenda_sole: drawTendaSole, basculante: drawBasculante, tenda_rullo: drawTendaRullo };
+    const draws = { tapparella: drawTapparella, porta_finestra: drawPortaFinestra, tenda_interna: drawTendaInterna, tenda_sole: drawTendaSole, basculante: drawBasculante, tenda_rullo: drawTendaRullo };
     const draw = (draws[type] || drawTapparella)(pos);
     const btn = (act, ico, lbl, col) =>
       `<button data-cov="${act}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
@@ -368,16 +387,17 @@
       return;
     }
 
-    // ── Tenda interna: translateX su due pannelli + ripple durante movimento ──
+    // ── Tenda interna: translateX su due pannelli + brezza sul wrapper interno ──
     if (type === 'tenda_interna') {
-      ensureRippleAnim();
+      ensureBreezeAnim();
       const sh2 = el.querySelector('[data-sh2]');
+      const shi = el.querySelector('[data-shi]'), shi2 = el.querySelector('[data-shi2]');
       const isMoving = st === 'opening' || st === 'closing';
-      const anim1 = isMoving ? 'tiRipple .65s ease-in-out infinite' : '';
-      const anim2 = isMoving ? 'tiRipple .65s ease-in-out .11s infinite' : '';
+      if (shi) shi.style.animation = isMoving ? 'tiBreeze 1.8s ease-in-out infinite' : '';
+      if (shi2) shi2.style.animation = isMoving ? 'tiBreeze 1.8s ease-in-out .42s infinite' : '';
       const setX = (p, dur) => {
-        sh.style.transition = `transform ${dur} ease-in-out`;  sh.style.transform  = `translateX(${-p}%)`; sh.style.animation = anim1;
-        if (sh2) { sh2.style.transition = `transform ${dur} ease-in-out`; sh2.style.transform = `translateX(${p}%)`; sh2.style.animation = anim2; }
+        sh.style.transition = `transform ${dur} ease-in-out`;  sh.style.transform  = `translateX(${-p}%)`;
+        if (sh2) { sh2.style.transition = `transform ${dur} ease-in-out`; sh2.style.transform = `translateX(${p}%)`; }
       };
       if (isMoving) {
         if (prev !== st) {
@@ -534,8 +554,8 @@
   }
 
   const CARD = {
-    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '3.3',
-    desc: 'Tapparella finestra, tenda interna (grigio tortora), tenda da sole, basculante, tenda a rullo — animazioni real-time.',
+    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '3.4',
+    desc: 'Tapparella finestra/porta finestra, tenda interna grigio tortora con brezza, tenda da sole, basculante, tenda a rullo — animazioni real-time.',
     colSpan: 2, rowSpan: 3,
     render, update, mount, configure: openCfg
   };
