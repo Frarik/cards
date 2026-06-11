@@ -1,4 +1,4 @@
-/* frarik-version: 4.0 */
+/* frarik-version: 4.1 */
 (function () {
   'use strict';
 
@@ -196,14 +196,11 @@
       +'#'+rid+'{position:relative;width:100%;height:100%;min-height:320px;border-radius:18px;'
       +'padding:13px 14px;box-sizing:border-box;font-family:system-ui,sans-serif;color:#e8ebf5;'
       +'display:flex;flex-direction:column;gap:7px;overflow:hidden;'
-      +'background:#0b1120;'
-      +'border:1px solid rgba(99,102,241,.22);}'
+      +'background:linear-gradient(150deg,#0c1322 0%,#0a0f1c 60%,#0c1626 100%);'
+      +'border:1px solid rgba(99,102,241,.22);box-shadow:0 10px 40px rgba(0,0,0,.45);}'
       +'#'+rid+'::before{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;'
       +'background:linear-gradient(105deg,transparent 40%,rgba(99,102,241,.06) 50%,transparent 60%);'
       +'background-size:200% 100%;animation:'+rid+'scan 7s linear infinite;}'
-      +'#'+rid+'::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;'
-      +'background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),'
-      +'linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);background-size:22px 22px,22px 22px;}'
       +'#'+rid+' .syk-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;flex-shrink:0;position:relative;}'
       +'#'+rid+' .syk-dot::after{content:"";position:absolute;inset:-3px;border-radius:50%;background:#22c55e;animation:'+rid+'ping 2s ease-out infinite;}'
       +'#'+rid+' .syk-hot{animation:'+rid+'p 1.8s ease-in-out infinite;}'
@@ -446,7 +443,7 @@
   }
 
   var CARD={
-    id:'system-card', name:'Sistema', icon:'🖥️', version:'4.0',
+    id:'system-card', name:'Sistema', icon:'🖥️', version:'4.1',
     desc:'Mini PC / Server: ring con glow, barra salute, badge stato, valori assoluti GB, sparkline EKG, rete doppia linea, I/O disco, temp con indicatore.',
     colSpan:2, rowSpan:4,
     render:render, mount:mount, update:update, configure:openCfg,
