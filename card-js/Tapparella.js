@@ -1,4 +1,4 @@
-/* frarik-version: 3.8 */
+/* frarik-version: 3.9 */
 (function () {
   'use strict';
 
@@ -529,7 +529,7 @@
   }
 
   const CARD = {
-    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '3.8',
+    id: 'tapparella', name: 'Tapparella', icon: '🪟', version: '3.9',
     desc: 'Tapparella finestra/porta finestra, tenda interna grigio tortora con brezza, tenda da sole, basculante, tenda a rullo — animazioni real-time.',
     colSpan: 2, rowSpan: 3,
     render, update, mount, configure: openCfg
