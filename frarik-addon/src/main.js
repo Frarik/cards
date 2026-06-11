@@ -552,16 +552,19 @@ async function installCardFromUrl(url){
   catch(e){ showToast('⚠️ Download fallito: '+(e.message||e)); return; }
   if(!/FratechCardRegistry|window\.customCards/.test(code)){ showToast('⚠️ Non sembra una card valida'); return; }
   window.FratechCardRegistry=window.FratechCardRegistry||{};
-  const before=new Set(Object.keys(window.FratechCardRegistry));
-  try{ _installCardCode(code); }catch(e){ showToast('⚠️ Errore nella card: '+(e.message||e)); return; }
-  const newId=Object.keys(window.FratechCardRegistry).find(id=>!before.has(id));
-  if(!newId){ showToast('⚠️ La card non si è registrata (formato non supportato)'); return; }
-  const def=window.FratechCardRegistry[newId]||{};
-  const ver=(code.match(/frarik-version:\s*([0-9.]+)/)||[])[1]||def.version||'1.0';
-  _jsStoreSave(newId,{id:newId,name:def.name||newId,icon:def.icon||'📦',version:ver,desc:def.desc||''},code,'url');
+  let res;
+  try{ res=_installCardCode(code); }catch(e){ showToast('⚠️ Errore nella card: '+(e.message||e)); return; }
+  // newCards include sia nuove card sia card aggiornate (stesso id, riferimento cambiato)
+  const touchedIds=res&&res.newCards&&res.newCards.length?res.newCards:null;
+  if(!touchedIds){ showToast('⚠️ La card non si è registrata (formato non supportato)'); return; }
+  const ver=(code.match(/frarik-version:\s*([0-9.]+)/)||[])[1]||'1.0';
+  touchedIds.forEach(id=>{
+    const def=window.FratechCardRegistry[id]||{};
+    _jsStoreSave(id,{id,name:def.name||id,icon:def.icon||'📦',version:ver,desc:def.desc||''},code,'url');
+  });
   try{ if(typeof _epRenderJsStore==='function') _epRenderJsStore(); }catch(e){}
   try{ renderDash(); }catch(e){}
-  showToast('✅ Installata: '+(def.name||newId));
+  showToast('✅ '+(touchedIds.length>1?touchedIds.length+' card':'Card')+' installata/e: '+touchedIds.map(id=>(window.FratechCardRegistry[id]||{}).name||id).join(', '));
 }
 /* ── POPUP PANEL: card-pulsante che apre una VISTA come finestra modale ── */
 function addPopupPanel(secId,col){
