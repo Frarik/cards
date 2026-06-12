@@ -1,4 +1,4 @@
-/* frarik-version: 2.10 */
+/* frarik-version: 2.11 */
 (function () {
   'use strict';
 
@@ -280,8 +280,11 @@
     const sensorH = humEnt  ? parseFloat(humEnt.state).toFixed(0)  : null;
 
     const swSEnt  = c.useSwingSensor && c.swingSensor && h && h.states && h.states[c.swingSensor] ? h.states[c.swingSensor] : null;
-    const flapPhys= swSEnt ? swSEnt.state === 'on' : null;
-    const syncCol = flapPhys !== null ? ((isOn === flapPhys) ? '#22c55e' : '#ef4444') : null;
+    /* aletta APERTA = stato 'on' (binary_sensor/switch) o 'open'/'opening' (cover) */
+    const flapOpen = swSEnt ? (swSEnt.state === 'on' || swSEnt.state === 'open' || swSEnt.state === 'opening') : null;
+    /* verde = sincronizzati (clima on ↔ aletta aperta, clima off ↔ aletta chiusa)
+       rosso = desincronizzati (clima on + aletta chiusa, o clima off + aletta aperta) */
+    const syncCol = flapOpen !== null ? ((isOn === flapOpen) ? '#22c55e' : '#ef4444') : null;
 
     const brand    = c.showBrand && c.brand ? c.brand : null;
     const brandSvg = brand ? (BRAND_SVG[brand] || null) : null;
@@ -696,7 +699,7 @@
   }
 
   var CARD={
-    id:'clima-card',name:'Climatizzatore',icon:'❄️',version:'2.10',
+    id:'clima-card',name:'Climatizzatore',icon:'❄️',version:'2.11',
     desc:'Split — look scuro, SVG loghi reali, aletta RAF, glow modalità.',
     colSpan:2,rowSpan:4,render:render,mount:mount,update:update,configure:openCfg,duplicate:duplicateCard,
   };

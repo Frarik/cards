@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.2 — 2026-06-12
+
+### fix: Clima v2.11 — pallino sync aletta corretto + supporto cover
+
+- **Logica pallino**: verde se clima ON + aletta APERTA oppure clima OFF + aletta CHIUSA (sincronizzati); rosso se clima ON + aletta CHIUSA o clima OFF + aletta APERTA (desincronizzati).
+- **Supporto entità cover**: prima `flapPhys` controllava solo `state === 'on'` (binary_sensor/switch). Ora supporta anche le entità `cover` con stati `'open'` e `'opening'`, così il pallino funziona indipendentemente dal tipo di entità configurata.
+
 ## 1.4.1 — 2026-06-12
 
 ### fix: Camera v1.6 — snapshot refresh immediato, HLS, fix schermo grigio
