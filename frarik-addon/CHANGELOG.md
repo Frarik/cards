@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.0 — 2026-06-12
+
+### Plancia salvata nell'add-on (file invece di user-data HA)
+- La configurazione della dashboard (pagine, card, layout) ora si salva in un **file dell'add-on**: `/config/frarik/cfg.json`, tramite gli endpoint `/api/frarik/config` (gated da licenza). Prima usava gli user-data di HA via WebSocket.
+- Vantaggio: **una plancia per istanza**, gestita dall'add-on e indipendente da quale utente HA la apre.
+- **Migrazione automatica**: al primo avvio, se il file è ancora vuoto ma sul dispositivo c'è già una plancia (cache locale), viene scritta sul file in automatico. Nessuna azione manuale, nessuna perdita.
+- La copia locale (`localStorage`) resta come cache rapida; il merge "vince il più recente" è invariato.
+
 ## 1.3.1 — 2026-06-12
 
 ### Pulizia legacy

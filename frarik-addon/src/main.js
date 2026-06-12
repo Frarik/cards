@@ -859,8 +859,7 @@ function loadCfg(){
   return {activePage:0,savedCards:[],theme:'dark',font:'Inter',pages:[{id:'p'+Math.random().toString(36).slice(2,7),name:'Dashboard',icon:'🏠',columns:DEF.columns,rowH:DEF.rowH,cards:JSON.parse(JSON.stringify(DEF.cards))}]};
 }
 /* ── Salvataggio config + SINCRONIZZAZIONE su Home Assistant (dati utente, condivisi tra dispositivi) ── */
-let _cfgGetId=-1, _cfgSetId=-1, _haSaveTimer=null, _cfgSyncing=false, _cfgSynced=false, _lastPull=0;
-let _cfgManualSyncId=-1;   // id del salvataggio avviato dal pulsante "Sincronizza" → mostra il toast SOLO per quello
+let _haSaveTimer=null, _cfgSyncing=false, _cfgSynced=false, _lastPull=0;
 function saveCfg(){
   if(!_cfgSyncing) cfg._ts=Date.now();      // timestamp ultima modifica (per "vince il più recente")
   localStorage.setItem('hadb_cfg',JSON.stringify(cfg));
@@ -931,25 +930,65 @@ function _saveCfgLocalOnly(){ localStorage.setItem('hadb_cfg',JSON.stringify(cfg
 function _haSaveCfgDebounced(){ clearTimeout(_haSaveTimer); _haSaveTimer=setTimeout(_haSaveCfg,400); }
 /* da chiamare quando si aggiunge/aggiorna/elimina una card JS → propaga su HA */
 function _cfgTouchAndPush(){ if(_cfgSyncing) return; cfg._ts=Date.now(); _saveCfgLocalOnly(); if(_cfgSynced) _haSaveCfgDebounced(); }
-function _haSaveCfg(){
+/* La plancia è salvata in un FILE dell'add-on (/config/frarik/cfg.json) tramite gli
+   endpoint /api/frarik/config — non più negli user-data di HA. Così è una plancia per
+   istanza, gestita dall'add-on, indipendente da quale utente HA la apre. */
+function _haSaveCfg(manual){
   try{
-    if(ws&&ws.readyState===1){
-      const payload={_ts:cfg._ts||Date.now(), cfg:cfg, js:(typeof _jsStoreList==='function'?_jsStoreList():[])};
-      _cfgSetId=mid;
-      send({type:'frontend/set_user_data',key:'frarik_cfg',value:payload});
-      return true;
-    }
-  }catch(e){}
-  return false;
+    const payload={_ts:cfg._ts||Date.now(), cfg:cfg, js:(typeof _jsStoreList==='function'?_jsStoreList():[])};
+    fetch(ADDON_BASE+'/api/frarik/config', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
+    }).then(r=>{
+      if(r.ok){
+        if(manual){
+          const np=(cfg.pages||[]).length, nj=(typeof _jsStoreList==='function'?_jsStoreList().length:0);
+          showToast('💾 Plancia salvata nell\'add-on — '+np+' pagine, '+nj+' card');
+        }
+      } else if(manual){
+        showToast('⚠️ Salvataggio non riuscito ('+r.status+')');
+      }
+    }).catch(()=>{ if(manual) showToast('⚠️ Backend non raggiungibile'); });
+    return true;
+  }catch(e){ return false; }
 }
 function _haLoadCfg(force){
   try{
-    if(!(ws&&ws.readyState===1)) return;
     const now=Date.now();
     if(!force && now-_lastPull<1500) return;   // throttle
-    _lastPull=now; _cfgGetId=mid;
-    send({type:'frontend/get_user_data',key:'frarik_cfg'});
+    _lastPull=now;
+    fetch(ADDON_BASE+'/api/frarik/config').then(r=> r.ok ? r.json() : null).then(v=>{
+      _cfgSynced=true;   // d'ora in poi le modifiche locali si auto-salvano
+      _applyRemoteCfg(v);
+      // migrazione/seed automatico: file add-on vuoto ma qui c'è già una plancia → scrivila
+      const hasRemote = v && ((v.cfg&&v.cfg.pages)||v.pages);
+      if(!hasRemote && cfg && (cfg.pages||[]).length){ _haSaveCfg(); }
+    }).catch(()=>{ /* offline: si tiene la copia locale */ });
   }catch(e){}
+}
+/* Adotta la plancia remota (file add-on) se più recente di quella locale. Se il remoto è
+   vuoto o più vecchio NON tocca nulla (così non si perde la plancia locale). */
+function _applyRemoteCfg(v){
+  const remoteCfg = v ? (v.cfg&&v.cfg.pages ? v.cfg : (v.pages ? v : null)) : null;
+  const remoteTs  = v ? (v._ts || (remoteCfg&&remoteCfg._ts) || 0) : 0;
+  const remoteJs  = (v&&Array.isArray(v.js)) ? v.js : null;
+  if(remoteCfg && remoteCfg.pages && remoteTs>(cfg._ts||0)){
+    _cfgSyncing=true;
+    if(Array.isArray(remoteJs) && typeof _jsStoreSave==='function'){
+      remoteJs.forEach(it=>{ try{ if(it&&it.meta&&it.meta.id){ _jsStoreSave(it.meta.id,it.meta,it.code,it.origin); if(!window.FratechCardRegistry[it.meta.id]) try{ _installCardCode(it.code); }catch(e){} } }catch(e){} });
+      const remoteIds=new Set(remoteJs.map(it=>it&&it.meta&&it.meta.id).filter(Boolean));
+      try{ _jsStoreList().forEach(it=>{ const id=it&&it.meta&&it.meta.id; if(id && !remoteIds.has(id)){ _jsStoreDelete(id); try{ delete window.FratechCardRegistry[id]; }catch(e){} } }); }catch(e){}
+    }
+    cfg=remoteCfg; cfg._ts=remoteTs;
+    if(!cfg.savedCards) cfg.savedCards=[];
+    cfg.activePage=Math.min(cfg.activePage||0,(cfg.pages.length||1)-1);
+    _saveCfgLocalOnly();
+    try{ applyTheme(cfg.theme); }catch(e){}
+    renderDash(); renderPageTabs();
+    _cfgSyncing=false;
+    try{ _histInit(); }catch(e){}
+    showToast('☁️ Plancia e card sincronizzate');
+    try{ _ghSchedule(); }catch(e){}
+  }
 }
 /* Quando torni sulla pagina/pannello: se la connessione è caduta (es. cambio plancia e ritorno) RICONNETTI,
    altrimenti ricontrolla la config. Evita di dover ricaricare a mano. */
@@ -972,11 +1011,8 @@ setInterval(()=>{ if(!document.hidden && ws && ws.readyState===1) _haLoadCfg(); 
 /* Forza il push della config di QUESTO dispositivo su HA (per "seminare" da quello giusto) */
 function syncCfgToHA(){
   cfg._ts=Date.now(); _saveCfgLocalOnly();
-  const ok=_haSaveCfg();
-  // Segna QUESTO salvataggio come "manuale": solo per lui mostriamo la conferma (vedi handler _cfgSetId).
-  // Gli auto-salvataggi a ogni modifica restano silenziosi.
-  if(ok){ _cfgManualSyncId=_cfgSetId; }
-  else showToast('⚠️ Non connesso a Home Assistant');
+  // salvataggio "manuale" → mostra la conferma (gli auto-salvataggi sono silenziosi)
+  _haSaveCfg(true);
 }
 
 /* ── BACKUP: esporta/ripristina TUTTO (layout + card JS) in un file .json ── */
@@ -2135,56 +2171,8 @@ function onMsg(m){
     const cm=document.getElementById('cmsg'); if(cm) cm.textContent='Autenticazione non riuscita — riprovo…';
     reconn=setTimeout(connect,3000);
   }
-  // Esito salvataggio config su HA (frontend/set_user_data)
-  else if(m.type==='result'&&m.id===_cfgSetId){
-    _cfgSetId=-1;
-    const isManual=(m.id===_cfgManualSyncId); if(isManual) _cfgManualSyncId=-1;
-    if(m.success){
-      // Conferma SOLO per la sincronizzazione manuale; gli auto-salvataggi sono silenziosi.
-      if(isManual){
-        const np=(cfg.pages||[]).length, nj=(typeof _jsStoreList==='function'?_jsStoreList().length:0);
-        showToast('☁️ Sincronizzato su Home Assistant — '+np+' pagine, '+nj+' card');
-      }
-    } else {
-      showToast('⚠️ Sincronizzazione fallita: '+((m.error&&m.error.message)||'dati troppo grandi'));
-    }
-  }
-  // Risposta sincronizzazione config (frontend/get_user_data)
-  else if(m.type==='result'&&m.id===_cfgGetId){
-    _cfgGetId=-1; _cfgSynced=true;   // d'ora in poi le modifiche locali si auto-salvano su HA
-    const v=(m.success&&m.result&&m.result.value)?m.result.value:null;
-    // formati: nuovo {_ts,cfg,js} · vecchio = cfg diretto (con .pages)
-    const remoteCfg = v ? (v.cfg&&v.cfg.pages ? v.cfg : (v.pages ? v : null)) : null;
-    const remoteTs  = v ? (v._ts || (remoteCfg&&remoteCfg._ts) || 0) : 0;
-    const remoteJs  = (v&&Array.isArray(v.js)) ? v.js : null;
-    if(remoteCfg && remoteCfg.pages && remoteTs>(cfg._ts||0)){
-      // HA ha una versione più recente → adottala su questo dispositivo
-      _cfgSyncing=true;
-      // 1) RICONCILIA le card allo stato remoto. Stiamo adottando la versione più recente "per
-      //    intero", quindi oltre ad aggiungere/aggiornare le card remote rimuoviamo anche quelle
-      //    locali che NON esistono più nel set remoto: così una card eliminata su un dispositivo
-      //    non "risorge" sugli altri (causa principale del conteggio gonfiato). Lo facciamo SOLO se
-      //    il remoto porta davvero la lista js (Array): col formato vecchio (js assente) non si tocca nulla.
-      if(Array.isArray(remoteJs) && typeof _jsStoreSave==='function'){
-        remoteJs.forEach(it=>{ try{ if(it&&it.meta&&it.meta.id){ _jsStoreSave(it.meta.id,it.meta,it.code,it.origin); if(!window.FratechCardRegistry[it.meta.id]) try{ _installCardCode(it.code); }catch(e){} } }catch(e){} });
-        const remoteIds=new Set(remoteJs.map(it=>it&&it.meta&&it.meta.id).filter(Boolean));
-        try{ _jsStoreList().forEach(it=>{ const id=it&&it.meta&&it.meta.id; if(id && !remoteIds.has(id)){ _jsStoreDelete(id); try{ delete window.FratechCardRegistry[id]; }catch(e){} } }); }catch(e){}
-      }
-      // 2) adotta il layout
-      cfg=remoteCfg; cfg._ts=remoteTs;
-      if(!cfg.savedCards) cfg.savedCards=[];
-      cfg.activePage=Math.min(cfg.activePage||0,(cfg.pages.length||1)-1);
-      _saveCfgLocalOnly();
-      try{ applyTheme(cfg.theme); }catch(e){}
-      renderDash(); renderPageTabs();
-      _cfgSyncing=false;
-      try{ _histInit(); }catch(e){}   // reset cronologia sullo stato sincronizzato
-      showToast('☁️ Configurazione e card sincronizzate da Home Assistant');
-      try{ _ghSchedule(); }catch(e){}   // la config GitHub potrebbe essere arrivata dalla sync
-    }
-    // se il locale è più recente o HA è vuoto NON si fa nulla in automatico:
-    // l'invio su HA avviene solo col pulsante "Sincronizza" (evita sovrascritture accidentali).
-  }
+  // (la sincronizzazione della plancia ora passa dagli endpoint HTTP dell'add-on,
+  //  non più da frontend/set_user_data/get_user_data via WebSocket)
   else if(m.type==='result'&&Array.isArray(m.result)){
     m.result.forEach(e=>{ if(e&&e.entity_id){ hs[e.entity_id]=e.state; ha[e.entity_id]=e.attributes||{}; }});
     allE=m.result.filter(e=>e&&e.entity_id).sort((a,b)=>a.entity_id.localeCompare(b.entity_id));

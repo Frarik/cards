@@ -10,6 +10,8 @@ const app     = express();
 const PORT    = 3000;
 const PANEL   = path.join(__dirname, 'panel');
 const HA_WWW  = '/config/www/frarik';
+const CFG_DIR  = '/config/frarik';
+const CFG_FILE = path.join(CFG_DIR, 'cfg.json');
 
 const SUP_TOKEN = process.env.SUPERVISOR_TOKEN || '';
 const CORE_HTTP = 'http://supervisor/core';        // proxy REST verso HA core
@@ -93,6 +95,35 @@ app.get('/api/frarik/license', async (req, res) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   const lic = await checkLicense(keyFromReq(req));
   res.json(lic);
+});
+
+/* ── Plancia (configurazione dashboard) salvata in un file dell'add-on ──
+   Persiste in /config/frarik/cfg.json (volume config:rw). Indipendente dall'utente
+   HA: una plancia per istanza, gestita dall'add-on. Gated da licenza. */
+app.get('/api/frarik/config', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  const lic = await checkLicense(keyFromReq(req));
+  if (!lic.valid) { res.status(403).json({ error: 'Licenza non valida o revocata' }); return; }
+  try {
+    const txt = fs.readFileSync(CFG_FILE, 'utf8');
+    res.type('application/json').send(txt);
+  } catch (e) {
+    res.json(null); // nessuna plancia salvata ancora
+  }
+});
+
+app.post('/api/frarik/config', async (req, res) => {
+  const lic = await checkLicense(keyFromReq(req));
+  if (!lic.valid) { res.status(403).json({ error: 'Licenza non valida o revocata' }); return; }
+  try {
+    const txt = (await readBody(req)).toString('utf8');
+    JSON.parse(txt); // valida: se non è JSON valido → 400 (non sovrascrive il file buono)
+    fs.mkdirSync(CFG_DIR, { recursive: true });
+    fs.writeFileSync(CFG_FILE, txt);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(400).json({ ok: false, error: String(e && e.message || e) });
+  }
 });
 
 async function reloadHaStore() {
