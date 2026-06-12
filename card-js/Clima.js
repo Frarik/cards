@@ -1,4 +1,4 @@
-/* frarik-version: 2.7 */
+/* frarik-version: 2.8 */
 (function () {
   'use strict';
 
@@ -33,56 +33,65 @@
   const SWING_LBL= { 'off':'Off', 'on':'On', both:'Tutto', vertical:'Verticale', horizontal:'Orizzontale' };
   const BRANDS   = ['Daikin','Samsung','LG','Mitsubishi Electric','Panasonic','Fujitsu','Toshiba','Hitachi','Midea','Haier','Gree','Bosch','Carrier','York'];
 
-  // SVG loghi fedeli agli originali, ottimizzati per sfondo scuro
+  /* ── SVG loghi fedeli all'originale, sfondo scuro ── */
   const BRAND_SVG = {
+
+    /* Daikin: chevron doppio piano navy/azzurro + DAIKIN ciano */
     'Daikin': (
       '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 18" height="15" style="display:block;margin:auto">'
-      // triangolo navy + sfumatura interna
-      +'<polygon points="0,9 8,1 8,17" fill="#00308F"/>'
-      +'<polygon points="8,3 14,1 14,17 8,15" fill="#1a5faa"/>'
-      // testo ciano
-      +'<text x="18" y="13.5" font-family="Arial,Helvetica,sans-serif" font-size="13" font-weight="700" fill="#00ADEF" letter-spacing="1.4">DAIKIN</text>'
+      +'<polygon points="0,9 9,1 9,17" fill="#0077CC"/>'
+      +'<polygon points="9,2.5 14,1 14,17 9,15.5" fill="#1a83e0"/>'
+      +'<text x="18" y="14" font-family="Arial,Helvetica,sans-serif" font-size="13" font-weight="700" fill="#00ADEF" letter-spacing="1.4">DAIKIN</text>'
       +'</svg>'
     ),
+
+    /* Samsung: ovale #1428A0 + SAMSUNG bianco centrato */
     'Samsung': (
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 22" height="18" style="display:block;margin:auto">'
-      // ovale blu navy
-      +'<ellipse cx="70" cy="11" rx="69" ry="10.5" fill="#1428A0"/>'
-      // testo bianco
-      +'<text x="70" y="15.2" font-family="Arial,Helvetica,sans-serif" font-size="10.5" font-weight="700" fill="white" text-anchor="middle" letter-spacing="0.7">SAMSUNG</text>'
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 24" height="20" style="display:block;margin:auto">'
+      +'<ellipse cx="70" cy="12" rx="69" ry="11" fill="#1428A0"/>'
+      +'<text x="70" y="16.8" font-family="Arial,Helvetica,sans-serif" font-size="11" font-weight="700" fill="white" text-anchor="middle" letter-spacing="0.8">SAMSUNG</text>'
       +'</svg>'
     ),
+
+    /* LG: cerchio rosso con L (2 rect) + G (arco 300° ccw + naso) + "LG" grigio */
     'LG': (
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 22" height="20" style="display:block;margin:auto">'
-      // cerchio rosso
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 82 22" height="20" style="display:block;margin:auto">'
       +'<circle cx="11" cy="11" r="10.5" fill="#A50034"/>'
-      // L: barra verticale + barra orizzontale in basso
-      +'<rect x="5.5" y="5" width="2.5" height="10.5" fill="white"/>'
-      +'<rect x="5.5" y="13" width="6.5" height="2.5" fill="white"/>'
-      // G: arco + tacca interna (semplificato)
-      +'<path d="M10,5.5 A5.5,5.5 0 1,1 10,16.5 L10,12.5 L8,12.5 L8,11 L13.5,11 L13.5,16.5" fill="none" stroke="white" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>'
-      // testo LG a destra
-      +'<text x="27" y="16.5" font-family="Arial,Helvetica,sans-serif" font-size="15" font-weight="700" fill="#c0c0c8">LG</text>'
+      // L — barra verticale sinistra
+      +'<rect x="3.5" y="4.5" width="2.5" height="10.5" fill="white"/>'
+      // L — barra orizzontale in basso
+      +'<rect x="3.5" y="13.5" width="7" height="2.5" fill="white"/>'
+      // G — arco ~300° counterclockwise + naso orizzontale
+      // Centro (10,11) r≈7: punto top-gap (13.5,5), punto right (17,11)
+      +'<path d="M13.5,5 A7,7 0 1,0 17,11 L12,11 L12,9" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>'
+      // testo LG grigio a destra
+      +'<text x="29" y="17" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="700" fill="#b5b5c5">LG</text>'
       +'</svg>'
     ),
+
+    /* Fujitsu: doppio anello (∞) sopra la J + FUJITSU rosso bold */
     'Fujitsu': (
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 26" height="22" style="display:block;margin:auto">'
-      // simbolo infinity (due cerchietti connessi) sopra la J (terza lettera ≈ x=42)
-      +'<circle cx="39" cy="4.5" r="3.5" fill="none" stroke="#E60012" stroke-width="1.8"/>'
-      +'<circle cx="46" cy="4.5" r="3.5" fill="none" stroke="#E60012" stroke-width="1.8"/>'
-      +'<line x1="42.5" y1="4.5" x2="42.5" y2="4.5" stroke="#E60012" stroke-width="1"/>'
-      // testo rosso bold
-      +'<text x="65" y="24" font-family="Arial Black,Arial,sans-serif" font-size="17" font-weight="900" fill="#E60012" text-anchor="middle" letter-spacing="0.3">FUJITSU</text>'
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 28" height="24" style="display:block;margin:auto">'
+      // due ellissi incatenate centrate sopra la "J" di FUJITSU
+      +'<ellipse cx="50" cy="6" rx="6" ry="4.5" fill="none" stroke="#E60012" stroke-width="2"/>'
+      +'<ellipse cx="60" cy="6" rx="6" ry="4.5" fill="none" stroke="#E60012" stroke-width="2"/>'
+      +'<text x="65" y="25" font-family="Arial Black,Arial,sans-serif" font-size="17" font-weight="900" fill="#E60012" text-anchor="middle" letter-spacing="0.3">FUJITSU</text>'
       +'</svg>'
     ),
+
+    /* Mitsubishi Electric: tre rombi rossi + testo */
     'Mitsubishi Electric': (
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 22" height="18" style="display:block;margin:auto">'
-      +'<text x="75" y="15" font-family="Arial,Helvetica,sans-serif" font-size="10" font-weight="700" fill="#E60012" text-anchor="middle" letter-spacing="0.8">MITSUBISHI ELECTRIC</text>'
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 22" height="17" style="display:block;margin:auto">'
+      +'<polygon points="8,11 12,5 16,11 12,17" fill="#E60012"/>'
+      +'<polygon points="16,11 20,5 24,11 20,17" fill="#E60012"/>'
+      +'<polygon points="24,11 28,5 32,11 28,17" fill="#E60012"/>'
+      +'<text x="90" y="15" font-family="Arial,Helvetica,sans-serif" font-size="10" font-weight="700" fill="#E60012" text-anchor="middle" letter-spacing="0.5">MITSUBISHI ELECTRIC</text>'
       +'</svg>'
     ),
+
     'Panasonic': (
       '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 20" height="16" style="display:block;margin:auto">'
-      +'<text x="65" y="14" font-family="Arial,Helvetica,sans-serif" font-size="13" font-weight="700" fill="#0039A6" text-anchor="middle" letter-spacing="0.6">Panasonic</text>'
+      +'<text x="65" y="15" font-family="Arial,Helvetica,sans-serif" font-size="13" font-weight="700" fill="#0039A6" text-anchor="middle" letter-spacing="0.5">Panasonic</text>'
       +'</svg>'
     ),
     'Toshiba': (
@@ -151,7 +160,6 @@
     } catch(e) { return String(Date.now()); }
   }
 
-  /* ── Mist nebulizzato ── */
   function airStreams(rid, col, show) {
     if (!show) return '';
     var p = [
@@ -175,7 +183,6 @@
     }).join('');
   }
 
-  /* ── Re-render completo ── */
   function _rerenderCard(card, el) {
     el.innerHTML = render(card);
     mount(card, H(), el);
@@ -237,15 +244,15 @@
     const brand    = c.showBrand && c.brand ? c.brand : null;
     const brandSvg = brand ? (BRAND_SVG[brand] || null) : null;
 
-    // Aletta: 0° chiusa / 40° aperta statica / 0°-52° oscillante 12s
-    const flapAnim = !isOn
-      ? 'transform:rotateX(0deg);'
+    /* Stato aletta controllato da <style id="rid-fls"> — NON inline sul div */
+    const flapStyle = !isOn
+      ? 'animation:none;transform:rotateX(0deg)'
       : (swingOn
-        ? 'animation:'+rid+'flap 12s ease-in-out infinite;'
-        : 'transform:rotateX(40deg);');
+        ? 'animation:'+rid+'flap 12s ease-in-out infinite'
+        : 'animation:none;transform:rotateX(40deg)');
 
-    /* ── CSS ── */
-    const css = '<style>'
+    /* CSS principale + style dedicato aletta */
+    const css = '<style id="'+rid+'-css">'
       +'@keyframes '+rid+'mist{0%{opacity:0;transform:translateY(-8px) scaleX(1)}15%{opacity:.82}76%{opacity:.26}100%{opacity:0;transform:translateY(96px) scaleX(1.22)}}'
       +'@keyframes '+rid+'flap{0%{transform:rotateX(0deg)}50%{transform:rotateX(52deg)}100%{transform:rotateX(0deg)}}'
       +'@keyframes '+rid+'led{0%,100%{opacity:1}46%{opacity:.72}}'
@@ -257,25 +264,22 @@
         +'font-weight:700;display:flex;flex-direction:column;align-items:center;gap:3px;'
         +'background:rgba(255,255,255,.07);color:#94a3b8;transition:all .2s;}'
       +'#'+rid+' .tog:hover{background:rgba(255,255,255,.13);color:#e2e8f0;}'
-      +'</style>';
+      +'</style>'
+      +'<style id="'+rid+'-fls">[data-rid="'+rid+'"][data-clm-flap]{'+flapStyle+'}</style>';
 
-    /* ── Badge sensori (stile scuro) ── */
     const indRight = '<div style="display:flex;gap:5px;align-items:center">'
       +(syncCol ? '<div title="Sync aletta" style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:'+syncCol+';box-shadow:0 0 6px '+syncCol+'cc"></div>' : '')
       +(sensorT ? '<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.65);background:rgba(255,255,255,.09);padding:2px 7px;border-radius:99px">🌡 '+sensorT+'°</div>' : '')
       +(sensorH ? '<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.65);background:rgba(255,255,255,.09);padding:2px 7px;border-radius:99px">💧 '+sensorH+'%</div>' : '')
       +'</div>';
 
-    /* ── CORPO AC — nuovo look scuro/antracite ── */
+    /* Corpo AC antracite */
     const acBody = '<div style="position:relative">'
-
-      // Frame scuro con glow modalità
       +'<div style="border-radius:15px;overflow:hidden;'
         +'background:linear-gradient(160deg,#1e2b3e 0%,#141c2c 55%,#192334 100%);'
         +'border:1px solid '+(isOn ? mCol+'55' : 'rgba(255,255,255,.09)')+';'
         +'box-shadow:0 8px 34px rgba(0,0,0,.65),'+(isOn ? '0 0 24px '+mCol+'1e,' : '')+'inset 0 1px 0 rgba(255,255,255,.06);">'
 
-        // Barra indicatore: accento colorato a sinistra
         +'<div style="display:flex;align-items:center;gap:8px;padding:5px 10px 5px 13px;'
           +'background:rgba(0,0,0,.35);border-bottom:1px solid rgba(255,255,255,.05);'
           +'border-left:3px solid '+(isOn ? mCol : 'rgba(255,255,255,.14)')+'">'
@@ -283,40 +287,29 @@
             +'background:'+(isOn?mCol:'rgba(255,255,255,.2)')+';'
             +(isOn?'animation:'+rid+'ind 2.2s ease-in-out infinite;':'')+'"></div>'
           +'<div style="flex:1;font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;'
-            +'color:'+(isOn?mCol:'rgba(255,255,255,.3)')+'">'
-            +(isOn?mLabel(mode):'SPENTO')
-          +'</div>'
+            +'color:'+(isOn?mCol:'rgba(255,255,255,.3)')+'">'+(isOn?mLabel(mode):'SPENTO')+'</div>'
           +indRight
         +'</div>'
 
-        // Faccia
         +'<div style="display:flex;height:78px">'
-
-          // Pannello sinistro scuro con ambient glow modalità
           +'<div style="flex:1;position:relative;overflow:hidden;'
             +'background:linear-gradient(135deg,rgba(255,255,255,.05) 0%,rgba(255,255,255,.02) 100%);">'
-            // Glow ambiente colore modalità (quando acceso)
             +(isOn
               ? '<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 20% 55%,'+mCol+'25 0%,transparent 68%);pointer-events:none;animation:'+rid+'glow 3s ease-in-out infinite"></div>'
               : '')
-            // Separatore ombra destra
             +'<div style="position:absolute;top:0;right:0;bottom:0;width:20px;'
               +'background:linear-gradient(90deg,transparent,rgba(0,0,0,.25));pointer-events:none"></div>'
-            // Logo marca SVG centrato in basso
             +(brandSvg
               ? '<div style="position:absolute;bottom:6px;left:0;right:0;text-align:center;line-height:0">'+brandSvg+'</div>'
               : '')
           +'</div>'
 
-          // Separatore verticale
           +'<div style="width:1px;background:rgba(255,255,255,.07);flex-shrink:0"></div>'
 
-          // Display LED (85px, solo numero)
           +'<div style="width:85px;flex-shrink:0;background:rgba(0,0,0,.25);'
             +'display:flex;align-items:center;justify-content:center;padding:0 7px">'
             +'<div style="background:#040c09;border-radius:8px;padding:6px 8px;width:100%;box-sizing:border-box;'
-              +'border:1px solid rgba(0,0,0,.7);'
-              +'box-shadow:inset 0 3px 12px rgba(0,0,0,.75),inset 0 0 22px rgba(0,0,0,.4)">'
+              +'border:1px solid rgba(0,0,0,.7);box-shadow:inset 0 3px 12px rgba(0,0,0,.75),inset 0 0 22px rgba(0,0,0,.4)">'
               +'<div data-clm-led style="font-family:\'Courier New\',Courier,monospace;font-size:23px;'
                 +'font-weight:700;letter-spacing:2px;line-height:1;text-align:center;'
                 +'color:'+(isOn?mCol:'#0d1a12')+';'
@@ -325,36 +318,29 @@
               +'">'+targetTemp+'</div>'
             +'</div>'
           +'</div>'
-
         +'</div>'
 
-        // Fascia inferiore scura
         +'<div style="height:12px;background:linear-gradient(180deg,rgba(0,0,0,.3),rgba(0,0,0,.45));'
           +'border-top:1px solid rgba(255,255,255,.04)"></div>'
-
       +'</div>'
 
-      // Aletta scura — si distingue chiaramente dal corpo
+      // Aletta: stile gestito SOLO da #rid-fls, nessun animation/transform inline
       +'<div style="position:absolute;bottom:-7px;left:13px;right:13px;height:15px;'
         +'perspective:220px;perspective-origin:50% 0%;z-index:2">'
         +'<div data-clm-flap data-rid="'+rid+'" style="width:100%;height:100%;'
           +'background:linear-gradient(180deg,#2d3e58 0%,#22304a 40%,#1b2640 100%);'
           +'border-radius:2px 2px 6px 6px;'
           +'box-shadow:0 5px 16px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.1);'
-          +'transform-origin:50% 0%;'
-          +flapAnim
+          +'transform-origin:50% 0%'
         +'"></div>'
       +'</div>'
-
     +'</div>';
 
-    /* ── Aria ── */
     const airSection = '<div style="position:relative;height:'+(isOn?'86px':'10px')+';overflow:hidden;'
       +'transition:height .7s ease;margin-top:6px;pointer-events:none">'
       +airStreams(rid, mCol, isOn)
     +'</div>';
 
-    /* ── Temperatura ── */
     const tempRow = '<div style="display:flex;align-items:center;justify-content:center;gap:8px;'
       +'background:rgba(255,255,255,.06);border-radius:13px;padding:7px 14px;border:1px solid rgba(255,255,255,.1)">'
       +'<button class="cb" data-cid="'+entityId+'" data-action="temp-down" '
@@ -369,7 +355,6 @@
         +'font-size:20px;font-weight:700;padding:0;display:flex;align-items:center;justify-content:center">+</button>'
     +'</div>';
 
-    /* ── Toggle row ── */
     const togRow = '<div style="display:flex;gap:7px">'
       +'<button class="tog" data-action="toggle" data-sec="mode"><span style="font-size:17px">'+mIcon(mode)+'</span><span>Modalità</span></button>'
       +'<button class="tog" data-action="toggle" data-sec="fan"><span style="font-size:17px">💨</span><span>Ventola</span></button>'
@@ -476,25 +461,24 @@
         const isOnNow  = effectiveMode !== 'off';
         const swingNow = val !== 'off';
 
-        // Fix animazione: clone+replace forza il browser a fermare/riprendere l'animazione
+        /* Fix aletta definitivo: aggiorna solo il testo del <style id="rid-fls">.
+           Il browser applica la nuova regola CSS immediatamente, fermando o avviando
+           l'animazione senza alcun DOM replacement né reflow forzato. */
         const flapEl = el.querySelector('[data-clm-flap]');
-        if (flapEl && flapEl.parentNode) {
-          const r      = flapEl.getAttribute('data-rid');
-          const clone  = flapEl.cloneNode(true);
-          // Azzera prima animation e transform, poi imposta il nuovo stato
-          clone.style.animation = '';
-          clone.style.transform = '';
-          if (!isOnNow) {
-            clone.style.transform = 'rotateX(0deg)';
-          } else if (swingNow) {
-            clone.style.animation = r + 'flap 12s ease-in-out infinite';
-          } else {
-            clone.style.transform = 'rotateX(40deg)';
+        if (flapEl) {
+          const r = flapEl.getAttribute('data-rid');
+          const styleEl = el.querySelector('#'+r+'-fls');
+          if (styleEl) {
+            if (!isOnNow) {
+              styleEl.textContent = '[data-rid="'+r+'"][data-clm-flap]{animation:none;transform:rotateX(0deg)}';
+            } else if (swingNow) {
+              styleEl.textContent = '[data-rid="'+r+'"][data-clm-flap]{animation:'+r+'flap 12s ease-in-out infinite}';
+            } else {
+              styleEl.textContent = '[data-rid="'+r+'"][data-clm-flap]{animation:none;transform:rotateX(40deg)}';
+            }
           }
-          flapEl.parentNode.replaceChild(clone, flapEl);
         }
 
-        // Aggiorna highlight bottoni swing
         el.querySelectorAll('[data-secpanel="swing"] .cb').forEach(function(b){
           const active = b.getAttribute('data-val')===val;
           b.style.background  = active?'#a78bfa33':'rgba(255,255,255,.07)';
@@ -540,7 +524,7 @@
     } catch(e){}
   }
 
-  /* ── CONFIG POPUP ── */
+  /* ── CONFIG ── */
   function openCfg(card, el) {
     const h=H(), c=load(card);
     const states=(h&&h.states)||{};
@@ -658,13 +642,13 @@
   }
 
   var CARD={
-    id:'clima-card',name:'Climatizzatore',icon:'❄️',version:'2.7',
-    desc:'Split — look scuro antracite, SVG loghi reali, swing clone+replace, glow modalità, mist prominente.',
+    id:'clima-card',name:'Climatizzatore',icon:'❄️',version:'2.8',
+    desc:'Split — look scuro, SVG loghi reali, aletta via style-tag (fix definitivo), glow modalità.',
     colSpan:2,rowSpan:4,render:render,mount:mount,update:update,configure:openCfg,
   };
   window.FratechCardRegistry=window.FratechCardRegistry||{};
   window.FratechCardRegistry[CARD.id]=CARD;
   window.FratechCards=window.FratechCards||{};
   window.FratechCards[CARD.id]=CARD;
-  try{console.log('[FratechStore] Card registrata: clima-card v2.7');}catch(e){}
+  try{console.log('[FratechStore] Card registrata: clima-card v2.8');}catch(e){}
 })();
