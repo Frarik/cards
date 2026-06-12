@@ -457,25 +457,37 @@
         callSvc('climate','set_swing_mode',{entity_id:entityId,swing_mode:val});
         _optimisticState[card.id] = { mode:curOpt.mode, fan:curOpt.fan, swing:val, expires:Date.now()+8000 };
 
-        const effectiveMode = (curOpt.mode!==undefined) ? curOpt.mode : (st ? st.mode : 'off');
-        const isOnNow  = effectiveMode !== 'off';
+        // Legge la modalità direttamente da HA (il mode non cambia con swing)
+        const modeNow  = (st && st.mode) ? st.mode : 'off';
+        const isOnNow  = modeNow !== 'off';
         const swingNow = val !== 'off';
 
-        /* Fix aletta definitivo: aggiorna solo il testo del <style id="rid-fls">.
-           Il browser applica la nuova regola CSS immediatamente, fermando o avviando
-           l'animazione senza alcun DOM replacement né reflow forzato. */
         const flapEl = el.querySelector('[data-clm-flap]');
         if (flapEl) {
           const r = flapEl.getAttribute('data-rid');
+
+          // 1. Aggiorna style-tag per coerenza con il DOM
           const styleEl = el.querySelector('#'+r+'-fls');
-          if (styleEl) {
-            if (!isOnNow) {
-              styleEl.textContent = '[data-rid="'+r+'"][data-clm-flap]{animation:none;transform:rotateX(0deg)}';
-            } else if (swingNow) {
-              styleEl.textContent = '[data-rid="'+r+'"][data-clm-flap]{animation:'+r+'flap 12s ease-in-out infinite}';
-            } else {
-              styleEl.textContent = '[data-rid="'+r+'"][data-clm-flap]{animation:none;transform:rotateX(40deg)}';
-            }
+
+          // 2. Imposta stili inline con !important — massima priorità CSS,
+          //    non può essere sovrascritto da nessuna regola esterna o del framework.
+          if (!isOnNow) {
+            flapEl.style.setProperty('animation','none','important');
+            flapEl.style.setProperty('transform','rotateX(0deg)','important');
+            if (styleEl) styleEl.textContent='[data-rid="'+r+'"][data-clm-flap]{animation:none;transform:rotateX(0deg)}';
+          } else if (swingNow) {
+            // Ferma prima, forza reflow, poi riavvia — così parte da frame 0
+            flapEl.style.setProperty('animation','none','important');
+            flapEl.style.setProperty('transform','','important');
+            void flapEl.offsetWidth;
+            flapEl.style.setProperty('animation',r+'flap 12s ease-in-out infinite','important');
+            if (styleEl) styleEl.textContent='[data-rid="'+r+'"][data-clm-flap]{animation:'+r+'flap 12s ease-in-out infinite}';
+          } else {
+            // Ferma oscillazione: animation:none + reflow + transform statico
+            flapEl.style.setProperty('animation','none','important');
+            void flapEl.offsetWidth;
+            flapEl.style.setProperty('transform','rotateX(40deg)','important');
+            if (styleEl) styleEl.textContent='[data-rid="'+r+'"][data-clm-flap]{animation:none;transform:rotateX(40deg)}';
           }
         }
 
