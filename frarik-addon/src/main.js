@@ -936,7 +936,10 @@ function _cfgTouchAndPush(){ if(_cfgSyncing) return; cfg._ts=Date.now(); _saveCf
 function _haSaveCfg(manual){
   try{
     const _cfgNoPage=Object.assign({},cfg); delete _cfgNoPage.activePage; // activePage è locale per dispositivo
-    const payload={_ts:cfg._ts||Date.now(), cfg:_cfgNoPage, js:(typeof _jsStoreList==='function'?_jsStoreList():[])};
+    // Configurazioni card JS (frarik_cam_*, frarik_clima_* ecc.) → sincronizzate tra dispositivi
+    const cardCfgs={};
+    try{ for(let _i=0;_i<localStorage.length;_i++){ const _k=localStorage.key(_i); if(_k&&_k.startsWith('frarik_')) cardCfgs[_k]=localStorage.getItem(_k); } }catch(_e){}
+    const payload={_ts:cfg._ts||Date.now(), cfg:_cfgNoPage, js:(typeof _jsStoreList==='function'?_jsStoreList():[]), cardCfgs};
     fetch(ADDON_BASE+'/api/frarik/config', {
       method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
     }).then(r=>{
@@ -978,6 +981,10 @@ function _applyRemoteCfg(v){
       remoteJs.forEach(it=>{ try{ if(it&&it.meta&&it.meta.id){ _jsStoreSave(it.meta.id,it.meta,it.code,it.origin); if(!window.FratechCardRegistry[it.meta.id]) try{ _installCardCode(it.code); }catch(e){} } }catch(e){} });
       const remoteIds=new Set(remoteJs.map(it=>it&&it.meta&&it.meta.id).filter(Boolean));
       try{ _jsStoreList().forEach(it=>{ const id=it&&it.meta&&it.meta.id; if(id && !remoteIds.has(id)){ _jsStoreDelete(id); try{ delete window.FratechCardRegistry[id]; }catch(e){} } }); }catch(e){}
+    }
+    // Applica configurazioni card JS ricevute dal backend (frarik_cam_*, frarik_clima_* ecc.)
+    if(v.cardCfgs&&typeof v.cardCfgs==='object'){
+      try{ Object.keys(v.cardCfgs).forEach(function(k){ if(k&&k.startsWith('frarik_')) localStorage.setItem(k,v.cardCfgs[k]); }); }catch(_e){}
     }
     const _localActivePage=cfg.activePage||0; // ogni dispositivo mantiene la propria vista
     cfg=remoteCfg; cfg._ts=remoteTs;
@@ -9058,7 +9065,7 @@ function setActivePage(idx){
   if(idx===cfg.activePage) return;
   function _doSetActivePage(){
     cfg.activePage=idx;
-    saveCfg();
+    _saveCfgLocalOnly(); // cambio vista = locale, non triggera sync su altri dispositivi
     renderDash(); // also calls renderPageTabs
     if(editMode){
       const p=curPage();
@@ -9111,8 +9118,11 @@ function _viewsOutside(e){ const m=document.getElementById('views-menu'),b=docum
 let _mfabOpenTime=0;
 function toggleMobileMenu(ev){
   if(ev) ev.stopPropagation();
-  if(document.getElementById('mfab-menu')){ if(Date.now()-_mfabOpenTime<300) return; closeMobileMenu(); return; }
-  _mfabOpenTime=Date.now();
+  const now=Date.now();
+  // debounce: blocca ghost tap entro 300ms dall'ultima apertura (chiusura O riapertura)
+  if(now-_mfabOpenTime<300) return;
+  if(document.getElementById('mfab-menu')){ _mfabOpenTime=now; closeMobileMenu(); return; }
+  _mfabOpenTime=now;
   closeViewsMenu(); closeNotifCenter && closeNotifCenter();
   const menu=document.createElement('div');
   menu.id='mfab-menu'; menu.className='mfab-menu';
@@ -9133,10 +9143,11 @@ function toggleMobileMenu(ev){
   const b=document.getElementById('mfab');
   if(b){ const r=b.getBoundingClientRect(); menu.style.top=(r.bottom+6)+'px'; menu.style.right=Math.max(8,(window.innerWidth-r.right))+'px'; }
   else { menu.style.top='56px'; menu.style.right='10px'; }
-  setTimeout(()=>document.addEventListener('click',_mfabOutside),0);
+  // delay 300ms: i ghost tap iOS/Android arrivano entro ~200ms, aggiungiamo il listener solo dopo
+  setTimeout(()=>document.addEventListener('click',_mfabOutside),300);
 }
 function closeMobileMenu(){ const m=document.getElementById('mfab-menu'); if(m) m.remove(); document.removeEventListener('click',_mfabOutside); }
-function _mfabOutside(e){ const m=document.getElementById('mfab-menu'),b=document.getElementById('mfab'); if(m&&!m.contains(e.target)&&b&&!b.contains(e.target)) closeMobileMenu(); }
+function _mfabOutside(e){ if(Date.now()-_mfabOpenTime<300) return; const m=document.getElementById('mfab-menu'),b=document.getElementById('mfab'); if(m&&!m.contains(e.target)&&b&&!b.contains(e.target)) closeMobileMenu(); }
 function _mfabViews(){ setTimeout(()=>toggleViewsMenu(),10); }
 /* Editor di una vista: nome, icona, elimina */
 let _vmodIdx=null;

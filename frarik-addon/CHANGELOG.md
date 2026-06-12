@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.8 — 2026-06-12
+
+### fix: flickering menu mobile + card configs sync + niente toast al cambio vista
+
+- **Flickering menu mobile (3 livelli di protezione)**: i ghost tap iOS/Android arrivano entro ~200ms dal tap reale e triggheravano `_mfabOutside` chiudendo/riaprendo il menu più volte. Fix: (1) debounce unificato da 300ms su qualsiasi azione in `toggleMobileMenu`; (2) `_mfabOutside` aggiunto con delay 300ms (era 0ms); (3) time-guard in `_mfabOutside` come fallback.
+- **Card non configurate su mobile**: le configurazioni delle card JS (Camera, Clima, ecc.) sono salvate in `localStorage` con chiavi `frarik_*`. Non facevano parte del payload di sync backend. Ora `_haSaveCfg` le raccoglie tutte e le include in `cardCfgs`, e `_applyRemoteCfg` le applica sul device ricevente.
+- **Toast + refresh inutile al cambio vista**: `setActivePage` chiamava `saveCfg()` che bumpava `_ts` e pushava al backend → altri device pullavano, mostravano il toast e ri-renderizzavano. Cambiato in `_saveCfgLocalOnly()` → il cambio vista è puramente locale, zero impatto sugli altri device.
+
 ## 1.4.7 — 2026-06-12
 
 ### fix: menu mobile — Viste non funzionava + flickering apertura
