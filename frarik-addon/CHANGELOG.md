@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.44 — 2026-06-12
+
+### fix: Clima — aletta quasi invisibile quando AC spento
+- Quando il clima è spento, l'aletta usa il colore del corpo (`#141c2c`) con solo una sottile linea di fessura scura, simulando il pannello chiuso che si fonde con la plastica.
+- Quando acceso, l'aletta mostra il pannello blu completo come prima.
+- Clima.js aggiornata a **v2.10**.
+
 ## 1.2.43 — 2026-06-12
 
 ### fix: Clima — animazione aletta sempre in esecuzione (swing)

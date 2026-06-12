@@ -1,4 +1,4 @@
-/* frarik-version: 2.9 */
+/* frarik-version: 2.10 */
 (function () {
   'use strict';
 
@@ -360,16 +360,28 @@
           +'border-top:1px solid rgba(255,255,255,.04)"></div>'
       +'</div>'
 
-      // Aletta: transform iniziale statico; RAF in mount() gestisce l'oscillazione
-      +'<div style="position:absolute;bottom:-7px;left:13px;right:13px;height:15px;'
-        +'perspective:220px;perspective-origin:50% 0%;z-index:2">'
-        +'<div data-clm-flap data-rid="'+rid+'" style="width:100%;height:100%;'
-          +'background:linear-gradient(180deg,#2d3e58 0%,#22304a 40%,#1b2640 100%);'
-          +'border-radius:2px 2px 6px 6px;'
-          +'box-shadow:0 5px 16px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.1);'
-          +'transform-origin:50% 0%;transform:'+flapInitTransform
-        +'"></div>'
-      +'</div>'
+      // Aletta: chiusa=quasi invisibile (colore corpo + fessura), aperta=pannello blu visibile
+      +(isOn
+        ? '<div style="position:absolute;bottom:-7px;left:13px;right:13px;height:15px;'
+            +'perspective:220px;perspective-origin:50% 0%;z-index:2">'
+            +'<div data-clm-flap data-rid="'+rid+'" style="width:100%;height:100%;'
+              +'background:linear-gradient(180deg,#2d3e58 0%,#22304a 40%,#1b2640 100%);'
+              +'border-radius:2px 2px 6px 6px;'
+              +'box-shadow:0 5px 16px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.1);'
+              +'transform-origin:50% 0%;transform:'+flapInitTransform
+            +'"></div>'
+          +'</div>'
+        : '<div style="position:absolute;bottom:-4px;left:13px;right:13px;height:5px;'
+            +'perspective:220px;perspective-origin:50% 0%;z-index:2">'
+            +'<div data-clm-flap data-rid="'+rid+'" style="width:100%;height:100%;'
+              +'background:#141c2c;'
+              +'border-top:1px solid #05080f;'
+              +'border-radius:0 0 4px 4px;'
+              +'box-shadow:inset 0 2px 4px rgba(0,0,0,.9);'
+              +'transform-origin:50% 0%;transform:rotateX(0deg)'
+            +'"></div>'
+          +'</div>'
+      )
     +'</div>';
 
     const airSection = '<div style="position:relative;height:'+(isOn?'86px':'10px')+';overflow:hidden;'
@@ -684,7 +696,7 @@
   }
 
   var CARD={
-    id:'clima-card',name:'Climatizzatore',icon:'❄️',version:'2.9',
+    id:'clima-card',name:'Climatizzatore',icon:'❄️',version:'2.10',
     desc:'Split — look scuro, SVG loghi reali, aletta RAF, glow modalità.',
     colSpan:2,rowSpan:4,render:render,mount:mount,update:update,configure:openCfg,duplicate:duplicateCard,
   };
