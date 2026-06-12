@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.46 — 2026-06-12
+
+### fix: Camera — stream live e click senza re-render (v1.1)
+- Vista principale usa `/api/camera_proxy_stream/` (MJPEG live) invece dello snapshot statico.
+- Click su miniatura fa solo swap del `src` + aggiorna highlights — nessun re-render, nessun flash.
+- `update()` aggiorna solo i badge batteria e l'overlay "non disponibile", non tocca lo stream.
+- Miniature continuano a usare snapshot con refresh ogni 10s per non saturare la connessione.
+
 ## 1.2.45 — 2026-06-12
 
 ### feat: nuova card Telecamere (Camera.js v1.0)

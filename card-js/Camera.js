@@ -1,4 +1,4 @@
-/* frarik-version: 1.0 */
+/* frarik-version: 1.1 */
 (function () {
   'use strict';
 
@@ -12,8 +12,17 @@
   function save(c,o) { try { localStorage.setItem(keyOf(c), JSON.stringify(o)); } catch(e) {} }
   function eh(s)     { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-  /* Costruisce l'URL snapshot della telecamera con cache-buster */
-  function camUrl(entityId, h, ts) {
+  /* URL stream MJPEG live — camera_proxy_stream per la vista principale */
+  function camStreamUrl(entityId, h) {
+    if (!entityId || !h) return '';
+    const st = h.states[entityId]; if (!st) return '';
+    const ep = (st.attributes || {}).entity_picture; if (!ep) return '';
+    const stream = ep.replace('/api/camera_proxy/', '/api/camera_proxy_stream/');
+    return /^https?:/i.test(stream) ? stream : (typeof h.hassUrl === 'function' ? h.hassUrl(stream) : stream);
+  }
+
+  /* URL snapshot statico con cache-buster — per le miniature */
+  function camThumbUrl(entityId, h, ts) {
     if (!entityId || !h) return '';
     const st = h.states[entityId]; if (!st) return '';
     const ep = (st.attributes || {}).entity_picture; if (!ep) return '';
@@ -33,11 +42,16 @@
     if (pct > 10) return '#fb923c';
     return '#f87171';
   }
+  function battHtml(pct, batEntity) {
+    if (pct !== null) return '<span style="color:'+battColor(pct)+'">🔋 '+Math.round(pct)+'%</span>';
+    if (batEntity)    return '<span style="color:rgba(255,255,255,.2)">🔋 —</span>';
+    return '<span style="color:rgba(255,255,255,.18)">🔌</span>';
+  }
 
   /* ── Stato modulo ── */
-  var _selectedCam   = {};  // card.id → index cam selezionata
-  var _refreshTimers = {};  // card.id → intervalId
-  var _lastKeys      = {};  // card.id → stateKey
+  var _selectedCam   = {};
+  var _refreshTimers = {};
+  var _lastKeys      = {};
 
   function _sel(card, cams) {
     const i = _selectedCam[card.id] || 0;
@@ -50,9 +64,94 @@
       return cams.map(function(cam) {
         const cs = h && h.states[cam.entity];
         const bs = cam.battery && h && h.states[cam.battery];
-        return (cs ? cs.state : '?') + ':' + (bs ? Math.round(parseFloat(bs.state) || 0) : '-');
+        return (cs ? cs.state : '?') + ':' + (bs ? Math.round(parseFloat(bs.state)||0) : '-');
       }).join(',');
     } catch(e) { return String(Date.now()); }
+  }
+
+  /* ── Aggiorna solo gli overlay senza toccare le immagini ── */
+  function _updateOverlays(card, el) {
+    const h = H(), c = load(card);
+    const cams = c.cameras || [];
+    const si  = _sel(card, cams);
+    const sel = cams[si];
+    if (!sel) return;
+
+    // Badge batteria vista principale
+    const mainBatEl = el.querySelector('[data-cam-bat-ov]');
+    if (mainBatEl) {
+      const pct = battPct(sel.battery, h);
+      if (pct !== null) {
+        mainBatEl.textContent = '🔋 '+Math.round(pct)+'%';
+        mainBatEl.style.color = battColor(pct);
+        mainBatEl.style.display = '';
+      } else {
+        mainBatEl.style.display = 'none';
+      }
+    }
+
+    // Badge batteria miniature
+    cams.forEach(function(cam, i) {
+      const batEl = el.querySelector('[data-cam-bat-thumb="'+i+'"]');
+      if (batEl) batEl.innerHTML = battHtml(battPct(cam.battery, h), cam.battery);
+    });
+
+    // Overlay "non disponibile"
+    const unavEl = el.querySelector('[data-cam-unavail]');
+    const mainState = h && h.states[sel.entity];
+    const isUnavail = mainState && mainState.state === 'unavailable';
+    if (unavEl) unavEl.style.display = isUnavail ? 'flex' : 'none';
+  }
+
+  /* ── Cambia telecamera attiva SENZA re-render (solo swap src + highlights) ── */
+  function _switchCam(card, el, newIdx) {
+    const h = H(), c = load(card);
+    const cams = c.cameras || [];
+    if (!cams.length || newIdx < 0 || newIdx >= cams.length) return;
+
+    _selectedCam[card.id] = newIdx;
+    const sel = cams[newIdx];
+
+    // 1. Cambia stream principale
+    const mainImg = el.querySelector('[data-cam-main]');
+    if (mainImg) {
+      const su = camStreamUrl(sel.entity, h);
+      if (su) mainImg.src = su;
+      else mainImg.removeAttribute('src');
+    }
+
+    // 2. Aggiorna nome overlay
+    const nameEl = el.querySelector('[data-cam-name-ov]');
+    if (nameEl) nameEl.textContent = sel.name || sel.entity;
+
+    // 3. Aggiorna batteria overlay
+    const batEl = el.querySelector('[data-cam-bat-ov]');
+    if (batEl) {
+      const pct = battPct(sel.battery, h);
+      if (pct !== null) {
+        batEl.textContent = '🔋 '+Math.round(pct)+'%';
+        batEl.style.color = battColor(pct);
+        batEl.style.display = '';
+      } else {
+        batEl.style.display = 'none';
+      }
+    }
+
+    // 4. Aggiorna highlights miniature
+    el.querySelectorAll('[data-cam-idx]').forEach(function(thumb) {
+      const i = parseInt(thumb.getAttribute('data-cam-idx'));
+      const active = (i === newIdx);
+      thumb.style.outline      = '2px solid '+(active ? '#818cf8' : 'transparent');
+      thumb.style.outlineOffset= '1px';
+      thumb.style.boxShadow    = active ? '0 0 10px rgba(129,140,248,.45)' : '0 2px 8px rgba(0,0,0,.55)';
+    });
+
+    // 5. Aggiorna overlay unavailable
+    const unavEl = el.querySelector('[data-cam-unavail]');
+    if (unavEl) {
+      const mainState = h && h.states[sel.entity];
+      unavEl.style.display = (mainState && mainState.state === 'unavailable') ? 'flex' : 'none';
+    }
   }
 
   /* ── RENDER ── */
@@ -74,48 +173,48 @@
     const si  = _sel(card, cams);
     const sel = cams[si];
     const ts  = Date.now();
-    const mainUrl   = camUrl(sel.entity, h, ts);
+
+    const streamUrl = camStreamUrl(sel.entity, h);
     const mainState = h && h.states[sel.entity];
     const isUnavail = mainState && mainState.state === 'unavailable';
     const pctMain   = battPct(sel.battery, h);
 
-    /* Vista principale */
+    /* Vista principale — MJPEG live stream */
     const mainView =
       '<div style="position:relative;flex:1;min-height:0;border-radius:12px;overflow:hidden;background:#050810">'
-        + (mainUrl
-          ? '<img data-cam-main src="'+eh(mainUrl)+'" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.opacity=\'.06\'" />'
+        +(streamUrl
+          ? '<img data-cam-main src="'+eh(streamUrl)+'" '
+              +'style="width:100%;height:100%;object-fit:cover;display:block" '
+              +'onerror="this.style.opacity=\'.06\'" />'
           : '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">'
               +'<span style="font-size:32px;opacity:.12">📷</span></div>'
         )
-        + (isUnavail
-          ? '<div style="position:absolute;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center">'
-              +'<span style="font-size:10px;color:rgba(255,255,255,.3);font-weight:800;letter-spacing:.07em;text-transform:uppercase">Non disponibile</span>'
-              +'</div>'
-          : ''
-        )
-        /* gradient overlay + nome + batteria */
+        /* overlay unavailable */
+        +'<div data-cam-unavail style="position:absolute;inset:0;background:rgba(0,0,0,.72);'
+          +'display:'+(isUnavail ? 'flex' : 'none')+';align-items:center;justify-content:center">'
+          +'<span style="font-size:10px;color:rgba(255,255,255,.3);font-weight:800;letter-spacing:.07em;text-transform:uppercase">Non disponibile</span>'
+        +'</div>'
+        /* gradient + nome + batteria */
         +'<div style="position:absolute;bottom:0;left:0;right:0;'
           +'padding:26px 10px 9px;'
           +'background:linear-gradient(transparent,rgba(0,0,0,.82))">'
           +'<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:8px">'
-            +'<span style="font-size:12px;font-weight:800;color:#fff;'
+            +'<span data-cam-name-ov style="font-size:12px;font-weight:800;color:#fff;'
               +'text-shadow:0 1px 4px rgba(0,0,0,.9);'
               +'white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'
               +eh(sel.name || sel.entity)
             +'</span>'
-            +(pctMain !== null
-              ? '<span style="font-size:10px;font-weight:700;flex-shrink:0;'
-                  +'color:'+battColor(pctMain)+';'
-                  +'background:rgba(0,0,0,.55);border-radius:5px;padding:2px 7px">'
-                  +'🔋 '+Math.round(pctMain)+'%'
-                +'</span>'
-              : ''
-            )
+            +'<span data-cam-bat-ov style="font-size:10px;font-weight:700;flex-shrink:0;'
+              +'background:rgba(0,0,0,.55);border-radius:5px;padding:2px 7px;'
+              +'color:'+battColor(pctMain !== null ? pctMain : 100)+';'
+              +'display:'+(pctMain !== null ? '' : 'none')+'">'
+              +(pctMain !== null ? '🔋 '+Math.round(pctMain)+'%' : '')
+            +'</span>'
           +'</div>'
         +'</div>'
       +'</div>';
 
-    /* Thumbnails (solo se >1 cam) */
+    /* Miniature — snapshot statico con refresh periodico */
     var thumbsHtml = '';
     if (cams.length > 1) {
       const multiRow = cams.length > 4;
@@ -123,25 +222,24 @@
         +(multiRow ? 'overflow-x:auto;padding-bottom:2px' : '')
         +'">'
         +cams.map(function(cam, i) {
-          const active   = (i === si);
-          const tUrl     = camUrl(cam.entity, h, ts);
-          const pct      = battPct(cam.battery, h);
-          const camSt    = h && h.states[cam.entity];
-          const unavail  = camSt && camSt.state === 'unavailable';
-          const minW     = multiRow ? 'min-width:80px;' : '';
-          return '<div data-action="selcam" data-val="'+i+'" style="'
-            +'flex:1;'+minW+'cursor:pointer;position:relative;'
+          const active  = (i === si);
+          const tUrl    = camThumbUrl(cam.entity, h, ts);
+          const pct     = battPct(cam.battery, h);
+          const camSt   = h && h.states[cam.entity];
+          const unavail = camSt && camSt.state === 'unavailable';
+          return '<div data-cam-idx="'+i+'" data-action="selcam" data-val="'+i+'" style="'
+            +'flex:1;'+(multiRow ? 'min-width:80px;' : '')+'cursor:pointer;position:relative;'
             +'border-radius:8px;overflow:hidden;background:#050810;'
             +'outline:2px solid '+(active ? '#818cf8' : 'transparent')+';'
             +'outline-offset:1px;'
             +'box-shadow:'+(active ? '0 0 10px rgba(129,140,248,.45)' : '0 2px 8px rgba(0,0,0,.55)')+'">'
-            /* 16:9 box */
+            /* 16:9 */
             +'<div style="padding-top:56.25%;position:relative">'
               +'<div style="position:absolute;inset:0">'
                 +(tUrl
                   ? '<img data-cam-thumb="'+i+'" src="'+eh(tUrl)+'" '
                       +'style="width:100%;height:100%;object-fit:cover;display:block'
-                      +(unavail?';opacity:.25':'')+'" '
+                      +(unavail ? ';opacity:.25' : '')+'" '
                       +'onerror="this.style.opacity=\'.05\'" />'
                   : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center">'
                       +'<span style="font-size:14px;opacity:.12">📷</span></div>'
@@ -154,13 +252,8 @@
                 +'white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'
                 +eh(cam.name || cam.entity.split('.').pop())
               +'</div>'
-              +'<div style="font-size:8px;margin-top:1px">'
-                +(pct !== null
-                  ? '<span style="color:'+battColor(pct)+'">🔋 '+Math.round(pct)+'%</span>'
-                  : cam.battery
-                    ? '<span style="color:rgba(255,255,255,.2)">🔋 —</span>'
-                    : '<span style="color:rgba(255,255,255,.2)">🔌</span>'
-                )
+              +'<div data-cam-bat-thumb="'+i+'" style="font-size:8px;margin-top:1px">'
+                +battHtml(pct, cam.battery)
               +'</div>'
             +'</div>'
           +'</div>';
@@ -176,23 +269,16 @@
       +'</div>';
   }
 
-  /* ── Refresh immagini senza re-render completo ── */
-  function _refreshImages(card, el) {
+  /* ── Refresh miniature (non tocca lo stream principale) ── */
+  function _refreshThumbs(card, el) {
     const h = H(), c = load(card);
     const cams = c.cameras || [];
     if (!cams.length || !el.isConnected) return;
-    const si = _sel(card, cams);
     const ts = Date.now();
-
-    const mainImg = el.querySelector('[data-cam-main]');
-    if (mainImg && cams[si]) {
-      const url = camUrl(cams[si].entity, h, ts);
-      if (url) mainImg.src = url;
-    }
     el.querySelectorAll('[data-cam-thumb]').forEach(function(img) {
       const cam = cams[parseInt(img.getAttribute('data-cam-thumb'))];
       if (!cam) return;
-      const url = camUrl(cam.entity, h, ts);
+      const url = camThumbUrl(cam.entity, h, ts);
       if (url) img.src = url;
     });
   }
@@ -201,31 +287,26 @@
   function mount(card, hass, el) {
     el.removeEventListener('click', el._camHandler);
     el._camHandler = function(ev) {
-      const t = ev.target.closest('[data-action]');
+      const t = ev.target.closest('[data-action="selcam"]');
       if (!t) return;
-      if (t.getAttribute('data-action') === 'selcam') {
-        _selectedCam[card.id] = parseInt(t.getAttribute('data-val'));
-        el.innerHTML = render(card);
-        mount(card, H(), el);
-      }
+      _switchCam(card, el, parseInt(t.getAttribute('data-val')));
     };
     el.addEventListener('click', el._camHandler);
 
     if (_refreshTimers[card.id]) clearInterval(_refreshTimers[card.id]);
     _refreshTimers[card.id] = setInterval(function() {
       if (!el.isConnected) { clearInterval(_refreshTimers[card.id]); delete _refreshTimers[card.id]; return; }
-      _refreshImages(card, el);
-    }, 8000);
+      _refreshThumbs(card, el);
+    }, 10000);
   }
 
-  /* ── UPDATE ── */
+  /* ── UPDATE (da HA — solo overlay, non tocca lo stream) ── */
   function update(card, hass, el) {
     try {
       const key = _stateKey(card, hass);
       if (_lastKeys[card.id] === key) return;
       _lastKeys[card.id] = key;
-      el.innerHTML = render(card);
-      mount(card, hass, el);
+      _updateOverlays(card, el);
     } catch(e) {}
   }
 
@@ -268,7 +349,7 @@
           +'<div style="position:relative;grid-column:1/-1">'
             +'<label style="'+stLbl+'">Sensore batteria '
               +'<span style="font-weight:400;color:#475569;text-transform:none;letter-spacing:0">'
-              +'— lascia vuoto se alimentata a corrente</span></label>'
+              +'— vuoto se alimentata a corrente</span></label>'
             +'<input data-cam-bat="'+i+'" type="text" value="'+eh(cam.battery||'')+'" autocomplete="off" placeholder="sensor.camera_batteria" style="'+stInp+'">'
             +'<div data-cam-bat-drop="'+i+'" style="'+stDrop+'"></div>'
           +'</div>'
@@ -317,7 +398,7 @@
       function show() {
         const q = inp.value.toLowerCase().trim();
         const hits = (q ? allIds.filter(function(id){ return id.toLowerCase().includes(q); }) : defaults).slice(0,60);
-        if (!hits.length) { drop.style.display = 'none'; return; }
+        if (!hits.length) { drop.style.display='none'; return; }
         drop.style.display = 'block';
         drop.innerHTML = hits.map(function(id) {
           const fn = ((states[id]||{}).attributes||{}).friendly_name || '';
@@ -328,7 +409,7 @@
             +'</div>';
         }).join('');
         drop.querySelectorAll('[data-pick]').forEach(function(row) {
-          row.addEventListener('mousedown', function(ev) { ev.preventDefault(); inp.value = row.getAttribute('data-pick'); drop.style.display='none'; });
+          row.addEventListener('mousedown', function(ev) { ev.preventDefault(); inp.value=row.getAttribute('data-pick'); drop.style.display='none'; });
           row.addEventListener('mouseover', function() { row.style.background='rgba(255,255,255,.08)'; });
           row.addEventListener('mouseout',  function() { row.style.background=''; });
         });
@@ -389,7 +470,8 @@
       save(card, Object.assign({}, c, { cameras: validCams }));
       close();
       _lastKeys[card.id] = null;
-      try { el.innerHTML = render(card); mount(card, H(), el); } catch(e) {}
+      el.innerHTML = render(card);
+      mount(card, H(), el);
     });
   }
 
@@ -403,8 +485,8 @@
     id: 'camera-card',
     name: 'Telecamere',
     icon: '📷',
-    version: '1.0',
-    desc: 'Vista principale + miniature per più telecamere. Indicatore batteria, aggiornamento ogni 8s.',
+    version: '1.1',
+    desc: 'Stream MJPEG live + miniature snapshot. Batteria, selezione senza re-render.',
     colSpan: 2,
     rowSpan: 5,
     render: render,
