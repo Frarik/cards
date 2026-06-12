@@ -533,13 +533,16 @@
     /* Avvia RAF aletta in base allo stato corrente */
     var flapEl0 = el.querySelector('[data-clm-flap]');
     if (flapEl0) {
-      var r0 = flapEl0.getAttribute('data-rid');
-      var c0 = load(card), h0 = H(), st0 = clState(h0, c0.entity||'');
-      var opt0 = _optimisticState[card.id];
+      var r0    = flapEl0.getAttribute('data-rid');
+      var c0    = load(card), h0 = H(), st0 = clState(h0, c0.entity||'');
+      var opt0  = _optimisticState[card.id];
       var useOpt0 = opt0 && Date.now() < opt0.expires;
-      var mode0  = (useOpt0 && opt0.mode  !== undefined) ? opt0.mode  : (st0 ? st0.mode  : 'off');
-      var swing0 = (useOpt0 && opt0.swing !== undefined) ? opt0.swing : (st0 ? st0.swing : 'off');
-      _flapSet(flapEl0, r0, mode0 !== 'off', _swingIsActive(swing0));
+      var mode0   = (useOpt0 && opt0.mode  !== undefined) ? opt0.mode  : (st0 ? st0.mode  : 'off');
+      var swing0  = (useOpt0 && opt0.swing !== undefined) ? opt0.swing : (st0 ? st0.swing : 'off');
+      // Se il sensore fisico è configurato, è lui l'autorità sull'oscillazione reale
+      var swSEnt0 = c0.useSwingSensor && c0.swingSensor && h0 && h0.states && h0.states[c0.swingSensor];
+      var swingIsOn0 = swSEnt0 ? swSEnt0.state === 'on' : _swingIsActive(swing0);
+      _flapSet(flapEl0, r0, mode0 !== 'off', swingIsOn0);
     }
   }
 
