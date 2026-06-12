@@ -703,7 +703,9 @@ function _epRenderJsStore(){
         <div style="font-size:11px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.name||m.id}</div>
         <div style="font-size:9px;color:var(--muted)">v${m.version||'?'} · ${m.id}${inPage?' · <span style="color:#4ade80">✓ in questa vista</span>':''}</div>
       </div>
-      <button data-action="jsStoreAddCard" data-action-arg="${m.id||''}" style="flex-shrink:0;padding:4px 9px;border-radius:7px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#a5b4fc;font-size:10px;font-weight:700;cursor:pointer">➕</button>
+      ${inPage
+        ? '<span style="flex-shrink:0;font-size:10px;font-weight:700;color:#4ade80;background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);border-radius:7px;padding:4px 9px;white-space:nowrap">✓ In vista</span>'
+        : `<button data-action="jsStoreAddCard" data-action-arg="${m.id||''}" style="flex-shrink:0;padding:4px 9px;border-radius:7px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#a5b4fc;font-size:10px;font-weight:700;cursor:pointer">➕</button>`}
     </div>`;
   }).join('');
 }
@@ -1620,8 +1622,11 @@ function _ghStoreRender(){
     const verLbl=_ghVerCache[f.sha]||g.fileVersions[f.name]||(cardId&&_curStoreVersion(cardId))||'';
     const inCurPage=!!(cardId&&usedInCurPage.has(cardId));
     const updateBtn=(g.shas[f.name]!==f.sha)?`<button class="ghs-btn ghs-btn-upd" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-update"></i> Aggiorna</button>`:'';
-    const addBtn=cardId?`<button class="ghs-btn ghs-btn-inst" data-action="_jsStoreAddAndRefresh" data-action-args='["${cardId}"]'><i class="mdi mdi-plus"></i> ${inCurPage?'Aggiungi ancora':'Aggiungi'}</button>`
-      :`<button class="ghs-btn ghs-btn-inst" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>`;
+    const addBtn=cardId
+      ? (inCurPage
+          ? `<span style="font-size:10px;font-weight:700;color:#4ade80;background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);border-radius:7px;padding:4px 9px;white-space:nowrap"><i class="mdi mdi-check-circle-outline"></i> In questa vista</span>`
+          : `<button class="ghs-btn ghs-btn-inst" data-action="_jsStoreAddAndRefresh" data-action-args='["${cardId}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`)
+      : `<button class="ghs-btn ghs-btn-inst" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>`;
     const delBtn=cardId?`<button class="ghs-ibtn ghs-ibtn-del" data-action="_ghsDeleteInstalled" data-action-arg="${cardId}" title="Disinstalla"><i class="mdi mdi-delete-outline"></i></button>`:'';
     return rowHtml(nm,verLbl,f.name,`${eyeBtn(enc,nm,cardId)}${updateBtn}${addBtn}${delBtn}`);
   };
@@ -1659,7 +1664,9 @@ function _ghStoreRenderInstalled(q, originFilter){
   const _usedLocal=new Set(); _lcCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) _usedLocal.add(c.jsCardId); });
   list.innerHTML=items.sort((a,b)=>((a.meta||{}).name||'').localeCompare((b.meta||{}).name||'')).map(i=>{
     const m=i.meta||{}; const inPage=_usedLocal.has(m.id); const id=m.id||'';
-    const act = `<button class="ghs-btn ghs-btn-inst" data-action="_jsStoreAddAndRefresh" data-action-args='["${id}"]'><i class="mdi mdi-plus"></i> ${inPage?'Aggiungi ancora':'Aggiungi'}</button>`;
+    const act = inPage
+      ? `<span style="font-size:10px;font-weight:700;color:#4ade80;background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);border-radius:7px;padding:4px 9px;white-space:nowrap"><i class="mdi mdi-check-circle-outline"></i> In questa vista</span>`
+      : `<button class="ghs-btn ghs-btn-inst" data-action="_jsStoreAddAndRefresh" data-action-args='["${id}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`;
     const pub = originFilter==='local' ? `<button class="ghs-btn ghs-btn-upd" data-action="_ghsPublish" data-action-arg="${id}" title="Pubblica su GitHub"><i class="mdi mdi-upload"></i> Pubblica</button>` : '';
     const safePrevNm=(m.name||id).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
     const previewBtn=`<button class="ghs-ibtn ghs-ibtn-eye" data-action="_ghsPreview" data-action-args='["","${safePrevNm}","${id}"]' title="Anteprima"><i class="mdi mdi-eye-outline"></i></button>`;
@@ -8132,29 +8139,43 @@ function _jsStoreRenderList(){
   if(!items.length){ listEl.innerHTML=''; emptyEl.style.display=''; return; }
   emptyEl.style.display='none';
 
-  // Controlla solo la vista corrente per il badge informativo (non blocca l'aggiunta)
+  // Controlla solo la vista corrente (non tutte le viste)
   const _curPgCards = (curPage()||{cards:[]}).cards||[];
-  const usedInCurPg = new Set();
-  _curPgCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedInCurPg.add(c.jsCardId); });
+  const usedIds = new Set();
+  _curPgCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedIds.add(c.jsCardId); });
+
+  const inDash = items.filter(i => usedIds.has((i.meta||{}).id));
+  const avail  = items.filter(i => !usedIds.has((i.meta||{}).id));
 
   function rowHTML(item){
     const m = item.meta || {};
-    const inPage = usedInCurPg.has(m.id);
+    const inUse = usedIds.has(m.id);
     return `<div class="jsst-card-row">
       <div class="jsst-card-ico">${m.icon||'📦'}</div>
       <div class="jsst-card-info">
-        <div class="jsst-card-name">${m.name||m.id||'Card'}${inPage?' <span style="font-size:9px;color:#4ade80;font-weight:600">✓ in questa vista</span>':''}</div>
+        <div class="jsst-card-name">${m.name||m.id||'Card'}</div>
         <div class="jsst-card-id">ID: ${m.id||'?'} &nbsp;·&nbsp; v${m.version||'?'}</div>
         <div class="jsst-card-desc">${m.desc||''}</div>
       </div>
       <div class="jsst-card-actions">
-        <button class="jsst-btn-add" data-action="jsStoreAddCard" data-action-arg="${m.id||''}">➕ Aggiungi</button>
+        ${inUse ? '<span style="font-size:10px;color:#4ade80;font-weight:700;">✓ In dashboard</span>' : `<button class="jsst-btn-add" data-action="jsStoreAddCard" data-action-arg="${m.id||''}">➕ Aggiungi</button>`}
         <button class="jsst-btn-del" data-action="jsStoreDeleteCard" data-action-arg="${m.id||''}">🗑</button>
       </div>
     </div>`;
   }
 
-  listEl.innerHTML = items.map(rowHTML).join('');
+  const secStyle = 'font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.3);margin:12px 0 6px;padding-bottom:4px;border-bottom:1px solid rgba(255,255,255,0.06)';
+
+  let html = '';
+  if(avail.length){
+    html += `<div style="${secStyle}">📦 Disponibili (${avail.length})</div>`;
+    html += avail.map(rowHTML).join('');
+  }
+  if(inDash.length){
+    html += `<div style="${secStyle};margin-top:${avail.length?'18px':'12px'}">✅ In questa vista (${inDash.length})</div>`;
+    html += inDash.map(rowHTML).join('');
+  }
+  listEl.innerHTML = html;
 }
 
 function jsStoreLoadFile(file){
