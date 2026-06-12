@@ -205,72 +205,16 @@ const LIC_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24h
 /* Frarik Dashboard — add-on per Home Assistant
    Sorgente: frarik-addon/src/main.js */
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   ⚙️  PROFILI MULTI-UTENTE — rilevamento automatico in base all'URL
-   Ogni utente usa il proprio Nabu Casa → il profilo giusto viene scelto in automatico.
-   ═══════════════════════════════════════════════════════════════════════════ */
-(function(){
-  var PROFILES = {
-    // ── Profilo 1 (utente originale) ──
-    // NB: nessun token nel bundle. In modalità add-on (ingress) il token non serve:
-    // il backend dell'add-on fa da proxy verso HA col SUPERVISOR_TOKEN.
-    'cvkvlnpaokb2r0pedlqjlq06f5zsd3fl.ui.nabu.casa': {
-      token: '',
-      remoteUrl: 'https://cvkvlnpaokb2r0pedlqjlq06f5zsd3fl.ui.nabu.casa',
-      localFallback: '192.168.1.189:8123'
-    },
-    // ── Profilo 2 (secondo utente) ──
-    'mzlej5bjgutlujw3go5vsanafnf1bom1.ui.nabu.casa': {
-      token: '',
-      remoteUrl: 'https://mzlej5bjgutlujw3go5vsanafnf1bom1.ui.nabu.casa',
-      localFallback: '192.168.1.64:8123'
-    }
-  };
-  var host = location.hostname;
-  var key = Object.keys(PROFILES).find(function(k){ return host.indexOf(k) !== -1; });
-  window.FRARIK_CFG = key ? PROFILES[key] : PROFILES['cvkvlnpaokb2r0pedlqjlq06f5zsd3fl.ui.nabu.casa'];
-})();
-/* ── Redirect automatico se aperto come file locale ── */
-if(location.protocol==='file:'){
-  location.replace(window.FRARIK_CFG.remoteUrl.replace(/\/$/,'') + '/local/frarik.html');
-}
-
 /* ═══════════════════════════════════════════════════════
-   CONFIG
+   CONFIG — solo modalità add-on (ingress)
+   La dashboard parla unicamente col backend dell'add-on (stessa origine + prefisso
+   ingress), che fa da proxy verso Home Assistant. Nessun token, nessun URL Nabu Casa,
+   nessun IP locale: tutto passa dal Supervisor lato server.
 ═══════════════════════════════════════════════════════ */
-/* Token e host sono variabili: vengono aggiornati al login */
-/* Token e indirizzi presi dal blocco IMPOSTAZIONI PERSONALI in cima al file (window.FRARIK_CFG) */
-const TOKEN_DEFAULT = (window.FRARIK_CFG&&window.FRARIK_CFG.token) || '';
-const REMOTE_URL_DEFAULT = (window.FRARIK_CFG&&window.FRARIK_CFG.remoteUrl) || '';
-const LOCAL_FALLBACK = (window.FRARIK_CFG&&window.FRARIK_CFG.localFallback) || '192.168.1.189:8123';
-let TOKEN   = ADDON_MODE ? '' : (localStorage.getItem('hadb_token') || TOKEN_DEFAULT);
-let HA_HOST, BASE;
-/* ACCESSO LOCALE + REMOTO:
-   la pagina è servita da Home Assistant (/local/...), quindi ci si connette alla STESSA origine
-   da cui viene aperta. Così:
-     • apri http://192.168.1.189:8123/local/...  → si connette in LOCALE
-     • apri https://tuo-dominio/local/...        → si connette da REMOTO
-   automaticamente, senza configurare nulla. Un URL fisso salvato si usa SOLO se la pagina è aperta
-   come file locale (file://) dove non c'è un'origine HA valida. */
-(function(){
-  if(ADDON_MODE){
-    // proxy dell'add-on: stessa origine + prefisso ingress (es. /api/hassio_ingress/<tok>)
-    HA_HOST = location.host;
-    BASE    = location.origin + INGRESS_BASE;
-    return;
-  }
-  const isHttp = (location.protocol==='http:'||location.protocol==='https:') && location.host;
-  const saved = localStorage.getItem('hadb_haurl');
-  if(isHttp){
-    HA_HOST = location.host;     // es. 192.168.1.189:8123  oppure  tuo-dominio.ui.nabu.casa
-    BASE    = location.origin;   // protocollo+host (http/https coerente)
-  } else if(saved){
-    try{ const u=new URL(saved.startsWith('http')?saved:'https://'+saved); HA_HOST=u.host; BASE=u.origin; }
-    catch(e){ HA_HOST=saved.replace(/^https?:\/\//,''); BASE='https://'+HA_HOST; }
-  } else {
-    HA_HOST=LOCAL_FALLBACK; BASE='http://'+HA_HOST;
-  }
-})();
+window.FRARIK_CFG = {};                      // compat: stub, non più usato
+let TOKEN   = '';                            // il token HA non esiste lato client
+let HA_HOST = location.host;
+let BASE    = location.origin + INGRESS_BASE;
 
 /* ═══ COLORS ═══ */
 const COLORS = [
@@ -2080,19 +2024,11 @@ function _ghSchedule(){
 
 /* ═══ WEBSOCKET ═══ */
 let covTimer=null;
-/* ── Connessione con fallback LOCALE → REMOTO ──
-   Prova prima l'origine da cui apri la pagina (locale). Se non risponde, prova l'indirizzo remoto
-   salvato (es. Nabu Casa). Così la stessa pagina/bookmark funziona a casa (WiFi) e fuori (dati). */
+/* ── Connessione al backend dell'add-on ──
+   Un solo target: il proxy dell'add-on (stessa origine + prefisso ingress), gated da licenza. */
 let _connTargets=[], _connIdx=0, _connBusy=false, _connOk=false, _lastTriedHost='', _everConnected=false, _dashBuilt=false;
 function _buildConnTargets(){
-  // modalità add-on: un solo target = il backend dell'add-on (proxy gated da licenza)
-  if(ADDON_MODE) return [{host:location.host, base:location.origin+INGRESS_BASE}];
-  const t=[];
-  if((location.protocol==='http:'||location.protocol==='https:')&&location.host) t.push({host:location.host,base:location.origin});
-  const rem=((localStorage.getItem('hadb_remote')||'').trim())||REMOTE_URL_DEFAULT;
-  if(rem){ try{ const u=new URL(rem.startsWith('http')?rem:'https://'+rem); if(!t.some(x=>x.host===u.host)) t.push({host:u.host,base:u.origin}); }catch(e){} }
-  if(!t.length) t.push({host:HA_HOST,base:BASE});
-  return t;
+  return [{host:location.host, base:location.origin+INGRESS_BASE}];
 }
 function connect(){
   clearTimeout(covTimer); clearTimeout(reconn);
@@ -2100,14 +2036,11 @@ function connect(){
   if(_connIdx>=_connTargets.length) _connIdx=0;
   _connBusy=true; _connOk=false;
   const tgt=_connTargets[_connIdx]; HA_HOST=tgt.host; BASE=tgt.base; _lastTriedHost=tgt.host;
-  const cm=document.getElementById('cmsg'); if(cm) cm.textContent='Connessione a '+tgt.host+'…';
+  const cm=document.getElementById('cmsg'); if(cm) cm.textContent='Connessione…';
   covTimer=setTimeout(_connFail,12000);
   try{
-    const proto=BASE.startsWith('https')?'wss':'ws';
-    // in modalità add-on l'URL WS include il prefisso ingress + la chiave licenza (?lic=)
-    const wsUrl = ADDON_MODE
-      ? `${BASE.replace(/^http/,'ws')}/api/websocket?lic=${encodeURIComponent(localStorage.getItem(LIC_KEY)||'')}`
-      : `${proto}://${HA_HOST}/api/websocket`;
+    // URL WS sul proxy dell'add-on: prefisso ingress + chiave licenza (?lic=)
+    const wsUrl = `${BASE.replace(/^http/,'ws')}/api/websocket?lic=${encodeURIComponent(localStorage.getItem(LIC_KEY)||'')}`;
     ws=new WebSocket(wsUrl);
     ws.onopen=()=>setC('wait');
     ws.onmessage=e=>onMsg(JSON.parse(e.data));
@@ -2131,35 +2064,15 @@ function _connFail(){
     reconn=setTimeout(connect,3000);
     return;
   }
-  // modalità add-on: niente box URL/token. Se manca la licenza valida → overlay licenza;
-  // altrimenti è il backend (proxy) momentaneamente non pronto → ritenta in silenzio.
-  if(ADDON_MODE){
-    const cm0=document.getElementById('cmsg');
-    if(!localStorage.getItem(LIC_KEY)){
-      const ov=document.getElementById('lic-overlay'); if(ov) ov.style.cssText+=';display:flex!important';
-    } else if(cm0){
-      cm0.innerHTML='⚠️ Backend non pronto<br><span style="font-size:10px;opacity:.6">riprovo…</span>';
-    }
-    reconn=setTimeout(connect,5000);
-    return;
+  // Se manca la licenza valida → overlay licenza; altrimenti il backend (proxy) è
+  // momentaneamente non pronto → ritenta in silenzio.
+  const cm0=document.getElementById('cmsg');
+  if(!localStorage.getItem(LIC_KEY)){
+    const ov=document.getElementById('lic-overlay'); if(ov) ov.style.cssText+=';display:flex!important';
+  } else if(cm0){
+    cm0.innerHTML='⚠️ Backend non pronto<br><span style="font-size:10px;opacity:.6">riprovo…</span>';
   }
-  // prima connessione mai riuscita → mostra overlay con campo indirizzo/token
-  const cm=document.getElementById('cmsg'); if(cm) cm.innerHTML='⚠️ Home Assistant non raggiungibile<br><span style="font-size:10px;opacity:.6">ultimo tentativo: '+(_lastTriedHost||'?')+'</span>';
-  const skip=document.getElementById('cov-skip'); if(skip) skip.style.display='';
-  const rbox=document.getElementById('cov-remote-box'); if(rbox) rbox.style.display='';
-  const cov=document.getElementById('cov'); if(cov) cov.classList.remove('off');
-  reconn=setTimeout(connect,8000);
-}
-function saveRemoteAndRetry(){
-  const v=(document.getElementById('cov-remote-url')?.value||'').trim();
-  if(v) localStorage.setItem('hadb_remote',v); else localStorage.removeItem('hadb_remote');
-  const tk=(document.getElementById('cov-token')?.value||'').trim();
-  if(tk){ TOKEN=tk; localStorage.setItem('hadb_token',tk); }
-  const rbox=document.getElementById('cov-remote-box'); if(rbox) rbox.style.display='none';
-  const cm=document.getElementById('cmsg'); if(cm) cm.textContent='Connessione…';
-  const cov=document.getElementById('cov'); if(cov) cov.classList.remove('off');
-  _connTargets=[]; _connIdx=0; _connBusy=false; clearTimeout(reconn);
-  connect();
+  reconn=setTimeout(connect,5000);
 }
 function send(p){ p.id=mid++; ws.send(JSON.stringify(p)); }
 /* Promise-based WS request — usato per lovelace/resources, entity_registry, ecc. */
@@ -2214,21 +2127,13 @@ function onMsg(m){
     _haLoadCfg(true);   // sincronizza la configurazione dai dati utente di HA
   }
   else if(m.type==='auth_invalid'){
-    _connBusy=false; _connOk=false;          // ferma fallback/auto-retry (col token sbagliato è inutile)
+    // In modalità add-on l'auth la fa il backend col Supervisor: qui non dovrebbe arrivare.
+    // Se arriva, è un problema lato proxy → riprova in silenzio.
+    _connBusy=false; _connOk=false;
     clearTimeout(covTimer); clearTimeout(reconn);
-    // Auto-recupero: se stavamo usando un token SALVATO (magari vecchio/non valido), scartalo e
-    // riprova col token predefinito valido → evita le notifiche "Login attempt failed" ripetute.
-    if(TOKEN!==TOKEN_DEFAULT){
-      try{ localStorage.removeItem('hadb_token'); }catch(e){}
-      TOKEN=TOKEN_DEFAULT; setC('wait');
-      reconn=setTimeout(connect,400);
-      return;
-    }
     setC('off');
-    const cm=document.getElementById('cmsg'); if(cm) cm.innerHTML='🔑 Token di accesso non valido<br><span style="font-size:10px;opacity:.6">Crea un token in Profilo HA → Token a lunga durata e incollalo qui sotto</span>';
-    const skip=document.getElementById('cov-skip'); if(skip) skip.style.display='';
-    const rbox=document.getElementById('cov-remote-box'); if(rbox) rbox.style.display='';
-    const cov=document.getElementById('cov'); if(cov) cov.classList.remove('off');
+    const cm=document.getElementById('cmsg'); if(cm) cm.textContent='Autenticazione non riuscita — riprovo…';
+    reconn=setTimeout(connect,3000);
   }
   // Esito salvataggio config su HA (frontend/set_user_data)
   else if(m.type==='result'&&m.id===_cfgSetId){
@@ -10185,11 +10090,6 @@ function openHBM_HDR(){
     if(ct){ const r=document.documentElement.style; r.setProperty('--acc',ct.acc); r.setProperty('--acc2',ct.acc2); r.setProperty('--glow1',ct.g[0]); r.setProperty('--glow2',ct.g[1]); r.setProperty('--glow3',ct.g[2]); if(t!=='light'){ r.setProperty('--bg',ct.bg); r.setProperty('--panel',ct.panel); r.setProperty('--panel2',ct.panel2); } }
   }catch(e){}
 })();
-/* Ripristina l'indirizzo remoto salvato nell'overlay di connessione */
-(function(){
-  const savedRemote = localStorage.getItem('hadb_remote')||REMOTE_URL_DEFAULT;
-  const cre=document.getElementById('cov-remote-url'); if(cre) cre.value=savedRemote;
-})();
 
 /* Login rimosso: si entra sempre direttamente nella dashboard */
 _jsStoreBootAll();
@@ -12729,7 +12629,6 @@ Object.assign(window, {
   saveFBM,
   saveGitHubCfg,
   saveHBM,
-  saveRemoteAndRetry,
   saveSectMod,
   saveViewEdit,
   saveWizard,

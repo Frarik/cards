@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.1 — 2026-06-12
+
+### Pulizia legacy
+- Rimosso il vecchio sistema multi-profilo (`PROFILES`): niente più URL Nabu Casa né IP locali hardcoded nel bundle, niente fallback `/local`. La dashboard funziona solo come add-on (pannello Frarik), via proxy gated da licenza.
+- Rimossi token e box "URL/token" di connessione, ora inutili (il token lo gestisce il backend).
+
 ## 1.3.0 — 2026-06-12
 
 ### Licenza lato server + addio token (cambio architetturale)
