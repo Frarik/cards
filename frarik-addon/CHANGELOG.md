@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.51 — 2026-06-12
+
+### Licenze: la revoca ora ha effetto
+- La licenza veniva ri-controllata solo **ogni 24h** e lo stato era salvato nel **browser** del client (un riavvio di Home Assistant non lo cancella): perciò una chiave **revocata** continuava a funzionare fino a 24h. Ora la chiave salvata viene **ri-validata ad ogni avvio/refresh** e **ogni ora** mentre la dashboard è aperta: una chiave revocata o scaduta viene bloccata subito. In caso di server licenze irraggiungibile resta una tolleranza di 3 giorni (così un'interruzione temporanea non blocca le licenze valide).
+- Allineate le versioni dell'add-on (package.json/config.yaml).
+
 ## 1.2.50 — 2026-06-12
 
 ### fix: Camera v1.5 — WebRTC e MJPEG in parallelo, fix race condition ontrack

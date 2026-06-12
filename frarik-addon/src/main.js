@@ -56,32 +56,48 @@ const LIC_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24h
   input.addEventListener('keydown', e=>{ if(e.key==='Enter') validate(input.value); });
   input.addEventListener('input', ()=>{ input.value=input.value.toUpperCase().replace(/[^A-Z0-9-]/g,''); });
 
-  // Controlla chiave salvata
-  const saved  = localStorage.getItem(LIC_KEY);
-  const savedTs= parseInt(localStorage.getItem(LIC_TS_KEY)||'0');
-  const needsCheck = !savedTs || (Date.now()-savedTs > LIC_CHECK_INTERVAL);
+  // Tolleranza quando il server licenze è IRRAGGIUNGIBILE (così un'interruzione
+  // temporanea di Cloudflare non blocca chi ha una licenza valida). Oltre questa
+  // finestra senza una verifica andata a buon fine → si blocca.
+  const LIC_OFFLINE_GRACE = 3 * 24 * 60 * 60 * 1000; // 3 giorni
 
-  if(!saved){
-    showOverlay();
-  } else if(needsCheck){
-    // Ri-valida silenziosamente, se fallisce mostra overlay
-    fetch(LICENSE_API, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({key: saved})})
-      .then(r=>r.json())
-      .then(d=>{
-        if(d.valid){
-          localStorage.setItem(LIC_TS_KEY, Date.now().toString());
-          localStorage.setItem('frarik_lic_name', d.name||'');
-          localStorage.setItem('frarik_lic_note', d.note||'');
-          localStorage.setItem('frarik_lic_expires', d.expires||'');
-        } else {
-          localStorage.removeItem(LIC_KEY);
-          localStorage.removeItem(LIC_TS_KEY);
-          showOverlay();
-        }
-      })
-      .catch(()=>{ /* se offline, lascia passare */ });
+  // Ri-valida SEMPRE la chiave salvata contro il server. Una chiave revocata/scaduta
+  // viene bloccata subito (al prossimo avvio/refresh, o entro 1h se l'app resta aperta).
+  async function revalidate(){
+    const key = localStorage.getItem(LIC_KEY);
+    if(!key){ showOverlay(); return; }
+    try{
+      const r = await fetch(LICENSE_API, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({key})});
+      const d = await r.json();
+      if(d.valid){
+        localStorage.setItem(LIC_TS_KEY, Date.now().toString());
+        localStorage.setItem('frarik_lic_name', d.name||'');
+        localStorage.setItem('frarik_lic_note', d.note||'');
+        localStorage.setItem('frarik_lic_expires', d.expires||'');
+        hideOverlay();
+      } else {
+        // revocata o scaduta → rimuovi e blocca
+        localStorage.removeItem(LIC_KEY);
+        localStorage.removeItem(LIC_TS_KEY);
+        localStorage.removeItem('frarik_lic_name');
+        localStorage.removeItem('frarik_lic_note');
+        localStorage.removeItem('frarik_lic_expires');
+        showOverlay();
+      }
+    } catch(e){
+      // server non raggiungibile: tollera solo entro la finestra di grazia
+      const ts = parseInt(localStorage.getItem(LIC_TS_KEY)||'0');
+      if(!ts || (Date.now()-ts > LIC_OFFLINE_GRACE)) showOverlay();
+      // altrimenti lascia passare (offline temporaneo)
+    }
   }
-  // Se salvata e non scaduta il controllo non blocca l'avvio
+
+  const saved = localStorage.getItem(LIC_KEY);
+  if(!saved) showOverlay();
+  else revalidate();   // verifica ad OGNI avvio (niente più finestra 24h)
+
+  // controllo periodico mentre l'app resta aperta → cattura la revoca senza reload
+  setInterval(()=>{ if(localStorage.getItem(LIC_KEY)) revalidate(); }, 60*60*1000);
 })();
 
 // ── Nasconde la barra HA ingress (ha-panel-app) ──────────────────────────────
