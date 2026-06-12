@@ -147,6 +147,39 @@
   var _optimisticTemps = {};
   var _optimisticState = {};
 
+  /* ── Animazione aletta via requestAnimationFrame (100% JS, nessuna CSS animation) ── */
+  var _flapRafs = {}; // rid → { id: rafId, t0: startTime }
+
+  function _flapStart(flapEl, rid) {
+    _flapStop(rid);
+    var period = 12000, maxAngle = 52;
+    var state = { id: null, t0: Date.now() };
+    _flapRafs[rid] = state;
+    function loop() {
+      if (!flapEl.isConnected) { _flapStop(rid); return; }
+      var phase = ((Date.now() - state.t0) % period) / period;
+      var angle = phase < 0.5 ? phase * 2 * maxAngle : (1 - phase) * 2 * maxAngle;
+      flapEl.style.transform = 'rotateX(' + angle.toFixed(1) + 'deg)';
+      state.id = requestAnimationFrame(loop);
+    }
+    state.id = requestAnimationFrame(loop);
+  }
+
+  function _flapStop(rid) {
+    var s = _flapRafs[rid];
+    if (s && s.id != null) cancelAnimationFrame(s.id);
+    delete _flapRafs[rid];
+  }
+
+  function _flapSet(flapEl, rid, isOn, swingOn) {
+    _flapStop(rid);
+    if (isOn && swingOn) {
+      _flapStart(flapEl, rid);
+    } else {
+      flapEl.style.transform = isOn ? 'rotateX(40deg)' : 'rotateX(0deg)';
+    }
+  }
+
   function _stateKey(card, hass) {
     try {
       const c = load(card), h = (hass && hass.states) || {};
@@ -184,6 +217,8 @@
   }
 
   function _rerenderCard(card, el) {
+    var oldFlap = el.querySelector('[data-clm-flap]');
+    if (oldFlap) _flapStop(oldFlap.getAttribute('data-rid'));
     el.innerHTML = render(card);
     mount(card, H(), el);
     _lastKeys[card.id] = _stateKey(card, H());
@@ -244,17 +279,12 @@
     const brand    = c.showBrand && c.brand ? c.brand : null;
     const brandSvg = brand ? (BRAND_SVG[brand] || null) : null;
 
-    /* Stato aletta controllato da <style id="rid-fls"> — NON inline sul div */
-    const flapStyle = !isOn
-      ? 'animation:none;transform:rotateX(0deg)'
-      : (swingOn
-        ? 'animation:'+rid+'flap 12s ease-in-out infinite'
-        : 'animation:none;transform:rotateX(40deg)');
+    /* Aletta: transform iniziale nel DOM; l'animazione è gestita da RAF in mount() */
+    const flapInitTransform = !isOn ? 'rotateX(0deg)' : 'rotateX(40deg)';
 
-    /* CSS principale + style dedicato aletta */
+    /* CSS (nessun @keyframes per l'aletta — RAF la anima) */
     const css = '<style id="'+rid+'-css">'
       +'@keyframes '+rid+'mist{0%{opacity:0;transform:translateY(-8px) scaleX(1)}15%{opacity:.82}76%{opacity:.26}100%{opacity:0;transform:translateY(96px) scaleX(1.22)}}'
-      +'@keyframes '+rid+'flap{0%{transform:rotateX(0deg)}50%{transform:rotateX(52deg)}100%{transform:rotateX(0deg)}}'
       +'@keyframes '+rid+'led{0%,100%{opacity:1}46%{opacity:.72}}'
       +'@keyframes '+rid+'ind{0%,100%{box-shadow:0 0 6px '+mCol+'77}50%{box-shadow:0 0 16px '+mCol+',0 0 32px '+mCol+'66}}'
       +'@keyframes '+rid+'glow{0%,100%{opacity:.5}50%{opacity:1}}'
@@ -264,8 +294,7 @@
         +'font-weight:700;display:flex;flex-direction:column;align-items:center;gap:3px;'
         +'background:rgba(255,255,255,.07);color:#94a3b8;transition:all .2s;}'
       +'#'+rid+' .tog:hover{background:rgba(255,255,255,.13);color:#e2e8f0;}'
-      +'</style>'
-      +'<style id="'+rid+'-fls">[data-rid="'+rid+'"][data-clm-flap]{'+flapStyle+'}</style>';
+      +'</style>';
 
     const indRight = '<div style="display:flex;gap:5px;align-items:center">'
       +(syncCol ? '<div title="Sync aletta" style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:'+syncCol+';box-shadow:0 0 6px '+syncCol+'cc"></div>' : '')
@@ -324,14 +353,14 @@
           +'border-top:1px solid rgba(255,255,255,.04)"></div>'
       +'</div>'
 
-      // Aletta: stile gestito SOLO da #rid-fls, nessun animation/transform inline
+      // Aletta: transform iniziale statico; RAF in mount() gestisce l'oscillazione
       +'<div style="position:absolute;bottom:-7px;left:13px;right:13px;height:15px;'
         +'perspective:220px;perspective-origin:50% 0%;z-index:2">'
         +'<div data-clm-flap data-rid="'+rid+'" style="width:100%;height:100%;'
           +'background:linear-gradient(180deg,#2d3e58 0%,#22304a 40%,#1b2640 100%);'
           +'border-radius:2px 2px 6px 6px;'
           +'box-shadow:0 5px 16px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.1);'
-          +'transform-origin:50% 0%'
+          +'transform-origin:50% 0%;transform:'+flapInitTransform
         +'"></div>'
       +'</div>'
     +'</div>';
@@ -457,38 +486,15 @@
         callSvc('climate','set_swing_mode',{entity_id:entityId,swing_mode:val});
         _optimisticState[card.id] = { mode:curOpt.mode, fan:curOpt.fan, swing:val, expires:Date.now()+8000 };
 
-        // Legge la modalità direttamente da HA (il mode non cambia con swing)
-        const modeNow  = (st && st.mode) ? st.mode : 'off';
-        const isOnNow  = modeNow !== 'off';
+        // Usa st.mode direttamente: il mode non cambia con lo swing
+        const isOnNow  = !!(st && st.mode && st.mode !== 'off');
         const swingNow = val !== 'off';
 
         const flapEl = el.querySelector('[data-clm-flap]');
         if (flapEl) {
           const r = flapEl.getAttribute('data-rid');
-
-          // 1. Aggiorna style-tag per coerenza con il DOM
-          const styleEl = el.querySelector('#'+r+'-fls');
-
-          // 2. Imposta stili inline con !important — massima priorità CSS,
-          //    non può essere sovrascritto da nessuna regola esterna o del framework.
-          if (!isOnNow) {
-            flapEl.style.setProperty('animation','none','important');
-            flapEl.style.setProperty('transform','rotateX(0deg)','important');
-            if (styleEl) styleEl.textContent='[data-rid="'+r+'"][data-clm-flap]{animation:none;transform:rotateX(0deg)}';
-          } else if (swingNow) {
-            // Ferma prima, forza reflow, poi riavvia — così parte da frame 0
-            flapEl.style.setProperty('animation','none','important');
-            flapEl.style.setProperty('transform','','important');
-            void flapEl.offsetWidth;
-            flapEl.style.setProperty('animation',r+'flap 12s ease-in-out infinite','important');
-            if (styleEl) styleEl.textContent='[data-rid="'+r+'"][data-clm-flap]{animation:'+r+'flap 12s ease-in-out infinite}';
-          } else {
-            // Ferma oscillazione: animation:none + reflow + transform statico
-            flapEl.style.setProperty('animation','none','important');
-            void flapEl.offsetWidth;
-            flapEl.style.setProperty('transform','rotateX(40deg)','important');
-            if (styleEl) styleEl.textContent='[data-rid="'+r+'"][data-clm-flap]{animation:none;transform:rotateX(40deg)}';
-          }
+          // RAF: stop istantaneo garantito (nessuna CSS da combattere)
+          _flapSet(flapEl, r, isOnNow, swingNow);
         }
 
         el.querySelectorAll('[data-secpanel="swing"] .cb').forEach(function(b){
@@ -516,6 +522,18 @@
     };
 
     el.addEventListener('click', el._clmHandler);
+
+    /* Avvia RAF aletta in base allo stato corrente */
+    var flapEl0 = el.querySelector('[data-clm-flap]');
+    if (flapEl0) {
+      var r0 = flapEl0.getAttribute('data-rid');
+      var c0 = load(card), h0 = H(), st0 = clState(h0, c0.entity||'');
+      var opt0 = _optimisticState[card.id];
+      var useOpt0 = opt0 && Date.now() < opt0.expires;
+      var mode0  = (useOpt0 && opt0.mode  !== undefined) ? opt0.mode  : (st0 ? st0.mode  : 'off');
+      var swing0 = (useOpt0 && opt0.swing !== undefined) ? opt0.swing : (st0 ? st0.swing : 'off');
+      _flapSet(flapEl0, r0, mode0 !== 'off', swing0 !== 'off');
+    }
   }
 
   /* ── UPDATE ── */
@@ -525,6 +543,8 @@
       if (_lastKeys[card.id]===key) return;
       _lastKeys[card.id]=key;
       const openSec=_openSecs[card.id];
+      var oldFlapU = el.querySelector('[data-clm-flap]');
+      if (oldFlapU) _flapStop(oldFlapU.getAttribute('data-rid'));
       el.innerHTML=render(card);
       mount(card,hass,el);
       if (openSec) {
