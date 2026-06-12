@@ -1,4 +1,4 @@
-/* frarik-version: 2.4 */
+/* frarik-version: 2.5 */
 (function () {
   'use strict';
 
@@ -31,6 +31,7 @@
   const HVAC_COL = { cool:'#38bdf8', heat:'#f87171', fan_only:'#94a3b8', dry:'#34d399', auto:'#a78bfa', heat_cool:'#fb923c', off:'#475569' };
   const FAN_LBL  = { auto:'Auto', low:'Bassa', medium:'Media', high:'Alta', turbo:'Turbo', quiet:'Silenziosa', 'off':'Ferma', 'on':'Attiva' };
   const SWING_LBL= { 'off':'Off', 'on':'On', both:'Tutto', vertical:'Verticale', horizontal:'Orizzontale' };
+  const BRANDS   = ['Daikin','Samsung','LG','Mitsubishi Electric','Panasonic','Fujitsu','Toshiba','Hitachi','Midea','Haier','Gree','Bosch','Carrier','York'];
 
   function mColor(m) { return HVAC_COL[m] || '#475569'; }
   function mLabel(m) { return HVAC_LBL[m] || m; }
@@ -38,9 +39,10 @@
   function fLabel(m) { return FAN_LBL[m]  || m; }
   function sLabel(m) { return SWING_LBL[m]|| m; }
 
-  var _openSecs       = {};
-  var _lastKeys       = {};
-  var _optimisticTemps = {}; // card.id → { temp:Number, expires:Number }
+  var _openSecs        = {};
+  var _lastKeys        = {};
+  var _optimisticTemps = {}; // card.id → { temp, expires }
+  var _optimisticState = {}; // card.id → { mode, fan, swing, expires }
 
   function _stateKey(card, hass) {
     try {
@@ -51,32 +53,24 @@
         return [s.state, a.temperature, a.current_temperature, a.fan_mode, a.swing_mode, a.hvac_action].join(':');
       }
       function sv(id) { const s = h[id]; return s ? s.state : ''; }
-      return cv(c.entity) + '|' + sv(c.tempEntity) + '|' + sv(c.humEntity);
+      return cv(c.entity) + '|' + sv(c.tempEntity) + '|' + sv(c.humEntity) + '|' + sv(c.swingSensor);
     } catch(e) { return String(Date.now()); }
   }
 
-  /* ── Mist: blob nebulizzati che scendono morbidi dall'AC ── */
+  /* ── Mist nebulizzato: blob ovali sfumati che scendono dall'AC ── */
   function airStreams(rid, col, show) {
     if (!show) return '';
-    // [leftPct, widthPx, heightPx, blurPx, durationS, delayS]
     var p = [
-      [3,  88, 15, 10, 7.2, 0.0],
-      [17, 58, 11,  7, 8.8, 1.4],
-      [33, 98, 17, 12, 6.6, 0.6],
-      [7,  42, 13,  6, 8.0, 2.6],
-      [48, 78, 15, 10, 8.2, 1.0],
-      [24, 52, 10,  6, 7.4, 3.6],
-      [58, 90, 17, 11, 6.9, 1.9],
-      [11, 68, 13,  8, 7.6, 0.3],
-      [43, 44, 11,  5, 8.5, 3.0],
-      [68, 72, 15, 10, 7.1, 1.6],
-      [28, 82, 16, 11, 9.0, 4.3],
-      [76, 36, 10,  5, 6.6, 2.4],
-      [52, 62, 13,  8, 7.5, 0.9],
-      [20, 46, 11,  6, 8.1, 2.1],
+      [3,  88,15,10, 7.2,0.0], [17,58,11, 7, 8.8,1.4],
+      [33, 98,17,12, 6.6,0.6], [7, 42,13, 6, 8.0,2.6],
+      [48, 78,15,10, 8.2,1.0], [24,52,10, 6, 7.4,3.6],
+      [58, 90,17,11, 6.9,1.9], [11,68,13, 8, 7.6,0.3],
+      [43, 44,11, 5, 8.5,3.0], [68,72,15,10, 7.1,1.6],
+      [28, 82,16,11, 9.0,4.3], [76,36,10, 5, 6.6,2.4],
+      [52, 62,13, 8, 7.5,0.9], [20,46,11, 6, 8.1,2.1],
     ];
     return p.map(function(s) {
-      var l=s[0], w=s[1], h=s[2], blur=s[3], dur=s[4], delay=s[5];
+      var l=s[0],w=s[1],h=s[2],blur=s[3],dur=s[4],delay=s[5];
       return '<div style="position:absolute;left:'+l+'%;top:-'+(h+4)+'px;width:'+w+'px;height:'+h+'px;'
         +'border-radius:50%;'
         +'background:radial-gradient(ellipse at 50% 38%,'+col+'cc 0%,'+col+'55 52%,'+col+'11 78%,transparent 100%);'
@@ -86,43 +80,85 @@
     }).join('');
   }
 
+  /* ── Re-render immediato con ripristino sezione aperta ── */
+  function _rerenderCard(card, el) {
+    el.innerHTML = render(card);
+    mount(card, H(), el);
+    _lastKeys[card.id] = _stateKey(card, H());
+    var os = _openSecs[card.id];
+    if (os) {
+      var se = el.querySelector('[data-secpanel="'+os+'"]');
+      var tb = el.querySelector('[data-action="toggle"][data-sec="'+os+'"]');
+      if (se) se.style.display = 'flex';
+      if (tb) { tb.style.background='rgba(255,255,255,.16)'; tb.style.color='#e2e8f0'; tb.style.borderColor='rgba(255,255,255,.22)'; }
+    }
+  }
+
   /* ── RENDER ── */
   function render(card) {
     const h = H(), c = load(card);
     const rid = 'clm' + (card.id || Math.random().toString(36).slice(2,8));
     const entityId = c.entity || '';
-    const st       = clState(h, entityId);
-    const mode     = st ? st.mode  : 'off';
+    const st = clState(h, entityId);
+
+    // Stato ottimistico: sovrascrive HA fino a conferma
+    const optS = _optimisticState[card.id];
+    const useOptS = optS && Date.now() < optS.expires;
+    if (useOptS && st) {
+      // Se HA ha già confermato tutto, cancella ottimistico
+      const confirmed =
+        (optS.mode  === undefined || optS.mode  === st.mode) &&
+        (optS.fan   === undefined || optS.fan   === st.fan)  &&
+        (optS.swing === undefined || optS.swing === st.swing);
+      if (confirmed) delete _optimisticState[card.id];
+    }
+    const useOpt = useOptS && !!_optimisticState[card.id];
+
+    const mode     = useOpt && optS.mode  !== undefined ? optS.mode  : (st ? st.mode  : 'off');
+    const fanMode  = useOpt && optS.fan   !== undefined ? optS.fan   : (st ? st.fan   : 'auto');
+    const swingMode= useOpt && optS.swing !== undefined ? optS.swing : (st ? st.swing : 'off');
     const isOn     = mode !== 'off';
-    const swingOn  = st ? st.swing !== 'off' : false;
+    const swingOn  = swingMode !== 'off';
     const mCol     = mColor(mode);
 
-    // Temperatura: usa ottimistica se disponibile e non ancora confermata da HA
-    const opt = _optimisticTemps[card.id];
-    const optValid = opt && Date.now() < opt.expires;
-    if (optValid && st && st.target != null && Math.abs(opt.temp - parseFloat(st.target)) < 0.001) {
-      delete _optimisticTemps[card.id]; // HA ha confermato
-    }
-    const targetTemp = optValid ? opt.temp.toFixed(1) : ((st && st.target != null) ? parseFloat(st.target).toFixed(1) : '--.-');
+    // Temperatura ottimistica
+    const optT = _optimisticTemps[card.id];
+    const useOptT = optT && Date.now() < optT.expires;
+    if (useOptT && st && st.target != null && Math.abs(optT.temp - parseFloat(st.target)) < 0.001) delete _optimisticTemps[card.id];
+    const targetTemp = (useOptT && _optimisticTemps[card.id]) ? optT.temp.toFixed(1)
+      : (st && st.target != null ? parseFloat(st.target).toFixed(1) : '--.-');
 
-    const fanMode    = st ? st.fan   : 'auto';
-    const swingMode  = st ? st.swing : 'off';
-    const nm         = c.name || (st ? st.friendlyName : 'Climatizzatore');
-
+    const nm = c.name || (st ? st.friendlyName : 'Climatizzatore');
     const hvacModes  = st ? st.hvacModes  : ['off','cool','heat'];
     const fanModes   = st ? st.fanModes   : ['auto','low','medium','high'];
     const swingModes = st ? st.swingModes : ['off','on'];
 
+    // Sensori temperatura/umidità
     const tempEnt = c.tempEntity && h && h.states && h.states[c.tempEntity] ? h.states[c.tempEntity] : null;
     const humEnt  = c.humEntity  && h && h.states && h.states[c.humEntity]  ? h.states[c.humEntity]  : null;
     const sensorT = tempEnt ? parseFloat(tempEnt.state).toFixed(1) : null;
     const sensorH = humEnt  ? parseFloat(humEnt.state).toFixed(0)  : null;
 
+    // Sensore aletta fisica (pallino sync)
+    const swSensorEnt = c.useSwingSensor && c.swingSensor && h && h.states && h.states[c.swingSensor] ? h.states[c.swingSensor] : null;
+    const flapPhysicalOpen = swSensorEnt ? swSensorEnt.state === 'on' : null;
+    const syncColor = flapPhysicalOpen !== null
+      ? ((isOn === flapPhysicalOpen) ? '#22c55e' : '#ef4444')
+      : null;
+
+    // Marca
+    const brand = c.showBrand && c.brand ? c.brand : null;
+
+    // Stato aletta: chiusa(off) / aperta-statica(on+no swing) / oscillante(on+swing)
+    const flapAnim = !isOn
+      ? 'transform:rotateX(0deg);'
+      : (swingOn
+        ? 'animation:'+rid+'flap 8s ease-in-out infinite;'
+        : 'transform:rotateX(35deg);');
+
     /* ── CSS ── */
     const css = '<style>'
-      // Mist: blob scendono dall'alto verso il basso, lenti e nebulosi
       +'@keyframes '+rid+'mist{0%{opacity:0;transform:translateY(-8px) scaleX(1)}16%{opacity:.54}78%{opacity:.14}100%{opacity:0;transform:translateY(96px) scaleX(1.2)}}'
-      // Aletta: più lenta (8 s), angoli realistici
       +'@keyframes '+rid+'flap{0%{transform:rotateX(4deg)}50%{transform:rotateX(40deg)}100%{transform:rotateX(4deg)}}'
       +'@keyframes '+rid+'led{0%,100%{opacity:1}46%{opacity:.72}}'
       +'@keyframes '+rid+'ind{0%,100%{box-shadow:0 0 5px '+mCol+'66}50%{box-shadow:0 0 14px '+mCol+',0 0 28px '+mCol+'66}}'
@@ -135,26 +171,23 @@
       +'</style>';
 
     /* ── Badge sensori ── */
-    const indRight = (sensorT || sensorH)
-      ? '<div style="display:flex;gap:4px;align-items:center">'
-          +(sensorT?'<div style="font-size:10px;font-weight:700;color:rgba(0,0,0,.44);background:rgba(0,0,0,.06);padding:2px 7px;border-radius:99px">🌡 '+sensorT+'°</div>':'')
-          +(sensorH?'<div style="font-size:10px;font-weight:700;color:rgba(0,0,0,.44);background:rgba(0,0,0,.06);padding:2px 7px;border-radius:99px">💧 '+sensorH+'%</div>':'')
-        +'</div>'
-      : '';
+    const indRight = '<div style="display:flex;gap:4px;align-items:center">'
+      +(syncColor ? '<div title="Sync aletta" style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:'+syncColor+';box-shadow:0 0 6px '+syncColor+'aa"></div>' : '')
+      +(sensorT?'<div style="font-size:10px;font-weight:700;color:rgba(0,0,0,.44);background:rgba(0,0,0,.06);padding:2px 7px;border-radius:99px">🌡 '+sensorT+'°</div>':'')
+      +(sensorH?'<div style="font-size:10px;font-weight:700;color:rgba(0,0,0,.44);background:rgba(0,0,0,.06);padding:2px 7px;border-radius:99px">💧 '+sensorH+'%</div>':'')
+      +'</div>';
 
     /* ── Corpo AC ── */
     const acBody = '<div style="position:relative">'
 
-      // Frame principale – bordo più visibile, ombra più profonda
       +'<div style="border-radius:15px;overflow:hidden;'
         +'background:linear-gradient(170deg,#f8fafd 0%,#edf2fa 55%,#e3eaf5 100%);'
-        +'border:1px solid rgba(100,125,162,.32);'
         +'box-shadow:0 8px 34px rgba(0,0,0,.52),0 2px 6px rgba(0,0,0,.2),'
           +'inset 0 1px 0 rgba(255,255,255,.95),inset 0 -2px 6px rgba(0,0,0,.1);">'
 
         // Barra indicatore
         +'<div style="display:flex;align-items:center;gap:8px;padding:5px 12px;'
-          +'background:rgba(0,0,0,.05);border-bottom:1px solid rgba(0,0,0,.09)">'
+          +'background:rgba(0,0,0,.05);border-bottom:1px solid rgba(0,0,0,.08)">'
           +'<div style="width:8px;height:8px;border-radius:50%;flex-shrink:0;'
             +'background:'+(isOn?mCol:'#9ca3af')+';'
             +(isOn?'animation:'+rid+'ind 2.2s ease-in-out infinite;box-shadow:0 0 8px '+mCol+';':'')+'"></div>'
@@ -167,26 +200,30 @@
         // Faccia
         +'<div style="display:flex;height:78px">'
 
-          // Pannello bianco sinistro con texture griglia orizzontale
+          // Pannello bianco sinistro
           +'<div style="flex:1;position:relative;overflow:hidden;'
             +'background:linear-gradient(90deg,rgba(255,255,255,.75),rgba(238,246,255,.45));">'
-            +'<div style="position:absolute;inset:0;pointer-events:none;'
-              +'background:repeating-linear-gradient(180deg,transparent,transparent 9px,rgba(0,0,0,.03) 9px,rgba(0,0,0,.03) 10px)"></div>'
             +'<div style="position:absolute;top:0;right:0;bottom:0;width:18px;'
-              +'background:linear-gradient(90deg,transparent,rgba(0,0,0,.07));pointer-events:none"></div>'
-            // Piccola spia status in basso a sinistra
-            +(isOn?'<div style="position:absolute;bottom:6px;left:10px;width:5px;height:5px;border-radius:50%;background:'+mCol+';opacity:.7;box-shadow:0 0 6px '+mCol+'"></div>':'')
+              +'background:linear-gradient(90deg,transparent,rgba(0,0,0,.06));pointer-events:none"></div>'
+            // Marca (centrata, testo sottile)
+            +(brand?'<div style="position:absolute;bottom:6px;left:0;right:0;text-align:center;'
+              +'font-size:8px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;'
+              +'color:rgba(0,0,0,.18);user-select:none;pointer-events:none">'+brand+'</div>':'')
+            // Spia colore modalità
+            +(isOn?'<div style="position:absolute;top:7px;left:10px;width:5px;height:5px;'
+              +'border-radius:50%;background:'+mCol+';opacity:.65;box-shadow:0 0 6px '+mCol+'"></div>':'')
           +'</div>'
 
-          // Separatore verticale
-          +'<div style="width:1px;background:rgba(0,0,0,.12);flex-shrink:0"></div>'
+          +'<div style="width:1px;background:rgba(0,0,0,.1);flex-shrink:0"></div>'
 
           // Display LED
-          +'<div style="width:108px;flex-shrink:0;background:rgba(0,0,0,.04);display:flex;align-items:center;justify-content:center;padding:0 8px">'
+          +'<div style="width:108px;flex-shrink:0;background:rgba(0,0,0,.04);'
+            +'display:flex;align-items:center;justify-content:center;padding:0 8px">'
             +'<div style="background:#050d0a;border-radius:8px;padding:5px 10px;width:100%;box-sizing:border-box;'
               +'border:1px solid rgba(0,0,0,.6);'
               +'box-shadow:inset 0 3px 10px rgba(0,0,0,.7),inset 0 0 20px rgba(0,0,0,.35)">'
-              +'<div data-clm-led style="font-family:\'Courier New\',Courier,monospace;font-size:25px;font-weight:700;letter-spacing:2px;line-height:1;text-align:center;'
+              +'<div data-clm-led style="font-family:\'Courier New\',Courier,monospace;font-size:25px;'
+                +'font-weight:700;letter-spacing:2px;line-height:1;text-align:center;'
                 +'color:'+(isOn?mCol:'#0d1a12')+';'
                 +'text-shadow:'+(isOn?'0 0 14px '+mCol+',0 0 30px '+mCol+'55':'none')+';'
                 +(isOn?'animation:'+rid+'led 3s ease-in-out infinite;':'')
@@ -198,42 +235,33 @@
 
         +'</div>'
 
-        // Fascia inferiore griglia aria
-        +'<div style="height:13px;background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.12));'
-          +'border-top:1px solid rgba(0,0,0,.08);position:relative;overflow:hidden">'
-          +'<div style="position:absolute;inset:0;background:repeating-linear-gradient(90deg,'
-            +'rgba(0,0,0,.07) 0px,rgba(0,0,0,.07) 1px,transparent 1px,transparent 13px)"></div>'
-        +'</div>'
+        // Fascia inferiore (griglia sottile)
+        +'<div style="height:12px;background:linear-gradient(180deg,rgba(0,0,0,.04),rgba(0,0,0,.09));'
+          +'border-top:1px solid rgba(0,0,0,.07)"></div>'
 
       +'</div>'
 
-      // Aletta: fuori dall'overflow, visibile contro il bianco
-      // border-top scuro per lo stacco netto dal corpo AC
+      // Aletta: fuori overflow, seamless (no border colorato)
       +'<div style="position:absolute;bottom:-7px;left:13px;right:13px;height:15px;'
         +'perspective:220px;perspective-origin:50% 0%;z-index:2">'
         +'<div style="width:100%;height:100%;'
-          +'background:linear-gradient(180deg,'
-            +'rgba(135,158,186,1.0) 0%,'
-            +'rgba(168,190,213,.97) 32%,'
-            +'rgba(182,204,224,.95) 100%);'
-          +'border-top:2px solid rgba(85,112,146,.68);'
-          +'border-radius:0 0 5px 5px;'
-          +'box-shadow:0 -1px 3px rgba(0,0,0,.1),0 5px 15px rgba(0,0,0,.38),'
-            +'inset 0 1px 0 rgba(255,255,255,.28);'
+          +'background:linear-gradient(180deg,#edf2f8 0%,#e5edf6 40%,#dce6f1 100%);'
+          +'border-radius:2px 2px 5px 5px;'
+          +'box-shadow:0 4px 12px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.55);'
           +'transform-origin:50% 0%;'
-          +(swingOn&&isOn?'animation:'+rid+'flap 8s ease-in-out infinite;':'')
+          +flapAnim
         +'"></div>'
       +'</div>'
 
     +'</div>';
 
-    /* ── Sezione aria nebulizzata ── */
+    /* ── Aria nebulizzata ── */
     const airSection = '<div style="position:relative;height:'+(isOn?'86px':'10px')+';overflow:hidden;'
       +'transition:height .7s ease;margin-top:6px;pointer-events:none">'
       +airStreams(rid, mCol, isOn)
     +'</div>';
 
-    /* ── Riga temperatura +/- ── */
+    /* ── Temperatura ── */
     const tempRow = '<div style="display:flex;align-items:center;justify-content:center;gap:8px;'
       +'background:rgba(255,255,255,.06);border-radius:13px;padding:7px 14px;border:1px solid rgba(255,255,255,.1)">'
       +'<button class="cb" data-cid="'+entityId+'" data-action="temp-down" '
@@ -248,7 +276,7 @@
         +'font-size:20px;font-weight:700;padding:0;display:flex;align-items:center;justify-content:center">+</button>'
     +'</div>';
 
-    /* ── 3 bottoni toggle ── */
+    /* ── Toggle row ── */
     const togRow = '<div style="display:flex;gap:7px">'
       +'<button class="tog" data-action="toggle" data-sec="mode">'
         +'<span style="font-size:17px">'+mIcon(mode)+'</span><span>Modalità</span>'
@@ -258,8 +286,7 @@
       +'</button>'
       +(swingModes.length>1
         ?'<button class="tog" data-action="toggle" data-sec="swing">'
-          +'<span style="font-size:17px">↕</span><span>Alette</span>'
-          +'</button>'
+          +'<span style="font-size:17px">↕</span><span>Alette</span></button>'
         :'')
     +'</div>';
 
@@ -323,22 +350,19 @@
 
       const action = btn.getAttribute('data-action');
 
+      // Toggle pannello: nessun service call, nessun re-render
       if (action === 'toggle') {
         const sec   = btn.getAttribute('data-sec');
         const secEl = el.querySelector('[data-secpanel="'+sec+'"]');
         if (!secEl) return;
         const wasOpen = secEl.style.display === 'flex';
-        el.querySelectorAll('[data-secpanel]').forEach(function(s){ s.style.display = 'none'; });
+        el.querySelectorAll('[data-secpanel]').forEach(function(s){ s.style.display='none'; });
         el.querySelectorAll('.tog').forEach(function(b){
-          b.style.background  = 'rgba(255,255,255,.07)';
-          b.style.color       = '#94a3b8';
-          b.style.borderColor = 'rgba(255,255,255,.1)';
+          b.style.background='rgba(255,255,255,.07)'; b.style.color='#94a3b8'; b.style.borderColor='rgba(255,255,255,.1)';
         });
         if (!wasOpen) {
           secEl.style.display = 'flex';
-          btn.style.background  = 'rgba(255,255,255,.16)';
-          btn.style.color       = '#e2e8f0';
-          btn.style.borderColor = 'rgba(255,255,255,.22)';
+          btn.style.background='rgba(255,255,255,.16)'; btn.style.color='#e2e8f0'; btn.style.borderColor='rgba(255,255,255,.22)';
           _openSecs[card.id] = sec;
         } else {
           _openSecs[card.id] = null;
@@ -346,6 +370,7 @@
         return;
       }
 
+      // Debounce 700 ms per service call
       const now = Date.now();
       if (now - (el._lastSvc||0) < 700) return;
       el._lastSvc = now;
@@ -355,29 +380,38 @@
       if (!entityId) return;
       const st  = clState(h, entityId);
       const val = btn.getAttribute('data-val');
+      const curOpt = _optimisticState[card.id] || {};
 
       if (action === 'mode') {
         if (val === 'off') callSvc('climate','turn_off',{entity_id:entityId});
         else callSvc('climate','set_hvac_mode',{entity_id:entityId,hvac_mode:val});
+        _optimisticState[card.id] = { mode:val, fan:curOpt.fan, swing:curOpt.swing, expires:Date.now()+8000 };
+        _rerenderCard(card, el);
+
       } else if (action === 'fan') {
         callSvc('climate','set_fan_mode',{entity_id:entityId,fan_mode:val});
+        _optimisticState[card.id] = { mode:curOpt.mode, fan:val, swing:curOpt.swing, expires:Date.now()+8000 };
+        _rerenderCard(card, el);
+
       } else if (action === 'swing') {
         callSvc('climate','set_swing_mode',{entity_id:entityId,swing_mode:val});
+        _optimisticState[card.id] = { mode:curOpt.mode, fan:curOpt.fan, swing:val, expires:Date.now()+8000 };
+        _rerenderCard(card, el);
+
       } else if (action==='temp-up'||action==='temp-down') {
         if (!st) return;
         const step    = parseFloat(st.step)||1;
-        const cur     = parseFloat(st.target)||22;
-        const nxt     = action==='temp-up' ? Math.min(st.max,cur+step) : Math.max(st.min,cur-step);
+        const curT    = parseFloat(st.target)||22;
+        const nxt     = action==='temp-up' ? Math.min(st.max,curT+step) : Math.max(st.min,curT-step);
         const rounded = Math.round(nxt/step)*step;
         callSvc('climate','set_temperature',{entity_id:entityId,temperature:rounded});
-
-        // Aggiornamento ottimistico immediato (nessun re-render, solo DOM diretto)
-        _optimisticTemps[card.id] = { temp: rounded, expires: Date.now() + 10000 };
+        // Aggiornamento diretto senza re-render (non interrompe animazioni)
+        _optimisticTemps[card.id] = { temp:rounded, expires:Date.now()+10000 };
         const disp   = rounded.toFixed(1);
         const ledEl  = el.querySelector('[data-clm-led]');
-        const tempEl = el.querySelector('[data-clm-temp]');
+        const tmpEl  = el.querySelector('[data-clm-temp]');
         if (ledEl) ledEl.textContent = disp;
-        if (tempEl && st.mode !== 'off') tempEl.textContent = disp + '°';
+        if (tmpEl && (st.mode||'off') !== 'off') tmpEl.textContent = disp+'°';
       }
     };
 
@@ -390,20 +424,14 @@
       const key = _stateKey(card, hass);
       if (_lastKeys[card.id] === key) return;
       _lastKeys[card.id] = key;
-
       const openSec = _openSecs[card.id];
       el.innerHTML = render(card);
       mount(card, hass, el);
-
       if (openSec) {
         const secEl  = el.querySelector('[data-secpanel="'+openSec+'"]');
         const togBtn = el.querySelector('[data-action="toggle"][data-sec="'+openSec+'"]');
         if (secEl)  secEl.style.display = 'flex';
-        if (togBtn) {
-          togBtn.style.background  = 'rgba(255,255,255,.16)';
-          togBtn.style.color       = '#e2e8f0';
-          togBtn.style.borderColor = 'rgba(255,255,255,.22)';
-        }
+        if (togBtn) { togBtn.style.background='rgba(255,255,255,.16)'; togBtn.style.color='#e2e8f0'; togBtn.style.borderColor='rgba(255,255,255,.22)'; }
       }
     } catch(e) {}
   }
@@ -415,29 +443,76 @@
     const allIds  = Object.keys(states).sort();
     const climIds = allIds.filter(function(id){ return id.startsWith('climate.'); });
     const sensIds = allIds.filter(function(id){ return id.startsWith('sensor.'); });
+    const binIds  = allIds.filter(function(id){ return id.startsWith('binary_sensor.'); });
 
     const stInp  = 'width:100%;padding:9px 11px;border-radius:10px;background:#0f1830;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none';
-    const stDrop = 'position:absolute;left:0;right:0;top:100%;z-index:20;max-height:160px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 10px 10px;display:none';
+    const stDrop = 'position:absolute;left:0;right:0;top:100%;z-index:20;max-height:150px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 10px 10px;display:none';
     const stLbl  = 'font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px;display:block';
     const stBase = 'width:100%;padding:11px;border-radius:11px;background:#0f1830;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:13px;box-sizing:border-box';
+    const stSel  = stBase+';cursor:pointer';
+
+    function mkTog(id, on) {
+      const bg  = on ? '#22c55e' : 'rgba(255,255,255,.15)';
+      const lft = on ? '17px'   : '2px';
+      return '<div id="'+id+'" data-on="'+(on?'1':'0')+'" style="width:34px;height:18px;border-radius:9px;cursor:pointer;flex-shrink:0;position:relative;background:'+bg+';transition:background .2s">'
+        +'<div style="position:absolute;top:1px;left:'+lft+';width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div></div>';
+    }
 
     const ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(2,6,16,.78);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
 
-    ov.innerHTML = '<div style="width:min(460px,94vw);max-height:90vh;overflow-y:auto;background:#0b1220;border:1px solid rgba(255,255,255,.14);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.6);padding:20px;color:#f1f5f9">'
+    ov.innerHTML = '<div style="width:min(480px,94vw);max-height:90vh;overflow-y:auto;background:#0b1220;border:1px solid rgba(255,255,255,.14);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.6);padding:20px;color:#f1f5f9">'
+
       +'<div style="font-size:16px;font-weight:800;margin-bottom:14px">❄️ Configura Climatizzatore</div>'
+
+      // Nome
       +'<div style="margin-bottom:10px"><label style="'+stLbl+'">Nome</label>'
         +'<input id="cl-name" type="text" value="'+(c.name||'').replace(/"/g,'&quot;')+'" placeholder="CLIMA SALOTTO" style="'+stBase+'"></div>'
+
+      // Entità clima
       +'<div style="margin-bottom:10px;position:relative"><label style="'+stLbl+'">Entità Clima</label>'
-        +'<input id="cl-ent"  type="text" value="'+(c.entity||'').replace(/"/g,'&quot;')+'" autocomplete="off" placeholder="climate.xxx" style="'+stInp+'">'
-        +'<div id="cl-ent-d"  style="'+stDrop+'"></div></div>'
+        +'<input id="cl-ent" type="text" value="'+(c.entity||'').replace(/"/g,'&quot;')+'" autocomplete="off" placeholder="climate.xxx" style="'+stInp+'">'
+        +'<div id="cl-ent-d" style="'+stDrop+'"></div></div>'
+
+      // Sensore temperatura
       +'<div style="margin-bottom:10px;position:relative"><label style="'+stLbl+'">Sensore Temperatura <span style="font-weight:400;color:#475569;font-size:10px;text-transform:none;letter-spacing:0">sul corpo del clima</span></label>'
         +'<input id="cl-temp" type="text" value="'+(c.tempEntity||'').replace(/"/g,'&quot;')+'" autocomplete="off" placeholder="sensor.temperatura_salotto" style="'+stInp+'">'
         +'<div id="cl-temp-d" style="'+stDrop+'"></div></div>'
+
+      // Sensore umidità
       +'<div style="margin-bottom:10px;position:relative"><label style="'+stLbl+'">Sensore Umidità <span style="font-weight:400;color:#475569;font-size:10px;text-transform:none;letter-spacing:0">sul corpo del clima</span></label>'
-        +'<input id="cl-hum"  type="text" value="'+(c.humEntity||'').replace(/"/g,'&quot;')+'" autocomplete="off" placeholder="sensor.umidita_salotto" style="'+stInp+'">'
-        +'<div id="cl-hum-d"  style="'+stDrop+'"></div></div>'
-      +'<div style="display:flex;gap:10px;margin-top:16px">'
+        +'<input id="cl-hum" type="text" value="'+(c.humEntity||'').replace(/"/g,'&quot;')+'" autocomplete="off" placeholder="sensor.umidita_salotto" style="'+stInp+'">'
+        +'<div id="cl-hum-d" style="'+stDrop+'"></div></div>'
+
+      // ── Sezione Marca ──
+      +'<div style="margin-bottom:14px;padding:12px;background:rgba(255,255,255,.04);border-radius:12px;border:1px solid rgba(255,255,255,.08)">'
+        +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:0" id="cl-brand-hdr">'
+          +mkTog('cl-showbrand-tog', !!c.showBrand)
+          +'<span style="font-size:12px;font-weight:700;color:#e2e8f0">Mostra marca</span>'
+        +'</div>'
+        +'<div id="cl-brand-row" style="margin-top:10px;display:'+(c.showBrand?'block':'none')+'">'
+          +'<select id="cl-brand" style="'+stSel+'">'
+          +BRANDS.map(function(b){ return '<option value="'+b+'"'+(c.brand===b?' selected':'')+'>'+b+'</option>'; }).join('')
+          +'</select>'
+        +'</div>'
+      +'</div>'
+
+      // ── Sezione Sensore Aletta ──
+      +'<div style="margin-bottom:14px;padding:12px;background:rgba(255,255,255,.04);border-radius:12px;border:1px solid rgba(255,255,255,.08)">'
+        +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:0">'
+          +mkTog('cl-swsensor-tog', !!c.useSwingSensor)
+          +'<div>'
+            +'<div style="font-size:12px;font-weight:700;color:#e2e8f0">Sensore aletta fisica</div>'
+            +'<div style="font-size:10px;color:#475569;margin-top:1px">Pallino verde/rosso: sync clima ↔ aletta</div>'
+          +'</div>'
+        +'</div>'
+        +'<div id="cl-swsensor-row" style="margin-top:10px;position:relative;display:'+(c.useSwingSensor?'block':'none')+'">'
+          +'<input id="cl-swsensor" type="text" value="'+(c.swingSensor||'').replace(/"/g,'&quot;')+'" autocomplete="off" placeholder="binary_sensor.aletta_clima" style="'+stInp+'">'
+          +'<div id="cl-swsensor-d" style="'+stDrop+'"></div>'
+        +'</div>'
+      +'</div>'
+
+      +'<div style="display:flex;gap:10px;margin-top:4px">'
         +'<button id="cl-cancel" style="flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#e2e8f0">Annulla</button>'
         +'<button id="cl-save"   style="flex:2;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;background:#22c55e;color:#04210f">Salva</button>'
       +'</div></div>';
@@ -447,6 +522,33 @@
     ov.addEventListener('click', function(e){ if(e.target===ov) close(); });
     ov.querySelector('#cl-cancel').addEventListener('click', close);
 
+    // Toggle marca
+    (function(){
+      const tog = ov.querySelector('#cl-showbrand-tog');
+      const row = ov.querySelector('#cl-brand-row');
+      tog.addEventListener('click', function(){
+        const on = this.getAttribute('data-on') !== '1';
+        this.setAttribute('data-on', on?'1':'0');
+        this.style.background = on ? '#22c55e' : 'rgba(255,255,255,.15)';
+        this.querySelector('div').style.left = on ? '17px' : '2px';
+        row.style.display = on ? 'block' : 'none';
+      });
+    })();
+
+    // Toggle sensore aletta
+    (function(){
+      const tog = ov.querySelector('#cl-swsensor-tog');
+      const row = ov.querySelector('#cl-swsensor-row');
+      tog.addEventListener('click', function(){
+        const on = this.getAttribute('data-on') !== '1';
+        this.setAttribute('data-on', on?'1':'0');
+        this.style.background = on ? '#22c55e' : 'rgba(255,255,255,.15)';
+        this.querySelector('div').style.left = on ? '17px' : '2px';
+        row.style.display = on ? 'block' : 'none';
+      });
+    })();
+
+    // Combobox generica
     function makeCombo(inpId, dropId, defaults) {
       var inp = ov.querySelector('#'+inpId), drop = ov.querySelector('#'+dropId);
       function show() {
@@ -472,19 +574,24 @@
       }
       inp.addEventListener('focus', show);
       inp.addEventListener('input', show);
-      inp.addEventListener('blur',  function(){ setTimeout(function(){ drop.style.display='none'; }, 200); });
+      inp.addEventListener('blur',  function(){ setTimeout(function(){ drop.style.display='none'; },200); });
     }
 
-    makeCombo('cl-ent',  'cl-ent-d',  climIds);
-    makeCombo('cl-temp', 'cl-temp-d', sensIds);
-    makeCombo('cl-hum',  'cl-hum-d',  sensIds);
+    makeCombo('cl-ent',      'cl-ent-d',      climIds);
+    makeCombo('cl-temp',     'cl-temp-d',     sensIds);
+    makeCombo('cl-hum',      'cl-hum-d',      sensIds);
+    makeCombo('cl-swsensor', 'cl-swsensor-d', binIds);
 
     ov.querySelector('#cl-save').addEventListener('click', function(){
       save(card,{
-        name:       ov.querySelector('#cl-name').value.trim(),
-        entity:     ov.querySelector('#cl-ent').value.trim(),
-        tempEntity: ov.querySelector('#cl-temp').value.trim(),
-        humEntity:  ov.querySelector('#cl-hum').value.trim(),
+        name:           ov.querySelector('#cl-name').value.trim(),
+        entity:         ov.querySelector('#cl-ent').value.trim(),
+        tempEntity:     ov.querySelector('#cl-temp').value.trim(),
+        humEntity:      ov.querySelector('#cl-hum').value.trim(),
+        showBrand:      ov.querySelector('#cl-showbrand-tog').getAttribute('data-on') === '1',
+        brand:          ov.querySelector('#cl-brand').value,
+        useSwingSensor: ov.querySelector('#cl-swsensor-tog').getAttribute('data-on') === '1',
+        swingSensor:    ov.querySelector('#cl-swsensor').value.trim(),
       });
       close();
       _lastKeys[card.id] = null;
@@ -493,8 +600,8 @@
   }
 
   var CARD = {
-    id:'clima-card', name:'Climatizzatore', icon:'❄️', version:'2.4',
-    desc:'Split murale — mist nebulizzato, aletta 8s, temperatura ottimistica immediata, griglia e stacco aletta raffinati.',
+    id:'clima-card', name:'Climatizzatore', icon:'❄️', version:'2.5',
+    desc:'Split murale — mist, aletta 3 stati, feedback immediato su ogni controllo, marca, sensore aletta fisica.',
     colSpan:2, rowSpan:4,
     render:render, mount:mount, update:update, configure:openCfg,
   };
@@ -502,5 +609,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try{ console.log('[FratechStore] Card registrata: clima-card v2.4'); }catch(e){}
+  try{ console.log('[FratechStore] Card registrata: clima-card v2.5'); }catch(e){}
 })();
