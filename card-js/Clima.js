@@ -155,6 +155,7 @@
     var period = 12000, maxAngle = 52;
     var state = { id: null, t0: Date.now() };
     _flapRafs[rid] = state;
+    console.log('[Clima] _flapStart rid='+rid);
     function loop() {
       if (!flapEl.isConnected) { _flapStop(rid); return; }
       var phase = ((Date.now() - state.t0) % period) / period;
@@ -167,6 +168,7 @@
 
   function _flapStop(rid) {
     var s = _flapRafs[rid];
+    console.log('[Clima] _flapStop rid='+rid+' rafId='+(s?s.id:'NOT_FOUND'));
     if (s && s.id != null) cancelAnimationFrame(s.id);
     delete _flapRafs[rid];
   }
@@ -493,14 +495,14 @@
         callSvc('climate','set_swing_mode',{entity_id:entityId,swing_mode:val});
         _optimisticState[card.id] = { mode:curOpt.mode, fan:curOpt.fan, swing:val, expires:Date.now()+8000 };
 
-        // Usa st.mode direttamente: il mode non cambia con lo swing
         const isOnNow  = !!(st && st.mode && st.mode !== 'off');
         const swingNow = _swingIsActive(val);
+        console.log('[Clima] swing click val='+val+' isOnNow='+isOnNow+' swingNow='+swingNow);
 
         const flapEl = el.querySelector('[data-clm-flap]');
+        console.log('[Clima] flapEl='+(flapEl?'FOUND data-rid='+flapEl.getAttribute('data-rid'):'NULL'));
         if (flapEl) {
           const r = flapEl.getAttribute('data-rid');
-          // RAF: stop istantaneo garantito (nessuna CSS da combattere)
           _flapSet(flapEl, r, isOnNow, swingNow);
         }
 
@@ -537,12 +539,10 @@
       var c0    = load(card), h0 = H(), st0 = clState(h0, c0.entity||'');
       var opt0  = _optimisticState[card.id];
       var useOpt0 = opt0 && Date.now() < opt0.expires;
-      var mode0   = (useOpt0 && opt0.mode  !== undefined) ? opt0.mode  : (st0 ? st0.mode  : 'off');
-      var swing0  = (useOpt0 && opt0.swing !== undefined) ? opt0.swing : (st0 ? st0.swing : 'off');
-      // Se il sensore fisico è configurato, è lui l'autorità sull'oscillazione reale
-      var swSEnt0 = c0.useSwingSensor && c0.swingSensor && h0 && h0.states && h0.states[c0.swingSensor];
-      var swingIsOn0 = swSEnt0 ? swSEnt0.state === 'on' : _swingIsActive(swing0);
-      _flapSet(flapEl0, r0, mode0 !== 'off', swingIsOn0);
+      var mode0  = (useOpt0 && opt0.mode  !== undefined) ? opt0.mode  : (st0 ? st0.mode  : 'off');
+      var swing0 = (useOpt0 && opt0.swing !== undefined) ? opt0.swing : (st0 ? st0.swing : 'off');
+      console.log('[Clima] mount flapSet rid='+r0+' mode0='+mode0+' swing0='+swing0+' swingActive='+_swingIsActive(swing0));
+      _flapSet(flapEl0, r0, mode0 !== 'off', _swingIsActive(swing0));
     }
   }
 
