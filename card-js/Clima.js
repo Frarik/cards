@@ -171,6 +171,13 @@
     delete _flapRafs[rid];
   }
 
+  // "stopped", "off", "none", "fixed" → swing fermo; tutto il resto → oscillazione attiva
+  function _swingIsActive(swingMode) {
+    if (!swingMode) return false;
+    var s = String(swingMode).toLowerCase();
+    return s !== 'off' && s !== 'stopped' && s !== 'none' && s !== 'fixed';
+  }
+
   function _flapSet(flapEl, rid, isOn, swingOn) {
     _flapStop(rid);
     if (isOn && swingOn) {
@@ -253,7 +260,7 @@
     const fanMode  = useOpt && optS.fan   !== undefined ? optS.fan   : (st ? st.fan   : 'auto');
     const swingMode= useOpt && optS.swing !== undefined ? optS.swing : (st ? st.swing : 'off');
     const isOn     = mode !== 'off';
-    const swingOn  = swingMode !== 'off';
+    const swingOn  = _swingIsActive(swingMode);
     const mCol     = mColor(mode);
 
     const optT = _optimisticTemps[card.id];
@@ -488,7 +495,7 @@
 
         // Usa st.mode direttamente: il mode non cambia con lo swing
         const isOnNow  = !!(st && st.mode && st.mode !== 'off');
-        const swingNow = val !== 'off';
+        const swingNow = _swingIsActive(val);
 
         const flapEl = el.querySelector('[data-clm-flap]');
         if (flapEl) {
@@ -532,7 +539,7 @@
       var useOpt0 = opt0 && Date.now() < opt0.expires;
       var mode0  = (useOpt0 && opt0.mode  !== undefined) ? opt0.mode  : (st0 ? st0.mode  : 'off');
       var swing0 = (useOpt0 && opt0.swing !== undefined) ? opt0.swing : (st0 ? st0.swing : 'off');
-      _flapSet(flapEl0, r0, mode0 !== 'off', swing0 !== 'off');
+      _flapSet(flapEl0, r0, mode0 !== 'off', _swingIsActive(swing0));
     }
   }
 
