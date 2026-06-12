@@ -19,6 +19,13 @@ Guida di riferimento. Quando si chiede all'assistente «creami una card», deve
 
 ## 0. Regole fondamentali
 
+> ⛔ **REGOLA DI CONSEGNA (sempre):** quando viene chiesto di **creare una card**, l'assistente
+> **NON deve caricarla/pubblicarla** (niente `git add/commit/push`, niente copia in `card-js/`
+> o nelle cartelle store, niente "load" nella dashboard). Deve **solo creare il file `.js` sul
+> Desktop dell'utente** (`C:\Users\play4\Desktop\`). Sarà l'utente a caricarla a mano quando vuole.
+> Vale **sempre**, sia che la card sia per Francesco sia che sia per l'amico (Riccardo).
+> Eccezione: solo se l'utente chiede **esplicitamente** di pubblicarla/caricarla.
+
 1. Produci **un singolo file `.js`** — niente build, niente npm, niente React.
 2. Solo **vanilla JS + HTML inline + CSS inline**.
 3. Wrappa sempre in IIFE: `(function(){ 'use strict'; … })();`
@@ -436,8 +443,9 @@ i singoli nodi con `el.querySelector('[data-field="x"]').textContent = …`. Usa
 
 > I file che iniziano con `frarik` sono esclusi (sono file dell'app, non card).
 
-**Flusso:** crea il `.js` → caricalo (Store → Card locali) per provarlo → **Pubblica**
-nella cartella giusta (o `git push`). Le altre dashboard ricevono la notifica.
+**Flusso:** l'assistente **crea solo il `.js` sul Desktop** (vedi REGOLA DI CONSEGNA in §0).
+Poi è l'**utente** a caricarlo (Store → Card locali) per provarlo e, se vuole, a **Pubblicarlo**
+nella cartella giusta (o `git push`). L'assistente NON pubblica e NON carica di sua iniziativa.
 
 ---
 

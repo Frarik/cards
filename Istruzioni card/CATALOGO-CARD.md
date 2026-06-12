@@ -2,7 +2,7 @@
 
 > ⚠️ **File generato automaticamente** da `scripts/build-card-catalog.mjs` — non modificarlo a mano.
 > Rigenera con: `node scripts/build-card-catalog.mjs`
-> Ultima generazione: 2026-06-12 · Card trovate: 11
+> Ultima generazione: 2026-06-12 · Card trovate: 10
 
 Questo catalogo elenca le card realmente presenti nel repo e i pattern/API che usano.
 Serve come **riferimento vivo**: quando si crea una nuova card si possono leggere quelle
@@ -17,7 +17,6 @@ esistenti (in `card-js/`, `card-chips/`, `card-distintivi/`) per riusarne stile 
 | card-js | `Clima.js` | `clima-card` | ❄️ Climatizzatore | 2.14 | FratechStore |
 | card-js | `Differenziata.js` | `differenziata-card` | Raccolta Differenziata | 1.0 | Lovelace |
 | card-js | `DoorsWindows.js` | `doors-windows` | 🚪 Porte e Finestre | 1.1 | FratechStore |
-| card-js | `flusso-energia.js` | `flusso-energia` | sun SOLARE | 1.0 | FratechStore |
 | card-js | `Irrigazione.js` | `irrigazione-card` | Irrigazione Smart | 1.0 | Lovelace |
 | card-js | `Meteo.js` | `meteo-card` | Meteo + Previsioni | — | Lovelace |
 | card-js | `person-card.js` | `person-card` | 👤 Persona | 1.19 | FratechStore |
@@ -55,12 +54,6 @@ esistenti (in `card-js/`, `card-chips/`, `card-distintivi/`) per riusarne stile 
 - **Descrizione:** Sensori apertura (porte/finestre/garage) auto-rilevati: quanti aperti, da quanto,
 - **Hooks:** mount, update · **righe:** 180
 - **Pattern/API usati:** timer · interazione (listener) · auto-scoperta device_class · popup/overlay
-
-### sun SOLARE  ·  `flusso-energia.js`
-- **ID:** `flusso-energia` · **versione:** 1.0 · **formato:** FratechStore
-- **Descrizione:** Flusso energetico fluido (solare/batteria/rete/casa) con sparkline e selettori sensore.
-- **Hooks:** mount, update · **righe:** 455
-- **Pattern/API usati:** fetchHistory (storia entità) · window.hs (stati) · window.ha (attributi) · grafica SVG inline · timer · interazione (listener) · popup/overlay
 
 ### Irrigazione Smart  ·  `Irrigazione.js`
 - **ID:** `irrigazione-card` · **versione:** 1.0 · **formato:** Lovelace
