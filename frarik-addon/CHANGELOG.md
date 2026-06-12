@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.3 — 2026-06-12
+
+### style: Clima v2.12 — effetto scavato (neumorphic) su tog e pulsanti ±
+
+- Bottoni Modalità / Ventola / Alette: rimosso il bordo, aggiunto `box-shadow: inset` per effetto scavato. Attivo = stesso scavato + outline bianca sottile.
+- Pulsanti +/− temperatura: stesso trattamento. Sfondo `#060c18`, shadow inset, nessun bordo.
+
 ## 1.4.2 — 2026-06-12
 
 ### fix: Clima v2.11 — pallino sync aletta corretto + supporto cover
