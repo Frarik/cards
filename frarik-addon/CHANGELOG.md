@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.6 — 2026-06-12
+
+### fix: viste indipendenti per dispositivo + menu mobile viste
+
+- **activePage isolato per dispositivo**: la vista attiva non viene più sincronizzata tra PC, tablet e cellulare. Ogni dispositivo mantiene la propria vista corrente indipendentemente.
+  - `_applyRemoteCfg`: preserva l'`activePage` locale prima di applicare la config remota.
+  - `_haSaveCfg`: non include `activePage` nel payload inviato al backend.
+- **Fix menu viste da mobile**: il `<div class="vm-go">` nel menu viste aveva il `>` di chiusura mancante → cliccando sulle viste non succedeva niente. Corretto.
+- **Fix chiusura menu viste su mobile**: `_viewsOutside` controllava `views-btn` (assente su mobile) con `&&b&&` → il menu non si chiudeva mai cliccando fuori. Corretto con `(!b||!b.contains(...))`.
+
 ## 1.4.5 — 2026-06-12
 
 ### style: Clima v2.14 — rimozione sfondo tempRow + fix centramento +/−

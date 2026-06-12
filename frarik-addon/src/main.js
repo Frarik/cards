@@ -935,7 +935,8 @@ function _cfgTouchAndPush(){ if(_cfgSyncing) return; cfg._ts=Date.now(); _saveCf
    istanza, gestita dall'add-on, indipendente da quale utente HA la apre. */
 function _haSaveCfg(manual){
   try{
-    const payload={_ts:cfg._ts||Date.now(), cfg:cfg, js:(typeof _jsStoreList==='function'?_jsStoreList():[])};
+    const _cfgNoPage=Object.assign({},cfg); delete _cfgNoPage.activePage; // activePage è locale per dispositivo
+    const payload={_ts:cfg._ts||Date.now(), cfg:_cfgNoPage, js:(typeof _jsStoreList==='function'?_jsStoreList():[])};
     fetch(ADDON_BASE+'/api/frarik/config', {
       method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
     }).then(r=>{
@@ -978,9 +979,10 @@ function _applyRemoteCfg(v){
       const remoteIds=new Set(remoteJs.map(it=>it&&it.meta&&it.meta.id).filter(Boolean));
       try{ _jsStoreList().forEach(it=>{ const id=it&&it.meta&&it.meta.id; if(id && !remoteIds.has(id)){ _jsStoreDelete(id); try{ delete window.FratechCardRegistry[id]; }catch(e){} } }); }catch(e){}
     }
+    const _localActivePage=cfg.activePage||0; // ogni dispositivo mantiene la propria vista
     cfg=remoteCfg; cfg._ts=remoteTs;
     if(!cfg.savedCards) cfg.savedCards=[];
-    cfg.activePage=Math.min(cfg.activePage||0,(cfg.pages.length||1)-1);
+    cfg.activePage=Math.min(_localActivePage,(cfg.pages.length||1)-1);
     _saveCfgLocalOnly();
     try{ applyTheme(cfg.theme); }catch(e){}
     renderDash(); renderPageTabs();
@@ -9083,7 +9085,7 @@ function toggleViewsMenu(ev){
   const menu=document.createElement('div');
   menu.id='views-menu'; menu.className='views-menu';
   const items=(cfg.pages||[]).map((p,i)=>`<div class="vm-item${i===cfg.activePage?' on':''}">
-      <div class="vm-go" data-action="_closeViewsAndSetPage" data-action-args='[${i}]'
+      <div class="vm-go" data-action="_closeViewsAndSetPage" data-action-args='[${i}]'>
         <span class="vm-ico">${_renderIcon(p.icon||'📄',16)}</span>
         <span class="vm-name">${eh(p.name||('Vista '+(i+1)))}</span>
         ${i===cfg.activePage?'<span class="vm-chk">✓</span>':''}
@@ -9104,7 +9106,7 @@ function toggleViewsMenu(ev){
   setTimeout(()=>document.addEventListener('click',_viewsOutside),0);
 }
 function closeViewsMenu(){ const m=document.getElementById('views-menu'); if(m) m.remove(); document.removeEventListener('click',_viewsOutside); }
-function _viewsOutside(e){ const m=document.getElementById('views-menu'),b=document.getElementById('views-btn'); if(m&&!m.contains(e.target)&&b&&!b.contains(e.target)) closeViewsMenu(); }
+function _viewsOutside(e){ const m=document.getElementById('views-menu'),b=document.getElementById('views-btn'); if(m&&!m.contains(e.target)&&(!b||!b.contains(e.target))) closeViewsMenu(); }
 /* ═══ FAB MOBILE: un'unica icona a destra con dentro tutte le azioni dell'header ═══ */
 function toggleMobileMenu(ev){
   if(ev) ev.stopPropagation();
