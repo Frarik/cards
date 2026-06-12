@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.2.43 — 2026-06-12
+
+### fix: Clima — animazione aletta sempre in esecuzione (swing)
+- Sostituita l'animazione CSS (`@keyframes`) con un loop `requestAnimationFrame`: `cancelAnimationFrame()` ferma l'oscillazione istantaneamente, senza problemi di cascade CSS.
+- Aggiunto `_swingIsActive()`: tratta `"stopped"`, `"off"`, `"none"`, `"fixed"` come swing fermo — supporto ai dispositivi che usano valori diversi da `"off"` (es. Daikin con `"stopped"/"rangefull"`).
+- Clima.js aggiornata a **v2.9**.
+
+### feat: duplica/copia card JS — copia anche la configurazione
+- `dupCard` e `_copyCardToPageDo` chiamano ora `_cardDuplicateHook(src, copy)`, che invoca `card.duplicate(src, copy)` se definita nel registry.
+- Clima.js implementa `duplicate()`: copia l'entry localStorage della card sorgente nella nuova card, così la card duplicata parte già configurata (entity, brand, sensori, ecc.).
+
 ## 1.2.42 — 2026-06-10
 
 ### fix: Tapparella — configurazione spostata nel popup ✏️

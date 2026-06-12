@@ -1,4 +1,4 @@
-/* frarik-version: 2.8 */
+/* frarik-version: 2.9 */
 (function () {
   'use strict';
 
@@ -684,7 +684,7 @@
   }
 
   var CARD={
-    id:'clima-card',name:'Climatizzatore',icon:'❄️',version:'2.8',
+    id:'clima-card',name:'Climatizzatore',icon:'❄️',version:'2.9',
     desc:'Split — look scuro, SVG loghi reali, aletta RAF, glow modalità.',
     colSpan:2,rowSpan:4,render:render,mount:mount,update:update,configure:openCfg,duplicate:duplicateCard,
   };
