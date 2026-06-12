@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.9 — 2026-06-12
+
+### fix: flickering menu mobile (backdrop) + auto-sync config card al salvataggio
+
+- **Flickering definitivamente risolto — approccio backdrop**: invece di `document addEventListener click` con delay/debounce (soggetto a ghost tap), ora viene creato un `<div id="mfab-backdrop">` trasparente `position:fixed; z-index:12000` SOTTO il menu (z-index 12001). Qualsiasi click fuori dal menu colpisce il backdrop → `closeMobileMenu()`. Il backdrop blocca i ghost tap in modo nativo: il secondo tap non può raggiungere il menu né riaprire tramite `toggleMobileMenu` perché `closeMobileMenu` setta `_mfabOpenTime=Date.now()` e il debounce da 300ms blocca la riapertura immediata.
+- **Card configs sincronizzate automaticamente**: patch di `Storage.prototype.setItem` dentro la IIFE principale. Ogni volta che una card JS (Camera, Clima, ecc.) salva in `localStorage` con chiave `frarik_*`, la modifica trigghera `_haSaveCfgDebounced()` automaticamente. Questo risolve il caso in cui le card erano configurate su PC ma non comparivano su mobile perché il payload backend non veniva mai aggiornato (le card non chiamano `saveCfg()`). Il guard `!_cfgSyncing` evita il loop durante `_applyRemoteCfg`.
+
 ## 1.4.8 — 2026-06-12
 
 ### fix: flickering menu mobile + card configs sync + niente toast al cambio vista

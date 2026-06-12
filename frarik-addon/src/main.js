@@ -930,6 +930,17 @@ function _saveCfgLocalOnly(){ localStorage.setItem('hadb_cfg',JSON.stringify(cfg
 function _haSaveCfgDebounced(){ clearTimeout(_haSaveTimer); _haSaveTimer=setTimeout(_haSaveCfg,400); }
 /* da chiamare quando si aggiunge/aggiorna/elimina una card JS → propaga su HA */
 function _cfgTouchAndPush(){ if(_cfgSyncing) return; cfg._ts=Date.now(); _saveCfgLocalOnly(); if(_cfgSynced) _haSaveCfgDebounced(); }
+/* Intercetta setItem per chiavi frarik_* (config card JS: frarik_cam_*, frarik_clima_* ecc.)
+   → triggera sync backend automatico senza dover modificare ogni singola card */
+(function(){
+  const _origSet=Storage.prototype.setItem;
+  Storage.prototype.setItem=function(k,v){
+    _origSet.call(this,k,v);
+    if(this===localStorage&&k&&k.startsWith('frarik_')&&!_cfgSyncing&&_cfgSynced){
+      cfg._ts=Date.now(); _saveCfgLocalOnly(); _haSaveCfgDebounced();
+    }
+  };
+})();
 /* La plancia è salvata in un FILE dell'add-on (/config/frarik/cfg.json) tramite gli
    endpoint /api/frarik/config — non più negli user-data di HA. Così è una plancia per
    istanza, gestita dall'add-on, indipendente da quale utente HA la apre. */
@@ -9143,11 +9154,14 @@ function toggleMobileMenu(ev){
   const b=document.getElementById('mfab');
   if(b){ const r=b.getBoundingClientRect(); menu.style.top=(r.bottom+6)+'px'; menu.style.right=Math.max(8,(window.innerWidth-r.right))+'px'; }
   else { menu.style.top='56px'; menu.style.right='10px'; }
-  // delay 300ms: i ghost tap iOS/Android arrivano entro ~200ms, aggiungiamo il listener solo dopo
-  setTimeout(()=>document.addEventListener('click',_mfabOutside),300);
+  // backdrop trasparente (z-index 12000) sotto il menu (12001): cattura click-fuori senza ghost tap
+  const bk=document.createElement('div');
+  bk.id='mfab-backdrop'; bk.style.cssText='position:fixed;inset:0;z-index:12000;';
+  bk.addEventListener('click',function(e){ e.stopPropagation(); closeMobileMenu(); });
+  document.body.insertBefore(bk,menu);
 }
-function closeMobileMenu(){ const m=document.getElementById('mfab-menu'); if(m) m.remove(); document.removeEventListener('click',_mfabOutside); }
-function _mfabOutside(e){ if(Date.now()-_mfabOpenTime<300) return; const m=document.getElementById('mfab-menu'),b=document.getElementById('mfab'); if(m&&!m.contains(e.target)&&b&&!b.contains(e.target)) closeMobileMenu(); }
+function closeMobileMenu(){ _mfabOpenTime=Date.now(); const m=document.getElementById('mfab-menu'); if(m) m.remove(); const bk=document.getElementById('mfab-backdrop'); if(bk) bk.remove(); document.removeEventListener('click',_mfabOutside); }
+function _mfabOutside(e){ /* non più il meccanismo primario — rimosso su close per cleanup */ }
 function _mfabViews(){ setTimeout(()=>toggleViewsMenu(),10); }
 /* Editor di una vista: nome, icona, elimina */
 let _vmodIdx=null;
