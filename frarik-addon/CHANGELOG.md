@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.2.45 — 2026-06-12
+
+### feat: nuova card Telecamere (Camera.js v1.0)
+- Vista principale grande con snapshot aggiornato ogni 8 secondi.
+- Miniature cliccabili per tutte le altre telecamere configurate (con scorrimento orizzontale se >4).
+- Indicatore batteria colorato (verde/giallo/arancio/rosso) + percentuale su ogni telecamera a batteria; icona 🔌 per quelle a corrente.
+- Configurazione: aggiunta/rimozione telecamere con nome, entità e sensore batteria opzionale (autocomplete da stati HA).
+- Gestione telecamera non disponibile, placeholder se snapshot mancante.
+- Supporto `duplicate` per copiare la configurazione quando si duplica la card.
+
 ## 1.2.44 — 2026-06-12
 
 ### fix: Clima — aletta quasi invisibile quando AC spento
