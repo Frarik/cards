@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.4 — 2026-06-12
+
+### style: Clima v2.13 — rimozione bordo tempRow + centramento contenuto tog
+
+- Rimosso `border:1px solid` dal contenitore +/− temperatura.
+- Aggiunto `justify-content:center` ai bottoni tog → icone e testo centrati verticalmente nel riquadro scavato.
+
 ## 1.4.3 — 2026-06-12
 
 ### style: Clima v2.12 — effetto scavato (neumorphic) su tog e pulsanti ±

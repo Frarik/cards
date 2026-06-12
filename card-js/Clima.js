@@ -1,4 +1,4 @@
-/* frarik-version: 2.12 */
+/* frarik-version: 2.13 */
 (function () {
   'use strict';
 
@@ -301,7 +301,7 @@
       +'#'+rid+' .cb{padding:5px 10px;border-radius:8px;border:none;cursor:pointer;font-size:11px;font-weight:700;transition:all .18s;}'
       +'#'+rid+' .cb:hover{filter:brightness(1.3);}'
       +'#'+rid+' .tog{flex:1;padding:8px 4px;border-radius:14px;border:none;cursor:pointer;font-size:10px;'
-        +'font-weight:700;display:flex;flex-direction:column;align-items:center;gap:3px;'
+        +'font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;'
         +'background:#060c18;color:#94a3b8;transition:color .2s,box-shadow .2s;'
         +'box-shadow:inset 2px 3px 8px rgba(0,0,0,.65),inset -1px -2px 5px rgba(255,255,255,.04);}'
       +'#'+rid+' .tog:hover{color:#e2e8f0;}'
@@ -394,7 +394,7 @@
     +'</div>';
 
     const tempRow = '<div style="display:flex;align-items:center;justify-content:center;gap:8px;'
-      +'background:rgba(255,255,255,.06);border-radius:13px;padding:7px 14px;border:1px solid rgba(255,255,255,.1)">'
+      +'background:rgba(255,255,255,.06);border-radius:13px;padding:7px 14px">'
       +'<button class="cb" data-cid="'+entityId+'" data-action="temp-down" '
         +'style="width:34px;height:34px;border-radius:11px;border:none;background:#060c18;color:#e2e8f0;'
         +'box-shadow:inset 2px 3px 8px rgba(0,0,0,.65),inset -1px -2px 5px rgba(255,255,255,.04);'
@@ -704,7 +704,7 @@
   }
 
   var CARD={
-    id:'clima-card',name:'Climatizzatore',icon:'❄️',version:'2.12',
+    id:'clima-card',name:'Climatizzatore',icon:'❄️',version:'2.13',
     desc:'Split — look scuro, SVG loghi reali, aletta RAF, glow modalità.',
     colSpan:2,rowSpan:4,render:render,mount:mount,update:update,configure:openCfg,duplicate:duplicateCard,
   };
