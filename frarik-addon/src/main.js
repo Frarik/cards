@@ -689,23 +689,21 @@ function _epRenderJsStore(){
     return;
   }
 
-  // Quali card sono già in dashboard
-  const usedIds = new Set();
-  (cfg.pages||[]).forEach(pg=>(pg.cards||[]).forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedIds.add(c.jsCardId); }));
+  // Quali card sono già nella vista corrente (solo informativo, non blocca l'aggiunta)
+  const curCards = (curPage()||{cards:[]}).cards||[];
+  const usedInPage = new Set();
+  curCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedInPage.add(c.jsCardId); });
 
   listEl.innerHTML = items.map(item=>{
     const m = item.meta||{};
-    const inUse = usedIds.has(m.id);
+    const inPage = usedInPage.has(m.id);
     return `<div style="display:flex;align-items:center;gap:8px;padding:7px 6px;border-bottom:1px solid rgba(255,255,255,.04)">
       <span style="font-size:18px;flex-shrink:0">${m.icon||'📦'}</span>
       <div style="flex:1;min-width:0">
         <div style="font-size:11px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.name||m.id}</div>
-        <div style="font-size:9px;color:var(--muted)">v${m.version||'?'} · ${m.id}</div>
+        <div style="font-size:9px;color:var(--muted)">v${m.version||'?'} · ${m.id}${inPage?' · <span style="color:#4ade80">✓ in questa vista</span>':''}</div>
       </div>
-      ${inUse
-        ? '<span style="font-size:9px;font-weight:700;color:#4ade80;flex-shrink:0">✓ In uso</span>'
-        : `<button data-action="jsStoreAddCard" data-action-arg="${m.id||''}" style="flex-shrink:0;padding:4px 9px;border-radius:7px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#a5b4fc;font-size:10px;font-weight:700;cursor:pointer">➕</button>`
-      }
+      <button data-action="jsStoreAddCard" data-action-arg="${m.id||''}" style="flex-shrink:0;padding:4px 9px;border-radius:7px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#a5b4fc;font-size:10px;font-weight:700;cursor:pointer">➕</button>
     </div>`;
   }).join('');
 }
@@ -1590,7 +1588,9 @@ function _ghStoreRender(){
   status.textContent=(_ghsCache[tab]||[]).length+' file'+(q?(' · '+files.length+' trovati'):'');
   if(!files.length){ list.innerHTML=`<div class="ghs-empty">${q?'Nessun risultato per "'+eh(q)+'"':'Nessun file in questa cartella su GitHub'}</div>`; return; }
   const ico=folder.ico;
-  const usedIds=new Set(); (cfg.pages||[]).forEach(pg=>(pg.cards||[]).forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedIds.add(c.jsCardId); }));
+  // Controlla solo la vista corrente (non tutte le viste) per il badge informativo
+  const _cpCards=(curPage()||{cards:[]}).cards||[];
+  const usedInCurPage=new Set(); _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedInCurPage.add(c.jsCardId); });
   const sorted=files.filter(f=>f&&f.name).sort((a,b)=>a.name.localeCompare(b.name));
   const eyeBtn=(enc,nm,cid)=>`<button class="ghs-ibtn ghs-ibtn-eye" data-action="_ghsPreviewEl" data-penc="${enc.replace(/'/g,"\\'")}" data-pnm="${nm.replace(/'/g,"\\'")}" data-pcid="${cid||''}" title="Anteprima"><i class="mdi mdi-eye-outline"></i></button>`;
   const rowHtml=(nm,verLbl,name,acts)=>{
@@ -1618,9 +1618,9 @@ function _ghStoreRender(){
     const nm=f.name.replace(/\.(js|ya?ml)$/i,''); const enc=encodeURIComponent(f.name);
     const cardId=Object.keys(idFile).find(k=>idFile[k]===f.name)||null;
     const verLbl=_ghVerCache[f.sha]||g.fileVersions[f.name]||(cardId&&_curStoreVersion(cardId))||'';
-    const inDash=!!(cardId&&usedIds.has(cardId));
+    const inCurPage=!!(cardId&&usedInCurPage.has(cardId));
     const updateBtn=(g.shas[f.name]!==f.sha)?`<button class="ghs-btn ghs-btn-upd" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-update"></i> Aggiorna</button>`:'';
-    const addBtn=cardId?(inDash?`<span class="ghs-badge ghs-badge-dash"><i class="mdi mdi-check-circle-outline"></i> In dashboard</span>`:`<button class="ghs-btn ghs-btn-inst" data-action="_jsStoreAddAndRefresh" data-action-args='["${cardId}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`)
+    const addBtn=cardId?`<button class="ghs-btn ghs-btn-inst" data-action="_jsStoreAddAndRefresh" data-action-args='["${cardId}"]'><i class="mdi mdi-plus"></i> ${inCurPage?'Aggiungi ancora':'Aggiungi'}</button>`
       :`<button class="ghs-btn ghs-btn-inst" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>`;
     const delBtn=cardId?`<button class="ghs-ibtn ghs-ibtn-del" data-action="_ghsDeleteInstalled" data-action-arg="${cardId}" title="Disinstalla"><i class="mdi mdi-delete-outline"></i></button>`:'';
     return rowHtml(nm,verLbl,f.name,`${eyeBtn(enc,nm,cardId)}${updateBtn}${addBtn}${delBtn}`);
@@ -1655,11 +1655,11 @@ function _ghStoreRenderInstalled(q, originFilter){
       : (q?'Nessun risultato':'Nessuna card installata da GitHub.<br>Installale dalle schede ⚡ Card JS · 🔹 Chips · 🏷️ Distintivi.');
     list.innerHTML=`<div class="ghs-empty">${msg}</div>`; return;
   }
-  const usedIds=new Set(); (cfg.pages||[]).forEach(pg=>(pg.cards||[]).forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedIds.add(c.jsCardId); }));
+  const _lcCards=(curPage()||{cards:[]}).cards||[];
+  const _usedLocal=new Set(); _lcCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) _usedLocal.add(c.jsCardId); });
   list.innerHTML=items.sort((a,b)=>((a.meta||{}).name||'').localeCompare((b.meta||{}).name||'')).map(i=>{
-    const m=i.meta||{}; const inUse=usedIds.has(m.id); const id=m.id||'';
-    const act = inUse ? `<span class="ghs-badge ghs-badge-dash"><i class="mdi mdi-check-circle-outline"></i> In dashboard</span>`
-                      : `<button class="ghs-btn ghs-btn-inst" data-action="_jsStoreAddAndRefresh" data-action-args='["${id}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`;
+    const m=i.meta||{}; const inPage=_usedLocal.has(m.id); const id=m.id||'';
+    const act = `<button class="ghs-btn ghs-btn-inst" data-action="_jsStoreAddAndRefresh" data-action-args='["${id}"]'><i class="mdi mdi-plus"></i> ${inPage?'Aggiungi ancora':'Aggiungi'}</button>`;
     const pub = originFilter==='local' ? `<button class="ghs-btn ghs-btn-upd" data-action="_ghsPublish" data-action-arg="${id}" title="Pubblica su GitHub"><i class="mdi mdi-upload"></i> Pubblica</button>` : '';
     const safePrevNm=(m.name||id).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
     const previewBtn=`<button class="ghs-ibtn ghs-ibtn-eye" data-action="_ghsPreview" data-action-args='["","${safePrevNm}","${id}"]' title="Anteprima"><i class="mdi mdi-eye-outline"></i></button>`;
@@ -3438,8 +3438,12 @@ function _buildSectionEl(sec,page){
   const head=document.createElement('div');
   head.className='sect-head';
   head.innerHTML=`<span class="sh-lbl">≡ RIGA ${secIdx+1}${sec.label?' · '+eh(sec.label):''}</span>
+    <button class="sh-btn sh-up" title="Sposta riga su">▲</button>
+    <button class="sh-btn sh-dn" title="Sposta riga giù">▼</button>
     <button class="sh-btn sh-add" title="Aggiungi colonna">+ colonne</button>
     <button class="sh-btn sh-del" title="Elimina riga">✕ riga</button>`;
+  head.querySelector('.sh-up').addEventListener('click',()=>moveSectionUp(sec.id));
+  head.querySelector('.sh-dn').addEventListener('click',()=>moveSectionDown(sec.id));
   head.querySelector('.sh-add').addEventListener('click',()=>setSectionCols(sec.id,Math.min(4,(sec.cols||4)+1)));  // max 4 colonne
   head.querySelector('.sh-del').addEventListener('click',()=>delSectionRow(sec.id));
   wrap.appendChild(head);
@@ -8128,42 +8132,29 @@ function _jsStoreRenderList(){
   if(!items.length){ listEl.innerHTML=''; emptyEl.style.display=''; return; }
   emptyEl.style.display='none';
 
-  // Calcola quali card sono già in dashboard (su tutte le pagine)
-  const usedIds = new Set();
-  (cfg.pages||[]).forEach(pg => (pg.cards||[]).forEach(c => { if(c.type==='js-custom'&&c.jsCardId) usedIds.add(c.jsCardId); }));
-
-  const inDash = items.filter(i => usedIds.has((i.meta||{}).id));
-  const avail  = items.filter(i => !usedIds.has((i.meta||{}).id));
+  // Controlla solo la vista corrente per il badge informativo (non blocca l'aggiunta)
+  const _curPgCards = (curPage()||{cards:[]}).cards||[];
+  const usedInCurPg = new Set();
+  _curPgCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedInCurPg.add(c.jsCardId); });
 
   function rowHTML(item){
     const m = item.meta || {};
-    const inUse = usedIds.has(m.id);
+    const inPage = usedInCurPg.has(m.id);
     return `<div class="jsst-card-row">
       <div class="jsst-card-ico">${m.icon||'📦'}</div>
       <div class="jsst-card-info">
-        <div class="jsst-card-name">${m.name||m.id||'Card'}</div>
+        <div class="jsst-card-name">${m.name||m.id||'Card'}${inPage?' <span style="font-size:9px;color:#4ade80;font-weight:600">✓ in questa vista</span>':''}</div>
         <div class="jsst-card-id">ID: ${m.id||'?'} &nbsp;·&nbsp; v${m.version||'?'}</div>
         <div class="jsst-card-desc">${m.desc||''}</div>
       </div>
       <div class="jsst-card-actions">
-        ${inUse ? '<span style="font-size:10px;color:#4ade80;font-weight:700;">✓ In dashboard</span>' : `<button class="jsst-btn-add" data-action="jsStoreAddCard" data-action-arg="${m.id||''}">➕ Aggiungi</button>`}
+        <button class="jsst-btn-add" data-action="jsStoreAddCard" data-action-arg="${m.id||''}">➕ Aggiungi</button>
         <button class="jsst-btn-del" data-action="jsStoreDeleteCard" data-action-arg="${m.id||''}">🗑</button>
       </div>
     </div>`;
   }
 
-  const secStyle = 'font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.3);margin:12px 0 6px;padding-bottom:4px;border-bottom:1px solid rgba(255,255,255,0.06)';
-
-  let html = '';
-  if(avail.length){
-    html += `<div style="${secStyle}">📦 Disponibili (${avail.length})</div>`;
-    html += avail.map(rowHTML).join('');
-  }
-  if(inDash.length){
-    html += `<div style="${secStyle};margin-top:${avail.length?'18px':'12px'}">✅ In dashboard (${inDash.length})</div>`;
-    html += inDash.map(rowHTML).join('');
-  }
-  listEl.innerHTML = html;
+  listEl.innerHTML = items.map(rowHTML).join('');
 }
 
 function jsStoreLoadFile(file){
