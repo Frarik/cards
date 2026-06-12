@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.10 — 2026-06-13
+
+### fix: menu mobile Android + loop sync + rimozione toast automatico
+
+- **Menu lampeggia su Android**: il backdrop creato in 1.4.9 veniva chiuso dai ghost tap di Android perché il browser li instrada all'elemento visivamente sopra (il backdrop stesso). Fix: aggiunto debounce di 300ms sul click handler del backdrop — i ghost tap che arrivano entro 300ms dalla creazione vengono ignorati.
+- **Loop sync card configs**: la patch `localStorage.setItem` introdotta in 1.4.9 triggherava il push al backend anche quando le card scrivevano lo stesso valore durante l'init (Android fa init diverso da iOS). Questo causava un push inutile → PC riceveva un `_ts` più nuovo → toast su PC → push PC → toast su Android → loop. Fix: aggiunto controllo `v !== old` (confronto prima/dopo) — sync solo se il valore cambia davvero.
+- **Toast "Plancia e card sincronizzate" rimosso**: il toast automatico in `_applyRemoteCfg` compariva ad ogni sync in background (inutile e fastidioso, specialmente su Android). Rimosso. Il push manuale ("Sync to HA") mantiene il proprio feedback.
+
 ## 1.4.9 — 2026-06-12
 
 ### fix: flickering menu mobile (backdrop) + auto-sync config card al salvataggio

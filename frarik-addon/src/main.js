@@ -931,13 +931,16 @@ function _haSaveCfgDebounced(){ clearTimeout(_haSaveTimer); _haSaveTimer=setTime
 /* da chiamare quando si aggiunge/aggiorna/elimina una card JS → propaga su HA */
 function _cfgTouchAndPush(){ if(_cfgSyncing) return; cfg._ts=Date.now(); _saveCfgLocalOnly(); if(_cfgSynced) _haSaveCfgDebounced(); }
 /* Intercetta setItem per chiavi frarik_* (config card JS: frarik_cam_*, frarik_clima_* ecc.)
-   → triggera sync backend automatico senza dover modificare ogni singola card */
+   → triggera sync backend SOLO se il valore cambia davvero (evita loop da init card su Android) */
 (function(){
   const _origSet=Storage.prototype.setItem;
   Storage.prototype.setItem=function(k,v){
-    _origSet.call(this,k,v);
     if(this===localStorage&&k&&k.startsWith('frarik_')&&!_cfgSyncing&&_cfgSynced){
-      cfg._ts=Date.now(); _saveCfgLocalOnly(); _haSaveCfgDebounced();
+      const old=this.getItem(k); // leggi prima di sovrascrivere
+      _origSet.call(this,k,v);
+      if(v!==old){ cfg._ts=Date.now(); _saveCfgLocalOnly(); _haSaveCfgDebounced(); }
+    } else {
+      _origSet.call(this,k,v);
     }
   };
 })();
@@ -1006,7 +1009,6 @@ function _applyRemoteCfg(v){
     renderDash(); renderPageTabs();
     _cfgSyncing=false;
     try{ _histInit(); }catch(e){}
-    showToast('☁️ Plancia e card sincronizzate');
     try{ _ghSchedule(); }catch(e){}
   }
 }
@@ -9154,10 +9156,11 @@ function toggleMobileMenu(ev){
   const b=document.getElementById('mfab');
   if(b){ const r=b.getBoundingClientRect(); menu.style.top=(r.bottom+6)+'px'; menu.style.right=Math.max(8,(window.innerWidth-r.right))+'px'; }
   else { menu.style.top='56px'; menu.style.right='10px'; }
-  // backdrop trasparente (z-index 12000) sotto il menu (12001): cattura click-fuori senza ghost tap
-  const bk=document.createElement('div');
+  // backdrop trasparente (z-index 12000) sotto il menu (12001): cattura click-fuori
+  // Debounce 300ms: i ghost tap Android/iOS arrivano entro ~200ms, li ignoriamo
+  const bk=document.createElement('div'),_bkT=Date.now();
   bk.id='mfab-backdrop'; bk.style.cssText='position:fixed;inset:0;z-index:12000;';
-  bk.addEventListener('click',function(e){ e.stopPropagation(); closeMobileMenu(); });
+  bk.addEventListener('click',function(e){ if(Date.now()-_bkT<300) return; e.stopPropagation(); closeMobileMenu(); });
   document.body.insertBefore(bk,menu);
 }
 function closeMobileMenu(){ _mfabOpenTime=Date.now(); const m=document.getElementById('mfab-menu'); if(m) m.remove(); const bk=document.getElementById('mfab-backdrop'); if(bk) bk.remove(); document.removeEventListener('click',_mfabOutside); }
