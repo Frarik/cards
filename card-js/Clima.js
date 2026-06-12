@@ -1,4 +1,4 @@
-/* frarik-version: 2.13 */
+/* frarik-version: 2.14 */
 (function () {
   'use strict';
 
@@ -393,12 +393,11 @@
       +airStreams(rid, mCol, isOn)
     +'</div>';
 
-    const tempRow = '<div style="display:flex;align-items:center;justify-content:center;gap:8px;'
-      +'background:rgba(255,255,255,.06);border-radius:13px;padding:7px 14px">'
+    const tempRow = '<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:7px 14px">'
       +'<button class="cb" data-cid="'+entityId+'" data-action="temp-down" '
         +'style="width:34px;height:34px;border-radius:11px;border:none;background:#060c18;color:#e2e8f0;'
         +'box-shadow:inset 2px 3px 8px rgba(0,0,0,.65),inset -1px -2px 5px rgba(255,255,255,.04);'
-        +'font-size:20px;font-weight:700;padding:0;display:flex;align-items:center;justify-content:center">−</button>'
+        +'font-size:22px;font-weight:700;line-height:1;padding:0;display:flex;align-items:center;justify-content:center">−</button>'
       +'<div data-clm-temp style="font-size:26px;font-weight:800;min-width:80px;text-align:center;'
         +'color:'+(isOn?mCol:'#334155')+';text-shadow:'+(isOn?'0 0 10px '+mCol:'none')+';">'
         +(isOn?targetTemp+'°':'—')
@@ -406,7 +405,7 @@
       +'<button class="cb" data-cid="'+entityId+'" data-action="temp-up" '
         +'style="width:34px;height:34px;border-radius:11px;border:none;background:#060c18;color:#e2e8f0;'
         +'box-shadow:inset 2px 3px 8px rgba(0,0,0,.65),inset -1px -2px 5px rgba(255,255,255,.04);'
-        +'font-size:20px;font-weight:700;padding:0;display:flex;align-items:center;justify-content:center">+</button>'
+        +'font-size:22px;font-weight:700;line-height:1;padding:0;display:flex;align-items:center;justify-content:center">+</button>'
     +'</div>';
 
     const togRow = '<div style="display:flex;gap:7px">'
@@ -704,7 +703,7 @@
   }
 
   var CARD={
-    id:'clima-card',name:'Climatizzatore',icon:'❄️',version:'2.13',
+    id:'clima-card',name:'Climatizzatore',icon:'❄️',version:'2.14',
     desc:'Split — look scuro, SVG loghi reali, aletta RAF, glow modalità.',
     colSpan:2,rowSpan:4,render:render,mount:mount,update:update,configure:openCfg,duplicate:duplicateCard,
   };

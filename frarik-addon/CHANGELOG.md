@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.5 — 2026-06-12
+
+### style: Clima v2.14 — rimozione sfondo tempRow + fix centramento +/−
+
+- Rimosso `background:rgba(255,255,255,.06)` e `border-radius` dal contenitore temperatura (nessun sfondo grigio visibile).
+- Aggiunto `line-height:1` e `font-size:22px` ai bottoni +/− → simboli perfettamente centrati nel riquadro scavato.
+
 ## 1.4.4 — 2026-06-12
 
 ### style: Clima v2.13 — rimozione bordo tempRow + centramento contenuto tog
