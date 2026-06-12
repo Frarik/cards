@@ -1,4 +1,4 @@
-/* frarik-version: 1.3 */
+/* frarik-version: 1.4 */
 (function () {
   'use strict';
 
@@ -13,8 +13,6 @@
   function eh(s)     { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
   /* ── URL helpers ── */
-
-  /* Snapshot con cache-buster */
   function camThumbUrl(entityId, h, ts) {
     if (!entityId || !h) return '';
     const st = h.states[entityId]; if (!st) return '';
@@ -24,7 +22,6 @@
     return clean + (clean.includes('?') ? '&' : '?') + '_=' + (ts || Date.now());
   }
 
-  /* MJPEG live — solo se entity_picture usa /api/camera_proxy/ */
   function camMjpegUrl(entityId, h) {
     if (!entityId || !h) return '';
     const st = h.states[entityId]; if (!st) return '';
@@ -35,10 +32,11 @@
   }
 
   /* ── Stato modulo ── */
-  var _selectedCam   = {};  // card.id → index cam selezionata
-  var _thumbTimers   = {};  // card.id → setInterval refresh miniature
-  var _mainSnapTimer = {};  // card.id → setInterval refresh snapshot main (fallback)
-  var _pendingImg    = {};  // card.id → <img> MJPEG in caricamento (per cancel rapido)
+  var _selectedCam   = {};  // card.id → index cam corrente
+  var _thumbTimers   = {};  // card.id → timer refresh miniature
+  var _mainSnapTimer = {};  // card.id → timer fallback snapshot
+  var _pendingImg    = {};  // card.id → img MJPEG in caricamento
+  var _peerConns     = {};  // card.id → RTCPeerConnection attiva
   var _lastKeys      = {};  // card.id → chiave stato HA
 
   function _sel(card, cams) {
@@ -57,7 +55,6 @@
     } catch(e) { return ''; }
   }
 
-  /* Batteria */
   function battPct(batEntity, h) {
     if (!batEntity || !h) return null;
     const s = h.states[batEntity];
@@ -73,19 +70,23 @@
     return '<span style="color:rgba(255,255,255,.18)">🔌</span>';
   }
 
-  /* ── Gestione stream principale ── */
-
+  /* ── Pulizia stream corrente ── */
   function _stopMainSnap(card) {
     if (_mainSnapTimer[card.id]) { clearInterval(_mainSnapTimer[card.id]); delete _mainSnapTimer[card.id]; }
+  }
+
+  function _closePeerConn(card) {
+    if (_peerConns[card.id]) { try { _peerConns[card.id].close(); } catch(e) {} delete _peerConns[card.id]; }
   }
 
   function _cancelPending(card) {
     const prev = _pendingImg[card.id];
     if (prev) { prev.onload = null; prev.onerror = null; try { prev.src = ''; } catch(e) {} delete _pendingImg[card.id]; }
     _stopMainSnap(card);
+    _closePeerConn(card);
   }
 
-  /* Refresh periodico snapshot sulla main view (fallback se MJPEG non disponibile) */
+  /* ── Fallback snapshot 2s (ultime risorse) ── */
   function _startMainSnap(card, cam, h, wrap) {
     _stopMainSnap(card);
     var img = wrap.querySelector('img'); if (!img) return;
@@ -98,126 +99,212 @@
     _mainSnapTimer[card.id] = setInterval(refresh, 2000);
   }
 
-  /*
-   * _showCamStream — cuore del cambio telecamera.
-   * 1. Mostra SUBITO lo snapshot cached (risposta istantanea al click).
-   * 2. Avvia MJPEG in background.
-   * 3. Quando arriva il primo frame MJPEG → sostituisce lo snapshot (live vero).
-   * 4. Se MJPEG fallisce → rimane lo snapshot con refresh ogni 2s.
-   */
-  function _showCamStream(card, el, si) {
-    const h = H(), c = load(card), cams = c.cameras || [];
-    const cam = cams[si]; if (!cam || !el.isConnected) return;
-    const wrap = el.querySelector('[data-cam-main-wrap]'); if (!wrap) return;
+  /* ── WebRTC via HA WebSocket (camera/webrtc/offer) ─────────────────────────
+     Identico a come fa la card nativa HA con camera_view: live.
+     Restituisce true se il video è avviato, false se va a fallback. */
+  function _tryWebRTC(cam, h, card, el, si, wrap) {
+    return new Promise(function(resolve) {
+      if (!window.RTCPeerConnection) { resolve(false); return; }
+      if (!h || !h.connection || typeof h.connection.sendMessagePromise !== 'function') { resolve(false); return; }
 
-    _cancelPending(card);
+      var pc;
+      try { pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }); }
+      catch(e) { resolve(false); return; }
 
-    /* 1. Placeholder snapshot — risposta immediata */
-    const snap = document.createElement('img');
-    snap.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block';
-    const snapUrl = camThumbUrl(cam.entity, h);
-    if (snapUrl) snap.src = snapUrl;
-    wrap.innerHTML = '';
-    wrap.appendChild(snap);
+      _peerConns[card.id] = pc;
 
-    /* 2. MJPEG stream in background */
-    const mjpeg = camMjpegUrl(cam.entity, h);
-    if (!mjpeg) {
-      /* Camera senza MJPEG → tieni snapshot con refresh 2s */
-      _startMainSnap(card, cam, h, wrap);
-      return;
-    }
+      /* Timeout di sicurezza: se non parte entro 10s → fallback */
+      var resolved = false;
+      var globalTimeout = setTimeout(function() {
+        if (!resolved) { resolved = true; try { pc.close(); } catch(e){} delete _peerConns[card.id]; resolve(false); }
+      }, 10000);
 
-    const streamImg = document.createElement('img');
+      function abort(reason) {
+        if (resolved) return; resolved = true;
+        clearTimeout(globalTimeout);
+        if (_peerConns[card.id] === pc) delete _peerConns[card.id];
+        try { pc.close(); } catch(e) {}
+        resolve(false);
+      }
+
+      try {
+        pc.addTransceiver('video', { direction: 'recvonly' });
+        pc.addTransceiver('audio', { direction: 'recvonly' });
+      } catch(e) { abort(); return; }
+
+      pc.createOffer()
+        .then(function(offer) {
+          return pc.setLocalDescription(offer).then(function() { return offer; });
+        })
+        .then(function(offer) {
+          /* Invia l'offerta a HA (go2rtc risponde con SDP answer) */
+          return h.connection.sendMessagePromise({
+            type: 'camera/webrtc/offer',
+            entity_id: cam.entity,
+            offer: offer.sdp
+          });
+        })
+        .then(function(result) {
+          if (!result || !result.answer) { abort(); return; }
+          if (_peerConns[card.id] !== pc) { return; } /* già cancellato */
+
+          return pc.setRemoteDescription({ type: 'answer', sdp: result.answer })
+            .then(function() {
+              /* Aspetta il primo track (video arrivato) */
+              pc.ontrack = function(event) {
+                if (resolved) return;
+                var stream = event.streams && event.streams[0];
+                if (!stream) return;
+
+                /* Controlla che l'utente non abbia già cambiato cam */
+                var cams = load(card).cameras || [];
+                if (!el.isConnected || _sel(card, cams) !== si) { abort(); return; }
+                if (_peerConns[card.id] !== pc) { return; }
+
+                var video = document.createElement('video');
+                video.autoplay = true; video.muted = true; video.playsInline = true;
+                video.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block';
+                video.srcObject = stream;
+
+                wrap.innerHTML = '';
+                wrap.appendChild(video);
+                video.play().catch(function(){});
+
+                resolved = true;
+                clearTimeout(globalTimeout);
+                resolve(true);
+              };
+
+              pc.onconnectionstatechange = function() {
+                if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') abort();
+              };
+            });
+        })
+        .catch(function() { abort(); });
+    });
+  }
+
+  /* ── MJPEG via img (primo frame → swap dal placeholder) ── */
+  function _tryMjpeg(cam, h, card, el, si, wrap) {
+    var mjpeg = camMjpegUrl(cam.entity, h);
+    if (!mjpeg) { _startMainSnap(card, cam, h, wrap); return; }
+
+    var streamImg = document.createElement('img');
     streamImg.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block';
     _pendingImg[card.id] = streamImg;
 
     streamImg.onload = function() {
-      /* Primo frame MJPEG arrivato — sostituisci il placeholder */
       _pendingImg[card.id] = null;
+      var cams = load(card).cameras || [];
       if (!el.isConnected || _sel(card, cams) !== si) return;
       wrap.innerHTML = '';
       wrap.appendChild(streamImg);
     };
-
     streamImg.onerror = function() {
-      /* MJPEG non supportato → resta snapshot con refresh */
       _pendingImg[card.id] = null;
+      var cams = load(card).cameras || [];
       if (!el.isConnected || _sel(card, cams) !== si) return;
       _startMainSnap(card, cam, h, wrap);
     };
-
     streamImg.src = mjpeg;
+  }
+
+  /*
+   * _showCamStream — sequenza completa per la vista principale:
+   *  1. Snapshot istantaneo (risposta immediata al click)
+   *  2. WebRTC (go2rtc) — se disponibile: vero live, < 1s latenza
+   *  3. MJPEG — per cam senza go2rtc ma con proxy stream HA
+   *  4. Snapshot 2s — fallback universale
+   */
+  function _showCamStream(card, el, si) {
+    var h = H(), c = load(card), cams = c.cameras || [];
+    var cam = cams[si]; if (!cam || !el.isConnected) return;
+    var wrap = el.querySelector('[data-cam-main-wrap]'); if (!wrap) return;
+
+    _cancelPending(card);
+
+    /* 1. Snapshot immediato */
+    var snap = document.createElement('img');
+    snap.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block';
+    var snapUrl = camThumbUrl(cam.entity, h);
+    if (snapUrl) snap.src = snapUrl;
+    wrap.innerHTML = '';
+    wrap.appendChild(snap);
+
+    /* 2. WebRTC → 3. MJPEG → 4. Snapshot (async, non blocca il click) */
+    _tryWebRTC(cam, h, card, el, si, wrap).then(function(rtcOk) {
+      if (rtcOk) return; /* WebRTC avviato, fine */
+      /* Controlla che l'utente non abbia già cambiato cam durante il tentativo WebRTC */
+      var camsNow = load(card).cameras || [];
+      if (!el.isConnected || _sel(card, camsNow) !== si) return;
+      _tryMjpeg(cam, h, card, el, si, wrap);
+    });
   }
 
   /* ── Cambio telecamera senza re-render ── */
   function _switchCam(card, el, newIdx) {
-    const h = H(), c = load(card), cams = c.cameras || [];
+    var h = H(), c = load(card), cams = c.cameras || [];
     if (!cams.length || newIdx < 0 || newIdx >= cams.length) return;
     _selectedCam[card.id] = newIdx;
-    const sel = cams[newIdx];
+    var sel = cams[newIdx];
 
-    /* Stream principale: snapshot istantaneo + MJPEG in background */
     _showCamStream(card, el, newIdx);
 
-    /* Overlay nome */
-    const nameEl = el.querySelector('[data-cam-name-ov]');
+    var nameEl = el.querySelector('[data-cam-name-ov]');
     if (nameEl) nameEl.textContent = sel.name || sel.entity;
 
-    /* Overlay batteria */
-    const batEl = el.querySelector('[data-cam-bat-ov]');
+    var batEl = el.querySelector('[data-cam-bat-ov]');
     if (batEl) {
-      const pct = battPct(sel.battery, h);
+      var pct = battPct(sel.battery, h);
       if (pct !== null) { batEl.textContent='🔋 '+Math.round(pct)+'%'; batEl.style.color=battColor(pct); batEl.style.display=''; }
       else batEl.style.display = 'none';
     }
 
-    /* Highlight miniature */
     el.querySelectorAll('[data-cam-idx]').forEach(function(thumb) {
-      const i = parseInt(thumb.getAttribute('data-cam-idx'));
-      const active = (i === newIdx);
+      var i = parseInt(thumb.getAttribute('data-cam-idx'));
+      var active = (i === newIdx);
       thumb.style.outline       = '2px solid '+(active ? '#818cf8' : 'transparent');
       thumb.style.outlineOffset = '1px';
       thumb.style.boxShadow     = active ? '0 0 10px rgba(129,140,248,.45)' : '0 2px 8px rgba(0,0,0,.55)';
     });
   }
 
-  /* ── Aggiorna solo overlay (batteria, unavailable) — non tocca lo stream ── */
+  /* ── Aggiorna overlay (batteria, unavailable) senza toccare lo stream ── */
   function _updateOverlays(card, el) {
-    const h = H(), c = load(card), cams = c.cameras || [];
-    const si = _sel(card, cams), sel = cams[si]; if (!sel) return;
+    var h = H(), c = load(card), cams = c.cameras || [];
+    var si = _sel(card, cams), sel = cams[si]; if (!sel) return;
 
-    const batEl = el.querySelector('[data-cam-bat-ov]');
+    var batEl = el.querySelector('[data-cam-bat-ov]');
     if (batEl) {
-      const pct = battPct(sel.battery, h);
+      var pct = battPct(sel.battery, h);
       if (pct !== null) { batEl.textContent='🔋 '+Math.round(pct)+'%'; batEl.style.color=battColor(pct); batEl.style.display=''; }
       else batEl.style.display = 'none';
     }
-    const unavEl = el.querySelector('[data-cam-unavail]');
+    var unavEl = el.querySelector('[data-cam-unavail]');
     if (unavEl) unavEl.style.display = (h&&h.states[sel.entity]&&h.states[sel.entity].state==='unavailable') ? 'flex' : 'none';
 
     cams.forEach(function(cam, i) {
-      const b = el.querySelector('[data-cam-bat-thumb="'+i+'"]');
+      var b = el.querySelector('[data-cam-bat-thumb="'+i+'"]');
       if (b) b.innerHTML = battHtml(battPct(cam.battery, h), cam.battery);
     });
   }
 
-  /* ── Refresh miniature (non tocca la main view) ── */
+  /* ── Refresh miniature ── */
   function _refreshThumbs(card, el) {
-    const h = H(), c = load(card), cams = c.cameras || [];
+    var h = H(), c = load(card), cams = c.cameras || [];
     if (!cams.length || !el.isConnected) return;
-    const ts = Date.now();
+    var ts = Date.now();
     el.querySelectorAll('[data-cam-thumb]').forEach(function(img) {
-      const cam = cams[parseInt(img.getAttribute('data-cam-thumb'))]; if (!cam) return;
-      const url = camThumbUrl(cam.entity, h, ts);
+      var cam = cams[parseInt(img.getAttribute('data-cam-thumb'))]; if (!cam) return;
+      var url = camThumbUrl(cam.entity, h, ts);
       if (url) img.src = url;
     });
   }
 
   /* ── RENDER ── */
   function render(card) {
-    const h = H(), c = load(card), cams = c.cameras || [];
-    const rid = 'cam' + (card.id || Math.random().toString(36).slice(2,8));
+    var h = H(), c = load(card), cams = c.cameras || [];
+    var rid = 'cam' + (card.id || Math.random().toString(36).slice(2,8));
 
     if (!cams.length) {
       return '<div id="'+rid+'" style="display:flex;flex-direction:column;align-items:center;justify-content:center;'
@@ -228,13 +315,13 @@
         +'</div>';
     }
 
-    const si = _sel(card, cams), sel = cams[si], ts = Date.now();
-    const initThumb = camThumbUrl(sel.entity, h, ts);
-    const mainState = h && h.states[sel.entity];
-    const isUnavail = mainState && mainState.state === 'unavailable';
-    const pctMain   = battPct(sel.battery, h);
+    var si = _sel(card, cams), sel = cams[si], ts = Date.now();
+    var initThumb = camThumbUrl(sel.entity, h, ts);
+    var mainState = h && h.states[sel.entity];
+    var isUnavail = mainState && mainState.state === 'unavailable';
+    var pctMain   = battPct(sel.battery, h);
 
-    const mainView =
+    var mainView =
       '<div style="position:relative;flex:1;min-height:0;border-radius:12px;overflow:hidden;background:#050810">'
         +'<div data-cam-main-wrap style="width:100%;height:100%">'
           +(initThumb
@@ -265,14 +352,14 @@
 
     var thumbsHtml = '';
     if (cams.length > 1) {
-      const multiRow = cams.length > 4;
+      var multiRow = cams.length > 4;
       thumbsHtml = '<div style="display:flex;gap:5px;flex-shrink:0;'+(multiRow?'overflow-x:auto;padding-bottom:2px':'')+'">'
         +cams.map(function(cam, i) {
-          const active  = (i === si);
-          const tUrl    = camThumbUrl(cam.entity, h, ts);
-          const pct     = battPct(cam.battery, h);
-          const camSt   = h && h.states[cam.entity];
-          const unavail = camSt && camSt.state === 'unavailable';
+          var active  = (i === si);
+          var tUrl    = camThumbUrl(cam.entity, h, ts);
+          var pct     = battPct(cam.battery, h);
+          var camSt   = h && h.states[cam.entity];
+          var unavail = camSt && camSt.state === 'unavailable';
           return '<div data-cam-idx="'+i+'" data-action="selcam" data-val="'+i+'" style="'
             +'flex:1;'+(multiRow?'min-width:80px;':'')+'cursor:pointer;position:relative;'
             +'border-radius:8px;overflow:hidden;background:#050810;'
@@ -301,12 +388,12 @@
   function mount(card, hass, el) {
     el.removeEventListener('click', el._camHandler);
     el._camHandler = function(ev) {
-      const t = ev.target.closest('[data-action="selcam"]'); if (!t) return;
+      var t = ev.target.closest('[data-action="selcam"]'); if (!t) return;
       _switchCam(card, el, parseInt(t.getAttribute('data-val')));
     };
     el.addEventListener('click', el._camHandler);
 
-    const c = load(card), cams = c.cameras || [];
+    var c = load(card), cams = c.cameras || [];
     _showCamStream(card, el, _sel(card, cams));
 
     if (_thumbTimers[card.id]) clearInterval(_thumbTimers[card.id]);
@@ -319,7 +406,7 @@
   /* ── UPDATE ── */
   function update(card, hass, el) {
     try {
-      const key = _stateKey(card, hass);
+      var key = _stateKey(card, hass);
       if (_lastKeys[card.id] === key) return;
       _lastKeys[card.id] = key;
       _updateOverlays(card, el);
@@ -328,16 +415,16 @@
 
   /* ── CONFIGURE ── */
   function openCfg(card, el) {
-    const h = H(), c = load(card);
-    const states  = (h && h.states) || {};
-    const allIds  = Object.keys(states).sort();
-    const camIds  = allIds.filter(function(id) { return id.startsWith('camera.'); });
-    const sensIds = allIds.filter(function(id) { return id.startsWith('sensor.'); });
+    var h = H(), c = load(card);
+    var states  = (h && h.states) || {};
+    var allIds  = Object.keys(states).sort();
+    var camIds  = allIds.filter(function(id) { return id.startsWith('camera.'); });
+    var sensIds = allIds.filter(function(id) { return id.startsWith('sensor.'); });
     var cams = JSON.parse(JSON.stringify(c.cameras || []));
 
-    const stInp = 'width:100%;padding:8px 10px;border-radius:8px;background:#0f1830;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:11px;font-family:monospace;box-sizing:border-box;outline:none';
-    const stDrop = 'position:absolute;left:0;right:0;top:100%;z-index:20;max-height:130px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 8px 8px;display:none';
-    const stLbl  = 'font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin-bottom:2px;display:block';
+    var stInp = 'width:100%;padding:8px 10px;border-radius:8px;background:#0f1830;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:11px;font-family:monospace;box-sizing:border-box;outline:none';
+    var stDrop = 'position:absolute;left:0;right:0;top:100%;z-index:20;max-height:130px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 8px 8px;display:none';
+    var stLbl  = 'font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin-bottom:2px;display:block';
 
     function buildRow(cam, i) {
       return '<div data-cam-row="'+i+'" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:11px;padding:11px 13px">'
@@ -357,7 +444,7 @@
         +'</div></div>';
     }
 
-    const ov = document.createElement('div');
+    var ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(2,6,16,.82);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
 
     function buildDialog() {
@@ -375,19 +462,19 @@
 
     ov.innerHTML = buildDialog();
     document.body.appendChild(ov);
-    const close = function() { try { document.body.removeChild(ov); } catch(e) {} };
+    var close = function() { try { document.body.removeChild(ov); } catch(e) {} };
     ov.addEventListener('click', function(e){ if (e.target===ov) close(); });
     ov.querySelector('#cam-cfg-cancel').addEventListener('click', close);
 
     function makeCombo(inpSel, dropSel, defaults) {
-      const inp = ov.querySelector(inpSel), drop = ov.querySelector(dropSel);
+      var inp = ov.querySelector(inpSel), drop = ov.querySelector(dropSel);
       if (!inp || !drop) return;
       function show() {
-        const q = inp.value.toLowerCase().trim();
-        const hits = (q ? allIds.filter(function(id){return id.toLowerCase().includes(q);}) : defaults).slice(0,60);
+        var q = inp.value.toLowerCase().trim();
+        var hits = (q ? allIds.filter(function(id){return id.toLowerCase().includes(q);}) : defaults).slice(0,60);
         if (!hits.length) { drop.style.display='none'; return; }
         drop.style.display='block';
-        drop.innerHTML=hits.map(function(id){const fn=((states[id]||{}).attributes||{}).friendly_name||'';
+        drop.innerHTML=hits.map(function(id){var fn=((states[id]||{}).attributes||{}).friendly_name||'';
           return '<div data-pick="'+id+'" style="padding:5px 10px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04)">'
             +'<span style="color:#e2e8f0">'+id+'</span>'+(fn?'<span style="color:#475569;margin-left:6px;font-family:system-ui;font-size:10px">'+fn+'</span>':'')+'</div>';
         }).join('');
@@ -408,30 +495,30 @@
     }
     function readValues() {
       cams.forEach(function(cam,i){
-        const n=ov.querySelector('[data-cam-name="'+i+'"]');
-        const e=ov.querySelector('[data-cam-ent="'+i+'"]');
-        const b=ov.querySelector('[data-cam-bat="'+i+'"]');
+        var n=ov.querySelector('[data-cam-name="'+i+'"]');
+        var e=ov.querySelector('[data-cam-ent="'+i+'"]');
+        var b=ov.querySelector('[data-cam-bat="'+i+'"]');
         if(n) cam.name=n.value.trim(); if(e) cam.entity=e.value.trim(); if(b) cam.battery=b.value.trim();
       });
     }
     function rebuildList() {
-      const list=ov.querySelector('#cam-cfg-list');
+      var list=ov.querySelector('#cam-cfg-list');
       list.innerHTML=cams.length?cams.map(buildRow).join(''):'<div style="font-size:12px;color:rgba(255,255,255,.3);text-align:center;padding:16px">Nessuna telecamera — clicca "Aggiungi" per iniziare</div>';
       bindAllCombos();
     }
     bindAllCombos();
 
     ov.addEventListener('click',function(e){
-      const b=e.target.closest('[data-action="delcam"]'); if(!b) return;
+      var b=e.target.closest('[data-action="delcam"]'); if(!b) return;
       readValues(); cams.splice(parseInt(b.getAttribute('data-idx')),1); rebuildList();
     });
     ov.querySelector('#cam-cfg-add').addEventListener('click',function(){
       readValues(); cams.push({entity:'',name:'',battery:''}); rebuildList();
-      const inner=ov.querySelector('div'); if(inner) inner.scrollTop=99999;
+      var inner=ov.querySelector('div'); if(inner) inner.scrollTop=99999;
     });
     ov.querySelector('#cam-cfg-save').addEventListener('click',function(){
       readValues();
-      const validCams=cams.filter(function(cam){return cam.entity.trim();});
+      var validCams=cams.filter(function(cam){return cam.entity.trim();});
       save(card,Object.assign({},c,{cameras:validCams}));
       close(); _lastKeys[card.id]=null;
       el.innerHTML=render(card); mount(card,H(),el);
@@ -440,13 +527,13 @@
 
   /* ── Registrazione ── */
   function duplicateCard(src, copy) {
-    const data = localStorage.getItem(keyOf(src));
+    var data = localStorage.getItem(keyOf(src));
     if (data) localStorage.setItem(keyOf(copy), data);
   }
 
   var CARD = {
-    id: 'camera-card', name: 'Telecamere', icon: '📷', version: '1.3',
-    desc: 'Click istantaneo (snapshot) → MJPEG live. Nessun HLS, nessuna attesa async.',
+    id: 'camera-card', name: 'Telecamere', icon: '📷', version: '1.4',
+    desc: 'WebRTC live (go2rtc) → MJPEG → snapshot. Click istantaneo, nessun re-render, batteria.',
     colSpan: 2, rowSpan: 5,
     render: render, mount: mount, update: update, configure: openCfg, duplicate: duplicateCard,
   };

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.49 — 2026-06-12
+
+### fix: Camera v1.4 — WebRTC live via go2rtc (come camera_view: live in HA)
+- `_tryWebRTC()`: usa `camera/webrtc/offer` via WebSocket HA (identico a come fa la card nativa HA con camera_view: live). Latenza < 1s, vero real-time.
+- Sequenza: WebRTC (go2rtc) → MJPEG → snapshot 2s. Ogni step tenta prima il precedente.
+- Click su miniatura: snapshot istantaneo → WebRTC avvia in background → video `<video srcObject>` sostituisce il placeholder al primo frame.
+- `_cancelPending()` chiude anche la RTCPeerConnection precedente per evitare leak.
+- Timeout 10s su WebRTC per non bloccare il fallback MJPEG.
+
 ## 1.2.48 — 2026-06-12
 
 ### fix: Camera v1.3 — switch istantaneo + MJPEG live senza HLS
