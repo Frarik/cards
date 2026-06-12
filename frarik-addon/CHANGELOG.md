@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.1 — 2026-06-12
+
+### fix: Camera v1.6 — snapshot refresh immediato, HLS, fix schermo grigio
+
 ## 1.4.0 — 2026-06-12
 
 ### Plancia salvata nell'add-on (file invece di user-data HA)

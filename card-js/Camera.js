@@ -1,4 +1,4 @@
-/* frarik-version: 1.5 */
+/* frarik-version: 1.6 */
 (function () {
   'use strict';
 
@@ -152,39 +152,84 @@
   }
 
   /* ── MJPEG via <img> ── */
-  function _startMjpeg(cam, h, card, el, si, gen, onFirst) {
+  function _startMjpeg(cam, h, card, el, si, gen, onWin) {
     var mjpeg = camMjpegUrl(cam.entity, h);
     if (!mjpeg) return;
     var img = document.createElement('img');
     img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block';
     img.onload = function() {
       img.onload = null; img.onerror = null;
-      if (!_valid(card, el, si, gen)) return;
-      onFirst(img);
+      if (_streamSlot[card.id] === gen) onWin(img);
     };
     img.onerror = function() { img.onload = null; img.onerror = null; };
     img.src = mjpeg;
   }
 
-  /* ── Fallback snapshot refresh ── */
-  function _startSnap(cam, h, card, el, wrap) {
+  /* ── HLS via camera/stream ───────────────────────────────────────────────────
+     Funziona anche per cam senza entity_picture (campanello live view).
+     Safari: HLS nativo. Chrome: HLS.js da CDN (4s timeout).                  */
+  function _startHLS(cam, h, card, el, si, gen, onWin) {
+    if (!h || !h.connection || typeof h.connection.sendMessagePromise !== 'function') return;
+    var wsP = h.connection.sendMessagePromise({ type: 'camera/stream', entity_id: cam.entity });
+    var toP = new Promise(function(_, rej){ setTimeout(function(){ rej(); }, 5000); });
+    Promise.race([wsP, toP])
+      .then(function(r) {
+        if (!r || !r.url || _streamSlot[card.id] !== gen) return;
+        var hlsUrl = /^https?:/i.test(r.url) ? r.url : (typeof h.hassUrl === 'function' ? h.hassUrl(r.url) : r.url);
+        var vid = document.createElement('video');
+        vid.autoplay = true; vid.muted = true; vid.playsInline = true;
+        vid.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block';
+        if (vid.canPlayType('application/vnd.apple.mpegurl') !== '') {
+          vid.src = hlsUrl;
+          vid.addEventListener('loadeddata', function() { if (_streamSlot[card.id] === gen) onWin(vid); }, { once: true });
+          return;
+        }
+        function setupHlsJs() {
+          if (!window.Hls || !window.Hls.isSupported()) return;
+          var hls = new window.Hls({ lowLatencyMode: true, maxBufferLength: 4, backBufferLength: 0 });
+          hls.loadSource(hlsUrl); hls.attachMedia(vid);
+          vid.addEventListener('loadeddata', function() {
+            if (_streamSlot[card.id] !== gen) { hls.destroy(); return; }
+            onWin(vid);
+          }, { once: true });
+          hls.on(window.Hls.Events.ERROR, function(_, d) { if (d.fatal) hls.destroy(); });
+        }
+        if (window.Hls) { setupHlsJs(); return; }
+        var s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js';
+        var cdnT = setTimeout(function() { try{document.head.removeChild(s);}catch(e){} }, 4000);
+        s.onload = function() { clearTimeout(cdnT); if (_streamSlot[card.id] === gen) setupHlsJs(); };
+        s.onerror = function() { clearTimeout(cdnT); };
+        document.head.appendChild(s);
+      })
+      .catch(function() {});
+  }
+
+  /* ── Snapshot refresh ogni 2s — baseline immediato ──────────────────────────
+     Crea l'img solo se ha url valido (niente rettangolo grigio Chrome per
+     cam senza entity_picture). Fermato dal gen slot quando cam cambia.        */
+  function _startSnap(cam, h, card, el, wrap, gen) {
     _stopSnap(card);
-    var img = wrap.querySelector('img');
-    if (!img) { img = document.createElement('img'); img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block'; wrap.innerHTML = ''; wrap.appendChild(img); }
+    var img = null;
     function refresh() {
-      if (!wrap.isConnected) { _stopSnap(card); return; }
+      if (!el.isConnected || _streamSlot[card.id] !== gen) { _stopSnap(card); return; }
       var url = camThumbUrl(cam.entity, h);
-      if (url) img.src = url;
+      if (!url) return;
+      if (!img) {
+        img = document.createElement('img');
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block';
+        wrap.innerHTML = ''; wrap.appendChild(img);
+      }
+      img.src = url;
     }
     refresh();
     _snapTimers[card.id] = setInterval(refresh, 2000);
   }
 
   /*
-   * _showCamStream — logica principale:
-   *  1. Snapshot istantaneo (dall'img della miniatura già in cache nel browser)
-   *  2. WebRTC e MJPEG IN PARALLELO — il primo frame che arriva vince
-   *  3. Se entrambi falliscono entro 7s → snapshot refresh ogni 2s
+   * _showCamStream
+   *  1. Snapshot refresh IMMEDIATO ogni 2s (baseline)
+   *  2. HLS + WebRTC + MJPEG in parallelo — il primo che vince ferma il refresh
    */
   function _showCamStream(card, el, si) {
     var h = H(), c = load(card), cams = c.cameras || [];
@@ -194,37 +239,26 @@
     _cancelAll(card);
     var gen = _streamSlot[card.id];
 
-    /* 1. Snapshot istantaneo — usa l'img della miniatura già caricata nel browser */
-    var snap = document.createElement('img');
-    snap.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block';
-    var thumbEl = el.querySelector('[data-cam-thumb="'+si+'"]');
-    var snapSrc = (thumbEl && thumbEl.src) ? thumbEl.src : camThumbUrl(cam.entity, h);
-    if (snapSrc) snap.src = snapSrc;
     wrap.innerHTML = '';
-    wrap.appendChild(snap);
+
+    /* 1. Snapshot refresh immediato */
+    _startSnap(cam, h, card, el, wrap, gen);
 
     var won = false;
-
-    /* Callback: il primo stream che produce un elemento lo monta nel wrap */
-    function onFirst(mediaEl) {
-      if (won || !_valid(card, el, si, gen)) return;
+    function onWin(mediaEl) {
+      if (won || _streamSlot[card.id] !== gen) return;
       won = true;
-      _closePc(card); /* chiude la connessione WebRTC se ha vinto MJPEG, o viceversa */
+      _stopSnap(card);
+      _closePc(card);
       wrap.innerHTML = '';
       wrap.appendChild(mediaEl);
       if (typeof mediaEl.play === 'function') mediaEl.play().catch(function(){});
     }
 
-    /* 2. WebRTC e MJPEG in parallelo */
-    _startWebRTC(cam, h, card, el, si, wrap, gen, onFirst);
-    _startMjpeg(cam, h, card, el, si, gen, onFirst);
-
-    /* 3. Fallback snapshot se nessuno dei due ha vinto entro 7s */
-    setTimeout(function() {
-      if (!won && _valid(card, el, si, gen)) {
-        _startSnap(cam, h, card, el, wrap);
-      }
-    }, 7000);
+    /* 2. Tre tentativi in parallelo */
+    _startHLS(cam, h, card, el, si, gen, onWin);
+    _startWebRTC(cam, h, card, el, si, wrap, gen, onWin);
+    _startMjpeg(cam, h, card, el, si, gen, onWin);
   }
 
   /* ── Cambio cam senza re-render ── */
@@ -318,10 +352,14 @@
 
     var mainView =
       '<div style="position:relative;flex:1;min-height:0;border-radius:12px;overflow:hidden;background:#050810">'
-        +'<div data-cam-main-wrap style="width:100%;height:100%">'
+        +'<div data-cam-main-wrap style="width:100%;height:100%;background:#050810">'
+          /* mount() sovrascrive subito con _showCamStream — questo è solo il flash iniziale */
           +(initThumb
-            ? '<img src="'+eh(initThumb)+'" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.opacity=\'.06\'" />'
-            : '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><span style="font-size:32px;opacity:.1">📷</span></div>'
+            ? '<img src="'+eh(initThumb)+'" style="width:100%;height:100%;object-fit:cover;display:block" />'
+            : '<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:rgba(255,255,255,.15)">'
+              +'<div style="font-size:36px">📷</div>'
+              +'<div style="font-size:10px;font-weight:700;letter-spacing:.05em">CONNESSIONE STREAM...</div>'
+              +'</div>'
           )
         +'</div>'
         +'<div data-cam-unavail style="position:absolute;inset:0;background:rgba(0,0,0,.72);'
@@ -525,7 +563,7 @@
   }
 
   var CARD = {
-    id: 'camera-card', name: 'Telecamere', icon: '📷', version: '1.5',
+    id: 'camera-card', name: 'Telecamere', icon: '📷', version: '1.6',
     desc: 'WebRTC (go2rtc) + MJPEG in parallelo. Click istantaneo, fallback snapshot 2s.',
     colSpan: 2, rowSpan: 5,
     render: render, mount: mount, update: update, configure: openCfg, duplicate: duplicateCard,
