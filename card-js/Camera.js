@@ -1,10 +1,10 @@
-/* frarik-version: 1.4 */
+/* frarik-version: 1.5 */
 (function () {
   'use strict';
 
   /* ── Helpers ── */
   function H() {
-    try { if (typeof window.frarikHass === 'function') { const h = window.frarikHass(); if (h && h.states) return h; } } catch(e) {}
+    try { if (typeof window.frarikHass === 'function') { var h = window.frarikHass(); if (h && h.states) return h; } } catch(e) {}
     return null;
   }
   function keyOf(c)  { return 'frarik_cam_' + (c.id || 'x'); }
@@ -12,52 +12,42 @@
   function save(c,o) { try { localStorage.setItem(keyOf(c), JSON.stringify(o)); } catch(e) {} }
   function eh(s)     { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-  /* ── URL helpers ── */
+  /* ── URL ── */
   function camThumbUrl(entityId, h, ts) {
     if (!entityId || !h) return '';
-    const st = h.states[entityId]; if (!st) return '';
-    const ep = (st.attributes || {}).entity_picture; if (!ep) return '';
-    const base = /^https?:/i.test(ep) ? ep : (typeof h.hassUrl === 'function' ? h.hassUrl(ep) : ep);
-    const clean = base.replace(/[?&]_=\d+/g, '');
+    var st = h.states[entityId]; if (!st) return '';
+    var ep = (st.attributes || {}).entity_picture; if (!ep) return '';
+    var base = /^https?:/i.test(ep) ? ep : (typeof h.hassUrl === 'function' ? h.hassUrl(ep) : ep);
+    var clean = base.replace(/[?&]_=\d+/g, '');
     return clean + (clean.includes('?') ? '&' : '?') + '_=' + (ts || Date.now());
   }
 
   function camMjpegUrl(entityId, h) {
     if (!entityId || !h) return '';
-    const st = h.states[entityId]; if (!st) return '';
-    const ep = (st.attributes || {}).entity_picture; if (!ep) return '';
+    var st = h.states[entityId]; if (!st) return '';
+    var ep = (st.attributes || {}).entity_picture; if (!ep) return '';
     if (!ep.includes('/api/camera_proxy/')) return '';
-    const s = ep.replace('/api/camera_proxy/', '/api/camera_proxy_stream/');
+    var s = ep.replace('/api/camera_proxy/', '/api/camera_proxy_stream/');
     return /^https?:/i.test(s) ? s : (typeof h.hassUrl === 'function' ? h.hassUrl(s) : s);
   }
 
   /* ── Stato modulo ── */
-  var _selectedCam   = {};  // card.id → index cam corrente
-  var _thumbTimers   = {};  // card.id → timer refresh miniature
-  var _mainSnapTimer = {};  // card.id → timer fallback snapshot
-  var _pendingImg    = {};  // card.id → img MJPEG in caricamento
-  var _peerConns     = {};  // card.id → RTCPeerConnection attiva
-  var _lastKeys      = {};  // card.id → chiave stato HA
+  var _selectedCam   = {};
+  var _thumbTimers   = {};
+  var _snapTimers    = {};   /* card.id → fallback snapshot timer */
+  var _peerConns     = {};   /* card.id → RTCPeerConnection */
+  var _streamSlot    = {};   /* card.id → contatore generazione (invalida async vecchie) */
+  var _lastKeys      = {};
 
   function _sel(card, cams) {
-    const i = _selectedCam[card.id] || 0;
+    var i = _selectedCam[card.id] || 0;
     return cams.length ? Math.min(Math.max(0, i), cams.length - 1) : 0;
   }
 
-  function _stateKey(card, h) {
-    try {
-      const c = load(card), cams = c.cameras || [];
-      return cams.map(function(cam) {
-        const cs = h && h.states[cam.entity];
-        const bs = cam.battery && h && h.states[cam.battery];
-        return (cs ? cs.state : '?') + ':' + (bs ? Math.round(parseFloat(bs.state)||0) : '-');
-      }).join(',');
-    } catch(e) { return ''; }
-  }
-
+  /* ── Batteria ── */
   function battPct(batEntity, h) {
     if (!batEntity || !h) return null;
-    const s = h.states[batEntity];
+    var s = h.states[batEntity];
     return (s && !isNaN(parseFloat(s.state))) ? parseFloat(s.state) : null;
   }
   function battColor(pct) {
@@ -70,178 +60,174 @@
     return '<span style="color:rgba(255,255,255,.18)">🔌</span>';
   }
 
-  /* ── Pulizia stream corrente ── */
-  function _stopMainSnap(card) {
-    if (_mainSnapTimer[card.id]) { clearInterval(_mainSnapTimer[card.id]); delete _mainSnapTimer[card.id]; }
+  /* ── Pulizia ── */
+  function _stopSnap(card) {
+    if (_snapTimers[card.id]) { clearInterval(_snapTimers[card.id]); delete _snapTimers[card.id]; }
   }
-
-  function _closePeerConn(card) {
+  function _closePc(card) {
     if (_peerConns[card.id]) { try { _peerConns[card.id].close(); } catch(e) {} delete _peerConns[card.id]; }
   }
-
-  function _cancelPending(card) {
-    const prev = _pendingImg[card.id];
-    if (prev) { prev.onload = null; prev.onerror = null; try { prev.src = ''; } catch(e) {} delete _pendingImg[card.id]; }
-    _stopMainSnap(card);
-    _closePeerConn(card);
+  function _cancelAll(card) {
+    _stopSnap(card);
+    _closePc(card);
+    /* incrementa il contatore di generazione → invalida tutte le callback async pendenti */
+    _streamSlot[card.id] = (_streamSlot[card.id] || 0) + 1;
   }
 
-  /* ── Fallback snapshot 2s (ultime risorse) ── */
-  function _startMainSnap(card, cam, h, wrap) {
-    _stopMainSnap(card);
-    var img = wrap.querySelector('img'); if (!img) return;
+  /* Controlla se questa generazione è ancora valida */
+  function _valid(card, el, si, gen) {
+    if (!el.isConnected) return false;
+    if (_streamSlot[card.id] !== gen) return false;
+    var cams = load(card).cameras || [];
+    return _sel(card, cams) === si;
+  }
+
+  /* ── WebRTC via camera/webrtc/offer ─────────────────────────────────────────
+     • ontrack va settato PRIMA di createOffer per evitare race conditions
+     • timeout 5s (non 10s) per non bloccare il fallback MJPEG
+     • go2rtc usa ICE completo nell'SDP: nessun trickle ICE necessario         */
+  function _startWebRTC(cam, h, card, el, si, wrap, gen, onFirst) {
+    if (!window.RTCPeerConnection) return;
+    if (!h || !h.connection || typeof h.connection.sendMessagePromise !== 'function') return;
+
+    var pc;
+    try { pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }); }
+    catch(e) { return; }
+
+    _closePc(card);
+    _peerConns[card.id] = pc;
+
+    /* video element creato subito (prima di createOffer) */
+    var vid = document.createElement('video');
+    vid.autoplay = true; vid.muted = true; vid.playsInline = true;
+    vid.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block';
+
+    /* ontrack PRIMA di createOffer — evita race condition se go2rtc risponde velocissimo */
+    pc.ontrack = function(event) {
+      if (!_valid(card, el, si, gen) || _peerConns[card.id] !== pc) { try{pc.close();}catch(e){} return; }
+      var stream = event.streams && event.streams[0];
+      if (!stream) return;
+      vid.srcObject = stream;
+      onFirst(vid); /* callback: monta il video e segnala vittoria */
+    };
+
+    pc.onconnectionstatechange = function() {
+      if (pc.connectionState === 'failed' || pc.connectionState === 'closed') {
+        if (_peerConns[card.id] === pc) { try{pc.close();}catch(e){} delete _peerConns[card.id]; }
+      }
+    };
+
+    /* timeout 5s: se entro 5s non arriva nessun track → chiudi */
+    var rtcTimeout = setTimeout(function() {
+      if (_peerConns[card.id] === pc) { try{pc.close();}catch(e){} delete _peerConns[card.id]; }
+    }, 5000);
+
+    try {
+      pc.addTransceiver('video', { direction: 'recvonly' });
+      pc.addTransceiver('audio', { direction: 'recvonly' });
+    } catch(e) { clearTimeout(rtcTimeout); try{pc.close();}catch(e2){} delete _peerConns[card.id]; return; }
+
+    pc.createOffer()
+      .then(function(offer) { return pc.setLocalDescription(offer).then(function(){ return offer; }); })
+      .then(function(offer) {
+        /* race tra sendMessagePromise e un timeout di 5s */
+        var wsPromise = h.connection.sendMessagePromise({
+          type: 'camera/webrtc/offer',
+          entity_id: cam.entity,
+          offer: offer.sdp
+        });
+        var raceTimeout = new Promise(function(_, rej) { setTimeout(function(){ rej(new Error('timeout')); }, 5000); });
+        return Promise.race([wsPromise, raceTimeout]);
+      })
+      .then(function(result) {
+        clearTimeout(rtcTimeout);
+        if (!result || !result.answer) { try{pc.close();}catch(e){} delete _peerConns[card.id]; return; }
+        if (_peerConns[card.id] !== pc) return;
+        return pc.setRemoteDescription({ type: 'answer', sdp: result.answer });
+      })
+      .catch(function() {
+        clearTimeout(rtcTimeout);
+        if (_peerConns[card.id] === pc) { try{pc.close();}catch(e){} delete _peerConns[card.id]; }
+      });
+  }
+
+  /* ── MJPEG via <img> ── */
+  function _startMjpeg(cam, h, card, el, si, gen, onFirst) {
+    var mjpeg = camMjpegUrl(cam.entity, h);
+    if (!mjpeg) return;
+    var img = document.createElement('img');
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block';
+    img.onload = function() {
+      img.onload = null; img.onerror = null;
+      if (!_valid(card, el, si, gen)) return;
+      onFirst(img);
+    };
+    img.onerror = function() { img.onload = null; img.onerror = null; };
+    img.src = mjpeg;
+  }
+
+  /* ── Fallback snapshot refresh ── */
+  function _startSnap(cam, h, card, el, wrap) {
+    _stopSnap(card);
+    var img = wrap.querySelector('img');
+    if (!img) { img = document.createElement('img'); img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block'; wrap.innerHTML = ''; wrap.appendChild(img); }
     function refresh() {
-      if (!wrap.isConnected) { _stopMainSnap(card); return; }
-      const url = camThumbUrl(cam.entity, h);
+      if (!wrap.isConnected) { _stopSnap(card); return; }
+      var url = camThumbUrl(cam.entity, h);
       if (url) img.src = url;
     }
     refresh();
-    _mainSnapTimer[card.id] = setInterval(refresh, 2000);
-  }
-
-  /* ── WebRTC via HA WebSocket (camera/webrtc/offer) ─────────────────────────
-     Identico a come fa la card nativa HA con camera_view: live.
-     Restituisce true se il video è avviato, false se va a fallback. */
-  function _tryWebRTC(cam, h, card, el, si, wrap) {
-    return new Promise(function(resolve) {
-      if (!window.RTCPeerConnection) { resolve(false); return; }
-      if (!h || !h.connection || typeof h.connection.sendMessagePromise !== 'function') { resolve(false); return; }
-
-      var pc;
-      try { pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }); }
-      catch(e) { resolve(false); return; }
-
-      _peerConns[card.id] = pc;
-
-      /* Timeout di sicurezza: se non parte entro 10s → fallback */
-      var resolved = false;
-      var globalTimeout = setTimeout(function() {
-        if (!resolved) { resolved = true; try { pc.close(); } catch(e){} delete _peerConns[card.id]; resolve(false); }
-      }, 10000);
-
-      function abort(reason) {
-        if (resolved) return; resolved = true;
-        clearTimeout(globalTimeout);
-        if (_peerConns[card.id] === pc) delete _peerConns[card.id];
-        try { pc.close(); } catch(e) {}
-        resolve(false);
-      }
-
-      try {
-        pc.addTransceiver('video', { direction: 'recvonly' });
-        pc.addTransceiver('audio', { direction: 'recvonly' });
-      } catch(e) { abort(); return; }
-
-      pc.createOffer()
-        .then(function(offer) {
-          return pc.setLocalDescription(offer).then(function() { return offer; });
-        })
-        .then(function(offer) {
-          /* Invia l'offerta a HA (go2rtc risponde con SDP answer) */
-          return h.connection.sendMessagePromise({
-            type: 'camera/webrtc/offer',
-            entity_id: cam.entity,
-            offer: offer.sdp
-          });
-        })
-        .then(function(result) {
-          if (!result || !result.answer) { abort(); return; }
-          if (_peerConns[card.id] !== pc) { return; } /* già cancellato */
-
-          return pc.setRemoteDescription({ type: 'answer', sdp: result.answer })
-            .then(function() {
-              /* Aspetta il primo track (video arrivato) */
-              pc.ontrack = function(event) {
-                if (resolved) return;
-                var stream = event.streams && event.streams[0];
-                if (!stream) return;
-
-                /* Controlla che l'utente non abbia già cambiato cam */
-                var cams = load(card).cameras || [];
-                if (!el.isConnected || _sel(card, cams) !== si) { abort(); return; }
-                if (_peerConns[card.id] !== pc) { return; }
-
-                var video = document.createElement('video');
-                video.autoplay = true; video.muted = true; video.playsInline = true;
-                video.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block';
-                video.srcObject = stream;
-
-                wrap.innerHTML = '';
-                wrap.appendChild(video);
-                video.play().catch(function(){});
-
-                resolved = true;
-                clearTimeout(globalTimeout);
-                resolve(true);
-              };
-
-              pc.onconnectionstatechange = function() {
-                if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') abort();
-              };
-            });
-        })
-        .catch(function() { abort(); });
-    });
-  }
-
-  /* ── MJPEG via img (primo frame → swap dal placeholder) ── */
-  function _tryMjpeg(cam, h, card, el, si, wrap) {
-    var mjpeg = camMjpegUrl(cam.entity, h);
-    if (!mjpeg) { _startMainSnap(card, cam, h, wrap); return; }
-
-    var streamImg = document.createElement('img');
-    streamImg.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block';
-    _pendingImg[card.id] = streamImg;
-
-    streamImg.onload = function() {
-      _pendingImg[card.id] = null;
-      var cams = load(card).cameras || [];
-      if (!el.isConnected || _sel(card, cams) !== si) return;
-      wrap.innerHTML = '';
-      wrap.appendChild(streamImg);
-    };
-    streamImg.onerror = function() {
-      _pendingImg[card.id] = null;
-      var cams = load(card).cameras || [];
-      if (!el.isConnected || _sel(card, cams) !== si) return;
-      _startMainSnap(card, cam, h, wrap);
-    };
-    streamImg.src = mjpeg;
+    _snapTimers[card.id] = setInterval(refresh, 2000);
   }
 
   /*
-   * _showCamStream — sequenza completa per la vista principale:
-   *  1. Snapshot istantaneo (risposta immediata al click)
-   *  2. WebRTC (go2rtc) — se disponibile: vero live, < 1s latenza
-   *  3. MJPEG — per cam senza go2rtc ma con proxy stream HA
-   *  4. Snapshot 2s — fallback universale
+   * _showCamStream — logica principale:
+   *  1. Snapshot istantaneo (dall'img della miniatura già in cache nel browser)
+   *  2. WebRTC e MJPEG IN PARALLELO — il primo frame che arriva vince
+   *  3. Se entrambi falliscono entro 7s → snapshot refresh ogni 2s
    */
   function _showCamStream(card, el, si) {
     var h = H(), c = load(card), cams = c.cameras || [];
     var cam = cams[si]; if (!cam || !el.isConnected) return;
     var wrap = el.querySelector('[data-cam-main-wrap]'); if (!wrap) return;
 
-    _cancelPending(card);
+    _cancelAll(card);
+    var gen = _streamSlot[card.id];
 
-    /* 1. Snapshot immediato */
+    /* 1. Snapshot istantaneo — usa l'img della miniatura già caricata nel browser */
     var snap = document.createElement('img');
     snap.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block';
-    var snapUrl = camThumbUrl(cam.entity, h);
-    if (snapUrl) snap.src = snapUrl;
+    var thumbEl = el.querySelector('[data-cam-thumb="'+si+'"]');
+    var snapSrc = (thumbEl && thumbEl.src) ? thumbEl.src : camThumbUrl(cam.entity, h);
+    if (snapSrc) snap.src = snapSrc;
     wrap.innerHTML = '';
     wrap.appendChild(snap);
 
-    /* 2. WebRTC → 3. MJPEG → 4. Snapshot (async, non blocca il click) */
-    _tryWebRTC(cam, h, card, el, si, wrap).then(function(rtcOk) {
-      if (rtcOk) return; /* WebRTC avviato, fine */
-      /* Controlla che l'utente non abbia già cambiato cam durante il tentativo WebRTC */
-      var camsNow = load(card).cameras || [];
-      if (!el.isConnected || _sel(card, camsNow) !== si) return;
-      _tryMjpeg(cam, h, card, el, si, wrap);
-    });
+    var won = false;
+
+    /* Callback: il primo stream che produce un elemento lo monta nel wrap */
+    function onFirst(mediaEl) {
+      if (won || !_valid(card, el, si, gen)) return;
+      won = true;
+      _closePc(card); /* chiude la connessione WebRTC se ha vinto MJPEG, o viceversa */
+      wrap.innerHTML = '';
+      wrap.appendChild(mediaEl);
+      if (typeof mediaEl.play === 'function') mediaEl.play().catch(function(){});
+    }
+
+    /* 2. WebRTC e MJPEG in parallelo */
+    _startWebRTC(cam, h, card, el, si, wrap, gen, onFirst);
+    _startMjpeg(cam, h, card, el, si, gen, onFirst);
+
+    /* 3. Fallback snapshot se nessuno dei due ha vinto entro 7s */
+    setTimeout(function() {
+      if (!won && _valid(card, el, si, gen)) {
+        _startSnap(cam, h, card, el, wrap);
+      }
+    }, 7000);
   }
 
-  /* ── Cambio telecamera senza re-render ── */
+  /* ── Cambio cam senza re-render ── */
   function _switchCam(card, el, newIdx) {
     var h = H(), c = load(card), cams = c.cameras || [];
     if (!cams.length || newIdx < 0 || newIdx >= cams.length) return;
@@ -269,11 +255,10 @@
     });
   }
 
-  /* ── Aggiorna overlay (batteria, unavailable) senza toccare lo stream ── */
+  /* ── Overlay (batteria, unavailable) — non tocca lo stream ── */
   function _updateOverlays(card, el) {
     var h = H(), c = load(card), cams = c.cameras || [];
     var si = _sel(card, cams), sel = cams[si]; if (!sel) return;
-
     var batEl = el.querySelector('[data-cam-bat-ov]');
     if (batEl) {
       var pct = battPct(sel.battery, h);
@@ -282,11 +267,21 @@
     }
     var unavEl = el.querySelector('[data-cam-unavail]');
     if (unavEl) unavEl.style.display = (h&&h.states[sel.entity]&&h.states[sel.entity].state==='unavailable') ? 'flex' : 'none';
-
     cams.forEach(function(cam, i) {
       var b = el.querySelector('[data-cam-bat-thumb="'+i+'"]');
       if (b) b.innerHTML = battHtml(battPct(cam.battery, h), cam.battery);
     });
+  }
+
+  function _stateKey(card, h) {
+    try {
+      var c = load(card), cams = c.cameras || [];
+      return cams.map(function(cam) {
+        var cs = h && h.states[cam.entity];
+        var bs = cam.battery && h && h.states[cam.battery];
+        return (cs ? cs.state : '?') + ':' + (bs ? Math.round(parseFloat(bs.state)||0) : '-');
+      }).join(',');
+    } catch(e) { return ''; }
   }
 
   /* ── Refresh miniature ── */
@@ -507,7 +502,6 @@
       bindAllCombos();
     }
     bindAllCombos();
-
     ov.addEventListener('click',function(e){
       var b=e.target.closest('[data-action="delcam"]'); if(!b) return;
       readValues(); cams.splice(parseInt(b.getAttribute('data-idx')),1); rebuildList();
@@ -525,19 +519,17 @@
     });
   }
 
-  /* ── Registrazione ── */
   function duplicateCard(src, copy) {
     var data = localStorage.getItem(keyOf(src));
     if (data) localStorage.setItem(keyOf(copy), data);
   }
 
   var CARD = {
-    id: 'camera-card', name: 'Telecamere', icon: '📷', version: '1.4',
-    desc: 'WebRTC live (go2rtc) → MJPEG → snapshot. Click istantaneo, nessun re-render, batteria.',
+    id: 'camera-card', name: 'Telecamere', icon: '📷', version: '1.5',
+    desc: 'WebRTC (go2rtc) + MJPEG in parallelo. Click istantaneo, fallback snapshot 2s.',
     colSpan: 2, rowSpan: 5,
     render: render, mount: mount, update: update, configure: openCfg, duplicate: duplicateCard,
   };
-
   window.FratechCardRegistry = window.FratechCardRegistry || {};
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};

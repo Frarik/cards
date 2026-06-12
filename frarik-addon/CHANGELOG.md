@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.2.50 — 2026-06-12
+
+### fix: Camera v1.5 — WebRTC e MJPEG in parallelo, fix race condition ontrack
+
+- **Fix critico**: `pc.ontrack` ora viene settato PRIMA di `createOffer()`. Prima era settato dopo `setRemoteDescription()`, causando una race condition su reti veloci (il track arrivava prima che il listener fosse registrato → video mai montato).
+- **WebRTC e MJPEG in parallelo**: entrambi partono contemporaneamente al click. Il primo che produce un frame vince. Nessun'attesa di 10s del fallback WebRTC prima di provare MJPEG.
+- **Timeout WebRTC ridotto a 5s** + race interno con `Promise.race` sul WebSocket (camera/webrtc/offer). Se go2rtc non risponde entro 5s, la connessione viene chiusa senza aspettare il timeout globale sendAndWait (10s).
+- **Click istantaneo**: usa `thumbEl.src` già in cache nel browser invece di rifare la richiesta snapshot all'apertura.
+- **Generazione slot** (`_streamSlot`): tutte le callback async verificano la generazione corrente — zero conflitti su click rapidi tra telecamere.
+- Rimossa subscription ICE candidate (go2rtc usa ICE completo nell'SDP answer, nessun trickle ICE necessario).
+
 ## 1.2.49 — 2026-06-12
 
 ### fix: Camera v1.4 — WebRTC live via go2rtc (come camera_view: live in HA)
