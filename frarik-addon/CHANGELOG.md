@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.48 — 2026-06-12
+
+### fix: Camera v1.3 — switch istantaneo + MJPEG live senza HLS
+- Rimosso HLS (aggiungeva 2-5s di latenza, incompatibile con "live in tempo reale").
+- Click su miniatura mostra subito lo snapshot cached (risposta istantanea), poi carica MJPEG in background: quando arriva il primo frame sostituisce il placeholder senza flash.
+- `_cancelPending()` annulla il caricamento MJPEG precedente alla velocità del click successivo.
+- Fallback snapshot ogni 2s per telecamere senza MJPEG (prima era 3s).
+- Nessuna chiamata async bloccante nel percorso del click.
+
 ## 1.2.47 — 2026-06-12
 
 ### fix: Camera v1.2 — HLS live fluido + fallback gray screen
