@@ -155,7 +155,6 @@
     var period = 12000, maxAngle = 52;
     var state = { id: null, t0: Date.now() };
     _flapRafs[rid] = state;
-    console.log('[Clima] _flapStart rid='+rid);
     function loop() {
       if (!flapEl.isConnected) { _flapStop(rid); return; }
       var phase = ((Date.now() - state.t0) % period) / period;
@@ -168,7 +167,6 @@
 
   function _flapStop(rid) {
     var s = _flapRafs[rid];
-    console.log('[Clima] _flapStop rid='+rid+' rafId='+(s?s.id:'NOT_FOUND'));
     if (s && s.id != null) cancelAnimationFrame(s.id);
     delete _flapRafs[rid];
   }
@@ -497,10 +495,8 @@
 
         const isOnNow  = !!(st && st.mode && st.mode !== 'off');
         const swingNow = _swingIsActive(val);
-        console.log('[Clima] swing click val='+val+' isOnNow='+isOnNow+' swingNow='+swingNow);
 
         const flapEl = el.querySelector('[data-clm-flap]');
-        console.log('[Clima] flapEl='+(flapEl?'FOUND data-rid='+flapEl.getAttribute('data-rid'):'NULL'));
         if (flapEl) {
           const r = flapEl.getAttribute('data-rid');
           _flapSet(flapEl, r, isOnNow, swingNow);
@@ -541,7 +537,6 @@
       var useOpt0 = opt0 && Date.now() < opt0.expires;
       var mode0  = (useOpt0 && opt0.mode  !== undefined) ? opt0.mode  : (st0 ? st0.mode  : 'off');
       var swing0 = (useOpt0 && opt0.swing !== undefined) ? opt0.swing : (st0 ? st0.swing : 'off');
-      console.log('[Clima] mount flapSet rid='+r0+' mode0='+mode0+' swing0='+swing0+' swingActive='+_swingIsActive(swing0));
       _flapSet(flapEl0, r0, mode0 !== 'off', _swingIsActive(swing0));
     }
   }
@@ -683,10 +678,15 @@
     });
   }
 
+  function duplicateCard(src, copy) {
+    var data = localStorage.getItem(keyOf(src));
+    if (data) localStorage.setItem(keyOf(copy), data);
+  }
+
   var CARD={
     id:'clima-card',name:'Climatizzatore',icon:'❄️',version:'2.8',
-    desc:'Split — look scuro, SVG loghi reali, aletta via style-tag (fix definitivo), glow modalità.',
-    colSpan:2,rowSpan:4,render:render,mount:mount,update:update,configure:openCfg,
+    desc:'Split — look scuro, SVG loghi reali, aletta RAF, glow modalità.',
+    colSpan:2,rowSpan:4,render:render,mount:mount,update:update,configure:openCfg,duplicate:duplicateCard,
   };
   window.FratechCardRegistry=window.FratechCardRegistry||{};
   window.FratechCardRegistry[CARD.id]=CARD;

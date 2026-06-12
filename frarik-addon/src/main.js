@@ -1050,6 +1050,7 @@ function _copyCardToPageDo(cardId, pageIdx){
   const sib=(tp.cards||[]).filter(c=>c.secId===sec.id&&(c.secCol||0)===0&&!c.parentId);
   nc.secOrder=sib.length?Math.max(...sib.map(c=>c.secOrder||0))+10:0;
   (tp.cards=tp.cards||[]).push(nc);
+  _cardDuplicateHook(src, nc);
   saveCfg(); showToast('📑 Copiata su "'+(tp.name||'vista')+'"');
 }
 /* AUTO-SCALE: se il CONTENUTO di una card sborda in larghezza dal contenitore,
@@ -8325,7 +8326,13 @@ function dupCard(id){
   }
   const idx=cards.findIndex(c=>c.id===id);
   cards.splice(idx+1,0,copy);
+  _cardDuplicateHook(src, copy);
   saveCfg(); renderDash();
+}
+function _cardDuplicateHook(src, copy){
+  if(src.type!=='js-custom'||!src.jsCardId) return;
+  const def=window.FratechCardRegistry&&window.FratechCardRegistry[src.jsCardId];
+  if(def&&typeof def.duplicate==='function') try{ def.duplicate(src,copy); }catch(e){}
 }
 function swapC(fromId,toId){
   const page=curPage();
