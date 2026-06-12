@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.2.53 — 2026-06-12
+
+### fix: Camera v1.6 — snapshot refresh immediato, HLS, fix schermo grigio
+
+- **Fix schermo grigio**: nessun `<img>` senza src nel DOM. Per cam senza entity_picture mostra sfondo scuro + "CONNESSIONE STREAM..." invece del rettangolo grigio Chrome.
+- **Snapshot refresh immediato**: parte subito come baseline (aggiorna ogni 2s). Niente più attesa prima di vedere qualcosa.
+- **HLS via camera/stream**: tentativo parallelo tramite WS HA → URL HLS → `<video>` nativo (Safari) o HLS.js da CDN (Chrome). Utile per cam senza entity_picture (campanello).
+- **Tre stream in parallelo**: HLS + WebRTC + MJPEG. Il primo che funziona vince e ferma il refresh snapshot.
+- **Fix `_stopSnap` su win**: `onWin` chiama `_stopSnap` → il refresh non sovrascrive più il video live.
+
 ## 1.2.52 — 2026-06-12
 
 ### Licenze: revoca effettiva anche nell'app mobile
