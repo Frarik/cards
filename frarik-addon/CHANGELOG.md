@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.47 — 2026-06-12
+
+### fix: Camera v1.2 — HLS live fluido + fallback gray screen
+- **Stream principale ora tenta HLS via WebSocket HA** (`camera/stream`): se go2rtc è configurato, usa `<video>` con HLS (fluido, ~1-3s latenza). Su Safari nativamente; su Chrome/Firefox carica HLS.js da CDN.
+- **Fallback a cascata**: HLS → MJPEG (`camera_proxy_stream`) → snapshot con refresh ogni 3s. Risolve il gray screen su telecamere che non supportano MJPEG.
+- `camMjpegUrl()` ora ritorna stringa vuota se `entity_picture` non contiene `/api/camera_proxy/`, evitando URL non validi.
+- `_applyMainStream()` gestisce il tutto in modo asincrono senza bloccare il render.
+- Istanze HLS.js vengono distrutte correttamente al cambio telecamera.
+
 ## 1.2.46 — 2026-06-12
 
 ### fix: Camera — stream live e click senza re-render (v1.1)
