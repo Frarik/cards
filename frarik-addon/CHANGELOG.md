@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.7 — 2026-06-12
+
+### fix: menu mobile — Viste non funzionava + flickering apertura
+
+- **`_mfabViews` non esposta su `window`**: il pulsante "Viste" usa `data-action2="_mfabViews"` che richiede `window._mfabViews`. La funzione non era nell'`Object.assign(window,{...})` → il sub-menu viste non si apriva mai. Aggiunta.
+- **Flickering apertura menu**: su mobile il browser spara un ghost click sintetico entro ~300ms dopo il tap reale. Questo secondo evento trovava il menu già aperto e lo richiudeva immediatamente. Fix: `toggleMobileMenu` ignora le chiusure rapide entro 300ms dall'apertura (`_mfabOpenTime`).
+
 ## 1.4.6 — 2026-06-12
 
 ### fix: viste indipendenti per dispositivo + menu mobile viste

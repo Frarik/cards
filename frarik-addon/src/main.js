@@ -9108,9 +9108,11 @@ function toggleViewsMenu(ev){
 function closeViewsMenu(){ const m=document.getElementById('views-menu'); if(m) m.remove(); document.removeEventListener('click',_viewsOutside); }
 function _viewsOutside(e){ const m=document.getElementById('views-menu'),b=document.getElementById('views-btn'); if(m&&!m.contains(e.target)&&(!b||!b.contains(e.target))) closeViewsMenu(); }
 /* ═══ FAB MOBILE: un'unica icona a destra con dentro tutte le azioni dell'header ═══ */
+let _mfabOpenTime=0;
 function toggleMobileMenu(ev){
   if(ev) ev.stopPropagation();
-  if(document.getElementById('mfab-menu')){ closeMobileMenu(); return; }
+  if(document.getElementById('mfab-menu')){ if(Date.now()-_mfabOpenTime<300) return; closeMobileMenu(); return; }
+  _mfabOpenTime=Date.now();
   closeViewsMenu(); closeNotifCenter && closeNotifCenter();
   const menu=document.createElement('div');
   menu.id='mfab-menu'; menu.className='mfab-menu';
@@ -12665,6 +12667,7 @@ Object.assign(window, {
   _ghCheckForce, _epToggleLicense, _epLicLogout, hbAddColorMapEntry, _hbResetColor,
   _hbPickChipIcon, _hbPickChipIcon2, _hbPickImapIcon, _hbIconInput, _hbIcon2Input,
   _hbSelEnt2Pos, _hbResetIcon, openSOSCfgModal, _hbEntityChanged, _hbBrowseEntity, _hbDelOption, _appDelItem, _appDelGroup,
+  _mfabViews,
   _openGhStoreClean, _pasteCardToClean, _closeViewsAndOpenTM, _closeViewsAndSetPage,
   _jsStoreAddAndRefresh, _jsRename, _jsRenameDo, _jsRenameInline, openRenameStore, closeRenameStore,
   _deleteSavedAt, _appChipPopupAt, _setActivePageAndSync,
