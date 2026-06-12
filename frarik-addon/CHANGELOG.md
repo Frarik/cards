@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.52 — 2026-06-12
+
+### Licenze: revoca effettiva anche nell'app mobile
+- L'app Home Assistant (e i WebView in genere) tengono la pagina **in memoria** senza ricaricarla e sospendono i timer in background: così una licenza revocata restava "attiva" finché non si ricaricava. Ora la validazione viene rilanciata anche al **ritorno in primo piano** (`visibilitychange`/`pageshow`/`focus`), così riaprendo la dashboard una chiave revocata viene bloccata subito. Intervallo periodico ridotto a 30 min.
+
 ## 1.2.51 — 2026-06-12
 
 ### Licenze: la revoca ora ha effetto

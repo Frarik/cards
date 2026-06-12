@@ -97,7 +97,24 @@ const LIC_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24h
   else revalidate();   // verifica ad OGNI avvio (niente più finestra 24h)
 
   // controllo periodico mentre l'app resta aperta → cattura la revoca senza reload
-  setInterval(()=>{ if(localStorage.getItem(LIC_KEY)) revalidate(); }, 60*60*1000);
+  setInterval(()=>{ if(localStorage.getItem(LIC_KEY)) revalidate(); }, 30*60*1000);
+
+  // ── Ri-controllo al ritorno in PRIMO PIANO ───────────────────────────────────
+  // Fondamentale per l'app mobile di Home Assistant: il WebView tiene la pagina in
+  // memoria (non la ricarica) e sospende i timer in background. Quando l'utente
+  // riapre la dashboard, questi eventi rilanciano la validazione → una licenza
+  // revocata viene bloccata subito, anche senza ricaricare la pagina.
+  let _lastRevalidate = Date.now();
+  function _maybeRevalidate(){
+    if(!localStorage.getItem(LIC_KEY)) return;
+    // evita raffiche: al massimo una verifica ogni 30s
+    if(Date.now()-_lastRevalidate < 30*1000) return;
+    _lastRevalidate = Date.now();
+    revalidate();
+  }
+  document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') _maybeRevalidate(); });
+  window.addEventListener('pageshow', _maybeRevalidate);   // ritorno da bfcache
+  window.addEventListener('focus', _maybeRevalidate);
 })();
 
 // ── Nasconde la barra HA ingress (ha-panel-app) ──────────────────────────────
