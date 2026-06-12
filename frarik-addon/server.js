@@ -1,7 +1,9 @@
 import express from 'express';
 import path    from 'path';
 import fs      from 'fs';
+import http    from 'http';
 import { fileURLToPath } from 'url';
+import { WebSocketServer, WebSocket } from 'ws';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app     = express();
@@ -9,6 +11,55 @@ const PORT    = 3000;
 const PANEL   = path.join(__dirname, 'panel');
 const HA_WWW  = '/config/www/frarik';
 
+const SUP_TOKEN = process.env.SUPERVISOR_TOKEN || '';
+const CORE_HTTP = 'http://supervisor/core';        // proxy REST verso HA core
+const CORE_WS   = 'ws://supervisor/core/websocket'; // proxy WebSocket verso HA core
+
+const LICENSE_API = 'https://frarik-license.frarik.workers.dev/api/validate';
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LICENZA — il backend è il vero gatekeeper.
+   Nessun token HA arriva mai al browser: il client manda solo la chiave licenza
+   (cookie frarik_lic o header/param), il backend valida col Worker e fa da proxy
+   verso HA usando il SUPERVISOR_TOKEN. Revoca ~istantanea: cache 30s + ricontrollo
+   periodico sulle connessioni WebSocket aperte.
+   ═══════════════════════════════════════════════════════════════════════════ */
+const LIC_TTL = 30 * 1000;        // cache validazione (revoca effettiva entro ~30s)
+const _licCache = new Map();      // key → { ts, data }
+
+async function checkLicense(key) {
+  if (!key) return { valid: false };
+  const c = _licCache.get(key);
+  if (c && Date.now() - c.ts < LIC_TTL) return c.data;
+  try {
+    const r = await fetch(LICENSE_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key })
+    });
+    const d = await r.json().catch(() => ({}));
+    const data = { valid: !!d.valid, name: d.name, note: d.note, expires: d.expires };
+    _licCache.set(key, { ts: Date.now(), data });
+    return data;
+  } catch (e) {
+    // Worker irraggiungibile: per non bloccare gli utenti durante un blip di rete,
+    // riusa l'ultimo esito noto (qualsiasi età). Una chiave mai vista resta negata.
+    if (c) return c.data;
+    return { valid: false, offline: true };
+  }
+}
+
+function keyFromCookie(cookieHeader) {
+  const m = (cookieHeader || '').match(/(?:^|;\s*)frarik_lic=([^;]+)/);
+  return m ? decodeURIComponent(m[1]).trim().toUpperCase() : '';
+}
+function keyFromReq(req) {
+  return keyFromCookie(req.headers.cookie)
+      || (req.headers['x-frarik-key'] ? String(req.headers['x-frarik-key']).trim().toUpperCase() : '')
+      || '';
+}
+
+/* ── Copia build in /config/www (modalità Lovelace legacy, non bloccante) ── */
 function copyDir(src, dest) {
   fs.mkdirSync(dest, { recursive: true });
   for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
@@ -17,20 +68,93 @@ function copyDir(src, dest) {
     entry.isDirectory() ? copyDir(s, d) : fs.copyFileSync(s, d);
   }
 }
-try {
-  copyDir(PANEL, HA_WWW);
-  console.log('[Frarik] File copiati in', HA_WWW);
-} catch (e) {
-  console.warn('[Frarik] Copia www non riuscita (non bloccante):', e.message);
+try { copyDir(PANEL, HA_WWW); console.log('[Frarik] File copiati in', HA_WWW); }
+catch (e) { console.warn('[Frarik] Copia www non riuscita (non bloccante):', e.message); }
+
+let manifest = { version: '1.0.0' };
+try { const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8')); manifest.version = pkg.version; } catch {}
+try { const cfg = fs.readFileSync(path.join(__dirname, 'config.yaml'), 'utf8'); const m = cfg.match(/^version:\s*"?([^"\n]+)"?/m); if (m) manifest.version = m[1].trim(); } catch {}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ENDPOINT LOCALI DELL'ADD-ON (devono precedere il proxy /api/*)
+   ═══════════════════════════════════════════════════════════════════════════ */
+app.get('/api/frarik/version', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  try {
+    const cfg = fs.readFileSync(path.join(__dirname, 'config.yaml'), 'utf8');
+    const m = cfg.match(/^version:\s*"?([^"\n]+)"?/m);
+    if (m) manifest.version = m[1].trim();
+  } catch {}
+  res.json({ version: manifest.version, ok: true });
+});
+
+// Stato licenza per il frontend (UX): valida la chiave fornita lato server.
+app.get('/api/frarik/license', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  const lic = await checkLicense(keyFromReq(req));
+  res.json(lic);
+});
+
+async function reloadHaStore() {
+  if (!SUP_TOKEN) return false;
+  try {
+    const r = await fetch('http://supervisor/store/reload', {
+      method: 'POST', headers: { Authorization: 'Bearer ' + SUP_TOKEN }
+    });
+    return r.ok;
+  } catch { return false; }
+}
+app.post('/api/frarik/reload-store', async (_req, res) => {
+  const ok = await reloadHaStore();
+  res.json({ ok });
+});
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PROXY REST → HA core  (tutto /api/* tranne /api/frarik/* e /api/websocket)
+   Gated da licenza. Il token HA non transita mai dal browser.
+   ═══════════════════════════════════════════════════════════════════════════ */
+function readBody(req) {
+  return new Promise((resolve) => {
+    const chunks = [];
+    req.on('data', (c) => chunks.push(c));
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', () => resolve(Buffer.alloc(0)));
+  });
 }
 
-let manifest = { version: '1.0.0', build: 'dev' };
-try { const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8')); manifest.version = pkg.version; } catch {}
-try { const cfg = fs.readFileSync(path.join(__dirname, 'config.yaml'), 'utf8'); const m = cfg.match(/^version:\s*"?([^"\n]+)"?/m); if(m) manifest.version = m[1].trim(); } catch {}
+app.use(async (req, res, next) => {
+  const p = req.path;
+  if (!/^\/api\//.test(p)) return next();
+  if (/^\/api\/frarik\//.test(p)) return next();
+  if (p === '/api/websocket') return next(); // gestito dall'upgrade WS
 
+  const lic = await checkLicense(keyFromReq(req));
+  if (!lic.valid) { res.status(403).json({ error: 'Licenza non valida o revocata' }); return; }
+  if (!SUP_TOKEN) { res.status(503).json({ error: 'Supervisor non disponibile' }); return; }
+
+  try {
+    const body = (req.method === 'GET' || req.method === 'HEAD') ? undefined : await readBody(req);
+    const headers = { Authorization: 'Bearer ' + SUP_TOKEN };
+    const ct = req.headers['content-type'];
+    if (ct && body && body.length) headers['Content-Type'] = ct;
+
+    const up = await fetch(CORE_HTTP + req.originalUrl, { method: req.method, headers, body });
+    res.status(up.status);
+    const upCt = up.headers.get('content-type');
+    if (upCt) res.setHeader('Content-Type', upCt);
+    res.setHeader('Cache-Control', 'no-store');
+    const buf = Buffer.from(await up.arrayBuffer());
+    res.send(buf);
+  } catch (e) {
+    res.status(502).json({ error: 'core non raggiungibile', detail: String(e && e.message || e) });
+  }
+});
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FILE STATICI + fallback index.html
+   ═══════════════════════════════════════════════════════════════════════════ */
 app.use(express.static(PANEL, {
-  etag: true,
-  lastModified: true,
+  etag: true, lastModified: true,
   setHeaders(res, filePath) {
     const base = path.basename(filePath);
     if (base === 'index.html') {
@@ -43,44 +167,73 @@ app.use(express.static(PANEL, {
     }
   }
 }));
-
-app.get('/api/frarik/version', (_req, res) => {
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  // Rilegge config.yaml ogni volta — aggiornamento senza riavvio server
-  try {
-    const cfg = fs.readFileSync(path.join(__dirname, 'config.yaml'), 'utf8');
-    const m = cfg.match(/^version:\s*"?([^"\n]+)"?/m);
-    if(m) manifest.version = m[1].trim();
-  } catch {}
-  res.json({ version: manifest.version, ok: true });
-});
-
-async function reloadHaStore() {
-  const token = process.env.SUPERVISOR_TOKEN;
-  if (!token) return false;
-  try {
-    const r = await fetch('http://supervisor/store/reload', {
-      method: 'POST',
-      headers: { Authorization: 'Bearer ' + token }
-    });
-    return r.ok;
-  } catch { return false; }
-}
-
-app.post('/api/frarik/reload-store', async (_req, res) => {
-  const ok = await reloadHaStore();
-  res.json({ ok });
-});
-
-// Ricarica il registro all'avvio e poi ogni 5 minuti → HA vede nuove versioni entro 5 min dal push
-reloadHaStore().then(ok => console.log('[Frarik] Store reload avvio:', ok ? 'OK' : 'skip (no supervisor)'));
-setInterval(() => reloadHaStore(), 5 * 60 * 1000);
-
 app.use((_req, res) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.sendFile(path.join(PANEL, 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`[Frarik] Server su porta ${PORT} — v${manifest.version}`);
+/* ═══════════════════════════════════════════════════════════════════════════
+   PROXY WEBSOCKET → HA core
+   Il browser non riceve mai il token: il backend autentica verso HA con il
+   SUPERVISOR_TOKEN ed emula l'handshake auth lato browser. Revoca istantanea:
+   ricontrollo licenza ogni 30s, alla revoca la socket viene chiusa.
+   ═══════════════════════════════════════════════════════════════════════════ */
+const server = http.createServer(app);
+const wss = new WebSocketServer({ noServer: true });
+
+server.on('upgrade', (req, socket, head) => {
+  let pathname = '/';
+  try { pathname = new URL(req.url, 'http://x').pathname; } catch {}
+  if (!pathname.endsWith('/api/websocket')) { socket.destroy(); return; }
+
+  let key = keyFromCookie(req.headers.cookie);
+  if (!key) { try { key = (new URL(req.url, 'http://x').searchParams.get('lic') || '').trim().toUpperCase(); } catch {} }
+
+  checkLicense(key).then((lic) => {
+    if (!lic.valid) { socket.write('HTTP/1.1 403 Forbidden\r\n\r\n'); socket.destroy(); return; }
+    wss.handleUpgrade(req, socket, head, (client) => proxyWs(client, key));
+  }).catch(() => { try { socket.destroy(); } catch {} });
+});
+
+function proxyWs(client, key) {
+  if (!SUP_TOKEN) { try { client.close(); } catch {} return; }
+  const upstream = new WebSocket(CORE_WS);
+  let upAuthed = false;
+  const pending = [];
+
+  // Emula l'handshake HA verso il browser
+  try { client.send(JSON.stringify({ type: 'auth_required', ha_version: 'frarik' })); } catch {}
+
+  upstream.on('message', (buf) => {
+    const txt = buf.toString();
+    let m; try { m = JSON.parse(txt); } catch { try { client.send(txt); } catch {} return; }
+    if (m.type === 'auth_required') { try { upstream.send(JSON.stringify({ type: 'auth', access_token: SUP_TOKEN })); } catch {} return; }
+    if (m.type === 'auth_ok')      { upAuthed = true; while (pending.length) { try { upstream.send(pending.shift()); } catch {} } return; }
+    if (m.type === 'auth_invalid') { try { client.close(); } catch {} try { upstream.close(); } catch {} return; }
+    try { client.send(txt); } catch {}
+  });
+
+  client.on('message', (buf) => {
+    const txt = buf.toString();
+    let m; try { m = JSON.parse(txt); } catch { return; }
+    if (m.type === 'auth') { try { client.send(JSON.stringify({ type: 'auth_ok', ha_version: 'frarik' })); } catch {} return; }
+    if (upAuthed) { try { upstream.send(txt); } catch {} } else pending.push(txt);
+  });
+
+  upstream.on('close', () => { try { client.close(); } catch {} });
+  upstream.on('error', () => { try { client.close(); } catch {} });
+  client.on('close', () => { try { upstream.close(); } catch {} clearInterval(iv); });
+
+  // Revoca istantanea: ricontrollo periodico della licenza sulla socket viva
+  const iv = setInterval(async () => {
+    const l = await checkLicense(key);
+    if (!l.valid) { try { client.close(4003, 'licenza revocata'); } catch {} try { upstream.close(); } catch {} clearInterval(iv); }
+  }, 30 * 1000);
+}
+
+reloadHaStore().then((ok) => console.log('[Frarik] Store reload avvio:', ok ? 'OK' : 'skip'));
+setInterval(() => reloadHaStore(), 5 * 60 * 1000);
+
+server.listen(PORT, () => {
+  console.log(`[Frarik] Server su porta ${PORT} — v${manifest.version} — proxy licenza ${SUP_TOKEN ? 'ATTIVO' : 'NO SUPERVISOR_TOKEN'}`);
 });

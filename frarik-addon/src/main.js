@@ -8,6 +8,24 @@ import { _ntfPushLog, _ntfDismissById, _ntfUpdateBell, ntfMarkAllRead, ntfClearA
 window.Chart  = Chart;
 window.jsyaml = jsyaml;
 
+// ── Modalità ADD-ON (ingress) ────────────────────────────────────────────────
+// Quando la dashboard è aperta dal pannello Frarik (ingress dell'add-on), il
+// percorso contiene /api/hassio_ingress/<token>. In questa modalità NON usiamo
+// né URL Nabu né token: si parla solo col backend dell'add-on, che fa da proxy
+// verso Home Assistant ed è gated dalla licenza. La chiave viaggia in un cookie
+// (così la portano automaticamente fetch, WebSocket e immagini).
+const _IG_MATCH   = location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
+const INGRESS_BASE = _IG_MATCH ? _IG_MATCH[1] : '';
+const ADDON_MODE   = !!INGRESS_BASE;
+const ADDON_BASE   = location.origin + INGRESS_BASE; // origine + prefisso ingress
+function _setLicCookie(k){
+  if(!k) return;
+  document.cookie = 'frarik_lic='+encodeURIComponent(k)+'; path='+(INGRESS_BASE||'/')+'; max-age=31536000; SameSite=Lax';
+}
+function _clearLicCookie(){
+  document.cookie = 'frarik_lic=; path='+(INGRESS_BASE||'/')+'; max-age=0; SameSite=Lax';
+}
+
 // ── License key check ────────────────────────────────────────────────────────
 const LICENSE_API = 'https://frarik-license.frarik.workers.dev/api/validate';
 const LIC_KEY     = 'frarik_license';
@@ -28,19 +46,22 @@ const LIC_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24h
     err.style.display='none';
     btn.textContent='Verifica…'; btn.disabled=true;
     try{
-      const r = await fetch(LICENSE_API, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({key: key.toUpperCase().trim()})
-      });
+      const K0 = key.toUpperCase().trim();
+      const r = ADDON_MODE
+        ? await fetch(ADDON_BASE+'/api/frarik/license', { headers:{'X-Frarik-Key': K0} })
+        : await fetch(LICENSE_API, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({key: K0}) });
       const d = await r.json();
       if(d.valid){
-        localStorage.setItem(LIC_KEY, key.toUpperCase().trim());
+        const K = key.toUpperCase().trim();
+        localStorage.setItem(LIC_KEY, K);
         localStorage.setItem(LIC_TS_KEY, Date.now().toString());
         localStorage.setItem('frarik_lic_name', d.name||'');
         localStorage.setItem('frarik_lic_note', d.note||'');
         localStorage.setItem('frarik_lic_expires', d.expires||'');
+        _setLicCookie(K);
         hideOverlay();
+        // in modalità add-on la connessione parte solo dopo l'attivazione licenza
+        if(ADDON_MODE && typeof connect==='function'){ try{ _connTargets=[]; _connIdx=0; connect(); }catch(e){} }
       } else {
         err.textContent = d.error || 'Chiave non valida.';
         err.style.display = 'block';
@@ -67,13 +88,16 @@ const LIC_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24h
     const key = localStorage.getItem(LIC_KEY);
     if(!key){ showOverlay(); return; }
     try{
-      const r = await fetch(LICENSE_API, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({key})});
+      const r = ADDON_MODE
+        ? await fetch(ADDON_BASE+'/api/frarik/license', { headers:{'X-Frarik-Key': key} })
+        : await fetch(LICENSE_API, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({key})});
       const d = await r.json();
       if(d.valid){
         localStorage.setItem(LIC_TS_KEY, Date.now().toString());
         localStorage.setItem('frarik_lic_name', d.name||'');
         localStorage.setItem('frarik_lic_note', d.note||'');
         localStorage.setItem('frarik_lic_expires', d.expires||'');
+        _setLicCookie(key);
         hideOverlay();
       } else {
         // revocata o scaduta → rimuovi e blocca
@@ -82,6 +106,7 @@ const LIC_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24h
         localStorage.removeItem('frarik_lic_name');
         localStorage.removeItem('frarik_lic_note');
         localStorage.removeItem('frarik_lic_expires');
+        _clearLicCookie();
         showOverlay();
       }
     } catch(e){
@@ -94,7 +119,7 @@ const LIC_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24h
 
   const saved = localStorage.getItem(LIC_KEY);
   if(!saved) showOverlay();
-  else revalidate();   // verifica ad OGNI avvio (niente più finestra 24h)
+  else { _setLicCookie(saved); revalidate(); }   // cookie subito + verifica ad OGNI avvio
 
   // controllo periodico mentre l'app resta aperta → cattura la revoca senza reload
   setInterval(()=>{ if(localStorage.getItem(LIC_KEY)) revalidate(); }, 30*60*1000);
@@ -187,14 +212,16 @@ const LIC_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24h
 (function(){
   var PROFILES = {
     // ── Profilo 1 (utente originale) ──
+    // NB: nessun token nel bundle. In modalità add-on (ingress) il token non serve:
+    // il backend dell'add-on fa da proxy verso HA col SUPERVISOR_TOKEN.
     'cvkvlnpaokb2r0pedlqjlq06f5zsd3fl.ui.nabu.casa': {
-      token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJjOTg4OGRlYmJmNmQ0NjNiODdkNDg1OTlmZjc1ZTRjZiIsImlhdCI6MTc4MDQ0MzQ4MCwiZXhwIjoyMDk1ODAzNDgwfQ.hyz6GFhQvycih8cn2oG7djSwXWMAg6Vthd_VyX8KPcY',
+      token: '',
       remoteUrl: 'https://cvkvlnpaokb2r0pedlqjlq06f5zsd3fl.ui.nabu.casa',
       localFallback: '192.168.1.189:8123'
     },
     // ── Profilo 2 (secondo utente) ──
     'mzlej5bjgutlujw3go5vsanafnf1bom1.ui.nabu.casa': {
-      token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIwYWU3ZTgxMWI5YWQ0Y2I0YmI4ZDViNGFkMzM4YWI2OSIsImlhdCI6MTc4MDQ0MDMwNiwiZXhwIjoyMDk1ODAwMzA2fQ.MtPfpfm2_Vo1rBinnvnN-g-pkbZRc1-qrmsSU-2W6KI',
+      token: '',
       remoteUrl: 'https://mzlej5bjgutlujw3go5vsanafnf1bom1.ui.nabu.casa',
       localFallback: '192.168.1.64:8123'
     }
@@ -216,7 +243,7 @@ if(location.protocol==='file:'){
 const TOKEN_DEFAULT = (window.FRARIK_CFG&&window.FRARIK_CFG.token) || '';
 const REMOTE_URL_DEFAULT = (window.FRARIK_CFG&&window.FRARIK_CFG.remoteUrl) || '';
 const LOCAL_FALLBACK = (window.FRARIK_CFG&&window.FRARIK_CFG.localFallback) || '192.168.1.189:8123';
-let TOKEN   = localStorage.getItem('hadb_token') || TOKEN_DEFAULT;
+let TOKEN   = ADDON_MODE ? '' : (localStorage.getItem('hadb_token') || TOKEN_DEFAULT);
 let HA_HOST, BASE;
 /* ACCESSO LOCALE + REMOTO:
    la pagina è servita da Home Assistant (/local/...), quindi ci si connette alla STESSA origine
@@ -226,6 +253,12 @@ let HA_HOST, BASE;
    automaticamente, senza configurare nulla. Un URL fisso salvato si usa SOLO se la pagina è aperta
    come file locale (file://) dove non c'è un'origine HA valida. */
 (function(){
+  if(ADDON_MODE){
+    // proxy dell'add-on: stessa origine + prefisso ingress (es. /api/hassio_ingress/<tok>)
+    HA_HOST = location.host;
+    BASE    = location.origin + INGRESS_BASE;
+    return;
+  }
   const isHttp = (location.protocol==='http:'||location.protocol==='https:') && location.host;
   const saved = localStorage.getItem('hadb_haurl');
   if(isHttp){
@@ -2052,6 +2085,8 @@ let covTimer=null;
    salvato (es. Nabu Casa). Così la stessa pagina/bookmark funziona a casa (WiFi) e fuori (dati). */
 let _connTargets=[], _connIdx=0, _connBusy=false, _connOk=false, _lastTriedHost='', _everConnected=false, _dashBuilt=false;
 function _buildConnTargets(){
+  // modalità add-on: un solo target = il backend dell'add-on (proxy gated da licenza)
+  if(ADDON_MODE) return [{host:location.host, base:location.origin+INGRESS_BASE}];
   const t=[];
   if((location.protocol==='http:'||location.protocol==='https:')&&location.host) t.push({host:location.host,base:location.origin});
   const rem=((localStorage.getItem('hadb_remote')||'').trim())||REMOTE_URL_DEFAULT;
@@ -2069,7 +2104,11 @@ function connect(){
   covTimer=setTimeout(_connFail,12000);
   try{
     const proto=BASE.startsWith('https')?'wss':'ws';
-    ws=new WebSocket(`${proto}://${HA_HOST}/api/websocket`);
+    // in modalità add-on l'URL WS include il prefisso ingress + la chiave licenza (?lic=)
+    const wsUrl = ADDON_MODE
+      ? `${BASE.replace(/^http/,'ws')}/api/websocket?lic=${encodeURIComponent(localStorage.getItem(LIC_KEY)||'')}`
+      : `${proto}://${HA_HOST}/api/websocket`;
+    ws=new WebSocket(wsUrl);
     ws.onopen=()=>setC('wait');
     ws.onmessage=e=>onMsg(JSON.parse(e.data));
     ws.onclose=()=>{
@@ -2090,6 +2129,18 @@ function _connFail(){
     // già connesso almeno una volta → riconnessione SILENZIOSA in background (solo pallino),
     // NON copriamo la plancia/header con l'overlay (così il tasto ☰ resta sempre visibile)
     reconn=setTimeout(connect,3000);
+    return;
+  }
+  // modalità add-on: niente box URL/token. Se manca la licenza valida → overlay licenza;
+  // altrimenti è il backend (proxy) momentaneamente non pronto → ritenta in silenzio.
+  if(ADDON_MODE){
+    const cm0=document.getElementById('cmsg');
+    if(!localStorage.getItem(LIC_KEY)){
+      const ov=document.getElementById('lic-overlay'); if(ov) ov.style.cssText+=';display:flex!important';
+    } else if(cm0){
+      cm0.innerHTML='⚠️ Backend non pronto<br><span style="font-size:10px;opacity:.6">riprovo…</span>';
+    }
+    reconn=setTimeout(connect,5000);
     return;
   }
   // prima connessione mai riuscita → mostra overlay con campo indirizzo/token

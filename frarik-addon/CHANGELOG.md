@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.0 — 2026-06-12
+
+### Licenza lato server + addio token (cambio architetturale)
+- **Solo la chiave licenza**: l'utente installa l'add-on, apre il pannello Frarik e inserisce la chiave. Niente più URL Nabu Casa, niente token di lunga durata da creare.
+- **Il token HA non esiste più nel browser**: il backend dell'add-on fa da **proxy** verso Home Assistant usando il `SUPERVISOR_TOKEN` interno (REST + WebSocket via `homeassistant_api`). Le credenziali HA non transitano mai lato client.
+- **Revoca davvero istantanea e inaggirabile**: il backend è il gatekeeper. Valida la chiave col Worker (cache 30s) e ricontrolla ogni 30s anche sulle connessioni WebSocket aperte → alla revoca la dashboard smette di ricevere dati subito, anche senza ricaricare. Non è aggirabile lato client perché senza licenza valida il proxy non passa nulla.
+- **Sicurezza**: rimossi dal bundle i token di lunga durata che vi erano hardcoded. ⚠️ I vecchi token vanno revocati manualmente da HA (profilo → token di lunga durata).
+- Il controllo licenza lato client in modalità add-on passa ora dal backend same-origin (`/api/frarik/license`): elimina i problemi CORS/WebView dell'app mobile.
+
 ## 1.2.53 — 2026-06-12
 
 ### fix: Camera v1.6 — snapshot refresh immediato, HLS, fix schermo grigio
