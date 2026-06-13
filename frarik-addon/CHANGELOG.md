@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.4.26 — 2026-06-13
+
+### feat(Meteo): zoom proporzionale + scrollbar popup nascosta
+
+**Slider "Scala" (CSS zoom proporzionale):**
+- Sostituisce il precedente slider larghezza pixel.
+- Range 20%–100%, step 5. Applica `zoom: X%` su `#card-{id}` via `frarik-card-layout`.
+- A 100% = Auto (dimensione piena della colonna). A 50% = card dimezzata in larghezza E altezza, contenuto tutto visibile e proporzionalmente più piccolo. Nessun clipping.
+- CSS `zoom` è supportato da tutti i browser moderni (Chrome, Safari, Firefox 126+).
+- Salvato in `card.cardScale`, restaurato al reload via `buildCard`.
+
+**Slider "Alt. min." (min-height via CSS custom property):**
+- Range 0–600px. Aggiunge spazio verticale alla card (es. per mostrare più cielo).
+- Usa `--card-min-h` custom property (penetra il shadow DOM) → `.card { min-height:var(--card-min-h,0px) }`.
+- Salvato in `card.cardMinH`, restaurato al reload via `buildCard`.
+
+**Fix scrollbar popup giornaliero:**
+- `.hr-list { scrollbar-width:none; -ms-overflow-style:none; }` + `::webkit-scrollbar { display:none }`.
+- La barra di scorrimento invisibile ma il popup rimane scorrevole.
+
+- Meteo.js frarik-version 1.23→1.24, config 1.4.25→1.4.26
+
 ## 1.4.25 — 2026-06-13
 
 ### fix(Meteo): slider dimensioni in pixel liberi + fix ReferenceError saveData

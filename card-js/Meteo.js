@@ -1,4 +1,4 @@
-/* frarik-version: 1.23 */
+/* frarik-version: 1.24 */
 
 // ── Lookup tables ─────────────────────────────────────────────────────────────
 const _WI = {
@@ -198,7 +198,7 @@ const _IC = {
 const _CSS = `
 :host{display:block;}
 *{box-sizing:border-box;margin:0;padding:0;}
-.card{border-radius:20px;overflow:hidden;font-family:var(--primary-font-family,system-ui,sans-serif);color:#fff;position:relative;box-shadow:0 12px 48px rgba(0,0,0,.6);}
+.card{border-radius:20px;overflow:hidden;font-family:var(--primary-font-family,system-ui,sans-serif);color:#fff;position:relative;box-shadow:0 12px 48px rgba(0,0,0,.6);min-height:var(--card-min-h,0px);}
 /* ── Sky ── */
 .sky{position:absolute;inset:0;z-index:0;overflow:hidden;border-radius:inherit;transition:background 90s linear;}
 .sky-stars{position:absolute;inset:0;pointer-events:none;transition:opacity 3s;}
@@ -313,14 +313,14 @@ class MeteoCard extends HTMLElement {
     super()
     this.attachShadow({mode:'open'})
     this._h   = null
-    this._c   = { entityId:'',cityName:'',humEntity:'',presEntity:'',windEntity:'',windDirEntity:'',wfDays:5,cardH:0,cardW:0 }
+    this._c   = { entityId:'',cityName:'',humEntity:'',presEntity:'',windEntity:'',windDirEntity:'',wfDays:5,cardScale:100,cardMinH:0 }
     this._fc  = []
     this._fch = []
     this._fcs = null
     this._fo  = false
     this._so  = false
     this._se  = false
-    this._te  = ''; this._tc = ''; this._th = ''; this._tp = ''; this._tw = ''; this._twd = ''; this._tdays = 5; this._tCardH = 0; this._tCardW = 0
+    this._te  = ''; this._tc = ''; this._th = ''; this._tp = ''; this._tw = ''; this._twd = ''; this._tdays = 5; this._tCardScale = 100; this._tCardMinH = 0
     this._fs  = null
     this._bk  = null
     this._nh  = true
@@ -347,8 +347,8 @@ class MeteoCard extends HTMLElement {
         humEntity:this._c.humEntity||'', presEntity:this._c.presEntity||'',
         windEntity:this._c.windEntity||'', windDirEntity:this._c.windDirEntity||'',
         wfDays:this._c.wfDays||5,
-        cardH:this._c.cardH||0,
-        cardW:this._c.cardW||0,
+        cardScale:this._c.cardScale||100,
+        cardMinH:this._c.cardMinH||0,
       }))
     }catch{}
   }
@@ -366,13 +366,13 @@ class MeteoCard extends HTMLElement {
       windEntity:   stored.windEntity   ||cfg.windEntity   ||'',
       windDirEntity:stored.windDirEntity||cfg.windDirEntity||'',
       wfDays:       stored.wfDays       ||cfg.wfDays       ||5,
-      cardH:        stored.cardH        ||cfg.cardH        ||0,
-      cardW:        stored.cardW        ||cfg.cardW        ||0,
+      cardScale:    stored.cardScale    !=null?stored.cardScale:(cfg.cardScale!=null?cfg.cardScale:100),
+      cardMinH:     stored.cardMinH     ||cfg.cardMinH     ||0,
     }
     this._te=this._c.entityId; this._tc=this._c.cityName
     this._th=this._c.humEntity; this._tp=this._c.presEntity
     this._tw=this._c.windEntity; this._twd=this._c.windDirEntity
-    this._tdays=this._c.wfDays; this._tCardH=this._c.cardH||0; this._tCardW=this._c.cardW||0
+    this._tdays=this._c.wfDays; this._tCardScale=this._c.cardScale??100; this._tCardMinH=this._c.cardMinH||0
     if(prev!==this._c.entityId&&this._h) this._getForecast()
     this._bk=null; this._build()
   }
@@ -485,7 +485,7 @@ class MeteoCard extends HTMLElement {
           return `<div class="hr-row"><div class="hr-t">${time}</div><div class="hr-i">${ico}</div><div class="hr-tp">${temp}°</div><div class="hr-r">${rn}${rp?' · '+rp:''}</div><div class="hr-w">${ws} ${wd}</div></div>`
         }).join('')
       :`<div class="hr-load">Previsioni orarie in caricamento…</div>`
-    const dmCSS=`.dov{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);font-family:var(--primary-font-family,system-ui,sans-serif);}.dov-modal{width:100%;max-height:85vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(56,189,248,.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:slideUp .22s cubic-bezier(.32,1.12,.56,1);}@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}.hr-list{flex:1;overflow-y:auto;padding:6px 0 env(safe-area-inset-bottom,8px);}.hr-row{display:grid;grid-template-columns:46px 30px 46px 1fr auto;align-items:center;gap:8px;padding:10px 20px;border-bottom:1px solid rgba(255,255,255,.05);color:#e2e8f0;}.hr-row:last-child{border-bottom:none;}.hr-t{font-size:13px;font-weight:700;color:#fff;}.hr-i{font-size:22px;text-align:center;}.hr-tp{font-size:15px;font-weight:800;letter-spacing:-.3px;color:#fff;}.hr-r{font-size:11px;color:#fff;}.hr-w{font-size:11px;color:#fff;text-align:right;white-space:nowrap;}.hr-load{padding:40px;text-align:center;color:#fff;font-size:12px;}`
+    const dmCSS=`.dov{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);font-family:var(--primary-font-family,system-ui,sans-serif);}.dov-modal{width:100%;max-height:85vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(56,189,248,.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:slideUp .22s cubic-bezier(.32,1.12,.56,1);}@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}.hr-list{flex:1;overflow-y:auto;padding:6px 0 env(safe-area-inset-bottom,8px);scrollbar-width:none;-ms-overflow-style:none;}.hr-list::-webkit-scrollbar{display:none;}.hr-row{display:grid;grid-template-columns:46px 30px 46px 1fr auto;align-items:center;gap:8px;padding:10px 20px;border-bottom:1px solid rgba(255,255,255,.05);color:#e2e8f0;}.hr-row:last-child{border-bottom:none;}.hr-t{font-size:13px;font-weight:700;color:#fff;}.hr-i{font-size:22px;text-align:center;}.hr-tp{font-size:15px;font-weight:800;letter-spacing:-.3px;color:#fff;}.hr-r{font-size:11px;color:#fff;}.hr-w{font-size:11px;color:#fff;text-align:right;white-space:nowrap;}.hr-load{padding:40px;text-align:center;color:#fff;font-size:12px;}`
     this._dayModalHost.shadowRoot.innerHTML=`<style>${_CSS}${dmCSS}</style>
 <div class="dov"><div class="dov-modal">
   <div class="shdr" style="border-radius:20px 20px 0 0;">
@@ -668,13 +668,13 @@ class MeteoCard extends HTMLElement {
                   humEntity:this._th,presEntity:this._tp,
                   windEntity:this._tw,windDirEntity:this._twd,
                   wfDays:Math.min(10,Math.max(1,parseInt(this._tdays)||5)),
-                  cardH:Math.max(0,parseInt(this._tCardH)||0),
-                  cardW:Math.max(0,parseInt(this._tCardW)||0) }
+                  cardScale:Math.max(20,Math.min(100,parseInt(this._tCardScale)||100)),
+                  cardMinH:Math.max(0,parseInt(this._tCardMinH)||0) }
         this._saveStore()
         if(this._frarikCard?.id){
           this.dispatchEvent(new CustomEvent('frarik-card-layout',{
             bubbles:true,composed:true,
-            detail:{cardId:this._frarikCard.id,cardW:this._c.cardW,cardH:this._c.cardH}
+            detail:{cardId:this._frarikCard.id,cardScale:this._c.cardScale,cardMinH:this._c.cardMinH}
           }))
         }
         this._fc=[]; this._getForecast()
@@ -700,19 +700,19 @@ class MeteoCard extends HTMLElement {
     else if(f==='wind'){ this._tw=v; this._updateDropdown('wind'); this._schedPrev() }
     else if(f==='wdir'){ this._twd=v; this._updateDropdown('wdir'); this._schedPrev() }
     else if(f==='days'){ this._tdays=parseInt(v)||5; this._schedPrev() }
-    else if(f==='cardh'){
-      this._tCardH=Math.max(0,parseInt(v)||0)
-      const lbl=sr?.querySelector('#cardh-lbl')
-      if(lbl) lbl.textContent=this._tCardH>0?this._tCardH+'px':'Auto'
+    else if(f==='cardscale'){
+      this._tCardScale=Math.max(20,Math.min(100,parseInt(v)||100))
+      const lbl=sr?.querySelector('#cardscale-lbl')
+      if(lbl) lbl.textContent=this._tCardScale>=100?'Auto (100%)':this._tCardScale+'%'
       this._schedPrev()
-      if(this._frarikCard?.id) this.dispatchEvent(new CustomEvent('frarik-card-layout',{bubbles:true,composed:true,detail:{cardId:this._frarikCard.id,cardH:this._tCardH}}))
+      if(this._frarikCard?.id) this.dispatchEvent(new CustomEvent('frarik-card-layout',{bubbles:true,composed:true,detail:{cardId:this._frarikCard.id,cardScale:this._tCardScale}}))
     }
-    else if(f==='cardw'){
-      this._tCardW=Math.max(0,parseInt(v)||0)
-      const lbl=sr?.querySelector('#cardw-lbl')
-      if(lbl) lbl.textContent=this._tCardW>0?this._tCardW+'px':'Auto'
+    else if(f==='cardminh'){
+      this._tCardMinH=Math.max(0,parseInt(v)||0)
+      const lbl=sr?.querySelector('#cardminh-lbl')
+      if(lbl) lbl.textContent=this._tCardMinH>0?this._tCardMinH+'px':'Auto'
       this._schedPrev()
-      if(this._frarikCard?.id) this.dispatchEvent(new CustomEvent('frarik-card-layout',{bubbles:true,composed:true,detail:{cardId:this._frarikCard.id,cardW:this._tCardW}}))
+      if(this._frarikCard?.id) this.dispatchEvent(new CustomEvent('frarik-card-layout',{bubbles:true,composed:true,detail:{cardId:this._frarikCard.id,cardMinH:this._tCardMinH}}))
     }
   }
 
@@ -735,16 +735,13 @@ class MeteoCard extends HTMLElement {
         windEntity:this._tw,
         windDirEntity:this._twd,
         wfDays:parseInt(this._tdays)||5,
-        cardH:0, cardW:0,
+        cardScale:100, cardMinH:0,
       })
       if(this._h) pc.hass=this._h
-      // Apply live size to preview element itself
-      const w=this._tCardW||0, h=this._tCardH||0
+      const sc=this._tCardScale??100
       pc.style.display='block'
-      pc.style.width=w>0?w+'px':''
-      pc.style.maxWidth=w>0?w+'px':'100%'
-      pc.style.height=h>0?h+'px':''
-      pc.style.overflow=h>0?'hidden':''
+      pc.style.zoom=sc<100?sc+'%':''
+      pc.style.setProperty('--card-min-h',(this._tCardMinH||0)+'px')
     }catch(err){}
   }
 
@@ -786,7 +783,7 @@ class MeteoCard extends HTMLElement {
     this._te=this._c.entityId; this._tc=this._c.cityName
     this._th=this._c.humEntity; this._tp=this._c.presEntity
     this._tw=this._c.windEntity; this._twd=this._c.windDirEntity
-    this._tdays=this._c.wfDays||5; this._tCardH=this._c.cardH||0; this._tCardW=this._c.cardW||0
+    this._tdays=this._c.wfDays||5; this._tCardScale=this._c.cardScale??100; this._tCardMinH=this._c.cardMinH||0
     this._renderModal(); this._bk=null; this._build()
   }
 
@@ -953,8 +950,8 @@ class MeteoCard extends HTMLElement {
     const ent=this._h?.states?.[eid]
     const enm=ent?.attributes?.friendly_name||eid||'—'
     const wents=Object.keys(this._h?.states||{}).filter(k=>k.startsWith('weather.'))
-    const cardHV=this._tCardH||0
-    const cardWV=this._tCardW||0
+    const cardScaleV=this._tCardScale??100
+    const cardMinHV=this._tCardMinH||0
     return `
 <div class="sov open">
   <div class="sov-modal">
@@ -1029,18 +1026,18 @@ class MeteoCard extends HTMLElement {
           <div class="fl" style="margin:0 0 4px;">Dimensioni card</div>
 
           <div class="layout-row">
-            <span class="layout-lbl">Altezza</span>
-            <input type="range" class="lslider" data-f="cardh" min="0" max="700" step="10" value="${cardHV}">
-            <span class="layout-val" id="cardh-lbl">${cardHV>0?cardHV+'px':'Auto'}</span>
+            <span class="layout-lbl">Scala</span>
+            <input type="range" class="lslider" data-f="cardscale" min="20" max="100" step="5" value="${cardScaleV}">
+            <span class="layout-val" id="cardscale-lbl">${cardScaleV>=100?'Auto (100%)':cardScaleV+'%'}</span>
           </div>
 
           <div class="layout-row">
-            <span class="layout-lbl">Larghezza</span>
-            <input type="range" class="lslider" data-f="cardw" min="0" max="800" step="10" value="${cardWV}">
-            <span class="layout-val" id="cardw-lbl">${cardWV>0?cardWV+'px':'Auto'}</span>
+            <span class="layout-lbl">Alt. min.</span>
+            <input type="range" class="lslider" data-f="cardminh" min="0" max="600" step="10" value="${cardMinHV}">
+            <span class="layout-val" id="cardminh-lbl">${cardMinHV>0?cardMinHV+'px':'Auto'}</span>
           </div>
-          <div class="ht" style="margin-top:6px;">Trascina gli slider — la card si ridimensiona in tempo reale</div>
-          <div class="ht">0 = dimensione automatica (occupa tutta la colonna)</div>
+          <div class="ht" style="margin-top:6px;">Scala: rimpicciolisce/ingrandisce tutto il contenuto proporzionalmente</div>
+          <div class="ht">Alt. min.: forza un'altezza minima (es. per mostrare più cielo)</div>
         </div>
       </div>
 
