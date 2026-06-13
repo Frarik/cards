@@ -3864,7 +3864,7 @@ function buildCard(card){
     el.addEventListener('dragleave',()=>el.classList.remove('dov'));
     el.addEventListener('drop',e=>{ e.preventDefault(); el.classList.remove('dov'); swapC(dragSrc,card.id); });
     if(card.cardScale>0&&card.cardScale<100) el.style.zoom=card.cardScale+'%';
-    if(card.cardMinH>0) el.style.setProperty('--card-min-h',card.cardMinH+'px');
+    if(card.cardW>0&&card.cardW<100){ el.style.width=card.cardW+'%'; el.style.maxWidth=card.cardW+'%'; }
     setTimeout(()=>initResize(card.id),0);
     return el;
   }
@@ -10205,7 +10205,7 @@ connect();
 
   // Layout resize from js-custom cards (e.g. Meteo)
   document.addEventListener('frarik-card-layout', e=>{
-    const {cardId,cardScale,cardMinH}=e.detail||{};
+    const {cardId,cardScale,cardW}=e.detail||{};
     if(!cardId) return;
     const pg=curPage(); if(!pg) return;
     const card=pg.cards.find(c=>c.id===cardId); if(!card) return;
@@ -10214,9 +10214,9 @@ connect();
       card.cardScale=cardScale;
       if(cardEl) cardEl.style.zoom=cardScale<100?cardScale+'%':'';
     }
-    if(cardMinH!=null){
-      card.cardMinH=cardMinH;
-      if(cardEl) cardEl.style.setProperty('--card-min-h',cardMinH>0?cardMinH+'px':'0px');
+    if(cardW!=null){
+      card.cardW=cardW;
+      if(cardEl){ cardEl.style.width=cardW<100?cardW+'%':''; cardEl.style.maxWidth=cardW<100?cardW+'%':''; }
     }
     saveCfg();
   });

@@ -1,4 +1,4 @@
-/* frarik-version: 1.24 */
+/* frarik-version: 1.25 */
 
 // ── Lookup tables ─────────────────────────────────────────────────────────────
 const _WI = {
@@ -198,7 +198,7 @@ const _IC = {
 const _CSS = `
 :host{display:block;}
 *{box-sizing:border-box;margin:0;padding:0;}
-.card{border-radius:20px;overflow:hidden;font-family:var(--primary-font-family,system-ui,sans-serif);color:#fff;position:relative;box-shadow:0 12px 48px rgba(0,0,0,.6);min-height:var(--card-min-h,0px);}
+.card{border-radius:20px;overflow:hidden;font-family:var(--primary-font-family,system-ui,sans-serif);color:#fff;position:relative;box-shadow:0 12px 48px rgba(0,0,0,.6);}
 /* ── Sky ── */
 .sky{position:absolute;inset:0;z-index:0;overflow:hidden;border-radius:inherit;transition:background 90s linear;}
 .sky-stars{position:absolute;inset:0;pointer-events:none;transition:opacity 3s;}
@@ -242,7 +242,9 @@ button[data-a="gear"]{display:var(--fgear,none);}
 .tdeg{font-size:34px;font-weight:600;margin-top:10px;letter-spacing:0;}
 .tl{font-size:12px;color:#fff;margin-top:5px;font-weight:500;}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;padding:10px 0 10px;}
-.stl{border-radius:12px;padding:10px 7px 9px;display:flex;flex-direction:column;align-items:center;gap:4px;backdrop-filter:blur(6px);}
+.stl{border-radius:12px;padding:10px 7px 9px;display:flex;flex-direction:column;align-items:center;gap:4px;backdrop-filter:blur(6px);cursor:pointer;transition:filter .12s,transform .1s;}
+.stl:hover{filter:brightness(1.25);}
+.stl:active{transform:scale(.95);}
 .sic{color:#fff;}
 .sv{font-size:14px;font-weight:800;letter-spacing:-.3px;line-height:1;color:#fff;}
 .sl{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#fff;}
@@ -313,14 +315,15 @@ class MeteoCard extends HTMLElement {
     super()
     this.attachShadow({mode:'open'})
     this._h   = null
-    this._c   = { entityId:'',cityName:'',humEntity:'',presEntity:'',windEntity:'',windDirEntity:'',wfDays:5,cardScale:100,cardMinH:0 }
+    this._c   = { entityId:'',cityName:'',humEntity:'',presEntity:'',windEntity:'',windDirEntity:'',wfDays:5,cardScale:100,cardW:100 }
     this._fc  = []
     this._fch = []
     this._fcs = null
     this._fo  = false
     this._so  = false
     this._se  = false
-    this._te  = ''; this._tc = ''; this._th = ''; this._tp = ''; this._tw = ''; this._twd = ''; this._tdays = 5; this._tCardScale = 100; this._tCardMinH = 0
+    this._te  = ''; this._tc = ''; this._th = ''; this._tp = ''; this._tw = ''; this._twd = ''; this._tdays = 5; this._tCardScale = 100; this._tCardW = 100
+    this._histModalHost = null
     this._fs  = null
     this._bk  = null
     this._nh  = true
@@ -347,8 +350,8 @@ class MeteoCard extends HTMLElement {
         humEntity:this._c.humEntity||'', presEntity:this._c.presEntity||'',
         windEntity:this._c.windEntity||'', windDirEntity:this._c.windDirEntity||'',
         wfDays:this._c.wfDays||5,
-        cardScale:this._c.cardScale||100,
-        cardMinH:this._c.cardMinH||0,
+        cardScale:this._c.cardScale??100,
+        cardW:this._c.cardW??100,
       }))
     }catch{}
   }
@@ -366,13 +369,13 @@ class MeteoCard extends HTMLElement {
       windEntity:   stored.windEntity   ||cfg.windEntity   ||'',
       windDirEntity:stored.windDirEntity||cfg.windDirEntity||'',
       wfDays:       stored.wfDays       ||cfg.wfDays       ||5,
-      cardScale:    stored.cardScale    !=null?stored.cardScale:(cfg.cardScale!=null?cfg.cardScale:100),
-      cardMinH:     stored.cardMinH     ||cfg.cardMinH     ||0,
+      cardScale:    stored.cardScale!=null?stored.cardScale:(cfg.cardScale!=null?cfg.cardScale:100),
+      cardW:        stored.cardW    !=null?stored.cardW    :(cfg.cardW    !=null?cfg.cardW    :100),
     }
     this._te=this._c.entityId; this._tc=this._c.cityName
     this._th=this._c.humEntity; this._tp=this._c.presEntity
     this._tw=this._c.windEntity; this._twd=this._c.windDirEntity
-    this._tdays=this._c.wfDays; this._tCardScale=this._c.cardScale??100; this._tCardMinH=this._c.cardMinH||0
+    this._tdays=this._c.wfDays; this._tCardScale=this._c.cardScale??100; this._tCardW=this._c.cardW??100
     if(prev!==this._c.entityId&&this._h) this._getForecast()
     this._bk=null; this._build()
   }
@@ -389,7 +392,7 @@ class MeteoCard extends HTMLElement {
   disconnectedCallback(){
     this.shadowRoot.removeEventListener('click',this._click)
     this.shadowRoot.removeEventListener('input',this._inp)
-    this._destroyModal(); this._destroyDayModal()
+    this._destroyModal(); this._destroyDayModal(); this._destroyHistModal()
     this._unsub(); this._unsubHourly()
     if(this._skyTimer){ clearInterval(this._skyTimer); this._skyTimer=null }
   }
@@ -458,6 +461,92 @@ class MeteoCard extends HTMLElement {
     if(!this._dayModalHost) return
     this._dayModalHost.shadowRoot.removeEventListener('click',this._click)
     this._dayModalHost.remove(); this._dayModalHost=null
+  }
+
+  _destroyHistModal(){
+    if(!this._histModalHost) return
+    this._histModalHost.shadowRoot.removeEventListener('click',this._click)
+    this._histModalHost.remove(); this._histModalHost=null
+  }
+
+  async _openHistPopup(entityId, attrName, label){
+    this._destroyHistModal()
+    this._histModalHost=document.createElement('div')
+    this._histModalHost.attachShadow({mode:'open'})
+    this._histModalHost.shadowRoot.addEventListener('click',this._click)
+    document.body.appendChild(this._histModalHost)
+    const histCSS=`.hov{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);font-family:var(--primary-font-family,system-ui,sans-serif);}.hov-modal{width:100%;max-height:72vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(251,191,36,.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:slideUp .22s cubic-bezier(.32,1.12,.56,1);}@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}.hw{flex:1;overflow-y:auto;padding:16px 20px 24px;scrollbar-width:none;-ms-overflow-style:none;}.hw::-webkit-scrollbar{display:none;}.hs-row{display:flex;gap:0;justify-content:space-around;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.07);}.hs-item{text-align:center;}.hs-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);}.hs-val{font-size:20px;font-weight:800;color:#fff;margin-top:3px;}.hs-unit{font-size:11px;font-weight:400;color:rgba(255,255,255,.6);margin-left:2px;}.hload{padding:40px;text-align:center;color:rgba(255,255,255,.5);font-size:12px;}`
+    this._histModalHost.shadowRoot.innerHTML=`<style>${_CSS}${histCSS}</style>
+<div class="hov"><div class="hov-modal">
+  <div class="shdr" style="border-radius:20px 20px 0 0;">
+    <div class="sico" style="font-size:18px;background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.3);color:#fbbf24;">📈</div>
+    <div><div class="stit">${label||'Andamento'}</div><div class="ssub">Ultime 24 ore · ${entityId}</div></div>
+    <button class="scls" data-a="closehist">${_IC.x}</button>
+  </div>
+  <div class="hw"><div class="hload">Caricamento dati…</div></div>
+</div></div>`
+    if(!entityId||!this._h?.callApi) return
+    try{
+      const end=new Date(), start=new Date(end-86400000)
+      const noAttr=!attrName
+      const path=`history/period/${start.toISOString()}?filter_entity_id=${entityId}&end_time=${end.toISOString()}&minimal_response=${noAttr?'true':'false'}${noAttr?'&no_attributes=true':''}`
+      const data=await this._h.callApi('GET',path)
+      const raw=Array.isArray(data)&&data.length?data[0]:[]
+      const unit=this._h?.states?.[entityId]?.attributes?.unit_of_measurement||''
+      const pts=raw.map(s=>{
+        const v=attrName?(parseFloat(s.attributes?.[attrName]??'')): parseFloat(s.state)
+        return isNaN(v)?null:{t:new Date(s.last_changed||s.last_updated).getTime(),v}
+      }).filter(Boolean)
+      const sr=this._histModalHost?.shadowRoot; if(!sr) return
+      const hw=sr.querySelector('.hw'); if(!hw) return
+      if(!pts.length){ hw.innerHTML=`<div class="hload">Nessun dato nelle ultime 24 ore</div>`; return }
+      const vals=pts.map(p=>p.v)
+      const minV=Math.min(...vals), maxV=Math.max(...vals)
+      const cur=this._h?.states?.[entityId]
+      const curVal=attrName?(cur?.attributes?.[attrName]??'—'):(cur?.state??'—')
+      const fmt=v=>typeof v==='number'?v.toFixed(1):String(v)
+      hw.innerHTML=`
+        <div class="hs-row">
+          <div class="hs-item"><div class="hs-lbl">Minimo</div><div class="hs-val">${fmt(minV)}<span class="hs-unit">${unit}</span></div></div>
+          <div class="hs-item"><div class="hs-lbl">Massimo</div><div class="hs-val">${fmt(maxV)}<span class="hs-unit">${unit}</span></div></div>
+          <div class="hs-item"><div class="hs-lbl">Attuale</div><div class="hs-val">${curVal}<span class="hs-unit">${unit}</span></div></div>
+        </div>
+        ${this._buildHistChart(pts,minV,maxV)}`
+    }catch(err){
+      const hw=this._histModalHost?.shadowRoot?.querySelector('.hw')
+      if(hw) hw.innerHTML=`<div class="hload">Errore: ${err?.message||'impossibile caricare i dati'}</div>`
+    }
+  }
+
+  _buildHistChart(pts,minV,maxV){
+    const W=460,H=130,PL=42,PR=12,PT=8,PB=22
+    const cW=W-PL-PR, cH=H-PT-PB
+    const rngV=(maxV-minV)||1
+    const minT=pts[0].t, maxT=pts[pts.length-1].t
+    const rngT=(maxT-minT)||1
+    const gx=p=>PL+((p.t-minT)/rngT*cW)
+    const gy=p=>PT+cH-((p.v-minV)/rngV*cH)
+    const poly=pts.map(p=>`${gx(p).toFixed(1)},${gy(p).toFixed(1)}`).join(' ')
+    const fill=`M${PL},${PT+cH} ${pts.map(p=>`L${gx(p).toFixed(1)},${gy(p).toFixed(1)}`).join(' ')} L${PL+cW},${PT+cH} Z`
+    const yLbls=[0,.5,1].map(t=>{
+      const v=minV+rngV*t, y=PT+cH-t*cH
+      return `<text x="${PL-5}" y="${y+3.5}" text-anchor="end" fill="rgba(255,255,255,.4)" font-size="9" font-family="system-ui">${v%1===0?v.toFixed(0):v.toFixed(1)}</text>
+      <line x1="${PL}" y1="${y}" x2="${PL+cW}" y2="${y}" stroke="rgba(255,255,255,.05)" stroke-width="1"/>`
+    }).join('')
+    const xLbls=[0,6,12,18,24].map(h=>{
+      const t=minT+(h/24)*rngT
+      if(t<minT||t>maxT+1800000) return ''
+      const x=PL+((t-minT)/rngT*cW)
+      const d=new Date(t)
+      return `<text x="${x.toFixed(1)}" y="${H-4}" text-anchor="middle" fill="rgba(255,255,255,.4)" font-size="8" font-family="system-ui">${d.getHours().toString().padStart(2,'0')}:00</text>`
+    }).join('')
+    return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;overflow:visible;">
+  <defs><linearGradient id="hgf" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fbbf24" stop-opacity=".3"/><stop offset="100%" stop-color="#fbbf24" stop-opacity="0"/></linearGradient></defs>
+  ${yLbls}
+  <path d="${fill}" fill="url(#hgf)"/>
+  <polyline points="${poly}" fill="none" stroke="#fbbf24" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+  ${xLbls}
+</svg>`
   }
 
   _renderDayModal(){
@@ -669,12 +758,12 @@ class MeteoCard extends HTMLElement {
                   windEntity:this._tw,windDirEntity:this._twd,
                   wfDays:Math.min(10,Math.max(1,parseInt(this._tdays)||5)),
                   cardScale:Math.max(20,Math.min(100,parseInt(this._tCardScale)||100)),
-                  cardMinH:Math.max(0,parseInt(this._tCardMinH)||0) }
+                  cardW:Math.max(20,Math.min(100,parseInt(this._tCardW)||100)) }
         this._saveStore()
         if(this._frarikCard?.id){
           this.dispatchEvent(new CustomEvent('frarik-card-layout',{
             bubbles:true,composed:true,
-            detail:{cardId:this._frarikCard.id,cardScale:this._c.cardScale,cardMinH:this._c.cardMinH}
+            detail:{cardId:this._frarikCard.id,cardScale:this._c.cardScale,cardW:this._c.cardW}
           }))
         }
         this._fc=[]; this._getForecast()
@@ -688,6 +777,12 @@ class MeteoCard extends HTMLElement {
         break
       case 'day':    this._openDayDetail(parseInt(t.dataset.idx||'0')); break
       case 'closedm':this._destroyDayModal(); break
+      case 'stat':{
+        const el=e.target.closest('[data-a="stat"]')
+        if(el) this._openHistPopup(el.dataset.eid||'',el.dataset.attr||'',el.dataset.lbl||'Dato')
+        break
+      }
+      case 'closehist':this._destroyHistModal(); break
     }
   }
 
@@ -707,12 +802,12 @@ class MeteoCard extends HTMLElement {
       this._schedPrev()
       if(this._frarikCard?.id) this.dispatchEvent(new CustomEvent('frarik-card-layout',{bubbles:true,composed:true,detail:{cardId:this._frarikCard.id,cardScale:this._tCardScale}}))
     }
-    else if(f==='cardminh'){
-      this._tCardMinH=Math.max(0,parseInt(v)||0)
-      const lbl=sr?.querySelector('#cardminh-lbl')
-      if(lbl) lbl.textContent=this._tCardMinH>0?this._tCardMinH+'px':'Auto'
+    else if(f==='cardw'){
+      this._tCardW=Math.max(20,Math.min(100,parseInt(v)||100))
+      const lbl=sr?.querySelector('#cardw-lbl')
+      if(lbl) lbl.textContent=this._tCardW>=100?'Auto (100%)':this._tCardW+'%'
       this._schedPrev()
-      if(this._frarikCard?.id) this.dispatchEvent(new CustomEvent('frarik-card-layout',{bubbles:true,composed:true,detail:{cardId:this._frarikCard.id,cardMinH:this._tCardMinH}}))
+      if(this._frarikCard?.id) this.dispatchEvent(new CustomEvent('frarik-card-layout',{bubbles:true,composed:true,detail:{cardId:this._frarikCard.id,cardW:this._tCardW}}))
     }
   }
 
@@ -741,7 +836,7 @@ class MeteoCard extends HTMLElement {
       const sc=this._tCardScale??100
       pc.style.display='block'
       pc.style.zoom=sc<100?sc+'%':''
-      pc.style.setProperty('--card-min-h',(this._tCardMinH||0)+'px')
+      pc.style.width=this._tCardW<100?this._tCardW+'%':''
     }catch(err){}
   }
 
@@ -783,7 +878,7 @@ class MeteoCard extends HTMLElement {
     this._te=this._c.entityId; this._tc=this._c.cityName
     this._th=this._c.humEntity; this._tp=this._c.presEntity
     this._tw=this._c.windEntity; this._twd=this._c.windDirEntity
-    this._tdays=this._c.wfDays||5; this._tCardScale=this._c.cardScale??100; this._tCardMinH=this._c.cardMinH||0
+    this._tdays=this._c.wfDays||5; this._tCardScale=this._c.cardScale??100; this._tCardW=this._c.cardW??100
     this._renderModal(); this._bk=null; this._build()
   }
 
@@ -919,19 +1014,19 @@ class MeteoCard extends HTMLElement {
       </div>
     </div>
     <div class="stats">
-      <div class="stl" style="background:${tb};border:1px solid ${tbr};">
+      <div class="stl" data-a="stat" data-eid="${c.humEntity||c.entityId}" data-attr="${c.humEntity?'':'humidity'}" data-lbl="Umidità" style="background:${tb};border:1px solid ${tbr};">
         <div class="sic">${_IC.hu}</div>
         <div class="sv">${hum}</div><div class="sl">Umidità</div>
       </div>
-      <div class="stl" style="background:${tb};border:1px solid ${tbr};">
+      <div class="stl" data-a="stat" data-eid="${c.presEntity||c.entityId}" data-attr="${c.presEntity?'':'pressure'}" data-lbl="Pressione" style="background:${tb};border:1px solid ${tbr};">
         <div class="sic">${_IC.pr}</div>
         <div class="sv">${pres}</div><div class="sl">Pressione</div>
       </div>
-      <div class="stl" style="background:${tb};border:1px solid ${tbr};">
+      <div class="stl" data-a="stat" data-eid="${c.windEntity||c.entityId}" data-attr="${c.windEntity?'':'wind_speed'}" data-lbl="Vento" style="background:${tb};border:1px solid ${tbr};">
         <div class="sic">${_IC.wi}</div>
         <div class="sv">${wsp}</div><div class="sl">Vento</div>
       </div>
-      <div class="stl" style="background:${tb};border:1px solid ${tbr};">
+      <div class="stl" data-a="stat" data-eid="${c.windDirEntity||c.entityId}" data-attr="${c.windDirEntity?'':'wind_bearing'}" data-lbl="Direzione" style="background:${tb};border:1px solid ${tbr};">
         <div class="sic">${_IC.co}</div>
         <div class="sv">${wdir}</div><div class="sl">Direzione</div>
       </div>
@@ -951,7 +1046,7 @@ class MeteoCard extends HTMLElement {
     const enm=ent?.attributes?.friendly_name||eid||'—'
     const wents=Object.keys(this._h?.states||{}).filter(k=>k.startsWith('weather.'))
     const cardScaleV=this._tCardScale??100
-    const cardMinHV=this._tCardMinH||0
+    const cardWV=this._tCardW??100
     return `
 <div class="sov open">
   <div class="sov-modal">
@@ -1026,18 +1121,18 @@ class MeteoCard extends HTMLElement {
           <div class="fl" style="margin:0 0 4px;">Dimensioni card</div>
 
           <div class="layout-row">
-            <span class="layout-lbl">Scala</span>
+            <span class="layout-lbl">Altezza</span>
             <input type="range" class="lslider" data-f="cardscale" min="20" max="100" step="5" value="${cardScaleV}">
             <span class="layout-val" id="cardscale-lbl">${cardScaleV>=100?'Auto (100%)':cardScaleV+'%'}</span>
           </div>
 
           <div class="layout-row">
-            <span class="layout-lbl">Alt. min.</span>
-            <input type="range" class="lslider" data-f="cardminh" min="0" max="600" step="10" value="${cardMinHV}">
-            <span class="layout-val" id="cardminh-lbl">${cardMinHV>0?cardMinHV+'px':'Auto'}</span>
+            <span class="layout-lbl">Larghezza</span>
+            <input type="range" class="lslider" data-f="cardw" min="20" max="100" step="5" value="${cardWV}">
+            <span class="layout-val" id="cardw-lbl">${cardWV>=100?'Auto (100%)':cardWV+'%'}</span>
           </div>
-          <div class="ht" style="margin-top:6px;">Scala: rimpicciolisce/ingrandisce tutto il contenuto proporzionalmente</div>
-          <div class="ht">Alt. min.: forza un'altezza minima (es. per mostrare più cielo)</div>
+          <div class="ht" style="margin-top:6px;">Altezza: zoom proporzionale sull'intera card</div>
+          <div class="ht">Larghezza: stringe la card nella colonna (il contenuto si adatta)</div>
         </div>
       </div>
 

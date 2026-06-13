@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.4.27 — 2026-06-13
+
+### feat(Meteo): slider Altezza/Larghezza + popup grafico 24h su entità sensore
+
+**Slider rinominati e ridefiniti:**
+- "Scala" → "Altezza": CSS `zoom` sulla card, scala proporzionalmente tutto il contenuto in altezza.
+- "Alt. min." → "Larghezza": `width: X%` sulla card, stringe la card nella colonna (20%–100%).
+- Entrambi live durante il drag, persistiti e restaurati al reload.
+
+**Grafico 24h per le 4 entità della card:**
+- Click su Umidità / Pressione / Vento / Direzione → apre bottom sheet con grafico SVG delle ultime 24 ore.
+- Usa HA history API (`/api/history/period/...`) con `callApi` del frontend hass.
+- Se è configurata un'entità sensor dedicata, usa quella; se usa attributo dell'entità meteo, usa `?minimal_response=false` per leggere l'attributo dalla storia.
+- Chart: linea gialla (`#fbbf24`) su sfondo gradiente, etichette Min/Max/Attuale, asse X con ore.
+- `.stl { cursor:pointer; }` + hover brightness + active scale.
+- Popup bottom sheet (`.hov`/`.hov-modal`) su `document.body` via `_histModalHost` in shadow DOM.
+- Scrollbar popup nascosta (`scrollbar-width:none`).
+- Meteo.js frarik-version 1.24→1.25, config 1.4.26→1.4.27
+
 ## 1.4.26 — 2026-06-13
 
 ### feat(Meteo): zoom proporzionale + scrollbar popup nascosta
