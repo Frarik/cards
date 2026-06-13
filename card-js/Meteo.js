@@ -111,6 +111,7 @@ const _CSS = `
 .gbtn{width:30px;height:30px;border-radius:8px;border:none;background:rgba(255,255,255,.08);cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.55);flex-shrink:0;transition:background .15s;margin-top:2px;}
 .gbtn:hover{background:rgba(255,255,255,.16);}
 .gbtn.on{background:rgba(255,255,255,.2);color:#fff;}
+button[data-a="gear"]{display:var(--fgear,none);}
 /* temperatura */
 .tz{display:flex;align-items:center;gap:18px;padding:6px 0 4px;}
 .tic{font-size:64px;line-height:1;filter:drop-shadow(0 2px 12px rgba(0,0,0,.25));}

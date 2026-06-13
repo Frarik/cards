@@ -53,13 +53,13 @@
         <span class="dwc-t">${elapsed(h, id)}</span>
       </div>`).join('');
     return `<style>${css(rid)}</style><div id="${rid}" class="dwc-root">
-      <div class="dwc-hdr"><div class="dwc-ico">🚪</div><div class="dwc-tit">Porte e Finestre</div><div class="dwc-gear" data-dwc="gear" title="Impostazioni">⚙️</div></div>
+      <div class="dwc-hdr"><div class="dwc-ico">🚪</div><div class="dwc-tit">Porte e Finestre</div></div>
       <div class="dwc-status" style="--c:${col}">
         <div class="dwc-big">${allClosed ? '✅' : open.length}</div>
         <div class="dwc-lbl">${allClosed ? 'Tutto chiuso' : (open.length === 1 ? '1 aperta' : open.length + ' aperte') + ' · su ' + list.length}</div>
       </div>
       ${allClosed ? '' : `<div class="dwc-list">${rows}</div>`}
-      ${list.length ? '' : '<div class="dwc-empty">Nessun sensore apertura rilevato. Aggiungili dal ⚙.</div>'}
+      ${list.length ? '' : '<div class="dwc-empty">Nessun sensore apertura rilevato. Attiva modifica → ✏️ per configurare.</div>'}
     </div>`;
   }
 
@@ -71,8 +71,6 @@
 #${rid} .dwc-hdr{display:flex;align-items:center;gap:9px;}
 #${rid} .dwc-ico{font-size:18px;}
 #${rid} .dwc-tit{flex:1;font-size:14px;font-weight:800;}
-#${rid} .dwc-gear{width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;color:rgba(255,255,255,.45);background:rgba(255,255,255,.06);}
-#${rid} .dwc-gear:hover{color:#fff;background:rgba(255,255,255,.14);}
 #${rid} .dwc-status{display:flex;align-items:center;gap:12px;}
 #${rid} .dwc-big{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;
   background:color-mix(in srgb,var(--c) 18%,transparent);border:1px solid var(--c);color:var(--c);flex-shrink:0;}
@@ -86,13 +84,7 @@
 `;
   }
 
-  function mount(card, hass, el) {
-    if (el._dwcBound) return; el._dwcBound = true;
-    el.addEventListener('click', e => {
-      const t = e.target.closest('[data-dwc]');
-      if (t && t.getAttribute('data-dwc') === 'gear') { e.stopPropagation(); openCfg(card, el); }
-    });
-  }
+  function mount(card, hass, el) {}
   function update(card, hass, el) { try { el.innerHTML = render(card); } catch (e) {} }
 
   function openCfg(card, el) {

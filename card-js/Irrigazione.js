@@ -157,6 +157,7 @@ const CSS = `
 .icon-btn  { width:30px;height:30px;border-radius:8px;border:none;background:rgba(255,255,255,.05);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--secondary-text-color,#64748b);transition:background .15s; }
 .icon-btn:hover  { background:rgba(255,255,255,.1); }
 .icon-btn.active { background:rgba(59,130,246,.18);color:#3b82f6; }
+button[data-action="toggleSettings"] { display: var(--fgear, none); }
 .badge { display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.05em;border:1px solid currentColor;white-space:nowrap; }
 .dot { width:6px;height:6px;border-radius:50%;background:currentColor; }
 .dot.pulse { animation:blink 1.4s infinite; }

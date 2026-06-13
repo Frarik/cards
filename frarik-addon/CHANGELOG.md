@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.4.12 — 2026-06-13
+
+### feat: rimozione icona ⚙️ da tutte le card — interfaccia pulita
+
+- **Gear icon rimossa da tutte le card** in modalità normale. In edit mode la rotella rimane accessibile tramite la matita ✏️.
+- **DoorsWindows.js**: rimosso `<div class="dwc-gear">⚙️</div>` dall'HTML, rimosso CSS `.dwc-gear`, rimosso click handler gear. Il configure è già disponibile tramite `configure: openCfg` nel registry (✏️ in edit mode).
+- **person-card.js**: rimosso `<div class="pc-gear">⚙️</div>` da entrambe le view (normale + vuota), rimosso CSS `.pc-gear`, rimosso check `act === 'gear'`. Aggiunto `configure: (card, el) => openConfig(card, el)` al CARD object — ora ✏️ in edit mode apre la configurazione.
+- **Antizanzare.js / Differenziata.js / Irrigazione.js** (shadow DOM): aggiunta regola CSS `button[data-action="toggleSettings"] { display: var(--fgear, none); }` nel CSS interno del componente. La custom property `--fgear` è `none` in modalità normale, `flex` in edit mode (definita in `style.css`).
+- **Meteo.js** (shadow DOM): aggiunta regola CSS `button[data-a="gear"] { display: var(--fgear, none); }`.
+- **style.css**: aggiunto `body { --fgear: none }` + `body.editing { --fgear: flex }` — la custom property attraversa il confine shadow DOM.
+- **Camera.js / Tapparella.js**: aggiornati testi placeholder che riferivano a `⚙️` → ora puntano a `✏️` in edit mode.
+
 ## 1.4.11 — 2026-06-13
 
 ### feat: menù ⋮ sulla card + rimozione frecce ridimensionamento dal popup

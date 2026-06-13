@@ -340,7 +340,7 @@
         +'height:100%;gap:12px;padding:20px;text-align:center;color:rgba(255,255,255,.3)">'
         +'<div style="font-size:40px;opacity:.35">📷</div>'
         +'<div style="font-size:13px;font-weight:700">Nessuna telecamera</div>'
-        +'<div style="font-size:11px;line-height:1.6;opacity:.7">Apri ✏️ → ⚙️ per aggiungere le telecamere</div>'
+        +'<div style="font-size:11px;line-height:1.6;opacity:.7">Attiva modifica → ✏️ per aggiungere le telecamere</div>'
         +'</div>';
     }
 

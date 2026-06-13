@@ -131,7 +131,6 @@
           <div class="pc-ago">${ago || ''}</div>
         </div>
       </div></div>
-      <div class="pc-gear" data-pc="gear" title="Impostazioni">⚙️</div>
     </div>`;
   }
 
@@ -143,7 +142,6 @@
         <div style="font-weight:800;font-size:15px">Card Persona</div>
         <div style="opacity:.7;font-size:11px">Tocca per scegliere l'entità <b>person</b> e il <b>GPS</b>.</div>
       </div></div>
-      <div class="pc-gear" data-pc="gear" title="Impostazioni">⚙️</div>
     </div>`;
   }
 
@@ -178,11 +176,6 @@
   font-size:12px;font-weight:800;line-height:1;white-space:nowrap;background:color-mix(in srgb,var(--pc-col) 22%,transparent);
   border:1px solid var(--pc-col);color:var(--pc-col);}
 #${rid} .pc-ago{font-size:12px;color:rgba(255,255,255,.62);margin-top:5px;white-space:nowrap;}
-/* ingranaggio impostazioni: in alto a destra, grigio chiaro discreto (NON scalato) */
-#${rid} .pc-gear{position:absolute;top:6px;right:7px;z-index:5;width:24px;height:24px;border-radius:7px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;background:rgba(8,12,22,.4);color:#cbd5e1;
-  font-size:13px;transition:background .15s,color .15s;}
-#${rid} .pc-gear:hover{background:rgba(8,12,22,.8);color:#fff;}
 `;
   }
 
@@ -222,7 +215,6 @@
         el.addEventListener('click', (e) => {
           const t = e.target.closest('[data-pc]');
           const act = t && t.getAttribute('data-pc');
-          if (act === 'gear') { e.stopPropagation(); openConfig(card, el, hass); return; }
           if (getPerson(card)) openHistory(card); else openConfig(card, el, hass);
         });
       }
@@ -434,7 +426,7 @@
     version: '1.19',
     desc: 'Foto persona + tracker, sfondo Google Maps live, stato zona colorato e storico 24h. Contenuto che scala con la dimensione della card.',
     noAutoFit: true,   // ha già il suo scaling interno (mappa a tutto sfondo) → niente auto-fit del core
-    render, mount, update
+    render, mount, update, configure: (card, el) => openConfig(card, el)
   };
   window.FratechCardRegistry = window.FratechCardRegistry || {};
   window.FratechCardRegistry[CARD.id] = CARD;

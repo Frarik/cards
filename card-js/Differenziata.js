@@ -100,6 +100,7 @@ const CSS = `
 .icon-btn { width:30px;height:30px;border-radius:8px;border:none;background:rgba(255,255,255,.05);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--secondary-text-color,#64748b);transition:background .15s; }
 .icon-btn:hover { background:rgba(255,255,255,.1); }
 .icon-btn.on { background:rgba(255,255,255,.12);color:var(--primary-text-color,#f1f5f9); }
+button[data-action="toggleSettings"] { display: var(--fgear, none); }
 
 /* Hero */
 .hero {

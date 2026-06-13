@@ -319,7 +319,7 @@
       return `<div style="height:100%;display:flex;flex-direction:column;min-height:0;gap:8px">${header(nm, type)}
         <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:rgba(255,255,255,.55);text-align:center;padding:10px">
           <div style="font-size:34px">${coverIcon(type)}</div>
-          <div style="font-size:11px">Tocca <b style="color:${acc}">✏️ → ⚙️ Configura</b> per scegliere l'entità <b style="color:${acc}">cover</b></div>
+          <div style="font-size:11px">Tocca <b style="color:${acc}">✏️ Configura</b> per scegliere l'entità <b style="color:${acc}">cover</b></div>
         </div></div>`;
     }
     const pos = getPos(h, id), st = stateOf(h, id);
@@ -574,7 +574,7 @@
         ${header(nm, 'porta_finestra')}
         <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:rgba(255,255,255,.55);text-align:center;padding:10px">
           <div style="font-size:34px">🚪</div>
-          <div style="font-size:11px">Tocca <b style="color:${acc}">✏️ → ⚙️ Configura</b> per scegliere l'entità <b style="color:${acc}">cover</b></div>
+          <div style="font-size:11px">Tocca <b style="color:${acc}">✏️ Configura</b> per scegliere l'entità <b style="color:${acc}">cover</b></div>
         </div></div>`;
     }
     const pos = getPos(h, id), st = stateOf(h, id);
