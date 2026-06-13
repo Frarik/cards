@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.4.11 — 2026-06-13
+
+### feat: menù ⋮ sulla card + rimozione frecce ridimensionamento dal popup
+
+- **Frecce ◀▶▲▼ rimosse definitivamente** dal popup di configurazione (erano in `_cfgActionsHTML`). Dead code `_ovSize` rimosso. Le frecce non compaiono più in nessun popup di configurazione.
+- **Azioni (Duplica, Copia, Taglia, Copia su vista, Elimina) rimosse dal popup** config card: non vengono più iniettate tramite `_attachCfgActions` / `_injectActionsIntoLastOverlay` / `_injectActionsIntoYaml`. `cardMenu()` semplificato.
+- **Nuovo bottone ⋮ (dots-vertical) su ogni card** in modalità modifica: appare nell'overlay (accanto alla matita ✏️) per tutti i tipi di card (standard, js-custom, yaml, weather, header-bar, footer-bar). Visibile SOLO in edit mode grazie ai container `.card-ov` / `.hbar-ctrl` che esistono già solo in quella modalità.
+- **`cardDotMenu(cardId, el, e)`**: apre un dropdown posizionato vicino al bottone con le 5 azioni (Duplica, Copia, Taglia, Copia su vista, Elimina). Si chiude su click esterno. Animazione `popIn`. Usato da tutte le card presenti e future.
+
 ## 1.4.10 — 2026-06-13
 
 ### fix: menu mobile Android + loop sync + rimozione toast automatico

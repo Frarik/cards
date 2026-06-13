@@ -3827,17 +3827,13 @@ function buildCard(card){
 
   if(t==='free') el.classList.add('card-free');
 
-  // Build size control row
-  const _ovSize=inSections
-    ?`<button class="ovb-sm" data-action="adjSecSpan" data-action-args='["${card.id}",-1]'>◀</button><span id="cs-${card.id}" style="min-width:28px;text-align:center">S:${card.colSpan||1}</span><button class="ovb-sm" data-action="adjSecSpan" data-action-args='["${card.id}",1]'>▶</button>&nbsp;<button class="ovb-sm" data-action="adjH" data-action-args='["${card.id}",-20]'>▲</button><span id="rs-${card.id}" style="min-width:36px;text-align:center">${card.height||150}px</span><button class="ovb-sm" data-action="adjH" data-action-args='["${card.id}",20]'>▼</button>`
-    :`<button class="ovb-sm" data-action="adjSpan" data-action-args='["${card.id}","col",-1]'>◀</button><span id="cs-${card.id}">L:${card.colSpan||1}</span><button class="ovb-sm" data-action="adjSpan" data-action-args='["${card.id}","col",1]'>▶</button>&nbsp;<button class="ovb-sm" data-action="adjSpan" data-action-args='["${card.id}","row",-1]'>▲</button><span id="rs-${card.id}">A:${card.rowSpan||1}</span><button class="ovb-sm" data-action="adjSpan" data-action-args='["${card.id}","row",1]'>▼</button>`;
-
   // Header-bar / Footer-bar: template semplificato senza c-top/cglow
   if(t==='header-bar'||t==='footer-bar'){
     el.innerHTML=`
       <div class="card-inner">${inner}</div>
       <div class="hbar-ctrl">
         <button class="ovb ovb-edit ovb-menu" data-action="cardMenu" data-action-arg="${card.id}" title="Modifica card">✏️</button>
+        <button class="ovb ovb-dots" data-action="cardDotMenu" data-action-args='["${card.id}"]' data-action-el="true" title="Azioni card"><i class="mdi mdi-dots-vertical"></i></button>
       </div>
       <div class="resize-handle" id="rh-${card.id}"></div>`;
     el.draggable=true;
@@ -3858,6 +3854,7 @@ function buildCard(card){
       ${inner}
       <div class="card-ov" style="z-index:30"><div class="ov-row">
           <button class="ovb ovb-edit ovb-menu" data-action="cardMenu" data-action-arg="${card.id}" title="Modifica card">✏️</button>
+          <button class="ovb ovb-dots" data-action="cardDotMenu" data-action-args='["${card.id}"]' data-action-el="true" title="Azioni card"><i class="mdi mdi-dots-vertical"></i></button>
         </div></div>
       <div class="resize-handle" id="rh-${card.id}"></div>`;
     el.draggable=true;
@@ -3876,6 +3873,7 @@ function buildCard(card){
       ${inner}${_renderCardBadgesHTML(card)}
       <div class="card-ov" style="z-index:30"><div class="ov-row">
           <button class="ovb ovb-edit ovb-menu" data-action="cardMenu" data-action-arg="${card.id}" title="Modifica card">✏️</button>
+          <button class="ovb ovb-dots" data-action="cardDotMenu" data-action-args='["${card.id}"]' data-action-el="true" title="Azioni card"><i class="mdi mdi-dots-vertical"></i></button>
         </div></div>
       <div class="resize-handle" id="rh-${card.id}"></div>`;
     el.draggable=true;
@@ -3898,6 +3896,7 @@ function buildCard(card){
     <div class="card-ov">
       <div class="ov-row">
         <button class="ovb ovb-edit ovb-menu" data-action="cardMenu" data-action-arg="${card.id}" title="${t==='free'?'Modifica Canvas':'Modifica card'}">${t==='free'?'🎨':'✏️'}</button>
+        <button class="ovb ovb-dots" data-action="cardDotMenu" data-action-args='["${card.id}"]' data-action-el="true" title="Azioni card"><i class="mdi mdi-dots-vertical"></i></button>
       </div>
     </div>
     <div class="resize-handle" id="rh-${card.id}"></div>`;
@@ -5209,16 +5208,8 @@ function _cmVisToggle(){
   const op=document.getElementById('cm-vis-op')?.value; const v2=document.getElementById('cm-vis-val2');
   if(v2) v2.style.display=(mode==='cond'&&op==='between')?'':'none';
 }
-/* ── Helpers per iniettare azioni (dimensione + copia/taglia/elimina) nel popup di config ── */
-function _cfgActionsHTML(cardId){
-  const c=curPage().cards.find(x=>x.id===cardId); if(!c) return '';
-  const inSec=!!curPage().sections;
-  const sr=inSec
-    ?`<button class="ovb-sm" data-action="adjSecSpan" data-action-args='["${cardId}",-1]'>◀</button><span id="cs-${cardId}" style="min-width:30px;text-align:center;font-size:12px">S:${c.colSpan||1}</span><button class="ovb-sm" data-action="adjSecSpan" data-action-args='["${cardId}",1]'>▶</button>&nbsp;<button class="ovb-sm" data-action="adjH" data-action-args='["${cardId}",-20]'>▲</button><span id="rs-${cardId}" style="min-width:44px;text-align:center;font-size:12px">${c.height||150}px</span><button class="ovb-sm" data-action="adjH" data-action-args='["${cardId}",20]'>▼</button>`
-    :`<button class="ovb-sm" data-action="adjSpan" data-action-args='["${cardId}","col",-1]'>◀</button><span id="cs-${cardId}" style="min-width:28px;text-align:center;font-size:12px">L:${c.colSpan||1}</span><button class="ovb-sm" data-action="adjSpan" data-action-args='["${cardId}","col",1]'>▶</button>&nbsp;<button class="ovb-sm" data-action="adjSpan" data-action-args='["${cardId}","row",-1]'>▲</button><span id="rs-${cardId}" style="min-width:28px;text-align:center;font-size:12px">A:${c.rowSpan||1}</span><button class="ovb-sm" data-action="adjSpan" data-action-args='["${cardId}","row",1]'>▼</button>`;
-  const ab=(a,ico,lbl,del=false)=>`<button data-cfgact="${a}" style="flex:1;min-width:0;padding:8px 4px;border-radius:8px;border:none;cursor:pointer;font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:3px;background:${del?'rgba(239,68,68,.15)':'rgba(255,255,255,.08)'};color:${del?'#fca5a5':'rgba(255,255,255,.7)'}"><span style="font-size:15px">${ico}</span>${lbl}</button>`;
-  return `<div style="display:flex;justify-content:center;align-items:center;gap:5px;padding:5px 6px;border-radius:8px;background:rgba(255,255,255,.04);margin-bottom:8px">${sr}</div><div style="display:flex;gap:5px">${ab('dup','⧉','Duplica')}${ab('copy','📋','Copia')}${ab('cut','✂️','Taglia')}${ab('page','📑','Copia su vista')}${ab('del','🗑','Elimina',true)}</div>`;
-}
+/* ── Helpers azioni card — mantenuti per retrocompatibilità ma non più usati nel popup ── */
+function _cfgActionsHTML(cardId){ return ''; }
 function _attachCfgActions(cardId, container, closeFn){
   if(!container) return;
   container.style.display='block';
@@ -5273,26 +5264,59 @@ function _injectActionsIntoYaml(cardId){
   });
 }
 
-/* Menu modifica card: apre direttamente la configurazione, con azioni in fondo */
+/* Menu modifica card: apre la configurazione (azioni ora nel menù ⋮ sulla card) */
 function cardMenu(cardId, ev){
   if(ev&&ev.stopPropagation) ev.stopPropagation();
   const c=curPage().cards.find(x=>x.id===cardId); if(!c) return;
-  // js-custom con configure() propria
   if(c.type==='js-custom'&&c.jsCardId){
     const _reg=(window.FratechCardRegistry||{})[c.jsCardId];
     if(_reg&&typeof _reg.configure==='function'){
       const _el=document.getElementById('v-'+cardId);
-      if(_el){ _reg.configure(c,_el); setTimeout(()=>_injectActionsIntoLastOverlay(cardId),0); return; }
+      if(_el){ _reg.configure(c,_el); return; }
     }
   }
-  // Tutti gli altri tipi
   openCM(cardId);
-  if(c.type==='yaml-card'){ _injectActionsIntoYaml(cardId); }
-  else if(c.type!=='free'&&c.type!=='header-bar'&&c.type!=='footer-bar'){
-    _attachCfgActions(cardId, document.getElementById('cm-actions-row'), ()=>closeCM());
-  }
 }
 window.cardMenu=cardMenu;
+
+/* Menù ⋮ sulla card (solo in editMode): Duplica, Copia, Taglia, Copia su vista, Elimina */
+function cardDotMenu(cardId, el, e){
+  if(e&&e.stopPropagation) e.stopPropagation();
+  document.getElementById('_cdm')?.remove();
+  const menu=document.createElement('div');
+  menu.id='_cdm';
+  menu.style.cssText='position:fixed;z-index:15000;background:#1a1f35;border:1px solid rgba(255,255,255,.14);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.75);padding:5px;display:flex;flex-direction:column;gap:3px;min-width:176px;animation:popIn .12s ease';
+  const it=(a,ico,lbl,del=false)=>`<button data-cdmact="${a}" style="display:flex;align-items:center;gap:9px;width:100%;padding:9px 11px;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;background:${del?'rgba(239,68,68,.12)':'rgba(255,255,255,.05)'};color:${del?'#fca5a5':'#e2e8f0'}">${ico} ${lbl}</button>`;
+  menu.innerHTML=
+    it('dup','⧉','Duplica')+
+    it('copy','📋','Copia')+
+    it('cut','✂️','Taglia')+
+    it('page','📑','Copia su vista')+
+    '<div style="height:1px;background:rgba(255,255,255,.09);margin:2px 0"></div>'+
+    it('del','🗑','Elimina',true);
+  const r=el?el.getBoundingClientRect():null;
+  if(r){
+    let top=r.bottom+4, left=r.left;
+    if(left+180>window.innerWidth) left=window.innerWidth-184;
+    if(top+220>window.innerHeight) top=r.top-224;
+    menu.style.top=top+'px'; menu.style.left=left+'px';
+  } else { menu.style.top='50%'; menu.style.left='50%'; menu.style.transform='translate(-50%,-50%)'; }
+  document.body.appendChild(menu);
+  menu.addEventListener('click',function(ev){
+    const b=ev.target.closest('[data-cdmact]'); if(!b) return;
+    const a=b.getAttribute('data-cdmact');
+    menu.remove();
+    if(a==='dup') dupCard(cardId);
+    else if(a==='copy') copyCard(cardId);
+    else if(a==='cut') cutCard(cardId);
+    else if(a==='page') copyCardToPage(cardId);
+    else if(a==='del') delCard(cardId);
+  });
+  setTimeout(()=>document.addEventListener('click',function _h(ev){
+    if(!menu.contains(ev.target)){menu.remove();document.removeEventListener('click',_h);}
+  }),80);
+}
+window.cardDotMenu=cardDotMenu;
 
 function openCM(cardId){
   editingId=cardId;

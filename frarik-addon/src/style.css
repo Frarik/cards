@@ -264,6 +264,7 @@ body.editing .dash-card-wrap{outline:1px dashed rgba(99,102,241,.25);outline-off
 .ovb{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;transition:filter .12s}
 .ovb:hover{filter:brightness(1.2)}
 .ovb-edit{background:rgba(99,102,241,0.85);color:#fff}
+.ovb-dots{background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);font-size:17px}
 .ovb-del{background:rgba(248,113,113,0.85);color:#fff}
 .ovb-sm{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);transition:all .12s}
 .ovb-sm:hover{background:rgba(255,255,255,0.22);color:#fff}
@@ -1046,6 +1047,7 @@ html,body{font-family:var(--font-family)}
 [data-theme="light"] .ov-size{color:#4a5568}
 [data-theme="light"] .ovb-sm{background:rgba(15,23,42,0.1);color:#4a5568}
 [data-theme="light"] .ovb-sm:hover{background:rgba(15,23,42,0.2);color:#0f172a}
+[data-theme="light"] .ovb-dots{background:rgba(15,23,42,.1);color:#374151}
 [data-theme="light"] #cov{background:rgba(232,236,244,0.97)}
 [data-theme="light"] #cmsg{color:#4a5568}
 /* ── Toast ── */
