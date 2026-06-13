@@ -1,4 +1,4 @@
-/* frarik-version: 1.29 */
+/* frarik-version: 1.30 */
 
 // ── Lookup tables ─────────────────────────────────────────────────────────────
 const _WI = {
@@ -308,6 +308,72 @@ input[type=range].lslider{flex:1;cursor:pointer;accent-color:#fbbf24;height:4px;
 .phi{font-size:38px;opacity:.3;}
 `
 
+// ── Station categories ────────────────────────────────────────────────────────
+const _STATION_CATS=[
+  {key:'rain',     icon:'🌧️', label:'Pioggia',     color:'#38bdf8',
+   sensors:[
+     {f:'sRainRate',    lbl:'Intensità Pioggia'},
+     {f:'sHourlyRain',  lbl:'Pioggia Oraria'},
+     {f:'sDailyRain',   lbl:'Pioggia Giornaliera'},
+     {f:'sEventRain',   lbl:'Pioggia Evento'},
+     {f:'s24hRain',     lbl:'Pioggia 24h'},
+     {f:'sWeeklyRain',  lbl:'Pioggia Settimanale'},
+     {f:'sMonthlyRain', lbl:'Pioggia Mensile'},
+     {f:'sYearlyRain',  lbl:'Pioggia Annuale'},
+     {f:'sTotalRain',   lbl:'Pioggia Totale'},
+     {f:'sPwPrecip0d',  lbl:'Max Precipit. Oggi'},
+     {f:'sPwPrecip1d',  lbl:'Max Precipit. Domani'},
+   ]},
+  {key:'wind',     icon:'💨', label:'Vento',       color:'#a78bfa',
+   sensors:[
+     {f:'sWindSpeed',  lbl:'Velocità Vento'},
+     {f:'sWindGust',   lbl:'Raffica Vento'},
+     {f:'sWindDir',    lbl:'Direzione Vento'},
+     {f:'sWindDir10m', lbl:'Direzione 10m'},
+     {f:'sMaxGust',    lbl:'Raffica Max Giorn.'},
+     {f:'sWindchill',  lbl:'Windchill'},
+   ]},
+  {key:'temp',     icon:'🌡️', label:'Temperatura', color:'#f97316',
+   sensors:[
+     {f:'sOutdoorTemp', lbl:'Temperatura Esterna'},
+     {f:'sFeelsLike',   lbl:'Temperatura Percepita'},
+     {f:'sIndoorTemp',  lbl:'Temperatura Interna'},
+     {f:'sDewpoint',    lbl:'Punto di Rugiada'},
+     {f:'sIndoorDew',   lbl:'Rugiada Interna'},
+     {f:'sPwDew0d',     lbl:'PW Rugiada Oggi'},
+     {f:'sPwDew1d',     lbl:'PW Rugiada Domani'},
+     {f:'sPwHighTemp0d',lbl:'PW Max Temp Oggi'},
+     {f:'sPwHighTemp1d',lbl:'PW Max Temp Domani'},
+     {f:'sPwHighApp0d', lbl:'PW Percepita Oggi'},
+     {f:'sPwHighApp1d', lbl:'PW Percepita Domani'},
+   ]},
+  {key:'pressure', icon:'📊', label:'Pressione',   color:'#fbbf24',
+   sensors:[
+     {f:'sRelPres',lbl:'Pressione Relativa'},
+     {f:'sAbsPres',lbl:'Pressione Assoluta'},
+   ]},
+  {key:'humidity', icon:'💧', label:'Umidità',     color:'#34d399',
+   sensors:[
+     {f:'sHumidity',   lbl:'Umidità Esterna'},
+     {f:'sIndoorHum',  lbl:'Umidità Interna'},
+     {f:'sVpd',        lbl:'Deficit Press. Vapore'},
+   ]},
+  {key:'solar',    icon:'☀️', label:'Sole & UV',   color:'#fb923c',
+   sensors:[
+     {f:'sSolarRad',   lbl:'Radiazione Solare'},
+     {f:'sSolarLux',   lbl:'Luminosità Solare'},
+     {f:'sUvIndex',    lbl:'Indice UV'},
+     {f:'sPwCloud',    lbl:'Copertura Nuvolosa'},
+     {f:'sPwCloud0d',  lbl:'Nuvole Oggi'},
+     {f:'sPwCloud1d',  lbl:'Nuvole Domani'},
+     {f:'sCape',       lbl:'Energia Convettiva (CAPE)'},
+   ]},
+]
+const _STATION_SPECIALS=[
+  {f:'sGhiaccio',icon:'❄️',label:'Ghiaccio Notturno',color:'#67e8f9'},
+  {f:'sAlerts',  icon:'⚠️',label:'Allerte Meteo',     color:'#fca5a5'},
+]
+
 // ── MeteoCard ─────────────────────────────────────────────────────────────────
 class MeteoCard extends HTMLElement {
   static getStubConfig(){ return { entityId:'weather.forecast_home', cityName:'' } }
@@ -325,6 +391,8 @@ class MeteoCard extends HTMLElement {
     this._se  = false
     this._te  = ''; this._tc = ''; this._th = ''; this._tp = ''; this._tw = ''; this._twd = ''; this._tdays = 5; this._tCardScale = 100; this._tCardW = 100
     this._histModalHost = null
+    this._stationModalHost = null
+    this._tSt = {}
     this._fs  = null
     this._bk  = null
     this._nh  = true
@@ -346,6 +414,9 @@ class MeteoCard extends HTMLElement {
   _loadStore(){ try{ return JSON.parse(localStorage.getItem(this._lsKey())||'null') }catch{ return null } }
   _saveStore(){
     try{
+      const stObj={}
+      _STATION_CATS.forEach(cat=>cat.sensors.forEach(s=>{ stObj[s.f]=this._c[s.f]||'' }))
+      _STATION_SPECIALS.forEach(s=>{ stObj[s.f]=this._c[s.f]||'' })
       localStorage.setItem(this._lsKey(), JSON.stringify({
         entityId:this._c.entityId, cityName:this._c.cityName,
         humEntity:this._c.humEntity||'', presEntity:this._c.presEntity||'',
@@ -353,6 +424,10 @@ class MeteoCard extends HTMLElement {
         wfDays:this._c.wfDays||5,
         cardScale:this._c.cardScale??100,
         cardW:this._c.cardW??100,
+        stationEnabled:this._c.stationEnabled||false,
+        stationLat:this._c.stationLat||'',
+        stationLon:this._c.stationLon||'',
+        ...stObj,
       }))
     }catch{}
   }
@@ -362,6 +437,9 @@ class MeteoCard extends HTMLElement {
     this._sk=cfg.storageKey||cfg.entityId||'default'
     const stored=this._loadStore()||{}
     const prev=this._c?.entityId
+    const stCfgObj={}
+    _STATION_CATS.forEach(cat=>cat.sensors.forEach(s=>{ stCfgObj[s.f]=stored[s.f]||cfg[s.f]||'' }))
+    _STATION_SPECIALS.forEach(s=>{ stCfgObj[s.f]=stored[s.f]||cfg[s.f]||'' })
     this._c={
       entityId:     stored.entityId     ||cfg.entityId     ||'',
       cityName:     stored.cityName     !=null?stored.cityName    :(cfg.cityName    ||''),
@@ -372,6 +450,10 @@ class MeteoCard extends HTMLElement {
       wfDays:       stored.wfDays       ||cfg.wfDays       ||5,
       cardScale:    stored.cardScale!=null?stored.cardScale:(cfg.cardScale!=null?cfg.cardScale:100),
       cardW:        stored.cardW    !=null?stored.cardW    :(cfg.cardW    !=null?cfg.cardW    :100),
+      stationEnabled: stored.stationEnabled!=null?stored.stationEnabled:(cfg.stationEnabled||false),
+      stationLat:   stored.stationLat   ||cfg.stationLat   ||'',
+      stationLon:   stored.stationLon   ||cfg.stationLon   ||'',
+      ...stCfgObj,
     }
     this._te=this._c.entityId; this._tc=this._c.cityName
     this._th=this._c.humEntity; this._tp=this._c.presEntity
@@ -393,7 +475,7 @@ class MeteoCard extends HTMLElement {
   disconnectedCallback(){
     this.shadowRoot.removeEventListener('click',this._click)
     this.shadowRoot.removeEventListener('input',this._inp)
-    this._destroyModal(); this._destroyDayModal(); this._destroyHistModal()
+    this._destroyModal(); this._destroyDayModal(); this._destroyHistModal(); this._destroyStationPopup()
     this._unsub(); this._unsubHourly()
     if(this._skyTimer){ clearInterval(this._skyTimer); this._skyTimer=null }
   }
@@ -767,6 +849,10 @@ class MeteoCard extends HTMLElement {
         else if(sf==='pres') this._tp=sid
         else if(sf==='wind') this._tw=sid
         else if(sf==='wdir') this._twd=sid
+        else {
+          const allStFs=_STATION_CATS.flatMap(c=>c.sensors.map(s=>s.f)).concat(_STATION_SPECIALS.map(s=>s.f))
+          if(allStFs.includes(sf)) this._tSt[sf]=sid
+        }
         const sr2=this._modalHost?.shadowRoot
         if(sr2){
           const inp=sr2.querySelector(`input[data-f="${sf}"]`); if(inp) inp.value=sid
@@ -774,13 +860,44 @@ class MeteoCard extends HTMLElement {
         }
         break
       }
-      case 'save':
+      case 'station':
+        if(this._c.stationEnabled) this._openStationPopup()
+        break
+      case 'closestov':
+        this._destroyStationPopup()
+        break
+      case 'ststat':{
+        const el2=e.target.closest('[data-a="ststat"]')
+        if(el2) this._openHistPopup(el2.dataset.eid||'',el2.dataset.attr||'',el2.dataset.lbl||'Dato')
+        break
+      }
+      case 'sttoggle':
+        this._tSt.stationEnabled=!this._tSt.stationEnabled
+        const stSect=this._modalHost?.shadowRoot?.querySelector('.st-sect')
+        if(stSect) stSect.style.display=this._tSt.stationEnabled?'block':'none'
+        const tog=this._modalHost?.shadowRoot?.querySelector('#st-tog')
+        if(tog){
+          tog.classList.toggle('on',this._tSt.stationEnabled)
+          tog.textContent=this._tSt.stationEnabled?'Attiva':'Non attiva'
+          tog.style.background=`rgba(251,191,36,${this._tSt.stationEnabled?.15:.06})`
+          tog.style.borderColor=`rgba(251,191,36,${this._tSt.stationEnabled?.4:.12})`
+          tog.style.color=this._tSt.stationEnabled?'#fbbf24':'rgba(255,255,255,.4)'
+        }
+        break
+      case 'save':{
+        const stSaveObj={}
+        _STATION_CATS.forEach(cat=>cat.sensors.forEach(s=>{ stSaveObj[s.f]=this._tSt[s.f]||'' }))
+        _STATION_SPECIALS.forEach(s=>{ stSaveObj[s.f]=this._tSt[s.f]||'' })
         this._c={ entityId:this._te,cityName:this._tc,
                   humEntity:this._th,presEntity:this._tp,
                   windEntity:this._tw,windDirEntity:this._twd,
                   wfDays:Math.min(10,Math.max(1,parseInt(this._tdays)||5)),
                   cardScale:Math.max(20,Math.min(100,parseInt(this._tCardScale)||100)),
-                  cardW:Math.max(20,Math.min(100,parseInt(this._tCardW)||100)) }
+                  cardW:Math.max(20,Math.min(100,parseInt(this._tCardW)||100)),
+                  stationEnabled:!!this._tSt.stationEnabled,
+                  stationLat:this._tSt.stationLat||'',
+                  stationLon:this._tSt.stationLon||'',
+                  ...stSaveObj }
         this._saveStore()
         if(this._frarikCard?.id){
           this.dispatchEvent(new CustomEvent('frarik-card-layout',{
@@ -797,6 +914,7 @@ class MeteoCard extends HTMLElement {
             windEntity:this._c.windEntity,windDirEntity:this._c.windDirEntity,
             wfDays:this._c.wfDays}},bubbles:true,composed:true}))
         break
+      }
       case 'day':    this._openDayDetail(parseInt(t.dataset.idx||'0')); break
       case 'closedm':this._destroyDayModal(); break
       case 'stat':{
@@ -828,6 +946,16 @@ class MeteoCard extends HTMLElement {
       const lbl=sr?.querySelector('#cardw-lbl')
       if(lbl) lbl.textContent=this._tCardW>=100?'Auto (100%)':this._tCardW+'%'
       this._schedPrev()
+    }
+    else if(f==='stlat'){ this._tSt.stationLat=v }
+    else if(f==='stlon'){ this._tSt.stationLon=v }
+    else if(f==='stenabled'){ /* toggle handled via click */ }
+    else {
+      const allStFs=_STATION_CATS.flatMap(c=>c.sensors.map(s=>s.f)).concat(_STATION_SPECIALS.map(s=>s.f))
+      if(allStFs.includes(f)){
+        this._tSt[f]=v
+        this._updateDropdown(f)
+      }
     }
   }
 
@@ -863,7 +991,8 @@ class MeteoCard extends HTMLElement {
   _onFocus(e){
     const f=e.target?.dataset?.f
     const sr=this._modalHost?.shadowRoot; if(!sr) return
-    if(['hum','pres','wind','wdir'].includes(f)){
+    const allStFs=_STATION_CATS.flatMap(c=>c.sensors.map(s=>s.f)).concat(_STATION_SPECIALS.map(s=>s.f))
+    if(['hum','pres','wind','wdir'].includes(f)||allStFs.includes(f)){
       sr.querySelectorAll('.esr[data-dropdown]').forEach(d=>{ if(d.dataset.dropdown!==f) d.classList.remove('open') })
       this._updateDropdown(f)
     } else {
@@ -874,7 +1003,7 @@ class MeteoCard extends HTMLElement {
   _updateDropdown(field){
     const sr=this._modalHost?.shadowRoot; if(!sr) return
     const dropdown=sr.querySelector(`[data-dropdown="${field}"]`); if(!dropdown) return
-    const val={hum:this._th,pres:this._tp,wind:this._tw,wdir:this._twd}[field]||''
+    const val={hum:this._th,pres:this._tp,wind:this._tw,wdir:this._twd}[field]||((['hum','pres','wind','wdir'].includes(field))?'':this._tSt[field]||'')
     const filter=val.toLowerCase()
     const allIds=Object.keys(this._h?.states||{})
     const filtered=filter
@@ -899,6 +1028,9 @@ class MeteoCard extends HTMLElement {
     this._th=this._c.humEntity; this._tp=this._c.presEntity
     this._tw=this._c.windEntity; this._twd=this._c.windDirEntity
     this._tdays=this._c.wfDays||5; const _mll=JSON.parse(localStorage.getItem('_frk_layout_'+(this._frarikCard?.id||''))||'{}'); this._tCardScale=_mll.cardScale??this._c.cardScale??100; this._tCardW=_mll.cardW??this._c.cardW??100
+    this._tSt={ stationEnabled:this._c.stationEnabled||false, stationLat:this._c.stationLat||'', stationLon:this._c.stationLon||'' }
+    _STATION_CATS.forEach(cat=>cat.sensors.forEach(s=>{ this._tSt[s.f]=this._c[s.f]||'' }))
+    _STATION_SPECIALS.forEach(s=>{ this._tSt[s.f]=this._c[s.f]||'' })
     this._renderModal(); this._bk=null; this._build()
   }
 
@@ -1018,7 +1150,7 @@ class MeteoCard extends HTMLElement {
     }
 
     this.shadowRoot.innerHTML=`<style>${_CSS}</style>
-<div class="card" style="border:1px solid ${border};">
+<div class="card" data-a="station" style="border:1px solid ${border};cursor:${this._c.stationEnabled?'pointer':'default'};">
   ${this._skyHTML(st)}
   <div class="body">
     <div class="hdr">
@@ -1134,6 +1266,48 @@ class MeteoCard extends HTMLElement {
         <div class="fl" style="margin-top:14px;">Giorni previsioni (1–10)</div>
         <input class="ci" type="number" min="1" max="10" value="${this._tdays}" data-f="days"/>
         <div class="ht">Quanti giorni mostrare nel pannello previsioni</div>
+
+        <div style="margin-top:20px;border-top:1px solid rgba(255,255,255,.08);padding-top:16px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+            <div class="fl" style="margin:0;flex:1;">🌡️ Stazione Meteo</div>
+            <button id="st-tog" data-a="sttoggle" style="background:rgba(251,191,36,${this._tSt.stationEnabled?.15:.06});border:1px solid rgba(251,191,36,${this._tSt.stationEnabled?.4:.12});color:${this._tSt.stationEnabled?'#fbbf24':'rgba(255,255,255,.4)'};border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;">${this._tSt.stationEnabled?'Attiva':'Non attiva'}</button>
+          </div>
+          <div class="ht">Abilita popup completo cliccando sullo sfondo della card</div>
+
+          <div class="st-sect" style="display:${this._tSt.stationEnabled?'block':'none'};">
+            <div style="display:flex;gap:8px;margin-top:12px;">
+              <div style="flex:1;">
+                <div class="fl">Latitudine</div>
+                <input class="ci" type="text" value="${this._tSt.stationLat}" placeholder="Es: 45.467" data-f="stlat"/>
+              </div>
+              <div style="flex:1;">
+                <div class="fl">Longitudine</div>
+                <input class="ci" type="text" value="${this._tSt.stationLon}" placeholder="Es: 10.295" data-f="stlon"/>
+              </div>
+            </div>
+            <div class="ht">Coordinate per la mappa radar Windy</div>
+
+            ${_STATION_CATS.map(cat=>`
+              <div style="margin-top:14px;font-size:11px;font-weight:800;color:${cat.color};text-transform:uppercase;letter-spacing:.07em;">${cat.icon} ${cat.label}</div>
+              ${cat.sensors.map(s=>`
+                <div class="fl" style="margin-top:6px;font-size:10px;color:rgba(255,255,255,.6);">${s.lbl}</div>
+                <div class="inp-grp">
+                  <input class="ci" type="text" value="${this._tSt[s.f]||''}" placeholder="entità..." data-f="${s.f}" autocomplete="off"/>
+                  <div class="esr" data-dropdown="${s.f}"><div class="el"></div></div>
+                </div>
+              `).join('')}
+            `).join('')}
+
+            <div style="margin-top:14px;font-size:11px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.07em;">Card Speciali</div>
+            ${_STATION_SPECIALS.map(s=>`
+              <div class="fl" style="margin-top:6px;font-size:10px;color:rgba(255,255,255,.6);">${s.icon} ${s.label}</div>
+              <div class="inp-grp">
+                <input class="ci" type="text" value="${this._tSt[s.f]||''}" placeholder="entità..." data-f="${s.f}" autocomplete="off"/>
+                <div class="esr" data-dropdown="${s.f}"><div class="el"></div></div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
       </div>
 
       <!-- COLONNA DX: anteprima live + slider dimensioni -->
@@ -1166,6 +1340,178 @@ class MeteoCard extends HTMLElement {
     <div class="sft"><button class="sav" data-a="save">${_IC.ok} Salva</button></div>
   </div>
 </div>`
+  }
+
+  // ── Station popup ─────────────────────────────────────────────────────────
+  _destroyStationPopup(){
+    if(!this._stationModalHost) return
+    this._stationModalHost.shadowRoot.removeEventListener('click',this._click)
+    this._stationModalHost.remove(); this._stationModalHost=null
+  }
+
+  _openStationPopup(){
+    this._destroyStationPopup()
+    this._stationModalHost=document.createElement('div')
+    this._stationModalHost.attachShadow({mode:'open'})
+    this._stationModalHost.shadowRoot.addEventListener('click',this._click)
+    document.body.appendChild(this._stationModalHost)
+    this._stationModalHost.shadowRoot.innerHTML=`<style>${_CSS}${this._stationCSS()}</style>${this._stationHTML()}`
+  }
+
+  _stationCSS(){
+    return `
+.stov{position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);display:flex;flex-direction:column;font-family:var(--primary-font-family,system-ui,sans-serif);overflow:hidden;}
+.stov-modal{width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden;}
+.stov-scroll{flex:1;overflow-y:auto;padding:16px;scrollbar-width:none;-ms-overflow-style:none;}
+.stov-scroll::-webkit-scrollbar{display:none;}
+.stov-map{width:100%;height:300px;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.1);margin-bottom:20px;background:#0a0816;}
+.stov-map iframe{width:100%;height:100%;border:none;}
+.stov-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+@media(max-width:700px){.stov-grid{grid-template-columns:1fr;}}
+.scat{border-radius:16px;padding:0;overflow:hidden;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;}
+.scat-anim{position:relative;height:90px;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.scat-icon{font-size:42px;position:relative;z-index:1;filter:drop-shadow(0 0 12px currentColor);}
+.scat-body{padding:12px 14px 16px;flex:1;}
+.scat-title{font-size:13px;font-weight:800;color:#fff;margin-bottom:10px;letter-spacing:.04em;}
+.ssel{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-radius:8px;cursor:pointer;transition:background .12s;margin-bottom:3px;}
+.ssel:hover{background:rgba(255,255,255,.06);}
+.ssel-lbl{font-size:10px;color:rgba(255,255,255,.55);font-weight:500;flex:1;}
+.ssel-val{font-size:13px;font-weight:700;color:#fff;text-align:right;}
+.ssel-empty{font-size:10px;color:rgba(255,255,255,.2);font-style:italic;}
+@keyframes stRainFall{0%{transform:translateY(-20px);opacity:0}20%{opacity:.7}80%{opacity:.7}100%{transform:translateY(80px);opacity:0}}
+.st-rdrop{position:absolute;width:1.5px;border-radius:2px;background:linear-gradient(to bottom,transparent,#38bdf8);animation:stRainFall linear infinite;}
+@keyframes stWindSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.st-wind-spin{animation:stWindSpin 6s linear infinite;transform-origin:center;}
+@keyframes stSunRays{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.st-sun-rays{animation:stSunRays 10s linear infinite;transform-origin:center;}
+@keyframes stBubble{0%{transform:translateY(50px);opacity:0}20%{opacity:.5}80%{opacity:.5}100%{transform:translateY(-10px);opacity:0}}
+.st-bubble{position:absolute;border-radius:50%;background:rgba(52,211,153,.25);animation:stBubble ease-in infinite;}
+@keyframes stIceSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.st-ice{animation:stIceSpin 8s linear infinite;display:block;}
+@keyframes stAlert{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.15)}}
+.st-alert{animation:stAlert 1.2s ease-in-out infinite;display:block;}
+@keyframes stPressSweep{from{stroke-dashoffset:220}to{stroke-dashoffset:var(--p-off,110)}}
+.st-gauge-arc{animation:stPressSweep 1.2s .2s cubic-bezier(.4,0,.2,1) forwards;}
+`
+  }
+
+  _stationHTML(){
+    const c=this._c
+    const lat=c.stationLat||'45.0', lon=c.stationLon||'10.0'
+    const windyUrl=`https://embed.windy.com/embed2.html?lat=${lat}&lon=${lon}&detailLat=${lat}&detailLon=${lon}&zoom=8&level=surface&overlay=radar&product=ecmwf&menu=&message=true&marker=true&calendar=now&type=map&location=coordinates&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1`
+    const sv=eid=>{
+      if(!eid) return null
+      const st=this._h?.states?.[eid]; if(!st) return null
+      const u=st.attributes?.unit_of_measurement||''; return st.state+(u?' '+u:'')
+    }
+    const tile=(eid,lbl,color)=>{
+      const val=sv(eid)
+      return eid?`<div class="ssel" data-a="ststat" data-eid="${eid}" data-lbl="${lbl}">
+        <span class="ssel-lbl">${lbl}</span>
+        <span class="ssel-val" style="color:${color}">${val||'--'}</span>
+      </div>`:''
+    }
+    const catHTML=(cat)=>{
+      const tiles=cat.sensors.map(s=>tile(c[s.f],s.lbl,cat.color)).filter(Boolean).join('')
+      if(!tiles) return ''
+      return `<div class="scat">
+        <div class="scat-anim" style="background:linear-gradient(135deg,${cat.color}18,transparent);">
+          ${this._catAnimHTML(cat)}
+        </div>
+        <div class="scat-body">
+          <div class="scat-title" style="color:${cat.color}">${cat.icon} ${cat.label}</div>
+          ${tiles}
+        </div>
+      </div>`
+    }
+    const specialHTML=(sp)=>{
+      const eid=c[sp.f]; if(!eid) return ''
+      const st=this._h?.states?.[eid]
+      const val=st?st.state:null
+      const isActive=val&&val!=='unknown'&&val!=='unavailable'&&val!=='0'&&val.toLowerCase()!=='none'&&val.toLowerCase()!=='false'
+      return `<div class="scat">
+        <div class="scat-anim" style="background:linear-gradient(135deg,${sp.color}18,transparent);">
+          <span class="${sp.f==='sGhiaccio'?'st-ice':'st-alert'}" style="font-size:48px;">${sp.icon}</span>
+        </div>
+        <div class="scat-body">
+          <div class="scat-title" style="color:${sp.color}">${sp.icon} ${sp.label}</div>
+          <div class="ssel">
+            <span class="ssel-lbl">Stato</span>
+            <span class="ssel-val" style="color:${isActive?sp.color:'rgba(255,255,255,.4)'}">${val||'--'}</span>
+          </div>
+        </div>
+      </div>`
+    }
+    const catCards=_STATION_CATS.map(cat=>catHTML(cat)).filter(Boolean)
+    const spCards=_STATION_SPECIALS.map(sp=>specialHTML(sp)).filter(Boolean)
+    const allCards=[...catCards,...spCards].join('')
+    return `
+<div class="stov">
+  <div class="stov-modal">
+    <div class="shdr" style="flex-shrink:0;border-radius:0;border-bottom:1px solid rgba(255,255,255,.07);">
+      <div class="sico" style="font-size:18px;">🌡️</div>
+      <div><div class="stit">Stazione Meteo</div><div class="ssub">Dati in tempo reale · ${c.cityName||'Casa'}</div></div>
+      <button class="scls" data-a="closestov">${_IC.x}</button>
+    </div>
+    <div class="stov-scroll">
+      <div class="stov-map">
+        <iframe src="${windyUrl}" frameborder="0" allowfullscreen></iframe>
+      </div>
+      <div class="stov-grid">${allCards}</div>
+    </div>
+  </div>
+</div>`
+  }
+
+  _catAnimHTML(cat){
+    switch(cat.key){
+      case 'rain':{
+        const drops=Array.from({length:12},(_,i)=>`<div class="st-rdrop" style="left:${(i*8+4)}%;height:${8+((i*37+13)%100)/100*8|0}px;animation-duration:${0.7+i*0.08}s;animation-delay:${-(i*0.1)}s;"></div>`).join('')
+        return drops+`<span style="font-size:40px;position:relative;z-index:1;">🌧️</span>`
+      }
+      case 'wind':
+        return `<svg width="70" height="70" viewBox="0 0 70 70">
+          <circle cx="35" cy="35" r="30" fill="none" stroke="rgba(167,139,250,.2)" stroke-width="1"/>
+          <circle cx="35" cy="35" r="3" fill="#a78bfa"/>
+          <g class="st-wind-spin">
+            <line x1="35" y1="35" x2="35" y2="8" stroke="#a78bfa" stroke-width="2.5" stroke-linecap="round"/>
+            <polygon points="35,2 30,11 40,11" fill="#a78bfa"/>
+          </g>
+          <text x="35" y="56" text-anchor="middle" fill="rgba(167,139,250,.5)" font-size="8" font-family="system-ui">N</text>
+          <text x="35" y="19" text-anchor="middle" fill="rgba(167,139,250,.5)" font-size="8" font-family="system-ui">S</text>
+          <text x="57" y="38" text-anchor="middle" fill="rgba(167,139,250,.5)" font-size="8" font-family="system-ui">E</text>
+          <text x="13" y="38" text-anchor="middle" fill="rgba(167,139,250,.5)" font-size="8" font-family="system-ui">O</text>
+        </svg>`
+      case 'temp':
+        return `<svg width="50" height="80" viewBox="0 0 50 80">
+          <rect x="21" y="5" width="8" height="48" rx="4" fill="rgba(249,115,22,.12)" stroke="rgba(249,115,22,.3)" stroke-width="1"/>
+          <rect x="22" y="30" width="6" height="22" rx="3" fill="#f97316" style="animation:stPressSweep 2s ease-out forwards;"/>
+          <circle cx="25" cy="58" r="9" fill="#f97316" style="filter:drop-shadow(0 0 6px #f97316);"/>
+        </svg>`
+      case 'pressure':{
+        const off=110
+        return `<svg width="80" height="60" viewBox="0 0 80 60">
+          <path d="M10 55 A30 30 0 0 1 70 55" fill="none" stroke="rgba(251,191,36,.15)" stroke-width="6" stroke-linecap="round"/>
+          <path d="M10 55 A30 30 0 0 1 70 55" class="st-gauge-arc" style="--p-off:${off}" fill="none" stroke="#fbbf24" stroke-width="6" stroke-linecap="round" stroke-dasharray="220" stroke-dashoffset="220"/>
+          <circle cx="40" cy="55" r="4" fill="#fbbf24"/>
+        </svg>`
+      }
+      case 'humidity':{
+        const bubbles=Array.from({length:6},(_,i)=>`<div class="st-bubble" style="width:${10+i*4}px;height:${10+i*4}px;left:${10+i*14}%;animation-duration:${1.5+i*0.3}s;animation-delay:${-(i*0.4)}s;"></div>`).join('')
+        return bubbles+`<span style="font-size:40px;position:relative;z-index:1;">💧</span>`
+      }
+      case 'solar':
+        return `<svg width="70" height="70" viewBox="0 0 70 70">
+          <g class="st-sun-rays">
+            ${[0,45,90,135,180,225,270,315].map(a=>{
+              const r=a*Math.PI/180
+              return `<line x1="${(35+Math.cos(r)*16).toFixed(1)}" y1="${(35+Math.sin(r)*16).toFixed(1)}" x2="${(35+Math.cos(r)*26).toFixed(1)}" y2="${(35+Math.sin(r)*26).toFixed(1)}" stroke="#fb923c" stroke-width="2.5" stroke-linecap="round"/>`
+            }).join('')}
+          </g>
+          <circle cx="35" cy="35" r="12" fill="#fb923c" style="filter:drop-shadow(0 0 8px #fb923c);"/>
+        </svg>`
+      default: return `<span class="scat-icon">${cat.icon}</span>`
+    }
   }
 }
 

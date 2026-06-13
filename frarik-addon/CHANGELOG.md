@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.4.36 — 2026-06-14
+
+### feat(Meteo): Stazione Meteo — popup completo con mappa Windy e sensori
+
+**Meteo.js 1.29→1.30:**
+- Aggiunta funzionalità "Stazione Meteo" con popup fullscreen attivabile cliccando sulla card
+- 6 categorie di sensori configurabili: Pioggia (11), Vento (6), Temperatura (11), Pressione (2),
+  Umidità (3), Sole & UV (7) — totale 40 sensori + 2 speciali (Ghiaccio, Allerte)
+- Mappa radar Windy integrata (iframe) con coordinate lat/lon configurabili
+- Animazioni CSS per ogni categoria: gocce di pioggia, bussola vento rotante, termometro,
+  manometro con arc sweep, bolle umidità, sole con raggi rotanti
+- Toggle "Abilita Stazione Meteo" nelle impostazioni con sezione espandibile
+- Ogni tile è cliccabile e apre il popup grafico storico (`_openHistPopup`)
+- `_stationCSS()`, `_stationHTML()`, `_catAnimHTML()` come metodi dedicati
+- `_openStationPopup()` / `_destroyStationPopup()` — shadow DOM separato su document.body
+- Tutti i campi stazione persistiti in localStorage (`_saveStore` / `setConfig`)
+
 ## 1.4.35 — 2026-06-13
 
 ### fix(Meteo): grafici storici 4 entità — parsing formato compresso HA
