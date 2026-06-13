@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.4.24 — 2026-06-13
+
+### feat(Meteo): modal settings 2 colonne, slider layout live, anteprima card in tempo reale
+
+**Modal più largo (max-width 900px) con layout 2 colonne:**
+- Colonna sinistra (400px): tutti i campi di configurazione (entità, città, sensori, giorni).
+- Colonna destra: anteprima live + slider dimensioni.
+- CSS: aggiunto `.sov-2col`, `.sbdy` con `border-right`, `.sov-prev`, `.prev-wrap`, `.lsect`, `.layout-row`, `.layout-lbl`, `.layout-val`, `input[type=range].lslider`.
+- Media query `@media(max-width:620px)` per collassare a colonna singola su schermi stretti.
+
+**Slider dimensioni in tempo reale (no preset):**
+- Sostituiti i `<select>` con `<input type="range">` nel pannello destro.
+- Altezza: range 0–700px, step 10. Valore 0 = Auto.
+- Larghezza: range 1–4, step 1 (colonne).
+- Durante il drag (`input` event): label aggiornata live, preview aggiornata, `frarik-card-layout` dispatchato → card nel dashboard si ridimensiona in tempo reale.
+
+**Anteprima live:**
+- `<meteo-card id="meteo-preview-card">` istanziata nel pannello destro con `--fgear:none` (gear nascosto).
+- `_updatePreview()`: chiama `setConfig()` + `hass=` sulla preview card con i valori temporanei correnti.
+- `_schedPrev()`: debounce 180ms, chiamato su ogni `input` di qualsiasi campo.
+- `_renderModal()`: setTimeout 60ms dopo il render per inizializzare la preview.
+- Meteo.js: frarik-version 1.21 → 1.22
+
 ## 1.4.23 — 2026-06-13
 
 ### feat(Meteo) + fix: layout card configurabile + popup testi bianchi

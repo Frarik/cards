@@ -1,4 +1,4 @@
-/* frarik-version: 1.21 */
+/* frarik-version: 1.22 */
 
 // ── Lookup tables ─────────────────────────────────────────────────────────────
 const _WI = {
@@ -259,16 +259,26 @@ button[data-a="gear"]{display:var(--fgear,none);}
 .fmi{font-size:11px;color:#fff;font-weight:600;}
 .fr{font-size:8px;color:#fff;margin-top:1px;}
 /* settings */
-.sov{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.62);backdrop-filter:blur(4px);padding:24px;color:#f1f5f9;font-family:var(--primary-font-family,system-ui,sans-serif);}
+.sov{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.68);backdrop-filter:blur(6px);padding:16px;color:#f1f5f9;font-family:var(--primary-font-family,system-ui,sans-serif);}
 .sov.open{display:flex;}
-.sov-modal{width:100%;max-width:440px;max-height:86vh;display:flex;flex-direction:column;background:rgba(12,9,24,.99);border:1px solid rgba(139,92,246,.32);border-radius:18px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.7);}
-.shdr{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;}
+.sov-modal{width:100%;max-width:900px;max-height:92vh;display:flex;flex-direction:column;background:rgba(10,8,20,.98);border:1px solid rgba(139,92,246,.32);border-radius:18px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.8);}
+.shdr{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;}
 .sico{width:34px;height:34px;border-radius:9px;flex-shrink:0;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);display:flex;align-items:center;justify-content:center;color:#fbbf24;}
 .stit{font-size:14px;font-weight:700;}
 .ssub{font-size:10px;color:#fff;margin-top:1px;}
 .scls{margin-left:auto;width:28px;height:28px;border-radius:7px;border:none;background:rgba(255,255,255,.06);cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;}
 .scls:hover{background:rgba(255,255,255,.12);}
-.sbdy{flex:1;overflow-y:auto;padding:14px 16px;min-height:140px;}
+.sov-2col{display:flex;flex:1;overflow:hidden;min-height:0;}
+.sbdy{width:400px;flex-shrink:0;overflow-y:auto;padding:14px 16px;border-right:1px solid rgba(255,255,255,.07);}
+.sov-prev{flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);}
+.prev-ttl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.5);}
+.prev-wrap{border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08);}
+.lsect{padding-top:12px;border-top:1px solid rgba(255,255,255,.08);}
+.layout-row{display:flex;align-items:center;gap:8px;margin-top:10px;}
+.layout-lbl{font-size:11px;font-weight:700;color:#fff;width:72px;flex-shrink:0;}
+.layout-val{font-size:12px;font-weight:800;color:#fbbf24;width:54px;text-align:right;flex-shrink:0;}
+input[type=range].lslider{flex:1;cursor:pointer;accent-color:#fbbf24;height:4px;}
+@media(max-width:620px){.sov-2col{flex-direction:column;}.sbdy{width:100%;border-right:none;border-bottom:1px solid rgba(255,255,255,.07);}.sov-prev{min-width:0;}}
 .fl{font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;margin-top:12px;}
 .fl:first-child{margin-top:0;}
 .er{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);}
@@ -683,14 +693,52 @@ class MeteoCard extends HTMLElement {
 
   _onInput(e){
     const f=e.target.dataset.f,v=e.target.value
-    if     (f==='city') this._tc=v
-    else if(f==='hum') { this._th=v; this._updateDropdown('hum') }
-    else if(f==='pres'){ this._tp=v; this._updateDropdown('pres') }
-    else if(f==='wind'){ this._tw=v; this._updateDropdown('wind') }
-    else if(f==='wdir'){ this._twd=v; this._updateDropdown('wdir') }
-    else if(f==='days')  this._tdays=parseInt(v)||5
-    else if(f==='minh')  this._tminH=parseInt(v)||0
-    else if(f==='cols')  this._tcols=parseInt(v)||1
+    const sr=this._modalHost?.shadowRoot
+    if     (f==='city') { this._tc=v; this._schedPrev() }
+    else if(f==='hum') { this._th=v; this._updateDropdown('hum'); this._schedPrev() }
+    else if(f==='pres'){ this._tp=v; this._updateDropdown('pres'); this._schedPrev() }
+    else if(f==='wind'){ this._tw=v; this._updateDropdown('wind'); this._schedPrev() }
+    else if(f==='wdir'){ this._twd=v; this._updateDropdown('wdir'); this._schedPrev() }
+    else if(f==='days'){ this._tdays=parseInt(v)||5; this._schedPrev() }
+    else if(f==='minh'){
+      this._tminH=parseInt(v)||0
+      const lbl=sr?.querySelector('#minh-lbl')
+      if(lbl) lbl.textContent=this._tminH>0?this._tminH+'px':'Auto'
+      this._schedPrev()
+      if(this._frarikCard?.id) this.dispatchEvent(new CustomEvent('frarik-card-layout',{bubbles:true,composed:true,detail:{cardId:this._frarikCard.id,minHeight:this._tminH,colSpan:null}}))
+    }
+    else if(f==='cols'){
+      this._tcols=Math.max(1,Math.min(4,parseInt(v)||1))
+      const lbl=sr?.querySelector('#cols-lbl')
+      if(lbl) lbl.textContent=this._tcols+' col.'
+      this._schedPrev()
+      if(this._frarikCard?.id) this.dispatchEvent(new CustomEvent('frarik-card-layout',{bubbles:true,composed:true,detail:{cardId:this._frarikCard.id,colSpan:this._tcols,minHeight:null}}))
+    }
+  }
+
+  _schedPrev(){
+    if(this._prevTimer) clearTimeout(this._prevTimer)
+    this._prevTimer=setTimeout(()=>this._updatePreview(),180)
+  }
+
+  _updatePreview(){
+    const sr=this._modalHost?.shadowRoot
+    const pc=sr?.querySelector('#meteo-preview-card')
+    if(!pc) return
+    try{
+      pc.setConfig({
+        storageKey:'__prev__',
+        entityId:this._te||this._c.entityId,
+        cityName:this._tc,
+        humEntity:this._th,
+        presEntity:this._tp,
+        windEntity:this._tw,
+        windDirEntity:this._twd,
+        wfDays:parseInt(this._tdays)||5,
+        minHeight:parseInt(this._tminH)||0,
+      })
+      if(this._h) pc.hass=this._h
+    }catch(err){}
   }
 
   _onFocus(e){
@@ -750,6 +798,7 @@ class MeteoCard extends HTMLElement {
       document.body.appendChild(this._modalHost)
     }
     this._modalHost.shadowRoot.innerHTML=`<style>${_CSS}</style>${this._sovHTML()}`
+    setTimeout(()=>this._updatePreview(),60)
   }
 
   _destroyModal(){
@@ -897,8 +946,9 @@ class MeteoCard extends HTMLElement {
     const eid=this._te||this._c.entityId||''
     const ent=this._h?.states?.[eid]
     const enm=ent?.attributes?.friendly_name||eid||'—'
-    const city=this._tc
     const wents=Object.keys(this._h?.states||{}).filter(k=>k.startsWith('weather.'))
+    const minhV=this._tminH||0
+    const colsV=this._tcols||1
     return `
 <div class="sov open">
   <div class="sov-modal">
@@ -907,81 +957,87 @@ class MeteoCard extends HTMLElement {
       <div><div class="stit">Meteo + Previsioni</div><div class="ssub">Impostazioni card</div></div>
       <button class="scls" data-a="close">${_IC.x}</button>
     </div>
-    <div class="sbdy">
-      <div class="fl">Entità meteo HA</div>
-      <div class="er">
-        <span style="color:rgba(255,255,255,.7);display:flex;flex-shrink:0;margin-right:4px;">${_IC.cl}</span>
-        <div class="ei"><div class="en">${enm}</div><div class="eid">${eid}</div></div>
-        <button class="cbtn" data-a="srch">Cambia</button>
+    <div class="sov-2col">
+
+      <!-- COLONNA SX: form configurazione -->
+      <div class="sbdy">
+        <div class="fl">Entità meteo HA</div>
+        <div class="er">
+          <span style="color:rgba(255,255,255,.7);display:flex;flex-shrink:0;margin-right:4px;">${_IC.cl}</span>
+          <div class="ei"><div class="en">${enm}</div><div class="eid">${eid}</div></div>
+          <button class="cbtn" data-a="srch">Cambia</button>
+        </div>
+        <div class="esr ${this._se?'open':''}">
+          <div class="el">
+            ${wents.length
+              ?wents.map(id=>`<div class="eo ${id===eid?'sel':''}" data-a="sel" data-id="${id}">${this._h.states[id]?.attributes?.friendly_name||id}<span style="font-size:9px;color:rgba(255,255,255,.45);margin-left:4px;">${id}</span></div>`).join('')
+              :'<div style="padding:8px 12px;font-size:11px;color:rgba(255,255,255,.7);">Nessuna entità weather.* trovata</div>'}
+          </div>
+        </div>
+
+        <div class="fl" style="margin-top:14px;">Nome città</div>
+        <input class="ci" type="text" value="${this._tc}" placeholder="Es: Selargius" data-f="city"/>
+        <div class="ht">Se vuoto usa il nome dell'entità HA</div>
+
+        <div class="fl" style="margin-top:14px;">Umidità — sensor (opzionale)</div>
+        <div class="inp-grp">
+          <input class="ci" type="text" value="${this._th}" placeholder="Es: sensor.umidita_esterna" data-f="hum" autocomplete="off"/>
+          <div class="esr" data-dropdown="hum"><div class="el"></div></div>
+        </div>
+        <div class="ht">Vuoto → usa attributo humidity dell'entità meteo</div>
+
+        <div class="fl" style="margin-top:10px;">Pressione — sensor (opzionale)</div>
+        <div class="inp-grp">
+          <input class="ci" type="text" value="${this._tp}" placeholder="Es: sensor.pressione_barometrica" data-f="pres" autocomplete="off"/>
+          <div class="esr" data-dropdown="pres"><div class="el"></div></div>
+        </div>
+        <div class="ht">Vuoto → usa attributo pressure dell'entità meteo</div>
+
+        <div class="fl" style="margin-top:10px;">Velocità vento — sensor (opzionale)</div>
+        <div class="inp-grp">
+          <input class="ci" type="text" value="${this._tw}" placeholder="Es: sensor.vento_velocita" data-f="wind" autocomplete="off"/>
+          <div class="esr" data-dropdown="wind"><div class="el"></div></div>
+        </div>
+        <div class="ht">Vuoto → usa attributo wind_speed dell'entità meteo</div>
+
+        <div class="fl" style="margin-top:10px;">Direzione vento — sensor (opzionale)</div>
+        <div class="inp-grp">
+          <input class="ci" type="text" value="${this._twd}" placeholder="Es: sensor.vento_direzione" data-f="wdir" autocomplete="off"/>
+          <div class="esr" data-dropdown="wdir"><div class="el"></div></div>
+        </div>
+        <div class="ht">Vuoto → usa attributo wind_bearing dell'entità meteo</div>
+
+        <div class="fl" style="margin-top:14px;">Giorni previsioni (1–10)</div>
+        <input class="ci" type="number" min="1" max="10" value="${this._tdays}" data-f="days"/>
+        <div class="ht">Quanti giorni mostrare nel pannello previsioni</div>
       </div>
-      <div class="esr ${this._se?'open':''}">
-        <div class="el">
-          ${wents.length
-            ?wents.map(id=>`<div class="eo ${id===eid?'sel':''}" data-a="sel" data-id="${id}">${this._h.states[id]?.attributes?.friendly_name||id}<span style="font-size:9px;color:#374151;margin-left:4px;">${id}</span></div>`).join('')
-            :'<div style="padding:8px 12px;font-size:11px;color:rgba(255,255,255,.7);">Nessuna entità weather.* trovata</div>'}
+
+      <!-- COLONNA DX: anteprima live + slider dimensioni -->
+      <div class="sov-prev">
+        <div class="prev-ttl">Anteprima live</div>
+        <div class="prev-wrap">
+          <meteo-card id="meteo-preview-card" style="--fgear:none;display:block;"></meteo-card>
+        </div>
+
+        <div class="lsect">
+          <div class="fl" style="margin:0 0 4px;">Dimensioni card</div>
+
+          <div class="layout-row">
+            <span class="layout-lbl">Altezza</span>
+            <input type="range" class="lslider" data-f="minh" min="0" max="700" step="10" value="${minhV}">
+            <span class="layout-val" id="minh-lbl">${minhV>0?minhV+'px':'Auto'}</span>
+          </div>
+
+          <div class="layout-row">
+            <span class="layout-lbl">Larghezza</span>
+            <input type="range" class="lslider" data-f="cols" min="1" max="4" step="1" value="${colsV}">
+            <span class="layout-val" id="cols-lbl">${colsV} col.</span>
+          </div>
+          <div class="ht" style="margin-top:6px;">Trascina gli slider — la card si aggiorna in tempo reale</div>
+          <div class="ht">La larghezza agisce sull'intera colonna del layout</div>
         </div>
       </div>
-      <div class="fl" style="margin-top:14px;">Nome città</div>
-      <input class="ci" type="text" value="${city}" placeholder="Es: Selargius" data-f="city"/>
-      <div class="ht">Se vuoto usa il nome dell'entità HA</div>
 
-      <div class="fl" style="margin-top:16px;">Umidità — entità sensor (opzionale)</div>
-      <div class="inp-grp">
-        <input class="ci" type="text" value="${this._th}" placeholder="Es: sensor.umidita_esterna" data-f="hum" autocomplete="off"/>
-        <div class="esr" data-dropdown="hum"><div class="el"></div></div>
-      </div>
-      <div class="ht">Lascia vuoto per usare l'attributo humidity dell'entità meteo</div>
-
-      <div class="fl" style="margin-top:10px;">Pressione — entità sensor (opzionale)</div>
-      <div class="inp-grp">
-        <input class="ci" type="text" value="${this._tp}" placeholder="Es: sensor.pressione_barometrica" data-f="pres" autocomplete="off"/>
-        <div class="esr" data-dropdown="pres"><div class="el"></div></div>
-      </div>
-      <div class="ht">Lascia vuoto per usare l'attributo pressure dell'entità meteo</div>
-
-      <div class="fl" style="margin-top:10px;">Velocità vento — entità sensor (opzionale)</div>
-      <div class="inp-grp">
-        <input class="ci" type="text" value="${this._tw}" placeholder="Es: sensor.vento_velocita" data-f="wind" autocomplete="off"/>
-        <div class="esr" data-dropdown="wind"><div class="el"></div></div>
-      </div>
-      <div class="ht">Lascia vuoto per usare l'attributo wind_speed dell'entità meteo</div>
-
-      <div class="fl" style="margin-top:10px;">Direzione vento — entità sensor (opzionale)</div>
-      <div class="inp-grp">
-        <input class="ci" type="text" value="${this._twd}" placeholder="Es: sensor.vento_direzione" data-f="wdir" autocomplete="off"/>
-        <div class="esr" data-dropdown="wdir"><div class="el"></div></div>
-      </div>
-      <div class="ht">Lascia vuoto per usare l'attributo wind_bearing dell'entità meteo</div>
-
-      <div class="fl" style="margin-top:16px;">Giorni previsioni (1–10)</div>
-      <input class="ci" type="number" min="1" max="10" value="${this._tdays}" data-f="days"/>
-      <div class="ht">Quanti giorni mostrare nel pannello previsioni</div>
-
-      <div class="fl" style="margin-top:20px;">Layout — Dimensioni card</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:2px;">
-        <div>
-          <div style="font-size:10px;color:rgba(255,255,255,.7);margin-bottom:6px;font-weight:600;">Altezza minima</div>
-          <select class="ci" data-f="minh" style="cursor:pointer;">
-            <option value="0"  ${!this._tminH||this._tminH===0  ?'selected':''}>Auto</option>
-            <option value="180" ${this._tminH===180?'selected':''}>180 px</option>
-            <option value="220" ${this._tminH===220?'selected':''}>220 px</option>
-            <option value="260" ${this._tminH===260?'selected':''}>260 px</option>
-            <option value="300" ${this._tminH===300?'selected':''}>300 px</option>
-            <option value="360" ${this._tminH===360?'selected':''}>360 px</option>
-            <option value="420" ${this._tminH===420?'selected':''}>420 px</option>
-          </select>
-        </div>
-        <div>
-          <div style="font-size:10px;color:rgba(255,255,255,.7);margin-bottom:6px;font-weight:600;">Larghezza (colonne)</div>
-          <select class="ci" data-f="cols" style="cursor:pointer;">
-            <option value="1" ${this._tcols===1?'selected':''}>1 colonna</option>
-            <option value="2" ${this._tcols===2?'selected':''}>2 colonne</option>
-            <option value="3" ${this._tcols===3?'selected':''}>3 colonne</option>
-            <option value="4" ${this._tcols===4?'selected':''}>4 colonne (intera pagina)</option>
-          </select>
-        </div>
-      </div>
-      <div class="ht">La larghezza cambia anche le altre card nella stessa colonna</div>
     </div>
     <div class="sft"><button class="sav" data-a="save">${_IC.ok} Salva</button></div>
   </div>
