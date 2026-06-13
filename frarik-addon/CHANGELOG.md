@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.4.22 — 2026-06-13
+
+### fix(Meteo): testo/icone/numeri/simboli 100% bianchi
+
+- Rimossi tutti i `rgba(255,255,255,X)` e `opacity` sui testi della card.
+- `.dt`, `.tl`, `.sl`, `.sv`, `.fdn`, `.fm`, `.fmi`, `.fr`, `.sic`, `.gbtn` → `color:#fff` senza opacity.
+- `.tdeg` → rimosso `opacity:.85`.
+- Meteo.js: frarik-version 1.19 → 1.20
+
 ## 1.4.21 — 2026-06-13
 
 ### fix(Meteo): tutte le scritte diventano bianche — leggibili su sfondo cielo

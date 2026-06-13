@@ -1,4 +1,4 @@
-/* frarik-version: 1.19 */
+/* frarik-version: 1.20 */
 
 // ── Lookup tables ─────────────────────────────────────────────────────────────
 const _WI = {
@@ -230,8 +230,8 @@ const _CSS = `
 .sub{display:flex;align-items:center;gap:7px;margin-top:5px;}
 .cond{font-size:13px;font-weight:700;color:#fff;}
 .dot-sep{width:3px;height:3px;border-radius:50%;background:rgba(255,255,255,.4);}
-.dt{font-size:13px;color:rgba(255,255,255,.55);font-weight:500;}
-.gbtn{width:30px;height:30px;border-radius:8px;border:none;background:rgba(0,0,0,.18);cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.6);flex-shrink:0;transition:background .15s;margin-top:2px;backdrop-filter:blur(4px);}
+.dt{font-size:13px;color:#fff;font-weight:500;}
+.gbtn{width:30px;height:30px;border-radius:8px;border:none;background:rgba(0,0,0,.18);cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;transition:background .15s;margin-top:2px;backdrop-filter:blur(4px);}
 .gbtn:hover{background:rgba(0,0,0,.3);}
 .gbtn.on{background:rgba(255,255,255,.15);color:#fff;}
 button[data-a="gear"]{display:var(--fgear,none);}
@@ -239,25 +239,25 @@ button[data-a="gear"]{display:var(--fgear,none);}
 .tic{font-size:64px;line-height:1;filter:drop-shadow(0 2px 12px rgba(0,0,0,.3));}
 .ts{display:flex;flex-direction:column;}
 .tn{font-size:70px;font-weight:900;line-height:1;letter-spacing:-4px;display:flex;align-items:flex-start;text-shadow:0 2px 24px rgba(0,0,0,.4);}
-.tdeg{font-size:34px;font-weight:600;margin-top:10px;letter-spacing:0;opacity:.85;}
-.tl{font-size:12px;color:rgba(255,255,255,.5);margin-top:5px;font-weight:500;}
+.tdeg{font-size:34px;font-weight:600;margin-top:10px;letter-spacing:0;}
+.tl{font-size:12px;color:#fff;margin-top:5px;font-weight:500;}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;padding:10px 0 10px;}
 .stl{border-radius:12px;padding:10px 7px 9px;display:flex;flex-direction:column;align-items:center;gap:4px;backdrop-filter:blur(6px);}
-.sic{opacity:.85;color:#fff;}
-.sv{font-size:14px;font-weight:800;letter-spacing:-.3px;line-height:1;}
-.sl{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;opacity:.5;}
+.sic{color:#fff;}
+.sv{font-size:14px;font-weight:800;letter-spacing:-.3px;line-height:1;color:#fff;}
+.sl{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#fff;}
 .fct{display:flex;align-items:center;justify-content:space-between;padding:11px 2px;border-top:1px solid rgba(255,255,255,.1);cursor:pointer;user-select:none;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;transition:opacity .15s;color:#fff;}
 .fct:hover{opacity:.75;}
 .fcg{display:none;grid-template-columns:repeat(auto-fit,minmax(52px,1fr));gap:6px;padding-bottom:14px;}
 .fcg.open{display:grid;}
 .fcc{border-radius:12px;border:1px solid rgba(255,255,255,.09);background:rgba(0,0,0,.18);padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;transition:background .12s;backdrop-filter:blur(4px);}
 .fcc:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);}
-.fdn{font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;}
+.fdn{font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#fff;}
 .fi{font-size:28px;line-height:1;margin:3px 0 2px;}
-.fm{font-size:18px;font-weight:800;letter-spacing:-.5px;line-height:1;}
+.fm{font-size:18px;font-weight:800;letter-spacing:-.5px;line-height:1;color:#fff;}
 .fb{width:75%;height:3px;border-radius:99px;margin:2px 0 2px;}
-.fmi{font-size:11px;color:rgba(255,255,255,.45);font-weight:600;}
-.fr{font-size:8px;color:rgba(255,255,255,.35);margin-top:1px;}
+.fmi{font-size:11px;color:#fff;font-weight:600;}
+.fr{font-size:8px;color:#fff;margin-top:1px;}
 /* settings */
 .sov{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.62);backdrop-filter:blur(4px);padding:24px;color:#f1f5f9;font-family:var(--primary-font-family,system-ui,sans-serif);}
 .sov.open{display:flex;}
