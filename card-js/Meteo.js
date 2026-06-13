@@ -1,4 +1,4 @@
-/* frarik-version: 1.16 */
+/* frarik-version: 1.17 */
 
 // ── Lookup tables ─────────────────────────────────────────────────────────────
 const _WI = {
@@ -42,10 +42,10 @@ function _lerpHex(h1,h2,t){
   return '#'+[r1+(r2-r1)*t,g1+(g2-g1)*t,b1+(b2-b1)*t].map(v=>Math.round(v).toString(16).padStart(2,'0')).join('')
 }
 
-function _isNightNow(now,rise,set,cond){
+function _isNightNow(sunState,cond){
+  if(sunState==='below_horizon') return true
   if(cond&&cond.includes('night')) return true
-  if(!rise||!set) return false
-  return now.getTime()<rise.getTime()||now.getTime()>set.getTime()
+  return false
 }
 
 function _condCoverage(cond){
@@ -483,60 +483,72 @@ class MeteoCard extends HTMLElement {
   }
 
   // ── Sky system ────────────────────────────────────────────────────────────
-  _skyGrad(now, rise, set){
-    if(!rise||!set) return 'linear-gradient(to bottom,#010206,#040818)'
-    const h=(now.getTime()-rise.getTime())/3600000
-    const dh=(set.getTime()-rise.getTime())/3600000
+  // Uses sun.sun entity: elevation (-90..+90°) and azimuth (0..360°, 0=N,90=E)
+  _skyGrad(el, az){
+    if(el==null) return 'linear-gradient(to bottom,#0a1020,#040818)'
+    const eve=az!=null&&az>180
+    // [elevation, topHex, botHex]
     const segs=[
-      {at:-4,   top:'#010206',bot:'#030714'},
-      {at:-1,   top:'#060820',bot:'#0e0618'},
-      {at: 0,   top:'#0c1030',bot:'#4a1808'},
-      {at: 0.8, top:'#163880',bot:'#c05820'},
-      {at: 1.8, top:'#1858b0',bot:'#6ab5e0'},
-      {at:dh/2, top:'#1565b5',bot:'#4db8f0'},
-      {at:dh-1.8,top:'#0e3068',bot:'#d06030'},
-      {at:dh-.8, top:'#0b1c50',bot:'#b03808'},
-      {at:dh,    top:'#060a20',bot:'#1a0a08'},
-      {at:dh+1,  top:'#010206',bot:'#030714'},
+      [-90,'#010206','#030714'],
+      [-18,'#040710','#08061a'],
+      [-8, '#070a22','#110918'],
+      [-3, '#0a0e30','#3a1008'],
+      [0,  '#152060', eve?'#a03815':'#b04818'],
+      [4,  '#1850a8', eve?'#d87040':'#c07840'],
+      [10, '#1a62b8','#5ab8e8'],
+      [30, '#1565b5','#42b0e8'],
+      [70, '#1060b0','#38aae2'],
+      [90, '#0e58a8','#34a5de'],
     ]
     let a=segs[0],b=segs[segs.length-1]
-    for(let i=0;i<segs.length-1;i++){ if(h>=segs[i].at&&h<=segs[i+1].at){a=segs[i];b=segs[i+1];break} }
-    const t=Math.max(0,Math.min(1,(h-a.at)/(b.at-a.at)||0))
-    return `linear-gradient(to bottom,${_lerpHex(a.top,b.top,t)},${_lerpHex(a.bot,b.bot,t)})`
+    for(let i=0;i<segs.length-1;i++){ if(el>=segs[i][0]&&el<=segs[i+1][0]){a=segs[i];b=segs[i+1];break} }
+    const t=Math.max(0,Math.min(1,(el-a[0])/(b[0]-a[0])||0))
+    return `linear-gradient(to bottom,${_lerpHex(a[1],b[1],t)},${_lerpHex(a[2],b[2],t)})`
   }
 
-  _horizonStyle(now, rise, set){
-    if(!rise||!set) return ''
-    const h=(now.getTime()-rise.getTime())/3600000
-    const dh=(set.getTime()-rise.getTime())/3600000
-    const dawnT=Math.max(0,1-Math.abs(h-0.4)/1.1)
-    const duskT=Math.max(0,1-Math.abs(h-(dh-0.4))/1.1)
-    const t=Math.max(dawnT,duskT)
-    if(t<0.01) return ''
-    const col=dawnT>=duskT?`rgba(215,78,15,${(t*.52).toFixed(2)})`:`rgba(195,62,8,${(t*.52).toFixed(2)})`
-    return `background:radial-gradient(ellipse 88% 38% at 50% 100%,${col},rgba(120,30,0,${(t*.18).toFixed(2)}) 55%,transparent 100%)`
+  _horizonStyle(el){
+    if(el==null||Math.abs(el)>=8) return ''
+    const t=1-Math.abs(el)/8
+    const col=`rgba(200,75,10,${(t*.55).toFixed(2)})`
+    return `background:radial-gradient(ellipse 90% 36% at 50% 100%,${col},transparent 72%)`
   }
 
-  _celestialPos(now, rise, set, isNight){
-    if(!rise||!set) return null
-    const n=now.getTime(),r=rise.getTime(),s=set.getTime()
-    if(!isNight){
-      const prog=Math.max(0,Math.min(1,(n-r)/(s-r)))
-      return { x:8+prog*84, y:4+Math.sin(prog*Math.PI)*56 }
+  _sunPos(az, el){
+    if(az==null||el==null||el<-1) return null
+    // Map azimuth 70°-290° → left 6%-94%
+    const x=(Math.max(70,Math.min(290,az))-70)/220*88+6
+    const y=Math.max(2,Math.min(88,el/90*80+5))
+    return {x,y}
+  }
+
+  _moonPos(){
+    const sun=this._h?.states?.['sun.sun']
+    const now=Date.now()
+    const nr=sun?.attributes?.next_rising?new Date(sun.attributes.next_rising):null
+    const ns=sun?.attributes?.next_setting?new Date(sun.attributes.next_setting):null
+    if(nr&&ns){
+      const msUntilRise=nr.getTime()-now
+      if(msUntilRise>0&&msUntilRise<16*3600000){
+        // ns is tomorrow's (or today's) sunset already passed; night started ~ns-24h ago
+        const nightStart=ns.getTime()-86400000
+        const nightDur=nr.getTime()-nightStart
+        const prog=Math.max(0,Math.min(1,(now-nightStart)/nightDur))
+        return {x:8+prog*84, y:4+Math.sin(prog*Math.PI)*52}
+      }
     }
-    const nightDur=86400000-(s-r)
-    let mp=-1
-    if(n>s) mp=(n-s)/nightDur
-    else if(n<r) mp=(n-(s-86400000))/nightDur
-    if(mp<0||mp>1) return null
-    return { x:8+mp*84, y:4+Math.sin(mp*Math.PI)*46 }
+    // Fallback: rough time-based arc (20:00=start, 06:00=end)
+    const hr=new Date().getHours()+new Date().getMinutes()/60
+    const n=hr>=20?hr-20:(hr+4)
+    const prog=Math.min(1,n/10)
+    return {x:8+prog*84, y:4+Math.sin(prog*Math.PI)*50}
   }
 
   _skyHTML(st){
-    const now=new Date(),cond=st.state,a=st.attributes
-    const rise=a.sunrise?new Date(a.sunrise):null
-    const set =a.sunset ?new Date(a.sunset) :null
-    const isNight=_isNightNow(now,rise,set,cond)
+    const cond=st.state,a=st.attributes
+    const sunE=this._h?.states?.['sun.sun']
+    const el=sunE!=null?parseFloat(sunE.attributes?.elevation??0):null
+    const az=sunE!=null?parseFloat(sunE.attributes?.azimuth??180):null
+    const isNight=_isNightNow(sunE?.state,cond)
     const coverage=a.cloud_coverage??_condCoverage(cond)
     const fxKey=`${cond}-${Math.round(coverage/10)}`
     if(fxKey!==this._skyFxKey){
@@ -555,9 +567,9 @@ class MeteoCard extends HTMLElement {
       }
     }
     const fx=this._skyFx
-    const skyBg=this._skyGrad(now,rise,set)
-    const hStyle=this._horizonStyle(now,rise,set)
-    const pos=this._celestialPos(now,rise,set,isNight)
+    const skyBg=this._skyGrad(el,az)
+    const hStyle=this._horizonStyle(el)
+    const pos=isNight?this._moonPos():this._sunPos(az,el)
     const starsOp=isNight&&coverage<75?1:0
     const hideBody=coverage>82
     let celHTML=''
@@ -565,7 +577,7 @@ class MeteoCard extends HTMLElement {
       if(!isNight){
         celHTML=`<div class="celestial" style="left:${pos.x.toFixed(1)}%;bottom:${pos.y.toFixed(1)}%;">${_sunSVG()}</div>`
       } else {
-        const phase=_moonPhaseNum(now)
+        const phase=_moonPhaseNum(new Date())
         const f=(1-Math.cos(phase/29.53*2*Math.PI))/2
         if(f>0.015){
           celHTML=`<div class="celestial" style="left:${pos.x.toFixed(1)}%;bottom:${pos.y.toFixed(1)}%;">${_moonSVG(phase)}</div>`
@@ -585,15 +597,16 @@ class MeteoCard extends HTMLElement {
     const sr=this.shadowRoot
     const skyEl=sr?.querySelector('.sky'); if(!skyEl) return
     const st=this._h?.states?.[this._c.entityId]; if(!st) return
-    const now=new Date(),a=st.attributes
-    const rise=a.sunrise?new Date(a.sunrise):null
-    const set =a.sunset ?new Date(a.sunset) :null
-    const isNight=_isNightNow(now,rise,set,st.state)
-    skyEl.style.background=this._skyGrad(now,rise,set)
+    const sunE=this._h?.states?.['sun.sun']
+    const el=sunE!=null?parseFloat(sunE.attributes?.elevation??0):null
+    const az=sunE!=null?parseFloat(sunE.attributes?.azimuth??180):null
+    const isNight=_isNightNow(sunE?.state,st.state)
+    skyEl.style.background=this._skyGrad(el,az)
     const hEl=sr.querySelector('.sky-horizon')
-    if(hEl) hEl.setAttribute('style',this._horizonStyle(now,rise,set))
+    if(hEl) hEl.setAttribute('style',this._horizonStyle(el))
+    const a=st.attributes
     const coverage=a.cloud_coverage??_condCoverage(st.state)
-    const pos=this._celestialPos(now,rise,set,isNight)
+    const pos=isNight?this._moonPos():this._sunPos(az,el)
     const celEl=sr.querySelector('.celestial')
     if(celEl&&pos){
       celEl.style.left=pos.x.toFixed(1)+'%'
@@ -769,11 +782,9 @@ class MeteoCard extends HTMLElement {
 
   _renderCard(st){
     const cond=st.state,a=st.attributes
-    const now=new Date()
-    const rise=a.sunrise?new Date(a.sunrise):null
-    const set =a.sunset ?new Date(a.sunset) :null
-    const isNight=_isNightNow(now,rise,set,cond)
-    const accent=isNight||cond.includes('night')?'#a78bfa':'#38bdf8'
+    const sunE=this._h?.states?.['sun.sun']
+    const isNight=_isNightNow(sunE?.state,cond)
+    const accent=isNight?'#a78bfa':'#38bdf8'
     const tb=isNight?'rgba(139,92,246,.12)':'rgba(56,189,248,.10)'
     const tbr=isNight?'rgba(139,92,246,.22)':'rgba(56,189,248,.18)'
     const border=isNight?'rgba(139,92,246,.28)':'rgba(56,189,248,.22)'

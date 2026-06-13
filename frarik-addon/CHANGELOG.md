@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.4.19 — 2026-06-13
+
+### fix(Meteo): sky usava a.sunrise/a.sunset che non esistono sulle entità weather HA
+
+- Root cause: le entità `weather.*` di HA non espongono `sunrise`/`sunset` come attributi → il gradiente cadeva sempre sul fallback scuro (`#0a1020→#040818`).
+- Fix: tutto il sistema sky usa ora `hass.states['sun.sun']` (sempre disponibile in HA) con attributi `elevation` (gradi -90..+90) e `azimuth` (0..360°) aggiornati in tempo reale.
+- `_skyGrad(el, az)`: gradiente in base all'elevazione solare reale (10 segmenti: notte fonda → pre-alba → alba → mattina → mezzogiorno). Toni arancio/oro per tramonto (az>180).
+- `_horizonStyle(el)`: glow arancio sull'orizzonte solo quando `|el|<8°` (alba/tramonto reali).
+- `_sunPos(az, el)`: posizione SVG sole da azimuth (az 70°-290° → left 6%-94%) e elevation (bottom%).
+- `_moonPos()`: arco notturno calcolato da `sun.sun.next_rising`/`next_setting`; fallback orario se non disponibili.
+- `_isNightNow(sunState, cond)`: ora usa `sun.state==='below_horizon'` invece di comparare timestamp rise/set.
+- `_renderCard`: accento/bordo card ora legge `sun.sun` invece di attributi inesistenti.
+- Meteo.js: frarik-version 1.16 → 1.17
+
 ## 1.4.18 — 2026-06-13
 
 ### feat(Meteo): cielo animato realistico — sole/luna, fasi lunari, meteo dinamico
