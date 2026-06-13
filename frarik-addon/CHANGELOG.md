@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.4.23 — 2026-06-13
+
+### feat(Meteo) + fix: layout card configurabile + popup testi bianchi
+
+**Layout card (Meteo.js + main.js):**
+- Nuovo pannello "Layout — Dimensioni card" nelle impostazioni Meteo con 2 select:
+  - **Altezza minima**: Auto / 180 / 220 / 260 / 300 / 360 / 420 px. Applicata come `min-height` sul `.card` (le card JS sono già `height:auto` nel container frarik).
+  - **Larghezza (colonne)**: 1 / 2 / 3 / 4 colonne. Al salvataggio dispatchizza `frarik-card-layout` (bubbles+composed) che main.js intercetta e aggiorna `sec.colWidths[col]` (sezioni) o `card.colSpan` (legacy grid), poi chiama `saveData()`.
+- main.js: `configure(card, el)` ora passa `card` a `cel.configure(card)` e al fallback `_ce.configure(c)`, così Meteo.js conosce il proprio frarik cardId.
+- main.js: aggiunto listener `document.addEventListener('frarik-card-layout', ...)` che gestisce sia la modalità sections che la modalità grid legacy.
+
+**Popup testi bianchi:**
+- CSS settings modal: `.ssub`, `.fl`, `.eid`, `.eo`, `.ht`, `.scls`, `.en` → `color:#fff`.
+- `.ci::placeholder` → `rgba(255,255,255,.35)`. `.eo.sel` → `#fbbf24` (giallo, per distinguere la selezione).
+- Bottom sheet orario: `.hr-t`, `.hr-tp`, `.hr-r`, `.hr-w`, `.hr-load` → `#fff`.
+- Inline styles: entity ID spans, "Nessuna entità trovata", icona search → bianco/semitrasparente.
+- Meteo.js: frarik-version 1.20 → 1.21
+
 ## 1.4.22 — 2026-06-13
 
 ### fix(Meteo): testo/icone/numeri/simboli 100% bianchi

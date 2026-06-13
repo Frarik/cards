@@ -1,4 +1,4 @@
-/* frarik-version: 1.20 */
+/* frarik-version: 1.21 */
 
 // ── Lookup tables ─────────────────────────────────────────────────────────────
 const _WI = {
@@ -265,28 +265,28 @@ button[data-a="gear"]{display:var(--fgear,none);}
 .shdr{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;}
 .sico{width:34px;height:34px;border-radius:9px;flex-shrink:0;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);display:flex;align-items:center;justify-content:center;color:#fbbf24;}
 .stit{font-size:14px;font-weight:700;}
-.ssub{font-size:10px;color:#64748b;margin-top:1px;}
-.scls{margin-left:auto;width:28px;height:28px;border-radius:7px;border:none;background:rgba(255,255,255,.06);cursor:pointer;display:flex;align-items:center;justify-content:center;color:#94a3b8;flex-shrink:0;}
+.ssub{font-size:10px;color:#fff;margin-top:1px;}
+.scls{margin-left:auto;width:28px;height:28px;border-radius:7px;border:none;background:rgba(255,255,255,.06);cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;}
 .scls:hover{background:rgba(255,255,255,.12);}
 .sbdy{flex:1;overflow-y:auto;padding:14px 16px;min-height:140px;}
-.fl{font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;margin-top:12px;}
+.fl{font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;margin-top:12px;}
 .fl:first-child{margin-top:0;}
 .er{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);}
 .ei{flex:1;min-width:0;}
-.en{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.eid{font-size:10px;color:#64748b;margin-top:1px;}
-.cbtn{padding:5px 12px;border-radius:7px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.07);color:#f1f5f9;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;}
-.cbtn:hover{background:rgba(255,255,255,.13);}
+.en{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff;}
+.eid{font-size:10px;color:#fff;margin-top:1px;}
+.cbtn{padding:5px 12px;border-radius:7px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;}
+.cbtn:hover{background:rgba(255,255,255,.18);}
 .esr{display:none;margin-top:6px;border-radius:10px;border:1px solid rgba(255,255,255,.12);overflow:hidden;background:rgba(10,8,22,1);}
 .esr.open{display:block;}
 .el{max-height:160px;overflow-y:auto;}
-.eo{padding:8px 12px;cursor:pointer;font-size:12px;color:#94a3b8;border-bottom:1px solid rgba(255,255,255,.04);}
-.eo:hover{background:rgba(255,255,255,.06);color:#f1f5f9;}
-.eo.sel{color:#a78bfa;font-weight:700;}
-.ci{width:100%;padding:9px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:#f1f5f9;font-size:13px;font-family:inherit;outline:none;}
-.ci:focus{border-color:rgba(167,139,250,.5);}
-.ci::placeholder{color:#374151;}
-.ht{font-size:10px;color:#374151;margin-top:4px;}
+.eo{padding:8px 12px;cursor:pointer;font-size:12px;color:#fff;border-bottom:1px solid rgba(255,255,255,.06);}
+.eo:hover{background:rgba(255,255,255,.08);color:#fff;}
+.eo.sel{color:#fbbf24;font-weight:700;}
+.ci{width:100%;padding:9px 12px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#fff;font-size:13px;font-family:inherit;outline:none;}
+.ci:focus{border-color:rgba(255,255,255,.4);}
+.ci::placeholder{color:rgba(255,255,255,.35);}
+.ht{font-size:10px;color:rgba(255,255,255,.55);margin-top:4px;}
 .inp-grp{position:relative;}
 .sft{padding:12px 16px;border-top:1px solid rgba(255,255,255,.08);flex-shrink:0;}
 .sav{width:100%;height:38px;border-radius:10px;border:none;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#000;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
@@ -303,14 +303,14 @@ class MeteoCard extends HTMLElement {
     super()
     this.attachShadow({mode:'open'})
     this._h   = null
-    this._c   = { entityId:'',cityName:'',humEntity:'',presEntity:'',windEntity:'',windDirEntity:'',wfDays:5 }
+    this._c   = { entityId:'',cityName:'',humEntity:'',presEntity:'',windEntity:'',windDirEntity:'',wfDays:5,minHeight:0,colSpan:1 }
     this._fc  = []
     this._fch = []
     this._fcs = null
     this._fo  = false
     this._so  = false
     this._se  = false
-    this._te  = ''; this._tc = ''; this._th = ''; this._tp = ''; this._tw = ''; this._twd = ''; this._tdays = 5
+    this._te  = ''; this._tc = ''; this._th = ''; this._tp = ''; this._tw = ''; this._twd = ''; this._tdays = 5; this._tminH = 0; this._tcols = 1
     this._fs  = null
     this._bk  = null
     this._nh  = true
@@ -321,6 +321,7 @@ class MeteoCard extends HTMLElement {
     this._skyFx      = null
     this._skyFxKey   = ''
     this._skyTimer   = null
+    this._frarikCard = null
     this._click = this._onClick.bind(this)
     this._inp   = this._onInput.bind(this)
     this._focus = this._onFocus.bind(this)
@@ -336,6 +337,8 @@ class MeteoCard extends HTMLElement {
         humEntity:this._c.humEntity||'', presEntity:this._c.presEntity||'',
         windEntity:this._c.windEntity||'', windDirEntity:this._c.windDirEntity||'',
         wfDays:this._c.wfDays||5,
+        minHeight:this._c.minHeight||0,
+        colSpan:this._c.colSpan||1,
       }))
     }catch{}
   }
@@ -353,11 +356,13 @@ class MeteoCard extends HTMLElement {
       windEntity:   stored.windEntity   ||cfg.windEntity   ||'',
       windDirEntity:stored.windDirEntity||cfg.windDirEntity||'',
       wfDays:       stored.wfDays       ||cfg.wfDays       ||5,
+      minHeight:    stored.minHeight    ||cfg.minHeight    ||0,
+      colSpan:      stored.colSpan      ||cfg.colSpan      ||1,
     }
     this._te=this._c.entityId; this._tc=this._c.cityName
     this._th=this._c.humEntity; this._tp=this._c.presEntity
     this._tw=this._c.windEntity; this._twd=this._c.windDirEntity
-    this._tdays=this._c.wfDays
+    this._tdays=this._c.wfDays; this._tminH=this._c.minHeight||0; this._tcols=this._c.colSpan||1
     if(prev!==this._c.entityId&&this._h) this._getForecast()
     this._bk=null; this._build()
   }
@@ -470,7 +475,7 @@ class MeteoCard extends HTMLElement {
           return `<div class="hr-row"><div class="hr-t">${time}</div><div class="hr-i">${ico}</div><div class="hr-tp">${temp}°</div><div class="hr-r">${rn}${rp?' · '+rp:''}</div><div class="hr-w">${ws} ${wd}</div></div>`
         }).join('')
       :`<div class="hr-load">Previsioni orarie in caricamento…</div>`
-    const dmCSS=`.dov{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);font-family:var(--primary-font-family,system-ui,sans-serif);}.dov-modal{width:100%;max-height:85vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(56,189,248,.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:slideUp .22s cubic-bezier(.32,1.12,.56,1);}@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}.hr-list{flex:1;overflow-y:auto;padding:6px 0 env(safe-area-inset-bottom,8px);}.hr-row{display:grid;grid-template-columns:46px 30px 46px 1fr auto;align-items:center;gap:8px;padding:10px 20px;border-bottom:1px solid rgba(255,255,255,.05);color:#e2e8f0;}.hr-row:last-child{border-bottom:none;}.hr-t{font-size:13px;font-weight:700;color:#94a3b8;}.hr-i{font-size:22px;text-align:center;}.hr-tp{font-size:15px;font-weight:800;letter-spacing:-.3px;}.hr-r{font-size:11px;color:#60a5fa;}.hr-w{font-size:11px;color:#94a3b8;text-align:right;white-space:nowrap;}.hr-load{padding:40px;text-align:center;color:rgba(255,255,255,.3);font-size:12px;}`
+    const dmCSS=`.dov{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);font-family:var(--primary-font-family,system-ui,sans-serif);}.dov-modal{width:100%;max-height:85vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(56,189,248,.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:slideUp .22s cubic-bezier(.32,1.12,.56,1);}@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}.hr-list{flex:1;overflow-y:auto;padding:6px 0 env(safe-area-inset-bottom,8px);}.hr-row{display:grid;grid-template-columns:46px 30px 46px 1fr auto;align-items:center;gap:8px;padding:10px 20px;border-bottom:1px solid rgba(255,255,255,.05);color:#e2e8f0;}.hr-row:last-child{border-bottom:none;}.hr-t{font-size:13px;font-weight:700;color:#fff;}.hr-i{font-size:22px;text-align:center;}.hr-tp{font-size:15px;font-weight:800;letter-spacing:-.3px;color:#fff;}.hr-r{font-size:11px;color:#fff;}.hr-w{font-size:11px;color:#fff;text-align:right;white-space:nowrap;}.hr-load{padding:40px;text-align:center;color:#fff;font-size:12px;}`
     this._dayModalHost.shadowRoot.innerHTML=`<style>${_CSS}${dmCSS}</style>
 <div class="dov"><div class="dov-modal">
   <div class="shdr" style="border-radius:20px 20px 0 0;">
@@ -652,8 +657,16 @@ class MeteoCard extends HTMLElement {
         this._c={ entityId:this._te,cityName:this._tc,
                   humEntity:this._th,presEntity:this._tp,
                   windEntity:this._tw,windDirEntity:this._twd,
-                  wfDays:Math.min(10,Math.max(1,parseInt(this._tdays)||5)) }
+                  wfDays:Math.min(10,Math.max(1,parseInt(this._tdays)||5)),
+                  minHeight:parseInt(this._tminH)||0,
+                  colSpan:Math.min(4,Math.max(1,parseInt(this._tcols)||1)) }
         this._saveStore()
+        if(this._frarikCard?.id){
+          this.dispatchEvent(new CustomEvent('frarik-card-layout',{
+            bubbles:true,composed:true,
+            detail:{cardId:this._frarikCard.id,colSpan:this._c.colSpan,minHeight:this._c.minHeight}
+          }))
+        }
         this._fc=[]; this._getForecast()
         this._fch=[]; this._unsubHourly()
         this._closeSettings()
@@ -675,7 +688,9 @@ class MeteoCard extends HTMLElement {
     else if(f==='pres'){ this._tp=v; this._updateDropdown('pres') }
     else if(f==='wind'){ this._tw=v; this._updateDropdown('wind') }
     else if(f==='wdir'){ this._twd=v; this._updateDropdown('wdir') }
-    else if(f==='days') this._tdays=parseInt(v)||5
+    else if(f==='days')  this._tdays=parseInt(v)||5
+    else if(f==='minh')  this._tminH=parseInt(v)||0
+    else if(f==='cols')  this._tcols=parseInt(v)||1
   }
 
   _onFocus(e){
@@ -702,13 +717,13 @@ class MeteoCard extends HTMLElement {
     listEl.innerHTML=filtered.length
       ?filtered.slice(0,80).map(id=>{
           const nm=this._h.states[id]?.attributes?.friendly_name||id
-          return `<div class="eo${id===val?' sel':''}" data-a="sel-sensor" data-f="${field}" data-id="${id}">${nm}<span style="font-size:9px;color:#374151;margin-left:6px;">${id}</span></div>`
+          return `<div class="eo${id===val?' sel':''}" data-a="sel-sensor" data-f="${field}" data-id="${id}">${nm}<span style="font-size:9px;color:rgba(255,255,255,.55);margin-left:6px;">${id}</span></div>`
         }).join('')
-      :'<div style="padding:8px 12px;font-size:11px;color:#64748b;">Nessuna entità trovata</div>'
+      :'<div style="padding:8px 12px;font-size:11px;color:rgba(255,255,255,.6);">Nessuna entità trovata</div>'
     dropdown.classList.add('open')
   }
 
-  configure(){ this._openSettings() }
+  configure(card){ if(card&&card.id) this._frarikCard=card; this._openSettings() }
 
   // ── Settings modal ────────────────────────────────────────────────────────
   _openSettings(){
@@ -716,7 +731,7 @@ class MeteoCard extends HTMLElement {
     this._te=this._c.entityId; this._tc=this._c.cityName
     this._th=this._c.humEntity; this._tp=this._c.presEntity
     this._tw=this._c.windEntity; this._twd=this._c.windDirEntity
-    this._tdays=this._c.wfDays||5
+    this._tdays=this._c.wfDays||5; this._tminH=this._c.minHeight||0; this._tcols=this._c.colSpan||1
     this._renderModal(); this._bk=null; this._build()
   }
 
@@ -828,8 +843,9 @@ class MeteoCard extends HTMLElement {
       fcH=`<div style="grid-column:span ${_nDays};text-align:center;padding:14px;color:rgba(255,255,255,.25);font-size:11px;">Previsioni in caricamento…</div>`
     }
 
+    const _mhS=this._c.minHeight>0?`min-height:${this._c.minHeight}px;`:''
     this.shadowRoot.innerHTML=`<style>${_CSS}</style>
-<div class="card" style="border:1px solid ${border};">
+<div class="card" style="border:1px solid ${border};${_mhS}">
   ${this._skyHTML(st)}
   <div class="body">
     <div class="hdr">
@@ -894,7 +910,7 @@ class MeteoCard extends HTMLElement {
     <div class="sbdy">
       <div class="fl">Entità meteo HA</div>
       <div class="er">
-        <span style="color:#64748b;display:flex;flex-shrink:0;margin-right:4px;">${_IC.cl}</span>
+        <span style="color:rgba(255,255,255,.7);display:flex;flex-shrink:0;margin-right:4px;">${_IC.cl}</span>
         <div class="ei"><div class="en">${enm}</div><div class="eid">${eid}</div></div>
         <button class="cbtn" data-a="srch">Cambia</button>
       </div>
@@ -902,7 +918,7 @@ class MeteoCard extends HTMLElement {
         <div class="el">
           ${wents.length
             ?wents.map(id=>`<div class="eo ${id===eid?'sel':''}" data-a="sel" data-id="${id}">${this._h.states[id]?.attributes?.friendly_name||id}<span style="font-size:9px;color:#374151;margin-left:4px;">${id}</span></div>`).join('')
-            :'<div style="padding:8px 12px;font-size:11px;color:#64748b;">Nessuna entità weather.* trovata</div>'}
+            :'<div style="padding:8px 12px;font-size:11px;color:rgba(255,255,255,.7);">Nessuna entità weather.* trovata</div>'}
         </div>
       </div>
       <div class="fl" style="margin-top:14px;">Nome città</div>
@@ -940,6 +956,32 @@ class MeteoCard extends HTMLElement {
       <div class="fl" style="margin-top:16px;">Giorni previsioni (1–10)</div>
       <input class="ci" type="number" min="1" max="10" value="${this._tdays}" data-f="days"/>
       <div class="ht">Quanti giorni mostrare nel pannello previsioni</div>
+
+      <div class="fl" style="margin-top:20px;">Layout — Dimensioni card</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:2px;">
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,.7);margin-bottom:6px;font-weight:600;">Altezza minima</div>
+          <select class="ci" data-f="minh" style="cursor:pointer;">
+            <option value="0"  ${!this._tminH||this._tminH===0  ?'selected':''}>Auto</option>
+            <option value="180" ${this._tminH===180?'selected':''}>180 px</option>
+            <option value="220" ${this._tminH===220?'selected':''}>220 px</option>
+            <option value="260" ${this._tminH===260?'selected':''}>260 px</option>
+            <option value="300" ${this._tminH===300?'selected':''}>300 px</option>
+            <option value="360" ${this._tminH===360?'selected':''}>360 px</option>
+            <option value="420" ${this._tminH===420?'selected':''}>420 px</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,.7);margin-bottom:6px;font-weight:600;">Larghezza (colonne)</div>
+          <select class="ci" data-f="cols" style="cursor:pointer;">
+            <option value="1" ${this._tcols===1?'selected':''}>1 colonna</option>
+            <option value="2" ${this._tcols===2?'selected':''}>2 colonne</option>
+            <option value="3" ${this._tcols===3?'selected':''}>3 colonne</option>
+            <option value="4" ${this._tcols===4?'selected':''}>4 colonne (intera pagina)</option>
+          </select>
+        </div>
+      </div>
+      <div class="ht">La larghezza cambia anche le altre card nella stessa colonna</div>
     </div>
     <div class="sft"><button class="sav" data-a="save">${_IC.ok} Salva</button></div>
   </div>

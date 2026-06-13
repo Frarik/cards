@@ -5279,7 +5279,7 @@ function cardMenu(cardId, ev){
   if(_vEl){
     if(typeof _vEl._fConfigure==='function'){ _vEl._fConfigure(); return; }
     const _ce=_vEl.querySelector('.frarik-lovel')||_vEl.firstElementChild;
-    if(_ce&&typeof _ce.configure==='function'){ _ce.configure(); return; }
+    if(_ce&&typeof _ce.configure==='function'){ _ce.configure(c); return; }
   }
   openCM(cardId);
 }
@@ -8013,7 +8013,7 @@ function _registerLovelaceCard(tag, meta){
     },
     configure(card, el){
       const cel=el&&el.querySelector('.frarik-lovel');
-      if(cel&&typeof cel.configure==='function') cel.configure();
+      if(cel&&typeof cel.configure==='function') cel.configure(card);
     }
   };
 }
@@ -10200,6 +10200,30 @@ connect();
   }
   document.addEventListener('input',  _inputDelegate);
   document.addEventListener('change', _inputDelegate);
+
+  // Layout resize from js-custom cards (e.g. Meteo)
+  document.addEventListener('frarik-card-layout', e=>{
+    const {cardId,colSpan,minHeight}=e.detail||{};
+    if(!cardId) return;
+    const pg=curPage();
+    const card=pg.cards.find(c=>c.id===cardId);
+    if(!card) return;
+    if(minHeight!=null) card.height=minHeight||150;
+    if(colSpan!=null){
+      const span=Math.max(1,Math.min(4,colSpan));
+      if(pg.sections){
+        const sec=pg.sections.find(s=>s.id===card.secId);
+        if(sec){ if(!sec.colWidths) sec.colWidths={}; sec.colWidths[card.secCol||0]=span; }
+        const colOuter=document.getElementById('card-'+cardId)?.closest('.dash-col-outer');
+        if(colOuter) colOuter.style.gridColumn=`span ${span}`;
+      } else {
+        card.colSpan=span;
+        const cardEl=document.getElementById('card-'+cardId);
+        if(cardEl) cardEl.style.gridColumn=`span ${span}`;
+      }
+    }
+    saveData();
+  });
 })();
 
 /* ── Wrapper per input/change con this.value nei template ──────────────────── */
