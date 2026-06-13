@@ -1,4 +1,4 @@
-/* frarik-version: 1.18 */
+/* frarik-version: 1.19 */
 
 // ── Lookup tables ─────────────────────────────────────────────────────────────
 const _WI = {
@@ -228,7 +228,7 @@ const _CSS = `
 .hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;}
 .city{font-size:32px;font-weight:900;letter-spacing:-.5px;line-height:1.1;text-shadow:0 2px 14px rgba(0,0,0,.5);}
 .sub{display:flex;align-items:center;gap:7px;margin-top:5px;}
-.cond{font-size:13px;font-weight:700;}
+.cond{font-size:13px;font-weight:700;color:#fff;}
 .dot-sep{width:3px;height:3px;border-radius:50%;background:rgba(255,255,255,.4);}
 .dt{font-size:13px;color:rgba(255,255,255,.55);font-weight:500;}
 .gbtn{width:30px;height:30px;border-radius:8px;border:none;background:rgba(0,0,0,.18);cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.6);flex-shrink:0;transition:background .15s;margin-top:2px;backdrop-filter:blur(4px);}
@@ -243,10 +243,10 @@ button[data-a="gear"]{display:var(--fgear,none);}
 .tl{font-size:12px;color:rgba(255,255,255,.5);margin-top:5px;font-weight:500;}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;padding:10px 0 10px;}
 .stl{border-radius:12px;padding:10px 7px 9px;display:flex;flex-direction:column;align-items:center;gap:4px;backdrop-filter:blur(6px);}
-.sic{opacity:.8;}
+.sic{opacity:.85;color:#fff;}
 .sv{font-size:14px;font-weight:800;letter-spacing:-.3px;line-height:1;}
 .sl{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;opacity:.5;}
-.fct{display:flex;align-items:center;justify-content:space-between;padding:11px 2px;border-top:1px solid rgba(255,255,255,.1);cursor:pointer;user-select:none;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;transition:opacity .15s;}
+.fct{display:flex;align-items:center;justify-content:space-between;padding:11px 2px;border-top:1px solid rgba(255,255,255,.1);cursor:pointer;user-select:none;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;transition:opacity .15s;color:#fff;}
 .fct:hover{opacity:.75;}
 .fcg{display:none;grid-template-columns:repeat(auto-fit,minmax(52px,1fr));gap:6px;padding-bottom:14px;}
 .fcg.open{display:grid;}
@@ -816,7 +816,7 @@ class MeteoCard extends HTMLElement {
         const rn=(parseFloat(f.precipitation)||0).toFixed(1)
         const col=_tempCol(f.temperature)
         const bw=Math.round(((parseFloat(f.temperature)||0)-minT)/rng*75+25)
-        const nc=i===0?accent:'rgba(255,255,255,.65)'
+        const nc=i===0?'#fff':'rgba(255,255,255,.7)'
         return `<div class="fcc" data-a="day" data-idx="${i}">
           <div class="fdn" style="color:${nc};">${nm}</div>
           <div class="fi">${fi}</div><div class="fm">${mx}°</div>
@@ -836,7 +836,7 @@ class MeteoCard extends HTMLElement {
       <div>
         <div class="city">${city}</div>
         <div class="sub">
-          <span class="cond" style="color:${accent};">${cit}</span>
+          <span class="cond">${cit}</span>
           <span class="dot-sep"></span>
           <span class="dt">${today}</span>
         </div>
@@ -852,23 +852,23 @@ class MeteoCard extends HTMLElement {
     </div>
     <div class="stats">
       <div class="stl" style="background:${tb};border:1px solid ${tbr};">
-        <div class="sic" style="color:${accent};">${_IC.hu}</div>
+        <div class="sic">${_IC.hu}</div>
         <div class="sv">${hum}</div><div class="sl">Umidità</div>
       </div>
       <div class="stl" style="background:${tb};border:1px solid ${tbr};">
-        <div class="sic" style="color:${accent};">${_IC.pr}</div>
+        <div class="sic">${_IC.pr}</div>
         <div class="sv">${pres}</div><div class="sl">Pressione</div>
       </div>
       <div class="stl" style="background:${tb};border:1px solid ${tbr};">
-        <div class="sic" style="color:${accent};">${_IC.wi}</div>
+        <div class="sic">${_IC.wi}</div>
         <div class="sv">${wsp}</div><div class="sl">Vento</div>
       </div>
       <div class="stl" style="background:${tb};border:1px solid ${tbr};">
-        <div class="sic" style="color:${accent};">${_IC.co}</div>
+        <div class="sic">${_IC.co}</div>
         <div class="sv">${wdir}</div><div class="sl">Direzione</div>
       </div>
     </div>
-    <div class="fct" data-a="fc" style="color:${accent};">
+    <div class="fct" data-a="fc">
       <span>Prossimi giorni — Tocca per i dettagli</span>
       <span>${this._fo?_IC.cd:_IC.cr}</span>
     </div>

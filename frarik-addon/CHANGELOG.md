@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.21 — 2026-06-13
+
+### fix(Meteo): tutte le scritte diventano bianche — leggibili su sfondo cielo
+
+- Rimossi tutti gli `style="color:${accent}"` inline dalla card HTML (condizione, icone stat, "Prossimi giorni", "OGGI").
+- CSS: `.cond`, `.sic`, `.fct` ora hanno `color:#fff` di default.
+- `nc` per il giorno "OGGI" nella griglia previsioni: da `accent` a `#fff` (bianco pieno) vs `rgba(255,255,255,.7)` per gli altri giorni.
+- L'accent color (azzurro/viola) rimane solo per bordo card e sfumatura tile — non più per il testo.
+- Meteo.js: frarik-version 1.18 → 1.19
+
 ## 1.4.20 — 2026-06-13
 
 ### fix(Meteo): sole/luna seguono arco visibile nella strip del cielo
