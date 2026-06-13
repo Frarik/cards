@@ -1,4 +1,4 @@
-/* frarik-version: 1.13 */
+/* frarik-version: 1.14 */
 /**
  * meteo+previsioni.js v1.2
  * type: custom:meteo-card
@@ -128,7 +128,7 @@ button[data-a="gear"]{display:var(--fgear,none);}
 /* forecast */
 .fct{display:flex;align-items:center;justify-content:space-between;padding:11px 2px;border-top:1px solid rgba(255,255,255,.09);cursor:pointer;user-select:none;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;transition:opacity .15s;}
 .fct:hover{opacity:.75;}
-.fcg{display:none;grid-template-columns:repeat(5,1fr);gap:6px;padding-bottom:14px;}
+.fcg{display:none;grid-template-columns:repeat(auto-fit,minmax(52px,1fr));gap:6px;padding-bottom:14px;}
 .fcg.open{display:grid;}
 .fcc{border-radius:12px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.04);padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;transition:background .12s;}
 .fcc:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.18);}
@@ -185,7 +185,7 @@ class MeteoCard extends HTMLElement {
     super()
     this.attachShadow({ mode:'open' })
     this._h  = null
-    this._c  = { entityId:'', cityName:'', humEntity:'', presEntity:'', windEntity:'', windDirEntity:'' }
+    this._c  = { entityId:'', cityName:'', humEntity:'', presEntity:'', windEntity:'', windDirEntity:'', wfDays:5 }
     this._fc = []            // daily forecast
     this._fch = []           // hourly forecast
     this._fcs = null         // hourly subscription
@@ -198,6 +198,7 @@ class MeteoCard extends HTMLElement {
     this._tp = ''            // temp presEntity
     this._tw = ''            // temp windEntity
     this._twd = ''           // temp windDirEntity
+    this._tdays = 5          // temp wfDays
     this._fs = null          // daily subscription
     this._bk = null
     this._nh = true
@@ -224,6 +225,7 @@ class MeteoCard extends HTMLElement {
         entityId: this._c.entityId, cityName: this._c.cityName,
         humEntity: this._c.humEntity || '', presEntity: this._c.presEntity || '',
         windEntity: this._c.windEntity || '', windDirEntity: this._c.windDirEntity || '',
+        wfDays: this._c.wfDays || 5,
       }))
     } catch {}
   }
@@ -244,10 +246,12 @@ class MeteoCard extends HTMLElement {
       presEntity:   stored.presEntity   || cfg.presEntity   || '',
       windEntity:   stored.windEntity   || cfg.windEntity   || '',
       windDirEntity:stored.windDirEntity|| cfg.windDirEntity|| '',
+      wfDays:       stored.wfDays       || cfg.wfDays       || 5,
     }
     this._te = this._c.entityId; this._tc = this._c.cityName
     this._th = this._c.humEntity; this._tp = this._c.presEntity
     this._tw = this._c.windEntity; this._twd = this._c.windDirEntity
+    this._tdays = this._c.wfDays
     if (prev !== this._c.entityId && this._h) this._getForecast()
     this._bk = null; this._build()
   }
@@ -389,7 +393,8 @@ class MeteoCard extends HTMLElement {
       case 'save':
         this._c={ entityId:this._te, cityName:this._tc,
                   humEntity:this._th, presEntity:this._tp,
-                  windEntity:this._tw, windDirEntity:this._twd }
+                  windEntity:this._tw, windDirEntity:this._twd,
+                  wfDays: Math.min(10, Math.max(1, parseInt(this._tdays)||5)) }
         this._saveStore()
         this._fc=[]; this._getForecast()
         this._fch=[]; this._unsubHourly()
@@ -397,7 +402,8 @@ class MeteoCard extends HTMLElement {
         this.dispatchEvent(new CustomEvent('config-changed',
           { detail:{ config:{ entityId:this._c.entityId, cityName:this._c.cityName,
               humEntity:this._c.humEntity, presEntity:this._c.presEntity,
-              windEntity:this._c.windEntity, windDirEntity:this._c.windDirEntity } },
+              windEntity:this._c.windEntity, windDirEntity:this._c.windDirEntity,
+              wfDays:this._c.wfDays } },
             bubbles:true, composed:true }))
         break
       case 'day':
@@ -414,6 +420,7 @@ class MeteoCard extends HTMLElement {
     else if (f === 'pres') this._tp  = v
     else if (f === 'wind') this._tw  = v
     else if (f === 'wdir') this._twd = v
+    else if (f === 'days') this._tdays = parseInt(v) || 5
   }
 
   configure() { this._openSettings(); }
@@ -424,6 +431,7 @@ class MeteoCard extends HTMLElement {
     this._te = this._c.entityId; this._tc = this._c.cityName
     this._th = this._c.humEntity; this._tp = this._c.presEntity
     this._tw = this._c.windEntity; this._twd = this._c.windDirEntity
+    this._tdays = this._c.wfDays || 5
     this._renderModal()
     this._bk = null; this._build()
   }
@@ -605,8 +613,9 @@ class MeteoCard extends HTMLElement {
 
     // forecast HTML
     let fcH = ''
+    const _nDays = Math.min(10, Math.max(1, this._c.wfDays || 5))
     if (this._fo && this._fc.length) {
-      const days = this._fc.slice(0,5)
+      const days = this._fc.slice(0,_nDays)
       const maxT = Math.max(...days.map(f=>parseFloat(f.temperature)||0))
       const minT = Math.min(...days.map(f=>parseFloat(f.templow??f.temperature)||0))
       const rng  = maxT - minT || 1
@@ -629,7 +638,7 @@ class MeteoCard extends HTMLElement {
         </div>`
       }).join('')
     } else if (this._fo) {
-      fcH = `<div style="grid-column:span 5;text-align:center;padding:14px;color:rgba(255,255,255,.25);font-size:11px;">Previsioni in caricamento…</div>`
+      fcH = `<div style="grid-column:span ${_nDays};text-align:center;padding:14px;color:rgba(255,255,255,.25);font-size:11px;">Previsioni in caricamento…</div>`
     }
 
     this.shadowRoot.innerHTML = `<style>${_CSS}</style>
@@ -746,6 +755,10 @@ class MeteoCard extends HTMLElement {
       <div class="fl" style="margin-top:10px;">Direzione vento — entità sensor (opzionale)</div>
       <input class="ci" type="text" value="${this._twd}" placeholder="Es: sensor.vento_direzione" data-f="wdir"/>
       <div class="ht">Lascia vuoto per usare l'attributo wind_bearing dell'entità meteo</div>
+
+      <div class="fl" style="margin-top:16px;">Giorni previsioni (1–10)</div>
+      <input class="ci" type="number" min="1" max="10" value="${this._tdays}" data-f="days"/>
+      <div class="ht">Quanti giorni mostrare nel pannello previsioni</div>
     </div>
     <div class="sft">
       <button class="sav" data-a="save">${_IC.ok} Salva</button>

@@ -5278,7 +5278,7 @@ function cardMenu(cardId, ev){
   const _vEl=document.getElementById('v-'+cardId);
   if(_vEl){
     if(typeof _vEl._fConfigure==='function'){ _vEl._fConfigure(); return; }
-    const _ce=_vEl.firstElementChild;
+    const _ce=_vEl.querySelector('.frarik-lovel')||_vEl.firstElementChild;
     if(_ce&&typeof _ce.configure==='function'){ _ce.configure(); return; }
   }
   openCM(cardId);
@@ -8010,6 +8010,10 @@ function _registerLovelaceCard(tag, meta){
       const cel=el.querySelector('.frarik-lovel');
       if(cel){ try{ cel.hass=_haHassObj(); }catch(e){} }
       else this.mount(card,_h,el);
+    },
+    configure(card, el){
+      const cel=el&&el.querySelector('.frarik-lovel');
+      if(cel&&typeof cel.configure==='function') cel.configure();
     }
   };
 }

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.4.16 — 2026-06-13
+
+### fix: matita ✏️ apre config card corretta + Meteo giorni configurabili
+
+- **main.js `_registerLovelaceCard`**: aggiunto hook `configure(card, el)` al wrapper lovelace — cerca `.frarik-lovel` nell'elemento container e chiama `cel.configure()`. Questo fa sì che la matita apra la config specifica di Meteo, Antizanzare, Differenziata, Irrigazione invece del popup generico frarik.
+- **main.js `cardMenu`**: fallback migliorato — usa `_vEl.querySelector('.frarik-lovel')` invece di `firstElementChild` per trovare il custom element anche quando è wrappato in `.lovel-wrap`.
+- **Meteo.js `wfDays`**: aggiunto campo "Giorni previsioni (1–10)" nel pannello config. Valore salvato in localStorage, rispettato in `setConfig`. La griglia previsioni ora usa `auto-fit` per adattarsi automaticamente al numero di giorni scelto.
+- Meteo.js: frarik-version 1.13 → 1.14
+
 ## 1.4.15 — 2026-06-13
 
 ### fix: Meteo config via matita + popup orario bottom sheet + filtro oggi
