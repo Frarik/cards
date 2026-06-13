@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.14 — 2026-06-13
+
+### feat(Meteo): config entità custom + popup orario giorni previsione
+
+- **4 entità configurabili** nel pannello impostazioni (✏️ in edit mode): Umidità, Pressione, Velocità vento, Direzione vento. Se compilate, usano lo stato del sensor HA corrispondente con unità di misura; se vuote, cadono sull'attributo dell'entità meteo.
+- **Popup orario per ogni giorno**: cliccando su un giorno nelle previsioni (aperte con il tasto "Prossimi giorni") si apre un modale fisso con le previsioni ora per ora del giorno selezionato — ora, icona condizione, temperatura, precipitazioni (mm + % probabilità), velocità e direzione vento.
+- Previsioni orarie recuperate via `weather/subscribe_forecast` (hourly) → `get_forecasts` (hourly) → `get_forecast` (hourly), stesso pattern robusto delle previsioni giornaliere.
+- `.fcc:hover` evidenziato per indicare che i giorni sono cliccabili.
+- Meteo.js: frarik-version 1.11 → 1.12
+
 ## 1.4.13 — 2026-06-13
 
 ### fix: gear mai visibile + configurazione card via matita ✏️

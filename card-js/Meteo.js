@@ -1,4 +1,4 @@
-/* frarik-version: 1.11 */
+/* frarik-version: 1.12 */
 /**
  * meteo+previsioni.js v1.2
  * type: custom:meteo-card
@@ -130,7 +130,8 @@ button[data-a="gear"]{display:var(--fgear,none);}
 .fct:hover{opacity:.75;}
 .fcg{display:none;grid-template-columns:repeat(5,1fr);gap:6px;padding-bottom:14px;}
 .fcg.open{display:grid;}
-.fcc{border-radius:12px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.04);padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.fcc{border-radius:12px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.04);padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;transition:background .12s;}
+.fcc:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.18);}
 .fdn{font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;}
 .fi{font-size:28px;line-height:1;margin:3px 0 2px;}
 .fm{font-size:18px;font-weight:800;letter-spacing:-.5px;line-height:1;}
@@ -183,19 +184,27 @@ class MeteoCard extends HTMLElement {
   constructor() {
     super()
     this.attachShadow({ mode:'open' })
-    this._h  = null          // hass
-    this._c  = { entityId:'', cityName:'' }  // config
-    this._fc = []            // forecast data
+    this._h  = null
+    this._c  = { entityId:'', cityName:'', humEntity:'', presEntity:'', windEntity:'', windDirEntity:'' }
+    this._fc = []            // daily forecast
+    this._fch = []           // hourly forecast
+    this._fcs = null         // hourly subscription
     this._fo = false         // forecast open
     this._so = false         // settings open
     this._se = false         // search open
-    this._te = ''            // temp entityId in settings
-    this._tc = ''            // temp cityName in settings
-    this._fs = null          // forecast subscription
-    this._bk = null          // build key (per evitare rebuild inutili)
-    this._nh = true          // flag primo hass
-    this._sk = 'default'      // storage key per localStorage
-    this._modalHost = null    // host del modal impostazioni (montato su document.body)
+    this._te = ''            // temp entityId
+    this._tc = ''            // temp cityName
+    this._th = ''            // temp humEntity
+    this._tp = ''            // temp presEntity
+    this._tw = ''            // temp windEntity
+    this._twd = ''           // temp windDirEntity
+    this._fs = null          // daily subscription
+    this._bk = null
+    this._nh = true
+    this._sk = 'default'
+    this._selDay = -1        // selected day index for hourly popup
+    this._modalHost = null
+    this._dayModalHost = null
     this._click = this._onClick.bind(this)
     this._inp   = this._onInput.bind(this)
   }
@@ -211,8 +220,11 @@ class MeteoCard extends HTMLElement {
 
   _saveStore() {
     try {
-      localStorage.setItem(this._lsKey(),
-        JSON.stringify({ entityId: this._c.entityId, cityName: this._c.cityName }))
+      localStorage.setItem(this._lsKey(), JSON.stringify({
+        entityId: this._c.entityId, cityName: this._c.cityName,
+        humEntity: this._c.humEntity || '', presEntity: this._c.presEntity || '',
+        windEntity: this._c.windEntity || '', windDirEntity: this._c.windDirEntity || '',
+      }))
     } catch {}
   }
 
@@ -226,11 +238,16 @@ class MeteoCard extends HTMLElement {
     const stored = this._loadStore() || {}
     const prev = this._c?.entityId
     this._c = {
-      entityId: stored.entityId || cfg.entityId || '',
-      cityName: (stored.cityName != null ? stored.cityName : (cfg.cityName || '')),
+      entityId:     stored.entityId     || cfg.entityId     || '',
+      cityName:     stored.cityName     != null ? stored.cityName     : (cfg.cityName     || ''),
+      humEntity:    stored.humEntity    || cfg.humEntity    || '',
+      presEntity:   stored.presEntity   || cfg.presEntity   || '',
+      windEntity:   stored.windEntity   || cfg.windEntity   || '',
+      windDirEntity:stored.windDirEntity|| cfg.windDirEntity|| '',
     }
-    this._te = this._c.entityId
-    this._tc = this._c.cityName
+    this._te = this._c.entityId; this._tc = this._c.cityName
+    this._th = this._c.humEntity; this._tp = this._c.presEntity
+    this._tw = this._c.windEntity; this._twd = this._c.windDirEntity
     if (prev !== this._c.entityId && this._h) this._getForecast()
     this._bk = null; this._build()
   }
@@ -247,7 +264,9 @@ class MeteoCard extends HTMLElement {
     this.shadowRoot.removeEventListener('click', this._click)
     this.shadowRoot.removeEventListener('input', this._inp)
     this._destroyModal()
+    this._destroyDayModal()
     this._unsub()
+    this._unsubHourly()
   }
 
   set hass(h) {
@@ -342,15 +361,20 @@ class MeteoCard extends HTMLElement {
     const st = this._h.states?.[this._c.entityId]
     if (!st) return 'NOT_FOUND:' + this._c.entityId
     const a = st.attributes
+    const c = this._c
     return [st.state, a.temperature, a.humidity, a.pressure,
-            a.wind_speed, a.wind_bearing, this._fo, this._so,
-            this._se, this._fc.length, this._c.cityName].join('|')
+            a.wind_speed, a.wind_bearing, this._fo, this._so, this._se,
+            this._fc.length, c.cityName,
+            this._h.states?.[c.humEntity]?.state,
+            this._h.states?.[c.presEntity]?.state,
+            this._h.states?.[c.windEntity]?.state,
+            this._h.states?.[c.windDirEntity]?.state].join('|')
   }
 
   // ── Click ──────────────────────────────────────────────────────────────────
   _onClick(e) {
-    // click sul backdrop scuro (fuori dal modal) → chiude
     if (e.target.classList?.contains('sov')) { this._closeSettings(); return }
+    if (e.target.classList?.contains('dov')) { this._destroyDayModal(); return }
     const t = e.target.closest('[data-a]')
     if (!t) return
     switch (t.dataset.a) {
@@ -363,19 +387,33 @@ class MeteoCard extends HTMLElement {
       case 'sel':
         this._te=t.dataset.id; this._se=false; this._renderModal(); break
       case 'save':
-        this._c={ entityId:this._te, cityName:this._tc }
-        this._saveStore()       // persiste in localStorage → sopravvive a refresh/cache
+        this._c={ entityId:this._te, cityName:this._tc,
+                  humEntity:this._th, presEntity:this._tp,
+                  windEntity:this._tw, windDirEntity:this._twd }
+        this._saveStore()
         this._fc=[]; this._getForecast()
+        this._fch=[]; this._unsubHourly()
         this._closeSettings()
         this.dispatchEvent(new CustomEvent('config-changed',
-          { detail:{ config:{ entityId:this._c.entityId, cityName:this._c.cityName } },
+          { detail:{ config:{ entityId:this._c.entityId, cityName:this._c.cityName,
+              humEntity:this._c.humEntity, presEntity:this._c.presEntity,
+              windEntity:this._c.windEntity, windDirEntity:this._c.windDirEntity } },
             bubbles:true, composed:true }))
         break
+      case 'day':
+        this._openDayDetail(parseInt(t.dataset.idx||'0')); break
+      case 'closedm':
+        this._destroyDayModal(); break
     }
   }
 
   _onInput(e) {
-    if (e.target.dataset.f === 'city') this._tc = e.target.value
+    const f = e.target.dataset.f, v = e.target.value
+    if (f === 'city') this._tc = v
+    else if (f === 'hum')  this._th  = v
+    else if (f === 'pres') this._tp  = v
+    else if (f === 'wind') this._tw  = v
+    else if (f === 'wdir') this._twd = v
   }
 
   configure() { this._openSettings(); }
@@ -384,8 +422,10 @@ class MeteoCard extends HTMLElement {
   _openSettings() {
     this._so = true; this._se = false
     this._te = this._c.entityId; this._tc = this._c.cityName
+    this._th = this._c.humEntity; this._tp = this._c.presEntity
+    this._tw = this._c.windEntity; this._twd = this._c.windDirEntity
     this._renderModal()
-    this._bk = null; this._build()   // aggiorna stato attivo del gear
+    this._bk = null; this._build()
   }
 
   _closeSettings() {
@@ -414,11 +454,115 @@ class MeteoCard extends HTMLElement {
     this._modalHost = null
   }
 
+  // ── Hourly forecast ────────────────────────────────────────────────────────
+  _unsubHourly() {
+    if (!this._fcs) return
+    Promise.resolve(this._fcs).then(u => { if (typeof u === 'function') u() }).catch(() => {})
+    this._fcs = null
+  }
+
+  async _getHourlyForecast() {
+    const eid = this._c?.entityId
+    if (!this._h || !eid) return
+    const onFc = fc => { if (!Array.isArray(fc) || !fc.length) return false; this._fch = fc; this._renderDayModal(); return true }
+    const extract = r => r?.response?.[eid]?.forecast ?? r?.[eid]?.forecast ?? r?.forecast ?? (Array.isArray(r) ? r : null)
+    const conn = this._h.connection
+    if (conn?.subscribeMessage) {
+      try {
+        this._fcs = conn.subscribeMessage(
+          ev => onFc(ev?.forecast ?? ev?.event?.forecast ?? []),
+          { type:'weather/subscribe_forecast', forecast_type:'hourly', entity_id:eid }
+        )
+      } catch(e) {}
+    }
+    if (this._fch.length) return
+    try {
+      const r = await conn?.sendMessagePromise?.({ type:'call_service', domain:'weather', service:'get_forecasts',
+        service_data:{ entity_id:eid, type:'hourly' }, return_response:true }).catch(()=>null)
+      if (onFc(extract(r))) return
+    } catch(e) {}
+    try {
+      const r = await conn?.sendMessagePromise?.({ type:'call_service', domain:'weather', service:'get_forecast',
+        service_data:{ entity_id:eid, type:'hourly' }, return_response:true }).catch(()=>null)
+      if (onFc(extract(r))) return
+    } catch(e) {}
+  }
+
+  _openDayDetail(idx) {
+    this._selDay = idx
+    if (!this._fch.length) this._getHourlyForecast()
+    this._renderDayModal()
+  }
+
+  _destroyDayModal() {
+    if (!this._dayModalHost) return
+    this._dayModalHost.shadowRoot.removeEventListener('click', this._click)
+    this._dayModalHost.remove()
+    this._dayModalHost = null
+  }
+
+  _renderDayModal() {
+    if (this._selDay < 0) return
+    const day = this._fc[this._selDay]
+    if (!day) return
+    if (!this._dayModalHost) {
+      this._dayModalHost = document.createElement('div')
+      this._dayModalHost.attachShadow({ mode:'open' })
+      this._dayModalHost.shadowRoot.addEventListener('click', this._click)
+      document.body.appendChild(this._dayModalHost)
+    }
+    const d = new Date(day.datetime)
+    const label = this._selDay === 0 ? 'Oggi' : `${_DI[d.getDay()]} ${d.getDate()} ${_MI[d.getMonth()]}`
+    const dayStr = day.datetime.split('T')[0]
+    const hourly = this._fch.filter(h => h.datetime && h.datetime.startsWith(dayStr))
+    const rowsHTML = hourly.length
+      ? hourly.map(h => {
+          const time = h.datetime.split('T')[1]?.slice(0,5) ?? '--'
+          const ico  = _WI[h.condition] || '🌡️'
+          const temp = _n(h.temperature)
+          const rn   = h.precipitation != null ? h.precipitation.toFixed(1)+'mm' : '—'
+          const rp   = h.precipitation_probability != null ? h.precipitation_probability+'%' : ''
+          const ws   = h.wind_speed  != null ? Math.round(h.wind_speed)+'k/h' : '—'
+          const wd   = _windDir(h.wind_bearing)
+          return `<div class="hr-row">
+            <div class="hr-t">${time}</div>
+            <div class="hr-i">${ico}</div>
+            <div class="hr-tp">${temp}°</div>
+            <div class="hr-r">${rn}${rp?' · '+rp:''}</div>
+            <div class="hr-w">${ws} ${wd}</div>
+          </div>`
+        }).join('')
+      : `<div class="hr-load">Previsioni orarie in caricamento…</div>`
+    const dmCSS = `
+.dov{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);padding:16px;font-family:var(--primary-font-family,system-ui,sans-serif);}
+.dov-modal{width:100%;max-width:400px;max-height:88vh;display:flex;flex-direction:column;background:rgba(10,8,22,.98);border:1px solid rgba(56,189,248,.3);border-radius:18px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.7);}
+.hr-list{flex:1;overflow-y:auto;padding:6px 0;}
+.hr-row{display:grid;grid-template-columns:44px 28px 42px 1fr auto;align-items:center;gap:6px;padding:9px 16px;border-bottom:1px solid rgba(255,255,255,.04);color:#e2e8f0;}
+.hr-row:last-child{border-bottom:none;}
+.hr-t{font-size:12px;font-weight:700;color:#94a3b8;}
+.hr-i{font-size:20px;text-align:center;}
+.hr-tp{font-size:14px;font-weight:800;letter-spacing:-.3px;}
+.hr-r{font-size:11px;color:#60a5fa;}
+.hr-w{font-size:11px;color:#94a3b8;text-align:right;}
+.hr-load{padding:32px;text-align:center;color:rgba(255,255,255,.3);font-size:12px;}`
+    this._dayModalHost.shadowRoot.innerHTML = `<style>${_CSS}${dmCSS}</style>
+<div class="dov">
+  <div class="dov-modal">
+    <div class="shdr">
+      <div class="sico" style="font-size:18px;background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.3);color:#38bdf8;">📅</div>
+      <div><div class="stit">${label}</div><div class="ssub">Previsioni ora per ora</div></div>
+      <button class="scls" data-a="closedm">${_IC.x}</button>
+    </div>
+    <div class="hr-list">${rowsHTML}</div>
+  </div>
+</div>`
+  }
+
   // ── Build ──────────────────────────────────────────────────────────────────
   _build() {
     if (!this._h) return
     const eid = this._c.entityId
-    if (!eid) { this._renderEmpty('Clicca ⚙ per configurare l\'entità meteo'); return }
+    if (!eid) { this._renderEmpty('Attiva modifica → ✏️ per configurare'); return }
     const st = this._h.states?.[eid]
     if (!st)  { this._renderEmpty('Entità non trovata: ' + eid); return }
     this._renderCard(st)
@@ -444,10 +588,12 @@ class MeteoCard extends HTMLElement {
     const ico   = _WI[cond]  || '🌡️'
     const cit   = _CI[cond]  || cond.replace(/-/g,' ')
     const temp  = _n(a.temperature)
-    const hum   = a.humidity   != null ? a.humidity  : '--'
-    const pres  = _n(a.pressure)
-    const wsp   = a.wind_speed != null ? a.wind_speed : '--'
-    const wdir  = _windDir(a.wind_bearing)
+    const _sv   = id => { const s=this._h?.states?.[id]; return s ? s.state+(s.attributes?.unit_of_measurement?' '+s.attributes.unit_of_measurement:'') : null }
+    const c     = this._c
+    const hum   = _sv(c.humEntity)    ?? (a.humidity   != null ? a.humidity+'%'     : '--')
+    const pres  = _sv(c.presEntity)   ?? (_n(a.pressure) !== '--' ? _n(a.pressure)+' hPa' : '--')
+    const wsp   = _sv(c.windEntity)   ?? (a.wind_speed  != null ? a.wind_speed+' k/h' : '--')
+    const wdir  = _sv(c.windDirEntity)?? _windDir(a.wind_bearing)
     const city  = this._c.cityName || a.friendly_name || this._c.entityId
     const today = _fmtDate()
 
@@ -467,7 +613,7 @@ class MeteoCard extends HTMLElement {
         const col = _tempCol(f.temperature)
         const bw  = Math.round(((parseFloat(f.temperature)||0)-minT)/rng*75+25)
         const nc  = i===0 ? th.accent : 'rgba(255,255,255,.65)'
-        return `<div class="fcc">
+        return `<div class="fcc" data-a="day" data-idx="${i}" style="cursor:pointer;">
           <div class="fdn" style="color:${nc};">${nm}</div>
           <div class="fi">${fi}</div>
           <div class="fm">${mx}°</div>
@@ -578,6 +724,22 @@ class MeteoCard extends HTMLElement {
       <div class="fl" style="margin-top:14px;">Nome città</div>
       <input class="ci" type="text" value="${city}" placeholder="Es: Selargius" data-f="city"/>
       <div class="ht">Se vuoto, usa il nome dell'entità HA</div>
+
+      <div class="fl" style="margin-top:16px;">Umidità — entità sensor (opzionale)</div>
+      <input class="ci" type="text" value="${this._th}" placeholder="Es: sensor.umidita_esterna" data-f="hum"/>
+      <div class="ht">Lascia vuoto per usare l'attributo humidity dell'entità meteo</div>
+
+      <div class="fl" style="margin-top:10px;">Pressione — entità sensor (opzionale)</div>
+      <input class="ci" type="text" value="${this._tp}" placeholder="Es: sensor.pressione_barometrica" data-f="pres"/>
+      <div class="ht">Lascia vuoto per usare l'attributo pressure dell'entità meteo</div>
+
+      <div class="fl" style="margin-top:10px;">Velocità vento — entità sensor (opzionale)</div>
+      <input class="ci" type="text" value="${this._tw}" placeholder="Es: sensor.vento_velocita" data-f="wind"/>
+      <div class="ht">Lascia vuoto per usare l'attributo wind_speed dell'entità meteo</div>
+
+      <div class="fl" style="margin-top:10px;">Direzione vento — entità sensor (opzionale)</div>
+      <input class="ci" type="text" value="${this._twd}" placeholder="Es: sensor.vento_direzione" data-f="wdir"/>
+      <div class="ht">Lascia vuoto per usare l'attributo wind_bearing dell'entità meteo</div>
     </div>
     <div class="sft">
       <button class="sav" data-a="save">${_IC.ok} Salva</button>
