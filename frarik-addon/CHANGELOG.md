@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.4.33 — 2026-06-13
+
+### fix(Meteo): popup responsive + slider non modifica card senza salvataggio
+
+**Meteo.js 1.26→1.27:**
+- Corretto media query `@media(max-width:620px)`: aggiunto `overflow-y:auto` su `.sov-2col`
+  e `overflow-y:visible` su `.sbdy`/`.sov-prev` — su mobile le due colonne ora si impilano
+  correttamente senza essere tagliate da `overflow:hidden`.
+- Rimosso dispatch `frarik-card-layout` dagli handler input di `cardscale`/`cardw`:
+  lo slider non altera più la card reale senza salvare.
+- `_closeSettings()` dispatcha `frarik-card-layout` con i valori SALVATI per ripristinare
+  zoom/width applicati da main.js se l'utente aveva mosso i slider senza salvare.
+- Rimosso click-outside per chiudere il popup impostazioni e il popup previsioni giornaliere.
+
 ## 1.4.32 — 2026-06-13
 
 ### fix(all cards): popup chiudibili solo dalla X, non cliccando fuori

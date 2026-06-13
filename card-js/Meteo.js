@@ -1,4 +1,4 @@
-/* frarik-version: 1.26 */
+/* frarik-version: 1.27 */
 
 // ── Lookup tables ─────────────────────────────────────────────────────────────
 const _WI = {
@@ -281,7 +281,7 @@ button[data-a="gear"]{display:var(--fgear,none);}
 .layout-lbl{font-size:11px;font-weight:700;color:#fff;width:72px;flex-shrink:0;}
 .layout-val{font-size:12px;font-weight:800;color:#fbbf24;width:54px;text-align:right;flex-shrink:0;}
 input[type=range].lslider{flex:1;cursor:pointer;accent-color:#fbbf24;height:4px;}
-@media(max-width:620px){.sov-2col{flex-direction:column;}.sbdy{width:100%;border-right:none;border-bottom:1px solid rgba(255,255,255,.07);}.sov-prev{min-width:0;}}
+@media(max-width:620px){.sov-2col{flex-direction:column!important;overflow-y:auto!important;overflow-x:hidden!important}.sbdy{width:100%!important;border-right:none!important;border-bottom:1px solid rgba(255,255,255,.07)!important;overflow-y:visible!important;flex-shrink:0!important}.sov-prev{min-width:0!important;overflow-y:visible!important}}
 .fl{font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;margin-top:12px;}
 .fl:first-child{margin-top:0;}
 .er{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);}
@@ -726,8 +726,6 @@ class MeteoCard extends HTMLElement {
 
   // ── Click ─────────────────────────────────────────────────────────────────
   _onClick(e){
-    if(e.target.classList?.contains('sov')){ this._closeSettings(); return }
-    if(e.target.classList?.contains('dov')){ this._destroyDayModal(); return }
     if(this._modalHost){
       const sr=this._modalHost.shadowRoot
       const inDrop=e.target.closest('.esr[data-dropdown]')||e.target.closest('input[data-f]')
@@ -801,14 +799,12 @@ class MeteoCard extends HTMLElement {
       const lbl=sr?.querySelector('#cardscale-lbl')
       if(lbl) lbl.textContent=this._tCardScale>=100?'Auto (100%)':this._tCardScale+'%'
       this._schedPrev()
-      if(this._frarikCard?.id) this.dispatchEvent(new CustomEvent('frarik-card-layout',{bubbles:true,composed:true,detail:{cardId:this._frarikCard.id,cardScale:this._tCardScale}}))
     }
     else if(f==='cardw'){
       this._tCardW=Math.max(20,Math.min(100,parseInt(v)||100))
       const lbl=sr?.querySelector('#cardw-lbl')
       if(lbl) lbl.textContent=this._tCardW>=100?'Auto (100%)':this._tCardW+'%'
       this._schedPrev()
-      if(this._frarikCard?.id) this.dispatchEvent(new CustomEvent('frarik-card-layout',{bubbles:true,composed:true,detail:{cardId:this._frarikCard.id,cardW:this._tCardW}}))
     }
   }
 
@@ -886,6 +882,12 @@ class MeteoCard extends HTMLElement {
   _closeSettings(){
     this._so=false; this._te=this._c.entityId; this._tc=this._c.cityName
     this._destroyModal(); this._bk=null; this._build()
+    if(this._frarikCard?.id){
+      this.dispatchEvent(new CustomEvent('frarik-card-layout',{
+        bubbles:true,composed:true,
+        detail:{cardId:this._frarikCard.id,cardScale:this._c.cardScale??100,cardW:this._c.cardW??100}
+      }))
+    }
   }
 
   _renderModal(){
