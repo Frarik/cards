@@ -378,6 +378,8 @@ class MeteoCard extends HTMLElement {
     if (e.target.dataset.f === 'city') this._tc = e.target.value
   }
 
+  configure() { this._openSettings(); }
+
   // ── Modal impostazioni (montato su document.body, fuori dalla card) ─────────
   _openSettings() {
     this._so = true; this._se = false

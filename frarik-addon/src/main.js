@@ -5275,6 +5275,8 @@ function cardMenu(cardId, ev){
       if(_el){ _reg.configure(c,_el); return; }
     }
   }
+  const _vEl=document.getElementById('v-'+cardId);
+  if(_vEl){ const _ce=_vEl.firstElementChild; if(_ce&&typeof _ce.configure==='function'){ _ce.configure(); return; } }
   openCM(cardId);
 }
 window.cardMenu=cardMenu;

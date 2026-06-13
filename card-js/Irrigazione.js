@@ -354,6 +354,8 @@ class IrrigazioneCard extends HTMLElement {
   setConfig(config)      { this._config = config || {} }
   getCardSize()          { return 7 }
 
+  configure() { this._settingsOpen = true; this._historyOpen = false; this._buildKey = null; this._buildDOM(); }
+
   connectedCallback() {
     this.shadowRoot.addEventListener('click',  this._onClick)
     this.shadowRoot.addEventListener('change', this._onChange)

@@ -92,7 +92,6 @@ body::before{
 .hbtn-edit-only{display:none}
 body.editing .hbtn-edit-only{display:flex}
 body{--fgear:none}
-body.editing{--fgear:flex}
 .hbtn.hbtn-off{opacity:.28;pointer-events:none}
 #undo-btn,#redo-btn{color:#a5b4fc;font-size:15px}
 #notif-bell{color:#fbbf24;font-size:15px}

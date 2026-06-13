@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.4.13 — 2026-06-13
+
+### fix: gear mai visibile + configurazione card via matita ✏️
+
+- **Gear sempre nascosto** (anche in edit mode): rimosso `body.editing { --fgear: flex }` da style.css. La custom property `--fgear: none` è permanente — il bottone gear non compare mai.
+- **Matita apre la config interna delle card**: `cardMenu()` ora cerca `_ce.configure()` sul primo figlio del container `#v-${cardId}` (custom element) prima di fallire su `openCM()`.
+- **Meteo.js**: aggiunto `configure() { this._openSettings(); }` — la matita apre il pannello selezione entità meteo.
+- **Antizanzare.js**: aggiunto `configure()` che imposta `_settingsOpen=true` e ri-renderizza.
+- **Differenziata.js**: stesso pattern.
+- **Irrigazione.js**: stesso pattern (chiude anche `_historyOpen`).
+
 ## 1.4.12 — 2026-06-13
 
 ### feat: rimozione icona ⚙️ da tutte le card — interfaccia pulita
