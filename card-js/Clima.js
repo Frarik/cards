@@ -1,4 +1,4 @@
-/* frarik-version: 2.14 */
+/* frarik-version: 2.15 */
 (function () {
   'use strict';
 
@@ -149,6 +149,107 @@
 
   /* ── Animazione aletta via requestAnimationFrame (100% JS, nessuna CSS animation) ── */
   var _flapRafs = {}; // rid → { id: rafId, t0: startTime }
+  var _histModalHosts = {};
+
+  function _destroyHistModal(cid) {
+    var h = _histModalHosts[cid];
+    if (!h) return;
+    h.remove();
+    delete _histModalHosts[cid];
+  }
+
+  function _buildHistChart(pts, minV, maxV) {
+    var W=460,H=130,PL=42,PR=12,PT=8,PB=22;
+    var gW=W-PL-PR, gH=H-PT-PB;
+    var range = maxV-minV || 1;
+    function px(v){return PT+gH-(v-minV)/range*gH;}
+    function py(i){return PL+i/(pts.length-1||1)*gW;}
+    var poly = pts.map(function(p,i){return py(i)+','+px(p.v);}).join(' ');
+    var area = 'M '+py(0)+','+(H-PB)+' L '+py(0)+','+px(pts[0].v)+' '
+      +pts.map(function(p,i){return 'L '+py(i)+','+px(p.v);}).join(' ')
+      +' L '+py(pts.length-1)+','+(H-PB)+' Z';
+    var ySteps=[0,.25,.5,.75,1].map(function(f){return minV+f*range;});
+    var xLabels=['00:00','06:00','12:00','18:00','24:00'];
+    var gid='cg'+Math.random().toString(36).slice(2,7);
+    return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block" xmlns="http://www.w3.org/2000/svg">'
+      +'<defs><linearGradient id="'+gid+'" x1="0" y1="0" x2="0" y2="1">'
+      +'<stop offset="0%" stop-color="#fbbf24" stop-opacity=".32"/>'
+      +'<stop offset="100%" stop-color="#fbbf24" stop-opacity="0"/>'
+      +'</linearGradient></defs>'
+      +ySteps.map(function(v){var y=px(v); return '<line x1="'+PL+'" y1="'+y+'" x2="'+(W-PR)+'" y2="'+y+'" stroke="rgba(255,255,255,.07)" stroke-width="1"/>'
+        +'<text x="'+(PL-3)+'" y="'+(y+3)+'" text-anchor="end" font-size="8" fill="rgba(255,255,255,.4)">'+v.toFixed(1)+'</text>';}).join('')
+      +xLabels.map(function(l,i){var x=PL+i/4*gW; return '<text x="'+x+'" y="'+(H-4)+'" text-anchor="middle" font-size="8" fill="rgba(255,255,255,.4)">'+l+'</text>';}).join('')
+      +'<path d="'+area+'" fill="url(#'+gid+')" />'
+      +'<polyline points="'+poly+'" fill="none" stroke="#fbbf24" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>'
+      +(pts.length>0?'<circle cx="'+py(pts.length-1)+'" cy="'+px(pts[pts.length-1].v)+'" r="3" fill="#fbbf24"/>':'')
+      +'</svg>';
+  }
+
+  function _openHistPopup(cid, entityId, attrName, label, hassObj) {
+    _destroyHistModal(cid);
+    var host = document.createElement('div');
+    host.attachShadow({mode:'open'});
+    document.body.appendChild(host);
+    _histModalHosts[cid] = host;
+
+    var histCSS = '.hov{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);font-family:system-ui,sans-serif;}'
+      +'.hov-modal{width:100%;max-height:72vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(251,191,36,.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:slideUp .22s cubic-bezier(.32,1.12,.56,1);}'
+      +'@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}'
+      +'.hw{flex:1;overflow-y:auto;padding:16px 20px 24px;scrollbar-width:none;-ms-overflow-style:none;}'
+      +'.hw::-webkit-scrollbar{display:none;}'
+      +'.shdr{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0;}'
+      +'.sico{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);color:#fbbf24;flex-shrink:0;}'
+      +'.stit{font-size:14px;font-weight:800;color:#fff;}'
+      +'.ssub{font-size:11px;color:rgba(255,255,255,.45);margin-top:1px;}'
+      +'.scls{margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.07);border:none;flex-shrink:0;}'
+      +'.scls:hover{background:rgba(255,255,255,.14);color:#fff;}'
+      +'.hs-row{display:flex;gap:0;justify-content:space-around;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.07);}'
+      +'.hs-item{text-align:center;}'
+      +'.hs-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);}'
+      +'.hs-val{font-size:20px;font-weight:800;color:#fff;margin-top:3px;}'
+      +'.hload{padding:40px;text-align:center;color:rgba(255,255,255,.5);font-size:12px;}';
+
+    host.shadowRoot.innerHTML = '<style>'+histCSS+'</style>'
+      +'<div class="hov"><div class="hov-modal">'
+      +'<div class="shdr"><div class="sico">📈</div>'
+      +'<div><div class="stit">'+label+' — ultime 24h</div><div class="ssub">'+entityId+'</div></div>'
+      +'<button class="scls">✕</button></div>'
+      +'<div class="hw"><div class="hload">Caricamento dati…</div></div>'
+      +'</div></div>';
+
+    host.shadowRoot.querySelector('.scls').addEventListener('click', function(){ _destroyHistModal(cid); });
+    host.shadowRoot.querySelector('.hov').addEventListener('click', function(e){ if(e.target===this) _destroyHistModal(cid); });
+
+    if (!hassObj || !hassObj.callApi) {
+      host.shadowRoot.querySelector('.hw').innerHTML = '<div class="hload">API non disponibile</div>';
+      return;
+    }
+    var end = new Date(), start = new Date(end - 86400000);
+    var noAttr = !attrName;
+    var path = 'history/period/'+start.toISOString()+'?filter_entity_id='+entityId+'&end_time='+end.toISOString()+'&minimal_response='+(noAttr?'true':'false')+(noAttr?'&no_attributes=true':'');
+    hassObj.callApi('GET', path).then(function(data) {
+      var series = Array.isArray(data) && data[0] ? data[0] : [];
+      var pts = [];
+      series.forEach(function(rec) {
+        var v = noAttr ? parseFloat(rec.state) : (rec.attributes ? parseFloat(rec.attributes[attrName]) : NaN);
+        if (!isNaN(v) && isFinite(v)) pts.push({t: new Date(rec.last_changed||rec.last_updated||0), v: v});
+      });
+      var hw = host.shadowRoot.querySelector('.hw');
+      if (!hw) return;
+      if (!pts.length) { hw.innerHTML = '<div class="hload">Nessun dato disponibile</div>'; return; }
+      var minV = Math.min.apply(null, pts.map(function(p){return p.v;}));
+      var maxV = Math.max.apply(null, pts.map(function(p){return p.v;}));
+      var last = pts[pts.length-1].v;
+      hw.innerHTML = '<div class="hs-row">'
+        +'<div class="hs-item"><div class="hs-lbl">Minimo</div><div class="hs-val">'+minV.toFixed(1)+'</div></div>'
+        +'<div class="hs-item"><div class="hs-lbl">Massimo</div><div class="hs-val">'+maxV.toFixed(1)+'</div></div>'
+        +'<div class="hs-item"><div class="hs-lbl">Attuale</div><div class="hs-val">'+last.toFixed(1)+'</div></div>'
+        +'</div>'+_buildHistChart(pts, minV, maxV);
+    }).catch(function() {
+      var hw = host.shadowRoot.querySelector('.hw');
+      if (hw) hw.innerHTML = '<div class="hload">Errore nel caricamento dei dati</div>';
+    });
+  }
 
   function _flapStart(flapEl, rid) {
     _flapStop(rid);
@@ -309,8 +410,8 @@
 
     const indRight = '<div style="display:flex;gap:5px;align-items:center">'
       +(syncCol ? '<div title="Sync aletta" style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:'+syncCol+';box-shadow:0 0 6px '+syncCol+'cc"></div>' : '')
-      +(sensorT ? '<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.65);background:rgba(255,255,255,.09);padding:2px 7px;border-radius:99px">🌡 '+sensorT+'°</div>' : '')
-      +(sensorH ? '<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.65);background:rgba(255,255,255,.09);padding:2px 7px;border-radius:99px">💧 '+sensorH+'%</div>' : '')
+      +(sensorT ? '<div data-a="stat" data-eid="'+c.tempEntity+'" data-attr="" data-lbl="Temperatura" style="cursor:pointer;font-size:10px;font-weight:700;color:rgba(255,255,255,.65);background:rgba(255,255,255,.09);padding:2px 7px;border-radius:99px;transition:filter .12s" onmouseover="this.style.filter=\'brightness(1.3)\'" onmouseout="this.style.filter=\'\'">🌡 '+sensorT+'°</div>' : '')
+      +(sensorH ? '<div data-a="stat" data-eid="'+c.humEntity+'" data-attr="" data-lbl="Umidità" style="cursor:pointer;font-size:10px;font-weight:700;color:rgba(255,255,255,.65);background:rgba(255,255,255,.09);padding:2px 7px;border-radius:99px;transition:filter .12s" onmouseover="this.style.filter=\'brightness(1.3)\'" onmouseout="this.style.filter=\'\'">💧 '+sensorH+'%</div>' : '')
       +'</div>';
 
     /* Corpo AC antracite */
@@ -461,6 +562,12 @@
     if (el._clmHandler) el.removeEventListener('click', el._clmHandler);
 
     el._clmHandler = function(e) {
+      const statEl = e.target.closest('[data-a="stat"]');
+      if (statEl) {
+        e.stopPropagation(); e.preventDefault();
+        _openHistPopup(card.id, statEl.getAttribute('data-eid'), statEl.getAttribute('data-attr')||'', statEl.getAttribute('data-lbl')||'Dato', H());
+        return;
+      }
       const btn = e.target.closest('[data-action]');
       if (!btn) return;
       e.stopPropagation(); e.preventDefault();
@@ -588,25 +695,49 @@
     const climIds=allIds.filter(function(id){return id.startsWith('climate.');});
     const sensIds=allIds.filter(function(id){return id.startsWith('sensor.');});
     const binIds =allIds.filter(function(id){return id.startsWith('binary_sensor.');});
+    const cardScaleV = c.cardScale||100, cardWV = c.cardW||100;
 
-    const stInp ='width:100%;padding:9px 11px;border-radius:10px;background:#0f1830;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none';
-    const stDrop='position:absolute;left:0;right:0;top:100%;z-index:20;max-height:150px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 10px 10px;display:none';
-    const stLbl ='font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px;display:block';
-    const stBase='width:100%;padding:11px;border-radius:11px;background:#0f1830;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:13px;box-sizing:border-box';
+    const stInp ='width:100%;padding:9px 11px;border-radius:10px;background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.15);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none';
+    const stDrop='position:absolute;left:0;right:0;top:100%;z-index:20;max-height:150px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 10px 10px;display:none;scrollbar-width:none;-ms-overflow-style:none';
+    const stLbl ='font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.45);margin-bottom:4px;display:block';
+    const stBase='width:100%;padding:9px 11px;border-radius:10px;background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.15);font-size:13px;box-sizing:border-box;cursor:pointer';
+
+    var _prevTimer = null;
+    function schedPrev(){ clearTimeout(_prevTimer); _prevTimer = setTimeout(updatePrev, 180); }
+    function updatePrev() {
+      var prevEl = ov.querySelector('#clcfg-prev-inner');
+      if (!prevEl) return;
+      var scV = parseInt((ov.querySelector('#clcfg-cardscale')||{}).value)||100;
+      var wV  = parseInt((ov.querySelector('#clcfg-cardw')||{}).value)||100;
+      try {
+        var tmpCfg = {
+          name:ov.querySelector('#cl-name').value||c.name||'Climatizzatore',
+          entity:ov.querySelector('#cl-ent').value||c.entity||'',
+          tempEntity:ov.querySelector('#cl-temp').value||c.tempEntity||'',
+          humEntity:ov.querySelector('#cl-hum').value||c.humEntity||'',
+          showBrand:ov.querySelector('#cl-showbrand-tog').getAttribute('data-on')==='1',
+          brand:ov.querySelector('#cl-brand').value,
+          useSwingSensor:ov.querySelector('#cl-swsensor-tog').getAttribute('data-on')==='1',
+          swingSensor:ov.querySelector('#cl-swsensor').value||'',
+          cardScale:100,cardW:100
+        };
+        localStorage.setItem('frarik_clima___clmprev__', JSON.stringify(tmpCfg));
+        prevEl.innerHTML = render({id:'__clmprev__'});
+        prevEl.style.zoom = scV<100?scV+'%':'';
+        prevEl.style.width = wV<100?wV+'%':'';
+        prevEl.style.display = 'block';
+      } catch(e){}
+    }
 
     function mkTog(id,on){
-      const bg=on?'#22c55e':'rgba(255,255,255,.15)', lft=on?'17px':'2px';
+      const bg=on?'#fbbf24':'rgba(255,255,255,.15)', lft=on?'17px':'2px';
       return '<div id="'+id+'" data-on="'+(on?'1':'0')+'" style="width:34px;height:18px;border-radius:9px;cursor:pointer;flex-shrink:0;position:relative;background:'+bg+';transition:background .2s">'
         +'<div style="position:absolute;top:1px;left:'+lft+';width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div></div>';
     }
 
-    const ov=document.createElement('div');
-    ov.style.cssText='position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(2,6,16,.78);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
-
-    ov.innerHTML='<div style="width:min(480px,94vw);max-height:90vh;overflow-y:auto;background:#0b1220;border:1px solid rgba(255,255,255,.14);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.6);padding:20px;color:#f1f5f9">'
-      +'<div style="font-size:16px;font-weight:800;margin-bottom:14px">❄️ Configura Climatizzatore</div>'
+    const formHTML = '<div style="width:380px;flex-shrink:0;overflow-y:auto;padding:14px 16px;border-right:1px solid rgba(255,255,255,.07);scrollbar-width:none;-ms-overflow-style:none">'
       +'<div style="margin-bottom:10px"><label style="'+stLbl+'">Nome</label>'
-        +'<input id="cl-name" type="text" value="'+(c.name||'').replace(/"/g,'&quot;')+'" placeholder="CLIMA SALOTTO" style="'+stBase+'"></div>'
+        +'<input id="cl-name" type="text" value="'+(c.name||'').replace(/"/g,'&quot;')+'" placeholder="CLIMA SALOTTO" style="'+stInp+'"></div>'
       +'<div style="margin-bottom:10px;position:relative"><label style="'+stLbl+'">Entità Clima</label>'
         +'<input id="cl-ent" type="text" value="'+(c.entity||'').replace(/"/g,'&quot;')+'" autocomplete="off" placeholder="climate.xxx" style="'+stInp+'">'
         +'<div id="cl-ent-d" style="'+stDrop+'"></div></div>'
@@ -616,44 +747,90 @@
       +'<div style="margin-bottom:10px;position:relative"><label style="'+stLbl+'">Sensore Umidità</label>'
         +'<input id="cl-hum" type="text" value="'+(c.humEntity||'').replace(/"/g,'&quot;')+'" autocomplete="off" placeholder="sensor.umidita_salotto" style="'+stInp+'">'
         +'<div id="cl-hum-d" style="'+stDrop+'"></div></div>'
-      +'<div style="margin-bottom:12px;padding:12px;background:rgba(255,255,255,.04);border-radius:12px;border:1px solid rgba(255,255,255,.08)">'
-        +'<div style="display:flex;align-items:center;gap:10px">'+mkTog('cl-showbrand-tog',!!c.showBrand)+'<span style="font-size:12px;font-weight:700">Mostra marca</span></div>'
+      +'<div style="margin-bottom:10px;padding:12px;background:rgba(255,255,255,.04);border-radius:12px;border:1px solid rgba(255,255,255,.08)">'
+        +'<div style="display:flex;align-items:center;gap:10px">'+mkTog('cl-showbrand-tog',!!c.showBrand)+'<span style="font-size:12px;font-weight:700;color:#fff">Mostra marca</span></div>'
         +'<div id="cl-brand-row" style="margin-top:10px;display:'+(c.showBrand?'block':'none')+'">'
-          +'<select id="cl-brand" style="'+stBase+';cursor:pointer">'
+          +'<select id="cl-brand" style="'+stBase+'">'
           +BRANDS.map(function(b){return '<option value="'+b+'"'+(c.brand===b?' selected':'')+'>'+b+'</option>';}).join('')
-          +'</select>'
-        +'</div>'
+          +'</select></div>'
       +'</div>'
-      +'<div style="margin-bottom:16px;padding:12px;background:rgba(255,255,255,.04);border-radius:12px;border:1px solid rgba(255,255,255,.08)">'
+      +'<div style="margin-bottom:14px;padding:12px;background:rgba(255,255,255,.04);border-radius:12px;border:1px solid rgba(255,255,255,.08)">'
         +'<div style="display:flex;align-items:center;gap:10px">'+mkTog('cl-swsensor-tog',!!c.useSwingSensor)
-        +'<div><div style="font-size:12px;font-weight:700">Sensore aletta fisica</div><div style="font-size:10px;color:#475569;margin-top:1px">Pallino verde/rosso sync clima ↔ aletta</div></div></div>'
+        +'<div><div style="font-size:12px;font-weight:700;color:#fff">Sensore aletta fisica</div><div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:1px">Pallino verde/rosso sync clima ↔ aletta</div></div></div>'
         +'<div id="cl-swsensor-row" style="margin-top:10px;position:relative;display:'+(c.useSwingSensor?'block':'none')+'">'
           +'<input id="cl-swsensor" type="text" value="'+(c.swingSensor||'').replace(/"/g,'&quot;')+'" autocomplete="off" placeholder="binary_sensor.aletta_clima" style="'+stInp+'">'
-          +'<div id="cl-swsensor-d" style="'+stDrop+'"></div>'
-        +'</div>'
+          +'<div id="cl-swsensor-d" style="'+stDrop+'"></div></div>'
       +'</div>'
       +'<div style="display:flex;gap:10px">'
-        +'<button id="cl-cancel" style="flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#e2e8f0">Annulla</button>'
-        +'<button id="cl-save"   style="flex:2;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;background:#22c55e;color:#04210f">Salva</button>'
-      +'</div></div>';
+        +'<button id="cl-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button>'
+        +'<button id="cl-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#fbbf24;color:#0a0816">Salva</button>'
+      +'</div>'
+    +'</div>';
+
+    const prevHTML = '<div style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);scrollbar-width:none;-ms-overflow-style:none">'
+      +'<div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em">Anteprima live</div>'
+      +'<div style="border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08)">'
+        +'<div id="clcfg-prev-inner"></div>'
+      +'</div>'
+      +'<div style="padding-top:12px;border-top:1px solid rgba(255,255,255,.08)">'
+        +'<div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Dimensioni card</div>'
+        +'<div style="display:flex;align-items:center;gap:8px;margin-top:8px">'
+          +'<span style="font-size:11px;font-weight:700;color:#fff;width:72px;flex-shrink:0">Altezza</span>'
+          +'<input type="range" id="clcfg-cardscale" min="20" max="100" step="5" value="'+cardScaleV+'" style="flex:1;cursor:pointer;accent-color:#fbbf24;height:4px">'
+          +'<span id="clcfg-cardscale-lbl" style="font-size:12px;font-weight:800;color:#fbbf24;width:64px;text-align:right;flex-shrink:0">'+(cardScaleV>=100?'Auto (100%)':cardScaleV+'%')+'</span>'
+        +'</div>'
+        +'<div style="display:flex;align-items:center;gap:8px;margin-top:8px">'
+          +'<span style="font-size:11px;font-weight:700;color:#fff;width:72px;flex-shrink:0">Larghezza</span>'
+          +'<input type="range" id="clcfg-cardw" min="20" max="100" step="5" value="'+cardWV+'" style="flex:1;cursor:pointer;accent-color:#fbbf24;height:4px">'
+          +'<span id="clcfg-cardw-lbl" style="font-size:12px;font-weight:800;color:#fbbf24;width:64px;text-align:right;flex-shrink:0">'+(cardWV>=100?'Auto (100%)':cardWV+'%')+'</span>'
+        +'</div>'
+      +'</div>'
+    +'</div>';
+
+    const ov=document.createElement('div');
+    ov.style.cssText='position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(2,6,16,.78);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
+    ov.innerHTML='<div style="width:min(900px,96vw);max-height:92vh;display:flex;flex-direction:column;background:rgba(10,8,20,.98);border:1px solid rgba(139,92,246,.32);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.7);color:#fff;overflow:hidden">'
+      +'<div style="display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
+        +'<div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);color:#fbbf24;flex-shrink:0">❄️</div>'
+        +'<div><div style="font-size:14px;font-weight:800;color:#fff">Configura Climatizzatore</div><div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px">'+card.id+'</div></div>'
+        +'<button id="cl-hdr-close" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.07);border:none">✕</button>'
+      +'</div>'
+      +'<div style="display:flex;flex:1;overflow:hidden;min-height:0">'
+        +formHTML+prevHTML
+      +'</div>'
+    +'</div>';
 
     document.body.appendChild(ov);
     const close=function(){try{document.body.removeChild(ov);}catch(e){}};
     ov.addEventListener('click',function(e){if(e.target===ov)close();});
     ov.querySelector('#cl-cancel').addEventListener('click',close);
+    ov.querySelector('#cl-hdr-close').addEventListener('click',close);
 
     function bindTog(id,rowId){
       const tog=ov.querySelector('#'+id), row=ov.querySelector('#'+rowId);
       tog.addEventListener('click',function(){
         const on=this.getAttribute('data-on')!=='1';
         this.setAttribute('data-on',on?'1':'0');
-        this.style.background=on?'#22c55e':'rgba(255,255,255,.15)';
+        this.style.background=on?'#fbbf24':'rgba(255,255,255,.15)';
         this.querySelector('div').style.left=on?'17px':'2px';
         row.style.display=on?'block':'none';
+        schedPrev();
       });
     }
     bindTog('cl-showbrand-tog','cl-brand-row');
     bindTog('cl-swsensor-tog','cl-swsensor-row');
+
+    ov.querySelector('#clcfg-cardscale').addEventListener('input', function(){
+      var v=parseInt(this.value)||100;
+      ov.querySelector('#clcfg-cardscale-lbl').textContent=v>=100?'Auto (100%)':v+'%';
+      schedPrev();
+    });
+    ov.querySelector('#clcfg-cardw').addEventListener('input', function(){
+      var v=parseInt(this.value)||100;
+      ov.querySelector('#clcfg-cardw-lbl').textContent=v>=100?'Auto (100%)':v+'%';
+      schedPrev();
+    });
+    ov.querySelectorAll('input:not([type=range]),select').forEach(function(inp){ inp.addEventListener('input', schedPrev); });
 
     function makeCombo(inpId,dropId,defaults){
       var inp=ov.querySelector('#'+inpId),drop=ov.querySelector('#'+dropId);
@@ -667,7 +844,7 @@
             +'<span style="color:#e2e8f0">'+id+'</span>'+(fn?'<span style="color:#475569;margin-left:7px;font-family:system-ui;font-size:10px">'+fn+'</span>':'')+'</div>';
         }).join('');
         drop.querySelectorAll('[data-pick]').forEach(function(row){
-          row.addEventListener('mousedown',function(ev){ev.preventDefault();inp.value=row.getAttribute('data-pick');drop.style.display='none';});
+          row.addEventListener('mousedown',function(ev){ev.preventDefault();inp.value=row.getAttribute('data-pick');drop.style.display='none';schedPrev();});
           row.addEventListener('mouseover',function(){row.style.background='rgba(255,255,255,.08)';});
           row.addEventListener('mouseout', function(){row.style.background='';});
         });
@@ -681,6 +858,8 @@
     makeCombo('cl-swsensor','cl-swsensor-d',binIds);
 
     ov.querySelector('#cl-save').addEventListener('click',function(){
+      var scV = parseInt(ov.querySelector('#clcfg-cardscale').value)||100;
+      var wV  = parseInt(ov.querySelector('#clcfg-cardw').value)||100;
       save(card,{
         name:           ov.querySelector('#cl-name').value.trim(),
         entity:         ov.querySelector('#cl-ent').value.trim(),
@@ -690,11 +869,20 @@
         brand:          ov.querySelector('#cl-brand').value,
         useSwingSensor: ov.querySelector('#cl-swsensor-tog').getAttribute('data-on')==='1',
         swingSensor:    ov.querySelector('#cl-swsensor').value.trim(),
+        cardScale:      scV,
+        cardW:          wV,
       });
+      var detail = {cardId:card.id};
+      if (scV !== cardScaleV) detail.cardScale = scV;
+      if (wV  !== cardWV)     detail.cardW = wV;
+      if (detail.cardScale!=null || detail.cardW!=null)
+        el.dispatchEvent(new CustomEvent('frarik-card-layout',{bubbles:true,composed:true,detail:detail}));
       close();
       _lastKeys[card.id]=null;
       try{el.innerHTML=render(card);mount(card,H(),el);}catch(e){}
     });
+
+    updatePrev();
   }
 
   function duplicateCard(src, copy) {
@@ -703,7 +891,7 @@
   }
 
   var CARD={
-    id:'clima-card',name:'Climatizzatore',icon:'❄️',version:'2.14',
+    id:'clima-card',name:'Climatizzatore',icon:'❄️',version:'2.15',
     desc:'Split — look scuro, SVG loghi reali, aletta RAF, glow modalità.',
     colSpan:2,rowSpan:4,render:render,mount:mount,update:update,configure:openCfg,duplicate:duplicateCard,
   };

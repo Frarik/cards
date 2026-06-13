@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.4.28 — 2026-06-13
+
+### feat(Clima): popup impostazioni 2 colonne + anteprima live + slider dimensioni + grafici 24h
+
+**Settings popup redesign (allineato a standard MeteoCard):**
+- Layout 2 colonne: form sinistra (380px) + anteprima live destra.
+- Colori standard: sfondo `#0a0816`, bordo `rgba(139,92,246,.32)`, accento `#fbbf24`.
+- Toggle switch con colore amber invece di verde.
+
+**Slider Altezza/Larghezza:**
+- "Altezza" = CSS `zoom` (20–100%, step 5) via evento `frarik-card-layout`.
+- "Larghezza" = `width: X%; max-width: X%` (20–100%, step 5) via evento `frarik-card-layout`.
+- Valori persistiti in localStorage (`cardScale`, `cardW`).
+
+**Anteprima live:**
+- Preview aggiornata con debounce 180ms su ogni cambio form.
+- Usa chiave localStorage `frarik_clima___clmprev__` per isolare dal dato reale.
+
+**Grafici 24h su temperatura e umidità:**
+- Click su pill 🌡 temperatura o 💧 umidità → bottom sheet SVG 24h.
+- Pattern identico a MeteoCard: `_openHistPopup`, `_destroyHistModal`, `_buildHistChart`.
+- Scrollbar nascosta, animazione slideUp, header con icona/titolo/X.
+- Clima.js frarik-version 2.14→2.15, config 1.4.27→1.4.28
+
 ## 1.4.27 — 2026-06-13
 
 ### feat(Meteo): slider Altezza/Larghezza + popup grafico 24h su entità sensore
