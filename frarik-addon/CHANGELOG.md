@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.4.30 — 2026-06-13
+
+### feat(Camera, person-card): anteprima live + slider Altezza/Larghezza nelle impostazioni
+
+**Camera.js (1.7→1.8):**
+- Popup impostazioni riscritto in layout 2 colonne: form telecamere (sinistra) + anteprima live + slider (destra).
+- Anteprima usa `render({id:'__prev__'})` con chiave `frarik_cam___prev__`.
+- Slider Altezza (zoom) e Larghezza (width%) con debounce 180ms.
+- Salvataggio include `cardScale`, `cardW` e dispatcha `frarik-card-layout`.
+- Pulsanti Aggiungi/Rimuovi telecamera aggiornano l'anteprima.
+
+**person-card.js (1.8→1.9):**
+- Popup impostazioni riscritto in layout 2 colonne: form entità (sinistra) + anteprima live + slider (destra).
+- Anteprima usa `render({id:'__prev__'}, bestHass())` con chiave `fratech_personcard___prev__`.
+- Rimossi i vecchi input px (larghezza/altezza numerici) → sostituiti dagli slider standard.
+- Combobox person/GPS aggiorna l'anteprima in tempo reale.
+- Salvataggio include `cardScale`, `cardW`, azzera `w`/`h`, dispatcha `frarik-card-layout`.
+
 ## 1.4.29 — 2026-06-13
 
 ### feat(all cards): tutti i popup aprono dal basso verso l'alto a schermo intero

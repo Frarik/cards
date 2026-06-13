@@ -1,5 +1,5 @@
 /**
- * person-card.js v1.8 — FratechStore Card "Persona"
+ * person-card.js v1.9 — FratechStore Card "Persona"
  * Foto entità + tracker · sfondo Google Maps con segnaposto live.
  * Affianco al nome: A casa (verde) / Fuori casa (rosso) / nome zona HA (azzurro) + "X min fa".
  * Tap sulla card → popup mappa intera con lo storico dei tracciati delle ultime 24h.
@@ -249,53 +249,103 @@
   }
 
   // ── config: modale a tutto schermo ─────────────────────────────────────────────
-  function openConfig(card, el, hass) {
+  function openConfig(card, el) {
     const H = bestHass();
+    const c = loadCfg(card);
     const personId = getPerson(card), gpsId = getGps(card);
     const states = (H && H.states) || {};
     const allIds = Object.keys(states).sort();
-    const stInp = 'width:100%;padding:11px 12px;border-radius:11px;background:#0f1830;color:#f1f5f9;border:1px solid rgba(255,255,255,.20);font-size:13px;font-family:monospace;box-sizing:border-box;outline:none';
-    const stDrop = 'position:absolute;left:0;right:0;top:100%;z-index:10;max-height:180px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 11px 11px;display:none';
-    const stLbl = 'display:block;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8';
+    const stInp = 'width:100%;padding:9px 11px;border-radius:9px;background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.15);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none';
+    const stDrop = 'position:absolute;left:0;right:0;top:100%;z-index:10;max-height:180px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 9px 9px;display:none;scrollbar-width:none';
+    const stLbl = 'display:block;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.45);margin-bottom:3px';
+    let cardScaleV = c.cardScale || 100, cardWV = c.cardW || 100;
+    let _prevTimer = null;
     const ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:flex-end;background:rgba(0,0,0,.68);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
     ov.innerHTML = `<style>@keyframes pcSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style>
-      <div style="width:100%;max-height:92vh;overflow:auto;background:#0a0816;border:1px solid rgba(139,92,246,.32);border-bottom:none;
-        border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);padding:20px;color:#fff;animation:pcSlideUp .22s cubic-bezier(.32,1.12,.56,1);scrollbar-width:none">
-        <div style="font-size:16px;font-weight:800;margin-bottom:16px">👤 Configura card persona</div>
-        <label style="${stLbl}">Entità Person</label>
-        <div style="position:relative;margin-top:6px;margin-bottom:14px">
-          <input id="pccfg-person" type="text" value="${personId}" autocomplete="off"
-            placeholder="Clicca per scegliere oppure scrivi per filtrare…" style="${stInp}">
-          <div id="pccfg-person-d" style="${stDrop}"></div>
+      <div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(139,92,246,.32);border-bottom:none;
+        border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:pcSlideUp .22s cubic-bezier(.32,1.12,.56,1)">
+        <div style="display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">
+          <div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);color:#fbbf24;flex-shrink:0">👤</div>
+          <div><div style="font-size:14px;font-weight:800">Configura card persona</div><div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px">${card.id}</div></div>
+          <button id="pccfg-hdr-close" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.07);border:none">✕</button>
         </div>
-        <label style="${stLbl}">Entità GPS (device_tracker) — opzionale</label>
-        <div style="position:relative;margin-top:6px;margin-bottom:8px">
-          <input id="pccfg-gps" type="text" value="${gpsId}" autocomplete="off"
-            placeholder="Clicca per scegliere oppure scrivi per filtrare…" style="${stInp}">
-          <div id="pccfg-gps-d" style="${stDrop}"></div>
-        </div>
-        <div style="font-size:11px;color:#64748b;margin-bottom:14px;line-height:1.5">Se lasci il GPS vuoto, la posizione viene presa dalla person stessa o dal suo tracker attivo.</div>
-        <label style="${stLbl}">Dimensioni card (px) — vuoto = automatica</label>
-        <div style="display:flex;gap:10px;margin-top:6px">
-          <div style="flex:1">
-            <input id="pccfg-w" type="number" min="0" step="10" placeholder="es. 400" value="${getW(card)||''}" style="${stInp};font-family:system-ui">
-            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-align:center;margin-top:4px">Larghezza</div>
+        <div style="display:flex;flex:1;overflow:hidden;min-height:0">
+          <div style="width:380px;flex-shrink:0;overflow-y:auto;padding:14px 16px;border-right:1px solid rgba(255,255,255,.07);scrollbar-width:none" id="pccfg-form-col">
+            <label style="${stLbl}">Entità Person</label>
+            <div style="position:relative;margin-bottom:12px">
+              <input id="pccfg-person" type="text" value="${personId}" autocomplete="off"
+                placeholder="person.nome" style="${stInp}">
+              <div id="pccfg-person-d" style="${stDrop}"></div>
+            </div>
+            <label style="${stLbl}">Entità GPS (device_tracker) — opzionale</label>
+            <div style="position:relative;margin-bottom:6px">
+              <input id="pccfg-gps" type="text" value="${gpsId}" autocomplete="off"
+                placeholder="device_tracker.xxx" style="${stInp}">
+              <div id="pccfg-gps-d" style="${stDrop}"></div>
+            </div>
+            <div style="font-size:10px;color:rgba(255,255,255,.3);margin-bottom:16px;line-height:1.5">Se vuoto, la posizione viene presa dalla person stessa o dal tracker attivo.</div>
+            <div style="display:flex;gap:8px;margin-top:4px">
+              <button id="pccfg-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button>
+              <button id="pccfg-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#fbbf24;color:#0a0816">Salva</button>
+            </div>
           </div>
-          <div style="flex:1">
-            <input id="pccfg-h" type="number" min="0" step="10" placeholder="es. 260" value="${getH(card)||''}" style="${stInp};font-family:system-ui">
-            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-align:center;margin-top:4px">Altezza</div>
+          <div style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);scrollbar-width:none">
+            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em">Anteprima live</div>
+            <div style="border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08)"><div id="pccfg-prev-inner"></div></div>
+            <div style="padding-top:12px;border-top:1px solid rgba(255,255,255,.08)">
+              <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Dimensioni card</div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+                <span style="font-size:11px;font-weight:700;color:#fff;width:72px;flex-shrink:0">Altezza</span>
+                <input type="range" id="pccfg-cardscale" min="20" max="100" step="5" value="${cardScaleV}" style="flex:1;cursor:pointer;accent-color:#fbbf24;height:4px">
+                <span id="pccfg-cardscale-lbl" style="font-size:12px;font-weight:800;color:#fbbf24;width:64px;text-align:right;flex-shrink:0">${cardScaleV >= 100 ? 'Auto (100%)' : cardScaleV + '%'}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+                <span style="font-size:11px;font-weight:700;color:#fff;width:72px;flex-shrink:0">Larghezza</span>
+                <input type="range" id="pccfg-cardw" min="20" max="100" step="5" value="${cardWV}" style="flex:1;cursor:pointer;accent-color:#fbbf24;height:4px">
+                <span id="pccfg-cardw-lbl" style="font-size:12px;font-weight:800;color:#fbbf24;width:64px;text-align:right;flex-shrink:0">${cardWV >= 100 ? 'Auto (100%)' : cardWV + '%'}</span>
+              </div>
+            </div>
           </div>
-        </div>
-        <div style="display:flex;gap:10px;margin-top:20px">
-          <button id="pccfg-cancel" style="flex:1;padding:12px;border-radius:11px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#e2e8f0">Annulla</button>
-          <button id="pccfg-save" style="flex:1;padding:12px;border-radius:11px;border:none;cursor:pointer;font-weight:800;background:#22c55e;color:#04210f">Salva</button>
         </div>
       </div>`;
     document.body.appendChild(ov);
-    const close = () => { try { document.body.removeChild(ov); } catch (e) {} };
+    const close = () => { if (_prevTimer) clearTimeout(_prevTimer); try { localStorage.removeItem(cfgKey({id:'__prev__'})); } catch(e) {} try { document.body.removeChild(ov); } catch (e) {} };
     ov.addEventListener('click', e => { if (e.target === ov) close(); });
+    ov.querySelector('#pccfg-hdr-close').addEventListener('click', close);
     ov.querySelector('#pccfg-cancel').addEventListener('click', close);
+
+    function updatePrev() {
+      const prevEl = ov.querySelector('#pccfg-prev-inner');
+      if (!prevEl) return;
+      const scV = parseInt((ov.querySelector('#pccfg-cardscale') || {}).value) || 100;
+      const wV  = parseInt((ov.querySelector('#pccfg-cardw') || {}).value) || 100;
+      try {
+        const p = ov.querySelector('#pccfg-person').value.trim();
+        const g = ov.querySelector('#pccfg-gps').value.trim();
+        const tmpCfg = Object.assign({}, c, { person: p, gps: g, cardScale: 100, cardW: 100 });
+        localStorage.setItem(cfgKey({id:'__prev__'}), JSON.stringify(tmpCfg));
+        prevEl.innerHTML = render({id:'__prev__'}, H);
+        prevEl.style.zoom = scV < 100 ? scV + '%' : '';
+        prevEl.style.width = wV < 100 ? wV + '%' : '';
+      } catch(e) {}
+    }
+    function schedPrev() {
+      if (_prevTimer) clearTimeout(_prevTimer);
+      _prevTimer = setTimeout(updatePrev, 180);
+    }
+    updatePrev();
+
+    ov.querySelector('#pccfg-cardscale').addEventListener('input', function() {
+      cardScaleV = parseInt(this.value) || 100;
+      ov.querySelector('#pccfg-cardscale-lbl').textContent = cardScaleV >= 100 ? 'Auto (100%)' : cardScaleV + '%';
+      schedPrev();
+    });
+    ov.querySelector('#pccfg-cardw').addEventListener('input', function() {
+      cardWV = parseInt(this.value) || 100;
+      ov.querySelector('#pccfg-cardw-lbl').textContent = cardWV >= 100 ? 'Auto (100%)' : cardWV + '%';
+      schedPrev();
+    });
 
     // Combobox helper
     function attachCombo(inpId, dropId) {
@@ -317,27 +367,26 @@
           </div>`;
         }).join('');
         drop.querySelectorAll('[data-pick]').forEach(row => {
-          row.addEventListener('mousedown', ev => { ev.preventDefault(); inp2.value = row.getAttribute('data-pick'); drop.style.display = 'none'; });
+          row.addEventListener('mousedown', ev => { ev.preventDefault(); inp2.value = row.getAttribute('data-pick'); drop.style.display = 'none'; schedPrev(); });
           row.addEventListener('mouseover', () => { row.style.background = 'rgba(255,255,255,.08)'; });
           row.addEventListener('mouseout',  () => { row.style.background = ''; });
         });
       }
       inp2.addEventListener('focus', showDrop);
-      inp2.addEventListener('input', showDrop);
+      inp2.addEventListener('input', () => { showDrop(); schedPrev(); });
       inp2.addEventListener('blur',  () => setTimeout(() => { drop.style.display = 'none'; }, 200));
     }
     attachCombo('pccfg-person', 'pccfg-person-d');
     attachCombo('pccfg-gps',    'pccfg-gps-d');
 
     ov.querySelector('#pccfg-save').addEventListener('click', () => {
-      const p = ov.querySelector('#pccfg-person').value;
-      const g = ov.querySelector('#pccfg-gps').value;
-      const w = parseInt(ov.querySelector('#pccfg-w').value, 10) || 0;
-      const h = parseInt(ov.querySelector('#pccfg-h').value, 10) || 0;
-      saveCfg(card, Object.assign({}, loadCfg(card), { person: p, gps: g, w: w, h: h }));
+      const p = ov.querySelector('#pccfg-person').value.trim();
+      const g = ov.querySelector('#pccfg-gps').value.trim();
+      saveCfg(card, Object.assign({}, c, { person: p, gps: g, w: 0, h: 0, cardScale: cardScaleV, cardW: cardWV }));
       card.person = p; card.gps = g;
+      document.dispatchEvent(new CustomEvent('frarik-card-layout', { bubbles: true, composed: true, detail: { cardId: card.id, cardScale: cardScaleV, cardW: cardWV } }));
       close();
-      try { el.innerHTML = render(card, hass); mount(card, hass, el); } catch (e) {}
+      try { el.innerHTML = render(card, bestHass()); mount(card, bestHass(), el); } catch (e) {}
     });
   }
 
@@ -423,10 +472,10 @@
     id: 'person-card',
     name: 'Persona',
     icon: '👤',
-    version: '1.19',
+    version: '1.9',
     desc: 'Foto persona + tracker, sfondo Google Maps live, stato zona colorato e storico 24h. Contenuto che scala con la dimensione della card.',
     noAutoFit: true,   // ha già il suo scaling interno (mappa a tutto sfondo) → niente auto-fit del core
-    render, mount, update, configure: (card, el) => openConfig(card, el)
+    render, mount, update, configure: openConfig
   };
   window.FratechCardRegistry = window.FratechCardRegistry || {};
   window.FratechCardRegistry[CARD.id] = CARD;

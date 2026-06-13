@@ -1,4 +1,4 @@
-/* frarik-version: 1.7 */
+/* frarik-version: 1.8 */
 (function () {
   'use strict';
 
@@ -479,25 +479,90 @@
 
     var ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:flex-end;background:rgba(0,0,0,.68);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
+    var cardScaleV = c.cardScale||100, cardWV = c.cardW||100;
+    var _prevTimer = null;
 
-    function buildDialog() {
-      return '<style>@keyframes camSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style><div style="width:100%;max-height:92vh;overflow-y:auto;background:#0a0816;border:1px solid rgba(139,92,246,.32);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);padding:20px;color:#fff;animation:camSlideUp .22s cubic-bezier(.32,1.12,.56,1);scrollbar-width:none">'
-        +'<div style="font-size:16px;font-weight:800;margin-bottom:14px">📷 Configura Telecamere</div>'
-        +'<div id="cam-cfg-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">'
+    function buildFormInner() {
+      return '<div id="cam-cfg-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">'
           +(cams.length ? cams.map(buildRow).join('') : '<div style="font-size:12px;color:rgba(255,255,255,.3);text-align:center;padding:16px">Nessuna telecamera — clicca "Aggiungi" per iniziare</div>')
         +'</div>'
         +'<button id="cam-cfg-add" style="width:100%;padding:9px;border-radius:9px;border:1px dashed rgba(129,140,248,.4);background:rgba(129,140,248,.07);color:#818cf8;cursor:pointer;font-size:12px;font-weight:700;margin-bottom:14px">+ Aggiungi telecamera</button>'
-        +'<div style="display:flex;gap:10px">'
-          +'<button id="cam-cfg-cancel" style="flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#e2e8f0">Annulla</button>'
-          +'<button id="cam-cfg-save"   style="flex:2;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;background:#818cf8;color:#fff">Salva</button>'
-        +'</div></div>';
+        +'<div style="display:flex;gap:8px">'
+          +'<button id="cam-cfg-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button>'
+          +'<button id="cam-cfg-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#fbbf24;color:#0a0816">Salva</button>'
+        +'</div>';
+    }
+
+    function buildDialog() {
+      return '<style>@keyframes camSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style>'
+        +'<div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(139,92,246,.32);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:camSlideUp .22s cubic-bezier(.32,1.12,.56,1)">'
+          +'<div style="display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
+            +'<div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);color:#fbbf24;flex-shrink:0">📷</div>'
+            +'<div><div style="font-size:14px;font-weight:800">Configura Telecamere</div><div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px">'+card.id+'</div></div>'
+            +'<button id="cam-hdr-close" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.07);border:none">✕</button>'
+          +'</div>'
+          +'<div style="display:flex;flex:1;overflow:hidden;min-height:0">'
+            +'<div style="width:380px;flex-shrink:0;overflow-y:auto;padding:14px 16px;border-right:1px solid rgba(255,255,255,.07);scrollbar-width:none" id="cam-form-col">'+buildFormInner()+'</div>'
+            +'<div style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);scrollbar-width:none">'
+              +'<div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em">Anteprima live</div>'
+              +'<div style="border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08)"><div id="cam-prev-inner"></div></div>'
+              +'<div style="padding-top:12px;border-top:1px solid rgba(255,255,255,.08)">'
+                +'<div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Dimensioni card</div>'
+                +'<div style="display:flex;align-items:center;gap:8px;margin-top:8px">'
+                  +'<span style="font-size:11px;font-weight:700;color:#fff;width:72px;flex-shrink:0">Altezza</span>'
+                  +'<input type="range" id="cam-cardscale" min="20" max="100" step="5" value="'+cardScaleV+'" style="flex:1;cursor:pointer;accent-color:#fbbf24;height:4px">'
+                  +'<span id="cam-cardscale-lbl" style="font-size:12px;font-weight:800;color:#fbbf24;width:64px;text-align:right;flex-shrink:0">'+(cardScaleV>=100?'Auto (100%)':cardScaleV+'%')+'</span>'
+                +'</div>'
+                +'<div style="display:flex;align-items:center;gap:8px;margin-top:8px">'
+                  +'<span style="font-size:11px;font-weight:700;color:#fff;width:72px;flex-shrink:0">Larghezza</span>'
+                  +'<input type="range" id="cam-cardw" min="20" max="100" step="5" value="'+cardWV+'" style="flex:1;cursor:pointer;accent-color:#fbbf24;height:4px">'
+                  +'<span id="cam-cardw-lbl" style="font-size:12px;font-weight:800;color:#fbbf24;width:64px;text-align:right;flex-shrink:0">'+(cardWV>=100?'Auto (100%)':cardWV+'%')+'</span>'
+                +'</div>'
+              +'</div>'
+            +'</div>'
+          +'</div>'
+        +'</div>';
     }
 
     ov.innerHTML = buildDialog();
     document.body.appendChild(ov);
-    var close = function() { try { document.body.removeChild(ov); } catch(e) {} };
+    var close = function() { if (_prevTimer) clearTimeout(_prevTimer); try { document.body.removeChild(ov); } catch(e) {} };
     ov.addEventListener('click', function(e){ if (e.target===ov) close(); });
+    ov.querySelector('#cam-hdr-close').addEventListener('click', close);
     ov.querySelector('#cam-cfg-cancel').addEventListener('click', close);
+
+    function updatePrev() {
+      var prevEl = ov.querySelector('#cam-prev-inner');
+      if (!prevEl) return;
+      var scV = parseInt((ov.querySelector('#cam-cardscale')||{}).value)||100;
+      var wV  = parseInt((ov.querySelector('#cam-cardw')||{}).value)||100;
+      try {
+        var prevCams = cams.filter(function(cam){ return cam.entity.trim(); });
+        var tmpCfg = Object.assign({}, c, { cameras: prevCams.length ? prevCams : c.cameras||[], cardScale:100, cardW:100 });
+        localStorage.setItem('frarik_cam___prev__', JSON.stringify(tmpCfg));
+        prevEl.innerHTML = render({id:'__prev__'});
+        prevEl.style.zoom = scV < 100 ? scV + '%' : '';
+        prevEl.style.width = wV < 100 ? wV + '%' : '';
+      } catch(e) {}
+    }
+    function schedPrev() {
+      if (_prevTimer) clearTimeout(_prevTimer);
+      _prevTimer = setTimeout(updatePrev, 180);
+    }
+    updatePrev();
+
+    ov.querySelector('#cam-cardscale').addEventListener('input', function() {
+      var v = parseInt(this.value)||100;
+      cardScaleV = v;
+      ov.querySelector('#cam-cardscale-lbl').textContent = v >= 100 ? 'Auto (100%)' : v + '%';
+      schedPrev();
+    });
+    ov.querySelector('#cam-cardw').addEventListener('input', function() {
+      var v = parseInt(this.value)||100;
+      cardWV = v;
+      ov.querySelector('#cam-cardw-lbl').textContent = v >= 100 ? 'Auto (100%)' : v + '%';
+      schedPrev();
+    });
 
     function makeCombo(inpSel, dropSel, defaults) {
       var inp = ov.querySelector(inpSel), drop = ov.querySelector(dropSel);
@@ -542,16 +607,18 @@
     bindAllCombos();
     ov.addEventListener('click',function(e){
       var b=e.target.closest('[data-action="delcam"]'); if(!b) return;
-      readValues(); cams.splice(parseInt(b.getAttribute('data-idx')),1); rebuildList();
+      readValues(); cams.splice(parseInt(b.getAttribute('data-idx')),1); rebuildList(); schedPrev();
     });
     ov.querySelector('#cam-cfg-add').addEventListener('click',function(){
-      readValues(); cams.push({entity:'',name:'',battery:''}); rebuildList();
-      var inner=ov.querySelector('div'); if(inner) inner.scrollTop=99999;
+      readValues(); cams.push({entity:'',name:'',battery:''}); rebuildList(); schedPrev();
+      var formCol=ov.querySelector('#cam-form-col'); if(formCol) formCol.scrollTop=99999;
     });
     ov.querySelector('#cam-cfg-save').addEventListener('click',function(){
       readValues();
       var validCams=cams.filter(function(cam){return cam.entity.trim();});
-      save(card,Object.assign({},c,{cameras:validCams}));
+      save(card,Object.assign({},c,{cameras:validCams,cardScale:cardScaleV,cardW:cardWV}));
+      try { localStorage.removeItem('frarik_cam___prev__'); } catch(e) {}
+      document.dispatchEvent(new CustomEvent('frarik-card-layout',{bubbles:true,composed:true,detail:{cardId:card.id,cardScale:cardScaleV,cardW:cardWV}}));
       close(); _lastKeys[card.id]=null;
       el.innerHTML=render(card); mount(card,H(),el);
     });
@@ -563,7 +630,7 @@
   }
 
   var CARD = {
-    id: 'camera-card', name: 'Telecamere', icon: '📷', version: '1.6',
+    id: 'camera-card', name: 'Telecamere', icon: '📷', version: '1.8',
     desc: 'WebRTC (go2rtc) + MJPEG in parallelo. Click istantaneo, fallback snapshot 2s.',
     colSpan: 2, rowSpan: 5,
     render: render, mount: mount, update: update, configure: openCfg, duplicate: duplicateCard,

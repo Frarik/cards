@@ -368,42 +368,91 @@
         +'</div>';
     }
 
+    const cardScaleV=c.cardScale||100, cardWV=c.cardW||100;
+    var _prevTimer=null;
+
     const ov=document.createElement('div');
     ov.style.cssText='position:fixed;inset:0;z-index:100000;display:flex;align-items:flex-end;background:rgba(0,0,0,.68);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
-    ov.innerHTML='<style>@keyframes sySlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style><div style="width:100%;background:#0a0816;border:1px solid rgba(139,92,246,.32);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);padding:20px;color:#fff;max-height:92vh;overflow-y:auto;animation:sySlideUp .22s cubic-bezier(.32,1.12,.56,1);scrollbar-width:none">'
-      +'<div style="font-size:16px;font-weight:800;margin-bottom:14px">🖥️ Configura Sistema</div>'
-      +'<div style="margin-bottom:10px"><label style="'+stLbl+'">Nome del sistema</label><input id="sy-name" type="text" value="'+(c.name||'').replace(/"/g,'&quot;')+'" placeholder="es. Mini PC, NAS, Server…" style="'+stBase+'"></div>'
-      +'<div style="'+stSec+'">Utilizzi percentuale</div>'
-      +field('sy-cpu',  'Uso Processore (%)',            cf.cpu,    'sensor.processor_use')
-      +field('sy-ram',  'Utilizzo RAM (%)',               cf.ram,    'sensor.memory_use_percent')
-      +field('sy-disk', 'Utilizzo Disco (%)',             cf.disk,   'sensor.disk_use_percent')
-      +field('sy-swap', 'Utilizzo Swap (%)',              cf.swap,   'sensor.swap_use_percent')
-      +field('sy-temp', 'Temperatura Processore (°C)',    cf.temp,   'sensor.processor_temperature')
-      +'<div style="'+stSec+'">Carico e avvio</div>'
-      +field('sy-load1', 'Carico sistema — 1 minuto',    cf.load1,  'sensor.load_1m')
-      +field('sy-load5', 'Carico sistema — 5 minuti',    cf.load5,  'sensor.load_5m')
-      +field('sy-load15','Carico sistema — 15 minuti',   cf.load15, 'sensor.load_15m')
-      +field('sy-boot',  'Tempo di attività (last boot)', cf.boot,   'sensor.last_boot')
-      +'<div style="'+stSec+'">Rete</div>'
-      +field('sy-netin', 'Traffico in entrata',           cf.netin,  'sensor.network_throughput_in_enp2s0')
-      +field('sy-netout','Traffico in uscita',            cf.netout, 'sensor.network_throughput_out_enp2s0')
-      +field('sy-ip',    'Indirizzo IP locale',           cf.ip,     'sensor.ipv4_address_enp2s0')
-      +'<div style="'+stSec+'">Valori assoluti (opzionale)</div>'
-      +field('sy-memuse', 'RAM usata (GB)',               cf.memuse,  'sensor.memory_use')
-      +field('sy-memfree','RAM libera (GB)',              cf.memfree, 'sensor.memory_free')
-      +field('sy-diskuse','Spazio disco usato',           cf.diskuse, 'sensor.disk_use')
-      +field('sy-diskfree','Spazio disco libero',         cf.diskfree,'sensor.disk_free')
-      +field('sy-swapuse','Swap usata (GB)',              cf.swapuse, 'sensor.swap_use')
-      +'<div style="'+stSec+'">I/O Disco (opzionale)</div>'
-      +field('sy-diskr','Velocità lettura disco',         cf.diskr,  'sensor.disk_read_throughput')
-      +field('sy-diskw','Velocità scrittura disco',       cf.diskw,  'sensor.disk_write_throughput')
-      +'<div style="display:flex;gap:10px;margin-top:16px">'
-      +'<button id="sy-cancel" style="flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#e2e8f0">Annulla</button>'
-      +'<button id="sy-save"   style="flex:2;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;background:#22c55e;color:#04210f">Salva</button>'
-      +'</div></div>';
+    ov.innerHTML='<style>@keyframes sySlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style>'
+      +'<div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(139,92,246,.32);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:sySlideUp .22s cubic-bezier(.32,1.12,.56,1)">'
+      +'<div style="display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
+        +'<div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);color:#fbbf24;flex-shrink:0">🖥️</div>'
+        +'<div><div style="font-size:14px;font-weight:800">Configura Sistema</div><div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px">'+card.id+'</div></div>'
+        +'<button id="sy-hdr-close" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.07);border:none">✕</button>'
+      +'</div>'
+      +'<div style="display:flex;flex:1;overflow:hidden;min-height:0">'
+        +'<div style="width:400px;flex-shrink:0;overflow-y:auto;padding:14px 16px;border-right:1px solid rgba(255,255,255,.07);scrollbar-width:none">'
+          +'<div style="margin-bottom:10px"><label style="'+stLbl+'">Nome del sistema</label><input id="sy-name" type="text" value="'+(c.name||'').replace(/"/g,'&quot;')+'" placeholder="es. Mini PC, NAS, Server…" style="'+stBase+'"></div>'
+          +'<div style="'+stSec+'">Utilizzi percentuale</div>'
+          +field('sy-cpu','Uso Processore (%)',cf.cpu,'sensor.processor_use')
+          +field('sy-ram','Utilizzo RAM (%)',cf.ram,'sensor.memory_use_percent')
+          +field('sy-disk','Utilizzo Disco (%)',cf.disk,'sensor.disk_use_percent')
+          +field('sy-swap','Utilizzo Swap (%)',cf.swap,'sensor.swap_use_percent')
+          +field('sy-temp','Temperatura Processore (°C)',cf.temp,'sensor.processor_temperature')
+          +'<div style="'+stSec+'">Carico e avvio</div>'
+          +field('sy-load1','Carico sistema — 1 minuto',cf.load1,'sensor.load_1m')
+          +field('sy-load5','Carico sistema — 5 minuti',cf.load5,'sensor.load_5m')
+          +field('sy-load15','Carico sistema — 15 minuti',cf.load15,'sensor.load_15m')
+          +field('sy-boot','Tempo di attività (last boot)',cf.boot,'sensor.last_boot')
+          +'<div style="'+stSec+'">Rete</div>'
+          +field('sy-netin','Traffico in entrata',cf.netin,'sensor.network_throughput_in_enp2s0')
+          +field('sy-netout','Traffico in uscita',cf.netout,'sensor.network_throughput_out_enp2s0')
+          +field('sy-ip','Indirizzo IP locale',cf.ip,'sensor.ipv4_address_enp2s0')
+          +'<div style="'+stSec+'">Valori assoluti (opzionale)</div>'
+          +field('sy-memuse','RAM usata (GB)',cf.memuse,'sensor.memory_use')
+          +field('sy-memfree','RAM libera (GB)',cf.memfree,'sensor.memory_free')
+          +field('sy-diskuse','Spazio disco usato',cf.diskuse,'sensor.disk_use')
+          +field('sy-diskfree','Spazio disco libero',cf.diskfree,'sensor.disk_free')
+          +field('sy-swapuse','Swap usata (GB)',cf.swapuse,'sensor.swap_use')
+          +'<div style="'+stSec+'">I/O Disco (opzionale)</div>'
+          +field('sy-diskr','Velocità lettura disco',cf.diskr,'sensor.disk_read_throughput')
+          +field('sy-diskw','Velocità scrittura disco',cf.diskw,'sensor.disk_write_throughput')
+          +'<div style="display:flex;gap:8px;margin-top:14px">'
+            +'<button id="sy-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button>'
+            +'<button id="sy-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#fbbf24;color:#0a0816">Salva</button>'
+          +'</div>'
+        +'</div>'
+        +'<div style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);scrollbar-width:none">'
+          +'<div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em">Anteprima live</div>'
+          +'<div style="border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08)"><div id="sy-prev-inner"></div></div>'
+          +'<div style="padding-top:12px;border-top:1px solid rgba(255,255,255,.08)">'
+            +'<div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Dimensioni card</div>'
+            +'<div style="display:flex;align-items:center;gap:8px;margin-top:8px">'
+              +'<span style="font-size:11px;font-weight:700;color:#fff;width:72px;flex-shrink:0">Altezza</span>'
+              +'<input type="range" id="sy-cardscale" min="20" max="100" step="5" value="'+cardScaleV+'" style="flex:1;cursor:pointer;accent-color:#fbbf24;height:4px">'
+              +'<span id="sy-cardscale-lbl" style="font-size:12px;font-weight:800;color:#fbbf24;width:64px;text-align:right;flex-shrink:0">'+(cardScaleV>=100?'Auto (100%)':cardScaleV+'%')+'</span>'
+            +'</div>'
+            +'<div style="display:flex;align-items:center;gap:8px;margin-top:8px">'
+              +'<span style="font-size:11px;font-weight:700;color:#fff;width:72px;flex-shrink:0">Larghezza</span>'
+              +'<input type="range" id="sy-cardw" min="20" max="100" step="5" value="'+cardWV+'" style="flex:1;cursor:pointer;accent-color:#fbbf24;height:4px">'
+              +'<span id="sy-cardw-lbl" style="font-size:12px;font-weight:800;color:#fbbf24;width:64px;text-align:right;flex-shrink:0">'+(cardWV>=100?'Auto (100%)':cardWV+'%')+'</span>'
+            +'</div>'
+          +'</div>'
+        +'</div>'
+      +'</div>'
+    +'</div>';
+
     document.body.appendChild(ov);
+
+    function updatePrev(){
+      var prevEl=ov.querySelector('#sy-prev-inner'); if(!prevEl) return;
+      var scV=parseInt((ov.querySelector('#sy-cardscale')||{}).value)||100;
+      var wV=parseInt((ov.querySelector('#sy-cardw')||{}).value)||100;
+      function g(id){var e=ov.querySelector('#'+id);return e?e.value.trim():'';}
+      try{
+        localStorage.setItem('frarik_systemcard___prev__',JSON.stringify({name:g('sy-name'),cpu:g('sy-cpu'),ram:g('sy-ram'),disk:g('sy-disk'),swap:g('sy-swap'),temp:g('sy-temp'),cardScale:100,cardW:100}));
+        prevEl.innerHTML=render({id:'__prev__'});
+        prevEl.style.zoom=scV<100?scV+'%':''; prevEl.style.width=wV<100?wV+'%':'';
+      }catch(e){}
+    }
+    function schedPrev(){clearTimeout(_prevTimer);_prevTimer=setTimeout(updatePrev,180);}
+
+    ov.querySelector('#sy-cardscale').addEventListener('input',function(){ov.querySelector('#sy-cardscale-lbl').textContent=this.value>=100?'Auto (100%)':this.value+'%';schedPrev();});
+    ov.querySelector('#sy-cardw').addEventListener('input',function(){ov.querySelector('#sy-cardw-lbl').textContent=this.value>=100?'Auto (100%)':this.value+'%';schedPrev();});
+
     const close=function(){try{document.body.removeChild(ov);}catch(e){}};
     ov.addEventListener('click',function(e){if(e.target===ov) close();});
+    ov.querySelector('#sy-hdr-close').addEventListener('click',close);
 
     var fieldIds=['sy-cpu','sy-ram','sy-disk','sy-swap','sy-temp','sy-load1','sy-load5','sy-load15','sy-boot','sy-netin','sy-netout','sy-ip','sy-memuse','sy-memfree','sy-diskuse','sy-diskfree','sy-swapuse','sy-diskr','sy-diskw'];
     fieldIds.forEach(function(fid){
@@ -425,21 +474,27 @@
         });
       }
       inp2.addEventListener('focus',showDrop);
-      inp2.addEventListener('input',showDrop);
+      inp2.addEventListener('input',function(){showDrop();schedPrev();});
       inp2.addEventListener('blur',function(){setTimeout(function(){drop.style.display='none';},200);});
     });
 
     ov.querySelector('#sy-cancel').addEventListener('click',close);
     ov.querySelector('#sy-save').addEventListener('click',function(){
       function g(id){var e=ov.querySelector('#'+id); return e?e.value.trim():'';}
+      var scV=parseInt(ov.querySelector('#sy-cardscale').value)||100;
+      var wV=parseInt(ov.querySelector('#sy-cardw').value)||100;
       save(card,{name:g('sy-name'),cpu:g('sy-cpu'),ram:g('sy-ram'),disk:g('sy-disk'),swap:g('sy-swap'),
         temp:g('sy-temp'),boot:g('sy-boot'),load1:g('sy-load1'),load5:g('sy-load5'),load15:g('sy-load15'),
         netin:g('sy-netin'),netout:g('sy-netout'),ip:g('sy-ip'),
         memuse:g('sy-memuse'),memfree:g('sy-memfree'),diskuse:g('sy-diskuse'),diskfree:g('sy-diskfree'),swapuse:g('sy-swapuse'),
-        diskr:g('sy-diskr'),diskw:g('sy-diskw')});
+        diskr:g('sy-diskr'),diskw:g('sy-diskw'),cardScale:scV,cardW:wV});
+      var detail={cardId:card.id};
+      if(scV!==cardScaleV) detail.cardScale=scV; if(wV!==cardWV) detail.cardW=wV;
+      if(detail.cardScale!=null||detail.cardW!=null) el.dispatchEvent(new CustomEvent('frarik-card-layout',{bubbles:true,composed:true,detail:detail}));
       close();
       try{el.innerHTML=render(card);el._sycBound=false;mount(card,H(),el);}catch(e){}
     });
+    updatePrev();
   }
 
   var CARD={

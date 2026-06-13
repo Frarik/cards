@@ -486,27 +486,76 @@
         <span style="font-size:20px">${t.icon}</span>${t.label}
       </button>`
     ).join('');
-    ov.innerHTML = `<style>@keyframes tpSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style><div style="width:100%;background:#0a0816;border:1px solid rgba(139,92,246,.32);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);padding:20px;color:#fff;max-height:92vh;overflow-y:auto;animation:tpSlideUp .22s cubic-bezier(.32,1.12,.56,1);scrollbar-width:none">
-      <div style="font-size:16px;font-weight:800;margin-bottom:14px">⚙️ Configura copertura</div>
-      <div style="font-size:11px;color:#94a3b8;margin-bottom:7px">Tipo di copertura</div>
-      <div id="tap-types" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">${typeBtns}</div>
-      <div style="font-size:11px;color:#94a3b8;margin-bottom:5px">Nome</div>
-      <input id="tap-name" placeholder="es. Tapparella salotto" value="${(load(card).name || '').replace(/"/g, '&quot;')}" style="${stInp};margin-bottom:12px">
-      <div style="font-size:11px;color:#94a3b8;margin-bottom:5px">Entità</div>
-      <div style="position:relative;margin-bottom:4px">
-        <input id="tap-entity" type="text" value="${cur}" autocomplete="off"
-          placeholder="Clicca per scegliere oppure scrivi per filtrare…"
-          style="${stInp};font-family:monospace;font-size:12px">
-        <div id="tap-entity-d" style="${stDrop}"></div>
+    const cardScaleV = load(card).cardScale||100, cardWV = load(card).cardW||100;
+    var _prevTimer = null;
+    ov.innerHTML = `<style>@keyframes tpSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style>
+    <div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(139,92,246,.32);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:tpSlideUp .22s cubic-bezier(.32,1.12,.56,1)">
+      <div style="display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">
+        <div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);color:#fbbf24;flex-shrink:0">🪟</div>
+        <div><div style="font-size:14px;font-weight:800">Configura copertura</div><div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px">${card.id}</div></div>
+        <button id="tap-hdr-close" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.07);border:none">✕</button>
       </div>
-      <div style="font-size:10px;color:#64748b;margin-top:8px">⚡ La velocità è automatica: la card impara il tempo di corsa dai movimenti reali.</div>
-      <div style="display:flex;gap:10px;margin-top:16px">
-        <button id="tap-cancel" style="flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#e2e8f0">Annulla</button>
-        <button id="tap-save" style="flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;background:#22c55e;color:#04210f">Salva</button>
+      <div style="display:flex;flex:1;overflow:hidden;min-height:0">
+        <div style="width:380px;flex-shrink:0;overflow-y:auto;padding:14px 16px;border-right:1px solid rgba(255,255,255,.07);scrollbar-width:none;display:flex;flex-direction:column;gap:10px">
+          <div>
+            <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.45);margin-bottom:6px">Tipo di copertura</div>
+            <div id="tap-types" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">${typeBtns}</div>
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.45);margin-bottom:4px">Nome</div>
+            <input id="tap-name" placeholder="es. Tapparella salotto" value="${(load(card).name || '').replace(/"/g, '&quot;')}" style="${stInp}">
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.45);margin-bottom:4px">Entità</div>
+            <div style="position:relative">
+              <input id="tap-entity" type="text" value="${cur}" autocomplete="off" placeholder="Clicca per scegliere oppure scrivi per filtrare…" style="${stInp};font-family:monospace;font-size:12px">
+              <div id="tap-entity-d" style="${stDrop}"></div>
+            </div>
+          </div>
+          <div style="font-size:10px;color:rgba(255,255,255,.35)">⚡ La velocità è automatica: la card impara il tempo di corsa dai movimenti reali.</div>
+          <div style="display:flex;gap:8px;margin-top:4px">
+            <button id="tap-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button>
+            <button id="tap-save" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#fbbf24;color:#0a0816">Salva</button>
+          </div>
+        </div>
+        <div style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);scrollbar-width:none">
+          <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em">Anteprima live</div>
+          <div style="border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08)"><div id="tap-prev-inner"></div></div>
+          <div style="padding-top:12px;border-top:1px solid rgba(255,255,255,.08)">
+            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Dimensioni card</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+              <span style="font-size:11px;font-weight:700;color:#fff;width:72px;flex-shrink:0">Altezza</span>
+              <input type="range" id="tap-cardscale" min="20" max="100" step="5" value="${cardScaleV}" style="flex:1;cursor:pointer;accent-color:#fbbf24;height:4px">
+              <span id="tap-cardscale-lbl" style="font-size:12px;font-weight:800;color:#fbbf24;width:64px;text-align:right;flex-shrink:0">${cardScaleV>=100?'Auto (100%)':cardScaleV+'%'}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+              <span style="font-size:11px;font-weight:700;color:#fff;width:72px;flex-shrink:0">Larghezza</span>
+              <input type="range" id="tap-cardw" min="20" max="100" step="5" value="${cardWV}" style="flex:1;cursor:pointer;accent-color:#fbbf24;height:4px">
+              <span id="tap-cardw-lbl" style="font-size:12px;font-weight:800;color:#fbbf24;width:64px;text-align:right;flex-shrink:0">${cardWV>=100?'Auto (100%)':cardWV+'%'}</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>`;
     document.body.appendChild(ov);
     const close = () => { try { document.body.removeChild(ov); } catch (e) {} };
+
+    function updatePrev() {
+      const prevEl = ov.querySelector('#tap-prev-inner'); if (!prevEl) return;
+      const scV = parseInt((ov.querySelector('#tap-cardscale')||{}).value)||100;
+      const wV  = parseInt((ov.querySelector('#tap-cardw')||{}).value)||100;
+      try {
+        localStorage.setItem('frarik_tapparellacard___prev__', JSON.stringify({entity:ov.querySelector('#tap-entity').value.trim(),name:ov.querySelector('#tap-name').value.trim(),coverType:selType,cardScale:100,cardW:100}));
+        prevEl.innerHTML = render({id:'__prev__'});
+        prevEl.style.zoom = scV<100?scV+'%':''; prevEl.style.width = wV<100?wV+'%':'';
+      } catch(e) {}
+    }
+    function schedPrev() { clearTimeout(_prevTimer); _prevTimer = setTimeout(updatePrev, 180); }
+
+    ov.querySelector('#tap-cardscale').addEventListener('input', function(){ ov.querySelector('#tap-cardscale-lbl').textContent=this.value>=100?'Auto (100%)':this.value+'%'; schedPrev(); });
+    ov.querySelector('#tap-cardw').addEventListener('input', function(){ ov.querySelector('#tap-cardw-lbl').textContent=this.value>=100?'Auto (100%)':this.value+'%'; schedPrev(); });
+    ov.querySelector('#tap-name').addEventListener('input', schedPrev);
+
     let selType = curType;
     ov.querySelector('#tap-types').addEventListener('click', e => {
       const b = e.target.closest('[data-type-btn]'); if (!b) return;
@@ -516,6 +565,7 @@
         btn.style.border = '2px solid ' + (on ? '#38bdf8' : 'rgba(255,255,255,.12)');
         btn.style.background = on ? 'rgba(56,189,248,.15)' : 'rgba(255,255,255,.05)';
       });
+      schedPrev();
     });
     // Combobox entità cover
     const entInp = ov.querySelector('#tap-entity');
@@ -541,17 +591,24 @@
       });
     }
     entInp.addEventListener('focus', showCoverDrop);
-    entInp.addEventListener('input', showCoverDrop);
+    entInp.addEventListener('input', () => { showCoverDrop(); schedPrev(); });
     entInp.addEventListener('blur',  () => setTimeout(() => { entDrop.style.display = 'none'; }, 200));
     ov.addEventListener('click', e => { if (e.target === ov) close(); });
     ov.querySelector('#tap-cancel').addEventListener('click', close);
+    ov.querySelector('#tap-hdr-close').addEventListener('click', close);
     ov.querySelector('#tap-save').addEventListener('click', () => {
       const entity = ov.querySelector('#tap-entity').value.trim();
       const name = ov.querySelector('#tap-name').value.trim();
-      save(card, { entity: entity, name: name, coverType: selType });
+      const scV = parseInt(ov.querySelector('#tap-cardscale').value)||100;
+      const wV  = parseInt(ov.querySelector('#tap-cardw').value)||100;
+      save(card, { entity, name, coverType: selType, cardScale: scV, cardW: wV });
+      const detail = {cardId:card.id};
+      if (scV!==cardScaleV) detail.cardScale=scV; if (wV!==cardWV) detail.cardW=wV;
+      if (detail.cardScale!=null||detail.cardW!=null) el.dispatchEvent(new CustomEvent('frarik-card-layout',{bubbles:true,composed:true,detail}));
       close();
       try { el._tapType = selType; el.innerHTML = render(card); } catch (e) {}
     });
+    updatePrev();
   }
 
   const CARD = {
