@@ -1,4 +1,4 @@
-/* frarik-version: 1.8 */
+/* frarik-version: 1.9 */
 (function () {
   'use strict';
 
@@ -494,16 +494,16 @@
     }
 
     function buildDialog() {
-      return '<style>@keyframes camSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style>'
+      return '<style>@keyframes camSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}@media(max-width:600px){.frk-cfg-cols{flex-direction:column!important;overflow-y:auto!important;overflow-x:hidden!important}.frk-form-col{width:100%!important;border-right:none!important;border-bottom:1px solid rgba(255,255,255,.07)!important;overflow-y:visible!important;flex-shrink:0!important}.frk-prev-col{min-width:0!important;overflow-y:visible!important}}</style>'
         +'<div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(139,92,246,.32);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:camSlideUp .22s cubic-bezier(.32,1.12,.56,1)">'
           +'<div style="display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
             +'<div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);color:#fbbf24;flex-shrink:0">📷</div>'
             +'<div><div style="font-size:14px;font-weight:800">Configura Telecamere</div><div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px">'+card.id+'</div></div>'
             +'<button id="cam-hdr-close" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.07);border:none">✕</button>'
           +'</div>'
-          +'<div style="display:flex;flex:1;overflow:hidden;min-height:0">'
-            +'<div style="width:380px;flex-shrink:0;overflow-y:auto;padding:14px 16px;border-right:1px solid rgba(255,255,255,.07);scrollbar-width:none" id="cam-form-col">'+buildFormInner()+'</div>'
-            +'<div style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);scrollbar-width:none">'
+          +'<div class="frk-cfg-cols" style="display:flex;flex:1;overflow:hidden;min-height:0">'
+            +'<div class="frk-form-col" style="width:380px;flex-shrink:0;overflow-y:auto;padding:14px 16px;border-right:1px solid rgba(255,255,255,.07);scrollbar-width:none" id="cam-form-col">'+buildFormInner()+'</div>'
+            +'<div class="frk-prev-col" style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);scrollbar-width:none">'
               +'<div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em">Anteprima live</div>'
               +'<div style="border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08)"><div id="cam-prev-inner"></div></div>'
               +'<div style="padding-top:12px;border-top:1px solid rgba(255,255,255,.08)">'
@@ -630,7 +630,7 @@
   }
 
   var CARD = {
-    id: 'camera-card', name: 'Telecamere', icon: '📷', version: '1.8',
+    id: 'camera-card', name: 'Telecamere', icon: '📷', version: '1.9',
     desc: 'WebRTC (go2rtc) + MJPEG in parallelo. Click istantaneo, fallback snapshot 2s.',
     colSpan: 2, rowSpan: 5,
     render: render, mount: mount, update: update, configure: openCfg, duplicate: duplicateCard,

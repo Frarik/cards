@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.4.31 — 2026-06-13
+
+### fix(all cards): popup 2 colonne responsive su mobile
+
+Su schermi ≤ 600px le due colonne si impilano verticalmente (form sopra, anteprima sotto).
+Aggiunta media query `@media(max-width:600px)` con classi `frk-cfg-cols`, `frk-form-col`, `frk-prev-col`
+in tutti e 6 i popup con layout a 2 colonne: Clima 2.15→2.16, DoorsWindows 1.2→1.3,
+System 4.2→4.3, Tapparella 4.5→4.6, Camera 1.8→1.9, person-card 1.9→1.10.
+
 ## 1.4.30 — 2026-06-13
 
 ### feat(Camera, person-card): anteprima live + slider Altezza/Larghezza nelle impostazioni

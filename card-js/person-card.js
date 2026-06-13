@@ -1,5 +1,5 @@
 /**
- * person-card.js v1.9 — FratechStore Card "Persona"
+ * person-card.js v1.10 — FratechStore Card "Persona"
  * Foto entità + tracker · sfondo Google Maps con segnaposto live.
  * Affianco al nome: A casa (verde) / Fuori casa (rosso) / nome zona HA (azzurro) + "X min fa".
  * Tap sulla card → popup mappa intera con lo storico dei tracciati delle ultime 24h.
@@ -262,7 +262,7 @@
     let _prevTimer = null;
     const ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:flex-end;background:rgba(0,0,0,.68);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
-    ov.innerHTML = `<style>@keyframes pcSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style>
+    ov.innerHTML = `<style>@keyframes pcSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}@media(max-width:600px){.frk-cfg-cols{flex-direction:column!important;overflow-y:auto!important;overflow-x:hidden!important}.frk-form-col{width:100%!important;border-right:none!important;border-bottom:1px solid rgba(255,255,255,.07)!important;overflow-y:visible!important;flex-shrink:0!important}.frk-prev-col{min-width:0!important;overflow-y:visible!important}}</style>
       <div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(139,92,246,.32);border-bottom:none;
         border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:pcSlideUp .22s cubic-bezier(.32,1.12,.56,1)">
         <div style="display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">
@@ -270,8 +270,8 @@
           <div><div style="font-size:14px;font-weight:800">Configura card persona</div><div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px">${card.id}</div></div>
           <button id="pccfg-hdr-close" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.07);border:none">✕</button>
         </div>
-        <div style="display:flex;flex:1;overflow:hidden;min-height:0">
-          <div style="width:380px;flex-shrink:0;overflow-y:auto;padding:14px 16px;border-right:1px solid rgba(255,255,255,.07);scrollbar-width:none" id="pccfg-form-col">
+        <div class="frk-cfg-cols" style="display:flex;flex:1;overflow:hidden;min-height:0">
+          <div class="frk-form-col" style="width:380px;flex-shrink:0;overflow-y:auto;padding:14px 16px;border-right:1px solid rgba(255,255,255,.07);scrollbar-width:none" id="pccfg-form-col">
             <label style="${stLbl}">Entità Person</label>
             <div style="position:relative;margin-bottom:12px">
               <input id="pccfg-person" type="text" value="${personId}" autocomplete="off"
@@ -290,7 +290,7 @@
               <button id="pccfg-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#fbbf24;color:#0a0816">Salva</button>
             </div>
           </div>
-          <div style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);scrollbar-width:none">
+          <div class="frk-prev-col" style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);scrollbar-width:none">
             <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em">Anteprima live</div>
             <div style="border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08)"><div id="pccfg-prev-inner"></div></div>
             <div style="padding-top:12px;border-top:1px solid rgba(255,255,255,.08)">
@@ -472,7 +472,7 @@
     id: 'person-card',
     name: 'Persona',
     icon: '👤',
-    version: '1.9',
+    version: '1.10',
     desc: 'Foto persona + tracker, sfondo Google Maps live, stato zona colorato e storico 24h. Contenuto che scala con la dimensione della card.',
     noAutoFit: true,   // ha già il suo scaling interno (mappa a tutto sfondo) → niente auto-fit del core
     render, mount, update, configure: openConfig

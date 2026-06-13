@@ -1,4 +1,4 @@
-/* frarik-version: 2.15 */
+/* frarik-version: 2.16 */
 (function () {
   'use strict';
 
@@ -735,7 +735,7 @@
         +'<div style="position:absolute;top:1px;left:'+lft+';width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div></div>';
     }
 
-    const formHTML = '<div style="width:380px;flex-shrink:0;overflow-y:auto;padding:14px 16px;border-right:1px solid rgba(255,255,255,.07);scrollbar-width:none;-ms-overflow-style:none">'
+    const formHTML = '<div class="frk-form-col" style="width:380px;flex-shrink:0;overflow-y:auto;padding:14px 16px;border-right:1px solid rgba(255,255,255,.07);scrollbar-width:none;-ms-overflow-style:none">'
       +'<div style="margin-bottom:10px"><label style="'+stLbl+'">Nome</label>'
         +'<input id="cl-name" type="text" value="'+(c.name||'').replace(/"/g,'&quot;')+'" placeholder="CLIMA SALOTTO" style="'+stInp+'"></div>'
       +'<div style="margin-bottom:10px;position:relative"><label style="'+stLbl+'">Entità Clima</label>'
@@ -767,7 +767,7 @@
       +'</div>'
     +'</div>';
 
-    const prevHTML = '<div style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);scrollbar-width:none;-ms-overflow-style:none">'
+    const prevHTML = '<div class="frk-prev-col" style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);scrollbar-width:none;-ms-overflow-style:none">'
       +'<div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em">Anteprima live</div>'
       +'<div style="border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08)">'
         +'<div id="clcfg-prev-inner"></div>'
@@ -789,13 +789,13 @@
 
     const ov=document.createElement('div');
     ov.style.cssText='position:fixed;inset:0;z-index:100000;display:flex;align-items:flex-end;background:rgba(0,0,0,.68);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
-    ov.innerHTML='<style>@keyframes clSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style><div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:rgba(10,8,20,.98);border:1px solid rgba(139,92,246,.32);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:clSlideUp .22s cubic-bezier(.32,1.12,.56,1)">'
+    ov.innerHTML='<style>@keyframes clSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}@media(max-width:600px){.frk-cfg-cols{flex-direction:column!important;overflow-y:auto!important;overflow-x:hidden!important}.frk-form-col{width:100%!important;border-right:none!important;border-bottom:1px solid rgba(255,255,255,.07)!important;overflow-y:visible!important;flex-shrink:0!important}.frk-prev-col{min-width:0!important;overflow-y:visible!important}}</style><div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:rgba(10,8,20,.98);border:1px solid rgba(139,92,246,.32);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:clSlideUp .22s cubic-bezier(.32,1.12,.56,1)">'
       +'<div style="display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
         +'<div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);color:#fbbf24;flex-shrink:0">❄️</div>'
         +'<div><div style="font-size:14px;font-weight:800;color:#fff">Configura Climatizzatore</div><div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px">'+card.id+'</div></div>'
         +'<button id="cl-hdr-close" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.07);border:none">✕</button>'
       +'</div>'
-      +'<div style="display:flex;flex:1;overflow:hidden;min-height:0">'
+      +'<div class="frk-cfg-cols" style="display:flex;flex:1;overflow:hidden;min-height:0">'
         +formHTML+prevHTML
       +'</div>'
     +'</div>';

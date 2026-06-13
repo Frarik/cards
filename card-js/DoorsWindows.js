@@ -1,4 +1,4 @@
-/* frarik-version: 1.2 */
+/* frarik-version: 1.3 */
 /**
  * DoorsWindows.js — FratechStore card "Porte e Finestre"
  * Rileva automaticamente i sensori apertura (device_class door/window/garage_door/opening),
@@ -99,15 +99,15 @@
     const stInp = 'width:100%;padding:10px 11px;border-radius:10px;background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.15);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none';
     const stDrop = 'position:absolute;left:0;right:0;top:100%;z-index:10;max-height:180px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 10px 10px;display:none;scrollbar-width:none';
 
-    ov.innerHTML = `<style>@keyframes dwSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style>
+    ov.innerHTML = `<style>@keyframes dwSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}@media(max-width:600px){.frk-cfg-cols{flex-direction:column!important;overflow-y:auto!important;overflow-x:hidden!important}.frk-form-col{width:100%!important;border-right:none!important;border-bottom:1px solid rgba(255,255,255,.07)!important;overflow-y:visible!important;flex-shrink:0!important}.frk-prev-col{min-width:0!important;overflow-y:visible!important}}</style>
     <div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(139,92,246,.32);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:dwSlideUp .22s cubic-bezier(.32,1.12,.56,1)">
       <div style="display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">
         <div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);color:#fbbf24;flex-shrink:0">🚪</div>
         <div><div style="font-size:14px;font-weight:800">Porte e Finestre</div><div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px">${auto.length} sensori rilevati automaticamente</div></div>
         <button id="dw-hdr-close" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.07);border:none">✕</button>
       </div>
-      <div style="display:flex;flex:1;overflow:hidden;min-height:0">
-        <div style="width:380px;flex-shrink:0;overflow-y:auto;padding:14px 16px;border-right:1px solid rgba(255,255,255,.07);scrollbar-width:none;display:flex;flex-direction:column;gap:10px">
+      <div class="frk-cfg-cols" style="display:flex;flex:1;overflow:hidden;min-height:0">
+        <div class="frk-form-col" style="width:380px;flex-shrink:0;overflow-y:auto;padding:14px 16px;border-right:1px solid rgba(255,255,255,.07);scrollbar-width:none;display:flex;flex-direction:column;gap:10px">
           <div style="font-size:11px;color:rgba(255,255,255,.4);line-height:1.5">Aggiungi sensori dalla lista o digitali. Lascia <b style="color:#fff">vuoto</b> per rilevamento automatico.</div>
           <div style="position:relative">
             <input id="dw-pick" type="text" autocomplete="off" placeholder="Cerca e aggiungi un'entità…" style="${stInp}">
@@ -120,7 +120,7 @@
             <button id="dw-save" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#fbbf24;color:#0a0816">Salva</button>
           </div>
         </div>
-        <div style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);scrollbar-width:none">
+        <div class="frk-prev-col" style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);scrollbar-width:none">
           <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em">Anteprima live</div>
           <div style="border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08)"><div id="dw-prev-inner"></div></div>
           <div style="padding-top:12px;border-top:1px solid rgba(255,255,255,.08)">
