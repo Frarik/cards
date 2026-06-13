@@ -1,4 +1,4 @@
-/* frarik-version: 1.17 */
+/* frarik-version: 1.18 */
 
 // ── Lookup tables ─────────────────────────────────────────────────────────────
 const _WI = {
@@ -205,7 +205,7 @@ const _CSS = `
 .star{position:absolute;border-radius:50%;background:#fff;animation:twinkle var(--td,3s) ease-in-out infinite var(--dl,0s);}
 @keyframes twinkle{0%,100%{opacity:var(--op,.6)}50%{opacity:calc(var(--op,.6)*.2)}}
 .sky-horizon{position:absolute;inset:0;pointer-events:none;}
-.celestial{position:absolute;pointer-events:none;transform:translate(-50%,50%);z-index:1;transition:left 90s linear,bottom 90s linear;}
+.celestial{position:absolute;pointer-events:none;transform:translate(-50%,-50%);z-index:1;transition:left 60s linear,top 60s linear;}
 .sky-clouds{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:2;}
 .cloud{position:absolute;animation:cldmv var(--spd,120s) linear infinite var(--dl,0s);}
 @keyframes cldmv{from{transform:translateX(-210px)}to{transform:translateX(115vw)}}
@@ -514,11 +514,13 @@ class MeteoCard extends HTMLElement {
   }
 
   _sunPos(az, el){
-    if(az==null||el==null||el<-1) return null
-    // Map azimuth 70°-290° → left 6%-94%
-    const x=(Math.max(70,Math.min(290,az))-70)/220*88+6
-    const y=Math.max(2,Math.min(88,el/90*80+5))
-    return {x,y}
+    if(az==null||el==null||el<-4) return null
+    // Azimuth 70°(E)→180°(S)→290°(W) maps to left 6%→50%→94%
+    const prog=Math.max(0,Math.min(1,(az-70)/220))
+    const x=6+prog*88
+    // Arc: top 38% at horizon, top 18% at zenith — stays in visible sky strip
+    const top=38-Math.sin(prog*Math.PI)*20
+    return {x, top}
   }
 
   _moonPos(){
@@ -526,21 +528,22 @@ class MeteoCard extends HTMLElement {
     const now=Date.now()
     const nr=sun?.attributes?.next_rising?new Date(sun.attributes.next_rising):null
     const ns=sun?.attributes?.next_setting?new Date(sun.attributes.next_setting):null
+    let prog=0.5
     if(nr&&ns){
       const msUntilRise=nr.getTime()-now
       if(msUntilRise>0&&msUntilRise<16*3600000){
-        // ns is tomorrow's (or today's) sunset already passed; night started ~ns-24h ago
         const nightStart=ns.getTime()-86400000
         const nightDur=nr.getTime()-nightStart
-        const prog=Math.max(0,Math.min(1,(now-nightStart)/nightDur))
-        return {x:8+prog*84, y:4+Math.sin(prog*Math.PI)*52}
+        prog=Math.max(0,Math.min(1,(now-nightStart)/nightDur))
       }
+    } else {
+      // Fallback: time-based (20:00=start, 06:00=end)
+      const hr=new Date().getHours()+new Date().getMinutes()/60
+      prog=Math.min(1,(hr>=20?hr-20:(hr+4))/10)
     }
-    // Fallback: rough time-based arc (20:00=start, 06:00=end)
-    const hr=new Date().getHours()+new Date().getMinutes()/60
-    const n=hr>=20?hr-20:(hr+4)
-    const prog=Math.min(1,n/10)
-    return {x:8+prog*84, y:4+Math.sin(prog*Math.PI)*50}
+    const x=6+prog*88
+    const top=38-Math.sin(prog*Math.PI)*20
+    return {x, top}
   }
 
   _skyHTML(st){
@@ -575,12 +578,12 @@ class MeteoCard extends HTMLElement {
     let celHTML=''
     if(pos&&!hideBody){
       if(!isNight){
-        celHTML=`<div class="celestial" style="left:${pos.x.toFixed(1)}%;bottom:${pos.y.toFixed(1)}%;">${_sunSVG()}</div>`
+        celHTML=`<div class="celestial" style="left:${pos.x.toFixed(1)}%;top:${pos.top.toFixed(1)}%;">${_sunSVG()}</div>`
       } else {
         const phase=_moonPhaseNum(new Date())
         const f=(1-Math.cos(phase/29.53*2*Math.PI))/2
         if(f>0.015){
-          celHTML=`<div class="celestial" style="left:${pos.x.toFixed(1)}%;bottom:${pos.y.toFixed(1)}%;">${_moonSVG(phase)}</div>`
+          celHTML=`<div class="celestial" style="left:${pos.x.toFixed(1)}%;top:${pos.top.toFixed(1)}%;">${_moonSVG(phase)}</div>`
         }
       }
     }
@@ -610,7 +613,7 @@ class MeteoCard extends HTMLElement {
     const celEl=sr.querySelector('.celestial')
     if(celEl&&pos){
       celEl.style.left=pos.x.toFixed(1)+'%'
-      celEl.style.bottom=pos.y.toFixed(1)+'%'
+      celEl.style.top=pos.top.toFixed(1)+'%'
     }
     const starsEl=sr.querySelector('.sky-stars')
     if(starsEl) starsEl.style.opacity=String(isNight&&coverage<75?1:0)

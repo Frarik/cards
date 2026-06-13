@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.4.20 — 2026-06-13
+
+### fix(Meteo): sole/luna seguono arco visibile nella strip del cielo
+
+- Root cause: `transform:translate(-50%, 50%)` con `bottom` spostava il sole SOTTO l'anchor point di metà SVG (30px), facendolo sforare fuori dalla card e venire clippato da `overflow:hidden`.
+- Fix CSS `.celestial`: cambiato in `transform:translate(-50%,-50%)` + `top` invece di `bottom` → l'elemento è centrato esattamente sull'anchor.
+- Transizione corretta: `transition:left 60s linear, top 60s linear` (non più `bottom`).
+- `_sunPos(az, el)`: arco calcolato su azimuth 70°→290° (E→W), x da 6% a 94%, top da 38% (orizzonte) a 18% (zenith) con seno — rimane sempre nella strip di cielo visibile sopra il contenuto card.
+- `_moonPos()`: stesso arco per la luna, calcolato da progressione notturna via `next_rising`/`next_setting` di sun.sun.
+- Meteo.js: frarik-version 1.17 → 1.18
+
 ## 1.4.19 — 2026-06-13
 
 ### fix(Meteo): sky usava a.sunrise/a.sunset che non esistono sulle entità weather HA
