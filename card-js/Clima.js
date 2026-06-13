@@ -1,4 +1,4 @@
-/* frarik-version: 2.16 */
+/* frarik-version: 2.17 */
 (function () {
   'use strict';
 
@@ -802,7 +802,6 @@
 
     document.body.appendChild(ov);
     const close=function(){try{document.body.removeChild(ov);}catch(e){}};
-    ov.addEventListener('click',function(e){if(e.target===ov)close();});
     ov.querySelector('#cl-cancel').addEventListener('click',close);
     ov.querySelector('#cl-hdr-close').addEventListener('click',close);
 

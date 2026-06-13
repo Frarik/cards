@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.32 — 2026-06-13
+
+### fix(all cards): popup chiudibili solo dalla X, non cliccando fuori
+
+Rimosso il listener `click` sull'overlay che chiudeva il popup al click fuori.
+Tutti i popup (configurazione + storico) si chiudono esclusivamente con il pulsante ✕.
+File aggiornati: Clima 2.17, DoorsWindows 1.4, System 4.4, Tapparella 4.7, Camera 1.10, person-card 1.11.
+
 ## 1.4.31 — 2026-06-13
 
 ### fix(all cards): popup 2 colonne responsive su mobile

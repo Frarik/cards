@@ -1,4 +1,4 @@
-/* frarik-version: 4.6 */
+/* frarik-version: 4.7 */
 (function () {
   'use strict';
 
@@ -593,7 +593,6 @@
     entInp.addEventListener('focus', showCoverDrop);
     entInp.addEventListener('input', () => { showCoverDrop(); schedPrev(); });
     entInp.addEventListener('blur',  () => setTimeout(() => { entDrop.style.display = 'none'; }, 200));
-    ov.addEventListener('click', e => { if (e.target === ov) close(); });
     ov.querySelector('#tap-cancel').addEventListener('click', close);
     ov.querySelector('#tap-hdr-close').addEventListener('click', close);
     ov.querySelector('#tap-save').addEventListener('click', () => {
@@ -754,7 +753,6 @@
     document.body.appendChild(ov);
     const close = () => { try { document.body.removeChild(ov); } catch (e) {} };
     ov.querySelector('#pp-sel').addEventListener('change', function () { if (this.value) ov.querySelector('#pp-man').value = this.value; });
-    ov.addEventListener('click', e => { if (e.target === ov) close(); });
     ov.querySelector('#pp-cancel').addEventListener('click', close);
     ov.querySelector('#pp-save').addEventListener('click', () => {
       const man = ov.querySelector('#pp-man').value.trim();

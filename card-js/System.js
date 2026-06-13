@@ -1,4 +1,4 @@
-/* frarik-version: 4.3 */
+/* frarik-version: 4.4 */
 (function () {
   'use strict';
 
@@ -451,7 +451,6 @@
     ov.querySelector('#sy-cardw').addEventListener('input',function(){ov.querySelector('#sy-cardw-lbl').textContent=this.value>=100?'Auto (100%)':this.value+'%';schedPrev();});
 
     const close=function(){try{document.body.removeChild(ov);}catch(e){}};
-    ov.addEventListener('click',function(e){if(e.target===ov) close();});
     ov.querySelector('#sy-hdr-close').addEventListener('click',close);
 
     var fieldIds=['sy-cpu','sy-ram','sy-disk','sy-swap','sy-temp','sy-load1','sy-load5','sy-load15','sy-boot','sy-netin','sy-netout','sy-ip','sy-memuse','sy-memfree','sy-diskuse','sy-diskfree','sy-swapuse','sy-diskr','sy-diskw'];

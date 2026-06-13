@@ -1,4 +1,4 @@
-/* frarik-version: 1.9 */
+/* frarik-version: 1.10 */
 (function () {
   'use strict';
 
@@ -527,7 +527,6 @@
     ov.innerHTML = buildDialog();
     document.body.appendChild(ov);
     var close = function() { if (_prevTimer) clearTimeout(_prevTimer); try { document.body.removeChild(ov); } catch(e) {} };
-    ov.addEventListener('click', function(e){ if (e.target===ov) close(); });
     ov.querySelector('#cam-hdr-close').addEventListener('click', close);
     ov.querySelector('#cam-cfg-cancel').addEventListener('click', close);
 
@@ -630,7 +629,7 @@
   }
 
   var CARD = {
-    id: 'camera-card', name: 'Telecamere', icon: '📷', version: '1.9',
+    id: 'camera-card', name: 'Telecamere', icon: '📷', version: '1.10',
     desc: 'WebRTC (go2rtc) + MJPEG in parallelo. Click istantaneo, fallback snapshot 2s.',
     colSpan: 2, rowSpan: 5,
     render: render, mount: mount, update: update, configure: openCfg, duplicate: duplicateCard,

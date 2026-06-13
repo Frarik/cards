@@ -1,5 +1,5 @@
 /**
- * person-card.js v1.10 — FratechStore Card "Persona"
+ * person-card.js v1.11 — FratechStore Card "Persona"
  * Foto entità + tracker · sfondo Google Maps con segnaposto live.
  * Affianco al nome: A casa (verde) / Fuori casa (rosso) / nome zona HA (azzurro) + "X min fa".
  * Tap sulla card → popup mappa intera con lo storico dei tracciati delle ultime 24h.
@@ -311,7 +311,6 @@
       </div>`;
     document.body.appendChild(ov);
     const close = () => { if (_prevTimer) clearTimeout(_prevTimer); try { localStorage.removeItem(cfgKey({id:'__prev__'})); } catch(e) {} try { document.body.removeChild(ov); } catch (e) {} };
-    ov.addEventListener('click', e => { if (e.target === ov) close(); });
     ov.querySelector('#pccfg-hdr-close').addEventListener('click', close);
     ov.querySelector('#pccfg-cancel').addEventListener('click', close);
 
@@ -432,7 +431,6 @@
       </div>`;
     document.body.appendChild(ov);
     const close = () => { try { document.body.removeChild(ov); } catch (e) {} };
-    ov.addEventListener('click', e => { if (e.target === ov) close(); });
     ov.querySelector('#pc-hist-x').addEventListener('click', close);
     const sub = ov.querySelector('#pc-hist-sub');
 
@@ -472,7 +470,7 @@
     id: 'person-card',
     name: 'Persona',
     icon: '👤',
-    version: '1.10',
+    version: '1.11',
     desc: 'Foto persona + tracker, sfondo Google Maps live, stato zona colorato e storico 24h. Contenuto che scala con la dimensione della card.',
     noAutoFit: true,   // ha già il suo scaling interno (mappa a tutto sfondo) → niente auto-fit del core
     render, mount, update, configure: openConfig
