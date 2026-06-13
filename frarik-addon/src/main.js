@@ -3863,6 +3863,8 @@ function buildCard(card){
     el.addEventListener('dragover',e=>{ if(dragSrc&&dragSrc!==card.id){ e.preventDefault(); el.classList.add('dov'); }});
     el.addEventListener('dragleave',()=>el.classList.remove('dov'));
     el.addEventListener('drop',e=>{ e.preventDefault(); el.classList.remove('dov'); swapC(dragSrc,card.id); });
+    if(card.cardW>0){ el.style.width=card.cardW+'px'; el.style.maxWidth=card.cardW+'px'; }
+    if(card.cardH>0){ el.style.height=card.cardH+'px'; el.style.overflow='hidden'; }
     setTimeout(()=>initResize(card.id),0);
     return el;
   }
@@ -10203,26 +10205,20 @@ connect();
 
   // Layout resize from js-custom cards (e.g. Meteo)
   document.addEventListener('frarik-card-layout', e=>{
-    const {cardId,colSpan,minHeight}=e.detail||{};
+    const {cardId,cardW,cardH}=e.detail||{};
     if(!cardId) return;
-    const pg=curPage();
-    const card=pg.cards.find(c=>c.id===cardId);
-    if(!card) return;
-    if(minHeight!=null) card.height=minHeight||150;
-    if(colSpan!=null){
-      const span=Math.max(1,Math.min(4,colSpan));
-      if(pg.sections){
-        const sec=pg.sections.find(s=>s.id===card.secId);
-        if(sec){ if(!sec.colWidths) sec.colWidths={}; sec.colWidths[card.secCol||0]=span; }
-        const colOuter=document.getElementById('card-'+cardId)?.closest('.dash-col-outer');
-        if(colOuter) colOuter.style.gridColumn=`span ${span}`;
-      } else {
-        card.colSpan=span;
-        const cardEl=document.getElementById('card-'+cardId);
-        if(cardEl) cardEl.style.gridColumn=`span ${span}`;
-      }
+    const pg=curPage(); if(!pg) return;
+    const card=pg.cards.find(c=>c.id===cardId); if(!card) return;
+    const cardEl=document.getElementById('card-'+cardId);
+    if(cardW!=null){
+      card.cardW=cardW;
+      if(cardEl){ cardEl.style.width=cardW>0?cardW+'px':''; cardEl.style.maxWidth=cardW>0?cardW+'px':''; }
     }
-    saveData();
+    if(cardH!=null){
+      card.cardH=cardH;
+      if(cardEl){ cardEl.style.height=cardH>0?cardH+'px':''; cardEl.style.overflow=cardH>0?'hidden':''; }
+    }
+    saveCfg();
   });
 })();
 

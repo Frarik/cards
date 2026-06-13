@@ -1,4 +1,4 @@
-/* frarik-version: 1.22 */
+/* frarik-version: 1.23 */
 
 // ── Lookup tables ─────────────────────────────────────────────────────────────
 const _WI = {
@@ -313,14 +313,14 @@ class MeteoCard extends HTMLElement {
     super()
     this.attachShadow({mode:'open'})
     this._h   = null
-    this._c   = { entityId:'',cityName:'',humEntity:'',presEntity:'',windEntity:'',windDirEntity:'',wfDays:5,minHeight:0,colSpan:1 }
+    this._c   = { entityId:'',cityName:'',humEntity:'',presEntity:'',windEntity:'',windDirEntity:'',wfDays:5,cardH:0,cardW:0 }
     this._fc  = []
     this._fch = []
     this._fcs = null
     this._fo  = false
     this._so  = false
     this._se  = false
-    this._te  = ''; this._tc = ''; this._th = ''; this._tp = ''; this._tw = ''; this._twd = ''; this._tdays = 5; this._tminH = 0; this._tcols = 1
+    this._te  = ''; this._tc = ''; this._th = ''; this._tp = ''; this._tw = ''; this._twd = ''; this._tdays = 5; this._tCardH = 0; this._tCardW = 0
     this._fs  = null
     this._bk  = null
     this._nh  = true
@@ -347,8 +347,8 @@ class MeteoCard extends HTMLElement {
         humEntity:this._c.humEntity||'', presEntity:this._c.presEntity||'',
         windEntity:this._c.windEntity||'', windDirEntity:this._c.windDirEntity||'',
         wfDays:this._c.wfDays||5,
-        minHeight:this._c.minHeight||0,
-        colSpan:this._c.colSpan||1,
+        cardH:this._c.cardH||0,
+        cardW:this._c.cardW||0,
       }))
     }catch{}
   }
@@ -366,13 +366,13 @@ class MeteoCard extends HTMLElement {
       windEntity:   stored.windEntity   ||cfg.windEntity   ||'',
       windDirEntity:stored.windDirEntity||cfg.windDirEntity||'',
       wfDays:       stored.wfDays       ||cfg.wfDays       ||5,
-      minHeight:    stored.minHeight    ||cfg.minHeight    ||0,
-      colSpan:      stored.colSpan      ||cfg.colSpan      ||1,
+      cardH:        stored.cardH        ||cfg.cardH        ||0,
+      cardW:        stored.cardW        ||cfg.cardW        ||0,
     }
     this._te=this._c.entityId; this._tc=this._c.cityName
     this._th=this._c.humEntity; this._tp=this._c.presEntity
     this._tw=this._c.windEntity; this._twd=this._c.windDirEntity
-    this._tdays=this._c.wfDays; this._tminH=this._c.minHeight||0; this._tcols=this._c.colSpan||1
+    this._tdays=this._c.wfDays; this._tCardH=this._c.cardH||0; this._tCardW=this._c.cardW||0
     if(prev!==this._c.entityId&&this._h) this._getForecast()
     this._bk=null; this._build()
   }
@@ -668,13 +668,13 @@ class MeteoCard extends HTMLElement {
                   humEntity:this._th,presEntity:this._tp,
                   windEntity:this._tw,windDirEntity:this._twd,
                   wfDays:Math.min(10,Math.max(1,parseInt(this._tdays)||5)),
-                  minHeight:parseInt(this._tminH)||0,
-                  colSpan:Math.min(4,Math.max(1,parseInt(this._tcols)||1)) }
+                  cardH:Math.max(0,parseInt(this._tCardH)||0),
+                  cardW:Math.max(0,parseInt(this._tCardW)||0) }
         this._saveStore()
         if(this._frarikCard?.id){
           this.dispatchEvent(new CustomEvent('frarik-card-layout',{
             bubbles:true,composed:true,
-            detail:{cardId:this._frarikCard.id,colSpan:this._c.colSpan,minHeight:this._c.minHeight}
+            detail:{cardId:this._frarikCard.id,cardW:this._c.cardW,cardH:this._c.cardH}
           }))
         }
         this._fc=[]; this._getForecast()
@@ -700,19 +700,19 @@ class MeteoCard extends HTMLElement {
     else if(f==='wind'){ this._tw=v; this._updateDropdown('wind'); this._schedPrev() }
     else if(f==='wdir'){ this._twd=v; this._updateDropdown('wdir'); this._schedPrev() }
     else if(f==='days'){ this._tdays=parseInt(v)||5; this._schedPrev() }
-    else if(f==='minh'){
-      this._tminH=parseInt(v)||0
-      const lbl=sr?.querySelector('#minh-lbl')
-      if(lbl) lbl.textContent=this._tminH>0?this._tminH+'px':'Auto'
+    else if(f==='cardh'){
+      this._tCardH=Math.max(0,parseInt(v)||0)
+      const lbl=sr?.querySelector('#cardh-lbl')
+      if(lbl) lbl.textContent=this._tCardH>0?this._tCardH+'px':'Auto'
       this._schedPrev()
-      if(this._frarikCard?.id) this.dispatchEvent(new CustomEvent('frarik-card-layout',{bubbles:true,composed:true,detail:{cardId:this._frarikCard.id,minHeight:this._tminH,colSpan:null}}))
+      if(this._frarikCard?.id) this.dispatchEvent(new CustomEvent('frarik-card-layout',{bubbles:true,composed:true,detail:{cardId:this._frarikCard.id,cardH:this._tCardH}}))
     }
-    else if(f==='cols'){
-      this._tcols=Math.max(1,Math.min(4,parseInt(v)||1))
-      const lbl=sr?.querySelector('#cols-lbl')
-      if(lbl) lbl.textContent=this._tcols+' col.'
+    else if(f==='cardw'){
+      this._tCardW=Math.max(0,parseInt(v)||0)
+      const lbl=sr?.querySelector('#cardw-lbl')
+      if(lbl) lbl.textContent=this._tCardW>0?this._tCardW+'px':'Auto'
       this._schedPrev()
-      if(this._frarikCard?.id) this.dispatchEvent(new CustomEvent('frarik-card-layout',{bubbles:true,composed:true,detail:{cardId:this._frarikCard.id,colSpan:this._tcols,minHeight:null}}))
+      if(this._frarikCard?.id) this.dispatchEvent(new CustomEvent('frarik-card-layout',{bubbles:true,composed:true,detail:{cardId:this._frarikCard.id,cardW:this._tCardW}}))
     }
   }
 
@@ -735,9 +735,16 @@ class MeteoCard extends HTMLElement {
         windEntity:this._tw,
         windDirEntity:this._twd,
         wfDays:parseInt(this._tdays)||5,
-        minHeight:parseInt(this._tminH)||0,
+        cardH:0, cardW:0,
       })
       if(this._h) pc.hass=this._h
+      // Apply live size to preview element itself
+      const w=this._tCardW||0, h=this._tCardH||0
+      pc.style.display='block'
+      pc.style.width=w>0?w+'px':''
+      pc.style.maxWidth=w>0?w+'px':'100%'
+      pc.style.height=h>0?h+'px':''
+      pc.style.overflow=h>0?'hidden':''
     }catch(err){}
   }
 
@@ -779,7 +786,7 @@ class MeteoCard extends HTMLElement {
     this._te=this._c.entityId; this._tc=this._c.cityName
     this._th=this._c.humEntity; this._tp=this._c.presEntity
     this._tw=this._c.windEntity; this._twd=this._c.windDirEntity
-    this._tdays=this._c.wfDays||5; this._tminH=this._c.minHeight||0; this._tcols=this._c.colSpan||1
+    this._tdays=this._c.wfDays||5; this._tCardH=this._c.cardH||0; this._tCardW=this._c.cardW||0
     this._renderModal(); this._bk=null; this._build()
   }
 
@@ -892,9 +899,8 @@ class MeteoCard extends HTMLElement {
       fcH=`<div style="grid-column:span ${_nDays};text-align:center;padding:14px;color:rgba(255,255,255,.25);font-size:11px;">Previsioni in caricamento…</div>`
     }
 
-    const _mhS=this._c.minHeight>0?`min-height:${this._c.minHeight}px;`:''
     this.shadowRoot.innerHTML=`<style>${_CSS}</style>
-<div class="card" style="border:1px solid ${border};${_mhS}">
+<div class="card" style="border:1px solid ${border};">
   ${this._skyHTML(st)}
   <div class="body">
     <div class="hdr">
@@ -947,8 +953,8 @@ class MeteoCard extends HTMLElement {
     const ent=this._h?.states?.[eid]
     const enm=ent?.attributes?.friendly_name||eid||'—'
     const wents=Object.keys(this._h?.states||{}).filter(k=>k.startsWith('weather.'))
-    const minhV=this._tminH||0
-    const colsV=this._tcols||1
+    const cardHV=this._tCardH||0
+    const cardWV=this._tCardW||0
     return `
 <div class="sov open">
   <div class="sov-modal">
@@ -1024,17 +1030,17 @@ class MeteoCard extends HTMLElement {
 
           <div class="layout-row">
             <span class="layout-lbl">Altezza</span>
-            <input type="range" class="lslider" data-f="minh" min="0" max="700" step="10" value="${minhV}">
-            <span class="layout-val" id="minh-lbl">${minhV>0?minhV+'px':'Auto'}</span>
+            <input type="range" class="lslider" data-f="cardh" min="0" max="700" step="10" value="${cardHV}">
+            <span class="layout-val" id="cardh-lbl">${cardHV>0?cardHV+'px':'Auto'}</span>
           </div>
 
           <div class="layout-row">
             <span class="layout-lbl">Larghezza</span>
-            <input type="range" class="lslider" data-f="cols" min="1" max="4" step="1" value="${colsV}">
-            <span class="layout-val" id="cols-lbl">${colsV} col.</span>
+            <input type="range" class="lslider" data-f="cardw" min="0" max="800" step="10" value="${cardWV}">
+            <span class="layout-val" id="cardw-lbl">${cardWV>0?cardWV+'px':'Auto'}</span>
           </div>
-          <div class="ht" style="margin-top:6px;">Trascina gli slider — la card si aggiorna in tempo reale</div>
-          <div class="ht">La larghezza agisce sull'intera colonna del layout</div>
+          <div class="ht" style="margin-top:6px;">Trascina gli slider — la card si ridimensiona in tempo reale</div>
+          <div class="ht">0 = dimensione automatica (occupa tutta la colonna)</div>
         </div>
       </div>
 

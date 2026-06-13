@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.4.25 — 2026-06-13
+
+### fix(Meteo): slider dimensioni in pixel liberi + fix ReferenceError saveData
+
+**Fix critico main.js:**
+- `saveData` non esiste → corretto in `saveCfg()` nel listener `frarik-card-layout`. Risolve decine di errori JS nel Centro Notifiche.
+
+**Slider width/height ora in pixel liberi (niente colonne):**
+- Rimosso concetto di `colSpan` (numero colonne) dallo slider.
+- Slider Larghezza: 0–800px, step 10. 0 = Auto (occupa tutta la colonna).
+- Slider Altezza: 0–700px, step 10. 0 = Auto (altezza naturale contenuto).
+- La card nel dashboard si ridimensiona in tempo reale durante il drag (event `frarik-card-layout` con `cardW`/`cardH`).
+- La preview nell'anteprima mostra le dimensioni corrette.
+- main.js `buildCard`: applica `card.cardW`/`card.cardH` al reload pagina (restore persistente).
+- MeteoCard: rename `_c.colSpan→cardW`, `_c.minHeight→cardH`, rimosso min-height interno da `_renderCard`.
+- Meteo.js frarik-version 1.22→1.23, config 1.4.24→1.4.25
+
 ## 1.4.24 — 2026-06-13
 
 ### feat(Meteo): modal settings 2 colonne, slider layout live, anteprima card in tempo reale
