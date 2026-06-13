@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.4.37 — 2026-06-14
+
+### feat(Meteo): Stazione Meteo — animazioni realistiche + tab layer Windy
+
+**Meteo.js 1.30→1.31:**
+- Mappa Windy con 10 tab layer (Radar, Satellite, Vento, Temp, Umidità, Press., Nuvole, Pioggia, Neve, Raffiche)
+- Pulsante "↗ Apri Windy" per aprire la mappa fullscreen nel browser
+- Altezza mappa aumentata a 430px
+- Anemometro SVG realistico con 3 coppe che girano a velocità proporzionale al vento
+  + freccia direzione vento in tempo reale (dati da entità sWindSpeed/sWindDir)
+- Manometro SVG con ago che indica pressione reale (arco 300°, zone colore bassa/normale/alta)
+- Termometro con mercurio al livello della temperatura reale + colore dinamico
+- Pioggia con densità/velocità gocce proporzionali all'intensità (sRainRate)
+- Umidità con numero di bolle proporzionale al valore %
+- Sole con raggi proporzionali all'irraggiamento + UV index con colore di rischio
+- Tutti i testi del popup (etichette sensori, grafico storico) a bianco 100%
+
 ## 1.4.36 — 2026-06-14
 
 ### feat(Meteo): Stazione Meteo — popup completo con mappa Windy e sensori

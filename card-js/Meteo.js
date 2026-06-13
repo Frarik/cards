@@ -1,4 +1,4 @@
-/* frarik-version: 1.30 */
+/* frarik-version: 1.31 */
 
 // ── Lookup tables ─────────────────────────────────────────────────────────────
 const _WI = {
@@ -558,7 +558,7 @@ class MeteoCard extends HTMLElement {
     this._histModalHost.attachShadow({mode:'open'})
     this._histModalHost.shadowRoot.addEventListener('click',this._click)
     document.body.appendChild(this._histModalHost)
-    const histCSS=`.hov{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);font-family:var(--primary-font-family,system-ui,sans-serif);}.hov-modal{width:100%;max-height:72vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(251,191,36,.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:slideUp .22s cubic-bezier(.32,1.12,.56,1);}@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}.hw{flex:1;overflow-y:auto;padding:16px 20px 24px;scrollbar-width:none;-ms-overflow-style:none;}.hw::-webkit-scrollbar{display:none;}.hs-row{display:flex;gap:0;justify-content:space-around;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.07);}.hs-item{text-align:center;}.hs-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);}.hs-val{font-size:20px;font-weight:800;color:#fff;margin-top:3px;}.hs-unit{font-size:11px;font-weight:400;color:rgba(255,255,255,.6);margin-left:2px;}.hload{padding:40px;text-align:center;color:rgba(255,255,255,.5);font-size:12px;}`
+    const histCSS=`.hov{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);font-family:var(--primary-font-family,system-ui,sans-serif);}.hov-modal{width:100%;max-height:72vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(251,191,36,.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:slideUp .22s cubic-bezier(.32,1.12,.56,1);}@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}.hw{flex:1;overflow-y:auto;padding:16px 20px 24px;scrollbar-width:none;-ms-overflow-style:none;}.hw::-webkit-scrollbar{display:none;}.hs-row{display:flex;gap:0;justify-content:space-around;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.07);}.hs-item{text-align:center;}.hs-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#fff;opacity:.65;}.hs-val{font-size:20px;font-weight:800;color:#fff;margin-top:3px;}.hs-unit{font-size:11px;font-weight:400;color:#fff;margin-left:2px;}.hload{padding:40px;text-align:center;color:rgba(255,255,255,.5);font-size:12px;}`
     this._histModalHost.shadowRoot.innerHTML=`<style>${_CSS}${histCSS}</style>
 <div class="hov"><div class="hov-modal">
   <div class="shdr" style="border-radius:20px 20px 0 0;">
@@ -869,6 +869,15 @@ class MeteoCard extends HTMLElement {
       case 'ststat':{
         const el2=e.target.closest('[data-a="ststat"]')
         if(el2) this._openHistPopup(el2.dataset.eid||'',el2.dataset.attr||'',el2.dataset.lbl||'Dato')
+        break
+      }
+      case 'windylayer':{
+        const btn2=e.target.closest('[data-a="windylayer"]'); if(!btn2) break
+        const layer=btn2.dataset.layer
+        const sr2=this._stationModalHost?.shadowRoot; if(!sr2) break
+        const ifr=sr2.querySelector('#stov-windy-frame')
+        if(ifr){ try{ const u=new URL(ifr.src); u.searchParams.set('overlay',layer); ifr.src=u.toString() }catch(_){} }
+        sr2.querySelectorAll('[data-a="windylayer"]').forEach(b=>b.classList.toggle('wba',b.dataset.layer===layer))
         break
       }
       case 'sttoggle':
@@ -1360,45 +1369,61 @@ class MeteoCard extends HTMLElement {
 
   _stationCSS(){
     return `
-.stov{position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);display:flex;flex-direction:column;font-family:var(--primary-font-family,system-ui,sans-serif);overflow:hidden;}
+.stov{position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.9);backdrop-filter:blur(12px);display:flex;flex-direction:column;font-family:var(--primary-font-family,system-ui,sans-serif);overflow:hidden;}
 .stov-modal{width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden;}
 .stov-scroll{flex:1;overflow-y:auto;padding:16px;scrollbar-width:none;-ms-overflow-style:none;}
 .stov-scroll::-webkit-scrollbar{display:none;}
-.stov-map{width:100%;height:300px;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.1);margin-bottom:20px;background:#0a0816;}
+.stov-map-wrap{width:100%;margin-bottom:18px;}
+.windy-bar{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;align-items:center;}
+.windy-btn{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#fff;border-radius:20px;padding:4px 11px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;flex-shrink:0;outline:none;}
+.windy-btn:hover{background:rgba(255,255,255,.13);}
+.windy-btn.wba{background:rgba(56,189,248,.18);border-color:rgba(56,189,248,.5);color:#38bdf8;}
+.windy-expand{margin-left:auto;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);color:#fbbf24;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:4px;flex-shrink:0;white-space:nowrap;}
+.windy-expand:hover{background:rgba(251,191,36,.2);}
+.stov-map{width:100%;height:430px;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.1);background:#0a0816;}
 .stov-map iframe{width:100%;height:100%;border:none;}
 .stov-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
 @media(max-width:700px){.stov-grid{grid-template-columns:1fr;}}
 .scat{border-radius:16px;padding:0;overflow:hidden;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;}
-.scat-anim{position:relative;height:90px;overflow:hidden;display:flex;align-items:center;justify-content:center;}
-.scat-icon{font-size:42px;position:relative;z-index:1;filter:drop-shadow(0 0 12px currentColor);}
+.scat-anim{position:relative;height:130px;overflow:hidden;display:flex;align-items:center;justify-content:center;}
 .scat-body{padding:12px 14px 16px;flex:1;}
 .scat-title{font-size:13px;font-weight:800;color:#fff;margin-bottom:10px;letter-spacing:.04em;}
 .ssel{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-radius:8px;cursor:pointer;transition:background .12s;margin-bottom:3px;}
-.ssel:hover{background:rgba(255,255,255,.06);}
-.ssel-lbl{font-size:10px;color:rgba(255,255,255,.55);font-weight:500;flex:1;}
+.ssel:hover{background:rgba(255,255,255,.07);}
+.ssel-lbl{font-size:10px;color:#fff;font-weight:500;flex:1;opacity:.72;}
 .ssel-val{font-size:13px;font-weight:700;color:#fff;text-align:right;}
-.ssel-empty{font-size:10px;color:rgba(255,255,255,.2);font-style:italic;}
-@keyframes stRainFall{0%{transform:translateY(-20px);opacity:0}20%{opacity:.7}80%{opacity:.7}100%{transform:translateY(80px);opacity:0}}
-.st-rdrop{position:absolute;width:1.5px;border-radius:2px;background:linear-gradient(to bottom,transparent,#38bdf8);animation:stRainFall linear infinite;}
-@keyframes stWindSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-.st-wind-spin{animation:stWindSpin 6s linear infinite;transform-origin:center;}
+@keyframes stRainFall{0%{transform:translateY(-20px);opacity:0}15%{opacity:.85}80%{opacity:.8}100%{transform:translateY(100px);opacity:0}}
+.st-rdrop{position:absolute;border-radius:2px;background:linear-gradient(to bottom,transparent,#38bdf8);animation:stRainFall linear infinite;}
+@keyframes stAnemSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 @keyframes stSunRays{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-.st-sun-rays{animation:stSunRays 10s linear infinite;transform-origin:center;}
-@keyframes stBubble{0%{transform:translateY(50px);opacity:0}20%{opacity:.5}80%{opacity:.5}100%{transform:translateY(-10px);opacity:0}}
-.st-bubble{position:absolute;border-radius:50%;background:rgba(52,211,153,.25);animation:stBubble ease-in infinite;}
+.st-sun-rays{animation:stSunRays 8s linear infinite;transform-origin:40px 40px;}
+@keyframes stBubble{0%{transform:translateY(70px);opacity:0}15%{opacity:.5}80%{opacity:.45}100%{transform:translateY(-20px);opacity:0}}
+.st-bubble{position:absolute;border-radius:50%;animation:stBubble ease-in infinite;}
 @keyframes stIceSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-.st-ice{animation:stIceSpin 8s linear infinite;display:block;}
-@keyframes stAlert{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.15)}}
-.st-alert{animation:stAlert 1.2s ease-in-out infinite;display:block;}
-@keyframes stPressSweep{from{stroke-dashoffset:220}to{stroke-dashoffset:var(--p-off,110)}}
-.st-gauge-arc{animation:stPressSweep 1.2s .2s cubic-bezier(.4,0,.2,1) forwards;}
+.st-ice{animation:stIceSpin 12s linear infinite;display:block;}
+@keyframes stAlert{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.25;transform:scale(1.25)}}
+.st-alert{animation:stAlert .9s ease-in-out infinite;display:block;}
 `
   }
 
   _stationHTML(){
     const c=this._c
     const lat=c.stationLat||'45.0', lon=c.stationLon||'10.0'
-    const windyUrl=`https://embed.windy.com/embed2.html?lat=${lat}&lon=${lon}&detailLat=${lat}&detailLon=${lon}&zoom=8&level=surface&overlay=radar&product=ecmwf&menu=&message=true&marker=true&calendar=now&type=map&location=coordinates&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1`
+    const windyUrl=`https://embed.windy.com/embed2.html?lat=${lat}&lon=${lon}&detailLat=${lat}&detailLon=${lon}&zoom=9&level=surface&overlay=radar&product=ecmwf&menu=&message=true&marker=true&calendar=now&type=map&location=coordinates&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1`
+    const windyOpen=`https://www.windy.com/?radar,${lat},${lon},9`
+    const layers=[
+      {l:'radar',n:'📡 Radar'},
+      {l:'satellite',n:'🛰️ Satellite'},
+      {l:'wind',n:'💨 Vento'},
+      {l:'temp',n:'🌡️ Temp'},
+      {l:'rh',n:'💧 Umidità'},
+      {l:'pressure',n:'📊 Press.'},
+      {l:'clouds',n:'☁️ Nuvole'},
+      {l:'rain',n:'🌧️ Pioggia'},
+      {l:'snowcover',n:'❄️ Neve'},
+      {l:'gustAccu',n:'🌀 Raffiche'},
+    ]
+    const layerBtns=layers.map(({l,n})=>`<button class="windy-btn${l==='radar'?' wba':''}" data-a="windylayer" data-layer="${l}">${n}</button>`).join('')
     const sv=eid=>{
       if(!eid) return null
       const st=this._h?.states?.[eid]; if(!st) return null
@@ -1415,7 +1440,7 @@ class MeteoCard extends HTMLElement {
       const tiles=cat.sensors.map(s=>tile(c[s.f],s.lbl,cat.color)).filter(Boolean).join('')
       if(!tiles) return ''
       return `<div class="scat">
-        <div class="scat-anim" style="background:linear-gradient(135deg,${cat.color}18,transparent);">
+        <div class="scat-anim" style="background:linear-gradient(160deg,${cat.color}14,transparent 70%);">
           ${this._catAnimHTML(cat)}
         </div>
         <div class="scat-body">
@@ -1428,16 +1453,16 @@ class MeteoCard extends HTMLElement {
       const eid=c[sp.f]; if(!eid) return ''
       const st=this._h?.states?.[eid]
       const val=st?st.state:null
-      const isActive=val&&val!=='unknown'&&val!=='unavailable'&&val!=='0'&&val.toLowerCase()!=='none'&&val.toLowerCase()!=='false'
+      const isOn=val&&val!=='unknown'&&val!=='unavailable'&&val!=='0'&&val.toLowerCase()!=='none'&&val.toLowerCase()!=='false'
       return `<div class="scat">
-        <div class="scat-anim" style="background:linear-gradient(135deg,${sp.color}18,transparent);">
-          <span class="${sp.f==='sGhiaccio'?'st-ice':'st-alert'}" style="font-size:48px;">${sp.icon}</span>
+        <div class="scat-anim" style="background:linear-gradient(160deg,${sp.color}14,transparent 70%);">
+          <span class="${sp.f==='sGhiaccio'?'st-ice':'st-alert'}" style="font-size:52px;">${sp.icon}</span>
         </div>
         <div class="scat-body">
           <div class="scat-title" style="color:${sp.color}">${sp.icon} ${sp.label}</div>
           <div class="ssel">
             <span class="ssel-lbl">Stato</span>
-            <span class="ssel-val" style="color:${isActive?sp.color:'rgba(255,255,255,.4)'}">${val||'--'}</span>
+            <span class="ssel-val" style="color:${isOn?sp.color:'#fff'}">${val||'--'}</span>
           </div>
         </div>
       </div>`
@@ -1454,8 +1479,14 @@ class MeteoCard extends HTMLElement {
       <button class="scls" data-a="closestov">${_IC.x}</button>
     </div>
     <div class="stov-scroll">
-      <div class="stov-map">
-        <iframe src="${windyUrl}" frameborder="0" allowfullscreen></iframe>
+      <div class="stov-map-wrap">
+        <div class="windy-bar">
+          ${layerBtns}
+          <a href="${windyOpen}" target="_blank" class="windy-expand">↗ Apri Windy</a>
+        </div>
+        <div class="stov-map">
+          <iframe id="stov-windy-frame" src="${windyUrl}" frameborder="0" allowfullscreen></iframe>
+        </div>
       </div>
       <div class="stov-grid">${allCards}</div>
     </div>
@@ -1463,54 +1494,176 @@ class MeteoCard extends HTMLElement {
 </div>`
   }
 
+  _windDirLabel(deg){
+    const dirs=['N','NE','E','SE','S','SO','O','NO']
+    return dirs[Math.round((((deg%360)+360)%360)/45)%8]
+  }
+
   _catAnimHTML(cat){
     switch(cat.key){
       case 'rain':{
-        const drops=Array.from({length:12},(_,i)=>`<div class="st-rdrop" style="left:${(i*8+4)}%;height:${8+((i*37+13)%100)/100*8|0}px;animation-duration:${0.7+i*0.08}s;animation-delay:${-(i*0.1)}s;"></div>`).join('')
-        return drops+`<span style="font-size:40px;position:relative;z-index:1;">🌧️</span>`
+        const rr=parseFloat(this._h?.states?.[this._c.sRainRate]?.state)||0
+        const n=rr>15?22:rr>5?15:rr>0?10:6
+        const spd=rr>15?0.35:rr>5?0.55:0.85
+        const drops=Array.from({length:n},(_,i)=>{
+          const left=((i*43+7)%88)+2
+          const h=9+((i*37+13)%100)/100*11
+          const w=rr>10?2:1.5
+          const dur=(spd*(0.45+((i*23+11)%100)/100*0.45)).toFixed(2)
+          const del=(-(i*0.065+((i*13)%10)/100)).toFixed(2)
+          return `<div class="st-rdrop" style="left:${left}%;height:${h.toFixed(0)}px;width:${w}px;animation-duration:${dur}s;animation-delay:${del}s;"></div>`
+        }).join('')
+        return `${drops}<div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:2px;pointer-events:none;">
+          <span style="font-size:34px;filter:drop-shadow(0 0 10px #38bdf8)">🌧️</span>
+          ${rr>0?`<span style="font-size:13px;font-weight:800;color:#38bdf8;">${rr.toFixed(1)} mm/h</span>`:''}
+        </div>`
       }
-      case 'wind':
-        return `<svg width="70" height="70" viewBox="0 0 70 70">
-          <circle cx="35" cy="35" r="30" fill="none" stroke="rgba(167,139,250,.2)" stroke-width="1"/>
-          <circle cx="35" cy="35" r="3" fill="#a78bfa"/>
-          <g class="st-wind-spin">
-            <line x1="35" y1="35" x2="35" y2="8" stroke="#a78bfa" stroke-width="2.5" stroke-linecap="round"/>
-            <polygon points="35,2 30,11 40,11" fill="#a78bfa"/>
+      case 'wind':{
+        const ws=parseFloat(this._h?.states?.[this._c.sWindSpeed]?.state)||0
+        const wd=parseFloat(this._h?.states?.[this._c.sWindDir]?.state)||0
+        const dur=ws>0?Math.max(0.12,4.5/ws).toFixed(2):'99'
+        const lbl=ws>0?`${ws.toFixed(1)} km/h`:'Calma'
+        const dlbl=this._windDirLabel(wd)
+        return `<svg viewBox="0 0 110 130" width="95" height="112" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="55" cy="65" r="50" fill="rgba(167,139,250,.03)" stroke="rgba(167,139,250,.1)" stroke-width="1"/>
+          <circle cx="55" cy="65" r="42" fill="none" stroke="rgba(167,139,250,.05)" stroke-width="1" stroke-dasharray="5 7"/>
+          <text x="55" y="13" text-anchor="middle" fill="#a78bfa" font-size="10" font-family="system-ui" font-weight="800">N</text>
+          <text x="55" y="122" text-anchor="middle" fill="rgba(167,139,250,.35)" font-size="9" font-family="system-ui">S</text>
+          <text x="106" y="69" text-anchor="middle" fill="rgba(167,139,250,.35)" font-size="9" font-family="system-ui">E</text>
+          <text x="4" y="69" text-anchor="middle" fill="rgba(167,139,250,.35)" font-size="9" font-family="system-ui">O</text>
+          <rect x="52.5" y="38" width="5" height="30" rx="2.5" fill="#555"/>
+          <rect x="52.5" y="68" width="5" height="36" rx="2.5" fill="#555"/>
+          <rect x="43" y="100" width="24" height="8" rx="4" fill="#444" stroke="#555" stroke-width="1"/>
+          <ellipse cx="55" cy="108" rx="16" ry="4.5" fill="#333" stroke="#444" stroke-width="1"/>
+          <g style="transform-origin:55px 65px;transform:rotate(${wd}deg)">
+            <line x1="55" y1="24" x2="55" y2="64" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" opacity=".75"/>
+            <polygon points="55,16 49,28 61,28" fill="#a78bfa" opacity=".95"/>
+            <polygon points="55,94 50,84 60,84" fill="rgba(167,139,250,.22)"/>
           </g>
-          <text x="35" y="56" text-anchor="middle" fill="rgba(167,139,250,.5)" font-size="8" font-family="system-ui">N</text>
-          <text x="35" y="19" text-anchor="middle" fill="rgba(167,139,250,.5)" font-size="8" font-family="system-ui">S</text>
-          <text x="57" y="38" text-anchor="middle" fill="rgba(167,139,250,.5)" font-size="8" font-family="system-ui">E</text>
-          <text x="13" y="38" text-anchor="middle" fill="rgba(167,139,250,.5)" font-size="8" font-family="system-ui">O</text>
+          <circle cx="55" cy="65" r="7.5" fill="#2a2a2a" stroke="#666" stroke-width="1.5"/>
+          <circle cx="55" cy="65" r="3.5" fill="#111"/>
+          <circle cx="55" cy="65" r="1.5" fill="#999"/>
+          <g style="transform-origin:55px 38px;animation:stAnemSpin ${dur}s linear infinite">
+            <line x1="55" y1="38" x2="55" y2="18" stroke="#777" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="55" cy="11" r="8" fill="#2a2a2a" stroke="#aaa" stroke-width="1.5"/>
+            <circle cx="53" cy="9" r="3" fill="rgba(255,255,255,.22)"/>
+            <line x1="55" y1="38" x2="72" y2="48" stroke="#777" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="76" cy="51" r="8" fill="#2a2a2a" stroke="#aaa" stroke-width="1.5"/>
+            <circle cx="74" cy="49" r="3" fill="rgba(255,255,255,.22)"/>
+            <line x1="55" y1="38" x2="38" y2="48" stroke="#777" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="34" cy="51" r="8" fill="#2a2a2a" stroke="#aaa" stroke-width="1.5"/>
+            <circle cx="32" cy="49" r="3" fill="rgba(255,255,255,.22)"/>
+            <circle cx="55" cy="38" r="6" fill="#444" stroke="#777" stroke-width="1.5"/>
+            <circle cx="55" cy="38" r="3" fill="#222"/>
+            <circle cx="55" cy="38" r="1.5" fill="#888"/>
+          </g>
+          <text x="55" y="127" text-anchor="middle" fill="#fff" font-size="9.5" font-weight="700" font-family="system-ui">${lbl} · ${dlbl}</text>
         </svg>`
-      case 'temp':
-        return `<svg width="50" height="80" viewBox="0 0 50 80">
-          <rect x="21" y="5" width="8" height="48" rx="4" fill="rgba(249,115,22,.12)" stroke="rgba(249,115,22,.3)" stroke-width="1"/>
-          <rect x="22" y="30" width="6" height="22" rx="3" fill="#f97316" style="animation:stPressSweep 2s ease-out forwards;"/>
-          <circle cx="25" cy="58" r="9" fill="#f97316" style="filter:drop-shadow(0 0 6px #f97316);"/>
+      }
+      case 'temp':{
+        const tv=parseFloat(this._h?.states?.[this._c.sOutdoorTemp]?.state)
+        const ok=!isNaN(tv)
+        const t=ok?tv:20
+        const minT=-10,maxT=45,tubeH=50
+        const norm=Math.max(0,Math.min(1,(t-minT)/(maxT-minT)))
+        const fh=Math.round(norm*tubeH)
+        const fy=12+(tubeH-fh)
+        const col=t<0?'#38bdf8':t<10?'#7dd3fc':t<20?'#4ade80':t<30?'#f97316':'#ef4444'
+        const ticks=[-10,0,10,20,30,40]
+        return `<svg viewBox="0 0 60 120" width="52" height="104" xmlns="http://www.w3.org/2000/svg">
+          ${ticks.map(v=>{const n2=(v-minT)/(maxT-minT);const y=12+(1-n2)*tubeH;return `<line x1="24" y1="${y.toFixed(1)}" x2="28" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,.3)" stroke-width="1"/>
+<text x="22" y="${(y+3).toFixed(1)}" text-anchor="end" fill="rgba(255,255,255,.45)" font-size="6.5" font-family="system-ui">${v}°</text>`}).join('')}
+          <rect x="26" y="10" width="11" height="${tubeH+8}" rx="5.5" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.2)" stroke-width="1.5"/>
+          ${ok?`<rect x="28.5" y="${fy}" width="6" height="${fh+8}" rx="3" fill="${col}" style="filter:drop-shadow(0 0 4px ${col})"/>`:``}
+          <circle cx="31.5" cy="${12+tubeH+11}" r="12.5" fill="${ok?col:'#333'}" stroke="${ok?col:'#444'}" stroke-width="1.5" style="${ok?`filter:drop-shadow(0 0 10px ${col})`:''}"/>
+          ${ok?`<circle cx="28.5" cy="${12+tubeH+8}" r="4.5" fill="rgba(255,255,255,.22)"/>`:``}
+          <text x="31.5" y="113" text-anchor="middle" fill="#fff" font-size="11" font-weight="800" font-family="system-ui">${ok?`${t.toFixed(1)}°`:'--'}</text>
         </svg>`
+      }
       case 'pressure':{
-        const off=110
-        return `<svg width="80" height="60" viewBox="0 0 80 60">
-          <path d="M10 55 A30 30 0 0 1 70 55" fill="none" stroke="rgba(251,191,36,.15)" stroke-width="6" stroke-linecap="round"/>
-          <path d="M10 55 A30 30 0 0 1 70 55" class="st-gauge-arc" style="--p-off:${off}" fill="none" stroke="#fbbf24" stroke-width="6" stroke-linecap="round" stroke-dasharray="220" stroke-dashoffset="220"/>
-          <circle cx="40" cy="55" r="4" fill="#fbbf24"/>
+        const pv=parseFloat(this._h?.states?.[this._c.sRelPres]?.state)
+        const ok=!isNaN(pv)
+        const p=ok?pv:1013
+        const minP=950,maxP=1050
+        const norm=Math.max(0,Math.min(1,(p-minP)/(maxP-minP)))
+        const C=289.03,arc300=240.86
+        const active=norm*arc300
+        const na=(210+norm*300)*Math.PI/180
+        const nx=(60+40*Math.sin(na)).toFixed(1)
+        const ny=(72-40*Math.cos(na)).toFixed(1)
+        const col=p<990?'#38bdf8':p<1020?'#4ade80':'#f97316'
+        const tmarks=[950,975,1000,1013,1025,1050]
+        const tickSvg=tmarks.map(pmark=>{
+          const n2=(pmark-minP)/(maxP-minP)
+          const a=(210+n2*300)*Math.PI/180
+          const r1=46,r2=39
+          const ox=(60+r1*Math.sin(a)).toFixed(1),oy=(72-r1*Math.cos(a)).toFixed(1)
+          const ix=(60+r2*Math.sin(a)).toFixed(1),iy=(72-r2*Math.cos(a)).toFixed(1)
+          const maj=[950,1013,1050].includes(pmark)
+          return `<line x1="${ox}" y1="${oy}" x2="${ix}" y2="${iy}" stroke="${maj?'rgba(255,255,255,.55)':'rgba(255,255,255,.2)'}" stroke-width="${maj?1.5:1}" stroke-linecap="round"/>`
+        }).join('')
+        const lblSvg=[[950,'LOW'],[1013,'Norm'],[1050,'HIGH']].map(([pmark,lv])=>{
+          const n2=(pmark-minP)/(maxP-minP)
+          const a=(210+n2*300)*Math.PI/180
+          const lx=(60+28*Math.sin(a)).toFixed(1),ly=(72-28*Math.cos(a)+3).toFixed(1)
+          return `<text x="${lx}" y="${ly}" text-anchor="middle" fill="rgba(255,255,255,.35)" font-size="5.5" font-family="system-ui">${lv}</text>`
+        }).join('')
+        return `<svg viewBox="0 0 120 90" width="120" height="90" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="60" cy="72" r="46" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="9"
+            stroke-dasharray="${arc300} ${C-arc300}" stroke-linecap="round" transform="rotate(120 60 72)"/>
+          ${ok?`<circle cx="60" cy="72" r="46" fill="none" stroke="${col}" stroke-width="9"
+            stroke-dasharray="${active} ${C-active}" stroke-linecap="round"
+            transform="rotate(120 60 72)" opacity=".7"/>`:''}
+          ${tickSvg}${lblSvg}
+          <line x1="60" y1="72" x2="${nx}" y2="${ny}" stroke="${ok?'#fbbf24':'rgba(255,255,255,.2)'}" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="60" cy="72" r="6.5" fill="#1a1a2e" stroke="#555" stroke-width="1.5"/>
+          <circle cx="60" cy="72" r="3" fill="${ok?'#fbbf24':'#444'}"/>
+          <text x="60" y="60" text-anchor="middle" fill="#fff" font-size="12" font-weight="800" font-family="system-ui">${ok?`${p.toFixed(0)}`:'--'}</text>
+          <text x="60" y="70" text-anchor="middle" fill="rgba(255,255,255,.5)" font-size="7" font-family="system-ui">hPa</text>
         </svg>`
       }
       case 'humidity':{
-        const bubbles=Array.from({length:6},(_,i)=>`<div class="st-bubble" style="width:${10+i*4}px;height:${10+i*4}px;left:${10+i*14}%;animation-duration:${1.5+i*0.3}s;animation-delay:${-(i*0.4)}s;"></div>`).join('')
-        return bubbles+`<span style="font-size:40px;position:relative;z-index:1;">💧</span>`
+        const hv=parseFloat(this._h?.states?.[this._c.sHumidity]?.state)
+        const ok=!isNaN(hv)
+        const hum=ok?hv:50
+        const bcnt=Math.max(3,Math.round(hum/100*9)+2)
+        const bubbles=Array.from({length:bcnt},(_,i)=>{
+          const size=8+((i*19+11)%100)/100*22
+          const left=((i*41+9)%80)+5
+          const bc=hum>70?'#34d399':hum>40?'#6ee7b7':'#a7f3d0'
+          const dur=(1.0+((i*29+7)%100)/100*1.8).toFixed(2)
+          const del=(-(i*0.28)).toFixed(2)
+          const op=(0.1+((i*17+9)%100)/100*0.18).toFixed(2)
+          return `<div class="st-bubble" style="width:${size}px;height:${size}px;left:${left}%;background:${bc};opacity:${op};animation-duration:${dur}s;animation-delay:${del}s;"></div>`
+        }).join('')
+        return `${bubbles}<div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:3px;pointer-events:none;">
+          <span style="font-size:34px;filter:drop-shadow(0 0 10px #34d399)">💧</span>
+          <span style="font-size:15px;font-weight:800;color:#34d399;">${ok?`${hum.toFixed(0)}%`:'--'}</span>
+        </div>`
       }
-      case 'solar':
-        return `<svg width="70" height="70" viewBox="0 0 70 70">
-          <g class="st-sun-rays">
-            ${[0,45,90,135,180,225,270,315].map(a=>{
-              const r=a*Math.PI/180
-              return `<line x1="${(35+Math.cos(r)*16).toFixed(1)}" y1="${(35+Math.sin(r)*16).toFixed(1)}" x2="${(35+Math.cos(r)*26).toFixed(1)}" y2="${(35+Math.sin(r)*26).toFixed(1)}" stroke="#fb923c" stroke-width="2.5" stroke-linecap="round"/>`
-            }).join('')}
-          </g>
-          <circle cx="35" cy="35" r="12" fill="#fb923c" style="filter:drop-shadow(0 0 8px #fb923c);"/>
+      case 'solar':{
+        const uv=parseFloat(this._h?.states?.[this._c.sUvIndex]?.state)
+        const sr=parseFloat(this._h?.states?.[this._c.sSolarRad]?.state)||0
+        const ok=!isNaN(uv)
+        const inten=Math.min(1,sr/900)
+        const iR=13
+        const uvCol=!ok||uv<3?'#4ade80':uv<6?'#fbbf24':uv<8?'#f97316':'#ef4444'
+        const rays=Array.from({length:12},(_,i)=>{
+          const a=(i*30)*Math.PI/180
+          const r1=iR+4,r2=iR+4+(i%2?5:8)+inten*10
+          return `<line x1="${(40+r1*Math.cos(a)).toFixed(1)}" y1="${(40+r1*Math.sin(a)).toFixed(1)}" x2="${(40+r2*Math.cos(a)).toFixed(1)}" y2="${(40+r2*Math.sin(a)).toFixed(1)}" stroke="#fbbf24" stroke-width="${i%2?1.5:2.2}" stroke-linecap="round" opacity="${(0.35+inten*0.65).toFixed(2)}"/>`
+        }).join('')
+        return `<svg viewBox="0 0 80 95" width="80" height="95" xmlns="http://www.w3.org/2000/svg">
+          <defs><radialGradient id="sgr${cat.key}" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fffbeb"/><stop offset="45%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#f97316"/></radialGradient></defs>
+          <circle cx="40" cy="40" r="${iR+18+inten*12}" fill="none" stroke="rgba(251,191,36,.05)" stroke-width="${5+inten*9}"/>
+          <g class="st-sun-rays">${rays}</g>
+          <circle cx="40" cy="40" r="${iR}" fill="url(#sgr${cat.key})" style="filter:drop-shadow(0 0 ${(5+inten*14).toFixed(0)}px #fbbf24)"/>
+          <rect x="12" y="66" width="56" height="24" rx="9" fill="rgba(0,0,0,.35)"/>
+          <text x="40" y="75" text-anchor="middle" fill="rgba(255,255,255,.55)" font-size="7" font-family="system-ui">UV Index</text>
+          <text x="40" y="87" text-anchor="middle" fill="${uvCol}" font-size="13" font-weight="800" font-family="system-ui">${ok?uv.toFixed(0):'--'}</text>
         </svg>`
-      default: return `<span class="scat-icon">${cat.icon}</span>`
+      }
+      default: return `<span style="font-size:44px;filter:drop-shadow(0 0 12px currentColor)">${cat.icon}</span>`
     }
   }
 }
