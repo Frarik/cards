@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.4.18 — 2026-06-13
+
+### feat(Meteo): cielo animato realistico — sole/luna, fasi lunari, meteo dinamico
+
+- **Sky layer**: sfondo animato a tutta card con gradiente che cambia in 9 segmenti dal pre-alba alla notte fonda, calcolato in base a alba/tramonto reali dall'entità HA.
+- **Sole**: SVG con raggi e corona radiale, si muove lungo un arco parabolico da E a O durante il giorno. Posizione aggiornata ogni 60s.
+- **Luna**: arco opposto durante la notte. Disegnata via SVG con l'algoritmo delle fasi lunari (M luna nuova + A luna piena, archi variabili per crescente/calante/gibbosa ecc). Fase calcolata da data di luna nuova di riferimento 2000-01-06.
+- **Stelle**: 58 stelle con posizioni deterministiche, animazione twinkling con opacità e timing variabili. Visibili solo di notte, nascoste quando c'è nuvola ≥75%.
+- **Copertura nuvolosità**: nuvole SVG realistiche (ellissi stratificate), opacity e numero basati su `cloud_coverage` dell'attributo HA, con fallback per ogni condizione.
+- **Pioggia**: drops diagonali animati via CSS (intensità normale/forte per `rainy`/`pouring`).
+- **Neve**: fiocchi con deriva orizzontale e rotazione.
+- **Fulmini**: 2 SVG polyline con flash asincroni animati via keyframes.
+- **Nebbia**: layer con `backdrop-filter:blur` semi-trasparente.
+- **Orizzonte**: glow radiale ambrato durante alba/tramonto, transizione morbida.
+- **Timer 60s**: `_updateSky()` aggiorna solo il gradiente, posizione celestiale e opacità stelle — niente re-render completo.
+- **Cache `_skyFx`**: effetti meteo (stelle, nuvole, pioggia, neve, fulmini) rigenerati solo quando cambia `condition + coverage`, non ogni minuto.
+- **Accento dinamico**: colore accent, tile stats e bordo card cambiano da azzurro (giorno) a viola (notte/condizioni notturne).
+- Meteo.js: frarik-version 1.15 → 1.16
+
 ## 1.4.17 — 2026-06-13
 
 ### feat(Meteo): autocomplete entità sensore nei 4 campi config
