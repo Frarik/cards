@@ -788,8 +788,8 @@
     +'</div>';
 
     const ov=document.createElement('div');
-    ov.style.cssText='position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(2,6,16,.78);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
-    ov.innerHTML='<div style="width:min(900px,96vw);max-height:92vh;display:flex;flex-direction:column;background:rgba(10,8,20,.98);border:1px solid rgba(139,92,246,.32);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.7);color:#fff;overflow:hidden">'
+    ov.style.cssText='position:fixed;inset:0;z-index:100000;display:flex;align-items:flex-end;background:rgba(0,0,0,.68);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
+    ov.innerHTML='<style>@keyframes clSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style><div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:rgba(10,8,20,.98);border:1px solid rgba(139,92,246,.32);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:clSlideUp .22s cubic-bezier(.32,1.12,.56,1)">'
       +'<div style="display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
         +'<div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);color:#fbbf24;flex-shrink:0">❄️</div>'
         +'<div><div style="font-size:14px;font-weight:800;color:#fff">Configura Climatizzatore</div><div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px">'+card.id+'</div></div>'

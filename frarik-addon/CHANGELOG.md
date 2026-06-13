@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.4.29 — 2026-06-13
+
+### feat(all cards): tutti i popup aprono dal basso verso l'alto a schermo intero
+
+Ogni popup di configurazione/impostazioni ora usa il pattern bottom sheet:
+- Overlay `align-items:flex-end` invece di centrato
+- Modal `width:100%`, `border-radius:20px 20px 0 0`, `border-bottom:none`
+- Animazione `slideUp .22s cubic-bezier(.32,1.12,.56,1)` su ogni popup
+- Scrollbar nascosta su tutti i contenitori scrollabili
+- Colori allineati allo standard: sfondo `#0a0816`, bordo `rgba(139,92,246,.32)`
+- Card aggiornate: Meteo 1.25→1.26, Clima 2.15 (già bump), Sistema 4.1→4.2,
+  Tapparella 4.4→4.5, Camera 1.6→1.7, DoorsWindows 1.1→1.2, person-card 1.7→1.8
+
 ## 1.4.28 — 2026-06-13
 
 ### feat(Clima): popup impostazioni 2 colonne + anteprima live + slider dimensioni + grafici 24h

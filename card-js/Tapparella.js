@@ -1,4 +1,4 @@
-/* frarik-version: 4.4 */
+/* frarik-version: 4.5 */
 (function () {
   'use strict';
 
@@ -474,7 +474,7 @@
     const states = (h && h.states) || {};
     const allEntities = Object.keys(states).sort();
     const ov = document.createElement('div');
-    ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(2,6,16,.74);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:flex-end;background:rgba(0,0,0,.68);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
     const stInp = 'width:100%;padding:11px;border-radius:11px;background:#0f1830;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:13px;box-sizing:border-box;outline:none';
     const stDrop = 'position:absolute;left:0;right:0;top:100%;z-index:10;max-height:180px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 11px 11px;display:none';
     const typeBtns = COVER_TYPES.map(t =>
@@ -486,7 +486,7 @@
         <span style="font-size:20px">${t.icon}</span>${t.label}
       </button>`
     ).join('');
-    ov.innerHTML = `<div style="width:min(460px,95vw);background:#0b1220;border:1px solid rgba(255,255,255,.14);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.6);padding:20px;color:#f1f5f9;max-height:90vh;overflow-y:auto">
+    ov.innerHTML = `<style>@keyframes tpSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style><div style="width:100%;background:#0a0816;border:1px solid rgba(139,92,246,.32);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);padding:20px;color:#fff;max-height:92vh;overflow-y:auto;animation:tpSlideUp .22s cubic-bezier(.32,1.12,.56,1);scrollbar-width:none">
       <div style="font-size:16px;font-weight:800;margin-bottom:14px">⚙️ Configura copertura</div>
       <div style="font-size:11px;color:#94a3b8;margin-bottom:7px">Tipo di copertura</div>
       <div id="tap-types" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">${typeBtns}</div>
@@ -678,11 +678,11 @@
   function openCfgPorta(card, el) {
     const h = H(), cur = entOf(card), covers = listCovers(h);
     const ov = document.createElement('div');
-    ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(2,6,16,.74);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:flex-end;background:rgba(0,0,0,.68);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
     const opts = ['<option value="">— Seleziona —</option>']
       .concat(covers.map(c => `<option value="${c.id}"${c.id === cur ? ' selected' : ''}>${c.name}</option>`)).join('');
     const inp = 'width:100%;padding:11px;border-radius:11px;background:#0f1830;color:#f1f5f9;border:1px solid rgba(255,255,255,.2);font-size:13px;box-sizing:border-box';
-    ov.innerHTML = `<div style="width:min(420px,95vw);background:#0b1220;border:1px solid rgba(255,255,255,.14);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.6);padding:20px;color:#f1f5f9">
+    ov.innerHTML = `<style>@keyframes ppSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style><div style="width:100%;background:#0a0816;border:1px solid rgba(139,92,246,.32);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);padding:20px;color:#fff;animation:ppSlideUp .22s cubic-bezier(.32,1.12,.56,1);scrollbar-width:none">
       <div style="font-size:16px;font-weight:800;margin-bottom:14px">🚪 Tapparella porta finestra</div>
       <div style="font-size:11px;color:#94a3b8;margin-bottom:5px">Nome</div>
       <input id="pp-name" placeholder="es. Tapparella portafinestra" value="${(load(card).name || '').replace(/"/g, '&quot;')}" style="${inp};margin-bottom:12px">

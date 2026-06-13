@@ -1,4 +1,4 @@
-/* frarik-version: 4.1 */
+/* frarik-version: 4.2 */
 (function () {
   'use strict';
 
@@ -369,8 +369,8 @@
     }
 
     const ov=document.createElement('div');
-    ov.style.cssText='position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(2,6,16,.78);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
-    ov.innerHTML='<div style="width:min(500px,95vw);background:#0b1220;border:1px solid rgba(255,255,255,.14);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.6);padding:20px;color:#f1f5f9;max-height:88vh;overflow-y:auto">'
+    ov.style.cssText='position:fixed;inset:0;z-index:100000;display:flex;align-items:flex-end;background:rgba(0,0,0,.68);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
+    ov.innerHTML='<style>@keyframes sySlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style><div style="width:100%;background:#0a0816;border:1px solid rgba(139,92,246,.32);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);padding:20px;color:#fff;max-height:92vh;overflow-y:auto;animation:sySlideUp .22s cubic-bezier(.32,1.12,.56,1);scrollbar-width:none">'
       +'<div style="font-size:16px;font-weight:800;margin-bottom:14px">🖥️ Configura Sistema</div>'
       +'<div style="margin-bottom:10px"><label style="'+stLbl+'">Nome del sistema</label><input id="sy-name" type="text" value="'+(c.name||'').replace(/"/g,'&quot;')+'" placeholder="es. Mini PC, NAS, Server…" style="'+stBase+'"></div>'
       +'<div style="'+stSec+'">Utilizzi percentuale</div>'

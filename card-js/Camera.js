@@ -1,4 +1,4 @@
-/* frarik-version: 1.6 */
+/* frarik-version: 1.7 */
 (function () {
   'use strict';
 
@@ -478,10 +478,10 @@
     }
 
     var ov = document.createElement('div');
-    ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(2,6,16,.82);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:flex-end;background:rgba(0,0,0,.68);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
 
     function buildDialog() {
-      return '<div style="width:min(520px,94vw);max-height:90vh;overflow-y:auto;background:#0b1220;border:1px solid rgba(255,255,255,.14);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.7);padding:20px;color:#f1f5f9">'
+      return '<style>@keyframes camSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style><div style="width:100%;max-height:92vh;overflow-y:auto;background:#0a0816;border:1px solid rgba(139,92,246,.32);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);padding:20px;color:#fff;animation:camSlideUp .22s cubic-bezier(.32,1.12,.56,1);scrollbar-width:none">'
         +'<div style="font-size:16px;font-weight:800;margin-bottom:14px">📷 Configura Telecamere</div>'
         +'<div id="cam-cfg-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">'
           +(cams.length ? cams.map(buildRow).join('') : '<div style="font-size:12px;color:rgba(255,255,255,.3);text-align:center;padding:16px">Nessuna telecamera — clicca "Aggiungi" per iniziare</div>')

@@ -1,5 +1,5 @@
 /**
- * person-card.js v1.7 — FratechStore Card "Persona"
+ * person-card.js v1.8 — FratechStore Card "Persona"
  * Foto entità + tracker · sfondo Google Maps con segnaposto live.
  * Affianco al nome: A casa (verde) / Fuori casa (rosso) / nome zona HA (azzurro) + "X min fa".
  * Tap sulla card → popup mappa intera con lo storico dei tracciati delle ultime 24h.
@@ -258,10 +258,10 @@
     const stDrop = 'position:absolute;left:0;right:0;top:100%;z-index:10;max-height:180px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 11px 11px;display:none';
     const stLbl = 'display:block;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8';
     const ov = document.createElement('div');
-    ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(2,6,16,.74);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
-    ov.innerHTML = `
-      <div style="width:min(440px,94vw);max-height:90vh;overflow:auto;background:#0b1220;border:1px solid rgba(255,255,255,.14);
-        border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.6);padding:20px;color:#f1f5f9">
+    ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:flex-end;background:rgba(0,0,0,.68);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
+    ov.innerHTML = `<style>@keyframes pcSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style>
+      <div style="width:100%;max-height:92vh;overflow:auto;background:#0a0816;border:1px solid rgba(139,92,246,.32);border-bottom:none;
+        border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);padding:20px;color:#fff;animation:pcSlideUp .22s cubic-bezier(.32,1.12,.56,1);scrollbar-width:none">
         <div style="font-size:16px;font-weight:800;margin-bottom:16px">👤 Configura card persona</div>
         <label style="${stLbl}">Entità Person</label>
         <div style="position:relative;margin-top:6px;margin-bottom:14px">
@@ -367,10 +367,10 @@
     const nm = nameOf(H, personId);
 
     const ov = document.createElement('div');
-    ov.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(2,6,16,.74);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
-    ov.innerHTML = `
-      <div style="position:relative;width:min(960px,96vw);height:min(700px,90vh);border-radius:20px;overflow:hidden;
-        background:#0b1220;border:1px solid rgba(255,255,255,.12);box-shadow:0 30px 80px rgba(0,0,0,.6);display:flex;flex-direction:column">
+    ov.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;background:rgba(0,0,0,.68);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
+    ov.innerHTML = `<style>@keyframes pcMapSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style>
+      <div style="position:relative;width:100%;height:92vh;border-radius:20px 20px 0 0;overflow:hidden;
+        background:#0a0816;border:1px solid rgba(139,92,246,.32);border-bottom:none;box-shadow:0 -12px 60px rgba(0,0,0,.8);display:flex;flex-direction:column;animation:pcMapSlideUp .22s cubic-bezier(.32,1.12,.56,1)">
         <div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.08);color:#f1f5f9">
           <span style="font-size:18px">🗺️</span>
           <div style="flex:1;min-width:0">
