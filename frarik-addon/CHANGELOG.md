@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.4.38 — 2026-06-14
+
+### fix(license): KV daily limit — cache 2h, gestione errori HTTP Worker
+
+**server.js:**
+- `LIC_TTL` aumentato da 30s a 2 ore: riduce le chiamate al Worker da ~2.880/giorno
+  a ~12/giorno per dispositivo connesso (240x meno KV writes)
+- `checkLicense`: risposta HTTP non-200 dal Worker (429 rate-limit, 500 KV esaurito)
+  ora trattata come "offline temporaneo" — si riusa la cache precedente anziché
+  invalidare la sessione. Solo una risposta 200 con `valid:false` è una vera negazione.
+- Intervallo WebSocket recheck aumentato da 30s a 2h (allineato al LIC_TTL)
+- WebSocket revoca solo su `!l.valid && !l.offline` per evitare disconnessioni false
+  durante outage Cloudflare
+
 ## 1.4.37 — 2026-06-14
 
 ### feat(Meteo): Stazione Meteo — animazioni realistiche + tab layer Windy

@@ -26,8 +26,8 @@ const LICENSE_API = 'https://frarik-license.frarik.workers.dev/api/validate';
    verso HA usando il SUPERVISOR_TOKEN. Revoca ~istantanea: cache 30s + ricontrollo
    periodico sulle connessioni WebSocket aperte.
    ═══════════════════════════════════════════════════════════════════════════ */
-const LIC_TTL = 30 * 1000;        // cache validazione (revoca effettiva entro ~30s)
-const _licCache = new Map();      // key → { ts, data }
+const LIC_TTL = 2 * 60 * 60 * 1000; // 2 ore (era 30s) — riduce KV writes di 240x
+const _licCache = new Map();          // key → { ts, valid, data }
 
 async function checkLicense(key) {
   if (!key) return { valid: false };
@@ -39,13 +39,19 @@ async function checkLicense(key) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ key })
     });
+    // Risposta HTTP non-200 (429 rate-limit, 500 KV esaurito, ecc.) = Worker
+    // temporaneamente non disponibile. Riusa cache precedente di qualsiasi età,
+    // o marca offline. NON aggiornare la cache con { valid:false } in questo caso.
+    if (!r.ok) {
+      if (c) return c.data;
+      return { valid: false, offline: true };
+    }
     const d = await r.json().catch(() => ({}));
     const data = { valid: !!d.valid, name: d.name, note: d.note, expires: d.expires };
     _licCache.set(key, { ts: Date.now(), data });
     return data;
   } catch (e) {
-    // Worker irraggiungibile: per non bloccare gli utenti durante un blip di rete,
-    // riusa l'ultimo esito noto (qualsiasi età). Una chiave mai vista resta negata.
+    // Worker irraggiungibile (errore rete): riusa l'ultimo esito noto di qualsiasi età.
     if (c) return c.data;
     return { valid: false, offline: true };
   }
@@ -255,11 +261,11 @@ function proxyWs(client, key) {
   upstream.on('error', () => { try { client.close(); } catch {} });
   client.on('close', () => { try { upstream.close(); } catch {} clearInterval(iv); });
 
-  // Revoca istantanea: ricontrollo periodico della licenza sulla socket viva
+  // Ricontrollo periodico licenza sulle socket vive (ogni 2h, allineato al LIC_TTL)
   const iv = setInterval(async () => {
     const l = await checkLicense(key);
-    if (!l.valid) { try { client.close(4003, 'licenza revocata'); } catch {} try { upstream.close(); } catch {} clearInterval(iv); }
-  }, 30 * 1000);
+    if (!l.valid && !l.offline) { try { client.close(4003, 'licenza revocata'); } catch {} try { upstream.close(); } catch {} clearInterval(iv); }
+  }, 2 * 60 * 60 * 1000);
 }
 
 reloadHaStore().then((ok) => console.log('[Frarik] Store reload avvio:', ok ? 'OK' : 'skip'));
