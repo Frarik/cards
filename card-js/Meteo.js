@@ -1,4 +1,4 @@
-/* frarik-version: 1.12 */
+/* frarik-version: 1.13 */
 /**
  * meteo+previsioni.js v1.2
  * type: custom:meteo-card
@@ -513,11 +513,16 @@ class MeteoCard extends HTMLElement {
     }
     const d = new Date(day.datetime)
     const label = this._selDay === 0 ? 'Oggi' : `${_DI[d.getDay()]} ${d.getDate()} ${_MI[d.getMonth()]}`
-    const dayStr = day.datetime.split('T')[0]
-    const hourly = this._fch.filter(h => h.datetime && h.datetime.startsWith(dayStr))
+    // confronto per data locale (getFullYear/Month/Date) per evitare problemi timezone
+    const _dKey = dt => { const x=new Date(dt); return `${x.getFullYear()}-${x.getMonth()}-${x.getDate()}` }
+    const dayKey = _dKey(day.datetime)
+    const hourly = this._fch.filter(h => h.datetime && _dKey(h.datetime) === dayKey)
+    const fmtTime = dt => {
+      try { return new Date(dt).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}) } catch { return dt.split('T')[1]?.slice(0,5)||'--' }
+    }
     const rowsHTML = hourly.length
       ? hourly.map(h => {
-          const time = h.datetime.split('T')[1]?.slice(0,5) ?? '--'
+          const time = fmtTime(h.datetime)
           const ico  = _WI[h.condition] || '🌡️'
           const temp = _n(h.temperature)
           const rn   = h.precipitation != null ? h.precipitation.toFixed(1)+'mm' : '—'
@@ -534,22 +539,23 @@ class MeteoCard extends HTMLElement {
         }).join('')
       : `<div class="hr-load">Previsioni orarie in caricamento…</div>`
     const dmCSS = `
-.dov{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);padding:16px;font-family:var(--primary-font-family,system-ui,sans-serif);}
-.dov-modal{width:100%;max-width:400px;max-height:88vh;display:flex;flex-direction:column;background:rgba(10,8,22,.98);border:1px solid rgba(56,189,248,.3);border-radius:18px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.7);}
-.hr-list{flex:1;overflow-y:auto;padding:6px 0;}
-.hr-row{display:grid;grid-template-columns:44px 28px 42px 1fr auto;align-items:center;gap:6px;padding:9px 16px;border-bottom:1px solid rgba(255,255,255,.04);color:#e2e8f0;}
+.dov{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);font-family:var(--primary-font-family,system-ui,sans-serif);}
+.dov-modal{width:100%;max-height:85vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(56,189,248,.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:slideUp .22s cubic-bezier(.32,1.12,.56,1);}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.hr-list{flex:1;overflow-y:auto;padding:6px 0 env(safe-area-inset-bottom,8px);}
+.hr-row{display:grid;grid-template-columns:46px 30px 46px 1fr auto;align-items:center;gap:8px;padding:10px 20px;border-bottom:1px solid rgba(255,255,255,.05);color:#e2e8f0;}
 .hr-row:last-child{border-bottom:none;}
-.hr-t{font-size:12px;font-weight:700;color:#94a3b8;}
-.hr-i{font-size:20px;text-align:center;}
-.hr-tp{font-size:14px;font-weight:800;letter-spacing:-.3px;}
+.hr-t{font-size:13px;font-weight:700;color:#94a3b8;}
+.hr-i{font-size:22px;text-align:center;}
+.hr-tp{font-size:15px;font-weight:800;letter-spacing:-.3px;}
 .hr-r{font-size:11px;color:#60a5fa;}
-.hr-w{font-size:11px;color:#94a3b8;text-align:right;}
-.hr-load{padding:32px;text-align:center;color:rgba(255,255,255,.3);font-size:12px;}`
+.hr-w{font-size:11px;color:#94a3b8;text-align:right;white-space:nowrap;}
+.hr-load{padding:40px;text-align:center;color:rgba(255,255,255,.3);font-size:12px;}`
     this._dayModalHost.shadowRoot.innerHTML = `<style>${_CSS}${dmCSS}</style>
 <div class="dov">
   <div class="dov-modal">
-    <div class="shdr">
-      <div class="sico" style="font-size:18px;background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.3);color:#38bdf8;">📅</div>
+    <div class="shdr" style="border-radius:20px 20px 0 0;">
+      <div class="sico" style="font-size:18px;background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.25);color:#38bdf8;">📅</div>
       <div><div class="stit">${label}</div><div class="ssub">Previsioni ora per ora</div></div>
       <button class="scls" data-a="closedm">${_IC.x}</button>
     </div>

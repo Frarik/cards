@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.15 — 2026-06-13
+
+### fix: Meteo config via matita + popup orario bottom sheet + filtro oggi
+
+- **main.js `_mountYamlCard`**: card `custom:` non usano più l'iframe HA (il modal settings usa `document.body` del documento principale — dentro iframe sarebbe inaccessibile). Queste card usano sempre il renderer interno. Dopo mount, se `el.configure` esiste viene salvato come `container._fConfigure`.
+- **main.js `cardMenu`**: controlla `_vEl._fConfigure()` prima di `firstElementChild.configure()` prima di `openCM()`. La matita ✏️ ora apre la config specifica della card (Meteo settings) invece del popup generico frarik.
+- **Meteo popup orario**: cambiato da modal centrato a **bottom sheet** — sale dal basso, border-radius in alto, occupa tutta la larghezza, max-height 85vh, animazione `slideUp`.
+- **Meteo filtro "oggi"**: cambiato da `datetime.startsWith(dayStr)` a confronto via `Date.getFullYear/Month/Date()` (locale) — risolve il problema delle previsioni orarie di oggi che non comparivano per problemi di timezone.
+- **Meteo orario**: ora formattata con `toLocaleTimeString` (HH:MM locale) invece di slice raw della stringa ISO.
+
 ## 1.4.14 — 2026-06-13
 
 ### feat(Meteo): config entità custom + popup orario giorni previsione

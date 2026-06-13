@@ -5276,7 +5276,11 @@ function cardMenu(cardId, ev){
     }
   }
   const _vEl=document.getElementById('v-'+cardId);
-  if(_vEl){ const _ce=_vEl.firstElementChild; if(_ce&&typeof _ce.configure==='function'){ _ce.configure(); return; } }
+  if(_vEl){
+    if(typeof _vEl._fConfigure==='function'){ _vEl._fConfigure(); return; }
+    const _ce=_vEl.firstElementChild;
+    if(_ce&&typeof _ce.configure==='function'){ _ce.configure(); return; }
+  }
   openCM(cardId);
 }
 window.cardMenu=cardMenu;
@@ -7574,31 +7578,35 @@ async function _mountYamlCard(card, container){
   let cfg;
   try{ cfg=jsyaml.load(card.lovelaceConfig); }
   catch(e){ container.innerHTML='<div style="padding:12px;color:#f87171;font-size:11px">YAML: '+eh(e.message)+'</div>'; return; }
-  // 1) Tentativo FEDELE: dashboard HA dedicata + iframe (render nativo di HA)
+  // card custom: (web component con configure()) — sempre renderer interno, mai iframe
+  // (il modal settings usa document.body del documento principale; inside-iframe sarebbe inaccessibile)
+  const _isCustomCard=(cfg?.type||'').startsWith('custom:');
+  // 1) Tentativo FEDELE: dashboard HA dedicata + iframe (solo per card native, non custom:)
   let iframed=false;
-  try{
-    if(await _fyUpsertView(card.id, cfg)){
-      if(!container.isConnected) return;
-      container.innerHTML='';
-      container.style.cssText='display:block;width:100%;height:100%';
-      const f=document.createElement('iframe');
-      // root-relative → risolve sull'origine di HA (la plancia gira sotto il dominio HA via ingress).
-      // ?kiosk nasconde header/sidebar se è installato kiosk-mode (HACS).
-      f.src='/'+_FY_DASH+'/'+encodeURIComponent(_fyPath(card.id))+'?kiosk';
-      f.setAttribute('allow','fullscreen; autoplay; camera; microphone; clipboard-write');
-      f.style.cssText='display:block;width:100%;height:100%;min-height:200px;border:0;border-radius:10px;background:transparent';
-      container.appendChild(f);
-      iframed=true;
-    }
-  }catch(e){ console.warn('[Frarik] yaml iframe:',e&&e.message); }
-  if(iframed) return;
-  // 2) Fallback: renderer interno leggero (card semplici)
+  if(!_isCustomCard){
+    try{
+      if(await _fyUpsertView(card.id, cfg)){
+        if(!container.isConnected) return;
+        container.innerHTML='';
+        container.style.cssText='display:block;width:100%;height:100%';
+        const f=document.createElement('iframe');
+        f.src='/'+_FY_DASH+'/'+encodeURIComponent(_fyPath(card.id))+'?kiosk';
+        f.setAttribute('allow','fullscreen; autoplay; camera; microphone; clipboard-write');
+        f.style.cssText='display:block;width:100%;height:100%;min-height:200px;border:0;border-radius:10px;background:transparent';
+        container.appendChild(f);
+        iframed=true;
+      }
+    }catch(e){ console.warn('[Frarik] yaml iframe:',e&&e.message); }
+    if(iframed) return;
+  }
+  // 2) Renderer interno leggero (card semplici e tutte le custom:)
   if(!_lovelaceResourcesLoaded){ try{ await _loadLovelaceResources(); }catch(e){} await new Promise(r=>setTimeout(r,700)); }
   if(!container.isConnected) return;
   container.innerHTML='';
   container.style.cssText='display:block;width:100%;height:100%;overflow:auto';
   const el=await _yamlCreateEl(cfg);
   container.appendChild(el);
+  if(typeof el.configure==='function') container._fConfigure=el.configure.bind(el);
   if(container._yamlTimer) clearInterval(container._yamlTimer);
   container._yamlTimer=setInterval(()=>_yamlRefreshHass(container),1000);
 }
