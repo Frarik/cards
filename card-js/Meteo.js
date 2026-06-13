@@ -1,4 +1,4 @@
-/* frarik-version: 1.28 */
+/* frarik-version: 1.29 */
 
 // ── Lookup tables ─────────────────────────────────────────────────────────────
 const _WI = {
@@ -498,7 +498,7 @@ class MeteoCard extends HTMLElement {
           entity_ids:[entityId],
           include_start_time_state:true,
           significant_changes_only:false,
-          minimal_response:false,
+          minimal_response:true,
           no_attributes:!attrName
         })
         raw=(wsData&&wsData[entityId])||[]
@@ -510,8 +510,16 @@ class MeteoCard extends HTMLElement {
       }
       const unit=this._h?.states?.[entityId]?.attributes?.unit_of_measurement||''
       const pts=raw.map(s=>{
-        const v=attrName?(parseFloat(s.attributes?.[attrName]??'')): parseFloat(s.state)
-        return isNaN(v)?null:{t:new Date(s.last_changed||s.last_updated).getTime(),v}
+        // HA history/history_during_period: compressed format usa s/lc/a, full usa state/last_changed/attributes
+        // Il timestamp lc può essere Unix float (secondi) o stringa ISO a seconda della versione HA
+        const stateVal=s.s??s.state
+        const v=attrName?parseFloat((s.a??s.attributes)?.[attrName]??''):parseFloat(stateVal)
+        if(isNaN(v)) return null
+        const rawTs=s.lc??s.last_changed??s.lu??s.last_updated
+        if(!rawTs) return null
+        const tsN=Number(rawTs)
+        const t=!isNaN(tsN)&&tsN<1e12?tsN*1000:new Date(rawTs).getTime()
+        return isNaN(t)?null:{t,v}
       }).filter(Boolean)
       const sr=this._histModalHost?.shadowRoot; if(!sr) return
       const hw=sr.querySelector('.hw'); if(!hw) return

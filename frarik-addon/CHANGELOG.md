@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.4.35 — 2026-06-13
+
+### fix(Meteo): grafici storici 4 entità — parsing formato compresso HA
+
+**Meteo.js 1.28→1.29:**
+- Fix "Nessun dato nelle ultime 24 ore" nel popup grafici delle 4 tile stat (Umidità, Pressione,
+  Vento, Direzione). Causa: `history/history_during_period` WS con `no_attributes:true` restituisce
+  sempre formato compresso (`s.s`, `s.lc`, `s.a`) indipendentemente da `minimal_response`.
+  Il parsing leggeva solo i campi del formato pieno (`s.state`, `s.last_changed`) → tutti NaN.
+- Ora usa `minimal_response:true` sempre (formato uniforme) e parsing robusto che gestisce:
+  - Chiavi compresse (`s`, `lc`, `lu`, `a`) e piene (`state`, `last_changed`, `attributes`)
+  - Timestamp come Unix float in secondi (HA ≥2023.6) o come stringa ISO (HA < 2023.6)
+
 ## 1.4.34 — 2026-06-13
 
 ### fix(mobile): stop blink + dimensioni per-device + grafici meteo su mobile
