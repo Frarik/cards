@@ -26,7 +26,7 @@ const LICENSE_API = 'https://frarik-license.frarik.workers.dev/api/validate';
    verso HA usando il SUPERVISOR_TOKEN. Revoca ~istantanea: cache 30s + ricontrollo
    periodico sulle connessioni WebSocket aperte.
    ═══════════════════════════════════════════════════════════════════════════ */
-const LIC_TTL = 2 * 60 * 60 * 1000; // 2 ore (era 30s) — riduce KV writes di 240x
+const LIC_TTL = 5 * 60 * 60 * 1000; // 5 ore (era 30s) — riduce KV writes di 600x
 const _licCache = new Map();          // key → { ts, valid, data }
 
 async function checkLicense(key) {
@@ -265,7 +265,7 @@ function proxyWs(client, key) {
   const iv = setInterval(async () => {
     const l = await checkLicense(key);
     if (!l.valid && !l.offline) { try { client.close(4003, 'licenza revocata'); } catch {} try { upstream.close(); } catch {} clearInterval(iv); }
-  }, 2 * 60 * 60 * 1000);
+  }, 5 * 60 * 60 * 1000);
 }
 
 reloadHaStore().then((ok) => console.log('[Frarik] Store reload avvio:', ok ? 'OK' : 'skip'));

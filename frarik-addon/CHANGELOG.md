@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.39 — 2026-06-14
+
+### fix(license): LIC_TTL 2h → 5h per maggiore margine sul piano gratuito KV
+
 ## 1.4.38 — 2026-06-14
 
 ### fix(license): KV daily limit — cache 2h, gestione errori HTTP Worker
