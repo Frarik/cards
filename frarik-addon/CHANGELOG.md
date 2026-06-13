@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.4.17 — 2026-06-13
+
+### feat(Meteo): autocomplete entità sensore nei 4 campi config
+
+- Cliccando su uno dei 4 input (umidità, pressione, vento, direzione) si apre una lista con tutte le entità HA disponibili.
+- Digitando si filtra in tempo reale per entity_id o friendly name (max 80 risultati).
+- Cliccando un'entità dalla lista la popola nell'input e chiude il dropdown.
+- Cliccando su un altro campo chiude il dropdown precedente e apre il nuovo.
+- Cliccando fuori dai campi chiude tutti i dropdown.
+- Meteo.js: frarik-version 1.14 → 1.15
+
 ## 1.4.16 — 2026-06-13
 
 ### fix: matita ✏️ apre config card corretta + Meteo giorni configurabili

@@ -1,4 +1,4 @@
-/* frarik-version: 1.14 */
+/* frarik-version: 1.15 */
 /**
  * meteo+previsioni.js v1.2
  * type: custom:meteo-card
@@ -167,6 +167,7 @@ button[data-a="gear"]{display:var(--fgear,none);}
 .ci:focus{border-color:rgba(167,139,250,.5);}
 .ci::placeholder{color:#374151;}
 .ht{font-size:10px;color:#374151;margin-top:4px;}
+.inp-grp{position:relative;}
 .sft{padding:12px 16px;border-top:1px solid rgba(255,255,255,.08);flex-shrink:0;}
 .sav{width:100%;height:38px;border-radius:10px;border:none;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#000;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
 .sav:hover{opacity:.88;}
@@ -208,6 +209,7 @@ class MeteoCard extends HTMLElement {
     this._dayModalHost = null
     this._click = this._onClick.bind(this)
     this._inp   = this._onInput.bind(this)
+    this._focus = this._onFocus.bind(this)
   }
 
   // ── Persistenza config in localStorage ──────────────────────────────────────
@@ -379,6 +381,12 @@ class MeteoCard extends HTMLElement {
   _onClick(e) {
     if (e.target.classList?.contains('sov')) { this._closeSettings(); return }
     if (e.target.classList?.contains('dov')) { this._destroyDayModal(); return }
+    // chiude dropdown sensori se si clicca fuori da essi
+    if (this._modalHost) {
+      const sr = this._modalHost.shadowRoot
+      const inDropdown = e.target.closest('.esr[data-dropdown]') || e.target.closest('input[data-f]')
+      if (!inDropdown) sr.querySelectorAll('.esr[data-dropdown]').forEach(d => d.classList.remove('open'))
+    }
     const t = e.target.closest('[data-a]')
     if (!t) return
     switch (t.dataset.a) {
@@ -406,6 +414,21 @@ class MeteoCard extends HTMLElement {
               wfDays:this._c.wfDays } },
             bubbles:true, composed:true }))
         break
+      case 'sel-sensor': {
+        const sf = t.dataset.f, sid = t.dataset.id
+        if (sf === 'hum')  this._th  = sid
+        else if (sf === 'pres') this._tp  = sid
+        else if (sf === 'wind') this._tw  = sid
+        else if (sf === 'wdir') this._twd = sid
+        const sr2 = this._modalHost?.shadowRoot
+        if (sr2) {
+          const inp = sr2.querySelector(`input[data-f="${sf}"]`)
+          if (inp) inp.value = sid
+          const drop = sr2.querySelector(`[data-dropdown="${sf}"]`)
+          if (drop) drop.classList.remove('open')
+        }
+        break
+      }
       case 'day':
         this._openDayDetail(parseInt(t.dataset.idx||'0')); break
       case 'closedm':
@@ -415,12 +438,52 @@ class MeteoCard extends HTMLElement {
 
   _onInput(e) {
     const f = e.target.dataset.f, v = e.target.value
-    if (f === 'city') this._tc = v
-    else if (f === 'hum')  this._th  = v
-    else if (f === 'pres') this._tp  = v
-    else if (f === 'wind') this._tw  = v
-    else if (f === 'wdir') this._twd = v
+    if      (f === 'city') this._tc = v
+    else if (f === 'hum')  { this._th  = v; this._updateDropdown('hum')  }
+    else if (f === 'pres') { this._tp  = v; this._updateDropdown('pres') }
+    else if (f === 'wind') { this._tw  = v; this._updateDropdown('wind') }
+    else if (f === 'wdir') { this._twd = v; this._updateDropdown('wdir') }
     else if (f === 'days') this._tdays = parseInt(v) || 5
+  }
+
+  _onFocus(e) {
+    const f = e.target?.dataset?.f
+    const sr = this._modalHost?.shadowRoot
+    if (!sr) return
+    if (['hum','pres','wind','wdir'].includes(f)) {
+      sr.querySelectorAll('.esr[data-dropdown]').forEach(d => {
+        if (d.dataset.dropdown !== f) d.classList.remove('open')
+      })
+      this._updateDropdown(f)
+    } else {
+      sr.querySelectorAll('.esr[data-dropdown]').forEach(d => d.classList.remove('open'))
+    }
+  }
+
+  _updateDropdown(field) {
+    const sr = this._modalHost?.shadowRoot
+    if (!sr) return
+    const dropdown = sr.querySelector(`[data-dropdown="${field}"]`)
+    if (!dropdown) return
+    const val = { hum:this._th, pres:this._tp, wind:this._tw, wdir:this._twd }[field] || ''
+    const filter = val.toLowerCase()
+    const allIds = Object.keys(this._h?.states || {})
+    const filtered = filter
+      ? allIds.filter(id =>
+          id.toLowerCase().includes(filter) ||
+          (this._h.states[id]?.attributes?.friendly_name || '').toLowerCase().includes(filter))
+      : allIds
+    const listEl = dropdown.querySelector('.el')
+    if (!listEl) return
+    listEl.innerHTML = filtered.length
+      ? filtered.slice(0, 80).map(id => {
+          const nm = this._h.states[id]?.attributes?.friendly_name || id
+          return `<div class="eo${id===val?' sel':''}" data-a="sel-sensor" data-f="${field}" data-id="${id}">
+            ${nm}<span style="font-size:9px;color:#374151;margin-left:6px;">${id}</span>
+          </div>`
+        }).join('')
+      : '<div style="padding:8px 12px;font-size:11px;color:#64748b;">Nessuna entità trovata</div>'
+    dropdown.classList.add('open')
   }
 
   configure() { this._openSettings(); }
@@ -449,6 +512,7 @@ class MeteoCard extends HTMLElement {
       this._modalHost.attachShadow({ mode:'open' })
       this._modalHost.shadowRoot.addEventListener('click', this._click)
       this._modalHost.shadowRoot.addEventListener('input', this._inp)
+      this._modalHost.shadowRoot.addEventListener('focusin', this._focus)
       document.body.appendChild(this._modalHost)
     }
     this._modalHost.shadowRoot.innerHTML = `<style>${_CSS}</style>${this._sovHTML()}`
@@ -458,6 +522,7 @@ class MeteoCard extends HTMLElement {
     if (!this._modalHost) return
     this._modalHost.shadowRoot.removeEventListener('click', this._click)
     this._modalHost.shadowRoot.removeEventListener('input', this._inp)
+    this._modalHost.shadowRoot.removeEventListener('focusin', this._focus)
     this._modalHost.remove()
     this._modalHost = null
   }
@@ -741,19 +806,31 @@ class MeteoCard extends HTMLElement {
       <div class="ht">Se vuoto, usa il nome dell'entità HA</div>
 
       <div class="fl" style="margin-top:16px;">Umidità — entità sensor (opzionale)</div>
-      <input class="ci" type="text" value="${this._th}" placeholder="Es: sensor.umidita_esterna" data-f="hum"/>
+      <div class="inp-grp">
+        <input class="ci" type="text" value="${this._th}" placeholder="Es: sensor.umidita_esterna" data-f="hum" autocomplete="off"/>
+        <div class="esr" data-dropdown="hum"><div class="el"></div></div>
+      </div>
       <div class="ht">Lascia vuoto per usare l'attributo humidity dell'entità meteo</div>
 
       <div class="fl" style="margin-top:10px;">Pressione — entità sensor (opzionale)</div>
-      <input class="ci" type="text" value="${this._tp}" placeholder="Es: sensor.pressione_barometrica" data-f="pres"/>
+      <div class="inp-grp">
+        <input class="ci" type="text" value="${this._tp}" placeholder="Es: sensor.pressione_barometrica" data-f="pres" autocomplete="off"/>
+        <div class="esr" data-dropdown="pres"><div class="el"></div></div>
+      </div>
       <div class="ht">Lascia vuoto per usare l'attributo pressure dell'entità meteo</div>
 
       <div class="fl" style="margin-top:10px;">Velocità vento — entità sensor (opzionale)</div>
-      <input class="ci" type="text" value="${this._tw}" placeholder="Es: sensor.vento_velocita" data-f="wind"/>
+      <div class="inp-grp">
+        <input class="ci" type="text" value="${this._tw}" placeholder="Es: sensor.vento_velocita" data-f="wind" autocomplete="off"/>
+        <div class="esr" data-dropdown="wind"><div class="el"></div></div>
+      </div>
       <div class="ht">Lascia vuoto per usare l'attributo wind_speed dell'entità meteo</div>
 
       <div class="fl" style="margin-top:10px;">Direzione vento — entità sensor (opzionale)</div>
-      <input class="ci" type="text" value="${this._twd}" placeholder="Es: sensor.vento_direzione" data-f="wdir"/>
+      <div class="inp-grp">
+        <input class="ci" type="text" value="${this._twd}" placeholder="Es: sensor.vento_direzione" data-f="wdir" autocomplete="off"/>
+        <div class="esr" data-dropdown="wdir"><div class="el"></div></div>
+      </div>
       <div class="ht">Lascia vuoto per usare l'attributo wind_bearing dell'entità meteo</div>
 
       <div class="fl" style="margin-top:16px;">Giorni previsioni (1–10)</div>
