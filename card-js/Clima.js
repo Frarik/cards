@@ -1,4 +1,4 @@
-/* frarik-version: 2.17 */
+/* frarik-version: 2.18 */
 (function () {
   'use strict';
 
@@ -695,7 +695,8 @@
     const climIds=allIds.filter(function(id){return id.startsWith('climate.');});
     const sensIds=allIds.filter(function(id){return id.startsWith('sensor.');});
     const binIds =allIds.filter(function(id){return id.startsWith('binary_sensor.');});
-    const cardScaleV = c.cardScale||100, cardWV = c.cardW||100;
+    var _fll=JSON.parse(localStorage.getItem('_frk_layout_'+(card.id||''))||'{}');
+    const cardScaleV=_fll.cardScale!=null?_fll.cardScale:(c.cardScale||100), cardWV=_fll.cardW!=null?_fll.cardW:(c.cardW||100);
 
     const stInp ='width:100%;padding:9px 11px;border-radius:10px;background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.15);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none';
     const stDrop='position:absolute;left:0;right:0;top:100%;z-index:20;max-height:150px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 10px 10px;display:none;scrollbar-width:none;-ms-overflow-style:none';

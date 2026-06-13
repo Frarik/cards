@@ -1,4 +1,4 @@
-/* frarik-version: 1.27 */
+/* frarik-version: 1.28 */
 
 // ── Lookup tables ─────────────────────────────────────────────────────────────
 const _WI = {
@@ -486,13 +486,28 @@ class MeteoCard extends HTMLElement {
   </div>
   <div class="hw"><div class="hload">Caricamento dati…</div></div>
 </div></div>`
-    if(!entityId||!this._h?.callApi) return
+    if(!entityId||!this._h) return
     try{
       const end=new Date(), start=new Date(end-86400000)
-      const noAttr=!attrName
-      const path=`history/period/${start.toISOString()}?filter_entity_id=${entityId}&end_time=${end.toISOString()}&minimal_response=${noAttr?'true':'false'}${noAttr?'&no_attributes=true':''}`
-      const data=await this._h.callApi('GET',path)
-      const raw=Array.isArray(data)&&data.length?data[0]:[]
+      let raw=[]
+      if(this._h.callWS){
+        const wsData=await this._h.callWS({
+          type:'history/history_during_period',
+          start_time:start.toISOString(),
+          end_time:end.toISOString(),
+          entity_ids:[entityId],
+          include_start_time_state:true,
+          significant_changes_only:false,
+          minimal_response:false,
+          no_attributes:!attrName
+        })
+        raw=(wsData&&wsData[entityId])||[]
+      } else if(this._h.callApi){
+        const noAttr=!attrName
+        const path=`history/period/${start.toISOString()}?filter_entity_id=${entityId}&end_time=${end.toISOString()}&minimal_response=${noAttr?'true':'false'}${noAttr?'&no_attributes=true':''}`
+        const data=await this._h.callApi('GET',path)
+        raw=Array.isArray(data)&&data.length?data[0]:[]
+      }
       const unit=this._h?.states?.[entityId]?.attributes?.unit_of_measurement||''
       const pts=raw.map(s=>{
         const v=attrName?(parseFloat(s.attributes?.[attrName]??'')): parseFloat(s.state)
@@ -875,7 +890,7 @@ class MeteoCard extends HTMLElement {
     this._te=this._c.entityId; this._tc=this._c.cityName
     this._th=this._c.humEntity; this._tp=this._c.presEntity
     this._tw=this._c.windEntity; this._twd=this._c.windDirEntity
-    this._tdays=this._c.wfDays||5; this._tCardScale=this._c.cardScale??100; this._tCardW=this._c.cardW??100
+    this._tdays=this._c.wfDays||5; const _mll=JSON.parse(localStorage.getItem('_frk_layout_'+(this._frarikCard?.id||''))||'{}'); this._tCardScale=_mll.cardScale??this._c.cardScale??100; this._tCardW=_mll.cardW??this._c.cardW??100
     this._renderModal(); this._bk=null; this._build()
   }
 

@@ -1,4 +1,4 @@
-/* frarik-version: 4.4 */
+/* frarik-version: 4.5 */
 (function () {
   'use strict';
 
@@ -368,7 +368,8 @@
         +'</div>';
     }
 
-    const cardScaleV=c.cardScale||100, cardWV=c.cardW||100;
+    var _fll=JSON.parse(localStorage.getItem('_frk_layout_'+(card.id||''))||'{}');
+    const cardScaleV=_fll.cardScale!=null?_fll.cardScale:(c.cardScale||100), cardWV=_fll.cardW!=null?_fll.cardW:(c.cardW||100);
     var _prevTimer=null;
 
     const ov=document.createElement('div');

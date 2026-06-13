@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.4.34 — 2026-06-13
+
+### fix(mobile): stop blink + dimensioni per-device + grafici meteo su mobile
+
+**main.js:**
+- Fix **blink/refresh continuo su mobile**: le preview di configurazione (chiavi `frarik_*___prev__`)
+  non triggerano più il sync verso HA server — filtro `___` (triple underscore) nel hook `setItem`
+  e nella funzione `_haSaveCfg`. Ogni apertura popup settings non provoca più re-render sul cell.
+- Fix **dimensioni card per-device**: `frarik-card-layout` ora salva `cardScale`/`cardW` in
+  `localStorage['_frk_layout_{cardId}']` (chiave NON sincronizzata, locale al device) invece di
+  `card.cardScale/cardW` nel config HA condiviso. `buildCard()` legge da `_frk_layout_` al posto
+  di `card.cardScale/cardW`. Ogni dispositivo ora mantiene le proprie dimensioni indipendenti.
+
+**Meteo.js 1.27→1.28:**
+- Fix **grafici storici su mobile**: `_openHistPopup` usa `callWS` (WebSocket già autenticato)
+  invece di `callApi` HTTP. Risolve il problema dove su mobile il cookie licenza non veniva inviato
+  con le richieste HTTP → la proxy server restituiva 403 → grafici non visibili.
+- Slider impostazioni mostra la dimensione device-locale (`_frk_layout_`) invece di quella condivisa.
+
+**Tutte le card JS (Clima 2.17→2.18, System 4.4→4.5, Tapparella 4.7→4.8, Camera 1.10→1.11,
+DoorsWindows 1.4→1.5, person-card 1.11→1.12):**
+- Slider Altezza/Larghezza nel popup impostazioni legge prima `_frk_layout_{cardId}` (preferenza
+  device-locale) per mostrare la dimensione reale di QUEL dispositivo.
+
 ## 1.4.33 — 2026-06-13
 
 ### fix(Meteo): popup responsive + slider non modifica card senza salvataggio

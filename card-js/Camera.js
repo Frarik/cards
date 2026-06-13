@@ -1,4 +1,4 @@
-/* frarik-version: 1.10 */
+/* frarik-version: 1.11 */
 (function () {
   'use strict';
 
@@ -479,7 +479,8 @@
 
     var ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:flex-end;background:rgba(0,0,0,.68);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
-    var cardScaleV = c.cardScale||100, cardWV = c.cardW||100;
+    var _fll=JSON.parse(localStorage.getItem('_frk_layout_'+(card.id||''))||'{}');
+    var cardScaleV=_fll.cardScale!=null?_fll.cardScale:(c.cardScale||100), cardWV=_fll.cardW!=null?_fll.cardW:(c.cardW||100);
     var _prevTimer = null;
 
     function buildFormInner() {

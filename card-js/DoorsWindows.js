@@ -1,4 +1,4 @@
-/* frarik-version: 1.4 */
+/* frarik-version: 1.5 */
 /**
  * DoorsWindows.js — FratechStore card "Porte e Finestre"
  * Rileva automaticamente i sensori apertura (device_class door/window/garage_door/opening),
@@ -91,7 +91,8 @@
     const h = H(); const c = load(card);
     const auto = detect(h, {});
     const cur = (Array.isArray(c.entities) && c.entities.length) ? c.entities : auto;
-    const cardScaleV = c.cardScale||100, cardWV = c.cardW||100;
+    var _fll=JSON.parse(localStorage.getItem('_frk_layout_'+(card.id||''))||'{}');
+    const cardScaleV=_fll.cardScale!=null?_fll.cardScale:(c.cardScale||100), cardWV=_fll.cardW!=null?_fll.cardW:(c.cardW||100);
     const ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:flex-end;background:rgba(0,0,0,.68);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
     const states = (h && h.states) || {};

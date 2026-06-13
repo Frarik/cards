@@ -935,7 +935,7 @@ function _cfgTouchAndPush(){ if(_cfgSyncing) return; cfg._ts=Date.now(); _saveCf
 (function(){
   const _origSet=Storage.prototype.setItem;
   Storage.prototype.setItem=function(k,v){
-    if(this===localStorage&&k&&k.startsWith('frarik_')&&!_cfgSyncing&&_cfgSynced){
+    if(this===localStorage&&k&&k.startsWith('frarik_')&&!k.includes('___')&&!_cfgSyncing&&_cfgSynced){
       const old=this.getItem(k); // leggi prima di sovrascrivere
       _origSet.call(this,k,v);
       if(v!==old){ cfg._ts=Date.now(); _saveCfgLocalOnly(); _haSaveCfgDebounced(); }
@@ -952,7 +952,7 @@ function _haSaveCfg(manual){
     const _cfgNoPage=Object.assign({},cfg); delete _cfgNoPage.activePage; // activePage è locale per dispositivo
     // Configurazioni card JS (frarik_cam_*, frarik_clima_* ecc.) → sincronizzate tra dispositivi
     const cardCfgs={};
-    try{ for(let _i=0;_i<localStorage.length;_i++){ const _k=localStorage.key(_i); if(_k&&_k.startsWith('frarik_')) cardCfgs[_k]=localStorage.getItem(_k); } }catch(_e){}
+    try{ for(let _i=0;_i<localStorage.length;_i++){ const _k=localStorage.key(_i); if(_k&&_k.startsWith('frarik_')&&!_k.includes('___')) cardCfgs[_k]=localStorage.getItem(_k); } }catch(_e){}
     const payload={_ts:cfg._ts||Date.now(), cfg:_cfgNoPage, js:(typeof _jsStoreList==='function'?_jsStoreList():[]), cardCfgs};
     fetch(ADDON_BASE+'/api/frarik/config', {
       method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
@@ -3863,8 +3863,9 @@ function buildCard(card){
     el.addEventListener('dragover',e=>{ if(dragSrc&&dragSrc!==card.id){ e.preventDefault(); el.classList.add('dov'); }});
     el.addEventListener('dragleave',()=>el.classList.remove('dov'));
     el.addEventListener('drop',e=>{ e.preventDefault(); el.classList.remove('dov'); swapC(dragSrc,card.id); });
-    if(card.cardScale>0&&card.cardScale<100) el.style.zoom=card.cardScale+'%';
-    if(card.cardW>0&&card.cardW<100){ el.style.width=card.cardW+'%'; el.style.maxWidth=card.cardW+'%'; }
+    const _ll=JSON.parse(localStorage.getItem('_frk_layout_'+card.id)||'{}');
+    if(_ll.cardScale>0&&_ll.cardScale<100) el.style.zoom=_ll.cardScale+'%';
+    if(_ll.cardW>0&&_ll.cardW<100){ el.style.width=_ll.cardW+'%'; el.style.maxWidth=_ll.cardW+'%'; }
     setTimeout(()=>initResize(card.id),0);
     return el;
   }
@@ -10203,22 +10204,16 @@ connect();
   document.addEventListener('input',  _inputDelegate);
   document.addEventListener('change', _inputDelegate);
 
-  // Layout resize from js-custom cards (e.g. Meteo)
+  // Layout resize from js-custom cards (e.g. Meteo) — salvato in localStorage device-locale
+  // NON sincronizzato su HA: ogni dispositivo mantiene le proprie dimensioni
   document.addEventListener('frarik-card-layout', e=>{
     const {cardId,cardScale,cardW}=e.detail||{};
     if(!cardId) return;
-    const pg=curPage(); if(!pg) return;
-    const card=pg.cards.find(c=>c.id===cardId); if(!card) return;
     const cardEl=document.getElementById('card-'+cardId);
-    if(cardScale!=null){
-      card.cardScale=cardScale;
-      if(cardEl) cardEl.style.zoom=cardScale<100?cardScale+'%':'';
-    }
-    if(cardW!=null){
-      card.cardW=cardW;
-      if(cardEl){ cardEl.style.width=cardW<100?cardW+'%':''; cardEl.style.maxWidth=cardW<100?cardW+'%':''; }
-    }
-    saveCfg();
+    const ll=JSON.parse(localStorage.getItem('_frk_layout_'+cardId)||'{}');
+    if(cardScale!=null){ ll.cardScale=cardScale; if(cardEl) cardEl.style.zoom=cardScale<100?cardScale+'%':''; }
+    if(cardW!=null){ ll.cardW=cardW; if(cardEl){ cardEl.style.width=cardW<100?cardW+'%':''; cardEl.style.maxWidth=cardW<100?cardW+'%':''; } }
+    localStorage.setItem('_frk_layout_'+cardId, JSON.stringify(ll));
   });
 })();
 

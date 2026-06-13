@@ -1,4 +1,4 @@
-/* frarik-version: 4.7 */
+/* frarik-version: 4.8 */
 (function () {
   'use strict';
 
@@ -486,7 +486,8 @@
         <span style="font-size:20px">${t.icon}</span>${t.label}
       </button>`
     ).join('');
-    const cardScaleV = load(card).cardScale||100, cardWV = load(card).cardW||100;
+    var _fll=JSON.parse(localStorage.getItem('_frk_layout_'+(card.id||''))||'{}');
+    const _c0=load(card); const cardScaleV=_fll.cardScale!=null?_fll.cardScale:(_c0.cardScale||100), cardWV=_fll.cardW!=null?_fll.cardW:(_c0.cardW||100);
     var _prevTimer = null;
     ov.innerHTML = `<style>@keyframes tpSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}@media(max-width:600px){.frk-cfg-cols{flex-direction:column!important;overflow-y:auto!important;overflow-x:hidden!important}.frk-form-col{width:100%!important;border-right:none!important;border-bottom:1px solid rgba(255,255,255,.07)!important;overflow-y:visible!important;flex-shrink:0!important}.frk-prev-col{min-width:0!important;overflow-y:visible!important}}</style>
     <div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(139,92,246,.32);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:tpSlideUp .22s cubic-bezier(.32,1.12,.56,1)">
