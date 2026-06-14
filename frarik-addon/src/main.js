@@ -5101,7 +5101,7 @@ function closeOikSettings(){
     else finish();
   });
 }
-/* ── Collapsible groups in edit panel ── */
+/* ── Collapsible groups in edit panel (legacy, mantenuto per compatibilità) ── */
 const _epGroupState={pg:false,saved:false};
 function _epToggleGroup(id){
   _epGroupState[id]=!_epGroupState[id];
@@ -5110,7 +5110,6 @@ function _epToggleGroup(id){
   const arrow=document.getElementById('ep-'+id+'-arrow');
   if(group){
     group.style.display=open?'block':'none';
-    // In fullscreen il gruppo si apre TUTTO: niente altezza max / scroll interno
     if(open){
       group.style.maxHeight='none';
       group.style.overflow='visible';
@@ -5120,6 +5119,62 @@ function _epToggleGroup(id){
     }
   }
   if(arrow) arrow.style.transform=open?'rotate(180deg)':'';
+}
+/* ── Tab Sheet (popup dal basso per ogni sezione impostazioni) ── */
+const _EP_SHEET_META={
+  aspetto:['🎨','Aspetto'],
+  viste:  ['📄','Viste'],
+  sistema:['⚙️','Sistema'],
+  topbar: ['🔝','Top Bar'],
+  dati:   ['☁️','Dati']
+};
+function _openEpSheet(tab){
+  const sheet=document.getElementById('ep-tab-sheet');
+  if(!sheet) return;
+  // Mostra overlay con animazione
+  sheet.style.display='flex';
+  // Riavvia animazione slide-up
+  const inner=sheet.querySelector('.ep-tsheet-inner');
+  if(inner){ inner.classList.remove('ep-tsheet-closing'); inner.style.animation='none'; requestAnimationFrame(()=>{ inner.style.animation=''; }); }
+  // overflow visible per permettere l'animazione fuori dai bordi
+  const panel=document.getElementById('epanel');
+  if(panel) panel.classList.add('sheet-open');
+  // Nasconde tutti i pannelli, mostra quello richiesto
+  sheet.querySelectorAll('[id^="ep-content-"]').forEach(el=>el.style.display='none');
+  const pane=document.getElementById('ep-content-'+tab);
+  if(pane) pane.style.display='';
+  // Aggiorna icona/titolo header
+  const [ico,title]=_EP_SHEET_META[tab]||['⚙️','Impostazioni'];
+  const icoEl=document.getElementById('ep-tsheet-ico');
+  const titleEl=document.getElementById('ep-tsheet-title');
+  if(icoEl) icoEl.textContent=ico;
+  if(titleEl) titleEl.textContent=title;
+  // Segna tab attivo
+  document.querySelectorAll('.ep-tab-btn').forEach(btn=>btn.classList.toggle('active',btn.dataset.actionArg===tab));
+  // Aggiornamenti lazy per-tab
+  if(tab==='viste'){ try{renderSectionsList();}catch(_){} }
+  if(tab==='topbar'){ try{_renderTopbarIconsList();}catch(_){} }
+  if(tab==='aspetto'){ try{_renderColorThemes();}catch(_){} try{renderFontPick();}catch(_){} }
+  if(tab==='sistema'){ if(window._sysLoad) try{_sysLoad();}catch(_){} }
+}
+function _closeEpSheet(){
+  const sheet=document.getElementById('ep-tab-sheet');
+  if(!sheet) return;
+  const inner=sheet.querySelector('.ep-tsheet-inner');
+  document.querySelectorAll('.ep-tab-btn').forEach(btn=>btn.classList.remove('active'));
+  if(inner){
+    inner.classList.add('ep-tsheet-closing');
+    setTimeout(()=>{
+      sheet.style.display='none';
+      inner.classList.remove('ep-tsheet-closing');
+      const panel=document.getElementById('epanel');
+      if(panel) panel.classList.remove('sheet-open');
+    },230);
+  } else {
+    sheet.style.display='none';
+    const panel=document.getElementById('epanel');
+    if(panel) panel.classList.remove('sheet-open');
+  }
 }
 
 function renderColPick(){ renderSectionsList(); }
@@ -9344,7 +9399,7 @@ function _postPageCreate(){
   document.getElementById('ep-page-name').value=p.name;
   document.getElementById('ep-del-page').style.display=cfg.pages.length>1?'block':'none';
   renderSectionsList();
-  if(!_epGroupState.pgpage) _epToggleGroup('pgpage');
+  _openEpSheet('viste');
   _pgSnapshot();
 }
 
@@ -9422,8 +9477,7 @@ function createPageFromTpl(tplName){
     document.getElementById('ep-page-name').value=p.name;
     document.getElementById('ep-del-page').style.display=cfg.pages.length>1?'block':'none';
     renderSectionsList();
-    // Auto-apre "Pagina & Griglia" così l'utente vede subito le sezioni
-    if(!_epGroupState.pgpage) _epToggleGroup('pgpage');
+    _openEpSheet('viste');
   }
 }
 
@@ -12762,4 +12816,5 @@ Object.assign(window, {
   _appSetItemEntity, _appSetItemName, _appSetGroupName,
   _appSetGroupShowList, _appSetGroupEntities,
   _ntfSetAndSuggest, _ntfSetIcon,
+  _openEpSheet, _closeEpSheet, frarikCheckUpdate,
 });

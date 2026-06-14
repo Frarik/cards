@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.4.45 — 2026-06-14
+
+### feat(Dashboard): redesign pagina impostazioni con tab + bottom sheet
+
+**frarik-addon src/dom.js + src/style.css + src/main.js:**
+- Sostituito il layout a fisarmonica (accordion) con una barra tab orizzontale scrollabile
+- Ogni tab apre un bottom sheet (popup dal basso) con lo stile dei popup delle card:
+  - Background `#0a0816`, bordo amber `rgba(251,191,36,.25)`, `border-radius:20px 20px 0 0`
+  - Animazione `epSheetUp/epSheetDown` (slide da basso, 0.22s)
+- Tab disponibili: 🎨 Aspetto, 📄 Viste, ⚙️ Sistema, 🔝 Top Bar, ▭ Bottom Bar,
+  🛒 Store, 🔔 Notifiche, 🆘 SOS, ☁️ Dati
+- Tab che aprono sheet interno (Aspetto/Viste/Sistema/Top Bar/Dati) vs tab che
+  aprono modal dedicati esistenti (Bottom Bar/Store/Notifiche/SOS)
+- Header ridisegnato con icona amber, titolo+sottotitolo, X di chiusura
+- Centro: area logo/istruzioni + version badge + bottone aggiornamenti
+- Nuovo `_openEpSheet(tab)` / `_closeEpSheet()` in main.js
+- Corretti riferimenti a `_epToggleGroup('pgpage')` → `_openEpSheet('viste')`
+- Aggiunto `frarikCheckUpdate` all'`Object.assign(window, {...})` (era mancante)
+- Contenuto Sistema espanso: kiosk, screensaver completo (immagini, entità, card),
+  tema automatico, colonna singola mobile
+- Contenuto Dati: sync, backup/ripristina, reset layout, pulizia entità, licenza
+
 ## 1.4.44 — 2026-06-14
 
 ### feat(Meteo): icone meteo animate con SVG
