@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.4.46 — 2026-06-14
+
+### fix(Settings): applica redesign al sorgente corretto (src/index.html)
+
+**frarik-addon src/index.html:**
+- Sostituito il corpo `#ep-body` con la nuova struttura tab + sheet
+- Tutto il contenuto accordion precedente ora è dentro i pannelli del bottom sheet
+- Sezione Aspetto, Viste, Sistema, Top Bar, Dati nei rispettivi `ep-content-*`
+- Sezioni Licenza spostata nel tab Dati, rimossi i vecchi `oik-cat` separatori
+
+---
+
 ## 1.4.45 — 2026-06-14
 
 ### feat(Dashboard): redesign pagina impostazioni con tab + bottom sheet
