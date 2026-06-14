@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.4.56 — 2026-06-14
+
+### feat(MeteoCard): dynamic station entities, sun/moon z-index fix (v1.4.56 / MeteoCard 1.40)
+
+**card-js/Meteo.js (1.39 → 1.40):**
+- **Stazione meteo — entità dinamiche**: ogni categoria (Pioggia, Vento, Temperatura, Pressione,
+  Umidità) ora ha un'interfaccia dinamica add/remove; è possibile aggiungere quante entità si vuole
+  per categoria, con campo entità (autocomplete) + campo nome personalizzabile + pulsante ✕ elimina
+- **`stationSensors`**: nuovo campo config `{[catKey]: [{eid, lbl},...]}` in sostituzione dei campi
+  piatti fissi; migrazione automatica dal vecchio formato alla prima apertura impostazioni
+- **Stazione popup**: `_stationHTML` aggiornato per leggere da `stationSensors` anziché dai campi fissi
+- **Sfondo animato — sole/luna**: fix z-index; `.body{z-index:4}` garantisce che testi e dati card
+  siano sempre sopra gli elementi `.celestial` (sole/luna) contenuti in `.sky{z-index:0}`
+
+---
+
 ## 1.4.55 — 2026-06-14
 
 ### feat(MeteoCard): MDI icon picker, emoji/MDI split UX, ha-icon rendering (v1.4.55 / MeteoCard 1.39)

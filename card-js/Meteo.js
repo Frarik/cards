@@ -1,4 +1,4 @@
-/* frarik-version: 1.39 */
+/* frarik-version: 1.40 */
 
 // ── Lookup tables ─────────────────────────────────────────────────────────────
 const _WI = {
@@ -530,7 +530,6 @@ class MeteoCard extends HTMLElement {
   _saveStore(){
     try{
       const stObj={}
-      _STATION_CATS.forEach(cat=>cat.sensors.forEach(s=>{ stObj[s.f]=this._c[s.f]||'' }))
       _STATION_SPECIALS.forEach(s=>{ stObj[s.f]=this._c[s.f]||'' })
       localStorage.setItem(this._lsKey(), JSON.stringify({
         entityId:this._c.entityId, cityName:this._c.cityName,
@@ -548,6 +547,7 @@ class MeteoCard extends HTMLElement {
         stationEnabled:this._c.stationEnabled||false,
         stationLat:this._c.stationLat||'',
         stationLon:this._c.stationLon||'',
+        stationSensors:this._c.stationSensors||{},
         ...stObj,
       }))
     }catch{}
@@ -580,6 +580,7 @@ class MeteoCard extends HTMLElement {
       stationEnabled: stored.stationEnabled!=null?stored.stationEnabled:(cfg.stationEnabled||false),
       stationLat:   stored.stationLat   ||cfg.stationLat   ||'',
       stationLon:   stored.stationLon   ||cfg.stationLon   ||'',
+      stationSensors: stored.stationSensors||cfg.stationSensors||null,
       ...stCfgObj,
     }
     this._te=this._c.entityId; this._tc=this._c.cityName
@@ -999,6 +1000,10 @@ class MeteoCard extends HTMLElement {
           const i=parseInt(sf.replace('tile-eid-',''))
           if(this._tAllTiles[i]!=null) this._tAllTiles[i].eid=sid
         }
+        else if(sf.startsWith('scat-eid-')){
+          const p=sf.split('-'),key=p[2],idx=parseInt(p[3])
+          if(this._tStSensors[key]?.[idx]!=null) this._tStSensors[key][idx].eid=sid
+        }
         else {
           const allStFs=_STATION_CATS.flatMap(c=>c.sensors.map(s=>s.f)).concat(_STATION_SPECIALS.map(s=>s.f))
           if(allStFs.includes(sf)) this._tSt[sf]=sid
@@ -1151,9 +1156,21 @@ class MeteoCard extends HTMLElement {
           tog.style.color=this._tSt.stationEnabled?'#fbbf24':'rgba(255,255,255,.4)'
         }
         break
+      case 'scat-add':{
+        const key=t.dataset.key
+        if(!this._tStSensors[key]) this._tStSensors[key]=[]
+        this._tStSensors[key].push({eid:'',lbl:''})
+        this._renderModal()
+        break
+      }
+      case 'scat-rm':{
+        const key=t.dataset.key,idx=parseInt(t.dataset.idx)
+        if(this._tStSensors[key]) this._tStSensors[key].splice(idx,1)
+        this._renderModal()
+        break
+      }
       case 'save':{
         const stSaveObj={}
-        _STATION_CATS.forEach(cat=>cat.sensors.forEach(s=>{ stSaveObj[s.f]=this._tSt[s.f]||'' }))
         _STATION_SPECIALS.forEach(s=>{ stSaveObj[s.f]=this._tSt[s.f]||'' })
         const _fixedTiles=this._tAllTiles.filter(t=>t.isFixed)
         const _extraTiles=this._tAllTiles.filter(t=>!t.isFixed&&t.eid)
@@ -1180,6 +1197,7 @@ class MeteoCard extends HTMLElement {
                   stationEnabled:!!this._tSt.stationEnabled,
                   stationLat:this._tSt.stationLat||'',
                   stationLon:this._tSt.stationLon||'',
+                  stationSensors:this._tStSensors,
                   ...stSaveObj }
         this._saveStore()
         if(this._frarikCard?.id){
@@ -1266,6 +1284,13 @@ class MeteoCard extends HTMLElement {
     else if(f==='swipe-interval'){ this._tSwipeInterval=Math.max(2,Math.min(60,parseInt(v)||5)) }
     else if(f==='swipe-transition'){ this._tSwipeTransition=Math.max(0.05,Math.min(5,parseFloat(v)||0.38)) }
     else if(f==='swipe-threshold'){ this._tSwipeThreshold=Math.max(10,Math.min(150,parseInt(v)||40)) }
+    else if(f?.startsWith('scat-')){
+      const p=f.split('-'),field=p[1],key=p[2],idx=parseInt(p[3])
+      if(this._tStSensors[key]?.[idx]!=null){
+        this._tStSensors[key][idx][field]=v
+        if(field==='eid') this._updateDropdown(f)
+      }
+    }
     else {
       const allStFs=_STATION_CATS.flatMap(c=>c.sensors.map(s=>s.f)).concat(_STATION_SPECIALS.map(s=>s.f))
       if(allStFs.includes(f)){
@@ -1314,7 +1339,7 @@ class MeteoCard extends HTMLElement {
     const f=e.target?.dataset?.f
     const sr=this._modalHost?.shadowRoot; if(!sr) return
     const allStFs=_STATION_CATS.flatMap(c=>c.sensors.map(s=>s.f)).concat(_STATION_SPECIALS.map(s=>s.f))
-    if(f?.startsWith('tile-eid-')||allStFs.includes(f)){
+    if(f?.startsWith('tile-eid-')||f?.startsWith('scat-eid-')||allStFs.includes(f)){
       sr.querySelectorAll('.esr[data-dropdown]').forEach(d=>{ if(d.dataset.dropdown!==f) d.classList.remove('open') })
       this._updateDropdown(f)
     } else if(f?.startsWith('tile-mdi-search-')){
@@ -1329,7 +1354,11 @@ class MeteoCard extends HTMLElement {
   _updateDropdown(field){
     const sr=this._modalHost?.shadowRoot; if(!sr) return
     const dropdown=sr.querySelector(`[data-dropdown="${field}"]`); if(!dropdown) return
-    const val=(field.startsWith('tile-eid-')?this._tAllTiles[parseInt(field.replace('tile-eid-',''))]?.eid||'':this._tSt[field]||'')
+    const val=field.startsWith('tile-eid-')
+      ?this._tAllTiles[parseInt(field.replace('tile-eid-',''))]?.eid||''
+      :field.startsWith('scat-eid-')
+        ?(()=>{const p=field.split('-');return this._tStSensors[p[2]]?.[parseInt(p[3])]?.eid||''})()
+        :this._tSt[field]||''
     const filter=val.toLowerCase()
     const allIds=Object.keys(this._h?.states||{})
     const filtered=filter
@@ -1370,6 +1399,15 @@ class MeteoCard extends HTMLElement {
     this._tSt={ stationEnabled:this._c.stationEnabled||false, stationLat:this._c.stationLat||'', stationLon:this._c.stationLon||'' }
     _STATION_CATS.forEach(cat=>cat.sensors.forEach(s=>{ this._tSt[s.f]=this._c[s.f]||'' }))
     _STATION_SPECIALS.forEach(s=>{ this._tSt[s.f]=this._c[s.f]||'' })
+    const _storedSS=this._c.stationSensors
+    this._tStSensors={}
+    _STATION_CATS.forEach(cat=>{
+      if(_storedSS?.[cat.key]){
+        this._tStSensors[cat.key]=_storedSS[cat.key].map(e=>({eid:e.eid||'',lbl:e.lbl||''}))
+      } else {
+        this._tStSensors[cat.key]=cat.sensors.filter(s=>this._tSt[s.f]).map(s=>({eid:this._tSt[s.f]||'',lbl:s.lbl}))
+      }
+    })
     this._renderModal(); this._bk=null; this._build()
   }
 
@@ -1797,16 +1835,23 @@ class MeteoCard extends HTMLElement {
             </div>
             <div class="ht">Coordinate per la mappa radar Windy</div>
 
-            ${_STATION_CATS.map(cat=>`
+            ${_STATION_CATS.map(cat=>{
+              const _ents=this._tStSensors[cat.key]||[]
+              return `
               <div style="margin-top:14px;font-size:11px;font-weight:800;color:${cat.color};text-transform:uppercase;letter-spacing:.07em;">${cat.icon} ${cat.label}</div>
-              ${cat.sensors.map(s=>`
-                <div class="fl" style="margin-top:6px;font-size:10px;color:rgba(255,255,255,.6);">${s.lbl}</div>
-                <div class="inp-grp">
-                  <input class="ci" type="text" value="${this._tSt[s.f]||''}" placeholder="entità..." data-f="${s.f}" autocomplete="off"/>
-                  <div class="esr" data-dropdown="${s.f}"><div class="el"></div></div>
+              ${_ents.map((e,idx)=>`
+                <div style="display:flex;gap:5px;align-items:center;margin-top:5px;">
+                  <div class="inp-grp" style="flex:2;min-width:0;">
+                    <input class="ci" type="text" value="${e.eid||''}" placeholder="entità..." data-f="scat-eid-${cat.key}-${idx}" autocomplete="off"/>
+                    <div class="esr" data-dropdown="scat-eid-${cat.key}-${idx}"><div class="el"></div></div>
+                  </div>
+                  <input class="ci" type="text" value="${e.lbl||''}" placeholder="nome..." data-f="scat-lbl-${cat.key}-${idx}" style="flex:1.5;min-width:0;" autocomplete="off"/>
+                  <button data-a="scat-rm" data-key="${cat.key}" data-idx="${idx}" style="flex-shrink:0;width:28px;height:32px;border-radius:7px;border:1px solid rgba(248,113,113,.25);background:rgba(248,113,113,.08);cursor:pointer;color:#f87171;font-size:13px;display:flex;align-items:center;justify-content:center;">✕</button>
                 </div>
               `).join('')}
-            `).join('')}
+              <button data-a="scat-add" data-key="${cat.key}" style="margin-top:7px;width:100%;height:29px;border-radius:7px;border:1px solid rgba(251,191,36,.2);background:rgba(251,191,36,.06);cursor:pointer;color:#fbbf24;font-size:11px;font-weight:600;">+ Aggiungi entità</button>
+              `
+            }).join('')}
 
             <div style="margin-top:14px;font-size:11px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.07em;">Card Speciali</div>
             ${_STATION_SPECIALS.map(s=>`
@@ -1955,7 +2000,8 @@ class MeteoCard extends HTMLElement {
       </div>`
     }
     const catHTML=(cat)=>{
-      const tiles=cat.sensors.map(s=>tile(c[s.f],s.lbl,cat.color)).filter(Boolean).join('')
+      const _sensors=c.stationSensors?.[cat.key]||[]
+      const tiles=_sensors.map(s=>tile(s.eid,s.lbl||s.eid,cat.color)).filter(Boolean).join('')
       if(!tiles) return ''
       return `<div class="scat">
         <div class="scat-anim" style="background:linear-gradient(160deg,${cat.color}14,transparent 70%);">
