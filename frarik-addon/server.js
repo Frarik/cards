@@ -146,6 +146,22 @@ app.post('/api/frarik/reload-store', async (_req, res) => {
   res.json({ ok });
 });
 
+/* Aggiorna l'add-on dalla repository GitHub e riavvia automaticamente */
+app.post('/api/frarik/self-update', async (_req, res) => {
+  if (!SUP_TOKEN) return res.json({ ok: false, err: 'no_supervisor' });
+  try {
+    await reloadHaStore();
+    const r = await fetch('http://supervisor/addons/self/update', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + SUP_TOKEN, 'Content-Type': 'application/json' }
+    });
+    const body = await r.json().catch(() => ({}));
+    res.json({ ok: r.ok, result: body.result });
+  } catch (e) {
+    res.json({ ok: false, err: String(e) });
+  }
+});
+
 /* ═══════════════════════════════════════════════════════════════════════════
    PROXY REST → HA core  (tutto /api/* tranne /api/frarik/* e /api/websocket)
    Gated da licenza. Il token HA non transita mai dal browser.

@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.4.50 — 2026-06-14
+
+### feat(Settings): auto-update add-on da GitHub + logo sidebar più grande + badge mobile (v1.4.50)
+
+**frarik-addon server.js:**
+- Aggiunto endpoint `POST /api/frarik/self-update` → chiama `http://supervisor/addons/self/update` e riavvia l'add-on automaticamente
+
+**frarik-addon src/main.js:**
+- `frarikCheckUpdate()`: ora chiama il nuovo endpoint e mostra progress toast; ricarica la pagina dopo il riavvio
+- Rimosse le stringhe "(add-on)" dall'etichetta versione nella sidebar
+
+**frarik-addon src/index.html:**
+- Badge versione nella sidebar: logo più grande (42px), testo "Frarik Dashboard" visibile, versione 14px
+
+**frarik-addon src/style.css:**
+- Badge versione ripristinato su mobile (compatto: logo 24px, testo ridotto)
+- Rimosso selettore CSS inesistente `#ep-sidebar-ver-name`
+
+---
+
 ## 1.4.49 — 2026-06-14
 
 ### fix(Settings): testo bianco 100%, testi più grandi, mobile responsive (v1.4.49)

@@ -4957,12 +4957,18 @@ function toggleEdit(){
 
 /* ── Riavvio completo di Home Assistant (dal pallino connessione) ── */
 async function frarikCheckUpdate(){
-  showToast('🔄 Controllo aggiornamenti in corso…');
+  showToast('🔄 Scarico aggiornamento da GitHub…');
   try{
-    const r=await fetch('./api/frarik/reload-store',{method:'POST'});
-    const d=await r.json();
-    if(d&&d.ok) showToast('✅ Registro aggiornato — controlla Impostazioni → Add-on in HA');
-    else showToast('⚠️ Reload non disponibile fuori dall\'add-on');
+    const r=await fetch('./api/frarik/self-update',{method:'POST'});
+    const d=await r.json().catch(()=>({}));
+    if(d&&d.ok){
+      showToast('⏳ Aggiornamento avviato — riavvio in corso…');
+      setTimeout(()=>{ showToast('🔄 Riconnessione…'); setTimeout(()=>window.location.reload(),3000); },5000);
+    } else if(d&&d.err==='no_supervisor'){
+      showToast('⚠️ Disponibile solo dentro l\'add-on HA');
+    } else {
+      showToast('⚠️ Nessun aggiornamento disponibile o errore: '+(d&&d.err||'unknown'));
+    }
   }catch(e){ showToast('⚠️ Errore: '+e.message); }
 }
 function confirmRestartHA(){
@@ -10507,7 +10513,7 @@ try{
   var _vl=document.getElementById('ep-ver-label');
   // Mostra versione add-on dal server (config.yaml), fallback al numero interno
   fetch('./api/frarik/version?t='+Date.now()).then(r=>r.json()).then(d=>{
-    if(_vl) _vl.textContent='v'+d.version+' (add-on)';
+    if(_vl) _vl.textContent='v'+d.version;
   }).catch(()=>{ if(_vl) _vl.textContent=(window.FRARIK_APP_VERSION||'?'); });
 }catch(e){}
 

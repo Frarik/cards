@@ -335,7 +335,8 @@ body.editing .resize-handle{opacity:.55}
   .ep-sidenav-sep{display:none}
   .ep-sidetab{width:auto;flex-shrink:0;white-space:nowrap;border-radius:20px;padding:8px 14px;font-size:13px;gap:7px}
   .ep-sidetab-ico{width:auto;font-size:15px}
-  .ep-sidebar-ver{display:none}
+  .ep-sidebar-ver{padding:8px 12px;gap:8px}
+  .ep-sidebar-ver img{height:24px}
   #ep-paste-wrap{padding:10px 12px 0}
   .ep-content-area{min-height:0}
   .ep-tab-content{padding:18px 20px}
