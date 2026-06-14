@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.4.60 — 2026-06-14
+
+### feat(ClimaCard): ridisegno temi Futuristico/Classico/Minimal con neumorfismo scuro (v1.4.60 / ClimaCard 2.21)
+
+**card-js/Clima.js (2.20 → 2.21):**
+- **Futuristico**: telecomando orizzontale neumorfismo scuro — grande pill arrotondata con pulsante power color-coded (rosso/verde), display LED `Courier New` con glow ciano quando acceso, flusso aria animato, ambient glow radiale al fondo, icone mode/fan/swing come pulsanti quadrati in alto a destra
+- **Classico**: telecomando verticale — strip in cima con power circle + nome + sensori incastonati, grande display inset con `−  22.0°  +` e glow colorato per modalità, pulsanti modalità sempre visibili con icona+label e bordo colorato quando attivi
+- **Minimal**: smart remote compatto — pill principale neumorfismo con power + sensore + display LED, indicatore dot pulsante per stato acceso/spento, strip info modalità/ventola sotto la pill, toggle collassabili per pannelli selezione
+- Tutti e 3 i temi: sfondo `#18181b`/`#1a1a1e`, ombre neumorfiche realistiche, nessun bordo aggiuntivo (solo shadow per profondità)
+
+---
+
 ## 1.4.59 — 2026-06-14
 
 ### feat(ClimaCard): 4 layout visivi completamente diversi (v1.4.59 / ClimaCard 2.20)

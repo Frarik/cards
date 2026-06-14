@@ -1,4 +1,4 @@
-/* frarik-version: 2.20 */
+/* frarik-version: 2.21 */
 (function () {
   'use strict';
 
@@ -363,196 +363,187 @@
     return modePanel+(fanPanel||'')+(swingPanel||'');
   }
 
-  /* ── FUTURISTIC: HUD con anello SVG ciano ── */
+  /* ── FUTURISTIC: telecomando orizzontale neumorfismo scuro ── */
   function _renderFuturistic(rid, d) {
     var entityId=d.entityId, nm=d.nm, mode=d.mode, fanMode=d.fanMode, swingMode=d.swingMode,
         isOn=d.isOn, swingOn=d.swingOn, mCol=d.mCol, targetTemp=d.targetTemp,
         sensorT=d.sensorT, sensorH=d.sensorH, syncCol=d.syncCol, flapInitTransform=d.flapInitTransform,
         hvacModes=d.hvacModes, fanModes=d.fanModes, swingModes=d.swingModes,
-        min=d.min, max=d.max, tempEntity=d.tempEntity, humEntity=d.humEntity;
-    var N='#00e5ff';
-    var cx=100,cy=88,r=68,sw=11;
-    var toRad=function(a){return a*Math.PI/180;};
-    var pt=function(a,rr){rr=rr||r;return [(cx+rr*Math.cos(toRad(a))).toFixed(2),(cy+rr*Math.sin(toRad(a))).toFixed(2)];};
-    var sp=pt(135),ep=pt(45);
-    var trackD='M '+sp[0]+' '+sp[1]+' A '+r+' '+r+' 0 1 1 '+ep[0]+' '+ep[1];
-    var activeD='',dotX=sp[0],dotY=sp[1];
-    if(isOn){
-      var ratio=Math.min(Math.max((parseFloat(targetTemp)-min)/(max-min),0),1);
-      var aDeg=135+ratio*270; var ap=pt(aDeg); dotX=ap[0]; dotY=ap[1];
-      if(ratio>0.01){var lg=aDeg-135>180?1:0; activeD='M '+sp[0]+' '+sp[1]+' A '+r+' '+r+' 0 '+lg+' 1 '+ap[0]+' '+ap[1];}
-    }
+        tempEntity=d.tempEntity, humEntity=d.humEntity;
+    var LED=isOn?'#38bdf8':'#1a2535';
     var css='<style id="'+rid+'-css">'
-      +'@keyframes '+rid+'led{0%,100%{opacity:1}50%{opacity:.65}}'
-      +'@keyframes '+rid+'mist{0%{opacity:0;transform:translateY(-8px)}15%{opacity:.55}80%{opacity:.15}100%{opacity:0;transform:translateY(55px)}}'
-      +'#'+rid+' .cb{padding:5px 10px;border-radius:8px;border:1px solid rgba(0,229,255,.22);cursor:pointer;font-size:11px;font-weight:700;transition:all .18s;background:rgba(0,229,255,.05);color:'+N+';}'
-      +'#'+rid+' .cb:hover{filter:brightness(1.4);}'
-      +'#'+rid+' .tog{flex:1;padding:7px 3px;border-radius:9px;border:1px solid rgba(0,229,255,.15);cursor:pointer;font-size:9px;'
-        +'font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;'
-        +'background:rgba(0,0,0,.35);color:rgba(0,229,255,.4);transition:all .18s;}'
-      +'#'+rid+' .tog:hover{color:'+N+';border-color:rgba(0,229,255,.4);}'
+      +'@keyframes '+rid+'mist{0%{opacity:0;transform:translateY(-6px)}15%{opacity:.6}80%{opacity:.15}100%{opacity:0;transform:translateY(50px)}}'
+      +'@keyframes '+rid+'glow{0%,100%{opacity:.7}50%{opacity:1}}'
+      +'#'+rid+' .cb{border:none;cursor:pointer;font-weight:700;transition:all .15s;background:transparent;}'
+      +'#'+rid+' .cb:active{filter:brightness(.8);transform:scale(.94);}'
+      +'#'+rid+' .tog{flex:1;padding:8px 5px;border-radius:12px;border:none;cursor:pointer;font-size:9.5px;'
+        +'font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;'
+        +'background:#222226;color:rgba(255,255,255,.3);'
+        +'box-shadow:3px 3px 8px rgba(0,0,0,.5),-1px -1px 4px rgba(255,255,255,.025);'
+        +'transition:all .18s;}'
+      +'#'+rid+' .tog:hover{color:rgba(255,255,255,.7);}'
       +'</style>';
     function selBtn(eId,action,val,label,active,col2){
-      var bs=active?'background:'+col2+'22;color:'+col2+';border:1px solid '+col2+'55;box-shadow:0 0 8px '+col2+'33;':'background:rgba(0,229,255,.04);color:rgba(0,229,255,.35);border:1px solid rgba(0,229,255,.1);';
-      return '<button class="cb" data-cid="'+eId+'" data-action="'+action+'" data-val="'+val+'" style="'+bs+'">'+label+'</button>';
+      var bs=active
+        ?'background:'+col2+'22;color:'+col2+';border:1px solid '+col2+'44;box-shadow:0 0 10px '+col2+'33,inset 0 1px 0 rgba(255,255,255,.05);'
+        :'background:#1e1e22;color:rgba(255,255,255,.35);border:1px solid rgba(255,255,255,.06);box-shadow:2px 2px 6px rgba(0,0,0,.45),-1px -1px 3px rgba(255,255,255,.02);';
+      return '<button class="cb" data-cid="'+eId+'" data-action="'+action+'" data-val="'+val+'" style="padding:5px 10px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;'+bs+'">'+label+'</button>';
     }
-    var pw='display:none;flex-direction:column;gap:5px;background:rgba(0,229,255,.03);border-radius:9px;padding:9px;border:1px solid rgba(0,229,255,.12);';
-    var togRow='<div style="display:flex;gap:5px">'
-      +'<button class="tog" data-action="toggle" data-sec="mode"><span style="font-size:14px">'+mIcon(mode)+'</span><span>MODALITÀ</span></button>'
-      +'<button class="tog" data-action="toggle" data-sec="fan"><span style="font-size:14px">💨</span><span>VENTOLA</span></button>'
-      +(swingModes.length>1?'<button class="tog" data-action="toggle" data-sec="swing"><span style="font-size:14px">↕</span><span>ALETTE</span></button>':'')
+    var pw='display:none;flex-direction:column;gap:6px;background:#1a1a1e;border-radius:12px;padding:10px;border:1px solid rgba(255,255,255,.06);box-shadow:inset 2px 2px 8px rgba(0,0,0,.5);';
+    // toggle icon buttons (top right)
+    var iconTogs='<div style="display:flex;gap:7px;align-items:center">'
+      +(syncCol?'<div style="width:7px;height:7px;border-radius:50%;background:'+syncCol+';box-shadow:0 0 5px '+syncCol+'"></div>':'')
+      +'<button class="tog" data-action="toggle" data-sec="mode" style="width:34px;height:34px;padding:0;border-radius:10px;font-size:17px;flex:none"><span>'+mIcon(mode)+'</span></button>'
+      +'<button class="tog" data-action="toggle" data-sec="fan" style="width:34px;height:34px;padding:0;border-radius:10px;font-size:17px;flex:none"><span>💨</span></button>'
+      +(swingModes.length>1?'<button class="tog" data-action="toggle" data-sec="swing" style="width:34px;height:34px;padding:0;border-radius:10px;font-size:17px;flex:none"><span>↕</span></button>':'')
     +'</div>';
-    var airH=isOn?'<div style="position:relative;height:36px;overflow:hidden;pointer-events:none;margin:-4px 0 0">'+airStreams(rid,N,true)+'</div>':'';
+    var airSection=isOn?'<div style="position:relative;height:28px;overflow:hidden;pointer-events:none;margin:2px 20px 0">'+airStreams(rid,'#38bdf8',true)+'</div>':'<div style="height:4px"></div>';
     return css
-      +'<div id="'+rid+'" style="position:relative;width:100%;height:100%;min-height:280px;border-radius:18px;'
-        +'padding:10px 12px;box-sizing:border-box;font-family:\'Courier New\',Courier,monospace;'
-        +'display:flex;flex-direction:column;gap:5px;overflow:hidden;'
-        +'background:linear-gradient(165deg,#020a0f 0%,#010507 55%,#020e16 100%);'
-        +'border:1px solid '+(isOn?'rgba(0,229,255,.45)':'rgba(0,229,255,.15)')+';'
-        +'box-shadow:0 10px 40px rgba(0,0,0,.85)'+(isOn?',0 0 28px rgba(0,229,255,.07)':'')+';">'
-      +'<div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,229,255,.022) 0px,rgba(0,229,255,.022) 1px,transparent 1px,transparent 3px);pointer-events:none;z-index:0"></div>'
-      // header
-      +'<div style="position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between">'
-        +'<div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:'+(isOn?N:'rgba(0,229,255,.3)')+'">'+nm+'</div>'
-        +'<div style="display:flex;gap:5px;align-items:center">'
-          +(syncCol?'<div style="width:6px;height:6px;border-radius:50%;background:'+syncCol+';box-shadow:0 0 5px '+syncCol+'"></div>':'')
-          +(sensorT?'<div data-a="stat" data-eid="'+tempEntity+'" data-attr="" data-lbl="Temperatura" style="cursor:pointer;font-size:9px;color:rgba(0,229,255,.55);background:rgba(0,229,255,.07);padding:1px 6px;border-radius:99px;border:1px solid rgba(0,229,255,.18)">🌡 '+sensorT+'°</div>':'')
-          +(sensorH?'<div data-a="stat" data-eid="'+humEntity+'" data-attr="" data-lbl="Umidità" style="cursor:pointer;font-size:9px;color:rgba(0,229,255,.55);background:rgba(0,229,255,.07);padding:1px 6px;border-radius:99px;border:1px solid rgba(0,229,255,.18)">💧 '+sensorH+'%</div>':'')
-          +'<div style="font-size:9px;color:'+(isOn?mCol:'rgba(255,255,255,.15)')+';letter-spacing:.1em;'+(isOn?'text-shadow:0 0 8px '+mCol+';':'')+'">'+( isOn?mLabel(mode).toUpperCase():'STANDBY')+'</div>'
+      +'<div id="'+rid+'" style="position:relative;width:100%;height:100%;min-height:260px;border-radius:20px;'
+        +'padding:14px 14px 12px;box-sizing:border-box;font-family:system-ui,sans-serif;'
+        +'display:flex;flex-direction:column;gap:10px;overflow:hidden;'
+        +'background:#18181b;'
+        +'border:1px solid rgba(255,255,255,.055);'
+        +'box-shadow:0 20px 60px rgba(0,0,0,.75);">'
+      // flap hidden
+      +'<div data-clm-flap data-rid="'+rid+'" style="position:absolute;width:0;height:0;overflow:hidden;transform:'+flapInitTransform+'"></div>'
+      // top row
+      +'<div style="display:flex;align-items:center;justify-content:space-between">'
+        +'<div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.55);letter-spacing:.01em">'+nm+'</div>'
+        +iconTogs
+      +'</div>'
+      // main pill
+      +'<div style="border-radius:999px;background:#242428;'
+        +'box-shadow:6px 6px 18px rgba(0,0,0,.65),-2px -2px 8px rgba(255,255,255,.03);'
+        +'padding:9px 14px;display:flex;align-items:center;gap:10px">'
+        // power button
+        +'<div style="width:44px;height:44px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;'
+          +'background:'+(isOn?'#14532d':'#1c1418')+';'
+          +'box-shadow:'+(isOn?'0 0 14px rgba(34,197,94,.35),inset 0 1px 0 rgba(255,255,255,.08)':'inset 2px 2px 8px rgba(0,0,0,.6),inset -1px -1px 3px rgba(255,255,255,.03)')+';'
+          +'color:'+(isOn?'#4ade80':'#7f1d1d')+'">'
+          +'⏻'
         +'</div>'
+        // sensor temp pill
+        +(sensorT
+          ?'<div data-a="stat" data-eid="'+tempEntity+'" data-attr="" data-lbl="Temperatura" style="cursor:pointer;flex-shrink:0;background:#0e0e11;border-radius:20px;padding:5px 10px;'
+            +'box-shadow:inset 2px 2px 7px rgba(0,0,0,.65),inset -1px -1px 3px rgba(255,255,255,.02);'
+            +'font-size:12px;font-weight:700;font-family:\'Courier New\',monospace;color:rgba(255,255,255,.38)">'+sensorT+'°</div>'
+          :'')
+        // LED display + controls (flex:1)
+        +'<div style="flex:1;background:#0d0d10;border-radius:14px;padding:7px 12px;'
+          +'box-shadow:inset 3px 3px 10px rgba(0,0,0,.7),inset -1px -1px 3px rgba(255,255,255,.02);'
+          +'display:flex;align-items:center;justify-content:space-between;gap:6px">'
+          +'<button class="cb" data-cid="'+entityId+'" data-action="temp-down" style="font-size:26px;color:rgba(255,255,255,.3);line-height:1;padding:0 4px">−</button>'
+          +'<div data-clm-led data-clm-temp style="flex:1;text-align:center;font-family:\'Courier New\',monospace;font-size:26px;font-weight:700;letter-spacing:2px;'
+            +'color:'+LED+';text-shadow:'+(isOn?'0 0 18px #38bdf8,0 0 40px rgba(56,189,248,.3)':'none')+';">'+(isOn?targetTemp+'°':'──')
+          +'</div>'
+          +'<button class="cb" data-cid="'+entityId+'" data-action="temp-up" style="font-size:26px;color:rgba(255,255,255,.3);line-height:1;padding:0 4px">+</button>'
+        +'</div>'
+        // humidity pill
+        +(sensorH
+          ?'<div data-a="stat" data-eid="'+humEntity+'" data-attr="" data-lbl="Umidità" style="cursor:pointer;flex-shrink:0;background:#0e0e11;border-radius:20px;padding:5px 9px;'
+            +'box-shadow:inset 2px 2px 7px rgba(0,0,0,.65);font-size:11px;font-weight:700;font-family:\'Courier New\',monospace;color:rgba(255,255,255,.35)">'+sensorH+'%</div>'
+          :'')
       +'</div>'
-      // SVG ring
-      +'<div style="position:relative;z-index:1;display:flex;justify-content:center">'
-        +'<svg viewBox="0 0 200 170" style="width:100%;max-width:220px;display:block;overflow:visible">'
-          +'<path d="'+trackD+'" fill="none" stroke="rgba(0,229,255,.09)" stroke-width="'+sw+'" stroke-linecap="round"/>'
-          +(activeD?'<path d="'+activeD+'" fill="none" stroke="rgba(0,229,255,.18)" stroke-width="'+(sw+8)+'" stroke-linecap="round"/>':'')
-          +(activeD?'<path d="'+activeD+'" fill="none" stroke="'+N+'" stroke-width="'+sw+'" stroke-linecap="round" style="filter:drop-shadow(0 0 5px '+N+')"/>':'')
-          +(isOn?'<circle cx="'+dotX+'" cy="'+dotY+'" r="7" fill="'+N+'" style="filter:drop-shadow(0 0 7px '+N+')"/>':'')
-          +'<text x="'+(parseFloat(sp[0])-6)+'" y="'+(parseFloat(sp[1])+13)+'" text-anchor="end" font-size="8" fill="rgba(0,229,255,.35)" font-family="Courier New">'+min+'°</text>'
-          +'<text x="'+(parseFloat(ep[0])+6)+'" y="'+(parseFloat(ep[1])+13)+'" text-anchor="start" font-size="8" fill="rgba(0,229,255,.35)" font-family="Courier New">'+max+'°</text>'
-          +'<text data-clm-led x="'+cx+'" y="'+(cy-4)+'" text-anchor="middle" font-size="36" font-weight="700" font-family="Courier New" fill="'+(isOn?N:'rgba(0,229,255,.12)')+'" '+(isOn?'style="filter:drop-shadow(0 0 10px '+N+')"':'')+'>'+targetTemp+'</text>'
-          +'<text x="'+cx+'" y="'+(cy+13)+'" text-anchor="middle" font-size="8.5" fill="'+(isOn?mCol:'rgba(255,255,255,.15)')+'" font-family="Courier New" letter-spacing="2">'+(isOn?mLabel(mode).toUpperCase():'─ OFF ─')+'</text>'
-          +'<text x="'+cx+'" y="'+(cy+26)+'" text-anchor="middle" font-size="8" fill="rgba(0,229,255,.38)" font-family="Courier New">💨 '+fLabel(fanMode)+(swingOn?' ↕':'')+'</text>'
-        +'</svg>'
-        +'<div data-clm-flap data-rid="'+rid+'" style="position:absolute;width:0;height:0;overflow:hidden;transform:'+flapInitTransform+'"></div>'
-      +'</div>'
-      +airH
-      // temp controls
-      +'<div style="position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:12px">'
-        +'<button class="cb" data-cid="'+entityId+'" data-action="temp-down" style="width:36px;height:36px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;box-shadow:inset 0 2px 8px rgba(0,0,0,.7)">−</button>'
-        +'<div data-clm-temp style="min-width:74px;text-align:center;font-size:18px;font-weight:700;letter-spacing:3px;color:'+(isOn?N:'rgba(0,229,255,.18)')+';'+(isOn?'text-shadow:0 0 10px '+N+';':'')+'>">'+(isOn?targetTemp+'°':'──')+'</div>'
-        +'<button class="cb" data-cid="'+entityId+'" data-action="temp-up" style="width:36px;height:36px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;box-shadow:inset 0 2px 8px rgba(0,0,0,.7)">+</button>'
-      +'</div>'
-      +'<div style="position:relative;z-index:1">'+togRow+'</div>'
-      +'<div style="position:relative;z-index:1">'+_panels(rid,entityId,mode,fanMode,swingMode,hvacModes,fanModes,swingModes,pw,selBtn)+'</div>'
+      // ambient glow
+      +airSection
+      +(isOn?'<div style="height:10px;background:radial-gradient(ellipse at 50% 100%,rgba(56,189,248,.28) 0%,transparent 68%);pointer-events:none;animation:'+rid+'glow 2.5s ease-in-out infinite;margin:0 14px -6px"></div>':'')
+      // mode label
+      +'<div style="text-align:center;font-size:10px;font-weight:700;color:'+(isOn?mCol:'rgba(255,255,255,.18)')+';letter-spacing:.08em;'+(isOn?'text-shadow:0 0 8px '+mCol+';':'')+'">'+( isOn?mLabel(mode).toUpperCase()+' — 💨 '+fLabel(fanMode)+(swingOn?' — ↕':''):'— spento —')+'</div>'
+      // panels
+      +'<div>'+_panels(rid,entityId,mode,fanMode,swingMode,hvacModes,fanModes,swingModes,pw,selBtn)+'</div>'
     +'</div>';
   }
 
-  /* ── CLASSIC: termostato rotondo con quadrante SVG ── */
+  /* ── CLASSIC: telecomando verticale neumorfismo scuro ── */
   function _renderClassic(rid, d) {
     var entityId=d.entityId, nm=d.nm, mode=d.mode, fanMode=d.fanMode, swingMode=d.swingMode,
         isOn=d.isOn, swingOn=d.swingOn, mCol=d.mCol, targetTemp=d.targetTemp,
         sensorT=d.sensorT, sensorH=d.sensorH, syncCol=d.syncCol, flapInitTransform=d.flapInitTransform,
         hvacModes=d.hvacModes, fanModes=d.fanModes, swingModes=d.swingModes,
-        min=d.min, max=d.max, tempEntity=d.tempEntity, humEntity=d.humEntity, brandSvg=d.brandSvg;
-    var W='#d97706', WL='#fbbf24', WD='#78350f';
-    var cx=100,cy=100,rO=80,rI=55;
-    var toRad=function(a){return a*Math.PI/180;};
-    var pt=function(a,rr){return [(cx+rr*Math.cos(toRad(a))).toFixed(2),(cy+rr*Math.sin(toRad(a))).toFixed(2)];};
-    var range=max-min; var ticks='';
-    for(var i=0;i<=range;i++){
-      var ang=135+(i/range)*270;
-      var isMaj=i%Math.max(1,Math.round(range/7))===0;
-      var t1=pt(ang,rO-(isMaj?2:4)), t2=pt(ang,rO-(isMaj?14:8));
-      var isAct=isOn&&(min+i)<=parseFloat(targetTemp)+0.01;
-      ticks+='<line x1="'+t1[0]+'" y1="'+t1[1]+'" x2="'+t2[0]+'" y2="'+t2[1]+'" stroke="'+(isAct?WL:'rgba(255,195,80,.18)')+'" stroke-width="'+(isMaj?2:1.2)+'" stroke-linecap="round"/>';
-      if(isMaj){var lp=pt(ang,rO+7); ticks+='<text x="'+lp[0]+'" y="'+(parseFloat(lp[1])+3)+'" text-anchor="middle" font-size="8" fill="rgba(255,190,70,.45)" font-family="Georgia,serif">'+(min+i)+'</text>';}
-    }
-    var sp=pt(135,rO-8),ep=pt(45,rO-8);
-    var activeArc='',dialDot='';
-    if(isOn){
-      var ratio=Math.min(Math.max((parseFloat(targetTemp)-min)/(max-min),0),1);
-      var aDeg=135+ratio*270; var ap=pt(aDeg,rO-8);
-      if(ratio>0.02){var lg=aDeg-135>180?1:0; activeArc='<path d="M '+sp[0]+' '+sp[1]+' A '+(rO-8)+' '+(rO-8)+' 0 '+lg+' 1 '+ap[0]+' '+ap[1]+'" fill="none" stroke="'+WL+'" stroke-width="4" stroke-linecap="round" style="filter:drop-shadow(0 0 4px '+WL+')"/>';}
-      dialDot='<circle cx="'+ap[0]+'" cy="'+ap[1]+'" r="5.5" fill="'+WL+'" stroke="#1a0e00" stroke-width="1.5" style="filter:drop-shadow(0 0 5px '+WL+')"/>';
-    }
+        tempEntity=d.tempEntity, humEntity=d.humEntity;
+    var LED=isOn?mCol:'#1e2535';
     var css='<style id="'+rid+'-css">'
-      +'@keyframes '+rid+'led{0%,100%{opacity:1}50%{opacity:.7}}'
-      +'@keyframes '+rid+'mist{0%{opacity:0;transform:translateY(-8px)}15%{opacity:.5}80%{opacity:.12}100%{opacity:0;transform:translateY(55px)}}'
-      +'#'+rid+' .cb{padding:5px 12px;border-radius:20px;border:1px solid rgba(255,195,80,.25);cursor:pointer;font-size:11px;font-weight:700;transition:all .18s;background:rgba(255,195,80,.06);color:'+WL+';}'
-      +'#'+rid+' .cb:hover{filter:brightness(1.3);}'
-      +'#'+rid+' .tog{flex:1;padding:8px 4px;border-radius:12px;border:1px solid rgba(255,195,80,.15);cursor:pointer;font-size:10px;'
+      +'@keyframes '+rid+'ind{0%,100%{box-shadow:0 0 8px '+mCol+'88}50%{box-shadow:0 0 18px '+mCol+',0 0 36px '+mCol+'44}}'
+      +'#'+rid+' .cb{border:none;cursor:pointer;font-weight:700;transition:all .15s;background:transparent;}'
+      +'#'+rid+' .cb:active{transform:scale(.93);}'
+      +'#'+rid+' .tog{flex:1;padding:8px 4px;border-radius:12px;border:none;cursor:pointer;font-size:10px;'
         +'font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;'
-        +'background:rgba(20,10,2,.5);color:rgba(255,195,80,.4);transition:all .18s;}'
-      +'#'+rid+' .tog:hover{color:'+WL+';border-color:rgba(255,195,80,.4);}'
+        +'background:#222226;color:rgba(255,255,255,.3);'
+        +'box-shadow:3px 3px 9px rgba(0,0,0,.55),-1px -1px 4px rgba(255,255,255,.025);'
+        +'transition:all .18s;}'
+      +'#'+rid+' .tog:hover{color:rgba(255,255,255,.7);}'
       +'</style>';
     function selBtn(eId,action,val,label,active,col2){
-      var bs=active?'background:'+col2+'22;color:'+col2+';border:1px solid '+col2+'55;box-shadow:0 0 8px '+col2+'33;':'background:rgba(255,195,80,.04);color:rgba(255,195,80,.35);border:1px solid rgba(255,195,80,.12);';
-      return '<button class="cb" data-cid="'+eId+'" data-action="'+action+'" data-val="'+val+'" style="'+bs+'">'+label+'</button>';
+      var bs=active
+        ?'background:'+col2+'1e;color:'+col2+';border:1px solid '+col2+'44;box-shadow:0 0 10px '+col2+'33,3px 3px 8px rgba(0,0,0,.4);'
+        :'background:#1e1e22;color:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.06);box-shadow:2px 2px 7px rgba(0,0,0,.5),-1px -1px 3px rgba(255,255,255,.02);';
+      return '<button class="cb" data-cid="'+eId+'" data-action="'+action+'" data-val="'+val+'" style="padding:6px 10px;border-radius:9px;font-size:11px;font-weight:700;cursor:pointer;'+bs+'">'+label+'</button>';
     }
-    var pw='display:none;flex-direction:column;gap:5px;background:rgba(255,195,80,.03);border-radius:11px;padding:9px;border:1px solid rgba(255,195,80,.12);';
-    var togRow='<div style="display:flex;gap:6px">'
-      +'<button class="tog" data-action="toggle" data-sec="mode"><span style="font-size:15px">'+mIcon(mode)+'</span><span>Modalità</span></button>'
-      +'<button class="tog" data-action="toggle" data-sec="fan"><span style="font-size:15px">💨</span><span>Ventola</span></button>'
-      +(swingModes.length>1?'<button class="tog" data-action="toggle" data-sec="swing"><span style="font-size:15px">↕</span><span>Alette</span></button>':'')
+    var pw='display:none;flex-direction:column;gap:6px;background:#1a1a1e;border-radius:12px;padding:10px;border:1px solid rgba(255,255,255,.05);box-shadow:inset 2px 2px 8px rgba(0,0,0,.5);';
+    // mode selection buttons always visible under the tog row
+    var modeBtns='<div style="display:flex;gap:6px;flex-wrap:wrap">'
+      +hvacModes.map(function(m){
+        var act=mode===m, c2=mColor(m);
+        return '<button class="cb" data-cid="'+entityId+'" data-action="mode" data-val="'+m+'" style="flex:1;min-width:0;padding:8px 4px;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;'
+          +(act?'background:'+c2+'1e;color:'+c2+';border:1px solid '+c2+'44;box-shadow:0 0 10px '+c2+'33,3px 3px 8px rgba(0,0,0,.4);':'background:#1e1e22;color:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.06);box-shadow:2px 2px 7px rgba(0,0,0,.5);')
+          +'"><span style="font-size:16px">'+mIcon(m)+'</span><span>'+mLabel(m)+'</span></button>';
+      }).join('')
     +'</div>';
     return css
-      +'<div id="'+rid+'" style="position:relative;width:100%;height:100%;min-height:280px;border-radius:18px;'
-        +'padding:12px;box-sizing:border-box;font-family:Georgia,\'Times New Roman\',serif;'
-        +'display:flex;flex-direction:column;gap:8px;overflow:hidden;'
-        +'background:linear-gradient(150deg,#1c1008 0%,#120c04 55%,#1a1006 100%);'
-        +'border:1px solid '+(isOn?WL+'55':'rgba(255,195,80,.18)')+';'
-        +'box-shadow:0 10px 40px rgba(0,0,0,.7)'+(isOn?',0 0 22px rgba(255,180,60,.08)':'')+';">'
-      // header
-      +'<div style="display:flex;align-items:center;justify-content:space-between">'
-        +'<div style="font-size:13px;font-weight:700;letter-spacing:.04em;color:#d4a245">'+nm+'</div>'
-        +'<div style="display:flex;gap:5px;align-items:center">'
-          +(syncCol?'<div style="width:6px;height:6px;border-radius:50%;background:'+syncCol+';box-shadow:0 0 4px '+syncCol+'"></div>':'')
-          +(sensorT?'<div data-a="stat" data-eid="'+tempEntity+'" data-attr="" data-lbl="Temperatura" style="cursor:pointer;font-size:9px;color:rgba(255,195,80,.55);background:rgba(255,195,80,.07);padding:1px 6px;border-radius:99px;border:1px solid rgba(255,195,80,.18)">🌡 '+sensorT+'°</div>':'')
-          +(sensorH?'<div data-a="stat" data-eid="'+humEntity+'" data-attr="" data-lbl="Umidità" style="cursor:pointer;font-size:9px;color:rgba(255,195,80,.55);background:rgba(255,195,80,.07);padding:1px 6px;border-radius:99px;border:1px solid rgba(255,195,80,.18)">💧 '+sensorH+'%</div>':'')
+      +'<div id="'+rid+'" style="position:relative;width:100%;height:100%;min-height:260px;border-radius:20px;'
+        +'padding:13px 13px 11px;box-sizing:border-box;font-family:system-ui,sans-serif;'
+        +'display:flex;flex-direction:column;gap:10px;overflow:hidden;'
+        +'background:#1a1a1e;'
+        +'border:1px solid rgba(255,255,255,.055);'
+        +'box-shadow:0 20px 60px rgba(0,0,0,.7);">'
+      // hidden flap
+      +'<div data-clm-flap data-rid="'+rid+'" style="position:absolute;width:0;height:0;overflow:hidden;transform:'+flapInitTransform+'"></div>'
+      // top strip: power circle + name + sensor pills
+      +'<div style="display:flex;align-items:center;gap:10px">'
+        +'<div style="width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;'
+          +'background:'+(isOn?'#14532d':'#1e1a1e')+';'
+          +'box-shadow:'+(isOn?'0 0 14px rgba(34,197,94,.4),3px 3px 8px rgba(0,0,0,.5)':'inset 2px 2px 7px rgba(0,0,0,.6),-1px -1px 3px rgba(255,255,255,.025)')+';'
+          +'color:'+(isOn?'#4ade80':'rgba(239,68,68,.6)')+'">⏻</div>'
+        +'<div style="flex:1;font-size:13px;font-weight:700;color:rgba(255,255,255,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+nm+'</div>'
+        +'<div style="display:flex;gap:5px;align-items:center;flex-shrink:0">'
+          +(syncCol?'<div style="width:6px;height:6px;border-radius:50%;background:'+syncCol+';box-shadow:0 0 5px '+syncCol+'"></div>':'')
+          +(sensorT?'<div data-a="stat" data-eid="'+tempEntity+'" data-attr="" data-lbl="Temperatura" style="cursor:pointer;background:#0e0e11;border-radius:20px;padding:4px 9px;box-shadow:inset 2px 2px 6px rgba(0,0,0,.6);font-size:11px;font-weight:700;font-family:\'Courier New\',monospace;color:rgba(255,255,255,.38)">🌡 '+sensorT+'°</div>':'')
+          +(sensorH?'<div data-a="stat" data-eid="'+humEntity+'" data-attr="" data-lbl="Umidità" style="cursor:pointer;background:#0e0e11;border-radius:20px;padding:4px 9px;box-shadow:inset 2px 2px 6px rgba(0,0,0,.6);font-size:11px;font-weight:700;font-family:\'Courier New\',monospace;color:rgba(255,255,255,.35)">💧 '+sensorH+'%</div>':'')
         +'</div>'
       +'</div>'
-      // dial SVG
-      +'<div style="display:flex;justify-content:center">'
-        +'<svg viewBox="0 0 200 200" style="width:100%;max-width:200px;display:block;overflow:visible">'
-          // outer ring bg
-          +'<circle cx="'+cx+'" cy="'+cy+'" r="'+rO+'" fill="rgba(0,0,0,.4)" stroke="rgba(255,195,80,.1)" stroke-width="1"/>'
-          // ticks
-          +ticks
-          // active arc
-          +activeArc
-          // dial dot
-          +dialDot
-          // face circle
-          +'<circle cx="'+cx+'" cy="'+cy+'" r="'+rI+'" fill="linear-gradient(145deg,#241508,#180e04)" stroke="rgba(255,195,80,.12)" stroke-width="1.5"/>'
-          +'<circle cx="'+cx+'" cy="'+cy+'" r="'+rI+'" fill="url(#dialgrad'+rid+')" stroke="rgba(255,195,80,.12)" stroke-width="1.5"/>'
-          +'<defs><radialGradient id="dialgrad'+rid+'" cx="40%" cy="35%"><stop offset="0%" stop-color="#2e1a08"/><stop offset="100%" stop-color="#100a02"/></radialGradient></defs>'
-          // mode icon
-          +'<text x="'+cx+'" y="'+(cy-16)+'" text-anchor="middle" font-size="18">'+mIcon(mode)+'</text>'
-          // temperature
-          +'<text data-clm-led x="'+cx+'" y="'+(cy+8)+'" text-anchor="middle" font-size="26" font-weight="700" font-family="Courier New,monospace" fill="'+(isOn?WL:'rgba(255,195,80,.15)')+'" '+(isOn?'style="filter:drop-shadow(0 0 8px '+WL+')"':'')+'>'+targetTemp+'</text>'
-          // mode label
-          +'<text x="'+cx+'" y="'+(cy+22)+'" text-anchor="middle" font-size="8" fill="'+(isOn?W:'rgba(255,195,80,.2)')+'" font-family="Georgia" letter-spacing="1">'+(isOn?mLabel(mode):'— spento —')+'</text>'
-          // fan + swing
-          +(isOn?'<text x="'+cx+'" y="'+(cy+35)+'" text-anchor="middle" font-size="8" fill="rgba(255,195,80,.4)" font-family="Georgia">💨 '+fLabel(fanMode)+(swingOn?' · ↕':'')+'</text>':'')
-          // brand logo if any
-          +(brandSvg?'<foreignObject x="55" y="155" width="90" height="22">'+brandSvg+'</foreignObject>':'')
-          // hidden flap
-        +'</svg>'
-        +'<div data-clm-flap data-rid="'+rid+'" style="position:absolute;width:0;height:0;overflow:hidden;transform:'+flapInitTransform+'"></div>'
+      // main inset display
+      +'<div style="background:#0d0d10;border-radius:16px;'
+        +'box-shadow:inset 4px 4px 14px rgba(0,0,0,.72),inset -1px -1px 4px rgba(255,255,255,.02);'
+        +'padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px">'
+        +'<button class="cb" data-cid="'+entityId+'" data-action="temp-down" style="font-size:30px;font-weight:300;color:rgba(255,255,255,.25);line-height:1;padding:0 6px">−</button>'
+        +'<div data-clm-led data-clm-temp style="flex:1;text-align:center;font-family:\'Courier New\',monospace;font-size:32px;font-weight:700;letter-spacing:3px;'
+          +'color:'+LED+';text-shadow:'+(isOn?'0 0 18px '+mCol+',0 0 40px '+mCol+'44':'none')+';'
+          +(isOn?'animation:'+rid+'ind 2.5s ease-in-out infinite;':'')+'">'+( isOn?targetTemp+'°':'──')
+        +'</div>'
+        +'<button class="cb" data-cid="'+entityId+'" data-action="temp-up" style="font-size:30px;font-weight:300;color:rgba(255,255,255,.25);line-height:1;padding:0 6px">+</button>'
       +'</div>'
-      // temp controls
-      +'<div style="display:flex;align-items:center;justify-content:center;gap:14px">'
-        +'<button class="cb" data-cid="'+entityId+'" data-action="temp-down" style="width:38px;height:38px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;box-shadow:inset 0 2px 10px rgba(0,0,0,.7),0 2px 5px rgba(0,0,0,.4)">−</button>'
-        +'<div data-clm-temp style="min-width:72px;text-align:center;font-size:22px;font-weight:700;color:'+(isOn?WL:'rgba(255,195,80,.18)')+';'+(isOn?'text-shadow:0 0 10px '+WL+';':'')+'font-family:\'Courier New\',monospace;">'+(isOn?targetTemp+'°':'—')+'</div>'
-        +'<button class="cb" data-cid="'+entityId+'" data-action="temp-up" style="width:38px;height:38px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;box-shadow:inset 0 2px 10px rgba(0,0,0,.7),0 2px 5px rgba(0,0,0,.4)">+</button>'
-      +'</div>'
-      +togRow
-      +_panels(rid,entityId,mode,fanMode,swingMode,hvacModes,fanModes,swingModes,pw,selBtn)
+      // fan + swing toggles (icon style)
+      +(fanModes.length>1||swingModes.length>1?'<div style="display:flex;gap:7px">'
+        +'<button class="tog" data-action="toggle" data-sec="fan" style="flex:none;width:40px;height:40px;padding:0;border-radius:12px;font-size:18px"><span>💨</span></button>'
+        +(swingModes.length>1?'<button class="tog" data-action="toggle" data-sec="swing" style="flex:none;width:40px;height:40px;padding:0;border-radius:12px;font-size:18px"><span>↕</span></button>':'')
+        +'<div style="flex:1;display:flex;align-items:center;justify-content:flex-end;gap:5px;font-size:10px;color:rgba(255,255,255,.28);font-weight:600">'
+          +(isOn?'💨 '+fLabel(fanMode)+(swingOn?' · ↕ att.':''):'')
+        +'</div>'
+        +'<div data-secpanel="fan" style="'+pw+'display:none"></div>'
+        +(swingModes.length>1?'<div data-secpanel="swing" style="'+pw+'display:none"></div>':'')
+      +'</div>':'')
+      // mode buttons always visible
+      +modeBtns
+      // hidden mode panel (needed by JS but empty since we show buttons directly)
+      +'<div data-secpanel="mode" style="display:none"></div>'
+      +'<div style="display:none"><button class="tog" data-action="toggle" data-sec="mode" style="display:none"></button></div>'
+      // fan + swing panels (for toggle)
+      +'<div>'+_panels(rid,entityId,mode,fanMode,swingMode,[],fanModes,swingModes,pw,selBtn)+'</div>'
     +'</div>';
   }
 
-  /* ── MINIMAL: tipografia pura, zero decorazioni ── */
+  /* ── MINIMAL: smart remote compatto neumorfismo scuro ── */
   function _renderMinimal(rid, d) {
     var entityId=d.entityId, nm=d.nm, mode=d.mode, fanMode=d.fanMode, swingMode=d.swingMode,
         isOn=d.isOn, swingOn=d.swingOn, mCol=d.mCol, targetTemp=d.targetTemp,
@@ -560,62 +551,73 @@
         hvacModes=d.hvacModes, fanModes=d.fanModes, swingModes=d.swingModes,
         tempEntity=d.tempEntity, humEntity=d.humEntity;
     var css='<style id="'+rid+'-css">'
-      +'#'+rid+' .cb{padding:4px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.12);cursor:pointer;font-size:11px;font-weight:700;transition:all .15s;background:transparent;color:rgba(255,255,255,.5);}'
-      +'#'+rid+' .cb:hover{background:rgba(255,255,255,.08);color:#fff;border-color:rgba(255,255,255,.25);}'
-      +'#'+rid+' .tog{flex:1;padding:8px 4px;border-radius:8px;border:none;border-top:2px solid rgba(255,255,255,.06);cursor:pointer;font-size:10px;'
+      +'@keyframes '+rid+'pulse{0%,100%{opacity:.7}50%{opacity:1}}'
+      +'#'+rid+' .cb{border:none;cursor:pointer;font-weight:700;transition:all .15s;background:transparent;}'
+      +'#'+rid+' .cb:active{transform:scale(.92);}'
+      +'#'+rid+' .tog{flex:1;padding:8px 5px;border-radius:11px;border:none;cursor:pointer;font-size:9.5px;'
         +'font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;'
-        +'background:transparent;color:rgba(255,255,255,.3);transition:all .18s;}'
-      +'#'+rid+' .tog:hover{color:rgba(255,255,255,.75);border-top-color:rgba(255,255,255,.2);}'
+        +'background:#1e1e22;color:rgba(255,255,255,.28);'
+        +'box-shadow:3px 3px 8px rgba(0,0,0,.5),-1px -1px 4px rgba(255,255,255,.025);'
+        +'transition:all .18s;}'
+      +'#'+rid+' .tog:hover{color:rgba(255,255,255,.65);}'
       +'</style>';
     function selBtn(eId,action,val,label,active,col2){
-      var bs=active?'background:'+col2+'18;color:'+col2+';border:1px solid '+col2+'44;':'background:transparent;color:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.1);';
-      return '<button class="cb" data-cid="'+eId+'" data-action="'+action+'" data-val="'+val+'" style="'+bs+'">'+label+'</button>';
+      var bs=active
+        ?'background:'+col2+'1e;color:'+col2+';border:1px solid '+col2+'44;box-shadow:0 0 10px '+col2+'33,3px 3px 8px rgba(0,0,0,.4);'
+        :'background:#1e1e22;color:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.06);box-shadow:2px 2px 7px rgba(0,0,0,.5),-1px -1px 3px rgba(255,255,255,.02);';
+      return '<button class="cb" data-cid="'+eId+'" data-action="'+action+'" data-val="'+val+'" style="padding:5px 9px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;'+bs+'">'+label+'</button>';
     }
-    var pw='display:none;flex-direction:column;gap:5px;background:transparent;padding:8px 0 0;border-top:1px solid rgba(255,255,255,.06);';
-    var togRow='<div style="display:flex;gap:4px;border-top:1px solid rgba(255,255,255,.06);padding-top:8px">'
-      +'<button class="tog" data-action="toggle" data-sec="mode"><span style="font-size:16px">'+mIcon(mode)+'</span><span>Modalità</span></button>'
-      +'<button class="tog" data-action="toggle" data-sec="fan"><span style="font-size:16px">💨</span><span>Ventola</span></button>'
-      +(swingModes.length>1?'<button class="tog" data-action="toggle" data-sec="swing"><span style="font-size:16px">↕</span><span>Alette</span></button>':'')
+    var pw='display:none;flex-direction:column;gap:6px;background:#1a1a1e;border-radius:12px;padding:10px;border:1px solid rgba(255,255,255,.05);box-shadow:inset 2px 2px 8px rgba(0,0,0,.5);';
+    var togRow='<div style="display:flex;gap:6px">'
+      +'<button class="tog" data-action="toggle" data-sec="mode"><span style="font-size:15px">'+mIcon(mode)+'</span><span>Modalità</span></button>'
+      +'<button class="tog" data-action="toggle" data-sec="fan"><span style="font-size:15px">💨</span><span>Ventola</span></button>'
+      +(swingModes.length>1?'<button class="tog" data-action="toggle" data-sec="swing"><span style="font-size:15px">↕</span><span>Alette</span></button>':'')
     +'</div>';
     return css
-      +'<div id="'+rid+'" style="position:relative;width:100%;height:100%;min-height:260px;border-radius:16px;'
-        +'padding:16px 16px 12px;box-sizing:border-box;font-family:system-ui,sans-serif;'
-        +'display:flex;flex-direction:column;gap:0;overflow:hidden;'
-        +'background:#0d1117;'
-        +'border:1px solid rgba(255,255,255,.08);box-shadow:0 4px 24px rgba(0,0,0,.5);">'
+      +'<div id="'+rid+'" style="position:relative;width:100%;height:100%;min-height:260px;border-radius:20px;'
+        +'padding:13px;box-sizing:border-box;font-family:system-ui,sans-serif;'
+        +'display:flex;flex-direction:column;gap:9px;overflow:hidden;'
+        +'background:#18181b;'
+        +'border:1px solid rgba(255,255,255,.05);'
+        +'box-shadow:0 20px 60px rgba(0,0,0,.75);">'
       // hidden flap
       +'<div data-clm-flap data-rid="'+rid+'" style="position:absolute;width:0;height:0;overflow:hidden;transform:'+flapInitTransform+'"></div>'
-      // top row: name + status pill
-      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
-        +'<div style="font-size:12px;font-weight:600;letter-spacing:.02em;color:rgba(255,255,255,.45);text-transform:uppercase">'+nm+'</div>'
-        +'<div style="display:flex;align-items:center;gap:4px">'
-          +(syncCol?'<div style="width:6px;height:6px;border-radius:50%;background:'+syncCol+'"></div>':'')
-          +'<div style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:99px;background:'+(isOn?mCol+'18':'rgba(255,255,255,.06)')+';border:1px solid '+(isOn?mCol+'40':'rgba(255,255,255,.1)')+';">'
-            +'<div style="width:5px;height:5px;border-radius:50%;background:'+(isOn?mCol:'rgba(255,255,255,.2)')+';flex-shrink:0"></div>'
-            +'<span style="font-size:10px;font-weight:700;color:'+(isOn?mCol:'rgba(255,255,255,.25)')+'">'+( isOn?mLabel(mode):'Spento')+'</span>'
+      // top: name + status dot + sensors
+      +'<div style="display:flex;align-items:center;gap:8px">'
+        +'<div style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:'+(isOn?mCol:'rgba(255,255,255,.15)')+';'+(isOn?'box-shadow:0 0 8px '+mCol+';animation:'+rid+'pulse 2s ease-in-out infinite;':'')+'"></div>'
+        +'<div style="flex:1;font-size:12px;font-weight:700;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+nm+'</div>'
+        +(syncCol?'<div style="width:6px;height:6px;border-radius:50%;flex-shrink:0;background:'+syncCol+';box-shadow:0 0 5px '+syncCol+'"></div>':'')
+        +(sensorT?'<div data-a="stat" data-eid="'+tempEntity+'" data-attr="" data-lbl="Temperatura" style="cursor:pointer;flex-shrink:0;background:#0e0e11;border-radius:20px;padding:3px 8px;box-shadow:inset 2px 2px 6px rgba(0,0,0,.6);font-size:10px;font-weight:700;font-family:\'Courier New\',monospace;color:rgba(255,255,255,.35)">🌡 '+sensorT+'°</div>':'')
+        +(sensorH?'<div data-a="stat" data-eid="'+humEntity+'" data-attr="" data-lbl="Umidità" style="cursor:pointer;flex-shrink:0;background:#0e0e11;border-radius:20px;padding:3px 8px;box-shadow:inset 2px 2px 6px rgba(0,0,0,.6);font-size:10px;font-weight:700;font-family:\'Courier New\',monospace;color:rgba(255,255,255,.32)">💧 '+sensorH+'%</div>':'')
+      +'</div>'
+      // main pill: power + display + expand
+      +'<div style="border-radius:999px;background:#222226;'
+        +'box-shadow:6px 6px 18px rgba(0,0,0,.65),-2px -2px 8px rgba(255,255,255,.025);'
+        +'padding:8px 10px;display:flex;align-items:center;gap:8px">'
+        // power
+        +'<div style="width:40px;height:40px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:17px;'
+          +'background:'+(isOn?'#14532d':'#1c1418')+';'
+          +'box-shadow:'+(isOn?'0 0 12px rgba(34,197,94,.35),inset 0 1px 0 rgba(255,255,255,.07)':'inset 2px 2px 7px rgba(0,0,0,.6),-1px -1px 3px rgba(255,255,255,.02)')+';'
+          +'color:'+(isOn?'#4ade80':'rgba(239,68,68,.55)')+'">⏻</div>'
+        // sensor temp small
+        +(sensorT?'<div style="flex-shrink:0;background:#0e0e11;border-radius:16px;padding:4px 8px;box-shadow:inset 2px 2px 6px rgba(0,0,0,.65);font-size:11px;font-weight:700;font-family:\'Courier New\',monospace;color:rgba(255,255,255,.35)">'+sensorT+'°</div>':'')
+        // LED display
+        +'<div style="flex:1;background:#0d0d10;border-radius:14px;padding:6px 10px;'
+          +'box-shadow:inset 3px 3px 10px rgba(0,0,0,.7),inset -1px -1px 3px rgba(255,255,255,.018);'
+          +'display:flex;align-items:center;justify-content:space-between">'
+          +'<button class="cb" data-cid="'+entityId+'" data-action="temp-down" style="font-size:24px;color:rgba(255,255,255,.25);line-height:1;padding:0 3px">−</button>'
+          +'<div data-clm-led data-clm-temp style="flex:1;text-align:center;font-family:\'Courier New\',monospace;font-size:24px;font-weight:700;letter-spacing:2px;'
+            +'color:'+(isOn?mCol:'#1a2535')+';text-shadow:'+(isOn?'0 0 16px '+mCol+',0 0 36px '+mCol+'44':'none')+'">'+( isOn?targetTemp+'°':'──')
           +'</div>'
+          +'<button class="cb" data-cid="'+entityId+'" data-action="temp-up" style="font-size:24px;color:rgba(255,255,255,.25);line-height:1;padding:0 3px">+</button>'
         +'</div>'
       +'</div>'
-      // big temperature
-      +'<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 0 4px">'
-        +'<div data-clm-led style="font-size:72px;font-weight:800;line-height:1;letter-spacing:-3px;color:'+(isOn?'#fff':'rgba(255,255,255,.08)')+';'+(isOn?'text-shadow:none;':'')+'">'+( isOn?targetTemp:'--')+'</div>'
-        +(isOn?'<div style="font-size:12px;font-weight:500;color:rgba(255,255,255,.25);margin-top:2px;letter-spacing:.05em">TARGET °C</div>':'<div style="font-size:12px;color:rgba(255,255,255,.2);margin-top:4px">climatizzatore spento</div>')
-      +'</div>'
-      // info pills row
-      +'<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:10px">'
-        +(isOn?'<div style="font-size:10px;color:rgba(255,255,255,.35);background:rgba(255,255,255,.05);padding:3px 9px;border-radius:99px">💨 '+fLabel(fanMode)+'</div>':'')
-        +(isOn&&swingOn?'<div style="font-size:10px;color:rgba(255,255,255,.35);background:rgba(255,255,255,.05);padding:3px 9px;border-radius:99px">↕ Oscillazione</div>':'')
-        +(sensorT?'<div data-a="stat" data-eid="'+tempEntity+'" data-attr="" data-lbl="Temperatura" style="cursor:pointer;font-size:10px;color:rgba(255,255,255,.35);background:rgba(255,255,255,.05);padding:3px 9px;border-radius:99px">🌡 '+sensorT+'°</div>':'')
-        +(sensorH?'<div data-a="stat" data-eid="'+humEntity+'" data-attr="" data-lbl="Umidità" style="cursor:pointer;font-size:10px;color:rgba(255,255,255,.35);background:rgba(255,255,255,.05);padding:3px 9px;border-radius:99px">💧 '+sensorH+'%</div>':'')
-      +'</div>'
-      // temp +/- inline
-      +'<div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:10px">'
-        +'<button class="cb" data-cid="'+entityId+'" data-action="temp-down" style="width:36px;height:36px;border-radius:8px;padding:0;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700">−</button>'
-        +'<div data-clm-temp style="min-width:60px;text-align:center;font-size:18px;font-weight:700;color:'+(isOn?'rgba(255,255,255,.7)':'rgba(255,255,255,.12)')+';">'+(isOn?targetTemp+'°':'—')+'</div>'
-        +'<button class="cb" data-cid="'+entityId+'" data-action="temp-up" style="width:36px;height:36px;border-radius:8px;padding:0;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700">+</button>'
-      +'</div>'
+      // mode/fan info strip
+      +'<div style="text-align:center;font-size:10px;font-weight:600;color:'+(isOn?mCol:'rgba(255,255,255,.15)')+';letter-spacing:.06em;'+(isOn?'text-shadow:0 0 8px '+mCol+'55;':'')+'">'+( isOn?mIcon(mode)+' '+mLabel(mode).toUpperCase()+(fanMode?' · 💨 '+fLabel(fanMode):'')+(swingOn?' · ↕':''):'— climatizzatore spento —')+'</div>'
+      // toggles
       +togRow
-      +_panels(rid,entityId,mode,fanMode,swingMode,hvacModes,fanModes,swingModes,pw,selBtn)
+      // panels
+      +'<div>'+_panels(rid,entityId,mode,fanMode,swingMode,hvacModes,fanModes,swingModes,pw,selBtn)+'</div>'
     +'</div>';
   }
 
@@ -1235,7 +1237,7 @@
   }
 
   var CARD={
-    id:'clima-card',name:'Climatizzatore',icon:'❄️',version:'2.20',
+    id:'clima-card',name:'Climatizzatore',icon:'❄️',version:'2.21',
     desc:'Split — tema visivo selezionabile (Moderno/Futuristico/Classico/Minimal), aletta RAF, glow modalità.',
     colSpan:2,rowSpan:4,render:render,mount:mount,update:update,configure:openCfg,duplicate:duplicateCard,
   };
