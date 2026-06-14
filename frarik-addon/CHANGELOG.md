@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.4.58 — 2026-06-14
+
+### feat(ClimaCard): tema visivo selezionabile (v1.4.58 / ClimaCard 2.19)
+
+**card-js/Clima.js (2.18 → 2.19):**
+- **Tema visivo**: aggiunto selettore tema nelle impostazioni con 4 opzioni:
+  - **Moderno** (default): look navy scuro con glow colorato in base alla modalità
+  - **Futuristico**: sfondo quasi nero, accenti ciano neon (#00e5ff), scanlines overlay sul corpo AC
+  - **Classico**: toni caldi marroni/ambra, display LED arancio (#ffa726)
+  - **Minimal**: flat dark senza glow, essenziale
+- Il tema cambia card background, bordi, corpo AC, display LED, pulsanti +/−, toggle Modalità/Ventola/Alette e aletta fisica — tutta l'estetica visiva. Logica, entità e funzionalità invariate
+- Il tema scelto è salvato in localStorage e visibile in anteprima live nelle impostazioni
+- `_tv(theme, isOn, mCol)` — nuova funzione interna che restituisce le proprietà visive per il tema selezionato
+
+---
+
 ## 1.4.57 — 2026-06-14
 
 ### fix(MeteoCard): MDI icons, station popup animation, scrollbar (v1.4.57 / MeteoCard 1.41)

@@ -1,4 +1,4 @@
-/* frarik-version: 2.18 */
+/* frarik-version: 2.19 */
 (function () {
   'use strict';
 
@@ -339,6 +339,113 @@
     }
   }
 
+  /* ── THEME VALUES ── */
+  function _tv(theme, isOn, mCol) {
+    if (theme === 'futuristic') {
+      return {
+        cardBg: 'linear-gradient(150deg,#020a0f 0%,#010608 60%,#02080c 100%)',
+        cardBorder: isOn ? 'rgba(0,229,255,.5)' : 'rgba(0,229,255,.18)',
+        cardShadow: '0 10px 40px rgba(0,0,0,.7)' + (isOn ? ',0 0 30px rgba(0,229,255,.12)' : ''),
+        nameColor: '#b0e8f0',
+        acBg: 'linear-gradient(160deg,#041218 0%,#020c10 55%,#03111a 100%)',
+        acBorder: isOn ? 'rgba(0,229,255,.55)' : 'rgba(0,229,255,.12)',
+        hdrBg: 'rgba(0,0,0,.55)',
+        hdrBorderLeft: isOn ? '#00e5ff' : 'rgba(0,229,255,.25)',
+        panelBg: 'rgba(0,0,0,.45)',
+        ledBg: '#000e14',
+        ledColor: isOn ? '#00e5ff' : '#00202a',
+        ledShadow: isOn ? '0 0 14px #00e5ff,0 0 30px #00e5ff55' : 'none',
+        cbBg: '#040d12',
+        cbColor: '#80d8e8',
+        cbShadow: 'inset 2px 3px 8px rgba(0,0,0,.8),0 0 0 1px rgba(0,229,255,.12)',
+        togBg: '#030a0e',
+        togShadow: 'inset 2px 3px 8px rgba(0,0,0,.8),inset -1px -2px 5px rgba(0,229,255,.04)',
+        tempColor: isOn ? '#00e5ff' : '#0a2028',
+        tempShadow: isOn ? '0 0 12px #00e5ff' : 'none',
+        flapBg: 'linear-gradient(180deg,#0a2d3a 0%,#071f28 40%,#051820 100%)',
+        flapClosedBg: '#020c10',
+        scanlines: true,
+      };
+    }
+    if (theme === 'classic') {
+      return {
+        cardBg: 'linear-gradient(150deg,#1c1008 0%,#140d05 60%,#1a1008 100%)',
+        cardBorder: isOn ? mCol+'66' : 'rgba(255,195,80,.18)',
+        cardShadow: '0 10px 40px rgba(0,0,0,.5)' + (isOn ? ',0 0 20px rgba(255,180,60,.1)' : ''),
+        nameColor: '#f0deb4',
+        acBg: 'linear-gradient(160deg,#2a1e0e 0%,#1e1408 55%,#261b0c 100%)',
+        acBorder: isOn ? mCol+'66' : 'rgba(255,195,80,.22)',
+        hdrBg: 'rgba(0,0,0,.4)',
+        hdrBorderLeft: isOn ? mCol : 'rgba(200,150,60,.35)',
+        panelBg: 'rgba(0,0,0,.3)',
+        ledBg: '#0c0800',
+        ledColor: isOn ? '#ffa726' : '#1a0e00',
+        ledShadow: isOn ? '0 0 14px #ffa726,0 0 30px #ffa72655' : 'none',
+        cbBg: '#140e04',
+        cbColor: '#d4a55a',
+        cbShadow: 'inset 2px 3px 8px rgba(0,0,0,.65),inset -1px -2px 5px rgba(255,200,100,.05)',
+        togBg: '#130d03',
+        togShadow: 'inset 2px 3px 8px rgba(0,0,0,.65),inset -1px -2px 5px rgba(255,200,100,.05)',
+        tempColor: isOn ? '#ffa726' : '#2a1e0e',
+        tempShadow: isOn ? '0 0 10px #ffa726' : 'none',
+        flapBg: 'linear-gradient(180deg,#3d2a12 0%,#2e1f0d 40%,#261a09 100%)',
+        flapClosedBg: '#140d03',
+        scanlines: false,
+      };
+    }
+    if (theme === 'minimal') {
+      return {
+        cardBg: 'linear-gradient(150deg,#111827 0%,#0d1117 60%,#111827 100%)',
+        cardBorder: isOn ? mCol+'44' : 'rgba(255,255,255,.08)',
+        cardShadow: '0 4px 20px rgba(0,0,0,.4)',
+        nameColor: '#e2e8f0',
+        acBg: '#0f1923',
+        acBorder: isOn ? mCol+'44' : 'rgba(255,255,255,.07)',
+        hdrBg: 'rgba(0,0,0,.2)',
+        hdrBorderLeft: isOn ? mCol : 'rgba(255,255,255,.12)',
+        panelBg: 'rgba(0,0,0,.15)',
+        ledBg: '#080f18',
+        ledColor: isOn ? mCol : '#1e293b',
+        ledShadow: 'none',
+        cbBg: '#0f1923',
+        cbColor: '#94a3b8',
+        cbShadow: 'inset 1px 2px 6px rgba(0,0,0,.5)',
+        togBg: '#0f1923',
+        togShadow: 'inset 1px 2px 6px rgba(0,0,0,.5)',
+        tempColor: isOn ? mCol : '#1e293b',
+        tempShadow: 'none',
+        flapBg: 'linear-gradient(180deg,#1e293b 0%,#172236 40%,#111d2e 100%)',
+        flapClosedBg: '#0d1117',
+        scanlines: false,
+      };
+    }
+    // Default: modern
+    return {
+      cardBg: 'linear-gradient(150deg,#0c1322 0%,#0a0f1c 60%,#0c1626 100%)',
+      cardBorder: isOn ? mCol+'55' : 'rgba(99,102,241,.22)',
+      cardShadow: '0 10px 40px rgba(0,0,0,.45)',
+      nameColor: '#e8ebf5',
+      acBg: 'linear-gradient(160deg,#1e2b3e 0%,#141c2c 55%,#192334 100%)',
+      acBorder: isOn ? mCol+'55' : 'rgba(255,255,255,.09)',
+      hdrBg: 'rgba(0,0,0,.35)',
+      hdrBorderLeft: isOn ? mCol : 'rgba(255,255,255,.14)',
+      panelBg: 'rgba(0,0,0,.25)',
+      ledBg: '#040c09',
+      ledColor: isOn ? mCol : '#0d1a12',
+      ledShadow: isOn ? '0 0 14px '+mCol+',0 0 30px '+mCol+'55' : 'none',
+      cbBg: '#060c18',
+      cbColor: '#e2e8f0',
+      cbShadow: 'inset 2px 3px 8px rgba(0,0,0,.65),inset -1px -2px 5px rgba(255,255,255,.04)',
+      togBg: '#060c18',
+      togShadow: 'inset 2px 3px 8px rgba(0,0,0,.65),inset -1px -2px 5px rgba(255,255,255,.04)',
+      tempColor: isOn ? mCol : '#334155',
+      tempShadow: isOn ? '0 0 10px '+mCol : 'none',
+      flapBg: 'linear-gradient(180deg,#2d3e58 0%,#22304a 40%,#1b2640 100%)',
+      flapClosedBg: '#141c2c',
+      scanlines: false,
+    };
+  }
+
   /* ── RENDER ── */
   function render(card) {
     const h = H(), c = load(card);
@@ -363,6 +470,7 @@
     const isOn     = mode !== 'off';
     const swingOn  = _swingIsActive(swingMode);
     const mCol     = mColor(mode);
+    const tv       = _tv(c.theme || 'modern', isOn, mCol);
 
     const optT = _optimisticTemps[card.id];
     const useOptT = optT && Date.now() < optT.expires;
@@ -403,8 +511,8 @@
       +'#'+rid+' .cb:hover{filter:brightness(1.3);}'
       +'#'+rid+' .tog{flex:1;padding:8px 4px;border-radius:14px;border:none;cursor:pointer;font-size:10px;'
         +'font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;'
-        +'background:#060c18;color:#94a3b8;transition:color .2s,box-shadow .2s;'
-        +'box-shadow:inset 2px 3px 8px rgba(0,0,0,.65),inset -1px -2px 5px rgba(255,255,255,.04);}'
+        +'background:'+tv.togBg+';color:#94a3b8;transition:color .2s,box-shadow .2s;'
+        +'box-shadow:'+tv.togShadow+';}'
       +'#'+rid+' .tog:hover{color:#e2e8f0;}'
       +'</style>';
 
@@ -414,16 +522,16 @@
       +(sensorH ? '<div data-a="stat" data-eid="'+c.humEntity+'" data-attr="" data-lbl="Umidità" style="cursor:pointer;font-size:10px;font-weight:700;color:rgba(255,255,255,.65);background:rgba(255,255,255,.09);padding:2px 7px;border-radius:99px;transition:filter .12s" onmouseover="this.style.filter=\'brightness(1.3)\'" onmouseout="this.style.filter=\'\'">💧 '+sensorH+'%</div>' : '')
       +'</div>';
 
-    /* Corpo AC antracite */
+    /* Corpo AC */
     const acBody = '<div style="position:relative">'
       +'<div style="border-radius:15px;overflow:hidden;'
-        +'background:linear-gradient(160deg,#1e2b3e 0%,#141c2c 55%,#192334 100%);'
-        +'border:1px solid '+(isOn ? mCol+'55' : 'rgba(255,255,255,.09)')+';'
+        +'background:'+tv.acBg+';'
+        +'border:1px solid '+tv.acBorder+';'
         +'box-shadow:0 8px 34px rgba(0,0,0,.65),'+(isOn ? '0 0 24px '+mCol+'1e,' : '')+'inset 0 1px 0 rgba(255,255,255,.06);">'
 
         +'<div style="display:flex;align-items:center;gap:8px;padding:5px 10px 5px 13px;'
-          +'background:rgba(0,0,0,.35);border-bottom:1px solid rgba(255,255,255,.05);'
-          +'border-left:3px solid '+(isOn ? mCol : 'rgba(255,255,255,.14)')+'">'
+          +'background:'+tv.hdrBg+';border-bottom:1px solid rgba(255,255,255,.05);'
+          +'border-left:3px solid '+(isOn ? tv.hdrBorderLeft : 'rgba(255,255,255,.14)')+'">'
           +'<div style="width:7px;height:7px;border-radius:50%;flex-shrink:0;'
             +'background:'+(isOn?mCol:'rgba(255,255,255,.2)')+';'
             +(isOn?'animation:'+rid+'ind 2.2s ease-in-out infinite;':'')+'"></div>'
@@ -438,6 +546,7 @@
             +(isOn
               ? '<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 20% 55%,'+mCol+'25 0%,transparent 68%);pointer-events:none;animation:'+rid+'glow 3s ease-in-out infinite"></div>'
               : '')
+            +(tv.scanlines ? '<div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.1) 0px,rgba(0,0,0,.1) 1px,transparent 1px,transparent 3px);pointer-events:none"></div>' : '')
             +'<div style="position:absolute;top:0;right:0;bottom:0;width:20px;'
               +'background:linear-gradient(90deg,transparent,rgba(0,0,0,.25));pointer-events:none"></div>'
             +(brandSvg
@@ -447,14 +556,14 @@
 
           +'<div style="width:1px;background:rgba(255,255,255,.07);flex-shrink:0"></div>'
 
-          +'<div style="width:85px;flex-shrink:0;background:rgba(0,0,0,.25);'
+          +'<div style="width:85px;flex-shrink:0;background:'+tv.panelBg+';'
             +'display:flex;align-items:center;justify-content:center;padding:0 7px">'
-            +'<div style="background:#040c09;border-radius:8px;padding:6px 8px;width:100%;box-sizing:border-box;'
+            +'<div style="background:'+tv.ledBg+';border-radius:8px;padding:6px 8px;width:100%;box-sizing:border-box;'
               +'border:1px solid rgba(0,0,0,.7);box-shadow:inset 0 3px 12px rgba(0,0,0,.75),inset 0 0 22px rgba(0,0,0,.4)">'
               +'<div data-clm-led style="font-family:\'Courier New\',Courier,monospace;font-size:23px;'
                 +'font-weight:700;letter-spacing:2px;line-height:1;text-align:center;'
-                +'color:'+(isOn?mCol:'#0d1a12')+';'
-                +'text-shadow:'+(isOn?'0 0 14px '+mCol+',0 0 30px '+mCol+'55':'none')+';'
+                +'color:'+tv.ledColor+';'
+                +'text-shadow:'+tv.ledShadow+';'
                 +(isOn?'animation:'+rid+'led 3s ease-in-out infinite;':'')
               +'">'+targetTemp+'</div>'
             +'</div>'
@@ -465,12 +574,11 @@
           +'border-top:1px solid rgba(255,255,255,.04)"></div>'
       +'</div>'
 
-      // Aletta: chiusa=quasi invisibile (colore corpo + fessura), aperta=pannello blu visibile
       +(isOn
         ? '<div style="position:absolute;bottom:-7px;left:13px;right:13px;height:15px;'
             +'perspective:220px;perspective-origin:50% 0%;z-index:2">'
             +'<div data-clm-flap data-rid="'+rid+'" style="width:100%;height:100%;'
-              +'background:linear-gradient(180deg,#2d3e58 0%,#22304a 40%,#1b2640 100%);'
+              +'background:'+tv.flapBg+';'
               +'border-radius:2px 2px 6px 6px;'
               +'box-shadow:0 5px 16px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.1);'
               +'transform-origin:50% 0%;transform:'+flapInitTransform
@@ -479,7 +587,7 @@
         : '<div style="position:absolute;bottom:-4px;left:13px;right:13px;height:5px;'
             +'perspective:220px;perspective-origin:50% 0%;z-index:2">'
             +'<div data-clm-flap data-rid="'+rid+'" style="width:100%;height:100%;'
-              +'background:#141c2c;'
+              +'background:'+tv.flapClosedBg+';'
               +'border-top:1px solid #05080f;'
               +'border-radius:0 0 4px 4px;'
               +'box-shadow:inset 0 2px 4px rgba(0,0,0,.9);'
@@ -496,16 +604,16 @@
 
     const tempRow = '<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:7px 14px">'
       +'<button class="cb" data-cid="'+entityId+'" data-action="temp-down" '
-        +'style="width:34px;height:34px;border-radius:11px;border:none;background:#060c18;color:#e2e8f0;'
-        +'box-shadow:inset 2px 3px 8px rgba(0,0,0,.65),inset -1px -2px 5px rgba(255,255,255,.04);'
+        +'style="width:34px;height:34px;border-radius:11px;border:none;background:'+tv.cbBg+';color:'+tv.cbColor+';'
+        +'box-shadow:'+tv.cbShadow+';'
         +'font-size:22px;font-weight:700;line-height:1;padding:0;display:flex;align-items:center;justify-content:center">−</button>'
       +'<div data-clm-temp style="font-size:26px;font-weight:800;min-width:80px;text-align:center;'
-        +'color:'+(isOn?mCol:'#334155')+';text-shadow:'+(isOn?'0 0 10px '+mCol:'none')+';">'
+        +'color:'+tv.tempColor+';text-shadow:'+tv.tempShadow+';">'
         +(isOn?targetTemp+'°':'—')
       +'</div>'
       +'<button class="cb" data-cid="'+entityId+'" data-action="temp-up" '
-        +'style="width:34px;height:34px;border-radius:11px;border:none;background:#060c18;color:#e2e8f0;'
-        +'box-shadow:inset 2px 3px 8px rgba(0,0,0,.65),inset -1px -2px 5px rgba(255,255,255,.04);'
+        +'style="width:34px;height:34px;border-radius:11px;border:none;background:'+tv.cbBg+';color:'+tv.cbColor+';'
+        +'box-shadow:'+tv.cbShadow+';'
         +'font-size:22px;font-weight:700;line-height:1;padding:0;display:flex;align-items:center;justify-content:center">+</button>'
     +'</div>';
 
@@ -547,10 +655,10 @@
 
     return css
       +'<div id="'+rid+'" style="position:relative;width:100%;height:100%;min-height:260px;border-radius:18px;'
-        +'padding:14px;box-sizing:border-box;font-family:system-ui,sans-serif;color:#e8ebf5;'
+        +'padding:14px;box-sizing:border-box;font-family:system-ui,sans-serif;color:'+tv.nameColor+';'
         +'display:flex;flex-direction:column;gap:9px;overflow:hidden;'
-        +'background:linear-gradient(150deg,#0c1322 0%,#0a0f1c 60%,#0c1626 100%);'
-        +'border:1px solid rgba(99,102,241,.22);box-shadow:0 10px 40px rgba(0,0,0,.45);">'
+        +'background:'+tv.cardBg+';'
+        +'border:1px solid '+tv.cardBorder+';box-shadow:'+tv.cardShadow+';">'
         +'<div style="text-align:center;font-size:19px;font-weight:800;letter-spacing:-.2px;'
           +'white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+nm+'</div>'
         +acBody+airSection+tempRow+togRow+modePanel+(fanPanel||'')+(swingPanel||'')
@@ -720,6 +828,7 @@
           brand:ov.querySelector('#cl-brand').value,
           useSwingSensor:ov.querySelector('#cl-swsensor-tog').getAttribute('data-on')==='1',
           swingSensor:ov.querySelector('#cl-swsensor').value||'',
+          theme:(ov.querySelector('[data-cltheme][data-selected]')||{getAttribute:function(){return 'modern';}}).getAttribute('data-cltheme')||'modern',
           cardScale:100,cardW:100
         };
         localStorage.setItem('frarik_clima___clmprev__', JSON.stringify(tmpCfg));
@@ -761,6 +870,17 @@
         +'<div id="cl-swsensor-row" style="margin-top:10px;position:relative;display:'+(c.useSwingSensor?'block':'none')+'">'
           +'<input id="cl-swsensor" type="text" value="'+(c.swingSensor||'').replace(/"/g,'&quot;')+'" autocomplete="off" placeholder="binary_sensor.aletta_clima" style="'+stInp+'">'
           +'<div id="cl-swsensor-d" style="'+stDrop+'"></div></div>'
+      +'</div>'
+      +'<div style="margin-bottom:14px;padding:12px;background:rgba(255,255,255,.04);border-radius:12px;border:1px solid rgba(255,255,255,.08)">'
+        +'<label style="'+stLbl+'">Tema visivo</label>'
+        +'<div style="display:flex;gap:6px">'
+        +[['modern','Moderno','🔲'],['futuristic','Futuristico','🚀'],['classic','Classico','🎛'],['minimal','Minimal','◻']].map(function(t){
+          var active=(c.theme||'modern')===t[0];
+          return '<button data-cltheme="'+t[0]+'"'+(active?' data-selected="1"':'')+' style="flex:1;padding:7px 2px;border-radius:9px;cursor:pointer;font-size:10px;font-weight:700;text-align:center;'
+            +(active?'background:rgba(251,191,36,.2);color:#fbbf24;border:1px solid rgba(251,191,36,.4);':'background:rgba(255,255,255,.06);color:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.1);')
+            +'">'+t[2]+'<br>'+t[1]+'</button>';
+        }).join('')
+        +'</div>'
       +'</div>'
       +'<div style="display:flex;gap:10px">'
         +'<button id="cl-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button>'
@@ -820,6 +940,22 @@
     bindTog('cl-showbrand-tog','cl-brand-row');
     bindTog('cl-swsensor-tog','cl-swsensor-row');
 
+    ov.querySelectorAll('[data-cltheme]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        ov.querySelectorAll('[data-cltheme]').forEach(function(b){
+          b.removeAttribute('data-selected');
+          b.style.background='rgba(255,255,255,.06)';
+          b.style.color='rgba(255,255,255,.5)';
+          b.style.border='1px solid rgba(255,255,255,.1)';
+        });
+        this.setAttribute('data-selected','1');
+        this.style.background='rgba(251,191,36,.2)';
+        this.style.color='#fbbf24';
+        this.style.border='1px solid rgba(251,191,36,.4)';
+        schedPrev();
+      });
+    });
+
     ov.querySelector('#clcfg-cardscale').addEventListener('input', function(){
       var v=parseInt(this.value)||100;
       ov.querySelector('#clcfg-cardscale-lbl').textContent=v>=100?'Auto (100%)':v+'%';
@@ -869,6 +1005,7 @@
         brand:          ov.querySelector('#cl-brand').value,
         useSwingSensor: ov.querySelector('#cl-swsensor-tog').getAttribute('data-on')==='1',
         swingSensor:    ov.querySelector('#cl-swsensor').value.trim(),
+        theme:          (ov.querySelector('[data-cltheme][data-selected]')||{getAttribute:function(){return 'modern';}}).getAttribute('data-cltheme')||'modern',
         cardScale:      scV,
         cardW:          wV,
       });
@@ -891,8 +1028,8 @@
   }
 
   var CARD={
-    id:'clima-card',name:'Climatizzatore',icon:'❄️',version:'2.15',
-    desc:'Split — look scuro, SVG loghi reali, aletta RAF, glow modalità.',
+    id:'clima-card',name:'Climatizzatore',icon:'❄️',version:'2.19',
+    desc:'Split — tema visivo selezionabile (Moderno/Futuristico/Classico/Minimal), aletta RAF, glow modalità.',
     colSpan:2,rowSpan:4,render:render,mount:mount,update:update,configure:openCfg,duplicate:duplicateCard,
   };
   window.FratechCardRegistry=window.FratechCardRegistry||{};
