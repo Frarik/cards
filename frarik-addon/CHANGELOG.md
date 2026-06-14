@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.4.41 — 2026-06-14
+
+### fix(Meteo): Windy embed — layer switching, tab duplicati, zoom esterno, espandi mappa
+
+**Meteo.js 1.32→1.33:**
+- Fix layer switching: URL ricostruita da zero ad ogni cambio layer (non modifica URL esistente)
+  → elimina il bug "schermata bianca" quando si passa da radar ad altri layer
+- Rimosso satellite dalla lista (overlay non disponibile nell'embed gratuito)
+- `menu=false&message=false` nella URL Windy → nasconde i tab interni dell'embed
+  che duplicavano i nostri bottoni personalizzati
+- Bottoni − / + zoom esterni alla mappa (zoom da 3 a 14, ricarica l'iframe con nuovo livello)
+- Bottone "⛶ Espandi" per ingrandire la mappa a schermo quasi pieno nel popup
+  (toggle, con animazione CSS height transition)
+
 ## 1.4.40 — 2026-06-14
 
 ### feat(Meteo): nuove entità PirateWeather nella Stazione Meteo

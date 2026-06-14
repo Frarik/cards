@@ -1,4 +1,4 @@
-/* frarik-version: 1.32 */
+/* frarik-version: 1.33 */
 
 // ── Lookup tables ─────────────────────────────────────────────────────────────
 const _WI = {
@@ -885,9 +885,35 @@ class MeteoCard extends HTMLElement {
         const btn2=e.target.closest('[data-a="windylayer"]'); if(!btn2) break
         const layer=btn2.dataset.layer
         const sr2=this._stationModalHost?.shadowRoot; if(!sr2) break
-        const ifr=sr2.querySelector('#stov-windy-frame')
-        if(ifr){ try{ const u=new URL(ifr.src); u.searchParams.set('overlay',layer); ifr.src=u.toString() }catch(_){} }
+        const ifr=sr2.querySelector('#stov-windy-frame'); if(!ifr) break
+        const zoom=ifr.dataset.zoom||'9'
+        const lat=this._c.stationLat||'45.0',lon=this._c.stationLon||'10.0'
+        ifr.dataset.layer=layer
+        ifr.src=`https://embed.windy.com/embed2.html?lat=${lat}&lon=${lon}&detailLat=${lat}&detailLon=${lon}&zoom=${zoom}&level=surface&overlay=${layer}&product=ecmwf&menu=false&message=false&marker=true&calendar=now&type=map&location=coordinates&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1`
         sr2.querySelectorAll('[data-a="windylayer"]').forEach(b=>b.classList.toggle('wba',b.dataset.layer===layer))
+        break
+      }
+      case 'windyzoom':{
+        const zbtn=e.target.closest('[data-a="windyzoom"]'); if(!zbtn) break
+        const sr2=this._stationModalHost?.shadowRoot; if(!sr2) break
+        const ifr=sr2.querySelector('#stov-windy-frame'); if(!ifr) break
+        let zoom=parseInt(ifr.dataset.zoom||'9')+(zbtn.dataset.dir==='in'?1:-1)
+        zoom=Math.max(3,Math.min(14,zoom))
+        const layer=ifr.dataset.layer||'radar'
+        const lat=this._c.stationLat||'45.0',lon=this._c.stationLon||'10.0'
+        ifr.dataset.zoom=String(zoom)
+        ifr.src=`https://embed.windy.com/embed2.html?lat=${lat}&lon=${lon}&detailLat=${lat}&detailLon=${lon}&zoom=${zoom}&level=surface&overlay=${layer}&product=ecmwf&menu=false&message=false&marker=true&calendar=now&type=map&location=coordinates&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1`
+        const zd=sr2.querySelector('.windy-zoom-val')
+        if(zd) zd.textContent=String(zoom)
+        break
+      }
+      case 'windyfull':{
+        const sr2=this._stationModalHost?.shadowRoot; if(!sr2) break
+        const mapEl=sr2.querySelector('.stov-map')
+        if(!mapEl) break
+        const isFs=mapEl.classList.toggle('stov-map-fs')
+        const fbtn=sr2.querySelector('[data-a="windyfull"]')
+        if(fbtn) fbtn.textContent=isFs?'⊠ Riduci':'⛶ Espandi'
         break
       }
       case 'sttoggle':
@@ -1390,8 +1416,13 @@ class MeteoCard extends HTMLElement {
 .windy-btn.wba{background:rgba(56,189,248,.18);border-color:rgba(56,189,248,.5);color:#38bdf8;}
 .windy-expand{margin-left:auto;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);color:#fbbf24;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:4px;flex-shrink:0;white-space:nowrap;}
 .windy-expand:hover{background:rgba(251,191,36,.2);}
-.stov-map{width:100%;height:430px;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.1);background:#0a0816;}
+.stov-map{width:100%;height:430px;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.1);background:#0a0816;transition:height .25s ease;}
+.stov-map.stov-map-fs{height:calc(100vh - 170px);border-radius:10px;}
 .stov-map iframe{width:100%;height:100%;border:none;}
+.windy-zoom{display:flex;align-items:center;gap:4px;margin-left:4px;}
+.windy-zbtn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:8px;width:28px;height:26px;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1;outline:none;}
+.windy-zbtn:hover{background:rgba(255,255,255,.18);}
+.windy-zoom-val{font-size:11px;color:rgba(255,255,255,.5);min-width:14px;text-align:center;}
 .stov-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
 @media(max-width:700px){.stov-grid{grid-template-columns:1fr;}}
 .scat{border-radius:16px;padding:0;overflow:hidden;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;}
@@ -1419,11 +1450,11 @@ class MeteoCard extends HTMLElement {
   _stationHTML(){
     const c=this._c
     const lat=c.stationLat||'45.0', lon=c.stationLon||'10.0'
-    const windyUrl=`https://embed.windy.com/embed2.html?lat=${lat}&lon=${lon}&detailLat=${lat}&detailLon=${lon}&zoom=9&level=surface&overlay=radar&product=ecmwf&menu=&message=true&marker=true&calendar=now&type=map&location=coordinates&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1`
-    const windyOpen=`https://www.windy.com/?radar,${lat},${lon},9`
+    const initZoom=9
+    const windyUrl=`https://embed.windy.com/embed2.html?lat=${lat}&lon=${lon}&detailLat=${lat}&detailLon=${lon}&zoom=${initZoom}&level=surface&overlay=radar&product=ecmwf&menu=false&message=false&marker=true&calendar=now&type=map&location=coordinates&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1`
+    const windyOpen=`https://www.windy.com/?radar,${lat},${lon},${initZoom}`
     const layers=[
       {l:'radar',n:'📡 Radar'},
-      {l:'satellite',n:'🛰️ Satellite'},
       {l:'wind',n:'💨 Vento'},
       {l:'temp',n:'🌡️ Temp'},
       {l:'rh',n:'💧 Umidità'},
@@ -1504,10 +1535,16 @@ class MeteoCard extends HTMLElement {
       <div class="stov-map-wrap">
         <div class="windy-bar">
           ${layerBtns}
-          <a href="${windyOpen}" target="_blank" class="windy-expand">↗ Apri Windy</a>
+          <div class="windy-zoom">
+            <button class="windy-zbtn" data-a="windyzoom" data-dir="out" title="Zoom out">−</button>
+            <span class="windy-zoom-val">${initZoom}</span>
+            <button class="windy-zbtn" data-a="windyzoom" data-dir="in" title="Zoom in">+</button>
+          </div>
+          <button class="windy-expand" data-a="windyfull">⛶ Espandi</button>
+          <a href="${windyOpen}" target="_blank" class="windy-expand">↗ Windy.com</a>
         </div>
         <div class="stov-map">
-          <iframe id="stov-windy-frame" src="${windyUrl}" frameborder="0" allowfullscreen></iframe>
+          <iframe id="stov-windy-frame" src="${windyUrl}" data-zoom="${initZoom}" data-layer="radar" frameborder="0" allowfullscreen></iframe>
         </div>
       </div>
       <div class="stov-grid">${allCards}</div>
