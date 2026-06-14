@@ -410,97 +410,7 @@
 </div>
 
 <!-- FOOTER BAR MODAL -->
-<div class="mbg off" id="fbmod">
-  <div class="mbox" style="width:500px">
-    <div class="mhdr"><span class="mtitle" id="fbmod-title">▭ Barra inferiore</span><button class="mx" data-action="closeFBM">✕</button></div>
-    <div class="fscroll" style="padding:0">
-      <!-- Toggle abilitato -->
-      <div class="sect-section" id="fb-enabled-row">
-        <div style="display:flex;align-items:center;gap:10px">
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex:1">
-            <input type="checkbox" id="fb-enabled-cb"  style="width:16px;height:16px;accent-color:#2dd4bf">
-            <span style="font-size:12px;font-weight:600;color:#e2e8f0">Mostra barra inferiore</span>
-          </label>
-          <span style="font-size:9px;color:var(--muted)">Dock flottante in basso</span>
-        </div>
-      </div>
-      <!-- Lista pulsanti -->
-      <div class="sect-section">
-        <span class="sect-section-lbl">⊙ Pulsanti</span>
-        <div id="fb-list" style="margin-bottom:8px"></div>
-        <button class="ep-add" data-action="fbAddBtn">➕ Aggiungi pulsante</button>
-      </div>
-      <!-- Form inline -->
-      <div id="fb-btn-form" style="display:none;padding:0 14px 14px;border-top:1px solid var(--bd)">
-        <div style="padding:10px 0 8px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted)" id="fb-form-title">Nuovo pulsante</div>
-        <!-- Tipo -->
-        <div class="flbl">Tipo</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;margin-bottom:12px">
-          <button class="sect-align-btn on" id="fbft-climate" data-action="fbSelType" data-action-arg="climate" style="font-size:10px;padding:8px 3px">🌡️<br><span style="font-size:7px">Termostato</span></button>
-          <button class="sect-align-btn" id="fbft-link" data-action="fbSelType" data-action-arg="link" style="font-size:10px;padding:8px 3px">🔗<br><span style="font-size:7px">Link URL</span></button>
-          <button class="sect-align-btn" id="fbft-navigate" data-action="fbSelType" data-action-arg="navigate" style="font-size:10px;padding:8px 3px">🧭<br><span style="font-size:7px">Naviga</span></button>
-          <button class="sect-align-btn" id="fbft-popup" data-action="fbSelType" data-action-arg="popup" style="font-size:10px;padding:8px 3px">💬<br><span style="font-size:7px">Popup</span></button>
-        </div>
-        <!-- Icona + Label + Colore -->
-        <div style="display:flex;gap:6px;margin-bottom:8px">
-          <div style="flex:0 0 60px">
-            <div class="flbl">Icona</div>
-            <div class="finp-row" style="gap:2px">
-              <input class="finp" id="fbf-icon" type="text" placeholder="mdi:home" style="text-align:center;font-size:11px;padding:4px" >
-              <button class="fbtn" id="fbf-icon-picker" title="Scegli">🎨</button>
-            </div>
-          </div>
-          <div style="flex:1">
-            <div class="flbl">Etichetta <span style="opacity:.5;font-weight:400">(opz.)</span></div>
-            <input class="finp" id="fbf-label" type="text" placeholder="es. Clima">
-          </div>
-          <div style="flex:0 0 72px">
-            <div class="flbl">Colore</div>
-            <input class="finp" id="fbf-color" type="color" value="#f87171" style="height:38px;padding:3px">
-          </div>
-        </div>
-        <!-- Preset icone rapide -->
-        <div class="flbl" style="margin-bottom:4px">Preset rapidi</div>
-        <div class="fb-icon-preset" id="fb-icon-preset"></div>
-        <!-- Entità clima -->
-        <div id="fbf-climate-row">
-          <div class="flbl">Entità clima</div>
-          <div class="finp-row" style="margin-bottom:6px">
-            <input class="finp entac" id="fbf-entity" type="text" placeholder="es. climate.soggiorno">
-            <button class="fbtn" data-action="browseField" data-action-arg="fbf-entity">🔍</button>
-          </div>
-          <div style="display:flex;gap:8px;margin-bottom:8px">
-            <div style="flex:1"><div class="flbl">Temp. min</div><input class="finp" id="fbf-clmmin" type="number" value="16" step="0.5"></div>
-            <div style="flex:1"><div class="flbl">Temp. max</div><input class="finp" id="fbf-clmmax" type="number" value="36" step="0.5"></div>
-          </div>
-        </div>
-        <!-- URL link -->
-        <div id="fbf-link-row" style="display:none">
-          <div class="flbl">URL</div>
-          <input class="finp" id="fbf-url" type="text" placeholder="https://…" style="margin-bottom:8px">
-        </div>
-        <!-- Naviga pagina -->
-        <div id="fbf-navigate-row" style="display:none">
-          <div class="flbl">Pagina</div>
-          <select class="finp" id="fbf-navpage" style="margin-bottom:8px"></select>
-        </div>
-        <!-- Popup testo -->
-        <div id="fbf-popup-row" style="display:none">
-          <div class="flbl">Contenuto popup</div>
-          <textarea class="finp" id="fbf-poptext" placeholder="Testo o HTML…" style="min-height:80px;resize:vertical;margin-bottom:8px"></textarea>
-        </div>
-        <div style="display:flex;gap:6px;margin-top:4px">
-          <button class="btn1" id="fbf-save-btn" data-action="fbSaveBtn" style="flex:1">✅ Salva pulsante</button>
-          <button class="btn2" data-action="fbCancelBtn" style="flex:0 0 80px">Annulla</button>
-        </div>
-      </div>
-    </div>
-    <div class="mfoot">
-      <button class="btn2" data-action="closeFBM">Annulla</button>
-      <button class="btn1" data-action="saveFBM">💾 Salva</button>
-    </div>
-  </div>
-</div>
+<div class="mbg off" id="fbmod" style="display:none"></div>
 
 <!-- YAML IMPORT MODAL -->
 <div class="mbg off" id="yaml-import-mod">
@@ -669,30 +579,25 @@
             <span class="ep-sidetab-ico">☁️</span><span>Dati</span>
           </button>
           <div class="ep-sidenav-sep"></div>
-          <div class="ep-sidenav-lbl">Componenti</div>
-          <button class="ep-sidetab ep-sidetab-ext" data-action="openFBM">
+          <button class="ep-sidetab" data-action="_switchEpTab" data-action-arg="fbar">
             <span class="ep-sidetab-ico">▭</span>
             <span style="flex:1">Bottom Bar</span>
-            <span id="ep-fbar-status" style="font-size:9px;opacity:.5"></span>
-            <span class="ep-sidetab-arr">›</span>
+            <span id="ep-fbar-status" style="font-size:9px;opacity:.5;margin-left:auto"></span>
           </button>
-          <button class="ep-sidetab ep-sidetab-ext" data-action="openGhStore">
+          <button class="ep-sidetab" data-action="_switchEpTab" data-action-arg="store">
             <span class="ep-sidetab-ico">🛒</span>
             <span style="flex:1">Store</span>
-            <span id="ep-jsstore-count" style="font-size:9px;opacity:.5"></span>
-            <span class="ep-sidetab-arr">›</span>
+            <span id="ep-jsstore-count" style="font-size:9px;opacity:.5;margin-left:auto"></span>
           </button>
-          <button class="ep-sidetab ep-sidetab-ext" data-action="openNotifCfg">
+          <button class="ep-sidetab" data-action="_switchEpTab" data-action-arg="notif">
             <span class="ep-sidetab-ico">🔔</span>
             <span style="flex:1">Notifiche</span>
-            <span id="ntf-ep-count" style="font-size:9px;opacity:.5"></span>
-            <span class="ep-sidetab-arr">›</span>
+            <span id="ntf-ep-count" style="font-size:9px;opacity:.5;margin-left:auto"></span>
           </button>
-          <button class="ep-sidetab ep-sidetab-ext" data-action="openSOSCfg">
+          <button class="ep-sidetab" data-action="_switchEpTab" data-action-arg="sos">
             <span class="ep-sidetab-ico">🆘</span>
             <span style="flex:1">SOS</span>
-            <span id="sos-ep-count" style="font-size:9px;opacity:.5"></span>
-            <span class="ep-sidetab-arr">›</span>
+            <span id="sos-ep-count" style="font-size:9px;opacity:.5;margin-left:auto"></span>
           </button>
         </nav>
 
@@ -870,6 +775,137 @@
             <button data-action="_epLicLogout" style="width:100%;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#f87171;border-radius:8px;padding:8px;font-size:11px;font-weight:700;cursor:pointer">Cambia licenza</button>
           </div>
           <div style="height:16px"></div>
+        </div>
+
+        <!-- ── BOTTOM BAR ── -->
+        <div id="ep-content-fbar" class="ep-tab-content">
+          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">▭</div><div class="ep-tab-hdr-title">Bottom Bar</div></div>
+          <div class="sect-section" id="fb-enabled-row" style="border-radius:10px;border:1px solid rgba(255,255,255,.07);margin-bottom:12px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex:1">
+                <input type="checkbox" id="fb-enabled-cb" style="width:16px;height:16px;accent-color:#2dd4bf">
+                <span style="font-size:12px;font-weight:600;color:#e2e8f0">Mostra barra inferiore</span>
+              </label>
+              <span style="font-size:9px;color:var(--muted)">Dock flottante in basso</span>
+            </div>
+          </div>
+          <div class="ep-sec-title" style="margin-bottom:8px">⊙ Pulsanti</div>
+          <div id="fb-list" style="margin-bottom:8px"></div>
+          <button class="ep-add" data-action="fbAddBtn">➕ Aggiungi pulsante</button>
+          <div id="fb-btn-form" style="display:none;padding:14px 0 0;border-top:1px solid rgba(255,255,255,.07);margin-top:14px">
+            <div style="padding:0 0 8px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted)" id="fb-form-title">Nuovo pulsante</div>
+            <div class="flbl">Tipo</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;margin-bottom:12px">
+              <button class="sect-align-btn on" id="fbft-climate" data-action="fbSelType" data-action-arg="climate" style="font-size:10px;padding:8px 3px">🌡️<br><span style="font-size:7px">Termostato</span></button>
+              <button class="sect-align-btn" id="fbft-link" data-action="fbSelType" data-action-arg="link" style="font-size:10px;padding:8px 3px">🔗<br><span style="font-size:7px">Link URL</span></button>
+              <button class="sect-align-btn" id="fbft-navigate" data-action="fbSelType" data-action-arg="navigate" style="font-size:10px;padding:8px 3px">🧭<br><span style="font-size:7px">Naviga</span></button>
+              <button class="sect-align-btn" id="fbft-popup" data-action="fbSelType" data-action-arg="popup" style="font-size:10px;padding:8px 3px">💬<br><span style="font-size:7px">Popup</span></button>
+            </div>
+            <div style="display:flex;gap:6px;margin-bottom:8px">
+              <div style="flex:0 0 60px">
+                <div class="flbl">Icona</div>
+                <div class="finp-row" style="gap:2px">
+                  <input class="finp" id="fbf-icon" type="text" placeholder="mdi:home" style="text-align:center;font-size:11px;padding:4px">
+                  <button class="fbtn" id="fbf-icon-picker" title="Scegli">🎨</button>
+                </div>
+              </div>
+              <div style="flex:1">
+                <div class="flbl">Etichetta <span style="opacity:.5;font-weight:400">(opz.)</span></div>
+                <input class="finp" id="fbf-label" type="text" placeholder="es. Clima">
+              </div>
+              <div style="flex:0 0 72px">
+                <div class="flbl">Colore</div>
+                <input class="finp" id="fbf-color" type="color" value="#f87171" style="height:38px;padding:3px">
+              </div>
+            </div>
+            <div class="flbl" style="margin-bottom:4px">Preset rapidi</div>
+            <div class="fb-icon-preset" id="fb-icon-preset"></div>
+            <div id="fbf-climate-row">
+              <div class="flbl">Entità clima</div>
+              <div class="finp-row" style="margin-bottom:6px">
+                <input class="finp entac" id="fbf-entity" type="text" placeholder="es. climate.soggiorno">
+                <button class="fbtn" data-action="browseField" data-action-arg="fbf-entity">🔍</button>
+              </div>
+              <div style="display:flex;gap:8px;margin-bottom:8px">
+                <div style="flex:1"><div class="flbl">Temp. min</div><input class="finp" id="fbf-clmmin" type="number" value="16" step="0.5"></div>
+                <div style="flex:1"><div class="flbl">Temp. max</div><input class="finp" id="fbf-clmmax" type="number" value="36" step="0.5"></div>
+              </div>
+            </div>
+            <div id="fbf-link-row" style="display:none">
+              <div class="flbl">URL</div>
+              <input class="finp" id="fbf-url" type="text" placeholder="https://…" style="margin-bottom:8px">
+            </div>
+            <div id="fbf-navigate-row" style="display:none">
+              <div class="flbl">Pagina</div>
+              <select class="finp" id="fbf-navpage" style="margin-bottom:8px"></select>
+            </div>
+            <div id="fbf-popup-row" style="display:none">
+              <div class="flbl">Contenuto popup</div>
+              <textarea class="finp" id="fbf-poptext" placeholder="Testo o HTML…" style="min-height:80px;resize:vertical;margin-bottom:8px"></textarea>
+            </div>
+            <div style="display:flex;gap:6px;margin-top:4px">
+              <button class="btn1" id="fbf-save-btn" data-action="fbSaveBtn" style="flex:1">✅ Salva pulsante</button>
+              <button class="btn2" data-action="fbCancelBtn" style="flex:0 0 80px">Annulla</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:18px">
+            <button class="btn1" data-action="saveFBM" style="flex:1">💾 Salva</button>
+          </div>
+        </div>
+
+        <!-- ── STORE ── -->
+        <div id="ep-content-store" class="ep-tab-content">
+          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">🛒</div><div class="ep-tab-hdr-title">Store</div></div>
+          <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+            <button class="jsst-tab on" id="ghs-tab-js"         data-action="ghStoreTab" data-action-arg="js">⚡ Card JS</button>
+            <button class="jsst-tab"    id="ghs-tab-chips"      data-action="ghStoreTab" data-action-arg="chips">🔹 Chips</button>
+            <button class="jsst-tab"    id="ghs-tab-distintivi" data-action="ghStoreTab" data-action-arg="distintivi">🏷️ Distintivi</button>
+            <button class="jsst-tab"    id="ghs-tab-yaml"       data-action="ghStoreTab" data-action-arg="yaml">📄 YAML</button>
+            <button class="jsst-tab"    id="ghs-tab-pkg"        data-action="ghStoreTab" data-action-arg="pkg">📦 Pacchetti</button>
+            <button class="jsst-tab"    id="ghs-tab-local"      data-action="ghStoreTab" data-action-arg="local">📁 Card locali</button>
+            <div style="display:flex;gap:4px;margin-left:auto">
+              <button class="jsst-tab" data-action="openYamlImport" title="Incolla YAML da HACS" style="color:#818cf8;font-size:11px;padding:4px 10px;font-weight:700"><i class="mdi mdi-code-braces"></i> YAML</button>
+              <button class="jsst-tab" data-action="_ghsReloadTab" title="Ricarica da GitHub" style="font-size:14px;padding:4px 8px">↻</button>
+              <button class="jsst-tab" data-action="_ghCleanOrphans" title="Rimuovi card orfane" style="font-size:13px;padding:4px 8px">🧹</button>
+              <button class="jsst-tab" data-action="openGitHubCfg" title="Impostazioni GitHub">⚙️</button>
+            </div>
+          </div>
+          <input id="ghs-search" class="ghs-search" placeholder="🔍 Cerca per nome…" autocomplete="off">
+          <div id="ghs-status" style="font-size:11px;color:var(--muted);margin:8px 2px;min-height:16px"></div>
+          <div id="ghs-list"></div>
+          <div id="ghs-load" style="display:none;margin-top:10px">
+            <div id="ghs-dropzone" class="jsst-dropzone" data-action="_ghsDropzoneClick">
+              <div class="jsst-dz-ico">📂</div>
+              <div class="jsst-dz-lbl">Clicca o trascina un file <code>.js</code></div>
+              <div class="jsst-dz-sub">per installare una card manualmente (max 2 MB)</div>
+              <input type="file" id="ghs-file-inp" accept=".js" style="display:none">
+            </div>
+            <button data-action="jsStoreDownloadTemplate" style="margin-top:8px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.35);color:#a5b4fc;border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer">⬇️ Scarica template.js</button>
+          </div>
+        </div>
+
+        <!-- ── NOTIFICHE ── -->
+        <div id="ep-content-notif" class="ep-tab-content">
+          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">🔔</div><div class="ep-tab-hdr-title">Notifiche Smart</div></div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.6;background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:10px;padding:10px 12px">
+            💡 Crea regole per ricevere popup animati al cambiamento di stato di qualsiasi entità.<br>
+            Supporta durata ciclo elettrodomestici, reset contatori, feed camera, annunci Alexa.
+          </div>
+          <div id="ntf-rules-list"></div>
+          <button class="ntf-add-rule" data-action="ntfAddRule" style="margin-top:8px">➕ Aggiungi nuova regola</button>
+          <button data-action="_ntfSaveRules" style="margin-top:10px;background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.35);color:#4ade80;border-radius:10px;padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer;width:100%">💾 Salva regole</button>
+        </div>
+
+        <!-- ── SOS ── -->
+        <div id="ep-content-sos" class="ep-tab-content">
+          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">🆘</div><div class="ep-tab-hdr-title">Contatti SOS</div></div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.6;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:10px;padding:10px 12px">
+            <b>📞 Chiama</b>: notifica ad alta priorità che bypassa il silenzioso.<br>
+            <b>💬 Messaggio</b>: notifica normale.<br>
+            Servizio: <code>mobile_app_nomeTelefono</code> — trovalo in HA → Impostazioni → App Companion.
+          </div>
+          <div id="sos-cfg-list"></div>
+          <button class="sos-cfg-add" data-action="sosAddContact" style="margin-top:8px">➕ Aggiungi contatto SOS</button>
         </div>
 
       </div><!-- /ep-content-area -->
@@ -1120,41 +1156,8 @@
   </div>
 </div>
 
-<!-- STORE GITHUB (a sezioni + ricerca) -->
-<div class="mbg off" id="gh-store-modal">
-  <div class="mbox" style="max-width:680px;width:96vw">
-    <div class="mhdr"><span class="mtitle">🛒 Store da GitHub</span>
-      <button class="mx" data-action="closeGhStore">✕</button></div>
-    <div class="fscroll" style="padding:14px 16px">
-      <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
-        <button class="jsst-tab on" id="ghs-tab-js"         data-action="ghStoreTab" data-action-arg="js">⚡ Card JS</button>
-        <button class="jsst-tab"    id="ghs-tab-chips"      data-action="ghStoreTab" data-action-arg="chips">🔹 Chips</button>
-        <button class="jsst-tab"    id="ghs-tab-distintivi" data-action="ghStoreTab" data-action-arg="distintivi">🏷️ Distintivi</button>
-        <button class="jsst-tab"    id="ghs-tab-yaml"       data-action="ghStoreTab" data-action-arg="yaml">📄 YAML</button>
-        <button class="jsst-tab"    id="ghs-tab-pkg"        data-action="ghStoreTab" data-action-arg="pkg">📦 Pacchetti</button>
-        <button class="jsst-tab"    id="ghs-tab-local"      data-action="ghStoreTab" data-action-arg="local">📁 Card locali</button>
-        <div style="display:flex;gap:4px;margin-left:auto">
-          <button class="jsst-tab" data-action="closeGhStore" data-action2="openYamlImport" title="Incolla YAML da HACS" style="color:#818cf8;font-size:11px;padding:4px 10px;font-weight:700"><i class="mdi mdi-code-braces"></i> YAML</button>
-          <button class="jsst-tab" data-action="_ghsReloadTab" title="Ricarica da GitHub" style="font-size:14px;padding:4px 8px">↻</button>
-          <button class="jsst-tab" data-action="_ghCleanOrphans" title="Rimuovi card orfane (installate non più nel repo)" style="font-size:13px;padding:4px 8px">🧹</button>
-          <button class="jsst-tab" data-action="openGitHubCfg" title="Impostazioni GitHub">⚙️</button>
-        </div>
-      </div>
-      <input id="ghs-search" class="ghs-search" placeholder="🔍 Cerca per nome…"  autocomplete="off">
-      <div id="ghs-status" style="font-size:11px;color:var(--muted);margin:8px 2px;min-height:16px"></div>
-      <div id="ghs-list"></div>
-      <div id="ghs-load" style="display:none;margin-top:10px">
-        <div id="ghs-dropzone" class="jsst-dropzone" data-action="_ghsDropzoneClick">
-          <div class="jsst-dz-ico">📂</div>
-          <div class="jsst-dz-lbl">Clicca o trascina un file <code>.js</code></div>
-          <div class="jsst-dz-sub">per installare una card manualmente (max 2 MB)</div>
-          <input type="file" id="ghs-file-inp" accept=".js" style="display:none" >
-        </div>
-        <button data-action="jsStoreDownloadTemplate" style="margin-top:8px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.35);color:#a5b4fc;border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer">⬇️ Scarica template.js</button>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- STORE GITHUB — contenuto spostato inline nel pannello impostazioni -->
+<div class="mbg off" id="gh-store-modal" style="display:none"></div>
 
 <!-- YAML IMPORT MODAL -->
 <div class="off" id="yaml-modal">
@@ -1211,45 +1214,11 @@
   </div>
 </div>
 
-<!-- NOTIFICHE SMART CONFIG MODAL -->
-<div class="cfg-modal-ov" id="ntf-cfg-modal">
-  <div class="cfg-modal-box">
-    <div class="cfg-modal-hdr">
-      <div class="cfg-modal-hdr-ico">🔔</div>
-      <div class="cfg-modal-hdr-title">Notifiche Smart</div>
-      <button data-action="_ntfSaveRules" style="background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.35);color:#4ade80;border-radius:10px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;margin-right:6px">💾 Salva</button>
-      <button class="cfg-modal-close" data-action="closeNotifCfg">✕</button>
-    </div>
-    <div class="cfg-modal-body">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.6;background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:10px;padding:10px 12px">
-        💡 Crea regole per ricevere popup animati al cambiamento di stato di qualsiasi entità.<br>
-        Supporta durata ciclo elettrodomestici, reset contatori, feed camera, annunci Alexa.
-      </div>
-      <div id="ntf-rules-list"></div>
-      <button class="ntf-add-rule" data-action="ntfAddRule">➕ Aggiungi nuova regola</button>
-    </div>
-  </div>
-</div>
+<!-- NOTIFICHE SMART CONFIG MODAL — contenuto spostato inline nel pannello impostazioni -->
+<div class="cfg-modal-ov" id="ntf-cfg-modal" style="display:none"></div>
 
-<!-- SOS CONFIG MODAL -->
-<div class="cfg-modal-ov" id="sos-cfg-modal">
-  <div class="cfg-modal-box">
-    <div class="cfg-modal-hdr">
-      <div class="cfg-modal-hdr-ico">🆘</div>
-      <div class="cfg-modal-hdr-title">Configurazione SOS</div>
-      <button class="cfg-modal-close" data-action="closeSOSCfg">✕</button>
-    </div>
-    <div class="cfg-modal-body">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.6;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:10px;padding:10px 12px">
-        <b>📞 Chiama</b>: notifica ad alta priorità che bypassa il silenzioso.<br>
-        <b>💬 Messaggio</b>: notifica normale.<br>
-        Servizio: <code>mobile_app_nomeTelefono</code> — trovalo in HA → Impostazioni → App Companion.
-      </div>
-      <div id="sos-cfg-list"></div>
-      <button class="sos-cfg-add" data-action="sosAddContact">➕ Aggiungi contatto SOS</button>
-    </div>
-  </div>
-</div>
+<!-- SOS CONFIG MODAL — contenuto spostato inline nel pannello impostazioni -->
+<div class="cfg-modal-ov" id="sos-cfg-modal" style="display:none"></div>
 
 <!-- SOS STEP 1 — Chi sei? -->
 <div class="sos-ov off" id="sos-mod1">

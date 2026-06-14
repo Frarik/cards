@@ -1545,10 +1545,10 @@ function _ghsReloadTab(){
 }
 function openGhStore(){
   try{ closeJsStore(); }catch(e){}
-  document.getElementById('gh-store-modal').classList.remove('off');
-  _ghsCache={}; ghStoreTab('js');
+  if(!document.getElementById('epanel').classList.contains('open')) openOikSettings();
+  _switchEpTab('store');
 }
-function closeGhStore(){ document.getElementById('gh-store-modal').classList.add('off'); }
+function closeGhStore(){}
 function closeGhsPreview(){
   document.getElementById('ghs-prev-modal').classList.add('off');
   document.getElementById('ghs-prev-card').innerHTML='';
@@ -5082,6 +5082,7 @@ function openOikSettings(){
   _pgSnapshot();
   if(window._sysLoad) try{_sysLoad();}catch(e){}
   try{ _renderTopbarIconsList(); }catch(e){}
+  _switchEpTab('aspetto');
 }
 function closeOikSettings(){
   _pgCheckDirtyAndProceed(()=>{
@@ -5138,6 +5139,16 @@ function _switchEpTab(tab){
   if(tab==='topbar'){ try{_renderTopbarIconsList();}catch(_){} }
   if(tab==='aspetto'){ try{_renderColorThemes();}catch(_){} try{renderFontPick();}catch(_){} }
   if(tab==='sistema'){ if(window._sysLoad) try{_sysLoad();}catch(_){} }
+  if(tab==='fbar'){
+    if(!cfg.footerBar) cfg.footerBar={enabled:false,buttons:[]};
+    const enCb=document.getElementById('fb-enabled-cb');
+    if(enCb) enCb.checked=!!cfg.footerBar.enabled;
+    document.getElementById('fb-btn-form').style.display='none';
+    try{_fbRenderList();}catch(_){}
+  }
+  if(tab==='store'){ try{_ghsCache={};ghStoreTab('js');}catch(_){} }
+  if(tab==='notif'){ try{renderNotifRules();}catch(_){} try{_ntfUpdateSidebarBadges();}catch(_){} }
+  if(tab==='sos'){ try{renderSOSCfgList();}catch(_){} }
 }
 function _openEpSheet(tab){ _switchEpTab(tab); }
 function _closeEpSheet(){}
@@ -9713,15 +9724,10 @@ function fbarZoneBtnClick(btnId,e){
 function openFBM(){
   if(!cfg.footerBar) cfg.footerBar={enabled:false,buttons:[]};
   _fbBtns=JSON.parse(JSON.stringify(cfg.footerBar.buttons||[]));
-  document.getElementById('fbmod-title').textContent='▭ Barra inferiore';
-  // toggle enabled state in label row
-  const enCb=document.getElementById('fb-enabled-cb');
-  if(enCb) enCb.checked=!!cfg.footerBar.enabled;
-  document.getElementById('fb-btn-form').style.display='none';
-  _fbRenderList();
-  document.getElementById('fbmod').classList.remove('off');
+  if(!document.getElementById('epanel').classList.contains('open')) openOikSettings();
+  _switchEpTab('fbar');
 }
-function closeFBM(){ document.getElementById('fbmod').classList.add('off'); }
+function closeFBM(){}
 function saveFBM(){
   if(!cfg.footerBar) cfg.footerBar={};
   const enCb=document.getElementById('fb-enabled-cb');
@@ -9729,7 +9735,6 @@ function saveFBM(){
   cfg.footerBar.buttons=JSON.parse(JSON.stringify(_fbBtns));
   saveCfg();
   renderFbarZone();
-  closeFBM();
   showToast('✅ Footer Bar salvata');
 }
 function toggleFbarEnabled(cb){
@@ -11606,29 +11611,23 @@ function _ntfDoAction(domain, service, entityId){
 
 /* ═══ MODAL OPEN/CLOSE ═══ */
 function openNotifCfg(){
-  document.getElementById('ntf-cfg-modal').classList.add('open');
-  renderNotifRules();
-  _ntfUpdateSidebarBadges();
+  if(!document.getElementById('epanel').classList.contains('open')) openOikSettings();
+  _switchEpTab('notif');
 }
-function closeNotifCfg(){
-  document.getElementById('ntf-cfg-modal').classList.remove('open');
-}
+function closeNotifCfg(){}
 
 /* ═══ CENTRO NOTIFICHE → notifications.js ═══ */
 function openSOSCfg(){
-  document.getElementById('sos-cfg-modal').classList.add('open');
-  renderSOSCfgList();
+  if(!document.getElementById('epanel').classList.contains('open')) openOikSettings();
+  _switchEpTab('sos');
 }
 function closeSOSCfg(){
-  // rimuovi i contatti rimasti completamente vuoti (es. riga aggiunta e mai compilata):
-  // non devono contare nel badge né restare salvati.
   try{
     const sc=_sosCfg();
     const before=sc.contacts.length;
     sc.contacts=sc.contacts.filter(c=>c&&((c.name||'').trim()||(c.notifyService||'').trim()||(c.phone||'').trim()));
     if(sc.contacts.length!==before){ saveCfg(); _ntfUpdateSidebarBadges(); }
   }catch(e){}
-  document.getElementById('sos-cfg-modal').classList.remove('open');
 }
 function _ntfUpdateSidebarBadges(){
   const rules=_ntfCfg();

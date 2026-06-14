@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.4.48 — 2026-06-14
+
+### feat(Settings): auto-apri primo tab + componenti inline (v1.4.48)
+
+**frarik-addon src/index.html + src/main.js:**
+- Apertura impostazioni → tab Aspetto già attivo (nessuna schermata vuota)
+- Rimosso separatore "Componenti": tutti i 9 tab usano `_switchEpTab` uniformemente
+- Bottom Bar, Store, Notifiche, SOS mostrano il contenuto direttamente nel pannello destra
+  - Spostati `#fb-list`, `#fb-btn-form`, `#fb-enabled-row`, `#ghs-list`, `#ntf-rules-list`, `#sos-cfg-list`
+    dai modal overlay ai nuovi pannelli inline (`ep-content-fbar/store/notif/sos`)
+  - Modal originali (`#fbmod`, `#gh-store-modal`, `#ntf-cfg-modal`, `#sos-cfg-modal`) svuotati
+- `openFBM/openGhStore/openNotifCfg/openSOSCfg` redirezionano alla sidebar invece di aprire overlay
+- `closeFBM/closeGhStore/closeNotifCfg` → no-op (la navigazione è gestita dalla sidebar)
+- `saveFBM` non chiude più nulla, resta sulla tab corrente
+
+---
+
 ## 1.4.47 — 2026-06-14
 
 ### feat(Settings): layout sidebar + area contenuto (v1.4.47)
