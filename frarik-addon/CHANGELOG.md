@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.4.57 — 2026-06-14
+
+### fix(MeteoCard): MDI icons, station popup animation, scrollbar (v1.4.57 / MeteoCard 1.41)
+
+**card-js/Meteo.js (1.40 → 1.41):**
+- **Icone MDI**: sostituito `<ha-icon>` (non disponibile nel contesto iframe frarik) con rendering
+  tramite MDI webfont (@mdi/font CDN via @import in shadow DOM). Le icone MDI compaiono ora
+  correttamente nelle tile della card, nel picker impostazioni e nell'anteprima
+- **Stazione — aggiunta entità**: fix popup impostazioni che si chiudeva e riapreva ad ogni click
+  su "+ Aggiungi entità" / ✕ elimina. Ora l'aggiornamento è locale alla sezione categorie
+  (`#sov-st-cats`) senza rirendere l'intera modale (niente più slide-up animation al click)
+- **Scrollbar nascosta**: rimossa la barra di scorrimento visibile in tutti i popup — colonna
+  impostazioni (`.sbdy`), colonna anteprima (`.sov-prev`), dropdown entità (`.el`),
+  lista oraria previsioni giornaliere (`.hr-list`)
+
+---
+
 ## 1.4.56 — 2026-06-14
 
 ### feat(MeteoCard): dynamic station entities, sun/moon z-index fix (v1.4.56 / MeteoCard 1.40)

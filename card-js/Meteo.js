@@ -1,4 +1,4 @@
-/* frarik-version: 1.40 */
+/* frarik-version: 1.41 */
 
 // ── Lookup tables ─────────────────────────────────────────────────────────────
 const _WI = {
@@ -199,6 +199,7 @@ const _MDI_ICONS=['thermometer','thermometer-high','thermometer-low','temperatur
 
 // ── CSS ───────────────────────────────────────────────────────────────────────
 const _CSS = `
+@import url('https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css');
 :host{display:block;}
 *{box-sizing:border-box;margin:0;padding:0;}
 .card{border-radius:20px;overflow:hidden;font-family:var(--primary-font-family,system-ui,sans-serif);color:#fff;position:relative;box-shadow:0 12px 48px rgba(0,0,0,.6);}
@@ -289,8 +290,10 @@ button[data-a="gear"]{display:var(--fgear,none);}
 .scls{margin-left:auto;width:28px;height:28px;border-radius:7px;border:none;background:rgba(255,255,255,.06);cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;}
 .scls:hover{background:rgba(255,255,255,.12);}
 .sov-2col{display:flex;flex:1;overflow:hidden;min-height:0;}
-.sbdy{width:400px;flex-shrink:0;overflow-y:auto;padding:14px 16px;border-right:1px solid rgba(255,255,255,.07);}
-.sov-prev{flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);}
+.sbdy{width:400px;flex-shrink:0;overflow-y:auto;padding:14px 16px;border-right:1px solid rgba(255,255,255,.07);scrollbar-width:none;-ms-overflow-style:none;}
+.sbdy::-webkit-scrollbar{display:none;}
+.sov-prev{flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);scrollbar-width:none;-ms-overflow-style:none;}
+.sov-prev::-webkit-scrollbar{display:none;}
 .prev-ttl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.5);}
 .prev-wrap{border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08);}
 .lsect{padding-top:12px;border-top:1px solid rgba(255,255,255,.08);}
@@ -309,7 +312,8 @@ input[type=range].lslider{flex:1;cursor:pointer;accent-color:#fbbf24;height:4px;
 .cbtn:hover{background:rgba(255,255,255,.18);}
 .esr{display:none;margin-top:6px;border-radius:10px;border:1px solid rgba(255,255,255,.12);overflow:hidden;background:rgba(10,8,22,1);}
 .esr.open{display:block;}
-.el{max-height:160px;overflow-y:auto;}
+.el{max-height:160px;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;}
+.el::-webkit-scrollbar{display:none;}
 .eo{padding:8px 12px;cursor:pointer;font-size:12px;color:#fff;border-bottom:1px solid rgba(255,255,255,.06);}
 .eo:hover{background:rgba(255,255,255,.08);color:#fff;}
 .eo.sel{color:#fbbf24;font-weight:700;}
@@ -816,7 +820,7 @@ class MeteoCard extends HTMLElement {
           return `<div class="hr-row"><div class="hr-t">${time}</div><div class="hr-i">${ico}</div><div class="hr-tp"><span style="color:${tc};font-size:14px;font-weight:800;">${temp}°</span><div class="hr-bar" style="background:${tc};width:${bw}%"></div></div><div class="hr-r">☂ ${rn}mm</div><div class="hr-w">⇒ ${ws}km/h<span class="hr-wd"> ${wd}</span></div></div>`
         }).join('')
       :`<div class="hr-load">Previsioni orarie in caricamento…</div>`
-    const dmCSS=`.dov{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);font-family:var(--primary-font-family,system-ui,sans-serif);}.dov-modal{width:100%;max-height:85vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(251,191,36,.2);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:slideUp .22s cubic-bezier(.32,1.12,.56,1);}@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}.dm-hdr{padding:18px 20px 16px;background:linear-gradient(135deg,rgba(80,50,8,.95),rgba(50,30,5,.98));border-radius:20px 20px 0 0;display:flex;align-items:flex-start;justify-content:space-between;}.dm-left{flex:1;}.dm-date{font-size:10px;font-weight:800;color:rgba(255,200,80,.8);letter-spacing:1.4px;margin-bottom:5px;}.dm-cond{font-size:24px;font-weight:900;color:#fff;letter-spacing:-.3px;line-height:1.1;}.dm-temps{font-size:14px;font-weight:700;color:rgba(255,215,100,.9);margin-top:6px;}.dm-ico{flex-shrink:0;margin-left:12px;display:flex;align-items:center;margin-top:-4px;}.dm-cls{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.12);border:none;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:10px;line-height:1;transition:background .15s;}.dm-cls:hover{background:rgba(248,113,113,.4);}.hr-thead{display:grid;grid-template-columns:48px 34px 1fr 80px 88px;gap:6px;padding:7px 20px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.4);border-bottom:1px solid rgba(255,255,255,.08);}.hr-thead-w{text-align:right;}.hr-list{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent;}.hr-row{display:grid;grid-template-columns:48px 34px 1fr 80px 88px;align-items:center;gap:6px;padding:8px 20px;border-bottom:1px solid rgba(255,255,255,.04);}.hr-row:last-child{border-bottom:none;}.hr-t{font-size:12px;font-weight:700;color:#fff;}.hr-i{display:flex;align-items:center;justify-content:center;}.hr-tp{display:flex;flex-direction:column;gap:3px;}.hr-bar{height:2px;border-radius:1px;}.hr-r{font-size:11px;color:#94d3f7;white-space:nowrap;}.hr-w{font-size:11px;color:#fff;text-align:right;white-space:nowrap;}.hr-wd{color:rgba(255,255,255,.5);font-size:10px;}.hr-load{padding:40px;text-align:center;color:rgba(255,255,255,.5);font-size:12px;}`
+    const dmCSS=`.dov{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);font-family:var(--primary-font-family,system-ui,sans-serif);}.dov-modal{width:100%;max-height:85vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(251,191,36,.2);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:slideUp .22s cubic-bezier(.32,1.12,.56,1);}@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}.dm-hdr{padding:18px 20px 16px;background:linear-gradient(135deg,rgba(80,50,8,.95),rgba(50,30,5,.98));border-radius:20px 20px 0 0;display:flex;align-items:flex-start;justify-content:space-between;}.dm-left{flex:1;}.dm-date{font-size:10px;font-weight:800;color:rgba(255,200,80,.8);letter-spacing:1.4px;margin-bottom:5px;}.dm-cond{font-size:24px;font-weight:900;color:#fff;letter-spacing:-.3px;line-height:1.1;}.dm-temps{font-size:14px;font-weight:700;color:rgba(255,215,100,.9);margin-top:6px;}.dm-ico{flex-shrink:0;margin-left:12px;display:flex;align-items:center;margin-top:-4px;}.dm-cls{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.12);border:none;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:10px;line-height:1;transition:background .15s;}.dm-cls:hover{background:rgba(248,113,113,.4);}.hr-thead{display:grid;grid-template-columns:48px 34px 1fr 80px 88px;gap:6px;padding:7px 20px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.4);border-bottom:1px solid rgba(255,255,255,.08);}.hr-thead-w{text-align:right;}.hr-list{flex:1;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;}.hr-list::-webkit-scrollbar{display:none;}.hr-row{display:grid;grid-template-columns:48px 34px 1fr 80px 88px;align-items:center;gap:6px;padding:8px 20px;border-bottom:1px solid rgba(255,255,255,.04);}.hr-row:last-child{border-bottom:none;}.hr-t{font-size:12px;font-weight:700;color:#fff;}.hr-i{display:flex;align-items:center;justify-content:center;}.hr-tp{display:flex;flex-direction:column;gap:3px;}.hr-bar{height:2px;border-radius:1px;}.hr-r{font-size:11px;color:#94d3f7;white-space:nowrap;}.hr-w{font-size:11px;color:#fff;text-align:right;white-space:nowrap;}.hr-wd{color:rgba(255,255,255,.5);font-size:10px;}.hr-load{padding:40px;text-align:center;color:rgba(255,255,255,.5);font-size:12px;}`
     this._dayModalHost.shadowRoot.innerHTML=`<style>${_CSS}${dmCSS}</style>
 <div class="dov"><div class="dov-modal">
   <div class="dm-hdr">
@@ -1160,13 +1164,15 @@ class MeteoCard extends HTMLElement {
         const key=t.dataset.key
         if(!this._tStSensors[key]) this._tStSensors[key]=[]
         this._tStSensors[key].push({eid:'',lbl:''})
-        this._renderModal()
+        const _sc=this._modalHost?.shadowRoot?.querySelector('#sov-st-cats')
+        if(_sc) _sc.innerHTML=this._stCatsHTML(); else this._renderModal()
         break
       }
       case 'scat-rm':{
         const key=t.dataset.key,idx=parseInt(t.dataset.idx)
         if(this._tStSensors[key]) this._tStSensors[key].splice(idx,1)
-        this._renderModal()
+        const _sc=this._modalHost?.shadowRoot?.querySelector('#sov-st-cats')
+        if(_sc) _sc.innerHTML=this._stCatsHTML(); else this._renderModal()
         break
       }
       case 'save':{
@@ -1450,7 +1456,7 @@ class MeteoCard extends HTMLElement {
             <div style="flex:1;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:7px;">
               <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;">
                 <span style="font-size:9px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;">Icona MDI</span>
-                ${icoIsMdi?`<ha-icon icon="${tile.ico}" style="color:${tile.icoColor||'#fff'};--mdc-icon-size:15px;pointer-events:none;"></ha-icon>`:''}
+                ${icoIsMdi?`<span class="mdi mdi-${tile.ico.slice(4)}" style="color:${tile.icoColor||'#fff'};font-size:15px;vertical-align:middle;pointer-events:none;"></span>`:''}
               </div>
               <div class="inp-grp" style="margin:0;">
                 <input class="ci" type="text" value="${mdiName}" placeholder="es: thermometer" data-f="tile-mdi-search-${i}" autocomplete="off" style="font-size:11px;"/>
@@ -1490,7 +1496,7 @@ class MeteoCard extends HTMLElement {
           ${!isFixed?`<div style="flex:1.5;"><div class="fl" style="margin:0 0 3px;font-size:10px;">Etichetta</div><input class="ci" type="text" value="${tile.lbl||''}" placeholder="Nome" data-f="tile-lbl-${i}"/></div>`:''}
           <div style="display:flex;gap:4px;padding-bottom:1px;">
             <button data-a="tile-open" data-idx="${i}" style="background:rgba(251,191,36,${tile._open?.12:.06});border:1px solid rgba(251,191,36,${tile._open?.35:.15});color:${tile._open?'#fbbf24':'rgba(255,255,255,.45)'};border-radius:8px;padding:6px 8px;font-size:13px;cursor:pointer;flex-shrink:0;line-height:1;" title="Personalizza">
-              ${icoIsMdi?`<ha-icon icon="${tile.ico}" style="color:inherit;--mdc-icon-size:15px;pointer-events:none;"></ha-icon>`:emojiDisplay||icoPreview} ⚙</button>
+              ${icoIsMdi?`<span class="mdi mdi-${tile.ico.slice(4)}" style="color:inherit;font-size:15px;vertical-align:middle;pointer-events:none;"></span>`:emojiDisplay||icoPreview} ⚙</button>
             ${!isFixed?`<button data-a="tile-rm" data-idx="${i}" style="background:rgba(255,80,80,.1);border:1px solid rgba(255,80,80,.22);color:rgba(255,120,120,.85);border-radius:8px;padding:6px 9px;font-size:13px;cursor:pointer;flex-shrink:0;line-height:1;">✕</button>`:''}
           </div>
         </div>
@@ -1515,7 +1521,7 @@ class MeteoCard extends HTMLElement {
     const listEl=drop.querySelector('.el'); if(!listEl) return
     listEl.innerHTML=icons.length
       ?icons.slice(0,60).map(name=>`<div class="eo" data-a="tile-mdi-sel" data-idx="${i}" data-mdi="${name}" style="display:flex;align-items:center;gap:8px;padding:6px 10px;">
-          <ha-icon icon="mdi:${name}" style="color:#fff;--mdc-icon-size:16px;flex-shrink:0;pointer-events:none;"></ha-icon>
+          <span class="mdi mdi-${name}" style="color:#fff;font-size:16px;vertical-align:middle;flex-shrink:0;pointer-events:none;"></span>
           <span>${name}</span></div>`).join('')
       :'<div style="padding:8px 12px;font-size:11px;color:rgba(255,255,255,.5);">Nessuna icona trovata</div>'
     drop.classList.add('open')
@@ -1635,7 +1641,7 @@ class MeteoCard extends HTMLElement {
     }
     const _icoHTML=(ico,color,defSvg)=>{
       if(!ico) return defSvg?`<span style="color:${color||'#fff'}">${defSvg}</span>`:`<span style="color:${color||'#fff'};font-size:1.1em">📊</span>`
-      if(ico.startsWith('mdi:')) return `<ha-icon icon="${ico}" style="color:${color||'#fff'};--mdc-icon-size:1.4em;display:inline-flex;vertical-align:middle;"></ha-icon>`
+      if(ico.startsWith('mdi:')) return `<span class="mdi mdi-${ico.slice(4)}" style="color:${color||'#fff'};font-size:1.3em;vertical-align:middle;"></span>`
       return `<span style="color:${color||'#fff'};font-size:1.1em">${ico}</span>`
     }
     const _tileIco=(key,cust)=>_icoHTML(cust?.ico, cust?.icoColor, _IC[key])
@@ -1747,6 +1753,26 @@ class MeteoCard extends HTMLElement {
     wrap.addEventListener('pointercancel',()=>{pdown=false;pdrag=false})
   }
 
+  _stCatsHTML(){
+    return _STATION_CATS.map(cat=>{
+      const _ents=this._tStSensors[cat.key]||[]
+      return `
+      <div style="margin-top:14px;font-size:11px;font-weight:800;color:${cat.color};text-transform:uppercase;letter-spacing:.07em;">${cat.icon} ${cat.label}</div>
+      ${_ents.map((e,idx)=>`
+        <div style="display:flex;gap:5px;align-items:center;margin-top:5px;">
+          <div class="inp-grp" style="flex:2;min-width:0;">
+            <input class="ci" type="text" value="${e.eid||''}" placeholder="entità..." data-f="scat-eid-${cat.key}-${idx}" autocomplete="off"/>
+            <div class="esr" data-dropdown="scat-eid-${cat.key}-${idx}"><div class="el"></div></div>
+          </div>
+          <input class="ci" type="text" value="${e.lbl||''}" placeholder="nome..." data-f="scat-lbl-${cat.key}-${idx}" style="flex:1.5;min-width:0;" autocomplete="off"/>
+          <button data-a="scat-rm" data-key="${cat.key}" data-idx="${idx}" style="flex-shrink:0;width:28px;height:32px;border-radius:7px;border:1px solid rgba(248,113,113,.25);background:rgba(248,113,113,.08);cursor:pointer;color:#f87171;font-size:13px;display:flex;align-items:center;justify-content:center;">✕</button>
+        </div>
+      `).join('')}
+      <button data-a="scat-add" data-key="${cat.key}" style="margin-top:7px;width:100%;height:29px;border-radius:7px;border:1px solid rgba(251,191,36,.2);background:rgba(251,191,36,.06);cursor:pointer;color:#fbbf24;font-size:11px;font-weight:600;">+ Aggiungi entità</button>
+      `
+    }).join('')
+  }
+
   _sovHTML(){
     const eid=this._te||this._c.entityId||''
     const ent=this._h?.states?.[eid]
@@ -1835,23 +1861,7 @@ class MeteoCard extends HTMLElement {
             </div>
             <div class="ht">Coordinate per la mappa radar Windy</div>
 
-            ${_STATION_CATS.map(cat=>{
-              const _ents=this._tStSensors[cat.key]||[]
-              return `
-              <div style="margin-top:14px;font-size:11px;font-weight:800;color:${cat.color};text-transform:uppercase;letter-spacing:.07em;">${cat.icon} ${cat.label}</div>
-              ${_ents.map((e,idx)=>`
-                <div style="display:flex;gap:5px;align-items:center;margin-top:5px;">
-                  <div class="inp-grp" style="flex:2;min-width:0;">
-                    <input class="ci" type="text" value="${e.eid||''}" placeholder="entità..." data-f="scat-eid-${cat.key}-${idx}" autocomplete="off"/>
-                    <div class="esr" data-dropdown="scat-eid-${cat.key}-${idx}"><div class="el"></div></div>
-                  </div>
-                  <input class="ci" type="text" value="${e.lbl||''}" placeholder="nome..." data-f="scat-lbl-${cat.key}-${idx}" style="flex:1.5;min-width:0;" autocomplete="off"/>
-                  <button data-a="scat-rm" data-key="${cat.key}" data-idx="${idx}" style="flex-shrink:0;width:28px;height:32px;border-radius:7px;border:1px solid rgba(248,113,113,.25);background:rgba(248,113,113,.08);cursor:pointer;color:#f87171;font-size:13px;display:flex;align-items:center;justify-content:center;">✕</button>
-                </div>
-              `).join('')}
-              <button data-a="scat-add" data-key="${cat.key}" style="margin-top:7px;width:100%;height:29px;border-radius:7px;border:1px solid rgba(251,191,36,.2);background:rgba(251,191,36,.06);cursor:pointer;color:#fbbf24;font-size:11px;font-weight:600;">+ Aggiungi entità</button>
-              `
-            }).join('')}
+            <div id="sov-st-cats">${this._stCatsHTML()}</div>
 
             <div style="margin-top:14px;font-size:11px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.07em;">Card Speciali</div>
             ${_STATION_SPECIALS.map(s=>`
