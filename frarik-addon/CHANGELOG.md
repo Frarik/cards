@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.4.62 — 2026-06-14
+
+### feat(SystemCard): tutti i sensori PKG configurabili nelle impostazioni (v1.4.62 / SystemCard 4.7)
+
+**card-js/System.js (4.6 → 4.7):**
+- **`pkDefaults()`**: nuova funzione con tutti i default dei sensori PKG (24 entity ID)
+- **`cfgFor()`**: esteso per includere i campi `pk_*` dal localStorage, unificato con autodetect
+- **Sezione impostazioni — "PKG Energia"**: 10 campi configurabili (potenza, kWh oggi/mese/anno, costi oggi/ieri/mese/mese prec./anno/anno prec.)
+- **Sezione impostazioni — "PKG Sistema HA"**: 7 campi (uptime HA, uptime server, entità, backup, avvio HA, RAM tot, disco tot)
+- **Sezione impostazioni — "PKG Aggiornamenti"**: 6 campi (Core, Supervisor, Addon, HACS store, HACS count, SSL cert)
+- **Sezione impostazioni — "PKG Switch"**: campo switch ventola fisica
+- **Uptime Server**: nuova sezione `srv-uptime` in `haInfoSection` usando `pk_srv_uptime`
+- **Badge SSL**: certificato SSL visibile in `aggSection` se `pk_cert` configurato
+- **HACS count**: numero aggiornamenti HACS in `aggSection` da `pk_hacs`
+- **Popup Notifiche**: nuovo `openNotifPopup()` — toggle per tutti i `notifica_*` e `alert_*` input_boolean, soglie input_number, orari input_datetime
+- **Pulsante "notifiche ›"** nella sezione Automazioni che apre il popup Notifiche
+- **Switch ventola fisica**: se `pk_ventola` configurato, appare toggle aggiuntivo nella sezione Automazioni
+- Tutti i valori PKG in `render()` e `_patch()` usano `c.pk_*` invece di ID hardcoded
+- Card funziona con entity ID diversi per ogni utente: ciascuno configura i propri una volta
+
+---
+
 ## 1.4.61 — 2026-06-14
 
 ### feat(SystemCard): rinominata Mini-PC, aggiunto pkg statistiche_ha (v1.4.61 / SystemCard 4.6)
