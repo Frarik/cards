@@ -1523,9 +1523,9 @@ const _GHS_FOLDERS={
   chips:     {path:'card-chips',      ext:/\.js$/i,    ico:'🔹',  kind:'install'},
   distintivi:{path:'card-distintivi', ext:/\.js$/i,    ico:'🏷️', kind:'install'},
   yaml:      {path:'card-yaml',       ext:/\.ya?ml$/i, ico:'📄',  kind:'copy'},
-  pkg:       {path:'pkg',             ext:/\.ya?ml$/i, ico:'📦',  kind:'copy'},
+  pkg:       {path:'pkg',             ext:/\.ya?ml$/i, ico:'📦',  kind:'pkg'},
 };
-let _ghsTab='js', _ghsCache={};
+let _ghsTab='js', _ghsCache={}, _pkgInstalledFiles=null;
 async function _ghListFolder(path){
   const g=_ghCfg(); if(!g.owner||!g.repo) throw new Error('Configura GitHub (proprietario/repository)');
   const p=path?path.split('/').map(encodeURIComponent).join('/'):'';
@@ -1623,6 +1623,18 @@ function ghStoreTab(tab){
   const s=document.getElementById('ghs-search'); if(s) s.value='';
   const loadEl=document.getElementById('ghs-load'); if(loadEl) loadEl.style.display=(tab==='local')?'':'none';
   if(tab==='local'){ _ghStoreRender(); _ghStoreInitDropzone(); return; }
+  if(tab==='pkg'){
+    _pkgInstalledFiles=null;
+    document.getElementById('ghs-status').textContent='⏳ Carico…';
+    document.getElementById('ghs-list').innerHTML='';
+    const pf=_GHS_FOLDERS.pkg;
+    Promise.all([
+      _pkgLoadInstalled(),
+      _ghsCache.pkg ? Promise.resolve() : _ghListFolder(pf.path).then(files=>{ _ghsCache.pkg=files.filter(x=>pf.ext.test(x.name)); })
+    ]).then(()=>{ if(_ghsTab==='pkg') _ghStoreRender(); })
+      .catch(e=>{ document.getElementById('ghs-status').textContent='⚠️ '+e.message; });
+    return;
+  }
   if(_ghsCache[tab]){ _ghStoreRender(); return; }
   document.getElementById('ghs-status').textContent='⏳ Carico da GitHub…';
   document.getElementById('ghs-list').innerHTML='';
@@ -1653,6 +1665,7 @@ function _ghStoreRender(){
   const tab=_ghsTab, list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
   const q=(document.getElementById('ghs-search').value||'').toLowerCase().trim();
   if(tab==='local'){ _ghStoreRenderInstalled(q,'local'); return; }
+  if(tab==='pkg'){ _ghStoreRenderPkg(q); return; }
   const folder=_GHS_FOLDERS[tab]; const g=_ghCfg();
   let files=(_ghsCache[tab]||[]).slice();
   if(q) files=files.filter(f=>f.name.toLowerCase().includes(q));
@@ -2070,6 +2083,126 @@ async function _ghsYamlAdd(name){
   const inp=document.getElementById('yaml-inp'); if(inp) inp.value=txt;
   try{ await yamlImportParse(); }catch(e){}   // genera l'anteprima; poi l'utente preme "Aggiungi"
 }
+
+/* ════════ PKG — Pacchetti HA installabili dallo store (↔ /config/packages/) ════════ */
+async function _pkgLoadInstalled(){
+  try{
+    const r=await fetch('/api/frarik/pkg/list');
+    const j=await r.json();
+    _pkgInstalledFiles=j.ok?(j.files||[]):[];
+  }catch(e){ _pkgInstalledFiles=[]; }
+}
+
+function _ghStoreRenderPkg(q){
+  const list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
+  if(_pkgInstalledFiles===null){ status.textContent='⏳ Carico pacchetti installati…'; list.innerHTML=''; return; }
+  const ico='📦';
+  const eyeBtn=(enc,nm)=>`<button class="ghs-ibtn ghs-ibtn-eye" data-action="_ghsPreviewEl" data-penc="${enc.replace(/'/g,"\\'")}" data-pnm="${nm.replace(/'/g,"\\'")}" data-pcid="" title="Mostra"><i class="mdi mdi-eye-outline"></i></button>`;
+  const rowHtml=(nm,sub,acts)=>`<div class="ghs-row"><div class="ghs-ico">${ico}</div><div class="ghs-info"><div class="ghs-name">${eh(nm)}</div><div class="ghs-sub">${eh(sub)}</div></div><div class="ghs-acts">${acts}</div></div>`;
+  const ghFiles=(_ghsCache.pkg||[]).slice();
+  const instSet=new Set((_pkgInstalledFiles||[]).map(f=>f.toLowerCase()));
+  const sorted=q?ghFiles.filter(f=>f.name.toLowerCase().includes(q)):ghFiles.slice();
+  const instFromGh=sorted.filter(f=>instSet.has(f.name.toLowerCase()));
+  const notInst=sorted.filter(f=>!instSet.has(f.name.toLowerCase()));
+  const onlyLocal=(_pkgInstalledFiles||[]).filter(n=>!ghFiles.some(f=>f.name.toLowerCase()===n.toLowerCase()));
+  status.textContent=ghFiles.length+' pacchetti'+(q?' · '+sorted.length+' trovati':'')+'  ·  '+(_pkgInstalledFiles||[]).length+' installati';
+  const uploadRow=`<div style="display:flex;align-items:center;gap:10px;background:rgba(99,102,241,.07);border:1px dashed rgba(99,102,241,.3);border-radius:10px;cursor:pointer;padding:10px 16px;margin-bottom:8px" onclick="document.getElementById('ghs-pkg-file-inp').click()"><i class="mdi mdi-upload" style="color:#818cf8;font-size:18px"></i><span style="color:#818cf8;font-size:12px;font-weight:600">Carica PKG locale (.yaml) e installa in HA</span><input type="file" id="ghs-pkg-file-inp" accept=".yaml,.yml" style="display:none"></div>`;
+  let html=uploadRow;
+  if(instFromGh.length){
+    html+=`<div class="ghs-subhdr"><i class="mdi mdi-check-circle-outline"></i> Installati · ${instFromGh.length}</div>`;
+    html+=instFromGh.map(f=>{ const nm=f.name.replace(/\.ya?ml$/i,''); const enc=encodeURIComponent(f.name);
+      return rowHtml(nm,f.name,`${eyeBtn(enc,nm)}<button class="ghs-btn ghs-btn-upd" data-action="_ghsPkgInstall" data-action-arg="${enc}"><i class="mdi mdi-update"></i> Aggiorna</button><button class="ghs-ibtn ghs-ibtn-del" data-action="_ghsPkgUninstall" data-action-arg="${f.name}" title="Disinstalla"><i class="mdi mdi-delete-outline"></i></button>`);
+    }).join('');
+  }
+  if(onlyLocal.length){
+    html+=`<div class="ghs-subhdr"><i class="mdi mdi-folder-outline"></i> Solo locali · ${onlyLocal.length}</div>`;
+    html+=onlyLocal.map(n=>{ const nm=n.replace(/\.ya?ml$/i,''); const enc=encodeURIComponent(n);
+      return rowHtml(nm,n,`<button class="ghs-btn ghs-btn-upd" data-action="_ghsPkgPublish" data-action-arg="${enc}"><i class="mdi mdi-upload"></i> Pubblica</button><button class="ghs-btn ghs-btn-cp" data-action="_ghsPkgCopyLocal" data-action-arg="${n}"><i class="mdi mdi-content-copy"></i> Copia</button><button class="ghs-ibtn ghs-ibtn-del" data-action="_ghsPkgUninstall" data-action-arg="${n}" title="Disinstalla"><i class="mdi mdi-delete-outline"></i></button>`);
+    }).join('');
+  }
+  if(notInst.length){
+    html+=`<div class="ghs-subhdr"><i class="mdi mdi-package-variant-closed"></i> Da installare · ${notInst.length}</div>`;
+    html+=notInst.map(f=>{ const nm=f.name.replace(/\.ya?ml$/i,''); const enc=encodeURIComponent(f.name);
+      return rowHtml(nm,f.name,`${eyeBtn(enc,nm)}<button class="ghs-btn ghs-btn-inst" data-action="_ghsPkgInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>`);
+    }).join('');
+  }
+  list.innerHTML=html;
+  const pkgInp=document.getElementById('ghs-pkg-file-inp');
+  if(pkgInp&&!pkgInp._init){ pkgInp._init=true;
+    pkgInp.addEventListener('change',function(){ const f=this.files[0]; this.value=''; if(!f) return; const r=new FileReader(); r.onload=ev=>_ghsPkgInstallLocal(f.name,ev.target.result); r.readAsText(f); }); }
+}
+
+async function _ghsPkgInstall(encodedName){
+  const name=decodeURIComponent(encodedName);
+  const f=(_ghsCache.pkg||[]).find(x=>x.name===name); if(!f){ showToast('⚠️ File non trovato'); return; }
+  showToast('⬇️ Scarico '+name+'…');
+  let content; try{ content=await _ghDownload(f); }catch(e){ showToast('⚠️ '+e.message); return; }
+  try{
+    const r=await fetch('/api/frarik/pkg/install',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,content})});
+    const j=await r.json(); if(!j.ok) throw new Error(j.error||'Errore server');
+    showToast('✅ '+name+' installato in /config/packages/');
+    _pkgInstalledFiles=null;
+    _pkgLoadInstalled().then(()=>{ if(_ghsTab==='pkg') _ghStoreRender(); });
+  }catch(e){ showToast('⚠️ '+e.message); }
+}
+
+async function _ghsPkgUninstall(name){
+  if(!confirm('Disinstallare '+name+' da /config/packages/?')) return;
+  try{
+    const r=await fetch('/api/frarik/pkg/uninstall',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
+    const j=await r.json(); if(!j.ok) throw new Error(j.error||'Errore server');
+    showToast('🗑️ '+name+' rimosso da /config/packages/');
+    _pkgInstalledFiles=null;
+    _pkgLoadInstalled().then(()=>{ if(_ghsTab==='pkg') _ghStoreRender(); });
+  }catch(e){ showToast('⚠️ '+e.message); }
+}
+
+async function _ghsPkgInstallLocal(name, content){
+  if(!/\.ya?ml$/i.test(name)){ showToast('⚠️ Il file deve essere .yaml o .yml'); return; }
+  showToast('⏳ Installo '+name+'…');
+  try{
+    const r=await fetch('/api/frarik/pkg/install',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,content})});
+    const j=await r.json(); if(!j.ok) throw new Error(j.error||'Errore server');
+    showToast('✅ '+name+' installato in /config/packages/');
+    _pkgInstalledFiles=null;
+    _pkgLoadInstalled().then(()=>{ if(_ghsTab==='pkg') _ghStoreRender(); });
+  }catch(e){ showToast('⚠️ '+e.message); }
+}
+
+async function _ghsPkgCopyLocal(name){
+  try{
+    const r=await fetch('/api/frarik/pkg/read?name='+encodeURIComponent(name));
+    if(!r.ok) throw new Error('File non trovato ('+r.status+')');
+    const txt=await r.text();
+    if(navigator.clipboard&&window.isSecureContext){
+      await navigator.clipboard.writeText(txt).catch(()=>{});
+      showToast('📋 "'+name+'" copiato negli appunti'); return;
+    }
+    const ta=document.createElement('textarea'); ta.value=txt; ta.style.cssText='position:fixed;top:-1000px;opacity:0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    showToast('📋 "'+name+'" copiato negli appunti');
+  }catch(e){ showToast('⚠️ '+e.message); }
+}
+
+async function _ghsPkgPublish(encodedName){
+  const name=decodeURIComponent(encodedName);
+  if(!_ghCfg().token){ showToast('🔑 Manca il token GitHub — configuralo con ⚙️'); openGitHubCfg(); return; }
+  showToast('⏳ Leggo il file…');
+  let content;
+  try{
+    const r=await fetch('/api/frarik/pkg/read?name='+encodeURIComponent(name));
+    if(!r.ok) throw new Error('File non trovato sul server ('+r.status+')');
+    content=await r.text();
+  }catch(e){ showToast('⚠️ '+e.message); return; }
+  showToast('⏳ Pubblico su GitHub…');
+  try{
+    await _ghPut('pkg/'+name, content, 'Pubblica PKG '+name+' da Frarik');
+    showToast('📤 '+name+' pubblicato in pkg/ su GitHub!');
+    delete _ghsCache.pkg;
+    if(_ghsTab==='pkg') ghStoreTab('pkg');
+  }catch(e){ showToast('⚠️ '+e.message); }
+}
+
 function _ghSchedule(){
   clearInterval(_ghTimer);
   const g=_ghCfg();
@@ -12514,6 +12647,11 @@ Object.assign(window, {
   _ghsPublish,
   _ghsReloadTab,
   _ghsYamlAdd,
+  _ghsPkgInstall,
+  _ghsPkgUninstall,
+  _ghsPkgInstallLocal,
+  _ghsPkgCopyLocal,
+  _ghsPkgPublish,
   _hbOptionsPopup,
   _hbOptionsPopupEl,
   _hbPickClockColor,

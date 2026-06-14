@@ -162,6 +162,49 @@ app.post('/api/frarik/self-update', async (_req, res) => {
   }
 });
 
+/* ── Gestione Pacchetti HA (PKG YAML in /config/packages/) ── */
+const PKG_DIR = '/config/packages';
+
+app.get('/api/frarik/pkg/list', (_req, res) => {
+  try {
+    fs.mkdirSync(PKG_DIR, { recursive: true });
+    const files = fs.readdirSync(PKG_DIR).filter(f => /\.ya?ml$/i.test(f));
+    res.json({ ok: true, files });
+  } catch (e) { res.json({ ok: false, files: [], error: String(e.message) }); }
+});
+
+app.get('/api/frarik/pkg/read', (req, res) => {
+  const name = String(req.query.name || '');
+  if (!name || !/\.ya?ml$/i.test(name) || name.includes('/') || name.includes('..'))
+    return res.status(400).json({ ok: false, error: 'Nome non valido' });
+  try {
+    const content = fs.readFileSync(path.join(PKG_DIR, name), 'utf8');
+    res.type('text/plain').send(content);
+  } catch (e) { res.status(404).json({ ok: false, error: String(e.message) }); }
+});
+
+app.post('/api/frarik/pkg/install', async (req, res) => {
+  try {
+    const { name, content } = JSON.parse((await readBody(req)).toString('utf8'));
+    if (!name || !/\.ya?ml$/i.test(name) || name.includes('/') || name.includes('..'))
+      return res.status(400).json({ ok: false, error: 'Nome non valido' });
+    fs.mkdirSync(PKG_DIR, { recursive: true });
+    fs.writeFileSync(path.join(PKG_DIR, name), content, 'utf8');
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ ok: false, error: String(e.message) }); }
+});
+
+app.delete('/api/frarik/pkg/uninstall', async (req, res) => {
+  try {
+    const { name } = JSON.parse((await readBody(req)).toString('utf8'));
+    if (!name || !/\.ya?ml$/i.test(name) || name.includes('/') || name.includes('..'))
+      return res.status(400).json({ ok: false, error: 'Nome non valido' });
+    const p = path.join(PKG_DIR, name);
+    if (fs.existsSync(p)) fs.unlinkSync(p);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ ok: false, error: String(e.message) }); }
+});
+
 /* ═══════════════════════════════════════════════════════════════════════════
    PROXY REST → HA core  (tutto /api/* tranne /api/frarik/* e /api/websocket)
    Gated da licenza. Il token HA non transita mai dal browser.

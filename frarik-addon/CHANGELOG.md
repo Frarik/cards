@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.4.64 — 2026-06-14
+
+### feat(store): PKG store completo — installa/disinstalla/pubblica pacchetti HA
+
+**frarik-addon/server.js:**
+- `GET /api/frarik/pkg/list` — elenca i file .yaml in `/config/packages/`
+- `GET /api/frarik/pkg/read?name=X` — legge il contenuto di un PKG installato
+- `POST /api/frarik/pkg/install` — scrive un PKG YAML in `/config/packages/`
+- `DELETE /api/frarik/pkg/uninstall` — rimuove un PKG da `/config/packages/`
+
+**frarik-addon/src/main.js:**
+- Tab **📦 Pacchetti** nello store ora ha funzionalità complete (era solo Copia/Download)
+- Sezione "Installati": PKG installati da GitHub con pulsanti Aggiorna + Disinstalla
+- Sezione "Solo locali": PKG caricati da PC (non su GitHub) con Pubblica + Copia + Disinstalla
+- Sezione "Da installare": PKG disponibili su GitHub non ancora installati
+- Pulsante **Carica PKG locale** inline: drag-click su .yaml → installa direttamente in HA
+- **Pubblica su GitHub**: legge il PKG da `/config/packages/` e fa PUT su `pkg/` del repo
+- `_pkgLoadInstalled()`: fetch asincrono lista PKG installati dal server
+- `_ghsPkgInstall/Uninstall/InstallLocal/CopyLocal/Publish`: nuove funzioni esposte su `window`
+
+**pkg/statistiche_ha_2_8.yaml:**
+- Aggiunto il pacchetto completo statistiche HA nella cartella `pkg/` del repo
+
+---
+
 ## 1.4.63 — 2026-06-14
 
 ### feat(SystemCard): v4.8 — popup notifiche completo con tabs, soglie e orari editabili
