@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.4.65 — 2026-06-14
+
+### fix(store): PKG tab ridisegnato — store locale YAML senza "installazione" in HA
+
+**Logica corretta:** il tab 📦 Pacchetti gestisce file YAML come lo store JS gestisce le card:
+- **Locali** (caricati da disco): Pubblica su GitHub · Copia · Download · Rimuovi dallo store
+- **Da GitHub** (non ancora salvati): Copia · Download · Salva locale
+- **Carica PKG locale**: pulsante inline per caricare un .yaml da disco nello store locale
+- **Pubblica su GitHub**: carica il PKG locale nella cartella `pkg/` del repo via GitHub API
+- Storage: `localStorage` con chiave `fratech_pkg_*` (nessuna chiamata al server)
+- Rimosso errore JSON che bloccava l'apertura del tab (chiamata a `/api/frarik/pkg/list` inesistente)
+
+---
+
 ## 1.4.64 — 2026-06-14
 
 ### feat(store): PKG store completo — installa/disinstalla/pubblica pacchetti HA
