@@ -11,8 +11,8 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@400;600;700;800;900&family=Nunito:wght@400;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="./assets/index-D6mIP8-G.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-DAZYhqW1.css">
+  <script type="module" crossorigin src="./assets/index-Cyy2EQYC.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-BLggJQCU.css">
 </head>
 <body>
 
@@ -640,219 +640,243 @@
       <button class="ep-x" data-action="closeOikSettings" title="Torna alla plancia">✕</button>
     </div>
 
-    <!-- ── BODY ── -->
-    <div id="ep-body">
+    <!-- ── LAYOUT: sidebar sinistra + contenuto destra ── -->
+    <div class="ep-layout">
 
-      <!-- Incolla (visibile solo con clipboard) -->
-      <div style="display:flex;gap:5px;padding:12px 22px 0;flex-shrink:0">
-        <button id="ep-btn-paste" class="ep-paste" data-action="pasteCard" style="flex:1;margin-top:0">📋 Incolla Card</button>
-        <button id="ep-btn-paste-clr" class="ep-paste-clr" data-action="clearClipboard" title="Svuota appunti">✕</button>
-      </div>
+      <!-- ── SIDEBAR ── -->
+      <div class="ep-sidebar">
 
-      <!-- ── TAB BAR ── -->
-      <div class="ep-tabs-row">
-        <button class="ep-tab-btn" data-action="_openEpSheet" data-action-arg="aspetto">🎨 Aspetto</button>
-        <button class="ep-tab-btn" data-action="_openEpSheet" data-action-arg="viste">📄 Viste</button>
-        <button class="ep-tab-btn" data-action="_openEpSheet" data-action-arg="sistema">⚙️ Sistema</button>
-        <button class="ep-tab-btn" data-action="_openEpSheet" data-action-arg="topbar">🔝 Top Bar</button>
-        <button class="ep-tab-btn" data-action="openFBM">▭ Bottom Bar <span id="ep-fbar-status" style="font-size:9px;opacity:.6"></span></button>
-        <button class="ep-tab-btn" data-action="openGhStore">🛒 Store <span id="ep-jsstore-count" style="font-size:9px;opacity:.6"></span></button>
-        <button class="ep-tab-btn" data-action="openNotifCfg">🔔 Notifiche <span id="ntf-ep-count" style="font-size:9px;opacity:.6"></span></button>
-        <button class="ep-tab-btn" data-action="openSOSCfg">🆘 SOS <span id="sos-ep-count" style="font-size:9px;opacity:.6"></span></button>
-        <button class="ep-tab-btn" data-action="_openEpSheet" data-action-arg="dati">☁️ Dati</button>
-      </div>
-
-      <!-- ── AREA CENTRALE ── -->
-      <div class="ep-center-area">
-        <div style="font-size:52px;margin-bottom:14px;opacity:.1">⚙️</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.25);font-weight:600;letter-spacing:.3px">Seleziona una sezione</div>
-      </div>
-
-      <!-- ── VERSIONE ── -->
-      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:0 22px 22px;flex-shrink:0">
-        <div style="display:inline-flex;align-items:center;gap:10px;padding:9px 18px;border-radius:16px;
-          background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(139,92,246,.08));
-          border:1px solid rgba(129,140,248,.25)">
-          <img src="./logo-v2.png?v=1.1.93" alt="Frarik" style="height:36px;width:auto;object-fit:contain;filter:drop-shadow(0 0 8px rgba(99,102,241,.4))">
-          <span style="display:flex;flex-direction:column;line-height:1.3">
-            <span style="font-size:11px;font-weight:800;color:#c7d2fe;letter-spacing:.3px">Frarik Dashboard</span>
-            <span style="font-size:13px;font-weight:800;color:#a5b4fc" id="ep-ver-label">…</span>
-          </span>
-        </div>
-        <button class="ep-add2" data-action="frarikCheckUpdate" style="width:auto;padding:6px 16px;margin-top:0">🔄 Controlla aggiornamenti</button>
-      </div>
-
-    </div><!-- /ep-body -->
-
-    <!-- ── SHEET OVERLAY (popup dal basso per ogni tab) ── -->
-    <div id="ep-tab-sheet" style="display:none">
-      <div class="ep-tsheet-inner">
-
-        <!-- Header sheet -->
-        <div class="ep-tsheet-hdr">
-          <div style="display:flex;align-items:center;gap:10px">
-            <div class="ep-tsheet-ico" id="ep-tsheet-ico">⚙️</div>
-            <div class="ep-tsheet-title" id="ep-tsheet-title">Impostazioni</div>
-          </div>
-          <button class="ep-x" data-action="_closeEpSheet">✕</button>
+        <!-- Incolla (visibile solo con clipboard) -->
+        <div id="ep-paste-wrap" style="padding:12px 10px 0;display:flex;gap:5px">
+          <button id="ep-btn-paste" class="ep-paste" data-action="pasteCard" style="flex:1;margin-top:0;font-size:11px;padding:8px 10px">📋 Incolla</button>
+          <button id="ep-btn-paste-clr" class="ep-paste-clr" data-action="clearClipboard" title="Svuota">✕</button>
         </div>
 
-        <!-- Corpo scrollabile -->
-        <div class="ep-tsheet-body" id="ep-tsheet-body">
+        <!-- Navigazione -->
+        <nav class="ep-sidenav">
+          <div class="ep-sidenav-lbl">Impostazioni</div>
+          <button class="ep-sidetab" data-action="_switchEpTab" data-action-arg="aspetto">
+            <span class="ep-sidetab-ico">🎨</span><span>Aspetto</span>
+          </button>
+          <button class="ep-sidetab" data-action="_switchEpTab" data-action-arg="viste">
+            <span class="ep-sidetab-ico">📄</span><span>Viste</span>
+          </button>
+          <button class="ep-sidetab" data-action="_switchEpTab" data-action-arg="sistema">
+            <span class="ep-sidetab-ico">⚙️</span><span>Sistema</span>
+          </button>
+          <button class="ep-sidetab" data-action="_switchEpTab" data-action-arg="topbar">
+            <span class="ep-sidetab-ico">🔝</span><span>Top Bar</span>
+          </button>
+          <button class="ep-sidetab" data-action="_switchEpTab" data-action-arg="dati">
+            <span class="ep-sidetab-ico">☁️</span><span>Dati</span>
+          </button>
+          <div class="ep-sidenav-sep"></div>
+          <div class="ep-sidenav-lbl">Componenti</div>
+          <button class="ep-sidetab ep-sidetab-ext" data-action="openFBM">
+            <span class="ep-sidetab-ico">▭</span>
+            <span style="flex:1">Bottom Bar</span>
+            <span id="ep-fbar-status" style="font-size:9px;opacity:.5"></span>
+            <span class="ep-sidetab-arr">›</span>
+          </button>
+          <button class="ep-sidetab ep-sidetab-ext" data-action="openGhStore">
+            <span class="ep-sidetab-ico">🛒</span>
+            <span style="flex:1">Store</span>
+            <span id="ep-jsstore-count" style="font-size:9px;opacity:.5"></span>
+            <span class="ep-sidetab-arr">›</span>
+          </button>
+          <button class="ep-sidetab ep-sidetab-ext" data-action="openNotifCfg">
+            <span class="ep-sidetab-ico">🔔</span>
+            <span style="flex:1">Notifiche</span>
+            <span id="ntf-ep-count" style="font-size:9px;opacity:.5"></span>
+            <span class="ep-sidetab-arr">›</span>
+          </button>
+          <button class="ep-sidetab ep-sidetab-ext" data-action="openSOSCfg">
+            <span class="ep-sidetab-ico">🆘</span>
+            <span style="flex:1">SOS</span>
+            <span id="sos-ep-count" style="font-size:9px;opacity:.5"></span>
+            <span class="ep-sidetab-arr">›</span>
+          </button>
+        </nav>
 
-          <!-- ── ASPETTO ── -->
-          <div id="ep-content-aspetto" style="display:none">
-            <div class="ep-sec-title" style="margin-bottom:6px">Tema</div>
-            <div class="ep-theme-row">
-              <button id="ep-theme-dark" class="ep-theme-btn on" data-action="applyTheme" data-action-arg="dark">🌙 Scuro</button>
-              <button id="ep-theme-light" class="ep-theme-btn" data-action="applyTheme" data-action-arg="light">☀️ Chiaro</button>
-            </div>
-            <div class="ep-sec-title" style="margin-top:10px;margin-bottom:4px">Tema colore</div>
-            <div class="ep-ctheme-row" id="ep-ctheme-row"></div>
-            <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
-              <label style="font-size:11px;color:#94a3b8;flex:1">Colore personalizzato</label>
-              <input type="color" id="ep-custom-acc" value="#6366f1" style="width:36px;height:28px;border:none;border-radius:7px;background:none;cursor:pointer">
-            </div>
-            <div style="display:flex;gap:6px;margin-top:8px">
-              <button class="ep-add2" data-action="exportTheme" style="flex:1">⬇ Esporta tema</button>
-              <button class="ep-add2" data-action="_importThemePick" style="flex:1">⬆ Importa tema</button>
-            </div>
-            <input type="file" id="theme-file-input" accept=".json,application/json" style="display:none">
-            <div class="ep-sec-title" style="margin-top:10px;margin-bottom:4px">Carattere</div>
-            <button class="ep-font-sel" id="ep-font-btn" data-action="toggleFontPop">
-              <span id="ep-font-lbl">Inter</span><span style="opacity:.4;font-size:9px">▾</span>
-            </button>
-            <div style="height:8px"></div>
+        <!-- Versione -->
+        <div class="ep-sidebar-ver">
+          <img src="./logo-v2.png?v=1.1.93" alt="" style="height:26px;width:auto;object-fit:contain;filter:drop-shadow(0 0 6px rgba(99,102,241,.4))">
+          <div style="flex:1;display:flex;flex-direction:column;line-height:1.3">
+            <span style="font-size:9px;font-weight:700;color:#c7d2fe;letter-spacing:.3px">Frarik</span>
+            <span style="font-size:11px;font-weight:800;color:#a5b4fc" id="ep-ver-label">…</span>
           </div>
+          <button class="ep-add2" data-action="frarikCheckUpdate" style="width:auto;padding:5px 8px;margin:0;font-size:11px;flex-shrink:0" title="Controlla aggiornamenti">🔄</button>
+        </div>
 
-          <!-- ── VISTE ── -->
-          <div id="ep-content-viste" style="display:none">
-            <div class="ep-sec-title" style="margin-bottom:6px">Vista corrente</div>
-            <div style="display:flex;gap:6px;margin-bottom:8px">
-              <input class="finp" id="ep-page-ico" style="width:44px;flex-shrink:0;text-align:center;font-size:14px" type="text" placeholder="📄">
-              <button class="fbtn" style="flex-shrink:0;padding:0 5px" title="Scegli icona" id="ep-page-ico-picker">🎨</button>
-              <input class="finp" id="ep-page-name" type="text" placeholder="Nome tab (opzionale)">
-            </div>
-            <div class="ep-sec-title" style="margin-top:2px;margin-bottom:4px">Titolo nella dashboard</div>
-            <input class="finp" id="ep-view-title" type="text" placeholder="es. Casa, Energia…" style="margin-bottom:8px">
-            <button class="ep-add2" id="ep-del-page" data-action="delPage" style="color:#f87171;border-color:rgba(248,113,113,0.25)">🗑 Elimina pagina</button>
-            <div id="ep-grid-sec" style="padding:10px 0">
-              <div id="sections-list"></div>
-            </div>
-            <div style="display:flex;gap:5px;margin-bottom:8px">
-              <button id="ep-pg-confirm" class="ep-pg-confirm-btn" data-action="confirmPageSettings" disabled>✓ Conferma</button>
-              <button id="ep-pg-cancel" class="ep-pg-cancel-btn" data-action="cancelPageSettings">↩ Annulla</button>
-            </div>
+      </div><!-- /ep-sidebar -->
+
+      <!-- ── AREA CONTENUTO ── -->
+      <div class="ep-content-area">
+
+        <!-- Welcome -->
+        <div id="ep-content-welcome" class="ep-tab-content ep-tab-active">
+          <div class="ep-welcome-hint">
+            <div style="font-size:60px;margin-bottom:16px">⚙️</div>
+            <div>Seleziona una sezione dalla barra laterale</div>
           </div>
+        </div>
 
-          <!-- ── SISTEMA ── -->
-          <div id="ep-content-sistema" style="display:none">
-            <div class="sys-row"><span class="sys-lbl">⛶ Modalità Kiosk</span><button class="sys-tog" id="sys-kiosk-tog" data-action="_sysToggle" data-action-arg="kiosk"></button></div>
-            <div class="sys-sub" style="margin-bottom:10px">Mostra l'icona schermo intero in alto. Disattivata = nessuna icona.</div>
-            <div class="sys-row"><span class="sys-lbl">🖼 Screensaver</span><button class="sys-tog" id="sys-ss-tog" data-action="_sysToggle" data-action-arg="ss"></button></div>
-            <div class="sys-sub">Dopo inattività: orologio + meteo a tutto schermo</div>
-            <div class="sys-row" style="margin-top:8px"><span class="sys-lbl2">Attesa</span>
-              <div style="display:flex;align-items:center;gap:4px">
-                <input class="sys-num" id="sys-ss-min" type="number" min="0" max="180"><span class="sys-u">min</span>
-                <input class="sys-num" id="sys-ss-sec" type="number" min="0" max="59"><span class="sys-u">sec</span>
-              </div></div>
-            <div class="sys-row" style="margin-top:10px"><span class="sys-lbl2">🖼️ Immagine giorno (URL)</span></div>
-            <input class="finp" id="sys-ss-img-day" type="url" placeholder="https://… oppure /local/…" data-input="_ssSaveImg" style="font-size:10px;margin-top:3px">
-            <div class="sys-row" style="margin-top:6px"><span class="sys-lbl2">🌙 Immagine notte (URL)</span></div>
-            <input class="finp" id="sys-ss-img-night" type="url" placeholder="opzionale — vuoto = sempre quella del giorno" data-input="_ssSaveImg" style="font-size:10px;margin-top:3px">
-            <div class="sys-row" style="margin-top:6px"><span class="sys-lbl2">Giorno / Notte dalle</span>
-              <div style="display:flex;gap:4px"><input class="sys-time" id="sys-ss-day-from" type="time" data-input="_ssSaveImg"><input class="sys-time" id="sys-ss-night-from" type="time" data-input="_ssSaveImg"></div></div>
-            <div class="sys-sub" style="margin-top:4px">2 immagini = cambia automaticamente · 1 sola = sempre quella</div>
-            <div class="sys-row" style="margin-top:10px"><span class="sys-lbl2">📊 Entità screensaver (max 3)</span></div>
-            <div style="display:flex;gap:4px;align-items:center;margin-top:3px">
-              <input class="sos-cfg-inp" id="sys-ss-e1" type="text" placeholder="es. sensor.temperatura" data-input="_ssSaveEnt" style="flex:1;font-size:10px">
-              <button class="ntf-pick-btn" style="width:26px;height:26px;border-radius:6px;font-size:12px" data-action="_ssPickEnt" data-action-arg="1" title="Sfoglia">🔍</button>
-            </div>
-            <div style="display:flex;gap:4px;align-items:center;margin-top:3px">
-              <input class="sos-cfg-inp" id="sys-ss-e2" type="text" placeholder="entità 2 (opzionale)" data-input="_ssSaveEnt" style="flex:1;font-size:10px">
-              <button class="ntf-pick-btn" style="width:26px;height:26px;border-radius:6px;font-size:12px" data-action="_ssPickEnt" data-action-arg="2" title="Sfoglia">🔍</button>
-            </div>
-            <div style="display:flex;gap:4px;align-items:center;margin-top:3px">
-              <input class="sos-cfg-inp" id="sys-ss-e3" type="text" placeholder="entità 3 (opzionale)" data-input="_ssSaveEnt" style="flex:1;font-size:10px">
-              <button class="ntf-pick-btn" style="width:26px;height:26px;border-radius:6px;font-size:12px" data-action="_ssPickEnt" data-action-arg="3" title="Sfoglia">🔍</button>
-            </div>
-            <div class="sys-row" style="margin-top:10px"><span class="sys-lbl2">🃏 Card al posto dell'orologio</span></div>
-            <select class="sys-sel" id="sys-ss-card" data-input="_ssSaveCard" style="margin-top:3px;width:100%"></select>
-            <button class="ep-add2" data-action="screensaverNow" style="margin-top:10px">👁 Anteprima screensaver</button>
-            <div style="height:1px;background:rgba(255,255,255,.06);margin:14px 0"></div>
-            <div class="sys-row"><span class="sys-lbl">🌗 Tema automatico</span><button class="sys-tog" id="sys-th-tog" data-action="_sysToggle" data-action-arg="th"></button></div>
-            <div class="sys-row" style="margin-top:8px"><span class="sys-lbl2">Modalità</span>
-              <select class="sys-sel" id="sys-th-mode"><option value="time">Orario</option><option value="sun">Alba/Tramonto</option></select></div>
-            <div class="sys-row" id="sys-th-times" style="margin-top:6px"><span class="sys-lbl2">Chiaro / Scuro</span>
-              <div style="display:flex;gap:4px"><input class="sys-time" id="sys-th-light" type="time"><input class="sys-time" id="sys-th-dark" type="time"></div></div>
-            <div style="height:1px;background:rgba(255,255,255,.06);margin:14px 0"></div>
-            <div class="sys-row"><span class="sys-lbl">📱 Colonna singola (cell)</span></div>
-            <div class="sys-sub">Su telefono impila tutto in 1 colonna</div>
-            <div class="sys-row" style="margin-top:6px"><span class="sys-lbl2">Modo</span>
-              <select class="sys-sel" id="sys-mob"><option value="auto">Auto (telefono)</option><option value="always">Sempre</option><option value="off">Mai</option></select></div>
-            <div style="height:16px"></div>
+        <!-- ── ASPETTO ── -->
+        <div id="ep-content-aspetto" class="ep-tab-content">
+          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">🎨</div><div class="ep-tab-hdr-title">Aspetto</div></div>
+          <div class="ep-sec-title" style="margin-bottom:6px">Tema</div>
+          <div class="ep-theme-row">
+            <button id="ep-theme-dark" class="ep-theme-btn on" data-action="applyTheme" data-action-arg="dark">🌙 Scuro</button>
+            <button id="ep-theme-light" class="ep-theme-btn" data-action="applyTheme" data-action-arg="light">☀️ Chiaro</button>
           </div>
-
-          <!-- ── TOP BAR ── -->
-          <div id="ep-content-topbar" style="display:none">
-            <div class="sys-sub" style="margin-bottom:8px">Icona (mdi o emoji) e colore di ogni icona in alto</div>
-            <div id="topbar-icons-list"></div>
-            <div style="height:8px"></div>
+          <div class="ep-sec-title" style="margin-top:14px;margin-bottom:4px">Tema colore</div>
+          <div class="ep-ctheme-row" id="ep-ctheme-row"></div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
+            <label style="font-size:11px;color:#94a3b8;flex:1">Colore personalizzato</label>
+            <input type="color" id="ep-custom-acc" value="#6366f1" style="width:36px;height:28px;border:none;border-radius:7px;background:none;cursor:pointer">
           </div>
+          <div style="display:flex;gap:6px;margin-top:10px">
+            <button class="ep-add2" data-action="exportTheme" style="flex:1">⬇ Esporta tema</button>
+            <button class="ep-add2" data-action="_importThemePick" style="flex:1">⬆ Importa tema</button>
+          </div>
+          <input type="file" id="theme-file-input" accept=".json,application/json" style="display:none">
+          <div class="ep-sec-title" style="margin-top:14px;margin-bottom:4px">Carattere</div>
+          <button class="ep-font-sel" id="ep-font-btn" data-action="toggleFontPop">
+            <span id="ep-font-lbl">Inter</span><span style="opacity:.4;font-size:9px">▾</span>
+          </button>
+        </div>
 
-          <!-- ── DATI ── -->
-          <div id="ep-content-dati" style="display:none">
-            <button class="cfg-open-btn" data-action="syncCfgToHA" style="background:rgba(34,211,238,.08);border-color:rgba(34,211,238,.2);color:#22d3ee">
-              ☁️ <span style="flex:1">Sincronizza su tutti i dispositivi</span>
-              <span style="font-size:9px;color:rgba(34,211,238,.6)">salva su HA</span>
-            </button>
-            <button class="cfg-open-btn" data-action="exportBackup" style="margin-top:6px;background:rgba(99,102,241,.08);border-color:rgba(99,102,241,.2);color:#a5b4fc">
-              💾 <span style="flex:1">Esporta backup</span>
-              <span style="font-size:9px;color:rgba(165,180,252,.6)">file .json</span>
-            </button>
-            <button class="cfg-open-btn" data-action="_importBackupPick" style="margin-top:6px;background:rgba(99,102,241,.08);border-color:rgba(99,102,241,.2);color:#a5b4fc">
-              📥 <span style="flex:1">Ripristina backup</span>
-            </button>
-            <input type="file" id="backup-file-input" accept=".json,application/json" style="display:none">
-            <button class="cfg-open-btn" data-action="resetLayout" style="margin-top:6px;background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.22);color:#f87171">
-              ♻️ <span style="flex:1">Reset layout (vista corrente)</span>
-              <span style="font-size:9px;color:rgba(248,113,113,.6)">torna a vuoto</span>
-            </button>
-            <button class="cfg-open-btn" data-action="openEntityCleanup" style="margin-top:6px;background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.2);color:#86efac">
-              🧹 <span style="flex:1">Pulizia entità (HA)</span>
-              <span style="font-size:9px;color:rgba(134,239,172,.6)">non disp./orfane</span>
-            </button>
-            <div style="height:1px;background:rgba(255,255,255,.06);margin:14px 0"></div>
-            <div class="ep-sec-title">🔑 Licenza</div>
-            <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:14px;margin-top:6px">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-                <span style="font-size:10px;color:#64748b;letter-spacing:1px;font-weight:700">STATO</span>
-                <span id="ep-lic-status" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;background:rgba(74,222,128,.12);color:#4ade80">● ATTIVO</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;margin-bottom:8px">
-                <span style="font-size:11px;color:#64748b">Livello</span>
-                <span id="ep-lic-level" style="font-size:11px;font-weight:700;color:#a5b4fc">—</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;margin-bottom:8px">
-                <span style="font-size:11px;color:#64748b">Chiave</span>
-                <span id="ep-lic-key" style="font-size:11px;font-weight:700;font-family:monospace;color:#f97316;letter-spacing:1px">—</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;margin-bottom:8px">
-                <span style="font-size:11px;color:#64748b">Intestatario</span>
-                <span id="ep-lic-name" style="font-size:11px;font-weight:700;color:#e2e8f0">—</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;margin-bottom:14px">
-                <span style="font-size:11px;color:#64748b">Scadenza</span>
-                <span id="ep-lic-expires" style="font-size:11px;font-weight:700;color:#e2e8f0">—</span>
-              </div>
-              <button data-action="_epLicLogout" style="width:100%;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#f87171;border-radius:8px;padding:8px;font-size:11px;font-weight:700;cursor:pointer">Cambia licenza</button>
+        <!-- ── VISTE ── -->
+        <div id="ep-content-viste" class="ep-tab-content">
+          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">📄</div><div class="ep-tab-hdr-title">Viste</div></div>
+          <div class="ep-sec-title" style="margin-bottom:6px">Vista corrente</div>
+          <div style="display:flex;gap:6px;margin-bottom:8px">
+            <input class="finp" id="ep-page-ico" style="width:44px;flex-shrink:0;text-align:center;font-size:14px" type="text" placeholder="📄">
+            <button class="fbtn" style="flex-shrink:0;padding:0 5px" title="Scegli icona" id="ep-page-ico-picker">🎨</button>
+            <input class="finp" id="ep-page-name" type="text" placeholder="Nome tab (opzionale)">
+          </div>
+          <div class="ep-sec-title" style="margin-top:4px;margin-bottom:4px">Titolo nella dashboard</div>
+          <input class="finp" id="ep-view-title" type="text" placeholder="es. Casa, Energia…" style="margin-bottom:10px">
+          <button class="ep-add2" id="ep-del-page" data-action="delPage" style="color:#f87171;border-color:rgba(248,113,113,0.25)">🗑 Elimina pagina</button>
+          <div id="ep-grid-sec" style="padding:10px 0">
+            <div id="sections-list"></div>
+          </div>
+          <div style="display:flex;gap:5px;margin-bottom:8px">
+            <button id="ep-pg-confirm" class="ep-pg-confirm-btn" data-action="confirmPageSettings" disabled>✓ Conferma</button>
+            <button id="ep-pg-cancel" class="ep-pg-cancel-btn" data-action="cancelPageSettings">↩ Annulla</button>
+          </div>
+        </div>
+
+        <!-- ── SISTEMA ── -->
+        <div id="ep-content-sistema" class="ep-tab-content">
+          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">⚙️</div><div class="ep-tab-hdr-title">Sistema</div></div>
+          <div class="sys-row"><span class="sys-lbl">⛶ Modalità Kiosk</span><button class="sys-tog" id="sys-kiosk-tog" data-action="_sysToggle" data-action-arg="kiosk"></button></div>
+          <div class="sys-sub" style="margin-bottom:10px">Mostra l'icona schermo intero in alto. Disattivata = nessuna icona.</div>
+          <div class="sys-row"><span class="sys-lbl">🖼 Screensaver</span><button class="sys-tog" id="sys-ss-tog" data-action="_sysToggle" data-action-arg="ss"></button></div>
+          <div class="sys-sub">Dopo inattività: orologio + meteo a tutto schermo</div>
+          <div class="sys-row" style="margin-top:8px"><span class="sys-lbl2">Attesa</span>
+            <div style="display:flex;align-items:center;gap:4px">
+              <input class="sys-num" id="sys-ss-min" type="number" min="0" max="180"><span class="sys-u">min</span>
+              <input class="sys-num" id="sys-ss-sec" type="number" min="0" max="59"><span class="sys-u">sec</span>
+            </div></div>
+          <div class="sys-row" style="margin-top:10px"><span class="sys-lbl2">🖼️ Immagine giorno (URL)</span></div>
+          <input class="finp" id="sys-ss-img-day" type="url" placeholder="https://… oppure /local/…" data-input="_ssSaveImg" style="font-size:10px;margin-top:3px">
+          <div class="sys-row" style="margin-top:6px"><span class="sys-lbl2">🌙 Immagine notte (URL)</span></div>
+          <input class="finp" id="sys-ss-img-night" type="url" placeholder="opzionale — vuoto = sempre quella del giorno" data-input="_ssSaveImg" style="font-size:10px;margin-top:3px">
+          <div class="sys-row" style="margin-top:6px"><span class="sys-lbl2">Giorno / Notte dalle</span>
+            <div style="display:flex;gap:4px"><input class="sys-time" id="sys-ss-day-from" type="time" data-input="_ssSaveImg"><input class="sys-time" id="sys-ss-night-from" type="time" data-input="_ssSaveImg"></div></div>
+          <div class="sys-sub" style="margin-top:4px">2 immagini = cambia automaticamente · 1 sola = sempre quella</div>
+          <div class="sys-row" style="margin-top:10px"><span class="sys-lbl2">📊 Entità screensaver (max 3)</span></div>
+          <div style="display:flex;gap:4px;align-items:center;margin-top:3px">
+            <input class="sos-cfg-inp" id="sys-ss-e1" type="text" placeholder="es. sensor.temperatura" data-input="_ssSaveEnt" style="flex:1;font-size:10px">
+            <button class="ntf-pick-btn" style="width:26px;height:26px;border-radius:6px;font-size:12px" data-action="_ssPickEnt" data-action-arg="1" title="Sfoglia">🔍</button>
+          </div>
+          <div style="display:flex;gap:4px;align-items:center;margin-top:3px">
+            <input class="sos-cfg-inp" id="sys-ss-e2" type="text" placeholder="entità 2 (opzionale)" data-input="_ssSaveEnt" style="flex:1;font-size:10px">
+            <button class="ntf-pick-btn" style="width:26px;height:26px;border-radius:6px;font-size:12px" data-action="_ssPickEnt" data-action-arg="2" title="Sfoglia">🔍</button>
+          </div>
+          <div style="display:flex;gap:4px;align-items:center;margin-top:3px">
+            <input class="sos-cfg-inp" id="sys-ss-e3" type="text" placeholder="entità 3 (opzionale)" data-input="_ssSaveEnt" style="flex:1;font-size:10px">
+            <button class="ntf-pick-btn" style="width:26px;height:26px;border-radius:6px;font-size:12px" data-action="_ssPickEnt" data-action-arg="3" title="Sfoglia">🔍</button>
+          </div>
+          <div class="sys-row" style="margin-top:10px"><span class="sys-lbl2">🃏 Card al posto dell'orologio</span></div>
+          <select class="sys-sel" id="sys-ss-card" data-input="_ssSaveCard" style="margin-top:3px;width:100%"></select>
+          <button class="ep-add2" data-action="screensaverNow" style="margin-top:10px">👁 Anteprima screensaver</button>
+          <div style="height:1px;background:rgba(255,255,255,.06);margin:16px 0"></div>
+          <div class="sys-row"><span class="sys-lbl">🌗 Tema automatico</span><button class="sys-tog" id="sys-th-tog" data-action="_sysToggle" data-action-arg="th"></button></div>
+          <div class="sys-row" style="margin-top:8px"><span class="sys-lbl2">Modalità</span>
+            <select class="sys-sel" id="sys-th-mode"><option value="time">Orario</option><option value="sun">Alba/Tramonto</option></select></div>
+          <div class="sys-row" id="sys-th-times" style="margin-top:6px"><span class="sys-lbl2">Chiaro / Scuro</span>
+            <div style="display:flex;gap:4px"><input class="sys-time" id="sys-th-light" type="time"><input class="sys-time" id="sys-th-dark" type="time"></div></div>
+          <div style="height:1px;background:rgba(255,255,255,.06);margin:16px 0"></div>
+          <div class="sys-row"><span class="sys-lbl">📱 Colonna singola (cell)</span></div>
+          <div class="sys-sub">Su telefono impila tutto in 1 colonna</div>
+          <div class="sys-row" style="margin-top:6px"><span class="sys-lbl2">Modo</span>
+            <select class="sys-sel" id="sys-mob"><option value="auto">Auto (telefono)</option><option value="always">Sempre</option><option value="off">Mai</option></select></div>
+          <div style="height:16px"></div>
+        </div>
+
+        <!-- ── TOP BAR ── -->
+        <div id="ep-content-topbar" class="ep-tab-content">
+          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">🔝</div><div class="ep-tab-hdr-title">Top Bar</div></div>
+          <div class="sys-sub" style="margin-bottom:10px">Icona (mdi o emoji) e colore di ogni icona in alto</div>
+          <div id="topbar-icons-list"></div>
+        </div>
+
+        <!-- ── DATI ── -->
+        <div id="ep-content-dati" class="ep-tab-content">
+          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">☁️</div><div class="ep-tab-hdr-title">Dati</div></div>
+          <button class="cfg-open-btn" data-action="syncCfgToHA" style="background:rgba(34,211,238,.08);border-color:rgba(34,211,238,.2);color:#22d3ee">
+            ☁️ <span style="flex:1">Sincronizza su tutti i dispositivi</span>
+            <span style="font-size:9px;color:rgba(34,211,238,.6)">salva su HA</span>
+          </button>
+          <button class="cfg-open-btn" data-action="exportBackup" style="margin-top:8px;background:rgba(99,102,241,.08);border-color:rgba(99,102,241,.2);color:#a5b4fc">
+            💾 <span style="flex:1">Esporta backup</span>
+            <span style="font-size:9px;color:rgba(165,180,252,.6)">file .json</span>
+          </button>
+          <button class="cfg-open-btn" data-action="_importBackupPick" style="margin-top:8px;background:rgba(99,102,241,.08);border-color:rgba(99,102,241,.2);color:#a5b4fc">
+            📥 <span style="flex:1">Ripristina backup</span>
+          </button>
+          <input type="file" id="backup-file-input" accept=".json,application/json" style="display:none">
+          <button class="cfg-open-btn" data-action="resetLayout" style="margin-top:8px;background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.22);color:#f87171">
+            ♻️ <span style="flex:1">Reset layout (vista corrente)</span>
+            <span style="font-size:9px;color:rgba(248,113,113,.6)">torna a vuoto</span>
+          </button>
+          <button class="cfg-open-btn" data-action="openEntityCleanup" style="margin-top:8px;background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.2);color:#86efac">
+            🧹 <span style="flex:1">Pulizia entità (HA)</span>
+            <span style="font-size:9px;color:rgba(134,239,172,.6)">non disp./orfane</span>
+          </button>
+          <div style="height:1px;background:rgba(255,255,255,.06);margin:18px 0"></div>
+          <div class="ep-sec-title">🔑 Licenza</div>
+          <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:14px;margin-top:6px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <span style="font-size:10px;color:#64748b;letter-spacing:1px;font-weight:700">STATO</span>
+              <span id="ep-lic-status" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;background:rgba(74,222,128,.12);color:#4ade80">● ATTIVO</span>
             </div>
-            <div style="height:16px"></div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+              <span style="font-size:11px;color:#64748b">Livello</span>
+              <span id="ep-lic-level" style="font-size:11px;font-weight:700;color:#a5b4fc">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+              <span style="font-size:11px;color:#64748b">Chiave</span>
+              <span id="ep-lic-key" style="font-size:11px;font-weight:700;font-family:monospace;color:#f97316;letter-spacing:1px">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+              <span style="font-size:11px;color:#64748b">Intestatario</span>
+              <span id="ep-lic-name" style="font-size:11px;font-weight:700;color:#e2e8f0">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:14px">
+              <span style="font-size:11px;color:#64748b">Scadenza</span>
+              <span id="ep-lic-expires" style="font-size:11px;font-weight:700;color:#e2e8f0">—</span>
+            </div>
+            <button data-action="_epLicLogout" style="width:100%;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#f87171;border-radius:8px;padding:8px;font-size:11px;font-weight:700;cursor:pointer">Cambia licenza</button>
           </div>
+          <div style="height:16px"></div>
+        </div>
 
-        </div><!-- /ep-tsheet-body -->
-      </div><!-- /ep-tsheet-inner -->
-    </div><!-- /ep-tab-sheet -->
+      </div><!-- /ep-content-area -->
+
+    </div><!-- /ep-layout -->
 
   </div>
 </div>

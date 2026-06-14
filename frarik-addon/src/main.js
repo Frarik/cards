@@ -5120,62 +5120,27 @@ function _epToggleGroup(id){
   }
   if(arrow) arrow.style.transform=open?'rotate(180deg)':'';
 }
-/* ── Tab Sheet (popup dal basso per ogni sezione impostazioni) ── */
-const _EP_SHEET_META={
-  aspetto:['🎨','Aspetto'],
-  viste:  ['📄','Viste'],
-  sistema:['⚙️','Sistema'],
-  topbar: ['🔝','Top Bar'],
-  dati:   ['☁️','Dati']
-};
-function _openEpSheet(tab){
-  const sheet=document.getElementById('ep-tab-sheet');
-  if(!sheet) return;
-  // Mostra overlay con animazione
-  sheet.style.display='flex';
-  // Riavvia animazione slide-up
-  const inner=sheet.querySelector('.ep-tsheet-inner');
-  if(inner){ inner.classList.remove('ep-tsheet-closing'); inner.style.animation='none'; requestAnimationFrame(()=>{ inner.style.animation=''; }); }
-  // overflow visible per permettere l'animazione fuori dai bordi
-  const panel=document.getElementById('epanel');
-  if(panel) panel.classList.add('sheet-open');
-  // Nasconde tutti i pannelli, mostra quello richiesto
-  sheet.querySelectorAll('[id^="ep-content-"]').forEach(el=>el.style.display='none');
+/* ── Sidebar tab switch ── */
+function _switchEpTab(tab){
+  // Aggiorna stato attivo dei tab nella sidebar
+  document.querySelectorAll('.ep-sidetab').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.actionArg===tab);
+  });
+  // Mostra il pannello corretto, nasconde gli altri
+  document.querySelectorAll('.ep-tab-content').forEach(p=>p.classList.remove('ep-tab-active'));
   const pane=document.getElementById('ep-content-'+tab);
-  if(pane) pane.style.display='';
-  // Aggiorna icona/titolo header
-  const [ico,title]=_EP_SHEET_META[tab]||['⚙️','Impostazioni'];
-  const icoEl=document.getElementById('ep-tsheet-ico');
-  const titleEl=document.getElementById('ep-tsheet-title');
-  if(icoEl) icoEl.textContent=ico;
-  if(titleEl) titleEl.textContent=title;
-  // Segna tab attivo
-  document.querySelectorAll('.ep-tab-btn').forEach(btn=>btn.classList.toggle('active',btn.dataset.actionArg===tab));
+  if(pane) pane.classList.add('ep-tab-active');
+  // Scroll in cima al contenuto
+  const area=document.querySelector('.ep-content-area');
+  if(area) area.scrollTop=0;
   // Aggiornamenti lazy per-tab
   if(tab==='viste'){ try{renderSectionsList();}catch(_){} }
   if(tab==='topbar'){ try{_renderTopbarIconsList();}catch(_){} }
   if(tab==='aspetto'){ try{_renderColorThemes();}catch(_){} try{renderFontPick();}catch(_){} }
   if(tab==='sistema'){ if(window._sysLoad) try{_sysLoad();}catch(_){} }
 }
-function _closeEpSheet(){
-  const sheet=document.getElementById('ep-tab-sheet');
-  if(!sheet) return;
-  const inner=sheet.querySelector('.ep-tsheet-inner');
-  document.querySelectorAll('.ep-tab-btn').forEach(btn=>btn.classList.remove('active'));
-  if(inner){
-    inner.classList.add('ep-tsheet-closing');
-    setTimeout(()=>{
-      sheet.style.display='none';
-      inner.classList.remove('ep-tsheet-closing');
-      const panel=document.getElementById('epanel');
-      if(panel) panel.classList.remove('sheet-open');
-    },230);
-  } else {
-    sheet.style.display='none';
-    const panel=document.getElementById('epanel');
-    if(panel) panel.classList.remove('sheet-open');
-  }
-}
+function _openEpSheet(tab){ _switchEpTab(tab); }
+function _closeEpSheet(){}
 
 function renderColPick(){ renderSectionsList(); }
 function setCol(n){ const s=(curPage().sections||[])[0]; if(s) setSectionCols(s.id,n); }
@@ -9399,7 +9364,7 @@ function _postPageCreate(){
   document.getElementById('ep-page-name').value=p.name;
   document.getElementById('ep-del-page').style.display=cfg.pages.length>1?'block':'none';
   renderSectionsList();
-  _openEpSheet('viste');
+  _switchEpTab('viste');
   _pgSnapshot();
 }
 
@@ -9477,7 +9442,7 @@ function createPageFromTpl(tplName){
     document.getElementById('ep-page-name').value=p.name;
     document.getElementById('ep-del-page').style.display=cfg.pages.length>1?'block':'none';
     renderSectionsList();
-    _openEpSheet('viste');
+    _switchEpTab('viste');
   }
 }
 
@@ -12816,5 +12781,5 @@ Object.assign(window, {
   _appSetItemEntity, _appSetItemName, _appSetGroupName,
   _appSetGroupShowList, _appSetGroupEntities,
   _ntfSetAndSuggest, _ntfSetIcon,
-  _openEpSheet, _closeEpSheet, frarikCheckUpdate,
+  _switchEpTab, _openEpSheet, _closeEpSheet, frarikCheckUpdate,
 });

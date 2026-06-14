@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.4.47 — 2026-06-14
+
+### feat(Settings): layout sidebar + area contenuto (v1.4.47)
+
+**frarik-addon src/index.html + src/style.css + src/main.js:**
+- Sostituito tab bar orizzontale + bottom sheet con sidebar verticale a sinistra
+- Sidebar (210px): paste bar, nav tab impilati verticalmente, badge versione in fondo
+- Area contenuto a destra: occupa tutto lo spazio rimanente, scrollabile
+- Tab Impostazioni (Aspetto/Viste/Sistema/Top Bar/Dati) mostrano contenuto inline a destra
+- Tab Componenti (Bottom Bar/Store/Notifiche/SOS) aprono modal dedicati con `›` indicator
+- Header per ogni sezione: icona amber + titolo, separato da bordo sottile
+- Tab attivo: sfondo amber `rgba(251,191,36,.1)`, bordo amber, testo `#fbbf24`
+- Nuovo `_switchEpTab(tab)` sostituisce `_openEpSheet`/`_closeEpSheet`
+
+---
+
 ## 1.4.46 — 2026-06-14
 
 ### fix(Settings): applica redesign al sorgente corretto (src/index.html)

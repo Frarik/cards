@@ -295,43 +295,42 @@ body.editing .resize-handle{opacity:.55}
 /* chiusura: slide verso il basso */
 #epanel.open.closing{animation:oikDown .28s cubic-bezier(.4,0,.7,.4) forwards}
 @keyframes oikDown{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(100%)}}
-#epanel.open .ep-hdr{max-width:840px;width:100%;margin:0 auto;border-bottom:1px solid rgba(255,255,255,.06)}
-#epanel.open .ep-title{font-size:19px;letter-spacing:.2px}
+#epanel.open .ep-hdr{border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0}
 #epanel.open .ep-x{width:34px;height:34px;font-size:15px;border-radius:10px}
-#epanel.open #ep-body{max-width:840px;width:100%;margin:0 auto;padding:0;gap:0}
-/* ── EP Tab bar ── */
-.ep-tabs-row{display:flex;overflow-x:auto;gap:8px;padding:16px 22px 10px;flex-shrink:0;scrollbar-width:none}
-.ep-tabs-row::-webkit-scrollbar{display:none}
-.ep-tab-btn{flex-shrink:0;padding:9px 16px;border-radius:24px;font-size:12px;font-weight:700;white-space:nowrap;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:rgba(255,255,255,.55);cursor:pointer;transition:all .18s;line-height:1.2}
-.ep-tab-btn:hover{background:rgba(255,255,255,.09);color:#fff;border-color:rgba(255,255,255,.15)}
-.ep-tab-btn.active{background:rgba(251,191,36,.14);border-color:rgba(251,191,36,.35);color:#fbbf24}
-/* ── EP center area ── */
-.ep-center-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;min-height:140px}
-/* ── EP Tab Sheet (popup dal basso) ── */
-#ep-tab-sheet{position:absolute;inset:0;z-index:100;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);align-items:flex-end}
-.ep-tsheet-inner{width:100%;max-height:82vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(251,191,36,.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:epSheetUp .22s cubic-bezier(.32,1.12,.56,1)}
-@keyframes epSheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.ep-tsheet-inner.ep-tsheet-closing{animation:epSheetDown .22s cubic-bezier(.4,0,.7,.4) forwards}
-@keyframes epSheetDown{from{transform:translateY(0)}to{transform:translateY(100%)}}
-.ep-tsheet-hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 14px;border-bottom:1px solid rgba(251,191,36,.12);flex-shrink:0}
-.ep-tsheet-ico{width:36px;height:36px;border-radius:10px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.25);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
-.ep-tsheet-title{font-size:15px;font-weight:800;color:#fff;letter-spacing:.2px}
-.ep-tsheet-body{flex:1;overflow-y:auto;padding:16px 20px 20px;scrollbar-width:none}
-.ep-tsheet-body::-webkit-scrollbar{display:none}
-/* overflow visible durante animazione sheet (translateY parte da fuori) */
-#epanel.open.sheet-open{overflow:visible}
+/* ── EP Sidebar layout ── */
+.ep-layout{flex:1;display:flex;overflow:hidden}
+.ep-sidebar{width:210px;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.07);background:rgba(0,0,0,.22)}
+.ep-sidenav{flex:1;overflow-y:auto;padding:8px 10px;display:flex;flex-direction:column;gap:2px;scrollbar-width:none}
+.ep-sidenav::-webkit-scrollbar{display:none}
+.ep-sidenav-lbl{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.28);padding:8px 10px 4px}
+.ep-sidenav-sep{height:1px;background:rgba(255,255,255,.07);margin:6px 2px}
+.ep-sidetab{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:10px;border:1px solid transparent;background:transparent;color:rgba(255,255,255,.48);font-size:12px;font-weight:600;cursor:pointer;text-align:left;transition:all .15s;width:100%}
+.ep-sidetab:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.82)}
+.ep-sidetab.active{background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.28);color:#fbbf24}
+.ep-sidetab-ico{font-size:14px;flex-shrink:0;width:18px;text-align:center}
+.ep-sidetab-arr{margin-left:auto;opacity:.28;font-size:13px;flex-shrink:0}
+.ep-sidetab-ext{color:rgba(255,255,255,.35)}
+.ep-sidebar-ver{display:flex;align-items:center;gap:8px;padding:12px 14px;border-top:1px solid rgba(255,255,255,.07);flex-shrink:0}
+/* ── EP Content area ── */
+.ep-content-area{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent}
+.ep-tab-content{display:none;flex-direction:column;padding:28px 32px;gap:0}
+.ep-tab-content.ep-tab-active{display:flex}
+.ep-welcome-hint{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:rgba(255,255,255,.18);font-size:13px;font-weight:600;text-align:center;gap:8px;min-height:300px}
+.ep-tab-hdr{display:flex;align-items:center;gap:12px;margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.06)}
+.ep-tab-hdr-ico{width:40px;height:40px;border-radius:12px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.25);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.ep-tab-hdr-title{font-size:18px;font-weight:800;color:#fff;letter-spacing:.2px}
 /* Righe impostazioni UNIFORMI scure (identico a Oikos: niente colori, solo dark + chevron) */
 #epanel.open .cfg-open-btn{padding:15px 18px!important;font-size:13px!important;font-weight:600!important;border-radius:12px!important;
   background:#0d101c!important;border:1px solid rgba(255,255,255,.06)!important;color:#e8ebf5!important;box-shadow:none!important}
 #epanel.open .cfg-open-btn:hover{filter:none!important;background:#13172a!important;border-color:rgba(99,102,241,.4)!important}
 #epanel.open .cfg-open-btn>span[style*="color:rgba(255,255,255,.2)"],
 #epanel.open .cfg-open-btn>span[id$="-arrow"]{color:rgba(255,255,255,.35)!important;font-size:15px!important}
-/* In fullscreen i gruppi si aprono TUTTI per intero, niente scroll/altezza interna: scorre la pagina */
-#epanel.open #ep-body [id$="-group"],
-#epanel.open #ep-body [id$="-list"],
-#epanel.open #ep-body #sections-list{max-height:none!important;height:auto!important;overflow:visible!important}
-#epanel.open #ep-body [id$="-group"] *{max-height:none!important;overflow-y:visible!important}
-#epanel.open #ep-body [style*="max-height"]{max-height:none!important;overflow-y:visible!important}
+/* Nel content area i gruppi si aprono per intero, scorre l'area contenuto */
+.ep-content-area [id$="-group"],
+.ep-content-area [id$="-list"],
+.ep-content-area #sections-list{max-height:none!important;height:auto!important;overflow:visible!important}
+.ep-content-area [id$="-group"] *{max-height:none!important;overflow-y:visible!important}
+.ep-content-area [style*="max-height"]{max-height:none!important;overflow-y:visible!important}
 /* category header (uppercase muto, come Oikos) */
 .oik-cat{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:2px;color:rgba(148,163,184,.65);margin:16px 2px 4px}
 .oik-cat:first-of-type{margin-top:6px}
