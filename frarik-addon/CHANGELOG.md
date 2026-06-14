@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.4.63 — 2026-06-14
+
+### feat(SystemCard): v4.8 — popup notifiche completo con tabs, soglie e orari editabili
+
+**card-js/System.js (4.7 → 4.8):**
+- **openNotifPopup()**: popup con 6 tab (Notifiche | Alert | Backup | Report | Riavvio | Update)
+- **Alert tab**: toggle per ogni alert (RAM/Temp/CPU/Disco/DB) + campo numerico soglia editabile inline, sezione ventola con soglie rack on/off editabili
+- **Backup/Report/Riavvio/Update tab**: toggle master + orario editabile (input time → `input_datetime.set_datetime`) + 7 chip giornalieri cliccabili (ha_backup_lunedi…domenica ecc.)
+- **Riavvio tab**: gestisce sia HA (ha_riavvio_*) sia Server (server_riavvio_*)
+- **Update tab**: on_off_aggiornamenti_ha + orario + notifica_aggiornamenti_* per Core/Supv/Addon/HACS + giorni ha_update_*
+- **Soglie input_number editabili**: `input_number.set_value` chiamato on change con flash verde di conferma
+- **Orari input_datetime editabili**: `input_datetime.set_datetime` chiamato on change con flash verde
+- **openEntitaPopup()**: nuovo popup cliccando su "Entità" — mostra distribuzione per dominio (attributi di sensor.conteggio_entita)
+- **haInfoSection**: mostra log avvio HA (sensor.homeassistant_start) come riga extra
+- **openEnergiaPopup()**: aggiunto kWh ieri/mese prec/anno prec via `Attr(h, id, 'last_period')`
+- **Attr()**: nuova funzione helper per leggere attributi di stato
+- **8 toggle** in sezione Automazioni (aggiunto on_off_aggiornamenti_ha e switch ventola fisica se configurato)
+
+---
+
 ## 1.4.62 — 2026-06-14
 
 ### feat(SystemCard): tutti i sensori PKG configurabili nelle impostazioni (v1.4.62 / SystemCard 4.7)
