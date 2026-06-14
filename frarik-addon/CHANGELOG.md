@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.4.43 — 2026-06-14
+
+### feat(Meteo): statistiche extra con carosello swipe automatico
+
+**Meteo.js 1.34→1.35:**
+- Nuova sezione "📊 Statistiche aggiuntive" nelle impostazioni (max 8 tile extra)
+- Ogni tile ha entity ID con autocompletamento + etichetta personalizzata
+- Quando ci sono più di 4 tile totali, le statistiche diventano un carosello:
+  - Scorrimento automatico ogni 5 secondi
+  - Swipe manuale touch (soglia 40px)
+  - Dot-indicator cliccabili per navigare direttamente
+  - Ultimo gruppo con tile < 4 si espande proporzionalmente (`flex:1`)
+- Con 4 tile o meno: layout griglia classico invariato
+- `_goCarousel()` / `_initStatsCarousel()` gestiscono timer e touch events
+- Timer carousel pulito in `disconnectedCallback`
+
+## 1.4.42 — 2026-06-14
+
+### feat(Meteo): opzione sfondo statico nella card Meteo
+
+**Meteo.js 1.33→1.34:**
+- Aggiunto toggle "🎨 Sfondo della card" nelle impostazioni (Animato / Statico)
+- Quando statico: lo sfondo mostra solo il gradiente giorno/notte + sole/luna,
+  senza stelle animate, nuvole in movimento, pioggia, neve o fulmini
+- Salva in `staticBg` nel localStorage; l'anteprima live aggiorna in tempo reale
+- Default: Animato (comportamento invariato per card esistenti)
+
 ## 1.4.41 — 2026-06-14
 
 ### fix(Meteo): Windy embed — layer switching, tab duplicati, zoom esterno, espandi mappa
