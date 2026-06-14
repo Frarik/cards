@@ -302,7 +302,7 @@ body.editing .resize-handle{opacity:.55}
 .ep-sidebar{width:230px;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.07);background:rgba(0,0,0,.22)}
 .ep-sidenav{flex:1;overflow-y:auto;padding:8px 10px;display:flex;flex-direction:column;gap:2px;scrollbar-width:none}
 .ep-sidenav::-webkit-scrollbar{display:none}
-.ep-sidenav-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.5);padding:10px 10px 4px}
+.ep-sidenav-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#fff;padding:10px 10px 4px}
 .ep-sidenav-sep{height:1px;background:rgba(255,255,255,.07);margin:8px 2px}
 .ep-sidetab{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:10px;border:1px solid transparent;background:transparent;color:#fff;font-size:14px;font-weight:600;cursor:pointer;text-align:left;transition:all .15s;width:100%}
 .ep-sidetab:hover{background:rgba(255,255,255,.07);color:#fff}
@@ -323,8 +323,27 @@ body.editing .resize-handle{opacity:.55}
 /* force white on inline-styled labels inside settings */
 .ep-content-area .ep-sec-title{font-size:13px;color:#fff;font-weight:700}
 .ep-content-area .sys-lbl,.ep-content-area .sys-lbl2{color:#fff}
-.ep-content-area .sys-sub{color:rgba(255,255,255,.65);font-size:12px}
+.ep-content-area .sys-sub{color:#fff;font-size:12px}
 .ep-content-area label{color:#fff}
+/* EP panel — tutti i testi 100% bianchi */
+#epanel{--muted:#fff}
+#epanel .ghs-subhdr,
+#epanel .jsst-card-desc,
+#epanel .ep-picker-eid,
+#epanel .ep-picker-state,
+#epanel .ntf-ent-id,
+#epanel .ntf-act-type-lbl,
+#epanel .brow-mv,
+#epanel .fbar-ibtn-lbl,
+#epanel .fbar-clm-cur,
+#epanel .hbz-add,
+#epanel .hbc-btn,
+#epanel .ipm-cat,
+#epanel .ipm-mdi-lbl,
+#epanel .sos-cancel-btn{color:#fff}
+/* Mobile header: versione affianco al titolo */
+.ep-hdr-ver{display:none;align-items:center;gap:6px}
+.ep-hdr-ver .ep-add2{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15);color:#fff}
 /* ── Mobile responsive ── */
 @media(max-width:680px){
   .ep-layout{flex-direction:column}
@@ -335,8 +354,9 @@ body.editing .resize-handle{opacity:.55}
   .ep-sidenav-sep{display:none}
   .ep-sidetab{width:auto;flex-shrink:0;white-space:nowrap;border-radius:20px;padding:8px 14px;font-size:13px;gap:7px}
   .ep-sidetab-ico{width:auto;font-size:15px}
-  .ep-sidebar-ver{padding:8px 12px;gap:8px}
-  .ep-sidebar-ver img{height:24px}
+  .ep-sidebar-ver{display:none}
+  .ep-hdr-ver{display:flex;margin-right:8px}
+  .ep-hdr-sub{display:none}
   #ep-paste-wrap{padding:10px 12px 0}
   .ep-content-area{min-height:0}
   .ep-tab-content{padding:18px 20px}
@@ -1610,10 +1630,10 @@ select.sos-cfg-inp option{background:#1e2535;color:#e2e8f0}
 /* SOS overlay è SEMPRE scuro indipendentemente dal tema */
 .sos-ov *{box-sizing:border-box}
 .sos-box,.sos-box *:not(button){color:#e2e8f0}
-.sos-hdr-sub{color:rgba(255,255,255,.4)!important}
-.sos-person-state{color:rgba(255,255,255,.45)!important}
-.sos-contact-name{color:#f1f5f9!important}
-.sos-no-contacts{color:rgba(255,255,255,.35)!important}
+.sos-hdr-sub{color:#fff!important}
+.sos-person-state{color:#fff!important}
+.sos-contact-name{color:#fff!important}
+.sos-no-contacts{color:#fff!important}
 /* WhatsApp / Telegram */
 .sos-act-wa{background:rgba(37,211,102,.12);border-color:rgba(37,211,102,.4);color:#25d366}
 .sos-act-wa:hover{background:rgba(37,211,102,.25);border-color:#25d366}

@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.4.51 — 2026-06-14
+
+### fix(Settings): testo 100% bianco ovunque + versione mobile nell'header (v1.4.51)
+
+**frarik-addon src/style.css:**
+- `#epanel { --muted: #fff }` — azzera tutti i grigi/semitrasparenti basati su `var(--muted)`
+- Override `#epanel` scoped per colori rgba hardcoded: `.ghs-subhdr`, `.jsst-card-desc`, `.ep-picker-eid`, `.ep-picker-state`, `.ntf-ent-id`, `.ntf-act-type-lbl`, `.brow-mv`, `.fbar-ibtn-lbl`, `.fbar-clm-cur`, `.hbz-add`, `.hbc-btn`, `.ipm-cat`, `.ipm-mdi-lbl`, `.sos-cancel-btn`
+- `.ep-sidenav-lbl` e `.ep-content-area .sys-sub`: #fff (da rgba 50-65%)
+- `.sos-hdr-sub`, `.sos-person-state`, `.sos-no-contacts`, `.sos-contact-name`: #fff !important
+- Mobile: `.ep-sidebar-ver` nascosta, `.ep-hdr-ver` visibile affianco al titolo
+
+**frarik-addon src/index.html:**
+- Header subtitle: #fff (da rgba 35%)
+- Sidebar version spans: colori inline rimossi (ereditano #fff dalla classe)
+- Aggiunto `#ep-hdr-ver` (logo + versione + 🔄) nell'header, visibile solo su mobile
+
+**frarik-addon src/main.js:**
+- `#ep-hdr-ver-label` aggiornato con la versione assieme a `#ep-ver-label`
+
+---
+
 ## 1.4.50 — 2026-06-14
 
 ### feat(Settings): auto-update add-on da GitHub + logo sidebar più grande + badge mobile (v1.4.50)

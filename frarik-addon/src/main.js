@@ -10511,10 +10511,12 @@ function _epLicLogout(){
 })();
 try{
   var _vl=document.getElementById('ep-ver-label');
+  var _vl2=document.getElementById('ep-hdr-ver-label');
   // Mostra versione add-on dal server (config.yaml), fallback al numero interno
   fetch('./api/frarik/version?t='+Date.now()).then(r=>r.json()).then(d=>{
     if(_vl) _vl.textContent='v'+d.version;
-  }).catch(()=>{ if(_vl) _vl.textContent=(window.FRARIK_APP_VERSION||'?'); });
+    if(_vl2) _vl2.textContent='v'+d.version;
+  }).catch(()=>{ if(_vl) _vl.textContent=(window.FRARIK_APP_VERSION||'?'); if(_vl2) _vl2.textContent=(window.FRARIK_APP_VERSION||'?'); });
 }catch(e){}
 
 /* ── Controllo "nuova versione dashboard disponibile" sul repo GitHub ──────────

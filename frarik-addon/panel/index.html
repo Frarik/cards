@@ -11,8 +11,8 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@400;600;700;800;900&family=Nunito:wght@400;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="./assets/index-CzFo-UkO.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-BGRY3R9b.css">
+  <script type="module" crossorigin src="./assets/index-oJbreZcm.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-BXMWj1DH.css">
 </head>
 <body>
 
@@ -540,12 +540,18 @@
 
     <!-- ── HEADER ── -->
     <div class="ep-hdr" style="display:flex;align-items:center;justify-content:space-between;padding:16px 22px 14px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">
-      <div style="display:flex;align-items:center;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
         <div style="width:38px;height:38px;border-radius:12px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.25);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">⚙️</div>
         <div>
           <div style="font-size:16px;font-weight:800;color:#fff;letter-spacing:.2px">Impostazioni</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:1px">Frarik Dashboard</div>
+          <div class="ep-hdr-sub" style="font-size:11px;color:#fff;margin-top:1px">Frarik Dashboard</div>
         </div>
+      </div>
+      <!-- versione + aggiorna (visibile solo su mobile) -->
+      <div class="ep-hdr-ver">
+        <img src="./logo-v2.png?v=1.1.93" alt="" style="height:20px;width:auto;object-fit:contain">
+        <span id="ep-hdr-ver-label" style="font-size:13px;font-weight:800;color:#fff">…</span>
+        <button class="ep-add2" data-action="frarikCheckUpdate" style="width:auto;padding:5px 8px;margin:0;font-size:13px;flex-shrink:0" title="Aggiorna add-on">🔄</button>
       </div>
       <button class="ep-x" data-action="closeOikSettings" title="Torna alla plancia">✕</button>
     </div>
@@ -607,8 +613,8 @@
         <div class="ep-sidebar-ver">
           <img src="./logo-v2.png?v=1.1.93" alt="" style="height:42px;width:auto;object-fit:contain;filter:drop-shadow(0 0 8px rgba(99,102,241,.5))">
           <div style="flex:1;display:flex;flex-direction:column;line-height:1.4">
-            <span style="font-size:11px;font-weight:800;color:#c7d2fe;letter-spacing:.3px">Frarik Dashboard</span>
-            <span style="font-size:14px;font-weight:800;color:#a5b4fc" id="ep-ver-label">…</span>
+            <span style="font-size:11px;font-weight:800;letter-spacing:.3px">Frarik Dashboard</span>
+            <span style="font-size:14px;font-weight:800" id="ep-ver-label">…</span>
           </div>
           <button class="ep-add2" data-action="frarikCheckUpdate" style="width:auto;padding:7px 10px;margin:0;font-size:14px;flex-shrink:0" title="Aggiorna add-on">🔄</button>
         </div>
