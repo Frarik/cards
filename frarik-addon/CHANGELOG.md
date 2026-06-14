@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.4.49 — 2026-06-14
+
+### fix(Settings): testo bianco 100%, testi più grandi, mobile responsive (v1.4.49)
+
+**frarik-addon src/style.css:**
+- Sidebar tab: `color:#fff` (da 48% opacità), `font-size:14px` (da 12px), padding aumentato
+- `.ep-layout { color:#fff }` → eredità bianco su tutti i figli
+- `.ep-tab-content *` → color inherit per coerenza completa
+- `.sys-lbl`, `.sys-lbl2`, `.sys-sub` → `color:#fff` / `rgba(255,255,255,.65)` (da var(--muted))
+- `.ep-tab-hdr-title`: 22px (da 18px); `.ep-tab-hdr-ico`: 20px (da 18px)
+- `.ep-tab-content`: padding 30px 36px; `.ep-sidetab`: padding 11px 14px
+- Sidebar label `#64748b` → override con `.ep-content-area label { color:#fff }`
+- **Mobile `@media(max-width:680px)`**: sidebar diventa barra orizzontale scrollabile in cima,
+  tab come pill, scompaiono label/separatori, versione nascosta, contenuto sotto
+
+---
+
 ## 1.4.48 — 2026-06-14
 
 ### feat(Settings): auto-apri primo tab + componenti inline (v1.4.48)
