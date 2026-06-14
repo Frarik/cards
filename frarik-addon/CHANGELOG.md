@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.4.59 — 2026-06-14
+
+### feat(ClimaCard): 4 layout visivi completamente diversi (v1.4.59 / ClimaCard 2.20)
+
+**card-js/Clima.js (2.19 → 2.20):**
+- **Moderno**: split AC con corpo antracite, display LED verde, aletta RAF, flusso aria — layout invariato
+- **Futuristico**: HUD ad anello SVG ciano (270°), scanlines overlay, arco attivo che avanza con la temperatura, punto luminoso al target, font monospace, temperatura grande nel centro dell'anello
+- **Classico**: quadrante termostato rotondo SVG con tacche per ogni grado, arco ambra che cresce verso il target, logo marca in foreignObject, colori caldi marrone/ambra, bottoni arrotondati
+- **Minimal**: layout tipografico puro — temperatura 72px centrata, nessuna grafica decorativa, pill di stato, pill sensori/ventola, bottoni flat con bordo sottile
+- Ogni tema ha HTML/CSS completamente diverso (non semplici cambi di colore)
+- Logica, entità, modalità, sensori, aletta sync rimangono identiche in tutti i temi
+
+---
+
 ## 1.4.58 — 2026-06-14
 
 ### feat(ClimaCard): tema visivo selezionabile (v1.4.58 / ClimaCard 2.19)

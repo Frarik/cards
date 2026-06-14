@@ -1,4 +1,4 @@
-/* frarik-version: 2.19 */
+/* frarik-version: 2.20 */
 (function () {
   'use strict';
 
@@ -339,7 +339,288 @@
     }
   }
 
-  /* ── THEME VALUES ── */
+  /* ── THEME RENDERS ── */
+
+  /* shared helpers used by all themes */
+  function _panels(rid, entityId, mode, fanMode, swingMode, hvacModes, fanModes, swingModes, pw, selBtn) {
+    const modePanel = '<div data-secpanel="mode" style="'+pw+'">'
+      +'<div style="font-size:9px;font-weight:800;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Modalità</div>'
+      +'<div style="display:flex;gap:5px;flex-wrap:wrap">'
+      +hvacModes.map(function(m){ return selBtn(entityId,'mode',m,mIcon(m)+' '+mLabel(m),mode===m,mColor(m)); }).join('')
+      +'</div></div>';
+    const fanPanel = fanModes.length>1
+      ? '<div data-secpanel="fan" style="'+pw+'">'
+          +'<div style="font-size:9px;font-weight:800;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Ventola</div>'
+          +'<div style="display:flex;gap:5px;flex-wrap:wrap">'
+          +fanModes.map(function(m){ return selBtn(entityId,'fan',m,fLabel(m),fanMode===m,'#38bdf8'); }).join('')
+          +'</div></div>' : '';
+    const swingPanel = swingModes.length>1
+      ? '<div data-secpanel="swing" style="'+pw+'">'
+          +'<div style="font-size:9px;font-weight:800;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Oscillazione</div>'
+          +'<div style="display:flex;gap:5px;flex-wrap:wrap">'
+          +swingModes.map(function(m){ return selBtn(entityId,'swing',m,sLabel(m),swingMode===m,'#a78bfa'); }).join('')
+          +'</div></div>' : '';
+    return modePanel+(fanPanel||'')+(swingPanel||'');
+  }
+
+  /* ── FUTURISTIC: HUD con anello SVG ciano ── */
+  function _renderFuturistic(rid, d) {
+    var entityId=d.entityId, nm=d.nm, mode=d.mode, fanMode=d.fanMode, swingMode=d.swingMode,
+        isOn=d.isOn, swingOn=d.swingOn, mCol=d.mCol, targetTemp=d.targetTemp,
+        sensorT=d.sensorT, sensorH=d.sensorH, syncCol=d.syncCol, flapInitTransform=d.flapInitTransform,
+        hvacModes=d.hvacModes, fanModes=d.fanModes, swingModes=d.swingModes,
+        min=d.min, max=d.max, tempEntity=d.tempEntity, humEntity=d.humEntity;
+    var N='#00e5ff';
+    var cx=100,cy=88,r=68,sw=11;
+    var toRad=function(a){return a*Math.PI/180;};
+    var pt=function(a,rr){rr=rr||r;return [(cx+rr*Math.cos(toRad(a))).toFixed(2),(cy+rr*Math.sin(toRad(a))).toFixed(2)];};
+    var sp=pt(135),ep=pt(45);
+    var trackD='M '+sp[0]+' '+sp[1]+' A '+r+' '+r+' 0 1 1 '+ep[0]+' '+ep[1];
+    var activeD='',dotX=sp[0],dotY=sp[1];
+    if(isOn){
+      var ratio=Math.min(Math.max((parseFloat(targetTemp)-min)/(max-min),0),1);
+      var aDeg=135+ratio*270; var ap=pt(aDeg); dotX=ap[0]; dotY=ap[1];
+      if(ratio>0.01){var lg=aDeg-135>180?1:0; activeD='M '+sp[0]+' '+sp[1]+' A '+r+' '+r+' 0 '+lg+' 1 '+ap[0]+' '+ap[1];}
+    }
+    var css='<style id="'+rid+'-css">'
+      +'@keyframes '+rid+'led{0%,100%{opacity:1}50%{opacity:.65}}'
+      +'@keyframes '+rid+'mist{0%{opacity:0;transform:translateY(-8px)}15%{opacity:.55}80%{opacity:.15}100%{opacity:0;transform:translateY(55px)}}'
+      +'#'+rid+' .cb{padding:5px 10px;border-radius:8px;border:1px solid rgba(0,229,255,.22);cursor:pointer;font-size:11px;font-weight:700;transition:all .18s;background:rgba(0,229,255,.05);color:'+N+';}'
+      +'#'+rid+' .cb:hover{filter:brightness(1.4);}'
+      +'#'+rid+' .tog{flex:1;padding:7px 3px;border-radius:9px;border:1px solid rgba(0,229,255,.15);cursor:pointer;font-size:9px;'
+        +'font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;'
+        +'background:rgba(0,0,0,.35);color:rgba(0,229,255,.4);transition:all .18s;}'
+      +'#'+rid+' .tog:hover{color:'+N+';border-color:rgba(0,229,255,.4);}'
+      +'</style>';
+    function selBtn(eId,action,val,label,active,col2){
+      var bs=active?'background:'+col2+'22;color:'+col2+';border:1px solid '+col2+'55;box-shadow:0 0 8px '+col2+'33;':'background:rgba(0,229,255,.04);color:rgba(0,229,255,.35);border:1px solid rgba(0,229,255,.1);';
+      return '<button class="cb" data-cid="'+eId+'" data-action="'+action+'" data-val="'+val+'" style="'+bs+'">'+label+'</button>';
+    }
+    var pw='display:none;flex-direction:column;gap:5px;background:rgba(0,229,255,.03);border-radius:9px;padding:9px;border:1px solid rgba(0,229,255,.12);';
+    var togRow='<div style="display:flex;gap:5px">'
+      +'<button class="tog" data-action="toggle" data-sec="mode"><span style="font-size:14px">'+mIcon(mode)+'</span><span>MODALITÀ</span></button>'
+      +'<button class="tog" data-action="toggle" data-sec="fan"><span style="font-size:14px">💨</span><span>VENTOLA</span></button>'
+      +(swingModes.length>1?'<button class="tog" data-action="toggle" data-sec="swing"><span style="font-size:14px">↕</span><span>ALETTE</span></button>':'')
+    +'</div>';
+    var airH=isOn?'<div style="position:relative;height:36px;overflow:hidden;pointer-events:none;margin:-4px 0 0">'+airStreams(rid,N,true)+'</div>':'';
+    return css
+      +'<div id="'+rid+'" style="position:relative;width:100%;height:100%;min-height:280px;border-radius:18px;'
+        +'padding:10px 12px;box-sizing:border-box;font-family:\'Courier New\',Courier,monospace;'
+        +'display:flex;flex-direction:column;gap:5px;overflow:hidden;'
+        +'background:linear-gradient(165deg,#020a0f 0%,#010507 55%,#020e16 100%);'
+        +'border:1px solid '+(isOn?'rgba(0,229,255,.45)':'rgba(0,229,255,.15)')+';'
+        +'box-shadow:0 10px 40px rgba(0,0,0,.85)'+(isOn?',0 0 28px rgba(0,229,255,.07)':'')+';">'
+      +'<div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,229,255,.022) 0px,rgba(0,229,255,.022) 1px,transparent 1px,transparent 3px);pointer-events:none;z-index:0"></div>'
+      // header
+      +'<div style="position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between">'
+        +'<div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:'+(isOn?N:'rgba(0,229,255,.3)')+'">'+nm+'</div>'
+        +'<div style="display:flex;gap:5px;align-items:center">'
+          +(syncCol?'<div style="width:6px;height:6px;border-radius:50%;background:'+syncCol+';box-shadow:0 0 5px '+syncCol+'"></div>':'')
+          +(sensorT?'<div data-a="stat" data-eid="'+tempEntity+'" data-attr="" data-lbl="Temperatura" style="cursor:pointer;font-size:9px;color:rgba(0,229,255,.55);background:rgba(0,229,255,.07);padding:1px 6px;border-radius:99px;border:1px solid rgba(0,229,255,.18)">🌡 '+sensorT+'°</div>':'')
+          +(sensorH?'<div data-a="stat" data-eid="'+humEntity+'" data-attr="" data-lbl="Umidità" style="cursor:pointer;font-size:9px;color:rgba(0,229,255,.55);background:rgba(0,229,255,.07);padding:1px 6px;border-radius:99px;border:1px solid rgba(0,229,255,.18)">💧 '+sensorH+'%</div>':'')
+          +'<div style="font-size:9px;color:'+(isOn?mCol:'rgba(255,255,255,.15)')+';letter-spacing:.1em;'+(isOn?'text-shadow:0 0 8px '+mCol+';':'')+'">'+( isOn?mLabel(mode).toUpperCase():'STANDBY')+'</div>'
+        +'</div>'
+      +'</div>'
+      // SVG ring
+      +'<div style="position:relative;z-index:1;display:flex;justify-content:center">'
+        +'<svg viewBox="0 0 200 170" style="width:100%;max-width:220px;display:block;overflow:visible">'
+          +'<path d="'+trackD+'" fill="none" stroke="rgba(0,229,255,.09)" stroke-width="'+sw+'" stroke-linecap="round"/>'
+          +(activeD?'<path d="'+activeD+'" fill="none" stroke="rgba(0,229,255,.18)" stroke-width="'+(sw+8)+'" stroke-linecap="round"/>':'')
+          +(activeD?'<path d="'+activeD+'" fill="none" stroke="'+N+'" stroke-width="'+sw+'" stroke-linecap="round" style="filter:drop-shadow(0 0 5px '+N+')"/>':'')
+          +(isOn?'<circle cx="'+dotX+'" cy="'+dotY+'" r="7" fill="'+N+'" style="filter:drop-shadow(0 0 7px '+N+')"/>':'')
+          +'<text x="'+(parseFloat(sp[0])-6)+'" y="'+(parseFloat(sp[1])+13)+'" text-anchor="end" font-size="8" fill="rgba(0,229,255,.35)" font-family="Courier New">'+min+'°</text>'
+          +'<text x="'+(parseFloat(ep[0])+6)+'" y="'+(parseFloat(ep[1])+13)+'" text-anchor="start" font-size="8" fill="rgba(0,229,255,.35)" font-family="Courier New">'+max+'°</text>'
+          +'<text data-clm-led x="'+cx+'" y="'+(cy-4)+'" text-anchor="middle" font-size="36" font-weight="700" font-family="Courier New" fill="'+(isOn?N:'rgba(0,229,255,.12)')+'" '+(isOn?'style="filter:drop-shadow(0 0 10px '+N+')"':'')+'>'+targetTemp+'</text>'
+          +'<text x="'+cx+'" y="'+(cy+13)+'" text-anchor="middle" font-size="8.5" fill="'+(isOn?mCol:'rgba(255,255,255,.15)')+'" font-family="Courier New" letter-spacing="2">'+(isOn?mLabel(mode).toUpperCase():'─ OFF ─')+'</text>'
+          +'<text x="'+cx+'" y="'+(cy+26)+'" text-anchor="middle" font-size="8" fill="rgba(0,229,255,.38)" font-family="Courier New">💨 '+fLabel(fanMode)+(swingOn?' ↕':'')+'</text>'
+        +'</svg>'
+        +'<div data-clm-flap data-rid="'+rid+'" style="position:absolute;width:0;height:0;overflow:hidden;transform:'+flapInitTransform+'"></div>'
+      +'</div>'
+      +airH
+      // temp controls
+      +'<div style="position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:12px">'
+        +'<button class="cb" data-cid="'+entityId+'" data-action="temp-down" style="width:36px;height:36px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;box-shadow:inset 0 2px 8px rgba(0,0,0,.7)">−</button>'
+        +'<div data-clm-temp style="min-width:74px;text-align:center;font-size:18px;font-weight:700;letter-spacing:3px;color:'+(isOn?N:'rgba(0,229,255,.18)')+';'+(isOn?'text-shadow:0 0 10px '+N+';':'')+'>">'+(isOn?targetTemp+'°':'──')+'</div>'
+        +'<button class="cb" data-cid="'+entityId+'" data-action="temp-up" style="width:36px;height:36px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;box-shadow:inset 0 2px 8px rgba(0,0,0,.7)">+</button>'
+      +'</div>'
+      +'<div style="position:relative;z-index:1">'+togRow+'</div>'
+      +'<div style="position:relative;z-index:1">'+_panels(rid,entityId,mode,fanMode,swingMode,hvacModes,fanModes,swingModes,pw,selBtn)+'</div>'
+    +'</div>';
+  }
+
+  /* ── CLASSIC: termostato rotondo con quadrante SVG ── */
+  function _renderClassic(rid, d) {
+    var entityId=d.entityId, nm=d.nm, mode=d.mode, fanMode=d.fanMode, swingMode=d.swingMode,
+        isOn=d.isOn, swingOn=d.swingOn, mCol=d.mCol, targetTemp=d.targetTemp,
+        sensorT=d.sensorT, sensorH=d.sensorH, syncCol=d.syncCol, flapInitTransform=d.flapInitTransform,
+        hvacModes=d.hvacModes, fanModes=d.fanModes, swingModes=d.swingModes,
+        min=d.min, max=d.max, tempEntity=d.tempEntity, humEntity=d.humEntity, brandSvg=d.brandSvg;
+    var W='#d97706', WL='#fbbf24', WD='#78350f';
+    var cx=100,cy=100,rO=80,rI=55;
+    var toRad=function(a){return a*Math.PI/180;};
+    var pt=function(a,rr){return [(cx+rr*Math.cos(toRad(a))).toFixed(2),(cy+rr*Math.sin(toRad(a))).toFixed(2)];};
+    var range=max-min; var ticks='';
+    for(var i=0;i<=range;i++){
+      var ang=135+(i/range)*270;
+      var isMaj=i%Math.max(1,Math.round(range/7))===0;
+      var t1=pt(ang,rO-(isMaj?2:4)), t2=pt(ang,rO-(isMaj?14:8));
+      var isAct=isOn&&(min+i)<=parseFloat(targetTemp)+0.01;
+      ticks+='<line x1="'+t1[0]+'" y1="'+t1[1]+'" x2="'+t2[0]+'" y2="'+t2[1]+'" stroke="'+(isAct?WL:'rgba(255,195,80,.18)')+'" stroke-width="'+(isMaj?2:1.2)+'" stroke-linecap="round"/>';
+      if(isMaj){var lp=pt(ang,rO+7); ticks+='<text x="'+lp[0]+'" y="'+(parseFloat(lp[1])+3)+'" text-anchor="middle" font-size="8" fill="rgba(255,190,70,.45)" font-family="Georgia,serif">'+(min+i)+'</text>';}
+    }
+    var sp=pt(135,rO-8),ep=pt(45,rO-8);
+    var activeArc='',dialDot='';
+    if(isOn){
+      var ratio=Math.min(Math.max((parseFloat(targetTemp)-min)/(max-min),0),1);
+      var aDeg=135+ratio*270; var ap=pt(aDeg,rO-8);
+      if(ratio>0.02){var lg=aDeg-135>180?1:0; activeArc='<path d="M '+sp[0]+' '+sp[1]+' A '+(rO-8)+' '+(rO-8)+' 0 '+lg+' 1 '+ap[0]+' '+ap[1]+'" fill="none" stroke="'+WL+'" stroke-width="4" stroke-linecap="round" style="filter:drop-shadow(0 0 4px '+WL+')"/>';}
+      dialDot='<circle cx="'+ap[0]+'" cy="'+ap[1]+'" r="5.5" fill="'+WL+'" stroke="#1a0e00" stroke-width="1.5" style="filter:drop-shadow(0 0 5px '+WL+')"/>';
+    }
+    var css='<style id="'+rid+'-css">'
+      +'@keyframes '+rid+'led{0%,100%{opacity:1}50%{opacity:.7}}'
+      +'@keyframes '+rid+'mist{0%{opacity:0;transform:translateY(-8px)}15%{opacity:.5}80%{opacity:.12}100%{opacity:0;transform:translateY(55px)}}'
+      +'#'+rid+' .cb{padding:5px 12px;border-radius:20px;border:1px solid rgba(255,195,80,.25);cursor:pointer;font-size:11px;font-weight:700;transition:all .18s;background:rgba(255,195,80,.06);color:'+WL+';}'
+      +'#'+rid+' .cb:hover{filter:brightness(1.3);}'
+      +'#'+rid+' .tog{flex:1;padding:8px 4px;border-radius:12px;border:1px solid rgba(255,195,80,.15);cursor:pointer;font-size:10px;'
+        +'font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;'
+        +'background:rgba(20,10,2,.5);color:rgba(255,195,80,.4);transition:all .18s;}'
+      +'#'+rid+' .tog:hover{color:'+WL+';border-color:rgba(255,195,80,.4);}'
+      +'</style>';
+    function selBtn(eId,action,val,label,active,col2){
+      var bs=active?'background:'+col2+'22;color:'+col2+';border:1px solid '+col2+'55;box-shadow:0 0 8px '+col2+'33;':'background:rgba(255,195,80,.04);color:rgba(255,195,80,.35);border:1px solid rgba(255,195,80,.12);';
+      return '<button class="cb" data-cid="'+eId+'" data-action="'+action+'" data-val="'+val+'" style="'+bs+'">'+label+'</button>';
+    }
+    var pw='display:none;flex-direction:column;gap:5px;background:rgba(255,195,80,.03);border-radius:11px;padding:9px;border:1px solid rgba(255,195,80,.12);';
+    var togRow='<div style="display:flex;gap:6px">'
+      +'<button class="tog" data-action="toggle" data-sec="mode"><span style="font-size:15px">'+mIcon(mode)+'</span><span>Modalità</span></button>'
+      +'<button class="tog" data-action="toggle" data-sec="fan"><span style="font-size:15px">💨</span><span>Ventola</span></button>'
+      +(swingModes.length>1?'<button class="tog" data-action="toggle" data-sec="swing"><span style="font-size:15px">↕</span><span>Alette</span></button>':'')
+    +'</div>';
+    return css
+      +'<div id="'+rid+'" style="position:relative;width:100%;height:100%;min-height:280px;border-radius:18px;'
+        +'padding:12px;box-sizing:border-box;font-family:Georgia,\'Times New Roman\',serif;'
+        +'display:flex;flex-direction:column;gap:8px;overflow:hidden;'
+        +'background:linear-gradient(150deg,#1c1008 0%,#120c04 55%,#1a1006 100%);'
+        +'border:1px solid '+(isOn?WL+'55':'rgba(255,195,80,.18)')+';'
+        +'box-shadow:0 10px 40px rgba(0,0,0,.7)'+(isOn?',0 0 22px rgba(255,180,60,.08)':'')+';">'
+      // header
+      +'<div style="display:flex;align-items:center;justify-content:space-between">'
+        +'<div style="font-size:13px;font-weight:700;letter-spacing:.04em;color:#d4a245">'+nm+'</div>'
+        +'<div style="display:flex;gap:5px;align-items:center">'
+          +(syncCol?'<div style="width:6px;height:6px;border-radius:50%;background:'+syncCol+';box-shadow:0 0 4px '+syncCol+'"></div>':'')
+          +(sensorT?'<div data-a="stat" data-eid="'+tempEntity+'" data-attr="" data-lbl="Temperatura" style="cursor:pointer;font-size:9px;color:rgba(255,195,80,.55);background:rgba(255,195,80,.07);padding:1px 6px;border-radius:99px;border:1px solid rgba(255,195,80,.18)">🌡 '+sensorT+'°</div>':'')
+          +(sensorH?'<div data-a="stat" data-eid="'+humEntity+'" data-attr="" data-lbl="Umidità" style="cursor:pointer;font-size:9px;color:rgba(255,195,80,.55);background:rgba(255,195,80,.07);padding:1px 6px;border-radius:99px;border:1px solid rgba(255,195,80,.18)">💧 '+sensorH+'%</div>':'')
+        +'</div>'
+      +'</div>'
+      // dial SVG
+      +'<div style="display:flex;justify-content:center">'
+        +'<svg viewBox="0 0 200 200" style="width:100%;max-width:200px;display:block;overflow:visible">'
+          // outer ring bg
+          +'<circle cx="'+cx+'" cy="'+cy+'" r="'+rO+'" fill="rgba(0,0,0,.4)" stroke="rgba(255,195,80,.1)" stroke-width="1"/>'
+          // ticks
+          +ticks
+          // active arc
+          +activeArc
+          // dial dot
+          +dialDot
+          // face circle
+          +'<circle cx="'+cx+'" cy="'+cy+'" r="'+rI+'" fill="linear-gradient(145deg,#241508,#180e04)" stroke="rgba(255,195,80,.12)" stroke-width="1.5"/>'
+          +'<circle cx="'+cx+'" cy="'+cy+'" r="'+rI+'" fill="url(#dialgrad'+rid+')" stroke="rgba(255,195,80,.12)" stroke-width="1.5"/>'
+          +'<defs><radialGradient id="dialgrad'+rid+'" cx="40%" cy="35%"><stop offset="0%" stop-color="#2e1a08"/><stop offset="100%" stop-color="#100a02"/></radialGradient></defs>'
+          // mode icon
+          +'<text x="'+cx+'" y="'+(cy-16)+'" text-anchor="middle" font-size="18">'+mIcon(mode)+'</text>'
+          // temperature
+          +'<text data-clm-led x="'+cx+'" y="'+(cy+8)+'" text-anchor="middle" font-size="26" font-weight="700" font-family="Courier New,monospace" fill="'+(isOn?WL:'rgba(255,195,80,.15)')+'" '+(isOn?'style="filter:drop-shadow(0 0 8px '+WL+')"':'')+'>'+targetTemp+'</text>'
+          // mode label
+          +'<text x="'+cx+'" y="'+(cy+22)+'" text-anchor="middle" font-size="8" fill="'+(isOn?W:'rgba(255,195,80,.2)')+'" font-family="Georgia" letter-spacing="1">'+(isOn?mLabel(mode):'— spento —')+'</text>'
+          // fan + swing
+          +(isOn?'<text x="'+cx+'" y="'+(cy+35)+'" text-anchor="middle" font-size="8" fill="rgba(255,195,80,.4)" font-family="Georgia">💨 '+fLabel(fanMode)+(swingOn?' · ↕':'')+'</text>':'')
+          // brand logo if any
+          +(brandSvg?'<foreignObject x="55" y="155" width="90" height="22">'+brandSvg+'</foreignObject>':'')
+          // hidden flap
+        +'</svg>'
+        +'<div data-clm-flap data-rid="'+rid+'" style="position:absolute;width:0;height:0;overflow:hidden;transform:'+flapInitTransform+'"></div>'
+      +'</div>'
+      // temp controls
+      +'<div style="display:flex;align-items:center;justify-content:center;gap:14px">'
+        +'<button class="cb" data-cid="'+entityId+'" data-action="temp-down" style="width:38px;height:38px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;box-shadow:inset 0 2px 10px rgba(0,0,0,.7),0 2px 5px rgba(0,0,0,.4)">−</button>'
+        +'<div data-clm-temp style="min-width:72px;text-align:center;font-size:22px;font-weight:700;color:'+(isOn?WL:'rgba(255,195,80,.18)')+';'+(isOn?'text-shadow:0 0 10px '+WL+';':'')+'font-family:\'Courier New\',monospace;">'+(isOn?targetTemp+'°':'—')+'</div>'
+        +'<button class="cb" data-cid="'+entityId+'" data-action="temp-up" style="width:38px;height:38px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;box-shadow:inset 0 2px 10px rgba(0,0,0,.7),0 2px 5px rgba(0,0,0,.4)">+</button>'
+      +'</div>'
+      +togRow
+      +_panels(rid,entityId,mode,fanMode,swingMode,hvacModes,fanModes,swingModes,pw,selBtn)
+    +'</div>';
+  }
+
+  /* ── MINIMAL: tipografia pura, zero decorazioni ── */
+  function _renderMinimal(rid, d) {
+    var entityId=d.entityId, nm=d.nm, mode=d.mode, fanMode=d.fanMode, swingMode=d.swingMode,
+        isOn=d.isOn, swingOn=d.swingOn, mCol=d.mCol, targetTemp=d.targetTemp,
+        sensorT=d.sensorT, sensorH=d.sensorH, syncCol=d.syncCol, flapInitTransform=d.flapInitTransform,
+        hvacModes=d.hvacModes, fanModes=d.fanModes, swingModes=d.swingModes,
+        tempEntity=d.tempEntity, humEntity=d.humEntity;
+    var css='<style id="'+rid+'-css">'
+      +'#'+rid+' .cb{padding:4px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.12);cursor:pointer;font-size:11px;font-weight:700;transition:all .15s;background:transparent;color:rgba(255,255,255,.5);}'
+      +'#'+rid+' .cb:hover{background:rgba(255,255,255,.08);color:#fff;border-color:rgba(255,255,255,.25);}'
+      +'#'+rid+' .tog{flex:1;padding:8px 4px;border-radius:8px;border:none;border-top:2px solid rgba(255,255,255,.06);cursor:pointer;font-size:10px;'
+        +'font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;'
+        +'background:transparent;color:rgba(255,255,255,.3);transition:all .18s;}'
+      +'#'+rid+' .tog:hover{color:rgba(255,255,255,.75);border-top-color:rgba(255,255,255,.2);}'
+      +'</style>';
+    function selBtn(eId,action,val,label,active,col2){
+      var bs=active?'background:'+col2+'18;color:'+col2+';border:1px solid '+col2+'44;':'background:transparent;color:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.1);';
+      return '<button class="cb" data-cid="'+eId+'" data-action="'+action+'" data-val="'+val+'" style="'+bs+'">'+label+'</button>';
+    }
+    var pw='display:none;flex-direction:column;gap:5px;background:transparent;padding:8px 0 0;border-top:1px solid rgba(255,255,255,.06);';
+    var togRow='<div style="display:flex;gap:4px;border-top:1px solid rgba(255,255,255,.06);padding-top:8px">'
+      +'<button class="tog" data-action="toggle" data-sec="mode"><span style="font-size:16px">'+mIcon(mode)+'</span><span>Modalità</span></button>'
+      +'<button class="tog" data-action="toggle" data-sec="fan"><span style="font-size:16px">💨</span><span>Ventola</span></button>'
+      +(swingModes.length>1?'<button class="tog" data-action="toggle" data-sec="swing"><span style="font-size:16px">↕</span><span>Alette</span></button>':'')
+    +'</div>';
+    return css
+      +'<div id="'+rid+'" style="position:relative;width:100%;height:100%;min-height:260px;border-radius:16px;'
+        +'padding:16px 16px 12px;box-sizing:border-box;font-family:system-ui,sans-serif;'
+        +'display:flex;flex-direction:column;gap:0;overflow:hidden;'
+        +'background:#0d1117;'
+        +'border:1px solid rgba(255,255,255,.08);box-shadow:0 4px 24px rgba(0,0,0,.5);">'
+      // hidden flap
+      +'<div data-clm-flap data-rid="'+rid+'" style="position:absolute;width:0;height:0;overflow:hidden;transform:'+flapInitTransform+'"></div>'
+      // top row: name + status pill
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
+        +'<div style="font-size:12px;font-weight:600;letter-spacing:.02em;color:rgba(255,255,255,.45);text-transform:uppercase">'+nm+'</div>'
+        +'<div style="display:flex;align-items:center;gap:4px">'
+          +(syncCol?'<div style="width:6px;height:6px;border-radius:50%;background:'+syncCol+'"></div>':'')
+          +'<div style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:99px;background:'+(isOn?mCol+'18':'rgba(255,255,255,.06)')+';border:1px solid '+(isOn?mCol+'40':'rgba(255,255,255,.1)')+';">'
+            +'<div style="width:5px;height:5px;border-radius:50%;background:'+(isOn?mCol:'rgba(255,255,255,.2)')+';flex-shrink:0"></div>'
+            +'<span style="font-size:10px;font-weight:700;color:'+(isOn?mCol:'rgba(255,255,255,.25)')+'">'+( isOn?mLabel(mode):'Spento')+'</span>'
+          +'</div>'
+        +'</div>'
+      +'</div>'
+      // big temperature
+      +'<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 0 4px">'
+        +'<div data-clm-led style="font-size:72px;font-weight:800;line-height:1;letter-spacing:-3px;color:'+(isOn?'#fff':'rgba(255,255,255,.08)')+';'+(isOn?'text-shadow:none;':'')+'">'+( isOn?targetTemp:'--')+'</div>'
+        +(isOn?'<div style="font-size:12px;font-weight:500;color:rgba(255,255,255,.25);margin-top:2px;letter-spacing:.05em">TARGET °C</div>':'<div style="font-size:12px;color:rgba(255,255,255,.2);margin-top:4px">climatizzatore spento</div>')
+      +'</div>'
+      // info pills row
+      +'<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:10px">'
+        +(isOn?'<div style="font-size:10px;color:rgba(255,255,255,.35);background:rgba(255,255,255,.05);padding:3px 9px;border-radius:99px">💨 '+fLabel(fanMode)+'</div>':'')
+        +(isOn&&swingOn?'<div style="font-size:10px;color:rgba(255,255,255,.35);background:rgba(255,255,255,.05);padding:3px 9px;border-radius:99px">↕ Oscillazione</div>':'')
+        +(sensorT?'<div data-a="stat" data-eid="'+tempEntity+'" data-attr="" data-lbl="Temperatura" style="cursor:pointer;font-size:10px;color:rgba(255,255,255,.35);background:rgba(255,255,255,.05);padding:3px 9px;border-radius:99px">🌡 '+sensorT+'°</div>':'')
+        +(sensorH?'<div data-a="stat" data-eid="'+humEntity+'" data-attr="" data-lbl="Umidità" style="cursor:pointer;font-size:10px;color:rgba(255,255,255,.35);background:rgba(255,255,255,.05);padding:3px 9px;border-radius:99px">💧 '+sensorH+'%</div>':'')
+      +'</div>'
+      // temp +/- inline
+      +'<div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:10px">'
+        +'<button class="cb" data-cid="'+entityId+'" data-action="temp-down" style="width:36px;height:36px;border-radius:8px;padding:0;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700">−</button>'
+        +'<div data-clm-temp style="min-width:60px;text-align:center;font-size:18px;font-weight:700;color:'+(isOn?'rgba(255,255,255,.7)':'rgba(255,255,255,.12)')+';">'+(isOn?targetTemp+'°':'—')+'</div>'
+        +'<button class="cb" data-cid="'+entityId+'" data-action="temp-up" style="width:36px;height:36px;border-radius:8px;padding:0;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700">+</button>'
+      +'</div>'
+      +togRow
+      +_panels(rid,entityId,mode,fanMode,swingMode,hvacModes,fanModes,swingModes,pw,selBtn)
+    +'</div>';
+  }
+
+  /* ─────────────────────────────────────────────────── */
+
   function _tv(theme, isOn, mCol) {
     if (theme === 'futuristic') {
       return {
@@ -470,8 +751,6 @@
     const isOn     = mode !== 'off';
     const swingOn  = _swingIsActive(swingMode);
     const mCol     = mColor(mode);
-    const tv       = _tv(c.theme || 'modern', isOn, mCol);
-
     const optT = _optimisticTemps[card.id];
     const useOptT = optT && Date.now() < optT.expires;
     if (useOptT && st && st.target != null && Math.abs(optT.temp - parseFloat(st.target)) < 0.001) delete _optimisticTemps[card.id];
@@ -501,7 +780,20 @@
     /* Aletta: transform iniziale nel DOM; l'animazione è gestita da RAF in mount() */
     const flapInitTransform = !isOn ? 'rotateX(0deg)' : 'rotateX(40deg)';
 
-    /* CSS (nessun @keyframes per l'aletta — RAF la anima) */
+    /* dispatch to theme-specific layout */
+    const themeData = {
+      entityId, nm, mode, fanMode, swingMode, isOn, swingOn, mCol, targetTemp,
+      sensorT, sensorH, syncCol, flapInitTransform, brandSvg,
+      hvacModes, fanModes, swingModes,
+      min: st ? st.min : 16, max: st ? st.max : 30,
+      tempEntity: c.tempEntity||'', humEntity: c.humEntity||'',
+    };
+    const theme = c.theme || 'modern';
+    if (theme === 'futuristic') return _renderFuturistic(rid, themeData);
+    if (theme === 'classic')    return _renderClassic(rid, themeData);
+    if (theme === 'minimal')    return _renderMinimal(rid, themeData);
+
+    /* ── MODERN (default): corpo split AC ── */
     const css = '<style id="'+rid+'-css">'
       +'@keyframes '+rid+'mist{0%{opacity:0;transform:translateY(-8px) scaleX(1)}15%{opacity:.82}76%{opacity:.26}100%{opacity:0;transform:translateY(96px) scaleX(1.22)}}'
       +'@keyframes '+rid+'led{0%,100%{opacity:1}46%{opacity:.72}}'
@@ -511,157 +803,72 @@
       +'#'+rid+' .cb:hover{filter:brightness(1.3);}'
       +'#'+rid+' .tog{flex:1;padding:8px 4px;border-radius:14px;border:none;cursor:pointer;font-size:10px;'
         +'font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;'
-        +'background:'+tv.togBg+';color:#94a3b8;transition:color .2s,box-shadow .2s;'
-        +'box-shadow:'+tv.togShadow+';}'
+        +'background:#060c18;color:#94a3b8;transition:color .2s,box-shadow .2s;'
+        +'box-shadow:inset 2px 3px 8px rgba(0,0,0,.65),inset -1px -2px 5px rgba(255,255,255,.04);}'
       +'#'+rid+' .tog:hover{color:#e2e8f0;}'
       +'</style>';
-
     const indRight = '<div style="display:flex;gap:5px;align-items:center">'
       +(syncCol ? '<div title="Sync aletta" style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:'+syncCol+';box-shadow:0 0 6px '+syncCol+'cc"></div>' : '')
       +(sensorT ? '<div data-a="stat" data-eid="'+c.tempEntity+'" data-attr="" data-lbl="Temperatura" style="cursor:pointer;font-size:10px;font-weight:700;color:rgba(255,255,255,.65);background:rgba(255,255,255,.09);padding:2px 7px;border-radius:99px;transition:filter .12s" onmouseover="this.style.filter=\'brightness(1.3)\'" onmouseout="this.style.filter=\'\'">🌡 '+sensorT+'°</div>' : '')
       +(sensorH ? '<div data-a="stat" data-eid="'+c.humEntity+'" data-attr="" data-lbl="Umidità" style="cursor:pointer;font-size:10px;font-weight:700;color:rgba(255,255,255,.65);background:rgba(255,255,255,.09);padding:2px 7px;border-radius:99px;transition:filter .12s" onmouseover="this.style.filter=\'brightness(1.3)\'" onmouseout="this.style.filter=\'\'">💧 '+sensorH+'%</div>' : '')
       +'</div>';
-
-    /* Corpo AC */
     const acBody = '<div style="position:relative">'
       +'<div style="border-radius:15px;overflow:hidden;'
-        +'background:'+tv.acBg+';'
-        +'border:1px solid '+tv.acBorder+';'
-        +'box-shadow:0 8px 34px rgba(0,0,0,.65),'+(isOn ? '0 0 24px '+mCol+'1e,' : '')+'inset 0 1px 0 rgba(255,255,255,.06);">'
-
+        +'background:linear-gradient(160deg,#1e2b3e 0%,#141c2c 55%,#192334 100%);'
+        +'border:1px solid '+(isOn?mCol+'55':'rgba(255,255,255,.09)')+';'
+        +'box-shadow:0 8px 34px rgba(0,0,0,.65),'+(isOn?'0 0 24px '+mCol+'1e,':'')+'inset 0 1px 0 rgba(255,255,255,.06);">'
         +'<div style="display:flex;align-items:center;gap:8px;padding:5px 10px 5px 13px;'
-          +'background:'+tv.hdrBg+';border-bottom:1px solid rgba(255,255,255,.05);'
-          +'border-left:3px solid '+(isOn ? tv.hdrBorderLeft : 'rgba(255,255,255,.14)')+'">'
-          +'<div style="width:7px;height:7px;border-radius:50%;flex-shrink:0;'
-            +'background:'+(isOn?mCol:'rgba(255,255,255,.2)')+';'
-            +(isOn?'animation:'+rid+'ind 2.2s ease-in-out infinite;':'')+'"></div>'
-          +'<div style="flex:1;font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;'
-            +'color:'+(isOn?mCol:'rgba(255,255,255,.3)')+'">'+(isOn?mLabel(mode):'SPENTO')+'</div>'
+          +'background:rgba(0,0,0,.35);border-bottom:1px solid rgba(255,255,255,.05);'
+          +'border-left:3px solid '+(isOn?mCol:'rgba(255,255,255,.14)')+'">'
+          +'<div style="width:7px;height:7px;border-radius:50%;flex-shrink:0;background:'+(isOn?mCol:'rgba(255,255,255,.2)')+';'+(isOn?'animation:'+rid+'ind 2.2s ease-in-out infinite;':'')+'"></div>'
+          +'<div style="flex:1;font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:'+(isOn?mCol:'rgba(255,255,255,.3)')+'">'+(isOn?mLabel(mode):'SPENTO')+'</div>'
           +indRight
         +'</div>'
-
         +'<div style="display:flex;height:78px">'
-          +'<div style="flex:1;position:relative;overflow:hidden;'
-            +'background:linear-gradient(135deg,rgba(255,255,255,.05) 0%,rgba(255,255,255,.02) 100%);">'
-            +(isOn
-              ? '<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 20% 55%,'+mCol+'25 0%,transparent 68%);pointer-events:none;animation:'+rid+'glow 3s ease-in-out infinite"></div>'
-              : '')
-            +(tv.scanlines ? '<div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.1) 0px,rgba(0,0,0,.1) 1px,transparent 1px,transparent 3px);pointer-events:none"></div>' : '')
-            +'<div style="position:absolute;top:0;right:0;bottom:0;width:20px;'
-              +'background:linear-gradient(90deg,transparent,rgba(0,0,0,.25));pointer-events:none"></div>'
-            +(brandSvg
-              ? '<div style="position:absolute;bottom:6px;left:0;right:0;text-align:center;line-height:0">'+brandSvg+'</div>'
-              : '')
+          +'<div style="flex:1;position:relative;overflow:hidden;background:linear-gradient(135deg,rgba(255,255,255,.05) 0%,rgba(255,255,255,.02) 100%);">'
+            +(isOn?'<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 20% 55%,'+mCol+'25 0%,transparent 68%);pointer-events:none;animation:'+rid+'glow 3s ease-in-out infinite"></div>':'')
+            +'<div style="position:absolute;top:0;right:0;bottom:0;width:20px;background:linear-gradient(90deg,transparent,rgba(0,0,0,.25));pointer-events:none"></div>'
+            +(brandSvg?'<div style="position:absolute;bottom:6px;left:0;right:0;text-align:center;line-height:0">'+brandSvg+'</div>':'')
           +'</div>'
-
           +'<div style="width:1px;background:rgba(255,255,255,.07);flex-shrink:0"></div>'
-
-          +'<div style="width:85px;flex-shrink:0;background:'+tv.panelBg+';'
-            +'display:flex;align-items:center;justify-content:center;padding:0 7px">'
-            +'<div style="background:'+tv.ledBg+';border-radius:8px;padding:6px 8px;width:100%;box-sizing:border-box;'
-              +'border:1px solid rgba(0,0,0,.7);box-shadow:inset 0 3px 12px rgba(0,0,0,.75),inset 0 0 22px rgba(0,0,0,.4)">'
-              +'<div data-clm-led style="font-family:\'Courier New\',Courier,monospace;font-size:23px;'
-                +'font-weight:700;letter-spacing:2px;line-height:1;text-align:center;'
-                +'color:'+tv.ledColor+';'
-                +'text-shadow:'+tv.ledShadow+';'
-                +(isOn?'animation:'+rid+'led 3s ease-in-out infinite;':'')
-              +'">'+targetTemp+'</div>'
+          +'<div style="width:85px;flex-shrink:0;background:rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;padding:0 7px">'
+            +'<div style="background:#040c09;border-radius:8px;padding:6px 8px;width:100%;box-sizing:border-box;border:1px solid rgba(0,0,0,.7);box-shadow:inset 0 3px 12px rgba(0,0,0,.75),inset 0 0 22px rgba(0,0,0,.4)">'
+              +'<div data-clm-led style="font-family:\'Courier New\',Courier,monospace;font-size:23px;font-weight:700;letter-spacing:2px;line-height:1;text-align:center;color:'+(isOn?mCol:'#0d1a12')+';text-shadow:'+(isOn?'0 0 14px '+mCol+',0 0 30px '+mCol+'55':'none')+';'+(isOn?'animation:'+rid+'led 3s ease-in-out infinite;':'')+'">'+targetTemp+'</div>'
             +'</div>'
           +'</div>'
         +'</div>'
-
-        +'<div style="height:12px;background:linear-gradient(180deg,rgba(0,0,0,.3),rgba(0,0,0,.45));'
-          +'border-top:1px solid rgba(255,255,255,.04)"></div>'
+        +'<div style="height:12px;background:linear-gradient(180deg,rgba(0,0,0,.3),rgba(0,0,0,.45));border-top:1px solid rgba(255,255,255,.04)"></div>'
       +'</div>'
-
       +(isOn
-        ? '<div style="position:absolute;bottom:-7px;left:13px;right:13px;height:15px;'
-            +'perspective:220px;perspective-origin:50% 0%;z-index:2">'
-            +'<div data-clm-flap data-rid="'+rid+'" style="width:100%;height:100%;'
-              +'background:'+tv.flapBg+';'
-              +'border-radius:2px 2px 6px 6px;'
-              +'box-shadow:0 5px 16px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.1);'
-              +'transform-origin:50% 0%;transform:'+flapInitTransform
-            +'"></div>'
-          +'</div>'
-        : '<div style="position:absolute;bottom:-4px;left:13px;right:13px;height:5px;'
-            +'perspective:220px;perspective-origin:50% 0%;z-index:2">'
-            +'<div data-clm-flap data-rid="'+rid+'" style="width:100%;height:100%;'
-              +'background:'+tv.flapClosedBg+';'
-              +'border-top:1px solid #05080f;'
-              +'border-radius:0 0 4px 4px;'
-              +'box-shadow:inset 0 2px 4px rgba(0,0,0,.9);'
-              +'transform-origin:50% 0%;transform:rotateX(0deg)'
-            +'"></div>'
-          +'</div>'
+        ?'<div style="position:absolute;bottom:-7px;left:13px;right:13px;height:15px;perspective:220px;perspective-origin:50% 0%;z-index:2"><div data-clm-flap data-rid="'+rid+'" style="width:100%;height:100%;background:linear-gradient(180deg,#2d3e58 0%,#22304a 40%,#1b2640 100%);border-radius:2px 2px 6px 6px;box-shadow:0 5px 16px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.1);transform-origin:50% 0%;transform:'+flapInitTransform+'"></div></div>'
+        :'<div style="position:absolute;bottom:-4px;left:13px;right:13px;height:5px;perspective:220px;perspective-origin:50% 0%;z-index:2"><div data-clm-flap data-rid="'+rid+'" style="width:100%;height:100%;background:#141c2c;border-top:1px solid #05080f;border-radius:0 0 4px 4px;box-shadow:inset 0 2px 4px rgba(0,0,0,.9);transform-origin:50% 0%;transform:rotateX(0deg)"></div></div>'
       )
     +'</div>';
-
-    const airSection = '<div style="position:relative;height:'+(isOn?'86px':'10px')+';overflow:hidden;'
-      +'transition:height .7s ease;margin-top:6px;pointer-events:none">'
-      +airStreams(rid, mCol, isOn)
-    +'</div>';
-
+    const airSection = '<div style="position:relative;height:'+(isOn?'86px':'10px')+';overflow:hidden;transition:height .7s ease;margin-top:6px;pointer-events:none">'+airStreams(rid,mCol,isOn)+'</div>';
     const tempRow = '<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:7px 14px">'
-      +'<button class="cb" data-cid="'+entityId+'" data-action="temp-down" '
-        +'style="width:34px;height:34px;border-radius:11px;border:none;background:'+tv.cbBg+';color:'+tv.cbColor+';'
-        +'box-shadow:'+tv.cbShadow+';'
-        +'font-size:22px;font-weight:700;line-height:1;padding:0;display:flex;align-items:center;justify-content:center">−</button>'
-      +'<div data-clm-temp style="font-size:26px;font-weight:800;min-width:80px;text-align:center;'
-        +'color:'+tv.tempColor+';text-shadow:'+tv.tempShadow+';">'
-        +(isOn?targetTemp+'°':'—')
-      +'</div>'
-      +'<button class="cb" data-cid="'+entityId+'" data-action="temp-up" '
-        +'style="width:34px;height:34px;border-radius:11px;border:none;background:'+tv.cbBg+';color:'+tv.cbColor+';'
-        +'box-shadow:'+tv.cbShadow+';'
-        +'font-size:22px;font-weight:700;line-height:1;padding:0;display:flex;align-items:center;justify-content:center">+</button>'
+      +'<button class="cb" data-cid="'+entityId+'" data-action="temp-down" style="width:34px;height:34px;border-radius:11px;border:none;background:#060c18;color:#e2e8f0;box-shadow:inset 2px 3px 8px rgba(0,0,0,.65),inset -1px -2px 5px rgba(255,255,255,.04);font-size:22px;font-weight:700;line-height:1;padding:0;display:flex;align-items:center;justify-content:center">−</button>'
+      +'<div data-clm-temp style="font-size:26px;font-weight:800;min-width:80px;text-align:center;color:'+(isOn?mCol:'#334155')+';text-shadow:'+(isOn?'0 0 10px '+mCol:'none')+';">'+(isOn?targetTemp+'°':'—')+'</div>'
+      +'<button class="cb" data-cid="'+entityId+'" data-action="temp-up" style="width:34px;height:34px;border-radius:11px;border:none;background:#060c18;color:#e2e8f0;box-shadow:inset 2px 3px 8px rgba(0,0,0,.65),inset -1px -2px 5px rgba(255,255,255,.04);font-size:22px;font-weight:700;line-height:1;padding:0;display:flex;align-items:center;justify-content:center">+</button>'
     +'</div>';
-
     const togRow = '<div style="display:flex;gap:7px">'
       +'<button class="tog" data-action="toggle" data-sec="mode"><span style="font-size:17px">'+mIcon(mode)+'</span><span>Modalità</span></button>'
       +'<button class="tog" data-action="toggle" data-sec="fan"><span style="font-size:17px">💨</span><span>Ventola</span></button>'
       +(swingModes.length>1?'<button class="tog" data-action="toggle" data-sec="swing"><span style="font-size:17px">↕</span><span>Alette</span></button>':'')
     +'</div>';
-
-    function selBtn(eId, action, val, label, active, col2) {
-      const bs = active
-        ? 'background:'+col2+'33;color:'+col2+';border:1px solid '+col2+'55;box-shadow:0 0 9px '+col2+'44;'
-        : 'background:rgba(255,255,255,.07);color:#64748b;border:1px solid rgba(255,255,255,.1);';
+    function selBtn(eId,action,val,label,active,col2){
+      const bs=active?'background:'+col2+'33;color:'+col2+';border:1px solid '+col2+'55;box-shadow:0 0 9px '+col2+'44;':'background:rgba(255,255,255,.07);color:#64748b;border:1px solid rgba(255,255,255,.1);';
       return '<button class="cb" data-cid="'+eId+'" data-action="'+action+'" data-val="'+val+'" style="'+bs+'">'+label+'</button>';
     }
-    const pw = 'display:none;flex-direction:column;gap:6px;background:rgba(255,255,255,.04);border-radius:13px;padding:10px;border:1px solid rgba(255,255,255,.08);';
-
-    const modePanel = '<div data-secpanel="mode" style="'+pw+'">'
-      +'<div style="font-size:9px;font-weight:800;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Modalità</div>'
-      +'<div style="display:flex;gap:5px;flex-wrap:wrap">'
-      +hvacModes.map(function(m){ return selBtn(entityId,'mode',m,mIcon(m)+' '+mLabel(m),mode===m,mColor(m)); }).join('')
-      +'</div></div>';
-
-    const fanPanel = fanModes.length>1
-      ? '<div data-secpanel="fan" style="'+pw+'">'
-          +'<div style="font-size:9px;font-weight:800;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Ventola</div>'
-          +'<div style="display:flex;gap:5px;flex-wrap:wrap">'
-          +fanModes.map(function(m){ return selBtn(entityId,'fan',m,fLabel(m),fanMode===m,'#38bdf8'); }).join('')
-          +'</div></div>'
-      : '';
-
-    const swingPanel = swingModes.length>1
-      ? '<div data-secpanel="swing" style="'+pw+'">'
-          +'<div style="font-size:9px;font-weight:800;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Oscillazione</div>'
-          +'<div style="display:flex;gap:5px;flex-wrap:wrap">'
-          +swingModes.map(function(m){ return selBtn(entityId,'swing',m,sLabel(m),swingMode===m,'#a78bfa'); }).join('')
-          +'</div></div>'
-      : '';
-
+    const pw='display:none;flex-direction:column;gap:6px;background:rgba(255,255,255,.04);border-radius:13px;padding:10px;border:1px solid rgba(255,255,255,.08);';
     return css
       +'<div id="'+rid+'" style="position:relative;width:100%;height:100%;min-height:260px;border-radius:18px;'
-        +'padding:14px;box-sizing:border-box;font-family:system-ui,sans-serif;color:'+tv.nameColor+';'
+        +'padding:14px;box-sizing:border-box;font-family:system-ui,sans-serif;color:#e8ebf5;'
         +'display:flex;flex-direction:column;gap:9px;overflow:hidden;'
-        +'background:'+tv.cardBg+';'
-        +'border:1px solid '+tv.cardBorder+';box-shadow:'+tv.cardShadow+';">'
-        +'<div style="text-align:center;font-size:19px;font-weight:800;letter-spacing:-.2px;'
-          +'white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+nm+'</div>'
-        +acBody+airSection+tempRow+togRow+modePanel+(fanPanel||'')+(swingPanel||'')
+        +'background:linear-gradient(150deg,#0c1322 0%,#0a0f1c 60%,#0c1626 100%);'
+        +'border:1px solid rgba(99,102,241,.22);box-shadow:0 10px 40px rgba(0,0,0,.45);">'
+        +'<div style="text-align:center;font-size:19px;font-weight:800;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+nm+'</div>'
+        +acBody+airSection+tempRow+togRow
+        +_panels(rid,entityId,mode,fanMode,swingMode,hvacModes,fanModes,swingModes,pw,selBtn)
       +'</div>';
   }
 
@@ -1028,7 +1235,7 @@
   }
 
   var CARD={
-    id:'clima-card',name:'Climatizzatore',icon:'❄️',version:'2.19',
+    id:'clima-card',name:'Climatizzatore',icon:'❄️',version:'2.20',
     desc:'Split — tema visivo selezionabile (Moderno/Futuristico/Classico/Minimal), aletta RAF, glow modalità.',
     colSpan:2,rowSpan:4,render:render,mount:mount,update:update,configure:openCfg,duplicate:duplicateCard,
   };
