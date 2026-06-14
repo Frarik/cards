@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.4.44 — 2026-06-14
+
+### feat(Meteo): icone meteo animate con SVG
+
+**Meteo.js 1.35→1.36:**
+- Nuova funzione `_wxSVG(cond, sz)` — genera SVG animati per tutte le condizioni meteo
+- Icone animate: sole con raggi rotanti, luna con stelle tremolanti, nuvola bobbing,
+  pioggia con gocce che cadono sfasate, neve con fiocchi rotanti, fulmini lampeggianti,
+  nebbia con strisce ondulate, vento con curve oscillanti, grandine, temporale, ecc.
+- Usata in: icona grande nella card principale (64px), icone nella griglia previsioni (28px),
+  icone nel popup orario giornaliero (24px)
+- Keyframes `wxSpin/wxBob/wxRain/wxSnow/wxFlash/wxDrift/wxMoon/wxTwink/wxWarn`
+  aggiunti a `_CSS` — disponibili in tutti i shadow DOM che la includono
+
 ## 1.4.43 — 2026-06-14
 
 ### feat(Meteo): statistiche extra con carosello swipe automatico

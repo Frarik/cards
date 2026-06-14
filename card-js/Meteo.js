@@ -1,4 +1,4 @@
-/* frarik-version: 1.35 */
+/* frarik-version: 1.36 */
 
 // ── Lookup tables ─────────────────────────────────────────────────────────────
 const _WI = {
@@ -222,6 +222,15 @@ const _CSS = `
 .ltg.l2{left:62%;top:4%;width:58px;height:46%;animation:fl2 4.2s 1.7s linear infinite;}
 @keyframes fl1{0%,85%,88%,91%,100%{opacity:0}86%,87%{opacity:1}89%,90%{opacity:.65}}
 @keyframes fl2{0%,82%,85%,88%,100%{opacity:0}83%,84%{opacity:.9}86%,87%{opacity:.45}}
+@keyframes wxSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes wxBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.5px)}}
+@keyframes wxRain{0%{opacity:0;transform:translateY(0)}15%{opacity:.85}85%{opacity:.85}100%{opacity:0;transform:translateY(14px)}}
+@keyframes wxSnow{0%{opacity:0;transform:translateY(0) rotate(0deg)}15%{opacity:.9}85%{opacity:.9}100%{opacity:0;transform:translateY(12px) rotate(90deg)}}
+@keyframes wxFlash{0%,72%,100%{opacity:.2}77%,87%{opacity:1}80%,90%{opacity:.3}}
+@keyframes wxDrift{0%{transform:translateX(-3px)}100%{transform:translateX(3px)}}
+@keyframes wxMoon{0%,100%{opacity:.7}50%{opacity:1}}
+@keyframes wxTwink{0%,100%{opacity:.2}50%{opacity:.9}}
+@keyframes wxWarn{0%,100%{opacity:.8}50%{opacity:1}}
 .fog-layer{position:absolute;inset:0;background:rgba(175,190,200,.3);backdrop-filter:blur(3px);}
 /* ── Body ── */
 .body{position:relative;z-index:4;padding:16px 16px 0;}
@@ -236,7 +245,7 @@ const _CSS = `
 .gbtn.on{background:rgba(255,255,255,.15);color:#fff;}
 button[data-a="gear"]{display:var(--fgear,none);}
 .tz{display:flex;align-items:center;gap:18px;padding:6px 0 4px;}
-.tic{font-size:64px;line-height:1;filter:drop-shadow(0 2px 12px rgba(0,0,0,.3));}
+.tic{line-height:0;filter:drop-shadow(0 2px 12px rgba(0,0,0,.3));}
 .ts{display:flex;flex-direction:column;}
 .tn{font-size:70px;font-weight:900;line-height:1;letter-spacing:-4px;display:flex;align-items:flex-start;text-shadow:0 2px 24px rgba(0,0,0,.4);}
 .tdeg{font-size:34px;font-weight:600;margin-top:10px;letter-spacing:0;}
@@ -262,7 +271,7 @@ button[data-a="gear"]{display:var(--fgear,none);}
 .fcc{border-radius:12px;border:1px solid rgba(255,255,255,.09);background:rgba(0,0,0,.18);padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;transition:background .12s;backdrop-filter:blur(4px);}
 .fcc:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);}
 .fdn{font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#fff;}
-.fi{font-size:28px;line-height:1;margin:3px 0 2px;}
+.fi{line-height:0;margin:3px 0 2px;display:flex;align-items:center;justify-content:center;}
 .fm{font-size:18px;font-weight:800;letter-spacing:-.5px;line-height:1;color:#fff;}
 .fb{width:75%;height:3px;border-radius:99px;margin:2px 0 2px;}
 .fmi{font-size:11px;color:#fff;font-weight:600;}
@@ -390,6 +399,94 @@ const _STATION_SPECIALS=[
   {f:'sGhiaccio',icon:'❄️',label:'Ghiaccio Notturno',color:'#67e8f9'},
   {f:'sAlerts',  icon:'⚠️',label:'Allerte Meteo',     color:'#fca5a5'},
 ]
+
+// ── Animated weather SVG icons ────────────────────────────────────────────────
+function _wxSVG(cond,sz=64){
+  const C='rgba(180,195,210,.96)',CD='rgba(130,148,168,.92)'
+  const cld=(cx,cy,col=C)=>
+    `<ellipse cx="${cx-9}" cy="${cy+5}" rx="10" ry="8" fill="${col}"/>`+
+    `<ellipse cx="${cx+9}" cy="${cy+5}" rx="10" ry="8" fill="${col}"/>`+
+    `<ellipse cx="${cx}" cy="${cy}" rx="13" ry="11" fill="${col}"/>`+
+    `<ellipse cx="${cx}" cy="${cy+9}" rx="16" ry="7" fill="${col}"/>`
+  const drop=(x,y,dl,sp=.9)=>
+    `<line x1="${x}" y1="${y}" x2="${x-2}" y2="${y+9}" stroke="#60a5fa" stroke-width="1.8" stroke-linecap="round" style="animation:wxRain ${sp}s linear ${dl}s infinite;opacity:0"/>`
+  const flake=(x,y,dl)=>
+    `<g transform="translate(${x},${y})" style="animation:wxSnow 2.2s linear ${dl}s infinite;opacity:0">`+
+    `<line x1="-4" y1="0" x2="4" y2="0" stroke="rgba(210,235,255,.95)" stroke-width="1.5" stroke-linecap="round"/>`+
+    `<line x1="0" y1="-4" x2="0" y2="4" stroke="rgba(210,235,255,.95)" stroke-width="1.5" stroke-linecap="round"/>`+
+    `<line x1="-2.8" y1="-2.8" x2="2.8" y2="2.8" stroke="rgba(210,235,255,.95)" stroke-width="1.2" stroke-linecap="round"/>`+
+    `<line x1="2.8" y1="-2.8" x2="-2.8" y2="2.8" stroke="rgba(210,235,255,.95)" stroke-width="1.2" stroke-linecap="round"/></g>`
+  const rayz=(cx,cy,r1,r2,col='#FFD700')=>
+    [0,45,90,135,180,225,270,315].map(a=>{
+      const r=a*Math.PI/180
+      return `<line x1="${(cx+Math.cos(r)*r1).toFixed(1)}" y1="${(cy+Math.sin(r)*r1).toFixed(1)}" x2="${(cx+Math.cos(r)*r2).toFixed(1)}" y2="${(cy+Math.sin(r)*r2).toFixed(1)}" stroke="${col}" stroke-width="2.2" stroke-linecap="round"/>`
+    }).join('')
+  const bolt=`<polygon points="34,30 28,42 33,42 27,56 40,39 34,39 38,30" fill="#fde047" style="animation:wxFlash 2.5s ease-in-out infinite"/>`
+  const S=b=>`<svg viewBox="0 0 64 64" width="${sz}" height="${sz}" xmlns="http://www.w3.org/2000/svg" style="display:block;overflow:visible;">${b}</svg>`
+  switch(cond){
+    case 'sunny':
+      return S(`<g style="animation:wxSpin 12s linear infinite;transform-box:fill-box;transform-origin:center">${rayz(32,32,16,24)}</g>`+
+        `<circle cx="32" cy="32" r="11.5" fill="#FFD700"/><circle cx="32" cy="32" r="8.5" fill="#ffe57f"/>`)
+    case 'clear-night':
+      return S(`<g style="animation:wxMoon 4s ease-in-out infinite">`+
+        `<circle cx="32" cy="30" r="15" fill="#e0cf88"/><circle cx="40" cy="24" r="12.5" fill="#040a18"/></g>`+
+        `<circle cx="14" cy="12" r="1.4" fill="white" style="animation:wxTwink 1.6s ease-in-out 0s infinite"/>`+
+        `<circle cx="52" cy="16" r="1.2" fill="white" style="animation:wxTwink 2s ease-in-out .4s infinite"/>`+
+        `<circle cx="10" cy="46" r="1.3" fill="white" style="animation:wxTwink 1.8s ease-in-out .2s infinite"/>`+
+        `<circle cx="54" cy="50" r="1.1" fill="white" style="animation:wxTwink 2.2s ease-in-out .7s infinite"/>`)
+    case 'partlycloudy':
+    case 'partly-cloudy-day':
+      return S(`<g style="animation:wxSpin 16s linear infinite;transform-box:fill-box;transform-origin:center">${rayz(20,18,10,16,'#FFD700')}</g>`+
+        `<circle cx="20" cy="18" r="8.5" fill="#FFD700"/><circle cx="20" cy="18" r="6.5" fill="#ffe57f"/>`+
+        `<g style="animation:wxBob 4s ease-in-out infinite">${cld(36,33)}</g>`)
+    case 'partly-cloudy-night':
+      return S(`<g style="animation:wxMoon 4s ease-in-out infinite">`+
+        `<circle cx="20" cy="18" r="12" fill="#e0cf88"/><circle cx="27" cy="12" r="9.5" fill="#040a18"/></g>`+
+        `<g style="animation:wxBob 4.5s ease-in-out infinite">${cld(36,34)}</g>`)
+    case 'cloudy':
+      return S(`<g style="animation:wxBob 3.5s ease-in-out infinite">${cld(32,28)}</g>`)
+    case 'fog':
+      return S([22,32,42].map((y,i)=>
+        `<line x1="${12+i*2}" y1="${y}" x2="${52-i*2}" y2="${y}" stroke="rgba(200,215,225,.78)" stroke-width="3.5" stroke-linecap="round" style="animation:wxDrift 2.5s ease-in-out ${i*.4}s infinite alternate"/>`
+      ).join(''))
+    case 'rainy':
+      return S(`<g style="animation:wxBob 4s ease-in-out infinite">${cld(32,24)}</g>`+
+        [22,30,38,26,34].map((x,i)=>drop(x,37+i%2*5,i*.2)).join(''))
+    case 'pouring':
+      return S(`<g style="animation:wxBob 3s ease-in-out infinite">${cld(32,22,CD)}</g>`+
+        [18,25,32,39,46,22,29,36,43].map((x,i)=>drop(x,35+i%3*5,i*.12,.65)).join(''))
+    case 'hail':
+      return S(`<g style="animation:wxBob 4s ease-in-out infinite">${cld(32,22,CD)}</g>`+
+        [[22,37],[30,42],[38,37],[26,47],[34,47]].map(([x,y],i)=>
+          `<circle cx="${x}" cy="${y}" r="3.2" fill="rgba(160,220,245,.9)" style="animation:wxRain .7s linear ${i*.2}s infinite;opacity:0"/>`
+        ).join(''))
+    case 'snowy':
+      return S(`<g style="animation:wxBob 5s ease-in-out infinite">${cld(32,24,'rgba(200,218,236,.92)')}</g>`+
+        [[22,38],[30,44],[38,38],[26,50],[34,50]].map(([x,y],i)=>flake(x,y,i*.38)).join(''))
+    case 'snowy-rainy':
+      return S(`<g style="animation:wxBob 4s ease-in-out infinite">${cld(32,24,CD)}</g>`+
+        [drop(20,37,0),flake(28,41,.35),drop(35,37,.2),flake(42,43,.6),drop(26,48,.5)].join(''))
+    case 'lightning':
+      return S(`<g style="animation:wxBob 4s ease-in-out infinite">${cld(32,20,CD)}</g>${bolt}`)
+    case 'lightning-rainy':
+      return S(`<g style="animation:wxBob 4s ease-in-out infinite">${cld(32,20,CD)}</g>`+
+        [drop(18,34,0,.75),drop(27,38,.25,.75),drop(44,34,.5,.75)].join('')+bolt)
+    case 'windy':
+      return S([22,32,42].map((y,i)=>
+        `<path d="M${12+i*2},${y} C28,${y-7} 36,${y-5} ${52-i*2},${y}" fill="none" stroke="rgba(148,163,184,.82)" stroke-width="3.2" stroke-linecap="round" style="animation:wxDrift 2s ease-in-out ${i*.3}s infinite alternate"/>`
+      ).join(''))
+    case 'windy-variant':
+      return S(`<g style="animation:wxBob 4s ease-in-out infinite">${cld(26,22)}</g>`+
+        [40,50].map((y,i)=>
+          `<path d="M28,${y} C40,${y-5} 44,${y-3} 54,${y}" fill="none" stroke="rgba(148,163,184,.82)" stroke-width="3" stroke-linecap="round" style="animation:wxDrift 2s ease-in-out ${i*.3}s infinite alternate"/>`
+        ).join(''))
+    case 'exceptional':
+      return S(`<polygon points="32,6 60,56 4,56" fill="rgba(239,68,68,.85)" stroke="rgba(252,165,165,.4)" stroke-width="1.5" stroke-linejoin="round" style="animation:wxWarn 1.5s ease-in-out infinite"/>`+
+        `<text x="32" y="48" text-anchor="middle" font-size="26" font-weight="900" fill="white" style="font-family:system-ui,sans-serif;">!</text>`)
+    default:
+      return S(`<g style="animation:wxBob 4s ease-in-out infinite">${cld(32,28)}</g>`)
+  }
+}
 
 // ── MeteoCard ─────────────────────────────────────────────────────────────────
 class MeteoCard extends HTMLElement {
@@ -694,7 +791,7 @@ class MeteoCard extends HTMLElement {
     const fmtTime=dt=>{ try{ return new Date(dt).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}) }catch{ return dt.split('T')[1]?.slice(0,5)||'--' } }
     const rowsHTML=hourly.length
       ?hourly.map(h=>{
-          const time=fmtTime(h.datetime),ico=_WI[h.condition]||'🌡️',temp=_n(h.temperature)
+          const time=fmtTime(h.datetime),ico=_wxSVG(h.condition,24),temp=_n(h.temperature)
           const rn=h.precipitation!=null?h.precipitation.toFixed(1)+'mm':'—'
           const rp=h.precipitation_probability!=null?h.precipitation_probability+'%':''
           const ws=h.wind_speed!=null?Math.round(h.wind_speed)+'k/h':'—'
@@ -702,7 +799,7 @@ class MeteoCard extends HTMLElement {
           return `<div class="hr-row"><div class="hr-t">${time}</div><div class="hr-i">${ico}</div><div class="hr-tp">${temp}°</div><div class="hr-r">${rn}${rp?' · '+rp:''}</div><div class="hr-w">${ws} ${wd}</div></div>`
         }).join('')
       :`<div class="hr-load">Previsioni orarie in caricamento…</div>`
-    const dmCSS=`.dov{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);font-family:var(--primary-font-family,system-ui,sans-serif);}.dov-modal{width:100%;max-height:85vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(56,189,248,.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:slideUp .22s cubic-bezier(.32,1.12,.56,1);}@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}.hr-list{flex:1;overflow-y:auto;padding:6px 0 env(safe-area-inset-bottom,8px);scrollbar-width:none;-ms-overflow-style:none;}.hr-list::-webkit-scrollbar{display:none;}.hr-row{display:grid;grid-template-columns:46px 30px 46px 1fr auto;align-items:center;gap:8px;padding:10px 20px;border-bottom:1px solid rgba(255,255,255,.05);color:#e2e8f0;}.hr-row:last-child{border-bottom:none;}.hr-t{font-size:13px;font-weight:700;color:#fff;}.hr-i{font-size:22px;text-align:center;}.hr-tp{font-size:15px;font-weight:800;letter-spacing:-.3px;color:#fff;}.hr-r{font-size:11px;color:#fff;}.hr-w{font-size:11px;color:#fff;text-align:right;white-space:nowrap;}.hr-load{padding:40px;text-align:center;color:#fff;font-size:12px;}`
+    const dmCSS=`.dov{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);font-family:var(--primary-font-family,system-ui,sans-serif);}.dov-modal{width:100%;max-height:85vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(56,189,248,.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:slideUp .22s cubic-bezier(.32,1.12,.56,1);}@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}.hr-list{flex:1;overflow-y:auto;padding:6px 0 env(safe-area-inset-bottom,8px);scrollbar-width:none;-ms-overflow-style:none;}.hr-list::-webkit-scrollbar{display:none;}.hr-row{display:grid;grid-template-columns:46px 30px 46px 1fr auto;align-items:center;gap:8px;padding:10px 20px;border-bottom:1px solid rgba(255,255,255,.05);color:#e2e8f0;}.hr-row:last-child{border-bottom:none;}.hr-t{font-size:13px;font-weight:700;color:#fff;}.hr-i{font-size:0;display:flex;align-items:center;justify-content:center;}.hr-tp{font-size:15px;font-weight:800;letter-spacing:-.3px;color:#fff;}.hr-r{font-size:11px;color:#fff;}.hr-w{font-size:11px;color:#fff;text-align:right;white-space:nowrap;}.hr-load{padding:40px;text-align:center;color:#fff;font-size:12px;}`
     this._dayModalHost.shadowRoot.innerHTML=`<style>${_CSS}${dmCSS}</style>
 <div class="dov"><div class="dov-modal">
   <div class="shdr" style="border-radius:20px 20px 0 0;">
@@ -1225,7 +1322,7 @@ class MeteoCard extends HTMLElement {
     const tb=isNight?'rgba(139,92,246,.12)':'rgba(56,189,248,.10)'
     const tbr=isNight?'rgba(139,92,246,.22)':'rgba(56,189,248,.18)'
     const border=isNight?'rgba(139,92,246,.28)':'rgba(56,189,248,.22)'
-    const ico=_WI[cond]||'🌡️'
+    const ico=_wxSVG(cond,64)
     const cit=_CI[cond]||cond.replace(/-/g,' ')
     const temp=_n(a.temperature)
     const _sv=id=>{ const s=this._h?.states?.[id]; return s?s.state+(s.attributes?.unit_of_measurement?' '+s.attributes.unit_of_measurement:''):null }
@@ -1245,7 +1342,7 @@ class MeteoCard extends HTMLElement {
       const rng=maxT-minT||1
       fcH=days.map((f,i)=>{
         const nm=i===0?'OGGI':_fmtDay(new Date(f.datetime))
-        const fi=_WI[f.condition]||'🌡️'
+        const fi=_wxSVG(f.condition,28)
         const mx=_n(f.temperature),mn=_n(f.templow??(parseFloat(f.temperature)-4))
         const rn=(parseFloat(f.precipitation)||0).toFixed(1)
         const col=_tempCol(f.temperature)
