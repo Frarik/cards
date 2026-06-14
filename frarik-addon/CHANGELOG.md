@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.67 — 2026-06-14
+
+### feat(store): PKG — elimina da GitHub con chiave di accesso
+
+- Bottone 🗑️ GitHub su ogni PKG (sia in "Locali" che in "Da GitHub")
+- Stessa chiave di sicurezza delle card JS (`FRKD-HVEM-JJR7-5DAN`)
+- Dopo eliminazione aggiorna la cache e il render del tab Pacchetti
+
+---
+
 ## 1.4.66 — 2026-06-14
 
 ### fix(store): messaggio errore 403 GitHub più chiaro con istruzioni token

@@ -2107,14 +2107,15 @@ function _ghStoreRenderPkg(q){
     html+=`<div class="ghs-subhdr"><i class="mdi mdi-folder-outline"></i> Locali · ${localFiltered.length}</div>`;
     html+=localFiltered.map(f=>{ const nm=f.name.replace(/\.ya?ml$/i,''); const enc=encodeURIComponent(f.name);
       const pubBtn=f.origin==='github'?'':`<button class="ghs-btn ghs-btn-upd" data-action="_ghsPkgPublish" data-action-arg="${enc}"><i class="mdi mdi-upload"></i> Pubblica</button>`;
-      return rowHtml(nm,f.origin==='github'?'Da GitHub':'Locale',`${pubBtn}<button class="ghs-btn ghs-btn-cp" data-action="_ghsPkgCopyLocal" data-action-arg="${f.name}"><i class="mdi mdi-content-copy"></i> Copia</button><button class="ghs-btn ghs-btn-cp" data-action="_ghsPkgDownloadLocal" data-action-arg="${f.name}"><i class="mdi mdi-download"></i></button><button class="ghs-ibtn ghs-ibtn-del" data-action="_ghsPkgDeleteLocal" data-action-arg="${f.name}" title="Rimuovi dallo store"><i class="mdi mdi-delete-outline"></i></button>`);
+      const delGhBtn=`<button class="ghs-ibtn ghs-ibtn-del" data-action="_ghsPkgDeleteFromGithub" data-action-arg="${enc}" title="Elimina da GitHub"><i class="mdi mdi-github"></i></button>`;
+      return rowHtml(nm,f.origin==='github'?'Da GitHub':'Locale',`${pubBtn}<button class="ghs-btn ghs-btn-cp" data-action="_ghsPkgCopyLocal" data-action-arg="${f.name}"><i class="mdi mdi-content-copy"></i> Copia</button><button class="ghs-btn ghs-btn-cp" data-action="_ghsPkgDownloadLocal" data-action-arg="${f.name}"><i class="mdi mdi-download"></i></button>${delGhBtn}<button class="ghs-ibtn ghs-ibtn-del" data-action="_ghsPkgDeleteLocal" data-action-arg="${f.name}" title="Rimuovi dallo store locale"><i class="mdi mdi-delete-outline"></i></button>`);
     }).join('');
   }
   // da GitHub (non ancora in locale)
   if(ghNotLocal.length){
     html+=`<div class="ghs-subhdr"><i class="mdi mdi-github"></i> Da GitHub · ${ghNotLocal.length}</div>`;
     html+=ghNotLocal.map(f=>{ const nm=f.name.replace(/\.ya?ml$/i,''); const enc=encodeURIComponent(f.name);
-      return rowHtml(nm,'GitHub',`<button class="ghs-btn ghs-btn-cp" data-action="_ghsCopy" data-action-arg="${enc}"><i class="mdi mdi-content-copy"></i> Copia</button><button class="ghs-btn ghs-btn-cp" data-action="_ghsPkgDownloadGh" data-action-arg="${enc}"><i class="mdi mdi-download"></i></button><button class="ghs-btn ghs-btn-inst" data-action="_ghsPkgSaveLocal" data-action-arg="${enc}"><i class="mdi mdi-tray-arrow-down"></i> Salva locale</button>`);
+      return rowHtml(nm,'GitHub',`<button class="ghs-btn ghs-btn-cp" data-action="_ghsCopy" data-action-arg="${enc}"><i class="mdi mdi-content-copy"></i> Copia</button><button class="ghs-btn ghs-btn-cp" data-action="_ghsPkgDownloadGh" data-action-arg="${enc}"><i class="mdi mdi-download"></i></button><button class="ghs-btn ghs-btn-inst" data-action="_ghsPkgSaveLocal" data-action-arg="${enc}"><i class="mdi mdi-tray-arrow-down"></i> Salva locale</button><button class="ghs-ibtn ghs-ibtn-del" data-action="_ghsPkgDeleteFromGithub" data-action-arg="${enc}" title="Elimina da GitHub"><i class="mdi mdi-github"></i></button>`);
     }).join('');
   }
   list.innerHTML=html;
@@ -2191,6 +2192,29 @@ async function _ghsPkgPublish(encodedName){
     delete _ghsCache.pkg;
     if(_ghsTab==='pkg') ghStoreTab('pkg');
   }catch(e){ showToast('⚠️ '+e.message); }
+}
+
+async function _ghsPkgDeleteFromGithub(encodedName){
+  const name=decodeURIComponent(encodedName);
+  const nm=name.replace(/\.ya?ml$/i,'');
+  if(!_ghCfg().token){ showToast('🔑 Manca il token GitHub'); openGitHubCfg(); return; }
+  showConfirm(
+    `Eliminare <b>DEFINITIVAMENTE</b> «${eh(nm)}» da GitHub?<br>`+
+    `<span style="font-size:11px;opacity:.7;display:block;margin:6px 0 4px">Operazione irreversibile. Inserisci la chiave di accesso:</span>`+
+    `<input id="ghdel-pkg-key" type="text" autocomplete="off" placeholder="Chiave di accesso" style="width:100%;padding:9px 11px;border-radius:9px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;font-size:13px;font-family:inherit;letter-spacing:.5px">`,
+    async ()=>{
+      const key=((document.getElementById('ghdel-pkg-key')||{}).value||'').trim();
+      if(key!==_GHDEL_KEY){ showToast('🔑 Chiave errata — eliminazione annullata'); return; }
+      try{
+        showToast('🗑 Elimino «'+nm+'» da GitHub…');
+        await _ghDelete('pkg/'+name, 'Elimina PKG '+name+' dallo store (chiave verificata)');
+        if(_ghsCache.pkg) _ghsCache.pkg=_ghsCache.pkg.filter(x=>x.name!==name);
+        showToast('✅ «'+nm+'» eliminato definitivamente da GitHub');
+        if(_ghsTab==='pkg') _ghStoreRender();
+      }catch(e){ showToast('⚠️ Errore eliminazione GitHub: '+(e.message||e)); }
+    },
+    'Elimina da GitHub', 'Annulla'
+  );
 }
 
 function _ghSchedule(){
@@ -12644,6 +12668,7 @@ Object.assign(window, {
   _ghsPkgDownloadLocal,
   _ghsPkgDownloadGh,
   _ghsPkgPublish,
+  _ghsPkgDeleteFromGithub,
   _hbOptionsPopup,
   _hbOptionsPopupEl,
   _hbPickClockColor,
