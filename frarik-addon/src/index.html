@@ -511,17 +511,20 @@
       <div id="page-tabs" style="display:none"></div>
       <!-- RIGHT: icone colorate — ordine da DESTRA: sidebar, matita, impostazioni, campanella, conn, viste, kiosk, reload.
            (undo/redo solo in edit, restano a sinistra) -->
-      <button class="hbtn hbtn-edit-only" id="undo-btn" title="Annulla (Ctrl+Z)"><i class="mdi mdi-undo-variant"></i></button>
-      <button class="hbtn hbtn-edit-only" id="redo-btn" title="Ripeti (Ctrl+Y)"><i class="mdi mdi-redo-variant"></i></button>
-      <button class="hbtn" id="reload-btn" title="Svuota cache e ricarica"><i class="mdi mdi-refresh"></i></button>
-      <button class="hbtn" id="kiosk-btn" title="Modalità Kiosk"><i class="mdi mdi-fullscreen"></i></button>
-      <button class="hbtn" id="views-btn" title="Viste / pagine"><i class="mdi mdi-view-dashboard"></i></button>
-      <div id="conn-wrap" title="Stato connessione — clicca per riavviare Home Assistant"><div id="conn-dot"></div></div>
-      <button class="hbtn" id="notif-bell" title="Notifiche" style="position:relative"><i class="mdi mdi-bell"></i><span id="notif-bell-badge"></span></button>
-      <button class="hbtn" id="settings-btn" title="Impostazioni"><i class="mdi mdi-cog"></i></button>
-      <button class="hbtn" id="edit-btn" title="Modifica dashboard"><i class="mdi mdi-pencil"></i></button>
-      <button class="hbtn" id="hasidebar-btn" title="Barra laterale Home Assistant"><i class="mdi mdi-menu"></i></button>
-      <button id="mfab" aria-label="Menu" title="Menu"><i class="mdi mdi-dots-vertical"></i></button>
+      <button id="hdr-icons-toggle" class="hbtn" data-action="_toggleHdrIcons" title="Mostra/nascondi icone"><i class="mdi mdi-chevron-left"></i></button>
+      <div id="hdr-icons">
+        <button class="hbtn hbtn-edit-only" id="undo-btn" title="Annulla (Ctrl+Z)"><i class="mdi mdi-undo-variant"></i></button>
+        <button class="hbtn hbtn-edit-only" id="redo-btn" title="Ripeti (Ctrl+Y)"><i class="mdi mdi-redo-variant"></i></button>
+        <button class="hbtn" id="reload-btn" title="Svuota cache e ricarica"><i class="mdi mdi-refresh"></i></button>
+        <button class="hbtn" id="kiosk-btn" title="Modalità Kiosk"><i class="mdi mdi-fullscreen"></i></button>
+        <button class="hbtn" id="views-btn" title="Viste / pagine"><i class="mdi mdi-view-dashboard"></i></button>
+        <div id="conn-wrap" title="Stato connessione — clicca per riavviare Home Assistant"><div id="conn-dot"></div></div>
+        <button class="hbtn" id="notif-bell" title="Notifiche" style="position:relative"><i class="mdi mdi-bell"></i><span id="notif-bell-badge"></span></button>
+        <button class="hbtn" id="settings-btn" title="Impostazioni"><i class="mdi mdi-cog"></i></button>
+        <button class="hbtn" id="edit-btn" title="Modifica dashboard"><i class="mdi mdi-pencil"></i></button>
+        <button class="hbtn" id="hasidebar-btn" title="Barra laterale Home Assistant"><i class="mdi mdi-menu"></i></button>
+        <button id="mfab" aria-label="Menu" title="Menu"><i class="mdi mdi-dots-vertical"></i></button>
+      </div>
     </div>
     <div id="page-tabs-wrap"></div>
     <div id="dash">
@@ -545,11 +548,10 @@
           <div class="ep-hdr-sub" style="font-size:11px;color:#fff;margin-top:1px">Frarik Dashboard</div>
         </div>
       </div>
-      <!-- versione + aggiorna (visibile solo su mobile) -->
+      <!-- versione (visibile solo su mobile) -->
       <div class="ep-hdr-ver">
         <img src="./logo-v2.png?v=1.1.93" alt="" style="height:20px;width:auto;object-fit:contain">
         <span id="ep-hdr-ver-label" style="font-size:13px;font-weight:800;color:#fff">…</span>
-        <button class="ep-add2" data-action="frarikCheckUpdate" style="width:auto;padding:5px 8px;margin:0;font-size:13px;flex-shrink:0" title="Aggiorna add-on">🔄</button>
       </div>
       <button class="ep-x" data-action="closeOikSettings" title="Torna alla plancia">✕</button>
     </div>
@@ -614,7 +616,6 @@
             <span style="font-size:11px;font-weight:800;letter-spacing:.3px">Frarik Dashboard</span>
             <span style="font-size:14px;font-weight:800" id="ep-ver-label">…</span>
           </div>
-          <button class="ep-add2" data-action="frarikCheckUpdate" style="width:auto;padding:7px 10px;margin:0;font-size:14px;flex-shrink:0" title="Aggiorna add-on">🔄</button>
         </div>
 
       </div><!-- /ep-sidebar -->

@@ -79,6 +79,13 @@ body::before{
 .hico{font-size:20px}.htitle{font-size:13px;font-weight:700}
 .hsub{font-size:8px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:1px}
 .hgap{flex:1}
+/* ── Header icons collapse (PC only) ── */
+#hdr-icons{display:flex;align-items:center;gap:2px;max-width:700px;overflow:hidden;transition:max-width .28s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:1}
+#hdr.icons-hidden #hdr-icons{max-width:0;opacity:0;pointer-events:none}
+#hdr-icons-toggle{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:7px;font-size:15px;border:none;color:rgba(255,255,255,.5);background:transparent;transition:color .15s,background .15s;flex-shrink:0;padding:0;cursor:pointer}
+#hdr-icons-toggle:hover{background:rgba(255,255,255,.08);color:#fff}
+#hdr-icons-toggle i{transition:transform .25s;display:inline-block}
+#hdr.icons-hidden #hdr-icons-toggle i{transform:rotate(180deg)}
 #conn-wrap{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9px;flex-shrink:0;cursor:pointer;
   background:rgba(255,255,255,.04);border:1px solid var(--bd);transition:background .15s,border-color .15s}
 #conn-wrap:hover{background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.4)}
@@ -343,7 +350,6 @@ body.editing .resize-handle{opacity:.55}
 #epanel .sos-cancel-btn{color:#fff}
 /* Mobile header: versione affianco al titolo */
 .ep-hdr-ver{display:none;align-items:center;gap:6px}
-.ep-hdr-ver .ep-add2{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15);color:#fff}
 /* ── Mobile responsive ── */
 @media(max-width:680px){
   .ep-layout{flex-direction:column}
@@ -614,7 +620,9 @@ body.editing .sect-add-row:hover{filter:brightness(1.15);transform:translateY(-1
   #notif-center{right:6px;left:6px;width:auto}
   /* MOBILE: le icone dell'header spariscono e finiscono nel FAB a destra; in alto restano solo chip/orologio. */
   #mfab{display:flex!important}
-  #hdr>#conn-wrap,#hdr>#views-btn,#hdr>#notif-bell,#hdr>#kiosk-btn,#hdr>#reload-btn,#hdr>#settings-btn,#hdr>#hasidebar-btn,#hdr>#edit-btn{display:none!important}
+  #hdr-icons>#conn-wrap,#hdr-icons>#views-btn,#hdr-icons>#notif-bell,#hdr-icons>#kiosk-btn,#hdr-icons>#reload-btn,#hdr-icons>#settings-btn,#hdr-icons>#hasidebar-btn,#hdr-icons>#edit-btn{display:none!important}
+  #hdr-icons{max-width:none!important;overflow:visible!important;opacity:1!important;pointer-events:auto!important}
+  #hdr-icons-toggle{display:none!important}
   #hdr{height:auto!important;min-height:46px;padding:6px 8px;align-items:center;gap:6px}
   #hdr-left{flex:1 1 auto;min-width:0;overflow:visible!important;height:auto}
   #hdr-bar-inner{height:auto;flex:1}
@@ -1560,12 +1568,12 @@ body.kiosk .kiosk-reload-fab:hover{background:rgba(255,255,255,0.18);color:#fff}
 /* In KIOSK: l'header RESTA visibile, ma mostra SOLO "esci kiosk" + "ricarica".
    (Prima l'header era nascosto e i pulsanti flottanti venivano coperti dalle card.) */
 body.kiosk #page-tabs,body.kiosk #page-tabs-wrap,body.kiosk #conn-lbl{display:none!important}
-body.kiosk #hdr > #conn-wrap,
-body.kiosk #hdr > #views-btn,
-body.kiosk #hdr > #notif-bell,
-body.kiosk #hdr > #settings-btn,
-body.kiosk #hdr > #hasidebar-btn,
-body.kiosk #hdr > #edit-btn{display:none!important}
+body.kiosk #hdr-icons > #conn-wrap,
+body.kiosk #hdr-icons > #views-btn,
+body.kiosk #hdr-icons > #notif-bell,
+body.kiosk #hdr-icons > #settings-btn,
+body.kiosk #hdr-icons > #hasidebar-btn,
+body.kiosk #hdr-icons > #edit-btn{display:none!important}
 /* niente più pulsanti flottanti (le card li coprivano): si usano quelli dell'header */
 body.kiosk .kiosk-exit-fab,body.kiosk .kiosk-reload-fab{display:none!important}
 body.kiosk #epanel{display:none!important;width:0!important}

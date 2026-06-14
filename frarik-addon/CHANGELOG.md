@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.4.52 — 2026-06-14
+
+### feat(Header): toggle icone PC + rimozione pulsante aggiornamento (v1.4.52)
+
+**frarik-addon src/index.html:**
+- Aggiunto `#hdr-icons-toggle` (chevron `‹/›`) prima delle icone header
+- Tutti i pulsanti header destro racchiusi in `<div id="hdr-icons">` per il collapse
+- Rimosso pulsante 🔄 dalla sidebar versione e dall'header mobile versione
+
+**frarik-addon src/style.css:**
+- `#hdr-icons`: `max-width` animato, `overflow:hidden`, transizione 0.28s
+- `#hdr.icons-hidden #hdr-icons`: `max-width:0; opacity:0; pointer-events:none`
+- `#hdr-icons-toggle i`: rotazione 180° con `#hdr.icons-hidden`
+- Mobile: `#hdr-icons-toggle` nascosto, `#hdr-icons` sempre visibile con `max-width:none!important`
+- Selettori `#hdr>` aggiornati a `#hdr-icons>` (mobile + kiosk mode)
+
+**frarik-addon src/main.js:**
+- `_toggleHdrIcons()`: aggiunge/rimuove classe `icons-hidden` su `#hdr`, salva in `localStorage`
+- Init: ripristina stato collapse da `localStorage` (`frk_hdr_ico`)
+- Rimossa `frarikCheckUpdate` dal window, sostituita con `_toggleHdrIcons`
+
+---
+
 ## 1.4.51 — 2026-06-14
 
 ### fix(Settings): testo 100% bianco ovunque + versione mobile nell'header (v1.4.51)

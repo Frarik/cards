@@ -4955,21 +4955,12 @@ function toggleEdit(){
   // La plancia resta visibile/modificabile; le impostazioni si aprono a tutto schermo on-demand (stile Oikos)
 }
 
-/* ── Riavvio completo di Home Assistant (dal pallino connessione) ── */
-async function frarikCheckUpdate(){
-  showToast('🔄 Scarico aggiornamento da GitHub…');
-  try{
-    const r=await fetch('./api/frarik/self-update',{method:'POST'});
-    const d=await r.json().catch(()=>({}));
-    if(d&&d.ok){
-      showToast('⏳ Aggiornamento avviato — riavvio in corso…');
-      setTimeout(()=>{ showToast('🔄 Riconnessione…'); setTimeout(()=>window.location.reload(),3000); },5000);
-    } else if(d&&d.err==='no_supervisor'){
-      showToast('⚠️ Disponibile solo dentro l\'add-on HA');
-    } else {
-      showToast('⚠️ Nessun aggiornamento disponibile o errore: '+(d&&d.err||'unknown'));
-    }
-  }catch(e){ showToast('⚠️ Errore: '+e.message); }
+/* ── Toggle icone header (PC) ── */
+function _toggleHdrIcons(){
+  var h=document.getElementById('hdr');
+  if(!h) return;
+  var hidden=h.classList.toggle('icons-hidden');
+  try{ localStorage.setItem('frk_hdr_ico',hidden?'0':'1'); }catch(e){}
 }
 function confirmRestartHA(){
   showConfirm('🔄 Vuoi <b>riavviare completamente Home Assistant</b>?<br><span style="font-size:11px;opacity:.7">La dashboard si disconnetterà per qualche minuto, poi si riconnetterà da sola.</span>', ()=>{
@@ -10510,6 +10501,8 @@ function _epLicLogout(){
   }catch(e){}
 })();
 try{
+  // Ripristina stato toggle icone header
+  try{ if(localStorage.getItem('frk_hdr_ico')==='0'){ var _hh=document.getElementById('hdr'); if(_hh) _hh.classList.add('icons-hidden'); } }catch(e){}
   var _vl=document.getElementById('ep-ver-label');
   var _vl2=document.getElementById('ep-hdr-ver-label');
   // Mostra versione add-on dal server (config.yaml), fallback al numero interno
@@ -12788,5 +12781,5 @@ Object.assign(window, {
   _appSetItemEntity, _appSetItemName, _appSetGroupName,
   _appSetGroupShowList, _appSetGroupEntities,
   _ntfSetAndSuggest, _ntfSetIcon,
-  _switchEpTab, _openEpSheet, _closeEpSheet, frarikCheckUpdate,
+  _switchEpTab, _openEpSheet, _closeEpSheet, _toggleHdrIcons,
 });
