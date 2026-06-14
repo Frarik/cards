@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.4.61 — 2026-06-14
+
+### feat(SystemCard): rinominata Mini-PC, aggiunto pkg statistiche_ha (v1.4.61 / SystemCard 4.6)
+
+**card-js/System.js (4.5 → 4.6):**
+- Card rinominata da "Sistema" a "Mini-PC"
+- **Sezione Energia**: potenza attuale W, energia oggi kWh, costo oggi/mese € — cliccabile apre popup con dettaglio completo (oggi/ieri/mese/mese prec./anno/anno prec.)
+- **Sezione HA Info**: uptime HA, conteggio entità totali, data ultimo backup
+- **Sezione Aggiornamenti**: badge Core/Supervisor/Addon/HACS — cliccabile apre popup con stato dettagliato
+- **Sezione Automazioni**: 6 toggle (Alert, Backup, Report, Riavvio HA, Riavvio Server, Ventola rack) — click chiama `homeassistant.turn_on/off` su `input_boolean.*`
+- **Grafico storico**: click su temp CPU e HA uptime apre popup con grafico ultime 24h
+- Tutti i sensori pkg sono nomi fissi (template creati dal pkg YAML) — card funziona uguale per tutti senza configurazione extra
+- Aggiunti helpers: `callSvc`, `callApi`, `isOn`, `Attr`, `fmtEur`, `fmtKwh`
+
+---
+
 ## 1.4.60 — 2026-06-14
 
 ### feat(ClimaCard): ridisegno temi Futuristico/Classico/Minimal con neumorfismo scuro (v1.4.60 / ClimaCard 2.21)
