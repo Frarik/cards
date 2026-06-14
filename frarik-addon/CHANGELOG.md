@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.4.53 — 2026-06-14
+
+### feat(MeteoCard): popup redesign, entity colorRules, swipe config, icon sizes, static bg fix (v1.4.53 / MeteoCard 1.37)
+
+**card-js/Meteo.js (1.36 → 1.37):**
+- Sfondo statico (`staticBg`): rimuove sole/luna, usa gradiente chiaro di giorno e scuro di notte
+- Icone animate più grandi: card principale 64→82px, previsioni 28→36px, popup orario 24→30px
+- Popup giornaliero redesign: header con sfondo dorato (data, condizione, min/max, icona meteo 58px),
+  colonne ORA/TEMP/PIOGGIA/VENTO con temperatura colorata + barra, precipitazioni con ☂, vento con ⇒
+- Configurazione swipe: `swipeInterval` (secondi tra scorrimenti auto) e `swipeThreshold` (px minimi per swipe)
+- Statistiche aggiuntive — per ogni entità:
+  - Pulsante ⚙ apre sub-pannello inline (senza chiudere/riaprire il modal — bug fix)
+  - Campo icona (emoji/testo) + colore icona
+  - Regole colore per valore: lista soglia→colore, applica il colore più alto raggiunto
+- Bug fix: `addexstat` e `rmexstat` usano `_updateExtraStatsSection()` che aggiorna solo il container,
+  senza ricreare l'intero shadow DOM (eliminato il flash/chiusura del popup)
+
+---
+
 ## 1.4.52 — 2026-06-14
 
 ### feat(Header): toggle icone PC + rimozione pulsante aggiornamento (v1.4.52)
