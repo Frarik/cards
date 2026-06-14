@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.4.55 — 2026-06-14
+
+### feat(MeteoCard): MDI icon picker, emoji/MDI split UX, ha-icon rendering (v1.4.55 / MeteoCard 1.39)
+
+**card-js/Meteo.js (1.38 → 1.39):**
+- **Picker icona ridisegnato**: sezione Emoji (sinistra, griglia clickable) + sezione MDI (destra, input con autocomplete)
+  - Digitare il nome di un'icona MDI (es. `thermometer`, `weather-sunny`) filtra la lista in tempo reale
+  - Selezione chiude la lista e salva l'icona come `mdi:nome`
+  - Lista include ~100 icone MDI comuni predefinite
+- **Rendering `ha-icon`**: le icone `mdi:*` vengono renderizzate tramite `<ha-icon>` (componente HA nativo)
+  sia nelle tile della card che nell'anteprima delle impostazioni
+- **Transizione swipe**: range esteso da 0.05 a 5 secondi (era max 2s); rimosso campo "Soglia drag"
+  non necessario per l'utente finale
+- **`_updateMdiDropdown`**: metodo dedicato per aggiornare il dropdown MDI senza rirendere tutta la sezione
+
+---
+
 ## 1.4.54 — 2026-06-14
 
 ### feat(MeteoCard): unified tile config, mouse drag, emoji picker, swipe transition fix (v1.4.54 / MeteoCard 1.38)

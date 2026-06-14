@@ -1,4 +1,4 @@
-/* frarik-version: 1.38 */
+/* frarik-version: 1.39 */
 
 // ── Lookup tables ─────────────────────────────────────────────────────────────
 const _WI = {
@@ -195,6 +195,7 @@ const _IC = {
 }
 const _TILE_EMOJIS=['💧','📊','🌡️','💨','🧭','☀️','🌤️','⛅','🌥️','☁️','🌧️','⛈️','❄️','🔥','💡','🏠','🔌','🔋','⚡','📡','📶','🌿','🌱','🌊','🌬️','🌪️','🌈','🌙','⭐','💫','✨','🎯','✅','🔔','⏱️','⏰','📌','🏔️','🌅','🌃','🎭','🌺','🍃','🌾','🍂','💎','🚀','✈️','🚗','🔊','📏','⚖️','🧪']
 const _TILE_DEF_ICO={hum:'💧',pres:'📊',wind:'💨',wdir:'🧭'}
+const _MDI_ICONS=['thermometer','thermometer-high','thermometer-low','temperature-celsius','water-percent','water','water-outline','water-check','raindrop','weather-sunny','weather-night','weather-partly-cloudy','weather-cloudy','weather-rainy','weather-pouring','weather-snowy','weather-snowy-rainy','weather-lightning','weather-lightning-rainy','weather-fog','weather-windy','weather-tornado','weather-hurricane','weather-dust','weather-hail','fan','air-filter','gauge','compass','compass-rose','wind-turbine','waves','snowflake','cloud','cloud-outline','lightning-bolt','lightning-bolt-outline','home','home-outline','home-thermometer','power-plug','battery','battery-charging','battery-high','solar-panel','solar-power','radiator','radiator-off','air-conditioner','heat-wave','fire','lightbulb','lightbulb-outline','lightbulb-on','chart-line','chart-bar','chart-areaspline','chart-pie','trending-up','trending-down','bell','bell-ring','bell-outline','alert','alert-circle','check-circle','information','timer','timer-outline','clock','clock-outline','calendar','alarm','leaf','flower','flower-outline','tree','grass','mountain','earth','globe-model','recycle','car','bicycle','walk','run','robot','heart','star','star-outline','eye','lock','key','shield','wifi','signal','cellphone','laptop','television','cpu-64-bit','memory','harddisk','cog','wrench','tools','magnify']
 
 // ── CSS ───────────────────────────────────────────────────────────────────────
 const _CSS = `
@@ -1058,7 +1059,7 @@ class MeteoCard extends HTMLElement {
       }
       case 'tile-add':
         if(this._tAllTiles.filter(t=>!t.isFixed).length<8){
-          this._tAllTiles.push({key:null,eid:'',lbl:'',ico:'📊',icoColor:'#ffffff',colorRules:[],isFixed:false,_open:false,_pickerOpen:false})
+          this._tAllTiles.push({key:null,eid:'',lbl:'',ico:'📊',icoColor:'#ffffff',colorRules:[],isFixed:false,_open:false,_pickerOpen:false,_mdiSearch:''})
           this._updateAllTilesSection()
         }
         break
@@ -1083,13 +1084,29 @@ class MeteoCard extends HTMLElement {
         const pb=e.target.closest('[data-a="tile-picker"]'); if(!pb) break
         const pi=parseInt(pb.dataset.idx||'0')
         if(this._tAllTiles[pi]) this._tAllTiles[pi]._pickerOpen=!this._tAllTiles[pi]._pickerOpen
+        // Close MDI dropdown when emoji picker opens
+        const sr_pk=this._modalHost?.shadowRoot
+        if(sr_pk){ const d=sr_pk.querySelector(`[data-dropdown="tile-mdi-${pi}"]`); if(d) d.classList.remove('open') }
         this._updateAllTilesSection()
         break
       }
       case 'tile-pick-emoji':{
         const eb=e.target.closest('[data-a="tile-pick-emoji"]'); if(!eb) break
         const ei=parseInt(eb.dataset.idx||'0'),em=eb.dataset.em||''
-        if(this._tAllTiles[ei]){ this._tAllTiles[ei].ico=em; this._tAllTiles[ei]._pickerOpen=false }
+        if(this._tAllTiles[ei]){ this._tAllTiles[ei].ico=em; this._tAllTiles[ei]._pickerOpen=false; this._tAllTiles[ei]._mdiSearch='' }
+        this._updateAllTilesSection()
+        // Clear MDI input
+        const sr_pe=this._modalHost?.shadowRoot
+        if(sr_pe){ const inp=sr_pe.querySelector(`[data-f="tile-mdi-search-${ei}"]`); if(inp) inp.value='' }
+        this._schedPrev()
+        break
+      }
+      case 'tile-mdi-sel':{
+        const mb=e.target.closest('[data-a="tile-mdi-sel"]'); if(!mb) break
+        const mi=parseInt(mb.dataset.idx||'0'),mn=mb.dataset.mdi||''
+        if(this._tAllTiles[mi]){ this._tAllTiles[mi].ico='mdi:'+mn; this._tAllTiles[mi]._mdiSearch=mn; this._tAllTiles[mi]._pickerOpen=false }
+        const sr_ms=this._modalHost?.shadowRoot
+        if(sr_ms){ const d=sr_ms.querySelector(`[data-dropdown="tile-mdi-${mi}"]`); if(d) d.classList.remove('open') }
         this._updateAllTilesSection(); this._schedPrev()
         break
       }
@@ -1226,6 +1243,11 @@ class MeteoCard extends HTMLElement {
       if(this._tAllTiles[i]){ this._tAllTiles[i].icoColor=v; this._updateAllTilesSection() }
       this._schedPrev()
     }
+    else if(f?.startsWith('tile-mdi-search-')){
+      const i=parseInt(f.replace('tile-mdi-search-',''))
+      if(this._tAllTiles[i]) this._tAllTiles[i]._mdiSearch=v
+      this._updateMdiDropdown(i)
+    }
     else if(f?.startsWith('tile-ico-')){
       const i=parseInt(f.replace('tile-ico-',''))
       if(this._tAllTiles[i]){ this._tAllTiles[i].ico=v; this._updateAllTilesSection() }
@@ -1242,7 +1264,7 @@ class MeteoCard extends HTMLElement {
       this._schedPrev()
     }
     else if(f==='swipe-interval'){ this._tSwipeInterval=Math.max(2,Math.min(60,parseInt(v)||5)) }
-    else if(f==='swipe-transition'){ this._tSwipeTransition=Math.max(0.1,Math.min(2,parseFloat(v)||0.38)) }
+    else if(f==='swipe-transition'){ this._tSwipeTransition=Math.max(0.05,Math.min(5,parseFloat(v)||0.38)) }
     else if(f==='swipe-threshold'){ this._tSwipeThreshold=Math.max(10,Math.min(150,parseInt(v)||40)) }
     else {
       const allStFs=_STATION_CATS.flatMap(c=>c.sensors.map(s=>s.f)).concat(_STATION_SPECIALS.map(s=>s.f))
@@ -1295,6 +1317,10 @@ class MeteoCard extends HTMLElement {
     if(f?.startsWith('tile-eid-')||allStFs.includes(f)){
       sr.querySelectorAll('.esr[data-dropdown]').forEach(d=>{ if(d.dataset.dropdown!==f) d.classList.remove('open') })
       this._updateDropdown(f)
+    } else if(f?.startsWith('tile-mdi-search-')){
+      const i=parseInt(f.replace('tile-mdi-search-',''))
+      sr.querySelectorAll('.esr[data-dropdown]').forEach(d=>{ if(d.dataset.dropdown!==`tile-mdi-${i}`) d.classList.remove('open') })
+      this._updateMdiDropdown(i)
     } else {
       sr.querySelectorAll('.esr[data-dropdown]').forEach(d=>d.classList.remove('open'))
     }
@@ -1333,12 +1359,13 @@ class MeteoCard extends HTMLElement {
     this._tSwipeThreshold=this._c.swipeThreshold||40
     this._tSwipeTransition=parseFloat(this._c.swipeTransition)||0.38
     const _tc=this._c.tileCustom||{}
+    const _ms=ico=>ico?.startsWith('mdi:')?ico.replace('mdi:',''):''
     this._tAllTiles=[
-      {key:'hum', eid:this._c.humEntity||'',    lbl:'Umidità',   ico:_tc.hum?.ico||'',  icoColor:_tc.hum?.icoColor||'#ffffff',  colorRules:[...((_tc.hum?.colorRules)||[])], isFixed:true,_open:false,_pickerOpen:false},
-      {key:'pres',eid:this._c.presEntity||'',   lbl:'Pressione', ico:_tc.pres?.ico||'', icoColor:_tc.pres?.icoColor||'#ffffff', colorRules:[...((_tc.pres?.colorRules)||[])],isFixed:true,_open:false,_pickerOpen:false},
-      {key:'wind',eid:this._c.windEntity||'',   lbl:'Vento',     ico:_tc.wind?.ico||'', icoColor:_tc.wind?.icoColor||'#ffffff', colorRules:[...((_tc.wind?.colorRules)||[])],isFixed:true,_open:false,_pickerOpen:false},
-      {key:'wdir',eid:this._c.windDirEntity||'',lbl:'Direzione', ico:_tc.wdir?.ico||'', icoColor:_tc.wdir?.icoColor||'#ffffff', colorRules:[...((_tc.wdir?.colorRules)||[])],isFixed:true,_open:false,_pickerOpen:false},
-      ...(this._c.extraStats||[]).map(e=>({key:null,eid:e.eid||'',lbl:e.lbl||'',ico:e.ico||'📊',icoColor:e.icoColor||'#ffffff',colorRules:[...(e.colorRules||[])],isFixed:false,_open:false,_pickerOpen:false}))
+      {key:'hum', eid:this._c.humEntity||'',    lbl:'Umidità',   ico:_tc.hum?.ico||'',  icoColor:_tc.hum?.icoColor||'#ffffff',  colorRules:[...((_tc.hum?.colorRules)||[])], isFixed:true,_open:false,_pickerOpen:false,_mdiSearch:_ms(_tc.hum?.ico)},
+      {key:'pres',eid:this._c.presEntity||'',   lbl:'Pressione', ico:_tc.pres?.ico||'', icoColor:_tc.pres?.icoColor||'#ffffff', colorRules:[...((_tc.pres?.colorRules)||[])],isFixed:true,_open:false,_pickerOpen:false,_mdiSearch:_ms(_tc.pres?.ico)},
+      {key:'wind',eid:this._c.windEntity||'',   lbl:'Vento',     ico:_tc.wind?.ico||'', icoColor:_tc.wind?.icoColor||'#ffffff', colorRules:[...((_tc.wind?.colorRules)||[])],isFixed:true,_open:false,_pickerOpen:false,_mdiSearch:_ms(_tc.wind?.ico)},
+      {key:'wdir',eid:this._c.windDirEntity||'',lbl:'Direzione', ico:_tc.wdir?.ico||'', icoColor:_tc.wdir?.icoColor||'#ffffff', colorRules:[...((_tc.wdir?.colorRules)||[])],isFixed:true,_open:false,_pickerOpen:false,_mdiSearch:_ms(_tc.wdir?.ico)},
+      ...(this._c.extraStats||[]).map(e=>({key:null,eid:e.eid||'',lbl:e.lbl||'',ico:e.ico||'📊',icoColor:e.icoColor||'#ffffff',colorRules:[...(e.colorRules||[])],isFixed:false,_open:false,_pickerOpen:false,_mdiSearch:_ms(e.ico)}))
     ]
     this._tSt={ stationEnabled:this._c.stationEnabled||false, stationLat:this._c.stationLat||'', stationLon:this._c.stationLon||'' }
     _STATION_CATS.forEach(cat=>cat.sensors.forEach(s=>{ this._tSt[s.f]=this._c[s.f]||'' }))
@@ -1360,22 +1387,43 @@ class MeteoCard extends HTMLElement {
   _allTilesHTML(){
     return this._tAllTiles.map((tile,i)=>{
       const isFixed=tile.isFixed
-      const icoDisplay=tile.ico||(isFixed?_TILE_DEF_ICO[tile.key]:'📊')
+      const icoIsMdi=tile.ico?.startsWith('mdi:')
+      const mdiName=tile._mdiSearch||(icoIsMdi?tile.ico.replace('mdi:',''):'')
+      const emojiDisplay=(!icoIsMdi&&tile.ico)||''
+      const icoPreview=emojiDisplay||(icoIsMdi?'':_TILE_DEF_ICO[tile.key]||'📊')
       const subPanel=tile._open?`
         <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.07);">
-          <div style="display:flex;gap:8px;margin-bottom:10px;align-items:flex-end;">
-            <div style="flex:1;">
-              <div class="fl" style="margin:0 0 4px;font-size:10px;">Icona tile</div>
-              <div style="display:flex;gap:6px;align-items:center;">
-                <button data-a="tile-picker" data-idx="${i}" style="font-size:19px;width:40px;height:36px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:8px;cursor:pointer;line-height:1;flex-shrink:0;" title="Scegli emoji">${icoDisplay}</button>
-                <input class="ci" type="text" value="${tile.ico||''}" placeholder="${isFixed?'Vuoto = icona SVG default':'📊'}" data-f="tile-ico-${i}" style="flex:1;"/>
+          <div class="fl" style="margin:0 0 6px;font-size:10px;">Icona tile</div>
+          <div style="display:flex;gap:8px;margin-bottom:10px;">
+            <!-- Emoji -->
+            <div style="flex:1;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:7px;">
+              <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">Emoji</div>
+              <button data-a="tile-picker" data-idx="${i}" style="font-size:${emojiDisplay?'22':'14'}px;width:100%;min-height:36px;background:rgba(255,255,255,${emojiDisplay?.07:.04});border:1px solid rgba(255,255,255,${emojiDisplay?.18:.1});border-radius:7px;cursor:pointer;line-height:1;padding:5px 6px;display:flex;align-items:center;justify-content:center;gap:5px;color:${emojiDisplay?'#fff':'rgba(255,255,255,.35)'};">
+                <span>${emojiDisplay||'scegli ▼'}</span>
+              </button>
+              ${tile._pickerOpen?`
+                <div style="margin-top:6px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:6px;max-height:118px;overflow-y:auto;scrollbar-width:none;">
+                  <div style="display:flex;flex-wrap:wrap;gap:2px;">
+                    ${_TILE_EMOJIS.map(em=>`<button data-a="tile-pick-emoji" data-idx="${i}" data-em="${em}" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:5px;padding:3px 4px;font-size:15px;cursor:pointer;line-height:1;">${em}</button>`).join('')}
+                  </div>
+                </div>`:''}
+            </div>
+            <!-- MDI -->
+            <div style="flex:1;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:7px;">
+              <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;">
+                <span style="font-size:9px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;">Icona MDI</span>
+                ${icoIsMdi?`<ha-icon icon="${tile.ico}" style="color:${tile.icoColor||'#fff'};--mdc-icon-size:15px;pointer-events:none;"></ha-icon>`:''}
               </div>
-              ${tile._pickerOpen?`<div style="margin-top:6px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:7px;max-height:128px;overflow-y:auto;scrollbar-width:none;"><div style="display:flex;flex-wrap:wrap;gap:3px;">${_TILE_EMOJIS.map(em=>`<button data-a="tile-pick-emoji" data-idx="${i}" data-em="${em}" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:3px 4px;font-size:16px;cursor:pointer;line-height:1;">${em}</button>`).join('')}</div></div>`:''}
+              <div class="inp-grp" style="margin:0;">
+                <input class="ci" type="text" value="${mdiName}" placeholder="es: thermometer" data-f="tile-mdi-search-${i}" autocomplete="off" style="font-size:11px;"/>
+                <div class="esr" data-dropdown="tile-mdi-${i}" style="overflow-y:auto;max-height:188px;"><div class="el"></div></div>
+              </div>
+              <div class="ht" style="margin-top:4px;">Scrivi per cercare, clicca per selezionare</div>
             </div>
-            <div style="flex-shrink:0;">
-              <div class="fl" style="margin:0 0 4px;font-size:10px;">Colore icona</div>
-              <input class="ci" type="color" value="${tile.icoColor||'#ffffff'}" data-f="tile-ico-color-${i}" style="padding:3px;height:36px;width:52px;"/>
-            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <div class="fl" style="margin:0;font-size:10px;flex:1;">Colore icona</div>
+            <input class="ci" type="color" value="${tile.icoColor||'#ffffff'}" data-f="tile-ico-color-${i}" style="padding:3px;height:32px;width:52px;"/>
           </div>
           <div>
             <div class="fl" style="margin-bottom:2px;font-size:10px;">🎨 Colori per soglia valore</div>
@@ -1393,7 +1441,7 @@ class MeteoCard extends HTMLElement {
         </div>`:''
       return `<div style="border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:8px 10px;margin-top:8px;background:rgba(255,255,255,.02);">
         <div style="display:flex;align-items:flex-end;gap:6px;">
-          ${isFixed?`<div style="padding:2px 0 6px;min-width:60px;"><div class="fl" style="margin:0 0 1px;">${tile.lbl}</div><div style="font-size:9px;color:rgba(255,255,255,.35);">tile fissa</div></div>`:''}
+          ${isFixed?`<div style="padding:2px 0 6px;min-width:58px;"><div class="fl" style="margin:0 0 1px;">${tile.lbl}</div><div style="font-size:9px;color:rgba(255,255,255,.35);">tile fissa</div></div>`:''}
           <div style="flex:${isFixed?2:3};">
             <div class="fl" style="margin:0 0 3px;font-size:10px;">${isFixed?'Sensore personalizzato (opzionale)':'Entità'}</div>
             <div class="inp-grp">
@@ -1403,7 +1451,8 @@ class MeteoCard extends HTMLElement {
           </div>
           ${!isFixed?`<div style="flex:1.5;"><div class="fl" style="margin:0 0 3px;font-size:10px;">Etichetta</div><input class="ci" type="text" value="${tile.lbl||''}" placeholder="Nome" data-f="tile-lbl-${i}"/></div>`:''}
           <div style="display:flex;gap:4px;padding-bottom:1px;">
-            <button data-a="tile-open" data-idx="${i}" style="background:rgba(251,191,36,${tile._open?.12:.06});border:1px solid rgba(251,191,36,${tile._open?.35:.15});color:${tile._open?'#fbbf24':'rgba(255,255,255,.45)'};border-radius:8px;padding:6px 7px;font-size:14px;cursor:pointer;flex-shrink:0;line-height:1;" title="Personalizza">${icoDisplay} ⚙</button>
+            <button data-a="tile-open" data-idx="${i}" style="background:rgba(251,191,36,${tile._open?.12:.06});border:1px solid rgba(251,191,36,${tile._open?.35:.15});color:${tile._open?'#fbbf24':'rgba(255,255,255,.45)'};border-radius:8px;padding:6px 8px;font-size:13px;cursor:pointer;flex-shrink:0;line-height:1;" title="Personalizza">
+              ${icoIsMdi?`<ha-icon icon="${tile.ico}" style="color:inherit;--mdc-icon-size:15px;pointer-events:none;"></ha-icon>`:emojiDisplay||icoPreview} ⚙</button>
             ${!isFixed?`<button data-a="tile-rm" data-idx="${i}" style="background:rgba(255,80,80,.1);border:1px solid rgba(255,80,80,.22);color:rgba(255,120,120,.85);border-radius:8px;padding:6px 9px;font-size:13px;cursor:pointer;flex-shrink:0;line-height:1;">✕</button>`:''}
           </div>
         </div>
@@ -1418,6 +1467,20 @@ class MeteoCard extends HTMLElement {
     const sr=this._modalHost?.shadowRoot; if(!sr) return
     const c=sr.querySelector('#all-tiles-container'); if(!c) return
     c.innerHTML=this._allTilesHTML()
+  }
+
+  _updateMdiDropdown(i){
+    const sr=this._modalHost?.shadowRoot; if(!sr) return
+    const drop=sr.querySelector(`[data-dropdown="tile-mdi-${i}"]`); if(!drop) return
+    const q=(this._tAllTiles[i]?._mdiSearch||'').toLowerCase()
+    const icons=q?_MDI_ICONS.filter(n=>n.includes(q)):_MDI_ICONS
+    const listEl=drop.querySelector('.el'); if(!listEl) return
+    listEl.innerHTML=icons.length
+      ?icons.slice(0,60).map(name=>`<div class="eo" data-a="tile-mdi-sel" data-idx="${i}" data-mdi="${name}" style="display:flex;align-items:center;gap:8px;padding:6px 10px;">
+          <ha-icon icon="mdi:${name}" style="color:#fff;--mdc-icon-size:16px;flex-shrink:0;pointer-events:none;"></ha-icon>
+          <span>${name}</span></div>`).join('')
+      :'<div style="padding:8px 12px;font-size:11px;color:rgba(255,255,255,.5);">Nessuna icona trovata</div>'
+    drop.classList.add('open')
   }
 
   _renderModal(){
@@ -1532,9 +1595,12 @@ class MeteoCard extends HTMLElement {
       for(const r of s){ if(n>=r.threshold) return r.color }
       return null
     }
-    const _tileIco=(key,cust)=>cust?.ico
-      ?`<span style="color:${cust.icoColor||'#fff'};font-size:1.1em">${cust.ico}</span>`
-      :`<span style="color:${cust?.icoColor||'#fff'}">${_IC[key]}</span>`
+    const _icoHTML=(ico,color,defSvg)=>{
+      if(!ico) return defSvg?`<span style="color:${color||'#fff'}">${defSvg}</span>`:`<span style="color:${color||'#fff'};font-size:1.1em">📊</span>`
+      if(ico.startsWith('mdi:')) return `<ha-icon icon="${ico}" style="color:${color||'#fff'};--mdc-icon-size:1.4em;display:inline-flex;vertical-align:middle;"></ha-icon>`
+      return `<span style="color:${color||'#fff'};font-size:1.1em">${ico}</span>`
+    }
+    const _tileIco=(key,cust)=>_icoHTML(cust?.ico, cust?.icoColor, _IC[key])
     const _wrapVal=(v,rules)=>{const cl=_applyColor(rules,v);return cl?`<span style="color:${cl}">${v}</span>`:v}
     const _allTiles=[
       {eid:c.humEntity||c.entityId,    attr:c.humEntity?'':'humidity',      lbl:'Umidità',   ico:_tileIco('hu',_tcust.hum),  val:_wrapVal(hum, _tcust.hum?.colorRules)},
@@ -1545,7 +1611,7 @@ class MeteoCard extends HTMLElement {
         const sv=_sv(ex.eid)
         const valColor=_applyColor(ex.colorRules,sv)
         return {eid:ex.eid,attr:'',lbl:ex.lbl||ex.eid.split('.').pop(),
-          ico:`<span style="color:${ex.icoColor||'#fff'};font-size:1.1em">${ex.ico||'📊'}</span>`,
+          ico:_icoHTML(ex.ico, ex.icoColor, null),
           val:valColor?`<span style="color:${valColor}">${sv||'--'}</span>`:sv||'--'}
       })
     ]
@@ -1699,14 +1765,10 @@ class MeteoCard extends HTMLElement {
             </div>
             <div style="flex:1;">
               <div class="fl" style="margin:0 0 3px;font-size:10px;">Transizione (s)</div>
-              <input class="ci" type="number" min="0.1" max="2" step="0.1" value="${this._tSwipeTransition}" data-f="swipe-transition"/>
-            </div>
-            <div style="flex:1;">
-              <div class="fl" style="margin:0 0 3px;font-size:10px;">Soglia drag (px)</div>
-              <input class="ci" type="number" min="10" max="150" value="${this._tSwipeThreshold}" data-f="swipe-threshold"/>
+              <input class="ci" type="number" min="0.05" max="5" step="0.05" value="${this._tSwipeTransition}" data-f="swipe-transition"/>
             </div>
           </div>
-          <div class="ht" style="margin-top:5px;">Intervallo: secondi tra cambi auto · Transizione: velocità animazione · Drag: pixels per swipe manuale</div>
+          <div class="ht" style="margin-top:5px;">Intervallo: secondi tra auto-scroll · Transizione: durata animazione slide (es. 0.38 veloce, 1 lento)</div>
         </div>
 
         <div style="margin-top:14px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;display:flex;align-items:center;gap:10px;">
