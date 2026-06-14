@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.66 — 2026-06-14
+
+### fix(store): messaggio errore 403 GitHub più chiaro con istruzioni token
+
+---
+
 ## 1.4.65 — 2026-06-14
 
 ### fix(store): PKG tab ridisegnato — store locale YAML senza "installazione" in HA

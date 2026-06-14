@@ -1957,7 +1957,7 @@ async function _ghPut(path, content, message){
     if(sha) body.sha=sha;
     const r=await fetch(base,{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},H),body:JSON.stringify(body)});
     if(r.ok) return await r.json();
-    if(r.status===401||r.status===403) throw new Error('GitHub ha rifiutato (403). Serve un token "classic" con permesso "repo" E aver accettato l\'invito come collaboratore.');
+    if(r.status===401||r.status===403) throw new Error('GitHub 403 — token senza permessi di scrittura. Vai su GitHub → Settings → Developer settings → Personal access tokens (classic) → crea token con scope "repo" → incollalo nell\'⚙️ impostazioni GitHub dello store.');
     if(r.status===404) throw new Error('Repo non raggiungibile (404): probabilmente l\'invito come collaboratore non è stato accettato, o il token non ha accesso al repo.');
     let m=''; try{ m=(await r.json()).message; }catch(e){}
     lastErr='GitHub HTTP '+r.status+(m?' — '+m:'');
