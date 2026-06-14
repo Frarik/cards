@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.4.40 — 2026-06-14
+
+### feat(Meteo): nuove entità PirateWeather nella Stazione Meteo
+
+**Meteo.js 1.31→1.32:**
+- Pioggia: aggiunto `sPwPrecipProb0d` (sensor.pirateweather_precip_probability_0d)
+- Pressione: aggiunti `sPwPressure` (base) + `sPwPressure0d`
+- Sole & UV: aggiunti `sPwUvNow` (base) + `sPwUvIndex0d`
+- Nuova categoria `🌐 PirateWeather`: `sPwSummary` (base) + `sPwSummary0d`
+  con icona dinamica in base al testo della previsione
+- Tile testuali (summary) mostrano il testo per intero senza aprire grafico storico
+- Seguita regola "solo base + 0d" per entità day-indexed
+
 ## 1.4.39 — 2026-06-14
 
 ### fix(license): LIC_TTL 2h → 5h per maggiore margine sul piano gratuito KV

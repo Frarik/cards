@@ -1,4 +1,4 @@
-/* frarik-version: 1.31 */
+/* frarik-version: 1.32 */
 
 // ── Lookup tables ─────────────────────────────────────────────────────────────
 const _WI = {
@@ -312,17 +312,18 @@ input[type=range].lslider{flex:1;cursor:pointer;accent-color:#fbbf24;height:4px;
 const _STATION_CATS=[
   {key:'rain',     icon:'🌧️', label:'Pioggia',     color:'#38bdf8',
    sensors:[
-     {f:'sRainRate',    lbl:'Intensità Pioggia'},
-     {f:'sHourlyRain',  lbl:'Pioggia Oraria'},
-     {f:'sDailyRain',   lbl:'Pioggia Giornaliera'},
-     {f:'sEventRain',   lbl:'Pioggia Evento'},
-     {f:'s24hRain',     lbl:'Pioggia 24h'},
-     {f:'sWeeklyRain',  lbl:'Pioggia Settimanale'},
-     {f:'sMonthlyRain', lbl:'Pioggia Mensile'},
-     {f:'sYearlyRain',  lbl:'Pioggia Annuale'},
-     {f:'sTotalRain',   lbl:'Pioggia Totale'},
-     {f:'sPwPrecip0d',  lbl:'Max Precipit. Oggi'},
-     {f:'sPwPrecip1d',  lbl:'Max Precipit. Domani'},
+     {f:'sRainRate',       lbl:'Intensità Pioggia'},
+     {f:'sHourlyRain',     lbl:'Pioggia Oraria'},
+     {f:'sDailyRain',      lbl:'Pioggia Giornaliera'},
+     {f:'sEventRain',      lbl:'Pioggia Evento'},
+     {f:'s24hRain',        lbl:'Pioggia 24h'},
+     {f:'sWeeklyRain',     lbl:'Pioggia Settimanale'},
+     {f:'sMonthlyRain',    lbl:'Pioggia Mensile'},
+     {f:'sYearlyRain',     lbl:'Pioggia Annuale'},
+     {f:'sTotalRain',      lbl:'Pioggia Totale'},
+     {f:'sPwPrecip0d',     lbl:'PW Max Precipit. Oggi'},
+     {f:'sPwPrecip1d',     lbl:'PW Max Precipit. Domani'},
+     {f:'sPwPrecipProb0d', lbl:'PW Prob. Pioggia Oggi'},
    ]},
   {key:'wind',     icon:'💨', label:'Vento',       color:'#a78bfa',
    sensors:[
@@ -349,8 +350,10 @@ const _STATION_CATS=[
    ]},
   {key:'pressure', icon:'📊', label:'Pressione',   color:'#fbbf24',
    sensors:[
-     {f:'sRelPres',lbl:'Pressione Relativa'},
-     {f:'sAbsPres',lbl:'Pressione Assoluta'},
+     {f:'sRelPres',      lbl:'Pressione Relativa'},
+     {f:'sAbsPres',      lbl:'Pressione Assoluta'},
+     {f:'sPwPressure',   lbl:'PW Pressione Corrente'},
+     {f:'sPwPressure0d', lbl:'PW Pressione Oggi'},
    ]},
   {key:'humidity', icon:'💧', label:'Umidità',     color:'#34d399',
    sensors:[
@@ -360,13 +363,20 @@ const _STATION_CATS=[
    ]},
   {key:'solar',    icon:'☀️', label:'Sole & UV',   color:'#fb923c',
    sensors:[
-     {f:'sSolarRad',   lbl:'Radiazione Solare'},
-     {f:'sSolarLux',   lbl:'Luminosità Solare'},
-     {f:'sUvIndex',    lbl:'Indice UV'},
-     {f:'sPwCloud',    lbl:'Copertura Nuvolosa'},
-     {f:'sPwCloud0d',  lbl:'Nuvole Oggi'},
-     {f:'sPwCloud1d',  lbl:'Nuvole Domani'},
-     {f:'sCape',       lbl:'Energia Convettiva (CAPE)'},
+     {f:'sSolarRad',    lbl:'Radiazione Solare'},
+     {f:'sSolarLux',    lbl:'Luminosità Solare'},
+     {f:'sUvIndex',     lbl:'Indice UV (Stazione)'},
+     {f:'sPwUvNow',     lbl:'PW UV Index Corrente'},
+     {f:'sPwUvIndex0d', lbl:'PW UV Index Oggi'},
+     {f:'sPwCloud',     lbl:'Copertura Nuvolosa'},
+     {f:'sPwCloud0d',   lbl:'Nuvole Oggi'},
+     {f:'sPwCloud1d',   lbl:'Nuvole Domani'},
+     {f:'sCape',        lbl:'Energia Convettiva (CAPE)'},
+   ]},
+  {key:'pwinfo',   icon:'🌐', label:'PirateWeather',color:'#c084fc',
+   sensors:[
+     {f:'sPwSummary',   lbl:'Condizioni Ora'},
+     {f:'sPwSummary0d', lbl:'Previsione Oggi'},
    ]},
 ]
 const _STATION_SPECIALS=[
@@ -1430,11 +1440,23 @@ class MeteoCard extends HTMLElement {
       const u=st.attributes?.unit_of_measurement||''; return st.state+(u?' '+u:'')
     }
     const tile=(eid,lbl,color)=>{
-      const val=sv(eid)
-      return eid?`<div class="ssel" data-a="ststat" data-eid="${eid}" data-lbl="${lbl}">
-        <span class="ssel-lbl">${lbl}</span>
-        <span class="ssel-val" style="color:${color}">${val||'--'}</span>
-      </div>`:''
+      if(!eid) return ''
+      const st=this._h?.states?.[eid]
+      const u=st?.attributes?.unit_of_measurement||''
+      const raw=st?.state||''
+      const isNum=raw&&!isNaN(parseFloat(raw))&&raw!=='unknown'&&raw!=='unavailable'
+      const disp=raw?(raw+(u?' '+u:'')):'--'
+      if(isNum){
+        return `<div class="ssel" data-a="ststat" data-eid="${eid}" data-lbl="${lbl}">
+          <span class="ssel-lbl">${lbl}</span>
+          <span class="ssel-val" style="color:${color}">${disp}</span>
+        </div>`
+      }
+      // Entità testuale (es. summary): mostro il testo, non apre grafico
+      return `<div class="ssel" style="cursor:default;align-items:flex-start;flex-wrap:wrap;gap:4px;">
+        <span class="ssel-lbl" style="flex-basis:100%;">${lbl}</span>
+        <span style="font-size:11px;color:${color};line-height:1.4;font-style:italic;">${raw||'--'}</span>
+      </div>`
     }
     const catHTML=(cat)=>{
       const tiles=cat.sensors.map(s=>tile(c[s.f],s.lbl,cat.color)).filter(Boolean).join('')
@@ -1662,6 +1684,15 @@ class MeteoCard extends HTMLElement {
           <text x="40" y="75" text-anchor="middle" fill="rgba(255,255,255,.55)" font-size="7" font-family="system-ui">UV Index</text>
           <text x="40" y="87" text-anchor="middle" fill="${uvCol}" font-size="13" font-weight="800" font-family="system-ui">${ok?uv.toFixed(0):'--'}</text>
         </svg>`
+      }
+      case 'pwinfo':{
+        const summ=this._h?.states?.[this._c.sPwSummary0d]?.state||this._h?.states?.[this._c.sPwSummary]?.state||''
+        const cond=summ.toLowerCase()
+        const ico=cond.includes('pioggi')||cond.includes('precipit')?'🌧️':cond.includes('sereno')||cond.includes('sole')?'☀️':cond.includes('nuvolos')||cond.includes('nuvole')?'☁️':cond.includes('temp')||cond.includes('fulmin')?'⛈️':cond.includes('neve')?'❄️':cond.includes('nebbia')?'🌫️':'🌐'
+        return `<div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:4px;">
+          <span style="font-size:42px;filter:drop-shadow(0 0 12px #c084fc);animation:stAlert 3s ease-in-out infinite;">${ico}</span>
+          <span style="font-size:9px;font-weight:800;color:#c084fc;letter-spacing:.08em;text-transform:uppercase;opacity:.85;">Pirate Weather</span>
+        </div>`
       }
       default: return `<span style="font-size:44px;filter:drop-shadow(0 0 12px currentColor)">${cat.icon}</span>`
     }
