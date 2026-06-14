@@ -1,4 +1,4 @@
-/* frarik-version: 1.37 */
+/* frarik-version: 1.38 */
 
 // ── Lookup tables ─────────────────────────────────────────────────────────────
 const _WI = {
@@ -193,6 +193,8 @@ const _IC = {
   co:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="currentColor" opacity=".6"/></svg>`,
   cl:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>`,
 }
+const _TILE_EMOJIS=['💧','📊','🌡️','💨','🧭','☀️','🌤️','⛅','🌥️','☁️','🌧️','⛈️','❄️','🔥','💡','🏠','🔌','🔋','⚡','📡','📶','🌿','🌱','🌊','🌬️','🌪️','🌈','🌙','⭐','💫','✨','🎯','✅','🔔','⏱️','⏰','📌','🏔️','🌅','🌃','🎭','🌺','🍃','🌾','🍂','💎','🚀','✈️','🚗','🔊','📏','⚖️','🧪']
+const _TILE_DEF_ICO={hum:'💧',pres:'📊',wind:'💨',wdir:'🧭'}
 
 // ── CSS ───────────────────────────────────────────────────────────────────────
 const _CSS = `
@@ -251,13 +253,11 @@ button[data-a="gear"]{display:var(--fgear,none);}
 .tdeg{font-size:34px;font-weight:600;margin-top:10px;letter-spacing:0;}
 .tl{font-size:12px;color:#fff;margin-top:5px;font-weight:500;}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;padding:10px 0 10px;}
-.stats-wrap{overflow:hidden;position:relative;padding:10px 0 0;}
-.stats-track{display:flex;transition:transform .38s cubic-bezier(.4,0,.2,1);will-change:transform;}
+.stats-wrap{overflow:hidden;position:relative;padding:10px 0 4px;touch-action:pan-y;user-select:none;cursor:grab;}
+.stats-wrap:active{cursor:grabbing;}
+.stats-track{display:flex;will-change:transform;}
 .stats-page{display:flex;gap:7px;min-width:100%;flex-shrink:0;}
 .stats-page .stl{flex:1;min-width:0;}
-.stats-dots{display:flex;justify-content:center;gap:5px;padding:5px 0 8px;}
-.stats-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.22);cursor:pointer;transition:background .2s,transform .18s;}
-.stats-dot.active{background:#fbbf24;transform:scale(1.25);}
 .stl{border-radius:12px;padding:10px 7px 9px;display:flex;flex-direction:column;align-items:center;gap:4px;backdrop-filter:blur(6px);cursor:pointer;transition:filter .12s,transform .1s;}
 .stl:hover{filter:brightness(1.25);}
 .stl:active{transform:scale(.95);}
@@ -539,7 +539,11 @@ class MeteoCard extends HTMLElement {
         cardScale:this._c.cardScale??100,
         cardW:this._c.cardW??100,
         extraStats:this._c.extraStats||[],
+        tileCustom:this._c.tileCustom||{},
         staticBg:this._c.staticBg||false,
+        swipeInterval:this._c.swipeInterval||5,
+        swipeTransition:this._c.swipeTransition||0.38,
+        swipeThreshold:this._c.swipeThreshold||40,
         stationEnabled:this._c.stationEnabled||false,
         stationLat:this._c.stationLat||'',
         stationLon:this._c.stationLon||'',
@@ -567,7 +571,11 @@ class MeteoCard extends HTMLElement {
       cardScale:    stored.cardScale!=null?stored.cardScale:(cfg.cardScale!=null?cfg.cardScale:100),
       cardW:        stored.cardW    !=null?stored.cardW    :(cfg.cardW    !=null?cfg.cardW    :100),
       extraStats:   Array.isArray(stored.extraStats)?stored.extraStats:(Array.isArray(cfg.extraStats)?cfg.extraStats:[]),
+      tileCustom:   stored.tileCustom||cfg.tileCustom||{},
       staticBg:     stored.staticBg!=null?stored.staticBg:(cfg.staticBg||false),
+      swipeInterval: stored.swipeInterval||cfg.swipeInterval||5,
+      swipeTransition: parseFloat(stored.swipeTransition||cfg.swipeTransition)||0.38,
+      swipeThreshold: stored.swipeThreshold||cfg.swipeThreshold||40,
       stationEnabled: stored.stationEnabled!=null?stored.stationEnabled:(cfg.stationEnabled||false),
       stationLat:   stored.stationLat   ||cfg.stationLat   ||'',
       stationLon:   stored.stationLon   ||cfg.stationLon   ||'',
@@ -986,13 +994,9 @@ class MeteoCard extends HTMLElement {
       case 'sel':   this._te=t.dataset.id; this._se=false; this._renderModal(); break
       case 'sel-sensor':{
         const sf=t.dataset.f,sid=t.dataset.id
-        if(sf==='hum') this._th=sid
-        else if(sf==='pres') this._tp=sid
-        else if(sf==='wind') this._tw=sid
-        else if(sf==='wdir') this._twd=sid
-        else if(sf.startsWith('exstat-eid-')){
-          const i=parseInt(sf.replace('exstat-eid-',''))
-          if(this._tExtraStats[i]!=null) this._tExtraStats[i].eid=sid
+        if(sf.startsWith('tile-eid-')){
+          const i=parseInt(sf.replace('tile-eid-',''))
+          if(this._tAllTiles[i]!=null) this._tAllTiles[i].eid=sid
         }
         else {
           const allStFs=_STATION_CATS.flatMap(c=>c.sensors.map(s=>s.f)).concat(_STATION_SPECIALS.map(s=>s.f))
@@ -1003,6 +1007,7 @@ class MeteoCard extends HTMLElement {
           const inp=sr2.querySelector(`input[data-f="${sf}"]`); if(inp) inp.value=sid
           const drop=sr2.querySelector(`[data-dropdown="${sf}"]`); if(drop) drop.classList.remove('open')
         }
+        this._schedPrev()
         break
       }
       case 'station':
@@ -1051,43 +1056,57 @@ class MeteoCard extends HTMLElement {
         if(fbtn) fbtn.textContent=isFs?'⊠ Riduci':'⛶ Espandi'
         break
       }
-      case 'addexstat':
-        if(this._tExtraStats.length<8){ this._tExtraStats.push({eid:'',lbl:'',ico:'📊',icoColor:'#fff',colorRules:[]}); this._updateExtraStatsSection() }
+      case 'tile-add':
+        if(this._tAllTiles.filter(t=>!t.isFixed).length<8){
+          this._tAllTiles.push({key:null,eid:'',lbl:'',ico:'📊',icoColor:'#ffffff',colorRules:[],isFixed:false,_open:false,_pickerOpen:false})
+          this._updateAllTilesSection()
+        }
         break
-      case 'rmexstat':{
-        const rmBtn=e.target.closest('[data-a="rmexstat"]'); if(!rmBtn) break
-        this._tExtraStats.splice(parseInt(rmBtn.dataset.idx||'0'),1)
-        this._updateExtraStatsSection(); this._schedPrev()
+      case 'tile-rm':{
+        const rmBtn=e.target.closest('[data-a="tile-rm"]'); if(!rmBtn) break
+        const ri0=parseInt(rmBtn.dataset.idx||'0')
+        if(!this._tAllTiles[ri0]?.isFixed) this._tAllTiles.splice(ri0,1)
+        this._updateAllTilesSection(); this._schedPrev()
         break
       }
-      case 'exstat-open':{
-        const ob=e.target.closest('[data-a="exstat-open"]'); if(!ob) break
+      case 'tile-open':{
+        const ob=e.target.closest('[data-a="tile-open"]'); if(!ob) break
         const oi=parseInt(ob.dataset.idx||'0')
-        if(this._tExtraStats[oi]) this._tExtraStats[oi]._open=!this._tExtraStats[oi]._open
-        this._updateExtraStatsSection()
+        if(this._tAllTiles[oi]){
+          this._tAllTiles[oi]._open=!this._tAllTiles[oi]._open
+          if(!this._tAllTiles[oi]._open) this._tAllTiles[oi]._pickerOpen=false
+        }
+        this._updateAllTilesSection()
         break
       }
-      case 'addrule':{
-        const ab=e.target.closest('[data-a="addrule"]'); if(!ab) break
+      case 'tile-picker':{
+        const pb=e.target.closest('[data-a="tile-picker"]'); if(!pb) break
+        const pi=parseInt(pb.dataset.idx||'0')
+        if(this._tAllTiles[pi]) this._tAllTiles[pi]._pickerOpen=!this._tAllTiles[pi]._pickerOpen
+        this._updateAllTilesSection()
+        break
+      }
+      case 'tile-pick-emoji':{
+        const eb=e.target.closest('[data-a="tile-pick-emoji"]'); if(!eb) break
+        const ei=parseInt(eb.dataset.idx||'0'),em=eb.dataset.em||''
+        if(this._tAllTiles[ei]){ this._tAllTiles[ei].ico=em; this._tAllTiles[ei]._pickerOpen=false }
+        this._updateAllTilesSection(); this._schedPrev()
+        break
+      }
+      case 'tile-addrule':{
+        const ab=e.target.closest('[data-a="tile-addrule"]'); if(!ab) break
         const ai=parseInt(ab.dataset.idx||'0')
-        if(!this._tExtraStats[ai]) break
-        if(!this._tExtraStats[ai].colorRules) this._tExtraStats[ai].colorRules=[]
-        this._tExtraStats[ai].colorRules.push({threshold:0,color:'#ffffff'})
-        this._updateExtraStatsSection()
+        if(!this._tAllTiles[ai]) break
+        if(!this._tAllTiles[ai].colorRules) this._tAllTiles[ai].colorRules=[]
+        this._tAllTiles[ai].colorRules.push({threshold:0,color:'#ffffff'})
+        this._updateAllTilesSection()
         break
       }
-      case 'rmrule':{
-        const rb=e.target.closest('[data-a="rmrule"]'); if(!rb) break
+      case 'tile-rmrule':{
+        const rb=e.target.closest('[data-a="tile-rmrule"]'); if(!rb) break
         const ri2=parseInt(rb.dataset.idx||'0'),rri=parseInt(rb.dataset.ridx||'0')
-        if(this._tExtraStats[ri2]?.colorRules) this._tExtraStats[ri2].colorRules.splice(rri,1)
-        this._updateExtraStatsSection()
-        break
-      }
-      case 'statdot':{
-        const dotEl=e.target.closest('[data-a="statdot"]'); if(!dotEl) break
-        clearInterval(this._statsTimer)
-        this._goCarousel(parseInt(dotEl.dataset.page||'0'))
-        this._statsTimer=setInterval(()=>this._goCarousel((this._carCur||0)+1),(this._c.swipeInterval||5)*1000)
+        if(this._tAllTiles[ri2]?.colorRules) this._tAllTiles[ri2].colorRules.splice(rri,1)
+        this._updateAllTilesSection()
         break
       }
       case 'staticbg':{
@@ -1119,15 +1138,27 @@ class MeteoCard extends HTMLElement {
         const stSaveObj={}
         _STATION_CATS.forEach(cat=>cat.sensors.forEach(s=>{ stSaveObj[s.f]=this._tSt[s.f]||'' }))
         _STATION_SPECIALS.forEach(s=>{ stSaveObj[s.f]=this._tSt[s.f]||'' })
+        const _fixedTiles=this._tAllTiles.filter(t=>t.isFixed)
+        const _extraTiles=this._tAllTiles.filter(t=>!t.isFixed&&t.eid)
+        const _tileCustom={}
+        _fixedTiles.forEach(t=>{
+          const rules=(t.colorRules||[]).filter(r=>r.color)
+          if(t.ico||t.icoColor!=='#ffffff'||rules.length)
+            _tileCustom[t.key]={ico:t.ico||'',icoColor:t.icoColor||'#ffffff',colorRules:rules}
+        })
         this._c={ entityId:this._te,cityName:this._tc,
-                  humEntity:this._th,presEntity:this._tp,
-                  windEntity:this._tw,windDirEntity:this._twd,
+                  humEntity:_fixedTiles.find(t=>t.key==='hum')?.eid||'',
+                  presEntity:_fixedTiles.find(t=>t.key==='pres')?.eid||'',
+                  windEntity:_fixedTiles.find(t=>t.key==='wind')?.eid||'',
+                  windDirEntity:_fixedTiles.find(t=>t.key==='wdir')?.eid||'',
+                  tileCustom:_tileCustom,
                   wfDays:Math.min(10,Math.max(1,parseInt(this._tdays)||5)),
                   cardScale:Math.max(20,Math.min(100,parseInt(this._tCardScale)||100)),
                   cardW:Math.max(20,Math.min(100,parseInt(this._tCardW)||100)),
-                  extraStats:this._tExtraStats.filter(e=>e.eid).map(e=>({eid:e.eid,lbl:e.lbl||'',ico:e.ico||'📊',icoColor:e.icoColor||'#fff',colorRules:(e.colorRules||[]).filter(r=>r.color)})),
+                  extraStats:_extraTiles.map(e=>({eid:e.eid,lbl:e.lbl||'',ico:e.ico||'📊',icoColor:e.icoColor||'#ffffff',colorRules:(e.colorRules||[]).filter(r=>r.color)})),
                   staticBg:!!this._tStaticBg,
                   swipeInterval:parseInt(this._tSwipeInterval)||5,
+                  swipeTransition:parseFloat(this._tSwipeTransition)||0.38,
                   swipeThreshold:parseInt(this._tSwipeThreshold)||40,
                   stationEnabled:!!this._tSt.stationEnabled,
                   stationLat:this._tSt.stationLat||'',
@@ -1165,10 +1196,6 @@ class MeteoCard extends HTMLElement {
     const f=e.target.dataset.f,v=e.target.value
     const sr=this._modalHost?.shadowRoot
     if     (f==='city') { this._tc=v; this._schedPrev() }
-    else if(f==='hum') { this._th=v; this._updateDropdown('hum'); this._schedPrev() }
-    else if(f==='pres'){ this._tp=v; this._updateDropdown('pres'); this._schedPrev() }
-    else if(f==='wind'){ this._tw=v; this._updateDropdown('wind'); this._schedPrev() }
-    else if(f==='wdir'){ this._twd=v; this._updateDropdown('wdir'); this._schedPrev() }
     else if(f==='days'){ this._tdays=parseInt(v)||5; this._schedPrev() }
     else if(f==='cardscale'){
       this._tCardScale=Math.max(20,Math.min(100,parseInt(v)||100))
@@ -1184,38 +1211,38 @@ class MeteoCard extends HTMLElement {
     }
     else if(f==='stlat'){ this._tSt.stationLat=v }
     else if(f==='stlon'){ this._tSt.stationLon=v }
-    else if(f==='stenabled'){ /* toggle handled via click */ }
-    else if(f?.startsWith('exstat-eid-')){
-      const i=parseInt(f.replace('exstat-eid-',''))
-      if(this._tExtraStats[i]!=null){ this._tExtraStats[i].eid=v; this._updateDropdown(f) }
+    else if(f?.startsWith('tile-eid-')){
+      const i=parseInt(f.replace('tile-eid-',''))
+      if(this._tAllTiles[i]!=null){ this._tAllTiles[i].eid=v; this._updateDropdown(f) }
       this._schedPrev()
     }
-    else if(f?.startsWith('exstat-lbl-')){
-      const i=parseInt(f.replace('exstat-lbl-',''))
-      if(this._tExtraStats[i]!=null) this._tExtraStats[i].lbl=v
+    else if(f?.startsWith('tile-lbl-')){
+      const i=parseInt(f.replace('tile-lbl-',''))
+      if(this._tAllTiles[i]!=null) this._tAllTiles[i].lbl=v
       this._schedPrev()
     }
-    else if(f?.startsWith('exstat-ico-color-')){
-      const i=parseInt(f.replace('exstat-ico-color-',''))
-      if(this._tExtraStats[i]) this._tExtraStats[i].icoColor=v
+    else if(f?.startsWith('tile-ico-color-')){
+      const i=parseInt(f.replace('tile-ico-color-',''))
+      if(this._tAllTiles[i]){ this._tAllTiles[i].icoColor=v; this._updateAllTilesSection() }
       this._schedPrev()
     }
-    else if(f?.startsWith('exstat-ico-')){
-      const i=parseInt(f.replace('exstat-ico-',''))
-      if(this._tExtraStats[i]) this._tExtraStats[i].ico=v
+    else if(f?.startsWith('tile-ico-')){
+      const i=parseInt(f.replace('tile-ico-',''))
+      if(this._tAllTiles[i]){ this._tAllTiles[i].ico=v; this._updateAllTilesSection() }
       this._schedPrev()
     }
-    else if(f?.startsWith('exstat-rule-thr-')){
+    else if(f?.startsWith('tile-rule-thr-')){
       const pts=f.split('-'); const ii=parseInt(pts[pts.length-2]); const ri=parseInt(pts[pts.length-1])
-      if(this._tExtraStats[ii]?.colorRules?.[ri]) this._tExtraStats[ii].colorRules[ri].threshold=parseFloat(v)||0
+      if(this._tAllTiles[ii]?.colorRules?.[ri]) this._tAllTiles[ii].colorRules[ri].threshold=parseFloat(v)||0
       this._schedPrev()
     }
-    else if(f?.startsWith('exstat-rule-col-')){
+    else if(f?.startsWith('tile-rule-col-')){
       const pts=f.split('-'); const ii=parseInt(pts[pts.length-2]); const ri=parseInt(pts[pts.length-1])
-      if(this._tExtraStats[ii]?.colorRules?.[ri]) this._tExtraStats[ii].colorRules[ri].color=v
+      if(this._tAllTiles[ii]?.colorRules?.[ri]){ this._tAllTiles[ii].colorRules[ri].color=v; this._updateAllTilesSection() }
       this._schedPrev()
     }
     else if(f==='swipe-interval'){ this._tSwipeInterval=Math.max(2,Math.min(60,parseInt(v)||5)) }
+    else if(f==='swipe-transition'){ this._tSwipeTransition=Math.max(0.1,Math.min(2,parseFloat(v)||0.38)) }
     else if(f==='swipe-threshold'){ this._tSwipeThreshold=Math.max(10,Math.min(150,parseInt(v)||40)) }
     else {
       const allStFs=_STATION_CATS.flatMap(c=>c.sensors.map(s=>s.f)).concat(_STATION_SPECIALS.map(s=>s.f))
@@ -1236,18 +1263,22 @@ class MeteoCard extends HTMLElement {
     const pc=sr?.querySelector('#meteo-preview-card')
     if(!pc) return
     try{
+      const _fprev=this._tAllTiles.filter(t=>t.isFixed)
+      const _tcprev={}
+      _fprev.forEach(t=>{ const r=(t.colorRules||[]).filter(x=>x.color); if(t.ico||t.icoColor!=='#ffffff'||r.length) _tcprev[t.key]={ico:t.ico||'',icoColor:t.icoColor||'#ffffff',colorRules:r} })
       pc.setConfig({
         storageKey:'__prev__',
         entityId:this._te||this._c.entityId,
         cityName:this._tc,
-        humEntity:this._th,
-        presEntity:this._tp,
-        windEntity:this._tw,
-        windDirEntity:this._twd,
+        humEntity:_fprev.find(t=>t.key==='hum')?.eid||'',
+        presEntity:_fprev.find(t=>t.key==='pres')?.eid||'',
+        windEntity:_fprev.find(t=>t.key==='wind')?.eid||'',
+        windDirEntity:_fprev.find(t=>t.key==='wdir')?.eid||'',
+        tileCustom:_tcprev,
         wfDays:parseInt(this._tdays)||5,
         cardScale:100, cardMinH:0,
         staticBg:!!this._tStaticBg,
-        extraStats:this._tExtraStats.filter(e=>e.eid).map(e=>({eid:e.eid,lbl:e.lbl||''})),
+        extraStats:this._tAllTiles.filter(t=>!t.isFixed&&t.eid).map(e=>({eid:e.eid,lbl:e.lbl||'',ico:e.ico||'📊',icoColor:e.icoColor||'#ffffff',colorRules:(e.colorRules||[]).filter(r=>r.color)})),
       })
       if(this._h) pc.hass=this._h
       const sc=this._tCardScale??100
@@ -1261,7 +1292,7 @@ class MeteoCard extends HTMLElement {
     const f=e.target?.dataset?.f
     const sr=this._modalHost?.shadowRoot; if(!sr) return
     const allStFs=_STATION_CATS.flatMap(c=>c.sensors.map(s=>s.f)).concat(_STATION_SPECIALS.map(s=>s.f))
-    if(['hum','pres','wind','wdir'].includes(f)||allStFs.includes(f)||f?.startsWith('exstat-eid-')){
+    if(f?.startsWith('tile-eid-')||allStFs.includes(f)){
       sr.querySelectorAll('.esr[data-dropdown]').forEach(d=>{ if(d.dataset.dropdown!==f) d.classList.remove('open') })
       this._updateDropdown(f)
     } else {
@@ -1272,9 +1303,7 @@ class MeteoCard extends HTMLElement {
   _updateDropdown(field){
     const sr=this._modalHost?.shadowRoot; if(!sr) return
     const dropdown=sr.querySelector(`[data-dropdown="${field}"]`); if(!dropdown) return
-    const val={hum:this._th,pres:this._tp,wind:this._tw,wdir:this._twd}[field]
-      ||(field.startsWith('exstat-eid-')?this._tExtraStats[parseInt(field.replace('exstat-eid-',''))]?.eid||'':'')
-      ||((['hum','pres','wind','wdir'].includes(field))?'':this._tSt[field]||'')
+    const val=(field.startsWith('tile-eid-')?this._tAllTiles[parseInt(field.replace('tile-eid-',''))]?.eid||'':this._tSt[field]||'')
     const filter=val.toLowerCase()
     const allIds=Object.keys(this._h?.states||{})
     const filtered=filter
@@ -1296,13 +1325,21 @@ class MeteoCard extends HTMLElement {
   _openSettings(){
     this._so=true; this._se=false
     this._te=this._c.entityId; this._tc=this._c.cityName
-    this._th=this._c.humEntity; this._tp=this._c.presEntity
-    this._tw=this._c.windEntity; this._twd=this._c.windDirEntity
-    this._tdays=this._c.wfDays||5; const _mll=JSON.parse(localStorage.getItem('_frk_layout_'+(this._frarikCard?.id||''))||'{}'); this._tCardScale=_mll.cardScale??this._c.cardScale??100; this._tCardW=_mll.cardW??this._c.cardW??100
+    this._tdays=this._c.wfDays||5
+    const _mll=JSON.parse(localStorage.getItem('_frk_layout_'+(this._frarikCard?.id||''))||'{}')
+    this._tCardScale=_mll.cardScale??this._c.cardScale??100; this._tCardW=_mll.cardW??this._c.cardW??100
     this._tStaticBg=this._c.staticBg||false
     this._tSwipeInterval=this._c.swipeInterval||5
     this._tSwipeThreshold=this._c.swipeThreshold||40
-    this._tExtraStats=(this._c.extraStats||[]).map(e=>({...e,colorRules:[...(e.colorRules||[])]}))
+    this._tSwipeTransition=parseFloat(this._c.swipeTransition)||0.38
+    const _tc=this._c.tileCustom||{}
+    this._tAllTiles=[
+      {key:'hum', eid:this._c.humEntity||'',    lbl:'Umidità',   ico:_tc.hum?.ico||'',  icoColor:_tc.hum?.icoColor||'#ffffff',  colorRules:[...((_tc.hum?.colorRules)||[])], isFixed:true,_open:false,_pickerOpen:false},
+      {key:'pres',eid:this._c.presEntity||'',   lbl:'Pressione', ico:_tc.pres?.ico||'', icoColor:_tc.pres?.icoColor||'#ffffff', colorRules:[...((_tc.pres?.colorRules)||[])],isFixed:true,_open:false,_pickerOpen:false},
+      {key:'wind',eid:this._c.windEntity||'',   lbl:'Vento',     ico:_tc.wind?.ico||'', icoColor:_tc.wind?.icoColor||'#ffffff', colorRules:[...((_tc.wind?.colorRules)||[])],isFixed:true,_open:false,_pickerOpen:false},
+      {key:'wdir',eid:this._c.windDirEntity||'',lbl:'Direzione', ico:_tc.wdir?.ico||'', icoColor:_tc.wdir?.icoColor||'#ffffff', colorRules:[...((_tc.wdir?.colorRules)||[])],isFixed:true,_open:false,_pickerOpen:false},
+      ...(this._c.extraStats||[]).map(e=>({key:null,eid:e.eid||'',lbl:e.lbl||'',ico:e.ico||'📊',icoColor:e.icoColor||'#ffffff',colorRules:[...(e.colorRules||[])],isFixed:false,_open:false,_pickerOpen:false}))
+    ]
     this._tSt={ stationEnabled:this._c.stationEnabled||false, stationLat:this._c.stationLat||'', stationLon:this._c.stationLon||'' }
     _STATION_CATS.forEach(cat=>cat.sensors.forEach(s=>{ this._tSt[s.f]=this._c[s.f]||'' }))
     _STATION_SPECIALS.forEach(s=>{ this._tSt[s.f]=this._c[s.f]||'' })
@@ -1320,58 +1357,67 @@ class MeteoCard extends HTMLElement {
     }
   }
 
-  _extraStatsHTML(){
-    return this._tExtraStats.map((ex,i)=>`
-      <div style="border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:8px 10px;margin-top:8px;background:rgba(255,255,255,.02);">
+  _allTilesHTML(){
+    return this._tAllTiles.map((tile,i)=>{
+      const isFixed=tile.isFixed
+      const icoDisplay=tile.ico||(isFixed?_TILE_DEF_ICO[tile.key]:'📊')
+      const subPanel=tile._open?`
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.07);">
+          <div style="display:flex;gap:8px;margin-bottom:10px;align-items:flex-end;">
+            <div style="flex:1;">
+              <div class="fl" style="margin:0 0 4px;font-size:10px;">Icona tile</div>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <button data-a="tile-picker" data-idx="${i}" style="font-size:19px;width:40px;height:36px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:8px;cursor:pointer;line-height:1;flex-shrink:0;" title="Scegli emoji">${icoDisplay}</button>
+                <input class="ci" type="text" value="${tile.ico||''}" placeholder="${isFixed?'Vuoto = icona SVG default':'📊'}" data-f="tile-ico-${i}" style="flex:1;"/>
+              </div>
+              ${tile._pickerOpen?`<div style="margin-top:6px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:7px;max-height:128px;overflow-y:auto;scrollbar-width:none;"><div style="display:flex;flex-wrap:wrap;gap:3px;">${_TILE_EMOJIS.map(em=>`<button data-a="tile-pick-emoji" data-idx="${i}" data-em="${em}" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:3px 4px;font-size:16px;cursor:pointer;line-height:1;">${em}</button>`).join('')}</div></div>`:''}
+            </div>
+            <div style="flex-shrink:0;">
+              <div class="fl" style="margin:0 0 4px;font-size:10px;">Colore icona</div>
+              <input class="ci" type="color" value="${tile.icoColor||'#ffffff'}" data-f="tile-ico-color-${i}" style="padding:3px;height:36px;width:52px;"/>
+            </div>
+          </div>
+          <div>
+            <div class="fl" style="margin-bottom:2px;font-size:10px;">🎨 Colori per soglia valore</div>
+            <div class="ht" style="margin-bottom:6px;">Il colore con la soglia più alta raggiunta viene applicato al valore</div>
+            ${(tile.colorRules||[]).map((r,ri)=>`
+              <div style="display:flex;align-items:center;gap:5px;margin-top:5px;background:rgba(255,255,255,.03);border-radius:8px;padding:5px 7px;">
+                <span style="font-size:10px;color:rgba(255,255,255,.4);white-space:nowrap;flex-shrink:0;">val ≥</span>
+                <input class="ci" type="number" value="${r.threshold}" data-f="tile-rule-thr-${i}-${ri}" style="width:60px;padding:4px 7px;font-size:11px;flex-shrink:0;"/>
+                <input class="ci" type="color" value="${r.color||'#ffffff'}" data-f="tile-rule-col-${i}-${ri}" style="padding:3px;height:30px;width:46px;flex-shrink:0;"/>
+                <span style="font-size:10px;color:rgba(255,255,255,.3);flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${r.color||''}</span>
+                <button data-a="tile-rmrule" data-idx="${i}" data-ridx="${ri}" style="background:rgba(255,80,80,.1);border:1px solid rgba(255,80,80,.22);color:rgba(255,120,120,.85);border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer;flex-shrink:0;">✕</button>
+              </div>`).join('')}
+            <button data-a="tile-addrule" data-idx="${i}" style="margin-top:7px;width:100%;background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.18);color:#4ade80;border-radius:8px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;">＋ Aggiungi soglia colore</button>
+          </div>
+        </div>`:''
+      return `<div style="border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:8px 10px;margin-top:8px;background:rgba(255,255,255,.02);">
         <div style="display:flex;align-items:flex-end;gap:6px;">
-          <div style="flex:2;">
-            <div class="fl" style="margin:0 0 3px;font-size:10px;">Entità</div>
+          ${isFixed?`<div style="padding:2px 0 6px;min-width:60px;"><div class="fl" style="margin:0 0 1px;">${tile.lbl}</div><div style="font-size:9px;color:rgba(255,255,255,.35);">tile fissa</div></div>`:''}
+          <div style="flex:${isFixed?2:3};">
+            <div class="fl" style="margin:0 0 3px;font-size:10px;">${isFixed?'Sensore personalizzato (opzionale)':'Entità'}</div>
             <div class="inp-grp">
-              <input class="ci" type="text" value="${ex.eid||''}" placeholder="sensor.xyz" data-f="exstat-eid-${i}" autocomplete="off"/>
-              <div class="esr" data-dropdown="exstat-eid-${i}"><div class="el"></div></div>
+              <input class="ci" type="text" value="${tile.eid||''}" placeholder="${isFixed?'sensor.xyz → auto se vuoto':'sensor.xyz'}" data-f="tile-eid-${i}" autocomplete="off"/>
+              <div class="esr" data-dropdown="tile-eid-${i}"><div class="el"></div></div>
             </div>
           </div>
-          <div style="flex:1;">
-            <div class="fl" style="margin:0 0 3px;font-size:10px;">Etichetta</div>
-            <input class="ci" type="text" value="${ex.lbl||''}" placeholder="Nome" data-f="exstat-lbl-${i}"/>
+          ${!isFixed?`<div style="flex:1.5;"><div class="fl" style="margin:0 0 3px;font-size:10px;">Etichetta</div><input class="ci" type="text" value="${tile.lbl||''}" placeholder="Nome" data-f="tile-lbl-${i}"/></div>`:''}
+          <div style="display:flex;gap:4px;padding-bottom:1px;">
+            <button data-a="tile-open" data-idx="${i}" style="background:rgba(251,191,36,${tile._open?.12:.06});border:1px solid rgba(251,191,36,${tile._open?.35:.15});color:${tile._open?'#fbbf24':'rgba(255,255,255,.45)'};border-radius:8px;padding:6px 7px;font-size:14px;cursor:pointer;flex-shrink:0;line-height:1;" title="Personalizza">${icoDisplay} ⚙</button>
+            ${!isFixed?`<button data-a="tile-rm" data-idx="${i}" style="background:rgba(255,80,80,.1);border:1px solid rgba(255,80,80,.22);color:rgba(255,120,120,.85);border-radius:8px;padding:6px 9px;font-size:13px;cursor:pointer;flex-shrink:0;line-height:1;">✕</button>`:''}
           </div>
-          <button data-a="exstat-open" data-idx="${i}" style="background:rgba(251,191,36,${ex._open?.12:.06});border:1px solid rgba(251,191,36,${ex._open?.35:.15});color:${ex._open?'#fbbf24':'rgba(255,255,255,.5)'};border-radius:8px;padding:8px 9px;font-size:13px;cursor:pointer;flex-shrink:0;line-height:1;" title="Personalizza icona e colori">⚙</button>
-          <button data-a="rmexstat" data-idx="${i}" style="background:rgba(255,80,80,.1);border:1px solid rgba(255,80,80,.22);color:rgba(255,120,120,.85);border-radius:8px;padding:8px 10px;font-size:13px;cursor:pointer;flex-shrink:0;line-height:1;">✕</button>
         </div>
-        ${ex._open?`
-          <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.07);">
-            <div style="display:flex;gap:8px;margin-bottom:8px;">
-              <div style="flex:2;">
-                <div class="fl" style="margin:0 0 3px;font-size:10px;">Icona (emoji o testo)</div>
-                <input class="ci" type="text" value="${ex.ico||'📊'}" placeholder="📊" data-f="exstat-ico-${i}" style="font-size:16px;"/>
-              </div>
-              <div style="flex:1;">
-                <div class="fl" style="margin:0 0 3px;font-size:10px;">Colore icona</div>
-                <input class="ci" type="color" value="${ex.icoColor||'#ffffff'}" data-f="exstat-ico-color-${i}" style="padding:4px;height:36px;"/>
-              </div>
-            </div>
-            <div class="fl" style="margin-bottom:4px;">🎨 Colore valore per soglia</div>
-            <div class="ht" style="margin-bottom:6px;">Il colore attivo è quello con la soglia più alta raggiunta</div>
-            ${(ex.colorRules||[]).map((r,ri)=>`
-              <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
-                <span style="font-size:11px;color:rgba(255,255,255,.5);flex-shrink:0;">valore ≥</span>
-                <input class="ci" type="number" value="${r.threshold}" data-f="exstat-rule-thr-${i}-${ri}" style="width:64px;padding:5px 8px;font-size:11px;flex-shrink:0;"/>
-                <input class="ci" type="color" value="${r.color||'#ffffff'}" data-f="exstat-rule-col-${i}-${ri}" style="padding:4px;height:32px;width:48px;flex-shrink:0;"/>
-                <button data-a="rmrule" data-idx="${i}" data-ridx="${ri}" style="background:rgba(255,80,80,.1);border:1px solid rgba(255,80,80,.22);color:rgba(255,120,120,.85);border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;flex-shrink:0;">✕</button>
-              </div>
-            `).join('')}
-            <button data-a="addrule" data-idx="${i}" style="margin-top:6px;width:100%;background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.2);color:#4ade80;border-radius:8px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;">＋ Aggiungi soglia colore</button>
-          </div>
-        `:''}
-      </div>
-    `).join('')+
-    (this._tExtraStats.length<8?`<button data-a="addexstat" style="margin-top:10px;width:100%;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.22);color:#fbbf24;border-radius:10px;padding:7px 14px;font-size:11px;font-weight:700;cursor:pointer;">＋ Aggiungi statistica</button>`:'')
+        ${subPanel}
+      </div>`
+    }).join('')+
+    (this._tAllTiles.filter(t=>!t.isFixed).length<8
+      ?`<button data-a="tile-add" style="margin-top:10px;width:100%;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.22);color:#fbbf24;border-radius:10px;padding:7px 14px;font-size:11px;font-weight:700;cursor:pointer;">＋ Aggiungi statistica</button>`:'')
   }
 
-  _updateExtraStatsSection(){
+  _updateAllTilesSection(){
     const sr=this._modalHost?.shadowRoot; if(!sr) return
-    const c=sr.querySelector('#extra-stats-container'); if(!c) return
-    c.innerHTML=this._extraStatsHTML()
+    const c=sr.querySelector('#all-tiles-container'); if(!c) return
+    c.innerHTML=this._allTilesHTML()
   }
 
   _renderModal(){
@@ -1478,23 +1524,28 @@ class MeteoCard extends HTMLElement {
       fcH=`<div style="grid-column:span ${_nDays};text-align:center;padding:14px;color:rgba(255,255,255,.25);font-size:11px;">Previsioni in caricamento…</div>`
     }
 
+    const _tcust=c.tileCustom||{}
+    const _applyColor=(rules,sv)=>{
+      if(!rules?.length||sv==null) return null
+      const n=parseFloat(sv); if(isNaN(n)) return null
+      const s=[...rules].sort((a,b)=>b.threshold-a.threshold)
+      for(const r of s){ if(n>=r.threshold) return r.color }
+      return null
+    }
+    const _tileIco=(key,cust)=>cust?.ico
+      ?`<span style="color:${cust.icoColor||'#fff'};font-size:1.1em">${cust.ico}</span>`
+      :`<span style="color:${cust?.icoColor||'#fff'}">${_IC[key]}</span>`
+    const _wrapVal=(v,rules)=>{const cl=_applyColor(rules,v);return cl?`<span style="color:${cl}">${v}</span>`:v}
     const _allTiles=[
-      {eid:c.humEntity||c.entityId,    attr:c.humEntity?'':'humidity',     lbl:'Umidità',   ico:_IC.hu, val:hum},
-      {eid:c.presEntity||c.entityId,   attr:c.presEntity?'':'pressure',    lbl:'Pressione', ico:_IC.pr, val:pres},
-      {eid:c.windEntity||c.entityId,   attr:c.windEntity?'':'wind_speed',  lbl:'Vento',     ico:_IC.wi, val:wsp},
-      {eid:c.windDirEntity||c.entityId,attr:c.windDirEntity?'':'wind_bearing',lbl:'Direzione',ico:_IC.co,val:wdir},
+      {eid:c.humEntity||c.entityId,    attr:c.humEntity?'':'humidity',      lbl:'Umidità',   ico:_tileIco('hu',_tcust.hum),  val:_wrapVal(hum, _tcust.hum?.colorRules)},
+      {eid:c.presEntity||c.entityId,   attr:c.presEntity?'':'pressure',     lbl:'Pressione', ico:_tileIco('pr',_tcust.pres), val:_wrapVal(pres,_tcust.pres?.colorRules)},
+      {eid:c.windEntity||c.entityId,   attr:c.windEntity?'':'wind_speed',   lbl:'Vento',     ico:_tileIco('wi',_tcust.wind), val:_wrapVal(wsp, _tcust.wind?.colorRules)},
+      {eid:c.windDirEntity||c.entityId,attr:c.windDirEntity?'':'wind_bearing',lbl:'Direzione',ico:_tileIco('co',_tcust.wdir),val:_wrapVal(wdir,_tcust.wdir?.colorRules)},
       ...(c.extraStats||[]).filter(x=>x.eid).map(ex=>{
         const sv=_sv(ex.eid)
-        let valColor=null
-        if(ex.colorRules?.length&&sv!=null&&sv!='--'){
-          const numVal=parseFloat(sv)
-          if(!isNaN(numVal)){
-            const sorted=[...(ex.colorRules)].sort((a,b)=>b.threshold-a.threshold)
-            for(const r of sorted){ if(numVal>=r.threshold){ valColor=r.color; break } }
-          }
-        }
+        const valColor=_applyColor(ex.colorRules,sv)
         return {eid:ex.eid,attr:'',lbl:ex.lbl||ex.eid.split('.').pop(),
-          ico:`<span style="color:${ex.icoColor||'#fff'};font-size:1em">${ex.ico||'📊'}</span>`,
+          ico:`<span style="color:${ex.icoColor||'#fff'};font-size:1.1em">${ex.ico||'📊'}</span>`,
           val:valColor?`<span style="color:${valColor}">${sv||'--'}</span>`:sv||'--'}
       })
     ]
@@ -1504,7 +1555,6 @@ class MeteoCard extends HTMLElement {
       ?`<div class="stats">${(_pages[0]||[]).map(_mkTile).join('')}</div>`
       :`<div class="stats-wrap">
           <div class="stats-track">${_pages.map(pg=>`<div class="stats-page">${pg.map(_mkTile).join('')}</div>`).join('')}</div>
-          <div class="stats-dots">${_pages.map((_,i)=>`<div class="stats-dot${i===0?' active':''}" data-a="statdot" data-page="${i}"></div>`).join('')}</div>
         </div>`
 
     this.shadowRoot.innerHTML=`<style>${_CSS}</style>
@@ -1546,7 +1596,6 @@ class MeteoCard extends HTMLElement {
     const n=track.querySelectorAll('.stats-page').length; if(!n) return
     this._carCur=((idx%n)+n)%n
     track.style.transform=`translateX(-${this._carCur*100}%)`
-    sr.querySelectorAll('.stats-dot').forEach((d,i)=>d.classList.toggle('active',i===this._carCur))
   }
 
   _initStatsCarousel(){
@@ -1557,24 +1606,41 @@ class MeteoCard extends HTMLElement {
     this._carCur=0
     const _si=(this._c.swipeInterval||5)*1000
     const _st=this._c.swipeThreshold||40
+    const _dur=parseFloat(this._c.swipeTransition)||0.38
+    track.style.transition=`transform ${_dur}s cubic-bezier(.4,0,.2,1)`
     this._statsTimer=setInterval(()=>this._goCarousel((this._carCur||0)+1),_si)
     const wrap=sr.querySelector('.stats-wrap'); if(!wrap) return
+    const _restart=()=>{ clearInterval(this._statsTimer); this._statsTimer=setInterval(()=>this._goCarousel((this._carCur||0)+1),_si) }
+    // touch
     let tx=0,dragging=false
     wrap.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;dragging=false},{passive:true})
-    wrap.addEventListener('touchmove',e=>{
-      const dx=Math.abs(e.touches[0].clientX-tx)
-      if(dx>8) dragging=true
-    },{passive:true})
+    wrap.addEventListener('touchmove',e=>{if(Math.abs(e.touches[0].clientX-tx)>8)dragging=true},{passive:true})
     wrap.addEventListener('touchend',e=>{
-      if(!dragging) return
+      if(!dragging){dragging=false;return}
       const dx=e.changedTouches[0].clientX-tx
-      if(Math.abs(dx)>_st){
-        clearInterval(this._statsTimer)
-        this._goCarousel((this._carCur||0)+(dx<0?1:-1))
-        this._statsTimer=setInterval(()=>this._goCarousel((this._carCur||0)+1),_si)
-      }
+      if(Math.abs(dx)>_st){this._goCarousel((this._carCur||0)+(dx<0?1:-1));_restart()}
       dragging=false
     },{passive:true})
+    // pointer/mouse drag
+    let px=0,pdrag=false,pdown=false
+    wrap.addEventListener('pointerdown',e=>{
+      if(e.pointerType==='touch') return
+      px=e.clientX;pdown=true;pdrag=false
+      try{wrap.setPointerCapture(e.pointerId)}catch(_){}
+    })
+    wrap.addEventListener('pointermove',e=>{
+      if(!pdown||e.pointerType==='touch') return
+      if(Math.abs(e.clientX-px)>8) pdrag=true
+    })
+    wrap.addEventListener('pointerup',e=>{
+      if(!pdown||e.pointerType==='touch') return
+      pdown=false
+      if(!pdrag){pdrag=false;return}
+      const dx=e.clientX-px
+      if(Math.abs(dx)>_st){this._goCarousel((this._carCur||0)+(dx<0?1:-1));_restart()}
+      pdrag=false
+    })
+    wrap.addEventListener('pointercancel',()=>{pdown=false;pdrag=false})
   }
 
   _sovHTML(){
@@ -1614,56 +1680,33 @@ class MeteoCard extends HTMLElement {
         <input class="ci" type="text" value="${this._tc}" placeholder="Es: Selargius" data-f="city"/>
         <div class="ht">Se vuoto usa il nome dell'entità HA</div>
 
-        <div class="fl" style="margin-top:14px;">Umidità — sensor (opzionale)</div>
-        <div class="inp-grp">
-          <input class="ci" type="text" value="${this._th}" placeholder="Es: sensor.umidita_esterna" data-f="hum" autocomplete="off"/>
-          <div class="esr" data-dropdown="hum"><div class="el"></div></div>
-        </div>
-        <div class="ht">Vuoto → usa attributo humidity dell'entità meteo</div>
-
-        <div class="fl" style="margin-top:10px;">Pressione — sensor (opzionale)</div>
-        <div class="inp-grp">
-          <input class="ci" type="text" value="${this._tp}" placeholder="Es: sensor.pressione_barometrica" data-f="pres" autocomplete="off"/>
-          <div class="esr" data-dropdown="pres"><div class="el"></div></div>
-        </div>
-        <div class="ht">Vuoto → usa attributo pressure dell'entità meteo</div>
-
-        <div class="fl" style="margin-top:10px;">Velocità vento — sensor (opzionale)</div>
-        <div class="inp-grp">
-          <input class="ci" type="text" value="${this._tw}" placeholder="Es: sensor.vento_velocita" data-f="wind" autocomplete="off"/>
-          <div class="esr" data-dropdown="wind"><div class="el"></div></div>
-        </div>
-        <div class="ht">Vuoto → usa attributo wind_speed dell'entità meteo</div>
-
-        <div class="fl" style="margin-top:10px;">Direzione vento — sensor (opzionale)</div>
-        <div class="inp-grp">
-          <input class="ci" type="text" value="${this._twd}" placeholder="Es: sensor.vento_direzione" data-f="wdir" autocomplete="off"/>
-          <div class="esr" data-dropdown="wdir"><div class="el"></div></div>
-        </div>
-        <div class="ht">Vuoto → usa attributo wind_bearing dell'entità meteo</div>
-
         <div class="fl" style="margin-top:14px;">Giorni previsioni (1–10)</div>
         <input class="ci" type="number" min="1" max="10" value="${this._tdays}" data-f="days"/>
         <div class="ht">Quanti giorni mostrare nel pannello previsioni</div>
 
         <div style="margin-top:16px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;">
-          <div class="fl" style="margin:0 0 4px;">📊 Statistiche aggiuntive</div>
-          <div class="ht" style="margin-bottom:6px;">Tile extra che scorrono automaticamente (max 8). ⚙ per icona e colori per valore.</div>
-          <div id="extra-stats-container">${this._extraStatsHTML()}</div>
+          <div class="fl" style="margin:0 0 2px;">📊 Tutte le tile swipe</div>
+          <div class="ht" style="margin-bottom:8px;">Le prime 4 sono fisse (usano attributo auto se il sensore è vuoto). Aggiungi fino a 8 statistiche extra. ⚙ per icona, colore e soglie.</div>
+          <div id="all-tiles-container">${this._allTilesHTML()}</div>
         </div>
 
         <div style="margin-top:14px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;">
-          <div class="fl" style="margin:0 0 8px;">🔄 Scorrimento automatico tile</div>
-          <div style="display:flex;gap:10px;">
+          <div class="fl" style="margin:0 0 8px;">🔄 Scorrimento automatico</div>
+          <div style="display:flex;gap:8px;">
             <div style="flex:1;">
-              <div class="fl" style="margin:0 0 3px;font-size:10px;">Intervallo (secondi)</div>
+              <div class="fl" style="margin:0 0 3px;font-size:10px;">Intervallo (s)</div>
               <input class="ci" type="number" min="2" max="60" value="${this._tSwipeInterval}" data-f="swipe-interval"/>
             </div>
             <div style="flex:1;">
-              <div class="fl" style="margin:0 0 3px;font-size:10px;">Soglia swipe (px)</div>
+              <div class="fl" style="margin:0 0 3px;font-size:10px;">Transizione (s)</div>
+              <input class="ci" type="number" min="0.1" max="2" step="0.1" value="${this._tSwipeTransition}" data-f="swipe-transition"/>
+            </div>
+            <div style="flex:1;">
+              <div class="fl" style="margin:0 0 3px;font-size:10px;">Soglia drag (px)</div>
               <input class="ci" type="number" min="10" max="150" value="${this._tSwipeThreshold}" data-f="swipe-threshold"/>
             </div>
           </div>
+          <div class="ht" style="margin-top:5px;">Intervallo: secondi tra cambi auto · Transizione: velocità animazione · Drag: pixels per swipe manuale</div>
         </div>
 
         <div style="margin-top:14px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;display:flex;align-items:center;gap:10px;">

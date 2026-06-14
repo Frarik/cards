@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.4.54 — 2026-06-14
+
+### feat(MeteoCard): unified tile config, mouse drag, emoji picker, swipe transition fix (v1.4.54 / MeteoCard 1.38)
+
+**card-js/Meteo.js (1.37 → 1.38):**
+- **Tile swipe unificate**: le 4 tile fisse (Umidità/Pressione/Vento/Direzione) e le extra sono ora
+  in un unico pannello "Tutte le tile swipe" con la stessa interfaccia di personalizzazione:
+  sensore opzionale, icona (emoji picker), colore icona, regole colore per soglia
+- **`tileCustom`**: nuovo campo config per icona/colore/colorRules delle 4 tile fisse
+- **Emoji picker**: pulsante 🔍 nell'icona tile apre griglia di 50+ emoji selezionabili
+- **Durata transizione swipe**: nuovo campo `swipeTransition` (default 0.38s), applicato dinamicamente
+  via `track.style.transition`; rimozione del valore hardcoded in CSS
+- **Drag mouse desktop**: eventi `pointerdown/pointermove/pointerup` per trascinamento con mouse
+  oltre al touch esistente; `cursor:grab/grabbing` su `.stats-wrap`
+- **Rimossi i pallini** (`.stats-dots`) sotto il carosello — non più necessari
+- Fix `setConfig`/`_saveStore`: `tileCustom`, `swipeInterval`, `swipeTransition`, `swipeThreshold`
+  ora persistono correttamente nel localStorage
+
+---
+
 ## 1.4.53 — 2026-06-14
 
 ### feat(MeteoCard): popup redesign, entity colorRules, swipe config, icon sizes, static bg fix (v1.4.53 / MeteoCard 1.37)
