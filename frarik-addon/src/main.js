@@ -10952,7 +10952,7 @@ function _epLicBadgeLoad(){
 }
 
 /* ── Pannello Admin (ep-content-admin-panel) ─────────────────────────────── */
-const LICENSE_ADMIN_API='https://frarik-license.frarik.workers.dev/api/admin/licenses';
+const LICENSE_ADMIN_API='https://frarik-license.frarik.workers.dev/api/admin/licenses'; // GET, auth via X-Frarik-Key (chiave admin)
 function _epAdminPanelLoad(){
   const body=document.getElementById('ep-admin-body'); if(!body) return;
   const name=localStorage.getItem('frarik_lic_name')||'—';
@@ -10972,14 +10972,17 @@ function _epAdminPanelLoad(){
     const dino=_licDinoFor(u.name||'',u.note||'');
     const lvlLabel=isUAdm?'🛡️ Admin + Premium':isUPrem?'💎 Premium':'⭐ Standard';
     const lvlColor=isUAdm?'#ec4899':isUPrem?'#fbbf24':'#94a3b8';
-    const expU=u.expires?new Date(isNaN(u.expires)?u.expires:parseInt(u.expires)).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'}):'—';
+    const fmtTs=ts=>{ if(!ts) return '—'; try{ return new Date(isNaN(ts)?ts:parseInt(ts)).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'}); }catch(e){ return '—'; } };
+    const expU=fmtTs(u.expires);
+    const lastU=u.lastSeen?fmtTs(u.lastSeen):'Mai';
+    const statusDot=u.active===false?'<span style="color:#f87171">● Rev.</span>':'<span style="color:#4ade80">●</span>';
     return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);margin-bottom:6px">
       <div style="font-size:24px;line-height:1">${dino.e}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(u.name||'—')}</div>
-        <div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:1px">Scad: ${expU}</div>
+        <div style="font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${statusDot} ${eh(u.name||'—')}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.32);margin-top:2px">Scad: ${expU} · Accesso: ${lastU}</div>
       </div>
-      <span style="padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);font-size:10px;font-weight:800;color:${lvlColor};white-space:nowrap">${lvlLabel}</span>
+      <span style="padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);font-size:10px;font-weight:800;color:${lvlColor};white-space:nowrap;flex-shrink:0">${lvlLabel}</span>
     </div>`;
   };
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.4.75 — 2026-06-15
+
+### fix(admin): endpoint Worker /api/admin/licenses + lista utenti reali funzionante
+
+- Aggiunto endpoint `GET /api/admin/licenses` al Worker Cloudflare: autentica tramite `X-Frarik-Key` (la chiave-licenza admin), verifica che la nota contenga "admin"/"amministratore", poi restituisce la lista completa
+- CORS aggiornato: aggiunto `X-Frarik-Key` e `X-Admin-Key` agli header permessi
+- Dashboard: `userRow` aggiornato con stato attivo/revocato, data ultimo accesso, formattazione corretta
+- Worker deployato a `https://frarik-license.frarik.workers.dev`
+
 ## 1.4.74 — 2026-06-15
 
 ### fix(licenza/admin): T-Rex per admin + badge Admin+Premium + utenti reali API
