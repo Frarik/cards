@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.4.90 — 2026-06-16
+
+### fix: Card YAML — diagnostica iframe nativo HA
+
+- Il renderer interno non può rendere card HACS complesse/annidate (es. `custom:multiple-entity-row`, `custom:hui-element` nested) → solo il motore nativo HA garantisce il 100%
+- **Diagnostica visibile**: se il rendering nativo HA (iframe su dashboard `frarik-yaml`) non parte, l'anteprima mostra il motivo esatto del fallimento (`dashboards/list`, `dashboards/create`, `config/save` con codice errore, oppure "WebSocket non connesso")
+- `_fyLastErr`: nuova variabile che cattura l'errore WS specifico nei passi `_fyEnsureDashboard` / `_fyUpsertView`
+- L'anteprima ora prova SEMPRE l'upgrade a iframe nativo e segnala se ricade sul renderer interno
+
 ## 1.4.89 — 2026-06-16
 
 ### fix: Card YAML — CSS vars HA + ordine setConfig/hass corretto

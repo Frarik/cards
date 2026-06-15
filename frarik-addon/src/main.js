@@ -8077,17 +8077,18 @@ async function _createHACard(config){
    mostriamo in un <iframe>: così è Home Assistant stesso a disegnare la card → identica,
    con TUTTI i plugin HACS. Se la dashboard/WS non è disponibile → fallback renderer interno. */
 const _FY_DASH='frarik-yaml';
-let _fyDashEnsured=false, _fyLock=Promise.resolve();
+let _fyDashEnsured=false, _fyLock=Promise.resolve(), _fyLastErr='';
 function _fyPath(cardId){ return 'c'+String(cardId||'').toLowerCase().replace(/[^a-z0-9_-]/g,''); }
 async function _fyWS(msg,timeout){ try{ return await sendAndWait(msg,timeout||10000); }catch(e){ return null; } }
+function _fyErrTxt(r){ if(!r) return 'nessuna risposta (timeout/WS)'; if(r.error) return (r.error.code||'')+' '+(r.error.message||''); return JSON.stringify(r).slice(0,120); }
 async function _fyEnsureDashboard(){
   if(_fyDashEnsured) return true;
   const list=await _fyWS({type:'lovelace/dashboards/list'});
-  if(!list||!list.success) return false;
+  if(!list||!list.success){ _fyLastErr='dashboards/list: '+_fyErrTxt(list); return false; }
   const ex=Array.isArray(list.result)&&list.result.find(d=>d.url_path===_FY_DASH);
   if(!ex){
     const cr=await _fyWS({type:'lovelace/dashboards/create',url_path:_FY_DASH,mode:'storage',title:'Frarik YAML',icon:'mdi:code-braces',show_in_sidebar:false,require_admin:false});
-    if(!cr||!cr.success) return false;
+    if(!cr||!cr.success){ _fyLastErr='dashboards/create: '+_fyErrTxt(cr); return false; }
   }
   _fyDashEnsured=true; return true;
 }
@@ -8098,7 +8099,8 @@ async function _fyGetConfig(){
 /* scrive/aggiorna la vista (path=cardId) con dentro la card YAML — serializzato per evitare race */
 function _fyUpsertView(cardId, cardCfg){
   const job=_fyLock.then(async()=>{
-    if(!(ws&&ws.readyState===1)) return false;
+    _fyLastErr='';
+    if(!(ws&&ws.readyState===1)){ _fyLastErr='WebSocket non connesso'; return false; }
     if(!await _fyEnsureDashboard()) return false;
     const cfg=await _fyGetConfig(); cfg.views=cfg.views||[];
     const path=_fyPath(cardId);
@@ -8106,9 +8108,10 @@ function _fyUpsertView(cardId, cardCfg){
     const i=cfg.views.findIndex(v=>v&&v.path===path);
     if(i>=0) cfg.views[i]=view; else cfg.views.push(view);
     const sv=await _fyWS({type:'lovelace/config/save',url_path:_FY_DASH,config:cfg});
-    return !!(sv&&sv.success);
+    if(!(sv&&sv.success)){ _fyLastErr='config/save: '+_fyErrTxt(sv); return false; }
+    return true;
   });
-  _fyLock=job.catch(()=>{});
+  _fyLock=job.catch(e=>{ _fyLastErr='eccezione: '+(e&&e.message||e); return false; });
   return job;
 }
 
@@ -8623,10 +8626,16 @@ async function _ghsYamlLivePreview(){
     const nc=(window.customCards||[]).length;
     if(hacsEl) hacsEl.textContent=nc?(nc+' card HACS'):'';
     if(addBtn) addBtn.style.display='';
-    // ── Upgrade opzionale via iframe HA (se WS disponibile, sostituisce dopo 1s) ──
+    // ── Upgrade a iframe HA reale (rendering 100% identico, tutti i plugin HACS) ──
+    if(errEl) errEl.textContent='⏳ Carico rendering nativo HA…';
     _fyUpsertView('ghsy_prv',config).then(saved=>{
-      if(!saved) return;
       const p2=document.getElementById('ghsy-prev'); if(!p2||!p2.isConnected) return;
+      if(!saved){
+        // Diagnostica visibile: perché l'iframe nativo non è disponibile
+        if(errEl) errEl.innerHTML='<span style="color:#fbbf24">⚠️ Rendering nativo HA non disponibile — uso renderer interno.</span> <span style="opacity:.6;font-size:9px">('+eh(_fyLastErr||'sconosciuto')+')</span>';
+        return;
+      }
+      if(errEl) errEl.textContent='';
       if(p2.querySelector('iframe[data-ghsy-prv]')) return; // già presente
       if(p2._ghsYamlTimer){ clearInterval(p2._ghsYamlTimer); p2._ghsYamlTimer=null; }
       p2.innerHTML='';
@@ -8638,7 +8647,7 @@ async function _ghsYamlLivePreview(){
       f.src='/'+_FY_DASH+'/'+encodeURIComponent(_fyPath('ghsy_prv'))+'?kiosk';
       _fyHideNavInIframe(f);
       p2.appendChild(f);
-    }).catch(()=>{});
+    }).catch(e=>{ if(errEl) errEl.textContent='⚠️ iframe HA: '+(e&&e.message||e); });
   }catch(e){
     prev.innerHTML=`<div style="padding:20px;color:#f87171;font-size:11px;text-align:center">⚠️ ${eh(e.message)}</div>`;
     if(errEl) errEl.textContent='⚠️ '+e.message;
