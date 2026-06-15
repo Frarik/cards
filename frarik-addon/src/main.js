@@ -593,7 +593,7 @@ function _popupPickView(cardId){
   const card=curPage().cards.find(c=>c.id===cardId); if(!card) return;
   const menu=document.createElement('div'); menu.id='pp-view-menu';
   menu.style.cssText='position:fixed;z-index:15500;left:50%;top:80px;transform:translateX(-50%);background:#1a1f35;border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:8px;box-shadow:0 12px 40px rgba(0,0,0,.75);display:flex;flex-direction:column;gap:6px;min-width:240px;max-height:70vh;overflow:auto';
-  const bs='background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:#e2e8f0;font-size:12px;padding:9px 12px;cursor:pointer;text-align:left';
+  const bs='background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:#fff;font-size:12px;padding:9px 12px;cursor:pointer;text-align:left';
   menu.innerHTML='<div style="font-size:9px;color:#fff;padding:2px 4px 4px;text-transform:uppercase">Quale vista apre il popup?</div>'+
     (cfg.pages||[]).map((p,i)=>`<button style="${bs}${p.id===card.targetPage?';border-color:var(--acc)':''}" data-action="_ppSetTarget" data-action-args='["${cardId}","${p.id}"]'>${eh(p.icon||'📄')} ${eh(p.name||('Vista '+(i+1)))}</button>`).join('');
   document.body.appendChild(menu);
@@ -1105,7 +1105,7 @@ function copyCardToPage(cardId){
   const menu=document.createElement('div');
   menu.id='copy-page-menu';
   menu.style.cssText='position:fixed;z-index:15000;left:50%;top:80px;transform:translateX(-50%);background:#1a1f35;border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:8px;box-shadow:0 12px 40px rgba(0,0,0,.75);display:flex;flex-direction:column;gap:6px;min-width:220px;max-height:70vh;overflow:auto';
-  const bs='background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:#e2e8f0;font-size:12px;padding:9px 12px;cursor:pointer;text-align:left';
+  const bs='background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:#fff;font-size:12px;padding:9px 12px;cursor:pointer;text-align:left';
   menu.innerHTML='<div style="font-size:9px;color:#fff;padding:2px 4px 4px;text-transform:uppercase">Copia "'+eh(card.label||card.type)+'" su…</div>'+
     others.map(x=>`<button style="${bs}" data-action="_copyCardToPageDo" data-action-args='["${cardId}",${x.i}]'>${eh(x.p.icon||'📄')} ${eh(x.p.name||('Vista '+(x.i+1)))}</button>`).join('');
   document.body.appendChild(menu);
@@ -1168,8 +1168,8 @@ async function openEntityCleanup(){
       '<input id="ec-filter" type="text" placeholder="Filtra per nome / id…" style="flex:1;height:34px;border-radius:9px;border:1px solid rgba(255,255,255,.15);background:#0f1830;color:#fff;font-size:12px;padding:0 10px">'+
       '<label style="display:flex;align-items:center;gap:6px;font-size:11px;cursor:pointer;white-space:nowrap"><input type="checkbox" id="ec-onlyun" checked> solo non disponibili</label>'+
     '</div>'+
-    '<div id="ec-list" style="flex:1;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;padding:6px 12px"><div style="padding:20px;text-align:center;color:#64748b;font-size:12px">Caricamento…</div></div>'+
-    '<div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,.08);display:flex;gap:10px;align-items:center"><div id="ec-count" style="flex:1;font-size:11px;color:#94a3b8"></div><button data-action="_ecRemoveSel" style="border:none;border-radius:10px;background:#ef4444;color:#fff;font-weight:800;font-size:12px;padding:10px 16px;cursor:pointer">🗑 Rimuovi selezionate</button></div>'+
+    '<div id="ec-list" style="flex:1;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;padding:6px 12px"><div style="padding:20px;text-align:center;color:#fff;font-size:12px">Caricamento…</div></div>'+
+    '<div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,.08);display:flex;gap:10px;align-items:center"><div id="ec-count" style="flex:1;font-size:11px;color:#fff"></div><button data-action="_ecRemoveSel" style="border:none;border-radius:10px;background:#ef4444;color:#fff;font-weight:800;font-size:12px;padding:10px 16px;cursor:pointer">🗑 Rimuovi selezionate</button></div>'+
   '</div>';
   document.body.appendChild(ov);
   ov.addEventListener('click',e=>{ if(e.target===ov) _closeEntCleanup(); });
@@ -1196,10 +1196,10 @@ function _ecRender(){
     const nm=e.name||e.original_name||id;
     return '<label style="display:flex;align-items:center;gap:9px;padding:8px 6px;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer">'+
       '<input type="checkbox" class="ec-cb" data-id="'+eh(id)+'" '+(un?'checked':'')+'>'+
-      '<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+eh(nm)+'</div><div style="font-size:9px;color:#64748b">'+eh(id)+'</div></div>'+
+      '<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+eh(nm)+'</div><div style="font-size:9px;color:#fff">'+eh(id)+'</div></div>'+
       '<span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:6px;background:'+(un?'rgba(239,68,68,.15)':'rgba(34,197,94,.12)')+';color:'+(un?'#f87171':'#4ade80')+'">'+(un?'non disp.':'ok')+'</span>'+
     '</label>';
-  }).join(''):'<div style="padding:20px;text-align:center;color:#64748b;font-size:12px">Nessuna entità</div>';
+  }).join(''):'<div style="padding:20px;text-align:center;color:#fff;font-size:12px">Nessuna entità</div>';
 }
 function _closeEntCleanup(){ document.getElementById('ent-cleanup')?.remove(); }
 async function _ecRemoveSel(){
@@ -6538,8 +6538,8 @@ function _hbCreateModal(){
                 <input type="hidden" id="hbf-imap-icon">
                 <button class="fbtn" data-action="hbAddIconMap" title="Aggiungi regola" style="flex-shrink:0">+</button>
               </div>
-              <div style="font-size:9px;color:rgba(148,163,184,.45);line-height:1.6">
-                💡 Es.: stato <span style="color:#4ade80">on</span> → 💡 giallo · stato <span style="color:#94a3b8">off</span> → 💡 grigio
+              <div style="font-size:9px;color:#fff;line-height:1.6">
+                💡 Es.: stato <span style="color:#4ade80">on</span> → 💡 giallo · stato <span style="color:#fff">off</span> → 💡 grigio
               </div>
             </div>
           </div>
@@ -8216,7 +8216,7 @@ async function _yamlEntitiesCard(cfg){
   wrap.style.cssText='display:block;width:100%;border-radius:12px;overflow:visible';
   if(cfg.name||cfg.title){
     const h=document.createElement('div');
-    h.style.cssText='padding:12px 16px 6px;font-size:14px;font-weight:700;color:#e2e8f0';
+    h.style.cssText='padding:12px 16px 6px;font-size:14px;font-weight:700;color:#fff';
     h.textContent=cfg.name||cfg.title; wrap.appendChild(h);
   }
   const list=document.createElement('div');
@@ -8273,7 +8273,7 @@ function _yamlDivider(){
 
 function _yamlMarkdown(cfg){
   const el=document.createElement('div');
-  el.style.cssText='padding:12px;font-size:12px;color:#e2e8f0;line-height:1.5';
+  el.style.cssText='padding:12px;font-size:12px;color:#fff;line-height:1.5';
   el.innerHTML=cfg.content||cfg.text||'';
   return el;
 }
@@ -8285,7 +8285,7 @@ function _yamlEntityRow(cfg){
   const unit=ha[eid]?.unit_of_measurement||'';
   const el=document.createElement('div');
   el.style.cssText='display:flex;align-items:center;padding:8px 6px;gap:8px;border-radius:6px;transition:background .1s';
-  el.innerHTML=`<span style="font-size:12px;flex:1;color:#e2e8f0">${eh(name)}</span><span style="font-size:12px;color:#94a3b8">${eh(isNaN(parseFloat(state))?_stateIt(state):state)} ${eh(unit)}</span>`;
+  el.innerHTML=`<span style="font-size:12px;flex:1;color:#fff">${eh(name)}</span><span style="font-size:12px;color:#fff">${eh(isNaN(parseFloat(state))?_stateIt(state):state)} ${eh(unit)}</span>`;
   return el;
 }
 
@@ -8299,8 +8299,8 @@ function _yamlPictureEntity(cfg){
   return el;
 }
 
-function _yamlText(str){ const el=document.createElement('div'); el.style.cssText='padding:4px;font-size:11px;color:#94a3b8'; el.textContent=str; return el; }
-function _yamlFallback(type){ const el=document.createElement('div'); el.style.cssText='padding:6px;font-size:10px;color:#94a3b8;border:1px dashed rgba(255,255,255,.1);border-radius:6px'; el.textContent='type: '+type; return el; }
+function _yamlText(str){ const el=document.createElement('div'); el.style.cssText='padding:4px;font-size:11px;color:#fff'; el.textContent=str; return el; }
+function _yamlFallback(type){ const el=document.createElement('div'); el.style.cssText='padding:6px;font-size:10px;color:#fff;border:1px dashed rgba(255,255,255,.1);border-radius:6px'; el.textContent='type: '+type; return el; }
 
 function _stopYamlCard(cardId){
   const w=document.getElementById('v-'+cardId);
@@ -10431,7 +10431,7 @@ function _openFbarTextPopup(btn,btnEl){
   document.querySelectorAll('.fbar-text-pop').forEach(p=>p.remove());
   const pop=document.createElement('div');
   pop.className='fbar-text-pop';
-  pop.style.cssText='position:fixed;z-index:9500;max-width:220px;background:rgba(6,8,16,.97);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:14px 16px;box-shadow:0 16px 48px rgba(0,0,0,.6);font-size:12px;line-height:1.5;color:#e2e8f0';
+  pop.style.cssText='position:fixed;z-index:9500;max-width:220px;background:rgba(6,8,16,.97);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:14px 16px;box-shadow:0 16px 48px rgba(0,0,0,.6);font-size:12px;line-height:1.5;color:#fff';
   pop.innerHTML=btn.popText||'';
   document.body.appendChild(pop);
   const rect=btnEl.getBoundingClientRect();

@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.4.77 — 2026-06-15
+
+### style: fix residui testo bianco + Premium popup bottom-sheet
+
+- Premium popup convertito a bottom-sheet (slideUp dal basso, border-radius:20px 20px 0 0)
+- Tab store (`jsst-tab`) ora esplicitamente `#fff` anziché `var(--muted)`
+- Chips Copia/Download (`ghs-btn-cp`, `ghc-btn-cp`, `ghc-btn-pub`) → `color:#fff`
+- Aggiunta regola `ghs-search::placeholder{color:#fff}`
+- Rimossa `opacity:.7` da `.ghs-subempty`
+- Sostituiti ulteriori grigi (#94a3b8, #64748b, #e2e8f0) in main.js e style.css
+
 ## 1.4.76 — 2026-06-15
 
 ### style: testo bianco 100% ovunque + popup uniformi bottom-sheet
