@@ -725,33 +725,8 @@ function _epRenderJsStore(){
 }
 
 function renderSectionsList(){
-  const page=curPage(); _ensureSections(page);
   const el=document.getElementById('sections-list'); if(!el) return;
-  const multi=(page.sections||[]).length>1;
-  const pcols=page.cols||(page.sections&&page.sections[0]&&page.sections[0].cols)||4;
-  // Selettore COLONNE PER PAGINA (1-4): distribuite sulla larghezza della pagina
-  const pageColsHtml=`
-    <div class="sec-item">
-      <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap">
-        <span style="font-size:9px;font-weight:700;color:#fff;min-width:90px">Colonne pagina</span>
-        ${[1,2,3,4].map(n=>`<button class="col-o${pcols===n?' on':''}" data-action="setPageCols" data-action-args='[${n}]'>${n}</button>`).join('')}
-      </div>
-      <div style="font-size:8px;color:var(--muted);margin-top:4px">Si distribuiscono sulla larghezza della pagina (max 4).</div>
-    </div>`;
-  el.innerHTML=pageColsHtml+(page.sections||[]).map((sec,i)=>`
-    <div class="sec-item">
-      <div class="sec-item-title">
-        <span style="flex:1;font-size:10px;font-weight:700;color:#fff">${multi?`Riga ${i+1}`:'Layout griglia'}</span>
-      </div>
-      ${multi?`<div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap;margin-bottom:4px">
-        <span style="font-size:8px;color:var(--muted);min-width:46px">Colonne</span>
-        ${[1,2,3,4].map(n=>`<button class="col-o${(sec.cols||4)===n?' on':''}" data-action="setSectionCols" data-action-args='["${sec.id}",${n}]'>${n}</button>`).join('')}
-      </div>`:''}
-      <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap">
-        <span style="font-size:8px;color:var(--muted);min-width:46px">Altezza</span>
-        ${[100,130,150,180,200].map(h=>`<button class="col-o${(sec.rowH||150)===h?' on':''}" style="font-size:8px;padding:2px 4px;min-width:28px" data-action="setSectionRowH" data-action-args='["${sec.id}",${h}]'>${h}</button>`).join('')}
-      </div>
-    </div>`).join('');
+  el.innerHTML='';
 }
 function moveToCol(cardId,secId,col){
   const page=curPage();
@@ -1652,17 +1627,22 @@ function _ghcDesc(cardId, sha){
   return _ghcSmartDesc(cardId||'', '');
 }
 function _ghcLivePrev(host, cardId){
-  const reg=window.FratechCardRegistry?.[cardId]; if(!reg) return;
+  const reg=window.FratechCardRegistry?.[cardId];
+  if(!reg){ host.innerHTML=_ghcPrevPh('📦', cardId); return; }
   host.innerHTML='';
   const hass=_haHassObj();
-  const dummyCard={id:'__preview__',type:'js-custom',jsCardId:reg.id,label:reg.name||cardId,icon:reg.icon||'📦',color:'#818cf8',entity:'',colSpan:2,rowSpan:2};
+  const PW=300, hw=host.clientWidth||190;
+  const scale=(hw/PW).toFixed(3);
   try{
     if(reg._lovelace!==false){
-      // Card lovelace custom element (frarik cards, HACS, ecc.)
+      // Card lovelace / frarik (custom element con setConfig + hass)
       const tag=reg._tag||cardId;
+      const wrap=document.createElement('div');
+      wrap.style.cssText=`width:${PW}px;transform:scale(${scale});transform-origin:0 0;position:absolute;top:0;left:0`;
       const cel=document.createElement(tag);
       cel.style.cssText='display:block;width:100%;';
-      host.appendChild(cel);
+      wrap.appendChild(cel);
+      host.appendChild(wrap);
       requestAnimationFrame(()=>{
         try{
           if(typeof cel.setConfig==='function'){
@@ -1678,22 +1658,27 @@ function _ghcLivePrev(host, cardId){
         requestAnimationFrame(()=>{ try{ cel.hass=hass; }catch(e){} });
       });
     } else {
-      // Card JS frarik con render() + mount()
+      // Card JS frarik con render() + mount() (pattern legacy)
+      const dummyCard={id:'__preview__',type:'js-custom',jsCardId:reg.id,label:reg.name||cardId,icon:reg.icon||'📦',color:'#818cf8',entity:'',colSpan:2,rowSpan:2};
       const html=reg.render?reg.render(dummyCard,hass):'';
-      if(!html){ host.innerHTML=_ghcPlaceholder(reg.name||cardId,reg.icon||'📦'); return; }
-      host.innerHTML=`<div style="position:relative;width:100%;">${html}</div>`;
-      if(typeof reg.mount==='function') try{ reg.mount(dummyCard,hass,host); }catch(e){}
+      if(!html){ host.innerHTML=_ghcPrevPh(reg.icon||'📦', reg.name||cardId); return; }
+      const wrap=document.createElement('div');
+      wrap.style.cssText=`width:${PW}px;transform:scale(${scale});transform-origin:0 0;position:absolute;top:0;left:0`;
+      wrap.innerHTML=`<div style="position:relative;width:100%;">${html}</div>`;
+      host.appendChild(wrap);
+      if(typeof reg.mount==='function') try{ reg.mount(dummyCard,hass,wrap); }catch(e){}
     }
-  }catch(e){ host.innerHTML=_ghcPlaceholder(reg.name||cardId,reg.icon||'📦'); }
+  }catch(e){ host.innerHTML=_ghcPrevPh(reg.icon||'📦', reg.name||cardId); }
 }
 function _ghcLivePrevBySha(host, sha){
-  // Preview per card NON installate: carica il JS dinamicamente e poi renderizza
-  const code=_ghCodeCache[sha]; if(!code) return;
+  const code=_ghCodeCache[sha];
+  if(!code){ host.innerHTML=_ghcPrevPh(_ghIconCache[sha]||'📦',''); return; }
   try{
     const res=_installCardCode(code);
     const cardId=(res.newCards&&res.newCards[0])||(res.tags&&res.tags[0])||null;
     if(cardId) _ghcLivePrev(host, cardId);
-  }catch(e){}
+    else host.innerHTML=_ghcPrevPh(_ghIconCache[sha]||'📦','');
+  }catch(e){ host.innerHTML=_ghcPrevPh(_ghIconCache[sha]||'📦',''); }
 }
 async function _ghsPreview(enc, nm, cardId){
   const modal=document.getElementById('ghs-prev-modal');

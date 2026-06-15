@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.80 — 2026-06-15
+
+### fix: colonne/layout rimossi da Viste (main.js) + store preview con fallback
+
+- `renderSectionsList()` svuotata: rimosse sezioni "Colonne pagina" e "Layout griglia" dal tab Viste
+- `_ghcLivePrev`: corretto bug `_ghcPlaceholder` → `_ghcPrevPh` (funzione inesistente causava area scura); ripristinato scaling; aggiunto supporto card render+mount
+- `_ghcLivePrevBySha`: aggiunto fallback placeholder quando codice non in cache o rendering fallisce
+
 ## 1.4.79 — 2026-06-15
 
 ### fix: rimozione sezioni licenza/colonne da src/index.html (file corretto)
