@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.4.88 — 2026-06-16
+
+### fix: Card YAML — anteprima e dashboard tramite iframe HA nativo
+
+- **Anteprima Store (Card YAML tab)**: usa ora `_fyUpsertView` + iframe che punta alla dashboard HA dedicata `frarik-yaml` → compatibilità 100% con HACS (button-card, mushroom, bubble-card, entities, ecc.)
+- **Dashboard yaml-card**: stessa pipeline iframe per TUTTE le card (non più solo native non-custom:) → nessun problema con card complesse o nested
+- **`_fyHideNavInIframe`**: nuova funzione che traversa il shadow DOM di HA (same-origin) e nasconde sidebar + app-header in modo asincrono con retry; l'iframe parte con `opacity:0` e appare con fade-in quando la navigazione è rimossa
+- **Eliminato "⏳ Carico…"**: `_mountYamlCard` non mostra più il messaggio di caricamento
+- **Aggiornamenti automatici**: l'iframe riconosce `lovelace/updated` di HA e si aggiorna da solo quando la config YAML cambia, senza reload della pagina
+- Fallback al renderer interno mantenuto se WebSocket non disponibile
+
 ## 1.4.87 — 2026-06-16
 
 ### fix: Card YAML tab — compatibilità HACS, anteprima e dashboard

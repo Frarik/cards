@@ -8111,46 +8111,61 @@ function _fyUpsertView(cardId, cardCfg){
   _fyLock=job.catch(()=>{});
   return job;
 }
+
+/* ════════ NASCONDI NAV HA IN IFRAME SAME-ORIGIN ════════
+   Traversa il shadow DOM di home-assistant e nasconde sidebar + header.
+   L'iframe parte invisibile (opacity:0) e viene svelato quando la navigazione
+   è rimossa — o dopo 4s come fallback di sicurezza. */
+function _fyHideNavInIframe(iframe){
+  let done=false;
+  function reveal(){ if(!done){ done=true; iframe.style.opacity='1'; iframe.style.transition='opacity .3s'; } }
+  let t=0;
+  function attempt(){
+    if(done) return; t++;
+    try{
+      const doc=iframe.contentDocument;
+      if(!doc||doc.readyState==='loading'){ if(t<40) setTimeout(attempt,150); else reveal(); return; }
+      const ha=doc.querySelector('home-assistant');
+      if(!ha){ if(t<40) setTimeout(attempt,150); else reveal(); return; }
+      const main=ha.shadowRoot&&ha.shadowRoot.querySelector('home-assistant-main');
+      if(!main){ if(t<40) setTimeout(attempt,150); else reveal(); return; }
+      const sr=main.shadowRoot; if(!sr){ if(t<40) setTimeout(attempt,150); else reveal(); return; }
+      // Nascondi sidebar
+      const sb=sr.querySelector('ha-sidebar'); if(sb) sb.style.display='none';
+      // Nascondi header
+      ['app-header','ha-top-app-bar'].forEach(s=>{ sr.querySelectorAll(s).forEach(e=>{ e.style.display='none'; }); });
+      // Azzera margini del contenuto
+      const c=sr.querySelector('.content,partial-panel-resolver,.main-content');
+      if(c){ c.style.paddingLeft='0'; c.style.paddingTop='0'; c.style.marginLeft='0'; c.style.marginTop='0'; }
+      reveal();
+    }catch(e){ if(t<40) setTimeout(attempt,150); else reveal(); }
+  }
+  const fallback=setTimeout(reveal,4000);
+  iframe.addEventListener('load',()=>{ clearTimeout(fallback); t=0; setTimeout(attempt,80); },{once:true});
+}
+
 async function _mountYamlCard(card, container){
-  container.innerHTML='<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px">⏳ Carico…</div>';
+  container.innerHTML='';
+  container.style.cssText='display:block;width:100%;height:100%;overflow:hidden;border-radius:inherit';
   let cfg;
   try{ cfg=jsyaml.load(card.lovelaceConfig); }
   catch(e){ container.innerHTML='<div style="padding:12px;color:#f87171;font-size:11px">YAML: '+eh(e.message)+'</div>'; return; }
-  const _isCustomCard=(cfg?.type||'').startsWith('custom:');
-  // 1) Tentativo FEDELE: dashboard HA dedicata + iframe (card native non-custom:)
-  let iframed=false;
-  if(!_isCustomCard){
-    try{
-      if(await _fyUpsertView(card.id, cfg)){
-        if(!container.isConnected) return;
-        container.innerHTML='';
-        container.style.cssText='display:block;width:100%;height:100%';
-        const f=document.createElement('iframe');
-        f.src='/'+_FY_DASH+'/'+encodeURIComponent(_fyPath(card.id))+'?kiosk';
-        f.setAttribute('allow','fullscreen; autoplay; camera; microphone; clipboard-write');
-        f.style.cssText='display:block;width:100%;height:100%;min-height:200px;border:0;border-radius:10px;background:transparent';
-        container.appendChild(f);
-        iframed=true;
-      }
-    }catch(e){ console.warn('[Frarik] yaml iframe:',e&&e.message); }
-    if(iframed) return;
-  }
-  // 2) Card custom:: prova motore HA (createCardElement) — compatibilità HACS massima
-  if(_isCustomCard){
-    try{
-      const haEl=await _createHACard(cfg);
-      if(haEl&&container.isConnected){
-        container.innerHTML='';
-        container.style.cssText='display:block;width:100%;height:100%;overflow:auto';
-        container.appendChild(haEl);
-        if(typeof haEl.configure==='function') container._fConfigure=haEl.configure.bind(haEl);
-        if(container._yamlTimer) clearInterval(container._yamlTimer);
-        container._yamlTimer=setInterval(()=>_yamlRefreshHass(container),800);
-        return;
-      }
-    }catch(e){ console.warn('[Frarik] _createHACard:',e&&e.message); }
-  }
-  // 3) Renderer interno leggero (fallback universale)
+  // Approccio principale: dashboard HA + iframe — funziona per TUTTE le card (native e HACS custom:)
+  try{
+    if(await _fyUpsertView(card.id,cfg)){
+      if(!container.isConnected) return;
+      container.innerHTML='';
+      container.style.cssText='display:block;width:100%;height:100%;overflow:hidden;border-radius:inherit';
+      const f=document.createElement('iframe');
+      f.src='/'+_FY_DASH+'/'+encodeURIComponent(_fyPath(card.id))+'?kiosk';
+      f.setAttribute('allow','fullscreen;autoplay;camera;microphone;clipboard-write');
+      f.style.cssText='display:block;width:100%;height:100%;min-height:200px;border:0;border-radius:10px;opacity:0;background:transparent';
+      _fyHideNavInIframe(f);
+      container.appendChild(f);
+      return;
+    }
+  }catch(e){ console.warn('[Frarik] yaml iframe:',e&&e.message); }
+  // Fallback: renderer interno leggero
   if(!_lovelaceResourcesLoaded){ try{ await _loadLovelaceResources(); }catch(e){} await new Promise(r=>setTimeout(r,700)); }
   if(!container.isConnected) return;
   container.innerHTML='';
@@ -8531,11 +8546,11 @@ async function _ghsYamlLivePreview(){
   const addBtn=document.getElementById('ghsy-add-btn');
   const hacsEl=document.getElementById('ghsy-hacs-count');
   if(!ta||!prev) return;
-  // Ferma il timer hass precedente
   if(prev._ghsYamlTimer){ clearInterval(prev._ghsYamlTimer); prev._ghsYamlTimer=null; }
   const txt=ta.value.trim();
   if(!txt){
-    prev.innerHTML=''; if(ph) ph.style.display='';
+    prev.innerHTML=''; prev.style.cssText='';
+    if(ph) ph.style.display='';
     if(errEl) errEl.textContent=''; if(addBtn) addBtn.style.display='none';
     _ghsYamlCurrentConfig=null; return;
   }
@@ -8546,22 +8561,43 @@ async function _ghsYamlLivePreview(){
   if(!config||typeof config!=='object'){ if(errEl) errEl.textContent='❌ YAML vuoto o non valido'; return; }
   const type=(config.type||'').trim();
   if(!type){ if(errEl) errEl.textContent='⚠️ Manca il campo type:'; return; }
-  if(errEl) errEl.textContent='⏳ Generando anteprima…';
+  if(errEl) errEl.textContent='';
   if(ph) ph.style.display='none';
-  prev.innerHTML='';
+  // ── Approccio principale: dashboard HA + iframe ──
+  // HA renderizza la card con il suo motore completo → 100% compatibile con HACS.
+  // Se l'iframe esiste già viene riusato: HA aggiorna il panel automaticamente
+  // tramite l'evento WebSocket lovelace/updated quando salviamo la config.
   try{
-    // 1) Motore ufficiale HA (loadCardHelpers.createCardElement) — compatibilità massima HACS
-    let el=await _createHACard(config);
-    if(!el){
-      // 2) Fallback: carica script HACS nel documento corrente + renderer interno
-      if(!_lovelaceResourcesLoaded){ await _loadLovelaceResources(); await new Promise(r=>setTimeout(r,700)); }
-      el=await _yamlCreateEl(config);
+    const saved=await _fyUpsertView('ghsy_prv',config);
+    if(saved&&prev.isConnected){
+      _ghsYamlCurrentConfig={config,yamlStr:txt};
+      let f=prev.querySelector('iframe[data-ghsy-prv]');
+      if(!f){
+        prev.innerHTML='';
+        prev.style.cssText='display:block;width:100%;overflow:hidden;border-radius:8px;background:#0a0f1e;position:relative';
+        f=document.createElement('iframe');
+        f.dataset.ghsyPrv='1';
+        f.setAttribute('allow','fullscreen;autoplay;camera;microphone;clipboard-write');
+        f.style.cssText='display:block;width:100%;height:380px;border:0;opacity:0;background:transparent;border-radius:8px';
+        f.src='/'+_FY_DASH+'/'+encodeURIComponent(_fyPath('ghsy_prv'))+'?kiosk';
+        _fyHideNavInIframe(f);
+        prev.appendChild(f);
+      }
+      // (iframe già presente → HA aggiorna in automatico via lovelace/updated)
+      const nc=(window.customCards||[]).length;
+      if(hacsEl) hacsEl.textContent=nc?(nc+' card HACS'):'';
+      if(addBtn) addBtn.style.display='';
+      return;
     }
+  }catch(e){ console.warn('[Frarik] preview iframe:',e&&e.message); }
+  // ── Fallback: renderer interno ──
+  try{
+    if(!_lovelaceResourcesLoaded){ await _loadLovelaceResources(); await new Promise(r=>setTimeout(r,700)); }
+    const el=await _yamlCreateEl(config);
     el.style.cssText='display:block;width:100%';
-    prev.innerHTML='';
+    prev.innerHTML=''; prev.style.cssText='';
     if(!prev.isConnected) return;
     prev.appendChild(el);
-    // Imposta hass subito + refresh periodico (molte card HACS sono asincrone / usano Lit)
     const doRefresh=()=>{ try{ _yamlRefreshHass(prev); }catch(_){} };
     doRefresh();
     prev._ghsYamlTimer=setInterval(()=>{
