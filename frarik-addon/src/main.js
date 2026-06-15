@@ -1654,35 +1654,37 @@ function _ghcDesc(cardId, sha){
 function _ghcLivePrev(host, cardId){
   const reg=window.FratechCardRegistry?.[cardId]; if(!reg) return;
   host.innerHTML='';
-  const PW=300, hw=host.clientWidth||190;
-  const scale=(hw/PW).toFixed(3);
-  const wrap=document.createElement('div');
-  wrap.className='ghc-prev-scale';
-  wrap.style.cssText=`width:${PW}px;transform:scale(${scale});transform-origin:0 0;position:absolute;top:0;left:0`;
+  const hass=_haHassObj();
+  const dummyCard={id:'__preview__',type:'js-custom',jsCardId:reg.id,label:reg.name||cardId,icon:reg.icon||'📦',color:'#818cf8',entity:'',colSpan:2,rowSpan:2};
   try{
-    const tag=reg._tag||cardId;
-    const hass=_haHassObj();
-    const cel=document.createElement(tag);
-    cel.style.cssText='display:block;width:100%;';
-    wrap.appendChild(cel);
-    host.appendChild(wrap);
-    requestAnimationFrame(()=>{
-      try{
-        if(typeof cel.setConfig==='function'){
-          // prova stub config del componente, poi fallback minimo
-          let cfg={type:'custom:'+tag};
-          try{ if(typeof cel.getStubConfig==='function'){ const stub=cel.getStubConfig(hass,Object.keys(hass?.states||{})); if(stub&&typeof stub==='object') cfg={...cfg,...stub}; } }catch(_){}
-          // se ancora manca entity/entityId, inietta il primo sensore disponibile
-          if(!cfg.entity&&!cfg.entityId&&hass?.states){
-            const ent=Object.keys(hass.states).find(k=>k.startsWith('sensor.')||k.startsWith('light.')||k.startsWith('switch.')||k.startsWith('weather.'));
-            if(ent){ cfg.entity=ent; cfg.entityId=ent; }
+    if(reg._lovelace!==false){
+      // Card lovelace custom element (frarik cards, HACS, ecc.)
+      const tag=reg._tag||cardId;
+      const cel=document.createElement(tag);
+      cel.style.cssText='display:block;width:100%;';
+      host.appendChild(cel);
+      requestAnimationFrame(()=>{
+        try{
+          if(typeof cel.setConfig==='function'){
+            let cfg={type:'custom:'+tag};
+            try{ if(typeof cel.getStubConfig==='function'){ const stub=cel.getStubConfig(hass,Object.keys(hass?.states||{})); if(stub&&typeof stub==='object') cfg={...cfg,...stub}; } }catch(_){}
+            if(!cfg.entity&&!cfg.entityId&&hass?.states){
+              const ent=Object.keys(hass.states).find(k=>k.startsWith('sensor.')||k.startsWith('light.')||k.startsWith('switch.')||k.startsWith('weather.'));
+              if(ent){ cfg.entity=ent; cfg.entityId=ent; }
+            }
+            cel.setConfig(cfg);
           }
-          cel.setConfig(cfg);
-        }
-      }catch(e){}
-      requestAnimationFrame(()=>{ try{ cel.hass=hass; }catch(e){} });
-    });
-  }catch(e){ wrap.remove(); }
+        }catch(e){}
+        requestAnimationFrame(()=>{ try{ cel.hass=hass; }catch(e){} });
+      });
+    } else {
+      // Card JS frarik con render() + mount()
+      const html=reg.render?reg.render(dummyCard,hass):'';
+      if(!html){ host.innerHTML=_ghcPlaceholder(reg.name||cardId,reg.icon||'📦'); return; }
+      host.innerHTML=`<div style="position:relative;width:100%;">${html}</div>`;
+      if(typeof reg.mount==='function') try{ reg.mount(dummyCard,hass,host); }catch(e){}
+    }
+  }catch(e){ host.innerHTML=_ghcPlaceholder(reg.name||cardId,reg.icon||'📦'); }
 }
 function _ghcLivePrevBySha(host, sha){
   // Preview per card NON installate: carica il JS dinamicamente e poi renderizza

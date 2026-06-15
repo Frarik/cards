@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.78 — 2026-06-15
+
+### feat: pulizia pannello impostazioni + store preview migliorata
+
+- Rimossa sezione "🔑 Licenza" dal tab Dati del pannello impostazioni
+- Rimossa sezione "Quante colonne?" dal tab Viste del pannello impostazioni
+- Store preview: `_ghcLivePrev` ora usa lo stesso pattern delle impostazioni card (render+mount per card JS, setConfig+hass per lovelace) senza scaling forzato — preview visibile per tutte le card
+
 ## 1.4.77 — 2026-06-15
 
 ### style: fix residui testo bianco + Premium popup bottom-sheet
