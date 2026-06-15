@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.4.91 — 2026-06-16
+
+### fix: Card YAML — usa la connessione WS del frontend HA reale
+
+- **Causa trovata**: il WebSocket proxied dell'add-on NON inoltra i comandi `lovelace/*` (timeout su `dashboards/list`) → l'iframe nativo non partiva mai
+- **`_parentConn()`**: nuova funzione che recupera `window.parent.hass.connection` (Frarik gira come pannello ingress dentro HA → `window.parent` è il frontend HA reale, con la sessione admin dell'utente loggato)
+- **`_fyWS`** ora instrada i comandi lovelace tramite la connessione del frontend HA reale → `dashboards/list`, `dashboards/create`, `config/save` funzionano → l'iframe nativo carica la dashboard `frarik-yaml` con il motore completo di HA (100% compatibile con tutti i plugin HACS)
+- Fallback al WS proxied + renderer interno solo se `window.parent` non è accessibile (Frarik aperto standalone)
+
 ## 1.4.90 — 2026-06-16
 
 ### fix: Card YAML — diagnostica iframe nativo HA

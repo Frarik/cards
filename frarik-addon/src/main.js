@@ -8079,7 +8079,29 @@ async function _createHACard(config){
 const _FY_DASH='frarik-yaml';
 let _fyDashEnsured=false, _fyLock=Promise.resolve(), _fyLastErr='';
 function _fyPath(cardId){ return 'c'+String(cardId||'').toLowerCase().replace(/[^a-z0-9_-]/g,''); }
-async function _fyWS(msg,timeout){ try{ return await sendAndWait(msg,timeout||10000); }catch(e){ return null; } }
+/* Connessione WS del frontend HA reale (utente loggato, permessi admin).
+   Frarik gira come pannello ingress dentro HA → window.parent è il frontend HA.
+   Questa connessione PUÒ eseguire i comandi lovelace/* che il proxy dell'add-on non inoltra. */
+function _parentConn(){
+  try{
+    const wins=[window.parent,window.top].filter(w=>{ try{return w&&w!==window;}catch(e){return false;} });
+    for(const w of wins){
+      const ha=w.document.querySelector('home-assistant');
+      if(ha&&ha.hass&&ha.hass.connection&&typeof ha.hass.connection.sendMessagePromise==='function') return ha.hass.connection;
+    }
+  }catch(e){}
+  return null;
+}
+async function _fyWS(msg,timeout){
+  // 1) Preferisci la connessione del frontend HA reale (sessione admin dell'utente)
+  const conn=_parentConn();
+  if(conn){
+    try{ const result=await conn.sendMessagePromise(Object.assign({},msg)); return {success:true,result}; }
+    catch(e){ return {success:false,error:{code:(e&&e.code)||'',message:(e&&e.message)||String(e)}}; }
+  }
+  // 2) Fallback: WS proxied dell'add-on (non inoltra lovelace/*, ma proviamo lo stesso)
+  try{ return await sendAndWait(msg,timeout||10000); }catch(e){ return null; }
+}
 function _fyErrTxt(r){ if(!r) return 'nessuna risposta (timeout/WS)'; if(r.error) return (r.error.code||'')+' '+(r.error.message||''); return JSON.stringify(r).slice(0,120); }
 async function _fyEnsureDashboard(){
   if(_fyDashEnsured) return true;
