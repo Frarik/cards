@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.76 — 2026-06-15
+
+### style: testo bianco 100% ovunque + popup uniformi bottom-sheet
+
+- Tutti i `color:rgba(255,255,255,...)` sostituiti con `#fff` in main.js, dom.js, style.css, index.html e tutti i card-js (331 occorrenze totali)
+- Variabili CSS `--muted` e `--dim` aggiornate a `#fff` per coerenza globale
+- Convertiti a bottom-sheet standard (slideUp + border-radius:20px 20px 0 0 + align-items:flex-end) i popup: openPopupView, openEntityCleanup, openBadgePopup, _pgCheckDirtyAndProceed, confirm-overlay
+
 ## 1.4.75 — 2026-06-15
 
 ### fix(admin): endpoint Worker /api/admin/licenses + lista utenti reali funzionante
