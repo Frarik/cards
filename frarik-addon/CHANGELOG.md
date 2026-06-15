@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.79 — 2026-06-15
+
+### fix: rimozione sezioni licenza/colonne da src/index.html (file corretto)
+
+- Rimossa sezione "🔑 Licenza" da tab Dati in src/index.html (precedentemente rimossa solo da dom.js per errore)
+- Rimossa sezione "Quante colonne?" da tab Viste in src/index.html (stesso motivo)
+
 ## 1.4.78 — 2026-06-15
 
 ### feat: pulizia pannello impostazioni + store preview migliorata
