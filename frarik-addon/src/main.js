@@ -1322,9 +1322,18 @@ async function _ghReadRemoteVersion(path){
   try{ const r=await fetch(url,{cache:'no-store'}); if(!r.ok) return null; return _parseCardVersion(await r.text()); }
   catch(e){ return null; }
 }
+function _parseCardDesc(code){
+  const s=String(code||'');
+  let m=s.match(/description\s*:\s*['"`]([^'"`\n]{5,300})['"`]/);
+  if(m) return m[1].trim();
+  m=s.match(/\bdesc\s*:\s*['"`]([^'"`\n]{5,300})['"`]/);
+  if(m) return m[1].trim();
+  return '';
+}
 /* compat: _bumpVer (vecchia patch) mantenuto per sicurezza, non più usato per il publish */
 function _bumpVer(v){ return _bumpMinor(v); }
 let _ghVerCache={};   // sha → versione letta dal file (per mostrarla nello store)
+let _ghDescCache={};  // sha → descrizione estratta dal file
 function _curStoreVersion(id){
   try{ const it=_jsStoreList().find(i=>(i.meta||{}).id===id); return (it&&it.meta&&it.meta.version)||null; }catch(e){ return null; }
 }
@@ -1554,6 +1563,46 @@ function closeGhsPreview(){
   document.getElementById('ghs-prev-card').innerHTML='';
   document.getElementById('ghs-prev-note').textContent='';
 }
+/* ── helpers griglia store ── */
+function _ghcPrevPh(icon, name){
+  const PALS=[['#1e1b4b','#312e81'],['#064e3b','#065f46'],['#422006','#78350f'],['#1e3a5f','#1e40af'],['#4a044e','#701a75'],['#0c1a2e','#0c4a6e'],['#1f1235','#4c1d95'],['#0f2027','#203a43']];
+  let h=0; for(let c=0;c<name.length;c++) h=(h*31+name.charCodeAt(c))&0xffffffff;
+  const [c1,c2]=PALS[Math.abs(h)%PALS.length];
+  return `<div class="ghc-prev-ph"><div class="ghc-prev-ph-bg" style="background:linear-gradient(135deg,${c1} 0%,${c2} 100%)"></div><div class="ghc-prev-ph-ico">${icon||'📦'}</div><div class="ghc-prev-ph-nm">${eh(name)}</div></div>`;
+}
+function _ghcDesc(cardId, sha){
+  const FALLBACK='Card Lovelace';
+  const reg=cardId?window.FratechCardRegistry?.[cardId]:null;
+  const rd=reg?.desc||''; if(rd.length>4&&!rd.includes(FALLBACK)) return rd;
+  if(sha&&_ghDescCache[sha]) return _ghDescCache[sha];
+  if(cardId){
+    try{
+      const it=_jsStoreList().find(i=>(i.meta||{}).id===cardId);
+      const md=it?.meta?.desc||''; if(md.length>4&&!md.includes(FALLBACK)) return md;
+      if(it?.code){ const d=_parseCardDesc(it.code); if(d) return d; }
+    }catch(e){}
+  }
+  return '';
+}
+function _ghcLivePrev(host, cardId){
+  const reg=window.FratechCardRegistry?.[cardId]; if(!reg) return;
+  const PW=300, hw=host.clientWidth||190;
+  const scale=(hw/PW).toFixed(3);
+  const wrap=document.createElement('div');
+  wrap.className='ghc-prev-scale';
+  wrap.style.cssText=`width:${PW}px;transform:scale(${scale})`;
+  try{
+    const tag=reg._tag||cardId;
+    const cel=document.createElement(tag);
+    cel.style.cssText='display:block;width:100%;';
+    wrap.appendChild(cel);
+    host.appendChild(wrap);
+    requestAnimationFrame(()=>{
+      try{ if(typeof cel.setConfig==='function') cel.setConfig({type:'custom:'+tag}); }catch(e){}
+      requestAnimationFrame(()=>{ try{ cel.hass=_haHassObj(); }catch(e){} });
+    });
+  }catch(e){ host.innerHTML=''; }
+}
 async function _ghsPreview(enc, nm, cardId){
   const modal=document.getElementById('ghs-prev-modal');
   const container=document.getElementById('ghs-prev-card');
@@ -1642,8 +1691,12 @@ async function _ghFetchVerLabels(tab){
   async function worker(){
     while(i<files.length){
       const x=files[i++];
-      try{ const r=await fetch(x.download_url,{cache:'no-store'}); _ghVerCache[x.sha]= r.ok ? (_parseCardVersion(await r.text())||'') : ''; }
-      catch(e){ _ghVerCache[x.sha]=''; }
+      try{
+        const r=await fetch(x.download_url,{cache:'no-store'});
+        if(r.ok){ const code=await r.text(); _ghVerCache[x.sha]=_parseCardVersion(code)||''; _ghDescCache[x.sha]=_parseCardDesc(code)||''; }
+        else { _ghVerCache[x.sha]=''; _ghDescCache[x.sha]=''; }
+      }
+      catch(e){ _ghVerCache[x.sha]=''; _ghDescCache[x.sha]=''; }
     }
   }
   await Promise.all(Array.from({length:Math.min(CONC,files.length)}, worker));
@@ -1659,91 +1712,123 @@ function _ghStoreRender(){
   if(q) files=files.filter(f=>f.name.toLowerCase().includes(q));
   status.textContent=(_ghsCache[tab]||[]).length+' file'+(q?(' · '+files.length+' trovati'):'');
   if(!files.length){ list.innerHTML=`<div class="ghs-empty">${q?'Nessun risultato per "'+eh(q)+'"':'Nessun file in questa cartella su GitHub'}</div>`; return; }
-  const ico=folder.ico;
-  // Controlla solo la vista corrente (non tutte le viste) per il badge informativo
-  const _cpCards=(curPage()||{cards:[]}).cards||[];
-  const usedInCurPage=new Set(); _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedInCurPage.add(c.jsCardId); });
-  const sorted=files.filter(f=>f&&f.name).sort((a,b)=>a.name.localeCompare(b.name));
-  const eyeBtn=(enc,nm,cid)=>`<button class="ghs-ibtn ghs-ibtn-eye" data-action="_ghsPreviewEl" data-penc="${enc.replace(/'/g,"\\'")}" data-pnm="${nm.replace(/'/g,"\\'")}" data-pcid="${cid||''}" title="Anteprima"><i class="mdi mdi-eye-outline"></i></button>`;
-  const rowHtml=(nm,verLbl,name,acts)=>{
-    const subTxt = verLbl ? 'v'+eh(verLbl) : eh(name);
-    return `<div class="ghs-row"><div class="ghs-ico">${ico}</div><div class="ghs-info"><div class="ghs-name">${eh(nm)}</div><div class="ghs-sub">${subTxt}</div></div><div class="ghs-acts">${acts}</div></div>`;
-  };
 
-  // ── Cartelle non-card (YAML/Pacchetti): lista semplice ──
+  // ── Cartelle non-card (YAML): lista semplice a righe ──
   if(folder.kind!=='install'){
+    const ico=folder.ico;
+    const sorted=files.filter(f=>f&&f.name).sort((a,b)=>a.name.localeCompare(b.name));
     list.innerHTML=sorted.map(f=>{
       const nm=f.name.replace(/\.(js|ya?ml)$/i,''); const enc=encodeURIComponent(f.name);
       const addYaml=(tab==='yaml')?`<button class="ghs-btn ghs-btn-inst" data-action="_ghsYamlAdd" data-action-arg="${enc}"><i class="mdi mdi-plus"></i> Aggiungi</button>`:'';
-      const acts=`${eyeBtn(enc,nm,null)}${addYaml}<button class="ghs-btn ghs-btn-cp" data-action="_ghsCopy" data-action-arg="${enc}"><i class="mdi mdi-content-copy"></i> Copia</button><button class="ghs-btn ghs-btn-cp" data-action="_ghsDownload" data-action-arg="${enc}"><i class="mdi mdi-download"></i></button>`;
-      return rowHtml(nm,'',f.name,acts);
+      const acts=`${addYaml}<button class="ghs-btn ghs-btn-cp" data-action="_ghsCopy" data-action-arg="${enc}"><i class="mdi mdi-content-copy"></i> Copia</button><button class="ghs-btn ghs-btn-cp" data-action="_ghsDownload" data-action-arg="${enc}"><i class="mdi mdi-download"></i></button>`;
+      return `<div class="ghs-row"><div class="ghs-ico">${ico}</div><div class="ghs-info"><div class="ghs-name">${eh(nm)}</div><div class="ghs-sub">${eh(f.name)}</div></div><div class="ghs-acts">${acts}</div></div>`;
     }).join('');
     return;
   }
 
-  // ── Cartelle card (Card JS / Chips / Distintivi): doppio sottomenu Installate / Da installare ──
+  // ── Cartelle card (JS / Chips / Distintivi): griglia moderna ──
   const idFile=g.idFile||{};
+  const _cpCards=(curPage()||{cards:[]}).cards||[];
+  const usedInCurPage=new Set(); _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedInCurPage.add(c.jsCardId); });
+  const sorted=files.filter(f=>f&&f.name).sort((a,b)=>a.name.localeCompare(b.name));
   const installed=[], toInstall=[];
   sorted.forEach(f=>{ (g.shas[f.name]?installed:toInstall).push(f); });
 
-  const rowInstalled=(f)=>{
+  const tileInstalled=(f)=>{
     const nm=f.name.replace(/\.(js|ya?ml)$/i,''); const enc=encodeURIComponent(f.name);
     const cardId=Object.keys(idFile).find(k=>idFile[k]===f.name)||null;
-    const verLbl=_ghVerCache[f.sha]||g.fileVersions[f.name]||(cardId&&_curStoreVersion(cardId))||'';
+    const verGH=_ghVerCache[f.sha]||g.fileVersions[f.name]||(cardId&&_curStoreVersion(cardId))||'';
+    const verLocal=cardId?(_curStoreVersion(cardId)||''):'';
+    const hasUpdate=!!(g.shas[f.name]&&g.shas[f.name]!==f.sha);
     const inCurPage=!!(cardId&&usedInCurPage.has(cardId));
-    const updateBtn=(g.shas[f.name]!==f.sha)?`<button class="ghs-btn ghs-btn-upd" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-update"></i> Aggiorna</button>`:'';
-    const addBtn=cardId
-      ? (inCurPage
-          ? `<span style="font-size:10px;font-weight:700;color:#4ade80;background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);border-radius:7px;padding:4px 9px;white-space:nowrap"><i class="mdi mdi-check-circle-outline"></i> In questa vista</span>`
-          : `<button class="ghs-btn ghs-btn-inst" data-action="_jsStoreAddAndRefresh" data-action-args='["${cardId}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`)
-      : `<button class="ghs-btn ghs-btn-inst" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>`;
-    const delBtn=cardId?`<button class="ghs-ibtn ghs-ibtn-del" data-action="_ghsDeleteInstalled" data-action-arg="${cardId}" title="Disinstalla"><i class="mdi mdi-delete-outline"></i></button>`:'';
-    return rowHtml(nm,verLbl,f.name,`${eyeBtn(enc,nm,cardId)}${updateBtn}${addBtn}${delBtn}`);
-  };
-  const rowToInstall=(f)=>{
-    const nm=f.name.replace(/\.(js|ya?ml)$/i,''); const enc=encodeURIComponent(f.name);
-    const verLbl=_ghVerCache[f.sha]||g.fileVersions[f.name]||'';
-    const instBtn=`<button class="ghs-btn ghs-btn-inst" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>`;
-    // cestino: elimina DEFINITIVAMENTE da GitHub (richiede conferma + chiave)
-    const ghDel=`<button class="ghs-ibtn ghs-ibtn-del" data-action="_ghsDeleteFromGithub" data-action-arg="${enc}" title="Elimina da GitHub"><i class="mdi mdi-delete-forever-outline"></i></button>`;
-    return rowHtml(nm,verLbl,f.name,`${eyeBtn(enc,nm,null)}${instBtn}${ghDel}`);
+    const reg=cardId?window.FratechCardRegistry?.[cardId]:null;
+    const icon=(reg?.icon)||(_jsStoreList().find(i=>(i.meta||{}).id===cardId)?.meta?.icon)||folder.ico||'📦';
+    const desc=_ghcDesc(cardId,f.sha);
+    const verLbl=hasUpdate&&verGH&&verLocal?`v${verLocal} → v${verGH}`:verGH?`v${verGH}`:verLocal?`v${verLocal}`:'';
+    const st=hasUpdate?'upd':'ok';
+    const prevHtml=cardId&&reg
+      ?`<div class="ghc-prev-inner" data-prev-id="${eh(cardId)}"></div>`
+      :`<div class="ghc-prev-inner">${_ghcPrevPh(icon,nm)}</div>`;
+    const bdg=hasUpdate?`<span class="ghc-bdg upd">↑ Aggiornamento</span>`
+      :inCurPage?`<span class="ghc-bdg cur">✓ In vista</span>`
+      :`<span class="ghc-bdg ok">● Installata</span>`;
+    const updBtn=hasUpdate?`<button class="ghc-btn ghc-btn-upd" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-update"></i> Aggiorna</button>`:'';
+    const addBtn=cardId?(inCurPage
+      ?`<span class="ghc-indash"><i class="mdi mdi-check-circle-outline"></i> In vista</span>`
+      :`<button class="ghc-btn ghc-btn-add" data-action="_jsStoreAddAndRefresh" data-action-args='["${cardId}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`)
+      :`<button class="ghc-btn ghc-btn-inst" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>`;
+    const delBtn=cardId?`<button class="ghc-btn-del" data-action="_ghsDeleteInstalled" data-action-arg="${cardId}" title="Disinstalla"><i class="mdi mdi-delete-outline"></i></button>`:'';
+    return `<div class="ghc-tile st-${st}"><div class="ghc-strip ${st}"></div>
+      <div class="ghc-prev">${prevHtml}<div class="ghc-prev-fade"></div>${bdg}</div>
+      <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico">${icon}</div><div class="ghc-meta"><div class="ghc-name">${eh(nm)}</div>${verLbl?`<div class="ghc-ver">${eh(verLbl)}</div>`:''}</div></div>
+      ${desc?`<div class="ghc-desc">${eh(desc)}</div>`:''}
+      <div class="ghc-acts">${updBtn}${addBtn}${delBtn}</div></div></div>`;
   };
 
-  list.innerHTML =
-    `<div class="ghs-subhdr"><i class="mdi mdi-check-circle-outline"></i> Installate · ${installed.length}</div>` +
-    (installed.length ? installed.map(rowInstalled).join('') : `<div class="ghs-subempty">Nessuna card installata da questa cartella</div>`) +
-    `<div class="ghs-subhdr"><i class="mdi mdi-download"></i> Da installare · ${toInstall.length}</div>` +
-    (toInstall.length ? toInstall.map(rowToInstall).join('') : `<div class="ghs-subempty">Tutte le card di questa cartella sono installate</div>`);
+  const tileToInstall=(f)=>{
+    const nm=f.name.replace(/\.(js|ya?ml)$/i,''); const enc=encodeURIComponent(f.name);
+    const verLbl=_ghVerCache[f.sha]||g.fileVersions[f.name]||'';
+    const desc=_ghDescCache[f.sha]||'';
+    const icon=folder.ico||'📦';
+    const ghDel=`<button class="ghc-btn-del" data-action="_ghsDeleteFromGithub" data-action-arg="${enc}" title="Elimina da GitHub"><i class="mdi mdi-delete-forever-outline"></i></button>`;
+    return `<div class="ghc-tile st-new"><div class="ghc-strip new"></div>
+      <div class="ghc-prev"><div class="ghc-prev-inner">${_ghcPrevPh(icon,nm)}</div><div class="ghc-prev-fade"></div><span class="ghc-bdg new">⬇ Disponibile</span></div>
+      <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico">${icon}</div><div class="ghc-meta"><div class="ghc-name">${eh(nm)}</div>${verLbl?`<div class="ghc-ver">v${eh(verLbl)}</div>`:''}</div></div>
+      ${desc?`<div class="ghc-desc">${eh(desc)}</div>`:''}
+      <div class="ghc-acts"><button class="ghc-btn ghc-btn-inst" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>${ghDel}</div></div></div>`;
+  };
+
+  list.innerHTML='<div class="ghc-grid">'
+    +`<div class="ghc-sec"><span class="ghc-sec-dot ok"></span>Installate<span class="ghc-sec-cnt">${installed.length}</span></div>`
+    +(installed.length?installed.map(tileInstalled).join(''):`<div style="grid-column:1/-1"><div class="ghs-empty">Nessuna card installata da questa cartella</div></div>`)
+    +`<div class="ghc-sec"><span class="ghc-sec-dot new"></span>Da installare<span class="ghc-sec-cnt">${toInstall.length}</span></div>`
+    +(toInstall.length?toInstall.map(tileToInstall).join(''):`<div style="grid-column:1/-1"><div class="ghs-empty">Tutte le card di questa cartella sono installate</div></div>`)
+    +'</div>';
+
+  requestAnimationFrame(()=>{
+    list.querySelectorAll('[data-prev-id]').forEach(el=>{ _ghcLivePrev(el, el.dataset.prevId); });
+  });
 }
 /* Schede "Installate" (origine github) e "Card locali" (origine local): gestisci le card installate */
 function _ghStoreRenderInstalled(q, originFilter){
   const list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
-  // origine: 'github' = installata dallo store · 'local' = caricata da PC · vecchie senza tag → 'github'
   let items=_jsStoreList().filter(i=>((i.origin||'github')===originFilter));
   const all=items.length;
   if(q) items=items.filter(i=>((i.meta||{}).name||(i.meta||{}).id||'').toLowerCase().includes(q));
   const lbl=originFilter==='local'?'card locali':'card da GitHub';
   status.textContent=all+' '+lbl+(q?(' · '+items.length+' trovate'):'');
   if(!items.length){
-    const msg = originFilter==='local'
-      ? (q?'Nessun risultato':'Nessuna card locale.<br>Usa la zona qui sotto per caricare un file <code>.js</code> dal PC.')
-      : (q?'Nessun risultato':'Nessuna card installata da GitHub.<br>Installale dalle schede ⚡ Card JS · 🔹 Chips · 🏷️ Distintivi.');
+    const msg=originFilter==='local'
+      ?(q?'Nessun risultato':'Nessuna card locale.<br>Usa la zona qui sotto per caricare un file <code>.js</code> dal PC.')
+      :(q?'Nessun risultato':'Nessuna card installata da GitHub.<br>Installale dalle schede ⚡ Card JS · 🔹 Chips · 🏷️ Distintivi.');
     list.innerHTML=`<div class="ghs-empty">${msg}</div>`; return;
   }
   const _lcCards=(curPage()||{cards:[]}).cards||[];
   const _usedLocal=new Set(); _lcCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) _usedLocal.add(c.jsCardId); });
-  list.innerHTML=items.sort((a,b)=>((a.meta||{}).name||'').localeCompare((b.meta||{}).name||'')).map(i=>{
+  const sorted=items.sort((a,b)=>((a.meta||{}).name||'').localeCompare((b.meta||{}).name||''));
+  list.innerHTML='<div class="ghc-grid">'+sorted.map(i=>{
     const m=i.meta||{}; const inPage=_usedLocal.has(m.id); const id=m.id||'';
-    const act = inPage
-      ? `<span style="font-size:10px;font-weight:700;color:#4ade80;background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);border-radius:7px;padding:4px 9px;white-space:nowrap"><i class="mdi mdi-check-circle-outline"></i> In questa vista</span>`
-      : `<button class="ghs-btn ghs-btn-inst" data-action="_jsStoreAddAndRefresh" data-action-args='["${id}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`;
-    const pub = originFilter==='local' ? `<button class="ghs-btn ghs-btn-upd" data-action="_ghsPublish" data-action-arg="${id}" title="Pubblica su GitHub"><i class="mdi mdi-upload"></i> Pubblica</button>` : '';
-    const safePrevNm=(m.name||id).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    const previewBtn=`<button class="ghs-ibtn ghs-ibtn-eye" data-action="_ghsPreview" data-action-args='["","${safePrevNm}","${id}"]' title="Anteprima"><i class="mdi mdi-eye-outline"></i></button>`;
-    return `<div class="ghs-row"><div class="ghs-ico">${m.icon||'📦'}</div>
-      <div class="ghs-info"><div class="ghs-name">${eh(m.name||id||'Card')}</div><div class="ghs-sub">ID: ${eh(id||'?')} · v${eh(m.version||'?')}</div></div>
-      <div class="ghs-acts">${previewBtn}${pub}${act}<button class="ghs-ibtn ghs-ibtn-del" data-action="_ghsDeleteInstalled" data-action-arg="${id}" title="Disinstalla"><i class="mdi mdi-delete-outline"></i></button></div></div>`;
-  }).join('');
+    const reg=id?window.FratechCardRegistry?.[id]:null;
+    const icon=m.icon||reg?.icon||'📦';
+    const desc=_ghcDesc(id,null);
+    const st=inPage?'ok':'new';
+    const prevHtml=reg
+      ?`<div class="ghc-prev-inner" data-prev-id="${eh(id)}"></div>`
+      :`<div class="ghc-prev-inner">${_ghcPrevPh(icon,m.name||id)}</div>`;
+    const bdg=inPage?`<span class="ghc-bdg cur">✓ In vista</span>`:`<span class="ghc-bdg ok">● Installata</span>`;
+    const act=inPage
+      ?`<span class="ghc-indash"><i class="mdi mdi-check-circle-outline"></i> In vista</span>`
+      :`<button class="ghc-btn ghc-btn-add" data-action="_jsStoreAddAndRefresh" data-action-args='["${id}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`;
+    const pub=originFilter==='local'?`<button class="ghc-btn ghc-btn-pub" data-action="_ghsPublish" data-action-arg="${id}" title="Pubblica su GitHub"><i class="mdi mdi-upload"></i> Pubblica</button>`:'';
+    return `<div class="ghc-tile st-${st}"><div class="ghc-strip ${st}"></div>
+      <div class="ghc-prev">${prevHtml}<div class="ghc-prev-fade"></div>${bdg}</div>
+      <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico">${icon}</div><div class="ghc-meta"><div class="ghc-name">${eh(m.name||id||'Card')}</div><div class="ghc-ver">v${eh(m.version||'?')}</div></div></div>
+      ${desc?`<div class="ghc-desc">${eh(desc)}</div>`:''}
+      <div class="ghc-acts">${pub}${act}<button class="ghc-btn-del" data-action="_ghsDeleteInstalled" data-action-arg="${id}" title="Disinstalla"><i class="mdi mdi-delete-outline"></i></button></div></div></div>`;
+  }).join('')+'</div>';
+  requestAnimationFrame(()=>{
+    list.querySelectorAll('[data-prev-id]').forEach(el=>{ _ghcLivePrev(el, el.dataset.prevId); });
+  });
 }
 function _ghsDeleteInstalled(id){
   if(!id) return;

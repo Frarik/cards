@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.4.68 — 2026-06-15
+
+### feat(store): redesign completo UI Store — griglia moderna con preview live
+
+- Nuovo layout a **griglia di card** (auto-fill minmax 182px) al posto delle righe piatte
+- **Preview visiva immediata** per le card installate: il componente reale viene renderizzato in scala nella tile, senza cliccare nessun tasto
+- **Placeholder grafico** con gradiente colorato + icona per le card non ancora installate
+- **Descrizione automatica** visibile direttamente in ogni tile (estratta da `description:` o `desc:` nel codice)
+- **Badge di stato** animati: ● Installata / ✓ In vista / ↑ Aggiornamento (pulsante animato) / ⬇ Disponibile
+- **Striscia di colore** in cima a ogni tile: verde=installata, amber=aggiornamento, viola=disponibile
+- Separatori di sezione "Installate / Da installare" con contatori in pillola
+- Hover effect con elevazione e glow colorato per sezione
+- `_parseCardDesc(code)` — estrae descrizione da `description:` o `desc:` nel codice sorgente
+- `_ghcDesc(cardId, sha)` — best-effort description: registry → GitHub cache → store meta → codice installato
+- `_ghcLivePrev(host, cardId)` — render inline del componente scalato (300px → larghezza tile)
+- `_ghcPrevPh(icon, name)` — placeholder con gradiente deterministico basato sul nome
+- `_ghDescCache` parallelo a `_ghVerCache` — popolato insieme durante `_ghFetchVerLabels`
+- Tab YAML conserva il layout a righe (senza preview, corretto per file YAML)
+
 ## 1.4.67 — 2026-06-14
 
 ### feat(store): PKG — elimina da GitHub con chiave di accesso
