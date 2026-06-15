@@ -1633,8 +1633,9 @@ function _ghcLivePrev(host, cardId){
   const hass=_haHassObj();
   const PW=300, hw=host.clientWidth||190;
   const scale=(hw/PW).toFixed(3);
+  const vH=Math.round(165*PW/(hw||190));
   try{
-    if(reg._lovelace!==false){
+    if(reg._lovelace===true){
       // Card lovelace / frarik (custom element con setConfig + hass)
       const tag=reg._tag||cardId;
       const wrap=document.createElement('div');
@@ -1647,13 +1648,11 @@ function _ghcLivePrev(host, cardId){
         try{
           if(typeof cel.setConfig==='function'){
             let pcfg={type:'custom:'+tag};
-            // Stub config dal componente
             try{ if(typeof cel.getStubConfig==='function'){ const stub=cel.getStubConfig(hass,Object.keys(hass?.states||{})); if(stub&&typeof stub==='object') pcfg={...pcfg,...stub}; } }catch(_){}
-            // Cerca un'istanza già configurata in dashboard → usa il suo storageKey così la card carica la configurazione salvata (entity, soglie, ecc.)
             const existingCard=(cfg.pages||[]).flatMap(p=>(p.cards||[])).find(c=>c.type==='js-custom'&&c.jsCardId===cardId&&c.id);
             if(existingCard?.id){ pcfg.storageKey=existingCard.id; }
             else if(!pcfg.entity&&!pcfg.entityId&&hass?.states){
-              const ent=Object.keys(hass.states).find(k=>k.startsWith('sensor.')||k.startsWith('light.')||k.startsWith('switch.')||k.startsWith('weather.'));
+              const ent=Object.keys(hass.states).find(k=>k.startsWith('sensor.')||k.startsWith('light.')||k.startsWith('switch.')||k.startsWith('weather.')||k.startsWith('climate.')||k.startsWith('camera.')||k.startsWith('binary_sensor.'));
               if(ent){ pcfg.entity=ent; pcfg.entityId=ent; }
             }
             cel.setConfig(pcfg);
@@ -1662,15 +1661,17 @@ function _ghcLivePrev(host, cardId){
         requestAnimationFrame(()=>{ try{ cel.hass=hass; }catch(e){} });
       });
     } else {
-      // Card JS frarik con render() + mount() (pattern legacy)
-      const dummyCard={id:'__preview__',type:'js-custom',jsCardId:reg.id,label:reg.name||cardId,icon:reg.icon||'📦',color:'#818cf8',entity:'',colSpan:2,rowSpan:2};
-      const html=reg.render?reg.render(dummyCard,hass):'';
+      // Card JS frarik con render() + mount() (pattern legacy — NON usa customElements)
+      const existingCard=(cfg.pages||[]).flatMap(p=>(p.cards||[])).find(c=>c.type==='js-custom'&&c.jsCardId===cardId&&c.id);
+      const previewCard=existingCard||{id:'__prev__',type:'js-custom',jsCardId:reg.id||cardId,label:reg.name||cardId,icon:reg.icon||'📦',color:'#818cf8',entity:'',colSpan:reg.colSpan||2,rowSpan:reg.rowSpan||2};
+      const html=reg.render?reg.render(previewCard,hass):'';
       if(!html){ host.innerHTML=_ghcPrevPh(reg.icon||'📦', reg.name||cardId); return; }
       const wrap=document.createElement('div');
-      wrap.style.cssText=`width:${PW}px;transform:scale(${scale});transform-origin:0 0;position:absolute;top:0;left:0`;
-      wrap.innerHTML=`<div style="position:relative;width:100%;">${html}</div>`;
+      wrap.style.cssText=`width:${PW}px;height:${vH}px;transform:scale(${scale});transform-origin:0 0;position:absolute;top:0;left:0`;
+      wrap.innerHTML=`<div style="position:relative;width:100%;height:100%;">${html}</div>`;
       host.appendChild(wrap);
-      if(typeof reg.mount==='function') try{ reg.mount(dummyCard,hass,wrap); }catch(e){}
+      // Non chiamare mount() per camera-card (evita connessioni WebRTC/MJPEG nel preview)
+      if(typeof reg.mount==='function'&&cardId!=='camera-card') try{ reg.mount(previewCard,hass,wrap.firstElementChild); }catch(e){}
     }
   }catch(e){ host.innerHTML=_ghcPrevPh(reg.icon||'📦', reg.name||cardId); }
 }

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.4.82 — 2026-06-15
+
+### fix: store preview per card render/mount (Camera, Clima, DoorsWindows ecc.)
+
+- `_ghcLivePrev`: corretta condizione routing `_lovelace!==false` → `_lovelace===true` — le card old-style (Camera, Clima, DoorsWindows) non chiamano `_registerLovelaceCard` quindi `_lovelace` è `undefined`, che passava erroneamente al ramo lovelace creando un elemento vuoto
+- Ramo render+mount: usa l'istanza esistente dal dashboard (`existingCard`) come `previewCard.id` così la card carica la sua config reale da localStorage; fallback a `{id:'__prev__'}` se non trovata
+- Aggiunta altezza virtuale `vH` proporzionale al contenitore preview (165px visualizzati / scale) così le card con `height:100%` hanno un riferimento valido
+- Camera: `mount()` NON chiamato nel preview per evitare connessioni WebRTC/MJPEG inutili
+
 ## 1.4.81 — 2026-06-15
 
 ### fix: store preview usa storageKey istanza esistente per caricare config card
