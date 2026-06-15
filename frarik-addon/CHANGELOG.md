@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.4.74 — 2026-06-15
+
+### fix(licenza/admin): T-Rex per admin + badge Admin+Premium + utenti reali API
+
+- **Admin → T-Rex sempre**: `_licDinoFor(name, note)` ora accetta la note come parametro; se contiene "admin"/"amministratore" restituisce sempre T-Rex indipendentemente dal nome
+- **Badge livello corretto**: mostra "🛡️ Admin + Premium" (non solo "Admin") per gli utenti admin
+- **Pannello Admin — utenti reali**: sezione "Utenti con licenza" ora fa fetch a `LICENSE_ADMIN_API` con la chiave admin in header; mostra due sezioni separate: "💎 Utenti Premium / Admin" e "⭐ Utenti Standard" con il nome reale di ogni utente
+- Admin e Amministratore inclusi nella sezione Premium (poiché hanno accesso automatico)
+- Ogni riga utente mostra: emoji dinosauro, nome, scadenza, badge livello colorato
+- Se l'API non risponde: messaggio di errore invece di crash silenzioso
+
 ## 1.4.73 — 2026-06-15
 
 ### fix(settings/store): badge licenza grande + admin panel + preview card con stub config

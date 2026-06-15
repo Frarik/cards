@@ -10873,7 +10873,9 @@ const LIC_DINOS=[
   {n:'Ankilosauro',  e:'🦕',c:'#eab308',g1:'#422006',g2:'#713f12',d:'Solido e protettivo'},
   {n:'Spinosauro',   e:'🦖',c:'#ec4899',g1:'#4a044e',g2:'#701a75',d:'Elegante e audace'},
 ];
-function _licDinoFor(name){
+function _licDinoFor(name, noteOverride){
+  const n=(noteOverride!==undefined?noteOverride:(localStorage.getItem('frarik_lic_note')||'')).toLowerCase();
+  if(n.includes('admin')||n.includes('amministratore')) return LIC_DINOS[0]; // T-Rex sempre per Admin
   let h=0; for(let i=0;i<(name||'').length;i++) h=(h*31+name.charCodeAt(i))&0xffffffff;
   return LIC_DINOS[Math.abs(h)%LIC_DINOS.length];
 }
@@ -10885,7 +10887,7 @@ function _licBadgeHtml({name,note,expires,key,dino,isPrem,isAdm}){
   };
   const masked=key?(key.slice(0,5)+'****-****-'+key.slice(-4)):'—';
   const expFmt=expires&&expires!=='null'?new Date(isNaN(expires)?expires:parseInt(expires)).toLocaleDateString('it-IT',{day:'numeric',month:'short',year:'numeric'}):'Nessuna scadenza';
-  const level=isAdm?'🛡️ Admin':isPrem?'💎 Premium':'⭐ Standard';
+  const level=isAdm?'🛡️ Admin + Premium':isPrem?'💎 Premium':'⭐ Standard';
   const upgBtn=(!isPrem&&!isAdm)?`<button data-action="openPremiumPage" style="width:100%;padding:12px;border-radius:12px;background:linear-gradient(135deg,rgba(251,191,36,.2),rgba(251,191,36,.06));border:1px solid rgba(251,191,36,.4);color:#fbbf24;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:.3px;margin-bottom:10px">💎 Passa a Premium</button>`:'';
   return `<div style="width:100%;border-radius:24px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.6);background:linear-gradient(135deg,${dino.g1} 0%,${dino.g2} 100%);border:1px solid ${alpha(.3)};position:relative">
   <!-- decorazioni sfondo -->
@@ -10942,7 +10944,7 @@ function _epLicBadgeLoad(){
       localStorage.setItem('frarik_lic_note',d.note||'');
       localStorage.setItem('frarik_lic_expires',d.expires||'');
       const n2=d.name||name; const note2=(d.note||'').toLowerCase();
-      const dino2=_licDinoFor(n2);
+      const dino2=_licDinoFor(n2, note2);
       const isPrem2=note2.includes('premium')||note2.includes('admin')||note2.includes('amministratore');
       const isAdm2=note2.includes('admin')||note2.includes('amministratore');
       wrap.innerHTML=_licBadgeHtml({name:n2,note:note2,expires:d.expires||expires,key,dino:dino2,isPrem:isPrem2,isAdm:isAdm2});
@@ -10950,6 +10952,7 @@ function _epLicBadgeLoad(){
 }
 
 /* ── Pannello Admin (ep-content-admin-panel) ─────────────────────────────── */
+const LICENSE_ADMIN_API='https://frarik-license.frarik.workers.dev/api/admin/licenses';
 function _epAdminPanelLoad(){
   const body=document.getElementById('ep-admin-body'); if(!body) return;
   const name=localStorage.getItem('frarik_lic_name')||'—';
@@ -10959,22 +10962,26 @@ function _epAdminPanelLoad(){
   const emails=JSON.parse(localStorage.getItem('frarik_prem_interest')||'[]');
   let cardCount=0; try{ cardCount=(_jsStoreList()||[]).length; }catch(e){}
   const ver=document.getElementById('ep-ver-label')?.textContent||'—';
+  const adminKey=localStorage.getItem('frarik_license')||'';
 
-  // mini badge preview — nome utente come testo principale, dino come decorazione
-  const stdDino=LIC_DINOS[0];   // T-Rex → Standard
-  const premDino=LIC_DINOS[1];  // Brontosauro → Premium
-  const admDino=LIC_DINOS[7];   // Spinosauro → Admin
-  const miniCard=(dino,lvl,nm,exp,c2)=>`<div style="border-radius:14px;overflow:hidden;background:linear-gradient(135deg,${dino.g1},${dino.g2});border:1px solid rgba(255,255,255,.1);padding:14px 16px">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-      <div style="font-size:32px;line-height:1">${dino.e}</div>
-      <div>
-        <div style="font-size:13px;font-weight:900;color:#fff;line-height:1.2">${eh(nm)}</div>
-        <div style="font-size:10px;color:rgba(255,255,255,.38);margin-top:2px;font-style:italic">${dino.n}</div>
+  // row per un utente reale
+  const userRow=(u)=>{
+    const un=(u.note||'').toLowerCase();
+    const isUAdm=un.includes('admin')||un.includes('amministratore');
+    const isUPrem=un.includes('premium')||isUAdm;
+    const dino=_licDinoFor(u.name||'',u.note||'');
+    const lvlLabel=isUAdm?'🛡️ Admin + Premium':isUPrem?'💎 Premium':'⭐ Standard';
+    const lvlColor=isUAdm?'#ec4899':isUPrem?'#fbbf24':'#94a3b8';
+    const expU=u.expires?new Date(isNaN(u.expires)?u.expires:parseInt(u.expires)).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'}):'—';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);margin-bottom:6px">
+      <div style="font-size:24px;line-height:1">${dino.e}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(u.name||'—')}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:1px">Scad: ${expU}</div>
       </div>
-    </div>
-    <div style="display:inline-block;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.12);font-size:10px;font-weight:800;color:${c2};margin-bottom:8px">${lvl}</div>
-    <div style="font-size:10px;color:rgba(255,255,255,.35)">Scad: ${exp}</div>
-  </div>`;
+      <span style="padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);font-size:10px;font-weight:800;color:${lvlColor};white-space:nowrap">${lvlLabel}</span>
+    </div>`;
+  };
 
   body.innerHTML=`
   <div style="padding:4px 0 16px">
@@ -10991,24 +10998,16 @@ function _epAdminPanelLoad(){
       <button data-action="openPremiumPage" style="padding:9px 14px;border-radius:10px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);color:#fbbf24;font-size:11px;font-weight:700;cursor:pointer">👁 Pagina Premium</button>
       <button data-action="_adminShowFirstAccess" style="padding:9px 14px;border-radius:10px;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.3);color:#a5b4fc;font-size:11px;font-weight:700;cursor:pointer">🔑 Schermata primo accesso</button>
     </div>
-    <!-- Anteprime utenti -->
-    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Come vedono la licenza i tuoi utenti</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px">
-      <div>
-        <div style="font-size:10px;color:rgba(255,255,255,.3);font-weight:700;margin-bottom:5px">⭐ Standard</div>
-        ${miniCard(stdDino,'⭐ Standard','Marco Rossi','Nessuna','#94a3b8')}
-      </div>
-      <div>
-        <div style="font-size:10px;color:rgba(255,255,255,.3);font-weight:700;margin-bottom:5px">💎 Premium</div>
-        ${miniCard(premDino,'💎 Premium','Giulia Bianchi','✓ Attiva','#fbbf24')}
-      </div>
-      <div>
-        <div style="font-size:10px;color:rgba(255,255,255,.3);font-weight:700;margin-bottom:5px">🛡️ Admin</div>
-        ${miniCard(admDino,'🛡️ Admin + Premium',eh(name),'✓ Illimitata','#ec4899')}
+    <!-- Utenti — caricamento asincrono -->
+    <div id="ep-admin-users-section">
+      <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Utenti con licenza</div>
+      <div id="ep-admin-users-loading" style="padding:14px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);text-align:center">
+        <div class="spin" style="width:20px;height:20px;margin:0 auto 6px"></div>
+        <div style="font-size:11px;color:rgba(255,255,255,.3)">Caricamento utenti…</div>
       </div>
     </div>
     <!-- Email interesse -->
-    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Email interesse Premium (${emails.length})</div>
+    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;margin-top:16px">Email interesse Premium (${emails.length})</div>
     <div style="padding:10px 14px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);margin-bottom:${emails.length?'8':'16'}px;max-height:110px;overflow-y:auto;scrollbar-width:none">
       ${emails.length?emails.map(e=>`<div style="font-size:11px;color:rgba(255,255,255,.65);padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04)">${eh(e)}</div>`).join(''):'<div style="font-size:11px;color:rgba(255,255,255,.25)">Nessuna email registrata</div>'}
     </div>
@@ -11030,6 +11029,29 @@ function _epAdminPanelLoad(){
       </div>
     </div>
   </div>`;
+  // Carica utenti reali in modo asincrono
+  if(adminKey){
+    fetch(LICENSE_ADMIN_API,{method:'GET',headers:{'X-Frarik-Key':adminKey,'X-Admin-Key':adminKey}})
+      .then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); })
+      .then(data=>{
+        const usersSection=document.getElementById('ep-admin-users-section'); if(!usersSection) return;
+        const users=Array.isArray(data)?data:(data.licenses||data.users||data.data||[]);
+        const isPremUser=u=>{ const n=(u.note||'').toLowerCase(); return n.includes('premium')||n.includes('admin')||n.includes('amministratore'); };
+        const prem=users.filter(isPremUser);
+        const std=users.filter(u=>!isPremUser(u));
+        usersSection.innerHTML=`
+          <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">💎 Utenti Premium / Admin (${prem.length})</div>
+          <div style="margin-bottom:12px">${prem.length?prem.map(userRow).join(''):'<div style="font-size:11px;color:rgba(255,255,255,.25);padding:8px">Nessuno</div>'}</div>
+          <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">⭐ Utenti Standard (${std.length})</div>
+          <div style="margin-bottom:4px">${std.length?std.map(userRow).join(''):'<div style="font-size:11px;color:rgba(255,255,255,.25);padding:8px">Nessuno</div>'}</div>`;
+      })
+      .catch(()=>{
+        const usersSection=document.getElementById('ep-admin-users-section'); if(!usersSection) return;
+        usersSection.innerHTML=`
+          <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Utenti con licenza</div>
+          <div style="padding:12px 14px;border-radius:10px;background:rgba(255,100,100,.04);border:1px solid rgba(255,100,100,.15);font-size:11px;color:rgba(255,150,150,.6)">API admin non disponibile — verifica che l'endpoint supporti la lista utenti</div>`;
+      });
+  }
 }
 function _adminShowFirstAccess(){
   const ov=document.getElementById('lic-overlay'); if(!ov) return;
