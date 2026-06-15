@@ -8137,36 +8137,63 @@ function _fyUpsertView(cardId, cardCfg){
   return job;
 }
 
-/* ════════ NASCONDI NAV HA IN IFRAME SAME-ORIGIN ════════
-   Traversa il shadow DOM di home-assistant e nasconde sidebar + header.
-   L'iframe parte invisibile (opacity:0) e viene svelato quando la navigazione
-   è rimossa — o dopo 4s come fallback di sicurezza. */
-function _fyHideNavInIframe(iframe){
-  let done=false;
-  function reveal(){ if(!done){ done=true; iframe.style.opacity='1'; iframe.style.transition='opacity .3s'; } }
-  let t=0;
-  function attempt(){
-    if(done) return; t++;
+/* Ricerca in profondità attraverso i confini shadow DOM (HA annida tutto in shadow root). */
+function _fyDeepQuery(root, sel, depth){
+  if(!root||depth>9) return null;
+  try{
+    const f=root.querySelector&&root.querySelector(sel); if(f) return f;
+    const kids=root.querySelectorAll?root.querySelectorAll('*'):[];
+    for(const el of kids){ if(el.shadowRoot){ const r=_fyDeepQuery(el.shadowRoot,sel,depth+1); if(r) return r; } }
+  }catch(e){}
+  return null;
+}
+
+/* ════════ ADATTA IFRAME HA SAME-ORIGIN ════════
+   Nasconde sidebar/header, azzera il padding della vista (così la card è in alto a
+   sinistra senza offset) e — se opts.fit — adatta l'altezza dell'iframe (e del container
+   Frarik) all'altezza reale della card. L'iframe parte opacity:0 e appare quando pronto. */
+function _fyFitIframe(iframe, opts){
+  opts=opts||{};
+  let done=false, t=0, fits=0;
+  function reveal(){ if(!done){ done=true; iframe.style.opacity='1'; iframe.style.transition='opacity .25s'; } }
+  function tune(){
+    t++;
+    let viewFound=false;
     try{
       const doc=iframe.contentDocument;
-      if(!doc||doc.readyState==='loading'){ if(t<40) setTimeout(attempt,150); else reveal(); return; }
-      const ha=doc.querySelector('home-assistant');
-      if(!ha){ if(t<40) setTimeout(attempt,150); else reveal(); return; }
-      const main=ha.shadowRoot&&ha.shadowRoot.querySelector('home-assistant-main');
-      if(!main){ if(t<40) setTimeout(attempt,150); else reveal(); return; }
-      const sr=main.shadowRoot; if(!sr){ if(t<40) setTimeout(attempt,150); else reveal(); return; }
-      // Nascondi sidebar
-      const sb=sr.querySelector('ha-sidebar'); if(sb) sb.style.display='none';
-      // Nascondi header
-      ['app-header','ha-top-app-bar'].forEach(s=>{ sr.querySelectorAll(s).forEach(e=>{ e.style.display='none'; }); });
-      // Azzera margini del contenuto
-      const c=sr.querySelector('.content,partial-panel-resolver,.main-content');
-      if(c){ c.style.paddingLeft='0'; c.style.paddingTop='0'; c.style.marginLeft='0'; c.style.marginTop='0'; }
-      reveal();
-    }catch(e){ if(t<40) setTimeout(attempt,150); else reveal(); }
+      if(doc&&doc.readyState!=='loading'){
+        try{ doc.documentElement.style.background='transparent'; doc.body.style.background='transparent'; }catch(e){}
+        const ha=doc.querySelector('home-assistant');
+        const main=ha&&ha.shadowRoot&&ha.shadowRoot.querySelector('home-assistant-main');
+        if(main&&main.shadowRoot){
+          const sb=main.shadowRoot.querySelector('ha-sidebar'); if(sb) sb.style.display='none';
+          const drawer=main.shadowRoot.querySelector('ha-drawer'); if(drawer){ try{ drawer.style.setProperty('--mdc-drawer-width','0px'); }catch(e){} }
+        }
+        const root=_fyDeepQuery(doc,'hui-root',0);
+        if(root&&root.shadowRoot){
+          const hdr=root.shadowRoot.querySelector('.header')||root.shadowRoot.querySelector('app-header')||root.shadowRoot.querySelector('ha-top-app-bar');
+          if(hdr) hdr.style.display='none';
+          const view=root.shadowRoot.querySelector('#view')||root.shadowRoot.querySelector('hui-view');
+          if(view){
+            viewFound=true;
+            view.style.padding='0'; view.style.margin='0'; view.style.minHeight='0';
+            // misura l'altezza reale della card per adattare l'iframe (no clipping, no vuoti)
+            if(opts.fit){
+              const card=view.firstElementChild;
+              let h=(card&&card.offsetHeight)||view.scrollHeight||0;
+              if(h>20){ iframe.style.height=h+'px'; if(opts.container) opts.container.style.height=h+'px'; fits++; }
+            }
+            reveal();
+          }
+        }
+      }
+    }catch(e){}
+    // continua: veloce finché non trova la vista; poi qualche rifinitura per le card async
+    if(!viewFound){ if(t<45) setTimeout(tune,150); else reveal(); }
+    else if(opts.fit && fits<6){ setTimeout(tune,500); }
   }
   const fallback=setTimeout(reveal,4000);
-  iframe.addEventListener('load',()=>{ clearTimeout(fallback); t=0; setTimeout(attempt,80); },{once:true});
+  iframe.addEventListener('load',()=>{ clearTimeout(fallback); t=0; fits=0; setTimeout(tune,80); },{once:true});
 }
 
 async function _mountYamlCard(card, container){
@@ -8180,12 +8207,13 @@ async function _mountYamlCard(card, container){
     if(await _fyUpsertView(card.id,cfg)){
       if(!container.isConnected) return;
       container.innerHTML='';
-      container.style.cssText='display:block;width:100%;height:100%;overflow:hidden;border-radius:inherit';
+      container.style.cssText='display:block;width:100%;overflow:hidden;border-radius:inherit';
       const f=document.createElement('iframe');
       f.src='/'+_FY_DASH+'/'+encodeURIComponent(_fyPath(card.id))+'?kiosk';
       f.setAttribute('allow','fullscreen;autoplay;camera;microphone;clipboard-write');
-      f.style.cssText='display:block;width:100%;height:100%;min-height:200px;border:0;border-radius:10px;opacity:0;background:transparent';
-      _fyHideNavInIframe(f);
+      f.style.cssText='display:block;width:100%;height:100%;min-height:120px;border:0;border-radius:10px;opacity:0;background:transparent';
+      // fit:true → l'iframe e la card Frarik si adattano all'altezza reale della card
+      _fyFitIframe(f,{fit:true,container});
       container.appendChild(f);
       return;
     }
@@ -8667,7 +8695,7 @@ async function _ghsYamlLivePreview(){
       f.setAttribute('allow','fullscreen;autoplay;camera;microphone;clipboard-write');
       f.style.cssText='display:block;width:100%;height:380px;border:0;opacity:0;background:transparent;border-radius:8px';
       f.src='/'+_FY_DASH+'/'+encodeURIComponent(_fyPath('ghsy_prv'))+'?kiosk';
-      _fyHideNavInIframe(f);
+      _fyFitIframe(f,{fit:false});  // anteprima store: altezza fissa, solo nascondi nav + padding
       p2.appendChild(f);
     }).catch(e=>{ if(errEl) errEl.textContent='⚠️ iframe HA: '+(e&&e.message||e); });
   }catch(e){

@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.92 — 2026-06-16
+
+### fix: Card YAML in dashboard — rimosso offset e clipping dell'iframe
+
+- **Anteprima store**: funziona al 100% (motore nativo HA, tutti i plugin HACS)
+- **`_fyFitIframe`** (sostituisce `_fyHideNavInIframe`): oltre a nascondere sidebar/header, azzera il padding della vista HA (`#view`/`hui-view`) → la card non è più spostata in basso a destra ma in alto a sinistra
+- **Auto-fit altezza** (solo dashboard): misura l'altezza reale della card e adatta iframe + container Frarik → niente più card tagliata
+- `_fyDeepQuery`: ricerca attraverso i confini shadow DOM annidati di HA per trovare `hui-root`/`#view`
+- Anteprima store mantiene altezza fissa (380px) con padding azzerato
+
 ## 1.4.91 — 2026-06-16
 
 ### fix: Card YAML — usa la connessione WS del frontend HA reale
