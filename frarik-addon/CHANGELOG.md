@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.89 — 2026-06-16
+
+### fix: Card YAML — CSS vars HA + ordine setConfig/hass corretto
+
+- **Bug critico risolto**: `_yamlCustomEl` impostava `hass` PRIMA di `setConfig` — le card HA richiedono l'ordine inverso; questo causava rendering blank per button-card, mushroom, bubble-card ecc.
+- **`_injectHACSSVars(container)`**: nuova funzione che legge tutte le CSS custom properties dal `documentElement` di HA (window.parent) e le inietta nel container di anteprima. Le custom props cascadano attraverso i confini shadow DOM → card HACS vedono il tema corretto
+- **`window.loadCardHelpers` definito in Frarik**: le card HACS che chiamano `window.loadCardHelpers()` internamente (per creare sub-elementi) usano ora il factory locale di Frarik invece di fallire
+- **Store preview**: usa renderer interno con CSS vars come path principale (immediato, nessuna dipendenza WS); tenta upgrade a iframe HA in background se disponibile
+- **Dashboard yaml-card fallback**: inietta CSS vars nel container prima di `_yamlCreateEl`
+
 ## 1.4.88 — 2026-06-16
 
 ### fix: Card YAML — anteprima e dashboard tramite iframe HA nativo
