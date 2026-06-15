@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.4.85 — 2026-06-15
+
+### feat: SOS Card — redesign completo con procedura guidata a step
+
+- **Wizard a 3 step**: Chi chiede aiuto? → Tipo emergenza → A chi chiedi aiuto? → Conferma
+- **Step 1 — Chi sei**: seleziona la tua persona da HA (entities person.*), con opzione "Non specificare"
+- **Step 2 — Tipo emergenza**: 4 tipi con icona + descrizione (SOS Generico / Medica / Incendio / Intrusione)
+- **Step 3 — Contatti**: lista contatti configurati con checkbox multi-selezione, "Seleziona tutti", badge check animato
+- **Conferma**: riepilogo completo (chi / tipo / destinatari) + hold button 3s con barra di progresso
+- **Countdown**: numero grande 5→0 con barra colorata + annulla visibile e urgente
+- **Allarme attivo**: header colorato animato con nome tipo, "chi ha chiesto" e lista destinatari inviati
+- **Impostazioni card (⚙️)**: pannello bottom-sheet con 4 sezioni — Persone (dropdown HA entities), Contatti (nome + notify service con hint), Trigger automazione, Dimensioni card
+- Salvataggio SOS cfg via evento `frarik-sos-cfg-update` (shadow DOM → main.js)
+- Wizard si resetta automaticamente a idle dopo reset allarme
+- Aggiornato `_jsStoreList` per mostrare versione 1.1 SOS card nello store
+
 ## 1.4.84 — 2026-06-15
 
 ### feat: SOS Card — emergenza protetta da licenza
