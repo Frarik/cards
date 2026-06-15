@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.4.84 — 2026-06-15
+
+### feat: SOS Card — emergenza protetta da licenza
+
+- Nuova card SOS embedded in main.js come custom element `sos-card` con shadow DOM completo
+- 4 modalità: Generico 🆘, Medico 🏥, Incendio 🔥, Intrusione 🔒 — ognuna con colore dedicato
+- Hold button 3 secondi → countdown 5 secondi → invio allarme a tutti i contatti configurati in Impostazioni → SOS
+- Notifiche HA via `notify.*` con priorità critica (TTL 0, canale `alarm_stream`, vibrazione SOS)
+- Trigger entità opzionale (script, input_button, automation) configurabile nelle impostazioni card
+- Posizione GPS automatica dalla prima entità `person.*` con lat/lon (link Google Maps nel messaggio)
+- Log ultimi 10 eventi in localStorage (`soscard:{storageKey}`)
+- **Protezione eliminazione**: `delCard()` richiede la chiave di licenza (SHA-256 verificato via `crypto.subtle`) — la chiave in chiaro non è mai nel codice
+- `cardDotMenu()`: voce "🔐 Protetta (richiede licenza)" viola al posto di "🗑 Elimina" per la sos-card
+- `renderSOSCfgList()`: banner di stato (card presente/assente + pulsante "➕ Aggiungi") sopra la lista contatti SOS
+- `window._addSosToDash()` / `_addSosToDash()` per aggiungere la card alla pagina corrente
+- `window.frarikSosCfg()` exposto per accesso ai contatti dalla card
+- `_registerLovelaceCard('sos-card', ...)` + override `mount` per passare `storageKey: card.id`
+
 ## 1.4.83 — 2026-06-15
 
 ### fix: store preview Meteo + fit card intera nel riquadro

@@ -1879,7 +1879,8 @@ function _ghStoreRender(){
 /* Schede "Installate" (origine github) e "Card locali" (origine local): gestisci le card installate */
 function _ghStoreRenderInstalled(q, originFilter){
   const list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
-  let items=_jsStoreList().filter(i=>((i.origin||'github')===originFilter));
+  // Includi sempre le card di sistema (builtin) nella tab 'local'
+  let items=_jsStoreList().filter(i=>((i.origin||'github')===originFilter)||(originFilter==='local'&&i._builtin));
   const all=items.length;
   if(q) items=items.filter(i=>((i.meta||{}).name||(i.meta||{}).id||'').toLowerCase().includes(q));
   const lbl=originFilter==='local'?'card locali':'card da GitHub';
@@ -1892,26 +1893,32 @@ function _ghStoreRenderInstalled(q, originFilter){
   }
   const _lcCards=(curPage()||{cards:[]}).cards||[];
   const _usedLocal=new Set(); _lcCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) _usedLocal.add(c.jsCardId); });
-  const sorted=items.sort((a,b)=>((a.meta||{}).name||'').localeCompare((b.meta||{}).name||''));
+  // Card di sistema in cima, poi ordine alfabetico
+  const sorted=[...items.filter(i=>i._builtin),...items.filter(i=>!i._builtin).sort((a,b)=>((a.meta||{}).name||'').localeCompare((b.meta||{}).name||''))];
   list.innerHTML='<div class="ghc-grid">'+sorted.map(i=>{
     const m=i.meta||{}; const inPage=_usedLocal.has(m.id); const id=m.id||'';
     const reg=id?window.FratechCardRegistry?.[id]:null;
     const icon=m.icon||reg?.icon||'📦';
-    const desc=_ghcDesc(id,null);
+    const desc=i._builtin?(m.desc||''):((_ghcDesc(id,null))||'');
     const st=inPage?'ok':'new';
     const prevHtml=reg
       ?`<div class="ghc-prev-inner" data-prev-id="${eh(id)}"></div>`
       :`<div class="ghc-prev-inner">${_ghcPrevPh(icon,m.name||id)}</div>`;
-    const bdg=inPage?`<span class="ghc-bdg cur">✓ In vista</span>`:`<span class="ghc-bdg ok">● Installata</span>`;
+    const bdg=i._builtin
+      ?`<span class="ghc-bdg" style="background:rgba(139,92,246,.2);color:#c4b5fd;border-color:rgba(139,92,246,.4)">🔐 Sistema</span>`
+      :(inPage?`<span class="ghc-bdg cur">✓ In vista</span>`:`<span class="ghc-bdg ok">● Installata</span>`);
     const act=inPage
       ?`<span class="ghc-indash"><i class="mdi mdi-check-circle-outline"></i> In vista</span>`
       :`<button class="ghc-btn ghc-btn-add" data-action="_jsStoreAddAndRefresh" data-action-args='["${id}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`;
-    const pub=originFilter==='local'?`<button class="ghc-btn ghc-btn-pub" data-action="_ghsPublish" data-action-arg="${id}" title="Pubblica su GitHub"><i class="mdi mdi-upload"></i> Pubblica</button>`:'';
+    const pub=(!i._builtin&&originFilter==='local')?`<button class="ghc-btn ghc-btn-pub" data-action="_ghsPublish" data-action-arg="${id}" title="Pubblica su GitHub"><i class="mdi mdi-upload"></i> Pubblica</button>`:'';
+    const del=i._builtin
+      ?`<button class="ghc-btn-del" data-action="_ghsDeleteInstalled" data-action-arg="${id}" title="Protetta da licenza" style="opacity:.4;cursor:default"><i class="mdi mdi-lock-outline"></i></button>`
+      :`<button class="ghc-btn-del" data-action="_ghsDeleteInstalled" data-action-arg="${id}" title="Disinstalla"><i class="mdi mdi-delete-outline"></i></button>`;
     return `<div class="ghc-tile st-${st}"><div class="ghc-strip ${st}"></div>
       <div class="ghc-prev">${prevHtml}<div class="ghc-prev-fade"></div>${bdg}</div>
       <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico">${icon}</div><div class="ghc-meta"><div class="ghc-name">${eh(m.name||id||'Card')}</div><div class="ghc-ver">v${eh(m.version||'?')}</div></div></div>
       ${desc?`<div class="ghc-desc">${eh(desc)}</div>`:''}
-      <div class="ghc-acts">${pub}${act}<button class="ghc-btn-del" data-action="_ghsDeleteInstalled" data-action-arg="${id}" title="Disinstalla"><i class="mdi mdi-delete-outline"></i></button></div></div></div>`;
+      <div class="ghc-acts">${pub}${act}${del}</div></div></div>`;
   }).join('')+'</div>';
   requestAnimationFrame(()=>{
     list.querySelectorAll('[data-prev-id]').forEach(el=>{ _ghcLivePrev(el, el.dataset.prevId); });
@@ -2078,7 +2085,9 @@ function _premSendInterest(){
 }
 function _ghsDeleteInstalled(id){
   if(!id) return;
-  const it=_jsStoreList().find(i=>(i.meta||{}).id===id); const nm=(it&&it.meta&&it.meta.name)||id;
+  const it=_jsStoreList().find(i=>(i.meta||{}).id===id);
+  if(it&&it._builtin){ _sosRequireLicense(()=>{ showToast('🔐 Card di sistema — non disinstallabile'); }); return; }
+  const nm=(it&&it.meta&&it.meta.name)||id;
   showConfirm(`Eliminare la card <b>${eh(nm)}</b> dalle installate?<br><span style="font-size:11px;opacity:.7">Le card di questo tipo già messe in dashboard mostreranno un errore.</span>`, ()=>{
     _jsStoreDelete(id);
     try{ delete window.FratechCardRegistry[id]; }catch(e){}
@@ -5815,13 +5824,18 @@ function cardDotMenu(cardId, el, e){
   menu.id='_cdm';
   menu.style.cssText='position:fixed;z-index:15000;background:#1a1f35;border:1px solid rgba(255,255,255,.14);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.75);padding:5px;display:flex;flex-direction:column;gap:3px;min-width:176px;animation:popIn .12s ease';
   const it=(a,ico,lbl,del=false)=>`<button data-cdmact="${a}" style="display:flex;align-items:center;gap:9px;width:100%;padding:9px 11px;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;background:${del?'rgba(239,68,68,.12)':'rgba(255,255,255,.05)'};color:${del?'#fca5a5':'#e2e8f0'}">${ico} ${lbl}</button>`;
+  const _crd=curPage().cards.find(c=>c.id===cardId);
+  const _isSos=_crd?.type==='js-custom'&&_crd?.jsCardId==='sos-card';
+  const delItem=_isSos
+    ? `<button data-cdmact="del" style="display:flex;align-items:center;gap:9px;width:100%;padding:9px 11px;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;background:rgba(139,92,246,.12);color:#c4b5fd">🔐 Protetta (richiede licenza)</button>`
+    : it('del','🗑','Elimina',true);
   menu.innerHTML=
     it('dup','⧉','Duplica')+
     it('copy','📋','Copia')+
     it('cut','✂️','Taglia')+
     it('page','📑','Copia su vista')+
     '<div style="height:1px;background:rgba(255,255,255,.09);margin:2px 0"></div>'+
-    it('del','🗑','Elimina',true);
+    delItem;
   const r=el?el.getBoundingClientRect():null;
   if(r){
     let top=r.bottom+4, left=r.left;
@@ -8353,6 +8367,8 @@ window.frarikState = function(id){ return id?(hs[id]!==undefined?hs[id]:null):nu
 // hass COMPLETO in stile Home Assistant (states come oggetti con attributi, callApi,
 // hassUrl, callService, ecc.) per le card che ne hanno bisogno (es. person-card)
 window.frarikHass = function(){ return _haHassObj(); };
+window.frarikSosCfg = function(){ try{return _sosCfg();}catch(e){return null;} };
+window._addSosToDash = function(){ _addSosToDash(); };
 
 function _haHassObj(){
   const states={};
@@ -8539,6 +8555,299 @@ function _registerLovelaceCard(tag, meta){
     }
   };
 }
+/* ═══════════════════════════════════════════════════════════
+   SOS CARD — embedded, protetta da licenza
+   Hash SHA-256 di FRKD-MVXV-NRQZ-3NN5
+═══════════════════════════════════════════════════════════ */
+const _SOS_HASH='896263d3d819ee96afd873d95b40ecba77eaac65e45162e3dce7c6ad2cc1cf08';
+
+async function _sosRequireLicense(onSuccess){
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:200000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.82);backdrop-filter:blur(8px);font-family:system-ui,sans-serif';
+  ov.innerHTML=`<div style="background:#0a0816;border:1px solid rgba(239,68,68,.4);border-radius:18px;padding:24px 24px 20px;width:min(340px,90vw);display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;align-items:center;gap:11px">
+      <span style="font-size:26px">🔐</span>
+      <div><div style="font-size:14px;font-weight:800;color:#fff">Card SOS Protetta</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.45)">Inserisci la chiave di licenza per procedere</div></div>
+    </div>
+    <input id="_slk" type="password" placeholder="XXXX-XXXX-XXXX-XXXX"
+      style="padding:11px 13px;border-radius:10px;background:rgba(255,255,255,.06);color:#fff;
+      border:1px solid rgba(255,255,255,.18);font-size:14px;font-family:monospace;letter-spacing:1px;outline:none;width:100%;box-sizing:border-box;text-transform:uppercase">
+    <div style="display:flex;gap:8px">
+      <button id="_slc" style="flex:1;padding:10px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#fff;cursor:pointer;font-size:12px">Annulla</button>
+      <button id="_slo" style="flex:1;padding:10px;border-radius:10px;background:rgba(239,68,68,.18);border:1px solid rgba(239,68,68,.35);color:#f87171;cursor:pointer;font-size:12px;font-weight:700">Sblocca</button>
+    </div>
+    <div id="_sle" style="font-size:10px;color:#f87171;text-align:center;display:none">❌ Chiave non valida</div>
+  </div>`;
+  document.body.appendChild(ov);
+  const inp=ov.querySelector('#_slk'); inp.focus();
+  const close=()=>{ try{document.body.removeChild(ov);}catch(_){} };
+  ov.querySelector('#_slc').onclick=close;
+  const verify=async()=>{
+    try{
+      const k=inp.value.trim().toUpperCase();
+      const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(k));
+      const hex=Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+      if(hex===_SOS_HASH){ close(); onSuccess(); }
+      else{ ov.querySelector('#_sle').style.display=''; inp.value=''; inp.focus(); }
+    }catch(_){ ov.querySelector('#_sle').style.display=''; }
+  };
+  ov.querySelector('#_slo').onclick=verify;
+  inp.onkeydown=e=>{ if(e.key==='Enter') verify(); };
+}
+
+(function _defineSosCard(){
+  if(customElements.get('sos-card')) return;
+  const _HMS=3000, _CS=5;
+  const _M=[
+    {id:'generic', icon:'🆘', label:'SOS',       color:'#ef4444', title:'🆘 SOS Emergenza'},
+    {id:'medical', icon:'🏥', label:'Medico',    color:'#f97316', title:'🏥 Emergenza Medica'},
+    {id:'fire',    icon:'🔥', label:'Incendio',  color:'#f59e0b', title:'🔥 INCENDIO'},
+    {id:'lock',    icon:'🔒', label:'Intrusione',color:'#8b5cf6', title:'🔒 Intrusione'},
+  ];
+  function _sk(k){ return 'soscard:'+(k||'default'); }
+  function _ld(k){ try{return JSON.parse(localStorage.getItem(_sk(k))||'{}')||{};}catch(_){return{};} }
+  function _sv(k,o){ try{localStorage.setItem(_sk(k),JSON.stringify(o));}catch(_){} }
+
+  class SosCard extends HTMLElement {
+    constructor(){
+      super(); this.attachShadow({mode:'open'});
+      this._h=null; this._sk='default';
+      this._c={triggerEntity:'',cardScale:100,cardW:100};
+      this._frarikCard=null; this._sh=null;
+      this._mode=0; this._state='idle';
+      this._hs=0; this._hraf=null; this._cdi=null; this._csec=0; this._am=null;
+      this._cl=this._onClick.bind(this);
+      this._pd=this._onPD.bind(this); this._pu=this._onPU.bind(this);
+    }
+    static getStubConfig(){ return {}; }
+    setConfig(cfg){
+      cfg=cfg||{}; this._sk=cfg.storageKey||'default';
+      const s=_ld(this._sk);
+      this._c={triggerEntity:s.triggerEntity||'',cardScale:s.cardScale!=null?s.cardScale:100,cardW:s.cardW!=null?s.cardW:100};
+      this._build();
+    }
+    set hass(h){ this._h=h; }
+    configure(card){ this._frarikCard=card||this._frarikCard; this._openCfg(); }
+    connectedCallback(){
+      const sr=this.shadowRoot;
+      sr.addEventListener('click',this._cl); sr.addEventListener('pointerdown',this._pd);
+      sr.addEventListener('pointerup',this._pu); sr.addEventListener('pointerleave',this._pu);
+      sr.addEventListener('pointercancel',this._pu);
+    }
+    disconnectedCallback(){
+      const sr=this.shadowRoot;
+      sr.removeEventListener('click',this._cl); sr.removeEventListener('pointerdown',this._pd);
+      sr.removeEventListener('pointerup',this._pu); sr.removeEventListener('pointerleave',this._pu);
+      sr.removeEventListener('pointercancel',this._pu);
+      this._clrT(); this._destroyCfg();
+    }
+    _save(){ const d=_ld(this._sk); _sv(this._sk,{...d,triggerEntity:this._c.triggerEntity,cardScale:this._c.cardScale,cardW:this._c.cardW}); }
+    _contacts(){ try{ const s=window.frarikSosCfg?.(); if(s) return (s.contacts||[]).filter(c=>c&&(c.name||c.phone||c.notifyService)); }catch(_){} return []; }
+    _clrT(){ if(this._hraf){cancelAnimationFrame(this._hraf);this._hraf=null;} if(this._cdi){clearInterval(this._cdi);this._cdi=null;} }
+    _build(){
+      const m=_M[this._mode]||_M[0], ct=this._contacts(), logs=(_ld(this._sk).logs||[]).slice(0,3);
+      // Istruzioni d'uso — sempre visibili tranne durante allarme attivo
+      const infoH=this._state!=='active'?`<div class="info">
+        <div class="info-title">📖 Come usare la card SOS</div>
+        <div class="info-steps">
+          <span class="step"><span class="sn">1</span>Scegli il tipo di emergenza qui sotto</span>
+          <span class="step"><span class="sn">2</span>Tieni premuto il pulsante rosso per <b>3 secondi</b></span>
+          <span class="step"><span class="sn">3</span>Hai <b>5 secondi</b> per annullare prima dell'invio</span>
+          <span class="step"><span class="sn">4</span>L'allarme viene inviato automaticamente ai contatti configurati</span>
+        </div>
+      </div>`:'';
+      let stH='';
+      if(this._state==='idle'){
+        stH=`<div class="bw"><button class="sb" data-a="hold" style="--mc:${m.color}">
+          <span class="bi">${m.icon}</span>
+          <span class="bl">${m.label.toUpperCase()}</span>
+          <span class="bs">⏱ Tieni premuto ${_HMS/1000} secondi per attivare</span>
+        </button></div>`;
+      } else if(this._state==='holding'){
+        stH=`<div class="bw"><button class="sb hld" data-a="hold" style="--mc:${m.color}">
+          <span class="bi">${m.icon}</span><span class="bl">Tieni premuto…</span>
+          <div class="hb"><div class="hf" id="shf"></div></div>
+        </button></div><button class="xb" data-a="cancel">✕ Rilascia il dito per annullare</button>`;
+      } else if(this._state==='countdown'){
+        const am=this._am||m;
+        stH=`<div class="cd"><div class="cdi" style="color:${am.color}">${am.icon}</div>
+          <div class="cdn" id="scdn">${this._csec}</div>
+          <div class="cdl">Invio allarme <b>${am.label}</b> tra pochi secondi…</div>
+          <div class="cdb"><div class="cdf" id="scdf" style="--mc:${am.color};width:${((_CS-this._csec)/_CS*100).toFixed(0)}%"></div></div>
+          <button class="xb" data-a="cancel">✕ ANNULLA (premi subito)</button></div>`;
+      } else if(this._state==='active'){
+        const am=this._am||m;
+        stH=`<div class="ac" style="--mc:${am.color}">
+          <div class="ah"><span>${am.icon}</span><span>⚠️ ALLARME INVIATO — ${am.label.toUpperCase()}</span></div>
+          <div id="ssl" class="sl"></div>
+          <button class="rb" data-a="reset">✅ Situazione risolta — Reset allarme</button></div>`;
+      }
+      const mbtns=_M.map((mm,i)=>`<button class="mb${i===this._mode?' on':''}" data-a="mode" data-i="${i}" style="--mc:${mm.color}"><span>${mm.icon}</span><span>${mm.label}</span></button>`).join('');
+      const ctb=ct.length?`<span class="cto">✓ ${ct.length} contatt${ct.length===1?'o':'i'}</span>`:`<span class="ctw">⚠ Nessun contatto!</span>`;
+      const logsH=logs.length?`<div class="lgs"><div class="lt">📋 Ultimi eventi</div>${logs.map(l=>{const lm=_M.find(x=>x.id===l.mode)||_M[0];const d=new Date(l.t);return`<div class="lr"><span>${lm.icon}</span><span>${lm.label}</span><span>${d.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'})} ${d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}</span></div>`;}).join('')}</div>`:'';
+      this.shadowRoot.innerHTML=`<style>${this._css()}</style><div class="r">
+        <div class="h"><span class="hi">🆘</span><span class="ht">Emergenza SOS</span>${ctb}<button class="cb" data-a="cfg">⚙️</button></div>
+        ${infoH}
+        <div class="ms"><div class="ml">Tipo di emergenza:</div><div class="mr">${mbtns}</div></div>
+        ${stH}${logsH}
+        ${this._c.triggerEntity?`<div class="tl">⚡ ${this._c.triggerEntity}</div>`:''}
+      </div>`;
+    }
+    _css(){ return `:host{display:block;width:100%}*{box-sizing:border-box}
+      .r{font-family:var(--primary-font-family,'Inter',system-ui,sans-serif);background:linear-gradient(150deg,#0a0816 0%,#0c0e1c 100%);border:1px solid rgba(239,68,68,.3);border-radius:18px;padding:14px 16px;color:#fff;display:flex;flex-direction:column;gap:12px;position:relative;overflow:hidden}
+      .r::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 70% 40% at 50% 0%,rgba(239,68,68,.08),transparent)}
+      .h{display:flex;align-items:center;gap:8px}.hi{font-size:18px;flex-shrink:0}.ht{font-size:13px;font-weight:800;flex:1;letter-spacing:.3px}
+      .cb{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:7px;padding:3px 8px;cursor:pointer;color:#fff;font-size:11px;flex-shrink:0}
+      .cto{font-size:9px;font-weight:700;color:#4ade80;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.2);border-radius:20px;padding:2px 8px;white-space:nowrap}
+      .ctw{font-size:9px;font-weight:700;color:#fbbf24;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.2);border-radius:20px;padding:2px 8px;white-space:nowrap}
+      .info{padding:10px 13px;border-radius:12px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.18)}
+      .info-title{font-size:11px;font-weight:800;color:#fca5a5;margin-bottom:7px;letter-spacing:.3px}
+      .info-steps{display:flex;flex-direction:column;gap:5px}
+      .step{display:flex;align-items:flex-start;gap:8px;font-size:11px;color:rgba(255,255,255,.8);line-height:1.4}
+      .sn{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:rgba(239,68,68,.25);border:1px solid rgba(239,68,68,.4);font-size:10px;font-weight:800;color:#fca5a5;flex-shrink:0;margin-top:1px}
+      .ms{display:flex;flex-direction:column;gap:5px}.ml{font-size:10px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.4px;text-transform:uppercase}
+      .mr{display:flex;gap:5px}.mb{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 3px;border-radius:10px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.03);cursor:pointer;color:#fff;font-size:11px;font-weight:700;transition:all .15s;min-width:0;touch-action:manipulation}
+      .mb span:first-child{font-size:18px}.mb.on{background:color-mix(in srgb,var(--mc) 22%,transparent);border-color:color-mix(in srgb,var(--mc) 60%,transparent);box-shadow:0 0 12px color-mix(in srgb,var(--mc) 30%,transparent)}.mb:active{transform:scale(.93)}
+      .bw{display:flex;justify-content:center}.sb{width:100%;padding:24px 14px;border-radius:16px;border:2px solid var(--mc);background:color-mix(in srgb,var(--mc) 10%,rgba(10,8,22,1));cursor:pointer;color:#fff;display:flex;flex-direction:column;align-items:center;gap:6px;box-shadow:0 0 30px color-mix(in srgb,var(--mc) 20%,transparent);transition:box-shadow .2s,transform .1s;user-select:none;-webkit-user-select:none;touch-action:none}
+      .sb:active,.sb.hld{background:color-mix(in srgb,var(--mc) 20%,rgba(10,8,22,1));box-shadow:0 0 50px color-mix(in srgb,var(--mc) 40%,transparent);transform:scale(.98)}
+      .bi{font-size:40px;line-height:1}.bl{font-size:16px;font-weight:900;letter-spacing:2px}.bs{font-size:10px;opacity:.6;font-weight:600}
+      .hb{width:100%;height:6px;background:rgba(255,255,255,.1);border-radius:5px;overflow:hidden;margin-top:6px}.hf{height:100%;width:0%;background:var(--mc);border-radius:5px;transition:none}
+      .xb{width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#fff;cursor:pointer;font-size:11px;font-weight:800;touch-action:manipulation;letter-spacing:.5px}
+      .cd{display:flex;flex-direction:column;align-items:center;gap:10px}.cdi{font-size:40px;animation:sp 1s ease-in-out infinite}.cdn{font-size:56px;font-weight:900;color:#ef4444;line-height:1}.cdl{font-size:11px;opacity:.7;font-weight:700;text-align:center}
+      .cdb{width:100%;height:6px;background:rgba(239,68,68,.15);border-radius:5px;overflow:hidden}.cdf{height:100%;background:linear-gradient(90deg,#ef4444,#f97316);border-radius:5px;transition:width 1s linear}
+      .ac{display:flex;flex-direction:column;gap:10px}.ah{display:flex;align-items:center;gap:9px;padding:11px 14px;border-radius:12px;font-weight:800;font-size:13px;background:color-mix(in srgb,var(--mc) 14%,rgba(0,0,0,.4));border:1px solid var(--mc);animation:sb 1.2s ease-in-out infinite alternate}.ah span:first-child{font-size:22px}
+      .sl{display:flex;flex-direction:column;gap:4px}.sr{display:flex;align-items:center;gap:7px;padding:6px 10px;border-radius:8px;background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.13);font-size:11px;font-weight:600}
+      .rb{width:100%;padding:11px;border-radius:11px;background:rgba(74,222,128,.13);border:1px solid rgba(74,222,128,.3);color:#4ade80;cursor:pointer;font-size:12px;font-weight:800;touch-action:manipulation}
+      .lgs{display:flex;flex-direction:column;gap:3px}.lt{font-size:8px;font-weight:700;opacity:.4;margin-bottom:2px;letter-spacing:.07em;text-transform:uppercase}
+      .lr{display:flex;align-items:center;gap:7px;padding:3px 0;font-size:10px;border-bottom:1px solid rgba(255,255,255,.04)}.lr span:first-child{font-size:13px;flex-shrink:0}.lr span:nth-child(2){flex:1;font-weight:600}.lr span:last-child{opacity:.45;font-size:9px}
+      .tl{font-size:8px;opacity:.35;text-align:center}
+      @keyframes sp{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}@keyframes sb{0%{opacity:1}100%{opacity:.6}}`; }
+    _onClick(e){
+      const b=e.target.closest('[data-a]'); if(!b) return; const a=b.dataset.a;
+      if(a==='mode'){ this._mode=parseInt(b.dataset.i)||0; if(this._state==='idle') this._build(); }
+      else if(a==='cancel'){ this._clrT(); this._state='idle'; this._am=null; this._build(); }
+      else if(a==='reset'){ this._clrT(); this._state='idle'; this._am=null; this._build(); }
+      else if(a==='cfg'){ this._openCfg(); }
+    }
+    _onPD(e){
+      const b=e.target.closest('[data-a="hold"]'); if(!b||this._state!=='idle') return;
+      e.preventDefault(); try{b.setPointerCapture(e.pointerId);}catch(_){}
+      this._state='holding'; this._hs=Date.now(); this._build();
+      const anim=()=>{
+        if(this._state!=='holding') return;
+        const el=this.shadowRoot.getElementById('shf');
+        if(el){ const p=Math.min(100,(Date.now()-this._hs)/_HMS*100); el.style.width=p+'%'; if(p>=100){ this._startCD(); return; } }
+        this._hraf=requestAnimationFrame(anim);
+      };
+      this._hraf=requestAnimationFrame(anim);
+    }
+    _onPU(){ if(this._state!=='holding') return; this._clrT(); this._state='idle'; this._build(); }
+    _startCD(){
+      this._clrT(); this._state='countdown'; this._am=_M[this._mode]; this._csec=_CS; this._build();
+      this._cdi=setInterval(()=>{
+        this._csec--;
+        const n=this.shadowRoot.getElementById('scdn'), f=this.shadowRoot.getElementById('scdf');
+        if(n) n.textContent=this._csec;
+        if(f) f.style.width=((_CS-this._csec)/_CS*100).toFixed(0)+'%';
+        if(this._csec<=0){ clearInterval(this._cdi); this._cdi=null; this._send(); }
+      },1000);
+    }
+    _send(){
+      const m=this._am||_M[0], ct=this._contacts();
+      if(this._c.triggerEntity){
+        try{ const d=this._c.triggerEntity.split('.')[0]; window.frarikCallService?.(d,d==='input_button'?'press':(d==='script'?'turn_on':'press'),{},{entity_id:this._c.triggerEntity}); }catch(_){}
+      }
+      const now=new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+      const loc=this._loc(); const sent=[];
+      for(const c of ct){
+        if(c.notifyService){
+          try{ window.frarikCallService?.('notify',c.notifyService.replace(/^notify\./,''),{title:m.title,message:(c.message||`⚠️ ALLARME ${m.label.toUpperCase()}! ${now}`)+(loc?'\n📍 '+loc:''),data:{channel:'alarm_stream',importance:'high',ttl:0,priority:'high',color:m.color,persistent:true,sticky:true,tag:'sos_'+m.id,notification_icon:'mdi:alarm-light',vibrationPattern:[0,400,200,400,200,400],ledColor:m.color,push:{sound:{name:'default',critical:1,volume:1.0},'interruption-level':'critical',badge:1}}},{}); sent.push({n:c.name||c.notifyService,ok:true}); }catch(_){ sent.push({n:c.name||c.notifyService,ok:false}); }
+        } else if(c.phone){ sent.push({n:c.name||c.phone,ok:null}); }
+      }
+      const d=_ld(this._sk); const logs=d.logs||[];
+      logs.unshift({t:Date.now(),mode:m.id,cts:ct.map(x=>x.name||'?')}); if(logs.length>10)logs.length=10;
+      _sv(this._sk,{...d,logs});
+      this._state='active'; this._build();
+      const logEl=this.shadowRoot.getElementById('ssl'); if(!logEl) return;
+      const trRow=this._c.triggerEntity?`<div class="sr"><span>✅</span><span>⚡ ${this._c.triggerEntity}</span><span style="font-size:9px;opacity:.6">trigger</span></div>`:'';
+      logEl.innerHTML=trRow+(sent.length?sent.map(s=>`<div class="sr"><span>${s.ok===null?'📞':s.ok?'✅':'⚠️'}</span><span>${s.n}</span></div>`).join(''):'<div class="sr"><span>⚠️</span><span>Nessun contatto configurato</span></div>');
+    }
+    _loc(){
+      try{ const h=this._h||window.frarikHass?.(); if(!h) return ''; const eid=Object.keys(h.states||{}).find(k=>k.startsWith('person.')); if(!eid) return ''; const a=h.states[eid]?.attributes||{}; if(a.latitude&&a.longitude) return `https://maps.google.com/maps?q=${a.latitude},${a.longitude}`; }catch(_){} return '';
+    }
+    _openCfg(){
+      if(this._sh) return;
+      this._sh=document.createElement('div'); document.body.appendChild(this._sh);
+      const sr=this._sh.attachShadow({mode:'open'}); const fc=this._frarikCard; const c=this._c;
+      sr.innerHTML=`<style>:host{font-family:'Inter',system-ui,sans-serif}
+        .ov{position:fixed;inset:0;z-index:100000;display:flex;align-items:flex-end;background:rgba(0,0,0,.65);backdrop-filter:blur(4px)}
+        .modal{width:100%;max-height:85vh;overflow-y:auto;background:#0a0816;border:1px solid rgba(239,68,68,.3);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);animation:sl .22s cubic-bezier(.32,1.12,.56,1);scrollbar-width:none}
+        .modal::-webkit-scrollbar{display:none}@keyframes sl{from{transform:translateY(100%)}to{transform:translateY(0)}}
+        .shdr{display:flex;align-items:center;gap:12px;padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,.06)}
+        .sico{width:36px;height:36px;border-radius:10px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+        .stit{font-size:15px;font-weight:800;color:#fff}.ssub{font-size:11px;opacity:.5;color:#fff}
+        .scls{margin-left:auto;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:5px 10px;cursor:pointer;color:#fff;font-size:13px}
+        .body{padding:18px 20px 28px;display:flex;flex-direction:column;gap:16px}
+        .slbl{font-size:11px;font-weight:700;color:#fff;opacity:.65;margin-bottom:4px}
+        input[type=text]{width:100%;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.15);font-size:12px;font-family:monospace;outline:none}
+        input[type=text]::placeholder{color:rgba(255,255,255,.3)}
+        .sr2{display:flex;align-items:center;gap:10px}.sr2 input[type=range]{flex:1;accent-color:#ef4444}
+        .sv{font-size:12px;font-weight:700;color:#ef4444;min-width:36px;text-align:right}
+        .sav{width:100%;padding:12px;border-radius:12px;background:linear-gradient(90deg,#ef4444,#f97316);border:none;color:#fff;font-size:13px;font-weight:800;cursor:pointer}
+        .inf{font-size:10px;opacity:.4;text-align:center;line-height:1.5}
+        .lkb{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:10px;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.18)}
+        .lkb span:first-child{font-size:20px}.lkt{font-size:10px;color:rgba(255,255,255,.6);line-height:1.5}
+      </style>
+      <div class="ov" id="so"><div class="modal">
+        <div class="shdr"><div class="sico">🆘</div>
+          <div><div class="stit">Impostazioni SOS</div><div class="ssub">Card Emergenza di Sistema</div></div>
+          <button class="scls" id="sc">✕</button></div>
+        <div class="body">
+          <div class="lkb"><span>🔐</span><div class="lkt">Card protetta da sistema — per eliminarla è richiesta la chiave di licenza. I contatti SOS si configurano in Impostazioni → SOS.</div></div>
+          <div><div class="slbl">⚡ Entità trigger HA (opzionale)</div>
+            <input type="text" id="ie" value="${c.triggerEntity||''}" placeholder="es. script.emergenza, input_button.sos">
+            <div class="inf" style="margin-top:5px">Viene attivata ad ogni allarme (script, input_button, automation, ecc.)</div></div>
+          <div><div class="slbl">📏 Altezza (zoom)</div>
+            <div class="sr2"><input type="range" id="ss" min="20" max="100" step="5" value="${c.cardScale??100}"><span class="sv" id="ssv">${c.cardScale??100}%</span></div></div>
+          <div><div class="slbl">↔ Larghezza</div>
+            <div class="sr2"><input type="range" id="sw" min="20" max="100" step="5" value="${c.cardW??100}"><span class="sv" id="swv">${c.cardW??100}%</span></div></div>
+          <button class="sav" id="sb">💾 Salva</button>
+        </div>
+      </div></div>`;
+      const $=id=>sr.getElementById(id);
+      $('sc').onclick=()=>this._destroyCfg();
+      $('so').onclick=e=>{ if(e.target===$('so')) this._destroyCfg(); };
+      $('ss').oninput=()=>$('ssv').textContent=$('ss').value+'%';
+      $('sw').oninput=()=>$('swv').textContent=$('sw').value+'%';
+      $('sb').onclick=()=>{
+        this._c.triggerEntity=($('ie').value||'').trim();
+        this._c.cardScale=parseInt($('ss').value)||100;
+        this._c.cardW=parseInt($('sw').value)||100;
+        this._save();
+        if(fc) this.dispatchEvent(new CustomEvent('frarik-card-layout',{bubbles:true,composed:true,detail:{cardId:fc.id,cardScale:this._c.cardScale,cardW:this._c.cardW}}));
+        this._destroyCfg(); this._build();
+      };
+    }
+    _destroyCfg(){ if(this._sh){try{document.body.removeChild(this._sh);}catch(_){} this._sh=null;} }
+  }
+
+  customElements.define('sos-card',SosCard);
+  _registerLovelaceCard('sos-card',{name:'SOS',icon:'🆘',description:'Card emergenza SOS protetta da sistema. Modalità Medico/Incendio/Intrusione con countdown e notifiche HA.',version:'1.0'});
+  // Override mount: passa storageKey per-istanza e imposta riferimento frarikCard
+  const _sr=window.FratechCardRegistry['sos-card'];
+  if(_sr) _sr.mount=function(card,_h,el){
+    const host=el.querySelector('.lovel-wrap')||el; host.innerHTML='';
+    const cel=document.createElement('sos-card');
+    cel.classList.add('frarik-lovel'); cel.style.cssText='display:block;width:100%';
+    try{ if(typeof cel.setConfig==='function') cel.setConfig({type:'custom:sos-card',storageKey:card.id||'default'}); }catch(_){}
+    try{ cel.hass=_haHassObj(); }catch(_){}
+    host.appendChild(cel);
+  };
+})();
+
+function _addSosToDash(){ jsStoreAddCard('sos-card'); }
+
 /* Esegue il codice di una card .js gestendo SIA il formato FratechStore SIA quello Lovelace */
 function _installCardCode(code){
   // snapshot dei RIFERIMENTI esistenti: così riconosciamo non solo le card nuove
@@ -8651,6 +8960,10 @@ function _jsStoreList(){
     // scarta voci corrotte/vuote: una card valida ha sempre meta.id e codice
     if(v && v.meta && v.meta.id && v.code) out.push(v);
   }
+  // Card di sistema embedded: SOS — sempre presente, non richiede file JS
+  if(window.FratechCardRegistry?.['sos-card'] && !out.find(i=>i.meta?.id==='sos-card')){
+    out.unshift({meta:{id:'sos-card',name:'SOS Emergenza',icon:'🆘',version:'1.0',desc:'Card emergenza protetta da sistema. Seleziona il tipo, tieni premuto 3s per inviare l\'allarme a tutti i contatti HA configurati. Non può essere eliminata senza chiave di licenza.'},code:'/* builtin */',origin:'system',_builtin:true});
+  }
   return out;
 }
 
@@ -8664,6 +8977,7 @@ function _jsStoreBootAll(){
     bad.forEach(k=>{ try{ localStorage.removeItem(k); }catch(e){} });
   }catch(e){}
   _jsStoreList().forEach(item => {
+    if(item._builtin) return; // card embedded: già definite a runtime, niente da installare
     try { _installCardCode(item.code); } catch(e){
       console.warn('[FratechStore] Errore boot card:', e.message);
       try{ _ntfPushLog('⚠️ Card JS rotta', (item.meta&&item.meta.id||'?')+': '+e.message, '🧩', null, {}); }catch(_){}
@@ -8865,6 +9179,14 @@ function addSpecial(type){
 /* ═══ CARD ACTIONS ═══ */
 function delCard(id){
   const card=curPage().cards.find(c=>c.id===id);
+  if(card?.type==='js-custom'&&card?.jsCardId==='sos-card'){
+    _sosRequireLicense(()=>{
+      destroyChart(id); stopCamTimer(id);
+      curPage().cards=curPage().cards.filter(c=>c.id!==id);
+      saveCfg(); renderDash();
+    });
+    return;
+  }
   const name=card?.label||card?.type||'questa card';
   showConfirm(`Eliminare <b>${name}</b>?`, ()=>{
     destroyChart(id); stopCamTimer(id);
@@ -11453,6 +11775,21 @@ function sosAlertAll(){
 /* ── Config contatti SOS nel pannello edit ── */
 function renderSOSCfgList(){
   const el=document.getElementById('sos-cfg-list'); if(!el) return;
+
+  // Banner SOS card status + aggiungi dashboard
+  const _sosOnDash=(cfg.pages||[]).some(p=>(p.cards||[]).some(c=>c.type==='js-custom'&&c.jsCardId==='sos-card'));
+  const _sosHdrEl=document.getElementById('_sos-dash-banner');
+  const _sosHdrHtml=`<div id="_sos-dash-banner" style="margin-bottom:12px;padding:11px 14px;border-radius:12px;background:${_sosOnDash?'rgba(74,222,128,.07)':'rgba(239,68,68,.07)'};border:1px solid ${_sosOnDash?'rgba(74,222,128,.25)':'rgba(239,68,68,.25)'};display:flex;align-items:center;gap:11px">
+    <span style="font-size:22px">${_sosOnDash?'✅':'🆘'}</span>
+    <div style="flex:1">
+      <div style="font-size:12px;font-weight:800;color:#fff">${_sosOnDash?'Card SOS attiva sulla dashboard':'Card SOS non presente sulla dashboard'}</div>
+      <div style="font-size:10px;opacity:.55;color:#fff;margin-top:1px">${_sosOnDash?'La card è protetta da licenza — non può essere eliminata senza chiave':'Aggiungi la card SOS alla vista corrente'}</div>
+    </div>
+    ${_sosOnDash?'':`<button onclick="window._addSosToDash()" style="padding:7px 13px;border-radius:9px;background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.4);color:#fca5a5;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0">➕ Aggiungi</button>`}
+  </div>`;
+  if(_sosHdrEl) _sosHdrEl.outerHTML=_sosHdrHtml;
+  else el.insertAdjacentHTML('beforebegin',_sosHdrHtml);
+
   const sc=_sosCfg();
   const contacts=sc.contacts;
   const persons=sc.persons||[];
