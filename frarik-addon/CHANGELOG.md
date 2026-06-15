@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.4.83 — 2026-06-15
+
+### fix: store preview Meteo + fit card intera nel riquadro
+
+- `_ghcLivePrev` lovelace: rimosso override `storageKey` — le card come Meteo usano `'default'` come chiave localStorage (il dashboard mount non passa mai `storageKey`), quindi il preview passava `existingCard.id` sbagliato → "Attiva modifica" invece della card configurata
+- Aggiunto re-scale post-render (3° rAF): dopo `cel.hass`, misura `cel.scrollHeight` e ricalcola `fitScale = min(hw/PW, PH/wh)` così l'intera card è visibile nel riquadro
+- `.ghc-prev` height: 165px → 200px per riquadro più generoso
+- `PH=200` (virtual height reference) sincronizzato con la nuova altezza CSS
+
 ## 1.4.82 — 2026-06-15
 
 ### fix: store preview per card render/mount (Camera, Clima, DoorsWindows ecc.)

@@ -1631,12 +1631,12 @@ function _ghcLivePrev(host, cardId){
   if(!reg){ host.innerHTML=_ghcPrevPh('📦', cardId); return; }
   host.innerHTML='';
   const hass=_haHassObj();
-  const PW=300, hw=host.clientWidth||190;
+  const PW=300, hw=host.clientWidth||190, PH=200;
   const scale=(hw/PW).toFixed(3);
-  const vH=Math.round(165*PW/(hw||190));
+  const vH=Math.round(PH*PW/(hw||190));
   try{
     if(reg._lovelace===true){
-      // Card lovelace / frarik (custom element con setConfig + hass)
+      // Card lovelace (custom element con setConfig + hass)
       const tag=reg._tag||cardId;
       const wrap=document.createElement('div');
       wrap.style.cssText=`width:${PW}px;transform:scale(${scale});transform-origin:0 0;position:absolute;top:0;left:0`;
@@ -1645,20 +1645,18 @@ function _ghcLivePrev(host, cardId){
       wrap.appendChild(cel);
       host.appendChild(wrap);
       requestAnimationFrame(()=>{
-        try{
-          if(typeof cel.setConfig==='function'){
-            let pcfg={type:'custom:'+tag};
-            try{ if(typeof cel.getStubConfig==='function'){ const stub=cel.getStubConfig(hass,Object.keys(hass?.states||{})); if(stub&&typeof stub==='object') pcfg={...pcfg,...stub}; } }catch(_){}
-            const existingCard=(cfg.pages||[]).flatMap(p=>(p.cards||[])).find(c=>c.type==='js-custom'&&c.jsCardId===cardId&&c.id);
-            if(existingCard?.id){ pcfg.storageKey=existingCard.id; }
-            else if(!pcfg.entity&&!pcfg.entityId&&hass?.states){
-              const ent=Object.keys(hass.states).find(k=>k.startsWith('sensor.')||k.startsWith('light.')||k.startsWith('switch.')||k.startsWith('weather.')||k.startsWith('climate.')||k.startsWith('camera.')||k.startsWith('binary_sensor.'));
-              if(ent){ pcfg.entity=ent; pcfg.entityId=ent; }
+        try{ if(typeof cel.setConfig==='function') cel.setConfig({type:'custom:'+tag}); }catch(e){}
+        requestAnimationFrame(()=>{
+          try{ cel.hass=hass; }catch(e){}
+          // Dopo il render, riscala per far entrare tutta la card nel riquadro
+          requestAnimationFrame(()=>{
+            const wh=cel.scrollHeight||cel.offsetHeight||wrap.scrollHeight||0;
+            if(wh>10){
+              const fit=Math.min(hw/PW, PH/wh);
+              wrap.style.transform=`scale(${fit.toFixed(3)})`;
             }
-            cel.setConfig(pcfg);
-          }
-        }catch(e){}
-        requestAnimationFrame(()=>{ try{ cel.hass=hass; }catch(e){} });
+          });
+        });
       });
     } else {
       // Card JS frarik con render() + mount() (pattern legacy — NON usa customElements)
