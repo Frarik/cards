@@ -43,4 +43,6 @@ export function showConfirm(msg, onOk, okLabel='Elimina', cancelLabel='Annulla',
   okBtn.onclick     = ()=>{ close(); onOk(); };
   cancelBtn.onclick = ()=>{ close(); if(onCancel) onCancel(); };
   ov.onclick        = e=>{ if(e.target===ov){ close(); if(onCancel) onCancel(); } };
+  const xBtn = document.getElementById('confirm-cancel-x');
+  if(xBtn) xBtn.onclick = ()=>{ close(); if(onCancel) onCancel(); };
 }

@@ -1,4 +1,4 @@
-// ── Dipendenze npm ───────────────────────────────────────────────────────────
+﻿// ── Dipendenze npm ───────────────────────────────────────────────────────────
 import './style.css';
 import Chart  from 'chart.js/auto';
 import jsyaml from 'js-yaml';
@@ -523,10 +523,10 @@ function addCardToCol(secId, col, triggerEl){
   const menu=document.createElement('div');
   menu.id='add-col-menu';
   menu.style.cssText='position:fixed;z-index:15000;background:#1a1f35;border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:8px;box-shadow:0 12px 40px rgba(0,0,0,.75);display:flex;flex-direction:column;gap:6px;min-width:210px;animation:popIn .12s ease';
-  const btnStyle='background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:rgba(255,255,255,.85);font-size:12px;padding:9px 12px;cursor:pointer;text-align:left;transition:background .12s';
+  const btnStyle='background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:#fff;font-size:12px;padding:9px 12px;cursor:pointer;text-align:left;transition:background .12s';
   const pasteBtn=_cardClipboard?`<button style="${btnStyle};background:rgba(99,102,241,.12);border-color:rgba(99,102,241,.3);color:#a5b4fc" data-action="_pasteCardToClean" data-action-args='["${secId}",${col}]'>📋 Incolla "${eh(_cardClipboard.label||_cardClipboard.type||'Card')}"</button>`:'';
   menu.innerHTML=`
-    <div style="font-size:9px;color:rgba(255,255,255,.3);padding:2px 4px 4px;letter-spacing:.5px;text-transform:uppercase">Aggiungi</div>
+    <div style="font-size:9px;color:#fff;padding:2px 4px 4px;letter-spacing:.5px;text-transform:uppercase">Aggiungi</div>
     <button style="${btnStyle};background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:#86efac" data-action="_openGhStoreClean">🛒 Apri lo Store</button>
     <button style="${btnStyle};background:rgba(168,85,247,.12);border-color:rgba(168,85,247,.3);color:#c4b5fd" data-action="addPopupPanel" data-action-args='["${secId}",${col}]'>🪟 Popup (apre una vista)</button>
     <button style="${btnStyle};background:rgba(34,211,238,.1);border-color:rgba(34,211,238,.3);color:#67e8f9" data-action="_installFromUrlPrompt">🔗 Installa card da URL</button>
@@ -594,7 +594,7 @@ function _popupPickView(cardId){
   const menu=document.createElement('div'); menu.id='pp-view-menu';
   menu.style.cssText='position:fixed;z-index:15500;left:50%;top:80px;transform:translateX(-50%);background:#1a1f35;border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:8px;box-shadow:0 12px 40px rgba(0,0,0,.75);display:flex;flex-direction:column;gap:6px;min-width:240px;max-height:70vh;overflow:auto';
   const bs='background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:#e2e8f0;font-size:12px;padding:9px 12px;cursor:pointer;text-align:left';
-  menu.innerHTML='<div style="font-size:9px;color:rgba(255,255,255,.4);padding:2px 4px 4px;text-transform:uppercase">Quale vista apre il popup?</div>'+
+  menu.innerHTML='<div style="font-size:9px;color:#fff;padding:2px 4px 4px;text-transform:uppercase">Quale vista apre il popup?</div>'+
     (cfg.pages||[]).map((p,i)=>`<button style="${bs}${p.id===card.targetPage?';border-color:var(--acc)':''}" data-action="_ppSetTarget" data-action-args='["${cardId}","${p.id}"]'>${eh(p.icon||'📄')} ${eh(p.name||('Vista '+(i+1)))}</button>`).join('');
   document.body.appendChild(menu);
   setTimeout(()=>document.addEventListener('click',function _h(e){ if(!menu.contains(e.target)){menu.remove();document.removeEventListener('click',_h);} }),80);
@@ -614,14 +614,16 @@ function openPopupView(pageId){
   if(!pg){ showToast('🪟 Imposta prima la vista del popup (in modifica)'); return; }
   document.getElementById('popup-view')?.remove();
   const ov=document.createElement('div'); ov.id='popup-view';
-  ov.style.cssText='position:fixed;inset:0;z-index:16000;background:rgba(2,6,16,.8);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:18px';
+  ov.style.cssText='position:fixed;inset:0;z-index:16000;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);display:flex;align-items:flex-end';
   const inner=document.createElement('div');
-  inner.style.cssText='width:min(1000px,96vw);max-height:90vh;overflow:auto;background:var(--panel,#0c0e1c);border:1px solid rgba(255,255,255,.12);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.6);padding:16px;color:#fff';
+  inner.style.cssText='width:100%;max-height:72vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(139,92,246,.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);color:#fff;animation:pvSlideUp .22s cubic-bezier(.32,1.12,.56,1)';
   const hdr=document.createElement('div');
-  hdr.style.cssText='display:flex;align-items:center;gap:10px;margin-bottom:12px';
-  hdr.innerHTML='<div style="flex:1;font-size:15px;font-weight:800">'+(/^mdi:/.test(pg.icon||'')?'':eh(pg.icon||'🪟'))+' '+eh(pg.name||'Popup')+'</div>';
-  const x=document.createElement('button'); x.textContent='✕'; x.style.cssText='width:32px;height:32px;border:none;border-radius:9px;background:rgba(255,255,255,.1);color:#fff;cursor:pointer;font-size:16px';
+  hdr.style.cssText='display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid rgba(139,92,246,.15);flex-shrink:0';
+  hdr.innerHTML='<div class="sico" style="width:36px;height:36px;border-radius:10px;background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.3);display:flex;align-items:center;justify-content:center;font-size:18px">'+(/^mdi:/.test(pg.icon||'')?'🪟':eh(pg.icon||'🪟'))+'</div><div style="flex:1"><div class="stit" style="font-size:15px;font-weight:800">'+eh(pg.name||'Popup')+'</div><div class="ssub" style="font-size:11px;opacity:.6">Vista popup</div></div>';
+  const x=document.createElement('button'); x.textContent='✕'; x.className='scls'; x.style.cssText='width:32px;height:32px;border:none;border-radius:9px;background:rgba(255,255,255,.1);color:#fff;cursor:pointer;font-size:16px';
   x.addEventListener('click',()=>ov.remove()); hdr.appendChild(x);
+  const body=document.createElement('div');
+  body.style.cssText='flex:1;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;padding:16px';
   const grid=document.createElement('div');
   grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px';
   (pg.cards||[]).filter(c=>c.type!=='header-bar').forEach(c=>{
@@ -630,7 +632,9 @@ function openPopupView(pageId){
     if(c.width){ w.style.width=c.width+'px'; w.style.maxWidth='100%'; }
     w.appendChild(_safeBuildCard(c)); grid.appendChild(w);
   });
-  inner.appendChild(hdr); inner.appendChild(grid); ov.appendChild(inner); document.body.appendChild(ov);
+  const style=document.createElement('style');
+  style.textContent='@keyframes pvSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}#popup-view .body::-webkit-scrollbar{display:none}';
+  body.appendChild(grid); inner.appendChild(hdr); inner.appendChild(body); ov.appendChild(style); ov.appendChild(inner); document.body.appendChild(ov);
   ov.addEventListener('click',e=>{ if(e.target===ov) ov.remove(); });
 }
 function moveSectionUp(secId){
@@ -729,7 +733,7 @@ function renderSectionsList(){
   const pageColsHtml=`
     <div class="sec-item">
       <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap">
-        <span style="font-size:9px;font-weight:700;color:rgba(255,255,255,.65);min-width:90px">Colonne pagina</span>
+        <span style="font-size:9px;font-weight:700;color:#fff;min-width:90px">Colonne pagina</span>
         ${[1,2,3,4].map(n=>`<button class="col-o${pcols===n?' on':''}" data-action="setPageCols" data-action-args='[${n}]'>${n}</button>`).join('')}
       </div>
       <div style="font-size:8px;color:var(--muted);margin-top:4px">Si distribuiscono sulla larghezza della pagina (max 4).</div>
@@ -737,7 +741,7 @@ function renderSectionsList(){
   el.innerHTML=pageColsHtml+(page.sections||[]).map((sec,i)=>`
     <div class="sec-item">
       <div class="sec-item-title">
-        <span style="flex:1;font-size:10px;font-weight:700;color:rgba(255,255,255,.5)">${multi?`Riga ${i+1}`:'Layout griglia'}</span>
+        <span style="flex:1;font-size:10px;font-weight:700;color:#fff">${multi?`Riga ${i+1}`:'Layout griglia'}</span>
       </div>
       ${multi?`<div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap;margin-bottom:4px">
         <span style="font-size:8px;color:var(--muted);min-width:46px">Colonne</span>
@@ -1102,7 +1106,7 @@ function copyCardToPage(cardId){
   menu.id='copy-page-menu';
   menu.style.cssText='position:fixed;z-index:15000;left:50%;top:80px;transform:translateX(-50%);background:#1a1f35;border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:8px;box-shadow:0 12px 40px rgba(0,0,0,.75);display:flex;flex-direction:column;gap:6px;min-width:220px;max-height:70vh;overflow:auto';
   const bs='background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:#e2e8f0;font-size:12px;padding:9px 12px;cursor:pointer;text-align:left';
-  menu.innerHTML='<div style="font-size:9px;color:rgba(255,255,255,.4);padding:2px 4px 4px;text-transform:uppercase">Copia "'+eh(card.label||card.type)+'" su…</div>'+
+  menu.innerHTML='<div style="font-size:9px;color:#fff;padding:2px 4px 4px;text-transform:uppercase">Copia "'+eh(card.label||card.type)+'" su…</div>'+
     others.map(x=>`<button style="${bs}" data-action="_copyCardToPageDo" data-action-args='["${cardId}",${x.i}]'>${eh(x.p.icon||'📄')} ${eh(x.p.name||('Vista '+(x.i+1)))}</button>`).join('');
   document.body.appendChild(menu);
   setTimeout(()=>document.addEventListener('click',function _h(e){ if(!menu.contains(e.target)){menu.remove();document.removeEventListener('click',_h);} }),80);
@@ -1157,14 +1161,14 @@ async function openEntityCleanup(){
   document.getElementById('ent-cleanup')?.remove();
   const ov=document.createElement('div');
   ov.id='ent-cleanup';
-  ov.style.cssText='position:fixed;inset:0;z-index:16000;background:rgba(2,6,16,.8);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:18px;font-family:system-ui,sans-serif';
-  ov.innerHTML='<div style="width:min(640px,96vw);height:min(720px,90vh);background:#0b1220;border:1px solid rgba(255,255,255,.14);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.6);display:flex;flex-direction:column;color:#f1f5f9;overflow:hidden">'+
-    '<div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.08)"><div style="flex:1;font-size:15px;font-weight:800">🧹 Pulizia entità</div><button data-action="_closeEntCleanup" style="width:32px;height:32px;border:none;border-radius:9px;background:rgba(255,255,255,.1);color:#e2e8f0;cursor:pointer;font-size:16px">✕</button></div>'+
+  ov.style.cssText='position:fixed;inset:0;z-index:16000;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);display:flex;align-items:flex-end;font-family:system-ui,sans-serif';
+  ov.innerHTML='<style>@keyframes ecSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}#ent-cleanup .ec-body::-webkit-scrollbar{display:none}</style><div style="width:100%;max-height:72vh;background:#0a0816;border:1px solid rgba(139,92,246,.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);display:flex;flex-direction:column;color:#fff;overflow:hidden;animation:ecSlideUp .22s cubic-bezier(.32,1.12,.56,1)">'+
+    '<div class="shdr" style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid rgba(139,92,246,.15);flex-shrink:0"><div class="sico" style="width:36px;height:36px;border-radius:10px;background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.3);display:flex;align-items:center;justify-content:center;font-size:18px">🧹</div><div style="flex:1"><div class="stit" style="font-size:15px;font-weight:800">Pulizia entità</div><div class="ssub" style="font-size:11px;opacity:.6">Gestisci entità del registro</div></div><button data-action="_closeEntCleanup" class="scls" style="width:32px;height:32px;border:none;border-radius:9px;background:rgba(255,255,255,.1);color:#fff;cursor:pointer;font-size:16px">✕</button></div>'+
     '<div style="padding:12px 16px;display:flex;gap:8px;align-items:center;border-bottom:1px solid rgba(255,255,255,.06)">'+
       '<input id="ec-filter" type="text" placeholder="Filtra per nome / id…" style="flex:1;height:34px;border-radius:9px;border:1px solid rgba(255,255,255,.15);background:#0f1830;color:#fff;font-size:12px;padding:0 10px">'+
       '<label style="display:flex;align-items:center;gap:6px;font-size:11px;cursor:pointer;white-space:nowrap"><input type="checkbox" id="ec-onlyun" checked> solo non disponibili</label>'+
     '</div>'+
-    '<div id="ec-list" style="flex:1;overflow:auto;padding:6px 12px"><div style="padding:20px;text-align:center;color:#64748b;font-size:12px">Caricamento…</div></div>'+
+    '<div id="ec-list" style="flex:1;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;padding:6px 12px"><div style="padding:20px;text-align:center;color:#64748b;font-size:12px">Caricamento…</div></div>'+
     '<div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,.08);display:flex;gap:10px;align-items:center"><div id="ec-count" style="flex:1;font-size:11px;color:#94a3b8"></div><button data-action="_ecRemoveSel" style="border:none;border-radius:10px;background:#ef4444;color:#fff;font-weight:800;font-size:12px;padding:10px 16px;cursor:pointer">🗑 Rimuovi selezionate</button></div>'+
   '</div>';
   document.body.appendChild(ov);
@@ -1947,7 +1951,7 @@ function _ghStoreRenderPremium(q){
       <div class="ghc-prem-hero-title">Frarik Premium</div>
       <div class="ghc-prem-hero-sub">Card esclusive con funzionalità avanzate, aggiornamenti prioritari e supporto dedicato.</div>
       <button class="ghc-prem-cta" data-action="openPremiumPage">💎 Vuoi Diventare Premium?</button>
-      <button style="display:block;margin:10px auto 0;padding:9px 22px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.55);font-size:11px;font-weight:700;cursor:pointer" data-action="_ghsPremActivate">🔑 Ho già una licenza Premium</button>
+      <button style="display:block;margin:10px auto 0;padding:9px 22px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:11px;font-weight:700;cursor:pointer" data-action="_ghsPremActivate">🔑 Ho già una licenza Premium</button>
     </div>
     <div class="ghc-grid" style="pointer-events:none;user-select:none">
       ${['Analytics Pro','Energy Dashboard','Ultra Widgets','Smart Automations'].map(nm=>`<div class="ghc-tile ghc-prem-locked" style="border-color:rgba(251,191,36,.18)">
@@ -2017,7 +2021,7 @@ function _ghsAdminPanel(list){
   div.innerHTML=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
     <span style="font-size:18px">🛡️</span>
     <div><div style="font-size:13px;font-weight:700;color:#ff6b6b">Pannello Amministratore</div>
-    <div style="font-size:11px;color:rgba(255,255,255,.4)">Visibile solo agli utenti Admin / Amministratore</div></div>
+    <div style="font-size:11px;color:#fff">Visibile solo agli utenti Admin / Amministratore</div></div>
   </div>
   <div style="display:flex;gap:8px;flex-wrap:wrap">
     <button style="padding:8px 16px;border-radius:10px;background:rgba(251,191,36,.14);border:1px solid rgba(251,191,36,.32);color:#fbbf24;font-size:12px;font-weight:700;cursor:pointer" data-action="openPremiumPage">👁 Testa pagina Premium</button>
@@ -2039,19 +2043,19 @@ function _adminCtrlPanel(){
   m.innerHTML=`<div style="width:min(560px,93vw);max-height:85vh;overflow-y:auto;scrollbar-width:none;background:#0a0816;border:1px solid rgba(255,60,80,.3);border-radius:20px;padding:24px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
       <div style="font-size:16px;font-weight:800;color:#ff8888">🛡️ Pannello di Controllo</div>
-      <button style="background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;cursor:pointer" onclick="document.getElementById('_admin-ctrl-modal').style.display='none'">✕</button>
+      <button style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer" onclick="document.getElementById('_admin-ctrl-modal').style.display='none'">✕</button>
     </div>
-    <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Licenza attiva</div>
+    <div style="font-size:12px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Licenza attiva</div>
     <div style="padding:12px 14px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);margin-bottom:14px">
       <div style="font-size:12px;color:#fff;margin-bottom:4px"><b>Tipo:</b> ${eh(lic.note)}</div>
-      <div style="font-size:12px;color:rgba(255,255,255,.6);margin-bottom:2px"><b>Nome:</b> ${eh(lic.name)}</div>
-      <div style="font-size:12px;color:rgba(255,255,255,.6)"><b>Scadenza:</b> ${eh(lic.expires)}</div>
+      <div style="font-size:12px;color:#fff;margin-bottom:2px"><b>Nome:</b> ${eh(lic.name)}</div>
+      <div style="font-size:12px;color:#fff"><b>Scadenza:</b> ${eh(lic.expires)}</div>
     </div>
-    <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Email interesse Premium (${interest.length})</div>
+    <div style="font-size:12px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Email interesse Premium (${interest.length})</div>
     <div style="padding:12px 14px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);margin-bottom:14px;max-height:120px;overflow-y:auto;scrollbar-width:none">
-      ${interest.length?interest.map(e=>`<div style="font-size:12px;color:rgba(255,255,255,.7);padding:3px 0">${eh(e)}</div>`).join(''):'<div style="font-size:12px;color:rgba(255,255,255,.3)">Nessuna email registrata</div>'}
+      ${interest.length?interest.map(e=>`<div style="font-size:12px;color:#fff;padding:3px 0">${eh(e)}</div>`).join(''):'<div style="font-size:12px;color:#fff">Nessuna email registrata</div>'}
     </div>
-    <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Test rapidi</div>
+    <div style="font-size:12px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Test rapidi</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button style="padding:7px 14px;border-radius:9px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.28);color:#fbbf24;font-size:11px;font-weight:700;cursor:pointer" data-action="openPremiumPage">👁 Vedi pagina Premium</button>
       <button style="padding:7px 14px;border-radius:9px;background:rgba(100,180,100,.1);border:1px solid rgba(100,180,100,.25);color:rgba(100,220,100,.9);font-size:11px;font-weight:700;cursor:pointer" onclick="document.getElementById('_admin-ctrl-modal').style.display='none';_ghStoreRenderPremium('')">↩ Ricarica sezione</button>
@@ -3541,7 +3545,7 @@ function hbarInner(card){
     const bgStyle=(customBg||customBorder||customText)
       ? `${customBg||`--hbbg:${_hex2rgba(baseColor,.18)};background:var(--hbbg);`}${customBorder||`--hbc:${_hex2rgba(baseColor,.6)};border-color:var(--hbc);`}--hbr:${shapeR};--hbpy:${spy};--hbpx:${spx};--hbfs:${sf}`
       : (baseColor.startsWith('rgba')||baseColor.startsWith('rgb'))
-        ? `background:${baseColor};border-color:rgba(255,255,255,.2);--hbr:${shapeR};--hbpy:${spy};--hbpx:${spx};--hbfs:${sf}`
+        ? `background:${baseColor};border-color:#fff;--hbr:${shapeR};--hbpy:${spy};--hbpx:${spx};--hbfs:${sf}`
         : `--hbbg:${_hex2rgba(baseColor,.18)};--hbc:${_hex2rgba(baseColor,.6)};background:var(--hbbg);border-color:var(--hbc);--hbr:${shapeR};--hbpy:${spy};--hbpx:${spx};--hbfs:${sf}`;
     let val='';
     if(item.type==='entity'&&item.entity){
@@ -4025,17 +4029,17 @@ function _buildSectionEl(sec,page){
       const wWrap=document.createElement('div');
       wWrap.style.cssText='display:flex;align-items:center;gap:1px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;overflow:hidden';
       const wDec=document.createElement('button');
-      wDec.style.cssText='background:none;border:none;color:rgba(255,255,255,.55);font-size:11px;width:20px;height:26px;cursor:pointer;padding:0;line-height:1;transition:color .12s';
+      wDec.style.cssText='background:none;border:none;color:#fff;font-size:11px;width:20px;height:26px;cursor:pointer;padding:0;line-height:1;transition:color .12s';
       wDec.textContent='◀';
       wDec.title='Riduci larghezza';
       wDec.disabled=cw<=1;
       if(cw<=1) wDec.style.opacity='.25';
       wDec.addEventListener('click',()=>setColWidth(sec.id,col,cw-1));
       const wLbl=document.createElement('span');
-      wLbl.style.cssText='font-size:9px;color:rgba(255,255,255,.55);min-width:18px;text-align:center;padding:0 1px;font-weight:600';
+      wLbl.style.cssText='font-size:9px;color:#fff;min-width:18px;text-align:center;padding:0 1px;font-weight:600';
       wLbl.textContent=cw+'×';
       const wInc=document.createElement('button');
-      wInc.style.cssText='background:none;border:none;color:rgba(255,255,255,.55);font-size:11px;width:20px;height:26px;cursor:pointer;padding:0;line-height:1;transition:color .12s';
+      wInc.style.cssText='background:none;border:none;color:#fff;font-size:11px;width:20px;height:26px;cursor:pointer;padding:0;line-height:1;transition:color .12s';
       wInc.textContent='▶';
       wInc.title='Aumenta larghezza';
       wInc.disabled=cw>=4||(totalUsed>=cols*2&&cw===1);
@@ -4893,14 +4897,21 @@ function openBadgePopup(jsCardId, ev){
   const def=reg[jsCardId];
   const cardCfg={id:'bp-'+jsCardId,type:'js-custom',jsCardId};
   const ov=document.createElement('div');
-  ov.style.cssText='position:fixed;inset:0;z-index:99997;background:rgba(6,8,16,.7);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:3vh 2vw';
+  ov.style.cssText='position:fixed;inset:0;z-index:99997;background:rgba(0,0,0,.6);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);display:flex;align-items:flex-end';
+  const style=document.createElement('style');
+  style.textContent='@keyframes bpSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}';
   const panel=document.createElement('div');
-  panel.style.cssText='position:relative;width:min(96vw,840px);max-height:94vh;overflow:auto;border-radius:20px;background:var(--panel);border:1px solid var(--bd2);box-shadow:0 30px 80px rgba(0,0,0,.6)';
+  panel.style.cssText='width:100%;max-height:72vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(139,92,246,.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);color:#fff;animation:bpSlideUp .22s cubic-bezier(.32,1.12,.56,1)';
+  const hdr=document.createElement('div');
+  hdr.className='shdr';
+  hdr.style.cssText='display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid rgba(139,92,246,.15);flex-shrink:0';
+  hdr.innerHTML='<div class="sico" style="width:36px;height:36px;border-radius:10px;background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.3);display:flex;align-items:center;justify-content:center;font-size:18px">📦</div><div style="flex:1"><div class="stit" style="font-size:15px;font-weight:800">'+eh(jsCardId)+'</div><div class="ssub" style="font-size:11px;opacity:.6">Card store</div></div>';
   const close=document.createElement('button');
-  close.textContent='✕';
-  close.style.cssText='position:absolute;top:10px;right:12px;z-index:5;width:32px;height:32px;border-radius:50%;border:none;cursor:pointer;background:rgba(255,255,255,.12);color:#fff;font-size:15px';
+  close.textContent='✕'; close.className='scls';
+  close.style.cssText='width:32px;height:32px;border:none;border-radius:9px;background:rgba(255,255,255,.1);color:#fff;cursor:pointer;font-size:15px';
+  hdr.appendChild(close);
   const body=document.createElement('div');
-  body.style.cssText='padding:14px';
+  body.style.cssText='flex:1;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;padding:14px';
   if(def){
     try{
       body.innerHTML=def.render(cardCfg,{states:hs});
@@ -4915,7 +4926,7 @@ function openBadgePopup(jsCardId, ev){
   close.onclick=closeFn;
   ov.onclick=(e)=>{ if(e.target===ov) closeFn(); };
   document.addEventListener('keydown',esc);
-  panel.appendChild(close); panel.appendChild(body); ov.appendChild(panel); document.body.appendChild(ov);
+  panel.appendChild(hdr); panel.appendChild(body); ov.appendChild(style); ov.appendChild(panel); document.body.appendChild(ov);
 }
 
 function renderBadgesAll(){
@@ -5419,7 +5430,7 @@ function toggleEdit(){
   if(editMode){
     _pgCheckDirtyAndProceed(()=>{
       showConfirm(
-        '✏️ Sei sicuro di voler uscire dalla modifica?<br><span style="font-size:12px;color:rgba(255,255,255,.5)">Tutte le modifiche sono già state salvate automaticamente.</span>',
+        '✏️ Sei sicuro di voler uscire dalla modifica?<br><span style="font-size:12px;color:#fff">Tutte le modifiche sono già state salvate automaticamente.</span>',
         ()=> _exitEditMode(),
         'Chiudi modifica',
         'Continua a modificare'
@@ -5693,7 +5704,7 @@ function renderEL(q){
         <span class="ename">${eh(e.attributes?.friendly_name||e.entity_id)}</span>
         <span class="estate">${eh(e.state)} ${eh(e.attributes?.unit_of_measurement||'')}</span>
       </div>`).join('')
-    : '<div style="padding:20px;text-align:center;font-size:11px;color:rgba(255,255,255,0.25)">Nessun risultato</div>';
+    : '<div style="padding:20px;text-align:center;font-size:11px;color:#fff">Nessun risultato</div>';
 }
 function eitClick(entityId,name,unit,domain){
   if(emTarget){
@@ -6193,7 +6204,7 @@ async function _iconPickerRenderTab(tab){
     if(!q){
       // Senza ricerca: mostra le categorie curate + conteggio totale
       const tot=allIcons.length;
-      let h=`<div style="font-size:10px;color:rgba(255,255,255,.3);padding:0 2px 8px">${tot>0?tot+' icone disponibili — cerca per filtrare':'Categorie suggerite (libreria non caricata)'}</div>`;
+      let h=`<div style="font-size:10px;color:#fff;padding:0 2px 8px">${tot>0?tot+' icone disponibili — cerca per filtrare':'Categorie suggerite (libreria non caricata)'}</div>`;
       _ICON_MDI_CATS.forEach(({cat,icons:catIcons})=>{
         h+=`<div class="ipm-cat">${cat}</div><div class="ipm-grid">`;
         catIcons.forEach(i=>{
@@ -6212,7 +6223,7 @@ async function _iconPickerRenderTab(tab){
     }
     // Risultati ricerca: grid piatta con max 500 risultati
     const shown=icons.slice(0,500);
-    let h=`<div style="font-size:10px;color:rgba(255,255,255,.3);padding:0 2px 8px">${icons.length} icone trovate${icons.length>500?' (prime 500)':''}</div>`;
+    let h=`<div style="font-size:10px;color:#fff;padding:0 2px 8px">${icons.length} icone trovate${icons.length>500?' (prime 500)':''}</div>`;
     h+='<div class="ipm-grid">';
     shown.forEach(i=>{
       h+=`<button class="ipm-btn ipm-mdi" data-action="_iconPickerPick" data-action-arg="mdi:${i}" title="mdi:${i}"><span class="mdi mdi-${i}"></span><span class="ipm-mdi-lbl">${i}</span></button>`;
@@ -6548,7 +6559,7 @@ function _hbCreateModal(){
           <div style="border-top:1px solid var(--bd);margin:10px 0 10px;padding-top:10px">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
               <div class="flbl" style="margin:0">Entità secondaria <span style="font-weight:400;opacity:.5">(opzionale)</span></div>
-              <label style="font-size:10px;display:flex;align-items:center;gap:5px;cursor:pointer;color:rgba(255,255,255,.6)">
+              <label style="font-size:10px;display:flex;align-items:center;gap:5px;cursor:pointer;color:#fff">
                 <input type="checkbox" id="hbf-entity2-on"> Abilita
               </label>
             </div>
@@ -7266,7 +7277,7 @@ function _hbAlarmPopup(el, eid){
     pop.appendChild(btn);
   });
   const closeBtn=document.createElement('button');
-  closeBtn.style.cssText='padding:5px 10px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.5);font-size:10px;font-weight:700;cursor:pointer;margin-top:3px';
+  closeBtn.style.cssText='padding:5px 10px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:#fff;font-size:10px;font-weight:700;cursor:pointer;margin-top:3px';
   closeBtn.textContent='✕ Annulla';
   closeBtn.onclick=()=>pop.remove();
   pop.appendChild(closeBtn);
@@ -7534,7 +7545,7 @@ function _hbRenderIconMap(){
     const col=typeof val==='object'?val.color:'#818cf8';
     return `<div class="hb-row" style="padding:4px 8px;gap:6px">
       <div style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06);border-radius:5px">${_renderIcon(ic,13,col)}</div>
-      <span style="font-size:10px;flex:1;color:rgba(255,255,255,.7)"><span style="color:#a5b4fc;font-weight:700">${eh(st)}</span> → ${ic}</span>
+      <span style="font-size:10px;flex:1;color:#fff"><span style="color:#a5b4fc;font-weight:700">${eh(st)}</span> → ${ic}</span>
       <button class="hbc-btn" data-action="_hbDelIconMapEntry" data-action-arg="${st}" title="Elimina">✕</button>
     </div>`;
   }).join('');
@@ -8249,7 +8260,7 @@ async function _yamlGrid(cfg){
 
 function _yamlSectionEl(cfg){
   const el=document.createElement('div');
-  el.style.cssText='padding:8px 6px 4px;font-size:10px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.7px';
+  el.style.cssText='padding:8px 6px 4px;font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.7px';
   el.textContent=cfg.label||'';
   return el;
 }
@@ -8723,7 +8734,7 @@ function _jsStoreRenderList(){
     </div>`;
   }
 
-  const secStyle = 'font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.3);margin:12px 0 6px;padding-bottom:4px;border-bottom:1px solid rgba(255,255,255,0.06)';
+  const secStyle = 'font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#fff;margin:12px 0 6px;padding-bottom:4px;border-bottom:1px solid rgba(255,255,255,0.06)';
 
   let html = '';
   if(avail.length){
@@ -10049,11 +10060,14 @@ function _pgCheckDirtyAndProceed(proceed){
   _pgProceedCb=proceed;
   const overlay=document.createElement('div');
   overlay.className='pg-warn-ov';
-  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)';
-  overlay.innerHTML=`<div style="background:var(--panel);border:1px solid var(--bd);border-radius:16px;padding:24px 22px;max-width:300px;width:90%;text-align:center">
-    <div style="font-size:22px;margin-bottom:10px">⚠️</div>
-    <div style="font-size:13px;font-weight:700;margin-bottom:6px">Modifiche non salvate</div>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:18px">Hai modificato le impostazioni della pagina senza salvare.</div>
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:flex-end;backdrop-filter:blur(4px)';
+  overlay.innerHTML=`<style>@keyframes pgWarnSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style><div style="width:100%;background:#0a0816;border:1px solid rgba(139,92,246,.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);padding:20px 18px 24px;color:#fff;animation:pgWarnSlideUp .22s cubic-bezier(.32,1.12,.56,1)">
+    <div class="shdr" style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <div class="sico" style="width:36px;height:36px;border-radius:10px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);display:flex;align-items:center;justify-content:center;font-size:18px">⚠️</div>
+      <div style="flex:1"><div class="stit" style="font-size:15px;font-weight:800">Modifiche non salvate</div><div class="ssub" style="font-size:11px;opacity:.6">Impostazioni pagina</div></div>
+      <button data-action="_pgWarnClose" class="scls" style="width:32px;height:32px;border:none;border-radius:9px;background:rgba(255,255,255,.1);color:#fff;cursor:pointer;font-size:15px">✕</button>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:14px">Hai modificato le impostazioni della pagina senza salvare.</div>
     <div style="display:flex;flex-direction:column;gap:7px">
       <button data-action="_pgWarnSaveAndProceed" style="padding:9px;border-radius:9px;background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.4);color:#4ade80;font-size:12px;font-weight:700">✓ Salva e continua</button>
       <button data-action="_pgWarnCancelAndProceed" style="padding:9px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid var(--bd2);color:var(--muted);font-size:12px;font-weight:700">↩ Annulla modifiche e continua</button>
@@ -10916,7 +10930,7 @@ function _licBadgeHtml({name,note,expires,key,dino,isPrem,isAdm}){
     </div>
     <div style="height:1px;background:${alpha(.1)};margin:12px 0"></div>
     ${upgBtn}
-    <button data-action="_epLicLogout" style="width:100%;padding:11px;border-radius:12px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);color:rgba(255,255,255,.55);font-size:12px;font-weight:700;cursor:pointer">🔄 Cambia licenza</button>
+    <button data-action="_epLicLogout" style="width:100%;padding:11px;border-radius:12px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);color:#fff;font-size:12px;font-weight:700;cursor:pointer">🔄 Cambia licenza</button>
   </div>
   <!-- Footer -->
   <div style="padding:12px 28px 18px;display:flex;align-items:center;gap:10px;border-top:1px solid ${alpha(.1)}">
@@ -10980,7 +10994,7 @@ function _epAdminPanelLoad(){
       <div style="font-size:24px;line-height:1">${dino.e}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${statusDot} ${eh(u.name||'—')}</div>
-        <div style="font-size:10px;color:rgba(255,255,255,.32);margin-top:2px">Scad: ${expU} · Accesso: ${lastU}</div>
+        <div style="font-size:10px;color:#fff;margin-top:2px">Scad: ${expU} · Accesso: ${lastU}</div>
       </div>
       <span style="padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);font-size:10px;font-weight:800;color:${lvlColor};white-space:nowrap;flex-shrink:0">${lvlLabel}</span>
     </div>`;
@@ -10989,46 +11003,46 @@ function _epAdminPanelLoad(){
   body.innerHTML=`
   <div style="padding:4px 0 16px">
     <!-- Info admin -->
-    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Licenza attiva</div>
+    <div style="font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Licenza attiva</div>
     <div style="padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);margin-bottom:16px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:11px;color:rgba(255,255,255,.4)">Tipo</span><span style="font-size:11px;font-weight:700;color:#ff8888">${eh(note)}</span></div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:11px;color:rgba(255,255,255,.4)">Nome</span><span style="font-size:11px;font-weight:700;color:#fff">${eh(name)}</span></div>
-      <div style="display:flex;justify-content:space-between"><span style="font-size:11px;color:rgba(255,255,255,.4)">Scadenza</span><span style="font-size:11px;font-weight:700;color:#fff">${eh(expFmt)}</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:11px;color:#fff">Tipo</span><span style="font-size:11px;font-weight:700;color:#ff8888">${eh(note)}</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:11px;color:#fff">Nome</span><span style="font-size:11px;font-weight:700;color:#fff">${eh(name)}</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="font-size:11px;color:#fff">Scadenza</span><span style="font-size:11px;font-weight:700;color:#fff">${eh(expFmt)}</span></div>
     </div>
     <!-- Test rapidi -->
-    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Test rapidi</div>
+    <div style="font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Test rapidi</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
       <button data-action="openPremiumPage" style="padding:9px 14px;border-radius:10px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);color:#fbbf24;font-size:11px;font-weight:700;cursor:pointer">👁 Pagina Premium</button>
       <button data-action="_adminShowFirstAccess" style="padding:9px 14px;border-radius:10px;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.3);color:#a5b4fc;font-size:11px;font-weight:700;cursor:pointer">🔑 Schermata primo accesso</button>
     </div>
     <!-- Utenti — caricamento asincrono -->
     <div id="ep-admin-users-section">
-      <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Utenti con licenza</div>
+      <div style="font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Utenti con licenza</div>
       <div id="ep-admin-users-loading" style="padding:14px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);text-align:center">
         <div class="spin" style="width:20px;height:20px;margin:0 auto 6px"></div>
-        <div style="font-size:11px;color:rgba(255,255,255,.3)">Caricamento utenti…</div>
+        <div style="font-size:11px;color:#fff">Caricamento utenti…</div>
       </div>
     </div>
     <!-- Email interesse -->
-    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;margin-top:16px">Email interesse Premium (${emails.length})</div>
+    <div style="font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;margin-top:16px">Email interesse Premium (${emails.length})</div>
     <div style="padding:10px 14px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);margin-bottom:${emails.length?'8':'16'}px;max-height:110px;overflow-y:auto;scrollbar-width:none">
-      ${emails.length?emails.map(e=>`<div style="font-size:11px;color:rgba(255,255,255,.65);padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04)">${eh(e)}</div>`).join(''):'<div style="font-size:11px;color:rgba(255,255,255,.25)">Nessuna email registrata</div>'}
+      ${emails.length?emails.map(e=>`<div style="font-size:11px;color:#fff;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04)">${eh(e)}</div>`).join(''):'<div style="font-size:11px;color:#fff">Nessuna email registrata</div>'}
     </div>
-    ${emails.length?`<button onclick="navigator.clipboard.writeText(${JSON.stringify(emails.join(', '))}).then(()=>showToast('✅ Copiate!'))" style="width:100%;margin-bottom:16px;padding:8px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.45);font-size:11px;font-weight:700;cursor:pointer">📋 Copia tutte</button>`:''}
+    ${emails.length?`<button onclick="navigator.clipboard.writeText(${JSON.stringify(emails.join(', '))}).then(()=>showToast('✅ Copiate!'))" style="width:100%;margin-bottom:16px;padding:8px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#fff;font-size:11px;font-weight:700;cursor:pointer">📋 Copia tutte</button>`:''}
     <!-- Statistiche -->
-    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Statistiche</div>
+    <div style="font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Statistiche</div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
       <div style="padding:10px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);text-align:center">
         <div style="font-size:18px;font-weight:900;color:#fff">${cardCount}</div>
-        <div style="font-size:9px;color:rgba(255,255,255,.35);margin-top:2px">Card</div>
+        <div style="font-size:9px;color:#fff;margin-top:2px">Card</div>
       </div>
       <div style="padding:10px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);text-align:center">
         <div style="font-size:12px;font-weight:900;color:#a5b4fc">${eh(ver)}</div>
-        <div style="font-size:9px;color:rgba(255,255,255,.35);margin-top:2px">Versione</div>
+        <div style="font-size:9px;color:#fff;margin-top:2px">Versione</div>
       </div>
       <div style="padding:10px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);text-align:center">
         <div style="font-size:12px;font-weight:900;color:#4ade80">✓</div>
-        <div style="font-size:9px;color:rgba(255,255,255,.35);margin-top:2px">Connesso</div>
+        <div style="font-size:9px;color:#fff;margin-top:2px">Connesso</div>
       </div>
     </div>
   </div>`;
@@ -11043,15 +11057,15 @@ function _epAdminPanelLoad(){
         const prem=users.filter(isPremUser);
         const std=users.filter(u=>!isPremUser(u));
         usersSection.innerHTML=`
-          <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">💎 Utenti Premium / Admin (${prem.length})</div>
-          <div style="margin-bottom:12px">${prem.length?prem.map(userRow).join(''):'<div style="font-size:11px;color:rgba(255,255,255,.25);padding:8px">Nessuno</div>'}</div>
-          <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">⭐ Utenti Standard (${std.length})</div>
-          <div style="margin-bottom:4px">${std.length?std.map(userRow).join(''):'<div style="font-size:11px;color:rgba(255,255,255,.25);padding:8px">Nessuno</div>'}</div>`;
+          <div style="font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">💎 Utenti Premium / Admin (${prem.length})</div>
+          <div style="margin-bottom:12px">${prem.length?prem.map(userRow).join(''):'<div style="font-size:11px;color:#fff;padding:8px">Nessuno</div>'}</div>
+          <div style="font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">⭐ Utenti Standard (${std.length})</div>
+          <div style="margin-bottom:4px">${std.length?std.map(userRow).join(''):'<div style="font-size:11px;color:#fff;padding:8px">Nessuno</div>'}</div>`;
       })
       .catch(()=>{
         const usersSection=document.getElementById('ep-admin-users-section'); if(!usersSection) return;
         usersSection.innerHTML=`
-          <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Utenti con licenza</div>
+          <div style="font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Utenti con licenza</div>
           <div style="padding:12px 14px;border-radius:10px;background:rgba(255,100,100,.04);border:1px solid rgba(255,100,100,.15);font-size:11px;color:rgba(255,150,150,.6)">API admin non disponibile — verifica che l'endpoint supporti la lista utenti</div>`;
       });
   }
@@ -11348,7 +11362,7 @@ function openSOS2(){
       const msgBtn=hasService
         ? `<button class="sos-act-btn sos-act-notify" data-action="sosNotify" data-action-args='[${i}]'>💬 Messaggio</button>` : '';
       const noSvc=(!hasService&&!c.phone)
-        ? `<span style="font-size:10px;color:rgba(255,255,255,.3)">Nessun servizio/numero</span>` : '';
+        ? `<span style="font-size:10px;color:#fff">Nessun servizio/numero</span>` : '';
       return `<div class="sos-contact-row">
         <div class="sos-contact-ico">${c.icon||'👤'}</div>
         <div class="sos-contact-name">${eh(c.name||'—')}</div>
@@ -12493,7 +12507,7 @@ function _ntfEntitySuggest(idx, inputEl, dropId){
     const name=ha[eid]?.friendly_name||'';
     const state=hs[eid]||'';
     return `<div class="ntf-ent-opt" onmousedown="_ntfPickEntity(${idx},'${eid}','${dropId}')">
-      <div class="ntf-ent-name">${name||eid} <span style="color:rgba(255,255,255,.3);font-size:9px">${state}</span></div>
+      <div class="ntf-ent-name">${name||eid} <span style="color:#fff;font-size:9px">${state}</span></div>
       <div class="ntf-ent-id">${eid}</div>
     </div>`;
   }).join('');
@@ -12670,7 +12684,7 @@ function renderNotifRules(){
           <input class="ntf-field-inp" type="time" value="${r.timeFrom||''}" data-input="_ntfSet" data-input-args='[${i},"timeFrom"]'>
           <input class="ntf-field-inp" type="time" value="${r.timeTo||''}" data-input="_ntfSet" data-input-args='[${i},"timeTo"]'>
         </div>
-        <div style="font-size:10px;color:rgba(255,255,255,.25);margin:-2px 0 6px 88px">Vuoto = sempre. Altrimenti notifica solo in questa fascia.</div>
+        <div style="font-size:10px;color:#fff;margin:-2px 0 6px 88px">Vuoto = sempre. Altrimenti notifica solo in questa fascia.</div>
 
         <div class="ntf-section-sep">💬 Contenuto popup</div>
         <div class="ntf-field-row">
@@ -12713,7 +12727,7 @@ function renderNotifRules(){
         </div>
         ${(()=>{
           const preset=_ntfActPresets.find(p=>p.id===(r.dismissActionType||'none'));
-          if(!preset||preset.id==='none') return '<div style="font-size:10px;color:rgba(255,255,255,.22);margin-bottom:12px;padding:0 2px">Nessuna azione — il popup si chiude senza fare nulla.</div>';
+          if(!preset||preset.id==='none') return '<div style="font-size:10px;color:#fff;margin-bottom:12px;padding:0 2px">Nessuna azione — il popup si chiude senza fare nulla.</div>';
           const isCustom=preset.id==='custom';
           const domainsFilter=preset.domains;
           const entityLabel=preset.id==='notify'?'Destinatario':'Entità';
@@ -12721,7 +12735,7 @@ function renderNotifRules(){
           const pickerTitle=preset.id==='reset'?'Seleziona contatore / timer':preset.id==='toggle'?'Seleziona dispositivo':preset.id==='turn_on'||preset.id==='turn_off'?'Seleziona dispositivo':preset.id==='script'?'Seleziona script':preset.id==='scene'?'Seleziona scena':preset.id==='automation'?'Seleziona automazione':preset.id==='notify'?'Seleziona servizio notify':preset.id==='input_select'?'Seleziona input_select':'Seleziona entità';
           const friendly=r.dismissEntity?ha[r.dismissEntity]?.friendly_name||r.dismissEntity:'';
           return `<div class="ntf-act-entity-row">
-            <div style="font-size:10px;font-weight:600;color:rgba(255,255,255,.45);margin-bottom:8px">${preset.icon} ${preset.desc||preset.label}</div>
+            <div style="font-size:10px;font-weight:600;color:#fff;margin-bottom:8px">${preset.icon} ${preset.desc||preset.label}</div>
             <div class="ntf-field-row" style="margin-bottom:0">
               <div class="ntf-field-lbl">${entityLabel}</div>
               <input id="ntf-da-inp-${i}" class="ntf-field-inp" value="${r.dismissEntity||''}" placeholder="${entityPlaceholder}"
@@ -12729,14 +12743,14 @@ function renderNotifRules(){
               <button class="ntf-pick-btn" title="Sfoglia entità"
                 data-action="_ntfOpenActionPicker" data-action-args='[${i},"ntf-da-inp-${i}"]'>🔍</button>
             </div>
-            ${friendly?`<div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:5px;padding-left:88px">${friendly}</div>`:''}
+            ${friendly?`<div style="font-size:10px;color:#fff;margin-top:5px;padding-left:88px">${friendly}</div>`:''}
             ${isCustom?`<div class="ntf-field-row" style="margin-top:8px">
               <div class="ntf-field-lbl">Dominio</div>
               <input class="ntf-field-inp" value="${r.dismissDomain||''}" placeholder="es. counter" data-input="_ntfSet" data-input-args='[${i},"dismissDomain"]' style="width:110px;flex:none">
               <div class="ntf-field-lbl" style="width:auto;margin:0 6px">Servizio</div>
               <input class="ntf-field-inp" value="${r.dismissService||''}" placeholder="es. reset" data-input="_ntfSet" data-input-args='[${i},"dismissService"]'>
             </div>`:''}
-            ${(!isCustom&&r.dismissDomain)?`<div style="font-size:10px;color:rgba(255,255,255,.22);margin-top:6px;padding-left:88px">→ ${r.dismissDomain}.${r.dismissService}</div>`:''}
+            ${(!isCustom&&r.dismissDomain)?`<div style="font-size:10px;color:#fff;margin-top:6px;padding-left:88px">→ ${r.dismissDomain}.${r.dismissService}</div>`:''}
           </div>`;
         })()}
 
@@ -12758,7 +12772,7 @@ function renderNotifRules(){
           <button class="ntf-pick-btn" title="Sfoglia entità"
             data-action="_ntfPickDuration" data-action-args='[${i}]'>🔍</button>
         </div>
-        <div style="font-size:10px;color:rgba(255,255,255,.25);margin:-4px 0 8px 88px">
+        <div style="font-size:10px;color:#fff;margin:-4px 0 8px 88px">
           Usa <b>{sensor}</b> nel messaggio per mostrare il valore di questo sensore (valore + unità).<br>
           Es: <i>Panni pronti per essere ritirati, Durata ciclo: {sensor}</i>
         </div>
@@ -12958,15 +12972,15 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
     #ss-clock .s{font-size:.38em;font-weight:600;opacity:.5;vertical-align:top;margin-left:4px}
     #ss-card{display:none;width:min(92vw,680px);max-height:62vh;overflow:hidden}
     #ss-card .card{margin:0 auto}
-    #ss-date{font-size:clamp(16px,3vw,30px);font-weight:600;color:rgba(255,255,255,.6);text-transform:capitalize}
+    #ss-date{font-size:clamp(16px,3vw,30px);font-weight:600;color:#fff;text-transform:capitalize}
     #ss-wx{display:flex;align-items:center;gap:14px;font-size:clamp(22px,4.4vw,42px);font-weight:700;margin-top:8px}
     #ss-wx .e{font-size:1.25em}
     #ss-entities{display:flex;flex-wrap:wrap;justify-content:center;gap:clamp(20px,5vw,52px);margin-top:22px}
     .ss-ent{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:90px}
     .ss-ent .ic{font-size:clamp(26px,4vw,40px);line-height:1}
     .ss-ent .vl{font-size:clamp(20px,2.8vw,32px);font-weight:800;line-height:1.1}
-    .ss-ent .nm{font-size:clamp(11px,1.5vw,15px);font-weight:600;color:rgba(255,255,255,.55)}
-    #ss-hint{position:absolute;bottom:32px;font-size:11px;letter-spacing:1.5px;color:rgba(255,255,255,.22);text-transform:uppercase}`;
+    .ss-ent .nm{font-size:clamp(11px,1.5vw,15px);font-weight:600;color:#fff}
+    #ss-hint{position:absolute;bottom:32px;font-size:11px;letter-spacing:1.5px;color:#fff;text-transform:uppercase}`;
     document.head.appendChild(st);
     ov=document.createElement('div'); ov.id='screensaver';
     ov.innerHTML='<div id="ss-card"></div><div id="ss-clock"></div><div id="ss-date"></div><div id="ss-wx"></div><div id="ss-entities"></div><div id="ss-hint">tocca per uscire</div>';
@@ -13083,7 +13097,7 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
     #fbar-navchips{display:flex;gap:4px;align-items:center;overflow-x:auto;scrollbar-width:none;max-width:40vw}
     #fbar-navchips::-webkit-scrollbar{display:none}
     .nv-chip{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:50px;padding:6px 10px;border-radius:16px;cursor:pointer;
-      color:rgba(255,255,255,.6);font-size:9px;font-weight:700;border:1px solid transparent;background:transparent;white-space:nowrap;transition:all .15s}
+      color:#fff;font-size:9px;font-weight:700;border:1px solid transparent;background:transparent;white-space:nowrap;transition:all .15s}
     .nv-chip .nv-ic{font-size:18px;line-height:1}
     .nv-chip:hover{color:#fff;background:rgba(255,255,255,.07)}
     .nv-chip.on{color:#a5b4fc;background:rgba(99,102,241,.18);border-color:rgba(129,140,248,.35)}

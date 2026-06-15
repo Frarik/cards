@@ -1,4 +1,4 @@
-/* frarik-version: 4.8 */
+﻿/* frarik-version: 4.8 */
 (function () {
   'use strict';
 
@@ -317,7 +317,7 @@
     const h = H(), id = entOf(card), acc = card.color || '#38bdf8', nm = nameOf(card, h), type = typeOf(card);
     if (!id || id.split('.')[0] !== 'cover') {
       return `<div style="height:100%;display:flex;flex-direction:column;min-height:0;gap:8px">${header(nm, type)}
-        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:rgba(255,255,255,.55);text-align:center;padding:10px">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#fff;text-align:center;padding:10px">
           <div style="font-size:34px">${coverIcon(type)}</div>
           <div style="font-size:11px">Tocca <b style="color:${acc}">✏️ Configura</b> per scegliere l'entità <b style="color:${acc}">cover</b></div>
         </div></div>`;
@@ -329,7 +329,7 @@
       `<button data-cov="${act}" style="flex:1;padding:10px 0;border-radius:10px;cursor:pointer;border:none;
         background:rgba(0,0,0,.32);
         box-shadow:inset 0 2px 6px rgba(0,0,0,.6),inset 0 0 0 1px rgba(255,255,255,.07),0 1px 0 rgba(255,255,255,.07);
-        color:rgba(255,255,255,.82);font-size:16px;line-height:1;transition:background .12s"
+        color:#fff;font-size:16px;line-height:1;transition:background .12s"
         onmouseover="this.style.background='rgba(255,255,255,.11)'"
         onmouseout="this.style.background='rgba(0,0,0,.32)'">${ico}</button>`;
     return `<div style="height:100%;display:flex;flex-direction:column;min-height:0;gap:8px">${header(nm, type)}
@@ -493,37 +493,37 @@
     <div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(139,92,246,.32);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:tpSlideUp .22s cubic-bezier(.32,1.12,.56,1)">
       <div style="display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">
         <div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);color:#fbbf24;flex-shrink:0">🪟</div>
-        <div><div style="font-size:14px;font-weight:800">Configura copertura</div><div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px">${card.id}</div></div>
-        <button id="tap-hdr-close" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.07);border:none">✕</button>
+        <div><div style="font-size:14px;font-weight:800">Configura copertura</div><div style="font-size:11px;color:#fff;margin-top:1px">${card.id}</div></div>
+        <button id="tap-hdr-close" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none">✕</button>
       </div>
       <div class="frk-cfg-cols" style="display:flex;flex:1;overflow:hidden;min-height:0">
         <div class="frk-form-col" style="width:380px;flex-shrink:0;overflow-y:auto;padding:14px 16px;border-right:1px solid rgba(255,255,255,.07);scrollbar-width:none;display:flex;flex-direction:column;gap:10px">
           <div>
-            <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.45);margin-bottom:6px">Tipo di copertura</div>
+            <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#fff;margin-bottom:6px">Tipo di copertura</div>
             <div id="tap-types" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">${typeBtns}</div>
           </div>
           <div>
-            <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.45);margin-bottom:4px">Nome</div>
+            <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#fff;margin-bottom:4px">Nome</div>
             <input id="tap-name" placeholder="es. Tapparella salotto" value="${(load(card).name || '').replace(/"/g, '&quot;')}" style="${stInp}">
           </div>
           <div>
-            <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.45);margin-bottom:4px">Entità</div>
+            <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#fff;margin-bottom:4px">Entità</div>
             <div style="position:relative">
               <input id="tap-entity" type="text" value="${cur}" autocomplete="off" placeholder="Clicca per scegliere oppure scrivi per filtrare…" style="${stInp};font-family:monospace;font-size:12px">
               <div id="tap-entity-d" style="${stDrop}"></div>
             </div>
           </div>
-          <div style="font-size:10px;color:rgba(255,255,255,.35)">⚡ La velocità è automatica: la card impara il tempo di corsa dai movimenti reali.</div>
+          <div style="font-size:10px;color:#fff">⚡ La velocità è automatica: la card impara il tempo di corsa dai movimenti reali.</div>
           <div style="display:flex;gap:8px;margin-top:4px">
             <button id="tap-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button>
             <button id="tap-save" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#fbbf24;color:#0a0816">Salva</button>
           </div>
         </div>
         <div class="frk-prev-col" style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);scrollbar-width:none">
-          <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em">Anteprima live</div>
+          <div style="font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.07em">Anteprima live</div>
           <div style="border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08)"><div id="tap-prev-inner"></div></div>
           <div style="padding-top:12px;border-top:1px solid rgba(255,255,255,.08)">
-            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Dimensioni card</div>
+            <div style="font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Dimensioni card</div>
             <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
               <span style="font-size:11px;font-weight:700;color:#fff;width:72px;flex-shrink:0">Altezza</span>
               <input type="range" id="tap-cardscale" min="20" max="100" step="5" value="${cardScaleV}" style="flex:1;cursor:pointer;accent-color:#fbbf24;height:4px">
@@ -629,7 +629,7 @@
     if (!id || id.split('.')[0] !== 'cover') {
       return `<div style="height:100%;display:flex;flex-direction:column;min-height:0;gap:8px">
         ${header(nm, 'porta_finestra')}
-        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:rgba(255,255,255,.55);text-align:center;padding:10px">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#fff;text-align:center;padding:10px">
           <div style="font-size:34px">🚪</div>
           <div style="font-size:11px">Tocca <b style="color:${acc}">✏️ Configura</b> per scegliere l'entità <b style="color:${acc}">cover</b></div>
         </div></div>`;
@@ -666,7 +666,7 @@
       `<button data-cov="${act}" style="flex:1;padding:10px 0;border-radius:10px;cursor:pointer;border:none;
         background:rgba(0,0,0,.32);
         box-shadow:inset 0 2px 6px rgba(0,0,0,.6),inset 0 0 0 1px rgba(255,255,255,.07),0 1px 0 rgba(255,255,255,.07);
-        color:rgba(255,255,255,.82);font-size:16px;line-height:1;transition:background .12s"
+        color:#fff;font-size:16px;line-height:1;transition:background .12s"
         onmouseover="this.style.background='rgba(255,255,255,.11)'"
         onmouseout="this.style.background='rgba(0,0,0,.32)'">${ico}</button>`;
     return `<div style="height:100%;display:flex;flex-direction:column;min-height:0;gap:8px">

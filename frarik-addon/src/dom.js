@@ -1,4 +1,4 @@
-// Struttura DOM — generata da _buildDOM() al boot
+﻿// Struttura DOM — generata da _buildDOM() al boot
 // Questo file sostituisce il contenuto HTML di index.html
 export function _buildDOM(){
   const t = document.createElement('template');
@@ -812,7 +812,7 @@ export function _buildDOM(){
       <!-- LEFT: header-bar items (stesso sistema della card header-bar) -->
       <div id="hdr-left">
         <div class="hbar-inner" id="hdr-bar-inner" data-id="__hdrbar__"></div>
-        <button id="hdr-bar-edit" data-action="openHBM_HDR" title="Configura elementi header" style="align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;font-size:13px;color:rgba(255,255,255,.4);border:1px dashed rgba(255,255,255,.25);background:none;flex-shrink:0;transition:all .15s"><i class="mdi mdi-pencil-outline"></i></button>
+        <button id="hdr-bar-edit" data-action="openHBM_HDR" title="Configura elementi header" style="align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;font-size:13px;color:#fff;border:1px dashed rgba(255,255,255,.25);background:none;flex-shrink:0;transition:all .15s"><i class="mdi mdi-pencil-outline"></i></button>
       </div>
       <!-- page-tabs rimane nel DOM per renderPageTabs() ma nascosto -->
       <div id="page-tabs" style="display:none"></div>
@@ -848,7 +848,7 @@ export function _buildDOM(){
         <div style="width:38px;height:38px;border-radius:12px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.25);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">⚙️</div>
         <div>
           <div style="font-size:16px;font-weight:800;color:#fff;letter-spacing:.2px">Impostazioni</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:1px">Frarik Dashboard</div>
+          <div style="font-size:11px;color:#fff;margin-top:1px">Frarik Dashboard</div>
         </div>
       </div>
       <button class="ep-x" data-action="closeOikSettings" title="Torna alla plancia">✕</button>
@@ -879,7 +879,7 @@ export function _buildDOM(){
       <!-- ── AREA CENTRALE ── -->
       <div class="ep-center-area">
         <div style="font-size:52px;margin-bottom:14px;opacity:.1">⚙️</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.25);font-weight:600;letter-spacing:.3px">Seleziona una sezione</div>
+        <div style="font-size:13px;color:#fff;font-weight:600;letter-spacing:.3px">Seleziona una sezione</div>
       </div>
 
       <!-- ── VERSIONE ── -->
@@ -1076,11 +1076,17 @@ export function _buildDOM(){
 <!-- TOAST -->
 <div id="toast"></div>
 <!-- CONFIRM DIALOG -->
-<div id="confirm-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:20000;display:none;align-items:center;justify-content:center">
-  <div style="background:#1a1f35;border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:24px 28px;max-width:340px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.7)">
-    <div id="confirm-msg" style="font-size:14px;color:rgba(255,255,255,.85);line-height:1.5;margin-bottom:20px;text-align:center"></div>
-    <div style="display:flex;gap:10px;justify-content:center">
-      <button id="confirm-cancel" style="flex:1;padding:9px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:rgba(255,255,255,.6);font-size:13px;cursor:pointer">Annulla</button>
+<style>@keyframes confirmSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style>
+<div id="confirm-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:20000;align-items:flex-end;backdrop-filter:blur(4px)">
+  <div style="width:100%;background:#0a0816;border:1px solid rgba(139,92,246,.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);padding:20px 18px 24px;animation:confirmSlideUp .22s cubic-bezier(.32,1.12,.56,1)">
+    <div class="shdr" style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <div class="sico" style="width:36px;height:36px;border-radius:10px;background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.3);display:flex;align-items:center;justify-content:center;font-size:18px">⚠️</div>
+      <div style="flex:1"><div class="stit" style="font-size:14px;font-weight:800">Conferma</div></div>
+      <button id="confirm-cancel-x" style="width:32px;height:32px;border:none;border-radius:9px;background:rgba(255,255,255,.1);color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>
+    <div id="confirm-msg" style="font-size:13px;color:#fff;line-height:1.5;margin-bottom:18px"></div>
+    <div style="display:flex;gap:10px">
+      <button id="confirm-cancel" style="flex:1;padding:9px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:#fff;font-size:13px;cursor:pointer">Annulla</button>
       <button id="confirm-ok" style="flex:1;padding:9px;background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.4);border-radius:10px;color:#f87171;font-size:13px;font-weight:700;cursor:pointer">Elimina</button>
     </div>
   </div>
@@ -1274,7 +1280,7 @@ export function _buildDOM(){
         </div>
       </div>
       <div id="jsst-panel-load" style="display:none">
-        <div style="background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:11px;color:rgba(255,255,255,.6);line-height:1.7">
+        <div style="background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:11px;color:#fff;line-height:1.7">
           📁 <b>Trascina un file <code>.js</code></b> qui sotto, oppure clicca per selezionarlo.<br>
           Il file deve esportare <code style="color:#fbbf24">window.FratechCards = window.FratechCards || {};</code> e registrare la card con un ID univoco.
         </div>

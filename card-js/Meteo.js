@@ -1,4 +1,4 @@
-/* frarik-version: 1.41 */
+﻿/* frarik-version: 1.41 */
 
 // ── Lookup tables ─────────────────────────────────────────────────────────────
 const _WI = {
@@ -271,7 +271,7 @@ button[data-a="gear"]{display:var(--fgear,none);}
 .fcg{display:none;grid-template-columns:repeat(auto-fit,minmax(52px,1fr));gap:6px;padding-bottom:14px;}
 .fcg.open{display:grid;}
 .fcc{border-radius:12px;border:1px solid rgba(255,255,255,.09);background:rgba(0,0,0,.18);padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;transition:background .12s;backdrop-filter:blur(4px);}
-.fcc:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);}
+.fcc:hover{background:rgba(255,255,255,.1);border-color:#fff;}
 .fdn{font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#fff;}
 .fi{line-height:0;margin:3px 0 2px;display:flex;align-items:center;justify-content:center;}
 .fm{font-size:18px;font-weight:800;letter-spacing:-.5px;line-height:1;color:#fff;}
@@ -294,7 +294,7 @@ button[data-a="gear"]{display:var(--fgear,none);}
 .sbdy::-webkit-scrollbar{display:none;}
 .sov-prev{flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);scrollbar-width:none;-ms-overflow-style:none;}
 .sov-prev::-webkit-scrollbar{display:none;}
-.prev-ttl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.5);}
+.prev-ttl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#fff;}
 .prev-wrap{border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08);}
 .lsect{padding-top:12px;border-top:1px solid rgba(255,255,255,.08);}
 .layout-row{display:flex;align-items:center;gap:8px;margin-top:10px;}
@@ -318,14 +318,14 @@ input[type=range].lslider{flex:1;cursor:pointer;accent-color:#fbbf24;height:4px;
 .eo:hover{background:rgba(255,255,255,.08);color:#fff;}
 .eo.sel{color:#fbbf24;font-weight:700;}
 .ci{width:100%;padding:9px 12px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#fff;font-size:13px;font-family:inherit;outline:none;}
-.ci:focus{border-color:rgba(255,255,255,.4);}
-.ci::placeholder{color:rgba(255,255,255,.35);}
-.ht{font-size:10px;color:rgba(255,255,255,.55);margin-top:4px;}
+.ci:focus{border-color:#fff;}
+.ci::placeholder{color:#fff;}
+.ht{font-size:10px;color:#fff;margin-top:4px;}
 .inp-grp{position:relative;}
 .sft{padding:12px 16px;border-top:1px solid rgba(255,255,255,.08);flex-shrink:0;}
 .sav{width:100%;height:38px;border-radius:10px;border:none;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#000;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
 .sav:hover{opacity:.88;}
-.ph{padding:32px 20px;text-align:center;color:rgba(255,255,255,.35);font-size:12px;display:flex;flex-direction:column;align-items:center;gap:10px;}
+.ph{padding:32px 20px;text-align:center;color:#fff;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:10px;}
 .phi{font-size:38px;opacity:.3;}
 `
 
@@ -691,7 +691,7 @@ class MeteoCard extends HTMLElement {
     this._histModalHost.attachShadow({mode:'open'})
     this._histModalHost.shadowRoot.addEventListener('click',this._click)
     document.body.appendChild(this._histModalHost)
-    const histCSS=`.hov{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);font-family:var(--primary-font-family,system-ui,sans-serif);}.hov-modal{width:100%;max-height:72vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(251,191,36,.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:slideUp .22s cubic-bezier(.32,1.12,.56,1);}@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}.hw{flex:1;overflow-y:auto;padding:16px 20px 24px;scrollbar-width:none;-ms-overflow-style:none;}.hw::-webkit-scrollbar{display:none;}.hs-row{display:flex;gap:0;justify-content:space-around;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.07);}.hs-item{text-align:center;}.hs-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#fff;opacity:.65;}.hs-val{font-size:20px;font-weight:800;color:#fff;margin-top:3px;}.hs-unit{font-size:11px;font-weight:400;color:#fff;margin-left:2px;}.hload{padding:40px;text-align:center;color:rgba(255,255,255,.5);font-size:12px;}`
+    const histCSS=`.hov{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);font-family:var(--primary-font-family,system-ui,sans-serif);}.hov-modal{width:100%;max-height:72vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(251,191,36,.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:slideUp .22s cubic-bezier(.32,1.12,.56,1);}@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}.hw{flex:1;overflow-y:auto;padding:16px 20px 24px;scrollbar-width:none;-ms-overflow-style:none;}.hw::-webkit-scrollbar{display:none;}.hs-row{display:flex;gap:0;justify-content:space-around;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.07);}.hs-item{text-align:center;}.hs-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#fff;opacity:.65;}.hs-val{font-size:20px;font-weight:800;color:#fff;margin-top:3px;}.hs-unit{font-size:11px;font-weight:400;color:#fff;margin-left:2px;}.hload{padding:40px;text-align:center;color:#fff;font-size:12px;}`
     this._histModalHost.shadowRoot.innerHTML=`<style>${_CSS}${histCSS}</style>
 <div class="hov"><div class="hov-modal">
   <div class="shdr" style="border-radius:20px 20px 0 0;">
@@ -820,7 +820,7 @@ class MeteoCard extends HTMLElement {
           return `<div class="hr-row"><div class="hr-t">${time}</div><div class="hr-i">${ico}</div><div class="hr-tp"><span style="color:${tc};font-size:14px;font-weight:800;">${temp}°</span><div class="hr-bar" style="background:${tc};width:${bw}%"></div></div><div class="hr-r">☂ ${rn}mm</div><div class="hr-w">⇒ ${ws}km/h<span class="hr-wd"> ${wd}</span></div></div>`
         }).join('')
       :`<div class="hr-load">Previsioni orarie in caricamento…</div>`
-    const dmCSS=`.dov{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);font-family:var(--primary-font-family,system-ui,sans-serif);}.dov-modal{width:100%;max-height:85vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(251,191,36,.2);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:slideUp .22s cubic-bezier(.32,1.12,.56,1);}@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}.dm-hdr{padding:18px 20px 16px;background:linear-gradient(135deg,rgba(80,50,8,.95),rgba(50,30,5,.98));border-radius:20px 20px 0 0;display:flex;align-items:flex-start;justify-content:space-between;}.dm-left{flex:1;}.dm-date{font-size:10px;font-weight:800;color:rgba(255,200,80,.8);letter-spacing:1.4px;margin-bottom:5px;}.dm-cond{font-size:24px;font-weight:900;color:#fff;letter-spacing:-.3px;line-height:1.1;}.dm-temps{font-size:14px;font-weight:700;color:rgba(255,215,100,.9);margin-top:6px;}.dm-ico{flex-shrink:0;margin-left:12px;display:flex;align-items:center;margin-top:-4px;}.dm-cls{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.12);border:none;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:10px;line-height:1;transition:background .15s;}.dm-cls:hover{background:rgba(248,113,113,.4);}.hr-thead{display:grid;grid-template-columns:48px 34px 1fr 80px 88px;gap:6px;padding:7px 20px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.4);border-bottom:1px solid rgba(255,255,255,.08);}.hr-thead-w{text-align:right;}.hr-list{flex:1;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;}.hr-list::-webkit-scrollbar{display:none;}.hr-row{display:grid;grid-template-columns:48px 34px 1fr 80px 88px;align-items:center;gap:6px;padding:8px 20px;border-bottom:1px solid rgba(255,255,255,.04);}.hr-row:last-child{border-bottom:none;}.hr-t{font-size:12px;font-weight:700;color:#fff;}.hr-i{display:flex;align-items:center;justify-content:center;}.hr-tp{display:flex;flex-direction:column;gap:3px;}.hr-bar{height:2px;border-radius:1px;}.hr-r{font-size:11px;color:#94d3f7;white-space:nowrap;}.hr-w{font-size:11px;color:#fff;text-align:right;white-space:nowrap;}.hr-wd{color:rgba(255,255,255,.5);font-size:10px;}.hr-load{padding:40px;text-align:center;color:rgba(255,255,255,.5);font-size:12px;}`
+    const dmCSS=`.dov{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);font-family:var(--primary-font-family,system-ui,sans-serif);}.dov-modal{width:100%;max-height:85vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(251,191,36,.2);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:slideUp .22s cubic-bezier(.32,1.12,.56,1);}@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}.dm-hdr{padding:18px 20px 16px;background:linear-gradient(135deg,rgba(80,50,8,.95),rgba(50,30,5,.98));border-radius:20px 20px 0 0;display:flex;align-items:flex-start;justify-content:space-between;}.dm-left{flex:1;}.dm-date{font-size:10px;font-weight:800;color:rgba(255,200,80,.8);letter-spacing:1.4px;margin-bottom:5px;}.dm-cond{font-size:24px;font-weight:900;color:#fff;letter-spacing:-.3px;line-height:1.1;}.dm-temps{font-size:14px;font-weight:700;color:rgba(255,215,100,.9);margin-top:6px;}.dm-ico{flex-shrink:0;margin-left:12px;display:flex;align-items:center;margin-top:-4px;}.dm-cls{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.12);border:none;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:10px;line-height:1;transition:background .15s;}.dm-cls:hover{background:rgba(248,113,113,.4);}.hr-thead{display:grid;grid-template-columns:48px 34px 1fr 80px 88px;gap:6px;padding:7px 20px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#fff;border-bottom:1px solid rgba(255,255,255,.08);}.hr-thead-w{text-align:right;}.hr-list{flex:1;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;}.hr-list::-webkit-scrollbar{display:none;}.hr-row{display:grid;grid-template-columns:48px 34px 1fr 80px 88px;align-items:center;gap:6px;padding:8px 20px;border-bottom:1px solid rgba(255,255,255,.04);}.hr-row:last-child{border-bottom:none;}.hr-t{font-size:12px;font-weight:700;color:#fff;}.hr-i{display:flex;align-items:center;justify-content:center;}.hr-tp{display:flex;flex-direction:column;gap:3px;}.hr-bar{height:2px;border-radius:1px;}.hr-r{font-size:11px;color:#94d3f7;white-space:nowrap;}.hr-w{font-size:11px;color:#fff;text-align:right;white-space:nowrap;}.hr-wd{color:#fff;font-size:10px;}.hr-load{padding:40px;text-align:center;color:#fff;font-size:12px;}`
     this._dayModalHost.shadowRoot.innerHTML=`<style>${_CSS}${dmCSS}</style>
 <div class="dov"><div class="dov-modal">
   <div class="dm-hdr">
@@ -1374,9 +1374,9 @@ class MeteoCard extends HTMLElement {
     listEl.innerHTML=filtered.length
       ?filtered.slice(0,80).map(id=>{
           const nm=this._h.states[id]?.attributes?.friendly_name||id
-          return `<div class="eo${id===val?' sel':''}" data-a="sel-sensor" data-f="${field}" data-id="${id}">${nm}<span style="font-size:9px;color:rgba(255,255,255,.55);margin-left:6px;">${id}</span></div>`
+          return `<div class="eo${id===val?' sel':''}" data-a="sel-sensor" data-f="${field}" data-id="${id}">${nm}<span style="font-size:9px;color:#fff;margin-left:6px;">${id}</span></div>`
         }).join('')
-      :'<div style="padding:8px 12px;font-size:11px;color:rgba(255,255,255,.6);">Nessuna entità trovata</div>'
+      :'<div style="padding:8px 12px;font-size:11px;color:#fff;">Nessuna entità trovata</div>'
     dropdown.classList.add('open')
   }
 
@@ -1441,7 +1441,7 @@ class MeteoCard extends HTMLElement {
           <div style="display:flex;gap:8px;margin-bottom:10px;">
             <!-- Emoji -->
             <div style="flex:1;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:7px;">
-              <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">Emoji</div>
+              <div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">Emoji</div>
               <button data-a="tile-picker" data-idx="${i}" style="font-size:${emojiDisplay?'22':'14'}px;width:100%;min-height:36px;background:rgba(255,255,255,${emojiDisplay?.07:.04});border:1px solid rgba(255,255,255,${emojiDisplay?.18:.1});border-radius:7px;cursor:pointer;line-height:1;padding:5px 6px;display:flex;align-items:center;justify-content:center;gap:5px;color:${emojiDisplay?'#fff':'rgba(255,255,255,.35)'};">
                 <span>${emojiDisplay||'scegli ▼'}</span>
               </button>
@@ -1455,7 +1455,7 @@ class MeteoCard extends HTMLElement {
             <!-- MDI -->
             <div style="flex:1;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:7px;">
               <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;">
-                <span style="font-size:9px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;">Icona MDI</span>
+                <span style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;">Icona MDI</span>
                 ${icoIsMdi?`<span class="mdi mdi-${tile.ico.slice(4)}" style="color:${tile.icoColor||'#fff'};font-size:15px;vertical-align:middle;pointer-events:none;"></span>`:''}
               </div>
               <div class="inp-grp" style="margin:0;">
@@ -1474,10 +1474,10 @@ class MeteoCard extends HTMLElement {
             <div class="ht" style="margin-bottom:6px;">Il colore con la soglia più alta raggiunta viene applicato al valore</div>
             ${(tile.colorRules||[]).map((r,ri)=>`
               <div style="display:flex;align-items:center;gap:5px;margin-top:5px;background:rgba(255,255,255,.03);border-radius:8px;padding:5px 7px;">
-                <span style="font-size:10px;color:rgba(255,255,255,.4);white-space:nowrap;flex-shrink:0;">val ≥</span>
+                <span style="font-size:10px;color:#fff;white-space:nowrap;flex-shrink:0;">val ≥</span>
                 <input class="ci" type="number" value="${r.threshold}" data-f="tile-rule-thr-${i}-${ri}" style="width:60px;padding:4px 7px;font-size:11px;flex-shrink:0;"/>
                 <input class="ci" type="color" value="${r.color||'#ffffff'}" data-f="tile-rule-col-${i}-${ri}" style="padding:3px;height:30px;width:46px;flex-shrink:0;"/>
-                <span style="font-size:10px;color:rgba(255,255,255,.3);flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${r.color||''}</span>
+                <span style="font-size:10px;color:#fff;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${r.color||''}</span>
                 <button data-a="tile-rmrule" data-idx="${i}" data-ridx="${ri}" style="background:rgba(255,80,80,.1);border:1px solid rgba(255,80,80,.22);color:rgba(255,120,120,.85);border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer;flex-shrink:0;">✕</button>
               </div>`).join('')}
             <button data-a="tile-addrule" data-idx="${i}" style="margin-top:7px;width:100%;background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.18);color:#4ade80;border-radius:8px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;">＋ Aggiungi soglia colore</button>
@@ -1485,7 +1485,7 @@ class MeteoCard extends HTMLElement {
         </div>`:''
       return `<div style="border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:8px 10px;margin-top:8px;background:rgba(255,255,255,.02);">
         <div style="display:flex;align-items:flex-end;gap:6px;">
-          ${isFixed?`<div style="padding:2px 0 6px;min-width:58px;"><div class="fl" style="margin:0 0 1px;">${tile.lbl}</div><div style="font-size:9px;color:rgba(255,255,255,.35);">tile fissa</div></div>`:''}
+          ${isFixed?`<div style="padding:2px 0 6px;min-width:58px;"><div class="fl" style="margin:0 0 1px;">${tile.lbl}</div><div style="font-size:9px;color:#fff;">tile fissa</div></div>`:''}
           <div style="flex:${isFixed?2:3};">
             <div class="fl" style="margin:0 0 3px;font-size:10px;">${isFixed?'Sensore personalizzato (opzionale)':'Entità'}</div>
             <div class="inp-grp">
@@ -1523,7 +1523,7 @@ class MeteoCard extends HTMLElement {
       ?icons.slice(0,60).map(name=>`<div class="eo" data-a="tile-mdi-sel" data-idx="${i}" data-mdi="${name}" style="display:flex;align-items:center;gap:8px;padding:6px 10px;">
           <span class="mdi mdi-${name}" style="color:#fff;font-size:16px;vertical-align:middle;flex-shrink:0;pointer-events:none;"></span>
           <span>${name}</span></div>`).join('')
-      :'<div style="padding:8px 12px;font-size:11px;color:rgba(255,255,255,.5);">Nessuna icona trovata</div>'
+      :'<div style="padding:8px 12px;font-size:11px;color:#fff;">Nessuna icona trovata</div>'
     drop.classList.add('open')
   }
 
@@ -1628,7 +1628,7 @@ class MeteoCard extends HTMLElement {
         </div>`
       }).join('')
     } else if(this._fo){
-      fcH=`<div style="grid-column:span ${_nDays};text-align:center;padding:14px;color:rgba(255,255,255,.25);font-size:11px;">Previsioni in caricamento…</div>`
+      fcH=`<div style="grid-column:span ${_nDays};text-align:center;padding:14px;color:#fff;font-size:11px;">Previsioni in caricamento…</div>`
     }
 
     const _tcust=c.tileCustom||{}
@@ -1794,15 +1794,15 @@ class MeteoCard extends HTMLElement {
       <div class="sbdy">
         <div class="fl">Entità meteo HA</div>
         <div class="er">
-          <span style="color:rgba(255,255,255,.7);display:flex;flex-shrink:0;margin-right:4px;">${_IC.cl}</span>
+          <span style="color:#fff;display:flex;flex-shrink:0;margin-right:4px;">${_IC.cl}</span>
           <div class="ei"><div class="en">${enm}</div><div class="eid">${eid}</div></div>
           <button class="cbtn" data-a="srch">Cambia</button>
         </div>
         <div class="esr ${this._se?'open':''}">
           <div class="el">
             ${wents.length
-              ?wents.map(id=>`<div class="eo ${id===eid?'sel':''}" data-a="sel" data-id="${id}">${this._h.states[id]?.attributes?.friendly_name||id}<span style="font-size:9px;color:rgba(255,255,255,.45);margin-left:4px;">${id}</span></div>`).join('')
-              :'<div style="padding:8px 12px;font-size:11px;color:rgba(255,255,255,.7);">Nessuna entità weather.* trovata</div>'}
+              ?wents.map(id=>`<div class="eo ${id===eid?'sel':''}" data-a="sel" data-id="${id}">${this._h.states[id]?.attributes?.friendly_name||id}<span style="font-size:9px;color:#fff;margin-left:4px;">${id}</span></div>`).join('')
+              :'<div style="padding:8px 12px;font-size:11px;color:#fff;">Nessuna entità weather.* trovata</div>'}
           </div>
         </div>
 
@@ -1865,7 +1865,7 @@ class MeteoCard extends HTMLElement {
 
             <div style="margin-top:14px;font-size:11px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.07em;">Card Speciali</div>
             ${_STATION_SPECIALS.map(s=>`
-              <div class="fl" style="margin-top:6px;font-size:10px;color:rgba(255,255,255,.6);">${s.icon} ${s.label}</div>
+              <div class="fl" style="margin-top:6px;font-size:10px;color:#fff;">${s.icon} ${s.label}</div>
               <div class="inp-grp">
                 <input class="ci" type="text" value="${this._tSt[s.f]||''}" placeholder="entità..." data-f="${s.f}" autocomplete="off"/>
                 <div class="esr" data-dropdown="${s.f}"><div class="el"></div></div>
@@ -1942,7 +1942,7 @@ class MeteoCard extends HTMLElement {
 .windy-zoom{display:flex;align-items:center;gap:4px;margin-left:4px;}
 .windy-zbtn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:8px;width:28px;height:26px;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1;outline:none;}
 .windy-zbtn:hover{background:rgba(255,255,255,.18);}
-.windy-zoom-val{font-size:11px;color:rgba(255,255,255,.5);min-width:14px;text-align:center;}
+.windy-zoom-val{font-size:11px;color:#fff;min-width:14px;text-align:center;}
 .stov-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
 @media(max-width:700px){.stov-grid{grid-template-columns:1fr;}}
 .scat{border-radius:16px;padding:0;overflow:hidden;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;}

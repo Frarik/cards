@@ -1,4 +1,4 @@
-/* frarik-version: 4.8 */
+﻿/* frarik-version: 4.8 */
 (function () {
   'use strict';
 
@@ -108,7 +108,7 @@
   }
   function updBadge(label,isOk) {
     const col=isOk?'#22c55e':'#f97316';
-    return '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 6px;border-radius:8px;background:'+col+'12;border:1px solid '+col+'30;flex:1;min-width:44px"><div style="font-size:8px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.05em">'+label+'</div><div style="font-size:11px;font-weight:900;color:'+col+'">'+(isOk?'✓':'!')+'</div></div>';
+    return '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 6px;border-radius:8px;background:'+col+'12;border:1px solid '+col+'30;flex:1;min-width:44px"><div style="font-size:8px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.05em">'+label+'</div><div style="font-size:11px;font-weight:900;color:'+col+'">'+(isOk?'✓':'!')+'</div></div>';
   }
 
   /* SVG */
@@ -141,7 +141,7 @@
   }
   function ringHTML(key,pct,col,label,sz,sub) {
     const s=sz||72,r=+(s*.36).toFixed(1),cx=s/2,cy=s/2,circ=+(2*Math.PI*r).toFixed(2),p=Math.max(0,Math.min(100,pct||0)),dash=+((p/100)*circ).toFixed(2);
-    return '<div style="display:flex;flex-direction:column;align-items:center;gap:2px"><svg width="'+s+'" height="'+s+'" viewBox="0 0 '+s+' '+s+'" style="overflow:visible"><circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="6"/><circle data-arc="'+key+'" cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="6" stroke-dasharray="'+dash+' '+circ+'" stroke-linecap="round" transform="rotate(-90 '+cx+' '+cy+')" style="transition:stroke-dasharray .9s ease-in-out,stroke .5s;filter:drop-shadow(0 0 7px '+col+'99)"/><text data-txt="'+key+'" x="'+cx+'" y="'+(cy+1)+'" text-anchor="middle" dominant-baseline="middle" fill="'+col+'" font-size="'+(s*.185).toFixed(0)+'px" font-weight="800" font-family="system-ui,sans-serif">'+(pct==null?'—':Math.round(pct)+'%')+'</text></svg><div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.45);letter-spacing:.06em;text-transform:uppercase">'+label+'</div><div data-sub="'+key+'" style="font-size:9px;font-weight:600;color:rgba(255,255,255,.3);height:12px;line-height:12px">'+(sub||'')+'</div></div>';
+    return '<div style="display:flex;flex-direction:column;align-items:center;gap:2px"><svg width="'+s+'" height="'+s+'" viewBox="0 0 '+s+' '+s+'" style="overflow:visible"><circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="6"/><circle data-arc="'+key+'" cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="6" stroke-dasharray="'+dash+' '+circ+'" stroke-linecap="round" transform="rotate(-90 '+cx+' '+cy+')" style="transition:stroke-dasharray .9s ease-in-out,stroke .5s;filter:drop-shadow(0 0 7px '+col+'99)"/><text data-txt="'+key+'" x="'+cx+'" y="'+(cy+1)+'" text-anchor="middle" dominant-baseline="middle" fill="'+col+'" font-size="'+(s*.185).toFixed(0)+'px" font-weight="800" font-family="system-ui,sans-serif">'+(pct==null?'—':Math.round(pct)+'%')+'</text></svg><div style="font-size:10px;font-weight:700;color:#fff;letter-spacing:.06em;text-transform:uppercase">'+label+'</div><div data-sub="'+key+'" style="font-size:9px;font-weight:600;color:#fff;height:12px;line-height:12px">'+(sub||'')+'</div></div>';
   }
   function updateRing(el,key,pct,col,sz) {
     const arc=el.querySelector('[data-arc="'+key+'"]'),txt=el.querySelector('[data-txt="'+key+'"]');
@@ -190,7 +190,7 @@
 
     function loadRow(lbl,v,k) {
       const p=Math.min(100,((v||0)/4)*100),col=loadColor(v);
-      return '<div style="display:flex;align-items:center;gap:5px"><div style="width:28px;font-size:9px;font-weight:700;color:rgba(255,255,255,.4);flex-shrink:0">'+lbl+'</div><div style="flex:1;height:5px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden"><div data-bar="'+k+'" style="height:100%;width:'+p.toFixed(1)+'%;background:'+col+';border-radius:99px;transition:width .9s ease-in-out,background .5s"></div></div><div data-syv="'+k+'" style="width:30px;text-align:right;font-size:10px;font-weight:800;color:'+col+';flex-shrink:0">'+(v==null?'—':v.toFixed(2))+'</div></div>';
+      return '<div style="display:flex;align-items:center;gap:5px"><div style="width:28px;font-size:9px;font-weight:700;color:#fff;flex-shrink:0">'+lbl+'</div><div style="flex:1;height:5px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden"><div data-bar="'+k+'" style="height:100%;width:'+p.toFixed(1)+'%;background:'+col+';border-radius:99px;transition:width .9s ease-in-out,background .5s"></div></div><div data-syv="'+k+'" style="width:30px;text-align:right;font-size:10px;font-weight:800;color:'+col+';flex-shrink:0">'+(v==null?'—':v.toFixed(2))+'</div></div>';
     }
 
     const css='<style>'
@@ -218,37 +218,37 @@
       +'<div data-sya="stat" data-eid="'+(c.temp||'')+'" data-lbl="Temperatura CPU" style="display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,.05);border-radius:12px;padding:7px 12px;flex-shrink:0;min-width:72px;gap:3px">'
       +'<div data-syv="temp" class="'+(tmpV!=null&&tmpV>=70?'syk-hot':'')+'" style="font-size:25px;font-weight:800;line-height:1;color:'+tCol+'">'+(tmpV==null?'—':tmpV.toFixed(1)+'°')+'</div>'
       +'<div style="width:100%;height:3px;border-radius:99px;background:linear-gradient(90deg,#22c55e 0%,#fbbf24 50%,#ef4444 100%);opacity:.7;position:relative;margin:2px 0"><div data-syv="tbar" style="position:absolute;top:-2px;left:'+Math.min(99,(tmpV||0)).toFixed(0)+'%;width:7px;height:7px;border-radius:50%;background:#fff;transform:translateX(-50%);box-shadow:0 0 6px rgba(255,255,255,.8);transition:left .9s ease-in-out"></div></div>'
-      +'<div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.06em">Temp CPU</div>'
+      +'<div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em">Temp CPU</div>'
       +'<div data-syv="temp-sp" style="width:62px;height:18px"></div>'
       +'</div>'
       +'<div style="flex:1;background:rgba(255,255,255,.04);border-radius:12px;padding:7px 9px;display:flex;flex-direction:column;justify-content:center;gap:5px">'
-      +'<div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.06em;margin-bottom:1px">Carico sistema</div>'
+      +'<div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin-bottom:1px">Carico sistema</div>'
       +loadRow('1m',l1,'l1')+loadRow('5m',l5,'l5')+loadRow('15m',l15,'l15')
       +'</div></div>';
 
     const sparklines='<div style="display:flex;gap:7px;position:relative;z-index:1"><div class="syk-sp"><div class="syk-spl" style="color:'+cpuC+'">▸ Processore</div><div data-syv="cpu-sp" style="height:46px"></div></div><div class="syk-sp"><div class="syk-spl" style="color:'+ramC+'">▸ RAM</div><div data-syv="ram-sp" style="height:46px"></div></div></div>';
 
-    const netSection=(c.netin||c.netout)?('<div style="background:rgba(56,189,248,.06);border:1px solid rgba(56,189,248,.15);border-radius:11px;padding:6px 10px;position:relative;z-index:1"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.06em">🌐 Rete</div><div style="display:flex;gap:10px"><div data-syv="ni" style="font-size:10px;font-weight:700;color:#38bdf8">↓ '+fmtNet(niV)+'</div><div data-syv="no" style="font-size:10px;font-weight:700;color:#a78bfa">↑ '+fmtNet(noV)+'</div></div></div><div data-syv="net-sp" style="height:32px"></div></div>'):'';
+    const netSection=(c.netin||c.netout)?('<div style="background:rgba(56,189,248,.06);border:1px solid rgba(56,189,248,.15);border-radius:11px;padding:6px 10px;position:relative;z-index:1"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em">🌐 Rete</div><div style="display:flex;gap:10px"><div data-syv="ni" style="font-size:10px;font-weight:700;color:#38bdf8">↓ '+fmtNet(niV)+'</div><div data-syv="no" style="font-size:10px;font-weight:700;color:#a78bfa">↑ '+fmtNet(noV)+'</div></div></div><div data-syv="net-sp" style="height:32px"></div></div>'):'';
 
-    const diskIOSection=(c.diskr||c.diskw)?('<div style="display:flex;align-items:center;gap:10px;padding:6px 10px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.15);border-radius:11px;position:relative;z-index:1"><div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.06em;flex-shrink:0">💾 I/O Disco</div><div style="flex:1;display:flex;gap:12px;justify-content:flex-end">'+(c.diskr?'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px"><div style="font-size:9px;color:rgba(255,255,255,.4)">Lettura</div><div data-syv="dr" style="font-size:11px;font-weight:700;color:#fbbf24">'+fmtIO(drV,unit(h,c.diskr))+'</div></div>':'')+(c.diskw?'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px"><div style="font-size:9px;color:rgba(255,255,255,.4)">Scrittura</div><div data-syv="dw" style="font-size:11px;font-weight:700;color:#f97316">'+fmtIO(dwV,unit(h,c.diskw))+'</div></div>':'')+'</div></div>'):'';
+    const diskIOSection=(c.diskr||c.diskw)?('<div style="display:flex;align-items:center;gap:10px;padding:6px 10px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.15);border-radius:11px;position:relative;z-index:1"><div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;flex-shrink:0">💾 I/O Disco</div><div style="flex:1;display:flex;gap:12px;justify-content:flex-end">'+(c.diskr?'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px"><div style="font-size:9px;color:#fff">Lettura</div><div data-syv="dr" style="font-size:11px;font-weight:700;color:#fbbf24">'+fmtIO(drV,unit(h,c.diskr))+'</div></div>':'')+(c.diskw?'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px"><div style="font-size:9px;color:#fff">Scrittura</div><div data-syv="dw" style="font-size:11px;font-weight:700;color:#f97316">'+fmtIO(dwV,unit(h,c.diskw))+'</div></div>':'')+'</div></div>'):'';
 
-    const energiaSection='<div data-sya="popup-energia" style="background:rgba(249,115,22,.07);border:1px solid rgba(249,115,22,.2);border-radius:11px;padding:7px 10px;position:relative;z-index:1"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px"><div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.06em">⚡ Energia</div><div style="font-size:9px;color:rgba(255,255,255,.25)">dettagli ›</div></div><div style="display:flex;gap:6px;flex-wrap:wrap"><div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:54px"><div style="font-size:8px;color:rgba(255,255,255,.4)">Potenza</div><div data-syv="pw" style="font-size:14px;font-weight:800;color:#fb923c">'+(pwV==null?'—':pwV.toFixed(0)+' W')+'</div></div><div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:54px"><div style="font-size:8px;color:rgba(255,255,255,.4)">Oggi kWh</div><div data-syv="en-oggi" style="font-size:11px;font-weight:800;color:#fdba74">'+fmtKwh(enOggi)+'</div></div><div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:54px"><div style="font-size:8px;color:rgba(255,255,255,.4)">Costo oggi</div><div data-syv="co-oggi" style="font-size:11px;font-weight:800;color:#fbbf24">'+fmtEur(coOggi)+'</div></div><div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:54px"><div style="font-size:8px;color:rgba(255,255,255,.4)">Mese</div><div data-syv="co-mese" style="font-size:11px;font-weight:800;color:#fbbf24">'+fmtEur(coMese)+'</div></div></div></div>';
+    const energiaSection='<div data-sya="popup-energia" style="background:rgba(249,115,22,.07);border:1px solid rgba(249,115,22,.2);border-radius:11px;padding:7px 10px;position:relative;z-index:1"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px"><div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em">⚡ Energia</div><div style="font-size:9px;color:#fff">dettagli ›</div></div><div style="display:flex;gap:6px;flex-wrap:wrap"><div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:54px"><div style="font-size:8px;color:#fff">Potenza</div><div data-syv="pw" style="font-size:14px;font-weight:800;color:#fb923c">'+(pwV==null?'—':pwV.toFixed(0)+' W')+'</div></div><div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:54px"><div style="font-size:8px;color:#fff">Oggi kWh</div><div data-syv="en-oggi" style="font-size:11px;font-weight:800;color:#fdba74">'+fmtKwh(enOggi)+'</div></div><div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:54px"><div style="font-size:8px;color:#fff">Costo oggi</div><div data-syv="co-oggi" style="font-size:11px;font-weight:800;color:#fbbf24">'+fmtEur(coOggi)+'</div></div><div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:54px"><div style="font-size:8px;color:#fff">Mese</div><div data-syv="co-mese" style="font-size:11px;font-weight:800;color:#fbbf24">'+fmtEur(coMese)+'</div></div></div></div>';
 
     const haInfoSection='<div style="display:flex;flex-direction:column;gap:5px;position:relative;z-index:1">'
       +'<div style="display:flex;gap:6px">'
-      +'<div data-sya="stat" data-eid="'+(c.pk_ha_uptime||'')+'" data-lbl="Uptime HA" style="flex:1;background:rgba(167,139,250,.07);border:1px solid rgba(167,139,250,.15);border-radius:10px;padding:6px 9px"><div style="font-size:8px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">HA attivo da</div><div data-syv="ha-uptime" style="font-size:11px;font-weight:800;color:#a78bfa">'+(haUptime||'—')+'</div></div>'
-      +'<div data-sya="stat" data-eid="'+(c.pk_srv_uptime||'')+'" data-lbl="Uptime Server" style="flex:1;background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.15);border-radius:10px;padding:6px 9px"><div style="font-size:8px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Server attivo da</div><div data-syv="srv-uptime" style="font-size:11px;font-weight:800;color:#818cf8">'+(srvUptimeRaw?uptimeText(h,c.pk_srv_uptime):'—')+'</div></div>'
-      +'<div data-sya="popup-entita" style="flex:1;background:rgba(56,189,248,.07);border:1px solid rgba(56,189,248,.15);border-radius:10px;padding:6px 9px;cursor:pointer"><div style="font-size:8px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Entità ›</div><div data-syv="ent-count" style="font-size:11px;font-weight:800;color:#38bdf8">'+(entCount||'—')+'</div></div>'
-      +'<div style="flex:1.4;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.15);border-radius:10px;padding:6px 9px"><div style="font-size:8px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Ultimo backup</div><div data-syv="last-bk" style="font-size:9px;font-weight:700;color:#86efac;line-height:1.3">'+(lastBk||'—')+'</div></div>'
+      +'<div data-sya="stat" data-eid="'+(c.pk_ha_uptime||'')+'" data-lbl="Uptime HA" style="flex:1;background:rgba(167,139,250,.07);border:1px solid rgba(167,139,250,.15);border-radius:10px;padding:6px 9px"><div style="font-size:8px;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">HA attivo da</div><div data-syv="ha-uptime" style="font-size:11px;font-weight:800;color:#a78bfa">'+(haUptime||'—')+'</div></div>'
+      +'<div data-sya="stat" data-eid="'+(c.pk_srv_uptime||'')+'" data-lbl="Uptime Server" style="flex:1;background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.15);border-radius:10px;padding:6px 9px"><div style="font-size:8px;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Server attivo da</div><div data-syv="srv-uptime" style="font-size:11px;font-weight:800;color:#818cf8">'+(srvUptimeRaw?uptimeText(h,c.pk_srv_uptime):'—')+'</div></div>'
+      +'<div data-sya="popup-entita" style="flex:1;background:rgba(56,189,248,.07);border:1px solid rgba(56,189,248,.15);border-radius:10px;padding:6px 9px;cursor:pointer"><div style="font-size:8px;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Entità ›</div><div data-syv="ent-count" style="font-size:11px;font-weight:800;color:#38bdf8">'+(entCount||'—')+'</div></div>'
+      +'<div style="flex:1.4;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.15);border-radius:10px;padding:6px 9px"><div style="font-size:8px;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Ultimo backup</div><div data-syv="last-bk" style="font-size:9px;font-weight:700;color:#86efac;line-height:1.3">'+(lastBk||'—')+'</div></div>'
       +'</div>'
-      +(haStart?'<div style="font-size:9px;color:rgba(255,255,255,.3);padding:3px 8px;background:rgba(255,255,255,.03);border-radius:6px;font-family:monospace">⏱ Avvio HA: <span data-syv="ha-start">'+haStart+'</span></div>':'')
+      +(haStart?'<div style="font-size:9px;color:#fff;padding:3px 8px;background:rgba(255,255,255,.03);border-radius:6px;font-family:monospace">⏱ Avvio HA: <span data-syv="ha-start">'+haStart+'</span></div>':'')
       +'</div>';
 
     const certCol=certS==null?'rgba(255,255,255,.3)':(certS.toLowerCase().includes('scad')||certS==='off'?'#ef4444':'#22c55e');
-    const aggSection='<div data-sya="popup-agg" style="background:'+(anyUpd?'rgba(249,115,22,.07)':'rgba(34,197,94,.05)')+';border:1px solid '+(anyUpd?'rgba(249,115,22,.2)':'rgba(34,197,94,.15)')+';border-radius:11px;padding:7px 10px;position:relative;z-index:1"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px"><div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.06em">🔄 Aggiornamenti</div><div style="font-size:9px;color:rgba(255,255,255,.25)">dettagli ›</div></div><div style="display:flex;gap:5px;align-items:stretch"><div data-syv="agg-badges" style="display:flex;gap:4px;flex:1">'+updBadge('Core',coreOk)+updBadge('Supv',supOk)+updBadge('Addon',addonOk)+updBadge('HACS',hacsOk)+'</div>'+(hacsN!=null&&hacsN>0?'<div style="font-size:9px;font-weight:700;color:#f97316;background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.2);border-radius:6px;padding:3px 7px;white-space:nowrap;display:flex;align-items:center">'+hacsN+' HACS</div>':'')+(c.pk_cert?'<div style="font-size:9px;font-weight:700;color:'+certCol+';background:'+certCol+'12;border:1px solid '+certCol+'30;border-radius:6px;padding:3px 7px;white-space:nowrap;display:flex;align-items:center">🔐 SSL</div>':'')+'</div></div>';
+    const aggSection='<div data-sya="popup-agg" style="background:'+(anyUpd?'rgba(249,115,22,.07)':'rgba(34,197,94,.05)')+';border:1px solid '+(anyUpd?'rgba(249,115,22,.2)':'rgba(34,197,94,.15)')+';border-radius:11px;padding:7px 10px;position:relative;z-index:1"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px"><div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em">🔄 Aggiornamenti</div><div style="font-size:9px;color:#fff">dettagli ›</div></div><div style="display:flex;gap:5px;align-items:stretch"><div data-syv="agg-badges" style="display:flex;gap:4px;flex:1">'+updBadge('Core',coreOk)+updBadge('Supv',supOk)+updBadge('Addon',addonOk)+updBadge('HACS',hacsOk)+'</div>'+(hacsN!=null&&hacsN>0?'<div style="font-size:9px;font-weight:700;color:#f97316;background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.2);border-radius:6px;padding:3px 7px;white-space:nowrap;display:flex;align-items:center">'+hacsN+' HACS</div>':'')+(c.pk_cert?'<div style="font-size:9px;font-weight:700;color:'+certCol+';background:'+certCol+'12;border:1px solid '+certCol+'30;border-radius:6px;padding:3px 7px;white-space:nowrap;display:flex;align-items:center">🔐 SSL</div>':'')+'</div></div>';
 
     const togglesSection='<div style="background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.18);border-radius:11px;padding:7px 10px;position:relative;z-index:1">'
-      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.06em">⚙ Automazioni</div><button data-sya="popup-notif" style="font-size:9px;color:rgba(255,255,255,.3);background:none;border:none;cursor:pointer;padding:0">configura ›</button></div>'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em">⚙ Automazioni</div><button data-sya="popup-notif" style="font-size:9px;color:#fff;background:none;border:none;cursor:pointer;padding:0">configura ›</button></div>'
       +'<div data-syv="toggles-row" style="display:flex;gap:5px;flex-wrap:wrap">'
       +togBtn('input_boolean.on_off_alert_ha','Alert',alertOn)
       +togBtn('input_boolean.ha_backup','Backup',backupOn)
@@ -356,8 +356,8 @@
     return POP_CSS+'<div style="width:100%;max-height:76vh;display:flex;flex-direction:column;background:#080b14;border:1px solid rgba('+rgb+',.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:syUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
       +'<div style="display:flex;align-items:center;gap:10px;padding:13px 15px 11px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
         +'<div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba('+rgb+',.15);border:1px solid rgba('+rgb+',.3)">'+icon+'</div>'
-        +'<div><div style="font-size:14px;font-weight:800;color:#fff">'+title+'</div><div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:1px">'+sub+'</div></div>'
-        +'<button id="'+closeId+'" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.07);border:none">✕</button>'
+        +'<div><div style="font-size:14px;font-weight:800;color:#fff">'+title+'</div><div style="font-size:11px;color:#fff;margin-top:1px">'+sub+'</div></div>'
+        +'<button id="'+closeId+'" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none">✕</button>'
       +'</div>'
       +'<div class="sypc" style="flex:1;overflow-y:auto;padding:13px 15px;display:flex;flex-direction:column;gap:0">'+content+'</div>'
       +'</div>';
@@ -366,20 +366,20 @@
   /* ── ENERGIA POPUP ── */
   function openEnergiaPopup(c) {
     const h=H();
-    function row(lbl,val,col){ return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)"><span style="font-size:12px;color:rgba(255,255,255,.5)">'+lbl+'</span><span style="font-size:13px;font-weight:800;color:'+(col||'#fbbf24')+'">'+val+'</span></div>'; }
+    function row(lbl,val,col){ return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)"><span style="font-size:12px;color:#fff">'+lbl+'</span><span style="font-size:13px;font-weight:800;color:'+(col||'#fbbf24')+'">'+val+'</span></div>'; }
     const pwV=num(S(h,c.pk_power));
     const enIeri=Attr(h,c.pk_en_oggi,'last_period');
     const enMeseP=Attr(h,c.pk_en_mese,'last_period');
     const enAnnoP=Attr(h,c.pk_en_anno,'last_period');
-    const content='<div style="background:rgba(249,115,22,.1);border-radius:12px;padding:12px 14px;text-align:center;margin-bottom:10px"><div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Potenza Attuale</div><div style="font-size:28px;font-weight:900;color:#fb923c">'+(pwV==null?'—':pwV.toFixed(0)+' W')+'</div></div>'
-      +'<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Energia</div>'
+    const content='<div style="background:rgba(249,115,22,.1);border-radius:12px;padding:12px 14px;text-align:center;margin-bottom:10px"><div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Potenza Attuale</div><div style="font-size:28px;font-weight:900;color:#fb923c">'+(pwV==null?'—':pwV.toFixed(0)+' W')+'</div></div>'
+      +'<div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Energia</div>'
       +row('Oggi',fmtKwh(S(h,c.pk_en_oggi)),'#fdba74')
       +row('Ieri',fmtKwh(enIeri),'rgba(255,255,255,.4)')
       +row('Questo mese',fmtKwh(S(h,c.pk_en_mese)),'#fdba74')
       +row('Mese precedente',fmtKwh(enMeseP),'rgba(255,255,255,.4)')
       +row('Questo anno',fmtKwh(S(h,c.pk_en_anno)),'#fdba74')
       +row('Anno precedente',fmtKwh(enAnnoP),'rgba(255,255,255,.4)')
-      +'<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 4px">Costi (€)</div>'
+      +'<div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 4px">Costi (€)</div>'
       +row('Oggi',fmtEur(S(h,c.pk_co_oggi)),'#fbbf24')
       +row('Ieri',fmtEur(S(h,c.pk_co_ieri)),'rgba(255,255,255,.4)')
       +row('Questo mese',fmtEur(S(h,c.pk_co_mese)),'#fbbf24')
@@ -397,7 +397,7 @@
     const hacsN=S(h,c.pk_hacs),certS=c.pk_cert?S(h,c.pk_cert):null;
     const content=badge('Core HA',coreS==='Aggiornato',coreS)+badge('Supervisor',supS==='Aggiornato',supS)+badge('Add-on',addonS==='Aggiornati',addonS)+badge('HACS',hacsS==='Aggiornato',hacsS)
       +(hacsN&&parseInt(hacsN)>0?'<div style="padding:8px 12px;border-radius:10px;background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.2);font-size:11px;color:#fdba74;margin-bottom:6px">'+hacsN+' aggiornamenti HACS disponibili</div>':'')
-      +(certS!=null?'<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:10px;background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.2)"><span style="font-size:11px;color:rgba(255,255,255,.7)">🔐 Certificato SSL</span><span style="font-size:11px;font-weight:800;color:#38bdf8">'+certS+'</span></div>':'');
+      +(certS!=null?'<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:10px;background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.2)"><span style="font-size:11px;color:#fff">🔐 Certificato SSL</span><span style="font-size:11px;font-weight:800;color:#38bdf8">'+certS+'</span></div>':'');
     mkOv(popShell('🔄','56,189,248','Aggiornamenti','Stato sistema HA','ag-close',content),'ag-close');
   }
 
@@ -408,15 +408,15 @@
     const total=S(h,c.pk_entita);
     const keys=['sensor','automation','binary_sensor','switch','light','input_boolean','input_number','input_datetime','input_select','script','media_player','camera','cover','climate','device_tracker','group','scene','zone'];
     let rows='';
-    keys.forEach(function(k){ if(attrs[k]!=null) rows+='<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)"><span style="font-size:12px;color:rgba(255,255,255,.5)">'+k+'</span><span style="font-size:12px;font-weight:700;color:#38bdf8">'+attrs[k]+'</span></div>'; });
-    const content='<div style="text-align:center;margin-bottom:10px"><div style="font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em">Totale entità</div><div style="font-size:32px;font-weight:900;color:#38bdf8">'+(total||'—')+'</div></div>'+rows;
+    keys.forEach(function(k){ if(attrs[k]!=null) rows+='<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)"><span style="font-size:12px;color:#fff">'+k+'</span><span style="font-size:12px;font-weight:700;color:#38bdf8">'+attrs[k]+'</span></div>'; });
+    const content='<div style="text-align:center;margin-bottom:10px"><div style="font-size:9px;color:#fff;text-transform:uppercase;letter-spacing:.06em">Totale entità</div><div style="font-size:32px;font-weight:900;color:#38bdf8">'+(total||'—')+'</div></div>'+rows;
     mkOv(popShell('📊','56,189,248','Entità Home Assistant','Distribuzione per dominio','ent-close',content),'ent-close');
   }
 
   /* ── STORIA POPUP ── */
   function openHistPopup(entityId,label) {
     if(!entityId) return;
-    const content='<div id="sh-stats" style="display:flex;gap:8px;margin-bottom:10px"></div><div id="sh-chart" style="min-height:120px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.3);font-size:12px">Caricamento dati…</div>';
+    const content='<div id="sh-stats" style="display:flex;gap:8px;margin-bottom:10px"></div><div id="sh-chart" style="min-height:120px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px">Caricamento dati…</div>';
     mkOv(popShell('📈','251,191,36',label,'Ultime 24 ore','sh-close',content),'sh-close');
     const now=new Date(),start=new Date(now-86400000);
     callApi('GET','history/period/'+start.toISOString()+'?filter_entity_id='+entityId+'&end_time='+now.toISOString()).then(function(data){
@@ -427,7 +427,7 @@
         const pts=series.map(function(s){ return parseFloat(s.state); }).filter(function(v){ return !isNaN(v); });
         if(!pts.length){ chartEl.textContent='Nessun dato disponibile'; return; }
         const minV=Math.min(...pts),maxV=Math.max(...pts),cur=pts[pts.length-1];
-        if(statsEl){ function st(l,v,col){ return '<div style="flex:1;background:rgba(255,255,255,.05);border-radius:10px;padding:8px 10px;text-align:center"><div style="font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">'+l+'</div><div style="font-size:14px;font-weight:800;color:'+col+'">'+v.toFixed(1)+'</div></div>'; } statsEl.innerHTML=st('Min',minV,'#38bdf8')+st('Attuale',cur,'#fbbf24')+st('Max',maxV,'#ef4444'); }
+        if(statsEl){ function st(l,v,col){ return '<div style="flex:1;background:rgba(255,255,255,.05);border-radius:10px;padding:8px 10px;text-align:center"><div style="font-size:9px;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">'+l+'</div><div style="font-size:14px;font-weight:800;color:'+col+'">'+v.toFixed(1)+'</div></div>'; } statsEl.innerHTML=st('Min',minV,'#38bdf8')+st('Attuale',cur,'#fbbf24')+st('Max',maxV,'#ef4444'); }
         chartEl.innerHTML=histSVG(pts,minV,maxV,400,120,'#fbbf24','shg'+Date.now());
       } catch(e){ chartEl.textContent='Errore'; }
     });
@@ -441,7 +441,7 @@
     function togR(id,lbl){
       const on=isOn(h,id);
       return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
-        +'<span style="font-size:12px;color:rgba(255,255,255,.65)">'+lbl+'</span>'
+        +'<span style="font-size:12px;color:#fff">'+lbl+'</span>'
         +'<button data-sya="ntog" data-eid="'+id+'" style="padding:3px 12px;border-radius:99px;border:1px solid '+(on?'rgba(34,197,94,.5)':'rgba(255,255,255,.2)')+';background:'+(on?'rgba(34,197,94,.15)':'rgba(255,255,255,.06)')+';color:'+(on?'#86efac':'rgba(255,255,255,.4)')+';font-size:10px;font-weight:700;cursor:pointer">'+(on?'ON':'OFF')+'</button>'
         +'</div>';
     }
@@ -449,20 +449,20 @@
       const on=isOn(h,boolId); const v=S(h,numId);
       return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
         +'<button data-sya="ntog" data-eid="'+boolId+'" style="padding:3px 10px;border-radius:99px;border:1px solid '+(on?'rgba(34,197,94,.5)':'rgba(255,255,255,.2)')+';background:'+(on?'rgba(34,197,94,.12)':'rgba(255,255,255,.06)')+';color:'+(on?'#86efac':'rgba(255,255,255,.4)')+';font-size:10px;font-weight:700;cursor:pointer">'+lbl+'</button>'
-        +(numId?'<div style="display:flex;align-items:center;gap:4px"><span style="font-size:10px;color:rgba(255,255,255,.3)">soglia</span><input type="number" data-sya="set-num" data-eid="'+numId+'" value="'+(v||'')+'" min="0" max="100" step="1" style="width:54px;padding:3px 6px;border-radius:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fbbf24;font-size:12px;font-weight:700;text-align:center;outline:none"><span style="font-size:10px;color:rgba(255,255,255,.35);min-width:20px">'+un+'</span></div>':'')
+        +(numId?'<div style="display:flex;align-items:center;gap:4px"><span style="font-size:10px;color:#fff">soglia</span><input type="number" data-sya="set-num" data-eid="'+numId+'" value="'+(v||'')+'" min="0" max="100" step="1" style="width:54px;padding:3px 6px;border-radius:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fbbf24;font-size:12px;font-weight:700;text-align:center;outline:none"><span style="font-size:10px;color:#fff;min-width:20px">'+un+'</span></div>':'')
         +'</div>';
     }
     function numR(id,lbl,mn,mx,un){
       const v=S(h,id);
       return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
-        +'<span style="font-size:12px;color:rgba(255,255,255,.6)">'+lbl+'</span>'
-        +'<div style="display:flex;align-items:center;gap:5px"><input type="number" data-sya="set-num" data-eid="'+id+'" value="'+(v||'')+'" min="'+mn+'" max="'+mx+'" step="1" style="width:64px;padding:4px 7px;border-radius:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fbbf24;font-size:12px;font-weight:700;text-align:center;outline:none"><span style="font-size:11px;color:rgba(255,255,255,.4);min-width:24px">'+un+'</span></div>'
+        +'<span style="font-size:12px;color:#fff">'+lbl+'</span>'
+        +'<div style="display:flex;align-items:center;gap:5px"><input type="number" data-sya="set-num" data-eid="'+id+'" value="'+(v||'')+'" min="'+mn+'" max="'+mx+'" step="1" style="width:64px;padding:4px 7px;border-radius:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fbbf24;font-size:12px;font-weight:700;text-align:center;outline:none"><span style="font-size:11px;color:#fff;min-width:24px">'+un+'</span></div>'
         +'</div>';
     }
     function timeR(id,lbl){
       const v=S(h,id); const tval=v?v.substring(0,5):'';
       return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
-        +'<span style="font-size:12px;color:rgba(255,255,255,.6)">'+lbl+'</span>'
+        +'<span style="font-size:12px;color:#fff">'+lbl+'</span>'
         +'<input type="time" data-sya="set-time" data-eid="'+id+'" value="'+tval+'" style="padding:4px 8px;border-radius:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#a78bfa;font-size:12px;font-weight:700;outline:none;cursor:pointer">'
         +'</div>';
     }
@@ -548,8 +548,8 @@
     const html=POP_CSS+'<div style="width:100%;max-height:84vh;display:flex;flex-direction:column;background:#080b14;border:1px solid rgba(139,92,246,.3);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);animation:syUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
       +'<div style="display:flex;align-items:center;gap:10px;padding:13px 15px 11px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
         +'<div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.3)">🔔</div>'
-        +'<div><div style="font-size:14px;font-weight:800;color:#fff">Notifiche & Automazioni</div><div style="font-size:11px;color:rgba(255,255,255,.4)">Configurazione completa pkg</div></div>'
-        +'<button id="nf-close" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.07);border:none">✕</button>'
+        +'<div><div style="font-size:14px;font-weight:800;color:#fff">Notifiche & Automazioni</div><div style="font-size:11px;color:#fff">Configurazione completa pkg</div></div>'
+        +'<button id="nf-close" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none">✕</button>'
       +'</div>'
       +tabBar
       +'<div class="sypc" style="flex:1;overflow-y:auto;padding:0 15px 14px">'+tabs+'</div>'
@@ -687,16 +687,16 @@
       +'<div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(139,92,246,.32);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:sySlideUp .22s cubic-bezier(.32,1.12,.56,1)">'
         +'<div style="display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
           +'<div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);flex-shrink:0">🖥️</div>'
-          +'<div><div style="font-size:14px;font-weight:800">Configura Mini-PC</div><div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px">'+card.id+'</div></div>'
-          +'<button id="sy-hdr-close" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.07);border:none">✕</button>'
+          +'<div><div style="font-size:14px;font-weight:800">Configura Mini-PC</div><div style="font-size:11px;color:#fff;margin-top:1px">'+card.id+'</div></div>'
+          +'<button id="sy-hdr-close" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none">✕</button>'
         +'</div>'
         +'<div class="fcc" style="display:flex;flex:1;overflow:hidden;min-height:0">'
           +'<div class="fcf" style="width:420px;flex-shrink:0;overflow-y:auto;padding:14px 16px;border-right:1px solid rgba(255,255,255,.07);scrollbar-width:none">'+formHtml+'</div>'
           +'<div class="fcp" style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);scrollbar-width:none">'
-            +'<div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em">Anteprima live</div>'
+            +'<div style="font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.07em">Anteprima live</div>'
             +'<div style="border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08)"><div id="sy-prev-inner"></div></div>'
             +'<div style="padding-top:12px;border-top:1px solid rgba(255,255,255,.08)">'
-              +'<div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Dimensioni card</div>'
+              +'<div style="font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Dimensioni card</div>'
               +'<div style="display:flex;align-items:center;gap:8px;margin-top:8px"><span style="font-size:11px;font-weight:700;color:#fff;width:72px;flex-shrink:0">Altezza</span><input type="range" id="sy-cardscale" min="20" max="100" step="5" value="'+cardScaleV+'" style="flex:1;cursor:pointer;accent-color:#fbbf24;height:4px"><span id="sy-cardscale-lbl" style="font-size:12px;font-weight:800;color:#fbbf24;width:64px;text-align:right;flex-shrink:0">'+(cardScaleV>=100?'Auto (100%)':cardScaleV+'%')+'</span></div>'
               +'<div style="display:flex;align-items:center;gap:8px;margin-top:8px"><span style="font-size:11px;font-weight:700;color:#fff;width:72px;flex-shrink:0">Larghezza</span><input type="range" id="sy-cardw" min="20" max="100" step="5" value="'+cardWV+'" style="flex:1;cursor:pointer;accent-color:#fbbf24;height:4px"><span id="sy-cardw-lbl" style="font-size:12px;font-weight:800;color:#fbbf24;width:64px;text-align:right;flex-shrink:0">'+(cardWV>=100?'Auto (100%)':cardWV+'%')+'</span></div>'
             +'</div>'

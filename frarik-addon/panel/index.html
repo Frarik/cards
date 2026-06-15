@@ -11,8 +11,8 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@400;600;700;800;900&family=Nunito:wght@400;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="./assets/index-CHfrZs3z.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-ByynuKlV.css">
+  <script type="module" crossorigin src="./assets/index-DLu879V_.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-CRXUeLqW.css">
 </head>
 <body>
 
@@ -24,7 +24,7 @@
 
 <!-- CONN OVERLAY -->
 <div id="cov"><div class="spin"></div><div id="cmsg">Connessione a Home Assistant…</div>
-  <button id="cov-skip" style="display:none;margin-top:10px;padding:8px 20px;border-radius:20px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);font-size:11px;font-weight:600;cursor:pointer" data-action="_covSkip">Continua senza connessione</button></div>
+  <button id="cov-skip" style="display:none;margin-top:10px;padding:8px 20px;border-radius:20px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:11px;font-weight:600;cursor:pointer" data-action="_covSkip">Continua senza connessione</button></div>
 
 <!-- ENTITY MODAL -->
 <div class="mbg off" id="emod">
@@ -507,7 +507,7 @@
       <!-- LEFT: header-bar items (stesso sistema della card header-bar) -->
       <div id="hdr-left">
         <div class="hbar-inner" id="hdr-bar-inner" data-id="__hdrbar__"></div>
-        <button id="hdr-bar-edit" data-action="openHBM_HDR" title="Configura elementi header" style="align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;font-size:13px;color:rgba(255,255,255,.4);border:1px dashed rgba(255,255,255,.25);background:none;flex-shrink:0;transition:all .15s"><i class="mdi mdi-pencil-outline"></i></button>
+        <button id="hdr-bar-edit" data-action="openHBM_HDR" title="Configura elementi header" style="align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;font-size:13px;color:#fff;border:1px dashed rgba(255,255,255,.25);background:none;flex-shrink:0;transition:all .15s"><i class="mdi mdi-pencil-outline"></i></button>
       </div>
       <!-- page-tabs rimane nel DOM per renderPageTabs() ma nascosto -->
       <div id="page-tabs" style="display:none"></div>
@@ -981,11 +981,11 @@
   <div style="text-align:center;margin-bottom:28px">
     <img src="./logo-v2.png?v=1.1.93" alt="Frarik Dashboard" style="height:72px;width:auto;object-fit:contain;filter:drop-shadow(0 0 24px rgba(99,102,241,.6));margin-bottom:14px;display:block;margin-left:auto;margin-right:auto">
     <div style="font-size:20px;font-weight:900;letter-spacing:1px;color:#fff">Frarik <span style="color:#a5b4fc">Dashboard</span></div>
-    <div style="font-size:12px;color:rgba(255,255,255,.35);margin-top:5px;letter-spacing:.5px">Inserisci la tua chiave per accedere</div>
+    <div style="font-size:12px;color:#fff;margin-top:5px;letter-spacing:.5px">Inserisci la tua chiave per accedere</div>
   </div>
   <!-- Card -->
   <div style="background:rgba(255,255,255,.04);border:1px solid rgba(99,102,241,.3);border-radius:20px;padding:28px;width:100%;max-width:420px;box-shadow:0 0 60px rgba(99,102,241,.12)">
-    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">Chiave di licenza</div>
+    <div style="font-size:11px;font-weight:700;color:#fff;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">Chiave di licenza</div>
     <input id="lic-input" type="text" placeholder="FRKD-XXXX-XXXX-XXXX" maxlength="19"
       style="width:100%;background:rgba(0,0,0,.35);border:1px solid rgba(99,102,241,.3);color:#f97316;border-radius:12px;padding:15px;font-size:18px;font-weight:700;letter-spacing:4px;text-align:center;font-family:monospace;outline:none;text-transform:uppercase;box-sizing:border-box">
     <button id="lic-btn" style="width:100%;margin-top:12px;background:linear-gradient(135deg,#6366f1,#818cf8);color:#fff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.5px">Attiva licenza</button>
@@ -993,26 +993,32 @@
     <!-- Separatore -->
     <div style="display:flex;align-items:center;gap:10px;margin:18px 0 14px">
       <div style="flex:1;height:1px;background:rgba(255,255,255,.07)"></div>
-      <span style="font-size:10px;color:rgba(255,255,255,.25);font-weight:600">oppure</span>
+      <span style="font-size:10px;color:#fff;font-weight:600">oppure</span>
       <div style="flex:1;height:1px;background:rgba(255,255,255,.07)"></div>
     </div>
     <!-- Acquisto -->
     <div style="text-align:center">
-      <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:10px">Non hai ancora una chiave?</div>
+      <div style="font-size:12px;color:#fff;margin-bottom:10px">Non hai ancora una chiave?</div>
       <a href="https://frarik-license.frarik.workers.dev/portal" target="_blank"
         style="display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:12px;background:linear-gradient(135deg,rgba(251,191,36,.15),rgba(251,191,36,.08));border:1px solid rgba(251,191,36,.35);color:#fbbf24;font-size:13px;font-weight:800;text-decoration:none;letter-spacing:.3px">
         💎 Acquista Premium
       </a>
     </div>
   </div>
-  <div style="margin-top:16px;font-size:10px;color:rgba(255,255,255,.2)">Frarik Dashboard · Fratech</div>
+  <div style="margin-top:16px;font-size:10px;color:#fff">Frarik Dashboard · Fratech</div>
 </div>
 <!-- CONFIRM DIALOG -->
-<div id="confirm-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:20000;display:none;align-items:center;justify-content:center">
-  <div style="background:#1a1f35;border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:24px 28px;max-width:340px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.7)">
-    <div id="confirm-msg" style="font-size:14px;color:rgba(255,255,255,.85);line-height:1.5;margin-bottom:20px;text-align:center"></div>
-    <div style="display:flex;gap:10px;justify-content:center">
-      <button id="confirm-cancel" style="flex:1;padding:9px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:rgba(255,255,255,.6);font-size:13px;cursor:pointer">Annulla</button>
+<style>@keyframes confirmSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style>
+<div id="confirm-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:20000;align-items:flex-end;backdrop-filter:blur(4px)">
+  <div style="width:100%;background:#0a0816;border:1px solid rgba(139,92,246,.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);padding:20px 18px 24px;animation:confirmSlideUp .22s cubic-bezier(.32,1.12,.56,1)">
+    <div class="shdr" style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <div class="sico" style="width:36px;height:36px;border-radius:10px;background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.3);display:flex;align-items:center;justify-content:center;font-size:18px">⚠️</div>
+      <div style="flex:1"><div class="stit" style="font-size:14px;font-weight:800">Conferma</div></div>
+      <button id="confirm-cancel-x" style="width:32px;height:32px;border:none;border-radius:9px;background:rgba(255,255,255,.1);color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>
+    <div id="confirm-msg" style="font-size:13px;color:#fff;line-height:1.5;margin-bottom:18px"></div>
+    <div style="display:flex;gap:10px">
+      <button id="confirm-cancel" style="flex:1;padding:9px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:#fff;font-size:13px;cursor:pointer">Annulla</button>
       <button id="confirm-ok" style="flex:1;padding:9px;background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.4);border-radius:10px;color:#f87171;font-size:13px;font-weight:700;cursor:pointer">Elimina</button>
     </div>
   </div>
@@ -1206,7 +1212,7 @@
         </div>
       </div>
       <div id="jsst-panel-load" style="display:none">
-        <div style="background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:11px;color:rgba(255,255,255,.6);line-height:1.7">
+        <div style="background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:11px;color:#fff;line-height:1.7">
           📁 <b>Trascina un file <code>.js</code></b> qui sotto, oppure clicca per selezionarlo.<br>
           Il file deve esportare <code style="color:#fbbf24">window.FratechCards = window.FratechCards || {};</code> e registrare la card con un ID univoco.
         </div>
@@ -1338,52 +1344,52 @@
       <div style="width:48px;height:48px;border-radius:14px;background:rgba(251,191,36,.14);border:1px solid rgba(251,191,36,.3);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">💎</div>
       <div style="flex:1">
         <div style="font-size:19px;font-weight:800;color:#fff;letter-spacing:-.3px">Frarik Premium</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.45);margin-top:2px">Sblocca l'esperienza completa di Frarik Dashboard</div>
+        <div style="font-size:12px;color:#fff;margin-top:2px">Sblocca l'esperienza completa di Frarik Dashboard</div>
       </div>
       <button class="mx" data-action="closePremiumPage" style="flex-shrink:0">✕</button>
     </div>
     <!-- hero badge -->
     <div style="margin:20px 24px 0;padding:16px 20px;border-radius:14px;background:linear-gradient(135deg,rgba(251,191,36,.12),rgba(251,191,36,.04));border:1px solid rgba(251,191,36,.2);text-align:center">
       <div style="font-size:13px;font-weight:700;color:#fbbf24;letter-spacing:.6px;text-transform:uppercase;margin-bottom:4px">✦ Accesso Anticipato</div>
-      <div style="font-size:12px;color:rgba(255,255,255,.5)">Il sistema di pagamento è in preparazione. Registra il tuo interesse e sarai tra i primi a essere contattato.</div>
+      <div style="font-size:12px;color:#fff">Il sistema di pagamento è in preparazione. Registra il tuo interesse e sarai tra i primi a essere contattato.</div>
     </div>
     <!-- features grid -->
     <div style="padding:20px 24px 0;display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)">
         <div style="font-size:20px;margin-bottom:6px">🌟</div>
         <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:3px">Card Esclusive</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.4)">Accesso a card avanzate non disponibili nel piano gratuito</div>
+        <div style="font-size:11px;color:#fff">Accesso a card avanzate non disponibili nel piano gratuito</div>
       </div>
       <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)">
         <div style="font-size:20px;margin-bottom:6px">⚡</div>
         <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:3px">Aggiornamenti Prioritari</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.4)">Ricevi le nuove funzionalità prima di tutti gli altri</div>
+        <div style="font-size:11px;color:#fff">Ricevi le nuove funzionalità prima di tutti gli altri</div>
       </div>
       <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)">
         <div style="font-size:20px;margin-bottom:6px">🛡️</div>
         <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:3px">Supporto Dedicato</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.4)">Assistenza prioritaria via canale diretto Fratech</div>
+        <div style="font-size:11px;color:#fff">Assistenza prioritaria via canale diretto Fratech</div>
       </div>
       <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)">
         <div style="font-size:20px;margin-bottom:6px">🎨</div>
         <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:3px">Temi Premium</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.4)">Palette di colori e stili esclusivi per la dashboard</div>
+        <div style="font-size:11px;color:#fff">Palette di colori e stili esclusivi per la dashboard</div>
       </div>
       <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)">
         <div style="font-size:20px;margin-bottom:6px">📊</div>
         <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:3px">Analytics Avanzati</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.4)">Grafici storici e statistiche dettagliate per ogni entità</div>
+        <div style="font-size:11px;color:#fff">Grafici storici e statistiche dettagliate per ogni entità</div>
       </div>
       <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)">
         <div style="font-size:20px;margin-bottom:6px">🔮</div>
         <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:3px">Funzioni Future</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.4)">Accesso anticipato a tutte le feature in arrivo</div>
+        <div style="font-size:11px;color:#fff">Accesso anticipato a tutte le feature in arrivo</div>
       </div>
     </div>
     <!-- pricing placeholder -->
     <div style="margin:20px 24px 0;padding:20px;border-radius:14px;background:rgba(251,191,36,.06);border:1px dashed rgba(251,191,36,.3);text-align:center">
       <div style="font-size:28px;font-weight:900;color:#fbbf24;letter-spacing:-1px">Prezzo <span style="font-size:16px;font-weight:600;color:rgba(251,191,36,.6)">da definire</span></div>
-      <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:4px">Il prezzo definitivo sarà comunicato al lancio ufficiale</div>
+      <div style="font-size:11px;color:#fff;margin-top:4px">Il prezzo definitivo sarà comunicato al lancio ufficiale</div>
       <div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
         <span style="padding:4px 12px;border-radius:20px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.25);font-size:11px;color:#fbbf24;font-weight:600">Pagamento singolo</span>
         <span style="padding:4px 12px;border-radius:20px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.25);font-size:11px;color:#fbbf24;font-weight:600">Abbonamento mensile</span>
@@ -1393,7 +1399,7 @@
     <!-- interest form -->
     <div style="margin:20px 24px;padding:20px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08)">
       <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px">📧 Registra il tuo interesse</div>
-      <div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:14px">Ti contatteremo non appena il Premium sarà disponibile</div>
+      <div style="font-size:11px;color:#fff;margin-bottom:14px">Ti contatteremo non appena il Premium sarà disponibile</div>
       <div style="display:flex;gap:8px">
         <input id="prem-interest-email" type="email" placeholder="La tua email…" style="flex:1;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#fff;font-size:12px;outline:none">
         <button id="prem-interest-btn" data-action="_premSendInterest" style="padding:10px 18px;border-radius:10px;background:linear-gradient(135deg,#fbbf24,#f59e0b);border:none;color:#0a0816;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap">Invia ✉️</button>

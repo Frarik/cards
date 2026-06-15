@@ -1,4 +1,4 @@
-/* frarik-version: 1.11 */
+﻿/* frarik-version: 1.11 */
 (function () {
   'use strict';
 
@@ -56,8 +56,8 @@
   }
   function battHtml(pct, batEntity) {
     if (pct !== null) return '<span style="color:'+battColor(pct)+'">🔋 '+Math.round(pct)+'%</span>';
-    if (batEntity)    return '<span style="color:rgba(255,255,255,.2)">🔋 —</span>';
-    return '<span style="color:rgba(255,255,255,.18)">🔌</span>';
+    if (batEntity)    return '<span style="color:#fff">🔋 —</span>';
+    return '<span style="color:#fff">🔌</span>';
   }
 
   /* ── Pulizia ── */
@@ -337,7 +337,7 @@
 
     if (!cams.length) {
       return '<div id="'+rid+'" style="display:flex;flex-direction:column;align-items:center;justify-content:center;'
-        +'height:100%;gap:12px;padding:20px;text-align:center;color:rgba(255,255,255,.3)">'
+        +'height:100%;gap:12px;padding:20px;text-align:center;color:#fff">'
         +'<div style="font-size:40px;opacity:.35">📷</div>'
         +'<div style="font-size:13px;font-weight:700">Nessuna telecamera</div>'
         +'<div style="font-size:11px;line-height:1.6;opacity:.7">Attiva modifica → ✏️ per aggiungere le telecamere</div>'
@@ -356,7 +356,7 @@
           /* mount() sovrascrive subito con _showCamStream — questo è solo il flash iniziale */
           +(initThumb
             ? '<img src="'+eh(initThumb)+'" style="width:100%;height:100%;object-fit:cover;display:block" />'
-            : '<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:rgba(255,255,255,.15)">'
+            : '<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff">'
               +'<div style="font-size:36px">📷</div>'
               +'<div style="font-size:10px;font-weight:700;letter-spacing:.05em">CONNESSIONE STREAM...</div>'
               +'</div>'
@@ -364,7 +364,7 @@
         +'</div>'
         +'<div data-cam-unavail style="position:absolute;inset:0;background:rgba(0,0,0,.72);'
           +'display:'+(isUnavail?'flex':'none')+';align-items:center;justify-content:center">'
-          +'<span style="font-size:10px;color:rgba(255,255,255,.3);font-weight:800;letter-spacing:.07em;text-transform:uppercase">Non disponibile</span>'
+          +'<span style="font-size:10px;color:#fff;font-weight:800;letter-spacing:.07em;text-transform:uppercase">Non disponibile</span>'
         +'</div>'
         +'<div style="position:absolute;bottom:0;left:0;right:0;padding:26px 10px 9px;'
           +'background:linear-gradient(transparent,rgba(0,0,0,.82))">'
@@ -485,7 +485,7 @@
 
     function buildFormInner() {
       return '<div id="cam-cfg-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">'
-          +(cams.length ? cams.map(buildRow).join('') : '<div style="font-size:12px;color:rgba(255,255,255,.3);text-align:center;padding:16px">Nessuna telecamera — clicca "Aggiungi" per iniziare</div>')
+          +(cams.length ? cams.map(buildRow).join('') : '<div style="font-size:12px;color:#fff;text-align:center;padding:16px">Nessuna telecamera — clicca "Aggiungi" per iniziare</div>')
         +'</div>'
         +'<button id="cam-cfg-add" style="width:100%;padding:9px;border-radius:9px;border:1px dashed rgba(129,140,248,.4);background:rgba(129,140,248,.07);color:#818cf8;cursor:pointer;font-size:12px;font-weight:700;margin-bottom:14px">+ Aggiungi telecamera</button>'
         +'<div style="display:flex;gap:8px">'
@@ -499,16 +499,16 @@
         +'<div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(139,92,246,.32);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:camSlideUp .22s cubic-bezier(.32,1.12,.56,1)">'
           +'<div style="display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
             +'<div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);color:#fbbf24;flex-shrink:0">📷</div>'
-            +'<div><div style="font-size:14px;font-weight:800">Configura Telecamere</div><div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px">'+card.id+'</div></div>'
-            +'<button id="cam-hdr-close" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.07);border:none">✕</button>'
+            +'<div><div style="font-size:14px;font-weight:800">Configura Telecamere</div><div style="font-size:11px;color:#fff;margin-top:1px">'+card.id+'</div></div>'
+            +'<button id="cam-hdr-close" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none">✕</button>'
           +'</div>'
           +'<div class="frk-cfg-cols" style="display:flex;flex:1;overflow:hidden;min-height:0">'
             +'<div class="frk-form-col" style="width:380px;flex-shrink:0;overflow-y:auto;padding:14px 16px;border-right:1px solid rgba(255,255,255,.07);scrollbar-width:none" id="cam-form-col">'+buildFormInner()+'</div>'
             +'<div class="frk-prev-col" style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);scrollbar-width:none">'
-              +'<div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em">Anteprima live</div>'
+              +'<div style="font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.07em">Anteprima live</div>'
               +'<div style="border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08)"><div id="cam-prev-inner"></div></div>'
               +'<div style="padding-top:12px;border-top:1px solid rgba(255,255,255,.08)">'
-                +'<div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Dimensioni card</div>'
+                +'<div style="font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Dimensioni card</div>'
                 +'<div style="display:flex;align-items:center;gap:8px;margin-top:8px">'
                   +'<span style="font-size:11px;font-weight:700;color:#fff;width:72px;flex-shrink:0">Altezza</span>'
                   +'<input type="range" id="cam-cardscale" min="20" max="100" step="5" value="'+cardScaleV+'" style="flex:1;cursor:pointer;accent-color:#fbbf24;height:4px">'
@@ -601,7 +601,7 @@
     }
     function rebuildList() {
       var list=ov.querySelector('#cam-cfg-list');
-      list.innerHTML=cams.length?cams.map(buildRow).join(''):'<div style="font-size:12px;color:rgba(255,255,255,.3);text-align:center;padding:16px">Nessuna telecamera — clicca "Aggiungi" per iniziare</div>';
+      list.innerHTML=cams.length?cams.map(buildRow).join(''):'<div style="font-size:12px;color:#fff;text-align:center;padding:16px">Nessuna telecamera — clicca "Aggiungi" per iniziare</div>';
       bindAllCombos();
     }
     bindAllCombos();

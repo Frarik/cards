@@ -1,4 +1,4 @@
-/**
+﻿/**
  * differenziata-card.js — Raccolta Differenziata Lovelace Card
  * Entità: input_text x7, input_datetime, input_boolean x2, sensor
  */
@@ -152,7 +152,7 @@ button[data-action="toggleSettings"] { display: var(--fgear, none); }
   border:1px solid rgba(255,255,255,.05);
   background:rgba(255,255,255,.02);
 }
-.day-chip.today { border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.07); }
+.day-chip.today { border-color:#fff;background:rgba(255,255,255,.07); }
 .day-chip-lbl { font-size:9px;font-weight:700;color:var(--secondary-text-color,#64748b); }
 .day-chip.today .day-chip-lbl { color:var(--primary-text-color,#f1f5f9); }
 .day-chip-bin { display:flex;align-items:center;justify-content:center; }
@@ -175,7 +175,7 @@ button[data-action="toggleSettings"] { display: var(--fgear, none); }
 .presets { display:flex;gap:2px;flex-shrink:0; }
 .preset-btn {
   width:19px;height:19px;border-radius:4px;border:none;
-  font-size:8px;font-weight:800;cursor:pointer;color:rgba(255,255,255,.9);
+  font-size:8px;font-weight:800;cursor:pointer;color:#fff;
   display:flex;align-items:center;justify-content:center;
   transition:opacity .12s,transform .1s;flex-shrink:0;
 }

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * person-card.js v1.12 — FratechStore Card "Persona"
  * Foto entità + tracker · sfondo Google Maps con segnaposto live.
  * Affianco al nome: A casa (verde) / Fuori casa (rosso) / nome zona HA (azzurro) + "X min fa".
@@ -175,7 +175,7 @@
 #${rid} .pc-pill{display:inline-flex;align-items:center;padding:3px 12px;border-radius:999px;
   font-size:12px;font-weight:800;line-height:1;white-space:nowrap;background:color-mix(in srgb,var(--pc-col) 22%,transparent);
   border:1px solid var(--pc-col);color:var(--pc-col);}
-#${rid} .pc-ago{font-size:12px;color:rgba(255,255,255,.62);margin-top:5px;white-space:nowrap;}
+#${rid} .pc-ago{font-size:12px;color:#fff;margin-top:5px;white-space:nowrap;}
 `;
   }
 
@@ -257,7 +257,7 @@
     const allIds = Object.keys(states).sort();
     const stInp = 'width:100%;padding:9px 11px;border-radius:9px;background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.15);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none';
     const stDrop = 'position:absolute;left:0;right:0;top:100%;z-index:10;max-height:180px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 9px 9px;display:none;scrollbar-width:none';
-    const stLbl = 'display:block;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.45);margin-bottom:3px';
+    const stLbl = 'display:block;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#fff;margin-bottom:3px';
     var _fll=JSON.parse(localStorage.getItem('_frk_layout_'+(card.id||''))||'{}');
     let cardScaleV=_fll.cardScale!=null?_fll.cardScale:(c.cardScale||100), cardWV=_fll.cardW!=null?_fll.cardW:(c.cardW||100);
     let _prevTimer = null;
@@ -268,8 +268,8 @@
         border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:pcSlideUp .22s cubic-bezier(.32,1.12,.56,1)">
         <div style="display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">
           <div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);color:#fbbf24;flex-shrink:0">👤</div>
-          <div><div style="font-size:14px;font-weight:800">Configura card persona</div><div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px">${card.id}</div></div>
-          <button id="pccfg-hdr-close" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.07);border:none">✕</button>
+          <div><div style="font-size:14px;font-weight:800">Configura card persona</div><div style="font-size:11px;color:#fff;margin-top:1px">${card.id}</div></div>
+          <button id="pccfg-hdr-close" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none">✕</button>
         </div>
         <div class="frk-cfg-cols" style="display:flex;flex:1;overflow:hidden;min-height:0">
           <div class="frk-form-col" style="width:380px;flex-shrink:0;overflow-y:auto;padding:14px 16px;border-right:1px solid rgba(255,255,255,.07);scrollbar-width:none" id="pccfg-form-col">
@@ -285,17 +285,17 @@
                 placeholder="device_tracker.xxx" style="${stInp}">
               <div id="pccfg-gps-d" style="${stDrop}"></div>
             </div>
-            <div style="font-size:10px;color:rgba(255,255,255,.3);margin-bottom:16px;line-height:1.5">Se vuoto, la posizione viene presa dalla person stessa o dal tracker attivo.</div>
+            <div style="font-size:10px;color:#fff;margin-bottom:16px;line-height:1.5">Se vuoto, la posizione viene presa dalla person stessa o dal tracker attivo.</div>
             <div style="display:flex;gap:8px;margin-top:4px">
               <button id="pccfg-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button>
               <button id="pccfg-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#fbbf24;color:#0a0816">Salva</button>
             </div>
           </div>
           <div class="frk-prev-col" style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);scrollbar-width:none">
-            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em">Anteprima live</div>
+            <div style="font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.07em">Anteprima live</div>
             <div style="border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08)"><div id="pccfg-prev-inner"></div></div>
             <div style="padding-top:12px;border-top:1px solid rgba(255,255,255,.08)">
-              <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Dimensioni card</div>
+              <div style="font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Dimensioni card</div>
               <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
                 <span style="font-size:11px;font-weight:700;color:#fff;width:72px;flex-shrink:0">Altezza</span>
                 <input type="range" id="pccfg-cardscale" min="20" max="100" step="5" value="${cardScaleV}" style="flex:1;cursor:pointer;accent-color:#fbbf24;height:4px">

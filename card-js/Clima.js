@@ -1,4 +1,4 @@
-/* frarik-version: 2.21 */
+﻿/* frarik-version: 2.21 */
 (function () {
   'use strict';
 
@@ -200,14 +200,14 @@
       +'.shdr{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0;}'
       +'.sico{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);color:#fbbf24;flex-shrink:0;}'
       +'.stit{font-size:14px;font-weight:800;color:#fff;}'
-      +'.ssub{font-size:11px;color:rgba(255,255,255,.45);margin-top:1px;}'
-      +'.scls{margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.07);border:none;flex-shrink:0;}'
+      +'.ssub{font-size:11px;color:#fff;margin-top:1px;}'
+      +'.scls{margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none;flex-shrink:0;}'
       +'.scls:hover{background:rgba(255,255,255,.14);color:#fff;}'
       +'.hs-row{display:flex;gap:0;justify-content:space-around;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.07);}'
       +'.hs-item{text-align:center;}'
-      +'.hs-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);}'
+      +'.hs-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#fff;}'
       +'.hs-val{font-size:20px;font-weight:800;color:#fff;margin-top:3px;}'
-      +'.hload{padding:40px;text-align:center;color:rgba(255,255,255,.5);font-size:12px;}';
+      +'.hload{padding:40px;text-align:center;color:#fff;font-size:12px;}';
 
     host.shadowRoot.innerHTML = '<style>'+histCSS+'</style>'
       +'<div class="hov"><div class="hov-modal">'
@@ -344,19 +344,19 @@
   /* shared helpers used by all themes */
   function _panels(rid, entityId, mode, fanMode, swingMode, hvacModes, fanModes, swingModes, pw, selBtn) {
     const modePanel = '<div data-secpanel="mode" style="'+pw+'">'
-      +'<div style="font-size:9px;font-weight:800;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Modalità</div>'
+      +'<div style="font-size:9px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Modalità</div>'
       +'<div style="display:flex;gap:5px;flex-wrap:wrap">'
       +hvacModes.map(function(m){ return selBtn(entityId,'mode',m,mIcon(m)+' '+mLabel(m),mode===m,mColor(m)); }).join('')
       +'</div></div>';
     const fanPanel = fanModes.length>1
       ? '<div data-secpanel="fan" style="'+pw+'">'
-          +'<div style="font-size:9px;font-weight:800;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Ventola</div>'
+          +'<div style="font-size:9px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Ventola</div>'
           +'<div style="display:flex;gap:5px;flex-wrap:wrap">'
           +fanModes.map(function(m){ return selBtn(entityId,'fan',m,fLabel(m),fanMode===m,'#38bdf8'); }).join('')
           +'</div></div>' : '';
     const swingPanel = swingModes.length>1
       ? '<div data-secpanel="swing" style="'+pw+'">'
-          +'<div style="font-size:9px;font-weight:800;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Oscillazione</div>'
+          +'<div style="font-size:9px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Oscillazione</div>'
           +'<div style="display:flex;gap:5px;flex-wrap:wrap">'
           +swingModes.map(function(m){ return selBtn(entityId,'swing',m,sLabel(m),swingMode===m,'#a78bfa'); }).join('')
           +'</div></div>' : '';
@@ -378,15 +378,15 @@
       +'#'+rid+' .cb:active{filter:brightness(.8);transform:scale(.94);}'
       +'#'+rid+' .tog{flex:1;padding:8px 5px;border-radius:12px;border:none;cursor:pointer;font-size:9.5px;'
         +'font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;'
-        +'background:#222226;color:rgba(255,255,255,.3);'
+        +'background:#222226;color:#fff;'
         +'box-shadow:3px 3px 8px rgba(0,0,0,.5),-1px -1px 4px rgba(255,255,255,.025);'
         +'transition:all .18s;}'
-      +'#'+rid+' .tog:hover{color:rgba(255,255,255,.7);}'
+      +'#'+rid+' .tog:hover{color:#fff;}'
       +'</style>';
     function selBtn(eId,action,val,label,active,col2){
       var bs=active
         ?'background:'+col2+'22;color:'+col2+';border:1px solid '+col2+'44;box-shadow:0 0 10px '+col2+'33,inset 0 1px 0 rgba(255,255,255,.05);'
-        :'background:#1e1e22;color:rgba(255,255,255,.35);border:1px solid rgba(255,255,255,.06);box-shadow:2px 2px 6px rgba(0,0,0,.45),-1px -1px 3px rgba(255,255,255,.02);';
+        :'background:#1e1e22;color:#fff;border:1px solid rgba(255,255,255,.06);box-shadow:2px 2px 6px rgba(0,0,0,.45),-1px -1px 3px rgba(255,255,255,.02);';
       return '<button class="cb" data-cid="'+eId+'" data-action="'+action+'" data-val="'+val+'" style="padding:5px 10px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;'+bs+'">'+label+'</button>';
     }
     var pw='display:none;flex-direction:column;gap:6px;background:#1a1a1e;border-radius:12px;padding:10px;border:1px solid rgba(255,255,255,.06);box-shadow:inset 2px 2px 8px rgba(0,0,0,.5);';
@@ -409,7 +409,7 @@
       +'<div data-clm-flap data-rid="'+rid+'" style="position:absolute;width:0;height:0;overflow:hidden;transform:'+flapInitTransform+'"></div>'
       // top row
       +'<div style="display:flex;align-items:center;justify-content:space-between">'
-        +'<div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.55);letter-spacing:.01em">'+nm+'</div>'
+        +'<div style="font-size:13px;font-weight:700;color:#fff;letter-spacing:.01em">'+nm+'</div>'
         +iconTogs
       +'</div>'
       // main pill
@@ -427,22 +427,22 @@
         +(sensorT
           ?'<div data-a="stat" data-eid="'+tempEntity+'" data-attr="" data-lbl="Temperatura" style="cursor:pointer;flex-shrink:0;background:#0e0e11;border-radius:20px;padding:5px 10px;'
             +'box-shadow:inset 2px 2px 7px rgba(0,0,0,.65),inset -1px -1px 3px rgba(255,255,255,.02);'
-            +'font-size:12px;font-weight:700;font-family:\'Courier New\',monospace;color:rgba(255,255,255,.38)">'+sensorT+'°</div>'
+            +'font-size:12px;font-weight:700;font-family:\'Courier New\',monospace;color:#fff">'+sensorT+'°</div>'
           :'')
         // LED display + controls (flex:1)
         +'<div style="flex:1;background:#0d0d10;border-radius:14px;padding:7px 12px;'
           +'box-shadow:inset 3px 3px 10px rgba(0,0,0,.7),inset -1px -1px 3px rgba(255,255,255,.02);'
           +'display:flex;align-items:center;justify-content:space-between;gap:6px">'
-          +'<button class="cb" data-cid="'+entityId+'" data-action="temp-down" style="font-size:26px;color:rgba(255,255,255,.3);line-height:1;padding:0 4px">−</button>'
+          +'<button class="cb" data-cid="'+entityId+'" data-action="temp-down" style="font-size:26px;color:#fff;line-height:1;padding:0 4px">−</button>'
           +'<div data-clm-led data-clm-temp style="flex:1;text-align:center;font-family:\'Courier New\',monospace;font-size:26px;font-weight:700;letter-spacing:2px;'
             +'color:'+LED+';text-shadow:'+(isOn?'0 0 18px #38bdf8,0 0 40px rgba(56,189,248,.3)':'none')+';">'+(isOn?targetTemp+'°':'──')
           +'</div>'
-          +'<button class="cb" data-cid="'+entityId+'" data-action="temp-up" style="font-size:26px;color:rgba(255,255,255,.3);line-height:1;padding:0 4px">+</button>'
+          +'<button class="cb" data-cid="'+entityId+'" data-action="temp-up" style="font-size:26px;color:#fff;line-height:1;padding:0 4px">+</button>'
         +'</div>'
         // humidity pill
         +(sensorH
           ?'<div data-a="stat" data-eid="'+humEntity+'" data-attr="" data-lbl="Umidità" style="cursor:pointer;flex-shrink:0;background:#0e0e11;border-radius:20px;padding:5px 9px;'
-            +'box-shadow:inset 2px 2px 7px rgba(0,0,0,.65);font-size:11px;font-weight:700;font-family:\'Courier New\',monospace;color:rgba(255,255,255,.35)">'+sensorH+'%</div>'
+            +'box-shadow:inset 2px 2px 7px rgba(0,0,0,.65);font-size:11px;font-weight:700;font-family:\'Courier New\',monospace;color:#fff">'+sensorH+'%</div>'
           :'')
       +'</div>'
       // ambient glow
@@ -469,15 +469,15 @@
       +'#'+rid+' .cb:active{transform:scale(.93);}'
       +'#'+rid+' .tog{flex:1;padding:8px 4px;border-radius:12px;border:none;cursor:pointer;font-size:10px;'
         +'font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;'
-        +'background:#222226;color:rgba(255,255,255,.3);'
+        +'background:#222226;color:#fff;'
         +'box-shadow:3px 3px 9px rgba(0,0,0,.55),-1px -1px 4px rgba(255,255,255,.025);'
         +'transition:all .18s;}'
-      +'#'+rid+' .tog:hover{color:rgba(255,255,255,.7);}'
+      +'#'+rid+' .tog:hover{color:#fff;}'
       +'</style>';
     function selBtn(eId,action,val,label,active,col2){
       var bs=active
         ?'background:'+col2+'1e;color:'+col2+';border:1px solid '+col2+'44;box-shadow:0 0 10px '+col2+'33,3px 3px 8px rgba(0,0,0,.4);'
-        :'background:#1e1e22;color:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.06);box-shadow:2px 2px 7px rgba(0,0,0,.5),-1px -1px 3px rgba(255,255,255,.02);';
+        :'background:#1e1e22;color:#fff;border:1px solid rgba(255,255,255,.06);box-shadow:2px 2px 7px rgba(0,0,0,.5),-1px -1px 3px rgba(255,255,255,.02);';
       return '<button class="cb" data-cid="'+eId+'" data-action="'+action+'" data-val="'+val+'" style="padding:6px 10px;border-radius:9px;font-size:11px;font-weight:700;cursor:pointer;'+bs+'">'+label+'</button>';
     }
     var pw='display:none;flex-direction:column;gap:6px;background:#1a1a1e;border-radius:12px;padding:10px;border:1px solid rgba(255,255,255,.05);box-shadow:inset 2px 2px 8px rgba(0,0,0,.5);';
@@ -486,7 +486,7 @@
       +hvacModes.map(function(m){
         var act=mode===m, c2=mColor(m);
         return '<button class="cb" data-cid="'+entityId+'" data-action="mode" data-val="'+m+'" style="flex:1;min-width:0;padding:8px 4px;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;'
-          +(act?'background:'+c2+'1e;color:'+c2+';border:1px solid '+c2+'44;box-shadow:0 0 10px '+c2+'33,3px 3px 8px rgba(0,0,0,.4);':'background:#1e1e22;color:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.06);box-shadow:2px 2px 7px rgba(0,0,0,.5);')
+          +(act?'background:'+c2+'1e;color:'+c2+';border:1px solid '+c2+'44;box-shadow:0 0 10px '+c2+'33,3px 3px 8px rgba(0,0,0,.4);':'background:#1e1e22;color:#fff;border:1px solid rgba(255,255,255,.06);box-shadow:2px 2px 7px rgba(0,0,0,.5);')
           +'"><span style="font-size:16px">'+mIcon(m)+'</span><span>'+mLabel(m)+'</span></button>';
       }).join('')
     +'</div>';
@@ -505,29 +505,29 @@
           +'background:'+(isOn?'#14532d':'#1e1a1e')+';'
           +'box-shadow:'+(isOn?'0 0 14px rgba(34,197,94,.4),3px 3px 8px rgba(0,0,0,.5)':'inset 2px 2px 7px rgba(0,0,0,.6),-1px -1px 3px rgba(255,255,255,.025)')+';'
           +'color:'+(isOn?'#4ade80':'rgba(239,68,68,.6)')+'">⏻</div>'
-        +'<div style="flex:1;font-size:13px;font-weight:700;color:rgba(255,255,255,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+nm+'</div>'
+        +'<div style="flex:1;font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+nm+'</div>'
         +'<div style="display:flex;gap:5px;align-items:center;flex-shrink:0">'
           +(syncCol?'<div style="width:6px;height:6px;border-radius:50%;background:'+syncCol+';box-shadow:0 0 5px '+syncCol+'"></div>':'')
-          +(sensorT?'<div data-a="stat" data-eid="'+tempEntity+'" data-attr="" data-lbl="Temperatura" style="cursor:pointer;background:#0e0e11;border-radius:20px;padding:4px 9px;box-shadow:inset 2px 2px 6px rgba(0,0,0,.6);font-size:11px;font-weight:700;font-family:\'Courier New\',monospace;color:rgba(255,255,255,.38)">🌡 '+sensorT+'°</div>':'')
-          +(sensorH?'<div data-a="stat" data-eid="'+humEntity+'" data-attr="" data-lbl="Umidità" style="cursor:pointer;background:#0e0e11;border-radius:20px;padding:4px 9px;box-shadow:inset 2px 2px 6px rgba(0,0,0,.6);font-size:11px;font-weight:700;font-family:\'Courier New\',monospace;color:rgba(255,255,255,.35)">💧 '+sensorH+'%</div>':'')
+          +(sensorT?'<div data-a="stat" data-eid="'+tempEntity+'" data-attr="" data-lbl="Temperatura" style="cursor:pointer;background:#0e0e11;border-radius:20px;padding:4px 9px;box-shadow:inset 2px 2px 6px rgba(0,0,0,.6);font-size:11px;font-weight:700;font-family:\'Courier New\',monospace;color:#fff">🌡 '+sensorT+'°</div>':'')
+          +(sensorH?'<div data-a="stat" data-eid="'+humEntity+'" data-attr="" data-lbl="Umidità" style="cursor:pointer;background:#0e0e11;border-radius:20px;padding:4px 9px;box-shadow:inset 2px 2px 6px rgba(0,0,0,.6);font-size:11px;font-weight:700;font-family:\'Courier New\',monospace;color:#fff">💧 '+sensorH+'%</div>':'')
         +'</div>'
       +'</div>'
       // main inset display
       +'<div style="background:#0d0d10;border-radius:16px;'
         +'box-shadow:inset 4px 4px 14px rgba(0,0,0,.72),inset -1px -1px 4px rgba(255,255,255,.02);'
         +'padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px">'
-        +'<button class="cb" data-cid="'+entityId+'" data-action="temp-down" style="font-size:30px;font-weight:300;color:rgba(255,255,255,.25);line-height:1;padding:0 6px">−</button>'
+        +'<button class="cb" data-cid="'+entityId+'" data-action="temp-down" style="font-size:30px;font-weight:300;color:#fff;line-height:1;padding:0 6px">−</button>'
         +'<div data-clm-led data-clm-temp style="flex:1;text-align:center;font-family:\'Courier New\',monospace;font-size:32px;font-weight:700;letter-spacing:3px;'
           +'color:'+LED+';text-shadow:'+(isOn?'0 0 18px '+mCol+',0 0 40px '+mCol+'44':'none')+';'
           +(isOn?'animation:'+rid+'ind 2.5s ease-in-out infinite;':'')+'">'+( isOn?targetTemp+'°':'──')
         +'</div>'
-        +'<button class="cb" data-cid="'+entityId+'" data-action="temp-up" style="font-size:30px;font-weight:300;color:rgba(255,255,255,.25);line-height:1;padding:0 6px">+</button>'
+        +'<button class="cb" data-cid="'+entityId+'" data-action="temp-up" style="font-size:30px;font-weight:300;color:#fff;line-height:1;padding:0 6px">+</button>'
       +'</div>'
       // fan + swing toggles (icon style)
       +(fanModes.length>1||swingModes.length>1?'<div style="display:flex;gap:7px">'
         +'<button class="tog" data-action="toggle" data-sec="fan" style="flex:none;width:40px;height:40px;padding:0;border-radius:12px;font-size:18px"><span>💨</span></button>'
         +(swingModes.length>1?'<button class="tog" data-action="toggle" data-sec="swing" style="flex:none;width:40px;height:40px;padding:0;border-radius:12px;font-size:18px"><span>↕</span></button>':'')
-        +'<div style="flex:1;display:flex;align-items:center;justify-content:flex-end;gap:5px;font-size:10px;color:rgba(255,255,255,.28);font-weight:600">'
+        +'<div style="flex:1;display:flex;align-items:center;justify-content:flex-end;gap:5px;font-size:10px;color:#fff;font-weight:600">'
           +(isOn?'💨 '+fLabel(fanMode)+(swingOn?' · ↕ att.':''):'')
         +'</div>'
         +'<div data-secpanel="fan" style="'+pw+'display:none"></div>'
@@ -556,15 +556,15 @@
       +'#'+rid+' .cb:active{transform:scale(.92);}'
       +'#'+rid+' .tog{flex:1;padding:8px 5px;border-radius:11px;border:none;cursor:pointer;font-size:9.5px;'
         +'font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;'
-        +'background:#1e1e22;color:rgba(255,255,255,.28);'
+        +'background:#1e1e22;color:#fff;'
         +'box-shadow:3px 3px 8px rgba(0,0,0,.5),-1px -1px 4px rgba(255,255,255,.025);'
         +'transition:all .18s;}'
-      +'#'+rid+' .tog:hover{color:rgba(255,255,255,.65);}'
+      +'#'+rid+' .tog:hover{color:#fff;}'
       +'</style>';
     function selBtn(eId,action,val,label,active,col2){
       var bs=active
         ?'background:'+col2+'1e;color:'+col2+';border:1px solid '+col2+'44;box-shadow:0 0 10px '+col2+'33,3px 3px 8px rgba(0,0,0,.4);'
-        :'background:#1e1e22;color:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.06);box-shadow:2px 2px 7px rgba(0,0,0,.5),-1px -1px 3px rgba(255,255,255,.02);';
+        :'background:#1e1e22;color:#fff;border:1px solid rgba(255,255,255,.06);box-shadow:2px 2px 7px rgba(0,0,0,.5),-1px -1px 3px rgba(255,255,255,.02);';
       return '<button class="cb" data-cid="'+eId+'" data-action="'+action+'" data-val="'+val+'" style="padding:5px 9px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;'+bs+'">'+label+'</button>';
     }
     var pw='display:none;flex-direction:column;gap:6px;background:#1a1a1e;border-radius:12px;padding:10px;border:1px solid rgba(255,255,255,.05);box-shadow:inset 2px 2px 8px rgba(0,0,0,.5);';
@@ -585,10 +585,10 @@
       // top: name + status dot + sensors
       +'<div style="display:flex;align-items:center;gap:8px">'
         +'<div style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:'+(isOn?mCol:'rgba(255,255,255,.15)')+';'+(isOn?'box-shadow:0 0 8px '+mCol+';animation:'+rid+'pulse 2s ease-in-out infinite;':'')+'"></div>'
-        +'<div style="flex:1;font-size:12px;font-weight:700;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+nm+'</div>'
+        +'<div style="flex:1;font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+nm+'</div>'
         +(syncCol?'<div style="width:6px;height:6px;border-radius:50%;flex-shrink:0;background:'+syncCol+';box-shadow:0 0 5px '+syncCol+'"></div>':'')
-        +(sensorT?'<div data-a="stat" data-eid="'+tempEntity+'" data-attr="" data-lbl="Temperatura" style="cursor:pointer;flex-shrink:0;background:#0e0e11;border-radius:20px;padding:3px 8px;box-shadow:inset 2px 2px 6px rgba(0,0,0,.6);font-size:10px;font-weight:700;font-family:\'Courier New\',monospace;color:rgba(255,255,255,.35)">🌡 '+sensorT+'°</div>':'')
-        +(sensorH?'<div data-a="stat" data-eid="'+humEntity+'" data-attr="" data-lbl="Umidità" style="cursor:pointer;flex-shrink:0;background:#0e0e11;border-radius:20px;padding:3px 8px;box-shadow:inset 2px 2px 6px rgba(0,0,0,.6);font-size:10px;font-weight:700;font-family:\'Courier New\',monospace;color:rgba(255,255,255,.32)">💧 '+sensorH+'%</div>':'')
+        +(sensorT?'<div data-a="stat" data-eid="'+tempEntity+'" data-attr="" data-lbl="Temperatura" style="cursor:pointer;flex-shrink:0;background:#0e0e11;border-radius:20px;padding:3px 8px;box-shadow:inset 2px 2px 6px rgba(0,0,0,.6);font-size:10px;font-weight:700;font-family:\'Courier New\',monospace;color:#fff">🌡 '+sensorT+'°</div>':'')
+        +(sensorH?'<div data-a="stat" data-eid="'+humEntity+'" data-attr="" data-lbl="Umidità" style="cursor:pointer;flex-shrink:0;background:#0e0e11;border-radius:20px;padding:3px 8px;box-shadow:inset 2px 2px 6px rgba(0,0,0,.6);font-size:10px;font-weight:700;font-family:\'Courier New\',monospace;color:#fff">💧 '+sensorH+'%</div>':'')
       +'</div>'
       // main pill: power + display + expand
       +'<div style="border-radius:999px;background:#222226;'
@@ -600,16 +600,16 @@
           +'box-shadow:'+(isOn?'0 0 12px rgba(34,197,94,.35),inset 0 1px 0 rgba(255,255,255,.07)':'inset 2px 2px 7px rgba(0,0,0,.6),-1px -1px 3px rgba(255,255,255,.02)')+';'
           +'color:'+(isOn?'#4ade80':'rgba(239,68,68,.55)')+'">⏻</div>'
         // sensor temp small
-        +(sensorT?'<div style="flex-shrink:0;background:#0e0e11;border-radius:16px;padding:4px 8px;box-shadow:inset 2px 2px 6px rgba(0,0,0,.65);font-size:11px;font-weight:700;font-family:\'Courier New\',monospace;color:rgba(255,255,255,.35)">'+sensorT+'°</div>':'')
+        +(sensorT?'<div style="flex-shrink:0;background:#0e0e11;border-radius:16px;padding:4px 8px;box-shadow:inset 2px 2px 6px rgba(0,0,0,.65);font-size:11px;font-weight:700;font-family:\'Courier New\',monospace;color:#fff">'+sensorT+'°</div>':'')
         // LED display
         +'<div style="flex:1;background:#0d0d10;border-radius:14px;padding:6px 10px;'
           +'box-shadow:inset 3px 3px 10px rgba(0,0,0,.7),inset -1px -1px 3px rgba(255,255,255,.018);'
           +'display:flex;align-items:center;justify-content:space-between">'
-          +'<button class="cb" data-cid="'+entityId+'" data-action="temp-down" style="font-size:24px;color:rgba(255,255,255,.25);line-height:1;padding:0 3px">−</button>'
+          +'<button class="cb" data-cid="'+entityId+'" data-action="temp-down" style="font-size:24px;color:#fff;line-height:1;padding:0 3px">−</button>'
           +'<div data-clm-led data-clm-temp style="flex:1;text-align:center;font-family:\'Courier New\',monospace;font-size:24px;font-weight:700;letter-spacing:2px;'
             +'color:'+(isOn?mCol:'#1a2535')+';text-shadow:'+(isOn?'0 0 16px '+mCol+',0 0 36px '+mCol+'44':'none')+'">'+( isOn?targetTemp+'°':'──')
           +'</div>'
-          +'<button class="cb" data-cid="'+entityId+'" data-action="temp-up" style="font-size:24px;color:rgba(255,255,255,.25);line-height:1;padding:0 3px">+</button>'
+          +'<button class="cb" data-cid="'+entityId+'" data-action="temp-up" style="font-size:24px;color:#fff;line-height:1;padding:0 3px">+</button>'
         +'</div>'
       +'</div>'
       // mode/fan info strip
@@ -811,8 +811,8 @@
       +'</style>';
     const indRight = '<div style="display:flex;gap:5px;align-items:center">'
       +(syncCol ? '<div title="Sync aletta" style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:'+syncCol+';box-shadow:0 0 6px '+syncCol+'cc"></div>' : '')
-      +(sensorT ? '<div data-a="stat" data-eid="'+c.tempEntity+'" data-attr="" data-lbl="Temperatura" style="cursor:pointer;font-size:10px;font-weight:700;color:rgba(255,255,255,.65);background:rgba(255,255,255,.09);padding:2px 7px;border-radius:99px;transition:filter .12s" onmouseover="this.style.filter=\'brightness(1.3)\'" onmouseout="this.style.filter=\'\'">🌡 '+sensorT+'°</div>' : '')
-      +(sensorH ? '<div data-a="stat" data-eid="'+c.humEntity+'" data-attr="" data-lbl="Umidità" style="cursor:pointer;font-size:10px;font-weight:700;color:rgba(255,255,255,.65);background:rgba(255,255,255,.09);padding:2px 7px;border-radius:99px;transition:filter .12s" onmouseover="this.style.filter=\'brightness(1.3)\'" onmouseout="this.style.filter=\'\'">💧 '+sensorH+'%</div>' : '')
+      +(sensorT ? '<div data-a="stat" data-eid="'+c.tempEntity+'" data-attr="" data-lbl="Temperatura" style="cursor:pointer;font-size:10px;font-weight:700;color:#fff;background:rgba(255,255,255,.09);padding:2px 7px;border-radius:99px;transition:filter .12s" onmouseover="this.style.filter=\'brightness(1.3)\'" onmouseout="this.style.filter=\'\'">🌡 '+sensorT+'°</div>' : '')
+      +(sensorH ? '<div data-a="stat" data-eid="'+c.humEntity+'" data-attr="" data-lbl="Umidità" style="cursor:pointer;font-size:10px;font-weight:700;color:#fff;background:rgba(255,255,255,.09);padding:2px 7px;border-radius:99px;transition:filter .12s" onmouseover="this.style.filter=\'brightness(1.3)\'" onmouseout="this.style.filter=\'\'">💧 '+sensorH+'%</div>' : '')
       +'</div>';
     const acBody = '<div style="position:relative">'
       +'<div style="border-radius:15px;overflow:hidden;'
@@ -1017,7 +1017,7 @@
 
     const stInp ='width:100%;padding:9px 11px;border-radius:10px;background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.15);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none';
     const stDrop='position:absolute;left:0;right:0;top:100%;z-index:20;max-height:150px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 10px 10px;display:none;scrollbar-width:none;-ms-overflow-style:none';
-    const stLbl ='font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.45);margin-bottom:4px;display:block';
+    const stLbl ='font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#fff;margin-bottom:4px;display:block';
     const stBase='width:100%;padding:9px 11px;border-radius:10px;background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.15);font-size:13px;box-sizing:border-box;cursor:pointer';
 
     var _prevTimer = null;
@@ -1075,7 +1075,7 @@
       +'</div>'
       +'<div style="margin-bottom:14px;padding:12px;background:rgba(255,255,255,.04);border-radius:12px;border:1px solid rgba(255,255,255,.08)">'
         +'<div style="display:flex;align-items:center;gap:10px">'+mkTog('cl-swsensor-tog',!!c.useSwingSensor)
-        +'<div><div style="font-size:12px;font-weight:700;color:#fff">Sensore aletta fisica</div><div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:1px">Pallino verde/rosso sync clima ↔ aletta</div></div></div>'
+        +'<div><div style="font-size:12px;font-weight:700;color:#fff">Sensore aletta fisica</div><div style="font-size:10px;color:#fff;margin-top:1px">Pallino verde/rosso sync clima ↔ aletta</div></div></div>'
         +'<div id="cl-swsensor-row" style="margin-top:10px;position:relative;display:'+(c.useSwingSensor?'block':'none')+'">'
           +'<input id="cl-swsensor" type="text" value="'+(c.swingSensor||'').replace(/"/g,'&quot;')+'" autocomplete="off" placeholder="binary_sensor.aletta_clima" style="'+stInp+'">'
           +'<div id="cl-swsensor-d" style="'+stDrop+'"></div></div>'
@@ -1086,7 +1086,7 @@
         +[['modern','Moderno','🔲'],['futuristic','Futuristico','🚀'],['classic','Classico','🎛'],['minimal','Minimal','◻']].map(function(t){
           var active=(c.theme||'modern')===t[0];
           return '<button data-cltheme="'+t[0]+'"'+(active?' data-selected="1"':'')+' style="flex:1;padding:7px 2px;border-radius:9px;cursor:pointer;font-size:10px;font-weight:700;text-align:center;'
-            +(active?'background:rgba(251,191,36,.2);color:#fbbf24;border:1px solid rgba(251,191,36,.4);':'background:rgba(255,255,255,.06);color:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.1);')
+            +(active?'background:rgba(251,191,36,.2);color:#fbbf24;border:1px solid rgba(251,191,36,.4);':'background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.1);')
             +'">'+t[2]+'<br>'+t[1]+'</button>';
         }).join('')
         +'</div>'
@@ -1098,12 +1098,12 @@
     +'</div>';
 
     const prevHTML = '<div class="frk-prev-col" style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);scrollbar-width:none;-ms-overflow-style:none">'
-      +'<div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em">Anteprima live</div>'
+      +'<div style="font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.07em">Anteprima live</div>'
       +'<div style="border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08)">'
         +'<div id="clcfg-prev-inner"></div>'
       +'</div>'
       +'<div style="padding-top:12px;border-top:1px solid rgba(255,255,255,.08)">'
-        +'<div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Dimensioni card</div>'
+        +'<div style="font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Dimensioni card</div>'
         +'<div style="display:flex;align-items:center;gap:8px;margin-top:8px">'
           +'<span style="font-size:11px;font-weight:700;color:#fff;width:72px;flex-shrink:0">Altezza</span>'
           +'<input type="range" id="clcfg-cardscale" min="20" max="100" step="5" value="'+cardScaleV+'" style="flex:1;cursor:pointer;accent-color:#fbbf24;height:4px">'
@@ -1122,8 +1122,8 @@
     ov.innerHTML='<style>@keyframes clSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}@media(max-width:600px){.frk-cfg-cols{flex-direction:column!important;overflow-y:auto!important;overflow-x:hidden!important}.frk-form-col{width:100%!important;border-right:none!important;border-bottom:1px solid rgba(255,255,255,.07)!important;overflow-y:visible!important;flex-shrink:0!important}.frk-prev-col{min-width:0!important;overflow-y:visible!important}}</style><div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:rgba(10,8,20,.98);border:1px solid rgba(139,92,246,.32);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:clSlideUp .22s cubic-bezier(.32,1.12,.56,1)">'
       +'<div style="display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
         +'<div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);color:#fbbf24;flex-shrink:0">❄️</div>'
-        +'<div><div style="font-size:14px;font-weight:800;color:#fff">Configura Climatizzatore</div><div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px">'+card.id+'</div></div>'
-        +'<button id="cl-hdr-close" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.07);border:none">✕</button>'
+        +'<div><div style="font-size:14px;font-weight:800;color:#fff">Configura Climatizzatore</div><div style="font-size:11px;color:#fff;margin-top:1px">'+card.id+'</div></div>'
+        +'<button id="cl-hdr-close" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none">✕</button>'
       +'</div>'
       +'<div class="frk-cfg-cols" style="display:flex;flex:1;overflow:hidden;min-height:0">'
         +formHTML+prevHTML

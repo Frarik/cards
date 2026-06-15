@@ -1,4 +1,4 @@
-/**
+﻿/**
  * irrigazione-card.js v2.1
  */
 
@@ -221,7 +221,7 @@ button[data-action="toggleSettings"] { display: var(--fgear, none); }
 }
 .atp-cell { background:#060e1c;padding:9px 8px;text-align:center; }
 .atp-val  { font-size:18px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.5px;line-height:1; }
-.atp-lbl  { font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.3);margin-top:3px; }
+.atp-lbl  { font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#fff;margin-top:3px; }
 
 /* ─ Info row ─ */
 .info-row   { display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(255,255,255,.06);border-top:1px solid rgba(255,255,255,.06); }
@@ -708,7 +708,7 @@ class IrrigazioneCard extends HTMLElement {
             <div class="stat-foot" style="${rubOn?'color:#3b82f6':''}">${rubOn?`${flusso.toFixed(1)} L/min`:'nessun flusso'}</div>
           </div>
           <!-- Tile 3: Sistema disattivato -->
-          <div class="stat" style="border-color:rgba(255,255,255,.07)">
+          <div class="stat" style="border-color:#fff">
             <div class="stat-lbl">Sistema</div>
             <div class="stat-body">
               <div class="sys-off">

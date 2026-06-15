@@ -1,4 +1,4 @@
-/* frarik-version: 1.5 */
+﻿/* frarik-version: 1.5 */
 /**
  * DoorsWindows.js — FratechStore card "Porte e Finestre"
  * Rileva automaticamente i sensori apertura (device_class door/window/garage_door/opening),
@@ -79,8 +79,8 @@
 #${rid} .dwc-row{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:10px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.18);}
 #${rid} .dwc-i{font-size:14px;}
 #${rid} .dwc-n{flex:1;min-width:0;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-#${rid} .dwc-t{font-size:10px;color:rgba(255,255,255,.5);flex-shrink:0;}
-#${rid} .dwc-empty{font-size:11px;color:rgba(255,255,255,.4);text-align:center;padding:10px;}
+#${rid} .dwc-t{font-size:10px;color:#fff;flex-shrink:0;}
+#${rid} .dwc-empty{font-size:11px;color:#fff;text-align:center;padding:10px;}
 `;
   }
 
@@ -104,12 +104,12 @@
     <div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(139,92,246,.32);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:dwSlideUp .22s cubic-bezier(.32,1.12,.56,1)">
       <div style="display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">
         <div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);color:#fbbf24;flex-shrink:0">🚪</div>
-        <div><div style="font-size:14px;font-weight:800">Porte e Finestre</div><div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px">${auto.length} sensori rilevati automaticamente</div></div>
-        <button id="dw-hdr-close" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.07);border:none">✕</button>
+        <div><div style="font-size:14px;font-weight:800">Porte e Finestre</div><div style="font-size:11px;color:#fff;margin-top:1px">${auto.length} sensori rilevati automaticamente</div></div>
+        <button id="dw-hdr-close" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none">✕</button>
       </div>
       <div class="frk-cfg-cols" style="display:flex;flex:1;overflow:hidden;min-height:0">
         <div class="frk-form-col" style="width:380px;flex-shrink:0;overflow-y:auto;padding:14px 16px;border-right:1px solid rgba(255,255,255,.07);scrollbar-width:none;display:flex;flex-direction:column;gap:10px">
-          <div style="font-size:11px;color:rgba(255,255,255,.4);line-height:1.5">Aggiungi sensori dalla lista o digitali. Lascia <b style="color:#fff">vuoto</b> per rilevamento automatico.</div>
+          <div style="font-size:11px;color:#fff;line-height:1.5">Aggiungi sensori dalla lista o digitali. Lascia <b style="color:#fff">vuoto</b> per rilevamento automatico.</div>
           <div style="position:relative">
             <input id="dw-pick" type="text" autocomplete="off" placeholder="Cerca e aggiungi un'entità…" style="${stInp}">
             <div id="dw-pick-d" style="${stDrop}"></div>
@@ -122,10 +122,10 @@
           </div>
         </div>
         <div class="frk-prev-col" style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);scrollbar-width:none">
-          <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em">Anteprima live</div>
+          <div style="font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.07em">Anteprima live</div>
           <div style="border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08)"><div id="dw-prev-inner"></div></div>
           <div style="padding-top:12px;border-top:1px solid rgba(255,255,255,.08)">
-            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Dimensioni card</div>
+            <div style="font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Dimensioni card</div>
             <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
               <span style="font-size:11px;font-weight:700;color:#fff;width:72px;flex-shrink:0">Altezza</span>
               <input type="range" id="dw-cardscale" min="20" max="100" step="5" value="${cardScaleV}" style="flex:1;cursor:pointer;accent-color:#fbbf24;height:4px">
