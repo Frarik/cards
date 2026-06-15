@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.73 — 2026-06-15
+
+### fix(settings/store): badge licenza grande + admin panel + preview card con stub config
+
+- **Badge licenza più grande**: occupa tutta la larghezza del pannello, emoji dino 90px, nome utente in evidenza (26px), dino come soprannome decorativo secondario
+- **Admin panel — nome utente**: le mini-preview mostrano il NOME dell'utente come testo principale, il nome del dinosauro come sottotitolo. Aggiunta terza card "Admin + Premium" che mostra il proprio nome
+- **Admin panel — 3 anteprime**: Standard (Marco Rossi / T-Rex), Premium (Giulia Bianchi / Brontosauro), Admin+Premium (tuo nome / Spinosauro)
+- **Admin = Premium**: la card Admin mostra "🛡️ Admin + Premium" per chiarire che Admin include l'accesso Premium
+- **Preview card store con stub config**: `_ghcLivePrev` usa `getStubConfig(hass, entities)` se disponibile, poi inietta automaticamente un'entità reale (sensor/light/switch/weather) per mostrare dati reali nell'anteprima
+
 ## 1.4.72 — 2026-06-15
 
 ### feat(settings): tab Licenza + Pannello Admin + overlay primo accesso rinnovato

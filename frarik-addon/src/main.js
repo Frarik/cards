@@ -1649,7 +1649,7 @@ function _ghcDesc(cardId, sha){
 }
 function _ghcLivePrev(host, cardId){
   const reg=window.FratechCardRegistry?.[cardId]; if(!reg) return;
-  host.innerHTML=''; // pulisce placeholder se c'era
+  host.innerHTML='';
   const PW=300, hw=host.clientWidth||190;
   const scale=(hw/PW).toFixed(3);
   const wrap=document.createElement('div');
@@ -1657,13 +1657,26 @@ function _ghcLivePrev(host, cardId){
   wrap.style.cssText=`width:${PW}px;transform:scale(${scale});transform-origin:0 0;position:absolute;top:0;left:0`;
   try{
     const tag=reg._tag||cardId;
+    const hass=_haHassObj();
     const cel=document.createElement(tag);
     cel.style.cssText='display:block;width:100%;';
     wrap.appendChild(cel);
     host.appendChild(wrap);
     requestAnimationFrame(()=>{
-      try{ if(typeof cel.setConfig==='function') cel.setConfig({type:'custom:'+tag}); }catch(e){}
-      requestAnimationFrame(()=>{ try{ cel.hass=_haHassObj(); }catch(e){} });
+      try{
+        if(typeof cel.setConfig==='function'){
+          // prova stub config del componente, poi fallback minimo
+          let cfg={type:'custom:'+tag};
+          try{ if(typeof cel.getStubConfig==='function'){ const stub=cel.getStubConfig(hass,Object.keys(hass?.states||{})); if(stub&&typeof stub==='object') cfg={...cfg,...stub}; } }catch(_){}
+          // se ancora manca entity/entityId, inietta il primo sensore disponibile
+          if(!cfg.entity&&!cfg.entityId&&hass?.states){
+            const ent=Object.keys(hass.states).find(k=>k.startsWith('sensor.')||k.startsWith('light.')||k.startsWith('switch.')||k.startsWith('weather.'));
+            if(ent){ cfg.entity=ent; cfg.entityId=ent; }
+          }
+          cel.setConfig(cfg);
+        }
+      }catch(e){}
+      requestAnimationFrame(()=>{ try{ cel.hass=hass; }catch(e){} });
     });
   }catch(e){ wrap.remove(); }
 }
@@ -10873,39 +10886,41 @@ function _licBadgeHtml({name,note,expires,key,dino,isPrem,isAdm}){
   const masked=key?(key.slice(0,5)+'****-****-'+key.slice(-4)):'—';
   const expFmt=expires&&expires!=='null'?new Date(isNaN(expires)?expires:parseInt(expires)).toLocaleDateString('it-IT',{day:'numeric',month:'short',year:'numeric'}):'Nessuna scadenza';
   const level=isAdm?'🛡️ Admin':isPrem?'💎 Premium':'⭐ Standard';
-  const upgBtn=(!isPrem&&!isAdm)?`<button data-action="openPremiumPage" style="flex:1;padding:9px;border-radius:10px;background:linear-gradient(135deg,rgba(251,191,36,.18),rgba(251,191,36,.08));border:1px solid rgba(251,191,36,.35);color:#fbbf24;font-size:11px;font-weight:800;cursor:pointer;letter-spacing:.3px">💎 Passa a Premium</button>`:'';
-  return `<div style="width:100%;max-width:360px;border-radius:20px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.55);background:linear-gradient(135deg,${dino.g1} 0%,${dino.g2} 100%);border:1px solid ${alpha(.25)};position:relative">
-  <div style="position:absolute;top:-20px;right:-20px;width:120px;height:120px;border-radius:50%;background:${alpha(.08)}"></div>
-  <div style="padding:20px 20px 10px;display:flex;align-items:flex-start;gap:14px;position:relative">
-    <div style="font-size:64px;line-height:1;filter:drop-shadow(0 4px 12px rgba(0,0,0,.5))">${dino.e}</div>
-    <div style="flex:1">
-      <div style="font-size:10px;font-weight:800;letter-spacing:2px;color:${alpha(.7)};text-transform:uppercase;margin-bottom:2px">Il tuo compagno</div>
-      <div style="font-size:18px;font-weight:900;color:#fff;letter-spacing:-.3px">${eh(dino.n)}</div>
-      <div style="font-size:11px;color:${alpha(.6)};margin-top:2px;font-style:italic">${eh(dino.d)}</div>
+  const upgBtn=(!isPrem&&!isAdm)?`<button data-action="openPremiumPage" style="width:100%;padding:12px;border-radius:12px;background:linear-gradient(135deg,rgba(251,191,36,.2),rgba(251,191,36,.06));border:1px solid rgba(251,191,36,.4);color:#fbbf24;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:.3px;margin-bottom:10px">💎 Passa a Premium</button>`:'';
+  return `<div style="width:100%;border-radius:24px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.6);background:linear-gradient(135deg,${dino.g1} 0%,${dino.g2} 100%);border:1px solid ${alpha(.3)};position:relative">
+  <!-- decorazioni sfondo -->
+  <div style="position:absolute;top:-30px;right:-30px;width:180px;height:180px;border-radius:50%;background:${alpha(.07)};pointer-events:none"></div>
+  <div style="position:absolute;bottom:-20px;left:-20px;width:120px;height:120px;border-radius:50%;background:${alpha(.05)};pointer-events:none"></div>
+  <!-- Header: nome utente + dinosauro + livello -->
+  <div style="padding:28px 28px 18px;display:flex;align-items:center;gap:20px;position:relative">
+    <!-- Dino come elemento decorativo laterale -->
+    <div style="font-size:90px;line-height:1;filter:drop-shadow(0 6px 18px rgba(0,0,0,.6));flex-shrink:0">${dino.e}</div>
+    <div style="flex:1;min-width:0">
+      <!-- NOME UTENTE come testo principale -->
+      <div style="font-size:11px;font-weight:800;letter-spacing:2px;color:${alpha(.6)};text-transform:uppercase;margin-bottom:4px">Abbonato</div>
+      <div style="font-size:26px;font-weight:900;color:#fff;letter-spacing:-.5px;line-height:1.1;word-break:break-word">${eh(name||'—')}</div>
+      <!-- Dino name come soprannome secondario -->
+      <div style="font-size:12px;color:${alpha(.5)};margin-top:5px;font-style:italic">${eh(dino.e)} ${eh(dino.n)} — ${eh(dino.d)}</div>
     </div>
-    <div style="padding:4px 10px;border-radius:20px;background:${alpha(.2)};border:1px solid ${alpha(.4)};font-size:10px;font-weight:800;color:${c};letter-spacing:.5px;white-space:nowrap">${level}</div>
+    <!-- Badge livello -->
+    <div style="padding:6px 14px;border-radius:22px;background:${alpha(.22)};border:1px solid ${alpha(.45)};font-size:12px;font-weight:800;color:${c};letter-spacing:.5px;white-space:nowrap;flex-shrink:0;align-self:flex-start">${level}</div>
   </div>
-  <div style="height:1px;background:${alpha(.15)};margin:0 20px"></div>
-  <div style="padding:14px 20px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <div>
-        <div style="font-size:10px;color:${alpha(.5)};font-weight:700;letter-spacing:.8px;text-transform:uppercase">Intestatario</div>
-        <div style="font-size:15px;font-weight:800;color:#fff;margin-top:2px">${eh(name||'—')}</div>
-      </div>
-      <div style="text-align:right">
-        <div style="font-size:10px;color:${alpha(.5)};font-weight:700;letter-spacing:.8px;text-transform:uppercase">Scadenza</div>
-        <div style="font-size:13px;font-weight:700;color:${c};margin-top:2px">${eh(expFmt)}</div>
-      </div>
+  <div style="height:1px;background:${alpha(.18)};margin:0 28px"></div>
+  <!-- Info scadenza + chiave -->
+  <div style="padding:18px 28px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <div style="font-size:11px;color:${alpha(.5)};font-weight:700;letter-spacing:.8px;text-transform:uppercase">Scadenza</div>
+      <div style="font-size:14px;font-weight:800;color:${c}">${eh(expFmt)}</div>
     </div>
-    <div style="display:flex;gap:8px;margin-top:4px">
-      ${upgBtn}
-      <button data-action="_epLicLogout" style="flex:1;padding:9px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.5);font-size:11px;font-weight:700;cursor:pointer">🔄 Cambia</button>
-    </div>
+    <div style="height:1px;background:${alpha(.1)};margin:12px 0"></div>
+    ${upgBtn}
+    <button data-action="_epLicLogout" style="width:100%;padding:11px;border-radius:12px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);color:rgba(255,255,255,.55);font-size:12px;font-weight:700;cursor:pointer">🔄 Cambia licenza</button>
   </div>
-  <div style="padding:10px 20px 14px;display:flex;align-items:center;gap:8px;border-top:1px solid ${alpha(.1)}">
-    <img src="./logo-v2.png?v=1.1.93" style="height:20px;width:auto;opacity:.55">
-    <span style="font-size:10px;color:${alpha(.4)};font-weight:700;letter-spacing:1px">FRARIK DASHBOARD</span>
-    <span style="margin-left:auto;font-size:9px;color:${alpha(.3)};font-family:monospace">${masked}</span>
+  <!-- Footer -->
+  <div style="padding:12px 28px 18px;display:flex;align-items:center;gap:10px;border-top:1px solid ${alpha(.1)}">
+    <img src="./logo-v2.png?v=1.1.93" style="height:22px;width:auto;opacity:.5">
+    <span style="font-size:11px;color:${alpha(.4)};font-weight:700;letter-spacing:1.2px">FRARIK DASHBOARD</span>
+    <span style="margin-left:auto;font-size:10px;color:${alpha(.3)};font-family:monospace">${masked}</span>
   </div>
 </div>`;
 }
@@ -10945,15 +10960,20 @@ function _epAdminPanelLoad(){
   let cardCount=0; try{ cardCount=(_jsStoreList()||[]).length; }catch(e){}
   const ver=document.getElementById('ep-ver-label')?.textContent||'—';
 
-  // mini badge standard preview
-  const stdDino=LIC_DINOS[0]; // T-Rex
-  const premDino=LIC_DINOS[1]; // Brontosauro
-  const miniCard=(dino,lvl,nm,exp,c2)=>`<div style="flex:1;border-radius:14px;overflow:hidden;background:linear-gradient(135deg,${dino.g1},${dino.g2});border:1px solid rgba(255,255,255,.08);padding:12px 14px">
-    <div style="font-size:36px;margin-bottom:4px">${dino.e}</div>
-    <div style="font-size:11px;font-weight:800;color:#fff">${dino.n}</div>
-    <div style="font-size:10px;color:rgba(255,255,255,.45);margin:2px 0 8px">${nm}</div>
-    <div style="display:inline-block;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,.1);font-size:9px;font-weight:800;color:${c2};margin-bottom:6px">${lvl}</div>
-    <div style="font-size:9px;color:rgba(255,255,255,.3)">Scad: ${exp}</div>
+  // mini badge preview — nome utente come testo principale, dino come decorazione
+  const stdDino=LIC_DINOS[0];   // T-Rex → Standard
+  const premDino=LIC_DINOS[1];  // Brontosauro → Premium
+  const admDino=LIC_DINOS[7];   // Spinosauro → Admin
+  const miniCard=(dino,lvl,nm,exp,c2)=>`<div style="border-radius:14px;overflow:hidden;background:linear-gradient(135deg,${dino.g1},${dino.g2});border:1px solid rgba(255,255,255,.1);padding:14px 16px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <div style="font-size:32px;line-height:1">${dino.e}</div>
+      <div>
+        <div style="font-size:13px;font-weight:900;color:#fff;line-height:1.2">${eh(nm)}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.38);margin-top:2px;font-style:italic">${dino.n}</div>
+      </div>
+    </div>
+    <div style="display:inline-block;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.12);font-size:10px;font-weight:800;color:${c2};margin-bottom:8px">${lvl}</div>
+    <div style="font-size:10px;color:rgba(255,255,255,.35)">Scad: ${exp}</div>
   </div>`;
 
   body.innerHTML=`
@@ -10973,14 +10993,18 @@ function _epAdminPanelLoad(){
     </div>
     <!-- Anteprime utenti -->
     <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Come vedono la licenza i tuoi utenti</div>
-    <div style="display:flex;gap:10px;margin-bottom:16px">
-      <div style="flex:1">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px">
+      <div>
         <div style="font-size:10px;color:rgba(255,255,255,.3);font-weight:700;margin-bottom:5px">⭐ Standard</div>
-        ${miniCard(stdDino,'⭐ Standard','Utente Frarik','Nessuna','#94a3b8')}
+        ${miniCard(stdDino,'⭐ Standard','Marco Rossi','Nessuna','#94a3b8')}
       </div>
-      <div style="flex:1">
+      <div>
         <div style="font-size:10px;color:rgba(255,255,255,.3);font-weight:700;margin-bottom:5px">💎 Premium</div>
-        ${miniCard(premDino,'💎 Premium','Utente Premium','✓ Attiva','#22c55e')}
+        ${miniCard(premDino,'💎 Premium','Giulia Bianchi','✓ Attiva','#fbbf24')}
+      </div>
+      <div>
+        <div style="font-size:10px;color:rgba(255,255,255,.3);font-weight:700;margin-bottom:5px">🛡️ Admin</div>
+        ${miniCard(admDino,'🛡️ Admin + Premium',eh(name),'✓ Illimitata','#ec4899')}
       </div>
     </div>
     <!-- Email interesse -->
