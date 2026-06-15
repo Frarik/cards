@@ -8116,10 +8116,8 @@ async function _mountYamlCard(card, container){
   let cfg;
   try{ cfg=jsyaml.load(card.lovelaceConfig); }
   catch(e){ container.innerHTML='<div style="padding:12px;color:#f87171;font-size:11px">YAML: '+eh(e.message)+'</div>'; return; }
-  // card custom: (web component con configure()) — sempre renderer interno, mai iframe
-  // (il modal settings usa document.body del documento principale; inside-iframe sarebbe inaccessibile)
   const _isCustomCard=(cfg?.type||'').startsWith('custom:');
-  // 1) Tentativo FEDELE: dashboard HA dedicata + iframe (solo per card native, non custom:)
+  // 1) Tentativo FEDELE: dashboard HA dedicata + iframe (card native non-custom:)
   let iframed=false;
   if(!_isCustomCard){
     try{
@@ -8137,7 +8135,22 @@ async function _mountYamlCard(card, container){
     }catch(e){ console.warn('[Frarik] yaml iframe:',e&&e.message); }
     if(iframed) return;
   }
-  // 2) Renderer interno leggero (card semplici e tutte le custom:)
+  // 2) Card custom:: prova motore HA (createCardElement) — compatibilità HACS massima
+  if(_isCustomCard){
+    try{
+      const haEl=await _createHACard(cfg);
+      if(haEl&&container.isConnected){
+        container.innerHTML='';
+        container.style.cssText='display:block;width:100%;height:100%;overflow:auto';
+        container.appendChild(haEl);
+        if(typeof haEl.configure==='function') container._fConfigure=haEl.configure.bind(haEl);
+        if(container._yamlTimer) clearInterval(container._yamlTimer);
+        container._yamlTimer=setInterval(()=>_yamlRefreshHass(container),800);
+        return;
+      }
+    }catch(e){ console.warn('[Frarik] _createHACard:',e&&e.message); }
+  }
+  // 3) Renderer interno leggero (fallback universale)
   if(!_lovelaceResourcesLoaded){ try{ await _loadLovelaceResources(); }catch(e){} await new Promise(r=>setTimeout(r,700)); }
   if(!container.isConnected) return;
   container.innerHTML='';
@@ -8146,12 +8159,14 @@ async function _mountYamlCard(card, container){
   container.appendChild(el);
   if(typeof el.configure==='function') container._fConfigure=el.configure.bind(el);
   if(container._yamlTimer) clearInterval(container._yamlTimer);
-  container._yamlTimer=setInterval(()=>_yamlRefreshHass(container),1000);
+  container._yamlTimer=setInterval(()=>_yamlRefreshHass(container),800);
 }
 
 function _yamlRefreshHass(root){
   const h=_getBestHass();
+  // fycel = elementi creati internamente; cerca anche figli diretti custom (createHACard)
   root.querySelectorAll('.fycel').forEach(el=>{ try{ el.hass=h; }catch(e){} });
+  root.childNodes.forEach(el=>{ if(el.nodeType===1&&!el.classList.contains('fycel')&&typeof el.hass!=='undefined') try{ el.hass=h; }catch(e){} });
 }
 
 async function _yamlCreateEl(cfg){
@@ -8448,7 +8463,10 @@ function _ghStoreRenderYamlEditor(){
       <div id="ghsy-left">
         <div class="ghsy-pane-hdr">
           <span class="ghsy-pane-lbl">CONFIGURAZIONE YAML</span>
-          <button class="ghsy-act-btn" data-action="_ghsYamlFormat">⇄ Formatta</button>
+          <div style="display:flex;gap:6px">
+            <button class="ghsy-act-btn" data-action="_ghsYamlFormat">⇄ Formatta</button>
+            <button class="ghsy-act-btn" data-action="_ghsYamlLivePreview" title="Ricarica anteprima">↻ Anteprima</button>
+          </div>
         </div>
         <div id="ghsy-editor-area">
           <div id="ghsy-lines" aria-hidden="true"></div>
@@ -8513,6 +8531,8 @@ async function _ghsYamlLivePreview(){
   const addBtn=document.getElementById('ghsy-add-btn');
   const hacsEl=document.getElementById('ghsy-hacs-count');
   if(!ta||!prev) return;
+  // Ferma il timer hass precedente
+  if(prev._ghsYamlTimer){ clearInterval(prev._ghsYamlTimer); prev._ghsYamlTimer=null; }
   const txt=ta.value.trim();
   if(!txt){
     prev.innerHTML=''; if(ph) ph.style.display='';
@@ -8530,15 +8550,28 @@ async function _ghsYamlLivePreview(){
   if(ph) ph.style.display='none';
   prev.innerHTML='';
   try{
-    if(!_lovelaceResourcesLoaded){ await _loadLovelaceResources(); await new Promise(r=>setTimeout(r,500)); }
-    const el=await _yamlCreateEl(config);
+    // 1) Motore ufficiale HA (loadCardHelpers.createCardElement) — compatibilità massima HACS
+    let el=await _createHACard(config);
+    if(!el){
+      // 2) Fallback: carica script HACS nel documento corrente + renderer interno
+      if(!_lovelaceResourcesLoaded){ await _loadLovelaceResources(); await new Promise(r=>setTimeout(r,700)); }
+      el=await _yamlCreateEl(config);
+    }
     el.style.cssText='display:block;width:100%';
     prev.innerHTML='';
+    if(!prev.isConnected) return;
     prev.appendChild(el);
-    _yamlRefreshHass(prev);
+    // Imposta hass subito + refresh periodico (molte card HACS sono asincrone / usano Lit)
+    const doRefresh=()=>{ try{ _yamlRefreshHass(prev); }catch(_){} };
+    doRefresh();
+    prev._ghsYamlTimer=setInterval(()=>{
+      const p=document.getElementById('ghsy-prev');
+      if(!p||!p.isConnected){ clearInterval(prev._ghsYamlTimer); return; }
+      _yamlRefreshHass(p);
+    },800);
     _ghsYamlCurrentConfig={config,yamlStr:txt};
     const nc=(window.customCards||[]).length;
-    if(hacsEl) hacsEl.textContent=nc+' card HACS';
+    if(hacsEl) hacsEl.textContent=nc?(nc+' card HACS'):'';
     if(errEl) errEl.textContent='';
     if(addBtn) addBtn.style.display='';
   }catch(e){

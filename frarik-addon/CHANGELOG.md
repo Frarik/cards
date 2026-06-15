@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.4.87 — 2026-06-16
+
+### fix: Card YAML tab — compatibilità HACS, anteprima e dashboard
+
+- Preview ora usa `_createHACard` (motore ufficiale HA via `loadCardHelpers.createCardElement`) come metodo primario → piena compatibilità con button-card, mushroom, bubble-card, ecc.
+- Aggiunto timer refresh hass ogni 800ms nell'anteprima (Lit/async cards si aggiornano dopo connessione DOM)
+- `_yamlRefreshHass` ora imposta hass anche su elementi creati via motore HA (non solo `.fycel`)
+- `_mountYamlCard` (dashboard): prova `_createHACard` per card `custom:` prima del fallback interno → card aggiunte funzionano ora in dashboard
+- Aggiunto pulsante "↻ Anteprima" manuale per forzare il refresh senza ri-digitare
+- Timer hass precedente fermato correttamente prima di ogni nuova anteprima
+
 ## 1.4.86 — 2026-06-15
 
 ### feat: Tab "Card YAML" nello Store — editor YAML con anteprima live HACS
