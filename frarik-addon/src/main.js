@@ -4207,7 +4207,15 @@ function buildCard(card){
   el.className='card'+(t==='picture-elements'?' card-pe':t==='appliances'?' card-app':t==='header-bar'?' card-hbar':t==='footer-bar'?' card-fbar':(t==='weather'||t==='weather-forecast')?' card-wtc':'');
   el.id='card-'+card.id;
   el.dataset.id=card.id;
-  if(t!=='weather'){
+  if(t==='yaml-card'){
+    // La card YAML porta il PROPRIO sfondo ha-card → il wrapper Frarik deve essere trasparente
+    // (niente "cornice" attorno): nessuno sfondo, bordo, ombra o blur.
+    el.style.background='transparent';
+    el.style.border='none';
+    el.style.boxShadow='none';
+    el.style.backdropFilter='none';
+    el.style.webkitBackdropFilter='none';
+  } else if(t!=='weather'){
     el.style.background=t==='picture-elements'?'transparent':(card.bgColor||color+'0d');
     el.style.border=`1px solid ${card.bgColor?'transparent':color+'28'}`;
     el.style.boxShadow=`0 8px 32px rgba(0,0,0,0.28),0 0 0 1px ${color}18,inset 0 1px 0 rgba(255,255,255,0.05)`;

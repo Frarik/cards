@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.93 — 2026-06-16
+
+### fix: Card YAML in dashboard — rimossa la "cornice" del wrapper Frarik
+
+- La card YAML porta il proprio sfondo `ha-card` → il wrapper Frarik aggiungeva una seconda cornice (sfondo + bordo + ombra + blur) attorno
+- Ora per le `yaml-card` il contenitore Frarik è **completamente trasparente** (niente background, bordo, box-shadow, backdrop-filter) → si vede solo la card nativa, identica a HA
+
 ## 1.4.92 — 2026-06-16
 
 ### fix: Card YAML in dashboard — rimosso offset e clipping dell'iframe
