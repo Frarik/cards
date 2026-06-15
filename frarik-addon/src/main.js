@@ -1368,6 +1368,7 @@ function _bumpVer(v){ return _bumpMinor(v); }
 let _ghVerCache={};   // sha → versione letta dal file (per mostrarla nello store)
 let _ghDescCache={};  // sha → descrizione estratta dal file
 let _ghIconCache={};  // sha → icona estratta dal file
+let _ghCodeCache={};  // sha → codice sorgente completo (per preview dinamica)
 function _parseCardIcon(code){
   const m=String(code||'').match(/\bicon\s*:\s*['"`]([^'"`\n]{1,60})['"`]/);
   return m?m[1].trim():'';
@@ -1648,13 +1649,12 @@ function _ghcDesc(cardId, sha){
 }
 function _ghcLivePrev(host, cardId){
   const reg=window.FratechCardRegistry?.[cardId]; if(!reg) return;
-  // Mostra sempre il placeholder come sfondo — il render live va sopra
-  host.innerHTML=_ghcPrevPh(reg.icon||'📦', reg.name||cardId);
+  host.innerHTML=''; // pulisce placeholder se c'era
   const PW=300, hw=host.clientWidth||190;
   const scale=(hw/PW).toFixed(3);
   const wrap=document.createElement('div');
   wrap.className='ghc-prev-scale';
-  wrap.style.cssText=`width:${PW}px;transform:scale(${scale});position:absolute;top:0;left:0`;
+  wrap.style.cssText=`width:${PW}px;transform:scale(${scale});transform-origin:0 0;position:absolute;top:0;left:0`;
   try{
     const tag=reg._tag||cardId;
     const cel=document.createElement(tag);
@@ -1663,15 +1663,18 @@ function _ghcLivePrev(host, cardId){
     host.appendChild(wrap);
     requestAnimationFrame(()=>{
       try{ if(typeof cel.setConfig==='function') cel.setConfig({type:'custom:'+tag}); }catch(e){}
-      requestAnimationFrame(()=>{
-        try{ cel.hass=_haHassObj(); }catch(e){}
-        // Se il shadow DOM non ha contenuto entro 600ms → rimuovi render, resta il placeholder
-        setTimeout(()=>{
-          try{ const sh=cel.shadowRoot; if(!sh||sh.innerHTML.trim().length<40) wrap.remove(); }catch(e){ wrap.remove(); }
-        }, 600);
-      });
+      requestAnimationFrame(()=>{ try{ cel.hass=_haHassObj(); }catch(e){} });
     });
   }catch(e){ wrap.remove(); }
+}
+function _ghcLivePrevBySha(host, sha){
+  // Preview per card NON installate: carica il JS dinamicamente e poi renderizza
+  const code=_ghCodeCache[sha]; if(!code) return;
+  try{
+    const res=_installCardCode(code);
+    const cardId=(res.newCards&&res.newCards[0])||(res.tags&&res.tags[0])||null;
+    if(cardId) _ghcLivePrev(host, cardId);
+  }catch(e){}
 }
 async function _ghsPreview(enc, nm, cardId){
   const modal=document.getElementById('ghs-prev-modal');
@@ -1767,7 +1770,7 @@ async function _ghFetchVerLabels(tab){
       const x=files[i++];
       try{
         const r=await fetch(x.download_url,{cache:'no-store'});
-        if(r.ok){ const code=await r.text(); _ghVerCache[x.sha]=_parseCardVersion(code)||''; const pd=_parseCardDesc(code); _ghDescCache[x.sha]=pd||_ghcSmartDesc(x.name.replace(/\.js$/i,''),code)||''; _ghIconCache[x.sha]=_parseCardIcon(code)||''; }
+        if(r.ok){ const code=await r.text(); _ghCodeCache[x.sha]=code; _ghVerCache[x.sha]=_parseCardVersion(code)||''; const pd=_parseCardDesc(code); _ghDescCache[x.sha]=pd||_ghcSmartDesc(x.name.replace(/\.js$/i,''),code)||''; _ghIconCache[x.sha]=_parseCardIcon(code)||''; }
         else { _ghVerCache[x.sha]=''; _ghDescCache[x.sha]=''; }
       }
       catch(e){ _ghVerCache[x.sha]=''; _ghDescCache[x.sha]=''; }
@@ -1823,7 +1826,7 @@ function _ghStoreRender(){
     const st=hasUpdate?'upd':'ok';
     const prevHtml=cardId&&reg
       ?`<div class="ghc-prev-inner" data-prev-id="${eh(cardId)}"></div>`
-      :`<div class="ghc-prev-inner">${_ghcPrevPh(icon,nm)}</div>`;
+      :`<div class="ghc-prev-inner" data-prev-sha="${eh(f.sha)}"></div>`;
     const bdg=hasUpdate?`<span class="ghc-bdg upd">↑ Aggiornamento</span>`
       :inCurPage?`<span class="ghc-bdg cur">✓ In vista</span>`
       :`<span class="ghc-bdg ok">● Installata</span>`;
@@ -1848,7 +1851,7 @@ function _ghStoreRender(){
     const icon=_ghIconCache[f.sha]||_ghcSmartIcon(nm)||folder.ico||'📦';
     const ghDel=`<button class="ghc-btn-del" data-action="_ghsDeleteFromGithub" data-action-arg="${enc}" title="Elimina da GitHub"><i class="mdi mdi-delete-forever-outline"></i></button>`;
     return `<div class="ghc-tile st-new"><div class="ghc-strip new"></div>
-      <div class="ghc-prev"><div class="ghc-prev-inner">${_ghcPrevPh(icon,nm)}</div><div class="ghc-prev-fade"></div><span class="ghc-bdg new">⬇ Disponibile</span></div>
+      <div class="ghc-prev"><div class="ghc-prev-inner" data-prev-sha="${eh(f.sha)}"></div><div class="ghc-prev-fade"></div><span class="ghc-bdg new">⬇ Disponibile</span></div>
       <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico">${icon}</div><div class="ghc-meta"><div class="ghc-name">${eh(nm)}</div>${verLbl?`<div class="ghc-ver">v${eh(verLbl)}</div>`:''}</div></div>
       ${desc?`<div class="ghc-desc">${eh(desc)}</div>`:''}
       <div class="ghc-acts"><button class="ghc-btn ghc-btn-inst" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>${ghDel}</div></div></div>`;
@@ -1863,6 +1866,7 @@ function _ghStoreRender(){
 
   requestAnimationFrame(()=>{
     list.querySelectorAll('[data-prev-id]').forEach(el=>{ _ghcLivePrev(el, el.dataset.prevId); });
+    list.querySelectorAll('[data-prev-sha]').forEach(el=>{ _ghcLivePrevBySha(el, el.dataset.prevSha); });
   });
 }
 /* Schede "Installate" (origine github) e "Card locali" (origine local): gestisci le card installate */
@@ -1906,9 +1910,13 @@ function _ghStoreRenderInstalled(q, originFilter){
     list.querySelectorAll('[data-prev-id]').forEach(el=>{ _ghcLivePrev(el, el.dataset.prevId); });
   });
 }
+function _isAdmin(){
+  const note=(localStorage.getItem('frarik_lic_note')||'').toLowerCase();
+  return note.includes('admin')||note.includes('amministratore');
+}
 function _isPremiumLic(){
   const note=(localStorage.getItem('frarik_lic_note')||'').toLowerCase();
-  return note.includes('premium')||note.includes('admin');
+  return note.includes('premium')||note.includes('admin')||note.includes('amministratore');
 }
 function openPremiumPage(){ document.getElementById('prem-page-modal')?.classList.remove('off'); }
 function closePremiumPage(){ document.getElementById('prem-page-modal')?.classList.add('off'); }
@@ -1921,7 +1929,6 @@ function _ghStoreRenderPremium(q){
 
   // ── Utente non premium → schermata bloccata ──
   if(!isPrem){
-    const MOCKS=[{ico:'🌟',nm:'Analytics Pro'},{ico:'🔥',nm:'Energy Dashboard'},{ico:'🚀',nm:'Ultra Widgets'},{ico:'🎯',nm:'Smart Automations'}];
     list.innerHTML=`<div class="ghc-prem-hero">
       <div class="ghc-prem-hero-ico">💎</div>
       <div class="ghc-prem-hero-title">Frarik Premium</div>
@@ -1930,10 +1937,10 @@ function _ghStoreRenderPremium(q){
       <button style="display:block;margin:10px auto 0;padding:9px 22px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.55);font-size:11px;font-weight:700;cursor:pointer" data-action="_ghsPremActivate">🔑 Ho già una licenza Premium</button>
     </div>
     <div class="ghc-grid" style="pointer-events:none;user-select:none">
-      ${MOCKS.map(m=>`<div class="ghc-tile ghc-prem-locked" style="border-color:rgba(251,191,36,.18)">
+      ${['Analytics Pro','Energy Dashboard','Ultra Widgets','Smart Automations'].map(nm=>`<div class="ghc-tile ghc-prem-locked" style="border-color:rgba(251,191,36,.18)">
         <div class="ghc-strip" style="background:linear-gradient(90deg,#fbbf24,rgba(251,191,36,0))"></div>
-        <div class="ghc-prev"><div class="ghc-prev-inner">${_ghcPrevPh(m.ico,m.nm)}</div><div class="ghc-prev-fade"></div><span class="ghc-bdg" style="background:rgba(251,191,36,.22);border-color:rgba(251,191,36,.5);color:#fbbf24">💎 PREMIUM</span></div>
-        <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico" style="background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.22)">${m.ico}</div><div class="ghc-meta"><div class="ghc-name">${eh(m.nm)}</div><div class="ghc-ver" style="color:rgba(251,191,36,.6)">Prossimamente</div></div></div>
+        <div class="ghc-prev"><div class="ghc-prev-inner" style="background:linear-gradient(135deg,#2a1a00,#78350f);display:flex;align-items:center;justify-content:center"><span style="font-size:28px;opacity:.25">💎</span></div><div class="ghc-prev-fade"></div><span class="ghc-bdg" style="background:rgba(251,191,36,.22);border-color:rgba(251,191,36,.5);color:#fbbf24">💎 PREMIUM</span></div>
+        <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico" style="background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.22)">💎</div><div class="ghc-meta"><div class="ghc-name">${eh(nm)}</div><div class="ghc-ver" style="color:rgba(251,191,36,.6)">Prossimamente</div></div></div>
         <div class="ghc-desc">Funzionalità avanzate disponibili con licenza Premium.</div>
         <div class="ghc-acts"><button class="ghc-btn" style="background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.25);color:rgba(251,191,36,.5)">🔒 Riservato</button></div></div></div>`).join('')}
     </div>`;
@@ -1947,6 +1954,7 @@ function _ghStoreRenderPremium(q){
       <div class="ghc-prem-hero-title" style="font-size:15px">Accesso Premium attivo</div>
       <div class="ghc-prem-hero-sub">Nessuna card premium disponibile al momento. Prossimamente saranno pubblicate qui le card esclusive.</div>
     </div>`;
+    if(_isAdmin()) _ghsAdminPanel(list);
     return;
   }
   let files=allFiles.slice();
@@ -1964,7 +1972,9 @@ function _ghStoreRenderPremium(q){
     const inCurPage=!!(cardId&&usedInCurPage.has(cardId));
     const reg=cardId?window.FratechCardRegistry?.[cardId]:null;
     const icon=_ghIconCache[f.sha]||(reg?.icon)||_ghcSmartIcon(nm)||'💎';
-    const prevHtml=cardId&&reg?`<div class="ghc-prev-inner" data-prev-id="${eh(cardId)}"></div>`:`<div class="ghc-prev-inner">${_ghcPrevPh(icon,nm)}</div>`;
+    const prevHtml=cardId&&reg
+      ?`<div class="ghc-prev-inner" data-prev-id="${eh(cardId)}"></div>`
+      :`<div class="ghc-prev-inner" data-prev-sha="${eh(f.sha)}"></div>`;
     const updBtn=hasUpdate?`<button class="ghc-btn" style="background:rgba(251,191,36,.2);border-color:rgba(251,191,36,.5);color:#fbbf24" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-update"></i> Aggiorna</button>`:'';
     const addBtn=isInstalled?(inCurPage?`<span class="ghc-indash"><i class="mdi mdi-check-circle-outline"></i> In vista</span>`:`<button class="ghc-btn" style="background:rgba(251,191,36,.14);border-color:rgba(251,191,36,.35);color:#fbbf24" data-action="_jsStoreAddAndRefresh" data-action-args='["${cardId}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`)
       :`<button class="ghc-btn" style="background:rgba(251,191,36,.18);border-color:rgba(251,191,36,.4);color:#fbbf24" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>`;
@@ -1982,7 +1992,58 @@ function _ghStoreRenderPremium(q){
     +`<div class="ghc-sec"><span class="ghc-sec-dot" style="background:#fbbf24"></span>Disponibili<span class="ghc-sec-cnt">${toInstall.length}</span></div>`
     +(toInstall.length?toInstall.map(f=>tilePrem(f,false)).join(''):`<div style="grid-column:1/-1"><div class="ghs-empty">Tutte le card premium sono già installate</div></div>`)
     +'</div>';
-  requestAnimationFrame(()=>{ list.querySelectorAll('[data-prev-id]').forEach(el=>{ _ghcLivePrev(el,el.dataset.prevId); }); });
+  if(_isAdmin()) _ghsAdminPanel(list);
+  requestAnimationFrame(()=>{
+    list.querySelectorAll('[data-prev-id]').forEach(el=>{ _ghcLivePrev(el,el.dataset.prevId); });
+    list.querySelectorAll('[data-prev-sha]').forEach(el=>{ _ghcLivePrevBySha(el,el.dataset.prevSha); });
+  });
+}
+function _ghsAdminPanel(list){
+  const div=document.createElement('div');
+  div.style.cssText='margin:16px 0 4px;padding:16px 18px;border-radius:14px;background:rgba(255,60,80,.06);border:1px solid rgba(255,60,80,.22)';
+  div.innerHTML=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+    <span style="font-size:18px">🛡️</span>
+    <div><div style="font-size:13px;font-weight:700;color:#ff6b6b">Pannello Amministratore</div>
+    <div style="font-size:11px;color:rgba(255,255,255,.4)">Visibile solo agli utenti Admin / Amministratore</div></div>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button style="padding:8px 16px;border-radius:10px;background:rgba(251,191,36,.14);border:1px solid rgba(251,191,36,.32);color:#fbbf24;font-size:12px;font-weight:700;cursor:pointer" data-action="openPremiumPage">👁 Testa pagina Premium</button>
+    <button style="padding:8px 16px;border-radius:10px;background:rgba(255,60,80,.12);border:1px solid rgba(255,60,80,.28);color:#ff8888;font-size:12px;font-weight:700;cursor:pointer" data-action="_adminCtrlPanel">🛡️ Pannello di Controllo</button>
+  </div>`;
+  list.appendChild(div);
+}
+function _adminCtrlPanel(){
+  const lic={
+    note: localStorage.getItem('frarik_lic_note')||'—',
+    name: localStorage.getItem('frarik_lic_name')||'—',
+    expires: localStorage.getItem('frarik_lic_expires')||'—',
+  };
+  const interest=JSON.parse(localStorage.getItem('frarik_prem_interest')||'[]');
+  // Modal semplice come overlay
+  let m=document.getElementById('_admin-ctrl-modal');
+  if(!m){ m=document.createElement('div'); m.id='_admin-ctrl-modal'; m.className='mbg'; document.body.appendChild(m); }
+  m.style.cssText='display:flex;align-items:center;justify-content:center;z-index:320';
+  m.innerHTML=`<div style="width:min(560px,93vw);max-height:85vh;overflow-y:auto;scrollbar-width:none;background:#0a0816;border:1px solid rgba(255,60,80,.3);border-radius:20px;padding:24px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <div style="font-size:16px;font-weight:800;color:#ff8888">🛡️ Pannello di Controllo</div>
+      <button style="background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;cursor:pointer" onclick="document.getElementById('_admin-ctrl-modal').style.display='none'">✕</button>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Licenza attiva</div>
+    <div style="padding:12px 14px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);margin-bottom:14px">
+      <div style="font-size:12px;color:#fff;margin-bottom:4px"><b>Tipo:</b> ${eh(lic.note)}</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.6);margin-bottom:2px"><b>Nome:</b> ${eh(lic.name)}</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.6)"><b>Scadenza:</b> ${eh(lic.expires)}</div>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Email interesse Premium (${interest.length})</div>
+    <div style="padding:12px 14px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);margin-bottom:14px;max-height:120px;overflow-y:auto;scrollbar-width:none">
+      ${interest.length?interest.map(e=>`<div style="font-size:12px;color:rgba(255,255,255,.7);padding:3px 0">${eh(e)}</div>`).join(''):'<div style="font-size:12px;color:rgba(255,255,255,.3)">Nessuna email registrata</div>'}
+    </div>
+    <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Test rapidi</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button style="padding:7px 14px;border-radius:9px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.28);color:#fbbf24;font-size:11px;font-weight:700;cursor:pointer" data-action="openPremiumPage">👁 Vedi pagina Premium</button>
+      <button style="padding:7px 14px;border-radius:9px;background:rgba(100,180,100,.1);border:1px solid rgba(100,180,100,.25);color:rgba(100,220,100,.9);font-size:11px;font-weight:700;cursor:pointer" onclick="document.getElementById('_admin-ctrl-modal').style.display='none';_ghStoreRenderPremium('')">↩ Ricarica sezione</button>
+    </div>
+  </div>`;
 }
 function _ghsPremActivate(){
   closePremiumPage();
@@ -13201,4 +13262,5 @@ Object.assign(window, {
   _ntfSetAndSuggest, _ntfSetIcon,
   _switchEpTab, _openEpSheet, _closeEpSheet, _toggleHdrIcons,
   openPremiumPage, closePremiumPage, _ghsPremActivate, _premSendInterest,
+  _isAdmin, _adminCtrlPanel,
 });

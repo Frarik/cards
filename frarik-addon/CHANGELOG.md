@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.4.71 — 2026-06-15
+
+### fix(store): preview reale per tutte le card + pannello Admin
+
+- **Preview reale per card non installate**: `_ghcLivePrevBySha()` carica dinamicamente il JS via `_installCardCode()` e renderizza il componente vero nella tile — niente più emoji o gradienti
+- **Preview card installate**: rimosso il timeout che uccideva il render se il shadow DOM sembrava vuoto; il render ora rimane sempre visibile
+- `_ghCodeCache`: nuova cache sha→codice sorgente; popolata in `_ghFetchVerLabels` per abilitare la preview dinamica
+- **Admin separato da Premium**: `_isAdmin()` controlla "Admin"/"Amministratore" in `frarik_lic_note`; `_isPremiumLic()` aggiunto controllo "amministratore"
+- **Pannello di Controllo Admin**: sezione rossa visibile solo agli Admin nella tab Premium, con info licenza, lista email interesse, tasti test rapidi
+- "Testa pagina Premium": bottone nel pannello Admin per aprire la pagina marketing (utile per test senza essere non-premium)
+- Mock card in schermata bloccata: tolte emoji, preview con sfondo opaco (non più placeholder con icon)
+
 ## 1.4.70 — 2026-06-15
 
 ### fix(store): anteprima nera + icona card non installate + Premium con licenza
