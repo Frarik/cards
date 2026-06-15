@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.4.69 — 2026-06-15
+
+### feat(store): anteprime grandi + smart description + tab revolution + sezione Premium
+
+- **Anteprime più grandi**: preview 165px di altezza (da 118px)
+- **Descrizione intelligente**: `_ghcSmartDesc()` genera automaticamente descrizioni italiane per qualsiasi card nuova, analizzando nome e codice (entità HA, feature, domini)
+- **Tab bar rivoluzionata**: icona + label verticale, effetto glow amber sull'attivo, spring animation, tab utilities (YAML/PKG/Locali) più compatti, wrapper con background traslucido
+- **Sezione 💎 Premium**: nuovo tab con hero screen, mock di card bloccate con overlay lock, CTA "Attiva licenza Premium". Quando la cartella `card-premium/` avrà card, le mostrerà con stile dorato
+- `_ghcSmartDesc(name, code)`: 16 domini HA riconosciuti + rilevamento feature secondarie (grafici, notifiche, schedule)
+- `_ghFetchVerLabels` usa smart desc come fallback se nessun campo desc/description trovato
+
 ## 1.4.68 — 2026-06-15
 
 ### feat(store): redesign completo UI Store — griglia moderna con preview live

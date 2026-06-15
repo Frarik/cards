@@ -1330,6 +1330,39 @@ function _parseCardDesc(code){
   if(m) return m[1].trim();
   return '';
 }
+function _ghcSmartDesc(name, code){
+  const nm=(name||'').toLowerCase();
+  const s=(code||'').toLowerCase().slice(0,6000);
+  // mappa pattern → descrizione italiana
+  const DOMAINS=[
+    [/camera|telecam|webrtc|mjpeg|go2rtc|snapshot/,  'Visualizzazione telecamere con streaming live'],
+    [/clima|climatizzat|hvac|thermostat|split|modalit/,'Controllo climatizzatore: modalità, temperatura, aletta'],
+    [/meteo|weather|forecast|previsioni|pioggia|neve/, 'Meteo in tempo reale con cielo animato e previsioni'],
+    [/tapparella|cover|shutter|blind|volet|stecche/,   'Controllo tapparelle: apertura, chiusura, posizione %'],
+    [/person|tracker|device_tracker|location|maps/,    'Tracciamento persona con mappa live e storico zone'],
+    [/irrigazion|irrigation|sprinkler|watering|acqua/, 'Gestione irrigazione: timer, schedule e meteo integrato'],
+    [/door|window|porte|finestre|apertur|binary_sensor/,'Monitoraggio porte e finestre: stato, contatori, aperture'],
+    [/cpu|ram|disk|memory|server|mini.pc|swap|system/,  'Statistiche sistema: CPU, RAM, disco e costi energetici'],
+    [/raccolta|differenziata|trash|garbage|bidone|rifiut/,'Calendario raccolta differenziata con notifiche push'],
+    [/zanzar|mosquito|antizanzar|repellent/,           'Controllo sistema anti-zanzare con schedule e statistiche'],
+    [/energy|energia|consumo|watt|kwh|elettric/,       'Monitoraggio energia e consumi in tempo reale'],
+    [/light|luce|lamp|dimmer|rgb|illumin/,             'Controllo luci: accensione, dimmer, colori RGB'],
+    [/alarm|allarme|security|sicurezza|intrusion/,     'Sistema di allarme e notifiche di sicurezza'],
+    [/media|player|music|spotify|sonos|radio/,         'Riproduzione media: musica, radio e controllo volume'],
+    [/vacuum|robot|roomba|aspirapolvere|pulizia/,       'Controllo robot aspirapolvere con mappa e zone'],
+    [/sensor|temperatura|humidity|umidità|pressione/,  'Monitoraggio sensori ambientali con grafici storici'],
+  ];
+  let main='';
+  for(const [rx,desc] of DOMAINS){
+    if(rx.test(nm)||rx.test(s)){ main=desc; break; }
+  }
+  const extras=[];
+  if(/histor|chart|graph|storico/.test(s)&&!main.includes('storico')) extras.push('grafici storici');
+  if(/notif|alert|push/.test(s)&&!main.includes('notif')) extras.push('notifiche');
+  if(/schedule|timer|orario|programmaz/.test(s)&&!main.includes('schedule')) extras.push('programmazione oraria');
+  if(!main) main=`Card Home Assistant — ${name}`;
+  return extras.length?`${main}. Include ${extras.slice(0,2).join(' e ')}.`:main+'.';
+}
 /* compat: _bumpVer (vecchia patch) mantenuto per sicurezza, non più usato per il publish */
 function _bumpVer(v){ return _bumpMinor(v); }
 let _ghVerCache={};   // sha → versione letta dal file (per mostrarla nello store)
@@ -1531,6 +1564,7 @@ const _GHS_FOLDERS={
   js:        {path:'card-js',         ext:/\.js$/i,    ico:'⚡',  kind:'install', exclude:/^frarik[-.]/i},
   chips:     {path:'card-chips',      ext:/\.js$/i,    ico:'🔹',  kind:'install'},
   distintivi:{path:'card-distintivi', ext:/\.js$/i,    ico:'🏷️', kind:'install'},
+  premium:   {path:'card-premium',    ext:/\.js$/i,    ico:'💎',  kind:'premium'},
   yaml:      {path:'card-yaml',       ext:/\.ya?ml$/i, ico:'📄',  kind:'copy'},
   pkg:       {path:'pkg',             ext:/\.ya?ml$/i, ico:'📦',  kind:'pkg'},
 };
@@ -1579,10 +1613,13 @@ function _ghcDesc(cardId, sha){
     try{
       const it=_jsStoreList().find(i=>(i.meta||{}).id===cardId);
       const md=it?.meta?.desc||''; if(md.length>4&&!md.includes(FALLBACK)) return md;
-      if(it?.code){ const d=_parseCardDesc(it.code); if(d) return d; }
+      if(it?.code){
+        const d=_parseCardDesc(it.code); if(d) return d;
+        return _ghcSmartDesc((it.meta&&it.meta.name)||cardId, it.code);
+      }
     }catch(e){}
   }
-  return '';
+  return _ghcSmartDesc(cardId||'', '');
 }
 function _ghcLivePrev(host, cardId){
   const reg=window.FratechCardRegistry?.[cardId]; if(!reg) return;
@@ -1668,19 +1705,23 @@ async function _ghsPreview(enc, nm, cardId){
 }
 function ghStoreTab(tab){
   _ghsTab=tab;
-  ['js','chips','distintivi','yaml','pkg','local'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
+  ['js','chips','distintivi','premium','yaml','pkg','local'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
   const s=document.getElementById('ghs-search'); if(s) s.value='';
   const loadEl=document.getElementById('ghs-load'); if(loadEl) loadEl.style.display=(tab==='local')?'':'none';
   if(tab==='local'){ _ghStoreRender(); _ghStoreInitDropzone(); return; }
-  if(_ghsCache[tab]){ _ghStoreRender(); return; }
+  if(tab==='premium'&&_ghsCache[tab]!==undefined){ _ghStoreRender(); return; }
+  if(tab!=='premium'&&_ghsCache[tab]){ _ghStoreRender(); return; }
   document.getElementById('ghs-status').textContent='⏳ Carico da GitHub…';
   document.getElementById('ghs-list').innerHTML='';
-  const f=_GHS_FOLDERS[tab];
+  const f=_GHS_FOLDERS[tab]; if(!f) return;
   _ghListFolder(f.path).then(files=>{
     _ghsCache[tab]=files.filter(x=>f.ext.test(x.name)&&!(f.exclude&&f.exclude.test(x.name)));
     if(_ghsTab===tab) _ghStoreRender();
-    if(f.kind==='install') _ghFetchVerLabels(tab);   // legge le versioni reali dai file su GitHub
-  }).catch(e=>{ document.getElementById('ghs-status').textContent='⚠️ '+e.message; });
+    if(f.kind==='install'||f.kind==='premium') _ghFetchVerLabels(tab);
+  }).catch(e=>{
+    if(tab==='premium'){ _ghsCache[tab]=[]; if(_ghsTab===tab) _ghStoreRender(); }
+    else document.getElementById('ghs-status').textContent='⚠️ '+e.message;
+  });
 }
 /* Scarica e legge la versione (campo version:) dai file della cartella, con cache per
    sha (un solo fetch per versione di file). Aggiorna le etichette nello store. */
@@ -1693,7 +1734,7 @@ async function _ghFetchVerLabels(tab){
       const x=files[i++];
       try{
         const r=await fetch(x.download_url,{cache:'no-store'});
-        if(r.ok){ const code=await r.text(); _ghVerCache[x.sha]=_parseCardVersion(code)||''; _ghDescCache[x.sha]=_parseCardDesc(code)||''; }
+        if(r.ok){ const code=await r.text(); _ghVerCache[x.sha]=_parseCardVersion(code)||''; const pd=_parseCardDesc(code); _ghDescCache[x.sha]=pd||_ghcSmartDesc(x.name.replace(/\.js$/i,''),code)||''; }
         else { _ghVerCache[x.sha]=''; _ghDescCache[x.sha]=''; }
       }
       catch(e){ _ghVerCache[x.sha]=''; _ghDescCache[x.sha]=''; }
@@ -1707,6 +1748,7 @@ function _ghStoreRender(){
   const q=(document.getElementById('ghs-search').value||'').toLowerCase().trim();
   if(tab==='local'){ _ghStoreRenderInstalled(q,'local'); return; }
   if(tab==='pkg'){ _ghStoreRenderPkg(q); return; }
+  if(tab==='premium'){ _ghStoreRenderPremium(q); return; }
   const folder=_GHS_FOLDERS[tab]; const g=_ghCfg();
   let files=(_ghsCache[tab]||[]).slice();
   if(q) files=files.filter(f=>f.name.toLowerCase().includes(q));
@@ -1829,6 +1871,66 @@ function _ghStoreRenderInstalled(q, originFilter){
   requestAnimationFrame(()=>{
     list.querySelectorAll('[data-prev-id]').forEach(el=>{ _ghcLivePrev(el, el.dataset.prevId); });
   });
+}
+function _ghStoreRenderPremium(q){
+  const list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
+  const g=_ghCfg(); const idFile=g.idFile||{};
+  const allFiles=(_ghsCache['premium']||[]);
+  status.textContent='💎 Premium';
+  // Se ci sono card premium reali su GitHub, mostrale con stile gold
+  if(allFiles.length){
+    let files=allFiles.slice();
+    if(q) files=files.filter(f=>f.name.toLowerCase().includes(q));
+    const _cpCards=(curPage()||{cards:[]}).cards||[];
+    const usedInCurPage=new Set(); _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedInCurPage.add(c.jsCardId); });
+    const sorted=files.filter(f=>f&&f.name).sort((a,b)=>a.name.localeCompare(b.name));
+    const installed=[], toInstall=[]; sorted.forEach(f=>{ (g.shas[f.name]?installed:toInstall).push(f); });
+    const tilePrem=(f, isInstalled)=>{
+      const nm=f.name.replace(/\.(js|ya?ml)$/i,''); const enc=encodeURIComponent(f.name);
+      const cardId=isInstalled?(Object.keys(idFile).find(k=>idFile[k]===f.name)||null):null;
+      const verLbl=_ghVerCache[f.sha]||g.fileVersions[f.name]||(cardId&&_curStoreVersion(cardId))||'';
+      const desc=_ghcDesc(cardId,f.sha)||_ghDescCache[f.sha]||'Card Premium con funzionalità esclusive.';
+      const hasUpdate=isInstalled&&!!(g.shas[f.name]&&g.shas[f.name]!==f.sha);
+      const inCurPage=!!(cardId&&usedInCurPage.has(cardId));
+      const reg=cardId?window.FratechCardRegistry?.[cardId]:null;
+      const icon=(reg?.icon)||'💎';
+      const prevHtml=cardId&&reg?`<div class="ghc-prev-inner" data-prev-id="${eh(cardId)}"></div>`:`<div class="ghc-prev-inner">${_ghcPrevPh(icon,nm)}</div>`;
+      const updBtn=hasUpdate?`<button class="ghc-btn" style="background:rgba(251,191,36,.2);border-color:rgba(251,191,36,.5);color:#fbbf24" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-update"></i> Aggiorna</button>`:'';
+      const addBtn=isInstalled?(inCurPage?`<span class="ghc-indash"><i class="mdi mdi-check-circle-outline"></i> In vista</span>`:`<button class="ghc-btn" style="background:rgba(251,191,36,.14);border-color:rgba(251,191,36,.35);color:#fbbf24" data-action="_jsStoreAddAndRefresh" data-action-args='["${cardId}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`)
+        :`<button class="ghc-btn" style="background:rgba(251,191,36,.18);border-color:rgba(251,191,36,.4);color:#fbbf24" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>`;
+      const delBtn=cardId?`<button class="ghc-btn-del" data-action="_ghsDeleteInstalled" data-action-arg="${cardId}"><i class="mdi mdi-delete-outline"></i></button>`:'';
+      return `<div class="ghc-tile" style="border-color:rgba(251,191,36,.28)">
+        <div class="ghc-strip" style="background:linear-gradient(90deg,#fbbf24,rgba(251,191,36,0))"></div>
+        <div class="ghc-prev">${prevHtml}<div class="ghc-prev-fade"></div><span class="ghc-bdg" style="background:rgba(251,191,36,.22);border-color:rgba(251,191,36,.5);color:#fbbf24">💎 ${isInstalled?'Installata':'Premium'}</span></div>
+        <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico" style="background:rgba(251,191,36,.15);border-color:rgba(251,191,36,.28)">${icon}</div><div class="ghc-meta"><div class="ghc-name">${eh(nm)}</div>${verLbl?`<div class="ghc-ver" style="color:rgba(251,191,36,.8)">v${eh(verLbl)}</div>`:''}</div></div>
+        <div class="ghc-desc">${eh(desc)}</div>
+        <div class="ghc-acts">${updBtn}${addBtn}${delBtn}</div></div></div>`;
+    };
+    list.innerHTML='<div class="ghc-grid">'
+      +`<div class="ghc-sec"><span class="ghc-sec-dot" style="background:#fbbf24"></span>Installate<span class="ghc-sec-cnt">${installed.length}</span></div>`
+      +(installed.length?installed.map(f=>tilePrem(f,true)).join(''):`<div style="grid-column:1/-1"><div class="ghs-empty">Nessuna card premium installata</div></div>`)
+      +`<div class="ghc-sec"><span class="ghc-sec-dot" style="background:#fbbf24"></span>Disponibili<span class="ghc-sec-cnt">${toInstall.length}</span></div>`
+      +(toInstall.length?toInstall.map(f=>tilePrem(f,false)).join(''):`<div style="grid-column:1/-1"><div class="ghs-empty">Nessuna nuova card premium disponibile</div></div>`)
+      +'</div>';
+    requestAnimationFrame(()=>{ list.querySelectorAll('[data-prev-id]').forEach(el=>{ _ghcLivePrev(el,el.dataset.prevId); }); });
+    return;
+  }
+  // Sezione vuota — hero + mock cards bloccate
+  const MOCKS=[{ico:'🌟',nm:'Analytics Pro'},{ico:'🔥',nm:'Energy Dashboard'},{ico:'🚀',nm:'Ultra Widgets'},{ico:'🎯',nm:'Smart Automations'}];
+  list.innerHTML=`<div class="ghc-prem-hero">
+    <div class="ghc-prem-hero-ico">💎</div>
+    <div class="ghc-prem-hero-title">Frarik Premium</div>
+    <div class="ghc-prem-hero-sub">Card esclusive con funzionalità avanzate, aggiornamenti prioritari e supporto dedicato. Prossimamente disponibili.</div>
+    <button class="ghc-prem-cta" onclick="void(0)">🔑 Attiva licenza Premium</button>
+  </div>
+  <div class="ghc-grid" style="pointer-events:none;user-select:none">
+    ${MOCKS.map(m=>`<div class="ghc-tile ghc-prem-locked" style="border-color:rgba(251,191,36,.2);opacity:.6">
+      <div class="ghc-strip" style="background:linear-gradient(90deg,#fbbf24,rgba(251,191,36,0))"></div>
+      <div class="ghc-prev"><div class="ghc-prev-inner">${_ghcPrevPh(m.ico,m.nm)}</div><div class="ghc-prev-fade"></div><span class="ghc-bdg" style="background:rgba(251,191,36,.22);border-color:rgba(251,191,36,.5);color:#fbbf24">💎 PREMIUM</span></div>
+      <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico" style="background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.25)">${m.ico}</div><div class="ghc-meta"><div class="ghc-name">${eh(m.nm)}</div><div class="ghc-ver" style="color:rgba(251,191,36,.7)">Prossimamente</div></div></div>
+      <div class="ghc-desc">Funzionalità avanzate disponibili con licenza Premium.</div>
+      <div class="ghc-acts"><button class="ghc-btn" style="background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.3);color:rgba(251,191,36,.6)">🔒 Riservato</button></div></div></div>`).join('')}
+  </div>`;
 }
 function _ghsDeleteInstalled(id){
   if(!id) return;

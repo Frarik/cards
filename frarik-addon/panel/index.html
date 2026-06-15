@@ -11,8 +11,8 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@400;600;700;800;900&family=Nunito:wght@400;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="./assets/index-DhIJjDD0.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-D1R8WH_6.css">
+  <script type="module" crossorigin src="./assets/index-BcNoHhaS.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-ByynuKlV.css">
 </head>
 <body>
 
@@ -865,18 +865,43 @@
         <!-- ── STORE ── -->
         <div id="ep-content-store" class="ep-tab-content">
           <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">🛒</div><div class="ep-tab-hdr-title">Store</div></div>
-          <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
-            <button class="jsst-tab on" id="ghs-tab-js"         data-action="ghStoreTab" data-action-arg="js">⚡ Card JS</button>
-            <button class="jsst-tab"    id="ghs-tab-chips"      data-action="ghStoreTab" data-action-arg="chips">🔹 Chips</button>
-            <button class="jsst-tab"    id="ghs-tab-distintivi" data-action="ghStoreTab" data-action-arg="distintivi">🏷️ Distintivi</button>
-            <button class="jsst-tab"    id="ghs-tab-yaml"       data-action="ghStoreTab" data-action-arg="yaml">📄 YAML</button>
-            <button class="jsst-tab"    id="ghs-tab-pkg"        data-action="ghStoreTab" data-action-arg="pkg">📦 Pacchetti</button>
-            <button class="jsst-tab"    id="ghs-tab-local"      data-action="ghStoreTab" data-action-arg="local">📁 Card locali</button>
-            <div style="display:flex;gap:4px;margin-left:auto">
-              <button class="jsst-tab" data-action="openYamlImport" title="Incolla YAML da HACS" style="color:#818cf8;font-size:11px;padding:4px 10px;font-weight:700"><i class="mdi mdi-code-braces"></i> YAML</button>
-              <button class="jsst-tab" data-action="_ghsReloadTab" title="Ricarica da GitHub" style="font-size:14px;padding:4px 8px">↻</button>
-              <button class="jsst-tab" data-action="_ghCleanOrphans" title="Rimuovi card orfane" style="font-size:13px;padding:4px 8px">🧹</button>
-              <button class="jsst-tab" data-action="openGitHubCfg" title="Impostazioni GitHub">⚙️</button>
+          <div class="ghc-tabbar">
+            <div class="ghc-tabs-main">
+              <button class="ghc-tab on" id="ghs-tab-js"         data-action="ghStoreTab" data-action-arg="js">
+                <span class="ghc-tab-ico">⚡</span><span class="ghc-tab-lbl">Card JS</span>
+              </button>
+              <button class="ghc-tab" id="ghs-tab-chips"      data-action="ghStoreTab" data-action-arg="chips">
+                <span class="ghc-tab-ico">🔹</span><span class="ghc-tab-lbl">Chips</span>
+              </button>
+              <button class="ghc-tab" id="ghs-tab-distintivi" data-action="ghStoreTab" data-action-arg="distintivi">
+                <span class="ghc-tab-ico">🏷️</span><span class="ghc-tab-lbl">Distintivi</span>
+              </button>
+              <button class="ghc-tab ghc-tab-prem" id="ghs-tab-premium" data-action="ghStoreTab" data-action-arg="premium">
+                <span class="ghc-tab-new">NEW</span>
+                <span class="ghc-tab-ico">💎</span><span class="ghc-tab-lbl">Premium</span>
+              </button>
+            </div>
+            <div class="ghc-tab-sep"></div>
+            <div class="ghc-tabs-util">
+              <button class="ghc-tab ghc-tab-sm" id="ghs-tab-yaml"  data-action="ghStoreTab" data-action-arg="yaml">
+                <span class="ghc-tab-ico">📄</span><span class="ghc-tab-lbl">YAML</span>
+              </button>
+              <button class="ghc-tab ghc-tab-sm" id="ghs-tab-pkg"   data-action="ghStoreTab" data-action-arg="pkg">
+                <span class="ghc-tab-ico">📦</span><span class="ghc-tab-lbl">PKG</span>
+              </button>
+              <button class="ghc-tab ghc-tab-sm" id="ghs-tab-local" data-action="ghStoreTab" data-action-arg="local">
+                <span class="ghc-tab-ico">📁</span><span class="ghc-tab-lbl">Locali</span>
+              </button>
+              <div class="ghc-tab-sep"></div>
+              <button class="ghc-tab ghc-tab-sm" data-action="openYamlImport" title="Incolla YAML da HACS">
+                <span class="ghc-tab-ico" style="font-size:14px"><i class="mdi mdi-code-braces"></i></span><span class="ghc-tab-lbl">YAML</span>
+              </button>
+              <button class="ghc-tab ghc-tab-sm" data-action="_ghsReloadTab" title="Ricarica da GitHub">
+                <span class="ghc-tab-ico" style="font-size:17px">↻</span><span class="ghc-tab-lbl">Sync</span>
+              </button>
+              <button class="ghc-tab ghc-tab-sm" data-action="openGitHubCfg" title="Impostazioni GitHub">
+                <span class="ghc-tab-ico" style="font-size:16px">⚙️</span><span class="ghc-tab-lbl">Config</span>
+              </button>
             </div>
           </div>
           <input id="ghs-search" class="ghs-search" placeholder="🔍 Cerca per nome…" autocomplete="off">
