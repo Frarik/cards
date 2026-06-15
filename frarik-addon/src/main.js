@@ -1748,10 +1748,11 @@ async function _ghsPreview(enc, nm, cardId){
 }
 function ghStoreTab(tab){
   _ghsTab=tab;
-  ['js','chips','distintivi','premium','yaml','pkg','local'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
-  const s=document.getElementById('ghs-search'); if(s) s.value='';
+  ['js','chips','distintivi','premium','yaml','pkg','local','card-yaml'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
+  const s=document.getElementById('ghs-search'); if(s){ s.value=''; s.style.display=(tab==='card-yaml')?'none':''; }
   const loadEl=document.getElementById('ghs-load'); if(loadEl) loadEl.style.display=(tab==='local')?'':'none';
   if(tab==='local'){ _ghStoreRender(); _ghStoreInitDropzone(); return; }
+  if(tab==='card-yaml'){ _ghStoreRender(); return; }
   if(tab==='premium'&&_ghsCache[tab]!==undefined){ _ghStoreRender(); return; }
   if(tab!=='premium'&&_ghsCache[tab]){ _ghStoreRender(); return; }
   document.getElementById('ghs-status').textContent='⏳ Carico da GitHub…';
@@ -1792,6 +1793,7 @@ function _ghStoreRender(){
   if(tab==='local'){ _ghStoreRenderInstalled(q,'local'); return; }
   if(tab==='pkg'){ _ghStoreRenderPkg(q); return; }
   if(tab==='premium'){ _ghStoreRenderPremium(q); return; }
+  if(tab==='card-yaml'){ _ghStoreRenderYamlEditor(); return; }
   const folder=_GHS_FOLDERS[tab]; const g=_ghCfg();
   let files=(_ghsCache[tab]||[]).slice();
   if(q) files=files.filter(f=>f.name.toLowerCase().includes(q));
@@ -8434,6 +8436,145 @@ function _haHassObj(){
     fireEvent:(node,type,detail)=>{ try{ node.dispatchEvent(new CustomEvent(type,{bubbles:true,composed:true,detail:detail||{}})); }catch(e){} }
   };
 }
+/* ════════ STORE TAB — Card YAML Editor (incolla YAML, anteprima live HACS) ════════ */
+let _ghsYamlEditorContent='', _ghsYamlEditorTimer=null, _ghsYamlCurrentConfig=null;
+
+function _ghStoreRenderYamlEditor(){
+  const list=document.getElementById('ghs-list');
+  const status=document.getElementById('ghs-status');
+  if(status) status.textContent='Incolla il codice YAML di una card HA/HACS per vederne l\'anteprima live';
+  list.innerHTML=`
+    <div id="ghsy-wrap">
+      <div id="ghsy-left">
+        <div class="ghsy-pane-hdr">
+          <span class="ghsy-pane-lbl">CONFIGURAZIONE YAML</span>
+          <button class="ghsy-act-btn" data-action="_ghsYamlFormat">⇄ Formatta</button>
+        </div>
+        <div id="ghsy-editor-area">
+          <div id="ghsy-lines" aria-hidden="true"></div>
+          <textarea id="ghsy-inp" spellcheck="false" placeholder="type: custom:button-card&#10;entity: light.soggiorno&#10;name: Soggiorno"></textarea>
+        </div>
+        <div id="ghsy-hint">Stesso formato YAML di HA. Il campo <code>type</code> è obbligatorio.</div>
+        <div id="ghsy-foot">
+          <div id="ghsy-err"></div>
+          <button id="ghsy-add-btn" class="ghsy-add-btn" data-action="_ghsYamlAddToDash" style="display:none">
+            <i class="mdi mdi-plus-circle-outline"></i> Aggiungi alla Dashboard
+          </button>
+        </div>
+      </div>
+      <div id="ghsy-right">
+        <div class="ghsy-pane-hdr">
+          <span class="ghsy-pane-lbl">ANTEPRIMA LIVE</span>
+          <span id="ghsy-hacs-count" style="font-size:10px;color:var(--muted)"></span>
+        </div>
+        <div id="ghsy-prev-wrap">
+          <div id="ghsy-placeholder">
+            <div style="font-size:28px;margin-bottom:10px;opacity:.3">📺</div>
+            <div>Inserisci il tipo nel YAML per vedere l'anteprima</div>
+          </div>
+          <div id="ghsy-prev"></div>
+        </div>
+      </div>
+    </div>`;
+  const ta=document.getElementById('ghsy-inp');
+  if(ta){
+    if(_ghsYamlEditorContent) ta.value=_ghsYamlEditorContent;
+    _ghsYamlSyncLines();
+    ta.addEventListener('input',()=>{
+      _ghsYamlEditorContent=ta.value;
+      _ghsYamlSyncLines();
+      clearTimeout(_ghsYamlEditorTimer);
+      _ghsYamlEditorTimer=setTimeout(_ghsYamlLivePreview,600);
+    });
+    ta.addEventListener('scroll',_ghsYamlSyncScroll);
+    if(_ghsYamlEditorContent) setTimeout(_ghsYamlLivePreview,200);
+  }
+}
+
+function _ghsYamlSyncLines(){
+  const ta=document.getElementById('ghsy-inp');
+  const ln=document.getElementById('ghsy-lines');
+  if(!ta||!ln) return;
+  const n=ta.value.split('\n').length;
+  ln.textContent=Array.from({length:n},(_,i)=>i+1).join('\n');
+}
+
+function _ghsYamlSyncScroll(){
+  const ta=document.getElementById('ghsy-inp');
+  const ln=document.getElementById('ghsy-lines');
+  if(ta&&ln) ln.scrollTop=ta.scrollTop;
+}
+
+async function _ghsYamlLivePreview(){
+  const ta=document.getElementById('ghsy-inp');
+  const prev=document.getElementById('ghsy-prev');
+  const ph=document.getElementById('ghsy-placeholder');
+  const errEl=document.getElementById('ghsy-err');
+  const addBtn=document.getElementById('ghsy-add-btn');
+  const hacsEl=document.getElementById('ghsy-hacs-count');
+  if(!ta||!prev) return;
+  const txt=ta.value.trim();
+  if(!txt){
+    prev.innerHTML=''; if(ph) ph.style.display='';
+    if(errEl) errEl.textContent=''; if(addBtn) addBtn.style.display='none';
+    _ghsYamlCurrentConfig=null; return;
+  }
+  let config;
+  try{ config=jsyaml.load(txt); }catch(e){
+    if(errEl) errEl.textContent='❌ YAML non valido: '+e.message; return;
+  }
+  if(!config||typeof config!=='object'){ if(errEl) errEl.textContent='❌ YAML vuoto o non valido'; return; }
+  const type=(config.type||'').trim();
+  if(!type){ if(errEl) errEl.textContent='⚠️ Manca il campo type:'; return; }
+  if(errEl) errEl.textContent='⏳ Generando anteprima…';
+  if(ph) ph.style.display='none';
+  prev.innerHTML='';
+  try{
+    if(!_lovelaceResourcesLoaded){ await _loadLovelaceResources(); await new Promise(r=>setTimeout(r,500)); }
+    const el=await _yamlCreateEl(config);
+    el.style.cssText='display:block;width:100%';
+    prev.innerHTML='';
+    prev.appendChild(el);
+    _yamlRefreshHass(prev);
+    _ghsYamlCurrentConfig={config,yamlStr:txt};
+    const nc=(window.customCards||[]).length;
+    if(hacsEl) hacsEl.textContent=nc+' card HACS';
+    if(errEl) errEl.textContent='';
+    if(addBtn) addBtn.style.display='';
+  }catch(e){
+    prev.innerHTML=`<div style="padding:20px;color:#f87171;font-size:11px;text-align:center">⚠️ ${eh(e.message)}</div>`;
+    if(errEl) errEl.textContent='⚠️ '+e.message;
+  }
+}
+
+function _ghsYamlFormat(){
+  const ta=document.getElementById('ghsy-inp');
+  if(!ta) return;
+  try{
+    const obj=jsyaml.load(ta.value);
+    if(!obj||typeof obj!=='object'){ showToast('❌ YAML non valido'); return; }
+    ta.value=jsyaml.dump(obj,{indent:2,lineWidth:-1}).replace(/\n$/,'');
+    _ghsYamlEditorContent=ta.value;
+    _ghsYamlSyncLines();
+  }catch(e){ showToast('❌ '+e.message); }
+}
+
+function _ghsYamlAddToDash(){
+  if(!_ghsYamlCurrentConfig){ showToast('⚠️ Prima genera l\'anteprima'); return; }
+  const {config,yamlStr}=_ghsYamlCurrentConfig;
+  const page=curPage();
+  const newCard={
+    id:uid(),type:'yaml-card',
+    lovelaceConfig:yamlStr,
+    label:(config.name||config.title||config.type||'YAML Card').toString(),
+    icon:'🧩',color:'#818cf8',colSpan:2,rowSpan:2
+  };
+  _assignSection(page,newCard);
+  page.cards.push(newCard);
+  saveCfg(); renderDash();
+  showToast('✅ Card YAML aggiunta alla dashboard');
+}
+
 /* ════════ YAML IMPORT ════════ */
 let _yamlCurrentConfig=null;
 function openYamlImport(){
@@ -13786,6 +13927,8 @@ Object.assign(window, {
   _ghsPublish,
   _ghsReloadTab,
   _ghsYamlAdd,
+  _ghsYamlFormat,
+  _ghsYamlAddToDash,
   _ghsPkgLoadFile,
   _ghsPkgSaveLocal,
   _ghsPkgDeleteLocal,

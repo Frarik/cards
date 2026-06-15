@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.4.86 — 2026-06-15
+
+### feat: Tab "Card YAML" nello Store — editor YAML con anteprima live HACS
+
+- Nuovo tab **📝 Card YAML** nel gruppo principale dello store (accanto a JS, Chips, Distintivi, Premium)
+- **Layout split-view**: editor YAML a sinistra (con numerazione righe), anteprima live a destra
+- Anteprima si aggiorna automaticamente mentre si digita (debounce 600ms)
+- Piena compatibilità HACS: carica le risorse Lovelace installate su HA (`custom:button-card`, `custom:mushroom-*`, `custom:bubble-card`, ecc.)
+- Supporto card HA native: `entities`, `horizontal-stack`, `vertical-stack`, `grid`, ecc.
+- Pulsante **"⇄ Formatta"** per riformattare/validare il YAML
+- Pulsante **"Aggiungi alla Dashboard"** appare dopo la prima anteprima valida
+- La barra di ricerca viene nascosta quando il tab è attivo (non rilevante)
+- Il contenuto dell'editor viene preservato quando si cambia tab e si torna
+
 ## 1.4.85 — 2026-06-15
 
 ### feat: SOS Card — redesign completo con procedura guidata a step
