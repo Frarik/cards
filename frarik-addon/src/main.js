@@ -1646,13 +1646,17 @@ function _ghcLivePrev(host, cardId){
       requestAnimationFrame(()=>{
         try{
           if(typeof cel.setConfig==='function'){
-            let cfg={type:'custom:'+tag};
-            try{ if(typeof cel.getStubConfig==='function'){ const stub=cel.getStubConfig(hass,Object.keys(hass?.states||{})); if(stub&&typeof stub==='object') cfg={...cfg,...stub}; } }catch(_){}
-            if(!cfg.entity&&!cfg.entityId&&hass?.states){
+            let pcfg={type:'custom:'+tag};
+            // Stub config dal componente
+            try{ if(typeof cel.getStubConfig==='function'){ const stub=cel.getStubConfig(hass,Object.keys(hass?.states||{})); if(stub&&typeof stub==='object') pcfg={...pcfg,...stub}; } }catch(_){}
+            // Cerca un'istanza già configurata in dashboard → usa il suo storageKey così la card carica la configurazione salvata (entity, soglie, ecc.)
+            const existingCard=(cfg.pages||[]).flatMap(p=>(p.cards||[])).find(c=>c.type==='js-custom'&&c.jsCardId===cardId&&c.id);
+            if(existingCard?.id){ pcfg.storageKey=existingCard.id; }
+            else if(!pcfg.entity&&!pcfg.entityId&&hass?.states){
               const ent=Object.keys(hass.states).find(k=>k.startsWith('sensor.')||k.startsWith('light.')||k.startsWith('switch.')||k.startsWith('weather.'));
-              if(ent){ cfg.entity=ent; cfg.entityId=ent; }
+              if(ent){ pcfg.entity=ent; pcfg.entityId=ent; }
             }
-            cel.setConfig(cfg);
+            cel.setConfig(pcfg);
           }
         }catch(e){}
         requestAnimationFrame(()=>{ try{ cel.hass=hass; }catch(e){} });

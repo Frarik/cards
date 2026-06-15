@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.81 — 2026-06-15
+
+### fix: store preview usa storageKey istanza esistente per caricare config card
+
+- `_ghcLivePrev`: cerca nella configurazione dashboard un'istanza già configurata dello stesso tipo di card e passa il suo `storageKey` al `setConfig` della preview — le card frarik caricano così la loro configurazione salvata (entity, soglie, ecc.) e renderizzano correttamente invece di mostrare uno stato vuoto
+
 ## 1.4.80 — 2026-06-15
 
 ### fix: colonne/layout rimossi da Viste (main.js) + store preview con fallback
