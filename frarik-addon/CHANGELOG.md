@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.4.72 — 2026-06-15
+
+### feat(settings): tab Licenza + Pannello Admin + overlay primo accesso rinnovato
+
+- **Tab "Licenza"**: nuovo pannello nelle impostazioni con badge membership colorato e dinosauro cartoon assegnato in modo deterministico dal nome utente (T-Rex, Brontosauro, Velociraptor ecc.)
+- **Badge licenza**: mostra nome, tipo (Standard/Premium/Admin), scadenza, chiave mascherata, logo Frarik; bottone "Passa a Premium" solo per utenti Standard
+- **Tab "Pannello Admin"**: visibile solo se `frarik_lic_note` contiene "Admin" o "Amministratore"; mostra info licenza, test rapidi, anteprime utente Standard vs Premium, lista email interesse, statistiche
+- **Schermata primo accesso rinnovata**: logo Frarik grande, card viola con glow, bottone "Acquista Premium" che apre il portale licenze, background `#0a0816`
+- `_adminShowFirstAccess()`: apre l'overlay primo accesso con tasto "Chiudi anteprima" per test da admin
+- `_epLicBadgeLoad()`: legge localStorage, genera badge immediato, poi fa fetch live per aggiornarlo
+- `_epAdminPanelLoad()`: compila il pannello admin con mini-preview utenti Standard/Premium, email, statistiche
+- `_switchEpTab()`: mostra/nasconde tab Admin in base a `_isAdmin()`, carica hook `licenza` e `admin-panel`
+
 ## 1.4.71 — 2026-06-15
 
 ### fix(store): preview reale per tutte le card + pannello Admin

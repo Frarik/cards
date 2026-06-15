@@ -5591,6 +5591,10 @@ function _epToggleGroup(id){
 }
 /* ── Sidebar tab switch ── */
 function _switchEpTab(tab){
+  // Mostra/nasconde tab Admin in base alla licenza
+  const adminBtn=document.getElementById('ep-sidetab-admin');
+  const adminSep=document.getElementById('ep-sep-admin');
+  if(adminBtn){ const isAdm=_isAdmin(); adminBtn.style.display=isAdm?'':'none'; if(adminSep) adminSep.style.display=isAdm?'':'none'; }
   // Aggiorna stato attivo dei tab nella sidebar
   document.querySelectorAll('.ep-sidetab').forEach(btn=>{
     btn.classList.toggle('active', btn.dataset.actionArg===tab);
@@ -5617,6 +5621,8 @@ function _switchEpTab(tab){
   if(tab==='store'){ try{_ghsCache={};ghStoreTab('js');}catch(_){} }
   if(tab==='notif'){ try{renderNotifRules();}catch(_){} try{_ntfUpdateSidebarBadges();}catch(_){} }
   if(tab==='sos'){ try{renderSOSCfgList();}catch(_){} }
+  if(tab==='licenza'){ try{_epLicBadgeLoad();}catch(_){} }
+  if(tab==='admin-panel'){ try{_epAdminPanelLoad();}catch(_){} }
 }
 function _openEpSheet(tab){ _switchEpTab(tab); }
 function _closeEpSheet(){}
@@ -10843,6 +10849,179 @@ function _epLicLogout(){
   location.reload();
 }
 
+/* ── Badge Licenza con dinosauro ─────────────────────────────────────────── */
+const LIC_DINOS=[
+  {n:'T-Rex',        e:'🦖',c:'#ef4444',g1:'#450a0a',g2:'#7f1d1d',d:'Feroce e leggendario'},
+  {n:'Brontosauro',  e:'🦕',c:'#22c55e',g1:'#052e16',g2:'#14532d',d:'Gentile e maestoso'},
+  {n:'Velociraptor', e:'🦖',c:'#f97316',g1:'#431407',g2:'#7c2d12',d:'Veloce e astuto'},
+  {n:'Triceratopo',  e:'🦕',c:'#a855f7',g1:'#2e1065',g2:'#4c1d95',d:'Coraggioso e fiero'},
+  {n:'Stegosauro',   e:'🦕',c:'#3b82f6',g1:'#172554',g2:'#1e3a8a',d:'Curioso e affidabile'},
+  {n:'Pterodattilo', e:'🦖',c:'#06b6d4',g1:'#083344',g2:'#0e4f6c',d:'Libero e intuitivo'},
+  {n:'Ankilosauro',  e:'🦕',c:'#eab308',g1:'#422006',g2:'#713f12',d:'Solido e protettivo'},
+  {n:'Spinosauro',   e:'🦖',c:'#ec4899',g1:'#4a044e',g2:'#701a75',d:'Elegante e audace'},
+];
+function _licDinoFor(name){
+  let h=0; for(let i=0;i<(name||'').length;i++) h=(h*31+name.charCodeAt(i))&0xffffffff;
+  return LIC_DINOS[Math.abs(h)%LIC_DINOS.length];
+}
+function _licBadgeHtml({name,note,expires,key,dino,isPrem,isAdm}){
+  const c=dino.c;
+  const alpha=(a)=>{
+    const r=parseInt(c.slice(1,3),16),g=parseInt(c.slice(3,5),16),b=parseInt(c.slice(5,7),16);
+    return `rgba(${r},${g},${b},${a})`;
+  };
+  const masked=key?(key.slice(0,5)+'****-****-'+key.slice(-4)):'—';
+  const expFmt=expires&&expires!=='null'?new Date(isNaN(expires)?expires:parseInt(expires)).toLocaleDateString('it-IT',{day:'numeric',month:'short',year:'numeric'}):'Nessuna scadenza';
+  const level=isAdm?'🛡️ Admin':isPrem?'💎 Premium':'⭐ Standard';
+  const upgBtn=(!isPrem&&!isAdm)?`<button data-action="openPremiumPage" style="flex:1;padding:9px;border-radius:10px;background:linear-gradient(135deg,rgba(251,191,36,.18),rgba(251,191,36,.08));border:1px solid rgba(251,191,36,.35);color:#fbbf24;font-size:11px;font-weight:800;cursor:pointer;letter-spacing:.3px">💎 Passa a Premium</button>`:'';
+  return `<div style="width:100%;max-width:360px;border-radius:20px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.55);background:linear-gradient(135deg,${dino.g1} 0%,${dino.g2} 100%);border:1px solid ${alpha(.25)};position:relative">
+  <div style="position:absolute;top:-20px;right:-20px;width:120px;height:120px;border-radius:50%;background:${alpha(.08)}"></div>
+  <div style="padding:20px 20px 10px;display:flex;align-items:flex-start;gap:14px;position:relative">
+    <div style="font-size:64px;line-height:1;filter:drop-shadow(0 4px 12px rgba(0,0,0,.5))">${dino.e}</div>
+    <div style="flex:1">
+      <div style="font-size:10px;font-weight:800;letter-spacing:2px;color:${alpha(.7)};text-transform:uppercase;margin-bottom:2px">Il tuo compagno</div>
+      <div style="font-size:18px;font-weight:900;color:#fff;letter-spacing:-.3px">${eh(dino.n)}</div>
+      <div style="font-size:11px;color:${alpha(.6)};margin-top:2px;font-style:italic">${eh(dino.d)}</div>
+    </div>
+    <div style="padding:4px 10px;border-radius:20px;background:${alpha(.2)};border:1px solid ${alpha(.4)};font-size:10px;font-weight:800;color:${c};letter-spacing:.5px;white-space:nowrap">${level}</div>
+  </div>
+  <div style="height:1px;background:${alpha(.15)};margin:0 20px"></div>
+  <div style="padding:14px 20px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div>
+        <div style="font-size:10px;color:${alpha(.5)};font-weight:700;letter-spacing:.8px;text-transform:uppercase">Intestatario</div>
+        <div style="font-size:15px;font-weight:800;color:#fff;margin-top:2px">${eh(name||'—')}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:10px;color:${alpha(.5)};font-weight:700;letter-spacing:.8px;text-transform:uppercase">Scadenza</div>
+        <div style="font-size:13px;font-weight:700;color:${c};margin-top:2px">${eh(expFmt)}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      ${upgBtn}
+      <button data-action="_epLicLogout" style="flex:1;padding:9px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.5);font-size:11px;font-weight:700;cursor:pointer">🔄 Cambia</button>
+    </div>
+  </div>
+  <div style="padding:10px 20px 14px;display:flex;align-items:center;gap:8px;border-top:1px solid ${alpha(.1)}">
+    <img src="./logo-v2.png?v=1.1.93" style="height:20px;width:auto;opacity:.55">
+    <span style="font-size:10px;color:${alpha(.4)};font-weight:700;letter-spacing:1px">FRARIK DASHBOARD</span>
+    <span style="margin-left:auto;font-size:9px;color:${alpha(.3)};font-family:monospace">${masked}</span>
+  </div>
+</div>`;
+}
+function _epLicBadgeLoad(){
+  const wrap=document.getElementById('lic-badge-wrap'); if(!wrap) return;
+  const key=localStorage.getItem('frarik_license')||'';
+  const name=localStorage.getItem('frarik_lic_name')||'Utente Frarik';
+  const note=(localStorage.getItem('frarik_lic_note')||'').toLowerCase();
+  const expires=localStorage.getItem('frarik_lic_expires')||'';
+  const isPrem=_isPremiumLic(); const isAdm=_isAdmin();
+  const dino=_licDinoFor(name);
+  wrap.innerHTML=_licBadgeHtml({name,note,expires,key,dino,isPrem,isAdm});
+  // Fetch live per aggiornare
+  if(!key) return;
+  fetch(LICENSE_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key})})
+    .then(r=>r.json()).then(d=>{
+      if(!d.valid) return;
+      localStorage.setItem('frarik_lic_name',d.name||'');
+      localStorage.setItem('frarik_lic_note',d.note||'');
+      localStorage.setItem('frarik_lic_expires',d.expires||'');
+      const n2=d.name||name; const note2=(d.note||'').toLowerCase();
+      const dino2=_licDinoFor(n2);
+      const isPrem2=note2.includes('premium')||note2.includes('admin')||note2.includes('amministratore');
+      const isAdm2=note2.includes('admin')||note2.includes('amministratore');
+      wrap.innerHTML=_licBadgeHtml({name:n2,note:note2,expires:d.expires||expires,key,dino:dino2,isPrem:isPrem2,isAdm:isAdm2});
+    }).catch(()=>{});
+}
+
+/* ── Pannello Admin (ep-content-admin-panel) ─────────────────────────────── */
+function _epAdminPanelLoad(){
+  const body=document.getElementById('ep-admin-body'); if(!body) return;
+  const name=localStorage.getItem('frarik_lic_name')||'—';
+  const note=localStorage.getItem('frarik_lic_note')||'—';
+  const expires=localStorage.getItem('frarik_lic_expires')||'';
+  const expFmt=expires&&expires!=='null'?new Date(isNaN(expires)?expires:parseInt(expires)).toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'}):'Nessuna scadenza';
+  const emails=JSON.parse(localStorage.getItem('frarik_prem_interest')||'[]');
+  let cardCount=0; try{ cardCount=(_jsStoreList()||[]).length; }catch(e){}
+  const ver=document.getElementById('ep-ver-label')?.textContent||'—';
+
+  // mini badge standard preview
+  const stdDino=LIC_DINOS[0]; // T-Rex
+  const premDino=LIC_DINOS[1]; // Brontosauro
+  const miniCard=(dino,lvl,nm,exp,c2)=>`<div style="flex:1;border-radius:14px;overflow:hidden;background:linear-gradient(135deg,${dino.g1},${dino.g2});border:1px solid rgba(255,255,255,.08);padding:12px 14px">
+    <div style="font-size:36px;margin-bottom:4px">${dino.e}</div>
+    <div style="font-size:11px;font-weight:800;color:#fff">${dino.n}</div>
+    <div style="font-size:10px;color:rgba(255,255,255,.45);margin:2px 0 8px">${nm}</div>
+    <div style="display:inline-block;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,.1);font-size:9px;font-weight:800;color:${c2};margin-bottom:6px">${lvl}</div>
+    <div style="font-size:9px;color:rgba(255,255,255,.3)">Scad: ${exp}</div>
+  </div>`;
+
+  body.innerHTML=`
+  <div style="padding:4px 0 16px">
+    <!-- Info admin -->
+    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Licenza attiva</div>
+    <div style="padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:11px;color:rgba(255,255,255,.4)">Tipo</span><span style="font-size:11px;font-weight:700;color:#ff8888">${eh(note)}</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:11px;color:rgba(255,255,255,.4)">Nome</span><span style="font-size:11px;font-weight:700;color:#fff">${eh(name)}</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="font-size:11px;color:rgba(255,255,255,.4)">Scadenza</span><span style="font-size:11px;font-weight:700;color:#fff">${eh(expFmt)}</span></div>
+    </div>
+    <!-- Test rapidi -->
+    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Test rapidi</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+      <button data-action="openPremiumPage" style="padding:9px 14px;border-radius:10px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);color:#fbbf24;font-size:11px;font-weight:700;cursor:pointer">👁 Pagina Premium</button>
+      <button data-action="_adminShowFirstAccess" style="padding:9px 14px;border-radius:10px;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.3);color:#a5b4fc;font-size:11px;font-weight:700;cursor:pointer">🔑 Schermata primo accesso</button>
+    </div>
+    <!-- Anteprime utenti -->
+    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Come vedono la licenza i tuoi utenti</div>
+    <div style="display:flex;gap:10px;margin-bottom:16px">
+      <div style="flex:1">
+        <div style="font-size:10px;color:rgba(255,255,255,.3);font-weight:700;margin-bottom:5px">⭐ Standard</div>
+        ${miniCard(stdDino,'⭐ Standard','Utente Frarik','Nessuna','#94a3b8')}
+      </div>
+      <div style="flex:1">
+        <div style="font-size:10px;color:rgba(255,255,255,.3);font-weight:700;margin-bottom:5px">💎 Premium</div>
+        ${miniCard(premDino,'💎 Premium','Utente Premium','✓ Attiva','#22c55e')}
+      </div>
+    </div>
+    <!-- Email interesse -->
+    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Email interesse Premium (${emails.length})</div>
+    <div style="padding:10px 14px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);margin-bottom:${emails.length?'8':'16'}px;max-height:110px;overflow-y:auto;scrollbar-width:none">
+      ${emails.length?emails.map(e=>`<div style="font-size:11px;color:rgba(255,255,255,.65);padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04)">${eh(e)}</div>`).join(''):'<div style="font-size:11px;color:rgba(255,255,255,.25)">Nessuna email registrata</div>'}
+    </div>
+    ${emails.length?`<button onclick="navigator.clipboard.writeText(${JSON.stringify(emails.join(', '))}).then(()=>showToast('✅ Copiate!'))" style="width:100%;margin-bottom:16px;padding:8px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.45);font-size:11px;font-weight:700;cursor:pointer">📋 Copia tutte</button>`:''}
+    <!-- Statistiche -->
+    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Statistiche</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <div style="padding:10px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);text-align:center">
+        <div style="font-size:18px;font-weight:900;color:#fff">${cardCount}</div>
+        <div style="font-size:9px;color:rgba(255,255,255,.35);margin-top:2px">Card</div>
+      </div>
+      <div style="padding:10px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);text-align:center">
+        <div style="font-size:12px;font-weight:900;color:#a5b4fc">${eh(ver)}</div>
+        <div style="font-size:9px;color:rgba(255,255,255,.35);margin-top:2px">Versione</div>
+      </div>
+      <div style="padding:10px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);text-align:center">
+        <div style="font-size:12px;font-weight:900;color:#4ade80">✓</div>
+        <div style="font-size:9px;color:rgba(255,255,255,.35);margin-top:2px">Connesso</div>
+      </div>
+    </div>
+  </div>`;
+}
+function _adminShowFirstAccess(){
+  const ov=document.getElementById('lic-overlay'); if(!ov) return;
+  let closeBtn=document.getElementById('_admin-lic-close');
+  if(!closeBtn){
+    closeBtn=document.createElement('button');
+    closeBtn.id='_admin-lic-close';
+    closeBtn.style.cssText='position:absolute;top:20px;right:20px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;z-index:1';
+    closeBtn.textContent='✕ Chiudi anteprima';
+    closeBtn.onclick=()=>{ ov.style.display='none'; closeBtn.remove(); };
+    ov.style.position='relative';
+    ov.appendChild(closeBtn);
+  }
+  ov.style.display='flex';
+}
+
 /* ── Listener icona picker (ex lambda inline) ────────────────────────────── */
 (function _initIconPickers(){
   const picks=[
@@ -13263,4 +13442,5 @@ Object.assign(window, {
   _switchEpTab, _openEpSheet, _closeEpSheet, _toggleHdrIcons,
   openPremiumPage, closePremiumPage, _ghsPremActivate, _premSendInterest,
   _isAdmin, _adminCtrlPanel,
+  _epLicBadgeLoad, _epAdminPanelLoad, _adminShowFirstAccess,
 });

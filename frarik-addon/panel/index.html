@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@400;600;700;800;900&family=Nunito:wght@400;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="./assets/index-j1z5LErG.js"></script>
+  <script type="module" crossorigin src="./assets/index-Bb5sunVN.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-ByynuKlV.css">
 </head>
 <body>
@@ -588,6 +588,9 @@
           <button class="ep-sidetab" data-action="_switchEpTab" data-action-arg="dati">
             <span class="ep-sidetab-ico">☁️</span><span>Dati</span>
           </button>
+          <button class="ep-sidetab" data-action="_switchEpTab" data-action-arg="licenza">
+            <span class="ep-sidetab-ico">💳</span><span>Licenza</span>
+          </button>
           <div class="ep-sidenav-sep"></div>
           <button class="ep-sidetab" data-action="_switchEpTab" data-action-arg="fbar">
             <span class="ep-sidetab-ico">▭</span>
@@ -608,6 +611,10 @@
             <span class="ep-sidetab-ico">🆘</span>
             <span style="flex:1">SOS</span>
             <span id="sos-ep-count" style="font-size:9px;opacity:.5;margin-left:auto"></span>
+          </button>
+          <div class="ep-sidenav-sep" id="ep-sep-admin" style="display:none"></div>
+          <button id="ep-sidetab-admin" class="ep-sidetab" style="display:none" data-action="_switchEpTab" data-action-arg="admin-panel">
+            <span class="ep-sidetab-ico">🛡️</span><span style="flex:1">Pannello Admin</span>
           </button>
         </nav>
 
@@ -786,6 +793,20 @@
           <div style="height:16px"></div>
         </div>
 
+        <!-- ── LICENZA ── -->
+        <div id="ep-content-licenza" class="ep-tab-content">
+          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">💳</div><div class="ep-tab-hdr-title">Licenza</div></div>
+          <div id="lic-badge-wrap" style="min-height:200px;display:flex;align-items:center;justify-content:center;flex-direction:column">
+            <div class="spin" style="width:28px;height:28px"></div>
+          </div>
+        </div>
+
+        <!-- ── PANNELLO ADMIN ── -->
+        <div id="ep-content-admin-panel" class="ep-tab-content">
+          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">🛡️</div><div class="ep-tab-hdr-title">Pannello Amministratore</div></div>
+          <div id="ep-admin-body"><!-- compilato da JS --></div>
+        </div>
+
         <!-- ── BOTTOM BAR ── -->
         <div id="ep-content-fbar" class="ep-tab-content">
           <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">▭</div><div class="ep-tab-hdr-title">Bottom Bar</div></div>
@@ -955,20 +976,36 @@
 <div id="toast"></div>
 
 <!-- LICENSE OVERLAY -->
-<div id="lic-overlay" style="display:none;position:fixed;inset:0;background:#0f0f13;z-index:9999;align-items:center;justify-content:center;flex-direction:column">
-  <div style="text-align:center;margin-bottom:32px">
-    <div style="font-size:26px;font-weight:800;letter-spacing:2px;color:#6366f1">FRARIK <span style="color:#a5b4fc">DASHBOARD</span></div>
-    <div style="font-size:12px;color:#64748b;margin-top:6px;letter-spacing:1px">Inserisci la tua license key per accedere</div>
+<div id="lic-overlay" style="display:none;position:fixed;inset:0;background:#0a0816;z-index:9999;align-items:center;justify-content:center;flex-direction:column;padding:16px">
+  <!-- Logo + titolo -->
+  <div style="text-align:center;margin-bottom:28px">
+    <img src="./logo-v2.png?v=1.1.93" alt="Frarik Dashboard" style="height:72px;width:auto;object-fit:contain;filter:drop-shadow(0 0 24px rgba(99,102,241,.6));margin-bottom:14px;display:block;margin-left:auto;margin-right:auto">
+    <div style="font-size:20px;font-weight:900;letter-spacing:1px;color:#fff">Frarik <span style="color:#a5b4fc">Dashboard</span></div>
+    <div style="font-size:12px;color:rgba(255,255,255,.35);margin-top:5px;letter-spacing:.5px">Inserisci la tua chiave per accedere</div>
   </div>
-  <div style="background:#1a1a24;border:1px solid #2d2d3d;border-radius:16px;padding:28px;width:100%;max-width:420px;margin:0 16px">
+  <!-- Card -->
+  <div style="background:rgba(255,255,255,.04);border:1px solid rgba(99,102,241,.3);border-radius:20px;padding:28px;width:100%;max-width:420px;box-shadow:0 0 60px rgba(99,102,241,.12)">
+    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">Chiave di licenza</div>
     <input id="lic-input" type="text" placeholder="FRKD-XXXX-XXXX-XXXX" maxlength="19"
-      style="width:100%;background:#111118;border:1px solid #2d2d3d;color:#f97316;border-radius:8px;padding:14px;font-size:18px;font-weight:700;letter-spacing:4px;text-align:center;font-family:monospace;outline:none;text-transform:uppercase">
-    <button id="lic-btn" style="width:100%;margin-top:12px;background:#6366f1;color:#fff;border:none;border-radius:8px;padding:13px;font-size:14px;font-weight:700;cursor:pointer">Attiva</button>
+      style="width:100%;background:rgba(0,0,0,.35);border:1px solid rgba(99,102,241,.3);color:#f97316;border-radius:12px;padding:15px;font-size:18px;font-weight:700;letter-spacing:4px;text-align:center;font-family:monospace;outline:none;text-transform:uppercase;box-sizing:border-box">
+    <button id="lic-btn" style="width:100%;margin-top:12px;background:linear-gradient(135deg,#6366f1,#818cf8);color:#fff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.5px">Attiva licenza</button>
     <div id="lic-err" style="color:#f87171;font-size:12px;text-align:center;margin-top:10px;display:none"></div>
-    <div style="margin-top:14px;text-align:center;font-size:11px;color:#475569">
-      Non hai una chiave? <a href="https://frarik-license.frarik.workers.dev/portal" target="_blank" style="color:#6366f1">Portale licenze</a>
+    <!-- Separatore -->
+    <div style="display:flex;align-items:center;gap:10px;margin:18px 0 14px">
+      <div style="flex:1;height:1px;background:rgba(255,255,255,.07)"></div>
+      <span style="font-size:10px;color:rgba(255,255,255,.25);font-weight:600">oppure</span>
+      <div style="flex:1;height:1px;background:rgba(255,255,255,.07)"></div>
+    </div>
+    <!-- Acquisto -->
+    <div style="text-align:center">
+      <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:10px">Non hai ancora una chiave?</div>
+      <a href="https://frarik-license.frarik.workers.dev/portal" target="_blank"
+        style="display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:12px;background:linear-gradient(135deg,rgba(251,191,36,.15),rgba(251,191,36,.08));border:1px solid rgba(251,191,36,.35);color:#fbbf24;font-size:13px;font-weight:800;text-decoration:none;letter-spacing:.3px">
+        💎 Acquista Premium
+      </a>
     </div>
   </div>
+  <div style="margin-top:16px;font-size:10px;color:rgba(255,255,255,.2)">Frarik Dashboard · Fratech</div>
 </div>
 <!-- CONFIRM DIALOG -->
 <div id="confirm-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:20000;display:none;align-items:center;justify-content:center">
