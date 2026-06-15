@@ -1367,6 +1367,31 @@ function _ghcSmartDesc(name, code){
 function _bumpVer(v){ return _bumpMinor(v); }
 let _ghVerCache={};   // sha → versione letta dal file (per mostrarla nello store)
 let _ghDescCache={};  // sha → descrizione estratta dal file
+let _ghIconCache={};  // sha → icona estratta dal file
+function _parseCardIcon(code){
+  const m=String(code||'').match(/\bicon\s*:\s*['"`]([^'"`\n]{1,60})['"`]/);
+  return m?m[1].trim():'';
+}
+function _ghcSmartIcon(name){
+  const n=(name||'').toLowerCase();
+  if(/meteo|weather/.test(n)) return '🌧️';
+  if(/camera|telecam|webrtc/.test(n)) return '📷';
+  if(/clima|climatizzat|hvac/.test(n)) return '❄️';
+  if(/tapparella|shutter|cover|blind/.test(n)) return '🪟';
+  if(/person|tracker/.test(n)) return '👤';
+  if(/irrigazion|irrigation/.test(n)) return '💧';
+  if(/door|window|porte|finestre/.test(n)) return '🚪';
+  if(/system|server|mini.pc|pc/.test(n)) return '🖥️';
+  if(/raccolta|differenziata|trash/.test(n)) return '♻️';
+  if(/zanzar|mosquito/.test(n)) return '🦟';
+  if(/energy|energia|consumo|watt/.test(n)) return '⚡';
+  if(/light|luce|lamp/.test(n)) return '💡';
+  if(/alarm|allarme|security/.test(n)) return '🔒';
+  if(/media|music|player|radio/.test(n)) return '🎵';
+  if(/vacuum|robot|aspirapolvere/.test(n)) return '🤖';
+  if(/sensor|temperatura|umidità/.test(n)) return '🌡️';
+  return '📦';
+}
 function _curStoreVersion(id){
   try{ const it=_jsStoreList().find(i=>(i.meta||{}).id===id); return (it&&it.meta&&it.meta.version)||null; }catch(e){ return null; }
 }
@@ -1623,11 +1648,13 @@ function _ghcDesc(cardId, sha){
 }
 function _ghcLivePrev(host, cardId){
   const reg=window.FratechCardRegistry?.[cardId]; if(!reg) return;
+  // Mostra sempre il placeholder come sfondo — il render live va sopra
+  host.innerHTML=_ghcPrevPh(reg.icon||'📦', reg.name||cardId);
   const PW=300, hw=host.clientWidth||190;
   const scale=(hw/PW).toFixed(3);
   const wrap=document.createElement('div');
   wrap.className='ghc-prev-scale';
-  wrap.style.cssText=`width:${PW}px;transform:scale(${scale})`;
+  wrap.style.cssText=`width:${PW}px;transform:scale(${scale});position:absolute;top:0;left:0`;
   try{
     const tag=reg._tag||cardId;
     const cel=document.createElement(tag);
@@ -1636,9 +1663,15 @@ function _ghcLivePrev(host, cardId){
     host.appendChild(wrap);
     requestAnimationFrame(()=>{
       try{ if(typeof cel.setConfig==='function') cel.setConfig({type:'custom:'+tag}); }catch(e){}
-      requestAnimationFrame(()=>{ try{ cel.hass=_haHassObj(); }catch(e){} });
+      requestAnimationFrame(()=>{
+        try{ cel.hass=_haHassObj(); }catch(e){}
+        // Se il shadow DOM non ha contenuto entro 600ms → rimuovi render, resta il placeholder
+        setTimeout(()=>{
+          try{ const sh=cel.shadowRoot; if(!sh||sh.innerHTML.trim().length<40) wrap.remove(); }catch(e){ wrap.remove(); }
+        }, 600);
+      });
     });
-  }catch(e){ host.innerHTML=''; }
+  }catch(e){ wrap.remove(); }
 }
 async function _ghsPreview(enc, nm, cardId){
   const modal=document.getElementById('ghs-prev-modal');
@@ -1734,7 +1767,7 @@ async function _ghFetchVerLabels(tab){
       const x=files[i++];
       try{
         const r=await fetch(x.download_url,{cache:'no-store'});
-        if(r.ok){ const code=await r.text(); _ghVerCache[x.sha]=_parseCardVersion(code)||''; const pd=_parseCardDesc(code); _ghDescCache[x.sha]=pd||_ghcSmartDesc(x.name.replace(/\.js$/i,''),code)||''; }
+        if(r.ok){ const code=await r.text(); _ghVerCache[x.sha]=_parseCardVersion(code)||''; const pd=_parseCardDesc(code); _ghDescCache[x.sha]=pd||_ghcSmartDesc(x.name.replace(/\.js$/i,''),code)||''; _ghIconCache[x.sha]=_parseCardIcon(code)||''; }
         else { _ghVerCache[x.sha]=''; _ghDescCache[x.sha]=''; }
       }
       catch(e){ _ghVerCache[x.sha]=''; _ghDescCache[x.sha]=''; }
@@ -1810,8 +1843,9 @@ function _ghStoreRender(){
   const tileToInstall=(f)=>{
     const nm=f.name.replace(/\.(js|ya?ml)$/i,''); const enc=encodeURIComponent(f.name);
     const verLbl=_ghVerCache[f.sha]||g.fileVersions[f.name]||'';
-    const desc=_ghDescCache[f.sha]||'';
-    const icon=folder.ico||'📦';
+    const rawDesc=_ghDescCache[f.sha]||'';
+    const desc=rawDesc||_ghcSmartDesc(nm,'');
+    const icon=_ghIconCache[f.sha]||_ghcSmartIcon(nm)||folder.ico||'📦';
     const ghDel=`<button class="ghc-btn-del" data-action="_ghsDeleteFromGithub" data-action-arg="${enc}" title="Elimina da GitHub"><i class="mdi mdi-delete-forever-outline"></i></button>`;
     return `<div class="ghc-tile st-new"><div class="ghc-strip new"></div>
       <div class="ghc-prev"><div class="ghc-prev-inner">${_ghcPrevPh(icon,nm)}</div><div class="ghc-prev-fade"></div><span class="ghc-bdg new">⬇ Disponibile</span></div>
@@ -1872,65 +1906,107 @@ function _ghStoreRenderInstalled(q, originFilter){
     list.querySelectorAll('[data-prev-id]').forEach(el=>{ _ghcLivePrev(el, el.dataset.prevId); });
   });
 }
+function _isPremiumLic(){
+  const note=(localStorage.getItem('frarik_lic_note')||'').toLowerCase();
+  return note.includes('premium')||note.includes('admin');
+}
+function openPremiumPage(){ document.getElementById('prem-page-modal')?.classList.remove('off'); }
+function closePremiumPage(){ document.getElementById('prem-page-modal')?.classList.add('off'); }
 function _ghStoreRenderPremium(q){
   const list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
   const g=_ghCfg(); const idFile=g.idFile||{};
+  const isPrem=_isPremiumLic();
   const allFiles=(_ghsCache['premium']||[]);
   status.textContent='💎 Premium';
-  // Se ci sono card premium reali su GitHub, mostrale con stile gold
-  if(allFiles.length){
-    let files=allFiles.slice();
-    if(q) files=files.filter(f=>f.name.toLowerCase().includes(q));
-    const _cpCards=(curPage()||{cards:[]}).cards||[];
-    const usedInCurPage=new Set(); _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedInCurPage.add(c.jsCardId); });
-    const sorted=files.filter(f=>f&&f.name).sort((a,b)=>a.name.localeCompare(b.name));
-    const installed=[], toInstall=[]; sorted.forEach(f=>{ (g.shas[f.name]?installed:toInstall).push(f); });
-    const tilePrem=(f, isInstalled)=>{
-      const nm=f.name.replace(/\.(js|ya?ml)$/i,''); const enc=encodeURIComponent(f.name);
-      const cardId=isInstalled?(Object.keys(idFile).find(k=>idFile[k]===f.name)||null):null;
-      const verLbl=_ghVerCache[f.sha]||g.fileVersions[f.name]||(cardId&&_curStoreVersion(cardId))||'';
-      const desc=_ghcDesc(cardId,f.sha)||_ghDescCache[f.sha]||'Card Premium con funzionalità esclusive.';
-      const hasUpdate=isInstalled&&!!(g.shas[f.name]&&g.shas[f.name]!==f.sha);
-      const inCurPage=!!(cardId&&usedInCurPage.has(cardId));
-      const reg=cardId?window.FratechCardRegistry?.[cardId]:null;
-      const icon=(reg?.icon)||'💎';
-      const prevHtml=cardId&&reg?`<div class="ghc-prev-inner" data-prev-id="${eh(cardId)}"></div>`:`<div class="ghc-prev-inner">${_ghcPrevPh(icon,nm)}</div>`;
-      const updBtn=hasUpdate?`<button class="ghc-btn" style="background:rgba(251,191,36,.2);border-color:rgba(251,191,36,.5);color:#fbbf24" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-update"></i> Aggiorna</button>`:'';
-      const addBtn=isInstalled?(inCurPage?`<span class="ghc-indash"><i class="mdi mdi-check-circle-outline"></i> In vista</span>`:`<button class="ghc-btn" style="background:rgba(251,191,36,.14);border-color:rgba(251,191,36,.35);color:#fbbf24" data-action="_jsStoreAddAndRefresh" data-action-args='["${cardId}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`)
-        :`<button class="ghc-btn" style="background:rgba(251,191,36,.18);border-color:rgba(251,191,36,.4);color:#fbbf24" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>`;
-      const delBtn=cardId?`<button class="ghc-btn-del" data-action="_ghsDeleteInstalled" data-action-arg="${cardId}"><i class="mdi mdi-delete-outline"></i></button>`:'';
-      return `<div class="ghc-tile" style="border-color:rgba(251,191,36,.28)">
+
+  // ── Utente non premium → schermata bloccata ──
+  if(!isPrem){
+    const MOCKS=[{ico:'🌟',nm:'Analytics Pro'},{ico:'🔥',nm:'Energy Dashboard'},{ico:'🚀',nm:'Ultra Widgets'},{ico:'🎯',nm:'Smart Automations'}];
+    list.innerHTML=`<div class="ghc-prem-hero">
+      <div class="ghc-prem-hero-ico">💎</div>
+      <div class="ghc-prem-hero-title">Frarik Premium</div>
+      <div class="ghc-prem-hero-sub">Card esclusive con funzionalità avanzate, aggiornamenti prioritari e supporto dedicato.</div>
+      <button class="ghc-prem-cta" data-action="openPremiumPage">💎 Vuoi Diventare Premium?</button>
+      <button style="display:block;margin:10px auto 0;padding:9px 22px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.55);font-size:11px;font-weight:700;cursor:pointer" data-action="_ghsPremActivate">🔑 Ho già una licenza Premium</button>
+    </div>
+    <div class="ghc-grid" style="pointer-events:none;user-select:none">
+      ${MOCKS.map(m=>`<div class="ghc-tile ghc-prem-locked" style="border-color:rgba(251,191,36,.18)">
         <div class="ghc-strip" style="background:linear-gradient(90deg,#fbbf24,rgba(251,191,36,0))"></div>
-        <div class="ghc-prev">${prevHtml}<div class="ghc-prev-fade"></div><span class="ghc-bdg" style="background:rgba(251,191,36,.22);border-color:rgba(251,191,36,.5);color:#fbbf24">💎 ${isInstalled?'Installata':'Premium'}</span></div>
-        <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico" style="background:rgba(251,191,36,.15);border-color:rgba(251,191,36,.28)">${icon}</div><div class="ghc-meta"><div class="ghc-name">${eh(nm)}</div>${verLbl?`<div class="ghc-ver" style="color:rgba(251,191,36,.8)">v${eh(verLbl)}</div>`:''}</div></div>
-        <div class="ghc-desc">${eh(desc)}</div>
-        <div class="ghc-acts">${updBtn}${addBtn}${delBtn}</div></div></div>`;
-    };
-    list.innerHTML='<div class="ghc-grid">'
-      +`<div class="ghc-sec"><span class="ghc-sec-dot" style="background:#fbbf24"></span>Installate<span class="ghc-sec-cnt">${installed.length}</span></div>`
-      +(installed.length?installed.map(f=>tilePrem(f,true)).join(''):`<div style="grid-column:1/-1"><div class="ghs-empty">Nessuna card premium installata</div></div>`)
-      +`<div class="ghc-sec"><span class="ghc-sec-dot" style="background:#fbbf24"></span>Disponibili<span class="ghc-sec-cnt">${toInstall.length}</span></div>`
-      +(toInstall.length?toInstall.map(f=>tilePrem(f,false)).join(''):`<div style="grid-column:1/-1"><div class="ghs-empty">Nessuna nuova card premium disponibile</div></div>`)
-      +'</div>';
-    requestAnimationFrame(()=>{ list.querySelectorAll('[data-prev-id]').forEach(el=>{ _ghcLivePrev(el,el.dataset.prevId); }); });
+        <div class="ghc-prev"><div class="ghc-prev-inner">${_ghcPrevPh(m.ico,m.nm)}</div><div class="ghc-prev-fade"></div><span class="ghc-bdg" style="background:rgba(251,191,36,.22);border-color:rgba(251,191,36,.5);color:#fbbf24">💎 PREMIUM</span></div>
+        <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico" style="background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.22)">${m.ico}</div><div class="ghc-meta"><div class="ghc-name">${eh(m.nm)}</div><div class="ghc-ver" style="color:rgba(251,191,36,.6)">Prossimamente</div></div></div>
+        <div class="ghc-desc">Funzionalità avanzate disponibili con licenza Premium.</div>
+        <div class="ghc-acts"><button class="ghc-btn" style="background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.25);color:rgba(251,191,36,.5)">🔒 Riservato</button></div></div></div>`).join('')}
+    </div>`;
     return;
   }
-  // Sezione vuota — hero + mock cards bloccate
-  const MOCKS=[{ico:'🌟',nm:'Analytics Pro'},{ico:'🔥',nm:'Energy Dashboard'},{ico:'🚀',nm:'Ultra Widgets'},{ico:'🎯',nm:'Smart Automations'}];
-  list.innerHTML=`<div class="ghc-prem-hero">
-    <div class="ghc-prem-hero-ico">💎</div>
-    <div class="ghc-prem-hero-title">Frarik Premium</div>
-    <div class="ghc-prem-hero-sub">Card esclusive con funzionalità avanzate, aggiornamenti prioritari e supporto dedicato. Prossimamente disponibili.</div>
-    <button class="ghc-prem-cta" onclick="void(0)">🔑 Attiva licenza Premium</button>
-  </div>
-  <div class="ghc-grid" style="pointer-events:none;user-select:none">
-    ${MOCKS.map(m=>`<div class="ghc-tile ghc-prem-locked" style="border-color:rgba(251,191,36,.2);opacity:.6">
+
+  // ── Utente premium: mostra card ──
+  if(!allFiles.length){
+    list.innerHTML=`<div class="ghc-prem-hero">
+      <div class="ghc-prem-hero-ico">✅</div>
+      <div class="ghc-prem-hero-title" style="font-size:15px">Accesso Premium attivo</div>
+      <div class="ghc-prem-hero-sub">Nessuna card premium disponibile al momento. Prossimamente saranno pubblicate qui le card esclusive.</div>
+    </div>`;
+    return;
+  }
+  let files=allFiles.slice();
+  if(q) files=files.filter(f=>f.name.toLowerCase().includes(q));
+  const _cpCards=(curPage()||{cards:[]}).cards||[];
+  const usedInCurPage=new Set(); _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedInCurPage.add(c.jsCardId); });
+  const sorted=files.filter(f=>f&&f.name).sort((a,b)=>a.name.localeCompare(b.name));
+  const installed=[], toInstall=[]; sorted.forEach(f=>{ (g.shas[f.name]?installed:toInstall).push(f); });
+  const tilePrem=(f,isInstalled)=>{
+    const nm=f.name.replace(/\.(js|ya?ml)$/i,''); const enc=encodeURIComponent(f.name);
+    const cardId=isInstalled?(Object.keys(idFile).find(k=>idFile[k]===f.name)||null):null;
+    const verLbl=_ghVerCache[f.sha]||g.fileVersions[f.name]||(cardId&&_curStoreVersion(cardId))||'';
+    const desc=_ghcDesc(cardId,f.sha)||_ghDescCache[f.sha]||_ghcSmartDesc(nm,'')||'Card Premium con funzionalità esclusive.';
+    const hasUpdate=isInstalled&&!!(g.shas[f.name]&&g.shas[f.name]!==f.sha);
+    const inCurPage=!!(cardId&&usedInCurPage.has(cardId));
+    const reg=cardId?window.FratechCardRegistry?.[cardId]:null;
+    const icon=_ghIconCache[f.sha]||(reg?.icon)||_ghcSmartIcon(nm)||'💎';
+    const prevHtml=cardId&&reg?`<div class="ghc-prev-inner" data-prev-id="${eh(cardId)}"></div>`:`<div class="ghc-prev-inner">${_ghcPrevPh(icon,nm)}</div>`;
+    const updBtn=hasUpdate?`<button class="ghc-btn" style="background:rgba(251,191,36,.2);border-color:rgba(251,191,36,.5);color:#fbbf24" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-update"></i> Aggiorna</button>`:'';
+    const addBtn=isInstalled?(inCurPage?`<span class="ghc-indash"><i class="mdi mdi-check-circle-outline"></i> In vista</span>`:`<button class="ghc-btn" style="background:rgba(251,191,36,.14);border-color:rgba(251,191,36,.35);color:#fbbf24" data-action="_jsStoreAddAndRefresh" data-action-args='["${cardId}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`)
+      :`<button class="ghc-btn" style="background:rgba(251,191,36,.18);border-color:rgba(251,191,36,.4);color:#fbbf24" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>`;
+    const delBtn=cardId?`<button class="ghc-btn-del" data-action="_ghsDeleteInstalled" data-action-arg="${cardId}"><i class="mdi mdi-delete-outline"></i></button>`:'';
+    return `<div class="ghc-tile" style="border-color:rgba(251,191,36,.28)">
       <div class="ghc-strip" style="background:linear-gradient(90deg,#fbbf24,rgba(251,191,36,0))"></div>
-      <div class="ghc-prev"><div class="ghc-prev-inner">${_ghcPrevPh(m.ico,m.nm)}</div><div class="ghc-prev-fade"></div><span class="ghc-bdg" style="background:rgba(251,191,36,.22);border-color:rgba(251,191,36,.5);color:#fbbf24">💎 PREMIUM</span></div>
-      <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico" style="background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.25)">${m.ico}</div><div class="ghc-meta"><div class="ghc-name">${eh(m.nm)}</div><div class="ghc-ver" style="color:rgba(251,191,36,.7)">Prossimamente</div></div></div>
-      <div class="ghc-desc">Funzionalità avanzate disponibili con licenza Premium.</div>
-      <div class="ghc-acts"><button class="ghc-btn" style="background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.3);color:rgba(251,191,36,.6)">🔒 Riservato</button></div></div></div>`).join('')}
-  </div>`;
+      <div class="ghc-prev">${prevHtml}<div class="ghc-prev-fade"></div><span class="ghc-bdg" style="background:rgba(251,191,36,.22);border-color:rgba(251,191,36,.5);color:#fbbf24">💎 ${isInstalled?'Installata':'Premium'}</span></div>
+      <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico" style="background:rgba(251,191,36,.15);border-color:rgba(251,191,36,.28)">${icon}</div><div class="ghc-meta"><div class="ghc-name">${eh(nm)}</div>${verLbl?`<div class="ghc-ver" style="color:rgba(251,191,36,.8)">v${eh(verLbl)}</div>`:''}</div></div>
+      <div class="ghc-desc">${eh(desc)}</div>
+      <div class="ghc-acts">${updBtn}${addBtn}${delBtn}</div></div></div>`;
+  };
+  list.innerHTML='<div class="ghc-grid">'
+    +`<div class="ghc-sec"><span class="ghc-sec-dot" style="background:#fbbf24"></span>Installate<span class="ghc-sec-cnt">${installed.length}</span></div>`
+    +(installed.length?installed.map(f=>tilePrem(f,true)).join(''):`<div style="grid-column:1/-1"><div class="ghs-empty">Nessuna card premium installata</div></div>`)
+    +`<div class="ghc-sec"><span class="ghc-sec-dot" style="background:#fbbf24"></span>Disponibili<span class="ghc-sec-cnt">${toInstall.length}</span></div>`
+    +(toInstall.length?toInstall.map(f=>tilePrem(f,false)).join(''):`<div style="grid-column:1/-1"><div class="ghs-empty">Tutte le card premium sono già installate</div></div>`)
+    +'</div>';
+  requestAnimationFrame(()=>{ list.querySelectorAll('[data-prev-id]').forEach(el=>{ _ghcLivePrev(el,el.dataset.prevId); }); });
+}
+function _ghsPremActivate(){
+  closePremiumPage();
+  try{ _switchEpTab('sistema'); setTimeout(()=>{ const el=document.getElementById('lic-section'); if(el){ el.scrollIntoView({behavior:'smooth'}); el.classList.add('lic-highlight'); setTimeout(()=>el.classList.remove('lic-highlight'),2000); } },200); }catch(e){}
+  showToast('💎 Inserisci la tua chiave Premium nelle impostazioni licenza');
+}
+function _premSendInterest(){
+  const inp=document.getElementById('prem-interest-email');
+  const msg=document.getElementById('prem-interest-msg');
+  const email=(inp?.value||'').trim();
+  if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    if(msg){ msg.style.color='rgba(251,100,100,.8)'; msg.textContent='⚠️ Inserisci un indirizzo email valido'; }
+    return;
+  }
+  const btn=document.getElementById('prem-interest-btn');
+  if(btn){ btn.disabled=true; btn.textContent='Invio…'; }
+  // salva localmente l'interesse (server-side non ancora configurato)
+  const stored=JSON.parse(localStorage.getItem('frarik_prem_interest')||'[]');
+  if(!stored.includes(email)){ stored.push(email); localStorage.setItem('frarik_prem_interest',JSON.stringify(stored)); }
+  setTimeout(()=>{
+    if(msg){ msg.style.color='rgba(100,220,130,.9)'; msg.textContent='✅ Registrato! Ti contatteremo presto.'; }
+    if(btn){ btn.disabled=false; btn.textContent='Invia ✉️'; }
+    if(inp) inp.value='';
+  },800);
 }
 function _ghsDeleteInstalled(id){
   if(!id) return;
@@ -13124,4 +13200,5 @@ Object.assign(window, {
   _appSetGroupShowList, _appSetGroupEntities,
   _ntfSetAndSuggest, _ntfSetIcon,
   _switchEpTab, _openEpSheet, _closeEpSheet, _toggleHdrIcons,
+  openPremiumPage, closePremiumPage, _ghsPremActivate, _premSendInterest,
 });

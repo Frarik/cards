@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.4.70 — 2026-06-15
+
+### fix(store): anteprima nera + icona card non installate + Premium con licenza
+
+- **Fix anteprima nera**: il placeholder viene mostrato subito; la preview live viene rimossa se dopo 600ms il shadow DOM è vuoto (<40 char)
+- **Fix icona card non installate**: `_parseCardIcon()` estrae l'icona dal codice sorgente; `_ghcSmartIcon()` mappa 16 pattern di nomi a emoji; fallback su `folder.ico`
+- **Premium — auto-sblocco**: `_isPremiumLic()` controlla `frarik_lic_note` per "Premium" o "Admin" → le card premium si sbloccano automaticamente con licenza valida
+- **Pagina "Vuoi Diventare Premium?"**: modal dedicata con griglia feature (6 aree), placeholder prezzi, form registrazione interesse via email
+- **Bottone "Ho già una licenza"**: rimanda alle impostazioni licenza con scroll+highlight automatico
+- `_premSendInterest()`: salva email in localStorage (server-side configurabile in futuro)
+- `_ghDescCache`, `_ghIconCache`: due nuove cache per SHA → descrizione e icona estratte dal codice
+
 ## 1.4.69 — 2026-06-15
 
 ### feat(store): anteprime grandi + smart description + tab revolution + sezione Premium
