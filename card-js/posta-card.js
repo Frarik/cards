@@ -1,4 +1,4 @@
-/* frarik-version: 1.3 */
+/* frarik-version: 1.4 */
 /* Centro Controllo Posta — Frarik card standalone */
 (function(){
   'use strict';
@@ -342,7 +342,7 @@ automation:
     _acHide();
     if(!res.length) return;
     const ac=document.createElement('div');
-    ac.id='__frk_wiz_ac__';
+    ac.id='__frk_posta_ac__';
     const rect=inputEl.getBoundingClientRect();
     ac.style.cssText=`position:fixed;top:${rect.bottom+3}px;left:${rect.left}px;width:${rect.width}px;`+
       `background:#0e0c1e;border:1px solid rgba(251,191,36,.35);border-radius:10px;`+
@@ -363,7 +363,7 @@ automation:
     });
     document.body.appendChild(ac);
   }
-  function _acHide(){ document.getElementById('__frk_wiz_ac__')?.remove(); }
+  function _acHide(){ document.getElementById('__frk_posta_ac__')?.remove(); }
 
   class PostaCard extends HTMLElement {
     static getStubConfig(){ return {storageKey:''} }
@@ -376,11 +376,10 @@ automation:
       this._frarikCard=null;
       this._modalHost=null;
       this._click=this._onClick.bind(this);
-      this._inp=this._onInput.bind(this);
       this._prevSig='';
       this._pkgState='idle';
       this._pkgError='';
-      this._settingsOpen=false;
+      this._menuOpen=false;
     }
 
     set hass(h){
@@ -412,23 +411,9 @@ automation:
       this._build();
     }
 
-    configure(card){
-      if(card?.id) this._frarikCard=card;
-      this._settingsOpen=true;
-      this._prevSig='';
-      this._build();
-    }
-
-    connectedCallback(){
-      this.shadowRoot.addEventListener('click',this._click);
-      this.shadowRoot.addEventListener('input',this._inp);
-    }
-    disconnectedCallback(){
-      this.shadowRoot.removeEventListener('click',this._click);
-      this.shadowRoot.removeEventListener('input',this._inp);
-      this._destroyModal();
-      _acHide();
-    }
+    configure(card){ if(card?.id) this._frarikCard=card; this._openSettings(); }
+    connectedCallback(){ this.shadowRoot.addEventListener('click',this._click); }
+    disconnectedCallback(){ this.shadowRoot.removeEventListener('click',this._click); this._destroyModal(); _acHide(); }
 
     _skKey(){ return 'posta-card:'+(this._c.storageKey||'default'); }
     _save(){ try{ localStorage.setItem(this._skKey(),JSON.stringify(this._c)); }catch(_){} }
@@ -453,34 +438,48 @@ automation:
     }
     _storico(){ return this._st('input_text.frarik_posta_storico')||''; }
 
+    _callSvc(domain,service,data){
+      if(this._h?.callService) this._h.callService(domain,service,data);
+      else window.frarikCallService?.(domain,service,data,{});
+    }
+
     _build(){
       if(!this.shadowRoot) return;
       this.shadowRoot.innerHTML=this._isPkg()?this._renderMain():this._renderNotInstalled();
     }
 
-    /* ── PANNELLO IMPOSTAZIONI INLINE (menu a tendina) ── */
-    _renderSettingsPanel(){
-      const c=this._c;
-      const op=this._settingsOpen;
-      return `<div class="sp" id="frk-sp" style="display:${op?'flex':'none'}">
-        <div class="sp-row">
-          <label class="sp-lbl">✏️ Etichetta</label>
-          <input class="sp-inp" id="sp-label" type="text" value="${(c.label||'Centro Posta').replace(/"/g,'&quot;')}" placeholder="Centro Posta" autocomplete="off"/>
+    /* ── DROPDOWN MENU (⚙️) — notifiche + storico/reset ── */
+    _renderMenu(){
+      if(!this._menuOpen) return '';
+      const master=this._bool('input_boolean.frarik_posta_notifiche_attive');
+      const bPush=this._bool('input_boolean.frarik_posta_notifica_push');
+      const bGoog=this._bool('input_boolean.frarik_posta_notifica_google');
+      const bAlex=this._bool('input_boolean.frarik_posta_notifica_alexa');
+      return `<div class="menu">
+        <div class="menu-sec">NOTIFICHE</div>
+        <div class="trow" data-a="toggle-master">
+          <span class="trow-ico">🔔</span>
+          <span class="trow-lbl">Tutte le notifiche</span>
+          <div class="tgl ${master?'on':'off'}"><div class="tgl-k"></div></div>
         </div>
-        <div class="sp-row">
-          <label class="sp-lbl">📡 Sensore cassetta <span class="sp-opt">opzionale</span></label>
-          <input class="sp-inp" id="sp-sensor" type="text" value="${(c.sensorEntity||'').replace(/"/g,'&quot;')}" placeholder="binary_sensor.cassetta_postale" autocomplete="off" spellcheck="false"/>
-          <div class="sp-hint">Mostra "Cassetta aperta" quando il sensore fisico è on</div>
+        <div class="tgrp ${master?'':'locked'}">
+          <div class="trow sub" data-a="toggle-push">
+            <span class="trow-ico">📱</span><span class="trow-lbl">Push smartphone</span>
+            <div class="tgl ${bPush?'on':'off'}"><div class="tgl-k"></div></div>
+          </div>
+          <div class="trow sub" data-a="toggle-google">
+            <span class="trow-ico">🔊</span><span class="trow-lbl">Google Home</span>
+            <div class="tgl ${bGoog?'on':'off'}"><div class="tgl-k"></div></div>
+          </div>
+          <div class="trow sub" data-a="toggle-alexa">
+            <span class="trow-ico">📣</span><span class="trow-lbl">Amazon Alexa</span>
+            <div class="tgl ${bAlex?'on':'off'}"><div class="tgl-k"></div></div>
+          </div>
         </div>
-        <div class="sp-row">
-          <label class="sp-lbl">📐 Scala — <span id="sp-sv-scale">${c.cardScale||100}</span>%</label>
-          <input type="range" id="sp-scale" min="20" max="100" step="5" value="${c.cardScale||100}" class="sp-range"/>
+        <div class="menu-actions">
+          <button class="act-btn" data-a="storico">📋 Storico</button>
+          <button class="act-btn act-btn-sec" data-a="reset">🔄 Reset</button>
         </div>
-        <div class="sp-row">
-          <label class="sp-lbl">↔️ Larghezza — <span id="sp-sv-w">${c.cardW||100}</span>%</label>
-          <input type="range" id="sp-w" min="20" max="100" step="5" value="${c.cardW||100}" class="sp-range"/>
-        </div>
-        <button class="sp-save" data-a="save-settings-inline">💾 Salva impostazioni</button>
       </div>`;
     }
 
@@ -512,21 +511,177 @@ automation:
         <div class="hdr">
           <span class="hico">📬</span>
           <span class="htit">${this._c.label}</span>
-          <button class="hbtn-set ${this._settingsOpen?'hbtn-set-on':''}" data-a="toggle-settings" title="Impostazioni">⚙️</button>
         </div>
-        ${this._renderSettingsPanel()}
         <div class="body ni-body">${body}</div>
       </div>`;
     }
 
-    /* ── WIZARD CONFIGURAZIONE ── */
+    /* ── STATO: principale ── */
+    _renderMain(){
+      const mail=this._hasMail(),open=this._isDoorOpen();
+      const svgState=open?'open':mail?'mail':'none';
+      const today=this._countToday(),week=this._countWeek();
+      const last=this._lastDelivery();
+      const statusTxt=open?`<span class="status open">📬 Cassetta aperta!</span>`
+        :mail?`<span class="status mail">📭 ${today} consegn${today===1?'a':'e'} oggi</span>`
+        :`<span class="status none">📪 Nessuna posta oggi</span>`;
+      return `<style>${this._css()}</style>
+      <div class="wrap">
+        <div class="hdr">
+          <span class="hico">📬</span>
+          <span class="htit">${this._c.label}</span>
+          <button class="hbtn ${this._menuOpen?'hbtn-on':''}" data-a="toggle-menu" title="Notifiche e opzioni">⚙️</button>
+        </div>
+        ${this._renderMenu()}
+        <div class="body">
+          <div class="mailbox-wrap ${svgState}">${_svgBox(svgState)}</div>
+          <div class="status-row">${statusTxt}</div>
+          <div class="counters">
+            <div class="cnt-card"><div class="cnt-val ${mail?'cnt-active':''}">${today}</div><div class="cnt-lbl">📦 Oggi</div></div>
+            <div class="cnt-sep"></div>
+            <div class="cnt-card"><div class="cnt-val">${week}</div><div class="cnt-lbl">📅 Settimana</div></div>
+          </div>
+          <div class="last-row">
+            <span class="last-ico">🕐</span>
+            <span class="last-txt">${last?`Ultima consegna <strong>${last}</strong>`:'Nessuna consegna registrata'}</span>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    /* ── CLICK HANDLER ── */
+    _onClick(e){
+      const b=e.target.closest('[data-a]'); if(!b) return;
+      const a=b.dataset.a;
+      if(a==='open-wizard') this._openInstallWizard();
+      else if(a==='toggle-menu'){
+        this._menuOpen=!this._menuOpen;
+        this._prevSig='';
+        this._build();
+      }
+      else if(a==='storico') this._openStorico();
+      else if(a==='reset') this._confirmReset();
+      else if(a==='toggle-master') this._callSvc('homeassistant',this._bool('input_boolean.frarik_posta_notifiche_attive')?'turn_off':'turn_on',{entity_id:'input_boolean.frarik_posta_notifiche_attive'});
+      else if(a==='toggle-push'){ if(this._bool('input_boolean.frarik_posta_notifiche_attive')) this._callSvc('homeassistant',this._bool('input_boolean.frarik_posta_notifica_push')?'turn_off':'turn_on',{entity_id:'input_boolean.frarik_posta_notifica_push'}); }
+      else if(a==='toggle-google'){ if(this._bool('input_boolean.frarik_posta_notifiche_attive')) this._callSvc('homeassistant',this._bool('input_boolean.frarik_posta_notifica_google')?'turn_off':'turn_on',{entity_id:'input_boolean.frarik_posta_notifica_google'}); }
+      else if(a==='toggle-alexa'){ if(this._bool('input_boolean.frarik_posta_notifiche_attive')) this._callSvc('homeassistant',this._bool('input_boolean.frarik_posta_notifica_alexa')?'turn_off':'turn_on',{entity_id:'input_boolean.frarik_posta_notifica_alexa'}); }
+    }
+
+    /* ── SETTINGS POPUP (matita / configure) ── */
+    _openSettings(){
+      this._destroyModal();
+      _acHide();
+      const host=document.createElement('div'); this._modalHost=host;
+      host.attachShadow({mode:'open'}); document.body.appendChild(host);
+      const self=this;
+      const c=this._c;
+
+      host.shadowRoot.innerHTML=`<style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        .ov{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.65);backdrop-filter:blur(6px)}
+        .mo{width:100%;max-height:85vh;display:flex;flex-direction:column;background:rgba(10,8,20,.98);border:1px solid rgba(139,92,246,.32);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.8);animation:su .22s cubic-bezier(.32,1.12,.56,1)}
+        @keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
+        .shdr{display:flex;align-items:center;gap:12px;padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0}
+        .sico{width:40px;height:40px;border-radius:12px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+        .stxt{flex:1}
+        .stit{font-size:16px;font-weight:900;color:#fff;font-family:system-ui,sans-serif}
+        .ssub{font-size:12px;color:#fff;opacity:.4;font-family:system-ui,sans-serif;margin-top:2px}
+        .scls{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:6px 14px;color:#fff;font-size:13px;cursor:pointer;font-family:system-ui,sans-serif}
+        .sbody{display:flex;flex:1;overflow:hidden}
+        .sleft{flex:1;overflow-y:auto;padding:20px;scrollbar-width:none;display:flex;flex-direction:column;gap:16px;min-width:0}
+        .sleft::-webkit-scrollbar{display:none}
+        .sright{width:280px;padding:20px;border-left:1px solid rgba(255,255,255,.07);display:flex;flex-direction:column;gap:12px;flex-shrink:0}
+        .flbl{font-size:11px;font-weight:800;color:#fff;opacity:.5;letter-spacing:.7px;text-transform:uppercase;font-family:system-ui,sans-serif;display:flex;align-items:center;gap:6px;margin-bottom:6px}
+        .fopt{font-size:10px;font-weight:700;background:rgba(255,255,255,.08);color:#fff;opacity:.6;padding:2px 7px;border-radius:5px;letter-spacing:0;text-transform:none}
+        .finp{width:100%;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.11);border-radius:10px;padding:11px 13px;color:#fff;font-size:13px;font-family:system-ui,sans-serif;outline:none;transition:border-color .15s}
+        .finp:focus{border-color:rgba(251,191,36,.5);background:rgba(255,255,255,.09)}
+        .fhint{font-size:11px;color:#fff;opacity:.35;margin-top:5px;font-family:system-ui,sans-serif;line-height:1.5}
+        .frange{width:100%;accent-color:#fbbf24;margin-top:4px}
+        .frow{display:flex;flex-direction:column}
+        .fsave{width:100%;padding:14px;border-radius:13px;background:#fbbf24;border:none;color:#1a1a2e;font-size:14px;font-weight:900;cursor:pointer;font-family:system-ui,sans-serif;transition:filter .15s;margin-top:4px}
+        .fsave:active{filter:brightness(.9)}
+        .prev-lbl{font-size:11px;font-weight:800;color:#fff;opacity:.35;letter-spacing:.6px;text-transform:uppercase;font-family:system-ui,sans-serif;text-align:center;margin-bottom:8px}
+        .prev-wrap{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;display:flex;align-items:flex-start;justify-content:center;flex:1;min-height:200px}
+      </style>
+      <div class="ov">
+        <div class="mo">
+          <div class="shdr">
+            <div class="sico">📬</div>
+            <div class="stxt">
+              <div class="stit">Impostazioni — Centro Posta</div>
+              <div class="ssub">Personalizza la card</div>
+            </div>
+            <button class="scls" id="set-close">✕</button>
+          </div>
+          <div class="sbody">
+            <div class="sleft">
+              <div class="frow">
+                <label class="flbl">✏️ Etichetta</label>
+                <input class="finp" id="s_label" type="text" value="${(c.label||'Centro Posta').replace(/"/g,'&quot;')}" placeholder="Centro Posta" autocomplete="off"/>
+              </div>
+              <div class="frow">
+                <label class="flbl">📡 Sensore cassetta <span class="fopt">opzionale</span></label>
+                <input class="finp" id="s_sensor" type="text" value="${(c.sensorEntity||'').replace(/"/g,'&quot;')}" placeholder="binary_sensor.cassetta_postale" autocomplete="off" spellcheck="false"/>
+                <div class="fhint">Mostra "Cassetta aperta" quando il sensore fisico è on</div>
+              </div>
+              <div class="frow">
+                <label class="flbl">📐 Scala — <span id="sv_scale">${c.cardScale||100}</span>%</label>
+                <input type="range" class="frange" id="s_scale" min="20" max="100" step="5" value="${c.cardScale||100}"/>
+              </div>
+              <div class="frow">
+                <label class="flbl">↔️ Larghezza — <span id="sv_w">${c.cardW||100}</span>%</label>
+                <input type="range" class="frange" id="s_w" min="20" max="100" step="5" value="${c.cardW||100}"/>
+              </div>
+              <button class="fsave" id="s_save">💾 Salva impostazioni</button>
+            </div>
+            <div class="sright">
+              <div class="prev-lbl">Anteprima</div>
+              <div class="prev-wrap"><posta-card id="s_prev" style="display:block;width:100%"></posta-card></div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+
+      const sr=host.shadowRoot;
+
+      sr.getElementById('set-close').addEventListener('click',()=>self._destroyModal());
+
+      sr.getElementById('s_scale').addEventListener('input',e=>{
+        sr.getElementById('sv_scale').textContent=e.target.value;
+      });
+      sr.getElementById('s_w').addEventListener('input',e=>{
+        sr.getElementById('sv_w').textContent=e.target.value;
+      });
+
+      /* autocomplete su sensore */
+      const sensorInp=sr.getElementById('s_sensor');
+      sensorInp.addEventListener('focus',()=>_acShow(sensorInp,self._h,'binary_sensor'));
+      sensorInp.addEventListener('blur',()=>setTimeout(_acHide,160));
+      sensorInp.addEventListener('input',()=>_acShow(sensorInp,self._h,'binary_sensor'));
+
+      sr.getElementById('s_save').addEventListener('click',()=>{
+        self._c.label=sr.getElementById('s_label').value||'Centro Posta';
+        self._c.sensorEntity=(sr.getElementById('s_sensor').value||'').trim();
+        self._c.cardScale=parseInt(sr.getElementById('s_scale').value)||100;
+        self._c.cardW=parseInt(sr.getElementById('s_w').value)||100;
+        self._save();
+        if(self._frarikCard) self.dispatchEvent(new CustomEvent('frarik-card-layout',{bubbles:true,composed:true,detail:{cardId:self._frarikCard.id,cardScale:self._c.cardScale,cardW:self._c.cardW}}));
+        _acHide();
+        self._destroyModal();
+        self._prevSig='';
+        self._build();
+      });
+
+      const prev=sr.getElementById('s_prev');
+      try{ prev.setConfig({type:'custom:posta-card',storageKey:'__posta_prev__'}); prev.hass=self._h; }catch(_){}
+    }
+
+    /* ── WIZARD INSTALLAZIONE ── */
     _openInstallWizard(){
       this._destroyModal();
       _acHide();
-      const host=document.createElement('div');
-      this._modalHost=host;
-      host.attachShadow({mode:'open'});
-      document.body.appendChild(host);
+      const host=document.createElement('div'); this._modalHost=host;
+      host.attachShadow({mode:'open'}); document.body.appendChild(host);
       const self=this;
       let _ridG=1,_ridA=1,_ridP=1;
 
@@ -562,8 +717,8 @@ automation:
         .wadd:hover{opacity:.9;border-color:rgba(251,191,36,.45);color:#fbbf24}
         .werr{font-size:11px;color:#fca5a5;font-family:system-ui,sans-serif}
         .wdiv{height:1px;background:rgba(255,255,255,.06)}
-        .mftr{display:flex;gap:10px;padding:14px 18px 24px;flex-shrink:0;border-top:1px solid rgba(255,255,255,.06)}
-        .wbtn-ok{flex:1;padding:13px;border-radius:12px;background:#fbbf24;border:none;color:#1a1a2e;font-size:13px;font-weight:900;cursor:pointer;font-family:system-ui,sans-serif;letter-spacing:.3px}
+        .mftr{padding:14px 18px 28px;flex-shrink:0;border-top:1px solid rgba(255,255,255,.06)}
+        .wbtn-ok{width:100%;padding:14px;border-radius:13px;background:#fbbf24;border:none;color:#1a1a2e;font-size:14px;font-weight:900;cursor:pointer;font-family:system-ui,sans-serif}
         .wbtn-ok:active{filter:brightness(.9)}
       </style>
       <div class="ov">
@@ -649,7 +804,7 @@ automation:
           listEl.appendChild(row);
           const newInp=row.querySelector('.winp');
           newInp.focus();
-          _bindAc(newInp, grp);
+          _bindAc(newInp,grp);
           return;
         }
         const remBtn=e.target.closest('.wrem');
@@ -676,7 +831,7 @@ automation:
       });
 
       const domainMap={sensor:'binary_sensor',google:'media_player',alexa:'media_player'};
-      function _bindAc(inp, grp){
+      function _bindAc(inp,grp){
         if(grp==='push') return;
         const domain=domainMap[grp]||'';
         inp.addEventListener('focus',()=>_acShow(inp,self._h,domain));
@@ -685,7 +840,7 @@ automation:
       }
       sr.querySelectorAll('.winp').forEach(inp=>{
         const grp=inp.closest('[data-group]')?.dataset.group||'sensor';
-        _bindAc(inp, grp);
+        _bindAc(inp,grp);
       });
       sr.getElementById('w_sensor').addEventListener('input',()=>{
         sr.getElementById('w_sensor_err').style.display='none';
@@ -722,106 +877,6 @@ automation:
       this._build();
     }
 
-    /* ── STATO: principale ── */
-    _renderMain(){
-      const mail=this._hasMail(),open=this._isDoorOpen();
-      const svgState=open?'open':mail?'mail':'none';
-      const today=this._countToday(),week=this._countWeek();
-      const last=this._lastDelivery();
-      const master=this._bool('input_boolean.frarik_posta_notifiche_attive');
-      const bPush=this._bool('input_boolean.frarik_posta_notifica_push');
-      const bGoog=this._bool('input_boolean.frarik_posta_notifica_google');
-      const bAlex=this._bool('input_boolean.frarik_posta_notifica_alexa');
-      const statusTxt=open?`<span class="status open">📬 Cassetta aperta!</span>`
-        :mail?`<span class="status mail">📭 ${today} consegn${today===1?'a':'e'} oggi</span>`
-        :`<span class="status none">📪 Nessuna posta oggi</span>`;
-      return `<style>${this._css()}</style>
-      <div class="wrap">
-        <div class="hdr">
-          <span class="hico">📬</span>
-          <span class="htit">${this._c.label}</span>
-          <button class="hbtn-set ${this._settingsOpen?'hbtn-set-on':''}" data-a="toggle-settings" title="Impostazioni">⚙️</button>
-        </div>
-        ${this._renderSettingsPanel()}
-        <div class="body">
-          <div class="mailbox-wrap ${svgState}">${_svgBox(svgState)}</div>
-          <div class="status-row">${statusTxt}</div>
-          <div class="counters">
-            <div class="cnt-card"><div class="cnt-val ${mail?'cnt-active':''}">${today}</div><div class="cnt-lbl">📦 Oggi</div></div>
-            <div class="cnt-sep"></div>
-            <div class="cnt-card"><div class="cnt-val">${week}</div><div class="cnt-lbl">📅 Settimana</div></div>
-          </div>
-          <div class="last-row">
-            <span class="last-ico">🕐</span>
-            <span class="last-txt">${last?`Ultima consegna <strong>${last}</strong>`:'Nessuna consegna registrata'}</span>
-          </div>
-          <div class="divider"></div>
-          <div class="section-title">Notifiche</div>
-          <div class="toggle-row ${master?'':'dimmed'}" data-a="toggle-master" style="margin-bottom:4px">
-            <span class="trow-ico">🔔</span><span class="trow-lbl">Tutte le notifiche</span>
-            <div class="tgl ${master?'on':'off'}"><div class="tgl-k"></div></div>
-          </div>
-          <div class="toggle-group ${master?'':'locked'}">
-            <div class="toggle-row" data-a="toggle-push"><span class="trow-ico">📱</span><span class="trow-lbl">Push smartphone</span><div class="tgl ${bPush?'on':'off'}"><div class="tgl-k"></div></div></div>
-            <div class="toggle-row" data-a="toggle-google"><span class="trow-ico">🔊</span><span class="trow-lbl">Google Home</span><div class="tgl ${bGoog?'on':'off'}"><div class="tgl-k"></div></div></div>
-            <div class="toggle-row" data-a="toggle-alexa"><span class="trow-ico">📣</span><span class="trow-lbl">Amazon Alexa</span><div class="tgl ${bAlex?'on':'off'}"><div class="tgl-k"></div></div></div>
-          </div>
-          <div class="actions">
-            <button class="act-btn" data-a="storico">📋 Storico</button>
-            <button class="act-btn act-btn-sec" data-a="reset">🔄 Reset</button>
-          </div>
-        </div>
-      </div>`;
-    }
-
-    /* ── INPUT HANDLER (slider impostazioni) ── */
-    _onInput(e){
-      if(e.target.id==='sp-scale'){
-        this._c.cardScale=parseInt(e.target.value)||100;
-        const lbl=this.shadowRoot.getElementById('sp-sv-scale');
-        if(lbl) lbl.textContent=e.target.value;
-      } else if(e.target.id==='sp-w'){
-        this._c.cardW=parseInt(e.target.value)||100;
-        const lbl=this.shadowRoot.getElementById('sp-sv-w');
-        if(lbl) lbl.textContent=e.target.value;
-      }
-    }
-
-    /* ── CLICK HANDLER ── */
-    _onClick(e){
-      const b=e.target.closest('[data-a]'); if(!b) return;
-      const a=b.dataset.a;
-      if(a==='open-wizard') this._openInstallWizard();
-      else if(a==='storico') this._openStorico();
-      else if(a==='reset') this._confirmReset();
-      else if(a==='toggle-settings'){
-        this._settingsOpen=!this._settingsOpen;
-        this._prevSig='';
-        this._build();
-      }
-      else if(a==='save-settings-inline'){
-        const sr=this.shadowRoot;
-        this._c.label=sr.getElementById('sp-label')?.value||'Centro Posta';
-        this._c.sensorEntity=(sr.getElementById('sp-sensor')?.value||'').trim();
-        this._c.cardScale=parseInt(sr.getElementById('sp-scale')?.value)||100;
-        this._c.cardW=parseInt(sr.getElementById('sp-w')?.value)||100;
-        this._save();
-        if(this._frarikCard) this.dispatchEvent(new CustomEvent('frarik-card-layout',{bubbles:true,composed:true,detail:{cardId:this._frarikCard.id,cardScale:this._c.cardScale,cardW:this._c.cardW}}));
-        this._settingsOpen=false;
-        this._prevSig='';
-        this._build();
-      }
-      else if(a==='toggle-master') this._callSvc('homeassistant',this._bool('input_boolean.frarik_posta_notifiche_attive')?'turn_off':'turn_on',{entity_id:'input_boolean.frarik_posta_notifiche_attive'});
-      else if(a==='toggle-push'){ if(this._bool('input_boolean.frarik_posta_notifiche_attive')) this._callSvc('homeassistant',this._bool('input_boolean.frarik_posta_notifica_push')?'turn_off':'turn_on',{entity_id:'input_boolean.frarik_posta_notifica_push'}); }
-      else if(a==='toggle-google'){ if(this._bool('input_boolean.frarik_posta_notifiche_attive')) this._callSvc('homeassistant',this._bool('input_boolean.frarik_posta_notifica_google')?'turn_off':'turn_on',{entity_id:'input_boolean.frarik_posta_notifica_google'}); }
-      else if(a==='toggle-alexa'){ if(this._bool('input_boolean.frarik_posta_notifiche_attive')) this._callSvc('homeassistant',this._bool('input_boolean.frarik_posta_notifica_alexa')?'turn_off':'turn_on',{entity_id:'input_boolean.frarik_posta_notifica_alexa'}); }
-    }
-
-    _callSvc(domain, service, data){
-      if(this._h?.callService) this._h.callService(domain, service, data);
-      else window.frarikCallService?.(domain, service, data, {});
-    }
-
     /* ── POPUP STORICO ── */
     _openStorico(){
       this._destroyModal();
@@ -841,7 +896,7 @@ automation:
         .mico{width:36px;height:36px;border-radius:10px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
         .mtit{flex:1;font-size:15px;font-weight:800;color:#fff;font-family:system-ui,sans-serif}
         .mxbtn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:6px 12px;color:#fff;font-size:13px;cursor:pointer;font-family:system-ui,sans-serif}
-        .mbody{flex:1;overflow-y:auto;padding:14px 18px 24px;scrollbar-width:none;display:flex;flex-direction:column;gap:6px}
+        .mbody{flex:1;overflow-y:auto;padding:14px 18px 28px;scrollbar-width:none;display:flex;flex-direction:column;gap:6px}
         .mbody::-webkit-scrollbar{display:none}
         .sh-row{display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px}
         .sh-n{min-width:24px;height:24px;border-radius:50%;background:rgba(251,191,36,.18);color:#fbbf24;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif}
@@ -872,9 +927,8 @@ automation:
         .mico{width:36px;height:36px;border-radius:10px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
         .mtit{flex:1;font-size:15px;font-weight:800;color:#fff;font-family:system-ui,sans-serif}
         .mxbtn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:6px 12px;color:#fff;font-size:13px;cursor:pointer;font-family:system-ui,sans-serif}
-        .mbody{padding:18px 18px 8px}
-        p{font-family:system-ui,sans-serif;font-size:13px;color:#fff;line-height:1.6;opacity:.7}
-        .btns{display:flex;gap:10px;padding:14px 18px 28px}
+        p{font-family:system-ui,sans-serif;font-size:13px;color:#fff;line-height:1.7;opacity:.7;padding:16px 18px 8px}
+        .btns{display:flex;gap:10px;padding:8px 18px 28px}
         button{flex:1;padding:14px;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:system-ui,sans-serif;color:#fff;border:none}
         .bconf{background:rgba(239,68,68,.7);border:2px solid rgba(239,68,68,.5)}
         .bcanc{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15)}
@@ -882,7 +936,7 @@ automation:
       <div class="ov">
         <div class="mo">
           <div class="mhdr"><div class="mico">🔄</div><div class="mtit">Reset contatore</div><button class="mxbtn" id="rst-close">✕</button></div>
-          <div class="mbody"><p>Resettare il contatore giornaliero a 0?<br>Lo storico consegne rimarrà invariato.</p></div>
+          <p>Resettare il contatore giornaliero a 0?<br>Lo storico consegne rimarrà invariato.</p>
           <div class="btns">
             <button class="bcanc" id="rst-cancel">Annulla</button>
             <button class="bconf" id="rst-ok">Sì, resetta</button>
@@ -908,20 +962,28 @@ automation:
 .hdr{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
 .hico{font-size:22px;line-height:1}
 .htit{flex:1;font-size:15px;font-weight:900;color:#fff;letter-spacing:.4px}
-.hbtn-set{background:none;border:none;font-size:18px;cursor:pointer;padding:4px;border-radius:8px;line-height:1;opacity:.5;transition:opacity .15s,background .15s}
-.hbtn-set:hover,.hbtn-set-on{opacity:1;background:rgba(255,255,255,.08)}
-/* ── settings panel ── */
-.sp{flex-direction:column;gap:12px;padding:14px 16px;background:rgba(0,0,0,.35);border-bottom:1px solid rgba(255,255,255,.08);animation:sp-slide .18s ease;flex-shrink:0}
-@keyframes sp-slide{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
-.sp-row{display:flex;flex-direction:column;gap:5px}
-.sp-lbl{font-size:11px;font-weight:800;color:#fff;opacity:.5;letter-spacing:.6px;text-transform:uppercase}
-.sp-opt{font-size:10px;font-weight:600;background:rgba(255,255,255,.07);color:#fff;opacity:.5;padding:1px 6px;border-radius:5px;margin-left:5px;letter-spacing:0;text-transform:none;vertical-align:middle}
-.sp-inp{background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.12);border-radius:9px;padding:9px 12px;color:#fff;font-size:13px;font-family:system-ui,sans-serif;outline:none;transition:border-color .15s}
-.sp-inp:focus{border-color:rgba(251,191,36,.5);background:rgba(255,255,255,.1)}
-.sp-hint{font-size:11px;color:#fff;opacity:.35;line-height:1.5}
-.sp-range{width:100%;accent-color:#fbbf24;margin-top:2px}
-.sp-save{padding:11px;border-radius:11px;background:#fbbf24;border:none;color:#1a1a2e;font-size:13px;font-weight:900;cursor:pointer;font-family:system-ui,sans-serif;transition:filter .15s;margin-top:2px}
-.sp-save:active{filter:brightness(.9)}
+.hbtn{background:none;border:none;font-size:18px;cursor:pointer;padding:4px 6px;border-radius:8px;line-height:1;opacity:.45;transition:opacity .15s,background .15s;color:#fff}
+.hbtn:hover,.hbtn-on{opacity:1;background:rgba(255,255,255,.1)}
+/* ── dropdown menu ── */
+.menu{padding:14px 16px 16px;background:rgba(0,0,0,.4);border-bottom:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;gap:8px;animation:mslide .15s ease;flex-shrink:0}
+@keyframes mslide{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.menu-sec{font-size:10px;font-weight:800;color:#fff;opacity:.35;letter-spacing:.9px;text-transform:uppercase;margin-bottom:2px}
+.trow{display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:11px;cursor:pointer;transition:background .15s;user-select:none}
+.trow:active{background:rgba(255,255,255,.09)}
+.trow.sub{padding:8px 12px;background:rgba(255,255,255,.02);border-color:rgba(255,255,255,.05)}
+.trow-ico{font-size:17px;flex-shrink:0}
+.trow-lbl{flex:1;font-size:13px;font-weight:700;color:#fff}
+.tgrp{display:flex;flex-direction:column;gap:5px;transition:opacity .2s}
+.tgrp.locked{opacity:.3;pointer-events:none}
+.tgl{width:44px;height:26px;border-radius:13px;background:rgba(255,255,255,.15);position:relative;transition:background .2s;flex-shrink:0}
+.tgl.on{background:#fbbf24}
+.tgl-k{width:22px;height:22px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform .2s;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.tgl.on .tgl-k{transform:translateX(18px)}
+.menu-actions{display:flex;gap:8px;margin-top:4px}
+.act-btn{flex:1;padding:11px;border-radius:11px;background:rgba(251,191,36,.18);border:1px solid rgba(251,191,36,.35);color:#fbbf24;font-size:12px;font-weight:800;cursor:pointer;transition:all .15s;font-family:system-ui,sans-serif}
+.act-btn:active{background:rgba(251,191,36,.28)}
+.act-btn-sec{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14);color:#fff;opacity:.7}
+.act-btn-sec:active{background:rgba(255,255,255,.1)}
 /* ── body ── */
 .body{flex:1;overflow-y:auto;padding:14px 14px 16px;display:flex;flex-direction:column;gap:10px;scrollbar-width:none}
 .body::-webkit-scrollbar{display:none}
@@ -951,23 +1013,7 @@ automation:
 .last-ico{font-size:16px;flex-shrink:0}
 .last-txt{font-size:12px;color:#fff;opacity:.7;line-height:1.5}
 .last-txt strong{color:#fff;opacity:1}
-.divider{height:1px;background:rgba(255,255,255,.07);flex-shrink:0}
-.section-title{font-size:11px;font-weight:800;color:#fff;opacity:.35;letter-spacing:.8px;text-transform:uppercase}
-.toggle-row{display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:11px;cursor:pointer;transition:background .15s;user-select:none}
-.toggle-row:active{background:rgba(255,255,255,.08)}
-.trow-ico{font-size:17px;flex-shrink:0}
-.trow-lbl{flex:1;font-size:13px;font-weight:700;color:#fff}
-.tgl{width:44px;height:26px;border-radius:13px;background:rgba(255,255,255,.15);position:relative;transition:background .2s;flex-shrink:0}
-.tgl.on{background:#fbbf24}
-.tgl-k{width:22px;height:22px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform .2s;box-shadow:0 2px 6px rgba(0,0,0,.35)}
-.tgl.on .tgl-k{transform:translateX(18px)}
-.toggle-group{display:flex;flex-direction:column;gap:6px;transition:opacity .2s}
-.toggle-group.locked{opacity:.35;pointer-events:none}
-.actions{display:flex;gap:8px;margin-top:2px}
-.act-btn{flex:1;padding:12px;border-radius:12px;background:rgba(251,191,36,.18);border:1px solid rgba(251,191,36,.35);color:#fbbf24;font-size:12px;font-weight:800;cursor:pointer;transition:all .15s;font-family:system-ui,sans-serif}
-.act-btn:active{background:rgba(251,191,36,.28)}
-.act-btn-sec{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14);color:#fff;opacity:.7}
-.act-btn-sec:active{background:rgba(255,255,255,.1)}
+/* ── not installed ── */
 .ni-body{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px;padding:24px 18px}
 .ni-icon{font-size:52px;line-height:1}
 .ni-title{font-size:17px;font-weight:900;color:#fff}

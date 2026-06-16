@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.13 — 2026-06-16
+
+### fix(posta-card): v1.4 — dropdown ⚙️ notifiche, configure popup con anteprima
+
+- **Dropdown ⚙️ corretto**: il menu sotto l'header mostra ora NOTIFICHE (toggle master + push/google/alexa) + bottoni Storico e Reset — non i campi di configurazione
+- **Popup configurazione (matita)**: `configure(card)` apre il bottom-sheet a 2 colonne (sinistra: Etichetta, Sensore, Scala, Larghezza, Salva — destra: anteprima live) come le altre card Frarik
+- Main body semplificato: solo SVG cassetta + status + contatori + ultima consegna
+- Autocomplete `binary_sensor.*` anche nel campo sensore del popup configurazione
+- posta-card bump a v1.4
+
 ## 1.5.12 — 2026-06-16
 
 ### fix(posta-card): v1.3 — popup full-width, chiusura solo X, reset fix, settings dropdown
