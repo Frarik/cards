@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.04 — 2026-06-16
+
+### fix: notifiche iOS — dual format (push wrapper + top-level) per compatibilità tutte le versioni companion
+
+- La companion iOS < 2021.1 legge da `data.push.sound` (formato documentazione ufficiale HA); la companion ≥ 2021.1 legge da `data.sound` direttamente
+- Ora entrambi i formati sono presenti in `notifData`: `sound`/`interruption-level`/`badge` al top-level E dentro `push{}`
+- `critical:1` + `interruption-level:critical` per massima priorità (richiede "Avvisi Critici" abilitati in iOS Impostazioni → Notifiche → Home Assistant)
+
 ## 1.5.03 — 2026-06-16
 
 ### fix: notifiche iOS — rimosso wrapper push{}, campi al livello corretto
