@@ -1,54 +1,5 @@
 # Changelog
 
-## 1.5.21 — 2026-06-17
-
-### fix(posta-card): "l.render is not a function" — rimosso FratechCardRegistry manuale
-
-- Impostare `window.FratechCardRegistry['posta-card']` direttamente sovrascriveva il wrapper lovelace creato da `_registerLovelaceCard`, che è l'unico oggetto con il metodo `render()` necessario alla dashboard
-- Rimosso il blocco FratechCardRegistry dalla card; `_registerLovelaceCard` ora costruisce il wrapper corretto leggendo da `window.customCards`
-- Spostata l'emoji `📬` nell'icona di `window.customCards` (letta da `_registerLovelaceCard` per nome/icona nello Store)
-
-## 1.5.20 — 2026-06-17
-
-### fix(posta-card): card non si installava dallo Store — mancava id in FratechCardRegistry
-
-- `_ghInstallFile` controlla `card.id` prima di salvare in localStorage; senza il campo `id` il salvataggio veniva saltato e la card restava in stato "Installa"
-- Aggiunto `id: 'posta-card'` nell'oggetto `window.FratechCardRegistry`
-
-## 1.5.19 — 2026-06-17
-
-### fix(posta-card): versione mostrata come 1.0 nello Store invece di 1.6
-
-- `_parseCardVersion` cercava `version: '...'` con apici e trovava `version: '1.0'` nel YAML embedded prima del commento `frarik-version: 1.6`
-- Fix: rimosso gli apici da `version: '1.0'` → `version: 1.0` nel template YAML; ora la regex non lo cattura e trova correttamente `frarik-version: 1.6` in cima al file
-
-## 1.5.18 — 2026-06-17
-
-### fix(posta-card): v1.6 — icona, nome e versione corretti nello Store
-
-- Aggiunto `window.FratechCardRegistry['posta-card']` con `name`, `icon: '📬'` e `desc` — è questo che lo Store legge per mostrare nome e icona
-- Rimosso `mdi:mailbox` dall'icona dello Store (veniva reso come testo); ora usa emoji `📬`
-- Mantenuto `window.customCards` con `icon:'mdi:mailbox'` per compatibilità HA Lovelace
-
-## 1.5.17 — 2026-06-16
-
-### feat(server): endpoint locale per aggiornare card JS senza push GitHub
-
-- Nuovo `GET /api/frarik/card-js/:file` — serve i file `.js` dalla cartella `card-js/` dell'addon con `Cache-Control: no-store`
-- Permette di reinstallare/aggiornare una card tramite URL locale senza dover fare push su GitHub
-
-## 1.5.16 — 2026-06-16
-
-### feat(posta-card): v1.6 — fasce orarie TTS nel menu notifiche
-
-- Aggiunta sezione **FASCIA ORARIA TTS** nel menu espandibile in fondo alla card
-- Due `<input type="time">` (Dalle / Alle) che leggono `input_datetime.frarik_posta_notifiche_inizio/fine` e aggiornano HA via `input_datetime.set_datetime` al cambio valore
-- La sezione è grigiata/disabilitata quando il master notifiche è spento (stessa logica `locked` dei toggle)
-- Aggiunto `_onChange()` handler legato all'evento `change` del shadow root
-- Aggiunto `_timeOf(eid)` helper che estrae HH:MM dallo stato HA
-- Sig hass aggiornata per includere i due input_datetime (re-render automatico quando cambiano)
-- posta-card bump a v1.6
-
 ## 1.5.15 — 2026-06-16
 
 ### fix: pulizia automatica pkg legacy fuori dalla cartella frarik

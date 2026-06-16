@@ -164,18 +164,6 @@ app.post('/api/frarik/self-update', async (_req, res) => {
 
 /* ── Gestione Pacchetti HA (PKG YAML in /config/packages/) ── */
 const PKG_DIR = '/config/packages';
-const CARD_JS_DIR = path.join(__dirname, '..', 'card-js');
-
-/* Serve i file .js da card-js/ in modo che possano essere reinstallati localmente */
-app.get('/api/frarik/card-js/:file', (req, res) => {
-  const file = path.basename(req.params.file || '');
-  if (!file || !/\.js$/i.test(file)) return res.status(400).end();
-  const filePath = path.join(CARD_JS_DIR, file);
-  if (!fs.existsSync(filePath)) return res.status(404).end();
-  res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
-  res.sendFile(filePath);
-});
 
 app.get('/api/frarik/pkg/list', (_req, res) => {
   try {
