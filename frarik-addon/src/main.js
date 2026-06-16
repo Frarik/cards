@@ -9154,11 +9154,11 @@ async function _sosRequireLicense(onSuccess){
 .p-st{font-size:11px;font-weight:600;text-align:center}
 .no-data{text-align:center;padding:30px 16px;color:#fff;opacity:.6;font-size:12px;line-height:1.8;grid-column:1/-1}
 /* TYPE GRID 3x2 */
-.type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;width:100%}
-.type-sq{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:7px 4px;border-radius:10px;border:1.5px solid rgba(var(--mc-rgb),.35);background:rgba(var(--mc-rgb),.08);cursor:pointer;touch-action:manipulation;transition:all .12s;min-height:0}
+.type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;width:100%}
+.type-sq{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:10px 5px;border-radius:12px;border:1.5px solid rgba(var(--mc-rgb),.35);background:rgba(var(--mc-rgb),.08);cursor:pointer;touch-action:manipulation;transition:all .12s;min-height:0}
 .type-sq:hover,.type-sq:active{background:rgba(var(--mc-rgb),.22);transform:scale(.95)}
-.ts-ico{font-size:18px;line-height:1}
-.ts-lbl{font-size:9px;font-weight:800;text-align:center;line-height:1.2;color:#fff}
+.ts-ico{font-size:22px;line-height:1}
+.ts-lbl{font-size:10px;font-weight:800;text-align:center;line-height:1.2;color:#fff}
 /* CONFIRM ROW (riepilogo inline) */
 .confirm-row{display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
 .cr-chip{font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:4px 10px;white-space:nowrap}
@@ -9183,7 +9183,7 @@ async function _sosRequireLicense(onSuccess){
 .cd-num{font-size:82px;font-weight:900;color:#ef4444;line-height:1;animation:blink 1s ease-in-out infinite}
 .cd-hint{font-size:12px;color:#fff;text-align:center}
 .cd-bar-wrap{width:80%;height:5px;background:rgba(255,255,255,.12);border-radius:3px;overflow:hidden}
-.cd-bar{height:100%;width:0;transition:width 1s linear;border-radius:3px}
+.cd-bar{height:100%;width:0;border-radius:3px}
 /* SENT */
 .s-row{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:rgba(74,222,128,.09);border:1px solid rgba(74,222,128,.22);font-size:12px;font-weight:700;color:#fff}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
@@ -9216,12 +9216,25 @@ async function _sosRequireLicense(onSuccess){
     _onPU(){}
     _startCD(){
       this._clrT(); this._state='countdown'; this._am=_M[this._wMode]; this._csec=_CS; this._build();
+      const t0=Date.now();
+      const barTick=()=>{
+        if(this._state!=='countdown') return;
+        const pct=Math.min(100,(Date.now()-t0)/(_CS*1000)*100);
+        const f=this.shadowRoot.getElementById('scdf');
+        if(f) f.style.width=pct.toFixed(1)+'%';
+        this._hraf=requestAnimationFrame(barTick);
+      };
+      this._hraf=requestAnimationFrame(barTick);
       this._cdi=setInterval(()=>{
         this._csec--;
-        const n=this.shadowRoot.getElementById('scdn'), f=this.shadowRoot.getElementById('scdf');
+        const n=this.shadowRoot.getElementById('scdn');
         if(n) n.textContent=this._csec;
-        if(f) f.style.width=((_CS-this._csec)/_CS*100).toFixed(0)+'%';
-        if(this._csec<=0){ clearInterval(this._cdi); this._cdi=null; this._send(); }
+        if(this._csec<=0){
+          clearInterval(this._cdi); this._cdi=null;
+          cancelAnimationFrame(this._hraf); this._hraf=null;
+          const f=this.shadowRoot.getElementById('scdf'); if(f) f.style.width='100%';
+          this._send();
+        }
       },1000);
     }
     _send(){
@@ -9274,8 +9287,9 @@ async function _sosRequireLicense(onSuccess){
           // iOS Critical Alert — solo push wrapper, formato documentazione ufficiale HA companion
           push:{sound:{name:'default',critical:1,volume:1.0},'interruption-level':'critical',badge:1},
         };
-        try{ window.frarikCallService?.('notify',c.notifyService.replace(/^notify\./,''),{title,message:msg,data:notifData},{}); sent.push({n:c.name||c.notifyService,ok:true}); }
-        catch(_){ sent.push({n:c.name||c.notifyService,ok:false}); }
+        const svc=c.notifyService.replace(/^notify\./,'');
+        try{ window.frarikCallService?.('notify',svc,{title,message:msg,data:notifData},{}); sent.push({n:`${c.name||svc} · notify.${svc}`,ok:true}); }
+        catch(_){ sent.push({n:`${c.name||svc} · notify.${svc}`,ok:false}); }
       }
       const d=_ld(this._sk); const logs=d.logs||[];
       logs.unshift({t:Date.now(),mode:m.id,who,cts:toNotify.map(x=>x.name||'?')});

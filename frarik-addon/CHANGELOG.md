@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.07 — 2026-06-16
+
+### fix: barra countdown sincronizzata, tile emergenza rimisurare, log servizio notify
+
+- **Barra countdown**: ora usa `requestAnimationFrame` ancorato al tempo reale — barra e numero scorrono perfettamente in sincronia. Rimossa `transition:width 1s linear` dal CSS che causava il ritardo visivo.
+- **Tile emergenza**: misura intermedia (icon 22px, padding 10×5px, gap 6px) — più grandi delle "mini" precedenti ma più compatte dell'originale.
+- **Log active**: nella schermata "Allarme inviato" ora mostra il nome persona E il servizio `notify.xxx` chiamato — utile per verificare che venga chiamato il servizio corretto.
+
 ## 1.5.06 — 2026-06-16
 
 ### fix: notifiche iOS — payload ripulito, solo push wrapper (formato ufficiale HA companion)
