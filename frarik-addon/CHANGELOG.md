@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.4.98 — 2026-06-16
+
+### feat: SOS card v1.4 — wizard aggiornato, config famiglia unificata, notifiche interattive, Store fix
+
+- **Step 2**: bottoni "Seleziona tutti" e "Continua" appaiono solo se >1 altra persona; con 1 sola persona il tap avanza direttamente a step 3
+- **Step 3**: 6 quadrati in griglia 3×2 (`aspect-ratio:1`) invece di rettangoli verticali — card più compatta
+- **Step 4**: riepilogo tutto su una sola riga (chips inline: 👤 chi · 🆘 tipo · 📱 chi avvisare); tasto "CHIEDI AIUTO" con barra di caricamento che appare al press
+- **Auto-reset**: dopo l'invio dell'allarme la card torna al passo 1 automaticamente dopo 5 secondi
+- **Config accordion unificato**: unico menù "Nucleo familiare & Contatti" — ogni riga = `person.*` + `mobile_app_*` notify service; rimossi campi telefono e messaggio personalizzato
+- **Store → Predefinite**: fix robusto `_jsStoreList()` — splica sempre la versione obsoleta e ri-inserisce builtin SOS card; visibile e aggiungibile come le card JS
+- **Notifiche interattive**: messaggio semplificato; `url`/`clickAction`/`actions` per Android, `push.url` per iOS — toccare la notifica apre la posizione GPS (non HA)
+- **Nuove funzioni esportate**: `sosFamilyAdd`, `sosFamilyRemove`, `sosFamilyUpdate`, `_sosPickFamilyNotify`
+
 ## 1.4.97 — 2026-06-16
 
 ### fix: SOS card — stop flash/rerender su ogni update HA

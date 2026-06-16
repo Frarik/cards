@@ -9009,6 +9009,8 @@ async function _sosRequireLicense(onSuccess){
           const a=h.states[k]?.attributes||{};
           return {eid:k,name:a.friendly_name||k.split('.')[1]?.replace(/_/g,' ')||k,picture:a.entity_picture||'',state:h.states[k]?.state||'unknown'};
         }):[];
+        // Priorità: nuovo schema family, poi vecchio schema persons, poi tutti HA
+        if(s?.family?.length) return s.family.filter(f=>f?.person_eid).map(f=>all.find(p=>p.eid===f.person_eid)||{eid:f.person_eid,name:f.person_eid.split('.')[1]||f.person_eid,picture:'',state:'unknown'});
         if(s?.persons?.length) return s.persons.map(eid=>all.find(p=>p.eid===eid)||{eid,name:eid.split('.')[1]||eid,picture:'',state:'unknown'});
         return all;
       }catch(_){ return []; }
@@ -9044,39 +9046,41 @@ async function _sosRequireLicense(onSuccess){
         <div class="body">${this._pgrid(this._persons(), null, 'person')}</div>`;
     }
 
-    /* ── STEP 2: chi vuoi avvisare (stesse card, altre persone) ── */
+    /* ── STEP 2: chi vuoi avvisare ── */
     _bStep2(){
       const ops=this._otherPersons();
+      const multiSel=ops.length>1;
       const ok=this._wContacts.size>0||!ops.length;
       return `<div class="stp-hdr"><button class="back-btn" data-a="cancel">✕</button><div class="stp-lbl">CHI VUOI AVVISARE?</div></div>
-        <div class="body">${this._pgrid(ops, this._wContacts, 'ct')}</div>
-        <div class="bot">
-          ${ops.length?`<button class="act-btn btn-sec" data-a="selall">Seleziona tutti</button>`:''}
+        <div class="body">${this._pgrid(ops, multiSel?this._wContacts:null, 'ct')}</div>
+        ${multiSel?`<div class="bot">
+          <button class="act-btn btn-sec" data-a="selall">Seleziona tutti</button>
           <button class="act-btn btn-main${ok?'':' dis'}" data-a="step3"${ok?'':' disabled'}>Continua →</button>
-        </div>`;
+        </div>`:''}`;
     }
 
-    /* ── STEP 3: tipo emergenza ── */
+    /* ── STEP 3: tipo emergenza (griglia 3x2) ── */
     _bStep3(){
       return `<div class="stp-hdr"><button class="back-btn" data-a="step2">←</button><div class="stp-lbl">TIPO DI EMERGENZA</div></div>
-        <div class="type-list">${_M.map((m,i)=>`<button class="type-btn" data-a="mode" data-i="${i}" style="--mc:${m.color};--mc-rgb:${_hexRgb(m.color)}">
-          <span class="t-ico">${m.icon}</span>
-          <div class="t-tx"><span class="t-lbl" style="color:${m.color}">${m.label}</span><span class="t-desc">${m.desc}</span></div>
-          <span class="t-arr">→</span>
-        </button>`).join('')}</div>`;
+        <div class="body"><div class="type-grid">${_M.map((m,i)=>`<button class="type-sq" data-a="mode" data-i="${i}" style="--mc:${m.color};--mc-rgb:${_hexRgb(m.color)}">
+          <span class="ts-ico">${m.icon}</span>
+          <span class="ts-lbl" style="color:${m.color}">${m.label}</span>
+        </button>`).join('')}</div></div>`;
     }
 
     /* ── STEP 4: conferma + tasto hold ── */
     _bConfirm(){
       const m=_M[this._wMode]||_M[0];
       const ops=this._otherPersons();
-      const selNm=this._wContacts.size?[...this._wContacts].map(i=>ops[i]?.name).filter(Boolean):[...ops.map(p=>p.name)];
+      const selNm=this._wContacts.size?[...this._wContacts].map(i=>ops[i]?.name).filter(Boolean):ops.map(p=>p.name);
       const whoStr=selNm.length?selNm.join(', '):'Tutti';
       return `<div class="stp-hdr"><button class="back-btn" data-a="step3">←</button><div class="stp-lbl">PRONTO A INVIARE</div></div>
-        <div class="confirm-info">
-          <div class="ci-row"><span class="ci-ico">👤</span><div><div class="ci-lbl">Chi chiede</div><div class="ci-val">${this._wPerson||'Anonimo'}</div></div></div>
-          <div class="ci-row"><span class="ci-ico">${m.icon}</span><div><div class="ci-lbl">Emergenza</div><div class="ci-val" style="color:${m.color}">${m.label}</div></div></div>
-          <div class="ci-row"><span class="ci-ico">📱</span><div><div class="ci-lbl">Avvisa</div><div class="ci-val">${whoStr}</div></div></div>
+        <div class="confirm-row">
+          <span class="cr-chip">👤 ${this._wPerson||'?'}</span>
+          <span class="cr-sep">·</span>
+          <span class="cr-chip" style="color:${m.color}">${m.icon} ${m.label}</span>
+          <span class="cr-sep">·</span>
+          <span class="cr-chip">📱 ${whoStr}</span>
         </div>
         <div class="bot">
           <div class="hold-wrap">
@@ -9123,8 +9127,9 @@ async function _sosRequireLicense(onSuccess){
           <div style="font-size:17px;font-weight:900;color:#4ade80;margin-top:6px">Allarme inviato!</div>
           <div style="font-size:12px;color:#fff;margin-top:4px">${m.label}${this._wPerson?` · 👤 ${this._wPerson}`:''}</div>
           <div id="ssl" style="margin-top:14px;width:100%;display:flex;flex-direction:column;gap:6px"></div>
+          <div style="font-size:11px;color:#fff;opacity:.4;margin-top:12px">La card torna alla home tra 5 secondi…</div>
         </div>
-        <div class="bot"><button class="act-btn btn-cancel" data-a="reset">← Torna alla home</button></div>`;
+        <div class="bot"><button class="act-btn btn-cancel" data-a="reset">← Torna subito</button></div>`;
     }
 
     _css(){ return `
@@ -9153,22 +9158,16 @@ async function _sosRequireLicense(onSuccess){
 .p-nm{font-size:14px;font-weight:800;color:#fff;text-align:center}
 .p-st{font-size:11px;font-weight:600;text-align:center}
 .no-data{text-align:center;padding:30px 16px;color:#fff;opacity:.6;font-size:12px;line-height:1.8;grid-column:1/-1}
-/* TYPE LIST */
-.type-list{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:8px;scrollbar-width:none}
-.type-list::-webkit-scrollbar{display:none}
-.type-btn{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;border:1.5px solid rgba(var(--mc-rgb),.35);background:rgba(var(--mc-rgb),.08);cursor:pointer;color:#fff;touch-action:manipulation;transition:all .12s;width:100%;text-align:left}
-.type-btn:hover,.type-btn:active{background:rgba(var(--mc-rgb),.18);transform:translateX(4px)}
-.t-ico{font-size:24px;width:34px;text-align:center;flex-shrink:0}
-.t-tx{flex:1}
-.t-lbl{display:block;font-size:13px;font-weight:800}
-.t-desc{display:block;font-size:11px;color:#fff;opacity:.6;margin-top:3px}
-.t-arr{color:#fff;opacity:.4;font-size:16px}
-/* CONFIRM INFO */
-.confirm-info{padding:14px 16px;display:flex;flex-direction:column;gap:12px;border-bottom:1px solid rgba(255,255,255,.07)}
-.ci-row{display:flex;align-items:flex-start;gap:12px}
-.ci-ico{font-size:20px;width:28px;text-align:center;flex-shrink:0;margin-top:2px}
-.ci-lbl{font-size:10px;color:#fff;opacity:.55;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
-.ci-val{font-size:14px;font-weight:800;color:#fff}
+/* TYPE GRID 3x2 */
+.type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%}
+.type-sq{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:14px 6px;border-radius:14px;border:1.5px solid rgba(var(--mc-rgb),.35);background:rgba(var(--mc-rgb),.08);cursor:pointer;touch-action:manipulation;transition:all .12s;aspect-ratio:1;min-height:0}
+.type-sq:hover,.type-sq:active{background:rgba(var(--mc-rgb),.22);transform:scale(.95)}
+.ts-ico{font-size:26px;line-height:1}
+.ts-lbl{font-size:10px;font-weight:800;text-align:center;line-height:1.2;color:#fff}
+/* CONFIRM ROW (riepilogo inline) */
+.confirm-row{display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
+.cr-chip{font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:4px 10px;white-space:nowrap}
+.cr-sep{color:#fff;opacity:.3;font-size:14px}
 /* BOTTOM ACTIONS */
 .bot{padding:12px 14px 16px;display:flex;flex-direction:column;gap:8px;flex-shrink:0}
 /* HOLD BUTTON */
@@ -9208,7 +9207,12 @@ async function _sosRequireLicense(onSuccess){
         this._state=this._otherPersons().length?'step2':'step3'; this._build();
       }
       else if(a==='mode'){ this._wMode=parseInt(b.dataset.i)||0; this._state='confirm'; this._build(); }
-      else if(a==='ct'){ const i=parseInt(b.dataset.i); this._wContacts.has(i)?this._wContacts.delete(i):this._wContacts.add(i); this._build(); }
+      else if(a==='ct'){
+        const i=parseInt(b.dataset.i); const ops=this._otherPersons();
+        this._wContacts.has(i)?this._wContacts.delete(i):this._wContacts.add(i);
+        if(ops.length<=1){ this._state='step3'; } // sola persona: auto-avanza
+        this._build();
+      }
       else if(a==='selall'){ const ops=this._otherPersons(); ops.forEach((_,i)=>this._wContacts.add(i)); this._build(); }
       else if(a==='confirm'){ this._state='confirm'; this._build(); }
     }
@@ -9237,36 +9241,65 @@ async function _sosRequireLicense(onSuccess){
       },1000);
     }
     _send(){
-      const m=this._am||_M[0], contacts=this._contacts();
+      const m=this._am||_M[0];
+      const sc=window.frarikSosCfg?.();
       const ops=this._otherPersons();
+      const who=this._wPerson;
+      const loc=this._loc();
+      // Costruisce lista destinatari
       let toNotify=[];
-      if(this._wContacts.size>0){
-        const selPersons=[...this._wContacts].map(i=>ops[i]).filter(Boolean);
-        for(const p of selPersons){
-          const fn=(p.name||'').toLowerCase().split(' ')[0];
-          const match=contacts.find(c=>{const cn=(c.name||'').toLowerCase(); return cn===p.name.toLowerCase()||cn.split(' ')[0]===fn;});
-          if(match) toNotify.push(match);
+      if(sc?.family?.length){
+        const selEids=this._wContacts.size>0?[...this._wContacts].map(i=>ops[i]?.eid).filter(Boolean):ops.map(p=>p.eid);
+        for(const eid of selEids){
+          const fam=sc.family.find(f=>f.person_eid===eid);
+          const p=ops.find(x=>x.eid===eid);
+          if(fam?.notify_eid) toNotify.push({name:p?.name||eid,notifyService:fam.notify_eid});
         }
-        if(!toNotify.length) toNotify=contacts;
-      } else { toNotify=contacts; }
+      }
+      if(!toNotify.length){
+        // Fallback: vecchi contatti
+        const contacts=this._contacts();
+        if(this._wContacts.size>0){
+          const selPersons=[...this._wContacts].map(i=>ops[i]).filter(Boolean);
+          for(const p of selPersons){
+            const fn=(p.name||'').toLowerCase().split(' ')[0];
+            const match=contacts.find(c=>{const cn=(c.name||'').toLowerCase();return cn===p.name.toLowerCase()||cn.split(' ')[0]===fn;});
+            if(match) toNotify.push(match);
+          }
+        }
+        if(!toNotify.length) toNotify=this._contacts();
+      }
+      // Trigger entità HA opzionale
       if(this._c.triggerEntity){
         try{ const d=this._c.triggerEntity.split('.')[0]; window.frarikCallService?.(d,d==='input_button'?'press':(d==='script'?'turn_on':'press'),{},{entity_id:this._c.triggerEntity}); }catch(_){}
       }
-      const now=new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
-      const loc=this._loc(); const who=this._wPerson; const sent=[];
+      // Notifica: messaggio semplice + azione GPS interattiva
+      const sent=[];
       for(const c of toNotify){
-        if(c.notifyService){
-          const msg=`${m.icon} ALLARME ${m.label.toUpperCase()}${who?'\n👤 '+who:''}\n⏰ ${now}`+(loc?'\n📍 '+loc:'');
-          try{ window.frarikCallService?.('notify',c.notifyService.replace(/^notify\./,''),{title:`🆘 ${m.label} — Richiesta di aiuto`,message:c.message||msg,data:{channel:'alarm_stream',importance:'high',ttl:0,priority:'high',color:m.color,persistent:true,sticky:true,tag:'sos_'+m.id,notification_icon:'mdi:alarm-light',vibrationPattern:[0,400,200,400,200,400],ledColor:m.color,push:{sound:{name:'default',critical:1,volume:1.0},'interruption-level':'critical',badge:1}}},{}); sent.push({n:c.name||c.notifyService,ok:true}); }catch(_){ sent.push({n:c.name||c.notifyService,ok:false}); }
-        }
+        if(!c.notifyService) continue;
+        const title=`🆘 ${m.label}${who?' — '+who:''}`;
+        const msg=`${m.icon} ${who||'Emergenza'} chiede aiuto!${loc?'\n📍 Tocca per vedere la posizione':'\n⏰ '+new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}`;
+        const notifData={
+          channel:'alarm_stream',importance:'high',ttl:0,priority:'high',
+          color:m.color,persistent:true,sticky:true,tag:'sos_'+m.id,
+          notification_icon:'mdi:alarm-light',
+          vibrationPattern:[0,500,200,500,200,500],ledColor:m.color,
+          ...(loc?{url:loc,clickAction:loc,actions:[{action:'URI',title:'📍 Apri posizione GPS',uri:loc}]}:{}),
+          push:{sound:{name:'default',critical:1,volume:1.0},'interruption-level':'critical',badge:1,...(loc?{url:loc}:{})}
+        };
+        try{ window.frarikCallService?.('notify',c.notifyService.replace(/^notify\./,''),{title,message:msg,data:notifData},{}); sent.push({n:c.name||c.notifyService,ok:true}); }
+        catch(_){ sent.push({n:c.name||c.notifyService,ok:false}); }
       }
       const d=_ld(this._sk); const logs=d.logs||[];
       logs.unshift({t:Date.now(),mode:m.id,who,cts:toNotify.map(x=>x.name||'?')});
       if(logs.length>10)logs.length=10; _sv(this._sk,{...d,logs});
       this._state='active'; this._build();
-      const logEl=this.shadowRoot.getElementById('ssl'); if(!logEl) return;
-      const trRow=this._c.triggerEntity?`<div class="s-row"><span>✅</span><span>⚡ ${this._c.triggerEntity}</span></div>`:'';
-      logEl.innerHTML=trRow+(sent.length?sent.map(s=>`<div class="s-row"><span>${s.ok?'✅':'⚠️'}</span><span>${s.n}</span></div>`).join(''):'<div class="s-row"><span>⚠️</span><span>Nessun contatto configurato</span></div>');
+      const logEl=this.shadowRoot.getElementById('ssl'); if(logEl){
+        const trRow=this._c.triggerEntity?`<div class="s-row"><span>✅</span><span>⚡ ${this._c.triggerEntity}</span></div>`:'';
+        logEl.innerHTML=trRow+(sent.length?sent.map(s=>`<div class="s-row"><span>${s.ok?'✅':'⚠️'}</span><span>${s.n}</span></div>`).join(''):'<div class="s-row"><span>⚠️</span><span>Nessun contatto configurato</span></div>');
+      }
+      // Auto-reset dopo 5 secondi
+      this._cdi=setTimeout(()=>{ this._clrT(); this._state='idle'; this._am=null; this._wPerson=null; this._wPersonEid=null; this._wContacts=new Set(); this._personsSig=''; this._build(); },5000);
     }
     _loc(){
       try{
@@ -9410,10 +9443,10 @@ function _jsStoreList(){
     // scarta voci corrotte/vuote: una card valida ha sempre meta.id e codice
     if(v && v.meta && v.meta.id && v.code) out.push(v);
   }
-  // Card di sistema embedded: SOS — sempre presente, non richiede file JS
-  if(!out.find(i=>i.meta?.id==='sos-card')){
-    out.unshift({meta:{id:'sos-card',name:'SOS Emergenza',icon:'🆘',version:'1.3',desc:'4 step guidati: chi chiede aiuto → chi avvisare → tipo emergenza → tieni premuto 3s. Notifica GPS inviata in secondi. Configurabile solo da Impostazioni → SOS.'},code:'/* builtin */',origin:'system',_builtin:true});
-  }
+  // Card di sistema embedded: SOS — sempre presente e sempre builtin
+  const _sosIdx=out.findIndex(i=>i.meta?.id==='sos-card');
+  if(_sosIdx>=0) out.splice(_sosIdx,1); // rimuove eventuali versioni localStorage non-builtin
+  out.unshift({meta:{id:'sos-card',name:'SOS Emergenza',icon:'🆘',version:'1.4',desc:'4 step guidati: chi chiede aiuto → chi avvisare → tipo emergenza → tieni premuto 3s. Notifica GPS interattiva. Configurabile solo da Impostazioni → SOS.'},code:'/* builtin */',origin:'system',_builtin:true});
   return out;
 }
 
@@ -12025,9 +12058,10 @@ let _sosPeopleArr=[];  // array persone caricato all'apertura (evita JSON inline
 
 /* helper config */
 function _sosCfg(){
-  if(!cfg.sos) cfg.sos={contacts:[],persons:[]};
+  if(!cfg.sos) cfg.sos={contacts:[],persons:[],family:[]};
   if(!cfg.sos.contacts) cfg.sos.contacts=[];
   if(!cfg.sos.persons) cfg.sos.persons=[];
+  if(!cfg.sos.family) cfg.sos.family=[];
   return cfg.sos;
 }
 
@@ -12207,14 +12241,9 @@ function renderSOSCfgList(){
   const el=document.getElementById('sos-cfg-list'); if(!el) return;
   const _sosOnDash=(cfg.pages||[]).some(p=>(p.cards||[]).some(c=>c.type==='js-custom'&&c.jsCardId==='sos-card'));
   const sc=_sosCfg();
-  const contacts=sc.contacts;
-  const persons=sc.persons||[];
+  const family=sc.family||[];
 
-  const S='style="';
-  const W=S+'color:#fff;';
-  const sB=S+'display:block;';
-
-  // ── GUIDE BANNER (grande, testo tutto bianco) ──
+  // ── GUIDE BANNER ──
   const guideBanner=`<div style="margin-bottom:22px;border-radius:18px;border:1.5px solid rgba(239,68,68,.4);background:linear-gradient(145deg,rgba(239,68,68,.18) 0%,rgba(139,0,0,.12) 100%);overflow:hidden">
     <div style="padding:20px 22px 18px;border-bottom:1px solid rgba(239,68,68,.2)">
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
@@ -12227,12 +12256,12 @@ function renderSOSCfgList(){
       </div>
       <div style="display:flex;flex-direction:column;gap:10px">
         <div style="display:flex;align-items:flex-start;gap:12px"><span style="background:rgba(239,68,68,.3);border:1px solid rgba(239,68,68,.5);border-radius:50%;width:24px;height:24px;min-width:24px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;margin-top:1px">1</span><span style="font-size:14px;color:#fff;font-weight:600;line-height:1.5"><b>CHI CHIEDE AIUTO?</b> — Tocca il tuo nome nella griglia persone</span></div>
-        <div style="display:flex;align-items:flex-start;gap:12px"><span style="background:rgba(239,68,68,.3);border:1px solid rgba(239,68,68,.5);border-radius:50%;width:24px;height:24px;min-width:24px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;margin-top:1px">2</span><span style="font-size:14px;color:#fff;font-weight:600;line-height:1.5"><b>CHI VUOI AVVISARE?</b> — Seleziona le altre persone del nucleo da allertare</span></div>
-        <div style="display:flex;align-items:flex-start;gap:12px"><span style="background:rgba(239,68,68,.3);border:1px solid rgba(239,68,68,.5);border-radius:50%;width:24px;height:24px;min-width:24px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;margin-top:1px">3</span><span style="font-size:14px;color:#fff;font-weight:600;line-height:1.5"><b>TIPO DI EMERGENZA</b> — SOS generico, incendio, allagamento…</span></div>
-        <div style="display:flex;align-items:flex-start;gap:12px"><span style="background:rgba(239,68,68,.3);border:1px solid rgba(239,68,68,.5);border-radius:50%;width:24px;height:24px;min-width:24px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;margin-top:1px">4</span><span style="font-size:14px;color:#fff;font-weight:600;line-height:1.5"><b>CHIEDI AIUTO</b> — Tieni premuto 3 secondi. L'allarme include la tua posizione GPS su Google Maps</span></div>
+        <div style="display:flex;align-items:flex-start;gap:12px"><span style="background:rgba(239,68,68,.3);border:1px solid rgba(239,68,68,.5);border-radius:50%;width:24px;height:24px;min-width:24px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;margin-top:1px">2</span><span style="font-size:14px;color:#fff;font-weight:600;line-height:1.5"><b>CHI VUOI AVVISARE?</b> — Le altre persone del nucleo che riceveranno la notifica</span></div>
+        <div style="display:flex;align-items:flex-start;gap:12px"><span style="background:rgba(239,68,68,.3);border:1px solid rgba(239,68,68,.5);border-radius:50%;width:24px;height:24px;min-width:24px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;margin-top:1px">3</span><span style="font-size:14px;color:#fff;font-weight:600;line-height:1.5"><b>TIPO DI EMERGENZA</b> — SOS, medica, incendio, allagamento, gas, intrusione</span></div>
+        <div style="display:flex;align-items:flex-start;gap:12px"><span style="background:rgba(239,68,68,.3);border:1px solid rgba(239,68,68,.5);border-radius:50%;width:24px;height:24px;min-width:24px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;margin-top:1px">4</span><span style="font-size:14px;color:#fff;font-weight:600;line-height:1.5"><b>CHIEDI AIUTO</b> — Tieni premuto 3s. La notifica include posizione GPS interattiva su Maps</span></div>
       </div>
     </div>
-    <div style="padding:16px 22px;display:flex;align-items:center;gap:14px">
+    <div style="padding:16px 22px">
       ${_sosOnDash
         ?`<div style="font-size:13px;color:#fff;opacity:.7">🔐 Protetta da licenza — non eliminabile senza chiave admin</div>`
         :`<button onclick="window._addSosToDash&&window._addSosToDash()" style="padding:11px 22px;border-radius:12px;background:rgba(239,68,68,.35);border:1.5px solid rgba(239,68,68,.6);color:#fff;font-size:14px;font-weight:900;cursor:pointer;letter-spacing:.5px">➕ Aggiungi alla dashboard</button>`
@@ -12243,64 +12272,40 @@ function renderSOSCfgList(){
   // ── CARD PREVIEW ──
   const cardPreview=`<div id="sos-settings-card-wrap" style="height:280px;margin:0 0 22px;border-radius:18px;overflow:hidden;border:1.5px solid rgba(239,68,68,.25);background:#0a0816;box-shadow:0 8px 40px rgba(0,0,0,.5)"></div>`;
 
-  // ── ACCORDION CONFIG ──
+  // ── ACCORDION UNICO: persona + dispositivo notify ──
   const allPeople=Object.keys(ha).filter(eid=>eid.startsWith('person.')).map(eid=>({eid,name:ha[eid]?.friendly_name||eid.split('.')[1].replace(/_/g,' ')}));
-  const availOpts=allPeople.filter(p=>!persons.includes(p.eid)).map(p=>`<option value="${eh(p.eid)}">${eh(p.name)}</option>`).join('');
-  const personRows=persons.map((eid,i)=>{
-    const inf=allPeople.find(p=>p.eid===eid);
-    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)"><span style="font-size:13px;flex:1;color:#fff;font-weight:600">👤 ${eh(inf?inf.name:eid)}</span><button class="sos-cfg-del" data-action="sosRemovePerson" data-action-args='[${i}]'>✕</button></div>`;
+  const personOpts=allPeople.map(p=>`<option value="${eh(p.eid)}">${eh(p.name)}</option>`).join('');
+
+  const famRows=family.map((f,i)=>{
+    const pInfo=allPeople.find(p=>p.eid===f.person_eid);
+    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)">
+      <select class="sos-cfg-inp" style="flex:1;min-width:0" data-input="sosFamilyUpdate" data-input-args='[${i},"person_eid"]'>
+        <option value="">— Persona HA —</option>${personOpts.replace(`value="${eh(f.person_eid||'')}"`,`value="${eh(f.person_eid||'')}" selected`)}
+      </select>
+      <span style="color:#fff;opacity:.3;font-size:18px;flex-shrink:0">→</span>
+      <div style="display:flex;gap:4px;flex:1;min-width:0">
+        <input class="sos-cfg-inp" type="text" placeholder="mobile_app_..." value="${eh(f.notify_eid||'')}" data-input="sosFamilyUpdate" data-input-args='[${i},"notify_eid"]' style="flex:1;min-width:0">
+        <button class="ntf-pick-btn" style="width:28px;height:28px;border-radius:7px;font-size:13px;flex-shrink:0" data-action="_sosPickFamilyNotify" data-action-args='[${i}]'>🔍</button>
+      </div>
+      <button class="sos-cfg-del" style="flex-shrink:0" data-action="sosFamilyRemove" data-action-args='[${i}]'>🗑</button>
+    </div>`;
   }).join('');
 
-  const contactRows=contacts.length
-    ? contacts.map((c,i)=>`
-      <div class="sos-cfg-contact">
-        <div style="display:flex;flex-direction:column;gap:1px">
-          <button class="sos-cfg-del" data-action="sosMoveContact" data-action-args='[${i},-1]' style="font-size:10px;padding:0 4px;${i===0?'opacity:.25;pointer-events:none':''}">▲</button>
-          <button class="sos-cfg-del" data-action="sosMoveContact" data-action-args='[${i},1]' style="font-size:10px;padding:0 4px;${i===contacts.length-1?'opacity:.25;pointer-events:none':''}">▼</button>
-        </div>
-        <div style="display:flex;gap:3px;align-items:center">
-          <input class="sos-cfg-ico-inp" type="text" value="${eh(c.icon||'👤')}" placeholder="👤" data-input="sosUpdateContact" data-input-args='[${i},"icon"]'>
-          <button class="ntf-pick-btn" style="width:26px;height:26px;border-radius:6px;font-size:12px" data-action="_sosPickIcon" data-action-args='[${i}]' data-action-el="true">🎨</button>
-        </div>
-        <div class="sos-cfg-fields">
-          <input class="sos-cfg-inp" type="text" value="${eh(c.name||'')}" placeholder="Nome (es. Mario Rossi)" data-input="sosUpdateContact" data-input-args='[${i},"name"]'>
-          <div style="display:flex;gap:5px;align-items:center">
-            <input id="sos-svc-inp-${i}" class="sos-cfg-inp" type="text" value="${eh(c.notifyService||'')}" placeholder="Servizio notify HA — es. mobile_app_pixel_7" data-input="sosUpdateContact" data-input-args='[${i},"notifyService"]' style="flex:1">
-            <button class="ntf-pick-btn" style="width:28px;height:28px;border-radius:7px;font-size:13px" data-action="_sosPickService" data-action-args='[${i}]'>🔍</button>
-          </div>
-          <input class="sos-cfg-inp" type="tel" value="${eh(c.phone||'')}" placeholder="📞 Telefono (opzionale)" data-input="sosUpdateContact" data-input-args='[${i},"phone"]'>
-          <input class="sos-cfg-inp" type="text" value="${eh(c.message||'')}" placeholder="💬 Messaggio personalizzato (opzionale)" data-input="sosUpdateContact" data-input-args='[${i},"message"]'>
-        </div>
-        <button class="sos-cfg-del" data-action="sosDeleteContact" data-action-args='[${i}]'>🗑</button>
-      </div>`).join('')
-    : `<div style="font-size:12px;color:#fff;opacity:.5;text-align:center;padding:12px 0">Nessun contatto. Aggiungine uno.</div>`;
-
-  const accordion=`<div style="display:flex;flex-direction:column;gap:10px">
-    <details style="border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);overflow:hidden">
-      <summary style="padding:14px 16px;font-size:14px;font-weight:800;color:#fff;cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;user-select:none">
-        <span style="font-size:18px">👥</span> Persone del nucleo familiare
-        <span style="margin-left:auto;font-size:11px;color:#fff;opacity:.5">${persons.length?persons.length+' configurate':'Tutte HA'}</span>
-        <span style="font-size:12px;color:#fff;opacity:.4">▾</span>
-      </summary>
-      <div style="padding:12px 16px 16px;border-top:1px solid rgba(255,255,255,.07)">
-        <div style="font-size:12px;color:#fff;opacity:.7;margin-bottom:12px;line-height:1.6">Seleziona le persone del nucleo. Lascia vuoto per usare tutte le entità <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:4px">person.*</code> di Home Assistant.</div>
-        ${personRows||`<div style="font-size:12px;color:#fff;opacity:.45;padding:4px 0 10px">Tutte le persone HA verranno mostrate</div>`}
-        ${availOpts?`<div style="display:flex;gap:8px;margin-top:8px;align-items:center"><select id="sos-person-sel" class="sos-cfg-inp" style="flex:1"><option value="">— Seleziona persona —</option>${availOpts}</select><button class="sos-cfg-add" style="padding:5px 12px;margin:0" data-action="sosAddPerson">➕</button></div>`:'<div style="font-size:12px;color:#fff;opacity:.4;margin-top:6px">Tutte già incluse</div>'}
+  const accordion=`<details open style="border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);overflow:hidden">
+    <summary style="padding:14px 16px;font-size:14px;font-weight:800;color:#fff;cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;user-select:none">
+      <span style="font-size:18px">👥</span> Nucleo familiare &amp; Contatti
+      <span style="margin-left:auto;font-size:11px;color:#fff;opacity:.5">${family.length?family.length+' membr'+(family.length===1?'o':'i'):'Nessuno'}</span>
+      <span style="font-size:12px;color:#fff;opacity:.4">▾</span>
+    </summary>
+    <div style="padding:12px 16px 16px;border-top:1px solid rgba(255,255,255,.07)">
+      <div style="font-size:12px;color:#fff;opacity:.7;margin-bottom:14px;line-height:1.7">
+        Per ogni membro del nucleo seleziona l'entità <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:4px">person.*</code> di HA e il nome del suo dispositivo notify (es. <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:4px">mobile_app_pixel_7</code>).<br>
+        Trovalo in HA → Strumenti Sviluppatore → Servizi → cerca "notify".
       </div>
-    </details>
-    <details style="border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);overflow:hidden">
-      <summary style="padding:14px 16px;font-size:14px;font-weight:800;color:#fff;cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;user-select:none">
-        <span style="font-size:18px">📱</span> Contatti di emergenza
-        <span style="margin-left:auto;font-size:11px;color:#fff;opacity:.5">${contacts.length} contatt${contacts.length===1?'o':'i'}</span>
-        <span style="font-size:12px;color:#fff;opacity:.4">▾</span>
-      </summary>
-      <div style="padding:12px 16px 16px;border-top:1px solid rgba(255,255,255,.07)">
-        <div style="font-size:12px;color:#fff;opacity:.7;margin-bottom:12px;line-height:1.6">Per ogni membro inserisci il <b style="color:#fff">nome</b> (deve corrispondere alla persona configurata sopra) e il <b style="color:#fff">servizio notify</b> della sua app HA sul telefono.</div>
-        ${contactRows}
-        <button class="sos-cfg-add" data-action="sosAddContact" style="margin-top:10px;width:100%">➕ Aggiungi contatto</button>
-      </div>
-    </details>
-  </div>`;
+      ${famRows||`<div style="font-size:12px;color:#fff;opacity:.4;text-align:center;padding:10px 0">Nessun membro configurato</div>`}
+      <button class="sos-cfg-add" data-action="sosFamilyAdd" style="margin-top:6px;width:100%">➕ Aggiungi membro</button>
+    </div>
+  </details>`;
 
   el.innerHTML=guideBanner+cardPreview+accordion;
 
@@ -12355,6 +12360,12 @@ function sosMoveContact(i,dir){
   saveCfg(); renderSOSCfgList();
 }
 function _sosSetQuick(val){ _sosCfg().quickMode=!!val; saveCfg(); }
+
+// ── Famiglia: nuovo schema unificato (person_eid + notify_eid) ──
+function sosFamilyAdd(){ const sc=_sosCfg(); sc.family.push({person_eid:'',notify_eid:''}); saveCfg(); renderSOSCfgList(); }
+function sosFamilyRemove(i){ const sc=_sosCfg(); sc.family.splice(i,1); saveCfg(); renderSOSCfgList(); }
+function sosFamilyUpdate(i,field,val){ const sc=_sosCfg(); if(sc.family[i]) sc.family[i][field]=val; saveCfg(); }
+function _sosPickFamilyNotify(i){ _epPickerOpen(v=>{ sosFamilyUpdate(i,'notify_eid',v); renderSOSCfgList(); },'notify','Seleziona servizio notify'); }
 
 /* link Google Maps dalla posizione GPS della persona che ha lanciato l'SOS (se disponibile) */
 function _sosLocLink(){
@@ -14278,6 +14289,7 @@ Object.assign(window, {
   _pgWarnClose, _sendCallSvc,
   _appItemPickIcon, _appItemPickColor, _appGroupPickColor,
   _sosPickIcon, _sosPickService, _sosSetQuick,
+  sosFamilyAdd, sosFamilyRemove, sosFamilyUpdate, _sosPickFamilyNotify,
   _fePickIconBtn, _fePickIconEl,
   _ntfPickEntityFor, _ntfPickIcon, _ntfPickDuration, _ntfPickCam, _ntfPickAlexa, _ntfPickCond, _ntfPickMobile,
   _hbDelColorMapEntry, _hbDelIconMapEntry,
