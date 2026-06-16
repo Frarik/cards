@@ -9263,19 +9263,16 @@ async function _sosRequireLicense(onSuccess){
         if(!c.notifyService) continue;
         const title=`🆘 ${m.label}${who?' — '+who:''}`;
         const msg=`${m.icon} ${who||'Emergenza'} chiede aiuto!${loc?'\n📍 Tocca per vedere la posizione':'\n⏰ '+new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}`;
-        const _iosSnd={name:'default',critical:1,volume:1.0};
         const notifData={
           // Android
           channel:'alarm_stream',importance:'high',ttl:0,priority:'high',
           color:m.color,persistent:true,sticky:true,tag:'sos_'+m.id,
           notification_icon:'mdi:alarm-light',
           vibrationPattern:[0,500,200,500,200,500],ledColor:m.color,
-          // GPS click (Android + iOS)
+          // GPS tap (Android + iOS)
           ...(loc?{url:loc,clickAction:loc,actions:[{action:'URI',title:'📍 Apri posizione GPS',uri:loc}]}:{}),
-          // iOS top-level (companion ≥ 2021.1)
-          sound:_iosSnd,'interruption-level':'critical',badge:1,
-          // iOS push-wrapper (companion < 2021.1 / documentazione ufficiale HA)
-          push:{sound:_iosSnd,'interruption-level':'critical',badge:1,...(loc?{url:loc}:{})},
+          // iOS Critical Alert — solo push wrapper, formato documentazione ufficiale HA companion
+          push:{sound:{name:'default',critical:1,volume:1.0},'interruption-level':'critical',badge:1},
         };
         try{ window.frarikCallService?.('notify',c.notifyService.replace(/^notify\./,''),{title,message:msg,data:notifData},{}); sent.push({n:c.name||c.notifyService,ok:true}); }
         catch(_){ sent.push({n:c.name||c.notifyService,ok:false}); }

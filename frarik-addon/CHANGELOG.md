@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.06 — 2026-06-16
+
+### fix: notifiche iOS — payload ripulito, solo push wrapper (formato ufficiale HA companion)
+
+- Rimossi `sound`/`interruption-level`/`badge` dal top-level di `notifData`: non sono campi HA standard e avere `sound:{...}` (oggetto) al top confondeva il backend Android che si aspetta una stringa
+- Rimosso `url` dall'interno di `push{}`: l'URL da aprire al tap va solo al top-level di `data` (`url`+`clickAction`), non dentro il wrapper APNs
+- Il payload iOS ora è esattamente il formato documentato da HA companion: `push:{sound:{name:'default',critical:1,volume:1.0},'interruption-level':'critical',badge:1}`
+
 ## 1.5.05 — 2026-06-16
 
 ### feat: SOS card — click immediato, countdown 3s, tile emergenza più piccole
