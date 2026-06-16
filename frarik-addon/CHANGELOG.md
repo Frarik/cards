@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.05 — 2026-06-16
+
+### feat: SOS card — click immediato, countdown 3s, tile emergenza più piccole
+
+- **"CHIEDI AIUTO"** ora è un click immediato — rimosso il meccanismo hold-3-secondi. Click → avvio countdown diretto.
+- **Countdown ridotto a 3 secondi** (era 5). Più rapido ma ancora annullabile.
+- **Tile emergenza (step3) dimezzate**: gap 5px, padding 7×4px, icona 18px, label 9px, rimosso `aspect-ratio:1`. La card mantiene la stessa altezza della griglia persone.
+
 ## 1.5.04 — 2026-06-16
 
 ### fix: notifiche iOS — dual format (push wrapper + top-level) per compatibilità tutte le versioni companion

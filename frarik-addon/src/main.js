@@ -8942,7 +8942,7 @@ async function _sosRequireLicense(onSuccess){
 
 (function _defineSosCard(){
   if(customElements.get('sos-card')) return;
-  const _HMS=3000, _CS=5;
+  const _HMS=3000, _CS=3;
   const _M=[
     {id:'generic', icon:'🆘', label:'SOS Generico',    color:'#ef4444', desc:'Qualsiasi emergenza'},
     {id:'medical', icon:'🏥', label:'Emergenza Medica', color:'#f97316', desc:'Malore, infortunio, urgenza sanitaria'},
@@ -9082,11 +9082,7 @@ async function _sosRequireLicense(onSuccess){
           <span class="cr-chip">📱 ${whoStr}</span>
         </div>
         <div class="bot">
-          <div class="hold-wrap" style="--mc:${m.color};--mc-rgb:${_hexRgb(m.color)}">
-            <button class="hold-btn" data-a="hold">CHIEDI AIUTO</button>
-            <div class="hold-bar" id="shf"></div>
-          </div>
-          <div class="hold-hint">Tieni premuto 3 secondi per inviare l'allarme</div>
+          <button class="act-btn btn-main" data-a="gocd" style="--mc:${m.color};--mc-rgb:${_hexRgb(m.color)};background:linear-gradient(135deg,rgba(var(--mc-rgb),.7),rgba(var(--mc-rgb),.45));border:2px solid rgba(var(--mc-rgb),.6);padding:22px;font-size:17px;font-weight:900;letter-spacing:1.5px;border-radius:14px;box-shadow:none">CHIEDI AIUTO</button>
           <button class="act-btn btn-cancel" data-a="cancel">Annulla</button>
         </div>`;
     }
@@ -9158,11 +9154,11 @@ async function _sosRequireLicense(onSuccess){
 .p-st{font-size:11px;font-weight:600;text-align:center}
 .no-data{text-align:center;padding:30px 16px;color:#fff;opacity:.6;font-size:12px;line-height:1.8;grid-column:1/-1}
 /* TYPE GRID 3x2 */
-.type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%}
-.type-sq{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:14px 6px;border-radius:14px;border:1.5px solid rgba(var(--mc-rgb),.35);background:rgba(var(--mc-rgb),.08);cursor:pointer;touch-action:manipulation;transition:all .12s;aspect-ratio:1;min-height:0}
+.type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;width:100%}
+.type-sq{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:7px 4px;border-radius:10px;border:1.5px solid rgba(var(--mc-rgb),.35);background:rgba(var(--mc-rgb),.08);cursor:pointer;touch-action:manipulation;transition:all .12s;min-height:0}
 .type-sq:hover,.type-sq:active{background:rgba(var(--mc-rgb),.22);transform:scale(.95)}
-.ts-ico{font-size:26px;line-height:1}
-.ts-lbl{font-size:10px;font-weight:800;text-align:center;line-height:1.2;color:#fff}
+.ts-ico{font-size:18px;line-height:1}
+.ts-lbl{font-size:9px;font-weight:800;text-align:center;line-height:1.2;color:#fff}
 /* CONFIRM ROW (riepilogo inline) */
 .confirm-row{display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
 .cr-chip{font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:4px 10px;white-space:nowrap}
@@ -9214,28 +9210,10 @@ async function _sosRequireLicense(onSuccess){
       }
       else if(a==='selall'){ const ops=this._otherPersons(); ops.forEach((_,i)=>this._wContacts.add(i)); this._build(); }
       else if(a==='confirm'){ this._state='confirm'; this._build(); }
+      else if(a==='gocd'){ this._am=_M[this._wMode]; this._startCD(); }
     }
-    _onPD(e){
-      const b=e.target.closest('[data-a="hold"]'); if(!b) return;
-      if(this._state!=='confirm'&&this._state!=='holding') return;
-      e.preventDefault(); try{b.setPointerCapture(e.pointerId);}catch(_){}
-      this._state='holding'; this._hs=Date.now();
-      // Aggiorna il bottone senza ricostruire il DOM — così pointer capture rimane valido
-      b.textContent='TIENI PREMUTO…'; b.classList.add('act');
-      const anim=()=>{
-        if(this._state!=='holding') return;
-        const el=this.shadowRoot.getElementById('shf');
-        if(el){ const p=Math.min(100,(Date.now()-this._hs)/_HMS*100); el.style.width=p+'%'; if(p>=100){ this._startCD(); return; } }
-        this._hraf=requestAnimationFrame(anim);
-      };
-      this._hraf=requestAnimationFrame(anim);
-    }
-    _onPU(){
-      if(this._state!=='holding') return;
-      this._clrT(); this._state='confirm';
-      const bar=this.shadowRoot.getElementById('shf'); if(bar) bar.style.width='0';
-      this._build();
-    }
+    _onPD(){}
+    _onPU(){}
     _startCD(){
       this._clrT(); this._state='countdown'; this._am=_M[this._wMode]; this._csec=_CS; this._build();
       this._cdi=setInterval(()=>{
