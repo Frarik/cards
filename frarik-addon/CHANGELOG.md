@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.5.10 — 2026-06-16
+
+### feat: wizard configurazione pkg posta + sottocartella frarik
+
+- Wizard "Configura e Installa": popup bottom-sheet con 4 campi configurabili (sensore, Google, Alexa, Push)
+- Ogni campo multi-dispositivo ha "+" per aggiungere e "✕" per rimuovere — dinamico senza re-render
+- YAML compilato automaticamente con i valori inseriti prima dell'installazione
+- Package installato in `/config/packages/frarik/frarik_posta.yaml` (sottocartella dedicata)
+- server.js: endpoint `/api/frarik/pkg/install` ora supporta un livello di sottocartella (path `frarik/file.yaml`)
+- Validazione sensore obbligatorio con errore inline e focus automatico
+- Rimosso tasto "Installazione manuale" — unico flusso: wizard → installa
+
 ## 1.5.09 — 2026-06-16
 
 ### feat: posta-card → standalone in card-js/ con installazione pkg automatica

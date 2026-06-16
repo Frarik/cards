@@ -186,10 +186,12 @@ app.get('/api/frarik/pkg/read', (req, res) => {
 app.post('/api/frarik/pkg/install', async (req, res) => {
   try {
     const { name, content } = JSON.parse((await readBody(req)).toString('utf8'));
-    if (!name || !/\.ya?ml$/i.test(name) || name.includes('/') || name.includes('..'))
+    const parts = (name || '').replace(/\\/g, '/').split('/').filter(Boolean);
+    if (!parts.length || parts.length > 2 || parts.some(p => p === '..' || p === '.') || !/\.ya?ml$/i.test(parts[parts.length - 1]))
       return res.status(400).json({ ok: false, error: 'Nome non valido' });
-    fs.mkdirSync(PKG_DIR, { recursive: true });
-    fs.writeFileSync(path.join(PKG_DIR, name), content, 'utf8');
+    const filePath = path.join(PKG_DIR, ...parts);
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    fs.writeFileSync(filePath, content, 'utf8');
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ ok: false, error: String(e.message) }); }
 });
