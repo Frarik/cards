@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.01 — 2026-06-16
+
+### fix: dashboard delete senza licenza, popup SOS header altezza, colori zona persone
+
+- **Dashboard delete**: rimossa anche la protezione dentro `delCard()` — la card SOS si elimina normalmente dalla dashboard con normale confirm dialog, senza inserire alcuna chiave
+- **Popup SOS header**: altezza area card fissata a 400px — la card SOS appare per intero nel popup
+- **Colori stato persone**: `home` → verde, `not_home` → rosso, zona custom (lavoro, ufficio, ecc.) → azzurro/blu `#38bdf8`, `unknown`/`unavailable` → grigio
+
 ## 1.5.00 — 2026-06-16
 
 ### fix: SOS — 6 fix su picker, preview, popup licenza, dashboard, stato persone, bottone header

@@ -8953,7 +8953,7 @@ async function _sosRequireLicense(onSuccess){
   ];
   function _hexRgb(h){ return [1,3,5].map(i=>parseInt(h.slice(i,i+2),16)||0).join(','); }
   function _stLbl(s){ return{home:'In casa',not_home:'Fuori casa',unavailable:'Non disp.',unknown:'Sconosciuta'}[s]||(s?s.replace(/_/g,' '):'—'); }
-  function _stCol(s){ return s==='home'?'#4ade80':s==='not_home'?'#f87171':s==='unavailable'||s==='unknown'||!s?'#6b7280':'#fbbf24'; }
+  function _stCol(s){ return s==='home'?'#4ade80':s==='not_home'?'#f87171':s==='unavailable'||s==='unknown'||!s?'#6b7280':'#38bdf8'; }
   function _sk(k){ return 'soscard:'+(k||'default'); }
   function _ld(k){ try{return JSON.parse(localStorage.getItem(_sk(k))||'{}')||{};}catch(_){return{};} }
   function _sv(k,o){ try{localStorage.setItem(_sk(k),JSON.stringify(o));}catch(_){} }
@@ -9717,14 +9717,6 @@ function addSpecial(type){
 /* ═══ CARD ACTIONS ═══ */
 function delCard(id){
   const card=curPage().cards.find(c=>c.id===id);
-  if(card?.type==='js-custom'&&card?.jsCardId==='sos-card'){
-    _sosRequireLicense(()=>{
-      destroyChart(id); stopCamTimer(id);
-      curPage().cards=curPage().cards.filter(c=>c.id!==id);
-      saveCfg(); renderDash();
-    });
-    return;
-  }
   const name=card?.label||card?.type||'questa card';
   showConfirm(`Eliminare <b>${name}</b>?`, ()=>{
     destroyChart(id); stopCamTimer(id);
@@ -12151,13 +12143,13 @@ function openSOS(){
       <span style="margin-left:12px;font-size:15px;font-weight:900;color:#fff;letter-spacing:.5px">SOS Emergenza</span>
       <button id="_sos-hdr-x" style="margin-left:auto;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;color:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center">✕</button>
     </div>
-    <div style="flex:1;overflow:hidden;min-height:0;position:relative" id="_sos-hdr-wrap"></div>
+    <div style="height:400px;overflow:hidden;position:relative" id="_sos-hdr-wrap"></div>
   </div>`;
   document.body.appendChild(pop);
   const wrap=document.getElementById('_sos-hdr-wrap');
   if(wrap){
     const card=document.createElement('sos-card');
-    card.style.cssText='display:block;width:100%;height:100%;position:absolute;inset:0';
+    card.style.cssText='display:block;width:100%;height:400px';
     wrap.appendChild(card);
     try{ card.setConfig({type:'custom:sos-card',storageKey:'__sos_hdr__'}); }catch(_){}
     try{ card.hass=_haHassObj(); }catch(_){}
