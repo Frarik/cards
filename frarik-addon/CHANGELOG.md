@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.21 — 2026-06-17
+
+### fix(posta-card): "l.render is not a function" — rimosso FratechCardRegistry manuale
+
+- Impostare `window.FratechCardRegistry['posta-card']` direttamente sovrascriveva il wrapper lovelace creato da `_registerLovelaceCard`, che è l'unico oggetto con il metodo `render()` necessario alla dashboard
+- Rimosso il blocco FratechCardRegistry dalla card; `_registerLovelaceCard` ora costruisce il wrapper corretto leggendo da `window.customCards`
+- Spostata l'emoji `📬` nell'icona di `window.customCards` (letta da `_registerLovelaceCard` per nome/icona nello Store)
+
 ## 1.5.20 — 2026-06-17
 
 ### fix(posta-card): card non si installava dallo Store — mancava id in FratechCardRegistry

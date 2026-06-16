@@ -1070,17 +1070,10 @@ automation:
   }
 
   customElements.define('posta-card', PostaCard);
-  window.FratechCardRegistry=window.FratechCardRegistry||{};
-  window.FratechCardRegistry['posta-card']={
-    id:'posta-card',
-    name:'Centro Controllo Posta',
-    icon:'📬',
-    desc:'Monitora la cassetta postale: contatori, storico, notifiche push/Google/Alexa. Installa il package con wizard guidato e autocomplete entità.'
-  };
   (window.customCards=window.customCards||[]).push({
     type:'posta-card',
     name:'Centro Controllo Posta',
     description:'Monitora la cassetta postale: contatori, storico, notifiche push/Google/Alexa. Installa il package con wizard guidato e autocomplete entità.',
-    icon:'mdi:mailbox'
+    icon:'📬'
   });
 })();
