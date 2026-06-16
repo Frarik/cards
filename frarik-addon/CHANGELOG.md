@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.03 — 2026-06-16
+
+### fix: notifiche iOS — rimosso wrapper push{}, campi al livello corretto
+
+- La companion app iOS ≥ 2021.1 ignora il vecchio formato `data.push.sound` e legge `data.sound` direttamente. Con il wrapper `push:{}` le notifiche venivano silenziosamente scartate dall'app iOS.
+- `sound`, `interruption-level`, `badge` ora sono al primo livello di `data` (come richiesto dalla companion moderna) — sia Android che iOS ricevono correttamente.
+- `interruption-level: critical` richiede "Avvisi Critici" abilitati in iOS Impostazioni → Notifiche → Home Assistant. Se non abilitati, la notifica arriva comunque come normale alert.
+
 ## 1.5.02 — 2026-06-16
 
 ### fix: popup SOS header — dimensioni corrette, centrato, idle forzato
