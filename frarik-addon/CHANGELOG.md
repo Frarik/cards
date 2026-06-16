@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.5.11 — 2026-06-16
+
+### fix: posta-card v1.2 — wizard funzionante + autocomplete entità
+
+- **Fix critico**: rimosso `onclick="event.stopPropagation()"` dal `.mo` del wizard che bloccava tutti i click interni (tasti "+", "✕", "⚡ Installa Package")
+- Wizard montato su shadow DOM dedicato in `document.body` — listener attaccati direttamente a `moEl` e ai singoli bottoni (non più su `sr` che non riceveva gli eventi)
+- **Autocomplete entità**: dropdown `#__frk_wiz_ac__` su `document.body` (evita il problema `backdrop-filter` containing block), positioning `fixed` con `getBoundingClientRect()`
+- Filtering domain-aware: `binary_sensor.*` per campo sensore, `media_player.*` per Google/Alexa, nessun autocomplete per Push
+- Highlight match in giallo (#fbbf24) nei risultati autocomplete (max 8)
+- `mousedown → preventDefault` sugli item autocomplete per evitare blur-before-click; blur delay 160ms prima di nascondere
+- Validazione sensore con errore inline e focus automatico sul campo mancante
+- Autocomplete si attacca automaticamente anche alle righe aggiunte dinamicamente con "+"
+- `_acShow` / `_acHide` come funzioni globali al modulo (non inline nell'HTML)
+- posta-card bump a v1.2
+
 ## 1.5.10 — 2026-06-16
 
 ### feat: wizard configurazione pkg posta + sottocartella frarik

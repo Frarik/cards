@@ -1,4 +1,4 @@
-/* frarik-version: 1.1 */
+/* frarik-version: 1.2 */
 /* Centro Controllo Posta — Frarik card standalone */
 (function(){
   'use strict';
@@ -6,6 +6,7 @@
 
   /* ─────────────────────────────────────────────
      PKG YAML template — compilato dal wizard
+     %%SENSORE_CASSETTA%% %%GOOGLE_LINES%% %%ALEXA_LINES%% %%PUSH_LINES%%
   ───────────────────────────────────────────── */
   const _PKG_YAML = `###############################################################
 #                                                             #
@@ -292,7 +293,7 @@ automation:
 ###############################################################
 `;
 
-  /* ── helpers colore ── */
+  /* ── colori ── */
   const _PC={
     bg:'linear-gradient(160deg,#0d0b1e 0%,#0a0f1e 60%,#080b18 100%)',
     bodyNoMail:'#1a2744',topNoMail:'#131d38',doorNoMail:'#0f1a32',
@@ -308,10 +309,10 @@ automation:
     const door=hasMail?_PC.doorMail:isOpen?_PC.doorOpen:_PC.doorNoMail;
     const glow=hasMail?'rgba(167,139,250,.35)':isOpen?'rgba(74,222,128,.3)':'rgba(99,102,241,.15)';
     const flagUp=hasMail||isOpen;
-    const envelope=hasMail?`<g class="letter-bob"><rect x="46" y="62" width="60" height="42" rx="5" fill="white" opacity=".96"/><path d="M46,62 L76,86 L106,62" fill="none" stroke="#d1d5db" stroke-width="2"/><rect x="56" y="82" width="40" height="4" rx="2" fill="#e5e7eb" opacity=".7"/><rect x="62" y="90" width="28" height="3" rx="1.5" fill="#e5e7eb" opacity=".5"/></g>`:'';
-    const openDoor=isOpen?`<g transform="rotate(-42,32,80)"><rect x="32" y="80" width="72" height="50" rx="9" fill="${door}" opacity=".9"/><rect x="40" y="106" width="56" height="8" rx="4" fill="rgba(0,0,0,.45)"/></g>`:'';
-    const sparkles=hasMail?`<circle class="sp1" cx="18" cy="44" r="5" fill="#fbbf24"/><circle class="sp2" cx="184" cy="40" r="4" fill="#a78bfa"/><circle class="sp3" cx="12" cy="86" r="3" fill="#34d399"/><circle class="sp4" cx="190" cy="90" r="3" fill="#f472b6"/><text x="168" y="30" font-size="16" class="sp5">✨</text>`:'';
-    const openSp=isOpen?`<circle class="sp1" cx="16" cy="50" r="4" fill="#4ade80"/><circle class="sp2" cx="188" cy="44" r="3" fill="#86efac"/><text x="170" y="34" font-size="14" class="sp5">📬</text>`:'';
+    const envelope=hasMail?`<g class="letter-bob"><rect x="46" y="62" width="60" height="42" rx="5" fill="white" opacity=".96"/><path d="M46,62 L76,86 L106,62" fill="none" stroke="#d1d5db" stroke-width="2"/><rect x="56" y="82" width="40" height="4" rx="2" fill="#e5e7eb" opacity=".7"/></g>`:'';
+    const openDoor=isOpen?`<g transform="rotate(-42,32,80)"><rect x="32" y="80" width="72" height="50" rx="9" fill="${door}" opacity=".9"/></g>`:'';
+    const sp=hasMail?`<circle class="sp1" cx="18" cy="44" r="5" fill="#fbbf24"/><circle class="sp2" cx="184" cy="40" r="4" fill="#a78bfa"/><circle class="sp3" cx="12" cy="86" r="3" fill="#34d399"/><text x="168" y="30" font-size="16" class="sp5">✨</text>`:'';
+    const osp=isOpen?`<circle class="sp1" cx="16" cy="50" r="4" fill="#4ade80"/><text x="170" y="34" font-size="14" class="sp5">📬</text>`:'';
     return `<svg viewBox="0 0 200 190" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:180px;filter:drop-shadow(0 8px 32px ${glow})">
       <defs>
         <linearGradient id="pg_body" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(255,255,255,.12)"/><stop offset="100%" stop-color="rgba(0,0,0,.18)"/></linearGradient>
@@ -331,9 +332,44 @@ automation:
       <rect x="159" y="76" width="5" height="52" rx="2.5" fill="#6b7280"/>
       ${!flagUp?`<g><rect x="155" y="110" width="5" height="18" rx="2" fill="#dc2626"/><path d="M160,110 L173,115 L160,120 Z" fill="#ef4444"/></g>`:''}
       ${flagUp?`<g filter="url(#pg_glow)"><rect x="159" y="76" width="5" height="20" rx="2" fill="${hasMail?'#dc2626':'#4ade80'}"/><path class="flag-wave" d="M164,76 Q178,72 180,80 Q178,88 164,84 Z" fill="${hasMail?'#ef4444':'#86efac'}"/></g>`:''}
-      ${sparkles}${openSp}
+      ${sp}${osp}
     </svg>`;
   }
+
+  /* ── autocomplete globale (document.body) ── */
+  let _acInput=null;
+  function _acShow(inputEl, hass, domain){
+    _acInput=inputEl;
+    const q=(inputEl.value||'').trim().toLowerCase();
+    const all=Object.keys(hass?.states||{});
+    let res=q?all.filter(id=>id.toLowerCase().includes(q)):all.filter(id=>id.startsWith(domain+'.'));
+    if(domain) res.sort((a,b)=>(b.startsWith(domain+'.')?1:0)-(a.startsWith(domain+'.')?1:0));
+    res=res.slice(0,8);
+    _acHide();
+    if(!res.length) return;
+    const ac=document.createElement('div');
+    ac.id='__frk_wiz_ac__';
+    const rect=inputEl.getBoundingClientRect();
+    ac.style.cssText=`position:fixed;top:${rect.bottom+3}px;left:${rect.left}px;width:${rect.width}px;`+
+      `background:#0e0c1e;border:1px solid rgba(251,191,36,.35);border-radius:10px;`+
+      `overflow-y:auto;max-height:200px;z-index:999999;box-shadow:0 10px 40px rgba(0,0,0,.85);scrollbar-width:none`;
+    const esc=s=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const hilite=id=>{
+      if(!q) return `<span style="color:#fff">${esc(id)}</span>`;
+      const i=id.toLowerCase().indexOf(q);
+      if(i<0) return `<span style="color:#fff">${esc(id)}</span>`;
+      return `<span style="color:#fff">${esc(id.slice(0,i))}<strong style="color:#fbbf24">${esc(id.slice(i,i+q.length))}</strong>${esc(id.slice(i+q.length))}</span>`;
+    };
+    ac.innerHTML=res.map(id=>`<div data-v="${esc(id)}" style="padding:8px 12px;font-size:12px;font-family:monospace;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.05);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${hilite(id)}</div>`).join('');
+    ac.querySelectorAll('[data-v]').forEach(el=>{
+      el.addEventListener('mousedown',e=>e.preventDefault());
+      el.addEventListener('click',()=>{ if(_acInput){ _acInput.value=el.dataset.v; _acInput.dispatchEvent(new Event('input',{bubbles:true})); _acInput.focus(); } _acHide(); });
+      el.addEventListener('mouseenter',()=>{ el.style.background='rgba(251,191,36,.12)'; });
+      el.addEventListener('mouseleave',()=>{ el.style.background=''; });
+    });
+    document.body.appendChild(ac);
+  }
+  function _acHide(){ document.getElementById('__frk_wiz_ac__')?.remove(); }
 
   class PostaCard extends HTMLElement {
     static getStubConfig(){ return {storageKey:''} }
@@ -382,7 +418,7 @@ automation:
 
     configure(card){ if(card?.id) this._frarikCard=card; this._openSettings(); }
     connectedCallback(){ this.shadowRoot.addEventListener('click',this._click); }
-    disconnectedCallback(){ this.shadowRoot.removeEventListener('click',this._click); this._destroyModal(); }
+    disconnectedCallback(){ this.shadowRoot.removeEventListener('click',this._click); this._destroyModal(); _acHide(); }
 
     _skKey(){ return 'posta-card:'+(this._c.storageKey||'default'); }
     _save(){ try{ localStorage.setItem(this._skKey(),JSON.stringify(this._c)); }catch(_){} }
@@ -419,7 +455,7 @@ automation:
       if(st==='installing'){
         body=`<div class="ni-icon" style="display:inline-block;animation:spin 1s linear infinite">⚙️</div>
           <div class="ni-title">Installazione in corso…</div>
-          <div class="ni-sub">Scrittura package in<br><code>/config/packages/frarik/</code></div>`;
+          <div class="ni-sub">Creazione cartella e scrittura<br><code>/config/packages/frarik/frarik_posta.yaml</code></div>`;
       } else if(st==='done'){
         body=`<div class="ni-icon">✅</div>
           <div class="ni-title">Package installato!</div>
@@ -432,7 +468,7 @@ automation:
       } else {
         body=`<div class="ni-icon">📦</div>
           <div class="ni-title">Package non installato</div>
-          <div class="ni-sub">Inserisci i tuoi sensori e dispositivi:<br>la card installerà il package in automatico.</div>
+          <div class="ni-sub">Configura i tuoi sensori e dispositivi:<br>la card installa il package in automatico.</div>
           <button class="ni-btn" data-a="open-wizard">⚡ Configura e Installa</button>`;
       }
       return `<style>${this._css()}</style>
@@ -445,15 +481,17 @@ automation:
     /* ── WIZARD CONFIGURAZIONE ── */
     _openInstallWizard(){
       this._destroyModal();
+      _acHide();
       const host=document.createElement('div');
       this._modalHost=host;
       host.attachShadow({mode:'open'});
       document.body.appendChild(host);
 
+      const self=this;
       let _ridG=1,_ridA=1,_ridP=1;
-      const sr=host.shadowRoot;
 
-      sr.innerHTML=`<style>
+      /* ---- HTML ---- */
+      host.shadowRoot.innerHTML=`<style>
         *{box-sizing:border-box;margin:0;padding:0}
         .ov{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.72);backdrop-filter:blur(6px)}
         .mo{width:100%;max-width:560px;max-height:88vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(251,191,36,.28);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.8);animation:su .22s cubic-bezier(.32,1.12,.56,1)}
@@ -479,26 +517,26 @@ automation:
         .wrow{display:flex;gap:6px;align-items:center}
         .winp{flex:1;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 12px;color:#fff;font-size:13px;font-family:monospace;outline:none;transition:border-color .15s}
         .winp:focus{border-color:rgba(251,191,36,.55);background:rgba(255,255,255,.09)}
-        .winp.err{border-color:rgba(239,68,68,.6)}
-        .wrem{width:32px;height:32px;flex-shrink:0;border-radius:8px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);color:#fca5a5;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;font-family:system-ui,sans-serif}
-        .wadd{align-self:flex-start;background:none;border:1px dashed rgba(255,255,255,.18);border-radius:9px;padding:6px 14px;color:#fff;opacity:.5;font-size:12px;font-weight:600;cursor:pointer;font-family:system-ui,sans-serif;transition:all .15s}
-        .wadd:hover{opacity:.85;border-color:rgba(251,191,36,.4);color:#fbbf24}
+        .winp.err{border-color:rgba(239,68,68,.6)!important}
+        .wrem{width:32px;height:32px;flex-shrink:0;border-radius:8px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);color:#fca5a5;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;font-family:system-ui,sans-serif;line-height:1}
+        .wadd{align-self:flex-start;background:none;border:1px dashed rgba(255,255,255,.18);border-radius:9px;padding:7px 16px;color:#fff;opacity:.55;font-size:12px;font-weight:600;cursor:pointer;font-family:system-ui,sans-serif;transition:all .15s}
+        .wadd:hover{opacity:.9;border-color:rgba(251,191,36,.45);color:#fbbf24}
         .werr{font-size:11px;color:#fca5a5;font-family:system-ui,sans-serif}
         .wdiv{height:1px;background:rgba(255,255,255,.06)}
         .mftr{display:flex;gap:10px;padding:14px 18px 24px;flex-shrink:0;border-top:1px solid rgba(255,255,255,.06)}
         .wbtn-c{flex:1;padding:13px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.13);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:system-ui,sans-serif}
         .wbtn-ok{flex:2;padding:13px;border-radius:12px;background:#fbbf24;border:none;color:#1a1a2e;font-size:13px;font-weight:900;cursor:pointer;font-family:system-ui,sans-serif;letter-spacing:.3px}
-        .wbtn-ok:active{filter:brightness(.92)}
+        .wbtn-ok:active{filter:brightness(.9)}
       </style>
-      <div class="ov">
-        <div class="mo" onclick="event.stopPropagation()">
+      <div class="ov" id="wiz_ov">
+        <div class="mo" id="wiz_mo">
           <div class="mhdr">
             <div class="mico">📦</div>
             <div class="mtxt">
               <div class="mtit">Configura Package Posta</div>
               <div class="msub">Inserisci i tuoi sensori e dispositivi</div>
             </div>
-            <button class="mxbtn" data-wiz="close">✕</button>
+            <button class="mxbtn" id="wiz_close">✕</button>
           </div>
           <div class="mbody">
 
@@ -508,13 +546,13 @@ automation:
                 <span class="wsec-ttl">Sensore Cassetta</span>
                 <span class="tag req">obbligatorio</span>
               </div>
-              <div class="wsec-hint">entity_id del binary sensor che si attiva (on) quando la cassetta postale viene aperta — contatto magnetico, sensore di vibrazione, ecc.</div>
+              <div class="wsec-hint">entity_id del binary sensor che si attiva (<strong>on</strong>) quando la cassetta viene aperta. Inizia a scrivere per cercare tra i tuoi sensori.</div>
               <div class="wlist">
-                <div class="wrow">
+                <div class="wrow" data-group="sensor">
                   <input class="winp" id="w_sensor" placeholder="binary_sensor.cassetta_postale" type="text" autocomplete="off" spellcheck="false"/>
                 </div>
               </div>
-              <div class="werr" id="w_sensor_err" style="display:none">⚠️ Campo obbligatorio</div>
+              <div class="werr" id="w_sensor_err" style="display:none">⚠️ Campo obbligatorio — inserisci l'entity_id del sensore</div>
             </div>
 
             <div class="wdiv"></div>
@@ -529,7 +567,7 @@ automation:
               <div class="wlist" id="w_google_list">
                 <div class="wrow" data-group="google" data-rid="0">
                   <input class="winp" placeholder="media_player.google_home_cucina" type="text" autocomplete="off" spellcheck="false"/>
-                  <button class="wrem" data-rem-grp="google" data-rem-rid="0">✕</button>
+                  <button class="wrem" data-rid="0" data-grp="google">✕</button>
                 </div>
               </div>
               <button class="wadd" data-add="google">+ Aggiungi dispositivo</button>
@@ -547,7 +585,7 @@ automation:
               <div class="wlist" id="w_alexa_list">
                 <div class="wrow" data-group="alexa" data-rid="0">
                   <input class="winp" placeholder="media_player.alexa_cucina" type="text" autocomplete="off" spellcheck="false"/>
-                  <button class="wrem" data-rem-grp="alexa" data-rem-rid="0">✕</button>
+                  <button class="wrem" data-rid="0" data-grp="alexa">✕</button>
                 </div>
               </div>
               <button class="wadd" data-add="alexa">+ Aggiungi dispositivo</button>
@@ -561,11 +599,11 @@ automation:
                 <span class="wsec-ttl">Push Smartphone</span>
                 <span class="tag opt">opzionale</span>
               </div>
-              <div class="wsec-hint">Nome servizio mobile_app (la parte dopo <code>notify.</code>). Trovalo in Strumenti sviluppatori → Servizi cercando "mobile_app".</div>
+              <div class="wsec-hint">Nome servizio mobile_app (parte dopo <code>notify.</code>). Trovalo in Strumenti sviluppatori → Servizi cercando "mobile_app_".</div>
               <div class="wlist" id="w_push_list">
                 <div class="wrow" data-group="push" data-rid="0">
                   <input class="winp" placeholder="mobile_app_iphone_mario" type="text" autocomplete="off" spellcheck="false"/>
-                  <button class="wrem" data-rem-grp="push" data-rem-rid="0">✕</button>
+                  <button class="wrem" data-rid="0" data-grp="push">✕</button>
                 </div>
               </div>
               <button class="wadd" data-add="push">+ Aggiungi smartphone</button>
@@ -573,80 +611,104 @@ automation:
 
           </div>
           <div class="mftr">
-            <button class="wbtn-c" data-wiz="close">Annulla</button>
-            <button class="wbtn-ok" data-wiz="install">⚡ Installa Package</button>
+            <button class="wbtn-c" id="wiz_cancel">Annulla</button>
+            <button class="wbtn-ok" id="wiz_install">⚡ Installa Package</button>
           </div>
         </div>
       </div>`;
 
-      setTimeout(()=>sr.getElementById('w_sensor')?.focus(),80);
+      const sr=host.shadowRoot;
+      const moEl=sr.getElementById('wiz_mo');
+      const ovEl=sr.getElementById('wiz_ov');
 
-      sr.addEventListener('click',e=>{
-        const t=e.target.closest('[data-wiz],[data-add],[data-rem-grp]');
-        if(!t) return;
+      /* chiudi su click overlay (fuori modal) */
+      ovEl.addEventListener('click',e=>{ if(e.target===ovEl){ _acHide(); self._destroyModal(); } });
 
-        if(t.dataset.wiz==='close'){ this._destroyModal(); return; }
+      /* chiudi con X o Annulla */
+      sr.getElementById('wiz_close').addEventListener('click',()=>{ _acHide(); self._destroyModal(); });
+      sr.getElementById('wiz_cancel').addEventListener('click',()=>{ _acHide(); self._destroyModal(); });
 
-        if(t.dataset.add){
-          const grp=t.dataset.add;
+      /* + Aggiungi */
+      moEl.addEventListener('click',e=>{
+        const addBtn=e.target.closest('[data-add]');
+        if(addBtn){
+          const grp=addBtn.dataset.add;
           const rid=(grp==='google'?_ridG++:grp==='alexa'?_ridA++:_ridP++);
           const listEl=sr.getElementById(`w_${grp}_list`);
           const ph={google:'media_player.google_home_2',alexa:'media_player.alexa_2',push:'mobile_app_samsung_2'}[grp]||'';
           const row=document.createElement('div');
           row.className='wrow'; row.dataset.group=grp; row.dataset.rid=rid;
           row.innerHTML=`<input class="winp" placeholder="${ph}" type="text" autocomplete="off" spellcheck="false"/>
-            <button class="wrem" data-rem-grp="${grp}" data-rem-rid="${rid}">✕</button>`;
+            <button class="wrem" data-rid="${rid}" data-grp="${grp}">✕</button>`;
           listEl.appendChild(row);
-          row.querySelector('.winp').focus();
+          const newInp=row.querySelector('.winp');
+          newInp.focus();
+          _bindAc(newInp, grp);
           return;
         }
 
-        if(t.dataset.remGrp){
-          const row=sr.querySelector(`[data-group="${t.dataset.remGrp}"][data-rid="${t.dataset.remRid}"]`);
-          if(row) row.remove();
+        /* ✕ Rimuovi */
+        const remBtn=e.target.closest('.wrem');
+        if(remBtn){
+          const row=remBtn.closest('.wrow');
+          if(row){ _acHide(); row.remove(); }
           return;
         }
-
-        if(t.dataset.wiz==='install'){
-          const sensor=(sr.getElementById('w_sensor').value||'').trim();
-          if(!sensor){
-            sr.getElementById('w_sensor_err').style.display='';
-            sr.getElementById('w_sensor').classList.add('err');
-            sr.getElementById('w_sensor').focus();
-            return;
-          }
-          sr.getElementById('w_sensor_err').style.display='none';
-          const _vals=g=>[...sr.querySelectorAll(`#w_${g}_list .winp`)].map(i=>i.value.trim()).filter(Boolean);
-          const customYaml=this._buildCustomPkg(sensor,_vals('google'),_vals('alexa'),_vals('push'));
-          this._destroyModal();
-          this._pkgState='installing';
-          this._build();
-          this._installPkg(customYaml);
-        }
       });
 
-      sr.addEventListener('input',e=>{
-        if(e.target.id==='w_sensor'){
-          sr.getElementById('w_sensor_err').style.display='none';
-          e.target.classList.remove('err');
+      /* Installa */
+      sr.getElementById('wiz_install').addEventListener('click',()=>{
+        const sensor=(sr.getElementById('w_sensor').value||'').trim();
+        const errEl=sr.getElementById('w_sensor_err');
+        if(!sensor){
+          errEl.style.display='';
+          sr.getElementById('w_sensor').classList.add('err');
+          sr.getElementById('w_sensor').focus();
+          return;
         }
+        errEl.style.display='none';
+        const _vals=g=>[...sr.querySelectorAll(`#w_${g}_list .winp`)].map(i=>i.value.trim()).filter(Boolean);
+        const customYaml=self._buildCustomPkg(sensor,_vals('google'),_vals('alexa'),_vals('push'));
+        _acHide();
+        self._destroyModal();
+        self._pkgState='installing';
+        self._build();
+        self._installPkg(customYaml);
       });
+
+      /* autocomplete */
+      const domainMap={sensor:'binary_sensor',google:'media_player',alexa:'media_player'};
+      function _bindAc(inp, grp){
+        if(grp==='push') return;
+        const domain=domainMap[grp]||'';
+        inp.addEventListener('focus',()=>_acShow(inp,self._h,domain));
+        inp.addEventListener('blur',()=>setTimeout(_acHide,160));
+        inp.addEventListener('input',()=>_acShow(inp,self._h,domain));
+      }
+
+      /* bind autocomplete su tutti gli input iniziali */
+      sr.querySelectorAll('.winp').forEach(inp=>{
+        const grp=inp.closest('[data-group]')?.dataset.group||'sensor';
+        _bindAc(inp, grp);
+      });
+
+      /* validazione sensore */
+      sr.getElementById('w_sensor').addEventListener('input',()=>{
+        sr.getElementById('w_sensor_err').style.display='none';
+        sr.getElementById('w_sensor').classList.remove('err');
+      });
+
+      setTimeout(()=>sr.getElementById('w_sensor')?.focus(),80);
     }
 
     /* ── COSTRUISCE IL YAML CON I VALORI DELL'UTENTE ── */
-    _buildCustomPkg(sensor, google, alexa, push){
+    _buildCustomPkg(sensor,google,alexa,push){
       const ind='          ';
       return _PKG_YAML
-        .replace('%%SENSORE_CASSETTA%%', sensor||'binary_sensor.IL_TUO_SENSORE_CASSETTA_POSTALE')
-        .replace('%%GOOGLE_LINES%%', google.length
-          ? google.map(e=>`${ind}- ${e}`).join('\n')
-          : `${ind}# - media_player.IL_TUO_GOOGLE_HOME`)
-        .replace('%%ALEXA_LINES%%', alexa.length
-          ? alexa.map(e=>`${ind}- ${e}`).join('\n')
-          : `${ind}# - media_player.LA_TUA_ALEXA`)
-        .replace('%%PUSH_LINES%%', push.length
-          ? push.map(s=>`${ind}- service: ${s}`).join('\n')
-          : `${ind}# - service: IL_TUO_MOBILE_APP`);
+        .replace('%%SENSORE_CASSETTA%%',sensor||'binary_sensor.IL_TUO_SENSORE')
+        .replace('%%GOOGLE_LINES%%',google.length?google.map(e=>`${ind}- ${e}`).join('\n'):`${ind}# - media_player.IL_TUO_GOOGLE_HOME`)
+        .replace('%%ALEXA_LINES%%',alexa.length?alexa.map(e=>`${ind}- ${e}`).join('\n'):`${ind}# - media_player.LA_TUA_ALEXA`)
+        .replace('%%PUSH_LINES%%',push.length?push.map(s=>`${ind}- service: ${s}`).join('\n'):`${ind}# - service: IL_TUO_MOBILE_APP`);
     }
 
     /* ── INSTALLA IL PKG ── */
@@ -704,18 +766,9 @@ automation:
             <div class="tgl ${master?'on':'off'}"><div class="tgl-k"></div></div>
           </div>
           <div class="toggle-group ${master?'':'locked'}">
-            <div class="toggle-row" data-a="toggle-push">
-              <span class="trow-ico">📱</span><span class="trow-lbl">Push smartphone</span>
-              <div class="tgl ${bPush?'on':'off'}"><div class="tgl-k"></div></div>
-            </div>
-            <div class="toggle-row" data-a="toggle-google">
-              <span class="trow-ico">🔊</span><span class="trow-lbl">Google Home</span>
-              <div class="tgl ${bGoog?'on':'off'}"><div class="tgl-k"></div></div>
-            </div>
-            <div class="toggle-row" data-a="toggle-alexa">
-              <span class="trow-ico">📣</span><span class="trow-lbl">Amazon Alexa</span>
-              <div class="tgl ${bAlex?'on':'off'}"><div class="tgl-k"></div></div>
-            </div>
+            <div class="toggle-row" data-a="toggle-push"><span class="trow-ico">📱</span><span class="trow-lbl">Push smartphone</span><div class="tgl ${bPush?'on':'off'}"><div class="tgl-k"></div></div></div>
+            <div class="toggle-row" data-a="toggle-google"><span class="trow-ico">🔊</span><span class="trow-lbl">Google Home</span><div class="tgl ${bGoog?'on':'off'}"><div class="tgl-k"></div></div></div>
+            <div class="toggle-row" data-a="toggle-alexa"><span class="trow-ico">📣</span><span class="trow-lbl">Amazon Alexa</span><div class="tgl ${bAlex?'on':'off'}"><div class="tgl-k"></div></div></div>
           </div>
           <div class="actions">
             <button class="act-btn" data-a="storico">📋 Storico</button>
@@ -725,7 +778,7 @@ automation:
       </div>`;
     }
 
-    /* ── CLICK HANDLER ── */
+    /* ── CLICK HANDLER (card principale) ── */
     _onClick(e){
       const b=e.target.closest('[data-a]'); if(!b) return;
       const a=b.dataset.a;
@@ -740,9 +793,7 @@ automation:
       else if(a==='confirm-reset'){ this._destroyModal(); window.frarikCallService?.('script','frarik_posta_reset',{},{}); }
     }
 
-    _toggle(eid){
-      window.frarikCallService?.('homeassistant',this._bool(eid)?'turn_off':'turn_on',{entity_id:eid},{});
-    }
+    _toggle(eid){ window.frarikCallService?.('homeassistant',this._bool(eid)?'turn_off':'turn_on',{entity_id:eid},{}); }
 
     /* ── POPUP STORICO ── */
     _openStorico(){
@@ -835,7 +886,7 @@ automation:
         input[type=text]{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:10px 12px;color:#fff;font-size:13px;font-family:system-ui,sans-serif;outline:none}
         input[type=text]:focus{border-color:rgba(251,191,36,.5);background:rgba(255,255,255,.09)}
         input[type=range]{width:100%;accent-color:#fbbf24}
-        .sbtn{width:100%;padding:13px;border-radius:12px;background:#fbbf24;color:#1a1a2e;font-size:13px;font-weight:900;cursor:pointer;border:none;font-family:system-ui,sans-serif;letter-spacing:.4px;margin-top:4px}
+        .sbtn{width:100%;padding:13px;border-radius:12px;background:#fbbf24;color:#1a1a2e;font-size:13px;font-weight:900;cursor:pointer;border:none;font-family:system-ui,sans-serif;margin-top:4px}
         .prev-wrap{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:240px}
         .prev-lbl{font-size:11px;font-weight:800;color:#fff;opacity:.4;letter-spacing:.6px;text-transform:uppercase;font-family:system-ui,sans-serif;text-align:center;margin-bottom:8px}
       </style>
@@ -913,8 +964,7 @@ automation:
 .flag-wave{animation:flagWave 1.2s ease-in-out infinite;transform-origin:left center}
 .letter-bob{animation:letterBob 1.8s ease-in-out infinite}
 .sp1{animation:sp 2s ease-in-out infinite}.sp2{animation:sp 2s ease-in-out .4s infinite}
-.sp3{animation:sp 2s ease-in-out .8s infinite}.sp4{animation:sp 2s ease-in-out 1.2s infinite}
-.sp5{animation:sp 2s ease-in-out .6s infinite}
+.sp3{animation:sp 2s ease-in-out .8s infinite}.sp5{animation:sp 2s ease-in-out .6s infinite}
 .status-row{text-align:center;font-size:13px;font-weight:700}
 .status{display:inline-block;padding:6px 14px;border-radius:20px}
 .status.none{background:rgba(255,255,255,.07);color:#fff;opacity:.7}
@@ -962,7 +1012,7 @@ automation:
   (window.customCards=window.customCards||[]).push({
     type:'posta-card',
     name:'Centro Controllo Posta',
-    description:'Monitora la cassetta postale: contatori, storico, notifiche push/Google/Alexa. Installa il package automaticamente con wizard guidato.',
+    description:'Monitora la cassetta postale: contatori, storico, notifiche push/Google/Alexa. Installa il package con wizard guidato e autocomplete entità.',
     icon:'mdi:mailbox'
   });
 })();
