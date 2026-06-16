@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.5.12 — 2026-06-16
+
+### fix(posta-card): v1.3 — popup full-width, chiusura solo X, reset fix, settings dropdown
+
+- **Popup a larghezza pagina**: rimosso `max-width` da tutti i popup (wizard, storico, confirm-reset); ora occupano tutta la larghezza dello schermo
+- **Chiusura solo dalla X**: rimosso il listener click sull'overlay che chiudeva i popup toccando fuori; solo il bottone ✕ chiude
+- **Reset funzionante**: cambiata chiamata da `window.frarikCallService` a `this._h.callService('script','turn_on',{entity_id:'script.frarik_posta_reset'})` (API HA standard); tutti i toggle usano lo stesso pattern via `_callSvc()` con fallback
+- **Impostazioni come menu a tendina**: rimosso il bottom-sheet separato; aggiunto bottone ⚙️ nell'header che apre/chiude un pannello accordion inline con campi label, sensore, scala, larghezza e bottone Salva
+- Lo stato `_settingsOpen` persiste attraverso i re-render hass; `configure(card)` apre direttamente il pannello inline
+- Slider aggiornano il valore live via listener `input` sul shadowRoot (senza re-render)
+- Bottone "Annulla" rimosso dal wizard (rimasto solo ✕ e ⚡ Installa)
+- posta-card bump a v1.3
+
 ## 1.5.11 — 2026-06-16
 
 ### fix: posta-card v1.2 — wizard funzionante + autocomplete entità

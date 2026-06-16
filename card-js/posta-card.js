@@ -1,13 +1,9 @@
-/* frarik-version: 1.2 */
+/* frarik-version: 1.3 */
 /* Centro Controllo Posta — Frarik card standalone */
 (function(){
   'use strict';
   if(customElements.get('posta-card')) return;
 
-  /* ─────────────────────────────────────────────
-     PKG YAML template — compilato dal wizard
-     %%SENSORE_CASSETTA%% %%GOOGLE_LINES%% %%ALEXA_LINES%% %%PUSH_LINES%%
-  ───────────────────────────────────────────── */
   const _PKG_YAML = `###############################################################
 #                                                             #
 #   ███████╗██████╗  █████╗ ██████╗ ██╗██╗  ██╗             #
@@ -293,7 +289,6 @@ automation:
 ###############################################################
 `;
 
-  /* ── colori ── */
   const _PC={
     bg:'linear-gradient(160deg,#0d0b1e 0%,#0a0f1e 60%,#080b18 100%)',
     bodyNoMail:'#1a2744',topNoMail:'#131d38',doorNoMail:'#0f1a32',
@@ -301,7 +296,6 @@ automation:
     bodyOpen:'#1a2a0d',topOpen:'#142208',doorOpen:'#102007',
   };
 
-  /* ── SVG cassetta postale ── */
   function _svgBox(state){
     const hasMail=state==='mail',isOpen=state==='open';
     const body=hasMail?_PC.bodyMail:isOpen?_PC.bodyOpen:_PC.bodyNoMail;
@@ -382,9 +376,11 @@ automation:
       this._frarikCard=null;
       this._modalHost=null;
       this._click=this._onClick.bind(this);
+      this._inp=this._onInput.bind(this);
       this._prevSig='';
       this._pkgState='idle';
       this._pkgError='';
+      this._settingsOpen=false;
     }
 
     set hass(h){
@@ -416,9 +412,23 @@ automation:
       this._build();
     }
 
-    configure(card){ if(card?.id) this._frarikCard=card; this._openSettings(); }
-    connectedCallback(){ this.shadowRoot.addEventListener('click',this._click); }
-    disconnectedCallback(){ this.shadowRoot.removeEventListener('click',this._click); this._destroyModal(); _acHide(); }
+    configure(card){
+      if(card?.id) this._frarikCard=card;
+      this._settingsOpen=true;
+      this._prevSig='';
+      this._build();
+    }
+
+    connectedCallback(){
+      this.shadowRoot.addEventListener('click',this._click);
+      this.shadowRoot.addEventListener('input',this._inp);
+    }
+    disconnectedCallback(){
+      this.shadowRoot.removeEventListener('click',this._click);
+      this.shadowRoot.removeEventListener('input',this._inp);
+      this._destroyModal();
+      _acHide();
+    }
 
     _skKey(){ return 'posta-card:'+(this._c.storageKey||'default'); }
     _save(){ try{ localStorage.setItem(this._skKey(),JSON.stringify(this._c)); }catch(_){} }
@@ -448,12 +458,38 @@ automation:
       this.shadowRoot.innerHTML=this._isPkg()?this._renderMain():this._renderNotInstalled();
     }
 
+    /* ── PANNELLO IMPOSTAZIONI INLINE (menu a tendina) ── */
+    _renderSettingsPanel(){
+      const c=this._c;
+      const op=this._settingsOpen;
+      return `<div class="sp" id="frk-sp" style="display:${op?'flex':'none'}">
+        <div class="sp-row">
+          <label class="sp-lbl">✏️ Etichetta</label>
+          <input class="sp-inp" id="sp-label" type="text" value="${(c.label||'Centro Posta').replace(/"/g,'&quot;')}" placeholder="Centro Posta" autocomplete="off"/>
+        </div>
+        <div class="sp-row">
+          <label class="sp-lbl">📡 Sensore cassetta <span class="sp-opt">opzionale</span></label>
+          <input class="sp-inp" id="sp-sensor" type="text" value="${(c.sensorEntity||'').replace(/"/g,'&quot;')}" placeholder="binary_sensor.cassetta_postale" autocomplete="off" spellcheck="false"/>
+          <div class="sp-hint">Mostra "Cassetta aperta" quando il sensore fisico è on</div>
+        </div>
+        <div class="sp-row">
+          <label class="sp-lbl">📐 Scala — <span id="sp-sv-scale">${c.cardScale||100}</span>%</label>
+          <input type="range" id="sp-scale" min="20" max="100" step="5" value="${c.cardScale||100}" class="sp-range"/>
+        </div>
+        <div class="sp-row">
+          <label class="sp-lbl">↔️ Larghezza — <span id="sp-sv-w">${c.cardW||100}</span>%</label>
+          <input type="range" id="sp-w" min="20" max="100" step="5" value="${c.cardW||100}" class="sp-range"/>
+        </div>
+        <button class="sp-save" data-a="save-settings-inline">💾 Salva impostazioni</button>
+      </div>`;
+    }
+
     /* ── STATO: pkg non installato ── */
     _renderNotInstalled(){
       const st=this._pkgState;
       let body='';
       if(st==='installing'){
-        body=`<div class="ni-icon" style="display:inline-block;animation:spin 1s linear infinite">⚙️</div>
+        body=`<div class="ni-icon" style="animation:spin 1s linear infinite">⚙️</div>
           <div class="ni-title">Installazione in corso…</div>
           <div class="ni-sub">Creazione cartella e scrittura<br><code>/config/packages/frarik/frarik_posta.yaml</code></div>`;
       } else if(st==='done'){
@@ -473,7 +509,12 @@ automation:
       }
       return `<style>${this._css()}</style>
       <div class="wrap">
-        <div class="hdr"><span class="hico">📬</span><span class="htit">${this._c.label}</span></div>
+        <div class="hdr">
+          <span class="hico">📬</span>
+          <span class="htit">${this._c.label}</span>
+          <button class="hbtn-set ${this._settingsOpen?'hbtn-set-on':''}" data-a="toggle-settings" title="Impostazioni">⚙️</button>
+        </div>
+        ${this._renderSettingsPanel()}
         <div class="body ni-body">${body}</div>
       </div>`;
     }
@@ -486,15 +527,13 @@ automation:
       this._modalHost=host;
       host.attachShadow({mode:'open'});
       document.body.appendChild(host);
-
       const self=this;
       let _ridG=1,_ridA=1,_ridP=1;
 
-      /* ---- HTML ---- */
       host.shadowRoot.innerHTML=`<style>
         *{box-sizing:border-box;margin:0;padding:0}
         .ov{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.72);backdrop-filter:blur(6px)}
-        .mo{width:100%;max-width:560px;max-height:88vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(251,191,36,.28);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.8);animation:su .22s cubic-bezier(.32,1.12,.56,1)}
+        .mo{width:100%;max-height:88vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(251,191,36,.28);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.8);animation:su .22s cubic-bezier(.32,1.12,.56,1)}
         @keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
         .mhdr{display:flex;align-items:center;gap:12px;padding:18px 18px 14px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
         .mico{width:40px;height:40px;border-radius:12px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
@@ -524,11 +563,10 @@ automation:
         .werr{font-size:11px;color:#fca5a5;font-family:system-ui,sans-serif}
         .wdiv{height:1px;background:rgba(255,255,255,.06)}
         .mftr{display:flex;gap:10px;padding:14px 18px 24px;flex-shrink:0;border-top:1px solid rgba(255,255,255,.06)}
-        .wbtn-c{flex:1;padding:13px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.13);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:system-ui,sans-serif}
-        .wbtn-ok{flex:2;padding:13px;border-radius:12px;background:#fbbf24;border:none;color:#1a1a2e;font-size:13px;font-weight:900;cursor:pointer;font-family:system-ui,sans-serif;letter-spacing:.3px}
+        .wbtn-ok{flex:1;padding:13px;border-radius:12px;background:#fbbf24;border:none;color:#1a1a2e;font-size:13px;font-weight:900;cursor:pointer;font-family:system-ui,sans-serif;letter-spacing:.3px}
         .wbtn-ok:active{filter:brightness(.9)}
       </style>
-      <div class="ov" id="wiz_ov">
+      <div class="ov">
         <div class="mo" id="wiz_mo">
           <div class="mhdr">
             <div class="mico">📦</div>
@@ -539,31 +577,20 @@ automation:
             <button class="mxbtn" id="wiz_close">✕</button>
           </div>
           <div class="mbody">
-
             <div class="wsec">
-              <div class="wsec-hdr">
-                <span class="wsec-ico">📡</span>
-                <span class="wsec-ttl">Sensore Cassetta</span>
-                <span class="tag req">obbligatorio</span>
-              </div>
-              <div class="wsec-hint">entity_id del binary sensor che si attiva (<strong>on</strong>) quando la cassetta viene aperta. Inizia a scrivere per cercare tra i tuoi sensori.</div>
+              <div class="wsec-hdr"><span class="wsec-ico">📡</span><span class="wsec-ttl">Sensore Cassetta</span><span class="tag req">obbligatorio</span></div>
+              <div class="wsec-hint">entity_id del binary sensor che si attiva (<strong>on</strong>) quando la cassetta viene aperta.</div>
               <div class="wlist">
                 <div class="wrow" data-group="sensor">
                   <input class="winp" id="w_sensor" placeholder="binary_sensor.cassetta_postale" type="text" autocomplete="off" spellcheck="false"/>
                 </div>
               </div>
-              <div class="werr" id="w_sensor_err" style="display:none">⚠️ Campo obbligatorio — inserisci l'entity_id del sensore</div>
+              <div class="werr" id="w_sensor_err" style="display:none">⚠️ Campo obbligatorio</div>
             </div>
-
             <div class="wdiv"></div>
-
             <div class="wsec">
-              <div class="wsec-hdr">
-                <span class="wsec-ico">🔊</span>
-                <span class="wsec-ttl">Google Home / Nest</span>
-                <span class="tag opt">opzionale</span>
-              </div>
-              <div class="wsec-hint">entity_id dei media player Google per annunci vocali. Lascia vuoto se non ne hai.</div>
+              <div class="wsec-hdr"><span class="wsec-ico">🔊</span><span class="wsec-ttl">Google Home / Nest</span><span class="tag opt">opzionale</span></div>
+              <div class="wsec-hint">entity_id dei media player Google per annunci vocali.</div>
               <div class="wlist" id="w_google_list">
                 <div class="wrow" data-group="google" data-rid="0">
                   <input class="winp" placeholder="media_player.google_home_cucina" type="text" autocomplete="off" spellcheck="false"/>
@@ -572,15 +599,9 @@ automation:
               </div>
               <button class="wadd" data-add="google">+ Aggiungi dispositivo</button>
             </div>
-
             <div class="wdiv"></div>
-
             <div class="wsec">
-              <div class="wsec-hdr">
-                <span class="wsec-ico">📣</span>
-                <span class="wsec-ttl">Amazon Alexa / Echo</span>
-                <span class="tag opt">opzionale</span>
-              </div>
+              <div class="wsec-hdr"><span class="wsec-ico">📣</span><span class="wsec-ttl">Amazon Alexa / Echo</span><span class="tag opt">opzionale</span></div>
               <div class="wsec-hint">entity_id dei media player Alexa. Richiede integrazione Alexa Media Player.</div>
               <div class="wlist" id="w_alexa_list">
                 <div class="wrow" data-group="alexa" data-rid="0">
@@ -590,16 +611,10 @@ automation:
               </div>
               <button class="wadd" data-add="alexa">+ Aggiungi dispositivo</button>
             </div>
-
             <div class="wdiv"></div>
-
             <div class="wsec">
-              <div class="wsec-hdr">
-                <span class="wsec-ico">📱</span>
-                <span class="wsec-ttl">Push Smartphone</span>
-                <span class="tag opt">opzionale</span>
-              </div>
-              <div class="wsec-hint">Nome servizio mobile_app (parte dopo <code>notify.</code>). Trovalo in Strumenti sviluppatori → Servizi cercando "mobile_app_".</div>
+              <div class="wsec-hdr"><span class="wsec-ico">📱</span><span class="wsec-ttl">Push Smartphone</span><span class="tag opt">opzionale</span></div>
+              <div class="wsec-hint">Nome servizio mobile_app (parte dopo <code>notify.</code>).</div>
               <div class="wlist" id="w_push_list">
                 <div class="wrow" data-group="push" data-rid="0">
                   <input class="winp" placeholder="mobile_app_iphone_mario" type="text" autocomplete="off" spellcheck="false"/>
@@ -608,10 +623,8 @@ automation:
               </div>
               <button class="wadd" data-add="push">+ Aggiungi smartphone</button>
             </div>
-
           </div>
           <div class="mftr">
-            <button class="wbtn-c" id="wiz_cancel">Annulla</button>
             <button class="wbtn-ok" id="wiz_install">⚡ Installa Package</button>
           </div>
         </div>
@@ -619,16 +632,9 @@ automation:
 
       const sr=host.shadowRoot;
       const moEl=sr.getElementById('wiz_mo');
-      const ovEl=sr.getElementById('wiz_ov');
 
-      /* chiudi su click overlay (fuori modal) */
-      ovEl.addEventListener('click',e=>{ if(e.target===ovEl){ _acHide(); self._destroyModal(); } });
-
-      /* chiudi con X o Annulla */
       sr.getElementById('wiz_close').addEventListener('click',()=>{ _acHide(); self._destroyModal(); });
-      sr.getElementById('wiz_cancel').addEventListener('click',()=>{ _acHide(); self._destroyModal(); });
 
-      /* + Aggiungi */
       moEl.addEventListener('click',e=>{
         const addBtn=e.target.closest('[data-add]');
         if(addBtn){
@@ -646,17 +652,10 @@ automation:
           _bindAc(newInp, grp);
           return;
         }
-
-        /* ✕ Rimuovi */
         const remBtn=e.target.closest('.wrem');
-        if(remBtn){
-          const row=remBtn.closest('.wrow');
-          if(row){ _acHide(); row.remove(); }
-          return;
-        }
+        if(remBtn){ const row=remBtn.closest('.wrow'); if(row){ _acHide(); row.remove(); } }
       });
 
-      /* Installa */
       sr.getElementById('wiz_install').addEventListener('click',()=>{
         const sensor=(sr.getElementById('w_sensor').value||'').trim();
         const errEl=sr.getElementById('w_sensor_err');
@@ -676,7 +675,6 @@ automation:
         self._installPkg(customYaml);
       });
 
-      /* autocomplete */
       const domainMap={sensor:'binary_sensor',google:'media_player',alexa:'media_player'};
       function _bindAc(inp, grp){
         if(grp==='push') return;
@@ -685,23 +683,17 @@ automation:
         inp.addEventListener('blur',()=>setTimeout(_acHide,160));
         inp.addEventListener('input',()=>_acShow(inp,self._h,domain));
       }
-
-      /* bind autocomplete su tutti gli input iniziali */
       sr.querySelectorAll('.winp').forEach(inp=>{
         const grp=inp.closest('[data-group]')?.dataset.group||'sensor';
         _bindAc(inp, grp);
       });
-
-      /* validazione sensore */
       sr.getElementById('w_sensor').addEventListener('input',()=>{
         sr.getElementById('w_sensor_err').style.display='none';
         sr.getElementById('w_sensor').classList.remove('err');
       });
-
       setTimeout(()=>sr.getElementById('w_sensor')?.focus(),80);
     }
 
-    /* ── COSTRUISCE IL YAML CON I VALORI DELL'UTENTE ── */
     _buildCustomPkg(sensor,google,alexa,push){
       const ind='          ';
       return _PKG_YAML
@@ -711,7 +703,6 @@ automation:
         .replace('%%PUSH_LINES%%',push.length?push.map(s=>`${ind}- service: ${s}`).join('\n'):`${ind}# - service: IL_TUO_MOBILE_APP`);
     }
 
-    /* ── INSTALLA IL PKG ── */
     async _installPkg(customYaml){
       try{
         const m=location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
@@ -746,7 +737,12 @@ automation:
         :`<span class="status none">📪 Nessuna posta oggi</span>`;
       return `<style>${this._css()}</style>
       <div class="wrap">
-        <div class="hdr"><span class="hico">📬</span><span class="htit">${this._c.label}</span></div>
+        <div class="hdr">
+          <span class="hico">📬</span>
+          <span class="htit">${this._c.label}</span>
+          <button class="hbtn-set ${this._settingsOpen?'hbtn-set-on':''}" data-a="toggle-settings" title="Impostazioni">⚙️</button>
+        </div>
+        ${this._renderSettingsPanel()}
         <div class="body">
           <div class="mailbox-wrap ${svgState}">${_svgBox(svgState)}</div>
           <div class="status-row">${statusTxt}</div>
@@ -778,22 +774,53 @@ automation:
       </div>`;
     }
 
-    /* ── CLICK HANDLER (card principale) ── */
+    /* ── INPUT HANDLER (slider impostazioni) ── */
+    _onInput(e){
+      if(e.target.id==='sp-scale'){
+        this._c.cardScale=parseInt(e.target.value)||100;
+        const lbl=this.shadowRoot.getElementById('sp-sv-scale');
+        if(lbl) lbl.textContent=e.target.value;
+      } else if(e.target.id==='sp-w'){
+        this._c.cardW=parseInt(e.target.value)||100;
+        const lbl=this.shadowRoot.getElementById('sp-sv-w');
+        if(lbl) lbl.textContent=e.target.value;
+      }
+    }
+
+    /* ── CLICK HANDLER ── */
     _onClick(e){
       const b=e.target.closest('[data-a]'); if(!b) return;
       const a=b.dataset.a;
       if(a==='open-wizard') this._openInstallWizard();
       else if(a==='storico') this._openStorico();
       else if(a==='reset') this._confirmReset();
-      else if(a==='toggle-master') this._toggle('input_boolean.frarik_posta_notifiche_attive');
-      else if(a==='toggle-push'){ if(this._bool('input_boolean.frarik_posta_notifiche_attive')) this._toggle('input_boolean.frarik_posta_notifica_push'); }
-      else if(a==='toggle-google'){ if(this._bool('input_boolean.frarik_posta_notifiche_attive')) this._toggle('input_boolean.frarik_posta_notifica_google'); }
-      else if(a==='toggle-alexa'){ if(this._bool('input_boolean.frarik_posta_notifiche_attive')) this._toggle('input_boolean.frarik_posta_notifica_alexa'); }
-      else if(a==='close-modal') this._destroyModal();
-      else if(a==='confirm-reset'){ this._destroyModal(); window.frarikCallService?.('script','frarik_posta_reset',{},{}); }
+      else if(a==='toggle-settings'){
+        this._settingsOpen=!this._settingsOpen;
+        this._prevSig='';
+        this._build();
+      }
+      else if(a==='save-settings-inline'){
+        const sr=this.shadowRoot;
+        this._c.label=sr.getElementById('sp-label')?.value||'Centro Posta';
+        this._c.sensorEntity=(sr.getElementById('sp-sensor')?.value||'').trim();
+        this._c.cardScale=parseInt(sr.getElementById('sp-scale')?.value)||100;
+        this._c.cardW=parseInt(sr.getElementById('sp-w')?.value)||100;
+        this._save();
+        if(this._frarikCard) this.dispatchEvent(new CustomEvent('frarik-card-layout',{bubbles:true,composed:true,detail:{cardId:this._frarikCard.id,cardScale:this._c.cardScale,cardW:this._c.cardW}}));
+        this._settingsOpen=false;
+        this._prevSig='';
+        this._build();
+      }
+      else if(a==='toggle-master') this._callSvc('homeassistant',this._bool('input_boolean.frarik_posta_notifiche_attive')?'turn_off':'turn_on',{entity_id:'input_boolean.frarik_posta_notifiche_attive'});
+      else if(a==='toggle-push'){ if(this._bool('input_boolean.frarik_posta_notifiche_attive')) this._callSvc('homeassistant',this._bool('input_boolean.frarik_posta_notifica_push')?'turn_off':'turn_on',{entity_id:'input_boolean.frarik_posta_notifica_push'}); }
+      else if(a==='toggle-google'){ if(this._bool('input_boolean.frarik_posta_notifiche_attive')) this._callSvc('homeassistant',this._bool('input_boolean.frarik_posta_notifica_google')?'turn_off':'turn_on',{entity_id:'input_boolean.frarik_posta_notifica_google'}); }
+      else if(a==='toggle-alexa'){ if(this._bool('input_boolean.frarik_posta_notifiche_attive')) this._callSvc('homeassistant',this._bool('input_boolean.frarik_posta_notifica_alexa')?'turn_off':'turn_on',{entity_id:'input_boolean.frarik_posta_notifica_alexa'}); }
     }
 
-    _toggle(eid){ window.frarikCallService?.('homeassistant',this._bool(eid)?'turn_off':'turn_on',{entity_id:eid},{}); }
+    _callSvc(domain, service, data){
+      if(this._h?.callService) this._h.callService(domain, service, data);
+      else window.frarikCallService?.(domain, service, data, {});
+    }
 
     /* ── POPUP STORICO ── */
     _openStorico(){
@@ -808,12 +835,12 @@ automation:
       host.shadowRoot.innerHTML=`<style>
         *{box-sizing:border-box;margin:0;padding:0}
         .ov{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.65);backdrop-filter:blur(6px)}
-        .mo{width:100%;max-width:480px;max-height:72vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(251,191,36,.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:su .22s cubic-bezier(.32,1.12,.56,1)}
+        .mo{width:100%;max-height:72vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(251,191,36,.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:su .22s cubic-bezier(.32,1.12,.56,1)}
         @keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
         .mhdr{display:flex;align-items:center;gap:10px;padding:16px 18px 12px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0}
         .mico{width:36px;height:36px;border-radius:10px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
         .mtit{flex:1;font-size:15px;font-weight:800;color:#fff;font-family:system-ui,sans-serif}
-        .mxbtn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:6px 12px;color:#fff;font-size:13px;cursor:pointer}
+        .mxbtn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:6px 12px;color:#fff;font-size:13px;cursor:pointer;font-family:system-ui,sans-serif}
         .mbody{flex:1;overflow-y:auto;padding:14px 18px 24px;scrollbar-width:none;display:flex;flex-direction:column;gap:6px}
         .mbody::-webkit-scrollbar{display:none}
         .sh-row{display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px}
@@ -821,13 +848,13 @@ automation:
         .sh-v{font-size:13px;font-weight:600;color:#fff;font-family:system-ui,sans-serif}
         .sh-empty{text-align:center;padding:30px 16px;color:#fff;opacity:.5;font-size:13px;line-height:1.8;font-family:system-ui,sans-serif}
       </style>
-      <div class="ov" data-a="close-modal">
-        <div class="mo" onclick="event.stopPropagation()">
-          <div class="mhdr"><div class="mico">📋</div><div class="mtit">Storico Consegne</div><button class="mxbtn" data-a="close-modal">✕</button></div>
+      <div class="ov">
+        <div class="mo">
+          <div class="mhdr"><div class="mico">📋</div><div class="mtit">Storico Consegne</div><button class="mxbtn" id="sh-close">✕</button></div>
           <div class="mbody">${rows}</div>
         </div>
       </div>`;
-      host.shadowRoot.addEventListener('click',e=>{ if(e.target.closest('[data-a="close-modal"]')) this._destroyModal(); });
+      host.shadowRoot.getElementById('sh-close').addEventListener('click',()=>this._destroyModal());
     }
 
     /* ── CONFIRM RESET ── */
@@ -835,110 +862,39 @@ automation:
       this._destroyModal();
       const host=document.createElement('div'); this._modalHost=host;
       host.attachShadow({mode:'open'}); document.body.appendChild(host);
+      const self=this;
       host.shadowRoot.innerHTML=`<style>
         *{box-sizing:border-box;margin:0;padding:0}
         .ov{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.65);backdrop-filter:blur(6px)}
-        .mo{width:100%;max-width:420px;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(239,68,68,.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:su .22s cubic-bezier(.32,1.12,.56,1);padding:22px 18px 32px}
+        .mo{width:100%;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(239,68,68,.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:su .22s cubic-bezier(.32,1.12,.56,1)}
         @keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
-        p{font-family:system-ui,sans-serif;font-size:14px;color:#fff;text-align:center;line-height:1.6;margin-bottom:20px}
-        .btns{display:flex;gap:10px}
+        .mhdr{display:flex;align-items:center;gap:10px;padding:16px 18px 12px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0}
+        .mico{width:36px;height:36px;border-radius:10px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+        .mtit{flex:1;font-size:15px;font-weight:800;color:#fff;font-family:system-ui,sans-serif}
+        .mxbtn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:6px 12px;color:#fff;font-size:13px;cursor:pointer;font-family:system-ui,sans-serif}
+        .mbody{padding:18px 18px 8px}
+        p{font-family:system-ui,sans-serif;font-size:13px;color:#fff;line-height:1.6;opacity:.7}
+        .btns{display:flex;gap:10px;padding:14px 18px 28px}
         button{flex:1;padding:14px;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:system-ui,sans-serif;color:#fff;border:none}
         .bconf{background:rgba(239,68,68,.7);border:2px solid rgba(239,68,68,.5)}
         .bcanc{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15)}
       </style>
-      <div class="ov" data-a="close-modal">
-        <div class="mo" onclick="event.stopPropagation()">
-          <p>🔄 Resettare il contatore giornaliero?<br><span style="opacity:.5;font-size:12px">Il contatore tornerà a 0. Lo storico resta invariato.</span></p>
+      <div class="ov">
+        <div class="mo">
+          <div class="mhdr"><div class="mico">🔄</div><div class="mtit">Reset contatore</div><button class="mxbtn" id="rst-close">✕</button></div>
+          <div class="mbody"><p>Resettare il contatore giornaliero a 0?<br>Lo storico consegne rimarrà invariato.</p></div>
           <div class="btns">
-            <button class="bcanc" data-a="close-modal">Annulla</button>
-            <button class="bconf" data-a="confirm-reset">Sì, resetta</button>
-          </div>
-        </div>
-      </div>`;
-      host.shadowRoot.addEventListener('click',e=>{
-        const t=e.target.closest('[data-a]'); if(!t) return;
-        if(t.dataset.a==='close-modal') this._destroyModal();
-        else if(t.dataset.a==='confirm-reset'){ this._destroyModal(); window.frarikCallService?.('script','frarik_posta_reset',{},{}); }
-      });
-    }
-
-    /* ── SETTINGS ── */
-    _openSettings(){
-      this._destroyModal();
-      const host=document.createElement('div'); this._modalHost=host;
-      host.attachShadow({mode:'open'}); document.body.appendChild(host);
-      const c=this._c;
-      host.shadowRoot.innerHTML=`<style>
-        *{box-sizing:border-box;margin:0;padding:0}
-        .ov{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.65);backdrop-filter:blur(6px)}
-        .mo{width:100%;max-width:900px;max-height:80vh;display:flex;flex-direction:column;background:rgba(10,8,20,.98);border:1px solid rgba(139,92,246,.32);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:su .22s cubic-bezier(.32,1.12,.56,1)}
-        @keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
-        .shdr{display:flex;align-items:center;gap:12px;padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0}
-        .sico{width:40px;height:40px;border-radius:12px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
-        .stit{flex:1;font-size:16px;font-weight:900;color:#fff;font-family:system-ui,sans-serif}
-        .ssub{font-size:12px;color:#fff;opacity:.45;font-family:system-ui,sans-serif;margin-top:1px}
-        .scls{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:6px 14px;color:#fff;font-size:13px;cursor:pointer;font-family:system-ui,sans-serif}
-        .sbody{display:flex;flex:1;overflow:hidden}
-        .sleft{flex:1;overflow-y:auto;padding:18px 20px 24px;scrollbar-width:none;display:flex;flex-direction:column;gap:14px;min-width:0}
-        .sleft::-webkit-scrollbar{display:none}
-        .sright{width:280px;padding:18px 20px 24px;border-left:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;gap:14px;flex-shrink:0}
-        label{font-size:11px;font-weight:800;color:#fff;opacity:.5;letter-spacing:.7px;text-transform:uppercase;font-family:system-ui,sans-serif;display:block;margin-bottom:5px}
-        input[type=text]{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:10px 12px;color:#fff;font-size:13px;font-family:system-ui,sans-serif;outline:none}
-        input[type=text]:focus{border-color:rgba(251,191,36,.5);background:rgba(255,255,255,.09)}
-        input[type=range]{width:100%;accent-color:#fbbf24}
-        .sbtn{width:100%;padding:13px;border-radius:12px;background:#fbbf24;color:#1a1a2e;font-size:13px;font-weight:900;cursor:pointer;border:none;font-family:system-ui,sans-serif;margin-top:4px}
-        .prev-wrap{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:240px}
-        .prev-lbl{font-size:11px;font-weight:800;color:#fff;opacity:.4;letter-spacing:.6px;text-transform:uppercase;font-family:system-ui,sans-serif;text-align:center;margin-bottom:8px}
-      </style>
-      <div class="ov" data-a="close-modal">
-        <div class="mo" onclick="event.stopPropagation()">
-          <div class="shdr">
-            <div class="sico">📬</div>
-            <div><div class="stit">Impostazioni — Centro Posta</div><div class="ssub">Personalizza etichetta e sensore opzionale</div></div>
-            <button class="scls" data-a="close-modal">✕</button>
-          </div>
-          <div class="sbody">
-            <div class="sleft">
-              <div><label>Etichetta card</label><input type="text" id="s_label" value="${c.label||'Centro Posta'}" placeholder="Centro Posta"/></div>
-              <div>
-                <label>Sensore cassetta (opzionale)</label>
-                <input type="text" id="s_sensor" value="${c.sensorEntity||''}" placeholder="binary_sensor.cassetta_postale"/>
-                <div style="font-size:11px;color:#fff;opacity:.4;margin-top:5px;font-family:system-ui,sans-serif;line-height:1.6">Mostra "Cassetta aperta" quando il sensore fisico è attivo.</div>
-              </div>
-              <div>
-                <label>Scala card — <span id="sv_scale">${c.cardScale||100}</span>%</label>
-                <input type="range" id="s_scale" min="20" max="100" step="5" value="${c.cardScale||100}"/>
-              </div>
-              <div>
-                <label>Larghezza card — <span id="sv_w">${c.cardW||100}</span>%</label>
-                <input type="range" id="s_w" min="20" max="100" step="5" value="${c.cardW||100}"/>
-              </div>
-              <button class="sbtn" data-a="save-settings">💾 Salva impostazioni</button>
-            </div>
-            <div class="sright">
-              <div class="prev-lbl">Anteprima</div>
-              <div class="prev-wrap"><posta-card id="s_prev" style="display:block;width:100%"></posta-card></div>
-            </div>
+            <button class="bcanc" id="rst-cancel">Annulla</button>
+            <button class="bconf" id="rst-ok">Sì, resetta</button>
           </div>
         </div>
       </div>`;
       const sr=host.shadowRoot;
-      sr.getElementById('s_scale').addEventListener('input',e=>{ sr.getElementById('sv_scale').textContent=e.target.value; });
-      sr.getElementById('s_w').addEventListener('input',e=>{ sr.getElementById('sv_w').textContent=e.target.value; });
-      const prev=sr.getElementById('s_prev');
-      try{ prev.setConfig({type:'custom:posta-card',storageKey:'__posta_prev__'}); prev.hass=this._h; }catch(_){}
-      sr.addEventListener('click',e=>{
-        const t=e.target.closest('[data-a]'); if(!t) return;
-        if(t.dataset.a==='close-modal') this._destroyModal();
-        else if(t.dataset.a==='save-settings'){
-          this._c.label=sr.getElementById('s_label').value||'Centro Posta';
-          this._c.sensorEntity=sr.getElementById('s_sensor').value.trim();
-          this._c.cardScale=parseInt(sr.getElementById('s_scale').value)||100;
-          this._c.cardW=parseInt(sr.getElementById('s_w').value)||100;
-          this._save();
-          if(this._frarikCard) this.dispatchEvent(new CustomEvent('frarik-card-layout',{bubbles:true,composed:true,detail:{cardId:this._frarikCard.id,cardScale:this._c.cardScale,cardW:this._c.cardW}}));
-          this._destroyModal(); this._prevSig=''; this._build();
-        }
+      sr.getElementById('rst-close').addEventListener('click',()=>self._destroyModal());
+      sr.getElementById('rst-cancel').addEventListener('click',()=>self._destroyModal());
+      sr.getElementById('rst-ok').addEventListener('click',()=>{
+        self._destroyModal();
+        self._callSvc('script','turn_on',{entity_id:'script.frarik_posta_reset'});
       });
     }
 
@@ -951,7 +907,22 @@ automation:
 .wrap{height:100%;display:flex;flex-direction:column;background:${_PC.bg};border-radius:16px;overflow:hidden}
 .hdr{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
 .hico{font-size:22px;line-height:1}
-.htit{font-size:15px;font-weight:900;color:#fff;letter-spacing:.4px}
+.htit{flex:1;font-size:15px;font-weight:900;color:#fff;letter-spacing:.4px}
+.hbtn-set{background:none;border:none;font-size:18px;cursor:pointer;padding:4px;border-radius:8px;line-height:1;opacity:.5;transition:opacity .15s,background .15s}
+.hbtn-set:hover,.hbtn-set-on{opacity:1;background:rgba(255,255,255,.08)}
+/* ── settings panel ── */
+.sp{flex-direction:column;gap:12px;padding:14px 16px;background:rgba(0,0,0,.35);border-bottom:1px solid rgba(255,255,255,.08);animation:sp-slide .18s ease;flex-shrink:0}
+@keyframes sp-slide{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.sp-row{display:flex;flex-direction:column;gap:5px}
+.sp-lbl{font-size:11px;font-weight:800;color:#fff;opacity:.5;letter-spacing:.6px;text-transform:uppercase}
+.sp-opt{font-size:10px;font-weight:600;background:rgba(255,255,255,.07);color:#fff;opacity:.5;padding:1px 6px;border-radius:5px;margin-left:5px;letter-spacing:0;text-transform:none;vertical-align:middle}
+.sp-inp{background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.12);border-radius:9px;padding:9px 12px;color:#fff;font-size:13px;font-family:system-ui,sans-serif;outline:none;transition:border-color .15s}
+.sp-inp:focus{border-color:rgba(251,191,36,.5);background:rgba(255,255,255,.1)}
+.sp-hint{font-size:11px;color:#fff;opacity:.35;line-height:1.5}
+.sp-range{width:100%;accent-color:#fbbf24;margin-top:2px}
+.sp-save{padding:11px;border-radius:11px;background:#fbbf24;border:none;color:#1a1a2e;font-size:13px;font-weight:900;cursor:pointer;font-family:system-ui,sans-serif;transition:filter .15s;margin-top:2px}
+.sp-save:active{filter:brightness(.9)}
+/* ── body ── */
 .body{flex:1;overflow-y:auto;padding:14px 14px 16px;display:flex;flex-direction:column;gap:10px;scrollbar-width:none}
 .body::-webkit-scrollbar{display:none}
 .mailbox-wrap{width:100%;display:flex;justify-content:center;padding:4px 0 0}
@@ -984,7 +955,6 @@ automation:
 .section-title{font-size:11px;font-weight:800;color:#fff;opacity:.35;letter-spacing:.8px;text-transform:uppercase}
 .toggle-row{display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:11px;cursor:pointer;transition:background .15s;user-select:none}
 .toggle-row:active{background:rgba(255,255,255,.08)}
-.dimmed{opacity:1}
 .trow-ico{font-size:17px;flex-shrink:0}
 .trow-lbl{flex:1;font-size:13px;font-weight:700;color:#fff}
 .tgl{width:44px;height:26px;border-radius:13px;background:rgba(255,255,255,.15);position:relative;transition:background .2s;flex-shrink:0}
