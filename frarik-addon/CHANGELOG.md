@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.5.08 — 2026-06-16
+
+### feat: posta-card v1.0 — Centro Controllo Posta
+
+- Nuova card `posta-card` aggiunta allo Store Predefinite
+- SVG cassetta postale animata con 3 stati: nessuna posta (blu scuro), posta ricevuta (viola + bandierina su + busta animata + scintille), cassetta aperta (verde)
+- Contatori giornaliero e settimanale con highlight quando attivi
+- Orario ultima consegna formattato (oggi/ieri/data)
+- Toggle notifiche: master switch + push/Google/Alexa individuali con lock visivo quando master off
+- Popup storico consegne (bottom-sheet stile Frarik)
+- Popup conferma reset contatore
+- Stato "pkg non installato" con guida passo-passo integrata
+- Settings popup standard (2 colonne, anteprima live, slider scala/larghezza, sensore fisico opzionale)
+- diff-check su hass per evitare re-render inutili
+
 ## 1.5.07 — 2026-06-16
 
 ### fix: barra countdown sincronizzata, tile emergenza rimisurare, log servizio notify
