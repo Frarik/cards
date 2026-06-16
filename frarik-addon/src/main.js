@@ -5872,11 +5872,7 @@ function cardDotMenu(cardId, el, e){
   menu.id='_cdm';
   menu.style.cssText='position:fixed;z-index:15000;background:#1a1f35;border:1px solid rgba(255,255,255,.14);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.75);padding:5px;display:flex;flex-direction:column;gap:3px;min-width:176px;animation:popIn .12s ease';
   const it=(a,ico,lbl,del=false)=>`<button data-cdmact="${a}" style="display:flex;align-items:center;gap:9px;width:100%;padding:9px 11px;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;background:${del?'rgba(239,68,68,.12)':'rgba(255,255,255,.05)'};color:${del?'#fca5a5':'#e2e8f0'}">${ico} ${lbl}</button>`;
-  const _crd=curPage().cards.find(c=>c.id===cardId);
-  const _isSos=_crd?.type==='js-custom'&&_crd?.jsCardId==='sos-card';
-  const delItem=_isSos
-    ? `<button data-cdmact="del" style="display:flex;align-items:center;gap:9px;width:100%;padding:9px 11px;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;background:rgba(139,92,246,.12);color:#c4b5fd">🔐 Protetta (richiede licenza)</button>`
-    : it('del','🗑','Elimina',true);
+  const delItem=it('del','🗑','Elimina',true);
   menu.innerHTML=
     it('dup','⧉','Duplica')+
     it('copy','📋','Copia')+
@@ -8956,8 +8952,8 @@ async function _sosRequireLicense(onSuccess){
     {id:'lock',    icon:'🔒', label:'Intrusione',       color:'#8b5cf6', desc:'Intruso in casa o furto in corso'},
   ];
   function _hexRgb(h){ return [1,3,5].map(i=>parseInt(h.slice(i,i+2),16)||0).join(','); }
-  function _stLbl(s){ return{home:'In casa',not_home:'Fuori',unavailable:'N/D',unknown:'N/D'}[s]||''; }
-  function _stCol(s){ return s==='home'?'#4ade80':s==='not_home'?'#f87171':'#9ca3af'; }
+  function _stLbl(s){ return{home:'In casa',not_home:'Fuori casa',unavailable:'Non disp.',unknown:'Sconosciuta'}[s]||(s?s.replace(/_/g,' '):'—'); }
+  function _stCol(s){ return s==='home'?'#4ade80':s==='not_home'?'#f87171':s==='unavailable'||s==='unknown'||!s?'#6b7280':'#fbbf24'; }
   function _sk(k){ return 'soscard:'+(k||'default'); }
   function _ld(k){ try{return JSON.parse(localStorage.getItem(_sk(k))||'{}')||{};}catch(_){return{};} }
   function _sv(k,o){ try{localStorage.setItem(_sk(k),JSON.stringify(o));}catch(_){} }
@@ -9341,19 +9337,51 @@ async function _sosRequireLicense(onSuccess){
 
 function _addSosToDash(){ jsStoreAddCard('sos-card'); }
 function _sosStoreRemove(){
-  const key=prompt('Inserisci la chiave amministratore per rimuovere la card SOS dallo Store:');
-  if(!key) return;
-  const enc=new TextEncoder().encode(key.trim().toUpperCase());
-  crypto.subtle.digest('SHA-256',enc).then(buf=>{
-    const hash=Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-    if(hash==='896263d3d819ee96afd873d95b40ecba77eaac65e45162e3dce7c6ad2cc1cf08'){
-      localStorage.setItem('fratech_sos_store_hidden','1');
-      showToast('🗑 Card SOS rimossa dallo Store. Sincronizza per ripristinarla.');
-      setTimeout(_ghStoreRender,50);
-    }else{
-      showToast('❌ Chiave non valida');
-    }
-  });
+  document.getElementById('_sos-del-pop')?.remove();
+  const pop=document.createElement('div');
+  pop.id='_sos-del-pop';
+  pop.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;background:rgba(0,0,0,.65);backdrop-filter:blur(4px)';
+  pop.innerHTML=`<style>@keyframes _frkSU{from{transform:translateY(100%)}to{transform:translateY(0)}}</style>
+  <div style="width:100%;background:#0a0816;border:1px solid rgba(239,68,68,.35);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:_frkSU .22s cubic-bezier(.32,1.12,.56,1);padding:24px 22px 32px">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+      <div style="width:44px;height:44px;border-radius:12px;background:rgba(239,68,68,.15);border:1.5px solid rgba(239,68,68,.35);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🔐</div>
+      <div>
+        <div style="font-size:16px;font-weight:900;color:#fff">Rimuovi card SOS dallo Store</div>
+        <div style="font-size:12px;color:#fff;opacity:.55;margin-top:3px">Inserisci la chiave amministratore per continuare</div>
+      </div>
+      <button id="_sos-del-x" style="margin-left:auto;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;color:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>
+    <input id="_sos-del-key" type="password" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" style="width:100%;padding:14px 16px;border-radius:12px;border:1.5px solid rgba(239,68,68,.3);background:rgba(255,255,255,.04);color:#fff;font-size:15px;font-weight:600;font-family:monospace;letter-spacing:2px;outline:none;box-sizing:border-box;margin-bottom:14px;display:block">
+    <div style="display:flex;gap:10px">
+      <button id="_sos-del-cancel" style="flex:1;padding:13px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;font-size:14px;font-weight:700;cursor:pointer">Annulla</button>
+      <button id="_sos-del-ok" style="flex:2;padding:13px;border-radius:12px;border:none;background:rgba(239,68,68,.8);color:#fff;font-size:14px;font-weight:900;cursor:pointer;letter-spacing:.5px">🗑 Rimuovi dallo Store</button>
+    </div>
+  </div>`;
+  document.body.appendChild(pop);
+  setTimeout(()=>document.getElementById('_sos-del-key')?.focus(),80);
+  const close=()=>pop.remove();
+  document.getElementById('_sos-del-x').onclick=close;
+  document.getElementById('_sos-del-cancel').onclick=close;
+  pop.addEventListener('click',ev=>{ if(ev.target===pop) close(); });
+  const doRemove=()=>{
+    const key=document.getElementById('_sos-del-key')?.value||'';
+    if(!key){ showToast('⚠️ Inserisci la chiave'); return; }
+    const enc=new TextEncoder().encode(key.trim().toUpperCase());
+    crypto.subtle.digest('SHA-256',enc).then(buf=>{
+      const hash=Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+      if(hash==='896263d3d819ee96afd873d95b40ecba77eaac65e45162e3dce7c6ad2cc1cf08'){
+        close(); localStorage.setItem('fratech_sos_store_hidden','1');
+        showToast('🗑 Card SOS rimossa dallo Store. Sincronizza per ripristinarla.');
+        setTimeout(_ghStoreRender,50);
+      }else{
+        showToast('❌ Chiave non valida');
+        const inp=document.getElementById('_sos-del-key');
+        if(inp){ inp.value=''; inp.focus(); }
+      }
+    });
+  };
+  document.getElementById('_sos-del-ok').onclick=doRemove;
+  document.getElementById('_sos-del-key').addEventListener('keydown',e=>{ if(e.key==='Enter') doRemove(); });
 }
 
 /* Esegue il codice di una card .js gestendo SIA il formato FratechStore SIA quello Lovelace */
@@ -12112,8 +12140,31 @@ function _sosGetPeople(){
 
 /* ── STEP 1: apri — chi sei? ── */
 function openSOS(){
-  // Redirect al pannello impostazioni SOS (la card SOS è sulla dashboard)
-  try{ openOikSettings(); setTimeout(()=>_switchEpTab('sos'),80); }catch(e){}
+  document.getElementById('_sos-hdr-pop')?.remove();
+  const pop=document.createElement('div');
+  pop.id='_sos-hdr-pop';
+  pop.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;background:rgba(0,0,0,.65);backdrop-filter:blur(6px)';
+  pop.innerHTML=`<style>@keyframes _frkSU{from{transform:translateY(100%)}to{transform:translateY(0)}}</style>
+  <div style="width:100%;max-height:90vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(239,68,68,.3);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:_frkSU .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">
+    <div style="display:flex;align-items:center;padding:14px 18px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">
+      <div style="width:36px;height:36px;border-radius:10px;background:rgba(239,68,68,.18);border:1.5px solid rgba(239,68,68,.4);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🆘</div>
+      <span style="margin-left:12px;font-size:15px;font-weight:900;color:#fff;letter-spacing:.5px">SOS Emergenza</span>
+      <button id="_sos-hdr-x" style="margin-left:auto;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;color:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>
+    <div style="flex:1;overflow:hidden;min-height:0;position:relative" id="_sos-hdr-wrap"></div>
+  </div>`;
+  document.body.appendChild(pop);
+  const wrap=document.getElementById('_sos-hdr-wrap');
+  if(wrap){
+    const card=document.createElement('sos-card');
+    card.style.cssText='display:block;width:100%;height:100%;position:absolute;inset:0';
+    wrap.appendChild(card);
+    try{ card.setConfig({type:'custom:sos-card',storageKey:'__sos_hdr__'}); }catch(_){}
+    try{ card.hass=_haHassObj(); }catch(_){}
+  }
+  const close=()=>pop.remove();
+  document.getElementById('_sos-hdr-x').onclick=close;
+  pop.addEventListener('click',ev=>{ if(ev.target===pop) close(); });
 }
 
 function _sosPickPerson(idx){
@@ -12297,7 +12348,7 @@ function renderSOSCfgList(){
   </div>`;
 
   // ── CARD PREVIEW ──
-  const cardPreview=`<div style="margin:0 0 22px;display:flex;justify-content:center"><div id="sos-settings-card-wrap" style="width:320px;height:260px;border-radius:18px;overflow:hidden;border:1.5px solid rgba(239,68,68,.25);background:#0a0816;box-shadow:0 8px 40px rgba(0,0,0,.5);flex-shrink:0"></div></div>`;
+  const cardPreview=`<div style="margin:0 0 22px;display:flex;justify-content:center"><div id="sos-settings-card-wrap" style="width:320px;height:320px;border-radius:18px;overflow:hidden;border:1.5px solid rgba(239,68,68,.25);background:#0a0816;box-shadow:0 8px 40px rgba(0,0,0,.5);flex-shrink:0"></div></div>`;
 
   // ── ACCORDION UNICO: persona + dispositivo notify ──
   const allPeople=Object.keys(ha).filter(eid=>eid.startsWith('person.')).map(eid=>({eid,name:ha[eid]?.friendly_name||eid.split('.')[1].replace(/_/g,' ')}));
@@ -12336,14 +12387,16 @@ function renderSOSCfgList(){
 
   el.innerHTML=guideBanner+cardPreview+accordion;
 
-  // Monta la card SOS live
+  // Monta la card SOS live (sempre in stato idle)
   const wrap=document.getElementById('sos-settings-card-wrap');
   if(wrap&&window.customElements?.get('sos-card')){
     try{
       const sc2=document.createElement('sos-card');
-      sc2.style.cssText='display:block;height:100%;width:100%';
+      sc2.style.cssText='display:block;width:100%;height:100%';
       wrap.appendChild(sc2);
-      sc2.setConfig({type:'custom:sos-card'});
+      sc2._state='idle'; sc2._personsSig='';
+      sc2.setConfig({type:'custom:sos-card',storageKey:'__sos_preview__'});
+      sc2._state='idle';
       const hObj=typeof frarikHass==='function'?frarikHass():null;
       if(hObj) sc2.hass=hObj;
     }catch(_){}
@@ -12392,7 +12445,7 @@ function _sosSetQuick(val){ _sosCfg().quickMode=!!val; saveCfg(); }
 function sosFamilyAdd(){ const sc=_sosCfg(); sc.family.push({person_eid:'',notify_eid:''}); saveCfg(); renderSOSCfgList(); }
 function sosFamilyRemove(i){ const sc=_sosCfg(); sc.family.splice(i,1); saveCfg(); renderSOSCfgList(); }
 function sosFamilyUpdate(i,field,val){ const sc=_sosCfg(); if(sc.family[i]) sc.family[i][field]=val; saveCfg(); }
-function _sosPickFamilyNotify(i){ _epPickerOpen(v=>{ sosFamilyUpdate(i,'notify_eid',v); renderSOSCfgList(); },'notify','Seleziona dispositivo mobile_app','mobile_app_'); }
+function _sosPickFamilyNotify(i){ _epPickerOpen(v=>{ const slug=v.replace(/^notify\./,''); sosFamilyUpdate(i,'notify_eid',slug); renderSOSCfgList(); },'notify','Seleziona servizio notify (mobile_app)'); }
 
 /* link Google Maps dalla posizione GPS della persona che ha lanciato l'SOS (se disponibile) */
 function _sosLocLink(){

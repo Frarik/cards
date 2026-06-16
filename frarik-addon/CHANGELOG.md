@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.5.00 — 2026-06-16
+
+### fix: SOS — 6 fix su picker, preview, popup licenza, dashboard, stato persone, bottone header
+
+- **Picker notify**: rimosso filtro `mobile_app_` (le entità in HA non hanno quel prefisso); picker mostra tutti i `notify.*`; quando si seleziona dal picker il prefisso `notify.` viene strippato automaticamente così si memorizza solo lo slug del servizio (es. `iphone_giulia`)
+- **Preview card impostazioni**: stato forzato a `idle` (non eredita più lo stato della card dashboard); storageKey dedicato `__sos_preview__`; altezza container 320×320px
+- **Popup rimozione Store**: rimpiazzato `window.prompt()` con popup Frarik bottom-sheet personalizzato — input password, tasti Annulla/Rimuovi, validazione SHA-256 inline, chiusura su backdrop click o tasto ✕
+- **Dashboard — eliminazione normale**: rimossa la protezione "Protetta (richiede licenza)" dal menu contestuale della card SOS sulla dashboard; la card si elimina normalmente come qualsiasi altra card
+- **Stato presenza persone**: `_stLbl`/`_stCol` aggiornati — mostra la posizione per TUTTE le persone: `home` → "In casa" 🟢, `not_home` → "Fuori casa" 🔴, zona custom (es. `lavoro`) → nome zona 🟡, `unknown`/`unavailable` → testo grigio
+- **Bottone SOS header**: `openSOS()` riscritta — apre un popup bottom-sheet Frarik con la card SOS completa (stesso stile degli altri bottom-sheet); si chiude con ✕ o tap sul backdrop
+
 ## 1.4.99 — 2026-06-16
 
 ### fix: SOS card — barra hold, preview impostazioni, picker mobile_app, Store cestino licenziato
