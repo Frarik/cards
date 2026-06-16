@@ -1,4 +1,4 @@
-/* frarik-version: 1.4 */
+/* frarik-version: 1.5 */
 /* Centro Controllo Posta — Frarik card standalone */
 (function(){
   'use strict';
@@ -448,39 +448,43 @@ automation:
       this.shadowRoot.innerHTML=this._isPkg()?this._renderMain():this._renderNotInstalled();
     }
 
-    /* ── DROPDOWN MENU (⚙️) — notifiche + storico/reset ── */
+    /* ── MENU NOTIFICHE (in fondo al body) ── */
     _renderMenu(){
-      if(!this._menuOpen) return '';
       const master=this._bool('input_boolean.frarik_posta_notifiche_attive');
       const bPush=this._bool('input_boolean.frarik_posta_notifica_push');
       const bGoog=this._bool('input_boolean.frarik_posta_notifica_google');
       const bAlex=this._bool('input_boolean.frarik_posta_notifica_alexa');
-      return `<div class="menu">
-        <div class="menu-sec">NOTIFICHE</div>
-        <div class="trow" data-a="toggle-master">
-          <span class="trow-ico">🔔</span>
-          <span class="trow-lbl">Tutte le notifiche</span>
-          <div class="tgl ${master?'on':'off'}"><div class="tgl-k"></div></div>
+      return `
+        <div class="btm-toggle" data-a="toggle-menu">
+          <span class="btm-lbl">🔔 Notifiche e opzioni</span>
+          <span class="btm-chev">${this._menuOpen?'▴':'▾'}</span>
         </div>
-        <div class="tgrp ${master?'':'locked'}">
-          <div class="trow sub" data-a="toggle-push">
-            <span class="trow-ico">📱</span><span class="trow-lbl">Push smartphone</span>
-            <div class="tgl ${bPush?'on':'off'}"><div class="tgl-k"></div></div>
+        ${this._menuOpen?`<div class="bmenu">
+          <div class="menu-sec">NOTIFICHE</div>
+          <div class="trow" data-a="toggle-master">
+            <span class="trow-ico">🔔</span>
+            <span class="trow-lbl">Tutte le notifiche</span>
+            <div class="tgl ${master?'on':'off'}"><div class="tgl-k"></div></div>
           </div>
-          <div class="trow sub" data-a="toggle-google">
-            <span class="trow-ico">🔊</span><span class="trow-lbl">Google Home</span>
-            <div class="tgl ${bGoog?'on':'off'}"><div class="tgl-k"></div></div>
+          <div class="tgrp ${master?'':'locked'}">
+            <div class="trow sub" data-a="toggle-push">
+              <span class="trow-ico">📱</span><span class="trow-lbl">Push smartphone</span>
+              <div class="tgl ${bPush?'on':'off'}"><div class="tgl-k"></div></div>
+            </div>
+            <div class="trow sub" data-a="toggle-google">
+              <span class="trow-ico">🔊</span><span class="trow-lbl">Google Home</span>
+              <div class="tgl ${bGoog?'on':'off'}"><div class="tgl-k"></div></div>
+            </div>
+            <div class="trow sub" data-a="toggle-alexa">
+              <span class="trow-ico">📣</span><span class="trow-lbl">Amazon Alexa</span>
+              <div class="tgl ${bAlex?'on':'off'}"><div class="tgl-k"></div></div>
+            </div>
           </div>
-          <div class="trow sub" data-a="toggle-alexa">
-            <span class="trow-ico">📣</span><span class="trow-lbl">Amazon Alexa</span>
-            <div class="tgl ${bAlex?'on':'off'}"><div class="tgl-k"></div></div>
+          <div class="menu-actions">
+            <button class="act-btn" data-a="storico">📋 Storico</button>
+            <button class="act-btn act-btn-sec" data-a="reset">🔄 Reset</button>
           </div>
-        </div>
-        <div class="menu-actions">
-          <button class="act-btn" data-a="storico">📋 Storico</button>
-          <button class="act-btn act-btn-sec" data-a="reset">🔄 Reset</button>
-        </div>
-      </div>`;
+        </div>`:''}`;
     }
 
     /* ── STATO: pkg non installato ── */
@@ -530,9 +534,7 @@ automation:
         <div class="hdr">
           <span class="hico">📬</span>
           <span class="htit">${this._c.label}</span>
-          <button class="hbtn ${this._menuOpen?'hbtn-on':''}" data-a="toggle-menu" title="Notifiche e opzioni">⚙️</button>
         </div>
-        ${this._renderMenu()}
         <div class="body">
           <div class="mailbox-wrap ${svgState}">${_svgBox(svgState)}</div>
           <div class="status-row">${statusTxt}</div>
@@ -545,6 +547,7 @@ automation:
             <span class="last-ico">🕐</span>
             <span class="last-txt">${last?`Ultima consegna <strong>${last}</strong>`:'Nessuna consegna registrata'}</span>
           </div>
+          ${this._renderMenu()}
         </div>
       </div>`;
     }
@@ -588,9 +591,9 @@ automation:
         .ssub{font-size:12px;color:#fff;opacity:.4;font-family:system-ui,sans-serif;margin-top:2px}
         .scls{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:6px 14px;color:#fff;font-size:13px;cursor:pointer;font-family:system-ui,sans-serif}
         .sbody{display:flex;flex:1;overflow:hidden}
-        .sleft{flex:1;overflow-y:auto;padding:20px;scrollbar-width:none;display:flex;flex-direction:column;gap:16px;min-width:0}
+        .sleft{flex:1;overflow-y:auto;padding:20px;scrollbar-width:none;display:flex;flex-direction:column;gap:16px;min-width:0;max-width:520px}
         .sleft::-webkit-scrollbar{display:none}
-        .sright{width:280px;padding:20px;border-left:1px solid rgba(255,255,255,.07);display:flex;flex-direction:column;gap:12px;flex-shrink:0}
+        .sright{flex:0 0 42%;min-width:300px;padding:20px;border-left:1px solid rgba(255,255,255,.07);display:flex;flex-direction:column;gap:10px;overflow:hidden}
         .flbl{font-size:11px;font-weight:800;color:#fff;opacity:.5;letter-spacing:.7px;text-transform:uppercase;font-family:system-ui,sans-serif;display:flex;align-items:center;gap:6px;margin-bottom:6px}
         .fopt{font-size:10px;font-weight:700;background:rgba(255,255,255,.08);color:#fff;opacity:.6;padding:2px 7px;border-radius:5px;letter-spacing:0;text-transform:none}
         .finp{width:100%;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.11);border-radius:10px;padding:11px 13px;color:#fff;font-size:13px;font-family:system-ui,sans-serif;outline:none;transition:border-color .15s}
@@ -600,8 +603,9 @@ automation:
         .frow{display:flex;flex-direction:column}
         .fsave{width:100%;padding:14px;border-radius:13px;background:#fbbf24;border:none;color:#1a1a2e;font-size:14px;font-weight:900;cursor:pointer;font-family:system-ui,sans-serif;transition:filter .15s;margin-top:4px}
         .fsave:active{filter:brightness(.9)}
-        .prev-lbl{font-size:11px;font-weight:800;color:#fff;opacity:.35;letter-spacing:.6px;text-transform:uppercase;font-family:system-ui,sans-serif;text-align:center;margin-bottom:8px}
-        .prev-wrap{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;display:flex;align-items:flex-start;justify-content:center;flex:1;min-height:200px}
+        .prev-lbl{font-size:11px;font-weight:800;color:#fff;opacity:.35;letter-spacing:.6px;text-transform:uppercase;font-family:system-ui,sans-serif;text-align:center;margin-bottom:8px;flex-shrink:0}
+        .prev-wrap{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow-y:auto;display:flex;align-items:flex-start;justify-content:center;flex:1;min-height:0;scrollbar-width:none}
+        .prev-wrap::-webkit-scrollbar{display:none}
       </style>
       <div class="ov">
         <div class="mo">
@@ -962,10 +966,12 @@ automation:
 .hdr{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
 .hico{font-size:22px;line-height:1}
 .htit{flex:1;font-size:15px;font-weight:900;color:#fff;letter-spacing:.4px}
-.hbtn{background:none;border:none;font-size:18px;cursor:pointer;padding:4px 6px;border-radius:8px;line-height:1;opacity:.45;transition:opacity .15s,background .15s;color:#fff}
-.hbtn:hover,.hbtn-on{opacity:1;background:rgba(255,255,255,.1)}
-/* ── dropdown menu ── */
-.menu{padding:14px 16px 16px;background:rgba(0,0,0,.4);border-bottom:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;gap:8px;animation:mslide .15s ease;flex-shrink:0}
+/* ── bottom menu toggle ── */
+.btm-toggle{display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:11px;cursor:pointer;user-select:none;transition:background .15s;margin-top:2px}
+.btm-toggle:active{background:rgba(255,255,255,.09)}
+.btm-lbl{flex:1;font-size:12px;font-weight:700;color:#fff;opacity:.7}
+.btm-chev{font-size:13px;color:#fff;opacity:.45}
+.bmenu{display:flex;flex-direction:column;gap:8px;animation:mslide .15s ease;padding-bottom:4px}
 @keyframes mslide{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
 .menu-sec{font-size:10px;font-weight:800;color:#fff;opacity:.35;letter-spacing:.9px;text-transform:uppercase;margin-bottom:2px}
 .trow{display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:11px;cursor:pointer;transition:background .15s;user-select:none}

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.14 — 2026-06-16
+
+### fix(posta-card): v1.5 — menu notifiche in fondo, preview settings più grande
+
+- **Rimosso ⚙️ dall'header**: nessun pulsante ingranaggio nella card
+- **Menu notifiche in fondo al body**: tab "🔔 Notifiche e opzioni ▾" espandibile in basso alla card; il dropdown si espande verso il basso dentro il body scorrevole
+- **Preview settings più grande**: colonna destra del popup impostazioni ora al 42% della larghezza, `flex:1` verticale → la preview occupa tutto lo spazio disponibile in altezza
+- posta-card bump a v1.5
+
 ## 1.5.13 — 2026-06-16
 
 ### fix(posta-card): v1.4 — dropdown ⚙️ notifiche, configure popup con anteprima
