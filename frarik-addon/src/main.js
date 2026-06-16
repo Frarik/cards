@@ -8945,11 +8945,14 @@ async function _sosRequireLicense(onSuccess){
   if(customElements.get('sos-card')) return;
   const _HMS=3000, _CS=5;
   const _M=[
-    {id:'generic', icon:'🆘', label:'SOS Generico',  color:'#ef4444', desc:'Qualsiasi tipo di emergenza'},
-    {id:'medical', icon:'🏥', label:'Emergenza Medica',color:'#f97316', desc:'Malore, infortunio, urgenza sanitaria'},
-    {id:'fire',    icon:'🔥', label:'Incendio',        color:'#f59e0b', desc:'Incendio o pericolo di esplosione'},
-    {id:'lock',    icon:'🔒', label:'Intrusione',      color:'#8b5cf6', desc:'Intruso in casa o furto in corso'},
+    {id:'generic', icon:'🆘', label:'SOS Generico',    color:'#ef4444', desc:'Qualsiasi tipo di emergenza'},
+    {id:'medical', icon:'🏥', label:'Emergenza Medica', color:'#f97316', desc:'Malore, infortunio, urgenza sanitaria'},
+    {id:'fire',    icon:'🔥', label:'Incendio',         color:'#f59e0b', desc:'Incendio o pericolo di esplosione'},
+    {id:'lock',    icon:'🔒', label:'Intrusione',       color:'#8b5cf6', desc:'Intruso in casa o furto in corso'},
   ];
+  function _hexRgb(h){ return [1,3,5].map(i=>parseInt(h.slice(i,i+2),16)||0).join(','); }
+  function _stLbl(s){ return{home:'In casa',not_home:'Fuori casa',unavailable:'N/D',unknown:'N/D'}[s]||s||''; }
+  function _stCol(s){ return s==='home'?'#4ade80':s==='not_home'?'#f87171':'#6b7280'; }
   function _sk(k){ return 'soscard:'+(k||'default'); }
   function _ld(k){ try{return JSON.parse(localStorage.getItem(_sk(k))||'{}')||{};}catch(_){return{};} }
   function _sv(k,o){ try{localStorage.setItem(_sk(k),JSON.stringify(o));}catch(_){} }
@@ -8959,9 +8962,8 @@ async function _sosRequireLicense(onSuccess){
       super(); this.attachShadow({mode:'open'});
       this._h=null; this._sk='default';
       this._c={triggerEntity:'',cardScale:100,cardW:100};
-      this._frarikCard=null; this._sh=null;
-      // Wizard state machine
-      this._state='idle'; // idle|step1|step2|step3|confirm|holding|countdown|active
+      this._frarikCard=null;
+      this._state='idle'; // idle|step2|step3|confirm|holding|countdown|active
       this._wPerson=null; this._wPersonEid=null; this._wMode=0; this._wContacts=new Set();
       this._hs=0; this._hraf=null; this._cdi=null; this._csec=0; this._am=null;
       this._cl=this._onClick.bind(this);
@@ -8974,8 +8976,8 @@ async function _sosRequireLicense(onSuccess){
       this._c={triggerEntity:s.triggerEntity||'',cardScale:s.cardScale??100,cardW:s.cardW??100};
       this._build();
     }
-    set hass(h){ this._h=h; }
-    configure(card){ this._frarikCard=card||this._frarikCard; this._openCfg(); }
+    set hass(h){ this._h=h; if(this._state==='idle') this._build(); }
+    configure(){ try{ openOikSettings(); setTimeout(()=>_switchEpTab('sos'),80); }catch(_){} }
     connectedCallback(){
       const sr=this.shadowRoot;
       sr.addEventListener('click',this._cl); sr.addEventListener('pointerdown',this._pd);
@@ -8987,231 +8989,215 @@ async function _sosRequireLicense(onSuccess){
       sr.removeEventListener('click',this._cl); sr.removeEventListener('pointerdown',this._pd);
       sr.removeEventListener('pointerup',this._pu); sr.removeEventListener('pointerleave',this._pu);
       sr.removeEventListener('pointercancel',this._pu);
-      this._clrT(); this._destroyCfg();
+      this._clrT();
     }
-    _save(){ const d=_ld(this._sk); _sv(this._sk,{...d,triggerEntity:this._c.triggerEntity,cardScale:this._c.cardScale,cardW:this._c.cardW}); }
     _contacts(){ try{ const s=window.frarikSosCfg?.(); if(s) return (s.contacts||[]).filter(c=>c&&(c.name||c.notifyService)); }catch(_){} return []; }
     _persons(){
       try{
         const s=window.frarikSosCfg?.(); const h=this._h||window.frarikHass?.();
-        const all=h?Object.keys(h.states||{}).filter(k=>k.startsWith('person.')).map(k=>({eid:k,name:h.states[k]?.attributes?.friendly_name||k.split('.')[1]?.replace(/_/g,' ')||k})):[];
-        if(s?.persons?.length) return s.persons.map(eid=>all.find(p=>p.eid===eid)||{eid,name:eid.split('.')[1]||eid});
+        const all=h?Object.keys(h.states||{}).filter(k=>k.startsWith('person.')).map(k=>{
+          const a=h.states[k]?.attributes||{};
+          return {eid:k,name:a.friendly_name||k.split('.')[1]?.replace(/_/g,' ')||k,picture:a.entity_picture||'',state:h.states[k]?.state||'unknown'};
+        }):[];
+        if(s?.persons?.length) return s.persons.map(eid=>all.find(p=>p.eid===eid)||{eid,name:eid.split('.')[1]||eid,picture:'',state:'unknown'});
         return all;
       }catch(_){ return []; }
     }
     _clrT(){ if(this._hraf){cancelAnimationFrame(this._hraf);this._hraf=null;} if(this._cdi){clearInterval(this._cdi);this._cdi=null;} }
 
-    /* ── WIZARD BUILD ─────────────────────────────────────── */
     _build(){
-      let body='';
-      switch(this._state){
-        case 'idle':      body=this._bIdle(); break;
-        case 'step1':     body=this._bStep1(); break;
-        case 'step2':     body=this._bStep2(); break;
-        case 'step3':     body=this._bStep3(); break;
-        case 'confirm':   body=this._bConfirm(); break;
-        case 'holding':   body=this._bHolding(); break;
-        case 'countdown': body=this._bCountdown(); break;
-        case 'active':    body=this._bActive(); break;
-      }
-      this.shadowRoot.innerHTML=`<style>${this._css()}</style><div class="r">${body}</div>`;
+      const body={'idle':()=>this._bIdle(),'step2':()=>this._bStep2(),'step3':()=>this._bStep3(),'confirm':()=>this._bConfirm(),'holding':()=>this._bHolding(),'countdown':()=>this._bCountdown(),'active':()=>this._bActive()}[this._state]||(() =>'');
+      this.shadowRoot.innerHTML=`<style>${this._css()}</style><div class="wrap">${body()}</div>`;
     }
 
-    _dots(on){ return `<div class="dots">${[0,1,2].map(i=>`<span class="dot${i<on?' d':i===on?' on':''}"></span>`).join('')}</div>`; }
-
+    /* ── IDLE: griglia persone (come Image#1) ── */
     _bIdle(){
-      const ct=this._contacts(), logs=(_ld(this._sk).logs||[]).slice(0,2);
-      const badge=ct.length?`<span class="badge ok">✓ ${ct.length} contatt${ct.length===1?'o':'i'}</span>`:`<span class="badge warn">⚠ Configura i contatti</span>`;
-      const logsH=logs.length?`<div class="log-sec"><div class="log-t">📋 Ultimi allarmi</div>${logs.map(l=>{
-        const lm=_M.find(x=>x.id===l.mode)||_M[0]; const d=new Date(l.t);
-        return`<div class="log-r"><span>${lm.icon}</span><div class="log-info"><b>${lm.label}</b>${l.who?` · 👤 ${l.who}`:''}</div><span class="log-dt">${d.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'})} ${d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}</span></div>`;
-      }).join('')}</div>`:'';
-      return `<div class="card-hdr"><div class="hico">🆘</div><div class="htxt"><div class="htit">Emergenza SOS</div><div class="hsub">Sistema di allerta rapida</div></div>${badge}<button class="cfg-btn" data-a="cfg">⚙️</button></div>
-      <button class="main-btn" data-a="start">
-        <span class="main-ico">🆘</span>
-        <span class="main-lbl">CHIEDI AIUTO</span>
-        <span class="main-sub">Tocca per avviare la procedura guidata</span>
-      </button>
-      ${logsH}${this._c.triggerEntity?`<div class="trig-lbl">⚡ ${this._c.triggerEntity}</div>`:''}`;
+      const ps=this._persons(), ct=this._contacts();
+      const badge=ct.length?`<span class="badge ok">✓ ${ct.length} contatt${ct.length===1?'o':'i'}</span>`:`<span class="badge warn">⚠ Nessun contatto</span>`;
+      const logs=(_ld(this._sk).logs||[]).slice(0,2);
+      const BASE=window.location.origin;
+      const cards=ps.length?ps.map(p=>{
+        const av=p.picture?`<img src="${BASE}${p.picture}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="av-ini" style="display:none">${(p.name||'?').charAt(0).toUpperCase()}</span>`:`<span class="av-ini">${(p.name||'?').charAt(0).toUpperCase()}</span>`;
+        return `<div class="pcrd" data-a="person" data-val="${encodeURIComponent(p.name||'')}" data-eid="${p.eid}">
+          <div class="p-av">${av}</div>
+          <div class="p-nm">${p.name}</div>
+          <div class="p-st" style="color:${_stCol(p.state)}">${_stLbl(p.state)}</div>
+        </div>`;
+      }).join(''):`<div class="no-data" style="grid-column:1/-1">Nessuna persona configurata.<br>Aggiungile in Impostazioni → SOS.</div>`;
+      const logsH=logs.length?`<div class="log-sec"><div class="log-t">📋 Ultimi allarmi</div>${logs.map(l=>{const lm=_M.find(x=>x.id===l.mode)||_M[0];const d=new Date(l.t);return`<div class="log-r"><span>${lm.icon}</span><div class="log-info"><b>${lm.label}</b>${l.who?` · 👤 ${l.who}`:''}</div><span class="log-dt">${d.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'})} ${d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}</span></div>`;}).join('')}</div>`:'';
+      return `<div class="hdr"><div class="hico">🆘</div><div class="htxt"><div class="htit">EMERGENZA SOS</div><div class="hsub">Seleziona la tua identità per continuare</div></div>${badge}</div>
+        <div class="body"><div class="pgrid">${cards}</div>${logsH}</div>`;
     }
-
-    _bStep1(){
-      const ps=this._persons();
-      const opts=ps.length?ps.map(p=>`<button class="opt-btn" data-a="person" data-val="${encodeURIComponent(p.name||'')}">
-        <span class="opt-ico">👤</span><div class="opt-tx"><span class="opt-name">${p.name}</span></div><span class="opt-arr">→</span>
-      </button>`).join(''):
-      `<div class="no-opt">Nessuna persona configurata.<br>Aggiungile in ⚙️ → Impostazioni SOS.</div>`;
-      return `<div class="wiz-hdr"><button class="back" data-a="cancel">✕</button><div class="step-lbl">Passo 1 di 3</div>${this._dots(0)}</div>
-      <div class="wiz-ico">👤</div>
-      <div class="wiz-tit">Chi chiede aiuto?</div>
-      <div class="wiz-desc">Seleziona il tuo nome così chi riceve l'allarme sa subito chi ha bisogno di aiuto.</div>
-      <div class="opts">${opts}</div>
-      <button class="skip-btn" data-a="step2">Non specificare →</button>`;
-    }
-
+    /* ── STEP 2: selezione contatti ── */
     _bStep2(){
-      return `<div class="wiz-hdr"><button class="back" data-a="step1">←</button><div class="step-lbl">Passo 2 di 3</div>${this._dots(1)}</div>
-      <div class="wiz-ico">🚨</div>
-      <div class="wiz-tit">Che tipo di emergenza?</div>
-      <div class="wiz-desc">Seleziona il tipo di aiuto di cui hai bisogno.</div>
-      <div class="types">${_M.map((m,i)=>`<button class="type-btn" data-a="mode" data-i="${i}" style="--mc:${m.color}">
-        <span class="t-ico">${m.icon}</span><div class="t-tx"><span class="t-lbl">${m.label}</span><span class="t-desc">${m.desc}</span></div><span class="opt-arr">→</span>
-      </button>`).join('')}</div>`;
-    }
-
-    _bStep3(){
-      const ct=this._contacts(); const m=_M[this._wMode]||_M[0];
-      const rows=ct.length?ct.map((c,i)=>{const sel=this._wContacts.has(i);return`<button class="ct-btn${sel?' sel':''}" data-a="ct" data-i="${i}" style="--mc:${m.color}">
-        <span class="ct-ico">${c.icon||'👤'}</span><div class="ct-tx"><span class="ct-name">${c.name||c.notifyService||'Contatto'}</span>${c.notifyService?`<span class="ct-svc">${c.notifyService}</span>`:''}</div>
-        <span class="ct-chk${sel?' sel':''}">${sel?'✓':''}</span>
-      </button>`;}).join(''):
-      `<div class="no-opt">Nessun contatto configurato.<br>Aggiungili in ⚙️ → Impostazioni SOS.</div>`;
+      const ct=this._contacts();
       const ok=this._wContacts.size>0||!ct.length;
-      return `<div class="wiz-hdr"><button class="back" data-a="step2">←</button><div class="step-lbl">Passo 3 di 3</div>${this._dots(2)}</div>
-      <div class="wiz-ico">${m.icon}</div>
-      <div class="wiz-tit">A chi chiedi aiuto?</div>
-      <div class="wiz-desc">Seleziona uno o più contatti da avvisare. Riceveranno una notifica urgente con la tua posizione.</div>
-      <div class="opts">${rows}</div>
-      <div class="bot-row">${ct.length?`<button class="skip-btn" data-a="selall">Seleziona tutti</button>`:''}
-      <button class="next-btn${ok?'':' dis'}" data-a="confirm">Conferma →</button></div>`;
+      const BASE=window.location.origin;
+      const ps=this._persons();
+      const rows=ct.length?ct.map((c,i)=>{
+        const sel=this._wContacts.has(i);
+        const pMatch=ps.find(p=>p.name&&c.name&&p.name.toLowerCase().startsWith(c.name.toLowerCase().split(' ')[0].toLowerCase()));
+        const avHtml=pMatch?.picture?`<img src="${BASE}${pMatch.picture}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span style="display:none">${(c.name||'?').charAt(0).toUpperCase()}</span>`:(c.icon||'👤');
+        return `<div class="ct-row${sel?' sel':''}" data-a="ct" data-i="${i}">
+          <div class="ct-av">${avHtml}</div>
+          <div class="ct-info"><div class="ct-nm">${c.name||c.notifyService||'Contatto '+(i+1)}</div>${c.notifyService?`<div class="ct-svc">${c.notifyService}</div>`:''}</div>
+          <div class="ct-chk">${sel?'✓':''}</div>
+        </div>`;
+      }).join(''):`<div class="no-data">Nessun contatto configurato.<br>Aggiungili in Impostazioni → SOS.</div>`;
+      return `<div class="stp-hdr"><button class="back-btn" data-a="cancel">✕</button><div class="stp-lbl">Passo 1 / 3 — A chi chiedi aiuto?</div></div>
+        <div class="who-badge">SOS inviato come: <b>${this._wPerson||'Anonimo'}</b></div>
+        <div class="ct-list">${rows}</div>
+        <div class="bot">${ct.length?`<button class="act-btn btn-sec" data-a="selall">Seleziona tutti</button>`:''}
+        <button class="act-btn btn-main${ok?'':' dis'}" data-a="step3"${ok?'':' disabled'}>Continua →</button></div>`;
     }
 
+    /* ── STEP 3: tipo emergenza ── */
+    _bStep3(){
+      return `<div class="stp-hdr"><button class="back-btn" data-a="step2">←</button><div class="stp-lbl">Passo 2 / 3 — Tipo di emergenza</div></div>
+        <div class="type-list">${_M.map((m,i)=>`<button class="type-btn" data-a="mode" data-i="${i}" style="--mc:${m.color};--mc-rgb:${_hexRgb(m.color)}">
+          <span class="t-ico">${m.icon}</span><div class="t-tx"><span class="t-lbl" style="color:${m.color}">${m.label}</span><span class="t-desc">${m.desc}</span></div><span class="t-arr">→</span>
+        </button>`).join('')}</div>`;
+    }
+
+    /* ── CONFIRM ── */
     _bConfirm(){
       const m=_M[this._wMode]||_M[0]; const ct=this._contacts();
       const selCt=ct.length?[...this._wContacts].map(i=>ct[i]).filter(Boolean):ct;
-      return `<div class="wiz-hdr"><button class="back" data-a="step3">←</button><div class="step-lbl">Conferma</div>${this._dots(3)}</div>
-      <div class="sum-ico" style="color:${m.color}">${m.icon}</div>
-      <div class="wiz-tit">Riepilogo richiesta</div>
-      <div class="sum-rows">
-        <div class="sum-r"><span class="sum-lbl">👤 Chi chiede aiuto</span><span class="sum-val">${this._wPerson||'Non specificato'}</span></div>
-        <div class="sum-r" style="border-color:color-mix(in srgb,${m.color} 30%,transparent)"><span class="sum-lbl">🚨 Tipo emergenza</span><span class="sum-val" style="color:${m.color}">${m.icon} ${m.label}</span></div>
-        <div class="sum-r"><span class="sum-lbl">📱 Avvisa</span><span class="sum-val">${selCt.length?selCt.map(c=>c.name||'?').join(', '):'Tutti i contatti'}</span></div>
-      </div>
-      <button class="hold-btn" data-a="hold" style="--mc:${m.color}">
-        <span class="h-ico">${m.icon}</span><span class="h-lbl">INVIA ALLARME</span>
-        <span class="h-sub">Tieni premuto 3 secondi per confermare l'invio</span>
-      </button>
-      <button class="skip-btn" data-a="cancel">✕ Annulla tutto</button>`;
+      return `<div class="stp-hdr"><button class="back-btn" data-a="step3">←</button><div class="stp-lbl">Passo 3 / 3 — Conferma</div></div>
+        <div class="sum-box">
+          <div class="sum-r"><div class="sum-lbl">👤 Chi chiede</div><div class="sum-val">${this._wPerson||'Non specificato'}</div></div>
+          <div class="sum-r"><div class="sum-lbl">🚨 Emergenza</div><div class="sum-val" style="color:${m.color}">${m.icon} ${m.label}</div></div>
+          <div class="sum-r"><div class="sum-lbl">📱 Avvisa</div><div class="sum-val">${selCt.length?selCt.map(c=>c.name||'?').join(', '):'Tutti i contatti'}</div></div>
+        </div>
+        <div class="bot" style="margin-top:auto">
+          <div class="hold-wrap"><button class="hold-btn" data-a="hold" style="--mc:${m.color}">🆘 Tieni premuto per inviare</button><div class="hold-bar" id="shf"></div></div>
+          <button class="act-btn btn-cancel" data-a="cancel">Annulla</button>
+        </div>`;
     }
 
+    /* ── HOLDING ── */
     _bHolding(){
       const m=_M[this._wMode]||_M[0];
-      return `<div class="cd-wrap"><div class="big-ico" style="color:${m.color}">${m.icon}</div>
-      <button class="hold-btn act" data-a="hold" style="--mc:${m.color}">
-        <span class="h-ico">${m.icon}</span><span class="h-lbl">INVIA ALLARME</span>
-        <div class="h-bar"><div class="h-fill" id="shf"></div></div>
-      </button>
-      <button class="skip-btn" data-a="cancel">✕ Rilascia per annullare</button></div>`;
+      return `<div class="cd-center">
+          <div style="font-size:48px;animation:pulse 1s ease-in-out infinite">${m.icon}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.5);text-align:center">Tieni premuto per 3 secondi…</div>
+        </div>
+        <div class="bot"><div class="hold-wrap"><button class="hold-btn act" data-a="hold" style="--mc:${m.color}">🆘 Rilascia per annullare</button><div class="hold-bar" id="shf"></div></div></div>`;
     }
 
+    /* ── COUNTDOWN ── */
     _bCountdown(){
-      const m=_M[this._wMode]||_M[0];
-      return `<div class="cd-wrap"><div class="big-ico pulse" style="color:${m.color}">${m.icon}</div>
-      <div class="cd-num" id="scdn">${this._csec}</div>
-      <div class="cd-lbl">Allarme <b>${m.label}</b> in invio tra pochi secondi…</div>
-      <div class="cd-bar"><div class="cd-fill" id="scdf" style="--mc:${m.color};width:${((_CS-this._csec)/_CS*100).toFixed(0)}%"></div></div>
-      <button class="skip-btn" style="font-size:13px;font-weight:900;color:#fca5a5;border-color:rgba(239,68,68,.4)" data-a="cancel">✕ ANNULLA SUBITO</button></div>`;
+      const m=this._am||_M[0];
+      return `<div class="cd-center">
+          <div style="font-size:36px;animation:pulse 1s ease-in-out infinite">${m.icon}</div>
+          <div class="cd-num" id="scdn">${this._csec}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.45);text-align:center">Allarme in invio…</div>
+          <div class="cd-bar-wrap"><div class="cd-bar" id="scdf" style="background:${m.color}"></div></div>
+        </div>
+        <div class="bot"><button class="act-btn btn-cancel" data-a="cancel">✕ Annulla subito</button></div>`;
     }
 
+    /* ── ACTIVE ── */
     _bActive(){
-      const m=_M[this._wMode]||_M[0];
-      return `<div class="act-wrap" style="--mc:${m.color}">
-        <div class="act-hdr"><span>${m.icon}</span><span>ALLARME INVIATO</span></div>
-        <div class="act-sub">${m.label}${this._wPerson?` · 👤 ${this._wPerson}`:''}</div>
-        <div id="ssl" class="sent-list"></div>
-        <button class="reset-btn" data-a="reset">✅ Situazione risolta — Reset</button>
-      </div>`;
+      const m=this._am||_M[0];
+      return `<div class="hdr"><div class="hico" style="background:rgba(74,222,128,.15);border-color:rgba(74,222,128,.4);font-size:18px">✅</div>
+          <div class="htxt"><div class="htit" style="color:#4ade80">Allarme inviato!</div><div class="hsub">${m.label}${this._wPerson?` · 👤 ${this._wPerson}`:''}</div></div></div>
+        <div class="body"><div id="ssl"></div></div>
+        <div class="bot"><button class="act-btn btn-cancel" data-a="reset">← Torna alla home</button></div>`;
     }
 
     _css(){ return `
-:host{display:block;width:100%}*{box-sizing:border-box}
-.r{font-family:var(--primary-font-family,'Inter',system-ui,sans-serif);background:linear-gradient(150deg,#0a0816 0%,#0c0e1c 100%);border:1px solid rgba(239,68,68,.28);border-radius:18px;padding:15px 16px;color:#fff;display:flex;flex-direction:column;gap:13px;position:relative;overflow:hidden}
-.r::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(239,68,68,.1),transparent)}
-/* header idle */
-.card-hdr{display:flex;align-items:center;gap:9px}
-.hico{width:36px;height:36px;border-radius:9px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
-.htxt{flex:1}.htit{font-size:14px;font-weight:800}.hsub{font-size:10px;opacity:.5;margin-top:1px}
-.cfg-btn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:7px;padding:4px 8px;cursor:pointer;color:#fff;font-size:12px;flex-shrink:0}
-.badge{font-size:9px;font-weight:700;border-radius:20px;padding:2px 8px;white-space:nowrap;flex-shrink:0}
-.badge.ok{color:#4ade80;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.2)}
-.badge.warn{color:#fbbf24;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.2)}
-/* main button */
-.main-btn{width:100%;padding:22px 14px;border-radius:16px;border:2px solid #ef4444;background:rgba(239,68,68,.1);cursor:pointer;color:#fff;display:flex;flex-direction:column;align-items:center;gap:6px;box-shadow:0 0 30px rgba(239,68,68,.18);transition:all .15s;touch-action:manipulation}
-.main-btn:active{background:rgba(239,68,68,.2);box-shadow:0 0 50px rgba(239,68,68,.35);transform:scale(.98)}
-.main-ico{font-size:40px;line-height:1}.main-lbl{font-size:17px;font-weight:900;letter-spacing:2px}.main-sub{font-size:10px;opacity:.55}
-/* logs */
-.log-sec{display:flex;flex-direction:column;gap:5px}.log-t{font-size:9px;font-weight:700;opacity:.4;text-transform:uppercase;letter-spacing:.05em}
-.log-r{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:10px}
-.log-info{flex:1;font-weight:600}.log-dt{font-size:9px;opacity:.4}
-.trig-lbl{font-size:9px;opacity:.3;text-align:center}
-/* wizard */
-.wiz-hdr{display:flex;align-items:center;gap:10px}
-.back{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:5px 10px;cursor:pointer;color:#fff;font-size:13px;flex-shrink:0;touch-action:manipulation}
-.step-lbl{flex:1;font-size:10px;font-weight:700;opacity:.45;text-transform:uppercase;letter-spacing:.5px}
-.dots{display:flex;gap:5px}.dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.12)}
-.dot.on{background:#ef4444;box-shadow:0 0 7px rgba(239,68,68,.7)}.dot.d{background:rgba(74,222,128,.55)}
-.wiz-ico{font-size:34px;text-align:center}.wiz-tit{font-size:17px;font-weight:900;text-align:center}
-.wiz-desc{font-size:11px;opacity:.6;text-align:center;line-height:1.55}
-/* options */
-.opts{display:flex;flex-direction:column;gap:7px}
-.opt-btn,.type-btn,.ct-btn{display:flex;align-items:center;gap:11px;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);cursor:pointer;color:#fff;text-align:left;touch-action:manipulation;transition:all .12s;width:100%}
-.opt-btn:active,.type-btn:active{background:rgba(255,255,255,.1);transform:scale(.98)}
-.opt-ico{font-size:22px;flex-shrink:0}.opt-tx{flex:1;display:flex;flex-direction:column;gap:2px}.opt-name{font-size:13px;font-weight:700}.opt-arr{font-size:13px;opacity:.35;flex-shrink:0}
-/* types */
-.types{display:flex;flex-direction:column;gap:7px}
-.type-btn{border-color:color-mix(in srgb,var(--mc) 35%,transparent);background:color-mix(in srgb,var(--mc) 8%,rgba(10,8,22,1))}
-.type-btn:active{background:color-mix(in srgb,var(--mc) 18%,rgba(10,8,22,1));transform:scale(.98)}
-.t-ico{font-size:24px;flex-shrink:0}.t-tx{flex:1;display:flex;flex-direction:column;gap:2px}.t-lbl{font-size:13px;font-weight:800}.t-desc{font-size:10px;opacity:.5}
-/* contacts */
-.ct-btn.sel{background:color-mix(in srgb,var(--mc) 12%,rgba(10,8,22,1));border-color:var(--mc)}
-.ct-ico{font-size:22px;flex-shrink:0}.ct-tx{flex:1;display:flex;flex-direction:column;gap:2px}.ct-name{font-size:12px;font-weight:700}.ct-svc{font-size:9px;opacity:.45;font-family:monospace}
-.ct-chk{width:21px;height:21px;border-radius:50%;border:1.5px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#4ade80;flex-shrink:0}
-.ct-chk.sel{background:rgba(74,222,128,.15);border-color:#4ade80}
-/* nav */
-.skip-btn{width:100%;padding:9px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);cursor:pointer;font-size:11px;touch-action:manipulation}
-.bot-row{display:flex;gap:8px}.bot-row .skip-btn{flex:0 0 auto;width:auto;padding:9px 12px}
-.next-btn{flex:1;padding:10px;border-radius:10px;background:rgba(239,68,68,.18);border:1px solid rgba(239,68,68,.4);color:#fca5a5;cursor:pointer;font-size:12px;font-weight:800;touch-action:manipulation}
-.next-btn.dis{opacity:.3;pointer-events:none}
-.no-opt{font-size:11px;opacity:.45;text-align:center;padding:14px;line-height:1.6}
-/* confirm */
-.sum-ico{font-size:42px;text-align:center;animation:pulse 1.5s ease-in-out infinite}
-.sum-rows{display:flex;flex-direction:column;gap:6px}
-.sum-r{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
-.sum-lbl{font-size:11px;opacity:.5}.sum-val{font-size:12px;font-weight:700;max-width:58%;text-align:right}
-/* hold */
-.hold-btn{width:100%;padding:22px 14px;border-radius:15px;border:2px solid var(--mc);background:color-mix(in srgb,var(--mc) 10%,rgba(10,8,22,1));cursor:pointer;color:#fff;display:flex;flex-direction:column;align-items:center;gap:6px;box-shadow:0 0 28px color-mix(in srgb,var(--mc) 20%,transparent);user-select:none;-webkit-user-select:none;touch-action:none;transition:all .15s}
-.hold-btn.act,.hold-btn:active{background:color-mix(in srgb,var(--mc) 20%,rgba(10,8,22,1));box-shadow:0 0 50px color-mix(in srgb,var(--mc) 40%,transparent);transform:scale(.98)}
-.h-ico{font-size:32px}.h-lbl{font-size:16px;font-weight:900;letter-spacing:2px}.h-sub{font-size:10px;opacity:.55}
-.h-bar{width:100%;height:5px;background:rgba(255,255,255,.1);border-radius:5px;overflow:hidden;margin-top:5px}.h-fill{height:100%;width:0%;background:var(--mc);border-radius:5px;transition:none}
-/* countdown */
-.cd-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;padding:8px 0}
-.big-ico{font-size:46px;line-height:1}.big-ico.pulse{animation:pulse 1s ease-in-out infinite}
-.cd-num{font-size:70px;font-weight:900;color:#ef4444;line-height:1}
-.cd-lbl{font-size:11px;opacity:.7;font-weight:700;text-align:center}
-.cd-bar{width:100%;height:6px;background:rgba(239,68,68,.15);border-radius:5px;overflow:hidden}
-.cd-fill{height:100%;background:linear-gradient(90deg,#ef4444,#f97316);border-radius:5px;transition:width 1s linear}
-/* active */
-.act-wrap{display:flex;flex-direction:column;gap:10px}
-.act-hdr{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;font-weight:900;font-size:13px;letter-spacing:.5px;background:color-mix(in srgb,var(--mc) 13%,rgba(0,0,0,.4));border:1px solid var(--mc);animation:blink 1.3s ease-in-out infinite alternate}
-.act-hdr span:first-child{font-size:24px}.act-sub{font-size:11px;opacity:.55;text-align:center;font-weight:700}
-.sent-list{display:flex;flex-direction:column;gap:5px}
-.sent-r{display:flex;align-items:center;gap:8px;padding:7px 11px;border-radius:9px;background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.13);font-size:11px;font-weight:700}
-.reset-btn{width:100%;padding:12px;border-radius:12px;background:rgba(74,222,128,.13);border:1px solid rgba(74,222,128,.3);color:#4ade80;cursor:pointer;font-size:12px;font-weight:800;touch-action:manipulation}
-@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
-@keyframes blink{0%{opacity:1}100%{opacity:.65}}`; }
+:host{display:block;height:100%;font-family:var(--primary-font-family,'Inter',system-ui,sans-serif)}
+*{box-sizing:border-box;margin:0;padding:0}
+.wrap{height:100%;display:flex;flex-direction:column;background:linear-gradient(160deg,#0d0b1e 0%,#1a0814 60%,#0a0816 100%);border-radius:inherit;overflow:hidden;position:relative}
+/* HEADER */
+.hdr{padding:16px 16px 12px;display:flex;align-items:center;gap:11px;border-bottom:1px solid rgba(239,68,68,.18);flex-shrink:0}
+.hico{width:40px;height:40px;border-radius:11px;background:rgba(239,68,68,.18);border:1px solid rgba(239,68,68,.45);display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0;box-shadow:0 0 18px rgba(239,68,68,.3)}
+.htxt{flex:1}.htit{font-size:13px;font-weight:900;color:#fff;letter-spacing:.6px;text-transform:uppercase}.hsub{font-size:10px;color:rgba(255,255,255,.4);margin-top:2px}
+.badge{font-size:9px;font-weight:700;border-radius:6px;padding:3px 8px;border:1px solid}
+.ok{background:rgba(74,222,128,.1);color:#4ade80;border-color:rgba(74,222,128,.3)}
+.warn{background:rgba(251,191,36,.1);color:#fbbf24;border-color:rgba(251,191,36,.3)}
+/* PERSON GRID */
+.body{flex:1;overflow-y:auto;padding:14px 13px 10px;scrollbar-width:none;display:flex;flex-direction:column;gap:12px}
+.body::-webkit-scrollbar{display:none}
+.pgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.pcrd{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:16px 10px 12px;display:flex;flex-direction:column;align-items:center;gap:9px;cursor:pointer;transition:all .15s;touch-action:manipulation}
+.pcrd:hover{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.4);transform:translateY(-2px);box-shadow:0 8px 24px rgba(239,68,68,.18)}
+.pcrd:active{transform:scale(.96);box-shadow:none}
+.p-av{width:58px;height:58px;border-radius:50%;background:rgba(239,68,68,.15);border:2.5px solid rgba(239,68,68,.5);box-shadow:0 0 16px rgba(239,68,68,.32);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+.p-av img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block}
+.av-ini{font-size:22px;font-weight:900;color:#fca5a5;line-height:1}
+.p-nm{font-size:13px;font-weight:800;color:#fff;text-align:center}
+.p-st{font-size:10px;font-weight:600;text-align:center}
+/* STEP HEADER */
+.stp-hdr{display:flex;align-items:center;gap:10px;padding:13px 14px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
+.back-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:5px 10px;color:#fff;font-size:13px;cursor:pointer;flex-shrink:0}
+.stp-lbl{font-size:11px;font-weight:700;color:rgba(255,255,255,.5);flex:1}
+.who-badge{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:8px 14px;font-size:11px;color:rgba(255,255,255,.65);margin:10px 13px 0;text-align:center;flex-shrink:0}
+.who-badge b{color:#fca5a5}
+/* CONTACT LIST */
+.ct-list{flex:1;overflow-y:auto;padding:8px 13px;display:flex;flex-direction:column;gap:7px;scrollbar-width:none}
+.ct-list::-webkit-scrollbar{display:none}
+.ct-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.08);cursor:pointer;transition:all .12s;background:rgba(255,255,255,.03);touch-action:manipulation}
+.ct-row:hover,.ct-row:active{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3)}
+.ct-row.sel{background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.42);box-shadow:0 0 12px rgba(239,68,68,.12)}
+.ct-av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);overflow:hidden}
+.ct-av img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.ct-info{flex:1;min-width:0}.ct-nm{font-size:12px;font-weight:700;color:#fff}.ct-svc{font-size:9px;color:rgba(255,255,255,.38);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ct-chk{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;flex-shrink:0;color:#4ade80;transition:all .1s}
+.ct-row.sel .ct-chk{background:#4ade80;border-color:#4ade80;color:#000}
+/* TYPE LIST */
+.type-list{flex:1;overflow-y:auto;padding:8px 13px;display:flex;flex-direction:column;gap:8px;scrollbar-width:none}
+.type-list::-webkit-scrollbar{display:none}
+.type-btn{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:13px;border:1px solid rgba(var(--mc-rgb),.3);background:rgba(var(--mc-rgb),.07);cursor:pointer;color:#fff;touch-action:manipulation;transition:all .12s;width:100%}
+.type-btn:hover,.type-btn:active{background:rgba(var(--mc-rgb),.15);transform:translateX(3px)}
+.t-ico{font-size:22px;width:32px;text-align:center;flex-shrink:0}.t-tx{flex:1;text-align:left}
+.t-lbl{display:block;font-size:12px;font-weight:800}.t-desc{display:block;font-size:10px;color:rgba(255,255,255,.42);margin-top:2px}.t-arr{color:rgba(255,255,255,.28);font-size:14px}
+/* SUMMARY */
+.sum-box{padding:12px 13px;display:flex;flex-direction:column;gap:0;border-bottom:1px solid rgba(255,255,255,.06)}
+.sum-r{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.sum-r:last-child{border-bottom:none}
+.sum-lbl{font-size:10px;color:rgba(255,255,255,.4);width:90px;flex-shrink:0}.sum-val{font-size:12px;font-weight:700;color:#fff;flex:1}
+/* HOLD BUTTON */
+.hold-wrap{position:relative;border-radius:13px;overflow:hidden}
+.hold-btn{width:100%;padding:14px;font-size:12px;font-weight:900;color:#fff;border:none;cursor:pointer;background:linear-gradient(135deg,rgba(var(--mc-rgb),.4),rgba(var(--mc-rgb),.2));border:1px solid rgba(var(--mc-rgb),.5);border-radius:13px;letter-spacing:.5px;text-transform:uppercase;user-select:none;-webkit-user-select:none;touch-action:none;display:block;position:relative}
+.hold-btn.act{background:linear-gradient(135deg,rgba(var(--mc-rgb),.6),rgba(var(--mc-rgb),.3))}
+.hold-bar{position:absolute;bottom:0;left:0;height:3px;background:#fbbf24;width:0;transition:width .1s linear}
+/* COUNTDOWN CENTER */
+.cd-center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px}
+.cd-num{font-size:72px;font-weight:900;color:#ef4444;line-height:1;animation:blink 1s ease-in-out infinite}
+.cd-bar-wrap{width:100%;height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden}
+.cd-bar{height:100%;width:0;transition:width 1s linear;border-radius:2px}
+/* BOTTOM ACTIONS */
+.bot{padding:10px 13px 14px;display:flex;flex-direction:column;gap:7px;flex-shrink:0}
+.act-btn{width:100%;padding:12px;border-radius:12px;font-size:12px;font-weight:800;cursor:pointer;transition:all .15s;touch-action:manipulation}
+.btn-main{background:linear-gradient(135deg,#ef4444,#dc2626);border:none;color:#fff;box-shadow:0 4px 20px rgba(239,68,68,.4)}
+.btn-main:hover{box-shadow:0 6px 28px rgba(239,68,68,.6)}
+.btn-main.dis{opacity:.3;cursor:default;pointer-events:none}
+.btn-sec{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.7)}
+.btn-cancel{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.45);font-size:11px}
+/* LOGS */
+.log-sec{border-top:1px solid rgba(255,255,255,.06);padding-top:10px}
+.log-t{font-size:9px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px}
+.log-r{display:flex;align-items:center;gap:7px;font-size:10px;color:rgba(255,255,255,.42);margin-bottom:4px}
+.log-info{flex:1}.log-dt{font-size:9px;color:rgba(255,255,255,.25)}
+/* NO DATA */
+.no-data{text-align:center;padding:24px 14px;color:rgba(255,255,255,.32);font-size:11px;line-height:1.7}
+/* SENT LIST */
+#ssl{display:flex;flex-direction:column;gap:6px}
+.s-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:9px;background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.15);font-size:11px;font-weight:700;color:rgba(255,255,255,.8)}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.55}}`; }
 
-    /* ── EVENTS ─────────────────────────────────────────── */
+    /* ── EVENTS ── */
     _onClick(e){
       const b=e.target.closest('[data-a]'); if(!b) return; const a=b.dataset.a;
-      if(a==='cfg') this._openCfg();
-      else if(a==='start'){ this._state='step1'; this._wPerson=null; this._wPersonEid=null; this._wMode=0; this._wContacts=new Set(); this._build(); }
-      else if(a==='cancel'){ this._clrT(); this._state='idle'; this._am=null; this._wPerson=null; this._wPersonEid=null; this._build(); }
+      if(a==='cancel'){ this._clrT(); this._state='idle'; this._am=null; this._wPerson=null; this._wPersonEid=null; this._build(); }
       else if(a==='reset'){ this._clrT(); this._state='idle'; this._am=null; this._wPerson=null; this._wPersonEid=null; this._build(); }
-      else if(a==='step1'){ this._state='step1'; this._build(); }
       else if(a==='step2'){ this._state='step2'; this._build(); }
       else if(a==='step3'){ this._state='step3'; this._build(); }
       else if(a==='person'){ const nm=decodeURIComponent(b.dataset.val||'')||null; this._wPerson=nm; this._wPersonEid=this._persons().find(p=>p.name===nm)?.eid||null; this._state='step2'; this._build(); }
-      else if(a==='mode'){ this._wMode=parseInt(b.dataset.i)||0; this._state='step3'; this._build(); }
+      else if(a==='mode'){ this._wMode=parseInt(b.dataset.i)||0; this._state='confirm'; this._build(); }
       else if(a==='ct'){ const i=parseInt(b.dataset.i); this._wContacts.has(i)?this._wContacts.delete(i):this._wContacts.add(i); this._build(); }
       else if(a==='selall'){ const ct=this._contacts(); ct.forEach((_,i)=>this._wContacts.add(i)); this._build(); }
       else if(a==='confirm'){ this._state='confirm'; this._build(); }
@@ -9261,7 +9247,7 @@ async function _sosRequireLicense(onSuccess){
       this._state='active'; this._build();
       const logEl=this.shadowRoot.getElementById('ssl'); if(!logEl) return;
       const trRow=this._c.triggerEntity?`<div class="sent-r"><span>✅</span><span>⚡ ${this._c.triggerEntity}</span></div>`:'';
-      logEl.innerHTML=trRow+(sent.length?sent.map(s=>`<div class="sent-r"><span>${s.ok?'✅':'⚠️'}</span><span>${s.n}</span></div>`).join(''):'<div class="sent-r"><span>⚠️</span><span>Nessun contatto — configurali in ⚙️</span></div>');
+      logEl.innerHTML=trRow+(sent.length?sent.map(s=>`<div class="s-row"><span>${s.ok?'✅':'⚠️'}</span><span>${s.n}</span></div>`).join(''):'<div class="s-row"><span>⚠️</span><span>Nessun contatto configurato</span></div>');
     }
     _loc(){
       try{
@@ -9276,147 +9262,10 @@ async function _sosRequireLicense(onSuccess){
       }catch(_){} return '';
     }
 
-    /* ── SETTINGS POPUP ─────────────────────────────────── */
-    _openCfg(){
-      if(this._sh) return;
-      this._sh=document.createElement('div'); document.body.appendChild(this._sh);
-      this._renderCfgInto(this._sh.attachShadow({mode:'open'}));
-    }
-    _renderCfgInto(sr){
-      const sc=window.frarikSosCfg?.()||{contacts:[],persons:[]};
-      const contacts=sc.contacts||[], persons=sc.persons||[];
-      const h=this._h||window.frarikHass?.();
-      const allP=h?Object.keys(h.states||{}).filter(k=>k.startsWith('person.')).map(k=>({eid:k,name:h.states[k]?.attributes?.friendly_name||k.split('.')[1]})):[];
-      const availOpts=allP.filter(p=>!persons.includes(p.eid)).map(p=>`<option value="${p.eid}">${p.name}</option>`).join('');
-      const personRows=persons.map((eid,i)=>{const inf=allP.find(p=>p.eid===eid); return`<div class="item-r"><span class="i-ico">👤</span><span class="i-nm">${inf?.name||eid}</span><button class="i-del" data-a="rmperson" data-i="${i}">✕</button></div>`;}).join('');
-      const ctRows=contacts.map((c,i)=>`<div class="ct-card"><div class="ct-card-hdr"><span>${c.icon||'👤'}</span><span>${c.name||'Contatto '+(i+1)}</span><button class="i-del" data-a="rmct" data-i="${i}">✕</button></div>
-        <div class="ct-card-body">
-          <div class="fld"><label class="flbl">Nome contatto</label><input class="finp" type="text" placeholder="Es. Mario Rossi" value="${c.name||''}" data-a="upct" data-i="${i}" data-f="name"></div>
-          <div class="fld"><label class="flbl">Servizio notifica Home Assistant</label><input class="finp" type="text" placeholder="Es. mobile_app_telefono_mario" value="${c.notifyService||''}" data-a="upct" data-i="${i}" data-f="notifyService">
-          <div class="fhint">Trovi i servizi disponibili in HA → Strumenti Sviluppatore → Servizi → cerca "notify".</div></div>
-        </div></div>`).join('');
-      const c=this._c, fc=this._frarikCard;
-      sr.innerHTML=`<style>:host{font-family:'Inter',system-ui,sans-serif}*{box-sizing:border-box}
-        .ov{position:fixed;inset:0;z-index:100000;display:flex;align-items:flex-end;background:rgba(0,0,0,.72);backdrop-filter:blur(6px)}
-        .modal{width:100%;max-height:90vh;overflow-y:auto;background:#0a0816;border:1px solid rgba(239,68,68,.3);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.85);animation:sl .22s cubic-bezier(.32,1.12,.56,1);scrollbar-width:none}.modal::-webkit-scrollbar{display:none}
-        @keyframes sl{from{transform:translateY(100%)}to{transform:translateY(0)}}
-        .shdr{display:flex;align-items:center;gap:12px;padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0}
-        .sico{width:38px;height:38px;border-radius:10px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
-        .stit{font-size:15px;font-weight:800;color:#fff}.ssub{font-size:11px;color:rgba(255,255,255,.45);margin-top:1px}
-        .scls{margin-left:auto;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:5px 10px;cursor:pointer;color:#fff;font-size:13px;flex-shrink:0}
-        .body{padding:18px 20px 32px;display:flex;flex-direction:column;gap:20px}
-        .sec{padding:14px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);display:flex;flex-direction:column;gap:11px}
-        .sec-tit{font-size:13px;font-weight:800;color:#fff}.sec-desc{font-size:11px;color:rgba(255,255,255,.48);line-height:1.55}
-        .item-r{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
-        .i-ico{font-size:17px}.i-nm{flex:1;font-size:12px;font-weight:700;color:#fff}
-        .i-del{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.22);border-radius:6px;padding:3px 8px;cursor:pointer;color:#f87171;font-size:11px;font-weight:700}
-        .add-row{display:flex;gap:8px;align-items:center}
-        .add-sel{flex:1;padding:9px 11px;border-radius:9px;background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.14);font-size:12px;outline:none}
-        .add-sel option{background:#1a1f35}
-        .add-btn{padding:9px 13px;border-radius:9px;background:rgba(74,222,128,.13);border:1px solid rgba(74,222,128,.28);color:#4ade80;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
-        .add-ct-btn{padding:11px;border-radius:11px;background:rgba(139,92,246,.08);border:1.5px dashed rgba(139,92,246,.4);color:#c4b5fd;font-size:12px;font-weight:700;cursor:pointer;width:100%}
-        .ct-card{border-radius:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);overflow:hidden}
-        .ct-card-hdr{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,.04);font-size:12px;font-weight:700;color:#fff;border-bottom:1px solid rgba(255,255,255,.06)}.ct-card-hdr span:nth-child(2){flex:1}
-        .ct-card-body{padding:10px 12px;display:flex;flex-direction:column;gap:9px}
-        .fld{display:flex;flex-direction:column;gap:4px}
-        .flbl{font-size:10px;font-weight:700;color:rgba(255,255,255,.48);text-transform:uppercase;letter-spacing:.4px}
-        .finp{padding:9px 11px;border-radius:9px;background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.14);font-size:12px;font-family:'Inter',sans-serif;outline:none;width:100%}
-        .finp::placeholder{color:rgba(255,255,255,.28)}
-        .fhint{font-size:10px;color:rgba(255,255,255,.32);line-height:1.5}
-        .no-items{font-size:11px;color:rgba(255,255,255,.32);text-align:center;padding:8px}
-        .lock-row{display:flex;align-items:flex-start;gap:10px;padding:11px 13px;border-radius:10px;background:rgba(139,92,246,.07);border:1px solid rgba(139,92,246,.2);font-size:11px;color:rgba(255,255,255,.5);line-height:1.55}
-        .lock-row span:first-child{font-size:19px;flex-shrink:0}
-        .range-row{display:flex;align-items:center;gap:10px}.range-row input[type=range]{flex:1;accent-color:#ef4444}
-        .range-val{font-size:12px;font-weight:700;color:#fca5a5;min-width:36px;text-align:right}
-        .save-btn{padding:13px;border-radius:13px;background:linear-gradient(90deg,#ef4444,#f97316);border:none;color:#fff;font-size:14px;font-weight:800;cursor:pointer;width:100%;margin-top:4px}
-        .items-block{display:flex;flex-direction:column;gap:6px}
-      </style>
-      <div class="ov" id="so"><div class="modal">
-        <div class="shdr"><div class="sico">🆘</div>
-          <div><div class="stit">Impostazioni SOS</div><div class="ssub">Configura persone e contatti di emergenza</div></div>
-          <button class="scls" id="sc">✕</button>
-        </div>
-        <div class="body">
-          <!-- PERSONE -->
-          <div class="sec">
-            <div class="sec-tit">👤 Chi può chiedere aiuto</div>
-            <div class="sec-desc">Aggiungi le persone che vivono in casa. Al momento dell'allarme verrà chiesto chi sta chiedendo aiuto, così i soccorritori sanno subito chi cercare.</div>
-            <div class="items-block" id="p-list">${personRows||'<div class="no-items">Nessuna persona aggiunta. Aggiungine una qui sotto.</div>'}</div>
-            ${availOpts?`<div class="add-row"><select class="add-sel" id="p-sel"><option value="">— Seleziona da Home Assistant —</option>${availOpts}</select><button class="add-btn" data-a="addp">➕ Aggiungi</button></div>`:'<div class="no-items">Tutte le persone di HA sono già incluse.</div>'}
-          </div>
-          <!-- CONTATTI -->
-          <div class="sec">
-            <div class="sec-tit">📱 Contatti di emergenza</div>
-            <div class="sec-desc">Inserisci qui i contatti a cui potrai chiedere aiuto. Per ogni contatto specifica il nome e il servizio di notifica di Home Assistant (es. mobile_app_nome_telefono). In caso di allarme riceveranno una notifica critica sul telefono con le tue informazioni e posizione.</div>
-            <div class="items-block" id="ct-list">${ctRows||'<div class="no-items">Nessun contatto. Aggiungine uno qui sotto.</div>'}</div>
-            <button class="add-ct-btn" data-a="addct">➕ Aggiungi contatto</button>
-          </div>
-          <!-- TRIGGER -->
-          <div class="sec">
-            <div class="sec-tit">⚡ Automazione HA (opzionale)</div>
-            <div class="sec-desc">Collega un'entità di Home Assistant che viene attivata automaticamente ad ogni allarme (es. una sirena, uno script di emergenza, un'automazione).</div>
-            <div class="fld"><label class="flbl">Entità da attivare</label><input class="finp" type="text" id="trig" placeholder="Es. script.emergenza_sos, input_button.allarme" value="${c.triggerEntity||''}"></div>
-          </div>
-          <!-- DIMENSIONI -->
-          <div class="sec">
-            <div class="sec-tit">📐 Dimensioni card</div>
-            <div class="fld"><label class="flbl">Altezza (zoom)</label><div class="range-row"><input type="range" id="ss" min="20" max="100" step="5" value="${c.cardScale??100}"><span class="range-val" id="ssv">${c.cardScale??100}%</span></div></div>
-            <div class="fld"><label class="flbl">Larghezza</label><div class="range-row"><input type="range" id="sw" min="20" max="100" step="5" value="${c.cardW??100}"><span class="range-val" id="swv">${c.cardW??100}%</span></div></div>
-          </div>
-          <!-- LOCK INFO -->
-          <div class="lock-row"><span>🔐</span><div>Questa card è protetta da licenza di sistema. Non può essere eliminata dalla dashboard senza inserire la chiave di licenza.</div></div>
-          <button class="save-btn" data-a="save">💾 Salva impostazioni</button>
-        </div>
-      </div></div>`;
-      const $=id=>sr.getElementById(id);
-      $('sc').onclick=()=>this._destroyCfg();
-      $('so').addEventListener('click',e=>{ if(e.target===$('so')) this._destroyCfg(); });
-      $('ss').oninput=()=>$('ssv').textContent=$('ss').value+'%';
-      $('sw').oninput=()=>$('swv').textContent=$('sw').value+'%';
-      sr.addEventListener('click',e=>{
-        const b=e.target.closest('[data-a]'); if(!b) return; const a=b.dataset.a;
-        if(a==='save'){
-          this._c.triggerEntity=($('trig').value||'').trim();
-          this._c.cardScale=parseInt($('ss').value)||100;
-          this._c.cardW=parseInt($('sw').value)||100;
-          this._save();
-          if(fc) this.dispatchEvent(new CustomEvent('frarik-card-layout',{bubbles:true,composed:true,detail:{cardId:fc.id,cardScale:this._c.cardScale,cardW:this._c.cardW}}));
-          this._destroyCfg(); this._build();
-        } else if(a==='addp'){
-          const sel=$('p-sel'); if(!sel||!sel.value) return;
-          const sc2=window.frarikSosCfg?.()||{contacts:[],persons:[]};
-          if(!sc2.persons.includes(sel.value)) sc2.persons.push(sel.value);
-          document.dispatchEvent(new CustomEvent('frarik-sos-cfg-update',{detail:sc2}));
-          setTimeout(()=>{ this._destroyCfg(); this._openCfg(); },80);
-        } else if(a==='rmperson'){
-          const sc2=window.frarikSosCfg?.()||{contacts:[],persons:[]};
-          sc2.persons.splice(parseInt(b.dataset.i),1);
-          document.dispatchEvent(new CustomEvent('frarik-sos-cfg-update',{detail:sc2}));
-          setTimeout(()=>{ this._destroyCfg(); this._openCfg(); },80);
-        } else if(a==='addct'){
-          const sc2=window.frarikSosCfg?.()||{contacts:[],persons:[]};
-          sc2.contacts.push({name:'',icon:'👤',notifyService:'',message:''});
-          document.dispatchEvent(new CustomEvent('frarik-sos-cfg-update',{detail:sc2}));
-          setTimeout(()=>{ this._destroyCfg(); this._openCfg(); },80);
-        } else if(a==='rmct'){
-          const sc2=window.frarikSosCfg?.()||{contacts:[],persons:[]};
-          sc2.contacts.splice(parseInt(b.dataset.i),1);
-          document.dispatchEvent(new CustomEvent('frarik-sos-cfg-update',{detail:sc2}));
-          setTimeout(()=>{ this._destroyCfg(); this._openCfg(); },80);
-        }
-      });
-      sr.addEventListener('input',e=>{
-        const b=e.target.closest('[data-a="upct"]'); if(!b) return;
-        const sc2=window.frarikSosCfg?.()||{contacts:[],persons:[]};
-        if(sc2.contacts[parseInt(b.dataset.i)]) sc2.contacts[parseInt(b.dataset.i)][b.dataset.f]=e.target.value;
-        document.dispatchEvent(new CustomEvent('frarik-sos-cfg-update',{detail:sc2}));
-      });
-    }
-    _destroyCfg(){ if(this._sh){try{document.body.removeChild(this._sh);}catch(_){} this._sh=null;} }
   }
 
   customElements.define('sos-card',SosCard);
-  _registerLovelaceCard('sos-card',{name:'SOS Emergenza',icon:'🆘',description:'Card emergenza guidata: seleziona chi chiede aiuto, il tipo di emergenza e i contatti da avvisare. Protetta da licenza di sistema.',version:'1.1'});
+  _registerLovelaceCard('sos-card',{name:'SOS Emergenza',icon:'🆘',description:'Card emergenza con griglia persone del nucleo familiare: tocca il tuo nome, scegli i contatti e il tipo di emergenza — notifica GPS inviata in pochi secondi. Configurazione solo da Impostazioni → SOS.',version:'1.2'});
   const _sr=window.FratechCardRegistry['sos-card'];
   if(_sr) _sr.mount=function(card,_h,el){
     const host=el.querySelector('.lovel-wrap')||el; host.innerHTML='';

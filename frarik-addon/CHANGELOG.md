@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.4.95 — 2026-06-16
+
+### feat: SOS card — griglia persone come stato idle, rimozione configurazione in-card
+
+- **sos-card v1.2**: stato idle completamente ridisegnato — mostra direttamente la griglia del nucleo familiare con avatar circolari (foto da HA o iniziali), nome e stato presenza (In casa/Fuori casa) con colori verde/rosso
+- **Flusso wizard**: idle (seleziona chi chiede aiuto) → step2 (scegli i contatti da avvisare, le altre persone del nucleo) → step3 (tipo emergenza) → confirm → hold → countdown → active
+- **Nessuna configurazione in-card**: rimosso il pulsante ⚙️ e i metodi `_openCfg`, `_renderCfgInto`, `_destroyCfg`; il metodo `configure()` ora reindirizza a Impostazioni → SOS
+- Card disponibile nel tab "Predefinite" dello store con possibilità di aggiunta in dashboard; nel pannello SOS è fissa (non modificabile dall'interno)
+
 ## 1.4.94 — 2026-06-16
 
 ### feat: SOS — tab Predefinite, ridisegno pannello impostazioni, GPS migliorato
