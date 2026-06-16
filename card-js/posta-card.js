@@ -1072,6 +1072,7 @@ automation:
   customElements.define('posta-card', PostaCard);
   window.FratechCardRegistry=window.FratechCardRegistry||{};
   window.FratechCardRegistry['posta-card']={
+    id:'posta-card',
     name:'Centro Controllo Posta',
     icon:'📬',
     desc:'Monitora la cassetta postale: contatori, storico, notifiche push/Google/Alexa. Installa il package con wizard guidato e autocomplete entità.'

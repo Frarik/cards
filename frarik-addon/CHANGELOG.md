@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.20 — 2026-06-17
+
+### fix(posta-card): card non si installava dallo Store — mancava id in FratechCardRegistry
+
+- `_ghInstallFile` controlla `card.id` prima di salvare in localStorage; senza il campo `id` il salvataggio veniva saltato e la card restava in stato "Installa"
+- Aggiunto `id: 'posta-card'` nell'oggetto `window.FratechCardRegistry`
+
 ## 1.5.19 — 2026-06-17
 
 ### fix(posta-card): versione mostrata come 1.0 nello Store invece di 1.6
