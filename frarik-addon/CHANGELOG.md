@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.4.96 — 2026-06-16
+
+### fix: SOS card v1.3 — flusso 4 step, testo bianco 100%, angoli card, store Predefinite
+
+- **sos-card v1.3**: flusso completamente ridisegnato in 4 step chiari: (1) griglia "CHI CHIEDE AIUTO?" → (2) griglia identica "CHI VUOI AVVISARE?" con le altre persone → (3) tipo emergenza (6 tipi: SOS, medica, incendio, allagamento, gas, intrusione) → (4) tasto "CHIEDI AIUTO" grande da tenere premuto 3s
+- **Testo bianco 100%**: tutti i testi nella card e nel pannello SOS sono `#fff` puro, rimossi tutti i `rgba(255,255,255,0.X)` per testi principali
+- **Angoli card**: fix `border-radius:16px` su `:host` e `.wrap` — niente più angoli tagliati nel pannello SOS
+- **Store → Predefinite**: fix `_jsStoreList()` — la card SOS ora appare sempre nel tab Predefinite senza dipendere dal timing del registry
+- **Pannello SOS**: riquadro guida grande con font 14-20px tutto bianco, card sotto, menù a tendina accordion (persone + contatti) sotto la card
+- **Nuovi tipi emergenza**: aggiunto Allagamento 🌊 e Perdita Gas 💨 alla lista
+
 ## 1.4.95 — 2026-06-16
 
 ### feat: SOS card — griglia persone come stato idle, rimozione configurazione in-card

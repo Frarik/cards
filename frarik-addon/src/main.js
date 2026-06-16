@@ -8945,14 +8945,16 @@ async function _sosRequireLicense(onSuccess){
   if(customElements.get('sos-card')) return;
   const _HMS=3000, _CS=5;
   const _M=[
-    {id:'generic', icon:'🆘', label:'SOS Generico',    color:'#ef4444', desc:'Qualsiasi tipo di emergenza'},
+    {id:'generic', icon:'🆘', label:'SOS Generico',    color:'#ef4444', desc:'Qualsiasi emergenza'},
     {id:'medical', icon:'🏥', label:'Emergenza Medica', color:'#f97316', desc:'Malore, infortunio, urgenza sanitaria'},
-    {id:'fire',    icon:'🔥', label:'Incendio',         color:'#f59e0b', desc:'Incendio o pericolo di esplosione'},
+    {id:'fire',    icon:'🔥', label:'Incendio',         color:'#f59e0b', desc:'Incendio o rischio esplosione'},
+    {id:'flood',   icon:'🌊', label:'Allagamento',      color:'#3b82f6', desc:'Allagamento o perdita d\'acqua grave'},
+    {id:'gas',     icon:'💨', label:'Perdita Gas',      color:'#10b981', desc:'Odore di gas o perdita rilevata'},
     {id:'lock',    icon:'🔒', label:'Intrusione',       color:'#8b5cf6', desc:'Intruso in casa o furto in corso'},
   ];
   function _hexRgb(h){ return [1,3,5].map(i=>parseInt(h.slice(i,i+2),16)||0).join(','); }
-  function _stLbl(s){ return{home:'In casa',not_home:'Fuori casa',unavailable:'N/D',unknown:'N/D'}[s]||s||''; }
-  function _stCol(s){ return s==='home'?'#4ade80':s==='not_home'?'#f87171':'#6b7280'; }
+  function _stLbl(s){ return{home:'In casa',not_home:'Fuori',unavailable:'N/D',unknown:'N/D'}[s]||''; }
+  function _stCol(s){ return s==='home'?'#4ade80':s==='not_home'?'#f87171':'#9ca3af'; }
   function _sk(k){ return 'soscard:'+(k||'default'); }
   function _ld(k){ try{return JSON.parse(localStorage.getItem(_sk(k))||'{}')||{};}catch(_){return{};} }
   function _sv(k,o){ try{localStorage.setItem(_sk(k),JSON.stringify(o));}catch(_){} }
@@ -8964,7 +8966,7 @@ async function _sosRequireLicense(onSuccess){
       this._c={triggerEntity:'',cardScale:100,cardW:100};
       this._frarikCard=null;
       this._state='idle'; // idle|step2|step3|confirm|holding|countdown|active
-      this._wPerson=null; this._wPersonEid=null; this._wMode=0; this._wContacts=new Set();
+      this._wPerson=null; this._wPersonEid=null; this._wMode=0; this._wContacts=new Set(); // Set of indexes into otherPersons array
       this._hs=0; this._hraf=null; this._cdi=null; this._csec=0; this._am=null;
       this._cl=this._onClick.bind(this);
       this._pd=this._onPD.bind(this); this._pu=this._onPU.bind(this);
@@ -9004,73 +9006,76 @@ async function _sosRequireLicense(onSuccess){
       }catch(_){ return []; }
     }
     _clrT(){ if(this._hraf){cancelAnimationFrame(this._hraf);this._hraf=null;} if(this._cdi){clearInterval(this._cdi);this._cdi=null;} }
+    _otherPersons(){ return this._persons().filter(p=>p.eid!==this._wPersonEid); }
 
     _build(){
-      const body={'idle':()=>this._bIdle(),'step2':()=>this._bStep2(),'step3':()=>this._bStep3(),'confirm':()=>this._bConfirm(),'holding':()=>this._bHolding(),'countdown':()=>this._bCountdown(),'active':()=>this._bActive()}[this._state]||(() =>'');
+      const body={'idle':()=>this._bIdle(),'step2':()=>this._bStep2(),'step3':()=>this._bStep3(),'confirm':()=>this._bConfirm(),'holding':()=>this._bHolding(),'countdown':()=>this._bCountdown(),'active':()=>this._bActive()}[this._state]||(()=>'');
       this.shadowRoot.innerHTML=`<style>${this._css()}</style><div class="wrap">${body()}</div>`;
     }
 
-    /* ── IDLE: griglia persone (come Image#1) ── */
-    _bIdle(){
-      const ps=this._persons(), ct=this._contacts();
-      const badge=ct.length?`<span class="badge ok">✓ ${ct.length} contatt${ct.length===1?'o':'i'}</span>`:`<span class="badge warn">⚠ Nessun contatto</span>`;
-      const logs=(_ld(this._sk).logs||[]).slice(0,2);
+    _pgrid(persons, selSet, action){
       const BASE=window.location.origin;
-      const cards=ps.length?ps.map(p=>{
-        const av=p.picture?`<img src="${BASE}${p.picture}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="av-ini" style="display:none">${(p.name||'?').charAt(0).toUpperCase()}</span>`:`<span class="av-ini">${(p.name||'?').charAt(0).toUpperCase()}</span>`;
-        return `<div class="pcrd" data-a="person" data-val="${encodeURIComponent(p.name||'')}" data-eid="${p.eid}">
+      if(!persons.length) return `<div class="no-data">Nessuna persona configurata.<br>Aggiungile in Impostazioni → SOS.</div>`;
+      return `<div class="pgrid">${persons.map((p,i)=>{
+        const sel=selSet&&selSet.has(i);
+        const av=p.picture
+          ?`<img src="${BASE}${p.picture}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="av-ini" style="display:none">${(p.name||'?')[0].toUpperCase()}</span>`
+          :`<span class="av-ini">${(p.name||'?')[0].toUpperCase()}</span>`;
+        return `<div class="pcrd${sel?' sel':''}" data-a="${action}" data-i="${i}" data-val="${encodeURIComponent(p.name||'')}" data-eid="${p.eid}">
+          ${sel?'<div class="p-chk">✓</div>':''}
           <div class="p-av">${av}</div>
           <div class="p-nm">${p.name}</div>
           <div class="p-st" style="color:${_stCol(p.state)}">${_stLbl(p.state)}</div>
         </div>`;
-      }).join(''):`<div class="no-data" style="grid-column:1/-1">Nessuna persona configurata.<br>Aggiungile in Impostazioni → SOS.</div>`;
-      const logsH=logs.length?`<div class="log-sec"><div class="log-t">📋 Ultimi allarmi</div>${logs.map(l=>{const lm=_M.find(x=>x.id===l.mode)||_M[0];const d=new Date(l.t);return`<div class="log-r"><span>${lm.icon}</span><div class="log-info"><b>${lm.label}</b>${l.who?` · 👤 ${l.who}`:''}</div><span class="log-dt">${d.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'})} ${d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}</span></div>`;}).join('')}</div>`:'';
-      return `<div class="hdr"><div class="hico">🆘</div><div class="htxt"><div class="htit">EMERGENZA SOS</div><div class="hsub">Seleziona la tua identità per continuare</div></div>${badge}</div>
-        <div class="body"><div class="pgrid">${cards}</div>${logsH}</div>`;
+      }).join('')}</div>`;
     }
-    /* ── STEP 2: selezione contatti ── */
+
+    /* ── STEP 1: chi chiede aiuto ── */
+    _bIdle(){
+      return `<div class="step-title">CHI CHIEDE AIUTO?</div>
+        <div class="body">${this._pgrid(this._persons(), null, 'person')}</div>`;
+    }
+
+    /* ── STEP 2: chi vuoi avvisare (stesse card, altre persone) ── */
     _bStep2(){
-      const ct=this._contacts();
-      const ok=this._wContacts.size>0||!ct.length;
-      const BASE=window.location.origin;
-      const ps=this._persons();
-      const rows=ct.length?ct.map((c,i)=>{
-        const sel=this._wContacts.has(i);
-        const pMatch=ps.find(p=>p.name&&c.name&&p.name.toLowerCase().startsWith(c.name.toLowerCase().split(' ')[0].toLowerCase()));
-        const avHtml=pMatch?.picture?`<img src="${BASE}${pMatch.picture}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span style="display:none">${(c.name||'?').charAt(0).toUpperCase()}</span>`:(c.icon||'👤');
-        return `<div class="ct-row${sel?' sel':''}" data-a="ct" data-i="${i}">
-          <div class="ct-av">${avHtml}</div>
-          <div class="ct-info"><div class="ct-nm">${c.name||c.notifyService||'Contatto '+(i+1)}</div>${c.notifyService?`<div class="ct-svc">${c.notifyService}</div>`:''}</div>
-          <div class="ct-chk">${sel?'✓':''}</div>
+      const ops=this._otherPersons();
+      const ok=this._wContacts.size>0||!ops.length;
+      return `<div class="stp-hdr"><button class="back-btn" data-a="cancel">✕</button><div class="stp-lbl">CHI VUOI AVVISARE?</div></div>
+        <div class="body">${this._pgrid(ops, this._wContacts, 'ct')}</div>
+        <div class="bot">
+          ${ops.length?`<button class="act-btn btn-sec" data-a="selall">Seleziona tutti</button>`:''}
+          <button class="act-btn btn-main${ok?'':' dis'}" data-a="step3"${ok?'':' disabled'}>Continua →</button>
         </div>`;
-      }).join(''):`<div class="no-data">Nessun contatto configurato.<br>Aggiungili in Impostazioni → SOS.</div>`;
-      return `<div class="stp-hdr"><button class="back-btn" data-a="cancel">✕</button><div class="stp-lbl">Passo 1 / 3 — A chi chiedi aiuto?</div></div>
-        <div class="who-badge">SOS inviato come: <b>${this._wPerson||'Anonimo'}</b></div>
-        <div class="ct-list">${rows}</div>
-        <div class="bot">${ct.length?`<button class="act-btn btn-sec" data-a="selall">Seleziona tutti</button>`:''}
-        <button class="act-btn btn-main${ok?'':' dis'}" data-a="step3"${ok?'':' disabled'}>Continua →</button></div>`;
     }
 
     /* ── STEP 3: tipo emergenza ── */
     _bStep3(){
-      return `<div class="stp-hdr"><button class="back-btn" data-a="step2">←</button><div class="stp-lbl">Passo 2 / 3 — Tipo di emergenza</div></div>
+      return `<div class="stp-hdr"><button class="back-btn" data-a="step2">←</button><div class="stp-lbl">TIPO DI EMERGENZA</div></div>
         <div class="type-list">${_M.map((m,i)=>`<button class="type-btn" data-a="mode" data-i="${i}" style="--mc:${m.color};--mc-rgb:${_hexRgb(m.color)}">
-          <span class="t-ico">${m.icon}</span><div class="t-tx"><span class="t-lbl" style="color:${m.color}">${m.label}</span><span class="t-desc">${m.desc}</span></div><span class="t-arr">→</span>
+          <span class="t-ico">${m.icon}</span>
+          <div class="t-tx"><span class="t-lbl" style="color:${m.color}">${m.label}</span><span class="t-desc">${m.desc}</span></div>
+          <span class="t-arr">→</span>
         </button>`).join('')}</div>`;
     }
 
-    /* ── CONFIRM ── */
+    /* ── STEP 4: conferma + tasto hold ── */
     _bConfirm(){
-      const m=_M[this._wMode]||_M[0]; const ct=this._contacts();
-      const selCt=ct.length?[...this._wContacts].map(i=>ct[i]).filter(Boolean):ct;
-      return `<div class="stp-hdr"><button class="back-btn" data-a="step3">←</button><div class="stp-lbl">Passo 3 / 3 — Conferma</div></div>
-        <div class="sum-box">
-          <div class="sum-r"><div class="sum-lbl">👤 Chi chiede</div><div class="sum-val">${this._wPerson||'Non specificato'}</div></div>
-          <div class="sum-r"><div class="sum-lbl">🚨 Emergenza</div><div class="sum-val" style="color:${m.color}">${m.icon} ${m.label}</div></div>
-          <div class="sum-r"><div class="sum-lbl">📱 Avvisa</div><div class="sum-val">${selCt.length?selCt.map(c=>c.name||'?').join(', '):'Tutti i contatti'}</div></div>
+      const m=_M[this._wMode]||_M[0];
+      const ops=this._otherPersons();
+      const selNm=this._wContacts.size?[...this._wContacts].map(i=>ops[i]?.name).filter(Boolean):[...ops.map(p=>p.name)];
+      const whoStr=selNm.length?selNm.join(', '):'Tutti';
+      return `<div class="stp-hdr"><button class="back-btn" data-a="step3">←</button><div class="stp-lbl">PRONTO A INVIARE</div></div>
+        <div class="confirm-info">
+          <div class="ci-row"><span class="ci-ico">👤</span><div><div class="ci-lbl">Chi chiede</div><div class="ci-val">${this._wPerson||'Anonimo'}</div></div></div>
+          <div class="ci-row"><span class="ci-ico">${m.icon}</span><div><div class="ci-lbl">Emergenza</div><div class="ci-val" style="color:${m.color}">${m.label}</div></div></div>
+          <div class="ci-row"><span class="ci-ico">📱</span><div><div class="ci-lbl">Avvisa</div><div class="ci-val">${whoStr}</div></div></div>
         </div>
-        <div class="bot" style="margin-top:auto">
-          <div class="hold-wrap"><button class="hold-btn" data-a="hold" style="--mc:${m.color}">🆘 Tieni premuto per inviare</button><div class="hold-bar" id="shf"></div></div>
+        <div class="bot">
+          <div class="hold-wrap">
+            <button class="hold-btn" data-a="hold" style="--mc:${m.color};--mc-rgb:${_hexRgb(m.color)}">CHIEDI AIUTO</button>
+            <div class="hold-bar" id="shf"></div>
+          </div>
+          <div class="hold-hint">Tieni premuto 3 secondi per inviare l'allarme</div>
           <button class="act-btn btn-cancel" data-a="cancel">Annulla</button>
         </div>`;
     }
@@ -9079,127 +9084,124 @@ async function _sosRequireLicense(onSuccess){
     _bHolding(){
       const m=_M[this._wMode]||_M[0];
       return `<div class="cd-center">
-          <div style="font-size:48px;animation:pulse 1s ease-in-out infinite">${m.icon}</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.5);text-align:center">Tieni premuto per 3 secondi…</div>
+          <div style="font-size:60px;animation:pulse .6s ease-in-out infinite">${m.icon}</div>
         </div>
-        <div class="bot"><div class="hold-wrap"><button class="hold-btn act" data-a="hold" style="--mc:${m.color}">🆘 Rilascia per annullare</button><div class="hold-bar" id="shf"></div></div></div>`;
+        <div class="bot">
+          <div class="hold-wrap">
+            <button class="hold-btn act" data-a="hold" style="--mc:${m.color};--mc-rgb:${_hexRgb(m.color)}">TIENI PREMUTO…</button>
+            <div class="hold-bar" id="shf"></div>
+          </div>
+          <button class="act-btn btn-cancel" data-a="cancel">Rilascia per annullare</button>
+        </div>`;
     }
 
     /* ── COUNTDOWN ── */
     _bCountdown(){
       const m=this._am||_M[0];
       return `<div class="cd-center">
-          <div style="font-size:36px;animation:pulse 1s ease-in-out infinite">${m.icon}</div>
+          <div style="font-size:48px;animation:pulse 1s ease-in-out infinite">${m.icon}</div>
           <div class="cd-num" id="scdn">${this._csec}</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.45);text-align:center">Allarme in invio…</div>
+          <div class="cd-hint">Allarme in invio — puoi ancora annullare</div>
           <div class="cd-bar-wrap"><div class="cd-bar" id="scdf" style="background:${m.color}"></div></div>
         </div>
-        <div class="bot"><button class="act-btn btn-cancel" data-a="cancel">✕ Annulla subito</button></div>`;
+        <div class="bot"><button class="act-btn btn-cancel-big" data-a="cancel">✕ ANNULLA</button></div>`;
     }
 
     /* ── ACTIVE ── */
     _bActive(){
       const m=this._am||_M[0];
-      return `<div class="hdr"><div class="hico" style="background:rgba(74,222,128,.15);border-color:rgba(74,222,128,.4);font-size:18px">✅</div>
-          <div class="htxt"><div class="htit" style="color:#4ade80">Allarme inviato!</div><div class="hsub">${m.label}${this._wPerson?` · 👤 ${this._wPerson}`:''}</div></div></div>
-        <div class="body"><div id="ssl"></div></div>
+      return `<div class="cd-center">
+          <div style="font-size:52px">✅</div>
+          <div style="font-size:17px;font-weight:900;color:#4ade80;margin-top:6px">Allarme inviato!</div>
+          <div style="font-size:12px;color:#fff;margin-top:4px">${m.label}${this._wPerson?` · 👤 ${this._wPerson}`:''}</div>
+          <div id="ssl" style="margin-top:14px;width:100%;display:flex;flex-direction:column;gap:6px"></div>
+        </div>
         <div class="bot"><button class="act-btn btn-cancel" data-a="reset">← Torna alla home</button></div>`;
     }
 
     _css(){ return `
-:host{display:block;height:100%;font-family:var(--primary-font-family,'Inter',system-ui,sans-serif)}
+:host{display:block;height:100%;border-radius:16px;overflow:hidden;font-family:var(--primary-font-family,'Inter',system-ui,sans-serif)}
 *{box-sizing:border-box;margin:0;padding:0}
-.wrap{height:100%;display:flex;flex-direction:column;background:linear-gradient(160deg,#0d0b1e 0%,#1a0814 60%,#0a0816 100%);border-radius:inherit;overflow:hidden;position:relative}
-/* HEADER */
-.hdr{padding:16px 16px 12px;display:flex;align-items:center;gap:11px;border-bottom:1px solid rgba(239,68,68,.18);flex-shrink:0}
-.hico{width:40px;height:40px;border-radius:11px;background:rgba(239,68,68,.18);border:1px solid rgba(239,68,68,.45);display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0;box-shadow:0 0 18px rgba(239,68,68,.3)}
-.htxt{flex:1}.htit{font-size:13px;font-weight:900;color:#fff;letter-spacing:.6px;text-transform:uppercase}.hsub{font-size:10px;color:rgba(255,255,255,.4);margin-top:2px}
-.badge{font-size:9px;font-weight:700;border-radius:6px;padding:3px 8px;border:1px solid}
-.ok{background:rgba(74,222,128,.1);color:#4ade80;border-color:rgba(74,222,128,.3)}
-.warn{background:rgba(251,191,36,.1);color:#fbbf24;border-color:rgba(251,191,36,.3)}
-/* PERSON GRID */
-.body{flex:1;overflow-y:auto;padding:14px 13px 10px;scrollbar-width:none;display:flex;flex-direction:column;gap:12px}
-.body::-webkit-scrollbar{display:none}
-.pgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.pcrd{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:16px 10px 12px;display:flex;flex-direction:column;align-items:center;gap:9px;cursor:pointer;transition:all .15s;touch-action:manipulation}
-.pcrd:hover{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.4);transform:translateY(-2px);box-shadow:0 8px 24px rgba(239,68,68,.18)}
-.pcrd:active{transform:scale(.96);box-shadow:none}
-.p-av{width:58px;height:58px;border-radius:50%;background:rgba(239,68,68,.15);border:2.5px solid rgba(239,68,68,.5);box-shadow:0 0 16px rgba(239,68,68,.32);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
-.p-av img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block}
-.av-ini{font-size:22px;font-weight:900;color:#fca5a5;line-height:1}
-.p-nm{font-size:13px;font-weight:800;color:#fff;text-align:center}
-.p-st{font-size:10px;font-weight:600;text-align:center}
+.wrap{height:100%;display:flex;flex-direction:column;background:linear-gradient(160deg,#0d0b1e 0%,#1a0814 60%,#0a0816 100%);border-radius:16px;overflow:hidden;position:relative}
+/* STEP 1 TITLE */
+.step-title{padding:22px 16px 16px;font-size:17px;font-weight:900;color:#fff;letter-spacing:1.2px;text-align:center;border-bottom:1px solid rgba(239,68,68,.2);flex-shrink:0}
 /* STEP HEADER */
-.stp-hdr{display:flex;align-items:center;gap:10px;padding:13px 14px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
-.back-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:5px 10px;color:#fff;font-size:13px;cursor:pointer;flex-shrink:0}
-.stp-lbl{font-size:11px;font-weight:700;color:rgba(255,255,255,.5);flex:1}
-.who-badge{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:8px 14px;font-size:11px;color:rgba(255,255,255,.65);margin:10px 13px 0;text-align:center;flex-shrink:0}
-.who-badge b{color:#fca5a5}
-/* CONTACT LIST */
-.ct-list{flex:1;overflow-y:auto;padding:8px 13px;display:flex;flex-direction:column;gap:7px;scrollbar-width:none}
-.ct-list::-webkit-scrollbar{display:none}
-.ct-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.08);cursor:pointer;transition:all .12s;background:rgba(255,255,255,.03);touch-action:manipulation}
-.ct-row:hover,.ct-row:active{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3)}
-.ct-row.sel{background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.42);box-shadow:0 0 12px rgba(239,68,68,.12)}
-.ct-av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);overflow:hidden}
-.ct-av img{width:100%;height:100%;object-fit:cover;border-radius:50%}
-.ct-info{flex:1;min-width:0}.ct-nm{font-size:12px;font-weight:700;color:#fff}.ct-svc{font-size:9px;color:rgba(255,255,255,.38);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ct-chk{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;flex-shrink:0;color:#4ade80;transition:all .1s}
-.ct-row.sel .ct-chk{background:#4ade80;border-color:#4ade80;color:#000}
+.stp-hdr{display:flex;align-items:center;gap:10px;padding:14px 14px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0}
+.back-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:6px 12px;color:#fff;font-size:13px;cursor:pointer;flex-shrink:0}
+.stp-lbl{font-size:14px;font-weight:900;color:#fff;flex:1;text-align:center;letter-spacing:.6px}
+/* BODY SCROLL AREA */
+.body{flex:1;overflow-y:auto;padding:16px 14px 10px;scrollbar-width:none;display:flex;flex-direction:column;gap:10px}
+.body::-webkit-scrollbar{display:none}
+/* PERSON GRID (step1 + step2) */
+.pgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;width:100%}
+.pcrd{background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:16px;padding:20px 10px 14px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;transition:all .15s;touch-action:manipulation;position:relative}
+.pcrd:hover{background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.5);transform:translateY(-2px);box-shadow:0 8px 28px rgba(239,68,68,.22)}
+.pcrd:active{transform:scale(.95)}
+.pcrd.sel{background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.65);box-shadow:0 0 22px rgba(239,68,68,.28)}
+.p-chk{position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;background:#ef4444;color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center}
+.p-av{width:70px;height:70px;border-radius:50%;background:rgba(239,68,68,.18);border:2.5px solid rgba(239,68,68,.55);box-shadow:0 0 20px rgba(239,68,68,.3);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+.p-av img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block}
+.av-ini{font-size:26px;font-weight:900;color:#fff;line-height:1}
+.p-nm{font-size:14px;font-weight:800;color:#fff;text-align:center}
+.p-st{font-size:11px;font-weight:600;text-align:center}
+.no-data{text-align:center;padding:30px 16px;color:#fff;opacity:.6;font-size:12px;line-height:1.8;grid-column:1/-1}
 /* TYPE LIST */
-.type-list{flex:1;overflow-y:auto;padding:8px 13px;display:flex;flex-direction:column;gap:8px;scrollbar-width:none}
+.type-list{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:8px;scrollbar-width:none}
 .type-list::-webkit-scrollbar{display:none}
-.type-btn{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:13px;border:1px solid rgba(var(--mc-rgb),.3);background:rgba(var(--mc-rgb),.07);cursor:pointer;color:#fff;touch-action:manipulation;transition:all .12s;width:100%}
-.type-btn:hover,.type-btn:active{background:rgba(var(--mc-rgb),.15);transform:translateX(3px)}
-.t-ico{font-size:22px;width:32px;text-align:center;flex-shrink:0}.t-tx{flex:1;text-align:left}
-.t-lbl{display:block;font-size:12px;font-weight:800}.t-desc{display:block;font-size:10px;color:rgba(255,255,255,.42);margin-top:2px}.t-arr{color:rgba(255,255,255,.28);font-size:14px}
-/* SUMMARY */
-.sum-box{padding:12px 13px;display:flex;flex-direction:column;gap:0;border-bottom:1px solid rgba(255,255,255,.06)}
-.sum-r{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05)}
-.sum-r:last-child{border-bottom:none}
-.sum-lbl{font-size:10px;color:rgba(255,255,255,.4);width:90px;flex-shrink:0}.sum-val{font-size:12px;font-weight:700;color:#fff;flex:1}
-/* HOLD BUTTON */
-.hold-wrap{position:relative;border-radius:13px;overflow:hidden}
-.hold-btn{width:100%;padding:14px;font-size:12px;font-weight:900;color:#fff;border:none;cursor:pointer;background:linear-gradient(135deg,rgba(var(--mc-rgb),.4),rgba(var(--mc-rgb),.2));border:1px solid rgba(var(--mc-rgb),.5);border-radius:13px;letter-spacing:.5px;text-transform:uppercase;user-select:none;-webkit-user-select:none;touch-action:none;display:block;position:relative}
-.hold-btn.act{background:linear-gradient(135deg,rgba(var(--mc-rgb),.6),rgba(var(--mc-rgb),.3))}
-.hold-bar{position:absolute;bottom:0;left:0;height:3px;background:#fbbf24;width:0;transition:width .1s linear}
-/* COUNTDOWN CENTER */
-.cd-center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px}
-.cd-num{font-size:72px;font-weight:900;color:#ef4444;line-height:1;animation:blink 1s ease-in-out infinite}
-.cd-bar-wrap{width:100%;height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden}
-.cd-bar{height:100%;width:0;transition:width 1s linear;border-radius:2px}
+.type-btn{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;border:1.5px solid rgba(var(--mc-rgb),.35);background:rgba(var(--mc-rgb),.08);cursor:pointer;color:#fff;touch-action:manipulation;transition:all .12s;width:100%;text-align:left}
+.type-btn:hover,.type-btn:active{background:rgba(var(--mc-rgb),.18);transform:translateX(4px)}
+.t-ico{font-size:24px;width:34px;text-align:center;flex-shrink:0}
+.t-tx{flex:1}
+.t-lbl{display:block;font-size:13px;font-weight:800}
+.t-desc{display:block;font-size:11px;color:#fff;opacity:.6;margin-top:3px}
+.t-arr{color:#fff;opacity:.4;font-size:16px}
+/* CONFIRM INFO */
+.confirm-info{padding:14px 16px;display:flex;flex-direction:column;gap:12px;border-bottom:1px solid rgba(255,255,255,.07)}
+.ci-row{display:flex;align-items:flex-start;gap:12px}
+.ci-ico{font-size:20px;width:28px;text-align:center;flex-shrink:0;margin-top:2px}
+.ci-lbl{font-size:10px;color:#fff;opacity:.55;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+.ci-val{font-size:14px;font-weight:800;color:#fff}
 /* BOTTOM ACTIONS */
-.bot{padding:10px 13px 14px;display:flex;flex-direction:column;gap:7px;flex-shrink:0}
-.act-btn{width:100%;padding:12px;border-radius:12px;font-size:12px;font-weight:800;cursor:pointer;transition:all .15s;touch-action:manipulation}
-.btn-main{background:linear-gradient(135deg,#ef4444,#dc2626);border:none;color:#fff;box-shadow:0 4px 20px rgba(239,68,68,.4)}
-.btn-main:hover{box-shadow:0 6px 28px rgba(239,68,68,.6)}
+.bot{padding:12px 14px 16px;display:flex;flex-direction:column;gap:8px;flex-shrink:0}
+/* HOLD BUTTON */
+.hold-wrap{position:relative;border-radius:14px;overflow:hidden}
+.hold-btn{width:100%;padding:22px;font-size:17px;font-weight:900;color:#fff;border:2px solid rgba(var(--mc-rgb),.6);cursor:pointer;background:linear-gradient(135deg,rgba(var(--mc-rgb),.45),rgba(var(--mc-rgb),.25));border-radius:14px;letter-spacing:1.5px;user-select:none;-webkit-user-select:none;touch-action:none;display:block;position:relative}
+.hold-btn.act{background:linear-gradient(135deg,rgba(var(--mc-rgb),.7),rgba(var(--mc-rgb),.45))}
+.hold-bar{position:absolute;bottom:0;left:0;height:5px;background:rgba(var(--mc-rgb),1);width:0;transition:width .08s linear}
+.hold-hint{font-size:11px;color:#fff;opacity:.5;text-align:center}
+/* ACTION BUTTONS */
+.act-btn{width:100%;padding:13px;border-radius:13px;font-size:13px;font-weight:800;cursor:pointer;transition:all .15s;touch-action:manipulation;color:#fff;border:none}
+.btn-main{background:linear-gradient(135deg,#ef4444,#dc2626);box-shadow:0 4px 20px rgba(239,68,68,.4)}
 .btn-main.dis{opacity:.3;cursor:default;pointer-events:none}
-.btn-sec{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.7)}
-.btn-cancel{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.45);font-size:11px}
-/* LOGS */
-.log-sec{border-top:1px solid rgba(255,255,255,.06);padding-top:10px}
-.log-t{font-size:9px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px}
-.log-r{display:flex;align-items:center;gap:7px;font-size:10px;color:rgba(255,255,255,.42);margin-bottom:4px}
-.log-info{flex:1}.log-dt{font-size:9px;color:rgba(255,255,255,.25)}
-/* NO DATA */
-.no-data{text-align:center;padding:24px 14px;color:rgba(255,255,255,.32);font-size:11px;line-height:1.7}
-/* SENT LIST */
-#ssl{display:flex;flex-direction:column;gap:6px}
-.s-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:9px;background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.15);font-size:11px;font-weight:700;color:rgba(255,255,255,.8)}
-@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.55}}`; }
+.btn-sec{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2)}
+.btn-cancel{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);font-size:12px;opacity:.8}
+.btn-cancel-big{background:rgba(239,68,68,.15);border:2px solid rgba(239,68,68,.5);font-size:14px;letter-spacing:1px}
+/* COUNTDOWN */
+.cd-center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px 16px}
+.cd-num{font-size:82px;font-weight:900;color:#ef4444;line-height:1;animation:blink 1s ease-in-out infinite}
+.cd-hint{font-size:12px;color:#fff;text-align:center}
+.cd-bar-wrap{width:80%;height:5px;background:rgba(255,255,255,.12);border-radius:3px;overflow:hidden}
+.cd-bar{height:100%;width:0;transition:width 1s linear;border-radius:3px}
+/* SENT */
+.s-row{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:rgba(74,222,128,.09);border:1px solid rgba(74,222,128,.22);font-size:12px;font-weight:700;color:#fff}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.45}}`; }
 
     /* ── EVENTS ── */
     _onClick(e){
       const b=e.target.closest('[data-a]'); if(!b) return; const a=b.dataset.a;
-      if(a==='cancel'){ this._clrT(); this._state='idle'; this._am=null; this._wPerson=null; this._wPersonEid=null; this._build(); }
-      else if(a==='reset'){ this._clrT(); this._state='idle'; this._am=null; this._wPerson=null; this._wPersonEid=null; this._build(); }
+      if(a==='cancel'||a==='reset'){ this._clrT(); this._state='idle'; this._am=null; this._wPerson=null; this._wPersonEid=null; this._wContacts=new Set(); this._build(); }
       else if(a==='step2'){ this._state='step2'; this._build(); }
       else if(a==='step3'){ this._state='step3'; this._build(); }
-      else if(a==='person'){ const nm=decodeURIComponent(b.dataset.val||'')||null; this._wPerson=nm; this._wPersonEid=this._persons().find(p=>p.name===nm)?.eid||null; this._state='step2'; this._build(); }
+      else if(a==='person'){
+        const nm=decodeURIComponent(b.dataset.val||'')||null;
+        this._wPerson=nm; this._wPersonEid=b.dataset.eid||null; this._wContacts=new Set();
+        // skip step2 if no other persons
+        this._state=this._otherPersons().length?'step2':'step3'; this._build();
+      }
       else if(a==='mode'){ this._wMode=parseInt(b.dataset.i)||0; this._state='confirm'; this._build(); }
       else if(a==='ct'){ const i=parseInt(b.dataset.i); this._wContacts.has(i)?this._wContacts.delete(i):this._wContacts.add(i); this._build(); }
-      else if(a==='selall'){ const ct=this._contacts(); ct.forEach((_,i)=>this._wContacts.add(i)); this._build(); }
+      else if(a==='selall'){ const ops=this._otherPersons(); ops.forEach((_,i)=>this._wContacts.add(i)); this._build(); }
       else if(a==='confirm'){ this._state='confirm'; this._build(); }
     }
     _onPD(e){
@@ -9227,9 +9229,18 @@ async function _sosRequireLicense(onSuccess){
       },1000);
     }
     _send(){
-      const m=this._am||_M[0], ct=this._contacts();
-      const selCt=ct.length?[...this._wContacts].map(i=>ct[i]).filter(Boolean):ct;
-      const toNotify=selCt.length?selCt:ct;
+      const m=this._am||_M[0], contacts=this._contacts();
+      const ops=this._otherPersons();
+      let toNotify=[];
+      if(this._wContacts.size>0){
+        const selPersons=[...this._wContacts].map(i=>ops[i]).filter(Boolean);
+        for(const p of selPersons){
+          const fn=(p.name||'').toLowerCase().split(' ')[0];
+          const match=contacts.find(c=>{const cn=(c.name||'').toLowerCase(); return cn===p.name.toLowerCase()||cn.split(' ')[0]===fn;});
+          if(match) toNotify.push(match);
+        }
+        if(!toNotify.length) toNotify=contacts;
+      } else { toNotify=contacts; }
       if(this._c.triggerEntity){
         try{ const d=this._c.triggerEntity.split('.')[0]; window.frarikCallService?.(d,d==='input_button'?'press':(d==='script'?'turn_on':'press'),{},{entity_id:this._c.triggerEntity}); }catch(_){}
       }
@@ -9246,7 +9257,7 @@ async function _sosRequireLicense(onSuccess){
       if(logs.length>10)logs.length=10; _sv(this._sk,{...d,logs});
       this._state='active'; this._build();
       const logEl=this.shadowRoot.getElementById('ssl'); if(!logEl) return;
-      const trRow=this._c.triggerEntity?`<div class="sent-r"><span>✅</span><span>⚡ ${this._c.triggerEntity}</span></div>`:'';
+      const trRow=this._c.triggerEntity?`<div class="s-row"><span>✅</span><span>⚡ ${this._c.triggerEntity}</span></div>`:'';
       logEl.innerHTML=trRow+(sent.length?sent.map(s=>`<div class="s-row"><span>${s.ok?'✅':'⚠️'}</span><span>${s.n}</span></div>`).join(''):'<div class="s-row"><span>⚠️</span><span>Nessun contatto configurato</span></div>');
     }
     _loc(){
@@ -9265,7 +9276,7 @@ async function _sosRequireLicense(onSuccess){
   }
 
   customElements.define('sos-card',SosCard);
-  _registerLovelaceCard('sos-card',{name:'SOS Emergenza',icon:'🆘',description:'Card emergenza con griglia persone del nucleo familiare: tocca il tuo nome, scegli i contatti e il tipo di emergenza — notifica GPS inviata in pochi secondi. Configurazione solo da Impostazioni → SOS.',version:'1.2'});
+  _registerLovelaceCard('sos-card',{name:'SOS Emergenza',icon:'🆘',description:'4 step guidati: chi chiede aiuto → chi avvisare → tipo emergenza → tieni premuto 3s. Notifica GPS inviata in secondi. Configurazione solo da Impostazioni → SOS.',version:'1.3'});
   const _sr=window.FratechCardRegistry['sos-card'];
   if(_sr) _sr.mount=function(card,_h,el){
     const host=el.querySelector('.lovel-wrap')||el; host.innerHTML='';
@@ -9392,8 +9403,8 @@ function _jsStoreList(){
     if(v && v.meta && v.meta.id && v.code) out.push(v);
   }
   // Card di sistema embedded: SOS — sempre presente, non richiede file JS
-  if(window.FratechCardRegistry?.['sos-card'] && !out.find(i=>i.meta?.id==='sos-card')){
-    out.unshift({meta:{id:'sos-card',name:'SOS Emergenza',icon:'🆘',version:'1.0',desc:'Card emergenza protetta da sistema. Seleziona il tipo, tieni premuto 3s per inviare l\'allarme a tutti i contatti HA configurati. Non può essere eliminata senza chiave di licenza.'},code:'/* builtin */',origin:'system',_builtin:true});
+  if(!out.find(i=>i.meta?.id==='sos-card')){
+    out.unshift({meta:{id:'sos-card',name:'SOS Emergenza',icon:'🆘',version:'1.3',desc:'4 step guidati: chi chiede aiuto → chi avvisare → tipo emergenza → tieni premuto 3s. Notifica GPS inviata in secondi. Configurabile solo da Impostazioni → SOS.'},code:'/* builtin */',origin:'system',_builtin:true});
   }
   return out;
 }
@@ -12191,51 +12202,47 @@ function renderSOSCfgList(){
   const contacts=sc.contacts;
   const persons=sc.persons||[];
 
-  // ── Guida principale ──
-  const guideBanner=`<div style="margin-bottom:18px;border-radius:16px;overflow:hidden;border:1px solid rgba(239,68,68,.35);background:linear-gradient(135deg,rgba(239,68,68,.13) 0%,rgba(239,68,68,.04) 100%)">
-    <div style="padding:14px 16px;background:rgba(239,68,68,.18);display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(239,68,68,.18)">
-      <span style="font-size:28px;filter:drop-shadow(0 0 8px rgba(239,68,68,.6))">🆘</span>
-      <div>
-        <div style="font-size:14px;font-weight:900;color:#fff;letter-spacing:.3px">Sistema SOS Emergenza</div>
-        <div style="font-size:10px;color:rgba(255,255,255,.55);margin-top:2px">Procedura guidata per richieste di aiuto rapide e sicure</div>
+  const S='style="';
+  const W=S+'color:#fff;';
+  const sB=S+'display:block;';
+
+  // ── GUIDE BANNER (grande, testo tutto bianco) ──
+  const guideBanner=`<div style="margin-bottom:22px;border-radius:18px;border:1.5px solid rgba(239,68,68,.4);background:linear-gradient(145deg,rgba(239,68,68,.18) 0%,rgba(139,0,0,.12) 100%);overflow:hidden">
+    <div style="padding:20px 22px 18px;border-bottom:1px solid rgba(239,68,68,.2)">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+        <span style="font-size:36px;filter:drop-shadow(0 0 12px rgba(239,68,68,.7))">🆘</span>
+        <div>
+          <div style="font-size:20px;font-weight:900;color:#fff;letter-spacing:.5px;line-height:1.2">SISTEMA SOS EMERGENZA</div>
+          <div style="font-size:13px;color:#fff;margin-top:4px;opacity:.75">Procedura guidata per richiedere aiuto in 4 passi</div>
+        </div>
+        ${_sosOnDash?`<span style="margin-left:auto;font-size:11px;font-weight:800;color:#4ade80;background:rgba(74,222,128,.15);border:1.5px solid rgba(74,222,128,.4);border-radius:10px;padding:5px 12px;white-space:nowrap;flex-shrink:0">✅ Attiva</span>`:''}
       </div>
-      ${_sosOnDash?`<span style="margin-left:auto;font-size:10px;font-weight:700;color:#4ade80;background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);border-radius:8px;padding:4px 10px;white-space:nowrap">✅ Attiva</span>`:''}
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:flex-start;gap:12px"><span style="background:rgba(239,68,68,.3);border:1px solid rgba(239,68,68,.5);border-radius:50%;width:24px;height:24px;min-width:24px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;margin-top:1px">1</span><span style="font-size:14px;color:#fff;font-weight:600;line-height:1.5"><b>CHI CHIEDE AIUTO?</b> — Tocca il tuo nome nella griglia persone</span></div>
+        <div style="display:flex;align-items:flex-start;gap:12px"><span style="background:rgba(239,68,68,.3);border:1px solid rgba(239,68,68,.5);border-radius:50%;width:24px;height:24px;min-width:24px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;margin-top:1px">2</span><span style="font-size:14px;color:#fff;font-weight:600;line-height:1.5"><b>CHI VUOI AVVISARE?</b> — Seleziona le altre persone del nucleo da allertare</span></div>
+        <div style="display:flex;align-items:flex-start;gap:12px"><span style="background:rgba(239,68,68,.3);border:1px solid rgba(239,68,68,.5);border-radius:50%;width:24px;height:24px;min-width:24px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;margin-top:1px">3</span><span style="font-size:14px;color:#fff;font-weight:600;line-height:1.5"><b>TIPO DI EMERGENZA</b> — SOS generico, incendio, allagamento…</span></div>
+        <div style="display:flex;align-items:flex-start;gap:12px"><span style="background:rgba(239,68,68,.3);border:1px solid rgba(239,68,68,.5);border-radius:50%;width:24px;height:24px;min-width:24px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;margin-top:1px">4</span><span style="font-size:14px;color:#fff;font-weight:600;line-height:1.5"><b>CHIEDI AIUTO</b> — Tieni premuto 3 secondi. L'allarme include la tua posizione GPS su Google Maps</span></div>
+      </div>
     </div>
-    <div style="padding:14px 16px">
-      <div style="font-size:11px;color:rgba(255,255,255,.8);line-height:1.75;margin-bottom:12px">
-        <div style="margin-bottom:7px;display:flex;align-items:flex-start;gap:9px"><span style="background:rgba(239,68,68,.22);border:1px solid rgba(239,68,68,.35);border-radius:50%;width:19px;height:19px;min-width:19px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;margin-top:1px">1</span><span>Aggiungi la card alla dashboard — comparirà un pulsante SOS nella pagina che hai scelto</span></div>
-        <div style="margin-bottom:7px;display:flex;align-items:flex-start;gap:9px"><span style="background:rgba(239,68,68,.22);border:1px solid rgba(239,68,68,.35);border-radius:50%;width:19px;height:19px;min-width:19px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;margin-top:1px">2</span><span>Configura le <b>persone</b> qui sotto — corrispondono alle entità <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:4px;font-size:10px">person.*</code> di Home Assistant</span></div>
-        <div style="margin-bottom:7px;display:flex;align-items:flex-start;gap:9px"><span style="background:rgba(239,68,68,.22);border:1px solid rgba(239,68,68,.35);border-radius:50%;width:19px;height:19px;min-width:19px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;margin-top:1px">3</span><span>Aggiungi i <b>contatti di emergenza</b> con il loro servizio notify HA (es. <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:4px;font-size:10px">mobile_app_telefono</code>)</span></div>
-        <div style="display:flex;align-items:flex-start;gap:9px"><span style="background:rgba(239,68,68,.22);border:1px solid rgba(239,68,68,.35);border-radius:50%;width:19px;height:19px;min-width:19px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;margin-top:1px">4</span><span>In emergenza: apri la card, segui la procedura guidata → l'allarme viene inviato con la <b>posizione GPS</b> su Google Maps</span></div>
-      </div>
+    <div style="padding:16px 22px;display:flex;align-items:center;gap:14px">
       ${_sosOnDash
-        ?`<div style="font-size:10px;color:rgba(255,255,255,.45)">🔐 La card SOS è protetta da licenza — non può essere eliminata senza la chiave amministratore</div>`
-        :`<button onclick="window._addSosToDash&&window._addSosToDash()" style="padding:9px 18px;border-radius:11px;background:rgba(239,68,68,.28);border:1px solid rgba(239,68,68,.5);color:#fca5a5;font-size:12px;font-weight:900;cursor:pointer;letter-spacing:.3px">➕ Aggiungi card alla dashboard</button>`
+        ?`<div style="font-size:13px;color:#fff;opacity:.7">🔐 Protetta da licenza — non eliminabile senza chiave admin</div>`
+        :`<button onclick="window._addSosToDash&&window._addSosToDash()" style="padding:11px 22px;border-radius:12px;background:rgba(239,68,68,.35);border:1.5px solid rgba(239,68,68,.6);color:#fff;font-size:14px;font-weight:900;cursor:pointer;letter-spacing:.5px">➕ Aggiungi alla dashboard</button>`
       }
     </div>
   </div>`;
 
-  // ── Anteprima card live ──
-  const cardPreview=`<div id="sos-settings-card-wrap" style="height:240px;margin:0 0 20px;border-radius:14px;overflow:hidden;border:1px solid rgba(239,68,68,.2);background:#0a0816"></div>`;
+  // ── CARD PREVIEW ──
+  const cardPreview=`<div id="sos-settings-card-wrap" style="height:280px;margin:0 0 22px;border-radius:18px;overflow:hidden;border:1.5px solid rgba(239,68,68,.25);background:#0a0816;box-shadow:0 8px 40px rgba(0,0,0,.5)"></div>`;
 
-  // ── Sezione PERSONE ──
+  // ── ACCORDION CONFIG ──
   const allPeople=Object.keys(ha).filter(eid=>eid.startsWith('person.')).map(eid=>({eid,name:ha[eid]?.friendly_name||eid.split('.')[1].replace(/_/g,' ')}));
   const availOpts=allPeople.filter(p=>!persons.includes(p.eid)).map(p=>`<option value="${eh(p.eid)}">${eh(p.name)}</option>`).join('');
   const personRows=persons.map((eid,i)=>{
     const inf=allPeople.find(p=>p.eid===eid);
-    return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span style="font-size:11px;flex:1;color:var(--fg)">👤 ${eh(inf?inf.name:eid)}</span><button class="sos-cfg-del" data-action="sosRemovePerson" data-action-args='[${i}]'>✕</button></div>`;
+    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)"><span style="font-size:13px;flex:1;color:#fff;font-weight:600">👤 ${eh(inf?inf.name:eid)}</span><button class="sos-cfg-del" data-action="sosRemovePerson" data-action-args='[${i}]'>✕</button></div>`;
   }).join('');
 
-  const personSec=`<div style="margin-bottom:18px">
-    <div style="font-size:12px;font-weight:800;color:#fff;margin-bottom:4px">👥 Persone che possono inviare SOS</div>
-    <div style="font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.5">Seleziona le persone autorizzate. Lascia vuoto per mostrare tutti gli utenti di Home Assistant.</div>
-    ${personRows||'<div style="font-size:10px;color:var(--dim);padding:4px 0 8px">Nessuna selezionata — verranno mostrate tutte quelle di HA</div>'}
-    ${availOpts?`<div style="display:flex;gap:6px;margin-top:6px;align-items:center"><select id="sos-person-sel" class="sos-cfg-inp" style="flex:1"><option value="">— Seleziona persona HA —</option>${availOpts}</select><button class="sos-cfg-add" style="padding:4px 10px;margin:0" data-action="sosAddPerson">➕</button></div>`:'<div style="font-size:10px;color:var(--dim);margin-top:4px">Tutte le persone HA sono già incluse</div>'}
-    <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);cursor:pointer;margin-top:10px"><input type="checkbox" ${sc.quickMode?'checked':''} data-input="_sosSetQuick"> ⚡ SOS rapido (salta la selezione "chi chiede aiuto")</label>
-    <div style="height:1px;background:rgba(255,255,255,.06);margin:14px 0"></div>
-  </div>`;
-
-  // ── Sezione CONTATTI ──
   const contactRows=contacts.length
     ? contacts.map((c,i)=>`
       <div class="sos-cfg-contact">
@@ -12248,33 +12255,53 @@ function renderSOSCfgList(){
           <button class="ntf-pick-btn" style="width:26px;height:26px;border-radius:6px;font-size:12px" data-action="_sosPickIcon" data-action-args='[${i}]' data-action-el="true">🎨</button>
         </div>
         <div class="sos-cfg-fields">
-          <input class="sos-cfg-inp" type="text" value="${eh(c.name||'')}" placeholder="Nome del contatto (es. Mario Rossi)" data-input="sosUpdateContact" data-input-args='[${i},"name"]'>
+          <input class="sos-cfg-inp" type="text" value="${eh(c.name||'')}" placeholder="Nome (es. Mario Rossi)" data-input="sosUpdateContact" data-input-args='[${i},"name"]'>
           <div style="display:flex;gap:5px;align-items:center">
-            <input id="sos-svc-inp-${i}" class="sos-cfg-inp" type="text" value="${eh(c.notifyService||'')}" placeholder="Servizio HA notify — es. mobile_app_pixel_7" data-input="sosUpdateContact" data-input-args='[${i},"notifyService"]' style="flex:1">
+            <input id="sos-svc-inp-${i}" class="sos-cfg-inp" type="text" value="${eh(c.notifyService||'')}" placeholder="Servizio notify HA — es. mobile_app_pixel_7" data-input="sosUpdateContact" data-input-args='[${i},"notifyService"]' style="flex:1">
             <button class="ntf-pick-btn" style="width:28px;height:28px;border-radius:7px;font-size:13px" data-action="_sosPickService" data-action-args='[${i}]'>🔍</button>
           </div>
-          <input class="sos-cfg-inp" type="tel" value="${eh(c.phone||'')}" placeholder="📞 Numero di telefono (opzionale)" data-input="sosUpdateContact" data-input-args='[${i},"phone"]'>
-          <input class="sos-cfg-inp" type="text" value="${eh(c.message||'')}" placeholder="💬 Messaggio personalizzato (opzionale — verrà aggiunta la posizione GPS automaticamente)" data-input="sosUpdateContact" data-input-args='[${i},"message"]'>
+          <input class="sos-cfg-inp" type="tel" value="${eh(c.phone||'')}" placeholder="📞 Telefono (opzionale)" data-input="sosUpdateContact" data-input-args='[${i},"phone"]'>
+          <input class="sos-cfg-inp" type="text" value="${eh(c.message||'')}" placeholder="💬 Messaggio personalizzato (opzionale)" data-input="sosUpdateContact" data-input-args='[${i},"message"]'>
         </div>
         <button class="sos-cfg-del" data-action="sosDeleteContact" data-action-args='[${i}]'>🗑</button>
       </div>`).join('')
-    : '<div style="font-size:10px;color:var(--dim);text-align:center;padding:10px 0;margin-bottom:8px">Nessun contatto configurato.<br><span style="opacity:.65">Aggiungi almeno un contatto per ricevere le notifiche SOS.</span></div>';
+    : `<div style="font-size:12px;color:#fff;opacity:.5;text-align:center;padding:12px 0">Nessun contatto. Aggiungine uno.</div>`;
 
-  const contactSec=`<div>
-    <div style="font-size:12px;font-weight:800;color:#fff;margin-bottom:4px">📞 Contatti di emergenza</div>
-    <div style="font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.5">Per ogni contatto inserisci il <b>servizio notify</b> dell'app HA sul loro telefono. Trovalo in HA → Strumenti Sviluppatore → Servizi → cerca "notify". La notifica includerà automaticamente la posizione GPS.</div>
-    ${contactRows}
-    <button class="sos-cfg-add" data-action="sosAddContact" style="margin-top:8px">➕ Aggiungi contatto SOS</button>
+  const accordion=`<div style="display:flex;flex-direction:column;gap:10px">
+    <details style="border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);overflow:hidden">
+      <summary style="padding:14px 16px;font-size:14px;font-weight:800;color:#fff;cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;user-select:none">
+        <span style="font-size:18px">👥</span> Persone del nucleo familiare
+        <span style="margin-left:auto;font-size:11px;color:#fff;opacity:.5">${persons.length?persons.length+' configurate':'Tutte HA'}</span>
+        <span style="font-size:12px;color:#fff;opacity:.4">▾</span>
+      </summary>
+      <div style="padding:12px 16px 16px;border-top:1px solid rgba(255,255,255,.07)">
+        <div style="font-size:12px;color:#fff;opacity:.7;margin-bottom:12px;line-height:1.6">Seleziona le persone del nucleo. Lascia vuoto per usare tutte le entità <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:4px">person.*</code> di Home Assistant.</div>
+        ${personRows||`<div style="font-size:12px;color:#fff;opacity:.45;padding:4px 0 10px">Tutte le persone HA verranno mostrate</div>`}
+        ${availOpts?`<div style="display:flex;gap:8px;margin-top:8px;align-items:center"><select id="sos-person-sel" class="sos-cfg-inp" style="flex:1"><option value="">— Seleziona persona —</option>${availOpts}</select><button class="sos-cfg-add" style="padding:5px 12px;margin:0" data-action="sosAddPerson">➕</button></div>`:'<div style="font-size:12px;color:#fff;opacity:.4;margin-top:6px">Tutte già incluse</div>'}
+      </div>
+    </details>
+    <details style="border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);overflow:hidden">
+      <summary style="padding:14px 16px;font-size:14px;font-weight:800;color:#fff;cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;user-select:none">
+        <span style="font-size:18px">📱</span> Contatti di emergenza
+        <span style="margin-left:auto;font-size:11px;color:#fff;opacity:.5">${contacts.length} contatt${contacts.length===1?'o':'i'}</span>
+        <span style="font-size:12px;color:#fff;opacity:.4">▾</span>
+      </summary>
+      <div style="padding:12px 16px 16px;border-top:1px solid rgba(255,255,255,.07)">
+        <div style="font-size:12px;color:#fff;opacity:.7;margin-bottom:12px;line-height:1.6">Per ogni membro inserisci il <b style="color:#fff">nome</b> (deve corrispondere alla persona configurata sopra) e il <b style="color:#fff">servizio notify</b> della sua app HA sul telefono.</div>
+        ${contactRows}
+        <button class="sos-cfg-add" data-action="sosAddContact" style="margin-top:10px;width:100%">➕ Aggiungi contatto</button>
+      </div>
+    </details>
   </div>`;
 
-  el.innerHTML=guideBanner+cardPreview+personSec+contactSec;
+  el.innerHTML=guideBanner+cardPreview+accordion;
 
-  // Monta la card SOS live nell'anteprima
+  // Monta la card SOS live
   const wrap=document.getElementById('sos-settings-card-wrap');
   if(wrap&&window.customElements?.get('sos-card')){
     try{
       const sc2=document.createElement('sos-card');
-      sc2.style.cssText='display:block;height:100%;width:100%;--fgear:none';
+      sc2.style.cssText='display:block;height:100%;width:100%';
       wrap.appendChild(sc2);
       sc2.setConfig({type:'custom:sos-card'});
       const hObj=typeof frarikHass==='function'?frarikHass():null;
