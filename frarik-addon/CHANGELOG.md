@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.02 — 2026-06-16
+
+### fix: popup SOS header — dimensioni corrette, centrato, idle forzato
+
+- Popup SOS dall'header ora centrato orizzontalmente con `max-width:420px` — rimane stretto come su mobile anche su schermi desktop, le tile 3×2 non si allargano a dismisura
+- Altezza card fissa a 380px, overflow:hidden, nessun contenuto tagliato
+- Card forzata a stato `idle` ad ogni apertura del popup (indipendente dallo stato della card in dashboard)
+
 ## 1.5.01 — 2026-06-16
 
 ### fix: dashboard delete senza licenza, popup SOS header altezza, colori zona persone

@@ -12135,23 +12135,27 @@ function openSOS(){
   document.getElementById('_sos-hdr-pop')?.remove();
   const pop=document.createElement('div');
   pop.id='_sos-hdr-pop';
-  pop.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;background:rgba(0,0,0,.65);backdrop-filter:blur(6px)';
+  // backdrop centrato orizzontalmente — la card rimane stretta come su mobile
+  pop.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.65);backdrop-filter:blur(6px)';
   pop.innerHTML=`<style>@keyframes _frkSU{from{transform:translateY(100%)}to{transform:translateY(0)}}</style>
-  <div style="width:100%;max-height:90vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(239,68,68,.3);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:_frkSU .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">
+  <div style="width:100%;max-width:420px;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(239,68,68,.3);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:_frkSU .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">
     <div style="display:flex;align-items:center;padding:14px 18px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">
       <div style="width:36px;height:36px;border-radius:10px;background:rgba(239,68,68,.18);border:1.5px solid rgba(239,68,68,.4);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🆘</div>
       <span style="margin-left:12px;font-size:15px;font-weight:900;color:#fff;letter-spacing:.5px">SOS Emergenza</span>
       <button id="_sos-hdr-x" style="margin-left:auto;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;color:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center">✕</button>
     </div>
-    <div style="height:400px;overflow:hidden;position:relative" id="_sos-hdr-wrap"></div>
+    <div id="_sos-hdr-wrap" style="height:380px;overflow:hidden"></div>
   </div>`;
   document.body.appendChild(pop);
   const wrap=document.getElementById('_sos-hdr-wrap');
   if(wrap){
     const card=document.createElement('sos-card');
-    card.style.cssText='display:block;width:100%;height:400px';
+    card.style.cssText='display:block;width:100%;height:380px';
     wrap.appendChild(card);
+    // forza sempre idle al primo render
+    card._state='idle'; card._personsSig='';
     try{ card.setConfig({type:'custom:sos-card',storageKey:'__sos_hdr__'}); }catch(_){}
+    card._state='idle';
     try{ card.hass=_haHassObj(); }catch(_){}
   }
   const close=()=>pop.remove();
