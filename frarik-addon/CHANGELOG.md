@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.99 — 2026-06-16
+
+### fix: SOS card — barra hold, preview impostazioni, picker mobile_app, Store cestino licenziato
+
+- **Barra hold fix**: la barra di avanzamento ora si anima correttamente al press di "CHIEDI AIUTO" — rimosso il `_build()` durante il pointer-down che detachava il DOM e perdeva il pointer-capture; la barra cresce sul DOM esistente via RAF; rilasciando si resetta
+- **CSS variables hold-bar**: `--mc-rgb` spostato su `.hold-wrap` invece del solo bottone, così la `hold-bar` (elemento fratello) eredita correttamente il colore
+- **Preview card impostazioni**: la card SOS nella sezione Impostazioni → SOS è ora centrata in un riquadro 320×260px fisso — non più a larghezza piena del pannello
+- **Picker mobile_app**: il bottone 🔍 nella configurazione "Nucleo familiare" ora apre il picker filtrato per `mobile_app_*` (non per tutti i servizi notify); il badge del picker mostra `mobile_app_*`
+- **Store Predefinite — cestino con licenza**: il 🗑 sulla card SOS è ora cliccabile; chiede la chiave amministratore (SHA-256); se valida rimuove la card dallo Store locale (non da GitHub); sincronizzando il tab Predefinite la card riappare
+
 ## 1.4.98 — 2026-06-16
 
 ### feat: SOS card v1.4 — wizard aggiornato, config famiglia unificata, notifiche interattive, Store fix

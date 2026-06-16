@@ -1588,6 +1588,7 @@ async function _ghListFolder(path){
 }
 function _ghsReloadTab(){
   delete _ghsCache[_ghsTab];
+  if(_ghsTab==='predefinite') localStorage.removeItem('fratech_sos_store_hidden');
   ghStoreTab(_ghsTab);
   showToast('🔄 Sincronizzazione con GitHub…');
 }
@@ -1952,7 +1953,9 @@ function _ghStoreRenderPredefinite(q){
     const act=inPage
       ?`<span class="ghc-indash"><i class="mdi mdi-check-circle-outline"></i> In vista</span>`
       :`<button class="ghc-btn ghc-btn-add" data-action="_jsStoreAddAndRefresh" data-action-args='["${id}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`;
-    const del=`<button class="ghc-btn-del" title="Protetta da licenza" style="opacity:.35;cursor:default"><i class="mdi mdi-lock-outline"></i></button>`;
+    const del=id==='sos-card'
+      ?`<button class="ghc-btn-del" title="Rimuovi dallo Store (richiede chiave admin)" data-action="_sosStoreRemove"><i class="mdi mdi-delete-outline"></i></button>`
+      :`<button class="ghc-btn-del" title="Protetta da licenza" style="opacity:.35;cursor:default"><i class="mdi mdi-lock-outline"></i></button>`;
     return `<div class="ghc-tile st-${st}"><div class="ghc-strip ${st}"></div>
       <div class="ghc-prev">${prevHtml}<div class="ghc-prev-fade"></div>${bdg}</div>
       <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico">${icon}</div><div class="ghc-meta"><div class="ghc-name">${eh(m.name||id||'Card')}</div><div class="ghc-ver">v${eh(m.version||'?')}</div></div></div>
@@ -9083,8 +9086,8 @@ async function _sosRequireLicense(onSuccess){
           <span class="cr-chip">📱 ${whoStr}</span>
         </div>
         <div class="bot">
-          <div class="hold-wrap">
-            <button class="hold-btn" data-a="hold" style="--mc:${m.color};--mc-rgb:${_hexRgb(m.color)}">CHIEDI AIUTO</button>
+          <div class="hold-wrap" style="--mc:${m.color};--mc-rgb:${_hexRgb(m.color)}">
+            <button class="hold-btn" data-a="hold">CHIEDI AIUTO</button>
             <div class="hold-bar" id="shf"></div>
           </div>
           <div class="hold-hint">Tieni premuto 3 secondi per inviare l'allarme</div>
@@ -9099,8 +9102,8 @@ async function _sosRequireLicense(onSuccess){
           <div style="font-size:60px;animation:pulse .6s ease-in-out infinite">${m.icon}</div>
         </div>
         <div class="bot">
-          <div class="hold-wrap">
-            <button class="hold-btn act" data-a="hold" style="--mc:${m.color};--mc-rgb:${_hexRgb(m.color)}">TIENI PREMUTO…</button>
+          <div class="hold-wrap" style="--mc:${m.color};--mc-rgb:${_hexRgb(m.color)}">
+            <button class="hold-btn act" data-a="hold">TIENI PREMUTO…</button>
             <div class="hold-bar" id="shf"></div>
           </div>
           <button class="act-btn btn-cancel" data-a="cancel">Rilascia per annullare</button>
@@ -9220,7 +9223,9 @@ async function _sosRequireLicense(onSuccess){
       const b=e.target.closest('[data-a="hold"]'); if(!b) return;
       if(this._state!=='confirm'&&this._state!=='holding') return;
       e.preventDefault(); try{b.setPointerCapture(e.pointerId);}catch(_){}
-      this._state='holding'; this._hs=Date.now(); this._build();
+      this._state='holding'; this._hs=Date.now();
+      // Aggiorna il bottone senza ricostruire il DOM — così pointer capture rimane valido
+      b.textContent='TIENI PREMUTO…'; b.classList.add('act');
       const anim=()=>{
         if(this._state!=='holding') return;
         const el=this.shadowRoot.getElementById('shf');
@@ -9229,7 +9234,12 @@ async function _sosRequireLicense(onSuccess){
       };
       this._hraf=requestAnimationFrame(anim);
     }
-    _onPU(){ if(this._state!=='holding') return; this._clrT(); this._state='confirm'; this._build(); }
+    _onPU(){
+      if(this._state!=='holding') return;
+      this._clrT(); this._state='confirm';
+      const bar=this.shadowRoot.getElementById('shf'); if(bar) bar.style.width='0';
+      this._build();
+    }
     _startCD(){
       this._clrT(); this._state='countdown'; this._am=_M[this._wMode]; this._csec=_CS; this._build();
       this._cdi=setInterval(()=>{
@@ -9330,6 +9340,21 @@ async function _sosRequireLicense(onSuccess){
 })();
 
 function _addSosToDash(){ jsStoreAddCard('sos-card'); }
+function _sosStoreRemove(){
+  const key=prompt('Inserisci la chiave amministratore per rimuovere la card SOS dallo Store:');
+  if(!key) return;
+  const enc=new TextEncoder().encode(key.trim().toUpperCase());
+  crypto.subtle.digest('SHA-256',enc).then(buf=>{
+    const hash=Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+    if(hash==='896263d3d819ee96afd873d95b40ecba77eaac65e45162e3dce7c6ad2cc1cf08'){
+      localStorage.setItem('fratech_sos_store_hidden','1');
+      showToast('🗑 Card SOS rimossa dallo Store. Sincronizza per ripristinarla.');
+      setTimeout(_ghStoreRender,50);
+    }else{
+      showToast('❌ Chiave non valida');
+    }
+  });
+}
 
 /* Esegue il codice di una card .js gestendo SIA il formato FratechStore SIA quello Lovelace */
 function _installCardCode(code){
@@ -9443,10 +9468,12 @@ function _jsStoreList(){
     // scarta voci corrotte/vuote: una card valida ha sempre meta.id e codice
     if(v && v.meta && v.meta.id && v.code) out.push(v);
   }
-  // Card di sistema embedded: SOS — sempre presente e sempre builtin
+  // Card di sistema embedded: SOS — sempre presente a meno che non sia stata nascosta con licenza
   const _sosIdx=out.findIndex(i=>i.meta?.id==='sos-card');
   if(_sosIdx>=0) out.splice(_sosIdx,1); // rimuove eventuali versioni localStorage non-builtin
-  out.unshift({meta:{id:'sos-card',name:'SOS Emergenza',icon:'🆘',version:'1.4',desc:'4 step guidati: chi chiede aiuto → chi avvisare → tipo emergenza → tieni premuto 3s. Notifica GPS interattiva. Configurabile solo da Impostazioni → SOS.'},code:'/* builtin */',origin:'system',_builtin:true});
+  if(!localStorage.getItem('fratech_sos_store_hidden')){
+    out.unshift({meta:{id:'sos-card',name:'SOS Emergenza',icon:'🆘',version:'1.4',desc:'4 step guidati: chi chiede aiuto → chi avvisare → tipo emergenza → tieni premuto 3s. Notifica GPS interattiva. Configurabile solo da Impostazioni → SOS.'},code:'/* builtin */',origin:'system',_builtin:true});
+  }
   return out;
 }
 
@@ -12270,7 +12297,7 @@ function renderSOSCfgList(){
   </div>`;
 
   // ── CARD PREVIEW ──
-  const cardPreview=`<div id="sos-settings-card-wrap" style="height:280px;margin:0 0 22px;border-radius:18px;overflow:hidden;border:1.5px solid rgba(239,68,68,.25);background:#0a0816;box-shadow:0 8px 40px rgba(0,0,0,.5)"></div>`;
+  const cardPreview=`<div style="margin:0 0 22px;display:flex;justify-content:center"><div id="sos-settings-card-wrap" style="width:320px;height:260px;border-radius:18px;overflow:hidden;border:1.5px solid rgba(239,68,68,.25);background:#0a0816;box-shadow:0 8px 40px rgba(0,0,0,.5);flex-shrink:0"></div></div>`;
 
   // ── ACCORDION UNICO: persona + dispositivo notify ──
   const allPeople=Object.keys(ha).filter(eid=>eid.startsWith('person.')).map(eid=>({eid,name:ha[eid]?.friendly_name||eid.split('.')[1].replace(/_/g,' ')}));
@@ -12365,7 +12392,7 @@ function _sosSetQuick(val){ _sosCfg().quickMode=!!val; saveCfg(); }
 function sosFamilyAdd(){ const sc=_sosCfg(); sc.family.push({person_eid:'',notify_eid:''}); saveCfg(); renderSOSCfgList(); }
 function sosFamilyRemove(i){ const sc=_sosCfg(); sc.family.splice(i,1); saveCfg(); renderSOSCfgList(); }
 function sosFamilyUpdate(i,field,val){ const sc=_sosCfg(); if(sc.family[i]) sc.family[i][field]=val; saveCfg(); }
-function _sosPickFamilyNotify(i){ _epPickerOpen(v=>{ sosFamilyUpdate(i,'notify_eid',v); renderSOSCfgList(); },'notify','Seleziona servizio notify'); }
+function _sosPickFamilyNotify(i){ _epPickerOpen(v=>{ sosFamilyUpdate(i,'notify_eid',v); renderSOSCfgList(); },'notify','Seleziona dispositivo mobile_app','mobile_app_'); }
 
 /* link Google Maps dalla posizione GPS della persona che ha lanciato l'SOS (se disponibile) */
 function _sosLocLink(){
@@ -13144,7 +13171,7 @@ function _ntfUpdateSidebarBadges(){
 }
 
 /* ═══ UNIVERSAL ENTITY PICKER ═══ */
-let _epPickerCb=null, _epPickerDomains=[];  // array — empty = all
+let _epPickerCb=null, _epPickerDomains=[], _epPickerPrefix='';  // array — empty = all
 const _epDomIco={
   sensor:'📊',binary_sensor:'🔘',switch:'🔌',light:'💡',cover:'🪟',
   climate:'🌡️',media_player:'🔊',camera:'📷',person:'👤',
@@ -13156,15 +13183,17 @@ const _epDomIco={
   zone:'📍',calendar:'📅',todo:'✔️'
 };
 
-function _epPickerOpen(cb, domainFilter='', title='Seleziona entità'){
+function _epPickerOpen(cb, domainFilter='', title='Seleziona entità', prefixFilter=''){
   _epPickerCb=cb;
+  _epPickerPrefix=prefixFilter||'';
   // domainFilter can be a string ('camera') or array (['counter','input_number'])
   _epPickerDomains=Array.isArray(domainFilter)?domainFilter:(domainFilter?[domainFilter]:[]);
   const titleEl=document.getElementById('ep-picker-title');
   if(titleEl) titleEl.textContent=title;
   const badge=document.getElementById('ep-picker-domain-badge');
   if(badge){
-    if(_epPickerDomains.length){badge.textContent=_epPickerDomains.join(', ')+'.*';badge.style.display='';}
+    if(_epPickerPrefix){badge.textContent=_epPickerPrefix+'*';badge.style.display='';}
+    else if(_epPickerDomains.length){badge.textContent=_epPickerDomains.join(', ')+'.*';badge.style.display='';}
     else badge.style.display='none';
   }
   const qEl=document.getElementById('ep-picker-q');
@@ -13185,6 +13214,7 @@ function _epPickerSearch(q){
   const query=(q||'').toLowerCase().trim();
   let entities=Object.keys(hs);
   if(_epPickerDomains.length) entities=entities.filter(e=>_epPickerDomains.some(d=>e.startsWith(d+'.')));
+  if(_epPickerPrefix) entities=entities.filter(e=>e.includes(_epPickerPrefix));
   if(query) entities=entities.filter(e=>{
     const name=(ha[e]?.friendly_name||'').toLowerCase();
     return e.includes(query)||name.includes(query);
@@ -14289,7 +14319,7 @@ Object.assign(window, {
   _pgWarnClose, _sendCallSvc,
   _appItemPickIcon, _appItemPickColor, _appGroupPickColor,
   _sosPickIcon, _sosPickService, _sosSetQuick,
-  sosFamilyAdd, sosFamilyRemove, sosFamilyUpdate, _sosPickFamilyNotify,
+  sosFamilyAdd, sosFamilyRemove, sosFamilyUpdate, _sosPickFamilyNotify, _sosStoreRemove,
   _fePickIconBtn, _fePickIconEl,
   _ntfPickEntityFor, _ntfPickIcon, _ntfPickDuration, _ntfPickCam, _ntfPickAlexa, _ntfPickCond, _ntfPickMobile,
   _hbDelColorMapEntry, _hbDelIconMapEntry,
