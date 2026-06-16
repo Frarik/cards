@@ -1,4 +1,4 @@
-/* frarik-version: 1.5 */
+/* frarik-version: 1.6 */
 /* Centro Controllo Posta — Frarik card standalone */
 (function(){
   'use strict';
@@ -376,6 +376,7 @@ automation:
       this._frarikCard=null;
       this._modalHost=null;
       this._click=this._onClick.bind(this);
+      this._change=this._onChange.bind(this);
       this._prevSig='';
       this._pkgState='idle';
       this._pkgError='';
@@ -394,6 +395,8 @@ automation:
         h?.states?.['input_boolean.frarik_posta_notifica_push']?.state,
         h?.states?.['input_boolean.frarik_posta_notifica_google']?.state,
         h?.states?.['input_boolean.frarik_posta_notifica_alexa']?.state,
+        h?.states?.['input_datetime.frarik_posta_notifiche_inizio']?.state,
+        h?.states?.['input_datetime.frarik_posta_notifiche_fine']?.state,
         this._c.sensorEntity?h?.states?.[this._c.sensorEntity]?.state:'',
       ].join('|');
       if(sig===this._prevSig) return;
@@ -412,8 +415,8 @@ automation:
     }
 
     configure(card){ if(card?.id) this._frarikCard=card; this._openSettings(); }
-    connectedCallback(){ this.shadowRoot.addEventListener('click',this._click); }
-    disconnectedCallback(){ this.shadowRoot.removeEventListener('click',this._click); this._destroyModal(); _acHide(); }
+    connectedCallback(){ this.shadowRoot.addEventListener('click',this._click); this.shadowRoot.addEventListener('change',this._change); }
+    disconnectedCallback(){ this.shadowRoot.removeEventListener('click',this._click); this.shadowRoot.removeEventListener('change',this._change); this._destroyModal(); _acHide(); }
 
     _skKey(){ return 'posta-card:'+(this._c.storageKey||'default'); }
     _save(){ try{ localStorage.setItem(this._skKey(),JSON.stringify(this._c)); }catch(_){} }
@@ -437,6 +440,7 @@ automation:
       }catch(_){ return null; }
     }
     _storico(){ return this._st('input_text.frarik_posta_storico')||''; }
+    _timeOf(eid){ const s=this._st(eid); if(!s||s==='unknown'||s==='unavailable') return ''; return s.slice(0,5); }
 
     _callSvc(domain,service,data){
       if(this._h?.callService) this._h.callService(domain,service,data);
@@ -454,6 +458,8 @@ automation:
       const bPush=this._bool('input_boolean.frarik_posta_notifica_push');
       const bGoog=this._bool('input_boolean.frarik_posta_notifica_google');
       const bAlex=this._bool('input_boolean.frarik_posta_notifica_alexa');
+      const tInizio=this._timeOf('input_datetime.frarik_posta_notifiche_inizio');
+      const tFine=this._timeOf('input_datetime.frarik_posta_notifiche_fine');
       return `
         <div class="btm-toggle" data-a="toggle-menu">
           <span class="btm-lbl">🔔 Notifiche e opzioni</span>
@@ -479,6 +485,21 @@ automation:
               <span class="trow-ico">📣</span><span class="trow-lbl">Amazon Alexa</span>
               <div class="tgl ${bAlex?'on':'off'}"><div class="tgl-k"></div></div>
             </div>
+          </div>
+          <div class="tgrp-tts ${master?'':'locked'}">
+            <div class="menu-sec" style="margin-top:6px">FASCIA ORARIA TTS</div>
+            <div class="ttime-row">
+              <div class="ttime-item">
+                <div class="ttime-lbl">Dalle</div>
+                <input class="ttime-inp" type="time" data-a="time-inizio" value="${tInizio}"/>
+              </div>
+              <div class="ttime-sep">→</div>
+              <div class="ttime-item">
+                <div class="ttime-lbl">Alle</div>
+                <input class="ttime-inp" type="time" data-a="time-fine" value="${tFine}"/>
+              </div>
+            </div>
+            <div class="ttime-hint">Orario in cui Google/Alexa possono fare annunci vocali</div>
           </div>
           <div class="menu-actions">
             <button class="act-btn" data-a="storico">📋 Storico</button>
@@ -568,6 +589,15 @@ automation:
       else if(a==='toggle-push'){ if(this._bool('input_boolean.frarik_posta_notifiche_attive')) this._callSvc('homeassistant',this._bool('input_boolean.frarik_posta_notifica_push')?'turn_off':'turn_on',{entity_id:'input_boolean.frarik_posta_notifica_push'}); }
       else if(a==='toggle-google'){ if(this._bool('input_boolean.frarik_posta_notifiche_attive')) this._callSvc('homeassistant',this._bool('input_boolean.frarik_posta_notifica_google')?'turn_off':'turn_on',{entity_id:'input_boolean.frarik_posta_notifica_google'}); }
       else if(a==='toggle-alexa'){ if(this._bool('input_boolean.frarik_posta_notifiche_attive')) this._callSvc('homeassistant',this._bool('input_boolean.frarik_posta_notifica_alexa')?'turn_off':'turn_on',{entity_id:'input_boolean.frarik_posta_notifica_alexa'}); }
+    }
+
+    /* ── CHANGE HANDLER (input time) ── */
+    _onChange(e){
+      const el=e.target; if(!el.dataset?.a) return;
+      if(el.dataset.a==='time-inizio')
+        this._callSvc('input_datetime','set_datetime',{entity_id:'input_datetime.frarik_posta_notifiche_inizio',time:el.value+':00'});
+      else if(el.dataset.a==='time-fine')
+        this._callSvc('input_datetime','set_datetime',{entity_id:'input_datetime.frarik_posta_notifiche_fine',time:el.value+':00'});
     }
 
     /* ── SETTINGS POPUP (matita / configure) ── */
@@ -990,6 +1020,15 @@ automation:
 .act-btn:active{background:rgba(251,191,36,.28)}
 .act-btn-sec{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14);color:#fff;opacity:.7}
 .act-btn-sec:active{background:rgba(255,255,255,.1)}
+.tgrp-tts{display:flex;flex-direction:column;gap:6px;transition:opacity .2s}
+.tgrp-tts.locked{opacity:.3;pointer-events:none}
+.ttime-row{display:flex;align-items:flex-end;gap:8px;padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:11px}
+.ttime-item{flex:1;display:flex;flex-direction:column;gap:4px}
+.ttime-lbl{font-size:10px;font-weight:700;color:#fff;opacity:.45;letter-spacing:.5px;text-transform:uppercase}
+.ttime-inp{width:100%;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.1);border-radius:8px;padding:7px 8px;color:#fff;font-size:13px;font-weight:700;font-family:system-ui,sans-serif;outline:none;cursor:pointer;-webkit-appearance:none;color-scheme:dark}
+.ttime-inp:focus{border-color:rgba(251,191,36,.5);background:rgba(255,255,255,.09)}
+.ttime-sep{font-size:16px;color:#fff;opacity:.3;padding-bottom:8px;flex-shrink:0}
+.ttime-hint{font-size:10px;color:#fff;opacity:.35;font-family:system-ui,sans-serif;line-height:1.5;padding:0 2px}
 /* ── body ── */
 .body{flex:1;overflow-y:auto;padding:14px 14px 16px;display:flex;flex-direction:column;gap:10px;scrollbar-width:none}
 .body::-webkit-scrollbar{display:none}
@@ -1031,6 +1070,12 @@ automation:
   }
 
   customElements.define('posta-card', PostaCard);
+  window.FratechCardRegistry=window.FratechCardRegistry||{};
+  window.FratechCardRegistry['posta-card']={
+    name:'Centro Controllo Posta',
+    icon:'📬',
+    desc:'Monitora la cassetta postale: contatori, storico, notifiche push/Google/Alexa. Installa il package con wizard guidato e autocomplete entità.'
+  };
   (window.customCards=window.customCards||[]).push({
     type:'posta-card',
     name:'Centro Controllo Posta',

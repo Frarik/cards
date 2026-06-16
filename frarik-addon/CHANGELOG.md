@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.5.18 — 2026-06-17
+
+### fix(posta-card): v1.6 — icona, nome e versione corretti nello Store
+
+- Aggiunto `window.FratechCardRegistry['posta-card']` con `name`, `icon: '📬'` e `desc` — è questo che lo Store legge per mostrare nome e icona
+- Rimosso `mdi:mailbox` dall'icona dello Store (veniva reso come testo); ora usa emoji `📬`
+- Mantenuto `window.customCards` con `icon:'mdi:mailbox'` per compatibilità HA Lovelace
+
+## 1.5.17 — 2026-06-16
+
+### feat(server): endpoint locale per aggiornare card JS senza push GitHub
+
+- Nuovo `GET /api/frarik/card-js/:file` — serve i file `.js` dalla cartella `card-js/` dell'addon con `Cache-Control: no-store`
+- Permette di reinstallare/aggiornare una card tramite URL locale senza dover fare push su GitHub
+
+## 1.5.16 — 2026-06-16
+
+### feat(posta-card): v1.6 — fasce orarie TTS nel menu notifiche
+
+- Aggiunta sezione **FASCIA ORARIA TTS** nel menu espandibile in fondo alla card
+- Due `<input type="time">` (Dalle / Alle) che leggono `input_datetime.frarik_posta_notifiche_inizio/fine` e aggiornano HA via `input_datetime.set_datetime` al cambio valore
+- La sezione è grigiata/disabilitata quando il master notifiche è spento (stessa logica `locked` dei toggle)
+- Aggiunto `_onChange()` handler legato all'evento `change` del shadow root
+- Aggiunto `_timeOf(eid)` helper che estrae HH:MM dallo stato HA
+- Sig hass aggiornata per includere i due input_datetime (re-render automatico quando cambiano)
+- posta-card bump a v1.6
+
 ## 1.5.15 — 2026-06-16
 
 ### fix: pulizia automatica pkg legacy fuori dalla cartella frarik
