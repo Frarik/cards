@@ -954,6 +954,9 @@ body.editing .col-add-btn{display:flex}
 /* ═══ CARD YAML EDITOR TAB ═══ */
 .ghc-tab-cyml{border-color:rgba(99,102,241,.35)!important}
 .ghc-tab-cyml.on,.ghc-tab-cyml:hover{background:rgba(99,102,241,.2)!important;border-color:rgba(99,102,241,.55)!important;color:#a5b4fc!important}
+.ghc-tab-predef{border-color:rgba(139,92,246,.3)!important}
+.ghc-tab-predef .ghc-tab-lbl{color:rgba(196,181,253,.7)!important}
+.ghc-tab-predef.on,.ghc-tab-predef:hover{background:rgba(139,92,246,.18)!important;border-color:rgba(139,92,246,.5)!important;color:#c4b5fd!important}
 #ghsy-wrap{display:flex;gap:12px;height:440px}
 #ghsy-left{flex:0 0 46%;display:flex;flex-direction:column;min-width:0}
 #ghsy-right{flex:1;display:flex;flex-direction:column;min-width:0}

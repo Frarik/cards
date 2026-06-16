@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.94 — 2026-06-16
+
+### feat: SOS — tab Predefinite, ridisegno pannello impostazioni, GPS migliorato
+
+- **Store → tab "Predefinite"** (🛡️): nuovo tab viola dedicato alle card di sistema integrate in Frarik; mostra la card SOS con badge 🔐 Sistema, pulsante Aggiungi, lucchetto (non eliminabile senza licenza)
+- **openSOS()** ridiretta al pannello Impostazioni → SOS invece dell'obsoleto popup modale (sos-mod1/sos-mod2); chip SOS nella top-bar apre ora la guida di configurazione
+- **Impostazioni → SOS** completamente ridisegnato: banner guida a 4 step con descrizione dettagliata, anteprima live della sos-card embeddada nel pannello, sezione Persone e Contatti con placeholder chiari
+- **GPS SOS migliorato**: `_loc()` in SosCard usa l'`entity_id` della persona selezionata (`_wPersonEid`) per inviare la posizione GPS esatta; fallback al primo `person.*` se non trovata
+- Aggiunto stile CSS `.ghc-tab-predef` per il nuovo tab con colori viola sistema
+
 ## 1.4.93 — 2026-06-16
 
 ### fix: Card YAML in dashboard — rimossa la "cornice" del wrapper Frarik

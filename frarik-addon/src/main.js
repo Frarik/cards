@@ -1748,9 +1748,10 @@ async function _ghsPreview(enc, nm, cardId){
 }
 function ghStoreTab(tab){
   _ghsTab=tab;
-  ['js','chips','distintivi','premium','yaml','pkg','local','card-yaml'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
+  ['js','chips','distintivi','premium','yaml','pkg','local','card-yaml','predefinite'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
   const s=document.getElementById('ghs-search'); if(s){ s.value=''; s.style.display=(tab==='card-yaml')?'none':''; }
   const loadEl=document.getElementById('ghs-load'); if(loadEl) loadEl.style.display=(tab==='local')?'':'none';
+  if(tab==='predefinite'){ _ghStoreRender(); return; }
   if(tab==='local'){ _ghStoreRender(); _ghStoreInitDropzone(); return; }
   if(tab==='card-yaml'){ _ghStoreRender(); return; }
   if(tab==='premium'&&_ghsCache[tab]!==undefined){ _ghStoreRender(); return; }
@@ -1790,6 +1791,7 @@ async function _ghFetchVerLabels(tab){
 function _ghStoreRender(){
   const tab=_ghsTab, list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
   const q=(document.getElementById('ghs-search').value||'').toLowerCase().trim();
+  if(tab==='predefinite'){ _ghStoreRenderPredefinite(q); return; }
   if(tab==='local'){ _ghStoreRenderInstalled(q,'local'); return; }
   if(tab==='pkg'){ _ghStoreRenderPkg(q); return; }
   if(tab==='premium'){ _ghStoreRenderPremium(q); return; }
@@ -1925,6 +1927,39 @@ function _ghStoreRenderInstalled(q, originFilter){
   requestAnimationFrame(()=>{
     list.querySelectorAll('[data-prev-id]').forEach(el=>{ _ghcLivePrev(el, el.dataset.prevId); });
   });
+}
+function _ghStoreRenderPredefinite(q){
+  const list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
+  let items=_jsStoreList().filter(i=>i._builtin);
+  const all=items.length;
+  if(q) items=items.filter(i=>((i.meta||{}).name||(i.meta||{}).id||'').toLowerCase().includes(q));
+  status.textContent=all+' card predefinite'+(q?(' · '+items.length+' trovate'):'');
+  const hdr=`<div style="margin-bottom:14px;padding:12px 14px;border-radius:12px;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.22);font-size:11px;color:rgba(255,255,255,.7);line-height:1.6"><b style="color:#c4b5fd">🛡️ Card Predefinite</b> — card integrate nel sistema Frarik, sempre disponibili e protette da licenza.<br><span style="opacity:.7">Non possono essere eliminate senza la chiave amministratore.</span></div>`;
+  if(!items.length){ list.innerHTML=hdr+`<div class="ghs-empty">${q?`Nessun risultato per "${eh(q)}"`: 'Nessuna card predefinita disponibile.'}</div>`; return; }
+  const _cpCards=(curPage()||{cards:[]}).cards||[];
+  const usedInCurPage=new Set(); _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedInCurPage.add(c.jsCardId); });
+  list.innerHTML=hdr+'<div class="ghc-grid">'+items.map(i=>{
+    const m=i.meta||{}; const id=m.id||'';
+    const reg=id?window.FratechCardRegistry?.[id]:null;
+    const icon=m.icon||reg?.icon||'📦';
+    const desc=m.desc||'';
+    const inPage=usedInCurPage.has(id);
+    const st=inPage?'ok':'new';
+    const prevHtml=reg
+      ?`<div class="ghc-prev-inner" data-prev-id="${eh(id)}"></div>`
+      :`<div class="ghc-prev-inner">${_ghcPrevPh(icon,m.name||id)}</div>`;
+    const bdg=`<span class="ghc-bdg" style="background:rgba(139,92,246,.2);color:#c4b5fd;border-color:rgba(139,92,246,.4)">🔐 Sistema</span>`;
+    const act=inPage
+      ?`<span class="ghc-indash"><i class="mdi mdi-check-circle-outline"></i> In vista</span>`
+      :`<button class="ghc-btn ghc-btn-add" data-action="_jsStoreAddAndRefresh" data-action-args='["${id}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`;
+    const del=`<button class="ghc-btn-del" title="Protetta da licenza" style="opacity:.35;cursor:default"><i class="mdi mdi-lock-outline"></i></button>`;
+    return `<div class="ghc-tile st-${st}"><div class="ghc-strip ${st}"></div>
+      <div class="ghc-prev">${prevHtml}<div class="ghc-prev-fade"></div>${bdg}</div>
+      <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico">${icon}</div><div class="ghc-meta"><div class="ghc-name">${eh(m.name||id||'Card')}</div><div class="ghc-ver">v${eh(m.version||'?')}</div></div></div>
+      ${desc?`<div class="ghc-desc">${eh(desc)}</div>`:''}
+      <div class="ghc-acts">${act}${del}</div></div></div>`;
+  }).join('')+'</div>';
+  requestAnimationFrame(()=>{ list.querySelectorAll('[data-prev-id]').forEach(el=>{ _ghcLivePrev(el, el.dataset.prevId); }); });
 }
 function _isAdmin(){
   const note=(localStorage.getItem('frarik_lic_note')||'').toLowerCase();
@@ -7415,7 +7450,7 @@ function _hbRenderSosPersons(){
   });
 }
 
-function openSOSCfgModal(){ closeHBM(); setTimeout(()=>{ try{ openOikSettings(); const btn=document.getElementById('ep-sos-btn'); if(btn) btn.click(); }catch(e){} },100); }
+function openSOSCfgModal(){ closeHBM(); setTimeout(()=>{ try{ openOikSettings(); setTimeout(()=>_switchEpTab('sos'),80); }catch(e){} },100); }
 
 /* ── Entità secondaria: toggle e posizione ── */
 function _hbSelEnt2Pos(pos){
@@ -8927,7 +8962,7 @@ async function _sosRequireLicense(onSuccess){
       this._frarikCard=null; this._sh=null;
       // Wizard state machine
       this._state='idle'; // idle|step1|step2|step3|confirm|holding|countdown|active
-      this._wPerson=null; this._wMode=0; this._wContacts=new Set();
+      this._wPerson=null; this._wPersonEid=null; this._wMode=0; this._wContacts=new Set();
       this._hs=0; this._hraf=null; this._cdi=null; this._csec=0; this._am=null;
       this._cl=this._onClick.bind(this);
       this._pd=this._onPD.bind(this); this._pu=this._onPU.bind(this);
@@ -9169,13 +9204,13 @@ async function _sosRequireLicense(onSuccess){
     _onClick(e){
       const b=e.target.closest('[data-a]'); if(!b) return; const a=b.dataset.a;
       if(a==='cfg') this._openCfg();
-      else if(a==='start'){ this._state='step1'; this._wPerson=null; this._wMode=0; this._wContacts=new Set(); this._build(); }
-      else if(a==='cancel'){ this._clrT(); this._state='idle'; this._am=null; this._build(); }
-      else if(a==='reset'){ this._clrT(); this._state='idle'; this._am=null; this._build(); }
+      else if(a==='start'){ this._state='step1'; this._wPerson=null; this._wPersonEid=null; this._wMode=0; this._wContacts=new Set(); this._build(); }
+      else if(a==='cancel'){ this._clrT(); this._state='idle'; this._am=null; this._wPerson=null; this._wPersonEid=null; this._build(); }
+      else if(a==='reset'){ this._clrT(); this._state='idle'; this._am=null; this._wPerson=null; this._wPersonEid=null; this._build(); }
       else if(a==='step1'){ this._state='step1'; this._build(); }
       else if(a==='step2'){ this._state='step2'; this._build(); }
       else if(a==='step3'){ this._state='step3'; this._build(); }
-      else if(a==='person'){ this._wPerson=decodeURIComponent(b.dataset.val||'')||null; this._state='step2'; this._build(); }
+      else if(a==='person'){ const nm=decodeURIComponent(b.dataset.val||'')||null; this._wPerson=nm; this._wPersonEid=this._persons().find(p=>p.name===nm)?.eid||null; this._state='step2'; this._build(); }
       else if(a==='mode'){ this._wMode=parseInt(b.dataset.i)||0; this._state='step3'; this._build(); }
       else if(a==='ct'){ const i=parseInt(b.dataset.i); this._wContacts.has(i)?this._wContacts.delete(i):this._wContacts.add(i); this._build(); }
       else if(a==='selall'){ const ct=this._contacts(); ct.forEach((_,i)=>this._wContacts.add(i)); this._build(); }
@@ -9229,7 +9264,16 @@ async function _sosRequireLicense(onSuccess){
       logEl.innerHTML=trRow+(sent.length?sent.map(s=>`<div class="sent-r"><span>${s.ok?'✅':'⚠️'}</span><span>${s.n}</span></div>`).join(''):'<div class="sent-r"><span>⚠️</span><span>Nessun contatto — configurali in ⚙️</span></div>');
     }
     _loc(){
-      try{ const h=this._h||window.frarikHass?.(); if(!h) return ''; const eid=Object.keys(h.states||{}).find(k=>k.startsWith('person.')); if(!eid) return ''; const a=h.states[eid]?.attributes||{}; if(a.latitude&&a.longitude) return `https://maps.google.com/maps?q=${a.latitude},${a.longitude}`; }catch(_){} return '';
+      try{
+        const h=this._h||window.frarikHass?.(); if(!h) return '';
+        const states=h.states||{};
+        let eid=this._wPersonEid;
+        if(!eid&&this._wPerson){ const wn=this._wPerson.toLowerCase(); eid=Object.keys(states).find(k=>k.startsWith('person.')&&(states[k]?.attributes?.friendly_name||'').toLowerCase()===wn); }
+        if(!eid) eid=Object.keys(states).find(k=>k.startsWith('person.'));
+        if(!eid) return '';
+        const a=states[eid]?.attributes||{};
+        if(a.latitude!=null&&a.longitude!=null) return `https://maps.google.com/maps?q=${a.latitude},${a.longitude}`;
+      }catch(_){} return '';
     }
 
     /* ── SETTINGS POPUP ─────────────────────────────────── */
@@ -12139,28 +12183,8 @@ function _sosGetPeople(){
 
 /* ── STEP 1: apri — chi sei? ── */
 function openSOS(){
-  if(_sosCfg().quickMode){ _sosPerson={name:'SOS',entity_id:null}; openSOS2(); return; }  // SOS rapido
-  _sosPeopleArr=_sosGetPeople();
-  const grid=document.getElementById('sos-people-grid');
-  const noP=document.getElementById('sos-no-people');
-  if(_sosPeopleArr.length===0){
-    grid.innerHTML=''; noP.style.display='';
-  } else {
-    noP.style.display='none';
-    grid.innerHTML=_sosPeopleArr.map((p,idx)=>{
-      const stateLabel=_stateIt(p.state);
-      const picHTML=p.picture
-        ? `<img class="sos-person-pic" src="${BASE}${p.picture}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`+
-          `<div class="sos-person-ico" style="display:none">👤</div>`
-        : `<div class="sos-person-ico">👤</div>`;
-      return `<div class="sos-person-card" data-action="_sosPickPerson" data-action-args='[${idx}]'>
-        ${picHTML}
-        <div class="sos-person-name">${eh(p.name)}</div>
-        <div class="sos-person-state">${stateLabel}</div>
-      </div>`;
-    }).join('');
-  }
-  document.getElementById('sos-mod1').classList.remove('off');
+  // Redirect al pannello impostazioni SOS (la card SOS è sulla dashboard)
+  try{ openOikSettings(); setTimeout(()=>_switchEpTab('sos'),80); }catch(e){}
 }
 
 function _sosPickPerson(idx){
@@ -12310,96 +12334,104 @@ function sosAlertAll(){
   document.getElementById('sos-mod2').classList.add('off');
 }
 
-/* ── Config contatti SOS nel pannello edit ── */
+/* ── Config SOS nel pannello impostazioni — guida + card live + contatti ── */
 function renderSOSCfgList(){
   const el=document.getElementById('sos-cfg-list'); if(!el) return;
-
-  // Banner SOS card status + aggiungi dashboard
   const _sosOnDash=(cfg.pages||[]).some(p=>(p.cards||[]).some(c=>c.type==='js-custom'&&c.jsCardId==='sos-card'));
-  const _sosHdrEl=document.getElementById('_sos-dash-banner');
-  const _sosHdrHtml=`<div id="_sos-dash-banner" style="margin-bottom:12px;padding:11px 14px;border-radius:12px;background:${_sosOnDash?'rgba(74,222,128,.07)':'rgba(239,68,68,.07)'};border:1px solid ${_sosOnDash?'rgba(74,222,128,.25)':'rgba(239,68,68,.25)'};display:flex;align-items:center;gap:11px">
-    <span style="font-size:22px">${_sosOnDash?'✅':'🆘'}</span>
-    <div style="flex:1">
-      <div style="font-size:12px;font-weight:800;color:#fff">${_sosOnDash?'Card SOS attiva sulla dashboard':'Card SOS non presente sulla dashboard'}</div>
-      <div style="font-size:10px;opacity:.55;color:#fff;margin-top:1px">${_sosOnDash?'La card è protetta da licenza — non può essere eliminata senza chiave':'Aggiungi la card SOS alla vista corrente'}</div>
-    </div>
-    ${_sosOnDash?'':`<button onclick="window._addSosToDash()" style="padding:7px 13px;border-radius:9px;background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.4);color:#fca5a5;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0">➕ Aggiungi</button>`}
-  </div>`;
-  if(_sosHdrEl) _sosHdrEl.outerHTML=_sosHdrHtml;
-  else el.insertAdjacentHTML('beforebegin',_sosHdrHtml);
-
   const sc=_sosCfg();
   const contacts=sc.contacts;
   const persons=sc.persons||[];
 
-  // ── sezione PERSONE ──
-  const allPeople=Object.keys(ha)
-    .filter(eid=>eid.startsWith('person.'))
-    .map(eid=>({eid, name:ha[eid]?.friendly_name||eid.split('.')[1].replace(/_/g,' ')}));
+  // ── Guida principale ──
+  const guideBanner=`<div style="margin-bottom:18px;border-radius:16px;overflow:hidden;border:1px solid rgba(239,68,68,.35);background:linear-gradient(135deg,rgba(239,68,68,.13) 0%,rgba(239,68,68,.04) 100%)">
+    <div style="padding:14px 16px;background:rgba(239,68,68,.18);display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(239,68,68,.18)">
+      <span style="font-size:28px;filter:drop-shadow(0 0 8px rgba(239,68,68,.6))">🆘</span>
+      <div>
+        <div style="font-size:14px;font-weight:900;color:#fff;letter-spacing:.3px">Sistema SOS Emergenza</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.55);margin-top:2px">Procedura guidata per richieste di aiuto rapide e sicure</div>
+      </div>
+      ${_sosOnDash?`<span style="margin-left:auto;font-size:10px;font-weight:700;color:#4ade80;background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);border-radius:8px;padding:4px 10px;white-space:nowrap">✅ Attiva</span>`:''}
+    </div>
+    <div style="padding:14px 16px">
+      <div style="font-size:11px;color:rgba(255,255,255,.8);line-height:1.75;margin-bottom:12px">
+        <div style="margin-bottom:7px;display:flex;align-items:flex-start;gap:9px"><span style="background:rgba(239,68,68,.22);border:1px solid rgba(239,68,68,.35);border-radius:50%;width:19px;height:19px;min-width:19px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;margin-top:1px">1</span><span>Aggiungi la card alla dashboard — comparirà un pulsante SOS nella pagina che hai scelto</span></div>
+        <div style="margin-bottom:7px;display:flex;align-items:flex-start;gap:9px"><span style="background:rgba(239,68,68,.22);border:1px solid rgba(239,68,68,.35);border-radius:50%;width:19px;height:19px;min-width:19px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;margin-top:1px">2</span><span>Configura le <b>persone</b> qui sotto — corrispondono alle entità <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:4px;font-size:10px">person.*</code> di Home Assistant</span></div>
+        <div style="margin-bottom:7px;display:flex;align-items:flex-start;gap:9px"><span style="background:rgba(239,68,68,.22);border:1px solid rgba(239,68,68,.35);border-radius:50%;width:19px;height:19px;min-width:19px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;margin-top:1px">3</span><span>Aggiungi i <b>contatti di emergenza</b> con il loro servizio notify HA (es. <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:4px;font-size:10px">mobile_app_telefono</code>)</span></div>
+        <div style="display:flex;align-items:flex-start;gap:9px"><span style="background:rgba(239,68,68,.22);border:1px solid rgba(239,68,68,.35);border-radius:50%;width:19px;height:19px;min-width:19px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;margin-top:1px">4</span><span>In emergenza: apri la card, segui la procedura guidata → l'allarme viene inviato con la <b>posizione GPS</b> su Google Maps</span></div>
+      </div>
+      ${_sosOnDash
+        ?`<div style="font-size:10px;color:rgba(255,255,255,.45)">🔐 La card SOS è protetta da licenza — non può essere eliminata senza la chiave amministratore</div>`
+        :`<button onclick="window._addSosToDash&&window._addSosToDash()" style="padding:9px 18px;border-radius:11px;background:rgba(239,68,68,.28);border:1px solid rgba(239,68,68,.5);color:#fca5a5;font-size:12px;font-weight:900;cursor:pointer;letter-spacing:.3px">➕ Aggiungi card alla dashboard</button>`
+      }
+    </div>
+  </div>`;
 
-  // opzioni select: solo quelle non ancora aggiunte
-  const availOpts=allPeople
-    .filter(p=>!persons.includes(p.eid))
-    .map(p=>`<option value="${eh(p.eid)}">${eh(p.name)}</option>`)
-    .join('');
+  // ── Anteprima card live ──
+  const cardPreview=`<div id="sos-settings-card-wrap" style="height:240px;margin:0 0 20px;border-radius:14px;overflow:hidden;border:1px solid rgba(239,68,68,.2);background:#0a0816"></div>`;
 
+  // ── Sezione PERSONE ──
+  const allPeople=Object.keys(ha).filter(eid=>eid.startsWith('person.')).map(eid=>({eid,name:ha[eid]?.friendly_name||eid.split('.')[1].replace(/_/g,' ')}));
+  const availOpts=allPeople.filter(p=>!persons.includes(p.eid)).map(p=>`<option value="${eh(p.eid)}">${eh(p.name)}</option>`).join('');
   const personRows=persons.map((eid,i)=>{
     const inf=allPeople.find(p=>p.eid===eid);
-    const name=inf?inf.name:eid;
-    return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
-      <span style="font-size:11px;flex:1;color:var(--fg)">👤 ${eh(name)}</span>
-      <button class="sos-cfg-del" data-action="sosRemovePerson" data-action-args='[${i}]' title="Rimuovi">✕</button>
-    </div>`;
+    return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span style="font-size:11px;flex:1;color:var(--fg)">👤 ${eh(inf?inf.name:eid)}</span><button class="sos-cfg-del" data-action="sosRemovePerson" data-action-args='[${i}]'>✕</button></div>`;
   }).join('');
 
-  const personSec=`
-    <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Persone visibili nel popup SOS</div>
-    ${personRows||'<div style="font-size:10px;color:var(--dim);padding:4px 0">Nessuna selezionata — verranno mostrate tutte quelle di HA</div>'}
-    ${availOpts?`<div style="display:flex;gap:6px;margin-top:6px;align-items:center">
-      <select id="sos-person-sel" class="sos-cfg-inp" style="flex:1">
-        <option value="">— Seleziona persona —</option>${availOpts}
-      </select>
-      <button class="sos-cfg-add" style="padding:4px 10px;margin:0" data-action="sosAddPerson">➕</button>
-    </div>`:'<div style="font-size:10px;color:var(--dim);margin-top:4px">Tutte le persone HA sono già incluse</div>'}
-    <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);cursor:pointer;margin:8px 0">
-      <input type="checkbox" ${sc.quickMode?'checked':''} data-input="_sosSetQuick"> ⚡ SOS rapido (salta la scelta "chi sei", vai diretto ai contatti)
-    </label>
-    <div style="height:12px;border-bottom:1px solid rgba(255,255,255,.06);margin:6px 0 10px"></div>
-    <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Contatti di emergenza</div>`;
+  const personSec=`<div style="margin-bottom:18px">
+    <div style="font-size:12px;font-weight:800;color:#fff;margin-bottom:4px">👥 Persone che possono inviare SOS</div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.5">Seleziona le persone autorizzate. Lascia vuoto per mostrare tutti gli utenti di Home Assistant.</div>
+    ${personRows||'<div style="font-size:10px;color:var(--dim);padding:4px 0 8px">Nessuna selezionata — verranno mostrate tutte quelle di HA</div>'}
+    ${availOpts?`<div style="display:flex;gap:6px;margin-top:6px;align-items:center"><select id="sos-person-sel" class="sos-cfg-inp" style="flex:1"><option value="">— Seleziona persona HA —</option>${availOpts}</select><button class="sos-cfg-add" style="padding:4px 10px;margin:0" data-action="sosAddPerson">➕</button></div>`:'<div style="font-size:10px;color:var(--dim);margin-top:4px">Tutte le persone HA sono già incluse</div>'}
+    <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);cursor:pointer;margin-top:10px"><input type="checkbox" ${sc.quickMode?'checked':''} data-input="_sosSetQuick"> ⚡ SOS rapido (salta la selezione "chi chiede aiuto")</label>
+    <div style="height:1px;background:rgba(255,255,255,.06);margin:14px 0"></div>
+  </div>`;
 
-  // ── sezione CONTATTI ──
+  // ── Sezione CONTATTI ──
   const contactRows=contacts.length
     ? contacts.map((c,i)=>`
       <div class="sos-cfg-contact">
         <div style="display:flex;flex-direction:column;gap:1px">
-          <button class="sos-cfg-del" data-action="sosMoveContact" data-action-args='[${i},-1]' title="Su" style="font-size:10px;padding:0 4px;${i===0?'opacity:.25;pointer-events:none':''}">▲</button>
-          <button class="sos-cfg-del" data-action="sosMoveContact" data-action-args='[${i},1]' title="Giù" style="font-size:10px;padding:0 4px;${i===contacts.length-1?'opacity:.25;pointer-events:none':''}">▼</button>
+          <button class="sos-cfg-del" data-action="sosMoveContact" data-action-args='[${i},-1]' style="font-size:10px;padding:0 4px;${i===0?'opacity:.25;pointer-events:none':''}">▲</button>
+          <button class="sos-cfg-del" data-action="sosMoveContact" data-action-args='[${i},1]' style="font-size:10px;padding:0 4px;${i===contacts.length-1?'opacity:.25;pointer-events:none':''}">▼</button>
         </div>
         <div style="display:flex;gap:3px;align-items:center">
-          <input class="sos-cfg-ico-inp" type="text" value="${eh(c.icon||'👤')}" placeholder="👤"
-            data-input="sosUpdateContact" data-input-args='[${i},"icon"]'>
-          <button class="ntf-pick-btn" style="width:26px;height:26px;border-radius:6px;font-size:12px" title="Scegli icona"
-            data-action="_sosPickIcon" data-action-args='[${i}]' data-action-el="true">🎨</button>
+          <input class="sos-cfg-ico-inp" type="text" value="${eh(c.icon||'👤')}" placeholder="👤" data-input="sosUpdateContact" data-input-args='[${i},"icon"]'>
+          <button class="ntf-pick-btn" style="width:26px;height:26px;border-radius:6px;font-size:12px" data-action="_sosPickIcon" data-action-args='[${i}]' data-action-el="true">🎨</button>
         </div>
         <div class="sos-cfg-fields">
-          <input class="sos-cfg-inp" type="text" value="${eh(c.name||'')}" placeholder="Nome contatto"
-            data-input="sosUpdateContact" data-input-args='[${i},"name"]'>
+          <input class="sos-cfg-inp" type="text" value="${eh(c.name||'')}" placeholder="Nome del contatto (es. Mario Rossi)" data-input="sosUpdateContact" data-input-args='[${i},"name"]'>
           <div style="display:flex;gap:5px;align-items:center">
-            <input id="sos-svc-inp-${i}" class="sos-cfg-inp" type="text" value="${eh(c.notifyService||'')}" placeholder="Servizio HA notify (es. mobile_app_pixel_7)"
-              data-input="sosUpdateContact" data-input-args='[${i},"notifyService"]' style="flex:1">
-            <button class="ntf-pick-btn" style="width:28px;height:28px;border-radius:7px;font-size:13px" title="Sfoglia servizi notify"
-              data-action="_sosPickService" data-action-args='[${i}]'>🔍</button>
+            <input id="sos-svc-inp-${i}" class="sos-cfg-inp" type="text" value="${eh(c.notifyService||'')}" placeholder="Servizio HA notify — es. mobile_app_pixel_7" data-input="sosUpdateContact" data-input-args='[${i},"notifyService"]' style="flex:1">
+            <button class="ntf-pick-btn" style="width:28px;height:28px;border-radius:7px;font-size:13px" data-action="_sosPickService" data-action-args='[${i}]'>🔍</button>
           </div>
-          <input class="sos-cfg-inp" type="tel" value="${eh(c.phone||'')}" placeholder="📞 Numero di telefono (opzionale)"
-            data-input="sosUpdateContact" data-input-args='[${i},"phone"]'>
-          <input class="sos-cfg-inp" type="text" value="${eh(c.message||'')}" placeholder="💬 Messaggio personalizzato (opzionale)"
-            data-input="sosUpdateContact" data-input-args='[${i},"message"]'>
+          <input class="sos-cfg-inp" type="tel" value="${eh(c.phone||'')}" placeholder="📞 Numero di telefono (opzionale)" data-input="sosUpdateContact" data-input-args='[${i},"phone"]'>
+          <input class="sos-cfg-inp" type="text" value="${eh(c.message||'')}" placeholder="💬 Messaggio personalizzato (opzionale — verrà aggiunta la posizione GPS automaticamente)" data-input="sosUpdateContact" data-input-args='[${i},"message"]'>
         </div>
-        <button class="sos-cfg-del" data-action="sosDeleteContact" data-action-args='[${i}]' title="Elimina">🗑</button>
+        <button class="sos-cfg-del" data-action="sosDeleteContact" data-action-args='[${i}]'>🗑</button>
       </div>`).join('')
-    : '<div style="font-size:10px;color:var(--dim);text-align:center;padding:6px 0">Nessun contatto</div>';
+    : '<div style="font-size:10px;color:var(--dim);text-align:center;padding:10px 0;margin-bottom:8px">Nessun contatto configurato.<br><span style="opacity:.65">Aggiungi almeno un contatto per ricevere le notifiche SOS.</span></div>';
 
-  el.innerHTML=personSec+contactRows;
+  const contactSec=`<div>
+    <div style="font-size:12px;font-weight:800;color:#fff;margin-bottom:4px">📞 Contatti di emergenza</div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:10px;line-height:1.5">Per ogni contatto inserisci il <b>servizio notify</b> dell'app HA sul loro telefono. Trovalo in HA → Strumenti Sviluppatore → Servizi → cerca "notify". La notifica includerà automaticamente la posizione GPS.</div>
+    ${contactRows}
+    <button class="sos-cfg-add" data-action="sosAddContact" style="margin-top:8px">➕ Aggiungi contatto SOS</button>
+  </div>`;
+
+  el.innerHTML=guideBanner+cardPreview+personSec+contactSec;
+
+  // Monta la card SOS live nell'anteprima
+  const wrap=document.getElementById('sos-settings-card-wrap');
+  if(wrap&&window.customElements?.get('sos-card')){
+    try{
+      const sc2=document.createElement('sos-card');
+      sc2.style.cssText='display:block;height:100%;width:100%;--fgear:none';
+      wrap.appendChild(sc2);
+      sc2.setConfig({type:'custom:sos-card'});
+      const hObj=typeof frarikHass==='function'?frarikHass():null;
+      if(hObj) sc2.hass=hObj;
+    }catch(_){}
+  }
 }
 
 function sosAddPerson(){
