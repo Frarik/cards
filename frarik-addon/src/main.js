@@ -10149,11 +10149,16 @@ function _jsStoreList(){
     // scarta voci corrotte/vuote: una card valida ha sempre meta.id e codice
     if(v && v.meta && v.meta.id && v.code) out.push(v);
   }
-  // Card di sistema embedded: SOS — sempre presente a meno che non sia stata nascosta con licenza
-  const _sosIdx=out.findIndex(i=>i.meta?.id==='sos-card');
-  if(_sosIdx>=0) out.splice(_sosIdx,1); // rimuove eventuali versioni localStorage non-builtin
+  // Card di sistema embedded: sempre presenti (rimuove eventuali copie da localStorage)
+  ['sos-card','posta-card'].forEach(bid=>{ const idx=out.findIndex(i=>i.meta?.id===bid); if(idx>=0) out.splice(idx,1); });
+  // SOS — nascondibile con licenza admin
   if(!localStorage.getItem('fratech_sos_store_hidden')){
     out.unshift({meta:{id:'sos-card',name:'SOS Emergenza',icon:'🆘',version:'1.4',desc:'4 step guidati: chi chiede aiuto → chi avvisare → tipo emergenza → tieni premuto 3s. Notifica GPS interattiva. Configurabile solo da Impostazioni → SOS.'},code:'/* builtin */',origin:'system',_builtin:true});
+  }
+  // Posta — sempre presente
+  const _postaIdx=out.findIndex(i=>i.meta?.id==='posta-card');
+  if(_postaIdx<0){
+    out.push({meta:{id:'posta-card',name:'Centro Controllo Posta',icon:'📬',version:'1.0',desc:'Monitora la cassetta postale: contatori giornaliero e settimanale, storico consegne, notifiche push/Google/Alexa. Richiede il package Frarik Posta.'},code:'/* builtin */',origin:'system',_builtin:true});
   }
   return out;
 }
