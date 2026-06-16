@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.15 — 2026-06-16
+
+### fix: pulizia automatica pkg legacy fuori dalla cartella frarik
+
+- `POST /api/frarik/pkg/install`: dopo aver scritto il file in `/packages/frarik/nome.yaml`, elimina automaticamente l'eventuale copia legacy `/packages/nome.yaml` se esiste
+- Risolve il problema del doppio file `frarik_posta.yaml` (uno in root packages/, uno in packages/frarik/)
+
 ## 1.5.14 — 2026-06-16
 
 ### fix(posta-card): v1.5 — menu notifiche in fondo, preview settings più grande

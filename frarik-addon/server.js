@@ -192,6 +192,11 @@ app.post('/api/frarik/pkg/install', async (req, res) => {
     const filePath = path.join(PKG_DIR, ...parts);
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
     fs.writeFileSync(filePath, content, 'utf8');
+    // rimuovi eventuale copia legacy nella root di packages/ (stesso nome file, senza sottocartella)
+    if (parts.length === 2) {
+      const legacy = path.join(PKG_DIR, parts[1]);
+      if (legacy !== filePath) { try { fs.unlinkSync(legacy); } catch(_){} }
+    }
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ ok: false, error: String(e.message) }); }
 });
