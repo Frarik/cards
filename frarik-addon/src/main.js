@@ -8966,8 +8966,9 @@ async function _sosRequireLicense(onSuccess){
       this._c={triggerEntity:'',cardScale:100,cardW:100};
       this._frarikCard=null;
       this._state='idle'; // idle|step2|step3|confirm|holding|countdown|active
-      this._wPerson=null; this._wPersonEid=null; this._wMode=0; this._wContacts=new Set(); // Set of indexes into otherPersons array
+      this._wPerson=null; this._wPersonEid=null; this._wMode=0; this._wContacts=new Set();
       this._hs=0; this._hraf=null; this._cdi=null; this._csec=0; this._am=null;
+      this._personsSig='';
       this._cl=this._onClick.bind(this);
       this._pd=this._onPD.bind(this); this._pu=this._onPU.bind(this);
     }
@@ -8978,7 +8979,14 @@ async function _sosRequireLicense(onSuccess){
       this._c={triggerEntity:s.triggerEntity||'',cardScale:s.cardScale??100,cardW:s.cardW??100};
       this._build();
     }
-    set hass(h){ this._h=h; if(this._state==='idle') this._build(); }
+    set hass(h){
+      this._h=h;
+      if(this._state==='idle'){
+        // Ricostruisce solo se i dati delle persone sono cambiati (evita flash ad ogni update HA)
+        const sig=JSON.stringify((this._persons()||[]).map(p=>p.eid+'|'+p.state+'|'+p.picture));
+        if(sig!==this._personsSig){ this._personsSig=sig; this._build(); }
+      }
+    }
     configure(){ try{ openOikSettings(); setTimeout(()=>_switchEpTab('sos'),80); }catch(_){} }
     connectedCallback(){
       const sr=this.shadowRoot;

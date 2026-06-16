@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.97 — 2026-06-16
+
+### fix: SOS card — stop flash/rerender su ogni update HA
+
+- `set hass` ora confronta una signature delle persone (`eid|state|picture`) prima di ridisegnare: la card si aggiorna solo se i dati cambiano davvero, non ad ogni tick HA (che arriva ogni 1-2 secondi)
+- Eliminati il lampeggio e il blocco ai click causati dai re-render continui
+
 ## 1.4.96 — 2026-06-16
 
 ### fix: SOS card v1.3 — flusso 4 step, testo bianco 100%, angoli card, store Predefinite
