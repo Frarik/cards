@@ -34,7 +34,7 @@ homeassistant:
       customize: &customize
         package: 'Frarik — Centro Controllo Posta'
         author: 'Frarik / Fratech'
-        version: '1.0'
+        version: 1.0
 
       setting:
         Sensore Cassetta: &sensore_cassetta

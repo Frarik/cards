@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.19 — 2026-06-17
+
+### fix(posta-card): versione mostrata come 1.0 nello Store invece di 1.6
+
+- `_parseCardVersion` cercava `version: '...'` con apici e trovava `version: '1.0'` nel YAML embedded prima del commento `frarik-version: 1.6`
+- Fix: rimosso gli apici da `version: '1.0'` → `version: 1.0` nel template YAML; ora la regex non lo cattura e trova correttamente `frarik-version: 1.6` in cima al file
+
 ## 1.5.18 — 2026-06-17
 
 ### fix(posta-card): v1.6 — icona, nome e versione corretti nello Store
