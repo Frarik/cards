@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.5.09 — 2026-06-16
+
+### feat: posta-card → standalone in card-js/ con installazione pkg automatica
+
+- `posta-card` rimossa da `main.js` (non più builtin in "Predefinite")
+- Nuova card standalone `card-js/posta-card.js` visibile nel tab "JS" dello Store
+- Package `frarik_posta.yaml` embedded direttamente nella card JS
+- Bottone **"⚡ Installa automaticamente"** chiama `POST /api/frarik/pkg/install` e scrive il file in `/config/packages/frarik_posta.yaml` senza passi manuali
+- Stati installazione: idle → installing (spinner) → done (istruzioni personalizzazione) → error (retry + manuale)
+- `_jsStoreList()` ora gestisce solo sos-card come builtin
+- Popup "Istruzioni personalizzazione" aggiornato con passi post-installazione automatica
+
 ## 1.5.08 — 2026-06-16
 
 ### feat: posta-card v1.0 — Centro Controllo Posta
