@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.26 — 2026-06-17
+
+### fix(posta-card): aggiornamento immediato contatori dopo reset senza uscire dalla card
+
+- Optimistic update dopo `counter.reset`: azzera subito `this._h.states[entityId].state='0'` e chiama `_build()` prima che HA pushback l'aggiornamento
+- Stessa fix applicata a "Ho ritirato la posta" (reset giornaliero via script)
+- card v2.1
+
 ## 1.5.25 — 2026-06-17
 
 ### feat(posta-card): counter mensile, reset separati, orari notifiche media/push — v2.0

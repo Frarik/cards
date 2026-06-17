@@ -1,4 +1,4 @@
-/* frarik-version: 2.0 */
+/* frarik-version: 2.1 */
 /* Centro Controllo Posta — Frarik card standalone */
 (function(){
   'use strict';
@@ -1057,6 +1057,8 @@ automation:
       sr.getElementById('ri-ok').addEventListener('click',()=>{
         self._destroyModal();
         self._callSvc('script','turn_on',{entity_id:'script.frarik_posta_reset'});
+        if(self._h?.states?.['counter.frarik_posta_oggi']) self._h.states['counter.frarik_posta_oggi'].state='0';
+        self._build();
       });
     }
 
@@ -1097,6 +1099,8 @@ automation:
       sr.getElementById('rst-ok').addEventListener('click',()=>{
         self._destroyModal();
         self._callSvc('counter','reset',{entity_id:entityId});
+        if(self._h?.states?.[entityId]) self._h.states[entityId].state='0';
+        self._build();
       });
     }
 
