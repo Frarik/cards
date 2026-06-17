@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.30 — 2026-06-17
+
+### feat(posta-card): v2.5 — SVG cassetta rifatto con gradiente 3D realistico
+
+- Gradiente verticale + orizzontale sovrapposti per effetto metallo
+- Slot prominente con pannello rialzato e flangia riflettente
+- Viti di montaggio a parete, serratura realistica
+- Nessun palo — cassetta a muro
+
 ## 1.5.29 — 2026-06-17
 
 ### fix(posta-card): v2.4 — testi bianchi al 100%, spacing ridotto tra header e contenuto

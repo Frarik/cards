@@ -1,4 +1,4 @@
-/* frarik-version: 2.4 */
+/* frarik-version: 2.5 */
 /* Centro Controllo Posta — Frarik card standalone */
 (function(){
   'use strict';
@@ -327,59 +327,87 @@ automation:
 
   function _svgMailbox(count,isOpen){
     const n=Math.min(count,4);
-    const hasLetters=n>0;
-    /* colori con contrasto sul bg scuro #0d0b1e */
-    const bc=isOpen?'#065f46':hasLetters?'#1e40af':'#3a506b';
-    const lc=isOpen?'#059669':hasLetters?'#2563eb':'#4a6380';
-    const glow=isOpen?'rgba(16,185,129,.55)':hasLetters?'rgba(96,165,250,.55)':'rgba(0,0,0,0)';
-    /* angolini buste: rettangolo ruotato, disegnato PRIMA del coperchio (y=14)
-       → solo il triangolino sopra y=14 resta visibile */
-    const pos=[[],[{x:27,r:0}],[{x:20,r:-15},{x:34,r:15}],[{x:16,r:-19},{x:27,r:0},{x:38,r:19}],[{x:13,r:-22},{x:21,r:-7},{x:33,r:7},{x:41,r:22}]];
-    const letters=(pos[n]||[]).map(({x,r},i)=>`
-      <g transform="rotate(${r},${x},14)" style="animation:lpop .26s ${(i*.09).toFixed(2)}s cubic-bezier(.32,1.6,.56,1) both">
-        <rect x="${x-7}" y="1" width="14" height="19" rx="2" fill="#fef9e7" opacity=".95"/>
-        <path d="M${x-7},1 L${x},7 L${x+7},1" fill="none" stroke="#d4a96a" stroke-width="1.1"/>
+    const has=n>0;
+    /* palette: stati vuoto / posta / aperta */
+    const [t,m,b]=isOpen?['#16a34a','#15803d','#166534']:has?['#3b82f6','#2563eb','#1d4ed8']:['#475569','#334155','#1e293b'];
+    const glow=isOpen?'rgba(34,197,94,.5)':has?'rgba(59,130,246,.55)':'rgba(0,0,0,0)';
+    /* buste: rettangoli ruotati disegnati PRIMA del corpo.
+       Il corpo inizia a y=16 → solo la parte sopra y=16 è visibile (angolino). */
+    const pos=[[],[{x:29,r:0}],[{x:21,r:-14},{x:37,r:14}],[{x:17,r:-18},{x:29,r:0},{x:41,r:18}],[{x:13,r:-21},{x:22,r:-7},{x:36,r:7},{x:45,r:21}]];
+    const env=(pos[n]||[]).map(({x,r},i)=>`
+      <g transform="rotate(${r},${x},16)" style="animation:lpop .27s ${(i*.09).toFixed(2)}s cubic-bezier(.32,1.6,.56,1) both">
+        <rect x="${x-9}" y="0" width="18" height="24" rx="3" fill="#fefce8" opacity=".96"/>
+        <line x1="${x-9}" y1="0" x2="${x}" y2="8" stroke="#c8a060" stroke-width="1.3" stroke-linecap="round"/>
+        <line x1="${x+9}" y1="0" x2="${x}" y2="8" stroke="#c8a060" stroke-width="1.3" stroke-linecap="round"/>
       </g>`).join('');
-    return `<svg viewBox="0 0 54 54" xmlns="http://www.w3.org/2000/svg"
-      style="width:100%;height:auto;display:block;filter:drop-shadow(0 6px 22px ${glow})">
+    return `<svg viewBox="0 0 58 72" xmlns="http://www.w3.org/2000/svg"
+      style="width:100%;height:auto;display:block;filter:drop-shadow(0 8px 28px ${glow})">
       <defs>
-        <linearGradient id="mg" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id="vg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="${t}"/>
+          <stop offset="100%" stop-color="${b}"/>
+        </linearGradient>
+        <linearGradient id="hg" x1="0" y1="0" x2="1" y2="0">
           <stop offset="0%" stop-color="rgba(255,255,255,.14)"/>
-          <stop offset="100%" stop-color="rgba(0,0,0,.25)"/>
+          <stop offset="40%" stop-color="rgba(255,255,255,.04)"/>
+          <stop offset="100%" stop-color="rgba(0,0,0,.22)"/>
         </linearGradient>
-        <linearGradient id="lg" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="rgba(255,255,255,.22)"/>
-          <stop offset="100%" stop-color="rgba(0,0,0,.08)"/>
+        <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="rgba(0,0,0,.9)"/>
+          <stop offset="100%" stop-color="rgba(0,0,0,.55)"/>
         </linearGradient>
+        <linearGradient id="tg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="rgba(255,255,255,.25)"/>
+          <stop offset="100%" stop-color="rgba(255,255,255,.05)"/>
+        </linearGradient>
+        <filter id="sf"><feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="rgba(0,0,0,.5)"/></filter>
       </defs>
-      ${hasLetters?letters:''}
-      <!-- corpo principale -->
-      <rect x="2" y="18" width="50" height="32" rx="5" fill="${bc}"/>
-      <rect x="2" y="18" width="50" height="32" rx="5" fill="url(#mg)"/>
-      <!-- coperchio -->
-      <rect x="0" y="12" width="54" height="9" rx="4" fill="${lc}"/>
-      <rect x="0" y="12" width="54" height="9" rx="4" fill="url(#lg)"/>
-      <!-- ombra coperchio/corpo -->
-      <rect x="2" y="20" width="50" height="2.5" fill="rgba(0,0,0,.22)"/>
-      <!-- slot posta (prominente) -->
-      <rect x="8" y="28" width="38" height="6" rx="3" fill="rgba(0,0,0,.82)"/>
-      <rect x="8" y="28" width="38" height="2" rx="1" fill="rgba(0,0,0,.4)"/>
-      <!-- viti a muro -->
-      <circle cx="6" cy="26" r="2" fill="rgba(0,0,0,.35)"/><circle cx="6" cy="26" r="1.1" fill="rgba(255,255,255,.1)"/>
-      <circle cx="48" cy="26" r="2" fill="rgba(0,0,0,.35)"/><circle cx="48" cy="26" r="1.1" fill="rgba(255,255,255,.1)"/>
-      <!-- serratura -->
-      <circle cx="27" cy="42" r="3.5" fill="rgba(0,0,0,.5)"/>
-      <circle cx="27" cy="42" r="2.1" fill="#04060a"/>
-      <rect x="26.1" y="43.5" width="1.8" height="3.2" rx=".9" fill="#04060a"/>
-      <!-- linea divisoria decorativa -->
-      <rect x="10" y="36" width="34" height=".6" rx=".3" fill="rgba(255,255,255,.07)"/>
+
+      ${has?env:''}
+
+      <!-- corpo principale con gradiente verticale + orizzontale per effetto 3D -->
+      <rect x="3" y="16" width="52" height="50" rx="6" fill="url(#vg)"/>
+      <rect x="3" y="16" width="52" height="50" rx="6" fill="url(#hg)"/>
+
+      <!-- striscia superiore (lamiera piegata) -->
+      <rect x="1" y="11" width="56" height="9" rx="4" fill="${t}"/>
+      <rect x="1" y="11" width="56" height="9" rx="4" fill="url(#tg)"/>
+      <!-- ombra sotto striscia -->
+      <rect x="3" y="19" width="52" height="3" fill="rgba(0,0,0,.28)" rx="1"/>
+
+      <!-- pannello slot (zona rialzata) -->
+      <rect x="6" y="28" width="46" height="16" rx="4" fill="rgba(0,0,0,.2)" filter="url(#sf)"/>
+      <!-- slot vero (fessura) -->
+      <rect x="9" y="31" width="40" height="10" rx="5" fill="url(#sg)"/>
+      <!-- riflesso metallico sulla flangia superiore dello slot -->
+      <rect x="9" y="31" width="40" height="3" rx="2" fill="rgba(255,255,255,.14)"/>
+      <!-- riflesso inferiore -->
+      <rect x="9" y="40" width="40" height="1.5" rx=".5" fill="rgba(255,255,255,.09)"/>
+
+      <!-- bordo perimetrale (effetto stampaggio metallo) -->
+      <rect x="3" y="16" width="52" height="50" rx="6" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="1"/>
+
+      <!-- viti montaggio parete -->
+      <circle cx="10" cy="56" r="3" fill="rgba(0,0,0,.45)"/>
+      <circle cx="10" cy="56" r="1.6" fill="rgba(255,255,255,.1)"/>
+      <line x1="8.5" y1="56" x2="11.5" y2="56" stroke="rgba(255,255,255,.15)" stroke-width=".7"/>
+      <circle cx="48" cy="56" r="3" fill="rgba(0,0,0,.45)"/>
+      <circle cx="48" cy="56" r="1.6" fill="rgba(255,255,255,.1)"/>
+      <line x1="46.5" y1="56" x2="49.5" y2="56" stroke="rgba(255,255,255,.15)" stroke-width=".7"/>
+
+      <!-- serratura centrale -->
+      <circle cx="29" cy="52" r="4.5" fill="rgba(0,0,0,.55)"/>
+      <circle cx="29" cy="52" r="2.8" fill="#0c0f16"/>
+      <circle cx="28.2" cy="51.3" r="1" fill="rgba(255,255,255,.08)"/>
+      <rect x="28.1" y="53.5" width="1.8" height="4" rx=".9" fill="#0c0f16"/>
+
       <!-- badge conteggio -->
-      ${hasLetters?`<circle cx="49" cy="15" r="7" fill="#fbbf24"/>
-        <text x="49" y="19.5" text-anchor="middle" fill="#1a1000" font-size="7.5" font-weight="900" font-family="system-ui,sans-serif">${count>9?'9+':count}</text>`:''}
-      <!-- indicatore aperta -->
-      ${isOpen?`<circle cx="5" cy="15" r="4.5" fill="#10b981"/><circle cx="5" cy="15" r="2.6" fill="#34d399"/>
-        <line x1="3.5" y1="15" x2="6.5" y2="15" stroke="#065f46" stroke-width="1.2" stroke-linecap="round"/>
-        <line x1="5" y1="13.5" x2="5" y2="16.5" stroke="#065f46" stroke-width="1.2" stroke-linecap="round"/>`:''}
+      ${has?`<circle cx="51" cy="14" r="8.5" fill="#fbbf24" stroke="#0d0b1e" stroke-width="2"/>
+        <text x="51" y="18.5" text-anchor="middle" fill="#1a1000" font-size="9" font-weight="900" font-family="system-ui,sans-serif">${count>9?'9+':count}</text>`:''}
+
+      <!-- indicatore cassetta aperta -->
+      ${isOpen?`<circle cx="7" cy="14" r="6" fill="#22c55e" stroke="#0d0b1e" stroke-width="1.5"/>
+        <text x="7" y="18" text-anchor="middle" fill="#fff" font-size="7" font-weight="900" font-family="system-ui">✓</text>`:''}
     </svg>`;
   }
 
