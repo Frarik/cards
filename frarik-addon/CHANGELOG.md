@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.29 — 2026-06-17
+
+### fix(posta-card): v2.4 — testi bianchi al 100%, spacing ridotto tra header e contenuto
+
+- Tutti i testi principali portati a `#fff` puro: big-num, big-lbl, last-t, sm-v, sm-l, btm-lbl, btm-chev, menu-sec, time-lbl, rst-btn, act-btn-sec, ni-sub
+- Rimossi tutti gli `opacity` ridotti dai testi (`.btm-lbl opacity:.7`, `.menu-sec opacity:.35`, ecc.)
+- Ridotto padding header da `14px 16px 10px` a `12px 16px 6px`
+- Ridotto padding body da `14px 14px 16px` a `10px 14px 14px`, gap da 10px a 8px
+
 ## 1.5.28 — 2026-06-17
 
 ### fix(posta-card): v2.3 — SVG cassetta completamente ridisegnata, contrasto migliorato
