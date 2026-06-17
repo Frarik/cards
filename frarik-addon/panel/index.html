@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -23,14 +23,14 @@
 </div>
 
 <!-- CONN OVERLAY -->
-<div id="cov"><div class="spin"></div><div id="cmsg">Connessione a Home Assistant…</div>
+<div id="cov"><div class="spin"></div><div id="cmsg">Connessione a Home Assistantâ€¦</div>
   <button id="cov-skip" style="display:none;margin-top:10px;padding:8px 20px;border-radius:20px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:11px;font-weight:600;cursor:pointer" data-action="_covSkip">Continua senza connessione</button></div>
 
 <!-- ENTITY MODAL -->
 <div class="mbg off" id="emod">
   <div class="mbox">
-    <div class="mhdr"><span class="mtitle" id="emod-title">➕ Aggiungi Sensore</span><button class="mx" data-action="closeEM">✕</button></div>
-    <input id="esearch" type="text" placeholder="Cerca entità…" >
+    <div class="mhdr"><span class="mtitle" id="emod-title">âž• Aggiungi Sensore</span><button class="mx" data-action="closeEM">âœ•</button></div>
+    <input id="esearch" type="text" placeholder="Cerca entitÃ â€¦" >
     <div id="elist"></div>
   </div>
 </div>
@@ -38,43 +38,43 @@
 <!-- CARD EDITOR MODAL -->
 <div class="mbg off" id="cmod">
   <div class="mbox">
-    <div class="mhdr"><span class="mtitle" id="cmod-title">✏️ Configura Card</span><button class="mx" data-action="closeCM">✕</button></div>
+    <div class="mhdr"><span class="mtitle" id="cmod-title">âœï¸ Configura Card</span><button class="mx" data-action="closeCM">âœ•</button></div>
     <div class="fscroll">
       <div class="fr"><div class="flbl">Etichetta</div><input class="finp" id="cm-lbl" type="text" placeholder="es. Fotovoltaico"></div>
-      <div class="fr"><div class="flbl">Icona</div><div class="finp-row"><input class="finp" id="cm-ico" type="text" placeholder="☀️ o mdi:home"><button class="fbtn" title="Scegli icona" id="cm-ico-picker">🎨</button></div></div>
-      <div class="fr" id="fr-entity"><div class="flbl">Entità Home Assistant</div><div class="finp-row"><input class="finp" id="cm-entity" type="text" placeholder="sensor.xxx"><button class="fbtn" data-action="browseField" data-action-arg="cm-entity">🔍</button></div></div>
-      <div class="fr" id="fr-unit"><div class="flbl">Unità di misura</div><input class="finp" id="cm-unit" type="text" placeholder="W, kWh, %, °C, €…"></div>
+      <div class="fr"><div class="flbl">Icona</div><div class="finp-row"><input class="finp" id="cm-ico" type="text" placeholder="â˜€ï¸ o mdi:home"><button class="fbtn" title="Scegli icona" id="cm-ico-picker">ðŸŽ¨</button></div></div>
+      <div class="fr" id="fr-entity"><div class="flbl">EntitÃ  Home Assistant</div><div class="finp-row"><input class="finp" id="cm-entity" type="text" placeholder="sensor.xxx"><button class="fbtn" data-action="browseField" data-action-arg="cm-entity">ðŸ”</button></div></div>
+      <div class="fr" id="fr-unit"><div class="flbl">UnitÃ  di misura</div><input class="finp" id="cm-unit" type="text" placeholder="W, kWh, %, Â°C, â‚¬â€¦"></div>
       <div class="fr">
         <div class="flbl">Tipo di card</div>
         <select class="finp" id="cm-type" >
           <optgroup label="Numeri">
-            <option value="big">🔢 Grande — numero enorme</option>
-            <option value="compact">📊 Compatta — numero + barra</option>
-            <option value="gauge">🕐 Indicatore — circolare</option>
-            <option value="text">🔤 Testo — mostra stato</option>
+            <option value="big">ðŸ”¢ Grande â€” numero enorme</option>
+            <option value="compact">ðŸ“Š Compatta â€” numero + barra</option>
+            <option value="gauge">ðŸ• Indicatore â€” circolare</option>
+            <option value="text">ðŸ”¤ Testo â€” mostra stato</option>
           </optgroup>
           <optgroup label="Grafici">
-            <option value="history">📈 Storico — grafico lineare</option>
-            <option value="multiline">📈 Multi-Linea — più sensori</option>
-            <option value="bar">📊 Barre — grafico orario</option>
+            <option value="history">ðŸ“ˆ Storico â€” grafico lineare</option>
+            <option value="multiline">ðŸ“ˆ Multi-Linea â€” piÃ¹ sensori</option>
+            <option value="bar">ðŸ“Š Barre â€” grafico orario</option>
           </optgroup>
           <optgroup label="Flusso Energia">
-            <option value="flowbars">⚡ Flusso Barre — stile app</option>
-            <option value="flowmap">🗺️ Flusso Mappa — nodi animati</option>
+            <option value="flowbars">âš¡ Flusso Barre â€” stile app</option>
+            <option value="flowmap">ðŸ—ºï¸ Flusso Mappa â€” nodi animati</option>
           </optgroup>
           <optgroup label="Dispositivi">
-            <option value="toggle">🔘 Interruttore — accendi/spegni</option>
-            <option value="camera">📷 Telecamera — stream live</option>
-            <option value="media">🎵 Lettore multimediale</option>
-            <option value="climate">🌡️ Termostato</option>
-            <option value="weather">🌤️ Meteo</option>
-            <option value="weather-forecast">📅 Previsioni — strip 7gg</option>
-            <option value="appliances">🔌 Elettrodomestici — consumo</option>
-            <option value="header-bar">⊞ Header Personalizzato</option>
-            <option value="picture-elements">🖼️ Immagine + Sensori</option>
-            <option value="clock">🕐 Orologio — data e ora</option>
-            <option value="markdown">📝 Testo/HTML — libero</option>
-            <option value="entities">📋 Lista Entità</option>
+            <option value="toggle">ðŸ”˜ Interruttore â€” accendi/spegni</option>
+            <option value="camera">ðŸ“· Telecamera â€” stream live</option>
+            <option value="media">ðŸŽµ Lettore multimediale</option>
+            <option value="climate">ðŸŒ¡ï¸ Termostato</option>
+            <option value="weather">ðŸŒ¤ï¸ Meteo</option>
+            <option value="weather-forecast">ðŸ“… Previsioni â€” strip 7gg</option>
+            <option value="appliances">ðŸ”Œ Elettrodomestici â€” consumo</option>
+            <option value="header-bar">âŠž Header Personalizzato</option>
+            <option value="picture-elements">ðŸ–¼ï¸ Immagine + Sensori</option>
+            <option value="clock">ðŸ• Orologio â€” data e ora</option>
+            <option value="markdown">ðŸ“ Testo/HTML â€” libero</option>
+            <option value="entities">ðŸ“‹ Lista EntitÃ </option>
           </optgroup>
         </select>
       </div>
@@ -83,33 +83,33 @@
       <div class="fr" id="fr-min"><div class="flbl">Valore minimo (gauge)</div><input class="finp" id="cm-min" type="number" placeholder="0"></div>
       <div class="fr" id="fr-hours"><div class="flbl">Ore di storico</div><input class="finp" id="cm-hours" type="number" placeholder="24" min="1" max="168"></div>
       <!-- Flow fields -->
-      <div class="fr" id="fr-solar"><div class="flbl">Entità Solare (W)</div><div class="finp-row"><input class="finp" id="cm-solar" type="text" placeholder="sensor.xxx_power"><button class="fbtn" data-action="browseField" data-action-arg="cm-solar">🔍</button></div></div>
-      <div class="fr" id="fr-load"><div class="flbl">Entità Carico Casa (W)</div><div class="finp-row"><input class="finp" id="cm-load" type="text" placeholder="sensor.consumo_xxx"><button class="fbtn" data-action="browseField" data-action-arg="cm-load">🔍</button></div></div>
-      <div class="fr" id="fr-grid"><div class="flbl">Entità Rete (W, + esport.)</div><div class="finp-row"><input class="finp" id="cm-grid" type="text" placeholder="sensor.grid_power"><button class="fbtn" data-action="browseField" data-action-arg="cm-grid">🔍</button></div></div>
-      <div class="fr" id="fr-battery"><div class="flbl">Entità Batteria (W, opz.)</div><div class="finp-row"><input class="finp" id="cm-battery" type="text" placeholder="opzionale"><button class="fbtn" data-action="browseField" data-action-arg="cm-battery">🔍</button></div></div>
+      <div class="fr" id="fr-solar"><div class="flbl">EntitÃ  Solare (W)</div><div class="finp-row"><input class="finp" id="cm-solar" type="text" placeholder="sensor.xxx_power"><button class="fbtn" data-action="browseField" data-action-arg="cm-solar">ðŸ”</button></div></div>
+      <div class="fr" id="fr-load"><div class="flbl">EntitÃ  Carico Casa (W)</div><div class="finp-row"><input class="finp" id="cm-load" type="text" placeholder="sensor.consumo_xxx"><button class="fbtn" data-action="browseField" data-action-arg="cm-load">ðŸ”</button></div></div>
+      <div class="fr" id="fr-grid"><div class="flbl">EntitÃ  Rete (W, + esport.)</div><div class="finp-row"><input class="finp" id="cm-grid" type="text" placeholder="sensor.grid_power"><button class="fbtn" data-action="browseField" data-action-arg="cm-grid">ðŸ”</button></div></div>
+      <div class="fr" id="fr-battery"><div class="flbl">EntitÃ  Batteria (W, opz.)</div><div class="finp-row"><input class="finp" id="cm-battery" type="text" placeholder="opzionale"><button class="fbtn" data-action="browseField" data-action-arg="cm-battery">ðŸ”</button></div></div>
       <!-- Multi-entity fields -->
-      <div class="fr" id="fr-ent2"><div class="flbl">Entità 2</div><div class="finp-row"><input class="finp" id="cm-ent2" type="text" placeholder="sensor.xxx"><button class="fbtn" data-action="browseField" data-action-arg="cm-ent2">🔍</button></div></div>
-      <div class="fr" id="fr-ent3"><div class="flbl">Entità 3</div><div class="finp-row"><input class="finp" id="cm-ent3" type="text" placeholder="sensor.xxx (opz.)"><button class="fbtn" data-action="browseField" data-action-arg="cm-ent3">🔍</button></div></div>
+      <div class="fr" id="fr-ent2"><div class="flbl">EntitÃ  2</div><div class="finp-row"><input class="finp" id="cm-ent2" type="text" placeholder="sensor.xxx"><button class="fbtn" data-action="browseField" data-action-arg="cm-ent2">ðŸ”</button></div></div>
+      <div class="fr" id="fr-ent3"><div class="flbl">EntitÃ  3</div><div class="finp-row"><input class="finp" id="cm-ent3" type="text" placeholder="sensor.xxx (opz.)"><button class="fbtn" data-action="browseField" data-action-arg="cm-ent3">ðŸ”</button></div></div>
       <!-- Weather-forecast extra entities -->
-      <div class="fr" id="fr-wf-temp"><div class="flbl">Sensore Temperatura</div><div class="finp-row"><input class="finp" id="cm-wf-temp" type="text" placeholder="sensor.temperatura_esterna"><button class="fbtn" data-action="browseField" data-action-arg="cm-wf-temp">🔍</button></div></div>
-      <div class="fr" id="fr-wf-hum"><div class="flbl">Sensore Umidità</div><div class="finp-row"><input class="finp" id="cm-wf-hum" type="text" placeholder="sensor.umidita_esterna"><button class="fbtn" data-action="browseField" data-action-arg="cm-wf-hum">🔍</button></div></div>
-      <div class="fr" id="fr-wf-wind"><div class="flbl">Sensore Vento (km/h)</div><div class="finp-row"><input class="finp" id="cm-wf-wind" type="text" placeholder="sensor.velocita_vento"><button class="fbtn" data-action="browseField" data-action-arg="cm-wf-wind">🔍</button></div></div>
-      <div class="fr" id="fr-wf-days"><div class="flbl">Giorni previsioni (1–14)</div><input class="finp" id="cm-wf-days" type="number" min="1" max="14" placeholder="7"></div>
+      <div class="fr" id="fr-wf-temp"><div class="flbl">Sensore Temperatura</div><div class="finp-row"><input class="finp" id="cm-wf-temp" type="text" placeholder="sensor.temperatura_esterna"><button class="fbtn" data-action="browseField" data-action-arg="cm-wf-temp">ðŸ”</button></div></div>
+      <div class="fr" id="fr-wf-hum"><div class="flbl">Sensore UmiditÃ </div><div class="finp-row"><input class="finp" id="cm-wf-hum" type="text" placeholder="sensor.umidita_esterna"><button class="fbtn" data-action="browseField" data-action-arg="cm-wf-hum">ðŸ”</button></div></div>
+      <div class="fr" id="fr-wf-wind"><div class="flbl">Sensore Vento (km/h)</div><div class="finp-row"><input class="finp" id="cm-wf-wind" type="text" placeholder="sensor.velocita_vento"><button class="fbtn" data-action="browseField" data-action-arg="cm-wf-wind">ðŸ”</button></div></div>
+      <div class="fr" id="fr-wf-days"><div class="flbl">Giorni previsioni (1â€“14)</div><input class="finp" id="cm-wf-days" type="number" min="1" max="14" placeholder="7"></div>
       <!-- Camera refresh -->
       <div class="fr" id="fr-refresh"><div class="flbl">Aggiorna ogni (sec)</div><input class="finp" id="cm-refresh" type="number" min="1" max="60" placeholder="5"></div>
       <!-- Click action -->
       <div class="fr">
         <div class="flbl">Azione al clic</div>
         <select class="finp" id="cm-clickaction" >
-          <option value="info">ℹ️ Mostra dettagli entità</option>
-          <option value="toggle">🔘 Interruttore on/off</option>
-          <option value="link">🔗 Apri link esterno</option>
-          <option value="none">⛔ Nessuna azione</option>
+          <option value="info">â„¹ï¸ Mostra dettagli entitÃ </option>
+          <option value="toggle">ðŸ”˜ Interruttore on/off</option>
+          <option value="link">ðŸ”— Apri link esterno</option>
+          <option value="none">â›” Nessuna azione</option>
         </select>
       </div>
       <div class="fr" id="fr-clickurl" style="display:none">
         <div class="flbl">URL da aprire</div>
-        <input class="finp" id="cm-clickurl" type="text" placeholder="https://…">
+        <input class="finp" id="cm-clickurl" type="text" placeholder="https://â€¦">
       </div>
       <!-- Appliances fields -->
       <div class="fr" id="fr-threshold"><div class="flbl">Soglia minima W (nascondi sotto)</div><input class="finp" id="cm-threshold" type="number" min="0" max="500" placeholder="5" value="5"></div>
@@ -122,8 +122,8 @@
         <div id="cm-items-list"></div>
       </div>
       <!-- Picture-elements fields -->
-      <div class="fr" id="fr-imageurl"><div class="flbl">URL Immagine</div><input class="finp" id="cm-imageurl" type="text" placeholder="casa.png  oppure  https://…/img.png"></div>
-      <div class="fr" id="fr-pelements" style="display:none"><div class="flbl" style="color:var(--muted)">💡 Overlay sensori: aggiungi elementi tramite il campo <code>elements</code> nella configurazione.<br>Ogni elemento: <code>entity, x, y, icon, suffix, color, size</code></div></div>
+      <div class="fr" id="fr-imageurl"><div class="flbl">URL Immagine</div><input class="finp" id="cm-imageurl" type="text" placeholder="casa.png  oppure  https://â€¦/img.png"></div>
+      <div class="fr" id="fr-pelements" style="display:none"><div class="flbl" style="color:var(--muted)">ðŸ’¡ Overlay sensori: aggiungi elementi tramite il campo <code>elements</code> nella configurazione.<br>Ogni elemento: <code>entity, x, y, icon, suffix, color, size</code></div></div>
       <!-- Markdown content -->
       <div class="fr" id="fr-content"><div class="flbl">Contenuto HTML / Testo</div><textarea class="finp" id="cm-content" rows="5" placeholder="&lt;b&gt;Titolo&lt;/b&gt; o testo libero..." style="resize:vertical;font-family:monospace;font-size:11px"></textarea></div>
       <!-- Color + Sub -->
@@ -150,37 +150,37 @@
       <div class="fr">
         <div class="flbl">Badge nella card</div>
         <div id="cm-badges-preview" style="display:flex;flex-wrap:wrap;gap:4px;min-height:20px;margin-bottom:6px"></div>
-        <button class="fbtn" style="width:100%;justify-content:center" id="cm-badge-btn">🏷️ Gestisci badge…</button>
+        <button class="fbtn" style="width:100%;justify-content:center" id="cm-badge-btn">ðŸ·ï¸ Gestisci badgeâ€¦</button>
       </div>
       <div class="fr">
-        <div class="flbl">👁 Visibilità della card</div>
+        <div class="flbl">ðŸ‘ VisibilitÃ  della card</div>
         <select class="finp" id="cm-vis-mode"  style="margin-bottom:6px">
           <option value="always">Sempre visibile</option>
-          <option value="cond">Mostra solo se… (condizione)</option>
+          <option value="cond">Mostra solo seâ€¦ (condizione)</option>
         </select>
         <div id="cm-vis-cond" style="display:none">
-          <div class="finp-row" style="margin-bottom:6px"><input class="finp entac" id="cm-vis-entity" type="text" placeholder="entità (es. alarm_control_panel.casa)"><button class="fbtn" data-action="browseField" data-action-arg="cm-vis-entity">🔍</button></div>
+          <div class="finp-row" style="margin-bottom:6px"><input class="finp entac" id="cm-vis-entity" type="text" placeholder="entitÃ  (es. alarm_control_panel.casa)"><button class="fbtn" data-action="browseField" data-action-arg="cm-vis-entity">ðŸ”</button></div>
           <div style="display:flex;gap:6px;margin-bottom:6px">
             <select class="finp" id="cm-vis-op"  style="flex:1.1">
-              <option value="eq">è uguale a</option>
-              <option value="ne">è diverso da</option>
+              <option value="eq">Ã¨ uguale a</option>
+              <option value="ne">Ã¨ diverso da</option>
               <option value="gt">maggiore di</option>
               <option value="lt">minore di</option>
-              <option value="gte">≥</option>
-              <option value="lte">≤</option>
+              <option value="gte">â‰¥</option>
+              <option value="lte">â‰¤</option>
               <option value="between">tra</option>
               <option value="contains">contiene</option>
             </select>
             <input class="finp" id="cm-vis-val" type="text" placeholder="valore" style="flex:1">
-            <input class="finp" id="cm-vis-val2" type="text" placeholder="e…" style="flex:0 0 64px;display:none">
+            <input class="finp" id="cm-vis-val2" type="text" placeholder="eâ€¦" style="flex:0 0 64px;display:none">
           </div>
-          <div style="font-size:10px;color:var(--muted);line-height:1.4">La card appare solo quando la condizione è vera. In modifica resta visibile (marcata 👁).</div>
+          <div style="font-size:10px;color:var(--muted);line-height:1.4">La card appare solo quando la condizione Ã¨ vera. In modifica resta visibile (marcata ðŸ‘).</div>
         </div>
       </div>
     </div>
     <div class="mfoot">
       <button class="btn2" data-action="closeCM">Annulla</button>
-      <button class="btn1" data-action="saveCard">💾 Salva Card</button>
+      <button class="btn1" data-action="saveCard">ðŸ’¾ Salva Card</button>
     </div>
   </div>
 </div>
@@ -189,13 +189,13 @@
 <!-- SPECIAL CARD MODAL -->
 <div class="mbg off" id="smod">
   <div class="mbox" style="max-width:560px;width:95vw">
-    <div class="mhdr"><span class="mtitle">✨ Aggiungi Card</span><button class="mx" data-action="closeSM">✕</button></div>
+    <div class="mhdr"><span class="mtitle">âœ¨ Aggiungi Card</span><button class="mx" data-action="closeSM">âœ•</button></div>
     <div class="fscroll" style="padding:12px 16px">
       <div class="scard-grid">
-        <button class="sc-btn" data-action="addSpecial" data-action-arg="appliances"><span class="sc-ico">🔌</span>Elettrodomestici</button>
-        <button class="sc-btn" data-action="addSpecial" data-action-arg="free" style="border-color:rgba(99,102,241,.4);color:var(--acc2)"><span class="sc-ico">🎨</span>Canvas Libero</button>
-        <button class="sc-btn" data-action="addSpecial" data-action-arg="header-bar" style="border-color:rgba(129,140,248,.4);color:#a5b4fc"><span class="sc-ico">⊞</span>Header Barra</button>
-        <button class="sc-btn" data-action="openFBM" style="border-color:rgba(20,184,166,.4);color:#2dd4bf"><span class="sc-ico">⊟</span>Footer Barra</button>
+        <button class="sc-btn" data-action="addSpecial" data-action-arg="appliances"><span class="sc-ico">ðŸ”Œ</span>Elettrodomestici</button>
+        <button class="sc-btn" data-action="addSpecial" data-action-arg="free" style="border-color:rgba(99,102,241,.4);color:var(--acc2)"><span class="sc-ico">ðŸŽ¨</span>Canvas Libero</button>
+        <button class="sc-btn" data-action="addSpecial" data-action-arg="header-bar" style="border-color:rgba(129,140,248,.4);color:#a5b4fc"><span class="sc-ico">âŠž</span>Header Barra</button>
+        <button class="sc-btn" data-action="openFBM" style="border-color:rgba(20,184,166,.4);color:#2dd4bf"><span class="sc-ico">âŠŸ</span>Footer Barra</button>
       </div>
     </div>
   </div>
@@ -204,20 +204,20 @@
 <!-- SECTION EDITOR MODAL -->
 <div class="mbg off" id="sectmod">
   <div class="mbox">
-    <div class="mhdr"><span class="mtitle" id="sectmod-title">✏️ Sezione</span><button class="mx" data-action="closeSectMod">✕</button></div>
+    <div class="mhdr"><span class="mtitle" id="sectmod-title">âœï¸ Sezione</span><button class="mx" data-action="closeSectMod">âœ•</button></div>
     <div class="fscroll" style="padding:0">
 
-      <!-- ── TITOLO (solo intestazione) ── -->
+      <!-- â”€â”€ TITOLO (solo intestazione) â”€â”€ -->
       <div id="sect-title-tab">
         <div class="sect-section">
-          <span class="sect-section-lbl">📝 Titolo</span>
+          <span class="sect-section-lbl">ðŸ“ Titolo</span>
           <div class="flbl">Testo</div>
-          <input class="finp" id="sect-title-text" type="text" placeholder="es. Casa, Energia…" style="margin-bottom:10px" >
+          <input class="finp" id="sect-title-text" type="text" placeholder="es. Casa, Energiaâ€¦" style="margin-bottom:10px" >
           <div class="flbl">Allineamento titolo</div>
           <div class="sect-align-pick" style="margin-bottom:10px">
-            <button class="sect-align-btn" id="sta-left"   data-action="setSectTitleAlign" data-action-arg="left">⬅ Sinistra</button>
-            <button class="sect-align-btn on" id="sta-center" data-action="setSectTitleAlign" data-action-arg="center">↔ Centro</button>
-            <button class="sect-align-btn" id="sta-right"  data-action="setSectTitleAlign" data-action-arg="right">➡ Destra</button>
+            <button class="sect-align-btn" id="sta-left"   data-action="setSectTitleAlign" data-action-arg="left">â¬… Sinistra</button>
+            <button class="sect-align-btn on" id="sta-center" data-action="setSectTitleAlign" data-action-arg="center">â†” Centro</button>
+            <button class="sect-align-btn" id="sta-right"  data-action="setSectTitleAlign" data-action-arg="right">âž¡ Destra</button>
           </div>
           <div class="flbl">Dimensione</div>
           <div class="sect-size-pick" style="margin-bottom:10px">
@@ -228,7 +228,7 @@
           </div>
           <div class="flbl">Colore testo</div>
           <div class="cpick" id="sect-colors" style="margin-bottom:5px"></div>
-          <button class="fbtn" style="font-size:10px;margin-bottom:10px" data-action="setSectColor" data-action-arg="">↺ Auto (predefinito)</button>
+          <button class="fbtn" style="font-size:10px;margin-bottom:10px" data-action="setSectColor" data-action-arg="">â†º Auto (predefinito)</button>
           <div class="flbl">Stile</div>
           <div style="display:flex;gap:6px">
             <button class="fbtn" id="sect-bold-btn" data-action="toggleSectBold" style="font-weight:800;min-width:50px">G</button>
@@ -237,26 +237,26 @@
         </div>
       </div>
 
-      <!-- ── DISTINTIVI / CHIPS ── -->
+      <!-- â”€â”€ DISTINTIVI / CHIPS â”€â”€ -->
       <div class="sect-section" id="sect-badge-tab">
-        <span class="sect-section-lbl">🏷️ Distintivi / Chips</span>
+        <span class="sect-section-lbl">ðŸ·ï¸ Distintivi / Chips</span>
         <div class="flbl">Allineamento distintivi</div>
         <div class="sect-align-pick" style="margin-bottom:10px">
-          <button class="sect-align-btn" id="sba-left"   data-action="setSectBadgesAlign" data-action-arg="left">⬅ Sinistra</button>
-          <button class="sect-align-btn on" id="sba-center" data-action="setSectBadgesAlign" data-action-arg="center">↔ Centro</button>
-          <button class="sect-align-btn" id="sba-right"  data-action="setSectBadgesAlign" data-action-arg="right">➡ Destra</button>
+          <button class="sect-align-btn" id="sba-left"   data-action="setSectBadgesAlign" data-action-arg="left">â¬… Sinistra</button>
+          <button class="sect-align-btn on" id="sba-center" data-action="setSectBadgesAlign" data-action-arg="center">â†” Centro</button>
+          <button class="sect-align-btn" id="sba-right"  data-action="setSectBadgesAlign" data-action-arg="right">âž¡ Destra</button>
         </div>
         <div id="sect-badge-list" style="margin-bottom:8px"></div>
         <div style="display:flex;gap:5px">
-          <button class="ep-add" style="flex:1" data-action="openSectBadges">➕ Aggiungi distintivo</button>
-          <button class="fbtn" id="sect-paste-btn" style="display:none" data-action="pasteSectBadge">📋 Incolla</button>
+          <button class="ep-add" style="flex:1" data-action="openSectBadges">âž• Aggiungi distintivo</button>
+          <button class="fbtn" id="sect-paste-btn" style="display:none" data-action="pasteSectBadge">ðŸ“‹ Incolla</button>
         </div>
       </div>
 
     </div>
     <div class="mfoot">
       <button class="btn2" data-action="closeSectMod">Annulla</button>
-      <button class="btn1" data-action="saveSectMod">💾 Salva</button>
+      <button class="btn1" data-action="saveSectMod">ðŸ’¾ Salva</button>
     </div>
   </div>
 </div>
@@ -264,31 +264,31 @@
 <!-- BADGE EDITOR MODAL -->
 <div class="mbg off" id="bmod">
   <div class="mbox">
-    <div class="mhdr"><span class="mtitle" id="bmod-title">🏷️ Badge</span><button class="mx" data-action="closeBM">✕</button></div>
+    <div class="mhdr"><span class="mtitle" id="bmod-title">ðŸ·ï¸ Badge</span><button class="mx" data-action="closeBM">âœ•</button></div>
     <div class="fscroll" style="padding:0">
       <div id="bm-align" style="display:flex;align-items:center;gap:6px;padding:12px 14px 6px">
         <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-right:auto">Allineamento</span>
-        <button class="bf-chip" data-al="left" data-action="_bmSetAlign" data-action-arg="left">◧ Sx</button>
-        <button class="bf-chip" data-al="center" data-action="_bmSetAlign" data-action-arg="center">▣ Centro</button>
-        <button class="bf-chip" data-al="right" data-action="_bmSetAlign" data-action-arg="right">◨ Dx</button>
+        <button class="bf-chip" data-al="left" data-action="_bmSetAlign" data-action-arg="left">â—§ Sx</button>
+        <button class="bf-chip" data-al="center" data-action="_bmSetAlign" data-action-arg="center">â–£ Centro</button>
+        <button class="bf-chip" data-al="right" data-action="_bmSetAlign" data-action-arg="right">â—¨ Dx</button>
       </div>
       <div class="badgelist" id="badge-list"></div>
       <div id="bm-addrow" style="padding:2px 14px 10px">
-        <button class="ep-add" data-action="showBadgeForm">➕ Aggiungi distintivo</button>
+        <button class="ep-add" data-action="showBadgeForm">âž• Aggiungi distintivo</button>
       </div>
       <div id="badge-form" style="display:none;padding:0 14px 14px;border-top:1px solid var(--bd)">
         <div id="bf-form-title" style="padding:10px 0 8px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted)">Nuovo distintivo</div>
         <div class="flbl">Tipo</div>
         <div style="display:flex;gap:5px;margin-bottom:10px">
-          <button class="fbtn badge-type-btn on" id="bft-entity" data-action="selBT" data-action-arg="entity">🏷️ Entità HA</button>
-          <button class="fbtn badge-type-btn" id="bft-text" data-action="selBT" data-action-arg="text">🔤 Testo fisso</button>
-          <button class="fbtn badge-type-btn" id="bft-sep" data-action="selBT" data-action-arg="sep">│ Separatore</button>
+          <button class="fbtn badge-type-btn on" id="bft-entity" data-action="selBT" data-action-arg="entity">ðŸ·ï¸ EntitÃ  HA</button>
+          <button class="fbtn badge-type-btn" id="bft-text" data-action="selBT" data-action-arg="text">ðŸ”¤ Testo fisso</button>
+          <button class="fbtn badge-type-btn" id="bft-sep" data-action="selBT" data-action-arg="sep">â”‚ Separatore</button>
         </div>
         <div id="bf-entity-row">
-          <div class="flbl">Entità</div>
-          <div class="finp-row" style="margin-bottom:8px"><input class="finp" id="bf-entity" type="text" placeholder="sensor.xxx"><button class="fbtn" data-action="browseField" data-action-arg="bf-entity">🔍</button></div>
-          <div class="flbl">Suffisso / Unità</div>
-          <input class="finp" id="bf-suffix" type="text" placeholder="W  kWh  %  °C" style="margin-bottom:8px">
+          <div class="flbl">EntitÃ </div>
+          <div class="finp-row" style="margin-bottom:8px"><input class="finp" id="bf-entity" type="text" placeholder="sensor.xxx"><button class="fbtn" data-action="browseField" data-action-arg="bf-entity">ðŸ”</button></div>
+          <div class="flbl">Suffisso / UnitÃ </div>
+          <input class="finp" id="bf-suffix" type="text" placeholder="W  kWh  %  Â°C" style="margin-bottom:8px">
         </div>
         <div id="bf-text-row" style="display:none">
           <div class="flbl">Testo da mostrare</div>
@@ -296,11 +296,11 @@
         </div>
         <div id="bf-details-row">
           <div style="display:flex;gap:8px;margin-bottom:8px">
-            <div style="flex:0 0 90px"><div class="flbl">Icona</div><div class="finp-row" style="gap:3px"><input class="finp" id="bf-icon" type="text" placeholder="💡" style="text-align:center;font-size:13px;min-width:0"><button class="fbtn" title="Scegli icona" id="bf-icon-picker" style="padding:0 5px">🎨</button></div></div>
+            <div style="flex:0 0 90px"><div class="flbl">Icona</div><div class="finp-row" style="gap:3px"><input class="finp" id="bf-icon" type="text" placeholder="ðŸ’¡" style="text-align:center;font-size:13px;min-width:0"><button class="fbtn" title="Scegli icona" id="bf-icon-picker" style="padding:0 5px">ðŸŽ¨</button></div></div>
             <div style="flex:1"><div class="flbl">Etichetta (opz.)</div><input class="finp" id="bf-label" type="text" placeholder="es. Solare"></div>
           </div>
 
-          <div class="flbl bf-seclbl">👁 Visualizzazione</div>
+          <div class="flbl bf-seclbl">ðŸ‘ Visualizzazione</div>
           <div class="bf-chips" id="bf-disp" style="margin-bottom:10px">
             <button class="bf-chip on" data-disp="full" data-action="_selDisp" data-action-arg="full">Icona + Nome + Valore</button>
             <button class="bf-chip" data-disp="iconval" data-action="_selDisp" data-action-arg="iconval">Icona + Valore</button>
@@ -311,7 +311,7 @@
             <button class="bf-chip" data-disp="label" data-action="_selDisp" data-action-arg="label">Solo Nome</button>
           </div>
 
-          <div class="flbl bf-seclbl">🎨 Colore</div>
+          <div class="flbl bf-seclbl">ðŸŽ¨ Colore</div>
           <div class="bf-chips" style="margin-bottom:8px">
             <button class="bf-chip on" id="bcm-fixed" data-action="_selColMode" data-action-arg="fixed">Fisso</button>
             <button class="bf-chip" id="bcm-auto" data-action="_selColMode" data-action-arg="auto">Auto (acceso/spento)</button>
@@ -319,27 +319,27 @@
           </div>
           <div id="bf-fixed-col"><div class="cpick" id="bf-colors"></div></div>
           <div id="bf-rules-wrap" style="display:none">
-            <div style="font-size:9px;color:var(--muted);margin:2px 0 6px">Prima regola soddisfatta → quel colore. Altrimenti acceso=verde / spento=rosso, poi il fisso.</div>
+            <div style="font-size:9px;color:var(--muted);margin:2px 0 6px">Prima regola soddisfatta â†’ quel colore. Altrimenti acceso=verde / spento=rosso, poi il fisso.</div>
             <div id="bf-rules-list"></div>
-            <button class="ep-add" style="margin-top:4px" data-action="_addColorRule">➕ Aggiungi regola colore</button>
+            <button class="ep-add" style="margin-top:4px" data-action="_addColorRule">âž• Aggiungi regola colore</button>
           </div>
 
-          <div class="flbl bf-seclbl">▸ Al clic (interazione)</div>
+          <div class="flbl bf-seclbl">â–¸ Al clic (interazione)</div>
           <select class="finp" id="bf-action"  style="margin-bottom:8px">
             <option value="none">Niente</option>
             <option value="popup">Apri popup con una card (Store JS)</option>
-            <option value="more_info">Dettagli entità (more-info)</option>
+            <option value="more_info">Dettagli entitÃ  (more-info)</option>
             <option value="toggle">Accendi / Spegni</option>
             <option value="navigate">Vai a una pagina</option>
             <option value="service">Chiama un servizio</option>
             <option value="url">Apri un link</option>
           </select>
           <div id="bfa-popup" class="bfa-row" style="display:none">
-            <select class="finp" id="bf-popupcard"><option value="">— nessuna —</option></select>
+            <select class="finp" id="bf-popupcard"><option value="">â€” nessuna â€”</option></select>
           </div>
           <div id="bfa-entity" class="bfa-row" style="display:none">
-            <div class="flbl">Entità (vuoto = quella del distintivo)</div>
-            <div class="finp-row"><input class="finp" id="bf-actentity" type="text" placeholder="light.xxx"><button class="fbtn" data-action="browseField" data-action-arg="bf-actentity">🔍</button></div>
+            <div class="flbl">EntitÃ  (vuoto = quella del distintivo)</div>
+            <div class="finp-row"><input class="finp" id="bf-actentity" type="text" placeholder="light.xxx"><button class="fbtn" data-action="browseField" data-action-arg="bf-actentity">ðŸ”</button></div>
           </div>
           <div id="bfa-nav" class="bfa-row" style="display:none">
             <div class="flbl">Pagina di destinazione</div>
@@ -347,28 +347,28 @@
           </div>
           <div id="bfa-service" class="bfa-row" style="display:none">
             <div style="display:flex;gap:6px"><input class="finp" id="bf-svc-domain" placeholder="dominio (es. light)"><input class="finp" id="bf-svc-service" placeholder="servizio (es. turn_on)"></div>
-            <div class="finp-row" style="margin-top:6px"><input class="finp" id="bf-svc-entity" placeholder="entity_id (opzionale)"><button class="fbtn" data-action="browseField" data-action-arg="bf-svc-entity">🔍</button></div>
+            <div class="finp-row" style="margin-top:6px"><input class="finp" id="bf-svc-entity" placeholder="entity_id (opzionale)"><button class="fbtn" data-action="browseField" data-action-arg="bf-svc-entity">ðŸ”</button></div>
           </div>
           <div id="bfa-url" class="bfa-row" style="display:none">
             <div class="flbl">URL</div>
             <input class="finp" id="bf-url" type="text" placeholder="https://...">
           </div>
 
-          <div class="flbl bf-seclbl">⊙ Visibilità</div>
+          <div class="flbl bf-seclbl">âŠ™ VisibilitÃ </div>
           <div class="bf-chips" style="margin-bottom:8px">
             <button class="bf-chip on" id="bvis-always" data-action="_selVis" data-action-arg="always">Sempre</button>
-            <button class="bf-chip" id="bvis-cond" data-action="_selVis" data-action-arg="cond">Solo se…</button>
+            <button class="bf-chip" id="bvis-cond" data-action="_selVis" data-action-arg="cond">Solo seâ€¦</button>
           </div>
           <div id="bf-vis-cond" style="display:none">
-            <div class="finp-row" style="margin-bottom:6px"><input class="finp" id="bf-vis-entity" placeholder="entità condizione (sensor.xxx)"><button class="fbtn" data-action="browseField" data-action-arg="bf-vis-entity">🔍</button></div>
+            <div class="finp-row" style="margin-bottom:6px"><input class="finp" id="bf-vis-entity" placeholder="entitÃ  condizione (sensor.xxx)"><button class="fbtn" data-action="browseField" data-action-arg="bf-vis-entity">ðŸ”</button></div>
             <div style="display:flex;gap:6px">
               <select class="finp" id="bf-vis-op" style="flex:0 0 130px">
                 <option value="eq">= uguale a</option>
-                <option value="ne">≠ diverso da</option>
+                <option value="ne">â‰  diverso da</option>
                 <option value="gt">&gt; maggiore</option>
                 <option value="lt">&lt; minore</option>
-                <option value="gte">≥ magg./uguale</option>
-                <option value="lte">≤ min./uguale</option>
+                <option value="gte">â‰¥ magg./uguale</option>
+                <option value="lte">â‰¤ min./uguale</option>
                 <option value="contains">contiene</option>
               </select>
               <input class="finp" id="bf-vis-val" placeholder="valore" style="flex:1">
@@ -376,7 +376,7 @@
           </div>
         </div>
         <div style="display:flex;gap:6px;margin-top:12px">
-          <button class="btn1" id="bf-save-btn" data-action="saveBadgeForm">➕ Aggiungi</button>
+          <button class="btn1" id="bf-save-btn" data-action="saveBadgeForm">âž• Aggiungi</button>
           <button class="btn2" data-action="hideBadgeForm">Annulla</button>
         </div>
       </div>
@@ -390,20 +390,20 @@
 <!-- CLIMATE POPUP (global, repositioned) -->
 <div id="fbar-clm-pop">
   <div class="fbar-clm-name" id="fcp-name">SOGGIORNO</div>
-  <div class="fbar-clm-cur">RILEVATA <b id="fcp-cur">—°</b></div>
+  <div class="fbar-clm-cur">RILEVATA <b id="fcp-cur">â€”Â°</b></div>
   <div class="fbar-therm-wrap">
     <div class="fbar-therm-track" id="fcp-track">
       <div class="fbar-therm-fill" id="fcp-fill" style="height:50%"></div>
       <div class="fbar-therm-handle" id="fcp-handle" style="bottom:calc(50% - 18px)">
         <span class="fbar-therm-hval" id="fcp-hval">22</span>
-        <span class="fbar-therm-hunit">°C</span>
+        <span class="fbar-therm-hunit">Â°C</span>
       </div>
     </div>
     <div class="fbar-therm-scale" id="fcp-scale"></div>
   </div>
   <div class="fbar-clm-target-lbl">TARGET</div>
-  <div class="fbar-clm-target-val" id="fcp-target">—</div>
-  <div class="fbar-clm-mode" id="fcp-mode">—</div>
+  <div class="fbar-clm-target-val" id="fcp-target">â€”</div>
+  <div class="fbar-clm-mode" id="fcp-mode">â€”</div>
 </div>
 
 <!-- BARRA INFERIORE (dock flottante) -->
@@ -417,10 +417,10 @@
 <!-- YAML IMPORT MODAL -->
 <div class="mbg off" id="yaml-import-mod">
   <div class="mbox" style="width:560px">
-    <div class="mhdr"><span class="mtitle">📋 Importa Card da YAML HA</span><button class="mx" data-action="closeYamlImport">✕</button></div>
+    <div class="mhdr"><span class="mtitle">ðŸ“‹ Importa Card da YAML HA</span><button class="mx" data-action="closeYamlImport">âœ•</button></div>
     <div class="fscroll" style="padding:14px 16px">
       <div style="font-size:10px;color:#a5b4fc;line-height:1.55;background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:9px;padding:9px 12px;margin-bottom:12px">
-        💡 Incolla il YAML di una card Lovelace di Home Assistant. Tipi supportati: <code style="background:rgba(255,255,255,.08);border-radius:3px;padding:1px 4px">sensor · entity · entities · button · gauge · history-graph · thermostat · weather-forecast · media-player · markdown · light · alarm-panel · input_boolean · switch · cover</code>
+        ðŸ’¡ Incolla il YAML di una card Lovelace di Home Assistant. Tipi supportati: <code style="background:rgba(255,255,255,.08);border-radius:3px;padding:1px 4px">sensor Â· entity Â· entities Â· button Â· gauge Â· history-graph Â· thermostat Â· weather-forecast Â· media-player Â· markdown Â· light Â· alarm-panel Â· input_boolean Â· switch Â· cover</code>
       </div>
       <div class="flbl">Codice YAML</div>
       <textarea id="yaml-import-txt" class="finp yaml-textarea" placeholder="type: sensor&#10;entity: sensor.temperatura_soggiorno&#10;name: Temperatura Soggiorno&#10;icon: mdi:thermometer" ></textarea>
@@ -432,7 +432,7 @@
     </div>
     <div class="mfoot">
       <button class="btn2" data-action="closeYamlImport">Annulla</button>
-      <button class="btn1" id="yaml-import-btn" data-action="importYamlCard" disabled>📥 Importa Card</button>
+      <button class="btn1" id="yaml-import-btn" data-action="importYamlCard" disabled>ðŸ“¥ Importa Card</button>
     </div>
   </div>
 </div>
@@ -441,8 +441,8 @@
 <div class="mbg off" id="imod">
   <div class="mbox">
     <div class="mhdr">
-      <span class="mtitle" id="imod-title">📦 Entità</span>
-      <button class="mx" data-action="closeIM">✕</button>
+      <span class="mtitle" id="imod-title">ðŸ“¦ EntitÃ </span>
+      <button class="mx" data-action="closeIM">âœ•</button>
     </div>
     <div id="imod-body" class="fscroll" style="padding:18px 20px"></div>
   </div>
@@ -452,15 +452,15 @@
 <div class="mbg off" id="wmod">
   <div class="mbox">
     <div class="mhdr">
-      <span class="mtitle" id="wmod-title">⚙️ Configura Pagina</span>
-      <button class="mx" data-action="closeWM">✕</button>
+      <span class="mtitle" id="wmod-title">âš™ï¸ Configura Pagina</span>
+      <button class="mx" data-action="closeWM">âœ•</button>
     </div>
     <div id="wmod-info" class="wz-info" style="display:none"></div>
     <hr class="wz-sep">
     <div class="fscroll" id="wmod-body" style="padding-top:6px"></div>
     <div class="mfoot">
       <button class="btn2" data-action="closeWM">Annulla</button>
-      <button class="btn1" id="wmod-btn" data-action="saveWizard">✨ Crea Pagina</button>
+      <button class="btn1" id="wmod-btn" data-action="saveWizard">âœ¨ Crea Pagina</button>
     </div>
   </div>
 </div>
@@ -468,28 +468,28 @@
 <!-- TEMPLATE (new page) MODAL -->
 <div class="mbg off" id="tmod">
   <div class="mbox">
-    <div class="mhdr"><span class="mtitle" id="tmod-title">📄 Nuova Pagina — scegli template</span><button class="mx" data-action="closeTM">✕</button></div>
+    <div class="mhdr"><span class="mtitle" id="tmod-title">ðŸ“„ Nuova Pagina â€” scegli template</span><button class="mx" data-action="closeTM">âœ•</button></div>
     <div class="fscroll" style="padding:0">
       <!-- Step 1: scelta template -->
       <div id="tmod-step1">
         <div style="padding:10px 18px 8px;font-size:11px;color:var(--muted)">Scegli un template preconfigurato oppure parti da una pagina vuota.</div>
         <div class="tpl-grid">
-          <button class="tpl-btn" data-action="openPageCfg" data-action-arg="energia"><span class="tpl-ico">⚡</span><span>Energia</span><span class="tpl-sub">FV, consumi, flussi</span></button>
-          <button class="tpl-btn" data-action="openPageCfg" data-action-arg="luci"><span class="tpl-ico">💡</span><span>Luci</span><span class="tpl-sub">Toggle e interruttori</span></button>
-          <button class="tpl-btn" data-action="openPageCfg" data-action-arg="clima"><span class="tpl-ico">🌡️</span><span>Clima</span><span class="tpl-sub">Termostati e temp.</span></button>
-          <button class="tpl-btn" data-action="openPageCfg" data-action-arg="sicurezza"><span class="tpl-ico">📷</span><span>Sicurezza</span><span class="tpl-sub">Camere e sensori</span></button>
-          <button class="tpl-btn" data-action="openPageCfg" data-action-arg="media"><span class="tpl-ico">🎵</span><span>Media</span><span class="tpl-sub">Lettori multimediali</span></button>
-          <button class="tpl-btn" data-action="openPageCfg" data-action-arg="meteo"><span class="tpl-ico">🌤️</span><span>Meteo</span><span class="tpl-sub">Previsioni e sensori</span></button>
-          <button class="tpl-btn" data-action="openPageCfg" data-action-arg="veicoli"><span class="tpl-ico">🚗</span><span>Veicoli</span><span class="tpl-sub">Auto elettrica / EV</span></button>
-          <button class="tpl-btn" data-action="openPageCfg" data-action-arg="casa"><span class="tpl-ico">🏠</span><span>Casa Overview</span><span class="tpl-sub">Immagine 3D + sensori</span></button>
-          <button class="tpl-btn" data-action="openPageCfg" data-action-arg="vuota"><span class="tpl-ico">📄</span><span>Vuota</span><span class="tpl-sub">Pagina in bianco</span></button>
+          <button class="tpl-btn" data-action="openPageCfg" data-action-arg="energia"><span class="tpl-ico">âš¡</span><span>Energia</span><span class="tpl-sub">FV, consumi, flussi</span></button>
+          <button class="tpl-btn" data-action="openPageCfg" data-action-arg="luci"><span class="tpl-ico">ðŸ’¡</span><span>Luci</span><span class="tpl-sub">Toggle e interruttori</span></button>
+          <button class="tpl-btn" data-action="openPageCfg" data-action-arg="clima"><span class="tpl-ico">ðŸŒ¡ï¸</span><span>Clima</span><span class="tpl-sub">Termostati e temp.</span></button>
+          <button class="tpl-btn" data-action="openPageCfg" data-action-arg="sicurezza"><span class="tpl-ico">ðŸ“·</span><span>Sicurezza</span><span class="tpl-sub">Camere e sensori</span></button>
+          <button class="tpl-btn" data-action="openPageCfg" data-action-arg="media"><span class="tpl-ico">ðŸŽµ</span><span>Media</span><span class="tpl-sub">Lettori multimediali</span></button>
+          <button class="tpl-btn" data-action="openPageCfg" data-action-arg="meteo"><span class="tpl-ico">ðŸŒ¤ï¸</span><span>Meteo</span><span class="tpl-sub">Previsioni e sensori</span></button>
+          <button class="tpl-btn" data-action="openPageCfg" data-action-arg="veicoli"><span class="tpl-ico">ðŸš—</span><span>Veicoli</span><span class="tpl-sub">Auto elettrica / EV</span></button>
+          <button class="tpl-btn" data-action="openPageCfg" data-action-arg="casa"><span class="tpl-ico">ðŸ </span><span>Casa Overview</span><span class="tpl-sub">Immagine 3D + sensori</span></button>
+          <button class="tpl-btn" data-action="openPageCfg" data-action-arg="vuota"><span class="tpl-ico">ðŸ“„</span><span>Vuota</span><span class="tpl-sub">Pagina in bianco</span></button>
         </div>
       </div>
       <!-- Step 2: configura sezioni -->
       <div id="tmod-step2" style="display:none;padding:16px 18px 20px">
-        <button data-action="closeTModStep2" style="font-size:11px;color:var(--muted);margin-bottom:14px;padding:3px 8px;border-radius:7px;border:1px solid var(--bd2);background:rgba(255,255,255,.03)">← Indietro</button>
+        <button data-action="closeTModStep2" style="font-size:11px;color:var(--muted);margin-bottom:14px;padding:3px 8px;border-radius:7px;border:1px solid var(--bd2);background:rgba(255,255,255,.03)">â† Indietro</button>
         <div class="ep-sec-title" style="margin-bottom:5px">Nome pagina</div>
-        <input class="finp" id="epw-name" type="text" placeholder="es. Casa, Luci…" style="margin-bottom:16px">
+        <input class="finp" id="epw-name" type="text" placeholder="es. Casa, Luciâ€¦" style="margin-bottom:16px">
         <button class="ep-add" style="width:100%" data-action="confirmPage">Crea Pagina</button>
       </div>
     </div>
@@ -508,16 +508,16 @@
       </div>
       <!-- page-tabs rimane nel DOM per renderPageTabs() ma nascosto -->
       <div id="page-tabs" style="display:none"></div>
-      <!-- RIGHT: icone colorate — ordine da DESTRA: sidebar, matita, impostazioni, campanella, conn, viste, kiosk, reload.
+      <!-- RIGHT: icone colorate â€” ordine da DESTRA: sidebar, matita, impostazioni, campanella, conn, viste, kiosk, reload.
            (undo/redo solo in edit, restano a sinistra) -->
       <button id="hdr-icons-toggle" class="hbtn" data-action="_toggleHdrIcons" title="Mostra/nascondi icone"><i class="mdi mdi-chevron-left"></i></button>
       <div id="hdr-icons">
         <button class="hbtn hbtn-edit-only" id="undo-btn" title="Annulla (Ctrl+Z)"><i class="mdi mdi-undo-variant"></i></button>
         <button class="hbtn hbtn-edit-only" id="redo-btn" title="Ripeti (Ctrl+Y)"><i class="mdi mdi-redo-variant"></i></button>
         <button class="hbtn" id="reload-btn" title="Svuota cache e ricarica"><i class="mdi mdi-refresh"></i></button>
-        <button class="hbtn" id="kiosk-btn" title="Modalità Kiosk"><i class="mdi mdi-fullscreen"></i></button>
+        <button class="hbtn" id="kiosk-btn" title="ModalitÃ  Kiosk"><i class="mdi mdi-fullscreen"></i></button>
         <button class="hbtn" id="views-btn" title="Viste / pagine"><i class="mdi mdi-view-dashboard"></i></button>
-        <div id="conn-wrap" title="Stato connessione — clicca per riavviare Home Assistant"><div id="conn-dot"></div></div>
+        <div id="conn-wrap" title="Stato connessione â€” clicca per riavviare Home Assistant"><div id="conn-dot"></div></div>
         <button class="hbtn" id="notif-bell" title="Notifiche" style="position:relative"><i class="mdi mdi-bell"></i><span id="notif-bell-badge"></span></button>
         <button class="hbtn" id="settings-btn" title="Impostazioni"><i class="mdi mdi-cog"></i></button>
         <button class="hbtn" id="edit-btn" title="Modifica dashboard"><i class="mdi mdi-pencil"></i></button>
@@ -529,7 +529,7 @@
     <div id="dash">
       <div id="dash-sections">
         <div id="empty">
-          <div class="eico">🧩</div>
+          <div class="eico">ðŸ§©</div>
           <h3>Dashboard vuota</h3>
           <p>Clicca <strong>Modifica</strong> poi <strong>+ Aggiungi</strong> per costruire la tua dashboard.</p>
         </div>
@@ -538,10 +538,10 @@
   </div>
   <div id="epanel">
 
-    <!-- ── HEADER ── -->
+    <!-- â”€â”€ HEADER â”€â”€ -->
     <div class="ep-hdr" style="display:flex;align-items:center;justify-content:space-between;padding:16px 22px 14px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">
       <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
-        <div style="width:38px;height:38px;border-radius:12px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.25);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">⚙️</div>
+        <div style="width:38px;height:38px;border-radius:12px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.25);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">âš™ï¸</div>
         <div>
           <div style="font-size:16px;font-weight:800;color:#fff;letter-spacing:.2px">Impostazioni</div>
           <div class="ep-hdr-sub" style="font-size:11px;color:#fff;margin-top:1px">Frarik Dashboard</div>
@@ -550,68 +550,68 @@
       <!-- versione (visibile solo su mobile) -->
       <div class="ep-hdr-ver">
         <img src="./logo-v2.png?v=1.1.93" alt="" style="height:20px;width:auto;object-fit:contain">
-        <span id="ep-hdr-ver-label" style="font-size:13px;font-weight:800;color:#fff">…</span>
+        <span id="ep-hdr-ver-label" style="font-size:13px;font-weight:800;color:#fff">â€¦</span>
       </div>
-      <button class="ep-x" data-action="closeOikSettings" title="Torna alla plancia">✕</button>
+      <button class="ep-x" data-action="closeOikSettings" title="Torna alla plancia">âœ•</button>
     </div>
 
-    <!-- ── LAYOUT: sidebar sinistra + contenuto destra ── -->
+    <!-- â”€â”€ LAYOUT: sidebar sinistra + contenuto destra â”€â”€ -->
     <div class="ep-layout">
 
-      <!-- ── SIDEBAR ── -->
+      <!-- â”€â”€ SIDEBAR â”€â”€ -->
       <div class="ep-sidebar">
 
         <!-- Incolla (visibile solo con clipboard) -->
         <div id="ep-paste-wrap" style="padding:12px 10px 0;display:flex;gap:5px">
-          <button id="ep-btn-paste" class="ep-paste" data-action="pasteCard" style="flex:1;margin-top:0;font-size:11px;padding:8px 10px">📋 Incolla</button>
-          <button id="ep-btn-paste-clr" class="ep-paste-clr" data-action="clearClipboard" title="Svuota">✕</button>
+          <button id="ep-btn-paste" class="ep-paste" data-action="pasteCard" style="flex:1;margin-top:0;font-size:11px;padding:8px 10px">ðŸ“‹ Incolla</button>
+          <button id="ep-btn-paste-clr" class="ep-paste-clr" data-action="clearClipboard" title="Svuota">âœ•</button>
         </div>
 
         <!-- Navigazione -->
         <nav class="ep-sidenav">
           <div class="ep-sidenav-lbl">Impostazioni</div>
           <button class="ep-sidetab" data-action="_switchEpTab" data-action-arg="aspetto">
-            <span class="ep-sidetab-ico">🎨</span><span>Aspetto</span>
+            <span class="ep-sidetab-ico">ðŸŽ¨</span><span>Aspetto</span>
           </button>
           <button class="ep-sidetab" data-action="_switchEpTab" data-action-arg="viste">
-            <span class="ep-sidetab-ico">📄</span><span>Viste</span>
+            <span class="ep-sidetab-ico">ðŸ“„</span><span>Viste</span>
           </button>
           <button class="ep-sidetab" data-action="_switchEpTab" data-action-arg="sistema">
-            <span class="ep-sidetab-ico">⚙️</span><span>Sistema</span>
+            <span class="ep-sidetab-ico">âš™ï¸</span><span>Sistema</span>
           </button>
           <button class="ep-sidetab" data-action="_switchEpTab" data-action-arg="topbar">
-            <span class="ep-sidetab-ico">🔝</span><span>Top Bar</span>
+            <span class="ep-sidetab-ico">ðŸ”</span><span>Top Bar</span>
           </button>
           <button class="ep-sidetab" data-action="_switchEpTab" data-action-arg="dati">
-            <span class="ep-sidetab-ico">☁️</span><span>Dati</span>
+            <span class="ep-sidetab-ico">â˜ï¸</span><span>Dati</span>
           </button>
           <button class="ep-sidetab" data-action="_switchEpTab" data-action-arg="licenza">
-            <span class="ep-sidetab-ico">💳</span><span>Licenza</span>
+            <span class="ep-sidetab-ico">ðŸ’³</span><span>Licenza</span>
           </button>
           <div class="ep-sidenav-sep"></div>
           <button class="ep-sidetab" data-action="_switchEpTab" data-action-arg="fbar">
-            <span class="ep-sidetab-ico">▭</span>
+            <span class="ep-sidetab-ico">â–­</span>
             <span style="flex:1">Bottom Bar</span>
             <span id="ep-fbar-status" style="font-size:9px;opacity:.5;margin-left:auto"></span>
           </button>
           <button class="ep-sidetab" data-action="_switchEpTab" data-action-arg="store">
-            <span class="ep-sidetab-ico">🛒</span>
+            <span class="ep-sidetab-ico">ðŸ›’</span>
             <span style="flex:1">Store</span>
             <span id="ep-jsstore-count" style="font-size:9px;opacity:.5;margin-left:auto"></span>
           </button>
           <button class="ep-sidetab" data-action="_switchEpTab" data-action-arg="notif">
-            <span class="ep-sidetab-ico">🔔</span>
+            <span class="ep-sidetab-ico">ðŸ””</span>
             <span style="flex:1">Notifiche</span>
             <span id="ntf-ep-count" style="font-size:9px;opacity:.5;margin-left:auto"></span>
           </button>
           <button class="ep-sidetab" data-action="_switchEpTab" data-action-arg="sos">
-            <span class="ep-sidetab-ico">🆘</span>
+            <span class="ep-sidetab-ico">ðŸ†˜</span>
             <span style="flex:1">SOS</span>
             <span id="sos-ep-count" style="font-size:9px;opacity:.5;margin-left:auto"></span>
           </button>
           <div class="ep-sidenav-sep" id="ep-sep-admin" style="display:none"></div>
           <button id="ep-sidetab-admin" class="ep-sidetab" style="display:none" data-action="_switchEpTab" data-action-arg="admin-panel">
-            <span class="ep-sidetab-ico">🛡️</span><span style="flex:1">Pannello Admin</span>
+            <span class="ep-sidetab-ico">ðŸ›¡ï¸</span><span style="flex:1">Pannello Admin</span>
           </button>
         </nav>
 
@@ -620,30 +620,30 @@
           <img src="./logo-v2.png?v=1.1.93" alt="" style="height:42px;width:auto;object-fit:contain;filter:drop-shadow(0 0 8px rgba(99,102,241,.5))">
           <div style="flex:1;display:flex;flex-direction:column;line-height:1.4">
             <span style="font-size:11px;font-weight:800;letter-spacing:.3px">Frarik Dashboard</span>
-            <span style="font-size:14px;font-weight:800" id="ep-ver-label">…</span>
+            <span style="font-size:14px;font-weight:800" id="ep-ver-label">â€¦</span>
           </div>
         </div>
 
       </div><!-- /ep-sidebar -->
 
-      <!-- ── AREA CONTENUTO ── -->
+      <!-- â”€â”€ AREA CONTENUTO â”€â”€ -->
       <div class="ep-content-area">
 
         <!-- Welcome -->
         <div id="ep-content-welcome" class="ep-tab-content ep-tab-active">
           <div class="ep-welcome-hint">
-            <div style="font-size:60px;margin-bottom:16px">⚙️</div>
+            <div style="font-size:60px;margin-bottom:16px">âš™ï¸</div>
             <div>Seleziona una sezione dalla barra laterale</div>
           </div>
         </div>
 
-        <!-- ── ASPETTO ── -->
+        <!-- â”€â”€ ASPETTO â”€â”€ -->
         <div id="ep-content-aspetto" class="ep-tab-content">
-          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">🎨</div><div class="ep-tab-hdr-title">Aspetto</div></div>
+          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">ðŸŽ¨</div><div class="ep-tab-hdr-title">Aspetto</div></div>
           <div class="ep-sec-title" style="margin-bottom:6px">Tema</div>
           <div class="ep-theme-row">
-            <button id="ep-theme-dark" class="ep-theme-btn on" data-action="applyTheme" data-action-arg="dark">🌙 Scuro</button>
-            <button id="ep-theme-light" class="ep-theme-btn" data-action="applyTheme" data-action-arg="light">☀️ Chiaro</button>
+            <button id="ep-theme-dark" class="ep-theme-btn on" data-action="applyTheme" data-action-arg="dark">ðŸŒ™ Scuro</button>
+            <button id="ep-theme-light" class="ep-theme-btn" data-action="applyTheme" data-action-arg="light">â˜€ï¸ Chiaro</button>
           </div>
           <div class="ep-sec-title" style="margin-top:14px;margin-bottom:4px">Tema colore</div>
           <div class="ep-ctheme-row" id="ep-ctheme-row"></div>
@@ -652,135 +652,135 @@
             <input type="color" id="ep-custom-acc" value="#6366f1" style="width:36px;height:28px;border:none;border-radius:7px;background:none;cursor:pointer">
           </div>
           <div style="display:flex;gap:6px;margin-top:10px">
-            <button class="ep-add2" data-action="exportTheme" style="flex:1">⬇ Esporta tema</button>
-            <button class="ep-add2" data-action="_importThemePick" style="flex:1">⬆ Importa tema</button>
+            <button class="ep-add2" data-action="exportTheme" style="flex:1">â¬‡ Esporta tema</button>
+            <button class="ep-add2" data-action="_importThemePick" style="flex:1">â¬† Importa tema</button>
           </div>
           <input type="file" id="theme-file-input" accept=".json,application/json" style="display:none">
           <div class="ep-sec-title" style="margin-top:14px;margin-bottom:4px">Carattere</div>
           <button class="ep-font-sel" id="ep-font-btn" data-action="toggleFontPop">
-            <span id="ep-font-lbl">Inter</span><span style="opacity:.4;font-size:9px">▾</span>
+            <span id="ep-font-lbl">Inter</span><span style="opacity:.4;font-size:9px">â–¾</span>
           </button>
         </div>
 
-        <!-- ── VISTE ── -->
+        <!-- â”€â”€ VISTE â”€â”€ -->
         <div id="ep-content-viste" class="ep-tab-content">
-          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">📄</div><div class="ep-tab-hdr-title">Viste</div></div>
+          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">ðŸ“„</div><div class="ep-tab-hdr-title">Viste</div></div>
           <div class="ep-sec-title" style="margin-bottom:6px">Vista corrente</div>
           <div style="display:flex;gap:6px;margin-bottom:8px">
-            <input class="finp" id="ep-page-ico" style="width:44px;flex-shrink:0;text-align:center;font-size:14px" type="text" placeholder="📄">
-            <button class="fbtn" style="flex-shrink:0;padding:0 5px" title="Scegli icona" id="ep-page-ico-picker">🎨</button>
+            <input class="finp" id="ep-page-ico" style="width:44px;flex-shrink:0;text-align:center;font-size:14px" type="text" placeholder="ðŸ“„">
+            <button class="fbtn" style="flex-shrink:0;padding:0 5px" title="Scegli icona" id="ep-page-ico-picker">ðŸŽ¨</button>
             <input class="finp" id="ep-page-name" type="text" placeholder="Nome tab (opzionale)">
           </div>
           <div class="ep-sec-title" style="margin-top:4px;margin-bottom:4px">Titolo nella dashboard</div>
-          <input class="finp" id="ep-view-title" type="text" placeholder="es. Casa, Energia…" style="margin-bottom:10px">
-          <button class="ep-add2" id="ep-del-page" data-action="delPage" style="color:#f87171;border-color:rgba(248,113,113,0.25)">🗑 Elimina pagina</button>
+          <input class="finp" id="ep-view-title" type="text" placeholder="es. Casa, Energiaâ€¦" style="margin-bottom:10px">
+          <button class="ep-add2" id="ep-del-page" data-action="delPage" style="color:#f87171;border-color:rgba(248,113,113,0.25)">ðŸ—‘ Elimina pagina</button>
           <div id="ep-grid-sec" style="padding:10px 0">
             <div id="sections-list"></div>
           </div>
           <div style="display:flex;gap:5px;margin-bottom:8px">
-            <button id="ep-pg-confirm" class="ep-pg-confirm-btn" data-action="confirmPageSettings" disabled>✓ Conferma</button>
-            <button id="ep-pg-cancel" class="ep-pg-cancel-btn" data-action="cancelPageSettings">↩ Annulla</button>
+            <button id="ep-pg-confirm" class="ep-pg-confirm-btn" data-action="confirmPageSettings" disabled>âœ“ Conferma</button>
+            <button id="ep-pg-cancel" class="ep-pg-cancel-btn" data-action="cancelPageSettings">â†© Annulla</button>
           </div>
         </div>
 
-        <!-- ── SISTEMA ── -->
+        <!-- â”€â”€ SISTEMA â”€â”€ -->
         <div id="ep-content-sistema" class="ep-tab-content">
-          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">⚙️</div><div class="ep-tab-hdr-title">Sistema</div></div>
-          <div class="sys-row"><span class="sys-lbl">⛶ Modalità Kiosk</span><button class="sys-tog" id="sys-kiosk-tog" data-action="_sysToggle" data-action-arg="kiosk"></button></div>
+          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">âš™ï¸</div><div class="ep-tab-hdr-title">Sistema</div></div>
+          <div class="sys-row"><span class="sys-lbl">â›¶ ModalitÃ  Kiosk</span><button class="sys-tog" id="sys-kiosk-tog" data-action="_sysToggle" data-action-arg="kiosk"></button></div>
           <div class="sys-sub" style="margin-bottom:10px">Mostra l'icona schermo intero in alto. Disattivata = nessuna icona.</div>
-          <div class="sys-row"><span class="sys-lbl">🖼 Screensaver</span><button class="sys-tog" id="sys-ss-tog" data-action="_sysToggle" data-action-arg="ss"></button></div>
-          <div class="sys-sub">Dopo inattività: orologio + meteo a tutto schermo</div>
+          <div class="sys-row"><span class="sys-lbl">ðŸ–¼ Screensaver</span><button class="sys-tog" id="sys-ss-tog" data-action="_sysToggle" data-action-arg="ss"></button></div>
+          <div class="sys-sub">Dopo inattivitÃ : orologio + meteo a tutto schermo</div>
           <div class="sys-row" style="margin-top:8px"><span class="sys-lbl2">Attesa</span>
             <div style="display:flex;align-items:center;gap:4px">
               <input class="sys-num" id="sys-ss-min" type="number" min="0" max="180"><span class="sys-u">min</span>
               <input class="sys-num" id="sys-ss-sec" type="number" min="0" max="59"><span class="sys-u">sec</span>
             </div></div>
-          <div class="sys-row" style="margin-top:10px"><span class="sys-lbl2">🖼️ Immagine giorno (URL)</span></div>
-          <input class="finp" id="sys-ss-img-day" type="url" placeholder="https://… oppure /local/…" data-input="_ssSaveImg" style="font-size:10px;margin-top:3px">
-          <div class="sys-row" style="margin-top:6px"><span class="sys-lbl2">🌙 Immagine notte (URL)</span></div>
-          <input class="finp" id="sys-ss-img-night" type="url" placeholder="opzionale — vuoto = sempre quella del giorno" data-input="_ssSaveImg" style="font-size:10px;margin-top:3px">
+          <div class="sys-row" style="margin-top:10px"><span class="sys-lbl2">ðŸ–¼ï¸ Immagine giorno (URL)</span></div>
+          <input class="finp" id="sys-ss-img-day" type="url" placeholder="https://â€¦ oppure /local/â€¦" data-input="_ssSaveImg" style="font-size:10px;margin-top:3px">
+          <div class="sys-row" style="margin-top:6px"><span class="sys-lbl2">ðŸŒ™ Immagine notte (URL)</span></div>
+          <input class="finp" id="sys-ss-img-night" type="url" placeholder="opzionale â€” vuoto = sempre quella del giorno" data-input="_ssSaveImg" style="font-size:10px;margin-top:3px">
           <div class="sys-row" style="margin-top:6px"><span class="sys-lbl2">Giorno / Notte dalle</span>
             <div style="display:flex;gap:4px"><input class="sys-time" id="sys-ss-day-from" type="time" data-input="_ssSaveImg"><input class="sys-time" id="sys-ss-night-from" type="time" data-input="_ssSaveImg"></div></div>
-          <div class="sys-sub" style="margin-top:4px">2 immagini = cambia automaticamente · 1 sola = sempre quella</div>
-          <div class="sys-row" style="margin-top:10px"><span class="sys-lbl2">📊 Entità screensaver (max 3)</span></div>
+          <div class="sys-sub" style="margin-top:4px">2 immagini = cambia automaticamente Â· 1 sola = sempre quella</div>
+          <div class="sys-row" style="margin-top:10px"><span class="sys-lbl2">ðŸ“Š EntitÃ  screensaver (max 3)</span></div>
           <div style="display:flex;gap:4px;align-items:center;margin-top:3px">
             <input class="sos-cfg-inp" id="sys-ss-e1" type="text" placeholder="es. sensor.temperatura" data-input="_ssSaveEnt" style="flex:1;font-size:10px">
-            <button class="ntf-pick-btn" style="width:26px;height:26px;border-radius:6px;font-size:12px" data-action="_ssPickEnt" data-action-arg="1" title="Sfoglia">🔍</button>
+            <button class="ntf-pick-btn" style="width:26px;height:26px;border-radius:6px;font-size:12px" data-action="_ssPickEnt" data-action-arg="1" title="Sfoglia">ðŸ”</button>
           </div>
           <div style="display:flex;gap:4px;align-items:center;margin-top:3px">
-            <input class="sos-cfg-inp" id="sys-ss-e2" type="text" placeholder="entità 2 (opzionale)" data-input="_ssSaveEnt" style="flex:1;font-size:10px">
-            <button class="ntf-pick-btn" style="width:26px;height:26px;border-radius:6px;font-size:12px" data-action="_ssPickEnt" data-action-arg="2" title="Sfoglia">🔍</button>
+            <input class="sos-cfg-inp" id="sys-ss-e2" type="text" placeholder="entitÃ  2 (opzionale)" data-input="_ssSaveEnt" style="flex:1;font-size:10px">
+            <button class="ntf-pick-btn" style="width:26px;height:26px;border-radius:6px;font-size:12px" data-action="_ssPickEnt" data-action-arg="2" title="Sfoglia">ðŸ”</button>
           </div>
           <div style="display:flex;gap:4px;align-items:center;margin-top:3px">
-            <input class="sos-cfg-inp" id="sys-ss-e3" type="text" placeholder="entità 3 (opzionale)" data-input="_ssSaveEnt" style="flex:1;font-size:10px">
-            <button class="ntf-pick-btn" style="width:26px;height:26px;border-radius:6px;font-size:12px" data-action="_ssPickEnt" data-action-arg="3" title="Sfoglia">🔍</button>
+            <input class="sos-cfg-inp" id="sys-ss-e3" type="text" placeholder="entitÃ  3 (opzionale)" data-input="_ssSaveEnt" style="flex:1;font-size:10px">
+            <button class="ntf-pick-btn" style="width:26px;height:26px;border-radius:6px;font-size:12px" data-action="_ssPickEnt" data-action-arg="3" title="Sfoglia">ðŸ”</button>
           </div>
-          <div class="sys-row" style="margin-top:10px"><span class="sys-lbl2">🃏 Card al posto dell'orologio</span></div>
+          <div class="sys-row" style="margin-top:10px"><span class="sys-lbl2">ðŸƒ Card al posto dell'orologio</span></div>
           <select class="sys-sel" id="sys-ss-card" data-input="_ssSaveCard" style="margin-top:3px;width:100%"></select>
-          <button class="ep-add2" data-action="screensaverNow" style="margin-top:10px">👁 Anteprima screensaver</button>
+          <button class="ep-add2" data-action="screensaverNow" style="margin-top:10px">ðŸ‘ Anteprima screensaver</button>
           <div style="height:1px;background:rgba(255,255,255,.06);margin:16px 0"></div>
-          <div class="sys-row"><span class="sys-lbl">🌗 Tema automatico</span><button class="sys-tog" id="sys-th-tog" data-action="_sysToggle" data-action-arg="th"></button></div>
-          <div class="sys-row" style="margin-top:8px"><span class="sys-lbl2">Modalità</span>
+          <div class="sys-row"><span class="sys-lbl">ðŸŒ— Tema automatico</span><button class="sys-tog" id="sys-th-tog" data-action="_sysToggle" data-action-arg="th"></button></div>
+          <div class="sys-row" style="margin-top:8px"><span class="sys-lbl2">ModalitÃ </span>
             <select class="sys-sel" id="sys-th-mode"><option value="time">Orario</option><option value="sun">Alba/Tramonto</option></select></div>
           <div class="sys-row" id="sys-th-times" style="margin-top:6px"><span class="sys-lbl2">Chiaro / Scuro</span>
             <div style="display:flex;gap:4px"><input class="sys-time" id="sys-th-light" type="time"><input class="sys-time" id="sys-th-dark" type="time"></div></div>
           <div style="height:1px;background:rgba(255,255,255,.06);margin:16px 0"></div>
-          <div class="sys-row"><span class="sys-lbl">📱 Colonna singola (cell)</span></div>
+          <div class="sys-row"><span class="sys-lbl">ðŸ“± Colonna singola (cell)</span></div>
           <div class="sys-sub">Su telefono impila tutto in 1 colonna</div>
           <div class="sys-row" style="margin-top:6px"><span class="sys-lbl2">Modo</span>
             <select class="sys-sel" id="sys-mob"><option value="auto">Auto (telefono)</option><option value="always">Sempre</option><option value="off">Mai</option></select></div>
           <div style="height:16px"></div>
         </div>
 
-        <!-- ── TOP BAR ── -->
+        <!-- â”€â”€ TOP BAR â”€â”€ -->
         <div id="ep-content-topbar" class="ep-tab-content">
-          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">🔝</div><div class="ep-tab-hdr-title">Top Bar</div></div>
+          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">ðŸ”</div><div class="ep-tab-hdr-title">Top Bar</div></div>
           <div class="sys-sub" style="margin-bottom:10px">Icona (mdi o emoji) e colore di ogni icona in alto</div>
           <div id="topbar-icons-list"></div>
         </div>
 
-        <!-- ── DATI ── -->
+        <!-- â”€â”€ DATI â”€â”€ -->
         <div id="ep-content-dati" class="ep-tab-content">
-          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">☁️</div><div class="ep-tab-hdr-title">Dati</div></div>
+          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">â˜ï¸</div><div class="ep-tab-hdr-title">Dati</div></div>
           <button class="cfg-open-btn" data-action="syncCfgToHA" style="background:rgba(34,211,238,.08);border-color:rgba(34,211,238,.2);color:#22d3ee">
-            ☁️ <span style="flex:1">Sincronizza su tutti i dispositivi</span>
+            â˜ï¸ <span style="flex:1">Sincronizza su tutti i dispositivi</span>
             <span style="font-size:9px;color:rgba(34,211,238,.6)">salva su HA</span>
           </button>
           <button class="cfg-open-btn" data-action="exportBackup" style="margin-top:8px;background:rgba(99,102,241,.08);border-color:rgba(99,102,241,.2);color:#a5b4fc">
-            💾 <span style="flex:1">Esporta backup</span>
+            ðŸ’¾ <span style="flex:1">Esporta backup</span>
             <span style="font-size:9px;color:rgba(165,180,252,.6)">file .json</span>
           </button>
           <button class="cfg-open-btn" data-action="_importBackupPick" style="margin-top:8px;background:rgba(99,102,241,.08);border-color:rgba(99,102,241,.2);color:#a5b4fc">
-            📥 <span style="flex:1">Ripristina backup</span>
+            ðŸ“¥ <span style="flex:1">Ripristina backup</span>
           </button>
           <input type="file" id="backup-file-input" accept=".json,application/json" style="display:none">
           <button class="cfg-open-btn" data-action="resetLayout" style="margin-top:8px;background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.22);color:#f87171">
-            ♻️ <span style="flex:1">Reset layout (vista corrente)</span>
+            â™»ï¸ <span style="flex:1">Reset layout (vista corrente)</span>
             <span style="font-size:9px;color:rgba(248,113,113,.6)">torna a vuoto</span>
           </button>
           <button class="cfg-open-btn" data-action="openEntityCleanup" style="margin-top:8px;background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.2);color:#86efac">
-            🧹 <span style="flex:1">Pulizia entità (HA)</span>
+            ðŸ§¹ <span style="flex:1">Pulizia entitÃ  (HA)</span>
             <span style="font-size:9px;color:rgba(134,239,172,.6)">non disp./orfane</span>
           </button>
         </div>
 
-        <!-- ── LICENZA ── -->
+        <!-- â”€â”€ LICENZA â”€â”€ -->
         <div id="ep-content-licenza" class="ep-tab-content">
-          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">💳</div><div class="ep-tab-hdr-title">Licenza</div></div>
+          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">ðŸ’³</div><div class="ep-tab-hdr-title">Licenza</div></div>
           <div id="lic-badge-wrap" style="padding:4px 0 16px">
             <div style="display:flex;align-items:center;justify-content:center;min-height:180px"><div class="spin" style="width:28px;height:28px"></div></div>
           </div>
         </div>
 
-        <!-- ── PANNELLO ADMIN ── -->
+        <!-- â”€â”€ PANNELLO ADMIN â”€â”€ -->
         <div id="ep-content-admin-panel" class="ep-tab-content">
-          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">🛡️</div><div class="ep-tab-hdr-title">Pannello Amministratore</div></div>
+          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">ðŸ›¡ï¸</div><div class="ep-tab-hdr-title">Pannello Amministratore</div></div>
           <div id="ep-admin-body"><!-- compilato da JS --></div>
         </div>
 
-        <!-- ── BOTTOM BAR ── -->
+        <!-- â”€â”€ BOTTOM BAR â”€â”€ -->
         <div id="ep-content-fbar" class="ep-tab-content">
-          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">▭</div><div class="ep-tab-hdr-title">Bottom Bar</div></div>
+          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">â–­</div><div class="ep-tab-hdr-title">Bottom Bar</div></div>
           <div class="sect-section" id="fb-enabled-row" style="border-radius:10px;border:1px solid rgba(255,255,255,.07);margin-bottom:12px">
             <div style="display:flex;align-items:center;gap:10px">
               <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex:1">
@@ -790,24 +790,24 @@
               <span style="font-size:9px;color:var(--muted)">Dock flottante in basso</span>
             </div>
           </div>
-          <div class="ep-sec-title" style="margin-bottom:8px">⊙ Pulsanti</div>
+          <div class="ep-sec-title" style="margin-bottom:8px">âŠ™ Pulsanti</div>
           <div id="fb-list" style="margin-bottom:8px"></div>
-          <button class="ep-add" data-action="fbAddBtn">➕ Aggiungi pulsante</button>
+          <button class="ep-add" data-action="fbAddBtn">âž• Aggiungi pulsante</button>
           <div id="fb-btn-form" style="display:none;padding:14px 0 0;border-top:1px solid rgba(255,255,255,.07);margin-top:14px">
             <div style="padding:0 0 8px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted)" id="fb-form-title">Nuovo pulsante</div>
             <div class="flbl">Tipo</div>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;margin-bottom:12px">
-              <button class="sect-align-btn on" id="fbft-climate" data-action="fbSelType" data-action-arg="climate" style="font-size:10px;padding:8px 3px">🌡️<br><span style="font-size:7px">Termostato</span></button>
-              <button class="sect-align-btn" id="fbft-link" data-action="fbSelType" data-action-arg="link" style="font-size:10px;padding:8px 3px">🔗<br><span style="font-size:7px">Link URL</span></button>
-              <button class="sect-align-btn" id="fbft-navigate" data-action="fbSelType" data-action-arg="navigate" style="font-size:10px;padding:8px 3px">🧭<br><span style="font-size:7px">Naviga</span></button>
-              <button class="sect-align-btn" id="fbft-popup" data-action="fbSelType" data-action-arg="popup" style="font-size:10px;padding:8px 3px">💬<br><span style="font-size:7px">Popup</span></button>
+              <button class="sect-align-btn on" id="fbft-climate" data-action="fbSelType" data-action-arg="climate" style="font-size:10px;padding:8px 3px">ðŸŒ¡ï¸<br><span style="font-size:7px">Termostato</span></button>
+              <button class="sect-align-btn" id="fbft-link" data-action="fbSelType" data-action-arg="link" style="font-size:10px;padding:8px 3px">ðŸ”—<br><span style="font-size:7px">Link URL</span></button>
+              <button class="sect-align-btn" id="fbft-navigate" data-action="fbSelType" data-action-arg="navigate" style="font-size:10px;padding:8px 3px">ðŸ§­<br><span style="font-size:7px">Naviga</span></button>
+              <button class="sect-align-btn" id="fbft-popup" data-action="fbSelType" data-action-arg="popup" style="font-size:10px;padding:8px 3px">ðŸ’¬<br><span style="font-size:7px">Popup</span></button>
             </div>
             <div style="display:flex;gap:6px;margin-bottom:8px">
               <div style="flex:0 0 60px">
                 <div class="flbl">Icona</div>
                 <div class="finp-row" style="gap:2px">
                   <input class="finp" id="fbf-icon" type="text" placeholder="mdi:home" style="text-align:center;font-size:11px;padding:4px">
-                  <button class="fbtn" id="fbf-icon-picker" title="Scegli">🎨</button>
+                  <button class="fbtn" id="fbf-icon-picker" title="Scegli">ðŸŽ¨</button>
                 </div>
               </div>
               <div style="flex:1">
@@ -822,10 +822,10 @@
             <div class="flbl" style="margin-bottom:4px">Preset rapidi</div>
             <div class="fb-icon-preset" id="fb-icon-preset"></div>
             <div id="fbf-climate-row">
-              <div class="flbl">Entità clima</div>
+              <div class="flbl">EntitÃ  clima</div>
               <div class="finp-row" style="margin-bottom:6px">
                 <input class="finp entac" id="fbf-entity" type="text" placeholder="es. climate.soggiorno">
-                <button class="fbtn" data-action="browseField" data-action-arg="fbf-entity">🔍</button>
+                <button class="fbtn" data-action="browseField" data-action-arg="fbf-entity">ðŸ”</button>
               </div>
               <div style="display:flex;gap:8px;margin-bottom:8px">
                 <div style="flex:1"><div class="flbl">Temp. min</div><input class="finp" id="fbf-clmmin" type="number" value="16" step="0.5"></div>
@@ -834,7 +834,7 @@
             </div>
             <div id="fbf-link-row" style="display:none">
               <div class="flbl">URL</div>
-              <input class="finp" id="fbf-url" type="text" placeholder="https://…" style="margin-bottom:8px">
+              <input class="finp" id="fbf-url" type="text" placeholder="https://â€¦" style="margin-bottom:8px">
             </div>
             <div id="fbf-navigate-row" style="display:none">
               <div class="flbl">Pagina</div>
@@ -842,95 +842,95 @@
             </div>
             <div id="fbf-popup-row" style="display:none">
               <div class="flbl">Contenuto popup</div>
-              <textarea class="finp" id="fbf-poptext" placeholder="Testo o HTML…" style="min-height:80px;resize:vertical;margin-bottom:8px"></textarea>
+              <textarea class="finp" id="fbf-poptext" placeholder="Testo o HTMLâ€¦" style="min-height:80px;resize:vertical;margin-bottom:8px"></textarea>
             </div>
             <div style="display:flex;gap:6px;margin-top:4px">
-              <button class="btn1" id="fbf-save-btn" data-action="fbSaveBtn" style="flex:1">✅ Salva pulsante</button>
+              <button class="btn1" id="fbf-save-btn" data-action="fbSaveBtn" style="flex:1">âœ… Salva pulsante</button>
               <button class="btn2" data-action="fbCancelBtn" style="flex:0 0 80px">Annulla</button>
             </div>
           </div>
           <div style="display:flex;gap:8px;margin-top:18px">
-            <button class="btn1" data-action="saveFBM" style="flex:1">💾 Salva</button>
+            <button class="btn1" data-action="saveFBM" style="flex:1">ðŸ’¾ Salva</button>
           </div>
         </div>
 
-        <!-- ── STORE ── -->
+        <!-- â”€â”€ STORE â”€â”€ -->
         <div id="ep-content-store" class="ep-tab-content">
-          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">🛒</div><div class="ep-tab-hdr-title">Store</div></div>
+          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">ðŸ›’</div><div class="ep-tab-hdr-title">Store</div></div>
           <div class="ghc-tabbar">
             <div class="ghc-tabs-main">
               <button class="ghc-tab on" id="ghs-tab-js"         data-action="ghStoreTab" data-action-arg="js">
-                <span class="ghc-tab-ico">⚡</span><span class="ghc-tab-lbl">Card JS</span>
+                <span class="ghc-tab-ico">âš¡</span><span class="ghc-tab-lbl">Card JS</span>
               </button>
               <button class="ghc-tab" id="ghs-tab-chips"      data-action="ghStoreTab" data-action-arg="chips">
-                <span class="ghc-tab-ico">🔹</span><span class="ghc-tab-lbl">Chips</span>
+                <span class="ghc-tab-ico">ðŸ”¹</span><span class="ghc-tab-lbl">Chips</span>
               </button>
               <button class="ghc-tab" id="ghs-tab-distintivi" data-action="ghStoreTab" data-action-arg="distintivi">
-                <span class="ghc-tab-ico">🏷️</span><span class="ghc-tab-lbl">Distintivi</span>
+                <span class="ghc-tab-ico">ðŸ·ï¸</span><span class="ghc-tab-lbl">Distintivi</span>
               </button>
               <button class="ghc-tab ghc-tab-prem" id="ghs-tab-premium" data-action="ghStoreTab" data-action-arg="premium">
                 <span class="ghc-tab-new">NEW</span>
-                <span class="ghc-tab-ico">💎</span><span class="ghc-tab-lbl">Premium</span>
+                <span class="ghc-tab-ico">ðŸ’Ž</span><span class="ghc-tab-lbl">Premium</span>
               </button>
               <button class="ghc-tab ghc-tab-cyml" id="ghs-tab-card-yaml" data-action="ghStoreTab" data-action-arg="card-yaml">
-                <span class="ghc-tab-ico">📝</span><span class="ghc-tab-lbl">Card YAML</span>
+                <span class="ghc-tab-ico">ðŸ“</span><span class="ghc-tab-lbl">Card YAML</span>
               </button>
               <button class="ghc-tab ghc-tab-predef" id="ghs-tab-predefinite" data-action="ghStoreTab" data-action-arg="predefinite">
-                <span class="ghc-tab-ico">🛡️</span><span class="ghc-tab-lbl">Predefinite</span>
+                <span class="ghc-tab-ico">ðŸ›¡ï¸</span><span class="ghc-tab-lbl">Predefinite</span>
               </button>
             </div>
             <div class="ghc-tab-sep"></div>
             <div class="ghc-tabs-util">
               <button class="ghc-tab ghc-tab-sm" id="ghs-tab-yaml"  data-action="ghStoreTab" data-action-arg="yaml">
-                <span class="ghc-tab-ico">📄</span><span class="ghc-tab-lbl">YAML</span>
+                <span class="ghc-tab-ico">ðŸ“„</span><span class="ghc-tab-lbl">YAML</span>
               </button>
               <button class="ghc-tab ghc-tab-sm" id="ghs-tab-pkg"   data-action="ghStoreTab" data-action-arg="pkg">
-                <span class="ghc-tab-ico">📦</span><span class="ghc-tab-lbl">PKG</span>
+                <span class="ghc-tab-ico">ðŸ“¦</span><span class="ghc-tab-lbl">PKG</span>
               </button>
               <button class="ghc-tab ghc-tab-sm" id="ghs-tab-local" data-action="ghStoreTab" data-action-arg="local">
-                <span class="ghc-tab-ico">📁</span><span class="ghc-tab-lbl">Locali</span>
+                <span class="ghc-tab-ico">ðŸ“</span><span class="ghc-tab-lbl">Locali</span>
               </button>
               <div class="ghc-tab-sep"></div>
               <button class="ghc-tab ghc-tab-sm" data-action="openYamlImport" title="Incolla YAML da HACS">
                 <span class="ghc-tab-ico" style="font-size:14px"><i class="mdi mdi-code-braces"></i></span><span class="ghc-tab-lbl">YAML</span>
               </button>
               <button class="ghc-tab ghc-tab-sm" data-action="_ghsReloadTab" title="Ricarica da GitHub">
-                <span class="ghc-tab-ico" style="font-size:17px">↻</span><span class="ghc-tab-lbl">Sync</span>
+                <span class="ghc-tab-ico" style="font-size:17px">â†»</span><span class="ghc-tab-lbl">Sync</span>
               </button>
               <button class="ghc-tab ghc-tab-sm" data-action="openGitHubCfg" title="Impostazioni GitHub">
-                <span class="ghc-tab-ico" style="font-size:16px">⚙️</span><span class="ghc-tab-lbl">Config</span>
+                <span class="ghc-tab-ico" style="font-size:16px">âš™ï¸</span><span class="ghc-tab-lbl">Config</span>
               </button>
             </div>
           </div>
-          <input id="ghs-search" class="ghs-search" placeholder="🔍 Cerca per nome…" autocomplete="off">
+          <input id="ghs-search" class="ghs-search" placeholder="ðŸ” Cerca per nomeâ€¦" autocomplete="off">
           <div id="ghs-status" style="font-size:11px;color:var(--muted);margin:8px 2px;min-height:16px"></div>
           <div id="ghs-list"></div>
           <div id="ghs-load" style="display:none;margin-top:10px">
             <div id="ghs-dropzone" class="jsst-dropzone" data-action="_ghsDropzoneClick">
-              <div class="jsst-dz-ico">📂</div>
+              <div class="jsst-dz-ico">ðŸ“‚</div>
               <div class="jsst-dz-lbl">Clicca o trascina un file <code>.js</code></div>
               <div class="jsst-dz-sub">per installare una card manualmente (max 2 MB)</div>
               <input type="file" id="ghs-file-inp" accept=".js" style="display:none">
             </div>
-            <button data-action="jsStoreDownloadTemplate" style="margin-top:8px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.35);color:#a5b4fc;border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer">⬇️ Scarica template.js</button>
+            <button data-action="jsStoreDownloadTemplate" style="margin-top:8px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.35);color:#a5b4fc;border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer">â¬‡ï¸ Scarica template.js</button>
           </div>
         </div>
 
-        <!-- ── NOTIFICHE ── -->
+        <!-- â”€â”€ NOTIFICHE â”€â”€ -->
         <div id="ep-content-notif" class="ep-tab-content">
-          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">🔔</div><div class="ep-tab-hdr-title">Notifiche Smart</div></div>
+          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">ðŸ””</div><div class="ep-tab-hdr-title">Notifiche Smart</div></div>
           <div style="font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.6;background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:10px;padding:10px 12px">
-            💡 Crea regole per ricevere popup animati al cambiamento di stato di qualsiasi entità.<br>
+            ðŸ’¡ Crea regole per ricevere popup animati al cambiamento di stato di qualsiasi entitÃ .<br>
             Supporta durata ciclo elettrodomestici, reset contatori, feed camera, annunci Alexa.
           </div>
           <div id="ntf-rules-list"></div>
-          <button class="ntf-add-rule" data-action="ntfAddRule" style="margin-top:8px">➕ Aggiungi nuova regola</button>
-          <button data-action="_ntfSaveRules" style="margin-top:10px;background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.35);color:#4ade80;border-radius:10px;padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer;width:100%">💾 Salva regole</button>
+          <button class="ntf-add-rule" data-action="ntfAddRule" style="margin-top:8px">âž• Aggiungi nuova regola</button>
+          <button data-action="_ntfSaveRules" style="margin-top:10px;background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.35);color:#4ade80;border-radius:10px;padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer;width:100%">ðŸ’¾ Salva regole</button>
         </div>
 
-        <!-- ── SOS ── -->
+        <!-- â”€â”€ SOS â”€â”€ -->
         <div id="ep-content-sos" class="ep-tab-content">
-          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">🆘</div><div class="ep-tab-hdr-title">SOS Emergenza</div></div>
+          <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">ðŸ†˜</div><div class="ep-tab-hdr-title">SOS Emergenza</div></div>
           <div id="sos-cfg-list"></div>
         </div>
 
@@ -972,20 +972,20 @@
       <div style="font-size:12px;color:#fff;margin-bottom:10px">Non hai ancora una chiave?</div>
       <a href="https://frarik-license.frarik.workers.dev/portal" target="_blank"
         style="display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:12px;background:linear-gradient(135deg,rgba(251,191,36,.15),rgba(251,191,36,.08));border:1px solid rgba(251,191,36,.35);color:#fbbf24;font-size:13px;font-weight:800;text-decoration:none;letter-spacing:.3px">
-        💎 Acquista Premium
+        ðŸ’Ž Acquista Premium
       </a>
     </div>
   </div>
-  <div style="margin-top:16px;font-size:10px;color:#fff">Frarik Dashboard · Fratech</div>
+  <div style="margin-top:16px;font-size:10px;color:#fff">Frarik Dashboard Â· Fratech</div>
 </div>
 <!-- CONFIRM DIALOG -->
 <style>@keyframes confirmSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style>
 <div id="confirm-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:20000;align-items:flex-end;backdrop-filter:blur(4px)">
   <div style="width:100%;background:#0a0816;border:1px solid rgba(139,92,246,.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);padding:20px 18px 24px;animation:confirmSlideUp .22s cubic-bezier(.32,1.12,.56,1)">
     <div class="shdr" style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-      <div class="sico" style="width:36px;height:36px;border-radius:10px;background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.3);display:flex;align-items:center;justify-content:center;font-size:18px">⚠️</div>
+      <div class="sico" style="width:36px;height:36px;border-radius:10px;background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.3);display:flex;align-items:center;justify-content:center;font-size:18px">âš ï¸</div>
       <div style="flex:1"><div class="stit" style="font-size:14px;font-weight:800">Conferma</div></div>
-      <button id="confirm-cancel-x" style="width:32px;height:32px;border:none;border-radius:9px;background:rgba(255,255,255,.1);color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+      <button id="confirm-cancel-x" style="width:32px;height:32px;border:none;border-radius:9px;background:rgba(255,255,255,.1);color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center">âœ•</button>
     </div>
     <div id="confirm-msg" style="font-size:13px;color:#fff;line-height:1.5;margin-bottom:18px"></div>
     <div style="display:flex;gap:10px">
@@ -998,14 +998,14 @@
 <div id="ntf-icon-modal" id="ntf-icon-modal-inner" data-backdrop-close="_iconPickerClose">
   <div class="ipm-box">
     <div class="ipm-hdr">
-      <div class="ipm-hdr-title">🎨 Scegli icona</div>
+      <div class="ipm-hdr-title">ðŸŽ¨ Scegli icona</div>
       <div class="ipm-tabs">
-        <button class="ipm-tab" data-tab="emoji" data-action="_iconPickerRenderTab" data-action-arg="emoji">😀 Emoji</button>
-        <button class="ipm-tab" data-tab="mdi"   data-action="_iconPickerRenderTab" data-action-arg="mdi">󰀍 MDI</button>
+        <button class="ipm-tab" data-tab="emoji" data-action="_iconPickerRenderTab" data-action-arg="emoji">ðŸ˜€ Emoji</button>
+        <button class="ipm-tab" data-tab="mdi"   data-action="_iconPickerRenderTab" data-action-arg="mdi">ó°€ MDI</button>
       </div>
-      <button data-action="_iconPickerClose" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;margin-left:10px">✕</button>
+      <button data-action="_iconPickerClose" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;margin-left:10px">âœ•</button>
     </div>
-    <input class="ipm-search" id="ipm-search" placeholder="Cerca icona MDI… (es. bell, home, lock)"  style="display:none">
+    <input class="ipm-search" id="ipm-search" placeholder="Cerca icona MDIâ€¦ (es. bell, home, lock)"  style="display:none">
     <div class="ipm-body"></div>
   </div>
 </div>
@@ -1018,14 +1018,14 @@
 <!-- CHIP DETAIL POPUP -->
 <div id="app-chip-pop"></div>
 
-<!-- Esci da kiosk: visibile SOLO in kiosk (l'header con il tasto kiosk è nascosto in kiosk) -->
-<button class="kiosk-reload-fab" id="kiosk-reload" data-action="hardReload" title="Ricarica">⟳</button>
-<button class="kiosk-exit-fab" id="kiosk-exit" data-action="toggleKiosk" title="Esci da Kiosk">✕ Esci</button>
+<!-- Esci da kiosk: visibile SOLO in kiosk (l'header con il tasto kiosk Ã¨ nascosto in kiosk) -->
+<button class="kiosk-reload-fab" id="kiosk-reload" data-action="hardReload" title="Ricarica">âŸ³</button>
+<button class="kiosk-exit-fab" id="kiosk-exit" data-action="toggleKiosk" title="Esci da Kiosk">âœ• Esci</button>
 
 <!-- Centro notifiche (apribile dalla campanella in alto) -->
 <div id="notif-center">
   <div class="ntfc-hdr">
-    <span style="font-weight:800;font-size:13px">🔔 Centro Notifiche FraRik HA</span>
+    <span style="font-weight:800;font-size:13px">ðŸ”” Centro Notifiche FraRik HA</span>
     <div id="ntfc-hdr-btns" style="display:flex;gap:6px;margin-left:auto"></div>
   </div>
   <div id="notif-center-list"></div>
@@ -1033,15 +1033,15 @@
 
 <!-- Notifica aggiornamenti card da GitHub -->
 <div id="gh-notif" data-action="_ghAskInstall" title="Clicca per aggiornare le card">
-  <span style="font-size:15px">🔄</span>
+  <span style="font-size:15px">ðŸ”„</span>
   <span id="gh-notif-txt" style="flex:1">Aggiornamenti card disponibili</span>
-  <button data-action="_ghDismiss" title="Ignora" style="background:rgba(255,255,255,.12);border:none;color:#fff;width:22px;height:22px;border-radius:6px;cursor:pointer;font-size:11px">✕</button>
+  <button data-action="_ghDismiss" title="Ignora" style="background:rgba(255,255,255,.12);border:none;color:#fff;width:22px;height:22px;border-radius:6px;cursor:pointer;font-size:11px">âœ•</button>
 </div>
 
 <!-- CONFIG GITHUB CARD -->
 <div class="mbg off" id="ghmod" style="z-index:260">
   <div class="mbox" style="width:460px">
-    <div class="mhdr"><span class="mtitle">🐙 Card da GitHub</span><button class="mx" data-action="closeGitHubCfg">✕</button></div>
+    <div class="mhdr"><span class="mtitle">ðŸ™ Card da GitHub</span><button class="mx" data-action="closeGitHubCfg">âœ•</button></div>
     <div class="fscroll" style="padding:14px">
       <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px">
         La plancia controlla il repository e quando tu o il tuo amico modificate/aggiungete una card, ricevi una <b>notifica</b> in alto: cliccandola la card si aggiorna (e si sincronizza su tutti i tuoi dispositivi).
@@ -1056,18 +1056,18 @@
       <input class="finp" id="gh-path" placeholder="(vuoto)" style="margin-bottom:8px">
       <div class="flbl">Ramo (branch)</div>
       <input class="finp" id="gh-branch" placeholder="main" style="margin-bottom:10px">
-      <div class="flbl">Token GitHub <span style="opacity:.5;font-weight:400">(solo per PUBBLICARE — facoltativo)</span></div>
-      <input class="finp" id="gh-token" type="password" placeholder="github_pat_… oppure ghp_…" style="margin-bottom:4px" autocomplete="off">
-      <div style="font-size:10px;color:var(--muted);line-height:1.45;margin-bottom:12px">Serve solo per <b>caricare</b> card su GitHub dalla plancia. Crea un token su <a href="https://github.com/settings/tokens" target="_blank" rel="noopener" style="color:#818cf8;text-decoration:underline">github.com/settings/tokens</a> → <i>Fine-grained tokens</i>, con permesso <b>Contents: Read and write</b> solo sul repo <code>cards</code>.</div>
+      <div class="flbl">Token GitHub <span style="opacity:.5;font-weight:400">(solo per PUBBLICARE â€” facoltativo)</span></div>
+      <input class="finp" id="gh-token" type="password" placeholder="github_pat_â€¦ oppure ghp_â€¦" style="margin-bottom:4px" autocomplete="off">
+      <div style="font-size:10px;color:var(--muted);line-height:1.45;margin-bottom:12px">Serve solo per <b>caricare</b> card su GitHub dalla plancia. Crea un token su <a href="https://github.com/settings/tokens" target="_blank" rel="noopener" style="color:#818cf8;text-decoration:underline">github.com/settings/tokens</a> â†’ <i>Fine-grained tokens</i>, con permesso <b>Contents: Read and write</b> solo sul repo <code>cards</code>.</div>
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:12px">
         <input type="checkbox" id="gh-auto" checked style="width:16px;height:16px;accent-color:#6366f1">
         <span style="font-size:12px;font-weight:600;color:#e2e8f0">Controlla automaticamente (ogni 5 min)</span>
       </label>
       <div id="gh-status" style="font-size:11px;color:var(--muted);min-height:16px;margin-bottom:10px"></div>
       <div style="display:flex;gap:6px">
-        <button class="btn1" data-action="saveGitHubCfg">💾 Salva</button>
-        <button class="btn2" data-action="_ghCheckForce">🔄 Controlla ora</button>
-        <button class="btn2" data-action="_ghImportAll">⬇️ Importa tutte</button>
+        <button class="btn1" data-action="saveGitHubCfg">ðŸ’¾ Salva</button>
+        <button class="btn2" data-action="_ghCheckForce">ðŸ”„ Controlla ora</button>
+        <button class="btn2" data-action="_ghImportAll">â¬‡ï¸ Importa tutte</button>
       </div>
     </div>
   </div>
@@ -1076,22 +1076,22 @@
 <!-- PUBBLICA CARD SU GITHUB -->
 <div class="mbg off" id="ghpub" style="z-index:280">
   <div class="mbox" style="width:420px">
-    <div class="mhdr"><span class="mtitle">📤 Pubblica su GitHub</span><button class="mx" data-action="closeGhPub">✕</button></div>
+    <div class="mhdr"><span class="mtitle">ðŸ“¤ Pubblica su GitHub</span><button class="mx" data-action="closeGhPub">âœ•</button></div>
     <div class="fscroll" style="padding:14px">
-      <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px">Invia questa card al tuo repository GitHub nella cartella scelta. Da lì potrà aggiornarsi su tutti i dispositivi (tuoi e del tuo amico).</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px">Invia questa card al tuo repository GitHub nella cartella scelta. Da lÃ¬ potrÃ  aggiornarsi su tutti i dispositivi (tuoi e del tuo amico).</div>
       <div class="flbl">Card</div>
       <input class="finp" id="ghpub-name" readonly style="margin-bottom:8px;opacity:.7">
       <div class="flbl">Cartella di destinazione</div>
       <select class="finp" id="ghpub-folder" style="margin-bottom:8px">
-        <option value="card-js">⚡ card-js (card normali)</option>
-        <option value="card-chips">🔹 card-chips (chips)</option>
-        <option value="card-distintivi">🏷️ card-distintivi (distintivi)</option>
+        <option value="card-js">âš¡ card-js (card normali)</option>
+        <option value="card-chips">ðŸ”¹ card-chips (chips)</option>
+        <option value="card-distintivi">ðŸ·ï¸ card-distintivi (distintivi)</option>
       </select>
       <div class="flbl">Nome file</div>
       <input class="finp" id="ghpub-file" placeholder="nome-card.js" style="margin-bottom:10px" autocomplete="off">
       <div id="ghpub-status" style="font-size:11px;color:var(--muted);min-height:16px;margin-bottom:10px"></div>
       <div style="display:flex;gap:6px">
-        <button class="btn1" data-action="_ghPublishDo">📤 Pubblica</button>
+        <button class="btn1" data-action="_ghPublishDo">ðŸ“¤ Pubblica</button>
         <button class="btn2" data-action="closeGhPub">Annulla</button>
       </div>
     </div>
@@ -1101,18 +1101,18 @@
 <!-- EDITOR VISTA (nome / icona / elimina) -->
 <div class="mbg off" id="vmod" style="z-index:240">
   <div class="mbox" style="width:360px">
-    <div class="mhdr"><span class="mtitle">✏️ Modifica vista</span><button class="mx" data-action="closeViewEdit">✕</button></div>
+    <div class="mhdr"><span class="mtitle">âœï¸ Modifica vista</span><button class="mx" data-action="closeViewEdit">âœ•</button></div>
     <div class="fscroll" style="padding:14px">
       <div class="flbl">Nome vista</div>
       <input class="finp" id="vmod-name" placeholder="es. Soggiorno" style="margin-bottom:10px" autocomplete="off">
       <div class="flbl">Icona</div>
       <div class="finp-row" style="margin-bottom:14px">
-        <input class="finp" id="vmod-ico" placeholder="🏠 oppure mdi:home" autocomplete="off">
-        <button class="fbtn" title="Scegli icona" id="vmod-ico-picker">🎨</button>
+        <input class="finp" id="vmod-ico" placeholder="ðŸ  oppure mdi:home" autocomplete="off">
+        <button class="fbtn" title="Scegli icona" id="vmod-ico-picker">ðŸŽ¨</button>
       </div>
       <div style="display:flex;gap:6px">
-        <button class="btn1" data-action="saveViewEdit" style="flex:1">💾 Salva</button>
-        <button class="btn2" id="vmod-del" data-action="deleteViewFromEdit" style="color:#f87171;border-color:rgba(248,113,113,.35)">🗑 Elimina</button>
+        <button class="btn1" data-action="saveViewEdit" style="flex:1">ðŸ’¾ Salva</button>
+        <button class="btn2" id="vmod-del" data-action="deleteViewFromEdit" style="color:#f87171;border-color:rgba(248,113,113,.35)">ðŸ—‘ Elimina</button>
       </div>
     </div>
   </div>
@@ -1124,24 +1124,24 @@
   <div id="fe-ep" style="display:none;position:absolute;inset:0;z-index:100;background:rgba(0,0,0,.7);align-items:center;justify-content:center">
     <div style="background:var(--panel);border:1px solid var(--bd);border-radius:16px;width:min(480px,94vw);max-height:80vh;display:flex;flex-direction:column;overflow:hidden">
       <div style="padding:12px 14px;border-bottom:1px solid var(--bd);display:flex;gap:8px;align-items:center">
-        <input id="fe-ep-q" class="fe-prop-inp" placeholder="Cerca entità (es. sensor.temp, light…)" style="flex:1"  autofocus>
-        <button data-action="_feEpClose" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer">✕</button>
+        <input id="fe-ep-q" class="fe-prop-inp" placeholder="Cerca entitÃ  (es. sensor.temp, lightâ€¦)" style="flex:1"  autofocus>
+        <button data-action="_feEpClose" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer">âœ•</button>
       </div>
       <div id="fe-ep-list" style="overflow-y:auto;max-height:60vh;padding:6px 8px"></div>
     </div>
   </div>
   <div class="fe-topbar">
-    <span class="fe-topbar-title">🎨 Canvas Libero</span>
+    <span class="fe-topbar-title">ðŸŽ¨ Canvas Libero</span>
     <div class="fe-vsep"></div>
     <!-- primary: add entity -->
-    <button class="fe-add-btn" data-action="feOpenEP" style="background:rgba(99,102,241,.18);border-color:rgba(99,102,241,.5);color:#a5b4fc;font-size:11px;padding:6px 14px">＋ Aggiungi entità</button>
+    <button class="fe-add-btn" data-action="feOpenEP" style="background:rgba(99,102,241,.18);border-color:rgba(99,102,241,.5);color:#a5b4fc;font-size:11px;padding:6px 14px">ï¼‹ Aggiungi entitÃ </button>
     <div class="fe-vsep"></div>
     <!-- secondary decorative elements -->
-    <button class="fe-add-btn" data-action="feAddEl" data-action-arg="text">＋ Testo</button>
-    <button class="fe-add-btn" data-action="feAddEl" data-action-arg="button">＋ Bottone</button>
-    <button class="fe-add-btn" data-action="feAddEl" data-action-arg="icon">＋ Icona</button>
-    <button class="fe-add-btn" data-action="feAddEl" data-action-arg="shape">＋ Forma</button>
-    <button class="fe-add-btn" data-action="feAddEl" data-action-arg="image">＋ Immagine</button>
+    <button class="fe-add-btn" data-action="feAddEl" data-action-arg="text">ï¼‹ Testo</button>
+    <button class="fe-add-btn" data-action="feAddEl" data-action-arg="button">ï¼‹ Bottone</button>
+    <button class="fe-add-btn" data-action="feAddEl" data-action-arg="icon">ï¼‹ Icona</button>
+    <button class="fe-add-btn" data-action="feAddEl" data-action-arg="shape">ï¼‹ Forma</button>
+    <button class="fe-add-btn" data-action="feAddEl" data-action-arg="image">ï¼‹ Immagine</button>
     <div class="fe-vsep"></div>
     <!-- canvas settings -->
     <span class="fe-cfg-lbl">L:</span><input id="fe-inp-w" class="fe-cfg-inp" type="number" placeholder="400" >
@@ -1155,26 +1155,26 @@
       <div id="fe-canvas-frame" class="fe-canvas-frame"></div>
     </div>
     <div class="fe-props-panel">
-      <div class="fe-props-hdr">Proprietà elemento</div>
+      <div class="fe-props-hdr">ProprietÃ  elemento</div>
       <div class="fe-props-body" id="fe-props-body">
-        <div class="fe-no-sel">Aggiungi un'entità con<br><b>＋ Aggiungi entità</b><br>poi trascinala dove vuoi.<br><br>Clic su un elemento<br>per modificarlo.</div>
+        <div class="fe-no-sel">Aggiungi un'entitÃ  con<br><b>ï¼‹ Aggiungi entitÃ </b><br>poi trascinala dove vuoi.<br><br>Clic su un elemento<br>per modificarlo.</div>
       </div>
     </div>
   </div>
   <div class="fe-bottombar">
-    <div style="font-size:10px;color:var(--dim)">Snap griglia: <input id="fe-inp-snap" class="fe-cfg-inp" type="number" value="5" min="1" max="20" style="width:44px" > px &nbsp;|&nbsp; Trascina gli elementi per posizionarli · angolo in basso a destra per ridimensionare</div>
-    <button class="fe-close-btn" data-action="closeFE">✅ Chiudi editor</button>
+    <div style="font-size:10px;color:var(--dim)">Snap griglia: <input id="fe-inp-snap" class="fe-cfg-inp" type="number" value="5" min="1" max="20" style="width:44px" > px &nbsp;|&nbsp; Trascina gli elementi per posizionarli Â· angolo in basso a destra per ridimensionare</div>
+    <button class="fe-close-btn" data-action="closeFE">âœ… Chiudi editor</button>
   </div>
 </div>
 
 <!-- JS CARD STORE MODAL -->
 <div class="mbg off" id="js-store-modal">
   <div class="mbox" style="max-width:620px;width:95vw">
-    <div class="mhdr"><span class="mtitle">📦 Store Card JS</span><button class="mx" data-action="closeJsStore">✕</button></div>
+    <div class="mhdr"><span class="mtitle">ðŸ“¦ Store Card JS</span><button class="mx" data-action="closeJsStore">âœ•</button></div>
     <div class="fscroll" style="padding:16px">
       <div style="display:flex;gap:6px;margin-bottom:14px">
-        <button class="jsst-tab on" id="jsst-tab-installed" data-action="jsStoreTab" data-action-arg="installed">📋 Installate (<span id="jsst-count">0</span>)</button>
-        <button class="jsst-tab" id="jsst-tab-load" data-action="jsStoreTab" data-action-arg="load">➕ Carica nuova</button>
+        <button class="jsst-tab on" id="jsst-tab-installed" data-action="jsStoreTab" data-action-arg="installed">ðŸ“‹ Installate (<span id="jsst-count">0</span>)</button>
+        <button class="jsst-tab" id="jsst-tab-load" data-action="jsStoreTab" data-action-arg="load">âž• Carica nuova</button>
       </div>
       <div id="jsst-panel-installed">
         <div id="jsst-list"></div>
@@ -1184,27 +1184,27 @@
       </div>
       <div id="jsst-panel-load" style="display:none">
         <div style="background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:11px;color:#fff;line-height:1.7">
-          📁 <b>Trascina un file <code>.js</code></b> qui sotto, oppure clicca per selezionarlo.<br>
+          ðŸ“ <b>Trascina un file <code>.js</code></b> qui sotto, oppure clicca per selezionarlo.<br>
           Il file deve esportare <code style="color:#fbbf24">window.FratechCards = window.FratechCards || {};</code> e registrare la card con un ID univoco.
         </div>
         <div id="jsst-dropzone" class="jsst-dropzone" data-action="_jsDropzoneClick">
-          <div class="jsst-dz-ico">📂</div>
+          <div class="jsst-dz-ico">ðŸ“‚</div>
           <div class="jsst-dz-lbl">Clicca o trascina il file <code>.js</code></div>
           <div class="jsst-dz-sub">Massimo 2 MB</div>
           <input type="file" id="jsst-file-inp" accept=".js" style="display:none" >
         </div>
         <div id="jsst-load-status" style="margin-top:10px;font-size:11px;min-height:18px"></div>
         <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--bd)">
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px">📝 Template di partenza</div>
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px">ðŸ“ Template di partenza</div>
           <pre id="jsst-template-pre" style="background:rgba(0,0,0,.4);border:1px solid var(--bd2);border-radius:10px;padding:12px;font-size:10px;color:#a5b4fc;overflow-x:auto;white-space:pre;line-height:1.6;max-height:240px;overflow-y:auto"></pre>
-          <button data-action="jsStoreDownloadTemplate" style="margin-top:8px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.35);color:#a5b4fc;border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer">⬇️ Scarica template.js</button>
+          <button data-action="jsStoreDownloadTemplate" style="margin-top:8px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.35);color:#a5b4fc;border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer">â¬‡ï¸ Scarica template.js</button>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- STORE GITHUB — contenuto spostato inline nel pannello impostazioni -->
+<!-- STORE GITHUB â€” contenuto spostato inline nel pannello impostazioni -->
 <div class="mbg off" id="gh-store-modal" style="display:none"></div>
 
 <!-- YAML IMPORT MODAL -->
@@ -1213,11 +1213,11 @@
     <div class="mhdr">
       <i class="mdi mdi-code-braces" style="font-size:18px;color:#818cf8"></i>
       <span class="mtitle" style="flex:1">Incolla card YAML (HACS)</span>
-      <button class="mx" data-action="closeYamlImport">✕</button>
+      <button class="mx" data-action="closeYamlImport">âœ•</button>
     </div>
     <div id="yaml-body">
       <div style="font-size:11px;color:var(--muted);line-height:1.6;background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.18);border-radius:10px;padding:10px 12px">
-        💡 Copia il codice YAML di una card HACS (Bubble Card, Mushroom, Mini Graph…), incollalo qui e clicca <b>Carica anteprima</b>. La card deve essere già installata in HACS sulla tua istanza HA.
+        ðŸ’¡ Copia il codice YAML di una card HACS (Bubble Card, Mushroom, Mini Graphâ€¦), incollalo qui e clicca <b>Carica anteprima</b>. La card deve essere giÃ  installata in HACS sulla tua istanza HA.
       </div>
       <textarea id="yaml-inp" spellcheck="false" placeholder="type: custom:bubble-card&#10;card_type: button&#10;entity: light.soggiorno&#10;name: Soggiorno"></textarea>
       <div id="yaml-status"></div>
@@ -1235,7 +1235,7 @@
   <div id="ghs-prev-box">
     <div id="ghs-prev-hdr">
       <span id="ghs-prev-title">Anteprima</span>
-      <button class="mx" data-action="closeGhsPreview">✕</button>
+      <button class="mx" data-action="closeGhsPreview">âœ•</button>
     </div>
     <div id="ghs-prev-body">
       <div id="ghs-prev-card"></div>
@@ -1251,108 +1251,108 @@
 <div id="ep-picker">
   <div class="ep-picker-box">
     <div class="ep-picker-hdr">
-      <div class="ep-picker-hdr-title" id="ep-picker-title">Seleziona entità</div>
+      <div class="ep-picker-hdr-title" id="ep-picker-title">Seleziona entitÃ </div>
       <div id="ep-picker-domain-badge" class="ep-picker-domain-badge" style="display:none"></div>
-      <button class="cfg-modal-close" data-action="_epPickerClose" title="Chiudi">✕</button>
+      <button class="cfg-modal-close" data-action="_epPickerClose" title="Chiudi">âœ•</button>
     </div>
     <div class="ep-picker-search">
-      <input class="ep-picker-inp" id="ep-picker-q" placeholder="🔍  Cerca per nome, dominio o ID…"  autocomplete="off" spellcheck="false">
+      <input class="ep-picker-inp" id="ep-picker-q" placeholder="ðŸ”  Cerca per nome, dominio o IDâ€¦"  autocomplete="off" spellcheck="false">
     </div>
     <div class="ep-picker-list" id="ep-picker-list"></div>
   </div>
 </div>
 
-<!-- NOTIFICHE SMART CONFIG MODAL — contenuto spostato inline nel pannello impostazioni -->
+<!-- NOTIFICHE SMART CONFIG MODAL â€” contenuto spostato inline nel pannello impostazioni -->
 <div class="cfg-modal-ov" id="ntf-cfg-modal" style="display:none"></div>
 
-<!-- SOS CONFIG MODAL — contenuto spostato inline nel pannello impostazioni -->
+<!-- SOS CONFIG MODAL â€” contenuto spostato inline nel pannello impostazioni -->
 <div class="cfg-modal-ov" id="sos-cfg-modal" style="display:none"></div>
 
-<!-- SOS STEP 1 — Chi sei? -->
+<!-- SOS STEP 1 â€” Chi sei? -->
 <div class="sos-ov off" id="sos-mod1">
   <div class="sos-box">
-    <div class="sos-hdr-ico">🆘</div>
+    <div class="sos-hdr-ico">ðŸ†˜</div>
     <div class="sos-hdr-title">EMERGENZA SOS</div>
-    <div class="sos-hdr-sub">Seleziona la tua identità per continuare</div>
+    <div class="sos-hdr-sub">Seleziona la tua identitÃ  per continuare</div>
     <div id="sos-people-grid" class="sos-people-grid"></div>
     <div id="sos-no-people" class="sos-no-contacts" style="display:none">
-      ⚠️ Nessuna persona trovata in Home Assistant.<br>
-      <span style="font-size:10px">Configura le entità <code>person.*</code> in HA oppure aggiungi persone nelle impostazioni SOS.</span>
+      âš ï¸ Nessuna persona trovata in Home Assistant.<br>
+      <span style="font-size:10px">Configura le entitÃ  <code>person.*</code> in HA oppure aggiungi persone nelle impostazioni SOS.</span>
     </div>
     <button class="sos-cancel-btn" data-action="closeSOS">Annulla</button>
   </div>
 </div>
 
-<!-- SOS STEP 2 — Contatta -->
+<!-- SOS STEP 2 â€” Contatta -->
 <div class="sos-ov off" id="sos-mod2">
   <div class="sos-box">
-    <div class="sos-hdr-ico">📞</div>
+    <div class="sos-hdr-ico">ðŸ“ž</div>
     <div class="sos-hdr-title">Chi vuoi contattare?</div>
     <div id="sos-who-badge" class="sos-who-badge"></div>
     <div id="sos-contacts-list"></div>
-    <button class="sos-act-all" data-action="sosAlertAll">📢 Avvisa TUTTI i contatti</button>
-    <button class="sos-cancel-btn" data-action="closeSOS2">← Torna indietro</button>
+    <button class="sos-act-all" data-action="sosAlertAll">ðŸ“¢ Avvisa TUTTI i contatti</button>
+    <button class="sos-cancel-btn" data-action="closeSOS2">â† Torna indietro</button>
   </div>
 </div>
 
-<!-- ═══ SCREENSAVER (idle → orologio + meteo a tutto schermo) ═══ -->
+<!-- â•â•â• SCREENSAVER (idle â†’ orologio + meteo a tutto schermo) â•â•â• -->
 
 
-<!-- ═══ TEMA AUTOMATICO (schedule: orario o alba/tramonto) ═══ -->
+<!-- â•â•â• TEMA AUTOMATICO (schedule: orario o alba/tramonto) â•â•â• -->
 
 
-<!-- ═══ NAVBAR DI CHIP (navigazione rapida tra pagine) ═══ -->
+<!-- â•â•â• NAVBAR DI CHIP (navigazione rapida tra pagine) â•â•â• -->
 
 
-<!-- ═══ PANNELLO SISTEMA: collega i controlli ai moduli ═══ -->
+<!-- â•â•â• PANNELLO SISTEMA: collega i controlli ai moduli â•â•â• -->
 
 
-<!-- ═══ PAGINA PREMIUM ═══ -->
+<!-- â•â•â• PAGINA PREMIUM â•â•â• -->
 <div class="mbg off" id="prem-page-modal" style="z-index:310;align-items:flex-end">
   <div style="position:relative;width:100%;max-height:88vh;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-ms-overflow-style:none;background:#0a0816;border:1px solid rgba(251,191,36,.35);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(251,191,36,.1);animation:premSlideUp .22s cubic-bezier(.32,1.12,.56,1)">
     <!-- header -->
     <div style="display:flex;align-items:center;gap:14px;padding:24px 24px 0">
-      <div style="width:48px;height:48px;border-radius:14px;background:rgba(251,191,36,.14);border:1px solid rgba(251,191,36,.3);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">💎</div>
+      <div style="width:48px;height:48px;border-radius:14px;background:rgba(251,191,36,.14);border:1px solid rgba(251,191,36,.3);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">ðŸ’Ž</div>
       <div style="flex:1">
         <div style="font-size:19px;font-weight:800;color:#fff;letter-spacing:-.3px">Frarik Premium</div>
         <div style="font-size:12px;color:#fff;margin-top:2px">Sblocca l'esperienza completa di Frarik Dashboard</div>
       </div>
-      <button class="mx" data-action="closePremiumPage" style="flex-shrink:0">✕</button>
+      <button class="mx" data-action="closePremiumPage" style="flex-shrink:0">âœ•</button>
     </div>
     <!-- hero badge -->
     <div style="margin:20px 24px 0;padding:16px 20px;border-radius:14px;background:linear-gradient(135deg,rgba(251,191,36,.12),rgba(251,191,36,.04));border:1px solid rgba(251,191,36,.2);text-align:center">
-      <div style="font-size:13px;font-weight:700;color:#fbbf24;letter-spacing:.6px;text-transform:uppercase;margin-bottom:4px">✦ Accesso Anticipato</div>
-      <div style="font-size:12px;color:#fff">Il sistema di pagamento è in preparazione. Registra il tuo interesse e sarai tra i primi a essere contattato.</div>
+      <div style="font-size:13px;font-weight:700;color:#fbbf24;letter-spacing:.6px;text-transform:uppercase;margin-bottom:4px">âœ¦ Accesso Anticipato</div>
+      <div style="font-size:12px;color:#fff">Il sistema di pagamento Ã¨ in preparazione. Registra il tuo interesse e sarai tra i primi a essere contattato.</div>
     </div>
     <!-- features grid -->
     <div style="padding:20px 24px 0;display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)">
-        <div style="font-size:20px;margin-bottom:6px">🌟</div>
+        <div style="font-size:20px;margin-bottom:6px">ðŸŒŸ</div>
         <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:3px">Card Esclusive</div>
         <div style="font-size:11px;color:#fff">Accesso a card avanzate non disponibili nel piano gratuito</div>
       </div>
       <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)">
-        <div style="font-size:20px;margin-bottom:6px">⚡</div>
+        <div style="font-size:20px;margin-bottom:6px">âš¡</div>
         <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:3px">Aggiornamenti Prioritari</div>
-        <div style="font-size:11px;color:#fff">Ricevi le nuove funzionalità prima di tutti gli altri</div>
+        <div style="font-size:11px;color:#fff">Ricevi le nuove funzionalitÃ  prima di tutti gli altri</div>
       </div>
       <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)">
-        <div style="font-size:20px;margin-bottom:6px">🛡️</div>
+        <div style="font-size:20px;margin-bottom:6px">ðŸ›¡ï¸</div>
         <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:3px">Supporto Dedicato</div>
         <div style="font-size:11px;color:#fff">Assistenza prioritaria via canale diretto Fratech</div>
       </div>
       <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)">
-        <div style="font-size:20px;margin-bottom:6px">🎨</div>
+        <div style="font-size:20px;margin-bottom:6px">ðŸŽ¨</div>
         <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:3px">Temi Premium</div>
         <div style="font-size:11px;color:#fff">Palette di colori e stili esclusivi per la dashboard</div>
       </div>
       <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)">
-        <div style="font-size:20px;margin-bottom:6px">📊</div>
+        <div style="font-size:20px;margin-bottom:6px">ðŸ“Š</div>
         <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:3px">Analytics Avanzati</div>
-        <div style="font-size:11px;color:#fff">Grafici storici e statistiche dettagliate per ogni entità</div>
+        <div style="font-size:11px;color:#fff">Grafici storici e statistiche dettagliate per ogni entitÃ </div>
       </div>
       <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)">
-        <div style="font-size:20px;margin-bottom:6px">🔮</div>
+        <div style="font-size:20px;margin-bottom:6px">ðŸ”®</div>
         <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:3px">Funzioni Future</div>
         <div style="font-size:11px;color:#fff">Accesso anticipato a tutte le feature in arrivo</div>
       </div>
@@ -1360,7 +1360,7 @@
     <!-- pricing placeholder -->
     <div style="margin:20px 24px 0;padding:20px;border-radius:14px;background:rgba(251,191,36,.06);border:1px dashed rgba(251,191,36,.3);text-align:center">
       <div style="font-size:28px;font-weight:900;color:#fbbf24;letter-spacing:-1px">Prezzo <span style="font-size:16px;font-weight:600;color:rgba(251,191,36,.6)">da definire</span></div>
-      <div style="font-size:11px;color:#fff;margin-top:4px">Il prezzo definitivo sarà comunicato al lancio ufficiale</div>
+      <div style="font-size:11px;color:#fff;margin-top:4px">Il prezzo definitivo sarÃ  comunicato al lancio ufficiale</div>
       <div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
         <span style="padding:4px 12px;border-radius:20px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.25);font-size:11px;color:#fbbf24;font-weight:600">Pagamento singolo</span>
         <span style="padding:4px 12px;border-radius:20px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.25);font-size:11px;color:#fbbf24;font-weight:600">Abbonamento mensile</span>
@@ -1369,11 +1369,11 @@
     </div>
     <!-- interest form -->
     <div style="margin:20px 24px;padding:20px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08)">
-      <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px">📧 Registra il tuo interesse</div>
-      <div style="font-size:11px;color:#fff;margin-bottom:14px">Ti contatteremo non appena il Premium sarà disponibile</div>
+      <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px">ðŸ“§ Registra il tuo interesse</div>
+      <div style="font-size:11px;color:#fff;margin-bottom:14px">Ti contatteremo non appena il Premium sarÃ  disponibile</div>
       <div style="display:flex;gap:8px">
-        <input id="prem-interest-email" type="email" placeholder="La tua email…" style="flex:1;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#fff;font-size:12px;outline:none">
-        <button id="prem-interest-btn" data-action="_premSendInterest" style="padding:10px 18px;border-radius:10px;background:linear-gradient(135deg,#fbbf24,#f59e0b);border:none;color:#0a0816;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap">Invia ✉️</button>
+        <input id="prem-interest-email" type="email" placeholder="La tua emailâ€¦" style="flex:1;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#fff;font-size:12px;outline:none">
+        <button id="prem-interest-btn" data-action="_premSendInterest" style="padding:10px 18px;border-radius:10px;background:linear-gradient(135deg,#fbbf24,#f59e0b);border:none;color:#0a0816;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap">Invia âœ‰ï¸</button>
       </div>
       <div id="prem-interest-msg" style="font-size:11px;margin-top:8px;min-height:14px"></div>
     </div>

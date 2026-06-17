@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.17 — 2026-06-17
+
+### feat(store): wizard pkg si apre nella Store, non nella dashboard
+
+- **`posta-card.js` v1.6**: aggiunto `PostaCard.openWizard(hass, onDone)` metodo statico accessibile da main.js; aggiunto `frarik_pkg_check: 'sensor.frarik_posta_versione'` nel customCards manifest
+- **`main.js` — `_ghsInstall`**: dopo aver installato il codice JS, controlla se la card richiede un package HA; se l'entità di controllo non è presente in hass, apre automaticamente il wizard (invece di mostrare "usa ➕ Aggiungi")
+- **`main.js` — `jsStoreAddCard`**: prima di aggiungere la card alla dashboard, controlla pkg; se non installato apre wizard con messaggio "riavvia HA poi aggiungi"
+- Flusso nuovo: Store → Installa card → wizard pkg si apre automaticamente → inserisci sensori → Installa Package → Riavvia HA → torna Store → ➕ Aggiungi → dashboard mostra vista principale
+
 ## 1.5.16 — 2026-06-17
 
 ### fix: Card YAML — sfondo vista HA trasparente dentro l'iframe

@@ -1,4 +1,4 @@
-/* frarik-version: 1.5 */
+/* frarik-version: 1.6 */
 /* Centro Controllo Posta — Frarik card standalone */
 (function(){
   'use strict';
@@ -1031,10 +1031,208 @@ automation:
   }
 
   customElements.define('posta-card', PostaCard);
+
+  /* ── WIZARD STATICO: chiamabile da Store prima di aggiungere la card ── */
+  PostaCard.openWizard = function(hass, onDone){
+    document.getElementById('__frk_posta_wizard__')?.remove();
+    const host=document.createElement('div');
+    host.id='__frk_posta_wizard__';
+    host.attachShadow({mode:'open'});
+    document.body.appendChild(host);
+    const destroy=()=>{ _acHide(); host.remove(); };
+    let _ridG=1,_ridA=1,_ridP=1;
+
+    host.shadowRoot.innerHTML=`<style>
+      *{box-sizing:border-box;margin:0;padding:0}
+      .ov{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.72);backdrop-filter:blur(6px)}
+      .mo{width:100%;max-height:88vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(251,191,36,.28);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.8);animation:su .22s cubic-bezier(.32,1.12,.56,1)}
+      @keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
+      .mhdr{display:flex;align-items:center;gap:12px;padding:18px 18px 14px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
+      .mico{width:40px;height:40px;border-radius:12px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+      .mtxt{flex:1}
+      .mtit{font-size:15px;font-weight:900;color:#fff;font-family:system-ui,sans-serif}
+      .msub{font-size:11px;color:#fff;opacity:.4;font-family:system-ui,sans-serif;margin-top:2px}
+      .mxbtn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:6px 12px;color:#fff;font-size:13px;cursor:pointer;font-family:system-ui,sans-serif}
+      .mbody{flex:1;overflow-y:auto;padding:16px 18px 4px;display:flex;flex-direction:column;gap:18px;scrollbar-width:none}
+      .mbody::-webkit-scrollbar{display:none}
+      .wsec{display:flex;flex-direction:column;gap:9px}
+      .wsec-hdr{display:flex;align-items:center;gap:8px}
+      .wsec-ico{font-size:17px;line-height:1}
+      .wsec-ttl{font-size:12px;font-weight:900;color:#fff;letter-spacing:.6px;text-transform:uppercase;font-family:system-ui,sans-serif}
+      .tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;font-family:system-ui,sans-serif}
+      .req{background:rgba(239,68,68,.2);color:#fca5a5;border:1px solid rgba(239,68,68,.3)}
+      .opt{background:rgba(255,255,255,.07);color:#fff;opacity:.5;border:1px solid rgba(255,255,255,.12)}
+      .wsec-hint{font-size:11px;color:#fff;opacity:.42;font-family:system-ui,sans-serif;line-height:1.6}
+      .wsec-hint code{background:rgba(255,255,255,.1);padding:1px 5px;border-radius:4px;font-size:10px;color:#fbbf24;font-family:monospace}
+      .wlist{display:flex;flex-direction:column;gap:6px}
+      .wrow{display:flex;gap:6px;align-items:center}
+      .winp{flex:1;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 12px;color:#fff;font-size:13px;font-family:monospace;outline:none;transition:border-color .15s}
+      .winp:focus{border-color:rgba(251,191,36,.55);background:rgba(255,255,255,.09)}
+      .winp.err{border-color:rgba(239,68,68,.6)!important}
+      .wrem{width:32px;height:32px;flex-shrink:0;border-radius:8px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);color:#fca5a5;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;font-family:system-ui,sans-serif;line-height:1}
+      .wadd{align-self:flex-start;background:none;border:1px dashed rgba(255,255,255,.18);border-radius:9px;padding:7px 16px;color:#fff;opacity:.55;font-size:12px;font-weight:600;cursor:pointer;font-family:system-ui,sans-serif;transition:all .15s}
+      .wadd:hover{opacity:.9;border-color:rgba(251,191,36,.45);color:#fbbf24}
+      .werr{font-size:11px;color:#fca5a5;font-family:system-ui,sans-serif}
+      .wdiv{height:1px;background:rgba(255,255,255,.06)}
+      .mftr{padding:14px 18px 28px;flex-shrink:0;border-top:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;gap:8px}
+      .wbtn-ok{width:100%;padding:14px;border-radius:13px;background:#fbbf24;border:none;color:#1a1a2e;font-size:14px;font-weight:900;cursor:pointer;font-family:system-ui,sans-serif}
+      .wbtn-ok:active{filter:brightness(.9)}
+      .wbtn-ok:disabled{opacity:.5;cursor:default}
+      .winst-err{font-size:12px;color:#fca5a5;font-family:system-ui,sans-serif;text-align:center;display:none}
+    </style>
+    <div class="ov">
+      <div class="mo" id="wiz_mo">
+        <div class="mhdr">
+          <div class="mico">📦</div>
+          <div class="mtxt">
+            <div class="mtit">Configura Package Posta</div>
+            <div class="msub">Inserisci i tuoi sensori e dispositivi</div>
+          </div>
+          <button class="mxbtn" id="wiz_close">✕</button>
+        </div>
+        <div class="mbody">
+          <div class="wsec">
+            <div class="wsec-hdr"><span class="wsec-ico">📡</span><span class="wsec-ttl">Sensore Cassetta</span><span class="tag req">obbligatorio</span></div>
+            <div class="wsec-hint">entity_id del binary sensor che si attiva (<strong>on</strong>) quando la cassetta viene aperta.</div>
+            <div class="wlist">
+              <div class="wrow" data-group="sensor">
+                <input class="winp" id="w_sensor" placeholder="binary_sensor.cassetta_postale" type="text" autocomplete="off" spellcheck="false"/>
+              </div>
+            </div>
+            <div class="werr" id="w_sensor_err" style="display:none">⚠️ Campo obbligatorio</div>
+          </div>
+          <div class="wdiv"></div>
+          <div class="wsec">
+            <div class="wsec-hdr"><span class="wsec-ico">🔊</span><span class="wsec-ttl">Google Home / Nest</span><span class="tag opt">opzionale</span></div>
+            <div class="wsec-hint">entity_id dei media player Google per annunci vocali.</div>
+            <div class="wlist" id="w_google_list">
+              <div class="wrow" data-group="google" data-rid="0">
+                <input class="winp" placeholder="media_player.google_home_cucina" type="text" autocomplete="off" spellcheck="false"/>
+                <button class="wrem" data-rid="0" data-grp="google">✕</button>
+              </div>
+            </div>
+            <button class="wadd" data-add="google">+ Aggiungi dispositivo</button>
+          </div>
+          <div class="wdiv"></div>
+          <div class="wsec">
+            <div class="wsec-hdr"><span class="wsec-ico">📣</span><span class="wsec-ttl">Amazon Alexa / Echo</span><span class="tag opt">opzionale</span></div>
+            <div class="wsec-hint">entity_id dei media player Alexa. Richiede integrazione Alexa Media Player.</div>
+            <div class="wlist" id="w_alexa_list">
+              <div class="wrow" data-group="alexa" data-rid="0">
+                <input class="winp" placeholder="media_player.alexa_cucina" type="text" autocomplete="off" spellcheck="false"/>
+                <button class="wrem" data-rid="0" data-grp="alexa">✕</button>
+              </div>
+            </div>
+            <button class="wadd" data-add="alexa">+ Aggiungi dispositivo</button>
+          </div>
+          <div class="wdiv"></div>
+          <div class="wsec">
+            <div class="wsec-hdr"><span class="wsec-ico">📱</span><span class="wsec-ttl">Push Smartphone</span><span class="tag opt">opzionale</span></div>
+            <div class="wsec-hint">Nome servizio mobile_app (parte dopo <code>notify.</code>).</div>
+            <div class="wlist" id="w_push_list">
+              <div class="wrow" data-group="push" data-rid="0">
+                <input class="winp" placeholder="mobile_app_iphone_mario" type="text" autocomplete="off" spellcheck="false"/>
+                <button class="wrem" data-rid="0" data-grp="push">✕</button>
+              </div>
+            </div>
+            <button class="wadd" data-add="push">+ Aggiungi smartphone</button>
+          </div>
+        </div>
+        <div class="mftr">
+          <button class="wbtn-ok" id="wiz_install">⚡ Installa Package</button>
+          <div class="winst-err" id="wiz_inst_err"></div>
+        </div>
+      </div>
+    </div>`;
+
+    const sr=host.shadowRoot;
+    const moEl=sr.getElementById('wiz_mo');
+
+    sr.getElementById('wiz_close').addEventListener('click',()=>destroy());
+
+    moEl.addEventListener('click',e=>{
+      const addBtn=e.target.closest('[data-add]');
+      if(addBtn){
+        const grp=addBtn.dataset.add;
+        const rid=(grp==='google'?_ridG++:grp==='alexa'?_ridA++:_ridP++);
+        const listEl=sr.getElementById(`w_${grp}_list`);
+        const ph={google:'media_player.google_home_2',alexa:'media_player.alexa_2',push:'mobile_app_samsung_2'}[grp]||'';
+        const row=document.createElement('div');
+        row.className='wrow'; row.dataset.group=grp; row.dataset.rid=rid;
+        row.innerHTML=`<input class="winp" placeholder="${ph}" type="text" autocomplete="off" spellcheck="false"/>
+          <button class="wrem" data-rid="${rid}" data-grp="${grp}">✕</button>`;
+        listEl.appendChild(row);
+        const newInp=row.querySelector('.winp');
+        newInp.focus();
+        _bindAcW(newInp,grp);
+        return;
+      }
+      const remBtn=e.target.closest('.wrem');
+      if(remBtn){ const row=remBtn.closest('.wrow'); if(row){ _acHide(); row.remove(); } }
+    });
+
+    sr.getElementById('wiz_install').addEventListener('click',async()=>{
+      const sensor=(sr.getElementById('w_sensor').value||'').trim();
+      const errEl=sr.getElementById('w_sensor_err');
+      if(!sensor){
+        errEl.style.display='';
+        sr.getElementById('w_sensor').classList.add('err');
+        sr.getElementById('w_sensor').focus();
+        return;
+      }
+      errEl.style.display='none';
+      const _vals=g=>[...sr.querySelectorAll(`#w_${g}_list .winp`)].map(i=>i.value.trim()).filter(Boolean);
+      const customYaml=PostaCard.prototype._buildCustomPkg.call(null,sensor,_vals('google'),_vals('alexa'),_vals('push'));
+      const btn=sr.getElementById('wiz_install');
+      const errBnr=sr.getElementById('wiz_inst_err');
+      btn.textContent='⚙️ Installazione…'; btn.disabled=true; errBnr.style.display='none';
+      try{
+        const m=location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
+        const base=location.origin+(m?m[1]:'');
+        const r=await fetch(base+'/api/frarik/pkg/install',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({name:'frarik/frarik_posta.yaml',content:customYaml})
+        });
+        const j=await r.json().catch(()=>({}));
+        if(r.ok&&j.ok){
+          _acHide(); destroy();
+          if(typeof onDone==='function') onDone();
+        }else{
+          btn.textContent='⚡ Installa Package'; btn.disabled=false;
+          errBnr.textContent='⚠️ Errore: '+(j.error||('HTTP '+r.status));
+          errBnr.style.display='';
+        }
+      }catch(e){
+        btn.textContent='⚡ Installa Package'; btn.disabled=false;
+        errBnr.textContent='⚠️ '+e.message; errBnr.style.display='';
+      }
+    });
+
+    const domainMap={sensor:'binary_sensor',google:'media_player',alexa:'media_player'};
+    function _bindAcW(inp,grp){
+      if(grp==='push') return;
+      const domain=domainMap[grp]||'';
+      inp.addEventListener('focus',()=>_acShow(inp,hass,domain));
+      inp.addEventListener('blur',()=>setTimeout(_acHide,160));
+      inp.addEventListener('input',()=>_acShow(inp,hass,domain));
+    }
+    sr.querySelectorAll('.winp').forEach(inp=>{
+      const grp=inp.closest('[data-group]')?.dataset.group||'sensor';
+      _bindAcW(inp,grp);
+    });
+    sr.getElementById('w_sensor').addEventListener('input',()=>{
+      sr.getElementById('w_sensor_err').style.display='none';
+      sr.getElementById('w_sensor').classList.remove('err');
+    });
+    setTimeout(()=>sr.getElementById('w_sensor')?.focus(),80);
+  };
+
   (window.customCards=window.customCards||[]).push({
     type:'posta-card',
     name:'Centro Controllo Posta',
     description:'Monitora la cassetta postale: contatori, storico, notifiche push/Google/Alexa. Installa il package con wizard guidato e autocomplete entità.',
-    icon:'mdi:mailbox'
+    icon:'mdi:mailbox',
+    frarik_pkg_check:'sensor.frarik_posta_versione'
   });
 })();

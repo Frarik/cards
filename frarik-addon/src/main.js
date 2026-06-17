@@ -2417,6 +2417,22 @@ async function _ghsInstall(name){
     if(typeof _jsStoreRenderList==='function') _jsStoreRenderList();
     if(typeof _epRenderJsStore==='function') _epRenderJsStore();
     renderDash();
+    /* dopo aver installato il codice, controlla se la card richiede un package HA */
+    const _instId=f.name.replace(/\.js$/i,'');
+    const _pkgMeta=(window.customCards||[]).find(c=>c&&c.type===_instId);
+    if(_pkgMeta?.frarik_pkg_check){
+      const _hass=_haHassObj();
+      if(!_hass?.states?.[_pkgMeta.frarik_pkg_check]){
+        const _CardClass=customElements.get(_instId);
+        if(typeof _CardClass?.openWizard==='function'){
+          _ghStoreRender();
+          _CardClass.openWizard(_hass,()=>{
+            showToast('✅ Package installato — riavvia Home Assistant per attivarlo, poi usa ➕ Aggiungi nella Store');
+          });
+          return;
+        }
+      }
+    }
     showToast('✅ '+f.name+' installata — usa ➕ Aggiungi per metterla in dashboard'); _ghStoreRender();
   }catch(e){ showToast('⚠️ Errore: '+e.message); }
 }
@@ -9644,6 +9660,21 @@ function jsStoreLoadFile(file){
 
 function jsStoreAddCard(id){
   if(!id) return;
+  const _pkgMeta=(window.customCards||[]).find(c=>c&&c.type===id);
+  if(_pkgMeta?.frarik_pkg_check){
+    const _hass=_haHassObj();
+    if(!_hass?.states?.[_pkgMeta.frarik_pkg_check]){
+      const _CardClass=customElements.get(id);
+      if(typeof _CardClass?.openWizard==='function'){
+        _CardClass.openWizard(_hass,()=>{
+          showToast('✅ Package installato — riavvia Home Assistant per attivarlo, poi aggiungi la card dalla Store');
+        });
+        return;
+      }
+      showToast('⚠️ Installa prima il package di questa card');
+      return;
+    }
+  }
   const regCard = window.FratechCardRegistry[id];
   if(!regCard){ showToast('⚠️ Card non trovata nel registry. Ricarica la pagina.'); return; }
   const page = curPage();
