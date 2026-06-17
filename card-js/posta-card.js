@@ -1,4 +1,4 @@
-/* frarik-version: 1.8 */
+/* frarik-version: 1.9 */
 /* Centro Controllo Posta — Frarik card standalone */
 (function(){
   'use strict';
@@ -294,37 +294,57 @@ automation:
     bodyOpen:'#1a2a0d',topOpen:'#142208',doorOpen:'#102007',
   };
 
-  function _svgBox(state){
-    const hasMail=state==='mail',isOpen=state==='open';
-    const body=hasMail?_PC.bodyMail:isOpen?_PC.bodyOpen:_PC.bodyNoMail;
-    const top=hasMail?_PC.topMail:isOpen?_PC.topOpen:_PC.topNoMail;
-    const door=hasMail?_PC.doorMail:isOpen?_PC.doorOpen:_PC.doorNoMail;
-    const glow=hasMail?'rgba(167,139,250,.35)':isOpen?'rgba(74,222,128,.3)':'rgba(99,102,241,.15)';
-    const flagUp=hasMail||isOpen;
-    const envelope=hasMail?`<g class="letter-bob"><rect x="46" y="62" width="60" height="42" rx="5" fill="white" opacity=".96"/><path d="M46,62 L76,86 L106,62" fill="none" stroke="#d1d5db" stroke-width="2"/><rect x="56" y="82" width="40" height="4" rx="2" fill="#e5e7eb" opacity=".7"/></g>`:'';
-    const openDoor=isOpen?`<g transform="rotate(-42,32,80)"><rect x="32" y="80" width="72" height="50" rx="9" fill="${door}" opacity=".9"/></g>`:'';
-    const sp=hasMail?`<circle class="sp1" cx="18" cy="44" r="5" fill="#fbbf24"/><circle class="sp2" cx="184" cy="40" r="4" fill="#a78bfa"/><circle class="sp3" cx="12" cy="86" r="3" fill="#34d399"/><text x="168" y="30" font-size="16" class="sp5">✨</text>`:'';
-    const osp=isOpen?`<circle class="sp1" cx="16" cy="50" r="4" fill="#4ade80"/><text x="170" y="34" font-size="14" class="sp5">📬</text>`:'';
-    return `<svg viewBox="0 0 200 190" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:180px;filter:drop-shadow(0 8px 32px ${glow})">
+  function _svgMailbox(count,isOpen){
+    const n=Math.min(count,5);
+    const hasLetters=n>0;
+    const mc=hasLetters?'#1d4ed8':isOpen?'#14532d':'#1e293b';
+    const tc=hasLetters?'#1e40af':isOpen?'#166534':'#0f172a';
+    const glow=isOpen?'rgba(74,222,128,.35)':hasLetters?'rgba(59,130,246,.5)':'rgba(99,102,241,.1)';
+    /* posizioni x degli offset per N lettere, centrate attorno a 50 */
+    const offsets=[[],[0],[-11,11],[-16,0,16],[-20,-7,7,20],[-22,-11,0,11,22]][n]||[];
+    const letters=offsets.map((o,i)=>{
+      const cx=50+o,r=(o*0.45).toFixed(1),d=(i*0.08).toFixed(2);
+      return `<g transform="rotate(${r},${cx},40)" style="animation:lpop .35s ${d}s cubic-bezier(.32,1.6,.56,1) both">
+        <rect x="${cx-11}" y="5" width="22" height="30" rx="2" fill="#fffbeb" opacity=".96"/>
+        <path d="M${cx-11},5 L${cx},16 L${cx+11},5" fill="none" stroke="#d4b896" stroke-width="1.5"/>
+        <rect x="${cx-7}" y="20" width="14" height="2" rx="1" fill="#d1b896" opacity=".65"/>
+        <rect x="${cx-5}" y="25" width="10" height="2" rx="1" fill="#d1b896" opacity=".45"/>
+      </g>`;
+    }).join('');
+    return `<svg viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg"
+      style="width:100%;height:auto;display:block;filter:drop-shadow(0 4px 18px ${glow})">
       <defs>
-        <linearGradient id="pg_body" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(255,255,255,.12)"/><stop offset="100%" stop-color="rgba(0,0,0,.18)"/></linearGradient>
-        <linearGradient id="pg_door" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(255,255,255,.06)"/><stop offset="100%" stop-color="rgba(0,0,0,.22)"/></linearGradient>
-        <filter id="pg_glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <linearGradient id="mb1" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="rgba(255,255,255,.14)"/>
+          <stop offset="100%" stop-color="rgba(0,0,0,.28)"/>
+        </linearGradient>
+        <linearGradient id="mb2" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="rgba(255,255,255,.22)"/>
+          <stop offset="100%" stop-color="rgba(0,0,0,.15)"/>
+        </linearGradient>
       </defs>
-      <ellipse cx="100" cy="172" rx="52" ry="9" fill="rgba(0,0,0,.35)"/>
-      <rect x="90" y="142" width="14" height="36" rx="5" fill="#374151"/>
-      <rect x="80" y="152" width="34" height="8" rx="4" fill="#1f2937"/>
-      <rect x="18" y="60" width="148" height="84" rx="14" fill="${body}"/>
-      <path d="M18,78 Q18,42 100,40 Q182,42 182,78" fill="${top}"/>
-      <rect x="18" y="60" width="148" height="84" rx="14" fill="url(#pg_body)" opacity=".7"/>
-      ${!isOpen?`<rect x="22" y="74" width="118" height="62" rx="10" fill="${door}"/><rect x="22" y="74" width="118" height="62" rx="10" fill="url(#pg_door)" opacity=".6"/>`:''}
-      ${!isOpen?`<rect x="32" y="118" width="98" height="11" rx="5.5" fill="rgba(0,0,0,.55)"/><rect x="34" y="120" width="94" height="7" rx="3.5" fill="rgba(0,0,0,.75)"/>`:''}
-      ${!isOpen?`<circle cx="28" cy="80" r="2.5" fill="rgba(255,255,255,.12)"/><circle cx="134" cy="80" r="2.5" fill="rgba(255,255,255,.12)"/><circle cx="28" cy="130" r="2.5" fill="rgba(255,255,255,.12)"/><circle cx="134" cy="130" r="2.5" fill="rgba(255,255,255,.12)"/>`:''}
-      ${openDoor}${envelope}
-      <rect x="159" y="76" width="5" height="52" rx="2.5" fill="#6b7280"/>
-      ${!flagUp?`<g><rect x="155" y="110" width="5" height="18" rx="2" fill="#dc2626"/><path d="M160,110 L173,115 L160,120 Z" fill="#ef4444"/></g>`:''}
-      ${flagUp?`<g filter="url(#pg_glow)"><rect x="159" y="76" width="5" height="20" rx="2" fill="${hasMail?'#dc2626':'#4ade80'}"/><path class="flag-wave" d="M164,76 Q178,72 180,80 Q178,88 164,84 Z" fill="${hasMail?'#ef4444':'#86efac'}"/></g>`:''}
-      ${sp}${osp}
+      <ellipse cx="50" cy="125" rx="28" ry="4" fill="rgba(0,0,0,.35)"/>
+      <rect x="44" y="108" width="12" height="20" rx="3" fill="#374151"/>
+      <rect x="40" y="114" width="20" height="6" rx="3" fill="#1f2937"/>
+      ${letters}
+      <rect x="6" y="36" width="88" height="74" rx="5" fill="${mc}"/>
+      <rect x="6" y="36" width="88" height="74" rx="5" fill="url(#mb1)"/>
+      <rect x="4" y="26" width="92" height="14" rx="4" fill="${tc}"/>
+      <rect x="4" y="26" width="92" height="14" rx="4" fill="url(#mb2)"/>
+      <rect x="4" y="37" width="92" height="4" fill="rgba(0,0,0,.22)"/>
+      <rect x="12" y="50" width="76" height="7" rx="3" fill="rgba(0,0,0,.6)"/>
+      <rect x="13" y="51" width="74" height="5" rx="2" fill="#020306"/>
+      <rect x="13" y="51" width="74" height="2" rx="1" fill="rgba(0,0,0,.5)"/>
+      <text x="50" y="71" text-anchor="middle" fill="rgba(255,255,255,.25)" font-size="7.5"
+        font-weight="800" font-family="system-ui,sans-serif" letter-spacing="3.5">POSTA</text>
+      <rect x="15" y="78" width="70" height="1" rx="0.5" fill="rgba(255,255,255,.07)"/>
+      <circle cx="50" cy="91" r="5" fill="rgba(0,0,0,.45)"/>
+      <circle cx="50" cy="91" r="3.5" fill="#060810"/>
+      <circle cx="50" cy="89.5" r="1.5" fill="rgba(255,255,255,.1)"/>
+      <rect x="48.5" y="92" width="3" height="5" rx="1.5" fill="#060810"/>
+      ${hasLetters?`<circle cx="86" cy="30" r="7" fill="#fbbf24"/>
+        <text x="86" y="34" text-anchor="middle" fill="#1a1a2e" font-size="8" font-weight="900" font-family="system-ui">${count>9?'9+':count}</text>`:''}
+      ${isOpen?`<circle cx="14" cy="30" r="5" fill="#4ade80" opacity=".9"/><circle cx="14" cy="30" r="3" fill="#22c55e"/>`:''}
     </svg>`;
   }
 
@@ -389,6 +409,7 @@ automation:
         h?.states?.['counter.frarik_posta_oggi']?.state,
         h?.states?.['binary_sensor.frarik_posta_ricevuta_oggi']?.state,
         h?.states?.['input_datetime.frarik_posta_ultima_consegna']?.state,
+        h?.states?.['counter.frarik_posta_mese']?.state,
         h?.states?.['input_text.frarik_posta_storico']?.state,
         h?.states?.['input_boolean.frarik_posta_notifiche_attive']?.state,
         h?.states?.['input_boolean.frarik_posta_notifica_push']?.state,
@@ -421,6 +442,7 @@ automation:
     _isPkg(){ return !!this._h?.states?.['sensor.frarik_posta_versione']; }
     _countToday(){ return parseInt(this._st('counter.frarik_posta_oggi')||'0',10); }
     _countWeek(){ return parseInt(this._st('counter.frarik_posta_settimana')||'0',10); }
+    _countMonth(){ return parseInt(this._st('counter.frarik_posta_mese')||'0',10); }
     _hasMail(){ const s=this._st('binary_sensor.frarik_posta_ricevuta_oggi'); return s==='on'||s==='true'; }
     _isDoorOpen(){ return this._c.sensorEntity?this._st(this._c.sensorEntity)==='on':false; }
     _bool(eid){ return this._st(eid)==='on'; }
@@ -522,12 +544,8 @@ automation:
     /* ── STATO: principale ── */
     _renderMain(){
       const mail=this._hasMail(),open=this._isDoorOpen();
-      const svgState=open?'open':mail?'mail':'none';
-      const today=this._countToday(),week=this._countWeek();
+      const today=this._countToday(),week=this._countWeek(),month=this._countMonth();
       const last=this._lastDelivery();
-      const statusTxt=open?`<span class="status open">📬 Cassetta aperta!</span>`
-        :mail?`<span class="status mail">📭 ${today} consegn${today===1?'a':'e'} oggi</span>`
-        :`<span class="status none">📪 Nessuna posta oggi</span>`;
       return `<style>${this._css()}</style>
       <div class="wrap">
         <div class="hdr">
@@ -535,17 +553,26 @@ automation:
           <span class="htit">${this._c.label}</span>
         </div>
         <div class="body">
-          <div class="mailbox-wrap ${svgState}">${_svgBox(svgState)}</div>
-          <div class="status-row">${statusTxt}</div>
-          <div class="counters">
-            <div class="cnt-card"><div class="cnt-val ${mail?'cnt-active':''}">${today}</div><div class="cnt-lbl">📦 Oggi</div></div>
-            <div class="cnt-sep"></div>
-            <div class="cnt-card"><div class="cnt-val">${week}</div><div class="cnt-lbl">📅 Settimana</div></div>
+          <div class="main-row">
+            <div class="mb-col">${_svgMailbox(today,open)}</div>
+            <div class="info-col">
+              <div class="big-num${today>0?' hi':''}${open?' green':''}">${today}</div>
+              <div class="big-lbl">consegn${today===1?'a':'e'} oggi</div>
+              <div class="info-div"></div>
+              ${last
+                ?`<div class="last-t">🕐 Ultima consegna</div><div class="last-v">${last}</div>`
+                :`<div class="last-t dim">Nessuna consegna</div>`}
+              ${open?`<div class="open-badge">📬 Aperta!</div>`:''}
+            </div>
           </div>
-          <div class="last-row">
-            <span class="last-ico">🕐</span>
-            <span class="last-txt">${last?`Ultima consegna <strong>${last}</strong>`:'Nessuna consegna registrata'}</span>
+          <div class="stats-mini">
+            <div class="sm-i"><span class="sm-v${today>0?' sm-hi':''}">${today}</span><span class="sm-l">Oggi</span></div>
+            <div class="sm-sep"></div>
+            <div class="sm-i"><span class="sm-v">${week}</span><span class="sm-l">Sett.</span></div>
+            <div class="sm-sep"></div>
+            <div class="sm-i"><span class="sm-v">${month}</span><span class="sm-l">Mese</span></div>
           </div>
+          ${today>0?`<button class="ritira-btn" data-a="ritira">📬 Ho ritirato la posta</button>`:''}
           ${this._renderMenu()}
         </div>
       </div>`;
@@ -556,6 +583,7 @@ automation:
       const b=e.target.closest('[data-a]'); if(!b) return;
       const a=b.dataset.a;
       if(a==='open-wizard') this._openInstallWizard();
+      else if(a==='ritira') this._confirmRitira();
       else if(a==='toggle-menu'){
         this._menuOpen=!this._menuOpen;
         this._prevSig='';
@@ -915,6 +943,46 @@ automation:
       host.shadowRoot.getElementById('sh-close').addEventListener('click',()=>this._destroyModal());
     }
 
+    /* ── CONFIRM RITIRA ── */
+    _confirmRitira(){
+      this._destroyModal();
+      const host=document.createElement('div'); this._modalHost=host;
+      host.attachShadow({mode:'open'}); document.body.appendChild(host);
+      const self=this;
+      host.shadowRoot.innerHTML=`<style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        .ov{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.65);backdrop-filter:blur(6px)}
+        .mo{width:100%;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(251,191,36,.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:su .22s cubic-bezier(.32,1.12,.56,1)}
+        @keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
+        .mhdr{display:flex;align-items:center;gap:10px;padding:16px 18px 12px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0}
+        .mico{width:36px;height:36px;border-radius:10px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+        .mtit{flex:1;font-size:15px;font-weight:800;color:#fff;font-family:system-ui,sans-serif}
+        .mxbtn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:6px 12px;color:#fff;font-size:13px;cursor:pointer;font-family:system-ui,sans-serif}
+        p{font-family:system-ui,sans-serif;font-size:13px;color:#fff;line-height:1.7;opacity:.7;padding:16px 18px 8px}
+        .btns{display:flex;gap:10px;padding:8px 18px 28px}
+        button{flex:1;padding:14px;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:system-ui,sans-serif;color:#fff;border:none}
+        .bconf{background:rgba(251,191,36,.25);border:1.5px solid rgba(251,191,36,.45);color:#fbbf24}
+        .bcanc{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15)}
+      </style>
+      <div class="ov">
+        <div class="mo">
+          <div class="mhdr"><div class="mico">📬</div><div class="mtit">Posta ritirata?</div><button class="mxbtn" id="ri-close">✕</button></div>
+          <p>Hai ritirato la posta dalla cassetta?<br>Il contatore giornaliero verrà azzerato.</p>
+          <div class="btns">
+            <button class="bcanc" id="ri-cancel">Annulla</button>
+            <button class="bconf" id="ri-ok">✅ Sì, l'ho ritirata</button>
+          </div>
+        </div>
+      </div>`;
+      const sr=host.shadowRoot;
+      sr.getElementById('ri-close').addEventListener('click',()=>self._destroyModal());
+      sr.getElementById('ri-cancel').addEventListener('click',()=>self._destroyModal());
+      sr.getElementById('ri-ok').addEventListener('click',()=>{
+        self._destroyModal();
+        self._callSvc('script','turn_on',{entity_id:'script.frarik_posta_reset'});
+      });
+    }
+
     /* ── CONFIRM RESET ── */
     _confirmReset(){
       this._destroyModal();
@@ -961,17 +1029,44 @@ automation:
     _css(){ return `
 :host{display:block;height:100%;border-radius:16px;overflow:hidden;font-family:system-ui,sans-serif}
 *{box-sizing:border-box;margin:0;padding:0}
+@keyframes lpop{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes mslide{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .wrap{height:100%;display:flex;flex-direction:column;background:${_PC.bg};border-radius:16px;overflow:hidden}
 .hdr{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
 .hico{font-size:22px;line-height:1}
 .htit{flex:1;font-size:15px;font-weight:900;color:#fff;letter-spacing:.4px}
-/* ── bottom menu toggle ── */
-.btm-toggle{display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:11px;cursor:pointer;user-select:none;transition:background .15s;margin-top:2px}
+.body{flex:1;overflow-y:auto;padding:14px 14px 16px;display:flex;flex-direction:column;gap:10px;scrollbar-width:none}
+.body::-webkit-scrollbar{display:none}
+/* 2 colonne */
+.main-row{display:flex;gap:12px;align-items:flex-start}
+.mb-col{flex:0 0 44%;max-width:44%}
+.info-col{flex:1;display:flex;flex-direction:column;gap:4px;padding:6px 0 0}
+.big-num{font-size:56px;font-weight:900;color:rgba(255,255,255,.45);line-height:1;transition:color .3s}
+.big-num.hi{color:#93c5fd}
+.big-num.green{color:#4ade80}
+.big-lbl{font-size:10px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.5px}
+.info-div{height:1px;background:rgba(255,255,255,.08);margin:6px 0}
+.last-t{font-size:10px;color:rgba(255,255,255,.55);font-weight:700}
+.last-t.dim{opacity:.35}
+.last-v{font-size:12px;color:#fff;font-weight:800;line-height:1.4;margin-top:2px}
+.open-badge{display:inline-block;margin-top:6px;padding:4px 10px;background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.3);border-radius:20px;font-size:11px;color:#4ade80;font-weight:700}
+/* mini stats */
+.stats-mini{display:flex;align-items:stretch;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;overflow:hidden}
+.sm-i{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 6px}
+.sm-sep{width:1px;background:rgba(255,255,255,.09)}
+.sm-v{font-size:18px;font-weight:900;color:rgba(255,255,255,.65);line-height:1}
+.sm-v.sm-hi{color:#93c5fd}
+.sm-l{font-size:9px;font-weight:700;color:rgba(255,255,255,.32);letter-spacing:.5px;text-transform:uppercase}
+/* ritira button */
+.ritira-btn{width:100%;padding:11px 16px;border-radius:12px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25);color:#fbbf24;font-size:12px;font-weight:800;cursor:pointer;font-family:system-ui,sans-serif;transition:all .15s;text-align:center}
+.ritira-btn:active{background:rgba(251,191,36,.22)}
+/* menu notifiche */
+.btm-toggle{display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:11px;cursor:pointer;user-select:none;transition:background .15s}
 .btm-toggle:active{background:rgba(255,255,255,.09)}
 .btm-lbl{flex:1;font-size:12px;font-weight:700;color:#fff;opacity:.7}
 .btm-chev{font-size:13px;color:#fff;opacity:.45}
 .bmenu{display:flex;flex-direction:column;gap:8px;animation:mslide .15s ease;padding-bottom:4px}
-@keyframes mslide{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
 .menu-sec{font-size:10px;font-weight:800;color:#fff;opacity:.35;letter-spacing:.9px;text-transform:uppercase;margin-bottom:2px}
 .trow{display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:11px;cursor:pointer;transition:background .15s;user-select:none}
 .trow:active{background:rgba(255,255,255,.09)}
@@ -989,36 +1084,7 @@ automation:
 .act-btn:active{background:rgba(251,191,36,.28)}
 .act-btn-sec{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14);color:#fff;opacity:.7}
 .act-btn-sec:active{background:rgba(255,255,255,.1)}
-/* ── body ── */
-.body{flex:1;overflow-y:auto;padding:14px 14px 16px;display:flex;flex-direction:column;gap:10px;scrollbar-width:none}
-.body::-webkit-scrollbar{display:none}
-.mailbox-wrap{width:100%;display:flex;justify-content:center;padding:4px 0 0}
-.mailbox-wrap.mail svg{filter:drop-shadow(0 0 18px rgba(167,139,250,.5)) drop-shadow(0 8px 32px rgba(167,139,250,.35))}
-.mailbox-wrap.open svg{filter:drop-shadow(0 0 18px rgba(74,222,128,.45)) drop-shadow(0 8px 32px rgba(74,222,128,.3))}
-@keyframes flagWave{0%,100%{transform:skewY(-3deg)}50%{transform:skewY(3deg)}}
-@keyframes letterBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-@keyframes sp{0%,100%{opacity:0;transform:scale(.5)}50%{opacity:1;transform:scale(1)}}
-@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-.flag-wave{animation:flagWave 1.2s ease-in-out infinite;transform-origin:left center}
-.letter-bob{animation:letterBob 1.8s ease-in-out infinite}
-.sp1{animation:sp 2s ease-in-out infinite}.sp2{animation:sp 2s ease-in-out .4s infinite}
-.sp3{animation:sp 2s ease-in-out .8s infinite}.sp5{animation:sp 2s ease-in-out .6s infinite}
-.status-row{text-align:center;font-size:13px;font-weight:700}
-.status{display:inline-block;padding:6px 14px;border-radius:20px}
-.status.none{background:rgba(255,255,255,.07);color:#fff;opacity:.7}
-.status.mail{background:rgba(167,139,250,.18);color:#c4b5fd;border:1px solid rgba(167,139,250,.3)}
-.status.open{background:rgba(74,222,128,.15);color:#4ade80;border:1px solid rgba(74,222,128,.3)}
-.counters{display:flex;align-items:stretch;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden}
-.cnt-card{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px 10px;gap:4px}
-.cnt-sep{width:1px;background:rgba(255,255,255,.08)}
-.cnt-val{font-size:36px;font-weight:900;color:#fff;line-height:1;transition:color .3s}
-.cnt-val.cnt-active{color:#c4b5fd}
-.cnt-lbl{font-size:11px;font-weight:700;color:#fff;opacity:.45;letter-spacing:.4px}
-.last-row{display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:11px}
-.last-ico{font-size:16px;flex-shrink:0}
-.last-txt{font-size:12px;color:#fff;opacity:.7;line-height:1.5}
-.last-txt strong{color:#fff;opacity:1}
-/* ── not installed ── */
+/* not installed */
 .ni-body{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px;padding:24px 18px}
 .ni-icon{font-size:52px;line-height:1}
 .ni-title{font-size:17px;font-weight:900;color:#fff}
@@ -1248,6 +1314,6 @@ automation:
   /* upsert customCards — aggiorna anche su re-eval (nessun duplicato) */
   const _ccArr=(window.customCards=window.customCards||[]);
   const _ccIdx=_ccArr.findIndex(c=>c&&c.type==='posta-card');
-  const _ccEntry={type:'posta-card',name:'Centro Controllo Posta',description:'Monitora la cassetta postale: contatori, storico, notifiche push/Google/Alexa. Installa il package con wizard guidato e autocomplete entità.',icon:'mdi:mailbox',frarik_pkg_check:'sensor.frarik_posta_versione'};
+  const _ccEntry={type:'posta-card',name:'Centro Controllo Posta',description:'Monitora la cassetta postale: cassetta SVG animata, contatori oggi/settimana/mese, ultima consegna, notifiche push/Google/Alexa.',icon:'mdi:mailbox',frarik_pkg_check:'sensor.frarik_posta_versione'};
   if(_ccIdx>=0) _ccArr[_ccIdx]=_ccEntry; else _ccArr.push(_ccEntry);
 })();

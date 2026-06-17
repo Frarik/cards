@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.5.22 — 2026-06-17
+
+### feat(posta-card): redesign completo layout — cassetta SVG realistica + 2 colonne
+
+- **Layout 2 colonne**: cassetta SVG (sx) + numero grande consegne oggi + orario ultima consegna (dx)
+- **Cassetta SVG realistica** (`_svgMailbox`): cassetta postale a muro stile italiano con lid, slot, chiave, lettere che sbucano dal top
+  - 0 lettere: cassetta vuota, colore grigio scuro
+  - N lettere (1-5): N buste bianche/avorio sbucan dal top, leggermente sventate, con animazione `lpop` staggered
+  - Indicatore numerico giallo in alto a destra quando c'è posta
+  - Colore azzurro/blu quando c'è posta, verde se cassetta aperta (sensore fisico)
+- **Mini stats row**: Oggi / Sett. / Mese in formato compatto — niente mega riquadri
+- **Tasto "Ho ritirato la posta"**: appare SOLO quando oggi > 0; apre popup conferma → chiama `script.frarik_posta_reset`
+- **`_countMonth()`**: nuovo metodo per `counter.frarik_posta_mese`
+- Rimossi: old status-row, counters grid, last-row (tutti assorbiti nel nuovo layout)
+- posta-card.js bump a v1.9
+
 ## 1.5.21 — 2026-06-17
 
 ### fix(store): flusso pkg completamente riscritto — popup con scelta SI/NO
