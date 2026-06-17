@@ -1,4 +1,4 @@
-/* frarik-version: 1.9 */
+/* frarik-version: 2.0 */
 /* Centro Controllo Posta — Frarik card standalone */
 (function(){
   'use strict';
@@ -12,7 +12,7 @@
 #   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝            #
 #                                                             #
 #   Package: Centro Controllo Posta                           #
-#   Versione: 1.0  |  Frarik / Fratech                       #
+#   Versione: 1.1  |  Frarik / Fratech                       #
 #                                                             #
 ###############################################################
 #
@@ -32,7 +32,7 @@ homeassistant:
       customize: &customize
         package: 'Frarik — Centro Controllo Posta'
         author: 'Frarik / Fratech'
-        version: '1.0'
+        version: '1.1'
 
       setting:
         Sensore Cassetta: &sensore_cassetta
@@ -65,6 +65,10 @@ counter:
     name: "Posta — Consegne Settimana"
     icon: mdi:calendar-week
 
+  frarik_posta_mese:
+    name: "Posta — Consegne Mese"
+    icon: mdi:calendar-month-outline
+
 
 ####################################################
 input_datetime:
@@ -74,17 +78,33 @@ input_datetime:
     has_time: true
     icon: mdi:clock-check-outline
 
-  frarik_posta_notifiche_inizio:
-    name: "Posta — Inizio Notifiche TTS"
+  frarik_posta_notifiche_media_inizio:
+    name: "Posta — Inizio Notifiche Media"
     has_date: false
     has_time: true
+    initial: "08:00"
     icon: mdi:bell-ring-outline
 
-  frarik_posta_notifiche_fine:
-    name: "Posta — Fine Notifiche TTS"
+  frarik_posta_notifiche_media_fine:
+    name: "Posta — Fine Notifiche Media"
     has_date: false
     has_time: true
+    initial: "22:00"
     icon: mdi:bell-off-outline
+
+  frarik_posta_notifiche_push_inizio:
+    name: "Posta — Inizio Notifiche Push"
+    has_date: false
+    has_time: true
+    initial: "07:00"
+    icon: mdi:cellphone-message
+
+  frarik_posta_notifiche_push_fine:
+    name: "Posta — Fine Notifiche Push"
+    has_date: false
+    has_time: true
+    initial: "23:00"
+    icon: mdi:cellphone-off
 
 
 ####################################################
@@ -119,7 +139,7 @@ template:
   - sensor:
       - name: "Frarik Posta Versione"
         unique_id: frarik_posta_versione
-        state: "1.0"
+        state: "1.1"
         icon: mdi:package-variant-closed
 
   - binary_sensor:
@@ -133,17 +153,12 @@ template:
 ####################################################
 script:
   frarik_posta_reset:
-    alias: "Frarik — Reset Contatore Posta"
+    alias: "Frarik — Reset Contatore Oggi"
     icon: mdi:restart
     sequence:
       - service: counter.reset
         target:
           entity_id: counter.frarik_posta_oggi
-      - service: input_text.set_value
-        target:
-          entity_id: input_text.frarik_posta_storico
-        data:
-          value: ""
 
 
 ####################################################
@@ -177,6 +192,10 @@ automation:
         target:
           entity_id: counter.frarik_posta_settimana
 
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_posta_mese
+
       - service: input_datetime.set_datetime
         target:
           entity_id: input_datetime.frarik_posta_ultima_consegna
@@ -207,6 +226,9 @@ automation:
               - condition: state
                 entity_id: input_boolean.frarik_posta_notifica_push
                 state: 'on'
+              - condition: time
+                after: input_datetime.frarik_posta_notifiche_push_inizio
+                before: input_datetime.frarik_posta_notifiche_push_fine
               sequence:
               - service: notify.frarik_posta
                 data:
@@ -223,8 +245,8 @@ automation:
                 entity_id: input_boolean.frarik_posta_notifica_google
                 state: 'on'
               - condition: time
-                after: input_datetime.frarik_posta_notifiche_inizio
-                before: input_datetime.frarik_posta_notifiche_fine
+                after: input_datetime.frarik_posta_notifiche_media_inizio
+                before: input_datetime.frarik_posta_notifiche_media_fine
               sequence:
               - service: tts.google_translate_say
                 data:
@@ -242,8 +264,8 @@ automation:
                 entity_id: input_boolean.frarik_posta_notifica_alexa
                 state: 'on'
               - condition: time
-                after: input_datetime.frarik_posta_notifiche_inizio
-                before: input_datetime.frarik_posta_notifiche_fine
+                after: input_datetime.frarik_posta_notifiche_media_inizio
+                before: input_datetime.frarik_posta_notifiche_media_fine
               sequence:
               - service: notify.alexa_media
                 data:
@@ -259,7 +281,7 @@ automation:
 
   - alias: "Frarik — Posta (reset)"
     id: frarik_posta_reset
-    description: "Reset giornaliero e settimanale dei contatori posta"
+    description: "Reset automatico giornaliero, settimanale e mensile"
     mode: single
 
     trigger:
@@ -282,8 +304,17 @@ automation:
             target:
               entity_id: counter.frarik_posta_settimana
 
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: "{{ now().day == 1 }}"
+          sequence:
+          - service: counter.reset
+            target:
+              entity_id: counter.frarik_posta_mese
+
 ###############################################################
-#  Fine package — Frarik Centro Controllo Posta v1.0
+#  Fine package — Frarik Centro Controllo Posta v1.1
 ###############################################################
 `;
 
@@ -295,56 +326,62 @@ automation:
   };
 
   function _svgMailbox(count,isOpen){
-    const n=Math.min(count,5);
+    const n=Math.min(count,4);
     const hasLetters=n>0;
-    const mc=hasLetters?'#1d4ed8':isOpen?'#14532d':'#1e293b';
-    const tc=hasLetters?'#1e40af':isOpen?'#166534':'#0f172a';
-    const glow=isOpen?'rgba(74,222,128,.35)':hasLetters?'rgba(59,130,246,.5)':'rgba(99,102,241,.1)';
-    /* posizioni x degli offset per N lettere, centrate attorno a 50 */
-    const offsets=[[],[0],[-11,11],[-16,0,16],[-20,-7,7,20],[-22,-11,0,11,22]][n]||[];
-    const letters=offsets.map((o,i)=>{
-      const cx=50+o,r=(o*0.45).toFixed(1),d=(i*0.08).toFixed(2);
-      return `<g transform="rotate(${r},${cx},40)" style="animation:lpop .35s ${d}s cubic-bezier(.32,1.6,.56,1) both">
-        <rect x="${cx-11}" y="5" width="22" height="30" rx="2" fill="#fffbeb" opacity=".96"/>
-        <path d="M${cx-11},5 L${cx},16 L${cx+11},5" fill="none" stroke="#d4b896" stroke-width="1.5"/>
-        <rect x="${cx-7}" y="20" width="14" height="2" rx="1" fill="#d1b896" opacity=".65"/>
-        <rect x="${cx-5}" y="25" width="10" height="2" rx="1" fill="#d1b896" opacity=".45"/>
+    const mc=isOpen?'#064e3b':hasLetters?'#1e3a8a':'#1e293b';
+    const tc=isOpen?'#065f46':hasLetters?'#1d4ed8':'#334155';
+    const glow=isOpen?'rgba(52,211,153,.3)':hasLetters?'rgba(96,165,250,.4)':'rgba(99,102,241,.07)';
+    /* angolini di posta: un rettangolo ruotato di traverso,
+       disegnato PRIMA del corpo → il corpo copre la parte inferiore,
+       resta visibile solo il triangolino in cima */
+    const envDefs=[
+      [],
+      [{cx:44,r:18}],
+      [{cx:36,r:-16},{cx:52,r:16}],
+      [{cx:30,r:-20},{cx:44,r:0},{cx:58,r:20}],
+      [{cx:26,r:-22},{cx:38,r:-8},{cx:50,r:8},{cx:62,r:22}],
+    ];
+    const letters=(envDefs[n]||[]).map(({cx,r},i)=>{
+      const d=(i*0.09).toFixed(2);
+      /* rettangolo 16×22 ruotato attorno a (cx,30) — solo ~10px sopra il lid sono visibili */
+      return `<g transform="rotate(${r},${cx},30)" style="animation:lpop .28s ${d}s cubic-bezier(.32,1.6,.56,1) both">
+        <rect x="${cx-8}" y="16" width="16" height="22" rx="2" fill="#fffbeb" opacity=".95"/>
+        <path d="M${cx-8},16 L${cx},22 L${cx+8},16" fill="none" stroke="#d4b896" stroke-width="1.1"/>
       </g>`;
     }).join('');
-    return `<svg viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg"
-      style="width:100%;height:auto;display:block;filter:drop-shadow(0 4px 18px ${glow})">
+    return `<svg viewBox="0 0 88 104" xmlns="http://www.w3.org/2000/svg"
+      style="width:100%;height:auto;display:block;filter:drop-shadow(0 3px 12px ${glow})">
       <defs>
-        <linearGradient id="mb1" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="rgba(255,255,255,.14)"/>
-          <stop offset="100%" stop-color="rgba(0,0,0,.28)"/>
+        <linearGradient id="mbg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="rgba(255,255,255,.11)"/>
+          <stop offset="100%" stop-color="rgba(0,0,0,.24)"/>
         </linearGradient>
-        <linearGradient id="mb2" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="rgba(255,255,255,.22)"/>
-          <stop offset="100%" stop-color="rgba(0,0,0,.15)"/>
+        <linearGradient id="mtg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="rgba(255,255,255,.2)"/>
+          <stop offset="100%" stop-color="rgba(0,0,0,.1)"/>
         </linearGradient>
       </defs>
-      <ellipse cx="50" cy="125" rx="28" ry="4" fill="rgba(0,0,0,.35)"/>
-      <rect x="44" y="108" width="12" height="20" rx="3" fill="#374151"/>
-      <rect x="40" y="114" width="20" height="6" rx="3" fill="#1f2937"/>
+      <ellipse cx="44" cy="100" rx="20" ry="3.5" fill="rgba(0,0,0,.32)"/>
+      <rect x="40" y="87" width="8" height="14" rx="2" fill="#374151"/>
+      <rect x="37" y="92" width="14" height="5" rx="2.5" fill="#1f2937"/>
       ${letters}
-      <rect x="6" y="36" width="88" height="74" rx="5" fill="${mc}"/>
-      <rect x="6" y="36" width="88" height="74" rx="5" fill="url(#mb1)"/>
-      <rect x="4" y="26" width="92" height="14" rx="4" fill="${tc}"/>
-      <rect x="4" y="26" width="92" height="14" rx="4" fill="url(#mb2)"/>
-      <rect x="4" y="37" width="92" height="4" fill="rgba(0,0,0,.22)"/>
-      <rect x="12" y="50" width="76" height="7" rx="3" fill="rgba(0,0,0,.6)"/>
-      <rect x="13" y="51" width="74" height="5" rx="2" fill="#020306"/>
-      <rect x="13" y="51" width="74" height="2" rx="1" fill="rgba(0,0,0,.5)"/>
-      <text x="50" y="71" text-anchor="middle" fill="rgba(255,255,255,.25)" font-size="7.5"
-        font-weight="800" font-family="system-ui,sans-serif" letter-spacing="3.5">POSTA</text>
-      <rect x="15" y="78" width="70" height="1" rx="0.5" fill="rgba(255,255,255,.07)"/>
-      <circle cx="50" cy="91" r="5" fill="rgba(0,0,0,.45)"/>
-      <circle cx="50" cy="91" r="3.5" fill="#060810"/>
-      <circle cx="50" cy="89.5" r="1.5" fill="rgba(255,255,255,.1)"/>
-      <rect x="48.5" y="92" width="3" height="5" rx="1.5" fill="#060810"/>
-      ${hasLetters?`<circle cx="86" cy="30" r="7" fill="#fbbf24"/>
-        <text x="86" y="34" text-anchor="middle" fill="#1a1a2e" font-size="8" font-weight="900" font-family="system-ui">${count>9?'9+':count}</text>`:''}
-      ${isOpen?`<circle cx="14" cy="30" r="5" fill="#4ade80" opacity=".9"/><circle cx="14" cy="30" r="3" fill="#22c55e"/>`:''}
+      <rect x="7" y="33" width="74" height="56" rx="4" fill="${mc}"/>
+      <rect x="7" y="33" width="74" height="56" rx="4" fill="url(#mbg)"/>
+      <rect x="5" y="24" width="78" height="13" rx="3" fill="${tc}"/>
+      <rect x="5" y="24" width="78" height="13" rx="3" fill="url(#mtg)"/>
+      <rect x="5" y="34" width="78" height="3" fill="rgba(0,0,0,.18)"/>
+      <rect x="14" y="45" width="60" height="5" rx="2" fill="rgba(0,0,0,.7)"/>
+      <rect x="14" y="45" width="60" height="2" rx="1" fill="rgba(0,0,0,.45)"/>
+      <text x="44" y="61" text-anchor="middle" fill="rgba(255,255,255,.18)"
+        font-size="6" font-weight="800" font-family="system-ui,sans-serif" letter-spacing="3">POSTA</text>
+      <rect x="14" y="67" width="60" height="0.8" rx="0.4" fill="rgba(255,255,255,.06)"/>
+      <circle cx="44" cy="76" r="4" fill="rgba(0,0,0,.4)"/>
+      <circle cx="44" cy="76" r="2.8" fill="#04060a"/>
+      <circle cx="44" cy="74.8" r="1.1" fill="rgba(255,255,255,.09)"/>
+      <rect x="42.8" y="77" width="2.4" height="4" rx="1.2" fill="#04060a"/>
+      ${hasLetters?`<circle cx="75" cy="27" r="6" fill="#fbbf24"/>
+        <text x="75" y="31" text-anchor="middle" fill="#1a1a2e" font-size="7" font-weight="900" font-family="system-ui">${count>9?'9+':count}</text>`:''}
+      ${isOpen?`<circle cx="13" cy="27" r="4" fill="#34d399"/><circle cx="13" cy="27" r="2.5" fill="#10b981"/>`:''}
     </svg>`;
   }
 
@@ -396,6 +433,7 @@ automation:
       this._frarikCard=null;
       this._modalHost=null;
       this._click=this._onClick.bind(this);
+      this._change=this._onChange.bind(this);
       this._prevSig='';
       this._pkgState='idle';
       this._pkgError='';
@@ -410,6 +448,10 @@ automation:
         h?.states?.['binary_sensor.frarik_posta_ricevuta_oggi']?.state,
         h?.states?.['input_datetime.frarik_posta_ultima_consegna']?.state,
         h?.states?.['counter.frarik_posta_mese']?.state,
+        h?.states?.['input_datetime.frarik_posta_notifiche_media_inizio']?.state,
+        h?.states?.['input_datetime.frarik_posta_notifiche_media_fine']?.state,
+        h?.states?.['input_datetime.frarik_posta_notifiche_push_inizio']?.state,
+        h?.states?.['input_datetime.frarik_posta_notifiche_push_fine']?.state,
         h?.states?.['input_text.frarik_posta_storico']?.state,
         h?.states?.['input_boolean.frarik_posta_notifiche_attive']?.state,
         h?.states?.['input_boolean.frarik_posta_notifica_push']?.state,
@@ -433,8 +475,8 @@ automation:
     }
 
     configure(card){ if(card?.id) this._frarikCard=card; this._openSettings(); }
-    connectedCallback(){ this.shadowRoot.addEventListener('click',this._click); }
-    disconnectedCallback(){ this.shadowRoot.removeEventListener('click',this._click); this._destroyModal(); _acHide(); }
+    connectedCallback(){ this.shadowRoot.addEventListener('click',this._click); this.shadowRoot.addEventListener('change',this._change); }
+    disconnectedCallback(){ this.shadowRoot.removeEventListener('click',this._click); this.shadowRoot.removeEventListener('change',this._change); this._destroyModal(); _acHide(); }
 
     _skKey(){ return 'posta-card:'+(this._c.storageKey||'default'); }
     _save(){ try{ localStorage.setItem(this._skKey(),JSON.stringify(this._c)); }catch(_){} }
@@ -459,11 +501,21 @@ automation:
       }catch(_){ return null; }
     }
     _storico(){ return this._st('input_text.frarik_posta_storico')||''; }
+    _getTime(eid){ const s=this._st(eid); return(s&&s!=='unknown'&&s!=='unavailable')?s.substring(0,5):''; }
 
     _callSvc(domain,service,data){
       if(this._h?.callService) this._h.callService(domain,service,data);
       else window.frarikCallService?.(domain,service,data,{});
     }
+    _onChange(e){
+      const inp=e.target.closest('[data-a]'); if(!inp) return;
+      const a=inp.dataset.a,v=inp.value||'';
+      if(a==='set-media-start') this._setTime('input_datetime.frarik_posta_notifiche_media_inizio',v);
+      else if(a==='set-media-end') this._setTime('input_datetime.frarik_posta_notifiche_media_fine',v);
+      else if(a==='set-push-start') this._setTime('input_datetime.frarik_posta_notifiche_push_inizio',v);
+      else if(a==='set-push-end') this._setTime('input_datetime.frarik_posta_notifiche_push_fine',v);
+    }
+    _setTime(eid,v){ if(!v) return; this._callSvc('input_datetime','set_datetime',{entity_id:eid,time:v+':00'}); }
 
     _build(){
       if(!this.shadowRoot) return;
@@ -476,6 +528,10 @@ automation:
       const bPush=this._bool('input_boolean.frarik_posta_notifica_push');
       const bGoog=this._bool('input_boolean.frarik_posta_notifica_google');
       const bAlex=this._bool('input_boolean.frarik_posta_notifica_alexa');
+      const mStart=this._getTime('input_datetime.frarik_posta_notifiche_media_inizio')||'08:00';
+      const mEnd=this._getTime('input_datetime.frarik_posta_notifiche_media_fine')||'22:00';
+      const pStart=this._getTime('input_datetime.frarik_posta_notifiche_push_inizio')||'07:00';
+      const pEnd=this._getTime('input_datetime.frarik_posta_notifiche_push_fine')||'23:00';
       return `
         <div class="btm-toggle" data-a="toggle-menu">
           <span class="btm-lbl">🔔 Notifiche e opzioni</span>
@@ -502,9 +558,28 @@ automation:
               <div class="tgl ${bAlex?'on':'off'}"><div class="tgl-k"></div></div>
             </div>
           </div>
-          <div class="menu-actions">
+          <div class="menu-sec" style="margin-top:10px">ORARI MEDIA (Google / Alexa)</div>
+          <div class="time-row">
+            <span class="time-lbl">Dalle</span>
+            <input type="time" class="time-inp" data-a="set-media-start" value="${mStart}">
+            <span class="time-lbl">alle</span>
+            <input type="time" class="time-inp" data-a="set-media-end" value="${mEnd}">
+          </div>
+          <div class="menu-sec" style="margin-top:6px">ORARI PUSH (Smartphone)</div>
+          <div class="time-row">
+            <span class="time-lbl">Dalle</span>
+            <input type="time" class="time-inp" data-a="set-push-start" value="${pStart}">
+            <span class="time-lbl">alle</span>
+            <input type="time" class="time-inp" data-a="set-push-end" value="${pEnd}">
+          </div>
+          <div class="menu-sec" style="margin-top:10px">RESET CONTATORI</div>
+          <div class="reset-row">
+            <button class="rst-btn" data-a="reset-today">🔄 Oggi</button>
+            <button class="rst-btn" data-a="reset-week">📅 Sett.</button>
+            <button class="rst-btn" data-a="reset-month">🗓️ Mese</button>
+          </div>
+          <div class="menu-actions" style="margin-top:4px">
             <button class="act-btn" data-a="storico">📋 Storico</button>
-            <button class="act-btn act-btn-sec" data-a="reset">🔄 Reset</button>
           </div>
         </div>`:''}`;
     }
@@ -590,7 +665,9 @@ automation:
         this._build();
       }
       else if(a==='storico') this._openStorico();
-      else if(a==='reset') this._confirmReset();
+      else if(a==='reset-today') this._confirmResetCounter('counter.frarik_posta_oggi','il contatore giornaliero');
+      else if(a==='reset-week') this._confirmResetCounter('counter.frarik_posta_settimana','il contatore settimanale');
+      else if(a==='reset-month') this._confirmResetCounter('counter.frarik_posta_mese','il contatore mensile');
       else if(a==='toggle-master') this._callSvc('homeassistant',this._bool('input_boolean.frarik_posta_notifiche_attive')?'turn_off':'turn_on',{entity_id:'input_boolean.frarik_posta_notifiche_attive'});
       else if(a==='toggle-push'){ if(this._bool('input_boolean.frarik_posta_notifiche_attive')) this._callSvc('homeassistant',this._bool('input_boolean.frarik_posta_notifica_push')?'turn_off':'turn_on',{entity_id:'input_boolean.frarik_posta_notifica_push'}); }
       else if(a==='toggle-google'){ if(this._bool('input_boolean.frarik_posta_notifiche_attive')) this._callSvc('homeassistant',this._bool('input_boolean.frarik_posta_notifica_google')?'turn_off':'turn_on',{entity_id:'input_boolean.frarik_posta_notifica_google'}); }
@@ -983,8 +1060,8 @@ automation:
       });
     }
 
-    /* ── CONFIRM RESET ── */
-    _confirmReset(){
+    /* ── CONFIRM RESET SINGOLO CONTATORE ── */
+    _confirmResetCounter(entityId,label){
       this._destroyModal();
       const host=document.createElement('div'); this._modalHost=host;
       host.attachShadow({mode:'open'}); document.body.appendChild(host);
@@ -1001,16 +1078,16 @@ automation:
         p{font-family:system-ui,sans-serif;font-size:13px;color:#fff;line-height:1.7;opacity:.7;padding:16px 18px 8px}
         .btns{display:flex;gap:10px;padding:8px 18px 28px}
         button{flex:1;padding:14px;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:system-ui,sans-serif;color:#fff;border:none}
-        .bconf{background:rgba(239,68,68,.7);border:2px solid rgba(239,68,68,.5)}
+        .bconf{background:rgba(239,68,68,.65);border:1.5px solid rgba(239,68,68,.5)}
         .bcanc{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15)}
       </style>
       <div class="ov">
         <div class="mo">
           <div class="mhdr"><div class="mico">🔄</div><div class="mtit">Reset contatore</div><button class="mxbtn" id="rst-close">✕</button></div>
-          <p>Resettare il contatore giornaliero a 0?<br>Lo storico consegne rimarrà invariato.</p>
+          <p>Azzerare ${label} a 0?</p>
           <div class="btns">
             <button class="bcanc" id="rst-cancel">Annulla</button>
-            <button class="bconf" id="rst-ok">Sì, resetta</button>
+            <button class="bconf" id="rst-ok">Sì, azzera</button>
           </div>
         </div>
       </div>`;
@@ -1019,7 +1096,7 @@ automation:
       sr.getElementById('rst-cancel').addEventListener('click',()=>self._destroyModal());
       sr.getElementById('rst-ok').addEventListener('click',()=>{
         self._destroyModal();
-        self._callSvc('script','turn_on',{entity_id:'script.frarik_posta_reset'});
+        self._callSvc('counter','reset',{entity_id:entityId});
       });
     }
 
@@ -1084,6 +1161,13 @@ automation:
 .act-btn:active{background:rgba(251,191,36,.28)}
 .act-btn-sec{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14);color:#fff;opacity:.7}
 .act-btn-sec:active{background:rgba(255,255,255,.1)}
+.time-row{display:flex;align-items:center;gap:7px;padding:6px 10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:11px}
+.time-lbl{font-size:11px;color:#fff;opacity:.55;min-width:28px}
+.time-inp{flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:8px;color:#fff;font-size:12px;font-weight:700;padding:5px 7px;font-family:system-ui,sans-serif;appearance:none;text-align:center}
+.time-inp:focus{outline:none;border-color:rgba(251,191,36,.55);background:rgba(251,191,36,.07)}
+.reset-row{display:flex;gap:7px}
+.rst-btn{flex:1;padding:10px 6px;border-radius:11px;background:rgba(239,68,68,.14);border:1px solid rgba(239,68,68,.28);color:#fca5a5;font-size:11px;font-weight:800;cursor:pointer;transition:all .15s;font-family:system-ui,sans-serif}
+.rst-btn:active{background:rgba(239,68,68,.28)}
 /* not installed */
 .ni-body{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px;padding:24px 18px}
 .ni-icon{font-size:52px;line-height:1}
@@ -1314,6 +1398,6 @@ automation:
   /* upsert customCards — aggiorna anche su re-eval (nessun duplicato) */
   const _ccArr=(window.customCards=window.customCards||[]);
   const _ccIdx=_ccArr.findIndex(c=>c&&c.type==='posta-card');
-  const _ccEntry={type:'posta-card',name:'Centro Controllo Posta',description:'Monitora la cassetta postale: cassetta SVG animata, contatori oggi/settimana/mese, ultima consegna, notifiche push/Google/Alexa.',icon:'mdi:mailbox',frarik_pkg_check:'sensor.frarik_posta_versione',frarik_pkg_version:'1.0'};
+  const _ccEntry={type:'posta-card',name:'Centro Controllo Posta',description:'Monitora la cassetta postale: cassetta SVG animata, contatori oggi/settimana/mese, ultima consegna, notifiche push/Google/Alexa.',icon:'mdi:mailbox',frarik_pkg_check:'sensor.frarik_posta_versione',frarik_pkg_version:'1.1'};
   if(_ccIdx>=0) _ccArr[_ccIdx]=_ccEntry; else _ccArr.push(_ccEntry);
 })();

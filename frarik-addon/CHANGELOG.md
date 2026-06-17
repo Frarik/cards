@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.5.25 — 2026-06-17
+
+### feat(posta-card): counter mensile, reset separati, orari notifiche media/push — v2.0
+
+- **Counter mensile** `counter.frarik_posta_mese`: aggiunto al pkg YAML (v1.1), reset automatico il 1° di ogni mese
+- **Reset separati**: 3 bottoni distinti nel menu — "Oggi", "Sett.", "Mese" — ciascuno azzera solo il proprio counter
+- **Orari notifiche separati**: `input_datetime` distinti per media (Google/Alexa) e push (smartphone)
+  - `frarik_posta_notifiche_media_inizio/fine` → condizione tempo per automazione Google/Alexa
+  - `frarik_posta_notifiche_push_inizio/fine` → condizione tempo per automazione push
+- **Time picker nel menu**: 2 righe di input `type="time"` (media e push) con salvataggio immediato via `input_datetime.set_datetime`
+- **SVG redesign**: cassetta moderna con triangolini angolari delle buste, animazione `lpop` staggered, badge numerico, colori per stato (vuoto/posta/aperta)
+- **`frarik_pkg_version`** bumped a `'1.1'` per attivare il wizard di aggiornamento pkg sugli utenti esistenti
+
 ## 1.5.24 — 2026-06-17
 
 ### feat(store): aggiornamento automatico del package HA quando il YAML cambia
