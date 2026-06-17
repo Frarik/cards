@@ -2418,8 +2418,9 @@ async function _ghsInstall(name){
   const _instId=f.name.replace(/\.js$/i,'');
   /* controlla tramite regex se il codice richiede un pkg HA */
   const _pkgMatch=code.match(/frarik_pkg_check\s*:\s*['"]([^'"]+)['"]/);
-  if(_pkgMatch){
-    /* SEMPRE chiede all'utente se il pkg è già installato o no */
+  /* mostra il popup pkg SOLO per nuove installazioni — non per aggiornamenti */
+  const _isUpdate=!!(_ghCfg().shas[f.name]);
+  if(_pkgMatch&&!_isUpdate){
     _ghsPkgAskPopup(_instId,f,code,res);
     return;
   }

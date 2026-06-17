@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.23 — 2026-06-17
+
+### fix(store): popup pkg non appare su "Aggiorna", solo su nuova installazione
+
+- `_ghsInstall` controlla `_ghCfg().shas[f.name]`: se esiste = aggiornamento → salta il popup pkg e installa direttamente
+- Il popup "Hai già installato il pkg?" compare SOLO per nuove installazioni (sha non presente in cfg)
+
 ## 1.5.22 — 2026-06-17
 
 ### feat(posta-card): redesign completo layout — cassetta SVG realistica + 2 colonne
