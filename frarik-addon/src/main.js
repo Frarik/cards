@@ -8283,18 +8283,21 @@ let _cardHelpersPromise=null, _cardHelpersWin=null;
 function _loadCardHelpers(){
   if(_cardHelpersPromise) return _cardHelpersPromise;
   _cardHelpersPromise=(async()=>{
+    // Preferisce window.parent (HA reale), poi top, poi window come ultimo fallback
     const tryWin=async(w)=>{ try{ if(w&&typeof w.loadCardHelpers==='function'){ const h=await w.loadCardHelpers(); if(h){ _cardHelpersWin=w; return h; } } }catch(e){} return null; };
-    return (await tryWin(window)) || (await tryWin(window.parent)) || (await tryWin(window.top)) || null;
+    return (await tryWin(window.parent)) || (await tryWin(window.top)) || (await tryWin(window)) || null;
   })();
   return _cardHelpersPromise;
 }
 async function _createHACard(config){
   try{
-    const helpers=await _loadCardHelpers();
-    if(!helpers||typeof helpers.createCardElement!=='function') return null;
-    const w=_cardHelpersWin||window;
-    let cfg; try{ cfg=w.JSON.parse(JSON.stringify(config)); }catch(e){ cfg=config; }   // oggetto nel realm di HA
-    const el=helpers.createCardElement(cfg);
+    // Usa sempre window.parent.loadCardHelpers (motore HA reale) — nessun cache stale
+    let helpers=null;
+    for(const w of [window.parent,window.top,window]){
+      try{ if(w&&typeof w.loadCardHelpers==='function'){ const h=await w.loadCardHelpers(); if(h&&typeof h.createCardElement==='function'){ helpers=h; break; } } }catch(e){}
+    }
+    if(!helpers) return null;
+    const el=helpers.createCardElement(config);
     if(!el) return null;
     try{ el.hass=_getBestHass(); }catch(e){}
     el.classList.add('fycel');
@@ -8443,35 +8446,25 @@ function _fyFitIframe(iframe, opts){
 
 async function _mountYamlCard(card, container){
   container.innerHTML='';
-  container.style.cssText='display:block;width:100%;height:100%;overflow:hidden;border-radius:inherit';
+  container.style.cssText='display:block;width:100%;min-height:60px;overflow:visible;border-radius:inherit';
   let cfg;
   try{ cfg=jsyaml.load(card.lovelaceConfig); }
   catch(e){ container.innerHTML='<div style="padding:12px;color:#f87171;font-size:11px">YAML: '+eh(e.message)+'</div>'; return; }
-  // Approccio principale: dashboard HA + iframe — funziona per TUTTE le card (native e HACS custom:)
-  try{
-    if(await _fyUpsertView(card.id,cfg)){
-      if(!container.isConnected) return;
-      container.innerHTML='';
-      container.style.cssText='display:block;width:100%;overflow:hidden;border-radius:inherit';
-      const f=document.createElement('iframe');
-      f.src='/'+_FY_DASH+'/'+encodeURIComponent(_fyPath(card.id))+'?kiosk';
-      f.setAttribute('allow','fullscreen;autoplay;camera;microphone;clipboard-write');
-      f.style.cssText='display:block;width:100%;height:100%;min-height:120px;border:0;border-radius:10px;opacity:0;background:transparent';
-      // fit:true → l'iframe e la card Frarik si adattano all'altezza reale della card
-      _fyFitIframe(f,{fit:true,container});
-      container.appendChild(f);
-      return;
-    }
-  }catch(e){ console.warn('[Frarik] yaml iframe:',e&&e.message); }
-  // Fallback: renderer interno con CSS vars HA iniettate
+  if(!cfg||typeof cfg!=='object'){ container.innerHTML='<div style="padding:12px;color:#f87171;font-size:11px">YAML non valido</div>'; return; }
+  // Carica custom elements HACS se non ancora presenti
   if(!_lovelaceResourcesLoaded){ try{ await _loadLovelaceResources(); }catch(e){} await new Promise(r=>setTimeout(r,700)); }
   if(!container.isConnected) return;
+  // Render diretto: motore HA nativo — nessun iframe, nessuna dashboard nascosta
   container.innerHTML='';
-  container.style.cssText='display:block;width:100%;height:100%;overflow:auto';
   _injectHACSSVars(container);
-  const el=await _yamlCreateEl(cfg);
-  container.appendChild(el);
-  if(typeof el.configure==='function') container._fConfigure=el.configure.bind(el);
+  const el=await _createHACard(cfg);
+  if(el){
+    container.appendChild(el);
+  } else {
+    // Fallback renderer interno
+    const elFb=await _yamlCreateEl(cfg);
+    container.appendChild(elFb);
+  }
   if(container._yamlTimer) clearInterval(container._yamlTimer);
   container._yamlTimer=setInterval(()=>_yamlRefreshHass(container),800);
 }
@@ -8895,21 +8888,22 @@ async function _ghsYamlLivePreview(){
   if(!type){ if(errEl) errEl.textContent='⚠️ Manca il campo type:'; return; }
   if(errEl) errEl.textContent='';
   if(ph) ph.style.display='none';
-  // ── Renderer interno con CSS vars HA ──
-  // Prima carichiamo gli script HACS (no-op se già caricati), poi creiamo l'elemento
-  // nel DOM di Frarik e iniettamo le CSS custom properties di HA nel container
-  // (cascadano attraverso lo shadow DOM → button-card, mushroom, ecc. vedono il tema).
+  // Render diretto con motore HA nativo (window.parent.loadCardHelpers) — nessun iframe
   try{
     if(!_lovelaceResourcesLoaded){ await _loadLovelaceResources(); await new Promise(r=>setTimeout(r,600)); }
-    const el=await _yamlCreateEl(config);
-    el.style.cssText='display:block;width:100%';
+    if(!prev.isConnected) return;
     prev.innerHTML='';
     prev.style.cssText='display:block;width:100%;padding:4px';
-    if(!prev.isConnected) return;
-    // Inietta CSS vars tema HA nel container → tutte le card figlio le ereditano
     _injectHACSSVars(prev);
-    prev.appendChild(el);
-    // Refresh hass subito + ogni 800ms (card Lit/async aggiornano dopo connessione DOM)
+    const el=await _createHACard(config);
+    if(el){
+      el.style.cssText='display:block;width:100%';
+      prev.appendChild(el);
+    } else {
+      const elFb=await _yamlCreateEl(config);
+      elFb.style.cssText='display:block;width:100%';
+      prev.appendChild(elFb);
+    }
     const doRefresh=()=>{ try{ _yamlRefreshHass(prev); }catch(_){} };
     doRefresh();
     prev._ghsYamlTimer=setInterval(()=>{
@@ -8921,28 +8915,6 @@ async function _ghsYamlLivePreview(){
     const nc=(window.customCards||[]).length;
     if(hacsEl) hacsEl.textContent=nc?(nc+' card HACS'):'';
     if(addBtn) addBtn.style.display='';
-    // ── Upgrade a iframe HA reale (rendering 100% identico, tutti i plugin HACS) ──
-    if(errEl) errEl.textContent='⏳ Carico rendering nativo HA…';
-    _fyUpsertView('ghsy_prv',config).then(saved=>{
-      const p2=document.getElementById('ghsy-prev'); if(!p2||!p2.isConnected) return;
-      if(!saved){
-        // Diagnostica visibile: perché l'iframe nativo non è disponibile
-        if(errEl) errEl.innerHTML='<span style="color:#fbbf24">⚠️ Rendering nativo HA non disponibile — uso renderer interno.</span> <span style="opacity:.6;font-size:9px">('+eh(_fyLastErr||'sconosciuto')+')</span>';
-        return;
-      }
-      if(errEl) errEl.textContent='';
-      if(p2.querySelector('iframe[data-ghsy-prv]')) return; // già presente
-      if(p2._ghsYamlTimer){ clearInterval(p2._ghsYamlTimer); p2._ghsYamlTimer=null; }
-      p2.innerHTML='';
-      p2.style.cssText='display:block;width:100%;overflow:hidden;border-radius:8px;background:#0a0f1e;position:relative';
-      const f=document.createElement('iframe');
-      f.dataset.ghsyPrv='1';
-      f.setAttribute('allow','fullscreen;autoplay;camera;microphone;clipboard-write');
-      f.style.cssText='display:block;width:100%;height:380px;border:0;opacity:0;background:transparent;border-radius:8px';
-      f.src='/'+_FY_DASH+'/'+encodeURIComponent(_fyPath('ghsy_prv'))+'?kiosk';
-      _fyFitIframe(f,{fit:false});  // anteprima store: altezza fissa, solo nascondi nav + padding
-      p2.appendChild(f);
-    }).catch(e=>{ if(errEl) errEl.textContent='⚠️ iframe HA: '+(e&&e.message||e); });
   }catch(e){
     prev.innerHTML=`<div style="padding:20px;color:#f87171;font-size:11px;text-align:center">⚠️ ${eh(e.message)}</div>`;
     if(errEl) errEl.textContent='⚠️ '+e.message;

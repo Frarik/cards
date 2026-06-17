@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.31 — 2026-06-18
+
+### refactor(yaml-card): render diretto DOM senza iframe
+
+- Eliminato approccio iframe + dashboard nascosta `frarik-yaml`
+- `_mountYamlCard` e `_ghsYamlLivePreview` usano ora `_createHACard` (motore nativo HA via `window.parent.loadCardHelpers`) + `_injectHACSSVars`
+- Nessuna "cornice" attorno alla card — identico a una card JS normale
+- Supporto completo HACS (button-card, mushroom, multiple-entity-row, bubble-card, ecc.)
+- `_loadCardHelpers` prioritizza `window.parent` (HA reale) anziché il window locale
+
 ## 1.5.30 — 2026-06-17
 
 ### feat(posta-card): v2.5 — SVG cassetta rifatto con gradiente 3D realistico
