@@ -2416,16 +2416,14 @@ async function _ghsInstall(name){
   const res=_installCardCode(code);
   if(res.err){ showToast('⚠️ Errore caricamento: '+res.err.message); return; }
   const _instId=f.name.replace(/\.js$/i,'');
-  /* usa regex sul codice scaricato — affidabile indipendentemente da cache/eval */
-  const _pkgCheckMatch=code.match(/frarik_pkg_check\s*:\s*['"]([^'"]+)['"]/);
-  const _pkgCheck=_pkgCheckMatch?_pkgCheckMatch[1]:null;
-  if(_pkgCheck&&!(_haHassObj()?.states?.[_pkgCheck])){
-    /* card richiede un pkg HA e non è ancora attivo → mostra popup informativo */
-    const _meta=(window.customCards||[]).find(c=>c&&c.type===_instId)||{name:_instId};
-    _ghsPkgRequiredPopup(_instId,_meta,_pkgCheck,f,code,res);
+  /* controlla tramite regex se il codice richiede un pkg HA */
+  const _pkgMatch=code.match(/frarik_pkg_check\s*:\s*['"]([^'"]+)['"]/);
+  if(_pkgMatch){
+    /* SEMPRE chiede all'utente se il pkg è già installato o no */
+    _ghsPkgAskPopup(_instId,f,code,res);
     return;
   }
-  /* nessun pkg richiesto (o già installato) → installa direttamente */
+  /* nessun pkg richiesto → installa direttamente */
   _ghsDoInstall(f,code,res);
   showToast('✅ '+f.name+' installata — usa ➕ Aggiungi per metterla in dashboard');
 }
@@ -2450,11 +2448,11 @@ function _ghsDoInstall(f,code,res){
   renderDash(); _ghStoreRender();
 }
 
-/* popup 1 — informa che la card richiede un pkg, offre tasto "Installa pkg" */
-function _ghsPkgRequiredPopup(cardId,pkgMeta,pkgCheck,f,code,res){
-  document.getElementById('__frk_pkg_req__')?.remove();
+/* popup — chiede all'utente se il pkg HA è già installato o no */
+function _ghsPkgAskPopup(cardId,f,code,res){
+  document.getElementById('__frk_pkg_ask__')?.remove();
   const host=document.createElement('div');
-  host.id='__frk_pkg_req__';
+  host.id='__frk_pkg_ask__';
   host.attachShadow({mode:'open'});
   document.body.appendChild(host);
   const destroy=()=>host.remove();
@@ -2465,50 +2463,61 @@ function _ghsPkgRequiredPopup(cardId,pkgMeta,pkgCheck,f,code,res){
     @keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
     .hdr{display:flex;align-items:center;gap:12px;padding:18px 18px 14px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
     .ico{width:40px;height:40px;border-radius:12px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
-    .txt{flex:1}
+    .titw{flex:1}
     .tit{font-size:15px;font-weight:900;color:#fff;font-family:system-ui,sans-serif}
-    .sub{font-size:11px;color:#fff;opacity:.4;font-family:system-ui,sans-serif;margin-top:2px}
+    .sub{font-size:11px;color:rgba(255,255,255,.45);font-family:system-ui,sans-serif;margin-top:2px}
     .xbtn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:6px 12px;color:#fff;font-size:13px;cursor:pointer;font-family:system-ui,sans-serif}
     .body{flex:1;overflow-y:auto;padding:20px 18px;scrollbar-width:none}
     .body::-webkit-scrollbar{display:none}
-    .msg{font-size:13px;color:#fff;font-family:system-ui,sans-serif;line-height:1.75;opacity:.85}
-    .msg strong{color:#fbbf24;opacity:1;font-weight:800}
+    .msg{font-size:13px;color:#fff;font-family:system-ui,sans-serif;line-height:1.75}
+    .msg strong{color:#fbbf24;font-weight:800}
     .ftr{padding:14px 18px 28px;flex-shrink:0;border-top:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;gap:8px}
-    .btn-pkg{width:100%;padding:14px;border-radius:13px;background:#fbbf24;border:none;color:#1a1a2e;font-size:14px;font-weight:900;cursor:pointer;font-family:system-ui,sans-serif}
-    .btn-pkg:active{filter:brightness(.9)}
+    .btn-yes{width:100%;padding:14px;border-radius:13px;background:rgba(34,197,94,.18);border:1px solid rgba(34,197,94,.4);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:system-ui,sans-serif}
+    .btn-yes:active{filter:brightness(.9)}
+    .btn-no{width:100%;padding:14px;border-radius:13px;background:#fbbf24;border:none;color:#1a1a2e;font-size:14px;font-weight:900;cursor:pointer;font-family:system-ui,sans-serif}
+    .btn-no:active{filter:brightness(.9)}
     .btn-cancel{width:100%;padding:10px;border-radius:13px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:system-ui,sans-serif}
   </style>
   <div class="ov">
     <div class="mo">
       <div class="hdr">
         <div class="ico">📦</div>
-        <div class="txt">
+        <div class="titw">
           <div class="tit">Package richiesto</div>
-          <div class="sub">${pkgMeta.name||cardId}</div>
+          <div class="sub">${cardId}</div>
         </div>
-        <button class="xbtn" id="pr_close">✕</button>
+        <button class="xbtn" id="pa_close">✕</button>
       </div>
       <div class="body">
         <div class="msg">
-          Questa card richiede l'installazione di un <strong>package Home Assistant</strong> per funzionare correttamente.<br><br>
-          Il package configurerà automaticamente le automazioni, i sensori e le notifiche necessarie. Dovrai inserire i tuoi dispositivi (sensore cassetta, speaker, smartphone) e il file verrà scritto nella cartella <strong>packages/frarik/</strong> del tuo Home Assistant.<br><br>
-          Clicca <strong>Installa pkg</strong> per avviare la configurazione guidata.
+          Questa card richiede un <strong>package Home Assistant</strong> per funzionare.<br><br>
+          Hai già installato il package <strong>frarik_posta</strong> in Home Assistant?
         </div>
       </div>
       <div class="ftr">
-        <button class="btn-pkg" id="pr_install">⚡ Installa pkg</button>
-        <button class="btn-cancel" id="pr_cancel">Annulla</button>
+        <button class="btn-yes" id="pa_yes">✅ Sì, pkg già installato</button>
+        <button class="btn-no"  id="pa_no">⚡ No, installa pkg ora</button>
+        <button class="btn-cancel" id="pa_cancel">Annulla</button>
       </div>
     </div>
   </div>`;
   const sr=host.shadowRoot;
-  sr.getElementById('pr_close').addEventListener('click',()=>destroy());
-  sr.getElementById('pr_cancel').addEventListener('click',()=>destroy());
-  sr.getElementById('pr_install').addEventListener('click',()=>{
+  sr.getElementById('pa_close').addEventListener('click',()=>destroy());
+  sr.getElementById('pa_cancel').addEventListener('click',()=>destroy());
+  /* pkg già installato → installa la card direttamente */
+  sr.getElementById('pa_yes').addEventListener('click',()=>{
+    destroy();
+    _ghsDoInstall(f,code,res);
+    showToast('✅ Card installata — usa ➕ Aggiungi per metterla in dashboard');
+  });
+  /* pkg non installato → apre il wizard di configurazione */
+  sr.getElementById('pa_no').addEventListener('click',()=>{
     destroy();
     const CardClass=customElements.get(cardId);
     if(typeof CardClass?.openWizard==='function'){
-      CardClass.openWizard(_haHassObj(),()=>{ _ghsDoInstall(f,code,res); });
+      CardClass.openWizard(_haHassObj(),()=>{
+        _ghsDoInstall(f,code,res);
+      });
     } else {
       showToast('⚠️ Wizard non disponibile — aggiorna la pagina e riprova');
     }

@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.5.21 — 2026-06-17
+
+### fix(store): flusso pkg completamente riscritto — popup con scelta SI/NO
+
+- **Flusso precedente (sbagliato)**: rilevamento automatico basato su HA states → inaffidabile se l'entità esisteva da vecchie installazioni
+- **Flusso nuovo**: se il codice scaricato contiene `frarik_pkg_check` → SEMPRE mostra popup di scelta all'utente
+  - `✅ Sì, pkg già installato` → `_ghsDoInstall` → card va in INSTALLATE
+  - `⚡ No, installa pkg ora` → apre wizard entità (PostaCard.openWizard) → scrive pkg → success state → Chiudi → `_ghsDoInstall` → card va in INSTALLATE
+  - `Annulla` → niente
+- Rimossa tutta la logica di `_haHassObj().states` dalla detection del pkg
+- `_ghsPkgRequiredPopup` rinominato `_ghsPkgAskPopup` con nuova UI a due tasti
+
 ## 1.5.20 — 2026-06-17
 
 ### fix(store): rilevamento frarik_pkg_check via regex sul codice scaricato
