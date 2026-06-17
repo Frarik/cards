@@ -8204,14 +8204,27 @@ function _fyFitIframe(iframe, opts){
     try{
       const doc=iframe.contentDocument;
       if(doc&&doc.readyState!=='loading'){
-        try{ doc.documentElement.style.background='transparent'; doc.body.style.background='transparent'; }catch(e){}
+        // Rendi trasparenti sfondo pagina/vista HA → nessuna "cornice" attorno alla card.
+        // NON tocchiamo --ha-card-background né --card-background-color (sfondo interno card).
+        try{
+          const de=doc.documentElement;
+          de.style.setProperty('--lovelace-background','transparent','important');
+          de.style.setProperty('--primary-background-color','transparent','important');
+          de.style.setProperty('--view-background','transparent','important');
+          de.style.background='transparent'; doc.body.style.background='transparent';
+        }catch(e){}
         const ha=doc.querySelector('home-assistant');
+        if(ha){ try{ ha.style.setProperty('--lovelace-background','transparent','important'); ha.style.background='transparent'; }catch(e){} }
         const main=ha&&ha.shadowRoot&&ha.shadowRoot.querySelector('home-assistant-main');
+        if(main){ try{ main.style.background='transparent'; }catch(e){} }
         if(main&&main.shadowRoot){
           const sb=main.shadowRoot.querySelector('ha-sidebar'); if(sb) sb.style.display='none';
-          const drawer=main.shadowRoot.querySelector('ha-drawer'); if(drawer){ try{ drawer.style.setProperty('--mdc-drawer-width','0px'); }catch(e){} }
+          const drawer=main.shadowRoot.querySelector('ha-drawer'); if(drawer){ try{ drawer.style.setProperty('--mdc-drawer-width','0px'); drawer.style.background='transparent'; }catch(e){} }
         }
+        const panel=_fyDeepQuery(doc,'ha-panel-lovelace',0);
+        if(panel){ try{ panel.style.background='transparent'; }catch(e){} }
         const root=_fyDeepQuery(doc,'hui-root',0);
+        if(root){ try{ root.style.background='transparent'; }catch(e){} }
         if(root&&root.shadowRoot){
           const hdr=root.shadowRoot.querySelector('.header')||root.shadowRoot.querySelector('app-header')||root.shadowRoot.querySelector('ha-top-app-bar');
           if(hdr) hdr.style.display='none';
@@ -8219,10 +8232,11 @@ function _fyFitIframe(iframe, opts){
           if(view){
             viewFound=true;
             view.style.padding='0'; view.style.margin='0'; view.style.minHeight='0';
-            // misura l'altezza reale della card per adattare l'iframe (no clipping, no vuoti)
+            view.style.background='transparent';
+            const vc=view.firstElementChild;
+            if(vc){ try{ vc.style.background='transparent'; vc.style.padding='0'; vc.style.margin='0'; }catch(e){} }
             if(opts.fit){
-              const card=view.firstElementChild;
-              let h=(card&&card.offsetHeight)||view.scrollHeight||0;
+              let h=(vc&&vc.offsetHeight)||view.scrollHeight||0;
               if(h>20){ iframe.style.height=h+'px'; if(opts.container) opts.container.style.height=h+'px'; fits++; }
             }
             reveal();

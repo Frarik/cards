@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.16 — 2026-06-17
+
+### fix: Card YAML — sfondo vista HA trasparente dentro l'iframe
+
+- La "cornice" attorno alla card YAML in dashboard era lo sfondo della vista HA dentro l'iframe (`frarik-yaml` con tema default)
+- `_fyFitIframe` ora rende trasparenti `--lovelace-background`, `--primary-background-color`, `--view-background` e gli sfondi diretti di `home-assistant`, `home-assistant-main`, `ha-drawer`, `ha-panel-lovelace`, `hui-root`, `#view` e la vista interna
+- **Preservati** `--ha-card-background` e `--card-background-color` → le card mantengono il loro sfondo interno; sparisce solo il riquadro esterno
+
 ## 1.5.15 — 2026-06-16
 
 ### fix: pulizia automatica pkg legacy fuori dalla cartella frarik
