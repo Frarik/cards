@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.28 — 2026-06-17
+
+### fix(posta-card): v2.3 — SVG cassetta completamente ridisegnata, contrasto migliorato
+
+- **SVG cassetta**: niente più piedistallo a croce — design a muro con viti decorative
+- viewBox 54×54, corpo `#3a506b` (vuoto) / `#1e40af` (posta) / `#065f46` (aperta), contrasto leggibile sul bg `#0d0b1e`
+- Coperchio con gradiente, slot prominente (38px wide), serratura con gambo
+- Angolini buste più nitidi, animazione lpop invariata
+- Badge conteggio giallo con testo scuro, indicatore aperta verde con croce
+
 ## 1.5.27 — 2026-06-17
 
 ### feat(posta-card): v2.2 — SVG cassetta redesign + counter mini più compatti

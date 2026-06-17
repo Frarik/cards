@@ -1,4 +1,4 @@
-/* frarik-version: 2.2 */
+/* frarik-version: 2.3 */
 /* Centro Controllo Posta — Frarik card standalone */
 (function(){
   'use strict';
@@ -328,43 +328,58 @@ automation:
   function _svgMailbox(count,isOpen){
     const n=Math.min(count,4);
     const hasLetters=n>0;
-    const bc=isOpen?'#064e3b':hasLetters?'#1e3a8a':'#1a2235';
-    const rc=isOpen?'#047857':hasLetters?'#1d4ed8':'#263347';
-    const glow=isOpen?'rgba(52,211,153,.4)':hasLetters?'rgba(96,165,250,.45)':'rgba(0,0,0,0)';
-    /* envelope corners: rettangolo ruotato disegnato PRIMA del tetto —
-       il tetto (y=16) copre la parte bassa, resta visibile solo il triangolino in cima */
-    const pos=[[],[{x:28,r:0}],[{x:21,r:-14},{x:35,r:14}],[{x:17,r:-18},{x:28,r:0},{x:39,r:18}],[{x:14,r:-20},{x:23,r:-7},{x:33,r:7},{x:42,r:20}]];
+    /* colori con contrasto sul bg scuro #0d0b1e */
+    const bc=isOpen?'#065f46':hasLetters?'#1e40af':'#3a506b';
+    const lc=isOpen?'#059669':hasLetters?'#2563eb':'#4a6380';
+    const glow=isOpen?'rgba(16,185,129,.55)':hasLetters?'rgba(96,165,250,.55)':'rgba(0,0,0,0)';
+    /* angolini buste: rettangolo ruotato, disegnato PRIMA del coperchio (y=14)
+       → solo il triangolino sopra y=14 resta visibile */
+    const pos=[[],[{x:27,r:0}],[{x:20,r:-15},{x:34,r:15}],[{x:16,r:-19},{x:27,r:0},{x:38,r:19}],[{x:13,r:-22},{x:21,r:-7},{x:33,r:7},{x:41,r:22}]];
     const letters=(pos[n]||[]).map(({x,r},i)=>`
-      <g transform="rotate(${r},${x},18)" style="animation:lpop .25s ${(i*.08).toFixed(2)}s cubic-bezier(.32,1.6,.56,1) both">
-        <rect x="${x-7}" y="2" width="14" height="20" rx="2" fill="#fffbeb" opacity=".93"/>
-        <path d="M${x-7},2 L${x},8 L${x+7},2" fill="none" stroke="#c8a97e" stroke-width="1"/>
+      <g transform="rotate(${r},${x},14)" style="animation:lpop .26s ${(i*.09).toFixed(2)}s cubic-bezier(.32,1.6,.56,1) both">
+        <rect x="${x-7}" y="1" width="14" height="19" rx="2" fill="#fef9e7" opacity=".95"/>
+        <path d="M${x-7},1 L${x},7 L${x+7},1" fill="none" stroke="#d4a96a" stroke-width="1.1"/>
       </g>`).join('');
-    return `<svg viewBox="0 0 56 66" xmlns="http://www.w3.org/2000/svg"
-      style="width:100%;height:auto;display:block;filter:drop-shadow(0 4px 16px ${glow})">
+    return `<svg viewBox="0 0 54 54" xmlns="http://www.w3.org/2000/svg"
+      style="width:100%;height:auto;display:block;filter:drop-shadow(0 6px 22px ${glow})">
       <defs>
-        <linearGradient id="mbg2" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="rgba(255,255,255,.12)"/>
-          <stop offset="100%" stop-color="rgba(0,0,0,.22)"/>
+        <linearGradient id="mg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="rgba(255,255,255,.14)"/>
+          <stop offset="100%" stop-color="rgba(0,0,0,.25)"/>
+        </linearGradient>
+        <linearGradient id="lg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="rgba(255,255,255,.22)"/>
+          <stop offset="100%" stop-color="rgba(0,0,0,.08)"/>
         </linearGradient>
       </defs>
-      <ellipse cx="28" cy="63" rx="14" ry="2" fill="rgba(0,0,0,.28)"/>
-      <rect x="25" y="50" width="6" height="14" rx="2" fill="#2d3a4a"/>
-      <rect x="22" y="56" width="12" height="5" rx="2" fill="#1f2937"/>
       ${hasLetters?letters:''}
-      <rect x="2" y="22" width="52" height="30" rx="4" fill="${bc}"/>
-      <rect x="2" y="22" width="52" height="30" rx="4" fill="url(#mbg2)"/>
-      <rect x="0" y="16" width="56" height="9" rx="3" fill="${rc}"/>
-      <rect x="2" y="24" width="52" height="2" fill="rgba(0,0,0,.18)"/>
-      <rect x="8" y="32" width="40" height="4.5" rx="2.2" fill="rgba(0,0,0,.72)"/>
-      <rect x="8" y="32" width="40" height="1.5" rx=".5" fill="rgba(0,0,0,.35)"/>
-      <circle cx="28" cy="43" r="3.2" fill="rgba(0,0,0,.45)"/>
-      <circle cx="28" cy="43" r="2" fill="#04060a"/>
-      <rect x="27.1" y="44.5" width="1.8" height="3" rx=".9" fill="#04060a"/>
-      <text x="28" y="29" text-anchor="middle" fill="rgba(255,255,255,.1)"
-        font-size="4.5" font-weight="800" font-family="system-ui,sans-serif" letter-spacing="2">POSTA</text>
-      ${hasLetters?`<circle cx="50" cy="19" r="6" fill="#fbbf24"/>
-        <text x="50" y="23" text-anchor="middle" fill="#1a1a2e" font-size="6.5" font-weight="900" font-family="system-ui">${count>9?'9+':count}</text>`:''}
-      ${isOpen?`<circle cx="6" cy="19" r="3.8" fill="#34d399"/><circle cx="6" cy="19" r="2.3" fill="#10b981"/>`:''}
+      <!-- corpo principale -->
+      <rect x="2" y="18" width="50" height="32" rx="5" fill="${bc}"/>
+      <rect x="2" y="18" width="50" height="32" rx="5" fill="url(#mg)"/>
+      <!-- coperchio -->
+      <rect x="0" y="12" width="54" height="9" rx="4" fill="${lc}"/>
+      <rect x="0" y="12" width="54" height="9" rx="4" fill="url(#lg)"/>
+      <!-- ombra coperchio/corpo -->
+      <rect x="2" y="20" width="50" height="2.5" fill="rgba(0,0,0,.22)"/>
+      <!-- slot posta (prominente) -->
+      <rect x="8" y="28" width="38" height="6" rx="3" fill="rgba(0,0,0,.82)"/>
+      <rect x="8" y="28" width="38" height="2" rx="1" fill="rgba(0,0,0,.4)"/>
+      <!-- viti a muro -->
+      <circle cx="6" cy="26" r="2" fill="rgba(0,0,0,.35)"/><circle cx="6" cy="26" r="1.1" fill="rgba(255,255,255,.1)"/>
+      <circle cx="48" cy="26" r="2" fill="rgba(0,0,0,.35)"/><circle cx="48" cy="26" r="1.1" fill="rgba(255,255,255,.1)"/>
+      <!-- serratura -->
+      <circle cx="27" cy="42" r="3.5" fill="rgba(0,0,0,.5)"/>
+      <circle cx="27" cy="42" r="2.1" fill="#04060a"/>
+      <rect x="26.1" y="43.5" width="1.8" height="3.2" rx=".9" fill="#04060a"/>
+      <!-- linea divisoria decorativa -->
+      <rect x="10" y="36" width="34" height=".6" rx=".3" fill="rgba(255,255,255,.07)"/>
+      <!-- badge conteggio -->
+      ${hasLetters?`<circle cx="49" cy="15" r="7" fill="#fbbf24"/>
+        <text x="49" y="19.5" text-anchor="middle" fill="#1a1000" font-size="7.5" font-weight="900" font-family="system-ui,sans-serif">${count>9?'9+':count}</text>`:''}
+      <!-- indicatore aperta -->
+      ${isOpen?`<circle cx="5" cy="15" r="4.5" fill="#10b981"/><circle cx="5" cy="15" r="2.6" fill="#34d399"/>
+        <line x1="3.5" y1="15" x2="6.5" y2="15" stroke="#065f46" stroke-width="1.2" stroke-linecap="round"/>
+        <line x1="5" y1="13.5" x2="5" y2="16.5" stroke="#065f46" stroke-width="1.2" stroke-linecap="round"/>`:''}
     </svg>`;
   }
 
@@ -1103,9 +1118,9 @@ automation:
 .body{flex:1;overflow-y:auto;padding:14px 14px 16px;display:flex;flex-direction:column;gap:10px;scrollbar-width:none}
 .body::-webkit-scrollbar{display:none}
 /* 2 colonne */
-.main-row{display:flex;gap:10px;align-items:center}
-.mb-col{flex:0 0 36%;max-width:36%}
-.info-col{flex:1;display:flex;flex-direction:column;gap:3px;padding:4px 0 0}
+.main-row{display:flex;gap:12px;align-items:center}
+.mb-col{flex:0 0 38%;max-width:38%;padding:2px 0}
+.info-col{flex:1;display:flex;flex-direction:column;gap:3px;padding:2px 0 0}
 .big-num{font-size:44px;font-weight:900;color:rgba(255,255,255,.45);line-height:1;transition:color .3s}
 .big-num.hi{color:#93c5fd}
 .big-num.green{color:#4ade80}
