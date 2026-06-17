@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.5.24 — 2026-06-17
+
+### feat(store): aggiornamento automatico del package HA quando il YAML cambia
+
+- **`frarik_pkg_version`** aggiunto a `customCards` entry in ogni card che ha un pkg (es. `'1.0'`)
+- Quando si fa "Aggiorna" una card, `_ghsInstall` confronta `frarik_pkg_version` dal nuovo codice con la versione salvata in `_ghCfg().pkgVersions[cardId]`
+- Se diversa → popup `_ghsPkgUpdatePopup`: "Aggiornamento package disponibile" con tasto "Aggiorna pkg" (riapre wizard) o "Lo faccio dopo"
+- `_savePkgVer(cardId, ver)`: helper che salva la versione pkg installata in cfg
+- La versione viene salvata sia su "Sì già installato" che su wizard completato (onDone)
+- **Workflow aggiornamento pkg**: bumpa `frarik_pkg_version` in `posta-card.js` → pubblica → utente clicca "Aggiorna" sulla card → popup avvisa → wizard rieseguito → YAML sovrascritto
+
 ## 1.5.23 — 2026-06-17
 
 ### fix(store): popup pkg non appare su "Aggiorna", solo su nuova installazione

@@ -2418,15 +2418,21 @@ async function _ghsInstall(name){
   const _instId=f.name.replace(/\.js$/i,'');
   /* controlla tramite regex se il codice richiede un pkg HA */
   const _pkgMatch=code.match(/frarik_pkg_check\s*:\s*['"]([^'"]+)['"]/);
+  const _pkgVerMatch=code.match(/frarik_pkg_version\s*:\s*['"]([^'"]+)['"]/);
+  const _pkgVerNew=_pkgVerMatch?_pkgVerMatch[1]:null;
   /* mostra il popup pkg SOLO per nuove installazioni — non per aggiornamenti */
   const _isUpdate=!!(_ghCfg().shas[f.name]);
   if(_pkgMatch&&!_isUpdate){
-    _ghsPkgAskPopup(_instId,f,code,res);
+    _ghsPkgAskPopup(_instId,_pkgVerNew,f,code,res);
     return;
   }
-  /* nessun pkg richiesto → installa direttamente */
   _ghsDoInstall(f,code,res);
-  showToast('✅ '+f.name+' installata — usa ➕ Aggiungi per metterla in dashboard');
+  /* su aggiornamento: se la pkg version è cambiata avvisa l'utente */
+  if(_pkgMatch&&_pkgVerNew&&_pkgVerNew!==(_ghCfg().pkgVersions||{})[_instId]){
+    _ghsPkgUpdatePopup(_instId,_pkgVerNew);
+  } else {
+    showToast('✅ '+f.name+(_isUpdate?' aggiornata':' installata — usa ➕ Aggiungi per metterla in dashboard'));
+  }
 }
 
 /* salva il codice JS nello store locale + aggiorna sha/versione + refresh UI */
@@ -2449,8 +2455,15 @@ function _ghsDoInstall(f,code,res){
   renderDash(); _ghStoreRender();
 }
 
+/* helper — salva la versione del pkg installato in cfg */
+function _savePkgVer(cardId,ver){
+  if(!ver) return;
+  const g=_ghCfg(); g.pkgVersions=g.pkgVersions||{}; g.pkgVersions[cardId]=ver;
+  saveCfg(); _haSaveCfg();
+}
+
 /* popup — chiede all'utente se il pkg HA è già installato o no */
-function _ghsPkgAskPopup(cardId,f,code,res){
+function _ghsPkgAskPopup(cardId,pkgVer,f,code,res){
   document.getElementById('__frk_pkg_ask__')?.remove();
   const host=document.createElement('div');
   host.id='__frk_pkg_ask__';
@@ -2508,6 +2521,7 @@ function _ghsPkgAskPopup(cardId,f,code,res){
   /* pkg già installato → installa la card direttamente */
   sr.getElementById('pa_yes').addEventListener('click',()=>{
     destroy();
+    _savePkgVer(cardId,pkgVer);
     _ghsDoInstall(f,code,res);
     showToast('✅ Card installata — usa ➕ Aggiungi per metterla in dashboard');
   });
@@ -2517,6 +2531,7 @@ function _ghsPkgAskPopup(cardId,f,code,res){
     const CardClass=customElements.get(cardId);
     if(typeof CardClass?.openWizard==='function'){
       CardClass.openWizard(_haHassObj(),()=>{
+        _savePkgVer(cardId,pkgVer);
         _ghsDoInstall(f,code,res);
       });
     } else {
@@ -2524,6 +2539,76 @@ function _ghsPkgAskPopup(cardId,f,code,res){
     }
   });
 }
+
+/* popup — avvisa che il package HA è stato aggiornato e offre di aggiornarlo */
+function _ghsPkgUpdatePopup(cardId,pkgVerNew){
+  document.getElementById('__frk_pkg_upd__')?.remove();
+  const host=document.createElement('div');
+  host.id='__frk_pkg_upd__';
+  host.attachShadow({mode:'open'});
+  document.body.appendChild(host);
+  const destroy=()=>host.remove();
+  host.shadowRoot.innerHTML=`<style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    .ov{position:fixed;inset:0;z-index:99998;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.72);backdrop-filter:blur(6px)}
+    .mo{width:100%;max-height:72vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(251,191,36,.28);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.8);animation:su .22s cubic-bezier(.32,1.12,.56,1)}
+    @keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
+    .hdr{display:flex;align-items:center;gap:12px;padding:18px 18px 14px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
+    .ico{width:40px;height:40px;border-radius:12px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+    .titw{flex:1}
+    .tit{font-size:15px;font-weight:900;color:#fff;font-family:system-ui,sans-serif}
+    .sub{font-size:11px;color:rgba(255,255,255,.4);font-family:system-ui,sans-serif;margin-top:2px}
+    .xbtn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:6px 12px;color:#fff;font-size:13px;cursor:pointer;font-family:system-ui,sans-serif}
+    .body{flex:1;overflow-y:auto;padding:20px 18px;scrollbar-width:none}
+    .body::-webkit-scrollbar{display:none}
+    .msg{font-size:13px;color:#fff;font-family:system-ui,sans-serif;line-height:1.75}
+    .msg strong{color:#fbbf24;font-weight:800}
+    .ftr{padding:14px 18px 28px;flex-shrink:0;border-top:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;gap:8px}
+    .btn-upd{width:100%;padding:14px;border-radius:13px;background:#fbbf24;border:none;color:#1a1a2e;font-size:14px;font-weight:900;cursor:pointer;font-family:system-ui,sans-serif}
+    .btn-upd:active{filter:brightness(.9)}
+    .btn-later{width:100%;padding:10px;border-radius:13px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:system-ui,sans-serif}
+  </style>
+  <div class="ov">
+    <div class="mo">
+      <div class="hdr">
+        <div class="ico">📦</div>
+        <div class="titw">
+          <div class="tit">Aggiornamento package disponibile</div>
+          <div class="sub">v${pkgVerNew||'?'} — ${cardId}</div>
+        </div>
+        <button class="xbtn" id="pu_close">✕</button>
+      </div>
+      <div class="body">
+        <div class="msg">
+          La card è stata aggiornata e include una <strong>nuova versione del package HA</strong>.<br><br>
+          Per attivare le nuove funzionalità, aggiorna anche il file<br>
+          <strong>/config/packages/frarik/frarik_posta.yaml</strong><br><br>
+          Clicca <strong>Aggiorna pkg</strong> per rieseguire il wizard di configurazione e sovrascrivere il file.
+        </div>
+      </div>
+      <div class="ftr">
+        <button class="btn-upd" id="pu_update">⚡ Aggiorna pkg</button>
+        <button class="btn-later" id="pu_later">Lo faccio dopo</button>
+      </div>
+    </div>
+  </div>`;
+  const sr=host.shadowRoot;
+  sr.getElementById('pu_close').addEventListener('click',()=>destroy());
+  sr.getElementById('pu_later').addEventListener('click',()=>{
+    destroy();
+    showToast('ℹ️ Ricorda di aggiornare il package HA per attivare le nuove funzionalità');
+  });
+  sr.getElementById('pu_update').addEventListener('click',()=>{
+    destroy();
+    const CardClass=customElements.get(cardId);
+    if(typeof CardClass?.openWizard==='function'){
+      CardClass.openWizard(_haHassObj(),()=>{ _savePkgVer(cardId,pkgVerNew); });
+    } else {
+      showToast('⚠️ Wizard non disponibile — aggiorna la pagina e riprova');
+    }
+  });
+}
+
 async function _ghsCopy(name){
   const f=_ghsFind(name); if(!f) return;
   let txt; try{ txt=await _ghDownload(f); }catch(e){ showToast('⚠️ '+e.message); return; }
