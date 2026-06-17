@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.34 — 2026-06-18
+
+### fix(yaml-card): layout corretto + click funzionanti (relay hass-action)
+
+- **`_createHACard`**: aumento pre-render wait 80ms → 300ms per garantire rendering completo di card complesse; ghost div da `visibility:hidden` a `opacity:0` (layout intatto, offsetWidth reale); larghezza ghost 360px → 420px; inietta CSS vars HA direttamente sull'elemento dopo adoptNode
+- **`_snapshotShadowStyles`**: nuova funzione — copia gli `adoptedStyleSheets` di ogni shadow root in `<style>` tag di backup prima di `document.adoptNode`; garantisce che gli stili Lit sopravvivano cross-document su tutti i browser
+- **`_relayHassEvents(container)`**: nuova funzione — intercetta `hass-action`, `hass-more-info`, `hass-notification`, `location-changed` sparati da button-card/HACS e li ri-emette su `window.parent` `home-assistant`; i click ora funzionano (navigation, more-info, service call)
+- Relay abilitato sia in `_mountYamlCard` che in `_ghsYamlLivePreview` (anteprima store)
+
 ## 1.5.33 — 2026-06-18
 
 ### fix(yaml-card): pre-render in HA window + adoptNode; rimozione patch createElement

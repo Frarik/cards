@@ -8317,25 +8317,55 @@ async function _createHACard(config){
     if(!helpers||typeof helpers.createCardElement!=='function') return null;
     const el=helpers.createCardElement(config);
     if(!el) return null;
-    // Imposta hass di HA (non quello simulato di Frarik) per il rendering iniziale
+    // Hass reale di HA per il pre-rendering
     const parentHA=pw.document.querySelector('home-assistant');
     const parentHass=parentHA&&parentHA.hass?parentHA.hass:_getBestHass();
     try{ el.hass=parentHass; }catch(e){}
-    // Pre-renderizza nell'albero DOM di HA (stesso realm → tutti gli elementi custom HA risolti)
+    // Pre-renderizza in un ghost dentro HA's document (stesso realm → ha-card, ha-icon, ecc. presenti)
+    // opacity:0 invece di visibility:hidden → layout intatto, offsetWidth reale
     const ghost=pw.document.createElement('div');
-    ghost.style.cssText='position:fixed;top:-9999px;left:-9999px;width:360px;pointer-events:none;visibility:hidden';
+    ghost.style.cssText='position:fixed;top:-9999px;left:-9999px;width:420px;opacity:0;pointer-events:none;z-index:-1';
     try{ pw.document.body.appendChild(ghost); ghost.appendChild(el); }catch(e){}
-    // Aspetta almeno 2 frame perché Lit (async) completi il rendering
-    await new Promise(r=>setTimeout(r,80));
-    // Rimuovi dall'albero HA e adotta in Frarik's document (stesso origin → adoptNode permesso)
+    // Attendi il rendering completo: Lit usa microtask+rAF, 300ms garantisce anche card complesse
+    await new Promise(r=>setTimeout(r,300));
+    // Estrai gli stili compilati PRIMA di spostare il documento
+    // (adoptedStyleSheets cross-document funziona in Chrome 111+ ma aggiungiamo backup <style>)
+    _snapshotShadowStyles(el);
+    // Sposta in Frarik's document (same-origin → consentito)
     try{ ghost.removeChild(el); pw.document.body.removeChild(ghost); }catch(e){}
     try{ document.adoptNode(el); }catch(e){}
-    // Aggiorna hass con l'oggetto di Frarik (stati live di questo pannello)
+    // Inietta CSS vars HA direttamente sul card element (garantisce cascata anche cross-shadow)
+    _injectHACSSVars(el);
     try{ el.hass=_getBestHass(); }catch(e){}
     el.classList.add('fycel');
     el.style.display='block'; el.style.width='100%';
     return el;
   }catch(e){ console.warn('[Frarik] createHACard:',e&&e.message); return null; }
+}
+
+/* Copia il contenuto degli adoptedStyleSheets in <style> tag di backup all'interno di ogni
+   shadow root dell'albero. Questo garantisce che gli stili sopravvivano a document.adoptNode
+   anche su browser dove gli adoptedStyleSheets non funzionano cross-document. */
+function _snapshotShadowStyles(root){
+  if(!root) return;
+  function fix(node){
+    const sr=node.shadowRoot;
+    if(sr){
+      try{
+        const sheets=sr.adoptedStyleSheets;
+        if(sheets&&sheets.length&&!sr.querySelector('style[data-fss]')){
+          let css='';
+          for(const sh of sheets){ try{ css+=Array.from(sh.cssRules).map(r=>r.cssText).join('\n')+'\n'; }catch(_){} }
+          if(css){ const s=document.createElement('style'); s.dataset.fss='1'; s.textContent=css; sr.insertBefore(s,sr.firstChild); }
+        }
+      }catch(_){}
+      // Ricorri nei figli del shadow root
+      for(const c of sr.children) fix(c);
+    }
+    // Ricorri nei figli normali
+    if(node.children) for(const c of node.children) fix(c);
+  }
+  fix(root);
 }
 
 /* ════════ RENDER FEDELE "alla Oikos": dashboard HA dedicata + iframe ════════
@@ -8476,6 +8506,31 @@ function _fyFitIframe(iframe, opts){
   iframe.addEventListener('load',()=>{ clearTimeout(fallback); t=0; fits=0; setTimeout(tune,80); },{once:true});
 }
 
+/* Intercetta gli eventi di azione Lovelace (hass-action, hass-more-info, location-changed)
+   emessi da button-card/HACS cards e li rilancia su home-assistant in window.parent, che è
+   l'unico elemento che li gestisce (navigation, more-info dialogs, service calls). */
+function _relayHassEvents(container){
+  if(!container||container._hassEventsRelayed) return;
+  container._hassEventsRelayed=true;
+  const EVENTS=['hass-action','hass-more-info','hass-notification','location-changed','config-changed'];
+  EVENTS.forEach(evName=>{
+    container.addEventListener(evName,e=>{
+      try{
+        const pw=window.parent&&window.parent!==window?window.parent:null;
+        if(!pw) return;
+        const haEl=pw.document.querySelector('home-assistant');
+        if(!haEl) return;
+        // Ricrea l'evento nel realm di HA in modo che venga gestito nativamente
+        haEl.dispatchEvent(new pw.CustomEvent(evName,{
+          bubbles:true,
+          composed:true,
+          detail:e.detail||{}
+        }));
+      }catch(_){}
+    },true); // capture=true: prende l'evento prima che possa essere fermato
+  });
+}
+
 async function _mountYamlCard(card, container){
   container.innerHTML='';
   container.style.cssText='display:block;width:100%;min-height:60px;overflow:visible;border-radius:inherit';
@@ -8483,13 +8538,12 @@ async function _mountYamlCard(card, container){
   try{ cfg=jsyaml.load(card.lovelaceConfig); }
   catch(e){ container.innerHTML='<div style="padding:12px;color:#f87171;font-size:11px">YAML: '+eh(e.message)+'</div>'; return; }
   if(!cfg||typeof cfg!=='object'){ container.innerHTML='<div style="padding:12px;color:#f87171;font-size:11px">YAML non valido</div>'; return; }
-  // Assicura che il compat layer sia attivo e le risorse HACS siano caricate
   _haCompatInit();
   if(!_lovelaceResourcesLoaded){ try{ await _loadLovelaceResources(); }catch(e){} }
   if(!container.isConnected) return;
-  // Render diretto: nessun iframe, nessuna dashboard nascosta
   container.innerHTML='';
   _injectHACSSVars(container);
+  _relayHassEvents(container);
   const el=await _createHACard(cfg);
   if(el){
     container.appendChild(el);
@@ -8934,6 +8988,7 @@ async function _ghsYamlLivePreview(){
     prev.innerHTML='';
     prev.style.cssText='display:block;width:100%;padding:4px';
     _injectHACSSVars(prev);
+    _relayHassEvents(prev);
     const el=await _createHACard(config);
     if(el){
       el.style.cssText='display:block;width:100%';
