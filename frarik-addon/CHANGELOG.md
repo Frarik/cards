@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.27 — 2026-06-17
+
+### feat(posta-card): v2.2 — SVG cassetta redesign + counter mini più compatti
+
+- **SVG cassetta**: redesign completo, viewBox 56×66 (più piccolo), corpo piatto moderno, tetto separato, slot frontale arrotondato, serratura, angolini buste più netti e animati sopra il tetto
+- **Colonna SVG**: ridotta da 44% a 36%, numero grande da 56px a 44px
+- **Counter mini**: padding ridotto (10px→7px), font da 18px a 14px, border-radius 12→10px
+
 ## 1.5.26 — 2026-06-17
 
 ### fix(posta-card): aggiornamento immediato contatori dopo reset senza uscire dalla card
