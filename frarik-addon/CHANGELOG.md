@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.5.32 — 2026-06-18
+
+### fix(yaml-card): HA compat layer — auto-mirror elementi custom + fix lovelace/resources
+
+- **Bug critico**: `_loadLovelaceResources` usava `sendAndWait` (WS proxy che non passa `lovelace/*`) → script HACS non venivano mai caricati; ora usa `_fyWS` che sfrutta `window.parent.hass.connection`
+- **`_haCompatInit()`**: nuova funzione che patcha `Document.prototype.createElement` → ogni elemento HA (`ha-card`, `ha-icon`, `hui-*`, ecc.) viene auto-mirrorato da `window.parent.customElements` al primo accesso; le card HACS vedono sempre gli elementi nativi HA
+- Copia utility HA (`fireEvent`, `navigate`, `formatDateTime`, ecc.) e variabili Lit su `window` locale
+- Delay startup HACS ridotto da 2000ms a 500ms; eliminati delay di 600/700ms in preview e mount
+- `_createHACard`: usa prima `window.loadCardHelpers` locale (con createElement patchato), poi parent come fallback
+- `_yamlCustomEl`: semplificato — usa direttamente `document.createElement` (ora auto-mirrorante)
+
 ## 1.5.31 — 2026-06-18
 
 ### refactor(yaml-card): render diretto DOM senza iframe

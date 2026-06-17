@@ -2922,7 +2922,8 @@ function onMsg(m){
       _restoreUIState();
       try{ _histInit(); }catch(e){}   // inizializza la cronologia Annulla/Ripeti
       try{ _ghSchedule(); setTimeout(()=>{ try{ _ghCheck(false); }catch(e){} }, 1000); }catch(e){}  // controllo aggiornamenti card GitHub
-      setTimeout(()=>{ try{ _loadLovelaceResources(); }catch(e){} }, 2000);  // carica risorse HACS
+      try{ _haCompatInit(); }catch(e){}  // patch createElement per auto-mirror elementi HA
+      setTimeout(()=>{ try{ _loadLovelaceResources(); }catch(e){} }, 500);  // carica risorse HACS (prima possibile)
       try{ _ntfUpdateBell(); }catch(e){}
     } else {
       // RICONNESSIONE: la dashboard è già costruita → aggiorna i VALORI in posto, niente rebuild (niente "scatto")
@@ -8262,6 +8263,46 @@ window.FratechCardRegistry = {};
 window.customCards = window.customCards || [];
 
 /* ════════════════════════════════════════════════════════════════════
+   HA COMPAT LAYER — auto-mirroring elementi custom HA in Frarik's window
+   ════════════════════════════════════════════════════════════════════
+   Frarik gira come ingress add-on dentro un iframe same-origin di HA.
+   Gli elementi custom HA (ha-card, ha-icon, hui-*-card, ecc.) sono registrati
+   in window.parent.customElements, NON in window. Patchamo Document.prototype
+   .createElement per auto-mirrare questi elementi al primo accesso: così le card
+   HACS caricate in questo documento trovano sempre gli elementi HA nativi. */
+function _haCompatInit(){
+  if(window._haCompatDone) return;
+  window._haCompatDone=true;
+  function _pw(){ try{ return(window.parent&&window.parent!==window)?window.parent:null; }catch(e){ return null; } }
+  // Patch createElement: auto-mirror elementi custom dal parent HA al primo accesso
+  try{
+    const _origCreate=Document.prototype.createElement;
+    Document.prototype.createElement=function(tag,opts){
+      if(typeof tag==='string'&&tag.includes('-')&&!customElements.get(tag)){
+        const pw=_pw();
+        if(pw){ try{ const cls=pw.customElements.get(tag); if(cls) try{ customElements.define(tag,cls); }catch(_){} }catch(_){} }
+      }
+      return _origCreate.call(this,tag,opts);
+    };
+  }catch(e){}
+  // Copia utility HA (fireEvent, navigate, formatDateTime…) usate da molte card HACS
+  try{
+    const pw=_pw();
+    if(pw){
+      ['fireEvent','navigate','computeStateName','computeStateDisplay','computeDomain',
+       'computeEntity','computeStateObject','formatDateTime','formatTime','formatDate',
+       'formatNumber','numberFormat'].forEach(fn=>{
+        if(typeof pw[fn]==='function'&&!window[fn]) try{ window[fn]=pw[fn].bind(pw); }catch(_){}
+      });
+      // Variabili Lit condivise — evita conflitti di versione tra le card HACS
+      ['litHtmlVersions','litElementVersions'].forEach(k=>{
+        if(pw[k]&&!window[k]) try{ window[k]=pw[k]; }catch(_){}
+      });
+    }
+  }catch(e){}
+}
+
+/* ════════════════════════════════════════════════════════════════════
    YAML CARD RENDERER — renderer ricorsivo HA/HACS
    • custom:xxx  → usa customElements dopo _loadLovelaceResources()
    • entities, stack, section, ecc. → reimplementazione HTML leggera
@@ -8279,30 +8320,28 @@ function _getBestHass(){
 /* ════════ MOTORE UFFICIALE HA: loadCardHelpers().createCardElement() ════════
    Costruisce QUALSIASI card Lovelace (nativa, HACS, stack, hui-element…) usando lo
    stesso motore di Home Assistant, preso dal frontend di HA (window.parent). */
-let _cardHelpersPromise=null, _cardHelpersWin=null;
-function _loadCardHelpers(){
-  if(_cardHelpersPromise) return _cardHelpersPromise;
-  _cardHelpersPromise=(async()=>{
-    // Preferisce window.parent (HA reale), poi top, poi window come ultimo fallback
-    const tryWin=async(w)=>{ try{ if(w&&typeof w.loadCardHelpers==='function'){ const h=await w.loadCardHelpers(); if(h){ _cardHelpersWin=w; return h; } } }catch(e){} return null; };
-    return (await tryWin(window.parent)) || (await tryWin(window.top)) || (await tryWin(window)) || null;
-  })();
-  return _cardHelpersPromise;
-}
 async function _createHACard(config){
   try{
-    // Usa sempre window.parent.loadCardHelpers (motore HA reale) — nessun cache stale
-    let helpers=null;
-    for(const w of [window.parent,window.top,window]){
-      try{ if(w&&typeof w.loadCardHelpers==='function'){ const h=await w.loadCardHelpers(); if(h&&typeof h.createCardElement==='function'){ helpers=h; break; } } }catch(e){}
+    // 1. Usa window.loadCardHelpers locale (definita dopo _loadLovelaceResources).
+    //    document.createElement è patchato → tutti gli elementi HA vengono auto-mirrorati
+    //    da window.parent: HACS cards + sub-elementi (ha-card, ha-icon…) funzionano tutti.
+    if(typeof window.loadCardHelpers==='function'){
+      const helpers=await window.loadCardHelpers();
+      if(helpers&&typeof helpers.createCardElement==='function'){
+        const el=helpers.createCardElement(config);
+        if(el){ try{ el.hass=_getBestHass(); }catch(e){} el.classList.add('fycel'); el.style.display='block'; el.style.width='100%'; return el; }
+      }
     }
-    if(!helpers) return null;
-    const el=helpers.createCardElement(config);
-    if(!el) return null;
-    try{ el.hass=_getBestHass(); }catch(e){}
-    el.classList.add('fycel');
-    el.style.display='block'; el.style.width='100%';
-    return el;
+    // 2. Fallback: window.parent.loadCardHelpers (motore HA reale, crea elementi nel parent)
+    const pw=window.parent&&window.parent!==window?window.parent:null;
+    if(pw&&typeof pw.loadCardHelpers==='function'){
+      const helpers=await pw.loadCardHelpers();
+      if(helpers&&typeof helpers.createCardElement==='function'){
+        const el=helpers.createCardElement(config);
+        if(el){ try{ document.adoptNode(el); }catch(e){} try{ el.hass=_getBestHass(); }catch(e){} el.classList.add('fycel'); el.style.display='block'; el.style.width='100%'; return el; }
+      }
+    }
+    return null;
   }catch(e){ console.warn('[Frarik] createCardElement:',e&&e.message); return null; }
 }
 
@@ -8451,17 +8490,17 @@ async function _mountYamlCard(card, container){
   try{ cfg=jsyaml.load(card.lovelaceConfig); }
   catch(e){ container.innerHTML='<div style="padding:12px;color:#f87171;font-size:11px">YAML: '+eh(e.message)+'</div>'; return; }
   if(!cfg||typeof cfg!=='object'){ container.innerHTML='<div style="padding:12px;color:#f87171;font-size:11px">YAML non valido</div>'; return; }
-  // Carica custom elements HACS se non ancora presenti
-  if(!_lovelaceResourcesLoaded){ try{ await _loadLovelaceResources(); }catch(e){} await new Promise(r=>setTimeout(r,700)); }
+  // Assicura che il compat layer sia attivo e le risorse HACS siano caricate
+  _haCompatInit();
+  if(!_lovelaceResourcesLoaded){ try{ await _loadLovelaceResources(); }catch(e){} }
   if(!container.isConnected) return;
-  // Render diretto: motore HA nativo — nessun iframe, nessuna dashboard nascosta
+  // Render diretto: nessun iframe, nessuna dashboard nascosta
   container.innerHTML='';
   _injectHACSSVars(container);
   const el=await _createHACard(cfg);
   if(el){
     container.appendChild(el);
   } else {
-    // Fallback renderer interno
     const elFb=await _yamlCreateEl(cfg);
     container.appendChild(elFb);
   }
@@ -8521,18 +8560,17 @@ function _injectHACSSVars(container){
 }
 
 function _yamlCustomEl(tag,cfg){
-  let parentKnown=false;
-  try{ parentKnown=!!(window.parent&&window.parent!==window&&window.parent.customElements&&window.parent.customElements.get(tag)); }catch(e){}
-  let el;
-  if(customElements.get(tag)||parentKnown){
-    el=_createLovelaceEl(tag);
-    // ORDINE CORRETTO: setConfig prima, poi hass (le card HA richiedono questo ordine)
-    try{ if(typeof el.setConfig==='function') el.setConfig(cfg); }catch(e){}
-    try{ el.hass=_getBestHass(); }catch(e){}
-  } else {
+  // document.createElement è patchato: auto-mirrorizza tag HA da parent se non presenti
+  let el=document.createElement(tag);
+  if(el.constructor===HTMLElement&&!customElements.get(tag)){
+    // Elemento non noto — card non installata su HACS
     el=document.createElement('div');
     el.style.cssText='padding:6px 10px;font-size:10px;color:#fbbf24;border:1px dashed rgba(251,191,36,.3);border-radius:6px;margin:2px 0';
     el.textContent='⚠️ '+tag+' non installata su HACS';
+  } else {
+    // ORDINE CORRETTO: setConfig prima, poi hass
+    try{ if(typeof el.setConfig==='function') el.setConfig(cfg); }catch(e){}
+    try{ el.hass=_getBestHass(); }catch(e){}
   }
   el.classList.add('fycel');
   el.style.setProperty('display','block');
@@ -8654,10 +8692,15 @@ function _stopYamlCard(cardId){
 /* ── Carica le risorse Lovelace (HACS custom cards) dal server HA ── */
 let _lovelaceResourcesLoaded=false, _lovelaceResCount=0;
 async function _loadLovelaceResources(){
-  if(_lovelaceResourcesLoaded||!ws||ws.readyState!==1) return;
+  if(_lovelaceResourcesLoaded) return;
+  _haCompatInit(); // assicura che il patch createElement sia attivo
   try{
-    const res=await sendAndWait({type:'lovelace/resources'},12000);
-    if(!res||!res.success||!Array.isArray(res.result)) return;
+    // USA _fyWS → tenta prima window.parent.hass.connection (il WS proxy non passa lovelace/*)
+    const res=await _fyWS({type:'lovelace/resources'},15000);
+    if(!res||!res.success||!Array.isArray(res.result)){
+      console.warn('[Frarik] lovelace/resources fallito:',res);
+      return;
+    }
     _lovelaceResourcesLoaded=true;
     let loaded=0;
     for(const r of res.result){
@@ -8665,21 +8708,23 @@ async function _loadLovelaceResources(){
       const url=r.url.startsWith('http')?r.url:BASE+r.url;
       try{ await _loadHAScript(url,r.type); loaded++; }catch(e){}
     }
-    // registra le card che si sono auto-annunciate via window.customCards
+    // Registra le card che si sono auto-annunciate via window.customCards
     (window.customCards||[]).forEach(c=>{
       if(c&&c.type&&!window.FratechCardRegistry[c.type]) _registerLovelaceCard(c.type,c);
     });
     _lovelaceResCount=(window.customCards||[]).length;
     console.info('[Frarik] Lovelace resources: '+loaded+' script caricati, '+_lovelaceResCount+' card custom disponibili');
-    // Esponi window.loadCardHelpers nell'ambito Frarik → le card HACS che la chiamano
-    // internamente per creare sub-elementi usano il nostro factory (document corrente).
+    // Esponi window.loadCardHelpers: le card HACS la chiamano internamente per creare sub-elementi.
+    // Ora document.createElement è patchato → tutti gli elementi HA (ha-card, ha-icon, ecc.)
+    // vengono auto-mirrorati da window.parent al primo accesso → rendering nativo completo.
     window.loadCardHelpers=async function(){
       return {
         createCardElement(cfg){
           if(!cfg||!cfg.type) return null;
           const t=(cfg.type||'').trim();
           const tag=t.startsWith('custom:')?t.replace('custom:','').trim():'hui-'+t+'-card';
-          const el=_createLovelaceEl(tag);
+          // document.createElement ora auto-mirrorizza elementi HA da parent se necessario
+          const el=document.createElement(tag);
           try{ if(typeof el.setConfig==='function') el.setConfig(cfg); }catch(e){}
           try{ el.hass=_getBestHass(); }catch(e){}
           return el;
@@ -8688,7 +8733,7 @@ async function _loadLovelaceResources(){
         createBadgeElement(cfg){ return this.createCardElement(cfg); }
       };
     };
-  }catch(e){ console.warn('[Frarik] _loadLovelaceResources:',e.message); }
+  }catch(e){ console.warn('[Frarik] _loadLovelaceResources:',e&&e.message); }
 }
 function _loadHAScript(url,rtype){
   return new Promise(resolve=>{
@@ -8888,9 +8933,10 @@ async function _ghsYamlLivePreview(){
   if(!type){ if(errEl) errEl.textContent='⚠️ Manca il campo type:'; return; }
   if(errEl) errEl.textContent='';
   if(ph) ph.style.display='none';
-  // Render diretto con motore HA nativo (window.parent.loadCardHelpers) — nessun iframe
+  // Render diretto: compat layer + HACS resources + motore nativo HA
+  _haCompatInit();
   try{
-    if(!_lovelaceResourcesLoaded){ await _loadLovelaceResources(); await new Promise(r=>setTimeout(r,600)); }
+    if(!_lovelaceResourcesLoaded){ await _loadLovelaceResources(); }
     if(!prev.isConnected) return;
     prev.innerHTML='';
     prev.style.cssText='display:block;width:100%;padding:4px';
