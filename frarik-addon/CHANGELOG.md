@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.5.18 — 2026-06-17
+
+### feat(store): flusso pkg corretto — 2 popup separati + success state in-popup
+
+- **Flusso "Installa" card con pkg richiesto**: clicca "Installa" → popup 1 informativo ("Package richiesto") con tasto "Installa pkg" → popup 2 wizard entità (PostaCard.openWizard) → salva → success state IN-POPUP con messaggio "riavvia HA" → chiudi → card JS installata in localStorage → card passa in "INSTALLATE"
+- **`_ghsInstall`**: scarica + evalua codice senza salvare; controlla `frarik_pkg_check`; se pkg non attivo → `_ghsPkgRequiredPopup`; altrimenti salva direttamente
+- **`_ghsDoInstall`**: nuovo helper — salva codice in localStorage, aggiorna sha/versione, refresh UI (senza toast)
+- **`_ghsPkgRequiredPopup`**: popup 1 bottom-sheet — info pkg + tasto "Installa pkg" → apre `CardClass.openWizard`; onDone chiama `_ghsDoInstall`
+- **`PostaCard.openWizard`**: dopo install ok mostra success state nel popup (✅ + "Riavvia HA") invece di chiudersi; tasto "Chiudi" → destroy + onDone()
+- **`_renderNotInstalled`**: rimosso wizard button dalla dashboard; solo messaggio "Installa dallo Store + riavvia HA"
+- **`jsStoreAddCard`**: rimosso pkg check (torna alla versione originale — il pkg viene gestito prima dell'install)
+
 ## 1.5.17 — 2026-06-17
 
 ### feat(store): wizard pkg si apre nella Store, non nella dashboard

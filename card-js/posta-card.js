@@ -1,4 +1,4 @@
-/* frarik-version: 1.6 */
+/* frarik-version: 1.7 */
 /* Centro Controllo Posta — Frarik card standalone */
 (function(){
   'use strict';
@@ -506,9 +506,8 @@ automation:
           <button class="ni-btn" data-a="open-wizard">🔄 Riprova</button>`;
       } else {
         body=`<div class="ni-icon">📦</div>
-          <div class="ni-title">Package non installato</div>
-          <div class="ni-sub">Configura i tuoi sensori e dispositivi:<br>la card installa il package in automatico.</div>
-          <button class="ni-btn" data-a="open-wizard">⚡ Configura e Installa</button>`;
+          <div class="ni-title">Package non attivo</div>
+          <div class="ni-sub">Installa il package dallo <strong>Store</strong>, poi riavvia Home Assistant per attivarlo.</div>`;
       }
       return `<style>${this._css()}</style>
       <div class="wrap">
@@ -1196,8 +1195,23 @@ automation:
         });
         const j=await r.json().catch(()=>({}));
         if(r.ok&&j.ok){
-          _acHide(); destroy();
-          if(typeof onDone==='function') onDone();
+          _acHide();
+          /* mostra success state dentro il popup */
+          const mo=sr.getElementById('wiz_mo');
+          mo.querySelector('.mbody').innerHTML=`
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px;gap:16px;text-align:center">
+              <div style="font-size:52px">✅</div>
+              <div style="font-size:16px;font-weight:900;color:#fff;font-family:system-ui,sans-serif">Package installato correttamente!</div>
+              <div style="font-size:13px;color:#fff;opacity:.6;font-family:system-ui,sans-serif;line-height:1.7">
+                Riavvia <strong style="color:#fbbf24;opacity:1">Home Assistant</strong> per attivare il package.<br>
+                Poi torna nello Store e aggiungi la card alla dashboard.
+              </div>
+            </div>`;
+          mo.querySelector('.mftr').innerHTML=`<button class="wbtn-ok" id="wiz_done" style="background:rgba(34,197,94,.85);color:#fff">Chiudi</button>`;
+          sr.getElementById('wiz_done').addEventListener('click',()=>{
+            destroy();
+            if(typeof onDone==='function') onDone();
+          });
         }else{
           btn.textContent='⚡ Installa Package'; btn.disabled=false;
           errBnr.textContent='⚠️ Errore: '+(j.error||('HTTP '+r.status));

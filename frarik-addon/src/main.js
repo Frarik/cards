@@ -2411,30 +2411,105 @@ async function _ghsEnsureFile(name){
 async function _ghsInstall(name){
   let f=await _ghsEnsureFile(name);
   if(!f){ showToast('⚠️ File non trovato su GitHub — premi ↻ per ricaricare'); return; }
-  showToast('⬇️ Installo '+f.name+'…');
-  try{
-    await _ghInstallFile(f); saveCfg(); _haSaveCfg();
-    if(typeof _jsStoreRenderList==='function') _jsStoreRenderList();
-    if(typeof _epRenderJsStore==='function') _epRenderJsStore();
-    renderDash();
-    /* dopo aver installato il codice, controlla se la card richiede un package HA */
-    const _instId=f.name.replace(/\.js$/i,'');
-    const _pkgMeta=(window.customCards||[]).find(c=>c&&c.type===_instId);
-    if(_pkgMeta?.frarik_pkg_check){
-      const _hass=_haHassObj();
-      if(!_hass?.states?.[_pkgMeta.frarik_pkg_check]){
-        const _CardClass=customElements.get(_instId);
-        if(typeof _CardClass?.openWizard==='function'){
-          _ghStoreRender();
-          _CardClass.openWizard(_hass,()=>{
-            showToast('✅ Package installato — riavvia Home Assistant per attivarlo, poi usa ➕ Aggiungi nella Store');
-          });
-          return;
-        }
-      }
+  let code;
+  try{ code=await _ghDownload(f); }catch(e){ showToast('⚠️ Download fallito: '+e.message); return; }
+  const res=_installCardCode(code);
+  if(res.err){ showToast('⚠️ Errore caricamento: '+res.err.message); return; }
+  const _instId=f.name.replace(/\.js$/i,'');
+  const _pkgMeta=(window.customCards||[]).find(c=>c&&c.type===_instId);
+  /* se la card richiede un pkg HA e non è ancora attivo → mostra popup informativo */
+  if(_pkgMeta?.frarik_pkg_check&&!(_haHassObj()?.states?.[_pkgMeta.frarik_pkg_check])){
+    _ghsPkgRequiredPopup(_instId,_pkgMeta,f,code,res);
+    return;
+  }
+  /* nessun pkg richiesto (o già installato) → installa direttamente */
+  _ghsDoInstall(f,code,res);
+  showToast('✅ '+f.name+' installata — usa ➕ Aggiungi per metterla in dashboard');
+}
+
+/* salva il codice JS nello store locale + aggiorna sha/versione + refresh UI */
+function _ghsDoInstall(f,code,res){
+  const id=(res.newCards&&res.newCards[0])||(res.tags&&res.tags[0]);
+  const card=id?window.FratechCardRegistry[id]:null;
+  if(card&&card.id){
+    const g=_ghCfg(); const version=_parseCardVersion(code)||'1.0';
+    g.fileVersions[f.name]=version;
+    g.idFile=g.idFile||{}; g.idFile[card.id]=f.name;
+    _ghVerCache[f.sha]=version;
+    _jsStoreSave(card.id,{id:card.id,name:card.name||card.id,icon:card.icon||'📦',version,desc:card.desc||''},code,'github');
+  }
+  _ghCfg().shas[f.name]=f.sha;
+  _ghCfg().notifiedShas[f.name]=f.sha;
+  try{_ntfClearGh(f.name);}catch(e){}
+  saveCfg(); _haSaveCfg();
+  if(typeof _jsStoreRenderList==='function') _jsStoreRenderList();
+  if(typeof _epRenderJsStore==='function') _epRenderJsStore();
+  renderDash(); _ghStoreRender();
+}
+
+/* popup 1 — informa che la card richiede un pkg, offre tasto "Installa pkg" */
+function _ghsPkgRequiredPopup(cardId,pkgMeta,f,code,res){
+  document.getElementById('__frk_pkg_req__')?.remove();
+  const host=document.createElement('div');
+  host.id='__frk_pkg_req__';
+  host.attachShadow({mode:'open'});
+  document.body.appendChild(host);
+  const destroy=()=>host.remove();
+  host.shadowRoot.innerHTML=`<style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    .ov{position:fixed;inset:0;z-index:99998;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.72);backdrop-filter:blur(6px)}
+    .mo{width:100%;max-height:72vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(251,191,36,.28);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.8);animation:su .22s cubic-bezier(.32,1.12,.56,1)}
+    @keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
+    .hdr{display:flex;align-items:center;gap:12px;padding:18px 18px 14px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
+    .ico{width:40px;height:40px;border-radius:12px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+    .txt{flex:1}
+    .tit{font-size:15px;font-weight:900;color:#fff;font-family:system-ui,sans-serif}
+    .sub{font-size:11px;color:#fff;opacity:.4;font-family:system-ui,sans-serif;margin-top:2px}
+    .xbtn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:6px 12px;color:#fff;font-size:13px;cursor:pointer;font-family:system-ui,sans-serif}
+    .body{flex:1;overflow-y:auto;padding:20px 18px;scrollbar-width:none}
+    .body::-webkit-scrollbar{display:none}
+    .msg{font-size:13px;color:#fff;font-family:system-ui,sans-serif;line-height:1.75;opacity:.85}
+    .msg strong{color:#fbbf24;opacity:1;font-weight:800}
+    .ftr{padding:14px 18px 28px;flex-shrink:0;border-top:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;gap:8px}
+    .btn-pkg{width:100%;padding:14px;border-radius:13px;background:#fbbf24;border:none;color:#1a1a2e;font-size:14px;font-weight:900;cursor:pointer;font-family:system-ui,sans-serif}
+    .btn-pkg:active{filter:brightness(.9)}
+    .btn-cancel{width:100%;padding:10px;border-radius:13px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:system-ui,sans-serif}
+  </style>
+  <div class="ov">
+    <div class="mo">
+      <div class="hdr">
+        <div class="ico">📦</div>
+        <div class="txt">
+          <div class="tit">Package richiesto</div>
+          <div class="sub">${pkgMeta.name||cardId}</div>
+        </div>
+        <button class="xbtn" id="pr_close">✕</button>
+      </div>
+      <div class="body">
+        <div class="msg">
+          Questa card richiede l'installazione di un <strong>package Home Assistant</strong> per funzionare correttamente.<br><br>
+          Il package configurerà automaticamente le automazioni, i sensori e le notifiche necessarie. Dovrai inserire i tuoi dispositivi (sensore cassetta, speaker, smartphone) e il file verrà scritto nella cartella <strong>packages/frarik/</strong> del tuo Home Assistant.<br><br>
+          Clicca <strong>Installa pkg</strong> per avviare la configurazione guidata.
+        </div>
+      </div>
+      <div class="ftr">
+        <button class="btn-pkg" id="pr_install">⚡ Installa pkg</button>
+        <button class="btn-cancel" id="pr_cancel">Annulla</button>
+      </div>
+    </div>
+  </div>`;
+  const sr=host.shadowRoot;
+  sr.getElementById('pr_close').addEventListener('click',()=>destroy());
+  sr.getElementById('pr_cancel').addEventListener('click',()=>destroy());
+  sr.getElementById('pr_install').addEventListener('click',()=>{
+    destroy();
+    const CardClass=customElements.get(cardId);
+    if(typeof CardClass?.openWizard==='function'){
+      CardClass.openWizard(_haHassObj(),()=>{
+        _ghsDoInstall(f,code,res);
+      });
     }
-    showToast('✅ '+f.name+' installata — usa ➕ Aggiungi per metterla in dashboard'); _ghStoreRender();
-  }catch(e){ showToast('⚠️ Errore: '+e.message); }
+  });
 }
 async function _ghsCopy(name){
   const f=_ghsFind(name); if(!f) return;
@@ -9660,21 +9735,6 @@ function jsStoreLoadFile(file){
 
 function jsStoreAddCard(id){
   if(!id) return;
-  const _pkgMeta=(window.customCards||[]).find(c=>c&&c.type===id);
-  if(_pkgMeta?.frarik_pkg_check){
-    const _hass=_haHassObj();
-    if(!_hass?.states?.[_pkgMeta.frarik_pkg_check]){
-      const _CardClass=customElements.get(id);
-      if(typeof _CardClass?.openWizard==='function'){
-        _CardClass.openWizard(_hass,()=>{
-          showToast('✅ Package installato — riavvia Home Assistant per attivarlo, poi aggiungi la card dalla Store');
-        });
-        return;
-      }
-      showToast('⚠️ Installa prima il package di questa card');
-      return;
-    }
-  }
   const regCard = window.FratechCardRegistry[id];
   if(!regCard){ showToast('⚠️ Card non trovata nel registry. Ricarica la pagina.'); return; }
   const page = curPage();
