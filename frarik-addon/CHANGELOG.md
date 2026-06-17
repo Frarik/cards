@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.33 — 2026-06-18
+
+### fix(yaml-card): pre-render in HA window + adoptNode; rimozione patch createElement
+
+- **Rimossa** patch `Document.prototype.createElement` (causava errori: registrazione cross-realm vietata dal browser)
+- **`_createHACard`** completamente riscritto: usa `window.parent.loadCardHelpers().createCardElement()` (motore HA reale), pre-renderizza in un host nascosto dentro HA's document (stesso realm → ha-card, ha-icon, hui-* risolti correttamente), poi `document.adoptNode()` porta l'elemento in Frarik — lit-html fa solo DIFF update preservando gli elementi HA nativi già creati
+- **Error handler** migliorato: mostra messaggio completo con numero colonna e testo dell'errore (non solo "Uncaught")
+- Aggiunto filtro ResizeObserver alle rejection silenziose
+
 ## 1.5.32 — 2026-06-18
 
 ### fix(yaml-card): HA compat layer — auto-mirror elementi custom + fix lovelace/resources

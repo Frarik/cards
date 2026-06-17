@@ -8263,38 +8263,21 @@ window.FratechCardRegistry = {};
 window.customCards = window.customCards || [];
 
 /* ════════════════════════════════════════════════════════════════════
-   HA COMPAT LAYER — auto-mirroring elementi custom HA in Frarik's window
+   HA COMPAT LAYER
    ════════════════════════════════════════════════════════════════════
-   Frarik gira come ingress add-on dentro un iframe same-origin di HA.
-   Gli elementi custom HA (ha-card, ha-icon, hui-*-card, ecc.) sono registrati
-   in window.parent.customElements, NON in window. Patchamo Document.prototype
-   .createElement per auto-mirrare questi elementi al primo accesso: così le card
-   HACS caricate in questo documento trovano sempre gli elementi HA nativi. */
+   Copia utility dal frontend HA (fireEvent, navigate, ecc.) usate da
+   molte card HACS caricate in questo documento. */
 function _haCompatInit(){
   if(window._haCompatDone) return;
   window._haCompatDone=true;
-  function _pw(){ try{ return(window.parent&&window.parent!==window)?window.parent:null; }catch(e){ return null; } }
-  // Patch createElement: auto-mirror elementi custom dal parent HA al primo accesso
   try{
-    const _origCreate=Document.prototype.createElement;
-    Document.prototype.createElement=function(tag,opts){
-      if(typeof tag==='string'&&tag.includes('-')&&!customElements.get(tag)){
-        const pw=_pw();
-        if(pw){ try{ const cls=pw.customElements.get(tag); if(cls) try{ customElements.define(tag,cls); }catch(_){} }catch(_){} }
-      }
-      return _origCreate.call(this,tag,opts);
-    };
-  }catch(e){}
-  // Copia utility HA (fireEvent, navigate, formatDateTime…) usate da molte card HACS
-  try{
-    const pw=_pw();
+    const pw=window.parent&&window.parent!==window?window.parent:null;
     if(pw){
       ['fireEvent','navigate','computeStateName','computeStateDisplay','computeDomain',
        'computeEntity','computeStateObject','formatDateTime','formatTime','formatDate',
        'formatNumber','numberFormat'].forEach(fn=>{
         if(typeof pw[fn]==='function'&&!window[fn]) try{ window[fn]=pw[fn].bind(pw); }catch(_){}
       });
-      // Variabili Lit condivise — evita conflitti di versione tra le card HACS
       ['litHtmlVersions','litElementVersions'].forEach(k=>{
         if(pw[k]&&!window[k]) try{ window[k]=pw[k]; }catch(_){}
       });
@@ -8320,29 +8303,39 @@ function _getBestHass(){
 /* ════════ MOTORE UFFICIALE HA: loadCardHelpers().createCardElement() ════════
    Costruisce QUALSIASI card Lovelace (nativa, HACS, stack, hui-element…) usando lo
    stesso motore di Home Assistant, preso dal frontend di HA (window.parent). */
+/* Crea una card HA/HACS usando il motore nativo di HA (window.parent.loadCardHelpers).
+   Strategia:
+   1. Crea l'elemento in HA's window tramite loadCardHelpers().createCardElement()
+   2. Renderizza in un host nascosto DENTRO HA's document (stesso realm → ha-card, ha-icon, ecc. funzionano)
+   3. Dopo il rendering iniziale, adoptNode() sposta l'elemento in Frarik's document.
+      Il lit-html già-renderizzato fa solo un DIFF update → preserva gli elementi HA nativi già creati. */
 async function _createHACard(config){
+  const pw=window.parent&&window.parent!==window?window.parent:null;
+  if(!pw||typeof pw.loadCardHelpers!=='function') return null;
   try{
-    // 1. Usa window.loadCardHelpers locale (definita dopo _loadLovelaceResources).
-    //    document.createElement è patchato → tutti gli elementi HA vengono auto-mirrorati
-    //    da window.parent: HACS cards + sub-elementi (ha-card, ha-icon…) funzionano tutti.
-    if(typeof window.loadCardHelpers==='function'){
-      const helpers=await window.loadCardHelpers();
-      if(helpers&&typeof helpers.createCardElement==='function'){
-        const el=helpers.createCardElement(config);
-        if(el){ try{ el.hass=_getBestHass(); }catch(e){} el.classList.add('fycel'); el.style.display='block'; el.style.width='100%'; return el; }
-      }
-    }
-    // 2. Fallback: window.parent.loadCardHelpers (motore HA reale, crea elementi nel parent)
-    const pw=window.parent&&window.parent!==window?window.parent:null;
-    if(pw&&typeof pw.loadCardHelpers==='function'){
-      const helpers=await pw.loadCardHelpers();
-      if(helpers&&typeof helpers.createCardElement==='function'){
-        const el=helpers.createCardElement(config);
-        if(el){ try{ document.adoptNode(el); }catch(e){} try{ el.hass=_getBestHass(); }catch(e){} el.classList.add('fycel'); el.style.display='block'; el.style.width='100%'; return el; }
-      }
-    }
-    return null;
-  }catch(e){ console.warn('[Frarik] createCardElement:',e&&e.message); return null; }
+    const helpers=await pw.loadCardHelpers();
+    if(!helpers||typeof helpers.createCardElement!=='function') return null;
+    const el=helpers.createCardElement(config);
+    if(!el) return null;
+    // Imposta hass di HA (non quello simulato di Frarik) per il rendering iniziale
+    const parentHA=pw.document.querySelector('home-assistant');
+    const parentHass=parentHA&&parentHA.hass?parentHA.hass:_getBestHass();
+    try{ el.hass=parentHass; }catch(e){}
+    // Pre-renderizza nell'albero DOM di HA (stesso realm → tutti gli elementi custom HA risolti)
+    const ghost=pw.document.createElement('div');
+    ghost.style.cssText='position:fixed;top:-9999px;left:-9999px;width:360px;pointer-events:none;visibility:hidden';
+    try{ pw.document.body.appendChild(ghost); ghost.appendChild(el); }catch(e){}
+    // Aspetta almeno 2 frame perché Lit (async) completi il rendering
+    await new Promise(r=>setTimeout(r,80));
+    // Rimuovi dall'albero HA e adotta in Frarik's document (stesso origin → adoptNode permesso)
+    try{ ghost.removeChild(el); pw.document.body.removeChild(ghost); }catch(e){}
+    try{ document.adoptNode(el); }catch(e){}
+    // Aggiorna hass con l'oggetto di Frarik (stati live di questo pannello)
+    try{ el.hass=_getBestHass(); }catch(e){}
+    el.classList.add('fycel');
+    el.style.display='block'; el.style.width='100%';
+    return el;
+  }catch(e){ console.warn('[Frarik] createHACard:',e&&e.message); return null; }
 }
 
 /* ════════ RENDER FEDELE "alla Oikos": dashboard HA dedicata + iframe ════════
@@ -11758,16 +11751,19 @@ connect();
     // Solo errori dal bundle Frarik (index-*.js) o senza sorgente
     return f && !f.includes('index-') && !f.includes('frarik');
   }
-  window.onerror = function(msg, src, line){
+  window.onerror = function(msg, src, line, col, err){
     if(isExternal(src)) return false; // errore da script terzo — ignora
     const file=(src||'').split('/').pop();
-    _pushErr('⚠️ Errore JS', (file?file+':'+line+' — ':'')+msg);
+    // Mostra messaggio completo: tipo errore + eventuale stack ridotto
+    const fullMsg=err instanceof Error?(err.message||msg):msg;
+    const detail=file?file+':'+line+(col?':'+col:'')+'  '+fullMsg:fullMsg;
+    _pushErr('⚠️ Errore JS', detail);
     return false;
   };
   window.addEventListener('unhandledrejection', function(e){
     const msg=e.reason instanceof Error?e.reason.message:String(e.reason||'Promise rejection');
     // Ignora errori comuni da componenti HA (CustomElementRegistry, exitfullscreen, ecc.)
-    if(/CustomElementRegistry|exitFullscreen|exitfullscreen|already been used/i.test(msg)) return;
+    if(/CustomElementRegistry|exitFullscreen|exitfullscreen|already been used|ResizeObserver/i.test(msg)) return;
     _pushErr('⚠️ Errore asincrono', msg);
   });
 })();
