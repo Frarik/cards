@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.19 — 2026-06-17
+
+### fix(posta-card): frarik_pkg_check e openWizard disponibili anche su re-eval
+
+- **Root cause**: la guard `if(customElements.get('posta-card')) return` in cima all'IIFE faceva uscire PRIMA di `frarik_pkg_check` e `openWizard` → il popup pkg non compariva mai
+- **Fix**: rimossa guard flat; ora la guard protegge SOLO la definizione della classe con `if(!customElements.get('posta-card')){ PostaCard = class ... } else { PostaCard = customElements.get(...) }` → `openWizard` e `customCards` upsert girano SEMPRE, anche su re-eval
+- posta-card.js bump a v1.8
+
 ## 1.5.18 — 2026-06-17
 
 ### feat(store): flusso pkg corretto — 2 popup separati + success state in-popup

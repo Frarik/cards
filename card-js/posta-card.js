@@ -1,9 +1,7 @@
-/* frarik-version: 1.7 */
+/* frarik-version: 1.8 */
 /* Centro Controllo Posta — Frarik card standalone */
 (function(){
   'use strict';
-  if(customElements.get('posta-card')) return;
-
   const _PKG_YAML = `###############################################################
 #                                                             #
 #   ███████╗██████╗  █████╗ ██████╗ ██╗██╗  ██╗             #
@@ -365,7 +363,9 @@ automation:
   }
   function _acHide(){ document.getElementById('__frk_posta_ac__')?.remove(); }
 
-  class PostaCard extends HTMLElement {
+  let PostaCard;
+  if(!customElements.get('posta-card')){
+    PostaCard = class extends HTMLElement {
     static getStubConfig(){ return {storageKey:''} }
 
     constructor(){
@@ -1030,8 +1030,11 @@ automation:
   }
 
   customElements.define('posta-card', PostaCard);
+  } else {
+    PostaCard = customElements.get('posta-card');
+  }
 
-  /* ── WIZARD STATICO: chiamabile da Store prima di aggiungere la card ── */
+  /* ── WIZARD STATICO: sempre aggiornato anche su re-eval ── */
   PostaCard.openWizard = function(hass, onDone){
     document.getElementById('__frk_posta_wizard__')?.remove();
     const host=document.createElement('div');
@@ -1242,11 +1245,9 @@ automation:
     setTimeout(()=>sr.getElementById('w_sensor')?.focus(),80);
   };
 
-  (window.customCards=window.customCards||[]).push({
-    type:'posta-card',
-    name:'Centro Controllo Posta',
-    description:'Monitora la cassetta postale: contatori, storico, notifiche push/Google/Alexa. Installa il package con wizard guidato e autocomplete entità.',
-    icon:'mdi:mailbox',
-    frarik_pkg_check:'sensor.frarik_posta_versione'
-  });
+  /* upsert customCards — aggiorna anche su re-eval (nessun duplicato) */
+  const _ccArr=(window.customCards=window.customCards||[]);
+  const _ccIdx=_ccArr.findIndex(c=>c&&c.type==='posta-card');
+  const _ccEntry={type:'posta-card',name:'Centro Controllo Posta',description:'Monitora la cassetta postale: contatori, storico, notifiche push/Google/Alexa. Installa il package con wizard guidato e autocomplete entità.',icon:'mdi:mailbox',frarik_pkg_check:'sensor.frarik_posta_versione'};
+  if(_ccIdx>=0) _ccArr[_ccIdx]=_ccEntry; else _ccArr.push(_ccEntry);
 })();
