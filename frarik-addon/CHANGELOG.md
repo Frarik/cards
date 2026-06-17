@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.20 — 2026-06-17
+
+### fix(store): rilevamento frarik_pkg_check via regex sul codice scaricato
+
+- **Root cause**: `_ghsInstall` usava `window.customCards.find` per trovare `frarik_pkg_check`, ma questa ricerca poteva fallire se `window.customCards` non era ancora aggiornato (cache CDN, eval timing, o entità già presente in HA)
+- **Fix**: ora usa `code.match(/frarik_pkg_check\s*:\s*['"]([^'"]+)['"]/)` direttamente sul sorgente scaricato — 100% affidabile indipendentemente dallo stato di `window.customCards` o `customElements`
+- **Fix**: `_ghsPkgRequiredPopup` riceve `pkgCheck` come parametro separato; aggiunto fallback toast se `openWizard` non disponibile
+- Flusso corretto garantito: Installa → popup 1 (info pkg) → popup 2 (wizard entità) → pkg scritto → success state → Chiudi → card in INSTALLATE
+
 ## 1.5.19 — 2026-06-17
 
 ### fix(posta-card): frarik_pkg_check e openWizard disponibili anche su re-eval

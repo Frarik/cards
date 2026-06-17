@@ -2416,10 +2416,13 @@ async function _ghsInstall(name){
   const res=_installCardCode(code);
   if(res.err){ showToast('⚠️ Errore caricamento: '+res.err.message); return; }
   const _instId=f.name.replace(/\.js$/i,'');
-  const _pkgMeta=(window.customCards||[]).find(c=>c&&c.type===_instId);
-  /* se la card richiede un pkg HA e non è ancora attivo → mostra popup informativo */
-  if(_pkgMeta?.frarik_pkg_check&&!(_haHassObj()?.states?.[_pkgMeta.frarik_pkg_check])){
-    _ghsPkgRequiredPopup(_instId,_pkgMeta,f,code,res);
+  /* usa regex sul codice scaricato — affidabile indipendentemente da cache/eval */
+  const _pkgCheckMatch=code.match(/frarik_pkg_check\s*:\s*['"]([^'"]+)['"]/);
+  const _pkgCheck=_pkgCheckMatch?_pkgCheckMatch[1]:null;
+  if(_pkgCheck&&!(_haHassObj()?.states?.[_pkgCheck])){
+    /* card richiede un pkg HA e non è ancora attivo → mostra popup informativo */
+    const _meta=(window.customCards||[]).find(c=>c&&c.type===_instId)||{name:_instId};
+    _ghsPkgRequiredPopup(_instId,_meta,_pkgCheck,f,code,res);
     return;
   }
   /* nessun pkg richiesto (o già installato) → installa direttamente */
@@ -2448,7 +2451,7 @@ function _ghsDoInstall(f,code,res){
 }
 
 /* popup 1 — informa che la card richiede un pkg, offre tasto "Installa pkg" */
-function _ghsPkgRequiredPopup(cardId,pkgMeta,f,code,res){
+function _ghsPkgRequiredPopup(cardId,pkgMeta,pkgCheck,f,code,res){
   document.getElementById('__frk_pkg_req__')?.remove();
   const host=document.createElement('div');
   host.id='__frk_pkg_req__';
@@ -2505,9 +2508,9 @@ function _ghsPkgRequiredPopup(cardId,pkgMeta,f,code,res){
     destroy();
     const CardClass=customElements.get(cardId);
     if(typeof CardClass?.openWizard==='function'){
-      CardClass.openWizard(_haHassObj(),()=>{
-        _ghsDoInstall(f,code,res);
-      });
+      CardClass.openWizard(_haHassObj(),()=>{ _ghsDoInstall(f,code,res); });
+    } else {
+      showToast('⚠️ Wizard non disponibile — aggiorna la pagina e riprova');
     }
   });
 }
