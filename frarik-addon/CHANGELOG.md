@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.40 — 2026-06-18
+
+### fix(yaml-card): overlay nascosto immediatamente su navigazione HA via location-changed
+
+- **Root cause v1.5.39**: HA mantiene l'iframe di Frarik vivo in background senza mai chiamare `unload`/`beforeunload`. `ir.width < 10` non si attivava perché l'iframe aveva ancora le sue dimensioni reali anche quando nascosto dietro le impostazioni HA.
+- **Fix**: in `_haCompatInit` aggiunto listener su `pw` (HA's window) per l'evento `location-changed` — HA lo dispatcha ad ogni cambio di rotta SPA. Quando scatta, si controlla se l'iframe Frarik è ancora visibile (`isConnected && width > 10`); se no, tutti gli overlay `[id^="frarik-yaml-"]` vengono nascosti immediatamente (senza aspettare il 1s timer).
+- **Backup `pagehide`/`unload`**: rimossi nel caso HA distrugga effettivamente il window di Frarik (replace/reload dell'iframe).
+
 ## 1.5.39 — 2026-06-18
 
 ### fix(yaml-card): overlay non persiste fuori da Frarik

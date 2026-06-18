@@ -8281,12 +8281,28 @@ function _haCompatInit(){
       ['litHtmlVersions','litElementVersions'].forEach(k=>{
         if(pw[k]&&!window[k]) try{ window[k]=pw[k]; }catch(_){}
       });
-      // Pulizia overlay quando Frarik viene scaricato (navigazione via / ricarica)
-      window.addEventListener('beforeunload',()=>{
+
+      // ── Pulizia overlay su navigazione HA ──────────────────────────────────
+      // HA dispatcha 'location-changed' su window.parent ad ogni cambio di rotta.
+      // Quando l'utente esce da Frarik, controlliamo la visibilità dell'iframe e
+      // nascondiamo immediatamente tutti gli overlay (senza aspettare il 1s timer).
+      const _hideIfOutside=()=>{
         try{
-          pw.document.querySelectorAll('[id^="frarik-yaml-"]').forEach(el=>el.remove());
+          const fr=_cachedFrameEl||window.frameElement;
+          const visible=fr&&fr.isConnected&&fr.getBoundingClientRect().width>10;
+          pw.document.querySelectorAll('[id^="frarik-yaml-"]').forEach(el=>{
+            el.style.display=visible?'':'none';
+          });
         }catch(_){}
-      },{once:true});
+      };
+      pw.addEventListener('location-changed',_hideIfOutside,{passive:true});
+
+      // Backup: rimuovi del tutto gli overlay se Frarik viene scaricato
+      const _rmAll=()=>{
+        try{ pw.document.querySelectorAll('[id^="frarik-yaml-"]').forEach(el=>el.remove()); }catch(_){}
+      };
+      window.addEventListener('pagehide',_rmAll,{once:true});
+      window.addEventListener('unload',_rmAll,{once:true});
     }
   }catch(e){}
 }
