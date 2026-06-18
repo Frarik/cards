@@ -8300,18 +8300,35 @@ function _getBestHass(){
   return _haHassObj();
 }
 
-/* ════════ MOTORE UFFICIALE HA: loadCardHelpers().createCardElement() ════════
-   Costruisce QUALSIASI card Lovelace (nativa, HACS, stack, hui-element…) usando lo
-   stesso motore di Home Assistant, preso dal frontend di HA (window.parent). */
-/* Crea una card HA/HACS usando il motore nativo di HA (window.parent.loadCardHelpers).
-   Strategia:
-   1. Crea l'elemento in HA's window tramite loadCardHelpers().createCardElement()
-   2. Renderizza in un host nascosto DENTRO HA's document (stesso realm → ha-card, ha-icon, ecc. funzionano)
-   3. Dopo il rendering iniziale, adoptNode() sposta l'elemento in Frarik's document.
-      Il lit-html già-renderizzato fa solo un DIFF update → preserva gli elementi HA nativi già creati. */
-/* Crea un elemento card nel realm di HA (window.parent) senza alcun document.adoptNode.
-   L'elemento vive nel DOM di HA → tutti gli elementi nativi (ha-card, ha-icon, hui-*),
-   card HACS, card_mod, better-moment-card, ecc. funzionano esattamente come in Lovelace. */
+/* Trova l'<iframe> che contiene questa finestra Frarik nel DOM di HA.
+   Prima tenta window.frameElement (veloce), poi ricerca ricorsiva nei shadow root. */
+let _cachedFrameEl=null;
+function _findFrameElement(){
+  try{ if(window.frameElement){ _cachedFrameEl=window.frameElement; return _cachedFrameEl; } }catch(_){}
+  if(_cachedFrameEl){ try{ if(_cachedFrameEl.contentWindow===window) return _cachedFrameEl; }catch(_){} _cachedFrameEl=null; }
+  const pw=window.parent&&window.parent!==window?window.parent:null;
+  if(!pw) return null;
+  try{
+    function _srch(node,d){
+      if(d>15||!node) return null;
+      const ch=node.children||[];
+      for(let i=0;i<ch.length;i++){
+        const c=ch[i];
+        if(c.tagName==='IFRAME'){ try{ if(c.contentWindow===window){ _cachedFrameEl=c; return c; } }catch(_){} }
+        if(c.shadowRoot){ const f=_srch(c.shadowRoot,d+1); if(f) return f; }
+        const f=_srch(c,d+1); if(f) return f;
+      }
+      return null;
+    }
+    return _srch(pw.document.documentElement,0);
+  }catch(_){ return null; }
+}
+
+/* Crea un elemento card nel realm di HA (window.parent) — l'elemento NON viene mai adottato
+   in Frarik's document, così ha-card, ha-icon, hui-*, card HACS, better-moment-card, card_mod
+   funzionano identici a Lovelace.
+   Il pre-render in un ghost-div nascosto lascia che LitElement completi tutti i render
+   asincroni prima che la card venga spostata nell'overlay visibile. */
 async function _createHACard(config){
   const pw=window.parent&&window.parent!==window?window.parent:null;
   if(!pw||typeof pw.loadCardHelpers!=='function') return null;
@@ -8321,10 +8338,19 @@ async function _createHACard(config){
     const el=helpers.createCardElement(config);
     if(!el) return null;
     const parentHA=pw.document.querySelector('home-assistant');
-    try{ el.hass=parentHA&&parentHA.hass?parentHA.hass:_getBestHass(); }catch(e){}
+
+    // Ghost div: pre-render nell'HA DOM per 800 ms (tutto nel realm corretto)
+    const ghost=pw.document.createElement('div');
+    ghost.style.cssText='position:fixed;left:-9999px;top:-9999px;width:420px;opacity:0;pointer-events:none;z-index:-9;overflow:visible;';
+    pw.document.body.appendChild(ghost);
+    try{ el.hass=parentHA&&parentHA.hass?parentHA.hass:_getBestHass(); }catch(_){}
+    ghost.appendChild(el);
+    await new Promise(r=>setTimeout(r,800));
+    // ghost.remove() viene chiamato DOPO overlay.appendChild(el) per non disconnettere mai el
+
     el.classList.add('fycel');
-    el.style.cssText='display:block;width:100%;height:100%;';
-    return el;
+    el.style.cssText='display:block;width:100%;';
+    return {el,ghost,haEl:parentHA};
   }catch(e){ console.warn('[Frarik] createHACard:',e&&e.message); return null; }
 }
 
@@ -8555,25 +8581,11 @@ function _handleHassAction(detail){
   }catch(e){ console.warn('[Frarik] _handleHassAction:',e&&e.message); }
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
-   APPROCCIO OVERLAY — soluzione definitiva per la compatibilità HA native.
-
-   La card viene creata nel DOM di window.parent (HA) e vi rimane per sempre.
-   Un <div position:fixed> con lo stesso id viene posizionato sopra il container
-   Frarik tramite getBoundingClientRect(). Poiché l'elemento vive nel realm di HA:
-     • ha-card, ha-icon, hui-*, card HACS, card_mod → funzionano senza modifiche
-     • better-moment-card, stack-in-card, hui-entities-card → rendering identico a HA
-     • hass-more-info, location-changed, hass-notification → salgono nel DOM di HA
-     • hass-action → intercettato sull'overlay e gestito da _handleHassAction
-
-   NESSUN document.adoptNode. NESSUN realm mismatch.
-   ════════════════════════════════════════════════════════════════════════════ */
-
 async function _mountYamlCard(card, container){
-  // Cleanup overlay/timer precedenti
   _cleanupYamlOverlay(card.id);
   if(container._yamlTimer){ clearInterval(container._yamlTimer); container._yamlTimer=null; }
   if(container._yamlRO){ try{container._yamlRO.disconnect();}catch(_){} container._yamlRO=null; }
+  if(container._yamlCardRO){ try{container._yamlCardRO.disconnect();}catch(_){} container._yamlCardRO=null; }
   if(container._yamlScrollOff){ try{container._yamlScrollOff();}catch(_){} container._yamlScrollOff=null; }
 
   container.innerHTML='';
@@ -8590,36 +8602,48 @@ async function _mountYamlCard(card, container){
 
   const pw=window.parent&&window.parent!==window?window.parent:null;
 
-  // ── OVERLAY nel DOM di HA ──────────────────────────────────────────────────
   if(pw){
-    const el=await _createHACard(cfg);
-    if(el){
-      const haEl=pw.document.querySelector('home-assistant');
+    const res=await _createHACard(cfg);
+    if(res){
+      const {el,ghost,haEl}=res;
 
+      // Overlay nel DOM di HA — l'elemento NON lascia mai il realm HA
       const overlay=pw.document.createElement('div');
       overlay.id='frarik-yaml-'+card.id;
-      overlay.style.cssText='position:fixed;z-index:3;overflow:hidden;background:transparent;';
-      overlay.appendChild(el);
-      _relayHassEventsOnOverlay(overlay);
+      // z-index:10 — sopra la topbar di HA (z~4) ma sotto i dialog (z~8+)
+      overlay.style.cssText='position:fixed;z-index:10;background:transparent;overflow:visible;display:none;';
       pw.document.body.appendChild(overlay);
+      // Sposta el da ghost a overlay senza mai disconnetterlo (entrambi in pw.document.body)
+      overlay.appendChild(el);
+      ghost.remove();
+      _relayHassEventsOnOverlay(overlay);
 
       function syncPos(){
         if(!container.isConnected){ overlay.remove(); return; }
-        // window.frameElement = l'<iframe> che contiene questa window (same-origin, affidabile)
-        const fr=window.frameElement;
+        const fr=_findFrameElement();
         if(!fr){ overlay.style.display='none'; return; }
         const ir=fr.getBoundingClientRect(), cr=container.getBoundingClientRect();
-        const L=ir.left+cr.left, T=ir.top+cr.top, W=cr.width, H=cr.height;
-        const vw=pw.innerWidth, vh=pw.innerHeight;
-        if(L+W<=0||L>=vw||T+H<=0||T>=vh){ overlay.style.display='none'; return; }
-        overlay.style.cssText='position:fixed;z-index:3;overflow:hidden;background:transparent;display:block;'
-          +'left:'+L+'px;top:'+T+'px;width:'+W+'px;height:'+H+'px;'
-          +'clip-path:inset('+Math.max(0,-T)+'px '+Math.max(0,L+W-vw)+'px '+Math.max(0,T+H-vh)+'px '+Math.max(0,-L)+'px);'
-          +'pointer-events:'+(window.editMode?'none':'auto')+';';
+        const L=ir.left+cr.left, T=ir.top+cr.top, W=cr.width;
+        if(W<=0){ overlay.style.display='none'; return; }
+        overlay.style.cssText='position:fixed;z-index:10;background:transparent;overflow:visible;display:block;'
+          +'left:'+L+'px;top:'+T+'px;width:'+W+'px;'
+          +'pointer-events:'+(editMode?'none':'auto')+';';
         el.style.width=W+'px';
       }
 
       syncPos();
+
+      // Aggiorna l'altezza del container Frarik quando la card HA cambia dimensione
+      const cardRO=new pw.ResizeObserver(()=>{
+        if(!overlay.isConnected) return;
+        const h=el.offsetHeight||el.scrollHeight||0;
+        if(h>10 && Math.abs(h-container.offsetHeight)>4){
+          container.style.minHeight=h+'px';
+          syncPos();
+        }
+      });
+      cardRO.observe(el);
+      container._yamlCardRO=cardRO;
 
       const ro=new ResizeObserver(syncPos);
       ro.observe(container);
@@ -8633,17 +8657,6 @@ async function _mountYamlCard(card, container){
         pw.removeEventListener('resize',scrollH);
       };
 
-      // Dopo il primo render sincronizza l'altezza del container Frarik con quella del card HA
-      // (il layout Frarik usa il container come placeholder — deve avere la giusta altezza)
-      setTimeout(()=>{
-        if(!overlay.isConnected) return;
-        const natH=el.offsetHeight||el.scrollHeight||0;
-        if(natH>0 && natH !== container.offsetHeight){
-          container.style.minHeight=natH+'px';
-          syncPos();
-        }
-      },600);
-
       container._yamlTimer=setInterval(()=>{
         try{ el.hass=haEl&&haEl.hass?haEl.hass:_getBestHass(); }catch(_){}
         syncPos();
@@ -8652,7 +8665,7 @@ async function _mountYamlCard(card, container){
     }
   }
 
-  // ── FALLBACK Frarik interno (fuori iframe o se HA non disponibile) ─────────
+  // Fallback renderer interno
   _injectHACSSVars(container);
   const elFb=await _yamlCreateEl(cfg);
   container.appendChild(elFb);
@@ -8840,6 +8853,7 @@ function _stopYamlCard(cardId){
   if(w){
     if(w._yamlTimer) clearInterval(w._yamlTimer);
     if(w._yamlRO){ try{ w._yamlRO.disconnect(); }catch(_){} }
+    if(w._yamlCardRO){ try{ w._yamlCardRO.disconnect(); }catch(_){} }
     try{ w._yamlScrollOff&&w._yamlScrollOff(); }catch(_){}
   }
   _cleanupYamlOverlay(cardId);
@@ -9103,32 +9117,32 @@ async function _ghsYamlLivePreview(){
     const pw=window.parent&&window.parent!==window?window.parent:null;
 
     if(pw){
-      const el=await _createHACard(config);
-      if(el){
-        const haEl=pw.document.querySelector('home-assistant');
+      const res=await _createHACard(config);
+      if(res){
+        const {el,ghost,haEl}=res;
         prev.innerHTML='';
         prev.style.cssText='display:block;width:100%;min-height:80px;background:transparent;';
 
         const overlay=pw.document.createElement('div');
         overlay.id='frarik-yaml-preview';
-        overlay.style.cssText='position:fixed;z-index:3;overflow:hidden;background:transparent;';
-        overlay.appendChild(el);
-        _relayHassEventsOnOverlay(overlay);
+        overlay.style.cssText='position:fixed;z-index:10;background:transparent;overflow:visible;display:none;';
         pw.document.body.appendChild(overlay);
+        overlay.appendChild(el);
+        ghost.remove();
+        _relayHassEventsOnOverlay(overlay);
 
         function syncP(){
           if(!prev.isConnected){ overlay.remove(); return; }
-          const fr=window.frameElement;
+          const fr=_findFrameElement();
           if(!fr){ overlay.style.display='none'; return; }
           const ir=fr.getBoundingClientRect(), cr=prev.getBoundingClientRect();
-          const L=ir.left+cr.left, T=ir.top+cr.top, W=cr.width, H=cr.height;
-          const vw=pw.innerWidth, vh=pw.innerHeight;
-          if(L+W<=0||L>=vw||T+H<=0||T>=vh){ overlay.style.display='none'; return; }
-          overlay.style.cssText='position:fixed;z-index:3;overflow:hidden;background:transparent;display:block;'
-            +'left:'+L+'px;top:'+T+'px;width:'+W+'px;height:'+H+'px;'
-            +'clip-path:inset('+Math.max(0,-T)+'px '+Math.max(0,L+W-vw)+'px '+Math.max(0,T+H-vh)+'px '+Math.max(0,-L)+'px);'
-            +'pointer-events:auto;';
+          const L=ir.left+cr.left, T=ir.top+cr.top, W=cr.width;
+          if(W<=0){ overlay.style.display='none'; return; }
+          overlay.style.cssText='position:fixed;z-index:10;background:transparent;overflow:visible;display:block;'
+            +'left:'+L+'px;top:'+T+'px;width:'+W+'px;pointer-events:auto;';
           el.style.width=W+'px';
+          const h=el.offsetHeight||el.scrollHeight||0;
+          if(h>10) prev.style.minHeight=h+'px';
         }
         syncP();
         const ro=new ResizeObserver(syncP); ro.observe(prev); prev._yamlRO=ro;

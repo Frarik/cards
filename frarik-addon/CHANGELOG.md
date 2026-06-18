@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.5.38 — 2026-06-18
+
+### fix(yaml-card): ghost pre-render + _findFrameElement fallback + overlay senza height fissa
+
+- **Ghost div pre-render (800ms)**: la card viene attaccata a un ghost div nascosto in `pw.document.body` per 800ms prima di essere spostata nell'overlay visibile. Questo lascia a LitElement il tempo di completare tutti i render asincroni (meglio-moment-card, mushroom, hui-entities) nel realm HA — nessuna disconnessione dal DOM durante tutta la fase.
+- **`_findFrameElement()`**: nuova funzione con fallback ricorsivo sui shadow root. Prima tenta `window.frameElement` (fast path); se null, esegue una ricerca ricorsiva in `pw.document.documentElement` che attraversa shadow root fino a profondità 15, trovando l'iframe anche se è dentro `ha-panel-iframe`/`hassio-ingress-view`. Risultato cachato per performance.
+- **Overlay senza height fissa**: rimossi `height` e `overflow:hidden` dall'overlay. La card determina la sua altezza naturalmente. Un `ResizeObserver` sull'elemento card (`_yamlCardRO`) rileva i cambiamenti di altezza e aggiorna `container.minHeight` in Frarik per tenere il layout corretto.
+- **z-index 10** (era 3): sopra la topbar HA (z~4), sotto i dialog modali (z~8+).
+- **Spostamento DOM sicuro**: `overlay.appendChild(el)` sposta el da ghost a overlay entrambi in `pw.document.body` → el rimane sempre nel realm HA.
+- Aggiornato `_stopYamlCard`: disconnette anche `_yamlCardRO`.
+- Stesso fix applicato a `_ghsYamlLivePreview`.
+
 ## 1.5.37 — 2026-06-18
 
 ### fix(yaml-card): overlay — iframe detection via window.frameElement + height sync
