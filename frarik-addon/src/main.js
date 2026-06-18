@@ -8509,26 +8509,139 @@ function _fyFitIframe(iframe, opts){
 /* Intercetta gli eventi di azione Lovelace (hass-action, hass-more-info, location-changed)
    emessi da button-card/HACS cards e li rilancia su home-assistant in window.parent, che è
    l'unico elemento che li gestisce (navigation, more-info dialogs, service calls). */
+/* Esegue l'azione di un hass-action event (toggle, call-service, more-info, navigate, url, ...).
+   In HA questo lo fa hui-card via handleAction; qui lo reimplementiamo direttamente senza
+   quel wrapper perché l'elemento è nel DOM di Frarik, non nel DOM di HA. */
+function _handleHassAction(detail){
+  const pw=window.parent&&window.parent!==window?window.parent:null;
+  const hass=_getBestHass();
+  if(!detail||!hass) return;
+  const cfg=detail.config||{};
+  const actionType=detail.action||'tap';
+  // HA usa tap_action / hold_action / double_tap_action
+  const actionCfg=cfg[actionType+'_action']||cfg.tap_action||{action:'more-info'};
+  const action=(actionCfg.action||'more-info').toLowerCase();
+  try{
+    switch(action){
+      case 'toggle':{
+        const eid=cfg.entity||cfg.entity_id||actionCfg.entity;
+        if(eid){ const dom=eid.split('.')[0]; hass.callService(dom,'toggle',{entity_id:eid}); }
+        break;
+      }
+      case 'call-service':
+      case 'perform-action':{
+        const svc=actionCfg.service||actionCfg.perform_action||'';
+        const dot=svc.indexOf('.');
+        if(dot>0){
+          const dom=svc.slice(0,dot), srv=svc.slice(dot+1);
+          const data=actionCfg.service_data||actionCfg.data||{};
+          const target=actionCfg.target||{};
+          hass.callService(dom,srv,data,target);
+        }
+        break;
+      }
+      case 'more-info':{
+        const eid=actionCfg.entity||cfg.entity||cfg.entity_id;
+        if(eid&&pw){
+          const haEl=pw.document.querySelector('home-assistant');
+          if(haEl) haEl.dispatchEvent(new pw.CustomEvent('hass-more-info',{
+            bubbles:true,composed:true,detail:{entityId:eid}
+          }));
+        }
+        break;
+      }
+      case 'navigate':{
+        const path=actionCfg.navigation_path||actionCfg.path;
+        if(path&&pw) pw.history.pushState(null,'',path);
+        break;
+      }
+      case 'url':{
+        const url=actionCfg.url_path||actionCfg.url;
+        if(url) pw ? pw.open(url,actionCfg.url_target||'_blank') : window.open(url,'_blank');
+        break;
+      }
+      case 'fire-dom-event':{
+        // custom:button-card e altri la usano per eventi personalizzati
+        const evDetail=actionCfg.event_data||{};
+        if(pw){
+          const haEl=pw.document.querySelector('home-assistant');
+          if(haEl) haEl.dispatchEvent(new pw.CustomEvent('ll-custom',{
+            bubbles:true,composed:true,detail:evDetail
+          }));
+        }
+        break;
+      }
+      case 'none': break;
+      default: break;
+    }
+  }catch(e){ console.warn('[Frarik] _handleHassAction:',e&&e.message); }
+}
+
+/* Intercetta gli eventi Lovelace e li gestisce/ritrasmette correttamente a HA. */
 function _relayHassEvents(container){
   if(!container||container._hassEventsRelayed) return;
   container._hassEventsRelayed=true;
-  const EVENTS=['hass-action','hass-more-info','hass-notification','location-changed','config-changed'];
-  EVENTS.forEach(evName=>{
-    container.addEventListener(evName,e=>{
-      try{
-        const pw=window.parent&&window.parent!==window?window.parent:null;
-        if(!pw) return;
-        const haEl=pw.document.querySelector('home-assistant');
-        if(!haEl) return;
-        // Ricrea l'evento nel realm di HA in modo che venga gestito nativamente
-        haEl.dispatchEvent(new pw.CustomEvent(evName,{
-          bubbles:true,
-          composed:true,
-          detail:e.detail||{}
-        }));
-      }catch(_){}
-    },true); // capture=true: prende l'evento prima che possa essere fermato
+  const pw=window.parent&&window.parent!==window?window.parent:null;
+  // hass-action: va INTERPRETATO (service call, navigation, more-info, ...) — NON solo ritrasmesso
+  container.addEventListener('hass-action',e=>{
+    e.stopPropagation();
+    try{ _handleHassAction(e.detail); }catch(_){}
+  },true);
+  // hass-more-info: apre il dialogo more-info di HA
+  container.addEventListener('hass-more-info',e=>{
+    e.stopPropagation();
+    try{
+      if(!pw) return;
+      const haEl=pw.document.querySelector('home-assistant');
+      if(haEl) haEl.dispatchEvent(new pw.CustomEvent('hass-more-info',{
+        bubbles:true,composed:true,detail:e.detail||{}
+      }));
+    }catch(_){}
+  },true);
+  // location-changed: navigazione interna HA
+  container.addEventListener('location-changed',e=>{
+    e.stopPropagation();
+    try{
+      if(!pw) return;
+      const haEl=pw.document.querySelector('home-assistant');
+      if(haEl) haEl.dispatchEvent(new pw.CustomEvent('location-changed',{
+        bubbles:true,composed:true,detail:e.detail||{}
+      }));
+    }catch(_){}
+  },true);
+  // hass-notification: toast HA
+  container.addEventListener('hass-notification',e=>{
+    e.stopPropagation();
+    try{
+      if(!pw) return;
+      const haEl=pw.document.querySelector('home-assistant');
+      if(haEl) haEl.dispatchEvent(new pw.CustomEvent('hass-notification',{
+        bubbles:true,composed:true,detail:e.detail||{}
+      }));
+    }catch(_){}
+  },true);
+}
+
+/* Osserva il container con ResizeObserver e notifica la card HA interna delle variazioni
+   di dimensione (il card è stato pre-renderizzato a 420px nel ghost div; dopo adoptNode
+   deve ricalcolare il layout per la larghezza reale del wrapper Frarik). */
+function _attachYamlCardResize(container){
+  if(!container||container._yamlRO) return;
+  container._yamlRO=new ResizeObserver(()=>{
+    container.childNodes.forEach(el=>{
+      if(el.nodeType!==1) return;
+      try{ el.requestUpdate&&el.requestUpdate(); }catch(_){}
+      // Aggiorna hass per forzare re-render nelle card che derivano il layout da hass.states
+      try{ el.hass=_getBestHass(); }catch(_){}
+      // Figli diretti nel shadow root (es. hui-horizontal-stack-card → figli)
+      if(el.shadowRoot){
+        el.shadowRoot.querySelectorAll('*').forEach(c=>{
+          try{ c.requestUpdate&&c.requestUpdate(); }catch(_){}
+        });
+      }
+    });
   });
+  container._yamlRO.observe(container);
 }
 
 async function _mountYamlCard(card, container){
@@ -8544,9 +8657,12 @@ async function _mountYamlCard(card, container){
   container.innerHTML='';
   _injectHACSSVars(container);
   _relayHassEvents(container);
+  _attachYamlCardResize(container);
   const el=await _createHACard(cfg);
   if(el){
     container.appendChild(el);
+    // Forza il re-layout dopo connectedCallback (la card era stata pre-renderizzata in un ghost div)
+    requestAnimationFrame(()=>{ try{ el.requestUpdate&&el.requestUpdate(); }catch(_){} });
   } else {
     const elFb=await _yamlCreateEl(cfg);
     container.appendChild(elFb);
@@ -8989,10 +9105,12 @@ async function _ghsYamlLivePreview(){
     prev.style.cssText='display:block;width:100%;padding:4px';
     _injectHACSSVars(prev);
     _relayHassEvents(prev);
+    _attachYamlCardResize(prev);
     const el=await _createHACard(config);
     if(el){
       el.style.cssText='display:block;width:100%';
       prev.appendChild(el);
+      requestAnimationFrame(()=>{ try{ el.requestUpdate&&el.requestUpdate(); }catch(_){} });
     } else {
       const elFb=await _yamlCreateEl(config);
       elFb.style.cssText='display:block;width:100%';

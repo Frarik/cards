@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.35 — 2026-06-18
+
+### fix(yaml-card): azioni card funzionanti (toggle/service/more-info/navigate) + resize reattivo
+
+- **`_handleHassAction`**: nuova funzione — interpreta `hass-action` e chiama direttamente `hass.callService` (toggle, call-service/perform-action), apre il dialogo more-info di HA, naviga, apre URL, gestisce fire-dom-event; supporta sia `tap_action` che `hold_action`/`double_tap_action`
+- **`_relayHassEvents`**: riscritto — ogni tipo di evento ha il suo handler dedicato; `hass-action` viene ora ESEGUITO (non solo ritrasmesso su home-assistant che non lo gestisce); `hass-more-info` e `location-changed` vengono inoltrati al `home-assistant` element in `window.parent`
+- **`_attachYamlCardResize`**: nuovo ResizeObserver sul container — quando il wrapper Frarik cambia dimensione, chiama `requestUpdate()` su tutti gli elementi HA figli; risolve il layout fisso a 420px del ghost div dopo `document.adoptNode`
+- `_mountYamlCard` e `_ghsYamlLivePreview`: aggiunto `_attachYamlCardResize` + `requestAnimationFrame(requestUpdate)` dopo `appendChild`
+
 ## 1.5.34 — 2026-06-18
 
 ### fix(yaml-card): layout corretto + click funzionanti (relay hass-action)
