@@ -8281,6 +8281,12 @@ function _haCompatInit(){
       ['litHtmlVersions','litElementVersions'].forEach(k=>{
         if(pw[k]&&!window[k]) try{ window[k]=pw[k]; }catch(_){}
       });
+      // Pulizia overlay quando Frarik viene scaricato (navigazione via / ricarica)
+      window.addEventListener('beforeunload',()=>{
+        try{
+          pw.document.querySelectorAll('[id^="frarik-yaml-"]').forEach(el=>el.remove());
+        }catch(_){}
+      },{once:true});
     }
   }catch(e){}
 }
@@ -8622,7 +8628,10 @@ async function _mountYamlCard(card, container){
         if(!container.isConnected){ overlay.remove(); return; }
         const fr=_findFrameElement();
         if(!fr){ overlay.style.display='none'; return; }
-        const ir=fr.getBoundingClientRect(), cr=container.getBoundingClientRect();
+        const ir=fr.getBoundingClientRect();
+        // Se l'iframe non è visibile (utente ha navigato fuori da Frarik), nascondi l'overlay
+        if(ir.width<10||ir.height<10){ overlay.style.display='none'; return; }
+        const cr=container.getBoundingClientRect();
         const L=ir.left+cr.left, T=ir.top+cr.top, W=cr.width;
         if(W<=0){ overlay.style.display='none'; return; }
         overlay.style.cssText='position:fixed;z-index:10;background:transparent;overflow:visible;display:block;'
@@ -9135,7 +9144,9 @@ async function _ghsYamlLivePreview(){
           if(!prev.isConnected){ overlay.remove(); return; }
           const fr=_findFrameElement();
           if(!fr){ overlay.style.display='none'; return; }
-          const ir=fr.getBoundingClientRect(), cr=prev.getBoundingClientRect();
+          const ir=fr.getBoundingClientRect();
+          if(ir.width<10||ir.height<10){ overlay.style.display='none'; return; }
+          const cr=prev.getBoundingClientRect();
           const L=ir.left+cr.left, T=ir.top+cr.top, W=cr.width;
           if(W<=0){ overlay.style.display='none'; return; }
           overlay.style.cssText='position:fixed;z-index:10;background:transparent;overflow:visible;display:block;'

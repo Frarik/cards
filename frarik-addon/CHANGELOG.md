@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.39 — 2026-06-18
+
+### fix(yaml-card): overlay non persiste fuori da Frarik
+
+- **`syncPos()` iframe visibility check**: se l'iframe di Frarik ha `width < 10` o `height < 10` (panel nascosto / utente navigato altrove in HA), l'overlay viene nascosto automaticamente. Si ri-mostra al ritorno su Frarik al prossimo ciclo del 1s timer.
+- **`beforeunload` cleanup**: aggiunto listener in `_haCompatInit` — quando Frarik viene scaricato (reload, navigazione via), tutti i div `[id^="frarik-yaml-"]` vengono rimossi da `pw.document.body` prima che la pagina sparisca. Evita overlay "fantasma" visibili sulle impostazioni HA e su altri pannelli.
+
 ## 1.5.38 — 2026-06-18
 
 ### fix(yaml-card): ghost pre-render + _findFrameElement fallback + overlay senza height fissa
