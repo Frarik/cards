@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.5.36 — 2026-06-18
+
+### feat(yaml-card): architettura overlay — rendering 100% identico a HA
+
+- **APPROCCIO OVERLAY**: la card non viene più adottata in Frarik (document.adoptNode eliminato). L'elemento vive nel DOM di `window.parent` (HA) e vi rimane. Un `<div position:fixed>` viene posizionato sopra il container Frarik tramite `getBoundingClientRect()` → sincronizzato con `ResizeObserver` + scroll listener.
+- Effetto: `ha-card`, `ha-icon`, `hui-*`, `card_mod`, `better-moment-card`, `hui-entities-card`, `custom:stack-in-card`, `custom:hui-element` funzionano esattamente come in Lovelace nativa — nessun realm mismatch possibile
+- `hass-more-info`, `location-changed`, `hass-notification`: salgono naturalmente nel DOM di HA senza relay
+- `hass-action` (click, toggle, navigate, service call): gestito da `_relayHassEventsOnOverlay` + `_handleHassAction`
+- Rimosse: `_snapshotShadowStyles`, `_relayHassEvents`, `_attachYamlCardResize`, ghost-div pre-render da `_createHACard`
+- Aggiornati: `_stopYamlCard` (rimuove overlay), `_ghsYamlLivePreview` (overlay separato con id `frarik-yaml-preview`), `_mountYamlCard` (overlay principale)
+- Fallback Frarik interno mantenuto per contesti senza `window.parent` (standalone mode)
+
 ## 1.5.35 — 2026-06-18
 
 ### fix(yaml-card): azioni card funzionanti (toggle/service/more-info/navigate) + resize reattivo
