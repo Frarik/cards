@@ -8603,18 +8603,10 @@ async function _mountYamlCard(card, container){
       _relayHassEventsOnOverlay(overlay);
       pw.document.body.appendChild(overlay);
 
-      let _iframe=null;
-      function _getIframe(){
-        if(_iframe&&_iframe.isConnected){ try{ if(_iframe.contentWindow===window) return _iframe; }catch(_){} }
-        for(const f of pw.document.querySelectorAll('iframe')){
-          try{ if(f.contentWindow===window){ _iframe=f; return f; } }catch(_){}
-        }
-        return null;
-      }
-
       function syncPos(){
         if(!container.isConnected){ overlay.remove(); return; }
-        const fr=_getIframe();
+        // window.frameElement = l'<iframe> che contiene questa window (same-origin, affidabile)
+        const fr=window.frameElement;
         if(!fr){ overlay.style.display='none'; return; }
         const ir=fr.getBoundingClientRect(), cr=container.getBoundingClientRect();
         const L=ir.left+cr.left, T=ir.top+cr.top, W=cr.width, H=cr.height;
@@ -8640,6 +8632,17 @@ async function _mountYamlCard(card, container){
         window.removeEventListener('scroll',scrollH,{capture:true});
         pw.removeEventListener('resize',scrollH);
       };
+
+      // Dopo il primo render sincronizza l'altezza del container Frarik con quella del card HA
+      // (il layout Frarik usa il container come placeholder — deve avere la giusta altezza)
+      setTimeout(()=>{
+        if(!overlay.isConnected) return;
+        const natH=el.offsetHeight||el.scrollHeight||0;
+        if(natH>0 && natH !== container.offsetHeight){
+          container.style.minHeight=natH+'px';
+          syncPos();
+        }
+      },600);
 
       container._yamlTimer=setInterval(()=>{
         try{ el.hass=haEl&&haEl.hass?haEl.hass:_getBestHass(); }catch(_){}
@@ -9113,15 +9116,10 @@ async function _ghsYamlLivePreview(){
         _relayHassEventsOnOverlay(overlay);
         pw.document.body.appendChild(overlay);
 
-        let _iframe=null;
-        function _gIF(){
-          if(_iframe&&_iframe.isConnected){ try{ if(_iframe.contentWindow===window) return _iframe; }catch(_){} }
-          for(const f of pw.document.querySelectorAll('iframe')){ try{ if(f.contentWindow===window){ _iframe=f; return f; } }catch(_){} }
-          return null;
-        }
         function syncP(){
           if(!prev.isConnected){ overlay.remove(); return; }
-          const fr=_gIF(); if(!fr){ overlay.style.display='none'; return; }
+          const fr=window.frameElement;
+          if(!fr){ overlay.style.display='none'; return; }
           const ir=fr.getBoundingClientRect(), cr=prev.getBoundingClientRect();
           const L=ir.left+cr.left, T=ir.top+cr.top, W=cr.width, H=cr.height;
           const vw=pw.innerWidth, vh=pw.innerHeight;

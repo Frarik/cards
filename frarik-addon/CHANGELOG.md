@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.37 — 2026-06-18
+
+### fix(yaml-card): overlay — iframe detection via window.frameElement + height sync
+
+- **Bug critico v1.5.36**: `pw.document.querySelectorAll('iframe')` non trova l'iframe Frarik perché HA lo renderizza dentro un shadow root (`ha-panel-lovelace`/`ha-panel-iframe`); `_getIframe()` restituiva sempre null → overlay `display:none` → card invisibili/nere
+- **Fix**: sostituito con `window.frameElement` — proprietà standard che restituisce direttamente l'`<iframe>` contenitore senza traversare il DOM; funziona per tutti gli iframe same-origin indipendentemente dalla profondità del shadow DOM
+- **Altezza automatica**: dopo 600ms dal mount, sincronizza `container.minHeight` con `el.offsetHeight` del card HA → il placeholder Frarik ha la giusta altezza per non sovrapporre card adiacenti
+
 ## 1.5.36 — 2026-06-18
 
 ### feat(yaml-card): architettura overlay — rendering 100% identico a HA
