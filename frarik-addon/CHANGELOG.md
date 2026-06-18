@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.41 — 2026-06-18
+
+### fix(yaml-card): overlay nascosto su impostazioni Frarik + location-changed semplificato
+
+- **Root cause v1.5.40**: `location-changed` scatta PRIMA che HA aggiorni il DOM → l'iframe aveva ancora dimensioni reali al momento del check → overlays non nascosti. Fix: `location-changed` ora nasconde SEMPRE tutti gli overlay incondizionatamente (vengono ri-mostrati dal timer 1s se Frarik è ancora il pannello attivo).
+- **Frarik settings (impostazioni)**: `syncPos()` ora controlla `document.body.classList.contains('oik-settings-open')` → nasconde overlay quando il pannello impostazioni di Frarik è aperto. Stesso check in `syncP()` per il preview YAML.
+- **`openOikSettings()`**: nasconde immediatamente gli overlay al momento dell'apertura (non aspetta il 1s timer).
+- **`closeOikSettings()`**: ri-mostra gli overlay (via `display:''`) al prossimo frame dopo la chiusura del pannello.
+- **`popstate`**: aggiunto come backup di `location-changed` per catturare navigazioni browser back/forward.
+
 ## 1.5.40 — 2026-06-18
 
 ### fix(yaml-card): overlay nascosto immediatamente su navigazione HA via location-changed

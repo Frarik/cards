@@ -5794,7 +5794,9 @@ function _restoreUIState(){
 /* ── Schermata impostazioni a tutto schermo (stile Oikos) — accessibile sempre dall'icona ⚙️ in alto ── */
 function openOikSettings(){
   try{ sessionStorage.setItem('dash_settings','1'); }catch(e){}
-  document.body.classList.add('oik-settings-open'); // nasconde la barra inferiore mentre le impostazioni sono aperte
+  document.body.classList.add('oik-settings-open');
+  // Nascondi immediatamente gli overlay YAML (il settings panel li coprirebbe)
+  try{ const pw=window.parent&&window.parent!==window?window.parent:null; if(pw) pw.document.querySelectorAll('[id^="frarik-yaml-"]').forEach(el=>{ el.style.display='none'; }); }catch(_){}
   const panel=document.getElementById('epanel');
   panel.classList.add('open');
   _clipboardLoad(); _updatePasteBtn();
@@ -5826,6 +5828,11 @@ function closeOikSettings(){
         requestAnimationFrame(()=>{ ep.style.transition=''; }); // ripristina dopo il reflow
       }
       renderFbarZone();
+      // Ri-mostra gli overlay YAML (settings chiuso, dashboard di nuovo visibile)
+      // requestAnimationFrame: aspetta che il DOM abbia tolto oik-settings-open prima del syncPos
+      requestAnimationFrame(()=>{
+        try{ const pw=window.parent&&window.parent!==window?window.parent:null; if(pw) pw.document.querySelectorAll('[id^="frarik-yaml-"]').forEach(el=>{ el.style.display=''; }); }catch(_){}
+      });
     };
     if(ep && ep.classList.contains('open')){ ep.classList.add('closing'); setTimeout(finish,270); }
     else finish();
@@ -8282,22 +8289,18 @@ function _haCompatInit(){
         if(pw[k]&&!window[k]) try{ window[k]=pw[k]; }catch(_){}
       });
 
-      // ── Pulizia overlay su navigazione HA ──────────────────────────────────
-      // HA dispatcha 'location-changed' su window.parent ad ogni cambio di rotta.
-      // Quando l'utente esce da Frarik, controlliamo la visibilità dell'iframe e
-      // nascondiamo immediatamente tutti gli overlay (senza aspettare il 1s timer).
-      const _hideIfOutside=()=>{
-        try{
-          const fr=_cachedFrameEl||window.frameElement;
-          const visible=fr&&fr.isConnected&&fr.getBoundingClientRect().width>10;
-          pw.document.querySelectorAll('[id^="frarik-yaml-"]').forEach(el=>{
-            el.style.display=visible?'':'none';
-          });
-        }catch(_){}
+      // ── Overlay: nascondi su ogni navigazione HA ───────────────────────────
+      // 'location-changed' scatta PRIMA che HA aggiorni il DOM, quindi non si
+      // può controllare la visibilità dell'iframe in quel momento. Soluzione:
+      // nasconde SEMPRE tutti gli overlay al cambio di rotta; il timer 1s di
+      // syncPos() li rimette se Frarik è ancora il pannello attivo.
+      const _hideAllOverlays=()=>{
+        try{ pw.document.querySelectorAll('[id^="frarik-yaml-"]').forEach(el=>{ el.style.display='none'; }); }catch(_){}
       };
-      pw.addEventListener('location-changed',_hideIfOutside,{passive:true});
+      pw.addEventListener('location-changed',_hideAllOverlays,{passive:true});
+      pw.addEventListener('popstate',_hideAllOverlays,{passive:true});
 
-      // Backup: rimuovi del tutto gli overlay se Frarik viene scaricato
+      // Se Frarik viene proprio scaricato (reload / iframe rimosso): rimuovi tutto
       const _rmAll=()=>{
         try{ pw.document.querySelectorAll('[id^="frarik-yaml-"]').forEach(el=>el.remove()); }catch(_){}
       };
@@ -8642,10 +8645,13 @@ async function _mountYamlCard(card, container){
 
       function syncPos(){
         if(!container.isConnected){ overlay.remove(); return; }
+        // Nascondi quando il settings panel di Frarik è aperto (copre la dashboard)
+        if(document.body.classList.contains('oik-settings-open')){
+          overlay.style.display='none'; return;
+        }
         const fr=_findFrameElement();
         if(!fr){ overlay.style.display='none'; return; }
         const ir=fr.getBoundingClientRect();
-        // Se l'iframe non è visibile (utente ha navigato fuori da Frarik), nascondi l'overlay
         if(ir.width<10||ir.height<10){ overlay.style.display='none'; return; }
         const cr=container.getBoundingClientRect();
         const L=ir.left+cr.left, T=ir.top+cr.top, W=cr.width;
@@ -9158,6 +9164,9 @@ async function _ghsYamlLivePreview(){
 
         function syncP(){
           if(!prev.isConnected){ overlay.remove(); return; }
+          if(document.body.classList.contains('oik-settings-open')){
+            overlay.style.display='none'; return;
+          }
           const fr=_findFrameElement();
           if(!fr){ overlay.style.display='none'; return; }
           const ir=fr.getBoundingClientRect();
