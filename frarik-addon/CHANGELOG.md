@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.42 — 2026-06-18
+
+### fix(yaml-card): overlay nascosto durante splash screen di caricamento
+
+- `syncPos()` e `syncP()`: se `document.getElementById('frk-splash')` esiste (splash ancora visibile), l'overlay viene nascosto. La splash dura ~4 secondi (3500ms + 650ms fade); il timer 1s di syncPos ri-mostra l'overlay non appena il DOM rimuove l'elemento `frk-splash`.
+
 ## 1.5.41 — 2026-06-18
 
 ### fix(yaml-card): overlay nascosto su impostazioni Frarik + location-changed semplificato

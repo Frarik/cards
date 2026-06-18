@@ -8645,6 +8645,8 @@ async function _mountYamlCard(card, container){
 
       function syncPos(){
         if(!container.isConnected){ overlay.remove(); return; }
+        // Nascosto durante splash screen di Frarik
+        if(document.getElementById('frk-splash')){ overlay.style.display='none'; return; }
         // Nascondi quando il settings panel di Frarik è aperto (copre la dashboard)
         if(document.body.classList.contains('oik-settings-open')){
           overlay.style.display='none'; return;
@@ -9164,6 +9166,7 @@ async function _ghsYamlLivePreview(){
 
         function syncP(){
           if(!prev.isConnected){ overlay.remove(); return; }
+          if(document.getElementById('frk-splash')){ overlay.style.display='none'; return; }
           if(document.body.classList.contains('oik-settings-open')){
             overlay.style.display='none'; return;
           }
