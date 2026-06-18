@@ -8645,9 +8645,11 @@ async function _mountYamlCard(card, container){
 
       function syncPos(){
         if(!container.isConnected){ overlay.remove(); return; }
-        // Nascosto durante splash screen di Frarik
+        // Nascosto durante splash screen
         if(document.getElementById('frk-splash')){ overlay.style.display='none'; return; }
-        // Nascondi quando il settings panel di Frarik è aperto (copre la dashboard)
+        // Nascosto in modalità modifica (i controlli drag/resize devono essere visibili)
+        if(editMode){ overlay.style.display='none'; return; }
+        // Nascosto quando le impostazioni Frarik sono aperte
         if(document.body.classList.contains('oik-settings-open')){
           overlay.style.display='none'; return;
         }
@@ -8659,8 +8661,7 @@ async function _mountYamlCard(card, container){
         const L=ir.left+cr.left, T=ir.top+cr.top, W=cr.width;
         if(W<=0){ overlay.style.display='none'; return; }
         overlay.style.cssText='position:fixed;z-index:10;background:transparent;overflow:visible;display:block;'
-          +'left:'+L+'px;top:'+T+'px;width:'+W+'px;'
-          +'pointer-events:'+(editMode?'none':'auto')+';';
+          +'left:'+L+'px;top:'+T+'px;width:'+W+'px;pointer-events:auto;';
         el.style.width=W+'px';
       }
 
@@ -11996,6 +11997,9 @@ function openHBM_HDR(){
 /* Login rimosso: si entra sempre direttamente nella dashboard */
 _jsStoreBootAll();
 renderDash();
+// Preload risorse HACS Lovelace in background durante la splash (< 4s):
+// quando _mountYamlCard viene chiamato le risorse sono già caricate → nessun extra-delay
+setTimeout(()=>{ try{ _haCompatInit(); if(!_lovelaceResourcesLoaded) _loadLovelaceResources().catch(()=>{}); }catch(_){} }, 300);
 connect();
 
 /* ── Error feedback visibile all'utente ─────────────────────────────────── */

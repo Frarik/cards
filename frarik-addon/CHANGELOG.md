@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.43 — 2026-06-18
+
+### fix(yaml-card): overlay nascosto in edit mode + preload HACS resources al boot
+
+- **Edit mode**: `syncPos()` nasconde l'overlay quando `editMode === true` — i controlli drag/resize/gear della plancia sono ora completamente visibili. Al ritorno alla view mode il timer 1s ri-mostra la card.
+- **Preload Lovelace resources**: aggiunto `setTimeout(_loadLovelaceResources, 300)` all'avvio (dopo `renderDash()`). Gli script HACS vengono scaricati durante la splash screen (~4s) invece di aspettare la prima chiamata a `_mountYamlCard`. Risultato: le card YAML appaiono entro ~1s dalla fine della splash anziché dopo 3-5s di attesa aggiuntiva.
+
 ## 1.5.42 — 2026-06-18
 
 ### fix(yaml-card): overlay nascosto durante splash screen di caricamento
