@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.54 — 2026-06-20
+
+### feat(add-card): anteprima card identica allo Store nel popup "Aggiungi"
+
+- Tab "Installate" e "Predefinite" ora usano gli stessi tile `ghc-tile` dello Store: preview live della card (con `_ghcLivePrev`), badge "In vista" / "Installata" / "Sistema", strip colorata, nome, versione, descrizione.
+- Pulsante "Aggiungi alla plancia" (verde) al posto di "Aggiungi" — chiude il popup dopo l'aggiunta.
+- Se la card è già nella vista corrente mostra "✓ In vista" invece del pulsante.
+
 ## 1.5.53 — 2026-06-20
 
 ### fix(add-card): pulsanti "Card installate" e "Card YAML" non funzionavano

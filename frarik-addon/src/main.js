@@ -616,14 +616,56 @@ function _acpTileHtml(id,name,icon,desc){
   return `<div class="acp-tile"><div class="acp-tile-icon">${icon||'📦'}</div><div class="acp-tile-name">${eh(name||id)}</div>${desc?`<div class="acp-tile-desc">${eh(desc)}</div>`:''}<button class="acp-tile-btn" data-acp-add="${eh(id)}"><i class="mdi mdi-plus"></i> Aggiungi alla plancia</button></div>`;
 }
 function _acpRenderInstalled(body){
-  const items=_jsStoreList().filter(i=>!i._builtin).sort((a,b)=>((a.meta||{}).name||'').localeCompare((b.meta||{}).name||''));
-  if(!items.length){ body.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.35);font-size:13px;line-height:1.8">Nessuna card installata.<br><span style="font-size:11px;opacity:.6">Installale dallo Store nelle Impostazioni.</span></div>'; return; }
-  body.innerHTML=`<div class="acp-grid">${items.map(i=>{ const m=i.meta||{}; const id=m.id||''; const reg=id?window.FratechCardRegistry?.[id]:null; return _acpTileHtml(id,m.name||id,m.icon||reg?.icon||'📦',reg?.desc||m.desc||''); }).join('')}</div>`;
+  const all=_jsStoreList().filter(i=>!i._builtin).sort((a,b)=>((a.meta||{}).name||'').localeCompare((b.meta||{}).name||''));
+  if(!all.length){ body.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.35);font-size:13px;line-height:1.8">Nessuna card installata.<br><span style="font-size:11px;opacity:.6">Installale dallo Store nelle Impostazioni.</span></div>'; return; }
+  const usedIds=new Set((curPage()||{cards:[]}).cards.filter(c=>c.type==='js-custom'&&c.jsCardId).map(c=>c.jsCardId));
+  body.innerHTML='<div class="ghc-grid">'+all.map(i=>{
+    const m=i.meta||{}; const id=m.id||'';
+    const reg=id?window.FratechCardRegistry?.[id]:null;
+    const icon=m.icon||reg?.icon||'📦';
+    const desc=(_ghcDesc(id,null))||'';
+    const inPage=usedIds.has(id);
+    const st=inPage?'ok':'new';
+    const prevHtml=reg
+      ?`<div class="ghc-prev-inner" data-prev-id="${eh(id)}"></div>`
+      :`<div class="ghc-prev-inner">${_ghcPrevPh(icon,m.name||id)}</div>`;
+    const bdg=inPage?`<span class="ghc-bdg cur">✓ In vista</span>`:`<span class="ghc-bdg ok">● Installata</span>`;
+    const act=inPage
+      ?`<span class="ghc-indash"><i class="mdi mdi-check-circle-outline"></i> In vista</span>`
+      :`<button class="ghc-btn ghc-btn-add" data-acp-add="${eh(id)}"><i class="mdi mdi-plus"></i> Aggiungi alla plancia</button>`;
+    return `<div class="ghc-tile st-${st}"><div class="ghc-strip ${st}"></div>
+      <div class="ghc-prev">${prevHtml}<div class="ghc-prev-fade"></div>${bdg}</div>
+      <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico">${icon}</div><div class="ghc-meta"><div class="ghc-name">${eh(m.name||id||'Card')}</div><div class="ghc-ver">v${eh(m.version||'?')}</div></div></div>
+      ${desc?`<div class="ghc-desc">${eh(desc)}</div>`:''}
+      <div class="ghc-acts">${act}</div></div></div>`;
+  }).join('')+'</div>';
+  requestAnimationFrame(()=>{ body.querySelectorAll('[data-prev-id]').forEach(el=>{ _ghcLivePrev(el, el.dataset.prevId); }); });
 }
 function _acpRenderBuiltin(body){
-  const items=_jsStoreList().filter(i=>i._builtin);
-  if(!items.length){ body.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.35);font-size:13px">Nessuna card predefinita.</div>'; return; }
-  body.innerHTML=`<div class="acp-grid">${items.map(i=>{ const m=i.meta||{}; const id=m.id||''; return _acpTileHtml(id,m.name||id,m.icon||'📦',m.desc||''); }).join('')}</div>`;
+  const all=_jsStoreList().filter(i=>i._builtin);
+  if(!all.length){ body.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.35);font-size:13px">Nessuna card predefinita.</div>'; return; }
+  const usedIds=new Set((curPage()||{cards:[]}).cards.filter(c=>c.type==='js-custom'&&c.jsCardId).map(c=>c.jsCardId));
+  body.innerHTML='<div class="ghc-grid">'+all.map(i=>{
+    const m=i.meta||{}; const id=m.id||'';
+    const reg=id?window.FratechCardRegistry?.[id]:null;
+    const icon=m.icon||reg?.icon||'📦';
+    const desc=m.desc||'';
+    const inPage=usedIds.has(id);
+    const st=inPage?'ok':'new';
+    const prevHtml=reg
+      ?`<div class="ghc-prev-inner" data-prev-id="${eh(id)}"></div>`
+      :`<div class="ghc-prev-inner">${_ghcPrevPh(icon,m.name||id)}</div>`;
+    const bdg=`<span class="ghc-bdg" style="background:rgba(139,92,246,.2);color:#c4b5fd;border-color:rgba(139,92,246,.4)">🔐 Sistema</span>`;
+    const act=inPage
+      ?`<span class="ghc-indash"><i class="mdi mdi-check-circle-outline"></i> In vista</span>`
+      :`<button class="ghc-btn ghc-btn-add" data-acp-add="${eh(id)}"><i class="mdi mdi-plus"></i> Aggiungi alla plancia</button>`;
+    return `<div class="ghc-tile st-${st}"><div class="ghc-strip ${st}"></div>
+      <div class="ghc-prev">${prevHtml}<div class="ghc-prev-fade"></div>${bdg}</div>
+      <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico">${icon}</div><div class="ghc-meta"><div class="ghc-name">${eh(m.name||id||'Card')}</div><div class="ghc-ver">v${eh(m.version||'?')}</div></div></div>
+      ${desc?`<div class="ghc-desc">${eh(desc)}</div>`:''}
+      <div class="ghc-acts">${act}</div></div></div>`;
+  }).join('')+'</div>';
+  requestAnimationFrame(()=>{ body.querySelectorAll('[data-prev-id]').forEach(el=>{ _ghcLivePrev(el, el.dataset.prevId); }); });
 }
 function _acpAddJs(id){
   const regCard=window.FratechCardRegistry?.[id];
