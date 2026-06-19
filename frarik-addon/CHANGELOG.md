@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.47 — 2026-06-19
+
+### fix(yaml-card): layout cramped (Bug 1) + doppio overlay race condition (Bug 2)
+
+- **Bug 1 — layout cramped**: il ghost div pre-renderizzava a `420px` fissi → `type:grid` sceglieva 3 colonne → horizontal-stack compressi. Fix: `_createHACard(config, containerWidth)` riceve la larghezza reale del container Frarik (`container.offsetWidth`) e usa quella per il ghost div. La card ora si renderizza con le stesse colonne che avrebbe nella larghezza finale dell'overlay.
+- **Bug 2 — doppio overlay**: `_mountYamlCard` è async (800ms pre-render). Se veniva chiamato una seconda volta prima che la prima creasse il suo overlay, entrambe le chiamate creavano un overlay → due card visibili sovrapposte. Fix: mount ID (`container._yamlMountId`). Dopo il pre-render si verifica che l'ID sia ancora valido; se nel frattempo è partito un nuovo mount, il risultato viene scartato e il ghost rimosso.
+- Stessa protezione mount ID aggiunta a `_ghsYamlLivePreview` (preview nella finestra "Aggiungi YAML card").
+
 ## 1.5.46 — 2026-06-19
 
 ### fix(yaml-card): card non si aggiorna più alla chiusura di popup more-info / grafici

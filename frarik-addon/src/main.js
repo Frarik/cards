@@ -8360,8 +8360,10 @@ function _findFrameElement(){
    in Frarik's document, così ha-card, ha-icon, hui-*, card HACS, better-moment-card, card_mod
    funzionano identici a Lovelace.
    Il pre-render in un ghost-div nascosto lascia che LitElement completi tutti i render
-   asincroni prima che la card venga spostata nell'overlay visibile. */
-async function _createHACard(config){
+   asincroni prima che la card venga spostata nell'overlay visibile.
+   containerWidth: larghezza reale del container Frarik — usata per il ghost div in modo che
+   la card (es. type:grid) scelga il numero corretto di colonne fin dal pre-render. */
+async function _createHACard(config, containerWidth){
   const pw=window.parent&&window.parent!==window?window.parent:null;
   if(!pw||typeof pw.loadCardHelpers!=='function') return null;
   try{
@@ -8372,8 +8374,9 @@ async function _createHACard(config){
     const parentHA=pw.document.querySelector('home-assistant');
 
     // Ghost div: pre-render nell'HA DOM per 800 ms (tutto nel realm corretto)
+    const w=Math.max(containerWidth||0,200)||420;
     const ghost=pw.document.createElement('div');
-    ghost.style.cssText='position:fixed;left:-9999px;top:-9999px;width:420px;opacity:0;pointer-events:none;z-index:-9;overflow:visible;';
+    ghost.style.cssText='position:fixed;left:-9999px;top:-9999px;width:'+w+'px;opacity:0;pointer-events:none;z-index:-9;overflow:visible;';
     pw.document.body.appendChild(ghost);
     try{ el.hass=parentHA&&parentHA.hass?parentHA.hass:_getBestHass(); }catch(_){}
     ghost.appendChild(el);
@@ -8632,10 +8635,18 @@ async function _mountYamlCard(card, container){
   if(!_lovelaceResourcesLoaded){ try{ await _loadLovelaceResources(); }catch(e){} }
   if(!container.isConnected) return;
 
+  // Mount ID: previene doppi overlay se _mountYamlCard viene chiamato di nuovo
+  // mentre il pre-render di 800ms è ancora in corso (race condition).
+  const mountId=((container._yamlMountId||0)+1);
+  container._yamlMountId=mountId;
+
   const pw=window.parent&&window.parent!==window?window.parent:null;
 
   if(pw){
-    const res=await _createHACard(cfg);
+    const cw=Math.max(container.offsetWidth||0,200);
+    const res=await _createHACard(cfg,cw);
+    // Monta stantio: un'altra chiamata è partita durante il pre-render → scarta
+    if(container._yamlMountId!==mountId){ if(res) try{ res.ghost.remove(); }catch(_){} return; }
     if(res){
       const {el,ghost,haEl}=res;
 
@@ -9157,8 +9168,13 @@ async function _ghsYamlLivePreview(){
 
     const pw=window.parent&&window.parent!==window?window.parent:null;
 
+    const prevMountId=((prev._ghsYamlMountId||0)+1);
+    prev._ghsYamlMountId=prevMountId;
+
     if(pw){
-      const res=await _createHACard(config);
+      const cw=Math.max(prev.offsetWidth||0,200);
+      const res=await _createHACard(config,cw);
+      if(prev._ghsYamlMountId!==prevMountId){ if(res) try{ res.ghost.remove(); }catch(_){} return; }
       if(res){
         const {el,ghost,haEl}=res;
         prev.innerHTML='';
