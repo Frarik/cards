@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.52 — 2026-06-20
+
+### feat(add-card): popup card installate + editor YAML nel menu "+ Card"
+
+- **Card installate**: il pulsante "Apri lo Store" nel menu "+ Card" ora apre un popup inline (non la pagina delle impostazioni). Mostra tutte le card installate con tile cliccabili e pulsante "Aggiungi alla plancia".
+- **Tab Predefinite**: seconda tab con le card builtin di sistema.
+- **Card YAML** (sostituisce "Installa card da URL"): apre direttamente il popup sulla tab YAML — editor a 2 colonne con anteprima live HA (stesso renderer dell'overlay — CSS custom properties HA disponibili) e pulsante "Aggiungi alla plancia" visibile solo quando il YAML è valido.
+- Rimosso il pulsante "🔗 Installa card da URL" dal menu.
+
 ## 1.5.51 — 2026-06-20
 
 ### fix(yaml-card): scroll mobile + wheel desktop sull'overlay

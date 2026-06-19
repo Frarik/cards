@@ -517,6 +517,273 @@ function deleteCol(secId, col){
     _pgMarkDirty(true);
   });
 }
+/* ══ ADD CARD POPUP ════════════════════════════════════════════════════════
+   Popup "Aggiungi card" che mostra card installate, predefinite e YAML editor.
+   Aperto dal menu "+ Card" in modalità modifica (addCardToCol).
+   ══════════════════════════════════════════════════════════════════════════ */
+let _acpYamlContent='', _acpYamlTimer=null, _acpYamlCurrentConfig=null, _acpSecId=null, _acpCol=0;
+
+function _acpOpenInstalled(secId,col){ document.getElementById('add-col-menu')?.remove(); _openAddCardPopup(secId,col,'installed'); }
+function _acpOpenYaml(secId,col){ document.getElementById('add-col-menu')?.remove(); _openAddCardPopup(secId,col,'yaml'); }
+
+function _openAddCardPopup(secId,col,startTab){
+  document.getElementById('acp-ov')?.remove();
+  _cleanupYamlOverlay('acpprev');
+  if(_acpYamlTimer){ clearInterval(_acpYamlTimer); _acpYamlTimer=null; }
+  _acpSecId=secId; _acpCol=col; _acpYamlCurrentConfig=null;
+  _pendingDropSec=secId; _pendingDropCol=col;
+  if(!document.getElementById('_acp-style')){
+    const s=document.createElement('style'); s.id='_acp-style';
+    s.textContent=`
+      #acp-ov{position:fixed;inset:0;z-index:15000;background:rgba(0,0,0,.78);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;animation:acpFi .15s ease}
+      @keyframes acpFi{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
+      #acp-modal{width:min(860px,96vw);height:min(600px,90vh);background:#06060f;border:1px solid rgba(139,92,246,.28);border-radius:20px;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.85);overflow:hidden}
+      #acp-tabs{display:flex;gap:4px;padding:8px 16px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+      .acp-tab{border-radius:8px;padding:6px 14px;font-size:11px;font-weight:600;cursor:pointer;transition:all .12s;border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.5);background:rgba(255,255,255,.04);white-space:nowrap}
+      .acp-tab.on{background:rgba(139,92,246,.18);border-color:rgba(139,92,246,.38);color:#c4b5fd}
+      .acp-tab:hover:not(.on){background:rgba(255,255,255,.07);color:rgba(255,255,255,.8)}
+      #acp-body{flex:1;overflow-y:auto;padding:14px 16px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;min-height:0}
+      .acp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px}
+      .acp-tile{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px 12px 12px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;transition:border-color .12s,background .12s}
+      .acp-tile:hover{border-color:rgba(139,92,246,.35);background:rgba(139,92,246,.05)}
+      .acp-tile-icon{font-size:26px;line-height:1}
+      .acp-tile-name{font-size:12px;font-weight:600;color:#fff;line-height:1.3;margin-top:2px}
+      .acp-tile-desc{font-size:10px;color:rgba(255,255,255,.38);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;flex:1}
+      .acp-tile-btn{margin-top:6px;background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.3);color:#c4b5fd;border-radius:8px;padding:6px 10px;font-size:10px;font-weight:600;cursor:pointer;width:100%;transition:background .12s;letter-spacing:.2px}
+      .acp-tile-btn:hover{background:rgba(139,92,246,.32)}
+      #acp-yaml-wrap{display:flex;height:100%;gap:0}
+      #acp-yaml-left{flex:1;display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.06)}
+      #acp-yaml-right{flex:1;display:flex;flex-direction:column}
+      #acp-yaml-editor-area{display:flex;flex:1;overflow:hidden;position:relative;background:#030307}
+      #acp-yaml-lines{font-size:11px;font-family:monospace;line-height:1.6;padding:11px 0 11px 10px;color:rgba(99,102,241,.5);user-select:none;overflow:hidden;text-align:right;min-width:28px;border-right:1px solid rgba(255,255,255,.05);white-space:pre}
+      #acp-yaml-inp{flex:1;background:transparent;border:none;resize:none;color:#c4d8f5;font-size:11px;font-family:monospace;line-height:1.6;padding:11px 14px;outline:none;overflow-y:auto;tab-size:2}
+      #acp-yaml-prev-wrap{flex:1;overflow-y:auto;padding:14px;min-height:0;position:relative;background:rgba(255,255,255,.015)}
+    `;
+    document.head.appendChild(s);
+  }
+  const ov=document.createElement('div'); ov.id='acp-ov';
+  ov.innerHTML=`<div id="acp-modal">
+    <div style="display:flex;align-items:center;padding:16px 20px 10px;flex-shrink:0;gap:12px">
+      <div style="width:32px;height:32px;border-radius:10px;background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🧩</div>
+      <div style="flex:1"><div style="font-size:14px;font-weight:700;color:#fff">Aggiungi card</div><div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:1px">Card installate, predefinite o inserisci YAML</div></div>
+      <button id="acp-close" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:13px;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
+    </div>
+    <div id="acp-tabs">
+      <button class="acp-tab" data-acp-tab="installed">📦 Installate</button>
+      <button class="acp-tab" data-acp-tab="builtin">⭐ Predefinite</button>
+      <button class="acp-tab" data-acp-tab="yaml">📋 Card YAML</button>
+    </div>
+    <div id="acp-body"></div>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click',e=>{
+    if(e.target===ov){ _acpClose(); return; }
+    if(e.target.id==='acp-close'||e.target.closest('#acp-close')){ _acpClose(); return; }
+    const tb=e.target.closest('[data-acp-tab]');
+    if(tb){ _acpSetTab(tb.dataset.acpTab); return; }
+    const ab=e.target.closest('[data-acp-add]');
+    if(ab&&ab.dataset.acpAdd){ _acpAddJs(ab.dataset.acpAdd); return; }
+    if(e.target.closest('#acp-yaml-add-btn')){ _acpYamlAdd(); return; }
+    if(e.target.closest('[data-acp-fmt]')){ _acpYamlFormat(); return; }
+  });
+  _acpSetTab(startTab||'installed');
+}
+function _acpClose(){
+  _cleanupYamlOverlay('acpprev');
+  if(_acpYamlTimer){ clearInterval(_acpYamlTimer); _acpYamlTimer=null; }
+  const ov=document.getElementById('acp-ov');
+  if(ov){
+    const prev=ov.querySelector('#acp-yaml-prev');
+    if(prev){
+      if(prev._yamlRO) try{prev._yamlRO.disconnect();}catch(_){}
+      if(prev._yamlScrollOff) try{prev._yamlScrollOff();}catch(_){}
+      if(prev._ghsYamlTimer){ clearInterval(prev._ghsYamlTimer); prev._ghsYamlTimer=null; }
+    }
+    ov.remove();
+  }
+}
+function _acpSetTab(tab){
+  document.querySelectorAll('.acp-tab').forEach(b=>b.classList.toggle('on',b.dataset.acpTab===tab));
+  const body=document.getElementById('acp-body');
+  if(!body) return;
+  _cleanupYamlOverlay('acpprev');
+  if(tab!=='yaml') body.style.cssText='flex:1;overflow-y:auto;padding:14px 16px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;min-height:0';
+  if(tab==='installed') _acpRenderInstalled(body);
+  else if(tab==='builtin') _acpRenderBuiltin(body);
+  else if(tab==='yaml') _acpRenderYaml(body);
+}
+function _acpTileHtml(id,name,icon,desc){
+  return `<div class="acp-tile"><div class="acp-tile-icon">${icon||'📦'}</div><div class="acp-tile-name">${eh(name||id)}</div>${desc?`<div class="acp-tile-desc">${eh(desc)}</div>`:''}<button class="acp-tile-btn" data-acp-add="${eh(id)}"><i class="mdi mdi-plus"></i> Aggiungi alla plancia</button></div>`;
+}
+function _acpRenderInstalled(body){
+  const items=_jsStoreList().filter(i=>!i._builtin).sort((a,b)=>((a.meta||{}).name||'').localeCompare((b.meta||{}).name||''));
+  if(!items.length){ body.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.35);font-size:13px;line-height:1.8">Nessuna card installata.<br><span style="font-size:11px;opacity:.6">Installale dallo Store nelle Impostazioni.</span></div>'; return; }
+  body.innerHTML=`<div class="acp-grid">${items.map(i=>{ const m=i.meta||{}; const id=m.id||''; const reg=id?window.FratechCardRegistry?.[id]:null; return _acpTileHtml(id,m.name||id,m.icon||reg?.icon||'📦',reg?.desc||m.desc||''); }).join('')}</div>`;
+}
+function _acpRenderBuiltin(body){
+  const items=_jsStoreList().filter(i=>i._builtin);
+  if(!items.length){ body.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.35);font-size:13px">Nessuna card predefinita.</div>'; return; }
+  body.innerHTML=`<div class="acp-grid">${items.map(i=>{ const m=i.meta||{}; const id=m.id||''; return _acpTileHtml(id,m.name||id,m.icon||'📦',m.desc||''); }).join('')}</div>`;
+}
+function _acpAddJs(id){
+  const regCard=window.FratechCardRegistry?.[id];
+  if(!regCard){ showToast('⚠️ Card non trovata nel registry'); return; }
+  _pendingDropSec=_acpSecId; _pendingDropCol=_acpCol;
+  const page=curPage();
+  const newCard={id:uid(),type:'js-custom',jsCardId:id,label:regCard.name||id,icon:regCard.icon||'📦',color:'#818cf8',entity:'',colSpan:regCard.colSpan||2,rowSpan:regCard.rowSpan||2};
+  _assignSection(page,newCard); page.cards.push(newCard);
+  saveCfg(); renderDash(); _acpClose();
+  showToast('✅ Card aggiunta!');
+  try{if(typeof _epRenderJsStore==='function')_epRenderJsStore();}catch(_){}
+}
+function _acpYamlAdd(){
+  if(!_acpYamlCurrentConfig){ showToast('⚠️ Prima genera l\'anteprima'); return; }
+  const {config,yamlStr}=_acpYamlCurrentConfig;
+  _pendingDropSec=_acpSecId; _pendingDropCol=_acpCol;
+  const page=curPage();
+  const newCard={id:uid(),type:'yaml-card',lovelaceConfig:yamlStr,label:(config.name||config.title||config.type||'YAML Card').toString(),icon:'🧩',color:'#818cf8',colSpan:2,rowSpan:2};
+  _assignSection(page,newCard); page.cards.push(newCard);
+  saveCfg(); renderDash(); _acpClose();
+  showToast('✅ Card YAML aggiunta!');
+}
+function _acpRenderYaml(body){
+  _acpYamlCurrentConfig=null;
+  body.style.cssText='flex:1;padding:0;min-height:0;overflow:hidden;display:flex;flex-direction:column';
+  body.innerHTML=`<div id="acp-yaml-wrap">
+    <div id="acp-yaml-left">
+      <div style="display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.06);gap:8px;flex-shrink:0">
+        <span style="font-size:9px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;flex:1">Configurazione YAML</span>
+        <button data-acp-fmt style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:rgba(255,255,255,.55);font-size:10px;padding:4px 9px;cursor:pointer">⇄ Formatta</button>
+      </div>
+      <div id="acp-yaml-editor-area">
+        <div id="acp-yaml-lines">1</div>
+        <textarea id="acp-yaml-inp" spellcheck="false" placeholder="type: custom:button-card&#10;entity: light.soggiorno&#10;name: Soggiorno"></textarea>
+      </div>
+      <div style="padding:8px 12px;border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:8px;flex-shrink:0;min-height:42px">
+        <div id="acp-yaml-err" style="flex:1;font-size:10px;color:#f87171"></div>
+        <button id="acp-yaml-add-btn" style="background:rgba(139,92,246,.2);border:1px solid rgba(139,92,246,.4);color:#c4b5fd;border-radius:8px;padding:7px 14px;font-size:11px;font-weight:600;cursor:pointer;display:none;white-space:nowrap"><i class="mdi mdi-plus-circle-outline"></i> Aggiungi alla plancia</button>
+      </div>
+    </div>
+    <div id="acp-yaml-right">
+      <div style="display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;gap:6px">
+        <span style="font-size:9px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;flex:1">Anteprima Live</span>
+        <span id="acp-hacs-count" style="font-size:10px;color:rgba(255,255,255,.3)"></span>
+      </div>
+      <div id="acp-yaml-prev-wrap">
+        <div id="acp-yaml-ph" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;color:rgba(255,255,255,.22);font-size:12px;gap:10px;text-align:center;padding:20px"><div style="font-size:22px;font-family:monospace;letter-spacing:-1px">⟨⟩</div>Inserisci YAML per vedere l'anteprima</div>
+        <div id="acp-yaml-prev"></div>
+      </div>
+    </div>
+  </div>`;
+  const ta=document.getElementById('acp-yaml-inp');
+  if(ta){
+    if(_acpYamlContent){ ta.value=_acpYamlContent; _acpYamlSyncLines(); setTimeout(_acpYamlLivePreview,200); }
+    ta.addEventListener('input',()=>{ _acpYamlContent=ta.value; _acpYamlSyncLines(); clearTimeout(_acpYamlTimer); _acpYamlTimer=setTimeout(_acpYamlLivePreview,200); });
+    ta.addEventListener('scroll',_acpYamlSyncScroll);
+  }
+}
+function _acpYamlSyncLines(){
+  const ta=document.getElementById('acp-yaml-inp'),ln=document.getElementById('acp-yaml-lines');
+  if(!ta||!ln) return;
+  ln.textContent=Array.from({length:ta.value.split('\n').length},(_,i)=>i+1).join('\n');
+}
+function _acpYamlSyncScroll(){
+  const ta=document.getElementById('acp-yaml-inp'),ln=document.getElementById('acp-yaml-lines');
+  if(ta&&ln) ln.scrollTop=ta.scrollTop;
+}
+function _acpYamlFormat(){
+  const ta=document.getElementById('acp-yaml-inp'); if(!ta) return;
+  try{
+    const obj=jsyaml.load(ta.value);
+    if(!obj||typeof obj!=='object'){ showToast('❌ YAML non valido'); return; }
+    ta.value=jsyaml.dump(obj,{indent:2,lineWidth:-1}).replace(/\n$/,'');
+    _acpYamlContent=ta.value; _acpYamlSyncLines();
+  }catch(e){ showToast('❌ '+e.message); }
+}
+async function _acpYamlLivePreview(){
+  const ta=document.getElementById('acp-yaml-inp');
+  const prev=document.getElementById('acp-yaml-prev');
+  const ph=document.getElementById('acp-yaml-ph');
+  const errEl=document.getElementById('acp-yaml-err');
+  const addBtn=document.getElementById('acp-yaml-add-btn');
+  const hacsEl=document.getElementById('acp-hacs-count');
+  if(!ta||!prev) return;
+  _cleanupYamlOverlay('acpprev');
+  if(prev._ghsYamlTimer){ clearInterval(prev._ghsYamlTimer); prev._ghsYamlTimer=null; }
+  if(prev._yamlRO){ try{prev._yamlRO.disconnect();}catch(_){} prev._yamlRO=null; }
+  if(prev._yamlScrollOff){ try{prev._yamlScrollOff();}catch(_){} prev._yamlScrollOff=null; }
+  const txt=ta.value.trim();
+  if(!txt){
+    prev.innerHTML=''; prev.style.cssText='';
+    if(ph) ph.style.display='';
+    if(errEl) errEl.textContent=''; if(addBtn) addBtn.style.display='none';
+    _acpYamlCurrentConfig=null; return;
+  }
+  let config;
+  try{ config=jsyaml.load(txt); }catch(e){ if(errEl) errEl.textContent='❌ '+e.message; return; }
+  if(!config||typeof config!=='object'){ if(errEl) errEl.textContent='❌ YAML non valido'; return; }
+  const type=(config.type||'').trim();
+  if(!type){ if(errEl) errEl.textContent='⚠️ Manca il campo type:'; return; }
+  if(errEl) errEl.textContent='';
+  if(ph) ph.style.display='none';
+  _haCompatInit();
+  try{
+    if(!_lovelaceResourcesLoaded){ await _loadLovelaceResources(); }
+    if(!prev.isConnected) return;
+    const pw=window.parent&&window.parent!==window?window.parent:null;
+    const mountId=((prev._acpMountId||0)+1); prev._acpMountId=mountId;
+    if(pw){
+      const cw=Math.max(prev.offsetWidth||0,200);
+      const res=await _createHACard(_patchYamlConfig(config),cw);
+      if(prev._acpMountId!==mountId){ if(res) try{res.ghost.remove();}catch(_){} return; }
+      if(res){
+        const {el,ghost,haEl}=res;
+        prev.innerHTML=''; prev.style.cssText='display:block;width:100%;min-height:80px;background:transparent;';
+        const overlay=pw.document.createElement('div');
+        overlay.id='frarik-yaml-acpprev';
+        overlay.style.cssText='position:fixed;z-index:10;background:transparent;overflow:visible;display:none;';
+        pw.document.body.appendChild(overlay);
+        overlay.appendChild(el); ghost.remove();
+        _relayHassEventsOnOverlay(overlay); _fixOverlaySwipeDrag(overlay);
+        function syncP(){
+          if(!prev.isConnected||!document.getElementById('acp-ov')){ overlay.remove(); return; }
+          if(document.getElementById('frk-splash')){ overlay.style.display='none'; return; }
+          const fr=_findFrameElement();
+          if(!fr){ overlay.style.display='none'; return; }
+          const ir=fr.getBoundingClientRect();
+          if(ir.width<10||ir.height<10){ overlay.style.display='none'; return; }
+          const cr=prev.getBoundingClientRect();
+          const L=ir.left+cr.left,T=ir.top+cr.top,W=cr.width;
+          if(W<=0){ overlay.style.display='none'; return; }
+          overlay.style.cssText='position:fixed;z-index:10;background:transparent;overflow:visible;display:block;'+'left:'+L+'px;top:'+T+'px;width:'+W+'px;pointer-events:auto;';
+          el.style.width=W+'px';
+          const h=el.offsetHeight||el.scrollHeight||0; if(h>10) prev.style.minHeight=h+'px';
+        }
+        syncP();
+        const ro=new ResizeObserver(syncP); ro.observe(prev); prev._yamlRO=ro;
+        const sh=()=>syncP();
+        document.addEventListener('scroll',sh,{passive:true,capture:true});
+        pw.addEventListener('resize',sh,{passive:true});
+        prev._yamlScrollOff=()=>{ document.removeEventListener('scroll',sh,{capture:true}); pw.removeEventListener('resize',sh); };
+        prev._ghsYamlTimer=setInterval(()=>{ try{el.hass=haEl&&haEl.hass?haEl.hass:_getBestHass();}catch(_){} syncP(); },1000);
+        _acpYamlCurrentConfig={config,yamlStr:txt};
+        if(hacsEl) hacsEl.textContent=(window.customCards||[]).length?((window.customCards||[]).length+' card HACS'):'';
+        if(addBtn) addBtn.style.display='';
+        return;
+      }
+    }
+    const elFb=await _yamlCreateEl(_patchYamlConfig(config));
+    elFb.style.cssText='display:block;width:100%'; prev.innerHTML=''; prev.appendChild(elFb);
+    _yamlRefreshHass(prev);
+    prev._ghsYamlTimer=setInterval(()=>{ const p=document.getElementById('acp-yaml-prev'); if(!p||!p.isConnected){clearInterval(prev._ghsYamlTimer);return;} _yamlRefreshHass(p); },800);
+    _acpYamlCurrentConfig={config,yamlStr:txt};
+    if(addBtn) addBtn.style.display='';
+  }catch(e){
+    prev.innerHTML=`<div style="padding:20px;color:#f87171;font-size:11px;text-align:center">⚠️ ${eh(e.message)}</div>`;
+    if(errEl) errEl.textContent='⚠️ '+e.message;
+  }
+}
+
 function addCardToCol(secId, col, triggerEl){
   _pendingDropSec=secId; _pendingDropCol=col;
   document.getElementById('add-col-menu')?.remove();
@@ -527,9 +794,9 @@ function addCardToCol(secId, col, triggerEl){
   const pasteBtn=_cardClipboard?`<button style="${btnStyle};background:rgba(99,102,241,.12);border-color:rgba(99,102,241,.3);color:#a5b4fc" data-action="_pasteCardToClean" data-action-args='["${secId}",${col}]'>📋 Incolla "${eh(_cardClipboard.label||_cardClipboard.type||'Card')}"</button>`:'';
   menu.innerHTML=`
     <div style="font-size:9px;color:#fff;padding:2px 4px 4px;letter-spacing:.5px;text-transform:uppercase">Aggiungi</div>
-    <button style="${btnStyle};background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:#86efac" data-action="_openGhStoreClean">🛒 Apri lo Store</button>
+    <button style="${btnStyle};background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:#86efac" data-action="_acpOpenInstalled" data-action-args='["${secId}",${col}]'>🧩 Card installate</button>
     <button style="${btnStyle};background:rgba(168,85,247,.12);border-color:rgba(168,85,247,.3);color:#c4b5fd" data-action="addPopupPanel" data-action-args='["${secId}",${col}]'>🪟 Popup (apre una vista)</button>
-    <button style="${btnStyle};background:rgba(34,211,238,.1);border-color:rgba(34,211,238,.3);color:#67e8f9" data-action="_installFromUrlPrompt">🔗 Installa card da URL</button>
+    <button style="${btnStyle};background:rgba(34,211,238,.1);border-color:rgba(34,211,238,.3);color:#67e8f9" data-action="_acpOpenYaml" data-action-args='["${secId}",${col}]'>📋 Card YAML</button>
     ${pasteBtn}
   `;
   // Position near the trigger element
