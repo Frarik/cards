@@ -8404,14 +8404,11 @@ function _relayHassEventsOnOverlay(overlay){
   },true);
 }
 
-/* Se type:grid non ha columns: esplicite e tutti i children sono horizontal-stack,
-   si tratta di una lista verticale di righe → forza columns:1 per evitare che il
-   default HA (3 colonne) comprima le horizontal-stack in un terzo della larghezza. */
+/* Se type:grid non ha columns: esplicite, forza columns:1 — in Frarik la larghezza
+   è sempre stretta e il default HA (3 colonne) comprime le righe. */
 function _patchYamlConfig(cfg){
-  if(cfg&&cfg.type==='grid'&&cfg.columns==null&&Array.isArray(cfg.cards)&&cfg.cards.length>0){
-    if(cfg.cards.every(c=>c&&c.type==='horizontal-stack'))
-      return Object.assign({},cfg,{columns:1});
-  }
+  if(cfg&&cfg.type==='grid'&&cfg.columns==null)
+    return Object.assign({},cfg,{columns:1});
   return cfg;
 }
 

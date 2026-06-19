@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.50 — 2026-06-19
+
+### fix(yaml-card): grid columns:1 ora applicato sempre senza condizioni sui children
+
+- `_patchYamlConfig`: rimossa la condizione restrittiva `cfg.cards.every(horizontal-stack)`. Ora qualsiasi `type:grid` senza `columns:` esplicito riceve `columns:1`. Questo garantisce il layout a colonna singola (righe verticali) indipendentemente dal tipo di children presenti nella griglia.
+
 ## 1.5.49 — 2026-06-19
 
 ### feat(yaml-editor): redesign futuristico unificato + live preview veloce
