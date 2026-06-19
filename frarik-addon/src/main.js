@@ -572,6 +572,7 @@ function _openAddCardPopup(secId,col,startTab){
       <button class="acp-tab" data-acp-tab="installed">📦 Installate</button>
       <button class="acp-tab" data-acp-tab="builtin">⭐ Predefinite</button>
       <button class="acp-tab" data-acp-tab="yaml">📋 Card YAML</button>
+      <button class="acp-tab" data-acp-tab="popup">🪟 Popup (apre una vista)</button>
     </div>
     <div id="acp-body"></div>
   </div>`;
@@ -611,6 +612,7 @@ function _acpSetTab(tab){
   if(tab==='installed') _acpRenderInstalled(body);
   else if(tab==='builtin') _acpRenderBuiltin(body);
   else if(tab==='yaml') _acpRenderYaml(body);
+  else if(tab==='popup'){ _acpClose(); addPopupPanel(_acpSecId,_acpCol); }
 }
 function _acpTileHtml(id,name,icon,desc){
   return `<div class="acp-tile"><div class="acp-tile-icon">${icon||'📦'}</div><div class="acp-tile-name">${eh(name||id)}</div>${desc?`<div class="acp-tile-desc">${eh(desc)}</div>`:''}<button class="acp-tile-btn" data-acp-add="${eh(id)}"><i class="mdi mdi-plus"></i> Aggiungi alla plancia</button></div>`;
@@ -828,33 +830,7 @@ async function _acpYamlLivePreview(){
 
 function addCardToCol(secId, col, triggerEl){
   _pendingDropSec=secId; _pendingDropCol=col;
-  document.getElementById('add-col-menu')?.remove();
-  const menu=document.createElement('div');
-  menu.id='add-col-menu';
-  menu.style.cssText='position:fixed;z-index:15000;background:#1a1f35;border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:8px;box-shadow:0 12px 40px rgba(0,0,0,.75);display:flex;flex-direction:column;gap:6px;min-width:210px;animation:popIn .12s ease';
-  const btnStyle='background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:#fff;font-size:12px;padding:9px 12px;cursor:pointer;text-align:left;transition:background .12s';
-  const pasteBtn=_cardClipboard?`<button style="${btnStyle};background:rgba(99,102,241,.12);border-color:rgba(99,102,241,.3);color:#a5b4fc" data-action="_pasteCardToClean" data-action-args='["${secId}",${col}]'>📋 Incolla "${eh(_cardClipboard.label||_cardClipboard.type||'Card')}"</button>`:'';
-  menu.innerHTML=`
-    <div style="font-size:9px;color:#fff;padding:2px 4px 4px;letter-spacing:.5px;text-transform:uppercase">Aggiungi</div>
-    <button style="${btnStyle};background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:#86efac" data-action="_acpOpenInstalled" data-action-args='["${secId}",${col}]'>🧩 Card installate</button>
-    <button style="${btnStyle};background:rgba(168,85,247,.12);border-color:rgba(168,85,247,.3);color:#c4b5fd" data-action="addPopupPanel" data-action-args='["${secId}",${col}]'>🪟 Popup (apre una vista)</button>
-    <button style="${btnStyle};background:rgba(34,211,238,.1);border-color:rgba(34,211,238,.3);color:#67e8f9" data-action="_acpOpenYaml" data-action-args='["${secId}",${col}]'>📋 Card YAML</button>
-    ${pasteBtn}
-  `;
-  // Position near the trigger element
-  const rect=triggerEl?triggerEl.getBoundingClientRect():{left:window.innerWidth/2-95,bottom:window.innerHeight/2};
-  let left=rect.left;
-  let top=rect.bottom+6;
-  // Keep inside viewport
-  if(left+200>window.innerWidth) left=window.innerWidth-208;
-  if(top+130>window.innerHeight) top=rect.top-136;
-  menu.style.left=left+'px';
-  menu.style.top=top+'px';
-  document.body.appendChild(menu);
-  // Close on outside click
-  setTimeout(()=>document.addEventListener('click',function _h(e){
-    if(!menu.contains(e.target)){menu.remove();document.removeEventListener('click',_h);}
-  }),80);
+  _openAddCardPopup(secId, col, 'installed');
 }
 /* ── INSTALLA CARD DA URL (GitHub raw/blob) — per card community esterne ── */
 function _installFromUrlPrompt(){
@@ -4685,8 +4661,8 @@ function _buildSectionEl(sec,page){
       // Add-card button at the bottom of the box
       const addBtn=document.createElement('div');
       addBtn.className='col-add-btn';
-      addBtn.title='Aggiungi card';
-      addBtn.innerHTML='<span style="font-size:17px;line-height:1">+</span> Card';
+      addBtn.title='Aggiungi una Card';
+      addBtn.innerHTML='<span style="font-size:17px;line-height:1">+</span> Aggiungi una Card';
       addBtn.addEventListener('click',e=>addCardToCol(sec.id,col,addBtn));
       box.appendChild(addBtn);
 

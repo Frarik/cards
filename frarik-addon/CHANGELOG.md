@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.55 — 2026-06-20
+
+### feat(add-card): click "+ Card" apre direttamente il popup, rinominato "Aggiungi una Card"
+
+- Rimosso il menu intermedio: cliccare "Aggiungi una Card" apre subito il popup con le card installate.
+- Aggiunta tab "🪟 Popup (apre una vista)" nel popup — cliccandola chiude il popup e avvia il selettore di vista.
+- Rimossa la tab "Card YAML" e "Popup" dal vecchio menu dropdown (ora tutto è nel popup).
+- Pulsante rinominato da "+ Card" a "+ Aggiungi una Card".
+
 ## 1.5.54 — 2026-06-20
 
 ### feat(add-card): anteprima card identica allo Store nel popup "Aggiungi"
