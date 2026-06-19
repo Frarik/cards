@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.53 — 2026-06-20
+
+### fix(add-card): pulsanti "Card installate" e "Card YAML" non funzionavano
+
+- `_acpOpenInstalled` e `_acpOpenYaml` non erano registrate in `Object.assign(window, {...})` — il sistema `data-action` le cercava su `window` e non le trovava, quindi i click venivano ignorati silenziosamente.
+- Aggiunte entrambe al registro globale: i pulsanti ora aprono correttamente il popup.
+
 ## 1.5.52 — 2026-06-20
 
 ### feat(add-card): popup card installate + editor YAML nel menu "+ Card"
