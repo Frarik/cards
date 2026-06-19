@@ -1208,22 +1208,46 @@
 <!-- YAML IMPORT MODAL -->
 <div class="off" id="yaml-modal">
   <div id="yaml-box">
-    <div class="mhdr">
-      <i class="mdi mdi-code-braces" style="font-size:18px;color:#818cf8"></i>
-      <span class="mtitle" style="flex:1">Incolla card YAML (HACS)</span>
-      <button class="mx" data-action="closeYamlImport">✕</button>
-    </div>
-    <div id="yaml-body">
-      <div style="font-size:11px;color:var(--muted);line-height:1.6;background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.18);border-radius:10px;padding:10px 12px">
-        💡 Copia il codice YAML di una card HACS (Bubble Card, Mushroom, Mini Graph…), incollalo qui e clicca <b>Carica anteprima</b>. La card deve essere già installata in HACS sulla tua istanza HA.
+    <div id="ymd-header">
+      <div id="ymd-title-wrap">
+        <span id="ymd-title-icon">⟨/⟩</span>
+        <span id="ymd-title">YAML Card Editor</span>
       </div>
-      <textarea id="yaml-inp" spellcheck="false" placeholder="type: custom:bubble-card&#10;card_type: button&#10;entity: light.soggiorno&#10;name: Soggiorno"></textarea>
-      <div id="yaml-status"></div>
-      <div id="yaml-preview"></div>
+      <div id="ymd-actions">
+        <button class="ymd-hdr-btn" data-action="ymdFormat" title="Formatta YAML">⇄ Format</button>
+        <button class="ymd-hdr-btn" data-action="ymdReload" title="Ricarica anteprima">↻</button>
+        <button class="mx" data-action="closeYamlImport">✕</button>
+      </div>
     </div>
-    <div id="yaml-footer">
-      <button class="yaml-act-btn primary" data-action="yamlImportParse"><i class="mdi mdi-eye-outline"></i> Carica anteprima</button>
-      <button class="yaml-act-btn success" id="yaml-add-btn" data-action="yamlImportAdd"><i class="mdi mdi-plus-circle-outline"></i> Aggiungi alla dashboard</button>
+    <div id="ymd-wrap">
+      <div id="ymd-left">
+        <div class="ymd-pane-hdr">
+          <span class="ymd-pane-lbl">CONFIGURAZIONE</span>
+        </div>
+        <div id="ymd-editor-area">
+          <div id="ymd-lines" aria-hidden="true">1</div>
+          <textarea id="ymd-inp" spellcheck="false" placeholder="type: custom:button-card&#10;entity: light.soggiorno&#10;name: Soggiorno"></textarea>
+        </div>
+        <div id="ymd-foot">
+          <div id="ymd-err"></div>
+          <button id="ymd-add-btn" class="ymd-add-btn" data-action="_ymdAddToDash" style="display:none">
+            <i class="mdi mdi-plus-circle-outline"></i> Aggiungi alla Dashboard
+          </button>
+        </div>
+      </div>
+      <div id="ymd-right">
+        <div class="ymd-pane-hdr">
+          <span class="ymd-pane-lbl">ANTEPRIMA LIVE</span>
+          <span id="ymd-hacs-count"></span>
+        </div>
+        <div id="ymd-prev-wrap">
+          <div id="ymd-placeholder">
+            <div id="ymd-ph-icon">⟨⟩</div>
+            <div>Inserisci il YAML per vedere l'anteprima</div>
+          </div>
+          <div id="ymd-prev"></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>

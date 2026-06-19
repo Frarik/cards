@@ -2637,8 +2637,8 @@ async function _ghsYamlAdd(name){
   let txt; try{ txt=await _ghDownload(f); }catch(e){ showToast('⚠️ '+(e.message||e)); return; }
   try{ closeGhStore(); }catch(e){}
   openYamlImport();
-  const inp=document.getElementById('yaml-inp'); if(inp) inp.value=txt;
-  try{ await yamlImportParse(); }catch(e){}   // genera l'anteprima; poi l'utente preme "Aggiungi"
+  const inp=document.getElementById('ymd-inp'); if(inp){ inp.value=txt; _ymdSyncLines(); }
+  try{ await _ymdLivePreview(); }catch(e){}   // genera l'anteprima; poi l'utente preme "Aggiungi"
 }
 
 /* ════════ PKG — Store locale pacchetti YAML (come card JS, ma per file .yaml) ════════ */
@@ -6109,28 +6109,25 @@ function openCM(cardId){
   if(c.type==='header-bar'){ openHBM(cardId); return; }
   if(c.type==='footer-bar'){ openFBM(); return; }
   if(c.type==='yaml-card'){
-    // Apre l'editor YAML con la config attuale
-    _yamlCurrentConfig=null;
-    document.getElementById('yaml-inp').value=c.lovelaceConfig||'';
-    document.getElementById('yaml-status').textContent='';
-    document.getElementById('yaml-status').className='';
-    document.getElementById('yaml-preview').className='';
-    document.getElementById('yaml-preview').innerHTML='';
-    // Override "Aggiungi" per salvare le modifiche
-    document.getElementById('yaml-add-btn').className='yaml-act-btn success show';
-    document.getElementById('yaml-add-btn').textContent='💾 Aggiorna card';
-    document.getElementById('yaml-add-btn').onclick=function(){
-      const txt=(document.getElementById('yaml-inp').value||'').trim();
-      if(!txt) return;
-      c.lovelaceConfig=txt;
-      try{ const cfg2=jsyaml.load(txt); c.label=(cfg2.name||cfg2.title||cfg2.type||c.label).toString(); }catch(e){}
-      saveCfg(); renderDash(); closeYamlImport();
-      document.getElementById('yaml-add-btn').onclick=yamlImportAdd;
-      document.getElementById('yaml-add-btn').textContent='';
-      document.getElementById('yaml-add-btn').innerHTML='<i class="mdi mdi-plus-circle-outline"></i> Aggiungi alla dashboard';
-      showToast('✅ Card YAML aggiornata');
-    };
-    document.getElementById('yaml-modal').classList.remove('off');
+    _ymdCurrentConfig=null;
+    openYamlImport();
+    const ta=document.getElementById('ymd-inp'); if(ta){ ta.value=c.lovelaceConfig||''; _ymdSyncLines(); }
+    // Override add-btn per modalità modifica
+    const addBtn=document.getElementById('ymd-add-btn');
+    if(addBtn){
+      addBtn.innerHTML='<i class="mdi mdi-content-save-outline"></i> Aggiorna card';
+      addBtn.style.display='';
+      addBtn.onclick=function(){
+        const txt=(document.getElementById('ymd-inp').value||'').trim();
+        if(!txt) return;
+        c.lovelaceConfig=txt;
+        try{ const cfg2=jsyaml.load(txt); c.label=(cfg2.name||cfg2.title||cfg2.type||c.label).toString(); }catch(e){}
+        saveCfg(); renderDash(); closeYamlImport();
+        addBtn.onclick=null;
+        showToast('✅ Card YAML aggiornata');
+      };
+    }
+    try{ _ymdLivePreview(); }catch(e){}
     return;
   }
   document.getElementById('cmod-title').textContent='✏️ '+c.label;
@@ -9110,7 +9107,6 @@ function _ghStoreRenderYamlEditor(){
           <div id="ghsy-lines" aria-hidden="true"></div>
           <textarea id="ghsy-inp" spellcheck="false" placeholder="type: custom:button-card&#10;entity: light.soggiorno&#10;name: Soggiorno"></textarea>
         </div>
-        <div id="ghsy-hint">Stesso formato YAML di HA. Il campo <code>type</code> è obbligatorio.</div>
         <div id="ghsy-foot">
           <div id="ghsy-err"></div>
           <button id="ghsy-add-btn" class="ghsy-add-btn" data-action="_ghsYamlAddToDash" style="display:none">
@@ -9125,8 +9121,8 @@ function _ghStoreRenderYamlEditor(){
         </div>
         <div id="ghsy-prev-wrap">
           <div id="ghsy-placeholder">
-            <div style="font-size:28px;margin-bottom:10px;opacity:.3">📺</div>
-            <div>Inserisci il tipo nel YAML per vedere l'anteprima</div>
+            <div style="font-size:18px;font-family:monospace;opacity:.35;letter-spacing:-1px">⟨⟩</div>
+            <div>Inserisci il YAML per vedere l'anteprima</div>
           </div>
           <div id="ghsy-prev"></div>
         </div>
@@ -9140,7 +9136,7 @@ function _ghStoreRenderYamlEditor(){
       _ghsYamlEditorContent=ta.value;
       _ghsYamlSyncLines();
       clearTimeout(_ghsYamlEditorTimer);
-      _ghsYamlEditorTimer=setTimeout(_ghsYamlLivePreview,600);
+      _ghsYamlEditorTimer=setTimeout(_ghsYamlLivePreview,200);
     });
     ta.addEventListener('scroll',_ghsYamlSyncScroll);
     if(_ghsYamlEditorContent) setTimeout(_ghsYamlLivePreview,200);
@@ -9310,72 +9306,206 @@ function _ghsYamlAddToDash(){
   showToast('✅ Card YAML aggiunta alla dashboard');
 }
 
-/* ════════ YAML IMPORT ════════ */
+/* ════════ YAML IMPORT MODAL (ymd-*) ════════ */
+let _ymdCurrentConfig=null, _ymdEditorTimer=null, _ymdListenersAttached=false;
+/* alias per compatibilità con chiamate esterne */
 let _yamlCurrentConfig=null;
-function openYamlImport(){
-  _yamlCurrentConfig=null;
-  document.getElementById('yaml-inp').value='';
-  document.getElementById('yaml-status').textContent='';
-  document.getElementById('yaml-status').className='';
-  document.getElementById('yaml-preview').className='';
-  document.getElementById('yaml-preview').innerHTML='';
-  document.getElementById('yaml-add-btn').className='yaml-act-btn success';
-  document.getElementById('yaml-modal').classList.remove('off');
-  setTimeout(()=>document.getElementById('yaml-inp').focus(),80);
+function yamlImportParse(){ return _ymdLivePreview(); }
+function yamlImportAdd(){ return _ymdAddToDash(); }
+
+function _ymdSyncLines(){
+  const ta=document.getElementById('ymd-inp');
+  const ln=document.getElementById('ymd-lines');
+  if(!ta||!ln) return;
+  const n=ta.value.split('\n').length;
+  ln.textContent=Array.from({length:n},(_,i)=>i+1).join('\n');
 }
-function closeYamlImport(){
-  document.getElementById('yaml-modal').classList.add('off');
-  const old=document.getElementById('yaml-act-row'); if(old) old.remove();
+function _ymdSyncScroll(){
+  const ta=document.getElementById('ymd-inp');
+  const ln=document.getElementById('ymd-lines');
+  if(ta&&ln) ln.scrollTop=ta.scrollTop;
 }
-function _yamlStatus(msg,type){
-  const el=document.getElementById('yaml-status');
-  el.textContent=msg; el.className=type||'';
-}
-async function yamlImportParse(){
-  const txt=(document.getElementById('yaml-inp').value||'').trim();
-  if(!txt){ _yamlStatus('Incolla il codice YAML della card','warn'); return; }
-  let config;
-  try{ config=jsyaml.load(txt); }catch(e){ _yamlStatus('❌ YAML non valido: '+e.message,'error'); return; }
-  if(!config||typeof config!=='object'){ _yamlStatus('❌ YAML vuoto o non riconosciuto','error'); return; }
-  const type=(config.type||'').trim();
-  if(!type){ _yamlStatus('❌ Manca il campo "type:" nel YAML','error'); return; }
-  _yamlStatus('⏳ Carico risorse e genero anteprima…','loading');
-  document.getElementById('yaml-add-btn').className='yaml-act-btn success';
-  _yamlCurrentConfig={config,yamlStr:jsyaml.dump(config)};
-  // ANTEPRIMA con LO STESSO renderer della dashboard (_yamlCreateEl) → quello che vedi qui è ciò che otterrai
-  const prev=document.getElementById('yaml-preview');
-  prev.innerHTML='';
-  prev.className='show';
-  try{
-    if(!_lovelaceResourcesLoaded){ await _loadLovelaceResources(); await new Promise(r=>setTimeout(r,500)); }
-    const el=await _yamlCreateEl(config);
-    el.style.cssText='display:block;width:100%';
-    prev.appendChild(el);
-    _yamlRefreshHass(prev);
-    _yamlStatus('✅ Anteprima generata · '+((window.customCards||[]).length)+' card HACS rilevate. Le card semplici si vedono; quelle molto complesse no (limite tecnico, vedi sotto).','ok');
-  }catch(e){
-    prev.innerHTML='<div style="padding:12px;color:#f87171;font-size:11px">Errore anteprima: '+eh(e.message)+'</div>';
-    _yamlStatus('⚠️ '+e.message,'warn');
+
+async function _ymdLivePreview(){
+  const ta=document.getElementById('ymd-inp');
+  const prev=document.getElementById('ymd-prev');
+  const ph=document.getElementById('ymd-placeholder');
+  const errEl=document.getElementById('ymd-err');
+  const addBtn=document.getElementById('ymd-add-btn');
+  const hacsEl=document.getElementById('ymd-hacs-count');
+  if(!ta||!prev) return;
+
+  _cleanupYamlOverlay('ymdprev');
+  if(prev._ymdTimer){ clearInterval(prev._ymdTimer); prev._ymdTimer=null; }
+  if(prev._ymdRO){ try{ prev._ymdRO.disconnect(); }catch(_){} prev._ymdRO=null; }
+  if(prev._ymdScrollOff){ try{ prev._ymdScrollOff(); }catch(_){} prev._ymdScrollOff=null; }
+
+  const txt=ta.value.trim();
+  if(!txt){
+    prev.innerHTML=''; prev.style.cssText='';
+    if(ph) ph.style.display='';
+    if(errEl) errEl.textContent='';
+    if(addBtn&&!addBtn.onclick) addBtn.style.display='none';
+    _ymdCurrentConfig=null; return;
   }
-  document.getElementById('yaml-add-btn').className='yaml-act-btn success show';
+  let config;
+  try{ config=jsyaml.load(txt); }catch(e){
+    if(errEl) errEl.textContent='❌ YAML non valido: '+e.message; return;
+  }
+  if(!config||typeof config!=='object'){ if(errEl) errEl.textContent='❌ YAML vuoto o non valido'; return; }
+  const type=(config.type||'').trim();
+  if(!type){ if(errEl) errEl.textContent='⚠️ Manca il campo type:'; return; }
+  if(errEl) errEl.textContent='';
+  if(ph) ph.style.display='none';
+
+  _haCompatInit();
+  try{
+    if(!_lovelaceResourcesLoaded){ await _loadLovelaceResources(); }
+    if(!prev.isConnected) return;
+
+    const pw=window.parent&&window.parent!==window?window.parent:null;
+    const prevMountId=((prev._ymdMountId||0)+1);
+    prev._ymdMountId=prevMountId;
+
+    if(pw){
+      const cw=Math.max(prev.offsetWidth||0,200);
+      const res=await _createHACard(_patchYamlConfig(config),cw);
+      if(prev._ymdMountId!==prevMountId){ if(res) try{ res.ghost.remove(); }catch(_){} return; }
+      if(res){
+        const {el,ghost,haEl}=res;
+        prev.innerHTML='';
+        prev.style.cssText='display:block;width:100%;min-height:80px;background:transparent;';
+
+        const overlay=pw.document.createElement('div');
+        overlay.id='frarik-yaml-ymdprev';
+        overlay.style.cssText='position:fixed;z-index:10;background:transparent;overflow:visible;display:none;';
+        pw.document.body.appendChild(overlay);
+        overlay.appendChild(el);
+        ghost.remove();
+        _relayHassEventsOnOverlay(overlay);
+        _fixOverlaySwipeDrag(overlay);
+
+        function syncP(){
+          if(!prev.isConnected){ overlay.remove(); return; }
+          if(document.getElementById('frk-splash')){ overlay.style.display='none'; return; }
+          const fr=_findFrameElement();
+          if(!fr){ overlay.style.display='none'; return; }
+          const ir=fr.getBoundingClientRect();
+          if(ir.width<10||ir.height<10){ overlay.style.display='none'; return; }
+          const cr=prev.getBoundingClientRect();
+          const L=ir.left+cr.left, T=ir.top+cr.top, W=cr.width;
+          if(W<=0){ overlay.style.display='none'; return; }
+          overlay.style.cssText='position:fixed;z-index:10;background:transparent;overflow:visible;display:block;'
+            +'left:'+L+'px;top:'+T+'px;width:'+W+'px;pointer-events:auto;';
+          el.style.width=W+'px';
+          const h=el.offsetHeight||el.scrollHeight||0;
+          if(h>10) prev.style.minHeight=h+'px';
+        }
+        syncP();
+        const ro=new ResizeObserver(syncP); ro.observe(prev); prev._ymdRO=ro;
+        const sh=()=>syncP();
+        window.addEventListener('scroll',sh,{passive:true,capture:true});
+        pw.addEventListener('resize',sh,{passive:true});
+        prev._ymdScrollOff=()=>{ window.removeEventListener('scroll',sh,{capture:true}); pw.removeEventListener('resize',sh); };
+        prev._ymdTimer=setInterval(()=>{
+          try{ el.hass=haEl&&haEl.hass?haEl.hass:_getBestHass(); }catch(_){}
+          syncP();
+        },1000);
+
+        _ymdCurrentConfig={config,yamlStr:txt};
+        const nc=(window.customCards||[]).length;
+        if(hacsEl) hacsEl.textContent=nc?(nc+' HACS'):'';
+        if(addBtn&&!addBtn.onclick) addBtn.style.display='';
+        return;
+      }
+    }
+
+    // Fallback render interno
+    prev.innerHTML='';
+    prev.style.cssText='display:block;width:100%;padding:4px';
+    _injectHACSSVars(prev);
+    const elFb=await _yamlCreateEl(config);
+    elFb.style.cssText='display:block;width:100%';
+    prev.appendChild(elFb);
+    _yamlRefreshHass(prev);
+    prev._ymdTimer=setInterval(()=>{
+      const p=document.getElementById('ymd-prev');
+      if(!p||!p.isConnected){ clearInterval(prev._ymdTimer); return; }
+      _yamlRefreshHass(p);
+    },800);
+    _ymdCurrentConfig={config,yamlStr:txt};
+    const nc=(window.customCards||[]).length;
+    if(hacsEl) hacsEl.textContent=nc?(nc+' HACS'):'';
+    if(addBtn&&!addBtn.onclick) addBtn.style.display='';
+  }catch(e){
+    if(errEl) errEl.textContent='❌ '+e.message;
+    if(prev) prev.innerHTML=`<div style="padding:20px;color:#f87171;font-size:11px;text-align:center">⚠️ ${eh(e.message)}</div>`;
+  }
 }
-function yamlImportAdd(){
-  if(!_yamlCurrentConfig){ _yamlStatus('Prima fai "Carica anteprima"','warn'); return; }
-  const {config,yamlStr}=_yamlCurrentConfig;
+
+function ymdFormat(){
+  const ta=document.getElementById('ymd-inp');
+  if(!ta) return;
+  try{
+    const obj=jsyaml.load(ta.value);
+    if(!obj||typeof obj!=='object'){ showToast('❌ YAML non valido'); return; }
+    ta.value=jsyaml.dump(obj,{indent:2,lineWidth:-1}).replace(/\n$/,'');
+    _ymdSyncLines();
+  }catch(e){ showToast('❌ '+e.message); }
+}
+function ymdReload(){ clearTimeout(_ymdEditorTimer); _ymdLivePreview(); }
+
+function _ymdAddToDash(){
+  if(!_ymdCurrentConfig){ showToast('⚠️ Attendi l\'anteprima'); return; }
+  const {config,yamlStr}=_ymdCurrentConfig;
   const page=curPage();
   const newCard={
-    id:uid(),
-    type:'yaml-card',          // tipo dedicato — niente conversione JS
-    lovelaceConfig:yamlStr,    // YAML originale conservato intatto
+    id:uid(),type:'yaml-card',
+    lovelaceConfig:yamlStr,
     label:(config.name||config.title||config.type||'YAML Card').toString(),
-    icon:'🧩',color:'#818cf8',
-    colSpan:2,rowSpan:2
+    icon:'🧩',color:'#818cf8',colSpan:2,rowSpan:2
   };
   _assignSection(page,newCard);
   page.cards.push(newCard);
   saveCfg(); renderDash();
   closeYamlImport();
   showToast('✅ Card YAML aggiunta alla dashboard');
+}
+
+function openYamlImport(){
+  _ymdCurrentConfig=null;
+  _yamlCurrentConfig=null;
+  clearTimeout(_ymdEditorTimer);
+  // Setup listeners once
+  if(!_ymdListenersAttached){
+    _ymdListenersAttached=true;
+    const ta=document.getElementById('ymd-inp');
+    if(ta){
+      ta.addEventListener('input',()=>{
+        _ymdSyncLines();
+        clearTimeout(_ymdEditorTimer);
+        _ymdEditorTimer=setTimeout(_ymdLivePreview,200);
+      });
+      ta.addEventListener('scroll',_ymdSyncScroll);
+    }
+  }
+  const ta=document.getElementById('ymd-inp');
+  if(ta){ ta.value=''; }
+  const errEl=document.getElementById('ymd-err'); if(errEl) errEl.textContent='';
+  const hacsEl=document.getElementById('ymd-hacs-count'); if(hacsEl) hacsEl.textContent='';
+  const ph=document.getElementById('ymd-placeholder'); if(ph) ph.style.display='';
+  const prev=document.getElementById('ymd-prev'); if(prev){ prev.innerHTML=''; prev.style.cssText=''; }
+  const addBtn=document.getElementById('ymd-add-btn');
+  if(addBtn){ addBtn.style.display='none'; addBtn.onclick=null; addBtn.innerHTML='<i class="mdi mdi-plus-circle-outline"></i> Aggiungi alla Dashboard'; }
+  _ymdSyncLines();
+  document.getElementById('yaml-modal').classList.remove('off');
+  setTimeout(()=>{ const t=document.getElementById('ymd-inp'); if(t) t.focus(); },80);
+}
+function closeYamlImport(){
+  _cleanupYamlOverlay('ymdprev');
+  clearTimeout(_ymdEditorTimer);
+  document.getElementById('yaml-modal').classList.add('off');
+  const old=document.getElementById('yaml-act-row'); if(old) old.remove();
 }
 /* Registra una card Lovelace (tag custom element) come card FratechStore (wrapper) */
 /* Crea un custom element: prova prima nel documento corrente,
@@ -14893,6 +15023,9 @@ Object.assign(window, {
   undoEdit,
   yamlImportAdd,
   yamlImportParse,
+  ymdFormat,
+  ymdReload,
+  _ymdAddToDash,
   // ── Wrapper aggiunti nel refactor handler ──
   _covSkip, _feEpClose, _ntfSaveRules, _jsDropzoneClick, _ghsDropzoneClick,
   _ghCheckForce, _epToggleLicense, _epLicLogout, hbAddColorMapEntry, _hbResetColor,

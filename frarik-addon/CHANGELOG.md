@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.5.49 — 2026-06-19
+
+### feat(yaml-editor): redesign futuristico unificato + live preview veloce
+
+- **UI unificata**: l'editor YAML nella Store tab e il modale della plancia ora hanno lo stesso aspetto e le stesse funzionalità — layout 2 colonne (sinistra: codice con numeri di riga, destra: anteprima live).
+- **Debounce veloce**: anteprima live aggiornata con 200ms di debounce (era 600ms nel Store, e manuale nel modale).
+- **Stile futuristico minimale**: sfondi `#06060f`, bordi violet `rgba(139,92,246,.x)`, numeri di riga indaco, font monospace. Il modale è 860px di larghezza.
+- **Modal plancia**: il vecchio modale con textarea singola e pulsante "Carica anteprima" è stato sostituito dall'editor a due colonne con overlay HA (stesso renderer del Store — CSS custom properties di HA disponibili).
+- **Nuovo overlay ID** `frarik-yaml-ymdprev` per la preview modale (isolato da `frarik-yaml-preview` dello Store).
+- Funzioni nuove: `_ymdLivePreview`, `_ymdSyncLines`, `_ymdSyncScroll`, `ymdFormat`, `ymdReload`, `_ymdAddToDash`.
+
 ## 1.5.48 — 2026-06-19
 
 ### fix(yaml-card): grid 1 colonna + swipe-card drag pointer
