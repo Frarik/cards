@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.48 — 2026-06-19
+
+### fix(yaml-card): grid 1 colonna + swipe-card drag pointer
+
+- **Grid columns**: `type:grid` senza `columns:` esplicito e tutti i children `horizontal-stack` → Frarik inietta `columns:1` automaticamente. La card è una lista verticale di righe (ogni `horizontal-stack` = riga con 2 card affiancate). Senza questa patch HA usa il default di 3 colonne → righe compresse a 1/3 della larghezza.
+- **Swipe-card drag**: quando si trascina una swipe-card, il cursore può uscire dai bordi dell'overlay ed entrare nell'area dell'iframe Frarik — in quel momento il `pointerup` non raggiunge Swiper.js e la slide rimane bloccata dove si lascia il mouse. Fix: `_fixOverlaySwipeDrag` — al `pointerdown` sull'overlay imposta `pointer-events:none` sull'iframe, così tutti i successivi eventi puntatore (incluso il `pointerup`) restano nell'HA DOM e Swiper può fare lo snap correttamente.
+
 ## 1.5.47 — 2026-06-19
 
 ### fix(yaml-card): layout cramped (Bug 1) + doppio overlay race condition (Bug 2)

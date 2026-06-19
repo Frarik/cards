@@ -8407,6 +8407,37 @@ function _relayHassEventsOnOverlay(overlay){
   },true);
 }
 
+/* Se type:grid non ha columns: esplicite e tutti i children sono horizontal-stack,
+   si tratta di una lista verticale di righe → forza columns:1 per evitare che il
+   default HA (3 colonne) comprima le horizontal-stack in un terzo della larghezza. */
+function _patchYamlConfig(cfg){
+  if(cfg&&cfg.type==='grid'&&cfg.columns==null&&Array.isArray(cfg.cards)&&cfg.cards.length>0){
+    if(cfg.cards.every(c=>c&&c.type==='horizontal-stack'))
+      return Object.assign({},cfg,{columns:1});
+  }
+  return cfg;
+}
+
+/* Durante un drag/swipe sull'overlay, disabilita pointer-events sull'iframe di Frarik
+   per evitare che il cursore che esce dai bordi dell'overlay cada sull'iframe e Swiper
+   non riceva il pointerup (bug: slide rimane dove si lascia il mouse). */
+function _fixOverlaySwipeDrag(overlay){
+  if(!overlay||overlay._swipeDragFixed) return;
+  overlay._swipeDragFixed=true;
+  overlay.addEventListener('pointerdown',()=>{
+    const fr=_findFrameElement();
+    if(fr) fr.style.pointerEvents='none';
+    const restore=()=>{ try{ if(fr) fr.style.pointerEvents=''; }catch(_){} };
+    try{
+      const pw=window.parent&&window.parent!==window?window.parent:null;
+      if(pw){
+        pw.addEventListener('pointerup',restore,{once:true,capture:true});
+        pw.addEventListener('pointercancel',restore,{once:true,capture:true});
+      }
+    }catch(_){}
+  },{passive:true});
+}
+
 /* ════════ RENDER FEDELE "alla Oikos": dashboard HA dedicata + iframe ════════
    Per ogni card YAML scriviamo una VISTA in una dashboard HA nascosta (frarik-yaml) e la
    mostriamo in un <iframe>: così è Home Assistant stesso a disegnare la card → identica,
@@ -8644,7 +8675,7 @@ async function _mountYamlCard(card, container){
 
   if(pw){
     const cw=Math.max(container.offsetWidth||0,200);
-    const res=await _createHACard(cfg,cw);
+    const res=await _createHACard(_patchYamlConfig(cfg),cw);
     // Monta stantio: un'altra chiamata è partita durante il pre-render → scarta
     if(container._yamlMountId!==mountId){ if(res) try{ res.ghost.remove(); }catch(_){} return; }
     if(res){
@@ -8660,6 +8691,7 @@ async function _mountYamlCard(card, container){
       overlay.appendChild(el);
       ghost.remove();
       _relayHassEventsOnOverlay(overlay);
+      _fixOverlaySwipeDrag(overlay);
 
       function syncPos(){
         if(!container.isConnected){ overlay.remove(); return; }
@@ -9173,7 +9205,7 @@ async function _ghsYamlLivePreview(){
 
     if(pw){
       const cw=Math.max(prev.offsetWidth||0,200);
-      const res=await _createHACard(config,cw);
+      const res=await _createHACard(_patchYamlConfig(config),cw);
       if(prev._ghsYamlMountId!==prevMountId){ if(res) try{ res.ghost.remove(); }catch(_){} return; }
       if(res){
         const {el,ghost,haEl}=res;
@@ -9187,6 +9219,7 @@ async function _ghsYamlLivePreview(){
         overlay.appendChild(el);
         ghost.remove();
         _relayHassEventsOnOverlay(overlay);
+        _fixOverlaySwipeDrag(overlay);
 
         function syncP(){
           if(!prev.isConnected){ overlay.remove(); return; }
