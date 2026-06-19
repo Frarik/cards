@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.45 — 2026-06-19
+
+### revert(yaml-card): ripristino overlay HA — adoptNode non funziona
+
+- **Causa**: dopo `document.adoptNode`, le CSS custom properties del tema HA (`--primary-color`, `--mdi-icon-size`, variabili mushroom, card_mod, ecc.) non sono disponibili nel documento Frarik. Le card renderizzano senza stili: icone enormi/nere, testi invisibili, layout rotto.
+- **Conclusione**: l'overlay `position:fixed` nel DOM di `window.parent` è **necessario** per mantenere le card nel realm HA dove tutte le variabili CSS, gli stili globali e i custom elements registrati funzionano correttamente.
+- Ripristinato il codice overlay di v1.5.43 (tutti i fix già presenti: edit mode, impostazioni, splash, navigazione HA).
+
 ## 1.5.44 — 2026-06-18
 
 ### refactor(yaml-card): elimina l'overlay HA — adoptNode invece di position:fixed
