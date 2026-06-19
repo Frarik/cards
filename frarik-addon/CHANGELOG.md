@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.51 — 2026-06-20
+
+### fix(yaml-card): scroll mobile + wheel desktop sull'overlay
+
+- **Scroll listener corretto**: cambiato da `window.addEventListener('scroll')` a `document.addEventListener('scroll', ..., {capture:true})`. Il container scrollabile di Frarik è `#dash` con `overflow:auto` — gli scroll events su un div figlio non bubblano su `window`, ma vengono catturati in fase capture su `document`.
+- **Touch scroll mobile**: l'overlay HA intercettava i touch events sul telefono impedendo lo scorrimento di Frarik. Ora `_fixOverlaySwipeDrag` rileva la direzione del gesto — se verticale, forwarda il delta direttamente a `#dash.scrollTop` nell'iframe; se orizzontale, lascia passare il gesto alla swipe-card.
+- **Wheel desktop**: aggiunto listener `wheel` sull'overlay che forwarda `deltaY` a `#dash.scrollTop`, in modo che lo scroll col mouse funzioni anche quando il cursore è sopra una YAML card.
+
 ## 1.5.50 — 2026-06-19
 
 ### fix(yaml-card): grid columns:1 ora applicato sempre senza condizioni sui children

@@ -8418,6 +8418,40 @@ function _patchYamlConfig(cfg){
 function _fixOverlaySwipeDrag(overlay){
   if(!overlay||overlay._swipeDragFixed) return;
   overlay._swipeDragFixed=true;
+
+  // Mobile: forward touch verticale a #dash di Frarik (scroll events non attraversano overlay)
+  let _tY=0,_tX=0,_tDir=0; // _tDir: 0=indefinito, 1=verticale, -1=orizzontale
+  overlay.addEventListener('touchstart',e=>{
+    _tY=e.touches[0].clientY; _tX=e.touches[0].clientX; _tDir=0;
+  },{passive:true});
+  overlay.addEventListener('touchmove',e=>{
+    const dy=_tY-e.touches[0].clientY;
+    const adx=Math.abs(_tX-e.touches[0].clientX);
+    if(_tDir===0&&(Math.abs(dy)>4||adx>4)) _tDir=Math.abs(dy)>=adx?1:-1;
+    if(_tDir===1){
+      try{
+        const fr=_findFrameElement();
+        if(fr&&fr.contentWindow){
+          const d=fr.contentWindow.document.getElementById('dash');
+          if(d) d.scrollTop+=dy; else fr.contentWindow.scrollBy(0,dy);
+        }
+      }catch(_){}
+      _tY=e.touches[0].clientY;
+    }
+  },{passive:true});
+
+  // Desktop: forward wheel a #dash di Frarik
+  overlay.addEventListener('wheel',e=>{
+    try{
+      const fr=_findFrameElement();
+      if(fr&&fr.contentWindow){
+        const d=fr.contentWindow.document.getElementById('dash');
+        if(d) d.scrollTop+=e.deltaY; else fr.contentWindow.scrollBy(0,e.deltaY);
+      }
+    }catch(_){}
+  },{passive:true});
+
+  // Swipe-card drag fix: pointer-events:none sull'iframe durante il drag orizzontale
   overlay.addEventListener('pointerdown',()=>{
     const fr=_findFrameElement();
     if(fr) fr.style.pointerEvents='none';
@@ -8728,10 +8762,11 @@ async function _mountYamlCard(card, container){
       container._yamlRO=ro;
 
       const scrollH=()=>syncPos();
-      window.addEventListener('scroll',scrollH,{passive:true,capture:true});
+      // capture:true cattura scroll su qualsiasi elemento figlio (es. #dash con overflow:auto)
+      document.addEventListener('scroll',scrollH,{passive:true,capture:true});
       pw.addEventListener('resize',scrollH,{passive:true});
       container._yamlScrollOff=()=>{
-        window.removeEventListener('scroll',scrollH,{capture:true});
+        document.removeEventListener('scroll',scrollH,{capture:true});
         pw.removeEventListener('resize',scrollH);
       };
 
