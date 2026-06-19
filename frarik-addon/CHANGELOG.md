@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.44 — 2026-06-18
+
+### refactor(yaml-card): elimina l'overlay HA — adoptNode invece di position:fixed
+
+- **Architettura**: le card YAML non vengono più montate come `position:fixed` nel DOM di `window.parent`. Ora vengono pre-renderizzate in un ghost-div nascosto nel realm HA per 800 ms, poi adottate in Frarik's document via `document.adoptNode()` e inserite direttamente nel container della plancia.
+- **Perché funziona**: Lit 2.x riusa gli elementi DOM esistenti al re-render (non li ricrea), quindi `ha-card`, `hui-*`, `better-moment-card`, `card_mod` restano intatti dopo l'adozione.
+- **Eliminati**: `_findFrameElement`, `_cachedFrameEl`, `_cleanupYamlOverlay`, `_relayHassEventsOnOverlay`, `syncPos()`, listener `location-changed`/`popstate`/`pagehide`/`unload` in `_haCompatInit`.
+- **Aggiunto**: `_relayHassEventsOnContainer()` — intercetta `hass-action` (eseguito via `_handleHassAction`), `hass-more-info` (re-dispatched su `home-assistant` in HA) e `location-changed` (re-dispatched su `window.parent`).
+- **Risultato**: card YAML si comportano come qualsiasi altra card Frarik — nessun problema di edit mode, impostazioni, splash, o navigazione HA.
+
 ## 1.5.43 — 2026-06-18
 
 ### fix(yaml-card): overlay nascosto in edit mode + preload HACS resources al boot
