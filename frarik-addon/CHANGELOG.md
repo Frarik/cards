@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.46 — 2026-06-19
+
+### fix(yaml-card): card non si aggiorna più alla chiusura di popup more-info / grafici
+
+- **Root cause**: `location-changed` e `popstate` scattano anche quando HA chiude un dialog more-info (HA aggiorna l'URL al cambio di stato del dialog). `_hideAllOverlays` nascondeva tutti gli overlay → 1 secondo dopo `syncPos()` li ri-mostrava → effetto "scomparsa e ricomparsa" della card.
+- **Fix**: sostituito `_hideAllOverlays` con `_hideIfOffFrarik` che controlla `pw.location.pathname` prima di nascondere. `history.pushState()` viene eseguito PRIMA del dispatch di `location-changed`, quindi il pathname è già aggiornato. Se il path contiene ancora `frarik_dashboard` siamo ancora sul pannello Frarik (il cambio URL era il dialog) → overlay non nascosti.
+- **Navigazione reale verso altri pannelli HA**: `/config`, `/lovelace`, ecc. non contengono `frarik_dashboard` → overlay nascosti correttamente come prima.
+
 ## 1.5.45 — 2026-06-19
 
 ### revert(yaml-card): ripristino overlay HA — adoptNode non funziona

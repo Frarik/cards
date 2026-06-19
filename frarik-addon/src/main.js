@@ -8289,16 +8289,23 @@ function _haCompatInit(){
         if(pw[k]&&!window[k]) try{ window[k]=pw[k]; }catch(_){}
       });
 
-      // ── Overlay: nascondi su ogni navigazione HA ───────────────────────────
-      // 'location-changed' scatta PRIMA che HA aggiorni il DOM, quindi non si
-      // può controllare la visibilità dell'iframe in quel momento. Soluzione:
-      // nasconde SEMPRE tutti gli overlay al cambio di rotta; il timer 1s di
-      // syncPos() li rimette se Frarik è ancora il pannello attivo.
-      const _hideAllOverlays=()=>{
-        try{ pw.document.querySelectorAll('[id^="frarik-yaml-"]').forEach(el=>{ el.style.display='none'; }); }catch(_){}
+      // ── Overlay: nascondi solo quando HA naviga FUORI da Frarik ──────────
+      // Problema v1.5.41: nascondere su ogni location-changed/popstate causava
+      // un "refresh" visibile quando l'utente chiudeva un popup more-info
+      // (HA aggiorna l'URL → evento scatta → overlay nascosto → 1s poi ri-mostrato).
+      // Fix: controlla l'URL di HA prima di nascondere. Se siamo ancora su
+      // /frarik_dashboard il cambio URL viene dal dialog, non dalla navigazione.
+      // history.pushState() viene chiamato PRIMA che HA dispatchi location-changed,
+      // quindi pw.location.pathname è già aggiornato quando il listener scatta.
+      const _hideIfOffFrarik=()=>{
+        try{
+          const path=(pw.location.pathname||'').toLowerCase();
+          if(!path.includes('frarik_dashboard')&&!path.includes('frarik'))
+            pw.document.querySelectorAll('[id^="frarik-yaml-"]').forEach(el=>{ el.style.display='none'; });
+        }catch(_){}
       };
-      pw.addEventListener('location-changed',_hideAllOverlays,{passive:true});
-      pw.addEventListener('popstate',_hideAllOverlays,{passive:true});
+      pw.addEventListener('location-changed',_hideIfOffFrarik,{passive:true});
+      pw.addEventListener('popstate',_hideIfOffFrarik,{passive:true});
 
       // Se Frarik viene proprio scaricato (reload / iframe rimosso): rimuovi tutto
       const _rmAll=()=>{
