@@ -689,6 +689,21 @@ function _acpSliderInit(body, count){
   applyW(); update();
   prevBtn.addEventListener('click',()=>{ if(idx>0){idx--;update();} });
   nextBtn.addEventListener('click',()=>{ if(idx+getN()<count){idx++;update();} });
+  // Swipe touch
+  let _tx0=0, _ty0=0, _swiping=false;
+  vp.addEventListener('touchstart',e=>{ _tx0=e.touches[0].clientX; _ty0=e.touches[0].clientY; _swiping=false; },{passive:true});
+  vp.addEventListener('touchmove',e=>{
+    const dx=_tx0-e.touches[0].clientX, dy=_ty0-e.touches[0].clientY;
+    if(!_swiping && Math.abs(dx)>8 && Math.abs(dx)>Math.abs(dy)) _swiping=true;
+  },{passive:true});
+  vp.addEventListener('touchend',e=>{
+    if(!_swiping) return;
+    const dx=_tx0-e.changedTouches[0].clientX;
+    if(Math.abs(dx)>40){
+      if(dx>0 && idx+getN()<count){ idx++; update(); }
+      else if(dx<0 && idx>0){ idx--; update(); }
+    }
+  },{passive:true});
   const ro=new ResizeObserver(()=>{ applyW(); update(); });
   ro.observe(vp); body._acpSliderRO=ro;
 }
@@ -9073,9 +9088,21 @@ async function _mountYamlCard(card, container){
       // capture:true cattura scroll su qualsiasi elemento figlio (es. #dash con overflow:auto)
       document.addEventListener('scroll',scrollH,{passive:true,capture:true});
       pw.addEventListener('resize',scrollH,{passive:true});
+      // rAF loop durante touch: lo scroll mobile con inerzia non triggera scroll eventi ogni frame
+      let _rafId=null, _rafStop=null;
+      function _rafSync(){ syncPos(); _rafId=requestAnimationFrame(_rafSync); }
+      function _startRaf(){ clearTimeout(_rafStop); if(!_rafId) _rafId=requestAnimationFrame(_rafSync); }
+      function _stopRafSoon(){ clearTimeout(_rafStop); _rafStop=setTimeout(()=>{ if(_rafId){cancelAnimationFrame(_rafId);_rafId=null;} },450); }
+      document.addEventListener('touchstart',_startRaf,{passive:true,capture:true});
+      document.addEventListener('touchend',_stopRafSoon,{passive:true,capture:true});
+      document.addEventListener('touchcancel',_stopRafSoon,{passive:true,capture:true});
       container._yamlScrollOff=()=>{
         document.removeEventListener('scroll',scrollH,{capture:true});
         pw.removeEventListener('resize',scrollH);
+        document.removeEventListener('touchstart',_startRaf,{passive:true,capture:true});
+        document.removeEventListener('touchend',_stopRafSoon,{passive:true,capture:true});
+        document.removeEventListener('touchcancel',_stopRafSoon,{passive:true,capture:true});
+        clearTimeout(_rafStop); if(_rafId){cancelAnimationFrame(_rafId);_rafId=null;}
       };
 
       container._yamlTimer=setInterval(()=>{

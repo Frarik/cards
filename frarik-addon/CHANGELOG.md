@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.57 — 2026-06-20
+
+### feat(add-card): swipe touch sul carousel del popup
+### fix(yaml-card): overlay non seguono lo scroll mobile (inerzia)
+
+- **Swipe slider**: il carousel nel popup "Aggiungi una Card" ora risponde allo swipe orizzontale touch (soglia 40px, ignora scroll verticale).
+- **Scroll mobile YAML**: aggiunto loop `requestAnimationFrame` durante touch — avvia su `touchstart`, si ferma 450ms dopo `touchend`. Così gli overlay YAML seguono la posizione corretta anche durante lo scroll con inerzia di iOS/Android (i scroll-event non erano abbastanza frequenti).
+
 ## 1.5.56 — 2026-06-20
 
 ### feat(add-card): slider orizzontale con frecce nel popup; popup più grande
