@@ -579,6 +579,7 @@ function _openAddCardPopup(secId,col,startTab){
       <button class="acp-tab" data-acp-tab="installed">📦 Installate</button>
       <button class="acp-tab" data-acp-tab="builtin">⭐ Predefinite</button>
       <button class="acp-tab" data-acp-tab="yaml">📋 Card YAML</button>
+      <button class="acp-tab" data-acp-tab="saved">💾 Salvate</button>
       <button class="acp-tab" data-acp-tab="popup">🪟 Popup (apre una vista)</button>
     </div>
     <div id="acp-body"></div>
@@ -620,6 +621,7 @@ function _acpSetTab(tab){
   if(tab==='installed') _acpRenderInstalled(body);
   else if(tab==='builtin') _acpRenderBuiltin(body);
   else if(tab==='yaml') _acpRenderYaml(body);
+  else if(tab==='saved') _acpRenderSaved(body);
   else if(tab==='popup'){ _acpClose(); addPopupPanel(_acpSecId,_acpCol); }
 }
 function _acpTileHtml(id,name,icon,desc){
@@ -734,6 +736,52 @@ function _acpYamlAdd(){
   _assignSection(page,newCard); page.cards.push(newCard);
   saveCfg(); renderDash(); _acpClose();
   showToast('✅ Card YAML aggiunta!');
+}
+function _acpRenderSaved(body){
+  const all=cfg.savedCards||[];
+  const yamlCards=all.filter(c=>c.type==='yaml-card');
+  if(!yamlCards.length){
+    body.innerHTML=`<div style="padding:40px;text-align:center;color:rgba(255,255,255,.35);font-size:13px;line-height:1.9">
+      Nessuna card YAML salvata.<br>
+      <span style="font-size:11px;opacity:.6">Vai in <b style="color:rgba(255,255,255,.5)">📋 Card YAML</b> oppure nello Store → YAML<br>e clicca <b style="color:rgba(255,255,255,.5)">💾 Salva localmente</b> dopo l'anteprima.</span>
+    </div>`;
+    return;
+  }
+  body.innerHTML=`<div style="display:flex;flex-direction:column;gap:9px;padding:4px 0">${
+    yamlCards.map(t=>{
+      const gi=all.indexOf(t);
+      const preview=(t.lovelaceConfig||'').split('\n').slice(0,2).join(' ').trim().slice(0,60);
+      return `<div style="background:rgba(129,140,248,.07);border:1px solid rgba(129,140,248,.18);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px">
+        <div style="font-size:26px;flex-shrink:0">${t.icon||'🧩'}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:#e2e8f0;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(t.label||'Card YAML')}</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.3);font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(preview)}</div>
+        </div>
+        <button data-action="_acpAddSaved" data-action-args='[${gi}]' style="background:rgba(139,92,246,.2);border:1px solid rgba(139,92,246,.4);border-radius:8px;color:#c4b5fd;font-size:11px;font-weight:600;padding:6px 12px;cursor:pointer;white-space:nowrap;flex-shrink:0"><i class="mdi mdi-plus"></i> Aggiungi</button>
+        <button data-action="_acpDeleteSaved" data-action-args='[${gi}]' style="background:rgba(239,68,68,.09);border:1px solid rgba(239,68,68,.22);border-radius:8px;color:rgba(239,68,68,.7);font-size:12px;padding:6px 9px;cursor:pointer;flex-shrink:0" title="Elimina">✕</button>
+      </div>`;
+    }).join('')
+  }</div>`;
+}
+function _acpAddSaved(globalIdx){
+  const tpl=(cfg.savedCards||[])[globalIdx];
+  if(!tpl){ showToast('⚠️ Card non trovata'); return; }
+  _pendingDropSec=_acpSecId; _pendingDropCol=_acpCol;
+  const page=curPage();
+  const newCard=JSON.parse(JSON.stringify(tpl));
+  newCard.id=uid(); delete newCard._savedAt;
+  _assignSection(page,newCard); page.cards.push(newCard);
+  saveCfg(); _acpClose(); renderDash();
+  showToast('✅ Card YAML aggiunta!');
+}
+function _acpDeleteSaved(globalIdx){
+  if(!cfg.savedCards) return;
+  const name=cfg.savedCards[globalIdx]?.label||'Card';
+  cfg.savedCards.splice(globalIdx,1);
+  saveCfg(); renderSavedCards();
+  const body=document.getElementById('acp-body');
+  if(body) _acpRenderSaved(body);
+  showToast(`🗑 "${name}" eliminata`);
 }
 function _acpRenderYaml(body){
   _acpYamlCurrentConfig=null;
@@ -8554,6 +8602,12 @@ function renderSavedCards(){
         </button>`).join('')}</div>`;
     }
   }
+  /* ── badge tab "Salvate" nel popup aggiungi card ── */
+  const acpSavedTab=document.querySelector('.acp-tab[data-acp-tab="saved"]');
+  if(acpSavedTab){
+    const yc=saved.filter(c=>c.type==='yaml-card').length;
+    acpSavedTab.textContent=yc?`💾 Salvate (${yc})`:'💾 Salvate';
+  }
 }
 
 function addSaved(idx){
@@ -15424,7 +15478,7 @@ Object.assign(window, {
   _hbPickChipIcon, _hbPickChipIcon2, _hbPickImapIcon, _hbIconInput, _hbIcon2Input,
   _hbSelEnt2Pos, _hbResetIcon, openSOSCfgModal, _hbEntityChanged, _hbBrowseEntity, _hbDelOption, _appDelItem, _appDelGroup,
   _mfabViews,
-  _acpOpenInstalled, _acpOpenYaml,
+  _acpOpenInstalled, _acpOpenYaml, _acpAddSaved, _acpDeleteSaved,
   _openGhStoreClean, _pasteCardToClean, _closeViewsAndOpenTM, _closeViewsAndSetPage,
   _jsStoreAddAndRefresh, _jsRename, _jsRenameDo, _jsRenameInline, openRenameStore, closeRenameStore,
   _deleteSavedAt, _appChipPopupAt, _setActivePageAndSync,

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.60 — 2026-06-20
+
+### feat(add-card): tab "💾 Salvate" nel popup Aggiungi una Card
+
+- Nuovo tab **💾 Salvate** nel popup "Aggiungi una Card": mostra tutte le card YAML salvate localmente con pulsante Aggiungi e ✕ Elimina.
+- Il badge del tab si aggiorna automaticamente con il conteggio (`💾 Salvate (N)`) ogni volta che si salva o elimina una card.
+- `_acpAddSaved(idx)` aggiunge la card salvata alla sezione/colonna corretta e chiude il popup.
+- `_acpDeleteSaved(idx)` rimuove la card dall'archivio e aggiorna la lista in tempo reale.
+
 ## 1.5.59 — 2026-06-20
 
 ### fix(mobile): overlay YAML definitivamente fissi durante qualsiasi scroll
