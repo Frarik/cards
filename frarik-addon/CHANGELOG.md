@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.56 — 2026-06-20
+
+### feat(add-card): slider orizzontale con frecce nel popup; popup più grande
+### fix(screensaver): overlay YAML card non appaiono più sopra lo screensaver
+
+- **Slider**: tab "Installate" e "Predefinite" mostrano le card in un carousel orizzontale con frecce ‹ › invece della griglia 4 colonne. Il numero di card visibili si adatta alla larghezza (~200px ciascuna).
+- **Popup più grande**: `min(980px,96vw)` × `min(680px,92vh)` (era 860×600).
+- **Screensaver**: all'attivazione nasconde tutti i `frarik-yaml-*` overlay nel DOM del parent; al ritorno li ripristina.
+
 ## 1.5.55 — 2026-06-20
 
 ### feat(add-card): click "+ Card" apre direttamente il popup, rinominato "Aggiungi una Card"

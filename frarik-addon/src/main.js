@@ -537,7 +537,7 @@ function _openAddCardPopup(secId,col,startTab){
     s.textContent=`
       #acp-ov{position:fixed;inset:0;z-index:15000;background:rgba(0,0,0,.78);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;animation:acpFi .15s ease}
       @keyframes acpFi{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
-      #acp-modal{width:min(860px,96vw);height:min(600px,90vh);background:#06060f;border:1px solid rgba(139,92,246,.28);border-radius:20px;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.85);overflow:hidden}
+      #acp-modal{width:min(980px,96vw);height:min(680px,92vh);background:#06060f;border:1px solid rgba(139,92,246,.28);border-radius:20px;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.85);overflow:hidden}
       #acp-tabs{display:flex;gap:4px;padding:8px 16px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
       .acp-tab{border-radius:8px;padding:6px 14px;font-size:11px;font-weight:600;cursor:pointer;transition:all .12s;border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.5);background:rgba(255,255,255,.04);white-space:nowrap}
       .acp-tab.on{background:rgba(139,92,246,.18);border-color:rgba(139,92,246,.38);color:#c4b5fd}
@@ -607,6 +607,7 @@ function _acpSetTab(tab){
   document.querySelectorAll('.acp-tab').forEach(b=>b.classList.toggle('on',b.dataset.acpTab===tab));
   const body=document.getElementById('acp-body');
   if(!body) return;
+  try{ if(body._acpSliderRO){ body._acpSliderRO.disconnect(); body._acpSliderRO=null; } }catch(_){}
   _cleanupYamlOverlay('acpprev');
   if(tab!=='yaml') body.style.cssText='flex:1;overflow-y:auto;padding:14px 16px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;min-height:0';
   if(tab==='installed') _acpRenderInstalled(body);
@@ -621,53 +622,75 @@ function _acpRenderInstalled(body){
   const all=_jsStoreList().filter(i=>!i._builtin).sort((a,b)=>((a.meta||{}).name||'').localeCompare((b.meta||{}).name||''));
   if(!all.length){ body.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.35);font-size:13px;line-height:1.8">Nessuna card installata.<br><span style="font-size:11px;opacity:.6">Installale dallo Store nelle Impostazioni.</span></div>'; return; }
   const usedIds=new Set((curPage()||{cards:[]}).cards.filter(c=>c.type==='js-custom'&&c.jsCardId).map(c=>c.jsCardId));
-  body.innerHTML='<div class="ghc-grid">'+all.map(i=>{
-    const m=i.meta||{}; const id=m.id||'';
-    const reg=id?window.FratechCardRegistry?.[id]:null;
-    const icon=m.icon||reg?.icon||'📦';
-    const desc=(_ghcDesc(id,null))||'';
-    const inPage=usedIds.has(id);
-    const st=inPage?'ok':'new';
-    const prevHtml=reg
-      ?`<div class="ghc-prev-inner" data-prev-id="${eh(id)}"></div>`
-      :`<div class="ghc-prev-inner">${_ghcPrevPh(icon,m.name||id)}</div>`;
-    const bdg=inPage?`<span class="ghc-bdg cur">✓ In vista</span>`:`<span class="ghc-bdg ok">● Installata</span>`;
-    const act=inPage
-      ?`<span class="ghc-indash"><i class="mdi mdi-check-circle-outline"></i> In vista</span>`
-      :`<button class="ghc-btn ghc-btn-add" data-acp-add="${eh(id)}"><i class="mdi mdi-plus"></i> Aggiungi alla plancia</button>`;
-    return `<div class="ghc-tile st-${st}"><div class="ghc-strip ${st}"></div>
-      <div class="ghc-prev">${prevHtml}<div class="ghc-prev-fade"></div>${bdg}</div>
-      <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico">${icon}</div><div class="ghc-meta"><div class="ghc-name">${eh(m.name||id||'Card')}</div><div class="ghc-ver">v${eh(m.version||'?')}</div></div></div>
-      ${desc?`<div class="ghc-desc">${eh(desc)}</div>`:''}
-      <div class="ghc-acts">${act}</div></div></div>`;
-  }).join('')+'</div>';
-  requestAnimationFrame(()=>{ body.querySelectorAll('[data-prev-id]').forEach(el=>{ _ghcLivePrev(el, el.dataset.prevId); }); });
+  _acpRenderSlider(body, all, usedIds, false);
 }
 function _acpRenderBuiltin(body){
   const all=_jsStoreList().filter(i=>i._builtin);
   if(!all.length){ body.innerHTML='<div style="padding:40px;text-align:center;color:rgba(255,255,255,.35);font-size:13px">Nessuna card predefinita.</div>'; return; }
   const usedIds=new Set((curPage()||{cards:[]}).cards.filter(c=>c.type==='js-custom'&&c.jsCardId).map(c=>c.jsCardId));
-  body.innerHTML='<div class="ghc-grid">'+all.map(i=>{
+  _acpRenderSlider(body, all, usedIds, true);
+}
+function _acpRenderSlider(body, items, usedIds, isBuiltin){
+  body.style.cssText='flex:1;overflow:hidden;display:flex;align-items:flex-start;padding:14px 0;gap:8px;min-height:0';
+  const arBtn='flex-shrink:0;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .15s;line-height:1';
+  const tilesHtml=items.map(i=>{
     const m=i.meta||{}; const id=m.id||'';
     const reg=id?window.FratechCardRegistry?.[id]:null;
     const icon=m.icon||reg?.icon||'📦';
-    const desc=m.desc||'';
+    const desc=isBuiltin?(m.desc||''):(_ghcDesc(id,null)||'');
     const inPage=usedIds.has(id);
     const st=inPage?'ok':'new';
     const prevHtml=reg
       ?`<div class="ghc-prev-inner" data-prev-id="${eh(id)}"></div>`
       :`<div class="ghc-prev-inner">${_ghcPrevPh(icon,m.name||id)}</div>`;
-    const bdg=`<span class="ghc-bdg" style="background:rgba(139,92,246,.2);color:#c4b5fd;border-color:rgba(139,92,246,.4)">🔐 Sistema</span>`;
+    const bdg=isBuiltin
+      ?`<span class="ghc-bdg" style="background:rgba(139,92,246,.2);color:#c4b5fd;border-color:rgba(139,92,246,.4)">🔐 Sistema</span>`
+      :(inPage?`<span class="ghc-bdg cur">✓ In vista</span>`:`<span class="ghc-bdg ok">● Installata</span>`);
     const act=inPage
       ?`<span class="ghc-indash"><i class="mdi mdi-check-circle-outline"></i> In vista</span>`
       :`<button class="ghc-btn ghc-btn-add" data-acp-add="${eh(id)}"><i class="mdi mdi-plus"></i> Aggiungi alla plancia</button>`;
-    return `<div class="ghc-tile st-${st}"><div class="ghc-strip ${st}"></div>
+    return `<div class="ghc-tile acp-slide-card st-${st}" style="flex-shrink:0;min-width:0"><div class="ghc-strip ${st}"></div>
       <div class="ghc-prev">${prevHtml}<div class="ghc-prev-fade"></div>${bdg}</div>
       <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico">${icon}</div><div class="ghc-meta"><div class="ghc-name">${eh(m.name||id||'Card')}</div><div class="ghc-ver">v${eh(m.version||'?')}</div></div></div>
       ${desc?`<div class="ghc-desc">${eh(desc)}</div>`:''}
       <div class="ghc-acts">${act}</div></div></div>`;
-  }).join('')+'</div>';
-  requestAnimationFrame(()=>{ body.querySelectorAll('[data-prev-id]').forEach(el=>{ _ghcLivePrev(el, el.dataset.prevId); }); });
+  }).join('');
+  body.innerHTML=`
+    <button id="acp-sl-prev" style="${arBtn};margin-left:14px;margin-top:82px">‹</button>
+    <div id="acp-sl-vp" style="flex:1;overflow:hidden;align-self:stretch">
+      <div id="acp-sl-track" style="display:flex;gap:12px;transition:transform .3s cubic-bezier(.4,0,.2,1)">
+        ${tilesHtml}
+      </div>
+    </div>
+    <button id="acp-sl-next" style="${arBtn};margin-right:14px;margin-top:82px">›</button>`;
+  requestAnimationFrame(()=>{
+    body.querySelectorAll('[data-prev-id]').forEach(el=>_ghcLivePrev(el, el.dataset.prevId));
+    _acpSliderInit(body, items.length);
+  });
+}
+function _acpSliderInit(body, count){
+  const vp=document.getElementById('acp-sl-vp');
+  const track=document.getElementById('acp-sl-track');
+  const prevBtn=document.getElementById('acp-sl-prev');
+  const nextBtn=document.getElementById('acp-sl-next');
+  if(!vp||!track||!prevBtn||!nextBtn) return;
+  let idx=0;
+  const GAP=12;
+  function getN(){ return Math.max(1,Math.floor((vp.offsetWidth+GAP)/(200+GAP))); }
+  function cardW(){ const n=getN(); return Math.floor((vp.offsetWidth-(n-1)*GAP)/n); }
+  function applyW(){ const w=cardW(); track.querySelectorAll('.acp-slide-card').forEach(c=>{ c.style.width=w+'px'; }); }
+  function update(){
+    const n=getN(), w=cardW();
+    track.style.transform=`translateX(-${idx*(w+GAP)}px)`;
+    const atStart=idx===0, atEnd=idx+n>=count;
+    prevBtn.style.opacity=atStart?'.25':'1'; prevBtn.style.cursor=atStart?'default':'pointer';
+    nextBtn.style.opacity=atEnd?'.25':'1'; nextBtn.style.cursor=atEnd?'default':'pointer';
+  }
+  applyW(); update();
+  prevBtn.addEventListener('click',()=>{ if(idx>0){idx--;update();} });
+  nextBtn.addEventListener('click',()=>{ if(idx+getN()<count){idx++;update();} });
+  const ro=new ResizeObserver(()=>{ applyW(); update(); });
+  ro.observe(vp); body._acpSliderRO=ro;
 }
 function _acpAddJs(id){
   const regCard=window.FratechCardRegistry?.[id];
@@ -14907,9 +14930,16 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
     if(url){ ov.style.backgroundImage='linear-gradient(rgba(0,0,0,.4),rgba(0,0,0,.5)), url("'+encodeURI(url)+'")'; ov.style.backgroundSize='cover'; ov.style.backgroundPosition='center'; }
     else { ov.style.backgroundImage=''; }
   }
-  function _open(){ if(!ov) build(); active=true; _ssCurImg=null; _ssApplyBg(); _ssApplyCard(); tick(); ov.classList.add('on'); clearInterval(tickTimer); tickTimer=setInterval(tick,1000); }
+  function _open(){
+    if(!ov) build(); active=true; _ssCurImg=null; _ssApplyBg(); _ssApplyCard(); tick();
+    ov.classList.add('on'); clearInterval(tickTimer); tickTimer=setInterval(tick,1000);
+    try{ const pw=window.parent&&window.parent!==window?window.parent:null; if(pw) pw.document.querySelectorAll('[id^="frarik-yaml-"]').forEach(el=>{ el.dataset.ssHide='1'; el.style.display='none'; }); }catch(e){}
+  }
   function show(){ if(active) return; if(typeof editMode!=='undefined'&&editMode) return; _open(); }
-  function hide(){ if(!active) return; active=false; if(ov) ov.classList.remove('on'); clearInterval(tickTimer); tickTimer=null; _ssClearCard(); }
+  function hide(){
+    if(!active) return; active=false; if(ov) ov.classList.remove('on'); clearInterval(tickTimer); tickTimer=null; _ssClearCard();
+    try{ const pw=window.parent&&window.parent!==window?window.parent:null; if(pw) pw.document.querySelectorAll('[id^="frarik-yaml-"][data-ss-hide]').forEach(el=>{ delete el.dataset.ssHide; el.style.display=''; }); }catch(e){}
+  }
   function reset(){ if(active) hide(); clearTimeout(idleTimer); const c=cfg(); if(!c.on) return; idleTimer=setTimeout(show, Math.max(10,c.sec|0)*1000); }
   ['mousemove','mousedown','keydown','touchstart','wheel','scroll'].forEach(ev=>document.addEventListener(ev,reset,{passive:true,capture:true}));
   if(document.readyState!=='loading') reset(); else document.addEventListener('DOMContentLoaded',reset);
