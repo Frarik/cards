@@ -9117,6 +9117,13 @@ async function _mountYamlCard(card, container){
         if(document.body.classList.contains('oik-settings-open')){
           overlay.style.display='none'; return;
         }
+        // Nascosto quando un popup di una card JS è aperto (host shadow DOM senza ID su document.body).
+        // I popup dei custom element si montano come div senza id/class direttamente su body —
+        // dato che vivono nell'iframe, hanno z-index alto al loro interno, ma l'overlay YAML nel
+        // DOM del parent li coprirebbe sempre senza questo check.
+        for(let _c=document.body.firstElementChild;_c;_c=_c.nextElementSibling){
+          if(_c.tagName==='DIV'&&!_c.id&&_c.shadowRoot){ overlay.style.display='none'; return; }
+        }
         const fr=_findFrameElement();
         if(!fr){ overlay.style.display='none'; return; }
         const ir=fr.getBoundingClientRect();

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.61 — 2026-06-20
+
+### fix(yaml-card): overlay YAML nascosti quando un popup JS è aperto
+
+- In `syncPos()` aggiunto check: se su `document.body` esiste un div senza ID con shadow root (= host di un popup di una card JS, es. previsioni meteo giornaliere), l'overlay YAML viene nascosto automaticamente. Il rAF loop globale lo ripristina non appena il popup viene chiuso. Funziona per qualsiasi popup che segua il pattern shadow DOM su body.
+
 ## 1.5.60 — 2026-06-20
 
 ### feat(add-card): tab "💾 Salvate" nel popup Aggiungi una Card
