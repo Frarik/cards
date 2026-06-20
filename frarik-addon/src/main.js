@@ -523,6 +523,10 @@ function deleteCol(secId, col){
    ══════════════════════════════════════════════════════════════════════════ */
 let _acpYamlContent='', _acpYamlTimer=null, _acpYamlCurrentConfig=null, _acpSecId=null, _acpCol=0;
 
+/* Registry globale delle syncPos degli overlay YAML attivi — usato da _fixOverlaySwipeDrag */
+const _yamlSyncRegistry=[];
+function _syncAllYamlOverlays(){ for(let i=0;i<_yamlSyncRegistry.length;i++){ try{_yamlSyncRegistry[i]();}catch(_){} } }
+
 function _acpOpenInstalled(secId,col){ document.getElementById('add-col-menu')?.remove(); _openAddCardPopup(secId,col,'installed'); }
 function _acpOpenYaml(secId,col){ document.getElementById('add-col-menu')?.remove(); _openAddCardPopup(secId,col,'yaml'); }
 
@@ -530,7 +534,7 @@ function _openAddCardPopup(secId,col,startTab){
   document.getElementById('acp-ov')?.remove();
   _cleanupYamlOverlay('acpprev');
   if(_acpYamlTimer){ clearInterval(_acpYamlTimer); _acpYamlTimer=null; }
-  _acpSecId=secId; _acpCol=col; _acpYamlCurrentConfig=null;
+  _acpSecId=secId; _acpCol=col; _acpYamlCurrentConfig=null; _acpYamlContent='';
   _pendingDropSec=secId; _pendingDropCol=col;
   if(!document.getElementById('_acp-style')){
     const s=document.createElement('style'); s.id='_acp-style';
@@ -8757,6 +8761,7 @@ function _fixOverlaySwipeDrag(overlay){
         if(fr&&fr.contentWindow){
           const d=fr.contentWindow.document.getElementById('dash');
           if(d) d.scrollTop+=dy; else fr.contentWindow.scrollBy(0,dy);
+          _syncAllYamlOverlays();
         }
       }catch(_){}
       _tY=e.touches[0].clientY;
@@ -8770,6 +8775,7 @@ function _fixOverlaySwipeDrag(overlay){
       if(fr&&fr.contentWindow){
         const d=fr.contentWindow.document.getElementById('dash');
         if(d) d.scrollTop+=e.deltaY; else fr.contentWindow.scrollBy(0,e.deltaY);
+        _syncAllYamlOverlays();
       }
     }catch(_){}
   },{passive:true});
@@ -9088,7 +9094,7 @@ async function _mountYamlCard(card, container){
       // capture:true cattura scroll su qualsiasi elemento figlio (es. #dash con overflow:auto)
       document.addEventListener('scroll',scrollH,{passive:true,capture:true});
       pw.addEventListener('resize',scrollH,{passive:true});
-      // rAF loop durante touch: lo scroll mobile con inerzia non triggera scroll eventi ogni frame
+      // rAF loop durante touch nativa (non su overlay): garantisce sync durante inerzia iOS
       let _rafId=null, _rafStop=null;
       function _rafSync(){ syncPos(); _rafId=requestAnimationFrame(_rafSync); }
       function _startRaf(){ clearTimeout(_rafStop); if(!_rafId) _rafId=requestAnimationFrame(_rafSync); }
@@ -9096,13 +9102,16 @@ async function _mountYamlCard(card, container){
       document.addEventListener('touchstart',_startRaf,{passive:true,capture:true});
       document.addEventListener('touchend',_stopRafSoon,{passive:true,capture:true});
       document.addEventListener('touchcancel',_stopRafSoon,{passive:true,capture:true});
+      // Registry globale: quando touch passa sull'overlay, _fixOverlaySwipeDrag chiama _syncAllYamlOverlays
+      _yamlSyncRegistry.push(syncPos);
       container._yamlScrollOff=()=>{
         document.removeEventListener('scroll',scrollH,{capture:true});
         pw.removeEventListener('resize',scrollH);
-        document.removeEventListener('touchstart',_startRaf,{passive:true,capture:true});
-        document.removeEventListener('touchend',_stopRafSoon,{passive:true,capture:true});
-        document.removeEventListener('touchcancel',_stopRafSoon,{passive:true,capture:true});
+        document.removeEventListener('touchstart',_startRaf,{capture:true});
+        document.removeEventListener('touchend',_stopRafSoon,{capture:true});
+        document.removeEventListener('touchcancel',_stopRafSoon,{capture:true});
         clearTimeout(_rafStop); if(_rafId){cancelAnimationFrame(_rafId);_rafId=null;}
+        const _ri=_yamlSyncRegistry.indexOf(syncPos); if(_ri>=0) _yamlSyncRegistry.splice(_ri,1);
       };
 
       container._yamlTimer=setInterval(()=>{
@@ -9476,9 +9485,14 @@ function _ghStoreRenderYamlEditor(){
         </div>
         <div id="ghsy-foot">
           <div id="ghsy-err"></div>
-          <button id="ghsy-add-btn" class="ghsy-add-btn" data-action="_ghsYamlAddToDash" style="display:none">
-            <i class="mdi mdi-plus-circle-outline"></i> Aggiungi alla Dashboard
-          </button>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button id="ghsy-save-btn" class="ghsy-act-btn" data-action="_ghsYamlSaveLocal" style="display:none;background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.32);color:#fbbf24">
+              <i class="mdi mdi-content-save-outline"></i> Salva localmente
+            </button>
+            <button id="ghsy-add-btn" class="ghsy-add-btn" data-action="_ghsYamlAddToDash" style="display:none">
+              <i class="mdi mdi-plus-circle-outline"></i> Aggiungi alla Dashboard
+            </button>
+          </div>
         </div>
       </div>
       <div id="ghsy-right">
@@ -9530,7 +9544,9 @@ async function _ghsYamlLivePreview(){
   const ph=document.getElementById('ghsy-placeholder');
   const errEl=document.getElementById('ghsy-err');
   const addBtn=document.getElementById('ghsy-add-btn');
+  const saveBtn=document.getElementById('ghsy-save-btn');
   const hacsEl=document.getElementById('ghsy-hacs-count');
+  const _showFooter=(v)=>{ if(addBtn) addBtn.style.display=v; if(saveBtn) saveBtn.style.display=v; };
   if(!ta||!prev) return;
 
   // Cleanup preview precedente (overlay HA + timer)
@@ -9543,7 +9559,7 @@ async function _ghsYamlLivePreview(){
   if(!txt){
     prev.innerHTML=''; prev.style.cssText='';
     if(ph) ph.style.display='';
-    if(errEl) errEl.textContent=''; if(addBtn) addBtn.style.display='none';
+    if(errEl) errEl.textContent=''; _showFooter('none');
     _ghsYamlCurrentConfig=null; return;
   }
   let config;
@@ -9617,7 +9633,7 @@ async function _ghsYamlLivePreview(){
         _ghsYamlCurrentConfig={config,yamlStr:txt};
         const nc=(window.customCards||[]).length;
         if(hacsEl) hacsEl.textContent=nc?(nc+' card HACS'):'';
-        if(addBtn) addBtn.style.display='';
+        _showFooter('');
         return;
       }
     }
@@ -9638,7 +9654,7 @@ async function _ghsYamlLivePreview(){
     _ghsYamlCurrentConfig={config,yamlStr:txt};
     const nc=(window.customCards||[]).length;
     if(hacsEl) hacsEl.textContent=nc?(nc+' card HACS'):'';
-    if(addBtn) addBtn.style.display='';
+    _showFooter('');
   }catch(e){
     prev.innerHTML=`<div style="padding:20px;color:#f87171;font-size:11px;text-align:center">⚠️ ${eh(e.message)}</div>`;
     if(errEl) errEl.textContent='⚠️ '+e.message;
@@ -9671,6 +9687,18 @@ function _ghsYamlAddToDash(){
   page.cards.push(newCard);
   saveCfg(); renderDash();
   showToast('✅ Card YAML aggiunta alla dashboard');
+}
+function _ghsYamlSaveLocal(){
+  if(!_ghsYamlCurrentConfig){ showToast('⚠️ Prima genera l\'anteprima'); return; }
+  const {config,yamlStr}=_ghsYamlCurrentConfig;
+  if(!cfg.savedCards) cfg.savedCards=[];
+  cfg.savedCards.push({
+    type:'yaml-card', lovelaceConfig:yamlStr,
+    label:(config.name||config.title||config.type||'YAML Card').toString(),
+    icon:'🧩', color:'#818cf8', colSpan:2, rowSpan:2, _savedAt:Date.now()
+  });
+  saveCfg(); renderSavedCards();
+  showToast('💾 Card YAML salvata localmente!');
 }
 
 /* ════════ YAML IMPORT MODAL (ymd-*) ════════ */
@@ -15140,7 +15168,7 @@ Object.assign(window, {
   _ghsReloadTab,
   _ghsYamlAdd,
   _ghsYamlFormat,
-  _ghsYamlAddToDash,
+  _ghsYamlAddToDash, _ghsYamlSaveLocal,
   _ghsPkgLoadFile,
   _ghsPkgSaveLocal,
   _ghsPkgDeleteLocal,

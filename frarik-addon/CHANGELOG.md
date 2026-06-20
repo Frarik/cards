@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.58 — 2026-06-20
+
+### fix(mobile): overlay YAML non si sovrappongono più alle JS card durante scroll
+### fix(add-card): YAML editor ora parte vuoto ad ogni apertura popup
+### feat(store): pulsante "Salva localmente" nella tab YAML dello Store
+
+- **Registry globale syncPos**: ogni `_mountYamlCard` registra la sua `syncPos` in `_yamlSyncRegistry[]`. Quando `_fixOverlaySwipeDrag` muove `#dash.scrollTop` (touch sull'overlay), chiama subito `_syncAllYamlOverlays()` — tutte le posizioni vengono aggiornate in sincronia, eliminando la sovrapposizione con le JS card.
+- **YAML reset**: `_acpYamlContent` viene azzerato in `_openAddCardPopup` — aprendo un nuovo popup il codice precedente non persiste più.
+- **Salva localmente** (Store → tab YAML): compare insieme al pulsante "Aggiungi alla Dashboard" dopo un'anteprima valida; salva la card in `savedCards` (template riutilizzabili).
+
 ## 1.5.57 — 2026-06-20
 
 ### feat(add-card): swipe touch sul carousel del popup
