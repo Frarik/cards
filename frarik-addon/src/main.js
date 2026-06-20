@@ -2127,12 +2127,13 @@ async function _ghsPreview(enc, nm, cardId){
 }
 function ghStoreTab(tab){
   _ghsTab=tab;
-  ['js','chips','distintivi','premium','yaml','pkg','local','card-yaml','predefinite'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
-  const s=document.getElementById('ghs-search'); if(s){ s.value=''; s.style.display=(tab==='card-yaml')?'none':''; }
+  ['js','chips','distintivi','premium','yaml','pkg','local','card-yaml','predefinite','saved'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
+  const s=document.getElementById('ghs-search'); if(s){ s.value=''; s.style.display=(tab==='card-yaml'||tab==='saved')?'none':''; }
   const loadEl=document.getElementById('ghs-load'); if(loadEl) loadEl.style.display=(tab==='local')?'':'none';
   if(tab==='predefinite'){ _ghStoreRender(); return; }
   if(tab==='local'){ _ghStoreRender(); _ghStoreInitDropzone(); return; }
   if(tab==='card-yaml'){ _ghStoreRender(); return; }
+  if(tab==='saved'){ _ghStoreRender(); return; }
   if(tab==='premium'&&_ghsCache[tab]!==undefined){ _ghStoreRender(); return; }
   if(tab!=='premium'&&_ghsCache[tab]){ _ghStoreRender(); return; }
   document.getElementById('ghs-status').textContent='⏳ Carico da GitHub…';
@@ -2175,6 +2176,7 @@ function _ghStoreRender(){
   if(tab==='pkg'){ _ghStoreRenderPkg(q); return; }
   if(tab==='premium'){ _ghStoreRenderPremium(q); return; }
   if(tab==='card-yaml'){ _ghStoreRenderYamlEditor(); return; }
+  if(tab==='saved'){ _ghStoreRenderSaved(); return; }
   const folder=_GHS_FOLDERS[tab]; const g=_ghCfg();
   let files=(_ghsCache[tab]||[]).slice();
   if(q) files=files.filter(f=>f.name.toLowerCase().includes(q));
@@ -8608,6 +8610,13 @@ function renderSavedCards(){
     const yc=saved.filter(c=>c.type==='yaml-card').length;
     acpSavedTab.textContent=yc?`💾 Salvate (${yc})`:'💾 Salvate';
   }
+  /* ── badge tab "Salvate" nello Store + aggiorna lista se aperta ── */
+  const ghsSavedTab=document.getElementById('ghs-tab-saved');
+  if(ghsSavedTab){
+    const yc=saved.filter(c=>c.type==='yaml-card').length;
+    ghsSavedTab.querySelector('.ghc-tab-lbl').textContent=yc?`Salvate (${yc})`:'Salvate';
+  }
+  if(typeof _ghsTab!=='undefined'&&_ghsTab==='saved') try{_ghStoreRenderSaved();}catch(_){}
 }
 
 function addSaved(idx){
@@ -9750,6 +9759,44 @@ function _ghsYamlSaveLocal(){
   });
   saveCfg(); renderSavedCards();
   showToast('💾 Card YAML salvata localmente!');
+}
+
+function _ghStoreRenderSaved(){
+  const list=document.getElementById('ghs-list');
+  const status=document.getElementById('ghs-status');
+  if(!list) return;
+  const all=cfg.savedCards||[];
+  const yamlCards=all.filter(c=>c.type==='yaml-card');
+  if(status) status.textContent=yamlCards.length?yamlCards.length+' card YAML salvate':'';
+  if(!yamlCards.length){
+    list.innerHTML=`<div class="ghs-empty" style="line-height:1.9">Nessuna card YAML salvata.<br><span style="font-size:11px;opacity:.6">Vai in <b>📝 Card YAML</b> e clicca <b>💾 Salva localmente</b> dopo aver generato l'anteprima.</span></div>`;
+    return;
+  }
+  list.innerHTML=`<div style="display:flex;flex-direction:column;gap:9px;padding:4px 0">${
+    yamlCards.map(t=>{
+      const gi=all.indexOf(t);
+      const preview=(t.lovelaceConfig||'').split('\n').slice(0,2).join(' ').trim().slice(0,70);
+      const date=t._savedAt?new Date(t._savedAt).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit'}):'';
+      return `<div style="background:rgba(129,140,248,.07);border:1px solid rgba(129,140,248,.18);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px">
+        <div style="font-size:26px;flex-shrink:0">${t.icon||'🧩'}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:#e2e8f0;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(t.label||'Card YAML')}</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.3);font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(preview)}</div>
+          ${date?`<div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:2px">Salvata ${date}</div>`:''}
+        </div>
+        <button data-action="addSaved" data-action-args='[${gi}]' style="background:rgba(139,92,246,.2);border:1px solid rgba(139,92,246,.4);border-radius:8px;color:#c4b5fd;font-size:11px;font-weight:600;padding:6px 12px;cursor:pointer;white-space:nowrap;flex-shrink:0"><i class="mdi mdi-plus"></i> Aggiungi</button>
+        <button data-action="_ghsDeleteSaved" data-action-args='[${gi}]' style="background:rgba(239,68,68,.09);border:1px solid rgba(239,68,68,.22);border-radius:8px;color:rgba(239,68,68,.7);font-size:12px;padding:6px 9px;cursor:pointer;flex-shrink:0" title="Elimina">✕</button>
+      </div>`;
+    }).join('')
+  }</div>`;
+}
+function _ghsDeleteSaved(gi){
+  if(!cfg.savedCards||cfg.savedCards[gi]===undefined) return;
+  const name=cfg.savedCards[gi]?.label||'Card';
+  cfg.savedCards.splice(gi,1);
+  saveCfg(); renderSavedCards();
+  if(_ghsTab==='saved') _ghStoreRenderSaved();
+  showToast(`🗑 "${name}" eliminata`);
 }
 
 /* ════════ YAML IMPORT MODAL (ymd-*) ════════ */
@@ -15485,7 +15532,7 @@ Object.assign(window, {
   _hbPickChipIcon, _hbPickChipIcon2, _hbPickImapIcon, _hbIconInput, _hbIcon2Input,
   _hbSelEnt2Pos, _hbResetIcon, openSOSCfgModal, _hbEntityChanged, _hbBrowseEntity, _hbDelOption, _appDelItem, _appDelGroup,
   _mfabViews,
-  _acpOpenInstalled, _acpOpenYaml, _acpAddSaved, _acpDeleteSaved,
+  _acpOpenInstalled, _acpOpenYaml, _acpAddSaved, _acpDeleteSaved, _ghsDeleteSaved,
   _openGhStoreClean, _pasteCardToClean, _closeViewsAndOpenTM, _closeViewsAndSetPage,
   _jsStoreAddAndRefresh, _jsRename, _jsRenameDo, _jsRenameInline, openRenameStore, closeRenameStore,
   _deleteSavedAt, _appChipPopupAt, _setActivePageAndSync,

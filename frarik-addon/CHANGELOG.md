@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.62 — 2026-06-20
+
+### feat(store): tab "💾 Salvate" nello Store + pulizia tab destra
+
+- Aggiunto tab **💾 Salvate** nella barra principale dello Store (sinistra): mostra le card YAML salvate localmente con pulsante Aggiungi e ✕ Elimina. Il badge si aggiorna automaticamente con il conteggio.
+- **"Locali"** (📁) spostato dalla barra destra alla barra principale (sinistra), insieme agli altri tab di contenuto.
+- Rimossi dalla barra destra: YAML (editor), PKG, Locali, YAML-import — rimangono solo ↻ Sync e ⚙️ Config.
+
 ## 1.5.61 — 2026-06-20
 
 ### fix(yaml-card): overlay YAML nascosti quando un popup JS è aperto
