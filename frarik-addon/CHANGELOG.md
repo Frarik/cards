@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.59 — 2026-06-20
+
+### fix(mobile): overlay YAML definitivamente fissi durante qualsiasi scroll
+
+- **Loop rAF globale**: sostituisce il meccanismo event-driven (touchstart/touchend/scroll) con un `requestAnimationFrame` loop continuo a livello globale. Il loop parte al montaggio del primo overlay YAML e si ferma quando non ce ne sono più. Ad ogni frame chiama `syncPos()` su tutti gli overlay registrati — funziona per scroll nativo, scroll via overlay, inerzia iOS, scroll programmatico, qualsiasi scenario.
+- Eliminati per-card rAF loop, touchstart/touchend listener, timeout 450ms — tutti punti di fallimento del vecchio approccio.
+
 ## 1.5.58 — 2026-06-20
 
 ### fix(mobile): overlay YAML non si sovrappongono più alle JS card durante scroll

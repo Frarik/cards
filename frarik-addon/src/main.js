@@ -523,9 +523,12 @@ function deleteCol(secId, col){
    ══════════════════════════════════════════════════════════════════════════ */
 let _acpYamlContent='', _acpYamlTimer=null, _acpYamlCurrentConfig=null, _acpSecId=null, _acpCol=0;
 
-/* Registry globale delle syncPos degli overlay YAML attivi — usato da _fixOverlaySwipeDrag */
+/* Registry globale delle syncPos degli overlay YAML attivi — loop rAF continuo finché ci sono overlay */
 const _yamlSyncRegistry=[];
+let _yamlGlobalRafId=null;
 function _syncAllYamlOverlays(){ for(let i=0;i<_yamlSyncRegistry.length;i++){ try{_yamlSyncRegistry[i]();}catch(_){} } }
+function _yamlRafLoop(){ if(!_yamlSyncRegistry.length){_yamlGlobalRafId=null;return;} _syncAllYamlOverlays(); _yamlGlobalRafId=requestAnimationFrame(_yamlRafLoop); }
+function _startYamlRaf(){ if(!_yamlGlobalRafId) _yamlGlobalRafId=requestAnimationFrame(_yamlRafLoop); }
 
 function _acpOpenInstalled(secId,col){ document.getElementById('add-col-menu')?.remove(); _openAddCardPopup(secId,col,'installed'); }
 function _acpOpenYaml(secId,col){ document.getElementById('add-col-menu')?.remove(); _openAddCardPopup(secId,col,'yaml'); }
@@ -9090,27 +9093,14 @@ async function _mountYamlCard(card, container){
       ro.observe(container);
       container._yamlRO=ro;
 
-      const scrollH=()=>syncPos();
-      // capture:true cattura scroll su qualsiasi elemento figlio (es. #dash con overflow:auto)
-      document.addEventListener('scroll',scrollH,{passive:true,capture:true});
-      pw.addEventListener('resize',scrollH,{passive:true});
-      // rAF loop durante touch nativa (non su overlay): garantisce sync durante inerzia iOS
-      let _rafId=null, _rafStop=null;
-      function _rafSync(){ syncPos(); _rafId=requestAnimationFrame(_rafSync); }
-      function _startRaf(){ clearTimeout(_rafStop); if(!_rafId) _rafId=requestAnimationFrame(_rafSync); }
-      function _stopRafSoon(){ clearTimeout(_rafStop); _rafStop=setTimeout(()=>{ if(_rafId){cancelAnimationFrame(_rafId);_rafId=null;} },450); }
-      document.addEventListener('touchstart',_startRaf,{passive:true,capture:true});
-      document.addEventListener('touchend',_stopRafSoon,{passive:true,capture:true});
-      document.addEventListener('touchcancel',_stopRafSoon,{passive:true,capture:true});
-      // Registry globale: quando touch passa sull'overlay, _fixOverlaySwipeDrag chiama _syncAllYamlOverlays
+      pw.addEventListener('resize',syncPos,{passive:true});
+      // Loop rAF globale: sincronizza posizione ad ogni frame finché ci sono overlay YAML attivi.
+      // Funziona per qualsiasi tipo di scroll (nativo, overlay-forwarded, inerzia iOS) senza bisogno
+      // di detectare eventi touch/scroll specifici.
       _yamlSyncRegistry.push(syncPos);
+      _startYamlRaf();
       container._yamlScrollOff=()=>{
-        document.removeEventListener('scroll',scrollH,{capture:true});
-        pw.removeEventListener('resize',scrollH);
-        document.removeEventListener('touchstart',_startRaf,{capture:true});
-        document.removeEventListener('touchend',_stopRafSoon,{capture:true});
-        document.removeEventListener('touchcancel',_stopRafSoon,{capture:true});
-        clearTimeout(_rafStop); if(_rafId){cancelAnimationFrame(_rafId);_rafId=null;}
+        pw.removeEventListener('resize',syncPos);
         const _ri=_yamlSyncRegistry.indexOf(syncPos); if(_ri>=0) _yamlSyncRegistry.splice(_ri,1);
       };
 
