@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.5.76 — 2026-06-22
+
+### feat(vanessa): config card completa, sensori auto-rilevati, durata intelligente, solo card JS
+
+- **Solo card JS**: il menu ⋮ mostra "🧠 Vanessa AI" solo se la card ha un `jsCardId` (è una card JS custom). Non appare su toggle, slider, YAML card, ecc.
+- **Configurazione card completamente ridisegnata**: sezioni separate — Dispositivo, Sensori rilevati, Criteri di attivazione, Durata tipica, Orario operativo. Nessun testo di esempio da altre card, ogni campo nasce vuoto.
+- **Auto-rileva sensori**: bottone "🔍 Auto-rileva" che scansiona `hass.states` cercando entità il cui nome contiene le stesse keyword dell'entità principale della card (es: tutte le entità `anti_zanzare_*` per la card Antizanzare). Mostra preview con valori live.
+- **Criteri AI espliciti**: campo testo libero dove l'utente descrive QUANDO attivare il dispositivo con soglie concrete (es: "Attiva la sera dopo le 19 se temperatura > 22°C e umidità > 60%").
+- **Durata intelligente**: campo "Durata tipica (min)" — se 0, il prompt dice all'AI di usare `duration_min=0` (la card gestisce il proprio timer internamente). L'AI non inventa più 90 minuti di default.
+- **`_vanessaAutoScan`**: nuova funzione standalone per rilevare entità correlate via keyword matching sul nome entità.
+- **Prompt più compatto e preciso**: include sensori specifici della card, criteri espliciti, hint durata.
+
 ## 1.5.75 — 2026-06-22
 
 ### fix(vanessa): Esegui/Test ora bypassano orario e timer, _callHassSvc portata a livello globale

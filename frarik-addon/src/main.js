@@ -6451,14 +6451,15 @@ function cardDotMenu(cardId, el, e){
   menu.style.cssText='position:fixed;z-index:15000;background:#1a1f35;border:1px solid rgba(255,255,255,.14);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.75);padding:5px;display:flex;flex-direction:column;gap:3px;min-width:176px;animation:popIn .12s ease';
   const it=(a,ico,lbl,del=false)=>`<button data-cdmact="${a}" style="display:flex;align-items:center;gap:9px;width:100%;padding:9px 11px;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;background:${del?'rgba(239,68,68,.12)':'rgba(255,255,255,.05)'};color:${del?'#fca5a5':'#e2e8f0'}">${ico} ${lbl}</button>`;
   const delItem=it('del','🗑','Elimina',true);
+  let card2=null; for(const pg of cfg.pages||[]) for(const c of pg.cards||[]) if(c.id===cardId){card2=c;break;}
+  const isJsCard=!!(card2&&card2.jsCardId);
   menu.innerHTML=
     it('dup','⧉','Duplica')+
     it('copy','📋','Copia')+
     it('cut','✂️','Taglia')+
     it('page','📑','Copia su vista')+
     '<div style="height:1px;background:rgba(255,255,255,.09);margin:2px 0"></div>'+
-    it('vanessa','🧠','Vanessa AI')+
-    '<div style="height:1px;background:rgba(255,255,255,.09);margin:2px 0"></div>'+
+    (isJsCard?it('vanessa','🧠','Vanessa AI')+'<div style="height:1px;background:rgba(255,255,255,.09);margin:2px 0"></div>':'')+
     delItem;
   const r=el?el.getBoundingClientRect():null;
   if(r){
@@ -15753,47 +15754,74 @@ async function _vanessaCallAI(prompt){
   throw new Error('Provider non supportato: '+provider);
 }
 
+function _vanessaAutoScan(card, hass){
+  const eid=card.vanessaEntityId||card.entity||'';
+  if(!eid||!hass) return [];
+  const namePart=eid.split('.').pop();
+  const keywords=namePart.split('_').filter(k=>k.length>=4);
+  if(!keywords.length) return [];
+  return Object.keys(hass.states).filter(id=>{
+    if(id===eid) return false;
+    const n=id.split('.').pop();
+    return keywords.some(kw=>n.includes(kw));
+  }).slice(0,10);
+}
+
 function _vanessaBuildPrompt(card){
   const v=_vanessaGetCfg();
   const hass=_getBestHass(); if(!hass) return null;
   const now=new Date();
-  let p=`Sei Vanessa, AI di automazione per Home Assistant integrata nella dashboard Frarik.
-Il tuo compito: decidere se il dispositivo deve essere attivato in questo momento.
-Rispondi SOLO con JSON valido, nessun altro testo, nessun markdown.
+  let p=`Sei Vanessa, AI di automazione per Home Assistant.
+Compito: decidere se attivare il dispositivo ora. Rispondi SOLO con JSON valido, zero testo extra.
 
-DATA E ORA: ${now.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'})} - ${now.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}
+ORA: ${now.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'})} ${now.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}
 `;
   if(v.weatherEntityId){
     const ws=hass.states[v.weatherEntityId];
     if(ws){
       const a=ws.attributes||{};
-      p+=`\nMETEO (${v.weatherEntityId}): stato=${ws.state}`;
-      if(a.temperature!=null) p+=`, temp=${a.temperature}°C`;
-      if(a.humidity!=null)    p+=`, umidità=${a.humidity}%`;
-      if(a.wind_speed!=null)  p+=`, vento=${a.wind_speed}km/h`;
-      if(a.precipitation!=null) p+=`, pioggia=${a.precipitation}mm`;
-      if(a.forecast?.[0]) p+=`\nPrevisione prossime ore: ${a.forecast[0].condition}, ${a.forecast[0].temperature}°C`;
+      p+=`METEO: ${ws.state}`;
+      if(a.temperature!=null) p+=`, ${a.temperature}°C`;
+      if(a.humidity!=null)    p+=`, umidità ${a.humidity}%`;
+      if(a.wind_speed!=null)  p+=`, vento ${a.wind_speed}km/h`;
+      if(a.precipitation!=null) p+=`, pioggia ${a.precipitation}mm`;
+      if(a.forecast?.[0]) p+=`\nProssime ore: ${a.forecast[0].condition} ${a.forecast[0].temperature}°C`;
       p+='\n';
     }
   }
+  // Sensori globali (extra sensors)
   for(const sid of (v.extraSensors||[])){
     const s=hass.states[sid]; if(!s) continue;
-    p+=`Sensore ${sid}: ${s.state}${s.attributes?.unit_of_measurement?' '+s.attributes.unit_of_measurement:''}\n`;
+    const lbl=s.attributes?.friendly_name||sid.split('.').pop().replace(/_/g,' ');
+    p+=`${lbl}: ${s.state}${s.attributes?.unit_of_measurement?' '+s.attributes.unit_of_measurement:''}\n`;
+  }
+  // Sensori specifici della card (auto-rilevati o manuali)
+  const cardSensors=(card.vanessaSensors||[]).filter(Boolean);
+  if(cardSensors.length){
+    p+=`SENSORI CARD:\n`;
+    for(const sid of cardSensors){
+      const s=hass.states[sid]; if(!s) continue;
+      const lbl=s.attributes?.friendly_name||sid.split('.').pop().replace(/_/g,' ');
+      p+=`  ${lbl}: ${s.state}${s.attributes?.unit_of_measurement?' '+s.attributes.unit_of_measurement:''}\n`;
+    }
   }
   const eid=card.vanessaEntityId||card.entity||'';
-  p+=`\nDISPOSITIVO: ${card.label||card.id} (tipo: ${card.jsCardId||card.type||'js'})`;
-  if(eid) p+=`\nEntità HA: ${eid}`;
-  if(eid&&hass.states[eid]) p+=`\nStato attuale: ${hass.states[eid].state}`;
-  if(card.vanessaContext) p+=`\nContesto: ${card.vanessaContext}`;
-  if(card.vanessaTimeFrom&&card.vanessaTimeTo) p+=`\nOrario operativo: ${card.vanessaTimeFrom} – ${card.vanessaTimeTo}`;
+  p+=`\nDISPOSITIVO: ${card.label||card.id}`;
+  if(eid&&hass.states[eid]) p+=` — stato: ${hass.states[eid].state}`;
+  const criteria=card.vanessaCriteria||card.vanessaContext||'';
+  if(criteria) p+=`\nCRITERI: ${criteria}`;
+  if(card.vanessaTimeFrom&&card.vanessaTimeTo) p+=`\nOrario: ${card.vanessaTimeFrom}–${card.vanessaTimeTo}`;
+  const durationHint=parseInt(card.vanessaDurationHint||0);
+  if(durationHint>0) p+=`\nDurata tipica: ${durationHint} min (usa questo come riferimento)`;
+  else p+=`\nduration_min=0 (consigliato: la card gestisce il timer internamente)`;
   const actTimer=_vanessaOffTimers[card.id];
   if(actTimer&&actTimer.expiresTs>Date.now()){
     const minsLeft=Math.round((actTimer.expiresTs-Date.now())/60000);
-    p+=`\nNote: già acceso da Vanessa, si spegne automaticamente in ${minsLeft} min. Non riattivare.`;
+    p+=`\nATTENZIONE: già attivo, spegnimento automatico tra ${minsLeft} min — non riattivare.`;
   }
-  p+=`\n\nINIZIA DIRETTAMENTE con { senza alcun testo prima. Rispondi con questo JSON su UNA SOLA RIGA:
-{"action":"skip","delay_min":0,"duration_min":0,"reason":"3-5 parole","detail":"2-3 frasi: ora attuale, condizioni, perché questa azione."}
-action: run=attiva, skip=non attivare, delay=rimanda. Se run, imposta duration_min (minuti di attività, 0=indefinito). Se delay, imposta delay_min.`;
+  p+=`\n\nINIZIA DIRETTAMENTE con { senza testo prima. JSON su UNA RIGA:
+{"action":"skip","delay_min":0,"duration_min":0,"reason":"3-5 parole","detail":"2-3 frasi: ora, condizioni, decisione."}
+action: run=attiva, skip=non attivare, delay=rimanda di delay_min. duration_min=0 salvo motivo specifico.`;
   return p;
 }
 
@@ -16040,112 +16068,156 @@ function _vanessaCardPopup(cardId){
   let card=null;
   for(const pg of cfg.pages||[]) for(const c of pg.cards||[]) if(c.id===cardId){ card=c; break; }
   if(!card) return;
+  const hass=_getBestHass();
+  // Auto-scan sensori correlati
+  const autoSuggested=_vanessaAutoScan(card,hass);
+  // Sensori già salvati sulla card (usa autoscan come default se vuoti)
+  const savedSensors=(card.vanessaSensors||[]).filter(Boolean);
+  const sensorsVal=(savedSensors.length?savedSensors:autoSuggested).join('\n');
   const ov=document.createElement('div');
   ov.id='_vnss-card-ov';
-  ov.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.65);backdrop-filter:blur(4px)';
-  const inp2=`width:100%;background:rgba(124,58,237,.08);border:1.5px solid rgba(124,58,237,.22);border-radius:10px;padding:9px 13px;color:#e2e8f0;font-size:12px;box-sizing:border-box;outline:none`;
+  ov.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.7);backdrop-filter:blur(5px);padding:16px;box-sizing:border-box';
+  const inp=`width:100%;background:rgba(124,58,237,.07);border:1.5px solid rgba(124,58,237,.2);border-radius:10px;padding:8px 12px;color:#e2e8f0;font-size:12px;box-sizing:border-box;outline:none;font-family:inherit`;
+  const sec=(lbl,ico)=>`<div style="font-size:10px;font-weight:800;letter-spacing:.09em;color:rgba(192,132,252,.6);text-transform:uppercase;margin-bottom:7px">${ico} ${lbl}</div>`;
   ov.innerHTML=`
-<div style="background:linear-gradient(160deg,#0d0620 0%,#120833 100%);border:1px solid rgba(124,58,237,.4);border-radius:20px;padding:0;width:min(460px,94vw);max-height:88vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.8),0 0 40px rgba(124,58,237,.2)">
-  <!-- Header popup -->
-  <div style="background:linear-gradient(135deg,rgba(124,58,237,.25),rgba(99,102,241,.15));border-bottom:1px solid rgba(124,58,237,.2);padding:18px 20px;display:flex;align-items:center;gap:12px;border-radius:20px 20px 0 0">
-    <div style="width:42px;height:42px;border-radius:12px;background:rgba(124,58,237,.25);border:1.5px solid rgba(192,132,252,.4);display:flex;align-items:center;justify-content:center;font-size:20px">🧠</div>
+<div style="background:linear-gradient(160deg,#0b0520 0%,#100830 100%);border:1px solid rgba(124,58,237,.35);border-radius:20px;width:min(520px,96vw);max-height:92vh;overflow-y:auto;box-shadow:0 28px 90px rgba(0,0,0,.85);scrollbar-width:none">
+  <!-- Header -->
+  <div style="background:linear-gradient(135deg,rgba(124,58,237,.22),rgba(99,102,241,.12));border-bottom:1px solid rgba(124,58,237,.18);padding:16px 20px;display:flex;align-items:center;gap:12px;border-radius:20px 20px 0 0;position:sticky;top:0;z-index:2">
+    <div style="width:40px;height:40px;border-radius:11px;background:rgba(124,58,237,.22);border:1.5px solid rgba(192,132,252,.35);display:flex;align-items:center;justify-content:center;font-size:19px">${card.icon||'📦'}</div>
     <div style="flex:1">
-      <div style="font-size:15px;font-weight:800;color:#fff;margin-bottom:2px">Vanessa AI</div>
-      <div style="font-size:11px;color:rgba(192,132,252,.7)">Configurazione per <b style="color:#c084fc">${eh(card.label||card.id)}</b></div>
+      <div style="font-size:14px;font-weight:800;color:#fff">${eh(card.label||card.id)}</div>
+      <div style="font-size:10px;color:rgba(192,132,252,.55)">${eh(card.jsCardId||'js card')} · Configurazione Vanessa AI</div>
     </div>
-    <button id="_vnss-card-close" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.4);font-size:14px;padding:6px 10px;cursor:pointer;line-height:1">✕</button>
+    <button id="_vnss-card-close" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09);border-radius:8px;color:rgba(255,255,255,.35);font-size:14px;padding:5px 10px;cursor:pointer">✕</button>
   </div>
-  <!-- Body -->
-  <div style="padding:20px">
-    <!-- toggle abilitazione -->
-    <div style="display:flex;align-items:center;justify-content:space-between;background:${card.vanessaEnabled?'rgba(74,222,128,.07)':'rgba(255,255,255,.03)'};border:1.5px solid ${card.vanessaEnabled?'rgba(74,222,128,.25)':'rgba(255,255,255,.08)'};border-radius:14px;padding:12px 16px;margin-bottom:14px;transition:all .3s" id="_vnss-card-toggle-row">
+  <div style="padding:18px 20px;display:flex;flex-direction:column;gap:16px">
+    <!-- 1. ABILITA -->
+    <div style="display:flex;align-items:center;justify-content:space-between;background:${card.vanessaEnabled?'rgba(74,222,128,.07)':'rgba(255,255,255,.03)'};border:1.5px solid ${card.vanessaEnabled?'rgba(74,222,128,.22)':'rgba(255,255,255,.07)'};border-radius:13px;padding:11px 15px;transition:all .3s" id="_vnss-card-toggle-row">
       <div>
-        <div style="font-size:13px;font-weight:700;color:#e2e8f0;margin-bottom:2px">Abilita Vanessa per questa card</div>
-        <div style="font-size:10px;color:rgba(255,255,255,.35)">Vanessa valuterà e attiverà questo dispositivo in autonomia</div>
+        <div style="font-size:13px;font-weight:700;color:#e2e8f0">Abilita gestione autonoma</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:2px">Vanessa decide quando attivare questo dispositivo</div>
       </div>
       <label class="toggle-sw"><input type="checkbox" id="_vnss-card-on" ${card.vanessaEnabled?'checked':''}><span class="toggle-slider"></span></label>
     </div>
-    <!-- entità stato -->
-    <div style="margin-bottom:14px">
-      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(192,132,252,.7);text-transform:uppercase;margin-bottom:6px">📡 Entità stato (contesto AI)</div>
-      <input type="text" id="_vnss-card-eid" style="${inp2}" value="${eh(card.vanessaEntityId||card.entity||'')}" placeholder="sensor.stato_antizanzare oppure switch.antizanzare">
-      <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:5px">Letta dall'AI per capire lo stato attuale del dispositivo</div>
-    </div>
-    <!-- entità run / stop -->
-    <div style="margin-bottom:14px">
-      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(192,132,252,.7);text-transform:uppercase;margin-bottom:8px">⚡ Entità da controllare</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <!-- 2. DISPOSITIVO -->
+    <div>
+      ${sec('Dispositivo','⚡')}
+      <div style="display:flex;flex-direction:column;gap:8px">
         <div>
-          <div style="font-size:10px;color:rgba(74,222,128,.6);margin-bottom:4px">▶ Avvia (run)</div>
-          <input type="text" id="_vnss-card-run-eid" style="${inp2}" value="${eh(card.vanessaRunEntity||'')}" placeholder="input_button.start / switch.xyz">
+          <div style="font-size:10px;color:rgba(255,255,255,.35);margin-bottom:4px">Entità stato — letta dall'AI per capire la situazione attuale</div>
+          <input type="text" id="_vnss-card-eid" style="${inp}" value="${eh(card.vanessaEntityId||card.entity||'')}" placeholder="">
         </div>
-        <div>
-          <div style="font-size:10px;color:rgba(248,113,113,.6);margin-bottom:4px">⏹ Ferma (stop)</div>
-          <input type="text" id="_vnss-card-stop-eid" style="${inp2}" value="${eh(card.vanessaStopEntity||'')}" placeholder="input_button.stop / switch.xyz">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div>
+            <div style="font-size:10px;color:rgba(74,222,128,.5);margin-bottom:4px">▶ Entità per avviare</div>
+            <input type="text" id="_vnss-card-run-eid" style="${inp}" value="${eh(card.vanessaRunEntity||'')}" placeholder="">
+          </div>
+          <div>
+            <div style="font-size:10px;color:rgba(248,113,113,.5);margin-bottom:4px">⏹ Entità per fermare</div>
+            <input type="text" id="_vnss-card-stop-eid" style="${inp}" value="${eh(card.vanessaStopEntity||'')}" placeholder="">
+          </div>
         </div>
+        <div style="font-size:10px;color:rgba(255,255,255,.2)">Avvia/Ferma vuoto = usa entità stato. Supporta switch, input_button, script, light…</div>
       </div>
-      <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:5px">Lascia vuoto per usare l'entità stato. Supporta switch, input_button, script, light…</div>
     </div>
-    <!-- contesto -->
-    <div style="margin-bottom:14px">
-      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(192,132,252,.7);text-transform:uppercase;margin-bottom:6px">💬 Contesto (opzionale)</div>
-      <textarea id="_vnss-card-ctx" rows="3" style="${inp2};resize:vertical" placeholder="Es: Antizanzare terrazzo estivo, attivo la sera quando c'è caldo e umidità alta">${eh(card.vanessaContext||'')}</textarea>
-      <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:5px">Più contesto fornisci, più intelligente sarà la decisione dell'AI</div>
-    </div>
-    <!-- orario operativo -->
-    <div style="margin-bottom:18px">
-      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(192,132,252,.7);text-transform:uppercase;margin-bottom:8px">🕐 Orario operativo</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div>
-          <div style="font-size:10px;color:rgba(255,255,255,.4);margin-bottom:4px">Dalle</div>
-          <input type="time" id="_vnss-card-from" style="${inp2}" value="${eh(card.vanessaTimeFrom||'')}">
-        </div>
-        <div>
-          <div style="font-size:10px;color:rgba(255,255,255,.4);margin-bottom:4px">Alle</div>
-          <input type="time" id="_vnss-card-to" style="${inp2}" value="${eh(card.vanessaTimeTo||'')}">
-        </div>
+    <!-- 3. SENSORI -->
+    <div>
+      ${sec('Sensori rilevati dalla card','📡')}
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button id="_vnss-card-scan" style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.25);color:#38bdf8;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">🔍 Auto-rileva</button>
+        <div style="font-size:10px;color:rgba(255,255,255,.25);align-self:center">Basato sull'entità stato — uno per riga</div>
       </div>
-      <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:5px">Lascia vuoto per nessun limite orario. Fuori orario Vanessa salta silenziosamente.</div>
+      <textarea id="_vnss-card-sensors" rows="4" style="${inp};resize:vertical;font-size:11px;font-family:monospace" placeholder="">${eh(sensorsVal)}</textarea>
+      <div id="_vnss-sensor-preview" style="margin-top:6px"></div>
     </div>
-    <!-- bottoni -->
-    <div style="display:grid;grid-template-columns:1fr auto auto;gap:8px">
-      <button id="_vnss-card-save" style="background:linear-gradient(135deg,rgba(124,58,237,.5),rgba(99,102,241,.4));border:1.5px solid rgba(192,132,252,.5);color:#fff;border-radius:11px;padding:11px;font-size:13px;font-weight:800;cursor:pointer">💾 Salva</button>
-      <button id="_vnss-card-run" style="background:rgba(74,222,128,.12);border:1.5px solid rgba(74,222,128,.3);color:#4ade80;border-radius:11px;padding:11px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">▶ Test ora</button>
+    <!-- 4. CRITERI AI -->
+    <div>
+      ${sec('Criteri di attivazione','🎯')}
+      <textarea id="_vnss-card-criteria" rows="3" style="${inp};resize:vertical" placeholder="">${eh(card.vanessaCriteria||card.vanessaContext||'')}</textarea>
+      <div style="font-size:10px;color:rgba(255,255,255,.2);margin-top:4px">Scrivi QUANDO attivare: condizioni, soglie, motivi. Più è preciso, migliore è la decisione AI.</div>
+    </div>
+    <!-- 5. DURATA + ORARIO -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div>
+        ${sec('Durata tipica','⏱')}
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="number" id="_vnss-card-duration" min="0" max="480" style="${inp};width:80px" value="${card.vanessaDurationHint||0}">
+          <span style="font-size:11px;color:rgba(255,255,255,.35)">min &nbsp;(0 = timer della card)</span>
+        </div>
+        <div style="font-size:10px;color:rgba(255,255,255,.2);margin-top:4px">Guida l'AI sulla durata. 0 = la card gestisce il proprio timer.</div>
+      </div>
+      <div>
+        ${sec('Orario operativo','🕐')}
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="time" id="_vnss-card-from" style="${inp}" value="${eh(card.vanessaTimeFrom||'')}">
+          <span style="color:rgba(255,255,255,.3);font-size:11px">→</span>
+          <input type="time" id="_vnss-card-to" style="${inp}" value="${eh(card.vanessaTimeTo||'')}">
+        </div>
+        <div style="font-size:10px;color:rgba(255,255,255,.2);margin-top:4px">Vuoto = nessun limite.</div>
+      </div>
+    </div>
+    <!-- BOTTONI -->
+    <div style="display:flex;gap:8px;padding-top:4px">
+      <button id="_vnss-card-save" style="flex:1;background:linear-gradient(135deg,rgba(124,58,237,.5),rgba(99,102,241,.4));border:1.5px solid rgba(192,132,252,.45);color:#fff;border-radius:11px;padding:11px;font-size:13px;font-weight:800;cursor:pointer">💾 Salva</button>
+      <button id="_vnss-card-run" style="background:rgba(74,222,128,.12);border:1.5px solid rgba(74,222,128,.28);color:#4ade80;border-radius:11px;padding:11px 16px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">▶ Test ora</button>
     </div>
   </div>
 </div>`;
   document.body.appendChild(ov);
+  // Mostra preview valori sensori al caricamento
+  function _refreshSensorPreview(){
+    const h2=_getBestHass(); if(!h2) return;
+    const sids=(document.getElementById('_vnss-card-sensors')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
+    const prev=document.getElementById('_vnss-sensor-preview'); if(!prev) return;
+    if(!sids.length){ prev.innerHTML=''; return; }
+    prev.innerHTML=sids.map(sid=>{
+      const st=h2.states[sid];
+      if(!st) return `<span style="display:inline-block;margin:2px;padding:2px 7px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:6px;font-size:10px;color:#f87171">${eh(sid.split('.').pop())} — non trovata</span>`;
+      const v2=`${st.state}${st.attributes?.unit_of_measurement?' '+st.attributes.unit_of_measurement:''}`;
+      return `<span style="display:inline-block;margin:2px;padding:2px 7px;background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.18);border-radius:6px;font-size:10px;color:#7dd3fc">${eh(st.attributes?.friendly_name||sid.split('.').pop())} <b>${eh(v2)}</b></span>`;
+    }).join('');
+  }
+  setTimeout(_refreshSensorPreview,50);
   ov.addEventListener('click',e=>{ if(e.target===ov) ov.remove(); });
   document.getElementById('_vnss-card-close')?.addEventListener('click',()=>ov.remove());
   document.getElementById('_vnss-card-on')?.addEventListener('change',e=>{
     const row=document.getElementById('_vnss-card-toggle-row'); if(!row) return;
     const on=e.target.checked;
     row.style.background=on?'rgba(74,222,128,.07)':'rgba(255,255,255,.03)';
-    row.style.borderColor=on?'rgba(74,222,128,.25)':'rgba(255,255,255,.08)';
+    row.style.borderColor=on?'rgba(74,222,128,.22)':'rgba(255,255,255,.07)';
   });
-  document.getElementById('_vnss-card-save')?.addEventListener('click',()=>{
+  document.getElementById('_vnss-card-scan')?.addEventListener('click',()=>{
+    const h2=_getBestHass(); if(!h2){ showToast('⚠️ Hass non disponibile'); return; }
+    const eid=document.getElementById('_vnss-card-eid')?.value?.trim()||card.vanessaEntityId||card.entity||'';
+    const tmpCard={vanessaEntityId:eid,entity:eid};
+    const found=_vanessaAutoScan(tmpCard,h2);
+    const ta=document.getElementById('_vnss-card-sensors');
+    if(ta){ ta.value=found.join('\n'); _refreshSensorPreview(); }
+    showToast(found.length?`🔍 Trovati ${found.length} sensori`:'⚠️ Nessun sensore correlato trovato');
+  });
+  document.getElementById('_vnss-card-sensors')?.addEventListener('input',_refreshSensorPreview);
+  function _saveCard(){
     card.vanessaEnabled=!!document.getElementById('_vnss-card-on')?.checked;
     card.vanessaEntityId=document.getElementById('_vnss-card-eid')?.value?.trim()||'';
     card.vanessaRunEntity=document.getElementById('_vnss-card-run-eid')?.value?.trim()||'';
     card.vanessaStopEntity=document.getElementById('_vnss-card-stop-eid')?.value?.trim()||'';
-    card.vanessaContext=document.getElementById('_vnss-card-ctx')?.value?.trim()||'';
+    card.vanessaSensors=(document.getElementById('_vnss-card-sensors')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
+    card.vanessaCriteria=document.getElementById('_vnss-card-criteria')?.value?.trim()||'';
+    card.vanessaDurationHint=parseInt(document.getElementById('_vnss-card-duration')?.value||0)||0;
     card.vanessaTimeFrom=document.getElementById('_vnss-card-from')?.value?.trim()||'';
     card.vanessaTimeTo=document.getElementById('_vnss-card-to')?.value?.trim()||'';
     saveCfg();
+  }
+  document.getElementById('_vnss-card-save')?.addEventListener('click',()=>{
+    _saveCard();
     ov.remove();
-    showToast(card.vanessaEnabled?'🧠 Vanessa abilitata per questa card!':'Vanessa disabilitata per questa card');
+    showToast(card.vanessaEnabled?'🧠 Vanessa abilitata!':'Vanessa disabilitata');
     try{_vanessaRenderCards();}catch(_){}
   });
   document.getElementById('_vnss-card-run')?.addEventListener('click',()=>{
-    card.vanessaEnabled=true;
-    card.vanessaEntityId=document.getElementById('_vnss-card-eid')?.value?.trim()||card.vanessaEntityId||'';
-    card.vanessaRunEntity=document.getElementById('_vnss-card-run-eid')?.value?.trim()||card.vanessaRunEntity||'';
-    card.vanessaStopEntity=document.getElementById('_vnss-card-stop-eid')?.value?.trim()||card.vanessaStopEntity||'';
-    card.vanessaContext=document.getElementById('_vnss-card-ctx')?.value?.trim()||card.vanessaContext||'';
-    card.vanessaTimeFrom=document.getElementById('_vnss-card-from')?.value?.trim()||card.vanessaTimeFrom||'';
-    card.vanessaTimeTo=document.getElementById('_vnss-card-to')?.value?.trim()||card.vanessaTimeTo||'';
+    _saveCard();
     ov.remove();
-    _vanessaRunCard(cardId, true); // force=true: bypassa check orario e timer
+    _vanessaRunCard(cardId, true);
   });
 }
 
