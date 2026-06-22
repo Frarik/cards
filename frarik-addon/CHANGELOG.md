@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.5.77 — 2026-06-22
+
+### feat(vanessa): redesign totale pannello impostazioni — 4 tab, Ambiente, Aggiungi dispositivo
+
+- **Nuovo layout a 4 tab principali**: `🎯 Dispositivi` · `🌡️ Ambiente` · `📋 Registro` · `⚙️ Config`. Il vecchio menu con sezione collassabile e tab secondari è completamente sostituito.
+- **Tab Dispositivi**: card grandi con stato live (colore), badge timer attivo, orario operativo, ultima decisione AI con timestamp relativo ("5m fa"). Pulsante ➕ Aggiungi dispositivo in cima.
+- **Aggiungi dispositivo**: picker modale che elenca tutte le card JS della configurazione, con badge "● Gestita" se già abilitata. Cliccando si apre direttamente la configurazione Vanessa della card.
+- **Tab Ambiente**: display meteo grande con condizione, temperatura, umidità/vento/pioggia/pressione e previsioni orarie. Griglia sensori extra con icone, valori e unità in grande. Placeholder visivo se non configurato.
+- **Tab Registro**: log più grande (max-height 380px), voci più leggibili con etichette in italiano (Avviato/Saltato/Rimandato), badge card colorato, dettaglio espanso. Sub-tab per filtrare per card specifica.
+- **Tab Config**: tutta la configurazione AI spostata qui — provider, API key, modello, sensori meteo, intervallo, Salva + Test.
+- **Hero riprogettato**: dino animato + VANESSA gradient + badge ATTIVA/INATTIVA + toggle ON/OFF sempre visibile indipendentemente dal tab attivo.
+- **`_vnssTimeAgo()`**: formatta timestamp come "3m fa", "2h fa", "1g fa".
+- **`_vnssShowAddDevicePicker()`**: modale overlay con lista card JS navigabile.
+
 ## 1.5.76 — 2026-06-22
 
 ### feat(vanessa): config card completa, sensori auto-rilevati, durata intelligente, solo card JS

@@ -15253,11 +15253,306 @@ function _vnssModelChips(provider, current){
   }).join('');
 }
 
-function _vanessaRenderSettings(){
-  const pane=document.getElementById('ep-content-vanessa'); if(!pane) return;
+/* ── Vanessa UI v2 — tab-based layout ──────────────────────────────────── */
+let _vnssMainTab='dispositivi';
+function _vnssTimeAgo(ts){const d=Date.now()-ts;if(d<60000)return 'ora';if(d<3600000)return Math.floor(d/60000)+'m fa';if(d<86400000)return Math.floor(d/3600000)+'h fa';return Math.floor(d/86400000)+'g fa';}
+
+function _vnssRenderMainTab(tab){
+  _vnssMainTab=tab;
+  document.querySelectorAll('[data-vnmt]').forEach(b=>{
+    const on=b.dataset.vnmt===tab;
+    b.style.background=on?'linear-gradient(135deg,rgba(124,58,237,.32),rgba(99,102,241,.22))':'transparent';
+    b.style.color=on?'#c084fc':'rgba(255,255,255,.38)';
+    b.style.borderBottomColor=on?'#c084fc':'transparent';
+  });
+  const content=document.getElementById('vnss-main-content'); if(!content) return;
+  if(tab==='dispositivi'){ content.innerHTML=_vnssHtmlDevices(); _vnssWireDevices(); }
+  else if(tab==='ambiente'){ content.innerHTML=_vnssHtmlAmbiente(); }
+  else if(tab==='registro'){
+    content.innerHTML=`<div id="vnss-tab-bar" style="display:flex;overflow-x:auto;scrollbar-width:none;padding:0 14px;border-bottom:1px solid rgba(255,255,255,.07)"></div><div id="vnss-tab-content" style="padding:16px 14px"></div>`;
+    _vanessaRenderTabs();
+  }
+  else if(tab==='config'){ content.innerHTML=_vnssHtmlConfig(); _vnssWireConfig(); }
+}
+
+function _vnssHtmlDevices(){
+  const hass=_getBestHass();
+  const v=_vanessaGetCfg();
+  const log=v.log||[];
+  const icons={run:'✅',skip:'⏭',delay:'⏱',off:'⏹'};
+  const colors={run:'#4ade80',skip:'#64748b',delay:'#fbbf24',off:'#94a3b8'};
+  const allEnabled=[];
+  for(const pg of cfg.pages||[]) for(const c of pg.cards||[]) if(c.vanessaEnabled&&c.jsCardId) allEnabled.push(c);
+  const addBtn=`<button id="vnss-add-dev" style="display:flex;align-items:center;justify-content:center;gap:7px;width:100%;background:rgba(124,58,237,.1);border:1.5px dashed rgba(192,132,252,.28);color:#a78bfa;border-radius:14px;padding:11px;font-size:12px;font-weight:800;cursor:pointer;margin-bottom:14px;transition:all .2s">➕ Aggiungi dispositivo</button>`;
+  if(!allEnabled.length) return `<div style="padding:16px">${addBtn}<div style="text-align:center;padding:28px 0;color:rgba(255,255,255,.2);font-size:12px;line-height:2">Nessun dispositivo gestito.<br>Clicca Aggiungi per iniziare.</div></div>`;
+  const cards=allEnabled.map(c=>{
+    const eid=c.vanessaEntityId||c.entity||'';
+    const st=eid&&hass?hass.states[eid]:null;
+    const stStr=st?.state||null;
+    const isOn=stStr&&!['off','idle','unavailable','unknown','spenta'].includes(stStr.toLowerCase());
+    const stCol=isOn?'#4ade80':stStr==='unavailable'?'#f87171':'#64748b';
+    const lastLog=log.find(e=>e.cardId===c.id);
+    const timer=_vanessaOffTimers[c.id];
+    const timerBadge=timer&&timer.expiresTs>Date.now()?`<span style="background:rgba(74,222,128,.12);color:#4ade80;border:1px solid rgba(74,222,128,.25);border-radius:20px;padding:2px 7px;font-size:9px;font-weight:700">⏳ ${Math.round((timer.expiresTs-Date.now())/60000)}min</span>`:'';
+    const orarioBadge=c.vanessaTimeFrom&&c.vanessaTimeTo?`<span style="color:rgba(255,255,255,.22);font-size:9px;background:rgba(255,255,255,.05);border-radius:20px;padding:2px 7px;border:1px solid rgba(255,255,255,.07)">🕐 ${c.vanessaTimeFrom}–${c.vanessaTimeTo}</span>`:'';
+    return `<div style="background:linear-gradient(160deg,rgba(255,255,255,.04),rgba(124,58,237,.07));border:1px solid rgba(124,58,237,.2);border-radius:16px;overflow:hidden;margin-bottom:10px">
+      <div style="padding:14px 16px">
+        <div style="display:flex;align-items:flex-start;gap:12px">
+          <div style="width:48px;height:48px;flex-shrink:0;border-radius:14px;background:rgba(124,58,237,.22);border:1.5px solid rgba(192,132,252,.28);display:flex;align-items:center;justify-content:center;font-size:22px">${c.icon||'📦'}</div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:4px">
+              <span style="font-size:14px;font-weight:800;color:#e2e8f0">${eh(c.label||c.id)}</span>
+              ${stStr?`<span style="padding:2px 9px;border-radius:20px;font-size:9px;font-weight:800;background:${isOn?'rgba(74,222,128,.12)':'rgba(255,255,255,.05)'};border:1px solid ${stCol}44;color:${stCol};text-transform:uppercase">${eh(stStr)}</span>`:''}
+              ${timerBadge}${orarioBadge}
+            </div>
+            <div style="font-size:10px;color:rgba(192,132,252,.42);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:4px">${eh(eid||c.jsCardId||'—')}</div>
+            ${lastLog?`<div style="display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(255,255,255,.3)"><span style="color:${colors[lastLog.action]||'#94a3b8'}">${icons[lastLog.action]||'•'}</span><span>${eh(lastLog.reason||'')}</span><span style="opacity:.5">· ${_vnssTimeAgo(lastLog.ts)}</span></div>`:`<div style="font-size:10px;color:rgba(255,255,255,.18)">Nessuna decisione ancora</div>`}
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;border-top:1px solid rgba(124,58,237,.12)">
+        <button data-action="_vanessaRunCard" data-action-args='["${c.id}",true]' style="flex:1;background:rgba(74,222,128,.07);border:none;border-right:1px solid rgba(124,58,237,.12);color:#4ade80;font-size:11px;font-weight:800;padding:11px 0;cursor:pointer">▶ Esegui</button>
+        <button data-action="_vanessaCardPopup" data-action-args='["${c.id}"]' style="flex:1;background:rgba(124,58,237,.07);border:none;border-right:1px solid rgba(124,58,237,.12);color:#c084fc;font-size:11px;font-weight:800;padding:11px 0;cursor:pointer">⚙ Configura</button>
+        <button data-vnss-disable="${c.id}" style="background:rgba(248,113,113,.05);border:none;color:rgba(248,113,113,.5);font-size:11px;font-weight:800;padding:11px 16px;cursor:pointer" title="Rimuovi">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+  return `<div style="padding:16px">${addBtn}${cards}</div>`;
+}
+
+function _vnssWireDevices(){
+  document.getElementById('vnss-add-dev')?.addEventListener('click',_vnssShowAddDevicePicker);
+  document.querySelectorAll('[data-vnss-disable]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      let c=null; for(const pg of cfg.pages||[]) for(const cc of pg.cards||[]) if(cc.id===btn.dataset.vnssDisable){c=cc;break;}
+      if(c){ c.vanessaEnabled=false; saveCfg(); _vnssRenderMainTab('dispositivi'); showToast('Vanessa disabilitata'); }
+    });
+  });
+}
+
+function _vnssShowAddDevicePicker(){
+  const allJs=[];
+  for(const pg of cfg.pages||[]) for(const c of pg.cards||[]) if(c.jsCardId) allJs.push({c,pgName:pg.name||pg.id});
+  if(!allJs.length){ showToast('Nessuna card JS trovata nella configurazione'); return; }
+  const ov=document.createElement('div');
+  ov.id='_vnss-add-ov'; ov.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);padding:16px;box-sizing:border-box';
+  const list=allJs.map(({c,pgName})=>`
+    <div data-vnss-pick="${c.id}" style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:${c.vanessaEnabled?'rgba(124,58,237,.22)':'rgba(255,255,255,.04)'};border:1px solid ${c.vanessaEnabled?'rgba(192,132,252,.38)':'rgba(255,255,255,.09)'};border-radius:12px;cursor:pointer;transition:all .15s;margin-bottom:7px">
+      <div style="width:38px;height:38px;border-radius:10px;background:rgba(124,58,237,.2);border:1px solid rgba(192,132,252,.2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${c.icon||'📦'}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;color:#e2e8f0">${eh(c.label||c.id)}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.3)">${eh(c.jsCardId)} · ${eh(pgName)}</div>
+      </div>
+      <span style="font-size:10px;font-weight:700;color:${c.vanessaEnabled?'#c084fc':'rgba(255,255,255,.25)'}">${c.vanessaEnabled?'● Gestita':'Configura →'}</span>
+    </div>`).join('');
+  ov.innerHTML=`<div style="background:linear-gradient(160deg,#0b0520,#100830);border:1px solid rgba(124,58,237,.38);border-radius:20px;width:min(420px,96vw);max-height:85vh;display:flex;flex-direction:column;box-shadow:0 28px 90px rgba(0,0,0,.9)">
+    <div style="padding:16px 20px;border-bottom:1px solid rgba(124,58,237,.18);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+      <div><div style="font-size:15px;font-weight:800;color:#fff">Scegli un dispositivo</div><div style="font-size:10px;color:rgba(192,132,252,.5);margin-top:2px">${allJs.length} card JS disponibili</div></div>
+      <button id="_vnss-add-close" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09);border-radius:8px;color:rgba(255,255,255,.35);font-size:14px;padding:5px 10px;cursor:pointer">✕</button>
+    </div>
+    <div style="padding:14px;overflow-y:auto;scrollbar-width:none">${list}</div>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.querySelector('#_vnss-add-close')?.addEventListener('click',()=>ov.remove());
+  ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
+  ov.querySelectorAll('[data-vnss-pick]').forEach(el=>el.addEventListener('click',()=>{ov.remove();_vanessaCardPopup(el.dataset.vnssPick);}));
+}
+
+function _vnssHtmlAmbiente(){
+  const hass=_getBestHass();
+  const v=_vanessaGetCfg();
+  const condIcons={sunny:'☀️',clear_night:'🌙',cloudy:'☁️',partlycloudy:'⛅',rainy:'🌧️',snowy:'❄️',windy:'💨',foggy:'🌫️',lightning:'⛈️','lightning-rainy':'⛈️',pouring:'🌊',hail:'🌨️',exceptional:'🌡️'};
+  let weatherHtml='';
+  if(v.weatherEntityId&&hass){
+    const ws=hass.states[v.weatherEntityId];
+    if(ws){
+      const a=ws.attributes||{};
+      const ico=condIcons[ws.state]||'🌤️';
+      const temp=a.temperature!=null?`${a.temperature}°`:'--';
+      const grid=[
+        a.humidity!=null&&`<div style="background:rgba(56,189,248,.09);border:1px solid rgba(56,189,248,.15);border-radius:12px;padding:10px;text-align:center"><div style="font-size:18px">💧</div><div style="font-size:16px;font-weight:900;color:#e2e8f0;line-height:1.1;margin-top:3px">${a.humidity}<span style="font-size:10px">%</span></div><div style="font-size:9px;color:rgba(255,255,255,.3);margin-top:2px">Umidità</div></div>`,
+        a.wind_speed!=null&&`<div style="background:rgba(56,189,248,.09);border:1px solid rgba(56,189,248,.15);border-radius:12px;padding:10px;text-align:center"><div style="font-size:18px">💨</div><div style="font-size:16px;font-weight:900;color:#e2e8f0;line-height:1.1;margin-top:3px">${a.wind_speed}<span style="font-size:10px">km/h</span></div><div style="font-size:9px;color:rgba(255,255,255,.3);margin-top:2px">Vento</div></div>`,
+        a.precipitation!=null&&`<div style="background:rgba(56,189,248,.09);border:1px solid rgba(56,189,248,.15);border-radius:12px;padding:10px;text-align:center"><div style="font-size:18px">🌧️</div><div style="font-size:16px;font-weight:900;color:#e2e8f0;line-height:1.1;margin-top:3px">${a.precipitation}<span style="font-size:10px">mm</span></div><div style="font-size:9px;color:rgba(255,255,255,.3);margin-top:2px">Pioggia</div></div>`,
+        a.pressure!=null&&`<div style="background:rgba(56,189,248,.09);border:1px solid rgba(56,189,248,.15);border-radius:12px;padding:10px;text-align:center"><div style="font-size:18px">🔵</div><div style="font-size:16px;font-weight:900;color:#e2e8f0;line-height:1.1;margin-top:3px">${Math.round(a.pressure)}<span style="font-size:10px">hPa</span></div><div style="font-size:9px;color:rgba(255,255,255,.3);margin-top:2px">Pressione</div></div>`,
+      ].filter(Boolean);
+      const forecast=a.forecast?.slice(0,4)||[];
+      const fcastHtml=forecast.length?`<div style="margin-top:14px;border-top:1px solid rgba(56,189,248,.12);padding-top:12px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:.08em;color:rgba(56,189,248,.5);text-transform:uppercase;margin-bottom:8px">Previsioni prossime ore</div>
+        <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px">${forecast.map(f=>{
+          const fi=condIcons[f.condition]||'🌤️';
+          const ft=f.datetime?new Date(f.datetime).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}):'';
+          return `<div style="background:rgba(56,189,248,.07);border:1px solid rgba(56,189,248,.12);border-radius:10px;padding:8px 10px;text-align:center;flex-shrink:0;min-width:56px"><div style="font-size:14px">${fi}</div><div style="font-size:12px;font-weight:800;color:#e2e8f0;margin-top:2px">${f.temperature||''}°</div><div style="font-size:9px;color:rgba(255,255,255,.3)">${ft}</div></div>`;
+        }).join('')}</div>
+      </div>`:'';
+      weatherHtml=`<div style="background:linear-gradient(135deg,rgba(14,165,233,.12),rgba(56,189,248,.06));border:1px solid rgba(56,189,248,.22);border-radius:20px;padding:20px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:14px">
+          <div style="font-size:56px;line-height:1;filter:drop-shadow(0 0 14px rgba(56,189,248,.45))">${ico}</div>
+          <div>
+            <div style="font-size:42px;font-weight:900;color:#fff;line-height:1">${temp}<span style="font-size:18px;font-weight:500;color:rgba(255,255,255,.5)">C</span></div>
+            <div style="font-size:12px;color:rgba(56,189,248,.8);margin-top:3px;text-transform:capitalize">${eh(ws.state.replace(/_/g,' '))}</div>
+          </div>
+        </div>
+        ${grid.length?`<div style="display:grid;grid-template-columns:repeat(${Math.min(grid.length,4)},1fr);gap:8px">${grid.join('')}</div>`:''}
+        ${fcastHtml}
+      </div>`;
+    }
+  } else {
+    weatherHtml=`<div style="background:rgba(56,189,248,.04);border:1px dashed rgba(56,189,248,.15);border-radius:16px;padding:24px;text-align:center;margin-bottom:16px">
+      <div style="font-size:32px;opacity:.3;margin-bottom:8px">🌡️</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.25)">Nessuna entità meteo configurata</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.15);margin-top:4px">Impostala nella scheda ⚙ Config</div>
+    </div>`;
+  }
+  const sensors=(v.extraSensors||[]).filter(Boolean);
+  let sensorsHtml='';
+  if(sensors.length&&hass){
+    const iconFor=(st)=>{const u=st?.attributes?.unit_of_measurement||'';return u.includes('°')?'🌡️':u.includes('%')?'💧':u.includes('km')||u.includes('m/s')?'💨':u.includes('W')||u.includes('kW')?'⚡':u.includes('lx')||u.includes('lm')?'💡':'📡';};
+    const sCards=sensors.map(sid=>{
+      const st=hass.states[sid];
+      if(!st) return `<div style="background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.14);border-radius:12px;padding:12px;text-align:center"><div style="font-size:24px">⚠️</div><div style="font-size:10px;color:rgba(248,113,113,.5);margin-top:4px">${eh(sid.split('.').pop())}</div><div style="font-size:10px;color:rgba(248,113,113,.3)">Non trovata</div></div>`;
+      const name=st.attributes?.friendly_name||sid.split('.').pop().replace(/_/g,' ');
+      const unit=st.attributes?.unit_of_measurement||'';
+      return `<div style="background:rgba(56,189,248,.06);border:1px solid rgba(56,189,248,.15);border-radius:12px;padding:14px;text-align:center">
+        <div style="font-size:22px;margin-bottom:5px">${iconFor(st)}</div>
+        <div style="font-size:20px;font-weight:900;color:#fff;line-height:1">${eh(st.state)}<span style="font-size:11px;font-weight:400;color:rgba(255,255,255,.35);margin-left:2px">${eh(unit)}</span></div>
+        <div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(name)}</div>
+      </div>`;
+    }).join('');
+    sensorsHtml=`<div style="margin-bottom:16px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(56,189,248,.5);text-transform:uppercase;margin-bottom:10px">📡 Sensori aggiuntivi</div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">${sCards}</div>
+    </div>`;
+  } else if(!sensors.length){
+    sensorsHtml=`<div style="background:rgba(56,189,248,.03);border:1px dashed rgba(56,189,248,.1);border-radius:14px;padding:16px;text-align:center">
+      <div style="font-size:11px;color:rgba(255,255,255,.2)">Aggiungi sensori nella scheda ⚙ Config per vederli qui</div>
+    </div>`;
+  }
+  return `<div style="padding:16px">${weatherHtml}${sensorsHtml}</div>`;
+}
+
+function _vnssHtmlConfig(){
   const v=_vanessaGetCfg();
   const cur=v.provider||'gemini';
   const ph={gemini:'gemini-2.0-flash',openai:'gpt-4o-mini',ollama:'llama3.2',claude:'claude-haiku-4-5-20251001'};
+  const inp=`width:100%;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.22);border-radius:10px;padding:9px 13px;color:#e2e8f0;font-size:12px;box-sizing:border-box;outline:none`;
+  const inpBlue=inp.replace('rgba(124,58,237,.08)','rgba(56,189,248,.07)').replace('rgba(124,58,237,.22)','rgba(56,189,248,.2)');
+  const sec=(t,i)=>`<div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(192,132,252,.6);text-transform:uppercase;margin-bottom:8px">${i} ${t}</div>`;
+  const provNames={gemini:'Google Gemini',openai:'OpenAI',claude:'Anthropic Claude',ollama:'Ollama'};
+  return `<div style="padding:16px;display:flex;flex-direction:column;gap:16px">
+  <!-- Provider -->
+  <div>
+    ${sec('Cervello AI','🤖')}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="vnss-prov-wrap">
+      ${['gemini','openai','claude','ollama'].map(p=>{
+        const icons2={gemini:'✦',openai:'⬡',claude:'🧡',ollama:'🏠'};
+        const subs={gemini:'Google · gratis',openai:'GPT · a consumo',claude:'Anthropic · potente',ollama:'Locale · privato'};
+        return `<button class="vnss-prov-btn${cur===p?' active':''}" data-prov="${p}" style="background:${cur===p?'rgba(124,58,237,.28)':'rgba(124,58,237,.1)'};border:1.5px solid ${cur===p?'#c084fc':'rgba(124,58,237,.2)'};border-radius:12px;padding:10px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;color:${cur===p?'#fff':'rgba(255,255,255,.5)'}"><span style="font-size:20px">${icons2[p]}</span><div style="text-align:left"><div style="font-size:12px;font-weight:800">${p.charAt(0).toUpperCase()+p.slice(1)}</div><div style="font-size:9px;opacity:.6">${subs[p]}</div></div></button>`;
+      }).join('')}
+    </div>
+    <input type="hidden" id="vnss-prov" value="${cur}">
+  </div>
+  <!-- API Key -->
+  <div id="vnss-key-row" style="${cur==='ollama'?'display:none':''}">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(192,132,252,.6);text-transform:uppercase">🔑 API Key — <span id="vnss-key-prov-lbl">${provNames[cur]||cur}</span></div>
+      <div id="vnss-key-status" style="font-size:10px;font-weight:700"></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <input type="password" id="vnss-key" style="${inp};flex:1" value="${eh((v.apiKeys&&v.apiKeys[cur])||v.apiKey||'')}" placeholder="Incolla la chiave API">
+      <button id="vnss-validate-btn" style="background:rgba(74,222,128,.12);border:1.5px solid rgba(74,222,128,.28);color:#4ade80;border-radius:10px;padding:0 14px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap">🔍 Valida</button>
+    </div>
+  </div>
+  <!-- Ollama URL -->
+  <div id="vnss-ollama-row" style="${cur!=='ollama'?'display:none':''}">
+    <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(192,132,252,.6);text-transform:uppercase;margin-bottom:7px">🌐 URL Ollama</div>
+    <div style="display:flex;gap:8px">
+      <input type="text" id="vnss-ollama" style="${inp};flex:1" value="${eh(v.ollamaUrl||'http://localhost:11434')}" placeholder="http://localhost:11434">
+      <button id="vnss-validate-btn-ol" style="background:rgba(74,222,128,.12);border:1.5px solid rgba(74,222,128,.28);color:#4ade80;border-radius:10px;padding:0 14px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap">🔍 Valida</button>
+    </div>
+  </div>
+  <!-- Modello -->
+  <div>
+    ${sec('Modello','⚡')}
+    <input type="text" id="vnss-model" style="${inp}" value="${eh(v.model||'')}" placeholder="${ph[cur]}">
+    <div id="vnss-model-chips" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:7px">${_vnssModelChips(cur,v.model||'')}</div>
+    <div id="vnss-model-hint" style="font-size:10px;color:rgba(255,255,255,.2);margin-top:4px">Clicca "Valida" per caricare i modelli reali dal tuo account</div>
+  </div>
+  <!-- Sensori ambientali -->
+  <div style="background:rgba(56,189,248,.05);border:1px solid rgba(56,189,248,.14);border-radius:14px;padding:14px">
+    <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(56,189,248,.6);text-transform:uppercase;margin-bottom:10px">📡 Sensori ambientali</div>
+    <div style="margin-bottom:10px">
+      <div style="font-size:10px;color:rgba(255,255,255,.35);margin-bottom:5px">Entità meteo principale</div>
+      <input type="text" id="vnss-weather" style="${inpBlue}" value="${eh(v.weatherEntityId||'')}" placeholder="weather.home">
+    </div>
+    <div>
+      <div style="font-size:10px;color:rgba(255,255,255,.35);margin-bottom:5px">Sensori extra (uno per riga)</div>
+      <textarea id="vnss-sensors" rows="3" style="${inpBlue};resize:vertical" placeholder="">${(v.extraSensors||[]).join('\n')}</textarea>
+    </div>
+  </div>
+  <!-- Intervallo -->
+  <div style="display:flex;align-items:center;gap:12px;background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.14);border-radius:12px;padding:12px 14px">
+    <span style="font-size:22px">⏱</span>
+    <div style="flex:1">
+      <div style="font-size:12px;font-weight:700;color:rgba(251,191,36,.9);margin-bottom:2px">Intervallo valutazione</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.3)">Ogni quanti minuti Vanessa analizza le card abilitate</div>
+    </div>
+    <input type="number" id="vnss-interval" min="1" max="720" style="background:rgba(251,191,36,.1);border:1.5px solid rgba(251,191,36,.28);border-radius:9px;padding:7px 10px;color:#fbbf24;font-size:15px;font-weight:800;width:70px;text-align:center;outline:none" value="${v.intervalMin||30}">
+    <span style="font-size:11px;color:rgba(255,255,255,.3)">min</span>
+  </div>
+  <!-- Azioni -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <button data-action="_vanessaSave" style="background:linear-gradient(135deg,rgba(124,58,237,.4),rgba(99,102,241,.3));border:1.5px solid rgba(192,132,252,.4);color:#fff;border-radius:12px;padding:13px;font-size:13px;font-weight:800;cursor:pointer">💾 Salva</button>
+    <button data-action="_vanessaTest" style="background:rgba(56,189,248,.1);border:1.5px solid rgba(56,189,248,.28);color:#38bdf8;border-radius:12px;padding:13px;font-size:13px;font-weight:800;cursor:pointer">🧪 Test</button>
+  </div>
+</div>`;
+}
+
+function _vnssWireConfig(){
+  const v=_vanessaGetCfg();
+  const cur=()=>document.getElementById('vnss-prov')?.value||'gemini';
+  const provNames={gemini:'Google Gemini',openai:'OpenAI',claude:'Anthropic Claude',ollama:'Ollama'};
+  const ph={gemini:'gemini-2.0-flash',openai:'gpt-4o-mini',ollama:'llama3.2',claude:'claude-haiku-4-5-20251001'};
+  document.getElementById('vnss-prov-wrap')?.querySelectorAll('.vnss-prov-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const p=btn.dataset.prov;
+      const vv=_vanessaGetCfg();
+      document.getElementById('vnss-prov').value=p;
+      document.querySelectorAll('.vnss-prov-btn').forEach(b=>{
+        b.style.background=b===btn?'rgba(124,58,237,.28)':'rgba(124,58,237,.1)';
+        b.style.borderColor=b===btn?'#c084fc':'rgba(124,58,237,.2)';
+        b.style.color=b===btn?'#fff':'rgba(255,255,255,.5)';
+      });
+      document.getElementById('vnss-key-row').style.display=p==='ollama'?'none':'';
+      document.getElementById('vnss-ollama-row').style.display=p==='ollama'?'':'none';
+      const kf=document.getElementById('vnss-key');
+      if(kf) kf.value=(vv.apiKeys&&vv.apiKeys[p])||'';
+      const lbl=document.getElementById('vnss-key-prov-lbl');
+      if(lbl) lbl.textContent=provNames[p]||p;
+      document.getElementById('vnss-key-status')?.innerHTML&&(document.getElementById('vnss-key-status').innerHTML='');
+      const mf=document.getElementById('vnss-model');
+      if(mf){ mf.placeholder=ph[p]||''; mf.value=vv.model||''; }
+      const mc=document.getElementById('vnss-model-chips');
+      if(mc) mc.innerHTML=_vnssModelChips(p,mf?.value||'');
+    });
+  });
+  document.getElementById('vnss-validate-btn')?.addEventListener('click',_vanessaValidateKey);
+  document.getElementById('vnss-validate-btn-ol')?.addEventListener('click',_vanessaValidateKey);
+  document.getElementById('vnss-model-chips')?.addEventListener('click',e=>{
+    const chip=e.target.closest('[data-vnss-model]'); if(!chip) return;
+    const m=chip.dataset.vnssModel;
+    const mf=document.getElementById('vnss-model'); if(mf) mf.value=m;
+    const mc=document.getElementById('vnss-model-chips');
+    if(mc) mc.innerHTML=_vnssModelChips(cur(),m);
+  });
+  document.getElementById('vnss-model')?.addEventListener('input',e=>{
+    const mc=document.getElementById('vnss-model-chips');
+    if(mc) mc.innerHTML=_vnssModelChips(cur(),e.target.value);
+  });
+}
+
+function _vanessaRenderSettings(){
+  const pane=document.getElementById('ep-content-vanessa'); if(!pane) return;
+  const v=_vanessaGetCfg();
   const dinoSvg=`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
     <defs>
       <radialGradient id="vbody" cx="50%" cy="55%" r="50%"><stop offset="0%" stop-color="#86efac"/><stop offset="100%" stop-color="#16a34a"/></radialGradient>
@@ -15265,291 +15560,113 @@ function _vanessaRenderSettings(){
       <radialGradient id="veye" cx="35%" cy="35%" r="50%"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#e2e8f0"/></radialGradient>
       <filter id="vglow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
     </defs>
-    <!-- corpo -->
     <ellipse cx="58" cy="72" rx="28" ry="24" fill="url(#vbody)"/>
-    <!-- coda -->
     <path d="M82 80 Q105 88 108 76 Q105 68 90 72 Z" fill="#16a34a"/>
     <path d="M82 80 Q102 86 105 76 Q102 70 90 72 Z" fill="#22c55e"/>
-    <!-- pancia -->
     <ellipse cx="56" cy="75" rx="16" ry="14" fill="url(#vbelly)" opacity=".85"/>
-    <!-- testa -->
     <ellipse cx="44" cy="46" rx="24" ry="20" fill="url(#vbody)"/>
-    <!-- muso -->
     <path d="M24 54 Q20 62 28 66 Q36 68 44 62 Q36 66 28 62 Z" fill="#22c55e"/>
     <path d="M26 63 Q34 69 42 64" stroke="#16a34a" stroke-width="1.2" fill="none"/>
-    <!-- narici -->
     <ellipse cx="30" cy="59" rx="2" ry="1.2" fill="#15803d"/>
     <ellipse cx="38" cy="60" rx="2" ry="1.2" fill="#15803d"/>
-    <!-- sorriso -->
     <path d="M28 65 Q36 71 44 65" stroke="#15803d" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-    <!-- dentini -->
     <path d="M31 65.5 L32.5 68 L34 65.8" fill="white" stroke="none"/>
     <path d="M36 66.5 L37.5 69 L39 66.8" fill="white" stroke="none"/>
-    <!-- occhio sinistro -->
     <ellipse cx="36" cy="42" rx="7" ry="7.5" fill="url(#veye)" filter="url(#vglow)"/>
     <ellipse cx="37" cy="43" rx="4" ry="4.5" fill="#1e1b4b"/>
     <ellipse cx="38.5" cy="41.5" rx="1.5" ry="1.5" fill="#818cf8"/>
     <ellipse cx="36.5" cy="40.5" rx=".7" ry=".7" fill="white"/>
-    <!-- ciglia occhio sinistro -->
     <line x1="30" y1="37" x2="28" y2="34" stroke="#064e3b" stroke-width="1.4" stroke-linecap="round"/>
     <line x1="33" y1="35.5" x2="32" y2="32.5" stroke="#064e3b" stroke-width="1.4" stroke-linecap="round"/>
     <line x1="36" y1="35" x2="36" y2="32" stroke="#064e3b" stroke-width="1.4" stroke-linecap="round"/>
     <line x1="39" y1="35.5" x2="40" y2="32.5" stroke="#064e3b" stroke-width="1.4" stroke-linecap="round"/>
     <line x1="42" y1="37" x2="44" y2="34.5" stroke="#064e3b" stroke-width="1.4" stroke-linecap="round"/>
-    <!-- fiocco rosa sulla testa -->
     <path d="M48 26 Q52 20 56 26 Q52 24 48 26Z" fill="#f9a8d4"/>
     <path d="M60 26 Q64 20 68 26 Q64 24 60 26Z" fill="#f9a8d4"/>
     <ellipse cx="58" cy="26" rx="4" ry="3.5" fill="#ec4899"/>
     <ellipse cx="58" cy="26" rx="2" ry="1.8" fill="#fce7f3"/>
-    <!-- braccino -->
     <path d="M74 65 Q82 58 84 64 Q82 68 74 68 Z" fill="#22c55e"/>
     <path d="M84 64 L88 61 M84 63 L89 62 M84 65 L88 66" stroke="#15803d" stroke-width="1" stroke-linecap="round"/>
-    <!-- piedini -->
     <path d="M44 93 Q40 98 36 96 Q38 91 44 90 Z" fill="#16a34a"/>
     <path d="M58 95 Q54 101 50 98 Q52 93 58 92 Z" fill="#16a34a"/>
     <path d="M44 93 L42 98 M44 93 L46 98 M44 93 L48 96" stroke="#15803d" stroke-width="1" stroke-linecap="round"/>
     <path d="M58 95 L56 101 M58 95 L60 100 M58 95 L62 98" stroke="#15803d" stroke-width="1" stroke-linecap="round"/>
-    <!-- brillantini IA -->
-    <g fill="#c084fc" opacity=".9">
-      <polygon points="95,18 96.5,22 100.5,22 97.5,24.5 98.8,28.5 95,26 91.2,28.5 92.5,24.5 89.5,22 93.5,22" transform="scale(.7) translate(40,10)"/>
-    </g>
-    <g fill="#38bdf8" opacity=".8">
-      <polygon points="108,8 109,11 112,11 109.5,13 110.5,16 108,14.5 105.5,16 106.5,13 104,11 107,11" transform="scale(.5) translate(100,50)"/>
-    </g>
-    <g fill="#f0abfc" opacity=".7">
-      <polygon points="15,22 16,25 19,25 16.5,27 17.5,30 15,28.5 12.5,30 13.5,27 11,25 14,25" transform="scale(.6) translate(10,10)"/>
-    </g>
+    <g fill="#c084fc" opacity=".9"><polygon points="95,18 96.5,22 100.5,22 97.5,24.5 98.8,28.5 95,26 91.2,28.5 92.5,24.5 89.5,22 93.5,22" transform="scale(.7) translate(40,10)"/></g>
+    <g fill="#38bdf8" opacity=".8"><polygon points="108,8 109,11 112,11 109.5,13 110.5,16 108,14.5 105.5,16 106.5,13 104,11 107,11" transform="scale(.5) translate(100,50)"/></g>
+    <g fill="#f0abfc" opacity=".7"><polygon points="15,22 16,25 19,25 16.5,27 17.5,30 15,28.5 12.5,30 13.5,27 11,25 14,25" transform="scale(.6) translate(10,10)"/></g>
   </svg>`;
-  const inp=`background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.25);border-radius:10px;padding:9px 13px;color:#e2e8f0;font-size:12px;width:100%;box-sizing:border-box;outline:none;transition:border .2s`;
-  const lbl=`font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(192,132,252,.7);text-transform:uppercase;margin-bottom:6px`;
+
+  const tabs=[
+    {id:'dispositivi',icon:'🎯',label:'Dispositivi'},
+    {id:'ambiente',icon:'🌡️',label:'Ambiente'},
+    {id:'registro',icon:'📋',label:'Registro'},
+    {id:'config',icon:'⚙️',label:'Config'},
+  ];
+
   pane.innerHTML=`
 <style>
-#vnss-inp:focus,#vnss-model:focus,#vnss-weather:focus,#vnss-sensors:focus,#vnss-interval:focus,#vnss-ollama:focus{border-color:rgba(192,132,252,.7)!important;box-shadow:0 0 0 3px rgba(124,58,237,.18)!important}
 @keyframes vnss-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
 @keyframes vnss-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 @keyframes vnss-scan{0%{transform:translateY(-100%)}100%{transform:translateY(400%)}}
-@keyframes vnss-glow{0%,100%{box-shadow:0 0 18px rgba(124,58,237,.4)}50%{box-shadow:0 0 36px rgba(192,132,252,.6),0 0 60px rgba(124,58,237,.3)}}
-.vnss-prov-btn{background:rgba(124,58,237,.1);border:1.5px solid rgba(124,58,237,.2);border-radius:12px;padding:10px 14px;cursor:pointer;transition:all .2s;display:flex;align-items:center;color:rgba(255,255,255,.5);font-size:10px;font-weight:700;text-align:left}
+.vnss-prov-btn{background:rgba(124,58,237,.1);border:1.5px solid rgba(124,58,237,.2);border-radius:12px;padding:10px 12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;color:rgba(255,255,255,.5);font-size:10px;font-weight:700;text-align:left}
 .vnss-prov-btn:hover{border-color:rgba(192,132,252,.5);background:rgba(124,58,237,.2);color:#e2e8f0}
-.vnss-prov-btn.active{border-color:#c084fc;background:rgba(124,58,237,.28);color:#fff;box-shadow:0 0 16px rgba(124,58,237,.35)}
+#vnss-model:focus,#vnss-weather:focus,#vnss-sensors:focus,#vnss-interval:focus,#vnss-ollama:focus,#vnss-key:focus{border-color:rgba(192,132,252,.7)!important;box-shadow:0 0 0 3px rgba(124,58,237,.15)!important}
 </style>
 
-<!-- HERO BANNER -->
-<div style="position:relative;overflow:hidden;border-radius:20px;background:linear-gradient(135deg,#0d0620 0%,#1a0a3e 40%,#0c1a3e 100%);border:1px solid rgba(124,58,237,.35);margin-bottom:18px;min-height:130px">
-  <!-- linee di scansione animate -->
-  <div style="position:absolute;inset:0;overflow:hidden;opacity:.06;pointer-events:none">
-    <div style="width:100%;height:2px;background:linear-gradient(90deg,transparent,#c084fc,transparent);animation:vnss-scan 3s linear infinite"></div>
-  </div>
-  <!-- sfondo griglia -->
+<!-- HERO -->
+<div style="position:relative;overflow:hidden;border-radius:20px;background:linear-gradient(135deg,#0d0620 0%,#1a0a3e 45%,#0c1a3e 100%);border:1px solid rgba(124,58,237,.38);margin-bottom:14px">
   <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(124,58,237,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(124,58,237,.07) 1px,transparent 1px);background-size:24px 24px;pointer-events:none"></div>
-  <!-- contenuto -->
-  <div style="position:relative;display:flex;align-items:center;gap:0;padding:16px 20px 16px 16px">
-    <!-- avatar dino -->
-    <div style="width:100px;height:100px;flex-shrink:0;animation:vnss-float 4s ease-in-out infinite;filter:drop-shadow(0 0 12px rgba(74,222,128,.4))">
-      ${dinoSvg}
-    </div>
-    <!-- testo hero -->
-    <div style="flex:1;padding-left:4px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-        <div style="font-size:22px;font-weight:900;letter-spacing:-.02em;background:linear-gradient(135deg,#c084fc,#818cf8,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">VANESSA</div>
-        <div id="vnss-badge" style="font-size:9px;font-weight:800;letter-spacing:.1em;padding:3px 8px;border-radius:20px;${v.enabled?'background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.4);color:#4ade80':'background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.3)'}">
-          ${v.enabled?`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#4ade80;margin-right:4px;animation:vnss-pulse 1.5s ease infinite"></span>ATTIVA`:'INATTIVA'}
+  <div style="position:absolute;inset:0;overflow:hidden;opacity:.05;pointer-events:none"><div style="width:100%;height:2px;background:linear-gradient(90deg,transparent,#c084fc,transparent);animation:vnss-scan 3s linear infinite"></div></div>
+  <div style="position:relative;display:flex;align-items:center;padding:14px 18px 14px 12px;gap:0">
+    <div style="width:90px;height:90px;flex-shrink:0;animation:vnss-float 4s ease-in-out infinite;filter:drop-shadow(0 0 10px rgba(74,222,128,.4))">${dinoSvg}</div>
+    <div style="flex:1;padding-left:6px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+        <div style="font-size:24px;font-weight:900;letter-spacing:-.02em;background:linear-gradient(135deg,#c084fc,#818cf8,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">VANESSA</div>
+        <div id="vnss-badge" style="font-size:9px;font-weight:800;letter-spacing:.1em;padding:3px 9px;border-radius:20px;${v.enabled?'background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.4);color:#4ade80':'background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.3)'}">
+          ${v.enabled?`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#4ade80;margin-right:4px;animation:vnss-pulse 1.5s ease infinite;vertical-align:middle"></span>ATTIVA`:'INATTIVA'}
         </div>
       </div>
-      <div style="font-size:11px;color:rgba(192,132,252,.8);font-weight:600;margin-bottom:4px">Motore decisionale AI autonomo</div>
-      <div id="vnss-live-status" style="min-height:18px"></div>
+      <div style="font-size:11px;color:rgba(192,132,252,.75);font-weight:600;margin-bottom:5px">Motore decisionale AI autonomo</div>
+      <div id="vnss-live-status" style="min-height:16px"></div>
     </div>
-    <!-- switch grande ON/OFF -->
-    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0">
-      <label class="toggle-sw" style="transform:scale(1.3)"><input type="checkbox" id="vnss-on" ${v.enabled?'checked':''}><span class="toggle-slider"></span></label>
-      <span style="font-size:9px;color:rgba(255,255,255,.3);font-weight:700;letter-spacing:.05em">${v.enabled?'ON':'OFF'}</span>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0;margin-left:10px">
+      <label class="toggle-sw" style="transform:scale(1.25)"><input type="checkbox" id="vnss-on" ${v.enabled?'checked':''}><span class="toggle-slider"></span></label>
+      <span id="vnss-onlbl" style="font-size:9px;color:rgba(255,255,255,.3);font-weight:700;letter-spacing:.05em">${v.enabled?'ON':'OFF'}</span>
     </div>
   </div>
 </div>
 
-<!-- TOGGLE CONFIGURAZIONE -->
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;cursor:pointer" id="vnss-cfg-toggle">
-  <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(192,132,252,.6);text-transform:uppercase">⚙ Configurazione</div>
-  <div id="vnss-cfg-chevron" style="font-size:12px;color:rgba(255,255,255,.3);transition:transform .2s">${(v.cfgOpen!==false)?'▲':'▼'}</div>
-</div>
-<div id="vnss-cfg-body" style="display:${(v.cfgOpen!==false)?'block':'none'}">
-
-<!-- SEZIONE PROVIDER -->
-<div style="margin-bottom:16px">
-  <div style="${lbl}">🤖 Cervello AI</div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="vnss-prov-wrap">
-    <button class="vnss-prov-btn${cur==='gemini'?' active':''}" data-prov="gemini">
-      <div style="display:flex;align-items:center;gap:8px;width:100%">
-        <span style="font-size:20px">✦</span>
-        <div style="text-align:left">
-          <div style="font-size:12px;font-weight:800">Gemini</div>
-          <div style="font-size:9px;opacity:.55">Google · gratis</div>
-        </div>
-      </div>
-    </button>
-    <button class="vnss-prov-btn${cur==='openai'?' active':''}" data-prov="openai">
-      <div style="display:flex;align-items:center;gap:8px;width:100%">
-        <span style="font-size:20px">⬡</span>
-        <div style="text-align:left">
-          <div style="font-size:12px;font-weight:800">OpenAI</div>
-          <div style="font-size:9px;opacity:.55">GPT · pay-per-use</div>
-        </div>
-      </div>
-    </button>
-    <button class="vnss-prov-btn${cur==='claude'?' active':''}" data-prov="claude">
-      <div style="display:flex;align-items:center;gap:8px;width:100%">
-        <span style="font-size:20px">🧡</span>
-        <div style="text-align:left">
-          <div style="font-size:12px;font-weight:800">Claude</div>
-          <div style="font-size:9px;opacity:.55">Anthropic · il migliore</div>
-        </div>
-      </div>
-    </button>
-    <button class="vnss-prov-btn${cur==='ollama'?' active':''}" data-prov="ollama">
-      <div style="display:flex;align-items:center;gap:8px;width:100%">
-        <span style="font-size:20px">🏠</span>
-        <div style="text-align:left">
-          <div style="font-size:12px;font-weight:800">Ollama</div>
-          <div style="font-size:9px;opacity:.55">Locale · gratis</div>
-        </div>
-      </div>
-    </button>
-  </div>
-  <input type="hidden" id="vnss-prov" value="${cur}">
+<!-- NAV TABS -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px">
+  ${tabs.map(t=>`<button data-vnmt="${t.id}" style="display:flex;flex-direction:column;align-items:center;gap:4px;background:transparent;border:1.5px solid transparent;border-bottom-color:transparent;border-radius:12px;padding:9px 6px;cursor:pointer;transition:all .2s;color:rgba(255,255,255,.38)">
+    <span style="font-size:18px">${t.icon}</span>
+    <span style="font-size:10px;font-weight:800;letter-spacing:.02em">${t.label}</span>
+  </button>`).join('')}
 </div>
 
-<!-- CAMPI DINAMICI -->
-<div id="vnss-key-row" style="margin-bottom:12px${cur==='ollama'?';display:none':''}">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-    <div style="${lbl};margin-bottom:0">🔑 API Key — <span id="vnss-key-prov-lbl" style="color:rgba(192,132,252,.9)">${{gemini:'Google Gemini',openai:'OpenAI',claude:'Anthropic Claude',ollama:'Ollama'}[cur]||cur}</span></div>
-    <div id="vnss-key-status" style="font-size:10px;font-weight:700"></div>
-  </div>
-  <div style="display:flex;gap:8px">
-    <input type="password" id="vnss-key" style="${inp};flex:1" value="${eh((v.apiKeys&&v.apiKeys[cur])||v.apiKey||'')}" placeholder="Incolla qui la chiave API">
-    <button id="vnss-validate-btn" style="background:rgba(74,222,128,.12);border:1.5px solid rgba(74,222,128,.3);color:#4ade80;border-radius:10px;padding:0 14px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;transition:all .2s">🔍 Valida</button>
-  </div>
-  <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:5px">La chiave viene salvata separatamente per ogni provider</div>
-</div>
-<div id="vnss-ollama-row" style="margin-bottom:12px${cur!=='ollama'?';display:none':''}">
-  <div style="${lbl}">🌐 URL Ollama</div>
-  <div style="display:flex;gap:8px">
-    <input type="text" id="vnss-ollama" style="${inp};flex:1" value="${eh(v.ollamaUrl||'http://localhost:11434')}" placeholder="http://localhost:11434">
-    <button id="vnss-validate-btn" style="background:rgba(74,222,128,.12);border:1.5px solid rgba(74,222,128,.3);color:#4ade80;border-radius:10px;padding:0 14px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;transition:all .2s">🔍 Valida</button>
-  </div>
-</div>
-<div style="margin-bottom:12px">
-  <div style="${lbl}">⚡ Modello</div>
-  <input type="text" id="vnss-model" style="${inp}" value="${eh(v.model||'')}" placeholder="${ph[cur]}">
-  <div id="vnss-model-chips" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:7px">
-    ${_vnssModelChips(cur,v.model||'')}
-  </div>
-  <div id="vnss-model-hint" style="font-size:10px;color:rgba(255,255,255,.22);margin-top:5px">Clicca "Valida" per caricare i modelli reali dal tuo account</div>
-</div>
+<!-- CONTENUTO TAB -->
+<div id="vnss-main-content" style="background:rgba(255,255,255,.02);border:1px solid rgba(124,58,237,.14);border-radius:16px;overflow:hidden;min-height:200px"></div>`;
 
-<!-- SENSORI -->
-<div style="background:rgba(56,189,248,.05);border:1px solid rgba(56,189,248,.15);border-radius:14px;padding:14px;margin-bottom:12px">
-  <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(56,189,248,.7);text-transform:uppercase;margin-bottom:10px">📡 Sensori ambientali</div>
-  <div style="margin-bottom:10px">
-    <div style="font-size:10px;color:rgba(255,255,255,.4);margin-bottom:5px">Entità meteo principale</div>
-    <input type="text" id="vnss-weather" style="${inp.replace('rgba(124,58,237,.08)','rgba(56,189,248,.07)').replace('rgba(124,58,237,.25)','rgba(56,189,248,.2)').replace('rgba(192,132,252,.7)','rgba(56,189,248,.7)')}" value="${eh(v.weatherEntityId||'')}" placeholder="weather.home">
-  </div>
-  <div>
-    <div style="font-size:10px;color:rgba(255,255,255,.4);margin-bottom:5px">Sensori extra (uno per riga)</div>
-    <textarea id="vnss-sensors" style="${inp.replace('rgba(124,58,237,.08)','rgba(56,189,248,.07)').replace('rgba(124,58,237,.25)','rgba(56,189,248,.2)')};resize:vertical;rows:3" rows="3" placeholder="sensor.temperatura_esterna&#10;sensor.umidita_giardino&#10;sensor.vento_kmh">${(v.extraSensors||[]).join('\n')}</textarea>
-  </div>
-</div>
-
-<!-- INTERVALLO -->
-<div style="display:flex;align-items:center;gap:12px;background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.15);border-radius:12px;padding:12px 14px;margin-bottom:16px">
-  <span style="font-size:20px">⏱</span>
-  <div style="flex:1">
-    <div style="font-size:11px;font-weight:700;color:rgba(251,191,36,.9);margin-bottom:2px">Intervallo valutazione</div>
-    <div style="font-size:10px;color:rgba(255,255,255,.35)">Ogni quanti minuti Vanessa analizza le card abilitate</div>
-  </div>
-  <input type="number" id="vnss-interval" style="background:rgba(251,191,36,.1);border:1.5px solid rgba(251,191,36,.3);border-radius:9px;padding:7px 10px;color:#fbbf24;font-size:14px;font-weight:700;width:70px;text-align:center" value="${v.intervalMin||30}" min="5" max="720">
-  <span style="font-size:11px;color:rgba(255,255,255,.3)">min</span>
-</div>
-
-</div><!-- /vnss-cfg-body -->
-
-<!-- BOTTONI AZIONE -->
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
-  <button data-action="_vanessaSave" style="background:rgba(124,58,237,.35);border:1.5px solid rgba(192,132,252,.4);color:#fff;border-radius:12px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:.02em;transition:all .2s">💾 Salva configurazione</button>
-  <button data-action="_vanessaTest" style="background:rgba(56,189,248,.1);border:1.5px solid rgba(56,189,248,.3);color:#38bdf8;border-radius:12px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;transition:all .2s">🧪 Test connessione</button>
-</div>
-
-<!-- SEZIONI DISPOSITIVI + LOG CON TAB -->
-<div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07);border-radius:16px;overflow:hidden">
-  <div style="display:flex;border-bottom:1px solid rgba(255,255,255,.07)" id="vnss-tab-bar"></div>
-  <div id="vnss-tab-content" style="padding:12px"></div>
-</div>`;
-
-  // Provider pill click
-  const provNames={gemini:'Google Gemini',openai:'OpenAI',claude:'Anthropic Claude',ollama:'Ollama'};
-  document.getElementById('vnss-prov-wrap')?.querySelectorAll('.vnss-prov-btn').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      const p=btn.dataset.prov;
-      const vv=_vanessaGetCfg();
-      document.getElementById('vnss-prov').value=p;
-      document.querySelectorAll('.vnss-prov-btn').forEach(b=>b.classList.toggle('active',b===btn));
-      document.getElementById('vnss-key-row').style.display=p==='ollama'?'none':'';
-      document.getElementById('vnss-ollama-row').style.display=p==='ollama'?'':'none';
-      // Carica chiave salvata per questo provider
-      const kf=document.getElementById('vnss-key');
-      if(kf) kf.value=(vv.apiKeys&&vv.apiKeys[p])||'';
-      const lbl2=document.getElementById('vnss-key-prov-lbl');
-      if(lbl2) lbl2.textContent=provNames[p]||p;
-      const st=document.getElementById('vnss-key-status');
-      if(st) st.innerHTML='';
-      const mf=document.getElementById('vnss-model');
-      if(mf){ mf.placeholder=ph[p]||''; mf.value=vv.model||''; }
-      const mc=document.getElementById('vnss-model-chips');
-      if(mc) mc.innerHTML=_vnssModelChips(p, mf?.value||'');
-      const hint=document.getElementById('vnss-model-hint');
-      if(hint) hint.style.display='';
-    });
-  });
-  // Bottone Valida
-  document.querySelectorAll('#vnss-validate-btn').forEach(btn=>{
-    btn.addEventListener('click', _vanessaValidateKey);
-  });
-  // Click su chip modello → popola il campo
-  document.getElementById('vnss-model-chips')?.addEventListener('click',e=>{
-    const chip=e.target.closest('[data-vnss-model]'); if(!chip) return;
-    const m=chip.dataset.vnssModel;
-    const mf=document.getElementById('vnss-model'); if(mf) mf.value=m;
-    const p=document.getElementById('vnss-prov')?.value||'gemini';
-    const mc=document.getElementById('vnss-model-chips');
-    if(mc) mc.innerHTML=_vnssModelChips(p,m);
-  });
-  // Aggiorna chip attivo mentre l'utente digita
-  document.getElementById('vnss-model')?.addEventListener('input',e=>{
-    const p=document.getElementById('vnss-prov')?.value||'gemini';
-    const mc=document.getElementById('vnss-model-chips');
-    if(mc) mc.innerHTML=_vnssModelChips(p,e.target.value);
-  });
-  // Toggle badge aggiornamento live
+  // Toggle ON/OFF
   document.getElementById('vnss-on')?.addEventListener('change',e=>{
     const on=e.target.checked;
     const badge=document.getElementById('vnss-badge');
-    if(badge) badge.innerHTML=on?`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#4ade80;margin-right:4px;animation:vnss-pulse 1.5s ease infinite"></span>ATTIVA`:'INATTIVA';
-    if(badge) badge.style.cssText=on?'font-size:9px;font-weight:800;letter-spacing:.1em;padding:3px 8px;border-radius:20px;background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.4);color:#4ade80':'font-size:9px;font-weight:800;letter-spacing:.1em;padding:3px 8px;border-radius:20px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.3)';
-    const sw=e.target.closest('.toggle-sw')?.nextElementSibling; if(sw) sw.textContent=on?'ON':'OFF';
+    if(badge){
+      badge.style.cssText=on?'font-size:9px;font-weight:800;letter-spacing:.1em;padding:3px 9px;border-radius:20px;background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.4);color:#4ade80':'font-size:9px;font-weight:800;letter-spacing:.1em;padding:3px 9px;border-radius:20px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.3)';
+      badge.innerHTML=on?`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#4ade80;margin-right:4px;animation:vnss-pulse 1.5s ease infinite;vertical-align:middle"></span>ATTIVA`:'INATTIVA';
+    }
+    const lbl=document.getElementById('vnss-onlbl'); if(lbl) lbl.textContent=on?'ON':'OFF';
   });
-  // Toggle collassabile config
-  document.getElementById('vnss-cfg-toggle')?.addEventListener('click',()=>{
-    const body=document.getElementById('vnss-cfg-body');
-    const chev=document.getElementById('vnss-cfg-chevron');
-    const vv=_vanessaGetCfg();
-    const open=body.style.display==='none';
-    body.style.display=open?'block':'none';
-    if(chev) chev.textContent=open?'▲':'▼';
-    vv.cfgOpen=open; saveCfg();
+  // Nav tab click
+  pane.querySelectorAll('[data-vnmt]').forEach(btn=>{
+    btn.addEventListener('click',()=>_vnssRenderMainTab(btn.dataset.vnmt));
   });
-  _vanessaRenderTabs();
+  // Status tick
   _vanessaUpdateStatus();
   if(window._vnssStatusTick) clearInterval(window._vnssStatusTick);
   window._vnssStatusTick=setInterval(()=>{ if(document.getElementById('vnss-live-status')) _vanessaUpdateStatus(); else clearInterval(window._vnssStatusTick); },1000);
+  // Render tab iniziale
+  _vnssRenderMainTab(_vnssMainTab||'dispositivi');
 }
 
 function _vanessaSave(){
@@ -15649,68 +15766,61 @@ function _vanessaRenderTabs(){
   const cards=[];
   for(const pg of cfg.pages||[]) for(const c of pg.cards||[]) if(c.vanessaEnabled) cards.push(c);
   const log=(_vanessaGetCfg().log||[]);
-  // costruisce tab: Dispositivi + uno per card + Tutti i Log
-  const tabs=[{id:'__devices__',label:'🎯 Dispositivi'},...cards.map(c=>({id:c.id,label:c.icon?`${c.icon} ${c.label||c.id}`:(c.label||c.id)})),{id:'__all__',label:'📋 Log completo'}];
-  if(!tabs.find(t=>t.id===_vnssActiveTab)) _vnssActiveTab='__devices__';
-  const tabBtn=(t)=>`<button data-vnss-tab="${t.id}" style="padding:9px 13px;border:none;border-bottom:2px solid ${_vnssActiveTab===t.id?'#c084fc':'transparent'};background:none;color:${_vnssActiveTab===t.id?'#c084fc':'rgba(255,255,255,.4)'};font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s">${eh(t.label)}</button>`;
+  const tabs=[{id:'__all__',label:'📋 Tutto'},...cards.map(c=>({id:c.id,label:c.icon?`${c.icon} ${c.label||c.id}`:(c.label||c.id)}))];
+  if(!tabs.find(t=>t.id===_vnssActiveTab)) _vnssActiveTab='__all__';
+  const tabBtn=(t)=>`<button data-vnss-tab="${t.id}" style="padding:10px 14px;border:none;border-bottom:2px solid ${_vnssActiveTab===t.id?'#c084fc':'transparent'};background:none;color:${_vnssActiveTab===t.id?'#c084fc':'rgba(255,255,255,.4)'};font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0">${eh(t.label)}</button>`;
   bar.innerHTML=tabs.map(tabBtn).join('');
   bar.querySelectorAll('[data-vnss-tab]').forEach(btn=>{
     btn.addEventListener('click',()=>{ _vnssActiveTab=btn.dataset.vnssTab; _vanessaRenderTabs(); });
   });
-  if(_vnssActiveTab==='__devices__'){
-    if(!cards.length){
-      content.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;padding:20px;gap:8px;background:rgba(124,58,237,.04);border:1px dashed rgba(124,58,237,.18);border-radius:12px;text-align:center">
-        <span style="font-size:28px;opacity:.4">🎯</span>
-        <div style="font-size:12px;color:rgba(255,255,255,.3);line-height:1.6">Nessun dispositivo assegnato.<br><span style="color:rgba(192,132,252,.45)">Modifica → ⋮ su una card → 🧠 Vanessa</span></div></div>`;
-      return;
-    }
-    content.innerHTML=cards.map(c=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:linear-gradient(135deg,rgba(124,58,237,.1),rgba(99,102,241,.06));border:1px solid rgba(124,58,237,.18);border-radius:12px;margin-bottom:7px">
-      <div style="width:36px;height:36px;border-radius:10px;background:rgba(124,58,237,.2);border:1px solid rgba(192,132,252,.22);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">${c.icon||'📦'}</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:12px;font-weight:700;color:#e2e8f0;margin-bottom:2px">${eh(c.label||c.id)}</div>
-        <div style="font-size:10px;color:rgba(192,132,252,.55);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(c.vanessaEntityId||c.entity||'—')}</div>
-      </div>
-      <button data-action="_vanessaRunCard" data-action-args='["${c.id}",true]' style="background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);border-radius:8px;color:#4ade80;font-size:10px;font-weight:700;padding:6px 10px;cursor:pointer;white-space:nowrap">▶ Esegui</button>
-      <button data-action="_vanessaCardPopup" data-action-args='["${c.id}"]' style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.4);font-size:13px;padding:6px 9px;cursor:pointer">⚙</button>
-    </div>`).join('');
-  } else {
-    // tab log per card specifica o log completo
-    const filterCard=_vnssActiveTab==='__all__'?null:_vnssActiveTab;
-    const entries=filterCard?log.filter(e=>e.cardId===filterCard):log;
-    _vanessaRenderLogEntries(content, entries, filterCard);
-  }
+  const filterCard=_vnssActiveTab==='__all__'?null:_vnssActiveTab;
+  const entries=filterCard?log.filter(e=>e.cardId===filterCard):log;
+  _vanessaRenderLogEntries(content, entries, filterCard);
 }
 
 function _vanessaRenderLogEntries(container, entries, filterCard){
-  const clearBtn=`<button data-action="_vanessaClearLog" data-action-args='["${filterCard||''}"]' style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.25);border-radius:8px;color:#f87171;font-size:10px;font-weight:700;padding:5px 10px;cursor:pointer;float:right;margin-bottom:8px">🗑 Cancella</button>`;
+  const clearBtn=`<button data-action="_vanessaClearLog" data-action-args='["${filterCard||''}"]' style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:#f87171;font-size:10px;font-weight:700;padding:6px 12px;cursor:pointer">🗑 Svuota</button>`;
   if(!entries.length){
-    container.innerHTML=clearBtn+`<div style="clear:both;padding:16px 0;text-align:center;font-size:12px;color:rgba(255,255,255,.25)">Nessuna decisione registrata.</div>`;
+    container.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">${clearBtn}</div><div style="padding:24px 0;text-align:center;font-size:12px;color:rgba(255,255,255,.2);line-height:2">Nessuna decisione registrata.<br>Le decisioni appariranno qui quando Vanessa è attiva.</div>`;
     return;
   }
-  const icons={run:'✅',skip:'⏭',delay:'⏱'};
-  const colors={run:'#4ade80',skip:'#f87171',delay:'#fbbf24'};
-  const bgs={run:'rgba(74,222,128,.06)',skip:'rgba(248,113,113,.06)',delay:'rgba(251,191,36,.06)'};
-  container.innerHTML=clearBtn+`<div style="clear:both;max-height:260px;overflow-y:auto;scrollbar-width:none">`+entries.map(e=>{
+  const icons={run:'✅',skip:'⏭',delay:'⏱',off:'⏹'};
+  const colors={run:'#4ade80',skip:'#64748b',delay:'#fbbf24',off:'#94a3b8'};
+  const bgs={run:'rgba(74,222,128,.06)',skip:'rgba(255,255,255,.03)',delay:'rgba(251,191,36,.06)',off:'rgba(255,255,255,.02)'};
+  const actionLabels={run:'Avviato',skip:'Saltato',delay:'Rimandato',off:'Spento'};
+  const rows=entries.map(e=>{
     const d=new Date(e.ts);
     const time=d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
     const day=d.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'});
     const col=colors[e.action]||'#94a3b8';
-    return `<div style="background:${bgs[e.action]||'rgba(255,255,255,.03)'};border:1px solid ${col}22;border-left:3px solid ${col};border-radius:0 10px 10px 0;padding:9px 12px;margin-bottom:6px">
-      <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px;flex-wrap:wrap">
-        <span style="font-size:13px">${icons[e.action]||'•'}</span>
-        <span style="font-size:11px;font-weight:800;color:${col};text-transform:uppercase">${e.action}</span>
-        <span style="font-size:10px;color:rgba(255,255,255,.3)">${day} ${time}</span>
-        ${filterCard?'':`<span style="font-size:11px;font-weight:600;color:#e2e8f0">${eh(e.cardLabel||e.cardId)}</span>`}
+    return `<div style="background:${bgs[e.action]||'rgba(255,255,255,.03)'};border:1px solid ${col}28;border-left:3px solid ${col};border-radius:0 12px 12px 0;padding:12px 14px;margin-bottom:8px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:${e.detail?'7px':'0'}">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:15px">${icons[e.action]||'•'}</span>
+          <span style="font-size:12px;font-weight:900;color:${col};text-transform:uppercase;letter-spacing:.04em">${actionLabels[e.action]||e.action}</span>
+          ${filterCard?'':`<span style="font-size:11px;font-weight:700;color:rgba(192,132,252,.7);background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.2);border-radius:20px;padding:1px 8px">${eh(e.cardLabel||e.cardId)}</span>`}
+          <span style="font-size:12px;font-weight:600;color:rgba(255,255,255,.65)">${eh(e.reason||'')}</span>
+        </div>
+        <span style="font-size:10px;color:rgba(255,255,255,.3);white-space:nowrap;flex-shrink:0">${day} ${time}</span>
       </div>
-      <div style="font-size:12px;color:rgba(255,255,255,.6);font-weight:600;margin-bottom:${e.detail?'4px':'0'}">${eh(e.reason||'')}</div>
-      ${e.detail?`<div style="font-size:11px;color:rgba(255,255,255,.4);line-height:1.6">${eh(e.detail)}</div>`:''}
+      ${e.detail?`<div style="font-size:11px;color:rgba(255,255,255,.42);line-height:1.7;padding-left:23px">${eh(e.detail)}</div>`:''}
     </div>`;
-  }).join('')+'</div>';
+  }).join('');
+  container.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><div style="font-size:11px;color:rgba(255,255,255,.3)">${entries.length} decision${entries.length!==1?'i':'e'}</div>${clearBtn}</div><div style="max-height:380px;overflow-y:auto;scrollbar-width:none">${rows}</div>`;
 }
 
-function _vanessaRenderLog(){ try{_vanessaRenderTabs();}catch(_){} }
-function _vanessaRenderCards(){ try{_vanessaRenderTabs();}catch(_){} }
+function _vanessaRenderLog(){
+  try{
+    if(_vnssMainTab==='registro') _vanessaRenderTabs();
+    else if(_vnssMainTab==='dispositivi') _vnssRenderMainTab('dispositivi');
+  }catch(_){}
+}
+function _vanessaRenderCards(){
+  try{
+    if(_vnssMainTab==='dispositivi') _vnssRenderMainTab('dispositivi');
+    else if(_vnssMainTab==='registro') _vanessaRenderTabs();
+  }catch(_){}
+}
 
 function _vanessaClearLog(cardId){
   const v=_vanessaGetCfg();
