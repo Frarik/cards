@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.5.65 — 2026-06-22
+
+### feat(vanessa): UI futuristica con avatar dinosauro femmina
+
+- Redesign completo della pagina Impostazioni → 🧠 Vanessa AI.
+- Hero banner con gradiente viola/indigo, griglia di sfondo, linea di scansione animata.
+- Avatar dinosauro femmina SVG (Vanessa-dino): T-Rex verde con ciglia, fiocco rosa, brillantini e animazione fluttuante.
+- Badge stato **ATTIVA / INATTIVA** con punto pulsante verde animato.
+- Provider AI scelto con pulsanti pill cliccabili (Gemini ✦ / OpenAI ⬡ / Ollama 🏠) — non più un select.
+- Sezione sensori con bordo azzurro/cyan distinto dalla sezione principale.
+- Intervallo con campo stilizzato giallo-amber inline.
+- Bottone Salva con glow animato, bottone Test con bordo cyan.
+- Lista dispositivi gestiti in card con icona su sfondo viola e pulsanti "▶ Esegui" e "⚙".
+- Log decisioni con timeline colorata (verde run, rosso skip, giallo delay), max 240px con scroll nascosto.
+- Popup card Vanessa ridisegnato: header con gradiente, toggle con sfondo dinamico che cambia colore in base allo stato, bottone Salva con gradient purple.
+
 ## 1.5.64 — 2026-06-22
 
 ### feat(vanessa): motore decisionale AI autonomo per card JS
