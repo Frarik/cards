@@ -15670,7 +15670,7 @@ function _vanessaRenderTabs(){
         <div style="font-size:12px;font-weight:700;color:#e2e8f0;margin-bottom:2px">${eh(c.label||c.id)}</div>
         <div style="font-size:10px;color:rgba(192,132,252,.55);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(c.vanessaEntityId||c.entity||'—')}</div>
       </div>
-      <button data-action="_vanessaRunCard" data-action-args='["${c.id}"]' style="background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);border-radius:8px;color:#4ade80;font-size:10px;font-weight:700;padding:6px 10px;cursor:pointer;white-space:nowrap">▶ Esegui</button>
+      <button data-action="_vanessaRunCard" data-action-args='["${c.id}",true]' style="background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);border-radius:8px;color:#4ade80;font-size:10px;font-weight:700;padding:6px 10px;cursor:pointer;white-space:nowrap">▶ Esegui</button>
       <button data-action="_vanessaCardPopup" data-action-args='["${c.id}"]' style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.4);font-size:13px;padding:6px 9px;cursor:pointer">⚙</button>
     </div>`).join('');
   } else {
@@ -15798,24 +15798,38 @@ action: run=attiva, skip=non attivare, delay=rimanda. Se run, imposta duration_m
 }
 
 const _vanessaOffTimers={}; // cardId → {timerId, expiresTs}
-async function _vanessaRunCard(cardId){
+function _callHassSvc(h,entityId,action){
+  if(!h||!entityId) return Promise.resolve();
+  const dom=entityId.split('.')[0];
+  if(dom==='input_button'||dom==='button') return h.callService(dom,'press',{entity_id:entityId});
+  if(dom==='script') return h.callService('script','turn_on',{entity_id:entityId});
+  if(action==='on') return h.callService(dom,'turn_on',{entity_id:entityId});
+  return h.callService(dom,'turn_off',{entity_id:entityId});
+}
+async function _vanessaRunCard(cardId, force){
   let card=null;
   for(const pg of cfg.pages||[]) for(const c of pg.cards||[]) if(c.id===cardId){ card=c; break; }
   if(!card){ showToast('⚠️ Card non trovata'); return; }
   const v=_vanessaGetCfg();
   const apiKey=(v.apiKeys&&v.apiKeys[v.provider])||v.apiKey||'';
   if(!apiKey&&v.provider!=='ollama'){ showToast('⚠️ Configura l\'API key di Vanessa prima'); return; }
-  // Check orario operativo
-  if(card.vanessaTimeFrom&&card.vanessaTimeTo){
+  // Check orario operativo (solo se non è un'esecuzione manuale forzata)
+  if(!force&&card.vanessaTimeFrom&&card.vanessaTimeTo){
     const now=new Date(); const h=now.getHours(),m=now.getMinutes(); const cur=h*60+m;
     const [fh,fm]=(card.vanessaTimeFrom||'00:00').split(':').map(Number);
     const [th,tm]=(card.vanessaTimeTo||'23:59').split(':').map(Number);
     const from=fh*60+fm, to=th*60+tm;
-    if(cur<from||cur>to){ return; } // fuori orario, silenzio
+    if(cur<from||cur>to){ showToast(`⏰ Fuori orario operativo (${card.vanessaTimeFrom}–${card.vanessaTimeTo})`); return; }
   }
-  // Se già acceso da Vanessa e ancora nella finestra di durata → non fare nulla
-  const timer=_vanessaOffTimers[cardId];
-  if(timer&&timer.expiresTs>Date.now()){ return; }
+  // Se già acceso da Vanessa e ancora nella finestra di durata → non fare nulla (solo automatico)
+  if(!force){
+    const timer=_vanessaOffTimers[cardId];
+    if(timer&&timer.expiresTs>Date.now()){
+      const minsLeft=Math.round((timer.expiresTs-Date.now())/60000);
+      showToast(`⏳ Già attivo, spegnimento tra ${minsLeft} min`);
+      return;
+    }
+  }
   showToast('🧠 Vanessa sta valutando…');
   const prompt=_vanessaBuildPrompt(card);
   if(!prompt){ showToast('⚠️ Hass non disponibile'); return; }
@@ -15838,15 +15852,6 @@ async function _vanessaRunCard(cardId){
   const runEid=card.vanessaRunEntity||eid;
   const stopEid=card.vanessaStopEntity||eid;
   const hass=_getBestHass();
-  // Chiama il servizio giusto in base al dominio dell'entità
-  function _callHassSvc(h,entityId,action){
-    if(!h||!entityId) return Promise.resolve();
-    const dom=entityId.split('.')[0];
-    if(dom==='input_button'||dom==='button') return h.callService(dom,'press',{entity_id:entityId});
-    if(dom==='script') return h.callService('script','turn_on',{entity_id:entityId});
-    if(action==='on') return h.callService(dom,'turn_on',{entity_id:entityId});
-    return h.callService(dom,'turn_off',{entity_id:entityId});
-  }
   try{
     if(decision.action==='run'&&hass){
       await _callHassSvc(hass,runEid,'on');
@@ -16140,7 +16145,7 @@ function _vanessaCardPopup(cardId){
     card.vanessaTimeFrom=document.getElementById('_vnss-card-from')?.value?.trim()||card.vanessaTimeFrom||'';
     card.vanessaTimeTo=document.getElementById('_vnss-card-to')?.value?.trim()||card.vanessaTimeTo||'';
     ov.remove();
-    _vanessaRunCard(cardId);
+    _vanessaRunCard(cardId, true); // force=true: bypassa check orario e timer
   });
 }
 

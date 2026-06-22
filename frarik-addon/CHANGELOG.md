@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.75 — 2026-06-22
+
+### fix(vanessa): Esegui/Test ora bypassano orario e timer, _callHassSvc portata a livello globale
+
+- **Fix "non fa nulla"**: i pulsanti ▶ Esegui e ▶ Test ora ora usano `force=true` — bypassano il check orario operativo e il check timer attivo. Solo il ciclo automatico rispetta questi limiti.
+- **Return silenziosi → toast**: se il ciclo automatico viene bloccato da orario ("⏰ Fuori orario operativo 19:00–23:00") o da timer attivo ("⏳ Già attivo, spegnimento tra X min"), mostra un toast invece di scomparire in silenzio.
+- **`_callHassSvc` spostata a livello modulo**: era definita come funzione interna dentro `async function _vanessaRunCard`, il che poteva causare problemi con transpiler/bundler. Ora è una funzione standalone.
+
 ## 1.5.74 — 2026-06-22
 
 ### fix(vanessa): entità run/stop separata, supporto input_button e script
