@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.73 — 2026-06-22
+
+### feat(vanessa): durata attivazione, orario operativo, skip intelligente
+
+- **`duration_min`**: l'AI ora decide per quanti minuti tenere acceso il dispositivo. Dopo X minuti Vanessa spegne automaticamente con `turn_off`. Esempio: attiva l'antizanzare per 90 minuti.
+- **Popup decisione aggiornato**: se l'azione è `run` e `duration_min > 0`, mostra una barra verde "⏳ Attivo per X minuti — Spegnimento automatico alle HH:MM".
+- **Orario operativo per card**: nel popup di configurazione di ogni card ci sono due campi orario "Dalle" e "Alle" (salvati come `vanessaTimeFrom`/`vanessaTimeTo`). Fuori orario Vanessa salta silenziosamente senza chiamare l'AI.
+- **Skip intelligente**: se Vanessa ha già acceso il dispositivo e il timer di durata è ancora attivo, la rivalutazione successiva viene saltata automaticamente senza consumare token AI.
+- **Prompt aggiornato**: include l'orario operativo della card e lo stato "già acceso, spegnimento in X min" per decisioni più coerenti.
+
 ## 1.5.72 — 2026-06-22
 
 ### feat(vanessa): popup decisione completo + tab per dispositivo + UI ordinata
