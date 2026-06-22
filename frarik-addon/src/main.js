@@ -15412,12 +15412,22 @@ function _vanessaRenderSettings(){
 
 <!-- CAMPI DINAMICI -->
 <div id="vnss-key-row" style="margin-bottom:12px${cur==='ollama'?';display:none':''}">
-  <div style="${lbl}">🔑 API Key</div>
-  <input type="password" id="vnss-key" style="${inp}" value="${eh(v.apiKey||'')}" placeholder="Incolla qui la tua chiave API">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+    <div style="${lbl};margin-bottom:0">🔑 API Key — <span id="vnss-key-prov-lbl" style="color:rgba(192,132,252,.9)">${{gemini:'Google Gemini',openai:'OpenAI',claude:'Anthropic Claude',ollama:'Ollama'}[cur]||cur}</span></div>
+    <div id="vnss-key-status" style="font-size:10px;font-weight:700"></div>
+  </div>
+  <div style="display:flex;gap:8px">
+    <input type="password" id="vnss-key" style="${inp};flex:1" value="${eh((v.apiKeys&&v.apiKeys[cur])||v.apiKey||'')}" placeholder="Incolla qui la chiave API">
+    <button id="vnss-validate-btn" style="background:rgba(74,222,128,.12);border:1.5px solid rgba(74,222,128,.3);color:#4ade80;border-radius:10px;padding:0 14px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;transition:all .2s">🔍 Valida</button>
+  </div>
+  <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:5px">La chiave viene salvata separatamente per ogni provider</div>
 </div>
 <div id="vnss-ollama-row" style="margin-bottom:12px${cur!=='ollama'?';display:none':''}">
   <div style="${lbl}">🌐 URL Ollama</div>
-  <input type="text" id="vnss-ollama" style="${inp}" value="${eh(v.ollamaUrl||'http://localhost:11434')}" placeholder="http://localhost:11434">
+  <div style="display:flex;gap:8px">
+    <input type="text" id="vnss-ollama" style="${inp};flex:1" value="${eh(v.ollamaUrl||'http://localhost:11434')}" placeholder="http://localhost:11434">
+    <button id="vnss-validate-btn" style="background:rgba(74,222,128,.12);border:1.5px solid rgba(74,222,128,.3);color:#4ade80;border-radius:10px;padding:0 14px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;transition:all .2s">🔍 Valida</button>
+  </div>
 </div>
 <div style="margin-bottom:12px">
   <div style="${lbl}">⚡ Modello</div>
@@ -15425,6 +15435,7 @@ function _vanessaRenderSettings(){
   <div id="vnss-model-chips" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:7px">
     ${_vnssModelChips(cur,v.model||'')}
   </div>
+  <div id="vnss-model-hint" style="font-size:10px;color:rgba(255,255,255,.22);margin-top:5px">Clicca "Valida" per caricare i modelli reali dal tuo account</div>
 </div>
 
 <!-- SENSORI -->
@@ -15470,18 +15481,33 @@ function _vanessaRenderSettings(){
 </div>`;
 
   // Provider pill click
+  const provNames={gemini:'Google Gemini',openai:'OpenAI',claude:'Anthropic Claude',ollama:'Ollama'};
   document.getElementById('vnss-prov-wrap')?.querySelectorAll('.vnss-prov-btn').forEach(btn=>{
     btn.addEventListener('click',()=>{
       const p=btn.dataset.prov;
+      const vv=_vanessaGetCfg();
       document.getElementById('vnss-prov').value=p;
       document.querySelectorAll('.vnss-prov-btn').forEach(b=>b.classList.toggle('active',b===btn));
       document.getElementById('vnss-key-row').style.display=p==='ollama'?'none':'';
       document.getElementById('vnss-ollama-row').style.display=p==='ollama'?'':'none';
+      // Carica chiave salvata per questo provider
+      const kf=document.getElementById('vnss-key');
+      if(kf) kf.value=(vv.apiKeys&&vv.apiKeys[p])||'';
+      const lbl2=document.getElementById('vnss-key-prov-lbl');
+      if(lbl2) lbl2.textContent=provNames[p]||p;
+      const st=document.getElementById('vnss-key-status');
+      if(st) st.innerHTML='';
       const mf=document.getElementById('vnss-model');
-      if(mf) mf.placeholder=ph[p]||'';
+      if(mf){ mf.placeholder=ph[p]||''; mf.value=vv.model||''; }
       const mc=document.getElementById('vnss-model-chips');
       if(mc) mc.innerHTML=_vnssModelChips(p, mf?.value||'');
+      const hint=document.getElementById('vnss-model-hint');
+      if(hint) hint.style.display='';
     });
+  });
+  // Bottone Valida
+  document.querySelectorAll('#vnss-validate-btn').forEach(btn=>{
+    btn.addEventListener('click', _vanessaValidateKey);
   });
   // Click su chip modello → popola il campo
   document.getElementById('vnss-model-chips')?.addEventListener('click',e=>{
@@ -15514,8 +15540,10 @@ function _vanessaSave(){
   const v=_vanessaGetCfg();
   v.enabled=!!document.getElementById('vnss-on')?.checked;
   v.provider=document.getElementById('vnss-prov')?.value||'gemini';
+  if(!v.apiKeys) v.apiKeys={};
   const keyEl=document.getElementById('vnss-key');
-  if(keyEl&&keyEl.value.trim()) v.apiKey=keyEl.value.trim();
+  if(keyEl&&keyEl.value.trim()) v.apiKeys[v.provider]=keyEl.value.trim();
+  v.apiKey=v.apiKeys[v.provider]||''; // backward compat
   v.ollamaUrl=document.getElementById('vnss-ollama')?.value?.trim()||'http://localhost:11434';
   v.model=document.getElementById('vnss-model')?.value?.trim()||'';
   v.weatherEntityId=document.getElementById('vnss-weather')?.value?.trim()||'';
@@ -15537,6 +15565,63 @@ async function _vanessaTest(){
     if(r&&(r.includes('"ok"')||r.includes('ok'))){ showToast('✅ Connessione AI funzionante!'); }
     else{ showToast('⚠️ Risposta ricevuta: '+r.slice(0,80)); }
   }catch(e){ showToast('❌ '+e.message); }
+}
+
+async function _vanessaValidateKey(){
+  const v=_vanessaGetCfg();
+  const provider=document.getElementById('vnss-prov')?.value||v.provider||'gemini';
+  const key=document.getElementById('vnss-key')?.value?.trim()||(provider!=='ollama'?'':'ok');
+  const ollamaUrl=document.getElementById('vnss-ollama')?.value?.trim()||v.ollamaUrl||'http://localhost:11434';
+  const statusEl=document.getElementById('vnss-key-status');
+  const chipsEl=document.getElementById('vnss-model-chips');
+  const hintEl=document.getElementById('vnss-model-hint');
+  const btn=document.getElementById('vnss-validate-btn');
+  if(!key&&provider!=='ollama'){ if(statusEl) statusEl.innerHTML='<span style="color:#f87171">⚠️ Inserisci la chiave</span>'; return; }
+  if(statusEl) statusEl.innerHTML='<span style="color:#fbbf24;animation:vnss-pulse 1s infinite">⏳ Verifica…</span>';
+  if(btn){ btn.disabled=true; btn.style.opacity='.5'; }
+  let models=[];
+  try{
+    if(provider==='gemini'){
+      const r=await fetch(`https://generativelanguage.googleapis.com/v1/models?key=${encodeURIComponent(key)}&pageSize=50`);
+      if(!r.ok){ const t=await r.text(); throw new Error(`${r.status}: ${JSON.parse(t)?.error?.message||t.slice(0,80)}`); }
+      const d=await r.json();
+      models=(d.models||[]).filter(m=>m.name&&m.supportedGenerationMethods?.includes('generateContent')).map(m=>m.name.replace('models/',''));
+    } else if(provider==='openai'){
+      const r=await fetch('https://api.openai.com/v1/models',{headers:{'Authorization':'Bearer '+key}});
+      if(!r.ok){ const t=await r.text(); throw new Error(`${r.status}: ${JSON.parse(t)?.error?.message||t.slice(0,80)}`); }
+      const d=await r.json();
+      models=(d.data||[]).map(m=>m.id).filter(id=>/gpt/.test(id)).sort();
+    } else if(provider==='claude'){
+      const r=await fetch('https://api.anthropic.com/v1/models',{headers:{'x-api-key':key,'anthropic-version':'2023-06-01'}});
+      if(!r.ok){ const t=await r.text(); throw new Error(`${r.status}: ${JSON.parse(t)?.error?.message||t.slice(0,80)}`); }
+      const d=await r.json();
+      models=(d.data||[]).map(m=>m.id).sort().reverse();
+    } else if(provider==='ollama'){
+      const r=await fetch(ollamaUrl+'/api/tags');
+      if(!r.ok) throw new Error('Ollama non raggiungibile su '+ollamaUrl);
+      const d=await r.json();
+      models=(d.models||[]).map(m=>m.name);
+    }
+    if(statusEl) statusEl.innerHTML=`<span style="color:#4ade80">✅ Valida · ${models.length} modelli</span>`;
+    if(chipsEl&&models.length){
+      const cur=document.getElementById('vnss-model')?.value||'';
+      chipsEl.innerHTML=models.map(m=>{
+        const active=cur===m;
+        return `<span data-vnss-model="${eh(m)}" style="cursor:pointer;font-size:10px;padding:4px 9px;border-radius:20px;font-weight:700;transition:all .15s;${active?'background:rgba(192,132,252,.25);border:1.5px solid rgba(192,132,252,.6);color:#c084fc':'background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4)'}">${eh(m)}</span>`;
+      }).join('');
+    }
+    if(hintEl) hintEl.style.display='none';
+    // Auto-salva la chiave validata
+    if(!v.apiKeys) v.apiKeys={};
+    if(key) v.apiKeys[provider]=key;
+    if(provider==='ollama') v.ollamaUrl=ollamaUrl;
+    saveCfg();
+    showToast(`✅ ${provider} verificato — ${models.length} modelli disponibili`);
+  }catch(e){
+    if(statusEl) statusEl.innerHTML=`<span style="color:#f87171">❌ ${eh(e.message.slice(0,80))}</span>`;
+    showToast('❌ '+e.message.slice(0,100));
+  }
+  if(btn){ btn.disabled=false; btn.style.opacity='1'; }
 }
 
 function _vanessaRenderCards(){
@@ -15600,23 +15685,24 @@ function _vanessaRenderLog(){
 async function _vanessaCallAI(prompt){
   const v=_vanessaGetCfg();
   const provider=v.provider||'gemini';
-  const defaults={gemini:'gemini-1.5-flash',openai:'gpt-4o-mini',ollama:'llama3.2',claude:'claude-haiku-4-5-20251001'};
+  const defaults={gemini:'gemini-2.0-flash',openai:'gpt-4o-mini',ollama:'llama3.2',claude:'claude-haiku-4-5-20251001'};
   const model=v.model||defaults[provider]||'gemini-2.0-flash';
+  const apiKey=(v.apiKeys&&v.apiKeys[provider])||v.apiKey||'';
   if(provider==='gemini'){
-    const url=`https://generativelanguage.googleapis.com/v1/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(v.apiKey||'')}`;
+    const url=`https://generativelanguage.googleapis.com/v1/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
     const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.2,maxOutputTokens:300}})});
     if(!r.ok){ const t=await r.text(); throw new Error(`Gemini ${r.status}: ${t.slice(0,120)}`); }
     const d=await r.json();
     return d.candidates?.[0]?.content?.parts?.[0]?.text||'';
   }
   if(provider==='openai'){
-    const r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+(v.apiKey||'')},body:JSON.stringify({model,messages:[{role:'system',content:'Sei Vanessa, AI di automazione domestica. Rispondi SEMPRE e SOLO con JSON valido, nessun altro testo.'},{role:'user',content:prompt}],temperature:0.2,max_tokens:300})});
+    const r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},body:JSON.stringify({model,messages:[{role:'system',content:'Sei Vanessa, AI di automazione domestica. Rispondi SEMPRE e SOLO con JSON valido, nessun altro testo.'},{role:'user',content:prompt}],temperature:0.2,max_tokens:300})});
     if(!r.ok){ const t=await r.text(); throw new Error(`OpenAI ${r.status}: ${t.slice(0,120)}`); }
     const d=await r.json();
     return d.choices?.[0]?.message?.content||'';
   }
   if(provider==='claude'){
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':v.apiKey||'','anthropic-version':'2023-06-01'},body:JSON.stringify({model,max_tokens:300,system:'Sei Vanessa, AI di automazione domestica integrata in Home Assistant. Rispondi SEMPRE e SOLO con JSON valido, nessun altro testo, nessun markdown.',messages:[{role:'user',content:prompt}]})});
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model,max_tokens:300,system:'Sei Vanessa, AI di automazione domestica integrata in Home Assistant. Rispondi SEMPRE e SOLO con JSON valido, nessun altro testo, nessun markdown.',messages:[{role:'user',content:prompt}]})});
     if(!r.ok){ const t=await r.text(); throw new Error(`Claude ${r.status}: ${t.slice(0,120)}`); }
     const d=await r.json();
     return d.content?.[0]?.text||'';
@@ -16126,6 +16212,6 @@ Object.assign(window, {
   openPremiumPage, closePremiumPage, _ghsPremActivate, _premSendInterest,
   _isAdmin, _adminCtrlPanel,
   _epLicBadgeLoad, _epAdminPanelLoad, _adminShowFirstAccess,
-  _vanessaRenderSettings, _vanessaSave, _vanessaTest,
+  _vanessaRenderSettings, _vanessaSave, _vanessaTest, _vanessaValidateKey,
   _vanessaRunCard, _vanessaCardPopup,
 });

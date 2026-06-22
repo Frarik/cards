@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.5.69 — 2026-06-22
+
+### feat(vanessa): chiave API per-provider + bottone Valida con modelli reali
+
+- **Chiavi separate per provider**: ogni AI (Gemini, OpenAI, Claude, Ollama) ha la sua chiave salvata in `cfg.vanessa.apiKeys[provider]`. Cambiando provider si carica automaticamente la chiave già salvata per quel provider.
+- **Bottone "🔍 Valida"**: interroga l'API reale del provider con la chiave inserita. Se valida, mostra badge verde "✅ Valida · N modelli" e popola i chip modello con i modelli realmente disponibili sull'account. Se non valida, mostra il messaggio di errore preciso dall'API.
+  - Gemini: `GET /v1/models?key=...` → filtra per `generateContent`
+  - OpenAI: `GET /v1/models` → filtra per GPT
+  - Claude: `GET /v1/models` → tutti i modelli Claude
+  - Ollama: `GET /api/tags` → modelli installati localmente
+- La chiave validata viene auto-salvata in `cfg.vanessa.apiKeys`.
+- `_vanessaCallAI` usa `apiKeys[provider]` invece del vecchio campo unico `apiKey`.
+
 ## 1.5.68 — 2026-06-22
 
 ### fix(vanessa): endpoint Gemini corretto + layout provider 2×2
