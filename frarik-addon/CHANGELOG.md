@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.66 — 2026-06-22
+
+### feat(vanessa): aggiunto provider Claude (Anthropic) + spiegazione Ollama
+
+- Quarto provider AI: **🧡 Claude** (Anthropic) — usa l'API `https://api.anthropic.com/v1/messages`, modello default `claude-haiku-4-5-20251001`. Richiede API key da console.anthropic.com.
+- Ollama: il provider locale ora ha descrizione "locale, gratis" nel pulsante pill.
+- `_vanessaCallAI` aggiornata con branch `claude` usando header `anthropic-version` e `x-api-key`.
+
 ## 1.5.65 — 2026-06-22
 
 ### feat(vanessa): UI futuristica con avatar dinosauro femmina

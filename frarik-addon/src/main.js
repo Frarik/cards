@@ -15242,7 +15242,7 @@ function _vanessaRenderSettings(){
   const pane=document.getElementById('ep-content-vanessa'); if(!pane) return;
   const v=_vanessaGetCfg();
   const cur=v.provider||'gemini';
-  const ph={gemini:'gemini-1.5-flash',openai:'gpt-4o-mini',ollama:'llama3.2'};
+  const ph={gemini:'gemini-1.5-flash',openai:'gpt-4o-mini',ollama:'llama3.2',claude:'claude-haiku-4-5-20251001'};
   const dinoSvg=`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
     <defs>
       <radialGradient id="vbody" cx="50%" cy="55%" r="50%"><stop offset="0%" stop-color="#86efac"/><stop offset="100%" stop-color="#16a34a"/></radialGradient>
@@ -15370,6 +15370,11 @@ function _vanessaRenderSettings(){
       <span style="font-size:18px">🏠</span>
       <span>Ollama</span>
       <span style="font-size:9px;opacity:.6">locale</span>
+    </button>
+    <button class="vnss-prov-btn${cur==='claude'?' active':''}" data-prov="claude" style="${cur==='claude'?'':'border-color:rgba(232,121,56,.3);'}">
+      <span style="font-size:18px">🧡</span>
+      <span>Claude</span>
+      <span style="font-size:9px;opacity:.6">Anthropic</span>
     </button>
   </div>
   <input type="hidden" id="vnss-prov" value="${cur}">
@@ -15542,7 +15547,8 @@ function _vanessaRenderLog(){
 async function _vanessaCallAI(prompt){
   const v=_vanessaGetCfg();
   const provider=v.provider||'gemini';
-  const model=v.model||(provider==='gemini'?'gemini-1.5-flash':provider==='openai'?'gpt-4o-mini':'llama3.2');
+  const defaults={gemini:'gemini-1.5-flash',openai:'gpt-4o-mini',ollama:'llama3.2',claude:'claude-haiku-4-5-20251001'};
+  const model=v.model||defaults[provider]||'gemini-1.5-flash';
   if(provider==='gemini'){
     const url=`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(v.apiKey||'')}`;
     const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.2,maxOutputTokens:300}})});
@@ -15555,6 +15561,12 @@ async function _vanessaCallAI(prompt){
     if(!r.ok){ const t=await r.text(); throw new Error(`OpenAI ${r.status}: ${t.slice(0,120)}`); }
     const d=await r.json();
     return d.choices?.[0]?.message?.content||'';
+  }
+  if(provider==='claude'){
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':v.apiKey||'','anthropic-version':'2023-06-01'},body:JSON.stringify({model,max_tokens:300,system:'Sei Vanessa, AI di automazione domestica integrata in Home Assistant. Rispondi SEMPRE e SOLO con JSON valido, nessun altro testo, nessun markdown.',messages:[{role:'user',content:prompt}]})});
+    if(!r.ok){ const t=await r.text(); throw new Error(`Claude ${r.status}: ${t.slice(0,120)}`); }
+    const d=await r.json();
+    return d.content?.[0]?.text||'';
   }
   if(provider==='ollama'){
     const r=await fetch((v.ollamaUrl||'http://localhost:11434')+'/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model,prompt,stream:false,options:{temperature:0.2,num_predict:300}})});
