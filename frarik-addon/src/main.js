@@ -15239,10 +15239,10 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
 function _vanessaGetCfg(){ if(!cfg.vanessa) cfg.vanessa={}; return cfg.vanessa; }
 
 const _vnssModels={
-  gemini:['gemini-1.5-flash','gemini-1.5-pro','gemini-2.0-flash'],
+  gemini:['gemini-2.0-flash','gemini-2.0-flash-lite','gemini-1.5-pro'],
   openai:['gpt-4o-mini','gpt-4o','gpt-3.5-turbo'],
   claude:['claude-haiku-4-5-20251001','claude-sonnet-4-6','claude-opus-4-8'],
-  ollama:['llama3.2','llama3.1','mistral','gemma2']
+  ollama:['llama3.2','mistral','gemma2','qwen2.5']
 };
 function _vnssModelChips(provider, current){
   const models=_vnssModels[provider]||[];
@@ -15256,7 +15256,7 @@ function _vanessaRenderSettings(){
   const pane=document.getElementById('ep-content-vanessa'); if(!pane) return;
   const v=_vanessaGetCfg();
   const cur=v.provider||'gemini';
-  const ph={gemini:'gemini-1.5-flash',openai:'gpt-4o-mini',ollama:'llama3.2',claude:'claude-haiku-4-5-20251001'};
+  const ph={gemini:'gemini-2.0-flash',openai:'gpt-4o-mini',ollama:'llama3.2',claude:'claude-haiku-4-5-20251001'};
   const dinoSvg=`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
     <defs>
       <radialGradient id="vbody" cx="50%" cy="55%" r="50%"><stop offset="0%" stop-color="#86efac"/><stop offset="100%" stop-color="#16a34a"/></radialGradient>
@@ -15328,7 +15328,7 @@ function _vanessaRenderSettings(){
 @keyframes vnss-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 @keyframes vnss-scan{0%{transform:translateY(-100%)}100%{transform:translateY(400%)}}
 @keyframes vnss-glow{0%,100%{box-shadow:0 0 18px rgba(124,58,237,.4)}50%{box-shadow:0 0 36px rgba(192,132,252,.6),0 0 60px rgba(124,58,237,.3)}}
-.vnss-prov-btn{background:rgba(124,58,237,.1);border:1.5px solid rgba(124,58,237,.2);border-radius:12px;padding:10px 8px;cursor:pointer;transition:all .2s;flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:rgba(255,255,255,.5);font-size:10px;font-weight:700}
+.vnss-prov-btn{background:rgba(124,58,237,.1);border:1.5px solid rgba(124,58,237,.2);border-radius:12px;padding:10px 14px;cursor:pointer;transition:all .2s;display:flex;align-items:center;color:rgba(255,255,255,.5);font-size:10px;font-weight:700;text-align:left}
 .vnss-prov-btn:hover{border-color:rgba(192,132,252,.5);background:rgba(124,58,237,.2);color:#e2e8f0}
 .vnss-prov-btn.active{border-color:#c084fc;background:rgba(124,58,237,.28);color:#fff;box-shadow:0 0 16px rgba(124,58,237,.35)}
 </style>
@@ -15369,26 +15369,42 @@ function _vanessaRenderSettings(){
 <!-- SEZIONE PROVIDER -->
 <div style="margin-bottom:16px">
   <div style="${lbl}">🤖 Cervello AI</div>
-  <div style="display:flex;gap:8px" id="vnss-prov-wrap">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="vnss-prov-wrap">
     <button class="vnss-prov-btn${cur==='gemini'?' active':''}" data-prov="gemini">
-      <span style="font-size:18px">✦</span>
-      <span>Gemini</span>
-      <span style="font-size:9px;opacity:.6">gratis</span>
+      <div style="display:flex;align-items:center;gap:8px;width:100%">
+        <span style="font-size:20px">✦</span>
+        <div style="text-align:left">
+          <div style="font-size:12px;font-weight:800">Gemini</div>
+          <div style="font-size:9px;opacity:.55">Google · gratis</div>
+        </div>
+      </div>
     </button>
     <button class="vnss-prov-btn${cur==='openai'?' active':''}" data-prov="openai">
-      <span style="font-size:18px">⬡</span>
-      <span>OpenAI</span>
-      <span style="font-size:9px;opacity:.6">GPT</span>
+      <div style="display:flex;align-items:center;gap:8px;width:100%">
+        <span style="font-size:20px">⬡</span>
+        <div style="text-align:left">
+          <div style="font-size:12px;font-weight:800">OpenAI</div>
+          <div style="font-size:9px;opacity:.55">GPT · pay-per-use</div>
+        </div>
+      </div>
+    </button>
+    <button class="vnss-prov-btn${cur==='claude'?' active':''}" data-prov="claude">
+      <div style="display:flex;align-items:center;gap:8px;width:100%">
+        <span style="font-size:20px">🧡</span>
+        <div style="text-align:left">
+          <div style="font-size:12px;font-weight:800">Claude</div>
+          <div style="font-size:9px;opacity:.55">Anthropic · il migliore</div>
+        </div>
+      </div>
     </button>
     <button class="vnss-prov-btn${cur==='ollama'?' active':''}" data-prov="ollama">
-      <span style="font-size:18px">🏠</span>
-      <span>Ollama</span>
-      <span style="font-size:9px;opacity:.6">locale</span>
-    </button>
-    <button class="vnss-prov-btn${cur==='claude'?' active':''}" data-prov="claude" style="${cur==='claude'?'':'border-color:rgba(232,121,56,.3);'}">
-      <span style="font-size:18px">🧡</span>
-      <span>Claude</span>
-      <span style="font-size:9px;opacity:.6">Anthropic</span>
+      <div style="display:flex;align-items:center;gap:8px;width:100%">
+        <span style="font-size:20px">🏠</span>
+        <div style="text-align:left">
+          <div style="font-size:12px;font-weight:800">Ollama</div>
+          <div style="font-size:9px;opacity:.55">Locale · gratis</div>
+        </div>
+      </div>
     </button>
   </div>
   <input type="hidden" id="vnss-prov" value="${cur}">
@@ -15585,9 +15601,9 @@ async function _vanessaCallAI(prompt){
   const v=_vanessaGetCfg();
   const provider=v.provider||'gemini';
   const defaults={gemini:'gemini-1.5-flash',openai:'gpt-4o-mini',ollama:'llama3.2',claude:'claude-haiku-4-5-20251001'};
-  const model=v.model||defaults[provider]||'gemini-1.5-flash';
+  const model=v.model||defaults[provider]||'gemini-2.0-flash';
   if(provider==='gemini'){
-    const url=`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(v.apiKey||'')}`;
+    const url=`https://generativelanguage.googleapis.com/v1/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(v.apiKey||'')}`;
     const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.2,maxOutputTokens:300}})});
     if(!r.ok){ const t=await r.text(); throw new Error(`Gemini ${r.status}: ${t.slice(0,120)}`); }
     const d=await r.json();

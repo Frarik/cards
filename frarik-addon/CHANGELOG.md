@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.68 — 2026-06-22
+
+### fix(vanessa): endpoint Gemini corretto + layout provider 2×2
+
+- **Bug fix critico**: endpoint Gemini aggiornato da `v1beta` a `v1` — `gemini-1.5-flash` non esiste più su v1beta. Modello default cambiato in `gemini-2.0-flash` (attuale modello free di Google).
+- **Layout provider**: i 4 bottoni (Gemini, OpenAI, Claude, Ollama) ora usano una griglia 2×2 con icona + nome + descrizione orizzontale — Claude non era più visibile con 4 pill in riga.
+- **Chip modelli aggiornati**: Gemini ora mostra `gemini-2.0-flash`, `gemini-2.0-flash-lite`, `gemini-1.5-pro`; Ollama aggiunge `qwen2.5`.
+
 ## 1.5.67 — 2026-06-22
 
 ### fix(vanessa): test connessione + selezione modello
