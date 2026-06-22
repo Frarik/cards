@@ -15238,6 +15238,20 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
 ═══════════════════════════════════════════════════════════════════════════ */
 function _vanessaGetCfg(){ if(!cfg.vanessa) cfg.vanessa={}; return cfg.vanessa; }
 
+const _vnssModels={
+  gemini:['gemini-1.5-flash','gemini-1.5-pro','gemini-2.0-flash'],
+  openai:['gpt-4o-mini','gpt-4o','gpt-3.5-turbo'],
+  claude:['claude-haiku-4-5-20251001','claude-sonnet-4-6','claude-opus-4-8'],
+  ollama:['llama3.2','llama3.1','mistral','gemma2']
+};
+function _vnssModelChips(provider, current){
+  const models=_vnssModels[provider]||[];
+  return models.map(m=>{
+    const active=current===m;
+    return `<span data-vnss-model="${m}" style="cursor:pointer;font-size:10px;padding:4px 9px;border-radius:20px;font-weight:700;transition:all .15s;${active?'background:rgba(192,132,252,.25);border:1.5px solid rgba(192,132,252,.6);color:#c084fc':'background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4)'}">${m}</span>`;
+  }).join('');
+}
+
 function _vanessaRenderSettings(){
   const pane=document.getElementById('ep-content-vanessa'); if(!pane) return;
   const v=_vanessaGetCfg();
@@ -15392,6 +15406,9 @@ function _vanessaRenderSettings(){
 <div style="margin-bottom:12px">
   <div style="${lbl}">⚡ Modello</div>
   <input type="text" id="vnss-model" style="${inp}" value="${eh(v.model||'')}" placeholder="${ph[cur]}">
+  <div id="vnss-model-chips" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:7px">
+    ${_vnssModelChips(cur,v.model||'')}
+  </div>
 </div>
 
 <!-- SENSORI -->
@@ -15444,8 +15461,26 @@ function _vanessaRenderSettings(){
       document.querySelectorAll('.vnss-prov-btn').forEach(b=>b.classList.toggle('active',b===btn));
       document.getElementById('vnss-key-row').style.display=p==='ollama'?'none':'';
       document.getElementById('vnss-ollama-row').style.display=p==='ollama'?'':'none';
-      document.getElementById('vnss-model').placeholder=ph[p]||'';
+      const mf=document.getElementById('vnss-model');
+      if(mf) mf.placeholder=ph[p]||'';
+      const mc=document.getElementById('vnss-model-chips');
+      if(mc) mc.innerHTML=_vnssModelChips(p, mf?.value||'');
     });
+  });
+  // Click su chip modello → popola il campo
+  document.getElementById('vnss-model-chips')?.addEventListener('click',e=>{
+    const chip=e.target.closest('[data-vnss-model]'); if(!chip) return;
+    const m=chip.dataset.vnssModel;
+    const mf=document.getElementById('vnss-model'); if(mf) mf.value=m;
+    const p=document.getElementById('vnss-prov')?.value||'gemini';
+    const mc=document.getElementById('vnss-model-chips');
+    if(mc) mc.innerHTML=_vnssModelChips(p,m);
+  });
+  // Aggiorna chip attivo mentre l'utente digita
+  document.getElementById('vnss-model')?.addEventListener('input',e=>{
+    const p=document.getElementById('vnss-prov')?.value||'gemini';
+    const mc=document.getElementById('vnss-model-chips');
+    if(mc) mc.innerHTML=_vnssModelChips(p,e.target.value);
   });
   // Toggle badge aggiornamento live
   document.getElementById('vnss-on')?.addEventListener('change',e=>{
@@ -15476,12 +15511,14 @@ function _vanessaSave(){
 }
 
 async function _vanessaTest(){
+  // Auto-salva prima di testare, così la chiave inserita viene letta correttamente
+  _vanessaSave();
   const v=_vanessaGetCfg();
-  if(!v.apiKey&&v.provider!=='ollama'){ showToast('⚠️ Inserisci prima l\'API key'); return; }
+  if(!v.apiKey&&v.provider!=='ollama'){ showToast('⚠️ Inserisci prima l\'API key nel campo sopra'); return; }
   showToast('🧪 Test in corso…');
   try{
     const r=await _vanessaCallAI('Rispondi SOLO con: {"ok":true}');
-    if(r&&r.includes('"ok"')||r.includes('ok')){ showToast('✅ Connessione AI funzionante!'); }
+    if(r&&(r.includes('"ok"')||r.includes('ok'))){ showToast('✅ Connessione AI funzionante!'); }
     else{ showToast('⚠️ Risposta ricevuta: '+r.slice(0,80)); }
   }catch(e){ showToast('❌ '+e.message); }
 }

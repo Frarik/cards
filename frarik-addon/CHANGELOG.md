@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.67 — 2026-06-22
+
+### fix(vanessa): test connessione + selezione modello
+
+- **Bug fix**: "Test connessione" ora auto-salva il form prima di eseguire il test — prima leggeva `cfg.vanessa.apiKey` (vuoto) invece della chiave appena digitata nel campo.
+- **Chip modello**: sotto il campo Modello appaiono i modelli consigliati per ogni provider come chip cliccabili (Gemini: flash/pro/2.0, OpenAI: 4o-mini/4o/3.5, Claude: haiku/sonnet/opus, Ollama: llama/mistral/gemma). Cliccando un chip si popola il campo automaticamente e si evidenzia come attivo.
+- I chip si aggiornano quando si cambia provider e mentre si digita manualmente nel campo.
+
 ## 1.5.66 — 2026-06-22
 
 ### feat(vanessa): aggiunto provider Claude (Anthropic) + spiegazione Ollama
