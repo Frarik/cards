@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.5.64 — 2026-06-22
+
+### feat(vanessa): motore decisionale AI autonomo per card JS
+
+- Nuova sezione **🧠 Vanessa AI** nelle impostazioni (sidebar).
+- Configura provider AI (Google Gemini free tier, OpenAI, Ollama locale), API key, modello, entità meteo, sensori extra e intervallo di valutazione.
+- Vanessa legge i dati meteo e i sensori HA, costruisce un prompt contestuale e chiede all'AI se il dispositivo deve essere attivato, saltato o rimandato (`run|skip|delay`).
+- Integrazione multi-provider: Gemini (`gemini-1.5-flash` default), OpenAI GPT, Ollama locale — nessuna soglia hardcoded, decide l'AI.
+- Ogni card JS ha ora l'opzione **🧠 Vanessa** nel menu ⋮ (edit mode): apre un popup per abilitare Vanessa, impostare l'entità da controllare e aggiungere contesto descrittivo.
+- Pulsante "▶ Esegui ora" per testare la valutazione manualmente da Settings → Vanessa.
+- Log delle ultime 30 decisioni (timestamp, azione, motivo) visibile nelle impostazioni.
+- Intervallo automatico configurabile (default 30 min): avvio ritardato di 3s dopo il caricamento per non rallentare il boot.
+
 ## 1.5.63 — 2026-06-20
 
 ### fix(store): modifica applicata al file sorgente corretto (src/index.html)

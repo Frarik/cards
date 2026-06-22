@@ -6271,6 +6271,7 @@ function _switchEpTab(tab){
   if(tab==='sos'){ try{renderSOSCfgList();}catch(_){} }
   if(tab==='licenza'){ try{_epLicBadgeLoad();}catch(_){} }
   if(tab==='admin-panel'){ try{_epAdminPanelLoad();}catch(_){} }
+  if(tab==='vanessa'){ try{_vanessaRenderSettings();}catch(_){} }
 }
 function _openEpSheet(tab){ _switchEpTab(tab); }
 function _closeEpSheet(){}
@@ -6456,6 +6457,8 @@ function cardDotMenu(cardId, el, e){
     it('cut','✂️','Taglia')+
     it('page','📑','Copia su vista')+
     '<div style="height:1px;background:rgba(255,255,255,.09);margin:2px 0"></div>'+
+    it('vanessa','🧠','Vanessa AI')+
+    '<div style="height:1px;background:rgba(255,255,255,.09);margin:2px 0"></div>'+
     delItem;
   const r=el?el.getBoundingClientRect():null;
   if(r){
@@ -6473,6 +6476,7 @@ function cardDotMenu(cardId, el, e){
     else if(a==='copy') copyCard(cardId);
     else if(a==='cut') cutCard(cardId);
     else if(a==='page') copyCardToPage(cardId);
+    else if(a==='vanessa') _vanessaCardPopup(cardId);
     else if(a==='del') delCard(cardId);
   });
   setTimeout(()=>document.addEventListener('click',function _h(ev){
@@ -15228,6 +15232,333 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
   (function boot(){ try{ _applyMobCol(localStorage.getItem('dash_mobcol')||'auto'); }catch(e){} })();
 })();
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   VANESSA AI — motore decisionale autonomo per card JS
+   Provider: Google Gemini (default) | OpenAI | Ollama locale
+═══════════════════════════════════════════════════════════════════════════ */
+function _vanessaGetCfg(){ if(!cfg.vanessa) cfg.vanessa={}; return cfg.vanessa; }
+
+function _vanessaRenderSettings(){
+  const pane=document.getElementById('ep-content-vanessa'); if(!pane) return;
+  const v=_vanessaGetCfg();
+  const cur=v.provider||'gemini';
+  const ph={gemini:'gemini-1.5-flash',openai:'gpt-4o-mini',ollama:'llama3.2'};
+  pane.innerHTML=`
+<div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">🧠</div><div class="ep-tab-hdr-title">Vanessa AI</div></div>
+<div style="font-size:11px;color:rgba(255,255,255,.35);padding:0 0 14px 0;line-height:1.6">
+  Vanessa è un motore decisionale autonomo: legge i sensori di Home Assistant<br>
+  e decide automaticamente se attivare, saltare o ritardare ogni dispositivo.
+</div>
+<div class="oik-sec">
+  <div class="oik-sec-hdr">Configurazione globale</div>
+  <div class="oik-row">
+    <span class="oik-lbl">Abilita Vanessa</span>
+    <label class="toggle-sw"><input type="checkbox" id="vnss-on" ${v.enabled?'checked':''}><span class="toggle-slider"></span></label>
+  </div>
+  <div class="oik-row">
+    <span class="oik-lbl">Provider AI</span>
+    <select id="vnss-prov" style="background:#0f1629;color:#e2e8f0;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:6px 10px;font-size:12px;width:100%;max-width:260px">
+      <option value="gemini" ${cur==='gemini'?'selected':''}>Google Gemini (gratis)</option>
+      <option value="openai" ${cur==='openai'?'selected':''}>OpenAI GPT</option>
+      <option value="ollama" ${cur==='ollama'?'selected':''}>Ollama (locale, gratis)</option>
+    </select>
+  </div>
+  <div class="oik-row" id="vnss-key-row" ${cur==='ollama'?'style="display:none"':''}>
+    <span class="oik-lbl">API Key</span>
+    <input type="password" id="vnss-key" class="oik-inp" value="${eh(v.apiKey||'')}" placeholder="Incolla qui la tua API key">
+  </div>
+  <div class="oik-row" id="vnss-ollama-row" ${cur!=='ollama'?'style="display:none"':''}>
+    <span class="oik-lbl">URL Ollama</span>
+    <input type="text" id="vnss-ollama" class="oik-inp" value="${eh(v.ollamaUrl||'http://localhost:11434')}" placeholder="http://localhost:11434">
+  </div>
+  <div class="oik-row">
+    <span class="oik-lbl">Modello AI</span>
+    <input type="text" id="vnss-model" class="oik-inp" value="${eh(v.model||'')}" placeholder="${ph[cur]}">
+  </div>
+  <div class="oik-row">
+    <span class="oik-lbl">Entità meteo</span>
+    <input type="text" id="vnss-weather" class="oik-inp" value="${eh(v.weatherEntityId||'')}" placeholder="weather.home">
+  </div>
+  <div class="oik-row" style="align-items:flex-start">
+    <span class="oik-lbl" style="padding-top:4px">Sensori extra</span>
+    <textarea id="vnss-sensors" class="oik-inp" rows="3" placeholder="sensor.temperatura_esterna&#10;sensor.umidita_giardino&#10;sensor.vento" style="resize:vertical">${(v.extraSensors||[]).join('\n')}</textarea>
+  </div>
+  <div class="oik-row">
+    <span class="oik-lbl">Intervallo (min)</span>
+    <input type="number" id="vnss-interval" class="oik-inp" value="${v.intervalMin||30}" min="5" max="720" style="width:90px">
+    <span style="font-size:10px;color:rgba(255,255,255,.3);margin-top:4px">Ogni quanti minuti Vanessa valuta le card</span>
+  </div>
+  <div style="display:flex;gap:8px;margin-top:10px">
+    <button data-action="_vanessaSave" style="background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);color:#fbbf24;border-radius:9px;padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer">💾 Salva</button>
+    <button data-action="_vanessaTest" style="background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#a5b4fc;border-radius:9px;padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer">🧪 Test connessione</button>
+  </div>
+</div>
+<div class="oik-sec">
+  <div class="oik-sec-hdr">Card con Vanessa abilitata</div>
+  <div id="vnss-cards"></div>
+</div>
+<div class="oik-sec">
+  <div class="oik-sec-hdr">Ultime decisioni</div>
+  <div id="vnss-log"></div>
+</div>`;
+  document.getElementById('vnss-prov')?.addEventListener('change',e=>{
+    const p=e.target.value;
+    document.getElementById('vnss-key-row').style.display=p==='ollama'?'none':'';
+    document.getElementById('vnss-ollama-row').style.display=p==='ollama'?'':'none';
+    document.getElementById('vnss-model').placeholder=ph[p]||'';
+  });
+  _vanessaRenderCards();
+  _vanessaRenderLog();
+}
+
+function _vanessaSave(){
+  const v=_vanessaGetCfg();
+  v.enabled=!!document.getElementById('vnss-on')?.checked;
+  v.provider=document.getElementById('vnss-prov')?.value||'gemini';
+  const keyEl=document.getElementById('vnss-key');
+  if(keyEl&&keyEl.value.trim()) v.apiKey=keyEl.value.trim();
+  v.ollamaUrl=document.getElementById('vnss-ollama')?.value?.trim()||'http://localhost:11434';
+  v.model=document.getElementById('vnss-model')?.value?.trim()||'';
+  v.weatherEntityId=document.getElementById('vnss-weather')?.value?.trim()||'';
+  v.extraSensors=(document.getElementById('vnss-sensors')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
+  v.intervalMin=parseInt(document.getElementById('vnss-interval')?.value||'30',10)||30;
+  saveCfg();
+  _vanessaRestartInterval();
+  showToast('✅ Vanessa salvata!');
+}
+
+async function _vanessaTest(){
+  const v=_vanessaGetCfg();
+  if(!v.apiKey&&v.provider!=='ollama'){ showToast('⚠️ Inserisci prima l\'API key'); return; }
+  showToast('🧪 Test in corso…');
+  try{
+    const r=await _vanessaCallAI('Rispondi SOLO con: {"ok":true}');
+    if(r&&r.includes('"ok"')||r.includes('ok')){ showToast('✅ Connessione AI funzionante!'); }
+    else{ showToast('⚠️ Risposta ricevuta: '+r.slice(0,80)); }
+  }catch(e){ showToast('❌ '+e.message); }
+}
+
+function _vanessaRenderCards(){
+  const el=document.getElementById('vnss-cards'); if(!el) return;
+  const all=[];
+  for(const pg of cfg.pages||[]) for(const c of pg.cards||[]) if(c.vanessaEnabled) all.push(c);
+  if(!all.length){
+    el.innerHTML='<div style="font-size:12px;color:rgba(255,255,255,.35);padding:8px 0;line-height:1.7">Nessuna card con Vanessa abilitata.<br>In modalità modifica, clicca <b>⋮</b> su una card JS → "🧠 Vanessa".</div>';
+    return;
+  }
+  el.innerHTML=all.map(c=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:rgba(255,255,255,.04);border-radius:9px;margin-bottom:6px">
+    <span style="font-size:20px">${c.icon||'📦'}</span>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:12px;font-weight:600;color:#e2e8f0">${eh(c.label||c.id)}</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.35);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(c.vanessaEntityId||c.entity||'entità non impostata')}</div>
+    </div>
+    <button data-action="_vanessaRunCard" data-action-args='["${c.id}"]' style="background:rgba(74,222,128,.13);border:1px solid rgba(74,222,128,.3);border-radius:7px;color:#4ade80;font-size:10px;padding:5px 9px;cursor:pointer;white-space:nowrap">▶ Esegui ora</button>
+    <button data-action="_vanessaCardPopup" data-action-args='["${c.id}"]' style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:rgba(255,255,255,.5);font-size:11px;padding:5px 9px;cursor:pointer">⚙</button>
+  </div>`).join('');
+}
+
+function _vanessaRenderLog(){
+  const el=document.getElementById('vnss-log'); if(!el) return;
+  const log=((_vanessaGetCfg()).log||[]);
+  if(!log.length){ el.innerHTML='<div style="font-size:11px;color:rgba(255,255,255,.25);padding:4px 0">Nessuna attività registrata.</div>'; return; }
+  el.innerHTML=log.map(entry=>{
+    const d=new Date(entry.ts);
+    const time=d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+    const day=d.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'});
+    const col=entry.action==='run'?'#4ade80':entry.action==='skip'?'#f87171':'#fbbf24';
+    return `<div style="border-left:2px solid ${col};padding:4px 8px;margin-bottom:5px;background:rgba(255,255,255,.03);border-radius:0 7px 7px 0">
+      <span style="color:${col};font-weight:700;font-size:10px">${entry.action.toUpperCase()}</span>
+      <span style="color:rgba(255,255,255,.3);font-size:10px;margin:0 6px">${day} ${time}</span>
+      <span style="color:#e2e8f0;font-size:11px;font-weight:600">${eh(entry.cardLabel||entry.cardId)}</span>
+      <div style="font-size:11px;color:rgba(255,255,255,.55);margin-top:2px">${eh(entry.reason||'')}</div>
+    </div>`;
+  }).join('');
+}
+
+async function _vanessaCallAI(prompt){
+  const v=_vanessaGetCfg();
+  const provider=v.provider||'gemini';
+  const model=v.model||(provider==='gemini'?'gemini-1.5-flash':provider==='openai'?'gpt-4o-mini':'llama3.2');
+  if(provider==='gemini'){
+    const url=`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(v.apiKey||'')}`;
+    const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.2,maxOutputTokens:300}})});
+    if(!r.ok){ const t=await r.text(); throw new Error(`Gemini ${r.status}: ${t.slice(0,120)}`); }
+    const d=await r.json();
+    return d.candidates?.[0]?.content?.parts?.[0]?.text||'';
+  }
+  if(provider==='openai'){
+    const r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+(v.apiKey||'')},body:JSON.stringify({model,messages:[{role:'system',content:'Sei Vanessa, AI di automazione domestica. Rispondi SEMPRE e SOLO con JSON valido, nessun altro testo.'},{role:'user',content:prompt}],temperature:0.2,max_tokens:300})});
+    if(!r.ok){ const t=await r.text(); throw new Error(`OpenAI ${r.status}: ${t.slice(0,120)}`); }
+    const d=await r.json();
+    return d.choices?.[0]?.message?.content||'';
+  }
+  if(provider==='ollama'){
+    const r=await fetch((v.ollamaUrl||'http://localhost:11434')+'/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model,prompt,stream:false,options:{temperature:0.2,num_predict:300}})});
+    if(!r.ok){ const t=await r.text(); throw new Error(`Ollama ${r.status}: ${t.slice(0,120)}`); }
+    const d=await r.json();
+    return d.response||'';
+  }
+  throw new Error('Provider non supportato: '+provider);
+}
+
+function _vanessaBuildPrompt(card){
+  const v=_vanessaGetCfg();
+  const hass=_getBestHass(); if(!hass) return null;
+  const now=new Date();
+  let p=`Sei Vanessa, AI di automazione per Home Assistant integrata nella dashboard Frarik.
+Il tuo compito: decidere se il dispositivo deve essere attivato in questo momento.
+Rispondi SOLO con JSON valido, nessun altro testo, nessun markdown.
+
+DATA E ORA: ${now.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'})} - ${now.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}
+`;
+  if(v.weatherEntityId){
+    const ws=hass.states[v.weatherEntityId];
+    if(ws){
+      const a=ws.attributes||{};
+      p+=`\nMETEO (${v.weatherEntityId}): stato=${ws.state}`;
+      if(a.temperature!=null) p+=`, temp=${a.temperature}°C`;
+      if(a.humidity!=null)    p+=`, umidità=${a.humidity}%`;
+      if(a.wind_speed!=null)  p+=`, vento=${a.wind_speed}km/h`;
+      if(a.precipitation!=null) p+=`, pioggia=${a.precipitation}mm`;
+      if(a.forecast?.[0]) p+=`\nPrevisione prossime ore: ${a.forecast[0].condition}, ${a.forecast[0].temperature}°C`;
+      p+='\n';
+    }
+  }
+  for(const sid of (v.extraSensors||[])){
+    const s=hass.states[sid]; if(!s) continue;
+    p+=`Sensore ${sid}: ${s.state}${s.attributes?.unit_of_measurement?' '+s.attributes.unit_of_measurement:''}\n`;
+  }
+  const eid=card.vanessaEntityId||card.entity||'';
+  p+=`\nDISPOSITIVO: ${card.label||card.id} (tipo: ${card.jsCardId||card.type||'js'})`;
+  if(eid) p+=`\nEntità HA: ${eid}`;
+  if(eid&&hass.states[eid]) p+=`\nStato attuale: ${hass.states[eid].state}`;
+  if(card.vanessaContext) p+=`\nContesto: ${card.vanessaContext}`;
+  p+=`\n\nDomanda: il dispositivo deve essere attivato adesso?
+Formato risposta OBBLIGATORIO: {"action":"run","delay_min":0,"reason":"motivo breve in italiano"}
+I valori di action possibili: "run" (attiva), "skip" (salta), "delay" (rimanda)
+Se action è "delay", specifica delay_min (minuti da aspettare prima di riprovare).`;
+  return p;
+}
+
+async function _vanessaRunCard(cardId){
+  let card=null;
+  for(const pg of cfg.pages||[]) for(const c of pg.cards||[]) if(c.id===cardId){ card=c; break; }
+  if(!card){ showToast('⚠️ Card non trovata'); return; }
+  const v=_vanessaGetCfg();
+  if(!v.apiKey&&v.provider!=='ollama'){ showToast('⚠️ Configura l\'API key di Vanessa prima'); return; }
+  showToast('🧠 Vanessa sta valutando…');
+  const prompt=_vanessaBuildPrompt(card);
+  if(!prompt){ showToast('⚠️ Hass non disponibile'); return; }
+  let rawResp='';
+  try{ rawResp=await _vanessaCallAI(prompt); }
+  catch(e){ showToast('❌ Errore AI: '+e.message); return; }
+  let decision=null;
+  try{
+    const m=rawResp.match(/\{[\s\S]*?\}/);
+    if(m) decision=JSON.parse(m[0]);
+  }catch(e){}
+  if(!decision){ showToast('⚠️ Risposta AI non valida: '+rawResp.slice(0,80)); return; }
+  const eid=card.vanessaEntityId||card.entity||'';
+  const domain=eid.split('.')[0];
+  const hass=_getBestHass();
+  try{
+    if(decision.action==='run'&&eid&&hass) await hass.callService(domain,'turn_on',{entity_id:eid});
+    else if(decision.action==='skip'&&eid&&hass) await hass.callService(domain,'turn_off',{entity_id:eid});
+    else if(decision.action==='delay'){
+      const ms=(decision.delay_min||30)*60000;
+      showToast(`⏱ Vanessa: rimanda di ${decision.delay_min} min — ${decision.reason||''}`);
+      setTimeout(()=>_vanessaRunCard(cardId),ms);
+    }
+  }catch(e){}
+  if(!v.log) v.log=[];
+  v.log.unshift({ts:Date.now(),cardId,cardLabel:card.label||card.id,action:decision.action,reason:decision.reason||''});
+  v.log=v.log.slice(0,30);
+  saveCfg();
+  if(decision.action!=='delay') showToast(`🧠 Vanessa: ${decision.action==='run'?'✅ Attivato':'⏭ Saltato'} — ${decision.reason||''}`);
+  try{_vanessaRenderLog();}catch(_){}
+  try{_vanessaRenderCards();}catch(_){}
+}
+
+function _vanessaRun(){
+  const v=_vanessaGetCfg();
+  if(!v.enabled) return;
+  if(!v.apiKey&&v.provider!=='ollama') return;
+  for(const pg of cfg.pages||[]) for(const c of pg.cards||[]) if(c.vanessaEnabled) _vanessaRunCard(c.id);
+}
+
+let _vanessaIntervalId=null;
+function _vanessaRestartInterval(){
+  if(_vanessaIntervalId){ clearInterval(_vanessaIntervalId); _vanessaIntervalId=null; }
+  const v=_vanessaGetCfg();
+  if(!v.enabled) return;
+  const ms=(v.intervalMin||30)*60000;
+  _vanessaIntervalId=setInterval(_vanessaRun,ms);
+}
+
+function _vanessaCardPopup(cardId){
+  document.getElementById('_vnss-card-ov')?.remove();
+  let card=null;
+  for(const pg of cfg.pages||[]) for(const c of pg.cards||[]) if(c.id===cardId){ card=c; break; }
+  if(!card) return;
+  const ov=document.createElement('div');
+  ov.id='_vnss-card-ov';
+  ov.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.65);backdrop-filter:blur(4px)';
+  ov.innerHTML=`
+<div style="background:#06060f;border:1px solid rgba(129,140,248,.3);border-radius:18px;padding:24px;width:min(440px,92vw);max-height:86vh;overflow-y:auto">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+    <div style="font-size:28px">🧠</div>
+    <div>
+      <div style="font-size:15px;font-weight:700;color:#e2e8f0">Vanessa per "${eh(card.label||card.id)}"</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.35)">Configura il motore decisionale AI per questa card</div>
+    </div>
+  </div>
+  <div style="margin-bottom:14px">
+    <div style="font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Abilita Vanessa</div>
+    <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+      <label class="toggle-sw"><input type="checkbox" id="_vnss-card-on" ${card.vanessaEnabled?'checked':''}><span class="toggle-slider"></span></label>
+      <span style="font-size:12px;color:#e2e8f0">Attiva il controllo automatico AI per questa card</span>
+    </label>
+  </div>
+  <div style="margin-bottom:14px">
+    <div style="font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Entità da controllare</div>
+    <input type="text" id="_vnss-card-eid" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 12px;color:#e2e8f0;font-size:12px;box-sizing:border-box" value="${eh(card.vanessaEntityId||card.entity||'')}" placeholder="switch.antizanzare_terrazza">
+    <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:4px">L'entità HA che Vanessa attiverà o disattiverà</div>
+  </div>
+  <div style="margin-bottom:18px">
+    <div style="font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Contesto (opzionale)</div>
+    <textarea id="_vnss-card-ctx" rows="3" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 12px;color:#e2e8f0;font-size:12px;resize:vertical;box-sizing:border-box" placeholder="Es: Dispositivo antizanzare sul terrazzo, usato la sera in estate quando fa caldo">${eh(card.vanessaContext||'')}</textarea>
+    <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:4px">Aiuta l'AI a prendere decisioni migliori descrivendo il contesto</div>
+  </div>
+  <div style="display:flex;gap:8px">
+    <button id="_vnss-card-save" style="flex:1;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);color:#fbbf24;border-radius:9px;padding:9px;font-size:12px;font-weight:700;cursor:pointer">💾 Salva</button>
+    <button id="_vnss-card-run" style="background:rgba(74,222,128,.13);border:1px solid rgba(74,222,128,.3);color:#4ade80;border-radius:9px;padding:9px 14px;font-size:12px;cursor:pointer">▶ Test</button>
+    <button id="_vnss-card-close" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.45);border-radius:9px;padding:9px 12px;font-size:12px;cursor:pointer">✕</button>
+  </div>
+</div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click',e=>{ if(e.target===ov) ov.remove(); });
+  document.getElementById('_vnss-card-close')?.addEventListener('click',()=>ov.remove());
+  document.getElementById('_vnss-card-save')?.addEventListener('click',()=>{
+    card.vanessaEnabled=!!document.getElementById('_vnss-card-on')?.checked;
+    card.vanessaEntityId=document.getElementById('_vnss-card-eid')?.value?.trim()||'';
+    card.vanessaContext=document.getElementById('_vnss-card-ctx')?.value?.trim()||'';
+    saveCfg();
+    ov.remove();
+    showToast(card.vanessaEnabled?'🧠 Vanessa abilitata per questa card!':'Vanessa disabilitata per questa card');
+    try{_vanessaRenderCards();}catch(_){}
+  });
+  document.getElementById('_vnss-card-run')?.addEventListener('click',()=>{
+    card.vanessaEnabled=true;
+    card.vanessaEntityId=document.getElementById('_vnss-card-eid')?.value?.trim()||card.vanessaEntityId||'';
+    card.vanessaContext=document.getElementById('_vnss-card-ctx')?.value?.trim()||card.vanessaContext||'';
+    ov.remove();
+    _vanessaRunCard(cardId);
+  });
+}
+
+// Avvia l'intervallo automatico dopo il caricamento della configurazione
+(()=>{ setTimeout(()=>{ try{ if(_vanessaGetCfg().enabled) _vanessaRestartInterval(); }catch(_){} },3000); })();
+
 // ── Esponi funzioni per handler HTML inline ──────────────────────────────────
 Object.assign(window, {
   _addColorRule,
@@ -15551,4 +15882,6 @@ Object.assign(window, {
   openPremiumPage, closePremiumPage, _ghsPremActivate, _premSendInterest,
   _isAdmin, _adminCtrlPanel,
   _epLicBadgeLoad, _epAdminPanelLoad, _adminShowFirstAccess,
+  _vanessaRenderSettings, _vanessaSave, _vanessaTest,
+  _vanessaRunCard, _vanessaCardPopup,
 });
