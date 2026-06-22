@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.71 — 2026-06-22
+
+### fix(vanessa): intervallo automatico + stato live con countdown
+
+- **Bug fix critico**: `_vanessaRun` controllava `v.apiKey` (vecchio campo) invece di `v.apiKeys[provider]` — l'intervallo automatico si avviava ma non eseguiva mai nulla. Ora usa `(v.apiKeys&&v.apiKeys[v.provider])||v.apiKey`.
+- **Stato live nel banner**: sotto il titolo VANESSA appare una barra con "⏱ Prossima valutazione: 28m 45s" aggiornata ogni secondo, e "Ultima: ✅ Anti Zanzare — orario serale". Si popola subito all'apertura del pannello.
+- **Prima valutazione immediata**: quando si abilita Vanessa e si salva, parte subito una valutazione (dopo 800ms) senza aspettare il primo intervallo.
+- Toast migliorato: mostra il nome della card invece di "Vanessa" generico.
+- `_vanessaUpdateStatus()` chiamata dopo ogni decisione per aggiornare la barra live.
+
 ## 1.5.70 — 2026-06-22
 
 ### fix(vanessa): JSON troncato — token ridotti + prompt iper-preciso + regex greedy

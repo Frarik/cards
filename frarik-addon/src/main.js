@@ -15355,8 +15355,8 @@ function _vanessaRenderSettings(){
           ${v.enabled?`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#4ade80;margin-right:4px;animation:vnss-pulse 1.5s ease infinite"></span>ATTIVA`:'INATTIVA'}
         </div>
       </div>
-      <div style="font-size:11px;color:rgba(192,132,252,.8);font-weight:600;margin-bottom:6px">Motore decisionale AI autonomo</div>
-      <div style="font-size:10px;color:rgba(255,255,255,.35);line-height:1.6;max-width:260px">Legge i sensori di Home Assistant e decide in autonomia quando attivare i tuoi dispositivi.</div>
+      <div style="font-size:11px;color:rgba(192,132,252,.8);font-weight:600;margin-bottom:4px">Motore decisionale AI autonomo</div>
+      <div id="vnss-live-status" style="min-height:18px"></div>
     </div>
     <!-- switch grande ON/OFF -->
     <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0">
@@ -15534,10 +15534,15 @@ function _vanessaRenderSettings(){
   });
   _vanessaRenderCards();
   _vanessaRenderLog();
+  _vanessaUpdateStatus();
+  // ticker countdown aggiornato ogni secondo mentre il pannello è aperto
+  if(window._vnssStatusTick) clearInterval(window._vnssStatusTick);
+  window._vnssStatusTick=setInterval(()=>{ if(document.getElementById('vnss-live-status')) _vanessaUpdateStatus(); else clearInterval(window._vnssStatusTick); },1000);
 }
 
 function _vanessaSave(){
   const v=_vanessaGetCfg();
+  const wasEnabled=!!v.enabled; // cattura PRIMA di modificare
   v.enabled=!!document.getElementById('vnss-on')?.checked;
   v.provider=document.getElementById('vnss-prov')?.value||'gemini';
   if(!v.apiKeys) v.apiKeys={};
@@ -15551,6 +15556,7 @@ function _vanessaSave(){
   v.intervalMin=parseInt(document.getElementById('vnss-interval')?.value||'30',10)||30;
   saveCfg();
   _vanessaRestartInterval();
+  if(v.enabled&&!wasEnabled) setTimeout(_vanessaRun,800); // prima valutazione immediata all'abilitazione
   showToast('✅ Vanessa salvata!');
 }
 
@@ -15796,16 +15802,27 @@ async function _vanessaRunCard(cardId){
   v.log.unshift({ts:Date.now(),cardId,cardLabel:card.label||card.id,action:decision.action,reason:decision.reason||''});
   v.log=v.log.slice(0,30);
   saveCfg();
-  if(decision.action!=='delay') showToast(`🧠 Vanessa: ${decision.action==='run'?'✅ Attivato':'⏭ Saltato'} — ${decision.reason||''}`);
+  if(decision.action!=='delay') showToast(`🧠 ${card.label||card.id}: ${decision.action==='run'?'✅ Attivato':'⏭ Saltato'} — ${decision.reason||''}`);
   try{_vanessaRenderLog();}catch(_){}
   try{_vanessaRenderCards();}catch(_){}
+  try{_vanessaUpdateStatus();}catch(_){}
 }
 
+let _vanessaNextRunTs=0;
 function _vanessaRun(){
   const v=_vanessaGetCfg();
   if(!v.enabled) return;
-  if(!v.apiKey&&v.provider!=='ollama') return;
-  for(const pg of cfg.pages||[]) for(const c of pg.cards||[]) if(c.vanessaEnabled) _vanessaRunCard(c.id);
+  const apiKey=(v.apiKeys&&v.apiKeys[v.provider])||v.apiKey||'';
+  if(!apiKey&&v.provider!=='ollama') return;
+  const cards=[];
+  for(const pg of cfg.pages||[]) for(const c of pg.cards||[]) if(c.vanessaEnabled) cards.push(c);
+  if(!cards.length) return;
+  // aggiorna prossima esecuzione
+  _vanessaNextRunTs=Date.now()+(v.intervalMin||30)*60000;
+  v.lastRunTs=Date.now();
+  saveCfg();
+  _vanessaUpdateStatus();
+  cards.forEach(c=>_vanessaRunCard(c.id));
 }
 
 let _vanessaIntervalId=null;
@@ -15814,7 +15831,26 @@ function _vanessaRestartInterval(){
   const v=_vanessaGetCfg();
   if(!v.enabled) return;
   const ms=(v.intervalMin||30)*60000;
+  _vanessaNextRunTs=Date.now()+ms;
   _vanessaIntervalId=setInterval(_vanessaRun,ms);
+  _vanessaUpdateStatus();
+}
+
+function _vanessaUpdateStatus(){
+  const el=document.getElementById('vnss-live-status'); if(!el) return;
+  const v=_vanessaGetCfg();
+  if(!v.enabled){ el.innerHTML=''; return; }
+  const now=Date.now();
+  const secLeft=Math.max(0,Math.round((_vanessaNextRunTs-now)/1000));
+  const minLeft=Math.floor(secLeft/60), secRem=secLeft%60;
+  const timeStr=secLeft>0?(minLeft>0?`${minLeft}m ${secRem}s`:`${secLeft}s`):'adesso';
+  const lastLog=(v.log||[])[0];
+  const lastStr=lastLog?`<span style="color:${lastLog.action==='run'?'#4ade80':lastLog.action==='skip'?'#f87171':'#fbbf24'}">${lastLog.action==='run'?'✅':'⏭'} ${eh(lastLog.cardLabel||'')} — ${eh(lastLog.reason||'')}</span>`:'<span style="opacity:.4">nessuna ancora</span>';
+  el.innerHTML=`<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:10px;color:rgba(255,255,255,.45)">
+    <span>⏱ Prossima valutazione: <b style="color:#fbbf24">${timeStr}</b></span>
+    <span>|</span>
+    <span>Ultima: ${lastStr}</span>
+  </div>`;
 }
 
 function _vanessaCardPopup(cardId){
