@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.70 — 2026-06-22
+
+### fix(vanessa): JSON troncato — token ridotti + prompt iper-preciso + regex greedy
+
+- **Causa root**: il modello generava testo introduttivo prima del JSON, esauriva i 300 token prima della `}` finale → `JSON.parse` falliva su JSON incompleto.
+- Token limit ridotto a **100** per tutti i provider (Gemini, OpenAI, Claude, Ollama) — il JSON atteso è ~30 token, 100 forza risposta cortissima senza preamble.
+- Prompt aggiornato: l'ultima riga mostra esattamente il formato atteso e dice "nient'altro, nessun testo prima o dopo".
+- Regex cambiata da non-greedy `*?` a **greedy** `*` per catturare il JSON completo.
+- Aggiunto fallback: se il JSON è ancora troncato, tenta di ricostruire la struttura prima di dare errore.
+
 ## 1.5.69 — 2026-06-22
 
 ### feat(vanessa): chiave API per-provider + bottone Valida con modelli reali

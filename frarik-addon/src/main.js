@@ -15690,25 +15690,25 @@ async function _vanessaCallAI(prompt){
   const apiKey=(v.apiKeys&&v.apiKeys[provider])||v.apiKey||'';
   if(provider==='gemini'){
     const url=`https://generativelanguage.googleapis.com/v1/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
-    const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.2,maxOutputTokens:300}})});
+    const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.1,maxOutputTokens:100}})});
     if(!r.ok){ const t=await r.text(); throw new Error(`Gemini ${r.status}: ${t.slice(0,120)}`); }
     const d=await r.json();
     return d.candidates?.[0]?.content?.parts?.[0]?.text||'';
   }
   if(provider==='openai'){
-    const r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},body:JSON.stringify({model,messages:[{role:'system',content:'Sei Vanessa, AI di automazione domestica. Rispondi SEMPRE e SOLO con JSON valido, nessun altro testo.'},{role:'user',content:prompt}],temperature:0.2,max_tokens:300})});
+    const r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},body:JSON.stringify({model,messages:[{role:'system',content:'Sei Vanessa, AI di automazione domestica. Rispondi SEMPRE e SOLO con JSON valido, nessun altro testo.'},{role:'user',content:prompt}],temperature:0.1,max_tokens:100})});
     if(!r.ok){ const t=await r.text(); throw new Error(`OpenAI ${r.status}: ${t.slice(0,120)}`); }
     const d=await r.json();
     return d.choices?.[0]?.message?.content||'';
   }
   if(provider==='claude'){
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model,max_tokens:300,system:'Sei Vanessa, AI di automazione domestica integrata in Home Assistant. Rispondi SEMPRE e SOLO con JSON valido, nessun altro testo, nessun markdown.',messages:[{role:'user',content:prompt}]})});
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model,max_tokens:100,system:'Sei Vanessa, AI di automazione domestica. Rispondi SOLO con una riga JSON. Nessun testo, nessun markdown.',messages:[{role:'user',content:prompt}]})});
     if(!r.ok){ const t=await r.text(); throw new Error(`Claude ${r.status}: ${t.slice(0,120)}`); }
     const d=await r.json();
     return d.content?.[0]?.text||'';
   }
   if(provider==='ollama'){
-    const r=await fetch((v.ollamaUrl||'http://localhost:11434')+'/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model,prompt,stream:false,options:{temperature:0.2,num_predict:300}})});
+    const r=await fetch((v.ollamaUrl||'http://localhost:11434')+'/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model,prompt,stream:false,options:{temperature:0.1,num_predict:100}})});
     if(!r.ok){ const t=await r.text(); throw new Error(`Ollama ${r.status}: ${t.slice(0,120)}`); }
     const d=await r.json();
     return d.response||'';
@@ -15748,10 +15748,9 @@ DATA E ORA: ${now.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month
   if(eid) p+=`\nEntità HA: ${eid}`;
   if(eid&&hass.states[eid]) p+=`\nStato attuale: ${hass.states[eid].state}`;
   if(card.vanessaContext) p+=`\nContesto: ${card.vanessaContext}`;
-  p+=`\n\nDomanda: il dispositivo deve essere attivato adesso?
-Formato risposta OBBLIGATORIO: {"action":"run","delay_min":0,"reason":"motivo breve in italiano"}
-I valori di action possibili: "run" (attiva), "skip" (salta), "delay" (rimanda)
-Se action è "delay", specifica delay_min (minuti da aspettare prima di riprovare).`;
+  p+=`\n\nRispondi SOLO con questa riga JSON (nient'altro, nessun testo prima o dopo):
+{"action":"skip","delay_min":0,"reason":"max 5 parole"}
+Sostituisci action con: run=attiva, skip=salta, delay=rimanda. Se delay, imposta delay_min.`;
   return p;
 }
 
@@ -15769,10 +15768,18 @@ async function _vanessaRunCard(cardId){
   catch(e){ showToast('❌ Errore AI: '+e.message); return; }
   let decision=null;
   try{
-    const m=rawResp.match(/\{[\s\S]*?\}/);
+    // Greedy: prende il JSON più lungo nella risposta
+    const m=rawResp.match(/\{[\s\S]*\}/);
     if(m) decision=JSON.parse(m[0]);
   }catch(e){}
-  if(!decision){ showToast('⚠️ Risposta AI non valida: '+rawResp.slice(0,80)); return; }
+  // Fallback: se il JSON è troncato prova a ricostruirlo
+  if(!decision){
+    try{
+      const partial=rawResp.match(/\{[\s\S]*/);
+      if(partial){ const fixed=partial[0].replace(/,?\s*"reason":"[^"]*$|,?\s*"[^"]*$/,'}'); decision=JSON.parse(fixed); }
+    }catch(e){}
+  }
+  if(!decision){ showToast('⚠️ Risposta AI non valida (raw): '+rawResp.slice(0,120)); return; }
   const eid=card.vanessaEntityId||card.entity||'';
   const domain=eid.split('.')[0];
   const hass=_getBestHass();
