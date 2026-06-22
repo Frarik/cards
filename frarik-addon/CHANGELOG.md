@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.74 — 2026-06-22
+
+### fix(vanessa): entità run/stop separata, supporto input_button e script
+
+- **Entità run/stop separate**: nella configurazione Vanessa per ogni card ora ci sono tre campi distinti — "Entità stato" (letta dall'AI), "▶ Avvia" (chiamata su `run`), "⏹ Ferma" (chiamata su `stop`/auto-shutoff). Se i campi run/stop sono vuoti usa l'entità stato come prima.
+- **Supporto `input_button` e `button`**: Vanessa chiama il servizio giusto in base al dominio — `input_button`/`button` → `press`, `script` → `turn_on`, tutto il resto → `turn_on`/`turn_off`.
+- Questo risolve la mancata sincronizzazione della card Antizanzare (che usa `input_button.anti_zanzare_start_manuale` / `stop_manuale` invece di un semplice switch).
+
 ## 1.5.73 — 2026-06-22
 
 ### feat(vanessa): durata attivazione, orario operativo, skip intelligente

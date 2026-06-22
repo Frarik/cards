@@ -15835,18 +15835,28 @@ async function _vanessaRunCard(cardId){
   }
   if(!decision){ showToast('⚠️ Risposta AI non valida (raw): '+rawResp.slice(0,120)); return; }
   const eid=card.vanessaEntityId||card.entity||'';
-  const domain=eid.split('.')[0];
+  const runEid=card.vanessaRunEntity||eid;
+  const stopEid=card.vanessaStopEntity||eid;
   const hass=_getBestHass();
+  // Chiama il servizio giusto in base al dominio dell'entità
+  function _callHassSvc(h,entityId,action){
+    if(!h||!entityId) return Promise.resolve();
+    const dom=entityId.split('.')[0];
+    if(dom==='input_button'||dom==='button') return h.callService(dom,'press',{entity_id:entityId});
+    if(dom==='script') return h.callService('script','turn_on',{entity_id:entityId});
+    if(action==='on') return h.callService(dom,'turn_on',{entity_id:entityId});
+    return h.callService(dom,'turn_off',{entity_id:entityId});
+  }
   try{
-    if(decision.action==='run'&&eid&&hass){
-      await hass.callService(domain,'turn_on',{entity_id:eid});
+    if(decision.action==='run'&&hass){
+      await _callHassSvc(hass,runEid,'on');
       // Gestione durata automatica
       const durMin=decision.duration_min||0;
-      if(durMin>0){
+      if(durMin>0&&stopEid){
         if(_vanessaOffTimers[cardId]) clearTimeout(_vanessaOffTimers[cardId].timerId);
         const expiresTs=Date.now()+durMin*60000;
         const timerId=setTimeout(async()=>{
-          try{ const h2=_getBestHass(); if(h2&&eid) await h2.callService(domain,'turn_off',{entity_id:eid}); }catch(_){}
+          try{ const h2=_getBestHass(); await _callHassSvc(h2,stopEid,'off'); }catch(_){}
           showToast(`⏹ Vanessa: ${card.label||card.id} spento dopo ${durMin} min`);
           const vv=_vanessaGetCfg(); if(!vv.log) vv.log=[];
           vv.log.unshift({ts:Date.now(),cardId,cardLabel:card.label||card.id,action:'off',reason:`Spento automaticamente dopo ${durMin} min`});
@@ -16050,11 +16060,26 @@ function _vanessaCardPopup(cardId){
       </div>
       <label class="toggle-sw"><input type="checkbox" id="_vnss-card-on" ${card.vanessaEnabled?'checked':''}><span class="toggle-slider"></span></label>
     </div>
-    <!-- entità -->
+    <!-- entità stato -->
     <div style="margin-bottom:14px">
-      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(192,132,252,.7);text-transform:uppercase;margin-bottom:6px">⚡ Entità da controllare</div>
-      <input type="text" id="_vnss-card-eid" style="${inp2}" value="${eh(card.vanessaEntityId||card.entity||'')}" placeholder="switch.antizanzare_terrazza">
-      <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:5px">L'entità HA che verrà accesa o spenta da Vanessa</div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(192,132,252,.7);text-transform:uppercase;margin-bottom:6px">📡 Entità stato (contesto AI)</div>
+      <input type="text" id="_vnss-card-eid" style="${inp2}" value="${eh(card.vanessaEntityId||card.entity||'')}" placeholder="sensor.stato_antizanzare oppure switch.antizanzare">
+      <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:5px">Letta dall'AI per capire lo stato attuale del dispositivo</div>
+    </div>
+    <!-- entità run / stop -->
+    <div style="margin-bottom:14px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(192,132,252,.7);text-transform:uppercase;margin-bottom:8px">⚡ Entità da controllare</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div style="font-size:10px;color:rgba(74,222,128,.6);margin-bottom:4px">▶ Avvia (run)</div>
+          <input type="text" id="_vnss-card-run-eid" style="${inp2}" value="${eh(card.vanessaRunEntity||'')}" placeholder="input_button.start / switch.xyz">
+        </div>
+        <div>
+          <div style="font-size:10px;color:rgba(248,113,113,.6);margin-bottom:4px">⏹ Ferma (stop)</div>
+          <input type="text" id="_vnss-card-stop-eid" style="${inp2}" value="${eh(card.vanessaStopEntity||'')}" placeholder="input_button.stop / switch.xyz">
+        </div>
+      </div>
+      <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:5px">Lascia vuoto per usare l'entità stato. Supporta switch, input_button, script, light…</div>
     </div>
     <!-- contesto -->
     <div style="margin-bottom:14px">
@@ -16096,6 +16121,8 @@ function _vanessaCardPopup(cardId){
   document.getElementById('_vnss-card-save')?.addEventListener('click',()=>{
     card.vanessaEnabled=!!document.getElementById('_vnss-card-on')?.checked;
     card.vanessaEntityId=document.getElementById('_vnss-card-eid')?.value?.trim()||'';
+    card.vanessaRunEntity=document.getElementById('_vnss-card-run-eid')?.value?.trim()||'';
+    card.vanessaStopEntity=document.getElementById('_vnss-card-stop-eid')?.value?.trim()||'';
     card.vanessaContext=document.getElementById('_vnss-card-ctx')?.value?.trim()||'';
     card.vanessaTimeFrom=document.getElementById('_vnss-card-from')?.value?.trim()||'';
     card.vanessaTimeTo=document.getElementById('_vnss-card-to')?.value?.trim()||'';
@@ -16107,6 +16134,8 @@ function _vanessaCardPopup(cardId){
   document.getElementById('_vnss-card-run')?.addEventListener('click',()=>{
     card.vanessaEnabled=true;
     card.vanessaEntityId=document.getElementById('_vnss-card-eid')?.value?.trim()||card.vanessaEntityId||'';
+    card.vanessaRunEntity=document.getElementById('_vnss-card-run-eid')?.value?.trim()||card.vanessaRunEntity||'';
+    card.vanessaStopEntity=document.getElementById('_vnss-card-stop-eid')?.value?.trim()||card.vanessaStopEntity||'';
     card.vanessaContext=document.getElementById('_vnss-card-ctx')?.value?.trim()||card.vanessaContext||'';
     card.vanessaTimeFrom=document.getElementById('_vnss-card-from')?.value?.trim()||card.vanessaTimeFrom||'';
     card.vanessaTimeTo=document.getElementById('_vnss-card-to')?.value?.trim()||card.vanessaTimeTo||'';
