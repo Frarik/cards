@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.63 — 2026-06-20
+
+### fix(store): modifica applicata al file sorgente corretto (src/index.html)
+
+- La v1.5.62 aveva modificato `panel/index.html` (output del build) che viene cancellato e riscritto ad ogni compilazione. Ora le stesse modifiche sono nel file sorgente `src/index.html`.
+
 ## 1.5.62 — 2026-06-20
 
 ### feat(store): tab "💾 Salvate" nello Store + pulizia tab destra
