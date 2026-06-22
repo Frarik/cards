@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.5.72 — 2026-06-22
+
+### feat(vanessa): popup decisione completo + tab per dispositivo + UI ordinata
+
+- **Popup decisione centrale**: ad ogni valutazione (manuale o automatica) appare un popup con: card + entità, decisione grande (✅/⏭/⏱), ragionamento completo in 2-3 frasi, griglia dati ambientali usati (temperatura, umidità, vento, meteo, stato entità). Si chiude con il tasto Chiudi o cliccando fuori.
+- **Campo `detail`** nel JSON AI: il prompt ora chiede `"detail":"2-3 frasi complete"` oltre al `"reason"` breve. Salvato nel log.
+- **Log con tab per dispositivo**: la sezione inferiore ha tab dinamici — uno per ogni card con Vanessa abilitata (mostra solo le decisioni di quel dispositivo) + "📋 Log completo". Ogni tab ha il pulsante 🗑 Cancella che elimina solo le entry di quella card.
+- **Sezione configurazione collassabile**: il toggle ⚙ Configurazione chiude/apre il blocco provider/chiave/modello/sensori/intervallo. Lo stato è persistito in `cfg.vanessa.cfgOpen`.
+- **Rimosso glow/pulse** dal bottone Salva configurazione.
+- Token aumentati a 280 per permettere il campo `detail` senza troncamenti.
+
 ## 1.5.71 — 2026-06-22
 
 ### fix(vanessa): intervallo automatico + stato live con countdown

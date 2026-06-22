@@ -15366,6 +15366,13 @@ function _vanessaRenderSettings(){
   </div>
 </div>
 
+<!-- TOGGLE CONFIGURAZIONE -->
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;cursor:pointer" id="vnss-cfg-toggle">
+  <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(192,132,252,.6);text-transform:uppercase">⚙ Configurazione</div>
+  <div id="vnss-cfg-chevron" style="font-size:12px;color:rgba(255,255,255,.3);transition:transform .2s">${(v.cfgOpen!==false)?'▲':'▼'}</div>
+</div>
+<div id="vnss-cfg-body" style="display:${(v.cfgOpen!==false)?'block':'none'}">
+
 <!-- SEZIONE PROVIDER -->
 <div style="margin-bottom:16px">
   <div style="${lbl}">🤖 Cervello AI</div>
@@ -15462,22 +15469,18 @@ function _vanessaRenderSettings(){
   <span style="font-size:11px;color:rgba(255,255,255,.3)">min</span>
 </div>
 
+</div><!-- /vnss-cfg-body -->
+
 <!-- BOTTONI AZIONE -->
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
-  <button data-action="_vanessaSave" style="background:linear-gradient(135deg,rgba(124,58,237,.5),rgba(99,102,241,.4));border:1.5px solid rgba(192,132,252,.5);color:#fff;border-radius:12px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:.02em;transition:all .2s;animation:vnss-glow 3s ease infinite">💾 Salva configurazione</button>
+  <button data-action="_vanessaSave" style="background:rgba(124,58,237,.35);border:1.5px solid rgba(192,132,252,.4);color:#fff;border-radius:12px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:.02em;transition:all .2s">💾 Salva configurazione</button>
   <button data-action="_vanessaTest" style="background:rgba(56,189,248,.1);border:1.5px solid rgba(56,189,248,.3);color:#38bdf8;border-radius:12px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;transition:all .2s">🧪 Test connessione</button>
 </div>
 
-<!-- CARD ABILITATE -->
-<div style="margin-bottom:16px">
-  <div style="${lbl}">🎯 Dispositivi gestiti</div>
-  <div id="vnss-cards"></div>
-</div>
-
-<!-- LOG DECISIONI -->
-<div>
-  <div style="${lbl}">📋 Registro decisioni</div>
-  <div id="vnss-log"></div>
+<!-- SEZIONI DISPOSITIVI + LOG CON TAB -->
+<div style="background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07);border-radius:16px;overflow:hidden">
+  <div style="display:flex;border-bottom:1px solid rgba(255,255,255,.07)" id="vnss-tab-bar"></div>
+  <div id="vnss-tab-content" style="padding:12px"></div>
 </div>`;
 
   // Provider pill click
@@ -15532,10 +15535,18 @@ function _vanessaRenderSettings(){
     if(badge) badge.style.cssText=on?'font-size:9px;font-weight:800;letter-spacing:.1em;padding:3px 8px;border-radius:20px;background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.4);color:#4ade80':'font-size:9px;font-weight:800;letter-spacing:.1em;padding:3px 8px;border-radius:20px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.3)';
     const sw=e.target.closest('.toggle-sw')?.nextElementSibling; if(sw) sw.textContent=on?'ON':'OFF';
   });
-  _vanessaRenderCards();
-  _vanessaRenderLog();
+  // Toggle collassabile config
+  document.getElementById('vnss-cfg-toggle')?.addEventListener('click',()=>{
+    const body=document.getElementById('vnss-cfg-body');
+    const chev=document.getElementById('vnss-cfg-chevron');
+    const vv=_vanessaGetCfg();
+    const open=body.style.display==='none';
+    body.style.display=open?'block':'none';
+    if(chev) chev.textContent=open?'▲':'▼';
+    vv.cfgOpen=open; saveCfg();
+  });
+  _vanessaRenderTabs();
   _vanessaUpdateStatus();
-  // ticker countdown aggiornato ogni secondo mentre il pannello è aperto
   if(window._vnssStatusTick) clearInterval(window._vnssStatusTick);
   window._vnssStatusTick=setInterval(()=>{ if(document.getElementById('vnss-live-status')) _vanessaUpdateStatus(); else clearInterval(window._vnssStatusTick); },1000);
 }
@@ -15630,62 +15641,82 @@ async function _vanessaValidateKey(){
   if(btn){ btn.disabled=false; btn.style.opacity='1'; }
 }
 
-function _vanessaRenderCards(){
-  const el=document.getElementById('vnss-cards'); if(!el) return;
-  const all=[];
-  for(const pg of cfg.pages||[]) for(const c of pg.cards||[]) if(c.vanessaEnabled) all.push(c);
-  if(!all.length){
-    el.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;padding:20px;gap:8px;background:rgba(124,58,237,.05);border:1px dashed rgba(124,58,237,.2);border-radius:14px">
-      <span style="font-size:28px;opacity:.4">🎯</span>
-      <div style="font-size:12px;color:rgba(255,255,255,.3);text-align:center;line-height:1.6">Nessun dispositivo assegnato a Vanessa.<br><span style="color:rgba(192,132,252,.5)">In modalità modifica → ⋮ su una card JS → 🧠 Vanessa</span></div>
-    </div>`;
-    return;
+let _vnssActiveTab='__all__';
+function _vanessaRenderTabs(){
+  const bar=document.getElementById('vnss-tab-bar'); if(!bar) return;
+  const content=document.getElementById('vnss-tab-content'); if(!content) return;
+  const cards=[];
+  for(const pg of cfg.pages||[]) for(const c of pg.cards||[]) if(c.vanessaEnabled) cards.push(c);
+  const log=(_vanessaGetCfg().log||[]);
+  // costruisce tab: Dispositivi + uno per card + Tutti i Log
+  const tabs=[{id:'__devices__',label:'🎯 Dispositivi'},...cards.map(c=>({id:c.id,label:c.icon?`${c.icon} ${c.label||c.id}`:(c.label||c.id)})),{id:'__all__',label:'📋 Log completo'}];
+  if(!tabs.find(t=>t.id===_vnssActiveTab)) _vnssActiveTab='__devices__';
+  const tabBtn=(t)=>`<button data-vnss-tab="${t.id}" style="padding:9px 13px;border:none;border-bottom:2px solid ${_vnssActiveTab===t.id?'#c084fc':'transparent'};background:none;color:${_vnssActiveTab===t.id?'#c084fc':'rgba(255,255,255,.4)'};font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s">${eh(t.label)}</button>`;
+  bar.innerHTML=tabs.map(tabBtn).join('');
+  bar.querySelectorAll('[data-vnss-tab]').forEach(btn=>{
+    btn.addEventListener('click',()=>{ _vnssActiveTab=btn.dataset.vnssTab; _vanessaRenderTabs(); });
+  });
+  if(_vnssActiveTab==='__devices__'){
+    if(!cards.length){
+      content.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;padding:20px;gap:8px;background:rgba(124,58,237,.04);border:1px dashed rgba(124,58,237,.18);border-radius:12px;text-align:center">
+        <span style="font-size:28px;opacity:.4">🎯</span>
+        <div style="font-size:12px;color:rgba(255,255,255,.3);line-height:1.6">Nessun dispositivo assegnato.<br><span style="color:rgba(192,132,252,.45)">Modifica → ⋮ su una card → 🧠 Vanessa</span></div></div>`;
+      return;
+    }
+    content.innerHTML=cards.map(c=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:linear-gradient(135deg,rgba(124,58,237,.1),rgba(99,102,241,.06));border:1px solid rgba(124,58,237,.18);border-radius:12px;margin-bottom:7px">
+      <div style="width:36px;height:36px;border-radius:10px;background:rgba(124,58,237,.2);border:1px solid rgba(192,132,252,.22);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">${c.icon||'📦'}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:700;color:#e2e8f0;margin-bottom:2px">${eh(c.label||c.id)}</div>
+        <div style="font-size:10px;color:rgba(192,132,252,.55);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(c.vanessaEntityId||c.entity||'—')}</div>
+      </div>
+      <button data-action="_vanessaRunCard" data-action-args='["${c.id}"]' style="background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);border-radius:8px;color:#4ade80;font-size:10px;font-weight:700;padding:6px 10px;cursor:pointer;white-space:nowrap">▶ Esegui</button>
+      <button data-action="_vanessaCardPopup" data-action-args='["${c.id}"]' style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.4);font-size:13px;padding:6px 9px;cursor:pointer">⚙</button>
+    </div>`).join('');
+  } else {
+    // tab log per card specifica o log completo
+    const filterCard=_vnssActiveTab==='__all__'?null:_vnssActiveTab;
+    const entries=filterCard?log.filter(e=>e.cardId===filterCard):log;
+    _vanessaRenderLogEntries(content, entries, filterCard);
   }
-  el.innerHTML=all.map(c=>`
-  <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:linear-gradient(135deg,rgba(124,58,237,.1),rgba(99,102,241,.06));border:1px solid rgba(124,58,237,.2);border-radius:12px;margin-bottom:8px;transition:border-color .2s">
-    <div style="width:36px;height:36px;border-radius:10px;background:rgba(124,58,237,.2);border:1px solid rgba(192,132,252,.25);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">${c.icon||'📦'}</div>
-    <div style="flex:1;min-width:0">
-      <div style="font-size:12px;font-weight:700;color:#e2e8f0;margin-bottom:2px">${eh(c.label||c.id)}</div>
-      <div style="font-size:10px;color:rgba(192,132,252,.6);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(c.vanessaEntityId||c.entity||'—')}</div>
-    </div>
-    <button data-action="_vanessaRunCard" data-action-args='["${c.id}"]' style="background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);border-radius:8px;color:#4ade80;font-size:10px;font-weight:700;padding:6px 10px;cursor:pointer;white-space:nowrap;transition:all .2s">▶ Esegui</button>
-    <button data-action="_vanessaCardPopup" data-action-args='["${c.id}"]' style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.4);font-size:13px;padding:6px 9px;cursor:pointer;transition:all .2s">⚙</button>
-  </div>`).join('');
 }
 
-function _vanessaRenderLog(){
-  const el=document.getElementById('vnss-log'); if(!el) return;
-  const log=((_vanessaGetCfg()).log||[]);
-  if(!log.length){
-    el.innerHTML=`<div style="display:flex;align-items:center;gap:10px;padding:14px;background:rgba(255,255,255,.03);border-radius:12px;border:1px dashed rgba(255,255,255,.08)">
-      <span style="font-size:20px;opacity:.3">📋</span>
-      <span style="font-size:11px;color:rgba(255,255,255,.25)">Nessuna decisione registrata ancora.</span>
-    </div>`;
+function _vanessaRenderLogEntries(container, entries, filterCard){
+  const clearBtn=`<button data-action="_vanessaClearLog" data-action-args='["${filterCard||''}"]' style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.25);border-radius:8px;color:#f87171;font-size:10px;font-weight:700;padding:5px 10px;cursor:pointer;float:right;margin-bottom:8px">🗑 Cancella</button>`;
+  if(!entries.length){
+    container.innerHTML=clearBtn+`<div style="clear:both;padding:16px 0;text-align:center;font-size:12px;color:rgba(255,255,255,.25)">Nessuna decisione registrata.</div>`;
     return;
   }
   const icons={run:'✅',skip:'⏭',delay:'⏱'};
   const colors={run:'#4ade80',skip:'#f87171',delay:'#fbbf24'};
-  const bg={run:'rgba(74,222,128,.07)',skip:'rgba(248,113,113,.07)',delay:'rgba(251,191,36,.07)'};
-  const brd={run:'rgba(74,222,128,.25)',skip:'rgba(248,113,113,.25)',delay:'rgba(251,191,36,.25)'};
-  el.innerHTML=`<div style="max-height:240px;overflow-y:auto;scrollbar-width:none">`+log.map((entry,i)=>{
-    const d=new Date(entry.ts);
+  const bgs={run:'rgba(74,222,128,.06)',skip:'rgba(248,113,113,.06)',delay:'rgba(251,191,36,.06)'};
+  container.innerHTML=clearBtn+`<div style="clear:both;max-height:260px;overflow-y:auto;scrollbar-width:none">`+entries.map(e=>{
+    const d=new Date(e.ts);
     const time=d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
     const day=d.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'});
-    const col=colors[entry.action]||'#94a3b8';
-    return `<div style="display:flex;align-items:flex-start;gap:10px;padding:9px 11px;background:${bg[entry.action]||'rgba(255,255,255,.03)'};border:1px solid ${brd[entry.action]||'rgba(255,255,255,.08)'};border-radius:11px;margin-bottom:6px">
-      <div style="flex-shrink:0;margin-top:1px">
-        <div style="width:28px;height:28px;border-radius:8px;background:${bg[entry.action]};border:1px solid ${brd[entry.action]};display:flex;align-items:center;justify-content:center;font-size:12px">${icons[entry.action]||'•'}</div>
+    const col=colors[e.action]||'#94a3b8';
+    return `<div style="background:${bgs[e.action]||'rgba(255,255,255,.03)'};border:1px solid ${col}22;border-left:3px solid ${col};border-radius:0 10px 10px 0;padding:9px 12px;margin-bottom:6px">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px;flex-wrap:wrap">
+        <span style="font-size:13px">${icons[e.action]||'•'}</span>
+        <span style="font-size:11px;font-weight:800;color:${col};text-transform:uppercase">${e.action}</span>
+        <span style="font-size:10px;color:rgba(255,255,255,.3)">${day} ${time}</span>
+        ${filterCard?'':`<span style="font-size:11px;font-weight:600;color:#e2e8f0">${eh(e.cardLabel||e.cardId)}</span>`}
       </div>
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
-          <span style="font-size:11px;font-weight:800;color:${col};text-transform:uppercase;letter-spacing:.05em">${entry.action}</span>
-          <span style="font-size:10px;color:rgba(255,255,255,.25)">${day} ${time}</span>
-          <span style="font-size:11px;font-weight:600;color:#e2e8f0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(entry.cardLabel||entry.cardId)}</span>
-        </div>
-        <div style="font-size:11px;color:rgba(255,255,255,.5);line-height:1.4">${eh(entry.reason||'')}</div>
-      </div>
+      <div style="font-size:12px;color:rgba(255,255,255,.6);font-weight:600;margin-bottom:${e.detail?'4px':'0'}">${eh(e.reason||'')}</div>
+      ${e.detail?`<div style="font-size:11px;color:rgba(255,255,255,.4);line-height:1.6">${eh(e.detail)}</div>`:''}
     </div>`;
   }).join('')+'</div>';
+}
+
+function _vanessaRenderLog(){ try{_vanessaRenderTabs();}catch(_){} }
+function _vanessaRenderCards(){ try{_vanessaRenderTabs();}catch(_){} }
+
+function _vanessaClearLog(cardId){
+  const v=_vanessaGetCfg();
+  if(cardId) v.log=(v.log||[]).filter(e=>e.cardId!==cardId);
+  else v.log=[];
+  saveCfg();
+  _vanessaRenderTabs();
 }
 
 async function _vanessaCallAI(prompt){
@@ -15696,25 +15727,25 @@ async function _vanessaCallAI(prompt){
   const apiKey=(v.apiKeys&&v.apiKeys[provider])||v.apiKey||'';
   if(provider==='gemini'){
     const url=`https://generativelanguage.googleapis.com/v1/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
-    const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.1,maxOutputTokens:100}})});
+    const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.1,maxOutputTokens:280}})});
     if(!r.ok){ const t=await r.text(); throw new Error(`Gemini ${r.status}: ${t.slice(0,120)}`); }
     const d=await r.json();
     return d.candidates?.[0]?.content?.parts?.[0]?.text||'';
   }
   if(provider==='openai'){
-    const r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},body:JSON.stringify({model,messages:[{role:'system',content:'Sei Vanessa, AI di automazione domestica. Rispondi SEMPRE e SOLO con JSON valido, nessun altro testo.'},{role:'user',content:prompt}],temperature:0.1,max_tokens:100})});
+    const r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},body:JSON.stringify({model,messages:[{role:'system',content:'Sei Vanessa, AI di automazione domestica. Rispondi SEMPRE e SOLO con JSON valido, nessun altro testo.'},{role:'user',content:prompt}],temperature:0.1,max_tokens:280})});
     if(!r.ok){ const t=await r.text(); throw new Error(`OpenAI ${r.status}: ${t.slice(0,120)}`); }
     const d=await r.json();
     return d.choices?.[0]?.message?.content||'';
   }
   if(provider==='claude'){
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model,max_tokens:100,system:'Sei Vanessa, AI di automazione domestica. Rispondi SOLO con una riga JSON. Nessun testo, nessun markdown.',messages:[{role:'user',content:prompt}]})});
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model,max_tokens:280,system:'Sei Vanessa, AI di automazione domestica. Rispondi SOLO con JSON valido su una riga. Nessun testo prima o dopo.',messages:[{role:'user',content:prompt}]})});
     if(!r.ok){ const t=await r.text(); throw new Error(`Claude ${r.status}: ${t.slice(0,120)}`); }
     const d=await r.json();
     return d.content?.[0]?.text||'';
   }
   if(provider==='ollama'){
-    const r=await fetch((v.ollamaUrl||'http://localhost:11434')+'/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model,prompt,stream:false,options:{temperature:0.1,num_predict:100}})});
+    const r=await fetch((v.ollamaUrl||'http://localhost:11434')+'/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model,prompt,stream:false,options:{temperature:0.1,num_predict:280}})});
     if(!r.ok){ const t=await r.text(); throw new Error(`Ollama ${r.status}: ${t.slice(0,120)}`); }
     const d=await r.json();
     return d.response||'';
@@ -15754,9 +15785,9 @@ DATA E ORA: ${now.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month
   if(eid) p+=`\nEntità HA: ${eid}`;
   if(eid&&hass.states[eid]) p+=`\nStato attuale: ${hass.states[eid].state}`;
   if(card.vanessaContext) p+=`\nContesto: ${card.vanessaContext}`;
-  p+=`\n\nRispondi SOLO con questa riga JSON (nient'altro, nessun testo prima o dopo):
-{"action":"skip","delay_min":0,"reason":"max 5 parole"}
-Sostituisci action con: run=attiva, skip=salta, delay=rimanda. Se delay, imposta delay_min.`;
+  p+=`\n\nINIZIA DIRETTAMENTE con { senza alcun testo prima. Rispondi con questo JSON su UNA SOLA RIGA:
+{"action":"skip","delay_min":0,"reason":"3-5 parole","detail":"2-3 frasi complete: spiega ora attuale, condizioni meteo rilevanti, perché hai scelto questa azione e per quanto tempo se pertinente."}
+action: run=attiva ora, skip=non attivare, delay=rimanda. Se delay specifica delay_min in minuti.`;
   return p;
 }
 
@@ -15799,13 +15830,101 @@ async function _vanessaRunCard(cardId){
     }
   }catch(e){}
   if(!v.log) v.log=[];
-  v.log.unshift({ts:Date.now(),cardId,cardLabel:card.label||card.id,action:decision.action,reason:decision.reason||''});
-  v.log=v.log.slice(0,30);
+  const logEntry={ts:Date.now(),cardId,cardLabel:card.label||card.id,action:decision.action,reason:decision.reason||'',detail:decision.detail||''};
+  v.log.unshift(logEntry);
+  v.log=v.log.slice(0,50);
   saveCfg();
   if(decision.action!=='delay') showToast(`🧠 ${card.label||card.id}: ${decision.action==='run'?'✅ Attivato':'⏭ Saltato'} — ${decision.reason||''}`);
+  try{ _vanessaDecisionPopup(card, decision); }catch(_){}
   try{_vanessaRenderLog();}catch(_){}
   try{_vanessaRenderCards();}catch(_){}
   try{_vanessaUpdateStatus();}catch(_){}
+}
+
+function _vanessaDecisionPopup(card, decision){
+  document.getElementById('_vnss-decision-ov')?.remove();
+  const hass=_getBestHass();
+  const now=new Date();
+  const timeStr=now.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+  const dateStr=now.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'});
+  const v=_vanessaGetCfg();
+  // raccolta dati sensori per il popup
+  let sensorLines=[];
+  if(v.weatherEntityId&&hass){
+    const ws=hass.states[v.weatherEntityId];
+    if(ws){
+      const a=ws.attributes||{};
+      const cond={sunny:'☀️ Sereno',clear_night:'🌙 Cielo sereno',cloudy:'☁️ Nuvoloso',partlycloudy:'⛅ Parz. nuvoloso',rainy:'🌧️ Pioggia',snowy:'❄️ Neve',windy:'💨 Ventoso',foggy:'🌫️ Nebbia',lightning:'⛈️ Temporale'}[ws.state]||ws.state;
+      if(a.temperature!=null) sensorLines.push({ico:'🌡️',lbl:'Temperatura',val:`${a.temperature}°C`});
+      if(a.humidity!=null) sensorLines.push({ico:'💧',lbl:'Umidità',val:`${a.humidity}%`});
+      if(a.wind_speed!=null) sensorLines.push({ico:'💨',lbl:'Vento',val:`${a.wind_speed} km/h`});
+      if(a.precipitation!=null) sensorLines.push({ico:'🌧️',lbl:'Pioggia',val:`${a.precipitation} mm`});
+      sensorLines.unshift({ico:'🌤️',lbl:'Meteo',val:cond});
+    }
+  }
+  for(const sid of (v.extraSensors||[])){
+    const s=hass?.states[sid]; if(!s) continue;
+    const name=s.attributes?.friendly_name||sid.split('.').pop().replace(/_/g,' ');
+    sensorLines.push({ico:'📡',lbl:name,val:`${s.state}${s.attributes?.unit_of_measurement?' '+s.attributes.unit_of_measurement:''}`});
+  }
+  const eid=card.vanessaEntityId||card.entity||'';
+  if(eid&&hass?.states[eid]) sensorLines.push({ico:'🔌',lbl:'Stato attuale',val:hass.states[eid].state});
+  const acol=decision.action==='run'?'#4ade80':decision.action==='skip'?'#f87171':'#fbbf24';
+  const abg=decision.action==='run'?'rgba(74,222,128,.12)':decision.action==='skip'?'rgba(248,113,113,.12)':'rgba(251,191,36,.12)';
+  const aico=decision.action==='run'?'✅':decision.action==='skip'?'⏭':'⏱';
+  const albl=decision.action==='run'?'ATTIVATO':decision.action==='skip'?'SALTATO':`RIMANDATO${decision.delay_min?' di '+decision.delay_min+' min':''}`;
+  const ov=document.createElement('div');
+  ov.id='_vnss-decision-ov';
+  ov.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);padding:16px;box-sizing:border-box';
+  ov.innerHTML=`
+<div style="background:linear-gradient(160deg,#0a0618 0%,#0f0d2a 100%);border:1px solid rgba(124,58,237,.4);border-radius:24px;width:min(520px,96vw);max-height:90vh;overflow-y:auto;box-shadow:0 32px 100px rgba(0,0,0,.85),0 0 60px rgba(124,58,237,.15);scrollbar-width:none">
+  <!-- Header -->
+  <div style="background:linear-gradient(135deg,rgba(124,58,237,.2),rgba(99,102,241,.1));border-bottom:1px solid rgba(124,58,237,.2);padding:16px 20px;display:flex;align-items:center;gap:10px;border-radius:24px 24px 0 0">
+    <div style="font-size:22px">🧠</div>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:800;color:#fff">Vanessa ha deciso</div>
+      <div style="font-size:10px;color:rgba(192,132,252,.6)">${dateStr} · ${timeStr}</div>
+    </div>
+    <button id="_vnss-dec-close" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.4);font-size:14px;padding:5px 10px;cursor:pointer">✕</button>
+  </div>
+  <!-- Card + Decisione -->
+  <div style="padding:20px 20px 0">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <div style="width:44px;height:44px;border-radius:13px;background:rgba(124,58,237,.2);border:1.5px solid rgba(192,132,252,.3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${card.icon||'📦'}</div>
+      <div style="flex:1">
+        <div style="font-size:15px;font-weight:800;color:#fff">${eh(card.label||card.id)}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.35)">${eh(eid||'entità non impostata')}</div>
+      </div>
+      <div style="background:${abg};border:2px solid ${acol};border-radius:14px;padding:8px 14px;text-align:center;flex-shrink:0">
+        <div style="font-size:20px">${aico}</div>
+        <div style="font-size:11px;font-weight:900;color:${acol};letter-spacing:.05em">${albl}</div>
+      </div>
+    </div>
+    <!-- Ragionamento completo -->
+    ${decision.detail?`<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-left:3px solid ${acol};border-radius:0 12px 12px 0;padding:14px 16px;margin-bottom:16px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(255,255,255,.35);text-transform:uppercase;margin-bottom:6px">💬 Ragionamento</div>
+      <div style="font-size:13px;color:#e2e8f0;line-height:1.7">${eh(decision.detail)}</div>
+    </div>`:''}
+    <!-- Dati sensori -->
+    ${sensorLines.length?`<div style="margin-bottom:16px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(56,189,248,.6);text-transform:uppercase;margin-bottom:8px">📡 Dati ambientali usati</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+        ${sensorLines.map(s=>`<div style="background:rgba(56,189,248,.05);border:1px solid rgba(56,189,248,.1);border-radius:10px;padding:8px 10px;display:flex;align-items:center;gap:7px">
+          <span style="font-size:14px">${s.ico}</span>
+          <div><div style="font-size:9px;color:rgba(255,255,255,.35)">${eh(s.lbl)}</div><div style="font-size:12px;font-weight:700;color:#e2e8f0">${eh(s.val)}</div></div>
+        </div>`).join('')}
+      </div>
+    </div>`:''}
+  </div>
+  <!-- Footer -->
+  <div style="padding:12px 20px 18px;display:flex;justify-content:flex-end">
+    <button id="_vnss-dec-close2" style="background:linear-gradient(135deg,rgba(124,58,237,.4),rgba(99,102,241,.3));border:1.5px solid rgba(192,132,252,.4);color:#fff;border-radius:10px;padding:10px 24px;font-size:13px;font-weight:800;cursor:pointer">Chiudi</button>
+  </div>
+</div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click',e=>{ if(e.target===ov) ov.remove(); });
+  document.getElementById('_vnss-dec-close')?.addEventListener('click',()=>ov.remove());
+  document.getElementById('_vnss-dec-close2')?.addEventListener('click',()=>ov.remove());
 }
 
 let _vanessaNextRunTs=0;
@@ -16256,5 +16375,5 @@ Object.assign(window, {
   _isAdmin, _adminCtrlPanel,
   _epLicBadgeLoad, _epAdminPanelLoad, _adminShowFirstAccess,
   _vanessaRenderSettings, _vanessaSave, _vanessaTest, _vanessaValidateKey,
-  _vanessaRunCard, _vanessaCardPopup,
+  _vanessaRunCard, _vanessaCardPopup, _vanessaClearLog,
 });
