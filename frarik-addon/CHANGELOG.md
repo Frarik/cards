@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.78 — 2026-06-22
+
+### feat(vanessa): gate configurazione — i menu appaiono solo dopo aver inserito l'API key
+
+- Prima dell'inserimento della chiave API, il pannello Vanessa mostra solo la schermata di setup iniziale (hero + form provider + key + bottone "✨ Configura Vanessa").
+- I 4 tab (Dispositivi, Ambiente, Registro, Config) diventano visibili solo dopo aver salvato una chiave valida.
+- Pulsante "✨ Configura Vanessa" chiama `_vanessaSave()` che ora fa re-render automatico del pannello — il gate sparisce e appare l'interfaccia completa senza ricaricare la pagina.
+- `_vnssIsConfigured()`: controlla se esiste una API key per il provider corrente (Ollama è sempre considerato configurato).
+- `_vnssRenderSetupGate(pane, dinoSvg)`: schermata di benvenuto standalone con provider picker e input chiave.
+
 ## 1.5.77 — 2026-06-22
 
 ### feat(vanessa): redesign totale pannello impostazioni — 4 tab, Ambiente, Aggiungi dispositivo

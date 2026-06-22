@@ -15245,6 +15245,100 @@ const _vnssModels={
   claude:['claude-haiku-4-5-20251001','claude-sonnet-4-6','claude-opus-4-8'],
   ollama:['llama3.2','mistral','gemma2','qwen2.5']
 };
+function _vnssIsConfigured(){
+  const v=_vanessaGetCfg();
+  if(v.provider==='ollama') return true;
+  return !!((v.apiKeys&&v.apiKeys[v.provider])||v.apiKey);
+}
+
+function _vnssRenderSetupGate(pane, dinoSvg){
+  const v=_vanessaGetCfg();
+  const cur=v.provider||'gemini';
+  const ph={gemini:'gemini-2.0-flash',openai:'gpt-4o-mini',ollama:'llama3.2',claude:'claude-haiku-4-5-20251001'};
+  const inp=`width:100%;background:rgba(124,58,237,.1);border:1.5px solid rgba(124,58,237,.25);border-radius:11px;padding:11px 14px;color:#e2e8f0;font-size:13px;box-sizing:border-box;outline:none`;
+  pane.innerHTML=`
+<style>
+@keyframes vnss-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
+@keyframes vnss-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes vnss-scan{0%{transform:translateY(-100%)}100%{transform:translateY(400%)}}
+.vnss-prov-btn{background:rgba(124,58,237,.1);border:1.5px solid rgba(124,58,237,.2);border-radius:13px;padding:11px 14px;cursor:pointer;transition:all .2s;display:flex;align-items:center;color:rgba(255,255,255,.5);font-size:10px;font-weight:700;text-align:left}
+.vnss-prov-btn:hover{border-color:rgba(192,132,252,.5);background:rgba(124,58,237,.2);color:#e2e8f0}
+#vnss-key:focus,#vnss-ollama:focus{border-color:rgba(192,132,252,.7)!important;box-shadow:0 0 0 3px rgba(124,58,237,.15)!important}
+</style>
+
+<!-- HERO SETUP -->
+<div style="position:relative;overflow:hidden;border-radius:22px;background:linear-gradient(135deg,#0d0620 0%,#1a0a3e 45%,#0c1a3e 100%);border:1px solid rgba(124,58,237,.38);margin-bottom:20px;padding:28px 24px;text-align:center">
+  <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(124,58,237,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(124,58,237,.07) 1px,transparent 1px);background-size:24px 24px;pointer-events:none"></div>
+  <div style="position:absolute;inset:0;overflow:hidden;opacity:.05;pointer-events:none"><div style="width:100%;height:2px;background:linear-gradient(90deg,transparent,#c084fc,transparent);animation:vnss-scan 3s linear infinite"></div></div>
+  <div style="position:relative">
+    <div style="width:100px;height:100px;margin:0 auto 14px;animation:vnss-float 4s ease-in-out infinite;filter:drop-shadow(0 0 14px rgba(74,222,128,.4))">${dinoSvg}</div>
+    <div style="font-size:26px;font-weight:900;letter-spacing:-.02em;background:linear-gradient(135deg,#c084fc,#818cf8,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:6px">VANESSA</div>
+    <div style="font-size:12px;color:rgba(192,132,252,.7);font-weight:600;margin-bottom:4px">Motore decisionale AI autonomo</div>
+    <div style="display:inline-block;font-size:10px;font-weight:800;letter-spacing:.1em;padding:4px 12px;border-radius:20px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);color:#fbbf24;margin-top:6px">⚙ CONFIGURAZIONE INIZIALE</div>
+  </div>
+</div>
+
+<!-- SETUP CARD -->
+<div style="background:linear-gradient(160deg,rgba(124,58,237,.1),rgba(99,102,241,.06));border:1.5px solid rgba(124,58,237,.28);border-radius:20px;padding:22px">
+  <div style="font-size:15px;font-weight:800;color:#fff;margin-bottom:6px">Benvenuto in Vanessa</div>
+  <div style="font-size:12px;color:rgba(255,255,255,.45);margin-bottom:22px;line-height:1.7">Scegli un provider AI e inserisci la tua chiave API per sbloccare tutte le funzionalità. Vanessa userà questa chiave per analizzare i sensori e controllare i dispositivi in autonomia.</div>
+
+  <!-- Provider -->
+  <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(192,132,252,.6);text-transform:uppercase;margin-bottom:10px">🤖 Scegli il provider AI</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px" id="vnss-prov-wrap">
+    ${[['gemini','✦','Gemini','Google · gratis'],['openai','⬡','OpenAI','GPT · pay-per-use'],['claude','🧡','Claude','Anthropic · potente'],['ollama','🏠','Ollama','Locale · privato']].map(([p,ico,name,sub])=>`
+    <button class="vnss-prov-btn${cur===p?' active':''}" data-prov="${p}" style="${cur===p?'border-color:#c084fc;background:rgba(124,58,237,.28);color:#fff;box-shadow:0 0 14px rgba(124,58,237,.3)':''}">
+      <span style="font-size:22px;margin-right:10px">${ico}</span>
+      <div><div style="font-size:13px;font-weight:800">${name}</div><div style="font-size:10px;opacity:.55">${sub}</div></div>
+    </button>`).join('')}
+  </div>
+  <input type="hidden" id="vnss-prov" value="${cur}">
+
+  <!-- API Key / Ollama URL -->
+  <div id="vnss-key-row" style="${cur==='ollama'?'display:none':''}margin-bottom:18px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(192,132,252,.6);text-transform:uppercase">🔑 API Key — <span id="vnss-key-prov-lbl">${{gemini:'Google Gemini',openai:'OpenAI',claude:'Anthropic Claude',ollama:'Ollama'}[cur]||cur}</span></div>
+      <div id="vnss-key-status" style="font-size:10px;font-weight:700"></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <input type="password" id="vnss-key" style="${inp};flex:1" placeholder="Incolla qui la chiave API" value="${eh((v.apiKeys&&v.apiKeys[cur])||v.apiKey||'')}">
+      <button id="vnss-validate-btn" style="background:rgba(74,222,128,.12);border:1.5px solid rgba(74,222,128,.3);color:#4ade80;border-radius:10px;padding:0 16px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap">🔍 Valida</button>
+    </div>
+    <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:6px">La chiave viene salvata localmente e non condivisa</div>
+  </div>
+  <div id="vnss-ollama-row" style="margin-bottom:18px;${cur!=='ollama'?'display:none':''}">
+    <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(192,132,252,.6);text-transform:uppercase;margin-bottom:8px">🌐 URL Ollama</div>
+    <div style="display:flex;gap:8px">
+      <input type="text" id="vnss-ollama" style="${inp};flex:1" value="${eh(v.ollamaUrl||'http://localhost:11434')}" placeholder="http://localhost:11434">
+      <button id="vnss-validate-btn" style="background:rgba(74,222,128,.12);border:1.5px solid rgba(74,222,128,.3);color:#4ade80;border-radius:10px;padding:0 16px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap">🔍 Valida</button>
+    </div>
+  </div>
+
+  <button data-action="_vanessaSave" style="width:100%;background:linear-gradient(135deg,rgba(124,58,237,.55),rgba(99,102,241,.4));border:1.5px solid rgba(192,132,252,.5);color:#fff;border-radius:13px;padding:15px;font-size:14px;font-weight:900;cursor:pointer;letter-spacing:.03em">✨ Configura Vanessa</button>
+</div>`;
+
+  const ph2={gemini:'Google Gemini',openai:'OpenAI',claude:'Anthropic Claude',ollama:'Ollama'};
+  pane.querySelectorAll('.vnss-prov-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const p=btn.dataset.prov;
+      document.getElementById('vnss-prov').value=p;
+      pane.querySelectorAll('.vnss-prov-btn').forEach(b=>{
+        b.style.borderColor=b===btn?'#c084fc':'';
+        b.style.background=b===btn?'rgba(124,58,237,.28)':'';
+        b.style.color=b===btn?'#fff':'';
+        b.style.boxShadow=b===btn?'0 0 14px rgba(124,58,237,.3)':'';
+        b.classList.toggle('active',b===btn);
+      });
+      document.getElementById('vnss-key-row').style.display=p==='ollama'?'none':'';
+      document.getElementById('vnss-ollama-row').style.display=p==='ollama'?'':'none';
+      const kf=document.getElementById('vnss-key'); if(kf){const vv=_vanessaGetCfg();kf.value=(vv.apiKeys&&vv.apiKeys[p])||'';}
+      const lbl=document.getElementById('vnss-key-prov-lbl'); if(lbl) lbl.textContent=ph2[p]||p;
+      const ks=document.getElementById('vnss-key-status'); if(ks) ks.innerHTML='';
+    });
+  });
+  pane.querySelectorAll('#vnss-validate-btn').forEach(b=>b.addEventListener('click',_vanessaValidateKey));
+}
+
 function _vnssModelChips(provider, current){
   const models=_vnssModels[provider]||[];
   return models.map(m=>{
@@ -15566,12 +15660,10 @@ function _vanessaRenderSettings(){
     <ellipse cx="56" cy="75" rx="16" ry="14" fill="url(#vbelly)" opacity=".85"/>
     <ellipse cx="44" cy="46" rx="24" ry="20" fill="url(#vbody)"/>
     <path d="M24 54 Q20 62 28 66 Q36 68 44 62 Q36 66 28 62 Z" fill="#22c55e"/>
-    <path d="M26 63 Q34 69 42 64" stroke="#16a34a" stroke-width="1.2" fill="none"/>
     <ellipse cx="30" cy="59" rx="2" ry="1.2" fill="#15803d"/>
     <ellipse cx="38" cy="60" rx="2" ry="1.2" fill="#15803d"/>
     <path d="M28 65 Q36 71 44 65" stroke="#15803d" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-    <path d="M31 65.5 L32.5 68 L34 65.8" fill="white" stroke="none"/>
-    <path d="M36 66.5 L37.5 69 L39 66.8" fill="white" stroke="none"/>
+    <path d="M31 65.5 L32.5 68 L34 65.8" fill="white"/><path d="M36 66.5 L37.5 69 L39 66.8" fill="white"/>
     <ellipse cx="36" cy="42" rx="7" ry="7.5" fill="url(#veye)" filter="url(#vglow)"/>
     <ellipse cx="37" cy="43" rx="4" ry="4.5" fill="#1e1b4b"/>
     <ellipse cx="38.5" cy="41.5" rx="1.5" ry="1.5" fill="#818cf8"/>
@@ -15595,6 +15687,7 @@ function _vanessaRenderSettings(){
     <g fill="#38bdf8" opacity=".8"><polygon points="108,8 109,11 112,11 109.5,13 110.5,16 108,14.5 105.5,16 106.5,13 104,11 107,11" transform="scale(.5) translate(100,50)"/></g>
     <g fill="#f0abfc" opacity=".7"><polygon points="15,22 16,25 19,25 16.5,27 17.5,30 15,28.5 12.5,30 13.5,27 11,25 14,25" transform="scale(.6) translate(10,10)"/></g>
   </svg>`;
+  if(!_vnssIsConfigured()){ _vnssRenderSetupGate(pane, dinoSvg); return; }
 
   const tabs=[
     {id:'dispositivi',icon:'🎯',label:'Dispositivi'},
@@ -15685,8 +15778,9 @@ function _vanessaSave(){
   v.intervalMin=parseInt(document.getElementById('vnss-interval')?.value||'30',10)||30;
   saveCfg();
   _vanessaRestartInterval();
-  if(v.enabled&&!wasEnabled) setTimeout(_vanessaRun,800); // prima valutazione immediata all'abilitazione
+  if(v.enabled&&!wasEnabled) setTimeout(_vanessaRun,800);
   showToast('✅ Vanessa salvata!');
+  _vanessaRenderSettings();
 }
 
 async function _vanessaTest(){
