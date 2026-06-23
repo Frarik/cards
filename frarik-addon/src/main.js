@@ -16449,7 +16449,7 @@ async function _vanessaRunCard(cardId, force){
   try{_vnssRefreshHero();}catch(_){}
 }
 
-function _vanessaDecisionPopup(card, decision){
+function _vanessaDecisionPopup(card, decision, dryRun=false){
   document.getElementById('_vnss-decision-ov')?.remove();
   const hass=_getBestHass();
   const now=new Date();
@@ -16501,8 +16501,11 @@ function _vanessaDecisionPopup(card, decision){
   <div style="background:linear-gradient(135deg,rgba(124,58,237,.2),rgba(99,102,241,.1));border-bottom:1px solid rgba(124,58,237,.2);padding:16px 20px;display:flex;align-items:center;gap:10px;border-radius:24px 24px 0 0">
     <div style="font-size:22px">🧠</div>
     <div style="flex:1">
-      <div style="font-size:13px;font-weight:800;color:#fff">Vanessa ha deciso</div>
-      <div style="font-size:10px;color:rgba(192,132,252,.6)">${dateStr} · ${timeStr}</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:13px;font-weight:800;color:#fff">${dryRun?'Simulazione decisione':'Vanessa ha deciso'}</span>
+        ${dryRun?'<span style="background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.35);color:#38bdf8;font-size:9px;font-weight:800;padding:2px 8px;border-radius:20px;letter-spacing:.07em">🧪 DRY RUN</span>':''}
+      </div>
+      <div style="font-size:10px;color:rgba(192,132,252,.6)">${dateStr} · ${timeStr}${dryRun?' · Nessuna azione eseguita':''}</div>
     </div>
     <button id="_vnss-dec-close" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.4);font-size:14px;padding:5px 10px;cursor:pointer">✕</button>
   </div>
@@ -16657,7 +16660,7 @@ function _vanessaCardPopup(cardId){
     <!-- BOTTONI -->
     <div style="display:flex;gap:10px;padding-top:2px">
       <button id="_vnss-card-save" style="flex:1;background:linear-gradient(135deg,rgba(124,58,237,.6),rgba(99,102,241,.45));border:1.5px solid rgba(192,132,252,.5);color:#fff;border-radius:13px;padding:13px;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:.02em">💾 Salva configurazione</button>
-      <button id="_vnss-card-run" style="background:rgba(74,222,128,.1);border:1.5px solid rgba(74,222,128,.28);color:#4ade80;border-radius:13px;padding:13px 18px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">▶ Test</button>
+      <button id="_vnss-card-run" style="background:rgba(56,189,248,.08);border:1.5px solid rgba(56,189,248,.28);color:#38bdf8;border-radius:13px;padding:13px 18px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">🔍 Simula</button>
     </div>
   </div>
 </div>`;
@@ -16679,10 +16682,26 @@ function _vanessaCardPopup(cardId){
     showToast('💾 '+eh(card.label||card.id)+' configurato!');
     try{_vanessaRenderCards();}catch(_){}
   });
-  document.getElementById('_vnss-card-run')?.addEventListener('click',()=>{
+  document.getElementById('_vnss-card-run')?.addEventListener('click', async ()=>{
     _saveCard();
-    ov.remove();
-    _vanessaRunCard(cardId, true);
+    const vv=_vanessaGetCfg();
+    const apiKey=(vv.apiKeys&&vv.apiKeys[vv.provider])||vv.apiKey||'';
+    if(!apiKey){ showToast('⚠️ Configura prima l\'API key di Vanessa'); return; }
+    const btn=document.getElementById('_vnss-card-run');
+    if(btn){ btn.disabled=true; btn.textContent='⏳ AI…'; }
+    const prompt=_vanessaBuildPrompt(card);
+    if(!prompt){ showToast('⚠️ Hass non disponibile'); if(btn){btn.disabled=false;btn.innerHTML='🔍 Simula';} return; }
+    let rawResp='';
+    try{ rawResp=await _vanessaCallAI(prompt); }
+    catch(e){ showToast('❌ Errore AI: '+e.message); if(btn){btn.disabled=false;btn.innerHTML='🔍 Simula';} return; }
+    let decision=null;
+    try{ const m=rawResp.match(/\{[\s\S]*\}/); if(m) decision=JSON.parse(m[0]); }catch(e){}
+    if(!decision){
+      try{ const partial=rawResp.match(/\{[\s\S]*/); if(partial){ const fixed=partial[0].replace(/,?\s*"detail":"[^"]*$|,?\s*"reason":"[^"]*$|,?\s*"[^"]*$/,'}'); decision=JSON.parse(fixed); } }catch(e){}
+    }
+    if(btn){ btn.disabled=false; btn.innerHTML='🔍 Simula'; }
+    if(!decision){ showToast('⚠️ Risposta AI non valida: '+rawResp.slice(0,120)); return; }
+    _vanessaDecisionPopup(card, decision, true);
   });
 }
 

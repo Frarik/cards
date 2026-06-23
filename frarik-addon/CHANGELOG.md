@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.89 — 2026-06-23
+
+### feat(vanessa): tasto "Simula" nel popup card — dry run AI senza eseguire azioni
+- Tasto "▶ Test" rinominato in "🔍 Simula" con comportamento dry run
+- Cliccando Simula: salva la config, chiama l'AI, mostra il popup decisione senza chiudere il popup di configurazione e senza eseguire nessuna azione reale
+- Badge "🧪 DRY RUN" visibile nell'header del popup decisione durante la simulazione
+- Il popup config rimane aperto dopo la simulazione per continuare a modificare le istruzioni e ritestare
+
 ## 1.5.88 — 2026-06-23
 
 ### feat(vanessa): AI autonoma su orario e durata + meteo per-card + forecast pioggia
