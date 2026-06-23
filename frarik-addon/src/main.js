@@ -15750,7 +15750,8 @@ function _vanessaRenderSettings(){
 function _vanessaSave(){
   const v=_vanessaGetCfg();
   const wasEnabled=!!v.enabled; // cattura PRIMA di modificare
-  v.enabled=!!document.getElementById('vnss-on')?.checked;
+  const _vnssOnEl=document.getElementById('vnss-on');
+  v.enabled=_vnssOnEl ? !!_vnssOnEl.checked : (v.enabled!==undefined ? v.enabled : true);
   v.provider=document.getElementById('vnss-prov')?.value||'gemini';
   if(!v.apiKeys) v.apiKeys={};
   const keyEl=document.getElementById('vnss-key');

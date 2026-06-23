@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.80 — 2026-06-23
+
+### fix(vanessa): Vanessa non veniva mai abilitata dopo la prima configurazione
+
+- `_vanessaSave()`: il setup gate non ha il checkbox `vnss-on` nel DOM, quindi `!!undefined = false` forzava `v.enabled = false` ad ogni salvataggio dal gate.
+- Fix: se `vnss-on` non è presente (salvataggio dal gate), si preserva il valore esistente di `v.enabled`; se non era mai stato impostato (primo avvio), si imposta `true` automaticamente.
+
 ## 1.5.79 — 2026-06-23
 
 ### fix(cards): gear button visibile + impostazioni interattive in modalità modifica
