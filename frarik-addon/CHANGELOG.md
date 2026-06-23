@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.82 — 2026-06-23
+
+### feat(viste): riordinamento viste e anteprima icona
+- Frecce ↑↓ nel menu viste per spostare la vista su o giù
+- Anteprima icona live nell'editor vista (accanto all'etichetta "Icona")
+- Pulsante catalogo icone rinominato in "🎨 Catalogo" per maggiore chiarezza
+
 ## 1.5.81 — 2026-06-23
 
 ### fix(vanessa): popup card — toggle "Abilita" ON di default per nuovi dispositivi

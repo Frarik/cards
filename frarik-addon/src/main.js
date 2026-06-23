@@ -11681,12 +11681,14 @@ function toggleViewsMenu(ev){
   if(document.getElementById('views-menu')){ closeViewsMenu(); return; }
   const menu=document.createElement('div');
   menu.id='views-menu'; menu.className='views-menu';
+  const n=cfg.pages.length;
   const items=(cfg.pages||[]).map((p,i)=>`<div class="vm-item${i===cfg.activePage?' on':''}">
       <div class="vm-go" data-action="_closeViewsAndSetPage" data-action-args='[${i}]'>
         <span class="vm-ico">${_renderIcon(p.icon||'📄',16)}</span>
         <span class="vm-name">${eh(p.name||('Vista '+(i+1)))}</span>
         ${i===cfg.activePage?'<span class="vm-chk">✓</span>':''}
       </div>
+      ${n>1?`<div class="vm-arrows"><button class="vm-mv" ${i===0?'disabled':''} data-action="moveViewUp" data-action-args='[${i}]' title="Sposta su">↑</button><button class="vm-mv" ${i===n-1?'disabled':''} data-action="moveViewDown" data-action-args='[${i}]' title="Sposta giù">↓</button></div>`:''}
       <button class="vm-edit" data-action="editView" data-action-args='[${i}]' title="Rinomina / icona / elimina">✏️</button>
     </div>`).join('');
   menu.innerHTML=`<div class="vm-hdr">Viste (${(cfg.pages||[]).length})</div>${items}<div class="vm-sep"></div>`+
@@ -11704,6 +11706,22 @@ function toggleViewsMenu(ev){
 }
 function closeViewsMenu(){ const m=document.getElementById('views-menu'); if(m) m.remove(); document.removeEventListener('click',_viewsOutside); }
 function _viewsOutside(e){ const m=document.getElementById('views-menu'),b=document.getElementById('views-btn'); if(m&&!m.contains(e.target)&&(!b||!b.contains(e.target))) closeViewsMenu(); }
+function moveViewUp(idx){
+  if(idx<=0) return;
+  const p=cfg.pages, tmp=p[idx-1]; p[idx-1]=p[idx]; p[idx]=tmp;
+  if(cfg.activePage===idx) cfg.activePage=idx-1;
+  else if(cfg.activePage===idx-1) cfg.activePage=idx;
+  saveCfg(); renderDash(); try{ renderPageTabs(); }catch(e){}
+  closeViewsMenu(); setTimeout(toggleViewsMenu,30);
+}
+function moveViewDown(idx){
+  if(idx>=cfg.pages.length-1) return;
+  const p=cfg.pages, tmp=p[idx+1]; p[idx+1]=p[idx]; p[idx]=tmp;
+  if(cfg.activePage===idx) cfg.activePage=idx+1;
+  else if(cfg.activePage===idx+1) cfg.activePage=idx;
+  saveCfg(); renderDash(); try{ renderPageTabs(); }catch(e){}
+  closeViewsMenu(); setTimeout(toggleViewsMenu,30);
+}
 /* ═══ FAB MOBILE: un'unica icona a destra con dentro tutte le azioni dell'header ═══ */
 let _mfabOpenTime=0;
 function toggleMobileMenu(ev){
@@ -11745,14 +11763,22 @@ function _mfabOutside(e){ /* non più il meccanismo primario — rimosso su clos
 function _mfabViews(){ setTimeout(()=>toggleViewsMenu(),10); }
 /* Editor di una vista: nome, icona, elimina */
 let _vmodIdx=null;
+function _vmodUpdateIcoPreview(){
+  const v=(document.getElementById('vmod-ico').value||'').trim();
+  const pr=document.getElementById('vmod-ico-prev');
+  if(pr) pr.innerHTML=_renderIcon(v||'📄',26);
+}
 function editView(idx){
   closeViewsMenu();
   const p=cfg.pages[idx]; if(!p) return;
   _vmodIdx=idx;
   document.getElementById('vmod-name').value=p.name||'';
-  document.getElementById('vmod-ico').value=p.icon||'';
+  const icoInp=document.getElementById('vmod-ico');
+  icoInp.value=p.icon||'';
+  icoInp.oninput=_vmodUpdateIcoPreview;
   document.getElementById('vmod-del').style.display=cfg.pages.length>1?'':'none';
   document.getElementById('vmod').classList.remove('off');
+  _vmodUpdateIcoPreview();
   setTimeout(()=>{ const n=document.getElementById('vmod-name'); if(n){ n.focus(); n.select(); } },80);
 }
 function closeViewEdit(){ document.getElementById('vmod').classList.add('off'); _vmodIdx=null; }
@@ -16705,6 +16731,7 @@ Object.assign(window, {
   _hbPickChipIcon, _hbPickChipIcon2, _hbPickImapIcon, _hbIconInput, _hbIcon2Input,
   _hbSelEnt2Pos, _hbResetIcon, openSOSCfgModal, _hbEntityChanged, _hbBrowseEntity, _hbDelOption, _appDelItem, _appDelGroup,
   _mfabViews,
+  moveViewUp, moveViewDown,
   _acpOpenInstalled, _acpOpenYaml, _acpAddSaved, _acpDeleteSaved, _ghsDeleteSaved,
   _openGhStoreClean, _pasteCardToClean, _closeViewsAndOpenTM, _closeViewsAndSetPage,
   _jsStoreAddAndRefresh, _jsRename, _jsRenameDo, _jsRenameInline, openRenameStore, closeRenameStore,

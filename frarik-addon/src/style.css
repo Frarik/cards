@@ -1998,6 +1998,10 @@ select.ntf-field-inp option{background:#1a2035;color:#e2e8f0}
 .vm-item.on .vm-go{color:#a5b4fc}
 .vm-edit{flex-shrink:0;width:30px;height:30px;margin-right:5px;border:none;background:rgba(255,255,255,.06);border-radius:7px;color:var(--muted);cursor:pointer;font-size:12px}
 .vm-edit:hover{background:rgba(255,255,255,.15);color:#fff}
+.vm-arrows{display:flex;flex-direction:column;gap:1px;flex-shrink:0;margin-right:2px}
+.vm-mv{width:22px;height:14px;border:none;background:rgba(255,255,255,.06);border-radius:4px;color:var(--muted);cursor:pointer;font-size:9px;line-height:1;padding:0;display:flex;align-items:center;justify-content:center;transition:background .12s}
+.vm-mv:hover:not(:disabled){background:rgba(255,255,255,.18);color:#fff}
+.vm-mv:disabled{opacity:.2;cursor:default}
 .vm-ico{flex-shrink:0;display:flex;align-items:center;justify-content:center;width:20px}
 .vm-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .vm-chk{flex-shrink:0;color:#4ade80;font-weight:800}
