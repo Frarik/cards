@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.5.85 — 2026-06-23
+
+### feat(vanessa): redesign completo — macchina a stati, hero adattivo, prompt potenziato
+- Sostituito toggle ON/OFF con macchina a 3 stati: `running` / `paused` / `stopped`
+- Nuovo hero adattivo: sfondo, bordo, glow e filtro dino cambiano colore in base allo stato (verde=attiva, ambra=pausa, viola=arrestata)
+- Nuovi controlli: ▶ Avvia, ⏸ Pausa, ⏹ Arresta, ⚡ Esegui ora
+- Provider e modello visibili direttamente nell'hero
+- Barra statistiche (totale/run/skip/delay) nell'hero
+- Prompt AI migliorato: contesto altri dispositivi Vanessa + ultime 3 decisioni per card
+- `_vnssRefreshHero()` per aggiornamento parziale senza full re-render
+- Rimosse: toggle checkbox `vnss-on`, label `vnss-onlbl`
+
 ## 1.5.84 — 2026-06-23
 
 ### feat(store): sistema PKG completo per le card

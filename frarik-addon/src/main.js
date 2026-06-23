@@ -15495,6 +15495,81 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
 ═══════════════════════════════════════════════════════════════════════════ */
 function _vanessaGetCfg(){ if(!cfg.vanessa) cfg.vanessa={}; return cfg.vanessa; }
 
+function _vnssState(){
+  const v=_vanessaGetCfg();
+  if(v.state==='running'||v.state==='paused'||v.state==='stopped') return v.state;
+  const s=v.enabled===true?'running':'stopped';
+  v.state=s; v.enabled=(s==='running');
+  return s;
+}
+function _vnssPlay(){
+  const v=_vanessaGetCfg();
+  if(!_vnssIsConfigured()){showToast('⚠️ Configura prima l\'API key');return;}
+  const prev=_vnssState();
+  v.state='running';v.enabled=true;saveCfg();
+  _vanessaRestartInterval();
+  _vnssRefreshHero();
+  showToast('▶ Vanessa avviata');
+  if(prev!=='running') setTimeout(_vanessaRun,600);
+}
+function _vnssPause(){
+  const v=_vanessaGetCfg();
+  v.state='paused';v.enabled=false;saveCfg();
+  if(_vanessaIntervalId){clearInterval(_vanessaIntervalId);_vanessaIntervalId=null;}
+  _vnssRefreshHero();
+  showToast('⏸ Vanessa in pausa');
+}
+function _vnssStop(){
+  const v=_vanessaGetCfg();
+  v.state='stopped';v.enabled=false;saveCfg();
+  if(_vanessaIntervalId){clearInterval(_vanessaIntervalId);_vanessaIntervalId=null;}
+  _vanessaNextRunTs=0;
+  _vnssRefreshHero();
+  showToast('⏹ Vanessa arrestata');
+}
+function _vnssForceRun(){
+  if(_vnssState()==='stopped'){showToast('⚠️ Avvia prima Vanessa');return;}
+  showToast('⚡ Analisi forzata in corso…');
+  _vanessaRun();
+}
+function _vnssRefreshHero(){
+  const v=_vanessaGetCfg();
+  const state=_vnssState();
+  const stats=v.stats||{};
+  const badge=document.getElementById('vnss-badge');
+  if(badge){
+    const cfgs={
+      running:{bg:'rgba(74,222,128,.15)',bd:'rgba(74,222,128,.4)',col:'#4ade80',dot:'#4ade80',anim:'animation:vnss-pulse 1.5s ease infinite',lbl:'ATTIVA'},
+      paused:{bg:'rgba(251,191,36,.12)',bd:'rgba(251,191,36,.3)',col:'#fbbf24',dot:'#fbbf24',anim:'',lbl:'IN PAUSA'},
+      stopped:{bg:'rgba(255,255,255,.06)',bd:'rgba(255,255,255,.12)',col:'rgba(255,255,255,.3)',dot:'rgba(255,255,255,.3)',anim:'',lbl:'INATTIVA'}
+    };
+    const sc=cfgs[state]||cfgs.stopped;
+    badge.style.cssText=`font-size:9px;font-weight:800;letter-spacing:.1em;padding:3px 9px;border-radius:20px;background:${sc.bg};border:1px solid ${sc.bd};color:${sc.col}`;
+    badge.innerHTML=`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${sc.dot};margin-right:4px;${sc.anim};vertical-align:middle"></span>${sc.lbl}`;
+  }
+  const stateButtons={running:'vnss-state-running',paused:'vnss-state-paused',stopped:'vnss-state-stopped'};
+  const activeBg={running:'rgba(74,222,128,.22)',paused:'rgba(251,191,36,.18)',stopped:'rgba(248,113,113,.18)'};
+  const activeBd={running:'rgba(74,222,128,.6)',paused:'rgba(251,191,36,.6)',stopped:'rgba(248,113,113,.6)'};
+  Object.entries(stateButtons).forEach(([s,id])=>{
+    const btn=document.getElementById(id); if(!btn) return;
+    const active=state===s;
+    btn.style.background=active?activeBg[s]:'rgba(255,255,255,.05)';
+    btn.style.borderColor=active?activeBd[s]:'rgba(255,255,255,.12)';
+    btn.style.color=active?(s==='running'?'#4ade80':s==='paused'?'#fbbf24':'#f87171'):'rgba(255,255,255,.4)';
+    btn.style.boxShadow=active?`0 0 12px ${activeBd[s]}`:'none';
+    btn.style.transform=active?'scale(1.05)':'scale(1)';
+  });
+  const statEl=document.getElementById('vnss-stats-bar');
+  if(statEl) statEl.innerHTML=_vnssStatsHtml(stats);
+  _vanessaUpdateStatus();
+}
+function _vnssStatsHtml(stats){
+  const t=stats.total||0;
+  if(!t) return `<span style="font-size:9px;color:rgba(255,255,255,.2)">Nessuna decisione ancora</span>`;
+  const r=stats.run||0,sk=stats.skip||0,dl=stats.delay||0;
+  return `<span style="font-size:9px;color:rgba(255,255,255,.3)">${t} decisioni —</span> <span style="font-size:9px;color:#4ade80">✅ ${r}</span> <span style="font-size:9px;color:rgba(255,255,255,.2)">·</span> <span style="font-size:9px;color:#94a3b8">⏭ ${sk}</span> <span style="font-size:9px;color:rgba(255,255,255,.2)">·</span> <span style="font-size:9px;color:#fbbf24">⏱ ${dl}</span>`;
+}
+
 const _vnssModels={
   gemini:['gemini-2.0-flash','gemini-2.0-flash-lite','gemini-1.5-pro'],
   openai:['gpt-4o-mini','gpt-4o','gpt-3.5-turbo'],
@@ -15931,6 +16006,14 @@ function _vanessaRenderSettings(){
     {id:'config',icon:'⚙️',label:'Config'},
   ];
 
+  const state=_vnssState();
+  const providerLbl={gemini:'Gemini',openai:'OpenAI',claude:'Claude'}[v.provider||'gemini']||v.provider||'Gemini';
+  const modelShort=(v.model||'').replace(/gemini-|claude-|gpt-/g,'')||'default';
+  const stateCfg={
+    running:{bg:'linear-gradient(135deg,#051a0c 0%,#071e1a 45%,#081020 100%)',bd:'rgba(74,222,128,.35)',glow:'rgba(74,222,128,.12)',grid:'rgba(74,222,128,.06)',scan:'#4ade80',dinoFilter:'drop-shadow(0 0 14px rgba(74,222,128,.65))'},
+    paused:{bg:'linear-gradient(135deg,#1a1200 0%,#1c1500 45%,#0c1020 100%)',bd:'rgba(251,191,36,.3)',glow:'rgba(251,191,36,.08)',grid:'rgba(251,191,36,.05)',scan:'#fbbf24',dinoFilter:'drop-shadow(0 0 12px rgba(251,191,36,.55))'},
+    stopped:{bg:'linear-gradient(135deg,#0d0620 0%,#1a0a3e 45%,#0c1a3e 100%)',bd:'rgba(124,58,237,.38)',glow:'rgba(124,58,237,.05)',grid:'rgba(124,58,237,.07)',scan:'#c084fc',dinoFilter:'drop-shadow(0 0 10px rgba(124,58,237,.4)) grayscale(.35)'},
+  }[state]||{bg:'linear-gradient(135deg,#0d0620 0%,#1a0a3e 45%,#0c1a3e 100%)',bd:'rgba(124,58,237,.38)',glow:'rgba(124,58,237,.05)',grid:'rgba(124,58,237,.07)',scan:'#c084fc',dinoFilter:'drop-shadow(0 0 10px rgba(124,58,237,.4)) grayscale(.35)'};
   pane.innerHTML=`
 <style>
 @keyframes vnss-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
@@ -15942,24 +16025,27 @@ function _vanessaRenderSettings(){
 </style>
 
 <!-- HERO -->
-<div style="position:relative;overflow:hidden;border-radius:20px;background:linear-gradient(135deg,#0d0620 0%,#1a0a3e 45%,#0c1a3e 100%);border:1px solid rgba(124,58,237,.38);margin-bottom:14px">
-  <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(124,58,237,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(124,58,237,.07) 1px,transparent 1px);background-size:24px 24px;pointer-events:none"></div>
-  <div style="position:absolute;inset:0;overflow:hidden;opacity:.05;pointer-events:none"><div style="width:100%;height:2px;background:linear-gradient(90deg,transparent,#c084fc,transparent);animation:vnss-scan 3s linear infinite"></div></div>
-  <div style="position:relative;display:flex;align-items:center;padding:14px 18px 14px 12px;gap:0">
-    <div style="width:90px;height:90px;flex-shrink:0;animation:vnss-float 4s ease-in-out infinite;filter:drop-shadow(0 0 10px rgba(74,222,128,.4))">${dinoSvg}</div>
-    <div style="flex:1;padding-left:6px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
-        <div style="font-size:24px;font-weight:900;letter-spacing:-.02em;background:linear-gradient(135deg,#c084fc,#818cf8,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">VANESSA</div>
-        <div id="vnss-badge" style="font-size:9px;font-weight:800;letter-spacing:.1em;padding:3px 9px;border-radius:20px;${v.enabled?'background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.4);color:#4ade80':'background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.3)'}">
-          ${v.enabled?`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#4ade80;margin-right:4px;animation:vnss-pulse 1.5s ease infinite;vertical-align:middle"></span>ATTIVA`:'INATTIVA'}
+<div style="position:relative;overflow:hidden;border-radius:20px;background:${stateCfg.bg};border:1px solid ${stateCfg.bd};margin-bottom:14px;transition:background .4s,border-color .4s;box-shadow:0 0 36px ${stateCfg.glow}">
+  <div style="position:absolute;inset:0;background-image:linear-gradient(${stateCfg.grid} 1px,transparent 1px),linear-gradient(90deg,${stateCfg.grid} 1px,transparent 1px);background-size:24px 24px;pointer-events:none"></div>
+  <div style="position:absolute;inset:0;overflow:hidden;opacity:.06;pointer-events:none"><div style="width:100%;height:2px;background:linear-gradient(90deg,transparent,${stateCfg.scan},transparent);animation:vnss-scan 3s linear infinite"></div></div>
+  <div style="position:relative;padding:14px 16px 12px">
+    <div style="display:flex;align-items:flex-start;gap:10px">
+      <div style="width:80px;height:80px;flex-shrink:0;animation:vnss-float 4s ease-in-out infinite;filter:${stateCfg.dinoFilter};transition:filter .4s">${dinoSvg}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+          <div style="font-size:22px;font-weight:900;letter-spacing:-.02em;background:linear-gradient(135deg,#c084fc,#818cf8,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">VANESSA</div>
+          <div id="vnss-badge" style="font-size:9px;font-weight:800;letter-spacing:.1em;padding:3px 9px;border-radius:20px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.3)">INATTIVA</div>
         </div>
+        <div style="font-size:10px;color:rgba(192,132,252,.6);font-weight:600;margin-bottom:4px;letter-spacing:.02em">${providerLbl} · ${modelShort} — Motore decisionale AI</div>
+        <div id="vnss-stats-bar" style="min-height:14px;margin-bottom:4px"></div>
+        <div id="vnss-live-status" style="min-height:14px"></div>
       </div>
-      <div style="font-size:11px;color:rgba(192,132,252,.75);font-weight:600;margin-bottom:5px">Motore decisionale AI autonomo</div>
-      <div id="vnss-live-status" style="min-height:16px"></div>
     </div>
-    <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0;margin-left:10px">
-      <label class="toggle-sw" style="transform:scale(1.25)"><input type="checkbox" id="vnss-on" ${v.enabled?'checked':''}><span class="toggle-slider"></span></label>
-      <span id="vnss-onlbl" style="font-size:9px;color:rgba(255,255,255,.3);font-weight:700;letter-spacing:.05em">${v.enabled?'ON':'OFF'}</span>
+    <div style="display:flex;align-items:center;gap:6px;margin-top:11px;flex-wrap:wrap">
+      <button id="vnss-state-running" style="display:flex;align-items:center;gap:5px;padding:6px 14px;border-radius:10px;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:rgba(255,255,255,.4);font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.03em">▶ Avvia</button>
+      <button id="vnss-state-paused" style="display:flex;align-items:center;gap:5px;padding:6px 14px;border-radius:10px;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:rgba(255,255,255,.4);font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.03em">⏸ Pausa</button>
+      <button id="vnss-state-stopped" style="display:flex;align-items:center;gap:5px;padding:6px 14px;border-radius:10px;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:rgba(255,255,255,.4);font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.03em">⏹ Arresta</button>
+      <button id="vnss-force-run" style="display:flex;align-items:center;gap:5px;padding:6px 14px;border-radius:10px;border:1.5px solid rgba(251,191,36,.3);background:rgba(251,191,36,.08);color:rgba(251,191,36,.75);font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.03em;margin-left:auto">⚡ Esegui ora</button>
     </div>
   </div>
 </div>
@@ -15975,16 +16061,12 @@ function _vanessaRenderSettings(){
 <!-- CONTENUTO TAB -->
 <div id="vnss-main-content" style="background:rgba(255,255,255,.02);border:1px solid rgba(124,58,237,.14);border-radius:16px;overflow:hidden;min-height:200px"></div>`;
 
-  // Toggle ON/OFF
-  document.getElementById('vnss-on')?.addEventListener('change',e=>{
-    const on=e.target.checked;
-    const badge=document.getElementById('vnss-badge');
-    if(badge){
-      badge.style.cssText=on?'font-size:9px;font-weight:800;letter-spacing:.1em;padding:3px 9px;border-radius:20px;background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.4);color:#4ade80':'font-size:9px;font-weight:800;letter-spacing:.1em;padding:3px 9px;border-radius:20px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.3)';
-      badge.innerHTML=on?`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#4ade80;margin-right:4px;animation:vnss-pulse 1.5s ease infinite;vertical-align:middle"></span>ATTIVA`:'INATTIVA';
-    }
-    const lbl=document.getElementById('vnss-onlbl'); if(lbl) lbl.textContent=on?'ON':'OFF';
-  });
+  // State buttons
+  document.getElementById('vnss-state-running')?.addEventListener('click',_vnssPlay);
+  document.getElementById('vnss-state-paused')?.addEventListener('click',_vnssPause);
+  document.getElementById('vnss-state-stopped')?.addEventListener('click',_vnssStop);
+  document.getElementById('vnss-force-run')?.addEventListener('click',_vnssForceRun);
+  _vnssRefreshHero();
   // Nav tab click
   pane.querySelectorAll('[data-vnmt]').forEach(btn=>{
     btn.addEventListener('click',()=>_vnssRenderMainTab(btn.dataset.vnmt));
@@ -15999,9 +16081,6 @@ function _vanessaRenderSettings(){
 
 function _vanessaSave(){
   const v=_vanessaGetCfg();
-  const wasEnabled=!!v.enabled; // cattura PRIMA di modificare
-  const _vnssOnEl=document.getElementById('vnss-on');
-  v.enabled=_vnssOnEl ? !!_vnssOnEl.checked : (v.enabled!==undefined ? v.enabled : true);
   v.provider=document.getElementById('vnss-prov')?.value||'gemini';
   if(!v.apiKeys) v.apiKeys={};
   const keyEl=document.getElementById('vnss-key');
@@ -16013,9 +16092,9 @@ function _vanessaSave(){
   v.intervalMin=parseInt(document.getElementById('vnss-interval')?.value||'30',10)||30;
   saveCfg();
   _vanessaRestartInterval();
-  if(v.enabled&&!wasEnabled) setTimeout(_vanessaRun,800);
   showToast('✅ Vanessa salvata!');
   _vanessaRenderSettings();
+  _vnssRefreshHero();
 }
 
 async function _vanessaTest(){
@@ -16231,23 +16310,44 @@ ORA: ${now.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'
       p+=`  ${lbl}: ${s.state}${s.attributes?.unit_of_measurement?' '+s.attributes.unit_of_measurement:''}\n`;
     }
   }
+  // Contesto altri dispositivi gestiti da Vanessa
+  const otherCards=[];
+  for(const pg of cfg.pages||[]) for(const c of pg.cards||[]){
+    if(c.id===card.id||c.vanessaEnabled===false) continue;
+    const eid2=c.vanessaEntityId||c.entity||''; if(!eid2) continue;
+    const st2=hass.states[eid2]; if(!st2) continue;
+    const activeTimer2=_vanessaOffTimers[c.id];
+    const extra2=activeTimer2&&activeTimer2.expiresTs>Date.now()?` (attivo, spegne tra ${Math.round((activeTimer2.expiresTs-Date.now())/60000)}min)`:'';
+    otherCards.push(`  ${c.label||c.id}: ${st2.state}${extra2}`);
+  }
+  if(otherCards.length) p+=`ALTRI DISPOSITIVI VANESSA:\n${otherCards.join('\n')}\n`;
+  // Dispositivo target
   const eid=card.vanessaEntityId||card.entity||'';
   p+=`\nDISPOSITIVO: ${card.label||card.id}`;
-  if(eid&&hass.states[eid]) p+=` — stato: ${hass.states[eid].state}`;
+  if(eid&&hass.states[eid]) p+=` — stato attuale: ${hass.states[eid].state}`;
   const criteria=card.vanessaCriteria||card.vanessaContext||'';
   if(criteria) p+=`\nCRITERI: ${criteria}`;
-  if(card.vanessaTimeFrom&&card.vanessaTimeTo) p+=`\nOrario: ${card.vanessaTimeFrom}–${card.vanessaTimeTo}`;
+  if(card.vanessaTimeFrom&&card.vanessaTimeTo) p+=`\nOrario operativo: ${card.vanessaTimeFrom}–${card.vanessaTimeTo}`;
   const durationHint=parseInt(card.vanessaDurationHint||0);
-  if(durationHint>0) p+=`\nDurata tipica: ${durationHint} min (usa questo come riferimento)`;
-  else p+=`\nduration_min=0 (consigliato: la card gestisce il timer internamente)`;
+  if(durationHint>0) p+=`\nDurata tipica: ${durationHint} min`;
+  else p+=`\nduration_min=0 (la card gestisce il timer internamente)`;
   const actTimer=_vanessaOffTimers[card.id];
   if(actTimer&&actTimer.expiresTs>Date.now()){
     const minsLeft=Math.round((actTimer.expiresTs-Date.now())/60000);
-    p+=`\nATTENZIONE: già attivo, spegnimento automatico tra ${minsLeft} min — non riattivare.`;
+    p+=`\nATTENZIONE: già attivo, spegnimento automatico tra ${minsLeft} min — NON riattivare.`;
   }
-  p+=`\n\nINIZIA DIRETTAMENTE con { senza testo prima. JSON su UNA RIGA:
+  // Ultime 3 decisioni per questa card (contesto storico)
+  const cardLog=((v.log||[]).filter(e=>e.cardId===card.id)).slice(0,3);
+  if(cardLog.length){
+    p+=`\nSTORIA RECENTE:\n`;
+    for(const e of cardLog){
+      const t=e.ts?new Date(e.ts).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}):'?';
+      p+=`  [${t}] ${e.action}${e.reason?' — '+e.reason:''}\n`;
+    }
+  }
+  p+=`\nINIZIA DIRETTAMENTE con { senza testo prima. JSON su UNA RIGA:
 {"action":"skip","delay_min":0,"duration_min":0,"reason":"3-5 parole","detail":"2-3 frasi: ora, condizioni, decisione."}
-action: run=attiva, skip=non attivare, delay=rimanda di delay_min. duration_min=0 salvo motivo specifico.`;
+action: run=attiva ora, skip=non attivare, delay=rimanda di delay_min minuti. duration_min=0 salvo motivo specifico.`;
   return p;
 }
 
@@ -16338,12 +16438,15 @@ async function _vanessaRunCard(cardId, force){
   const logEntry={ts:Date.now(),cardId,cardLabel:card.label||card.id,action:decision.action,reason:decision.reason||'',detail:decision.detail||''};
   v.log.unshift(logEntry);
   v.log=v.log.slice(0,50);
+  if(!v.stats) v.stats={};
+  v.stats[decision.action]=(v.stats[decision.action]||0)+1;
+  v.stats.total=(v.stats.total||0)+1;
   saveCfg();
   if(decision.action!=='delay') showToast(`🧠 ${card.label||card.id}: ${decision.action==='run'?'✅ Attivato':'⏭ Saltato'} — ${decision.reason||''}`);
   try{ _vanessaDecisionPopup(card, decision); }catch(_){}
   try{_vanessaRenderLog();}catch(_){}
   try{_vanessaRenderCards();}catch(_){}
-  try{_vanessaUpdateStatus();}catch(_){}
+  try{_vnssRefreshHero();}catch(_){}
 }
 
 function _vanessaDecisionPopup(card, decision){
@@ -16447,7 +16550,7 @@ function _vanessaDecisionPopup(card, decision){
 let _vanessaNextRunTs=0;
 function _vanessaRun(){
   const v=_vanessaGetCfg();
-  if(!v.enabled) return;
+  if(_vnssState()!=='running') return;
   const apiKey=(v.apiKeys&&v.apiKeys[v.provider])||v.apiKey||'';
   if(!apiKey) return;
   const cards=[];
@@ -16465,7 +16568,7 @@ let _vanessaIntervalId=null;
 function _vanessaRestartInterval(){
   if(_vanessaIntervalId){ clearInterval(_vanessaIntervalId); _vanessaIntervalId=null; }
   const v=_vanessaGetCfg();
-  if(!v.enabled) return;
+  if(_vnssState()!=='running') return;
   const ms=(v.intervalMin||30)*60000;
   _vanessaNextRunTs=Date.now()+ms;
   _vanessaIntervalId=setInterval(_vanessaRun,ms);
@@ -16475,17 +16578,19 @@ function _vanessaRestartInterval(){
 function _vanessaUpdateStatus(){
   const el=document.getElementById('vnss-live-status'); if(!el) return;
   const v=_vanessaGetCfg();
-  if(!v.enabled){ el.innerHTML=''; return; }
+  const state=_vnssState();
+  if(state==='stopped'){ el.innerHTML='<span style="font-size:10px;color:rgba(255,255,255,.2)">Vanessa è arrestata</span>'; return; }
+  if(state==='paused'){ el.innerHTML='<span style="font-size:10px;color:#fbbf24">⏸ In pausa — clicca ▶ per riprendere</span>'; return; }
   const now=Date.now();
   const secLeft=Math.max(0,Math.round((_vanessaNextRunTs-now)/1000));
-  const minLeft=Math.floor(secLeft/60), secRem=secLeft%60;
+  const minLeft=Math.floor(secLeft/60),secRem=secLeft%60;
   const timeStr=secLeft>0?(minLeft>0?`${minLeft}m ${secRem}s`:`${secLeft}s`):'adesso';
   const lastLog=(v.log||[])[0];
-  const lastStr=lastLog?`<span style="color:${lastLog.action==='run'?'#4ade80':lastLog.action==='skip'?'#f87171':'#fbbf24'}">${lastLog.action==='run'?'✅':'⏭'} ${eh(lastLog.cardLabel||'')} — ${eh(lastLog.reason||'')}</span>`:'<span style="opacity:.4">nessuna ancora</span>';
-  el.innerHTML=`<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:10px;color:rgba(255,255,255,.45)">
-    <span>⏱ Prossima valutazione: <b style="color:#fbbf24">${timeStr}</b></span>
-    <span>|</span>
-    <span>Ultima: ${lastStr}</span>
+  const lastStr=lastLog?`<span style="color:${lastLog.action==='run'?'#4ade80':lastLog.action==='skip'?'#64748b':'#fbbf24'}">${lastLog.action==='run'?'✅':'⏭'} ${eh(lastLog.cardLabel||'')} — ${eh(lastLog.reason||'').slice(0,30)}</span>`:'<span style="opacity:.35">—</span>';
+  el.innerHTML=`<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:10px;color:rgba(255,255,255,.4)">
+    <span>⏱ Prossima: <b style="color:#fbbf24">${timeStr}</b></span>
+    <span style="opacity:.3">|</span>
+    <span>${lastStr}</span>
   </div>`;
 }
 
