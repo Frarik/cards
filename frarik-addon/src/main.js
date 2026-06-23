@@ -10050,6 +10050,8 @@ function _registerLovelaceCard(tag, meta){
       cel.classList.add('frarik-lovel');
       try{ cel.hass=_haHassObj(); }catch(e){}
       cel.style.cssText='display:block;width:100%';
+      try{ cel._frarikCard=card; }catch(e){}
+      try{ cel.style.setProperty('--fgear','flex'); }catch(e){}
       host.appendChild(cel);
     },
     update(card, _h, el){
@@ -10059,7 +10061,11 @@ function _registerLovelaceCard(tag, meta){
     },
     configure(card, el){
       const cel=el&&el.querySelector('.frarik-lovel');
-      if(cel&&typeof cel.configure==='function') cel.configure(card);
+      if(!cel) return;
+      try{ cel._frarikCard=card; }catch(e){}
+      const ov=el.parentElement?.querySelector(':scope>.card-ov');
+      if(ov) ov.style.pointerEvents='none';
+      if(typeof cel.configure==='function') cel.configure(card);
     }
   };
 }
@@ -15235,26 +15241,24 @@ document.addEventListener('webkitfullscreenchange',_syncKioskFromFS);
 
 /* ═══════════════════════════════════════════════════════════════════════════
    VANESSA AI — motore decisionale autonomo per card JS
-   Provider: Google Gemini (default) | OpenAI | Ollama locale
+   Provider: Google Gemini (default) | OpenAI | Claude
 ═══════════════════════════════════════════════════════════════════════════ */
 function _vanessaGetCfg(){ if(!cfg.vanessa) cfg.vanessa={}; return cfg.vanessa; }
 
 const _vnssModels={
   gemini:['gemini-2.0-flash','gemini-2.0-flash-lite','gemini-1.5-pro'],
   openai:['gpt-4o-mini','gpt-4o','gpt-3.5-turbo'],
-  claude:['claude-haiku-4-5-20251001','claude-sonnet-4-6','claude-opus-4-8'],
-  ollama:['llama3.2','mistral','gemma2','qwen2.5']
+  claude:['claude-haiku-4-5-20251001','claude-sonnet-4-6','claude-opus-4-8']
 };
 function _vnssIsConfigured(){
   const v=_vanessaGetCfg();
-  if(v.provider==='ollama') return true;
   return !!((v.apiKeys&&v.apiKeys[v.provider])||v.apiKey);
 }
 
 function _vnssRenderSetupGate(pane, dinoSvg){
   const v=_vanessaGetCfg();
   const cur=v.provider||'gemini';
-  const ph={gemini:'gemini-2.0-flash',openai:'gpt-4o-mini',ollama:'llama3.2',claude:'claude-haiku-4-5-20251001'};
+  const ph={gemini:'gemini-2.0-flash',openai:'gpt-4o-mini',claude:'claude-haiku-4-5-20251001'};
   const inp=`width:100%;background:rgba(124,58,237,.1);border:1.5px solid rgba(124,58,237,.25);border-radius:11px;padding:11px 14px;color:#e2e8f0;font-size:13px;box-sizing:border-box;outline:none`;
   pane.innerHTML=`
 <style>
@@ -15263,7 +15267,7 @@ function _vnssRenderSetupGate(pane, dinoSvg){
 @keyframes vnss-scan{0%{transform:translateY(-100%)}100%{transform:translateY(400%)}}
 .vnss-prov-btn{background:rgba(124,58,237,.1);border:1.5px solid rgba(124,58,237,.2);border-radius:13px;padding:11px 14px;cursor:pointer;transition:all .2s;display:flex;align-items:center;color:rgba(255,255,255,.5);font-size:10px;font-weight:700;text-align:left}
 .vnss-prov-btn:hover{border-color:rgba(192,132,252,.5);background:rgba(124,58,237,.2);color:#e2e8f0}
-#vnss-key:focus,#vnss-ollama:focus{border-color:rgba(192,132,252,.7)!important;box-shadow:0 0 0 3px rgba(124,58,237,.15)!important}
+#vnss-key:focus{border-color:rgba(192,132,252,.7)!important;box-shadow:0 0 0 3px rgba(124,58,237,.15)!important}
 </style>
 
 <!-- HERO SETUP -->
@@ -15286,7 +15290,7 @@ function _vnssRenderSetupGate(pane, dinoSvg){
   <!-- Provider -->
   <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(192,132,252,.6);text-transform:uppercase;margin-bottom:10px">🤖 Scegli il provider AI</div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px" id="vnss-prov-wrap">
-    ${[['gemini','✦','Gemini','Google · gratis'],['openai','⬡','OpenAI','GPT · pay-per-use'],['claude','🧡','Claude','Anthropic · potente'],['ollama','🏠','Ollama','Locale · privato']].map(([p,ico,name,sub])=>`
+    ${[['gemini','✦','Gemini','Google · gratis'],['openai','⬡','OpenAI','GPT · pay-per-use'],['claude','🧡','Claude','Anthropic · potente']].map(([p,ico,name,sub])=>`
     <button class="vnss-prov-btn${cur===p?' active':''}" data-prov="${p}" style="${cur===p?'border-color:#c084fc;background:rgba(124,58,237,.28);color:#fff;box-shadow:0 0 14px rgba(124,58,237,.3)':''}">
       <span style="font-size:22px;margin-right:10px">${ico}</span>
       <div><div style="font-size:13px;font-weight:800">${name}</div><div style="font-size:10px;opacity:.55">${sub}</div></div>
@@ -15294,10 +15298,10 @@ function _vnssRenderSetupGate(pane, dinoSvg){
   </div>
   <input type="hidden" id="vnss-prov" value="${cur}">
 
-  <!-- API Key / Ollama URL -->
-  <div id="vnss-key-row" style="${cur==='ollama'?'display:none':''}margin-bottom:18px">
+  <!-- API Key -->
+  <div id="vnss-key-row" style="margin-bottom:18px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(192,132,252,.6);text-transform:uppercase">🔑 API Key — <span id="vnss-key-prov-lbl">${{gemini:'Google Gemini',openai:'OpenAI',claude:'Anthropic Claude',ollama:'Ollama'}[cur]||cur}</span></div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(192,132,252,.6);text-transform:uppercase">🔑 API Key — <span id="vnss-key-prov-lbl">${{gemini:'Google Gemini',openai:'OpenAI',claude:'Anthropic Claude'}[cur]||cur}</span></div>
       <div id="vnss-key-status" style="font-size:10px;font-weight:700"></div>
     </div>
     <div style="display:flex;gap:8px">
@@ -15306,18 +15310,11 @@ function _vnssRenderSetupGate(pane, dinoSvg){
     </div>
     <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:6px">La chiave viene salvata localmente e non condivisa</div>
   </div>
-  <div id="vnss-ollama-row" style="margin-bottom:18px;${cur!=='ollama'?'display:none':''}">
-    <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(192,132,252,.6);text-transform:uppercase;margin-bottom:8px">🌐 URL Ollama</div>
-    <div style="display:flex;gap:8px">
-      <input type="text" id="vnss-ollama" style="${inp};flex:1" value="${eh(v.ollamaUrl||'http://localhost:11434')}" placeholder="http://localhost:11434">
-      <button id="vnss-validate-btn" style="background:rgba(74,222,128,.12);border:1.5px solid rgba(74,222,128,.3);color:#4ade80;border-radius:10px;padding:0 16px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap">🔍 Valida</button>
-    </div>
-  </div>
 
   <button data-action="_vanessaSave" style="width:100%;background:linear-gradient(135deg,rgba(124,58,237,.55),rgba(99,102,241,.4));border:1.5px solid rgba(192,132,252,.5);color:#fff;border-radius:13px;padding:15px;font-size:14px;font-weight:900;cursor:pointer;letter-spacing:.03em">✨ Configura Vanessa</button>
 </div>`;
 
-  const ph2={gemini:'Google Gemini',openai:'OpenAI',claude:'Anthropic Claude',ollama:'Ollama'};
+  const ph2={gemini:'Google Gemini',openai:'OpenAI',claude:'Anthropic Claude'};
   pane.querySelectorAll('.vnss-prov-btn').forEach(btn=>{
     btn.addEventListener('click',()=>{
       const p=btn.dataset.prov;
@@ -15329,8 +15326,6 @@ function _vnssRenderSetupGate(pane, dinoSvg){
         b.style.boxShadow=b===btn?'0 0 14px rgba(124,58,237,.3)':'';
         b.classList.toggle('active',b===btn);
       });
-      document.getElementById('vnss-key-row').style.display=p==='ollama'?'none':'';
-      document.getElementById('vnss-ollama-row').style.display=p==='ollama'?'':'none';
       const kf=document.getElementById('vnss-key'); if(kf){const vv=_vanessaGetCfg();kf.value=(vv.apiKeys&&vv.apiKeys[p])||'';}
       const lbl=document.getElementById('vnss-key-prov-lbl'); if(lbl) lbl.textContent=ph2[p]||p;
       const ks=document.getElementById('vnss-key-status'); if(ks) ks.innerHTML='';
@@ -15527,26 +15522,26 @@ function _vnssHtmlAmbiente(){
 function _vnssHtmlConfig(){
   const v=_vanessaGetCfg();
   const cur=v.provider||'gemini';
-  const ph={gemini:'gemini-2.0-flash',openai:'gpt-4o-mini',ollama:'llama3.2',claude:'claude-haiku-4-5-20251001'};
+  const ph={gemini:'gemini-2.0-flash',openai:'gpt-4o-mini',claude:'claude-haiku-4-5-20251001'};
   const inp=`width:100%;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.22);border-radius:10px;padding:9px 13px;color:#e2e8f0;font-size:12px;box-sizing:border-box;outline:none`;
   const inpBlue=inp.replace('rgba(124,58,237,.08)','rgba(56,189,248,.07)').replace('rgba(124,58,237,.22)','rgba(56,189,248,.2)');
   const sec=(t,i)=>`<div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(192,132,252,.6);text-transform:uppercase;margin-bottom:8px">${i} ${t}</div>`;
-  const provNames={gemini:'Google Gemini',openai:'OpenAI',claude:'Anthropic Claude',ollama:'Ollama'};
+  const provNames={gemini:'Google Gemini',openai:'OpenAI',claude:'Anthropic Claude'};
   return `<div style="padding:16px;display:flex;flex-direction:column;gap:16px">
   <!-- Provider -->
   <div>
     ${sec('Cervello AI','🤖')}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="vnss-prov-wrap">
-      ${['gemini','openai','claude','ollama'].map(p=>{
-        const icons2={gemini:'✦',openai:'⬡',claude:'🧡',ollama:'🏠'};
-        const subs={gemini:'Google · gratis',openai:'GPT · a consumo',claude:'Anthropic · potente',ollama:'Locale · privato'};
+      ${['gemini','openai','claude'].map(p=>{
+        const icons2={gemini:'✦',openai:'⬡',claude:'🧡'};
+        const subs={gemini:'Google · gratis',openai:'GPT · a consumo',claude:'Anthropic · potente'};
         return `<button class="vnss-prov-btn${cur===p?' active':''}" data-prov="${p}" style="background:${cur===p?'rgba(124,58,237,.28)':'rgba(124,58,237,.1)'};border:1.5px solid ${cur===p?'#c084fc':'rgba(124,58,237,.2)'};border-radius:12px;padding:10px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;color:${cur===p?'#fff':'rgba(255,255,255,.5)'}"><span style="font-size:20px">${icons2[p]}</span><div style="text-align:left"><div style="font-size:12px;font-weight:800">${p.charAt(0).toUpperCase()+p.slice(1)}</div><div style="font-size:9px;opacity:.6">${subs[p]}</div></div></button>`;
       }).join('')}
     </div>
     <input type="hidden" id="vnss-prov" value="${cur}">
   </div>
   <!-- API Key -->
-  <div id="vnss-key-row" style="${cur==='ollama'?'display:none':''}">
+  <div id="vnss-key-row">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
       <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(192,132,252,.6);text-transform:uppercase">🔑 API Key — <span id="vnss-key-prov-lbl">${provNames[cur]||cur}</span></div>
       <div id="vnss-key-status" style="font-size:10px;font-weight:700"></div>
@@ -15554,14 +15549,6 @@ function _vnssHtmlConfig(){
     <div style="display:flex;gap:8px">
       <input type="password" id="vnss-key" style="${inp};flex:1" value="${eh((v.apiKeys&&v.apiKeys[cur])||v.apiKey||'')}" placeholder="Incolla la chiave API">
       <button id="vnss-validate-btn" style="background:rgba(74,222,128,.12);border:1.5px solid rgba(74,222,128,.28);color:#4ade80;border-radius:10px;padding:0 14px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap">🔍 Valida</button>
-    </div>
-  </div>
-  <!-- Ollama URL -->
-  <div id="vnss-ollama-row" style="${cur!=='ollama'?'display:none':''}">
-    <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(192,132,252,.6);text-transform:uppercase;margin-bottom:7px">🌐 URL Ollama</div>
-    <div style="display:flex;gap:8px">
-      <input type="text" id="vnss-ollama" style="${inp};flex:1" value="${eh(v.ollamaUrl||'http://localhost:11434')}" placeholder="http://localhost:11434">
-      <button id="vnss-validate-btn-ol" style="background:rgba(74,222,128,.12);border:1.5px solid rgba(74,222,128,.28);color:#4ade80;border-radius:10px;padding:0 14px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap">🔍 Valida</button>
     </div>
   </div>
   <!-- Modello -->
@@ -15604,8 +15591,8 @@ function _vnssHtmlConfig(){
 function _vnssWireConfig(){
   const v=_vanessaGetCfg();
   const cur=()=>document.getElementById('vnss-prov')?.value||'gemini';
-  const provNames={gemini:'Google Gemini',openai:'OpenAI',claude:'Anthropic Claude',ollama:'Ollama'};
-  const ph={gemini:'gemini-2.0-flash',openai:'gpt-4o-mini',ollama:'llama3.2',claude:'claude-haiku-4-5-20251001'};
+  const provNames={gemini:'Google Gemini',openai:'OpenAI',claude:'Anthropic Claude'};
+  const ph={gemini:'gemini-2.0-flash',openai:'gpt-4o-mini',claude:'claude-haiku-4-5-20251001'};
   document.getElementById('vnss-prov-wrap')?.querySelectorAll('.vnss-prov-btn').forEach(btn=>{
     btn.addEventListener('click',()=>{
       const p=btn.dataset.prov;
@@ -15616,8 +15603,6 @@ function _vnssWireConfig(){
         b.style.borderColor=b===btn?'#c084fc':'rgba(124,58,237,.2)';
         b.style.color=b===btn?'#fff':'rgba(255,255,255,.5)';
       });
-      document.getElementById('vnss-key-row').style.display=p==='ollama'?'none':'';
-      document.getElementById('vnss-ollama-row').style.display=p==='ollama'?'':'none';
       const kf=document.getElementById('vnss-key');
       if(kf) kf.value=(vv.apiKeys&&vv.apiKeys[p])||'';
       const lbl=document.getElementById('vnss-key-prov-lbl');
@@ -15703,7 +15688,7 @@ function _vanessaRenderSettings(){
 @keyframes vnss-scan{0%{transform:translateY(-100%)}100%{transform:translateY(400%)}}
 .vnss-prov-btn{background:rgba(124,58,237,.1);border:1.5px solid rgba(124,58,237,.2);border-radius:12px;padding:10px 12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;color:rgba(255,255,255,.5);font-size:10px;font-weight:700;text-align:left}
 .vnss-prov-btn:hover{border-color:rgba(192,132,252,.5);background:rgba(124,58,237,.2);color:#e2e8f0}
-#vnss-model:focus,#vnss-weather:focus,#vnss-sensors:focus,#vnss-interval:focus,#vnss-ollama:focus,#vnss-key:focus{border-color:rgba(192,132,252,.7)!important;box-shadow:0 0 0 3px rgba(124,58,237,.15)!important}
+#vnss-model:focus,#vnss-weather:focus,#vnss-sensors:focus,#vnss-interval:focus,#vnss-key:focus{border-color:rgba(192,132,252,.7)!important;box-shadow:0 0 0 3px rgba(124,58,237,.15)!important}
 </style>
 
 <!-- HERO -->
@@ -15771,7 +15756,6 @@ function _vanessaSave(){
   const keyEl=document.getElementById('vnss-key');
   if(keyEl&&keyEl.value.trim()) v.apiKeys[v.provider]=keyEl.value.trim();
   v.apiKey=v.apiKeys[v.provider]||''; // backward compat
-  v.ollamaUrl=document.getElementById('vnss-ollama')?.value?.trim()||'http://localhost:11434';
   v.model=document.getElementById('vnss-model')?.value?.trim()||'';
   v.weatherEntityId=document.getElementById('vnss-weather')?.value?.trim()||'';
   v.extraSensors=(document.getElementById('vnss-sensors')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
@@ -15787,7 +15771,7 @@ async function _vanessaTest(){
   // Auto-salva prima di testare, così la chiave inserita viene letta correttamente
   _vanessaSave();
   const v=_vanessaGetCfg();
-  if(!v.apiKey&&v.provider!=='ollama'){ showToast('⚠️ Inserisci prima l\'API key nel campo sopra'); return; }
+  if(!v.apiKey){ showToast('⚠️ Inserisci prima l\'API key nel campo sopra'); return; }
   showToast('🧪 Test in corso…');
   try{
     const r=await _vanessaCallAI('Rispondi SOLO con: {"ok":true}');
@@ -15799,13 +15783,12 @@ async function _vanessaTest(){
 async function _vanessaValidateKey(){
   const v=_vanessaGetCfg();
   const provider=document.getElementById('vnss-prov')?.value||v.provider||'gemini';
-  const key=document.getElementById('vnss-key')?.value?.trim()||(provider!=='ollama'?'':'ok');
-  const ollamaUrl=document.getElementById('vnss-ollama')?.value?.trim()||v.ollamaUrl||'http://localhost:11434';
+  const key=document.getElementById('vnss-key')?.value?.trim()||'';
   const statusEl=document.getElementById('vnss-key-status');
   const chipsEl=document.getElementById('vnss-model-chips');
   const hintEl=document.getElementById('vnss-model-hint');
   const btn=document.getElementById('vnss-validate-btn');
-  if(!key&&provider!=='ollama'){ if(statusEl) statusEl.innerHTML='<span style="color:#f87171">⚠️ Inserisci la chiave</span>'; return; }
+  if(!key){ if(statusEl) statusEl.innerHTML='<span style="color:#f87171">⚠️ Inserisci la chiave</span>'; return; }
   if(statusEl) statusEl.innerHTML='<span style="color:#fbbf24;animation:vnss-pulse 1s infinite">⏳ Verifica…</span>';
   if(btn){ btn.disabled=true; btn.style.opacity='.5'; }
   let models=[];
@@ -15825,11 +15808,6 @@ async function _vanessaValidateKey(){
       if(!r.ok){ const t=await r.text(); throw new Error(`${r.status}: ${JSON.parse(t)?.error?.message||t.slice(0,80)}`); }
       const d=await r.json();
       models=(d.data||[]).map(m=>m.id).sort().reverse();
-    } else if(provider==='ollama'){
-      const r=await fetch(ollamaUrl+'/api/tags');
-      if(!r.ok) throw new Error('Ollama non raggiungibile su '+ollamaUrl);
-      const d=await r.json();
-      models=(d.models||[]).map(m=>m.name);
     }
     if(statusEl) statusEl.innerHTML=`<span style="color:#4ade80">✅ Valida · ${models.length} modelli</span>`;
     if(chipsEl&&models.length){
@@ -15843,7 +15821,6 @@ async function _vanessaValidateKey(){
     // Auto-salva la chiave validata
     if(!v.apiKeys) v.apiKeys={};
     if(key) v.apiKeys[provider]=key;
-    if(provider==='ollama') v.ollamaUrl=ollamaUrl;
     saveCfg();
     showToast(`✅ ${provider} verificato — ${models.length} modelli disponibili`);
   }catch(e){
@@ -15927,7 +15904,7 @@ function _vanessaClearLog(cardId){
 async function _vanessaCallAI(prompt){
   const v=_vanessaGetCfg();
   const provider=v.provider||'gemini';
-  const defaults={gemini:'gemini-2.0-flash',openai:'gpt-4o-mini',ollama:'llama3.2',claude:'claude-haiku-4-5-20251001'};
+  const defaults={gemini:'gemini-2.0-flash',openai:'gpt-4o-mini',claude:'claude-haiku-4-5-20251001'};
   const model=v.model||defaults[provider]||'gemini-2.0-flash';
   const apiKey=(v.apiKeys&&v.apiKeys[provider])||v.apiKey||'';
   if(provider==='gemini'){
@@ -15948,12 +15925,6 @@ async function _vanessaCallAI(prompt){
     if(!r.ok){ const t=await r.text(); throw new Error(`Claude ${r.status}: ${t.slice(0,120)}`); }
     const d=await r.json();
     return d.content?.[0]?.text||'';
-  }
-  if(provider==='ollama'){
-    const r=await fetch((v.ollamaUrl||'http://localhost:11434')+'/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model,prompt,stream:false,options:{temperature:0.1,num_predict:280}})});
-    if(!r.ok){ const t=await r.text(); throw new Error(`Ollama ${r.status}: ${t.slice(0,120)}`); }
-    const d=await r.json();
-    return d.response||'';
   }
   throw new Error('Provider non supportato: '+provider);
 }
@@ -16044,7 +16015,7 @@ async function _vanessaRunCard(cardId, force){
   if(!card){ showToast('⚠️ Card non trovata'); return; }
   const v=_vanessaGetCfg();
   const apiKey=(v.apiKeys&&v.apiKeys[v.provider])||v.apiKey||'';
-  if(!apiKey&&v.provider!=='ollama'){ showToast('⚠️ Configura l\'API key di Vanessa prima'); return; }
+  if(!apiKey){ showToast('⚠️ Configura l\'API key di Vanessa prima'); return; }
   // Check orario operativo (solo se non è un'esecuzione manuale forzata)
   if(!force&&card.vanessaTimeFrom&&card.vanessaTimeTo){
     const now=new Date(); const h=now.getHours(),m=now.getMinutes(); const cur=h*60+m;
@@ -16227,7 +16198,7 @@ function _vanessaRun(){
   const v=_vanessaGetCfg();
   if(!v.enabled) return;
   const apiKey=(v.apiKeys&&v.apiKeys[v.provider])||v.apiKey||'';
-  if(!apiKey&&v.provider!=='ollama') return;
+  if(!apiKey) return;
   const cards=[];
   for(const pg of cfg.pages||[]) for(const c of pg.cards||[]) if(c.vanessaEnabled) cards.push(c);
   if(!cards.length) return;

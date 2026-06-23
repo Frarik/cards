@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.5.79 — 2026-06-23
+
+### fix(cards): gear button visibile + impostazioni interattive in modalità modifica
+
+- **`_registerLovelaceCard.mount()`**: imposta `--fgear: flex` e `_frarikCard` sull'elemento custom (`cel`) appena montato — il pulsante gear ⚙ è ora visibile direttamente nella card in modalità normale, senza dover usare il menu modifica.
+- **`_registerLovelaceCard.configure()`**: imposta `_frarikCard` sul custom element e disabilita `pointer-events` sulla `.card-ov` overlay — le impostazioni inline aperte da modalità modifica ✏️ sono ora cliccabili e modificabili.
+- Card interessate: Antizanzare, Irrigazione, Differenziata, Meteo, posta-card (lovelace). Le card vecchio stile (Camera, Clima, DoorsWindows, System, Tapparella, person-card) non usano `--fgear` e non sono coinvolte.
+
+### feat(vanessa): rimosso provider Ollama
+
+- Ollama eliminato da tutti i punti: setup gate, tab Config, `_VNSS_MODELS`, `_vnssIsConfigured`, `_vanessaCallAI`, `_vanessaValidateKey`, `_vanessaRunCard`, `_vanessaRun`, CSS.
+- Provider supportati: **Gemini** · **OpenAI** · **Claude**.
+
 ## 1.5.78 — 2026-06-22
 
 ### feat(vanessa): gate configurazione — i menu appaiono solo dopo aver inserito l'API key
