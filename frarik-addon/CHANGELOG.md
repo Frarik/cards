@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.81 — 2026-06-23
+
+### fix(vanessa): popup card — toggle "Abilita" ON di default per nuovi dispositivi
+
+- `_vanessaCardPopup()`: quando una card non è mai stata configurata (`vanessaEnabled` è `undefined`), il toggle ora parte come **abilitato** invece che spento.
+- Prima: l'utente apriva il popup, non notava il toggle spento, salvava → toast "Vanessa disabilitata".
+- Ora: il toggle parte ON, il toast "🧠 Vanessa abilitata!" appare al salvataggio.
+
 ## 1.5.80 — 2026-06-23
 
 ### fix(vanessa): Vanessa non veniva mai abilitata dopo la prima configurazione

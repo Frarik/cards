@@ -16245,6 +16245,7 @@ function _vanessaCardPopup(cardId){
   for(const pg of cfg.pages||[]) for(const c of pg.cards||[]) if(c.id===cardId){ card=c; break; }
   if(!card) return;
   const hass=_getBestHass();
+  const isEnabled=card.vanessaEnabled !== false; // default ON per card nuove (undefined → true)
   // Auto-scan sensori correlati
   const autoSuggested=_vanessaAutoScan(card,hass);
   // Sensori già salvati sulla card (usa autoscan come default se vuoti)
@@ -16268,12 +16269,12 @@ function _vanessaCardPopup(cardId){
   </div>
   <div style="padding:18px 20px;display:flex;flex-direction:column;gap:16px">
     <!-- 1. ABILITA -->
-    <div style="display:flex;align-items:center;justify-content:space-between;background:${card.vanessaEnabled?'rgba(74,222,128,.07)':'rgba(255,255,255,.03)'};border:1.5px solid ${card.vanessaEnabled?'rgba(74,222,128,.22)':'rgba(255,255,255,.07)'};border-radius:13px;padding:11px 15px;transition:all .3s" id="_vnss-card-toggle-row">
+    <div style="display:flex;align-items:center;justify-content:space-between;background:${isEnabled?'rgba(74,222,128,.07)':'rgba(255,255,255,.03)'};border:1.5px solid ${isEnabled?'rgba(74,222,128,.22)':'rgba(255,255,255,.07)'};border-radius:13px;padding:11px 15px;transition:all .3s" id="_vnss-card-toggle-row">
       <div>
         <div style="font-size:13px;font-weight:700;color:#e2e8f0">Abilita gestione autonoma</div>
         <div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:2px">Vanessa decide quando attivare questo dispositivo</div>
       </div>
-      <label class="toggle-sw"><input type="checkbox" id="_vnss-card-on" ${card.vanessaEnabled?'checked':''}><span class="toggle-slider"></span></label>
+      <label class="toggle-sw"><input type="checkbox" id="_vnss-card-on" ${isEnabled?'checked':''}><span class="toggle-slider"></span></label>
     </div>
     <!-- 2. DISPOSITIVO -->
     <div>
