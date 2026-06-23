@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.86 — 2026-06-23
+
+### fix(vanessa): rimosso auto-scan sensori + redesign popup card + fix toast "disabilitata"
+- Rimosso auto-scan automatico dei sensori (`_vanessaAutoScan`) dalla popup di configurazione card
+- Rimosso pulsante "🔍 Auto-rileva" e preview dinamica sensori
+- Rimosso toggle "Abilita gestione autonoma" dalla popup (il salvataggio ora forza sempre `vanessaEnabled=true`)
+- Fix: aggiungendo un dispositivo via picker e salvando non appare più il toast "Vanessa disabilitata"
+- Toast al salvataggio ora mostra sempre il nome del dispositivo configurato
+- Popup ridisegnato: sezioni visivamente separate con card interne, header con badge "GESTITA"
+
 ## 1.5.85 — 2026-06-23
 
 ### feat(vanessa): redesign completo — macchina a stati, hero adattivo, prompt potenziato
