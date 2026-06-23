@@ -1,6 +1,6 @@
 name: "Frarik Dashboard"
 description: "Dashboard personalizzata per Home Assistant — sviluppata da Fratech & Rizzahc"
-version: "1.5.89"
+version: "1.5.90"
 slug: frarik_dashboard
 url: "https://github.com/Frarik/cards"
 

@@ -15726,6 +15726,7 @@ function _vnssHtmlDevices(){
       </div>
       <div style="display:flex;border-top:1px solid rgba(124,58,237,.12)">
         <button data-action="_vanessaRunCard" data-action-args='["${c.id}",true]' style="flex:1;background:rgba(74,222,128,.07);border:none;border-right:1px solid rgba(124,58,237,.12);color:#4ade80;font-size:11px;font-weight:800;padding:11px 0;cursor:pointer">▶ Esegui</button>
+        <button data-action="_vanessaSimulateCard" data-action-args='["${c.id}"]' style="flex:1;background:rgba(56,189,248,.05);border:none;border-right:1px solid rgba(124,58,237,.12);color:#38bdf8;font-size:11px;font-weight:800;padding:11px 0;cursor:pointer">🔍 Test</button>
         <button data-action="_vanessaCardPopup" data-action-args='["${c.id}"]' style="flex:1;background:rgba(124,58,237,.07);border:none;border-right:1px solid rgba(124,58,237,.12);color:#c084fc;font-size:11px;font-weight:800;padding:11px 0;cursor:pointer">⚙ Configura</button>
         <button data-vnss-disable="${c.id}" style="background:rgba(248,113,113,.05);border:none;color:rgba(248,113,113,.5);font-size:11px;font-weight:800;padding:11px 16px;cursor:pointer" title="Rimuovi">✕</button>
       </div>
@@ -16367,6 +16368,27 @@ function _callHassSvc(h,entityId,action){
   if(dom==='script') return h.callService('script','turn_on',{entity_id:entityId});
   if(action==='on') return h.callService(dom,'turn_on',{entity_id:entityId});
   return h.callService(dom,'turn_off',{entity_id:entityId});
+}
+async function _vanessaSimulateCard(cardId){
+  let card=null;
+  for(const pg of cfg.pages||[]) for(const c of pg.cards||[]) if(c.id===cardId){ card=c; break; }
+  if(!card){ showToast('⚠️ Card non trovata'); return; }
+  const vv=_vanessaGetCfg();
+  const apiKey=(vv.apiKeys&&vv.apiKeys[vv.provider])||vv.apiKey||'';
+  if(!apiKey){ showToast('⚠️ Configura prima l\'API key di Vanessa'); return; }
+  showToast('🔍 Vanessa sta simulando…');
+  const prompt=_vanessaBuildPrompt(card);
+  if(!prompt){ showToast('⚠️ Hass non disponibile'); return; }
+  let rawResp='';
+  try{ rawResp=await _vanessaCallAI(prompt); }
+  catch(e){ showToast('❌ Errore AI: '+e.message); return; }
+  let decision=null;
+  try{ const m=rawResp.match(/\{[\s\S]*\}/); if(m) decision=JSON.parse(m[0]); }catch(e){}
+  if(!decision){
+    try{ const partial=rawResp.match(/\{[\s\S]*/); if(partial){ const fixed=partial[0].replace(/,?\s*"detail":"[^"]*$|,?\s*"reason":"[^"]*$|,?\s*"[^"]*$/,'}'); decision=JSON.parse(fixed); } }catch(e){}
+  }
+  if(!decision){ showToast('⚠️ Risposta AI non valida: '+rawResp.slice(0,120)); return; }
+  _vanessaDecisionPopup(card, decision, true);
 }
 async function _vanessaRunCard(cardId, force){
   let card=null;
@@ -17035,7 +17057,7 @@ Object.assign(window, {
   _isAdmin, _adminCtrlPanel,
   _epLicBadgeLoad, _epAdminPanelLoad, _adminShowFirstAccess,
   _vanessaRenderSettings, _vanessaSave, _vanessaTest, _vanessaValidateKey,
-  _vanessaRunCard, _vanessaCardPopup, _vanessaClearLog,
+  _vanessaRunCard, _vanessaSimulateCard, _vanessaCardPopup, _vanessaClearLog,
   _pkgUninstallFromHA, _pkgViewOnHA, _pkgGenericInstall, _pkgPostInstall,
   _ghsPkgInstallFromGH, _pkgInstallLocalToHA,
 });

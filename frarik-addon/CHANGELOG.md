@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.90 — 2026-06-23
+
+### feat(vanessa): tasto 🔍 Test nella lista dispositivi
+- Aggiunto pulsante "🔍 Test" tra "▶ Esegui" e "⚙ Configura" nella tab Dispositivi
+- Nuova funzione `_vanessaSimulateCard(cardId)`: chiama l'AI e mostra il popup decisione in modalità dry run (🧪 DRY RUN) senza eseguire azioni reali
+
 ## 1.5.89 — 2026-06-23
 
 ### feat(vanessa): tasto "Simula" nel popup card — dry run AI senza eseguire azioni
