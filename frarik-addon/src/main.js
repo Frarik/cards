@@ -16392,6 +16392,16 @@ Compito: decidere in modo AUTONOMO se attivare il dispositivo ora. Considera ora
 ORA: ${now.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'})} ${now.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}
 `;
   if(v.vacationMode) p+=`MODALITÀ VACANZE: casa vuota, nessuna persona presente. Privilegia risparmio energetico e sicurezza. Salta tutto ciò che richiede presenza umana.\n`;
+  if(!v.vacationMode&&card.vanessaPresenceEntity){
+    const presSt=hass.states[card.vanessaPresenceEntity];
+    if(presSt){
+      const present=!['off','not_home','away','unavailable','unknown'].includes((presSt.state||'').toLowerCase());
+      p+=`PRESENZA: ${present?'✅ casa occupata — persone presenti':'❌ casa vuota — nessuno in casa'}`;
+      const name=presSt.attributes?.friendly_name;
+      if(name) p+=` (${name}: ${presSt.state})`;
+      p+='\n';
+    }
+  }
   if(v.globalRules) p+=`REGOLE GLOBALI (si applicano a tutte le card):\n${v.globalRules}\n`;
   // Meteo: usa entità per-card se configurata, altrimenti quella globale
   const weatherEid=card.vanessaWeatherEntity||v.weatherEntityId||'';
@@ -16861,11 +16871,20 @@ function _vanessaCardPopup(cardId){
       <textarea id="_vnss-card-criteria" rows="4" style="${inp};resize:vertical" placeholder="Es: accendi solo se la temperatura supera 25°C e ci sono persone in casa…">${eh(card.vanessaCriteria||card.vanessaContext||'')}</textarea>
       <div style="font-size:10px;color:rgba(255,255,255,.18);margin-top:5px">Descrivi QUANDO e PERCHÉ attivare. Più è preciso, migliore sarà la decisione.</div>
     </div>
-    <!-- 3. METEO -->
+    <!-- 3. CONTESTO AMBIENTALE -->
     <div style="${card2}">
-      ${sec('Entità meteo','🌤')}
-      <input type="text" id="_vnss-card-weather" style="${inp}" value="${eh(card.vanessaWeatherEntity||'')}" placeholder="weather.home  (opzionale — sovrascrive il meteo globale)">
-      <div style="font-size:10px;color:rgba(255,255,255,.18);margin-top:5px">L'AI userà previsioni e dati meteo di questa entità per la decisione. Lascia vuoto per usare il meteo globale di Vanessa.</div>
+      ${sec('Contesto ambientale','🌍')}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div>
+          <div style="font-size:10px;color:rgba(56,189,248,.6);margin-bottom:4px">🌤 Entità meteo</div>
+          <input type="text" id="_vnss-card-weather" style="${inp}" value="${eh(card.vanessaWeatherEntity||'')}" placeholder="weather.home">
+        </div>
+        <div>
+          <div style="font-size:10px;color:rgba(74,222,128,.6);margin-bottom:4px">👥 Sensore presenza</div>
+          <input type="text" id="_vnss-card-presence" style="${inp}" value="${eh(card.vanessaPresenceEntity||'')}" placeholder="binary_sensor.presenza">
+        </div>
+      </div>
+      <div style="font-size:10px;color:rgba(255,255,255,.18);margin-top:7px">Meteo: sovrascrive il globale. Presenza: se OFF l'AI sa che non c'è nessuno in casa.</div>
     </div>
     <!-- 4. DIPENDENZE -->
     <div style="${card2}">
@@ -16925,6 +16944,7 @@ function _vanessaCardPopup(cardId){
     card.vanessaStopEntity=document.getElementById('_vnss-card-stop-eid')?.value?.trim()||'';
     card.vanessaCriteria=document.getElementById('_vnss-card-criteria')?.value?.trim()||'';
     card.vanessaWeatherEntity=document.getElementById('_vnss-card-weather')?.value?.trim()||'';
+    card.vanessaPresenceEntity=document.getElementById('_vnss-card-presence')?.value?.trim()||'';
     card.vanessaDependsOn=(document.getElementById('_vnss-card-depends')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
     saveCfg();
   }

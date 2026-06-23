@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.95 — 2026-06-24
+
+### feat(vanessa): sensore presenza per-card
+- Nuovo campo "👥 Sensore presenza" nel popup configurazione card (accanto a entità meteo)
+- Se il sensore è OFF/not_home/away → il prompt informa l'AI "casa vuota — nessuno in casa"
+- Più granulare della modalità Vacanze globale: ogni card può avere il proprio sensore di presenza
+- La sezione "Contesto ambientale" raggruppa meteo e presenza in griglia 2 colonne
+
 ## 1.5.94 — 2026-06-24
 
 ### fix(vanessa): dropdown dipendenze custom — rimosse opzioni bianche del select nativo
