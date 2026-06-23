@@ -15527,6 +15527,43 @@ function _vnssStop(){
   _vnssRefreshHero();
   showToast('⏹ Vanessa arrestata');
 }
+function _vnssSendDailyReport(){
+  const v=_vanessaGetCfg();
+  if(!v.notifyEntityId||!v.reportTime) return;
+  const hass=_getBestHass(); if(!hass) return;
+  const today=new Date().toISOString().slice(0,10);
+  if(v.lastReportDate===today) return;
+  const t0=new Date(); t0.setHours(0,0,0,0);
+  const todayLog=(v.log||[]).filter(e=>e.ts>=t0.getTime());
+  if(!todayLog.length) return;
+  const byCard={};
+  for(const e of todayLog){
+    const k=e.cardLabel||e.cardId||'?';
+    if(!byCard[k]) byCard[k]={run:0,skip:0,delay:0};
+    byCard[k][e.action]=(byCard[k][e.action]||0)+1;
+  }
+  let lines=[];
+  for(const [name,st] of Object.entries(byCard)){
+    let l=`• ${name}:`;
+    if(st.run) l+=` ✅${st.run} avviati`;
+    if(st.skip) l+=` ⏭${st.skip} saltati`;
+    if(st.delay) l+=` ⏱${st.delay} rimandati`;
+    lines.push(l);
+  }
+  const msg=lines.join('\n')+`\n\nTotale: ${todayLog.length} decisioni`;
+  try{
+    const svc=v.notifyEntityId.replace(/^notify\./,'');
+    hass.callService('notify',svc,{title:`🧠 Vanessa — Report ${new Date().toLocaleDateString('it-IT')}`,message:msg});
+    v.lastReportDate=today; saveCfg();
+  }catch(_){}
+}
+function _vnssToggleVacation(){
+  const v=_vanessaGetCfg();
+  v.vacationMode=!v.vacationMode;
+  saveCfg();
+  _vnssRefreshHero();
+  showToast(v.vacationMode?'🏖 Modalità Vacanze attivata — casa vuota':'🏠 Modalità Vacanze disattivata');
+}
 function _vnssForceRun(){
   if(_vnssState()==='stopped'){showToast('⚠️ Avvia prima Vanessa');return;}
   showToast('⚡ Analisi forzata in corso…');
@@ -15561,6 +15598,15 @@ function _vnssRefreshHero(){
   });
   const statEl=document.getElementById('vnss-stats-bar');
   if(statEl) statEl.innerHTML=_vnssStatsHtml(stats);
+  const vacBtn=document.getElementById('vnss-vacation');
+  if(vacBtn){
+    const vac=!!v.vacationMode;
+    vacBtn.style.background=vac?'rgba(56,189,248,.22)':'rgba(56,189,248,.06)';
+    vacBtn.style.borderColor=vac?'rgba(56,189,248,.7)':'rgba(56,189,248,.25)';
+    vacBtn.style.color=vac?'#38bdf8':'rgba(56,189,248,.6)';
+    vacBtn.style.boxShadow=vac?'0 0 12px rgba(56,189,248,.4)':'none';
+    vacBtn.textContent=vac?'🏖 Vacanze ON':'🏖 Vacanze';
+  }
   _vanessaUpdateStatus();
 }
 function _vnssStatsHtml(stats){
@@ -15898,12 +15944,26 @@ function _vnssHtmlConfig(){
       <textarea id="vnss-sensors" rows="3" style="${inpBlue};resize:vertical" placeholder="">${(v.extraSensors||[]).join('\n')}</textarea>
     </div>
   </div>
+  <!-- Regole globali -->
+  <div style="background:rgba(74,222,128,.04);border:1px solid rgba(74,222,128,.13);border-radius:14px;padding:14px">
+    <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(74,222,128,.6);text-transform:uppercase;margin-bottom:10px">📋 Regole globali</div>
+    <textarea id="vnss-global-rules" rows="3" style="${inpBlue};resize:vertical" placeholder="Es: Non attivare nulla tra le 23:00 e le 06:00. Se vento >60 km/h salta l'irrigazione.">${eh(v.globalRules||'')}</textarea>
+    <div style="font-size:10px;color:rgba(255,255,255,.2);margin-top:6px">Istruzioni che si applicano a TUTTE le card senza doverle ripetere su ognuna.</div>
+  </div>
   <!-- Notifiche push -->
   <div style="background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.14);border-radius:14px;padding:14px">
     <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(251,191,36,.7);text-transform:uppercase;margin-bottom:10px">🔔 Notifiche push</div>
-    <div style="font-size:10px;color:rgba(255,255,255,.35);margin-bottom:5px">Entità notify (es. notify.mobile_app_iphone)</div>
-    <input type="text" id="vnss-notify" style="${inpBlue}" value="${eh(v.notifyEntityId||'')}" placeholder="notify.mobile_app_iphone">
-    <div style="font-size:10px;color:rgba(255,255,255,.2);margin-top:6px">Vanessa invierà una notifica push ogni volta che attiva o salta un dispositivo. Lascia vuoto per disabilitare.</div>
+    <div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end">
+      <div>
+        <div style="font-size:10px;color:rgba(255,255,255,.35);margin-bottom:5px">Entità notify (es. notify.mobile_app_iphone)</div>
+        <input type="text" id="vnss-notify" style="${inpBlue}" value="${eh(v.notifyEntityId||'')}" placeholder="notify.mobile_app_iphone">
+      </div>
+      <div>
+        <div style="font-size:10px;color:rgba(255,255,255,.35);margin-bottom:5px">Report ore</div>
+        <input type="time" id="vnss-report-time" style="${inpBlue};width:90px" value="${eh(v.reportTime||'')}">
+      </div>
+    </div>
+    <div style="font-size:10px;color:rgba(255,255,255,.2);margin-top:6px">Notifica push ad ogni decisione · Report giornaliero all'orario impostato (lascia vuoto per disabilitare).</div>
   </div>
   <!-- Intervallo -->
   <div style="display:flex;align-items:center;gap:12px;background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.14);border-radius:12px;padding:12px 14px">
@@ -16056,6 +16116,7 @@ function _vanessaRenderSettings(){
       <button id="vnss-state-paused" style="display:flex;align-items:center;gap:5px;padding:6px 14px;border-radius:10px;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:rgba(255,255,255,.4);font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.03em">⏸ Pausa</button>
       <button id="vnss-state-stopped" style="display:flex;align-items:center;gap:5px;padding:6px 14px;border-radius:10px;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:rgba(255,255,255,.4);font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.03em">⏹ Arresta</button>
       <button id="vnss-force-run" style="display:flex;align-items:center;gap:5px;padding:6px 14px;border-radius:10px;border:1.5px solid rgba(251,191,36,.3);background:rgba(251,191,36,.08);color:rgba(251,191,36,.75);font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.03em;margin-left:auto">⚡ Esegui ora</button>
+      <button id="vnss-vacation" style="display:flex;align-items:center;gap:5px;padding:6px 14px;border-radius:10px;border:1.5px solid rgba(56,189,248,.25);background:rgba(56,189,248,.06);color:rgba(56,189,248,.6);font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.03em" title="Modalità Vacanze — casa vuota">🏖 Vacanze</button>
     </div>
   </div>
 </div>
@@ -16076,6 +16137,7 @@ function _vanessaRenderSettings(){
   document.getElementById('vnss-state-paused')?.addEventListener('click',_vnssPause);
   document.getElementById('vnss-state-stopped')?.addEventListener('click',_vnssStop);
   document.getElementById('vnss-force-run')?.addEventListener('click',_vnssForceRun);
+  document.getElementById('vnss-vacation')?.addEventListener('click',_vnssToggleVacation);
   _vnssRefreshHero();
   // Nav tab click
   pane.querySelectorAll('[data-vnmt]').forEach(btn=>{
@@ -16100,6 +16162,8 @@ function _vanessaSave(){
   v.weatherEntityId=document.getElementById('vnss-weather')?.value?.trim()||'';
   v.extraSensors=(document.getElementById('vnss-sensors')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
   v.notifyEntityId=document.getElementById('vnss-notify')?.value?.trim()||'';
+  v.globalRules=document.getElementById('vnss-global-rules')?.value?.trim()||'';
+  v.reportTime=document.getElementById('vnss-report-time')?.value?.trim()||'';
   v.intervalMin=parseInt(document.getElementById('vnss-interval')?.value||'30',10)||30;
   saveCfg();
   _vanessaRestartInterval();
@@ -16327,6 +16391,8 @@ Compito: decidere in modo AUTONOMO se attivare il dispositivo ora. Considera ora
 
 ORA: ${now.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'})} ${now.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}
 `;
+  if(v.vacationMode) p+=`MODALITÀ VACANZE: casa vuota, nessuna persona presente. Privilegia risparmio energetico e sicurezza. Salta tutto ciò che richiede presenza umana.\n`;
+  if(v.globalRules) p+=`REGOLE GLOBALI (si applicano a tutte le card):\n${v.globalRules}\n`;
   // Meteo: usa entità per-card se configurata, altrimenti quella globale
   const weatherEid=card.vanessaWeatherEntity||v.weatherEntityId||'';
   if(weatherEid){
@@ -16399,8 +16465,24 @@ ORA: ${now.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'
     const minsLeft=Math.round((actTimer.expiresTs-Date.now())/60000);
     p+=`\nATTENZIONE: il dispositivo è già attivo, spegnimento automatico tra ${minsLeft} min — NON riattivare.`;
   }
+  // Memoria pattern 7 giorni
+  const allCardLog=(v.log||[]).filter(e=>e.cardId===card.id);
+  const week7=Date.now()-7*86400000;
+  const weekLog=allCardLog.filter(e=>e.ts>week7);
+  if(weekLog.length){
+    const wRun=weekLog.filter(e=>e.action==='run').length;
+    const wSkip=weekLog.filter(e=>e.action==='skip').length;
+    const lastRun=allCardLog.find(e=>e.action==='run');
+    const lastRunAgo=lastRun?Math.round((Date.now()-lastRun.ts)/3600000):null;
+    const durations=weekLog.filter(e=>e.action==='run'&&e.duration_min>0).map(e=>e.duration_min);
+    const avgDur=durations.length?Math.round(durations.reduce((a,b)=>a+b,0)/durations.length):0;
+    p+=`STORICO 7 GIORNI: ${wRun} avviamenti, ${wSkip} salti`;
+    if(lastRunAgo!=null) p+=`, ultima attivazione ${lastRunAgo}h fa`;
+    if(avgDur>0) p+=`, durata media ${avgDur} min`;
+    p+='\n';
+  }
   // Ultime 5 decisioni per questa card
-  const cardLog=((v.log||[]).filter(e=>e.cardId===card.id)).slice(0,5);
+  const cardLog=allCardLog.slice(0,5);
   if(cardLog.length){
     p+=`\nSTORIA RECENTE:\n`;
     for(const e of cardLog){
@@ -16673,6 +16755,12 @@ let _vanessaNextRunTs=0;
 function _vanessaRun(){
   const v=_vanessaGetCfg();
   if(_vnssState()!=='running') return;
+  // Check report giornaliero
+  if(v.reportTime&&v.notifyEntityId){
+    const now2=new Date();
+    const [rh,rm]=(v.reportTime||'20:00').split(':').map(Number);
+    if(now2.getHours()*60+now2.getMinutes()>=rh*60+rm) try{_vnssSendDailyReport();}catch(_){}
+  }
   const apiKey=(v.apiKeys&&v.apiKeys[v.provider])||v.apiKey||'';
   if(!apiKey) return;
   const cards=[];
@@ -17187,7 +17275,7 @@ Object.assign(window, {
   _isAdmin, _adminCtrlPanel,
   _epLicBadgeLoad, _epAdminPanelLoad, _adminShowFirstAccess,
   _vanessaRenderSettings, _vanessaSave, _vanessaTest, _vanessaValidateKey,
-  _vanessaRunCard, _vanessaSimulateCard, _vanessaUndoCard, _vanessaCardPopup, _vanessaClearLog,
+  _vanessaRunCard, _vanessaSimulateCard, _vanessaUndoCard, _vanessaCardPopup, _vanessaClearLog, _vnssToggleVacation,
   _pkgUninstallFromHA, _pkgViewOnHA, _pkgGenericInstall, _pkgPostInstall,
   _ghsPkgInstallFromGH, _pkgInstallLocalToHA,
 });

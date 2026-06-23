@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.93 — 2026-06-24
+
+### feat(vanessa): modalità vacanze, regole globali, memoria pattern, report giornaliero
+- **Modalità Vacanze**: bottone 🏖 nell'hero — toggle rapido "casa vuota". L'AI riceve nel prompt la condizione e adatta tutte le decisioni (risparmio, sicurezza). Badge visivo nell'hero.
+- **Regole globali**: textarea nelle impostazioni con istruzioni che si applicano a TUTTE le card senza doverle ripetere su ognuna (es. "non attivare nulla tra le 23 e le 6").
+- **Memoria pattern 7 giorni**: il prompt include automaticamente run/skip degli ultimi 7 giorni, ultima attivazione in ore, durata media. Migliora le decisioni su frequenza e durata.
+- **Report giornaliero push**: campo "Report ore" nelle impostazioni (es. 20:00). Vanessa invia un riepilogo con run/skip per ogni dispositivo tramite la stessa entità notify.
+
 ## 1.5.92 — 2026-06-23
 
 ### feat(vanessa): timeline log, skip streak, undo azione, dipendenze inter-card
