@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.87 — 2026-06-23
+
+### fix(vanessa): rimossa sezione "Sensori di contesto" dal popup card
+
 ## 1.5.86 — 2026-06-23
 
 ### fix(vanessa): rimosso auto-scan sensori + redesign popup card + fix toast "disabilitata"

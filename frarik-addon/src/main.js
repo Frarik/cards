@@ -16599,8 +16599,6 @@ function _vanessaCardPopup(cardId){
   let card=null;
   for(const pg of cfg.pages||[]) for(const c of pg.cards||[]) if(c.id===cardId){ card=c; break; }
   if(!card) return;
-  const savedSensors=(card.vanessaSensors||[]).filter(Boolean);
-  const sensorsVal=savedSensors.join('\n');
   const ov=document.createElement('div');
   ov.id='_vnss-card-ov';
   ov.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);padding:16px;box-sizing:border-box';
@@ -16649,13 +16647,7 @@ function _vanessaCardPopup(cardId){
       <textarea id="_vnss-card-criteria" rows="3" style="${inp};resize:vertical" placeholder="Es: accendi solo se la temperatura supera 25°C e ci sono persone in casa…">${eh(card.vanessaCriteria||card.vanessaContext||'')}</textarea>
       <div style="font-size:10px;color:rgba(255,255,255,.18);margin-top:5px">Descrivi QUANDO e PERCHÉ attivare. Più è preciso, migliore sarà la decisione.</div>
     </div>
-    <!-- 3. SENSORI -->
-    <div style="${card2}">
-      ${sec('Sensori di contesto','📡')}
-      <textarea id="_vnss-card-sensors" rows="3" style="${inp};resize:vertical;font-size:11px;font-family:monospace" placeholder="sensor.temperatura_soggiorno&#10;sensor.umidita&#10;binary_sensor.presenza_casa">${eh(sensorsVal)}</textarea>
-      <div style="font-size:10px;color:rgba(255,255,255,.18);margin-top:5px">Uno per riga — questi valori vengono passati all'AI come contesto per la decisione.</div>
-    </div>
-    <!-- 4. PARAMETRI -->
+    <!-- 3. PARAMETRI -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
       <div style="${card2}">
         ${sec('Durata tipica','⏱')}
@@ -16690,7 +16682,6 @@ function _vanessaCardPopup(cardId){
     card.vanessaEntityId=document.getElementById('_vnss-card-eid')?.value?.trim()||'';
     card.vanessaRunEntity=document.getElementById('_vnss-card-run-eid')?.value?.trim()||'';
     card.vanessaStopEntity=document.getElementById('_vnss-card-stop-eid')?.value?.trim()||'';
-    card.vanessaSensors=(document.getElementById('_vnss-card-sensors')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
     card.vanessaCriteria=document.getElementById('_vnss-card-criteria')?.value?.trim()||'';
     card.vanessaDurationHint=parseInt(document.getElementById('_vnss-card-duration')?.value||0)||0;
     card.vanessaTimeFrom=document.getElementById('_vnss-card-from')?.value?.trim()||'';
