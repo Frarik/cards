@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.5.88 — 2026-06-23
+
+### feat(vanessa): AI autonoma su orario e durata + meteo per-card + forecast pioggia
+- Rimosso blocco orario fisso da `_vanessaRunCard()`: l'AI decide autonomamente quando è il momento giusto
+- Rimossi campi "Durata tipica" e "Orario operativo" dal popup card
+- Aggiunto campo "Entità meteo" per-card (sovrascrive il meteo globale di Vanessa)
+- `_vanessaBuildPrompt()`: include forecast multi-slot con prob. pioggia, condizione tradotta in italiano
+- Prompt potenziato: regole esplicite (skip se pioggia >60% nelle 12h, scegli orario ottimale, spiega in 3-5 frasi)
+- `_vanessaDecisionPopup()`: usa meteo per-card se configurato
+- Storia recente estesa a ultime 5 decisioni (era 3)
+
 ## 1.5.87 — 2026-06-23
 
 ### fix(vanessa): rimossa sezione "Sensori di contesto" dal popup card

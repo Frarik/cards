@@ -16276,39 +16276,45 @@ function _vanessaBuildPrompt(card){
   const v=_vanessaGetCfg();
   const hass=_getBestHass(); if(!hass) return null;
   const now=new Date();
-  let p=`Sei Vanessa, AI di automazione per Home Assistant.
-Compito: decidere se attivare il dispositivo ora. Rispondi SOLO con JSON valido, zero testo extra.
+  let p=`Sei Vanessa, AI autonoma di automazione per Home Assistant.
+Compito: decidere in modo AUTONOMO se attivare il dispositivo ora. Considera ora del giorno, dati meteo, previsioni, storico. Rispondi SOLO con JSON valido, zero testo extra.
 
 ORA: ${now.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'})} ${now.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}
 `;
-  if(v.weatherEntityId){
-    const ws=hass.states[v.weatherEntityId];
+  // Meteo: usa entità per-card se configurata, altrimenti quella globale
+  const weatherEid=card.vanessaWeatherEntity||v.weatherEntityId||'';
+  if(weatherEid){
+    const ws=hass.states[weatherEid];
     if(ws){
       const a=ws.attributes||{};
-      p+=`METEO: ${ws.state}`;
+      const cond={sunny:'Soleggiato',clear_night:'Cielo sereno (notte)',cloudy:'Nuvoloso',partlycloudy:'Parz. nuvoloso',rainy:'Pioggia',snowy:'Neve',windy:'Ventoso',foggy:'Nebbia',lightning:'Temporale',hail:'Grandine','lightning-rainy':'Pioggia e fulmini','snowy-rainy':'Neve/pioggia'}[ws.state]||ws.state;
+      p+=`METEO ATTUALE: ${cond}`;
       if(a.temperature!=null) p+=`, ${a.temperature}°C`;
       if(a.humidity!=null)    p+=`, umidità ${a.humidity}%`;
-      if(a.wind_speed!=null)  p+=`, vento ${a.wind_speed}km/h`;
-      if(a.precipitation!=null) p+=`, pioggia ${a.precipitation}mm`;
-      if(a.forecast?.[0]) p+=`\nProssime ore: ${a.forecast[0].condition} ${a.forecast[0].temperature}°C`;
+      if(a.wind_speed!=null)  p+=`, vento ${a.wind_speed} km/h`;
+      if(a.precipitation!=null&&a.precipitation>0) p+=`, precipitazioni ${a.precipitation} mm`;
       p+='\n';
+      // Previsioni nelle prossime ore/giorni (fino a 5 slot)
+      const fc=Array.isArray(a.forecast)?a.forecast.slice(0,6):[];
+      if(fc.length){
+        p+=`PREVISIONI:\n`;
+        for(const f of fc){
+          const ft=f.datetime?new Date(f.datetime).toLocaleString('it-IT',{weekday:'short',hour:'2-digit',minute:'2-digit'}):'';
+          const fcond={sunny:'☀️',clear_night:'🌙',cloudy:'☁️',partlycloudy:'⛅',rainy:'🌧️',snowy:'❄️',windy:'💨',foggy:'🌫️',lightning:'⛈️',hail:'🌨️','lightning-rainy':'⛈️','snowy-rainy':'🌨️'}[f.condition]||'';
+          p+=`  ${ft}: ${fcond}${f.condition||''}`;
+          if(f.temperature!=null) p+=` ${f.temperature}°C`;
+          if(f.precipitation_probability!=null) p+=`, prob.pioggia ${f.precipitation_probability}%`;
+          if(f.precipitation!=null&&f.precipitation>0) p+=`, ${f.precipitation}mm`;
+          p+='\n';
+        }
+      }
     }
   }
-  // Sensori globali (extra sensors)
+  // Sensori globali extra
   for(const sid of (v.extraSensors||[])){
     const s=hass.states[sid]; if(!s) continue;
     const lbl=s.attributes?.friendly_name||sid.split('.').pop().replace(/_/g,' ');
     p+=`${lbl}: ${s.state}${s.attributes?.unit_of_measurement?' '+s.attributes.unit_of_measurement:''}\n`;
-  }
-  // Sensori specifici della card (auto-rilevati o manuali)
-  const cardSensors=(card.vanessaSensors||[]).filter(Boolean);
-  if(cardSensors.length){
-    p+=`SENSORI CARD:\n`;
-    for(const sid of cardSensors){
-      const s=hass.states[sid]; if(!s) continue;
-      const lbl=s.attributes?.friendly_name||sid.split('.').pop().replace(/_/g,' ');
-      p+=`  ${lbl}: ${s.state}${s.attributes?.unit_of_measurement?' '+s.attributes.unit_of_measurement:''}\n`;
-    }
   }
   // Contesto altri dispositivi gestiti da Vanessa
   const otherCards=[];
@@ -16326,28 +16332,30 @@ ORA: ${now.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'
   p+=`\nDISPOSITIVO: ${card.label||card.id}`;
   if(eid&&hass.states[eid]) p+=` — stato attuale: ${hass.states[eid].state}`;
   const criteria=card.vanessaCriteria||card.vanessaContext||'';
-  if(criteria) p+=`\nCRITERI: ${criteria}`;
-  if(card.vanessaTimeFrom&&card.vanessaTimeTo) p+=`\nOrario operativo: ${card.vanessaTimeFrom}–${card.vanessaTimeTo}`;
-  const durationHint=parseInt(card.vanessaDurationHint||0);
-  if(durationHint>0) p+=`\nDurata tipica: ${durationHint} min`;
-  else p+=`\nduration_min=0 (la card gestisce il timer internamente)`;
+  if(criteria) p+=`\nISTRUZIONI: ${criteria}`;
   const actTimer=_vanessaOffTimers[card.id];
   if(actTimer&&actTimer.expiresTs>Date.now()){
     const minsLeft=Math.round((actTimer.expiresTs-Date.now())/60000);
-    p+=`\nATTENZIONE: già attivo, spegnimento automatico tra ${minsLeft} min — NON riattivare.`;
+    p+=`\nATTENZIONE: il dispositivo è già attivo, spegnimento automatico tra ${minsLeft} min — NON riattivare.`;
   }
-  // Ultime 3 decisioni per questa card (contesto storico)
-  const cardLog=((v.log||[]).filter(e=>e.cardId===card.id)).slice(0,3);
+  // Ultime 5 decisioni per questa card
+  const cardLog=((v.log||[]).filter(e=>e.cardId===card.id)).slice(0,5);
   if(cardLog.length){
     p+=`\nSTORIA RECENTE:\n`;
     for(const e of cardLog){
-      const t=e.ts?new Date(e.ts).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}):'?';
+      const t=e.ts?new Date(e.ts).toLocaleString('it-IT',{weekday:'short',hour:'2-digit',minute:'2-digit'}):'?';
       p+=`  [${t}] ${e.action}${e.reason?' — '+e.reason:''}\n`;
     }
   }
-  p+=`\nINIZIA DIRETTAMENTE con { senza testo prima. JSON su UNA RIGA:
-{"action":"skip","delay_min":0,"duration_min":0,"reason":"3-5 parole","detail":"2-3 frasi: ora, condizioni, decisione."}
-action: run=attiva ora, skip=non attivare, delay=rimanda di delay_min minuti. duration_min=0 salvo motivo specifico.`;
+  p+=`
+REGOLE OBBLIGATORIE:
+- Decidi TU l'orario ottimale: se l'ora attuale non è adatta (es. notte per irrigazione), rispondi skip o delay.
+- Calcola duration_min in base alle condizioni reali (temperatura, siccità, ecc.). Se la card gestisce il timer, metti 0.
+- Se pioggia prevista nelle prossime 12h con prob. >60%, salta (skip).
+- Spiega nel campo detail in 3-5 frasi: ora attuale, condizioni meteo, motivazione, durata scelta se run.
+- INIZIA DIRETTAMENTE con { senza testo prima. JSON su UNA RIGA:
+{"action":"skip","delay_min":0,"duration_min":0,"reason":"4-6 parole","detail":"3-5 frasi complete di spiegazione."}
+action: run=attiva ora, skip=non attivare, delay=rimanda di delay_min minuti.`;
   return p;
 }
 
@@ -16367,14 +16375,6 @@ async function _vanessaRunCard(cardId, force){
   const v=_vanessaGetCfg();
   const apiKey=(v.apiKeys&&v.apiKeys[v.provider])||v.apiKey||'';
   if(!apiKey){ showToast('⚠️ Configura l\'API key di Vanessa prima'); return; }
-  // Check orario operativo (solo se non è un'esecuzione manuale forzata)
-  if(!force&&card.vanessaTimeFrom&&card.vanessaTimeTo){
-    const now=new Date(); const h=now.getHours(),m=now.getMinutes(); const cur=h*60+m;
-    const [fh,fm]=(card.vanessaTimeFrom||'00:00').split(':').map(Number);
-    const [th,tm]=(card.vanessaTimeTo||'23:59').split(':').map(Number);
-    const from=fh*60+fm, to=th*60+tm;
-    if(cur<from||cur>to){ showToast(`⏰ Fuori orario operativo (${card.vanessaTimeFrom}–${card.vanessaTimeTo})`); return; }
-  }
   // Se già acceso da Vanessa e ancora nella finestra di durata → non fare nulla (solo automatico)
   if(!force){
     const timer=_vanessaOffTimers[cardId];
@@ -16458,8 +16458,9 @@ function _vanessaDecisionPopup(card, decision){
   const v=_vanessaGetCfg();
   // raccolta dati sensori per il popup
   let sensorLines=[];
-  if(v.weatherEntityId&&hass){
-    const ws=hass.states[v.weatherEntityId];
+  const _decWeatherEid=card.vanessaWeatherEntity||v.weatherEntityId||'';
+  if(_decWeatherEid&&hass){
+    const ws=hass.states[_decWeatherEid];
     if(ws){
       const a=ws.attributes||{};
       const cond={sunny:'☀️ Sereno',clear_night:'🌙 Cielo sereno',cloudy:'☁️ Nuvoloso',partlycloudy:'⛅ Parz. nuvoloso',rainy:'🌧️ Pioggia',snowy:'❄️ Neve',windy:'💨 Ventoso',foggy:'🌫️ Nebbia',lightning:'⛈️ Temporale'}[ws.state]||ws.state;
@@ -16647,25 +16648,11 @@ function _vanessaCardPopup(cardId){
       <textarea id="_vnss-card-criteria" rows="3" style="${inp};resize:vertical" placeholder="Es: accendi solo se la temperatura supera 25°C e ci sono persone in casa…">${eh(card.vanessaCriteria||card.vanessaContext||'')}</textarea>
       <div style="font-size:10px;color:rgba(255,255,255,.18);margin-top:5px">Descrivi QUANDO e PERCHÉ attivare. Più è preciso, migliore sarà la decisione.</div>
     </div>
-    <!-- 3. PARAMETRI -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      <div style="${card2}">
-        ${sec('Durata tipica','⏱')}
-        <div style="display:flex;align-items:center;gap:8px">
-          <input type="number" id="_vnss-card-duration" min="0" max="480" style="${inp};width:75px" value="${card.vanessaDurationHint||0}">
-          <span style="font-size:11px;color:rgba(255,255,255,.3)">min</span>
-        </div>
-        <div style="font-size:10px;color:rgba(255,255,255,.18);margin-top:5px">0 = la card gestisce il timer</div>
-      </div>
-      <div style="${card2}">
-        ${sec('Orario operativo','🕐')}
-        <div style="display:flex;align-items:center;gap:5px">
-          <input type="time" id="_vnss-card-from" style="${inp}" value="${eh(card.vanessaTimeFrom||'')}">
-          <span style="color:rgba(255,255,255,.25);font-size:11px;flex-shrink:0">→</span>
-          <input type="time" id="_vnss-card-to" style="${inp}" value="${eh(card.vanessaTimeTo||'')}">
-        </div>
-        <div style="font-size:10px;color:rgba(255,255,255,.18);margin-top:5px">Vuoto = nessun limite orario</div>
-      </div>
+    <!-- 3. METEO -->
+    <div style="${card2}">
+      ${sec('Entità meteo','🌤')}
+      <input type="text" id="_vnss-card-weather" style="${inp}" value="${eh(card.vanessaWeatherEntity||'')}" placeholder="weather.home  (opzionale — sovrascrive il meteo globale)">
+      <div style="font-size:10px;color:rgba(255,255,255,.18);margin-top:5px">L'AI userà previsioni e dati meteo di questa entità per la decisione. Lascia vuoto per usare il meteo globale di Vanessa.</div>
     </div>
     <!-- BOTTONI -->
     <div style="display:flex;gap:10px;padding-top:2px">
@@ -16683,9 +16670,7 @@ function _vanessaCardPopup(cardId){
     card.vanessaRunEntity=document.getElementById('_vnss-card-run-eid')?.value?.trim()||'';
     card.vanessaStopEntity=document.getElementById('_vnss-card-stop-eid')?.value?.trim()||'';
     card.vanessaCriteria=document.getElementById('_vnss-card-criteria')?.value?.trim()||'';
-    card.vanessaDurationHint=parseInt(document.getElementById('_vnss-card-duration')?.value||0)||0;
-    card.vanessaTimeFrom=document.getElementById('_vnss-card-from')?.value?.trim()||'';
-    card.vanessaTimeTo=document.getElementById('_vnss-card-to')?.value?.trim()||'';
+    card.vanessaWeatherEntity=document.getElementById('_vnss-card-weather')?.value?.trim()||'';
     saveCfg();
   }
   document.getElementById('_vnss-card-save')?.addEventListener('click',()=>{
