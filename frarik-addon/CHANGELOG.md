@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.5.96 — 2026-06-24
+
+### feat(vanessa): redesign UI futuristica — T-Rex animato, sub-tab Config, entity search
+- **Avatar T-Rex animato**: sostituisce il vecchio dino con un T-Rex SMIL animato (zampe che camminano, coda che oscilla, mandibola che si apre, occhio che sbatte)
+- **Eliminata tab "Ambiente"**: la sezione meteo visuale è rimossa (le entità rimangono nel tab Config → Sensori)
+- **Config suddivisa in 5 sub-tab**: 🤖 AI Config | 📋 Regole | 📡 Sensori | 🔔 Notifiche | ⏱ Intervallo
+- **Ricerca entità con lente 🔍**: tutti i campi sensore/meteo/notify hanno autocomplete live filtrando `hass.states`
+- **Stazione meteo personale**: 4 nuovi campi (temperatura, umidità, vento, pioggia) con entity search — inclusi nel prompt AI
+- **Zoom & glow effects**: hover su bottoni, provider, tab, card sezioni con transform:scale e box-shadow
+- **Nav tab** ridotto da 4 a 3 colonne (rimosso Ambiente)
+
 ## 1.5.95 — 2026-06-24
 
 ### feat(vanessa): sensore presenza per-card

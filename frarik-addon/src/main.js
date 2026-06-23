@@ -15727,7 +15727,6 @@ function _vnssRenderMainTab(tab){
   });
   const content=document.getElementById('vnss-main-content'); if(!content) return;
   if(tab==='dispositivi'){ content.innerHTML=_vnssHtmlDevices(); _vnssWireDevices(); }
-  else if(tab==='ambiente'){ content.innerHTML=_vnssHtmlAmbiente(); }
   else if(tab==='registro'){
     content.innerHTML=`<div id="vnss-tab-bar" style="display:flex;overflow-x:auto;scrollbar-width:none;padding:0 14px;border-bottom:1px solid rgba(255,255,255,.07)"></div><div id="vnss-tab-content" style="padding:16px 14px"></div>`;
     _vanessaRenderTabs();
@@ -15896,91 +15895,147 @@ function _vnssHtmlAmbiente(){
 function _vnssHtmlConfig(){
   const v=_vanessaGetCfg();
   const cur=v.provider||'gemini';
+  const provNames={gemini:'Google Gemini',openai:'OpenAI',claude:'Anthropic Claude'};
   const ph={gemini:'gemini-2.0-flash',openai:'gpt-4o-mini',claude:'claude-haiku-4-5-20251001'};
   const inp=`width:100%;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.22);border-radius:10px;padding:9px 13px;color:#e2e8f0;font-size:12px;box-sizing:border-box;outline:none`;
-  const inpBlue=inp.replace('rgba(124,58,237,.08)','rgba(56,189,248,.07)').replace('rgba(124,58,237,.22)','rgba(56,189,248,.2)');
-  const sec=(t,i)=>`<div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(192,132,252,.6);text-transform:uppercase;margin-bottom:8px">${i} ${t}</div>`;
-  const provNames={gemini:'Google Gemini',openai:'OpenAI',claude:'Anthropic Claude'};
-  return `<div style="padding:16px;display:flex;flex-direction:column;gap:16px">
-  <!-- Provider -->
-  <div>
-    ${sec('Cervello AI','🤖')}
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="vnss-prov-wrap">
-      ${['gemini','openai','claude'].map(p=>{
-        const icons2={gemini:'✦',openai:'⬡',claude:'🧡'};
-        const subs={gemini:'Google · gratis',openai:'GPT · a consumo',claude:'Anthropic · potente'};
-        return `<button class="vnss-prov-btn${cur===p?' active':''}" data-prov="${p}" style="background:${cur===p?'rgba(124,58,237,.28)':'rgba(124,58,237,.1)'};border:1.5px solid ${cur===p?'#c084fc':'rgba(124,58,237,.2)'};border-radius:12px;padding:10px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;color:${cur===p?'#fff':'rgba(255,255,255,.5)'}"><span style="font-size:20px">${icons2[p]}</span><div style="text-align:left"><div style="font-size:12px;font-weight:800">${p.charAt(0).toUpperCase()+p.slice(1)}</div><div style="font-size:9px;opacity:.6">${subs[p]}</div></div></button>`;
-      }).join('')}
-    </div>
-    <input type="hidden" id="vnss-prov" value="${cur}">
+  const inpB=`width:100%;background:rgba(56,189,248,.07);border:1px solid rgba(56,189,248,.2);border-radius:10px;padding:9px 13px;color:#e2e8f0;font-size:12px;box-sizing:border-box;outline:none`;
+  const searchField=(id,val,ph2)=>`<div style="position:relative">
+    <div style="position:relative"><span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;pointer-events:none;z-index:1">🔍</span><input type="text" id="${id}" autocomplete="off" style="${inpB};padding-left:32px" value="${eh(val)}" placeholder="${ph2}"></div>
+    <div id="${id}-drop" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:300;background:#0a0816;border:1px solid rgba(56,189,248,.3);border-radius:10px;max-height:180px;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.85);scrollbar-width:none;margin-top:3px"></div>
+  </div>`;
+  const subTabs=[{id:'ai',icon:'🤖',label:'AI Config'},{id:'regole',icon:'📋',label:'Regole'},{id:'sensori',icon:'📡',label:'Sensori'},{id:'notifiche',icon:'🔔',label:'Notifiche'},{id:'intervallo',icon:'⏱',label:'Intervallo'}];
+  return `<div>
+  <div style="display:flex;gap:3px;overflow-x:auto;scrollbar-width:none;padding:12px 12px 0;border-bottom:1px solid rgba(124,58,237,.18)">
+    ${subTabs.map((t,i)=>`<button class="vnss-ctab" data-ctab="${t.id}" style="flex-shrink:0;display:flex;align-items:center;gap:5px;padding:8px 12px;border-radius:10px 10px 0 0;border:1.5px solid transparent;border-bottom:none;cursor:pointer;font-size:10px;font-weight:800;letter-spacing:.03em;${i===0?'background:rgba(124,58,237,.22);border-color:rgba(192,132,252,.28);color:#c084fc':'background:transparent;color:rgba(255,255,255,.35)'}"><span style="font-size:14px">${t.icon}</span>${t.label}</button>`).join('')}
   </div>
-  <!-- API Key -->
-  <div id="vnss-key-row">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
-      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(192,132,252,.6);text-transform:uppercase">🔑 API Key — <span id="vnss-key-prov-lbl">${provNames[cur]||cur}</span></div>
-      <div id="vnss-key-status" style="font-size:10px;font-weight:700"></div>
-    </div>
-    <div style="display:flex;gap:8px">
-      <input type="password" id="vnss-key" style="${inp};flex:1" value="${eh((v.apiKeys&&v.apiKeys[cur])||v.apiKey||'')}" placeholder="Incolla la chiave API">
-      <button id="vnss-validate-btn" style="background:rgba(74,222,128,.12);border:1.5px solid rgba(74,222,128,.28);color:#4ade80;border-radius:10px;padding:0 14px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap">🔍 Valida</button>
-    </div>
-  </div>
-  <!-- Modello -->
-  <div>
-    ${sec('Modello','⚡')}
-    <input type="text" id="vnss-model" style="${inp}" value="${eh(v.model||'')}" placeholder="${ph[cur]}">
-    <div id="vnss-model-chips" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:7px">${_vnssModelChips(cur,v.model||'')}</div>
-    <div id="vnss-model-hint" style="font-size:10px;color:rgba(255,255,255,.2);margin-top:4px">Clicca "Valida" per caricare i modelli reali dal tuo account</div>
-  </div>
-  <!-- Sensori ambientali -->
-  <div style="background:rgba(56,189,248,.05);border:1px solid rgba(56,189,248,.14);border-radius:14px;padding:14px">
-    <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(56,189,248,.6);text-transform:uppercase;margin-bottom:10px">📡 Sensori ambientali</div>
-    <div style="margin-bottom:10px">
-      <div style="font-size:10px;color:rgba(255,255,255,.35);margin-bottom:5px">Entità meteo principale</div>
-      <input type="text" id="vnss-weather" style="${inpBlue}" value="${eh(v.weatherEntityId||'')}" placeholder="weather.home">
-    </div>
-    <div>
-      <div style="font-size:10px;color:rgba(255,255,255,.35);margin-bottom:5px">Sensori extra (uno per riga)</div>
-      <textarea id="vnss-sensors" rows="3" style="${inpBlue};resize:vertical" placeholder="">${(v.extraSensors||[]).join('\n')}</textarea>
-    </div>
-  </div>
-  <!-- Regole globali -->
-  <div style="background:rgba(74,222,128,.04);border:1px solid rgba(74,222,128,.13);border-radius:14px;padding:14px">
-    <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(74,222,128,.6);text-transform:uppercase;margin-bottom:10px">📋 Regole globali</div>
-    <textarea id="vnss-global-rules" rows="3" style="${inpBlue};resize:vertical" placeholder="Es: Non attivare nulla tra le 23:00 e le 06:00. Se vento >60 km/h salta l'irrigazione.">${eh(v.globalRules||'')}</textarea>
-    <div style="font-size:10px;color:rgba(255,255,255,.2);margin-top:6px">Istruzioni che si applicano a TUTTE le card senza doverle ripetere su ognuna.</div>
-  </div>
-  <!-- Notifiche push -->
-  <div style="background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.14);border-radius:14px;padding:14px">
-    <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(251,191,36,.7);text-transform:uppercase;margin-bottom:10px">🔔 Notifiche push</div>
-    <div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end">
+
+  <!-- ⬛ AI CONFIG -->
+  <div id="vnss-section-ai" style="display:block">
+    <div style="padding:16px;display:flex;flex-direction:column;gap:14px">
       <div>
-        <div style="font-size:10px;color:rgba(255,255,255,.35);margin-bottom:5px">Entità notify (es. notify.mobile_app_iphone)</div>
-        <input type="text" id="vnss-notify" style="${inpBlue}" value="${eh(v.notifyEntityId||'')}" placeholder="notify.mobile_app_iphone">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(192,132,252,.6);text-transform:uppercase;margin-bottom:8px">🤖 Provider AI</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="vnss-prov-wrap">
+          ${['gemini','openai','claude'].map(p=>{const ic={gemini:'✦',openai:'⬡',claude:'🧡'};const sb={gemini:'Google · gratis',openai:'GPT · a consumo',claude:'Anthropic · potente'};return `<button class="vnss-prov-btn${cur===p?' active':''}" data-prov="${p}" style="background:${cur===p?'rgba(124,58,237,.28)':'rgba(124,58,237,.1)'};border:1.5px solid ${cur===p?'#c084fc':'rgba(124,58,237,.2)'};border-radius:12px;padding:10px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;color:${cur===p?'#fff':'rgba(255,255,255,.5)'}"><span style="font-size:20px">${ic[p]}</span><div style="text-align:left"><div style="font-size:12px;font-weight:800">${p.charAt(0).toUpperCase()+p.slice(1)}</div><div style="font-size:9px;opacity:.6">${sb[p]}</div></div></button>`;}).join('')}
+        </div>
+        <input type="hidden" id="vnss-prov" value="${cur}">
+      </div>
+      <div id="vnss-key-row">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(192,132,252,.6);text-transform:uppercase">🔑 API Key — <span id="vnss-key-prov-lbl">${provNames[cur]||cur}</span></div>
+          <div id="vnss-key-status" style="font-size:10px;font-weight:700"></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <input type="password" id="vnss-key" style="${inp};flex:1" value="${eh((v.apiKeys&&v.apiKeys[cur])||v.apiKey||'')}" placeholder="Incolla la chiave API">
+          <button id="vnss-validate-btn" style="background:rgba(74,222,128,.12);border:1.5px solid rgba(74,222,128,.28);color:#4ade80;border-radius:10px;padding:0 14px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap">🔍 Valida</button>
+        </div>
       </div>
       <div>
-        <div style="font-size:10px;color:rgba(255,255,255,.35);margin-bottom:5px">Report ore</div>
-        <input type="time" id="vnss-report-time" style="${inpBlue};width:90px" value="${eh(v.reportTime||'')}">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(192,132,252,.6);text-transform:uppercase;margin-bottom:8px">⚡ Modello</div>
+        <input type="text" id="vnss-model" style="${inp}" value="${eh(v.model||'')}" placeholder="${ph[cur]}">
+        <div id="vnss-model-chips" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:7px">${_vnssModelChips(cur,v.model||'')}</div>
+        <div id="vnss-model-hint" style="font-size:10px;color:rgba(255,255,255,.2);margin-top:4px">Clicca "Valida" per caricare i modelli reali dal tuo account</div>
       </div>
     </div>
-    <div style="font-size:10px;color:rgba(255,255,255,.2);margin-top:6px">Notifica push ad ogni decisione · Report giornaliero all'orario impostato (lascia vuoto per disabilitare).</div>
   </div>
-  <!-- Intervallo -->
-  <div style="display:flex;align-items:center;gap:12px;background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.14);border-radius:12px;padding:12px 14px">
-    <span style="font-size:22px">⏱</span>
-    <div style="flex:1">
-      <div style="font-size:12px;font-weight:700;color:rgba(251,191,36,.9);margin-bottom:2px">Intervallo valutazione</div>
-      <div style="font-size:10px;color:rgba(255,255,255,.3)">Ogni quanti minuti Vanessa analizza le card abilitate</div>
+
+  <!-- ⬛ REGOLE GENERALI -->
+  <div id="vnss-section-regole" style="display:none">
+    <div style="padding:16px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(74,222,128,.6);text-transform:uppercase;margin-bottom:10px">📋 Regole globali</div>
+      <textarea id="vnss-global-rules" rows="6" style="${inpB};resize:vertical;line-height:1.7" placeholder="Es: Non attivare nulla tra le 23:00 e le 06:00.&#10;Se vento >60 km/h salta l'irrigazione.">${eh(v.globalRules||'')}</textarea>
+      <div style="font-size:10px;color:rgba(255,255,255,.2);margin-top:8px;line-height:1.6">Istruzioni applicate a TUTTE le card senza ripeterle su ognuna.<br>Una regola per riga per chiarezza.</div>
     </div>
-    <input type="number" id="vnss-interval" min="1" max="720" style="background:rgba(251,191,36,.1);border:1.5px solid rgba(251,191,36,.28);border-radius:9px;padding:7px 10px;color:#fbbf24;font-size:15px;font-weight:800;width:70px;text-align:center;outline:none" value="${v.intervalMin||30}">
-    <span style="font-size:11px;color:rgba(255,255,255,.3)">min</span>
   </div>
-  <!-- Azioni -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-    <button data-action="_vanessaSave" style="background:linear-gradient(135deg,rgba(124,58,237,.4),rgba(99,102,241,.3));border:1.5px solid rgba(192,132,252,.4);color:#fff;border-radius:12px;padding:13px;font-size:13px;font-weight:800;cursor:pointer">💾 Salva</button>
-    <button data-action="_vanessaTest" style="background:rgba(56,189,248,.1);border:1.5px solid rgba(56,189,248,.28);color:#38bdf8;border-radius:12px;padding:13px;font-size:13px;font-weight:800;cursor:pointer">🧪 Test</button>
+
+  <!-- ⬛ SENSORI AMBIENTALI -->
+  <div id="vnss-section-sensori" style="display:none">
+    <div style="padding:16px;display:flex;flex-direction:column;gap:14px">
+      <div class="vnss-sec-card" style="background:rgba(56,189,248,.05);border:1px solid rgba(56,189,248,.14);border-radius:14px;padding:14px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(56,189,248,.6);text-transform:uppercase;margin-bottom:12px">🌤️ Entità meteo principale</div>
+        ${searchField('vnss-weather',v.weatherEntityId||'','Cerca o digita (es. weather.home)')}
+      </div>
+      <div class="vnss-sec-card" style="background:rgba(56,189,248,.04);border:1px solid rgba(56,189,248,.12);border-radius:14px;padding:14px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(56,189,248,.6);text-transform:uppercase;margin-bottom:12px">🏠 Stazione meteo personale</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div><div style="font-size:10px;color:rgba(255,255,255,.35);margin-bottom:5px">🌡️ Temperatura</div>${searchField('vnss-ws-temp',v.wsTemp||'','sensor.stazione_temperatura')}</div>
+          <div><div style="font-size:10px;color:rgba(255,255,255,.35);margin-bottom:5px">💧 Umidità</div>${searchField('vnss-ws-humidity',v.wsHumidity||'','sensor.stazione_umidita')}</div>
+          <div><div style="font-size:10px;color:rgba(255,255,255,.35);margin-bottom:5px">💨 Velocità vento</div>${searchField('vnss-ws-wind',v.wsWind||'','sensor.stazione_vento')}</div>
+          <div><div style="font-size:10px;color:rgba(255,255,255,.35);margin-bottom:5px">🌧️ Pioggia</div>${searchField('vnss-ws-rain',v.wsRain||'','sensor.stazione_pioggia')}</div>
+        </div>
+      </div>
+      <div class="vnss-sec-card" style="background:rgba(56,189,248,.04);border:1px solid rgba(56,189,248,.12);border-radius:14px;padding:14px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(56,189,248,.6);text-transform:uppercase;margin-bottom:10px">📡 Sensori extra</div>
+        <textarea id="vnss-sensors" rows="4" style="${inpB};resize:vertical" placeholder="Un entity_id per riga&#10;es: sensor.temperatura_casa&#10;sensor.consumo_kw">${(v.extraSensors||[]).join('\n')}</textarea>
+        <div style="font-size:10px;color:rgba(255,255,255,.2);margin-top:6px">Inclusi nel contesto AI di ogni valutazione.</div>
+      </div>
+    </div>
   </div>
-</div>`;
+
+  <!-- ⬛ NOTIFICHE -->
+  <div id="vnss-section-notifiche" style="display:none">
+    <div style="padding:16px">
+      <div class="vnss-sec-card" style="background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.14);border-radius:14px;padding:14px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(251,191,36,.7);text-transform:uppercase;margin-bottom:14px">🔔 Notifiche push</div>
+        <div style="margin-bottom:12px">
+          <div style="font-size:10px;color:rgba(255,255,255,.35);margin-bottom:5px">Entità notify</div>
+          ${searchField('vnss-notify',v.notifyEntityId||'','notify.mobile_app_iphone')}
+        </div>
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,.35);margin-bottom:5px">⏰ Orario report giornaliero</div>
+          <input type="time" id="vnss-report-time" style="${inpB};width:130px" value="${eh(v.reportTime||'')}">
+        </div>
+        <div style="font-size:10px;color:rgba(255,255,255,.2);margin-top:10px;line-height:1.6">Notifica ad ogni decisione AI.<br>Lascia l'orario vuoto per disabilitare il report giornaliero.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⬛ INTERVALLO -->
+  <div id="vnss-section-intervallo" style="display:none">
+    <div style="padding:16px">
+      <div class="vnss-sec-card" style="background:rgba(251,191,36,.04);border:1px solid rgba(251,191,36,.13);border-radius:14px;padding:24px;text-align:center">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(251,191,36,.7);text-transform:uppercase;margin-bottom:18px">⏱ Intervallo valutazione</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:14px">
+          <input type="number" id="vnss-interval" min="1" max="720" style="background:rgba(251,191,36,.12);border:2px solid rgba(251,191,36,.35);border-radius:12px;padding:12px 16px;color:#fbbf24;font-size:30px;font-weight:900;width:110px;text-align:center;outline:none" value="${v.intervalMin||30}">
+          <span style="font-size:15px;color:rgba(255,255,255,.4);font-weight:700">min</span>
+        </div>
+        <div style="font-size:11px;color:rgba(255,255,255,.3);line-height:1.8">Ogni quanti minuti Vanessa analizza le card abilitate.<br>Valore consigliato: 30–60 min.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AZIONI (sempre visibili) -->
+  <div style="padding:0 16px 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <button data-action="_vanessaSave" style="background:linear-gradient(135deg,rgba(124,58,237,.4),rgba(99,102,241,.3));border:1.5px solid rgba(192,132,252,.4);color:#fff;border-radius:12px;padding:13px;font-size:13px;font-weight:800;cursor:pointer;transition:all .2s">💾 Salva</button>
+    <button data-action="_vanessaTest" style="background:rgba(56,189,248,.1);border:1.5px solid rgba(56,189,248,.28);color:#38bdf8;border-radius:12px;padding:13px;font-size:13px;font-weight:800;cursor:pointer;transition:all .2s">🧪 Test</button>
+  </div>
+  </div>`;
+}
+
+function _vnssWireEntitySearch(inputId){
+  const inp=document.getElementById(inputId);
+  const drop=document.getElementById(inputId+'-drop');
+  if(!inp||!drop) return;
+  const show=()=>{
+    const q=(inp.value||'').toLowerCase().trim();
+    const hass=_getBestHass();
+    if(!hass||q.length<1){ drop.style.display='none'; return; }
+    const matches=Object.keys(hass.states).filter(id=>id.toLowerCase().includes(q)||(hass.states[id].attributes?.friendly_name||'').toLowerCase().includes(q)).slice(0,8);
+    if(!matches.length){ drop.style.display='none'; return; }
+    drop.innerHTML=matches.map(id=>{
+      const st=hass.states[id];
+      const name=st.attributes?.friendly_name||'';
+      return `<div data-pick="${eh(id)}" style="padding:8px 12px;cursor:pointer;transition:background .1s;border-bottom:1px solid rgba(255,255,255,.05)"><div style="font-size:11px;font-weight:700;color:#e2e8f0">${eh(id)}</div>${name?`<div style="font-size:9px;color:rgba(255,255,255,.35)">${eh(name)} · ${eh(st.state)}</div>`:''}</div>`;
+    }).join('');
+    drop.style.display='block';
+    drop.querySelectorAll('[data-pick]').forEach(el=>{
+      el.addEventListener('mousedown',e=>{ e.preventDefault(); inp.value=el.dataset.pick; drop.style.display='none'; });
+      el.addEventListener('mouseenter',()=>el.style.background='rgba(124,58,237,.22)');
+      el.addEventListener('mouseleave',()=>el.style.background='');
+    });
+  };
+  inp.addEventListener('input',show);
+  inp.addEventListener('focus',show);
+  inp.addEventListener('blur',()=>setTimeout(()=>drop.style.display='none',200));
 }
 
 function _vnssWireConfig(){
@@ -15988,6 +16043,23 @@ function _vnssWireConfig(){
   const cur=()=>document.getElementById('vnss-prov')?.value||'gemini';
   const provNames={gemini:'Google Gemini',openai:'OpenAI',claude:'Anthropic Claude'};
   const ph={gemini:'gemini-2.0-flash',openai:'gpt-4o-mini',claude:'claude-haiku-4-5-20251001'};
+  const sections=['ai','regole','sensori','notifiche','intervallo'];
+  // Sub-tab switching
+  document.querySelectorAll('.vnss-ctab').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const id=btn.dataset.ctab;
+      sections.forEach(s=>{ const el=document.getElementById('vnss-section-'+s); if(el) el.style.display='none'; });
+      const active=document.getElementById('vnss-section-'+id);
+      if(active) active.style.display='block';
+      document.querySelectorAll('.vnss-ctab').forEach(b=>{
+        const on=b===btn;
+        b.style.background=on?'rgba(124,58,237,.22)':'transparent';
+        b.style.color=on?'#c084fc':'rgba(255,255,255,.35)';
+        b.style.borderColor=on?'rgba(192,132,252,.28)':'transparent';
+      });
+    });
+  });
+  // Provider buttons
   document.getElementById('vnss-prov-wrap')?.querySelectorAll('.vnss-prov-btn').forEach(btn=>{
     btn.addEventListener('click',()=>{
       const p=btn.dataset.prov;
@@ -16002,7 +16074,7 @@ function _vnssWireConfig(){
       if(kf) kf.value=(vv.apiKeys&&vv.apiKeys[p])||'';
       const lbl=document.getElementById('vnss-key-prov-lbl');
       if(lbl) lbl.textContent=provNames[p]||p;
-      document.getElementById('vnss-key-status')?.innerHTML&&(document.getElementById('vnss-key-status').innerHTML='');
+      const ks=document.getElementById('vnss-key-status'); if(ks) ks.innerHTML='';
       const mf=document.getElementById('vnss-model');
       if(mf){ mf.placeholder=ph[p]||''; mf.value=vv.model||''; }
       const mc=document.getElementById('vnss-model-chips');
@@ -16010,7 +16082,6 @@ function _vnssWireConfig(){
     });
   });
   document.getElementById('vnss-validate-btn')?.addEventListener('click',_vanessaValidateKey);
-  document.getElementById('vnss-validate-btn-ol')?.addEventListener('click',_vanessaValidateKey);
   document.getElementById('vnss-model-chips')?.addEventListener('click',e=>{
     const chip=e.target.closest('[data-vnss-model]'); if(!chip) return;
     const m=chip.dataset.vnssModel;
@@ -16022,56 +16093,85 @@ function _vnssWireConfig(){
     const mc=document.getElementById('vnss-model-chips');
     if(mc) mc.innerHTML=_vnssModelChips(cur(),e.target.value);
   });
+  // Entity search fields
+  ['vnss-weather','vnss-ws-temp','vnss-ws-humidity','vnss-ws-wind','vnss-ws-rain','vnss-notify'].forEach(_vnssWireEntitySearch);
 }
 
 function _vanessaRenderSettings(){
   const pane=document.getElementById('ep-content-vanessa'); if(!pane) return;
   const v=_vanessaGetCfg();
-  const dinoSvg=`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
+  const dinoSvg=`<svg viewBox="0 0 140 130" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
     <defs>
-      <radialGradient id="vbody" cx="50%" cy="55%" r="50%"><stop offset="0%" stop-color="#86efac"/><stop offset="100%" stop-color="#16a34a"/></radialGradient>
-      <radialGradient id="vbelly" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#dcfce7"/><stop offset="100%" stop-color="#bbf7d0"/></radialGradient>
-      <radialGradient id="veye" cx="35%" cy="35%" r="50%"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#e2e8f0"/></radialGradient>
-      <filter id="vglow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <radialGradient id="trxG1" cx="45%" cy="40%" r="60%"><stop offset="0%" stop-color="#4ade80"/><stop offset="100%" stop-color="#15803d"/></radialGradient>
+      <radialGradient id="trxG2" cx="50%" cy="50%" r="55%"><stop offset="0%" stop-color="#dcfce7"/><stop offset="100%" stop-color="#a7f3d0"/></radialGradient>
+      <filter id="trxGlow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
     </defs>
-    <ellipse cx="58" cy="72" rx="28" ry="24" fill="url(#vbody)"/>
-    <path d="M82 80 Q105 88 108 76 Q105 68 90 72 Z" fill="#16a34a"/>
-    <path d="M82 80 Q102 86 105 76 Q102 70 90 72 Z" fill="#22c55e"/>
-    <ellipse cx="56" cy="75" rx="16" ry="14" fill="url(#vbelly)" opacity=".85"/>
-    <ellipse cx="44" cy="46" rx="24" ry="20" fill="url(#vbody)"/>
-    <path d="M24 54 Q20 62 28 66 Q36 68 44 62 Q36 66 28 62 Z" fill="#22c55e"/>
-    <ellipse cx="30" cy="59" rx="2" ry="1.2" fill="#15803d"/>
-    <ellipse cx="38" cy="60" rx="2" ry="1.2" fill="#15803d"/>
-    <path d="M28 65 Q36 71 44 65" stroke="#15803d" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-    <path d="M31 65.5 L32.5 68 L34 65.8" fill="white"/><path d="M36 66.5 L37.5 69 L39 66.8" fill="white"/>
-    <ellipse cx="36" cy="42" rx="7" ry="7.5" fill="url(#veye)" filter="url(#vglow)"/>
-    <ellipse cx="37" cy="43" rx="4" ry="4.5" fill="#1e1b4b"/>
-    <ellipse cx="38.5" cy="41.5" rx="1.5" ry="1.5" fill="#818cf8"/>
-    <ellipse cx="36.5" cy="40.5" rx=".7" ry=".7" fill="white"/>
-    <line x1="30" y1="37" x2="28" y2="34" stroke="#064e3b" stroke-width="1.4" stroke-linecap="round"/>
-    <line x1="33" y1="35.5" x2="32" y2="32.5" stroke="#064e3b" stroke-width="1.4" stroke-linecap="round"/>
-    <line x1="36" y1="35" x2="36" y2="32" stroke="#064e3b" stroke-width="1.4" stroke-linecap="round"/>
-    <line x1="39" y1="35.5" x2="40" y2="32.5" stroke="#064e3b" stroke-width="1.4" stroke-linecap="round"/>
-    <line x1="42" y1="37" x2="44" y2="34.5" stroke="#064e3b" stroke-width="1.4" stroke-linecap="round"/>
-    <path d="M48 26 Q52 20 56 26 Q52 24 48 26Z" fill="#f9a8d4"/>
-    <path d="M60 26 Q64 20 68 26 Q64 24 60 26Z" fill="#f9a8d4"/>
-    <ellipse cx="58" cy="26" rx="4" ry="3.5" fill="#ec4899"/>
-    <ellipse cx="58" cy="26" rx="2" ry="1.8" fill="#fce7f3"/>
-    <path d="M74 65 Q82 58 84 64 Q82 68 74 68 Z" fill="#22c55e"/>
-    <path d="M84 64 L88 61 M84 63 L89 62 M84 65 L88 66" stroke="#15803d" stroke-width="1" stroke-linecap="round"/>
-    <path d="M44 93 Q40 98 36 96 Q38 91 44 90 Z" fill="#16a34a"/>
-    <path d="M58 95 Q54 101 50 98 Q52 93 58 92 Z" fill="#16a34a"/>
-    <path d="M44 93 L42 98 M44 93 L46 98 M44 93 L48 96" stroke="#15803d" stroke-width="1" stroke-linecap="round"/>
-    <path d="M58 95 L56 101 M58 95 L60 100 M58 95 L62 98" stroke="#15803d" stroke-width="1" stroke-linecap="round"/>
-    <g fill="#c084fc" opacity=".9"><polygon points="95,18 96.5,22 100.5,22 97.5,24.5 98.8,28.5 95,26 91.2,28.5 92.5,24.5 89.5,22 93.5,22" transform="scale(.7) translate(40,10)"/></g>
-    <g fill="#38bdf8" opacity=".8"><polygon points="108,8 109,11 112,11 109.5,13 110.5,16 108,14.5 105.5,16 106.5,13 104,11 107,11" transform="scale(.5) translate(100,50)"/></g>
-    <g fill="#f0abfc" opacity=".7"><polygon points="15,22 16,25 19,25 16.5,27 17.5,30 15,28.5 12.5,30 13.5,27 11,25 14,25" transform="scale(.6) translate(10,10)"/></g>
+    <!-- TAIL swings around (90,73) -->
+    <g><animateTransform attributeName="transform" type="rotate" values="-12 90 73;12 90 73;-12 90 73" dur="1.3s" repeatCount="indefinite" calcMode="spline" keySplines="0.5 0 0.5 1;0.5 0 0.5 1"/>
+      <path d="M90 73 Q112 63 134 48 Q128 67 110 79 Q102 83 90 78Z" fill="#16a34a"/>
+      <path d="M90 73 Q110 65 130 52 Q125 68 108 77Z" fill="#22c55e" opacity=".5"/>
+    </g>
+    <!-- BODY -->
+    <ellipse cx="80" cy="72" rx="30" ry="22" fill="url(#trxG1)"/>
+    <ellipse cx="77" cy="77" rx="16" ry="13" fill="url(#trxG2)" opacity=".8"/>
+    <path d="M68 52 Q76 48 90 53" stroke="#15803d" stroke-width="1.8" fill="none" stroke-linecap="round" opacity=".5"/>
+    <path d="M70 58 Q78 54 92 59" stroke="#15803d" stroke-width="1.3" fill="none" stroke-linecap="round" opacity=".3"/>
+    <!-- NECK -->
+    <path d="M62 56 Q55 43 60 30 Q68 28 72 38 Q71 48 72 56Z" fill="#16a34a"/>
+    <!-- HEAD -->
+    <ellipse cx="50" cy="24" rx="24" ry="16" fill="url(#trxG1)"/>
+    <!-- Upper teeth -->
+    <path d="M30 31 L32 26 L34 31" fill="white" opacity=".92"/><path d="M36 30 L38 25 L40 30" fill="white" opacity=".92"/><path d="M42 29 L44 24 L46 29" fill="white" opacity=".9"/><path d="M48 29 L50 24 L52 29" fill="white" opacity=".85"/>
+    <!-- LOWER JAW (jaw opens/closes) -->
+    <g><animateTransform attributeName="transform" type="rotate" values="0 46 36;7 46 36;0 46 36" dur="2s" repeatCount="indefinite" calcMode="spline" keySplines="0.5 0 0.5 1;0.5 0 0.5 1"/>
+      <path d="M29 32 Q38 45 62 40 Q60 34 56 30Z" fill="#22c55e"/>
+      <path d="M33 35 L35 41 L37 35" fill="white" opacity=".88"/><path d="M39 34 L41 40 L43 34" fill="white" opacity=".88"/><path d="M45 33 L47 39 L49 33" fill="white" opacity=".85"/>
+    </g>
+    <!-- Nostril -->
+    <ellipse cx="31" cy="24" rx="2.2" ry="1.6" fill="#064e3b" opacity=".65"/>
+    <!-- Eyebrow ridge -->
+    <path d="M50 13 Q57 11 65 14" stroke="#064e3b" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <!-- EYE with blink -->
+    <g filter="url(#trxGlow)">
+      <ellipse cx="57" cy="20" rx="7.5" ry="7.5" fill="white"/>
+      <ellipse cx="58" cy="21" rx="4.5" ry="4.5" fill="#1e1b4b"/>
+      <ellipse cx="59.5" cy="19.5" rx="2" ry="2" fill="#818cf8"/>
+      <ellipse cx="58.8" cy="18.8" rx=".8" ry=".8" fill="white"/>
+      <ellipse cx="57" cy="20" rx="7.8" ry="0" fill="url(#trxG1)"><animate attributeName="ry" values="0;7.8;0;0" keyTimes="0;0.04;0.1;1" calcMode="linear" dur="5s" repeatCount="indefinite"/></ellipse>
+    </g>
+    <!-- Tiny arms -->
+    <path d="M64 65 L56 75 L52 72 L55 64Z" fill="#15803d"/>
+    <line x1="52" y1="72" x2="48" y2="76" stroke="#064e3b" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="54" y1="73" x2="51" y2="78" stroke="#064e3b" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="56" y1="75" x2="54" y2="79" stroke="#064e3b" stroke-width="1.8" stroke-linecap="round"/>
+    <!-- LEFT LEG (walks, pivots at 78,94) -->
+    <g><animateTransform attributeName="transform" type="rotate" values="-18 78 94;18 78 94;-18 78 94" dur="0.8s" repeatCount="indefinite" calcMode="spline" keySplines="0.5 0 0.5 1;0.5 0 0.5 1"/>
+      <rect x="73" y="94" width="10" height="22" rx="4" fill="#16a34a"/>
+      <path d="M68 114 Q73 121 82 118 Q79 112 73 112Z" fill="#15803d"/>
+      <line x1="68" y1="116" x2="63" y2="120" stroke="#064e3b" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="72" y1="118" x2="69" y2="123" stroke="#064e3b" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="76" y1="119" x2="75" y2="124" stroke="#064e3b" stroke-width="1.5" stroke-linecap="round"/>
+    </g>
+    <!-- RIGHT LEG (opposite phase, pivots at 91,94) -->
+    <g><animateTransform attributeName="transform" type="rotate" values="18 91 94;-18 91 94;18 91 94" dur="0.8s" repeatCount="indefinite" calcMode="spline" keySplines="0.5 0 0.5 1;0.5 0 0.5 1"/>
+      <rect x="86" y="94" width="10" height="22" rx="4" fill="#15803d"/>
+      <path d="M82 114 Q87 121 96 118 Q93 112 87 112Z" fill="#16a34a"/>
+      <line x1="82" y1="116" x2="77" y2="120" stroke="#064e3b" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="86" y1="118" x2="83" y2="123" stroke="#064e3b" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="90" y1="119" x2="89" y2="124" stroke="#064e3b" stroke-width="1.5" stroke-linecap="round"/>
+    </g>
+    <!-- Ground shadow -->
+    <ellipse cx="82" cy="128" rx="26" ry="3.5" fill="#16a34a" opacity=".18"/>
+    <!-- Sparkles -->
+    <g fill="#c084fc" opacity=".85"><polygon points="127,16 128.5,20 132.5,20 129.5,22.5 130.8,26.5 127,24 123.2,26.5 124.5,22.5 121.5,20 125.5,20" transform="scale(.65)"/></g>
+    <g fill="#38bdf8" opacity=".75"><polygon points="138,7 139,10 142,10 139.5,12 140.5,15 138,13.5 135.5,15 136.5,12 134,10 137,10" transform="scale(.5)"/></g>
+    <g fill="#fbbf24" opacity=".7"><circle cx="18" cy="18" r="2.5"/><circle cx="18" cy="18" r="1.3" fill="#fff"/></g>
+    <g fill="#f0abfc" opacity=".6"><circle cx="10" cy="32" r="2"/></g>
   </svg>`;
   if(!_vnssIsConfigured()){ _vnssRenderSetupGate(pane, dinoSvg); return; }
 
   const tabs=[
     {id:'dispositivi',icon:'🎯',label:'Dispositivi'},
-    {id:'ambiente',icon:'🌡️',label:'Ambiente'},
     {id:'registro',icon:'📋',label:'Registro'},
     {id:'config',icon:'⚙️',label:'Config'},
   ];
@@ -16090,8 +16190,14 @@ function _vanessaRenderSettings(){
 @keyframes vnss-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 @keyframes vnss-scan{0%{transform:translateY(-100%)}100%{transform:translateY(400%)}}
 .vnss-prov-btn{background:rgba(124,58,237,.1);border:1.5px solid rgba(124,58,237,.2);border-radius:12px;padding:10px 12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;color:rgba(255,255,255,.5);font-size:10px;font-weight:700;text-align:left}
-.vnss-prov-btn:hover{border-color:rgba(192,132,252,.5);background:rgba(124,58,237,.2);color:#e2e8f0}
-#vnss-model:focus,#vnss-weather:focus,#vnss-sensors:focus,#vnss-interval:focus,#vnss-key:focus{border-color:rgba(192,132,252,.7)!important;box-shadow:0 0 0 3px rgba(124,58,237,.15)!important}
+.vnss-prov-btn:hover{border-color:rgba(192,132,252,.5);background:rgba(124,58,237,.2);color:#e2e8f0;transform:scale(1.04)}
+.vnss-ctab{transition:all .2s}
+.vnss-ctab:hover{background:rgba(124,58,237,.15)!important;color:rgba(192,132,252,.8)!important}
+[data-action="_vanessaSave"]:hover{transform:scale(1.02);box-shadow:0 0 18px rgba(124,58,237,.35)!important}
+[data-action="_vanessaTest"]:hover{transform:scale(1.02);box-shadow:0 0 18px rgba(56,189,248,.25)!important}
+[data-vnmt]:hover{transform:scale(1.04);background:rgba(124,58,237,.12)!important}
+.vnss-sec-card{transition:box-shadow .2s,transform .2s}.vnss-sec-card:hover{box-shadow:0 0 18px rgba(56,189,248,.14);transform:translateY(-1px)}
+input[type=text]:focus,input[type=password]:focus,textarea:focus,input[type=number]:focus,input[type=time]:focus{border-color:rgba(192,132,252,.7)!important;box-shadow:0 0 0 3px rgba(124,58,237,.15)!important}
 </style>
 
 <!-- HERO -->
@@ -16122,7 +16228,7 @@ function _vanessaRenderSettings(){
 </div>
 
 <!-- NAV TABS -->
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px">
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px">
   ${tabs.map(t=>`<button data-vnmt="${t.id}" style="display:flex;flex-direction:column;align-items:center;gap:4px;background:transparent;border:1.5px solid transparent;border-bottom-color:transparent;border-radius:12px;padding:9px 6px;cursor:pointer;transition:all .2s;color:rgba(255,255,255,.38)">
     <span style="font-size:18px">${t.icon}</span>
     <span style="font-size:10px;font-weight:800;letter-spacing:.02em">${t.label}</span>
@@ -16160,6 +16266,10 @@ function _vanessaSave(){
   v.apiKey=v.apiKeys[v.provider]||''; // backward compat
   v.model=document.getElementById('vnss-model')?.value?.trim()||'';
   v.weatherEntityId=document.getElementById('vnss-weather')?.value?.trim()||'';
+  v.wsTemp=document.getElementById('vnss-ws-temp')?.value?.trim()||'';
+  v.wsHumidity=document.getElementById('vnss-ws-humidity')?.value?.trim()||'';
+  v.wsWind=document.getElementById('vnss-ws-wind')?.value?.trim()||'';
+  v.wsRain=document.getElementById('vnss-ws-rain')?.value?.trim()||'';
   v.extraSensors=(document.getElementById('vnss-sensors')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
   v.notifyEntityId=document.getElementById('vnss-notify')?.value?.trim()||'';
   v.globalRules=document.getElementById('vnss-global-rules')?.value?.trim()||'';
@@ -16431,6 +16541,12 @@ ORA: ${now.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'
         }
       }
     }
+  }
+  // Stazione meteo personale
+  const wsFields=[{eid:v.wsTemp,label:'Temp. stazione'},{eid:v.wsHumidity,label:'Umidità stazione'},{eid:v.wsWind,label:'Vento stazione'},{eid:v.wsRain,label:'Pioggia stazione'}].filter(f=>f.eid);
+  if(wsFields.length){
+    p+=`STAZIONE METEO PERSONALE:\n`;
+    for(const f of wsFields){ const st=hass.states[f.eid]; if(st) p+=`  ${f.label}: ${st.state}${st.attributes?.unit_of_measurement?' '+st.attributes.unit_of_measurement:''}\n`; }
   }
   // Sensori globali extra
   for(const sid of (v.extraSensors||[])){
