@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.91 — 2026-06-23
+
+### feat(vanessa): notifiche push + prompt debug + template istruzioni
+- **Notifiche push**: campo `notify.*` nelle impostazioni Vanessa — invia notifica push su ogni decisione run/skip
+- **Prompt debug**: nel popup Simula (dry run) sezione collassabile "🔍 Prompt inviato all'AI" che mostra il testo esatto mandato al modello
+- **Template istruzioni**: 5 preset pronti nel popup configurazione card — 🌿 Irrigazione, ❄️ Climatizzatore, 🔥 Riscaldamento, 💡 Luci esterne, 🧺 Lavatrice
+
 ## 1.5.90 — 2026-06-23
 
 ### feat(vanessa): tasto 🔍 Test nella lista dispositivi

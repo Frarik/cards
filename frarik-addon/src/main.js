@@ -15896,6 +15896,13 @@ function _vnssHtmlConfig(){
       <textarea id="vnss-sensors" rows="3" style="${inpBlue};resize:vertical" placeholder="">${(v.extraSensors||[]).join('\n')}</textarea>
     </div>
   </div>
+  <!-- Notifiche push -->
+  <div style="background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.14);border-radius:14px;padding:14px">
+    <div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(251,191,36,.7);text-transform:uppercase;margin-bottom:10px">🔔 Notifiche push</div>
+    <div style="font-size:10px;color:rgba(255,255,255,.35);margin-bottom:5px">Entità notify (es. notify.mobile_app_iphone)</div>
+    <input type="text" id="vnss-notify" style="${inpBlue}" value="${eh(v.notifyEntityId||'')}" placeholder="notify.mobile_app_iphone">
+    <div style="font-size:10px;color:rgba(255,255,255,.2);margin-top:6px">Vanessa invierà una notifica push ogni volta che attiva o salta un dispositivo. Lascia vuoto per disabilitare.</div>
+  </div>
   <!-- Intervallo -->
   <div style="display:flex;align-items:center;gap:12px;background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.14);border-radius:12px;padding:12px 14px">
     <span style="font-size:22px">⏱</span>
@@ -16090,6 +16097,7 @@ function _vanessaSave(){
   v.model=document.getElementById('vnss-model')?.value?.trim()||'';
   v.weatherEntityId=document.getElementById('vnss-weather')?.value?.trim()||'';
   v.extraSensors=(document.getElementById('vnss-sensors')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
+  v.notifyEntityId=document.getElementById('vnss-notify')?.value?.trim()||'';
   v.intervalMin=parseInt(document.getElementById('vnss-interval')?.value||'30',10)||30;
   saveCfg();
   _vanessaRestartInterval();
@@ -16388,7 +16396,7 @@ async function _vanessaSimulateCard(cardId){
     try{ const partial=rawResp.match(/\{[\s\S]*/); if(partial){ const fixed=partial[0].replace(/,?\s*"detail":"[^"]*$|,?\s*"reason":"[^"]*$|,?\s*"[^"]*$/,'}'); decision=JSON.parse(fixed); } }catch(e){}
   }
   if(!decision){ showToast('⚠️ Risposta AI non valida: '+rawResp.slice(0,120)); return; }
-  _vanessaDecisionPopup(card, decision, true);
+  _vanessaDecisionPopup(card, decision, true, prompt);
 }
 async function _vanessaRunCard(cardId, force){
   let card=null;
@@ -16465,13 +16473,22 @@ async function _vanessaRunCard(cardId, force){
   v.stats.total=(v.stats.total||0)+1;
   saveCfg();
   if(decision.action!=='delay') showToast(`🧠 ${card.label||card.id}: ${decision.action==='run'?'✅ Attivato':'⏭ Saltato'} — ${decision.reason||''}`);
+  // Notifica push
+  if(v.notifyEntityId&&hass&&decision.action!=='delay'){
+    try{
+      const nSvc=v.notifyEntityId.replace(/^notify\./,'');
+      const nIco=decision.action==='run'?'✅':'⏭';
+      const nDur=decision.action==='run'&&decision.duration_min>0?` per ${decision.duration_min} min`:'';
+      hass.callService('notify',nSvc,{title:`🧠 Vanessa — ${card.label||card.id}`,message:`${nIco} ${decision.action==='run'?'Attivato':'Saltato'}${nDur}: ${decision.reason||''}`});
+    }catch(_){}
+  }
   try{ _vanessaDecisionPopup(card, decision); }catch(_){}
   try{_vanessaRenderLog();}catch(_){}
   try{_vanessaRenderCards();}catch(_){}
   try{_vnssRefreshHero();}catch(_){}
 }
 
-function _vanessaDecisionPopup(card, decision, dryRun=false){
+function _vanessaDecisionPopup(card, decision, dryRun=false, promptText=null){
   document.getElementById('_vnss-decision-ov')?.remove();
   const hass=_getBestHass();
   const now=new Date();
@@ -16561,6 +16578,12 @@ function _vanessaDecisionPopup(card, decision, dryRun=false){
         </div>`).join('')}
       </div>
     </div>`:''}
+  </div>
+    <!-- Prompt debug (solo dry run) -->
+    ${dryRun&&promptText?`<details style="margin-bottom:16px">
+      <summary style="font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(56,189,248,.5);text-transform:uppercase;cursor:pointer;user-select:none;list-style:none;display:flex;align-items:center;gap:6px"><span>🔍</span><span>Prompt inviato all\'AI</span><span style="margin-left:auto;opacity:.5">▼</span></summary>
+      <pre style="margin-top:8px;background:rgba(0,0,0,.4);border:1px solid rgba(56,189,248,.12);border-radius:10px;padding:12px;font-size:10px;color:rgba(56,189,248,.7);white-space:pre-wrap;word-break:break-word;max-height:260px;overflow-y:auto;scrollbar-width:none;font-family:monospace;line-height:1.6">${eh(promptText)}</pre>
+    </details>`:''}
   </div>
   <!-- Footer -->
   <div style="padding:12px 20px 18px;display:flex;justify-content:flex-end">
@@ -16670,7 +16693,11 @@ function _vanessaCardPopup(cardId){
     <!-- 2. ISTRUZIONI AI -->
     <div style="${card2}">
       ${sec('Istruzioni per l\'AI','🎯')}
-      <textarea id="_vnss-card-criteria" rows="3" style="${inp};resize:vertical" placeholder="Es: accendi solo se la temperatura supera 25°C e ci sono persone in casa…">${eh(card.vanessaCriteria||card.vanessaContext||'')}</textarea>
+      <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">
+        <span style="font-size:10px;color:rgba(255,255,255,.25);align-self:center">Template:</span>
+        ${[['🌿','Irrigazione'],['❄️','Climatizzatore'],['🔥','Riscaldamento'],['💡','Luci esterne'],['🧺','Lavatrice']].map(([ico,lbl])=>`<button data-vnss-tpl="${lbl}" style="background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.22);color:rgba(192,132,252,.8);border-radius:7px;padding:3px 9px;font-size:10px;font-weight:700;cursor:pointer">${ico} ${lbl}</button>`).join('')}
+      </div>
+      <textarea id="_vnss-card-criteria" rows="4" style="${inp};resize:vertical" placeholder="Es: accendi solo se la temperatura supera 25°C e ci sono persone in casa…">${eh(card.vanessaCriteria||card.vanessaContext||'')}</textarea>
       <div style="font-size:10px;color:rgba(255,255,255,.18);margin-top:5px">Descrivi QUANDO e PERCHÉ attivare. Più è preciso, migliore sarà la decisione.</div>
     </div>
     <!-- 3. METEO -->
@@ -16687,6 +16714,19 @@ function _vanessaCardPopup(cardId){
   </div>
 </div>`;
   document.body.appendChild(ov);
+  const _vnssTemplates={
+    'Irrigazione':'Irrigazione automatica del giardino. Preferisci mattino presto (6:00–9:00) o sera (19:00–21:00). Salta se pioggia prevista nelle prossime 12h con probabilità >50% o se umidità >80%. Aumenta la durata di 5 min per ogni grado sopra 28°C. Durata base 15 minuti.',
+    'Climatizzatore':'Accendi il climatizzatore se la temperatura supera 26°C e ci sono persone in casa. Opera nelle ore più calde (11:00–20:00). Non accendere di notte (23:00–7:00) salvo temperatura >30°C. Spegni se la temperatura scende sotto 24°C o non ci sono persone.',
+    'Riscaldamento':'Accendi il riscaldamento se la temperatura interna scende sotto 19°C di giorno (7:00–23:00) o sotto 16°C di notte. Anticipalo di 30 minuti rispetto ai cali previsti dalle previsioni meteo. Spegni se supera 21°C.',
+    'Luci esterne':'Accendi le luci esterne al tramonto (circa 20:00 in estate, 17:00 in inverno) e spegnile all\'alba. Considera la stagione e la luminosità naturale. Non accendere durante il giorno.',
+    'Lavatrice':'Avvia nelle ore di bassa tariffa elettrica (22:00–7:00 o durante il weekend). Evita le ore di punta nei giorni feriali (7:00–10:00 e 18:00–21:00). Avvia solo se il ciclo può completarsi entro la finestra di bassa tariffa.'
+  };
+  ov.querySelectorAll('[data-vnss-tpl]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const ta=document.getElementById('_vnss-card-criteria');
+      if(ta){ ta.value=_vnssTemplates[btn.dataset.vnssTpl]||''; ta.focus(); }
+    });
+  });
   ov.addEventListener('click',e=>{ if(e.target===ov) ov.remove(); });
   document.getElementById('_vnss-card-close')?.addEventListener('click',()=>ov.remove());
   function _saveCard(){
@@ -16723,7 +16763,7 @@ function _vanessaCardPopup(cardId){
     }
     if(btn){ btn.disabled=false; btn.innerHTML='🔍 Simula'; }
     if(!decision){ showToast('⚠️ Risposta AI non valida: '+rawResp.slice(0,120)); return; }
-    _vanessaDecisionPopup(card, decision, true);
+    _vanessaDecisionPopup(card, decision, true, prompt);
   });
 }
 
