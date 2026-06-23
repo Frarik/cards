@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.94 — 2026-06-24
+
+### fix(vanessa): dropdown dipendenze custom — rimosse opzioni bianche del select nativo
+- Sostituito `<select>` nativo (opzioni bianche su sfondo dark) con dropdown custom div-based
+- Dropdown dark con icone card, hover viola, chiusura al click esterno
+
 ## 1.5.93 — 2026-06-24
 
 ### feat(vanessa): modalità vacanze, regole globali, memoria pattern, report giornaliero

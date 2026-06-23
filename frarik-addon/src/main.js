@@ -16870,10 +16870,15 @@ function _vanessaCardPopup(cardId){
     <!-- 4. DIPENDENZE -->
     <div style="${card2}">
       ${sec('Non attivare se queste card sono attive','🔗')}
-      <select id="_vnss-card-depends-sel" style="${inp};margin-bottom:6px">
-        <option value="">— seleziona una card da aggiungere —</option>
-        ${(()=>{ const opts=[]; for(const pg of cfg.pages||[]) for(const cc of pg.cards||[]) if(cc.id!==card.id&&cc.vanessaEnabled&&cc.jsCardId) opts.push(`<option value="${eh(cc.id)}">${eh(cc.label||cc.id)}</option>`); return opts.join(''); })()}
-      </select>
+      <div style="position:relative;margin-bottom:6px">
+        <button id="_vnss-dep-btn" style="${inp};text-align:left;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <span id="_vnss-dep-lbl" style="color:rgba(255,255,255,.32);font-size:12px">— seleziona una card da aggiungere —</span>
+          <span style="color:rgba(192,132,252,.5);font-size:10px;flex-shrink:0">▾</span>
+        </button>
+        <div id="_vnss-dep-list" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:200;background:#0b0420;border:1.5px solid rgba(124,58,237,.45);border-radius:12px;overflow:hidden;max-height:180px;overflow-y:auto;scrollbar-width:none;box-shadow:0 12px 40px rgba(0,0,0,.8)">
+          ${(()=>{ const items=[]; for(const pg of cfg.pages||[]) for(const cc of pg.cards||[]) if(cc.id!==card.id&&cc.vanessaEnabled&&cc.jsCardId) items.push(`<div data-dep-id="${eh(cc.id)}" class="_vnss-dep-item" style="padding:10px 14px;font-size:12px;color:#e2e8f0;cursor:pointer;border-bottom:1px solid rgba(124,58,237,.1);display:flex;align-items:center;gap:8px"><span style="font-size:14px">${cc.icon||'📦'}</span><span>${eh(cc.label||cc.id)}</span></div>`); return items.length?items.join(''):'<div style="padding:10px 14px;font-size:11px;color:rgba(255,255,255,.28)">Nessun altro dispositivo Vanessa configurato</div>'; })()}
+        </div>
+      </div>
       <textarea id="_vnss-card-depends" rows="2" style="${inp};resize:vertical;font-size:11px;font-family:monospace" placeholder="IDs delle card (uno per riga)">${eh((card.vanessaDependsOn||[]).join('\n'))}</textarea>
       <div style="font-size:10px;color:rgba(255,255,255,.18);margin-top:5px">Se una di queste card è attiva, Vanessa eviterà di attivare questa.</div>
     </div>
@@ -16892,12 +16897,19 @@ function _vanessaCardPopup(cardId){
     'Luci esterne':'Accendi le luci esterne al tramonto (circa 20:00 in estate, 17:00 in inverno) e spegnile all\'alba. Considera la stagione e la luminosità naturale. Non accendere durante il giorno.',
     'Lavatrice':'Avvia nelle ore di bassa tariffa elettrica (22:00–7:00 o durante il weekend). Evita le ore di punta nei giorni feriali (7:00–10:00 e 18:00–21:00). Avvia solo se il ciclo può completarsi entro la finestra di bassa tariffa.'
   };
-  document.getElementById('_vnss-card-depends-sel')?.addEventListener('change',e=>{
-    const sel=e.target; if(!sel.value) return;
-    const ta=document.getElementById('_vnss-card-depends');
-    if(ta){ const cur=(ta.value||'').split('\n').map(s=>s.trim()).filter(Boolean); if(!cur.includes(sel.value)){ ta.value=[...cur,sel.value].join('\n'); } }
-    sel.value='';
+  const _depBtn=document.getElementById('_vnss-dep-btn');
+  const _depList=document.getElementById('_vnss-dep-list');
+  _depBtn?.addEventListener('click',e=>{ e.stopPropagation(); if(_depList) _depList.style.display=_depList.style.display==='none'?'block':'none'; });
+  _depList?.querySelectorAll('._vnss-dep-item').forEach(item=>{
+    item.addEventListener('mouseenter',()=>item.style.background='rgba(124,58,237,.2)');
+    item.addEventListener('mouseleave',()=>item.style.background='');
+    item.addEventListener('click',e=>{ e.stopPropagation();
+      const ta=document.getElementById('_vnss-card-depends');
+      if(ta){ const cur=(ta.value||'').split('\n').map(s=>s.trim()).filter(Boolean); if(!cur.includes(item.dataset.depId)){ ta.value=[...cur,item.dataset.depId].join('\n'); } }
+      if(_depList) _depList.style.display='none';
+    });
   });
+  ov.addEventListener('click',()=>{ if(_depList) _depList.style.display='none'; });
   ov.querySelectorAll('[data-vnss-tpl]').forEach(btn=>{
     btn.addEventListener('click',()=>{
       const ta=document.getElementById('_vnss-card-criteria');
