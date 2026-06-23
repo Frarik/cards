@@ -15726,7 +15726,9 @@ function _vnssRenderMainTab(tab){
     b.style.borderBottomColor=on?'#c084fc':'transparent';
   });
   const content=document.getElementById('vnss-main-content'); if(!content) return;
+  if(window._vnssLiveTick){ clearInterval(window._vnssLiveTick); window._vnssLiveTick=null; }
   if(tab==='dispositivi'){ content.innerHTML=_vnssHtmlDevices(); _vnssWireDevices(); }
+  else if(tab==='live'){ content.innerHTML=_vnssHtmlLive(); _vnssWireLive(); }
   else if(tab==='registro'){
     content.innerHTML=`<div id="vnss-tab-bar" style="display:flex;overflow-x:auto;scrollbar-width:none;padding:0 14px;border-bottom:1px solid rgba(255,255,255,.07)"></div><div id="vnss-tab-content" style="padding:16px 14px"></div>`;
     _vanessaRenderTabs();
@@ -15890,6 +15892,160 @@ function _vnssHtmlAmbiente(){
     </div>`;
   }
   return `<div style="padding:16px">${weatherHtml}${sensorsHtml}</div>`;
+}
+
+function _vnssHtmlLive(){
+  const v=_vanessaGetCfg();
+  const hass=_getBestHass();
+  const state=_vnssState();
+  const now=Date.now();
+  const intervalMs=(v.intervalMin||30)*60000;
+  const secLeft=Math.max(0,Math.round((_vanessaNextRunTs-now)/1000));
+  const minL=Math.floor(secLeft/60),secR=secLeft%60;
+  const countdown=state==='running'?(secLeft>0?`${String(minL).padStart(2,'0')}:${String(secR).padStart(2,'0')}`:'00:00'):'--:--';
+  const progress=state==='running'&&_vanessaNextRunTs>now?Math.min(100,Math.max(0,((intervalMs-((_vanessaNextRunTs-now)))/intervalMs)*100)):0;
+  const stateColors={running:'#4ade80',paused:'#fbbf24',stopped:'#c084fc'};
+  const stateLabel={running:'● IN ESECUZIONE',paused:'⏸ IN PAUSA',stopped:'⏹ ARRESTATA'};
+  const stColor=stateColors[state]||'#c084fc';
+  const allEnabled=[];
+  for(const pg of cfg.pages||[]) for(const c of pg.cards||[]) if(c.vanessaEnabled&&c.jsCardId) allEnabled.push(c);
+  const icons={run:'✅',skip:'⏭',delay:'⏱',off:'⏹'};
+  const actColors={run:'#4ade80',skip:'#64748b',delay:'#fbbf24',off:'#94a3b8'};
+  const cardRows=allEnabled.map(c=>{
+    const eid=c.vanessaEntityId||c.entity||'';
+    const st=eid&&hass?hass.states[eid]:null;
+    const stStr=st?.state||null;
+    const isOn=stStr&&!['off','idle','unavailable','unknown','spenta'].includes(stStr.toLowerCase());
+    const stCol=isOn?'#4ade80':stStr==='unavailable'?'#f87171':'#475569';
+    const cardLog=(v.log||[]).filter(e=>e.cardId===c.id);
+    const last=cardLog[0]||null;
+    const timer=_vanessaOffTimers[c.id];
+    const isEval=_vnssEvaluating.includes(c.id);
+    const timerMin=timer&&timer.expiresTs>now?Math.round((timer.expiresTs-now)/60000):0;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:11px 14px;background:${isEval?'rgba(192,132,252,.12)':'rgba(255,255,255,.025)'};border:1px solid ${isEval?'rgba(192,132,252,.4)':stStr?stCol+'28':'rgba(255,255,255,.07)'};border-radius:12px;margin-bottom:7px;transition:all .3s">
+      <div style="width:38px;height:38px;border-radius:10px;background:rgba(124,58,237,.18);border:1px solid rgba(192,132,252,.2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;position:relative">${c.icon||'📦'}${isEval?`<div style="position:absolute;inset:-3px;border-radius:12px;border:2px solid #c084fc;animation:vnss-pulse .8s infinite"></div>`:''}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:3px">
+          <span style="font-size:12px;font-weight:800;color:#e2e8f0">${eh(c.label||c.id)}</span>
+          ${isEval?`<span style="font-size:9px;font-weight:800;color:#c084fc;background:rgba(124,58,237,.2);border:1px solid rgba(192,132,252,.35);border-radius:20px;padding:2px 8px;animation:vnss-pulse 1s infinite">🧠 ANALIZZANDO…</span>`:''}
+          ${stStr?`<span style="font-size:9px;font-weight:800;padding:2px 8px;border-radius:20px;background:${isOn?'rgba(74,222,128,.1)':'rgba(255,255,255,.05)'};border:1px solid ${stCol}44;color:${stCol};text-transform:uppercase">${eh(stStr)}</span>`:''}
+          ${timerMin>0?`<span style="font-size:9px;font-weight:700;color:#4ade80;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2);border-radius:20px;padding:2px 7px">⏳ off tra ${timerMin}min</span>`:''}
+        </div>
+        ${last?`<div style="font-size:10px;color:rgba(255,255,255,.3);display:flex;align-items:center;gap:5px"><span style="color:${actColors[last.action]||'#94a3b8'}">${icons[last.action]||'•'}</span><span>${eh(last.reason||'').slice(0,40)}</span><span style="opacity:.5">— ${_vnssTimeAgo(last.ts)}</span></div>`:`<div style="font-size:10px;color:rgba(255,255,255,.2)">Nessuna decisione ancora</div>`}
+      </div>
+    </div>`;
+  }).join('');
+  const recentLog=(v.log||[]).slice(0,6).map(e=>{
+    const col=actColors[e.action]||'#94a3b8';
+    const d=new Date(e.ts);
+    const t=d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+    return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+      <span style="font-size:14px;flex-shrink:0">${icons[e.action]||'•'}</span>
+      <div style="flex:1;min-width:0">
+        <span style="font-size:11px;font-weight:700;color:${col}">${eh(e.cardLabel||e.cardId)}</span>
+        <span style="font-size:10px;color:rgba(255,255,255,.35);margin-left:6px">${eh(e.reason||'').slice(0,35)}</span>
+      </div>
+      <span style="font-size:9px;color:rgba(255,255,255,.25);flex-shrink:0">${t}</span>
+    </div>`;
+  }).join('')||`<div style="padding:16px;text-align:center;font-size:11px;color:rgba(255,255,255,.2)">Nessuna decisione registrata</div>`;
+  return `<div id="vnss-live-wrap" style="padding:14px;display:flex;flex-direction:column;gap:12px">
+  <!-- Countdown -->
+  <div style="background:linear-gradient(135deg,rgba(124,58,237,.12),rgba(99,102,241,.07));border:1px solid rgba(124,58,237,.25);border-radius:18px;padding:18px 20px;position:relative;overflow:hidden">
+    <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,${stColor},transparent);opacity:.4"></div>
+    <div style="font-size:9px;font-weight:800;letter-spacing:.18em;color:rgba(192,132,252,.5);text-transform:uppercase;margin-bottom:6px">PROSSIMA VALUTAZIONE</div>
+    <div style="display:flex;align-items:flex-end;gap:14px;margin-bottom:10px">
+      <div id="vnss-lcd-time" style="font-size:42px;font-weight:900;color:#c084fc;font-family:monospace;letter-spacing:.04em;line-height:1;text-shadow:0 0 20px rgba(192,132,252,.5)">${countdown}</div>
+      <div style="padding-bottom:6px">
+        <div style="font-size:9px;font-weight:800;color:${stColor};letter-spacing:.1em">${stateLabel[state]||''}</div>
+        ${state==='running'&&v.intervalMin?`<div style="font-size:9px;color:rgba(255,255,255,.25);margin-top:2px">Ciclo: ${v.intervalMin} min</div>`:''}
+      </div>
+    </div>
+    <div style="height:4px;background:rgba(124,58,237,.12);border-radius:4px;overflow:hidden">
+      <div id="vnss-lcd-bar" style="height:100%;border-radius:4px;background:linear-gradient(90deg,#7c3aed,#c084fc,#818cf8);width:${progress.toFixed(1)}%;transition:width 1s linear;box-shadow:0 0 8px rgba(192,132,252,.5)"></div>
+    </div>
+    <div id="vnss-lcd-eval" style="${_vnssEvaluating.length?'display:block':'display:none'}">${_vnssEvaluating.length?`<div style="margin-top:12px;display:flex;align-items:center;gap:8px;background:rgba(192,132,252,.1);border:1px solid rgba(192,132,252,.28);border-radius:10px;padding:9px 13px"><span style="font-size:16px;animation:vnss-pulse .7s infinite">🧠</span><div><div style="font-size:11px;font-weight:800;color:#c084fc;letter-spacing:.06em">ANALISI IN CORSO</div><div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:1px">${_vnssEvaluating.map(id=>{ let lbl=id; for(const pg of cfg.pages||[]) for(const c of pg.cards||[]) if(c.id===id) lbl=c.label||c.id; return eh(lbl); }).join(', ')}</div></div></div>`:''}</div>
+  </div>
+  <!-- Card live status -->
+  <div>
+    <div style="font-size:9px;font-weight:800;letter-spacing:.12em;color:rgba(192,132,252,.5);text-transform:uppercase;margin-bottom:10px">📋 Card abilitate (${allEnabled.length})</div>
+    <div id="vnss-lcd-cards">${allEnabled.length?cardRows:`<div style="padding:20px;text-align:center;font-size:11px;color:rgba(255,255,255,.2)">Nessuna card abilitata</div>`}</div>
+  </div>
+  <!-- Mini log -->
+  <div style="background:rgba(255,255,255,.02);border:1px solid rgba(124,58,237,.12);border-radius:14px;padding:14px">
+    <div style="font-size:9px;font-weight:800;letter-spacing:.12em;color:rgba(192,132,252,.5);text-transform:uppercase;margin-bottom:10px">🕐 Ultime decisioni</div>
+    <div id="vnss-lcd-log">${recentLog}</div>
+  </div>
+  </div>`;
+}
+
+function _vnssWireLive(){
+  const tick=()=>{
+    const wrap=document.getElementById('vnss-live-wrap');
+    if(!wrap){ clearInterval(window._vnssLiveTick); window._vnssLiveTick=null; return; }
+    const v=_vanessaGetCfg();
+    const state=_vnssState();
+    const now=Date.now();
+    const intervalMs=(v.intervalMin||30)*60000;
+    const secLeft=Math.max(0,Math.round((_vanessaNextRunTs-now)/1000));
+    const minL=Math.floor(secLeft/60),secR=secLeft%60;
+    const countdown=state==='running'?(secLeft>0?`${String(minL).padStart(2,'0')}:${String(secR).padStart(2,'0')}`:'00:00'):'--:--';
+    const progress=state==='running'&&_vanessaNextRunTs>now?Math.min(100,((intervalMs-(_vanessaNextRunTs-now))/intervalMs)*100):0;
+    const cdEl=document.getElementById('vnss-lcd-time'); if(cdEl) cdEl.textContent=countdown;
+    const barEl=document.getElementById('vnss-lcd-bar'); if(barEl) barEl.style.width=progress.toFixed(1)+'%';
+    // Cards
+    const hass=_getBestHass();
+    const allEnabled=[]; for(const pg of cfg.pages||[]) for(const c of pg.cards||[]) if(c.vanessaEnabled&&c.jsCardId) allEnabled.push(c);
+    const icons={run:'✅',skip:'⏭',delay:'⏱',off:'⏹'};
+    const actColors={run:'#4ade80',skip:'#64748b',delay:'#fbbf24',off:'#94a3b8'};
+    const cardRows=allEnabled.map(c=>{
+      const eid=c.vanessaEntityId||c.entity||'';
+      const st=eid&&hass?hass.states[eid]:null;
+      const stStr=st?.state||null;
+      const isOn=stStr&&!['off','idle','unavailable','unknown','spenta'].includes(stStr.toLowerCase());
+      const stCol=isOn?'#4ade80':stStr==='unavailable'?'#f87171':'#475569';
+      const cardLog=(v.log||[]).filter(e=>e.cardId===c.id);
+      const last=cardLog[0]||null;
+      const timer=_vanessaOffTimers[c.id];
+      const isEval=_vnssEvaluating.includes(c.id);
+      const timerMin=timer&&timer.expiresTs>now?Math.round((timer.expiresTs-now)/60000):0;
+      return `<div style="display:flex;align-items:center;gap:10px;padding:11px 14px;background:${isEval?'rgba(192,132,252,.12)':'rgba(255,255,255,.025)'};border:1px solid ${isEval?'rgba(192,132,252,.4)':stStr?stCol+'28':'rgba(255,255,255,.07)'};border-radius:12px;margin-bottom:7px;transition:all .3s">
+        <div style="width:38px;height:38px;border-radius:10px;background:rgba(124,58,237,.18);border:1px solid rgba(192,132,252,.2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;position:relative">${c.icon||'📦'}${isEval?`<div style="position:absolute;inset:-3px;border-radius:12px;border:2px solid #c084fc;animation:vnss-pulse .8s infinite"></div>`:''}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:3px">
+            <span style="font-size:12px;font-weight:800;color:#e2e8f0">${eh(c.label||c.id)}</span>
+            ${isEval?`<span style="font-size:9px;font-weight:800;color:#c084fc;background:rgba(124,58,237,.2);border:1px solid rgba(192,132,252,.35);border-radius:20px;padding:2px 8px;animation:vnss-pulse 1s infinite">🧠 ANALIZZANDO…</span>`:''}
+            ${stStr?`<span style="font-size:9px;font-weight:800;padding:2px 8px;border-radius:20px;background:${isOn?'rgba(74,222,128,.1)':'rgba(255,255,255,.05)'};border:1px solid ${stCol}44;color:${stCol};text-transform:uppercase">${eh(stStr)}</span>`:''}
+            ${timerMin>0?`<span style="font-size:9px;font-weight:700;color:#4ade80;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2);border-radius:20px;padding:2px 7px">⏳ off tra ${timerMin}min</span>`:''}
+          </div>
+          ${last?`<div style="font-size:10px;color:rgba(255,255,255,.3);display:flex;align-items:center;gap:5px"><span style="color:${actColors[last.action]||'#94a3b8'}">${icons[last.action]||'•'}</span><span>${eh(last.reason||'').slice(0,40)}</span><span style="opacity:.5">— ${_vnssTimeAgo(last.ts)}</span></div>`:`<div style="font-size:10px;color:rgba(255,255,255,.2)">Nessuna decisione ancora</div>`}
+        </div>
+      </div>`;
+    }).join('');
+    const cardsEl=document.getElementById('vnss-lcd-cards');
+    if(cardsEl) cardsEl.innerHTML=allEnabled.length?cardRows:`<div style="padding:20px;text-align:center;font-size:11px;color:rgba(255,255,255,.2)">Nessuna card abilitata</div>`;
+    // Mini log
+    const recentLog=(v.log||[]).slice(0,6).map(e=>{
+      const col=actColors[e.action]||'#94a3b8';
+      const d=new Date(e.ts);
+      const t=d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+      return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)"><span style="font-size:14px;flex-shrink:0">${icons[e.action]||'•'}</span><div style="flex:1;min-width:0"><span style="font-size:11px;font-weight:700;color:${col}">${eh(e.cardLabel||e.cardId)}</span><span style="font-size:10px;color:rgba(255,255,255,.35);margin-left:6px">${eh(e.reason||'').slice(0,35)}</span></div><span style="font-size:9px;color:rgba(255,255,255,.25);flex-shrink:0">${t}</span></div>`;
+    }).join('');
+    const logEl=document.getElementById('vnss-lcd-log');
+    if(logEl) logEl.innerHTML=recentLog||`<div style="padding:16px;text-align:center;font-size:11px;color:rgba(255,255,255,.2)">Nessuna decisione registrata</div>`;
+    // Evaluating banner in header
+    const evalSection=wrap.querySelector('#vnss-lcd-eval');
+    if(evalSection){
+      if(_vnssEvaluating.length){
+        const names=_vnssEvaluating.map(id=>{ let lbl=id; for(const pg of cfg.pages||[]) for(const c of pg.cards||[]) if(c.id===id) lbl=c.label||c.id; return eh(lbl); }).join(', ');
+        evalSection.innerHTML=`<div style="margin-top:12px;display:flex;align-items:center;gap:8px;background:rgba(192,132,252,.1);border:1px solid rgba(192,132,252,.28);border-radius:10px;padding:9px 13px"><span style="font-size:16px;animation:vnss-pulse .7s infinite">🧠</span><div><div style="font-size:11px;font-weight:800;color:#c084fc;letter-spacing:.06em">ANALISI IN CORSO</div><div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:1px">${names}</div></div></div>`;
+        evalSection.style.display='block';
+      } else {
+        evalSection.innerHTML=''; evalSection.style.display='none';
+      }
+    }
+  };
+  if(window._vnssLiveTick) clearInterval(window._vnssLiveTick);
+  window._vnssLiveTick=setInterval(tick,1000);
 }
 
 function _vnssHtmlConfig(){
@@ -16172,6 +16328,7 @@ function _vanessaRenderSettings(){
 
   const tabs=[
     {id:'dispositivi',icon:'🎯',label:'Dispositivi'},
+    {id:'live',icon:'📡',label:'Live'},
     {id:'registro',icon:'📋',label:'Registro'},
     {id:'config',icon:'⚙️',label:'Config'},
   ];
@@ -16228,7 +16385,7 @@ input[type=text]:focus,input[type=password]:focus,textarea:focus,input[type=numb
 </div>
 
 <!-- NAV TABS -->
-<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px">
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px">
   ${tabs.map(t=>`<button data-vnmt="${t.id}" style="display:flex;flex-direction:column;align-items:center;gap:4px;background:transparent;border:1.5px solid transparent;border-bottom-color:transparent;border-radius:12px;padding:9px 6px;cursor:pointer;transition:all .2s;color:rgba(255,255,255,.38)">
     <span style="font-size:18px">${t.icon}</span>
     <span style="font-size:10px;font-weight:800;letter-spacing:.02em">${t.label}</span>
@@ -16658,6 +16815,7 @@ async function _vanessaSimulateCard(cardId){
   if(!decision){ showToast('⚠️ Risposta AI non valida: '+rawResp.slice(0,120)); return; }
   _vanessaDecisionPopup(card, decision, true, prompt);
 }
+let _vnssEvaluating=[];
 async function _vanessaRunCard(cardId, force){
   let card=null;
   for(const pg of cfg.pages||[]) for(const c of pg.cards||[]) if(c.id===cardId){ card=c; break; }
@@ -16674,6 +16832,7 @@ async function _vanessaRunCard(cardId, force){
       return;
     }
   }
+  _vnssEvaluating.push(cardId);
   showToast('🧠 Vanessa sta valutando…');
   const prompt=_vanessaBuildPrompt(card);
   if(!prompt){ showToast('⚠️ Hass non disponibile'); return; }
@@ -16746,6 +16905,7 @@ async function _vanessaRunCard(cardId, force){
   try{_vanessaRenderLog();}catch(_){}
   try{_vanessaRenderCards();}catch(_){}
   try{_vnssRefreshHero();}catch(_){}
+  _vnssEvaluating=_vnssEvaluating.filter(id=>id!==cardId);
 }
 
 function _vanessaDecisionPopup(card, decision, dryRun=false, promptText=null){

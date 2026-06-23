@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.5.97 — 2026-06-24
+
+### feat(vanessa): tab Live — monitoraggio real-time in diretta
+- Nuovo tab **📡 Live** tra Dispositivi e Registro
+- **Countdown MM:SS** con barra di progresso del ciclo corrente
+- **Banner "🧠 ANALISI IN CORSO"** animato quando una card viene valutata dall'AI
+- **Status per ogni card abilitata**: stato entità live, ultima decisione + tempo fa, timer di spegnimento automatico
+- **Ring animato** intorno all'icona card quando è in valutazione
+- **Mini log** delle ultime 6 decisioni con ora e motivo
+- **Auto-refresh ogni secondo** (aggiorna countdown, stati e log senza ricaricare la pagina)
+- Navigazione: nav tab da 3 a 4 colonne (Dispositivi | Live | Registro | Config)
+
 ## 1.5.96 — 2026-06-24
 
 ### feat(vanessa): redesign UI futuristica — T-Rex animato, sub-tab Config, entity search
