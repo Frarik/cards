@@ -1,4 +1,5 @@
-﻿/* ═══ SPLASH / SCHERMATA DI AVVIO ═══ */
+﻿@import '@mdi/font/css/materialdesignicons.min.css';
+/* ═══ SPLASH / SCHERMATA DI AVVIO ═══ */
 #frk-splash{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:30px;
   background:radial-gradient(ellipse at 20% 80%, #0d1b2e 0%, #060c18 40%, #04090f 100%),radial-gradient(ellipse at 80% 20%, #0a1628 0%, transparent 60%);
   background-color:#060c18;transition:opacity .6s ease}
@@ -889,6 +890,8 @@ body.editing .col-add-btn{display:flex}
 .ghc-bdg.upd{background:rgba(251,191,36,.22);border-color:rgba(251,191,36,.45);color:#fbbf24;animation:ghc-pulse 2s ease-in-out infinite}
 .ghc-bdg.cur{background:rgba(56,189,248,.18);border-color:rgba(56,189,248,.38);color:#38bdf8}
 .ghc-bdg.new{background:rgba(99,102,241,.18);border-color:rgba(99,102,241,.38);color:#a5b4fc}
+.ghc-bdg.pkg-ok{background:rgba(74,222,128,.18);border-color:rgba(74,222,128,.38);color:#4ade80}
+.ghc-bdg.pkg-req{background:rgba(251,191,36,.22);border-color:rgba(251,191,36,.45);color:#fbbf24}
 @keyframes ghc-pulse{0%,100%{opacity:1}50%{opacity:.5}}
 .ghc-body{padding:10px 11px 11px;display:flex;flex-direction:column;gap:5px;flex:1}
 .ghc-head{display:flex;align-items:center;gap:8px}
@@ -1054,6 +1057,16 @@ body.editing .col-add-btn{display:flex}
 .ipm-btn.ipm-mdi .mdi{font-size:22px;color:#818cf8}
 .ipm-mdi-lbl{font-size:7px;color:#fff;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:52px;line-height:1.1}
 .ipm-btn.ipm-mdi:hover .mdi{color:#a5b4fc}
+.ipm-res-hdr{font-size:10px;color:rgba(255,255,255,.4);padding:2px 2px 8px}
+.ipm-grp{margin-bottom:2px}
+.ipm-grp-hdr{display:flex;align-items:center;gap:6px;width:100%;padding:6px 8px;border:none;background:rgba(255,255,255,.04);border-radius:8px;cursor:pointer;color:#c4b5fd;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;transition:background .12s}
+.ipm-grp-hdr:hover{background:rgba(139,92,246,.15)}
+.ipm-grp-count{margin-left:auto;font-size:9px;color:rgba(255,255,255,.3);font-weight:400;text-transform:none;letter-spacing:0}
+.ipm-grp-arrow{font-size:8px;transition:transform .15s;color:rgba(255,255,255,.4)}
+.ipm-grp-body{overflow:hidden;padding:4px 0}
+.ipm-grp-body.off{display:none}
+.ipm-btn-more{grid-column:span 3;padding:6px 10px;border:1px dashed rgba(255,255,255,.15);border-radius:8px;background:transparent;color:rgba(255,255,255,.4);font-size:10px;cursor:pointer;text-align:center}
+.ipm-btn-more:hover{background:rgba(255,255,255,.06);color:#fff}
 [data-theme="light"] .ipm-box{background:#f8fafc;border-color:rgba(0,0,0,.1)}
 [data-theme="light"] .ipm-tab{border-color:rgba(0,0,0,.1);color:#64748b}
 [data-theme="light"] .ipm-btn{background:rgba(0,0,0,.03);color:#1e293b}

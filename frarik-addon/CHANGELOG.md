@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.5.84 — 2026-06-23
+
+### feat(store): sistema PKG completo per le card
+- Tab "Package" dello Store completamente ridisegnata
+- Sezione "Installati su HA": mostra i pkg già su `/config/packages/frarik/` con pulsanti Visualizza e Rimuovi
+- Sezione "Disponibili su GitHub": pkg dal repo con installazione diretta su HA (un clic)
+- Sezione "Carica package": upload file .yaml locale + installazione su HA
+- Badge PKG sulle card dello store (verde = installato, giallo = richiesto)
+- Quando si installa una card con pkg: controlla se il pkg è già su HA, propone installazione e riavvio HA
+- Reinstallando una card chiede di nuovo se installare il pkg
+
+## 1.5.83 — 2026-06-23
+
+### feat(icon-picker): libreria MDI completa bundlata offline (7.447 icone)
+- Font MDI ora bundlato nel pannello — funziona senza internet
+- 7.447 icone MDI disponibili, ricerca istantanea e offline
+- Nuova tab "Sfoglia tutto": gruppi collassabili per prefisso (home-*, light-*, ...)
+- Rimossa dipendenza CDN jsdelivr per i font
+
 ## 1.5.82 — 2026-06-23
 
 ### feat(viste): riordinamento viste e anteprima icona

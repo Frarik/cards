@@ -2,6 +2,7 @@
 import './style.css';
 import Chart  from 'chart.js/auto';
 import jsyaml from 'js-yaml';
+import _mdiMetaRaw from './mdi-names.js';
 import { uid, eh, ea, _lightenHex, showToast, showConfirm } from './utils.js';
 import { _ntfPushLog, _ntfDismissById, _ntfUpdateBell, ntfMarkAllRead, ntfClearAll,
          _ntfClearGh, _ntfClearGhExcept, renderNotifCenter, toggleNotifCenter, closeNotifCenter } from './notifications.js';
@@ -1726,6 +1727,7 @@ let _ghVerCache={};   // sha → versione letta dal file (per mostrarla nello st
 let _ghDescCache={};  // sha → descrizione estratta dal file
 let _ghIconCache={};  // sha → icona estratta dal file
 let _ghCodeCache={};  // sha → codice sorgente completo (per preview dinamica)
+let _ghPkgCache={};   // sha → {check, id, ver, file} — info PKG estratta dal file JS
 function _parseCardIcon(code){
   const m=String(code||'').match(/\bicon\s*:\s*['"`]([^'"`\n]{1,60})['"`]/);
   return m?m[1].trim():'';
@@ -1988,6 +1990,14 @@ function _ghcPrevPh(icon, name){
   const [c1,c2]=PALS[Math.abs(h)%PALS.length];
   return `<div class="ghc-prev-ph"><div class="ghc-prev-ph-bg" style="background:linear-gradient(135deg,${c1} 0%,${c2} 100%)"></div><div class="ghc-prev-ph-ico">${icon||'📦'}</div><div class="ghc-prev-ph-nm">${eh(name)}</div></div>`;
 }
+/* Genera badge PKG per card tile: null se nessun pkg richiesto */
+function _pkgBadgeHtml(pkgInfo){
+  if(!pkgInfo) return '';
+  const on=pkgInfo.file?_pkgIsOnHA(pkgInfo.file):false;
+  if(on) return '<span class="ghc-bdg pkg-ok"><i class="mdi mdi-package-variant-closed-check"></i> PKG ✓</span>';
+  return '<span class="ghc-bdg pkg-req"><i class="mdi mdi-package-variant"></i> PKG richiesto</span>';
+}
+
 function _ghcDesc(cardId, sha){
   const FALLBACK='Card Lovelace';
   const reg=cardId?window.FratechCardRegistry?.[cardId]:null;
@@ -2134,6 +2144,7 @@ function ghStoreTab(tab){
   if(tab==='local'){ _ghStoreRender(); _ghStoreInitDropzone(); return; }
   if(tab==='card-yaml'){ _ghStoreRender(); return; }
   if(tab==='saved'){ _ghStoreRender(); return; }
+  if(tab==='pkg'){ _loadHaInstalledPkgs().then(()=>{ if(_ghsTab==='pkg') _ghStoreRender(); }); _ghStoreRender(); return; }
   if(tab==='premium'&&_ghsCache[tab]!==undefined){ _ghStoreRender(); return; }
   if(tab!=='premium'&&_ghsCache[tab]){ _ghStoreRender(); return; }
   document.getElementById('ghs-status').textContent='⏳ Carico da GitHub…';
@@ -2159,8 +2170,8 @@ async function _ghFetchVerLabels(tab){
       const x=files[i++];
       try{
         const r=await fetch(x.download_url,{cache:'no-store'});
-        if(r.ok){ const code=await r.text(); _ghCodeCache[x.sha]=code; _ghVerCache[x.sha]=_parseCardVersion(code)||''; const pd=_parseCardDesc(code); _ghDescCache[x.sha]=pd||_ghcSmartDesc(x.name.replace(/\.js$/i,''),code)||''; _ghIconCache[x.sha]=_parseCardIcon(code)||''; }
-        else { _ghVerCache[x.sha]=''; _ghDescCache[x.sha]=''; }
+        if(r.ok){ const code=await r.text(); _ghCodeCache[x.sha]=code; _ghVerCache[x.sha]=_parseCardVersion(code)||''; const pd=_parseCardDesc(code); _ghDescCache[x.sha]=pd||_ghcSmartDesc(x.name.replace(/\.js$/i,''),code)||''; _ghIconCache[x.sha]=_parseCardIcon(code)||''; _ghPkgCache[x.sha]=_parsePkgInfo(code); }
+        else { _ghVerCache[x.sha]=''; _ghDescCache[x.sha]=''; _ghPkgCache[x.sha]=null; }
       }
       catch(e){ _ghVerCache[x.sha]=''; _ghDescCache[x.sha]=''; }
     }
@@ -2219,6 +2230,8 @@ function _ghStoreRender(){
     const prevHtml=cardId&&reg
       ?`<div class="ghc-prev-inner" data-prev-id="${eh(cardId)}"></div>`
       :`<div class="ghc-prev-inner" data-prev-sha="${eh(f.sha)}"></div>`;
+    const pkgInfoInst=cardId?_pkgInfoForInstalledCard(cardId):(_ghPkgCache[f.sha]||null);
+    const pkgBdgInst=_pkgBadgeHtml(pkgInfoInst);
     const bdg=hasUpdate?`<span class="ghc-bdg upd">↑ Aggiornamento</span>`
       :inCurPage?`<span class="ghc-bdg cur">✓ In vista</span>`
       :`<span class="ghc-bdg ok">● Installata</span>`;
@@ -2229,7 +2242,7 @@ function _ghStoreRender(){
       :`<button class="ghc-btn ghc-btn-inst" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>`;
     const delBtn=cardId?`<button class="ghc-btn-del" data-action="_ghsDeleteInstalled" data-action-arg="${cardId}" title="Disinstalla"><i class="mdi mdi-delete-outline"></i></button>`:'';
     return `<div class="ghc-tile st-${st}"><div class="ghc-strip ${st}"></div>
-      <div class="ghc-prev">${prevHtml}<div class="ghc-prev-fade"></div>${bdg}</div>
+      <div class="ghc-prev">${prevHtml}<div class="ghc-prev-fade"></div>${bdg}${pkgBdgInst}</div>
       <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico">${icon}</div><div class="ghc-meta"><div class="ghc-name">${eh(nm)}</div>${verLbl?`<div class="ghc-ver">${eh(verLbl)}</div>`:''}</div></div>
       ${desc?`<div class="ghc-desc">${eh(desc)}</div>`:''}
       <div class="ghc-acts">${updBtn}${addBtn}${delBtn}</div></div></div>`;
@@ -2241,9 +2254,11 @@ function _ghStoreRender(){
     const rawDesc=_ghDescCache[f.sha]||'';
     const desc=rawDesc||_ghcSmartDesc(nm,'');
     const icon=_ghIconCache[f.sha]||_ghcSmartIcon(nm)||folder.ico||'📦';
+    const pkgInfoNew=_ghPkgCache[f.sha]||null;
+    const pkgBdgNew=_pkgBadgeHtml(pkgInfoNew);
     const ghDel=`<button class="ghc-btn-del" data-action="_ghsDeleteFromGithub" data-action-arg="${enc}" title="Elimina da GitHub"><i class="mdi mdi-delete-forever-outline"></i></button>`;
     return `<div class="ghc-tile st-new"><div class="ghc-strip new"></div>
-      <div class="ghc-prev"><div class="ghc-prev-inner" data-prev-sha="${eh(f.sha)}"></div><div class="ghc-prev-fade"></div><span class="ghc-bdg new">⬇ Disponibile</span></div>
+      <div class="ghc-prev"><div class="ghc-prev-inner" data-prev-sha="${eh(f.sha)}"></div><div class="ghc-prev-fade"></div><span class="ghc-bdg new">⬇ Disponibile</span>${pkgBdgNew}</div>
       <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico">${icon}</div><div class="ghc-meta"><div class="ghc-name">${eh(nm)}</div>${verLbl?`<div class="ghc-ver">v${eh(verLbl)}</div>`:''}</div></div>
       ${desc?`<div class="ghc-desc">${eh(desc)}</div>`:''}
       <div class="ghc-acts"><button class="ghc-btn ghc-btn-inst" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>${ghDel}</div></div></div>`;
@@ -2845,6 +2860,10 @@ function _savePkgVer(cardId,ver){
 /* popup — chiede all'utente se il pkg HA è già installato o no */
 function _ghsPkgAskPopup(cardId,pkgVer,f,code,res){
   document.getElementById('__frk_pkg_ask__')?.remove();
+  const pkgInfo=_parsePkgInfo(code)||{};
+  const pkgFile=pkgInfo.file||''; // es. 'frarik/frarik_posta.yaml'
+  const alreadyOnHA=pkgFile?_pkgIsOnHA(pkgFile):false;
+  const pkgName=pkgFile?pkgFile.split('/').pop().replace(/\.ya?ml$/i,''):cardId;
   const host=document.createElement('div');
   host.id='__frk_pkg_ask__';
   host.attachShadow({mode:'open'});
@@ -2853,18 +2872,21 @@ function _ghsPkgAskPopup(cardId,pkgVer,f,code,res){
   host.shadowRoot.innerHTML=`<style>
     *{box-sizing:border-box;margin:0;padding:0}
     .ov{position:fixed;inset:0;z-index:99998;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.72);backdrop-filter:blur(6px)}
-    .mo{width:100%;max-height:72vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(251,191,36,.28);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.8);animation:su .22s cubic-bezier(.32,1.12,.56,1)}
+    .mo{width:100%;max-height:80vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(251,191,36,.28);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.8);animation:su .22s cubic-bezier(.32,1.12,.56,1)}
     @keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
     .hdr{display:flex;align-items:center;gap:12px;padding:18px 18px 14px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
-    .ico{width:40px;height:40px;border-radius:12px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+    .ico{width:44px;height:44px;border-radius:12px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
     .titw{flex:1}
     .tit{font-size:15px;font-weight:900;color:#fff;font-family:system-ui,sans-serif}
-    .sub{font-size:11px;color:rgba(255,255,255,.45);font-family:system-ui,sans-serif;margin-top:2px}
+    .sub{font-size:11px;color:rgba(255,255,255,.4);font-family:system-ui,sans-serif;margin-top:2px}
     .xbtn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:6px 12px;color:#fff;font-size:13px;cursor:pointer;font-family:system-ui,sans-serif}
     .body{flex:1;overflow-y:auto;padding:20px 18px;scrollbar-width:none}
     .body::-webkit-scrollbar{display:none}
-    .msg{font-size:13px;color:#fff;font-family:system-ui,sans-serif;line-height:1.75}
+    .msg{font-size:13px;color:#e2e8f0;font-family:system-ui,sans-serif;line-height:1.8}
     .msg strong{color:#fbbf24;font-weight:800}
+    .info-box{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);border-radius:10px;padding:10px 14px;margin-top:14px;font-size:11px;color:rgba(255,255,255,.6);font-family:system-ui,sans-serif;line-height:1.6}
+    .info-box b{color:#fbbf24}
+    .ha-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);border-radius:8px;padding:4px 10px;font-size:11px;color:#4ade80;margin-top:10px;font-family:system-ui,sans-serif}
     .ftr{padding:14px 18px 28px;flex-shrink:0;border-top:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;gap:8px}
     .btn-yes{width:100%;padding:14px;border-radius:13px;background:rgba(34,197,94,.18);border:1px solid rgba(34,197,94,.4);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:system-ui,sans-serif}
     .btn-yes:active{filter:brightness(.9)}
@@ -2878,19 +2900,21 @@ function _ghsPkgAskPopup(cardId,pkgVer,f,code,res){
         <div class="ico">📦</div>
         <div class="titw">
           <div class="tit">Package richiesto</div>
-          <div class="sub">${cardId}</div>
+          <div class="sub">${pkgName}${pkgVer?' · v'+pkgVer:''}</div>
         </div>
         <button class="xbtn" id="pa_close">✕</button>
       </div>
       <div class="body">
         <div class="msg">
           Questa card richiede un <strong>package Home Assistant</strong> per funzionare.<br><br>
-          Hai già installato il package <strong>frarik_posta</strong> in Home Assistant?
+          Il package viene installato in <strong>/config/packages/</strong> e aggiunge le entità necessarie alla card.
+          ${alreadyOnHA?'<br><br><span class="ha-badge">✅ Rilevato già installato su HA</span>':''}
         </div>
+        ${pkgFile?`<div class="info-box">📁 File: <b>${pkgFile}</b></div>`:''}
       </div>
       <div class="ftr">
-        <button class="btn-yes" id="pa_yes">✅ Sì, pkg già installato</button>
-        <button class="btn-no"  id="pa_no">⚡ No, installa pkg ora</button>
+        <button class="btn-yes" id="pa_yes">✅ ${alreadyOnHA?'Confermo, è già installato':'Sì, pkg già installato'}</button>
+        <button class="btn-no"  id="pa_no">⚡ ${alreadyOnHA?'Reinstalla / riconfigura':'No, installa pkg ora'}</button>
         <button class="btn-cancel" id="pa_cancel">Annulla</button>
       </div>
     </div>
@@ -2910,14 +2934,35 @@ function _ghsPkgAskPopup(cardId,pkgVer,f,code,res){
     destroy();
     const CardClass=customElements.get(cardId);
     if(typeof CardClass?.openWizard==='function'){
-      CardClass.openWizard(_haHassObj(),()=>{
+      CardClass.openWizard(_haHassObj(),async ()=>{
         _savePkgVer(cardId,pkgVer);
         _ghsDoInstall(f,code,res);
+        await _pkgPostInstall(cardId,pkgVer);
       });
     } else {
-      showToast('⚠️ Wizard non disponibile — aggiorna la pagina e riprova');
+      _pkgGenericInstall(cardId,pkgVer,pkgInfo,f,code,res);
     }
   });
+}
+
+/* Installazione generica per card senza openWizard(): scarica il pkg da GitHub e lo installa */
+async function _pkgGenericInstall(cardId,pkgVer,pkgInfo,f,code,res){
+  const file=pkgInfo?.file||'';
+  if(!file){ showToast('⚠️ Wizard non disponibile e nessun file pkg specificato'); return; }
+  const pkgName=file.split('/').pop();
+  const ghFiles=(_ghsCache.pkg||[]);
+  const ghFile=ghFiles.find(x=>x.name===pkgName||x.name===file.split('/').pop());
+  if(!ghFile){ showToast('⚠️ Package "'+pkgName+'" non trovato nel repo — caricarlo manualmente nel tab Packages'); return; }
+  showToast('⏳ Installo package…');
+  try{
+    const content=await _ghDownload(ghFile);
+    const r=await fetch(ADDON_BASE+'/api/frarik/pkg/install',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:file,content})});
+    const d=await r.json();
+    if(!d.ok){ showToast('⚠️ Errore installazione: '+(d.error||'?')); return; }
+    _savePkgVer(cardId,pkgVer);
+    _ghsDoInstall(f,code,res);
+    await _pkgPostInstall(cardId,pkgVer);
+  }catch(e){ showToast('⚠️ '+e.message); }
 }
 
 /* popup — avvisa che il package HA è stato aggiornato e offre di aggiornarlo */
@@ -3021,6 +3066,122 @@ async function _ghsYamlAdd(name){
   try{ await _ymdLivePreview(); }catch(e){}   // genera l'anteprima; poi l'utente preme "Aggiungi"
 }
 
+/* ════════ PKG — infrastruttura: parsing, stato HA, mapping card↔file ════════ */
+
+/* Estrae info PKG dal codice JS di una card */
+function _parsePkgInfo(code){
+  const check=(code.match(/frarik_pkg_check\s*:\s*['"]([^'"]+)['"]/)||[])[1]||'';
+  const id   =(code.match(/frarik_pkg_id\s*:\s*['"]([^'"]+)['"]/)||[])[1]||'';
+  const file =(code.match(/frarik_pkg_file\s*:\s*['"]([^'"]+)['"]/)||[])[1]||'';
+  const ver  =(code.match(/frarik_pkg_version\s*:\s*['"]([^'"]+)['"]/)||[])[1]||'';
+  if(!check&&!id&&!file) return null;
+  const resolvedFile=file||(id?'frarik/'+id+'.yaml':'');
+  return {check, id, ver, file:resolvedFile};
+}
+
+/* Set dei file yaml installati su HA (nomi come 'frarik/frarik_posta.yaml' o 'frarik_posta.yaml') */
+let _haInstalledPkgs=new Set();
+
+async function _loadHaInstalledPkgs(){
+  try{
+    const r=await fetch(ADDON_BASE+'/api/frarik/pkg/list');
+    if(!r.ok) return;
+    const d=await r.json();
+    _haInstalledPkgs=new Set((d.files||[]).map(f=>f.toLowerCase()));
+  }catch(e){}
+}
+
+/* Verifica se un pkg è installato su HA, accettando nomi con o senza sottocartella */
+function _pkgIsOnHA(file){
+  if(!file) return false;
+  const f=file.toLowerCase();
+  if(_haInstalledPkgs.has(f)) return true;
+  const base=f.split('/').pop();
+  for(const k of _haInstalledPkgs){ if(k===base||k.endsWith('/'+base)) return true; }
+  return false;
+}
+
+/* Recupera PKG info per una card installata (dalla sua code in store) */
+function _pkgInfoForInstalledCard(cardId){
+  const s=_jsStoreList().find(i=>(i.meta||{}).id===cardId);
+  return s?.code?_parsePkgInfo(s.code):null;
+}
+
+/* Dopo installazione PKG: aggiorna stato e offre restart */
+async function _pkgPostInstall(cardId,pkgVer){
+  await _loadHaInstalledPkgs();
+  if(_ghsTab==='pkg') _ghStoreRender();
+  showConfirm(
+    '📦 Package installato!<br><br>'+
+    'Per attivare le nuove entità è necessario <b>riavviare Home Assistant</b>.<br>'+
+    '<span style="font-size:11px;opacity:.7">La dashboard si riconnetterà da sola dopo il riavvio.</span>',
+    ()=>{ try{send({type:'call_service',domain:'homeassistant',service:'restart'});}catch(e){} showToast('🔄 Riavvio HA in corso…'); try{setC('wait');}catch(e){} },
+    '🔄 Riavvia HA ora','Lo faccio dopo'
+  );
+}
+
+/* Disinstalla un pkg da HA (/config/packages/) */
+async function _pkgUninstallFromHA(filename){
+  try{
+    const r=await fetch(ADDON_BASE+'/api/frarik/pkg/uninstall',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:filename})});
+    const d=await r.json();
+    if(d.ok){ await _loadHaInstalledPkgs(); showToast('🗑 Package rimosso da HA'); if(_ghsTab==='pkg') _ghStoreRender(); }
+    else showToast('⚠️ '+d.error);
+  }catch(e){ showToast('⚠️ Errore: '+e.message); }
+}
+
+/* Visualizza YAML di un pkg installato su HA */
+async function _pkgViewOnHA(filename){
+  try{
+    const r=await fetch(ADDON_BASE+'/api/frarik/pkg/read?name='+encodeURIComponent(filename));
+    if(!r.ok){ showToast('⚠️ File non trovato'); return; }
+    const txt=await r.text();
+    const mo=document.createElement('div');
+    mo.style.cssText='position:fixed;inset:0;z-index:9700;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.75);backdrop-filter:blur(6px)';
+    mo.innerHTML=`<div style="background:#0d1020;border:1px solid rgba(255,255,255,.12);border-radius:18px;width:min(640px,96vw);max-height:80vh;display:flex;flex-direction:column;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.07)">
+        <span style="font-size:16px">📦</span>
+        <span style="flex:1;font-weight:700;color:#f1f5f9;font-size:14px">${eh(filename)}</span>
+        <button style="background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;cursor:pointer" id="_pv_close">✕</button>
+      </div>
+      <pre style="flex:1;overflow:auto;padding:16px 18px;font-size:11px;line-height:1.6;color:#c4d8f5;font-family:monospace;margin:0;white-space:pre-wrap;word-break:break-all">${eh(txt)}</pre>
+    </div>`;
+    mo.querySelector('#_pv_close').onclick=()=>mo.remove();
+    mo.addEventListener('click',e=>{if(e.target===mo)mo.remove();});
+    document.body.appendChild(mo);
+  }catch(e){ showToast('⚠️ '+e.message); }
+}
+
+/* Installa un pkg da GitHub direttamente su HA */
+async function _ghsPkgInstallFromGH(filename){
+  const decoded=decodeURIComponent(filename);
+  showToast('⬇️ Download pkg da GitHub...');
+  try{
+    const url=`https://raw.githubusercontent.com/Frarik/cards/main/pkg/${decoded}`;
+    const r=await fetch(url); if(!r.ok) throw new Error('Download fallito');
+    const yaml=await r.text();
+    const res=await fetch(ADDON_BASE+'/api/frarik/pkg/install',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:decoded,content:yaml})});
+    if(!res.ok) throw new Error((await res.json()).error||'Errore installazione');
+    await _pkgPostInstall(null,null);
+    showToast('✅ Package installato su HA');
+    ghStoreTab('pkg');
+  }catch(e){ showToast('⚠️ '+e.message); }
+}
+
+/* Installa un pkg locale (store locale) su HA */
+async function _pkgInstallLocalToHA(filename){
+  const decoded=decodeURIComponent(filename);
+  const all=_pkgStoreList();
+  const item=all.find(f=>f.name===decoded); if(!item){ showToast('⚠️ File non trovato'); return; }
+  try{
+    const res=await fetch(ADDON_BASE+'/api/frarik/pkg/install',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:decoded,content:item.content})});
+    if(!res.ok) throw new Error((await res.json()).error||'Errore installazione');
+    await _pkgPostInstall(null,null);
+    showToast('✅ Package installato su HA');
+    ghStoreTab('pkg');
+  }catch(e){ showToast('⚠️ '+e.message); }
+}
+
 /* ════════ PKG — Store locale pacchetti YAML (come card JS, ma per file .yaml) ════════ */
 function _pkgStoreKey(name){ return 'fratech_pkg_'+name; }
 function _pkgStoreSave(name, content, origin){
@@ -3039,34 +3200,90 @@ function _pkgStoreList(){
 
 function _ghStoreRenderPkg(q){
   const list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
-  const ico='📦';
-  const rowHtml=(nm,sub,acts)=>`<div class="ghs-row"><div class="ghs-ico">${ico}</div><div class="ghs-info"><div class="ghs-name">${eh(nm)}</div><div class="ghs-sub">${eh(sub)}</div></div><div class="ghs-acts">${acts}</div></div>`;
+
+  /* Mappa cardId → card name (per mostrare quale card usa il pkg) */
+  const cardPkgMap={};
+  _jsStoreList().forEach(({meta,code})=>{
+    const id=(meta||{}).id, name=(meta||{}).name||id;
+    const info=code?_parsePkgInfo(code):null;
+    if(id&&info?.file) cardPkgMap[info.file.toLowerCase()]=name;
+  });
+
   const ghFiles=(_ghsCache.pkg||[]).slice();
-  const localFiles=_pkgStoreList();
-  const localNames=new Set(localFiles.map(f=>f.name.toLowerCase()));
-  const sortedGh=q?ghFiles.filter(f=>f.name.toLowerCase().includes(q)):ghFiles.slice();
-  const localFiltered=q?localFiles.filter(f=>f.name.toLowerCase().includes(q)):localFiles.slice();
-  const ghNotLocal=sortedGh.filter(f=>!localNames.has(f.name.toLowerCase()));
-  status.textContent=ghFiles.length+' su GitHub'+(q?' · '+sortedGh.length+' trovati':'')+'  ·  '+localFiles.length+' locali';
-  // upload button
-  const uploadRow=`<div style="display:flex;align-items:center;gap:10px;background:rgba(99,102,241,.07);border:1px dashed rgba(99,102,241,.3);border-radius:10px;cursor:pointer;padding:10px 16px;margin-bottom:8px" onclick="document.getElementById('ghs-pkg-file-inp').click()"><i class="mdi mdi-upload" style="color:#818cf8;font-size:18px"></i><span style="color:#818cf8;font-size:12px;font-weight:600">Carica PKG locale (.yaml) — poi tienilo qui o pubblicalo su GitHub</span><input type="file" id="ghs-pkg-file-inp" accept=".yaml,.yml" style="display:none"></div>`;
-  let html=uploadRow;
-  // locali (caricati da disco o scaricati da GH)
-  if(localFiltered.length){
-    html+=`<div class="ghs-subhdr"><i class="mdi mdi-folder-outline"></i> Locali · ${localFiltered.length}</div>`;
-    html+=localFiltered.map(f=>{ const nm=f.name.replace(/\.ya?ml$/i,''); const enc=encodeURIComponent(f.name);
-      const pubBtn=f.origin==='github'?'':`<button class="ghs-btn ghs-btn-upd" data-action="_ghsPkgPublish" data-action-arg="${enc}"><i class="mdi mdi-upload"></i> Pubblica</button>`;
-      const delGhBtn=`<button class="ghs-ibtn ghs-ibtn-del" data-action="_ghsPkgDeleteFromGithub" data-action-arg="${enc}" title="Elimina da GitHub"><i class="mdi mdi-github"></i></button>`;
-      return rowHtml(nm,f.origin==='github'?'Da GitHub':'Locale',`${pubBtn}<button class="ghs-btn ghs-btn-cp" data-action="_ghsPkgCopyLocal" data-action-arg="${f.name}"><i class="mdi mdi-content-copy"></i> Copia</button><button class="ghs-btn ghs-btn-cp" data-action="_ghsPkgDownloadLocal" data-action-arg="${f.name}"><i class="mdi mdi-download"></i></button>${delGhBtn}<button class="ghs-ibtn ghs-ibtn-del" data-action="_ghsPkgDeleteLocal" data-action-arg="${f.name}" title="Rimuovi dallo store locale"><i class="mdi mdi-delete-outline"></i></button>`);
+  const ghNames=new Set(ghFiles.map(f=>f.name.toLowerCase()));
+
+  /* Pkg installati su HA */
+  const haList=Array.from(_haInstalledPkgs).filter(f=>!q||f.includes(q.toLowerCase())).sort();
+  /* Pkg su GitHub non ancora su HA */
+  const ghNotHA=ghFiles.filter(f=>!_pkgIsOnHA('frarik/'+f.name)&&!_pkgIsOnHA(f.name)&&(!q||f.name.toLowerCase().includes(q.toLowerCase())));
+
+  status.textContent=`${haList.length} installati su HA  ·  ${ghFiles.length} su GitHub`;
+
+  const pkgRow=(filename,origin,acts)=>{
+    const nm=filename.split('/').pop().replace(/\.ya?ml$/i,'');
+    const cardName=cardPkgMap[filename.toLowerCase()]||cardPkgMap[filename.split('/').pop().toLowerCase()]||'';
+    const originLbl=origin==='ha'
+      ?`<span style="color:#4ade80;font-size:10px;font-weight:700">✅ Su HA</span>`
+      :`<span style="color:#818cf8;font-size:10px;font-weight:700"><i class="mdi mdi-github"></i> GitHub</span>`;
+    return `<div class="ghs-row" style="align-items:flex-start">
+      <div class="ghs-ico" style="font-size:22px;padding-top:2px">📦</div>
+      <div class="ghs-info" style="flex:1;min-width:0">
+        <div class="ghs-name">${eh(nm)}</div>
+        <div class="ghs-sub" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:2px">
+          ${originLbl}
+          ${cardName?`<span style="color:rgba(255,255,255,.45);font-size:10px">Card: ${eh(cardName)}</span>`:''}
+          <span style="color:rgba(255,255,255,.25);font-size:10px">${eh(filename)}</span>
+        </div>
+      </div>
+      <div class="ghs-acts" style="flex-shrink:0">${acts}</div>
+    </div>`;
+  };
+
+  let html='';
+
+  /* ── Installati su HA ── */
+  html+=`<div class="ghs-subhdr" style="display:flex;align-items:center;gap:8px"><i class="mdi mdi-check-circle" style="color:#4ade80"></i> Installati su Home Assistant <span style="margin-left:auto;background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.3);border-radius:8px;padding:2px 8px;font-size:10px;color:#4ade80">${haList.length}</span></div>`;
+  if(haList.length){
+    html+=haList.map(f=>{
+      const enc=encodeURIComponent(f);
+      return pkgRow(f,'ha',
+        `<button class="ghs-btn" data-action="_pkgViewOnHA" data-action-arg="${enc}" title="Visualizza YAML"><i class="mdi mdi-eye-outline"></i></button>`+
+        `<button class="ghs-btn ghs-ibtn-del" data-action="_pkgUninstallFromHA" data-action-arg="${enc}" title="Rimuovi da HA" style="color:#f87171;border-color:rgba(248,113,113,.3)"><i class="mdi mdi-delete-outline"></i> Rimuovi</button>`
+      );
     }).join('');
+  } else {
+    html+=`<div class="ghs-empty" style="padding:18px 0 10px">Nessun package installato su Home Assistant.<br><span style="font-size:10px;opacity:.5">I package vengono installati automaticamente quando installi una card che ne richiede uno.</span></div>`;
   }
-  // da GitHub (non ancora in locale)
-  if(ghNotLocal.length){
-    html+=`<div class="ghs-subhdr"><i class="mdi mdi-github"></i> Da GitHub · ${ghNotLocal.length}</div>`;
-    html+=ghNotLocal.map(f=>{ const nm=f.name.replace(/\.ya?ml$/i,''); const enc=encodeURIComponent(f.name);
-      return rowHtml(nm,'GitHub',`<button class="ghs-btn ghs-btn-cp" data-action="_ghsCopy" data-action-arg="${enc}"><i class="mdi mdi-content-copy"></i> Copia</button><button class="ghs-btn ghs-btn-cp" data-action="_ghsPkgDownloadGh" data-action-arg="${enc}"><i class="mdi mdi-download"></i></button><button class="ghs-btn ghs-btn-inst" data-action="_ghsPkgSaveLocal" data-action-arg="${enc}"><i class="mdi mdi-tray-arrow-down"></i> Salva locale</button><button class="ghs-ibtn ghs-ibtn-del" data-action="_ghsPkgDeleteFromGithub" data-action-arg="${enc}" title="Elimina da GitHub"><i class="mdi mdi-github"></i></button>`);
-    }).join('');
+
+  /* ── Disponibili su GitHub ── */
+  if(ghFiles.length||ghNotHA.length){
+    html+=`<div class="ghs-subhdr" style="display:flex;align-items:center;gap:8px;margin-top:10px"><i class="mdi mdi-github"></i> Disponibili su GitHub <span style="margin-left:auto;background:rgba(129,140,248,.12);border:1px solid rgba(129,140,248,.25);border-radius:8px;padding:2px 8px;font-size:10px;color:#818cf8">${ghFiles.length}</span></div>`;
+    if(ghNotHA.length){
+      html+=ghNotHA.map(f=>{
+        const enc=encodeURIComponent(f.name);
+        return pkgRow('frarik/'+f.name,'github',
+          `<button class="ghs-btn ghs-btn-cp" data-action="_ghsCopy" data-action-arg="${enc}"><i class="mdi mdi-content-copy"></i> Copia</button>`+
+          `<button class="ghs-btn ghs-btn-cp" data-action="_ghsPkgDownloadGh" data-action-arg="${enc}"><i class="mdi mdi-download"></i></button>`+
+          `<button class="ghs-btn ghs-btn-inst" data-action="_ghsPkgInstallFromGH" data-action-arg="${enc}"><i class="mdi mdi-package-down"></i> Installa su HA</button>`
+        );
+      }).join('');
+    } else if(ghFiles.length){
+      html+=`<div class="ghs-empty" style="padding:10px 0">Tutti i package GitHub sono già installati su HA.</div>`;
+    }
   }
+
+  /* ── Upload ── */
+  html+=`<div class="ghs-subhdr" style="margin-top:10px"><i class="mdi mdi-upload"></i> Carica package</div>`;
+  html+=`<div style="display:flex;align-items:center;gap:10px;background:rgba(99,102,241,.07);border:1px dashed rgba(99,102,241,.3);border-radius:10px;cursor:pointer;padding:10px 16px" onclick="document.getElementById('ghs-pkg-file-inp').click()"><i class="mdi mdi-file-upload-outline" style="color:#818cf8;font-size:20px"></i><div><div style="color:#818cf8;font-size:12px;font-weight:600">Carica file .yaml da PC</div><div style="color:rgba(255,255,255,.35);font-size:10px;margin-top:2px">Poi installalo su HA o pubblicalo su GitHub</div></div><input type="file" id="ghs-pkg-file-inp" accept=".yaml,.yml" style="display:none"></div>`;
+  html+=_pkgStoreList().filter(f=>!q||f.name.toLowerCase().includes(q.toLowerCase())).map(f=>{
+    const nm=f.name.replace(/\.ya?ml$/i,''); const enc=encodeURIComponent(f.name);
+    const isOnHA=_pkgIsOnHA('frarik/'+f.name)||_pkgIsOnHA(f.name);
+    const pubBtn=f.origin==='github'?'':`<button class="ghs-btn ghs-btn-upd" data-action="_ghsPkgPublish" data-action-arg="${enc}"><i class="mdi mdi-upload"></i> Pubblica</button>`;
+    const installBtn=isOnHA?'':`<button class="ghs-btn ghs-btn-inst" data-action="_pkgInstallLocalToHA" data-action-arg="${enc}"><i class="mdi mdi-package-down"></i> Installa su HA</button>`;
+    const delBtn=`<button class="ghs-ibtn ghs-ibtn-del" data-action="_ghsPkgDeleteLocal" data-action-arg="${f.name}" title="Rimuovi dalla lista"><i class="mdi mdi-delete-outline"></i></button>`;
+    return pkgRow(f.name,'local',`${installBtn}${pubBtn}<button class="ghs-btn ghs-btn-cp" data-action="_ghsPkgCopyLocal" data-action-arg="${f.name}"><i class="mdi mdi-content-copy"></i></button><button class="ghs-btn ghs-btn-cp" data-action="_ghsPkgDownloadLocal" data-action-arg="${f.name}"><i class="mdi mdi-download"></i></button>${delBtn}`);
+  }).join('');
+
   list.innerHTML=html;
   const pkgInp=document.getElementById('ghs-pkg-file-inp');
   if(pkgInp&&!pkgInp._init){ pkgInp._init=true;
@@ -6755,43 +6972,29 @@ const _ICON_MDI_CATS=[
   {cat:'Casa',          icons:['sofa','sofa-outline','bed','bed-outline','bed-double','bathtub','bathtub-outline','shower','shower-head','toilet','toilet-outline','table-furniture','chair-rolling','curtains','curtains-closed','blinds','blinds-open','window-shutter','window-shutter-open','door-sliding','door-sliding-open','stairs','stairs-up','stairs-down','pool','shed','greenhouse','mailbox','mailbox-open','mailbox-up','mailbox-outline','trash-can','trash-can-outline','recycle','wardrobe','hanger','desk','baby-carriage','dog','dog-service','cat','paw']},
   {cat:'Sistema/Rete',  icons:['chart-line','chart-bar','chart-pie','counter','numeric','database','server','nas','router-wireless','router-wireless-off','wifi','wifi-off','wifi-strength-4','bluetooth','bluetooth-off','zigbee','z-wave','cellphone','cellphone-off','tablet','laptop','desktop-classic','cpu-64-bit','memory','harddisk','cloud','cloud-upload','cloud-download','cloud-check','api','code-json','console','terminal']},
 ];
-let _iconPickerCb=null;
-let _mdiAllIcons=null; // cache completa MDI
-let _mdiLoadPromise=null; // evita fetch paralleli
+/* ── Libreria MDI bundlata (7.4.47 — 7447 icone) ── */
+const _mdiAllIcons=_mdiMetaRaw; // già ordinato e filtrato in mdi-names.js
 
-function _loadMdiAll(){
-  if(_mdiAllIcons!==null) return Promise.resolve(_mdiAllIcons);
-  if(_mdiLoadPromise) return _mdiLoadPromise;
-  _mdiLoadPromise=(async()=>{
-    const urls=[
-      'https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/meta.json',
-      'https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/meta.json',
-      'https://cdn.jsdelivr.net/npm/@mdi/font/meta.json',
-      'https://cdn.jsdelivr.net/npm/@mdi/svg/meta.json',
-    ];
-    for(const url of urls){
-      try{
-        const r=await fetch(url);
-        if(!r.ok) continue;
-        const data=await r.json();
-        if(!Array.isArray(data)||data.length<100) continue;
-        _mdiAllIcons=data.map(d=>(typeof d==='string'?d:d.name)).filter(Boolean).sort();
-        return _mdiAllIcons;
-      }catch(e){}
-    }
-    _mdiAllIcons=[]; // segna come tentato anche se fallito
-    return _mdiAllIcons;
-  })();
-  return _mdiLoadPromise;
+/* Gruppi per prefisso (prima parola prima del '-') */
+let _mdiGroups=null;
+function _getMdiGroups(){
+  if(_mdiGroups) return _mdiGroups;
+  const g={};
+  _mdiAllIcons.forEach(n=>{ const k=n.split('-')[0]; (g[k]||(g[k]=[])).push(n); });
+  _mdiGroups=Object.keys(g).sort().map(k=>({prefix:k,icons:g[k]}));
+  return _mdiGroups;
 }
+
+let _iconPickerCb=null;
+let _ipmTab='emoji'; // tab corrente
 
 function openIconPicker(cb, anchorEl, evt){
   if(evt) evt.stopPropagation();
   _iconPickerCb=cb;
   const m=document.getElementById('ntf-icon-modal');
   const s=document.getElementById('ipm-search');
-  if(s){ s.value=''; s.style.display='none'; }
-  if(m){ m.style.display='flex'; _iconPickerRenderTab('emoji'); }
+  if(s){ s.value=''; }
+  if(m){ m.style.display='flex'; _iconPickerRenderTab('mdi-cat'); }
 }
 function _iconPickerClose(){
   const m=document.getElementById('ntf-icon-modal');
@@ -6802,14 +7005,13 @@ function _iconPickerPick(val){
   if(_iconPickerCb) _iconPickerCb(val);
   _iconPickerClose();
 }
-async function _iconPickerRenderTab(tab){
+function _iconPickerRenderTab(tab){
+  _ipmTab=tab;
   const m=document.getElementById('ntf-icon-modal');
   if(!m) return;
-  const et=m.querySelector('[data-tab="emoji"]'), mt=m.querySelector('[data-tab="mdi"]');
-  if(et) et.classList.toggle('active',tab==='emoji');
-  if(mt) mt.classList.toggle('active',tab==='mdi');
+  m.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
   const s=document.getElementById('ipm-search');
-  if(s) s.style.display=tab==='mdi'?'block':'none';
+  if(s) s.style.display=(tab==='mdi-cat'||tab==='mdi-all')?'block':'none';
   const body=m.querySelector('.ipm-body');
   if(!body) return;
   if(tab==='emoji'){
@@ -6820,44 +7022,66 @@ async function _iconPickerRenderTab(tab){
     });
     h+='</div>';
     body.innerHTML=h;
-  } else {
+  } else if(tab==='mdi-cat'){
     const q=(document.getElementById('ipm-search')?.value||'').toLowerCase().trim();
-    // Carica la libreria se non ancora disponibile
-    if(_mdiAllIcons===null){
-      body.innerHTML='<div style="color:var(--muted);padding:30px;text-align:center">⏳ Caricamento libreria MDI…</div>';
-      await _loadMdiAll();
-    }
-    const allIcons=_mdiAllIcons||[];
-    if(!q){
-      // Senza ricerca: mostra le categorie curate + conteggio totale
-      const tot=allIcons.length;
-      let h=`<div style="font-size:10px;color:#fff;padding:0 2px 8px">${tot>0?tot+' icone disponibili — cerca per filtrare':'Categorie suggerite (libreria non caricata)'}</div>`;
+    if(q){
+      const icons=_mdiAllIcons.filter(n=>n.includes(q));
+      if(!icons.length){ body.innerHTML=`<div style="color:var(--muted);padding:20px;text-align:center">Nessun risultato per "<b>${eh(q)}</b>"</div>`; return; }
+      const shown=icons.slice(0,600);
+      let h=`<div class="ipm-res-hdr">${icons.length} icone trovate${icons.length>600?' (prime 600)':''}</div><div class="ipm-grid">`;
+      shown.forEach(i=>{ h+=`<button class="ipm-btn ipm-mdi" data-action="_iconPickerPick" data-action-arg="mdi:${i}" title="mdi:${i}"><span class="mdi mdi-${i}"></span><span class="ipm-mdi-lbl">${i}</span></button>`; });
+      h+='</div>';
+      body.innerHTML=h;
+    } else {
+      let h=`<div class="ipm-res-hdr">${_mdiAllIcons.length} icone MDI — cerca o sfoglia per gruppo →</div>`;
       _ICON_MDI_CATS.forEach(({cat,icons:catIcons})=>{
         h+=`<div class="ipm-cat">${cat}</div><div class="ipm-grid">`;
-        catIcons.forEach(i=>{
-          h+=`<button class="ipm-btn ipm-mdi" data-action="_iconPickerPick" data-action-arg="mdi:${i}" title="mdi:${i}"><span class="mdi mdi-${i}"></span><span class="ipm-mdi-lbl">${i}</span></button>`;
-        });
+        catIcons.forEach(i=>{ h+=`<button class="ipm-btn ipm-mdi" data-action="_iconPickerPick" data-action-arg="mdi:${i}" title="mdi:${i}"><span class="mdi mdi-${i}"></span><span class="ipm-mdi-lbl">${i}</span></button>`; });
         h+='</div>';
       });
       body.innerHTML=h;
-      return;
     }
-    // Con ricerca: filtra su tutta la libreria
-    const icons=allIcons.filter(n=>n.includes(q));
-    if(!icons.length){
-      body.innerHTML=`<div style="color:var(--muted);padding:20px;text-align:center">Nessun risultato per "<b>${q}</b>"${allIcons.length===0?' — libreria non caricata':''}</div>`;
-      return;
+  } else {
+    // tab === 'mdi-all': sfoglia tutto per prefisso, con gruppi collassabili
+    const q=(document.getElementById('ipm-search')?.value||'').toLowerCase().trim();
+    if(q){
+      const icons=_mdiAllIcons.filter(n=>n.includes(q));
+      if(!icons.length){ body.innerHTML=`<div style="color:var(--muted);padding:20px;text-align:center">Nessun risultato per "<b>${eh(q)}</b>"</div>`; return; }
+      const shown=icons.slice(0,600);
+      let h=`<div class="ipm-res-hdr">${icons.length} icone trovate${icons.length>600?' (prime 600)':''}</div><div class="ipm-grid">`;
+      shown.forEach(i=>{ h+=`<button class="ipm-btn ipm-mdi" data-action="_iconPickerPick" data-action-arg="mdi:${i}" title="mdi:${i}"><span class="mdi mdi-${i}"></span><span class="ipm-mdi-lbl">${i}</span></button>`; });
+      h+='</div>';
+      body.innerHTML=h;
+    } else {
+      const groups=_getMdiGroups();
+      let h='';
+      groups.forEach(({prefix,icons})=>{
+        const show=icons.slice(0,24);
+        const more=icons.length-show.length;
+        h+=`<div class="ipm-grp"><div class="ipm-grp-hdr" data-action="_ipmToggleGroup" data-action-arg="${prefix}"><span class="ipm-grp-arrow">▶</span><span>${prefix}</span><span class="ipm-grp-count">${icons.length}</span></div><div class="ipm-grp-body off" id="ipmgrp-${prefix}"><div class="ipm-grid">`;
+        show.forEach(i=>{ h+=`<button class="ipm-btn ipm-mdi" data-action="_iconPickerPick" data-action-arg="mdi:${i}" title="mdi:${i}"><span class="mdi mdi-${i}"></span><span class="ipm-mdi-lbl">${i}</span></button>`; });
+        if(more>0) h+=`<button class="ipm-btn-more" data-action="_ipmShowAll" data-action-arg="${prefix}">+${more} altro</button>`;
+        h+=`</div></div></div>`;
+      });
+      body.innerHTML=h;
     }
-    // Risultati ricerca: grid piatta con max 500 risultati
-    const shown=icons.slice(0,500);
-    let h=`<div style="font-size:10px;color:#fff;padding:0 2px 8px">${icons.length} icone trovate${icons.length>500?' (prime 500)':''}</div>`;
-    h+='<div class="ipm-grid">';
-    shown.forEach(i=>{
-      h+=`<button class="ipm-btn ipm-mdi" data-action="_iconPickerPick" data-action-arg="mdi:${i}" title="mdi:${i}"><span class="mdi mdi-${i}"></span><span class="ipm-mdi-lbl">${i}</span></button>`;
-    });
-    h+='</div>';
-    body.innerHTML=h;
   }
+}
+function _ipmToggleGroup(prefix){
+  const body=document.getElementById('ipmgrp-'+prefix); if(!body) return;
+  const grp=body.closest('.ipm-grp'); if(!grp) return;
+  const arrow=grp.querySelector('.ipm-grp-arrow');
+  const open=body.classList.toggle('off');
+  if(arrow) arrow.textContent=open?'▶':'▼';
+}
+function _ipmShowAll(prefix){
+  const body=document.getElementById('ipmgrp-'+prefix); if(!body) return;
+  const groups=_getMdiGroups();
+  const gr=groups.find(g=>g.prefix===prefix); if(!gr) return;
+  const grid=body.querySelector('.ipm-grid'); if(!grid) return;
+  let h='';
+  gr.icons.forEach(i=>{ h+=`<button class="ipm-btn ipm-mdi" data-action="_iconPickerPick" data-action-arg="mdi:${i}" title="mdi:${i}"><span class="mdi mdi-${i}"></span><span class="ipm-mdi-lbl">${i}</span></button>`; });
+  grid.innerHTML=h;
 }
 
 /* ── Render icon universale: emoji o mdi:xxx ── */
@@ -16485,6 +16709,8 @@ Object.assign(window, {
   _iconPickerClose,
   _iconPickerPick,
   _iconPickerRenderTab,
+  _ipmToggleGroup,
+  _ipmShowAll,
   _inViewCopyBadge,
   _inViewCutBadge,
   _inViewDelBadge,
@@ -16753,4 +16979,6 @@ Object.assign(window, {
   _epLicBadgeLoad, _epAdminPanelLoad, _adminShowFirstAccess,
   _vanessaRenderSettings, _vanessaSave, _vanessaTest, _vanessaValidateKey,
   _vanessaRunCard, _vanessaCardPopup, _vanessaClearLog,
+  _pkgUninstallFromHA, _pkgViewOnHA, _pkgGenericInstall, _pkgPostInstall,
+  _ghsPkgInstallFromGH, _pkgInstallLocalToHA,
 });
