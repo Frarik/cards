@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.92 — 2026-06-23
+
+### feat(vanessa): timeline log, skip streak, undo azione, dipendenze inter-card
+- **Timeline log visiva**: barra 24h con dot colorati (verde=run, rosso=skip, giallo=delay) nel tab registro. Hover mostra orario, card e motivo. Contatori run/skip giornalieri.
+- **Skip streak alert**: badge ⚠️ NxSkip nella lista dispositivi se la stessa card viene saltata N≥3 volte di fila. Il bordo della card diventa ambra.
+- **Undo ultima azione**: pulsante "↩️ Annulla azione" nel popup decisione (solo dopo un run reale). Spegne il dispositivo, cancella il timer Vanessa e aggiunge voce "off" nel log.
+- **Dipendenze inter-card**: nel popup config card, campo "Non attivare se queste card sono attive" con select delle card Vanessa + textarea. Se una dipendenza è attiva, il prompt istruisce l'AI a rispondere skip.
+
 ## 1.5.91 — 2026-06-23
 
 ### feat(vanessa): notifiche push + prompt debug + template istruzioni
