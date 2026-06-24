@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.09 — 2026-06-24
+
+### fix(vanessa): azione invertita cover, timing orario preciso
+- **Toggle "Quando AI dice esegui"** nel popup configurazione card: "▶ ON / Apri" (default) oppure "◀ OFF / Chiudi" — risolve il caso tapparelle dove "run" deve chiudere, non aprire
+- `_callHassSvc` ora riceve `card` e applica l'inversione dell'azione (`vanessaActionInvert`) su qualsiasi dominio (switch off, cover close, lock, ecc.)
+- **Regola oraria critica nel prompt AI**: Vanessa deve rispondere `delay` se l'ora attuale è PRECEDENTE all'orario specificato — risolve il caso "valutazione alle 19:19 ma regola dice 19:20"
+- Undo e auto-spegnimento timer rispettano anch'essi l'inversione
+
 ## 1.6.08 — 2026-06-24
 
 ### fix(vanessa): supporto cover (tapparelle) + template tapparelle

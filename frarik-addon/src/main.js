@@ -16736,6 +16736,7 @@ function _vanessaBuildPrompt(card){
 Compito: decidere in modo AUTONOMO se attivare il dispositivo ora. Considera ora del giorno, dati meteo, previsioni, storico. Rispondi SOLO con JSON valido, zero testo extra.
 
 ORA: ${now.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'})} ${now.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}
+REGOLA ORARIA CRITICA: Se l'istruzione specifica un orario esatto (es. "alle 19:20"), attiva SOLO se l'ora attuale è ≥ all'orario indicato. Se l'ora attuale è PRECEDENTE all'orario, rispondi OBBLIGATORIAMENTE con action:"delay" con delay_min pari ai minuti mancanti. Non anticipare MAI un orario specifico, nemmeno di 1 minuto.
 `;
   if(v.vacationMode) p+=`MODALITÀ VACANZE: casa vuota, nessuna persona presente. Privilegia risparmio energetico e sicurezza. Salta tutto ciò che richiede presenza umana.\n`;
   if(!v.vacationMode&&card.vanessaPresenceEntity){
@@ -16865,14 +16866,16 @@ action: run=attiva ora, skip=non attivare, delay=rimanda di delay_min minuti.`;
 }
 
 const _vanessaOffTimers={}; // cardId → {timerId, expiresTs}
-function _callHassSvc(h,entityId,action){
+function _callHassSvc(h,entityId,action,card=null){
   if(!h||!entityId) return Promise.resolve();
+  const invert=card?.vanessaActionInvert===true;
+  const eff=invert?(action==='on'?'off':'on'):action;
   const dom=entityId.split('.')[0];
   if(dom==='input_button'||dom==='button') return h.callService(dom,'press',{entity_id:entityId});
   if(dom==='script') return h.callService('script','turn_on',{entity_id:entityId});
-  if(dom==='cover') return h.callService('cover',action==='on'?'open_cover':'close_cover',{entity_id:entityId});
-  if(dom==='lock') return h.callService('lock',action==='on'?'unlock':'lock',{entity_id:entityId});
-  if(action==='on') return h.callService(dom,'turn_on',{entity_id:entityId});
+  if(dom==='cover') return h.callService('cover',eff==='on'?'open_cover':'close_cover',{entity_id:entityId});
+  if(dom==='lock') return h.callService('lock',eff==='on'?'unlock':'lock',{entity_id:entityId});
+  if(eff==='on') return h.callService(dom,'turn_on',{entity_id:entityId});
   return h.callService(dom,'turn_off',{entity_id:entityId});
 }
 async function _vanessaSimulateCard(cardId){
@@ -16938,14 +16941,14 @@ async function _vanessaRunCard(cardId, force){
   const hass=_getBestHass();
   try{
     if(decision.action==='run'&&hass){
-      await _callHassSvc(hass,runEid,'on');
+      await _callHassSvc(hass,runEid,'on',card);
       // Gestione durata automatica
       const durMin=decision.duration_min||0;
       if(durMin>0&&stopEid){
         if(_vanessaOffTimers[cardId]) clearTimeout(_vanessaOffTimers[cardId].timerId);
         const expiresTs=Date.now()+durMin*60000;
         const timerId=setTimeout(async()=>{
-          try{ const h2=_getBestHass(); await _callHassSvc(h2,stopEid,'off'); }catch(_){}
+          try{ const h2=_getBestHass(); await _callHassSvc(h2,stopEid,'off',card); }catch(_){}
           showToast(`⏹ Vanessa: ${card.label||card.id} spento dopo ${durMin} min`);
           const vv=_vanessaGetCfg(); if(!vv.log) vv.log=[];
           vv.log.unshift({ts:Date.now(),cardId,cardLabel:card.label||card.id,action:'off',reason:`Spento automaticamente dopo ${durMin} min`});
@@ -17109,7 +17112,7 @@ async function _vanessaUndoCard(cardId){
   if(timer){ clearTimeout(timer.timerId); delete _vanessaOffTimers[cardId]; }
   const hass=_getBestHass();
   const stopEid=card.vanessaStopEntity||card.vanessaEntityId||card.entity||'';
-  if(hass&&stopEid) try{ await _callHassSvc(hass,stopEid,'off'); }catch(_){}
+  if(hass&&stopEid) try{ await _callHassSvc(hass,stopEid,'off',card); }catch(_){}
   const v=_vanessaGetCfg();
   if(!v.log) v.log=[];
   v.log.unshift({ts:Date.now(),cardId,cardLabel:card.label||card.id,action:'off',reason:'Annullato manualmente'});
@@ -17216,6 +17219,14 @@ function _vanessaCardPopup(cardId){
           </div>
         </div>
         <div style="font-size:10px;color:rgba(255,255,255,.18)">Supporta: switch, input_button, script, light, climate, cover…</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px">
+          <span style="font-size:10px;color:rgba(255,255,255,.3)">🔄 Quando AI dice "esegui":</span>
+          <div style="display:flex;gap:5px">
+            <button id="_vnss-ainv-off" style="border-radius:8px;padding:4px 12px;font-size:10px;font-weight:800;cursor:pointer;border:1.5px solid ${!card.vanessaActionInvert?'rgba(74,222,128,.4)':'rgba(255,255,255,.1)'};background:${!card.vanessaActionInvert?'rgba(74,222,128,.12)':'rgba(255,255,255,.05)'};color:${!card.vanessaActionInvert?'#4ade80':'rgba(255,255,255,.35)'}">▶ ON / Apri</button>
+            <button id="_vnss-ainv-on"  style="border-radius:8px;padding:4px 12px;font-size:10px;font-weight:800;cursor:pointer;border:1.5px solid ${card.vanessaActionInvert?'rgba(248,113,113,.4)':'rgba(255,255,255,.1)'};background:${card.vanessaActionInvert?'rgba(248,113,113,.1)':'rgba(255,255,255,.05)'};color:${card.vanessaActionInvert?'#f87171':'rgba(255,255,255,.35)'}">◀ OFF / Chiudi</button>
+          </div>
+          <input type="hidden" id="_vnss-action-invert" value="${card.vanessaActionInvert?'true':'false'}">
+        </div>
       </div>
     </div>
     <!-- 2. ISTRUZIONI AI -->
@@ -17295,11 +17306,23 @@ function _vanessaCardPopup(cardId){
   });
   ov.addEventListener('click',e=>{ if(e.target===ov) ov.remove(); });
   document.getElementById('_vnss-card-close')?.addEventListener('click',()=>ov.remove());
+  // Toggle azione invert
+  const _wireAInv=()=>{
+    const hidEl=document.getElementById('_vnss-action-invert');
+    const val=hidEl?.value==='true';
+    const btnOff=document.getElementById('_vnss-ainv-off');
+    const btnOn=document.getElementById('_vnss-ainv-on');
+    if(btnOff){ btnOff.style.borderColor=!val?'rgba(74,222,128,.4)':'rgba(255,255,255,.1)'; btnOff.style.background=!val?'rgba(74,222,128,.12)':'rgba(255,255,255,.05)'; btnOff.style.color=!val?'#4ade80':'rgba(255,255,255,.35)'; }
+    if(btnOn){ btnOn.style.borderColor=val?'rgba(248,113,113,.4)':'rgba(255,255,255,.1)'; btnOn.style.background=val?'rgba(248,113,113,.1)':'rgba(255,255,255,.05)'; btnOn.style.color=val?'#f87171':'rgba(255,255,255,.35)'; }
+  };
+  document.getElementById('_vnss-ainv-off')?.addEventListener('click',()=>{ document.getElementById('_vnss-action-invert').value='false'; _wireAInv(); });
+  document.getElementById('_vnss-ainv-on')?.addEventListener('click',()=>{ document.getElementById('_vnss-action-invert').value='true'; _wireAInv(); });
   function _saveCard(){
     card.vanessaEnabled=true;
     card.vanessaEntityId=document.getElementById('_vnss-card-eid')?.value?.trim()||'';
     card.vanessaRunEntity=document.getElementById('_vnss-card-run-eid')?.value?.trim()||'';
     card.vanessaStopEntity=document.getElementById('_vnss-card-stop-eid')?.value?.trim()||'';
+    card.vanessaActionInvert=document.getElementById('_vnss-action-invert')?.value==='true';
     card.vanessaCriteria=document.getElementById('_vnss-card-criteria')?.value?.trim()||'';
     card.vanessaWeatherEntity=document.getElementById('_vnss-card-weather')?.value?.trim()||'';
     card.vanessaPresenceEntity=document.getElementById('_vnss-card-presence')?.value?.trim()||'';
