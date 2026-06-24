@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.6.06 — 2026-06-24
+
+### feat(system-card): redesign totale v4.8 — stile Oikos/posta-card
+- **Nuova grafica**: layout `.card` / `.hdr` / `.bscroll` identico alla posta-card — fondo midnight `#06080f`, accento indigo `#818cf8`
+- **Header**: icona 🖥️ pill + nome card + pill "Sistema OK" (verde) / stato allerta (arancio)
+- **Hero**: ring health score a sinistra + potenza W grande + chip temperatura + IP locale
+- **Sezione Prestazioni**: 4 ring (CPU/RAM/Disco/Swap) + barre carico 1m/5m/15m + sparklines CPU/RAM + I/O Disco
+- **Sezione Rete**: traffico in/out live + sparkline duale
+- **Stats bar**: Potenza W | kWh oggi | Costo oggi — tap → popup energia
+- **Sezione Energia**: griglia 6 celle (kWh mese/anno, Costo mese/ieri/anno/mese precedente) — tap → popup dettagli
+- **Sezione Home Assistant**: griglia 4 celle (uptime HA, uptime Server, Entità totali, Ultimo backup)
+- **Sezione Aggiornamenti**: badge Core/Supv/Addon/HACS + badge HACS count + badge SSL
+- **Drawer** (toggle): switch automazioni (Alert, Backup, Report, Riavvio HA/Server, Ventola auto, Update notif) + switch ventola fisica + link notifiche dettagliate
+- Stato drawer persistito in `localStorage` (`frarik_sycdrw_<id>`)
+- `update()` con firma stato: re-render completo solo se i dati cambiano; sparklines aggiornate ogni tick
+
 ## 1.6.05 — 2026-06-24
 
 ### fix(system-card): wizard PKG — URL fetch errato, errore connessione
