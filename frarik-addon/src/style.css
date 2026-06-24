@@ -892,6 +892,7 @@ body.editing .col-add-btn{display:flex}
 .ghc-bdg.new{background:rgba(99,102,241,.18);border-color:rgba(99,102,241,.38);color:#a5b4fc}
 .ghc-bdg.pkg-ok{background:rgba(74,222,128,.18);border-color:rgba(74,222,128,.38);color:#4ade80}
 .ghc-bdg.pkg-req{background:rgba(251,191,36,.22);border-color:rgba(251,191,36,.45);color:#fbbf24}
+.ghc-bdg.pkg-upd{background:rgba(249,115,22,.18);border-color:rgba(249,115,22,.4);color:#fb923c;animation:ghc-pulse 2s ease-in-out infinite}
 @keyframes ghc-pulse{0%,100%{opacity:1}50%{opacity:.5}}
 .ghc-body{padding:10px 11px 11px;display:flex;flex-direction:column;gap:5px;flex:1}
 .ghc-head{display:flex;align-items:center;gap:8px}

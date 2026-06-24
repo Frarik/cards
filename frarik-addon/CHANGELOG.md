@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.99 — 2026-06-24
+
+### feat(store): sistema aggiornamento PKG completo
+- **Badge "PKG update"** arancione animato sul tile della card quando `pkgVersionLatest !== pkgVersionInstalled`
+- **Bottone "Aggiorna PKG"** arancione che apre il wizard precompilato
+- **`_pkgUpdateCard(cardId)`**: apre `openWizard` (con fallback `_pkgGenericInstall`), poi salva la nuova versione e ricarica lo store
+- **Wizard precompilato**: alla riapertura del wizard i campi sensore, Google Home, Alexa e Push vengono pre-riempiti dai valori inseriti in precedenza (salvati in `localStorage` alla prima installazione)
+- **Stile `.ghc-bdg.pkg-upd`**: arancione pulsante coerente con il sistema badge esistente
+
 ## 1.5.98 — 2026-06-24
 
 ### feat(posta-card): card completamente riscritta + PKG v1.2

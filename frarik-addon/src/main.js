@@ -2231,11 +2231,18 @@ function _ghStoreRender(){
       ?`<div class="ghc-prev-inner" data-prev-id="${eh(cardId)}"></div>`
       :`<div class="ghc-prev-inner" data-prev-sha="${eh(f.sha)}"></div>`;
     const pkgInfoInst=cardId?_pkgInfoForInstalledCard(cardId):(_ghPkgCache[f.sha]||null);
-    const pkgBdgInst=_pkgBadgeHtml(pkgInfoInst);
+    const pkgVerLatest=_ghPkgCache[f.sha]?.ver||'';
+    const pkgVerSaved=(g.pkgVersions||{})[cardId]||'';
+    const pkgIsOnHANow=pkgInfoInst?.file?_pkgIsOnHA(pkgInfoInst.file):false;
+    const hasPkgUpd=!!(pkgVerLatest&&pkgIsOnHANow&&pkgVerLatest!==pkgVerSaved);
+    const pkgBdgInst=hasPkgUpd
+      ?`<span class="ghc-bdg pkg-upd"><i class="mdi mdi-package-up"></i> PKG update</span>`
+      :_pkgBadgeHtml(pkgInfoInst);
     const bdg=hasUpdate?`<span class="ghc-bdg upd">↑ Aggiornamento</span>`
       :inCurPage?`<span class="ghc-bdg cur">✓ In vista</span>`
       :`<span class="ghc-bdg ok">● Installata</span>`;
     const updBtn=hasUpdate?`<button class="ghc-btn ghc-btn-upd" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-update"></i> Aggiorna</button>`:'';
+    const pkgUpdBtn=hasPkgUpd&&cardId?`<button class="ghc-btn ghc-btn-upd" data-action="_pkgUpdateCard" data-action-arg="${cardId}" style="background:rgba(251,146,60,.15);border-color:rgba(251,146,60,.4);color:#fb923c"><i class="mdi mdi-package-up"></i> Aggiorna PKG</button>`:'';
     const addBtn=cardId?(inCurPage
       ?`<span class="ghc-indash"><i class="mdi mdi-check-circle-outline"></i> In vista</span>`
       :`<button class="ghc-btn ghc-btn-add" data-action="_jsStoreAddAndRefresh" data-action-args='["${cardId}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`)
@@ -2245,7 +2252,7 @@ function _ghStoreRender(){
       <div class="ghc-prev">${prevHtml}<div class="ghc-prev-fade"></div>${bdg}${pkgBdgInst}</div>
       <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico">${icon}</div><div class="ghc-meta"><div class="ghc-name">${eh(nm)}</div>${verLbl?`<div class="ghc-ver">${eh(verLbl)}</div>`:''}</div></div>
       ${desc?`<div class="ghc-desc">${eh(desc)}</div>`:''}
-      <div class="ghc-acts">${updBtn}${addBtn}${delBtn}</div></div></div>`;
+      <div class="ghc-acts">${pkgUpdBtn}${updBtn}${addBtn}${delBtn}</div></div></div>`;
   };
 
   const tileToInstall=(f)=>{
@@ -3032,6 +3039,25 @@ function _ghsPkgUpdatePopup(cardId,pkgVerNew){
       showToast('⚠️ Wizard non disponibile — aggiorna la pagina e riprova');
     }
   });
+}
+
+/* aggiorna il PKG di una card installata — apre wizard (pre-riempito) o fallback generico */
+async function _pkgUpdateCard(cardId){
+  const it=_jsStoreList().find(i=>(i.meta||{}).id===cardId);
+  if(!it){ showToast('⚠️ Card non trovata nello store locale'); return; }
+  const pkgInfo=_parsePkgInfo(it.code||'');
+  if(!pkgInfo){ showToast('⚠️ Nessun package associato a questa card'); return; }
+  const CardClass=window.FratechCardRegistry?.[cardId]??customElements.get(cardId);
+  if(typeof CardClass?.openWizard==='function'){
+    CardClass.openWizard(_haHassObj(),()=>{
+      _savePkgVer(cardId,pkgInfo.ver);
+      _loadHaInstalledPkgs().then(()=>{ if(typeof _ghStoreRender==='function') _ghStoreRender(); });
+    });
+  } else {
+    await _pkgGenericInstall(cardId,pkgInfo.ver,pkgInfo,null,it.code,null);
+    _savePkgVer(cardId,pkgInfo.ver);
+    _loadHaInstalledPkgs().then(()=>{ if(typeof _ghStoreRender==='function') _ghStoreRender(); });
+  }
 }
 
 async function _ghsCopy(name){
@@ -17585,5 +17611,5 @@ Object.assign(window, {
   _vanessaRenderSettings, _vanessaSave, _vanessaTest, _vanessaValidateKey,
   _vanessaRunCard, _vanessaSimulateCard, _vanessaUndoCard, _vanessaCardPopup, _vanessaClearLog, _vnssToggleVacation,
   _pkgUninstallFromHA, _pkgViewOnHA, _pkgGenericInstall, _pkgPostInstall,
-  _ghsPkgInstallFromGH, _pkgInstallLocalToHA,
+  _ghsPkgInstallFromGH, _pkgInstallLocalToHA, _pkgUpdateCard,
 });

@@ -1025,20 +1025,46 @@ PostaCard.openWizard=function(hass,onDone){
   </div></div>`;
 
   const sr=host.shadowRoot;
+  const _WIZ_KEY='frarik_pkg_wizard_posta-card';
+
+  /* helper: aggiunge una riga ad un gruppo e la restituisce */
+  function _addRow(grp,val=''){
+    const rid=(grp==='google'?_ridG++:grp==='alexa'?_ridA++:_ridP++);
+    const listEl=sr.getElementById(`w_${grp}_list`);
+    const ph={google:'media_player.google_home_2',alexa:'media_player.alexa_2',push:'mobile_app_samsung_2'}[grp]||'';
+    const row=document.createElement('div');
+    row.className='wrow'; row.dataset.group=grp; row.dataset.rid=rid;
+    row.innerHTML=`<input class="winp" placeholder="${ph}" type="text" autocomplete="off" spellcheck="false" value="${val.replace(/"/g,'&quot;')}"/><button class="wrem" data-rid="${rid}" data-grp="${grp}">✕</button>`;
+    listEl.appendChild(row);
+    return row.querySelector('.winp');
+  }
+
+  /* pre-carica config salvata */
+  try{
+    const saved=JSON.parse(localStorage.getItem(_WIZ_KEY)||'null');
+    if(saved){
+      if(saved.sensor) sr.getElementById('w_sensor').value=saved.sensor;
+      /* per i gruppi opzionali: rimpiazza la riga esistente con i valori salvati */
+      ['google','alexa','push'].forEach(grp=>{
+        const arr=(saved[grp]||[]).filter(Boolean);
+        if(!arr.length) return;
+        const listEl=sr.getElementById(`w_${grp}_list`);
+        /* aggiorna prima riga */
+        const first=listEl.querySelector('.winp'); if(first) first.value=arr[0];
+        /* aggiungi righe extra */
+        arr.slice(1).forEach(v=>_addRow(grp,v));
+      });
+    }
+  }catch(e){}
+
   sr.getElementById('wiz_close').addEventListener('click',()=>destroy());
 
   sr.getElementById('wiz_mo').addEventListener('click',e=>{
     const addBtn=e.target.closest('[data-add]');
     if(addBtn){
       const grp=addBtn.dataset.add;
-      const rid=(grp==='google'?_ridG++:grp==='alexa'?_ridA++:_ridP++);
-      const listEl=sr.getElementById(`w_${grp}_list`);
-      const ph={google:'media_player.google_home_2',alexa:'media_player.alexa_2',push:'mobile_app_samsung_2'}[grp]||'';
-      const row=document.createElement('div');
-      row.className='wrow'; row.dataset.group=grp; row.dataset.rid=rid;
-      row.innerHTML=`<input class="winp" placeholder="${ph}" type="text" autocomplete="off" spellcheck="false"/><button class="wrem" data-rid="${rid}" data-grp="${grp}">✕</button>`;
-      listEl.appendChild(row);
-      const ni=row.querySelector('.winp'); ni.focus(); _bindAcW(ni,grp);
+      const ni=_addRow(grp,'');
+      ni.focus(); _bindAcW(ni,grp);
       return;
     }
     const remBtn=e.target.closest('.wrem');
@@ -1053,7 +1079,8 @@ PostaCard.openWizard=function(hass,onDone){
     }
     errEl.style.display='';
     const _vals=g=>[...sr.querySelectorAll(`#w_${g}_list .winp`)].map(i=>i.value.trim()).filter(Boolean);
-    const yaml=_buildCustomPkg(sensor,_vals('google'),_vals('alexa'),_vals('push'));
+    const gVals=_vals('google'), aVals=_vals('alexa'), pVals=_vals('push');
+    const yaml=_buildCustomPkg(sensor,gVals,aVals,pVals);
     const btn=sr.getElementById('wiz_install'), errBnr=sr.getElementById('wiz_inst_err');
     btn.textContent='⚙️ Installazione…'; btn.disabled=true; errBnr.style.display='none';
     try{
@@ -1062,6 +1089,8 @@ PostaCard.openWizard=function(hass,onDone){
       const r=await fetch(base+'/api/frarik/pkg/install',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'frarik/frarik_posta.yaml',content:yaml})});
       const j=await r.json().catch(()=>({}));
       if(r.ok&&j.ok){
+        /* salva config per futuri aggiornamenti */
+        try{ localStorage.setItem(_WIZ_KEY,JSON.stringify({sensor,google:gVals,alexa:aVals,push:pVals})); }catch(e){}
         _acHide();
         sr.getElementById('wiz_mo').querySelector('.mbody').innerHTML=`
           <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 20px;gap:16px;text-align:center">
