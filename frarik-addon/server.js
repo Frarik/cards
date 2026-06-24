@@ -168,17 +168,31 @@ const PKG_DIR = '/config/packages';
 app.get('/api/frarik/pkg/list', (_req, res) => {
   try {
     fs.mkdirSync(PKG_DIR, { recursive: true });
-    const files = fs.readdirSync(PKG_DIR).filter(f => /\.ya?ml$/i.test(f));
+    const files = [];
+    for (const f of fs.readdirSync(PKG_DIR)) {
+      try {
+        const full = path.join(PKG_DIR, f);
+        const stat = fs.statSync(full);
+        if (stat.isFile() && /\.ya?ml$/i.test(f)) {
+          files.push(f);
+        } else if (stat.isDirectory() && !f.startsWith('.')) {
+          for (const sf of fs.readdirSync(full)) {
+            if (/\.ya?ml$/i.test(sf)) files.push(f + '/' + sf);
+          }
+        }
+      } catch(_) {}
+    }
     res.json({ ok: true, files });
   } catch (e) { res.json({ ok: false, files: [], error: String(e.message) }); }
 });
 
 app.get('/api/frarik/pkg/read', (req, res) => {
   const name = String(req.query.name || '');
-  if (!name || !/\.ya?ml$/i.test(name) || name.includes('/') || name.includes('..'))
+  const parts = name.replace(/\\/g, '/').split('/').filter(Boolean);
+  if (!parts.length || parts.length > 2 || parts.some(p => p === '..' || p === '.') || !/\.ya?ml$/i.test(parts[parts.length - 1]))
     return res.status(400).json({ ok: false, error: 'Nome non valido' });
   try {
-    const content = fs.readFileSync(path.join(PKG_DIR, name), 'utf8');
+    const content = fs.readFileSync(path.join(PKG_DIR, ...parts), 'utf8');
     res.type('text/plain').send(content);
   } catch (e) { res.status(404).json({ ok: false, error: String(e.message) }); }
 });
@@ -204,9 +218,10 @@ app.post('/api/frarik/pkg/install', async (req, res) => {
 app.delete('/api/frarik/pkg/uninstall', async (req, res) => {
   try {
     const { name } = JSON.parse((await readBody(req)).toString('utf8'));
-    if (!name || !/\.ya?ml$/i.test(name) || name.includes('/') || name.includes('..'))
+    const parts = (name || '').replace(/\\/g, '/').split('/').filter(Boolean);
+    if (!parts.length || parts.length > 2 || parts.some(p => p === '..' || p === '.') || !/\.ya?ml$/i.test(parts[parts.length - 1]))
       return res.status(400).json({ ok: false, error: 'Nome non valido' });
-    const p = path.join(PKG_DIR, name);
+    const p = path.join(PKG_DIR, ...parts);
     if (fs.existsSync(p)) fs.unlinkSync(p);
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ ok: false, error: String(e.message) }); }

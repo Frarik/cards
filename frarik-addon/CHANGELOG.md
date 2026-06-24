@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.03 — 2026-06-24
+
+### fix(server): pkg/list, pkg/read, pkg/uninstall — supporto sottocartelle
+- **`pkg/list`** ora scansiona anche le sottocartelle di `/config/packages/` (un livello) e restituisce percorsi relativi come `frarik/frarik_posta.yaml`
+- **`pkg/read`** accetta nomi con `/` (max 2 livelli, stessa validazione di install)
+- **`pkg/uninstall`** accetta nomi con `/` — prima rifiutava qualsiasi nome con slash, rendendo impossibile eliminare PKG in sottocartella
+
 ## 1.6.02 — 2026-06-24
 
 ### feat(system-card): PKG sistema completo — Centro Controllo Server v2.8
