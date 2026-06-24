@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.04 — 2026-06-24
+
+### fix(store): openWizard non trovato per card FratechRegistry — due cause
+- **`System.js` rinominato in `system-card.js`**: il file `System.js` produceva `_instId='System'` invece di `'system-card'` — il lookup `FratechCardRegistry['System']` falliva sempre, cadendo nel fallback `_pkgGenericInstall`
+- **`_ghsPkgAskPopup` pa_no handler**: lookup esteso a `window.FratechCardRegistry?.[cardId] ?? customElements.get(cardId)` — prima cercava solo in `customElements`, escludendo le card old-style FratechRegistry
+
 ## 1.6.03 — 2026-06-24
 
 ### fix(server): pkg/list, pkg/read, pkg/uninstall — supporto sottocartelle

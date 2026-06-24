@@ -2967,7 +2967,7 @@ function _ghsPkgAskPopup(cardId,pkgVer,f,code,res){
   /* pkg non installato → apre il wizard di configurazione */
   sr.getElementById('pa_no').addEventListener('click',()=>{
     destroy();
-    const CardClass=customElements.get(cardId);
+    const CardClass=window.FratechCardRegistry?.[cardId]??customElements.get(cardId);
     if(typeof CardClass?.openWizard==='function'){
       CardClass.openWizard(_haHassObj(),async ()=>{
         _savePkgVer(cardId,pkgVer);
