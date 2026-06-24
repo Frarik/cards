@@ -661,9 +661,9 @@
     if(!el.querySelector('.bscroll')||el._sycSig!==sig){
       el._sycSig=sig;
       var buf=el._sycBuf;
-      el.innerHTML=render(card); el._sycBound=false; el._sycBuf=buf;
-      mount(card,hass,el);
+      el.innerHTML=render(card); el._sycBuf=buf;
     }
+    mount(card,hass,el);
     var rid=((el.querySelector('[id^="syc"]')||{}).id)||'sycx';
     var ramC='#a78bfa', cpuC=usageColor(cpuV);
     var cpuSp=el.querySelector('[data-syv="cpu-sp"]'); if(cpuSp) cpuSp.innerHTML=ekgSVG(el._sycBuf&&el._sycBuf.cpu||[],cpuSp.offsetWidth||160,32,cpuC,rid+'gc');
@@ -678,7 +678,7 @@
       if(a==='toggle-drawer'){
         var nowOpen=!el.querySelector('.drw');
         try{localStorage.setItem('frarik_sycdrw_'+(card.id||'x'),nowOpen?'1':'0');}catch(e){}
-        var buf=el._sycBuf; el._sycSig=''; el.innerHTML=render(card); el._sycBound=false; el._sycBuf=buf; mount(card,hass,el);
+        var buf=el._sycBuf; el._sycSig=''; el.innerHTML=render(card); el._sycBuf=buf;
         return;
       }
       if(a==='toggle'){ var eid=sya.dataset.eid; var h=H(),cur=h&&h.states&&h.states[eid]&&h.states[eid].state; callSvc('homeassistant',cur==='on'?'turn_off':'turn_on',{entity_id:eid}); return; }
@@ -836,7 +836,7 @@
       if(scV!==cardScaleV) detail.cardScale=scV; if(wV!==cardWV) detail.cardW=wV;
       if(detail.cardScale!=null||detail.cardW!=null) el.dispatchEvent(new CustomEvent('frarik-card-layout',{bubbles:true,composed:true,detail:detail}));
       close();
-      try{ el.innerHTML=render(card); el._sycBound=false; mount(card,H(),el); }catch(e){}
+      try{ el._sycSig=''; el.innerHTML=render(card); }catch(e){}
     });
     updatePrev();
   }

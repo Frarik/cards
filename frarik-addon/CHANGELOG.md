@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.07 — 2026-06-24
+
+### fix(system-card): popup non si chiude al primo click sulla X
+- `update()` resettava `el._sycBound=false` ad ogni re-render e richiamava `mount()`, accumulando N listener identici su `el` — ogni click sulla X chiudeva il popup ma ne riapreva N-1 istanze
+- Fix: `el._sycBound` non viene più resettato nei re-render; `mount()` è idempotente (guard `_sycBound`) e viene chiamato una volta sola per ciclo di vita dell'elemento
+
 ## 1.6.06 — 2026-06-24
 
 ### feat(system-card): redesign totale v4.8 — stile Oikos/posta-card
