@@ -16805,7 +16805,21 @@ REGOLA ORARIA CRITICA: Se l'istruzione specifica un orario esatto (es. "alle 19:
   // Dispositivo target
   const eid=card.vanessaEntityId||card.entity||'';
   p+=`\nDISPOSITIVO: ${card.label||card.id}`;
-  if(eid&&hass.states[eid]) p+=` — stato attuale: ${hass.states[eid].state}`;
+  if(eid&&hass.states[eid]){
+    const curSt2=(hass.states[eid].state||'').toLowerCase();
+    p+=` — stato attuale: ${hass.states[eid].state}`;
+    const dom3=eid.split('.')[0];
+    if(dom3==='cover'){
+      const targetDesc=card.vanessaActionInvert?'chiusa':'aperta';
+      const alreadyTarget=card.vanessaActionInvert?(curSt2==='closed'||curSt2==='closing'):(curSt2==='open'||curSt2==='opening');
+      if(alreadyTarget) p+=`\nATTENZIONE: Il dispositivo è GIÀ ${targetDesc}. Rispondi OBBLIGATORIAMENTE skip — non ripetere un'azione già eseguita.`;
+    } else {
+      const targetOn=!card.vanessaActionInvert;
+      const isOn=['on','open','unlocked','playing','heating','cooling','active'].includes(curSt2);
+      const alreadyTarget2=targetOn?isOn:!isOn;
+      if(alreadyTarget2) p+=`\nATTENZIONE: Il dispositivo è GIÀ nello stato target (${hass.states[eid].state}). Rispondi OBBLIGATORIAMENTE skip.`;
+    }
+  }
   const criteria=card.vanessaCriteria||card.vanessaContext||'';
   if(criteria) p+=`\nISTRUZIONI: ${criteria}`;
   // Dipendenze inter-card
@@ -16903,89 +16917,126 @@ let _vnssEvaluating=[];
 async function _vanessaRunCard(cardId, force){
   let card=null;
   for(const pg of cfg.pages||[]) for(const c of pg.cards||[]) if(c.id===cardId){ card=c; break; }
-  if(!card){ showToast('⚠️ Card non trovata'); return; }
+  if(!card){ if(force) showToast('⚠️ Card non trovata'); return; }
   const v=_vanessaGetCfg();
   const apiKey=(v.apiKeys&&v.apiKeys[v.provider])||v.apiKey||'';
-  if(!apiKey){ showToast('⚠️ Configura l\'API key di Vanessa prima'); return; }
-  // Se già acceso da Vanessa e ancora nella finestra di durata → non fare nulla (solo automatico)
-  if(!force){
-    const timer=_vanessaOffTimers[cardId];
-    if(timer&&timer.expiresTs>Date.now()){
-      const minsLeft=Math.round((timer.expiresTs-Date.now())/60000);
-      showToast(`⏳ Già attivo, spegnimento tra ${minsLeft} min`);
-      return;
-    }
+  if(!apiKey){ if(force) showToast('⚠️ Configura l\'API key prima'); return; }
+  const isAuto=!force; // true = chiamata ciclica automatica
+
+  // Timer attivo → in auto salta silenzioso, in manuale avvisa
+  const existTimer=_vanessaOffTimers[cardId];
+  if(existTimer&&existTimer.expiresTs>Date.now()){
+    if(!isAuto) showToast(`⏳ Già attivo, spegnimento tra ${Math.round((existTimer.expiresTs-Date.now())/60000)} min`);
+    return;
   }
+
   _vnssEvaluating.push(cardId);
-  showToast('🧠 Vanessa sta valutando…');
+  if(!isAuto) showToast('🧠 Vanessa sta valutando…');
+
   const prompt=_vanessaBuildPrompt(card);
-  if(!prompt){ showToast('⚠️ Hass non disponibile'); return; }
+  if(!prompt){
+    if(!isAuto) showToast('⚠️ Hass non disponibile');
+    _vnssEvaluating=_vnssEvaluating.filter(id=>id!==cardId); return;
+  }
   let rawResp='';
   try{ rawResp=await _vanessaCallAI(prompt); }
-  catch(e){ showToast('❌ Errore AI: '+e.message); return; }
-  let decision=null;
-  try{
-    const m=rawResp.match(/\{[\s\S]*\}/);
-    if(m) decision=JSON.parse(m[0]);
-  }catch(e){}
-  if(!decision){
-    try{
-      const partial=rawResp.match(/\{[\s\S]*/);
-      if(partial){ const fixed=partial[0].replace(/,?\s*"detail":"[^"]*$|,?\s*"reason":"[^"]*$|,?\s*"[^"]*$/,'}'); decision=JSON.parse(fixed); }
-    }catch(e){}
+  catch(e){
+    if(!isAuto) showToast('❌ Errore AI: '+e.message);
+    _vnssEvaluating=_vnssEvaluating.filter(id=>id!==cardId); return;
   }
-  if(!decision){ showToast('⚠️ Risposta AI non valida (raw): '+rawResp.slice(0,120)); return; }
+  let decision=null;
+  try{ const m=rawResp.match(/\{[\s\S]*\}/); if(m) decision=JSON.parse(m[0]); }catch(e){}
+  if(!decision){ try{ const p2=rawResp.match(/\{[\s\S]*/); if(p2){ const fx=p2[0].replace(/,?\s*"detail":"[^"]*$|,?\s*"reason":"[^"]*$|,?\s*"[^"]*$/,'}'); decision=JSON.parse(fx); } }catch(e){} }
+  if(!decision){
+    if(!isAuto) showToast('⚠️ Risposta AI non valida: '+rawResp.slice(0,120));
+    _vnssEvaluating=_vnssEvaluating.filter(id=>id!==cardId); return;
+  }
+
   const eid=card.vanessaEntityId||card.entity||'';
   const runEid=card.vanessaRunEntity||eid;
   const stopEid=card.vanessaStopEntity||eid;
   const hass=_getBestHass();
+
+  // ── MODALITÀ AUTO: skip/delay → silenzio totale, nessun log, nessun popup ──
+  if(isAuto && decision.action!=='run'){
+    if(decision.action==='delay'){
+      const ms=Math.min((decision.delay_min||5)*60000,(v.intervalMin||30)*60000);
+      setTimeout(()=>_vanessaRunCard(cardId), ms);
+    }
+    _vnssEvaluating=_vnssEvaluating.filter(id=>id!==cardId);
+    return;
+  }
+
+  // ── GUARD: se già nello stato target → niente da fare (evita ri-trigger) ──
+  if(decision.action==='run' && hass && runEid){
+    const curSt=(hass.states[runEid]?.state||'').toLowerCase();
+    const dom2=runEid.split('.')[0];
+    let alreadyDone=false;
+    if(dom2==='cover'){
+      alreadyDone=card.vanessaActionInvert
+        ?(curSt==='closed'||curSt==='closing')
+        :(curSt==='open'||curSt==='opening');
+    } else {
+      alreadyDone=card.vanessaActionInvert
+        ?['off','closed','locked','idle','standby'].includes(curSt)
+        :['on','open','unlocked','playing','heating','cooling','active'].includes(curSt);
+    }
+    if(alreadyDone){ _vnssEvaluating=_vnssEvaluating.filter(id=>id!==cardId); return; }
+  }
+
+  // ── ESEGUI AZIONE ──
   try{
     if(decision.action==='run'&&hass){
       await _callHassSvc(hass,runEid,'on',card);
-      // Gestione durata automatica
       const durMin=decision.duration_min||0;
       if(durMin>0&&stopEid){
         if(_vanessaOffTimers[cardId]) clearTimeout(_vanessaOffTimers[cardId].timerId);
         const expiresTs=Date.now()+durMin*60000;
         const timerId=setTimeout(async()=>{
           try{ const h2=_getBestHass(); await _callHassSvc(h2,stopEid,'off',card); }catch(_){}
-          showToast(`⏹ Vanessa: ${card.label||card.id} spento dopo ${durMin} min`);
+          showToast(`⏹ Vanessa: ${card.label||card.id} dopo ${durMin} min`);
           const vv=_vanessaGetCfg(); if(!vv.log) vv.log=[];
-          vv.log.unshift({ts:Date.now(),cardId,cardLabel:card.label||card.id,action:'off',reason:`Spento automaticamente dopo ${durMin} min`});
+          vv.log.unshift({ts:Date.now(),cardId,cardLabel:card.label||card.id,action:'off',reason:`Auto-spento dopo ${durMin} min`});
           vv.log=vv.log.slice(0,50); saveCfg();
           delete _vanessaOffTimers[cardId];
-          try{_vanessaRenderTabs();}catch(_){} try{_vanessaUpdateStatus();}catch(_){}
+          try{_vanessaRenderTabs();}catch(_){}
         },durMin*60000);
         _vanessaOffTimers[cardId]={timerId,expiresTs,durMin};
       }
     }
-    else if(decision.action==='skip'){
-      // skip = non fare nulla (non spegnere forzatamente)
-    }
-    else if(decision.action==='delay'){
+    else if(decision.action==='delay'&&!isAuto){ // delay solo in manuale
       const ms=(decision.delay_min||30)*60000;
       setTimeout(()=>_vanessaRunCard(cardId),ms);
     }
   }catch(e){}
+
+  // ── LOG: solo run in auto, tutto in manuale ──
   if(!v.log) v.log=[];
-  const logEntry={ts:Date.now(),cardId,cardLabel:card.label||card.id,action:decision.action,reason:decision.reason||'',detail:decision.detail||''};
-  v.log.unshift(logEntry);
-  v.log=v.log.slice(0,50);
+  if(!isAuto || decision.action==='run'){
+    v.log.unshift({ts:Date.now(),cardId,cardLabel:card.label||card.id,action:decision.action,reason:decision.reason||'',detail:decision.detail||''});
+    v.log=v.log.slice(0,50);
+  }
   if(!v.stats) v.stats={};
   v.stats[decision.action]=(v.stats[decision.action]||0)+1;
   v.stats.total=(v.stats.total||0)+1;
   saveCfg();
-  if(decision.action!=='delay') showToast(`🧠 ${card.label||card.id}: ${decision.action==='run'?'✅ Attivato':'⏭ Saltato'} — ${decision.reason||''}`);
-  // Notifica push
-  if(v.notifyEntityId&&hass&&decision.action!=='delay'){
-    try{
-      const nSvc=v.notifyEntityId.replace(/^notify\./,'');
-      const nIco=decision.action==='run'?'✅':'⏭';
-      const nDur=decision.action==='run'&&decision.duration_min>0?` per ${decision.duration_min} min`:'';
-      hass.callService('notify',nSvc,{title:`🧠 Vanessa — ${card.label||card.id}`,message:`${nIco} ${decision.action==='run'?'Attivato':'Saltato'}${nDur}: ${decision.reason||''}`});
-    }catch(_){}
+
+  // ── NOTIFICHE UI ──
+  if(isAuto){
+    // Auto + run eseguito: toast discreto, NESSUN popup
+    if(decision.action==='run') showToast(`🤖 ${card.label||card.id}: ${decision.reason||'attivato'}`);
+    if(decision.action==='run'&&v.notifyEntityId&&hass){
+      try{ const ns=v.notifyEntityId.replace(/^notify\./,''); const nd=decision.duration_min>0?` per ${decision.duration_min} min`:''; hass.callService('notify',ns,{title:`✅ Vanessa — ${card.label||card.id}`,message:`Attivato${nd}: ${decision.reason||''}`}); }catch(_){}
+    }
+  } else {
+    // Manuale: toast + popup decisione
+    if(decision.action!=='delay') showToast(`🧠 ${card.label||card.id}: ${decision.action==='run'?'✅ Attivato':'⏭ '+decision.reason}`);
+    if(v.notifyEntityId&&hass&&decision.action==='run'){
+      try{ const ns=v.notifyEntityId.replace(/^notify\./,''); const nd=decision.duration_min>0?` per ${decision.duration_min} min`:''; hass.callService('notify',ns,{title:`🧠 Vanessa — ${card.label||card.id}`,message:`Attivato${nd}: ${decision.reason||''}`}); }catch(_){}
+    }
+    try{ _vanessaDecisionPopup(card, decision); }catch(_){}
   }
-  try{ _vanessaDecisionPopup(card, decision); }catch(_){}
+
   try{_vanessaRenderLog();}catch(_){}
   try{_vanessaRenderCards();}catch(_){}
   try{_vnssRefreshHero();}catch(_){}

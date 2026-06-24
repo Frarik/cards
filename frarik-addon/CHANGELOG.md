@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.6.10 — 2026-06-24
+
+### fix(vanessa): modalità autonoma silenziosa + guard stato entity
+
+**Problema:** in ciclo automatico ogni valutazione (skip/delay) generava log, toast, popup e notifica push — la tapparella si apriva e chiudeva in loop.
+
+- **Auto mode silenzioso**: quando Vanessa valuta in background (`!force`), skip e delay sono 100% silenziosi — nessun log, nessun toast, nessun popup, nessuna notifica
+- **Guard stato entity**: prima di eseguire `run`, controlla se il dispositivo è già nello stato target (cover già chiusa, luce già accesa, ecc.) → se sì, salta silenziosamente
+- **Prompt AI**: aggiunto avviso "GIÀ NELLO STATO TARGET → rispondi skip" per cover e altri dispositivi
+- **Auto run**: quando Vanessa attiva qualcosa automaticamente → solo toast discreto `🤖` + push; NESSUN popup decisione
+- **Manuale (force)**: comportamento invariato — toast + popup completo con dettaglio AI
+
 ## 1.6.09 — 2026-06-24
 
 ### fix(vanessa): azione invertita cover, timing orario preciso
