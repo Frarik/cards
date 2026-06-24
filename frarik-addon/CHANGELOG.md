@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.08 — 2026-06-24
+
+### fix(vanessa): supporto cover (tapparelle) + template tapparelle
+- `_callHassSvc`: gestione dominio `cover` → chiama `open_cover`/`close_cover` invece di `turn_on`/`turn_off` (era il bug "servizio non trovato")
+- Aggiunto anche mapping corretto per dominio `lock` (`unlock`/`lock`)
+- Nuovo template istruzioni **🪟 Tapparelle**: apertura mattutina, chiusura al tramonto/caldo/vento/pioggia
+
 ## 1.6.07 — 2026-06-24
 
 ### fix(system-card): popup non si chiude al primo click sulla X

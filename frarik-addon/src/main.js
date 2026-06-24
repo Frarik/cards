@@ -16870,6 +16870,8 @@ function _callHassSvc(h,entityId,action){
   const dom=entityId.split('.')[0];
   if(dom==='input_button'||dom==='button') return h.callService(dom,'press',{entity_id:entityId});
   if(dom==='script') return h.callService('script','turn_on',{entity_id:entityId});
+  if(dom==='cover') return h.callService('cover',action==='on'?'open_cover':'close_cover',{entity_id:entityId});
+  if(dom==='lock') return h.callService('lock',action==='on'?'unlock':'lock',{entity_id:entityId});
   if(action==='on') return h.callService(dom,'turn_on',{entity_id:entityId});
   return h.callService(dom,'turn_off',{entity_id:entityId});
 }
@@ -17221,7 +17223,7 @@ function _vanessaCardPopup(cardId){
       ${sec('Istruzioni per l\'AI','🎯')}
       <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">
         <span style="font-size:10px;color:rgba(255,255,255,.25);align-self:center">Template:</span>
-        ${[['🌿','Irrigazione'],['❄️','Climatizzatore'],['🔥','Riscaldamento'],['💡','Luci esterne'],['🧺','Lavatrice']].map(([ico,lbl])=>`<button data-vnss-tpl="${lbl}" style="background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.22);color:rgba(192,132,252,.8);border-radius:7px;padding:3px 9px;font-size:10px;font-weight:700;cursor:pointer">${ico} ${lbl}</button>`).join('')}
+        ${[['🌿','Irrigazione'],['❄️','Climatizzatore'],['🔥','Riscaldamento'],['💡','Luci esterne'],['🧺','Lavatrice'],['🪟','Tapparelle']].map(([ico,lbl])=>`<button data-vnss-tpl="${lbl}" style="background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.22);color:rgba(192,132,252,.8);border-radius:7px;padding:3px 9px;font-size:10px;font-weight:700;cursor:pointer">${ico} ${lbl}</button>`).join('')}
       </div>
       <textarea id="_vnss-card-criteria" rows="4" style="${inp};resize:vertical" placeholder="Es: accendi solo se la temperatura supera 25°C e ci sono persone in casa…">${eh(card.vanessaCriteria||card.vanessaContext||'')}</textarea>
       <div style="font-size:10px;color:rgba(255,255,255,.18);margin-top:5px">Descrivi QUANDO e PERCHÉ attivare. Più è preciso, migliore sarà la decisione.</div>
@@ -17269,7 +17271,8 @@ function _vanessaCardPopup(cardId){
     'Climatizzatore':'Accendi il climatizzatore se la temperatura supera 26°C e ci sono persone in casa. Opera nelle ore più calde (11:00–20:00). Non accendere di notte (23:00–7:00) salvo temperatura >30°C. Spegni se la temperatura scende sotto 24°C o non ci sono persone.',
     'Riscaldamento':'Accendi il riscaldamento se la temperatura interna scende sotto 19°C di giorno (7:00–23:00) o sotto 16°C di notte. Anticipalo di 30 minuti rispetto ai cali previsti dalle previsioni meteo. Spegni se supera 21°C.',
     'Luci esterne':'Accendi le luci esterne al tramonto (circa 20:00 in estate, 17:00 in inverno) e spegnile all\'alba. Considera la stagione e la luminosità naturale. Non accendere durante il giorno.',
-    'Lavatrice':'Avvia nelle ore di bassa tariffa elettrica (22:00–7:00 o durante il weekend). Evita le ore di punta nei giorni feriali (7:00–10:00 e 18:00–21:00). Avvia solo se il ciclo può completarsi entro la finestra di bassa tariffa.'
+    'Lavatrice':'Avvia nelle ore di bassa tariffa elettrica (22:00–7:00 o durante il weekend). Evita le ore di punta nei giorni feriali (7:00–10:00 e 18:00–21:00). Avvia solo se il ciclo può completarsi entro la finestra di bassa tariffa.',
+    'Tapparelle':'Apri le tapparelle al mattino (7:30–9:00) se ci sono persone in casa e il sole è sopra l\'orizzonte. Chiudi al tramonto o se la temperatura esterna supera 32°C nelle ore più calde (12:00–16:00) per ridurre il surriscaldamento. Chiudi completamente in caso di vento forte (>40 km/h), pioggia intensa o temporale previsto. Di notte tieni sempre chiuse.'
   };
   const _depBtn=document.getElementById('_vnss-dep-btn');
   const _depList=document.getElementById('_vnss-dep-list');
