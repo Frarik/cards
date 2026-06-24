@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.6.02 — 2026-06-24
+
+### feat(system-card): PKG sistema completo — Centro Controllo Server v2.8
+- **PKG YAML Frarik**: `frarik_statistiche_minipc.yaml` — riscrittura completa del PKG originale DomHouse in stile Frarik (intestazione, entità rinominate, `notify.frarik_server`, `sensor.frarik_statistiche_minipc_versione`)
+- **`openWizard`** su `CARD`: popup shadow DOM con 5 campi configurabili — Sensore Potenza (W), Sensore Temperatura CPU, Sensore Cert SSL, Switch Ventola Rack, lista Push smartphones; autocomplete live con entità HA
+- **`_buildPkgFromConfig(cfg)`**: metodo per reinstallazione silenziosa senza wizard (usato dall'auto-update PKG)
+- **`frarik_pkg_check/id/version`**: `sensor.frarik_statistiche_minipc_versione` / `frarik_statistiche_minipc` / `2.8` — integrazione completa con il sistema store PKG (badge, aggiorna, auto-update)
+- Config wizard salvata/caricata da `localStorage` (`frarik_pkg_wizard_system-card`) — i valori inseriti vengono pre-compilati alla riapertura
+
 ## 1.6.01 — 2026-06-24
 
 ### fix(popup): bottone riavvio dice "Elimina" invece di "Riavvia"
