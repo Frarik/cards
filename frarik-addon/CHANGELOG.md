@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.6.00 — 2026-06-24
+
+### fix(store): tile card — icona, badge PKG e auto-aggiornamento PKG
+- **Fix icona `mdi:` nelle tile**: i valori `mdi:mailbox` ora si convertono in `<i class="mdi mdi-mailbox">` invece di testo grezzo
+- **Fix badge "PKG RICHIESTO"**: aggiunto `frarik_pkg_id:'frarik_posta'` in `_ccEntry` — `_parsePkgInfo` ora trova il nome file e `_pkgIsOnHA` funziona correttamente (mostra "PKG ✓" verde)
+- **Auto-aggiornamento PKG silenzioso**: se la config wizard è già salvata in localStorage, il PKG si aggiorna automaticamente senza mostrare badge né chiedere input — badge+button solo se manca la configurazione
+- **`PostaCard._buildPkgFromConfig(cfg)`**: metodo statico per ricostruire il PKG YAML da config salvata senza aprire il wizard
+- **`_ghsPkgUpdatePopup`**: ora usa silent auto-update se config esiste, wizard solo se config mancante
+- **Helper `_iconHtml(icon)`**: converte `mdi:xxx` → tag MDI, passa emoji invariate
+- **Helper `_pkgWizardConfigExists(cardId)`**: controlla se localStorage ha config wizard valida
+- **`_schedulePkgSilentUpd(cardId)`**: schedula auto-update PKG (deduplificato) quando versione cambia e config è completa
+
 ## 1.5.99 — 2026-06-24
 
 ### feat(store): sistema aggiornamento PKG completo

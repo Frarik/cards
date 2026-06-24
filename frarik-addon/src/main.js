@@ -1984,6 +1984,31 @@ function closeGhsPreview(){
   document.getElementById('ghs-prev-note').textContent='';
 }
 /* ── helpers griglia store ── */
+function _iconHtml(icon){
+  if(!icon) return '📦';
+  if(/^mdi:/.test(icon)){
+    const n=icon.slice(4).replace(/_/g,'-');
+    return `<i class="mdi mdi-${eh(n)}" style="font-size:17px;line-height:1"></i>`;
+  }
+  return eh(icon);
+}
+function _pkgWizardConfigExists(cardId){
+  try{
+    const s=JSON.parse(localStorage.getItem('frarik_pkg_wizard_'+cardId)||'null');
+    if(!s) return false;
+    return Object.values(s).some(v=>v&&(typeof v==='string'?v.trim():Array.isArray(v)?v.length>0:true));
+  }catch(e){ return false; }
+}
+const _pkgSilentUpdPending=new Set();
+function _schedulePkgSilentUpd(cardId){
+  if(_pkgSilentUpdPending.has(cardId)) return;
+  _pkgSilentUpdPending.add(cardId);
+  setTimeout(async()=>{
+    try{ await _pkgUpdateCard(cardId,true); }
+    catch(e){ console.warn('[frarik] silent PKG update failed',e); }
+    finally{ _pkgSilentUpdPending.delete(cardId); }
+  }, 800);
+}
 function _ghcPrevPh(icon, name){
   const PALS=[['#1e1b4b','#312e81'],['#064e3b','#065f46'],['#422006','#78350f'],['#1e3a5f','#1e40af'],['#4a044e','#701a75'],['#0c1a2e','#0c4a6e'],['#1f1235','#4c1d95'],['#0f2027','#203a43']];
   let h=0; for(let c=0;c<name.length;c++) h=(h*31+name.charCodeAt(c))&0xffffffff;
@@ -2234,7 +2259,10 @@ function _ghStoreRender(){
     const pkgVerLatest=_ghPkgCache[f.sha]?.ver||'';
     const pkgVerSaved=(g.pkgVersions||{})[cardId]||'';
     const pkgIsOnHANow=pkgInfoInst?.file?_pkgIsOnHA(pkgInfoInst.file):false;
-    const hasPkgUpd=!!(pkgVerLatest&&pkgIsOnHANow&&pkgVerLatest!==pkgVerSaved);
+    const pkgVerChanged=!!(pkgVerLatest&&pkgIsOnHANow&&pkgVerLatest!==pkgVerSaved);
+    const wizConfigOk=cardId?_pkgWizardConfigExists(cardId):false;
+    const hasPkgUpd=pkgVerChanged&&!wizConfigOk;
+    if(pkgVerChanged&&wizConfigOk&&cardId) _schedulePkgSilentUpd(cardId);
     const pkgBdgInst=hasPkgUpd
       ?`<span class="ghc-bdg pkg-upd"><i class="mdi mdi-package-up"></i> PKG update</span>`
       :_pkgBadgeHtml(pkgInfoInst);
@@ -2250,7 +2278,7 @@ function _ghStoreRender(){
     const delBtn=cardId?`<button class="ghc-btn-del" data-action="_ghsDeleteInstalled" data-action-arg="${cardId}" title="Disinstalla"><i class="mdi mdi-delete-outline"></i></button>`:'';
     return `<div class="ghc-tile st-${st}"><div class="ghc-strip ${st}"></div>
       <div class="ghc-prev">${prevHtml}<div class="ghc-prev-fade"></div>${bdg}${pkgBdgInst}</div>
-      <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico">${icon}</div><div class="ghc-meta"><div class="ghc-name">${eh(nm)}</div>${verLbl?`<div class="ghc-ver">${eh(verLbl)}</div>`:''}</div></div>
+      <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico">${_iconHtml(icon)}</div><div class="ghc-meta"><div class="ghc-name">${eh(nm)}</div>${verLbl?`<div class="ghc-ver">${eh(verLbl)}</div>`:''}</div></div>
       ${desc?`<div class="ghc-desc">${eh(desc)}</div>`:''}
       <div class="ghc-acts">${pkgUpdBtn}${updBtn}${addBtn}${delBtn}</div></div></div>`;
   };
@@ -2266,7 +2294,7 @@ function _ghStoreRender(){
     const ghDel=`<button class="ghc-btn-del" data-action="_ghsDeleteFromGithub" data-action-arg="${enc}" title="Elimina da GitHub"><i class="mdi mdi-delete-forever-outline"></i></button>`;
     return `<div class="ghc-tile st-new"><div class="ghc-strip new"></div>
       <div class="ghc-prev"><div class="ghc-prev-inner" data-prev-sha="${eh(f.sha)}"></div><div class="ghc-prev-fade"></div><span class="ghc-bdg new">⬇ Disponibile</span>${pkgBdgNew}</div>
-      <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico">${icon}</div><div class="ghc-meta"><div class="ghc-name">${eh(nm)}</div>${verLbl?`<div class="ghc-ver">v${eh(verLbl)}</div>`:''}</div></div>
+      <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico">${_iconHtml(icon)}</div><div class="ghc-meta"><div class="ghc-name">${eh(nm)}</div>${verLbl?`<div class="ghc-ver">v${eh(verLbl)}</div>`:''}</div></div>
       ${desc?`<div class="ghc-desc">${eh(desc)}</div>`:''}
       <div class="ghc-acts"><button class="ghc-btn ghc-btn-inst" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>${ghDel}</div></div></div>`;
   };
@@ -3032,21 +3060,46 @@ function _ghsPkgUpdatePopup(cardId,pkgVerNew){
   });
   sr.getElementById('pu_update').addEventListener('click',()=>{
     destroy();
-    const CardClass=customElements.get(cardId);
-    if(typeof CardClass?.openWizard==='function'){
-      CardClass.openWizard(_haHassObj(),()=>{ _savePkgVer(cardId,pkgVerNew); });
-    } else {
-      showToast('⚠️ Wizard non disponibile — aggiorna la pagina e riprova');
-    }
+    _pkgUpdateCard(cardId, _pkgWizardConfigExists(cardId));
   });
 }
 
-/* aggiorna il PKG di una card installata — apre wizard (pre-riempito) o fallback generico */
-async function _pkgUpdateCard(cardId){
+/* aggiorna il PKG di una card installata.
+   silent=true → reinstalla con config salvata senza aprire wizard (auto-update) */
+async function _pkgUpdateCard(cardId, silent=false){
   const it=_jsStoreList().find(i=>(i.meta||{}).id===cardId);
-  if(!it){ showToast('⚠️ Card non trovata nello store locale'); return; }
+  if(!it){ if(!silent) showToast('⚠️ Card non trovata nello store locale'); return; }
   const pkgInfo=_parsePkgInfo(it.code||'');
-  if(!pkgInfo){ showToast('⚠️ Nessun package associato a questa card'); return; }
+  if(!pkgInfo){ if(!silent) showToast('⚠️ Nessun package associato a questa card'); return; }
+
+  const wizKey='frarik_pkg_wizard_'+cardId;
+  const savedCfg=silent?JSON.parse(localStorage.getItem(wizKey)||'null'):null;
+
+  if(savedCfg){
+    /* silent reinstall usando config salvata tramite _buildPkgFromConfig o openWizard headless */
+    const CardClass=window.FratechCardRegistry?.[cardId]??customElements.get(cardId);
+    let yaml='';
+    if(typeof CardClass?._buildPkgFromConfig==='function'){
+      yaml=CardClass._buildPkgFromConfig(savedCfg);
+    } else { if(!silent) showToast('⚠️ Build PKG non disponibile'); return; }
+    if(!yaml){ if(!silent) showToast('⚠️ YAML PKG vuoto'); return; }
+    try{
+      const m=location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
+      const base=location.origin+(m?m[1]:'');
+      const fname=pkgInfo.file||(pkgInfo.id?'frarik/'+pkgInfo.id+'.yaml':'');
+      const r=await fetch(base+'/api/frarik/pkg/install',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:fname,content:yaml})});
+      const j=await r.json().catch(()=>({}));
+      if(r.ok&&j.ok){
+        _savePkgVer(cardId,pkgInfo.ver);
+        if(!silent) showToast('📦 PKG aggiornato!');
+        await _loadHaInstalledPkgs();
+        if(typeof _ghStoreRender==='function') _ghStoreRender();
+      } else { if(!silent) showToast('⚠️ Errore PKG: '+(j.error||r.status)); }
+    }catch(e){ if(!silent) showToast('⚠️ '+e.message); }
+    return;
+  }
+
+  /* nessuna config salvata oppure chiamata manuale → apri wizard */
   const CardClass=window.FratechCardRegistry?.[cardId]??customElements.get(cardId);
   if(typeof CardClass?.openWizard==='function'){
     CardClass.openWizard(_haHassObj(),()=>{

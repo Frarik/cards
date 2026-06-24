@@ -1129,9 +1129,14 @@ PostaCard.openWizard=function(hass,onDone){
   setTimeout(()=>sr.getElementById('w_sensor')?.focus(),80);
 };
 
+/* Reinstalla il PKG con config già nota — usato per silent auto-update dallo store */
+PostaCard._buildPkgFromConfig=function(cfg){
+  return _buildCustomPkg(cfg.sensor||'',cfg.google||[],cfg.alexa||[],cfg.push||[]);
+};
+
 /* ── registrazione customCards ── */
 const _ccArr=(window.customCards=window.customCards||[]);
 const _ccIdx=_ccArr.findIndex(c=>c&&c.type==='posta-card');
-const _ccEntry={type:'posta-card',name:'Centro Controllo Posta',description:'Monitora la cassetta postale: consegne giornaliere con orari, storico, notifiche push/Google/Alexa.',icon:'mdi:mailbox',frarik_pkg_check:'sensor.frarik_posta_versione',frarik_pkg_version:'1.2'};
+const _ccEntry={type:'posta-card',name:'Centro Controllo Posta',description:'Monitora la cassetta postale: consegne giornaliere con orari, storico, notifiche push/Google/Alexa.',icon:'mdi:mailbox',frarik_pkg_check:'sensor.frarik_posta_versione',frarik_pkg_id:'frarik_posta',frarik_pkg_version:'1.2'};
 if(_ccIdx>=0) _ccArr[_ccIdx]=_ccEntry; else _ccArr.push(_ccEntry);
 })();
