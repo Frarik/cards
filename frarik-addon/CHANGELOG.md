@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.05 — 2026-06-24
+
+### fix(system-card): wizard PKG — URL fetch errato, errore connessione
+- Sostituito il calcolo del `basePath` con la stessa logica di posta-card: `location.origin + location.pathname.match(/api\/hassio_ingress\/[^/]+/)`
+- Prima usava una regex sbagliata senza `location.origin`, causando il fallimento della chiamata POST a `/api/frarik/pkg/install`
+
 ## 1.6.04 — 2026-06-24
 
 ### fix(store): openWizard non trovato per card FratechRegistry — due cause

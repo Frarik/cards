@@ -2133,8 +2133,8 @@ automation:
       try{localStorage.setItem(_SRV_WIZ_KEY,JSON.stringify(cfg));}catch(e){}
 
       var yaml=_srvBuildPkg(power,temp,cert,ventola,push);
-      var base=(window.location.pathname.match(/^(\/[^/]+\/[^/]+)/))||[''];
-      var basePath=base[1]||'';
+      var _m=location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
+      var basePath=location.origin+(_m?_m[1]:'');
       fetch(basePath+'/api/frarik/pkg/install',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
