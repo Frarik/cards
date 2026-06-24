@@ -1,4 +1,4 @@
-/* frarik-version: 3.0 */
+/* frarik-version: 4.0 */
 /* Centro Controllo Posta — Frarik card standalone */
 (function(){
 'use strict';
@@ -438,8 +438,25 @@ function _acShow(inputEl,hass,domain){
 function _acHide(){ document.getElementById('__frk_posta_ac__')?.remove(); }
 
 /* ══════════════════════════════════════════════════════════════
-   PostaCard — custom element
+   PostaCard v4.0 — Midnight Envelope design
    ══════════════════════════════════════════════════════════════ */
+
+function _svgEnvelope(count, isOpen){
+  const acc=isOpen?'#34d399':count>0?'#22d3ee':'rgba(255,255,255,.18)';
+  const bg=isOpen?'rgba(52,211,153,.09)':count>0?'rgba(34,211,238,.07)':'rgba(255,255,255,.03)';
+  const flap=isOpen?`<path d="M2 2 L50 32 L98 2" fill="${acc}" fill-opacity=".18" stroke="${acc}" stroke-width="1.4" stroke-opacity=".7" stroke-linejoin="round"/>`:
+    `<path d="M2 5 L50 34 L98 5" stroke="${acc}" stroke-width="1.5" stroke-opacity=".6" fill="none" stroke-linejoin="round"/>`;
+  const badge=count>0?`<circle cx="82" cy="16" r="13" fill="${count>0?'#22d3ee':'rgba(255,255,255,.12)'}"/><text x="82" y="20" text-anchor="middle" fill="#06080f" font-size="${count>9?'9':'11'}" font-weight="900" font-family="system-ui,sans-serif">${count>99?'99+':count}</text>`:'';
+  return `<svg viewBox="0 0 100 68" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
+    <rect x="1" y="1" width="98" height="66" rx="8" fill="${bg}" stroke="${acc}" stroke-width="1.5" stroke-opacity=".5"/>
+    <path d="M1 8 L1 67 L37 40 Z" fill="${acc}" fill-opacity=".04"/>
+    <path d="M99 8 L99 67 L63 40 Z" fill="${acc}" fill-opacity=".04"/>
+    <path d="M1 67 L37 40 L50 49 L63 40 L99 67 Z" fill="${acc}" fill-opacity=".07" stroke="${acc}" stroke-width=".8" stroke-opacity=".3"/>
+    ${flap}
+    ${badge}
+  </svg>`;
+}
+
 let PostaCard;
 if(!customElements.get('posta-card')){
   PostaCard=class extends HTMLElement{
@@ -554,11 +571,11 @@ if(!customElements.get('posta-card')){
       return `<style>${this._css()}</style>
       <div class="card">
         <div class="hdr">
-          <div class="hdr-ico">📬</div>
+          <div class="hdr-icon-wrap"><svg viewBox="0 0 24 24" fill="none" style="width:18px;height:18px"><path d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="#22d3ee" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <div class="hdr-tit">${this._c.label||'Centro Posta'}</div>
         </div>
         <div class="ni">
-          <div class="ni-icon">📦</div>
+          <div class="ni-env">${_svgEnvelope(0,false)}</div>
           <div class="ni-title">Package non installato</div>
           <div class="ni-sub">Installa il package dallo <strong>Store Frarik</strong>, poi riavvia Home Assistant per attivarlo.</div>
         </div>
@@ -578,120 +595,81 @@ if(!customElements.get('posta-card')){
       const mEnd=this._getTime('input_datetime.frarik_posta_notifiche_media_fine')||'22:00';
       const pStart=this._getTime('input_datetime.frarik_posta_notifiche_push_inizio')||'07:00';
       const pEnd=this._getTime('input_datetime.frarik_posta_notifiche_push_fine')||'23:00';
+      const acc=isOpen?'#34d399':today>0?'#22d3ee':'rgba(255,255,255,.2)';
 
       const tgl=on=>`<div class="tgl${on?' on':''}"><div class="tgl-k"></div></div>`;
 
-      /* lista orari arrivo */
+      /* timeline orari */
       let orariHtml='';
       if(orari.length){
-        orariHtml=orari.map((t,i)=>{
+        orariHtml=`<div class="tl">`+orari.map((t,i)=>{
           const isLast=i===orari.length-1;
-          return `<div class="orario-row${isLast?' last':''}">
-            <div class="orario-dot"></div>
-            <div class="orario-time">${t}</div>
-            ${isLast?'<div class="orario-badge">ultima</div>':''}
+          return `<div class="tl-row${isLast?' tl-last':''}">
+            <div class="tl-line-wrap"><div class="tl-dot${isLast?' tl-dot-last':''}"></div>${i<orari.length-1?'<div class="tl-line"></div>':''}</div>
+            <div class="tl-time">${t}</div>
+            ${isLast?'<div class="tl-badge">ultima</div>':''}
           </div>`;
-        }).join('');
+        }).join('')+`</div>`;
       } else {
-        orariHtml=`<div class="orari-empty">Nessuna consegna registrata oggi</div>`;
+        orariHtml=`<div class="tl-empty">Nessuna consegna registrata oggi</div>`;
       }
 
-      /* drawer impostazioni */
-      const drawerHtml=this._drawerOpen?`
-      <div class="drawer">
+      /* drawer */
+      const drawerHtml=this._drawerOpen?`<div class="drw">
         <div class="drw-sec">NOTIFICHE</div>
-        <div class="drw-row" data-a="toggle-master">
-          <span class="drw-row-ico">🔔</span>
-          <span class="drw-row-lbl">Tutte le notifiche</span>
-          ${tgl(master)}
-        </div>
+        <div class="drw-row" data-a="toggle-master"><span class="dri">🔔</span><span class="drl">Tutte le notifiche</span>${tgl(master)}</div>
         <div class="drw-sub${master?'':' locked'}">
-          <div class="drw-row" data-a="toggle-push">
-            <span class="drw-row-ico">📱</span><span class="drw-row-lbl">Push smartphone</span>${tgl(bPush)}
-          </div>
-          <div class="drw-row" data-a="toggle-google">
-            <span class="drw-row-ico">🔊</span><span class="drw-row-lbl">Google Home</span>${tgl(bGoog)}
-          </div>
-          <div class="drw-row" data-a="toggle-alexa">
-            <span class="drw-row-ico">📣</span><span class="drw-row-lbl">Amazon Alexa</span>${tgl(bAlex)}
-          </div>
+          <div class="drw-row" data-a="toggle-push"><span class="dri">📱</span><span class="drl">Push smartphone</span>${tgl(bPush)}</div>
+          <div class="drw-row" data-a="toggle-google"><span class="dri">🔊</span><span class="drl">Google Home</span>${tgl(bGoog)}</div>
+          <div class="drw-row" data-a="toggle-alexa"><span class="dri">📣</span><span class="drl">Amazon Alexa</span>${tgl(bAlex)}</div>
         </div>
-
         <div class="drw-sec" style="margin-top:10px">ORARI MEDIA (Google / Alexa)</div>
-        <div class="time-row">
-          <span class="time-lbl">Dalle</span>
-          <input class="time-inp" type="time" data-a="set-media-start" value="${mStart}">
-          <span class="time-lbl">alle</span>
-          <input class="time-inp" type="time" data-a="set-media-end" value="${mEnd}">
-        </div>
-
+        <div class="time-row"><span class="tl-lbl">Dalle</span><input class="ti" type="time" data-a="set-media-start" value="${mStart}"><span class="tl-lbl">alle</span><input class="ti" type="time" data-a="set-media-end" value="${mEnd}"></div>
         <div class="drw-sec" style="margin-top:8px">ORARI PUSH (Smartphone)</div>
-        <div class="time-row">
-          <span class="time-lbl">Dalle</span>
-          <input class="time-inp" type="time" data-a="set-push-start" value="${pStart}">
-          <span class="time-lbl">alle</span>
-          <input class="time-inp" type="time" data-a="set-push-end" value="${pEnd}">
-        </div>
-
+        <div class="time-row"><span class="tl-lbl">Dalle</span><input class="ti" type="time" data-a="set-push-start" value="${pStart}"><span class="tl-lbl">alle</span><input class="ti" type="time" data-a="set-push-end" value="${pEnd}"></div>
         <div class="drw-sec" style="margin-top:10px">RESET MANUALI</div>
-        <div class="reset-row">
-          <button class="rst-btn" data-a="reset-oggi">🔄 Oggi</button>
-          <button class="rst-btn" data-a="reset-sett">📅 Settimana</button>
-          <button class="rst-btn" data-a="reset-mese">🗓️ Mese</button>
+        <div class="rst-row">
+          <button class="rst-btn" data-a="reset-oggi">↺ Oggi</button>
+          <button class="rst-btn" data-a="reset-sett">↺ Settimana</button>
+          <button class="rst-btn" data-a="reset-mese">↺ Mese</button>
         </div>
-
-        <div class="drw-sec" style="margin-top:10px">CONFIGURAZIONE</div>
-        <button class="cfg-btn" data-a="open-wizard">🔧 Riconfigura sensori e dispositivi</button>
-      </div>`:''
+      </div>`:'';
 
       return `<style>${this._css()}</style>
       <div class="card">
 
         <div class="hdr">
-          <div class="hdr-ico">📬</div>
+          <div class="hdr-icon-wrap"><svg viewBox="0 0 24 24" fill="none" style="width:18px;height:18px"><path d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="${acc}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <div class="hdr-tit">${this._c.label||'Centro Posta'}</div>
-          <div class="hdr-status${today>0?' active':''}">
-            <div class="hdr-dot"></div>
-            <span class="hdr-slbl">${today>0?'Posta ricevuta':'Nessuna posta'}</span>
-          </div>
+          ${today>0||isOpen?`<div class="hdr-pill${isOpen?' hdr-pill-open':''}">${isOpen?'Aperta':today+' oggi'}</div>`:`<div class="hdr-dot-wrap"><div class="hdr-dot-empty"></div></div>`}
         </div>
 
-        <div class="body-scroll">
+        <div class="bscroll">
 
-          <div class="main-row">
-            <div class="mb-col">${_svgMailbox(today,isOpen)}</div>
-            <div class="main-info">
-              <div class="big-num${today>0?' active':''}${isOpen?' open':''}">${today}</div>
-              <div class="big-lbl">consegn${today===1?'a':'e'} oggi</div>
-              ${last?`<div class="last-row"><span class="last-ico">🕐</span><span class="last-txt">${last}</span></div>`:''}
-              ${isOpen?'<div class="open-pill">📬 Cassetta aperta</div>':''}
+          <div class="hero">
+            <div class="hero-env">${_svgEnvelope(today,isOpen)}</div>
+            <div class="hero-info">
+              <div class="hero-n${today>0?' hero-n-act':''}${isOpen?' hero-n-open':''}">${today}</div>
+              <div class="hero-lbl">consegn${today===1?'a':'e'} oggi</div>
+              ${last?`<div class="hero-last"><svg viewBox="0 0 16 16" fill="none" style="width:10px;height:10px;flex-shrink:0"><circle cx="8" cy="8" r="6.5" stroke="rgba(255,255,255,.35)" stroke-width="1.3"/><path d="M8 5v3.2l2 1.3" stroke="rgba(255,255,255,.45)" stroke-width="1.3" stroke-linecap="round"/></svg><span>${last}</span></div>`:''}
+              ${isOpen?`<div class="open-pill">Cassetta aperta</div>`:''}
             </div>
           </div>
 
-          <div class="section">
-            <div class="sec-hdr">
-              <div class="sec-line"></div>
-              <span class="sec-lbl">Consegne di oggi</span>
-              <div class="sec-line"></div>
-            </div>
-            <div class="orari-list">${orariHtml}</div>
+          <div class="sec">
+            <div class="sec-hdr"><div class="sec-ln"></div><span class="sec-lb">Consegne di oggi</span><div class="sec-ln"></div></div>
+            ${orariHtml}
           </div>
 
-          <div class="stats-bar">
-            <div class="stat">
-              <span class="stat-n">${week}</span>
-              <span class="stat-l">Settimana</span>
-            </div>
+          <div class="stats">
+            <div class="stat-box"><span class="stat-n">${week}</span><span class="stat-l">Settimana</span></div>
             <div class="stat-sep"></div>
-            <div class="stat">
-              <span class="stat-n">${month}</span>
-              <span class="stat-l">Mese</span>
-            </div>
+            <div class="stat-box"><span class="stat-n">${month}</span><span class="stat-l">Mese</span></div>
           </div>
 
-          <div class="drawer-toggle" data-a="toggle-drawer">
-            <span class="drw-ico">⚙️</span>
-            <span class="drw-lbl">Impostazioni</span>
+          <div class="drw-toggle" data-a="toggle-drawer">
+            <span class="drw-ico">🔔</span>
+            <span class="drw-lbl">Notifiche e opzioni</span>
             <span class="drw-chev">${this._drawerOpen?'▲':'▼'}</span>
           </div>
 
@@ -705,11 +683,7 @@ if(!customElements.get('posta-card')){
     _onClick(e){
       const b=e.target.closest('[data-a]'); if(!b) return;
       const a=b.dataset.a;
-      if(a==='toggle-drawer'){
-        this._drawerOpen=!this._drawerOpen;
-        this._prevSig='';
-        this._build();
-      }
+      if(a==='toggle-drawer'){ this._drawerOpen=!this._drawerOpen; this._prevSig=''; this._build(); }
       else if(a==='toggle-master') this._callSvc('homeassistant',this._bool('input_boolean.frarik_posta_notifiche_attive')?'turn_off':'turn_on',{entity_id:'input_boolean.frarik_posta_notifiche_attive'});
       else if(a==='toggle-push'){ if(this._bool('input_boolean.frarik_posta_notifiche_attive')) this._callSvc('homeassistant',this._bool('input_boolean.frarik_posta_notifica_push')?'turn_off':'turn_on',{entity_id:'input_boolean.frarik_posta_notifica_push'}); }
       else if(a==='toggle-google'){ if(this._bool('input_boolean.frarik_posta_notifiche_attive')) this._callSvc('homeassistant',this._bool('input_boolean.frarik_posta_notifica_google')?'turn_off':'turn_on',{entity_id:'input_boolean.frarik_posta_notifica_google'}); }
@@ -717,7 +691,6 @@ if(!customElements.get('posta-card')){
       else if(a==='reset-oggi') this._confirmReset('script.frarik_posta_reset_oggi','il contatore giornaliero e gli orari di oggi');
       else if(a==='reset-sett') this._confirmReset('script.frarik_posta_reset_settimana','il contatore settimanale');
       else if(a==='reset-mese') this._confirmReset('script.frarik_posta_reset_mese','il contatore mensile');
-      else if(a==='open-wizard'){ this._destroyModal(); PostaCard.openWizard(this._h,()=>{}); }
     }
 
     /* ── confirm reset ── */
@@ -817,103 +790,101 @@ if(!customElements.get('posta-card')){
     _css(){ return `
 :host{display:block;height:100%;font-family:system-ui,sans-serif}
 *{box-sizing:border-box;margin:0;padding:0}
-@keyframes lpop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes fade-up{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.7;transform:scale(.96)}}
 
-.card{height:100%;display:flex;flex-direction:column;background:linear-gradient(160deg,#0d0b1e 0%,#0a0f1e 60%,#080b18 100%);border-radius:16px;overflow:hidden}
+.card{height:100%;display:flex;flex-direction:column;background:linear-gradient(155deg,#06080f 0%,#080c14 55%,#06090e 100%);border-radius:16px;overflow:hidden;position:relative}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:140px;background:radial-gradient(ellipse at 30% 0%,rgba(34,211,238,.07) 0%,transparent 70%);pointer-events:none}
 
 /* header */
-.hdr{display:flex;align-items:center;gap:10px;padding:13px 16px 11px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
-.hdr-ico{font-size:22px;line-height:1}
-.hdr-tit{flex:1;font-size:15px;font-weight:900;color:#fff;letter-spacing:.3px}
-.hdr-status{display:flex;align-items:center;gap:5px}
-.hdr-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.18);transition:background .4s}
-.hdr-status.active .hdr-dot{background:#4ade80;box-shadow:0 0 8px rgba(74,222,128,.6);animation:pulse 2.2s ease-in-out infinite}
-.hdr-slbl{font-size:10px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.3px}
-.hdr-status.active .hdr-slbl{color:#4ade80}
+.hdr{display:flex;align-items:center;gap:9px;padding:12px 15px 10px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}
+.hdr-icon-wrap{width:28px;height:28px;border-radius:8px;background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hdr-tit{flex:1;font-size:14px;font-weight:800;color:#fff;letter-spacing:.2px}
+.hdr-pill{font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;background:rgba(34,211,238,.12);border:1px solid rgba(34,211,238,.3);color:#22d3ee;letter-spacing:.2px;animation:fade-up .2s ease}
+.hdr-pill.hdr-pill-open{background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.3);color:#34d399}
+.hdr-dot-wrap{width:8px;height:8px;display:flex;align-items:center;justify-content:center}
+.hdr-dot-empty{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.12)}
 
 /* body scroll */
-.body-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none}
-.body-scroll::-webkit-scrollbar{display:none}
+.bscroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}
+.bscroll::-webkit-scrollbar{display:none}
 
-/* main row */
-.main-row{display:flex;align-items:center;gap:14px;padding:14px 16px 10px}
-.mb-col{flex:0 0 38%;max-width:38%}
-.main-info{flex:1;display:flex;flex-direction:column;gap:3px}
-.big-num{font-size:52px;font-weight:900;color:rgba(255,255,255,.18);line-height:1;transition:color .4s;letter-spacing:-2px}
-.big-num.active{color:#93c5fd}
-.big-num.open{color:#4ade80}
-.big-lbl{font-size:10px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.6px;margin-top:2px}
-.last-row{display:flex;align-items:flex-start;gap:5px;margin-top:9px;padding:6px 10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:9px}
-.last-ico{font-size:11px;margin-top:1px;flex-shrink:0}
-.last-txt{font-size:12px;color:#c4d8f5;font-weight:600;line-height:1.4}
-.open-pill{display:inline-flex;align-items:center;gap:5px;margin-top:6px;padding:4px 10px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);border-radius:20px;font-size:11px;color:#4ade80;font-weight:700}
+/* hero */
+.hero{display:flex;align-items:center;gap:14px;padding:14px 15px 12px}
+.hero-env{flex:0 0 42%;max-width:120px;aspect-ratio:100/68}
+.hero-info{flex:1;display:flex;flex-direction:column;gap:2px}
+.hero-n{font-size:54px;font-weight:900;color:rgba(255,255,255,.14);line-height:1;letter-spacing:-3px;transition:color .35s,text-shadow .35s}
+.hero-n.hero-n-act{color:#22d3ee;text-shadow:0 0 28px rgba(34,211,238,.35)}
+.hero-n.hero-n-open{color:#34d399;text-shadow:0 0 28px rgba(52,211,153,.35)}
+.hero-lbl{font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.7px;margin-top:1px}
+.hero-last{display:flex;align-items:center;gap:5px;margin-top:8px;padding:5px 9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;font-size:11px;color:rgba(255,255,255,.55);font-weight:600;line-height:1.3;animation:fade-up .2s ease}
+.open-pill{display:inline-flex;align-items:center;gap:4px;margin-top:6px;padding:4px 9px;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.25);border-radius:16px;font-size:10px;color:#34d399;font-weight:800;letter-spacing:.2px;animation:pulse 2.5s ease infinite}
 
-/* orari section */
-.section{padding:0 16px 10px}
-.sec-hdr{display:flex;align-items:center;gap:8px;margin-bottom:7px}
-.sec-line{flex:1;height:1px;background:rgba(255,255,255,.06)}
-.sec-lbl{font-size:9px;font-weight:800;color:rgba(255,255,255,.28);text-transform:uppercase;letter-spacing:.9px;white-space:nowrap}
-.orari-list{display:flex;flex-direction:column;gap:4px}
-.orario-row{display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;animation:lpop .2s ease both}
-.orario-row.last{background:rgba(74,222,128,.05);border-color:rgba(74,222,128,.18)}
-.orario-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.2);flex-shrink:0}
-.orario-row.last .orario-dot{background:#4ade80;box-shadow:0 0 7px rgba(74,222,128,.5)}
-.orario-time{flex:1;font-size:16px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:.5px}
-.orario-badge{font-size:9px;font-weight:800;padding:2px 7px;border-radius:10px;background:rgba(74,222,128,.14);border:1px solid rgba(74,222,128,.28);color:#4ade80;text-transform:uppercase;letter-spacing:.4px}
-.orari-empty{padding:14px;text-align:center;font-size:12px;color:rgba(255,255,255,.22);background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:10px}
+/* section */
+.sec{padding:0 15px 10px}
+.sec-hdr{display:flex;align-items:center;gap:7px;margin-bottom:8px}
+.sec-ln{flex:1;height:1px;background:rgba(255,255,255,.05)}
+.sec-lb{font-size:9px;font-weight:800;color:rgba(255,255,255,.22);text-transform:uppercase;letter-spacing:1px;white-space:nowrap}
 
-/* stats bar */
-.stats-bar{display:flex;align-items:stretch;margin:0 16px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;overflow:hidden}
-.stat{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 8px;gap:2px}
-.stat-sep{width:1px;background:rgba(255,255,255,.07)}
+/* timeline */
+.tl{display:flex;flex-direction:column}
+.tl-row{display:flex;align-items:flex-start;gap:10px;padding:0 0 0 2px;animation:fade-up .18s ease both}
+.tl-line-wrap{display:flex;flex-direction:column;align-items:center;width:14px;flex-shrink:0;padding-top:3px}
+.tl-dot{width:8px;height:8px;border-radius:50%;background:rgba(34,211,238,.35);border:1.5px solid rgba(34,211,238,.55);flex-shrink:0;transition:all .3s}
+.tl-dot.tl-dot-last{background:#22d3ee;box-shadow:0 0 8px rgba(34,211,238,.6);border-color:#22d3ee;animation:pulse 2.5s ease infinite}
+.tl-line{flex:1;width:1.5px;background:linear-gradient(to bottom,rgba(34,211,238,.25),rgba(34,211,238,.08));min-height:14px;margin-top:2px}
+.tl-time{flex:1;font-size:17px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:.5px;line-height:1;padding-top:2px;padding-bottom:14px}
+.tl-last .tl-time{color:#22d3ee;padding-bottom:6px}
+.tl-badge{align-self:flex-start;margin-top:3px;font-size:9px;font-weight:800;padding:2px 7px;border-radius:10px;background:rgba(34,211,238,.12);border:1px solid rgba(34,211,238,.25);color:#22d3ee;text-transform:uppercase;letter-spacing:.5px}
+.tl-empty{padding:13px;text-align:center;font-size:11px;color:rgba(255,255,255,.2);background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.06);border-radius:10px}
+
+/* stats */
+.stats{display:flex;align-items:stretch;margin:0 15px 10px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden}
+.stat-box{flex:1;display:flex;flex-direction:column;align-items:center;padding:9px 6px;gap:2px}
+.stat-sep{width:1px;background:rgba(255,255,255,.06)}
 .stat-n{font-size:20px;font-weight:900;color:#fff;line-height:1}
-.stat-l{font-size:9px;font-weight:700;color:rgba(255,255,255,.32);text-transform:uppercase;letter-spacing:.5px}
+.stat-l{font-size:9px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px}
 
 /* drawer toggle */
-.drawer-toggle{display:flex;align-items:center;gap:8px;padding:11px 16px;background:rgba(255,255,255,.03);border-top:1px solid rgba(255,255,255,.07);cursor:pointer;user-select:none;transition:background .15s;flex-shrink:0}
-.drawer-toggle:active{background:rgba(255,255,255,.07)}
-.drw-ico{font-size:14px}
-.drw-lbl{flex:1;font-size:12px;font-weight:700;color:rgba(255,255,255,.55)}
-.drw-chev{font-size:11px;color:rgba(255,255,255,.3)}
+.drw-toggle{display:flex;align-items:center;gap:8px;padding:10px 15px;background:rgba(255,255,255,.025);border-top:1px solid rgba(255,255,255,.06);cursor:pointer;user-select:none;transition:background .15s;flex-shrink:0}
+.drw-toggle:active{background:rgba(255,255,255,.06)}
+.drw-ico{font-size:13px}
+.drw-lbl{flex:1;font-size:11px;font-weight:700;color:rgba(255,255,255,.45);letter-spacing:.2px}
+.drw-chev{font-size:10px;color:rgba(255,255,255,.25)}
 
-/* drawer content */
-.drawer{padding:12px 16px 18px;display:flex;flex-direction:column;gap:5px;animation:lpop .18s ease}
-.drw-sec{font-size:9px;font-weight:800;color:rgba(255,255,255,.28);text-transform:uppercase;letter-spacing:.9px;margin-top:6px;margin-bottom:3px}
-.drw-row{display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:11px;cursor:pointer;user-select:none;transition:background .15s}
-.drw-row:active{background:rgba(255,255,255,.09)}
-.drw-row-ico{font-size:16px;flex-shrink:0}
-.drw-row-lbl{flex:1;font-size:13px;font-weight:700;color:#fff}
-.drw-sub{display:flex;flex-direction:column;gap:5px;padding-left:8px;transition:opacity .2s}
-.drw-sub.locked{opacity:.3;pointer-events:none}
+/* drawer */
+.drw{padding:10px 15px 16px;display:flex;flex-direction:column;gap:5px;animation:fade-up .15s ease}
+.drw-sec{font-size:9px;font-weight:800;color:rgba(255,255,255,.22);text-transform:uppercase;letter-spacing:1px;margin-top:5px;margin-bottom:3px}
+.drw-row{display:flex;align-items:center;gap:9px;padding:9px 11px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:10px;cursor:pointer;user-select:none;transition:background .15s}
+.drw-row:active{background:rgba(255,255,255,.08)}
+.dri{font-size:15px;flex-shrink:0}
+.drl{flex:1;font-size:12px;font-weight:700;color:#fff}
+.drw-sub{display:flex;flex-direction:column;gap:4px;padding-left:6px;transition:opacity .2s}
+.drw-sub.locked{opacity:.28;pointer-events:none}
 
-/* toggle switch */
-.tgl{width:44px;height:26px;border-radius:13px;background:rgba(255,255,255,.15);position:relative;transition:background .2s;flex-shrink:0}
-.tgl.on{background:#4ade80}
-.tgl-k{width:22px;height:22px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform .2s;box-shadow:0 2px 5px rgba(0,0,0,.4)}
-.tgl.on .tgl-k{transform:translateX(18px)}
+/* toggle */
+.tgl{width:40px;height:24px;border-radius:12px;background:rgba(255,255,255,.12);position:relative;transition:background .2s;flex-shrink:0}
+.tgl.on{background:#22d3ee}
+.tgl-k{width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform .18s;box-shadow:0 2px 4px rgba(0,0,0,.4)}
+.tgl.on .tgl-k{transform:translateX(16px)}
 
 /* time row */
-.time-row{display:flex;align-items:center;gap:7px;padding:8px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:11px}
-.time-lbl{font-size:11px;color:rgba(255,255,255,.45);min-width:28px}
-.time-inp{flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#fff;font-size:12px;font-weight:700;padding:5px 7px;font-family:system-ui,sans-serif;appearance:none;text-align:center;outline:none}
-.time-inp:focus{border-color:rgba(251,191,36,.55);background:rgba(251,191,36,.07)}
+.time-row{display:flex;align-items:center;gap:6px;padding:7px 11px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:10px}
+.tl-lbl{font-size:10px;color:rgba(255,255,255,.38);min-width:26px}
+.ti{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:#fff;font-size:12px;font-weight:700;padding:4px 6px;font-family:system-ui,sans-serif;appearance:none;text-align:center;outline:none}
+.ti:focus{border-color:rgba(34,211,238,.5);background:rgba(34,211,238,.07)}
 
-/* reset row */
-.reset-row{display:flex;gap:7px}
-.rst-btn{flex:1;padding:10px 4px;border-radius:11px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);color:rgba(255,255,255,.8);font-size:11px;font-weight:800;cursor:pointer;font-family:system-ui,sans-serif;transition:all .15s}
-.rst-btn:active{background:rgba(239,68,68,.25)}
-
-/* config btn */
-.cfg-btn{width:100%;padding:11px 14px;border-radius:11px;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.25);color:rgba(167,139,250,.9);font-size:12px;font-weight:700;cursor:pointer;font-family:system-ui,sans-serif;text-align:left;transition:all .15s}
-.cfg-btn:active{background:rgba(139,92,246,.2)}
+/* reset */
+.rst-row{display:flex;gap:6px}
+.rst-btn{flex:1;padding:9px 2px;border-radius:9px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.18);color:rgba(255,255,255,.7);font-size:11px;font-weight:800;cursor:pointer;font-family:system-ui,sans-serif;transition:all .15s;letter-spacing:.1px}
+.rst-btn:active{background:rgba(239,68,68,.22)}
 
 /* not installed */
-.ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px;padding:28px 18px}
-.ni-icon{font-size:52px;line-height:1}
-.ni-title{font-size:17px;font-weight:900;color:#fff}
-.ni-sub{font-size:13px;color:rgba(255,255,255,.45);line-height:1.8;max-width:260px}
-.ni-sub strong{color:#fbbf24;opacity:1}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:26px 18px}
+.ni-env{width:80px;height:54px;opacity:.4}
+.ni-title{font-size:16px;font-weight:900;color:#fff}
+.ni-sub{font-size:12px;color:rgba(255,255,255,.4);line-height:1.8;max-width:240px}
+.ni-sub strong{color:#22d3ee;opacity:1}
 `;}
   };
   customElements.define('posta-card',PostaCard);

@@ -6375,7 +6375,7 @@ function confirmRestartHA(){
     try{ send({type:'call_service',domain:'homeassistant',service:'restart'}); }catch(e){}
     showToast('🔄 Riavvio di Home Assistant in corso…');
     try{ setC('wait'); }catch(e){}
-  });
+  }, '🔄 Riavvia', 'Annulla');
 }
 
 /* ── Ricarica pagina + svuota cache ── */

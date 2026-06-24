@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.6.01 — 2026-06-24
+
+### fix(popup): bottone riavvio dice "Elimina" invece di "Riavvia"
+- `confirmRestartHA()` ora passa `'🔄 Riavvia'` come label al bottone OK (prima usava il default "Elimina" di `showConfirm`)
+
+### feat(posta-card): redesign totale v4.0 — Midnight Envelope
+- **Nuova grafica**: busta SVG flat con badge numerico al posto del cassetto 3D; colore dinamico (grigio→ciano attivo→verde cassetta aperta)
+- **Accento ciano** (#22d3ee) su fondo midnight (#06080f) — completamente diverso dalla v3
+- **Hero full-width**: busta a sinistra + numero grande + ultima consegna a destra
+- **Timeline verticale**: orari giornalieri con dot + linea connettore, ultimo in evidenza ciano
+- **Rimosse le impostazioni sensori** dal drawer: rimangono solo notifiche, orari e reset manuali
+- **Pillola header** dinamica: mostra "N oggi" o "Aperta" invece del solo pallino
+- Glow/shadow animati sul numero quando la posta è arrivata
+- `frarik-version: 4.0`
+
 ## 1.6.00 — 2026-06-24
 
 ### fix(store): tile card — icona, badge PKG e auto-aggiornamento PKG
