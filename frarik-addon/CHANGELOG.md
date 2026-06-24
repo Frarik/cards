@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.5.98 — 2026-06-24
+
+### feat(posta-card): card completamente riscritta + PKG v1.2
+- Card ridisegnata da zero: header con stato live, cassetta SVG, lista orari consegne di oggi
+- **Storico orari giornaliero**: ogni consegna registra l'orario (HH:MM), visibile come lista nella card
+- **PKG v1.2**: aggiunto `input_text.frarik_posta_oggi_orari` per gli orari del giorno
+- **Reset automatici corretti**: fix indentazione YAML `choose` — reset settimanale (lunedì) e mensile (1° del mese) ora funzionano
+- **Script separati per reset manuale**: `frarik_posta_reset_oggi`, `frarik_posta_reset_settimana`, `frarik_posta_reset_mese`
+- **Menu impostazioni in-card** (drawer in fondo): notifiche, orari, reset manuali, riconfigura sensori
+- Reset oggi azzera anche gli orari del giorno
+
 ## 1.5.97 — 2026-06-24
 
 ### feat(vanessa): tab Live — monitoraggio real-time in diretta
