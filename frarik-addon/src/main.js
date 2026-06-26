@@ -5422,7 +5422,7 @@ let _badgeDisp='full';
 let _badgeColMode='fixed';
 let _badgeRules=[];          // [{op,val,val2,color}]
 let _badgeAction='none';
-let _badgeGroupEntities=[];
+let _badgeJsdSelected='';
 let _badgeVisMode='always';
 let _editBadgeIdx=null;      // null = nuovo, altrimenti indice in modifica
 
@@ -5545,7 +5545,7 @@ function showBadgeForm(){
   _badgeAction='none'; document.getElementById('bf-action').value='none'; _selBAction('none');
   _badgeVisMode='always'; _setVisUI('always');
   document.getElementById('bf-vis-op').value='eq';
-  _badgeGroupEntities=[]; _grpRenderList();
+  _badgeJsdSelected='';
   selBT('entity');
 }
 /* carica un distintivo esistente nel form (modifica) */
@@ -5555,9 +5555,8 @@ function editBadgeAt(i){
   document.getElementById('badge-form').style.display='';
   document.getElementById('bf-form-title').textContent='Modifica distintivo';
   document.getElementById('bf-save-btn').innerHTML='💾 Salva modifiche';
-  selBT(b.type||'entity');
-  _badgeGroupEntities=b.type==='group'&&Array.isArray(b.entities)?JSON.parse(JSON.stringify(b.entities)):[];
-  _grpRenderList();
+  selBT(b.type==='jsd'?'jsd':(b.type||'entity'));
+  _badgeJsdSelected=b.type==='jsd'?(b.jsCardId||''):'';
   document.getElementById('bf-entity').value=b.entity||'';
   document.getElementById('bf-suffix').value=b.suffix||'';
   document.getElementById('bf-text').value=b.text||'';
@@ -5595,14 +5594,15 @@ function hideBadgeForm(){
 
 function selBT(t){
   _badgeType=t;
-  ['entity','text','sep','group'].forEach(x=>document.getElementById('bft-'+x)?.classList.toggle('on',x===t));
+  ['entity','text','sep','jsd'].forEach(x=>document.getElementById('bft-'+x)?.classList.toggle('on',x===t));
   document.getElementById('bf-entity-row').style.display=t==='entity'?'':'none';
   document.getElementById('bf-text-row').style.display=t==='text'?'':'none';
-  document.getElementById('bf-group-row').style.display=t==='group'?'':'none';
-  document.getElementById('bf-details-row').style.display=t==='sep'?'none':'';
-  const grp=t==='group';
-  document.getElementById('bf-disp-wrap').style.display=grp?'none':'';
-  document.getElementById('bf-action-wrap').style.display=grp?'none':'';
+  document.getElementById('bf-jsd-row').style.display=t==='jsd'?'':'none';
+  document.getElementById('bf-details-row').style.display=(t==='sep'||t==='jsd')?'none':'';
+  const hide=t==='jsd';
+  document.getElementById('bf-disp-wrap').style.display=hide?'none':'';
+  document.getElementById('bf-action-wrap').style.display=hide?'none':'';
+  if(t==='jsd') _fillJsdPicker();
 }
 /* ── Visualizzazione ── */
 function _selDisp(d){ _badgeDisp=d; _setDispUI(d); }
@@ -5663,10 +5663,11 @@ function saveBadgeForm(){
   } else if(_badgeType==='text'){
     b.text=G('bf-text'); b.icon=G('bf-icon'); b.label=G('bf-label');
     if(!b.text&&!b.icon&&!b.label){ showToast('⚠️ Inserisci del testo'); return; }
-  } else if(_badgeType==='group'){
-    b.icon=G('bf-icon'); b.label=G('bf-label');
-    b.entities=_badgeGroupEntities.filter(e=>(e.entity||'').trim()).map(e=>({entity:e.entity.trim(),label:e.label||'',automation:e.automation||''}));
-    if(!b.entities.length){ showToast('⚠️ Aggiungi almeno un\'entità al gruppo'); return; }
+  } else if(_badgeType==='jsd'){
+    if(!_badgeJsdSelected){ showToast('⚠️ Seleziona un distintivo dalla lista'); return; }
+    b.jsCardId=_badgeJsdSelected;
+    const def=(window.FratechCardRegistry||{})[_badgeJsdSelected];
+    b.cfg=def&&def.defaultCfg?JSON.parse(JSON.stringify(def.defaultCfg)):{};
   }
   if(_badgeType!=='sep'){
     // visualizzazione
@@ -5763,7 +5764,7 @@ function _badgeClick(id, ev){
   if(ev) ev.stopPropagation();
   if(typeof editMode!=='undefined' && editMode) return;
   const b=_findBadge(id); if(!b) return;
-  if(b.type==='group'){ _openGroupBadgePopup(b, ev); return; }
+  if(b.type==='jsd'){ _openJsdPopup(b, ev); return; }
   const act=b.action||(b.popupCard?'popup':'none');
   const ent=b.actionEntity||b.entity||'';
   if(act==='popup'&&b.popupCard) openBadgePopup(b.popupCard,ev);
@@ -5790,13 +5791,15 @@ function _badgeShow(disp,part){
 /* ── Render badge HTML ── */
 function _badgeItemHTML(b, cls='hbadge', sepCls='badge-sep'){
   if(b.type==='sep') return `<div class="${sepCls}"></div>`;
-  if(b.type==='group'){
-    const ents=b.entities||[];
-    const active=ents.filter(e=>_BADGE_ON.includes((hs[e.entity]?.state||'').toLowerCase())).length;
-    const col=active>0?_badgeColor(b):'rgba(255,255,255,0.35)';
-    const ico=b.icon?`${b.icon} `:'';
-    const lbl=b.label?`<span class="badge-lbl">${eh(b.label)}: </span>`:'';
-    return `<span class="${cls}" id="bchip-${b.id}" style="cursor:pointer;--bc:${col}" data-action="_badgeClick" data-action-arg="${b.id}">${ico}${lbl}<span class="badge-val" id="bgcnt-${b.id}">${active}</span><span style="opacity:.35;font-size:.85em">/${ents.length}</span></span>`;
+  if(b.type==='jsd'){
+    const def=(window.FratechCardRegistry||{})[b.jsCardId];
+    let chip={};
+    try{ if(def&&def.chip) chip=def.chip(b.cfg||{},{states:hs})||{}; }catch(e){}
+    const col=chip.color||'rgba(255,255,255,0.38)';
+    const ico=chip.icon!=null?`${chip.icon} `:(def?.icon?def.icon+' ':'📦 ');
+    const lbl=chip.label?`<span class="badge-lbl">${eh(chip.label)}: </span>`:'';
+    const val=chip.value!=null?`<span class="badge-val" id="bgcnt-${b.id}">${chip.value}</span>`:'';
+    return `<span class="${cls}" id="bchip-${b.id}" style="cursor:pointer;--bc:${col}" data-action="_badgeClick" data-action-arg="${b.id}">${ico}${lbl}${val}</span>`;
   }
   const col=_badgeColor(b);
   const act=b.action||(b.popupCard?'popup':'none');
@@ -5863,113 +5866,63 @@ function openBadgePopup(jsCardId, ev){
   panel.appendChild(hdr); panel.appendChild(body); ov.appendChild(style); ov.appendChild(panel); document.body.appendChild(ov);
 }
 
-/* ── Popup gruppo distintivi ── */
-function _openGroupBadgePopup(b, ev){
+/* ── JS-Distintivo: popup (render/mount della card) ── */
+function _openJsdPopup(b, ev){
   if(ev) ev.stopPropagation();
   if(typeof editMode!=='undefined'&&editMode) return;
-  const col=b.color||'#6366f1';
-  const ents=b.entities||[];
+  const def=(window.FratechCardRegistry||{})[b.jsCardId]; if(!def) return;
+  const col=def.color||b.color||'#6366f1';
   const ov=document.createElement('div');
   ov.style.cssText='position:fixed;inset:0;z-index:99997;background:rgba(0,0,0,.6);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);display:flex;align-items:flex-end';
-  const styleEl=document.createElement('style');
-  styleEl.textContent='@keyframes gbSlUp{from{transform:translateY(100%)}to{transform:translateY(0)}}.gbdr{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,.04);margin-bottom:6px;transition:background .15s}.gbdr:active{background:rgba(255,255,255,.08)}.gbdot{width:10px;height:10px;border-radius:50%;flex-shrink:0;transition:background .3s}.gbinf{flex:1;min-width:0}.gblbl{font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.gbst{font-size:10px;opacity:.45;margin-top:1px}.gbsw{width:44px;height:24px;border-radius:12px;border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;outline:none}.gbsw.on{background:var(--swc,#4ade80)}.gbsw.off{background:rgba(255,255,255,.15)}.gbth{position:absolute;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .18s;pointer-events:none}.gbsw.on .gbth{left:23px}.gbsw.off .gbth{left:3px}.gbauto{display:flex;align-items:center;gap:6px;padding:4px 14px 8px 34px}.gbautobtn{padding:3px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#94a3b8;cursor:pointer;font-size:10px;font-weight:700;transition:all .15s}.gbautobtn.on{background:rgba(74,222,128,.15);border-color:rgba(74,222,128,.4);color:#4ade80}';
+  const sty=document.createElement('style');
+  sty.textContent='@keyframes jsdSlUp{from{transform:translateY(100%)}to{transform:translateY(0)}}';
   const panel=document.createElement('div');
-  panel.style.cssText=`width:100%;max-height:76vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid ${_hex2rgba(col,.25)};border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);color:#fff;animation:gbSlUp .22s cubic-bezier(.32,1.12,.56,1)`;
+  panel.style.cssText=`width:100%;max-height:76vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid ${_hex2rgba(col,.25)};border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);color:#fff;animation:jsdSlUp .22s cubic-bezier(.32,1.12,.56,1)`;
   const hdr=document.createElement('div');
-  hdr.style.cssText=`display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid ${_hex2rgba(col,.15)};flex-shrink:0`;
-  hdr.innerHTML=`<div style="width:40px;height:40px;border-radius:12px;background:${_hex2rgba(col,.15)};border:1px solid ${_hex2rgba(col,.3)};display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${b.icon||'🔦'}</div><div style="flex:1"><div style="font-size:16px;font-weight:800">${eh(b.label||'Gruppo')}</div><div id="gbdg-hcnt" style="font-size:11px;opacity:.5"></div></div>`;
+  hdr.style.cssText=`display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid ${_hex2rgba(col,.15)};flex-shrink:0`;
+  let chip={}; try{ if(def.chip) chip=def.chip(b.cfg||{},{states:hs})||{}; }catch(e){}
+  hdr.innerHTML=`<div style="width:38px;height:38px;border-radius:11px;background:${_hex2rgba(col,.15)};border:1px solid ${_hex2rgba(col,.3)};display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0">${chip.icon||def.icon||'📦'}</div><div style="flex:1"><div style="font-size:15px;font-weight:800">${eh(chip.label||def.name||b.jsCardId)}</div><div style="font-size:10px;opacity:.45">${eh(def.desc||'')}</div></div>`;
   const closeBtn=document.createElement('button');
-  closeBtn.textContent='✕';
-  closeBtn.style.cssText='width:32px;height:32px;border:none;border-radius:9px;background:rgba(255,255,255,.1);color:#fff;cursor:pointer;font-size:15px;flex-shrink:0';
+  closeBtn.textContent='✕'; closeBtn.style.cssText='width:30px;height:30px;border:none;border-radius:8px;background:rgba(255,255,255,.1);color:#fff;cursor:pointer;font-size:14px;flex-shrink:0';
   hdr.appendChild(closeBtn);
   const body=document.createElement('div');
-  body.style.cssText='flex:1;overflow-y:auto;scrollbar-width:none;padding:12px 12px 24px';
-
-  function renderRows(){
-    body.innerHTML='';
-    if(!ents.length){
-      body.innerHTML='<div style="padding:30px;text-align:center;color:rgba(255,255,255,.3)">Nessuna entità configurata</div>';
-      return;
-    }
-    ents.forEach(e=>{
-      const entId=e.entity||''; if(!entId) return;
-      const domain=entId.split('.')[0];
-      const stObj=hs[entId]; const state=stObj?.state||'unknown';
-      const isOn=_BADGE_ON.includes(state.toLowerCase());
-      const lbl=e.label||(stObj?.attributes?.friendly_name||entId);
-      const row=document.createElement('div');
-      const main=document.createElement('div');
-      main.className='gbdr';
-      const dot=document.createElement('div');
-      dot.className='gbdot';
-      dot.style.cssText=`background:${isOn?col:'rgba(255,255,255,.2)'};box-shadow:${isOn?'0 0 6px '+col:'none'}`;
-      const info=document.createElement('div');
-      info.className='gbinf';
-      info.innerHTML=`<div class="gblbl">${eh(lbl)}</div><div class="gbst">${_stateIt(state)}</div>`;
-      const sw=document.createElement('button');
-      sw.className=`gbsw ${isOn?'on':'off'}`;
-      sw.style.setProperty('--swc',col);
-      sw.innerHTML='<div class="gbth"></div>';
-      sw.addEventListener('click',ev2=>{ ev2.stopPropagation(); callSvc(domain,isOn?'turn_off':'turn_on',entId); setTimeout(renderRows,600); });
-      main.appendChild(dot); main.appendChild(info); main.appendChild(sw);
-      row.appendChild(main);
-      if(e.automation){
-        const autoId=e.automation;
-        const autoOn=(hs[autoId]?.state||'off')==='on';
-        const autoLbl=hs[autoId]?.attributes?.friendly_name||autoId;
-        const ar=document.createElement('div');
-        ar.className='gbauto';
-        ar.innerHTML=`<span style="opacity:.4;font-size:12px">🤖</span><span style="flex:1;font-size:11px;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(autoLbl)}</span>`;
-        const ab=document.createElement('button');
-        ab.className=`gbautobtn${autoOn?' on':''}`;
-        ab.textContent=autoOn?'Disattiva':'Attiva';
-        ab.addEventListener('click',ev2=>{ ev2.stopPropagation(); callSvc('automation',autoOn?'turn_off':'turn_on',autoId); setTimeout(renderRows,600); });
-        ar.appendChild(ab); row.appendChild(ar);
-      }
-      body.appendChild(row);
-    });
-    const activeNow=ents.filter(e=>_BADGE_ON.includes((hs[e.entity]?.state||'').toLowerCase())).length;
-    const cntEl=panel.querySelector('#gbdg-hcnt');
-    if(cntEl) cntEl.textContent=`${activeNow}/${ents.length} attiv${activeNow===1?'o':'i'}`;
-  }
-
-  renderRows();
-  const closeFn=()=>{ clearInterval(ov._iv); ov.remove(); document.removeEventListener('keydown',escFn); };
+  body.style.cssText='flex:1;overflow-y:auto;scrollbar-width:none;padding:12px 12px 20px';
+  try{ body.innerHTML=def.render(b.cfg||{},{states:hs}); if(def.mount) def.mount(b.cfg||{},{states:hs},body); if(def.update) ov._iv=setInterval(()=>{ try{ def.update(b.cfg||{},{states:hs},body); }catch(e){} },3000); }
+  catch(e){ body.innerHTML=`<div style="padding:24px;color:#f87171">Errore: ${e.message}</div>`; }
+  const closeFn=()=>{ if(ov._iv) clearInterval(ov._iv); ov.remove(); document.removeEventListener('keydown',escFn); };
   function escFn(e){ if(e.key==='Escape') closeFn(); }
-  closeBtn.onclick=closeFn;
-  ov.onclick=(e)=>{ if(e.target===ov) closeFn(); };
-  document.addEventListener('keydown',escFn);
-  ov._iv=setInterval(renderRows, 3000);
-  panel.appendChild(hdr); panel.appendChild(body);
-  ov.appendChild(styleEl); ov.appendChild(panel); document.body.appendChild(ov);
+  closeBtn.onclick=closeFn; ov.onclick=(e)=>{ if(e.target===ov) closeFn(); }; document.addEventListener('keydown',escFn);
+  panel.appendChild(hdr); panel.appendChild(body); ov.appendChild(sty); ov.appendChild(panel); document.body.appendChild(ov);
 }
 
-/* ── Form gruppo: gestione lista entità ── */
-function _grpRenderList(){
-  const el=document.getElementById('bf-group-list'); if(!el) return;
-  if(!_badgeGroupEntities.length){
-    el.innerHTML='<div style="font-size:10px;color:var(--muted);text-align:center;padding:4px 0">Nessuna entità — clicca ➕</div>';
+/* ── JS-Distintivo: apertura editor config dedicato ── */
+function _editJsdBadge(b, idx, zone){
+  const def=(window.FratechCardRegistry||{})[b.jsCardId];
+  if(!def||!def.configure){ showToast('⚠️ Questo distintivo non ha un editor'); return; }
+  const prevCfg=JSON.parse(JSON.stringify(b.cfg||{}));
+  def.configure(b.cfg||{},null,(newCfg)=>{
+    b.cfg=newCfg||{};
+    saveCfg(); renderBadgesAll();
+    try{ _updateCMBadgePreview(); }catch(e){}
+  });
+}
+
+/* ── JS-Distintivo: picker nel form badge ── */
+function _fillJsdPicker(){
+  const el=document.getElementById('bf-jsd-picker'); if(!el) return;
+  const reg=window.FratechCardRegistry||{};
+  const defs=Object.values(reg).filter(d=>d.isDistintivo);
+  if(!defs.length){
+    el.innerHTML='<div style="font-size:10px;color:var(--muted);text-align:center;padding:10px 0">Nessun distintivo installato — vai sullo Store (tab Distintivi) e installa un distintivo prima.</div>';
     return;
   }
-  el.innerHTML=_badgeGroupEntities.map((e,i)=>`
-    <div style="display:flex;flex-direction:column;gap:4px;background:rgba(255,255,255,.04);border-radius:8px;padding:8px">
-      <div style="display:flex;gap:4px;align-items:center">
-        <input class="finp" id="grpe-${i}" placeholder="entity_id (es. light.soggiorno)" value="${eh(e.entity||'')}" style="flex:1" data-input="_grpSetField" data-input-args='[${i},"entity"]'>
-        <button class="fbtn" data-action="browseField" data-action-arg="grpe-${i}" title="Sfoglia">🔍</button>
-        <button class="fbtn" data-action="_grpDelRow" data-action-args='[${i}]' style="color:#f87171;border-color:rgba(248,113,113,.3)" title="Rimuovi">✕</button>
-      </div>
-      <input class="finp" id="grpl-${i}" placeholder="Etichetta (opz.)" value="${eh(e.label||'')}" data-input="_grpSetField" data-input-args='[${i},"label"]'>
-      <div style="display:flex;gap:4px;align-items:center">
-        <span style="font-size:11px;opacity:.35;flex-shrink:0">🤖</span>
-        <input class="finp" id="grpa-${i}" placeholder="Automazione (opz., es. automation.xxx)" value="${eh(e.automation||'')}" style="flex:1" data-input="_grpSetField" data-input-args='[${i},"automation"]'>
-        <button class="fbtn" data-action="browseField" data-action-arg="grpa-${i}" title="Sfoglia">🔍</button>
-      </div>
-    </div>
-  `).join('');
+  el.innerHTML=defs.map(d=>`<div style="display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:10px;background:${_badgeJsdSelected===d.id?'rgba(99,102,241,.18)':'rgba(255,255,255,.04)'};border:1px solid ${_badgeJsdSelected===d.id?'rgba(99,102,241,.5)':'rgba(255,255,255,.08)'};cursor:pointer;transition:background .15s" data-action="_jsdPickCard" data-action-arg="${d.id}">
+    <span style="font-size:18px;flex-shrink:0">${d.icon||'📦'}</span>
+    <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(d.name||d.id)}</div>${d.desc?`<div style="font-size:9px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(d.desc)}</div>`:''}</div>
+    ${_badgeJsdSelected===d.id?'<span style="color:#818cf8;font-size:13px">✓</span>':''}
+  </div>`).join('');
 }
-function _grpAddRow(){ _badgeGroupEntities.push({entity:'',label:'',automation:''}); _grpRenderList(); }
-function _grpDelRow(i){ _badgeGroupEntities.splice(i,1); _grpRenderList(); }
-function _grpSetField(i,field,val){ if(_badgeGroupEntities[i]) _badgeGroupEntities[i][field]=val; }
+function _jsdPickCard(id){ _badgeJsdSelected=id; _fillJsdPicker(); }
 
 function renderBadgesAll(){
   _renderViewHeader();
@@ -6289,9 +6242,14 @@ function _inViewPasteBadge(zone){
   saveCfg(); renderBadgesAll();
   showToast('📋 Distintivo incollato');
 }
-/* Modifica un distintivo direttamente dalla plancia (apre l'editor su quel distintivo) */
+/* Modifica un distintivo direttamente dalla plancia */
 function _inViewEditBadge(i,zone){
   _badgeZone=zone||'header';
+  const arr=_getBadgeArr(); const b=arr[i]; if(!b) return;
+  if(b.type==='jsd'){
+    _editJsdBadge(b,i,_badgeZone);
+    return;
+  }
   openBM(_badgeZone);
   setTimeout(()=>editBadgeAt(i),0);
 }
@@ -6331,15 +6289,19 @@ function _liveUpdateBadges(entityId){
       const el=document.getElementById('bv-'+b.id);
       if(el){ const rv=hs[entityId]??'—'; el.textContent=isNaN(parseFloat(rv))?_stateIt(rv):rv; }
     }
-    // gruppo: aggiorna contatore se una delle entità è cambiata
-    if(b.type==='group'&&(b.entities||[]).some(e=>e.entity===entityId||e.automation===entityId)){
-      const ents=b.entities||[];
-      const cnt=document.getElementById('bgcnt-'+b.id);
-      const chip=document.getElementById('bchip-'+b.id);
-      if(cnt||chip){
-        const active=ents.filter(e=>_BADGE_ON.includes((hs[e.entity]?.state||'').toLowerCase())).length;
-        if(cnt) cnt.textContent=String(active);
-        if(chip){ const nc=active>0?_badgeColor(b):'rgba(255,255,255,0.35)'; chip.style.setProperty('--bc',nc); }
+    // jsd: aggiorna chip se l'entità è watched dal distintivo
+    if(b.type==='jsd'){
+      const def=(window.FratechCardRegistry||{})[b.jsCardId];
+      if(def&&def.chip){
+        let doUpdate=true;
+        if(def.watchEntities){ try{ doUpdate=(def.watchEntities(b.cfg||{})||[]).includes(entityId); }catch(e){} }
+        if(doUpdate){
+          let chip={}; try{ chip=def.chip(b.cfg||{},{states:hs})||{}; }catch(e){}
+          const vel=document.getElementById('bgcnt-'+b.id);
+          const cel=document.getElementById('bchip-'+b.id);
+          if(vel&&chip.value!=null) vel.textContent=String(chip.value);
+          if(cel&&chip.color!=null) cel.style.setProperty('--bc',chip.color);
+        }
       }
     }
     // COLORE-auto aggiornato SUL POSTO (niente re-render → niente flash ogni secondo)
@@ -17878,7 +17840,7 @@ Object.assign(window, {
   openPremiumPage, closePremiumPage, _ghsPremActivate, _premSendInterest,
   _isAdmin, _adminCtrlPanel,
   _epLicBadgeLoad, _epAdminPanelLoad, _adminShowFirstAccess,
-  _grpAddRow, _grpDelRow, _grpSetField, _grpRenderList, _openGroupBadgePopup,
+  _openJsdPopup, _editJsdBadge, _fillJsdPicker, _jsdPickCard,
   _vanessaRenderSettings, _vanessaSave, _vanessaTest, _vanessaValidateKey,
   _vanessaRunCard, _vanessaSimulateCard, _vanessaUndoCard, _vanessaCardPopup, _vanessaClearLog, _vnssToggleVacation,
   _pkgUninstallFromHA, _pkgViewOnHA, _pkgGenericInstall, _pkgPostInstall,

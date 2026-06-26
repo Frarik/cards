@@ -261,7 +261,7 @@ export function _buildDOM(){
           <button class="fbtn badge-type-btn on" id="bft-entity" data-action="selBT" data-action-arg="entity">🏷️ Entità HA</button>
           <button class="fbtn badge-type-btn" id="bft-text" data-action="selBT" data-action-arg="text">🔤 Testo fisso</button>
           <button class="fbtn badge-type-btn" id="bft-sep" data-action="selBT" data-action-arg="sep">│ Separatore</button>
-          <button class="fbtn badge-type-btn" id="bft-group" data-action="selBT" data-action-arg="group">🔦 Gruppo</button>
+          <button class="fbtn badge-type-btn" id="bft-jsd" data-action="selBT" data-action-arg="jsd">📦 Installati</button>
         </div>
         <div id="bf-entity-row">
           <div class="flbl">Entità</div>
@@ -273,10 +273,12 @@ export function _buildDOM(){
           <div class="flbl">Testo da mostrare</div>
           <input class="finp" id="bf-text" type="text" placeholder="es. Casa Mia" style="margin-bottom:8px">
         </div>
-        <div id="bf-group-row" style="display:none">
-          <div class="flbl">Entità del gruppo</div>
-          <div id="bf-group-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px"></div>
-          <button class="ep-add" data-action="_grpAddRow">➕ Aggiungi entità</button>
+        <div id="bf-jsd-row" style="display:none">
+          <div class="flbl">Scegli un distintivo installato</div>
+          <div id="bf-jsd-picker" style="display:flex;flex-direction:column;gap:5px;margin-bottom:6px">
+            <div style="font-size:10px;color:var(--muted);text-align:center;padding:8px 0">Nessun distintivo installato — vai sullo Store (tab Distintivi)</div>
+          </div>
+          <div style="font-size:9px;color:var(--muted)">Dopo aver aggiunto il distintivo, usa ✏️ sulla chip per configurarlo.</div>
         </div>
         <div id="bf-details-row">
           <div style="display:flex;gap:8px;margin-bottom:8px">
