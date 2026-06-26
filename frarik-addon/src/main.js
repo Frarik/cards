@@ -2236,7 +2236,7 @@ function _ghStoreRender(){
   const idFile=g.idFile||{};
   const _cpCards=(curPage()||{cards:[]}).cards||[];
   const usedInCurPage=new Set();
-  _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedInCurPage.add(c.jsCardId); });
+  _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId&&!(window.FratechCardRegistry?.[c.jsCardId]?.isDistintivo)) usedInCurPage.add(c.jsCardId); });
   ((curPage()||{}).headerBadges||[]).forEach(b=>{ if(b.type==='jsd'&&b.jsCardId) usedInCurPage.add(b.jsCardId); });
   const sorted=files.filter(f=>f&&f.name).sort((a,b)=>a.name.localeCompare(b.name));
   const installed=[], toInstall=[];
@@ -2372,7 +2372,7 @@ function _ghStoreRenderPredefinite(q){
   if(!items.length){ list.innerHTML=hdr+`<div class="ghs-empty">${q?`Nessun risultato per "${eh(q)}"`: 'Nessuna card predefinita disponibile.'}</div>`; return; }
   const _cpCards=(curPage()||{cards:[]}).cards||[];
   const usedInCurPage=new Set();
-  _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedInCurPage.add(c.jsCardId); });
+  _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId&&!(window.FratechCardRegistry?.[c.jsCardId]?.isDistintivo)) usedInCurPage.add(c.jsCardId); });
   ((curPage()||{}).headerBadges||[]).forEach(b=>{ if(b.type==='jsd'&&b.jsCardId) usedInCurPage.add(b.jsCardId); });
   list.innerHTML=hdr+'<div class="ghc-grid">'+items.map(i=>{
     const m=i.meta||{}; const id=m.id||'';
@@ -2450,7 +2450,7 @@ function _ghStoreRenderPremium(q){
   if(q) files=files.filter(f=>f.name.toLowerCase().includes(q));
   const _cpCards=(curPage()||{cards:[]}).cards||[];
   const usedInCurPage=new Set();
-  _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedInCurPage.add(c.jsCardId); });
+  _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId&&!(window.FratechCardRegistry?.[c.jsCardId]?.isDistintivo)) usedInCurPage.add(c.jsCardId); });
   ((curPage()||{}).headerBadges||[]).forEach(b=>{ if(b.type==='jsd'&&b.jsCardId) usedInCurPage.add(b.jsCardId); });
   const sorted=files.filter(f=>f&&f.name).sort((a,b)=>a.name.localeCompare(b.name));
   const installed=[], toInstall=[]; sorted.forEach(f=>{ (g.shas[f.name]?installed:toInstall).push(f); });
@@ -11215,6 +11215,8 @@ function _jsdAddToHeader(id, def){
   const page = curPage();
   if(!page) return;
   if(!page.headerBadges) page.headerBadges=[];
+  // Rimuovi eventuali entry stale {type:'js-custom', jsCardId:id} rimaste dalla versione precedente
+  if(page.cards) page.cards=page.cards.filter(c=>!(c.type==='js-custom'&&c.jsCardId===id));
   const newBadge = { id: uid(), type: 'jsd', jsCardId: id, cfg: def.defaultCfg ? JSON.parse(JSON.stringify(def.defaultCfg)) : {} };
   page.headerBadges.push(newBadge);
   saveCfg();
