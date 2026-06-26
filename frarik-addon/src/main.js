@@ -2235,7 +2235,9 @@ function _ghStoreRender(){
   // ── Cartelle card (JS / Chips / Distintivi): griglia moderna ──
   const idFile=g.idFile||{};
   const _cpCards=(curPage()||{cards:[]}).cards||[];
-  const usedInCurPage=new Set(); _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedInCurPage.add(c.jsCardId); });
+  const usedInCurPage=new Set();
+  _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedInCurPage.add(c.jsCardId); });
+  ((curPage()||{}).headerBadges||[]).forEach(b=>{ if(b.type==='jsd'&&b.jsCardId) usedInCurPage.add(b.jsCardId); });
   const sorted=files.filter(f=>f&&f.name).sort((a,b)=>a.name.localeCompare(b.name));
   const installed=[], toInstall=[];
   sorted.forEach(f=>{ (g.shas[f.name]?installed:toInstall).push(f); });
@@ -2266,13 +2268,14 @@ function _ghStoreRender(){
     const pkgBdgInst=hasPkgUpd
       ?`<span class="ghc-bdg pkg-upd"><i class="mdi mdi-package-up"></i> PKG update</span>`
       :_pkgBadgeHtml(pkgInfoInst);
+    const _inLabel=reg?.isDistintivo?'In intestazione':'In vista';
     const bdg=hasUpdate?`<span class="ghc-bdg upd">↑ Aggiornamento</span>`
-      :inCurPage?`<span class="ghc-bdg cur">✓ In vista</span>`
+      :inCurPage?`<span class="ghc-bdg cur">✓ ${_inLabel}</span>`
       :`<span class="ghc-bdg ok">● Installata</span>`;
     const updBtn=hasUpdate?`<button class="ghc-btn ghc-btn-upd" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-update"></i> Aggiorna</button>`:'';
     const pkgUpdBtn=hasPkgUpd&&cardId?`<button class="ghc-btn ghc-btn-upd" data-action="_pkgUpdateCard" data-action-arg="${cardId}" style="background:rgba(251,146,60,.15);border-color:rgba(251,146,60,.4);color:#fb923c"><i class="mdi mdi-package-up"></i> Aggiorna PKG</button>`:'';
     const addBtn=cardId?(inCurPage
-      ?`<span class="ghc-indash"><i class="mdi mdi-check-circle-outline"></i> In vista</span>`
+      ?`<span class="ghc-indash"><i class="mdi mdi-check-circle-outline"></i> ${_inLabel}</span>`
       :`<button class="ghc-btn ghc-btn-add" data-action="_jsStoreAddAndRefresh" data-action-args='["${cardId}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`)
       :`<button class="ghc-btn ghc-btn-inst" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>`;
     const delBtn=cardId?`<button class="ghc-btn-del" data-action="_ghsDeleteInstalled" data-action-arg="${cardId}" title="Disinstalla"><i class="mdi mdi-delete-outline"></i></button>`:'';
@@ -2368,7 +2371,9 @@ function _ghStoreRenderPredefinite(q){
   const hdr=`<div style="margin-bottom:14px;padding:12px 14px;border-radius:12px;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.22);font-size:11px;color:rgba(255,255,255,.7);line-height:1.6"><b style="color:#c4b5fd">🛡️ Card Predefinite</b> — card integrate nel sistema Frarik, sempre disponibili e protette da licenza.<br><span style="opacity:.7">Non possono essere eliminate senza la chiave amministratore.</span></div>`;
   if(!items.length){ list.innerHTML=hdr+`<div class="ghs-empty">${q?`Nessun risultato per "${eh(q)}"`: 'Nessuna card predefinita disponibile.'}</div>`; return; }
   const _cpCards=(curPage()||{cards:[]}).cards||[];
-  const usedInCurPage=new Set(); _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedInCurPage.add(c.jsCardId); });
+  const usedInCurPage=new Set();
+  _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedInCurPage.add(c.jsCardId); });
+  ((curPage()||{}).headerBadges||[]).forEach(b=>{ if(b.type==='jsd'&&b.jsCardId) usedInCurPage.add(b.jsCardId); });
   list.innerHTML=hdr+'<div class="ghc-grid">'+items.map(i=>{
     const m=i.meta||{}; const id=m.id||'';
     const reg=id?window.FratechCardRegistry?.[id]:null;
@@ -2444,7 +2449,9 @@ function _ghStoreRenderPremium(q){
   let files=allFiles.slice();
   if(q) files=files.filter(f=>f.name.toLowerCase().includes(q));
   const _cpCards=(curPage()||{cards:[]}).cards||[];
-  const usedInCurPage=new Set(); _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedInCurPage.add(c.jsCardId); });
+  const usedInCurPage=new Set();
+  _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedInCurPage.add(c.jsCardId); });
+  ((curPage()||{}).headerBadges||[]).forEach(b=>{ if(b.type==='jsd'&&b.jsCardId) usedInCurPage.add(b.jsCardId); });
   const sorted=files.filter(f=>f&&f.name).sort((a,b)=>a.name.localeCompare(b.name));
   const installed=[], toInstall=[]; sorted.forEach(f=>{ (g.shas[f.name]?installed:toInstall).push(f); });
   const tilePrem=(f,isInstalled)=>{
@@ -11203,16 +11210,31 @@ function jsStoreLoadFile(file){
   reader.readAsText(file);
 }
 
+function _jsdAddToHeader(id, def){
+  const page = curPage();
+  if(!page) return;
+  if(!page.headerBadges) page.headerBadges=[];
+  const newBadge = { id: uid(), type: 'jsd', jsCardId: id, cfg: def.defaultCfg ? JSON.parse(JSON.stringify(def.defaultCfg)) : {} };
+  page.headerBadges.push(newBadge);
+  saveCfg();
+  if(typeof renderBadgesAll==='function') renderBadgesAll();
+  closeJsStore();
+  showToast('✅ Distintivo aggiunto — clicca ✏️ per configurare!');
+  if(typeof _epRenderJsStore==='function') _epRenderJsStore();
+  if(typeof _jsStoreRenderList==='function') _jsStoreRenderList();
+}
+
 function jsStoreAddCard(id){
   if(!id) return;
   const regCard = window.FratechCardRegistry[id];
   if(!regCard){ showToast('⚠️ Card non trovata nel registry. Ricarica la pagina.'); return; }
+  if(regCard.isDistintivo){ _jsdAddToHeader(id, regCard); return; }
   const page = curPage();
   const newCard = {
     id: uid(), type: 'js-custom', jsCardId: id,
     label: regCard.name||id, icon: regCard.icon||'📦',
     color: '#818cf8', entity: '',
-    colSpan: regCard.colSpan||2, rowSpan: regCard.rowSpan||2   // la card può suggerire la dimensione
+    colSpan: regCard.colSpan||2, rowSpan: regCard.rowSpan||2
   };
   _assignSection(page, newCard);
   page.cards.push(newCard);

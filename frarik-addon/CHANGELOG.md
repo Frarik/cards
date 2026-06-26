@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.6.11 — 2026-06-27
+
+### feat(distintivi): store → header (distintivi JS da card-distintivi/)
+
+- **Fix critico**: `jsStoreAddCard` ora rileva `isDistintivo:true` nel registry e chiama `_jsdAddToHeader` invece di aggiungere alla griglia card — il distintivo compare nell'intestazione della pagina
+- Nuova funzione `_jsdAddToHeader(id, def)`: crea badge `{type:'jsd', jsCardId, cfg}` e lo inserisce in `page.headerBadges`
+- `usedInCurPage` aggiornato in tutti i punti dello store (cartelle, predefinite, premium) per includere anche i badge `jsd` da `page.headerBadges` — lo stato "✓ In intestazione" compare correttamente dopo l'aggiunta
+- Label dinamica "In intestazione" (invece di "In vista") per i tile dei distintivi nello store
+- **Primo distintivo**: `GruppoLuci.js` in `card-distintivi/` — chip con contatore luci accese, popup con toggle on/off per ogni luce e automazione opzionale
+
 ## 1.6.10 — 2026-06-24
 
 ### fix(vanessa): modalità autonoma silenziosa + guard stato entity
