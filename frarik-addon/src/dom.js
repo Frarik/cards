@@ -261,6 +261,7 @@ export function _buildDOM(){
           <button class="fbtn badge-type-btn on" id="bft-entity" data-action="selBT" data-action-arg="entity">🏷️ Entità HA</button>
           <button class="fbtn badge-type-btn" id="bft-text" data-action="selBT" data-action-arg="text">🔤 Testo fisso</button>
           <button class="fbtn badge-type-btn" id="bft-sep" data-action="selBT" data-action-arg="sep">│ Separatore</button>
+          <button class="fbtn badge-type-btn" id="bft-group" data-action="selBT" data-action-arg="group">🔦 Gruppo</button>
         </div>
         <div id="bf-entity-row">
           <div class="flbl">Entità</div>
@@ -272,13 +273,18 @@ export function _buildDOM(){
           <div class="flbl">Testo da mostrare</div>
           <input class="finp" id="bf-text" type="text" placeholder="es. Casa Mia" style="margin-bottom:8px">
         </div>
+        <div id="bf-group-row" style="display:none">
+          <div class="flbl">Entità del gruppo</div>
+          <div id="bf-group-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px"></div>
+          <button class="ep-add" data-action="_grpAddRow">➕ Aggiungi entità</button>
+        </div>
         <div id="bf-details-row">
           <div style="display:flex;gap:8px;margin-bottom:8px">
             <div style="flex:0 0 90px"><div class="flbl">Icona</div><div class="finp-row" style="gap:3px"><input class="finp" id="bf-icon" type="text" placeholder="💡" style="text-align:center;font-size:13px;min-width:0"><button class="fbtn" title="Scegli icona" id="bf-icon-picker" style="padding:0 5px">🎨</button></div></div>
             <div style="flex:1"><div class="flbl">Etichetta (opz.)</div><input class="finp" id="bf-label" type="text" placeholder="es. Solare"></div>
           </div>
 
-          <div class="flbl bf-seclbl">👁 Visualizzazione</div>
+          <div id="bf-disp-wrap"><div class="flbl bf-seclbl">👁 Visualizzazione</div>
           <div class="bf-chips" id="bf-disp" style="margin-bottom:10px">
             <button class="bf-chip on" data-disp="full" data-action="_selDisp" data-action-arg="full">Icona + Nome + Valore</button>
             <button class="bf-chip" data-disp="iconval" data-action="_selDisp" data-action-arg="iconval">Icona + Valore</button>
@@ -287,7 +293,7 @@ export function _buildDOM(){
             <button class="bf-chip" data-disp="iconlabel" data-action="_selDisp" data-action-arg="iconlabel">Icona + Nome</button>
             <button class="bf-chip" data-disp="icon" data-action="_selDisp" data-action-arg="icon">Solo Icona</button>
             <button class="bf-chip" data-disp="label" data-action="_selDisp" data-action-arg="label">Solo Nome</button>
-          </div>
+          </div></div>
 
           <div class="flbl bf-seclbl">🎨 Colore</div>
           <div class="bf-chips" style="margin-bottom:8px">
@@ -302,7 +308,7 @@ export function _buildDOM(){
             <button class="ep-add" style="margin-top:4px" data-action="_addColorRule">➕ Aggiungi regola colore</button>
           </div>
 
-          <div class="flbl bf-seclbl">▸ Al clic (interazione)</div>
+          <div id="bf-action-wrap"><div class="flbl bf-seclbl">▸ Al clic (interazione)</div>
           <select class="finp" id="bf-action"  style="margin-bottom:8px">
             <option value="none">Niente</option>
             <option value="popup">Apri popup con una card (Store JS)</option>
@@ -330,7 +336,7 @@ export function _buildDOM(){
           <div id="bfa-url" class="bfa-row" style="display:none">
             <div class="flbl">URL</div>
             <input class="finp" id="bf-url" type="text" placeholder="https://...">
-          </div>
+          </div></div>
 
           <div class="flbl bf-seclbl">⊙ Visibilità</div>
           <div class="bf-chips" style="margin-bottom:8px">
