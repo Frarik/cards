@@ -5602,13 +5602,14 @@ function hideBadgeForm(){
 function selBT(t){
   _badgeType=t;
   ['entity','text','sep','jsd'].forEach(x=>document.getElementById('bft-'+x)?.classList.toggle('on',x===t));
-  document.getElementById('bf-entity-row').style.display=t==='entity'?'':'none';
-  document.getElementById('bf-text-row').style.display=t==='text'?'':'none';
-  document.getElementById('bf-jsd-row').style.display=t==='jsd'?'':'none';
-  document.getElementById('bf-details-row').style.display=(t==='sep'||t==='jsd')?'none':'';
+  const _gs=id=>document.getElementById(id);
+  _gs('bf-entity-row')&&(_gs('bf-entity-row').style.display=t==='entity'?'':'none');
+  _gs('bf-text-row')&&(_gs('bf-text-row').style.display=t==='text'?'':'none');
+  _gs('bf-jsd-row')&&(_gs('bf-jsd-row').style.display=t==='jsd'?'':'none');
+  _gs('bf-details-row')&&(_gs('bf-details-row').style.display=(t==='sep'||t==='jsd')?'none':'');
   const hide=t==='jsd';
-  document.getElementById('bf-disp-wrap').style.display=hide?'none':'';
-  document.getElementById('bf-action-wrap').style.display=hide?'none':'';
+  _gs('bf-disp-wrap')&&(_gs('bf-disp-wrap').style.display=hide?'none':'');
+  _gs('bf-action-wrap')&&(_gs('bf-action-wrap').style.display=hide?'none':'');
   if(t==='jsd') _fillJsdPicker();
 }
 /* ── Visualizzazione ── */
