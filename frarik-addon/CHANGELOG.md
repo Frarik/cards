@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.34 — 2026-06-27
+
+### fix: GruppoAllarme v1.2 — rosso per armato, desc rimossa, fix caching
+
+- **Colore armato rosso**: `armed_away` passa da arancio `#f97316` a rosso `#ef4444`; `armed_home` ora usa l'arancio precedente
+- **Descrizione popup rimossa**: `CARD.desc` svuotata — elimina la riga descrittiva sotto il titolo nel popup FratechStore
+- Versione bumped a 1.2 per forzare aggiornamento nel negozio
+
 ## 1.6.33 — 2026-06-27
 
 ### fix: GruppoAllarme v1.1 — bypass sempre visibile, subtitle rimosso, testo bianco, icone finestra

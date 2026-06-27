@@ -1,6 +1,6 @@
-/* frarik-version: 1.1 */
+/* frarik-version: 1.2 */
 /**
- * GruppoAllarme.js — Distintivo FratechStore v1.1
+ * GruppoAllarme.js — Distintivo FratechStore v1.2
  * Chip stato allarme Alarmo + popup sensori/bypass + overlay triggered automatico
  */
 (function () {
@@ -10,8 +10,8 @@
 
   const ALARM_DEF = {
     disarmed:            { lbl: 'Disarmato',        col: '#4ade80', ico: 'mdi:lock-open-variant', pulse: false },
-    armed_away:          { lbl: 'Armato · Fuori',   col: '#f97316', ico: 'mdi:lock',              pulse: false },
-    armed_home:          { lbl: 'Armato · Casa',    col: '#fb923c', ico: 'mdi:home-lock',         pulse: false },
+    armed_away:          { lbl: 'Armato · Fuori',   col: '#ef4444', ico: 'mdi:lock',              pulse: false },
+    armed_home:          { lbl: 'Armato · Casa',    col: '#f97316', ico: 'mdi:home-lock',         pulse: false },
     armed_night:         { lbl: 'Armato · Notte',   col: '#a78bfa', ico: 'mdi:weather-night',     pulse: false },
     armed_vacation:      { lbl: 'Armato · Vacanza', col: '#facc15', ico: 'mdi:airplane',          pulse: false },
     armed_custom_bypass: { lbl: 'Armato · Bypass',  col: '#34d399', ico: 'mdi:shield-half-full',  pulse: false },
@@ -617,8 +617,8 @@
      ════════════════════════════════════════ */
   const CARD = {
     id: ID, name: 'Gruppo Allarme', icon: '🔒',
-    desc: 'Chip stato allarme Alarmo. Popup con sensori, bypass selettivo per sensori aperti, arm/disarm, sirena. Overlay automatico su triggered.',
-    version: '1.1', isDistintivo: true,
+    desc: '',
+    version: '1.2', isDistintivo: true,
     defaultCfg: { label: 'Allarme', alarmEntity: '', code: '', modes: ['armed_away'], sensors: [], siren: '' },
     chip,
     watchEntities,
@@ -632,5 +632,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v1.1'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v1.2'); } catch (e) {}
 })();
