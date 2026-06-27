@@ -1,9 +1,7 @@
-/* frarik-version: 1.2 */
+/* frarik-version: 1.3 */
 /**
- * GruppoLuci.js — Distintivo FratechStore v1.2
- * Chip header: N/M luci accese.
- * Clic → pannello stile HA: toggle + Accendi/Spegni tutte (solo luci configurate)
- * ⚙ Configura: picker inline light.* + autocomplete automazioni, scroll preservato
+ * GruppoLuci.js — Distintivo FratechStore v1.3
+ * Fix: animazione no-repeat, chip/render usa H() live, polling 2s nel popup, listener unico
  */
 (function () {
   'use strict';
@@ -20,31 +18,28 @@
     const s = h && h.states && h.states[id];
     return (s && s.attributes && s.attributes.friendly_name) || (id.includes('.') ? id.split('.')[1].replace(/_/g, ' ') : id);
   }
-  function stateOf(h, id) {
-    return (h && h.states && h.states[id] && h.states[id].state) || 'unknown';
-  }
+  function stateOf(h, id) { return (h && h.states && h.states[id] && h.states[id].state) || 'unknown'; }
   function isOn(h, id) { return ON_STATES.includes(stateOf(h, id).toLowerCase()); }
   function callSvc(domain, svc, entityId) {
     if (typeof window.callSvc === 'function') { window.callSvc(domain, svc, entityId); return; }
-    const h = H(); if (h && h.callService) h.callService(domain, svc, { entity_id: entityId });
+    const hh = H(); if (hh && hh.callService) hh.callService(domain, svc, { entity_id: entityId });
   }
-  function eh(s) {
-    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
+  function eh(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function hex2rgba(hex, a) {
-    let h = (hex || '').replace('#', '');
-    if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
-    if (h.length !== 6) return `rgba(255,255,255,${a})`;
+    let h = (hex||'').replace('#','');
+    if (h.length===3) h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+    if (h.length!==6) return `rgba(255,255,255,${a})`;
     return `rgba(${parseInt(h.slice(0,2),16)},${parseInt(h.slice(2,4),16)},${parseInt(h.slice(4,6),16)},${a})`;
   }
-  function h2(arg) { return arg && arg.states ? arg : H(); }
+  // Usa sempre H() per dati live; fallback al parametro passato solo se H() non disponibile
+  function liveH(rawHass) { return H() || (rawHass && rawHass.states ? rawHass : null); }
 
-  /* ── chip ── */
+  /* ── chip — usa H() live ── */
   function chip(cfg, rawHass) {
     const c = loadCfg(cfg);
-    const h = h2(rawHass);
+    const h = liveH(rawHass);
     const ents = Array.isArray(c.entities) ? c.entities : [];
-    const active = ents.filter(e => isOn(h, e.entity)).length;
+    const active = h ? ents.filter(e => isOn(h, e.entity)).length : 0;
     const col = c.color || '#fbbf24';
     return {
       icon: c.icon || '💡',
@@ -62,35 +57,35 @@
     return ids;
   }
 
-  /* ── render popup (stile HA) ── */
+  /* ── render popup — usa H() live ── */
   function render(cfg, rawHass) {
     const c = loadCfg(cfg);
-    const h = h2(rawHass);
+    const h = liveH(rawHass);
     const ents = Array.isArray(c.entities) ? c.entities : [];
     const col = c.color || '#fbbf24';
-    const active = ents.filter(e => isOn(h, e.entity)).length;
+    const active = h ? ents.filter(e => isOn(h, e.entity)).length : 0;
 
     const ctrlBar = ents.length ? `
-      <div style="display:flex;gap:8px;padding:10px 14px 6px;flex-shrink:0">
+      <div style="display:flex;gap:8px;padding:10px 14px 4px">
         <button data-gl-all="on" style="flex:1;padding:7px;border-radius:8px;border:1px solid ${hex2rgba(col,.4)};background:${hex2rgba(col,.12)};color:${col};font-size:11px;font-weight:700;cursor:pointer">☀ Accendi tutte</button>
         <button data-gl-all="off" style="flex:1;padding:7px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:rgba(255,255,255,.6);font-size:11px;font-weight:700;cursor:pointer">⏻ Spegni tutte</button>
       </div>
-      <div style="padding:2px 14px 8px;font-size:10px;color:rgba(255,255,255,.35)">${active} / ${ents.length} accese</div>
-    ` : '';
+      <div style="padding:4px 14px 8px;font-size:11px;font-weight:600;color:${active>0?col:'rgba(255,255,255,.35)'}">
+        ${active} / ${ents.length} ${active===1?'luce accesa':'luci accese'}
+      </div>` : '';
 
     const rows = ents.map((e, i) => {
       if (!e.entity) return '';
-      const on = isOn(h, e.entity);
+      const on = h ? isOn(h, e.entity) : false;
       const lbl = e.label || nameOf(h, e.entity);
       const swBg = on ? col : 'rgba(255,255,255,0.14)';
       const thumbL = on ? '22px' : '2px';
       let autoRow = '';
       if (e.automation) {
-        const autoOn = isOn(h, e.automation);
-        const autoLbl = nameOf(h, e.automation);
+        const autoOn = h ? isOn(h, e.automation) : false;
         autoRow = `<div style="display:flex;align-items:center;gap:8px;padding:4px 16px 10px 60px">
           <span style="font-size:10px;opacity:.4">🤖</span>
-          <span style="flex:1;font-size:10px;color:rgba(255,255,255,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(autoLbl)}</span>
+          <span style="flex:1;font-size:10px;color:rgba(255,255,255,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(nameOf(h, e.automation))}</span>
           <button data-jsd-auto="${i}" style="padding:3px 10px;border-radius:6px;border:1px solid ${autoOn?hex2rgba(col,.4):'rgba(255,255,255,.15)'};background:${autoOn?hex2rgba(col,.15):'transparent'};color:${autoOn?col:'#64748b'};cursor:pointer;font-size:10px;font-weight:600">${autoOn?'Disattiva':'Attiva'}</button>
         </div>`;
       }
@@ -110,41 +105,75 @@
 
     return `<div id="gl-popup-body">
       ${ctrlBar}
-      <div>${rows || '<div style="padding:32px 20px;text-align:center;color:rgba(255,255,255,.3);font-size:12px">Nessuna luce configurata.<br><span style="font-size:10px;opacity:.6">Clicca ✏️ sulla chip per configurare.</span></div>'}</div>
+      <div>${rows||'<div style="padding:32px 20px;text-align:center;color:rgba(255,255,255,.3);font-size:12px">Nessuna luce configurata.<br><span style="font-size:10px;opacity:.6">Clicca ✏️ sulla chip per configurare.</span></div>'}</div>
     </div>`;
   }
 
-  function mount(cfg, rawHass, el) {
+  /* ── mount: listener unico + polling 2s real-time ── */
+  function _mountHandlers(cfg, el) {
     const c = loadCfg(cfg);
     const ents = Array.isArray(c.entities) ? c.entities : [];
-    el.addEventListener('click', ev => {
+
+    // rimuovi listener precedente (evita accumulo su ogni update)
+    if (el._glHandler) el.removeEventListener('click', el._glHandler);
+
+    function handler(ev) {
       const tog = ev.target.closest('[data-jsd-toggle]');
       if (tog) {
         const e = ents[parseInt(tog.dataset.jsdToggle)]; if (!e) return;
         callSvc(e.entity.split('.')[0], isOn(H(), e.entity) ? 'turn_off' : 'turn_on', e.entity);
-        setTimeout(() => { try { update(cfg, null, el); } catch(_){} }, 600);
+        setTimeout(() => {
+          if (!el.isConnected) return;
+          el.innerHTML = render(cfg, null);
+          _mountHandlers(cfg, el);
+        }, 1200);
         ev.stopPropagation(); return;
       }
       const auto = ev.target.closest('[data-jsd-auto]');
       if (auto) {
-        const e = ents[parseInt(auto.dataset.jsdAuto)]; if (!e || !e.automation) return;
+        const e = ents[parseInt(auto.dataset.jsdAuto)]; if (!e||!e.automation) return;
         callSvc('automation', isOn(H(), e.automation) ? 'turn_off' : 'turn_on', e.automation);
-        setTimeout(() => { try { update(cfg, null, el); } catch(_){} }, 600);
+        setTimeout(() => {
+          if (!el.isConnected) return;
+          el.innerHTML = render(cfg, null);
+          _mountHandlers(cfg, el);
+        }, 1200);
         ev.stopPropagation(); return;
       }
       const allBtn = ev.target.closest('[data-gl-all]');
       if (allBtn) {
         const svc = allBtn.dataset.glAll === 'on' ? 'turn_on' : 'turn_off';
-        // solo le luci configurate in questo distintivo
         ents.forEach(e => { if (e.entity) callSvc(e.entity.split('.')[0], svc, e.entity); });
-        setTimeout(() => { try { update(cfg, null, el); } catch(_){} }, 700);
+        setTimeout(() => {
+          if (!el.isConnected) return;
+          el.innerHTML = render(cfg, null);
+          _mountHandlers(cfg, el);
+        }, 1200);
         ev.stopPropagation(); return;
       }
-    });
+    }
+
+    el._glHandler = handler;
+    el.addEventListener('click', handler);
+  }
+
+  function mount(cfg, rawHass, el) {
+    _mountHandlers(cfg, el);
+
+    // Polling real-time ogni 2s — avvia solo una volta (check _glPoll)
+    if (el._glPoll) return;
+    el._glPoll = setInterval(() => {
+      if (!el.isConnected) { clearInterval(el._glPoll); delete el._glPoll; return; }
+      try {
+        const h = H(); if (!h) return;
+        el.innerHTML = render(cfg, h);
+        _mountHandlers(cfg, el);
+      } catch(e) {}
+    }, 2000);
   }
 
   function update(cfg, rawHass, el) {
-    try { el.innerHTML = render(cfg, rawHass || H()); mount(cfg, null, el); } catch(e){}
+    try { el.innerHTML = render(cfg, null); _mountHandlers(cfg, el); } catch(e){}
   }
 
   /* ── configure ── */
@@ -154,6 +183,7 @@
     const h = H();
     let filterQ = '';
     let expandedAuto = new Set();
+    let _firstRender = true; // animazione solo al primo render
 
     /* ---- autocomplete singleton ---- */
     let _acDrop = null;
@@ -164,14 +194,14 @@
       if (!matches.length) return;
       const rect = inp.getBoundingClientRect();
       _acDrop = document.createElement('div');
-      _acDrop.style.cssText = `position:fixed;left:${rect.left}px;top:${rect.bottom + 3}px;width:${rect.width}px;max-height:180px;overflow-y:auto;z-index:100003;background:#1a1630;border:1px solid rgba(251,191,36,.3);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.85);scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent`;
+      _acDrop.style.cssText = `position:fixed;left:${rect.left}px;top:${rect.bottom+3}px;width:${rect.width}px;max-height:180px;overflow-y:auto;z-index:100003;background:#1a1630;border:1px solid rgba(251,191,36,.3);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.85);scrollbar-width:thin`;
       matches.forEach(m => {
         const r = document.createElement('div');
         r.style.cssText = 'padding:8px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.05);transition:background .1s';
         r.innerHTML = `<div style="font-size:11px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(m.name)}</div><div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:1px">${eh(m.id)}</div>`;
-        r.addEventListener('mouseover', () => { r.style.background = 'rgba(251,191,36,.1)'; });
-        r.addEventListener('mouseout',  () => { r.style.background = 'transparent'; });
-        r.addEventListener('mousedown', ev => { ev.preventDefault(); onPick(m.id, m.name); _closeAc(); });
+        r.addEventListener('mouseover', () => { r.style.background='rgba(251,191,36,.1)'; });
+        r.addEventListener('mouseout',  () => { r.style.background='transparent'; });
+        r.addEventListener('mousedown', ev => { ev.preventDefault(); onPick(m.id); _closeAc(); });
         _acDrop.appendChild(r);
       });
       document.body.appendChild(_acDrop);
@@ -179,32 +209,31 @@
 
     function _setupAc(inp, filterFn, onPick) {
       inp.addEventListener('input', () => {
-        const q = (inp.value || '').toLowerCase();
+        const q = (inp.value||'').toLowerCase();
         if (!q) { _closeAc(); return; }
-        _openAc(inp, filterFn(q).slice(0, 9), onPick);
+        _openAc(inp, filterFn(q).slice(0,9), onPick);
       });
       inp.addEventListener('focus', () => {
-        const q = (inp.value || '').toLowerCase();
-        if (q) _openAc(inp, filterFn(q).slice(0, 9), onPick);
+        const q = (inp.value||'').toLowerCase();
+        if (q) _openAc(inp, filterFn(q).slice(0,9), onPick);
       });
       inp.addEventListener('blur', () => setTimeout(_closeAc, 160));
     }
 
     function _autoMatches(q) {
-      if (!h || !h.states) return [];
+      if (!h||!h.states) return [];
       return Object.keys(h.states)
-        .filter(id => id.startsWith('automation.') && (id.includes(q) || nameOf(h, id).toLowerCase().includes(q)))
-        .map(id => ({ id, name: nameOf(h, id) }))
-        .sort((a, b) => a.name.localeCompare(b.name));
+        .filter(id => id.startsWith('automation.') && (id.includes(q) || nameOf(h,id).toLowerCase().includes(q)))
+        .map(id => ({ id, name: nameOf(h,id) }))
+        .sort((a,b) => a.name.localeCompare(b.name));
     }
 
-    /* ---- luci ---- */
     function getLights() {
-      if (!h || !h.states) return [];
+      if (!h||!h.states) return [];
       return Object.keys(h.states)
         .filter(id => id.startsWith('light.'))
-        .map(id => ({ id, name: nameOf(h, id), on: isOn(h, id) }))
-        .sort((a, b) => a.name.localeCompare(b.name));
+        .map(id => ({ id, name: nameOf(h,id), on: isOn(h,id) }))
+        .sort((a,b) => a.name.localeCompare(b.name));
     }
     const allLights = getLights();
 
@@ -217,21 +246,20 @@
       try { document.body.removeChild(ov); } catch(e){}
       document.removeEventListener('keydown', escFn);
     }
-    function escFn(ev) { if (ev.key === 'Escape') closeOv(); }
+    function escFn(ev) { if (ev.key==='Escape') closeOv(); }
     document.addEventListener('keydown', escFn);
 
     /* ---- renderForm ---- */
     function renderForm() {
+      const col = c.color || '#fbbf24';
       const selIds = new Set(ents.map(e => e.entity));
       const filtered = filterQ
         ? allLights.filter(l => l.name.toLowerCase().includes(filterQ.toLowerCase()) || l.id.includes(filterQ.toLowerCase()))
         : allLights;
 
-      const col = c.color || '#fbbf24';
-
       const selRows = ents.map((e, i) => {
         const lbl = e.label || nameOf(h, e.entity);
-        const on = isOn(h, e.entity);
+        const on = h ? isOn(h, e.entity) : false;
         const hasAuto = !!(e.automation && e.automation.trim());
         const autoExpanded = expandedAuto.has(i);
         const autoSection = hasAuto
@@ -241,7 +269,7 @@
               <button data-rmauto="${i}" style="font-size:9px;padding:2px 6px;border-radius:4px;border:1px solid rgba(248,113,113,.3);background:rgba(248,113,113,.1);color:#f87171;cursor:pointer">✕</button>
             </div>`
           : autoExpanded
-            ? `<div style="display:flex;gap:5px;margin-top:5px;position:relative">
+            ? `<div style="display:flex;gap:5px;margin-top:5px">
                 <input data-auto-idx="${i}" placeholder="🔍 automation.xxx" value="${eh(e.automation||'')}" style="flex:1;padding:6px 9px;border-radius:7px;border:1px solid rgba(99,102,241,.35);background:rgba(99,102,241,.08);color:#fff;font-size:11px;outline:none;font-family:inherit">
                 <button data-saveauto="${i}" style="padding:6px 10px;border-radius:7px;border:none;background:#6366f1;color:#fff;cursor:pointer;font-size:11px;font-weight:700">OK</button>
               </div>`
@@ -272,7 +300,9 @@
         </label>`;
       }).join('') || `<div style="padding:20px;text-align:center;color:rgba(255,255,255,.3);font-size:11px">Nessuna luce trovata</div>`;
 
-      return `<div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0f0d1a;border:1px solid rgba(251,191,36,.22);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);color:#fff;animation:glCfgUp .22s cubic-bezier(.32,1.12,.56,1)">
+      // animazione glCfgUp solo al primissimo render — poi no, altrimenti sembra "chiudi/riapri"
+      const anim = _firstRender ? 'animation:glCfgUp .22s cubic-bezier(.32,1.12,.56,1)' : '';
+      return `<div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0f0d1a;border:1px solid rgba(251,191,36,.22);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);color:#fff;${anim}">
         <style>@keyframes glCfgUp{from{transform:translateY(100%)}to{transform:translateY(0)}} .glcinp{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;font-size:12px;outline:none;font-family:inherit;transition:border-color .15s} .glcinp:focus{border-color:rgba(251,191,36,.5);background:rgba(251,191,36,.04)} .glcinp::placeholder{color:rgba(255,255,255,.3)}</style>
 
         <div style="display:flex;align-items:center;gap:10px;padding:14px 18px 12px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">
@@ -285,7 +315,6 @@
         </div>
 
         <div id="glcfg-body" style="flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;padding:14px 14px 4px">
-
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.35);margin-bottom:6px">Chip</div>
           <div style="display:flex;gap:7px;margin-bottom:14px">
             <div style="flex:1"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">Nome chip</div><input id="glcfg-label" class="glcinp" placeholder="Luci" value="${eh(c.label||'Luci')}"></div>
@@ -311,33 +340,33 @@
       </div>`;
     }
 
-    /* ---- attach (con scroll preservation) ---- */
+    /* ---- attach (scroll preservation + no listener accumulo su ov) ---- */
     function attach() {
       _closeAc();
-
-      // salva scroll prima di riscrivere innerHTML
       const prevBody = ov.querySelector('#glcfg-body');
       const savedScroll = prevBody ? prevBody.scrollTop : 0;
 
       ov.innerHTML = renderForm();
+      _firstRender = false;
 
-      // ripristina scroll — requestAnimationFrame garantisce che il DOM sia aggiornato
       const newBody = ov.querySelector('#glcfg-body');
       if (newBody && savedScroll > 0) requestAnimationFrame(() => { newBody.scrollTop = savedScroll; });
 
-      /* ---- event listeners ---- */
+      /* ---- listener unico su ov per backdrop ---- */
+      if (ov._ovClick) ov.removeEventListener('click', ov._ovClick);
+      ov._ovClick = ev => { if (ev.target === ov) closeOv(); };
+      ov.addEventListener('click', ov._ovClick);
+
       ov.querySelector('#glcfg-close').onclick = closeOv;
       ov.querySelector('#glcfg-cancel').onclick = closeOv;
-      ov.addEventListener('click', ev => { if (ev.target === ov) closeOv(); });
 
-      // ricerca luce
       const srch = ov.querySelector('#glcfg-search');
       if (srch) srch.addEventListener('input', () => { filterQ = srch.value; attach(); });
 
-      // toggle luce (checkbox)
       ov.querySelectorAll('[data-light-id]').forEach(lbl => {
         lbl.addEventListener('click', ev => {
           ev.preventDefault();
+          ev.stopPropagation();
           const lid = lbl.dataset.lightId;
           const idx = ents.findIndex(e => e.entity === lid);
           if (idx >= 0) { ents.splice(idx, 1); expandedAuto.delete(idx); }
@@ -346,64 +375,45 @@
         });
       });
 
-      // rimuovi luce
       ov.querySelectorAll('[data-del]').forEach(btn => {
         btn.addEventListener('click', () => {
           const i = parseInt(btn.dataset.del);
-          ents.splice(i, 1);
-          expandedAuto.delete(i);
-          attach();
+          ents.splice(i, 1); expandedAuto.delete(i); attach();
         });
       });
 
-      // apri input automazione
       ov.querySelectorAll('[data-addauto]').forEach(btn => {
         btn.addEventListener('click', () => {
-          const i = parseInt(btn.dataset.addauto);
-          expandedAuto.add(i);
-          attach();
-          setTimeout(() => {
-            const inp = ov.querySelector(`[data-auto-idx="${i}"]`);
-            if (inp) inp.focus();
-          }, 40);
+          expandedAuto.add(parseInt(btn.dataset.addauto)); attach();
+          setTimeout(() => { const inp = ov.querySelector(`[data-auto-idx="${btn.dataset.addauto}"]`); if (inp) inp.focus(); }, 40);
         });
       });
 
-      // salva automazione
       ov.querySelectorAll('[data-saveauto]').forEach(btn => {
         btn.addEventListener('click', () => {
           const i = parseInt(btn.dataset.saveauto);
           const inp = ov.querySelector(`[data-auto-idx="${i}"]`);
           if (inp) ents[i].automation = inp.value.trim();
-          expandedAuto.delete(i);
-          attach();
+          expandedAuto.delete(i); attach();
         });
       });
 
-      // rimuovi automazione
       ov.querySelectorAll('[data-rmauto]').forEach(btn => {
         btn.addEventListener('click', () => { ents[parseInt(btn.dataset.rmauto)].automation = ''; attach(); });
       });
 
-      // autocomplete automazioni — input con data-auto-idx
       ov.querySelectorAll('[data-auto-idx]').forEach(inp => {
         const i = parseInt(inp.dataset.autoIdx);
-        _setupAc(inp, _autoMatches, (id) => {
-          ents[i].automation = id;
-          inp.value = id;
-        });
+        _setupAc(inp, _autoMatches, id => { ents[i].automation = id; inp.value = id; });
       });
 
-      // salva config
       ov.querySelector('#glcfg-save').addEventListener('click', () => {
         const newCfg = {
           label: (ov.querySelector('#glcfg-label')?.value || 'Luci').trim(),
-          icon: (ov.querySelector('#glcfg-icon')?.value || '💡').trim(),
-          color: ov.querySelector('#glcfg-color')?.value || '#fbbf24',
+          icon:  (ov.querySelector('#glcfg-icon')?.value  || '💡').trim(),
+          color: ov.querySelector('#glcfg-color')?.value  || '#fbbf24',
           entities: ents.filter(e => e.entity).map(e => ({
-            entity: e.entity.trim(),
-            label: e.label || '',
-            automation: e.automation || '',
+            entity: e.entity.trim(), label: e.label||'', automation: e.automation||'',
           })),
         };
         closeOv();
@@ -417,12 +427,9 @@
 
   /* ── registrazione ── */
   const CARD = {
-    id: ID,
-    name: 'Gruppo Luci',
-    icon: '💡',
+    id: ID, name: 'Gruppo Luci', icon: '💡',
     desc: 'Chip con contatore luci accese. Clic → pannello toggle + Accendi/Spegni tutte.',
-    version: '1.2',
-    isDistintivo: true,
+    version: '1.3', isDistintivo: true,
     defaultCfg: { label: 'Luci', icon: '💡', color: '#fbbf24', entities: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -431,5 +438,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-luci v1.2'); } catch(e){}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-luci v1.3'); } catch(e){}
 })();

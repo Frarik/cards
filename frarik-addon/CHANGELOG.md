@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.6.14 — 2026-06-27
+
+### fix(gruppo-luci): animazione, stati live, listener unico, contatore popup
+
+- **Fix "popup si chiude e riapre"**: l'animazione `glCfgUp` ora si applica solo al primo `attach()` — i re-render successivi (selezione luce) non riproducono più lo slide-up
+- **Fix chip 0/12 stale**: `chip()` e `render()` usano ora sempre `H()` (stato live) invece dello snapshot `rawHass` passato dal sistema badge — il contatore si aggiorna immediatamente
+- **Real-time popup**: `mount()` avvia un polling `setInterval` ogni 2s che rilegge `H()` e ridisegna il popup; si ferma automaticamente quando il popup viene chiuso (`el.isConnected`)
+- **Listener unico**: `_mountHandlers` rimuove il listener click precedente prima di aggiungerne uno nuovo — niente accumulo su toggle ripetuti
+- **Ritardo toggle aumentato a 1200ms**: dà più tempo a HA di processare il comando prima del refresh
+- **Contatore luci accese nel popup**: la riga "N / M luci accese" è colorata con il colore del chip quando ci sono luci on
+
 ## 1.6.13 — 2026-06-27
 
 ### fix(gruppo-luci): scroll, autocomplete automazioni, rimozione sensorEntity
