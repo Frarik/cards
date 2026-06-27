@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.19 — 2026-06-27
+
+### feat(gruppo-luci): contatore luci accese spostato come titolo del popup
+
+- Il contatore "X luci accese / 1 luce accesa" ora appare in cima al popup come titolo, colorato col colore del gruppo
+- Rimosso dalla posizione precedente (sotto i pulsanti Accendi/Spegni tutte)
+
 ## 1.6.18 — 2026-06-27
 
 ### fix(gruppo-luci): badge automazione compatto, nessun re-render ritardato, polling 1.5s

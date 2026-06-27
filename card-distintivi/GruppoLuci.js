@@ -66,12 +66,9 @@
     const active = h ? ents.filter(e => isOn(h, e.entity)).length : 0;
 
     const ctrlBar = ents.length ? `
-      <div style="display:flex;gap:8px;padding:10px 14px 4px">
+      <div style="display:flex;gap:8px;padding:4px 14px 8px">
         <button data-gl-all="on" style="flex:1;padding:7px;border-radius:8px;border:1px solid ${hex2rgba(col,.4)};background:${hex2rgba(col,.12)};color:${col};font-size:11px;font-weight:700;cursor:pointer">☀ Accendi tutte</button>
         <button data-gl-all="off" style="flex:1;padding:7px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:rgba(255,255,255,.6);font-size:11px;font-weight:700;cursor:pointer">⏻ Spegni tutte</button>
-      </div>
-      <div style="padding:4px 14px 8px;font-size:11px;font-weight:600;color:${active>0?col:'rgba(255,255,255,.35)'}">
-        ${active} / ${ents.length} ${active===1?'luce accesa':'luci accese'}
       </div>` : '';
 
     const rows = ents.map((e, i) => {
@@ -109,7 +106,14 @@
       </div>`;
     }).join('');
 
+    const title = ents.length
+      ? `<div style="padding:12px 16px 4px;font-size:15px;font-weight:700;color:${active>0?col:'rgba(255,255,255,.45)'}">
+          ${active} ${active===1?'luce accesa':'luci accese'}
+        </div>`
+      : '';
+
     return `<div id="gl-popup-body">
+      ${title}
       ${ctrlBar}
       <div>${rows||'<div style="padding:32px 20px;text-align:center;color:rgba(255,255,255,.3);font-size:12px">Nessuna luce configurata.<br><span style="font-size:10px;opacity:.6">Clicca ✏️ sulla chip per configurare.</span></div>'}</div>
     </div>`;
