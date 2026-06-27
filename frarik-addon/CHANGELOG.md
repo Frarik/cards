@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.35 — 2026-06-27
+
+### fix: GruppoAllarme v1.3 — bypass non sparisce + bypassed_sensors inviati correttamente
+
+- **callEx corretta**: `window.callSvc(domain, svc, entity_id, rest)` ora passa tutti i parametri extra incluso `bypassed_sensors` — prima veniva chiamata solo con `entity_id` e il bypass veniva silenziosamente ignorato da Alarmo
+- **Bypass non sparisce dopo arm**: rimosso `el._bypassed.clear()` immediato dall'handler; il toggle "Escludi/✕ Includi" rimane visibile fino a quando HA non conferma l'armamento (stato `armed_*`) e il poll smette di mostrare i bottoni perché `!armed = false`
+
 ## 1.6.34 — 2026-06-27
 
 ### fix: GruppoAllarme v1.2 — rosso per armato, desc rimossa, fix caching
