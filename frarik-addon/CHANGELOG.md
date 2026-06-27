@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.6.12 — 2026-06-27
+
+### feat(gruppo-luci): rework completo distintivo
+
+- **Picker luci inline**: il configuratore mostra tutte le entità `light.*` da HA con checkbox, ricerca e stato corrente — nessun popup annidato (fix popup che si apriva dietro)
+- **Entità sensore opzionale**: campo "Entità sensore" nel configuratore — se impostato, il valore del chip viene dal sensore HA invece del contatore calcolato N/M
+- **Automazione per luce**: per ogni luce selezionata è possibile associare un'automazione opzionale con pulsante espandibile (no popup extra)
+- **Popup stile HA**: pannello clic con "Accendi tutte" / "Spegni tutte", icona con glow quando accesa, stato testuale colorato, toggle switch animato
+- **Z-index corretto**: overlay configurazione a z-index 100001, sopra qualsiasi altro layer
+
 ## 1.6.11 — 2026-06-27
 
 ### feat(distintivi): store → header (distintivi JS da card-distintivi/)
