@@ -8,7 +8,7 @@
 #   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝            #
 #                                                             #
 #   Package: Centro Controllo Frigorifero                     #
-#   Versione: 1.0  |  Frarik / Fratech                       #
+#   Versione: 1.2  |  Frarik / Fratech                       #
 #                                                             #
 ###############################################################
 #
@@ -47,7 +47,7 @@ homeassistant:
   customize:
     package.node_anchors:
       customize: &customize
-        package: 'Centro Controllo Frigorifero 1.0 — Frarik'
+        package: 'Centro Controllo Frigorifero 1.2 — Frarik'
 
       setting:
 
@@ -407,8 +407,8 @@ template:
         icon: mdi:flash
         state: *sensore_potenza_frigo
 
-      - name: "versione_pkg_frigo"
-        state: "1.0"
+      - name: "frarik_frigorifero_versione"
+        state: "1.2"
 
 ####################################################
 #                   COUNTER                        #

@@ -1,4 +1,4 @@
-/* frarik-version: 1.1 */
+/* frarik-version: 1.2 */
 (function () {
   'use strict';
 
@@ -32,7 +32,7 @@
       pk_cicli_tot:  'counter.frigo_cicli_totale',
       pk_time_on:    'sensor.time_on_frigo',
       pk_soglia:     'input_number.frigo_soglia_w',
-      pk_versione:   'sensor.versione_pkg_frigo',
+      pk_versione:   'sensor.frarik_frigorifero_versione',
     };
   }
 
@@ -445,38 +445,924 @@
 
   /* ── PKG YAML EMBEDDED ── */
   var _FRIGO_PKG_YAML = `###############################################################
-#   Package: Centro Controllo Frigorifero 1.0 — Frarik
-###############################################################
-#
-# INSTALLAZIONE
-#  1. Aggiungi in configuration.yaml:
-#       homeassistant:
-#         packages: !include_dir_named packages
-#  2. Copia in config/packages/centro_controllo_frigorifero.yaml
-#  3. Modifica "Sensore Potenza Frigo" e "Switch Frigo"
-#  4. Riavvia HA
-#  5. Configura la card con le entità generate
-#
-###############################################################
-# VEDI IL FILE COMPLETO NEL REPO:
-# cards/pkg/centro_controllo_frigorifero.yaml
+#                                                             #
+#   ███████╗██████╗  █████╗ ██████╗ ██╗██╗  ██╗             #
+#   ██╔════╝██╔══██╗██╔══██╗██╔══██╗██║██║ ██╔╝             #
+#   █████╗  ██████╔╝███████║██████╔╝██║█████╔╝              #
+#   ██╔══╝  ██╔══██╗██╔══██║██╔══██╗██║██╔═██╗              #
+#   ██║     ██║  ██║██║  ██║██║  ██║██║██║  ██╗             #
+#   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝            #
+#                                                             #
+#   Package: Centro Controllo Frigorifero                     #
+#   Versione: 1.2  |  Frarik / Fratech                       #
+#                                                             #
 ###############################################################
 
-# Entità generate dopo l'installazione:
-#
-#  sensor.potenza_frigo_w          — Potenza W (usa la tua presa)
-#  sensor.kwh_frigo                — Integrazione kWh
-#  binary_sensor.compressore_frigo — Compressore on/off
-#  sensor.time_on_frigo            — Tempo acceso + attributi
-#  sensor.frigo_energy_oggi/mese/anno
-#  sensor.frigo_cicli_oggi/mese/anno
-#  counter.frigo_cicli_totale
-#  input_number.frigo_soglia_w     — Soglia attivazione compressore`;
+homeassistant:
+  customize:
+    package.node_anchors:
+      customize: &customize
+        package: 'Centro Controllo Frigorifero 1.2 — Frarik'
 
+      setting:
+
+        Sensore Potenza Frigo: &sensore_potenza_frigo "{{ states('IL_TUO_SENSORE_POTENZA_FRIGO') | float(0) }}"
+        Switch Frigo:          &switch_frigo 'IL_TUO_SWITCH_FRIGO'
+
+        Lista MediaPlayer Google: &google
+          - media_player.tv_sala
+
+        Lista mediaplayer alexa: &alexa
+          - media_player.alexa_cameretta
+
+        Device per notifica push: &push
+          - service: IL_TUO_MOBILE_APP_1
+
+notify:
+  - name: Frigorifero
+    platform: group
+    services: *push
+
+sensor:
+  - platform: integration
+    source: sensor.potenza_frigo_w
+    name: kwh_frigo
+    unit_prefix: k
+    method: left
+    round: 2
+
+input_number:
+  frigo_soglia_w:
+    name: Soglia Lavoro Frigo W
+    icon: mdi:flash
+    min: 0
+    max: 5000
+    step: 1.00
+    unit_of_measurement: "w"
+    mode: box
+
+  frigo_tempo_innesco_m:
+    name: Tempo Innesco Frigo M
+    icon: mdi:timer
+    min: 0
+    max: 60
+    step: 1.00
+    unit_of_measurement: "m"
+    mode: box
+
+  frigo_avvio_ritardato_s:
+    name: Avvio Ritardato Frigo S
+    icon: mdi:timer-sand
+    min: 0
+    max: 60
+    step: 1.00
+    unit_of_measurement: "s"
+    mode: box
+
+  lunedi_frigo_consumo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "kwh"
+
+  lunedi_frigo_costo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "€"
+
+  martedi_frigo_consumo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "kwh"
+
+  martedi_frigo_costo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "€"
+
+  mercoledi_frigo_consumo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "kwh"
+
+  mercoledi_frigo_costo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "€"
+
+  giovedi_frigo_consumo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "kwh"
+
+  giovedi_frigo_costo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "€"
+
+  venerdi_frigo_consumo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "kwh"
+
+  venerdi_frigo_costo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "€"
+
+  sabato_frigo_consumo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "kwh"
+
+  sabato_frigo_costo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "€"
+
+  domenica_frigo_consumo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "kwh"
+
+  domenica_frigo_costo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "€"
+
+utility_meter:
+
+  frigo_tempo_oggi:
+    source: sensor.time_on_frigo
+    cycle: daily
+
+  frigo_tempo_mese:
+    source: sensor.time_on_frigo
+    cycle: monthly
+
+  frigo_tempo_anno:
+    source: sensor.time_on_frigo
+    cycle: yearly
+
+  frigo_cicli_oggi:
+    source: counter.frigo_cicli_totale
+    cycle: daily
+
+  frigo_cicli_mese:
+    source: counter.frigo_cicli_totale
+    cycle: monthly
+
+  frigo_cicli_anno:
+    source: counter.frigo_cicli_totale
+    cycle: yearly
+
+  frigo_energy_oggi:
+    source: sensor.kwh_frigo
+    cycle: daily
+
+  frigo_energy_mese:
+    source: sensor.kwh_frigo
+    cycle: monthly
+
+  frigo_energy_anno:
+    source: sensor.kwh_frigo
+    cycle: yearly
+
+template:
+  - binary_sensor:
+      - name: compressore_frigo
+        icon: mdi:snowflake
+        state: >-
+          {{ 'on' if (states('sensor.potenza_frigo_w') | int(0)) >
+             states('input_number.frigo_soglia_w') | int(0) else 'off' }}
+        delay_off: "00:{{ states('input_number.frigo_tempo_innesco_m') | int(0) }}:00"
+        delay_on:  "00:00:{{ states('input_number.frigo_avvio_ritardato_s') | int(0) }}"
+
+  - trigger:
+      - platform: state
+        entity_id: input_boolean.frigo_ciclo_attivo
+        from: "off"
+        to: "on"
+    sensor:
+      - name: inizio_ciclo_frigo
+        state: "{{ states('sensor.kwh_frigo') }}"
+
+  - trigger:
+      - platform: state
+        entity_id: binary_sensor.compressore_frigo
+        from: "on"
+        to: "off"
+    sensor:
+      - name: fine_ciclo_frigo
+        state: "{{ now().strftime('%d/%m/%Y %H:%M') }}"
+
+  - trigger:
+      - platform: state
+        entity_id: input_boolean.frigo_ciclo_attivo
+        from: "off"
+        to: "on"
+    sensor:
+      - name: tempo_riavvio_frigo
+        state: "{{ as_timestamp(now()) }}"
+
+  - sensor:
+      - name: "time_on_frigo"
+        icon: mdi:history
+        state: >-
+          {% if is_state('binary_sensor.compressore_frigo', 'on') and
+                (as_timestamp(states.binary_sensor.compressore_frigo.last_changed) + 1) <= as_timestamp(now()) %}
+            {{ ((as_timestamp(now()) - as_timestamp(states.binary_sensor.compressore_frigo.last_changed)) / 3600) }}
+          {% else %} 0 {% endif %}
+        attributes:
+          terminato: >-
+            {{ states('sensor.fine_ciclo_frigo') if is_state('binary_sensor.compressore_frigo', 'off') else 'In funzione' }}
+          tempo_ciclo_frigo: >
+            {% set hours = (as_timestamp(now()) - states('sensor.tempo_riavvio_frigo') | float(0)) / 3600 %}
+            {% set minutes = ((hours % 1) * 60) | int(0) %}
+            {% set hours = (hours - (hours % 1)) | int(0) %}
+            {% set day = ((hours | int(0) / 24)) | int(0) %}
+            {% if is_state('input_boolean.frigo_ciclo_attivo', 'on') %}
+              {% if day | int(0) > 0 %}
+                {{ day }}d {{ (hours | int(0)) - (day * 24) }}h {{ minutes }}m
+              {% elif hours | int(0) > 0 %}
+                {{ hours }}h {{ minutes }}m
+              {% else %}
+                {{ minutes }}min
+              {% endif %}
+            {% else %}
+              {{ states('input_text.frigo_ultimo_ciclo') }}
+            {% endif %}
+          Oggi: >
+            {% set hours = states('sensor.frigo_tempo_oggi') | float(0) %}
+            {% set minutes = ((hours % 1) * 60) | int(0) %}
+            {% set hours = (hours - (hours % 1)) | int(0) %}
+            {% if hours | int(0) > 0 %}
+              {{ hours }}h {{ minutes }}m
+            {% else %}
+              {{ minutes }}min
+            {% endif %}
+          Mese: >
+            {% set hours = states('sensor.frigo_tempo_mese') | float(0) %}
+            {% set minutes = ((hours % 1) * 60) | int(0) %}
+            {% set hours = (hours - (hours % 1)) | int(0) %}
+            {% set day = ((hours | int / 24)) | int(0) %}
+            {% if day | int(0) > 0 %}
+              {{ day }}d {{ (hours | int) - (day * 24) }}h {{ minutes }}m
+            {% elif hours | int(0) > 0 %}
+              {{ hours }}h {{ minutes }}m
+            {% else %}
+              {{ minutes }}min
+            {% endif %}
+          Anno: >
+            {% set hours = states('sensor.frigo_tempo_anno') | float(0) %}
+            {% set minutes = ((hours % 1) * 60) | int(0) %}
+            {% set hours = (hours - (hours % 1)) | int(0) %}
+            {% set day = ((hours | int(0) / 24)) | int(0) %}
+            {% if day | int(0) > 0 %}
+              {{ day }}d {{ (hours | int(0)) - (day * 24) }}h {{ minutes }}m
+            {% elif hours | int(0) > 0 %}
+              {{ hours }}h {{ minutes }}m
+            {% else %}
+              {{ minutes }}min
+            {% endif %}
+          Ieri: >
+            {% set hours = state_attr('sensor.frigo_tempo_oggi', 'last_period') | float(0) %}
+            {% set minutes = ((hours % 1) * 60) | int(0) %}
+            {% set hours = (hours - (hours % 1)) | int(0) %}
+            {% if hours | int(0) > 0 %}
+              {{ hours }}h {{ minutes }}m
+            {% else %}
+              {{ minutes }}min
+            {% endif %}
+          Mese Precedente: >
+            {% set hours = state_attr('sensor.frigo_tempo_mese', 'last_period') | float(0) %}
+            {% set minutes = ((hours % 1) * 60) | int(0) %}
+            {% set hours = (hours - (hours % 1)) | int(0) %}
+            {% set day = ((hours | int / 24)) | int(0) %}
+            {% if day | int(0) > 0 %}
+              {{ day }}d {{ (hours | int) - (day * 24) }}h {{ minutes }}m
+            {% elif hours | int(0) > 0 %}
+              {{ hours }}h {{ minutes }}m
+            {% else %}
+              {{ minutes }}min
+            {% endif %}
+          consumo_ciclo_frigo: >-
+            {{ (states('sensor.kwh_frigo') | float(0) - states('sensor.inizio_ciclo_frigo') | float(0)) | round(3) }} kWh
+          costo_ciclo_frigo: >-
+            {{ ((states('sensor.kwh_frigo') | float(0) - states('sensor.inizio_ciclo_frigo') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(3, default=0) }}
+          costo_oggi_frigo: >-
+            {{ ((states('sensor.frigo_energy_oggi') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+          costo_mese_frigo: >-
+            {{ ((states('sensor.frigo_energy_mese') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+          costo_anno_frigo: >-
+            {{ ((states('sensor.frigo_energy_anno') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+          costo_ieri_frigo: >-
+            {{ ((state_attr('sensor.frigo_energy_oggi', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+          costo_mese_prec_frigo: >-
+            {{ ((state_attr('sensor.frigo_energy_mese', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+          costo_anno_prec_frigo: >-
+            {{ ((state_attr('sensor.frigo_energy_anno', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+
+      - name: "potenza_frigo_w"
+        unit_of_measurement: 'W'
+        device_class: power
+        state_class: measurement
+        icon: mdi:flash
+        state: *sensore_potenza_frigo
+
+      - name: "frarik_frigorifero_versione"
+        state: "1.2"
+
+counter:
+  frigo_cicli_totale:
+    name: Cicli Compressore Frigo
+    initial: 0
+    step: 1
+
+input_boolean:
+  frigo_switch:
+    name: Switch Frigo
+    icon: mdi:power
+
+  frigo_ciclo_attivo:
+    name: Ciclo Attivo Frigo
+
+  frigo_notify_push:
+    name: Notifica Push Frigo
+
+  frigo_notify_alexa:
+    name: Notifica Alexa Frigo
+
+  frigo_notify_google:
+    name: Notifica Google Frigo
+
+group:
+  frigo_notifiche:
+    entities:
+      - input_boolean.frigo_notify_google
+      - input_boolean.frigo_notify_alexa
+      - input_boolean.frigo_notify_push
+      - automation.frigo_off_automatico
+      - input_boolean.frigo_switch
+
+input_datetime:
+  frigo_notifiche_inizio:
+    name: Orario Inizio Notifiche Frigo
+    has_date: false
+    has_time: true
+
+  frigo_notifiche_fine:
+    name: Orario Fine Notifiche Frigo
+    has_date: false
+    has_time: true
+
+  frigo_off:
+    name: Frigo Spegnimento Automatico
+    has_date: false
+    has_time: true
+
+input_text:
+  frigo_data_reset:
+  frigo_nome:
+  frigo_messaggio:
+  frigo_ultimo_ciclo:
+  lunedi_frigo_cicli:
+  lunedi_frigo_tempo:
+  martedi_frigo_cicli:
+  martedi_frigo_tempo:
+  mercoledi_frigo_cicli:
+  mercoledi_frigo_tempo:
+  giovedi_frigo_cicli:
+  giovedi_frigo_tempo:
+  venerdi_frigo_cicli:
+  venerdi_frigo_tempo:
+  sabato_frigo_cicli:
+  sabato_frigo_tempo:
+  domenica_frigo_cicli:
+  domenica_frigo_tempo:
+
+script:
+  frigo_reset_sensori:
+    sequence:
+    - service: input_text.set_value
+      data:
+        value: "{{ now().strftime('%d/%m/%Y %H:%M') }}"
+      target:
+        entity_id: input_text.frigo_data_reset
+
+    - service: utility_meter.calibrate
+      data:
+        value: '0'
+      target:
+        entity_id:
+          - sensor.frigo_cicli_oggi
+          - sensor.frigo_cicli_mese
+          - sensor.frigo_cicli_anno
+          - sensor.frigo_energy_oggi
+          - sensor.frigo_energy_mese
+          - sensor.frigo_energy_anno
+          - sensor.frigo_tempo_oggi
+          - sensor.frigo_tempo_mese
+          - sensor.frigo_tempo_anno
+
+    - service: input_number.set_value
+      data:
+        value: '0'
+      target:
+        entity_id:
+          - input_number.lunedi_frigo_consumo
+          - input_number.martedi_frigo_consumo
+          - input_number.mercoledi_frigo_consumo
+          - input_number.giovedi_frigo_consumo
+          - input_number.venerdi_frigo_consumo
+          - input_number.sabato_frigo_consumo
+          - input_number.domenica_frigo_consumo
+          - input_number.lunedi_frigo_costo
+          - input_number.martedi_frigo_costo
+          - input_number.mercoledi_frigo_costo
+          - input_number.giovedi_frigo_costo
+          - input_number.venerdi_frigo_costo
+          - input_number.sabato_frigo_costo
+          - input_number.domenica_frigo_costo
+
+    - service: input_text.set_value
+      data:
+        value: '0'
+      target:
+        entity_id:
+          - input_text.lunedi_frigo_cicli
+          - input_text.martedi_frigo_cicli
+          - input_text.mercoledi_frigo_cicli
+          - input_text.giovedi_frigo_cicli
+          - input_text.venerdi_frigo_cicli
+          - input_text.sabato_frigo_cicli
+          - input_text.domenica_frigo_cicli
+          - input_text.lunedi_frigo_tempo
+          - input_text.martedi_frigo_tempo
+          - input_text.mercoledi_frigo_tempo
+          - input_text.giovedi_frigo_tempo
+          - input_text.venerdi_frigo_tempo
+          - input_text.sabato_frigo_tempo
+          - input_text.domenica_frigo_tempo
+
+    - service: counter.reset
+      target:
+        entity_id:
+          - counter.frigo_cicli_totale
+
+automation:
+- alias: frigo_automazioni
+  id: frigo_automazioni
+  max_exceeded: silent
+  trigger:
+
+  - platform: state
+    entity_id: binary_sensor.compressore_frigo
+    from: 'off'
+    to: 'on'
+    id: inizio_ciclo
+
+  - platform: state
+    entity_id: binary_sensor.compressore_frigo
+    from: 'on'
+    to: 'off'
+    id: fine_ciclo
+
+  - platform: time
+    at: '23:59:59'
+    id: incremento_statistiche_7gg
+
+  - platform: state
+    entity_id:
+      - input_boolean.frigo_switch
+      - *switch_frigo
+    from: 'on'
+    to: 'off'
+    id: switch_off
+
+  - platform: state
+    entity_id:
+      - input_boolean.frigo_switch
+      - *switch_frigo
+    from: 'off'
+    to: 'on'
+    id: switch_on
+
+  - platform: template
+    value_template: >-
+      {{ is_state('binary_sensor.compressore_frigo','off') and
+         is_state('input_boolean.frigo_ciclo_attivo','on') }}
+    id: controllo_ciclo
+
+  action:
+
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: incremento_statistiche_7gg
+      sequence:
+
+      - service: input_text.set_value
+        target:
+          entity_id: >
+            {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
+            {% if today == "Monday" %}    input_text.lunedi_frigo_cicli
+            {% elif today == "Tuesday" %} input_text.martedi_frigo_cicli
+            {% elif today == "Wednesday" %} input_text.mercoledi_frigo_cicli
+            {% elif today == "Thursday" %} input_text.giovedi_frigo_cicli
+            {% elif today == "Friday" %}  input_text.venerdi_frigo_cicli
+            {% elif today == "Saturday" %} input_text.sabato_frigo_cicli
+            {% elif today == "Sunday" %}  input_text.domenica_frigo_cicli
+            {% endif %}
+        data:
+          value: "{{ states('sensor.frigo_cicli_oggi') }}"
+
+      - service: input_text.set_value
+        target:
+          entity_id: >
+            {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
+            {% if today == "Monday" %}    input_text.lunedi_frigo_tempo
+            {% elif today == "Tuesday" %} input_text.martedi_frigo_tempo
+            {% elif today == "Wednesday" %} input_text.mercoledi_frigo_tempo
+            {% elif today == "Thursday" %} input_text.giovedi_frigo_tempo
+            {% elif today == "Friday" %}  input_text.venerdi_frigo_tempo
+            {% elif today == "Saturday" %} input_text.sabato_frigo_tempo
+            {% elif today == "Sunday" %}  input_text.domenica_frigo_tempo
+            {% endif %}
+        data:
+          value: "{{ state_attr('sensor.time_on_frigo','Oggi') }}"
+
+      - service: input_number.set_value
+        target:
+          entity_id: >
+            {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
+            {% if today == "Monday" %}    input_number.lunedi_frigo_consumo
+            {% elif today == "Tuesday" %} input_number.martedi_frigo_consumo
+            {% elif today == "Wednesday" %} input_number.mercoledi_frigo_consumo
+            {% elif today == "Thursday" %} input_number.giovedi_frigo_consumo
+            {% elif today == "Friday" %}  input_number.venerdi_frigo_consumo
+            {% elif today == "Saturday" %} input_number.sabato_frigo_consumo
+            {% elif today == "Sunday" %}  input_number.domenica_frigo_consumo
+            {% endif %}
+        data:
+          value: "{{ states('sensor.frigo_energy_oggi') }}"
+
+      - service: input_number.set_value
+        target:
+          entity_id: >
+            {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
+            {% if today == "Monday" %}    input_number.lunedi_frigo_costo
+            {% elif today == "Tuesday" %} input_number.martedi_frigo_costo
+            {% elif today == "Wednesday" %} input_number.mercoledi_frigo_costo
+            {% elif today == "Thursday" %} input_number.giovedi_frigo_costo
+            {% elif today == "Friday" %}  input_number.venerdi_frigo_costo
+            {% elif today == "Saturday" %} input_number.sabato_frigo_costo
+            {% elif today == "Sunday" %}  input_number.domenica_frigo_costo
+            {% endif %}
+        data:
+          value: "{{ state_attr('sensor.time_on_frigo','costo_oggi_frigo') }}"
+
+  - choose:
+    - alias: SWITCH OFF
+      conditions:
+      - condition: trigger
+        id: switch_off
+      sequence:
+      - service: switch.turn_off
+        target:
+          entity_id: *switch_frigo
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.frigo_switch
+
+  - choose:
+    - alias: SWITCH ON
+      conditions:
+      - condition: trigger
+        id: switch_on
+      sequence:
+      - service: switch.turn_on
+        target:
+          entity_id: *switch_frigo
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.frigo_switch
+
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: controllo_ciclo
+      sequence:
+      - delay: '00:01:00'
+      - entity_id: input_boolean.frigo_ciclo_attivo
+        service: input_boolean.turn_off
+
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: inizio_ciclo
+      sequence:
+      - entity_id: input_boolean.frigo_ciclo_attivo
+        service: input_boolean.turn_on
+
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: fine_ciclo
+      sequence:
+
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.frigo_ultimo_ciclo
+        data:
+          value: "{{ state_attr('sensor.time_on_frigo','tempo_ciclo_frigo') }}"
+
+      - service: counter.increment
+        target:
+          entity_id: counter.frigo_cicli_totale
+
+      - delay: '00:00:05'
+
+      - entity_id: input_boolean.frigo_ciclo_attivo
+        service: input_boolean.turn_off
+
+  - parallel:
+    - choose:
+      - conditions:
+        - condition: trigger
+          id: fine_ciclo
+        - condition: time
+          after: 'input_datetime.frigo_notifiche_inizio'
+          before: 'input_datetime.frigo_notifiche_fine'
+        - condition: state
+          entity_id: input_boolean.frigo_notify_google
+          state: 'on'
+        sequence:
+        - service: tts.google_translate_say
+          continue_on_error: true
+          data:
+            entity_id: *google
+            message: "{{ states('input_text.frigo_messaggio') }} in {{ state_attr('sensor.time_on_frigo','tempo_ciclo_frigo') }}"
+
+    - choose:
+      - conditions:
+        - condition: trigger
+          id: fine_ciclo
+        - condition: time
+          after: 'input_datetime.frigo_notifiche_inizio'
+          before: 'input_datetime.frigo_notifiche_fine'
+        - condition: state
+          entity_id: input_boolean.frigo_notify_alexa
+          state: 'on'
+        sequence:
+        - service: notify.alexa_media
+          continue_on_error: true
+          data:
+            target: *alexa
+            data:
+              type: announce
+              method: spoken
+            message: "{{ states('input_text.frigo_messaggio') }} in {{ state_attr('sensor.time_on_frigo','tempo_ciclo_frigo') }}"
+
+    - choose:
+      - conditions:
+        - condition: trigger
+          id: fine_ciclo
+        - condition: state
+          entity_id: input_boolean.frigo_notify_push
+          state: 'on'
+        sequence:
+        - data_template:
+            message: >-
+              🧊 {{ states('input_text.frigo_nome') }}
+
+              ⏱ Ciclo durato: {{ state_attr('sensor.time_on_frigo','tempo_ciclo_frigo') }}
+
+              ⚡ Consumati: {{ state_attr('sensor.time_on_frigo','consumo_ciclo_frigo') }}
+
+              💰 Spesi: {{ state_attr('sensor.time_on_frigo','costo_ciclo_frigo') }} €
+            title: "Frigorifero"
+          service: notify.frigorifero
+          continue_on_error: true
+
+- alias: frigo_off_automatico
+  id: frigo_off_automatico
+  trigger:
+    - platform: time
+      at: 'input_datetime.frigo_off'
+      id: frigo_automatico_off
+  condition: []
+  action:
+    - choose:
+      - conditions:
+        - condition: trigger
+          id: frigo_automatico_off
+        - condition: state
+          entity_id: *switch_frigo
+          state: 'on'
+        sequence:
+        - entity_id: *switch_frigo
+          service: switch.turn_off`;
+
+  /* ── PKG BUILD ── */
+  var _FRIGO_WIZ_KEY = 'frarik_pkg_wizard_frigorifero';
+
+  function _buildPkg(potenza, sw, push) {
+    var ind = '          ';
+    var pushLines = (push && push.length)
+      ? push.map(function(p) { return ind + '- service: ' + p; }).join('\n')
+      : ind + '- service: IL_TUO_MOBILE_APP_1';
+    var yaml = _FRIGO_PKG_YAML
+      .split('IL_TUO_SENSORE_POTENZA_FRIGO').join(potenza || 'sensor.non_configurato')
+      .split('IL_TUO_SWITCH_FRIGO').join(sw || 'switch.non_configurato');
+    return yaml.replace(ind + '- service: IL_TUO_MOBILE_APP_1', pushLines);
+  }
+
+  /* ── WIZARD ── */
+  function _openWizard(hass, onDone) {
+    var states = (hass && hass.states) || {};
+    var allIds = Object.keys(states).sort();
+    var sensorIds = allIds.filter(function(id) { return /^sensor\./.test(id); });
+    var switchIds = allIds.filter(function(id) { return /^switch\./.test(id); });
+    var saved = null;
+    try { saved = JSON.parse(localStorage.getItem(_FRIGO_WIZ_KEY) || 'null'); } catch(e) {}
+    var pushRows = (saved && saved.push && saved.push.length) ? saved.push.slice() : [''];
+
+    var host = document.createElement('div');
+    var sr = host.attachShadow({mode: 'open'});
+    document.body.appendChild(host);
+    function destroy() { try { document.body.removeChild(host); } catch(e) {} }
+
+    function setupAC(inp, drop, ids) {
+      if (!inp || !drop) return;
+      function show() {
+        var q = inp.value.toLowerCase().trim();
+        var hits = (q ? ids.filter(function(id) { return id.toLowerCase().includes(q); }) : ids).slice(0, 50);
+        if (!hits.length) { drop.style.display = 'none'; return; }
+        drop.innerHTML = hits.map(function(id) { return '<div class="wd-item" data-pick="' + id + '">' + id + '</div>'; }).join('');
+        drop.style.display = 'block';
+        drop.querySelectorAll('[data-pick]').forEach(function(row) {
+          row.addEventListener('mousedown', function(ev) { ev.preventDefault(); inp.value = row.getAttribute('data-pick'); drop.style.display = 'none'; });
+          row.addEventListener('mouseover', function() { row.style.background = 'rgba(255,255,255,.08)'; });
+          row.addEventListener('mouseout', function() { row.style.background = ''; });
+        });
+      }
+      inp.addEventListener('focus', show);
+      inp.addEventListener('input', show);
+      inp.addEventListener('blur', function() { setTimeout(function() { drop.style.display = 'none'; }, 200); });
+    }
+
+    function renderWiz() {
+      var pushHtml = pushRows.map(function(v, i) {
+        return '<div class="wd-push-row"><input class="wd-inp push-inp" type="text" autocomplete="off" placeholder="mobile_app_..." value="' + (v || '').replace(/"/g, '&quot;') + '"><button class="wd-rm" data-rm="' + i + '">✕</button></div>';
+      }).join('');
+
+      sr.innerHTML = '<style>'
+        + ':host{all:initial;font-family:system-ui,sans-serif}'
+        + '.wd-bd{position:fixed;inset:0;z-index:200000;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);display:flex;align-items:flex-end}'
+        + '.wd-panel{width:100%;max-height:85vh;display:flex;flex-direction:column;background:#080f18;border:1px solid rgba(56,189,248,.3);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:wUp .22s cubic-bezier(.32,1.12,.56,1)}'
+        + '@keyframes wUp{from{transform:translateY(100%)}to{transform:translateY(0)}}'
+        + '.wd-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}'
+        + '.wd-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.3);flex-shrink:0}'
+        + '.wd-tit{font-size:14px;font-weight:800}'
+        + '.wd-sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:1px}'
+        + '.wd-x{margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none}'
+        + '.wd-body{flex:1;overflow-y:auto;padding:16px;scrollbar-width:none;display:flex;flex-direction:column;gap:14px}'
+        + '.wd-body::-webkit-scrollbar{display:none}'
+        + '.wd-sec{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding-bottom:5px;border-bottom:1px solid rgba(56,189,248,.18);margin-bottom:10px}'
+        + '.wd-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px}'
+        + '.wd-frow{position:relative;margin-bottom:10px}'
+        + '.wd-inp{width:100%;padding:9px 11px;border-radius:10px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none}'
+        + '.wd-inp:focus{border-color:rgba(56,189,248,.5)}'
+        + '.wd-drop{position:absolute;left:0;right:0;top:100%;z-index:10;max-height:150px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 9px 9px;display:none}'
+        + '.wd-item{padding:5px 10px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04);color:#e2e8f0}'
+        + '.wd-push-row{display:flex;gap:6px;margin-bottom:6px}'
+        + '.wd-push-row .wd-inp{flex:1}'
+        + '.wd-rm{width:30px;height:38px;border-radius:8px;background:rgba(255,255,255,.07);border:none;color:#fff;cursor:pointer;font-size:14px;flex-shrink:0}'
+        + '.wd-add{padding:6px 12px;border-radius:8px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.25);color:#38bdf8;font-size:11px;font-weight:700;cursor:pointer}'
+        + '.wd-note{font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;margin:0 0 10px}'
+        + '.wd-foot{padding:12px 16px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:8px;flex-shrink:0}'
+        + '.wd-cancel{flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:rgba(255,255,255,.1);color:#fff}'
+        + '.wd-install{flex:2;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#38bdf8;color:#060d14}'
+        + '.wd-loading{opacity:.6;pointer-events:none}'
+        + '</style>'
+        + '<div class="wd-bd" id="wd-bd">'
+        + '<div class="wd-panel">'
+        + '<div class="wd-hdr"><div class="wd-ico">🧊</div>'
+        + '<div><div class="wd-tit">Installa PKG Frigorifero</div><div class="wd-sub">frarik_frigorifero.yaml → config/packages/</div></div>'
+        + '<button class="wd-x" id="wd-x">✕</button></div>'
+        + '<div class="wd-body">'
+        + '<div><div class="wd-sec">Sensori</div>'
+        + '<div class="wd-lbl">Sensore Potenza (W)</div>'
+        + '<div class="wd-frow"><input class="wd-inp" id="f-potenza" type="text" autocomplete="off" placeholder="sensor.presa_frigorifero_potenza" value="' + ((saved && saved.potenza) || '').replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-potenza"></div></div>'
+        + '<div class="wd-lbl">Switch Presa Frigo</div>'
+        + '<div class="wd-frow"><input class="wd-inp" id="f-switch" type="text" autocomplete="off" placeholder="switch.presa_frigorifero" value="' + ((saved && saved.sw) || '').replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-switch"></div></div>'
+        + '</div>'
+        + '<div><div class="wd-sec">Notifiche Push</div>'
+        + '<p class="wd-note">Inserisci i mobile_app per le notifiche push (es. <code>mobile_app_iphone</code>). Puoi aggiungerne più di uno.</p>'
+        + '<div id="push-rows">' + pushHtml + '</div>'
+        + '<button class="wd-add" id="push-add">+ Aggiungi dispositivo</button>'
+        + '</div>'
+        + '</div>'
+        + '<div class="wd-foot">'
+        + '<button class="wd-cancel" id="wd-cancel">Annulla</button>'
+        + '<button class="wd-install" id="wd-install">📦 Installa PKG</button>'
+        + '</div>'
+        + '</div>'
+        + '</div>';
+
+      sr.getElementById('wd-x').addEventListener('click', destroy);
+      sr.getElementById('wd-cancel').addEventListener('click', destroy);
+      sr.getElementById('wd-bd').addEventListener('click', function(e) { if (e.target === sr.getElementById('wd-bd')) destroy(); });
+
+      sr.getElementById('push-rows').addEventListener('click', function(e) {
+        var btn = e.target.closest('[data-rm]'); if (!btn) return;
+        pushRows = Array.from(sr.querySelectorAll('.push-inp')).map(function(i) { return i.value; });
+        pushRows.splice(+btn.dataset.rm, 1);
+        if (!pushRows.length) pushRows = [''];
+        renderWiz();
+      });
+
+      sr.getElementById('push-add').addEventListener('click', function() {
+        pushRows = Array.from(sr.querySelectorAll('.push-inp')).map(function(i) { return i.value; });
+        pushRows.push('');
+        renderWiz();
+      });
+
+      setupAC(sr.getElementById('f-potenza'), sr.getElementById('d-potenza'), sensorIds);
+      setupAC(sr.getElementById('f-switch'), sr.getElementById('d-switch'), switchIds);
+
+      sr.getElementById('wd-install').addEventListener('click', function() {
+        var potenza = sr.getElementById('f-potenza').value.trim();
+        var sw = sr.getElementById('f-switch').value.trim();
+        var push = Array.from(sr.querySelectorAll('.push-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
+        try { localStorage.setItem(_FRIGO_WIZ_KEY, JSON.stringify({potenza: potenza, sw: sw, push: push})); } catch(e) {}
+        var yaml = _buildPkg(potenza, sw, push);
+        var m = location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
+        var base = location.origin + (m ? m[1] : '');
+        var btn = sr.getElementById('wd-install');
+        btn.classList.add('wd-loading');
+        btn.textContent = 'Installazione…';
+        fetch(base + '/api/frarik/pkg/install', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({name: 'frarik/frarik_frigorifero.yaml', content: yaml})
+        }).then(function(r) { return r.json().then(function(j) { return {r: r, j: j}; }); })
+          .then(function(res) {
+            destroy();
+            if (res.r.ok && res.j.ok) {
+              try { if (typeof window.showToast === 'function') window.showToast('📦 PKG Frigorifero installato! Riavvia HA.'); } catch(e) {}
+              if (typeof onDone === 'function') onDone();
+            } else {
+              try { if (typeof window.showToast === 'function') window.showToast('⚠️ Errore installazione PKG: ' + ((res.j && res.j.error) || '')); } catch(e) {}
+            }
+          }).catch(function() {
+            destroy();
+            try { if (typeof window.showToast === 'function') window.showToast('⚠️ Errore connessione al PKG install'); } catch(e) {}
+          });
+      });
+    }
+
+    renderWiz();
+  }
+
+  /* ── CARD ── */
   const CARD = {
-    id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '1.1',
-    desc: 'Monitoraggio compressore, cicli, energia e costi. Richiede PKG centro_controllo_frigorifero.',
-    render, mount, update, configure: openCfg
+    id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '1.2',
+    desc: 'Monitoraggio compressore, cicli, energia e costi. Richiede PKG Centro Controllo Frigorifero.',
+    render: render, mount: mount, update: update, configure: openCfg,
+    frarik_pkg_check: 'sensor.frarik_frigorifero_versione',
+    frarik_pkg_id: 'frarik_frigorifero',
+    frarik_pkg_version: '1.2',
+    openWizard: _openWizard,
+    _buildPkgFromConfig: function(cfg) { return _buildPkg(cfg.potenza || '', cfg.sw || '', cfg.push || []); },
   };
   window.FratechCardRegistry = window.FratechCardRegistry || {};
   window.FratechCardRegistry[CARD.id] = CARD;
