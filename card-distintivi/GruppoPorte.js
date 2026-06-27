@@ -1,6 +1,6 @@
-/* frarik-version: 1.0 */
+/* frarik-version: 1.1 */
 /**
- * GruppoPorte.js — Distintivo FratechStore v1.0
+ * GruppoPorte.js — Distintivo FratechStore v1.1
  * Chip contatore porte aperte + popup stato (solo Aperta/Chiusa) + automazione opzionale
  */
 (function () {
@@ -46,8 +46,12 @@
     const ents = Array.isArray(c.entities) ? c.entities : [];
     const active = h ? ents.filter(e => isOn(h, e.entity)).length : 0;
     const col = c.color || '#fb923c';
+    const anyOpen = active > 0;
+    const dynIcon = (!c.icon || c.icon === '🚪')
+      ? iconHtml(anyOpen ? 'mdi:door-open' : 'mdi:door-closed')
+      : iconHtml(c.icon);
     return {
-      icon: iconHtml(c.icon || '🚪'),
+      icon: dynIcon,
       label: c.label || 'Porte',
       value: ents.length ? `${active}/${ents.length}` : '—',
       color: active > 0 ? col : 'rgba(255,255,255,0.32)',
@@ -74,7 +78,10 @@
       const on = h ? isOn(h, e.entity) : false;
       const lbl = e.label || nameOf(h, e.entity);
       const stLbl = on ? 'Aperta' : 'Chiusa';
-      const stCol = on ? col : 'rgba(255,255,255,.3)';
+      const stCol = on ? '#f87171' : '#4ade80';
+      const stBg  = on ? 'rgba(248,113,113,.14)' : 'rgba(74,222,128,.12)';
+      const stBdr = on ? 'rgba(248,113,113,.32)' : 'rgba(74,222,128,.28)';
+      const rowIco = iconHtml(on ? 'mdi:door-open' : 'mdi:door-closed', 18);
 
       let autoBadge = '';
       if (e.automation) {
@@ -86,13 +93,13 @@
         autoBadge = `<button data-gp-auto="${i}" style="padding:3px 8px;border-radius:6px;border:1px solid ${aBdr};background:${aBg};color:${aCol};cursor:pointer;font-size:9px;font-weight:700;white-space:nowrap;outline:none">${aTxt}</button>`;
       }
 
-      const statePill = `<div style="padding:4px 10px;border-radius:20px;background:${on?hex2rgba(col,.15):'rgba(255,255,255,.06)'};border:1px solid ${on?hex2rgba(col,.35):'rgba(255,255,255,.1)'};font-size:11px;font-weight:700;color:${stCol};white-space:nowrap">${stLbl}</div>`;
+      const statePill = `<div style="padding:4px 10px;border-radius:20px;background:${stBg};border:1px solid ${stBdr};font-size:11px;font-weight:700;color:${stCol};white-space:nowrap">${stLbl}</div>`;
 
       return `<div style="border-bottom:1px solid rgba(255,255,255,.04)">
         <div style="display:flex;align-items:center;gap:12px;padding:11px 16px">
-          <div style="width:36px;height:36px;border-radius:50%;background:${on?hex2rgba(col,.15):'rgba(255,255,255,.05)'};border:1px solid ${on?hex2rgba(col,.3):'rgba(255,255,255,.1)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;filter:${on?'none':'grayscale(1) opacity(.4)'}">🚪</div>
+          <div style="width:36px;height:36px;border-radius:50%;background:${stBg};border:1px solid ${stBdr};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${stCol}">${rowIco}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:600;color:${on?'#fff':'rgba(255,255,255,.6)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
+            <div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
             ${statePill}
@@ -207,6 +214,7 @@
         _acDrop.appendChild(r);
       });
       document.body.appendChild(_acDrop);
+      inp.focus();
     }
 
     function _setupAc(inp, filterFn, onPick) {

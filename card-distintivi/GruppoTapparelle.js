@@ -279,6 +279,7 @@
         _acDrop.appendChild(r);
       });
       document.body.appendChild(_acDrop);
+      inp.focus();
     }
 
     function _setupAc(inp, filterFn, onPick) {

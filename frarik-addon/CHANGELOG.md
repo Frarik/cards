@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.6.25 — 2026-06-27
+
+### feat: GruppoPorte/GruppoFinestre — colori sicurezza + icone MDI dinamiche + fix focus autocomplete
+
+- **Colori invertiti**: chiusa → verde (`#4ade80`), aperta → rosso (`#f87171`) — logica di sicurezza (chiusa = ok, aperta = allerta)
+- **Icone dinamiche nel popup**: ogni riga mostra `mdi:door-open`/`mdi:door-closed` e `mdi:window-open`/`mdi:window` in base allo stato reale dell'entità
+- **Icona dinamica nel chip (distintivo)**: se almeno una porta/finestra è aperta → icona "aperta", altrimenti → icona "chiusa"; si attiva automaticamente se l'utente usa l'icona di default
+- **Fix focus autocomplete**: aggiunto `inp.focus()` dopo `appendChild(_acDrop)` in tutti i 4 file Gruppo (Luci, Tapparelle, Finestre, Porte) — impedisce che l'aggiunta del dropdown nel DOM sposti il focus fuori dall'input, risolvendo il bug "una lettera per volta"
+
 ## 1.6.24 — 2026-06-27
 
 ### fix: icon picker sopra il configure overlay + focus autocomplete ripristinato
