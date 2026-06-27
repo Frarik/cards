@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.6.32 — 2026-06-27
+
+### feat: GruppoAllarme v1.0 — distintivo allarme Alarmo con bypass, overlay triggered
+
+- **Nuovo distintivo `gruppo-allarme`**: chip colorato con stato in italiano (Disarmato / Armato · Fuori / Attivazione… / ⚠ ALLARME), colori semantici per ogni stato
+- **Popup completo**: header stato grande + bottoni modalità (Fuori Casa, Casa, Notte, Vacanza — configurabili) + bottone Disarma
+- **Bypass selettivo**: sensori aperti mostrati in rosso con pulsante "Escludi"; i sensori esclusi (es. vasistas aperto) vengono passati come `bypassed_sensors` al servizio Alarmo — permette di armare ignorando singoli sensori aperti
+- **Lista sensori**: ogni `binary_sensor` configurato mostra icona device_class (porta/finestra/motion/fumo…), stato OK/APERTO/ESCLUSO, badge colorato
+- **Sirena**: badge stato + pulsante "Spegni" se attiva, opzionale
+- **Overlay triggered automatico**: quando lo stato diventa `triggered`, appare automaticamente un overlay fullscreen con sfondo rosso pulsante, titolo "ALLARME IN CORSO", pulsante DISARMA grande e (opz.) pulsante spegni sirena — si chiude da solo quando l'allarme viene disarmato
+- **PIN code opzionale**: salvato in cfg, inviato automaticamente ai servizi se impostato
+- **Configure**: entity picker con autocomplete per allarme/sensori/sirena, checkbox per modalità, gestione sensori con add/remove
+
 ## 1.6.31 — 2026-06-27
 
 ### feat: GruppoClima v1.3 — colori semantici temperatura e umidità
