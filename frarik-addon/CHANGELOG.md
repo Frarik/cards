@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.6.21 — 2026-06-27
+
+### feat: nuovo distintivo GruppoTapparelle
+
+- Chip con contatore tapparelle aperte (es. "2/5"), colore sky-blue `#38bdf8`
+- Popup con titolo live "X tapparelle aperte / 1 tapparella aperta" nell'header
+- Per ogni tapparella: stato testuale (Aperta / Chiusa / In apertura… / In chiusura…), barra posizione + % se disponibile
+- Controlli per tapparella: ↑ Apri · ■ Stop · ↓ Chiudi (servizi `cover.open/stop/close_cover`)
+- Pulsanti globali "↑ Apri tutte" e "↓ Chiudi tutte"
+- Badge automazione opzionale per tapparella (🟢 Attiva / 🔴 Disattiva)
+- Editor configurazione con autocomplete (cover.* per prime), colore, icona, nome chip
+- Polling real-time 1.5s, nessun flicker sui click
+
 ## 1.6.20 — 2026-06-27
 
 ### fix(gruppo-luci): contatore luci nel titolo dell'header popup (non nel body)
