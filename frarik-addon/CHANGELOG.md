@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.53 — 2026-06-27
+
+### fix: GruppoEnergia v2.4 — arco stabile (fix loop 0→valore)
+
+- **Root cause identificata**: `update()` riceveva `rawHass` stale/senza il sensore → `_info()` tornava `pct=0` → arco andava a 0 → poll da 2s con `H()` fresco lo riportava al valore → loop continuo
+- **Fix**: `_live()` ora usa sempre `H()` fresco come priorità; se il sensore non restituisce un valore numerico valido (`w === null`) salta completamente l'aggiornamento del DOM — l'arco non si muove mai per dati stale
+
 ## 1.6.52 — 2026-06-27
 
 ### fix: GruppoEnergia v2.3 — gauge stabile, kWh da sensore reale

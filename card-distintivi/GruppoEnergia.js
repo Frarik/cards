@@ -1,4 +1,4 @@
-/* frarik-version: 2.3 */
+/* frarik-version: 2.4 */
 /**
  * GruppoEnergia.js — Distintivo FratechStore v2.2
  * Arco centrato · Grafico 24h compatto · Statistiche
@@ -234,16 +234,23 @@
   }
 
   /* ── aggiornamento live chirurgico ── */
-  function _live(cfg, h, el) {
+  function _live(cfg, rawH, el) {
     try {
+      /* usa sempre H() fresco; se non disponibile torna al rawH passato */
+      const h = H() || (rawH?.states ? rawH : null);
+      if (!h) return;
+
       const info = _info(cfg, h);
+      /* se il sensore non ha un valore numerico valido, non aggiornare il DOM
+         (evita che pct=0 mandi l'arco a zero quando hass è momentaneamente stale) */
+      if (info.w === null) return;
+
       const { col, pct, label } = info;
 
       const v = el.querySelector('.e-val');   if (v) { v.textContent = label; v.style.color = col; }
       const p = el.querySelector('.e-pct');   if (p) p.textContent = pct + '%';
       const p2= el.querySelector('.e-pct2');  if (p2){ p2.textContent = pct + '% utilizzato'; p2.style.color = col; }
 
-      /* transizione già impostata nell'inline style dell'SVG — non riscriverla */
       const arc = el.querySelector('.e-arc-fill');
       if (arc) {
         arc.style.strokeDashoffset = (AC * (1 - pct / 100)).toFixed(2);
@@ -252,7 +259,7 @@
       }
 
       const c = loadCfg(cfg);
-      if (c.solarEntity && h) {
+      if (c.solarEntity) {
         const u  = attrOf(h, c.solarEntity, 'unit_of_measurement') || 'W';
         const sw = _parseW(stateOf(h, c.solarEntity), u);
         const se = el.querySelector('.e-solar'); if (se) se.textContent = _fmtPower(sw);
@@ -423,7 +430,7 @@
   /* ════════════════════════════════════════ REGISTRAZIONE ══ */
   const CARD = {
     id: ID, name: 'Gruppo Energia', icon: '⚡', desc: '',
-    version: '2.2', isDistintivo: true,
+    version: '2.4', isDistintivo: true,
     defaultCfg: { label: 'Energia', entity: '', maxKw: 3, kwhEntity: '', solarEntity: '' },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -431,5 +438,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v2.3'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v2.4'); } catch (e) {}
 })();
