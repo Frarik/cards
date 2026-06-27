@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.6.30 — 2026-06-27
+
+### fix: GruppoClima v1.2 — temp ottimistica, sensore temp/umidità, chevron MDI, fix panel HVAC
+
+- **Temperatura ottimistica** (`_optTemps`): click su +/− aggiorna il display immediatamente e mantiene il valore per 8s, evitando il flickering 2-3x causato dal poll 1500ms che rileggeva lo stato HA prima della conferma
+- **Sensore temperatura + umidità**: sostituito il campo numerico `Temp. fissa` con due picker di sensori (`🌡 Temp.` → `sensor.*` e `💧 Umidità` → `sensor.*`); in popup la riga superiore mostra `temp° 💧 hum%` con autocomplete dei sensori
+- **Chevron MDI**: sostituita la freccia `▸/▾` testuale con `mdi:chevron-right` / `mdi:chevron-down` via `<span class="mdi">` — rendering pulito coerente con il resto dell'interfaccia
+- **Panel HVAC stabile**: `update()` ora preserva `el._openPanels` prima del re-render e ripristina i pannelli aperti dopo `_mountHandlers()`, eliminando l'auto-chiusura/apertura causata dagli aggiornamenti HA frequenti su `hvac_action`
+
 ## 1.6.29 — 2026-06-27
 
 ### feat: GruppoClima v1.1 — controlli HVAC completi, bottone power ridisegnato, temp fissa
