@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.44 — 2026-06-27
+
+### fix: GruppoBatterie v1.2 — scroll, altezza popup, layout colonne
+
+- **Scroll fisso**: il refresh automatico (ogni 3s) ora salva e ripristina `scrollTop` prima di ridisegnare il DOM — lo scroll non torna più alla prima batteria
+- **Popup più alto**: la lista usa `max-height:55vh` invece di 260px fissi
+- **Layout 2 colonne**: le card batteria sono in griglia 2 colonne con barra del livello, percentuale e stato — più compatte e leggibili
+
 ## 1.6.43 — 2026-06-27
 
 ### fix: GruppoBatterie v1.1 — rilevamento automatico entità
