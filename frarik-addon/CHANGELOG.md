@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.43 — 2026-06-27
+
+### fix: GruppoBatterie v1.1 — rilevamento automatico entità
+
+- Rimossa la lista manuale di entità: ora rileva in automatico tutte le entità con `device_class: battery` presenti in HA (sensori numerici + binary_sensor)
+- Configurazione semplificata: solo nome chip + soglie bassa/critica
+- Il pannello di configurazione mostra quanti sensori vengono rilevati al momento dell'apertura
+
 ## 1.6.42 — 2026-06-27
 
 ### feat: distintivi GruppoEnergia e GruppoBatterie
