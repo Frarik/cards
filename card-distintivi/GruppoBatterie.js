@@ -1,4 +1,4 @@
-/* frarik-version: 1.2 */
+/* frarik-version: 1.3 */
 /**
  * GruppoBatterie.js — Distintivo FratechStore v1.2
  * Rileva automaticamente TUTTE le entità con device_class: battery
@@ -157,28 +157,37 @@
       summaryTxt = `⚠️ ${pcs.join(' · ')} su ${total}`;
     }
 
-    /* cards griglia 2 colonne — ordinate per urgenza */
-    const cards = items.map(item => {
+    /* offline → riga orizzontale in cima; altri → griglia 3 colonne */
+    const offlineItems = items.filter(i => i.status === 'offline');
+    const otherItems   = items.filter(i => i.status !== 'offline');
+
+    const offlineRow = offlineItems.length ? `
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">
+        ${offlineItems.map(item => `
+          <div style="display:flex;align-items:center;gap:5px;padding:5px 9px;border-radius:20px;border:1px solid #ef444440;background:#ef444410;min-width:0;max-width:100%">
+            <span style="font-size:13px;flex-shrink:0">📴</span>
+            <span style="font-size:10px;font-weight:700;color:#ef4444;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(item.name)}</span>
+          </div>`).join('')}
+      </div>` : '';
+
+    const grid3 = otherItems.map(item => {
       const sc = STATUS_COL[item.status];
-
-      let bar = '';
-      if (item.level !== null) {
-        bar = `<div style="position:relative;height:4px;border-radius:2px;background:rgba(255,255,255,.08);margin-top:5px">
-          <div style="position:absolute;top:0;left:0;height:100%;width:${Math.max(3, item.level)}%;background:${sc};border-radius:2px"></div>
-        </div>`;
-      }
-
-      return `<div style="display:flex;flex-direction:column;padding:8px 9px;border-radius:9px;border:1px solid ${sc}28;background:${sc}09">
-        <div style="display:flex;align-items:center;gap:5px;min-width:0">
-          <span style="font-size:14px;flex-shrink:0">${STATUS_EMO[item.status]}</span>
+      const bar = item.level !== null
+        ? `<div style="position:relative;height:3px;border-radius:2px;background:rgba(255,255,255,.08);margin-top:5px">
+             <div style="position:absolute;top:0;left:0;height:100%;width:${Math.max(3, item.level)}%;background:${sc};border-radius:2px"></div>
+           </div>`
+        : '';
+      return `<div style="display:flex;flex-direction:column;padding:7px 8px;border-radius:9px;border:1px solid ${sc}28;background:${sc}09">
+        <div style="display:flex;align-items:center;gap:4px;min-width:0">
+          <span style="font-size:13px;flex-shrink:0">${STATUS_EMO[item.status]}</span>
           <div style="flex:1;min-width:0;font-size:10px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(item.name)}</div>
         </div>
         ${bar}
         <div style="margin-top:5px;display:flex;align-items:baseline;justify-content:space-between">
           ${item.level !== null
-            ? `<span style="font-size:13px;font-weight:900;color:${sc};line-height:1">${Math.round(item.level)}%</span>`
+            ? `<span style="font-size:12px;font-weight:900;color:${sc};line-height:1">${Math.round(item.level)}%</span>`
             : `<span></span>`}
-          <span style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:${sc}">${eh(STATUS_LABEL[item.status])}</span>
+          <span style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:${sc}">${eh(STATUS_LABEL[item.status])}</span>
         </div>
       </div>`;
     }).join('');
@@ -191,7 +200,8 @@
       </div>
 
       <div class="batt-scroll" style="max-height:55vh;overflow-y:auto;scrollbar-width:thin;padding-bottom:10px">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">${cards}</div>
+        ${offlineRow}
+        ${otherItems.length ? `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px">${grid3}</div>` : ''}
       </div>
     </div>`;
   }
@@ -302,7 +312,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Batterie', icon: '🔋',
     desc: '',
-    version: '1.2', isDistintivo: true,
+    version: '1.3', isDistintivo: true,
     defaultCfg: { label: 'Batterie', threshLow: 20, threshCrit: 10 },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -311,5 +321,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-batterie v1.2'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-batterie v1.3'); } catch (e) {}
 })();

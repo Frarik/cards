@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.46 — 2026-06-27
+
+### feat: GruppoBatterie v1.3 — layout offline in cima + griglia 3 colonne
+
+- Dispositivi offline mostrati in orizzontale come pill rosse nella riga superiore
+- Tutti gli altri dispositivi (OK/bassa/critica) in griglia 3 colonne affiancate
+
 ## 1.6.45 — 2026-06-27
 
 ### fix: GitHub store HTTP 401 — retry senza token su repo pubblico
