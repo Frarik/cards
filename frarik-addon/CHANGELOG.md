@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.50 — 2026-06-27
+
+### fix: GruppoEnergia v2.1 — arco stabile, grafico e statistiche
+
+- **Arco non loopa più**: rimossa la `<animate>` SVG che conflliggeva con `style.strokeDashoffset`; animazione iniziale ora via `requestAnimationFrame` + CSS transition — si disegna una sola volta all'apertura, gli aggiornamenti live sono smooth
+- **Grafico e statistiche**: `_loadChart` ora cattura le eccezioni di `_svgChart` per non bloccarsi; timeout di 8s su `fetchHistory`; chart sempre aggiornato (anche a "Nessun dato storico") al termine del fetch
+
 ## 1.6.49 — 2026-06-27
 
 ### feat: GruppoEnergia v2.0 — popup ricco con arco, grafico e statistiche

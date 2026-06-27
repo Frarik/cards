@@ -1,4 +1,4 @@
-/* frarik-version: 2.0 */
+/* frarik-version: 2.1 */
 /**
  * GruppoEnergia.js — Distintivo FratechStore v2.0
  * Arco SVG animato · Grafico 24h · Statistiche · Solare
@@ -61,8 +61,11 @@
   async function _fetchHist(entityId, hours) {
     try {
       if (typeof window.fetchHistory === 'function') {
-        const pts = await window.fetchHistory(entityId, hours);
-        if (Array.isArray(pts) && pts.length) return pts.map(p => ({ t: +p.t, v: +p.v })).filter(p => !isNaN(p.v));
+        const timeout = new Promise(r => setTimeout(() => r([]), 8000));
+        const pts = await Promise.race([window.fetchHistory(entityId, hours), timeout]);
+        if (Array.isArray(pts) && pts.length) {
+          return pts.map(p => ({ t: typeof p.t === 'object' ? +p.t : p.t, v: +p.v })).filter(p => !isNaN(p.v) && isFinite(p.t));
+        }
       }
     } catch (e) {}
     return [];
@@ -82,7 +85,8 @@
   /* ── SVG area chart ── */
   function _svgChart(pts, maxW, col) {
     const W = 300, H = 72;
-    if (!pts || pts.length < 2) return `<div style="height:${H}px;display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(255,255,255,.2)">Dati non disponibili</div>`;
+    if (!pts || pts.length < 2) return `<div style="height:${H}px;display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(255,255,255,.2)">Nessun dato storico disponibile</div>`;
+    try {
 
     const now   = Date.now();
     const start = now - 24 * 3600000;
@@ -136,42 +140,14 @@
       ${peakMark}
       ${hourLabels}
     </svg>`;
+    } catch (e) {
+      return `<div style="height:${H}px;display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(255,255,255,.2)">Errore grafico</div>`;
+    }
   }
 
-  /* ── arc SVG ── */
-  function _arcSvg(pct, col, animate) {
-    const offset     = +(ARC_C * (1 - pct / 100)).toFixed(2);
-    const offsetFull = ARC_C;
-    const pulse      = pct >= 90 ? `style="animation:ePulse 1.4s ease-in-out infinite"` : '';
-    const animEl     = animate
-      ? `<animate attributeName="stroke-dashoffset" from="${offsetFull}" to="${offset}" dur=".85s" fill="freeze" calcMode="spline" keySplines=".4 0 .2 1" keyTimes="0;1"/>`
-      : '';
-    /* glow filter only when critical */
-    const filtDef = pct >= 90
-      ? `<filter id="eGlw"><feGaussianBlur in="SourceGraphic" stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`
-      : '';
-    const filtAttr = pct >= 90 ? `filter="url(#eGlw)"` : '';
-
+  /* ── arc SVG — sempre a riposo (ARC_C = vuoto); animazione fatta via CSS transition da mount() ── */
+  function _arcSvg(col) {
     return `<svg width="128" height="128" viewBox="0 0 128 128" style="overflow:visible;flex-shrink:0">
-      <defs>${filtDef}</defs>
-      <style>@keyframes ePulse{0%,100%{opacity:.75}50%{opacity:1}}</style>
-      <!-- traccia sfondo -->
-      <circle cx="${ARC_CX}" cy="${ARC_CY}" r="${ARC_R}" fill="none"
-        stroke="rgba(255,255,255,.07)" stroke-width="12" stroke-linecap="round"
-        transform="rotate(-90 ${ARC_CX} ${ARC_CY})"
-        stroke-dasharray="${ARC_C}" stroke-dashoffset="0"/>
-      <!-- gradiente zona sfondo -->
-      <circle cx="${ARC_CX}" cy="${ARC_CY}" r="${ARC_R}" fill="none"
-        stroke="url(#arcBg)" stroke-width="12" stroke-linecap="round"
-        transform="rotate(-90 ${ARC_CX} ${ARC_CY})"
-        stroke-dasharray="${ARC_C}" stroke-dashoffset="0" opacity=".18"/>
-      <!-- fill attivo -->
-      <circle class="e-arc-fill" cx="${ARC_CX}" cy="${ARC_CY}" r="${ARC_R}" fill="none"
-        stroke="${col}" stroke-width="12" stroke-linecap="round"
-        transform="rotate(-90 ${ARC_CX} ${ARC_CY})"
-        stroke-dasharray="${ARC_C}" stroke-dashoffset="${animate ? offsetFull : offset}"
-        ${filtAttr} ${pulse}>${animEl}</circle>
-      <!-- sfumatura interna -->
       <defs>
         <radialGradient id="arcBg">
           <stop offset="0%" stop-color="#4ade80"/>
@@ -180,6 +156,22 @@
           <stop offset="100%" stop-color="#ef4444"/>
         </radialGradient>
       </defs>
+      <style>@keyframes ePulse{0%,100%{opacity:.7}50%{opacity:1}}</style>
+      <!-- traccia sfondo -->
+      <circle cx="${ARC_CX}" cy="${ARC_CY}" r="${ARC_R}" fill="none"
+        stroke="rgba(255,255,255,.07)" stroke-width="12" stroke-linecap="round"
+        transform="rotate(-90 ${ARC_CX} ${ARC_CY})"
+        stroke-dasharray="${ARC_C}" stroke-dashoffset="0"/>
+      <!-- gradiente sfondo -->
+      <circle cx="${ARC_CX}" cy="${ARC_CY}" r="${ARC_R}" fill="none"
+        stroke="url(#arcBg)" stroke-width="12" stroke-linecap="round"
+        transform="rotate(-90 ${ARC_CX} ${ARC_CY})"
+        stroke-dasharray="${ARC_C}" stroke-dashoffset="0" opacity=".16"/>
+      <!-- fill attivo — parte vuoto, animato via CSS in mount() -->
+      <circle class="e-arc-fill" cx="${ARC_CX}" cy="${ARC_CY}" r="${ARC_R}" fill="none"
+        stroke="${col}" stroke-width="12" stroke-linecap="round"
+        transform="rotate(-90 ${ARC_CX} ${ARC_CY})"
+        stroke-dasharray="${ARC_C}" stroke-dashoffset="${ARC_C}"/>
     </svg>`;
   }
 
@@ -228,7 +220,7 @@
       <!-- arco + valore centrale -->
       <div style="display:flex;align-items:center;gap:14px;padding:4px 0 14px">
         <div style="position:relative;flex-shrink:0">
-          ${_arcSvg(pct, col, true)}
+          ${_arcSvg(col)}
           <!-- valore sovrapposto all'arco -->
           <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none">
             <div class="e-val" style="font-size:17px;font-weight:900;color:${col};line-height:1;letter-spacing:-.5px">${eh(info.label)}</div>
@@ -312,29 +304,44 @@
   /* ── fetch history e aggiornamento grafico/stats ── */
   async function _loadChart(cfg, el) {
     const c = loadCfg(cfg);
-    if (!c.entity || !el.isConnected) return;
+    if (!c.entity) return;
+    const chartEl = el.querySelector('.e-chart');
+    const peakEl  = el.querySelector('.e-peak');
+    const avgEl   = el.querySelector('.e-avg');
+    const kwhEl   = el.querySelector('.e-kwh');
     try {
-      const pts   = await _fetchHist(c.entity, 24);
+      const pts  = await _fetchHist(c.entity, 24);
       if (!el.isConnected) return;
-      const maxW  = (parseFloat(c.maxKw) || 3) * 1000;
-      const h     = H();
-      const info  = _info(cfg, h);
-
-      /* grafico */
-      const chartEl = el.querySelector('.e-chart');
-      if (chartEl) chartEl.innerHTML = _svgChart(pts, maxW, info.col);
-
-      /* stats */
+      const maxW = (parseFloat(c.maxKw) || 3) * 1000;
+      const col  = _info(cfg, H()).col;
       const { peak, avg, kwh } = _calcStats(pts);
-      const peakEl = el.querySelector('.e-peak'); if (peakEl) peakEl.textContent = peak !== null ? _fmtPower(peak) : '—';
-      const avgEl  = el.querySelector('.e-avg');  if (avgEl)  avgEl.textContent  = avg  !== null ? _fmtPower(avg)  : '—';
-      const kwhEl  = el.querySelector('.e-kwh');  if (kwhEl)  kwhEl.textContent  = kwh  !== null ? kwh.toFixed(1) + ' kWh' : '—';
-    } catch (e) {}
+
+      if (chartEl) chartEl.innerHTML = _svgChart(pts, maxW, col);
+      if (peakEl)  peakEl.textContent  = peak !== null ? _fmtPower(peak) : '—';
+      if (avgEl)   avgEl.textContent   = avg  !== null ? _fmtPower(avg)  : '—';
+      if (kwhEl)   kwhEl.textContent   = kwh  !== null ? kwh.toFixed(1) + ' kWh' : '—';
+    } catch (e) {
+      if (chartEl) chartEl.innerHTML = `<div style="height:72px;display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(255,255,255,.2)">Nessun dato storico</div>`;
+    }
   }
 
   /* ════════════════════════════════════════ MOUNT / UPDATE ══ */
   function mount(cfg, rawHass, el) {
     el.innerHTML = render(cfg, rawHass);
+
+    /* animazione arco via CSS transition — rAF evita conflitti con SVG animate */
+    const info = _info(cfg, rawHass);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const arcEl = el.querySelector('.e-arc-fill');
+        if (!arcEl) return;
+        arcEl.style.transition = 'stroke-dashoffset .9s cubic-bezier(.4,0,.2,1), stroke .3s ease';
+        arcEl.style.strokeDashoffset = (ARC_C * (1 - info.pct / 100)).toFixed(2);
+        arcEl.style.stroke = info.col;
+        if (info.pct >= 90) arcEl.style.animation = 'ePulse 1.4s ease-in-out infinite';
+      });
+    });
+
     _loadChart(cfg, el);
 
     if (el._ePoll) return;
@@ -342,8 +349,6 @@
       if (!el.isConnected) { clearInterval(el._ePoll); delete el._ePoll; return; }
       const h = H(); if (h) _updateLive(cfg, h, el);
     }, 2000);
-
-    /* ricarica grafico ogni 5 min */
     el._eChartPoll = setInterval(() => {
       if (!el.isConnected) { clearInterval(el._eChartPoll); delete el._eChartPoll; return; }
       _loadChart(cfg, el);
@@ -467,7 +472,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Energia', icon: '⚡',
     desc: '',
-    version: '2.0', isDistintivo: true,
+    version: '2.1', isDistintivo: true,
     defaultCfg: { label: 'Energia', entity: '', maxKw: 3, solarEntity: '' },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -476,5 +481,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v2.0'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v2.1'); } catch (e) {}
 })();
