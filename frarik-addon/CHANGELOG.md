@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.6.18 — 2026-06-27
+
+### fix(gruppo-luci): badge automazione compatto, nessun re-render ritardato, polling 1.5s
+
+- **Badge automazione compatto**: rimossa visualizzazione nome automazione; sotto ogni toggle compare un riquadro cliccabile (`🟢 Attiva` / `🔴 Disattiva`) con bordo colorato
+- **Nessun flicker al toggle**: eliminato il re-render ritardato a 700ms dopo ogni click su toggle/automazione — aggiornamento visivo solo ottimistico, stato reale via polling
+- **Polling più veloce**: intervallo ridotto da 2000ms a 1500ms per aggiornamenti stato più reattivi
+- **Accendi/Spegni tutte**: unico caso che mantiene un re-render (1s) per aggiornare tutti i toggle contemporaneamente
+
 ## 1.6.17 — 2026-06-27
 
 ### fix(gruppo-luci): dropdown smart, toggle ottimistico, automazione verde/rosso, no scrollbar

@@ -1,7 +1,7 @@
-/* frarik-version: 1.5 */
+/* frarik-version: 1.6 */
 /**
- * GruppoLuci.js — Distintivo FratechStore v1.5
- * Fix: dropdown sopra/sotto smart, no scrollbar, toggle ottimistico istantaneo, automazione verde/rosso
+ * GruppoLuci.js — Distintivo FratechStore v1.6
+ * Fix: badge automazione compatto sotto toggle (verde/rosso), nessun re-render ritardato sui click, polling 1.5s
  */
 (function () {
   'use strict';
@@ -80,26 +80,18 @@
       const lbl = e.label || nameOf(h, e.entity);
       const swBg = on ? col : 'rgba(255,255,255,0.14)';
       const thumbL = on ? '22px' : '2px';
-      let autoRow = '';
+
+      // badge automazione — sotto il toggle, senza nome, solo stato cliccabile
+      let autoBadge = '';
       if (e.automation) {
         const autoOn = h ? isOn(h, e.automation) : false;
-        const autoName = nameOf(h, e.automation);
-        // verde = attiva, rosso = disattivata
-        const autoStateColor = autoOn ? '#4ade80' : '#f87171';
-        const autoStateLabel = autoOn ? 'Attiva' : 'Disattivata';
-        const autoBtnBg = autoOn ? 'rgba(248,113,113,.12)' : 'rgba(74,222,128,.12)';
-        const autoBtnBorder = autoOn ? 'rgba(248,113,113,.4)' : 'rgba(74,222,128,.4)';
-        const autoBtnColor = autoOn ? '#f87171' : '#4ade80';
-        const autoBtnLabel = autoOn ? 'Disattiva' : 'Attiva';
-        autoRow = `<div style="display:flex;align-items:center;gap:8px;padding:4px 16px 10px 60px">
-          <span style="font-size:10px;opacity:.4">🤖</span>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:10px;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(autoName)}</div>
-            <div style="font-size:9px;color:${autoStateColor};font-weight:700;margin-top:1px">${autoStateLabel}</div>
-          </div>
-          <button data-jsd-auto="${i}" style="padding:3px 10px;border-radius:6px;border:1px solid ${autoBtnBorder};background:${autoBtnBg};color:${autoBtnColor};cursor:pointer;font-size:10px;font-weight:700;flex-shrink:0">${autoBtnLabel}</button>
-        </div>`;
+        const aBg  = autoOn ? 'rgba(74,222,128,.13)'  : 'rgba(248,113,113,.13)';
+        const aBdr = autoOn ? 'rgba(74,222,128,.38)'  : 'rgba(248,113,113,.38)';
+        const aCol = autoOn ? '#4ade80'               : '#f87171';
+        const aTxt = autoOn ? '🟢 Attiva'             : '🔴 Disattiva';
+        autoBadge = `<button data-jsd-auto="${i}" style="padding:3px 8px;border-radius:6px;border:1px solid ${aBdr};background:${aBg};color:${aCol};cursor:pointer;font-size:9px;font-weight:700;white-space:nowrap;outline:none">${aTxt}</button>`;
       }
+
       return `<div style="border-bottom:1px solid rgba(255,255,255,.04)">
         <div style="display:flex;align-items:center;gap:12px;padding:11px 16px">
           <div style="width:36px;height:36px;border-radius:50%;background:${on?hex2rgba(col,.15):'rgba(255,255,255,.05)'};border:1px solid ${on?hex2rgba(col,.3):'rgba(255,255,255,.1)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;filter:${on?'none':'grayscale(1) opacity(.4)'}">💡</div>
@@ -107,10 +99,13 @@
             <div style="font-size:13px;font-weight:600;color:${on?'#fff':'rgba(255,255,255,.6)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
             <div style="font-size:11px;color:${on?col:'rgba(255,255,255,.3)'};margin-top:1px;font-weight:${on?600:400}">${on?'Accesa':'Spenta'}</div>
           </div>
-          <button data-jsd-toggle="${i}" style="width:46px;height:26px;border-radius:13px;border:none;cursor:pointer;position:relative;background:${swBg};transition:background .2s;flex-shrink:0;outline:none">
-            <div style="position:absolute;top:3px;left:${thumbL};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3);transition:left .18s;pointer-events:none"></div>
-          </button>
-        </div>${autoRow}
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
+            <button data-jsd-toggle="${i}" style="width:46px;height:26px;border-radius:13px;border:none;cursor:pointer;position:relative;background:${swBg};transition:background .2s;outline:none">
+              <div style="position:absolute;top:3px;left:${thumbL};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3);transition:left .18s;pointer-events:none"></div>
+            </button>
+            ${autoBadge}
+          </div>
+        </div>
       </div>`;
     }).join('');
 
@@ -135,44 +130,37 @@
       if (tog) {
         const e = ents[parseInt(tog.dataset.jsdToggle)]; if (!e) return;
         const on = isOn(H(), e.entity);
-        // aggiornamento ottimistico immediato del toggle
+        // ottimistico immediato: sposta toggle visivamente senza aspettare HA
         tog.style.background = on ? 'rgba(255,255,255,0.14)' : col;
         const thumb = tog.querySelector('div');
         if (thumb) { thumb.style.transition = 'left .18s'; thumb.style.left = on ? '2px' : '22px'; }
         callSvc(e.entity.split('.')[0], on ? 'turn_off' : 'turn_on', e.entity);
-        setTimeout(() => {
-          if (!el.isConnected) return;
-          el.innerHTML = render(cfg, null);
-          _mountHandlers(cfg, el);
-        }, 700);
+        // nessun re-render ritardato: il polling a 1.5s aggiorna lo stato reale
+        // (evita il flicker causato dal re-render prima che HA abbia processato il comando)
         ev.stopPropagation(); return;
       }
       const auto = ev.target.closest('[data-jsd-auto]');
       if (auto) {
         const e = ents[parseInt(auto.dataset.jsdAuto)]; if (!e||!e.automation) return;
         const autoOn = isOn(H(), e.automation);
-        // aggiornamento ottimistico immediato del pulsante automazione
-        auto.textContent = autoOn ? 'Attiva' : 'Disattiva';
-        auto.style.color = autoOn ? '#4ade80' : '#f87171';
-        auto.style.borderColor = autoOn ? 'rgba(74,222,128,.4)' : 'rgba(248,113,113,.4)';
-        auto.style.background = autoOn ? 'rgba(74,222,128,.12)' : 'rgba(248,113,113,.12)';
+        // ottimistico immediato: cambia badge automazione
+        const newCol = autoOn ? '#4ade80' : '#f87171';
+        const newBdr = autoOn ? 'rgba(74,222,128,.38)' : 'rgba(248,113,113,.38)';
+        const newBg  = autoOn ? 'rgba(74,222,128,.13)' : 'rgba(248,113,113,.13)';
+        auto.textContent = autoOn ? '🟢 Attiva' : '🔴 Disattiva';
+        auto.style.color = newCol; auto.style.borderColor = newBdr; auto.style.background = newBg;
         callSvc('automation', autoOn ? 'turn_off' : 'turn_on', e.automation);
-        setTimeout(() => {
-          if (!el.isConnected) return;
-          el.innerHTML = render(cfg, null);
-          _mountHandlers(cfg, el);
-        }, 700);
         ev.stopPropagation(); return;
       }
       const allBtn = ev.target.closest('[data-gl-all]');
       if (allBtn) {
         const svc = allBtn.dataset.glAll === 'on' ? 'turn_on' : 'turn_off';
         ents.forEach(e => { if (e.entity) callSvc(e.entity.split('.')[0], svc, e.entity); });
+        // "accendi/spegni tutte" → aspetta 1s per HA poi re-render
         setTimeout(() => {
           if (!el.isConnected) return;
-          el.innerHTML = render(cfg, null);
-          _mountHandlers(cfg, el);
-        }, 700);
+          el.innerHTML = render(cfg, null); _mountHandlers(cfg, el);
+        }, 1000);
         ev.stopPropagation(); return;
       }
     }
@@ -184,7 +172,7 @@
   function mount(cfg, rawHass, el) {
     _mountHandlers(cfg, el);
 
-    // Polling real-time ogni 2s — avvia solo una volta (check _glPoll)
+    // Polling real-time ogni 1.5s — avvia solo una volta (check _glPoll)
     if (el._glPoll) return;
     el._glPoll = setInterval(() => {
       if (!el.isConnected) { clearInterval(el._glPoll); delete el._glPoll; return; }
@@ -193,7 +181,7 @@
         el.innerHTML = render(cfg, h);
         _mountHandlers(cfg, el);
       } catch(e) {}
-    }, 2000);
+    }, 1500);
   }
 
   function update(cfg, rawHass, el) {
@@ -468,7 +456,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Luci', icon: '💡',
     desc: 'Chip con contatore luci accese. Clic → pannello toggle + Accendi/Spegni tutte.',
-    version: '1.5', isDistintivo: true,
+    version: '1.6', isDistintivo: true,
     defaultCfg: { label: 'Luci', icon: '💡', color: '#fbbf24', entities: [] },
     chip, watchEntities, render, mount, update, configure,
   };
