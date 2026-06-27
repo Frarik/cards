@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.6.56 — 2026-06-27
+
+### feat: GruppoEnergia v2.7 — shimmer, tralicio MDI, costo, confronto ieri, alert
+
+- **Pipe shimmer**: gradiente luminoso che scorre sulla linea solida (niente pallini); velocità proporzionale al consumo
+- **Tralicio MDI**: path SVG ufficiale `mdi:transmission-tower` invece dell'SVG personalizzato
+- **kWh + Costo oggi**: box statistiche aggiornati — consume kWh giornaliero (sensore diretto o stima) + costo in € (kWh × prezzo/kWh configurabile)
+- **Confronto vs ieri**: ▲/▼ delta % in ogni box statistiche (kWh e €) calcolato su 48h di storia
+- **Alert soglia**: parametro `alertKw` — quando il consumo supera la soglia il flow e il nodo casa diventano rossi, appare banner ⚠️, il nodo pulsa
+
 ## 1.6.55 — 2026-06-27
 
 ### feat: GruppoEnergia v2.6 — tralicio SVG, pipe continua speed-reactive

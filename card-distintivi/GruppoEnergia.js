@@ -1,7 +1,7 @@
-/* frarik-version: 2.6 */
+/* frarik-version: 2.7 */
 /**
- * GruppoEnergia.js — Distintivo FratechStore v2.6
- * Flow energetico: tralicio → Casa ← Solare · pipe continua speed-reactive
+ * GruppoEnergia.js — Distintivo FratechStore v2.7
+ * Flow shimmer · Tralicio MDI · kWh+Costo oggi · vs ieri · Alert soglia
  */
 (function () {
   'use strict';
@@ -58,7 +58,7 @@
   async function _fetchHist(entityId, hours) {
     try {
       if (typeof window.fetchHistory === 'function') {
-        const to  = new Promise(r => setTimeout(() => r([]), 8000));
+        const to  = new Promise(r => setTimeout(() => r([]), 9000));
         const raw = await Promise.race([window.fetchHistory(entityId, hours), to]);
         if (Array.isArray(raw) && raw.length) {
           return raw.map(p => ({ t: +(p.t instanceof Date ? p.t : new Date(p.t)), v: +p.v }))
@@ -79,6 +79,17 @@
     return { peak, avg, kwh };
   }
 
+  /* ── delta html (confronto vs ieri) ── */
+  function _deltaHtml(today, yest) {
+    if (today === null || yest === null || yest < 0.001)
+      return '<span style="font-size:9px;color:rgba(255,255,255,.2)">— vs ieri</span>';
+    const diff = today - yest;
+    const pct  = Math.round(Math.abs(diff / yest) * 100);
+    const up   = diff > 0;
+    const col  = up ? '#ef4444' : '#4ade80';
+    return `<span style="font-size:9px;color:${col}">${up ? '▲' : '▼'} ${up ? '+' : '-'}${pct}% vs ieri</span>`;
+  }
+
   /* ── grafico SVG compatto ── */
   function _chart(pts, maxW, col) {
     const W = 300, H = 70;
@@ -90,51 +101,33 @@
       const maxV  = Math.max(...pts.map(p => p.v), maxW * 0.1);
       const xf = t => Math.max(0, Math.min(W, ((t - start) / (now - start)) * W));
       const yf = v => Math.max(1, Math.min(H - 1, H - (v / maxV) * (H - 4)));
-
       const line = pts.map(p => `${xf(p.t).toFixed(1)},${yf(p.v).toFixed(1)}`).join(' L ');
       const area = `M ${line} L ${xf(pts[pts.length - 1].t).toFixed(1)},${H} L ${xf(pts[0].t).toFixed(1)},${H} Z`;
-
-      const thr = [{ r: .50, c: '#4ade80' }, { r: .75, c: '#facc15' }, { r: .90, c: '#f97316' }]
+      const thr  = [{ r: .50, c: '#4ade80' }, { r: .75, c: '#facc15' }, { r: .90, c: '#f97316' }]
         .filter(t => maxV > maxW * t.r)
         .map(t => { const y = yf(maxW * t.r).toFixed(1); return `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="${t.c}" stroke-width=".7" stroke-dasharray="4,3" opacity=".35"/>`; })
         .join('');
-
       const pk  = pts.reduce((a, b) => b.v > a.v ? b : a);
-      const pkX = xf(pk.t).toFixed(1), pkY = yf(pk.v).toFixed(1);
       const gid = 'eg' + col.replace('#', '');
-
       const labels = [0, 6, 12, 18].map(hr => {
         const d = new Date(); d.setHours(hr, 0, 0, 0);
         const x = xf(+d); if (x < 14 || x > W - 14) return '';
         return `<text x="${x.toFixed(1)}" y="${H + 12}" text-anchor="middle" fill="rgba(255,255,255,.22)" font-size="8">${String(hr).padStart(2, '0')}:00</text>`;
       }).join('');
-
       return `<svg width="100%" height="${H + 18}" viewBox="0 0 ${W} ${H + 18}" style="display:block;overflow:visible">
-        <defs>
-          <linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="${col}" stop-opacity=".4"/>
-            <stop offset="100%" stop-color="${col}" stop-opacity=".02"/>
-          </linearGradient>
-        </defs>
+        <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="${col}" stop-opacity=".4"/><stop offset="100%" stop-color="${col}" stop-opacity=".02"/>
+        </linearGradient></defs>
         ${thr}
         <path d="${area}" fill="url(#${gid})"/>
         <path d="M ${line}" fill="none" stroke="${col}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
-        <circle cx="${pkX}" cy="${pkY}" r="3.5" fill="${col}" stroke="rgba(0,0,0,.4)" stroke-width="1"/>
+        <circle cx="${xf(pk.t).toFixed(1)}" cy="${yf(pk.v).toFixed(1)}" r="3.5" fill="${col}" stroke="rgba(0,0,0,.4)" stroke-width="1"/>
         ${labels}
       </svg>`;
     } catch (e) { return noData; }
   }
 
-  /* ── stat box ── */
-  function _box(label, val, ico, cls) {
-    return `<div style="padding:9px 6px 8px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);text-align:center">
-      <div style="font-size:15px;margin-bottom:4px">${ico}</div>
-      <div class="${cls}" style="font-size:12px;font-weight:800;color:#fff;line-height:1.1">${val}</div>
-      <div style="font-size:8px;color:rgba(255,255,255,.3);margin-top:3px;text-transform:uppercase;letter-spacing:.4px">${label}</div>
-    </div>`;
-  }
-
-  /* ── velocità flusso (secondi per ciclo) in base a % contratto ── */
+  /* ── velocità shimmer (secondi per ciclo) ── */
   function _flowSpeed(pct) {
     if (pct >= 90) return 0.30;
     if (pct >= 75) return 0.50;
@@ -143,32 +136,21 @@
     return 2.20;
   }
 
-  /* ── SVG tralicio alta tensione ── */
+  /* ── tralicio MDI: path ufficiale mdi:transmission-tower ── */
   function _pylonSvg(col) {
-    return `<svg width="26" height="32" viewBox="0 0 26 32" fill="none" style="display:block">
-      <line x1="1" y1="5" x2="25" y2="5" stroke="${col}" stroke-width="2" stroke-linecap="round"/>
-      <line x1="5" y1="13" x2="21" y2="13" stroke="${col}" stroke-width="1.8" stroke-linecap="round"/>
-      <line x1="13" y1="1" x2="13" y2="27" stroke="${col}" stroke-width="1.8" stroke-linecap="round"/>
-      <line x1="1"  y1="5"  x2="13" y2="13" stroke="${col}" stroke-width="1.2" stroke-linecap="round"/>
-      <line x1="25" y1="5"  x2="13" y2="13" stroke="${col}" stroke-width="1.2" stroke-linecap="round"/>
-      <line x1="5"  y1="13" x2="13" y2="20" stroke="${col}" stroke-width="1.2" stroke-linecap="round"/>
-      <line x1="21" y1="13" x2="13" y2="20" stroke="${col}" stroke-width="1.2" stroke-linecap="round"/>
-      <line x1="13" y1="27" x2="4"  y2="32" stroke="${col}" stroke-width="2"   stroke-linecap="round"/>
-      <line x1="13" y1="27" x2="22" y2="32" stroke="${col}" stroke-width="2"   stroke-linecap="round"/>
-      <circle cx="1"  cy="5"  r="2"   fill="${col}"/>
-      <circle cx="25" cy="5"  r="2"   fill="${col}"/>
-      <circle cx="5"  cy="13" r="1.5" fill="${col}"/>
-      <circle cx="21" cy="13" r="1.5" fill="${col}"/>
+    return `<svg viewBox="0 0 24 24" width="30" height="30" style="display:block">
+      <path fill="${col}" d="M11.21,3.29C10.93,3.07 10.6,3 10.27,3C9.5,3 8.85,3.5 8.67,4.27L8,7H8.06C7.5,7 7,7.5 7,8.07C7,8.31 7.1,8.55 7.25,8.74L5,21H9L9.14,20H14.86L15,21H19L16.75,8.74C16.9,8.55 17,8.31 17,8.07C17,7.5 16.5,7 15.94,7H16L15.33,4.27C15.15,3.5 14.5,3 13.73,3C13.4,3 13.07,3.07 12.79,3.29L12,4L11.21,3.29M11,6.13L11.5,5.75L12,5.39L12.5,5.75L13,6.13L13.5,8L12,7L10.5,8L11,6.13M10.12,9.16L12,8.39L13.88,9.16L14.25,10L12,9L9.75,10L10.12,9.16M9.36,11.18L12,10.36L14.64,11.18L15,12L12,11L9,12L9.36,11.18M8.61,13.21L12,12.39L15.39,13.21L15.69,14L12,13L8.31,14L8.61,13.21M7.85,15.24L12,14.39L16.15,15.24L16.38,16L12,15L7.62,16L7.85,15.24M7.09,17.26L12,16.39L16.91,17.26L17.08,18L12,17L6.92,18L7.09,17.26Z"/>
     </svg>`;
   }
 
   /* ── nodo flow ── */
-  function _node(icoHtml, valHtml, sublabel, valCls, borderCol, isCenter) {
+  function _node(icoHtml, valHtml, sublabel, valCls, borderCol, isCenter, nodeClass) {
     const sz = isCenter ? 62 : 52;
     const rr = Math.round(sz / 4);
     const glow = isCenter ? `;box-shadow:0 0 24px ${borderCol}40` : '';
+    const nc = nodeClass ? ` ${nodeClass}` : '';
     return `<div style="display:flex;flex-direction:column;align-items:center;gap:5px;min-width:${isCenter ? 82 : 70}px">
-      <div style="width:${sz}px;height:${sz}px;border-radius:${rr}px;background:rgba(255,255,255,.05);border:1.5px solid ${borderCol};display:flex;align-items:center;justify-content:center${glow}">
+      <div class="e-node-box${nc}" style="width:${sz}px;height:${sz}px;border-radius:${rr}px;background:rgba(255,255,255,.05);border:1.5px solid ${borderCol};display:flex;align-items:center;justify-content:center${glow}">
         ${icoHtml}
       </div>
       <div class="${valCls}" style="font-size:${isCenter ? 15 : 12}px;font-weight:900;color:${borderCol};line-height:1;text-align:center">${valHtml}</div>
@@ -176,27 +158,29 @@
     </div>`;
   }
 
-  /* ── pipe continua con particelle speed-reactive ── */
+  /* ── pipe shimmer continua ── */
   function _pipe(col, dir, pct) {
     const spd  = _flowSpeed(pct);
-    const d1   = (spd / 3).toFixed(2);
-    const d2   = (spd * 2 / 3).toFixed(2);
-    const anim = dir === 'right' ? 'gePartR' : 'gePartL';
-    /* arrowhead (CSS triangle) */
-    const arr = dir === 'right'
-      ? `<div style="width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:8px solid ${col};flex-shrink:0"></div>`
-      : `<div style="width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-right:8px solid ${col};flex-shrink:0"></div>`;
-    return `<div style="display:flex;align-items:center;gap:0;padding:0 4px;margin-bottom:18px;flex:1">
-      ${dir === 'left' ? arr : ''}
-      <div style="position:relative;flex:1;height:20px;overflow:hidden">
-        <!-- linea continua -->
-        <div style="position:absolute;top:50%;left:0;right:0;height:2px;background:${col};opacity:.3;transform:translateY(-50%);border-radius:1px"></div>
-        <!-- particelle scorrevoli -->
-        <div class="e-part" style="position:absolute;top:50%;transform:translateY(-50%);width:9px;height:9px;border-radius:50%;background:${col};box-shadow:0 0 8px ${col};animation:${anim} ${spd}s linear infinite"></div>
-        <div class="e-part" style="position:absolute;top:50%;transform:translateY(-50%);width:7px;height:7px;border-radius:50%;background:${col};opacity:.7;box-shadow:0 0 6px ${col};animation:${anim} ${spd}s linear infinite;animation-delay:-${d1}s"></div>
-        <div class="e-part" style="position:absolute;top:50%;transform:translateY(-50%);width:5px;height:5px;border-radius:50%;background:${col};opacity:.45;animation:${anim} ${spd}s linear infinite;animation-delay:-${d2}s"></div>
+    const anim = dir === 'right' ? 'geShimR' : 'geShimL';
+    const deg  = dir === 'right' ? '90deg' : '270deg';
+    const arrR = `<div style="width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:9px solid ${col};flex-shrink:0"></div>`;
+    const arrL = `<div style="width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-right:9px solid ${col};flex-shrink:0"></div>`;
+    return `<div style="display:flex;align-items:center;gap:3px;padding:0 4px;flex:1;margin-bottom:16px">
+      ${dir === 'left' ? arrL : ''}
+      <div class="e-pipe" data-dir="${dir}" style="position:relative;flex:1;height:3px;border-radius:2px;overflow:hidden;background:${col}22">
+        <div class="e-pipe-shimmer" data-col="${col}" data-dir="${dir}" style="position:absolute;inset:0;background:linear-gradient(${deg},transparent 0%,${col}55 40%,#ffffff99 50%,${col}55 60%,transparent 100%);animation:${anim} ${spd}s linear infinite"></div>
       </div>
-      ${dir === 'right' ? arr : ''}
+      ${dir === 'right' ? arrR : ''}
+    </div>`;
+  }
+
+  /* ── stat box con sub-riga ── */
+  function _box(ico, val, label, valCls, sub, subCls) {
+    return `<div style="padding:9px 6px 8px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);text-align:center">
+      <div style="font-size:14px;margin-bottom:3px">${ico}</div>
+      <div class="${valCls}" style="font-size:11px;font-weight:800;color:#fff;line-height:1.15">${val}</div>
+      <div style="font-size:7.5px;color:rgba(255,255,255,.3);margin-top:2px;text-transform:uppercase;letter-spacing:.4px">${label}</div>
+      <div class="${subCls}" style="margin-top:4px;min-height:13px;line-height:1.2">${sub}</div>
     </div>`;
   }
 
@@ -222,7 +206,7 @@
       </div>`;
     }
 
-    const info   = _info(cfg, h);
+    const info = _info(cfg, h);
     const { col, pct, label, maxW } = info;
 
     /* solare */
@@ -233,52 +217,60 @@
       solarW   = _parseW(stateOf(h, c.solarEntity), su);
       solarLabel = c.solarLabel || nameOf(h, c.solarEntity) || 'Solare';
     }
+    const totalW = hasSolar && solarW !== null && info.w !== null ? (info.w || 0) + (solarW || 0) : info.w;
 
-    /* consumo totale casa */
-    const totalW = hasSolar && solarW !== null && info.w !== null
-      ? (info.w || 0) + (solarW || 0) : info.w;
-    const totalLabel = hasSolar ? _fmtPower(totalW) : label;
+    /* alert */
+    const alertKw  = parseFloat(c.alertKw) || 0;
+    const isAlert  = alertKw > 0 && info.w !== null && info.w >= alertKw * 1000;
+    const houseCol = isAlert ? '#ef4444' : col;
+    const priceOk  = parseFloat(c.priceKwh) > 0;
 
-    /* flow con tralicio */
-    const gridCol   = '#60a5fa';
-    const solarCol  = '#facc15';
-    const pylonHtml = _pylonSvg(gridCol);
-    const houseHtml = `<span style="font-size:${hasSolar?26:28}px">🏠</span>`;
+    /* nodi */
+    const gridCol  = '#60a5fa';
+    const solarCol = '#facc15';
+    const pylonHtml = _pylonSvg(isAlert ? '#ef4444' : gridCol);
+    const houseHtml = `<span style="font-size:${hasSolar ? 26 : 28}px">🏠</span>`;
     const sunHtml   = `<span style="font-size:26px">☀️</span>`;
 
     let flowRow = '';
     if (hasSolar) {
       flowRow = `<div style="display:flex;align-items:center;justify-content:center">
-        ${_node(pylonHtml, `<span class="e-grid-val">${eh(label)}</span>`, 'Rete', 'e-grid-wrap', gridCol, false)}
-        ${_pipe(gridCol, 'right', pct)}
-        ${_node(houseHtml, `<span class="e-val">${eh(_fmtPower(totalW))}</span>`, 'Casa', 'e-casa-wrap', col, true)}
-        ${_pipe(solarCol, 'left', pct)}
+        ${_node(pylonHtml, `<span class="e-grid-val">${eh(label)}</span>`, 'Rete', 'e-grid-wrap', isAlert ? '#ef4444' : gridCol, false)}
+        ${_pipe(isAlert ? '#ef4444' : gridCol, 'right', pct)}
+        ${_node(houseHtml, `<span class="e-val">${eh(_fmtPower(totalW))}</span>`, 'Casa', 'e-casa-wrap', houseCol, true, 'e-house-node')}
+        ${_pipe(isAlert ? '#ef4444' : solarCol, 'left', pct)}
         ${_node(sunHtml, `<span class="e-solar-val">${_fmtPower(solarW)}</span>`, solarLabel, 'e-solar-wrap', solarCol, false)}
       </div>`;
     } else {
       flowRow = `<div style="display:flex;align-items:center;justify-content:center">
-        ${_node(pylonHtml, `<span class="e-grid-val">${eh(label)}</span>`, 'Rete', 'e-grid-wrap', gridCol, false)}
-        ${_pipe(col, 'right', pct)}
-        ${_node(houseHtml, `<span class="e-val">${eh(label)}</span>`, 'Consumo', 'e-casa-wrap', col, true)}
+        ${_node(pylonHtml, `<span class="e-grid-val">${eh(label)}</span>`, 'Rete', 'e-grid-wrap', isAlert ? '#ef4444' : gridCol, false)}
+        ${_pipe(isAlert ? '#ef4444' : col, 'right', pct)}
+        ${_node(houseHtml, `<span class="e-val">${eh(label)}</span>`, 'Consumo', 'e-casa-wrap', houseCol, true, 'e-house-node')}
       </div>`;
     }
 
+    const noSub = '<span style="font-size:9px;color:rgba(255,255,255,.2)">— vs ieri</span>';
+
     return `<div style="font-family:system-ui,sans-serif;padding:10px 14px 4px">
       <style>
-        @keyframes gePartR{from{left:-10px}to{left:calc(100% + 10px)}}
-        @keyframes gePartL{from{left:calc(100% + 10px)}to{left:-10px}}
+        @keyframes geShimR{from{transform:translateX(-100%)}to{transform:translateX(200%)}}
+        @keyframes geShimL{from{transform:translateX(200%)}to{transform:translateX(-100%)}}
+        @keyframes gePulse{0%,100%{opacity:.55}50%{opacity:1}}
       </style>
 
-      <!-- FLOW -->
-      <div style="padding:10px 0 14px">
-        ${flowRow}
+      <!-- ALERT BANNER -->
+      <div class="e-alert" style="display:${isAlert ? 'flex' : 'none'};align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.35);margin-bottom:10px;font-size:11px;font-weight:700;color:#ef4444">
+        ⚠️ Soglia superata: <span class="e-alert-val">${eh(label)}</span> / ${eh(_fmtPower(alertKw * 1000))}
       </div>
 
-      <!-- STATS -->
+      <!-- FLOW -->
+      <div style="padding:8px 0 12px">${flowRow}</div>
+
+      <!-- STATS: kWh · Costo · Picco -->
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:14px">
-        ${_box('Picco oggi', '—', '⬆️', 'e-peak')}
-        ${_box('Media 24h',  '—', '〰️', 'e-avg')}
-        ${_box('kWh oggi',   '—', '⚡',  'e-kwh')}
+        ${_box('⚡', '—', 'kWh oggi', 'e-kwh', noSub, 'e-kwh-delta')}
+        ${_box('💶', priceOk ? '—' : 'n/d', 'Costo oggi', 'e-cost', noSub, 'e-cost-delta')}
+        ${_box('⬆️', '—', 'Picco oggi', 'e-peak', '<span style="font-size:9px;color:rgba(255,255,255,.2)">〰️ —</span>', 'e-avg-box')}
       </div>
 
       <!-- GRAFICO -->
@@ -299,7 +291,6 @@
 
       const c = loadCfg(cfg);
       const { col, pct, label } = info;
-
       const hasSolar = !!(c.solarEntity && h);
       let solarW = null;
       if (hasSolar) {
@@ -316,50 +307,112 @@
       const sEl = el.querySelector('.e-solar-val');
       if (sEl && solarW !== null) sEl.textContent = _fmtPower(solarW);
 
-      /* colore nodo casa */
-      const cw = el.querySelector('.e-casa-wrap');
-      if (cw) { const v = cw.querySelector('.e-val'); if (v) v.style.color = col; }
+      /* alert */
+      const alertKw = parseFloat(c.alertKw) || 0;
+      const isAlert = alertKw > 0 && info.w >= alertKw * 1000;
+      const houseCol = isAlert ? '#ef4444' : col;
+      const gridCol  = isAlert ? '#ef4444' : '#60a5fa';
 
-      /* velocità particelle — aggiorna solo se categoria cambia */
+      /* banner */
+      const alertEl = el.querySelector('.e-alert');
+      if (alertEl) {
+        alertEl.style.display = isAlert ? 'flex' : 'none';
+        const av = alertEl.querySelector('.e-alert-val');
+        if (av) av.textContent = label;
+      }
+
+      /* colore nodo casa */
+      const cw = el.querySelector('.e-casa-wrap .e-val');
+      if (cw) cw.style.color = houseCol;
+      const hb = el.querySelector('.e-house-node');
+      if (hb) {
+        hb.style.borderColor  = houseCol;
+        hb.style.boxShadow    = isAlert ? '0 0 20px #ef444455' : `0 0 24px ${col}40`;
+        hb.style.animation    = isAlert ? 'gePulse .8s ease-in-out infinite' : '';
+      }
+
+      /* shimmer: aggiorna colore se alert cambia */
+      el.querySelectorAll('.e-pipe-shimmer').forEach(s => {
+        const dir = s.dataset.dir || 'right';
+        const deg = dir === 'right' ? '90deg' : '270deg';
+        const c2  = (dir === 'left' && hasSolar && !isAlert) ? '#facc15' : gridCol;
+        s.style.background = `linear-gradient(${deg},transparent 0%,${c2}55 40%,#ffffff99 50%,${c2}55 60%,transparent 100%)`;
+      });
+
+      /* velocità shimmer */
       const newSpd = _flowSpeed(pct);
       if (Math.abs((el._eFlowSpd || 99) - newSpd) > 0.05) {
         el._eFlowSpd = newSpd;
-        const parts = el.querySelectorAll('.e-part');
-        parts.forEach((p, i) => {
-          p.style.animationDuration = newSpd + 's';
-          p.style.animationDelay   = -(newSpd / 3 * i) + 's';
+        el.querySelectorAll('.e-pipe-shimmer').forEach(s => {
+          s.style.animationDuration = newSpd + 's';
         });
       }
+
     } catch (e) {}
   }
 
-  /* ── carica grafico + stats ── */
-  async function _loadChart(cfg, el) {
+  /* ── carica dati storici: grafico + stats oggi + ieri ── */
+  async function _loadData(cfg, el) {
     const c = loadCfg(cfg);
     if (!c.entity) return;
-    const chartEl = el.querySelector('.e-chart');
-    const peakEl  = el.querySelector('.e-peak');
-    const avgEl   = el.querySelector('.e-avg');
-    const kwhEl   = el.querySelector('.e-kwh');
     try {
-      const pts  = await _fetchHist(c.entity, 24);
+      const pts48 = await _fetchHist(c.entity, 48);
       if (!el.isConnected) return;
-      const maxW = (parseFloat(c.maxKw) || 3) * 1000;
-      const col  = _info(cfg, H()).col;
-      const { peak, avg, kwh } = _stats(pts);
 
-      if (chartEl) chartEl.innerHTML = _chart(pts, maxW, col);
-      if (peakEl)  peakEl.textContent = peak !== null ? _fmtPower(peak) : '—';
-      if (avgEl)   avgEl.textContent  = avg  !== null ? _fmtPower(avg)  : '—';
-      if (kwhEl) {
-        if (c.kwhEntity) {
-          const kv = parseFloat(stateOf(H(), c.kwhEntity));
-          kwhEl.textContent = isNaN(kv) ? '—' : kv.toFixed(2) + ' kWh';
-        } else {
-          kwhEl.textContent = kwh !== null ? '~' + kwh.toFixed(1) + ' kWh' : '—';
-        }
+      const now      = Date.now();
+      const midT     = +(new Date().setHours(0, 0, 0, 0));
+      const midY     = midT - 86400000;
+      const pts24    = pts48.filter(p => p.t >= now - 86400000);
+      const ptsToday = pts48.filter(p => p.t >= midT && p.t <= now);
+      const ptsYest  = pts48.filter(p => p.t >= midY && p.t < midT);
+
+      const stT = _stats(ptsToday);
+      const stY = _stats(ptsYest);
+
+      const maxW  = (parseFloat(c.maxKw) || 3) * 1000;
+      const col   = _info(cfg, H()).col;
+      const price = parseFloat(c.priceKwh) || 0;
+
+      /* grafico 24h */
+      const chartEl = el.querySelector('.e-chart');
+      if (chartEl) chartEl.innerHTML = _chart(pts24, maxW, col);
+
+      /* kWh oggi (sensore diretto o stima) */
+      let kwhT = null;
+      if (c.kwhEntity) {
+        const kv = parseFloat(stateOf(H(), c.kwhEntity));
+        kwhT = isNaN(kv) ? null : kv;
+      } else {
+        kwhT = stT.kwh;
       }
+      const kwhY = stY.kwh;
+
+      /* costo */
+      const costT = kwhT !== null && price > 0 ? kwhT * price : null;
+      const costY = kwhY !== null && price > 0 ? kwhY * price : null;
+
+      /* aggiorna DOM */
+      const kwhEl   = el.querySelector('.e-kwh');
+      const kwhDEl  = el.querySelector('.e-kwh-delta');
+      const costEl  = el.querySelector('.e-cost');
+      const costDEl = el.querySelector('.e-cost-delta');
+      const peakEl  = el.querySelector('.e-peak');
+      const avgBox  = el.querySelector('.e-avg-box');
+
+      if (kwhEl)  kwhEl.textContent  = kwhT !== null ? (c.kwhEntity ? kwhT.toFixed(2) : '~' + kwhT.toFixed(1)) + ' kWh' : '—';
+      if (kwhDEl) kwhDEl.innerHTML   = _deltaHtml(kwhT, kwhY);
+      if (costEl) costEl.textContent = costT !== null ? '€ ' + costT.toFixed(2) : (price > 0 ? '—' : 'n/d');
+      if (costDEl) {
+        if (price > 0) costDEl.innerHTML = _deltaHtml(costT, costY);
+        else costDEl.innerHTML = '<span style="font-size:8px;color:rgba(255,255,255,.2)">Configura €/kWh</span>';
+      }
+      if (peakEl) peakEl.textContent = stT.peak !== null ? _fmtPower(stT.peak) : '—';
+      if (avgBox) avgBox.innerHTML   = stT.avg  !== null
+        ? `<span style="font-size:9px;color:rgba(255,255,255,.38)">〰️ ${_fmtPower(stT.avg)}</span>`
+        : '<span style="font-size:9px;color:rgba(255,255,255,.2)">〰️ —</span>';
+
     } catch (e) {
+      const chartEl = el.querySelector('.e-chart');
       if (chartEl) chartEl.innerHTML = `<div style="height:88px;display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(255,255,255,.2)">Nessun dato storico</div>`;
     }
   }
@@ -369,15 +422,15 @@
     if (el._eMounted) { _live(cfg, rawHass, el); return; }
     el._eMounted = true;
     el.innerHTML = render(cfg, rawHass);
-    _loadChart(cfg, el);
+    _loadData(cfg, el);
     if (el._ePoll) return;
     el._ePoll = setInterval(() => {
       if (!el.isConnected) { clearInterval(el._ePoll); delete el._ePoll; return; }
       _live(cfg, null, el);
     }, 2000);
-    el._eChart = setInterval(() => {
-      if (!el.isConnected) { clearInterval(el._eChart); delete el._eChart; return; }
-      _loadChart(cfg, el);
+    el._eData = setInterval(() => {
+      if (!el.isConnected) { clearInterval(el._eData); delete el._eData; return; }
+      _loadData(cfg, el);
     }, 300000);
   }
 
@@ -446,20 +499,31 @@
         <button id="ecfg-close" style="width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,255,255,.07);color:#fff;cursor:pointer;font-size:14px">✕</button>
       </div>
       <div id="ecfg-body" style="flex:1;overflow-y:auto;scrollbar-width:none;padding:14px 14px 4px">
+
         <div style="${secL}">Nome chip</div>
         <input id="ecfg-label" style="${sinp};margin-bottom:14px" value="${eh(c.label || 'Energia')}" placeholder="Nome chip">
+
         <div style="${secL}">Sensore consumo / importazione rete (W o kW)</div>
-        <input id="ecfg-entity" style="${sinp};margin-bottom:4px" value="${eh(c.entity || '')}" placeholder="🔍 sensor.consumo_potenza…" autocomplete="off">
-        <div style="font-size:9px;color:rgba(255,255,255,.28);margin-bottom:14px">Mostrato come nodo Rete nel flow. Se non hai il solare è anche il consumo casa.</div>
+        <input id="ecfg-entity" style="${sinp};margin-bottom:14px" value="${eh(c.entity || '')}" placeholder="🔍 sensor.consumo_potenza…" autocomplete="off">
+
         <div style="${secL}">Potenza massima contratto (kW)</div>
-        <input id="ecfg-maxkw" type="number" step="0.5" min="0.5" max="200" style="${sinp};margin-bottom:4px" value="${eh(String(c.maxKw || '3'))}" placeholder="es. 4.5">
-        <div style="font-size:9px;color:rgba(255,255,255,.28);margin-bottom:14px">Verde &lt;50% · Giallo 50-75% · Arancio 75-90% · Rosso ≥90%</div>
+        <input id="ecfg-maxkw" type="number" step="0.5" min="0.5" max="200" style="${sinp};margin-bottom:14px" value="${eh(String(c.maxKw || '3'))}" placeholder="es. 4.5">
+
+        <div style="${secL}">Prezzo energia (€/kWh)</div>
+        <input id="ecfg-price" type="number" step="0.001" min="0" max="5" style="${sinp};margin-bottom:4px" value="${eh(String(c.priceKwh || ''))}" placeholder="es. 0.254">
+        <div style="font-size:9px;color:rgba(255,255,255,.28);margin-bottom:14px">Necessario per calcolare il costo giornaliero in €</div>
+
+        <div style="${secL}">Soglia alert (kW) — 0 = disabilitata</div>
+        <input id="ecfg-alert" type="number" step="0.1" min="0" max="200" style="${sinp};margin-bottom:4px" value="${eh(String(c.alertKw || '0'))}" placeholder="es. 3.0">
+        <div style="font-size:9px;color:rgba(255,255,255,.28);margin-bottom:14px">Quando il consumo supera questa soglia il flow diventa rosso e appare un banner</div>
+
         <div style="${secL}">Produzione solare (opzionale)</div>
-        <input id="ecfg-solar" style="${sinp};margin-bottom:4px" value="${eh(c.solarEntity || '')}" placeholder="🔍 sensor.fotovoltaico…" autocomplete="off">
-        <div style="font-size:9px;color:rgba(255,255,255,.28);margin-bottom:14px">Se configurato appare il nodo ☀️ e il consumo casa = rete + solare</div>
-        <div style="${secL}">Energia oggi — sensore kWh diretto (opzionale)</div>
+        <input id="ecfg-solar" style="${sinp};margin-bottom:14px" value="${eh(c.solarEntity || '')}" placeholder="🔍 sensor.fotovoltaico…" autocomplete="off">
+
+        <div style="${secL}">Sensore kWh oggi diretto (opzionale)</div>
         <input id="ecfg-kwh" style="${sinp};margin-bottom:4px" value="${eh(c.kwhEntity || '')}" placeholder="🔍 sensor.energia_oggi…" autocomplete="off">
-        <div style="font-size:9px;color:rgba(255,255,255,.28);margin-bottom:14px">Se configurato mostra il dato reale del contatore; altrimenti stima (~) dall'integrazione della potenza</div>
+        <div style="font-size:9px;color:rgba(255,255,255,.28);margin-bottom:14px">Se configurato usa il dato reale del contatore; altrimenti stima (~) dall'integrazione della potenza</div>
+
         <div style="height:10px"></div>
       </div>
       <div style="display:flex;gap:8px;padding:12px 14px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0">
@@ -474,11 +538,14 @@
     _setupAc(ov.querySelector('#ecfg-entity'), id => { ov.querySelector('#ecfg-entity').value = id; });
     _setupAc(ov.querySelector('#ecfg-solar'),  id => { ov.querySelector('#ecfg-solar').value  = id; });
     _setupAc(ov.querySelector('#ecfg-kwh'),    id => { ov.querySelector('#ecfg-kwh').value    = id; });
+
     ov.querySelector('#ecfg-save').addEventListener('click', () => {
       const newCfg = {
         label:       (ov.querySelector('#ecfg-label')?.value  || 'Energia').trim(),
         entity:      (ov.querySelector('#ecfg-entity')?.value || '').trim(),
-        maxKw:       parseFloat(ov.querySelector('#ecfg-maxkw')?.value) || 3,
+        maxKw:       parseFloat(ov.querySelector('#ecfg-maxkw')?.value)  || 3,
+        priceKwh:    parseFloat(ov.querySelector('#ecfg-price')?.value)  || 0,
+        alertKw:     parseFloat(ov.querySelector('#ecfg-alert')?.value)  || 0,
         solarEntity: (ov.querySelector('#ecfg-solar')?.value  || '').trim(),
         kwhEntity:   (ov.querySelector('#ecfg-kwh')?.value    || '').trim(),
       };
@@ -491,13 +558,13 @@
   /* ════════════════════════════════════════ REGISTRAZIONE ══ */
   const CARD = {
     id: ID, name: 'Gruppo Energia', icon: '⚡', desc: '',
-    version: '2.6', isDistintivo: true,
-    defaultCfg: { label: 'Energia', entity: '', maxKw: 3, solarEntity: '', kwhEntity: '' },
+    version: '2.7', isDistintivo: true,
+    defaultCfg: { label: 'Energia', entity: '', maxKw: 3, priceKwh: 0, alertKw: 0, solarEntity: '', kwhEntity: '' },
     chip, watchEntities, render, mount, update, configure,
   };
   window.FratechCardRegistry = window.FratechCardRegistry || {};
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v2.5'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v2.7'); } catch (e) {}
 })();
