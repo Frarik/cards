@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.36 — 2026-06-27
+
+### fix: GruppoAllarme v1.4 — arm con bypass usa alarmo.arm force:true
+
+- Quando almeno un sensore è escluso, l'arm usa `alarmo.arm` con `mode` + `force: true` invece di `alarm_control_panel.alarm_arm_*` con `bypassed_sensors` — il parametro `bypassed_sensors` sullo standard HA service viene spesso ignorato da Alarmo se "allow bypass" non è abilitato nella sua configurazione; `alarmo.arm force:true` è il metodo affidabile per forzare l'armamento ignorando i sensori aperti selezionati
+- Se nessun sensore è escluso, continua a usare il servizio standard `alarm_control_panel.alarm_arm_*`
+
 ## 1.6.35 — 2026-06-27
 
 ### fix: GruppoAllarme v1.3 — bypass non sparisce + bypassed_sensors inviati correttamente
