@@ -1,12 +1,22 @@
-/* frarik-version: 1.4 */
+/* frarik-version: 1.5 */
 /**
- * GruppoAllarme.js — Distintivo FratechStore v1.4
+ * GruppoAllarme.js — Distintivo FratechStore v1.5
  * Chip stato allarme Alarmo + popup sensori/bypass + overlay triggered automatico
+ *
+ * Fix v1.5:
+ *  - Bypass persistente tra aperture popup (module-level _bypassedState)
+ *  - Chip emoji aggiornata a ogni cambio stato (via chip.value)
+ *  - Sfondo chip bianco per tutti i distintivi (CSS injection)
+ *  - callEx preferisce window.callSvc (firma nota e affidabile)
+ *  - Bypass state azzerata automaticamente quando l'allarme si arma
  */
 (function () {
   'use strict';
 
   const ID = 'gruppo-allarme';
+
+  /* bypass state persistente tra aperture del popup, per alarmEntity */
+  const _bypassedState = {};
 
   const ALARM_DEF = {
     disarmed:            { lbl: 'Disarmato',        col: '#4ade80', ico: 'mdi:lock-open-variant', pulse: false },
@@ -20,6 +30,19 @@
     triggered:           { lbl: '⚠ ALLARME',        col: '#f87171', ico: 'mdi:alarm-light',       pulse: true  },
   };
 
+  /* emoji per stato — usate in chip.value che viene aggiornato live */
+  const STATE_EMO = {
+    disarmed:            '🔓',
+    armed_away:          '🔒',
+    armed_home:          '🏠',
+    armed_night:         '🌙',
+    armed_vacation:      '✈️',
+    armed_custom_bypass: '🛡️',
+    pending:             '⏳',
+    arming:              '⌛',
+    triggered:           '🚨',
+  };
+
   const ALL_MODES = [
     { key: 'armed_away',     lbl: 'Fuori Casa', ico: 'mdi:car-outline',   svc: 'alarm_arm_away'     },
     { key: 'armed_home',     lbl: 'Casa',       ico: 'mdi:home-outline',  svc: 'alarm_arm_home'     },
@@ -30,7 +53,7 @@
   const DC_ICO = {
     door:      { off: 'mdi:door-closed',        on: 'mdi:door-open'            },
     window:    { off: 'mdi:window-closed',       on: 'mdi:window-open'          },
-    opening:   { off: 'mdi:window-closed',       on: 'mdi:window-open'          }, // HA usa 'opening' per finestre
+    opening:   { off: 'mdi:window-closed',       on: 'mdi:window-open'          },
     motion:    { off: 'mdi:motion-sensor-off',   on: 'mdi:motion-sensor'        },
     smoke:     { off: 'mdi:smoke-detector',      on: 'mdi:smoke-detector-alert' },
     vibration: { off: 'mdi:vibrate-off',         on: 'mdi:vibrate'              },
@@ -65,14 +88,18 @@
       return `<span class="mdi mdi-${name.slice(4)}" style="font-size:${sz}px;line-height:1;color:inherit"></span>`;
     return `<span style="font-size:${sz}px;line-height:1">${name || '🔒'}</span>`;
   }
+
+  /* callEx — preferisce window.callSvc (firma nota: domain, svc, entityId, extraData) */
   function callEx(domain, svc, data) {
-    const hh = H();
-    if (hh?.callService) { hh.callService(domain, svc, data); return; }
     if (typeof window.callSvc === 'function') {
       const { entity_id, ...rest } = data;
       window.callSvc(domain, svc, entity_id, rest);
+      return;
     }
+    const hh = H();
+    if (hh?.callService) hh.callService(domain, svc, data);
   }
+
   function alarmDef(state) {
     return ALARM_DEF[state] || { lbl: state || 'Sconosciuto', col: 'rgba(255,255,255,.3)', ico: 'mdi:help-circle', pulse: false };
   }
@@ -83,6 +110,18 @@
     const dc = attrOf(h, entityId, 'device_class') || 'door';
     return (DC_ICO[dc] || DC_DEFAULT)[isOpen ? 'on' : 'off'];
   }
+
+  /* ────────────────────────────────────────────
+     CSS INJECTION — sfondo bianco per tutti i .hbadge
+     (chip.color controlla il testo, non lo sfondo)
+     ──────────────────────────────────────────── */
+  (function injectBadgeStyle() {
+    if (document.getElementById('cc-badge-white-fix')) return;
+    const s = document.createElement('style');
+    s.id = 'cc-badge-white-fix';
+    s.textContent = '.hbadge{background:rgba(255,255,255,.92)!important;border-color:rgba(0,0,0,.1)!important}';
+    (document.head || document.documentElement).appendChild(s);
+  })();
 
   /* ════════════════════════════════════════
      OVERLAY TRIGGERED — si apre automaticamente
@@ -102,7 +141,7 @@
       return;
     }
 
-    if (ovl) return; // già aperto
+    if (ovl) return;
 
     const alarmName = nameOf(h, ae);
     const hasSiren  = !!c.siren;
@@ -143,17 +182,19 @@
 
   /* ════════════════════════════════════════
      CHIP
+     chip.value contiene l'emoji di stato → si aggiorna live
+     chip.icon non restituito → usa l'icona default '🔒' del CARD
      ════════════════════════════════════════ */
   function chip(cfg, rawHass) {
-    const c   = loadCfg(cfg);
-    const h   = liveH(rawHass);
-    const ae  = c.alarmEntity;
+    const c     = loadCfg(cfg);
+    const h     = liveH(rawHass);
+    const ae    = c.alarmEntity;
     const state = ae && h ? stateOf(h, ae) : 'unknown';
     const def   = alarmDef(state);
+    const emo   = STATE_EMO[state] || '🔒';
     return {
-      icon:  mdi(def.ico, 16),
       label: c.label || 'Allarme',
-      value: def.lbl,
+      value: `${emo} ${def.lbl}`,
       color: def.col,
       pulse: def.pulse,
     };
@@ -188,12 +229,11 @@
     const def     = alarmDef(state);
     const col     = def.col;
     const armed   = isArmed(state);
-    const canDisarm = armed && state !== 'triggered';
 
-    const enabledModes  = c.modes || ['armed_away'];
-    const visibleModes  = ALL_MODES.filter(m => enabledModes.includes(m.key));
+    const enabledModes = c.modes || ['armed_away'];
+    const visibleModes = ALL_MODES.filter(m => enabledModes.includes(m.key));
 
-    /* ── sensori ── */
+    /* sensori */
     const sensors    = Array.isArray(c.sensors) ? c.sensors : [];
     const openActive = sensors.filter(s => {
       const ss = h ? stateOf(h, s.entity) : 'unknown';
@@ -224,7 +264,6 @@
         tag = `<span style="font-size:9px;padding:2px 7px;border-radius:4px;background:rgba(74,222,128,.13);color:#4ade80;font-weight:700;flex-shrink:0">OK</span>`;
       }
 
-      // bypass toggle sempre visibile quando non armato
       if (!armed) {
         bypassBtn = isBypassed
           ? `<button data-ca-bypass="${i}" data-entity="${eh(s.entity)}" style="padding:3px 8px;border-radius:6px;border:1px solid rgba(250,204,21,.38);background:rgba(250,204,21,.1);color:#facc15;cursor:pointer;font-size:9px;font-weight:700;white-space:nowrap;outline:none;flex-shrink:0">✕ Includi</button>`
@@ -239,7 +278,7 @@
       </div>`;
     }).join('');
 
-    /* ── bottoni modalità ── */
+    /* bottoni modalità */
     const modeBtns = visibleModes.map(m => {
       const isCur = state === m.key;
       const mCol  = ALARM_DEF[m.key]?.col || '#f97316';
@@ -254,16 +293,16 @@
       <span style="white-space:nowrap;color:inherit">Disarma</span>
     </button>`;
 
-    /* ── warning sensori aperti ── */
+    /* warning sensori aperti */
     const openWarn = (openActive > 0 && !armed) ? `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:9px;background:rgba(250,204,21,.07);border:1px solid rgba(250,204,21,.22);margin-bottom:10px">
       <span style="font-size:14px;flex-shrink:0">⚠️</span>
       <span style="font-size:11px;color:#facc15;font-weight:600">${openActive} sensore${openActive > 1 ? 'i' : ''} aper${openActive > 1 ? 'ti' : 'to'} — escludili per armare lo stesso</span>
     </div>` : '';
 
-    /* ── sirena ── */
+    /* sirena */
     let sirenRow = '';
     if (c.siren) {
-      const ss     = h ? stateOf(h, c.siren) : 'unknown';
+      const ss      = h ? stateOf(h, c.siren) : 'unknown';
       const sirenOn = ss === 'on';
       const sName   = nameOf(h, c.siren);
       sirenRow = `<div style="margin-top:10px">
@@ -283,7 +322,6 @@
         .cc-alm-pulse { animation: ccAlmPulse .85s ease-in-out infinite alternate }
       </style>
 
-      <!-- stato header -->
       <div class="${def.pulse ? 'cc-alm-pulse' : ''}" style="display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:13px;background:${hex2rgba(col,.1)};border:1px solid ${hex2rgba(col,.3)};margin-bottom:11px">
         <span style="font-size:30px;color:${col};flex-shrink:0">${mdi(def.ico, 30)}</span>
         <div style="flex:1;min-width:0">
@@ -291,7 +329,6 @@
         </div>
       </div>
 
-      <!-- azioni -->
       <div style="display:flex;gap:5px;margin-bottom:11px">
         ${modeBtns}
         ${disarmBtn}
@@ -299,7 +336,6 @@
 
       ${openWarn}
 
-      <!-- sensori -->
       ${sensors.length ? `<div style="${secLbl}">Sensori</div><div style="display:flex;flex-direction:column;gap:4px">${sensorRows}</div>` : ''}
 
       ${sirenRow}
@@ -311,7 +347,8 @@
      HANDLERS
      ════════════════════════════════════════ */
   function _mountHandlers(cfg, el) {
-    const c = loadCfg(cfg);
+    const c  = loadCfg(cfg);
+    const ae = c.alarmEntity;
     if (el._caHandler) el.removeEventListener('click', el._caHandler);
 
     function handler(ev) {
@@ -319,7 +356,8 @@
       const bypassBtn = ev.target.closest('[data-ca-bypass]');
       if (bypassBtn) {
         const entityId = bypassBtn.dataset.entity;
-        if (!el._bypassed) el._bypassed = new Set();
+        /* el._bypassed è lo stesso oggetto di _bypassedState[ae] */
+        if (!el._bypassed) el._bypassed = _bypassedState[ae] || (_bypassedState[ae] = new Set());
         if (el._bypassed.has(entityId)) el._bypassed.delete(entityId);
         else el._bypassed.add(entityId);
         el.innerHTML = render(cfg, null, el._bypassed);
@@ -332,21 +370,20 @@
       if (armBtn) {
         const svc    = armBtn.dataset.caArm;
         const code   = c.code ? String(c.code) : undefined;
-        const bypArr = el._bypassed ? [...el._bypassed] : [];
+        const bypSet = el._bypassed instanceof Set ? el._bypassed : new Set();
 
-        if (bypArr.length) {
-          // Usa alarmo.arm con force:true — unico modo affidabile per ignorare
-          // sensori aperti senza dover abilitare il bypass nelle impostazioni Alarmo
+        if (bypSet.size > 0) {
+          /* alarmo.arm con force:true — bypassa i sensori aperti.
+             Richiede "Consenti bypass" abilitato nelle impostazioni Alarmo per ogni sensore. */
           const modeMap = { alarm_arm_away:'away', alarm_arm_home:'home', alarm_arm_night:'night', alarm_arm_vacation:'vacation' };
-          const payload = { entity_id: c.alarmEntity, mode: modeMap[svc] || 'away', force: true };
+          const payload = { entity_id: ae, mode: modeMap[svc] || 'away', force: true, skip_delay: false };
           if (code) payload.code = code;
           callEx('alarmo', 'arm', payload);
         } else {
-          const payload = { entity_id: c.alarmEntity };
+          const payload = { entity_id: ae };
           if (code) payload.code = code;
           callEx('alarm_control_panel', svc, payload);
         }
-        // el._bypassed NON viene pulito: sparisce da solo quando armed=true
         ev.stopPropagation(); return;
       }
 
@@ -354,7 +391,7 @@
       const disarmBtn = ev.target.closest('[data-ca-disarm]');
       if (disarmBtn) {
         const code    = c.code ? String(c.code) : undefined;
-        const payload = { entity_id: c.alarmEntity };
+        const payload = { entity_id: ae };
         if (code) payload.code = code;
         callEx('alarm_control_panel', 'alarm_disarm', payload);
         ev.stopPropagation(); return;
@@ -376,7 +413,17 @@
      MOUNT / UPDATE
      ════════════════════════════════════════ */
   function mount(cfg, rawHass, el) {
-    if (!el._bypassed) el._bypassed = new Set();
+    const c  = loadCfg(cfg);
+    const ae = c.alarmEntity;
+
+    /* collega el._bypassed al bypassedState globale (stessa reference Set) */
+    if (ae) {
+      if (!_bypassedState[ae]) _bypassedState[ae] = new Set();
+      el._bypassed = _bypassedState[ae];
+    } else {
+      el._bypassed = new Set();
+    }
+
     _mountHandlers(cfg, el);
 
     const h0 = liveH(rawHass);
@@ -388,6 +435,10 @@
       try {
         const h = H(); if (!h) return;
         _updateOverlay(cfg, h);
+        /* azzera bypass quando l'allarme diventa armato */
+        if (ae && isArmed(stateOf(h, ae)) && el._bypassed?.size > 0) {
+          el._bypassed.clear();
+        }
         el.innerHTML = render(cfg, h, el._bypassed);
         _mountHandlers(cfg, el);
       } catch (e) {}
@@ -396,6 +447,13 @@
 
   function update(cfg, rawHass, el) {
     try {
+      const c  = loadCfg(cfg);
+      const ae = c.alarmEntity;
+      /* garantisce che el._bypassed sia sempre la reference globale */
+      if (ae && (!el._bypassed || el._bypassed !== _bypassedState[ae])) {
+        if (!_bypassedState[ae]) _bypassedState[ae] = new Set();
+        el._bypassed = _bypassedState[ae];
+      }
       const h = liveH(rawHass);
       _updateOverlay(cfg, h);
       el.innerHTML = render(cfg, rawHass, el._bypassed || new Set());
@@ -519,7 +577,6 @@
       ov.innerHTML = `<div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0f0d1a;border:1px solid rgba(249,115,22,.22);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);color:#fff;${anim}">
         <style>@keyframes cacfgUp{from{transform:translateY(100%)}to{transform:translateY(0)}} #cacfg-body::-webkit-scrollbar{display:none}</style>
 
-        <!-- header -->
         <div style="display:flex;align-items:center;gap:10px;padding:14px 18px 12px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">
           <div style="width:36px;height:36px;border-radius:10px;background:rgba(249,115,22,.13);border:1px solid rgba(249,115,22,.28);display:flex;align-items:center;justify-content:center;font-size:18px">🔒</div>
           <div style="flex:1">
@@ -529,7 +586,6 @@
           <button id="cacfg-close" style="width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,255,255,.07);color:#fff;cursor:pointer;font-size:14px">✕</button>
         </div>
 
-        <!-- body -->
         <div id="cacfg-body" style="flex:1;overflow-y:auto;scrollbar-width:none;padding:14px 14px 4px">
 
           <div style="${secL}">Chip</div>
@@ -554,7 +610,6 @@
           <div style="height:10px"></div>
         </div>
 
-        <!-- footer -->
         <div style="display:flex;gap:8px;padding:12px 14px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0">
           <button id="cacfg-save" style="flex:1;padding:11px;border-radius:11px;border:none;background:#f97316;color:#0a0816;font-weight:800;cursor:pointer;font-size:13px">💾 Salva</button>
           <button id="cacfg-cancel" style="flex:0 0 80px;padding:11px;border-radius:11px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);color:#fff;cursor:pointer;font-size:13px">Annulla</button>
@@ -568,7 +623,6 @@
       if (curSiren !== undefined) { const f = ov.querySelector('#cacfg-siren'); if (f) f.value = curSiren; }
       if (curLabel !== undefined) { const f = ov.querySelector('#cacfg-label'); if (f) f.value = curLabel; }
 
-      /* mode checkboxes */
       ov.querySelectorAll('[data-ca-mode]').forEach(cb => {
         cb.addEventListener('change', () => {
           const k = cb.dataset.caMode;
@@ -577,12 +631,10 @@
         });
       });
 
-      /* sensor delete */
       ov.querySelectorAll('[data-ca-delsensor]').forEach(btn => {
         btn.addEventListener('click', () => { sensors.splice(parseInt(btn.dataset.caDelsensor), 1); attach(); });
       });
 
-      /* autocomplete */
       const alarmInp = ov.querySelector('#cacfg-alarm');
       if (alarmInp) _setupAc(alarmInp, _alarmMatches, id => { alarmInp.value = id; });
 
@@ -598,7 +650,6 @@
       const sirenInp = ov.querySelector('#cacfg-siren');
       if (sirenInp) _setupAc(sirenInp, _sirenMatches, id => { sirenInp.value = id; });
 
-      /* backdrop */
       if (ov._ovClick) ov.removeEventListener('click', ov._ovClick);
       ov._ovClick = ev => { if (ev.target === ov) closeOv(); };
       ov.addEventListener('click', ov._ovClick);
@@ -630,7 +681,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Allarme', icon: '🔒',
     desc: '',
-    version: '1.4', isDistintivo: true,
+    version: '1.5', isDistintivo: true,
     defaultCfg: { label: 'Allarme', alarmEntity: '', code: '', modes: ['armed_away'], sensors: [], siren: '' },
     chip,
     watchEntities,
@@ -644,5 +695,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v1.4'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v1.5'); } catch (e) {}
 })();

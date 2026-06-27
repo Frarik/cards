@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.6.37 — 2026-06-27
+
+### fix: GruppoAllarme v1.5 — bypass persistente, chip emoji, badge bianchi
+
+- **Bypass persistente**: stato "Escludi" ora salvato in `_bypassedState` a livello di modulo, keyed per `alarmEntity` — sopravvive alla chiusura e riapertura del popup; si azzera automaticamente quando l'allarme si arma
+- **Chip icona live**: `chip()` restituisce `value: '🔓 Disarmato'` / `'🔒 Armato · Fuori'` ecc. — l'emoji di stato cambia a ogni aggiornamento via `badge-val.textContent` (FratechStore aggiorna solo value e color, non l'icona MDI)
+- **Badge tutti bianchi**: inietta CSS `#cc-badge-white-fix` a caricamento script → `.hbadge { background: rgba(255,255,255,.92) !important }` — `--bc` controlla il testo colorato, lo sfondo diventa bianco solido per tutti i distintivi
+- **callEx affidabile**: `window.callSvc` ora è prioritario rispetto a `hh.callService`; la firma `(domain, svc, entityId, extraData)` è quella verificata da main.js
+
 ## 1.6.36 — 2026-06-27
 
 ### fix: GruppoAllarme v1.4 — arm con bypass usa alarmo.arm force:true
