@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.41 — 2026-06-27
+
+### fix: cfg distintivi salvata su TUTTI i percorsi di cancellazione
+
+- `_saveJsdCfgBeforeDelete(b)` helper riusabile per tutti e 4 i percorsi di rimozione badge
+- Patch aggiunta a `delBadge` (bmod), `delSectBadge` (section editor ✕), `cutSectBadge` (section editor ✂️) e `_inViewDelBadge` (✕ diretto sulla plancia) — in v1.6.40 solo `delBadge` era patchato, gli altri 3 bypassavano il salvataggio
+
 ## 1.6.40 — 2026-06-27
 
 ### feat: cfg distintivi persistente dopo eliminazione

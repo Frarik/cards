@@ -5532,14 +5532,16 @@ function moveBadge(i,dir){
   [arr[i],arr[j]]=[arr[j],arr[i]];
   renderBadgeList();
 }
-function delBadge(i){
-  const arr=_getBadgeArr();
-  const b=arr[i];
-  /* salva cfg del distintivo prima di cancellarlo, così al re-inserimento è già configurato */
+/* salva cfg JSD prima di rimuovere il badge (comune a tutti i percorsi di cancellazione) */
+function _saveJsdCfgBeforeDelete(b){
   if(b&&b.type==='jsd'&&b.jsCardId&&b.cfg){
     if(!cfg.savedJsdCfgs) cfg.savedJsdCfgs={};
     cfg.savedJsdCfgs[b.jsCardId]=JSON.parse(JSON.stringify(b.cfg));
   }
+}
+function delBadge(i){
+  const arr=_getBadgeArr(); const b=arr[i];
+  _saveJsdCfgBeforeDelete(b);
   arr.splice(i,1); saveCfg(); renderBadgeList();
 }
 
@@ -6227,6 +6229,7 @@ function copySectBadge(i){
 }
 function cutSectBadge(i){
   const arr=_getSectArr(); if(!arr[i]) return;
+  _saveJsdCfgBeforeDelete(arr[i]);
   _badgeClipboard=JSON.parse(JSON.stringify(arr[i]));
   arr.splice(i,1);
   const pb=document.getElementById('sect-paste-btn'); if(pb) pb.style.display='';
@@ -6240,7 +6243,9 @@ function pasteSectBadge(){
   showToast('📋 Distintivo incollato');
 }
 function delSectBadge(i){
-  const arr=_getSectArr(); arr.splice(i,1);
+  const arr=_getSectArr();
+  _saveJsdCfgBeforeDelete(arr[i]);
+  arr.splice(i,1);
   renderSectBadgeList(); saveCfg(); renderBadgesAll();
 }
 
@@ -6305,6 +6310,7 @@ function _inViewCutBadge(i,zone){
 function _inViewDelBadge(i,zone){
   const page=curPage();
   const arr=zone==='header'?(page.headerBadges||(page.headerBadges=[])):(page.footerBadges||(page.footerBadges=[]));
+  _saveJsdCfgBeforeDelete(arr[i]);
   arr.splice(i,1); saveCfg(); renderBadgesAll();
 }
 function _inViewPasteBadge(zone){
