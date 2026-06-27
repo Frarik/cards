@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.6.57 — 2026-06-27
+
+### fix: GruppoEnergia v2.8 — ha-icon tralicio, nodi uguali, shimmer reattivo
+
+- **Tralicio**: usa `ha-icon icon="mdi:transmission-tower"` nativo HA — rendering identico alle icone dell'interfaccia, niente SVG custom
+- **Nodi uguali**: tutti i nodi (tralicio, casa, solare) sono ora 56×56px — stesso border-radius, stessa dimensione; solo il glow del nodo casa è più intenso per indicare il centro del flusso
+- **Shimmer più luminoso**: opacità gradiente aumentata (`88` + picco bianco `ee`), linea base più spessa (4px) e più visibile (`30` di opacity)
+- **Velocità molto più reattiva**: range da 4.5s (consumo minimo) a 0.12s (consumo ≥95% contratto) — 9 livelli progressivi invece di 5
+
 ## 1.6.56 — 2026-06-27
 
 ### feat: GruppoEnergia v2.7 — shimmer, tralicio MDI, costo, confronto ieri, alert

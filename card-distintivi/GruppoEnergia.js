@@ -1,7 +1,7 @@
-/* frarik-version: 2.7 */
+/* frarik-version: 2.8 */
 /**
- * GruppoEnergia.js — Distintivo FratechStore v2.7
- * Flow shimmer · Tralicio MDI · kWh+Costo oggi · vs ieri · Alert soglia
+ * GruppoEnergia.js — Distintivo FratechStore v2.8
+ * Flow shimmer · ha-icon tralicio · nodi uguali · speed reattiva
  */
 (function () {
   'use strict';
@@ -127,38 +127,41 @@
     } catch (e) { return noData; }
   }
 
-  /* ── velocità shimmer (secondi per ciclo) ── */
+  /* ── velocità shimmer — range ampio: consumo basso=lentissimo, alto=velocissimo ── */
   function _flowSpeed(pct) {
-    if (pct >= 90) return 0.30;
-    if (pct >= 75) return 0.50;
-    if (pct >= 50) return 0.80;
-    if (pct >= 20) return 1.30;
-    return 2.20;
+    if (pct >= 95) return 0.12;
+    if (pct >= 85) return 0.20;
+    if (pct >= 70) return 0.35;
+    if (pct >= 55) return 0.55;
+    if (pct >= 40) return 0.85;
+    if (pct >= 25) return 1.30;
+    if (pct >= 12) return 2.00;
+    if (pct >= 4)  return 3.00;
+    return 4.50;
   }
 
-  /* ── tralicio MDI: path ufficiale mdi:transmission-tower ── */
-  function _pylonSvg(col) {
-    return `<svg viewBox="0 0 24 24" width="30" height="30" style="display:block">
-      <path fill="${col}" d="M11.21,3.29C10.93,3.07 10.6,3 10.27,3C9.5,3 8.85,3.5 8.67,4.27L8,7H8.06C7.5,7 7,7.5 7,8.07C7,8.31 7.1,8.55 7.25,8.74L5,21H9L9.14,20H14.86L15,21H19L16.75,8.74C16.9,8.55 17,8.31 17,8.07C17,7.5 16.5,7 15.94,7H16L15.33,4.27C15.15,3.5 14.5,3 13.73,3C13.4,3 13.07,3.07 12.79,3.29L12,4L11.21,3.29M11,6.13L11.5,5.75L12,5.39L12.5,5.75L13,6.13L13.5,8L12,7L10.5,8L11,6.13M10.12,9.16L12,8.39L13.88,9.16L14.25,10L12,9L9.75,10L10.12,9.16M9.36,11.18L12,10.36L14.64,11.18L15,12L12,11L9,12L9.36,11.18M8.61,13.21L12,12.39L15.39,13.21L15.69,14L12,13L8.31,14L8.61,13.21M7.85,15.24L12,14.39L16.15,15.24L16.38,16L12,15L7.62,16L7.85,15.24M7.09,17.26L12,16.39L16.91,17.26L17.08,18L12,17L6.92,18L7.09,17.26Z"/>
-    </svg>`;
+  /* ── tralicio: ha-icon nativo HA (rendering identico all'interfaccia) ── */
+  function _pylonIcon(col) {
+    return `<ha-icon icon="mdi:transmission-tower" style="color:${col};width:32px;height:32px;display:block;--mdc-icon-size:32px"></ha-icon>`;
   }
 
-  /* ── nodo flow ── */
+  /* ── nodo flow — tutti stessa dimensione 56px ── */
   function _node(icoHtml, valHtml, sublabel, valCls, borderCol, isCenter, nodeClass) {
-    const sz = isCenter ? 62 : 52;
-    const rr = Math.round(sz / 4);
-    const glow = isCenter ? `;box-shadow:0 0 24px ${borderCol}40` : '';
+    const sz = 56, rr = 14;
+    const glow = isCenter
+      ? `;box-shadow:0 0 28px ${borderCol}55`
+      : `;box-shadow:0 0 12px ${borderCol}25`;
     const nc = nodeClass ? ` ${nodeClass}` : '';
-    return `<div style="display:flex;flex-direction:column;align-items:center;gap:5px;min-width:${isCenter ? 82 : 70}px">
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:5px;min-width:76px">
       <div class="e-node-box${nc}" style="width:${sz}px;height:${sz}px;border-radius:${rr}px;background:rgba(255,255,255,.05);border:1.5px solid ${borderCol};display:flex;align-items:center;justify-content:center${glow}">
         ${icoHtml}
       </div>
-      <div class="${valCls}" style="font-size:${isCenter ? 15 : 12}px;font-weight:900;color:${borderCol};line-height:1;text-align:center">${valHtml}</div>
+      <div class="${valCls}" style="font-size:13px;font-weight:900;color:${borderCol};line-height:1;text-align:center">${valHtml}</div>
       <div style="font-size:9px;color:rgba(255,255,255,.3);text-align:center;white-space:nowrap">${sublabel}</div>
     </div>`;
   }
 
-  /* ── pipe shimmer continua ── */
+  /* ── pipe shimmer continua e luminosa ── */
   function _pipe(col, dir, pct) {
     const spd  = _flowSpeed(pct);
     const anim = dir === 'right' ? 'geShimR' : 'geShimL';
@@ -167,8 +170,8 @@
     const arrL = `<div style="width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-right:9px solid ${col};flex-shrink:0"></div>`;
     return `<div style="display:flex;align-items:center;gap:3px;padding:0 4px;flex:1;margin-bottom:16px">
       ${dir === 'left' ? arrL : ''}
-      <div class="e-pipe" data-dir="${dir}" style="position:relative;flex:1;height:3px;border-radius:2px;overflow:hidden;background:${col}22">
-        <div class="e-pipe-shimmer" data-col="${col}" data-dir="${dir}" style="position:absolute;inset:0;background:linear-gradient(${deg},transparent 0%,${col}55 40%,#ffffff99 50%,${col}55 60%,transparent 100%);animation:${anim} ${spd}s linear infinite"></div>
+      <div class="e-pipe" data-dir="${dir}" style="position:relative;flex:1;height:4px;border-radius:2px;overflow:hidden;background:${col}30">
+        <div class="e-pipe-shimmer" data-col="${col}" data-dir="${dir}" style="position:absolute;inset:0;background:linear-gradient(${deg},transparent 0%,${col}88 35%,#ffffffee 50%,${col}88 65%,transparent 100%);animation:${anim} ${spd}s linear infinite"></div>
       </div>
       ${dir === 'right' ? arrR : ''}
     </div>`;
@@ -228,7 +231,7 @@
     /* nodi */
     const gridCol  = '#60a5fa';
     const solarCol = '#facc15';
-    const pylonHtml = _pylonSvg(isAlert ? '#ef4444' : gridCol);
+    const pylonHtml = _pylonIcon(isAlert ? '#ef4444' : gridCol);
     const houseHtml = `<span style="font-size:${hasSolar ? 26 : 28}px">🏠</span>`;
     const sunHtml   = `<span style="font-size:26px">☀️</span>`;
 
@@ -558,7 +561,7 @@
   /* ════════════════════════════════════════ REGISTRAZIONE ══ */
   const CARD = {
     id: ID, name: 'Gruppo Energia', icon: '⚡', desc: '',
-    version: '2.7', isDistintivo: true,
+    version: '2.8', isDistintivo: true,
     defaultCfg: { label: 'Energia', entity: '', maxKw: 3, priceKwh: 0, alertKw: 0, solarEntity: '', kwhEntity: '' },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -566,5 +569,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v2.7'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v2.8'); } catch (e) {}
 })();
