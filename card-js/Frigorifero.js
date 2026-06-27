@@ -1,4 +1,4 @@
-/* frarik-version: 1.3 */
+/* frarik-version: 1.4 */
 (function () {
   'use strict';
 
@@ -43,20 +43,37 @@
     return r;
   }
 
-  /* ── RING ── */
-  function ringHTML(key, pct, col, label, sz) {
-    const s = sz || 72, r = +(s * .36).toFixed(1), cx = s / 2, cy = s / 2;
-    const circ = +(2 * Math.PI * r).toFixed(2);
-    const p = Math.max(0, Math.min(100, pct || 0));
-    const dash = +((p / 100) * circ).toFixed(2);
-    return '<div style="display:flex;flex-direction:column;align-items:center;gap:2px">'
-      + '<svg width="' + s + '" height="' + s + '" viewBox="0 0 ' + s + ' ' + s + '" style="overflow:visible">'
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="6"/>'
-      + '<circle data-arc="' + key + '" cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + col + '" stroke-width="6" stroke-dasharray="' + dash + ' ' + circ + '" stroke-linecap="round" transform="rotate(-90 ' + cx + ' ' + cy + ')" style="transition:stroke-dasharray .9s ease-in-out;filter:drop-shadow(0 0 7px ' + col + '99)"/>'
-      + '<text data-txt="' + key + '" x="' + cx + '" y="' + (cy + 1) + '" text-anchor="middle" dominant-baseline="middle" fill="' + col + '" font-size="' + (s * .185).toFixed(0) + 'px" font-weight="800" font-family="system-ui,sans-serif">' + (pct == null ? '—' : Math.round(pct) + '%') + '</text>'
-      + '</svg>'
-      + '<div style="font-size:9px;font-weight:700;color:#fff;letter-spacing:.06em;text-transform:uppercase">' + label + '</div>'
-      + '</div>';
+  /* ── FRIDGE SVG ── */
+  function _fridgeSVG(running) {
+    const c  = running ? '#38bdf8' : '#64748b';
+    const cf = running ? 'rgba(56,189,248,.12)' : 'rgba(100,116,139,.07)';
+    const glow = running ? ';filter:drop-shadow(0 0 12px rgba(56,189,248,.4))' : '';
+    const css = running
+      ? '@keyframes fA{0%{opacity:0;transform:translateY(0)}45%{opacity:.9}100%{opacity:0;transform:translateY(18px)}}@keyframes fB{0%{opacity:0;transform:translateY(0)}45%{opacity:.7}100%{opacity:0;transform:translateY(14px)}}@keyframes fG{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.1)}}.fa{animation:fA 2.4s ease-in-out infinite}.fb{animation:fB 2s ease-in-out infinite .8s}.fc2{animation:fA 2.8s ease-in-out infinite 1.5s}.fg{animation:fG 1.8s ease-in-out infinite}'
+      : '';
+    const snowMain = running
+      ? '<text class="fg" x="32" y="24" font-size="14" fill="' + c + '" text-anchor="middle">❄</text>'
+      : '<text x="32" y="24" font-size="11" fill="' + c + '" text-anchor="middle" opacity=".22">❄</text>';
+    const snowFall = running
+      ? '<g class="fa"><text x="15" y="65" font-size="10" fill="' + c + '" text-anchor="middle" opacity=".85">❄</text></g>'
+        + '<g class="fb"><text x="32" y="58" font-size="8" fill="' + c + '" text-anchor="middle" opacity=".7">❄</text></g>'
+        + '<g class="fc2"><text x="49" y="68" font-size="9" fill="' + c + '" text-anchor="middle" opacity=".8">❄</text></g>'
+      : '';
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 108" width="64" height="108" style="display:block;overflow:visible' + glow + '"><defs><style>' + css + '</style></defs>'
+      + (running ? '<rect x="0" y="0" width="64" height="108" rx="11" fill="rgba(56,189,248,.04)" stroke="rgba(56,189,248,.15)" stroke-width="1"/>' : '')
+      + '<rect x="3" y="3" width="58" height="102" rx="9" fill="' + cf + '" stroke="' + c + '" stroke-width="2"/>'
+      + '<rect x="3" y="3" width="58" height="34" rx="8" fill="' + (running ? 'rgba(56,189,248,.1)' : 'rgba(100,116,139,.05)') + '" stroke="' + c + '" stroke-width="1.5"/>'
+      + '<rect x="3" y="35" width="58" height="5" fill="' + c + '" opacity=".1"/>'
+      + '<line x1="3" y1="37.5" x2="61" y2="37.5" stroke="' + c + '" stroke-width="2"/>'
+      + '<rect x="49" y="11" width="7" height="14" rx="4" fill="' + c + '" opacity=".85"/>'
+      + '<rect x="49" y="52" width="7" height="22" rx="4" fill="' + c + '" opacity=".85"/>'
+      + '<line x1="9" y1="69" x2="55" y2="69" stroke="' + c + '" stroke-width=".8" opacity=".15"/>'
+      + '<line x1="9" y1="83" x2="55" y2="83" stroke="' + c + '" stroke-width=".8" opacity=".15"/>'
+      + '<rect x="9" y="89" width="46" height="11" rx="3" fill="' + c + '" opacity=".07" stroke="' + c + '" stroke-width=".8"/>'
+      + snowMain + snowFall
+      + '<rect x="10" y="103" width="12" height="5" rx="3" fill="' + c + '" opacity=".28"/>'
+      + '<rect x="42" y="103" width="12" height="5" rx="3" fill="' + c + '" opacity=".28"/>'
+      + '</svg>';
   }
 
   /* ── RENDER ── */
@@ -64,143 +81,101 @@
     const h = H(), c = cfgFor(card);
     const rid = 'frc' + (card.id || Math.random().toString(36).slice(2, 8));
 
-    const pwV    = num(S(h, c.pk_power));
+    const pwV     = num(S(h, c.pk_power));
     const running = isOn(h, c.pk_running);
-    const swOn   = isOn(h, c.pk_switch);
-    const soglia = num(S(h, c.pk_soglia)) || 30;
-
-    const kwOggi  = S(h, c.pk_kwh_oggi);
-    const kwMese  = S(h, c.pk_kwh_mese);
-    const kwAnno  = S(h, c.pk_kwh_anno);
-    const cicOggi = S(h, c.pk_cicli_oggi);
-    const cicMese = S(h, c.pk_cicli_mese);
-    const cicAnno = S(h, c.pk_cicli_anno);
-    const cicTot  = S(h, c.pk_cicli_tot);
-
     const ton     = c.pk_time_on;
-    const timeOggi   = Attr(h, ton, 'Oggi')          || '—';
-    const timeIeri   = Attr(h, ton, 'Ieri')          || '—';
-    const timeMese   = Attr(h, ton, 'Mese')          || '—';
-    const tempoC     = Attr(h, ton, 'tempo_ciclo_frigo') || '—';
+
+    const terminato  = Attr(h, ton, 'terminato')           || '—';
+    const tempoC     = Attr(h, ton, 'tempo_ciclo_frigo')   || '—';
     const consumoC   = Attr(h, ton, 'consumo_ciclo_frigo') || '—';
     const costoC     = Attr(h, ton, 'costo_ciclo_frigo');
+    const kwOggi     = S(h, c.pk_kwh_oggi);
+    const cicOggi    = S(h, c.pk_cicli_oggi);
+    const timeOggi   = Attr(h, ton, 'Oggi')                || '—';
     const costoOggi  = Attr(h, ton, 'costo_oggi_frigo');
-    const costoMese  = Attr(h, ton, 'costo_mese_frigo');
-    const costoAnno  = Attr(h, ton, 'costo_anno_frigo');
-    const costoIeri  = Attr(h, ton, 'costo_ieri_frigo');
-    const costoMeseP = Attr(h, ton, 'costo_mese_prec_frigo');
-    const terminato  = Attr(h, ton, 'terminato') || '—';
 
-    const pct = soglia > 0 ? Math.min(100, ((pwV || 0) / soglia) * 100) : 0;
-    const col = running ? '#38bdf8' : '#64748b';
+    const pw     = pwV || 0;
+    const col    = running ? '#38bdf8' : '#64748b';
     const statusLabel = running ? 'COMPRESSORE ON' : 'STANDBY';
-    const statusCol   = running ? '#38bdf8' : '#64748b';
+    const soglia = num(S(h, c.pk_soglia)) || 300;
+    const barPct = Math.min(100, (pw / soglia) * 100);
+    const barCol = pw < 50 ? '#64748b' : pw <= 150 ? '#38bdf8' : pw <= 250 ? '#22c55e' : pw <= 400 ? '#f97316' : '#ef4444';
 
-    function statBox(val, label, col2) {
-      return '<div class="fc-stat-box"><div class="fc-stat-n" style="color:' + (col2 || '#fff') + '">' + val + '</div><div class="fc-stat-l">' + label + '</div></div>';
-    }
-    function row(label, val, col2) {
-      return '<div class="fc-row"><span class="fc-row-l">' + label + '</span><span class="fc-row-v" style="color:' + (col2 || '#fff') + '">' + val + '</span></div>';
-    }
-    function secHdr(label) {
-      return '<div class="fc-sec-hdr"><div class="fc-sec-ln"></div><span class="fc-sec-lb">' + label + '</span><div class="fc-sec-ln"></div></div>';
+    function ir(icon, lbl, val, vc) {
+      return '<div class="fc-ir">'
+        + '<div class="fc-ir-h"><span class="fc-ir-ic">' + icon + '</span><span class="fc-ir-lb">' + lbl + '</span></div>'
+        + '<div class="fc-ir-v" style="color:' + (vc || '#e2e8f0') + '">' + val + '</div>'
+        + '</div>';
     }
 
     const css = '<style>'
-      + '#' + rid + '{position:relative;width:100%;height:100%;min-height:280px;font-family:system-ui,sans-serif;display:block}'
+      + '#' + rid + '{position:relative;width:100%;height:100%;min-height:260px;font-family:system-ui,sans-serif;display:block}'
       + '#' + rid + ' .fc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
-      + '#' + rid + ' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:140px;background:radial-gradient(ellipse at 30% 0%,rgba(56,189,248,.06) 0%,transparent 70%);pointer-events:none}'
-      + '#' + rid + ' .fc-hdr{display:flex;align-items:center;gap:9px;padding:12px 15px 10px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
-      + '#' + rid + ' .fc-hdr-iw{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2)}'
-      + '#' + rid + ' .fc-hdr-tit{flex:1;font-size:14px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
-      + '#' + rid + ' .fc-hdr-pill{font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;white-space:nowrap}'
+      + '#' + rid + ' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:180px;background:radial-gradient(ellipse at 25% 0%,rgba(56,189,248,.07) 0%,transparent 65%);pointer-events:none}'
+      + '#' + rid + ' .fc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
+      + '#' + rid + ' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2)}'
+      + '#' + rid + ' .fc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+      + '#' + rid + ' .fc-hdr-pill{font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;white-space:nowrap;display:flex;align-items:center;gap:4px}'
+      + '#' + rid + ' .fc-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:' + col + (running ? ';box-shadow:0 0 5px #38bdf8;animation:fcPulse 1.5s ease-in-out infinite' : '') + '}'
       + '#' + rid + ' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
       + '#' + rid + ' .fc-scroll::-webkit-scrollbar{display:none}'
-      + '#' + rid + ' .fc-hero{display:flex;align-items:center;gap:14px;padding:13px 15px 10px}'
-      + '#' + rid + ' .fc-hero-info{flex:1;display:flex;flex-direction:column;gap:4px}'
-      + '#' + rid + ' .fc-hero-pw{font-size:38px;font-weight:900;line-height:1;letter-spacing:-2px}'
-      + '#' + rid + ' .fc-hero-lbl{font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.7px}'
-      + '#' + rid + ' .fc-hero-status{display:inline-flex;align-items:center;gap:5px;margin-top:2px}'
-      + '#' + rid + ' .fc-dot{width:7px;height:7px;border-radius:50%}'
-      + '#' + rid + ' .fc-dot.on{background:#38bdf8;box-shadow:0 0 6px #38bdf8}'
-      + '#' + rid + ' .fc-dot.off{background:#64748b}'
-      + '#' + rid + ' .fc-sec{padding:0 15px 10px}'
-      + '#' + rid + ' .fc-sec-hdr{display:flex;align-items:center;gap:7px;margin-bottom:8px}'
-      + '#' + rid + ' .fc-sec-ln{flex:1;height:1px;background:rgba(255,255,255,.05)}'
-      + '#' + rid + ' .fc-sec-lb{font-size:9px;font-weight:800;color:rgba(255,255,255,.22);text-transform:uppercase;letter-spacing:1px;white-space:nowrap}'
-      + '#' + rid + ' .fc-stats{display:flex;margin:0 15px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden}'
-      + '#' + rid + ' .fc-stat-box{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:9px 4px;gap:2px;cursor:pointer}'
-      + '#' + rid + ' .fc-stat-box:hover{background:rgba(255,255,255,.03)}'
-      + '#' + rid + ' .fc-stat-sep{width:1px;background:rgba(255,255,255,.06);flex-shrink:0}'
-      + '#' + rid + ' .fc-stat-n{font-size:13px;font-weight:900}'
-      + '#' + rid + ' .fc-stat-l{font-size:8px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;text-align:center}'
-      + '#' + rid + ' .fc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}'
-      + '#' + rid + ' .fc-cell{padding:8px 10px;border-radius:10px;background:rgba(56,189,248,.05);border:1px solid rgba(56,189,248,.12)}'
-      + '#' + rid + ' .fc-cell-lbl{font-size:8px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}'
-      + '#' + rid + ' .fc-cell-val{font-size:13px;font-weight:900;color:#38bdf8}'
-      + '#' + rid + ' .fc-ciclo{padding:10px 12px;border-radius:12px;background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.2);display:flex;flex-direction:column;gap:6px}'
-      + '#' + rid + ' .fc-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04)}'
-      + '#' + rid + ' .fc-row:last-child{border-bottom:none}'
-      + '#' + rid + ' .fc-row-l{font-size:11px;color:rgba(255,255,255,.55)}'
-      + '#' + rid + ' .fc-row-v{font-size:12px;font-weight:800}'
+      + '#' + rid + ' .fc-hero{display:flex;align-items:center;gap:0;padding:12px 14px 8px}'
+      + '#' + rid + ' .fc-hero-img{flex-shrink:0;padding-right:12px;display:flex;align-items:center;cursor:pointer}'
+      + '#' + rid + ' .fc-hero-rows{flex:1;display:flex;flex-direction:column;gap:0}'
+      + '#' + rid + ' .fc-ir{padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04)}'
+      + '#' + rid + ' .fc-ir:last-child{border-bottom:none}'
+      + '#' + rid + ' .fc-ir-h{display:flex;align-items:center;gap:4px;margin-bottom:1px}'
+      + '#' + rid + ' .fc-ir-ic{font-size:9px;opacity:.45}'
+      + '#' + rid + ' .fc-ir-lb{font-size:8px;font-weight:700;color:rgba(255,255,255,.32);text-transform:uppercase;letter-spacing:.06em}'
+      + '#' + rid + ' .fc-ir-v{font-size:12px;font-weight:800;padding-left:2px}'
+      + '#' + rid + ' .fc-pbar{padding:0 14px 10px}'
+      + '#' + rid + ' .fc-pbar-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}'
+      + '#' + rid + ' .fc-pbar-lbl{font-size:8px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.06em}'
+      + '#' + rid + ' .fc-pbar-v{font-size:13px;font-weight:900;color:' + barCol + ';transition:color .4s}'
+      + '#' + rid + ' .fc-pbar-bg{height:7px;border-radius:4px;background:rgba(255,255,255,.07);overflow:hidden}'
+      + '#' + rid + ' .fc-pbar-fill{height:100%;border-radius:4px;transition:width .6s ease,background .4s ease}'
+      + '#' + rid + ' .fc-stats{display:flex;margin:0 14px 8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;overflow:hidden;cursor:pointer}'
+      + '#' + rid + ' .fc-stats:hover{background:rgba(255,255,255,.05)}'
+      + '#' + rid + ' .fc-sb{flex:1;display:flex;flex-direction:column;align-items:center;padding:7px 3px;gap:2px}'
+      + '#' + rid + ' .fc-sb-sep{width:1px;background:rgba(255,255,255,.07);flex-shrink:0}'
+      + '#' + rid + ' .fc-sb-n{font-size:11px;font-weight:900;color:' + col + '}'
+      + '#' + rid + ' .fc-sb-l{font-size:7px;font-weight:700;color:rgba(255,255,255,.28);text-transform:uppercase;letter-spacing:.4px;text-align:center}'
+      + '#' + rid + ' .fc-btns{display:flex;gap:6px;padding:0 14px 12px}'
+      + '#' + rid + ' .fc-btn{flex:1;padding:7px 4px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);font-size:9px;font-weight:700;color:rgba(255,255,255,.5);text-align:center;cursor:pointer;transition:all .15s}'
+      + '#' + rid + ' .fc-btn:hover{background:rgba(56,189,248,.1);border-color:rgba(56,189,248,.22);color:#38bdf8}'
       + '#' + rid + ' [data-sya]{cursor:pointer}'
-      + '#' + rid + ' [data-sya]:hover{filter:brightness(1.1)}'
-      + (running ? '@keyframes fcPulse{0%,100%{opacity:.7}50%{opacity:1}}' : '')
+      + (running ? '@keyframes fcPulse{0%,100%{opacity:.6}50%{opacity:1}}' : '')
       + '</style>';
 
-    /* HERO */
     const heroHtml = '<div class="fc-hero">'
-      + '<div>' + ringHTML('pct', pct, col, running ? 'CICLO' : 'STAND', 76) + '</div>'
-      + '<div class="fc-hero-info">'
-      + '<div class="fc-hero-pw" style="color:' + col + '">' + (pwV == null ? '—' : pwV.toFixed(0) + ' W') + '</div>'
-      + '<div class="fc-hero-lbl">Potenza istantanea</div>'
-      + '<div class="fc-hero-status"><div class="fc-dot ' + (running ? 'on' : 'off') + '" ' + (running ? 'style="animation:fcPulse 1.5s ease-in-out infinite"' : '') + '></div>'
-      + '<span style="font-size:10px;font-weight:800;color:' + statusCol + '">' + statusLabel + '</span></div>'
+      + '<div class="fc-hero-img" data-sya="popup-cicli">' + _fridgeSVG(running) + '</div>'
+      + '<div class="fc-hero-rows">'
+      + ir('⚡', running ? 'Compressore' : 'Ultimo avvio', terminato, running ? '#38bdf8' : 'rgba(255,255,255,.4)')
+      + ir('⏱', running ? 'Durata ciclo' : 'Durata ultimo', tempoC, '#7dd3fc')
+      + ir('🔌', running ? 'Consumo ON' : 'Consumo ultimo', consumoC, '#bae6fd')
+      + ir('💶', running ? 'Costo attuale' : 'Costo ultimo', costoC != null ? costoC + ' €' : '—', '#e0f2fe')
       + '</div>'
       + '</div>';
 
-    /* STATS BAR */
+    const barHtml = '<div class="fc-pbar">'
+      + '<div class="fc-pbar-hdr"><span class="fc-pbar-lbl">Consumo Istantaneo</span><span class="fc-pbar-v">' + (pw > 0 ? pw.toFixed(0) + ' W' : '— W') + '</span></div>'
+      + '<div class="fc-pbar-bg"><div class="fc-pbar-fill" style="width:' + barPct + '%;background:' + barCol + ';box-shadow:0 0 7px ' + barCol + '55"></div></div>'
+      + '</div>';
+
     const statsHtml = '<div class="fc-stats" data-sya="popup-cicli">'
-      + statBox(cicOggi || '—', 'Cicli oggi', '#38bdf8')
-      + '<div class="fc-stat-sep"></div>'
-      + statBox(timeOggi, 'Tempo oggi', '#7dd3fc')
-      + '<div class="fc-stat-sep"></div>'
-      + statBox(fmtKwhShort(kwOggi), 'kWh oggi', '#bae6fd')
-      + '<div class="fc-stat-sep"></div>'
-      + statBox(fmtEur(costoOggi), '€ oggi', '#e0f2fe')
+      + '<div class="fc-sb"><div class="fc-sb-n">' + (cicOggi || '—') + '</div><div class="fc-sb-l">Cicli oggi</div></div>'
+      + '<div class="fc-sb-sep"></div>'
+      + '<div class="fc-sb"><div class="fc-sb-n">' + timeOggi + '</div><div class="fc-sb-l">Tempo oggi</div></div>'
+      + '<div class="fc-sb-sep"></div>'
+      + '<div class="fc-sb"><div class="fc-sb-n" style="font-size:9px">' + fmtKwhShort(kwOggi) + '</div><div class="fc-sb-l">kWh oggi</div></div>'
+      + '<div class="fc-sb-sep"></div>'
+      + '<div class="fc-sb"><div class="fc-sb-n" style="font-size:9px">' + fmtEur(costoOggi) + '</div><div class="fc-sb-l">€ oggi</div></div>'
       + '</div>';
 
-    /* CICLO CORRENTE / ULTIMO CICLO */
-    const cicloHtml = '<div class="fc-sec">'
-      + secHdr(running ? '❄ Ciclo in corso' : '⏱ Ultimo ciclo')
-      + '<div class="fc-ciclo">'
-      + row('Durata', tempoC, '#38bdf8')
-      + row('Consumo', consumoC, '#7dd3fc')
-      + row(running ? 'Costo corrente' : 'Costo ciclo', costoC != null ? costoC + ' €' : '—', '#bae6fd')
-      + (running ? '' : row('Terminato', terminato, 'rgba(255,255,255,.4)'))
-      + '</div>'
-      + '</div>';
-
-    /* ENERGIA GRID */
-    const energiaHtml = '<div class="fc-sec" data-sya="popup-energia">'
-      + secHdr('⚡ Energia ›')
-      + '<div class="fc-grid">'
-      + '<div class="fc-cell"><div class="fc-cell-lbl">kWh oggi</div><div class="fc-cell-val">' + fmtKwhShort(kwOggi) + '</div></div>'
-      + '<div class="fc-cell"><div class="fc-cell-lbl">kWh ieri</div><div class="fc-cell-val" style="color:#7dd3fc">' + fmtKwhShort(Attr(h, c.pk_kwh_oggi, 'last_period')) + '</div></div>'
-      + '<div class="fc-cell"><div class="fc-cell-lbl">kWh mese</div><div class="fc-cell-val">' + fmtKwhShort(kwMese) + '</div></div>'
-      + '<div class="fc-cell"><div class="fc-cell-lbl">kWh anno</div><div class="fc-cell-val">' + fmtKwhShort(kwAnno) + '</div></div>'
-      + '</div>'
-      + '</div>';
-
-    /* COSTI GRID */
-    const costiHtml = '<div class="fc-sec" data-sya="popup-energia">'
-      + secHdr('💶 Costi ›')
-      + '<div class="fc-grid">'
-      + '<div class="fc-cell"><div class="fc-cell-lbl">€ oggi</div><div class="fc-cell-val">' + fmtEur(costoOggi) + '</div></div>'
-      + '<div class="fc-cell"><div class="fc-cell-lbl">€ ieri</div><div class="fc-cell-val" style="color:#7dd3fc">' + fmtEur(costoIeri) + '</div></div>'
-      + '<div class="fc-cell"><div class="fc-cell-lbl">€ mese</div><div class="fc-cell-val">' + fmtEur(costoMese) + '</div></div>'
-      + '<div class="fc-cell"><div class="fc-cell-lbl">€ mese prec.</div><div class="fc-cell-val" style="color:#7dd3fc">' + fmtEur(costoMeseP) + '</div></div>'
-      + '</div>'
+    const btnsHtml = '<div class="fc-btns">'
+      + '<div class="fc-btn" data-sya="popup-cicli">📅 Ultimi 7gg</div>'
+      + '<div class="fc-btn" data-sya="popup-energia">📊 Statistiche</div>'
+      + '<div class="fc-btn" data-sya="popup-impostazioni">⚙ Impostazioni</div>'
       + '</div>';
 
     return css
@@ -209,16 +184,16 @@
       + '<div class="fc-hdr">'
       + '<div class="fc-hdr-iw">🧊</div>'
       + '<div class="fc-hdr-tit">' + (c.name || 'Frigorifero') + '</div>'
-      + '<div class="fc-hdr-pill" style="background:' + (running ? 'rgba(56,189,248,.12)' : 'rgba(255,255,255,.05)') + ';border:1px solid ' + (running ? 'rgba(56,189,248,.3)' : 'rgba(255,255,255,.1)') + ';color:' + statusCol + '">'
+      + '<div class="fc-hdr-pill" style="background:' + (running ? 'rgba(56,189,248,.1)' : 'rgba(255,255,255,.05)') + ';border:1px solid ' + (running ? 'rgba(56,189,248,.28)' : 'rgba(255,255,255,.08)') + ';color:' + col + '">'
+      + '<div class="fc-dot"></div>'
       + statusLabel
       + '</div>'
       + '</div>'
       + '<div class="fc-scroll">'
       + heroHtml
+      + barHtml
       + statsHtml
-      + cicloHtml
-      + energiaHtml
-      + costiHtml
+      + btnsHtml
       + '</div>'
       + '</div>'
       + '</div>';
@@ -422,6 +397,81 @@
     });
   }
 
+  /* ── IMPOSTAZIONI HA POPUP ── */
+  function openImpostazioniHAPopup(c) {
+    const h = H();
+    function bs(e) { return !!(h && h.states && h.states[e] && h.states[e].state === 'on'); }
+    function ss(e) { const st = h && h.states && h.states[e]; return st ? st.state : '—'; }
+    function ns(e) { return num(S(h, e)); }
+
+    const rows = [];
+    function dSec(lbl) {
+      rows.push('<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding:12px 0 6px;border-bottom:1px solid rgba(56,189,248,.15)">' + lbl + '</div>');
+    }
+    function dRow(lbl, val, vc) {
+      rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
+        + '<span style="font-size:12px;color:rgba(255,255,255,.55)">' + lbl + '</span>'
+        + '<span style="font-size:12px;font-weight:800;color:' + (vc || '#fff') + '">' + val + '</span>'
+        + '</div>');
+    }
+    function dToggle(entity, lbl) {
+      const on = bs(entity);
+      rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
+        + '<span style="font-size:12px;color:rgba(255,255,255,.55)">' + lbl + '</span>'
+        + '<div class="fi-sw ' + (on ? 'on' : 'off') + '" data-entity="' + entity + '"><div class="fi-knob"></div></div>'
+        + '</div>');
+    }
+
+    dSec('🔔 Notifiche');
+    dToggle('input_boolean.frigo_notify_push',   '📱 Push');
+    dToggle('input_boolean.frigo_notify_google', '🔊 Google');
+    dToggle('input_boolean.frigo_notify_alexa',  '🗣 Alexa');
+    const t1 = ss('input_datetime.frigo_notifiche_inizio');
+    const t2 = ss('input_datetime.frigo_notifiche_fine');
+    dRow('Fascia oraria', (t1 !== '—' ? t1.substring(0, 5) : '?') + ' → ' + (t2 !== '—' ? t2.substring(0, 5) : '?'));
+
+    dSec('🔌 Elettrodomestico');
+    dToggle('input_boolean.frigo_switch', 'Switch presa');
+    const sg = ns('input_number.frigo_soglia_w');
+    dRow('Soglia lavoro', sg != null ? sg + ' W' : '—', '#38bdf8');
+    const dOff = ns('input_number.frigo_tempo_innesco_m');
+    dRow('Delay OFF', dOff != null ? dOff + ' min' : '—');
+    const dOn = ns('input_number.frigo_avvio_ritardato_s');
+    dRow('Delay ON', dOn != null ? dOn + ' s' : '—');
+
+    dSec('⏰ Spegnimento Auto');
+    dToggle('automation.frigo_off_automatico', 'Auto OFF');
+    const offT = ss('input_datetime.frigo_off');
+    dRow('Orario', offT !== '—' ? offT.substring(0, 5) : '—');
+
+    dSec('📝 Personalizzazione');
+    dRow('Nome', ss('input_text.frigo_nome'));
+    const ce = ns('input_number.costo_energia');
+    dRow('Costo energia', ce != null ? ce + ' €/kWh' : '—', '#fbbf24');
+    const dr = ss('input_text.frigo_data_reset');
+    dRow('Ultimo reset', dr, 'rgba(255,255,255,.4)');
+
+    const swCss = '<style>.fi-sw{width:42px;height:24px;border-radius:12px;cursor:pointer;position:relative;flex-shrink:0;transition:background .25s}.fi-sw.on{background:#38bdf8}.fi-sw.off{background:rgba(255,255,255,.1)}.fi-knob{position:absolute;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .25s;box-shadow:0 1px 3px rgba(0,0,0,.35)}.fi-sw.on .fi-knob{left:21px}.fi-sw.off .fi-knob{left:3px}</style>';
+    const resetBtn = '<button id="fi-reset" style="width:100%;margin-top:14px;padding:11px;border-radius:11px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);color:#f87171;font-size:12px;font-weight:700;cursor:pointer">🔄 Reset Contatori</button>';
+    const closeId = 'fi-cl-' + Math.random().toString(36).slice(2, 6);
+    const ov = mkOv(popShell('⚙', '100,116,139', 'Impostazioni', c.name || 'Frigorifero', closeId, swCss + rows.join('') + resetBtn), closeId);
+
+    ov.querySelectorAll('.fi-sw').forEach(function(sw) {
+      sw.addEventListener('click', function() {
+        const entity = sw.dataset.entity; if (!entity) return;
+        const domain = entity.split('.')[0];
+        callSvc(domain, 'toggle', {entity_id: entity});
+        sw.classList.toggle('on'); sw.classList.toggle('off');
+      });
+    });
+    const rb = ov.querySelector('#fi-reset');
+    if (rb) rb.addEventListener('click', function() {
+      callSvc('script', 'turn_on', {entity_id: 'script.frigo_reset_sensori'});
+      rb.textContent = '✅ Reset avviato!'; rb.style.color = '#4ade80';
+      setTimeout(function() { try { ov._close(); } catch(e) {} }, 1500);
+    });
+  }
+
   /* ── UPDATE / MOUNT ── */
   function update(card, hass, el) {
     const h = H(), c = cfgFor(card);
@@ -438,8 +488,9 @@
     el.addEventListener('click', function (e) {
       const sya = e.target.closest('[data-sya]'); if (!sya) return;
       const a = sya.dataset.sya;
-      if (a === 'popup-energia') { openEnergiaPopup(cfgFor(card)); return; }
-      if (a === 'popup-cicli')   { openCicliPopup(cfgFor(card)); return; }
+      if (a === 'popup-energia')      { openEnergiaPopup(cfgFor(card)); return; }
+      if (a === 'popup-cicli')        { openCicliPopup(cfgFor(card)); return; }
+      if (a === 'popup-impostazioni') { openImpostazioniHAPopup(cfgFor(card)); return; }
     });
   }
 
@@ -1397,7 +1448,7 @@ automation:
 
   /* ── CARD ── */
   const CARD = {
-    id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '1.3',
+    id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '1.4',
     desc: 'Monitoraggio compressore, cicli, energia e costi. Richiede PKG Centro Controllo Frigorifero.',
     render: render, mount: mount, update: update, configure: openCfg,
     frarik_pkg_check: 'sensor.frarik_frigorifero_versione',

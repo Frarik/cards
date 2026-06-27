@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.6.66 — 2026-06-28
+
+### feat: Frigorifero v1.4 — nuovo design con SVG animata + power bar colorata
+
+- Card completamente ridisegnata: layout immagine-sinistra + info-destra (come originale HA)
+- SVG frigo animata in-JS: ❄ pulsanti e fiocchi animati quando compressore ON, statica e dimmerata OFF
+- Power bar colorata: grigio standby → cyan normale → verde leggero → arancio alto → rosso picco
+- Header con status pill + dot animato COMPRESSORE ON / STANDBY
+- 3 pulsanti azione: 📅 Ultimi 7gg | 📊 Statistiche | ⚙ Impostazioni
+- Popup Impostazioni HA: toggle notifiche push/google/alexa, switch presa, auto-OFF, costo energia, reset contatori
+- Rimosse sezioni Energia/Costi dalla card body (accessibili via popup Statistiche)
+
 ## 1.6.65 — 2026-06-28
 
 ### feat: Frigorifero v1.3 — wizard con Google + Alexa configurabili
