@@ -1,4 +1,4 @@
-/* frarik-version: 1.0 */
+/* frarik-version: 1.1 */
 (function () {
   'use strict';
 
@@ -473,21 +473,14 @@
 #  counter.frigo_cicli_totale
 #  input_number.frigo_soglia_w     — Soglia attivazione compressore`;
 
-  /* ── REGISTER ── */
-  if (window.FratechCardRegistry) {
-    window.FratechCardRegistry.register({
-      id: 'Frigorifero',
-      name: 'Frigorifero',
-      icon: 'mdi:fridge',
-      version: '1.0',
-      isDistintivo: false,
-      defaultCfg: pkDefaults(),
-      chip: null,
-      watchEntities: ['binary_sensor.compressore_frigo', 'sensor.potenza_frigo_w', 'sensor.frigo_energy_oggi'],
-      render: render,
-      mount: mount,
-      update: update,
-      configure: function (card, el) { openCfg(card, el); },
-    });
-  }
+  const CARD = {
+    id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '1.1',
+    desc: 'Monitoraggio compressore, cicli, energia e costi. Richiede PKG centro_controllo_frigorifero.',
+    render, mount, update, configure: openCfg
+  };
+  window.FratechCardRegistry = window.FratechCardRegistry || {};
+  window.FratechCardRegistry[CARD.id] = CARD;
+  window.FratechCards = window.FratechCards || {};
+  window.FratechCards[CARD.id] = CARD;
+  try { console.log('[FratechStore] Card registrata: frigorifero v' + CARD.version); } catch (e) {}
 })();

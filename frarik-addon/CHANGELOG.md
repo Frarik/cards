@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.61 — 2026-06-27
+
+### fix: Frigorifero v1.1 — registrazione corretta nel FratechCardRegistry
+
+- **Registrazione**: corretto da `FratechCardRegistry.register({...})` (non esiste) a `FratechCardRegistry[CARD.id] = CARD` come tutte le altre card
+- **Icona**: cambiata da stringa `mdi:fridge` (mostrata come testo) a emoji `🧊`
+- **Desc**: aggiunto campo `desc` per la preview nello store
+
 ## 1.6.60 — 2026-06-27
 
 ### feat: card Frigorifero v1.0 + PKG centro_controllo_frigorifero
