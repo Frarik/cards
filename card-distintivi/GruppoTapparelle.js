@@ -46,6 +46,12 @@
     return `rgba(${parseInt(h.slice(0,2),16)},${parseInt(h.slice(2,4),16)},${parseInt(h.slice(4,6),16)},${a})`;
   }
   function liveH(rawHass) { return H() || (rawHass && rawHass.states ? rawHass : null); }
+  function iconHtml(ico, sz) {
+    sz = sz || 16;
+    if (typeof ico === 'string' && ico.startsWith('mdi:'))
+      return `<span class="mdi mdi-${ico.slice(4)}" style="font-size:${sz}px;line-height:1"></span>`;
+    return `<span style="font-size:${sz}px;line-height:1">${ico||'📦'}</span>`;
+  }
 
   /* ── chip ── */
   function chip(cfg, rawHass) {
@@ -55,7 +61,7 @@
     const active = h ? ents.filter(e => isOn(h, e.entity)).length : 0;
     const col = c.color || '#38bdf8';
     return {
-      icon: c.icon || '🪟',
+      icon: iconHtml(c.icon || '🪟'),
       label: c.label || 'Tapparelle',
       value: ents.length ? `${active}/${ents.length}` : '—',
       color: active > 0 ? col : 'rgba(255,255,255,0.32)',
@@ -381,7 +387,7 @@
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.35);margin-bottom:6px">Chip</div>
           <div style="display:flex;gap:7px;margin-bottom:14px">
             <div style="flex:1"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">Nome chip</div><input id="gtcfg-label" class="gtcinp" placeholder="Tapparelle" value="${eh(c.label||'Tapparelle')}"></div>
-            <div style="flex:0 0 56px"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">Icona</div><input id="gtcfg-icon" class="gtcinp" placeholder="🪟" value="${eh(c.icon||'🪟')}" style="text-align:center;font-size:15px;padding:6px 4px"></div>
+            <div style="flex:0 0 56px"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">Icona</div><button id="gtcfg-icon-btn" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);cursor:pointer;display:flex;align-items:center;justify-content:center;outline:none">${iconHtml(c.icon||'🪟',22)}</button><input type="hidden" id="gtcfg-icon" value="${eh(c.icon||'🪟')}"></div>
             <div style="flex:0 0 50px"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">Colore</div><input type="color" id="gtcfg-color" value="${(c.color||'#38bdf8').match(/^#[0-9a-f]{6}$/i)?c.color:'#38bdf8'}" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:none;cursor:pointer;padding:2px"></div>
           </div>
 
@@ -422,11 +428,22 @@
 
       // ripristina valori che l'utente stava modificando
       if (curLabel !== undefined) { const f = ov.querySelector('#gtcfg-label'); if (f) f.value = curLabel; }
-      if (curIcon  !== undefined) { const f = ov.querySelector('#gtcfg-icon');  if (f) f.value = curIcon; }
+      if (curIcon  !== undefined) {
+        const f = ov.querySelector('#gtcfg-icon'); if (f) f.value = curIcon;
+        const b = ov.querySelector('#gtcfg-icon-btn'); if (b) b.innerHTML = iconHtml(curIcon, 22);
+      }
       if (curColor !== undefined) { const f = ov.querySelector('#gtcfg-color'); if (f) f.value = curColor; }
 
-      // seleziona tutto al focus per facilitare la sostituzione dell'icona
-      ov.querySelector('#gtcfg-icon')?.addEventListener('focus', e => e.target.select());
+      // click sull'icona → apre il picker HA (emoji + MDI)
+      ov.querySelector('#gtcfg-icon-btn')?.addEventListener('click', ev => {
+        ev.stopPropagation();
+        if (typeof openIconPicker === 'function') {
+          openIconPicker(val => {
+            const f = ov.querySelector('#gtcfg-icon'); if (f) f.value = val;
+            const b = ov.querySelector('#gtcfg-icon-btn'); if (b) b.innerHTML = iconHtml(val, 22);
+          });
+        }
+      });
 
       if (ov._ovClick) ov.removeEventListener('click', ov._ovClick);
       ov._ovClick = ev => { if (ev.target === ov) closeOv(); };

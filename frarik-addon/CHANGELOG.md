@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.6.23 — 2026-06-27
+
+### feat: icon picker HA su tutti i distintivi + GruppoFinestre + GruppoPorte
+
+- **Icon picker**: il campo icona in tutti i configure (Luci, Tapparelle, Finestre, Porte) è ora un bottone che apre il picker HA completo (emoji + tutte le icone MDI `mdi:*`)
+- **Supporto MDI**: le icone `mdi:xxx` vengono renderizzate correttamente nel chip badge e nel popup header tramite helper `iconHtml()`
+- **GruppoFinestre** (v1.0): chip contatore finestre aperte, popup con stato Aperta/Chiusa pill, automazione opzionale, binary_sensor.* per prime nell'autocomplete
+- **GruppoPorte** (v1.0): identico a Finestre ma con icona 🚪, colore arancione `#fb923c`, testo "porta/porte"
+
 ## 1.6.22 — 2026-06-27
 
 ### fix(gruppo-luci, gruppo-tapparelle): icona modificabile + sottotitolo popup rimosso
