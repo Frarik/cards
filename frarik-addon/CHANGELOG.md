@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.6.16 — 2026-06-27
+
+### refactor(gruppo-luci): picker entità → autocomplete su tutte le entità HA
+
+- **Rimossa lista/checkbox**: eliminata la `#glcfg-list` con scroll interno (causa principale del reset-to-top)
+- **Nuovo picker**: singolo campo di testo `🔍 Inizia a scrivere il nome dell'entità…` con autocomplete live su **tutte** le entità HA — nessun filtro di dominio; `light.*` appaiono per prime
+- **Dropdown ricco**: ogni suggerimento mostra icona dominio, nome, entity_id e stato (Accesa/Spenta/On/Off)
+- **Scroll fix definitivo**: senza `#glcfg-list` interno non c'è più nessuno scroll da preservare durante le selezioni
+- **Autocomplete automazioni**: stesso stile con placeholder "Cerca automazione…"
+
 ## 1.6.15 — 2026-06-27
 
 ### fix(gruppo-luci): scroll lista luci + filtro "luce" nel picker

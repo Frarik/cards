@@ -181,9 +181,8 @@
     const c = loadCfg(cfg);
     const ents = JSON.parse(JSON.stringify(Array.isArray(c.entities) ? c.entities : []));
     const h = H();
-    let filterQ = '';
     let expandedAuto = new Set();
-    let _firstRender = true; // animazione solo al primo render
+    let _firstRender = true;
 
     /* ---- autocomplete singleton ---- */
     let _acDrop = null;
@@ -194,14 +193,22 @@
       if (!matches.length) return;
       const rect = inp.getBoundingClientRect();
       _acDrop = document.createElement('div');
-      _acDrop.style.cssText = `position:fixed;left:${rect.left}px;top:${rect.bottom+3}px;width:${rect.width}px;max-height:180px;overflow-y:auto;z-index:100003;background:#1a1630;border:1px solid rgba(251,191,36,.3);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.85);scrollbar-width:thin`;
+      _acDrop.style.cssText = `position:fixed;left:${rect.left}px;top:${rect.bottom+3}px;width:${rect.width}px;max-height:220px;overflow-y:auto;z-index:100003;background:#1a1630;border:1px solid rgba(251,191,36,.3);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.88);scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent`;
       matches.forEach(m => {
         const r = document.createElement('div');
-        r.style.cssText = 'padding:8px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.05);transition:background .1s';
-        r.innerHTML = `<div style="font-size:11px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(m.name)}</div><div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:1px">${eh(m.id)}</div>`;
-        r.addEventListener('mouseover', () => { r.style.background='rgba(251,191,36,.1)'; });
+        r.style.cssText = 'padding:9px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.05);transition:background .1s';
+        const stColor = m.on ? '#fbbf24' : 'rgba(255,255,255,.3)';
+        const stLabel = m.stateLabel || '';
+        r.innerHTML = `<div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:13px;flex-shrink:0;filter:${m.on?'none':'grayscale(1) opacity(.4)'}">${m.icon||'📦'}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:11px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(m.name)}</div>
+            <div style="font-size:9px;color:rgba(255,255,255,.38);margin-top:1px">${eh(m.id)}${stLabel?` · <span style="color:${stColor}">${eh(stLabel)}</span>`:''}</div>
+          </div>
+        </div>`;
+        r.addEventListener('mouseover', () => { r.style.background='rgba(251,191,36,.08)'; });
         r.addEventListener('mouseout',  () => { r.style.background='transparent'; });
-        r.addEventListener('mousedown', ev => { ev.preventDefault(); onPick(m.id); _closeAc(); });
+        r.addEventListener('mousedown', ev => { ev.preventDefault(); onPick(m.id, m.name); _closeAc(); });
         _acDrop.appendChild(r);
       });
       document.body.appendChild(_acDrop);
@@ -209,38 +216,45 @@
 
     function _setupAc(inp, filterFn, onPick) {
       inp.addEventListener('input', () => {
-        const q = (inp.value||'').toLowerCase();
+        const q = (inp.value||'').toLowerCase().trim();
         if (!q) { _closeAc(); return; }
-        _openAc(inp, filterFn(q).slice(0,9), onPick);
+        _openAc(inp, filterFn(q).slice(0,12), onPick);
       });
       inp.addEventListener('focus', () => {
-        const q = (inp.value||'').toLowerCase();
-        if (q) _openAc(inp, filterFn(q).slice(0,9), onPick);
+        const q = (inp.value||'').toLowerCase().trim();
+        if (q) _openAc(inp, filterFn(q).slice(0,12), onPick);
       });
       inp.addEventListener('blur', () => setTimeout(_closeAc, 160));
+    }
+
+    // Tutte le entità HA (no filtri di dominio) — light.* per prime
+    function _entityMatches(q) {
+      if (!h||!h.states) return [];
+      const lq = q.toLowerCase();
+      return Object.keys(h.states)
+        .filter(id => nameOf(h,id).toLowerCase().includes(lq) || id.toLowerCase().includes(lq))
+        .map(id => {
+          const dom = id.split('.')[0];
+          const on = isOn(h, id);
+          const icons = { light:'💡', switch:'🔌', automation:'🤖', sensor:'📡', binary_sensor:'🔵', cover:'🪟', climate:'🌡️', media_player:'📺', fan:'💨' };
+          return { id, name: nameOf(h,id), on, icon: icons[dom]||'📦', stateLabel: on?'Accesa/On':'Spenta/Off' };
+        })
+        .sort((a,b) => {
+          // light.* per prime, poi alfabetico
+          const al = a.id.startsWith('light.') ? 0 : 1;
+          const bl = b.id.startsWith('light.') ? 0 : 1;
+          if (al!==bl) return al-bl;
+          return a.name.localeCompare(b.name);
+        });
     }
 
     function _autoMatches(q) {
       if (!h||!h.states) return [];
       return Object.keys(h.states)
         .filter(id => id.startsWith('automation.') && (id.includes(q) || nameOf(h,id).toLowerCase().includes(q)))
-        .map(id => ({ id, name: nameOf(h,id) }))
+        .map(id => ({ id, name: nameOf(h,id), icon:'🤖', on:false, stateLabel:'' }))
         .sort((a,b) => a.name.localeCompare(b.name));
     }
-
-    function getLights() {
-      if (!h||!h.states) return [];
-      return Object.keys(h.states)
-        .filter(id => {
-          if (!id.startsWith('light.')) return false;
-          const n = nameOf(h, id).toLowerCase();
-          // mostra solo entità il cui nome o entity_id contiene "luce"/"luci"
-          return n.includes('luce') || n.includes('luci') || id.includes('luce') || id.includes('luci');
-        })
-        .map(id => ({ id, name: nameOf(h,id), on: isOn(h,id) }))
-        .sort((a,b) => a.name.localeCompare(b.name));
-    }
-    const allLights = getLights();
 
     /* ---- overlay ---- */
     const ov = document.createElement('div');
@@ -257,10 +271,6 @@
     /* ---- renderForm ---- */
     function renderForm() {
       const col = c.color || '#fbbf24';
-      const selIds = new Set(ents.map(e => e.entity));
-      const filtered = filterQ
-        ? allLights.filter(l => l.name.toLowerCase().includes(filterQ.toLowerCase()) || l.id.includes(filterQ.toLowerCase()))
-        : allLights;
 
       const selRows = ents.map((e, i) => {
         const lbl = e.label || nameOf(h, e.entity);
@@ -275,7 +285,7 @@
             </div>`
           : autoExpanded
             ? `<div style="display:flex;gap:5px;margin-top:5px">
-                <input data-auto-idx="${i}" placeholder="🔍 automation.xxx" value="${eh(e.automation||'')}" style="flex:1;padding:6px 9px;border-radius:7px;border:1px solid rgba(99,102,241,.35);background:rgba(99,102,241,.08);color:#fff;font-size:11px;outline:none;font-family:inherit">
+                <input data-auto-idx="${i}" placeholder="🔍 Cerca automazione…" value="${eh(e.automation||'')}" style="flex:1;padding:6px 9px;border-radius:7px;border:1px solid rgba(99,102,241,.35);background:rgba(99,102,241,.08);color:#fff;font-size:11px;outline:none;font-family:inherit">
                 <button data-saveauto="${i}" style="padding:6px 10px;border-radius:7px;border:none;background:#6366f1;color:#fff;cursor:pointer;font-size:11px;font-weight:700">OK</button>
               </div>`
             : `<button data-addauto="${i}" style="margin-top:4px;font-size:9px;padding:3px 8px;border-radius:5px;border:1px dashed rgba(255,255,255,.2);background:transparent;color:rgba(255,255,255,.4);cursor:pointer">🤖 + Automazione (opz.)</button>`;
@@ -293,19 +303,6 @@
         </div>`;
       }).join('');
 
-      const lightRows = filtered.map(l => {
-        const sel = selIds.has(l.id);
-        return `<label data-light-id="${eh(l.id)}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:${sel?hex2rgba(col,.08):'rgba(255,255,255,.02)'};border:1px solid ${sel?hex2rgba(col,.3):'rgba(255,255,255,.06)'};cursor:pointer;margin-bottom:3px">
-          <div style="width:28px;height:28px;border-radius:50%;background:${l.on?hex2rgba(col,.15):'rgba(255,255,255,.05)'};border:1px solid ${l.on?hex2rgba(col,.35):'rgba(255,255,255,.1)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;filter:${l.on?'none':'grayscale(1) opacity(.4)'}">💡</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:12px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(l.name)}</div>
-            <div style="font-size:10px;color:${l.on?col:'rgba(255,255,255,.3)'}">${l.on?'Accesa':'Spenta'}</div>
-          </div>
-          <div style="width:18px;height:18px;border-radius:4px;border:2px solid ${sel?col:'rgba(255,255,255,.3)'};background:${sel?col:'transparent'};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:#000;font-weight:900">${sel?'✓':''}</div>
-        </label>`;
-      }).join('') || `<div style="padding:20px;text-align:center;color:rgba(255,255,255,.3);font-size:11px">Nessuna luce trovata</div>`;
-
-      // animazione glCfgUp solo al primissimo render — poi no, altrimenti sembra "chiudi/riapri"
       const anim = _firstRender ? 'animation:glCfgUp .22s cubic-bezier(.32,1.12,.56,1)' : '';
       return `<div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0f0d1a;border:1px solid rgba(251,191,36,.22);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);color:#fff;${anim}">
         <style>@keyframes glCfgUp{from{transform:translateY(100%)}to{transform:translateY(0)}} .glcinp{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;font-size:12px;outline:none;font-family:inherit;transition:border-color .15s} .glcinp:focus{border-color:rgba(251,191,36,.5);background:rgba(251,191,36,.04)} .glcinp::placeholder{color:rgba(255,255,255,.3)}</style>
@@ -314,12 +311,13 @@
           <div style="width:36px;height:36px;border-radius:10px;background:rgba(251,191,36,.13);border:1px solid rgba(251,191,36,.28);display:flex;align-items:center;justify-content:center;font-size:18px">💡</div>
           <div style="flex:1">
             <div style="font-size:14px;font-weight:800">Configura — Gruppo Luci</div>
-            <div style="font-size:10px;color:rgba(255,255,255,.38)">${ents.length} luc${ents.length===1?'e':'i'} selezionate</div>
+            <div style="font-size:10px;color:rgba(255,255,255,.38)">${ents.length} entit${ents.length===1?'à':'à'} selezionate</div>
           </div>
           <button id="glcfg-close" style="width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,255,255,.07);color:#fff;cursor:pointer;font-size:14px">✕</button>
         </div>
 
         <div id="glcfg-body" style="flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;padding:14px 14px 4px">
+
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.35);margin-bottom:6px">Chip</div>
           <div style="display:flex;gap:7px;margin-bottom:14px">
             <div style="flex:1"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">Nome chip</div><input id="glcfg-label" class="glcinp" placeholder="Luci" value="${eh(c.label||'Luci')}"></div>
@@ -328,14 +326,15 @@
           </div>
 
           ${ents.length ? `
-            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.35);margin-bottom:6px">Luci selezionate (${ents.length})</div>
-            <div id="glcfg-sel">${selRows}</div>
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.35);margin-bottom:6px">Entità selezionate (${ents.length})</div>
+            <div>${selRows}</div>
           ` : ''}
 
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.35);margin:${ents.length?'12px':0} 0 6px">Luci disponibili (${allLights.length})</div>
-          <input id="glcfg-search" class="glcinp" placeholder="🔍 Cerca luce…" value="${eh(filterQ)}" style="margin-bottom:7px">
-          <div id="glcfg-list" style="border-radius:10px;border:1px solid rgba(255,255,255,.07);padding:6px;background:rgba(0,0,0,.25);max-height:260px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent">${lightRows}</div>
-          <div style="height:14px"></div>
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.35);margin:${ents.length?'12px':0} 0 6px">Aggiungi entità</div>
+          <input id="glcfg-add-entity" class="glcinp" placeholder="🔍 Inizia a scrivere il nome dell'entità…" autocomplete="off">
+          <div style="font-size:9px;color:rgba(255,255,255,.25);margin-top:5px">Mostra tutte le entità — light.* compaiono per prime</div>
+
+          <div style="height:16px"></div>
         </div>
 
         <div style="display:flex;gap:8px;padding:12px 14px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0">
@@ -345,27 +344,19 @@
       </div>`;
     }
 
-    /* ---- attach (scroll preservation su body + list interno) ---- */
+    /* ---- attach ---- */
     function attach() {
       _closeAc();
-      // salva scroll di ENTRAMBI i contenitori prima di distruggere il DOM
       const prevBody = ov.querySelector('#glcfg-body');
       const savedBody = prevBody ? prevBody.scrollTop : 0;
-      const prevList = ov.querySelector('#glcfg-list');
-      const savedList = prevList ? prevList.scrollTop : 0;
 
       ov.innerHTML = renderForm();
       _firstRender = false;
 
-      // ripristina dopo il layout — rAF garantisce che il DOM sia misurato
-      requestAnimationFrame(() => {
-        const nb = ov.querySelector('#glcfg-body');
-        if (nb && savedBody > 0) nb.scrollTop = savedBody;
-        const nl = ov.querySelector('#glcfg-list');
-        if (nl && savedList > 0) nl.scrollTop = savedList;
-      });
+      // ripristina scroll del body — sincrono: funziona subito dopo innerHTML
+      const nb = ov.querySelector('#glcfg-body');
+      if (nb && savedBody > 0) nb.scrollTop = savedBody;
 
-      /* ---- listener unico su ov per backdrop ---- */
       if (ov._ovClick) ov.removeEventListener('click', ov._ovClick);
       ov._ovClick = ev => { if (ev.target === ov) closeOv(); };
       ov.addEventListener('click', ov._ovClick);
@@ -373,21 +364,7 @@
       ov.querySelector('#glcfg-close').onclick = closeOv;
       ov.querySelector('#glcfg-cancel').onclick = closeOv;
 
-      const srch = ov.querySelector('#glcfg-search');
-      if (srch) srch.addEventListener('input', () => { filterQ = srch.value; attach(); });
-
-      ov.querySelectorAll('[data-light-id]').forEach(lbl => {
-        lbl.addEventListener('click', ev => {
-          ev.preventDefault();
-          ev.stopPropagation();
-          const lid = lbl.dataset.lightId;
-          const idx = ents.findIndex(e => e.entity === lid);
-          if (idx >= 0) { ents.splice(idx, 1); expandedAuto.delete(idx); }
-          else ents.push({ entity: lid, label: '', automation: '' });
-          attach();
-        });
-      });
-
+      // rimuovi entità selezionata
       ov.querySelectorAll('[data-del]').forEach(btn => {
         btn.addEventListener('click', () => {
           const i = parseInt(btn.dataset.del);
@@ -395,6 +372,7 @@
         });
       });
 
+      // automazione: apri input
       ov.querySelectorAll('[data-addauto]').forEach(btn => {
         btn.addEventListener('click', () => {
           expandedAuto.add(parseInt(btn.dataset.addauto)); attach();
@@ -402,6 +380,7 @@
         });
       });
 
+      // automazione: salva
       ov.querySelectorAll('[data-saveauto]').forEach(btn => {
         btn.addEventListener('click', () => {
           const i = parseInt(btn.dataset.saveauto);
@@ -411,15 +390,30 @@
         });
       });
 
+      // automazione: rimuovi
       ov.querySelectorAll('[data-rmauto]').forEach(btn => {
         btn.addEventListener('click', () => { ents[parseInt(btn.dataset.rmauto)].automation = ''; attach(); });
       });
 
+      // autocomplete automazioni
       ov.querySelectorAll('[data-auto-idx]').forEach(inp => {
         const i = parseInt(inp.dataset.autoIdx);
         _setupAc(inp, _autoMatches, id => { ents[i].automation = id; inp.value = id; });
       });
 
+      // autocomplete aggiunta entità — tutte le entità HA
+      const addInp = ov.querySelector('#glcfg-add-entity');
+      if (addInp) {
+        _setupAc(addInp, _entityMatches, (id, name) => {
+          if (!ents.find(e => e.entity === id)) {
+            ents.push({ entity: id, label: name || '', automation: '' });
+          }
+          addInp.value = '';
+          attach(); // aggiorna lista selezionati senza scroll reset (body.scrollTop = 0 qui è corretto)
+        });
+      }
+
+      // salva config
       ov.querySelector('#glcfg-save').addEventListener('click', () => {
         const newCfg = {
           label: (ov.querySelector('#glcfg-label')?.value || 'Luci').trim(),
@@ -442,7 +436,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Luci', icon: '💡',
     desc: 'Chip con contatore luci accese. Clic → pannello toggle + Accendi/Spegni tutte.',
-    version: '1.3', isDistintivo: true,
+    version: '1.4', isDistintivo: true,
     defaultCfg: { label: 'Luci', icon: '💡', color: '#fbbf24', entities: [] },
     chip, watchEntities, render, mount, update, configure,
   };
