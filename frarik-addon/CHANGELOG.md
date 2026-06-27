@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.6.29 — 2026-06-27
+
+### feat: GruppoClima v1.1 — controlli HVAC completi, bottone power ridisegnato, temp fissa
+
+- **Step ±1°**: i tasti − e + usano `target_temp_step` dall'entità (default 1°); aggiustamento clampato su `min_temp`/`max_temp`
+- **Bottone power ridisegnato**: cerchio separato a destra da una linea divisoria (`│`); icona `mdi:power` via MDI; verde+glow quando acceso, rosso/dimmed quando spento; aggiornamento ottimistico istantaneo al click
+- **Panel HVAC espandibile** per ogni clima: freccia `▸/▾` apre un pannello collassabile con Modalità (button colorati per tipo: 🔥❄️♻️💨💧), Ventola (blu), Alette (viola) — si espande/chiude per row; lo stato aperto viene preservato tra i cicli di polling
+- **Temperatura fissa (opz.)**: in configure ogni entità ha un campo numerico `Temp. fissa °C`; se impostata, sovrascrive il target display dell'entità (`→ X°`) sia in lettura che come punto di partenza per +/−
+- **Aggiornamento ottimistico modalità/ventola/alette**: click sui button nel panel aggiorna subito la visual senza aspettare il poll
+- **Automazione** opzionale per ogni entità mantenuta
+
 ## 1.6.28 — 2026-06-27
 
 ### feat: GruppoClima — distintivo per termostati/climi

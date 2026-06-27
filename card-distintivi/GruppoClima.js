@@ -1,12 +1,18 @@
-/* frarik-version: 1.0 */
+/* frarik-version: 1.1 */
 /**
- * GruppoClima.js — Distintivo FratechStore v1.0
- * Chip contatore climi attivi + popup con temperature e controlli per ogni clima
+ * GruppoClima.js — Distintivo FratechStore v1.1
+ * Chip climi attivi + popup con temp, controlli HVAC/ventola/alette per ogni clima
  */
 (function () {
   'use strict';
 
   const ID = 'gruppo-clima';
+
+  const HVAC_LBL = { cool:'Freddo', heat:'Caldo', fan_only:'Ventola', dry:'Deumid.', auto:'Auto', heat_cool:'C/F', off:'Off' };
+  const HVAC_ICO = { cool:'❄️', heat:'🔥', fan_only:'💨', dry:'💧', auto:'♻️', heat_cool:'♨️', off:'⏻' };
+  const HVAC_COL = { cool:'#38bdf8', heat:'#f97316', fan_only:'#94a3b8', dry:'#34d399', auto:'#a78bfa', heat_cool:'#fb923c', off:'#64748b' };
+  const FAN_LBL  = { auto:'Auto', low:'Bassa', medium:'Media', high:'Alta', turbo:'Turbo', quiet:'Silenz.', 'off':'Ferma', 'on':'Attiva' };
+  const SWING_LBL = { 'off':'Off', 'on':'On', both:'Tutto', vertical:'Verticale', horizontal:'Orizz.' };
 
   function H() {
     try { if (typeof window.frarikHass === 'function') { const h = window.frarikHass(); if (h && h.states) return h; } } catch (e) {}
@@ -15,7 +21,7 @@
   function loadCfg(cfg) { return cfg && typeof cfg === 'object' ? cfg : {}; }
   function nameOf(h, id) {
     const s = h && h.states && h.states[id];
-    return (s && s.attributes && s.attributes.friendly_name) || (id.includes('.') ? id.split('.')[1].replace(/_/g, ' ') : id);
+    return (s && s.attributes && s.attributes.friendly_name) || (id && id.includes('.') ? id.split('.')[1].replace(/_/g, ' ') : id);
   }
   function stateOf(h, id) { return (h && h.states && h.states[id] && h.states[id].state) || 'unknown'; }
   function attrOf(h, id, attr) {
@@ -46,39 +52,48 @@
     if (typeof window.callSvc === 'function') window.callSvc(domain, svc, data.entity_id);
   }
 
+  function climaFull(h, id) {
+    if (!id || !h || !h.states || !h.states[id]) return null;
+    const s = h.states[id], a = s.attributes || {};
+    return {
+      mode:       s.state,
+      action:     a.hvac_action || '',
+      target:     a.temperature,
+      current:    a.current_temperature,
+      fan:        a.fan_mode || 'auto',
+      swing:      a.swing_mode || 'off',
+      min:        a.min_temp || 16,
+      max:        a.max_temp || 30,
+      step:       a.target_temp_step || 1,
+      hvacModes:  a.hvac_modes  || ['off','heat','cool'],
+      fanModes:   a.fan_modes   || [],
+      swingModes: a.swing_modes || [],
+    };
+  }
   function climaIsActive(h, id) {
     const st = stateOf(h, id);
     return st !== 'off' && st !== 'unknown' && st !== 'unavailable';
   }
-  function climaAction(h, id) { return attrOf(h, id, 'hvac_action') || ''; }
-  function climaCurTemp(h, id) {
-    const t = attrOf(h, id, 'current_temperature');
-    return t != null ? parseFloat(t) : null;
-  }
-  function climaTargetTemp(h, id) {
-    const t = attrOf(h, id, 'temperature');
-    return t != null ? parseFloat(t) : null;
-  }
-  function climaLbl(state, action) {
+  function climaLbl(mode, action) {
     if (action === 'heating')  return 'In riscaldamento';
     if (action === 'cooling')  return 'In raffreddamento';
     if (action === 'idle')     return 'In attesa';
     if (action === 'fan')      return 'Ventilazione attiva';
     if (action === 'drying')   return 'Deumidificazione';
-    if (state === 'off')       return 'Spento';
-    if (state === 'heat')      return 'Riscaldamento';
-    if (state === 'cool')      return 'Raffreddamento';
-    if (state === 'heat_cool') return 'Riscalda/Raffredda';
-    if (state === 'auto')      return 'Automatico';
-    if (state === 'dry')       return 'Deumidificazione';
-    if (state === 'fan_only')  return 'Solo ventola';
-    return state || 'Sconosciuto';
+    if (mode === 'off')        return 'Spento';
+    if (mode === 'heat')       return 'Riscaldamento';
+    if (mode === 'cool')       return 'Raffreddamento';
+    if (mode === 'heat_cool')  return 'Riscalda/Raffredda';
+    if (mode === 'auto')       return 'Automatico';
+    if (mode === 'dry')        return 'Deumidificazione';
+    if (mode === 'fan_only')   return 'Solo ventola';
+    return mode || 'Sconosciuto';
   }
-  function climaStCol(state, action, col) {
-    if (action === 'heating' || state === 'heat') return '#f97316';
-    if (action === 'cooling' || state === 'cool') return '#38bdf8';
-    if (state === 'off' || state === 'unknown' || state === 'unavailable') return 'rgba(255,255,255,.4)';
-    if (action === 'idle') return 'rgba(255,255,255,.5)';
+  function climaStCol(mode, action, col) {
+    if (action === 'heating' || mode === 'heat')      return '#f97316';
+    if (action === 'cooling' || mode === 'cool')      return '#38bdf8';
+    if (mode === 'off' || mode === 'unknown' || mode === 'unavailable') return 'rgba(255,255,255,.38)';
+    if (action === 'idle')  return 'rgba(255,255,255,.5)';
     return col || '#f97316';
   }
 
@@ -100,7 +115,7 @@
     };
     const pair = P[ico];
     if (pair) return isActive ? pair[0] : pair[1];
-    return ico || (isActive ? 'mdi:thermostat' : 'mdi:thermostat');
+    return ico || 'mdi:thermostat';
   }
 
   /* ── chip ── */
@@ -133,58 +148,112 @@
     const ents = Array.isArray(c.entities) ? c.entities : [];
     const col = c.color || '#f97316';
 
+    const btnBase = 'width:26px;height:26px;border-radius:7px;cursor:pointer;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;outline:none;flex-shrink:0;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);color:#fff';
+
     const rows = ents.map((e, i) => {
       if (!e.entity) return '';
-      const st = h ? stateOf(h, e.entity) : 'unknown';
-      const action = h ? climaAction(h, e.entity) : '';
-      const active = st !== 'off' && st !== 'unknown' && st !== 'unavailable';
-      const lbl = e.label || nameOf(h, e.entity);
-      const stCol = climaStCol(st, action, col);
-      const stBg  = active ? hex2rgba(stCol, .13) : 'rgba(255,255,255,.05)';
-      const stBdr = active ? hex2rgba(stCol, .30) : 'rgba(255,255,255,.10)';
-      const stLbl = climaLbl(st, action);
+      const st = h ? climaFull(h, e.entity) : null;
+      const mode   = st ? st.mode   : 'unknown';
+      const action = st ? st.action : '';
+      const active = mode !== 'off' && mode !== 'unknown' && mode !== 'unavailable';
+      const lbl    = e.label || nameOf(h, e.entity);
+      const stCol  = climaStCol(mode, action, col);
+      const stBg   = active ? hex2rgba(stCol, .12) : 'rgba(255,255,255,.04)';
+      const stBdr  = active ? hex2rgba(stCol, .28) : 'rgba(255,255,255,.09)';
+      const stLbl  = climaLbl(mode, action);
       const rowIco = iconHtml(_dynIcon(c.icon||'🌡️', active), 18);
-      const curTemp = h ? climaCurTemp(h, e.entity) : null;
-      const tgtTemp = h ? climaTargetTemp(h, e.entity) : null;
-      const curTxt = curTemp != null ? curTemp.toFixed(1) + '°' : '—';
-      const tgtTxt = tgtTemp != null ? '→ ' + tgtTemp.toFixed(1) + '°' : '';
 
-      const togBg  = active ? 'rgba(248,113,113,.15)' : 'rgba(74,222,128,.15)';
-      const togBdr = active ? 'rgba(248,113,113,.35)' : 'rgba(74,222,128,.35)';
-      const togCol = active ? '#f87171' : '#4ade80';
-      const togLbl = active ? '⏻' : '⏻';
+      const curTemp = st ? st.current : null;
+      const curTxt  = curTemp != null ? `${parseFloat(curTemp).toFixed(1)}°` : '—';
 
-      const btnBase = 'width:26px;height:26px;border-radius:7px;cursor:pointer;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;outline:none;flex-shrink:0';
+      // target: use per-entity custom override if configured, else entity attribute
+      const rawTarget = st ? st.target : null;
+      const customT   = (e.customTemp != null && e.customTemp !== '' && !isNaN(parseFloat(e.customTemp)))
+                          ? parseFloat(e.customTemp) : null;
+      const displayTarget = customT != null ? customT : rawTarget;
+      const displayTargetStr = displayTarget != null ? parseFloat(displayTarget).toFixed(1) : '—';
+      const targetDataVal = displayTarget != null ? parseFloat(displayTarget) : '';
 
+      const step = st ? (parseFloat(st.step) || 1) : 1;
+      const minT = st ? st.min : 16;
+      const maxT = st ? st.max : 30;
+
+      // power button: green = on (to turn off), red/dim = off (to turn on)
+      const togBg  = active ? 'rgba(74,222,128,.16)' : 'rgba(239,68,68,.13)';
+      const togBdr = active ? 'rgba(74,222,128,.38)' : 'rgba(239,68,68,.3)';
+      const togCol = active ? '#4ade80' : 'rgba(239,68,68,.65)';
+
+      const hvacModes  = st ? st.hvacModes  : ['off','heat','cool'];
+      const fanModes   = st ? st.fanModes   : [];
+      const swingModes = st ? st.swingModes : [];
+      const curFan   = st ? st.fan   : 'auto';
+      const curSwing = st ? st.swing : 'off';
+
+      // mode buttons
+      const modeBtns = hvacModes.map(m => {
+        const mCol2 = HVAC_COL[m] || '#64748b';
+        const mActive = mode === m;
+        const bg  = mActive ? hex2rgba(mCol2, .2) : 'rgba(255,255,255,.05)';
+        const bdr = mActive ? hex2rgba(mCol2, .4) : 'rgba(255,255,255,.1)';
+        const cl  = mActive ? mCol2 : 'rgba(255,255,255,.45)';
+        return `<button data-cc-mode="${i}" data-val="${eh(m)}" data-entity="${eh(e.entity)}" style="padding:5px 9px;border-radius:8px;border:1px solid ${bdr};background:${bg};color:${cl};cursor:pointer;font-size:10px;font-weight:700;white-space:nowrap;outline:none">${HVAC_ICO[m]||''} ${HVAC_LBL[m]||m}</button>`;
+      }).join('');
+
+      // fan buttons
+      const fanBtns = fanModes.length > 1 ? fanModes.map(m => {
+        const fActive = curFan === m;
+        const bg  = fActive ? 'rgba(56,189,248,.18)' : 'rgba(255,255,255,.05)';
+        const bdr = fActive ? 'rgba(56,189,248,.38)' : 'rgba(255,255,255,.1)';
+        const cl  = fActive ? '#38bdf8' : 'rgba(255,255,255,.45)';
+        return `<button data-cc-fan="${i}" data-val="${eh(m)}" data-entity="${eh(e.entity)}" style="padding:4px 8px;border-radius:7px;border:1px solid ${bdr};background:${bg};color:${cl};cursor:pointer;font-size:10px;font-weight:700;outline:none">${FAN_LBL[m]||m}</button>`;
+      }).join('') : '';
+
+      // swing buttons
+      const swingBtns = swingModes.length > 1 ? swingModes.map(m => {
+        const sActive = curSwing === m;
+        const bg  = sActive ? 'rgba(167,139,250,.18)' : 'rgba(255,255,255,.05)';
+        const bdr = sActive ? 'rgba(167,139,250,.38)' : 'rgba(255,255,255,.1)';
+        const cl  = sActive ? '#a78bfa' : 'rgba(255,255,255,.45)';
+        return `<button data-cc-swing="${i}" data-val="${eh(m)}" data-entity="${eh(e.entity)}" style="padding:4px 8px;border-radius:7px;border:1px solid ${bdr};background:${bg};color:${cl};cursor:pointer;font-size:10px;font-weight:700;outline:none">${SWING_LBL[m]||m}</button>`;
+      }).join('') : '';
+
+      // automation badge
       let autoBadge = '';
       if (e.automation) {
         const autoOn = h ? (stateOf(h, e.automation) === 'on') : false;
-        const aBg  = autoOn ? 'rgba(74,222,128,.13)'  : 'rgba(248,113,113,.13)';
-        const aBdr = autoOn ? 'rgba(74,222,128,.38)'  : 'rgba(248,113,113,.38)';
-        const aCol = autoOn ? '#4ade80'               : '#f87171';
-        const aTxt = autoOn ? '🟢 Attiva'             : '🔴 Disattiva';
-        autoBadge = `<button data-cc-auto="${i}" style="padding:3px 8px;border-radius:6px;border:1px solid ${aBdr};background:${aBg};color:${aCol};cursor:pointer;font-size:9px;font-weight:700;white-space:nowrap;outline:none">${aTxt}</button>`;
+        autoBadge = `<button data-cc-auto="${i}" style="padding:3px 8px;border-radius:6px;border:1px solid ${autoOn?'rgba(74,222,128,.38)':'rgba(248,113,113,.38)'};background:${autoOn?'rgba(74,222,128,.13)':'rgba(248,113,113,.13)'};color:${autoOn?'#4ade80':'#f87171'};cursor:pointer;font-size:9px;font-weight:700;white-space:nowrap;outline:none">${autoOn?'🟢 Attiva':'🔴 Disattiva'}</button>`;
       }
 
-      return `<div style="border-bottom:1px solid rgba(255,255,255,.04)">
-        <div style="display:flex;align-items:center;gap:10px;padding:11px 16px">
+      const secLbl = 'font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:rgba(255,255,255,.28);margin-bottom:5px';
+
+      return `<div style="border-bottom:1px solid rgba(255,255,255,.04)" data-cc-row="${i}" data-cc-step="${step}" data-cc-min="${minT}" data-cc-max="${maxT}">
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px">
           <div style="width:36px;height:36px;border-radius:50%;background:${stBg};border:1px solid ${stBdr};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${stCol}">${rowIco}</div>
           <div style="flex:1;min-width:0">
             <div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
             <div style="font-size:10px;color:${stCol};margin-top:2px;font-weight:600">${eh(stLbl)}</div>
           </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
-            <div style="display:flex;align-items:baseline;gap:5px">
-              <span style="font-size:16px;font-weight:700;color:#fff">${eh(curTxt)}</span>
-              <span data-cc-target="${i}" style="font-size:10px;color:rgba(255,255,255,.45)">${eh(tgtTxt)}</span>
+          <div style="display:flex;align-items:center;gap:7px;flex-shrink:0">
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+              <span style="font-size:11px;color:rgba(255,255,255,.38);font-weight:600">${eh(curTxt)}</span>
+              <div style="display:flex;align-items:center;gap:3px">
+                <button data-cc-down="${i}" style="${btnBase}">−</button>
+                <span data-cc-target="${i}" data-val="${targetDataVal}" style="font-size:13px;font-weight:700;color:#fff;min-width:48px;text-align:center">${displayTargetStr === '—' ? '—' : displayTargetStr + '°'}</span>
+                <button data-cc-up="${i}" style="${btnBase}">+</button>
+                <button data-cc-expand="${i}" style="width:22px;height:22px;border-radius:6px;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;outline:none;flex-shrink:0;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(255,255,255,.38)">▸</button>
+              </div>
             </div>
-            <div style="display:flex;align-items:center;gap:4px">
-              <button data-cc-down="${i}" style="${btnBase};border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);color:#fff">−</button>
-              <button data-cc-toggle="${i}" style="${btnBase};border:1px solid ${togBdr};background:${togBg};color:${togCol}">${togLbl}</button>
-              <button data-cc-up="${i}" style="${btnBase};border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);color:#fff">+</button>
-              ${autoBadge}
-            </div>
+            <div style="width:1px;height:46px;background:rgba(255,255,255,.1);flex-shrink:0"></div>
+            <button data-cc-toggle="${i}" style="width:40px;height:40px;border-radius:50%;border:1.5px solid ${togBdr};background:${togBg};color:${togCol};cursor:pointer;display:flex;align-items:center;justify-content:center;outline:none;flex-shrink:0">
+              <span class="mdi mdi-power" style="font-size:21px;color:inherit"></span>
+            </button>
           </div>
+        </div>
+        <div data-cc-panel="${i}" style="display:none;flex-direction:column;gap:9px;padding:0 14px 12px 58px">
+          <div><div style="${secLbl}">Modalità</div><div style="display:flex;flex-wrap:wrap;gap:4px">${modeBtns}</div></div>
+          ${fanModes.length > 1 ? `<div><div style="${secLbl}">Ventola</div><div style="display:flex;flex-wrap:wrap;gap:4px">${fanBtns}</div></div>` : ''}
+          ${swingModes.length > 1 ? `<div><div style="${secLbl}">Alette</div><div style="display:flex;flex-wrap:wrap;gap:4px">${swingBtns}</div></div>` : ''}
+          ${autoBadge ? `<div style="padding-top:2px">${autoBadge}</div>` : ''}
         </div>
       </div>`;
     }).join('');
@@ -201,65 +270,141 @@
     if (el._ccHandler) el.removeEventListener('click', el._ccHandler);
 
     function handler(ev) {
+      // expand/collapse HVAC panel
+      const expand = ev.target.closest('[data-cc-expand]');
+      if (expand) {
+        const i = parseInt(expand.dataset.ccExpand);
+        const panel = el.querySelector(`[data-cc-panel="${i}"]`);
+        if (!panel) return;
+        const open = panel.style.display === 'flex';
+        panel.style.display = open ? 'none' : 'flex';
+        expand.textContent = open ? '▸' : '▾';
+        if (!el._openPanels) el._openPanels = new Set();
+        if (open) el._openPanels.delete(i); else el._openPanels.add(i);
+        ev.stopPropagation(); return;
+      }
+
+      // power toggle
       const toggle = ev.target.closest('[data-cc-toggle]');
       if (toggle) {
-        const e = ents[parseInt(toggle.dataset.ccToggle)]; if (!e||!e.entity) return;
+        const i = parseInt(toggle.dataset.ccToggle);
+        const e = ents[i]; if (!e||!e.entity) return;
         const h = H();
-        const st = h ? stateOf(h, e.entity) : 'off';
-        const active = st !== 'off' && st !== 'unknown' && st !== 'unavailable';
+        const st = h ? climaFull(h, e.entity) : null;
+        const active = st && st.mode !== 'off' && st.mode !== 'unknown' && st.mode !== 'unavailable';
         if (active) {
-          toggle.style.borderColor = 'rgba(74,222,128,.35)';
-          toggle.style.background  = 'rgba(74,222,128,.15)';
-          toggle.style.color = '#4ade80';
+          toggle.style.borderColor = 'rgba(239,68,68,.3)';
+          toggle.style.background  = 'rgba(239,68,68,.13)';
+          toggle.style.color = 'rgba(239,68,68,.65)';
           callSvc('climate', 'turn_off', e.entity);
         } else {
-          toggle.style.borderColor = 'rgba(248,113,113,.35)';
-          toggle.style.background  = 'rgba(248,113,113,.15)';
-          toggle.style.color = '#f87171';
+          toggle.style.borderColor = 'rgba(74,222,128,.38)';
+          toggle.style.background  = 'rgba(74,222,128,.16)';
+          toggle.style.color = '#4ade80';
           callSvc('climate', 'turn_on', e.entity);
         }
         ev.stopPropagation(); return;
       }
 
+      // temp down
       const down = ev.target.closest('[data-cc-down]');
       if (down) {
         const i = parseInt(down.dataset.ccDown);
         const e = ents[i]; if (!e||!e.entity) return;
-        const h = H();
-        const cur = h ? climaTargetTemp(h, e.entity) : null;
-        if (cur == null) return;
-        const minT = h ? (attrOf(h, e.entity, 'min_temp') || 7) : 7;
-        const newT = Math.max(minT, Math.round((cur - 0.5) * 2) / 2);
+        const row  = el.querySelector(`[data-cc-row="${i}"]`);
+        const step = parseFloat(row?.dataset.ccStep) || 1;
+        const minT = parseFloat(row?.dataset.ccMin) || 16;
         const span = el.querySelector(`[data-cc-target="${i}"]`);
-        if (span) span.textContent = `→ ${newT.toFixed(1)}°`;
+        const cur  = parseFloat(span?.dataset.val);
+        if (isNaN(cur)) return;
+        const newT = Math.max(minT, Math.round((cur - step) / step) * step);
+        span.textContent = `${newT.toFixed(1)}°`;
+        span.dataset.val = String(newT);
         callSvcEx('climate', 'set_temperature', { entity_id: e.entity, temperature: newT });
         ev.stopPropagation(); return;
       }
 
+      // temp up
       const up = ev.target.closest('[data-cc-up]');
       if (up) {
         const i = parseInt(up.dataset.ccUp);
         const e = ents[i]; if (!e||!e.entity) return;
-        const h = H();
-        const cur = h ? climaTargetTemp(h, e.entity) : null;
-        if (cur == null) return;
-        const maxT = h ? (attrOf(h, e.entity, 'max_temp') || 35) : 35;
-        const newT = Math.min(maxT, Math.round((cur + 0.5) * 2) / 2);
+        const row  = el.querySelector(`[data-cc-row="${i}"]`);
+        const step = parseFloat(row?.dataset.ccStep) || 1;
+        const maxT = parseFloat(row?.dataset.ccMax) || 30;
         const span = el.querySelector(`[data-cc-target="${i}"]`);
-        if (span) span.textContent = `→ ${newT.toFixed(1)}°`;
+        const cur  = parseFloat(span?.dataset.val);
+        if (isNaN(cur)) return;
+        const newT = Math.min(maxT, Math.round((cur + step) / step) * step);
+        span.textContent = `${newT.toFixed(1)}°`;
+        span.dataset.val = String(newT);
         callSvcEx('climate', 'set_temperature', { entity_id: e.entity, temperature: newT });
         ev.stopPropagation(); return;
       }
 
+      // HVAC mode
+      const modeBtn = ev.target.closest('[data-cc-mode]');
+      if (modeBtn) {
+        const i = parseInt(modeBtn.dataset.ccMode);
+        const val = modeBtn.dataset.val;
+        const entityId = modeBtn.dataset.entity;
+        if (!entityId) return;
+        el.querySelectorAll(`[data-cc-mode="${i}"]`).forEach(b => {
+          const mActive = b.dataset.val === val;
+          const mCol2 = HVAC_COL[b.dataset.val] || '#64748b';
+          b.style.background   = mActive ? hex2rgba(mCol2, .2) : 'rgba(255,255,255,.05)';
+          b.style.borderColor  = mActive ? hex2rgba(mCol2, .4) : 'rgba(255,255,255,.1)';
+          b.style.color        = mActive ? mCol2 : 'rgba(255,255,255,.45)';
+        });
+        if (val === 'off') callSvc('climate', 'turn_off', entityId);
+        else callSvcEx('climate', 'set_hvac_mode', { entity_id: entityId, hvac_mode: val });
+        ev.stopPropagation(); return;
+      }
+
+      // fan mode
+      const fanBtn = ev.target.closest('[data-cc-fan]');
+      if (fanBtn) {
+        const i = parseInt(fanBtn.dataset.ccFan);
+        const val = fanBtn.dataset.val;
+        const entityId = fanBtn.dataset.entity;
+        if (!entityId) return;
+        el.querySelectorAll(`[data-cc-fan="${i}"]`).forEach(b => {
+          const fActive = b.dataset.val === val;
+          b.style.background  = fActive ? 'rgba(56,189,248,.18)' : 'rgba(255,255,255,.05)';
+          b.style.borderColor = fActive ? 'rgba(56,189,248,.38)' : 'rgba(255,255,255,.1)';
+          b.style.color       = fActive ? '#38bdf8' : 'rgba(255,255,255,.45)';
+        });
+        callSvcEx('climate', 'set_fan_mode', { entity_id: entityId, fan_mode: val });
+        ev.stopPropagation(); return;
+      }
+
+      // swing mode
+      const swingBtn = ev.target.closest('[data-cc-swing]');
+      if (swingBtn) {
+        const i = parseInt(swingBtn.dataset.ccSwing);
+        const val = swingBtn.dataset.val;
+        const entityId = swingBtn.dataset.entity;
+        if (!entityId) return;
+        el.querySelectorAll(`[data-cc-swing="${i}"]`).forEach(b => {
+          const sActive = b.dataset.val === val;
+          b.style.background  = sActive ? 'rgba(167,139,250,.18)' : 'rgba(255,255,255,.05)';
+          b.style.borderColor = sActive ? 'rgba(167,139,250,.38)' : 'rgba(255,255,255,.1)';
+          b.style.color       = sActive ? '#a78bfa' : 'rgba(255,255,255,.45)';
+        });
+        callSvcEx('climate', 'set_swing_mode', { entity_id: entityId, swing_mode: val });
+        ev.stopPropagation(); return;
+      }
+
+      // automation
       const auto = ev.target.closest('[data-cc-auto]');
       if (auto) {
         const e = ents[parseInt(auto.dataset.ccAuto)]; if (!e||!e.automation) return;
         const h = H();
         const autoOn = h ? (stateOf(h, e.automation) === 'on') : false;
-        auto.textContent = autoOn ? '🟢 Attiva' : '🔴 Disattiva';
-        auto.style.color = autoOn ? '#4ade80' : '#f87171';
-        auto.style.borderColor = autoOn ? 'rgba(74,222,128,.38)' : 'rgba(248,113,113,.38)';
-        auto.style.background  = autoOn ? 'rgba(74,222,128,.13)' : 'rgba(248,113,113,.13)';
+        auto.textContent    = autoOn ? '🟢 Attiva' : '🔴 Disattiva';
+        auto.style.color        = autoOn ? '#4ade80' : '#f87171';
+        auto.style.borderColor  = autoOn ? 'rgba(74,222,128,.38)' : 'rgba(248,113,113,.38)';
+        auto.style.background   = autoOn ? 'rgba(74,222,128,.13)' : 'rgba(248,113,113,.13)';
         callSvc('automation', autoOn ? 'turn_off' : 'turn_on', e.automation);
         ev.stopPropagation(); return;
       }
@@ -270,6 +415,7 @@
   }
 
   function mount(cfg, rawHass, el) {
+    if (!el._openPanels) el._openPanels = new Set();
     _mountHandlers(cfg, el);
 
     function _syncTitle() {
@@ -295,8 +441,15 @@
       if (!el.isConnected) { clearInterval(el._ccPoll); delete el._ccPoll; return; }
       try {
         const h = H(); if (!h) return;
+        const openPanels = new Set(el._openPanels || []);
         el.innerHTML = render(cfg, h);
         _mountHandlers(cfg, el);
+        openPanels.forEach(i => {
+          const panel = el.querySelector(`[data-cc-panel="${i}"]`);
+          const btn   = el.querySelector(`[data-cc-expand="${i}"]`);
+          if (panel) { panel.style.display = 'flex'; }
+          if (btn)   { btn.textContent = '▾'; }
+        });
         _syncTitle();
       } catch(e) {}
     }, 1500);
@@ -331,12 +484,11 @@
       matches.forEach(m => {
         const r = document.createElement('div');
         r.style.cssText = 'padding:9px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.05);transition:background .1s';
-        const stColor = m.on ? '#f97316' : 'rgba(255,255,255,.3)';
         r.innerHTML = `<div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:13px;flex-shrink:0;filter:${m.on?'none':'grayscale(1) opacity(.4)'}">${m.icon||'📦'}</span>
           <div style="flex:1;min-width:0">
             <div style="font-size:11px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(m.name)}</div>
-            <div style="font-size:9px;color:rgba(255,255,255,.38);margin-top:1px">${eh(m.id)}${m.stateLabel?` · <span style="color:${stColor}">${eh(m.stateLabel)}</span>`:''}</div>
+            <div style="font-size:9px;color:rgba(255,255,255,.38);margin-top:1px">${eh(m.id)}${m.stateLabel?` · <span style="color:${m.on?'#f97316':'rgba(255,255,255,.3)'}">${eh(m.stateLabel)}</span>`:''}</div>
           </div>
         </div>`;
         r.addEventListener('mouseover', () => { r.style.background='rgba(249,115,22,.08)'; });
@@ -368,11 +520,11 @@
         .filter(id => nameOf(h,id).toLowerCase().includes(lq) || id.toLowerCase().includes(lq))
         .map(id => {
           const dom = id.split('.')[0];
-          const st = stateOf(h, id);
-          const active = st !== 'off' && st !== 'unknown' && st !== 'unavailable';
+          const st = h ? climaFull(h, id) : null;
+          const stStr = stateOf(h, id);
+          const active = stStr !== 'off' && stStr !== 'unknown' && stStr !== 'unavailable';
           const icons = { climate:'🌡️', light:'💡', switch:'🔌', automation:'🤖', sensor:'📡', binary_sensor:'🚪', cover:'🪟', media_player:'📺', fan:'💨' };
-          const action = attrOf(h, id, 'hvac_action') || '';
-          const stLbl = dom === 'climate' ? climaLbl(st, action) : st;
+          const stLbl = dom === 'climate' ? climaLbl(stStr, st ? st.action : '') : stStr;
           return { id, name: nameOf(h,id), on: active, icon: icons[dom]||'📦', stateLabel: stLbl };
         })
         .sort((a,b) => {
@@ -403,8 +555,8 @@
 
       const selRows = ents.map((e, i) => {
         const lbl = e.label || nameOf(h, e.entity);
-        const st = h ? stateOf(h, e.entity) : 'off';
-        const active = st !== 'off' && st !== 'unknown' && st !== 'unavailable';
+        const stStr = h ? stateOf(h, e.entity) : 'off';
+        const active = stStr !== 'off' && stStr !== 'unknown' && stStr !== 'unavailable';
         const hasAuto = !!(e.automation && e.automation.trim());
         const autoExpanded = expandedAuto.has(i);
         const autoSection = hasAuto
@@ -420,6 +572,8 @@
               </div>`
             : `<button data-addauto="${i}" style="margin-top:4px;font-size:9px;padding:3px 8px;border-radius:5px;border:1px dashed rgba(255,255,255,.2);background:transparent;color:rgba(255,255,255,.4);cursor:pointer">🤖 + Automazione (opz.)</button>`;
 
+        const ctVal = (e.customTemp != null && e.customTemp !== '') ? e.customTemp : '';
+
         return `<div style="padding:8px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid ${active?hex2rgba(col,.25):'rgba(255,255,255,.08)'};margin-bottom:6px">
           <div style="display:flex;align-items:center;gap:8px">
             <span style="font-size:15px;flex-shrink:0;filter:${active?'none':'grayscale(1) opacity(.4)'}">🌡️</span>
@@ -428,6 +582,12 @@
               <div style="font-size:9px;color:rgba(255,255,255,.35)">${eh(e.entity)}</div>
             </div>
             <button data-del="${i}" style="width:22px;height:22px;border:none;border-radius:5px;background:rgba(248,113,113,.15);color:#f87171;cursor:pointer;font-size:11px;flex-shrink:0">✕</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;margin-top:6px">
+            <span style="font-size:9px;color:rgba(255,255,255,.35);flex-shrink:0">🌡 Temp. fissa</span>
+            <input type="number" data-ctemp="${i}" value="${ctVal}" min="10" max="40" step="1" placeholder="—"
+              style="width:58px;padding:4px 8px;border-radius:6px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:#fff;font-size:11px;outline:none;text-align:center;font-family:inherit">
+            <span style="font-size:9px;color:rgba(255,255,255,.28)">°C (opz. — sovrascrive entità)</span>
           </div>
           ${autoSection}
         </div>`;
@@ -485,13 +645,20 @@
 
       const nb = ov.querySelector('#cccfg-body');
       if (nb && savedBody > 0) nb.scrollTop = savedBody;
-
       if (curLabel !== undefined) { const f = ov.querySelector('#cccfg-label'); if (f) f.value = curLabel; }
       if (curIcon  !== undefined) {
         const f = ov.querySelector('#cccfg-icon'); if (f) f.value = curIcon;
         const b = ov.querySelector('#cccfg-icon-btn'); if (b) b.innerHTML = iconHtml(curIcon, 22);
       }
       if (curColor !== undefined) { const f = ov.querySelector('#cccfg-color'); if (f) f.value = curColor; }
+
+      // sync customTemp changes to ents immediately
+      ov.querySelectorAll('[data-ctemp]').forEach(input => {
+        const i = parseInt(input.dataset.ctemp);
+        const sync = () => { const v = parseFloat(input.value); ents[i].customTemp = isNaN(v) ? null : v; };
+        input.addEventListener('input', sync);
+        input.addEventListener('change', sync);
+      });
 
       ov.querySelector('#cccfg-icon-btn')?.addEventListener('click', ev => {
         ev.stopPropagation();
@@ -516,7 +683,6 @@
       if (ov._ovClick) ov.removeEventListener('click', ov._ovClick);
       ov._ovClick = ev => { if (ev.target === ov) closeOv(); };
       ov.addEventListener('click', ov._ovClick);
-
       ov.querySelector('#cccfg-close').onclick = closeOv;
       ov.querySelector('#cccfg-cancel').onclick = closeOv;
 
@@ -548,7 +714,7 @@
       const addInp = ov.querySelector('#cccfg-add-entity');
       if (addInp) {
         _setupAc(addInp, _entityMatches, (id, name) => {
-          if (!ents.find(e => e.entity === id)) ents.push({ entity: id, label: name||'', automation: '' });
+          if (!ents.find(e => e.entity === id)) ents.push({ entity: id, label: name||'', automation: '', customTemp: null });
           addInp.value = ''; attach();
         });
       }
@@ -558,7 +724,10 @@
           label: (ov.querySelector('#cccfg-label')?.value || 'Clima').trim(),
           icon:  (ov.querySelector('#cccfg-icon')?.value  || '🌡️').trim(),
           color: ov.querySelector('#cccfg-color')?.value  || '#f97316',
-          entities: ents.filter(e => e.entity).map(e => ({ entity: e.entity.trim(), label: e.label||'', automation: e.automation||'' })),
+          entities: ents.filter(e => e.entity).map(e => {
+            const ct = parseFloat(e.customTemp);
+            return { entity: e.entity.trim(), label: e.label||'', automation: e.automation||'', customTemp: isNaN(ct) ? null : ct };
+          }),
         };
         closeOv();
         if (typeof onSave === 'function') onSave(newCfg);
@@ -572,8 +741,8 @@
   /* ── registrazione ── */
   const CARD = {
     id: ID, name: 'Gruppo Clima', icon: '🌡️',
-    desc: 'Chip con contatore climi attivi. Clic → temperatura attuale, target e controlli ON/OFF + ±0.5° per ogni clima.',
-    version: '1.0', isDistintivo: true,
+    desc: 'Chip climi attivi. Clic → temp attuale/target, controlli ±1°, ON/OFF, modalità HVAC, ventola, alette per ogni clima.',
+    version: '1.1', isDistintivo: true,
     defaultCfg: { label: 'Clima', icon: '🌡️', color: '#f97316', entities: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -582,5 +751,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-clima v1.0'); } catch(e){}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-clima v1.1'); } catch(e){}
 })();
