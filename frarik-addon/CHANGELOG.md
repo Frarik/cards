@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.6.54 — 2026-06-27
+
+### feat: GruppoEnergia v2.5 — flow energetico animato, niente arco
+
+- **Popup completamente ridisegnato**: diagramma a nodi animati — ☀️ Solare →→→ 🏠 Casa ←←← 🔌 Rete (con frecce animate che scorrono nella direzione del flusso)
+- **Nessun arco / gauge**: rimosso; il colore del nodo casa cambia verde→giallo→arancio→rosso in base al % del contratto
+- **Layout senza solare**: se solarEntity non è configurato, mostra solo 🔌 Rete →→→ 🏠 Casa
+- **% contratto**: sotto i nodi come label colorata con classe di consumo testuale
+- **Statistiche e grafico**: invariati (Picco/Media/kWh + area chart 24h)
+
 ## 1.6.53 — 2026-06-27
 
 ### fix: GruppoEnergia v2.4 — arco stabile (fix loop 0→valore)

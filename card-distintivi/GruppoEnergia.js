@@ -1,15 +1,12 @@
-/* frarik-version: 2.4 */
+/* frarik-version: 2.5 */
 /**
- * GruppoEnergia.js — Distintivo FratechStore v2.2
- * Arco centrato · Grafico 24h compatto · Statistiche
+ * GruppoEnergia.js — Distintivo FratechStore v2.5
+ * Flow energetico animato: Solare → Casa ← Rete
  */
 (function () {
   'use strict';
 
   const ID = 'gruppo-energia';
-  /* arco: SVG 160×160, raggio 66, stroke 14 */
-  const AR = 66, ACX = 80, ACY = 80, ASW = 14;
-  const AC = +(2 * Math.PI * AR).toFixed(4); // 414.69
 
   (function injectBadgeStyle() {
     if (document.getElementById('cc-badge-border-fix')) return;
@@ -65,7 +62,7 @@
         const raw = await Promise.race([window.fetchHistory(entityId, hours), to]);
         if (Array.isArray(raw) && raw.length) {
           return raw.map(p => ({ t: +(p.t instanceof Date ? p.t : new Date(p.t)), v: +p.v }))
-                    .filter(p => isFinite(p.t) && !isNaN(p.v));
+                    .filter(p => isFinite(p.t) && !isNaN(p.v) && p.v >= 0);
         }
       }
     } catch (e) {}
@@ -82,7 +79,7 @@
     return { peak, avg, kwh };
   }
 
-  /* ── grafico SVG con altezza fissa ── */
+  /* ── grafico SVG compatto ── */
   function _chart(pts, maxW, col) {
     const W = 300, H = 70;
     const noData = `<div style="height:${H}px;display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(255,255,255,.2)">Nessun dato storico disponibile</div>`;
@@ -94,60 +91,38 @@
       const xf = t => Math.max(0, Math.min(W, ((t - start) / (now - start)) * W));
       const yf = v => Math.max(1, Math.min(H - 1, H - (v / maxV) * (H - 4)));
 
-      const line  = pts.map(p => `${xf(p.t).toFixed(1)},${yf(p.v).toFixed(1)}`).join(' L ');
-      const area  = `M ${line} L ${xf(pts[pts.length-1].t).toFixed(1)},${H} L ${xf(pts[0].t).toFixed(1)},${H} Z`;
+      const line = pts.map(p => `${xf(p.t).toFixed(1)},${yf(p.v).toFixed(1)}`).join(' L ');
+      const area = `M ${line} L ${xf(pts[pts.length - 1].t).toFixed(1)},${H} L ${xf(pts[0].t).toFixed(1)},${H} Z`;
 
-      /* linee soglia */
-      const thr = [
-        { r: .50, c: '#4ade80' }, { r: .75, c: '#facc15' }, { r: .90, c: '#f97316' },
-      ].filter(t => maxV > maxW * t.r)
-       .map(t => { const y = yf(maxW * t.r).toFixed(1); return `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="${t.c}" stroke-width=".7" stroke-dasharray="4,3" opacity=".4"/>`; })
-       .join('');
+      const thr = [{ r: .50, c: '#4ade80' }, { r: .75, c: '#facc15' }, { r: .90, c: '#f97316' }]
+        .filter(t => maxV > maxW * t.r)
+        .map(t => { const y = yf(maxW * t.r).toFixed(1); return `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="${t.c}" stroke-width=".7" stroke-dasharray="4,3" opacity=".35"/>`; })
+        .join('');
 
-      /* cerchio picco */
       const pk  = pts.reduce((a, b) => b.v > a.v ? b : a);
       const pkX = xf(pk.t).toFixed(1), pkY = yf(pk.v).toFixed(1);
-      const dot = `<circle cx="${pkX}" cy="${pkY}" r="3.5" fill="${col}" stroke="rgba(0,0,0,.4)" stroke-width="1"/>`;
-
-      /* gradiente */
       const gid = 'eg' + col.replace('#', '');
 
-      /* etichette ore come testo SVG (alla fine, non influenzate da scale) */
       const labels = [0, 6, 12, 18].map(hr => {
         const d = new Date(); d.setHours(hr, 0, 0, 0);
         const x = xf(+d); if (x < 14 || x > W - 14) return '';
-        return `<text x="${x.toFixed(1)}" y="${H + 12}" text-anchor="middle" fill="rgba(255,255,255,.22)" font-size="8">${String(hr).padStart(2,'0')}:00</text>`;
+        return `<text x="${x.toFixed(1)}" y="${H + 12}" text-anchor="middle" fill="rgba(255,255,255,.22)" font-size="8">${String(hr).padStart(2, '0')}:00</text>`;
       }).join('');
 
       return `<svg width="100%" height="${H + 18}" viewBox="0 0 ${W} ${H + 18}" style="display:block;overflow:visible">
         <defs>
           <linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="${col}" stop-opacity=".45"/>
+            <stop offset="0%" stop-color="${col}" stop-opacity=".4"/>
             <stop offset="100%" stop-color="${col}" stop-opacity=".02"/>
           </linearGradient>
         </defs>
         ${thr}
-        <line x1="${W}" y1="0" x2="${W}" y2="${H}" stroke="rgba(255,255,255,.18)" stroke-width=".8" stroke-dasharray="3,2"/>
         <path d="${area}" fill="url(#${gid})"/>
         <path d="M ${line}" fill="none" stroke="${col}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
-        ${dot}
+        <circle cx="${pkX}" cy="${pkY}" r="3.5" fill="${col}" stroke="rgba(0,0,0,.4)" stroke-width="1"/>
         ${labels}
       </svg>`;
     } catch (e) { return noData; }
-  }
-
-  /* ── arco SVG — renderizzato già alla posizione corretta (niente animazione 0→N) ── */
-  function _arc(col, pct) {
-    const offset = (AC * (1 - (pct || 0) / 100)).toFixed(2);
-    return `<svg width="160" height="160" viewBox="0 0 160 160" style="display:block;overflow:visible">
-      <defs>
-        <radialGradient id="arcBgGr"><stop offset="0%" stop-color="#4ade80"/><stop offset="50%" stop-color="#facc15"/><stop offset="75%" stop-color="#f97316"/><stop offset="100%" stop-color="#ef4444"/></radialGradient>
-      </defs>
-      <style>@keyframes ePulse{0%,100%{opacity:.7}50%{opacity:1}}</style>
-      <circle cx="${ACX}" cy="${ACY}" r="${AR}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="${ASW}" stroke-linecap="round" transform="rotate(-90 ${ACX} ${ACY})" stroke-dasharray="${AC}"/>
-      <circle cx="${ACX}" cy="${ACY}" r="${AR}" fill="none" stroke="url(#arcBgGr)" stroke-width="${ASW}" stroke-linecap="round" transform="rotate(-90 ${ACX} ${ACY})" stroke-dasharray="${AC}" opacity=".14"/>
-      <circle class="e-arc-fill" cx="${ACX}" cy="${ACY}" r="${AR}" fill="none" stroke="${col}" stroke-width="${ASW}" stroke-linecap="round" transform="rotate(-90 ${ACX} ${ACY})" stroke-dasharray="${AC}" stroke-dashoffset="${offset}" style="transition:stroke-dashoffset .5s ease,stroke .3s ease"/>
-    </svg>`;
   }
 
   /* ── stat box ── */
@@ -156,6 +131,40 @@
       <div style="font-size:15px;margin-bottom:4px">${ico}</div>
       <div class="${cls}" style="font-size:12px;font-weight:800;color:#fff;line-height:1.1">${val}</div>
       <div style="font-size:8px;color:rgba(255,255,255,.3);margin-top:3px;text-transform:uppercase;letter-spacing:.4px">${label}</div>
+    </div>`;
+  }
+
+  /* ── nodo flow ── */
+  function _node(ico, valHtml, sublabel, valCls, borderCol, isCenter) {
+    const sz = isCenter ? 62 : 50;
+    const rr = Math.round(sz / 4);
+    const glow = isCenter ? `;box-shadow:0 0 24px ${borderCol}40` : '';
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:5px;min-width:${isCenter ? 80 : 68}px">
+      <div style="width:${sz}px;height:${sz}px;border-radius:${rr}px;background:rgba(255,255,255,.05);border:1.5px solid ${borderCol};display:flex;align-items:center;justify-content:center;font-size:${isCenter ? 28 : 22}px${glow}">
+        ${ico}
+      </div>
+      <div class="${valCls}" style="font-size:${isCenter ? 15 : 12}px;font-weight:900;color:${borderCol};line-height:1;text-align:center">${valHtml}</div>
+      <div style="font-size:9px;color:rgba(255,255,255,.3);text-align:center;white-space:nowrap">${sublabel}</div>
+    </div>`;
+  }
+
+  /* ── pipe animata ── */
+  function _pipe(col, dir) {
+    /* dir: 'right' = freccia a destra (solare→casa), 'left' = freccia a sinistra (rete→casa) */
+    const cy = 10, W = 70, pad = 14;
+    const x1 = dir === 'right' ? 2 : pad;
+    const x2 = dir === 'right' ? W - pad : W - 2;
+    const anim = dir === 'right' ? 'geR' : 'geL';
+    const arr = dir === 'right'
+      ? `<polygon points="${x2},${cy} ${x2 - 8},${cy - 4} ${x2 - 8},${cy + 4}" fill="${col}"/>`
+      : `<polygon points="${x1},${cy} ${x1 + 8},${cy - 4} ${x1 + 8},${cy + 4}" fill="${col}"/>`;
+    const lx1 = dir === 'right' ? x1 : x1 + 8;
+    const lx2 = dir === 'right' ? x2 - 8 : x2;
+    return `<div style="display:flex;align-items:center;padding:0 6px;margin-bottom:22px">
+      <svg width="${W}" height="20" viewBox="0 0 ${W} 20" style="overflow:visible;display:block">
+        <line x1="${lx1}" y1="${cy}" x2="${lx2}" y2="${cy}" stroke="${col}" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="4 7" style="animation:${anim} .8s linear infinite;opacity:.85"/>
+        ${arr}
+      </svg>
     </div>`;
   }
 
@@ -181,89 +190,113 @@
       </div>`;
     }
 
-    const info = _info(cfg, h);
+    const info   = _info(cfg, h);
     const { col, pct, label, maxW } = info;
 
     /* solare */
-    let solar = '';
-    if (c.solarEntity && h) {
-      const u  = attrOf(h, c.solarEntity, 'unit_of_measurement') || 'W';
-      const sw = _parseW(stateOf(h, c.solarEntity), u);
-      solar = `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;background:rgba(250,204,21,.07);border:1px solid rgba(250,204,21,.18);margin:0 0 12px">
-        <span style="font-size:16px">☀️</span>
-        <span style="flex:1;font-size:11px;font-weight:600;color:rgba(255,255,255,.6)">${eh(c.solarLabel || nameOf(h, c.solarEntity))}</span>
-        <span class="e-solar" style="font-size:14px;font-weight:800;color:#facc15">${eh(_fmtPower(sw))}</span>
+    let solarW = null, solarLabel = 'Solare';
+    const hasSolar = !!(c.solarEntity && h);
+    if (hasSolar) {
+      const su = attrOf(h, c.solarEntity, 'unit_of_measurement') || 'W';
+      solarW   = _parseW(stateOf(h, c.solarEntity), su);
+      solarLabel = c.solarLabel || nameOf(h, c.solarEntity) || 'Solare';
+    }
+
+    /* consumo totale casa */
+    const totalW = hasSolar && solarW !== null && info.w !== null
+      ? (info.w || 0) + (solarW || 0) : info.w;
+    const totalLabel = hasSolar ? _fmtPower(totalW) : label;
+
+    const gridCol   = '#60a5fa';
+    const solarCol  = '#facc15';
+    const gridLabel = hasSolar ? 'Rete' : 'Consumo';
+
+    /* flow row */
+    let flowRow = '';
+    if (hasSolar) {
+      flowRow = `<div style="display:flex;align-items:center;justify-content:center">
+        ${_node('☀️', `<span class="e-solar-val">${_fmtPower(solarW)}</span>`, solarLabel, 'e-solar-wrap', solarCol, false)}
+        ${_pipe(solarCol, 'right')}
+        ${_node('🏠', `<span class="e-val">${eh(totalLabel)}</span>`, 'Casa', 'e-casa-wrap', col, true)}
+        ${_pipe(gridCol, 'left')}
+        ${_node('🔌', `<span class="e-grid-val">${eh(label)}</span>`, gridLabel, 'e-grid-wrap', gridCol, false)}
+      </div>`;
+    } else {
+      flowRow = `<div style="display:flex;align-items:center;justify-content:center">
+        ${_node('🔌', `<span class="e-grid-val">${eh(label)}</span>`, 'Rete', 'e-grid-wrap', gridCol, false)}
+        ${_pipe(col, 'right')}
+        ${_node('🏠', `<span class="e-val">${eh(label)}</span>`, 'Consumo', 'e-casa-wrap', col, true)}
       </div>`;
     }
 
-    return `<div style="font-family:system-ui,sans-serif;padding:8px 14px 4px">
+    return `<div style="font-family:system-ui,sans-serif;padding:10px 14px 4px">
+      <style>
+        @keyframes geR{from{stroke-dashoffset:-11}to{stroke-dashoffset:0}}
+        @keyframes geL{from{stroke-dashoffset:11}to{stroke-dashoffset:0}}
+        @keyframes gePulse{0%,100%{opacity:.6}50%{opacity:1}}
+      </style>
 
-      <!-- arco centrato -->
-      <div style="display:flex;flex-direction:column;align-items:center;padding:6px 0 16px">
-        <div style="position:relative;width:160px;height:160px">
-          ${_arc(col, pct)}
-          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none">
-            <div class="e-val" style="font-size:22px;font-weight:900;color:${col};line-height:1;letter-spacing:-.5px">${eh(label)}</div>
-            <div class="e-pct" style="font-size:11px;color:rgba(255,255,255,.38);margin-top:4px">${pct}%</div>
-          </div>
-        </div>
-        <div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:6px">
-          Contratto <b style="color:rgba(255,255,255,.55)">${eh(_fmtPower(maxW))}</b>
-          &nbsp;·&nbsp;
-          <span class="e-pct2" style="color:${col};font-weight:700">${pct}% utilizzato</span>
-        </div>
+      <!-- FLOW -->
+      <div style="padding:10px 0 6px">
+        ${flowRow}
       </div>
 
-      <!-- solare -->
-      ${solar}
+      <!-- % contratto -->
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,.3);margin-bottom:14px;margin-top:2px">
+        <span class="e-pct2" style="color:${col};font-weight:700">${pct}%</span>
+        del contratto <b style="color:rgba(255,255,255,.5)">${eh(_fmtPower(maxW))}</b>
+        &nbsp;·&nbsp; classe <span style="color:${col};font-weight:700">${pct >= 90 ? '🔴 alta' : pct >= 75 ? '🟠 media-alta' : pct >= 50 ? '🟡 media' : '🟢 bassa'}</span>
+      </div>
 
-      <!-- stats -->
-      <div class="e-stats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:14px">
+      <!-- STATS -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:14px">
         ${_box('Picco oggi', '—', '⬆️', 'e-peak')}
         ${_box('Media 24h',  '—', '〰️', 'e-avg')}
         ${_box('kWh oggi',   '—', '⚡',  'e-kwh')}
       </div>
 
-      <!-- grafico -->
+      <!-- GRAFICO -->
       <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:rgba(255,255,255,.28);margin-bottom:6px">Ultime 24 ore</div>
       <div class="e-chart" style="padding-bottom:6px">
         <div style="height:88px;display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(255,255,255,.2)">⏳ Caricamento…</div>
       </div>
-
     </div>`;
   }
 
   /* ── aggiornamento live chirurgico ── */
   function _live(cfg, rawH, el) {
     try {
-      /* usa sempre H() fresco; se non disponibile torna al rawH passato */
       const h = H() || (rawH?.states ? rawH : null);
       if (!h) return;
-
       const info = _info(cfg, h);
-      /* se il sensore non ha un valore numerico valido, non aggiornare il DOM
-         (evita che pct=0 mandi l'arco a zero quando hass è momentaneamente stale) */
       if (info.w === null) return;
 
+      const c = loadCfg(cfg);
       const { col, pct, label } = info;
 
-      const v = el.querySelector('.e-val');   if (v) { v.textContent = label; v.style.color = col; }
-      const p = el.querySelector('.e-pct');   if (p) p.textContent = pct + '%';
-      const p2= el.querySelector('.e-pct2');  if (p2){ p2.textContent = pct + '% utilizzato'; p2.style.color = col; }
-
-      const arc = el.querySelector('.e-arc-fill');
-      if (arc) {
-        arc.style.strokeDashoffset = (AC * (1 - pct / 100)).toFixed(2);
-        arc.style.stroke = col;
-        arc.style.animation = pct >= 90 ? 'ePulse 1.4s ease-in-out infinite' : '';
+      /* consumo istantaneo (nodo casa o nodo unico) */
+      const hasSolar = !!(c.solarEntity && h);
+      let solarW = null;
+      if (hasSolar) {
+        const su = attrOf(h, c.solarEntity, 'unit_of_measurement') || 'W';
+        solarW = _parseW(stateOf(h, c.solarEntity), su);
       }
+      const totalW = hasSolar && solarW !== null ? (info.w || 0) + (solarW || 0) : info.w;
+      const totalLabel = hasSolar ? _fmtPower(totalW) : label;
 
-      const c = loadCfg(cfg);
-      if (c.solarEntity) {
-        const u  = attrOf(h, c.solarEntity, 'unit_of_measurement') || 'W';
-        const sw = _parseW(stateOf(h, c.solarEntity), u);
-        const se = el.querySelector('.e-solar'); if (se) se.textContent = _fmtPower(sw);
-      }
+      /* update nodi */
+      const vEl = el.querySelector('.e-val');        if (vEl) { vEl.textContent = totalLabel; vEl.parentElement.style.color = col; }
+      const gEl = el.querySelector('.e-grid-val');   if (gEl) { gEl.textContent = label; }
+      const sEl = el.querySelector('.e-solar-val');  if (sEl && solarW !== null) { sEl.textContent = _fmtPower(solarW); }
+
+      /* colore nodo casa (il contenitore .e-casa-wrap usa style.color per il valore) */
+      const cw = el.querySelector('.e-casa-wrap');
+      if (cw) cw.querySelector('.e-val').style.color = col;
+
+      /* % contratto */
+      const p2 = el.querySelector('.e-pct2');
+      if (p2) { p2.textContent = pct + '%'; p2.style.color = col; }
+
     } catch (e) {}
   }
 
@@ -285,7 +318,6 @@
       if (chartEl) chartEl.innerHTML = _chart(pts, maxW, col);
       if (peakEl)  peakEl.textContent = peak !== null ? _fmtPower(peak) : '—';
       if (avgEl)   avgEl.textContent  = avg  !== null ? _fmtPower(avg)  : '—';
-      /* kWh: legge sensore diretto se configurato, altrimenti stima con ~ */
       if (kwhEl) {
         if (c.kwhEntity) {
           const kv = parseFloat(stateOf(H(), c.kwhEntity));
@@ -301,19 +333,14 @@
 
   /* ════════════════════════════════════════ MOUNT / UPDATE ══ */
   function mount(cfg, rawHass, el) {
-    /* guard: se già montato, solo update live — evita doppia animazione */
     if (el._eMounted) { _live(cfg, rawHass, el); return; }
     el._eMounted = true;
-
-    /* l'arco è già alla posizione corretta nell'HTML (nessun rAF necessario) */
     el.innerHTML = render(cfg, rawHass);
-
     _loadChart(cfg, el);
-
     if (el._ePoll) return;
     el._ePoll = setInterval(() => {
       if (!el.isConnected) { clearInterval(el._ePoll); delete el._ePoll; return; }
-      const h = H(); if (h) _live(cfg, h, el);
+      _live(cfg, null, el);
     }, 2000);
     el._eChart = setInterval(() => {
       if (!el.isConnected) { clearInterval(el._eChart); delete el._eChart; return; }
@@ -359,7 +386,7 @@
       function match(q) {
         if (!h?.states) return [];
         return Object.keys(h.states)
-          .filter(id => id.startsWith('sensor.') && (id.toLowerCase().includes(q) || nameOf(h,id).toLowerCase().includes(q)))
+          .filter(id => id.startsWith('sensor.') && (id.toLowerCase().includes(q) || nameOf(h, id).toLowerCase().includes(q)))
           .map(id => ({ id, name: nameOf(h, id) }))
           .sort((a, b) => a.name.localeCompare(b.name));
       }
@@ -388,17 +415,18 @@
       <div id="ecfg-body" style="flex:1;overflow-y:auto;scrollbar-width:none;padding:14px 14px 4px">
         <div style="${secL}">Nome chip</div>
         <input id="ecfg-label" style="${sinp};margin-bottom:14px" value="${eh(c.label || 'Energia')}" placeholder="Nome chip">
-        <div style="${secL}">Sensore consumo istantaneo</div>
+        <div style="${secL}">Sensore consumo / importazione rete (W o kW)</div>
         <input id="ecfg-entity" style="${sinp};margin-bottom:4px" value="${eh(c.entity || '')}" placeholder="🔍 sensor.consumo_potenza…" autocomplete="off">
-        <div style="font-size:9px;color:rgba(255,255,255,.28);margin-bottom:14px">Supporta W e kW — unità letta automaticamente dall'entità</div>
+        <div style="font-size:9px;color:rgba(255,255,255,.28);margin-bottom:14px">Mostrato come nodo Rete nel flow. Se non hai il solare è anche il consumo casa.</div>
         <div style="${secL}">Potenza massima contratto (kW)</div>
         <input id="ecfg-maxkw" type="number" step="0.5" min="0.5" max="200" style="${sinp};margin-bottom:4px" value="${eh(String(c.maxKw || '3'))}" placeholder="es. 4.5">
         <div style="font-size:9px;color:rgba(255,255,255,.28);margin-bottom:14px">Verde &lt;50% · Giallo 50-75% · Arancio 75-90% · Rosso ≥90%</div>
+        <div style="${secL}">Produzione solare (opzionale)</div>
+        <input id="ecfg-solar" style="${sinp};margin-bottom:4px" value="${eh(c.solarEntity || '')}" placeholder="🔍 sensor.fotovoltaico…" autocomplete="off">
+        <div style="font-size:9px;color:rgba(255,255,255,.28);margin-bottom:14px">Se configurato appare il nodo ☀️ e il consumo casa = rete + solare</div>
         <div style="${secL}">Energia oggi — sensore kWh diretto (opzionale)</div>
         <input id="ecfg-kwh" style="${sinp};margin-bottom:4px" value="${eh(c.kwhEntity || '')}" placeholder="🔍 sensor.energia_oggi…" autocomplete="off">
-        <div style="font-size:9px;color:rgba(255,255,255,.28);margin-bottom:14px">Se configurato mostra il valore reale del contatore; se vuoto usa una stima (~) dall'integrazione della potenza</div>
-        <div style="${secL}">Produzione solare (opzionale)</div>
-        <input id="ecfg-solar" style="${sinp};margin-bottom:14px" value="${eh(c.solarEntity || '')}" placeholder="🔍 sensor.fotovoltaico…" autocomplete="off">
+        <div style="font-size:9px;color:rgba(255,255,255,.28);margin-bottom:14px">Se configurato mostra il dato reale del contatore; altrimenti stima (~) dall'integrazione della potenza</div>
         <div style="height:10px"></div>
       </div>
       <div style="display:flex;gap:8px;padding:12px 14px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0">
@@ -411,15 +439,15 @@
     ov.querySelector('#ecfg-cancel').onclick = closeOv;
     ov.onclick = ev => { if (ev.target === ov) closeOv(); };
     _setupAc(ov.querySelector('#ecfg-entity'), id => { ov.querySelector('#ecfg-entity').value = id; });
-    _setupAc(ov.querySelector('#ecfg-kwh'),    id => { ov.querySelector('#ecfg-kwh').value    = id; });
     _setupAc(ov.querySelector('#ecfg-solar'),  id => { ov.querySelector('#ecfg-solar').value  = id; });
+    _setupAc(ov.querySelector('#ecfg-kwh'),    id => { ov.querySelector('#ecfg-kwh').value    = id; });
     ov.querySelector('#ecfg-save').addEventListener('click', () => {
       const newCfg = {
         label:       (ov.querySelector('#ecfg-label')?.value  || 'Energia').trim(),
         entity:      (ov.querySelector('#ecfg-entity')?.value || '').trim(),
         maxKw:       parseFloat(ov.querySelector('#ecfg-maxkw')?.value) || 3,
-        kwhEntity:   (ov.querySelector('#ecfg-kwh')?.value    || '').trim(),
         solarEntity: (ov.querySelector('#ecfg-solar')?.value  || '').trim(),
+        kwhEntity:   (ov.querySelector('#ecfg-kwh')?.value    || '').trim(),
       };
       closeOv();
       if (typeof onSave === 'function') onSave(newCfg);
@@ -430,13 +458,13 @@
   /* ════════════════════════════════════════ REGISTRAZIONE ══ */
   const CARD = {
     id: ID, name: 'Gruppo Energia', icon: '⚡', desc: '',
-    version: '2.4', isDistintivo: true,
-    defaultCfg: { label: 'Energia', entity: '', maxKw: 3, kwhEntity: '', solarEntity: '' },
+    version: '2.5', isDistintivo: true,
+    defaultCfg: { label: 'Energia', entity: '', maxKw: 3, solarEntity: '', kwhEntity: '' },
     chip, watchEntities, render, mount, update, configure,
   };
   window.FratechCardRegistry = window.FratechCardRegistry || {};
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v2.4'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v2.5'); } catch (e) {}
 })();
