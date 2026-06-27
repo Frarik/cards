@@ -106,14 +106,7 @@
       </div>`;
     }).join('');
 
-    const title = ents.length
-      ? `<div style="padding:12px 16px 4px;font-size:15px;font-weight:700;color:${active>0?col:'rgba(255,255,255,.45)'}">
-          ${active} ${active===1?'luce accesa':'luci accese'}
-        </div>`
-      : '';
-
     return `<div id="gl-popup-body">
-      ${title}
       ${ctrlBar}
       <div>${rows||'<div style="padding:32px 20px;text-align:center;color:rgba(255,255,255,.3);font-size:12px">Nessuna luce configurata.<br><span style="font-size:10px;opacity:.6">Clicca ✏️ sulla chip per configurare.</span></div>'}</div>
     </div>`;
@@ -176,6 +169,24 @@
   function mount(cfg, rawHass, el) {
     _mountHandlers(cfg, el);
 
+    // Aggiorna il titolo dell'header popup (el.previousElementSibling = hdr di _openJsdPopup)
+    // struttura: panel > [hdr, body(=el)]; hdr > [iconDiv, textDiv, closeBtn]; textDiv > [titleEl, subEl]
+    function _syncTitle() {
+      try {
+        const hdr = el.previousElementSibling; if (!hdr) return;
+        const titleEl = hdr.children?.[1]?.firstElementChild; if (!titleEl) return;
+        const c = loadCfg(cfg);
+        const ents = Array.isArray(c.entities) ? c.entities : [];
+        const h = H();
+        const active = h ? ents.filter(e => isOn(h, e.entity)).length : 0;
+        const col = c.color || '#fbbf24';
+        titleEl.style.color = active > 0 ? col : '';
+        titleEl.textContent = active === 1 ? '1 luce accesa' : `${active} luci accese`;
+      } catch(e) {}
+    }
+
+    _syncTitle();
+
     // Polling real-time ogni 1.5s — avvia solo una volta (check _glPoll)
     if (el._glPoll) return;
     el._glPoll = setInterval(() => {
@@ -184,6 +195,7 @@
         const h = H(); if (!h) return;
         el.innerHTML = render(cfg, h);
         _mountHandlers(cfg, el);
+        _syncTitle();
       } catch(e) {}
     }, 1500);
   }

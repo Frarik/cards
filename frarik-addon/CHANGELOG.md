@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.20 — 2026-06-27
+
+### fix(gruppo-luci): contatore luci nel titolo dell'header popup (non nel body)
+
+- Il titolo del popup (dove c'era il nome del chip) ora mostra "X luci accese / 1 luce accesa"
+- Il colore del titolo cambia: colorato se accese, neutro se tutte spente
+- Aggiornato in real-time dal polling (ogni 1.5s) via DOM traversal sul parent header
+
 ## 1.6.19 — 2026-06-27
 
 ### feat(gruppo-luci): contatore luci accese spostato come titolo del popup
