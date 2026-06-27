@@ -1,4 +1,4 @@
-/* frarik-version: 2.8 */
+/* frarik-version: 2.9 */
 /**
  * GruppoEnergia.js — Distintivo FratechStore v2.8
  * Flow shimmer · ha-icon tralicio · nodi uguali · speed reattiva
@@ -140,9 +140,32 @@
     return 4.50;
   }
 
-  /* ── tralicio: ha-icon nativo HA (rendering identico all'interfaccia) ── */
+  /* ── tralicio SVG disegnato a mano (ha-icon non disponibile nel popup) ── */
   function _pylonIcon(col) {
-    return `<ha-icon icon="mdi:transmission-tower" style="color:${col};width:32px;height:32px;display:block;--mdc-icon-size:32px"></ha-icon>`;
+    return `<svg viewBox="0 0 32 42" width="32" height="32" fill="none" style="display:block;overflow:visible">
+      <!-- picco -->
+      <line x1="13" y1="1" x2="19" y2="1" stroke="${col}" stroke-width="2.2" stroke-linecap="round"/>
+      <!-- palo centrale -->
+      <line x1="16" y1="1" x2="16" y2="37" stroke="${col}" stroke-width="2" stroke-linecap="round"/>
+      <!-- braccio superiore (lungo) -->
+      <line x1="2" y1="8" x2="30" y2="8" stroke="${col}" stroke-width="2.2" stroke-linecap="round"/>
+      <!-- braccio inferiore -->
+      <line x1="6" y1="18" x2="26" y2="18" stroke="${col}" stroke-width="2" stroke-linecap="round"/>
+      <!-- X superiore: dai bordi del braccio alto al centro-basso -->
+      <line x1="2"  y1="8"  x2="16" y2="18" stroke="${col}" stroke-width="1.4" stroke-linecap="round"/>
+      <line x1="30" y1="8"  x2="16" y2="18" stroke="${col}" stroke-width="1.4" stroke-linecap="round"/>
+      <!-- X inferiore: dai bordi del braccio basso alla convergenza -->
+      <line x1="6"  y1="18" x2="16" y2="27" stroke="${col}" stroke-width="1.4" stroke-linecap="round"/>
+      <line x1="26" y1="18" x2="16" y2="27" stroke="${col}" stroke-width="1.4" stroke-linecap="round"/>
+      <!-- gambe base (a V larga) -->
+      <line x1="16" y1="37" x2="3"  y2="42" stroke="${col}" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="16" y1="37" x2="29" y2="42" stroke="${col}" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- isolatori sui bracci (cerchi pieni) -->
+      <circle cx="2"  cy="8"  r="2.8" fill="${col}"/>
+      <circle cx="30" cy="8"  r="2.8" fill="${col}"/>
+      <circle cx="6"  cy="18" r="2.2" fill="${col}"/>
+      <circle cx="26" cy="18" r="2.2" fill="${col}"/>
+    </svg>`;
   }
 
   /* ── nodo flow — tutti stessa dimensione 56px ── */
@@ -157,7 +180,7 @@
         ${icoHtml}
       </div>
       <div class="${valCls}" style="font-size:13px;font-weight:900;color:${borderCol};line-height:1;text-align:center">${valHtml}</div>
-      <div style="font-size:9px;color:rgba(255,255,255,.3);text-align:center;white-space:nowrap">${sublabel}</div>
+      <div style="font-size:9px;color:#fff;text-align:center;white-space:nowrap">${sublabel}</div>
     </div>`;
   }
 
@@ -182,7 +205,7 @@
     return `<div style="padding:9px 6px 8px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);text-align:center">
       <div style="font-size:14px;margin-bottom:3px">${ico}</div>
       <div class="${valCls}" style="font-size:11px;font-weight:800;color:#fff;line-height:1.15">${val}</div>
-      <div style="font-size:7.5px;color:rgba(255,255,255,.3);margin-top:2px;text-transform:uppercase;letter-spacing:.4px">${label}</div>
+      <div style="font-size:7.5px;color:#fff;margin-top:2px;text-transform:uppercase;letter-spacing:.4px">${label}</div>
       <div class="${subCls}" style="margin-top:4px;min-height:13px;line-height:1.2">${sub}</div>
     </div>`;
   }
@@ -277,7 +300,7 @@
       </div>
 
       <!-- GRAFICO -->
-      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:rgba(255,255,255,.28);margin-bottom:6px">Ultime 24 ore</div>
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#fff;margin-bottom:6px">Ultime 24 ore</div>
       <div class="e-chart" style="padding-bottom:6px">
         <div style="height:88px;display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(255,255,255,.2)">⏳ Caricamento…</div>
       </div>
@@ -561,7 +584,7 @@
   /* ════════════════════════════════════════ REGISTRAZIONE ══ */
   const CARD = {
     id: ID, name: 'Gruppo Energia', icon: '⚡', desc: '',
-    version: '2.8', isDistintivo: true,
+    version: '2.9', isDistintivo: true,
     defaultCfg: { label: 'Energia', entity: '', maxKw: 3, priceKwh: 0, alertKw: 0, solarEntity: '', kwhEntity: '' },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -569,5 +592,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v2.8'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v2.9'); } catch (e) {}
 })();

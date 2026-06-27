@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.58 — 2026-06-27
+
+### fix: GruppoEnergia v2.9 — tralicio SVG leggibile, testi bianchi
+
+- **Tralicio ridisegnato**: SVG a mano con palo, bracci (2), X-bracing, gambe a V e isolatori (cerchi pieni) — `ha-icon` non funziona nel contesto popup, rimosso
+- **Testi bianchi**: etichette nodi ("Rete", "Casa", "Consumo"), label box stats e titolo "Ultime 24 ore" ora a `#fff` pieno invece di `rgba(255,255,255,.28-.3)`
+
 ## 1.6.57 — 2026-06-27
 
 ### fix: GruppoEnergia v2.8 — ha-icon tralicio, nodi uguali, shimmer reattivo
