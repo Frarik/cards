@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.24 — 2026-06-27
+
+### fix: icon picker sopra il configure overlay + focus autocomplete ripristinato
+
+- Il modal `#ntf-icon-modal` veniva mostrato con z-index inferiore al configure overlay (100001) → appariva dietro e catturava la tastiera in background, rubando il focus all'autocomplete dopo ogni tasto
+- Fix: dopo `openIconPicker()` viene forzato `zIndex = 200000` sul modal, portandolo sopra il configure overlay
+
 ## 1.6.23 — 2026-06-27
 
 ### feat: icon picker HA su tutti i distintivi + GruppoFinestre + GruppoPorte

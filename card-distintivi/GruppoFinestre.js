@@ -359,6 +359,8 @@
             const f = ov.querySelector('#gfcfg-icon'); if (f) f.value = val;
             const b = ov.querySelector('#gfcfg-icon-btn'); if (b) b.innerHTML = iconHtml(val, 22);
           });
+          const _ipm = document.getElementById('ntf-icon-modal');
+          if (_ipm) _ipm.style.zIndex = '200000';
         }
       });
 
