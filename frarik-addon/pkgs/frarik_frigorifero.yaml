@@ -8,7 +8,7 @@
 #   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝            #
 #                                                             #
 #   Package: Centro Controllo Frigorifero                     #
-#   Versione: 1.2  |  Frarik / Fratech                       #
+#   Versione: 1.3  |  Frarik / Fratech                       #
 #                                                             #
 ###############################################################
 #
@@ -26,7 +26,7 @@ homeassistant:
   customize:
     package.node_anchors:
       customize: &customize
-        package: 'Centro Controllo Frigorifero 1.2 — Frarik'
+        package: 'Centro Controllo Frigorifero 1.3 — Frarik'
 
       setting:
 
@@ -38,13 +38,13 @@ homeassistant:
         Switch Frigo:          &switch_frigo 'switch.presa_frigorifero'
 
         Lista MediaPlayer Google: &google
-          - media_player.tv_sala
+          - IL_TUO_MEDIA_PLAYER_GOOGLE_1
 
         Lista mediaplayer alexa: &alexa
-          - media_player.alexa_cameretta
+          - IL_TUO_MEDIA_PLAYER_ALEXA_1
 
         Device per notifica push: &push
-          - service: mobile_app_smartphone
+          - service: IL_TUO_MOBILE_APP_1
 
 ####################################################
 #                  NOTIFICHE                       #
@@ -386,7 +386,7 @@ template:
         state: *sensore_potenza_frigo
 
       - name: "frarik_frigorifero_versione"
-        state: "1.2"
+        state: "1.3"
 
 ####################################################
 #                   COUNTER                        #

@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.6.65 — 2026-06-28
+
+### feat: Frigorifero v1.3 — wizard con Google + Alexa configurabili
+
+- Wizard: aggiunta sezione **Notifiche Google / Chromecast** (media_player, multipli, autocomplete)
+- Wizard: aggiunta sezione **Notifiche Alexa** (media_player, multipli, autocomplete)
+- PKG YAML: placeholder `IL_TUO_MEDIA_PLAYER_GOOGLE_1` / `IL_TUO_MEDIA_PLAYER_ALEXA_1` sostituiti da `_buildPkg`
+- `_buildPkgFromConfig` aggiornato con `cfg.google` e `cfg.alexa`
+- Tutti e 3 i file YAML (embedded, pkgs/, pkg/) aggiornati a v1.3
+
 ## 1.6.64 — 2026-06-28
 
 ### fix: store — lookup CardClass case-insensitive per aprire wizard

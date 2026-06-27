@@ -1,4 +1,4 @@
-/* frarik-version: 1.2 */
+/* frarik-version: 1.3 */
 (function () {
   'use strict';
 
@@ -454,7 +454,7 @@
 #   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝            #
 #                                                             #
 #   Package: Centro Controllo Frigorifero                     #
-#   Versione: 1.2  |  Frarik / Fratech                       #
+#   Versione: 1.3  |  Frarik / Fratech                       #
 #                                                             #
 ###############################################################
 
@@ -462,7 +462,7 @@ homeassistant:
   customize:
     package.node_anchors:
       customize: &customize
-        package: 'Centro Controllo Frigorifero 1.2 — Frarik'
+        package: 'Centro Controllo Frigorifero 1.3 — Frarik'
 
       setting:
 
@@ -470,10 +470,10 @@ homeassistant:
         Switch Frigo:          &switch_frigo 'IL_TUO_SWITCH_FRIGO'
 
         Lista MediaPlayer Google: &google
-          - media_player.tv_sala
+          - IL_TUO_MEDIA_PLAYER_GOOGLE_1
 
         Lista mediaplayer alexa: &alexa
-          - media_player.alexa_cameretta
+          - IL_TUO_MEDIA_PLAYER_ALEXA_1
 
         Device per notifica push: &push
           - service: IL_TUO_MOBILE_APP_1
@@ -1194,15 +1194,24 @@ automation:
   /* ── PKG BUILD ── */
   var _FRIGO_WIZ_KEY = 'frarik_pkg_wizard_frigorifero';
 
-  function _buildPkg(potenza, sw, push) {
+  function _buildPkg(potenza, sw, push, google, alexa) {
     var ind = '          ';
     var pushLines = (push && push.length)
       ? push.map(function(p) { return ind + '- service: ' + p; }).join('\n')
-      : ind + '- service: IL_TUO_MOBILE_APP_1';
+      : ind + '- service: mobile_app_smartphone';
+    var googleLines = (google && google.length)
+      ? google.map(function(p) { return ind + '- ' + p; }).join('\n')
+      : ind + '- media_player.tv_sala';
+    var alexaLines = (alexa && alexa.length)
+      ? alexa.map(function(p) { return ind + '- ' + p; }).join('\n')
+      : ind + '- media_player.alexa_cameretta';
     var yaml = _FRIGO_PKG_YAML
       .split('IL_TUO_SENSORE_POTENZA_FRIGO').join(potenza || 'sensor.non_configurato')
       .split('IL_TUO_SWITCH_FRIGO').join(sw || 'switch.non_configurato');
-    return yaml.replace(ind + '- service: IL_TUO_MOBILE_APP_1', pushLines);
+    yaml = yaml.replace(ind + '- service: IL_TUO_MOBILE_APP_1', pushLines);
+    yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_GOOGLE_1', googleLines);
+    yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_ALEXA_1', alexaLines);
+    return yaml;
   }
 
   /* ── WIZARD ── */
@@ -1211,9 +1220,12 @@ automation:
     var allIds = Object.keys(states).sort();
     var sensorIds = allIds.filter(function(id) { return /^sensor\./.test(id); });
     var switchIds = allIds.filter(function(id) { return /^switch\./.test(id); });
+    var mediaIds  = allIds.filter(function(id) { return /^media_player\./.test(id); });
     var saved = null;
     try { saved = JSON.parse(localStorage.getItem(_FRIGO_WIZ_KEY) || 'null'); } catch(e) {}
-    var pushRows = (saved && saved.push && saved.push.length) ? saved.push.slice() : [''];
+    var pushRows   = (saved && saved.push   && saved.push.length)   ? saved.push.slice()   : [''];
+    var googleRows = (saved && saved.google && saved.google.length) ? saved.google.slice() : [''];
+    var alexaRows  = (saved && saved.alexa  && saved.alexa.length)  ? saved.alexa.slice()  : [''];
 
     var host = document.createElement('div');
     var sr = host.attachShadow({mode: 'open'});
@@ -1239,15 +1251,17 @@ automation:
       inp.addEventListener('blur', function() { setTimeout(function() { drop.style.display = 'none'; }, 200); });
     }
 
-    function renderWiz() {
-      var pushHtml = pushRows.map(function(v, i) {
-        return '<div class="wd-push-row"><input class="wd-inp push-inp" type="text" autocomplete="off" placeholder="mobile_app_..." value="' + (v || '').replace(/"/g, '&quot;') + '"><button class="wd-rm" data-rm="' + i + '">✕</button></div>';
+    function multiRows(rows, cls, placeholder) {
+      return rows.map(function(v, i) {
+        return '<div class="wd-push-row"><input class="wd-inp ' + cls + '" type="text" autocomplete="off" placeholder="' + placeholder + '" value="' + (v || '').replace(/"/g, '&quot;') + '"><button class="wd-rm" data-rm="' + i + '">✕</button></div>';
       }).join('');
+    }
 
+    function renderWiz() {
       sr.innerHTML = '<style>'
         + ':host{all:initial;font-family:system-ui,sans-serif}'
         + '.wd-bd{position:fixed;inset:0;z-index:200000;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);display:flex;align-items:flex-end}'
-        + '.wd-panel{width:100%;max-height:85vh;display:flex;flex-direction:column;background:#080f18;border:1px solid rgba(56,189,248,.3);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:wUp .22s cubic-bezier(.32,1.12,.56,1)}'
+        + '.wd-panel{width:100%;max-height:88vh;display:flex;flex-direction:column;background:#080f18;border:1px solid rgba(56,189,248,.3);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:wUp .22s cubic-bezier(.32,1.12,.56,1)}'
         + '@keyframes wUp{from{transform:translateY(100%)}to{transform:translateY(0)}}'
         + '.wd-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}'
         + '.wd-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.3);flex-shrink:0}'
@@ -1279,17 +1293,36 @@ automation:
         + '<div><div class="wd-tit">Installa PKG Frigorifero</div><div class="wd-sub">frarik_frigorifero.yaml → config/packages/</div></div>'
         + '<button class="wd-x" id="wd-x">✕</button></div>'
         + '<div class="wd-body">'
+
+        /* ── Sensori ── */
         + '<div><div class="wd-sec">Sensori</div>'
         + '<div class="wd-lbl">Sensore Potenza (W)</div>'
         + '<div class="wd-frow"><input class="wd-inp" id="f-potenza" type="text" autocomplete="off" placeholder="sensor.presa_frigorifero_potenza" value="' + ((saved && saved.potenza) || '').replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-potenza"></div></div>'
         + '<div class="wd-lbl">Switch Presa Frigo</div>'
         + '<div class="wd-frow"><input class="wd-inp" id="f-switch" type="text" autocomplete="off" placeholder="switch.presa_frigorifero" value="' + ((saved && saved.sw) || '').replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-switch"></div></div>'
         + '</div>'
+
+        /* ── Notifiche Push ── */
         + '<div><div class="wd-sec">Notifiche Push</div>'
-        + '<p class="wd-note">Inserisci i mobile_app per le notifiche push (es. <code>mobile_app_iphone</code>). Puoi aggiungerne più di uno.</p>'
-        + '<div id="push-rows">' + pushHtml + '</div>'
+        + '<p class="wd-note">mobile_app dei dispositivi che ricevono le notifiche push (es. <code>mobile_app_iphone</code>).</p>'
+        + '<div id="push-rows">' + multiRows(pushRows, 'push-inp', 'mobile_app_...') + '</div>'
         + '<button class="wd-add" id="push-add">+ Aggiungi dispositivo</button>'
         + '</div>'
+
+        /* ── Notifiche Google ── */
+        + '<div><div class="wd-sec">Notifiche Google / Chromecast</div>'
+        + '<p class="wd-note">media_player dei dispositivi Google Home / Chromecast (es. <code>media_player.google_cucina</code>). Lascia vuoto per non usare.</p>'
+        + '<div id="google-rows">' + multiRows(googleRows, 'google-inp', 'media_player.google_cucina') + '</div>'
+        + '<button class="wd-add" id="google-add">+ Aggiungi speaker Google</button>'
+        + '</div>'
+
+        /* ── Notifiche Alexa ── */
+        + '<div><div class="wd-sec">Notifiche Alexa</div>'
+        + '<p class="wd-note">media_player dei dispositivi Alexa (es. <code>media_player.echo_cucina</code>). Lascia vuoto per non usare.</p>'
+        + '<div id="alexa-rows">' + multiRows(alexaRows, 'alexa-inp', 'media_player.echo_cucina') + '</div>'
+        + '<button class="wd-add" id="alexa-add">+ Aggiungi Echo</button>'
+        + '</div>'
+
         + '</div>'
         + '<div class="wd-foot">'
         + '<button class="wd-cancel" id="wd-cancel">Annulla</button>'
@@ -1302,29 +1335,38 @@ automation:
       sr.getElementById('wd-cancel').addEventListener('click', destroy);
       sr.getElementById('wd-bd').addEventListener('click', function(e) { if (e.target === sr.getElementById('wd-bd')) destroy(); });
 
-      sr.getElementById('push-rows').addEventListener('click', function(e) {
-        var btn = e.target.closest('[data-rm]'); if (!btn) return;
-        pushRows = Array.from(sr.querySelectorAll('.push-inp')).map(function(i) { return i.value; });
-        pushRows.splice(+btn.dataset.rm, 1);
-        if (!pushRows.length) pushRows = [''];
-        renderWiz();
-      });
-
-      sr.getElementById('push-add').addEventListener('click', function() {
-        pushRows = Array.from(sr.querySelectorAll('.push-inp')).map(function(i) { return i.value; });
-        pushRows.push('');
-        renderWiz();
-      });
+      function bindMulti(containerId, rows, cls, addId) {
+        sr.getElementById(containerId).addEventListener('click', function(e) {
+          var btn = e.target.closest('[data-rm]'); if (!btn) return;
+          rows.length = 0;
+          Array.from(sr.querySelectorAll('.' + cls)).forEach(function(i) { rows.push(i.value); });
+          rows.splice(+btn.dataset.rm, 1);
+          if (!rows.length) rows.push('');
+          renderWiz();
+        });
+        sr.getElementById(addId).addEventListener('click', function() {
+          Array.from(sr.querySelectorAll('.' + cls)).forEach(function(i, idx) { rows[idx] = i.value; });
+          rows.push('');
+          renderWiz();
+        });
+      }
+      bindMulti('push-rows',   pushRows,   'push-inp',   'push-add');
+      bindMulti('google-rows', googleRows, 'google-inp', 'google-add');
+      bindMulti('alexa-rows',  alexaRows,  'alexa-inp',  'alexa-add');
 
       setupAC(sr.getElementById('f-potenza'), sr.getElementById('d-potenza'), sensorIds);
-      setupAC(sr.getElementById('f-switch'), sr.getElementById('d-switch'), switchIds);
+      setupAC(sr.getElementById('f-switch'),  sr.getElementById('d-switch'),  switchIds);
+      sr.querySelectorAll('.google-inp').forEach(function(inp) { setupAC(inp, null, mediaIds); });
+      sr.querySelectorAll('.alexa-inp').forEach(function(inp)  { setupAC(inp, null, mediaIds); });
 
       sr.getElementById('wd-install').addEventListener('click', function() {
         var potenza = sr.getElementById('f-potenza').value.trim();
-        var sw = sr.getElementById('f-switch').value.trim();
-        var push = Array.from(sr.querySelectorAll('.push-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
-        try { localStorage.setItem(_FRIGO_WIZ_KEY, JSON.stringify({potenza: potenza, sw: sw, push: push})); } catch(e) {}
-        var yaml = _buildPkg(potenza, sw, push);
+        var sw      = sr.getElementById('f-switch').value.trim();
+        var push    = Array.from(sr.querySelectorAll('.push-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
+        var google  = Array.from(sr.querySelectorAll('.google-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
+        var alexa   = Array.from(sr.querySelectorAll('.alexa-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
+        try { localStorage.setItem(_FRIGO_WIZ_KEY, JSON.stringify({potenza: potenza, sw: sw, push: push, google: google, alexa: alexa})); } catch(e) {}
+        var yaml = _buildPkg(potenza, sw, push, google, alexa);
         var m = location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
         var base = location.origin + (m ? m[1] : '');
         var btn = sr.getElementById('wd-install');
@@ -1355,14 +1397,14 @@ automation:
 
   /* ── CARD ── */
   const CARD = {
-    id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '1.2',
+    id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '1.3',
     desc: 'Monitoraggio compressore, cicli, energia e costi. Richiede PKG Centro Controllo Frigorifero.',
     render: render, mount: mount, update: update, configure: openCfg,
     frarik_pkg_check: 'sensor.frarik_frigorifero_versione',
     frarik_pkg_id: 'frarik_frigorifero',
-    frarik_pkg_version: '1.2',
+    frarik_pkg_version: '1.3',
     openWizard: _openWizard,
-    _buildPkgFromConfig: function(cfg) { return _buildPkg(cfg.potenza || '', cfg.sw || '', cfg.push || []); },
+    _buildPkgFromConfig: function(cfg) { return _buildPkg(cfg.potenza || '', cfg.sw || '', cfg.push || [], cfg.google || [], cfg.alexa || []); },
   };
   window.FratechCardRegistry = window.FratechCardRegistry || {};
   window.FratechCardRegistry[CARD.id] = CARD;
