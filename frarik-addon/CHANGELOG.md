@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.6.17 — 2026-06-27
+
+### fix(gruppo-luci): dropdown smart, toggle ottimistico, automazione verde/rosso, no scrollbar
+
+- **Dropdown posizione smart**: se non c'è spazio sotto l'input di ricerca, il dropdown si apre sopra — calcolato da `window.innerHeight` vs `rect.top/bottom`
+- **No scrollbar configure**: `scrollbar-width:none` + `::-webkit-scrollbar{display:none}` su `#glcfg-body`
+- **Toggle ottimistico istantaneo**: al click il toggle si sposta immediatamente (background + thumb) senza aspettare HA — poi re-render reale dopo 700ms
+- **Automazione ottimistica**: al click il pulsante cambia colore subito (verde↔rosso) prima del re-render
+- **Stato automazione verde/rosso**: riga automazione mostra "Attiva" in verde `#4ade80` o "Disattivata" in rosso `#f87171`, aggiornato in real-time dal polling 2s
+
 ## 1.6.16 — 2026-06-27
 
 ### refactor(gruppo-luci): picker entità → autocomplete su tutte le entità HA

@@ -1,7 +1,7 @@
-/* frarik-version: 1.3 */
+/* frarik-version: 1.5 */
 /**
- * GruppoLuci.js — Distintivo FratechStore v1.3
- * Fix: animazione no-repeat, chip/render usa H() live, polling 2s nel popup, listener unico
+ * GruppoLuci.js — Distintivo FratechStore v1.5
+ * Fix: dropdown sopra/sotto smart, no scrollbar, toggle ottimistico istantaneo, automazione verde/rosso
  */
 (function () {
   'use strict';
@@ -83,10 +83,21 @@
       let autoRow = '';
       if (e.automation) {
         const autoOn = h ? isOn(h, e.automation) : false;
+        const autoName = nameOf(h, e.automation);
+        // verde = attiva, rosso = disattivata
+        const autoStateColor = autoOn ? '#4ade80' : '#f87171';
+        const autoStateLabel = autoOn ? 'Attiva' : 'Disattivata';
+        const autoBtnBg = autoOn ? 'rgba(248,113,113,.12)' : 'rgba(74,222,128,.12)';
+        const autoBtnBorder = autoOn ? 'rgba(248,113,113,.4)' : 'rgba(74,222,128,.4)';
+        const autoBtnColor = autoOn ? '#f87171' : '#4ade80';
+        const autoBtnLabel = autoOn ? 'Disattiva' : 'Attiva';
         autoRow = `<div style="display:flex;align-items:center;gap:8px;padding:4px 16px 10px 60px">
           <span style="font-size:10px;opacity:.4">🤖</span>
-          <span style="flex:1;font-size:10px;color:rgba(255,255,255,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(nameOf(h, e.automation))}</span>
-          <button data-jsd-auto="${i}" style="padding:3px 10px;border-radius:6px;border:1px solid ${autoOn?hex2rgba(col,.4):'rgba(255,255,255,.15)'};background:${autoOn?hex2rgba(col,.15):'transparent'};color:${autoOn?col:'#64748b'};cursor:pointer;font-size:10px;font-weight:600">${autoOn?'Disattiva':'Attiva'}</button>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:10px;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(autoName)}</div>
+            <div style="font-size:9px;color:${autoStateColor};font-weight:700;margin-top:1px">${autoStateLabel}</div>
+          </div>
+          <button data-jsd-auto="${i}" style="padding:3px 10px;border-radius:6px;border:1px solid ${autoBtnBorder};background:${autoBtnBg};color:${autoBtnColor};cursor:pointer;font-size:10px;font-weight:700;flex-shrink:0">${autoBtnLabel}</button>
         </div>`;
       }
       return `<div style="border-bottom:1px solid rgba(255,255,255,.04)">
@@ -117,27 +128,40 @@
     // rimuovi listener precedente (evita accumulo su ogni update)
     if (el._glHandler) el.removeEventListener('click', el._glHandler);
 
+    const col = loadCfg(cfg).color || '#fbbf24';
+
     function handler(ev) {
       const tog = ev.target.closest('[data-jsd-toggle]');
       if (tog) {
         const e = ents[parseInt(tog.dataset.jsdToggle)]; if (!e) return;
-        callSvc(e.entity.split('.')[0], isOn(H(), e.entity) ? 'turn_off' : 'turn_on', e.entity);
+        const on = isOn(H(), e.entity);
+        // aggiornamento ottimistico immediato del toggle
+        tog.style.background = on ? 'rgba(255,255,255,0.14)' : col;
+        const thumb = tog.querySelector('div');
+        if (thumb) { thumb.style.transition = 'left .18s'; thumb.style.left = on ? '2px' : '22px'; }
+        callSvc(e.entity.split('.')[0], on ? 'turn_off' : 'turn_on', e.entity);
         setTimeout(() => {
           if (!el.isConnected) return;
           el.innerHTML = render(cfg, null);
           _mountHandlers(cfg, el);
-        }, 1200);
+        }, 700);
         ev.stopPropagation(); return;
       }
       const auto = ev.target.closest('[data-jsd-auto]');
       if (auto) {
         const e = ents[parseInt(auto.dataset.jsdAuto)]; if (!e||!e.automation) return;
-        callSvc('automation', isOn(H(), e.automation) ? 'turn_off' : 'turn_on', e.automation);
+        const autoOn = isOn(H(), e.automation);
+        // aggiornamento ottimistico immediato del pulsante automazione
+        auto.textContent = autoOn ? 'Attiva' : 'Disattiva';
+        auto.style.color = autoOn ? '#4ade80' : '#f87171';
+        auto.style.borderColor = autoOn ? 'rgba(74,222,128,.4)' : 'rgba(248,113,113,.4)';
+        auto.style.background = autoOn ? 'rgba(74,222,128,.12)' : 'rgba(248,113,113,.12)';
+        callSvc('automation', autoOn ? 'turn_off' : 'turn_on', e.automation);
         setTimeout(() => {
           if (!el.isConnected) return;
           el.innerHTML = render(cfg, null);
           _mountHandlers(cfg, el);
-        }, 1200);
+        }, 700);
         ev.stopPropagation(); return;
       }
       const allBtn = ev.target.closest('[data-gl-all]');
@@ -148,7 +172,7 @@
           if (!el.isConnected) return;
           el.innerHTML = render(cfg, null);
           _mountHandlers(cfg, el);
-        }, 1200);
+        }, 700);
         ev.stopPropagation(); return;
       }
     }
@@ -192,8 +216,16 @@
       _closeAc();
       if (!matches.length) return;
       const rect = inp.getBoundingClientRect();
+      const MAXH = 220;
+      const spaceBelow = window.innerHeight - rect.bottom - 6;
+      const spaceAbove = rect.top - 6;
+      const useAbove = spaceBelow < MAXH && spaceAbove > spaceBelow;
       _acDrop = document.createElement('div');
-      _acDrop.style.cssText = `position:fixed;left:${rect.left}px;top:${rect.bottom+3}px;width:${rect.width}px;max-height:220px;overflow-y:auto;z-index:100003;background:#1a1630;border:1px solid rgba(251,191,36,.3);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.88);scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent`;
+      // posizione: sopra se non c'è spazio sotto
+      const pos = useAbove
+        ? `bottom:${window.innerHeight - rect.top + 4}px`
+        : `top:${rect.bottom + 4}px`;
+      _acDrop.style.cssText = `position:fixed;left:${rect.left}px;${pos};width:${rect.width}px;max-height:${MAXH}px;overflow-y:auto;z-index:100003;background:#1a1630;border:1px solid rgba(251,191,36,.3);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.88);scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent`;
       matches.forEach(m => {
         const r = document.createElement('div');
         r.style.cssText = 'padding:9px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.05);transition:background .1s';
@@ -305,7 +337,7 @@
 
       const anim = _firstRender ? 'animation:glCfgUp .22s cubic-bezier(.32,1.12,.56,1)' : '';
       return `<div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0f0d1a;border:1px solid rgba(251,191,36,.22);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);color:#fff;${anim}">
-        <style>@keyframes glCfgUp{from{transform:translateY(100%)}to{transform:translateY(0)}} .glcinp{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;font-size:12px;outline:none;font-family:inherit;transition:border-color .15s} .glcinp:focus{border-color:rgba(251,191,36,.5);background:rgba(251,191,36,.04)} .glcinp::placeholder{color:rgba(255,255,255,.3)}</style>
+        <style>@keyframes glCfgUp{from{transform:translateY(100%)}to{transform:translateY(0)}} .glcinp{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;font-size:12px;outline:none;font-family:inherit;transition:border-color .15s} .glcinp:focus{border-color:rgba(251,191,36,.5);background:rgba(251,191,36,.04)} .glcinp::placeholder{color:rgba(255,255,255,.3)} #glcfg-body::-webkit-scrollbar{display:none}</style>
 
         <div style="display:flex;align-items:center;gap:10px;padding:14px 18px 12px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">
           <div style="width:36px;height:36px;border-radius:10px;background:rgba(251,191,36,.13);border:1px solid rgba(251,191,36,.28);display:flex;align-items:center;justify-content:center;font-size:18px">💡</div>
@@ -316,7 +348,7 @@
           <button id="glcfg-close" style="width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,255,255,.07);color:#fff;cursor:pointer;font-size:14px">✕</button>
         </div>
 
-        <div id="glcfg-body" style="flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;padding:14px 14px 4px">
+        <div id="glcfg-body" style="flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;padding:14px 14px 4px">
 
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.35);margin-bottom:6px">Chip</div>
           <div style="display:flex;gap:7px;margin-bottom:14px">
@@ -436,7 +468,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Luci', icon: '💡',
     desc: 'Chip con contatore luci accese. Clic → pannello toggle + Accendi/Spegni tutte.',
-    version: '1.4', isDistintivo: true,
+    version: '1.5', isDistintivo: true,
     defaultCfg: { label: 'Luci', icon: '💡', color: '#fbbf24', entities: [] },
     chip, watchEntities, render, mount, update, configure,
   };
