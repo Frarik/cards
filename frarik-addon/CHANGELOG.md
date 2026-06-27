@@ -1,8 +1,8 @@
 # Changelog
 
-## 1.6.62 — 2026-06-28
+## 1.6.63 — 2026-06-28
 
-### feat: Frigorifero v1.2 — wizard PKG completo + `frarik_pkg_*`
+### feat: Frigorifero v1.2 — aggiunto pkgs/frarik_frigorifero.yaml + wizard PKG completo + `frarik_pkg_*`
 
 - **PKG YAML completo**: `_FRIGO_PKG_YAML` ora contiene l'intero package con placeholder `IL_TUO_SENSORE_POTENZA_FRIGO` / `IL_TUO_SWITCH_FRIGO` / notifiche push
 - **Wizard Shadow DOM**: `_openWizard` con form sensore potenza, switch e push multipli — installa via `/api/frarik/pkg/install` (`frarik/frarik_frigorifero.yaml`)
