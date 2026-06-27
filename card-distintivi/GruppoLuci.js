@@ -231,7 +231,12 @@
     function getLights() {
       if (!h||!h.states) return [];
       return Object.keys(h.states)
-        .filter(id => id.startsWith('light.'))
+        .filter(id => {
+          if (!id.startsWith('light.')) return false;
+          const n = nameOf(h, id).toLowerCase();
+          // mostra solo entità il cui nome o entity_id contiene "luce"/"luci"
+          return n.includes('luce') || n.includes('luci') || id.includes('luce') || id.includes('luci');
+        })
         .map(id => ({ id, name: nameOf(h,id), on: isOn(h,id) }))
         .sort((a,b) => a.name.localeCompare(b.name));
     }
@@ -340,17 +345,25 @@
       </div>`;
     }
 
-    /* ---- attach (scroll preservation + no listener accumulo su ov) ---- */
+    /* ---- attach (scroll preservation su body + list interno) ---- */
     function attach() {
       _closeAc();
+      // salva scroll di ENTRAMBI i contenitori prima di distruggere il DOM
       const prevBody = ov.querySelector('#glcfg-body');
-      const savedScroll = prevBody ? prevBody.scrollTop : 0;
+      const savedBody = prevBody ? prevBody.scrollTop : 0;
+      const prevList = ov.querySelector('#glcfg-list');
+      const savedList = prevList ? prevList.scrollTop : 0;
 
       ov.innerHTML = renderForm();
       _firstRender = false;
 
-      const newBody = ov.querySelector('#glcfg-body');
-      if (newBody && savedScroll > 0) requestAnimationFrame(() => { newBody.scrollTop = savedScroll; });
+      // ripristina dopo il layout — rAF garantisce che il DOM sia misurato
+      requestAnimationFrame(() => {
+        const nb = ov.querySelector('#glcfg-body');
+        if (nb && savedBody > 0) nb.scrollTop = savedBody;
+        const nl = ov.querySelector('#glcfg-list');
+        if (nl && savedList > 0) nl.scrollTop = savedList;
+      });
 
       /* ---- listener unico su ov per backdrop ---- */
       if (ov._ovClick) ov.removeEventListener('click', ov._ovClick);

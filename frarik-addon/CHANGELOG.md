@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.15 — 2026-06-27
+
+### fix(gruppo-luci): scroll lista luci + filtro "luce" nel picker
+
+- **Fix scroll reset**: ora vengono salvati e ripristinati (via `requestAnimationFrame`) sia lo scroll di `#glcfg-body` (contenitore esterno) sia di `#glcfg-list` (lista luci interna con `max-height`) — selezionare una luce non fa più tornare in cima
+- **Filtro picker "luce"**: il picker mostra solo le entità `light.*` il cui `friendly_name` o `entity_id` contiene "luce"/"luci" — esclude altre entità luce (strisce LED, TV backlight, ecc.) non pertinenti
+
 ## 1.6.14 — 2026-06-27
 
 ### fix(gruppo-luci): animazione, stati live, listener unico, contatore popup
