@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.6.49 — 2026-06-27
+
+### feat: GruppoEnergia v2.0 — popup ricco con arco, grafico e statistiche
+
+- **Arco SVG animato**: gauge circolare con animazione draw-on-open; glow pulsante quando il consumo supera il 90% del contratto
+- **Barra 4 zone**: affiancata all'arco con etichette soglia colorate
+- **Grafico ultime 24h**: SVG area chart con gradient fill, linee soglia colorate, marker picco e etichette orarie — caricato async senza bloccare il popup, aggiornato ogni 5 min
+- **Stats row**: Picco oggi · Media 24h · kWh stimati (calcolati dall'integrazione della cronologia)
+- **Solare live**: valore aggiornato ogni 2s senza ricreare il DOM
+- **Aggiornamento chirurgico**: il poll ogni 2s aggiorna solo valore/arco/barra senza ridisegnare il grafico
+
 ## 1.6.48 — 2026-06-27
 
 ### fix: GruppoBatterie v1.5 — scrollbar nascosta nel popup
