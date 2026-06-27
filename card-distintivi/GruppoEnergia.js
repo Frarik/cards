@@ -1,7 +1,7 @@
-/* frarik-version: 2.5 */
+/* frarik-version: 2.6 */
 /**
- * GruppoEnergia.js — Distintivo FratechStore v2.5
- * Flow energetico animato: Solare → Casa ← Rete
+ * GruppoEnergia.js — Distintivo FratechStore v2.6
+ * Flow energetico: tralicio → Casa ← Solare · pipe continua speed-reactive
  */
 (function () {
   'use strict';
@@ -134,37 +134,69 @@
     </div>`;
   }
 
+  /* ── velocità flusso (secondi per ciclo) in base a % contratto ── */
+  function _flowSpeed(pct) {
+    if (pct >= 90) return 0.30;
+    if (pct >= 75) return 0.50;
+    if (pct >= 50) return 0.80;
+    if (pct >= 20) return 1.30;
+    return 2.20;
+  }
+
+  /* ── SVG tralicio alta tensione ── */
+  function _pylonSvg(col) {
+    return `<svg width="26" height="32" viewBox="0 0 26 32" fill="none" style="display:block">
+      <line x1="1" y1="5" x2="25" y2="5" stroke="${col}" stroke-width="2" stroke-linecap="round"/>
+      <line x1="5" y1="13" x2="21" y2="13" stroke="${col}" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="13" y1="1" x2="13" y2="27" stroke="${col}" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="1"  y1="5"  x2="13" y2="13" stroke="${col}" stroke-width="1.2" stroke-linecap="round"/>
+      <line x1="25" y1="5"  x2="13" y2="13" stroke="${col}" stroke-width="1.2" stroke-linecap="round"/>
+      <line x1="5"  y1="13" x2="13" y2="20" stroke="${col}" stroke-width="1.2" stroke-linecap="round"/>
+      <line x1="21" y1="13" x2="13" y2="20" stroke="${col}" stroke-width="1.2" stroke-linecap="round"/>
+      <line x1="13" y1="27" x2="4"  y2="32" stroke="${col}" stroke-width="2"   stroke-linecap="round"/>
+      <line x1="13" y1="27" x2="22" y2="32" stroke="${col}" stroke-width="2"   stroke-linecap="round"/>
+      <circle cx="1"  cy="5"  r="2"   fill="${col}"/>
+      <circle cx="25" cy="5"  r="2"   fill="${col}"/>
+      <circle cx="5"  cy="13" r="1.5" fill="${col}"/>
+      <circle cx="21" cy="13" r="1.5" fill="${col}"/>
+    </svg>`;
+  }
+
   /* ── nodo flow ── */
-  function _node(ico, valHtml, sublabel, valCls, borderCol, isCenter) {
-    const sz = isCenter ? 62 : 50;
+  function _node(icoHtml, valHtml, sublabel, valCls, borderCol, isCenter) {
+    const sz = isCenter ? 62 : 52;
     const rr = Math.round(sz / 4);
     const glow = isCenter ? `;box-shadow:0 0 24px ${borderCol}40` : '';
-    return `<div style="display:flex;flex-direction:column;align-items:center;gap:5px;min-width:${isCenter ? 80 : 68}px">
-      <div style="width:${sz}px;height:${sz}px;border-radius:${rr}px;background:rgba(255,255,255,.05);border:1.5px solid ${borderCol};display:flex;align-items:center;justify-content:center;font-size:${isCenter ? 28 : 22}px${glow}">
-        ${ico}
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:5px;min-width:${isCenter ? 82 : 70}px">
+      <div style="width:${sz}px;height:${sz}px;border-radius:${rr}px;background:rgba(255,255,255,.05);border:1.5px solid ${borderCol};display:flex;align-items:center;justify-content:center${glow}">
+        ${icoHtml}
       </div>
       <div class="${valCls}" style="font-size:${isCenter ? 15 : 12}px;font-weight:900;color:${borderCol};line-height:1;text-align:center">${valHtml}</div>
       <div style="font-size:9px;color:rgba(255,255,255,.3);text-align:center;white-space:nowrap">${sublabel}</div>
     </div>`;
   }
 
-  /* ── pipe animata ── */
-  function _pipe(col, dir) {
-    /* dir: 'right' = freccia a destra (solare→casa), 'left' = freccia a sinistra (rete→casa) */
-    const cy = 10, W = 70, pad = 14;
-    const x1 = dir === 'right' ? 2 : pad;
-    const x2 = dir === 'right' ? W - pad : W - 2;
-    const anim = dir === 'right' ? 'geR' : 'geL';
+  /* ── pipe continua con particelle speed-reactive ── */
+  function _pipe(col, dir, pct) {
+    const spd  = _flowSpeed(pct);
+    const d1   = (spd / 3).toFixed(2);
+    const d2   = (spd * 2 / 3).toFixed(2);
+    const anim = dir === 'right' ? 'gePartR' : 'gePartL';
+    /* arrowhead (CSS triangle) */
     const arr = dir === 'right'
-      ? `<polygon points="${x2},${cy} ${x2 - 8},${cy - 4} ${x2 - 8},${cy + 4}" fill="${col}"/>`
-      : `<polygon points="${x1},${cy} ${x1 + 8},${cy - 4} ${x1 + 8},${cy + 4}" fill="${col}"/>`;
-    const lx1 = dir === 'right' ? x1 : x1 + 8;
-    const lx2 = dir === 'right' ? x2 - 8 : x2;
-    return `<div style="display:flex;align-items:center;padding:0 6px;margin-bottom:22px">
-      <svg width="${W}" height="20" viewBox="0 0 ${W} 20" style="overflow:visible;display:block">
-        <line x1="${lx1}" y1="${cy}" x2="${lx2}" y2="${cy}" stroke="${col}" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="4 7" style="animation:${anim} .8s linear infinite;opacity:.85"/>
-        ${arr}
-      </svg>
+      ? `<div style="width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:8px solid ${col};flex-shrink:0"></div>`
+      : `<div style="width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-right:8px solid ${col};flex-shrink:0"></div>`;
+    return `<div style="display:flex;align-items:center;gap:0;padding:0 4px;margin-bottom:18px;flex:1">
+      ${dir === 'left' ? arr : ''}
+      <div style="position:relative;flex:1;height:20px;overflow:hidden">
+        <!-- linea continua -->
+        <div style="position:absolute;top:50%;left:0;right:0;height:2px;background:${col};opacity:.3;transform:translateY(-50%);border-radius:1px"></div>
+        <!-- particelle scorrevoli -->
+        <div class="e-part" style="position:absolute;top:50%;transform:translateY(-50%);width:9px;height:9px;border-radius:50%;background:${col};box-shadow:0 0 8px ${col};animation:${anim} ${spd}s linear infinite"></div>
+        <div class="e-part" style="position:absolute;top:50%;transform:translateY(-50%);width:7px;height:7px;border-radius:50%;background:${col};opacity:.7;box-shadow:0 0 6px ${col};animation:${anim} ${spd}s linear infinite;animation-delay:-${d1}s"></div>
+        <div class="e-part" style="position:absolute;top:50%;transform:translateY(-50%);width:5px;height:5px;border-radius:50%;background:${col};opacity:.45;animation:${anim} ${spd}s linear infinite;animation-delay:-${d2}s"></div>
+      </div>
+      ${dir === 'right' ? arr : ''}
     </div>`;
   }
 
@@ -207,45 +239,39 @@
       ? (info.w || 0) + (solarW || 0) : info.w;
     const totalLabel = hasSolar ? _fmtPower(totalW) : label;
 
+    /* flow con tralicio */
     const gridCol   = '#60a5fa';
     const solarCol  = '#facc15';
-    const gridLabel = hasSolar ? 'Rete' : 'Consumo';
+    const pylonHtml = _pylonSvg(gridCol);
+    const houseHtml = `<span style="font-size:${hasSolar?26:28}px">🏠</span>`;
+    const sunHtml   = `<span style="font-size:26px">☀️</span>`;
 
-    /* flow row */
     let flowRow = '';
     if (hasSolar) {
       flowRow = `<div style="display:flex;align-items:center;justify-content:center">
-        ${_node('☀️', `<span class="e-solar-val">${_fmtPower(solarW)}</span>`, solarLabel, 'e-solar-wrap', solarCol, false)}
-        ${_pipe(solarCol, 'right')}
-        ${_node('🏠', `<span class="e-val">${eh(totalLabel)}</span>`, 'Casa', 'e-casa-wrap', col, true)}
-        ${_pipe(gridCol, 'left')}
-        ${_node('🔌', `<span class="e-grid-val">${eh(label)}</span>`, gridLabel, 'e-grid-wrap', gridCol, false)}
+        ${_node(pylonHtml, `<span class="e-grid-val">${eh(label)}</span>`, 'Rete', 'e-grid-wrap', gridCol, false)}
+        ${_pipe(gridCol, 'right', pct)}
+        ${_node(houseHtml, `<span class="e-val">${eh(_fmtPower(totalW))}</span>`, 'Casa', 'e-casa-wrap', col, true)}
+        ${_pipe(solarCol, 'left', pct)}
+        ${_node(sunHtml, `<span class="e-solar-val">${_fmtPower(solarW)}</span>`, solarLabel, 'e-solar-wrap', solarCol, false)}
       </div>`;
     } else {
       flowRow = `<div style="display:flex;align-items:center;justify-content:center">
-        ${_node('🔌', `<span class="e-grid-val">${eh(label)}</span>`, 'Rete', 'e-grid-wrap', gridCol, false)}
-        ${_pipe(col, 'right')}
-        ${_node('🏠', `<span class="e-val">${eh(label)}</span>`, 'Consumo', 'e-casa-wrap', col, true)}
+        ${_node(pylonHtml, `<span class="e-grid-val">${eh(label)}</span>`, 'Rete', 'e-grid-wrap', gridCol, false)}
+        ${_pipe(col, 'right', pct)}
+        ${_node(houseHtml, `<span class="e-val">${eh(label)}</span>`, 'Consumo', 'e-casa-wrap', col, true)}
       </div>`;
     }
 
     return `<div style="font-family:system-ui,sans-serif;padding:10px 14px 4px">
       <style>
-        @keyframes geR{from{stroke-dashoffset:-11}to{stroke-dashoffset:0}}
-        @keyframes geL{from{stroke-dashoffset:11}to{stroke-dashoffset:0}}
-        @keyframes gePulse{0%,100%{opacity:.6}50%{opacity:1}}
+        @keyframes gePartR{from{left:-10px}to{left:calc(100% + 10px)}}
+        @keyframes gePartL{from{left:calc(100% + 10px)}to{left:-10px}}
       </style>
 
       <!-- FLOW -->
-      <div style="padding:10px 0 6px">
+      <div style="padding:10px 0 14px">
         ${flowRow}
-      </div>
-
-      <!-- % contratto -->
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,.3);margin-bottom:14px;margin-top:2px">
-        <span class="e-pct2" style="color:${col};font-weight:700">${pct}%</span>
-        del contratto <b style="color:rgba(255,255,255,.5)">${eh(_fmtPower(maxW))}</b>
-        &nbsp;·&nbsp; classe <span style="color:${col};font-weight:700">${pct >= 90 ? '🔴 alta' : pct >= 75 ? '🟠 media-alta' : pct >= 50 ? '🟡 media' : '🟢 bassa'}</span>
       </div>
 
       <!-- STATS -->
@@ -274,7 +300,6 @@
       const c = loadCfg(cfg);
       const { col, pct, label } = info;
 
-      /* consumo istantaneo (nodo casa o nodo unico) */
       const hasSolar = !!(c.solarEntity && h);
       let solarW = null;
       if (hasSolar) {
@@ -282,21 +307,29 @@
         solarW = _parseW(stateOf(h, c.solarEntity), su);
       }
       const totalW = hasSolar && solarW !== null ? (info.w || 0) + (solarW || 0) : info.w;
-      const totalLabel = hasSolar ? _fmtPower(totalW) : label;
 
-      /* update nodi */
-      const vEl = el.querySelector('.e-val');        if (vEl) { vEl.textContent = totalLabel; vEl.parentElement.style.color = col; }
-      const gEl = el.querySelector('.e-grid-val');   if (gEl) { gEl.textContent = label; }
-      const sEl = el.querySelector('.e-solar-val');  if (sEl && solarW !== null) { sEl.textContent = _fmtPower(solarW); }
+      /* valori nodi */
+      const vEl = el.querySelector('.e-val');
+      if (vEl) { vEl.textContent = hasSolar ? _fmtPower(totalW) : label; vEl.style.color = col; }
+      const gEl = el.querySelector('.e-grid-val');
+      if (gEl) gEl.textContent = label;
+      const sEl = el.querySelector('.e-solar-val');
+      if (sEl && solarW !== null) sEl.textContent = _fmtPower(solarW);
 
-      /* colore nodo casa (il contenitore .e-casa-wrap usa style.color per il valore) */
+      /* colore nodo casa */
       const cw = el.querySelector('.e-casa-wrap');
-      if (cw) cw.querySelector('.e-val').style.color = col;
+      if (cw) { const v = cw.querySelector('.e-val'); if (v) v.style.color = col; }
 
-      /* % contratto */
-      const p2 = el.querySelector('.e-pct2');
-      if (p2) { p2.textContent = pct + '%'; p2.style.color = col; }
-
+      /* velocità particelle — aggiorna solo se categoria cambia */
+      const newSpd = _flowSpeed(pct);
+      if (Math.abs((el._eFlowSpd || 99) - newSpd) > 0.05) {
+        el._eFlowSpd = newSpd;
+        const parts = el.querySelectorAll('.e-part');
+        parts.forEach((p, i) => {
+          p.style.animationDuration = newSpd + 's';
+          p.style.animationDelay   = -(newSpd / 3 * i) + 's';
+        });
+      }
     } catch (e) {}
   }
 
@@ -458,7 +491,7 @@
   /* ════════════════════════════════════════ REGISTRAZIONE ══ */
   const CARD = {
     id: ID, name: 'Gruppo Energia', icon: '⚡', desc: '',
-    version: '2.5', isDistintivo: true,
+    version: '2.6', isDistintivo: true,
     defaultCfg: { label: 'Energia', entity: '', maxKw: 3, solarEntity: '', kwhEntity: '' },
     chip, watchEntities, render, mount, update, configure,
   };

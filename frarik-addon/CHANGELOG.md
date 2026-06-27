@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.6.55 — 2026-06-27
+
+### feat: GruppoEnergia v2.6 — tralicio SVG, pipe continua speed-reactive
+
+- **Tralicio alta tensione**: icona SVG disegnata del traliccio elettrico (braccia, isolatori, gambe a V) al posto dell'emoji 🔌
+- **Pipe continua**: rimosso il tratteggio; tre particelle luminose scorrevoli su linea solida — velocità proporzionale al consumo (≥90%=0.3s · 75-90%=0.5s · 50-75%=0.8s · 20-50%=1.3s · &lt;20%=2.2s)
+- **Rimossa riga % contratto / classe** dal popup (richiesta utente)
+- **Speed live**: `_live()` aggiorna `animation-duration` delle particelle quando la categoria di velocità cambia
+
 ## 1.6.54 — 2026-06-27
 
 ### feat: GruppoEnergia v2.5 — flow energetico animato, niente arco
