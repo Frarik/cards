@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.6.51 — 2026-06-27
+
+### feat: GruppoEnergia v2.2 — popup ridisegnato, gauge fisso
+
+- **Arco non loopa più (fix definitivo)**: guard `el._eMounted` in `mount()` impedisce a FratechStore di richiamare la funzione a ogni cambio di stato; l'animazione 0→valore avviene una sola volta all'apertura del popup
+- **Popup ridisegnato da zero**: arco grande centrato (160×160) con valore e % sovrapposti; rimossa la barra a 4 zone ridondante; layout verticale pulito
+- **Grafico compatto**: SVG con `height` esplicito in px — non si espande più a riempire tutta la finestra; etichette ore come testo SVG in area separata (non distorte da preserveAspectRatio)
+- **Update live chirurgico**: `_live()` aggiorna arco, valore, % e solare senza toccare grafico né DOM; transizione 0.4s breve per poll da 2s
+
 ## 1.6.50 — 2026-06-27
 
 ### fix: GruppoEnergia v2.1 — arco stabile, grafico e statistiche
