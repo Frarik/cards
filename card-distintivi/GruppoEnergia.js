@@ -1,7 +1,7 @@
-/* frarik-version: 2.9 */
+/* frarik-version: 3.0 */
 /**
- * GruppoEnergia.js — Distintivo FratechStore v2.8
- * Flow shimmer · ha-icon tralicio · nodi uguali · speed reattiva
+ * GruppoEnergia.js — Distintivo FratechStore v3.0
+ * Flow shimmer · tralicio img data-URI · nodi uguali · speed reattiva
  */
 (function () {
   'use strict';
@@ -140,32 +140,10 @@
     return 4.50;
   }
 
-  /* ── tralicio SVG disegnato a mano (ha-icon non disponibile nel popup) ── */
+  /* ── tralicio come <img> data-URI base64 — isolato da CSS ereditato ── */
   function _pylonIcon(col) {
-    return `<svg viewBox="0 0 32 42" width="32" height="32" fill="none" style="display:block;overflow:visible">
-      <!-- picco -->
-      <line x1="13" y1="1" x2="19" y2="1" stroke="${col}" stroke-width="2.2" stroke-linecap="round"/>
-      <!-- palo centrale -->
-      <line x1="16" y1="1" x2="16" y2="37" stroke="${col}" stroke-width="2" stroke-linecap="round"/>
-      <!-- braccio superiore (lungo) -->
-      <line x1="2" y1="8" x2="30" y2="8" stroke="${col}" stroke-width="2.2" stroke-linecap="round"/>
-      <!-- braccio inferiore -->
-      <line x1="6" y1="18" x2="26" y2="18" stroke="${col}" stroke-width="2" stroke-linecap="round"/>
-      <!-- X superiore: dai bordi del braccio alto al centro-basso -->
-      <line x1="2"  y1="8"  x2="16" y2="18" stroke="${col}" stroke-width="1.4" stroke-linecap="round"/>
-      <line x1="30" y1="8"  x2="16" y2="18" stroke="${col}" stroke-width="1.4" stroke-linecap="round"/>
-      <!-- X inferiore: dai bordi del braccio basso alla convergenza -->
-      <line x1="6"  y1="18" x2="16" y2="27" stroke="${col}" stroke-width="1.4" stroke-linecap="round"/>
-      <line x1="26" y1="18" x2="16" y2="27" stroke="${col}" stroke-width="1.4" stroke-linecap="round"/>
-      <!-- gambe base (a V larga) -->
-      <line x1="16" y1="37" x2="3"  y2="42" stroke="${col}" stroke-width="2.5" stroke-linecap="round"/>
-      <line x1="16" y1="37" x2="29" y2="42" stroke="${col}" stroke-width="2.5" stroke-linecap="round"/>
-      <!-- isolatori sui bracci (cerchi pieni) -->
-      <circle cx="2"  cy="8"  r="2.8" fill="${col}"/>
-      <circle cx="30" cy="8"  r="2.8" fill="${col}"/>
-      <circle cx="6"  cy="18" r="2.2" fill="${col}"/>
-      <circle cx="26" cy="18" r="2.2" fill="${col}"/>
-    </svg>`;
+    const s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 40" fill="none"><line x1="15" y1="2" x2="15" y2="34" stroke="${col}" stroke-width="2" stroke-linecap="round"/><line x1="1" y1="6" x2="29" y2="6" stroke="${col}" stroke-width="2.2" stroke-linecap="round"/><line x1="5" y1="15" x2="25" y2="15" stroke="${col}" stroke-width="2" stroke-linecap="round"/><line x1="1" y1="6" x2="15" y2="15" stroke="${col}" stroke-width="1.5" stroke-linecap="round"/><line x1="29" y1="6" x2="15" y2="15" stroke="${col}" stroke-width="1.5" stroke-linecap="round"/><line x1="5" y1="15" x2="15" y2="24" stroke="${col}" stroke-width="1.5" stroke-linecap="round"/><line x1="25" y1="15" x2="15" y2="24" stroke="${col}" stroke-width="1.5" stroke-linecap="round"/><line x1="15" y1="34" x2="4" y2="40" stroke="${col}" stroke-width="2.5" stroke-linecap="round"/><line x1="15" y1="34" x2="26" y2="40" stroke="${col}" stroke-width="2.5" stroke-linecap="round"/><circle cx="1" cy="6" r="2.5" fill="${col}"/><circle cx="29" cy="6" r="2.5" fill="${col}"/><circle cx="5" cy="15" r="2" fill="${col}"/><circle cx="25" cy="15" r="2" fill="${col}"/></svg>`;
+    return `<img src="data:image/svg+xml;base64,${btoa(s)}" width="30" height="40" style="display:block"/>`;
   }
 
   /* ── nodo flow — tutti stessa dimensione 56px ── */

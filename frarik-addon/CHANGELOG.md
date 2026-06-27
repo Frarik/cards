@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.59 — 2026-06-27
+
+### fix: GruppoEnergia v3.0 — tralicio come img data-URI (visibilità garantita)
+
+- **Tralicio**: SVG encodato come `<img src="data:image/svg+xml;base64,...">` invece di SVG inline — risolve invisibilità causata da CSS ereditato/namespace nel contesto popup FratechStore
+
 ## 1.6.58 — 2026-06-27
 
 ### fix: GruppoEnergia v2.9 — tralicio SVG leggibile, testi bianchi
