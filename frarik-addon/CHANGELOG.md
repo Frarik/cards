@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.6.13 — 2026-06-27
+
+### fix(gruppo-luci): scroll, autocomplete automazioni, rimozione sensorEntity
+
+- **Fix scroll**: selezione/deselezione luce non fa più tornare in cima — `scrollTop` salvato e ripristinato via `requestAnimationFrame` ad ogni re-render
+- **Autocomplete automazioni**: l'input "+ Automazione" mostra un dropdown live mentre si digita, filtrando le entità `automation.*` di HA (floating div, z-index 100003)
+- **Rimosso campo "Entità sensore"**: il contatore N/M sul chip è calcolato direttamente dalle luci selezionate, senza sensore HA aggiuntivo — il configuratore mostra solo Nome chip / Icona / Colore
+- **Accendi/Spegni tutte**: confermato che agiscono solo sulle luci configurate nel distintivo, non su tutte le luci HA
+
 ## 1.6.12 — 2026-06-27
 
 ### feat(gruppo-luci): rework completo distintivo
