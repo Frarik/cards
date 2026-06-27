@@ -1,7 +1,7 @@
-/* frarik-version: 1.6 */
+/* frarik-version: 1.7 */
 /**
- * GruppoLuci.js — Distintivo FratechStore v1.6
- * Fix: badge automazione compatto sotto toggle (verde/rosso), nessun re-render ritardato sui click, polling 1.5s
+ * GruppoLuci.js — Distintivo FratechStore v1.7
+ * Fix: icona configurabile (preserve su re-render), sottotitolo popup nascosto
  */
 (function () {
   'use strict';
@@ -174,7 +174,11 @@
     function _syncTitle() {
       try {
         const hdr = el.previousElementSibling; if (!hdr) return;
-        const titleEl = hdr.children?.[1]?.firstElementChild; if (!titleEl) return;
+        const textWrap = hdr.children?.[1]; if (!textWrap) return;
+        const titleEl = textWrap.firstElementChild; if (!titleEl) return;
+        // nasconde il sottotitolo (def.desc) nel popup
+        const subEl = textWrap.children?.[1];
+        if (subEl) subEl.style.display = 'none';
         const c = loadCfg(cfg);
         const ents = Array.isArray(c.entities) ? c.entities : [];
         const h = H();
@@ -386,12 +390,25 @@
       const prevBody = ov.querySelector('#glcfg-body');
       const savedBody = prevBody ? prevBody.scrollTop : 0;
 
+      // salva i valori correnti dei campi chip prima del re-render (evita reset se l'utente stava modificando)
+      const curLabel = ov.querySelector('#glcfg-label')?.value;
+      const curIcon  = ov.querySelector('#glcfg-icon')?.value;
+      const curColor = ov.querySelector('#glcfg-color')?.value;
+
       ov.innerHTML = renderForm();
       _firstRender = false;
 
       // ripristina scroll del body — sincrono: funziona subito dopo innerHTML
       const nb = ov.querySelector('#glcfg-body');
       if (nb && savedBody > 0) nb.scrollTop = savedBody;
+
+      // ripristina valori che l'utente stava modificando
+      if (curLabel !== undefined) { const f = ov.querySelector('#glcfg-label'); if (f) f.value = curLabel; }
+      if (curIcon  !== undefined) { const f = ov.querySelector('#glcfg-icon');  if (f) f.value = curIcon; }
+      if (curColor !== undefined) { const f = ov.querySelector('#glcfg-color'); if (f) f.value = curColor; }
+
+      // seleziona tutto al focus per facilitare la sostituzione dell'icona
+      ov.querySelector('#glcfg-icon')?.addEventListener('focus', e => e.target.select());
 
       if (ov._ovClick) ov.removeEventListener('click', ov._ovClick);
       ov._ovClick = ev => { if (ev.target === ov) closeOv(); };
@@ -472,7 +489,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Luci', icon: '💡',
     desc: 'Chip con contatore luci accese. Clic → pannello toggle + Accendi/Spegni tutte.',
-    version: '1.6', isDistintivo: true,
+    version: '1.7', isDistintivo: true,
     defaultCfg: { label: 'Luci', icon: '💡', color: '#fbbf24', entities: [] },
     chip, watchEntities, render, mount, update, configure,
   };

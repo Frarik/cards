@@ -199,7 +199,11 @@
     function _syncTitle() {
       try {
         const hdr = el.previousElementSibling; if (!hdr) return;
-        const titleEl = hdr.children?.[1]?.firstElementChild; if (!titleEl) return;
+        const textWrap = hdr.children?.[1]; if (!textWrap) return;
+        const titleEl = textWrap.firstElementChild; if (!titleEl) return;
+        // nasconde il sottotitolo (def.desc) nel popup
+        const subEl = textWrap.children?.[1];
+        if (subEl) subEl.style.display = 'none';
         const c = loadCfg(cfg);
         const ents = Array.isArray(c.entities) ? c.entities : [];
         const h = H();
@@ -405,11 +409,24 @@
       const prevBody = ov.querySelector('#gtcfg-body');
       const savedBody = prevBody ? prevBody.scrollTop : 0;
 
+      // salva i valori correnti dei campi chip prima del re-render
+      const curLabel = ov.querySelector('#gtcfg-label')?.value;
+      const curIcon  = ov.querySelector('#gtcfg-icon')?.value;
+      const curColor = ov.querySelector('#gtcfg-color')?.value;
+
       ov.innerHTML = renderForm();
       _firstRender = false;
 
       const nb = ov.querySelector('#gtcfg-body');
       if (nb && savedBody > 0) nb.scrollTop = savedBody;
+
+      // ripristina valori che l'utente stava modificando
+      if (curLabel !== undefined) { const f = ov.querySelector('#gtcfg-label'); if (f) f.value = curLabel; }
+      if (curIcon  !== undefined) { const f = ov.querySelector('#gtcfg-icon');  if (f) f.value = curIcon; }
+      if (curColor !== undefined) { const f = ov.querySelector('#gtcfg-color'); if (f) f.value = curColor; }
+
+      // seleziona tutto al focus per facilitare la sostituzione dell'icona
+      ov.querySelector('#gtcfg-icon')?.addEventListener('focus', e => e.target.select());
 
       if (ov._ovClick) ov.removeEventListener('click', ov._ovClick);
       ov._ovClick = ev => { if (ev.target === ov) closeOv(); };

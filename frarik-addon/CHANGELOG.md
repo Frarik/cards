@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.22 — 2026-06-27
+
+### fix(gruppo-luci, gruppo-tapparelle): icona modificabile + sottotitolo popup rimosso
+
+- **Fix icona**: i campi Label/Icona/Colore non si resettano più al re-render del configure (es. aggiunta entità) — i valori in corso vengono salvati e ripristinati; click sull'icona seleziona tutto per facilitare la sostituzione
+- **Sottotitolo popup rimosso**: la descrizione della card (testo sotto il titolo nell'header del popup) è nascosta per entrambi i distintivi
+
 ## 1.6.21 — 2026-06-27
 
 ### feat: nuovo distintivo GruppoTapparelle
