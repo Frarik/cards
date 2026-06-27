@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.6.28 — 2026-06-27
+
+### feat: GruppoClima — distintivo per termostati/climi
+
+- **Nuovo card `gruppo-clima`**: chip badge con contatore climi attivi (`N/TOT`), popup con stato, temperatura attuale e target per ogni clima
+- **Controlli inline**: bottoni `−` / `⏻` / `+` per ogni riga — step ±0.5° con clamping su `min_temp`/`max_temp`, toggle ON/OFF con aggiornamento ottimistico visivo
+- **Etichette stato in italiano**: "In riscaldamento", "In raffreddamento", "In attesa", "Ventilazione attiva", "Deumidificazione", "Spento", "Automatico" ecc. in base a `hvac_action` + `state`
+- **Colori semantici**: arancione `#f97316` per riscaldamento, azzurro `#38bdf8` per raffreddamento, grigio per spento/in attesa
+- **_dynIcon()**: varianti MDI per thermostat, radiator, fire, snowflake, hvac, heat-pump
+- **`callSvcEx()`**: helper per `climate.set_temperature` con payload esteso (temperature nel body)
+- **Autocomplete**: `climate.*` in cima alla lista; stessa struttura di GruppoPorte con automazione opzionale
+- Tutte le fix standard incluse: `setTimeout(_syncTitle,0)`, `inp.focus()` in `_openAc`, `color:#fff` sul bottone icona, `focusout` refocus su `#ipm-search`
+
 ## 1.6.27 — 2026-06-27
 
 ### fix: icona configurata dinamica + bianco 100% + ricerca icone + colore bottone
