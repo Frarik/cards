@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.45 — 2026-06-27
+
+### fix: GitHub store HTTP 401 — retry senza token su repo pubblico
+
+- Aggiunto helper `_ghFetchApi`: se il token configurato è scaduto/invalido e GitHub risponde 401, riprova la stessa richiesta senza header Authorization — i repo pubblici sono accessibili senza token
+- Applicato a `_ghApiListAll` (controllo aggiornamenti automatico) e `_ghListFolder` (tab store: JS, Chips, Distintivi, Premium)
+
 ## 1.6.44 — 2026-06-27
 
 ### fix: GruppoBatterie v1.2 — scroll, altezza popup, layout colonne

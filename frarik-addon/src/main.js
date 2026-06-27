@@ -1624,13 +1624,20 @@ async function _ghApiList(){
   // solo file .js, ESCLUSI i file dell'app (non sono card): frarik-panel.js, frarik-app.js, ecc.
   return j.filter(f=>f.type==='file'&&/\.js$/i.test(f.name)&&!/^frarik[-.]/i.test(f.name));
 }
+/* Helper: fetch GitHub API con fallback senza token se il token è invalido (401) */
+async function _ghFetchApi(url, g){
+  const H={'Accept':'application/vnd.github.v3+json'};
+  if(g.token) H['Authorization']='token '+g.token;
+  let r=await fetch(url,{headers:H});
+  if(r.status===401 && g.token) r=await fetch(url,{headers:{'Accept':'application/vnd.github.v3+json'}});
+  return r;
+}
 /* Lista TUTTE le card .js da tutte le cartelle installabili (card-js, card-chips, card-distintivi)
    con UNA sola richiesta (git tree), così il controllo automatico copre ogni cartella senza esaurire il limite. */
 async function _ghApiListAll(){
   const g=_ghCfg(); if(!g.owner||!g.repo) throw new Error('Configura proprietario e repository');
   const branch=g.branch||'main';
-  const H={'Accept':'application/vnd.github.v3+json'}; if(g.token) H['Authorization']='token '+g.token;
-  const r=await fetch(`https://api.github.com/repos/${g.owner}/${g.repo}/git/trees/${encodeURIComponent(branch)}?recursive=1`,{headers:H});
+  const r=await _ghFetchApi(`https://api.github.com/repos/${g.owner}/${g.repo}/git/trees/${encodeURIComponent(branch)}?recursive=1`,g);
   if(r.status===403) throw new Error('Limite richieste GitHub raggiunto, riprova tra poco');
   if(r.status===404) throw new Error('Repo o branch non trovati');
   if(!r.ok) throw new Error('GitHub HTTP '+r.status);
@@ -1958,8 +1965,7 @@ async function _ghListFolder(path){
   const g=_ghCfg(); if(!g.owner||!g.repo) throw new Error('Configura GitHub (proprietario/repository)');
   const p=path?path.split('/').map(encodeURIComponent).join('/'):'';
   const url=`https://api.github.com/repos/${g.owner}/${g.repo}/contents/${p}?ref=${encodeURIComponent(g.branch||'main')}`;
-  const H={'Accept':'application/vnd.github.v3+json'}; if(g.token) H['Authorization']='token '+g.token;
-  const r=await fetch(url,{headers:H});
+  const r=await _ghFetchApi(url,g);
   if(r.status===404) return [];   // cartella non ancora creata su GitHub
   if(r.status===403) throw new Error('Limite richieste GitHub raggiunto, riprova tra poco');
   if(!r.ok) throw new Error('GitHub HTTP '+r.status);
