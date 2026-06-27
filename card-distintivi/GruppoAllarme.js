@@ -1,14 +1,11 @@
-/* frarik-version: 1.5 */
+/* frarik-version: 1.6 */
 /**
- * GruppoAllarme.js — Distintivo FratechStore v1.5
+ * GruppoAllarme.js — Distintivo FratechStore v1.6
  * Chip stato allarme Alarmo + popup sensori/bypass + overlay triggered automatico
  *
- * Fix v1.5:
- *  - Bypass persistente tra aperture popup (module-level _bypassedState)
- *  - Chip emoji aggiornata a ogni cambio stato (via chip.value)
- *  - Sfondo chip bianco per tutti i distintivi (CSS injection)
- *  - callEx preferisce window.callSvc (firma nota e affidabile)
- *  - Bypass state azzerata automaticamente quando l'allarme si arma
+ * Fix v1.6:
+ *  - Badge: contorno colorato (var(--bc)) su sfondo trasparente, niente bianco
+ *  - Arm con bypass: chiama sia alarm_control_panel.alarm_arm_* sia alarmo.arm force:true
  */
 (function () {
   'use strict';
@@ -112,14 +109,14 @@
   }
 
   /* ────────────────────────────────────────────
-     CSS INJECTION — sfondo bianco per tutti i .hbadge
-     (chip.color controlla il testo, non lo sfondo)
+     CSS INJECTION — contorno colorato per tutti i .hbadge
+     chip.color (--bc) controlla testo E bordo; sfondo trasparente
      ──────────────────────────────────────────── */
   (function injectBadgeStyle() {
-    if (document.getElementById('cc-badge-white-fix')) return;
+    if (document.getElementById('cc-badge-border-fix')) return;
     const s = document.createElement('style');
-    s.id = 'cc-badge-white-fix';
-    s.textContent = '.hbadge{background:rgba(255,255,255,.92)!important;border-color:rgba(0,0,0,.1)!important}';
+    s.id = 'cc-badge-border-fix';
+    s.textContent = '.hbadge{background:transparent!important;border-color:var(--bc,rgba(255,255,255,.35))!important;border-width:1.5px!important}';
     (document.head || document.documentElement).appendChild(s);
   })();
 
@@ -373,12 +370,16 @@
         const bypSet = el._bypassed instanceof Set ? el._bypassed : new Set();
 
         if (bypSet.size > 0) {
-          /* alarmo.arm con force:true — bypassa i sensori aperti.
-             Richiede "Consenti bypass" abilitato nelle impostazioni Alarmo per ogni sensore. */
+          /* Arm con bypass: chiama sia il servizio standard HA (che Alarmo può bloccare
+             se ci sono sensori aperti) sia alarmo.arm con force:true (bypassa il blocco).
+             Uno dei due andrà a buon fine. */
           const modeMap = { alarm_arm_away:'away', alarm_arm_home:'home', alarm_arm_night:'night', alarm_arm_vacation:'vacation' };
-          const payload = { entity_id: ae, mode: modeMap[svc] || 'away', force: true, skip_delay: false };
-          if (code) payload.code = code;
-          callEx('alarmo', 'arm', payload);
+          const stdPayload = { entity_id: ae };
+          if (code) stdPayload.code = code;
+          callEx('alarm_control_panel', svc, stdPayload);
+          const alarmoPayload = { entity_id: ae, mode: modeMap[svc] || 'away', force: true };
+          if (code) alarmoPayload.code = code;
+          callEx('alarmo', 'arm', alarmoPayload);
         } else {
           const payload = { entity_id: ae };
           if (code) payload.code = code;
@@ -681,7 +682,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Allarme', icon: '🔒',
     desc: '',
-    version: '1.5', isDistintivo: true,
+    version: '1.6', isDistintivo: true,
     defaultCfg: { label: 'Allarme', alarmEntity: '', code: '', modes: ['armed_away'], sensors: [], siren: '' },
     chip,
     watchEntities,
@@ -695,5 +696,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v1.5'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v1.6'); } catch (e) {}
 })();

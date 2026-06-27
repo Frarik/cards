@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.38 — 2026-06-27
+
+### fix: GruppoAllarme v1.6 — contorno badge, arm bypass doppio tentativo
+
+- **Badge contorno**: rimosso sfondo bianco — ora `background:transparent` con `border-color:var(--bc)` → il contorno della chip è colorato come il testo (stato allarme), sfondo trasparente
+- **Arm con bypass affidabile**: quando ci sono sensori esclusi chiama ENTRAMBI `alarm_control_panel.alarm_arm_*` (standard HA) E `alarmo.arm force:true` (Alarmo nativo) — se Alarmo blocca il servizio standard, il secondo con force bypassa il blocco; se alarmo.arm non esiste, il servizio standard opera normalmente
+
 ## 1.6.37 — 2026-06-27
 
 ### fix: GruppoAllarme v1.5 — bypass persistente, chip emoji, badge bianchi
