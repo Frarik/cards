@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.26 — 2026-06-27
+
+### fix: icone dinamiche uniformi chip↔popup + sottotitolo istantaneo
+
+- **GruppoPorte/Finestre chip**: icona ora sempre dinamica (mdi:door-open/closed, mdi:window-open/window), non solo quando si usa l'emoji di default — chip e righe popup ora sempre allineate
+- **GruppoTapparelle**: aggiunta icona MDI dinamica `mdi:blinds-open`/`mdi:blinds` sia nel chip badge sia nel cerchio icona di ogni riga popup
+- **Sottotitolo popup**: `_syncTitle()` spostato a `setTimeout(..., 0)` in tutti i 4 mount() — il panel non era ancora nel DOM al momento della prima chiamata sincrona, quindi il sottotitolo rimaneva visibile per ~1500ms (un ciclo di polling); ora scompare immediatamente al primo frame
+
 ## 1.6.25 — 2026-06-27
 
 ### feat: GruppoPorte/GruppoFinestre — colori sicurezza + icone MDI dinamiche + fix focus autocomplete

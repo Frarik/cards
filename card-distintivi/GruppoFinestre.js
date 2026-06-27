@@ -47,11 +47,8 @@
     const active = h ? ents.filter(e => isOn(h, e.entity)).length : 0;
     const col = c.color || '#34d399';
     const anyOpen = active > 0;
-    const dynIcon = (!c.icon || c.icon === '🪟')
-      ? iconHtml(anyOpen ? 'mdi:window-open' : 'mdi:window')
-      : iconHtml(c.icon);
     return {
-      icon: dynIcon,
+      icon: iconHtml(anyOpen ? 'mdi:window-open' : 'mdi:window'),
       label: c.label || 'Finestre',
       value: ents.length ? `${active}/${ents.length}` : '—',
       color: active > 0 ? col : 'rgba(255,255,255,0.32)',
@@ -157,7 +154,7 @@
       } catch(e) {}
     }
 
-    _syncTitle();
+    setTimeout(_syncTitle, 0);
 
     if (el._gfPoll) return;
     el._gfPoll = setInterval(() => {

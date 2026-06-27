@@ -1,6 +1,6 @@
-/* frarik-version: 1.0 */
+/* frarik-version: 1.1 */
 /**
- * GruppoTapparelle.js — Distintivo FratechStore v1.0
+ * GruppoTapparelle.js — Distintivo FratechStore v1.1
  * Chip contatore tapparelle aperte + popup con Apri/Stop/Chiudi + posizione + automazione opzionale
  */
 (function () {
@@ -60,8 +60,9 @@
     const ents = Array.isArray(c.entities) ? c.entities : [];
     const active = h ? ents.filter(e => isOn(h, e.entity)).length : 0;
     const col = c.color || '#38bdf8';
+    const anyOpen = active > 0;
     return {
-      icon: iconHtml(c.icon || '🪟'),
+      icon: iconHtml(anyOpen ? 'mdi:blinds-open' : 'mdi:blinds'),
       label: c.label || 'Tapparelle',
       value: ents.length ? `${active}/${ents.length}` : '—',
       color: active > 0 ? col : 'rgba(255,255,255,0.32)',
@@ -125,7 +126,7 @@
 
       return `<div style="border-bottom:1px solid rgba(255,255,255,.04)">
         <div style="display:flex;align-items:center;gap:12px;padding:11px 16px">
-          <div style="width:36px;height:36px;border-radius:50%;background:${on?hex2rgba(col,.15):'rgba(255,255,255,.05)'};border:1px solid ${on?hex2rgba(col,.3):'rgba(255,255,255,.1)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;filter:${on||moving?'none':'grayscale(1) opacity(.4)'}">🪟</div>
+          <div style="width:36px;height:36px;border-radius:50%;background:${on?hex2rgba(col,.15):'rgba(255,255,255,.05)'};border:1px solid ${on?hex2rgba(col,.3):'rgba(255,255,255,.1)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${on||moving?col:'rgba(255,255,255,.4)'}">${iconHtml(on||moving?'mdi:blinds-open':'mdi:blinds',18)}</div>
           <div style="flex:1;min-width:0">
             <div style="font-size:13px;font-weight:600;color:${on?'#fff':'rgba(255,255,255,.6)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
             <div style="font-size:11px;color:${stCol};margin-top:1px;font-weight:${on||moving?600:400}">${stLbl}</div>
@@ -220,7 +221,7 @@
       } catch(e) {}
     }
 
-    _syncTitle();
+    setTimeout(_syncTitle, 0);
 
     if (el._gtPoll) return;
     el._gtPoll = setInterval(() => {
@@ -520,7 +521,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Tapparelle', icon: '🪟',
     desc: 'Chip con contatore tapparelle aperte. Clic → pannello Apri/Stop/Chiudi + posizione.',
-    version: '1.0', isDistintivo: true,
+    version: '1.1', isDistintivo: true,
     defaultCfg: { label: 'Tapparelle', icon: '🪟', color: '#38bdf8', entities: [] },
     chip, watchEntities, render, mount, update, configure,
   };

@@ -194,7 +194,7 @@
       } catch(e) {}
     }
 
-    _syncTitle();
+    setTimeout(_syncTitle, 0);
 
     // Polling real-time ogni 1.5s — avvia solo una volta (check _glPoll)
     if (el._glPoll) return;

@@ -47,11 +47,8 @@
     const active = h ? ents.filter(e => isOn(h, e.entity)).length : 0;
     const col = c.color || '#fb923c';
     const anyOpen = active > 0;
-    const dynIcon = (!c.icon || c.icon === '🚪')
-      ? iconHtml(anyOpen ? 'mdi:door-open' : 'mdi:door-closed')
-      : iconHtml(c.icon);
     return {
-      icon: dynIcon,
+      icon: iconHtml(anyOpen ? 'mdi:door-open' : 'mdi:door-closed'),
       label: c.label || 'Porte',
       value: ents.length ? `${active}/${ents.length}` : '—',
       color: active > 0 ? col : 'rgba(255,255,255,0.32)',
@@ -157,7 +154,7 @@
       } catch(e) {}
     }
 
-    _syncTitle();
+    setTimeout(_syncTitle, 0);
 
     if (el._gpPoll) return;
     el._gpPoll = setInterval(() => {
