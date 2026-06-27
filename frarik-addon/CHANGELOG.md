@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.42 — 2026-06-27
+
+### feat: distintivi GruppoEnergia e GruppoBatterie
+
+- **GruppoEnergia v1.0**: consumo istantaneo colorato in base alla % della potenza contrattuale — verde &lt;50%, giallo 50-75%, arancio 75-90%, rosso ≥90%; barra progressiva a 4 zone; supporto opzionale sensore solare; sensori W e kW gestiti automaticamente dall'unità dell'entità
+- **GruppoBatterie v1.0**: monitora una lista configurabile di sensori batteria (sensor/binary_sensor); rileva livello basso (soglia configurabile, default 20%), critico (default 10%) e offline (unavailable/unknown); chip mostra conteggio per categoria; popup lista dispositivi ordinati per urgenza con barra livello
+
 ## 1.6.41 — 2026-06-27
 
 ### fix: cfg distintivi salvata su TUTTI i percorsi di cancellazione
