@@ -1,4 +1,4 @@
-/* frarik-version: 1.3 */
+/* frarik-version: 1.4 */
 /**
  * GruppoBatterie.js — Distintivo FratechStore v1.2
  * Rileva automaticamente TUTTE le entità con device_class: battery
@@ -157,40 +157,59 @@
       summaryTxt = `⚠️ ${pcs.join(' · ')} su ${total}`;
     }
 
-    /* offline → riga orizzontale in cima; altri → griglia 3 colonne */
-    const offlineItems = items.filter(i => i.status === 'offline');
-    const otherItems   = items.filter(i => i.status !== 'offline');
+    /* ── sezione offline: pill orizzontali in cima ── */
+    const offlineItems   = items.filter(i => i.status === 'offline');
+    const criticalItems  = items.filter(i => i.status === 'critical');
+    const lowItems       = items.filter(i => i.status === 'low');
+    const okItems        = items.filter(i => i.status === 'ok');
 
     const offlineRow = offlineItems.length ? `
-      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">
         ${offlineItems.map(item => `
-          <div style="display:flex;align-items:center;gap:5px;padding:5px 9px;border-radius:20px;border:1px solid #ef444440;background:#ef444410;min-width:0;max-width:100%">
-            <span style="font-size:13px;flex-shrink:0">📴</span>
-            <span style="font-size:10px;font-weight:700;color:#ef4444;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(item.name)}</span>
+          <div style="display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;border:1px solid #ef444440;background:#ef444412">
+            <span style="font-size:12px;flex-shrink:0">📴</span>
+            <span style="font-size:10px;font-weight:700;color:#ef4444;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px">${eh(item.name)}</span>
           </div>`).join('')}
       </div>` : '';
 
-    const grid3 = otherItems.map(item => {
+    /* ── card singola batteria ── */
+    function _battCard(item) {
       const sc = STATUS_COL[item.status];
       const bar = item.level !== null
-        ? `<div style="position:relative;height:3px;border-radius:2px;background:rgba(255,255,255,.08);margin-top:5px">
+        ? `<div style="position:relative;height:3px;border-radius:2px;background:rgba(255,255,255,.08);margin:5px 0 3px">
              <div style="position:absolute;top:0;left:0;height:100%;width:${Math.max(3, item.level)}%;background:${sc};border-radius:2px"></div>
            </div>`
-        : '';
-      return `<div style="display:flex;flex-direction:column;padding:7px 8px;border-radius:9px;border:1px solid ${sc}28;background:${sc}09">
-        <div style="display:flex;align-items:center;gap:4px;min-width:0">
-          <span style="font-size:13px;flex-shrink:0">${STATUS_EMO[item.status]}</span>
-          <div style="flex:1;min-width:0;font-size:10px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(item.name)}</div>
-        </div>
+        : '<div style="height:8px"></div>';
+      return `<div style="padding:7px 8px;border-radius:9px;border:1px solid ${sc}25;background:${sc}08;margin-bottom:4px">
+        <div style="font-size:10px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(item.name)}</div>
         ${bar}
-        <div style="margin-top:5px;display:flex;align-items:baseline;justify-content:space-between">
-          ${item.level !== null
-            ? `<span style="font-size:12px;font-weight:900;color:${sc};line-height:1">${Math.round(item.level)}%</span>`
-            : `<span></span>`}
-          <span style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:${sc}">${eh(STATUS_LABEL[item.status])}</span>
-        </div>
+        ${item.level !== null
+          ? `<div style="font-size:12px;font-weight:900;color:${sc};line-height:1">${Math.round(item.level)}%</div>`
+          : `<div style="font-size:9px;font-weight:700;color:${sc}">—</div>`}
       </div>`;
-    }).join('');
+    }
+
+    /* ── colonna per categoria ── */
+    function _col(label, emo, sc, colItems) {
+      const cards = colItems.map(_battCard).join('');
+      const empty = colItems.length === 0
+        ? `<div style="padding:12px 0;text-align:center;font-size:9px;color:rgba(255,255,255,.18)">nessuna</div>`
+        : '';
+      return `<div style="display:flex;flex-direction:column;min-width:0">
+        <div style="display:flex;align-items:center;gap:4px;padding:5px 6px 6px;border-bottom:1px solid ${sc}30;margin-bottom:6px">
+          <span style="font-size:12px">${emo}</span>
+          <span style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:${sc}">${label}</span>
+          ${colItems.length ? `<span style="margin-left:auto;font-size:9px;font-weight:700;color:${sc};background:${sc}18;border-radius:8px;padding:1px 6px">${colItems.length}</span>` : ''}
+        </div>
+        ${cards}${empty}
+      </div>`;
+    }
+
+    const col3 = `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      ${_col('Critiche', '🔴', '#ef4444', criticalItems)}
+      ${_col('Basse',    '🟡', '#facc15', lowItems)}
+      ${_col('OK',       '🟢', '#4ade80', okItems)}
+    </div>`;
 
     return `<div style="padding:10px 10px 0;font-family:system-ui,sans-serif">
 
@@ -201,7 +220,7 @@
 
       <div class="batt-scroll" style="max-height:55vh;overflow-y:auto;scrollbar-width:thin;padding-bottom:10px">
         ${offlineRow}
-        ${otherItems.length ? `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px">${grid3}</div>` : ''}
+        ${col3}
       </div>
     </div>`;
   }
@@ -312,7 +331,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Batterie', icon: '🔋',
     desc: '',
-    version: '1.3', isDistintivo: true,
+    version: '1.4', isDistintivo: true,
     defaultCfg: { label: 'Batterie', threshLow: 20, threshCrit: 10 },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -321,5 +340,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-batterie v1.3'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-batterie v1.4'); } catch (e) {}
 })();

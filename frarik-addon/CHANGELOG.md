@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.47 — 2026-06-27
+
+### feat: GruppoBatterie v1.4 — colonne per categoria
+
+- Layout Kanban: 3 colonne fisse (🔴 Critiche · 🟡 Basse · 🟢 OK) ciascuna con header colorato e contatore
+- Dispositivi offline come pill rosse orizzontali nella riga superiore sopra le colonne
+- Ogni colonna mostra "nessuna" se vuota
+
 ## 1.6.46 — 2026-06-27
 
 ### feat: GruppoBatterie v1.3 — layout offline in cima + griglia 3 colonne
