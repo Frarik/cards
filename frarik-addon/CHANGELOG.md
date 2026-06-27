@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.52 — 2026-06-27
+
+### fix: GruppoEnergia v2.3 — gauge stabile, kWh da sensore reale
+
+- **Gauge non si muove più**: l'arco è ora renderizzato già alla posizione corretta nell'HTML (nessuna animazione 0→valore); la transizione CSS `stroke-dashoffset .5s` è inline sull'elemento SVG e agisce solo quando il valore cambia davvero
+- **kWh reale**: aggiunto campo "Energia oggi" nella configurazione — se si imposta un sensore kWh diretto del contatore (es. `sensor.energia_oggi`), il box mostra il valore preciso; se non configurato rimane la stima con prefisso `~`
+- **Configurazione**: autocomplete disponibile anche sul campo kWh
+
 ## 1.6.51 — 2026-06-27
 
 ### feat: GruppoEnergia v2.2 — popup ridisegnato, gauge fisso

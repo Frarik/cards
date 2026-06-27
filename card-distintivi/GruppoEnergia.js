@@ -1,4 +1,4 @@
-/* frarik-version: 2.2 */
+/* frarik-version: 2.3 */
 /**
  * GruppoEnergia.js — Distintivo FratechStore v2.2
  * Arco centrato · Grafico 24h compatto · Statistiche
@@ -136,17 +136,17 @@
     } catch (e) { return noData; }
   }
 
-  /* ── arco SVG ── */
-  function _arc(col) {
+  /* ── arco SVG — renderizzato già alla posizione corretta (niente animazione 0→N) ── */
+  function _arc(col, pct) {
+    const offset = (AC * (1 - (pct || 0) / 100)).toFixed(2);
     return `<svg width="160" height="160" viewBox="0 0 160 160" style="display:block;overflow:visible">
       <defs>
         <radialGradient id="arcBgGr"><stop offset="0%" stop-color="#4ade80"/><stop offset="50%" stop-color="#facc15"/><stop offset="75%" stop-color="#f97316"/><stop offset="100%" stop-color="#ef4444"/></radialGradient>
-        <filter id="arcGlow"><feGaussianBlur in="SourceGraphic" stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
       </defs>
       <style>@keyframes ePulse{0%,100%{opacity:.7}50%{opacity:1}}</style>
       <circle cx="${ACX}" cy="${ACY}" r="${AR}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="${ASW}" stroke-linecap="round" transform="rotate(-90 ${ACX} ${ACY})" stroke-dasharray="${AC}"/>
       <circle cx="${ACX}" cy="${ACY}" r="${AR}" fill="none" stroke="url(#arcBgGr)" stroke-width="${ASW}" stroke-linecap="round" transform="rotate(-90 ${ACX} ${ACY})" stroke-dasharray="${AC}" opacity=".14"/>
-      <circle class="e-arc-fill" cx="${ACX}" cy="${ACY}" r="${AR}" fill="none" stroke="${col}" stroke-width="${ASW}" stroke-linecap="round" transform="rotate(-90 ${ACX} ${ACY})" stroke-dasharray="${AC}" stroke-dashoffset="${AC}"/>
+      <circle class="e-arc-fill" cx="${ACX}" cy="${ACY}" r="${AR}" fill="none" stroke="${col}" stroke-width="${ASW}" stroke-linecap="round" transform="rotate(-90 ${ACX} ${ACY})" stroke-dasharray="${AC}" stroke-dashoffset="${offset}" style="transition:stroke-dashoffset .5s ease,stroke .3s ease"/>
     </svg>`;
   }
 
@@ -167,7 +167,7 @@
 
   function watchEntities(cfg) {
     const c = loadCfg(cfg);
-    return [c.entity, c.solarEntity].filter(Boolean);
+    return [c.entity, c.solarEntity, c.kwhEntity].filter(Boolean);
   }
 
   /* ════════════════════════════════════════ RENDER ══ */
@@ -201,7 +201,7 @@
       <!-- arco centrato -->
       <div style="display:flex;flex-direction:column;align-items:center;padding:6px 0 16px">
         <div style="position:relative;width:160px;height:160px">
-          ${_arc(col)}
+          ${_arc(col, pct)}
           <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none">
             <div class="e-val" style="font-size:22px;font-weight:900;color:${col};line-height:1;letter-spacing:-.5px">${eh(label)}</div>
             <div class="e-pct" style="font-size:11px;color:rgba(255,255,255,.38);margin-top:4px">${pct}%</div>
@@ -243,17 +243,18 @@
       const p = el.querySelector('.e-pct');   if (p) p.textContent = pct + '%';
       const p2= el.querySelector('.e-pct2');  if (p2){ p2.textContent = pct + '% utilizzato'; p2.style.color = col; }
 
+      /* transizione già impostata nell'inline style dell'SVG — non riscriverla */
       const arc = el.querySelector('.e-arc-fill');
       if (arc) {
-        arc.style.transition = 'stroke-dashoffset .4s ease, stroke .3s ease';
         arc.style.strokeDashoffset = (AC * (1 - pct / 100)).toFixed(2);
         arc.style.stroke = col;
         arc.style.animation = pct >= 90 ? 'ePulse 1.4s ease-in-out infinite' : '';
       }
 
-      if (cfg.solarEntity && h) {
-        const u  = attrOf(h, cfg.solarEntity, 'unit_of_measurement') || 'W';
-        const sw = _parseW(stateOf(h, cfg.solarEntity), u);
+      const c = loadCfg(cfg);
+      if (c.solarEntity && h) {
+        const u  = attrOf(h, c.solarEntity, 'unit_of_measurement') || 'W';
+        const sw = _parseW(stateOf(h, c.solarEntity), u);
         const se = el.querySelector('.e-solar'); if (se) se.textContent = _fmtPower(sw);
       }
     } catch (e) {}
@@ -277,7 +278,15 @@
       if (chartEl) chartEl.innerHTML = _chart(pts, maxW, col);
       if (peakEl)  peakEl.textContent = peak !== null ? _fmtPower(peak) : '—';
       if (avgEl)   avgEl.textContent  = avg  !== null ? _fmtPower(avg)  : '—';
-      if (kwhEl)   kwhEl.textContent  = kwh  !== null ? kwh.toFixed(1) + ' kWh' : '—';
+      /* kWh: legge sensore diretto se configurato, altrimenti stima con ~ */
+      if (kwhEl) {
+        if (c.kwhEntity) {
+          const kv = parseFloat(stateOf(H(), c.kwhEntity));
+          kwhEl.textContent = isNaN(kv) ? '—' : kv.toFixed(2) + ' kWh';
+        } else {
+          kwhEl.textContent = kwh !== null ? '~' + kwh.toFixed(1) + ' kWh' : '—';
+        }
+      }
     } catch (e) {
       if (chartEl) chartEl.innerHTML = `<div style="height:88px;display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(255,255,255,.2)">Nessun dato storico</div>`;
     }
@@ -285,23 +294,12 @@
 
   /* ════════════════════════════════════════ MOUNT / UPDATE ══ */
   function mount(cfg, rawHass, el) {
-    /* guard: se già montato, solo update live — evita che FratechStore
-       ri-chiami mount() a ogni cambio stato (che rifaceva l'animazione) */
+    /* guard: se già montato, solo update live — evita doppia animazione */
     if (el._eMounted) { _live(cfg, rawHass, el); return; }
     el._eMounted = true;
 
+    /* l'arco è già alla posizione corretta nell'HTML (nessun rAF necessario) */
     el.innerHTML = render(cfg, rawHass);
-
-    /* animazione arco: rAF doppio evita conflitti con il reflow */
-    const info = _info(cfg, rawHass);
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      const arc = el.querySelector('.e-arc-fill');
-      if (!arc) return;
-      arc.style.transition = 'stroke-dashoffset .9s cubic-bezier(.4,0,.2,1), stroke .3s ease';
-      arc.style.strokeDashoffset = (AC * (1 - info.pct / 100)).toFixed(2);
-      arc.style.stroke = info.col;
-      if (info.pct >= 90) arc.style.animation = 'ePulse 1.4s ease-in-out infinite';
-    }));
 
     _loadChart(cfg, el);
 
@@ -389,6 +387,9 @@
         <div style="${secL}">Potenza massima contratto (kW)</div>
         <input id="ecfg-maxkw" type="number" step="0.5" min="0.5" max="200" style="${sinp};margin-bottom:4px" value="${eh(String(c.maxKw || '3'))}" placeholder="es. 4.5">
         <div style="font-size:9px;color:rgba(255,255,255,.28);margin-bottom:14px">Verde &lt;50% · Giallo 50-75% · Arancio 75-90% · Rosso ≥90%</div>
+        <div style="${secL}">Energia oggi — sensore kWh diretto (opzionale)</div>
+        <input id="ecfg-kwh" style="${sinp};margin-bottom:4px" value="${eh(c.kwhEntity || '')}" placeholder="🔍 sensor.energia_oggi…" autocomplete="off">
+        <div style="font-size:9px;color:rgba(255,255,255,.28);margin-bottom:14px">Se configurato mostra il valore reale del contatore; se vuoto usa una stima (~) dall'integrazione della potenza</div>
         <div style="${secL}">Produzione solare (opzionale)</div>
         <input id="ecfg-solar" style="${sinp};margin-bottom:14px" value="${eh(c.solarEntity || '')}" placeholder="🔍 sensor.fotovoltaico…" autocomplete="off">
         <div style="height:10px"></div>
@@ -403,12 +404,14 @@
     ov.querySelector('#ecfg-cancel').onclick = closeOv;
     ov.onclick = ev => { if (ev.target === ov) closeOv(); };
     _setupAc(ov.querySelector('#ecfg-entity'), id => { ov.querySelector('#ecfg-entity').value = id; });
+    _setupAc(ov.querySelector('#ecfg-kwh'),    id => { ov.querySelector('#ecfg-kwh').value    = id; });
     _setupAc(ov.querySelector('#ecfg-solar'),  id => { ov.querySelector('#ecfg-solar').value  = id; });
     ov.querySelector('#ecfg-save').addEventListener('click', () => {
       const newCfg = {
         label:       (ov.querySelector('#ecfg-label')?.value  || 'Energia').trim(),
         entity:      (ov.querySelector('#ecfg-entity')?.value || '').trim(),
         maxKw:       parseFloat(ov.querySelector('#ecfg-maxkw')?.value) || 3,
+        kwhEntity:   (ov.querySelector('#ecfg-kwh')?.value    || '').trim(),
         solarEntity: (ov.querySelector('#ecfg-solar')?.value  || '').trim(),
       };
       closeOv();
@@ -421,12 +424,12 @@
   const CARD = {
     id: ID, name: 'Gruppo Energia', icon: '⚡', desc: '',
     version: '2.2', isDistintivo: true,
-    defaultCfg: { label: 'Energia', entity: '', maxKw: 3, solarEntity: '' },
+    defaultCfg: { label: 'Energia', entity: '', maxKw: 3, kwhEntity: '', solarEntity: '' },
     chip, watchEntities, render, mount, update, configure,
   };
   window.FratechCardRegistry = window.FratechCardRegistry || {};
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v2.2'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v2.3'); } catch (e) {}
 })();
