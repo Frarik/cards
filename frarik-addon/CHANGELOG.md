@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.60 — 2026-06-27
+
+### feat: card Frigorifero v1.0 + PKG centro_controllo_frigorifero
+
+- **PKG YAML**: `pkg/centro_controllo_frigorifero.yaml` — entità rinominate con suffisso `_frigo` (era `_8` DomHouse); sensori potenza, kWh, cicli, time_on, costi giornalieri/mensili/annuali, statistiche 7gg, notifiche push/Alexa/Google
+- **Card JS**: `card-js/Frigorifero.js` — hero potenza + ring ciclo, status compressore animato, stats bar (cicli/tempo/kWh/€ oggi), sezione ciclo corrente/ultimo, griglie energia e costi, popup cicli settimanali, popup energia dettagliato, configure con autocomplete entità + tab PKG YAML per installazione guidata
+
 ## 1.6.59 — 2026-06-27
 
 ### fix: GruppoEnergia v3.0 — tralicio come img data-URI (visibilità garantita)
