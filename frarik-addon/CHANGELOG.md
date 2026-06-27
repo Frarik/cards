@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.6.27 — 2026-06-27
+
+### fix: icona configurata dinamica + bianco 100% + ricerca icone + colore bottone
+
+- **_dynIcon()**: funzione per varianti aperto/chiuso aggiunta a tutti i 4 card — chip badge e ogni riga popup usano l'icona CONFIGURATA dall'utente e la switchano automaticamente in base allo stato (es. mdi:door-closed → mdi:door-open/closed, mdi:window-closed-variant → mdi:window-open/mdi:window-closed-variant, mdi:blinds → mdi:blinds-open/mdi:blinds)
+- **Icona MDI nel bottone nera**: `color:inherit` aggiunto allo `<span class="mdi">` in `iconHtml()` + `color:#fff` esplicito su tutti i bottoni icona nel configure — i browser WebKit resettano il colore dei `<button>` a nero ignorando l'eredità
+- **Bianco 100%**: nomi entità in tutti i popup sempre `#fff`; stato "spenta/chiusa" bumped da `.3` a `.45-.5` per leggibilità
+- **Ricerca icone HA**: aggiunto `focusout` listener su `#ipm-search` che re-focalizza il campo dopo 50ms se il modal è ancora aperto — HA re-renderizza la griglia icone ad ogni input causando la perdita del focus
+- **Tapparelle default**: icona default cambiata da '🪟' a 'mdi:blinds' per evitare conflitto con Finestre nel mapping varianti
+
 ## 1.6.26 — 2026-06-27
 
 ### fix: icone dinamiche uniformi chip↔popup + sottotitolo istantaneo

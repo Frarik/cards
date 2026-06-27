@@ -35,8 +35,23 @@
   function iconHtml(ico, sz) {
     sz = sz || 16;
     if (typeof ico === 'string' && ico.startsWith('mdi:'))
-      return `<span class="mdi mdi-${ico.slice(4)}" style="font-size:${sz}px;line-height:1"></span>`;
+      return `<span class="mdi mdi-${ico.slice(4)}" style="font-size:${sz}px;line-height:1;color:inherit"></span>`;
     return `<span style="font-size:${sz}px;line-height:1">${ico||'📦'}</span>`;
+  }
+  function _dynIcon(ico, isOpen) {
+    const P = {
+      '🚪':['mdi:door-open','mdi:door-closed'],
+      'mdi:door':['mdi:door-open','mdi:door-closed'],
+      'mdi:door-open':['mdi:door-open','mdi:door-closed'],
+      'mdi:door-closed':['mdi:door-open','mdi:door-closed'],
+      'mdi:garage':['mdi:garage-open','mdi:garage'],
+      'mdi:garage-open':['mdi:garage-open','mdi:garage'],
+      'mdi:lock':['mdi:lock-open-variant','mdi:lock'],
+      'mdi:lock-open-variant':['mdi:lock-open-variant','mdi:lock'],
+    };
+    const pair = P[ico];
+    if (pair) return isOpen ? pair[0] : pair[1];
+    return ico || (isOpen ? 'mdi:door-open' : 'mdi:door-closed');
   }
 
   /* ── chip ── */
@@ -48,7 +63,7 @@
     const col = c.color || '#fb923c';
     const anyOpen = active > 0;
     return {
-      icon: iconHtml(anyOpen ? 'mdi:door-open' : 'mdi:door-closed'),
+      icon: iconHtml(_dynIcon(c.icon||'🚪', anyOpen)),
       label: c.label || 'Porte',
       value: ents.length ? `${active}/${ents.length}` : '—',
       color: active > 0 ? col : 'rgba(255,255,255,0.32)',
@@ -78,7 +93,7 @@
       const stCol = on ? '#f87171' : '#4ade80';
       const stBg  = on ? 'rgba(248,113,113,.14)' : 'rgba(74,222,128,.12)';
       const stBdr = on ? 'rgba(248,113,113,.32)' : 'rgba(74,222,128,.28)';
-      const rowIco = iconHtml(on ? 'mdi:door-open' : 'mdi:door-closed', 18);
+      const rowIco = iconHtml(_dynIcon(c.icon||'🚪', on), 18);
 
       let autoBadge = '';
       if (e.automation) {
@@ -313,7 +328,7 @@
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.35);margin-bottom:6px">Chip</div>
           <div style="display:flex;gap:7px;margin-bottom:14px">
             <div style="flex:1"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">Nome chip</div><input id="gpcfg-label" class="gpcinp" placeholder="Porte" value="${eh(c.label||'Porte')}"></div>
-            <div style="flex:0 0 56px"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">Icona</div><button id="gpcfg-icon-btn" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);cursor:pointer;display:flex;align-items:center;justify-content:center;outline:none">${iconHtml(c.icon||'🚪',22)}</button><input type="hidden" id="gpcfg-icon" value="${eh(c.icon||'🚪')}"></div>
+            <div style="flex:0 0 56px"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">Icona</div><button id="gpcfg-icon-btn" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);cursor:pointer;display:flex;align-items:center;justify-content:center;outline:none;color:#fff">${iconHtml(c.icon||'🚪',22)}</button><input type="hidden" id="gpcfg-icon" value="${eh(c.icon||'🚪')}"></div>
             <div style="flex:0 0 50px"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">Colore</div><input type="color" id="gpcfg-color" value="${(c.color||'#fb923c').match(/^#[0-9a-f]{6}$/i)?c.color:'#fb923c'}" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:none;cursor:pointer;padding:2px"></div>
           </div>
 
@@ -364,7 +379,15 @@
             const b = ov.querySelector('#gpcfg-icon-btn'); if (b) b.innerHTML = iconHtml(val, 22);
           });
           const _ipm = document.getElementById('ntf-icon-modal');
-          if (_ipm) _ipm.style.zIndex = '200000';
+          if (_ipm) {
+            _ipm.style.zIndex = '200000';
+            const _ipmS = document.getElementById('ipm-search');
+            if (_ipmS) _ipmS.addEventListener('focusout', function _rf() {
+              const m = document.getElementById('ntf-icon-modal');
+              if (!m || m.style.display === 'none') { _ipmS.removeEventListener('focusout', _rf); return; }
+              setTimeout(() => { if (document.getElementById('ntf-icon-modal')?.style.display !== 'none') document.getElementById('ipm-search')?.focus(); }, 50);
+            });
+          }
         }
       });
 

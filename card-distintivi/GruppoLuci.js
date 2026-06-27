@@ -35,8 +35,23 @@
   function iconHtml(ico, sz) {
     sz = sz || 16;
     if (typeof ico === 'string' && ico.startsWith('mdi:'))
-      return `<span class="mdi mdi-${ico.slice(4)}" style="font-size:${sz}px;line-height:1"></span>`;
+      return `<span class="mdi mdi-${ico.slice(4)}" style="font-size:${sz}px;line-height:1;color:inherit"></span>`;
     return `<span style="font-size:${sz}px;line-height:1">${ico||'📦'}</span>`;
+  }
+  function _dynIcon(ico, on) {
+    const P = {
+      '💡':['mdi:lightbulb-on','mdi:lightbulb'],
+      'mdi:lightbulb':['mdi:lightbulb-on','mdi:lightbulb'],
+      'mdi:lightbulb-on':['mdi:lightbulb-on','mdi:lightbulb'],
+      'mdi:lightbulb-off':['mdi:lightbulb-on','mdi:lightbulb-off'],
+      'mdi:ceiling-light':['mdi:ceiling-light','mdi:ceiling-light-outline'],
+      'mdi:ceiling-light-outline':['mdi:ceiling-light','mdi:ceiling-light-outline'],
+      'mdi:floor-lamp':['mdi:floor-lamp','mdi:floor-lamp-outline'],
+      'mdi:lamp':['mdi:lamp','mdi:lamp-outline'],
+    };
+    const pair = P[ico];
+    if (pair) return on ? pair[0] : pair[1];
+    return ico || (on ? 'mdi:lightbulb-on' : 'mdi:lightbulb');
   }
 
   /* ── chip — usa H() live ── */
@@ -96,10 +111,10 @@
 
       return `<div style="border-bottom:1px solid rgba(255,255,255,.04)">
         <div style="display:flex;align-items:center;gap:12px;padding:11px 16px">
-          <div style="width:36px;height:36px;border-radius:50%;background:${on?hex2rgba(col,.15):'rgba(255,255,255,.05)'};border:1px solid ${on?hex2rgba(col,.3):'rgba(255,255,255,.1)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;filter:${on?'none':'grayscale(1) opacity(.4)'}">💡</div>
+          <div style="width:36px;height:36px;border-radius:50%;background:${on?hex2rgba(col,.15):'rgba(255,255,255,.05)'};border:1px solid ${on?hex2rgba(col,.3):'rgba(255,255,255,.1)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${on?col:'rgba(255,255,255,.4)'}">${iconHtml(_dynIcon(c.icon||'💡',on),18)}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:600;color:${on?'#fff':'rgba(255,255,255,.6)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
-            <div style="font-size:11px;color:${on?col:'rgba(255,255,255,.3)'};margin-top:1px;font-weight:${on?600:400}">${on?'Accesa':'Spenta'}</div>
+            <div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
+            <div style="font-size:11px;color:${on?col:'rgba(255,255,255,.45)'};margin-top:1px;font-weight:${on?600:400}">${on?'Accesa':'Spenta'}</div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
             <button data-jsd-toggle="${i}" style="width:46px;height:26px;border-radius:13px;border:none;cursor:pointer;position:relative;background:${swBg};transition:background .2s;outline:none">
@@ -367,7 +382,7 @@
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.35);margin-bottom:6px">Chip</div>
           <div style="display:flex;gap:7px;margin-bottom:14px">
             <div style="flex:1"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">Nome chip</div><input id="glcfg-label" class="glcinp" placeholder="Luci" value="${eh(c.label||'Luci')}"></div>
-            <div style="flex:0 0 56px"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">Icona</div><button id="glcfg-icon-btn" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);cursor:pointer;display:flex;align-items:center;justify-content:center;outline:none">${iconHtml(c.icon||'💡',22)}</button><input type="hidden" id="glcfg-icon" value="${eh(c.icon||'💡')}"></div>
+            <div style="flex:0 0 56px"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">Icona</div><button id="glcfg-icon-btn" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);cursor:pointer;display:flex;align-items:center;justify-content:center;outline:none;color:#fff">${iconHtml(c.icon||'💡',22)}</button><input type="hidden" id="glcfg-icon" value="${eh(c.icon||'💡')}"></div>
             <div style="flex:0 0 50px"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">Colore</div><input type="color" id="glcfg-color" value="${(c.color||'#fbbf24').match(/^#[0-9a-f]{6}$/i)?c.color:'#fbbf24'}" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:none;cursor:pointer;padding:2px"></div>
           </div>
 
@@ -426,7 +441,15 @@
           });
           // porta il modal sopra il configure overlay — senza questo rimane dietro e cattura la tastiera
           const _ipm = document.getElementById('ntf-icon-modal');
-          if (_ipm) _ipm.style.zIndex = '200000';
+          if (_ipm) {
+            _ipm.style.zIndex = '200000';
+            const _ipmS = document.getElementById('ipm-search');
+            if (_ipmS) _ipmS.addEventListener('focusout', function _rf() {
+              const m = document.getElementById('ntf-icon-modal');
+              if (!m || m.style.display === 'none') { _ipmS.removeEventListener('focusout', _rf); return; }
+              setTimeout(() => { if (document.getElementById('ntf-icon-modal')?.style.display !== 'none') document.getElementById('ipm-search')?.focus(); }, 50);
+            });
+          }
         }
       });
 

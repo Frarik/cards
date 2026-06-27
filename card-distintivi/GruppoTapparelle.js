@@ -49,8 +49,21 @@
   function iconHtml(ico, sz) {
     sz = sz || 16;
     if (typeof ico === 'string' && ico.startsWith('mdi:'))
-      return `<span class="mdi mdi-${ico.slice(4)}" style="font-size:${sz}px;line-height:1"></span>`;
+      return `<span class="mdi mdi-${ico.slice(4)}" style="font-size:${sz}px;line-height:1;color:inherit"></span>`;
     return `<span style="font-size:${sz}px;line-height:1">${ico||'📦'}</span>`;
+  }
+  function _dynIcon(ico, isOpen) {
+    const P = {
+      'mdi:blinds':['mdi:blinds-open','mdi:blinds'],
+      'mdi:blinds-open':['mdi:blinds-open','mdi:blinds'],
+      'mdi:roller-shade':['mdi:roller-shade-open','mdi:roller-shade'],
+      'mdi:roller-shade-open':['mdi:roller-shade-open','mdi:roller-shade'],
+      'mdi:window-shutter':['mdi:window-shutter-open','mdi:window-shutter'],
+      'mdi:window-shutter-open':['mdi:window-shutter-open','mdi:window-shutter'],
+    };
+    const pair = P[ico];
+    if (pair) return isOpen ? pair[0] : pair[1];
+    return isOpen ? 'mdi:blinds-open' : 'mdi:blinds';
   }
 
   /* ── chip ── */
@@ -62,7 +75,7 @@
     const col = c.color || '#38bdf8';
     const anyOpen = active > 0;
     return {
-      icon: iconHtml(anyOpen ? 'mdi:blinds-open' : 'mdi:blinds'),
+      icon: iconHtml(_dynIcon(c.icon||'mdi:blinds', anyOpen)),
       label: c.label || 'Tapparelle',
       value: ents.length ? `${active}/${ents.length}` : '—',
       color: active > 0 ? col : 'rgba(255,255,255,0.32)',
@@ -98,7 +111,7 @@
       const lbl = e.label || nameOf(h, e.entity);
       const pos = h ? coverPos(h, e.entity) : null;
       const stLbl = coverStateLbl(st);
-      const stCol = on ? col : moving ? '#fbbf24' : 'rgba(255,255,255,.3)';
+      const stCol = on ? col : moving ? '#fbbf24' : 'rgba(255,255,255,.5)';
 
       const posBar = pos !== null ? `
         <div style="display:flex;align-items:center;gap:6px;margin-top:5px">
@@ -126,9 +139,9 @@
 
       return `<div style="border-bottom:1px solid rgba(255,255,255,.04)">
         <div style="display:flex;align-items:center;gap:12px;padding:11px 16px">
-          <div style="width:36px;height:36px;border-radius:50%;background:${on?hex2rgba(col,.15):'rgba(255,255,255,.05)'};border:1px solid ${on?hex2rgba(col,.3):'rgba(255,255,255,.1)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${on||moving?col:'rgba(255,255,255,.4)'}">${iconHtml(on||moving?'mdi:blinds-open':'mdi:blinds',18)}</div>
+          <div style="width:36px;height:36px;border-radius:50%;background:${on?hex2rgba(col,.15):'rgba(255,255,255,.05)'};border:1px solid ${on?hex2rgba(col,.3):'rgba(255,255,255,.1)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${on||moving?col:'rgba(255,255,255,.4)'}">${iconHtml(_dynIcon(c.icon||'mdi:blinds',on||moving),18)}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:600;color:${on?'#fff':'rgba(255,255,255,.6)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
+            <div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
             <div style="font-size:11px;color:${stCol};margin-top:1px;font-weight:${on||moving?600:400}">${stLbl}</div>
             ${posBar}
           </div>
@@ -389,7 +402,7 @@
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.35);margin-bottom:6px">Chip</div>
           <div style="display:flex;gap:7px;margin-bottom:14px">
             <div style="flex:1"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">Nome chip</div><input id="gtcfg-label" class="gtcinp" placeholder="Tapparelle" value="${eh(c.label||'Tapparelle')}"></div>
-            <div style="flex:0 0 56px"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">Icona</div><button id="gtcfg-icon-btn" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);cursor:pointer;display:flex;align-items:center;justify-content:center;outline:none">${iconHtml(c.icon||'🪟',22)}</button><input type="hidden" id="gtcfg-icon" value="${eh(c.icon||'🪟')}"></div>
+            <div style="flex:0 0 56px"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">Icona</div><button id="gtcfg-icon-btn" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);cursor:pointer;display:flex;align-items:center;justify-content:center;outline:none;color:#fff">${iconHtml(c.icon||'mdi:blinds',22)}</button><input type="hidden" id="gtcfg-icon" value="${eh(c.icon||'mdi:blinds')}"></div>
             <div style="flex:0 0 50px"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">Colore</div><input type="color" id="gtcfg-color" value="${(c.color||'#38bdf8').match(/^#[0-9a-f]{6}$/i)?c.color:'#38bdf8'}" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:none;cursor:pointer;padding:2px"></div>
           </div>
 
@@ -445,7 +458,15 @@
             const b = ov.querySelector('#gtcfg-icon-btn'); if (b) b.innerHTML = iconHtml(val, 22);
           });
           const _ipm = document.getElementById('ntf-icon-modal');
-          if (_ipm) _ipm.style.zIndex = '200000';
+          if (_ipm) {
+            _ipm.style.zIndex = '200000';
+            const _ipmS = document.getElementById('ipm-search');
+            if (_ipmS) _ipmS.addEventListener('focusout', function _rf() {
+              const m = document.getElementById('ntf-icon-modal');
+              if (!m || m.style.display === 'none') { _ipmS.removeEventListener('focusout', _rf); return; }
+              setTimeout(() => { if (document.getElementById('ntf-icon-modal')?.style.display !== 'none') document.getElementById('ipm-search')?.focus(); }, 50);
+            });
+          }
         }
       });
 
@@ -502,7 +523,7 @@
       ov.querySelector('#gtcfg-save').addEventListener('click', () => {
         const newCfg = {
           label: (ov.querySelector('#gtcfg-label')?.value || 'Tapparelle').trim(),
-          icon:  (ov.querySelector('#gtcfg-icon')?.value  || '🪟').trim(),
+          icon:  (ov.querySelector('#gtcfg-icon')?.value  || 'mdi:blinds').trim(),
           color: ov.querySelector('#gtcfg-color')?.value  || '#38bdf8',
           entities: ents.filter(e => e.entity).map(e => ({
             entity: e.entity.trim(), label: e.label||'', automation: e.automation||'',
@@ -522,7 +543,7 @@
     id: ID, name: 'Gruppo Tapparelle', icon: '🪟',
     desc: 'Chip con contatore tapparelle aperte. Clic → pannello Apri/Stop/Chiudi + posizione.',
     version: '1.1', isDistintivo: true,
-    defaultCfg: { label: 'Tapparelle', icon: '🪟', color: '#38bdf8', entities: [] },
+    defaultCfg: { label: 'Tapparelle', icon: 'mdi:blinds', color: '#38bdf8', entities: [] },
     chip, watchEntities, render, mount, update, configure,
   };
 
