@@ -2980,7 +2980,7 @@ function _ghsPkgAskPopup(cardId,pkgVer,f,code,res){
   /* pkg non installato → apre il wizard di configurazione */
   sr.getElementById('pa_no').addEventListener('click',()=>{
     destroy();
-    const CardClass=window.FratechCardRegistry?.[cardId]??customElements.get(cardId);
+    const CardClass=window.FratechCardRegistry?.[cardId]??window.FratechCardRegistry?.[cardId.toLowerCase()]??customElements.get(cardId);
     if(typeof CardClass?.openWizard==='function'){
       CardClass.openWizard(_haHassObj(),async ()=>{
         _savePkgVer(cardId,pkgVer);
@@ -3090,7 +3090,7 @@ async function _pkgUpdateCard(cardId, silent=false){
 
   if(savedCfg){
     /* silent reinstall usando config salvata tramite _buildPkgFromConfig o openWizard headless */
-    const CardClass=window.FratechCardRegistry?.[cardId]??customElements.get(cardId);
+    const CardClass=window.FratechCardRegistry?.[cardId]??window.FratechCardRegistry?.[cardId.toLowerCase()]??customElements.get(cardId);
     let yaml='';
     if(typeof CardClass?._buildPkgFromConfig==='function'){
       yaml=CardClass._buildPkgFromConfig(savedCfg);

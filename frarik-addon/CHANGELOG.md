@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.6.64 — 2026-06-28
+
+### fix: store — lookup CardClass case-insensitive per aprire wizard
+
+- `FratechCardRegistry[cardId]` falliva perché `cardId` è il nome del file JS (`'Frigorifero'`, F maiuscola) ma la card si registra con `id: 'frigorifero'` (minuscola)
+- Fix in `main.js`: aggiunto fallback `?? window.FratechCardRegistry?.[cardId.toLowerCase()]` in tutti e 3 i punti di lookup `CardClass`
+- Ora il wizard di installazione PKG si apre correttamente per Frigorifero (e qualunque altra card con nome file capitalized)
+- Rebuild panel con vite
+
 ## 1.6.63 — 2026-06-28
 
 ### feat: Frigorifero v1.2 — aggiunto pkgs/frarik_frigorifero.yaml + wizard PKG completo + `frarik_pkg_*`
