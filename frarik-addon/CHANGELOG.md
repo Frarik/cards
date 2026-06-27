@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.31 — 2026-06-27
+
+### feat: GruppoClima v1.3 — colori semantici temperatura e umidità
+
+- **Temperatura colorata**: verde 19-25°C (comfort), giallo 17-19/25-27°C, arancio 15-17/27-29°C, rosso <15°C o >29°C
+- **Umidità colorata**: verde 40-60% (comfort), giallo 35-40/60-65%, arancio 25-35/65-75%, rosso <25% o >75%
+- Peso font aumentato a `700` su entrambi i valori per maggiore leggibilità
+
 ## 1.6.30 — 2026-06-27
 
 ### fix: GruppoClima v1.2 — temp ottimistica, sensore temp/umidità, chevron MDI, fix panel HVAC

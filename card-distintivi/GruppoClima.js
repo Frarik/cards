@@ -1,6 +1,6 @@
-/* frarik-version: 1.2 */
+/* frarik-version: 1.3 */
 /**
- * GruppoClima.js — Distintivo FratechStore v1.2
+ * GruppoClima.js — Distintivo FratechStore v1.3
  * Chip climi attivi + popup con temp/umidità da sensore, controlli HVAC/ventola/alette
  */
 (function () {
@@ -19,6 +19,24 @@
 
   const CHEV_RIGHT = `<span class="mdi mdi-chevron-right" style="font-size:16px;color:inherit"></span>`;
   const CHEV_DOWN  = `<span class="mdi mdi-chevron-down"  style="font-size:16px;color:inherit"></span>`;
+
+  // Temperatura ambiente: ottimale 19-25°C
+  function _tempColor(val) {
+    if (val == null || isNaN(val)) return 'rgba(255,255,255,.4)';
+    if (val < 15 || val > 29) return '#f87171'; // rosso — troppo freddo/caldo
+    if (val < 17 || val > 27) return '#fb923c'; // arancio
+    if (val < 19 || val > 25) return '#facc15'; // giallo
+    return '#4ade80';                            // verde — comfort
+  }
+
+  // Umidità relativa: ottimale 40-60%
+  function _humColor(val) {
+    if (val == null || isNaN(val)) return 'rgba(255,255,255,.4)';
+    if (val < 25 || val > 75) return '#f87171'; // rosso — aria secca/troppo umida
+    if (val < 30 || val > 65) return '#fb923c'; // arancio
+    if (val < 40 || val > 60) return '#facc15'; // giallo
+    return '#4ade80';                            // verde — comfort
+  }
 
   function H() {
     try { if (typeof window.frarikHass === 'function') { const h = window.frarikHass(); if (h && h.states) return h; } } catch (e) {}
@@ -177,11 +195,13 @@
       const sensorTempRaw = (e.tempSensor && h) ? parseFloat(stateOf(h, e.tempSensor)) : NaN;
       const climateTempRaw = st ? parseFloat(st.current) : NaN;
       const curTempVal = !isNaN(sensorTempRaw) ? sensorTempRaw : (!isNaN(climateTempRaw) ? climateTempRaw : null);
-      const curTxt = curTempVal != null ? `${curTempVal.toFixed(1)}°` : '—';
+      const curTxt    = curTempVal != null ? `${curTempVal.toFixed(1)}°` : '—';
+      const curTmpCol = _tempColor(curTempVal);
 
       // Humidity from humSensor
-      const humRaw = (e.humSensor && h) ? parseFloat(stateOf(h, e.humSensor)) : NaN;
-      const humTxt = !isNaN(humRaw) ? `${Math.round(humRaw)}%` : null;
+      const humRaw    = (e.humSensor && h) ? parseFloat(stateOf(h, e.humSensor)) : NaN;
+      const humTxt    = !isNaN(humRaw) ? `${Math.round(humRaw)}%` : null;
+      const humCol    = _humColor(humRaw);
 
       // Target temperature — use optimistic value if fresh, else entity target
       const rawTarget = st ? st.target : null;
@@ -240,8 +260,8 @@
           <div style="display:flex;align-items:center;gap:7px;flex-shrink:0">
             <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
               <div style="display:flex;align-items:center;gap:7px">
-                <span style="font-size:11px;color:rgba(255,255,255,.4);font-weight:600">${eh(curTxt)}</span>
-                ${humTxt ? `<span style="font-size:11px;color:rgba(56,189,248,.7);font-weight:600">💧 ${eh(humTxt)}</span>` : ''}
+                <span style="font-size:11px;color:${curTmpCol};font-weight:700">${eh(curTxt)}</span>
+                ${humTxt ? `<span style="font-size:11px;color:${humCol};font-weight:700">💧 ${eh(humTxt)}</span>` : ''}
               </div>
               <div style="display:flex;align-items:center;gap:3px">
                 <button data-cc-down="${i}" style="${btnBase}">−</button>
@@ -773,7 +793,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Clima', icon: '🌡️',
     desc: 'Chip climi attivi. Clic → temp/umidità da sensore, ±1°, ON/OFF, modalità HVAC, ventola, alette per ogni clima.',
-    version: '1.2', isDistintivo: true,
+    version: '1.3', isDistintivo: true,
     defaultCfg: { label: 'Clima', icon: '🌡️', color: '#f97316', entities: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -782,5 +802,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-clima v1.2'); } catch(e){}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-clima v1.3'); } catch(e){}
 })();
