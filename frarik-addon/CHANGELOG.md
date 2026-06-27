@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.39 — 2026-06-27
+
+### feat: popup rapido "Nuovo distintivo" — solo i distintivi installati
+
+- **"Gestione distintivi" rimosso**: il bottone non appare più in modalità modifica
+- **"+ Nuovo distintivo" / "+ Aggiungi distintivo"**: ora apre `openJsdPicker()` — un bottom sheet con lista dei soli card `isDistintivo:true` installati nello Store; clic su uno → badge JSD aggiunto istantaneamente; se il distintivo ha `configure()` apre subito l'editor per configurarlo
+
 ## 1.6.38 — 2026-06-27
 
 ### fix: GruppoAllarme v1.6 — contorno badge, arm bypass doppio tentativo

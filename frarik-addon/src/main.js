@@ -5932,6 +5932,58 @@ function _fillJsdPicker(){
 }
 function _jsdPickCard(id){ _badgeJsdSelected=id; _fillJsdPicker(); }
 
+/* ── Picker rapido: apre popup con solo i distintivi installati (isDistintivo) ── */
+function openJsdPicker(zone){
+  _badgeZone=zone||'header';
+  const reg=window.FratechCardRegistry||{};
+  const defs=Object.values(reg).filter(d=>d.isDistintivo);
+
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:99998;display:flex;align-items:flex-end;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
+
+  const closeOv=()=>{ try{ document.body.removeChild(ov); }catch(_){} };
+
+  const inner=defs.length
+    ? defs.map(d=>`<div style="display:flex;align-items:center;gap:11px;padding:11px 14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);cursor:pointer;transition:background .15s" data-jsdpick="${eh(d.id)}">
+        <div style="width:38px;height:38px;border-radius:10px;background:rgba(99,102,241,.14);border:1px solid rgba(99,102,241,.25);display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0">${d.icon||'📦'}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(d.name||d.id)}</div>
+          ${d.version?`<div style="font-size:9px;color:rgba(255,255,255,.35)">v${eh(d.version)}</div>`:''}
+        </div>
+        <span style="font-size:18px;color:rgba(255,255,255,.25)">›</span>
+      </div>`).join('')
+    : `<div style="padding:24px;text-align:center;color:rgba(255,255,255,.4);font-size:12px">Nessun distintivo installato.<br><span style="font-size:10px;opacity:.7">Vai nello Store → tab Distintivi e installa prima un distintivo.</span></div>`;
+
+  ov.innerHTML=`<div style="width:100%;max-height:80vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(99,102,241,.22);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.85);color:#fff;animation:jsdPkUp .2s cubic-bezier(.32,1.12,.56,1)">
+    <style>@keyframes jsdPkUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style>
+    <div style="display:flex;align-items:center;gap:10px;padding:14px 18px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">
+      <div style="font-size:20px">🏷️</div>
+      <div style="flex:1;font-size:15px;font-weight:800">Aggiungi distintivo</div>
+      <button id="jsdpk-close" style="width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,255,255,.08);color:#fff;cursor:pointer;font-size:14px">✕</button>
+    </div>
+    <div style="flex:1;overflow-y:auto;scrollbar-width:none;padding:12px 14px 20px;display:flex;flex-direction:column;gap:6px" id="jsdpk-list">${inner}</div>
+  </div>`;
+
+  ov.querySelector('#jsdpk-close').onclick=closeOv;
+  ov.onclick=e=>{ if(e.target===ov) closeOv(); };
+  const _escFn=e=>{ if(e.key==='Escape'){ closeOv(); document.removeEventListener('keydown',_escFn); } };
+  document.addEventListener('keydown',_escFn);
+
+  ov.querySelector('#jsdpk-list')?.addEventListener('click',e=>{
+    const row=e.target.closest('[data-jsdpick]'); if(!row) return;
+    const jsCardId=row.dataset.jsdpick;
+    const def=(window.FratechCardRegistry||{})[jsCardId]; if(!def) return;
+    const newBadge={id:uid(),type:'jsd',jsCardId,cfg:def.defaultCfg?JSON.parse(JSON.stringify(def.defaultCfg)):{},color:'rgba(255,255,255,0.38)',colorMode:'fixed',display:'full',action:'none'};
+    _getBadgeArr().push(newBadge);
+    saveCfg(); renderBadgesAll();
+    closeOv();
+    if(def.configure) setTimeout(()=>_editJsdBadge(newBadge,_getBadgeArr().length-1,_badgeZone),150);
+    else showToast('✅ Distintivo aggiunto');
+  });
+
+  document.body.appendChild(ov);
+}
+
 function renderBadgesAll(){
   _renderViewHeader();
   _renderViewFooter();
@@ -6022,9 +6074,7 @@ function _renderViewHeader(){
     html+=title
       ? `<button class="view-add-btn" data-action="openSectMod" data-action-args='["header","title"]'>✏️ Modifica titolo</button>`
       : `<button class="view-add-btn" data-action="openSectMod" data-action-args='["header","title"]'>＋ Aggiungi titolo</button>`;
-    html+=badges.length
-      ? `<button class="view-add-btn" data-action="openBM" data-action-args='["header","manage"]'>🏷️ Gestione distintivi</button><button class="view-add-btn" data-action="openBM" data-action-args='["header","new"]'>＋ Nuovo distintivo</button>`
-      : `<button class="view-add-btn" data-action="openBM" data-action-args='["header","new"]'>＋ Aggiungi distintivo</button>`;
+    html+=`<button class="view-add-btn" data-action="openJsdPicker" data-action-arg="header">＋ ${badges.length?'Nuovo':'Aggiungi'} distintivo</button>`;
     if(badges.length && _badgeClipboard){
       html+=`<button class="view-add-btn" data-action="_inViewPasteBadge" data-action-arg="header">📋 Incolla</button>`;
     }
@@ -17764,6 +17814,7 @@ Object.assign(window, {
   onCustomColorToggle,
   onTypeChange,
   openBM,
+  openJsdPicker,
   openCM,
   openColorPicker,
   openFBM,
