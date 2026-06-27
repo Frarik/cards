@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.48 — 2026-06-27
+
+### fix: GruppoBatterie v1.5 — scrollbar nascosta nel popup
+
 ## 1.6.47 — 2026-06-27
 
 ### feat: GruppoBatterie v1.4 — colonne per categoria

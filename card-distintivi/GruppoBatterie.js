@@ -1,4 +1,4 @@
-/* frarik-version: 1.4 */
+/* frarik-version: 1.5 */
 /**
  * GruppoBatterie.js — Distintivo FratechStore v1.2
  * Rileva automaticamente TUTTE le entità con device_class: battery
@@ -218,7 +218,8 @@
         <div style="font-size:9px;color:rgba(255,255,255,.25);margin-top:5px">Soglie: bassa &lt;${thrL}% · critica &lt;${thrC}%</div>
       </div>
 
-      <div class="batt-scroll" style="max-height:55vh;overflow-y:auto;scrollbar-width:thin;padding-bottom:10px">
+      <style>.batt-scroll::-webkit-scrollbar{display:none}</style>
+      <div class="batt-scroll" style="max-height:55vh;overflow-y:auto;scrollbar-width:none;padding-bottom:10px">
         ${offlineRow}
         ${col3}
       </div>
@@ -331,7 +332,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Batterie', icon: '🔋',
     desc: '',
-    version: '1.4', isDistintivo: true,
+    version: '1.5', isDistintivo: true,
     defaultCfg: { label: 'Batterie', threshLow: 20, threshCrit: 10 },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -340,5 +341,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-batterie v1.4'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-batterie v1.5'); } catch (e) {}
 })();
