@@ -5532,7 +5532,16 @@ function moveBadge(i,dir){
   [arr[i],arr[j]]=[arr[j],arr[i]];
   renderBadgeList();
 }
-function delBadge(i){ _getBadgeArr().splice(i,1); saveCfg(); renderBadgeList(); }
+function delBadge(i){
+  const arr=_getBadgeArr();
+  const b=arr[i];
+  /* salva cfg del distintivo prima di cancellarlo, così al re-inserimento è già configurato */
+  if(b&&b.type==='jsd'&&b.jsCardId&&b.cfg){
+    if(!cfg.savedJsdCfgs) cfg.savedJsdCfgs={};
+    cfg.savedJsdCfgs[b.jsCardId]=JSON.parse(JSON.stringify(b.cfg));
+  }
+  arr.splice(i,1); saveCfg(); renderBadgeList();
+}
 
 function _fillNavPageSelect(sel){
   const s=document.getElementById('bf-navpage'); if(!s) return;
@@ -5910,6 +5919,8 @@ function _editJsdBadge(b, idx, zone){
   const prevCfg=JSON.parse(JSON.stringify(b.cfg||{}));
   def.configure(b.cfg||{},null,(newCfg)=>{
     b.cfg=newCfg||{};
+    /* aggiorna anche la cfg salvata in modo che sia aggiornata al re-inserimento */
+    if(b.jsCardId){ if(!cfg.savedJsdCfgs) cfg.savedJsdCfgs={}; cfg.savedJsdCfgs[b.jsCardId]=JSON.parse(JSON.stringify(b.cfg)); }
     saveCfg(); renderBadgesAll();
     try{ _updateCMBadgePreview(); }catch(e){}
   });
@@ -5973,11 +5984,15 @@ function openJsdPicker(zone){
     const row=e.target.closest('[data-jsdpick]'); if(!row) return;
     const jsCardId=row.dataset.jsdpick;
     const def=(window.FratechCardRegistry||{})[jsCardId]; if(!def) return;
-    const newBadge={id:uid(),type:'jsd',jsCardId,cfg:def.defaultCfg?JSON.parse(JSON.stringify(def.defaultCfg)):{},color:'rgba(255,255,255,0.38)',colorMode:'fixed',display:'full',action:'none'};
+    /* usa cfg salvata se esiste, altrimenti defaultCfg */
+    const savedCfg=(cfg.savedJsdCfgs||{})[jsCardId];
+    const initCfg=savedCfg?JSON.parse(JSON.stringify(savedCfg)):(def.defaultCfg?JSON.parse(JSON.stringify(def.defaultCfg)):{});
+    const newBadge={id:uid(),type:'jsd',jsCardId,cfg:initCfg,color:'rgba(255,255,255,0.38)',colorMode:'fixed',display:'full',action:'none'};
     _getBadgeArr().push(newBadge);
     saveCfg(); renderBadgesAll();
     closeOv();
-    if(def.configure) setTimeout(()=>_editJsdBadge(newBadge,_getBadgeArr().length-1,_badgeZone),150);
+    /* apri configure solo se non c'è una cfg salvata (prima volta) */
+    if(def.configure&&!savedCfg) setTimeout(()=>_editJsdBadge(newBadge,_getBadgeArr().length-1,_badgeZone),150);
     else showToast('✅ Distintivo aggiunto');
   });
 

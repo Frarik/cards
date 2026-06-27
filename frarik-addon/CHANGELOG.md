@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.40 — 2026-06-27
+
+### feat: cfg distintivi persistente dopo eliminazione
+
+- `cfg.savedJsdCfgs[jsCardId]` — la configurazione del distintivo viene salvata automaticamente quando viene eliminato (in `delBadge`) e quando viene modificato (in `_editJsdBadge` configure callback)
+- Al re-inserimento via picker (`openJsdPicker`) viene usata la cfg salvata invece di `defaultCfg` → nessuna riconfigurazione necessaria
+- Prima aggiunta (nessuna cfg salvata): si apre automaticamente l'editor di configurazione come prima
+
 ## 1.6.39 — 2026-06-27
 
 ### feat: popup rapido "Nuovo distintivo" — solo i distintivi installati
