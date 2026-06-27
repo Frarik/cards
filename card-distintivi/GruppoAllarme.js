@@ -1,6 +1,6 @@
-/* frarik-version: 1.0 */
+/* frarik-version: 1.1 */
 /**
- * GruppoAllarme.js — Distintivo FratechStore v1.0
+ * GruppoAllarme.js — Distintivo FratechStore v1.1
  * Chip stato allarme Alarmo + popup sensori/bypass + overlay triggered automatico
  */
 (function () {
@@ -30,6 +30,7 @@
   const DC_ICO = {
     door:      { off: 'mdi:door-closed',        on: 'mdi:door-open'            },
     window:    { off: 'mdi:window-closed',       on: 'mdi:window-open'          },
+    opening:   { off: 'mdi:window-closed',       on: 'mdi:window-open'          }, // HA usa 'opening' per finestre
     motion:    { off: 'mdi:motion-sensor-off',   on: 'mdi:motion-sensor'        },
     smoke:     { off: 'mdi:smoke-detector',      on: 'mdi:smoke-detector-alert' },
     vibration: { off: 'mdi:vibrate-off',         on: 'mdi:vibrate'              },
@@ -208,18 +209,23 @@
 
       let rowBg = 'rgba(255,255,255,.04)', rowBdr = 'rgba(255,255,255,.08)', tag = '', bypassBtn = '';
 
-      if (open && !isBypassed) {
-        rowBg  = 'rgba(248,113,113,.08)';
-        rowBdr = 'rgba(248,113,113,.25)';
-        tag    = `<span style="font-size:9px;padding:2px 7px;border-radius:4px;background:rgba(248,113,113,.18);color:#f87171;font-weight:700;flex-shrink:0">APERTO</span>`;
-        if (!armed) bypassBtn = `<button data-ca-bypass="${i}" data-entity="${eh(s.entity)}" title="Escludi questo sensore quando armi" style="padding:3px 8px;border-radius:6px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:rgba(255,255,255,.6);cursor:pointer;font-size:9px;font-weight:700;white-space:nowrap;outline:none;flex-shrink:0">Escludi</button>`;
-      } else if (isBypassed) {
+      if (isBypassed) {
         rowBg  = 'rgba(250,204,21,.06)';
         rowBdr = 'rgba(250,204,21,.22)';
         tag    = `<span style="font-size:9px;padding:2px 7px;border-radius:4px;background:rgba(250,204,21,.18);color:#facc15;font-weight:700;flex-shrink:0">ESCLUSO</span>`;
-        if (!armed) bypassBtn = `<button data-ca-bypass="${i}" data-entity="${eh(s.entity)}" title="Rimuovi esclusione" style="padding:3px 8px;border-radius:6px;border:1px solid rgba(250,204,21,.35);background:rgba(250,204,21,.1);color:#facc15;cursor:pointer;font-size:9px;font-weight:700;white-space:nowrap;outline:none;flex-shrink:0">✕ Includi</button>`;
+      } else if (open) {
+        rowBg  = 'rgba(248,113,113,.08)';
+        rowBdr = 'rgba(248,113,113,.25)';
+        tag    = `<span style="font-size:9px;padding:2px 7px;border-radius:4px;background:rgba(248,113,113,.18);color:#f87171;font-weight:700;flex-shrink:0">APERTO</span>`;
       } else {
         tag = `<span style="font-size:9px;padding:2px 7px;border-radius:4px;background:rgba(74,222,128,.13);color:#4ade80;font-weight:700;flex-shrink:0">OK</span>`;
+      }
+
+      // bypass toggle sempre visibile quando non armato
+      if (!armed) {
+        bypassBtn = isBypassed
+          ? `<button data-ca-bypass="${i}" data-entity="${eh(s.entity)}" style="padding:3px 8px;border-radius:6px;border:1px solid rgba(250,204,21,.38);background:rgba(250,204,21,.1);color:#facc15;cursor:pointer;font-size:9px;font-weight:700;white-space:nowrap;outline:none;flex-shrink:0">✕ Includi</button>`
+          : `<button data-ca-bypass="${i}" data-entity="${eh(s.entity)}" style="padding:3px 8px;border-radius:6px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;cursor:pointer;font-size:9px;font-weight:700;white-space:nowrap;outline:none;flex-shrink:0">Escludi</button>`;
       }
 
       return `<div style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:9px;background:${rowBg};border:1px solid ${rowBdr}">
@@ -234,13 +240,13 @@
     const modeBtns = visibleModes.map(m => {
       const isCur = state === m.key;
       const mCol  = ALARM_DEF[m.key]?.col || '#f97316';
-      return `<button data-ca-arm="${m.svc}" style="flex:1;padding:10px 4px;border-radius:11px;border:1px solid ${isCur ? hex2rgba(mCol,.4) : 'rgba(255,255,255,.12)'};background:${isCur ? hex2rgba(mCol,.18) : 'rgba(255,255,255,.06)'};color:${isCur ? mCol : 'rgba(255,255,255,.75)'};cursor:pointer;font-size:10px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px;outline:none;min-width:0;transition:background .15s">
+      return `<button data-ca-arm="${m.svc}" style="flex:1;padding:10px 4px;border-radius:11px;border:1px solid ${isCur ? hex2rgba(mCol,.4) : 'rgba(255,255,255,.12)'};background:${isCur ? hex2rgba(mCol,.18) : 'rgba(255,255,255,.06)'};color:${isCur ? mCol : '#fff'};cursor:pointer;font-size:10px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px;outline:none;min-width:0;transition:background .15s">
         <span style="color:inherit">${mdi(m.ico, 19)}</span>
         <span style="white-space:nowrap;color:inherit">${eh(m.lbl)}</span>
       </button>`;
     }).join('');
 
-    const disarmBtn = `<button data-ca-disarm style="flex:1;padding:10px 4px;border-radius:11px;border:1px solid ${state==='disarmed'?'rgba(74,222,128,.38)':'rgba(255,255,255,.12)'};background:${state==='disarmed'?'rgba(74,222,128,.15)':'rgba(255,255,255,.06)'};color:${state==='disarmed'?'#4ade80':'rgba(255,255,255,.75)'};cursor:pointer;font-size:10px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px;outline:none;min-width:0">
+    const disarmBtn = `<button data-ca-disarm style="flex:1;padding:10px 4px;border-radius:11px;border:1px solid ${state==='disarmed'?'rgba(74,222,128,.38)':'rgba(255,255,255,.12)'};background:${state==='disarmed'?'rgba(74,222,128,.15)':'rgba(255,255,255,.06)'};color:${state==='disarmed'?'#4ade80':'#fff'};cursor:pointer;font-size:10px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px;outline:none;min-width:0">
       <span style="color:inherit">${mdi('mdi:lock-open-variant', 19)}</span>
       <span style="white-space:nowrap;color:inherit">Disarma</span>
     </button>`;
@@ -279,7 +285,6 @@
         <span style="font-size:30px;color:${col};flex-shrink:0">${mdi(def.ico, 30)}</span>
         <div style="flex:1;min-width:0">
           <div style="font-size:16px;font-weight:900;color:${col};letter-spacing:.3px">${def.lbl}</div>
-          <div style="font-size:10px;color:rgba(255,255,255,.38);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(nameOf(h, ae))}</div>
         </div>
       </div>
 
@@ -613,7 +618,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Allarme', icon: '🔒',
     desc: 'Chip stato allarme Alarmo. Popup con sensori, bypass selettivo per sensori aperti, arm/disarm, sirena. Overlay automatico su triggered.',
-    version: '1.0', isDistintivo: true,
+    version: '1.1', isDistintivo: true,
     defaultCfg: { label: 'Allarme', alarmEntity: '', code: '', modes: ['armed_away'], sensors: [], siren: '' },
     chip,
     watchEntities,
@@ -627,5 +632,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v1.0'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v1.1'); } catch (e) {}
 })();

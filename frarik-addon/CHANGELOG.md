@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.6.33 — 2026-06-27
+
+### fix: GruppoAllarme v1.1 — bypass sempre visibile, subtitle rimosso, testo bianco, icone finestra
+
+- **Bypass sempre visibile**: il pulsante "Escludi"/"✕ Includi" appare su TUTTI i sensori quando l'allarme è disarmato, non solo su quelli aperti — permette di pre-selezionare i sensori da ignorare prima di armare
+- **Subtitle rimosso**: eliminata la riga grigia con il nome entità sotto lo stato nell'header popup
+- **Testo 100% bianco**: tutti i testi dei bottoni modalità e Disarma ora usano `#fff` invece di `rgba(255,255,255,.75)`
+- **Icone finestra corrette**: aggiunto `opening` a DC_ICO → `mdi:window-closed`/`mdi:window-open` (HA usa `device_class: opening` per le finestre)
+
 ## 1.6.32 — 2026-06-27
 
 ### feat: GruppoAllarme v1.0 — distintivo allarme Alarmo con bypass, overlay triggered
