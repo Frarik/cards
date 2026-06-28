@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.76 — 2026-06-28
+
+### fix: immagini elettrodomestici a piena altezza + oblò lavatrice/asciugatrice non tagliato
+
+- Tutte e 8 le card: rimosso `max-height:108px` dal container immagine — le SVG ora riempiono tutta l'altezza disponibile (~125px invece di 108px), immagini più grandi
+- Lavatrice v1.8, Asciugatrice v1.6: viewBox esteso a `0 0 64 82` — il bordo inferiore dell'oblò (stroke y=78.75) ha ora 3 unità di margine dal bordo del viewBox, nessun taglio visibile
+- Frigo v1.40, Forno/Microonde/Induzione/Lavastoviglie/Friggitrice v1.3
+
 ## 1.6.75 — 2026-06-28
 
 ### fix: immagini non tagliate + Microonde ridisegnato
