@@ -1391,7 +1391,7 @@ automation:
 
     function multiRows(rows, cls, placeholder) {
       return rows.map(function(v, i) {
-        return '<div class="wd-push-row"><input class="wd-inp ' + cls + '" type="text" autocomplete="off" placeholder="' + placeholder + '" value="' + (v || '').replace(/"/g, '&quot;') + '"><button class="wd-rm" data-rm="' + i + '">✕</button></div>';
+        return '<div class="wd-push-row"><div style="position:relative;flex:1"><input class="wd-inp ' + cls + '" type="text" autocomplete="off" placeholder="' + placeholder + '" value="' + (v || '').replace(/"/g, '&quot;') + '"><div class="wd-drop"></div></div><button class="wd-rm" data-rm="' + i + '">✕</button></div>';
       }).join('');
     }
 
@@ -1436,7 +1436,7 @@ automation:
         + '<div><div class="wd-sec">Sensori</div>'
         + '<div class="wd-lbl">Sensore Potenza (W)</div>'
         + '<div class="wd-frow"><input class="wd-inp" id="f-potenza" type="text" autocomplete="off" placeholder="sensor.presa_lavatrice_potenza" value="' + ((saved && saved.potenza) || '').replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-potenza"></div></div>'
-        + '<div class="wd-lbl">Switch Presa Frigo</div>'
+        + '<div class="wd-lbl">Switch Presa Lavatrice</div>'
         + '<div class="wd-frow"><input class="wd-inp" id="f-switch" type="text" autocomplete="off" placeholder="switch.presa_lavatrice" value="' + ((saved && saved.sw) || '').replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-switch"></div></div>'
         + '</div>'
 
@@ -1494,8 +1494,8 @@ automation:
 
       setupAC(sr.getElementById('f-potenza'), sr.getElementById('d-potenza'), sensorIds);
       setupAC(sr.getElementById('f-switch'),  sr.getElementById('d-switch'),  switchIds);
-      sr.querySelectorAll('.google-inp').forEach(function(inp) { setupAC(inp, null, mediaIds); });
-      sr.querySelectorAll('.alexa-inp').forEach(function(inp)  { setupAC(inp, null, mediaIds); });
+      sr.querySelectorAll('.google-inp').forEach(function(inp) { setupAC(inp, inp.parentElement.querySelector('.wd-drop'), mediaIds); });
+      sr.querySelectorAll('.alexa-inp').forEach(function(inp)  { setupAC(inp, inp.parentElement.querySelector('.wd-drop'), mediaIds); });
 
       sr.getElementById('wd-install').addEventListener('click', function() {
         var potenza = sr.getElementById('f-potenza').value.trim();
@@ -1535,7 +1535,7 @@ automation:
 
   /* ── CARD ── */
   const CARD = {
-    id: 'lavatrice', name: 'Lavatrice', icon: '🫧', version: '1.0',
+    id: 'lavatrice', name: 'Lavatrice', icon: '🫧', version: '1.1',
     desc: 'Monitoraggio motore, cicli, energia e costi. Richiede PKG Centro Controllo Lavatrice.',
     render: render, mount: mount, update: update, configure: openCfg,
     frarik_pkg_check: 'sensor.frarik_lavatrice_versione',
