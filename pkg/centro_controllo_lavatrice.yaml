@@ -407,7 +407,7 @@ template:
         icon: mdi:flash
         state: *sensore_potenza_lavatrice
 
-      - name: "frarik_lavatrice_versione
+      - name: "frarik_lavatrice_versione"
         state: "1.0"
 
 ####################################################

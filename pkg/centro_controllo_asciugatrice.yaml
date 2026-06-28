@@ -407,7 +407,7 @@ template:
         icon: mdi:flash
         state: *sensore_potenza_Asciugatrice
 
-      - name: "frarik_asciugatrice_versione
+      - name: "frarik_asciugatrice_versione"
         state: "1.0"
 
 ####################################################
