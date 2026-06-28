@@ -564,21 +564,23 @@
     const sig = [CARD.version, S(h, c.pk_power), S(h, c.pk_running), S(h, c.pk_kwh_oggi), S(h, c.pk_cicli_oggi), Attr(h, c.pk_time_on, 'Oggi'), Attr(h, c.pk_time_on, 'tempo_ciclo_lavatrice'), Attr(h, c.pk_time_on, 'costo_oggi_lavatrice')].join('|');
     if (!el.querySelector('.fc-card') || el._fcSig !== sig) {
       el._fcSig = sig;
-      el._fcBound = false;
       el.innerHTML = render(card);
     }
     mount(card, hass, el);
   }
 
   function mount(card, hass, el) {
-    if (el._fcBound) return; el._fcBound = true;
-    el.addEventListener('click', function (e) {
+    if (el._fcBound === CARD.version) return;
+    el._fcBound = CARD.version;
+    if (el._fcHandler) el.removeEventListener('click', el._fcHandler);
+    el._fcHandler = function (e) {
       const sya = e.target.closest('[data-sya]'); if (!sya) return;
       const a = sya.dataset.sya;
       if (a === 'popup-energia')      { openEnergiaPopup(cfgFor(card)); return; }
       if (a === 'popup-cicli')        { openCicliPopup(cfgFor(card)); return; }
       if (a === 'popup-impostazioni') { openImpostazioniHAPopup(cfgFor(card)); return; }
-    });
+    };
+    el.addEventListener('click', el._fcHandler);
   }
 
   /* ── PKG YAML EMBEDDED ── */
@@ -1535,7 +1537,7 @@ automation:
 
   /* ── CARD ── */
   const CARD = {
-    id: 'lavatrice', name: 'Lavatrice', icon: '🫧', version: '1.2',
+    id: 'lavatrice', name: 'Lavatrice', icon: '🫧', version: '1.3',
     desc: 'Monitoraggio motore, cicli, energia e costi. Richiede PKG Centro Controllo Lavatrice.',
     render: render, mount: mount, update: update, configure: openCfg,
     frarik_pkg_check: 'sensor.frarik_lavatrice_versione',
