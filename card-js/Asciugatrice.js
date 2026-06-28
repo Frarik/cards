@@ -1,4 +1,4 @@
-﻿/* frarik-version: 1.2 */
+﻿/* frarik-version: 1.3 */
 (function () {
   'use strict';
 
@@ -8,7 +8,7 @@
   function save(c, o) { try { localStorage.setItem(keyOf(c), JSON.stringify(o)); } catch (e) {} }
   function S(h, id) { const s = h && id && h.states && h.states[id]; return s ? s.state : null; }
   function Attr(h, id, attr) { const s = h && id && h.states && h.states[id]; return (s && s.attributes && s.attributes[attr] != null) ? s.attributes[attr] : null; }
-  function num(v) { const x = parseFloat(String(v || '').replace(',', '.')); return isNaN(x) ? null : x; }
+  function num(v) { const x = parseFloat(String(v != null ? v : '').replace(',', '.')); return isNaN(x) ? null : x; }
   function has(h, id) { return !!(h && h.states && h.states[id]); }
   function isOn(h, id) { return !!(h && h.states && h.states[id] && h.states[id].state === 'on'); }
   function callSvc(domain, service, data) { try { const h = H(); if (h && h.callService) h.callService(domain, service, data || {}); } catch (e) {} }
@@ -171,14 +171,14 @@
       + '#' + rid + ' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2)}'
       + '#' + rid + ' .fc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
       + '#' + rid + ' .fc-hdr-pill{font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;white-space:nowrap;display:flex;align-items:center;gap:4px}'
-      + '#' + rid + ' .fc-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:' + col + (running ? ';box-shadow:0 0 5px #38bdf8;animation:fcPulse 1.5s ease-in-out infinite' : '') + '}'
+      + '#' + rid + ' .fc-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:#38bdf8' + (running ? ';box-shadow:0 0 5px #38bdf8;animation:fcPulse 1.5s ease-in-out infinite' : '') + '}'
       + '#' + rid + ' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
       + '#' + rid + ' .fc-scroll::-webkit-scrollbar{display:none}'
       + '#' + rid + ' .fc-hero{display:flex;align-items:stretch;padding:10px 14px 8px;flex:1}'
       + '#' + rid + ' .fc-hero-img{flex-shrink:0;padding-right:14px;display:flex;align-items:center;cursor:pointer}'
       + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:7px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:14px}'
       + '#' + rid + ' .fc-st{display:flex;align-items:center;justify-content:flex-end;gap:7px;font-size:14px;font-weight:800;color:' + col + ';padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06)}'
-      + '#' + rid + ' .fc-stdot{width:8px;height:8px;border-radius:50%;background:' + col + ';flex-shrink:0' + (running ? ';box-shadow:0 0 7px #38bdf8;animation:fcPulse 1.5s ease-in-out infinite' : '') + '}'
+      + '#' + rid + ' .fc-stdot{width:8px;height:8px;border-radius:50%;background:#38bdf8;flex-shrink:0' + (running ? ';box-shadow:0 0 7px #38bdf8;animation:fcPulse 1.5s ease-in-out infinite' : '') + '}'
       + '#' + rid + ' .fc-pwfull{margin:0 14px 14px}'
       + '#' + rid + ' .fc-pwfull-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}'
       + '#' + rid + ' .fc-pwfull-lbl{font-size:10px;font-weight:700;color:#fff}'
@@ -193,7 +193,7 @@
       + '#' + rid + ' .fc-stats:hover{background:rgba(255,255,255,.06)}'
       + '#' + rid + ' .fc-sb{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 3px;gap:2px}'
       + '#' + rid + ' .fc-sb-sep{width:1px;background:rgba(255,255,255,.08);flex-shrink:0}'
-      + '#' + rid + ' .fc-sb-n{font-size:12px;font-weight:900;color:' + col + ';height:18px;display:flex;align-items:center;justify-content:center}'
+      + '#' + rid + ' .fc-sb-n{font-size:12px;font-weight:900;color:#38bdf8;height:18px;display:flex;align-items:center;justify-content:center}'
       + '#' + rid + ' .fc-sb-l{font-size:8px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.4px;text-align:center}'
       + '#' + rid + ' .fc-btns{display:flex;gap:6px;padding:0 14px 12px}'
       + '#' + rid + ' .fc-btn{flex:1;padding:8px 4px;border-radius:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:10px;font-weight:700;color:#fff;text-align:center;cursor:pointer;transition:all .15s}'
@@ -260,7 +260,7 @@
       + '<div class="fc-hdr">'
       + '<div class="fc-hdr-iw">💨</div>'
       + '<div class="fc-hdr-tit">' + (c.name || 'Asciugatrice') + '</div>'
-      + '<div class="fc-hdr-pill" style="background:' + (running ? 'rgba(56,189,248,.1)' : 'rgba(255,255,255,.05)') + ';border:1px solid ' + (running ? 'rgba(56,189,248,.28)' : 'rgba(255,255,255,.08)') + ';color:' + col + '">'
+      + '<div class="fc-hdr-pill" style="background:' + (running ? 'rgba(56,189,248,.1)' : 'rgba(56,189,248,.05)') + ';border:1px solid rgba(56,189,248,' + (running ? '.28' : '.15') + ');color:#38bdf8">'
       + '<div class="fc-dot"></div>'
       + statusLabel
       + '</div>'
@@ -1540,7 +1540,7 @@ automation:
 
   /* ── CARD ── */
   const CARD = {
-    id: 'asciugatrice', name: 'Asciugatrice', icon: '💨', version: '1.2',
+    id: 'asciugatrice', name: 'Asciugatrice', icon: '💨', version: '1.3',
     desc: 'Monitoraggio resistenza, cicli, energia e costi. Richiede PKG Centro Controllo Asciugatrice.',
     render: render, mount: mount, update: update, configure: openCfg,
     frarik_pkg_check: 'sensor.frarik_asciugatrice_versione',

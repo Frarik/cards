@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.72 — 2026-06-28
+
+### fix: colori e costo nelle card elettrodomestici
+
+- Tutte e 3 le card: badge top-right, dot, numeri nei 4 riquadri ora sempre `#38bdf8` indipendentemente dallo stato ON/STANDBY
+- `num()`: fix bug per cui il valore `0` veniva trattato come falsy → mostrava `—` invece di `0.00` (es. `€ OGGI` lavatrice con costo < 0.01)
+- Frigo v1.19, Lavatrice v1.5, Asciugatrice v1.3
+
 ## 1.6.71 — 2026-06-28
 
 ### fix: allineamento struttura card Frigorifero a Lavatrice/Asciugatrice
