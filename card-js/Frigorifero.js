@@ -1,4 +1,4 @@
-/* frarik-version: 1.9 */
+/* frarik-version: 1.10 */
 (function () {
   'use strict';
 
@@ -101,6 +101,22 @@
     const barPct = Math.min(100, (pw / soglia) * 100);
     const barCol = pw < 50 ? '#64748b' : pw <= 150 ? '#38bdf8' : pw <= 250 ? '#22c55e' : pw <= 400 ? '#f97316' : '#ef4444';
 
+    let lastCycleFull = null;
+    if (!running && terminato && terminato !== '—') {
+      try {
+        const rst = h && h.states && h.states[c.pk_running];
+        const lc = rst ? (rst.last_changed || rst.last_updated) : null;
+        if (lc) {
+          const _ld = new Date(lc);
+          if (!isNaN(_ld.getTime())) {
+            lastCycleFull = String(_ld.getDate()).padStart(2,'0') + '/' + String(_ld.getMonth()+1).padStart(2,'0') + ' · ' + terminato;
+          } else { lastCycleFull = terminato; }
+        } else { lastCycleFull = terminato; }
+      } catch(e) { lastCycleFull = terminato; }
+    }
+    const kwOggiNum = num(kwOggi);
+    const costoOggiNum = num(costoOggi);
+
     const css = '<style>'
       + '#' + rid + '{position:relative;width:100%;height:100%;min-height:280px;font-family:system-ui,sans-serif;display:block}'
       + '#' + rid + ' .fc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
@@ -118,17 +134,18 @@
       + '#' + rid + ' .fc-st{display:flex;align-items:center;gap:7px;font-size:14px;font-weight:800;color:' + col + ';padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06)}'
       + '#' + rid + ' .fc-stdot{width:8px;height:8px;border-radius:50%;background:' + col + ';flex-shrink:0' + (running ? ';box-shadow:0 0 7px #38bdf8;animation:fcPulse 1.5s ease-in-out infinite' : '') + '}'
       + '#' + rid + ' .fc-pw{display:flex;flex-direction:column;gap:4px}'
-      + '#' + rid + ' .fc-pw-val{font-size:22px;font-weight:900;color:' + barCol + ';line-height:1;transition:color .4s}'
+      + '#' + rid + ' .fc-pw-val{font-size:22px;font-weight:900;color:' + barCol + ';line-height:1;transition:color .4s;text-align:right;width:100%}'
       + '#' + rid + ' .fc-pw-bar{height:4px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden}'
       + '#' + rid + ' .fc-pw-fill{height:100%;border-radius:2px;transition:width .6s,background .4s}'
-      + '#' + rid + ' .fc-met{display:flex;align-items:center;gap:9px}'
+      + '#' + rid + ' .fc-met{display:flex;align-items:center;justify-content:space-between;gap:6px}'
       + '#' + rid + ' .fc-met-ic{font-size:13px;flex-shrink:0;width:18px;text-align:center}'
       + '#' + rid + ' .fc-met-v{font-size:16px;font-weight:800;color:#fff}'
+      + '#' + rid + ' .fc-met-sm{font-size:12px;font-weight:800;color:#fff}'
       + '#' + rid + ' .fc-stats{display:flex;margin:0 14px 8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden;cursor:pointer}'
       + '#' + rid + ' .fc-stats:hover{background:rgba(255,255,255,.06)}'
       + '#' + rid + ' .fc-sb{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 3px;gap:2px}'
       + '#' + rid + ' .fc-sb-sep{width:1px;background:rgba(255,255,255,.08);flex-shrink:0}'
-      + '#' + rid + ' .fc-sb-n{font-size:12px;font-weight:900;color:' + col + '}'
+      + '#' + rid + ' .fc-sb-n{font-size:12px;font-weight:900;color:' + col + ';height:18px;display:flex;align-items:center;justify-content:center}'
       + '#' + rid + ' .fc-sb-l{font-size:8px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.4px;text-align:center}'
       + '#' + rid + ' .fc-btns{display:flex;gap:6px;padding:0 14px 12px}'
       + '#' + rid + ' .fc-btn{flex:1;padding:8px 4px;border-radius:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:10px;font-weight:700;color:#fff;text-align:center;cursor:pointer;transition:all .15s}'
@@ -148,6 +165,7 @@
       + '<div class="fc-met"><span class="fc-met-ic">⏱</span><span class="fc-met-v">' + tempoC + '</span></div>'
       + '<div class="fc-met"><span class="fc-met-ic">🔌</span><span class="fc-met-v">' + consumoC + '</span></div>'
       + '<div class="fc-met"><span class="fc-met-ic">💶</span><span class="fc-met-v">' + (costoC != null ? costoC + ' €' : '—') + '</span></div>'
+      + (!running && lastCycleFull ? '<div class="fc-met"><span class="fc-met-ic">🕐</span><span class="fc-met-sm">' + lastCycleFull + '</span></div>' : '')
       + '</div>'
       + '</div>';
 
@@ -156,9 +174,9 @@
       + '<div class="fc-sb-sep"></div>'
       + '<div class="fc-sb"><div class="fc-sb-n">' + timeOggi + '</div><div class="fc-sb-l">Tempo oggi</div></div>'
       + '<div class="fc-sb-sep"></div>'
-      + '<div class="fc-sb"><div class="fc-sb-n" style="font-size:9px">' + fmtKwhShort(kwOggi) + '</div><div class="fc-sb-l">kWh oggi</div></div>'
+      + '<div class="fc-sb"><div class="fc-sb-n">' + (kwOggiNum != null ? kwOggiNum.toFixed(2) : '—') + '</div><div class="fc-sb-l">kWh oggi</div></div>'
       + '<div class="fc-sb-sep"></div>'
-      + '<div class="fc-sb"><div class="fc-sb-n" style="font-size:9px">' + fmtEur(costoOggi) + '</div><div class="fc-sb-l">€ oggi</div></div>'
+      + '<div class="fc-sb"><div class="fc-sb-n">' + (costoOggiNum != null ? costoOggiNum.toFixed(2) : '—') + '</div><div class="fc-sb-l">€ oggi</div></div>'
       + '</div>';
 
     const btnsHtml = '<div class="fc-btns">'
@@ -250,11 +268,15 @@
     const ton = c.pk_time_on;
     let weekHtml = '<div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 6px">Ultimi 7 giorni</div>'
       + '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:12px">';
+    const _todayJsDay = new Date().getDay();
+    const _todayIdx = [6,0,1,2,3,4,5][_todayJsDay];
+    function cleanVal(v) { return (!v || v === 'unknown' || v === 'unavailable' || v === 'none') ? '—' : v; }
     DAYS.forEach(function (d, i) {
-      const cicli = S(h, 'input_text.' + d + '_frigo_cicli') || '—';
-      const tempo = S(h, 'input_text.' + d + '_frigo_tempo') || '—';
-      weekHtml += '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;background:rgba(56,189,248,.05);border:1px solid rgba(56,189,248,.1);border-radius:8px;padding:6px 2px">'
-        + '<div style="font-size:8px;font-weight:700;color:#fff">' + DAY_LABELS[i] + '</div>'
+      const cicli = cleanVal(S(h, 'input_text.' + d + '_frigo_cicli'));
+      const tempo = cleanVal(S(h, 'input_text.' + d + '_frigo_tempo'));
+      const isToday = i === _todayIdx;
+      weekHtml += '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;background:' + (isToday ? 'rgba(56,189,248,.12)' : 'rgba(56,189,248,.05)') + ';border:1px solid ' + (isToday ? 'rgba(56,189,248,.4)' : 'rgba(56,189,248,.1)') + ';border-radius:8px;padding:6px 2px' + (isToday ? ';box-shadow:0 0 8px rgba(56,189,248,.15)' : '') + '">'
+        + '<div style="font-size:8px;font-weight:' + (isToday ? '900' : '700') + ';color:' + (isToday ? '#38bdf8' : '#fff') + '">' + DAY_LABELS[i] + '</div>'
         + '<div style="font-size:11px;font-weight:900;color:#38bdf8">' + cicli + '</div>'
         + '<div style="font-size:8px;color:#fff;text-align:center;line-height:1.2">' + tempo + '</div>'
         + '</div>';
@@ -1440,7 +1462,7 @@ automation:
 
   /* ── CARD ── */
   const CARD = {
-    id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '1.9',
+    id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '1.10',
     desc: 'Monitoraggio compressore, cicli, energia e costi. Richiede PKG Centro Controllo Frigorifero.',
     render: render, mount: mount, update: update, configure: openCfg,
     frarik_pkg_check: 'sensor.frarik_frigorifero_versione',
