@@ -1,9 +1,9 @@
-/* frarik-version: 1.5 */
+﻿/* frarik-version: 1.0 */
 (function () {
   'use strict';
 
   function H() { try { if (typeof window.frarikHass === 'function') { const h = window.frarikHass(); if (h && h.states) return h; } } catch (e) {} return null; }
-  function keyOf(c) { return 'frarik_lavatricecard_' + (c.id || 'x'); }
+  function keyOf(c) { return 'frarik_induzionecard_' + (c.id || 'x'); }
   function load(c) { try { return JSON.parse(localStorage.getItem(keyOf(c)) || '{}') || {}; } catch (e) { return {}; } }
   function save(c, o) { try { localStorage.setItem(keyOf(c), JSON.stringify(o)); } catch (e) {} }
   function S(h, id) { const s = h && id && h.states && h.states[id]; return s ? s.state : null; }
@@ -20,109 +20,66 @@
 
   function pkDefaults() {
     return {
-      pk_power:      'sensor.potenza_lavatrice_w',
-      pk_running:    'binary_sensor.motore_lavatrice',
-      pk_switch:     'switch.presa_lavatrice',
-      pk_kwh_oggi:   'sensor.lavatrice_energy_oggi',
-      pk_kwh_mese:   'sensor.lavatrice_energy_mese',
-      pk_kwh_anno:   'sensor.lavatrice_energy_anno',
-      pk_cicli_oggi: 'sensor.lavatrice_cicli_oggi',
-      pk_cicli_mese: 'sensor.lavatrice_cicli_mese',
-      pk_cicli_anno: 'sensor.lavatrice_cicli_anno',
-      pk_cicli_tot:  'counter.lavatrice_cicli_totale',
-      pk_time_on:    'sensor.time_on_lavatrice',
-      pk_soglia:     'input_number.lavatrice_soglia_w',
-      pk_versione:   'sensor.frarik_lavatrice_versione',
+      pk_power:      'sensor.potenza_induzione_w',
+      pk_running:    'binary_sensor.piano_induzione',
+      pk_switch:     'switch.presa_induzione',
+      pk_kwh_oggi:   'sensor.induzione_energy_oggi',
+      pk_kwh_mese:   'sensor.induzione_energy_mese',
+      pk_kwh_anno:   'sensor.induzione_energy_anno',
+      pk_cicli_oggi: 'sensor.induzione_cicli_oggi',
+      pk_cicli_mese: 'sensor.induzione_cicli_mese',
+      pk_cicli_anno: 'sensor.induzione_cicli_anno',
+      pk_cicli_tot:  'counter.induzione_cicli_totale',
+      pk_time_on:    'sensor.time_on_induzione',
+      pk_soglia:     'input_number.induzione_soglia_w',
+      pk_versione:   'sensor.frarik_induzione_versione',
     };
   }
 
   function cfgFor(card) {
     const c = load(card), pk = pkDefaults(), r = {};
     Object.keys(pk).forEach(function (k) { r[k] = (c[k] !== undefined && c[k] !== '') ? c[k] : pk[k]; });
-    r.name = c.name || 'Lavatrice';
+    r.name = c.name || 'Induzione';
     return r;
   }
 
-  /* ── FRIDGE SVG ── */
-  function _washSVG(running) {
-    var cx = 32, cy = 53;
-    var spinStyle = running ? 'style="transform-origin:' + cx + 'px ' + cy + 'px;animation:wspin 3s linear infinite"' : '';
-    var keyframes = running ? '@keyframes wspin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes wbub{0%,100%{opacity:.25;transform:translateY(0)}50%{opacity:.8;transform:translateY(-2px)}}@keyframes wled{0%,100%{opacity:.5}50%{opacity:1}}' : '';
-    return '<svg viewBox="0 0 64 84" width="104" height="137" style="display:block;filter:drop-shadow(0 0 10px rgba(56,189,248,' + (running ? '.3' : '.1') + '))">'
-      + (running ? '<defs><style>' + keyframes + '</style></defs>' : '')
-      // Corpo
-      + '<rect x="2" y="2" width="60" height="80" rx="6" fill="#0b1929" stroke="#1a3050" stroke-width="1.2"/>'
-      // Pannello comandi
-      + '<rect x="2" y="2" width="60" height="18" rx="6" fill="#070f1c"/>'
-      + '<rect x="2" y="14" width="60" height="6" fill="#070f1c"/>'
-      // Display digitale
-      + '<rect x="5" y="5" width="22" height="10" rx="2" fill="#020810" stroke="' + (running ? '#38bdf8' : '#162035') + '" stroke-width=".7"/>'
-      + '<text x="16" y="12.5" text-anchor="middle" font-size="5.5" font-weight="bold" font-family="monospace" fill="' + (running ? '#38bdf8' : '#1a3050') + '">' + (running ? '60°C' : '-- --') + '</text>'
-      // Manopola programmi
-      + '<circle cx="36" cy="11" r="5.5" fill="#0a1830" stroke="' + (running ? '#38bdf8' : '#1e3a5f') + '" stroke-width=".8"/>'
-      + '<circle cx="36" cy="11" r="2" fill="' + (running ? '#0d2545' : '#060e1c') + '"/>'
-      + '<line x1="36" y1="6.5" x2="36" y2="9.5" stroke="' + (running ? '#38bdf8' : '#2d4a6a') + '" stroke-width=".9" stroke-linecap="round"/>'
-      + '<circle cx="31.5" cy="8" r=".5" fill="' + (running ? 'rgba(56,189,248,.4)' : '#162035') + '"/>'
-      + '<circle cx="40.5" cy="8" r=".5" fill="' + (running ? 'rgba(56,189,248,.4)' : '#162035') + '"/>'
-      + '<circle cx="36" cy="16.5" r=".5" fill="' + (running ? 'rgba(56,189,248,.4)' : '#162035') + '"/>'
-      // LED indicatori
-      + '<circle cx="47" cy="8" r="2" fill="' + (running ? '#22c55e' : '#0a1a2e') + '"' + (running ? ' style="animation:wled 1.2s ease-in-out infinite"' : '') + '/>'
-      + '<circle cx="53" cy="8" r="2" fill="' + (running ? '#38bdf8' : '#0a1a2e') + '"' + (running ? ' style="animation:wled 1.8s ease-in-out infinite"' : '') + '/>'
-      + '<circle cx="59" cy="8" r="2" fill="#0a1a2e"/>'
-      // Pulsante giri
-      + '<rect x="46" y="13" width="14" height="4.5" rx="2" fill="' + (running ? 'rgba(56,189,248,.08)' : '#0a1525') + '" stroke="' + (running ? '#38bdf8' : '#162035') + '" stroke-width=".4"/>'
-      + '<text x="53" y="16.5" text-anchor="middle" font-size="3" fill="' + (running ? '#7dd3fc' : '#1a3050') + '" font-family="system-ui">1200</text>'
-      // Oblò — anello esterno
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="25" fill="#070f1c" stroke="#38bdf8" stroke-width="1.5"/>'
-      // Guarnizione gomma (anelli)
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="22.5" fill="none" stroke="rgba(56,189,248,.18)" stroke-width="1.2"/>'
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="21" fill="none" stroke="rgba(56,189,248,.07)" stroke-width=".5"/>'
-      // Vetro oblò
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="19.5" fill="' + (running ? '#040c1a' : '#030912') + '" stroke="#0d1f38" stroke-width=".6"/>'
-      // Cestello (ruota quando in funzione)
-      + '<g ' + spinStyle + '>'
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="17" fill="' + (running ? '#050e1e' : '#040b16') + '" stroke="rgba(56,189,248,.1)" stroke-width=".5"/>'
-      // Fori cestello — corona esterna
-      + '<circle cx="' + cx + '" cy="' + (cy-12) + '" r=".9" fill="#0b1f35"/>'
-      + '<circle cx="' + (cx+10.4) + '" cy="' + (cy-6) + '" r=".9" fill="#0b1f35"/>'
-      + '<circle cx="' + (cx+10.4) + '" cy="' + (cy+6) + '" r=".9" fill="#0b1f35"/>'
-      + '<circle cx="' + cx + '" cy="' + (cy+12) + '" r=".9" fill="#0b1f35"/>'
-      + '<circle cx="' + (cx-10.4) + '" cy="' + (cy+6) + '" r=".9" fill="#0b1f35"/>'
-      + '<circle cx="' + (cx-10.4) + '" cy="' + (cy-6) + '" r=".9" fill="#0b1f35"/>'
-      // Fori corona interna
-      + '<circle cx="' + cx + '" cy="' + (cy-7) + '" r=".6" fill="#0b1f35" opacity=".5"/>'
-      + '<circle cx="' + (cx+6.1) + '" cy="' + (cy+3.5) + '" r=".6" fill="#0b1f35" opacity=".5"/>'
-      + '<circle cx="' + (cx-6.1) + '" cy="' + (cy+3.5) + '" r=".6" fill="#0b1f35" opacity=".5"/>'
-      // 3 palette/alzatori a 0° 120° 240°
-      + '<rect x="30.5" y="' + (cy-17) + '" width="3" height="8" rx="1.5" fill="#1a3050"/>'
-      + '<rect x="30.5" y="' + (cy-17) + '" width="3" height="8" rx="1.5" fill="#1a3050" transform="rotate(120 ' + cx + ' ' + cy + ')"/>'
-      + '<rect x="30.5" y="' + (cy-17) + '" width="3" height="8" rx="1.5" fill="#1a3050" transform="rotate(240 ' + cx + ' ' + cy + ')"/>'
-      + '</g>'
-      // Acqua + bolle (statiche, rimangono in basso per gravità)
-      + (running
-        ? '<path d="M' + (cx-18) + ' ' + (cy+8) + ' Q' + cx + ' ' + (cy+5) + ' ' + (cx+18) + ' ' + (cy+8) + ' L' + (cx+18) + ' ' + (cy+15) + ' L' + (cx-18) + ' ' + (cy+15) + ' Z" fill="rgba(56,189,248,.07)"/>'
-          + '<circle cx="' + (cx-7) + '" cy="' + (cy+5) + '" r="1.5" fill="rgba(56,189,248,.35)" style="animation:wbub 2.1s ease-in-out infinite"/>'
-          + '<circle cx="' + (cx+2) + '" cy="' + (cy+3) + '" r="1" fill="rgba(56,189,248,.28)" style="animation:wbub 2.6s ease-in-out infinite .5s"/>'
-          + '<circle cx="' + (cx+8) + '" cy="' + (cy+6) + '" r="1.3" fill="rgba(56,189,248,.22)" style="animation:wbub 1.9s ease-in-out infinite .9s"/>'
-          + '<circle cx="' + (cx-2) + '" cy="' + (cy+9) + '" r=".8" fill="rgba(56,189,248,.18)" style="animation:wbub 3s ease-in-out infinite 1.3s"/>'
-        : '')
-      // Riflesso vetro (statico, sempre sopra)
-      + '<path d="M' + (cx-8) + ' ' + (cy-17) + ' Q' + (cx-2) + ' ' + (cy-20) + ' ' + (cx+6) + ' ' + (cy-16) + '" stroke="rgba(255,255,255,.1)" stroke-width="2.5" fill="none" stroke-linecap="round"/>'
-      + '<path d="M' + (cx-16) + ' ' + (cy-8) + ' Q' + (cx-19) + ' ' + (cy-2) + ' ' + (cx-16) + ' ' + (cy+4) + '" stroke="rgba(255,255,255,.05)" stroke-width="1.5" fill="none" stroke-linecap="round"/>'
-      // Maniglia oblò (destra)
-      + '<rect x="57" y="' + (cy-6) + '" width="4" height="12" rx="2" fill="#0f1e35" stroke="#1e3a5f" stroke-width=".6"/>'
-      // Pannello inferiore
-      + '<rect x="2" y="77" width="60" height="7" rx="3" fill="#070f1c" stroke="#162035" stroke-width=".5"/>'
-      // Sportellino filtro
-      + '<rect x="4" y="78.5" width="12" height="4" rx="2" fill="#0a1525" stroke="#1e3a5f" stroke-width=".5"/>'
-      + '<circle cx="10" cy="80.5" r="1.2" fill="' + (running ? 'rgba(56,189,248,.2)' : '#0d2040') + '"/>'
-      // LED on/off pannello basso
-      + '<circle cx="56" cy="80.5" r="1.5" fill="' + (running ? '#22c55e' : '#0a1a2e') + '"' + (running ? ' style="animation:wled 2s ease-in-out infinite"' : '') + '/>'
-      // Piedini
-      + '<rect x="5" y="82" width="10" height="2" rx="1" fill="#060d1a"/>'
-      + '<rect x="49" y="82" width="10" height="2" rx="1" fill="#060d1a"/>'
+  /* â”€â”€ INDUCTION SVG â”€â”€ */
+  function _induzioneSVG(running) {
+    var c    = running ? '#38bdf8' : '#64748b';
+    var glow = running ? ';filter:drop-shadow(0 0 14px rgba(56,189,248,.4))' : '';
+    var css  = running ? '@keyframes indzn{0%,100%{opacity:.4}50%{opacity:.85}}' : '';
+    var zo   = running ? '.7' : '.25';
+    var zo2  = running ? '.5' : '.15';
+    var zo3  = running ? '.8' : '.12';
+    var an1  = running ? ' style="animation:indzn 2s ease-in-out infinite"' : '';
+    var an2  = running ? ' style="animation:indzn 2s ease-in-out infinite .5s"' : '';
+    var an3  = running ? ' style="animation:indzn 2s ease-in-out infinite 1s"' : '';
+    var an4  = running ? ' style="animation:indzn 2s ease-in-out infinite 1.5s"' : '';
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 70" width="130" height="91" style="display:block;overflow:visible' + glow + '">'
+      + (running ? '<defs><style>' + css + '</style></defs>' : '')
+      + '<rect x="2" y="2" width="96" height="66" rx="9" fill="#070e1c" stroke="' + c + '" stroke-width="1.5"/>'
+      + '<rect x="72" y="4" width="24" height="62" rx="7" fill="#060c18"/>'
+      + '<rect x="74" y="8" width="20" height="10" rx="3" fill="#020810" stroke="' + (running ? '#38bdf8' : '#162035') + '" stroke-width=".6"/>'
+      + '<text x="84" y="15" text-anchor="middle" font-size="5" font-family="monospace" fill="' + (running ? '#38bdf8' : '#1a3050') + '">' + (running ? 'ON' : 'OFF') + '</text>'
+      + '<circle cx="84" cy="35" r="7" fill="#0a1830" stroke="' + c + '" stroke-width=".8"/>'
+      + '<circle cx="84" cy="35" r="3" fill="' + (running ? '#0d2545' : '#060e1c') + '"/>'
+      + '<line x1="84" y1="28.5" x2="84" y2="31.5" stroke="' + c + '" stroke-width=".9" stroke-linecap="round"/>'
+      + '<circle cx="84" cy="52" r="4" fill="' + (running ? '#22c55e' : '#0a1a2e') + '" opacity="' + (running ? '1' : '.3') + '"/>'
+      + '<circle cx="22" cy="20" r="14" fill="none" stroke="' + (running ? '#38bdf8' : '#1a3050') + '" stroke-width="1.5" opacity="' + zo + '"' + an1 + '/>'
+      + '<circle cx="22" cy="20" r="8" fill="none" stroke="' + c + '" stroke-width=".8" opacity="' + zo2 + '"/>'
+      + '<circle cx="22" cy="20" r="2.5" fill="' + c + '" opacity="' + zo3 + '"/>'
+      + '<circle cx="56" cy="20" r="14" fill="none" stroke="' + (running ? '#38bdf8' : '#1a3050') + '" stroke-width="1.5" opacity="' + zo + '"' + an2 + '/>'
+      + '<circle cx="56" cy="20" r="8" fill="none" stroke="' + c + '" stroke-width=".8" opacity="' + zo2 + '"/>'
+      + '<circle cx="56" cy="20" r="2.5" fill="' + c + '" opacity="' + zo3 + '"/>'
+      + '<circle cx="22" cy="50" r="14" fill="none" stroke="' + (running ? '#38bdf8' : '#1a3050') + '" stroke-width="1.5" opacity="' + zo + '"' + an3 + '/>'
+      + '<circle cx="22" cy="50" r="8" fill="none" stroke="' + c + '" stroke-width=".8" opacity="' + zo2 + '"/>'
+      + '<circle cx="22" cy="50" r="2.5" fill="' + c + '" opacity="' + zo3 + '"/>'
+      + '<circle cx="56" cy="50" r="14" fill="none" stroke="' + (running ? '#38bdf8' : '#1a3050') + '" stroke-width="1.5" opacity="' + zo + '"' + an4 + '/>'
+      + '<circle cx="56" cy="50" r="8" fill="none" stroke="' + c + '" stroke-width=".8" opacity="' + zo2 + '"/>'
+      + '<circle cx="56" cy="50" r="2.5" fill="' + c + '" opacity="' + zo3 + '"/>'
       + '</svg>';
   }
+
 
   /* ── RENDER ── */
   function render(card) {
@@ -134,17 +91,17 @@
     const ton     = c.pk_time_on;
 
     const terminato  = Attr(h, ton, 'terminato')           || '—';
-    const tempoC     = Attr(h, ton, 'tempo_ciclo_lavatrice')   || '—';
-    const consumoC   = Attr(h, ton, 'consumo_ciclo_lavatrice') || '—';
-    const costoC     = Attr(h, ton, 'costo_ciclo_lavatrice');
+    const tempoC     = Attr(h, ton, 'tempo_ciclo_induzione')   || '—';
+    const consumoC   = Attr(h, ton, 'consumo_ciclo_induzione') || '—';
+    const costoC     = Attr(h, ton, 'costo_ciclo_induzione');
     const kwOggi     = S(h, c.pk_kwh_oggi);
     const cicOggi    = S(h, c.pk_cicli_oggi);
     const timeOggi   = Attr(h, ton, 'Oggi')                || '—';
-    const costoOggi  = Attr(h, ton, 'costo_oggi_lavatrice');
+    const costoOggi  = Attr(h, ton, 'costo_oggi_induzione');
 
     const pw     = pwV || 0;
     const col    = running ? '#38bdf8' : '#64748b';
-    const statusLabel = running ? 'MOTORE ON' : 'STANDBY';
+    const statusLabel = running ? 'PIANO ON' : 'STANDBY';
     const soglia = num(S(h, c.pk_soglia)) || 300;
     const barPct = Math.min(100, (pw / soglia) * 100);
     const barCol = pw < 50 ? '#64748b' : pw <= 150 ? '#38bdf8' : pw <= 250 ? '#22c55e' : pw <= 400 ? '#f97316' : '#ef4444';
@@ -222,7 +179,7 @@
     }
 
     const heroHtml = '<div class="fc-hero">'
-      + '<div class="fc-hero-img" data-sya="popup-cicli">' + _washSVG(running) + '</div>'
+      + '<div class="fc-hero-img" data-sya="popup-cicli">' + _induzioneSVG(running) + '</div>'
       + '<div class="fc-hero-r">'
       + '<div class="fc-st">' + (running ? 'In funzione' : 'Standby') + '<div class="fc-stdot"></div></div>'
       + '<div class="fc-met"><span class="fc-met-lbl">' + cycleLbl + '</span><span class="fc-met-sm">' + cycleDt + '</span></div>'
@@ -260,8 +217,8 @@
       + '<div id="' + rid + '">'
       + '<div class="fc-card">'
       + '<div class="fc-hdr">'
-      + '<div class="fc-hdr-iw">🫧</div>'
-      + '<div class="fc-hdr-tit">' + (c.name || 'Lavatrice') + '</div>'
+      + '<div class="fc-hdr-iw">🍳</div>'
+      + '<div class="fc-hdr-tit">' + (c.name || 'Induzione') + '</div>'
       + '<div class="fc-hdr-pill" style="background:' + (running ? 'rgba(56,189,248,.1)' : 'rgba(56,189,248,.05)') + ';border:1px solid rgba(56,189,248,' + (running ? '.28' : '.15') + ');color:#38bdf8">'
       + '<div class="fc-dot"></div>'
       + statusLabel
@@ -322,13 +279,13 @@
       + row('Questo anno', fmtKwh(S(h, c.pk_kwh_anno)), '#bae6fd')
       + row('Anno precedente', fmtKwh(kwAnnoP), '#fff')
       + '<div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 4px">Costi</div>'
-      + row('Oggi', fmtEur(Attr(h, ton, 'costo_oggi_lavatrice')), '#7dd3fc')
-      + row('Ieri', fmtEur(Attr(h, ton, 'costo_ieri_lavatrice')), '#fff')
-      + row('Questo mese', fmtEur(Attr(h, ton, 'costo_mese_lavatrice')), '#7dd3fc')
-      + row('Mese precedente', fmtEur(Attr(h, ton, 'costo_mese_prec_lavatrice')), '#fff')
-      + row('Questo anno', fmtEur(Attr(h, ton, 'costo_anno_lavatrice')), '#7dd3fc')
-      + row('Anno precedente', fmtEur(Attr(h, ton, 'costo_anno_prec_lavatrice')), '#fff');
-    mkOv(popShell('⚡', '56,189,248', 'Energia & Costi', 'Lavatrice', 'fc-en-close', content), 'fc-en-close');
+      + row('Oggi', fmtEur(Attr(h, ton, 'costo_oggi_induzione')), '#7dd3fc')
+      + row('Ieri', fmtEur(Attr(h, ton, 'costo_ieri_induzione')), '#fff')
+      + row('Questo mese', fmtEur(Attr(h, ton, 'costo_mese_induzione')), '#7dd3fc')
+      + row('Mese precedente', fmtEur(Attr(h, ton, 'costo_mese_prec_induzione')), '#fff')
+      + row('Questo anno', fmtEur(Attr(h, ton, 'costo_anno_induzione')), '#7dd3fc')
+      + row('Anno precedente', fmtEur(Attr(h, ton, 'costo_anno_prec_induzione')), '#fff');
+    mkOv(popShell('⚡', '56,189,248', 'Energia & Costi', 'Induzione', 'fc-en-close', content), 'fc-en-close');
   }
 
   /* ── POPUP CICLI ── */
@@ -345,8 +302,8 @@
     function cleanVal(v) { return (!v || v === 'unknown' || v === 'unavailable' || v === 'none') ? '—' : v; }
     DAYS.forEach(function (d, i) {
       const isToday = i === _todayIdx;
-      const cicli = isToday ? cleanVal(S(h, c.pk_cicli_oggi))      : cleanVal(S(h, 'input_text.' + d + '_lavatrice_cicli'));
-      const tempo = isToday ? cleanVal(Attr(h, ton, 'Oggi'))        : cleanVal(S(h, 'input_text.' + d + '_lavatrice_tempo'));
+      const cicli = isToday ? cleanVal(S(h, c.pk_cicli_oggi))      : cleanVal(S(h, 'input_text.' + d + '_induzione_cicli'));
+      const tempo = isToday ? cleanVal(Attr(h, ton, 'Oggi'))        : cleanVal(S(h, 'input_text.' + d + '_induzione_tempo'));
       weekHtml += '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;background:' + (isToday ? 'rgba(56,189,248,.12)' : 'rgba(56,189,248,.05)') + ';border:1px solid ' + (isToday ? 'rgba(56,189,248,.4)' : 'rgba(56,189,248,.1)') + ';border-radius:8px;padding:6px 2px' + (isToday ? ';box-shadow:0 0 8px rgba(56,189,248,.15)' : '') + '">'
         + '<div style="font-size:8px;font-weight:' + (isToday ? '900' : '700') + ';color:' + (isToday ? '#38bdf8' : '#fff') + '">' + DAY_LABELS[i] + '</div>'
         + '<div style="font-size:11px;font-weight:900;color:#38bdf8">' + cicli + '</div>'
@@ -355,23 +312,23 @@
     });
     weekHtml += '</div>';
     const content = weekHtml
-      + '<div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Cicli motore</div>'
+      + '<div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Cicli piano</div>'
       + row('Oggi', S(h, c.pk_cicli_oggi) || '—', '#38bdf8')
       + row('Questo mese', S(h, c.pk_cicli_mese) || '—', '#38bdf8')
       + row('Questo anno', S(h, c.pk_cicli_anno) || '—', '#38bdf8')
       + row('Totale storico', S(h, c.pk_cicli_tot) || '—', '#7dd3fc')
-      + '<div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 4px">Tempo motore</div>'
+      + '<div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 4px">Tempo piano</div>'
       + row('Oggi', Attr(h, ton, 'Oggi') || '—', '#7dd3fc')
       + row('Ieri', Attr(h, ton, 'Ieri') || '—', '#fff')
       + row('Questo mese', Attr(h, ton, 'Mese') || '—', '#7dd3fc')
       + row('Mese precedente', Attr(h, ton, 'Mese Precedente') || '—', '#fff')
       + row('Questo anno', Attr(h, ton, 'Anno') || '—', '#7dd3fc')
       + '<div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 4px">Costo</div>'
-      + row('Ultimo ciclo', fmtEur(Attr(h, ton, 'costo_ciclo_lavatrice')), '#7dd3fc')
-      + row('Oggi', fmtEur(Attr(h, ton, 'costo_oggi_lavatrice')), '#7dd3fc')
-      + row('Questo mese', fmtEur(Attr(h, ton, 'costo_mese_lavatrice')), '#fff')
-      + row('Questo anno', fmtEur(Attr(h, ton, 'costo_anno_lavatrice')), '#fff');
-    mkOv(popShell('❄', '56,189,248', 'Cicli & Statistiche', 'Motore lavatrice', 'fc-ci-close', content), 'fc-ci-close');
+      + row('Ultimo ciclo', fmtEur(Attr(h, ton, 'costo_ciclo_induzione')), '#7dd3fc')
+      + row('Oggi', fmtEur(Attr(h, ton, 'costo_oggi_induzione')), '#7dd3fc')
+      + row('Questo mese', fmtEur(Attr(h, ton, 'costo_mese_induzione')), '#fff')
+      + row('Questo anno', fmtEur(Attr(h, ton, 'costo_anno_induzione')), '#fff');
+    mkOv(popShell('❄', '56,189,248', 'Cicli & Statistiche', 'Piano induzione', 'fc-ci-close', content), 'fc-ci-close');
   }
 
   /* ── CONFIGURE ── */
@@ -388,30 +345,30 @@
       return '<div style="margin-bottom:9px;position:relative"><label style="' + stLbl + '">' + lbl2 + (hint ? '<span style="font-weight:400;color:#475569;margin-left:6px;font-family:monospace;text-transform:none;letter-spacing:0">' + hint + '</span>' : '') + '</label><input id="' + fid + '" type="text" value="' + (val || '').replace(/"/g, '&quot;') + '" autocomplete="off" placeholder="Cerca entità…" style="' + stInp + '"><div id="' + fid + '-d" style="' + stDrop + '"></div></div>';
     }
 
-    const formHtml = '<div style="margin-bottom:10px"><label style="' + stLbl + '">Nome card</label><input id="fc-name" type="text" value="' + (cf.name || '').replace(/"/g, '&quot;') + '" placeholder="es. Lavatrice cucina" style="' + stInp.replace('monospace', 'system-ui') + '"></div>'
+    const formHtml = '<div style="margin-bottom:10px"><label style="' + stLbl + '">Nome card</label><input id="fc-name" type="text" value="' + (cf.name || '').replace(/"/g, '&quot;') + '" placeholder="es. Induzione cucina" style="' + stInp.replace('monospace', 'system-ui') + '"></div>'
       + '<div style="' + stSec + '">Sensori base</div>'
-      + field('fc-power',   'Potenza istantanea (W)', cf.pk_power,   'sensor.potenza_lavatrice_w')
-      + field('fc-running', 'Motore on/off',     cf.pk_running, 'binary_sensor.motore_lavatrice')
-      + field('fc-switch',  'Switch presa',           cf.pk_switch,  'switch.presa_lavatrice')
+      + field('fc-power',   'Potenza istantanea (W)', cf.pk_power,   'sensor.potenza_induzione_w')
+      + field('fc-running', 'Piano on/off',     cf.pk_running, 'binary_sensor.piano_induzione')
+      + field('fc-switch',  'Switch presa',           cf.pk_switch,  'switch.presa_induzione')
       + '<div style="' + stSec + '">PKG — Energia (kWh)</div>'
-      + field('fc-kwh-oggi', 'kWh oggi', cf.pk_kwh_oggi, 'sensor.lavatrice_energy_oggi')
-      + field('fc-kwh-mese', 'kWh mese', cf.pk_kwh_mese, 'sensor.lavatrice_energy_mese')
-      + field('fc-kwh-anno', 'kWh anno', cf.pk_kwh_anno, 'sensor.lavatrice_energy_anno')
+      + field('fc-kwh-oggi', 'kWh oggi', cf.pk_kwh_oggi, 'sensor.induzione_energy_oggi')
+      + field('fc-kwh-mese', 'kWh mese', cf.pk_kwh_mese, 'sensor.induzione_energy_mese')
+      + field('fc-kwh-anno', 'kWh anno', cf.pk_kwh_anno, 'sensor.induzione_energy_anno')
       + '<div style="' + stSec + '">PKG — Cicli</div>'
-      + field('fc-cic-oggi', 'Cicli oggi',    cf.pk_cicli_oggi, 'sensor.lavatrice_cicli_oggi')
-      + field('fc-cic-mese', 'Cicli mese',    cf.pk_cicli_mese, 'sensor.lavatrice_cicli_mese')
-      + field('fc-cic-anno', 'Cicli anno',    cf.pk_cicli_anno, 'sensor.lavatrice_cicli_anno')
-      + field('fc-cic-tot',  'Cicli totale',  cf.pk_cicli_tot,  'counter.lavatrice_cicli_totale')
+      + field('fc-cic-oggi', 'Cicli oggi',    cf.pk_cicli_oggi, 'sensor.induzione_cicli_oggi')
+      + field('fc-cic-mese', 'Cicli mese',    cf.pk_cicli_mese, 'sensor.induzione_cicli_mese')
+      + field('fc-cic-anno', 'Cicli anno',    cf.pk_cicli_anno, 'sensor.induzione_cicli_anno')
+      + field('fc-cic-tot',  'Cicli totale',  cf.pk_cicli_tot,  'counter.induzione_cicli_totale')
       + '<div style="' + stSec + '">PKG — Statistiche</div>'
-      + field('fc-time-on', 'Sensore time_on',  cf.pk_time_on, 'sensor.time_on_lavatrice')
-      + field('fc-soglia',  'Soglia lavoro (W)', cf.pk_soglia,  'input_number.lavatrice_soglia_w')
+      + field('fc-time-on', 'Sensore time_on',  cf.pk_time_on, 'sensor.time_on_induzione')
+      + field('fc-soglia',  'Soglia lavoro (W)', cf.pk_soglia,  'input_number.induzione_soglia_w')
       + '<div style="display:flex;gap:8px;margin-top:16px">'
       + '<button id="fc-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button>'
       + '<button id="fc-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#38bdf8;color:#060d14">Salva</button>'
       + '</div>';
 
     const allFieldIds = ['fc-power','fc-running','fc-switch','fc-kwh-oggi','fc-kwh-mese','fc-kwh-anno','fc-cic-oggi','fc-cic-mese','fc-cic-anno','fc-cic-tot','fc-time-on','fc-soglia'];
-    const ov = mkOv(popShell('🫧', '56,189,248', 'Configura Lavatrice', card.id || '', 'fc-cfg-close', formHtml), 'fc-cfg-close');
+    const ov = mkOv(popShell('🍳', '56,189,248', 'Configura Induzione', card.id || '', 'fc-cfg-close', formHtml), 'fc-cfg-close');
 
     ov.querySelector('#fc-cancel').addEventListener('click', function() { ov._close(); });
 
@@ -499,27 +456,27 @@
     }
 
     dSec('🔔 Notifiche push & vocali');
-    dToggle('input_boolean.lavatrice_notify_push',   '📱 Push');
-    dToggle('input_boolean.lavatrice_notify_google', '🔊 Google');
-    dToggle('input_boolean.lavatrice_notify_alexa',  '🗣 Alexa');
-    dTime('input_datetime.lavatrice_notifiche_inizio', '⏰ Orario inizio notifiche');
-    dTime('input_datetime.lavatrice_notifiche_fine',   '⏰ Orario fine notifiche');
+    dToggle('input_boolean.induzione_notify_push',   '📱 Push');
+    dToggle('input_boolean.induzione_notify_google', '🔊 Google');
+    dToggle('input_boolean.induzione_notify_alexa',  '🗣 Alexa');
+    dTime('input_datetime.induzione_notifiche_inizio', '⏰ Orario inizio notifiche');
+    dTime('input_datetime.induzione_notifiche_fine',   '⏰ Orario fine notifiche');
 
     dSec('🔌 Elettrodomestico');
-    dToggle('input_boolean.lavatrice_switch', 'Switch presa');
-    dNum('input_number.lavatrice_soglia_w',          'Soglia lavoro',  'W',   0, 5000, 1);
-    dNum('input_number.lavatrice_tempo_innesco_m',   'Delay spegnimento', 'min', 0, 60, 1);
-    dNum('input_number.lavatrice_avvio_ritardato_s', 'Delay riavvio',  's',   0, 300, 1);
+    dToggle('input_boolean.induzione_switch', 'Switch presa');
+    dNum('input_number.induzione_soglia_w',          'Soglia lavoro',  'W',   0, 5000, 1);
+    dNum('input_number.induzione_tempo_innesco_m',   'Delay spegnimento', 'min', 0, 60, 1);
+    dNum('input_number.induzione_avvio_ritardato_s', 'Delay riavvio',  's',   0, 300, 1);
 
     dSec('⏰ Spegnimento automatico');
-    dToggle('automation.lavatrice_off_automatico', 'Auto OFF abilitato');
-    dTime('input_datetime.lavatrice_off', 'Orario spegnimento');
+    dToggle('automation.induzione_off_automatico', 'Auto OFF abilitato');
+    dTime('input_datetime.induzione_off', 'Orario spegnimento');
 
     dSec('📝 Personalizzazione');
-    dText('input_text.lavatrice_nome',      'Nome elettrodomestico');
-    dText('input_text.lavatrice_messaggio', 'Messaggio notifica');
+    dText('input_text.induzione_nome',      'Nome elettrodomestico');
+    dText('input_text.induzione_messaggio', 'Messaggio notifica');
     dNum('input_number.costo_energia',  'Costo energia', '€/kWh', 0, 2, 0.001);
-    dInfo('Ultimo reset contatori', ss('input_text.lavatrice_data_reset'));
+    dInfo('Ultimo reset contatori', ss('input_text.induzione_data_reset'));
 
     const swCss = '<style>'
       + '.fi-sw{width:44px;height:26px;border-radius:13px;cursor:pointer;position:relative;flex-shrink:0;transition:background .25s}'
@@ -530,7 +487,7 @@
       + '</style>';
     const resetBtn = '<button id="fi-reset" style="width:100%;margin-top:16px;padding:12px;border-radius:12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);color:#f87171;font-size:13px;font-weight:700;cursor:pointer">🔄 Reset Contatori</button>';
     const closeId = 'fi-cl-' + Math.random().toString(36).slice(2, 6);
-    const ov = mkOv(popShell('⚙', '100,116,139', 'Impostazioni', c.name || 'Lavatrice', closeId, swCss + rows.join('') + resetBtn), closeId);
+    const ov = mkOv(popShell('⚙', '100,116,139', 'Impostazioni', c.name || 'Induzione', closeId, swCss + rows.join('') + resetBtn), closeId);
 
     ov.querySelectorAll('.fi-sw').forEach(function(sw) {
       sw.addEventListener('click', function() {
@@ -557,7 +514,7 @@
 
     const rb = ov.querySelector('#fi-reset');
     if (rb) rb.addEventListener('click', function() {
-      callSvc('script', 'turn_on', {entity_id: 'script.lavatrice_reset_sensori'});
+      callSvc('script', 'turn_on', {entity_id: 'script.induzione_reset_sensori'});
       rb.textContent = '✅ Reset avviato!'; rb.style.color = '#4ade80';
       setTimeout(function() { try { ov._close(); } catch(e) {} }, 1500);
     });
@@ -566,7 +523,7 @@
   /* ── UPDATE / MOUNT ── */
   function update(card, hass, el) {
     const h = H(), c = cfgFor(card);
-    const sig = [CARD.version, S(h, c.pk_power), S(h, c.pk_running), S(h, c.pk_kwh_oggi), S(h, c.pk_cicli_oggi), Attr(h, c.pk_time_on, 'Oggi'), Attr(h, c.pk_time_on, 'tempo_ciclo_lavatrice'), Attr(h, c.pk_time_on, 'costo_oggi_lavatrice')].join('|');
+    const sig = [CARD.version, S(h, c.pk_power), S(h, c.pk_running), S(h, c.pk_kwh_oggi), S(h, c.pk_cicli_oggi), Attr(h, c.pk_time_on, 'Oggi'), Attr(h, c.pk_time_on, 'tempo_ciclo_induzione'), Attr(h, c.pk_time_on, 'costo_oggi_induzione')].join('|');
     if (!el.querySelector('.fc-card') || el._fcSig !== sig) {
       el._fcSig = sig;
       el.innerHTML = render(card);
@@ -598,7 +555,7 @@
 #   ██║     ██║  ██║██║  ██║██║  ██║██║██║  ██╗             #
 #   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝            #
 #                                                             #
-#   Package: Centro Controllo Lavatrice                     #
+#   Package: Centro Controllo Induzione                     #
 #   Versione: 1.3  |  Frarik / Fratech                       #
 #                                                             #
 ###############################################################
@@ -607,12 +564,12 @@ homeassistant:
   customize:
     package.node_anchors:
       customize: &customize
-        package: 'Centro Controllo Lavatrice 1.3 — Frarik'
+        package: 'Centro Controllo Induzione 1.3 — Frarik'
 
       setting:
 
-        Sensore Potenza Frigo: &sensore_potenza_lavatrice "{{ states('IL_TUO_SENSORE_POTENZA_FRIGO') | float(0) }}"
-        Switch Frigo:          &switch_lavatrice 'IL_TUO_SWITCH_FRIGO'
+        Sensore Potenza Induzione: &sensore_potenza_induzione "{{ states('IL_TUO_SENSORE_POTENZA_INDUZIONE') | float(0) }}"
+        Switch Induzione:          &switch_induzione 'IL_TUO_SWITCH_INDUZIONE'
 
         Lista MediaPlayer Google: &google
           - IL_TUO_MEDIA_PLAYER_GOOGLE_1
@@ -624,21 +581,21 @@ homeassistant:
           - service: IL_TUO_MOBILE_APP_1
 
 notify:
-  - name: Lavatrice
+  - name: Induzione
     platform: group
     services: *push
 
 sensor:
   - platform: integration
-    source: sensor.potenza_lavatrice_w
-    name: kwh_lavatrice
+    source: sensor.potenza_induzione_w
+    name: kwh_induzione
     unit_prefix: k
     method: left
     round: 2
 
 input_number:
-  lavatrice_soglia_w:
-    name: Soglia Lavoro Frigo W
+  induzione_soglia_w:
+    name: Soglia Lavoro Induzione W
     icon: mdi:flash
     min: 0
     max: 5000
@@ -646,8 +603,8 @@ input_number:
     unit_of_measurement: "w"
     mode: box
 
-  lavatrice_tempo_innesco_m:
-    name: Tempo Innesco Frigo M
+  induzione_tempo_innesco_m:
+    name: Tempo Innesco Induzione M
     icon: mdi:timer
     min: 0
     max: 60
@@ -655,8 +612,8 @@ input_number:
     unit_of_measurement: "m"
     mode: box
 
-  lavatrice_avvio_ritardato_s:
-    name: Avvio Ritardato Frigo S
+  induzione_avvio_ritardato_s:
+    name: Avvio Ritardato Induzione S
     icon: mdi:timer-sand
     min: 0
     max: 60
@@ -664,98 +621,98 @@ input_number:
     unit_of_measurement: "s"
     mode: box
 
-  lunedi_lavatrice_consumo:
+  lunedi_induzione_consumo:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "kwh"
 
-  lunedi_lavatrice_costo:
+  lunedi_induzione_costo:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "€"
 
-  martedi_lavatrice_consumo:
+  martedi_induzione_consumo:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "kwh"
 
-  martedi_lavatrice_costo:
+  martedi_induzione_costo:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "€"
 
-  mercoledi_lavatrice_consumo:
+  mercoledi_induzione_consumo:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "kwh"
 
-  mercoledi_lavatrice_costo:
+  mercoledi_induzione_costo:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "€"
 
-  giovedi_lavatrice_consumo:
+  giovedi_induzione_consumo:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "kwh"
 
-  giovedi_lavatrice_costo:
+  giovedi_induzione_costo:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "€"
 
-  venerdi_lavatrice_consumo:
+  venerdi_induzione_consumo:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "kwh"
 
-  venerdi_lavatrice_costo:
+  venerdi_induzione_costo:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "€"
 
-  sabato_lavatrice_consumo:
+  sabato_induzione_consumo:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "kwh"
 
-  sabato_lavatrice_costo:
+  sabato_induzione_costo:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "€"
 
-  domenica_lavatrice_consumo:
+  domenica_induzione_consumo:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "kwh"
 
-  domenica_lavatrice_costo:
+  domenica_induzione_costo:
     icon: mdi:counter
     min: 0
     max: 999999
@@ -764,96 +721,96 @@ input_number:
 
 utility_meter:
 
-  lavatrice_tempo_oggi:
-    source: sensor.time_on_lavatrice
+  induzione_tempo_oggi:
+    source: sensor.time_on_induzione
     cycle: daily
 
-  lavatrice_tempo_mese:
-    source: sensor.time_on_lavatrice
+  induzione_tempo_mese:
+    source: sensor.time_on_induzione
     cycle: monthly
 
-  lavatrice_tempo_anno:
-    source: sensor.time_on_lavatrice
+  induzione_tempo_anno:
+    source: sensor.time_on_induzione
     cycle: yearly
 
-  lavatrice_cicli_oggi:
-    source: counter.lavatrice_cicli_totale
+  induzione_cicli_oggi:
+    source: counter.induzione_cicli_totale
     cycle: daily
 
-  lavatrice_cicli_mese:
-    source: counter.lavatrice_cicli_totale
+  induzione_cicli_mese:
+    source: counter.induzione_cicli_totale
     cycle: monthly
 
-  lavatrice_cicli_anno:
-    source: counter.lavatrice_cicli_totale
+  induzione_cicli_anno:
+    source: counter.induzione_cicli_totale
     cycle: yearly
 
-  lavatrice_energy_oggi:
-    source: sensor.kwh_lavatrice
+  induzione_energy_oggi:
+    source: sensor.kwh_induzione
     cycle: daily
 
-  lavatrice_energy_mese:
-    source: sensor.kwh_lavatrice
+  induzione_energy_mese:
+    source: sensor.kwh_induzione
     cycle: monthly
 
-  lavatrice_energy_anno:
-    source: sensor.kwh_lavatrice
+  induzione_energy_anno:
+    source: sensor.kwh_induzione
     cycle: yearly
 
 template:
   - binary_sensor:
-      - name: motore_lavatrice
+      - name: piano_induzione
         icon: mdi:snowflake
         state: >-
-          {{ 'on' if (states('sensor.potenza_lavatrice_w') | int(0)) >
-             states('input_number.lavatrice_soglia_w') | int(0) else 'off' }}
-        delay_off: "00:{{ states('input_number.lavatrice_tempo_innesco_m') | int(0) }}:00"
-        delay_on:  "00:00:{{ states('input_number.lavatrice_avvio_ritardato_s') | int(0) }}"
+          {{ 'on' if (states('sensor.potenza_induzione_w') | int(0)) >
+             states('input_number.induzione_soglia_w') | int(0) else 'off' }}
+        delay_off: "00:{{ states('input_number.induzione_tempo_innesco_m') | int(0) }}:00"
+        delay_on:  "00:00:{{ states('input_number.induzione_avvio_ritardato_s') | int(0) }}"
 
   - trigger:
       - platform: state
-        entity_id: input_boolean.lavatrice_ciclo_attivo
+        entity_id: input_boolean.induzione_ciclo_attivo
         from: "off"
         to: "on"
     sensor:
-      - name: inizio_ciclo_lavatrice
-        state: "{{ states('sensor.kwh_lavatrice') }}"
+      - name: inizio_ciclo_induzione
+        state: "{{ states('sensor.kwh_induzione') }}"
 
   - trigger:
       - platform: state
-        entity_id: binary_sensor.motore_lavatrice
+        entity_id: binary_sensor.piano_induzione
         from: "on"
         to: "off"
     sensor:
-      - name: fine_ciclo_lavatrice
+      - name: fine_ciclo_induzione
         state: "{{ now().strftime('%d/%m/%Y %H:%M') }}"
 
   - trigger:
       - platform: state
-        entity_id: input_boolean.lavatrice_ciclo_attivo
+        entity_id: input_boolean.induzione_ciclo_attivo
         from: "off"
         to: "on"
     sensor:
-      - name: tempo_riavvio_lavatrice
+      - name: tempo_riavvio_induzione
         state: "{{ as_timestamp(now()) }}"
 
   - sensor:
-      - name: "time_on_lavatrice"
+      - name: "time_on_induzione"
         icon: mdi:history
         state: >-
-          {% if is_state('binary_sensor.motore_lavatrice', 'on') and
-                (as_timestamp(states.binary_sensor.motore_lavatrice.last_changed) + 1) <= as_timestamp(now()) %}
-            {{ ((as_timestamp(now()) - as_timestamp(states.binary_sensor.motore_lavatrice.last_changed)) / 3600) }}
+          {% if is_state('binary_sensor.piano_induzione', 'on') and
+                (as_timestamp(states.binary_sensor.piano_induzione.last_changed) + 1) <= as_timestamp(now()) %}
+            {{ ((as_timestamp(now()) - as_timestamp(states.binary_sensor.piano_induzione.last_changed)) / 3600) }}
           {% else %} 0 {% endif %}
         attributes:
           terminato: >-
-            {{ states('sensor.fine_ciclo_lavatrice') if is_state('binary_sensor.motore_lavatrice', 'off') else 'In funzione' }}
-          tempo_ciclo_lavatrice: >
-            {% set hours = (as_timestamp(now()) - states('sensor.tempo_riavvio_lavatrice') | float(0)) / 3600 %}
+            {{ states('sensor.fine_ciclo_induzione') if is_state('binary_sensor.piano_induzione', 'off') else 'In funzione' }}
+          tempo_ciclo_induzione: >
+            {% set hours = (as_timestamp(now()) - states('sensor.tempo_riavvio_induzione') | float(0)) / 3600 %}
             {% set minutes = ((hours % 1) * 60) | int(0) %}
             {% set hours = (hours - (hours % 1)) | int(0) %}
             {% set day = ((hours | int(0) / 24)) | int(0) %}
-            {% if is_state('input_boolean.lavatrice_ciclo_attivo', 'on') %}
+            {% if is_state('input_boolean.induzione_ciclo_attivo', 'on') %}
               {% if day | int(0) > 0 %}
                 {{ day }}d {{ (hours | int(0)) - (day * 24) }}h {{ minutes }}m
               {% elif hours | int(0) > 0 %}
@@ -862,10 +819,10 @@ template:
                 {{ minutes }}min
               {% endif %}
             {% else %}
-              {{ states('input_text.lavatrice_ultimo_ciclo') }}
+              {{ states('input_text.induzione_ultimo_ciclo') }}
             {% endif %}
           Oggi: >
-            {% set hours = states('sensor.lavatrice_tempo_oggi') | float(0) %}
+            {% set hours = states('sensor.induzione_tempo_oggi') | float(0) %}
             {% set minutes = ((hours % 1) * 60) | int(0) %}
             {% set hours = (hours - (hours % 1)) | int(0) %}
             {% if hours | int(0) > 0 %}
@@ -874,7 +831,7 @@ template:
               {{ minutes }}min
             {% endif %}
           Mese: >
-            {% set hours = states('sensor.lavatrice_tempo_mese') | float(0) %}
+            {% set hours = states('sensor.induzione_tempo_mese') | float(0) %}
             {% set minutes = ((hours % 1) * 60) | int(0) %}
             {% set hours = (hours - (hours % 1)) | int(0) %}
             {% set day = ((hours | int / 24)) | int(0) %}
@@ -886,7 +843,7 @@ template:
               {{ minutes }}min
             {% endif %}
           Anno: >
-            {% set hours = states('sensor.lavatrice_tempo_anno') | float(0) %}
+            {% set hours = states('sensor.induzione_tempo_anno') | float(0) %}
             {% set minutes = ((hours % 1) * 60) | int(0) %}
             {% set hours = (hours - (hours % 1)) | int(0) %}
             {% set day = ((hours | int(0) / 24)) | int(0) %}
@@ -898,7 +855,7 @@ template:
               {{ minutes }}min
             {% endif %}
           Ieri: >
-            {% set hours = state_attr('sensor.lavatrice_tempo_oggi', 'last_period') | float(0) %}
+            {% set hours = state_attr('sensor.induzione_tempo_oggi', 'last_period') | float(0) %}
             {% set minutes = ((hours % 1) * 60) | int(0) %}
             {% set hours = (hours - (hours % 1)) | int(0) %}
             {% if hours | int(0) > 0 %}
@@ -907,7 +864,7 @@ template:
               {{ minutes }}min
             {% endif %}
           Mese Precedente: >
-            {% set hours = state_attr('sensor.lavatrice_tempo_mese', 'last_period') | float(0) %}
+            {% set hours = state_attr('sensor.induzione_tempo_mese', 'last_period') | float(0) %}
             {% set minutes = ((hours % 1) * 60) | int(0) %}
             {% set hours = (hours - (hours % 1)) | int(0) %}
             {% set day = ((hours | int / 24)) | int(0) %}
@@ -918,184 +875,184 @@ template:
             {% else %}
               {{ minutes }}min
             {% endif %}
-          consumo_ciclo_lavatrice: >-
-            {{ (states('sensor.kwh_lavatrice') | float(0) - states('sensor.inizio_ciclo_lavatrice') | float(0)) | round(3) }} kWh
-          costo_ciclo_lavatrice: >-
-            {{ ((states('sensor.kwh_lavatrice') | float(0) - states('sensor.inizio_ciclo_lavatrice') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(3, default=0) }}
-          costo_oggi_lavatrice: >-
-            {{ ((states('sensor.lavatrice_energy_oggi') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
-          costo_mese_lavatrice: >-
-            {{ ((states('sensor.lavatrice_energy_mese') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
-          costo_anno_lavatrice: >-
-            {{ ((states('sensor.lavatrice_energy_anno') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
-          costo_ieri_lavatrice: >-
-            {{ ((state_attr('sensor.lavatrice_energy_oggi', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
-          costo_mese_prec_lavatrice: >-
-            {{ ((state_attr('sensor.lavatrice_energy_mese', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
-          costo_anno_prec_lavatrice: >-
-            {{ ((state_attr('sensor.lavatrice_energy_anno', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+          consumo_ciclo_induzione: >-
+            {{ (states('sensor.kwh_induzione') | float(0) - states('sensor.inizio_ciclo_induzione') | float(0)) | round(3) }} kWh
+          costo_ciclo_induzione: >-
+            {{ ((states('sensor.kwh_induzione') | float(0) - states('sensor.inizio_ciclo_induzione') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(3, default=0) }}
+          costo_oggi_induzione: >-
+            {{ ((states('sensor.induzione_energy_oggi') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+          costo_mese_induzione: >-
+            {{ ((states('sensor.induzione_energy_mese') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+          costo_anno_induzione: >-
+            {{ ((states('sensor.induzione_energy_anno') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+          costo_ieri_induzione: >-
+            {{ ((state_attr('sensor.induzione_energy_oggi', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+          costo_mese_prec_induzione: >-
+            {{ ((state_attr('sensor.induzione_energy_mese', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+          costo_anno_prec_induzione: >-
+            {{ ((state_attr('sensor.induzione_energy_anno', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
 
-      - name: "potenza_lavatrice_w"
+      - name: "potenza_induzione_w"
         unit_of_measurement: 'W'
         device_class: power
         state_class: measurement
         icon: mdi:flash
-        state: *sensore_potenza_lavatrice
+        state: *sensore_potenza_induzione
 
-      - name: "frarik_lavatrice_versione"
+      - name: "frarik_induzione_versione"
         state: "1.2"
 
 counter:
-  lavatrice_cicli_totale:
-    name: Cicli Motore Lavatrice
+  induzione_cicli_totale:
+    name: Cicli Piano Induzione
     initial: 0
     step: 1
 
 input_boolean:
-  lavatrice_switch:
-    name: Switch Frigo
+  induzione_switch:
+    name: Switch Induzione
     icon: mdi:power
 
-  lavatrice_ciclo_attivo:
-    name: Ciclo Attivo Frigo
+  induzione_ciclo_attivo:
+    name: Ciclo Attivo Induzione
 
-  lavatrice_notify_push:
-    name: Notifica Push Frigo
+  induzione_notify_push:
+    name: Notifica Push Induzione
 
-  lavatrice_notify_alexa:
-    name: Notifica Alexa Frigo
+  induzione_notify_alexa:
+    name: Notifica Alexa Induzione
 
-  lavatrice_notify_google:
-    name: Notifica Google Frigo
+  induzione_notify_google:
+    name: Notifica Google Induzione
 
 group:
-  lavatrice_notifiche:
+  induzione_notifiche:
     entities:
-      - input_boolean.lavatrice_notify_google
-      - input_boolean.lavatrice_notify_alexa
-      - input_boolean.lavatrice_notify_push
-      - automation.lavatrice_off_automatico
-      - input_boolean.lavatrice_switch
+      - input_boolean.induzione_notify_google
+      - input_boolean.induzione_notify_alexa
+      - input_boolean.induzione_notify_push
+      - automation.induzione_off_automatico
+      - input_boolean.induzione_switch
 
 input_datetime:
-  lavatrice_notifiche_inizio:
-    name: Orario Inizio Notifiche Frigo
+  induzione_notifiche_inizio:
+    name: Orario Inizio Notifiche Induzione
     has_date: false
     has_time: true
 
-  lavatrice_notifiche_fine:
-    name: Orario Fine Notifiche Frigo
+  induzione_notifiche_fine:
+    name: Orario Fine Notifiche Induzione
     has_date: false
     has_time: true
 
-  lavatrice_off:
-    name: Frigo Spegnimento Automatico
+  induzione_off:
+    name: Induzione Spegnimento Automatico
     has_date: false
     has_time: true
 
 input_text:
-  lavatrice_data_reset:
-  lavatrice_nome:
-  lavatrice_messaggio:
-  lavatrice_ultimo_ciclo:
-  lunedi_lavatrice_cicli:
-  lunedi_lavatrice_tempo:
-  martedi_lavatrice_cicli:
-  martedi_lavatrice_tempo:
-  mercoledi_lavatrice_cicli:
-  mercoledi_lavatrice_tempo:
-  giovedi_lavatrice_cicli:
-  giovedi_lavatrice_tempo:
-  venerdi_lavatrice_cicli:
-  venerdi_lavatrice_tempo:
-  sabato_lavatrice_cicli:
-  sabato_lavatrice_tempo:
-  domenica_lavatrice_cicli:
-  domenica_lavatrice_tempo:
+  induzione_data_reset:
+  induzione_nome:
+  induzione_messaggio:
+  induzione_ultimo_ciclo:
+  lunedi_induzione_cicli:
+  lunedi_induzione_tempo:
+  martedi_induzione_cicli:
+  martedi_induzione_tempo:
+  mercoledi_induzione_cicli:
+  mercoledi_induzione_tempo:
+  giovedi_induzione_cicli:
+  giovedi_induzione_tempo:
+  venerdi_induzione_cicli:
+  venerdi_induzione_tempo:
+  sabato_induzione_cicli:
+  sabato_induzione_tempo:
+  domenica_induzione_cicli:
+  domenica_induzione_tempo:
 
 script:
-  lavatrice_reset_sensori:
+  induzione_reset_sensori:
     sequence:
     - service: input_text.set_value
       data:
         value: "{{ now().strftime('%d/%m/%Y %H:%M') }}"
       target:
-        entity_id: input_text.lavatrice_data_reset
+        entity_id: input_text.induzione_data_reset
 
     - service: utility_meter.calibrate
       data:
         value: '0'
       target:
         entity_id:
-          - sensor.lavatrice_cicli_oggi
-          - sensor.lavatrice_cicli_mese
-          - sensor.lavatrice_cicli_anno
-          - sensor.lavatrice_energy_oggi
-          - sensor.lavatrice_energy_mese
-          - sensor.lavatrice_energy_anno
-          - sensor.lavatrice_tempo_oggi
-          - sensor.lavatrice_tempo_mese
-          - sensor.lavatrice_tempo_anno
+          - sensor.induzione_cicli_oggi
+          - sensor.induzione_cicli_mese
+          - sensor.induzione_cicli_anno
+          - sensor.induzione_energy_oggi
+          - sensor.induzione_energy_mese
+          - sensor.induzione_energy_anno
+          - sensor.induzione_tempo_oggi
+          - sensor.induzione_tempo_mese
+          - sensor.induzione_tempo_anno
 
     - service: input_number.set_value
       data:
         value: '0'
       target:
         entity_id:
-          - input_number.lunedi_lavatrice_consumo
-          - input_number.martedi_lavatrice_consumo
-          - input_number.mercoledi_lavatrice_consumo
-          - input_number.giovedi_lavatrice_consumo
-          - input_number.venerdi_lavatrice_consumo
-          - input_number.sabato_lavatrice_consumo
-          - input_number.domenica_lavatrice_consumo
-          - input_number.lunedi_lavatrice_costo
-          - input_number.martedi_lavatrice_costo
-          - input_number.mercoledi_lavatrice_costo
-          - input_number.giovedi_lavatrice_costo
-          - input_number.venerdi_lavatrice_costo
-          - input_number.sabato_lavatrice_costo
-          - input_number.domenica_lavatrice_costo
+          - input_number.lunedi_induzione_consumo
+          - input_number.martedi_induzione_consumo
+          - input_number.mercoledi_induzione_consumo
+          - input_number.giovedi_induzione_consumo
+          - input_number.venerdi_induzione_consumo
+          - input_number.sabato_induzione_consumo
+          - input_number.domenica_induzione_consumo
+          - input_number.lunedi_induzione_costo
+          - input_number.martedi_induzione_costo
+          - input_number.mercoledi_induzione_costo
+          - input_number.giovedi_induzione_costo
+          - input_number.venerdi_induzione_costo
+          - input_number.sabato_induzione_costo
+          - input_number.domenica_induzione_costo
 
     - service: input_text.set_value
       data:
         value: '0'
       target:
         entity_id:
-          - input_text.lunedi_lavatrice_cicli
-          - input_text.martedi_lavatrice_cicli
-          - input_text.mercoledi_lavatrice_cicli
-          - input_text.giovedi_lavatrice_cicli
-          - input_text.venerdi_lavatrice_cicli
-          - input_text.sabato_lavatrice_cicli
-          - input_text.domenica_lavatrice_cicli
-          - input_text.lunedi_lavatrice_tempo
-          - input_text.martedi_lavatrice_tempo
-          - input_text.mercoledi_lavatrice_tempo
-          - input_text.giovedi_lavatrice_tempo
-          - input_text.venerdi_lavatrice_tempo
-          - input_text.sabato_lavatrice_tempo
-          - input_text.domenica_lavatrice_tempo
+          - input_text.lunedi_induzione_cicli
+          - input_text.martedi_induzione_cicli
+          - input_text.mercoledi_induzione_cicli
+          - input_text.giovedi_induzione_cicli
+          - input_text.venerdi_induzione_cicli
+          - input_text.sabato_induzione_cicli
+          - input_text.domenica_induzione_cicli
+          - input_text.lunedi_induzione_tempo
+          - input_text.martedi_induzione_tempo
+          - input_text.mercoledi_induzione_tempo
+          - input_text.giovedi_induzione_tempo
+          - input_text.venerdi_induzione_tempo
+          - input_text.sabato_induzione_tempo
+          - input_text.domenica_induzione_tempo
 
     - service: counter.reset
       target:
         entity_id:
-          - counter.lavatrice_cicli_totale
+          - counter.induzione_cicli_totale
 
 automation:
-- alias: lavatrice_automazioni
-  id: lavatrice_automazioni
+- alias: induzione_automazioni
+  id: induzione_automazioni
   max_exceeded: silent
   trigger:
 
   - platform: state
-    entity_id: binary_sensor.motore_lavatrice
+    entity_id: binary_sensor.piano_induzione
     from: 'off'
     to: 'on'
     id: inizio_ciclo
 
   - platform: state
-    entity_id: binary_sensor.motore_lavatrice
+    entity_id: binary_sensor.piano_induzione
     from: 'on'
     to: 'off'
     id: fine_ciclo
@@ -1106,24 +1063,24 @@ automation:
 
   - platform: state
     entity_id:
-      - input_boolean.lavatrice_switch
-      - *switch_lavatrice
+      - input_boolean.induzione_switch
+      - *switch_induzione
     from: 'on'
     to: 'off'
     id: switch_off
 
   - platform: state
     entity_id:
-      - input_boolean.lavatrice_switch
-      - *switch_lavatrice
+      - input_boolean.induzione_switch
+      - *switch_induzione
     from: 'off'
     to: 'on'
     id: switch_on
 
   - platform: template
     value_template: >-
-      {{ is_state('binary_sensor.motore_lavatrice','off') and
-         is_state('input_boolean.lavatrice_ciclo_attivo','on') }}
+      {{ is_state('binary_sensor.piano_induzione','off') and
+         is_state('input_boolean.induzione_ciclo_attivo','on') }}
     id: controllo_ciclo
 
   action:
@@ -1138,61 +1095,61 @@ automation:
         target:
           entity_id: >
             {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
-            {% if today == "Monday" %}    input_text.lunedi_lavatrice_cicli
-            {% elif today == "Tuesday" %} input_text.martedi_lavatrice_cicli
-            {% elif today == "Wednesday" %} input_text.mercoledi_lavatrice_cicli
-            {% elif today == "Thursday" %} input_text.giovedi_lavatrice_cicli
-            {% elif today == "Friday" %}  input_text.venerdi_lavatrice_cicli
-            {% elif today == "Saturday" %} input_text.sabato_lavatrice_cicli
-            {% elif today == "Sunday" %}  input_text.domenica_lavatrice_cicli
+            {% if today == "Monday" %}    input_text.lunedi_induzione_cicli
+            {% elif today == "Tuesday" %} input_text.martedi_induzione_cicli
+            {% elif today == "Wednesday" %} input_text.mercoledi_induzione_cicli
+            {% elif today == "Thursday" %} input_text.giovedi_induzione_cicli
+            {% elif today == "Friday" %}  input_text.venerdi_induzione_cicli
+            {% elif today == "Saturday" %} input_text.sabato_induzione_cicli
+            {% elif today == "Sunday" %}  input_text.domenica_induzione_cicli
             {% endif %}
         data:
-          value: "{{ states('sensor.lavatrice_cicli_oggi') }}"
+          value: "{{ states('sensor.induzione_cicli_oggi') }}"
 
       - service: input_text.set_value
         target:
           entity_id: >
             {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
-            {% if today == "Monday" %}    input_text.lunedi_lavatrice_tempo
-            {% elif today == "Tuesday" %} input_text.martedi_lavatrice_tempo
-            {% elif today == "Wednesday" %} input_text.mercoledi_lavatrice_tempo
-            {% elif today == "Thursday" %} input_text.giovedi_lavatrice_tempo
-            {% elif today == "Friday" %}  input_text.venerdi_lavatrice_tempo
-            {% elif today == "Saturday" %} input_text.sabato_lavatrice_tempo
-            {% elif today == "Sunday" %}  input_text.domenica_lavatrice_tempo
+            {% if today == "Monday" %}    input_text.lunedi_induzione_tempo
+            {% elif today == "Tuesday" %} input_text.martedi_induzione_tempo
+            {% elif today == "Wednesday" %} input_text.mercoledi_induzione_tempo
+            {% elif today == "Thursday" %} input_text.giovedi_induzione_tempo
+            {% elif today == "Friday" %}  input_text.venerdi_induzione_tempo
+            {% elif today == "Saturday" %} input_text.sabato_induzione_tempo
+            {% elif today == "Sunday" %}  input_text.domenica_induzione_tempo
             {% endif %}
         data:
-          value: "{{ state_attr('sensor.time_on_lavatrice','Oggi') }}"
+          value: "{{ state_attr('sensor.time_on_induzione','Oggi') }}"
 
       - service: input_number.set_value
         target:
           entity_id: >
             {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
-            {% if today == "Monday" %}    input_number.lunedi_lavatrice_consumo
-            {% elif today == "Tuesday" %} input_number.martedi_lavatrice_consumo
-            {% elif today == "Wednesday" %} input_number.mercoledi_lavatrice_consumo
-            {% elif today == "Thursday" %} input_number.giovedi_lavatrice_consumo
-            {% elif today == "Friday" %}  input_number.venerdi_lavatrice_consumo
-            {% elif today == "Saturday" %} input_number.sabato_lavatrice_consumo
-            {% elif today == "Sunday" %}  input_number.domenica_lavatrice_consumo
+            {% if today == "Monday" %}    input_number.lunedi_induzione_consumo
+            {% elif today == "Tuesday" %} input_number.martedi_induzione_consumo
+            {% elif today == "Wednesday" %} input_number.mercoledi_induzione_consumo
+            {% elif today == "Thursday" %} input_number.giovedi_induzione_consumo
+            {% elif today == "Friday" %}  input_number.venerdi_induzione_consumo
+            {% elif today == "Saturday" %} input_number.sabato_induzione_consumo
+            {% elif today == "Sunday" %}  input_number.domenica_induzione_consumo
             {% endif %}
         data:
-          value: "{{ states('sensor.lavatrice_energy_oggi') }}"
+          value: "{{ states('sensor.induzione_energy_oggi') }}"
 
       - service: input_number.set_value
         target:
           entity_id: >
             {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
-            {% if today == "Monday" %}    input_number.lunedi_lavatrice_costo
-            {% elif today == "Tuesday" %} input_number.martedi_lavatrice_costo
-            {% elif today == "Wednesday" %} input_number.mercoledi_lavatrice_costo
-            {% elif today == "Thursday" %} input_number.giovedi_lavatrice_costo
-            {% elif today == "Friday" %}  input_number.venerdi_lavatrice_costo
-            {% elif today == "Saturday" %} input_number.sabato_lavatrice_costo
-            {% elif today == "Sunday" %}  input_number.domenica_lavatrice_costo
+            {% if today == "Monday" %}    input_number.lunedi_induzione_costo
+            {% elif today == "Tuesday" %} input_number.martedi_induzione_costo
+            {% elif today == "Wednesday" %} input_number.mercoledi_induzione_costo
+            {% elif today == "Thursday" %} input_number.giovedi_induzione_costo
+            {% elif today == "Friday" %}  input_number.venerdi_induzione_costo
+            {% elif today == "Saturday" %} input_number.sabato_induzione_costo
+            {% elif today == "Sunday" %}  input_number.domenica_induzione_costo
             {% endif %}
         data:
-          value: "{{ state_attr('sensor.time_on_lavatrice','costo_oggi_lavatrice') }}"
+          value: "{{ state_attr('sensor.time_on_induzione','costo_oggi_induzione') }}"
 
   - choose:
     - alias: SWITCH OFF
@@ -1202,10 +1159,10 @@ automation:
       sequence:
       - service: switch.turn_off
         target:
-          entity_id: *switch_lavatrice
+          entity_id: *switch_induzione
       - service: input_boolean.turn_off
         target:
-          entity_id: input_boolean.lavatrice_switch
+          entity_id: input_boolean.induzione_switch
 
   - choose:
     - alias: SWITCH ON
@@ -1215,10 +1172,10 @@ automation:
       sequence:
       - service: switch.turn_on
         target:
-          entity_id: *switch_lavatrice
+          entity_id: *switch_induzione
       - service: input_boolean.turn_on
         target:
-          entity_id: input_boolean.lavatrice_switch
+          entity_id: input_boolean.induzione_switch
 
   - choose:
     - conditions:
@@ -1226,7 +1183,7 @@ automation:
         id: controllo_ciclo
       sequence:
       - delay: '00:01:00'
-      - entity_id: input_boolean.lavatrice_ciclo_attivo
+      - entity_id: input_boolean.induzione_ciclo_attivo
         service: input_boolean.turn_off
 
   - choose:
@@ -1234,7 +1191,7 @@ automation:
       - condition: trigger
         id: inizio_ciclo
       sequence:
-      - entity_id: input_boolean.lavatrice_ciclo_attivo
+      - entity_id: input_boolean.induzione_ciclo_attivo
         service: input_boolean.turn_on
 
   - choose:
@@ -1245,17 +1202,17 @@ automation:
 
       - service: input_text.set_value
         target:
-          entity_id: input_text.lavatrice_ultimo_ciclo
+          entity_id: input_text.induzione_ultimo_ciclo
         data:
-          value: "{{ state_attr('sensor.time_on_lavatrice','tempo_ciclo_lavatrice') }}"
+          value: "{{ state_attr('sensor.time_on_induzione','tempo_ciclo_induzione') }}"
 
       - service: counter.increment
         target:
-          entity_id: counter.lavatrice_cicli_totale
+          entity_id: counter.induzione_cicli_totale
 
       - delay: '00:00:05'
 
-      - entity_id: input_boolean.lavatrice_ciclo_attivo
+      - entity_id: input_boolean.induzione_ciclo_attivo
         service: input_boolean.turn_off
 
   - parallel:
@@ -1264,27 +1221,27 @@ automation:
         - condition: trigger
           id: fine_ciclo
         - condition: time
-          after: 'input_datetime.lavatrice_notifiche_inizio'
-          before: 'input_datetime.lavatrice_notifiche_fine'
+          after: 'input_datetime.induzione_notifiche_inizio'
+          before: 'input_datetime.induzione_notifiche_fine'
         - condition: state
-          entity_id: input_boolean.lavatrice_notify_google
+          entity_id: input_boolean.induzione_notify_google
           state: 'on'
         sequence:
         - service: tts.google_translate_say
           continue_on_error: true
           data:
             entity_id: *google
-            message: "{{ states('input_text.lavatrice_messaggio') }} in {{ state_attr('sensor.time_on_lavatrice','tempo_ciclo_lavatrice') }}"
+            message: "{{ states('input_text.induzione_messaggio') }} in {{ state_attr('sensor.time_on_induzione','tempo_ciclo_induzione') }}"
 
     - choose:
       - conditions:
         - condition: trigger
           id: fine_ciclo
         - condition: time
-          after: 'input_datetime.lavatrice_notifiche_inizio'
-          before: 'input_datetime.lavatrice_notifiche_fine'
+          after: 'input_datetime.induzione_notifiche_inizio'
+          before: 'input_datetime.induzione_notifiche_fine'
         - condition: state
-          entity_id: input_boolean.lavatrice_notify_alexa
+          entity_id: input_boolean.induzione_notify_alexa
           state: 'on'
         sequence:
         - service: notify.alexa_media
@@ -1294,50 +1251,50 @@ automation:
             data:
               type: announce
               method: spoken
-            message: "{{ states('input_text.lavatrice_messaggio') }} in {{ state_attr('sensor.time_on_lavatrice','tempo_ciclo_lavatrice') }}"
+            message: "{{ states('input_text.induzione_messaggio') }} in {{ state_attr('sensor.time_on_induzione','tempo_ciclo_induzione') }}"
 
     - choose:
       - conditions:
         - condition: trigger
           id: fine_ciclo
         - condition: state
-          entity_id: input_boolean.lavatrice_notify_push
+          entity_id: input_boolean.induzione_notify_push
           state: 'on'
         sequence:
         - data_template:
             message: >-
-              🫧 {{ states('input_text.lavatrice_nome') }}
+              🍳 {{ states('input_text.induzione_nome') }}
 
-              ⏱ Ciclo durato: {{ state_attr('sensor.time_on_lavatrice','tempo_ciclo_lavatrice') }}
+              ⏱ Ciclo durato: {{ state_attr('sensor.time_on_induzione','tempo_ciclo_induzione') }}
 
-              ⚡ Consumati: {{ state_attr('sensor.time_on_lavatrice','consumo_ciclo_lavatrice') }}
+              ⚡ Consumati: {{ state_attr('sensor.time_on_induzione','consumo_ciclo_induzione') }}
 
-              💰 Spesi: {{ state_attr('sensor.time_on_lavatrice','costo_ciclo_lavatrice') }} €
-            title: "Lavatrice"
-          service: notify.lavatrice
+              💰 Spesi: {{ state_attr('sensor.time_on_induzione','costo_ciclo_induzione') }} €
+            title: "Induzione"
+          service: notify.induzione
           continue_on_error: true
 
-- alias: lavatrice_off_automatico
-  id: lavatrice_off_automatico
+- alias: induzione_off_automatico
+  id: induzione_off_automatico
   trigger:
     - platform: time
-      at: 'input_datetime.lavatrice_off'
-      id: lavatrice_automatico_off
+      at: 'input_datetime.induzione_off'
+      id: induzione_automatico_off
   condition: []
   action:
     - choose:
       - conditions:
         - condition: trigger
-          id: lavatrice_automatico_off
+          id: induzione_automatico_off
         - condition: state
-          entity_id: *switch_lavatrice
+          entity_id: *switch_induzione
           state: 'on'
         sequence:
-        - entity_id: *switch_lavatrice
+        - entity_id: *switch_induzione
           service: switch.turn_off`;
 
   /* ── PKG BUILD ── */
-  var _LAV_WIZ_KEY = 'frarik_pkg_wizard_lavatrice';
+  var _IND_WIZ_KEY = 'frarik_pkg_wizard_induzione';
 
   function _buildPkg(potenza, sw, push, google, alexa) {
     var ind = '          ';
@@ -1351,8 +1308,8 @@ automation:
       ? alexa.map(function(p) { return ind + '- ' + p; }).join('\n')
       : ind + '- media_player.alexa_cameretta';
     var yaml = _FRIGO_PKG_YAML
-      .split('IL_TUO_SENSORE_POTENZA_FRIGO').join(potenza || 'sensor.non_configurato')
-      .split('IL_TUO_SWITCH_FRIGO').join(sw || 'switch.non_configurato');
+      .split('IL_TUO_SENSORE_POTENZA_INDUZIONE').join(potenza || 'sensor.non_configurato')
+      .split('IL_TUO_SWITCH_INDUZIONE').join(sw || 'switch.non_configurato');
     yaml = yaml.replace(ind + '- service: IL_TUO_MOBILE_APP_1', pushLines);
     yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_GOOGLE_1', googleLines);
     yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_ALEXA_1', alexaLines);
@@ -1367,7 +1324,7 @@ automation:
     var switchIds = allIds.filter(function(id) { return /^switch\./.test(id); });
     var mediaIds  = allIds.filter(function(id) { return /^media_player\./.test(id); });
     var saved = null;
-    try { saved = JSON.parse(localStorage.getItem(_LAV_WIZ_KEY) || 'null'); } catch(e) {}
+    try { saved = JSON.parse(localStorage.getItem(_IND_WIZ_KEY) || 'null'); } catch(e) {}
     var pushRows   = (saved && saved.push   && saved.push.length)   ? saved.push.slice()   : [''];
     var googleRows = (saved && saved.google && saved.google.length) ? saved.google.slice() : [''];
     var alexaRows  = (saved && saved.alexa  && saved.alexa.length)  ? saved.alexa.slice()  : [''];
@@ -1406,8 +1363,8 @@ automation:
       sr.innerHTML = '<style>'
         + ':host{all:initial;font-family:system-ui,sans-serif}'
         + '.wd-bd{position:fixed;inset:0;z-index:200000;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);display:flex;align-items:flex-end}'
-        + '.wd-panel{width:100%;max-height:88vh;display:flex;flex-direction:column;background:#080f18;border:1px solid rgba(56,189,248,.3);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:wUp .22s cubic-bezier(.32,1.12,.56,1)}'
-        + '@keyframes wUp{from{transform:translateY(100%)}to{transform:translateY(0)}}'
+        + '.wd-panel{width:100%;max-height:88vh;display:flex;flex-direction:column;background:#080f18;border:1px solid rgba(56,189,248,.3);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:indUp .22s cubic-bezier(.32,1.12,.56,1)}'
+        + '@keyframes indUp{from{transform:translateY(100%)}to{transform:translateY(0)}}'
         + '.wd-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}'
         + '.wd-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.3);flex-shrink:0}'
         + '.wd-tit{font-size:14px;font-weight:800}'
@@ -1434,17 +1391,17 @@ automation:
         + '</style>'
         + '<div class="wd-bd" id="wd-bd">'
         + '<div class="wd-panel">'
-        + '<div class="wd-hdr"><div class="wd-ico">🫧</div>'
-        + '<div><div class="wd-tit">Installa PKG Lavatrice</div><div class="wd-sub">frarik_lavatrice.yaml → config/packages/</div></div>'
+        + '<div class="wd-hdr"><div class="wd-ico">🍳</div>'
+        + '<div><div class="wd-tit">Installa PKG Induzione</div><div class="wd-sub">frarik_induzione.yaml → config/packages/</div></div>'
         + '<button class="wd-x" id="wd-x">✕</button></div>'
         + '<div class="wd-body">'
 
         /* ── Sensori ── */
         + '<div><div class="wd-sec">Sensori</div>'
         + '<div class="wd-lbl">Sensore Potenza (W)</div>'
-        + '<div class="wd-frow"><input class="wd-inp" id="f-potenza" type="text" autocomplete="off" placeholder="sensor.presa_lavatrice_potenza" value="' + ((saved && saved.potenza) || '').replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-potenza"></div></div>'
-        + '<div class="wd-lbl">Switch Presa Lavatrice</div>'
-        + '<div class="wd-frow"><input class="wd-inp" id="f-switch" type="text" autocomplete="off" placeholder="switch.presa_lavatrice" value="' + ((saved && saved.sw) || '').replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-switch"></div></div>'
+        + '<div class="wd-frow"><input class="wd-inp" id="f-potenza" type="text" autocomplete="off" placeholder="sensor.presa_induzione_potenza" value="' + ((saved && saved.potenza) || '').replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-potenza"></div></div>'
+        + '<div class="wd-lbl">Switch Presa Induzione</div>'
+        + '<div class="wd-frow"><input class="wd-inp" id="f-switch" type="text" autocomplete="off" placeholder="switch.presa_induzione" value="' + ((saved && saved.sw) || '').replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-switch"></div></div>'
         + '</div>'
 
         /* ── Notifiche Push ── */
@@ -1510,7 +1467,7 @@ automation:
         var push    = Array.from(sr.querySelectorAll('.push-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
         var google  = Array.from(sr.querySelectorAll('.google-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
         var alexa   = Array.from(sr.querySelectorAll('.alexa-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
-        try { localStorage.setItem(_LAV_WIZ_KEY, JSON.stringify({potenza: potenza, sw: sw, push: push, google: google, alexa: alexa})); } catch(e) {}
+        try { localStorage.setItem(_IND_WIZ_KEY, JSON.stringify({potenza: potenza, sw: sw, push: push, google: google, alexa: alexa})); } catch(e) {}
         var yaml = _buildPkg(potenza, sw, push, google, alexa);
         var m = location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
         var base = location.origin + (m ? m[1] : '');
@@ -1520,12 +1477,12 @@ automation:
         fetch(base + '/api/frarik/pkg/install', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({name: 'frarik/frarik_lavatrice.yaml', content: yaml})
+          body: JSON.stringify({name: 'frarik/frarik_induzione.yaml', content: yaml})
         }).then(function(r) { return r.json().then(function(j) { return {r: r, j: j}; }); })
           .then(function(res) {
             destroy();
             if (res.r.ok && res.j.ok) {
-              try { if (typeof window.showToast === 'function') window.showToast('📦 PKG Lavatrice installato! Riavvia HA.'); } catch(e) {}
+              try { if (typeof window.showToast === 'function') window.showToast('📦 PKG Induzione installato! Riavvia HA.'); } catch(e) {}
               if (typeof onDone === 'function') onDone();
             } else {
               try { if (typeof window.showToast === 'function') window.showToast('⚠️ Errore installazione PKG: ' + ((res.j && res.j.error) || '')); } catch(e) {}
@@ -1542,11 +1499,11 @@ automation:
 
   /* ── CARD ── */
   const CARD = {
-    id: 'lavatrice', name: 'Lavatrice', icon: '🫧', version: '1.5',
-    desc: 'Monitoraggio motore, cicli, energia e costi. Richiede PKG Centro Controllo Lavatrice.',
+    id: 'induzione', name: 'Induzione', icon: '🍳', version: '1.0',
+    desc: 'Monitoraggio piano induzione, cicli, energia e costi. Richiede PKG Centro Controllo Induzione.',
     render: render, mount: mount, update: update, configure: openCfg,
-    frarik_pkg_check: 'sensor.frarik_lavatrice_versione',
-    frarik_pkg_id: 'frarik_lavatrice',
+    frarik_pkg_check: 'sensor.frarik_induzione_versione',
+    frarik_pkg_id: 'frarik_induzione',
     frarik_pkg_version: '1.0',
     openWizard: _openWizard,
     _buildPkgFromConfig: function(cfg) { return _buildPkg(cfg.potenza || '', cfg.sw || '', cfg.push || [], cfg.google || [], cfg.alexa || []); },
@@ -1555,5 +1512,5 @@ automation:
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Card registrata: lavatrice v' + CARD.version); } catch (e) {}
+  try { console.log('[FratechStore] Card registrata: induzione v' + CARD.version); } catch (e) {}
 })();

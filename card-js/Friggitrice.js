@@ -1,9 +1,9 @@
-/* frarik-version: 1.5 */
+﻿/* frarik-version: 1.0 */
 (function () {
   'use strict';
 
   function H() { try { if (typeof window.frarikHass === 'function') { const h = window.frarikHass(); if (h && h.states) return h; } } catch (e) {} return null; }
-  function keyOf(c) { return 'frarik_lavatricecard_' + (c.id || 'x'); }
+  function keyOf(c) { return 'frarik_friggitricecard_' + (c.id || 'x'); }
   function load(c) { try { return JSON.parse(localStorage.getItem(keyOf(c)) || '{}') || {}; } catch (e) { return {}; } }
   function save(c, o) { try { localStorage.setItem(keyOf(c), JSON.stringify(o)); } catch (e) {} }
   function S(h, id) { const s = h && id && h.states && h.states[id]; return s ? s.state : null; }
@@ -20,109 +20,63 @@
 
   function pkDefaults() {
     return {
-      pk_power:      'sensor.potenza_lavatrice_w',
-      pk_running:    'binary_sensor.motore_lavatrice',
-      pk_switch:     'switch.presa_lavatrice',
-      pk_kwh_oggi:   'sensor.lavatrice_energy_oggi',
-      pk_kwh_mese:   'sensor.lavatrice_energy_mese',
-      pk_kwh_anno:   'sensor.lavatrice_energy_anno',
-      pk_cicli_oggi: 'sensor.lavatrice_cicli_oggi',
-      pk_cicli_mese: 'sensor.lavatrice_cicli_mese',
-      pk_cicli_anno: 'sensor.lavatrice_cicli_anno',
-      pk_cicli_tot:  'counter.lavatrice_cicli_totale',
-      pk_time_on:    'sensor.time_on_lavatrice',
-      pk_soglia:     'input_number.lavatrice_soglia_w',
-      pk_versione:   'sensor.frarik_lavatrice_versione',
+      pk_power:      'sensor.potenza_friggitrice_w',
+      pk_running:    'binary_sensor.resistenza_friggitrice',
+      pk_switch:     'switch.presa_friggitrice',
+      pk_kwh_oggi:   'sensor.friggitrice_energy_oggi',
+      pk_kwh_mese:   'sensor.friggitrice_energy_mese',
+      pk_kwh_anno:   'sensor.friggitrice_energy_anno',
+      pk_cicli_oggi: 'sensor.friggitrice_cicli_oggi',
+      pk_cicli_mese: 'sensor.friggitrice_cicli_mese',
+      pk_cicli_anno: 'sensor.friggitrice_cicli_anno',
+      pk_cicli_tot:  'counter.friggitrice_cicli_totale',
+      pk_time_on:    'sensor.time_on_friggitrice',
+      pk_soglia:     'input_number.friggitrice_soglia_w',
+      pk_versione:   'sensor.frarik_friggitrice_versione',
     };
   }
 
   function cfgFor(card) {
     const c = load(card), pk = pkDefaults(), r = {};
     Object.keys(pk).forEach(function (k) { r[k] = (c[k] !== undefined && c[k] !== '') ? c[k] : pk[k]; });
-    r.name = c.name || 'Lavatrice';
+    r.name = c.name || 'Friggitrice';
     return r;
   }
 
-  /* ── FRIDGE SVG ── */
-  function _washSVG(running) {
-    var cx = 32, cy = 53;
-    var spinStyle = running ? 'style="transform-origin:' + cx + 'px ' + cy + 'px;animation:wspin 3s linear infinite"' : '';
-    var keyframes = running ? '@keyframes wspin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes wbub{0%,100%{opacity:.25;transform:translateY(0)}50%{opacity:.8;transform:translateY(-2px)}}@keyframes wled{0%,100%{opacity:.5}50%{opacity:1}}' : '';
-    return '<svg viewBox="0 0 64 84" width="104" height="137" style="display:block;filter:drop-shadow(0 0 10px rgba(56,189,248,' + (running ? '.3' : '.1') + '))">'
-      + (running ? '<defs><style>' + keyframes + '</style></defs>' : '')
-      // Corpo
-      + '<rect x="2" y="2" width="60" height="80" rx="6" fill="#0b1929" stroke="#1a3050" stroke-width="1.2"/>'
-      // Pannello comandi
-      + '<rect x="2" y="2" width="60" height="18" rx="6" fill="#070f1c"/>'
-      + '<rect x="2" y="14" width="60" height="6" fill="#070f1c"/>'
-      // Display digitale
-      + '<rect x="5" y="5" width="22" height="10" rx="2" fill="#020810" stroke="' + (running ? '#38bdf8' : '#162035') + '" stroke-width=".7"/>'
-      + '<text x="16" y="12.5" text-anchor="middle" font-size="5.5" font-weight="bold" font-family="monospace" fill="' + (running ? '#38bdf8' : '#1a3050') + '">' + (running ? '60°C' : '-- --') + '</text>'
-      // Manopola programmi
-      + '<circle cx="36" cy="11" r="5.5" fill="#0a1830" stroke="' + (running ? '#38bdf8' : '#1e3a5f') + '" stroke-width=".8"/>'
-      + '<circle cx="36" cy="11" r="2" fill="' + (running ? '#0d2545' : '#060e1c') + '"/>'
-      + '<line x1="36" y1="6.5" x2="36" y2="9.5" stroke="' + (running ? '#38bdf8' : '#2d4a6a') + '" stroke-width=".9" stroke-linecap="round"/>'
-      + '<circle cx="31.5" cy="8" r=".5" fill="' + (running ? 'rgba(56,189,248,.4)' : '#162035') + '"/>'
-      + '<circle cx="40.5" cy="8" r=".5" fill="' + (running ? 'rgba(56,189,248,.4)' : '#162035') + '"/>'
-      + '<circle cx="36" cy="16.5" r=".5" fill="' + (running ? 'rgba(56,189,248,.4)' : '#162035') + '"/>'
-      // LED indicatori
-      + '<circle cx="47" cy="8" r="2" fill="' + (running ? '#22c55e' : '#0a1a2e') + '"' + (running ? ' style="animation:wled 1.2s ease-in-out infinite"' : '') + '/>'
-      + '<circle cx="53" cy="8" r="2" fill="' + (running ? '#38bdf8' : '#0a1a2e') + '"' + (running ? ' style="animation:wled 1.8s ease-in-out infinite"' : '') + '/>'
-      + '<circle cx="59" cy="8" r="2" fill="#0a1a2e"/>'
-      // Pulsante giri
-      + '<rect x="46" y="13" width="14" height="4.5" rx="2" fill="' + (running ? 'rgba(56,189,248,.08)' : '#0a1525') + '" stroke="' + (running ? '#38bdf8' : '#162035') + '" stroke-width=".4"/>'
-      + '<text x="53" y="16.5" text-anchor="middle" font-size="3" fill="' + (running ? '#7dd3fc' : '#1a3050') + '" font-family="system-ui">1200</text>'
-      // Oblò — anello esterno
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="25" fill="#070f1c" stroke="#38bdf8" stroke-width="1.5"/>'
-      // Guarnizione gomma (anelli)
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="22.5" fill="none" stroke="rgba(56,189,248,.18)" stroke-width="1.2"/>'
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="21" fill="none" stroke="rgba(56,189,248,.07)" stroke-width=".5"/>'
-      // Vetro oblò
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="19.5" fill="' + (running ? '#040c1a' : '#030912') + '" stroke="#0d1f38" stroke-width=".6"/>'
-      // Cestello (ruota quando in funzione)
-      + '<g ' + spinStyle + '>'
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="17" fill="' + (running ? '#050e1e' : '#040b16') + '" stroke="rgba(56,189,248,.1)" stroke-width=".5"/>'
-      // Fori cestello — corona esterna
-      + '<circle cx="' + cx + '" cy="' + (cy-12) + '" r=".9" fill="#0b1f35"/>'
-      + '<circle cx="' + (cx+10.4) + '" cy="' + (cy-6) + '" r=".9" fill="#0b1f35"/>'
-      + '<circle cx="' + (cx+10.4) + '" cy="' + (cy+6) + '" r=".9" fill="#0b1f35"/>'
-      + '<circle cx="' + cx + '" cy="' + (cy+12) + '" r=".9" fill="#0b1f35"/>'
-      + '<circle cx="' + (cx-10.4) + '" cy="' + (cy+6) + '" r=".9" fill="#0b1f35"/>'
-      + '<circle cx="' + (cx-10.4) + '" cy="' + (cy-6) + '" r=".9" fill="#0b1f35"/>'
-      // Fori corona interna
-      + '<circle cx="' + cx + '" cy="' + (cy-7) + '" r=".6" fill="#0b1f35" opacity=".5"/>'
-      + '<circle cx="' + (cx+6.1) + '" cy="' + (cy+3.5) + '" r=".6" fill="#0b1f35" opacity=".5"/>'
-      + '<circle cx="' + (cx-6.1) + '" cy="' + (cy+3.5) + '" r=".6" fill="#0b1f35" opacity=".5"/>'
-      // 3 palette/alzatori a 0° 120° 240°
-      + '<rect x="30.5" y="' + (cy-17) + '" width="3" height="8" rx="1.5" fill="#1a3050"/>'
-      + '<rect x="30.5" y="' + (cy-17) + '" width="3" height="8" rx="1.5" fill="#1a3050" transform="rotate(120 ' + cx + ' ' + cy + ')"/>'
-      + '<rect x="30.5" y="' + (cy-17) + '" width="3" height="8" rx="1.5" fill="#1a3050" transform="rotate(240 ' + cx + ' ' + cy + ')"/>'
+  /* â”€â”€ AIRFRYER SVG â”€â”€ */
+  function _friggitriceVG(running) {
+    var c    = running ? '#38bdf8' : '#64748b';
+    var cf   = running ? 'rgba(56,189,248,.1)' : 'rgba(100,116,139,.06)';
+    var glow = running ? ';filter:drop-shadow(0 0 12px rgba(56,189,248,.4))' : '';
+    var css  = running ? '@keyframes frgspin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes frgwave{0%{opacity:0;transform:translateY(0)}60%{opacity:.7}100%{opacity:0;transform:translateY(-9px)}}' : '';
+    var fspin = running ? 'style="transform-origin:35px 15px;animation:frgspin 1.5s linear infinite"' : '';
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 70 100" width="88" height="126" style="display:block;overflow:visible' + glow + '">'
+      + (running ? '<defs><style>' + css + '</style></defs>' : '')
+      + '<ellipse cx="35" cy="50" rx="30" ry="46" fill="#080f1a" stroke="' + c + '" stroke-width="1.5"/>'
+      + '<ellipse cx="35" cy="50" rx="28" ry="44" fill="' + cf + '"/>'
+      + '<ellipse cx="35" cy="15" rx="28" ry="11" fill="#060d18" stroke="' + c + '" stroke-width="1"/>'
+      + '<ellipse cx="35" cy="15" rx="14" ry="5" fill="#040b14" stroke="' + (running ? '#38bdf8' : '#1a3050') + '" stroke-width=".8"/>'
+      + '<g ' + fspin + '>'
+      + '<line x1="35" y1="11" x2="35" y2="19" stroke="' + (running ? '#38bdf8' : c) + '" stroke-width="1" opacity="' + (running ? '.7' : '.3') + '"/>'
+      + '<line x1="29" y1="12.5" x2="41" y2="17.5" stroke="' + (running ? '#38bdf8' : c) + '" stroke-width="1" opacity="' + (running ? '.7' : '.3') + '"/>'
+      + '<line x1="29" y1="17.5" x2="41" y2="12.5" stroke="' + (running ? '#38bdf8' : c) + '" stroke-width="1" opacity="' + (running ? '.7' : '.3') + '"/>'
       + '</g>'
-      // Acqua + bolle (statiche, rimangono in basso per gravità)
-      + (running
-        ? '<path d="M' + (cx-18) + ' ' + (cy+8) + ' Q' + cx + ' ' + (cy+5) + ' ' + (cx+18) + ' ' + (cy+8) + ' L' + (cx+18) + ' ' + (cy+15) + ' L' + (cx-18) + ' ' + (cy+15) + ' Z" fill="rgba(56,189,248,.07)"/>'
-          + '<circle cx="' + (cx-7) + '" cy="' + (cy+5) + '" r="1.5" fill="rgba(56,189,248,.35)" style="animation:wbub 2.1s ease-in-out infinite"/>'
-          + '<circle cx="' + (cx+2) + '" cy="' + (cy+3) + '" r="1" fill="rgba(56,189,248,.28)" style="animation:wbub 2.6s ease-in-out infinite .5s"/>'
-          + '<circle cx="' + (cx+8) + '" cy="' + (cy+6) + '" r="1.3" fill="rgba(56,189,248,.22)" style="animation:wbub 1.9s ease-in-out infinite .9s"/>'
-          + '<circle cx="' + (cx-2) + '" cy="' + (cy+9) + '" r=".8" fill="rgba(56,189,248,.18)" style="animation:wbub 3s ease-in-out infinite 1.3s"/>'
-        : '')
-      // Riflesso vetro (statico, sempre sopra)
-      + '<path d="M' + (cx-8) + ' ' + (cy-17) + ' Q' + (cx-2) + ' ' + (cy-20) + ' ' + (cx+6) + ' ' + (cy-16) + '" stroke="rgba(255,255,255,.1)" stroke-width="2.5" fill="none" stroke-linecap="round"/>'
-      + '<path d="M' + (cx-16) + ' ' + (cy-8) + ' Q' + (cx-19) + ' ' + (cy-2) + ' ' + (cx-16) + ' ' + (cy+4) + '" stroke="rgba(255,255,255,.05)" stroke-width="1.5" fill="none" stroke-linecap="round"/>'
-      // Maniglia oblò (destra)
-      + '<rect x="57" y="' + (cy-6) + '" width="4" height="12" rx="2" fill="#0f1e35" stroke="#1e3a5f" stroke-width=".6"/>'
-      // Pannello inferiore
-      + '<rect x="2" y="77" width="60" height="7" rx="3" fill="#070f1c" stroke="#162035" stroke-width=".5"/>'
-      // Sportellino filtro
-      + '<rect x="4" y="78.5" width="12" height="4" rx="2" fill="#0a1525" stroke="#1e3a5f" stroke-width=".5"/>'
-      + '<circle cx="10" cy="80.5" r="1.2" fill="' + (running ? 'rgba(56,189,248,.2)' : '#0d2040') + '"/>'
-      // LED on/off pannello basso
-      + '<circle cx="56" cy="80.5" r="1.5" fill="' + (running ? '#22c55e' : '#0a1a2e') + '"' + (running ? ' style="animation:wled 2s ease-in-out infinite"' : '') + '/>'
-      // Piedini
-      + '<rect x="5" y="82" width="10" height="2" rx="1" fill="#060d1a"/>'
-      + '<rect x="49" y="82" width="10" height="2" rx="1" fill="#060d1a"/>'
+      + '<rect x="22" y="25" width="26" height="12" rx="4" fill="#020810" stroke="' + (running ? '#38bdf8' : '#162035') + '" stroke-width=".7"/>'
+      + '<text x="35" y="33.5" text-anchor="middle" font-size="6" font-family="monospace" fill="' + (running ? '#38bdf8' : '#1a3050') + '">' + (running ? '200 C' : '-- --') + '</text>'
+      + '<ellipse cx="35" cy="75" rx="22" ry="20" fill="#060c18" stroke="' + c + '" stroke-width="1"/>'
+      + '<line x1="16" y1="70" x2="54" y2="70" stroke="' + c + '" stroke-width=".7" opacity=".28"/>'
+      + '<line x1="16" y1="76" x2="54" y2="76" stroke="' + c + '" stroke-width=".7" opacity=".28"/>'
+      + '<line x1="16" y1="82" x2="54" y2="82" stroke="' + c + '" stroke-width=".7" opacity=".28"/>'
+      + '<line x1="22" y1="56" x2="22" y2="93" stroke="' + c + '" stroke-width=".7" opacity=".22"/>'
+      + '<line x1="35" y1="55" x2="35" y2="95" stroke="' + c + '" stroke-width=".7" opacity=".22"/>'
+      + '<line x1="48" y1="56" x2="48" y2="93" stroke="' + c + '" stroke-width=".7" opacity=".22"/>'
+      + (running ? '<ellipse cx="27" cy="43" rx="1.2" ry="2" fill="rgba(56,189,248,.55)" style="animation:frgwave 2s ease-in-out infinite"/>' : '')
+      + (running ? '<ellipse cx="35" cy="41" rx="1.2" ry="2" fill="rgba(56,189,248,.5)" style="animation:frgwave 2s ease-in-out infinite .6s"/>' : '')
+      + (running ? '<ellipse cx="43" cy="43" rx="1.2" ry="2" fill="rgba(56,189,248,.45)" style="animation:frgwave 2s ease-in-out infinite 1.2s"/>' : '')
+      + '<rect x="28" y="92" width="14" height="5" rx="2.5" fill="' + c + '" opacity=".55"/>'
       + '</svg>';
   }
+
 
   /* ── RENDER ── */
   function render(card) {
@@ -134,17 +88,17 @@
     const ton     = c.pk_time_on;
 
     const terminato  = Attr(h, ton, 'terminato')           || '—';
-    const tempoC     = Attr(h, ton, 'tempo_ciclo_lavatrice')   || '—';
-    const consumoC   = Attr(h, ton, 'consumo_ciclo_lavatrice') || '—';
-    const costoC     = Attr(h, ton, 'costo_ciclo_lavatrice');
+    const tempoC     = Attr(h, ton, 'tempo_ciclo_friggitrice')   || '—';
+    const consumoC   = Attr(h, ton, 'consumo_ciclo_friggitrice') || '—';
+    const costoC     = Attr(h, ton, 'costo_ciclo_friggitrice');
     const kwOggi     = S(h, c.pk_kwh_oggi);
     const cicOggi    = S(h, c.pk_cicli_oggi);
     const timeOggi   = Attr(h, ton, 'Oggi')                || '—';
-    const costoOggi  = Attr(h, ton, 'costo_oggi_lavatrice');
+    const costoOggi  = Attr(h, ton, 'costo_oggi_friggitrice');
 
     const pw     = pwV || 0;
     const col    = running ? '#38bdf8' : '#64748b';
-    const statusLabel = running ? 'MOTORE ON' : 'STANDBY';
+    const statusLabel = running ? 'RESISTENZA ON' : 'STANDBY';
     const soglia = num(S(h, c.pk_soglia)) || 300;
     const barPct = Math.min(100, (pw / soglia) * 100);
     const barCol = pw < 50 ? '#64748b' : pw <= 150 ? '#38bdf8' : pw <= 250 ? '#22c55e' : pw <= 400 ? '#f97316' : '#ef4444';
@@ -222,7 +176,7 @@
     }
 
     const heroHtml = '<div class="fc-hero">'
-      + '<div class="fc-hero-img" data-sya="popup-cicli">' + _washSVG(running) + '</div>'
+      + '<div class="fc-hero-img" data-sya="popup-cicli">' + _friggitriceVG(running) + '</div>'
       + '<div class="fc-hero-r">'
       + '<div class="fc-st">' + (running ? 'In funzione' : 'Standby') + '<div class="fc-stdot"></div></div>'
       + '<div class="fc-met"><span class="fc-met-lbl">' + cycleLbl + '</span><span class="fc-met-sm">' + cycleDt + '</span></div>'
@@ -260,8 +214,8 @@
       + '<div id="' + rid + '">'
       + '<div class="fc-card">'
       + '<div class="fc-hdr">'
-      + '<div class="fc-hdr-iw">🫧</div>'
-      + '<div class="fc-hdr-tit">' + (c.name || 'Lavatrice') + '</div>'
+      + '<div class="fc-hdr-iw">🍟</div>'
+      + '<div class="fc-hdr-tit">' + (c.name || 'Friggitrice') + '</div>'
       + '<div class="fc-hdr-pill" style="background:' + (running ? 'rgba(56,189,248,.1)' : 'rgba(56,189,248,.05)') + ';border:1px solid rgba(56,189,248,' + (running ? '.28' : '.15') + ');color:#38bdf8">'
       + '<div class="fc-dot"></div>'
       + statusLabel
@@ -322,13 +276,13 @@
       + row('Questo anno', fmtKwh(S(h, c.pk_kwh_anno)), '#bae6fd')
       + row('Anno precedente', fmtKwh(kwAnnoP), '#fff')
       + '<div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 4px">Costi</div>'
-      + row('Oggi', fmtEur(Attr(h, ton, 'costo_oggi_lavatrice')), '#7dd3fc')
-      + row('Ieri', fmtEur(Attr(h, ton, 'costo_ieri_lavatrice')), '#fff')
-      + row('Questo mese', fmtEur(Attr(h, ton, 'costo_mese_lavatrice')), '#7dd3fc')
-      + row('Mese precedente', fmtEur(Attr(h, ton, 'costo_mese_prec_lavatrice')), '#fff')
-      + row('Questo anno', fmtEur(Attr(h, ton, 'costo_anno_lavatrice')), '#7dd3fc')
-      + row('Anno precedente', fmtEur(Attr(h, ton, 'costo_anno_prec_lavatrice')), '#fff');
-    mkOv(popShell('⚡', '56,189,248', 'Energia & Costi', 'Lavatrice', 'fc-en-close', content), 'fc-en-close');
+      + row('Oggi', fmtEur(Attr(h, ton, 'costo_oggi_friggitrice')), '#7dd3fc')
+      + row('Ieri', fmtEur(Attr(h, ton, 'costo_ieri_friggitrice')), '#fff')
+      + row('Questo mese', fmtEur(Attr(h, ton, 'costo_mese_friggitrice')), '#7dd3fc')
+      + row('Mese precedente', fmtEur(Attr(h, ton, 'costo_mese_prec_friggitrice')), '#fff')
+      + row('Questo anno', fmtEur(Attr(h, ton, 'costo_anno_friggitrice')), '#7dd3fc')
+      + row('Anno precedente', fmtEur(Attr(h, ton, 'costo_anno_prec_friggitrice')), '#fff');
+    mkOv(popShell('⚡', '56,189,248', 'Energia & Costi', 'Friggitrice', 'fc-en-close', content), 'fc-en-close');
   }
 
   /* ── POPUP CICLI ── */
@@ -345,8 +299,8 @@
     function cleanVal(v) { return (!v || v === 'unknown' || v === 'unavailable' || v === 'none') ? '—' : v; }
     DAYS.forEach(function (d, i) {
       const isToday = i === _todayIdx;
-      const cicli = isToday ? cleanVal(S(h, c.pk_cicli_oggi))      : cleanVal(S(h, 'input_text.' + d + '_lavatrice_cicli'));
-      const tempo = isToday ? cleanVal(Attr(h, ton, 'Oggi'))        : cleanVal(S(h, 'input_text.' + d + '_lavatrice_tempo'));
+      const cicli = isToday ? cleanVal(S(h, c.pk_cicli_oggi))      : cleanVal(S(h, 'input_text.' + d + '_friggitrice_cicli'));
+      const tempo = isToday ? cleanVal(Attr(h, ton, 'Oggi'))        : cleanVal(S(h, 'input_text.' + d + '_friggitrice_tempo'));
       weekHtml += '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;background:' + (isToday ? 'rgba(56,189,248,.12)' : 'rgba(56,189,248,.05)') + ';border:1px solid ' + (isToday ? 'rgba(56,189,248,.4)' : 'rgba(56,189,248,.1)') + ';border-radius:8px;padding:6px 2px' + (isToday ? ';box-shadow:0 0 8px rgba(56,189,248,.15)' : '') + '">'
         + '<div style="font-size:8px;font-weight:' + (isToday ? '900' : '700') + ';color:' + (isToday ? '#38bdf8' : '#fff') + '">' + DAY_LABELS[i] + '</div>'
         + '<div style="font-size:11px;font-weight:900;color:#38bdf8">' + cicli + '</div>'
@@ -355,23 +309,23 @@
     });
     weekHtml += '</div>';
     const content = weekHtml
-      + '<div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Cicli motore</div>'
+      + '<div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Cicli resistenza</div>'
       + row('Oggi', S(h, c.pk_cicli_oggi) || '—', '#38bdf8')
       + row('Questo mese', S(h, c.pk_cicli_mese) || '—', '#38bdf8')
       + row('Questo anno', S(h, c.pk_cicli_anno) || '—', '#38bdf8')
       + row('Totale storico', S(h, c.pk_cicli_tot) || '—', '#7dd3fc')
-      + '<div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 4px">Tempo motore</div>'
+      + '<div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 4px">Tempo resistenza</div>'
       + row('Oggi', Attr(h, ton, 'Oggi') || '—', '#7dd3fc')
       + row('Ieri', Attr(h, ton, 'Ieri') || '—', '#fff')
       + row('Questo mese', Attr(h, ton, 'Mese') || '—', '#7dd3fc')
       + row('Mese precedente', Attr(h, ton, 'Mese Precedente') || '—', '#fff')
       + row('Questo anno', Attr(h, ton, 'Anno') || '—', '#7dd3fc')
       + '<div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 4px">Costo</div>'
-      + row('Ultimo ciclo', fmtEur(Attr(h, ton, 'costo_ciclo_lavatrice')), '#7dd3fc')
-      + row('Oggi', fmtEur(Attr(h, ton, 'costo_oggi_lavatrice')), '#7dd3fc')
-      + row('Questo mese', fmtEur(Attr(h, ton, 'costo_mese_lavatrice')), '#fff')
-      + row('Questo anno', fmtEur(Attr(h, ton, 'costo_anno_lavatrice')), '#fff');
-    mkOv(popShell('❄', '56,189,248', 'Cicli & Statistiche', 'Motore lavatrice', 'fc-ci-close', content), 'fc-ci-close');
+      + row('Ultimo ciclo', fmtEur(Attr(h, ton, 'costo_ciclo_friggitrice')), '#7dd3fc')
+      + row('Oggi', fmtEur(Attr(h, ton, 'costo_oggi_friggitrice')), '#7dd3fc')
+      + row('Questo mese', fmtEur(Attr(h, ton, 'costo_mese_friggitrice')), '#fff')
+      + row('Questo anno', fmtEur(Attr(h, ton, 'costo_anno_friggitrice')), '#fff');
+    mkOv(popShell('❄', '56,189,248', 'Cicli & Statistiche', 'Resistenza friggitrice', 'fc-ci-close', content), 'fc-ci-close');
   }
 
   /* ── CONFIGURE ── */
@@ -388,30 +342,30 @@
       return '<div style="margin-bottom:9px;position:relative"><label style="' + stLbl + '">' + lbl2 + (hint ? '<span style="font-weight:400;color:#475569;margin-left:6px;font-family:monospace;text-transform:none;letter-spacing:0">' + hint + '</span>' : '') + '</label><input id="' + fid + '" type="text" value="' + (val || '').replace(/"/g, '&quot;') + '" autocomplete="off" placeholder="Cerca entità…" style="' + stInp + '"><div id="' + fid + '-d" style="' + stDrop + '"></div></div>';
     }
 
-    const formHtml = '<div style="margin-bottom:10px"><label style="' + stLbl + '">Nome card</label><input id="fc-name" type="text" value="' + (cf.name || '').replace(/"/g, '&quot;') + '" placeholder="es. Lavatrice cucina" style="' + stInp.replace('monospace', 'system-ui') + '"></div>'
+    const formHtml = '<div style="margin-bottom:10px"><label style="' + stLbl + '">Nome card</label><input id="fc-name" type="text" value="' + (cf.name || '').replace(/"/g, '&quot;') + '" placeholder="es. Friggitrice cucina" style="' + stInp.replace('monospace', 'system-ui') + '"></div>'
       + '<div style="' + stSec + '">Sensori base</div>'
-      + field('fc-power',   'Potenza istantanea (W)', cf.pk_power,   'sensor.potenza_lavatrice_w')
-      + field('fc-running', 'Motore on/off',     cf.pk_running, 'binary_sensor.motore_lavatrice')
-      + field('fc-switch',  'Switch presa',           cf.pk_switch,  'switch.presa_lavatrice')
+      + field('fc-power',   'Potenza istantanea (W)', cf.pk_power,   'sensor.potenza_friggitrice_w')
+      + field('fc-running', 'Resistenza on/off',     cf.pk_running, 'binary_sensor.resistenza_friggitrice')
+      + field('fc-switch',  'Switch presa',           cf.pk_switch,  'switch.presa_friggitrice')
       + '<div style="' + stSec + '">PKG — Energia (kWh)</div>'
-      + field('fc-kwh-oggi', 'kWh oggi', cf.pk_kwh_oggi, 'sensor.lavatrice_energy_oggi')
-      + field('fc-kwh-mese', 'kWh mese', cf.pk_kwh_mese, 'sensor.lavatrice_energy_mese')
-      + field('fc-kwh-anno', 'kWh anno', cf.pk_kwh_anno, 'sensor.lavatrice_energy_anno')
+      + field('fc-kwh-oggi', 'kWh oggi', cf.pk_kwh_oggi, 'sensor.friggitrice_energy_oggi')
+      + field('fc-kwh-mese', 'kWh mese', cf.pk_kwh_mese, 'sensor.friggitrice_energy_mese')
+      + field('fc-kwh-anno', 'kWh anno', cf.pk_kwh_anno, 'sensor.friggitrice_energy_anno')
       + '<div style="' + stSec + '">PKG — Cicli</div>'
-      + field('fc-cic-oggi', 'Cicli oggi',    cf.pk_cicli_oggi, 'sensor.lavatrice_cicli_oggi')
-      + field('fc-cic-mese', 'Cicli mese',    cf.pk_cicli_mese, 'sensor.lavatrice_cicli_mese')
-      + field('fc-cic-anno', 'Cicli anno',    cf.pk_cicli_anno, 'sensor.lavatrice_cicli_anno')
-      + field('fc-cic-tot',  'Cicli totale',  cf.pk_cicli_tot,  'counter.lavatrice_cicli_totale')
+      + field('fc-cic-oggi', 'Cicli oggi',    cf.pk_cicli_oggi, 'sensor.friggitrice_cicli_oggi')
+      + field('fc-cic-mese', 'Cicli mese',    cf.pk_cicli_mese, 'sensor.friggitrice_cicli_mese')
+      + field('fc-cic-anno', 'Cicli anno',    cf.pk_cicli_anno, 'sensor.friggitrice_cicli_anno')
+      + field('fc-cic-tot',  'Cicli totale',  cf.pk_cicli_tot,  'counter.friggitrice_cicli_totale')
       + '<div style="' + stSec + '">PKG — Statistiche</div>'
-      + field('fc-time-on', 'Sensore time_on',  cf.pk_time_on, 'sensor.time_on_lavatrice')
-      + field('fc-soglia',  'Soglia lavoro (W)', cf.pk_soglia,  'input_number.lavatrice_soglia_w')
+      + field('fc-time-on', 'Sensore time_on',  cf.pk_time_on, 'sensor.time_on_friggitrice')
+      + field('fc-soglia',  'Soglia lavoro (W)', cf.pk_soglia,  'input_number.friggitrice_soglia_w')
       + '<div style="display:flex;gap:8px;margin-top:16px">'
       + '<button id="fc-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button>'
       + '<button id="fc-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#38bdf8;color:#060d14">Salva</button>'
       + '</div>';
 
     const allFieldIds = ['fc-power','fc-running','fc-switch','fc-kwh-oggi','fc-kwh-mese','fc-kwh-anno','fc-cic-oggi','fc-cic-mese','fc-cic-anno','fc-cic-tot','fc-time-on','fc-soglia'];
-    const ov = mkOv(popShell('🫧', '56,189,248', 'Configura Lavatrice', card.id || '', 'fc-cfg-close', formHtml), 'fc-cfg-close');
+    const ov = mkOv(popShell('🍟', '56,189,248', 'Configura Friggitrice', card.id || '', 'fc-cfg-close', formHtml), 'fc-cfg-close');
 
     ov.querySelector('#fc-cancel').addEventListener('click', function() { ov._close(); });
 
@@ -499,27 +453,27 @@
     }
 
     dSec('🔔 Notifiche push & vocali');
-    dToggle('input_boolean.lavatrice_notify_push',   '📱 Push');
-    dToggle('input_boolean.lavatrice_notify_google', '🔊 Google');
-    dToggle('input_boolean.lavatrice_notify_alexa',  '🗣 Alexa');
-    dTime('input_datetime.lavatrice_notifiche_inizio', '⏰ Orario inizio notifiche');
-    dTime('input_datetime.lavatrice_notifiche_fine',   '⏰ Orario fine notifiche');
+    dToggle('input_boolean.friggitrice_notify_push',   '📱 Push');
+    dToggle('input_boolean.friggitrice_notify_google', '🔊 Google');
+    dToggle('input_boolean.friggitrice_notify_alexa',  '🗣 Alexa');
+    dTime('input_datetime.friggitrice_notifiche_inizio', '⏰ Orario inizio notifiche');
+    dTime('input_datetime.friggitrice_notifiche_fine',   '⏰ Orario fine notifiche');
 
     dSec('🔌 Elettrodomestico');
-    dToggle('input_boolean.lavatrice_switch', 'Switch presa');
-    dNum('input_number.lavatrice_soglia_w',          'Soglia lavoro',  'W',   0, 5000, 1);
-    dNum('input_number.lavatrice_tempo_innesco_m',   'Delay spegnimento', 'min', 0, 60, 1);
-    dNum('input_number.lavatrice_avvio_ritardato_s', 'Delay riavvio',  's',   0, 300, 1);
+    dToggle('input_boolean.friggitrice_switch', 'Switch presa');
+    dNum('input_number.friggitrice_soglia_w',          'Soglia lavoro',  'W',   0, 5000, 1);
+    dNum('input_number.friggitrice_tempo_innesco_m',   'Delay spegnimento', 'min', 0, 60, 1);
+    dNum('input_number.friggitrice_avvio_ritardato_s', 'Delay riavvio',  's',   0, 300, 1);
 
     dSec('⏰ Spegnimento automatico');
-    dToggle('automation.lavatrice_off_automatico', 'Auto OFF abilitato');
-    dTime('input_datetime.lavatrice_off', 'Orario spegnimento');
+    dToggle('automation.friggitrice_off_automatico', 'Auto OFF abilitato');
+    dTime('input_datetime.friggitrice_off', 'Orario spegnimento');
 
     dSec('📝 Personalizzazione');
-    dText('input_text.lavatrice_nome',      'Nome elettrodomestico');
-    dText('input_text.lavatrice_messaggio', 'Messaggio notifica');
+    dText('input_text.friggitrice_nome',      'Nome elettrodomestico');
+    dText('input_text.friggitrice_messaggio', 'Messaggio notifica');
     dNum('input_number.costo_energia',  'Costo energia', '€/kWh', 0, 2, 0.001);
-    dInfo('Ultimo reset contatori', ss('input_text.lavatrice_data_reset'));
+    dInfo('Ultimo reset contatori', ss('input_text.friggitrice_data_reset'));
 
     const swCss = '<style>'
       + '.fi-sw{width:44px;height:26px;border-radius:13px;cursor:pointer;position:relative;flex-shrink:0;transition:background .25s}'
@@ -530,7 +484,7 @@
       + '</style>';
     const resetBtn = '<button id="fi-reset" style="width:100%;margin-top:16px;padding:12px;border-radius:12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);color:#f87171;font-size:13px;font-weight:700;cursor:pointer">🔄 Reset Contatori</button>';
     const closeId = 'fi-cl-' + Math.random().toString(36).slice(2, 6);
-    const ov = mkOv(popShell('⚙', '100,116,139', 'Impostazioni', c.name || 'Lavatrice', closeId, swCss + rows.join('') + resetBtn), closeId);
+    const ov = mkOv(popShell('⚙', '100,116,139', 'Impostazioni', c.name || 'Friggitrice', closeId, swCss + rows.join('') + resetBtn), closeId);
 
     ov.querySelectorAll('.fi-sw').forEach(function(sw) {
       sw.addEventListener('click', function() {
@@ -557,7 +511,7 @@
 
     const rb = ov.querySelector('#fi-reset');
     if (rb) rb.addEventListener('click', function() {
-      callSvc('script', 'turn_on', {entity_id: 'script.lavatrice_reset_sensori'});
+      callSvc('script', 'turn_on', {entity_id: 'script.friggitrice_reset_sensori'});
       rb.textContent = '✅ Reset avviato!'; rb.style.color = '#4ade80';
       setTimeout(function() { try { ov._close(); } catch(e) {} }, 1500);
     });
@@ -566,7 +520,7 @@
   /* ── UPDATE / MOUNT ── */
   function update(card, hass, el) {
     const h = H(), c = cfgFor(card);
-    const sig = [CARD.version, S(h, c.pk_power), S(h, c.pk_running), S(h, c.pk_kwh_oggi), S(h, c.pk_cicli_oggi), Attr(h, c.pk_time_on, 'Oggi'), Attr(h, c.pk_time_on, 'tempo_ciclo_lavatrice'), Attr(h, c.pk_time_on, 'costo_oggi_lavatrice')].join('|');
+    const sig = [CARD.version, S(h, c.pk_power), S(h, c.pk_running), S(h, c.pk_kwh_oggi), S(h, c.pk_cicli_oggi), Attr(h, c.pk_time_on, 'Oggi'), Attr(h, c.pk_time_on, 'tempo_ciclo_friggitrice'), Attr(h, c.pk_time_on, 'costo_oggi_friggitrice')].join('|');
     if (!el.querySelector('.fc-card') || el._fcSig !== sig) {
       el._fcSig = sig;
       el.innerHTML = render(card);
@@ -598,7 +552,7 @@
 #   ██║     ██║  ██║██║  ██║██║  ██║██║██║  ██╗             #
 #   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝            #
 #                                                             #
-#   Package: Centro Controllo Lavatrice                     #
+#   Package: Centro Controllo Friggitrice                     #
 #   Versione: 1.3  |  Frarik / Fratech                       #
 #                                                             #
 ###############################################################
@@ -607,12 +561,12 @@ homeassistant:
   customize:
     package.node_anchors:
       customize: &customize
-        package: 'Centro Controllo Lavatrice 1.3 — Frarik'
+        package: 'Centro Controllo Friggitrice 1.3 — Frarik'
 
       setting:
 
-        Sensore Potenza Frigo: &sensore_potenza_lavatrice "{{ states('IL_TUO_SENSORE_POTENZA_FRIGO') | float(0) }}"
-        Switch Frigo:          &switch_lavatrice 'IL_TUO_SWITCH_FRIGO'
+        Sensore Potenza Friggitrice: &sensore_potenza_friggitrice "{{ states('IL_TUO_SENSORE_POTENZA_FRIGGITRICE') | float(0) }}"
+        Switch Friggitrice:          &switch_friggitrice 'IL_TUO_SWITCH_FRIGGITRICE'
 
         Lista MediaPlayer Google: &google
           - IL_TUO_MEDIA_PLAYER_GOOGLE_1
@@ -624,21 +578,21 @@ homeassistant:
           - service: IL_TUO_MOBILE_APP_1
 
 notify:
-  - name: Lavatrice
+  - name: Friggitrice
     platform: group
     services: *push
 
 sensor:
   - platform: integration
-    source: sensor.potenza_lavatrice_w
-    name: kwh_lavatrice
+    source: sensor.potenza_friggitrice_w
+    name: kwh_friggitrice
     unit_prefix: k
     method: left
     round: 2
 
 input_number:
-  lavatrice_soglia_w:
-    name: Soglia Lavoro Frigo W
+  friggitrice_soglia_w:
+    name: Soglia Lavoro Friggitrice W
     icon: mdi:flash
     min: 0
     max: 5000
@@ -646,8 +600,8 @@ input_number:
     unit_of_measurement: "w"
     mode: box
 
-  lavatrice_tempo_innesco_m:
-    name: Tempo Innesco Frigo M
+  friggitrice_tempo_innesco_m:
+    name: Tempo Innesco Friggitrice M
     icon: mdi:timer
     min: 0
     max: 60
@@ -655,8 +609,8 @@ input_number:
     unit_of_measurement: "m"
     mode: box
 
-  lavatrice_avvio_ritardato_s:
-    name: Avvio Ritardato Frigo S
+  friggitrice_avvio_ritardato_s:
+    name: Avvio Ritardato Friggitrice S
     icon: mdi:timer-sand
     min: 0
     max: 60
@@ -664,98 +618,98 @@ input_number:
     unit_of_measurement: "s"
     mode: box
 
-  lunedi_lavatrice_consumo:
+  lunedi_friggitrice_consumo:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "kwh"
 
-  lunedi_lavatrice_costo:
+  lunedi_friggitrice_costo:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "€"
 
-  martedi_lavatrice_consumo:
+  martedi_friggitrice_consumo:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "kwh"
 
-  martedi_lavatrice_costo:
+  martedi_friggitrice_costo:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "€"
 
-  mercoledi_lavatrice_consumo:
+  mercoledi_friggitrice_consumo:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "kwh"
 
-  mercoledi_lavatrice_costo:
+  mercoledi_friggitrice_costo:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "€"
 
-  giovedi_lavatrice_consumo:
+  giovedi_friggitrice_consumo:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "kwh"
 
-  giovedi_lavatrice_costo:
+  giovedi_friggitrice_costo:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "€"
 
-  venerdi_lavatrice_consumo:
+  venerdi_friggitrice_consumo:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "kwh"
 
-  venerdi_lavatrice_costo:
+  venerdi_friggitrice_costo:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "€"
 
-  sabato_lavatrice_consumo:
+  sabato_friggitrice_consumo:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "kwh"
 
-  sabato_lavatrice_costo:
+  sabato_friggitrice_costo:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "€"
 
-  domenica_lavatrice_consumo:
+  domenica_friggitrice_consumo:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "kwh"
 
-  domenica_lavatrice_costo:
+  domenica_friggitrice_costo:
     icon: mdi:counter
     min: 0
     max: 999999
@@ -764,96 +718,96 @@ input_number:
 
 utility_meter:
 
-  lavatrice_tempo_oggi:
-    source: sensor.time_on_lavatrice
+  friggitrice_tempo_oggi:
+    source: sensor.time_on_friggitrice
     cycle: daily
 
-  lavatrice_tempo_mese:
-    source: sensor.time_on_lavatrice
+  friggitrice_tempo_mese:
+    source: sensor.time_on_friggitrice
     cycle: monthly
 
-  lavatrice_tempo_anno:
-    source: sensor.time_on_lavatrice
+  friggitrice_tempo_anno:
+    source: sensor.time_on_friggitrice
     cycle: yearly
 
-  lavatrice_cicli_oggi:
-    source: counter.lavatrice_cicli_totale
+  friggitrice_cicli_oggi:
+    source: counter.friggitrice_cicli_totale
     cycle: daily
 
-  lavatrice_cicli_mese:
-    source: counter.lavatrice_cicli_totale
+  friggitrice_cicli_mese:
+    source: counter.friggitrice_cicli_totale
     cycle: monthly
 
-  lavatrice_cicli_anno:
-    source: counter.lavatrice_cicli_totale
+  friggitrice_cicli_anno:
+    source: counter.friggitrice_cicli_totale
     cycle: yearly
 
-  lavatrice_energy_oggi:
-    source: sensor.kwh_lavatrice
+  friggitrice_energy_oggi:
+    source: sensor.kwh_friggitrice
     cycle: daily
 
-  lavatrice_energy_mese:
-    source: sensor.kwh_lavatrice
+  friggitrice_energy_mese:
+    source: sensor.kwh_friggitrice
     cycle: monthly
 
-  lavatrice_energy_anno:
-    source: sensor.kwh_lavatrice
+  friggitrice_energy_anno:
+    source: sensor.kwh_friggitrice
     cycle: yearly
 
 template:
   - binary_sensor:
-      - name: motore_lavatrice
+      - name: resistenza_friggitrice
         icon: mdi:snowflake
         state: >-
-          {{ 'on' if (states('sensor.potenza_lavatrice_w') | int(0)) >
-             states('input_number.lavatrice_soglia_w') | int(0) else 'off' }}
-        delay_off: "00:{{ states('input_number.lavatrice_tempo_innesco_m') | int(0) }}:00"
-        delay_on:  "00:00:{{ states('input_number.lavatrice_avvio_ritardato_s') | int(0) }}"
+          {{ 'on' if (states('sensor.potenza_friggitrice_w') | int(0)) >
+             states('input_number.friggitrice_soglia_w') | int(0) else 'off' }}
+        delay_off: "00:{{ states('input_number.friggitrice_tempo_innesco_m') | int(0) }}:00"
+        delay_on:  "00:00:{{ states('input_number.friggitrice_avvio_ritardato_s') | int(0) }}"
 
   - trigger:
       - platform: state
-        entity_id: input_boolean.lavatrice_ciclo_attivo
+        entity_id: input_boolean.friggitrice_ciclo_attivo
         from: "off"
         to: "on"
     sensor:
-      - name: inizio_ciclo_lavatrice
-        state: "{{ states('sensor.kwh_lavatrice') }}"
+      - name: inizio_ciclo_friggitrice
+        state: "{{ states('sensor.kwh_friggitrice') }}"
 
   - trigger:
       - platform: state
-        entity_id: binary_sensor.motore_lavatrice
+        entity_id: binary_sensor.resistenza_friggitrice
         from: "on"
         to: "off"
     sensor:
-      - name: fine_ciclo_lavatrice
+      - name: fine_ciclo_friggitrice
         state: "{{ now().strftime('%d/%m/%Y %H:%M') }}"
 
   - trigger:
       - platform: state
-        entity_id: input_boolean.lavatrice_ciclo_attivo
+        entity_id: input_boolean.friggitrice_ciclo_attivo
         from: "off"
         to: "on"
     sensor:
-      - name: tempo_riavvio_lavatrice
+      - name: tempo_riavvio_friggitrice
         state: "{{ as_timestamp(now()) }}"
 
   - sensor:
-      - name: "time_on_lavatrice"
+      - name: "time_on_friggitrice"
         icon: mdi:history
         state: >-
-          {% if is_state('binary_sensor.motore_lavatrice', 'on') and
-                (as_timestamp(states.binary_sensor.motore_lavatrice.last_changed) + 1) <= as_timestamp(now()) %}
-            {{ ((as_timestamp(now()) - as_timestamp(states.binary_sensor.motore_lavatrice.last_changed)) / 3600) }}
+          {% if is_state('binary_sensor.resistenza_friggitrice', 'on') and
+                (as_timestamp(states.binary_sensor.resistenza_friggitrice.last_changed) + 1) <= as_timestamp(now()) %}
+            {{ ((as_timestamp(now()) - as_timestamp(states.binary_sensor.resistenza_friggitrice.last_changed)) / 3600) }}
           {% else %} 0 {% endif %}
         attributes:
           terminato: >-
-            {{ states('sensor.fine_ciclo_lavatrice') if is_state('binary_sensor.motore_lavatrice', 'off') else 'In funzione' }}
-          tempo_ciclo_lavatrice: >
-            {% set hours = (as_timestamp(now()) - states('sensor.tempo_riavvio_lavatrice') | float(0)) / 3600 %}
+            {{ states('sensor.fine_ciclo_friggitrice') if is_state('binary_sensor.resistenza_friggitrice', 'off') else 'In funzione' }}
+          tempo_ciclo_friggitrice: >
+            {% set hours = (as_timestamp(now()) - states('sensor.tempo_riavvio_friggitrice') | float(0)) / 3600 %}
             {% set minutes = ((hours % 1) * 60) | int(0) %}
             {% set hours = (hours - (hours % 1)) | int(0) %}
             {% set day = ((hours | int(0) / 24)) | int(0) %}
-            {% if is_state('input_boolean.lavatrice_ciclo_attivo', 'on') %}
+            {% if is_state('input_boolean.friggitrice_ciclo_attivo', 'on') %}
               {% if day | int(0) > 0 %}
                 {{ day }}d {{ (hours | int(0)) - (day * 24) }}h {{ minutes }}m
               {% elif hours | int(0) > 0 %}
@@ -862,10 +816,10 @@ template:
                 {{ minutes }}min
               {% endif %}
             {% else %}
-              {{ states('input_text.lavatrice_ultimo_ciclo') }}
+              {{ states('input_text.friggitrice_ultimo_ciclo') }}
             {% endif %}
           Oggi: >
-            {% set hours = states('sensor.lavatrice_tempo_oggi') | float(0) %}
+            {% set hours = states('sensor.friggitrice_tempo_oggi') | float(0) %}
             {% set minutes = ((hours % 1) * 60) | int(0) %}
             {% set hours = (hours - (hours % 1)) | int(0) %}
             {% if hours | int(0) > 0 %}
@@ -874,7 +828,7 @@ template:
               {{ minutes }}min
             {% endif %}
           Mese: >
-            {% set hours = states('sensor.lavatrice_tempo_mese') | float(0) %}
+            {% set hours = states('sensor.friggitrice_tempo_mese') | float(0) %}
             {% set minutes = ((hours % 1) * 60) | int(0) %}
             {% set hours = (hours - (hours % 1)) | int(0) %}
             {% set day = ((hours | int / 24)) | int(0) %}
@@ -886,7 +840,7 @@ template:
               {{ minutes }}min
             {% endif %}
           Anno: >
-            {% set hours = states('sensor.lavatrice_tempo_anno') | float(0) %}
+            {% set hours = states('sensor.friggitrice_tempo_anno') | float(0) %}
             {% set minutes = ((hours % 1) * 60) | int(0) %}
             {% set hours = (hours - (hours % 1)) | int(0) %}
             {% set day = ((hours | int(0) / 24)) | int(0) %}
@@ -898,7 +852,7 @@ template:
               {{ minutes }}min
             {% endif %}
           Ieri: >
-            {% set hours = state_attr('sensor.lavatrice_tempo_oggi', 'last_period') | float(0) %}
+            {% set hours = state_attr('sensor.friggitrice_tempo_oggi', 'last_period') | float(0) %}
             {% set minutes = ((hours % 1) * 60) | int(0) %}
             {% set hours = (hours - (hours % 1)) | int(0) %}
             {% if hours | int(0) > 0 %}
@@ -907,7 +861,7 @@ template:
               {{ minutes }}min
             {% endif %}
           Mese Precedente: >
-            {% set hours = state_attr('sensor.lavatrice_tempo_mese', 'last_period') | float(0) %}
+            {% set hours = state_attr('sensor.friggitrice_tempo_mese', 'last_period') | float(0) %}
             {% set minutes = ((hours % 1) * 60) | int(0) %}
             {% set hours = (hours - (hours % 1)) | int(0) %}
             {% set day = ((hours | int / 24)) | int(0) %}
@@ -918,184 +872,184 @@ template:
             {% else %}
               {{ minutes }}min
             {% endif %}
-          consumo_ciclo_lavatrice: >-
-            {{ (states('sensor.kwh_lavatrice') | float(0) - states('sensor.inizio_ciclo_lavatrice') | float(0)) | round(3) }} kWh
-          costo_ciclo_lavatrice: >-
-            {{ ((states('sensor.kwh_lavatrice') | float(0) - states('sensor.inizio_ciclo_lavatrice') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(3, default=0) }}
-          costo_oggi_lavatrice: >-
-            {{ ((states('sensor.lavatrice_energy_oggi') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
-          costo_mese_lavatrice: >-
-            {{ ((states('sensor.lavatrice_energy_mese') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
-          costo_anno_lavatrice: >-
-            {{ ((states('sensor.lavatrice_energy_anno') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
-          costo_ieri_lavatrice: >-
-            {{ ((state_attr('sensor.lavatrice_energy_oggi', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
-          costo_mese_prec_lavatrice: >-
-            {{ ((state_attr('sensor.lavatrice_energy_mese', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
-          costo_anno_prec_lavatrice: >-
-            {{ ((state_attr('sensor.lavatrice_energy_anno', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+          consumo_ciclo_friggitrice: >-
+            {{ (states('sensor.kwh_friggitrice') | float(0) - states('sensor.inizio_ciclo_friggitrice') | float(0)) | round(3) }} kWh
+          costo_ciclo_friggitrice: >-
+            {{ ((states('sensor.kwh_friggitrice') | float(0) - states('sensor.inizio_ciclo_friggitrice') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(3, default=0) }}
+          costo_oggi_friggitrice: >-
+            {{ ((states('sensor.friggitrice_energy_oggi') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+          costo_mese_friggitrice: >-
+            {{ ((states('sensor.friggitrice_energy_mese') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+          costo_anno_friggitrice: >-
+            {{ ((states('sensor.friggitrice_energy_anno') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+          costo_ieri_friggitrice: >-
+            {{ ((state_attr('sensor.friggitrice_energy_oggi', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+          costo_mese_prec_friggitrice: >-
+            {{ ((state_attr('sensor.friggitrice_energy_mese', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+          costo_anno_prec_friggitrice: >-
+            {{ ((state_attr('sensor.friggitrice_energy_anno', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
 
-      - name: "potenza_lavatrice_w"
+      - name: "potenza_friggitrice_w"
         unit_of_measurement: 'W'
         device_class: power
         state_class: measurement
         icon: mdi:flash
-        state: *sensore_potenza_lavatrice
+        state: *sensore_potenza_friggitrice
 
-      - name: "frarik_lavatrice_versione"
+      - name: "frarik_friggitrice_versione"
         state: "1.2"
 
 counter:
-  lavatrice_cicli_totale:
-    name: Cicli Motore Lavatrice
+  friggitrice_cicli_totale:
+    name: Cicli Resistenza Friggitrice
     initial: 0
     step: 1
 
 input_boolean:
-  lavatrice_switch:
-    name: Switch Frigo
+  friggitrice_switch:
+    name: Switch Friggitrice
     icon: mdi:power
 
-  lavatrice_ciclo_attivo:
-    name: Ciclo Attivo Frigo
+  friggitrice_ciclo_attivo:
+    name: Ciclo Attivo Friggitrice
 
-  lavatrice_notify_push:
-    name: Notifica Push Frigo
+  friggitrice_notify_push:
+    name: Notifica Push Friggitrice
 
-  lavatrice_notify_alexa:
-    name: Notifica Alexa Frigo
+  friggitrice_notify_alexa:
+    name: Notifica Alexa Friggitrice
 
-  lavatrice_notify_google:
-    name: Notifica Google Frigo
+  friggitrice_notify_google:
+    name: Notifica Google Friggitrice
 
 group:
-  lavatrice_notifiche:
+  friggitrice_notifiche:
     entities:
-      - input_boolean.lavatrice_notify_google
-      - input_boolean.lavatrice_notify_alexa
-      - input_boolean.lavatrice_notify_push
-      - automation.lavatrice_off_automatico
-      - input_boolean.lavatrice_switch
+      - input_boolean.friggitrice_notify_google
+      - input_boolean.friggitrice_notify_alexa
+      - input_boolean.friggitrice_notify_push
+      - automation.friggitrice_off_automatico
+      - input_boolean.friggitrice_switch
 
 input_datetime:
-  lavatrice_notifiche_inizio:
-    name: Orario Inizio Notifiche Frigo
+  friggitrice_notifiche_inizio:
+    name: Orario Inizio Notifiche Friggitrice
     has_date: false
     has_time: true
 
-  lavatrice_notifiche_fine:
-    name: Orario Fine Notifiche Frigo
+  friggitrice_notifiche_fine:
+    name: Orario Fine Notifiche Friggitrice
     has_date: false
     has_time: true
 
-  lavatrice_off:
-    name: Frigo Spegnimento Automatico
+  friggitrice_off:
+    name: Friggitrice Spegnimento Automatico
     has_date: false
     has_time: true
 
 input_text:
-  lavatrice_data_reset:
-  lavatrice_nome:
-  lavatrice_messaggio:
-  lavatrice_ultimo_ciclo:
-  lunedi_lavatrice_cicli:
-  lunedi_lavatrice_tempo:
-  martedi_lavatrice_cicli:
-  martedi_lavatrice_tempo:
-  mercoledi_lavatrice_cicli:
-  mercoledi_lavatrice_tempo:
-  giovedi_lavatrice_cicli:
-  giovedi_lavatrice_tempo:
-  venerdi_lavatrice_cicli:
-  venerdi_lavatrice_tempo:
-  sabato_lavatrice_cicli:
-  sabato_lavatrice_tempo:
-  domenica_lavatrice_cicli:
-  domenica_lavatrice_tempo:
+  friggitrice_data_reset:
+  friggitrice_nome:
+  friggitrice_messaggio:
+  friggitrice_ultimo_ciclo:
+  lunedi_friggitrice_cicli:
+  lunedi_friggitrice_tempo:
+  martedi_friggitrice_cicli:
+  martedi_friggitrice_tempo:
+  mercoledi_friggitrice_cicli:
+  mercoledi_friggitrice_tempo:
+  giovedi_friggitrice_cicli:
+  giovedi_friggitrice_tempo:
+  venerdi_friggitrice_cicli:
+  venerdi_friggitrice_tempo:
+  sabato_friggitrice_cicli:
+  sabato_friggitrice_tempo:
+  domenica_friggitrice_cicli:
+  domenica_friggitrice_tempo:
 
 script:
-  lavatrice_reset_sensori:
+  friggitrice_reset_sensori:
     sequence:
     - service: input_text.set_value
       data:
         value: "{{ now().strftime('%d/%m/%Y %H:%M') }}"
       target:
-        entity_id: input_text.lavatrice_data_reset
+        entity_id: input_text.friggitrice_data_reset
 
     - service: utility_meter.calibrate
       data:
         value: '0'
       target:
         entity_id:
-          - sensor.lavatrice_cicli_oggi
-          - sensor.lavatrice_cicli_mese
-          - sensor.lavatrice_cicli_anno
-          - sensor.lavatrice_energy_oggi
-          - sensor.lavatrice_energy_mese
-          - sensor.lavatrice_energy_anno
-          - sensor.lavatrice_tempo_oggi
-          - sensor.lavatrice_tempo_mese
-          - sensor.lavatrice_tempo_anno
+          - sensor.friggitrice_cicli_oggi
+          - sensor.friggitrice_cicli_mese
+          - sensor.friggitrice_cicli_anno
+          - sensor.friggitrice_energy_oggi
+          - sensor.friggitrice_energy_mese
+          - sensor.friggitrice_energy_anno
+          - sensor.friggitrice_tempo_oggi
+          - sensor.friggitrice_tempo_mese
+          - sensor.friggitrice_tempo_anno
 
     - service: input_number.set_value
       data:
         value: '0'
       target:
         entity_id:
-          - input_number.lunedi_lavatrice_consumo
-          - input_number.martedi_lavatrice_consumo
-          - input_number.mercoledi_lavatrice_consumo
-          - input_number.giovedi_lavatrice_consumo
-          - input_number.venerdi_lavatrice_consumo
-          - input_number.sabato_lavatrice_consumo
-          - input_number.domenica_lavatrice_consumo
-          - input_number.lunedi_lavatrice_costo
-          - input_number.martedi_lavatrice_costo
-          - input_number.mercoledi_lavatrice_costo
-          - input_number.giovedi_lavatrice_costo
-          - input_number.venerdi_lavatrice_costo
-          - input_number.sabato_lavatrice_costo
-          - input_number.domenica_lavatrice_costo
+          - input_number.lunedi_friggitrice_consumo
+          - input_number.martedi_friggitrice_consumo
+          - input_number.mercoledi_friggitrice_consumo
+          - input_number.giovedi_friggitrice_consumo
+          - input_number.venerdi_friggitrice_consumo
+          - input_number.sabato_friggitrice_consumo
+          - input_number.domenica_friggitrice_consumo
+          - input_number.lunedi_friggitrice_costo
+          - input_number.martedi_friggitrice_costo
+          - input_number.mercoledi_friggitrice_costo
+          - input_number.giovedi_friggitrice_costo
+          - input_number.venerdi_friggitrice_costo
+          - input_number.sabato_friggitrice_costo
+          - input_number.domenica_friggitrice_costo
 
     - service: input_text.set_value
       data:
         value: '0'
       target:
         entity_id:
-          - input_text.lunedi_lavatrice_cicli
-          - input_text.martedi_lavatrice_cicli
-          - input_text.mercoledi_lavatrice_cicli
-          - input_text.giovedi_lavatrice_cicli
-          - input_text.venerdi_lavatrice_cicli
-          - input_text.sabato_lavatrice_cicli
-          - input_text.domenica_lavatrice_cicli
-          - input_text.lunedi_lavatrice_tempo
-          - input_text.martedi_lavatrice_tempo
-          - input_text.mercoledi_lavatrice_tempo
-          - input_text.giovedi_lavatrice_tempo
-          - input_text.venerdi_lavatrice_tempo
-          - input_text.sabato_lavatrice_tempo
-          - input_text.domenica_lavatrice_tempo
+          - input_text.lunedi_friggitrice_cicli
+          - input_text.martedi_friggitrice_cicli
+          - input_text.mercoledi_friggitrice_cicli
+          - input_text.giovedi_friggitrice_cicli
+          - input_text.venerdi_friggitrice_cicli
+          - input_text.sabato_friggitrice_cicli
+          - input_text.domenica_friggitrice_cicli
+          - input_text.lunedi_friggitrice_tempo
+          - input_text.martedi_friggitrice_tempo
+          - input_text.mercoledi_friggitrice_tempo
+          - input_text.giovedi_friggitrice_tempo
+          - input_text.venerdi_friggitrice_tempo
+          - input_text.sabato_friggitrice_tempo
+          - input_text.domenica_friggitrice_tempo
 
     - service: counter.reset
       target:
         entity_id:
-          - counter.lavatrice_cicli_totale
+          - counter.friggitrice_cicli_totale
 
 automation:
-- alias: lavatrice_automazioni
-  id: lavatrice_automazioni
+- alias: friggitrice_automazioni
+  id: friggitrice_automazioni
   max_exceeded: silent
   trigger:
 
   - platform: state
-    entity_id: binary_sensor.motore_lavatrice
+    entity_id: binary_sensor.resistenza_friggitrice
     from: 'off'
     to: 'on'
     id: inizio_ciclo
 
   - platform: state
-    entity_id: binary_sensor.motore_lavatrice
+    entity_id: binary_sensor.resistenza_friggitrice
     from: 'on'
     to: 'off'
     id: fine_ciclo
@@ -1106,24 +1060,24 @@ automation:
 
   - platform: state
     entity_id:
-      - input_boolean.lavatrice_switch
-      - *switch_lavatrice
+      - input_boolean.friggitrice_switch
+      - *switch_friggitrice
     from: 'on'
     to: 'off'
     id: switch_off
 
   - platform: state
     entity_id:
-      - input_boolean.lavatrice_switch
-      - *switch_lavatrice
+      - input_boolean.friggitrice_switch
+      - *switch_friggitrice
     from: 'off'
     to: 'on'
     id: switch_on
 
   - platform: template
     value_template: >-
-      {{ is_state('binary_sensor.motore_lavatrice','off') and
-         is_state('input_boolean.lavatrice_ciclo_attivo','on') }}
+      {{ is_state('binary_sensor.resistenza_friggitrice','off') and
+         is_state('input_boolean.friggitrice_ciclo_attivo','on') }}
     id: controllo_ciclo
 
   action:
@@ -1138,61 +1092,61 @@ automation:
         target:
           entity_id: >
             {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
-            {% if today == "Monday" %}    input_text.lunedi_lavatrice_cicli
-            {% elif today == "Tuesday" %} input_text.martedi_lavatrice_cicli
-            {% elif today == "Wednesday" %} input_text.mercoledi_lavatrice_cicli
-            {% elif today == "Thursday" %} input_text.giovedi_lavatrice_cicli
-            {% elif today == "Friday" %}  input_text.venerdi_lavatrice_cicli
-            {% elif today == "Saturday" %} input_text.sabato_lavatrice_cicli
-            {% elif today == "Sunday" %}  input_text.domenica_lavatrice_cicli
+            {% if today == "Monday" %}    input_text.lunedi_friggitrice_cicli
+            {% elif today == "Tuesday" %} input_text.martedi_friggitrice_cicli
+            {% elif today == "Wednesday" %} input_text.mercoledi_friggitrice_cicli
+            {% elif today == "Thursday" %} input_text.giovedi_friggitrice_cicli
+            {% elif today == "Friday" %}  input_text.venerdi_friggitrice_cicli
+            {% elif today == "Saturday" %} input_text.sabato_friggitrice_cicli
+            {% elif today == "Sunday" %}  input_text.domenica_friggitrice_cicli
             {% endif %}
         data:
-          value: "{{ states('sensor.lavatrice_cicli_oggi') }}"
+          value: "{{ states('sensor.friggitrice_cicli_oggi') }}"
 
       - service: input_text.set_value
         target:
           entity_id: >
             {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
-            {% if today == "Monday" %}    input_text.lunedi_lavatrice_tempo
-            {% elif today == "Tuesday" %} input_text.martedi_lavatrice_tempo
-            {% elif today == "Wednesday" %} input_text.mercoledi_lavatrice_tempo
-            {% elif today == "Thursday" %} input_text.giovedi_lavatrice_tempo
-            {% elif today == "Friday" %}  input_text.venerdi_lavatrice_tempo
-            {% elif today == "Saturday" %} input_text.sabato_lavatrice_tempo
-            {% elif today == "Sunday" %}  input_text.domenica_lavatrice_tempo
+            {% if today == "Monday" %}    input_text.lunedi_friggitrice_tempo
+            {% elif today == "Tuesday" %} input_text.martedi_friggitrice_tempo
+            {% elif today == "Wednesday" %} input_text.mercoledi_friggitrice_tempo
+            {% elif today == "Thursday" %} input_text.giovedi_friggitrice_tempo
+            {% elif today == "Friday" %}  input_text.venerdi_friggitrice_tempo
+            {% elif today == "Saturday" %} input_text.sabato_friggitrice_tempo
+            {% elif today == "Sunday" %}  input_text.domenica_friggitrice_tempo
             {% endif %}
         data:
-          value: "{{ state_attr('sensor.time_on_lavatrice','Oggi') }}"
+          value: "{{ state_attr('sensor.time_on_friggitrice','Oggi') }}"
 
       - service: input_number.set_value
         target:
           entity_id: >
             {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
-            {% if today == "Monday" %}    input_number.lunedi_lavatrice_consumo
-            {% elif today == "Tuesday" %} input_number.martedi_lavatrice_consumo
-            {% elif today == "Wednesday" %} input_number.mercoledi_lavatrice_consumo
-            {% elif today == "Thursday" %} input_number.giovedi_lavatrice_consumo
-            {% elif today == "Friday" %}  input_number.venerdi_lavatrice_consumo
-            {% elif today == "Saturday" %} input_number.sabato_lavatrice_consumo
-            {% elif today == "Sunday" %}  input_number.domenica_lavatrice_consumo
+            {% if today == "Monday" %}    input_number.lunedi_friggitrice_consumo
+            {% elif today == "Tuesday" %} input_number.martedi_friggitrice_consumo
+            {% elif today == "Wednesday" %} input_number.mercoledi_friggitrice_consumo
+            {% elif today == "Thursday" %} input_number.giovedi_friggitrice_consumo
+            {% elif today == "Friday" %}  input_number.venerdi_friggitrice_consumo
+            {% elif today == "Saturday" %} input_number.sabato_friggitrice_consumo
+            {% elif today == "Sunday" %}  input_number.domenica_friggitrice_consumo
             {% endif %}
         data:
-          value: "{{ states('sensor.lavatrice_energy_oggi') }}"
+          value: "{{ states('sensor.friggitrice_energy_oggi') }}"
 
       - service: input_number.set_value
         target:
           entity_id: >
             {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
-            {% if today == "Monday" %}    input_number.lunedi_lavatrice_costo
-            {% elif today == "Tuesday" %} input_number.martedi_lavatrice_costo
-            {% elif today == "Wednesday" %} input_number.mercoledi_lavatrice_costo
-            {% elif today == "Thursday" %} input_number.giovedi_lavatrice_costo
-            {% elif today == "Friday" %}  input_number.venerdi_lavatrice_costo
-            {% elif today == "Saturday" %} input_number.sabato_lavatrice_costo
-            {% elif today == "Sunday" %}  input_number.domenica_lavatrice_costo
+            {% if today == "Monday" %}    input_number.lunedi_friggitrice_costo
+            {% elif today == "Tuesday" %} input_number.martedi_friggitrice_costo
+            {% elif today == "Wednesday" %} input_number.mercoledi_friggitrice_costo
+            {% elif today == "Thursday" %} input_number.giovedi_friggitrice_costo
+            {% elif today == "Friday" %}  input_number.venerdi_friggitrice_costo
+            {% elif today == "Saturday" %} input_number.sabato_friggitrice_costo
+            {% elif today == "Sunday" %}  input_number.domenica_friggitrice_costo
             {% endif %}
         data:
-          value: "{{ state_attr('sensor.time_on_lavatrice','costo_oggi_lavatrice') }}"
+          value: "{{ state_attr('sensor.time_on_friggitrice','costo_oggi_friggitrice') }}"
 
   - choose:
     - alias: SWITCH OFF
@@ -1202,10 +1156,10 @@ automation:
       sequence:
       - service: switch.turn_off
         target:
-          entity_id: *switch_lavatrice
+          entity_id: *switch_friggitrice
       - service: input_boolean.turn_off
         target:
-          entity_id: input_boolean.lavatrice_switch
+          entity_id: input_boolean.friggitrice_switch
 
   - choose:
     - alias: SWITCH ON
@@ -1215,10 +1169,10 @@ automation:
       sequence:
       - service: switch.turn_on
         target:
-          entity_id: *switch_lavatrice
+          entity_id: *switch_friggitrice
       - service: input_boolean.turn_on
         target:
-          entity_id: input_boolean.lavatrice_switch
+          entity_id: input_boolean.friggitrice_switch
 
   - choose:
     - conditions:
@@ -1226,7 +1180,7 @@ automation:
         id: controllo_ciclo
       sequence:
       - delay: '00:01:00'
-      - entity_id: input_boolean.lavatrice_ciclo_attivo
+      - entity_id: input_boolean.friggitrice_ciclo_attivo
         service: input_boolean.turn_off
 
   - choose:
@@ -1234,7 +1188,7 @@ automation:
       - condition: trigger
         id: inizio_ciclo
       sequence:
-      - entity_id: input_boolean.lavatrice_ciclo_attivo
+      - entity_id: input_boolean.friggitrice_ciclo_attivo
         service: input_boolean.turn_on
 
   - choose:
@@ -1245,17 +1199,17 @@ automation:
 
       - service: input_text.set_value
         target:
-          entity_id: input_text.lavatrice_ultimo_ciclo
+          entity_id: input_text.friggitrice_ultimo_ciclo
         data:
-          value: "{{ state_attr('sensor.time_on_lavatrice','tempo_ciclo_lavatrice') }}"
+          value: "{{ state_attr('sensor.time_on_friggitrice','tempo_ciclo_friggitrice') }}"
 
       - service: counter.increment
         target:
-          entity_id: counter.lavatrice_cicli_totale
+          entity_id: counter.friggitrice_cicli_totale
 
       - delay: '00:00:05'
 
-      - entity_id: input_boolean.lavatrice_ciclo_attivo
+      - entity_id: input_boolean.friggitrice_ciclo_attivo
         service: input_boolean.turn_off
 
   - parallel:
@@ -1264,27 +1218,27 @@ automation:
         - condition: trigger
           id: fine_ciclo
         - condition: time
-          after: 'input_datetime.lavatrice_notifiche_inizio'
-          before: 'input_datetime.lavatrice_notifiche_fine'
+          after: 'input_datetime.friggitrice_notifiche_inizio'
+          before: 'input_datetime.friggitrice_notifiche_fine'
         - condition: state
-          entity_id: input_boolean.lavatrice_notify_google
+          entity_id: input_boolean.friggitrice_notify_google
           state: 'on'
         sequence:
         - service: tts.google_translate_say
           continue_on_error: true
           data:
             entity_id: *google
-            message: "{{ states('input_text.lavatrice_messaggio') }} in {{ state_attr('sensor.time_on_lavatrice','tempo_ciclo_lavatrice') }}"
+            message: "{{ states('input_text.friggitrice_messaggio') }} in {{ state_attr('sensor.time_on_friggitrice','tempo_ciclo_friggitrice') }}"
 
     - choose:
       - conditions:
         - condition: trigger
           id: fine_ciclo
         - condition: time
-          after: 'input_datetime.lavatrice_notifiche_inizio'
-          before: 'input_datetime.lavatrice_notifiche_fine'
+          after: 'input_datetime.friggitrice_notifiche_inizio'
+          before: 'input_datetime.friggitrice_notifiche_fine'
         - condition: state
-          entity_id: input_boolean.lavatrice_notify_alexa
+          entity_id: input_boolean.friggitrice_notify_alexa
           state: 'on'
         sequence:
         - service: notify.alexa_media
@@ -1294,50 +1248,50 @@ automation:
             data:
               type: announce
               method: spoken
-            message: "{{ states('input_text.lavatrice_messaggio') }} in {{ state_attr('sensor.time_on_lavatrice','tempo_ciclo_lavatrice') }}"
+            message: "{{ states('input_text.friggitrice_messaggio') }} in {{ state_attr('sensor.time_on_friggitrice','tempo_ciclo_friggitrice') }}"
 
     - choose:
       - conditions:
         - condition: trigger
           id: fine_ciclo
         - condition: state
-          entity_id: input_boolean.lavatrice_notify_push
+          entity_id: input_boolean.friggitrice_notify_push
           state: 'on'
         sequence:
         - data_template:
             message: >-
-              🫧 {{ states('input_text.lavatrice_nome') }}
+              🍟 {{ states('input_text.friggitrice_nome') }}
 
-              ⏱ Ciclo durato: {{ state_attr('sensor.time_on_lavatrice','tempo_ciclo_lavatrice') }}
+              ⏱ Ciclo durato: {{ state_attr('sensor.time_on_friggitrice','tempo_ciclo_friggitrice') }}
 
-              ⚡ Consumati: {{ state_attr('sensor.time_on_lavatrice','consumo_ciclo_lavatrice') }}
+              ⚡ Consumati: {{ state_attr('sensor.time_on_friggitrice','consumo_ciclo_friggitrice') }}
 
-              💰 Spesi: {{ state_attr('sensor.time_on_lavatrice','costo_ciclo_lavatrice') }} €
-            title: "Lavatrice"
-          service: notify.lavatrice
+              💰 Spesi: {{ state_attr('sensor.time_on_friggitrice','costo_ciclo_friggitrice') }} €
+            title: "Friggitrice"
+          service: notify.friggitrice
           continue_on_error: true
 
-- alias: lavatrice_off_automatico
-  id: lavatrice_off_automatico
+- alias: friggitrice_off_automatico
+  id: friggitrice_off_automatico
   trigger:
     - platform: time
-      at: 'input_datetime.lavatrice_off'
-      id: lavatrice_automatico_off
+      at: 'input_datetime.friggitrice_off'
+      id: friggitrice_automatico_off
   condition: []
   action:
     - choose:
       - conditions:
         - condition: trigger
-          id: lavatrice_automatico_off
+          id: friggitrice_automatico_off
         - condition: state
-          entity_id: *switch_lavatrice
+          entity_id: *switch_friggitrice
           state: 'on'
         sequence:
-        - entity_id: *switch_lavatrice
+        - entity_id: *switch_friggitrice
           service: switch.turn_off`;
 
   /* ── PKG BUILD ── */
-  var _LAV_WIZ_KEY = 'frarik_pkg_wizard_lavatrice';
+  var _FRG_WIZ_KEY = 'frarik_pkg_wizard_friggitrice';
 
   function _buildPkg(potenza, sw, push, google, alexa) {
     var ind = '          ';
@@ -1351,8 +1305,8 @@ automation:
       ? alexa.map(function(p) { return ind + '- ' + p; }).join('\n')
       : ind + '- media_player.alexa_cameretta';
     var yaml = _FRIGO_PKG_YAML
-      .split('IL_TUO_SENSORE_POTENZA_FRIGO').join(potenza || 'sensor.non_configurato')
-      .split('IL_TUO_SWITCH_FRIGO').join(sw || 'switch.non_configurato');
+      .split('IL_TUO_SENSORE_POTENZA_FRIGGITRICE').join(potenza || 'sensor.non_configurato')
+      .split('IL_TUO_SWITCH_FRIGGITRICE').join(sw || 'switch.non_configurato');
     yaml = yaml.replace(ind + '- service: IL_TUO_MOBILE_APP_1', pushLines);
     yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_GOOGLE_1', googleLines);
     yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_ALEXA_1', alexaLines);
@@ -1367,7 +1321,7 @@ automation:
     var switchIds = allIds.filter(function(id) { return /^switch\./.test(id); });
     var mediaIds  = allIds.filter(function(id) { return /^media_player\./.test(id); });
     var saved = null;
-    try { saved = JSON.parse(localStorage.getItem(_LAV_WIZ_KEY) || 'null'); } catch(e) {}
+    try { saved = JSON.parse(localStorage.getItem(_FRG_WIZ_KEY) || 'null'); } catch(e) {}
     var pushRows   = (saved && saved.push   && saved.push.length)   ? saved.push.slice()   : [''];
     var googleRows = (saved && saved.google && saved.google.length) ? saved.google.slice() : [''];
     var alexaRows  = (saved && saved.alexa  && saved.alexa.length)  ? saved.alexa.slice()  : [''];
@@ -1406,8 +1360,8 @@ automation:
       sr.innerHTML = '<style>'
         + ':host{all:initial;font-family:system-ui,sans-serif}'
         + '.wd-bd{position:fixed;inset:0;z-index:200000;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);display:flex;align-items:flex-end}'
-        + '.wd-panel{width:100%;max-height:88vh;display:flex;flex-direction:column;background:#080f18;border:1px solid rgba(56,189,248,.3);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:wUp .22s cubic-bezier(.32,1.12,.56,1)}'
-        + '@keyframes wUp{from{transform:translateY(100%)}to{transform:translateY(0)}}'
+        + '.wd-panel{width:100%;max-height:88vh;display:flex;flex-direction:column;background:#080f18;border:1px solid rgba(56,189,248,.3);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:frgUp .22s cubic-bezier(.32,1.12,.56,1)}'
+        + '@keyframes frgUp{from{transform:translateY(100%)}to{transform:translateY(0)}}'
         + '.wd-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}'
         + '.wd-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.3);flex-shrink:0}'
         + '.wd-tit{font-size:14px;font-weight:800}'
@@ -1434,17 +1388,17 @@ automation:
         + '</style>'
         + '<div class="wd-bd" id="wd-bd">'
         + '<div class="wd-panel">'
-        + '<div class="wd-hdr"><div class="wd-ico">🫧</div>'
-        + '<div><div class="wd-tit">Installa PKG Lavatrice</div><div class="wd-sub">frarik_lavatrice.yaml → config/packages/</div></div>'
+        + '<div class="wd-hdr"><div class="wd-ico">🍟</div>'
+        + '<div><div class="wd-tit">Installa PKG Friggitrice</div><div class="wd-sub">frarik_friggitrice.yaml → config/packages/</div></div>'
         + '<button class="wd-x" id="wd-x">✕</button></div>'
         + '<div class="wd-body">'
 
         /* ── Sensori ── */
         + '<div><div class="wd-sec">Sensori</div>'
         + '<div class="wd-lbl">Sensore Potenza (W)</div>'
-        + '<div class="wd-frow"><input class="wd-inp" id="f-potenza" type="text" autocomplete="off" placeholder="sensor.presa_lavatrice_potenza" value="' + ((saved && saved.potenza) || '').replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-potenza"></div></div>'
-        + '<div class="wd-lbl">Switch Presa Lavatrice</div>'
-        + '<div class="wd-frow"><input class="wd-inp" id="f-switch" type="text" autocomplete="off" placeholder="switch.presa_lavatrice" value="' + ((saved && saved.sw) || '').replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-switch"></div></div>'
+        + '<div class="wd-frow"><input class="wd-inp" id="f-potenza" type="text" autocomplete="off" placeholder="sensor.presa_friggitrice_potenza" value="' + ((saved && saved.potenza) || '').replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-potenza"></div></div>'
+        + '<div class="wd-lbl">Switch Presa Friggitrice</div>'
+        + '<div class="wd-frow"><input class="wd-inp" id="f-switch" type="text" autocomplete="off" placeholder="switch.presa_friggitrice" value="' + ((saved && saved.sw) || '').replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-switch"></div></div>'
         + '</div>'
 
         /* ── Notifiche Push ── */
@@ -1510,7 +1464,7 @@ automation:
         var push    = Array.from(sr.querySelectorAll('.push-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
         var google  = Array.from(sr.querySelectorAll('.google-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
         var alexa   = Array.from(sr.querySelectorAll('.alexa-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
-        try { localStorage.setItem(_LAV_WIZ_KEY, JSON.stringify({potenza: potenza, sw: sw, push: push, google: google, alexa: alexa})); } catch(e) {}
+        try { localStorage.setItem(_FRG_WIZ_KEY, JSON.stringify({potenza: potenza, sw: sw, push: push, google: google, alexa: alexa})); } catch(e) {}
         var yaml = _buildPkg(potenza, sw, push, google, alexa);
         var m = location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
         var base = location.origin + (m ? m[1] : '');
@@ -1520,12 +1474,12 @@ automation:
         fetch(base + '/api/frarik/pkg/install', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({name: 'frarik/frarik_lavatrice.yaml', content: yaml})
+          body: JSON.stringify({name: 'frarik/frarik_friggitrice.yaml', content: yaml})
         }).then(function(r) { return r.json().then(function(j) { return {r: r, j: j}; }); })
           .then(function(res) {
             destroy();
             if (res.r.ok && res.j.ok) {
-              try { if (typeof window.showToast === 'function') window.showToast('📦 PKG Lavatrice installato! Riavvia HA.'); } catch(e) {}
+              try { if (typeof window.showToast === 'function') window.showToast('📦 PKG Friggitrice installato! Riavvia HA.'); } catch(e) {}
               if (typeof onDone === 'function') onDone();
             } else {
               try { if (typeof window.showToast === 'function') window.showToast('⚠️ Errore installazione PKG: ' + ((res.j && res.j.error) || '')); } catch(e) {}
@@ -1542,11 +1496,11 @@ automation:
 
   /* ── CARD ── */
   const CARD = {
-    id: 'lavatrice', name: 'Lavatrice', icon: '🫧', version: '1.5',
-    desc: 'Monitoraggio motore, cicli, energia e costi. Richiede PKG Centro Controllo Lavatrice.',
+    id: 'friggitrice', name: 'Friggitrice', icon: '🍟', version: '1.0',
+    desc: 'Monitoraggio resistenza, cicli, energia e costi. Richiede PKG Centro Controllo Friggitrice.',
     render: render, mount: mount, update: update, configure: openCfg,
-    frarik_pkg_check: 'sensor.frarik_lavatrice_versione',
-    frarik_pkg_id: 'frarik_lavatrice',
+    frarik_pkg_check: 'sensor.frarik_friggitrice_versione',
+    frarik_pkg_id: 'frarik_friggitrice',
     frarik_pkg_version: '1.0',
     openWizard: _openWizard,
     _buildPkgFromConfig: function(cfg) { return _buildPkg(cfg.potenza || '', cfg.sw || '', cfg.push || [], cfg.google || [], cfg.alexa || []); },
@@ -1555,5 +1509,5 @@ automation:
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Card registrata: lavatrice v' + CARD.version); } catch (e) {}
+  try { console.log('[FratechStore] Card registrata: friggitrice v' + CARD.version); } catch (e) {}
 })();

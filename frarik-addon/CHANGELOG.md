@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.6.73 — 2026-06-28
+
+### feat: 5 nuove card elettrodomestici
+
+- Nuove card: Forno, Microonde, Induzione, Lavastoviglie, Friggitrice
+- Struttura identica alle card Frigo/Lavatrice/Asciugatrice (stesso schema logico, entity names, popup Cicli con sezione Costo, week grid live)
+- SVG custom per ogni elettrodomestico con animazioni specifiche
+- PKG YAML per ognuno (`centro_controllo_forno.yaml`, `centro_controllo_microonde.yaml`, `centro_controllo_induzione.yaml`, `centro_controllo_lavastoviglie.yaml`, `centro_controllo_friggitrice.yaml`)
+- Fix: stray `name: Cicli Motore Frigo` in Lavatrice.js corretto in `Cicli Motore Lavatrice`
+
 ## 1.6.72 — 2026-06-28
 
 ### fix: colori e costo nelle card elettrodomestici
