@@ -1,4 +1,4 @@
-/* frarik-version: 1.4 */
+/* frarik-version: 1.5 */
 (function () {
   'use strict';
 
@@ -293,10 +293,9 @@
     const states = (h && h.states) || {};
     const allIds = Object.keys(states).sort();
     const stInp = 'width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none';
-    const stDrop = 'position:absolute;left:0;right:0;top:100%;z-index:10;max-height:150px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 9px 9px;display:none';
+    const stDrop = 'position:absolute;left:0;right:0;top:calc(100% + 2px);z-index:200;max-height:160px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-radius:9px;display:none;scrollbar-width:none';
     const stLbl = 'font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px;display:block';
     const stSec = 'font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid rgba(56,189,248,.2)';
-    var _prevTimer = null;
 
     function field(fid, lbl2, val, hint) {
       return '<div style="margin-bottom:9px;position:relative"><label style="' + stLbl + '">' + lbl2 + (hint ? '<span style="font-weight:400;color:#475569;margin-left:6px;font-family:monospace;text-transform:none;letter-spacing:0">' + hint + '</span>' : '') + '</label><input id="' + fid + '" type="text" value="' + (val || '').replace(/"/g, '&quot;') + '" autocomplete="off" placeholder="Cerca entità…" style="' + stInp + '"><div id="' + fid + '-d" style="' + stDrop + '"></div></div>';
@@ -304,87 +303,53 @@
 
     const formHtml = '<div style="margin-bottom:10px"><label style="' + stLbl + '">Nome card</label><input id="fc-name" type="text" value="' + (cf.name || '').replace(/"/g, '&quot;') + '" placeholder="es. Frigo cucina" style="' + stInp.replace('monospace', 'system-ui') + '"></div>'
       + '<div style="' + stSec + '">Sensori base</div>'
-      + field('fc-power', 'Potenza istantanea (W)', cf.pk_power, 'sensor.potenza_frigo_w')
-      + field('fc-running', 'Compressore on/off', cf.pk_running, 'binary_sensor.compressore_frigo')
-      + field('fc-switch', 'Switch presa', cf.pk_switch, 'switch.presa_frigorifero')
+      + field('fc-power',   'Potenza istantanea (W)', cf.pk_power,   'sensor.potenza_frigo_w')
+      + field('fc-running', 'Compressore on/off',     cf.pk_running, 'binary_sensor.compressore_frigo')
+      + field('fc-switch',  'Switch presa',           cf.pk_switch,  'switch.presa_frigorifero')
       + '<div style="' + stSec + '">PKG — Energia (kWh)</div>'
       + field('fc-kwh-oggi', 'kWh oggi', cf.pk_kwh_oggi, 'sensor.frigo_energy_oggi')
       + field('fc-kwh-mese', 'kWh mese', cf.pk_kwh_mese, 'sensor.frigo_energy_mese')
       + field('fc-kwh-anno', 'kWh anno', cf.pk_kwh_anno, 'sensor.frigo_energy_anno')
       + '<div style="' + stSec + '">PKG — Cicli</div>'
-      + field('fc-cic-oggi', 'Cicli oggi', cf.pk_cicli_oggi, 'sensor.frigo_cicli_oggi')
-      + field('fc-cic-mese', 'Cicli mese', cf.pk_cicli_mese, 'sensor.frigo_cicli_mese')
-      + field('fc-cic-anno', 'Cicli anno', cf.pk_cicli_anno, 'sensor.frigo_cicli_anno')
-      + field('fc-cic-tot', 'Cicli totale', cf.pk_cicli_tot, 'counter.frigo_cicli_totale')
+      + field('fc-cic-oggi', 'Cicli oggi',    cf.pk_cicli_oggi, 'sensor.frigo_cicli_oggi')
+      + field('fc-cic-mese', 'Cicli mese',    cf.pk_cicli_mese, 'sensor.frigo_cicli_mese')
+      + field('fc-cic-anno', 'Cicli anno',    cf.pk_cicli_anno, 'sensor.frigo_cicli_anno')
+      + field('fc-cic-tot',  'Cicli totale',  cf.pk_cicli_tot,  'counter.frigo_cicli_totale')
       + '<div style="' + stSec + '">PKG — Statistiche</div>'
-      + field('fc-time-on', 'Sensore time_on', cf.pk_time_on, 'sensor.time_on_frigo')
-      + field('fc-soglia', 'Soglia lavoro (W)', cf.pk_soglia, 'input_number.frigo_soglia_w')
-      + '<div style="display:flex;gap:8px;margin-top:14px">'
+      + field('fc-time-on', 'Sensore time_on',  cf.pk_time_on, 'sensor.time_on_frigo')
+      + field('fc-soglia',  'Soglia lavoro (W)', cf.pk_soglia,  'input_number.frigo_soglia_w')
+      + '<div style="display:flex;gap:8px;margin-top:16px">'
       + '<button id="fc-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button>'
       + '<button id="fc-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#38bdf8;color:#060d14">Salva</button>'
       + '</div>';
 
-    const pkgYaml = _FRIGO_PKG_YAML;
-    const allFieldIds = ['fc-power', 'fc-running', 'fc-switch', 'fc-kwh-oggi', 'fc-kwh-mese', 'fc-kwh-anno', 'fc-cic-oggi', 'fc-cic-mese', 'fc-cic-anno', 'fc-cic-tot', 'fc-time-on', 'fc-soglia'];
+    const allFieldIds = ['fc-power','fc-running','fc-switch','fc-kwh-oggi','fc-kwh-mese','fc-kwh-anno','fc-cic-oggi','fc-cic-mese','fc-cic-anno','fc-cic-tot','fc-time-on','fc-soglia'];
+    const ov = mkOv(popShell('🧊', '56,189,248', 'Configura Frigorifero', card.id || '', 'fc-cfg-close', formHtml), 'fc-cfg-close');
 
-    const ov = document.createElement('div');
-    ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:flex-end;background:rgba(0,0,0,.68);backdrop-filter:blur(6px);font-family:system-ui,sans-serif';
-    ov.innerHTML = '<style>@keyframes fcSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}@media(max-width:600px){.fccc{flex-direction:column!important}.fccf{width:100%!important;border-right:none!important;flex-shrink:0!important}}</style>'
-      + '<div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#080f18;border:1px solid rgba(56,189,248,.3);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:fcSlideUp .22s cubic-bezier(.32,1.12,.56,1)">'
-      + '<div style="display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
-      + '<div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.3)">🧊</div>'
-      + '<div><div style="font-size:14px;font-weight:800">Configura Frigorifero</div><div style="font-size:11px;color:#fff;margin-top:1px">' + card.id + '</div></div>'
-      + '<button id="fc-hdr-close" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none">✕</button>'
-      + '</div>'
-      + '<div id="fc-cfg-tabs" style="display:flex;gap:2px;padding:8px 16px 0;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
-      + '<button data-tab="settings" style="padding:5px 12px;border-radius:8px 8px 0 0;border:none;font-size:10px;font-weight:700;cursor:pointer;background:rgba(56,189,248,.2);color:#38bdf8;border-bottom:2px solid #38bdf8">⚙ Impostazioni</button>'
-      + '<button data-tab="pkg" style="padding:5px 12px;border-radius:8px 8px 0 0;border:none;font-size:10px;font-weight:700;cursor:pointer;background:rgba(255,255,255,.05);color:rgba(255,255,255,.4);border-bottom:2px solid transparent">📦 PKG YAML</button>'
-      + '</div>'
-      + '<div class="fccc" style="display:flex;flex:1;overflow:hidden;min-height:0">'
-      + '<div class="fccf" data-tabcontent="settings" style="width:380px;flex-shrink:0;overflow-y:auto;padding:14px 16px;scrollbar-width:none">' + formHtml + '</div>'
-      + '<div data-tabcontent="pkg" style="display:none;flex:1;overflow-y:auto;padding:14px 16px;background:rgba(0,0,0,.2);scrollbar-width:none">'
-      + '<div style="font-size:11px;color:#94a3b8;margin-bottom:10px">Installa questo package in <code style="color:#38bdf8">config/packages/</code> e riavvia HA, poi configura i sensori nella tab Impostazioni.</div>'
-      + '<pre style="font-size:10px;color:#e2e8f0;background:#060d14;border:1px solid rgba(56,189,248,.15);border-radius:10px;padding:12px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;max-height:60vh;overflow-y:auto">' + pkgYaml.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</pre>'
-      + '</div>'
-      + '</div>'
-      + '</div>';
-    document.body.appendChild(ov);
-
-    const close = function () { try { document.body.removeChild(ov); } catch (e) {} };
-    ov.querySelector('#fc-hdr-close').addEventListener('click', close);
-    ov.querySelector('#fc-cancel').addEventListener('click', close);
-
-    ov.querySelectorAll('[data-tab]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        ov.querySelectorAll('[data-tab]').forEach(function (b) { b.style.background = 'rgba(255,255,255,.05)'; b.style.color = 'rgba(255,255,255,.4)'; b.style.borderBottom = '2px solid transparent'; });
-        btn.style.background = 'rgba(56,189,248,.2)'; btn.style.color = '#38bdf8'; btn.style.borderBottom = '2px solid #38bdf8';
-        ov.querySelectorAll('[data-tabcontent]').forEach(function (d) { d.style.display = 'none'; });
-        const tc = ov.querySelector('[data-tabcontent="' + btn.dataset.tab + '"]'); if (tc) tc.style.display = 'block';
-      });
-    });
+    ov.querySelector('#fc-cancel').addEventListener('click', function() { ov._close(); });
 
     function g(id) { const e = ov.querySelector('#' + id); return e ? e.value.trim() : ''; }
-    allFieldIds.forEach(function (fid) {
+    allFieldIds.forEach(function(fid) {
       const inp = ov.querySelector('#' + fid), drop = ov.querySelector('#' + fid + '-d');
       if (!inp || !drop) return;
       function showDrop() {
         const q = inp.value.toLowerCase().trim();
-        const hits = (q ? allIds.filter(function (id) { return id.toLowerCase().includes(q); }) : allIds).slice(0, 50);
+        const hits = (q ? allIds.filter(function(id) { return id.toLowerCase().includes(q); }) : allIds).slice(0, 50);
         if (!hits.length) { drop.style.display = 'none'; return; }
         drop.style.display = 'block';
-        drop.innerHTML = hits.map(function (id) { return '<div data-pick="' + id + '" style="padding:5px 10px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04);color:#e2e8f0">' + id + '</div>'; }).join('');
-        drop.querySelectorAll('[data-pick]').forEach(function (row) {
-          row.addEventListener('mousedown', function (ev) { ev.preventDefault(); inp.value = row.getAttribute('data-pick'); drop.style.display = 'none'; });
-          row.addEventListener('mouseover', function () { row.style.background = 'rgba(255,255,255,.08)'; });
-          row.addEventListener('mouseout', function () { row.style.background = ''; });
+        drop.innerHTML = hits.map(function(id) { return '<div data-pick="' + id + '" style="padding:6px 10px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04);color:#e2e8f0">' + id + '</div>'; }).join('');
+        drop.querySelectorAll('[data-pick]').forEach(function(row) {
+          row.addEventListener('mousedown', function(ev) { ev.preventDefault(); inp.value = row.getAttribute('data-pick'); drop.style.display = 'none'; });
+          row.addEventListener('mouseover', function() { row.style.background = 'rgba(255,255,255,.08)'; });
+          row.addEventListener('mouseout', function() { row.style.background = ''; });
         });
       }
       inp.addEventListener('focus', showDrop);
       inp.addEventListener('input', showDrop);
-      inp.addEventListener('blur', function () { setTimeout(function () { drop.style.display = 'none'; }, 200); });
+      inp.addEventListener('blur', function() { setTimeout(function() { drop.style.display = 'none'; }, 200); });
     });
 
-    ov.querySelector('#fc-save').addEventListener('click', function () {
+    ov.querySelector('#fc-save').addEventListener('click', function() {
       save(card, {
         name: g('fc-name'),
         pk_power: g('fc-power'), pk_running: g('fc-running'), pk_switch: g('fc-switch'),
@@ -392,8 +357,8 @@
         pk_cicli_oggi: g('fc-cic-oggi'), pk_cicli_mese: g('fc-cic-mese'), pk_cicli_anno: g('fc-cic-anno'),
         pk_cicli_tot: g('fc-cic-tot'), pk_time_on: g('fc-time-on'), pk_soglia: g('fc-soglia'),
       });
-      close();
-      try { el._fcSig = ''; el.innerHTML = render(card); } catch (e) {}
+      ov._close();
+      try { el._fcSig = ''; el.innerHTML = render(card); } catch(e) {}
     });
   }
 
@@ -401,69 +366,108 @@
   function openImpostazioniHAPopup(c) {
     const h = H();
     function bs(e) { return !!(h && h.states && h.states[e] && h.states[e].state === 'on'); }
-    function ss(e) { const st = h && h.states && h.states[e]; return st ? st.state : '—'; }
+    function ss(e) { const st = h && h.states && h.states[e]; return (st && st.state) || ''; }
     function ns(e) { return num(S(h, e)); }
 
+    const iBase = 'background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);border-radius:8px;font-size:12px;font-family:system-ui;box-sizing:border-box;outline:none;color-scheme:dark';
     const rows = [];
+
     function dSec(lbl) {
       rows.push('<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding:12px 0 6px;border-bottom:1px solid rgba(56,189,248,.15)">' + lbl + '</div>');
     }
-    function dRow(lbl, val, vc) {
-      rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
-        + '<span style="font-size:12px;color:rgba(255,255,255,.55)">' + lbl + '</span>'
-        + '<span style="font-size:12px;font-weight:800;color:' + (vc || '#fff') + '">' + val + '</span>'
-        + '</div>');
-    }
     function dToggle(entity, lbl) {
       const on = bs(entity);
-      rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
-        + '<span style="font-size:12px;color:rgba(255,255,255,.55)">' + lbl + '</span>'
+      rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
+        + '<span style="font-size:13px;color:rgba(255,255,255,.7)">' + lbl + '</span>'
         + '<div class="fi-sw ' + (on ? 'on' : 'off') + '" data-entity="' + entity + '"><div class="fi-knob"></div></div>'
         + '</div>');
     }
+    function dTime(entity, lbl) {
+      const raw = ss(entity);
+      const val = raw && raw.length >= 5 ? raw.substring(0, 5) : '';
+      rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);gap:10px">'
+        + '<span style="font-size:13px;color:rgba(255,255,255,.7);flex:1">' + lbl + '</span>'
+        + '<input type="time" class="fi-inp" data-entity="' + entity + '" data-svctype="time" value="' + val + '" style="' + iBase + ';width:108px;padding:6px 8px;text-align:center">'
+        + '</div>');
+    }
+    function dNum(entity, lbl, unit, mn, mx, step) {
+      const val = ns(entity);
+      rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);gap:10px">'
+        + '<span style="font-size:13px;color:rgba(255,255,255,.7);flex:1">' + lbl + (unit ? ' <span style="font-size:10px;color:rgba(255,255,255,.35)">(' + unit + ')</span>' : '') + '</span>'
+        + '<input type="number" class="fi-inp" data-entity="' + entity + '" data-svctype="number" value="' + (val != null ? val : '') + '" min="' + (mn != null ? mn : 0) + '" max="' + (mx != null ? mx : 9999) + '" step="' + (step || 1) + '" style="' + iBase + ';width:90px;padding:6px 8px;text-align:right">'
+        + '</div>');
+    }
+    function dText(entity, lbl) {
+      const val = ss(entity);
+      rows.push('<div style="padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
+        + '<div style="font-size:13px;color:rgba(255,255,255,.7);margin-bottom:5px">' + lbl + '</div>'
+        + '<input type="text" class="fi-inp" data-entity="' + entity + '" data-svctype="text" value="' + (val || '').replace(/"/g, '&quot;') + '" style="' + iBase + ';width:100%;padding:7px 10px">'
+        + '</div>');
+    }
+    function dInfo(lbl, val) {
+      rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
+        + '<span style="font-size:12px;color:rgba(255,255,255,.4)">' + lbl + '</span>'
+        + '<span style="font-size:12px;font-weight:700;color:rgba(255,255,255,.3)">' + (val || '—') + '</span>'
+        + '</div>');
+    }
 
-    dSec('🔔 Notifiche');
+    dSec('🔔 Notifiche push & vocali');
     dToggle('input_boolean.frigo_notify_push',   '📱 Push');
     dToggle('input_boolean.frigo_notify_google', '🔊 Google');
     dToggle('input_boolean.frigo_notify_alexa',  '🗣 Alexa');
-    const t1 = ss('input_datetime.frigo_notifiche_inizio');
-    const t2 = ss('input_datetime.frigo_notifiche_fine');
-    dRow('Fascia oraria', (t1 !== '—' ? t1.substring(0, 5) : '?') + ' → ' + (t2 !== '—' ? t2.substring(0, 5) : '?'));
+    dTime('input_datetime.frigo_notifiche_inizio', '⏰ Orario inizio notifiche');
+    dTime('input_datetime.frigo_notifiche_fine',   '⏰ Orario fine notifiche');
 
     dSec('🔌 Elettrodomestico');
     dToggle('input_boolean.frigo_switch', 'Switch presa');
-    const sg = ns('input_number.frigo_soglia_w');
-    dRow('Soglia lavoro', sg != null ? sg + ' W' : '—', '#38bdf8');
-    const dOff = ns('input_number.frigo_tempo_innesco_m');
-    dRow('Delay OFF', dOff != null ? dOff + ' min' : '—');
-    const dOn = ns('input_number.frigo_avvio_ritardato_s');
-    dRow('Delay ON', dOn != null ? dOn + ' s' : '—');
+    dNum('input_number.frigo_soglia_w',          'Soglia lavoro',  'W',   0, 5000, 1);
+    dNum('input_number.frigo_tempo_innesco_m',   'Delay spegnimento', 'min', 0, 60, 1);
+    dNum('input_number.frigo_avvio_ritardato_s', 'Delay riavvio',  's',   0, 300, 1);
 
-    dSec('⏰ Spegnimento Auto');
-    dToggle('automation.frigo_off_automatico', 'Auto OFF');
-    const offT = ss('input_datetime.frigo_off');
-    dRow('Orario', offT !== '—' ? offT.substring(0, 5) : '—');
+    dSec('⏰ Spegnimento automatico');
+    dToggle('automation.frigo_off_automatico', 'Auto OFF abilitato');
+    dTime('input_datetime.frigo_off', 'Orario spegnimento');
 
     dSec('📝 Personalizzazione');
-    dRow('Nome', ss('input_text.frigo_nome'));
-    const ce = ns('input_number.costo_energia');
-    dRow('Costo energia', ce != null ? ce + ' €/kWh' : '—', '#fbbf24');
-    const dr = ss('input_text.frigo_data_reset');
-    dRow('Ultimo reset', dr, 'rgba(255,255,255,.4)');
+    dText('input_text.frigo_nome',      'Nome elettrodomestico');
+    dText('input_text.frigo_messaggio', 'Messaggio notifica');
+    dNum('input_number.costo_energia',  'Costo energia', '€/kWh', 0, 2, 0.001);
+    dInfo('Ultimo reset contatori', ss('input_text.frigo_data_reset'));
 
-    const swCss = '<style>.fi-sw{width:42px;height:24px;border-radius:12px;cursor:pointer;position:relative;flex-shrink:0;transition:background .25s}.fi-sw.on{background:#38bdf8}.fi-sw.off{background:rgba(255,255,255,.1)}.fi-knob{position:absolute;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .25s;box-shadow:0 1px 3px rgba(0,0,0,.35)}.fi-sw.on .fi-knob{left:21px}.fi-sw.off .fi-knob{left:3px}</style>';
-    const resetBtn = '<button id="fi-reset" style="width:100%;margin-top:14px;padding:11px;border-radius:11px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);color:#f87171;font-size:12px;font-weight:700;cursor:pointer">🔄 Reset Contatori</button>';
+    const swCss = '<style>'
+      + '.fi-sw{width:44px;height:26px;border-radius:13px;cursor:pointer;position:relative;flex-shrink:0;transition:background .25s}'
+      + '.fi-sw.on{background:#38bdf8}.fi-sw.off{background:rgba(255,255,255,.12)}'
+      + '.fi-knob{position:absolute;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .25s;box-shadow:0 1px 4px rgba(0,0,0,.4)}'
+      + '.fi-sw.on .fi-knob{left:21px}.fi-sw.off .fi-knob{left:3px}'
+      + '.fi-inp:focus{border-color:rgba(56,189,248,.55)!important;box-shadow:0 0 0 2px rgba(56,189,248,.12)}'
+      + '</style>';
+    const resetBtn = '<button id="fi-reset" style="width:100%;margin-top:16px;padding:12px;border-radius:12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);color:#f87171;font-size:13px;font-weight:700;cursor:pointer">🔄 Reset Contatori</button>';
     const closeId = 'fi-cl-' + Math.random().toString(36).slice(2, 6);
     const ov = mkOv(popShell('⚙', '100,116,139', 'Impostazioni', c.name || 'Frigorifero', closeId, swCss + rows.join('') + resetBtn), closeId);
 
     ov.querySelectorAll('.fi-sw').forEach(function(sw) {
       sw.addEventListener('click', function() {
         const entity = sw.dataset.entity; if (!entity) return;
-        const domain = entity.split('.')[0];
-        callSvc(domain, 'toggle', {entity_id: entity});
+        callSvc(entity.split('.')[0], 'toggle', {entity_id: entity});
         sw.classList.toggle('on'); sw.classList.toggle('off');
       });
     });
+
+    ov.querySelectorAll('.fi-inp').forEach(function(inp) {
+      inp.addEventListener('change', function() {
+        const entity = inp.dataset.entity, type = inp.dataset.svctype;
+        if (!entity) return;
+        if (type === 'time') {
+          if (inp.value) callSvc('input_datetime', 'set_datetime', {entity_id: entity, time: inp.value + ':00'});
+        } else if (type === 'number') {
+          const v = parseFloat(inp.value);
+          if (!isNaN(v)) callSvc('input_number', 'set_value', {entity_id: entity, value: v});
+        } else if (type === 'text') {
+          callSvc('input_text', 'set_value', {entity_id: entity, value: inp.value});
+        }
+      });
+    });
+
     const rb = ov.querySelector('#fi-reset');
     if (rb) rb.addEventListener('click', function() {
       callSvc('script', 'turn_on', {entity_id: 'script.frigo_reset_sensori'});
@@ -1448,7 +1452,7 @@ automation:
 
   /* ── CARD ── */
   const CARD = {
-    id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '1.4',
+    id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '1.5',
     desc: 'Monitoraggio compressore, cicli, energia e costi. Richiede PKG Centro Controllo Frigorifero.',
     render: render, mount: mount, update: update, configure: openCfg,
     frarik_pkg_check: 'sensor.frarik_frigorifero_versione',

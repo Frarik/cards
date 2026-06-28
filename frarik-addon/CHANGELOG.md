@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.6.67 — 2026-06-28
+
+### fix: Frigorifero v1.5 — popup configurazione riscritto + impostazioni editabili
+
+- `openCfg`: rimosso layout a due colonne e tab PKG YAML; ora usa `popShell` a colonna singola → risolve destra vuota e scrolling
+- `openImpostazioniHAPopup`: tutti i campi ora editabili — `<input type="time">` per orari, `<input type="number">` per soglia/delay, `<input type="text">` per nome/messaggio
+- Ogni modifica chiama `callSvc` (input_datetime/input_number/input_text) al cambio del campo
+- Autocomplete dropdown in `openCfg` spostato al di sopra del campo (z-index 200, no clip)
+
 ## 1.6.66 — 2026-06-28
 
 ### feat: Frigorifero v1.4 — nuovo design con SVG animata + power bar colorata
