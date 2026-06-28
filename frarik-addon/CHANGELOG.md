@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.77 — 2026-06-28
+
+### fix: ripristino altezza card — max-height:130px sul container immagine
+
+- Tutte e 8 le card: container immagine torna a `max-height:130px` (era stato rimosso in 1.6.76 causando card troppo alte)
+- SVG rimane `width:100%;height:100%` — riempie esattamente i 130px senza overflow
+- Stessa altezza card di v1.6.74, senza il taglio del bordo oblò (viewBox Lavatrice/Asciugatrice = 0 0 64 82)
+
 ## 1.6.76 — 2026-06-28
 
 ### fix: immagini elettrodomestici a piena altezza + oblò lavatrice/asciugatrice non tagliato
