@@ -1,4 +1,4 @@
-﻿/* frarik-version: 1.0 */
+﻿/* frarik-version: 1.1 */
 (function () {
   'use strict';
 
@@ -49,32 +49,32 @@
     var cf   = running ? 'rgba(56,189,248,.1)' : 'rgba(100,116,139,.06)';
     var glow = running ? ';filter:drop-shadow(0 0 10px rgba(56,189,248,.35))' : '';
     var css  = running ? '@keyframes ldsdrop{0%{opacity:0;transform:translateY(0)}50%{opacity:.75}100%{opacity:0;transform:translateY(10px)}}@keyframes ldsled{0%,100%{opacity:.4}50%{opacity:1}}' : '';
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 104" width="80" height="130" style="display:block;overflow:visible' + glow + '">'
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 108" style="display:block;width:100%;max-height:130px' + glow + '">'
       + (running ? '<defs><style>' + css + '</style></defs>' : '')
-      + '<rect x="2" y="2" width="60" height="100" rx="7" fill="#080f1a" stroke="' + c + '" stroke-width="1.5"/>'
-      + '<rect x="2" y="2" width="60" height="18" rx="7" fill="#060c18"/>'
-      + '<rect x="2" y="15" width="60" height="5" fill="#060c18"/>'
-      + '<rect x="5" y="5" width="22" height="9" rx="2.5" fill="#020810" stroke="' + (running ? '#38bdf8' : '#162035') + '" stroke-width=".7"/>'
-      + '<text x="16" y="11.5" text-anchor="middle" font-size="5.5" font-family="monospace" fill="' + (running ? '#38bdf8' : '#1a3050') + '">' + (running ? '1:45' : '--:--') + '</text>'
-      + '<circle cx="34" cy="10" r="2" fill="' + (running ? '#22c55e' : '#0a1a2e') + '"' + (running ? ' style="animation:ldsled 1s ease-in-out infinite"' : '') + '/>'
-      + '<circle cx="41" cy="10" r="2" fill="' + (running ? '#38bdf8' : '#0a1a2e') + '"' + (running ? ' style="animation:ldsled 1.5s ease-in-out infinite"' : '') + '/>'
-      + '<rect x="46" y="5" width="14" height="5" rx="2" fill="' + (running ? 'rgba(56,189,248,.08)' : '#0a1525') + '" stroke="' + c + '" stroke-width=".4"/>'
-      + '<rect x="46" y="12" width="14" height="4" rx="2" fill="#0a1525" stroke="' + c + '" stroke-width=".4" opacity=".5"/>'
-      + '<rect x="4" y="20" width="56" height="74" rx="4" fill="' + cf + '" stroke="' + c + '" stroke-width="1"/>'
-      + '<rect x="8" y="24" width="48" height="28" rx="3" fill="' + (running ? 'rgba(56,189,248,.05)' : '#030912') + '" stroke="' + (running ? 'rgba(56,189,248,.28)' : '#1a3050') + '" stroke-width=".7"/>'
-      + '<line x1="12" y1="30" x2="52" y2="30" stroke="' + c + '" stroke-width=".6" opacity=".22"/>'
-      + '<line x1="12" y1="36" x2="52" y2="36" stroke="' + c + '" stroke-width=".6" opacity=".22"/>'
-      + '<line x1="12" y1="42" x2="52" y2="42" stroke="' + c + '" stroke-width=".6" opacity=".22"/>'
-      + '<line x1="18" y1="24" x2="18" y2="52" stroke="' + c + '" stroke-width=".6" opacity=".18"/>'
-      + '<line x1="28" y1="24" x2="28" y2="52" stroke="' + c + '" stroke-width=".6" opacity=".18"/>'
-      + '<line x1="38" y1="24" x2="38" y2="52" stroke="' + c + '" stroke-width=".6" opacity=".18"/>'
-      + '<line x1="48" y1="24" x2="48" y2="52" stroke="' + c + '" stroke-width=".6" opacity=".18"/>'
-      + (running ? '<ellipse cx="23" cy="38" rx="1.5" ry="2.5" fill="rgba(56,189,248,.6)" style="animation:ldsdrop 1.8s ease-in-out infinite"/>' : '')
-      + (running ? '<ellipse cx="36" cy="35" rx="1.5" ry="2.5" fill="rgba(56,189,248,.5)" style="animation:ldsdrop 2.2s ease-in-out infinite .6s"/>' : '')
-      + (running ? '<ellipse cx="49" cy="40" rx="1.5" ry="2.5" fill="rgba(56,189,248,.45)" style="animation:ldsdrop 1.6s ease-in-out infinite 1.1s"/>' : '')
-      + '<rect x="10" y="96" width="44" height="5" rx="2.5" fill="' + c + '" opacity=".55"/>'
-      + '<rect x="7" y="100" width="12" height="3" rx="1.5" fill="' + c + '" opacity=".3"/>'
-      + '<rect x="45" y="100" width="12" height="3" rx="1.5" fill="' + c + '" opacity=".3"/>'
+      + '<rect x="2" y="2" width="68" height="104" rx="8" fill="#080f1a" stroke="' + c + '" stroke-width="1.5"/>'
+      + '<rect x="2" y="2" width="68" height="20" rx="8" fill="#060c18"/>'
+      + '<rect x="2" y="17" width="68" height="5" fill="#060c18"/>'
+      + '<rect x="5" y="5" width="26" height="10" rx="2.5" fill="#020810" stroke="' + (running ? '#38bdf8' : '#162035') + '" stroke-width=".7"/>'
+      + '<text x="18" y="12" text-anchor="middle" font-size="6" font-family="monospace" fill="' + (running ? '#38bdf8' : '#1a3050') + '">' + (running ? '1:45' : '--:--') + '</text>'
+      + '<circle cx="40" cy="10.5" r="2.5" fill="' + (running ? '#22c55e' : '#0a1a2e') + '"' + (running ? ' style="animation:ldsled 1s ease-in-out infinite"' : '') + '/>'
+      + '<circle cx="47" cy="10.5" r="2.5" fill="' + (running ? '#38bdf8' : '#0a1a2e') + '"' + (running ? ' style="animation:ldsled 1.5s ease-in-out infinite"' : '') + '/>'
+      + '<rect x="52" y="5" width="16" height="5" rx="2" fill="' + (running ? 'rgba(56,189,248,.09)' : '#0a1525') + '" stroke="' + c + '" stroke-width=".5"/>'
+      + '<rect x="52" y="12" width="16" height="5" rx="2" fill="#0a1525" stroke="' + c + '" stroke-width=".5" opacity=".5"/>'
+      + '<rect x="4" y="23" width="64" height="72" rx="5" fill="' + cf + '" stroke="' + c + '" stroke-width="1.1"/>'
+      + '<rect x="8" y="27" width="56" height="36" rx="4" fill="' + (running ? 'rgba(56,189,248,.06)' : '#030912') + '" stroke="' + (running ? 'rgba(56,189,248,.3)' : '#1a3050') + '" stroke-width=".8"/>'
+      + '<line x1="12" y1="34" x2="60" y2="34" stroke="' + c + '" stroke-width=".7" opacity=".22"/>'
+      + '<line x1="12" y1="41" x2="60" y2="41" stroke="' + c + '" stroke-width=".7" opacity=".22"/>'
+      + '<line x1="12" y1="48" x2="60" y2="48" stroke="' + c + '" stroke-width=".7" opacity=".22"/>'
+      + '<line x1="20" y1="27" x2="20" y2="63" stroke="' + c + '" stroke-width=".7" opacity=".18"/>'
+      + '<line x1="32" y1="27" x2="32" y2="63" stroke="' + c + '" stroke-width=".7" opacity=".18"/>'
+      + '<line x1="44" y1="27" x2="44" y2="63" stroke="' + c + '" stroke-width=".7" opacity=".18"/>'
+      + '<line x1="56" y1="27" x2="56" y2="63" stroke="' + c + '" stroke-width=".7" opacity=".18"/>'
+      + (running ? '<ellipse cx="26" cy="41" rx="1.8" ry="2.8" fill="rgba(56,189,248,.6)" style="animation:ldsdrop 1.8s ease-in-out infinite"/>' : '')
+      + (running ? '<ellipse cx="42" cy="38" rx="1.8" ry="2.8" fill="rgba(56,189,248,.5)" style="animation:ldsdrop 2.2s ease-in-out infinite .6s"/>' : '')
+      + (running ? '<ellipse cx="56" cy="44" rx="1.8" ry="2.8" fill="rgba(56,189,248,.45)" style="animation:ldsdrop 1.6s ease-in-out infinite 1.1s"/>' : '')
+      + '<rect x="12" y="98" width="48" height="6" rx="3" fill="' + c + '" opacity=".5"/>'
+      + '<rect x="7" y="103" width="14" height="3" rx="1.5" fill="' + c + '" opacity=".25"/>'
+      + '<rect x="51" y="103" width="14" height="3" rx="1.5" fill="' + c + '" opacity=".25"/>'
       + '</svg>';
   }
 
@@ -132,8 +132,8 @@
       + '#' + rid + ' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
       + '#' + rid + ' .fc-scroll::-webkit-scrollbar{display:none}'
       + '#' + rid + ' .fc-hero{display:flex;align-items:stretch;padding:10px 14px 8px;flex:1}'
-      + '#' + rid + ' .fc-hero-img{flex-shrink:0;padding-right:14px;display:flex;align-items:center;cursor:pointer}'
-      + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:7px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:14px}'
+      + '#' + rid + ' .fc-hero-img{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden}'
+      + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:6px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:10px;overflow:hidden}'
       + '#' + rid + ' .fc-st{display:flex;align-items:center;justify-content:flex-end;gap:7px;font-size:14px;font-weight:800;color:' + col + ';padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06)}'
       + '#' + rid + ' .fc-stdot{width:8px;height:8px;border-radius:50%;background:#38bdf8;flex-shrink:0' + (running ? ';box-shadow:0 0 7px #38bdf8;animation:fcPulse 1.5s ease-in-out infinite' : '') + '}'
       + '#' + rid + ' .fc-pwfull{margin:0 14px 14px}'
@@ -1497,7 +1497,7 @@ automation:
 
   /* ── CARD ── */
   const CARD = {
-    id: 'lavastoviglie', name: 'Lavastoviglie', icon: '🍽', version: '1.0',
+    id: 'lavastoviglie', name: 'Lavastoviglie', icon: '🍽', version: '1.1',
     desc: 'Monitoraggio pompa, cicli, energia e costi. Richiede PKG Centro Controllo Lavastoviglie.',
     render: render, mount: mount, update: update, configure: openCfg,
     frarik_pkg_check: 'sensor.frarik_lavastoviglie_versione',

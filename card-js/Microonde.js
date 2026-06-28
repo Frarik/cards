@@ -1,4 +1,4 @@
-﻿/* frarik-version: 1.0 */
+﻿/* frarik-version: 1.1 */
 (function () {
   'use strict';
 
@@ -48,30 +48,32 @@
     var c    = running ? '#38bdf8' : '#64748b';
     var glow = running ? ';filter:drop-shadow(0 0 10px rgba(56,189,248,.3))' : '';
     var css  = running ? '@keyframes mcrspin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes mcrled{0%,100%{opacity:.4}50%{opacity:1}}' : '';
-    var cx = 44, cy = 42;
+    var cx = 52, cy = 40;
     var sattr = running ? 'style="transform-origin:' + cx + 'px ' + cy + 'px;animation:mcrspin 4s linear infinite"' : '';
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 70" width="104" height="91" style="display:block;overflow:visible' + glow + '">'
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 72" style="display:block;width:100%;max-height:130px' + glow + '">'
       + (running ? '<defs><style>' + css + '</style></defs>' : '')
-      + '<rect x="2" y="2" width="76" height="66" rx="7" fill="#080f1a" stroke="' + c + '" stroke-width="1.5"/>'
-      + '<rect x="4" y="4" width="22" height="62" rx="5" fill="#060d14"/>'
-      + '<rect x="6" y="7" width="18" height="10" rx="3" fill="#020810" stroke="' + (running ? '#38bdf8' : '#162035') + '" stroke-width=".7"/>'
-      + '<text x="15" y="14.5" text-anchor="middle" font-size="6" font-family="monospace" fill="' + (running ? '#38bdf8' : '#1a3050') + '">' + (running ? '1:30' : '--:--') + '</text>'
-      + '<rect x="7" y="22" width="16" height="5" rx="2" fill="' + (running ? 'rgba(56,189,248,.1)' : '#0a1525') + '" stroke="' + c + '" stroke-width=".4"/>'
-      + '<rect x="7" y="30" width="16" height="5" rx="2" fill="' + (running ? 'rgba(56,189,248,.08)' : '#0a1525') + '" stroke="' + c + '" stroke-width=".4"/>'
-      + '<rect x="7" y="38" width="16" height="5" rx="2" fill="#0a1525" stroke="' + c + '" stroke-width=".4" opacity=".5"/>'
-      + '<circle cx="15" cy="50" r="2" fill="' + (running ? '#22c55e' : '#0a1a2e') + '"' + (running ? ' style="animation:mcrled 1s ease-in-out infinite"' : '') + '/>'
-      + '<circle cx="21" cy="50" r="2" fill="' + (running ? '#38bdf8' : '#0a1a2e') + '"' + (running ? ' style="animation:mcrled 1.6s ease-in-out infinite"' : '') + '/>'
-      + '<rect x="26" y="4" width="50" height="62" rx="5" fill="#060d14"/>'
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="24" fill="#070f1c" stroke="' + c + '" stroke-width="1.5"/>'
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="21" fill="#030912" stroke="#0d1f38" stroke-width=".6"/>'
+      + '<rect x="2" y="2" width="86" height="68" rx="8" fill="#080f1a" stroke="' + c + '" stroke-width="1.5"/>'
+      + '<rect x="4" y="4" width="24" height="64" rx="6" fill="#060d14"/>'
+      + '<rect x="6" y="7" width="20" height="11" rx="3" fill="#020810" stroke="' + (running ? '#38bdf8' : '#162035') + '" stroke-width=".7"/>'
+      + '<text x="16" y="14.5" text-anchor="middle" font-size="6.5" font-family="monospace" fill="' + (running ? '#38bdf8' : '#1a3050') + '">' + (running ? '1:30' : '--:--') + '</text>'
+      + '<rect x="7" y="23" width="18" height="6" rx="2" fill="' + (running ? 'rgba(56,189,248,.12)' : '#0a1525') + '" stroke="' + c + '" stroke-width=".5"/>'
+      + '<rect x="7" y="32" width="18" height="6" rx="2" fill="' + (running ? 'rgba(56,189,248,.09)' : '#0a1525') + '" stroke="' + c + '" stroke-width=".5"/>'
+      + '<rect x="7" y="41" width="18" height="6" rx="2" fill="#0a1525" stroke="' + c + '" stroke-width=".5" opacity=".5"/>'
+      + '<rect x="7" y="50" width="18" height="6" rx="2" fill="#0a1525" stroke="' + c + '" stroke-width=".5" opacity=".35"/>'
+      + '<circle cx="13" cy="62" r="2.5" fill="' + (running ? '#22c55e' : '#0a1a2e') + '"' + (running ? ' style="animation:mcrled 1s ease-in-out infinite"' : '') + '/>'
+      + '<circle cx="20" cy="62" r="2.5" fill="' + (running ? '#38bdf8' : '#0a1a2e') + '"' + (running ? ' style="animation:mcrled 1.6s ease-in-out infinite"' : '') + '/>'
+      + '<rect x="28" y="4" width="58" height="64" rx="6" fill="#060d14"/>'
+      + '<circle cx="' + cx + '" cy="' + cy + '" r="27" fill="#070f1c" stroke="' + c + '" stroke-width="1.6"/>'
+      + '<circle cx="' + cx + '" cy="' + cy + '" r="24" fill="' + (running ? '#040b16' : '#030912') + '" stroke="#0d1f38" stroke-width=".6"/>'
       + '<g ' + sattr + '>'
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="13" fill="none" stroke="' + c + '" stroke-width=".6" opacity=".3"/>'
-      + '<circle cx="' + cx + '" cy="33" r="2.5" fill="rgba(56,189,248,.15)" stroke="' + c + '" stroke-width=".5"/>'
-      + '<circle cx="51.8" cy="46.5" r="2.5" fill="rgba(56,189,248,.15)" stroke="' + c + '" stroke-width=".5"/>'
-      + '<circle cx="36.2" cy="46.5" r="2.5" fill="rgba(56,189,248,.15)" stroke="' + c + '" stroke-width=".5"/>'
+      + '<circle cx="' + cx + '" cy="' + cy + '" r="15" fill="none" stroke="' + c + '" stroke-width=".7" opacity=".28"/>'
+      + '<circle cx="' + cx + '" cy="' + (cy - 14) + '" r="3" fill="rgba(56,189,248,.18)" stroke="' + c + '" stroke-width=".6"/>'
+      + '<circle cx="' + (cx + 12.1) + '" cy="' + (cy + 7) + '" r="3" fill="rgba(56,189,248,.18)" stroke="' + c + '" stroke-width=".6"/>'
+      + '<circle cx="' + (cx - 12.1) + '" cy="' + (cy + 7) + '" r="3" fill="rgba(56,189,248,.18)" stroke="' + c + '" stroke-width=".6"/>'
       + '</g>'
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="1.5" fill="' + c + '" opacity=".4"/>'
-      + '<rect x="72" y="28" width="4" height="14" rx="2" fill="#0f1e35" stroke="' + c + '" stroke-width=".5"/>'
+      + '<circle cx="' + cx + '" cy="' + cy + '" r="2" fill="' + c + '" opacity=".5"/>'
+      + (running ? '<circle cx="' + cx + '" cy="' + cy + '" r="9" fill="none" stroke="rgba(56,189,248,.12)" stroke-width="6" style="animation:mcrled 2s ease-in-out infinite"/>' : '')
+      + '<rect x="83" y="30" width="5" height="18" rx="2.5" fill="#0f1e35" stroke="' + c + '" stroke-width=".6"/>'
       + '</svg>';
   }
 
@@ -129,8 +131,8 @@
       + '#' + rid + ' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
       + '#' + rid + ' .fc-scroll::-webkit-scrollbar{display:none}'
       + '#' + rid + ' .fc-hero{display:flex;align-items:stretch;padding:10px 14px 8px;flex:1}'
-      + '#' + rid + ' .fc-hero-img{flex-shrink:0;padding-right:14px;display:flex;align-items:center;cursor:pointer}'
-      + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:7px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:14px}'
+      + '#' + rid + ' .fc-hero-img{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden}'
+      + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:6px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:10px;overflow:hidden}'
       + '#' + rid + ' .fc-st{display:flex;align-items:center;justify-content:flex-end;gap:7px;font-size:14px;font-weight:800;color:' + col + ';padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06)}'
       + '#' + rid + ' .fc-stdot{width:8px;height:8px;border-radius:50%;background:#38bdf8;flex-shrink:0' + (running ? ';box-shadow:0 0 7px #38bdf8;animation:fcPulse 1.5s ease-in-out infinite' : '') + '}'
       + '#' + rid + ' .fc-pwfull{margin:0 14px 14px}'
@@ -1494,7 +1496,7 @@ automation:
 
   /* ── CARD ── */
   const CARD = {
-    id: 'microonde', name: 'Microonde', icon: '📡', version: '1.0',
+    id: 'microonde', name: 'Microonde', icon: '📡', version: '1.1',
     desc: 'Monitoraggio magnetron, cicli, energia e costi. Richiede PKG Centro Controllo Microonde.',
     render: render, mount: mount, update: update, configure: openCfg,
     frarik_pkg_check: 'sensor.frarik_microonde_versione',

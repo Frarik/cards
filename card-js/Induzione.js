@@ -1,4 +1,4 @@
-﻿/* frarik-version: 1.0 */
+﻿/* frarik-version: 1.1 */
 (function () {
   'use strict';
 
@@ -45,38 +45,46 @@
 
   /* â”€â”€ INDUCTION SVG â”€â”€ */
   function _induzioneSVG(running) {
-    var c    = running ? '#38bdf8' : '#64748b';
+    var c   = running ? '#38bdf8' : '#64748b';
     var glow = running ? ';filter:drop-shadow(0 0 14px rgba(56,189,248,.4))' : '';
-    var css  = running ? '@keyframes indzn{0%,100%{opacity:.4}50%{opacity:.85}}' : '';
-    var zo   = running ? '.7' : '.25';
-    var zo2  = running ? '.5' : '.15';
-    var zo3  = running ? '.8' : '.12';
-    var an1  = running ? ' style="animation:indzn 2s ease-in-out infinite"' : '';
-    var an2  = running ? ' style="animation:indzn 2s ease-in-out infinite .5s"' : '';
-    var an3  = running ? ' style="animation:indzn 2s ease-in-out infinite 1s"' : '';
-    var an4  = running ? ' style="animation:indzn 2s ease-in-out infinite 1.5s"' : '';
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 70" width="130" height="91" style="display:block;overflow:visible' + glow + '">'
+    var css = running ? '@keyframes indzn{0%,100%{opacity:.35;stroke-width:1.5}50%{opacity:.95;stroke-width:2.2}}@keyframes indzn2{0%,100%{opacity:.2}50%{opacity:.75}}@keyframes indzn3{0%,100%{opacity:.12}50%{opacity:.5}}' : '';
+    var z1a = running ? ' style="animation:indzn  2s ease-in-out infinite"'     : '';
+    var z2a = running ? ' style="animation:indzn2 2s ease-in-out infinite"'     : '';
+    var z3a = running ? ' style="animation:indzn3 2s ease-in-out infinite"'     : '';
+    var z1b = running ? ' style="animation:indzn  2s ease-in-out infinite .5s"' : '';
+    var z2b = running ? ' style="animation:indzn2 2s ease-in-out infinite .5s"' : '';
+    var z3b = running ? ' style="animation:indzn3 2s ease-in-out infinite .5s"' : '';
+    var z1c = running ? ' style="animation:indzn  2s ease-in-out infinite 1s"'  : '';
+    var z2c = running ? ' style="animation:indzn2 2s ease-in-out infinite 1s"'  : '';
+    var z3c = running ? ' style="animation:indzn3 2s ease-in-out infinite 1s"'  : '';
+    var z1d = running ? ' style="animation:indzn  2s ease-in-out infinite 1.5s"': '';
+    var z2d = running ? ' style="animation:indzn2 2s ease-in-out infinite 1.5s"': '';
+    var z3d = running ? ' style="animation:indzn3 2s ease-in-out infinite 1.5s"': '';
+    var zo = running ? '.7' : '.22'; var zo2 = running ? '.45' : '.12'; var zo3 = running ? '.9' : '.15';
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 110 78" style="display:block;width:100%;max-height:130px' + glow + '">'
       + (running ? '<defs><style>' + css + '</style></defs>' : '')
-      + '<rect x="2" y="2" width="96" height="66" rx="9" fill="#070e1c" stroke="' + c + '" stroke-width="1.5"/>'
-      + '<rect x="72" y="4" width="24" height="62" rx="7" fill="#060c18"/>'
-      + '<rect x="74" y="8" width="20" height="10" rx="3" fill="#020810" stroke="' + (running ? '#38bdf8' : '#162035') + '" stroke-width=".6"/>'
-      + '<text x="84" y="15" text-anchor="middle" font-size="5" font-family="monospace" fill="' + (running ? '#38bdf8' : '#1a3050') + '">' + (running ? 'ON' : 'OFF') + '</text>'
-      + '<circle cx="84" cy="35" r="7" fill="#0a1830" stroke="' + c + '" stroke-width=".8"/>'
-      + '<circle cx="84" cy="35" r="3" fill="' + (running ? '#0d2545' : '#060e1c') + '"/>'
-      + '<line x1="84" y1="28.5" x2="84" y2="31.5" stroke="' + c + '" stroke-width=".9" stroke-linecap="round"/>'
-      + '<circle cx="84" cy="52" r="4" fill="' + (running ? '#22c55e' : '#0a1a2e') + '" opacity="' + (running ? '1' : '.3') + '"/>'
-      + '<circle cx="22" cy="20" r="14" fill="none" stroke="' + (running ? '#38bdf8' : '#1a3050') + '" stroke-width="1.5" opacity="' + zo + '"' + an1 + '/>'
-      + '<circle cx="22" cy="20" r="8" fill="none" stroke="' + c + '" stroke-width=".8" opacity="' + zo2 + '"/>'
-      + '<circle cx="22" cy="20" r="2.5" fill="' + c + '" opacity="' + zo3 + '"/>'
-      + '<circle cx="56" cy="20" r="14" fill="none" stroke="' + (running ? '#38bdf8' : '#1a3050') + '" stroke-width="1.5" opacity="' + zo + '"' + an2 + '/>'
-      + '<circle cx="56" cy="20" r="8" fill="none" stroke="' + c + '" stroke-width=".8" opacity="' + zo2 + '"/>'
-      + '<circle cx="56" cy="20" r="2.5" fill="' + c + '" opacity="' + zo3 + '"/>'
-      + '<circle cx="22" cy="50" r="14" fill="none" stroke="' + (running ? '#38bdf8' : '#1a3050') + '" stroke-width="1.5" opacity="' + zo + '"' + an3 + '/>'
-      + '<circle cx="22" cy="50" r="8" fill="none" stroke="' + c + '" stroke-width=".8" opacity="' + zo2 + '"/>'
-      + '<circle cx="22" cy="50" r="2.5" fill="' + c + '" opacity="' + zo3 + '"/>'
-      + '<circle cx="56" cy="50" r="14" fill="none" stroke="' + (running ? '#38bdf8' : '#1a3050') + '" stroke-width="1.5" opacity="' + zo + '"' + an4 + '/>'
-      + '<circle cx="56" cy="50" r="8" fill="none" stroke="' + c + '" stroke-width=".8" opacity="' + zo2 + '"/>'
-      + '<circle cx="56" cy="50" r="2.5" fill="' + c + '" opacity="' + zo3 + '"/>'
+      + '<rect x="1" y="1" width="108" height="76" rx="10" fill="#06111e" stroke="' + c + '" stroke-width="1.5"/>'
+      + '<rect x="3" y="3" width="104" height="72" rx="8" fill="#050e1a"/>'
+      + '<rect x="4" y="4" width="80" height="3" rx="2" fill="rgba(255,255,255,.04)"/>'
+      + '<circle cx="28" cy="21" r="19" fill="none" stroke="' + (running ? '#38bdf8' : '#1a3050') + '" stroke-width="1.8"' + z1a + ' opacity="' + zo + '"/>'
+      + '<circle cx="28" cy="21" r="13" fill="none" stroke="' + c + '" stroke-width="1.1"' + z2a + ' opacity="' + zo2 + '"/>'
+      + '<circle cx="28" cy="21" r="7"  fill="none" stroke="' + c + '" stroke-width=".8"' + z3a + ' opacity="' + zo3 + '"/>'
+      + '<circle cx="28" cy="21" r="2.5" fill="' + c + '" opacity="' + (running ? '.85' : '.15') + '"/>'
+      + '<circle cx="82" cy="21" r="19" fill="none" stroke="' + (running ? '#38bdf8' : '#1a3050') + '" stroke-width="1.8"' + z1b + ' opacity="' + zo + '"/>'
+      + '<circle cx="82" cy="21" r="13" fill="none" stroke="' + c + '" stroke-width="1.1"' + z2b + ' opacity="' + zo2 + '"/>'
+      + '<circle cx="82" cy="21" r="7"  fill="none" stroke="' + c + '" stroke-width=".8"' + z3b + ' opacity="' + zo3 + '"/>'
+      + '<circle cx="82" cy="21" r="2.5" fill="' + c + '" opacity="' + (running ? '.85' : '.15') + '"/>'
+      + '<circle cx="28" cy="57" r="19" fill="none" stroke="' + (running ? '#38bdf8' : '#1a3050') + '" stroke-width="1.8"' + z1c + ' opacity="' + zo + '"/>'
+      + '<circle cx="28" cy="57" r="13" fill="none" stroke="' + c + '" stroke-width="1.1"' + z2c + ' opacity="' + zo2 + '"/>'
+      + '<circle cx="28" cy="57" r="7"  fill="none" stroke="' + c + '" stroke-width=".8"' + z3c + ' opacity="' + zo3 + '"/>'
+      + '<circle cx="28" cy="57" r="2.5" fill="' + c + '" opacity="' + (running ? '.85' : '.15') + '"/>'
+      + '<circle cx="82" cy="57" r="19" fill="none" stroke="' + (running ? '#38bdf8' : '#1a3050') + '" stroke-width="1.8"' + z1d + ' opacity="' + zo + '"/>'
+      + '<circle cx="82" cy="57" r="13" fill="none" stroke="' + c + '" stroke-width="1.1"' + z2d + ' opacity="' + zo2 + '"/>'
+      + '<circle cx="82" cy="57" r="7"  fill="none" stroke="' + c + '" stroke-width=".8"' + z3d + ' opacity="' + zo3 + '"/>'
+      + '<circle cx="82" cy="57" r="2.5" fill="' + c + '" opacity="' + (running ? '.85' : '.15') + '"/>'
+      + '<line x1="55" y1="4" x2="55" y2="74" stroke="rgba(56,189,248,.07)" stroke-width=".8"/>'
+      + '<line x1="4" y1="39" x2="106" y2="39" stroke="rgba(56,189,248,.07)" stroke-width=".8"/>'
+      + '<circle cx="103" cy="72" r="2.5" fill="' + (running ? '#22c55e' : '#162035') + '" opacity="' + (running ? '1' : '.5') + '"/>'
       + '</svg>';
   }
 
@@ -134,8 +142,8 @@
       + '#' + rid + ' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
       + '#' + rid + ' .fc-scroll::-webkit-scrollbar{display:none}'
       + '#' + rid + ' .fc-hero{display:flex;align-items:stretch;padding:10px 14px 8px;flex:1}'
-      + '#' + rid + ' .fc-hero-img{flex-shrink:0;padding-right:14px;display:flex;align-items:center;cursor:pointer}'
-      + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:7px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:14px}'
+      + '#' + rid + ' .fc-hero-img{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden}'
+      + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:6px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:10px;overflow:hidden}'
       + '#' + rid + ' .fc-st{display:flex;align-items:center;justify-content:flex-end;gap:7px;font-size:14px;font-weight:800;color:' + col + ';padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06)}'
       + '#' + rid + ' .fc-stdot{width:8px;height:8px;border-radius:50%;background:#38bdf8;flex-shrink:0' + (running ? ';box-shadow:0 0 7px #38bdf8;animation:fcPulse 1.5s ease-in-out infinite' : '') + '}'
       + '#' + rid + ' .fc-pwfull{margin:0 14px 14px}'
@@ -1499,7 +1507,7 @@ automation:
 
   /* ── CARD ── */
   const CARD = {
-    id: 'induzione', name: 'Induzione', icon: '🍳', version: '1.0',
+    id: 'induzione', name: 'Induzione', icon: '🍳', version: '1.1',
     desc: 'Monitoraggio piano induzione, cicli, energia e costi. Richiede PKG Centro Controllo Induzione.',
     render: render, mount: mount, update: update, configure: openCfg,
     frarik_pkg_check: 'sensor.frarik_induzione_versione',

@@ -1,4 +1,4 @@
-﻿/* frarik-version: 1.0 */
+﻿/* frarik-version: 1.1 */
 (function () {
   'use strict';
 
@@ -49,27 +49,28 @@
     var cf   = running ? 'rgba(56,189,248,.1)' : 'rgba(100,116,139,.06)';
     var glow = running ? ';filter:drop-shadow(0 0 10px rgba(56,189,248,.35))' : '';
     var css  = running ? '@keyframes frnheat{0%,100%{opacity:.4}50%{opacity:1}}@keyframes frnglow{0%,100%{opacity:.1}50%{opacity:.28}}' : '';
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 102" width="80" height="128" style="display:block;overflow:visible' + glow + '">'
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 108" style="display:block;width:100%;max-height:130px' + glow + '">'
       + (running ? '<defs><style>' + css + '</style></defs>' : '')
-      + '<rect x="2" y="2" width="60" height="98" rx="7" fill="#080f1a" stroke="' + c + '" stroke-width="1.5"/>'
-      + '<rect x="2" y="2" width="60" height="22" rx="7" fill="#070e1c"/>'
-      + '<rect x="2" y="18" width="60" height="4" fill="#070e1c"/>'
-      + '<rect x="5" y="5" width="28" height="11" rx="3" fill="#020810" stroke="' + (running ? '#38bdf8' : '#162035') + '" stroke-width=".7"/>'
-      + '<text x="19" y="13" text-anchor="middle" font-size="6" font-weight="bold" font-family="monospace" fill="' + (running ? '#38bdf8' : '#1a3050') + '">' + (running ? '180 C' : '-- --') + '</text>'
-      + '<circle cx="45" cy="11" r="5" fill="#0a1830" stroke="' + c + '" stroke-width=".8"/>'
-      + '<circle cx="45" cy="11" r="2" fill="' + (running ? '#0d2545' : '#060e1c') + '"/>'
-      + '<line x1="45" y1="6.5" x2="45" y2="9" stroke="' + c + '" stroke-width=".9" stroke-linecap="round"/>'
-      + '<circle cx="57" cy="11" r="4" fill="#0a1830" stroke="' + c + '" stroke-width=".7"/>'
-      + '<line x1="57" y1="7.5" x2="57" y2="10" stroke="' + c + '" stroke-width=".8" stroke-linecap="round"/>'
-      + '<rect x="4" y="23" width="56" height="63" rx="4" fill="' + cf + '" stroke="' + c + '" stroke-width="1"/>'
-      + '<rect x="8" y="27" width="48" height="38" rx="4" fill="' + (running ? 'rgba(56,189,248,.06)' : '#030912') + '" stroke="' + (running ? 'rgba(56,189,248,.3)' : '#1a3050') + '" stroke-width=".8"/>'
-      + (running ? '<line x1="12" y1="33" x2="52" y2="33" stroke="#38bdf8" stroke-width="1.2" stroke-dasharray="5,3" style="animation:frnheat 1.5s ease-in-out infinite"/>' : '')
-      + (running ? '<line x1="12" y1="57" x2="52" y2="57" stroke="rgba(56,189,248,.6)" stroke-width="1.2" stroke-dasharray="5,3" style="animation:frnheat 1.9s ease-in-out infinite .4s"/>' : '')
-      + (running ? '<rect x="8" y="27" width="48" height="38" rx="4" fill="rgba(56,189,248,.06)" style="animation:frnglow 2s ease-in-out infinite"/>' : '')
-      + '<rect x="10" y="68" width="44" height="5" rx="2.5" fill="' + c + '" opacity=".55"/>'
-      + '<rect x="8" y="90" width="48" height="3" rx="1.5" fill="rgba(56,189,248,.06)" stroke="' + c + '" stroke-width=".5" opacity=".4"/>'
-      + '<rect x="7" y="98" width="12" height="3" rx="1.5" fill="' + c + '" opacity=".3"/>'
-      + '<rect x="45" y="98" width="12" height="3" rx="1.5" fill="' + c + '" opacity=".3"/>'
+      + '<rect x="2" y="2" width="68" height="104" rx="8" fill="#080f1a" stroke="' + c + '" stroke-width="1.5"/>'
+      + '<rect x="2" y="2" width="68" height="22" rx="8" fill="#070e1c"/>'
+      + '<rect x="2" y="19" width="68" height="5" fill="#070e1c"/>'
+      + '<rect x="5" y="5" width="32" height="12" rx="3" fill="#020810" stroke="' + (running ? '#38bdf8' : '#162035') + '" stroke-width=".7"/>'
+      + '<text x="21" y="13.5" text-anchor="middle" font-size="6.5" font-weight="bold" font-family="monospace" fill="' + (running ? '#38bdf8' : '#1a3050') + '">' + (running ? '200 C' : '-- --') + '</text>'
+      + '<circle cx="51" cy="11" r="6" fill="#0a1830" stroke="' + c + '" stroke-width=".9"/>'
+      + '<circle cx="51" cy="11" r="2.5" fill="' + (running ? '#0d2545' : '#060e1c') + '"/>'
+      + '<line x1="51" y1="5.5" x2="51" y2="8.5" stroke="' + c + '" stroke-width="1" stroke-linecap="round"/>'
+      + '<circle cx="64" cy="11" r="5" fill="#0a1830" stroke="' + c + '" stroke-width=".8"/>'
+      + '<line x1="64" y1="6.5" x2="64" y2="9.5" stroke="' + c + '" stroke-width=".9" stroke-linecap="round"/>'
+      + '<rect x="4" y="25" width="64" height="68" rx="5" fill="' + cf + '" stroke="' + c + '" stroke-width="1.1"/>'
+      + '<rect x="8" y="29" width="56" height="46" rx="4" fill="' + (running ? 'rgba(56,189,248,.07)' : '#030912') + '" stroke="' + (running ? 'rgba(56,189,248,.3)' : '#1a3050') + '" stroke-width=".9"/>'
+      + (running ? '<line x1="13" y1="36" x2="59" y2="36" stroke="#38bdf8" stroke-width="1.3" stroke-dasharray="6,3" style="animation:frnheat 1.5s ease-in-out infinite"/>' : '')
+      + '<line x1="8" y1="52" x2="64" y2="52" stroke="' + c + '" stroke-width=".6" opacity="' + (running ? '.3' : '.1') + '"/>'
+      + '<line x1="8" y1="62" x2="64" y2="62" stroke="' + c + '" stroke-width=".6" opacity="' + (running ? '.3' : '.1') + '"/>'
+      + (running ? '<line x1="13" y1="71" x2="59" y2="71" stroke="rgba(56,189,248,.65)" stroke-width="1.3" stroke-dasharray="6,3" style="animation:frnheat 1.9s ease-in-out infinite .4s"/>' : '')
+      + (running ? '<rect x="8" y="29" width="56" height="46" rx="4" fill="rgba(56,189,248,.06)" style="animation:frnglow 2s ease-in-out infinite"/>' : '')
+      + '<rect x="12" y="95" width="48" height="5.5" rx="2.8" fill="' + c + '" opacity=".5"/>'
+      + '<rect x="7" y="103" width="14" height="3" rx="1.5" fill="' + c + '" opacity=".25"/>'
+      + '<rect x="51" y="103" width="14" height="3" rx="1.5" fill="' + c + '" opacity=".25"/>'
       + '</svg>';
   }
 
@@ -127,8 +128,8 @@
       + '#' + rid + ' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
       + '#' + rid + ' .fc-scroll::-webkit-scrollbar{display:none}'
       + '#' + rid + ' .fc-hero{display:flex;align-items:stretch;padding:10px 14px 8px;flex:1}'
-      + '#' + rid + ' .fc-hero-img{flex-shrink:0;padding-right:14px;display:flex;align-items:center;cursor:pointer}'
-      + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:7px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:14px}'
+      + '#' + rid + ' .fc-hero-img{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden}'
+      + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:6px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:10px;overflow:hidden}'
       + '#' + rid + ' .fc-st{display:flex;align-items:center;justify-content:flex-end;gap:7px;font-size:14px;font-weight:800;color:' + col + ';padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06)}'
       + '#' + rid + ' .fc-stdot{width:8px;height:8px;border-radius:50%;background:#38bdf8;flex-shrink:0' + (running ? ';box-shadow:0 0 7px #38bdf8;animation:fcPulse 1.5s ease-in-out infinite' : '') + '}'
       + '#' + rid + ' .fc-pwfull{margin:0 14px 14px}'
@@ -1492,7 +1493,7 @@ automation:
 
   /* ── CARD ── */
   const CARD = {
-    id: 'forno', name: 'Forno', icon: '🥘', version: '1.0',
+    id: 'forno', name: 'Forno', icon: '🥘', version: '1.1',
     desc: 'Monitoraggio resistenza, cicli, energia e costi. Richiede PKG Centro Controllo Forno.',
     render: render, mount: mount, update: update, configure: openCfg,
     frarik_pkg_check: 'sensor.frarik_forno_versione',

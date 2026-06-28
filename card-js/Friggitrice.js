@@ -1,4 +1,4 @@
-﻿/* frarik-version: 1.0 */
+﻿/* frarik-version: 1.1 */
 (function () {
   'use strict';
 
@@ -49,31 +49,37 @@
     var cf   = running ? 'rgba(56,189,248,.1)' : 'rgba(100,116,139,.06)';
     var glow = running ? ';filter:drop-shadow(0 0 12px rgba(56,189,248,.4))' : '';
     var css  = running ? '@keyframes frgspin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes frgwave{0%{opacity:0;transform:translateY(0)}60%{opacity:.7}100%{opacity:0;transform:translateY(-9px)}}' : '';
-    var fspin = running ? 'style="transform-origin:35px 15px;animation:frgspin 1.5s linear infinite"' : '';
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 70 100" width="88" height="126" style="display:block;overflow:visible' + glow + '">'
+    var fspin = running ? 'style="transform-origin:40px 18px;animation:frgspin 1.5s linear infinite"' : '';
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 106" style="display:block;width:100%;max-height:130px' + glow + '">'
       + (running ? '<defs><style>' + css + '</style></defs>' : '')
-      + '<ellipse cx="35" cy="50" rx="30" ry="46" fill="#080f1a" stroke="' + c + '" stroke-width="1.5"/>'
-      + '<ellipse cx="35" cy="50" rx="28" ry="44" fill="' + cf + '"/>'
-      + '<ellipse cx="35" cy="15" rx="28" ry="11" fill="#060d18" stroke="' + c + '" stroke-width="1"/>'
-      + '<ellipse cx="35" cy="15" rx="14" ry="5" fill="#040b14" stroke="' + (running ? '#38bdf8' : '#1a3050') + '" stroke-width=".8"/>'
+      + '<rect x="8" y="12" width="64" height="56" rx="12" fill="#080f1a" stroke="' + c + '" stroke-width="1.5"/>'
+      + '<rect x="10" y="14" width="60" height="52" rx="10" fill="' + cf + '"/>'
+      + '<ellipse cx="40" cy="18" rx="30" ry="10" fill="#060d18" stroke="' + c + '" stroke-width="1.2"/>'
+      + '<ellipse cx="40" cy="18" rx="16" ry="6" fill="#040b14" stroke="' + (running ? '#38bdf8' : '#1a3050') + '" stroke-width=".9"/>'
       + '<g ' + fspin + '>'
-      + '<line x1="35" y1="11" x2="35" y2="19" stroke="' + (running ? '#38bdf8' : c) + '" stroke-width="1" opacity="' + (running ? '.7' : '.3') + '"/>'
-      + '<line x1="29" y1="12.5" x2="41" y2="17.5" stroke="' + (running ? '#38bdf8' : c) + '" stroke-width="1" opacity="' + (running ? '.7' : '.3') + '"/>'
-      + '<line x1="29" y1="17.5" x2="41" y2="12.5" stroke="' + (running ? '#38bdf8' : c) + '" stroke-width="1" opacity="' + (running ? '.7' : '.3') + '"/>'
+      + '<line x1="40" y1="13" x2="40" y2="23" stroke="' + (running ? '#38bdf8' : c) + '" stroke-width="1.2" opacity="' + (running ? '.8' : '.3') + '"/>'
+      + '<line x1="32" y1="14.8" x2="48" y2="21.2" stroke="' + (running ? '#38bdf8' : c) + '" stroke-width="1.2" opacity="' + (running ? '.8' : '.3') + '"/>'
+      + '<line x1="32" y1="21.2" x2="48" y2="14.8" stroke="' + (running ? '#38bdf8' : c) + '" stroke-width="1.2" opacity="' + (running ? '.8' : '.3') + '"/>'
       + '</g>'
-      + '<rect x="22" y="25" width="26" height="12" rx="4" fill="#020810" stroke="' + (running ? '#38bdf8' : '#162035') + '" stroke-width=".7"/>'
-      + '<text x="35" y="33.5" text-anchor="middle" font-size="6" font-family="monospace" fill="' + (running ? '#38bdf8' : '#1a3050') + '">' + (running ? '200 C' : '-- --') + '</text>'
-      + '<ellipse cx="35" cy="75" rx="22" ry="20" fill="#060c18" stroke="' + c + '" stroke-width="1"/>'
-      + '<line x1="16" y1="70" x2="54" y2="70" stroke="' + c + '" stroke-width=".7" opacity=".28"/>'
-      + '<line x1="16" y1="76" x2="54" y2="76" stroke="' + c + '" stroke-width=".7" opacity=".28"/>'
-      + '<line x1="16" y1="82" x2="54" y2="82" stroke="' + c + '" stroke-width=".7" opacity=".28"/>'
-      + '<line x1="22" y1="56" x2="22" y2="93" stroke="' + c + '" stroke-width=".7" opacity=".22"/>'
-      + '<line x1="35" y1="55" x2="35" y2="95" stroke="' + c + '" stroke-width=".7" opacity=".22"/>'
-      + '<line x1="48" y1="56" x2="48" y2="93" stroke="' + c + '" stroke-width=".7" opacity=".22"/>'
-      + (running ? '<ellipse cx="27" cy="43" rx="1.2" ry="2" fill="rgba(56,189,248,.55)" style="animation:frgwave 2s ease-in-out infinite"/>' : '')
-      + (running ? '<ellipse cx="35" cy="41" rx="1.2" ry="2" fill="rgba(56,189,248,.5)" style="animation:frgwave 2s ease-in-out infinite .6s"/>' : '')
-      + (running ? '<ellipse cx="43" cy="43" rx="1.2" ry="2" fill="rgba(56,189,248,.45)" style="animation:frgwave 2s ease-in-out infinite 1.2s"/>' : '')
-      + '<rect x="28" y="92" width="14" height="5" rx="2.5" fill="' + c + '" opacity=".55"/>'
+      + '<rect x="24" y="29" width="32" height="14" rx="4" fill="#020810" stroke="' + (running ? '#38bdf8' : '#162035') + '" stroke-width=".8"/>'
+      + '<text x="40" y="38.5" text-anchor="middle" font-size="7" font-family="monospace" fill="' + (running ? '#38bdf8' : '#1a3050') + '">' + (running ? '200 C' : '-- --') + '</text>'
+      + '<circle cx="61" cy="36" r="3" fill="' + (running ? '#22c55e' : '#0a1a2e') + '"/>'
+      + '<circle cx="68" cy="36" r="3" fill="' + (running ? '#38bdf8' : '#0a1a2e') + '"/>'
+      + '<line x1="68" y1="13" x2="68" y2="65" stroke="' + c + '" stroke-width=".8" opacity=".18"/>'
+      + '<line x1="72" y1="13" x2="72" y2="65" stroke="' + c + '" stroke-width=".8" opacity=".12"/>'
+      + (running ? '<ellipse cx="30" cy="26" rx="1.4" ry="2.2" fill="rgba(56,189,248,.55)" style="animation:frgwave 2s ease-in-out infinite"/>' : '')
+      + (running ? '<ellipse cx="40" cy="24" rx="1.4" ry="2.2" fill="rgba(56,189,248,.5)" style="animation:frgwave 2s ease-in-out infinite .6s"/>' : '')
+      + (running ? '<ellipse cx="50" cy="26" rx="1.4" ry="2.2" fill="rgba(56,189,248,.45)" style="animation:frgwave 2s ease-in-out infinite 1.2s"/>' : '')
+      + '<rect x="10" y="62" width="60" height="34" rx="8" fill="#060c18" stroke="' + c + '" stroke-width="1.2"/>'
+      + '<line x1="16" y1="71" x2="64" y2="71" stroke="' + c + '" stroke-width=".8" opacity=".25"/>'
+      + '<line x1="16" y1="79" x2="64" y2="79" stroke="' + c + '" stroke-width=".8" opacity=".25"/>'
+      + '<line x1="16" y1="87" x2="64" y2="87" stroke="' + c + '" stroke-width=".8" opacity=".25"/>'
+      + '<line x1="26" y1="62" x2="26" y2="96" stroke="' + c + '" stroke-width=".8" opacity=".2"/>'
+      + '<line x1="40" y1="62" x2="40" y2="96" stroke="' + c + '" stroke-width=".8" opacity=".2"/>'
+      + '<line x1="54" y1="62" x2="54" y2="96" stroke="' + c + '" stroke-width=".8" opacity=".2"/>'
+      + '<rect x="30" y="94" width="20" height="7" rx="3.5" fill="' + c + '" opacity=".5"/>'
+      + '<rect x="8" y="94" width="16" height="5" rx="2.5" fill="' + c + '" opacity=".18"/>'
+      + '<rect x="56" y="94" width="16" height="5" rx="2.5" fill="' + c + '" opacity=".18"/>'
       + '</svg>';
   }
 
@@ -131,8 +137,8 @@
       + '#' + rid + ' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
       + '#' + rid + ' .fc-scroll::-webkit-scrollbar{display:none}'
       + '#' + rid + ' .fc-hero{display:flex;align-items:stretch;padding:10px 14px 8px;flex:1}'
-      + '#' + rid + ' .fc-hero-img{flex-shrink:0;padding-right:14px;display:flex;align-items:center;cursor:pointer}'
-      + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:7px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:14px}'
+      + '#' + rid + ' .fc-hero-img{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden}'
+      + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:6px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:10px;overflow:hidden}'
       + '#' + rid + ' .fc-st{display:flex;align-items:center;justify-content:flex-end;gap:7px;font-size:14px;font-weight:800;color:' + col + ';padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06)}'
       + '#' + rid + ' .fc-stdot{width:8px;height:8px;border-radius:50%;background:#38bdf8;flex-shrink:0' + (running ? ';box-shadow:0 0 7px #38bdf8;animation:fcPulse 1.5s ease-in-out infinite' : '') + '}'
       + '#' + rid + ' .fc-pwfull{margin:0 14px 14px}'
@@ -1496,7 +1502,7 @@ automation:
 
   /* ── CARD ── */
   const CARD = {
-    id: 'friggitrice', name: 'Friggitrice', icon: '🍟', version: '1.0',
+    id: 'friggitrice', name: 'Friggitrice', icon: '🍟', version: '1.1',
     desc: 'Monitoraggio resistenza, cicli, energia e costi. Richiede PKG Centro Controllo Friggitrice.',
     render: render, mount: mount, update: update, configure: openCfg,
     frarik_pkg_check: 'sensor.frarik_friggitrice_versione',

@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.6.74 — 2026-06-28
+
+### feat: layout 50/50 hero + SVG ridisegnati per tutte le card elettrodomestici
+
+- Tutte e 8 le card (Frigo, Lavatrice, Asciugatrice, Forno, Microonde, Induzione, Lavastoviglie, Friggitrice): layout hero ora 50% immagine / 50% sensori (era immagine piccola fissa + sensori flex:1)
+- SVG responsivi (`width:100%;max-height:130px`) — le immagini si ingrandiscono per occupare la metà sinistra del card
+- Induzione: SVG completamente ridisegnato — pannello laterale rimosso, 4 zone cottura più grandi con 3 cerchi concentrici per zona + animazioni indipendenti
+- Forno: finestra interna più grande, griglia rack visibile, resistenze superiore e inferiore animate
+- Microonde: oblò più grande (r=27), 4 bottoni nel pannello, glow pulsante nell'interno quando attivo
+- Lavastoviglie e Friggitrice: proporzionati al nuovo layout, dettagli migliorati
+- Frigo v1.29, Lavatrice v1.6, Asciugatrice v1.4, nuove card v1.1
+
 ## 1.6.73 — 2026-06-28
 
 ### feat: 5 nuove card elettrodomestici
