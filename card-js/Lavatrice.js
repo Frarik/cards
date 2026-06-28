@@ -1,4 +1,4 @@
-/* frarik-version: 1.6 */
+/* frarik-version: 1.7 */
 (function () {
   'use strict';
 
@@ -48,7 +48,7 @@
     var cx = 32, cy = 53;
     var spinStyle = running ? 'style="transform-origin:' + cx + 'px ' + cy + 'px;animation:wspin 3s linear infinite"' : '';
     var keyframes = running ? '@keyframes wspin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes wbub{0%,100%{opacity:.25;transform:translateY(0)}50%{opacity:.8;transform:translateY(-2px)}}@keyframes wled{0%,100%{opacity:.5}50%{opacity:1}}' : '';
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 84" style="display:block;width:100%;max-height:130px;filter:drop-shadow(0 0 10px rgba(56,189,248,' + (running ? '.3' : '.1') + '))">'
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 84" style="display:block;width:100%;height:100%;filter:drop-shadow(0 0 10px rgba(56,189,248,' + (running ? '.3' : '.1') + '))">'
       + (running ? '<defs><style>' + keyframes + '</style></defs>' : '')
       // Corpo
       + '<rect x="2" y="2" width="60" height="80" rx="6" fill="#0b1929" stroke="#1a3050" stroke-width="1.2"/>'
@@ -177,7 +177,7 @@
       + '#' + rid + ' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
       + '#' + rid + ' .fc-scroll::-webkit-scrollbar{display:none}'
       + '#' + rid + ' .fc-hero{display:flex;align-items:stretch;padding:10px 14px 8px;flex:1}'
-      + '#' + rid + ' .fc-hero-img{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden}'
+      + '#' + rid + ' .fc-hero-img{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;max-height:108px}'
       + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:6px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:10px;overflow:hidden}'
       + '#' + rid + ' .fc-st{display:flex;align-items:center;justify-content:flex-end;gap:7px;font-size:14px;font-weight:800;color:' + col + ';padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06)}'
       + '#' + rid + ' .fc-stdot{width:8px;height:8px;border-radius:50%;background:#38bdf8;flex-shrink:0' + (running ? ';box-shadow:0 0 7px #38bdf8;animation:fcPulse 1.5s ease-in-out infinite' : '') + '}'
@@ -1542,7 +1542,7 @@ automation:
 
   /* ── CARD ── */
   const CARD = {
-    id: 'lavatrice', name: 'Lavatrice', icon: '🫧', version: '1.6',
+    id: 'lavatrice', name: 'Lavatrice', icon: '🫧', version: '1.7',
     desc: 'Monitoraggio motore, cicli, energia e costi. Richiede PKG Centro Controllo Lavatrice.',
     render: render, mount: mount, update: update, configure: openCfg,
     frarik_pkg_check: 'sensor.frarik_lavatrice_versione',

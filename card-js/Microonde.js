@@ -1,4 +1,4 @@
-﻿/* frarik-version: 1.1 */
+﻿/* frarik-version: 1.2 */
 (function () {
   'use strict';
 
@@ -48,32 +48,61 @@
     var c    = running ? '#38bdf8' : '#64748b';
     var glow = running ? ';filter:drop-shadow(0 0 10px rgba(56,189,248,.3))' : '';
     var css  = running ? '@keyframes mcrspin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes mcrled{0%,100%{opacity:.4}50%{opacity:1}}' : '';
-    var cx = 52, cy = 40;
-    var sattr = running ? 'style="transform-origin:' + cx + 'px ' + cy + 'px;animation:mcrspin 4s linear infinite"' : '';
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 72" style="display:block;width:100%;max-height:130px' + glow + '">'
+    // piatto rotante: centro della finestra rettangolare
+    var px = 40, py = 38;
+    var sattr = running ? 'style="transform-origin:' + px + 'px ' + py + 'px;animation:mcrspin 5s linear infinite"' : '';
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 110 78" style="display:block;width:100%;height:100%' + glow + '">'
       + (running ? '<defs><style>' + css + '</style></defs>' : '')
-      + '<rect x="2" y="2" width="86" height="68" rx="8" fill="#080f1a" stroke="' + c + '" stroke-width="1.5"/>'
-      + '<rect x="4" y="4" width="24" height="64" rx="6" fill="#060d14"/>'
-      + '<rect x="6" y="7" width="20" height="11" rx="3" fill="#020810" stroke="' + (running ? '#38bdf8' : '#162035') + '" stroke-width=".7"/>'
-      + '<text x="16" y="14.5" text-anchor="middle" font-size="6.5" font-family="monospace" fill="' + (running ? '#38bdf8' : '#1a3050') + '">' + (running ? '1:30' : '--:--') + '</text>'
-      + '<rect x="7" y="23" width="18" height="6" rx="2" fill="' + (running ? 'rgba(56,189,248,.12)' : '#0a1525') + '" stroke="' + c + '" stroke-width=".5"/>'
-      + '<rect x="7" y="32" width="18" height="6" rx="2" fill="' + (running ? 'rgba(56,189,248,.09)' : '#0a1525') + '" stroke="' + c + '" stroke-width=".5"/>'
-      + '<rect x="7" y="41" width="18" height="6" rx="2" fill="#0a1525" stroke="' + c + '" stroke-width=".5" opacity=".5"/>'
-      + '<rect x="7" y="50" width="18" height="6" rx="2" fill="#0a1525" stroke="' + c + '" stroke-width=".5" opacity=".35"/>'
-      + '<circle cx="13" cy="62" r="2.5" fill="' + (running ? '#22c55e' : '#0a1a2e') + '"' + (running ? ' style="animation:mcrled 1s ease-in-out infinite"' : '') + '/>'
-      + '<circle cx="20" cy="62" r="2.5" fill="' + (running ? '#38bdf8' : '#0a1a2e') + '"' + (running ? ' style="animation:mcrled 1.6s ease-in-out infinite"' : '') + '/>'
-      + '<rect x="28" y="4" width="58" height="64" rx="6" fill="#060d14"/>'
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="27" fill="#070f1c" stroke="' + c + '" stroke-width="1.6"/>'
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="24" fill="' + (running ? '#040b16' : '#030912') + '" stroke="#0d1f38" stroke-width=".6"/>'
+      // Corpo principale
+      + '<rect x="2" y="2" width="106" height="74" rx="8" fill="#080f1a" stroke="' + c + '" stroke-width="1.5"/>'
+      // Porta (occupa il 73% sinistro)
+      + '<rect x="4" y="4" width="76" height="70" rx="6" fill="#060c18" stroke="' + c + '" stroke-width=".6" opacity=".5"/>'
+      // Cornice finestra
+      + '<rect x="7" y="7" width="68" height="58" rx="5" fill="#030b16" stroke="' + (running ? '#38bdf8' : '#162035') + '" stroke-width="1"/>'
+      // Interno forno (scuro con tinta quando attivo)
+      + '<rect x="9" y="9" width="64" height="54" rx="4" fill="' + (running ? 'rgba(56,189,248,.04)' : '#02080f') + '"/>'
+      // Mesh del vetro (reticolo sottile — come il filo metallico del microonde)
+      + '<line x1="9" y1="18" x2="73" y2="18" stroke="' + c + '" stroke-width=".4" opacity=".08"/>'
+      + '<line x1="9" y1="27" x2="73" y2="27" stroke="' + c + '" stroke-width=".4" opacity=".08"/>'
+      + '<line x1="9" y1="36" x2="73" y2="36" stroke="' + c + '" stroke-width=".4" opacity=".08"/>'
+      + '<line x1="9" y1="45" x2="73" y2="45" stroke="' + c + '" stroke-width=".4" opacity=".08"/>'
+      + '<line x1="9" y1="54" x2="73" y2="54" stroke="' + c + '" stroke-width=".4" opacity=".08"/>'
+      + '<line x1="18" y1="9" x2="18" y2="63" stroke="' + c + '" stroke-width=".4" opacity=".07"/>'
+      + '<line x1="27" y1="9" x2="27" y2="63" stroke="' + c + '" stroke-width=".4" opacity=".07"/>'
+      + '<line x1="36" y1="9" x2="36" y2="63" stroke="' + c + '" stroke-width=".4" opacity=".07"/>'
+      + '<line x1="45" y1="9" x2="45" y2="63" stroke="' + c + '" stroke-width=".4" opacity=".07"/>'
+      + '<line x1="54" y1="9" x2="54" y2="63" stroke="' + c + '" stroke-width=".4" opacity=".07"/>'
+      + '<line x1="63" y1="9" x2="63" y2="63" stroke="' + c + '" stroke-width=".4" opacity=".07"/>'
+      // Piatto rotante visibile attraverso il vetro
       + '<g ' + sattr + '>'
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="15" fill="none" stroke="' + c + '" stroke-width=".7" opacity=".28"/>'
-      + '<circle cx="' + cx + '" cy="' + (cy - 14) + '" r="3" fill="rgba(56,189,248,.18)" stroke="' + c + '" stroke-width=".6"/>'
-      + '<circle cx="' + (cx + 12.1) + '" cy="' + (cy + 7) + '" r="3" fill="rgba(56,189,248,.18)" stroke="' + c + '" stroke-width=".6"/>'
-      + '<circle cx="' + (cx - 12.1) + '" cy="' + (cy + 7) + '" r="3" fill="rgba(56,189,248,.18)" stroke="' + c + '" stroke-width=".6"/>'
+      + '<circle cx="' + px + '" cy="' + py + '" r="20" fill="none" stroke="' + c + '" stroke-width=".8" opacity="' + (running ? '.3' : '.12') + '"/>'
+      + '<circle cx="' + px + '" cy="' + py + '" r="13" fill="none" stroke="' + c + '" stroke-width=".5" opacity="' + (running ? '.2' : '.08') + '"/>'
+      + '<circle cx="' + px + '" cy="' + (py - 16) + '" r="2.5" fill="rgba(56,189,248,' + (running ? '.28' : '.08') + ')"/>'
+      + '<circle cx="' + (px + 13.9) + '" cy="' + (py + 8) + '" r="2.5" fill="rgba(56,189,248,' + (running ? '.28' : '.08') + ')"/>'
+      + '<circle cx="' + (px - 13.9) + '" cy="' + (py + 8) + '" r="2.5" fill="rgba(56,189,248,' + (running ? '.28' : '.08') + ')"/>'
       + '</g>'
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="2" fill="' + c + '" opacity=".5"/>'
-      + (running ? '<circle cx="' + cx + '" cy="' + cy + '" r="9" fill="none" stroke="rgba(56,189,248,.12)" stroke-width="6" style="animation:mcrled 2s ease-in-out infinite"/>' : '')
-      + '<rect x="83" y="30" width="5" height="18" rx="2.5" fill="#0f1e35" stroke="' + c + '" stroke-width=".6"/>'
+      + '<circle cx="' + px + '" cy="' + py + '" r="2" fill="' + c + '" opacity="' + (running ? '.5' : '.2') + '"/>'
+      // Maniglia porta (barra orizzontale in basso sulla porta)
+      + '<rect x="10" y="68" width="62" height="4.5" rx="2.2" fill="#0f1e35" stroke="' + c + '" stroke-width=".7"/>'
+      // Pannello comandi (destra — 25%)
+      + '<rect x="82" y="4" width="26" height="70" rx="5" fill="#060c18"/>'
+      // Display digitale
+      + '<rect x="84" y="7" width="22" height="11" rx="3" fill="#020810" stroke="' + (running ? '#38bdf8' : '#162035') + '" stroke-width=".7"/>'
+      + '<text x="95" y="14.5" text-anchor="middle" font-size="6.5" font-family="monospace" fill="' + (running ? '#38bdf8' : '#1a3050') + '">' + (running ? '1:30' : '--:--') + '</text>'
+      // Pulsanti (tastierino numerico 3×3)
+      + '<rect x="84" y="22" width="9" height="6" rx="1.5" fill="' + (running ? 'rgba(56,189,248,.1)' : '#0a1525') + '" stroke="' + c + '" stroke-width=".4"/>'
+      + '<rect x="95" y="22" width="9" height="6" rx="1.5" fill="' + (running ? 'rgba(56,189,248,.08)' : '#0a1525') + '" stroke="' + c + '" stroke-width=".4"/>'
+      + '<rect x="84" y="30" width="9" height="6" rx="1.5" fill="#0a1525" stroke="' + c + '" stroke-width=".4" opacity=".6"/>'
+      + '<rect x="95" y="30" width="9" height="6" rx="1.5" fill="#0a1525" stroke="' + c + '" stroke-width=".4" opacity=".6"/>'
+      + '<rect x="84" y="38" width="9" height="6" rx="1.5" fill="#0a1525" stroke="' + c + '" stroke-width=".4" opacity=".45"/>'
+      + '<rect x="95" y="38" width="9" height="6" rx="1.5" fill="#0a1525" stroke="' + c + '" stroke-width=".4" opacity=".45"/>'
+      // Manopola
+      + '<circle cx="95" cy="54" r="7" fill="#0a1830" stroke="' + c + '" stroke-width=".9"/>'
+      + '<circle cx="95" cy="54" r="3" fill="' + (running ? '#0d2545' : '#060e1c') + '"/>'
+      + '<line x1="95" y1="47.5" x2="95" y2="51" stroke="' + c + '" stroke-width="1" stroke-linecap="round"/>'
+      // LED
+      + '<circle cx="86" cy="68" r="2.5" fill="' + (running ? '#22c55e' : '#0a1a2e') + '"' + (running ? ' style="animation:mcrled 1s ease-in-out infinite"' : '') + '/>'
+      + '<circle cx="93" cy="68" r="2.5" fill="' + (running ? '#38bdf8' : '#0a1a2e') + '"' + (running ? ' style="animation:mcrled 1.6s ease-in-out infinite"' : '') + '/>'
       + '</svg>';
   }
 
@@ -131,7 +160,7 @@
       + '#' + rid + ' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
       + '#' + rid + ' .fc-scroll::-webkit-scrollbar{display:none}'
       + '#' + rid + ' .fc-hero{display:flex;align-items:stretch;padding:10px 14px 8px;flex:1}'
-      + '#' + rid + ' .fc-hero-img{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden}'
+      + '#' + rid + ' .fc-hero-img{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;max-height:108px}'
       + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:6px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:10px;overflow:hidden}'
       + '#' + rid + ' .fc-st{display:flex;align-items:center;justify-content:flex-end;gap:7px;font-size:14px;font-weight:800;color:' + col + ';padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06)}'
       + '#' + rid + ' .fc-stdot{width:8px;height:8px;border-radius:50%;background:#38bdf8;flex-shrink:0' + (running ? ';box-shadow:0 0 7px #38bdf8;animation:fcPulse 1.5s ease-in-out infinite' : '') + '}'
@@ -1496,7 +1525,7 @@ automation:
 
   /* ── CARD ── */
   const CARD = {
-    id: 'microonde', name: 'Microonde', icon: '📡', version: '1.1',
+    id: 'microonde', name: 'Microonde', icon: '📡', version: '1.2',
     desc: 'Monitoraggio magnetron, cicli, energia e costi. Richiede PKG Centro Controllo Microonde.',
     render: render, mount: mount, update: update, configure: openCfg,
     frarik_pkg_check: 'sensor.frarik_microonde_versione',

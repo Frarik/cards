@@ -1,4 +1,4 @@
-/* frarik-version: 1.29 */
+/* frarik-version: 1.39 */
 (function () {
   'use strict';
 
@@ -59,7 +59,7 @@
         + '<g class="fb"><text x="32" y="58" font-size="8" fill="' + c + '" text-anchor="middle" opacity=".7">❄</text></g>'
         + '<g class="fc2"><text x="49" y="68" font-size="9" fill="' + c + '" text-anchor="middle" opacity=".8">❄</text></g>'
       : '';
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 108" style="display:block;width:100%;max-height:130px' + glow + '"><defs><style>' + css + '</style></defs>'
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 108" style="display:block;width:100%;height:100%' + glow + '"><defs><style>' + css + '</style></defs>'
       + (running ? '<rect x="0" y="0" width="64" height="108" rx="11" fill="rgba(56,189,248,.04)" stroke="rgba(56,189,248,.15)" stroke-width="1"/>' : '')
       + '<rect x="3" y="3" width="58" height="102" rx="9" fill="' + cf + '" stroke="' + c + '" stroke-width="2"/>'
       + '<rect x="3" y="3" width="58" height="34" rx="8" fill="' + (running ? 'rgba(56,189,248,.1)' : 'rgba(100,116,139,.05)') + '" stroke="' + c + '" stroke-width="1.5"/>'
@@ -129,7 +129,7 @@
       + '#' + rid + ' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
       + '#' + rid + ' .fc-scroll::-webkit-scrollbar{display:none}'
       + '#' + rid + ' .fc-hero{display:flex;align-items:stretch;padding:10px 14px 8px;flex:1}'
-      + '#' + rid + ' .fc-hero-img{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden}'
+      + '#' + rid + ' .fc-hero-img{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;max-height:108px}'
       + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:6px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:10px;overflow:hidden}'
       + '#' + rid + ' .fc-st{display:flex;align-items:center;justify-content:flex-end;gap:7px;font-size:14px;font-weight:800;color:' + col + ';padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06)}'
       + '#' + rid + ' .fc-stdot{width:8px;height:8px;border-radius:50%;background:#38bdf8;flex-shrink:0' + (running ? ';box-shadow:0 0 7px #38bdf8;animation:fcPulse 1.5s ease-in-out infinite' : '') + '}'
@@ -1494,7 +1494,7 @@ automation:
 
   /* ── CARD ── */
   const CARD = {
-    id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '1.29',
+    id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '1.39',
     desc: 'Monitoraggio compressore, cicli, energia e costi. Richiede PKG Centro Controllo Frigorifero.',
     render: render, mount: mount, update: update, configure: openCfg,
     frarik_pkg_check: 'sensor.frarik_frigorifero_versione',

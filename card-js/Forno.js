@@ -1,4 +1,4 @@
-﻿/* frarik-version: 1.1 */
+﻿/* frarik-version: 1.2 */
 (function () {
   'use strict';
 
@@ -49,7 +49,7 @@
     var cf   = running ? 'rgba(56,189,248,.1)' : 'rgba(100,116,139,.06)';
     var glow = running ? ';filter:drop-shadow(0 0 10px rgba(56,189,248,.35))' : '';
     var css  = running ? '@keyframes frnheat{0%,100%{opacity:.4}50%{opacity:1}}@keyframes frnglow{0%,100%{opacity:.1}50%{opacity:.28}}' : '';
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 108" style="display:block;width:100%;max-height:130px' + glow + '">'
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 108" style="display:block;width:100%;height:100%' + glow + '">'
       + (running ? '<defs><style>' + css + '</style></defs>' : '')
       + '<rect x="2" y="2" width="68" height="104" rx="8" fill="#080f1a" stroke="' + c + '" stroke-width="1.5"/>'
       + '<rect x="2" y="2" width="68" height="22" rx="8" fill="#070e1c"/>'
@@ -128,7 +128,7 @@
       + '#' + rid + ' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
       + '#' + rid + ' .fc-scroll::-webkit-scrollbar{display:none}'
       + '#' + rid + ' .fc-hero{display:flex;align-items:stretch;padding:10px 14px 8px;flex:1}'
-      + '#' + rid + ' .fc-hero-img{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden}'
+      + '#' + rid + ' .fc-hero-img{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;max-height:108px}'
       + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:6px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:10px;overflow:hidden}'
       + '#' + rid + ' .fc-st{display:flex;align-items:center;justify-content:flex-end;gap:7px;font-size:14px;font-weight:800;color:' + col + ';padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06)}'
       + '#' + rid + ' .fc-stdot{width:8px;height:8px;border-radius:50%;background:#38bdf8;flex-shrink:0' + (running ? ';box-shadow:0 0 7px #38bdf8;animation:fcPulse 1.5s ease-in-out infinite' : '') + '}'
@@ -1493,7 +1493,7 @@ automation:
 
   /* ── CARD ── */
   const CARD = {
-    id: 'forno', name: 'Forno', icon: '🥘', version: '1.1',
+    id: 'forno', name: 'Forno', icon: '🥘', version: '1.2',
     desc: 'Monitoraggio resistenza, cicli, energia e costi. Richiede PKG Centro Controllo Forno.',
     render: render, mount: mount, update: update, configure: openCfg,
     frarik_pkg_check: 'sensor.frarik_forno_versione',

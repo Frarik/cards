@@ -1,4 +1,4 @@
-﻿/* frarik-version: 1.1 */
+﻿/* frarik-version: 1.2 */
 (function () {
   'use strict';
 
@@ -50,7 +50,7 @@
     var glow = running ? ';filter:drop-shadow(0 0 12px rgba(56,189,248,.4))' : '';
     var css  = running ? '@keyframes frgspin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes frgwave{0%{opacity:0;transform:translateY(0)}60%{opacity:.7}100%{opacity:0;transform:translateY(-9px)}}' : '';
     var fspin = running ? 'style="transform-origin:40px 18px;animation:frgspin 1.5s linear infinite"' : '';
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 106" style="display:block;width:100%;max-height:130px' + glow + '">'
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 106" style="display:block;width:100%;height:100%' + glow + '">'
       + (running ? '<defs><style>' + css + '</style></defs>' : '')
       + '<rect x="8" y="12" width="64" height="56" rx="12" fill="#080f1a" stroke="' + c + '" stroke-width="1.5"/>'
       + '<rect x="10" y="14" width="60" height="52" rx="10" fill="' + cf + '"/>'
@@ -137,7 +137,7 @@
       + '#' + rid + ' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
       + '#' + rid + ' .fc-scroll::-webkit-scrollbar{display:none}'
       + '#' + rid + ' .fc-hero{display:flex;align-items:stretch;padding:10px 14px 8px;flex:1}'
-      + '#' + rid + ' .fc-hero-img{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden}'
+      + '#' + rid + ' .fc-hero-img{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;max-height:108px}'
       + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:6px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:10px;overflow:hidden}'
       + '#' + rid + ' .fc-st{display:flex;align-items:center;justify-content:flex-end;gap:7px;font-size:14px;font-weight:800;color:' + col + ';padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06)}'
       + '#' + rid + ' .fc-stdot{width:8px;height:8px;border-radius:50%;background:#38bdf8;flex-shrink:0' + (running ? ';box-shadow:0 0 7px #38bdf8;animation:fcPulse 1.5s ease-in-out infinite' : '') + '}'
@@ -1502,7 +1502,7 @@ automation:
 
   /* ── CARD ── */
   const CARD = {
-    id: 'friggitrice', name: 'Friggitrice', icon: '🍟', version: '1.1',
+    id: 'friggitrice', name: 'Friggitrice', icon: '🍟', version: '1.2',
     desc: 'Monitoraggio resistenza, cicli, energia e costi. Richiede PKG Centro Controllo Friggitrice.',
     render: render, mount: mount, update: update, configure: openCfg,
     frarik_pkg_check: 'sensor.frarik_friggitrice_versione',

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.75 — 2026-06-28
+
+### fix: immagini non tagliate + Microonde ridisegnato
+
+- Tutte e 8 le card: SVG usa `width:100%;height:100%` + container con `max-height:108px` — il drum/immagine non viene più tagliato in basso
+- Microonde: SVG completamente ridisegnato — era oblò (come lavatrice), ora ha la **porta rettangolare** con finestra a griglia (mesh), manopola, tastierino 2×3, LED — realistico come un vero microonde
+- Frigo v1.39, Lavatrice v1.7, Asciugatrice v1.5, nuove card v1.2
+
 ## 1.6.74 — 2026-06-28
 
 ### feat: layout 50/50 hero + SVG ridisegnati per tutte le card elettrodomestici
