@@ -1,4 +1,4 @@
-/* frarik-version: 1.6 */
+/* frarik-version: 1.7 */
 (function () {
   'use strict';
 
@@ -238,18 +238,18 @@
       + '</div>'
       + '<div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Energia</div>'
       + row('Oggi', fmtKwh(S(h, c.pk_kwh_oggi)), '#bae6fd')
-      + row('Ieri', fmtKwh(kwIeri), 'rgba(255,255,255,.4)')
+      + row('Ieri', fmtKwh(kwIeri), '#fff')
       + row('Questo mese', fmtKwh(S(h, c.pk_kwh_mese)), '#bae6fd')
-      + row('Mese precedente', fmtKwh(kwMeseP), 'rgba(255,255,255,.4)')
+      + row('Mese precedente', fmtKwh(kwMeseP), '#fff')
       + row('Questo anno', fmtKwh(S(h, c.pk_kwh_anno)), '#bae6fd')
-      + row('Anno precedente', fmtKwh(kwAnnoP), 'rgba(255,255,255,.4)')
+      + row('Anno precedente', fmtKwh(kwAnnoP), '#fff')
       + '<div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 4px">Costi</div>'
       + row('Oggi', fmtEur(Attr(h, ton, 'costo_oggi_frigo')), '#7dd3fc')
-      + row('Ieri', fmtEur(Attr(h, ton, 'costo_ieri_frigo')), 'rgba(255,255,255,.4)')
+      + row('Ieri', fmtEur(Attr(h, ton, 'costo_ieri_frigo')), '#fff')
       + row('Questo mese', fmtEur(Attr(h, ton, 'costo_mese_frigo')), '#7dd3fc')
-      + row('Mese precedente', fmtEur(Attr(h, ton, 'costo_mese_prec_frigo')), 'rgba(255,255,255,.4)')
+      + row('Mese precedente', fmtEur(Attr(h, ton, 'costo_mese_prec_frigo')), '#fff')
       + row('Questo anno', fmtEur(Attr(h, ton, 'costo_anno_frigo')), '#7dd3fc')
-      + row('Anno precedente', fmtEur(Attr(h, ton, 'costo_anno_prec_frigo')), 'rgba(255,255,255,.4)');
+      + row('Anno precedente', fmtEur(Attr(h, ton, 'costo_anno_prec_frigo')), '#fff');
     mkOv(popShell('⚡', '56,189,248', 'Energia & Costi', 'Frigorifero', 'fc-en-close', content), 'fc-en-close');
   }
 
@@ -266,9 +266,9 @@
       const cicli = S(h, 'input_text.' + d + '_frigo_cicli') || '—';
       const tempo = S(h, 'input_text.' + d + '_frigo_tempo') || '—';
       weekHtml += '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;background:rgba(56,189,248,.05);border:1px solid rgba(56,189,248,.1);border-radius:8px;padding:6px 2px">'
-        + '<div style="font-size:8px;font-weight:700;color:rgba(255,255,255,.4)">' + DAY_LABELS[i] + '</div>'
+        + '<div style="font-size:8px;font-weight:700;color:#fff">' + DAY_LABELS[i] + '</div>'
         + '<div style="font-size:11px;font-weight:900;color:#38bdf8">' + cicli + '</div>'
-        + '<div style="font-size:8px;color:rgba(255,255,255,.35);text-align:center;line-height:1.2">' + tempo + '</div>'
+        + '<div style="font-size:8px;color:rgba(255,255,255,.75);text-align:center;line-height:1.2">' + tempo + '</div>'
         + '</div>';
     });
     weekHtml += '</div>';
@@ -280,9 +280,9 @@
       + row('Totale storico', S(h, c.pk_cicli_tot) || '—', '#7dd3fc')
       + '<div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 4px">Tempo compressore</div>'
       + row('Oggi', Attr(h, ton, 'Oggi') || '—', '#7dd3fc')
-      + row('Ieri', Attr(h, ton, 'Ieri') || '—', 'rgba(255,255,255,.4)')
+      + row('Ieri', Attr(h, ton, 'Ieri') || '—', '#fff')
       + row('Questo mese', Attr(h, ton, 'Mese') || '—', '#7dd3fc')
-      + row('Mese precedente', Attr(h, ton, 'Mese Precedente') || '—', 'rgba(255,255,255,.4)')
+      + row('Mese precedente', Attr(h, ton, 'Mese Precedente') || '—', '#fff')
       + row('Questo anno', Attr(h, ton, 'Anno') || '—', '#7dd3fc');
     mkOv(popShell('❄', '56,189,248', 'Cicli & Statistiche', 'Compressore frigo', 'fc-ci-close', content), 'fc-ci-close');
   }
@@ -378,7 +378,7 @@
     function dToggle(entity, lbl) {
       const on = bs(entity);
       rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
-        + '<span style="font-size:13px;color:rgba(255,255,255,.7)">' + lbl + '</span>'
+        + '<span style="font-size:13px;color:#fff">' + lbl + '</span>'
         + '<div class="fi-sw ' + (on ? 'on' : 'off') + '" data-entity="' + entity + '"><div class="fi-knob"></div></div>'
         + '</div>');
     }
@@ -386,28 +386,28 @@
       const raw = ss(entity);
       const val = raw && raw.length >= 5 ? raw.substring(0, 5) : '';
       rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);gap:10px">'
-        + '<span style="font-size:13px;color:rgba(255,255,255,.7);flex:1">' + lbl + '</span>'
+        + '<span style="font-size:13px;color:#fff;flex:1">' + lbl + '</span>'
         + '<input type="time" class="fi-inp" data-entity="' + entity + '" data-svctype="time" value="' + val + '" style="' + iBase + ';width:108px;padding:6px 8px;text-align:center">'
         + '</div>');
     }
     function dNum(entity, lbl, unit, mn, mx, step) {
       const val = ns(entity);
       rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);gap:10px">'
-        + '<span style="font-size:13px;color:rgba(255,255,255,.7);flex:1">' + lbl + (unit ? ' <span style="font-size:10px;color:rgba(255,255,255,.35)">(' + unit + ')</span>' : '') + '</span>'
+        + '<span style="font-size:13px;color:#fff;flex:1">' + lbl + (unit ? ' <span style="font-size:10px;color:rgba(255,255,255,.6)">(' + unit + ')</span>' : '') + '</span>'
         + '<input type="number" class="fi-inp" data-entity="' + entity + '" data-svctype="number" value="' + (val != null ? val : '') + '" min="' + (mn != null ? mn : 0) + '" max="' + (mx != null ? mx : 9999) + '" step="' + (step || 1) + '" style="' + iBase + ';width:90px;padding:6px 8px;text-align:right">'
         + '</div>');
     }
     function dText(entity, lbl) {
       const val = ss(entity);
       rows.push('<div style="padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
-        + '<div style="font-size:13px;color:rgba(255,255,255,.7);margin-bottom:5px">' + lbl + '</div>'
+        + '<div style="font-size:13px;color:#fff;margin-bottom:5px">' + lbl + '</div>'
         + '<input type="text" class="fi-inp" data-entity="' + entity + '" data-svctype="text" value="' + (val || '').replace(/"/g, '&quot;') + '" style="' + iBase + ';width:100%;padding:7px 10px">'
         + '</div>');
     }
     function dInfo(lbl, val) {
       rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
-        + '<span style="font-size:12px;color:rgba(255,255,255,.4)">' + lbl + '</span>'
-        + '<span style="font-size:12px;font-weight:700;color:rgba(255,255,255,.3)">' + (val || '—') + '</span>'
+        + '<span style="font-size:12px;color:rgba(255,255,255,.7)">' + lbl + '</span>'
+        + '<span style="font-size:12px;font-weight:700;color:#fff">' + (val || '—') + '</span>'
         + '</div>');
     }
 
@@ -1452,7 +1452,7 @@ automation:
 
   /* ── CARD ── */
   const CARD = {
-    id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '1.6',
+    id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '1.7',
     desc: 'Monitoraggio compressore, cicli, energia e costi. Richiede PKG Centro Controllo Frigorifero.',
     render: render, mount: mount, update: update, configure: openCfg,
     frarik_pkg_check: 'sensor.frarik_frigorifero_versione',
