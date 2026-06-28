@@ -634,7 +634,9 @@ automation:
   - choose:
     - conditions:
       - condition: trigger
-        id: incremento_statistiche_7gg
+        id:
+          - incremento_statistiche_7gg
+          - fine_ciclo
       sequence:
 
       - service: input_text.set_value
