@@ -1,4 +1,4 @@
-/* frarik-version: 1.8 */
+/* frarik-version: 1.9 */
 (function () {
   'use strict';
 
@@ -59,7 +59,7 @@
         + '<g class="fb"><text x="32" y="58" font-size="8" fill="' + c + '" text-anchor="middle" opacity=".7">❄</text></g>'
         + '<g class="fc2"><text x="49" y="68" font-size="9" fill="' + c + '" text-anchor="middle" opacity=".8">❄</text></g>'
       : '';
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 108" width="64" height="108" style="display:block;overflow:visible' + glow + '"><defs><style>' + css + '</style></defs>'
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 108" width="82" height="137" style="display:block;overflow:visible' + glow + '"><defs><style>' + css + '</style></defs>'
       + (running ? '<rect x="0" y="0" width="64" height="108" rx="11" fill="rgba(56,189,248,.04)" stroke="rgba(56,189,248,.15)" stroke-width="1"/>' : '')
       + '<rect x="3" y="3" width="58" height="102" rx="9" fill="' + cf + '" stroke="' + c + '" stroke-width="2"/>'
       + '<rect x="3" y="3" width="58" height="34" rx="8" fill="' + (running ? 'rgba(56,189,248,.1)' : 'rgba(100,116,139,.05)') + '" stroke="' + c + '" stroke-width="1.5"/>'
@@ -101,17 +101,10 @@
     const barPct = Math.min(100, (pw / soglia) * 100);
     const barCol = pw < 50 ? '#64748b' : pw <= 150 ? '#38bdf8' : pw <= 250 ? '#22c55e' : pw <= 400 ? '#f97316' : '#ef4444';
 
-    function ir(icon, lbl, val, vc) {
-      return '<div class="fc-ir">'
-        + '<div class="fc-ir-h"><span class="fc-ir-ic">' + icon + '</span><span class="fc-ir-lb">' + lbl + '</span></div>'
-        + '<div class="fc-ir-v" style="color:' + (vc || '#fff') + '">' + val + '</div>'
-        + '</div>';
-    }
-
     const css = '<style>'
-      + '#' + rid + '{position:relative;width:100%;height:100%;min-height:260px;font-family:system-ui,sans-serif;display:block}'
+      + '#' + rid + '{position:relative;width:100%;height:100%;min-height:280px;font-family:system-ui,sans-serif;display:block}'
       + '#' + rid + ' .fc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
-      + '#' + rid + ' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:180px;background:radial-gradient(ellipse at 25% 0%,rgba(56,189,248,.07) 0%,transparent 65%);pointer-events:none}'
+      + '#' + rid + ' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(56,189,248,.08) 0%,transparent 65%);pointer-events:none}'
       + '#' + rid + ' .fc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
       + '#' + rid + ' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2)}'
       + '#' + rid + ' .fc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
@@ -119,21 +112,18 @@
       + '#' + rid + ' .fc-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:' + col + (running ? ';box-shadow:0 0 5px #38bdf8;animation:fcPulse 1.5s ease-in-out infinite' : '') + '}'
       + '#' + rid + ' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
       + '#' + rid + ' .fc-scroll::-webkit-scrollbar{display:none}'
-      + '#' + rid + ' .fc-hero{display:flex;align-items:center;gap:0;padding:12px 14px 8px}'
-      + '#' + rid + ' .fc-hero-img{flex-shrink:0;padding-right:12px;display:flex;align-items:center;cursor:pointer}'
-      + '#' + rid + ' .fc-hero-rows{flex:1;display:flex;flex-direction:column;gap:0}'
-      + '#' + rid + ' .fc-ir{padding:5px 0;border-bottom:1px solid rgba(255,255,255,.06)}'
-      + '#' + rid + ' .fc-ir:last-child{border-bottom:none}'
-      + '#' + rid + ' .fc-ir-h{display:flex;align-items:center;gap:4px;margin-bottom:2px}'
-      + '#' + rid + ' .fc-ir-ic{font-size:9px;opacity:.5}'
-      + '#' + rid + ' .fc-ir-lb{font-size:8px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em}'
-      + '#' + rid + ' .fc-ir-v{font-size:13px;font-weight:800;padding-left:2px}'
-      + '#' + rid + ' .fc-pbar{padding:0 14px 10px}'
-      + '#' + rid + ' .fc-pbar-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}'
-      + '#' + rid + ' .fc-pbar-lbl{font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em}'
-      + '#' + rid + ' .fc-pbar-v{font-size:14px;font-weight:900;color:' + barCol + ';transition:color .4s}'
-      + '#' + rid + ' .fc-pbar-bg{height:8px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}'
-      + '#' + rid + ' .fc-pbar-fill{height:100%;border-radius:4px;transition:width .6s ease,background .4s ease}'
+      + '#' + rid + ' .fc-hero{display:flex;align-items:stretch;padding:10px 14px 8px;flex:1}'
+      + '#' + rid + ' .fc-hero-img{flex-shrink:0;padding-right:14px;display:flex;align-items:center;cursor:pointer}'
+      + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:7px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:14px}'
+      + '#' + rid + ' .fc-st{display:flex;align-items:center;gap:7px;font-size:14px;font-weight:800;color:' + col + ';padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06)}'
+      + '#' + rid + ' .fc-stdot{width:8px;height:8px;border-radius:50%;background:' + col + ';flex-shrink:0' + (running ? ';box-shadow:0 0 7px #38bdf8;animation:fcPulse 1.5s ease-in-out infinite' : '') + '}'
+      + '#' + rid + ' .fc-pw{display:flex;flex-direction:column;gap:4px}'
+      + '#' + rid + ' .fc-pw-val{font-size:22px;font-weight:900;color:' + barCol + ';line-height:1;transition:color .4s}'
+      + '#' + rid + ' .fc-pw-bar{height:4px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden}'
+      + '#' + rid + ' .fc-pw-fill{height:100%;border-radius:2px;transition:width .6s,background .4s}'
+      + '#' + rid + ' .fc-met{display:flex;align-items:center;gap:9px}'
+      + '#' + rid + ' .fc-met-ic{font-size:13px;flex-shrink:0;width:18px;text-align:center}'
+      + '#' + rid + ' .fc-met-v{font-size:16px;font-weight:800;color:#fff}'
       + '#' + rid + ' .fc-stats{display:flex;margin:0 14px 8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden;cursor:pointer}'
       + '#' + rid + ' .fc-stats:hover{background:rgba(255,255,255,.06)}'
       + '#' + rid + ' .fc-sb{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 3px;gap:2px}'
@@ -149,17 +139,16 @@
 
     const heroHtml = '<div class="fc-hero">'
       + '<div class="fc-hero-img" data-sya="popup-cicli">' + _fridgeSVG(running) + '</div>'
-      + '<div class="fc-hero-rows">'
-      + ir('⚡', running ? 'Compressore' : 'Ultimo avvio', terminato, running ? '#38bdf8' : '#fff')
-      + ir('⏱', running ? 'Durata ciclo' : 'Durata ultimo', tempoC, '#fff')
-      + ir('🔌', running ? 'Consumo ON' : 'Consumo ultimo', consumoC, '#fff')
-      + ir('💶', running ? 'Costo attuale' : 'Costo ultimo', costoC != null ? costoC + ' €' : '—', '#fff')
+      + '<div class="fc-hero-r">'
+      + '<div class="fc-st"><div class="fc-stdot"></div>' + (running ? 'In funzione' : 'Standby') + '</div>'
+      + '<div class="fc-pw">'
+      + '<div class="fc-pw-val">' + (pw > 0 ? pw.toFixed(0) + ' W' : '— W') + '</div>'
+      + '<div class="fc-pw-bar"><div class="fc-pw-fill" style="width:' + barPct + '%;background:' + barCol + ';box-shadow:0 0 6px ' + barCol + '88"></div></div>'
       + '</div>'
-      + '</div>';
-
-    const barHtml = '<div class="fc-pbar">'
-      + '<div class="fc-pbar-hdr"><span class="fc-pbar-lbl">Consumo Istantaneo</span><span class="fc-pbar-v">' + (pw > 0 ? pw.toFixed(0) + ' W' : '— W') + '</span></div>'
-      + '<div class="fc-pbar-bg"><div class="fc-pbar-fill" style="width:' + barPct + '%;background:' + barCol + ';box-shadow:0 0 7px ' + barCol + '55"></div></div>'
+      + '<div class="fc-met"><span class="fc-met-ic">⏱</span><span class="fc-met-v">' + tempoC + '</span></div>'
+      + '<div class="fc-met"><span class="fc-met-ic">🔌</span><span class="fc-met-v">' + consumoC + '</span></div>'
+      + '<div class="fc-met"><span class="fc-met-ic">💶</span><span class="fc-met-v">' + (costoC != null ? costoC + ' €' : '—') + '</span></div>'
+      + '</div>'
       + '</div>';
 
     const statsHtml = '<div class="fc-stats" data-sya="popup-cicli">'
@@ -191,7 +180,6 @@
       + '</div>'
       + '<div class="fc-scroll">'
       + heroHtml
-      + barHtml
       + statsHtml
       + btnsHtml
       + '</div>'
@@ -1452,7 +1440,7 @@ automation:
 
   /* ── CARD ── */
   const CARD = {
-    id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '1.8',
+    id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '1.9',
     desc: 'Monitoraggio compressore, cicli, energia e costi. Richiede PKG Centro Controllo Frigorifero.',
     render: render, mount: mount, update: update, configure: openCfg,
     frarik_pkg_check: 'sensor.frarik_frigorifero_versione',
