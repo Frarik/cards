@@ -1,4 +1,4 @@
-/* frarik-version: 1.14 */
+/* frarik-version: 1.15 */
 (function () {
   'use strict';
 
@@ -515,9 +515,10 @@
   /* ── UPDATE / MOUNT ── */
   function update(card, hass, el) {
     const h = H(), c = cfgFor(card);
-    const sig = [S(h, c.pk_power), S(h, c.pk_running), S(h, c.pk_kwh_oggi), S(h, c.pk_cicli_oggi), Attr(h, c.pk_time_on, 'Oggi'), Attr(h, c.pk_time_on, 'tempo_ciclo_frigo'), Attr(h, c.pk_time_on, 'costo_oggi_frigo')].join('|');
+    const sig = [CARD.version, S(h, c.pk_power), S(h, c.pk_running), S(h, c.pk_kwh_oggi), S(h, c.pk_cicli_oggi), Attr(h, c.pk_time_on, 'Oggi'), Attr(h, c.pk_time_on, 'tempo_ciclo_frigo'), Attr(h, c.pk_time_on, 'costo_oggi_frigo')].join('|');
     if (!el.querySelector('.fc-card') || el._fcSig !== sig) {
       el._fcSig = sig;
+      el._fcBound = false;
       el.innerHTML = render(card);
     }
     mount(card, hass, el);
@@ -1488,7 +1489,7 @@ automation:
 
   /* ── CARD ── */
   const CARD = {
-    id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '1.14',
+    id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '1.15',
     desc: 'Monitoraggio compressore, cicli, energia e costi. Richiede PKG Centro Controllo Frigorifero.',
     render: render, mount: mount, update: update, configure: openCfg,
     frarik_pkg_check: 'sensor.frarik_frigorifero_versione',
