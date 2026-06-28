@@ -1648,7 +1648,8 @@ async function _ghApiListAll(){
       download_url:`https://raw.githubusercontent.com/${g.owner}/${g.repo}/${branch}/${t.path.split('/').map(encodeURIComponent).join('/')}` }));
 }
 async function _ghDownload(file){
-  const r=await fetch(file.download_url);
+  const url=file.download_url+(file.download_url.includes('?')?'&':'?')+'_t='+Date.now();
+  const r=await fetch(url,{cache:'no-store'});
   if(!r.ok) throw new Error('download '+r.status);
   return await r.text();
 }

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.70 — 2026-06-28
+
+### fix: cache-busting download card JS da GitHub
+
+- `_ghDownload`: aggiunto `?_t=timestamp` e `cache:'no-store'` — risolve il problema per cui aggiornando una card dallo store veniva scaricata la versione vecchia dalla CDN GitHub
+
 ## 1.6.69 — 2026-06-28
 
 ### fix: case-insensitive cardId nel sistema PKG store
