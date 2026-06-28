@@ -1,4 +1,4 @@
-/* frarik-version: 1.11 */
+/* frarik-version: 1.12 */
 (function () {
   'use strict';
 
@@ -133,7 +133,7 @@
       + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:7px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:14px}'
       + '#' + rid + ' .fc-st{display:flex;align-items:center;justify-content:flex-end;gap:7px;font-size:14px;font-weight:800;color:' + col + ';padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06)}'
       + '#' + rid + ' .fc-stdot{width:8px;height:8px;border-radius:50%;background:' + col + ';flex-shrink:0' + (running ? ';box-shadow:0 0 7px #38bdf8;animation:fcPulse 1.5s ease-in-out infinite' : '') + '}'
-      + '#' + rid + ' .fc-pwfull{margin:0 14px 6px}'
+      + '#' + rid + ' .fc-pwfull{margin:0 14px 14px}'
       + '#' + rid + ' .fc-pwfull-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}'
       + '#' + rid + ' .fc-pwfull-lbl{font-size:10px;font-weight:700;color:#fff}'
       + '#' + rid + ' .fc-pwfull-v{font-size:18px;font-weight:900;color:' + barCol + ';line-height:1}'
@@ -141,8 +141,10 @@
       + '#' + rid + ' .fc-pw-fill{height:100%;border-radius:2px;transition:width .6s,background .4s}'
       + '#' + rid + ' .fc-met{display:flex;align-items:center;justify-content:flex-end;gap:6px}'
       + '#' + rid + ' .fc-met-ic{font-size:13px;flex-shrink:0;width:18px;text-align:center}'
-      + '#' + rid + ' .fc-met-v{font-size:16px;font-weight:800;color:#fff}'
-      + '#' + rid + ' .fc-met-sm{font-size:12px;font-weight:800;color:#fff}'
+      + '#' + rid + ' .fc-met-r{display:flex;flex-direction:column;align-items:flex-end;gap:1px}'
+      + '#' + rid + ' .fc-met-lbl{font-size:8px;font-weight:700;color:#fff;line-height:1}'
+      + '#' + rid + ' .fc-met-v{font-size:15px;font-weight:800;color:#fff;line-height:1}'
+      + '#' + rid + ' .fc-met-sm{font-size:11px;font-weight:800;color:#fff;line-height:1}'
       + '#' + rid + ' .fc-stats{display:flex;margin:0 14px 8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden;cursor:pointer}'
       + '#' + rid + ' .fc-stats:hover{background:rgba(255,255,255,.06)}'
       + '#' + rid + ' .fc-sb{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 3px;gap:2px}'
@@ -162,10 +164,10 @@
       + '<div class="fc-hero-img" data-sya="popup-cicli">' + _fridgeSVG(running) + '</div>'
       + '<div class="fc-hero-r">'
       + '<div class="fc-st">' + (running ? 'In funzione' : 'Standby') + '<div class="fc-stdot"></div></div>'
-      + '<div class="fc-met"><span class="fc-met-sm">' + cycleDt + '</span><span class="fc-met-ic">🕐</span></div>'
-      + '<div class="fc-met"><span class="fc-met-v">' + (costoC != null ? costoC + ' €' : '—') + '</span><span class="fc-met-ic">💶</span></div>'
-      + '<div class="fc-met"><span class="fc-met-v">' + tempoC + '</span><span class="fc-met-ic">⏱</span></div>'
-      + '<div class="fc-met"><span class="fc-met-v">' + consumoC + '</span><span class="fc-met-ic">🔌</span></div>'
+      + '<div class="fc-met"><div class="fc-met-r"><div class="fc-met-lbl">Fine ciclo</div><span class="fc-met-sm">' + cycleDt + '</span></div><span class="fc-met-ic">🕐</span></div>'
+      + '<div class="fc-met"><div class="fc-met-r"><div class="fc-met-lbl">Costo</div><span class="fc-met-v">' + (costoC != null ? costoC + ' €' : '—') + '</span></div><span class="fc-met-ic">💶</span></div>'
+      + '<div class="fc-met"><div class="fc-met-r"><div class="fc-met-lbl">Durata</div><span class="fc-met-v">' + tempoC + '</span></div><span class="fc-met-ic">⏱</span></div>'
+      + '<div class="fc-met"><div class="fc-met-r"><div class="fc-met-lbl">Energia</div><span class="fc-met-v">' + consumoC + '</span></div><span class="fc-met-ic">🔌</span></div>'
       + '</div>'
       + '</div>';
 
@@ -1471,7 +1473,7 @@ automation:
 
   /* ── CARD ── */
   const CARD = {
-    id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '1.11',
+    id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '1.12',
     desc: 'Monitoraggio compressore, cicli, energia e costi. Richiede PKG Centro Controllo Frigorifero.',
     render: render, mount: mount, update: update, configure: openCfg,
     frarik_pkg_check: 'sensor.frarik_frigorifero_versione',
