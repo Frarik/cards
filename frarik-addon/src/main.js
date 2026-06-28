@@ -2000,7 +2000,7 @@ function _iconHtml(icon){
 }
 function _pkgWizardConfigExists(cardId){
   try{
-    const s=JSON.parse(localStorage.getItem('frarik_pkg_wizard_'+cardId)||'null');
+    const s=JSON.parse(localStorage.getItem('frarik_pkg_wizard_'+(cardId||'').toLowerCase())||'null');
     if(!s) return false;
     return Object.values(s).some(v=>v&&(typeof v==='string'?v.trim():Array.isArray(v)?v.length>0:true));
   }catch(e){ return false; }
@@ -2265,7 +2265,7 @@ function _ghStoreRender(){
       :`<div class="ghc-prev-inner" data-prev-sha="${eh(f.sha)}"></div>`;
     const pkgInfoInst=cardId?_pkgInfoForInstalledCard(cardId):(_ghPkgCache[f.sha]||null);
     const pkgVerLatest=_ghPkgCache[f.sha]?.ver||'';
-    const pkgVerSaved=(g.pkgVersions||{})[cardId]||'';
+    const pkgVerSaved=Object.entries(g.pkgVersions||{}).find(([k])=>k.toLowerCase()===(cardId||'').toLowerCase())?.[1]||'';
     const pkgIsOnHANow=pkgInfoInst?.file?_pkgIsOnHA(pkgInfoInst.file):false;
     const pkgVerChanged=!!(pkgVerLatest&&pkgIsOnHANow&&pkgVerLatest!==pkgVerSaved);
     const wizConfigOk=cardId?_pkgWizardConfigExists(cardId):false;
@@ -2871,8 +2871,8 @@ async function _ghsInstall(name){
   }
   _ghsDoInstall(f,code,res);
   /* su aggiornamento: se la pkg version è cambiata avvisa l'utente */
-  if(_pkgMatch&&_pkgVerNew&&_pkgVerNew!==(_ghCfg().pkgVersions||{})[_instId]){
-    _ghsPkgUpdatePopup(_instId,_pkgVerNew);
+  if(_pkgMatch&&_pkgVerNew&&_pkgVerNew!==(Object.entries(_ghCfg().pkgVersions||{}).find(([k])=>k.toLowerCase()===_instId.toLowerCase())?.[1]||'')){
+    _ghsPkgUpdatePopup(_instId.toLowerCase(),_pkgVerNew);
   } else {
     showToast('✅ '+f.name+(_isUpdate?' aggiornata':' installata — usa ➕ Aggiungi per metterla in dashboard'));
   }
@@ -2901,7 +2901,10 @@ function _ghsDoInstall(f,code,res){
 /* helper — salva la versione del pkg installato in cfg */
 function _savePkgVer(cardId,ver){
   if(!ver) return;
-  const g=_ghCfg(); g.pkgVersions=g.pkgVersions||{}; g.pkgVersions[cardId]=ver;
+  const key=(cardId||'').toLowerCase()||cardId;
+  const g=_ghCfg(); g.pkgVersions=g.pkgVersions||{};
+  if(key!==cardId&&g.pkgVersions[cardId]!==undefined) delete g.pkgVersions[cardId];
+  g.pkgVersions[key]=ver;
   saveCfg(); _haSaveCfg();
 }
 
@@ -3080,12 +3083,12 @@ function _ghsPkgUpdatePopup(cardId,pkgVerNew){
 /* aggiorna il PKG di una card installata.
    silent=true → reinstalla con config salvata senza aprire wizard (auto-update) */
 async function _pkgUpdateCard(cardId, silent=false){
-  const it=_jsStoreList().find(i=>(i.meta||{}).id===cardId);
+  const it=_jsStoreList().find(i=>(i.meta||{}).id?.toLowerCase()===(cardId||'').toLowerCase());
   if(!it){ if(!silent) showToast('⚠️ Card non trovata nello store locale'); return; }
   const pkgInfo=_parsePkgInfo(it.code||'');
   if(!pkgInfo){ if(!silent) showToast('⚠️ Nessun package associato a questa card'); return; }
 
-  const wizKey='frarik_pkg_wizard_'+cardId;
+  const wizKey='frarik_pkg_wizard_'+(cardId||'').toLowerCase();
   const savedCfg=silent?JSON.parse(localStorage.getItem(wizKey)||'null'):null;
 
   if(savedCfg){
@@ -3113,7 +3116,7 @@ async function _pkgUpdateCard(cardId, silent=false){
   }
 
   /* nessuna config salvata oppure chiamata manuale → apri wizard */
-  const CardClass=window.FratechCardRegistry?.[cardId]??customElements.get(cardId);
+  const CardClass=window.FratechCardRegistry?.[cardId]??window.FratechCardRegistry?.[cardId.toLowerCase()]??customElements.get(cardId);
   if(typeof CardClass?.openWizard==='function'){
     CardClass.openWizard(_haHassObj(),()=>{
       _savePkgVer(cardId,pkgInfo.ver);

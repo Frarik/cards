@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.6.69 — 2026-06-28
+
+### fix: case-insensitive cardId nel sistema PKG store
+
+- `_savePkgVer`: chiave sempre lowercase — evita false positive badge "PKG update" quando il filename ha lettera maiuscola (es. `Frigorifero.js`)
+- `_pkgWizardConfigExists`: lookup key lowercase — rileva correttamente la config wizard salvata da `CARD.id` (già lowercase)
+- `_pkgUpdateCard`: `.find()` case-insensitive → risolve "Card non trovata nello store locale"
+- `_pkgUpdateCard` wizKey: lowercase → trova la config wizard indipendentemente dal case del chiamante
+- `_pkgUpdateCard` linea CardClass manuale: aggiunto fallback `.toLowerCase()` (mancante, presente negli altri rami)
+- `_ghsInstall`: lookup pkgVersions e chiamata `_ghsPkgUpdatePopup` ora usano `_instId.toLowerCase()`
+- tile `pkgVerSaved`: lookup case-insensitive su `pkgVersions` per compatibilità con dati storici maiuscoli
+
 ## 1.6.68 — 2026-06-28
 
 ### fix: Frigorifero v1.6 — testi a bianco 100%
