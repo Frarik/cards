@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.6.68 — 2026-06-28
+
+### fix: Frigorifero v1.6 — testi a bianco 100%
+
+- Tutti i valori delle info-row ora `#fff` (erano `#e2e8f0` o `rgba(255,255,255,.4)`)
+- Etichette categoria (label piccole uppercase) portate a `rgba(255,255,255,.6)`
+- Testo pulsanti azione a `#fff` (era `.5`)
+- Stat box labels a `.6`, pbar label a `.65`
+- Taglia font valori info-row a 13px, pbar value a 14px
+
 ## 1.6.67 — 2026-06-28
 
 ### fix: Frigorifero v1.5 — popup configurazione riscritto + impostazioni editabili

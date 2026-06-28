@@ -1,4 +1,4 @@
-/* frarik-version: 1.5 */
+/* frarik-version: 1.6 */
 (function () {
   'use strict';
 
@@ -104,7 +104,7 @@
     function ir(icon, lbl, val, vc) {
       return '<div class="fc-ir">'
         + '<div class="fc-ir-h"><span class="fc-ir-ic">' + icon + '</span><span class="fc-ir-lb">' + lbl + '</span></div>'
-        + '<div class="fc-ir-v" style="color:' + (vc || '#e2e8f0') + '">' + val + '</div>'
+        + '<div class="fc-ir-v" style="color:' + (vc || '#fff') + '">' + val + '</div>'
         + '</div>';
     }
 
@@ -122,27 +122,27 @@
       + '#' + rid + ' .fc-hero{display:flex;align-items:center;gap:0;padding:12px 14px 8px}'
       + '#' + rid + ' .fc-hero-img{flex-shrink:0;padding-right:12px;display:flex;align-items:center;cursor:pointer}'
       + '#' + rid + ' .fc-hero-rows{flex:1;display:flex;flex-direction:column;gap:0}'
-      + '#' + rid + ' .fc-ir{padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04)}'
+      + '#' + rid + ' .fc-ir{padding:5px 0;border-bottom:1px solid rgba(255,255,255,.06)}'
       + '#' + rid + ' .fc-ir:last-child{border-bottom:none}'
-      + '#' + rid + ' .fc-ir-h{display:flex;align-items:center;gap:4px;margin-bottom:1px}'
-      + '#' + rid + ' .fc-ir-ic{font-size:9px;opacity:.45}'
-      + '#' + rid + ' .fc-ir-lb{font-size:8px;font-weight:700;color:rgba(255,255,255,.32);text-transform:uppercase;letter-spacing:.06em}'
-      + '#' + rid + ' .fc-ir-v{font-size:12px;font-weight:800;padding-left:2px}'
+      + '#' + rid + ' .fc-ir-h{display:flex;align-items:center;gap:4px;margin-bottom:2px}'
+      + '#' + rid + ' .fc-ir-ic{font-size:9px;opacity:.5}'
+      + '#' + rid + ' .fc-ir-lb{font-size:8px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.06em}'
+      + '#' + rid + ' .fc-ir-v{font-size:13px;font-weight:800;padding-left:2px}'
       + '#' + rid + ' .fc-pbar{padding:0 14px 10px}'
       + '#' + rid + ' .fc-pbar-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}'
-      + '#' + rid + ' .fc-pbar-lbl{font-size:8px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.06em}'
-      + '#' + rid + ' .fc-pbar-v{font-size:13px;font-weight:900;color:' + barCol + ';transition:color .4s}'
-      + '#' + rid + ' .fc-pbar-bg{height:7px;border-radius:4px;background:rgba(255,255,255,.07);overflow:hidden}'
+      + '#' + rid + ' .fc-pbar-lbl{font-size:9px;font-weight:700;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.06em}'
+      + '#' + rid + ' .fc-pbar-v{font-size:14px;font-weight:900;color:' + barCol + ';transition:color .4s}'
+      + '#' + rid + ' .fc-pbar-bg{height:8px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}'
       + '#' + rid + ' .fc-pbar-fill{height:100%;border-radius:4px;transition:width .6s ease,background .4s ease}'
-      + '#' + rid + ' .fc-stats{display:flex;margin:0 14px 8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;overflow:hidden;cursor:pointer}'
-      + '#' + rid + ' .fc-stats:hover{background:rgba(255,255,255,.05)}'
-      + '#' + rid + ' .fc-sb{flex:1;display:flex;flex-direction:column;align-items:center;padding:7px 3px;gap:2px}'
-      + '#' + rid + ' .fc-sb-sep{width:1px;background:rgba(255,255,255,.07);flex-shrink:0}'
-      + '#' + rid + ' .fc-sb-n{font-size:11px;font-weight:900;color:' + col + '}'
-      + '#' + rid + ' .fc-sb-l{font-size:7px;font-weight:700;color:rgba(255,255,255,.28);text-transform:uppercase;letter-spacing:.4px;text-align:center}'
+      + '#' + rid + ' .fc-stats{display:flex;margin:0 14px 8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden;cursor:pointer}'
+      + '#' + rid + ' .fc-stats:hover{background:rgba(255,255,255,.06)}'
+      + '#' + rid + ' .fc-sb{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 3px;gap:2px}'
+      + '#' + rid + ' .fc-sb-sep{width:1px;background:rgba(255,255,255,.08);flex-shrink:0}'
+      + '#' + rid + ' .fc-sb-n{font-size:12px;font-weight:900;color:' + col + '}'
+      + '#' + rid + ' .fc-sb-l{font-size:8px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.4px;text-align:center}'
       + '#' + rid + ' .fc-btns{display:flex;gap:6px;padding:0 14px 12px}'
-      + '#' + rid + ' .fc-btn{flex:1;padding:7px 4px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);font-size:9px;font-weight:700;color:rgba(255,255,255,.5);text-align:center;cursor:pointer;transition:all .15s}'
-      + '#' + rid + ' .fc-btn:hover{background:rgba(56,189,248,.1);border-color:rgba(56,189,248,.22);color:#38bdf8}'
+      + '#' + rid + ' .fc-btn{flex:1;padding:8px 4px;border-radius:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:10px;font-weight:700;color:#fff;text-align:center;cursor:pointer;transition:all .15s}'
+      + '#' + rid + ' .fc-btn:hover{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.3);color:#38bdf8}'
       + '#' + rid + ' [data-sya]{cursor:pointer}'
       + (running ? '@keyframes fcPulse{0%,100%{opacity:.6}50%{opacity:1}}' : '')
       + '</style>';
@@ -150,10 +150,10 @@
     const heroHtml = '<div class="fc-hero">'
       + '<div class="fc-hero-img" data-sya="popup-cicli">' + _fridgeSVG(running) + '</div>'
       + '<div class="fc-hero-rows">'
-      + ir('⚡', running ? 'Compressore' : 'Ultimo avvio', terminato, running ? '#38bdf8' : 'rgba(255,255,255,.4)')
-      + ir('⏱', running ? 'Durata ciclo' : 'Durata ultimo', tempoC, '#7dd3fc')
-      + ir('🔌', running ? 'Consumo ON' : 'Consumo ultimo', consumoC, '#bae6fd')
-      + ir('💶', running ? 'Costo attuale' : 'Costo ultimo', costoC != null ? costoC + ' €' : '—', '#e0f2fe')
+      + ir('⚡', running ? 'Compressore' : 'Ultimo avvio', terminato, running ? '#38bdf8' : '#fff')
+      + ir('⏱', running ? 'Durata ciclo' : 'Durata ultimo', tempoC, '#fff')
+      + ir('🔌', running ? 'Consumo ON' : 'Consumo ultimo', consumoC, '#fff')
+      + ir('💶', running ? 'Costo attuale' : 'Costo ultimo', costoC != null ? costoC + ' €' : '—', '#fff')
       + '</div>'
       + '</div>';
 
@@ -1452,7 +1452,7 @@ automation:
 
   /* ── CARD ── */
   const CARD = {
-    id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '1.5',
+    id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '1.6',
     desc: 'Monitoraggio compressore, cicli, energia e costi. Richiede PKG Centro Controllo Frigorifero.',
     render: render, mount: mount, update: update, configure: openCfg,
     frarik_pkg_check: 'sensor.frarik_frigorifero_versione',
