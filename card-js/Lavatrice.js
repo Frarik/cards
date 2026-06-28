@@ -48,7 +48,7 @@
     var cx = 32, cy = 53;
     var spinStyle = running ? 'style="transform-origin:' + cx + 'px ' + cy + 'px;animation:wspin 3s linear infinite"' : '';
     var keyframes = running ? '@keyframes wspin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes wbub{0%,100%{opacity:.25;transform:translateY(0)}50%{opacity:.8;transform:translateY(-2px)}}@keyframes wled{0%,100%{opacity:.5}50%{opacity:1}}' : '';
-    return '<svg viewBox="0 0 64 84" width="82" height="107" style="display:block;filter:drop-shadow(0 0 10px rgba(56,189,248,' + (running ? '.3' : '.1') + '))">'
+    return '<svg viewBox="0 0 64 84" width="104" height="137" style="display:block;filter:drop-shadow(0 0 10px rgba(56,189,248,' + (running ? '.3' : '.1') + '))">'
       + (running ? '<defs><style>' + keyframes + '</style></defs>' : '')
       // Corpo
       + '<rect x="2" y="2" width="60" height="80" rx="6" fill="#0b1929" stroke="#1a3050" stroke-width="1.2"/>'
@@ -1535,7 +1535,7 @@ automation:
 
   /* ── CARD ── */
   const CARD = {
-    id: 'lavatrice', name: 'Lavatrice', icon: '🫧', version: '1.1',
+    id: 'lavatrice', name: 'Lavatrice', icon: '🫧', version: '1.2',
     desc: 'Monitoraggio motore, cicli, energia e costi. Richiede PKG Centro Controllo Lavatrice.',
     render: render, mount: mount, update: update, configure: openCfg,
     frarik_pkg_check: 'sensor.frarik_lavatrice_versione',
