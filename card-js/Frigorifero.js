@@ -1,4 +1,4 @@
-/* frarik-version: 1.10 */
+/* frarik-version: 1.11 */
 (function () {
   'use strict';
 
@@ -131,13 +131,15 @@
       + '#' + rid + ' .fc-hero{display:flex;align-items:stretch;padding:10px 14px 8px;flex:1}'
       + '#' + rid + ' .fc-hero-img{flex-shrink:0;padding-right:14px;display:flex;align-items:center;cursor:pointer}'
       + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:7px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:14px}'
-      + '#' + rid + ' .fc-st{display:flex;align-items:center;gap:7px;font-size:14px;font-weight:800;color:' + col + ';padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06)}'
+      + '#' + rid + ' .fc-st{display:flex;align-items:center;justify-content:flex-end;gap:7px;font-size:14px;font-weight:800;color:' + col + ';padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06)}'
       + '#' + rid + ' .fc-stdot{width:8px;height:8px;border-radius:50%;background:' + col + ';flex-shrink:0' + (running ? ';box-shadow:0 0 7px #38bdf8;animation:fcPulse 1.5s ease-in-out infinite' : '') + '}'
-      + '#' + rid + ' .fc-pw{display:flex;flex-direction:column;gap:4px}'
-      + '#' + rid + ' .fc-pw-val{font-size:22px;font-weight:900;color:' + barCol + ';line-height:1;transition:color .4s;text-align:right;width:100%}'
-      + '#' + rid + ' .fc-pw-bar{height:4px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden}'
+      + '#' + rid + ' .fc-pwfull{margin:0 14px 6px}'
+      + '#' + rid + ' .fc-pwfull-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}'
+      + '#' + rid + ' .fc-pwfull-lbl{font-size:10px;font-weight:700;color:#fff}'
+      + '#' + rid + ' .fc-pwfull-v{font-size:18px;font-weight:900;color:' + barCol + ';line-height:1}'
+      + '#' + rid + ' .fc-pw-bar{height:5px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden}'
       + '#' + rid + ' .fc-pw-fill{height:100%;border-radius:2px;transition:width .6s,background .4s}'
-      + '#' + rid + ' .fc-met{display:flex;align-items:center;justify-content:space-between;gap:6px}'
+      + '#' + rid + ' .fc-met{display:flex;align-items:center;justify-content:flex-end;gap:6px}'
       + '#' + rid + ' .fc-met-ic{font-size:13px;flex-shrink:0;width:18px;text-align:center}'
       + '#' + rid + ' .fc-met-v{font-size:16px;font-weight:800;color:#fff}'
       + '#' + rid + ' .fc-met-sm{font-size:12px;font-weight:800;color:#fff}'
@@ -154,19 +156,25 @@
       + (running ? '@keyframes fcPulse{0%,100%{opacity:.6}50%{opacity:1}}' : '')
       + '</style>';
 
+    const cycleDt = lastCycleFull || (terminato !== '—' ? terminato : '—');
+
     const heroHtml = '<div class="fc-hero">'
       + '<div class="fc-hero-img" data-sya="popup-cicli">' + _fridgeSVG(running) + '</div>'
       + '<div class="fc-hero-r">'
-      + '<div class="fc-st"><div class="fc-stdot"></div>' + (running ? 'In funzione' : 'Standby') + '</div>'
-      + '<div class="fc-pw">'
-      + '<div class="fc-pw-val">' + (pw > 0 ? pw.toFixed(0) + ' W' : '— W') + '</div>'
+      + '<div class="fc-st">' + (running ? 'In funzione' : 'Standby') + '<div class="fc-stdot"></div></div>'
+      + '<div class="fc-met"><span class="fc-met-sm">' + cycleDt + '</span><span class="fc-met-ic">🕐</span></div>'
+      + '<div class="fc-met"><span class="fc-met-v">' + (costoC != null ? costoC + ' €' : '—') + '</span><span class="fc-met-ic">💶</span></div>'
+      + '<div class="fc-met"><span class="fc-met-v">' + tempoC + '</span><span class="fc-met-ic">⏱</span></div>'
+      + '<div class="fc-met"><span class="fc-met-v">' + consumoC + '</span><span class="fc-met-ic">🔌</span></div>'
+      + '</div>'
+      + '</div>';
+
+    const pwBarHtml = '<div class="fc-pwfull">'
+      + '<div class="fc-pwfull-hd">'
+      + '<span class="fc-pwfull-lbl">Consumo istantaneo</span>'
+      + '<span class="fc-pwfull-v">' + (pw > 0 ? pw.toFixed(0) + ' W' : '— W') + '</span>'
+      + '</div>'
       + '<div class="fc-pw-bar"><div class="fc-pw-fill" style="width:' + barPct + '%;background:' + barCol + ';box-shadow:0 0 6px ' + barCol + '88"></div></div>'
-      + '</div>'
-      + '<div class="fc-met"><span class="fc-met-ic">⏱</span><span class="fc-met-v">' + tempoC + '</span></div>'
-      + '<div class="fc-met"><span class="fc-met-ic">🔌</span><span class="fc-met-v">' + consumoC + '</span></div>'
-      + '<div class="fc-met"><span class="fc-met-ic">💶</span><span class="fc-met-v">' + (costoC != null ? costoC + ' €' : '—') + '</span></div>'
-      + (!running && lastCycleFull ? '<div class="fc-met"><span class="fc-met-ic">🕐</span><span class="fc-met-sm">' + lastCycleFull + '</span></div>' : '')
-      + '</div>'
       + '</div>';
 
     const statsHtml = '<div class="fc-stats" data-sya="popup-cicli">'
@@ -198,6 +206,7 @@
       + '</div>'
       + '<div class="fc-scroll">'
       + heroHtml
+      + pwBarHtml
       + statsHtml
       + btnsHtml
       + '</div>'
@@ -1462,7 +1471,7 @@ automation:
 
   /* ── CARD ── */
   const CARD = {
-    id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '1.10',
+    id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '1.11',
     desc: 'Monitoraggio compressore, cicli, energia e costi. Richiede PKG Centro Controllo Frigorifero.',
     render: render, mount: mount, update: update, configure: openCfg,
     frarik_pkg_check: 'sensor.frarik_frigorifero_versione',
