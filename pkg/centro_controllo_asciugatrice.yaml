@@ -55,8 +55,8 @@ homeassistant:
 #              IMPOSTAZIONI PACKAGE                #
 ####################################################
 
-        Sensore Potenza Asciugatrice: &sensore_potenza_Asciugatrice "{{ states('sensor.presa_asciugatrice_potenza') | float(0) }}"
-        Switch Asciugatrice:          &switch_Asciugatrice 'switch.presa_asciugatrice'
+        Sensore Potenza Asciugatrice: &sensore_potenza_asciugatrice "{{ states('sensor.presa_asciugatrice_potenza') | float(0) }}"
+        Switch Asciugatrice:          &switch_asciugatrice 'switch.presa_asciugatrice'
 
         Lista MediaPlayer Google: &google
           - media_player.tv_sala
@@ -405,7 +405,7 @@ template:
         device_class: power
         state_class: measurement
         icon: mdi:flash
-        state: *sensore_potenza_Asciugatrice
+        state: *sensore_potenza_asciugatrice
 
       - name: "frarik_asciugatrice_versione"
         state: "1.0"
@@ -610,7 +610,7 @@ automation:
   - platform: state
     entity_id:
       - input_boolean.asciugatrice_switch
-      - *switch_Asciugatrice
+      - *switch_asciugatrice
     from: 'on'
     to: 'off'
     id: switch_off
@@ -618,7 +618,7 @@ automation:
   - platform: state
     entity_id:
       - input_boolean.asciugatrice_switch
-      - *switch_Asciugatrice
+      - *switch_asciugatrice
     from: 'off'
     to: 'on'
     id: switch_on
@@ -707,7 +707,7 @@ automation:
       sequence:
       - service: switch.turn_off
         target:
-          entity_id: *switch_Asciugatrice
+          entity_id: *switch_asciugatrice
       - service: input_boolean.turn_off
         target:
           entity_id: input_boolean.asciugatrice_switch
@@ -720,7 +720,7 @@ automation:
       sequence:
       - service: switch.turn_on
         target:
-          entity_id: *switch_Asciugatrice
+          entity_id: *switch_asciugatrice
       - service: input_boolean.turn_on
         target:
           entity_id: input_boolean.asciugatrice_switch
@@ -835,8 +835,8 @@ automation:
         - condition: trigger
           id: Asciugatrice_automatico_off
         - condition: state
-          entity_id: *switch_Asciugatrice
+          entity_id: *switch_asciugatrice
           state: 'on'
         sequence:
-        - entity_id: *switch_Asciugatrice
+        - entity_id: *switch_asciugatrice
           service: switch.turn_off

@@ -1,4 +1,4 @@
-/* frarik-version: 1.16 */
+/* frarik-version: 1.18 */
 (function () {
   'use strict';
 
@@ -296,9 +296,9 @@
     const _todayIdx = [6,0,1,2,3,4,5][_todayJsDay];
     function cleanVal(v) { return (!v || v === 'unknown' || v === 'unavailable' || v === 'none') ? '—' : v; }
     DAYS.forEach(function (d, i) {
-      const cicli = cleanVal(S(h, 'input_text.' + d + '_frigo_cicli'));
-      const tempo = cleanVal(S(h, 'input_text.' + d + '_frigo_tempo'));
       const isToday = i === _todayIdx;
+      const cicli = isToday ? cleanVal(S(h, c.pk_cicli_oggi))      : cleanVal(S(h, 'input_text.' + d + '_frigo_cicli'));
+      const tempo = isToday ? cleanVal(Attr(h, ton, 'Oggi'))        : cleanVal(S(h, 'input_text.' + d + '_frigo_tempo'));
       weekHtml += '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;background:' + (isToday ? 'rgba(56,189,248,.12)' : 'rgba(56,189,248,.05)') + ';border:1px solid ' + (isToday ? 'rgba(56,189,248,.4)' : 'rgba(56,189,248,.1)') + ';border-radius:8px;padding:6px 2px' + (isToday ? ';box-shadow:0 0 8px rgba(56,189,248,.15)' : '') + '">'
         + '<div style="font-size:8px;font-weight:' + (isToday ? '900' : '700') + ';color:' + (isToday ? '#38bdf8' : '#fff') + '">' + DAY_LABELS[i] + '</div>'
         + '<div style="font-size:11px;font-weight:900;color:#38bdf8">' + cicli + '</div>'
@@ -317,7 +317,12 @@
       + row('Ieri', Attr(h, ton, 'Ieri') || '—', '#fff')
       + row('Questo mese', Attr(h, ton, 'Mese') || '—', '#7dd3fc')
       + row('Mese precedente', Attr(h, ton, 'Mese Precedente') || '—', '#fff')
-      + row('Questo anno', Attr(h, ton, 'Anno') || '—', '#7dd3fc');
+      + row('Questo anno', Attr(h, ton, 'Anno') || '—', '#7dd3fc')
+      + '<div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 4px">Costo</div>'
+      + row('Ultimo ciclo', fmtEur(Attr(h, ton, 'costo_ciclo_frigo')), '#7dd3fc')
+      + row('Oggi', fmtEur(Attr(h, ton, 'costo_oggi_frigo')), '#7dd3fc')
+      + row('Questo mese', fmtEur(Attr(h, ton, 'costo_mese_frigo')), '#fff')
+      + row('Questo anno', fmtEur(Attr(h, ton, 'costo_anno_frigo')), '#fff');
     mkOv(popShell('❄', '56,189,248', 'Cicli & Statistiche', 'Compressore frigo', 'fc-ci-close', content), 'fc-ci-close');
   }
 
@@ -1489,7 +1494,7 @@ automation:
 
   /* ── CARD ── */
   const CARD = {
-    id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '1.17',
+    id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '1.18',
     desc: 'Monitoraggio compressore, cicli, energia e costi. Richiede PKG Centro Controllo Frigorifero.',
     render: render, mount: mount, update: update, configure: openCfg,
     frarik_pkg_check: 'sensor.frarik_frigorifero_versione',

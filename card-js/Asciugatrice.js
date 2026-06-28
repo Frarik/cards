@@ -1,4 +1,4 @@
-﻿/* frarik-version: 1.0 */
+﻿/* frarik-version: 1.2 */
 (function () {
   'use strict';
 

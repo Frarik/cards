@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.6.71 — 2026-06-28
+
+### fix: allineamento struttura card Frigorifero a Lavatrice/Asciugatrice
+
+- Frigorifero: week grid "Ultimi 7 giorni" ora usa sensore live per il giorno corrente (come Lavatrice/Asciugatrice)
+- Frigorifero: aggiunta sezione "Costo" nel popup Cicli (Ultimo ciclo, Oggi, Questo mese, Questo anno)
+- Frigorifero PKG: aggiunto trigger `fine_ciclo` alla condizione aggiornamento statistiche settimanali
+- Asciugatrice PKG: normalizzati anchor YAML a lowercase (`sensore_potenza_asciugatrice`, `switch_asciugatrice`)
+- Frigorifero card: v1.18
+
 ## 1.6.70 — 2026-06-28
 
 ### fix: cache-busting download card JS da GitHub
