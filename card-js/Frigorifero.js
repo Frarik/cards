@@ -1,4 +1,4 @@
-/* frarik-version: 1.15 */
+/* frarik-version: 1.16 */
 (function () {
   'use strict';
 
@@ -139,12 +139,10 @@
       + '#' + rid + ' .fc-pwfull-v{font-size:18px;font-weight:900;color:' + barCol + ';line-height:1}'
       + '#' + rid + ' .fc-pw-bar{height:5px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden}'
       + '#' + rid + ' .fc-pw-fill{height:100%;border-radius:2px;transition:width .6s,background .4s}'
-      + '#' + rid + ' .fc-met{display:flex;align-items:center;justify-content:flex-end;gap:6px}'
-      + '#' + rid + ' .fc-met-ic{font-size:13px;flex-shrink:0;width:18px;text-align:center}'
-      + '#' + rid + ' .fc-met-r{display:flex;flex-direction:column;align-items:flex-end;gap:1px}'
-      + '#' + rid + ' .fc-met-lbl{font-size:11px;font-weight:700;color:#fff;line-height:1}'
-      + '#' + rid + ' .fc-met-v{font-size:15px;font-weight:800;color:#fff;line-height:1}'
-      + '#' + rid + ' .fc-met-sm{font-size:11px;font-weight:800;color:#fff;line-height:1}'
+      + '#' + rid + ' .fc-met{display:flex;align-items:center;justify-content:space-between;gap:6px}'
+      + '#' + rid + ' .fc-met-lbl{font-size:11px;font-weight:700;color:#fff;flex-shrink:0}'
+      + '#' + rid + ' .fc-met-v{font-size:15px;font-weight:800;color:#fff;text-align:right}'
+      + '#' + rid + ' .fc-met-sm{font-size:12px;font-weight:800;color:#fff;text-align:right}'
       + '#' + rid + ' .fc-stats{display:flex;margin:0 14px 8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden;cursor:pointer}'
       + '#' + rid + ' .fc-stats:hover{background:rgba(255,255,255,.06)}'
       + '#' + rid + ' .fc-sb{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 3px;gap:2px}'
@@ -179,10 +177,10 @@
       + '<div class="fc-hero-img" data-sya="popup-cicli">' + _fridgeSVG(running) + '</div>'
       + '<div class="fc-hero-r">'
       + '<div class="fc-st">' + (running ? 'In funzione' : 'Standby') + '<div class="fc-stdot"></div></div>'
-      + '<div class="fc-met"><div class="fc-met-r"><div class="fc-met-lbl">' + cycleLbl + '</div><span class="fc-met-sm">' + cycleDt + '</span></div></div>'
-      + '<div class="fc-met"><div class="fc-met-r"><div class="fc-met-lbl">Costo</div><span class="fc-met-v">' + (costoC != null ? costoC + ' €' : '—') + '</span></div></div>'
-      + '<div class="fc-met"><div class="fc-met-r"><div class="fc-met-lbl">Durata</div><span class="fc-met-v">' + tempoC + '</span></div></div>'
-      + '<div class="fc-met"><div class="fc-met-r"><div class="fc-met-lbl">Energia</div><span class="fc-met-v">' + consumoC + '</span></div></div>'
+      + '<div class="fc-met"><span class="fc-met-lbl">' + cycleLbl + '</span><span class="fc-met-sm">' + cycleDt + '</span></div>'
+      + '<div class="fc-met"><span class="fc-met-lbl">Costo</span><span class="fc-met-v">' + (costoC != null ? costoC + ' €' : '—') + '</span></div>'
+      + '<div class="fc-met"><span class="fc-met-lbl">Durata</span><span class="fc-met-v">' + tempoC + '</span></div>'
+      + '<div class="fc-met"><span class="fc-met-lbl">Energia</span><span class="fc-met-v">' + consumoC + '</span></div>'
       + '</div>'
       + '</div>';
 
@@ -1489,7 +1487,7 @@ automation:
 
   /* ── CARD ── */
   const CARD = {
-    id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '1.15',
+    id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '1.16',
     desc: 'Monitoraggio compressore, cicli, energia e costi. Richiede PKG Centro Controllo Frigorifero.',
     render: render, mount: mount, update: update, configure: openCfg,
     frarik_pkg_check: 'sensor.frarik_frigorifero_versione',
