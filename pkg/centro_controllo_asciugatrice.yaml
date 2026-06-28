@@ -1,0 +1,840 @@
+﻿###############################################################
+#                                                             #
+#   ███████╗██████╗  █████╗ ██████╗ ██╗██╗  ██╗             #
+#   ██╔════╝██╔══██╗██╔══██╗██╔══██╗██║██║ ██╔╝             #
+#   █████╗  ██████╔╝███████║██████╔╝██║█████╔╝              #
+#   ██╔══╝  ██╔══██╗██╔══██║██╔══██╗██║██╔═██╗              #
+#   ██║     ██║  ██║██║  ██║██║  ██║██║██║  ██╗             #
+#   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝            #
+#                                                             #
+#   Package: Centro Controllo Asciugatrice                     #
+#   Versione: 1.0  |  Frarik / Fratech                       #
+#                                                             #
+###############################################################
+#
+# COSA FA QUESTO PACKAGE
+# ──────────────────────────────────────────────────────────
+#  ▸ Monitoraggio potenza istantanea resistenza (W)
+#  ▸ Tracciamento energia consumata (kWh) giorno/mese/anno
+#  ▸ Calcolo costi energetici (usa input_number.costo_energia)
+#  ▸ Conteggio cicli resistenza oggi/mese/anno
+#  ▸ Durata cicli e storico 7 giorni
+#  ▸ Notifiche fine ciclo (Push / Alexa / Google)
+#  ▸ Orario notifiche e spegnimento automatico
+#
+###############################################################
+#
+# INSTALLAZIONE
+# ──────────────────────────────────────────────────────────
+#  1. Verifica che configuration.yaml contenga:
+#
+#       homeassistant:
+#         packages: !include_dir_named packages
+#
+#  2. Copia questo file nella cartella "packages"
+#
+#  3. Modifica le 2 righe sotto "IMPOSTAZIONI PACKAGE":
+#     - Sensore potenza della presa (es. sensor.presa_asciugatrice_potenza)
+#     - Switch della presa (es. switch.presa_asciugatrice)
+#
+#  4. Riavvia Home Assistant
+#
+#  5. Nella card Frarik → Configura → collega le entità pkg
+#
+###############################################################
+
+homeassistant:
+  customize:
+    package.node_anchors:
+      customize: &customize
+        package: 'Centro Controllo Asciugatrice 1.0 — Frarik'
+
+      setting:
+
+####################################################
+#              IMPOSTAZIONI PACKAGE                #
+####################################################
+
+        Sensore Potenza Asciugatrice: &sensore_potenza_Asciugatrice "{{ states('sensor.presa_asciugatrice_potenza') | float(0) }}"
+        Switch Asciugatrice:          &switch_Asciugatrice 'switch.presa_asciugatrice'
+
+        Lista MediaPlayer Google: &google
+          - media_player.tv_sala
+
+        Lista mediaplayer alexa: &alexa
+          - media_player.alexa_cameretta
+
+        Device per notifica push: &push
+          - service: mobile_app_a065
+          - service: mobile_app_iphone_giulia
+
+####################################################
+#                  NOTIFICHE                       #
+####################################################
+
+notify:
+  - name: Asciugatrice
+    platform: group
+    services: *push
+
+####################################################
+#                    SENSORI                       #
+####################################################
+
+sensor:
+  - platform: integration
+    source: sensor.potenza_asciugatrice_w
+    name: kwh_asciugatrice
+    unit_prefix: k
+    method: left
+    round: 2
+
+####################################################
+#                INPUT NUMBER                      #
+####################################################
+
+input_number:
+  asciugatrice_soglia_w:
+    name: Soglia Lavoro Asciugatrice W
+    icon: mdi:flash
+    min: 0
+    max: 5000
+    step: 1.00
+    unit_of_measurement: "w"
+    mode: box
+
+  asciugatrice_tempo_innesco_m:
+    name: Tempo Innesco Asciugatrice M
+    icon: mdi:timer
+    min: 0
+    max: 60
+    step: 1.00
+    unit_of_measurement: "m"
+    mode: box
+
+  asciugatrice_avvio_ritardato_s:
+    name: Avvio Ritardato Asciugatrice S
+    icon: mdi:timer-sand
+    min: 0
+    max: 60
+    step: 1.00
+    unit_of_measurement: "s"
+    mode: box
+
+  lunedi_asciugatrice_consumo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "kwh"
+
+  lunedi_asciugatrice_costo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "€"
+
+  martedi_asciugatrice_consumo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "kwh"
+
+  martedi_asciugatrice_costo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "€"
+
+  mercoledi_asciugatrice_consumo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "kwh"
+
+  mercoledi_asciugatrice_costo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "€"
+
+  giovedi_asciugatrice_consumo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "kwh"
+
+  giovedi_asciugatrice_costo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "€"
+
+  venerdi_asciugatrice_consumo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "kwh"
+
+  venerdi_asciugatrice_costo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "€"
+
+  sabato_asciugatrice_consumo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "kwh"
+
+  sabato_asciugatrice_costo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "€"
+
+  domenica_asciugatrice_consumo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "kwh"
+
+  domenica_asciugatrice_costo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "€"
+
+####################################################
+#                 UTILITY METER                    #
+####################################################
+
+utility_meter:
+
+  asciugatrice_tempo_oggi:
+    source: sensor.time_on_asciugatrice
+    cycle: daily
+
+  asciugatrice_tempo_mese:
+    source: sensor.time_on_asciugatrice
+    cycle: monthly
+
+  asciugatrice_tempo_anno:
+    source: sensor.time_on_asciugatrice
+    cycle: yearly
+
+  asciugatrice_cicli_oggi:
+    source: counter.asciugatrice_cicli_totale
+    cycle: daily
+
+  asciugatrice_cicli_mese:
+    source: counter.asciugatrice_cicli_totale
+    cycle: monthly
+
+  asciugatrice_cicli_anno:
+    source: counter.asciugatrice_cicli_totale
+    cycle: yearly
+
+  asciugatrice_energy_oggi:
+    source: sensor.kwh_asciugatrice
+    cycle: daily
+
+  asciugatrice_energy_mese:
+    source: sensor.kwh_asciugatrice
+    cycle: monthly
+
+  asciugatrice_energy_anno:
+    source: sensor.kwh_asciugatrice
+    cycle: yearly
+
+####################################################
+#                TEMPLATE                          #
+####################################################
+
+template:
+  - binary_sensor:
+      - name: resistenza_asciugatrice
+        icon: mdi:tumble-dryer
+        state: >-
+          {{ 'on' if (states('sensor.potenza_asciugatrice_w') | int(0)) >
+             states('input_number.asciugatrice_soglia_w') | int(0) else 'off' }}
+        delay_off: "00:{{ states('input_number.asciugatrice_tempo_innesco_m') | int(0) }}:00"
+        delay_on:  "00:00:{{ states('input_number.asciugatrice_avvio_ritardato_s') | int(0) }}"
+
+  - trigger:
+      - platform: state
+        entity_id: input_boolean.asciugatrice_ciclo_attivo
+        from: "off"
+        to: "on"
+    sensor:
+      - name: inizio_ciclo_asciugatrice
+        state: "{{ states('sensor.kwh_asciugatrice') }}"
+
+  - trigger:
+      - platform: state
+        entity_id: binary_sensor.resistenza_asciugatrice
+        from: "on"
+        to: "off"
+    sensor:
+      - name: fine_ciclo_asciugatrice
+        state: "{{ now().strftime('%d/%m/%Y %H:%M') }}"
+
+  - trigger:
+      - platform: state
+        entity_id: input_boolean.asciugatrice_ciclo_attivo
+        from: "off"
+        to: "on"
+    sensor:
+      - name: tempo_riavvio_asciugatrice
+        state: "{{ as_timestamp(now()) }}"
+
+  - sensor:
+      - name: "time_on_asciugatrice"
+        icon: mdi:history
+        state: >-
+          {% if is_state('binary_sensor.resistenza_asciugatrice', 'on') and
+                (as_timestamp(states.binary_sensor.resistenza_asciugatrice.last_changed) + 1) <= as_timestamp(now()) %}
+            {{ ((as_timestamp(now()) - as_timestamp(states.binary_sensor.resistenza_asciugatrice.last_changed)) / 3600) }}
+          {% else %} 0 {% endif %}
+        attributes:
+          terminato: >-
+            {{ states('sensor.fine_ciclo_asciugatrice') if is_state('binary_sensor.resistenza_asciugatrice', 'off') else 'In funzione' }}
+          tempo_ciclo_asciugatrice: >
+            {% set hours = (as_timestamp(now()) - states('sensor.tempo_riavvio_asciugatrice') | float(0)) / 3600 %}
+            {% set minutes = ((hours % 1) * 60) | int(0) %}
+            {% set hours = (hours - (hours % 1)) | int(0) %}
+            {% set day = ((hours | int(0) / 24)) | int(0) %}
+            {% if is_state('input_boolean.asciugatrice_ciclo_attivo', 'on') %}
+              {% if day | int(0) > 0 %}
+                {{ day }}d {{ (hours | int(0)) - (day * 24) }}h {{ minutes }}m
+              {% elif hours | int(0) > 0 %}
+                {{ hours }}h {{ minutes }}m
+              {% else %}
+                {{ minutes }}min
+              {% endif %}
+            {% else %}
+              {{ states('input_text.asciugatrice_ultimo_ciclo') }}
+            {% endif %}
+          Oggi: >
+            {% set hours = states('sensor.asciugatrice_tempo_oggi') | float(0) %}
+            {% set minutes = ((hours % 1) * 60) | int(0) %}
+            {% set hours = (hours - (hours % 1)) | int(0) %}
+            {% if hours | int(0) > 0 %}
+              {{ hours }}h {{ minutes }}m
+            {% else %}
+              {{ minutes }}min
+            {% endif %}
+          Mese: >
+            {% set hours = states('sensor.asciugatrice_tempo_mese') | float(0) %}
+            {% set minutes = ((hours % 1) * 60) | int(0) %}
+            {% set hours = (hours - (hours % 1)) | int(0) %}
+            {% set day = ((hours | int / 24)) | int(0) %}
+            {% if day | int(0) > 0 %}
+              {{ day }}d {{ (hours | int) - (day * 24) }}h {{ minutes }}m
+            {% elif hours | int(0) > 0 %}
+              {{ hours }}h {{ minutes }}m
+            {% else %}
+              {{ minutes }}min
+            {% endif %}
+          Anno: >
+            {% set hours = states('sensor.asciugatrice_tempo_anno') | float(0) %}
+            {% set minutes = ((hours % 1) * 60) | int(0) %}
+            {% set hours = (hours - (hours % 1)) | int(0) %}
+            {% set day = ((hours | int(0) / 24)) | int(0) %}
+            {% if day | int(0) > 0 %}
+              {{ day }}d {{ (hours | int(0)) - (day * 24) }}h {{ minutes }}m
+            {% elif hours | int(0) > 0 %}
+              {{ hours }}h {{ minutes }}m
+            {% else %}
+              {{ minutes }}min
+            {% endif %}
+          Ieri: >
+            {% set hours = state_attr('sensor.asciugatrice_tempo_oggi', 'last_period') | float(0) %}
+            {% set minutes = ((hours % 1) * 60) | int(0) %}
+            {% set hours = (hours - (hours % 1)) | int(0) %}
+            {% if hours | int(0) > 0 %}
+              {{ hours }}h {{ minutes }}m
+            {% else %}
+              {{ minutes }}min
+            {% endif %}
+          Mese Precedente: >
+            {% set hours = state_attr('sensor.asciugatrice_tempo_mese', 'last_period') | float(0) %}
+            {% set minutes = ((hours % 1) * 60) | int(0) %}
+            {% set hours = (hours - (hours % 1)) | int(0) %}
+            {% set day = ((hours | int / 24)) | int(0) %}
+            {% if day | int(0) > 0 %}
+              {{ day }}d {{ (hours | int) - (day * 24) }}h {{ minutes }}m
+            {% elif hours | int(0) > 0 %}
+              {{ hours }}h {{ minutes }}m
+            {% else %}
+              {{ minutes }}min
+            {% endif %}
+          consumo_ciclo_asciugatrice: >-
+            {{ (states('sensor.kwh_asciugatrice') | float(0) - states('sensor.inizio_ciclo_asciugatrice') | float(0)) | round(3) }} kWh
+          costo_ciclo_asciugatrice: >-
+            {{ ((states('sensor.kwh_asciugatrice') | float(0) - states('sensor.inizio_ciclo_asciugatrice') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(3, default=0) }}
+          costo_oggi_asciugatrice: >-
+            {{ ((states('sensor.asciugatrice_energy_oggi') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+          costo_mese_asciugatrice: >-
+            {{ ((states('sensor.asciugatrice_energy_mese') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+          costo_anno_asciugatrice: >-
+            {{ ((states('sensor.asciugatrice_energy_anno') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+          costo_ieri_asciugatrice: >-
+            {{ ((state_attr('sensor.asciugatrice_energy_oggi', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+          costo_mese_prec_asciugatrice: >-
+            {{ ((state_attr('sensor.asciugatrice_energy_mese', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+          costo_anno_prec_asciugatrice: >-
+            {{ ((state_attr('sensor.asciugatrice_energy_anno', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+
+      - name: "potenza_asciugatrice_w"
+        unit_of_measurement: 'W'
+        device_class: power
+        state_class: measurement
+        icon: mdi:flash
+        state: *sensore_potenza_Asciugatrice
+
+      - name: "frarik_asciugatrice_versione
+        state: "1.0"
+
+####################################################
+#                   COUNTER                        #
+####################################################
+
+counter:
+  asciugatrice_cicli_totale:
+    name: Cicli Resistenza Asciugatrice
+    initial: 0
+    step: 1
+
+####################################################
+#                INPUT BOOLEAN                     #
+####################################################
+
+input_boolean:
+  asciugatrice_switch:
+    name: Switch Asciugatrice
+    icon: mdi:power
+
+  asciugatrice_ciclo_attivo:
+    name: Ciclo Attivo Asciugatrice
+
+  asciugatrice_notify_push:
+    name: Notifica Push Asciugatrice
+
+  asciugatrice_notify_alexa:
+    name: Notifica Alexa Asciugatrice
+
+  asciugatrice_notify_google:
+    name: Notifica Google Asciugatrice
+
+####################################################
+#                     GROUP                        #
+####################################################
+
+group:
+  asciugatrice_notifiche:
+    entities:
+      - input_boolean.asciugatrice_notify_google
+      - input_boolean.asciugatrice_notify_alexa
+      - input_boolean.asciugatrice_notify_push
+      - automation.asciugatrice_off_automatico
+      - input_boolean.asciugatrice_switch
+
+####################################################
+#                 INPUT DATETIME                   #
+####################################################
+
+input_datetime:
+  asciugatrice_notifiche_inizio:
+    name: Orario Inizio Notifiche Asciugatrice
+    has_date: false
+    has_time: true
+
+  asciugatrice_notifiche_fine:
+    name: Orario Fine Notifiche Asciugatrice
+    has_date: false
+    has_time: true
+
+  asciugatrice_off:
+    name: Asciugatrice Spegnimento Automatico
+    has_date: false
+    has_time: true
+
+####################################################
+#                  INPUT TEXT                      #
+####################################################
+
+input_text:
+  asciugatrice_data_reset:
+
+  asciugatrice_nome:
+
+  asciugatrice_messaggio:
+
+  asciugatrice_ultimo_ciclo:
+
+  lunedi_asciugatrice_cicli:
+  lunedi_asciugatrice_tempo:
+
+  martedi_asciugatrice_cicli:
+  martedi_asciugatrice_tempo:
+
+  mercoledi_asciugatrice_cicli:
+  mercoledi_asciugatrice_tempo:
+
+  giovedi_asciugatrice_cicli:
+  giovedi_asciugatrice_tempo:
+
+  venerdi_asciugatrice_cicli:
+  venerdi_asciugatrice_tempo:
+
+  sabato_asciugatrice_cicli:
+  sabato_asciugatrice_tempo:
+
+  domenica_asciugatrice_cicli:
+  domenica_asciugatrice_tempo:
+
+####################################################
+#                     SCRIPT                       #
+####################################################
+
+script:
+  asciugatrice_reset_sensori:
+    sequence:
+    - service: input_text.set_value
+      data:
+        value: "{{ now().strftime('%d/%m/%Y %H:%M') }}"
+      target:
+        entity_id: input_text.asciugatrice_data_reset
+
+    - service: utility_meter.calibrate
+      data:
+        value: '0'
+      target:
+        entity_id:
+          - sensor.asciugatrice_cicli_oggi
+          - sensor.asciugatrice_cicli_mese
+          - sensor.asciugatrice_cicli_anno
+          - sensor.asciugatrice_energy_oggi
+          - sensor.asciugatrice_energy_mese
+          - sensor.asciugatrice_energy_anno
+          - sensor.asciugatrice_tempo_oggi
+          - sensor.asciugatrice_tempo_mese
+          - sensor.asciugatrice_tempo_anno
+
+    - service: input_number.set_value
+      data:
+        value: '0'
+      target:
+        entity_id:
+          - input_number.lunedi_asciugatrice_consumo
+          - input_number.martedi_asciugatrice_consumo
+          - input_number.mercoledi_asciugatrice_consumo
+          - input_number.giovedi_asciugatrice_consumo
+          - input_number.venerdi_asciugatrice_consumo
+          - input_number.sabato_asciugatrice_consumo
+          - input_number.domenica_asciugatrice_consumo
+          - input_number.lunedi_asciugatrice_costo
+          - input_number.martedi_asciugatrice_costo
+          - input_number.mercoledi_asciugatrice_costo
+          - input_number.giovedi_asciugatrice_costo
+          - input_number.venerdi_asciugatrice_costo
+          - input_number.sabato_asciugatrice_costo
+          - input_number.domenica_asciugatrice_costo
+
+    - service: input_text.set_value
+      data:
+        value: '0'
+      target:
+        entity_id:
+          - input_text.lunedi_asciugatrice_cicli
+          - input_text.martedi_asciugatrice_cicli
+          - input_text.mercoledi_asciugatrice_cicli
+          - input_text.giovedi_asciugatrice_cicli
+          - input_text.venerdi_asciugatrice_cicli
+          - input_text.sabato_asciugatrice_cicli
+          - input_text.domenica_asciugatrice_cicli
+          - input_text.lunedi_asciugatrice_tempo
+          - input_text.martedi_asciugatrice_tempo
+          - input_text.mercoledi_asciugatrice_tempo
+          - input_text.giovedi_asciugatrice_tempo
+          - input_text.venerdi_asciugatrice_tempo
+          - input_text.sabato_asciugatrice_tempo
+          - input_text.domenica_asciugatrice_tempo
+
+    - service: counter.reset
+      target:
+        entity_id:
+          - counter.asciugatrice_cicli_totale
+
+####################################################
+#                  AUTOMAZIONI                     #
+####################################################
+
+automation:
+- alias: asciugatrice_automazioni
+  id: asciugatrice_automazioni
+  max_exceeded: silent
+  trigger:
+
+  - platform: state
+    entity_id: binary_sensor.resistenza_asciugatrice
+    from: 'off'
+    to: 'on'
+    id: inizio_ciclo
+
+  - platform: state
+    entity_id: binary_sensor.resistenza_asciugatrice
+    from: 'on'
+    to: 'off'
+    id: fine_ciclo
+
+  - platform: time
+    at: '23:59:59'
+    id: incremento_statistiche_7gg
+
+  - platform: state
+    entity_id:
+      - input_boolean.asciugatrice_switch
+      - *switch_Asciugatrice
+    from: 'on'
+    to: 'off'
+    id: switch_off
+
+  - platform: state
+    entity_id:
+      - input_boolean.asciugatrice_switch
+      - *switch_Asciugatrice
+    from: 'off'
+    to: 'on'
+    id: switch_on
+
+  - platform: template
+    value_template: >-
+      {{ is_state('binary_sensor.resistenza_asciugatrice','off') and
+         is_state('input_boolean.asciugatrice_ciclo_attivo','on') }}
+    id: controllo_ciclo
+
+  action:
+
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: incremento_statistiche_7gg
+      sequence:
+
+      - service: input_text.set_value
+        target:
+          entity_id: >
+            {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
+            {% if today == "Monday" %}    input_text.lunedi_asciugatrice_cicli
+            {% elif today == "Tuesday" %} input_text.martedi_asciugatrice_cicli
+            {% elif today == "Wednesday" %} input_text.mercoledi_asciugatrice_cicli
+            {% elif today == "Thursday" %} input_text.giovedi_asciugatrice_cicli
+            {% elif today == "Friday" %}  input_text.venerdi_asciugatrice_cicli
+            {% elif today == "Saturday" %} input_text.sabato_asciugatrice_cicli
+            {% elif today == "Sunday" %}  input_text.domenica_asciugatrice_cicli
+            {% endif %}
+        data:
+          value: "{{ states('sensor.asciugatrice_cicli_oggi') }}"
+
+      - service: input_text.set_value
+        target:
+          entity_id: >
+            {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
+            {% if today == "Monday" %}    input_text.lunedi_asciugatrice_tempo
+            {% elif today == "Tuesday" %} input_text.martedi_asciugatrice_tempo
+            {% elif today == "Wednesday" %} input_text.mercoledi_asciugatrice_tempo
+            {% elif today == "Thursday" %} input_text.giovedi_asciugatrice_tempo
+            {% elif today == "Friday" %}  input_text.venerdi_asciugatrice_tempo
+            {% elif today == "Saturday" %} input_text.sabato_asciugatrice_tempo
+            {% elif today == "Sunday" %}  input_text.domenica_asciugatrice_tempo
+            {% endif %}
+        data:
+          value: "{{ state_attr('sensor.time_on_asciugatrice','Oggi') }}"
+
+      - service: input_number.set_value
+        target:
+          entity_id: >
+            {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
+            {% if today == "Monday" %}    input_number.lunedi_asciugatrice_consumo
+            {% elif today == "Tuesday" %} input_number.martedi_asciugatrice_consumo
+            {% elif today == "Wednesday" %} input_number.mercoledi_asciugatrice_consumo
+            {% elif today == "Thursday" %} input_number.giovedi_asciugatrice_consumo
+            {% elif today == "Friday" %}  input_number.venerdi_asciugatrice_consumo
+            {% elif today == "Saturday" %} input_number.sabato_asciugatrice_consumo
+            {% elif today == "Sunday" %}  input_number.domenica_asciugatrice_consumo
+            {% endif %}
+        data:
+          value: "{{ states('sensor.asciugatrice_energy_oggi') }}"
+
+      - service: input_number.set_value
+        target:
+          entity_id: >
+            {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
+            {% if today == "Monday" %}    input_number.lunedi_asciugatrice_costo
+            {% elif today == "Tuesday" %} input_number.martedi_asciugatrice_costo
+            {% elif today == "Wednesday" %} input_number.mercoledi_asciugatrice_costo
+            {% elif today == "Thursday" %} input_number.giovedi_asciugatrice_costo
+            {% elif today == "Friday" %}  input_number.venerdi_asciugatrice_costo
+            {% elif today == "Saturday" %} input_number.sabato_asciugatrice_costo
+            {% elif today == "Sunday" %}  input_number.domenica_asciugatrice_costo
+            {% endif %}
+        data:
+          value: "{{ state_attr('sensor.time_on_asciugatrice','costo_oggi_asciugatrice') }}"
+
+  - choose:
+    - alias: SWITCH OFF
+      conditions:
+      - condition: trigger
+        id: switch_off
+      sequence:
+      - service: switch.turn_off
+        target:
+          entity_id: *switch_Asciugatrice
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.asciugatrice_switch
+
+  - choose:
+    - alias: SWITCH ON
+      conditions:
+      - condition: trigger
+        id: switch_on
+      sequence:
+      - service: switch.turn_on
+        target:
+          entity_id: *switch_Asciugatrice
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.asciugatrice_switch
+
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: controllo_ciclo
+      sequence:
+      - delay: '00:01:00'
+      - entity_id: input_boolean.asciugatrice_ciclo_attivo
+        service: input_boolean.turn_off
+
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: inizio_ciclo
+      sequence:
+      - entity_id: input_boolean.asciugatrice_ciclo_attivo
+        service: input_boolean.turn_on
+
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: fine_ciclo
+      sequence:
+
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.asciugatrice_ultimo_ciclo
+        data:
+          value: "{{ state_attr('sensor.time_on_asciugatrice','tempo_ciclo_asciugatrice') }}"
+
+      - service: counter.increment
+        target:
+          entity_id: counter.asciugatrice_cicli_totale
+
+      - delay: '00:00:05'
+
+      - entity_id: input_boolean.asciugatrice_ciclo_attivo
+        service: input_boolean.turn_off
+
+  - parallel:
+    - choose:
+      - conditions:
+        - condition: trigger
+          id: fine_ciclo
+        - condition: time
+          after: 'input_datetime.asciugatrice_notifiche_inizio'
+          before: 'input_datetime.asciugatrice_notifiche_fine'
+        - condition: state
+          entity_id: input_boolean.asciugatrice_notify_google
+          state: 'on'
+        sequence:
+        - service: tts.google_translate_say
+          continue_on_error: true
+          data:
+            entity_id: *google
+            message: "{{ states('input_text.asciugatrice_messaggio') }} in {{ state_attr('sensor.time_on_asciugatrice','tempo_ciclo_asciugatrice') }}"
+
+    - choose:
+      - conditions:
+        - condition: trigger
+          id: fine_ciclo
+        - condition: time
+          after: 'input_datetime.asciugatrice_notifiche_inizio'
+          before: 'input_datetime.asciugatrice_notifiche_fine'
+        - condition: state
+          entity_id: input_boolean.asciugatrice_notify_alexa
+          state: 'on'
+        sequence:
+        - service: notify.alexa_media
+          continue_on_error: true
+          data:
+            target: *alexa
+            data:
+              type: announce
+              method: spoken
+            message: "{{ states('input_text.asciugatrice_messaggio') }} in {{ state_attr('sensor.time_on_asciugatrice','tempo_ciclo_asciugatrice') }}"
+
+    - choose:
+      - conditions:
+        - condition: trigger
+          id: fine_ciclo
+        - condition: state
+          entity_id: input_boolean.asciugatrice_notify_push
+          state: 'on'
+        sequence:
+        - data_template:
+            message: >-
+              🫧 {{ states('input_text.asciugatrice_nome') }}
+
+              ⏱ Ciclo durato: {{ state_attr('sensor.time_on_asciugatrice','tempo_ciclo_asciugatrice') }}
+
+              ⚡ Consumati: {{ state_attr('sensor.time_on_asciugatrice','consumo_ciclo_asciugatrice') }}
+
+              💰 Spesi: {{ state_attr('sensor.time_on_asciugatrice','costo_ciclo_asciugatrice') }} €
+            title: "Asciugatrice"
+          service: notify.asciugatrice
+          continue_on_error: true
+
+- alias: asciugatrice_off_automatico
+  id: asciugatrice_off_automatico
+  trigger:
+    - platform: time
+      at: 'input_datetime.asciugatrice_off'
+      id: Asciugatrice_automatico_off
+  condition: []
+  action:
+    - choose:
+      - conditions:
+        - condition: trigger
+          id: Asciugatrice_automatico_off
+        - condition: state
+          entity_id: *switch_Asciugatrice
+          state: 'on'
+        sequence:
+        - entity_id: *switch_Asciugatrice
+          service: switch.turn_off
