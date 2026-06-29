@@ -1627,6 +1627,14 @@ window.customCards.push({ version: '1.0',
     try { var h = _iH(); if (h && h.callService) { h.callService(domain, svc, data); return; } if (window.callSvc) window.callSvc(domain, svc, data); } catch(e) {}
   }
 
+  function _iComputeSig(h, c) {
+    var px = c.pk_prefix||'irrigazione';
+    var dk = ['lunedi','martedi','mercoledi','giovedi','venerdi','sabato','domenica'];
+    var dsg = dk.map(function(d){return _iIsOn(h,'input_boolean.'+px+'_'+d)?'1':'0';}).join('');
+    var tc = _iS(h,c.pk_timer_ciclo), tm = _iS(h,c.pk_timer_manuale);
+    return ['2.1irr',_iS(h,c.pk_stato),_iS(h,c.pk_auto),_iS(h,c.pk_manuale),tc,tm,_iS(h,c.pk_cicli_oggi),_iS(h,c.pk_blocco_meteo),_iS(h,c.pk_pioggia),_iS(h,c.pk_rubinetto),dsg].join('|');
+  }
+
   function _iMount(card, hass, el) {
     if (el._fcBound === '2.1irr') return;
     el._fcBound = '2.1irr';
@@ -1643,15 +1651,24 @@ window.customCards.push({ version: '1.0',
       if (a.length > 4 && a.slice(0,4) === 'day-') _iOpenDayDetail(card, a.slice(4), _iCfgFor(card).pk_prefix||'irrigazione');
     };
     el.addEventListener('click', el._fcHandler);
+    clearInterval(el._irrPoll);
+    el._irrPoll = setInterval(function() {
+      try {
+        if (!el._fcBound) { clearInterval(el._irrPoll); return; }
+        var h = _iH(), c2 = _iCfgFor(card);
+        var sig = _iComputeSig(h, c2);
+        var tc2 = _iS(h,c2.pk_timer_ciclo), tm2 = _iS(h,c2.pk_timer_manuale);
+        if (tc2 === 'active' || tm2 === 'active') sig += '|' + Date.now();
+        if (el._fcSig !== sig) { el._fcSig = sig; el.innerHTML = _iRender(card); }
+      } catch(e) {}
+    }, 2000);
   }
 
   function _iUpdate(card, hass, el) {
     var h = _iH(), c = _iCfgFor(card);
     var tc = _iS(h,c.pk_timer_ciclo), tm = _iS(h,c.pk_timer_manuale);
-    var iPrefix2 = c.pk_prefix||'irrigazione';
-    var iDayIds3 = ['lunedi','martedi','mercoledi','giovedi','venerdi','sabato','domenica'];
-    var iDaySig = iDayIds3.map(function(d){return _iIsOn(h,'input_boolean.'+iPrefix2+'_'+d)?'1':'0';}).join('');
-    var sig = ['2.1irr',_iS(h,c.pk_stato),_iS(h,c.pk_auto),_iS(h,c.pk_manuale),tc,tm,_iS(h,c.pk_cicli_oggi),_iS(h,c.pk_blocco_meteo),_iS(h,c.pk_pioggia),_iS(h,c.pk_rubinetto),iDaySig].join('|');
+    var sig = _iComputeSig(h, c);
+    if (tc === 'active' || tm === 'active') sig += '|' + Math.floor(Date.now()/1000);
     if (tc === 'active' || tm === 'active') {
       clearTimeout(el._irrTick);
       el._irrTick = setTimeout(function() { el._fcSig = null; }, 1000);
@@ -1661,7 +1678,7 @@ window.customCards.push({ version: '1.0',
   }
 
   var _IRR_CARD = {
-    id: 'irrigazione', name: 'Irrigazione Smart', icon: '💧', version: '2.1',
+    id: 'irrigazione', name: 'Irrigazione Smart', icon: '💧', version: '2.2',
     desc: 'Controllo irrigazione: schedule settimanale, timer animato, blocco meteo e storico.',
     render:    function(card) { return _iRender(card); },
     mount:     function(card, hass, el) { _iMount(card, hass, el); },

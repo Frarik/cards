@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.84 — 2026-06-29
+
+### fix: live update card + ristrutturazione impostazioni Differenziata
+
+- `Antizanzare.js` v2.2: aggiunto polling live ogni 2s (`setInterval` in mount) — la card si aggiorna in tempo reale senza uscire/rientrare; estratta `_azComputeSig()` condivisa tra mount-poll e update; timer tick integrato nel sig
+- `Irrigazione.js` v2.2: stesso polling live + `_iComputeSig()` condivisa
+- `Differenziata.js` v2.2: rimossi toggle notifiche dalla card stessa; rimosso bottone "Modifica giorni" — tutto ora nell'unico popup ⚙ Impostazioni (modifica giorni per giorno con pallino colore + toggle Push/Google/Alexa con orario); entity ID spostati nella funzione `configure` (modalità modifica dashboard) tramite `_dOpenEntCfg`; polling live ogni 2s
+
 ## 1.6.83 — 2026-06-29
 
 ### feat: card v2.1 — schedule settimanale editabile, toggle notifiche, testo rifiuto più grande

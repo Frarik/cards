@@ -851,28 +851,8 @@ window.customCards.push({ version: '1.0',
 
     var weekHtml = '<div class="fc-week">' + weekChips + '</div>';
 
-    // Notification toggles
-    var nPush   = _dIsOn(h, c.pk_npush);
-    var nGoogle = _dIsOn(h, c.pk_ngoogle);
-    var nAlexa  = _dIsOn(h, c.pk_nalexa);
-    function _dNtogBtn(label, sya, isOn) {
-      return '<div data-sya="' + sya + '" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:7px 4px;border-radius:9px;background:rgba(' + (isOn?'34,197,94':'100,116,139') + ',.1);border:1px solid rgba(' + (isOn?'34,197,94':'100,116,139') + ',' + (isOn?'.35':'.15') + ');transition:all .2s">'
-        + '<div style="font-size:13px">' + (isOn ? '🔔' : '🔕') + '</div>'
-        + '<div style="font-size:9px;font-weight:800;color:' + (isOn ? '#22c55e' : 'rgba(255,255,255,.35)') + '">' + label + '</div>'
-        + '<div style="font-size:8px;font-weight:700;color:' + (isOn ? '#fff' : 'rgba(255,255,255,.25)') + '">' + (isOn ? 'ON' : 'OFF') + '</div>'
-        + '</div>';
-    }
-    var notifHtml = '<div style="padding:0 14px 10px">'
-      + '<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.35);margin-bottom:7px">Notifiche</div>'
-      + '<div style="display:flex;gap:8px">'
-      + _dNtogBtn('Push', 'ntoggle-push', nPush)
-      + _dNtogBtn('Google', 'ntoggle-google', nGoogle)
-      + _dNtogBtn('Alexa', 'ntoggle-alexa', nAlexa)
-      + '</div></div>';
-
     var btnsHtml = '<div class="fc-btns">'
-      + '<div class="fc-btn" data-sya="popup-edit">✏ Modifica giorni</div>'
-      + '<div class="fc-btn" data-sya="popup-cfg" style="flex:0.7">⚙</div>'
+      + '<div class="fc-btn" data-sya="popup-cfg">⚙ Impostazioni</div>'
       + '</div>';
 
     return css
@@ -882,7 +862,7 @@ window.customCards.push({ version: '1.0',
       + '<div class="fc-hdr-tit">' + (c.name || 'Raccolta Differenziata') + '</div>'
       + '<div class="fc-hdr-pill"><div class="fc-dot"></div>' + statusLabel + '</div>'
       + '</div>'
-      + '<div class="fc-scroll">' + heroHtml + weekHtml + notifHtml + btnsHtml + '</div>'
+      + '<div class="fc-scroll">' + heroHtml + weekHtml + btnsHtml + '</div>'
       + '</div></div>';
   }
 
@@ -942,31 +922,98 @@ window.customCards.push({ version: '1.0',
   }
 
   function _dOpenCfg(card, el) {
+    var h = _dH(), c = _dCfgFor(card);
+    var days = ['pk_lunedi','pk_martedi','pk_mercoledi','pk_giovedi','pk_venerdi','pk_sabato','pk_domenica'];
+    var dayLabels = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato','Domenica'];
+    var suggestions = ['Organico','Carta','Cartone','Plastica','Vetro','Indifferenziato','Multimateriale','Ingombranti','Nessuno'];
+    var nPush   = _dIsOn(h, c.pk_npush);
+    var nGoogle = _dIsOn(h, c.pk_ngoogle);
+    var nAlexa  = _dIsOn(h, c.pk_nalexa);
+    var orario  = _dS(h, c.pk_orario) || '08:00:00';
+    function ntog(label, sya, isOn) {
+      return '<div data-sya="' + sya + '" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:8px 4px;border-radius:9px;background:rgba(' + (isOn?'34,197,94':'100,116,139') + ',.1);border:1px solid rgba(' + (isOn?'34,197,94':'100,116,139') + ',' + (isOn?'.35':'.15') + ');transition:all .2s">'
+        + '<div style="font-size:15px">' + (isOn ? '🔔' : '🔕') + '</div>'
+        + '<div style="font-size:10px;font-weight:800;color:' + (isOn ? '#22c55e' : 'rgba(255,255,255,.35)') + '">' + label + '</div>'
+        + '<div style="font-size:9px;font-weight:700;color:' + (isOn ? '#fff' : 'rgba(255,255,255,.25)') + '">' + (isOn ? 'ON' : 'OFF') + '</div>'
+        + '</div>';
+    }
+    var dayFlds = days.map(function(k, i) {
+      var val = (_dS(h, c[k]) || '').replace(/"/g,'&quot;');
+      var w = _dWasteInfo(_dS(h, c[k]) || '');
+      return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+        + '<div style="font-size:10px;font-weight:800;color:#94a3b8;width:82px;flex-shrink:0">' + dayLabels[i] + '</div>'
+        + '<div style="width:8px;height:8px;border-radius:50%;background:' + w.col + ';flex-shrink:0"></div>'
+        + '<input id="dcf-' + k + '" type="text" list="dcf-datalist" placeholder="es. Organico" value="' + val + '" style="flex:1;padding:7px 9px;border-radius:8px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:12px;box-sizing:border-box;outline:none">'
+        + '</div>';
+    }).join('');
+    var content = '<datalist id="dcf-datalist">' + suggestions.map(function(s){return '<option value="'+s+'">';}).join('') + '</datalist>'
+      + '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#22c55e;padding-bottom:4px;border-bottom:1px solid rgba(34,197,94,.18);margin-bottom:10px">Programmazione giorni</div>'
+      + dayFlds
+      + '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#22c55e;padding-bottom:4px;border-bottom:1px solid rgba(34,197,94,.18);margin:14px 0 10px">Notifiche</div>'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">'
+      + '<span style="font-size:11px;color:#fff;flex:1">Orario notifica</span>'
+      + '<input id="dcf-orario" type="time" value="' + orario.slice(0,5) + '" style="width:110px;padding:6px 9px;border-radius:7px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:13px;outline:none">'
+      + '</div>'
+      + '<div style="display:flex;gap:8px;margin-bottom:14px">'
+      + ntog('Push', 'ncfg-push', nPush) + ntog('Google', 'ncfg-google', nGoogle) + ntog('Alexa', 'ncfg-alexa', nAlexa)
+      + '</div>'
+      + '<button id="d-cfg-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#22c55e;color:#022c1b">💾 Salva</button>';
+    var ov = _dMkOv(_dPopShell('⚙','34,197,94','Impostazioni',c.name||'Raccolta Differenziata','d-cfg-cl',content),'d-cfg-cl');
+    // Notification toggles inside cfg popup
+    ov.querySelectorAll('[data-sya^="ncfg-"]').forEach(function(tog) {
+      tog.addEventListener('click', function() {
+        var sya = tog.dataset.sya;
+        var eid = sya === 'ncfg-push' ? c.pk_npush : sya === 'ncfg-google' ? c.pk_ngoogle : c.pk_nalexa;
+        var wasOn = tog.querySelector('div:last-child').textContent === 'ON';
+        _dCallSvc('input_boolean', wasOn ? 'turn_off' : 'turn_on', {entity_id: eid});
+        tog.style.background = 'rgba(' + (wasOn?'100,116,139':'34,197,94') + ',.1)';
+        tog.style.border = '1px solid rgba(' + (wasOn?'100,116,139':'34,197,94') + ',' + (wasOn?'.15':'.35') + ')';
+        tog.querySelector('div:first-child').textContent = wasOn ? '🔕' : '🔔';
+        tog.querySelector('div:nth-child(2)').style.color = wasOn ? 'rgba(255,255,255,.35)' : '#22c55e';
+        var lv = tog.querySelector('div:last-child'); lv.textContent = wasOn ? 'OFF' : 'ON'; lv.style.color = wasOn ? 'rgba(255,255,255,.25)' : '#fff';
+      });
+    });
+    ov.querySelector('#d-cfg-save').addEventListener('click', function() {
+      var h2 = _dH();
+      days.forEach(function(k) {
+        var inp = ov.querySelector('#dcf-'+k);
+        if (!inp) return;
+        var eid = c[k];
+        if (eid && h2 && h2.callService) h2.callService('input_text','set_value',{entity_id:eid, value:inp.value.trim()});
+      });
+      var ori = ov.querySelector('#dcf-orario');
+      if (ori && ori.value && h2 && h2.callService) h2.callService('input_datetime','set_datetime',{entity_id:c.pk_orario, time:ori.value+':00'});
+      ov._close();
+      if (el) el._fcSig = null;
+    });
+  }
+
+  function _dOpenEntCfg(card, el) {
     var c = _dCfgFor(card);
     function fld(key, label, ph) {
       return '<div style="margin-bottom:10px">'
         + '<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px">' + label + '</div>'
-        + '<input id="dcf-' + key + '" type="text" autocomplete="off" placeholder="' + ph + '" value="' + (c[key]||'').replace(/"/g,'&quot;') + '" style="width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:11px;font-family:monospace;box-sizing:border-box;outline:none">'
+        + '<input id="dent-' + key + '" type="text" autocomplete="off" placeholder="' + ph + '" value="' + (c[key]||'').replace(/"/g,'&quot;') + '" style="width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:11px;font-family:monospace;box-sizing:border-box;outline:none">'
         + '</div>';
     }
     function sec(t) { return '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#22c55e;padding-bottom:4px;border-bottom:1px solid rgba(34,197,94,.18);margin:14px 0 10px">' + t + '</div>'; }
     var days = ['pk_lunedi','pk_martedi','pk_mercoledi','pk_giovedi','pk_venerdi','pk_sabato','pk_domenica'];
     var dayLabels = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato','Domenica'];
     var content = '<div style="margin-bottom:10px"><div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px">Nome card</div>'
-      + '<input id="dcf-name" type="text" placeholder="Raccolta Differenziata" value="' + (c.name||'').replace(/"/g,'&quot;') + '" style="width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:11px;box-sizing:border-box;outline:none"></div>'
-      + sec('Entità giorni')
-      + days.map(function(k,i){ return fld(k, dayLabels[i], 'input_text.rifiuto_'+dayLabels[i].toLowerCase().replace('à','a').replace('ì','i').replace('ù','u')); }).join('')
-      + sec('Notifiche')
+      + '<input id="dent-name" type="text" placeholder="Raccolta Differenziata" value="' + (c.name||'').replace(/"/g,'&quot;') + '" style="width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:11px;box-sizing:border-box;outline:none"></div>'
+      + sec('Entità giorni (input_text)')
+      + days.map(function(k,i){ return fld(k, dayLabels[i], 'input_text.rifiuto_'+['lunedi','martedi','mercoledi','giovedi','venerdi','sabato','domenica'][i]); }).join('')
+      + sec('Entità notifiche')
       + fld('pk_orario','Orario notifica','input_datetime.orario_notifica_differenziata')
       + fld('pk_npush','Boolean push','input_boolean.notify_push_raccolta_differenziata')
       + fld('pk_ngoogle','Boolean Google','input_boolean.notify_google_raccolta_differenziata')
       + fld('pk_nalexa','Boolean Alexa','input_boolean.notify_alexa_raccolta_differenziata')
-      + '<button id="d-cfg-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#22c55e;color:#022c1b;margin-top:8px">💾 Salva</button>';
-    var ov = _dMkOv(_dPopShell('⚙','34,197,94','Impostazioni',c.name||'Raccolta Differenziata','d-cfg-cl',content),'d-cfg-cl');
-    ov.querySelector('#d-cfg-save').addEventListener('click', function() {
+      + '<button id="dent-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#22c55e;color:#022c1b;margin-top:8px">💾 Salva</button>';
+    var ov = _dMkOv(_dPopShell('🔧','34,197,94','Entità',c.name||'Raccolta Differenziata','dent-cl',content),'dent-cl');
+    ov.querySelector('#dent-save').addEventListener('click', function() {
       var pk = _dPkgDef(), saved = {};
-      Object.keys(pk).forEach(function(k) { var i = ov.querySelector('#dcf-'+k); if (i) saved[k] = i.value.trim(); });
-      var ni = ov.querySelector('#dcf-name'); if (ni) saved.name = ni.value.trim();
+      Object.keys(pk).forEach(function(k) { var i = ov.querySelector('#dent-'+k); if (i) saved[k] = i.value.trim(); });
+      var ni = ov.querySelector('#dent-name'); if (ni) saved.name = ni.value.trim();
       _dSave(card, saved);
       ov._close();
       if (el) el._fcSig = null;
@@ -983,14 +1030,20 @@ window.customCards.push({ version: '1.0',
     if (el._fcHandler) el.removeEventListener('click', el._fcHandler);
     el._fcHandler = function(e) {
       var t = e.target.closest('[data-sya]'); if (!t) return;
-      var a = t.dataset.sya, c = _dCfgFor(card), h = _dH();
-      if (a === 'popup-edit') _dOpenEdit(card, el);
-      if (a === 'popup-cfg')  _dOpenCfg(card, el);
-      if (a === 'ntoggle-push')   _dCallSvc('input_boolean', _dIsOn(h,c.pk_npush)   ? 'turn_off' : 'turn_on', {entity_id:c.pk_npush});
-      if (a === 'ntoggle-google') _dCallSvc('input_boolean', _dIsOn(h,c.pk_ngoogle) ? 'turn_off' : 'turn_on', {entity_id:c.pk_ngoogle});
-      if (a === 'ntoggle-alexa')  _dCallSvc('input_boolean', _dIsOn(h,c.pk_nalexa)  ? 'turn_off' : 'turn_on', {entity_id:c.pk_nalexa});
+      var a = t.dataset.sya;
+      if (a === 'popup-cfg') _dOpenCfg(card, el);
     };
     el.addEventListener('click', el._fcHandler);
+    clearInterval(el._dPoll);
+    el._dPoll = setInterval(function() {
+      try {
+        if (!el._fcBound) { clearInterval(el._dPoll); return; }
+        var h = _dH(), c2 = _dCfgFor(card);
+        var days2 = ['pk_lunedi','pk_martedi','pk_mercoledi','pk_giovedi','pk_venerdi','pk_sabato','pk_domenica'];
+        var sig = ['2.1diff'].concat(days2.map(function(k){return _dS(h,c2[k])||'';})).concat([_dIsOn(h,c2.pk_npush)?'1':'0',_dIsOn(h,c2.pk_ngoogle)?'1':'0',_dIsOn(h,c2.pk_nalexa)?'1':'0']).join('|');
+        if (el._fcSig !== sig) { el._fcSig = sig; el.innerHTML = _dRender(card); }
+      } catch(e) {}
+    }, 2000);
   }
 
   function _dUpdate(card, hass, el) {
@@ -1002,12 +1055,12 @@ window.customCards.push({ version: '1.0',
   }
 
   var _DIFF_CARD = {
-    id: 'differenziata', name: 'Raccolta Differenziata', icon: '♻️', version: '2.1',
+    id: 'differenziata', name: 'Raccolta Differenziata', icon: '♻️', version: '2.2',
     desc: 'Calendario raccolta differenziata settimanale con notifiche push, Google e Alexa.',
     render:    function(card) { return _dRender(card); },
     mount:     function(card, hass, el) { _dMount(card, hass, el); },
     update:    function(card, hass, el) { _dUpdate(card, hass, el); },
-    configure: function(card, el) { _dOpenCfg(card, el); },
+    configure: function(card, el) { _dOpenEntCfg(card, el); },
     frarik_pkg_check:   'sensor.raccolta_differenziata',
     frarik_pkg_id:      'frarik_differenziata',
     frarik_pkg_version: '1.0',

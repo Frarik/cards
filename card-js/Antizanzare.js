@@ -1462,6 +1462,14 @@ window.customCards.push({ version: '1.5',
     try { var h = _azH(); if (h && h.callService) { h.callService(domain, svc, data); return; } if (window.callSvc) window.callSvc(domain, svc, data); } catch(e) {}
   }
 
+  function _azComputeSig(h, c) {
+    var px = c.pk_prefix||'anti_zanzare';
+    var dk = ['lunedi','martedi','mercoledi','giovedi','venerdi','sabato','domenica'];
+    var dsg = dk.map(function(d){return _azIsOn(h,'input_boolean.'+px+'_'+d)?'1':'0';}).join('');
+    var tc = _azS(h,c.pk_timer_ciclo), tm = _azS(h,c.pk_timer_manuale);
+    return ['2.1az',_azS(h,c.pk_stato),_azS(h,c.pk_auto),_azS(h,c.pk_manuale),tc,tm,_azS(h,c.pk_cicli_mensili),_azS(h,c.pk_blocco_meteo),_azS(h,c.pk_pioggia),dsg].join('|');
+  }
+
   function _azMount(card, hass, el) {
     if (el._fcBound === '2.1az') return;
     el._fcBound = '2.1az';
@@ -1478,25 +1486,31 @@ window.customCards.push({ version: '1.5',
       if (a.length > 4 && a.slice(0,4) === 'day-') _azOpenDayDetail(card, a.slice(4), _azCfgFor(card).pk_prefix||'anti_zanzare');
     };
     el.addEventListener('click', el._fcHandler);
+    // Live polling — aggiorna la card ogni 2s se lo stato HA è cambiato
+    clearInterval(el._azPoll);
+    el._azPoll = setInterval(function() {
+      try {
+        if (!el._fcBound) { clearInterval(el._azPoll); return; }
+        var h = _azH(), c2 = _azCfgFor(card);
+        var sig = _azComputeSig(h, c2);
+        var tc2 = _azS(h,c2.pk_timer_ciclo), tm2 = _azS(h,c2.pk_timer_manuale);
+        if (tc2 === 'active' || tm2 === 'active') sig += '|' + Date.now(); // forza tick ogni ciclo
+        if (el._fcSig !== sig) { el._fcSig = sig; el.innerHTML = _azRender(card); }
+      } catch(e) {}
+    }, 2000);
   }
 
   function _azUpdate(card, hass, el) {
     var h = _azH(), c = _azCfgFor(card);
+    var sig = _azComputeSig(h, c);
     var tc = _azS(h,c.pk_timer_ciclo), tm = _azS(h,c.pk_timer_manuale);
-    var prefix2 = c.pk_prefix||'anti_zanzare';
-    var dayIds3 = ['lunedi','martedi','mercoledi','giovedi','venerdi','sabato','domenica'];
-    var daySig = dayIds3.map(function(d){return _azIsOn(h,'input_boolean.'+prefix2+'_'+d)?'1':'0';}).join('');
-    var sig = ['2.1az',_azS(h,c.pk_stato),_azS(h,c.pk_auto),_azS(h,c.pk_manuale),tc,tm,_azS(h,c.pk_cicli_mensili),_azS(h,c.pk_blocco_meteo),_azS(h,c.pk_pioggia),daySig].join('|');
-    if (tc === 'active' || tm === 'active') {
-      clearTimeout(el._azTick);
-      el._azTick = setTimeout(function() { el._fcSig = null; }, 1000);
-    }
+    if (tc === 'active' || tm === 'active') sig += '|' + Math.floor(Date.now()/1000);
     if (!el.querySelector('.fc-card') || el._fcSig !== sig) { el._fcSig = sig; el.innerHTML = _azRender(card); }
     _azMount(card, hass, el);
   }
 
   var _AZ_CARD = {
-    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.1',
+    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.2',
     desc: 'Controllo sistema anti zanzare: schedule settimanale, timer, statistiche mensili e blocco meteo.',
     render:    function(card) { return _azRender(card); },
     mount:     function(card, hass, el) { _azMount(card, hass, el); },
