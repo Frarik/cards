@@ -1,4 +1,4 @@
-﻿/* frarik-version: 1.6 */
+﻿/* frarik-version: 1.7 */
 (function () {
   'use strict';
 
@@ -109,16 +109,13 @@
       + '<path d="M' + (cx-16) + ' ' + (cy-8) + ' Q' + (cx-19) + ' ' + (cy-2) + ' ' + (cx-16) + ' ' + (cy+4) + '" stroke="rgba(255,255,255,.04)" stroke-width="1.5" fill="none" stroke-linecap="round"/>'
       // Maniglia oblò (destra)
       + '<rect x="57" y="' + (cy-6) + '" width="4" height="12" rx="2" fill="#0f1e35" stroke="#1e3a5f" stroke-width=".6"/>'
-      // Pannello inferiore
-      + '<rect x="2" y="77" width="60" height="7" rx="3" fill="#070f1c" stroke="#162035" stroke-width=".5"/>'
+      // Pannello inferiore (sotto l'oblò, non sovrapposto)
+      + '<rect x="2" y="79" width="60" height="3" rx="1.5" fill="#070f1c" stroke="#162035" stroke-width=".5"/>'
       // Sportellino filtro pelucchi
-      + '<rect x="4" y="78.5" width="12" height="4" rx="2" fill="#0a1525" stroke="#1e3a5f" stroke-width=".5"/>'
-      + '<circle cx="10" cy="80.5" r="1.2" fill="' + (running ? 'rgba(249,115,22,.3)' : '#0d2040') + '"/>'
+      + '<rect x="4" y="79.5" width="12" height="2" rx="1" fill="#0a1525" stroke="#1e3a5f" stroke-width=".5"/>'
+      + '<circle cx="10" cy="80.5" r="1" fill="' + (running ? 'rgba(249,115,22,.3)' : '#0d2040') + '"/>'
       // LED on/off
-      + '<circle cx="56" cy="80.5" r="1.5" fill="' + (running ? '#22c55e' : '#0a1a2e') + '"' + (running ? ' style="animation:aled 2s ease-in-out infinite"' : '') + '/>'
-      // Piedini
-      + '<rect x="5" y="82" width="10" height="2" rx="1" fill="#060d1a"/>'
-      + '<rect x="49" y="82" width="10" height="2" rx="1" fill="#060d1a"/>'
+      + '<circle cx="56" cy="80.5" r="1.2" fill="' + (running ? '#22c55e' : '#0a1a2e') + '"' + (running ? ' style="animation:aled 2s ease-in-out infinite"' : '') + '/>'
       + '</svg>';
   }
 

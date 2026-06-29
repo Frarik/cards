@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.78 — 2026-06-29
+
+### fix: pannello filtro Lavatrice/Asciugatrice non sovrapposto all'oblò
+
+- Lavatrice v1.9, Asciugatrice v1.7: pannello inferiore spostato da y=77 a y=79 (drum bottom = y=78) — lo sportellino non copre più il bordo dell'oblò
+- Rimossi i piedini (erano fuori dal viewBox, invisibili)
+
 ## 1.6.77 — 2026-06-28
 
 ### fix: ripristino altezza card — max-height:130px sul container immagine
