@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.6.94 — 2026-06-30
+
+### feat: store — tab Installate, card JS e Elettrodomestici senza duplicati, spostamento manuale
+
+- **Tab 🗂 Installate**: mostra tutte le card JS installate da GitHub, con badge del tab di appartenenza (⚡/🔌), bottoni Aggiungi/Aggiorna/Disinstalla e bottone ⤷ Sposta
+- **Card JS**: ora mostra SOLO card non-installate e non-appliance — le installate vanno in Installate, le appliance in Elettrodomestici
+- **Elettrodomestici**: ora mostra SOLO card non-installate — le installate scompaiono dal tab e vanno in Installate
+- **Spostamento manuale** (⤷): ogni tile ha un bottone che apre un picker per assegnare manualmente la card a ⚡ Card JS, 🔌 Elettrodomestici o 🔄 Auto (torna al rilevamento automatico). La scelta viene salvata in localStorage e sopravvive ai refresh
+
 ## 1.6.93 — 2026-06-30
 
 ### feat: store — tab Elettrodomestici con auto-categorizzazione
