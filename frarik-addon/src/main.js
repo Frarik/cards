@@ -2169,7 +2169,7 @@ async function _ghsPreview(enc, nm, cardId){
 }
 function ghStoreTab(tab){
   _ghsTab=tab;
-  ['js','chips','distintivi','premium','yaml','pkg','local','card-yaml','predefinite','saved'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
+  ['js','chips','distintivi','premium','yaml','pkg','local','card-yaml','predefinite','saved','elettrodomestici'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
   const s=document.getElementById('ghs-search'); if(s){ s.value=''; s.style.display=(tab==='card-yaml'||tab==='saved')?'none':''; }
   const loadEl=document.getElementById('ghs-load'); if(loadEl) loadEl.style.display=(tab==='local')?'':'none';
   if(tab==='predefinite'){ _ghStoreRender(); return; }
@@ -2177,6 +2177,18 @@ function ghStoreTab(tab){
   if(tab==='card-yaml'){ _ghStoreRender(); return; }
   if(tab==='saved'){ _ghStoreRender(); return; }
   if(tab==='pkg'){ _loadHaInstalledPkgs().then(()=>{ if(_ghsTab==='pkg') _ghStoreRender(); }); _ghStoreRender(); return; }
+  if(tab==='elettrodomestici'){
+    if(_ghsCache['js']){ _ghStoreRender(); return; }
+    document.getElementById('ghs-status').textContent='⏳ Carico da GitHub…';
+    document.getElementById('ghs-list').innerHTML='';
+    const fEl=_GHS_FOLDERS['js'];
+    _ghListFolder(fEl.path).then(files=>{
+      _ghsCache['js']=files.filter(x=>fEl.ext.test(x.name)&&!(fEl.exclude&&fEl.exclude.test(x.name)));
+      if(_ghsTab==='elettrodomestici') _ghStoreRender();
+      _ghFetchVerLabels('js');
+    }).catch(e=>{ document.getElementById('ghs-status').textContent='⚠️ '+e.message; });
+    return;
+  }
   if(tab==='premium'&&_ghsCache[tab]!==undefined){ _ghStoreRender(); return; }
   if(tab!=='premium'&&_ghsCache[tab]){ _ghStoreRender(); return; }
   document.getElementById('ghs-status').textContent='⏳ Carico da GitHub…';
@@ -2220,6 +2232,7 @@ function _ghStoreRender(){
   if(tab==='premium'){ _ghStoreRenderPremium(q); return; }
   if(tab==='card-yaml'){ _ghStoreRenderYamlEditor(); return; }
   if(tab==='saved'){ _ghStoreRenderSaved(); return; }
+  if(tab==='elettrodomestici'){ _ghStoreRenderElettr(q); return; }
   const folder=_GHS_FOLDERS[tab]; const g=_ghCfg();
   let files=(_ghsCache[tab]||[]).slice();
   if(q) files=files.filter(f=>f.name.toLowerCase().includes(q));
@@ -2405,6 +2418,72 @@ function _ghStoreRenderPredefinite(q){
       <div class="ghc-acts">${act}${del}</div></div></div>`;
   }).join('')+'</div>';
   requestAnimationFrame(()=>{ list.querySelectorAll('[data-prev-id]').forEach(el=>{ _ghcLivePrev(el, el.dataset.prevId); }); });
+}
+/* ── TAB ELETTRODOMESTICI: filtro automatico su card-js ── */
+function _isElettrCard(f, idFile){
+  const cardId=Object.keys(idFile||{}).find(k=>(idFile||{})[k]===f.name)||null;
+  // 1. Registry: CARD.category impostato dalla card
+  if(cardId){ const reg=window.FratechCardRegistry?.[cardId]; if(reg&&reg.category) return reg.category==='elettrodomestici'; }
+  // 2. Codice sorgente: /* frarik-category: elettrodomestici */
+  const code=_ghCodeCache[f.sha]||'';
+  if(code){ const m=code.match(/frarik-category:\s*(\S+)/i); if(m) return m[1].toLowerCase()==='elettrodomestici'; }
+  // 3. Smart-match sul nome file (fallback per card esistenti)
+  const n=(f.name||'').toLowerCase().replace(/\.js$/i,'');
+  return /asciugat|lavatr|lavastov|forno|friggit|microond|scaldab|bolletta|elettrodomest|clima|condiz|split|hvac/.test(n);
+}
+function _ghStoreRenderElettr(q){
+  const list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
+  const g=_ghCfg(); const idFile=g.idFile||{};
+  const _cpCards=(curPage()||{cards:[]}).cards||[];
+  const usedInCurPage=new Set();
+  _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId&&!(window.FratechCardRegistry?.[c.jsCardId]?.isDistintivo)&&!(window.FratechCardRegistry?.[c.jsCardId]?.allowMultiple)) usedInCurPage.add(c.jsCardId); });
+  ((curPage()||{}).headerBadges||[]).forEach(b=>{ if(b.type==='jsd'&&b.jsCardId) usedInCurPage.add(b.jsCardId); });
+  let files=(_ghsCache['js']||[]).filter(f=>_isElettrCard(f,idFile));
+  if(q) files=files.filter(f=>f.name.toLowerCase().includes(q));
+  const hdr=`<div style="margin-bottom:14px;padding:12px 14px;border-radius:12px;background:rgba(56,189,248,.07);border:1px solid rgba(56,189,248,.2);font-size:11px;color:rgba(255,255,255,.7);line-height:1.6"><b style="color:#7dd3fc">🔌 Elettrodomestici</b> — card per monitoraggio consumi ed elettrodomestici.<br><span style="opacity:.7">Le card con <code style="background:rgba(255,255,255,.08);padding:0 3px;border-radius:3px">category:'elettrodomestici'</code> appaiono automaticamente qui.</span></div>`;
+  status.textContent=files.length+' card'+(q?' trovate':'');
+  if(!files.length){ list.innerHTML=hdr+`<div class="ghs-empty">${q?`Nessun risultato per "${eh(q)}"`: 'Nessuna card elettrodomestici trovata.'}</div>`; return; }
+  const sorted=files.slice().sort((a,b)=>a.name.localeCompare(b.name));
+  const installed=[], toInstall=[];
+  sorted.forEach(f=>{ (g.shas[f.name]?installed:toInstall).push(f); });
+  const tileInstalled=(f)=>{
+    const nm=f.name.replace(/\.(js|ya?ml)$/i,''); const enc=encodeURIComponent(f.name);
+    const cardId=Object.keys(idFile).find(k=>idFile[k]===f.name)||null;
+    const verGH=_ghVerCache[f.sha]||g.fileVersions[f.name]||(cardId&&_curStoreVersion(cardId))||'';
+    const verLocal=cardId?(_curStoreVersion(cardId)||''):'';
+    const hasUpdate=!!(g.shas[f.name]&&g.shas[f.name]!==f.sha);
+    const inCurPage=!!(cardId&&usedInCurPage.has(cardId));
+    const reg=cardId?window.FratechCardRegistry?.[cardId]:null;
+    const icon=(reg?.icon)||(_jsStoreList().find(i=>(i.meta||{}).id===cardId)?.meta?.icon)||'🔌';
+    const desc=_ghcDesc(cardId,f.sha);
+    const verLbl=hasUpdate&&verGH&&verLocal?`v${verLocal} → v${verGH}`:verGH?`v${verGH}`:verLocal?`v${verLocal}`:'';
+    const st=hasUpdate?'upd':'ok';
+    const prevHtml=cardId&&reg?`<div class="ghc-prev-inner" data-prev-id="${eh(cardId)}"></div>`:`<div class="ghc-prev-inner" data-prev-sha="${eh(f.sha)}"></div>`;
+    const _inLabel=reg?.isDistintivo?'In intestazione':'In vista';
+    const bdg=hasUpdate?`<span class="ghc-bdg upd">↑ Aggiornamento</span>`:inCurPage?`<span class="ghc-bdg cur">✓ ${_inLabel}</span>`:`<span class="ghc-bdg ok">● Installata</span>`;
+    const updBtn=hasUpdate?`<button class="ghc-btn ghc-btn-upd" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-update"></i> Aggiorna</button>`:'';
+    const addBtn=cardId?(inCurPage?`<span class="ghc-indash"><i class="mdi mdi-check-circle-outline"></i> ${_inLabel}</span>`:`<button class="ghc-btn ghc-btn-add" data-action="_jsStoreAddAndRefresh" data-action-args='["${cardId}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`):`<button class="ghc-btn ghc-btn-inst" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>`;
+    const delBtn=cardId?`<button class="ghc-btn-del" data-action="_ghsDeleteInstalled" data-action-arg="${cardId}" title="Disinstalla"><i class="mdi mdi-delete-outline"></i></button>`:'';
+    return `<div class="ghc-tile st-${st}"><div class="ghc-strip ${st}"></div><div class="ghc-prev">${prevHtml}<div class="ghc-prev-fade"></div>${bdg}</div><div class="ghc-body"><div class="ghc-head"><div class="ghc-ico">${_iconHtml(icon)}</div><div class="ghc-meta"><div class="ghc-name">${eh(nm)}</div>${verLbl?`<div class="ghc-ver">${eh(verLbl)}</div>`:''}</div></div>${desc?`<div class="ghc-desc">${eh(desc)}</div>`:''}<div class="ghc-acts">${updBtn}${addBtn}${delBtn}</div></div></div>`;
+  };
+  const tileToInstall=(f)=>{
+    const nm=f.name.replace(/\.(js|ya?ml)$/i,''); const enc=encodeURIComponent(f.name);
+    const verLbl=_ghVerCache[f.sha]||g.fileVersions[f.name]||'';
+    const rawDesc=_ghDescCache[f.sha]||'';
+    const desc=rawDesc||_ghcSmartDesc(nm,'');
+    const icon=_ghIconCache[f.sha]||_ghcSmartIcon(nm)||'🔌';
+    return `<div class="ghc-tile st-new"><div class="ghc-strip new"></div><div class="ghc-prev"><div class="ghc-prev-inner" data-prev-sha="${eh(f.sha)}"></div><div class="ghc-prev-fade"></div><span class="ghc-bdg new">⬇ Disponibile</span></div><div class="ghc-body"><div class="ghc-head"><div class="ghc-ico">${_iconHtml(icon)}</div><div class="ghc-meta"><div class="ghc-name">${eh(nm)}</div>${verLbl?`<div class="ghc-ver">v${eh(verLbl)}</div>`:''}</div></div>${desc?`<div class="ghc-desc">${eh(desc)}</div>`:''}<div class="ghc-acts"><button class="ghc-btn ghc-btn-inst" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button></div></div></div>`;
+  };
+  list.innerHTML=hdr+'<div class="ghc-grid">'
+    +`<div class="ghc-sec"><span class="ghc-sec-dot ok"></span>Installate<span class="ghc-sec-cnt">${installed.length}</span></div>`
+    +(installed.length?installed.map(tileInstalled).join(''):`<div style="grid-column:1/-1"><div class="ghs-empty">Nessuna card elettrodomestici installata</div></div>`)
+    +`<div class="ghc-sec"><span class="ghc-sec-dot new"></span>Da installare<span class="ghc-sec-cnt">${toInstall.length}</span></div>`
+    +(toInstall.length?toInstall.map(tileToInstall).join(''):`<div style="grid-column:1/-1"><div class="ghs-empty">Tutte installate!</div></div>`)
+    +'</div>';
+  requestAnimationFrame(()=>{
+    list.querySelectorAll('[data-prev-id]').forEach(el=>{ _ghcLivePrev(el, el.dataset.prevId); });
+    list.querySelectorAll('[data-prev-sha]').forEach(el=>{ _ghcLivePrevBySha(el, el.dataset.prevSha); });
+  });
 }
 function _isAdmin(){
   const note=(localStorage.getItem('frarik_lic_note')||'').toLowerCase();

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.6.93 — 2026-06-30
+
+### feat: store — tab Elettrodomestici con auto-categorizzazione
+
+- `index.html`: aggiunto bottone tab 🔌 Elettrodomestici tra Card JS e Chips
+- `main.js`: `_isElettrCard()` — rileva automaticamente se una card è un elettrodomestico con 3 livelli: 1) `CARD.category='elettrodomestici'` nel registry; 2) commento `/* frarik-category: elettrodomestici */` nel codice; 3) smart-match sul nome file (Asciugatrice, Bolletta, Clima, Forno, ecc.)
+- `main.js`: `_ghStoreRenderElettr()` — rendering filtrato identico alla tab Card JS ma solo card elettrodomestici; intestazione informativa con spiegazione auto-categorizzazione
+- `main.js`: `ghStoreTab('elettrodomestici')` — riutilizza `_ghsCache['js']` se già caricato, altrimenti scarica card-js da GitHub
+
 ## 1.6.92 — 2026-06-29
 
 ### fix: frarik_bolletta — rename entità da `br_` a `bolletta_`
