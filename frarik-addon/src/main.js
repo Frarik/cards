@@ -2329,7 +2329,7 @@ function _ghStoreRender(){
   list.innerHTML='<div class="ghc-grid">'
     +(installed.length?`<div class="ghc-sec"><span class="ghc-sec-dot ok"></span>Installate<span class="ghc-sec-cnt">${installed.length}</span></div>`+installed.map(tileInstalled).join(''):'')
     +`<div class="ghc-sec"><span class="ghc-sec-dot new"></span>Da installare<span class="ghc-sec-cnt">${toInstall.length}</span></div>`
-    +(toInstall.length?toInstall.map(tileToInstall).join(''):`<div style="grid-column:1/-1"><div class="ghs-empty">${tab==='js'?'Tutte le card JS sono installate — vai su <b style="color:#7dd3fc">🗂 Installate</b>':'Tutte le card di questa cartella sono installate'}</div></div>`)
+    +(toInstall.length?toInstall.map(tileToInstall).join(''):`<div style="grid-column:1/-1"><div class="ghs-empty">${tab==='js'?'Tutte le card sono installate — vai su <b style="color:#7dd3fc">🗂 Installate</b>':'Tutte le card di questa cartella sono installate'}</div></div>`)
     +'</div>';
 
   requestAnimationFrame(()=>{
@@ -2519,7 +2519,7 @@ function _isElettrCard(f, idFile){
   if(code){ const m=code.match(/frarik-category:\s*(\S+)/i); if(m) return m[1].toLowerCase()==='elettrodomestici'; }
   // 3. Smart-match sul nome file (fallback per card esistenti)
   const n=(f.name||'').toLowerCase().replace(/\.js$/i,'');
-  return /asciugat|lavatr|lavastov|forno|friggit|microond|scaldab|bolletta|elettrodomest|clima|condiz|split|hvac/.test(n);
+  return /asciugat|lavatr|lavastov|forno|friggit|microond|scaldab|frigorif|induzion|elettrodomest|clima|condiz|split|hvac/.test(n);
 }
 function _ghStoreRenderElettr(q){
   const list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');

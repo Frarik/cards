@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.95 — 2026-06-30
+
+### fix: store — categorizzazione corretta Frigorifero/Induzione/Bolletta + rename tab Cards
+
+- `_isElettrCard`: aggiunto `frigorif` e `induzion` alla regex → Frigorifero e Induzione ora riconosciuti come elettrodomestici
+- `_isElettrCard`: rimosso `bolletta` dalla regex → Bolletta torna in tab Cards (non è un elettrodomestico)
+- `index.html`: tab "Card JS" rinominato in "Cards"
+
 ## 1.6.94 — 2026-06-30
 
 ### feat: store — tab Installate, card JS e Elettrodomestici senza duplicati, spostamento manuale
