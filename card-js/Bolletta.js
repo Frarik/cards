@@ -472,8 +472,8 @@
     icon:    '⚡',
     version: _bVer,
     desc:    'Calcolo bolletta elettrica con tariffe ARERA auto-aggiornate, storico 12 mesi, proiezione e integrazione Octopus.',
-    frarik_pkg_check: false,
-    frarik_pkg_id:    'bolletta_riccardo',
+    frarik_pkg_check: 'sensor.frarik_bolletta_versione',
+    frarik_pkg_id:    'frarik_bolletta',
     frarik_pkg_version: '1.0',
 
     render: function(card) {
