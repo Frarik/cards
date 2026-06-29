@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.6.91 — 2026-06-29
+
+### feat: frarik_bolletta.yaml v1.0 — Package formato Frarik standard
+
+**frarik_bolletta.yaml v1.0** (riscritto in formato frarik standard)
+- Logo ASCII FRARIK, sezioni COSA FA / INSTALLAZIONE / ENTITÀ CREATE
+- `homeassistant: customize:` con ancore YAML per sensore potenza, Octopus, notifiche push
+- `notify.frarik_bolletta` gruppo push — `group.notifiche_bolletta` toggle
+- Sensore `frarik_bolletta_versione` per rilevamento automatico pkg nella card
+- Integration sensor W→kWh + 5 utility meter (giornaliero/settimanale/mensile/trimestrale/annuale)
+- REST ARERA auto-aggiornamento (24h) con 16 tariffe regolatorie; fallback su `input_number.br_fb_*`
+- 14 sensori template di calcolo (perdite, dispacciamento, mercato capacità, DISPbt, PNO, commercializzazione, trasporto x3, UC3, UC6 x2, ARIM, ASOS, accise, IVA, canone RAI)
+- Bolletta mensile, giornaliera, proiezione, costo al kWh, media giornaliera, media settimanale, simulatore sandbox
+- Storico 12+12 mesi (€+kWh), archiviazione anno a fine dicembre, backup anti-reset ogni 15 min
+- Toggle notifiche granulari, alert soglia potenza (W) con finestra oraria, report mattutino 08:00, alert scadenza Octopus
+- Script `br_reset_sensori_energia`, 8 automazioni
+
 ## 1.6.90 — 2026-06-29
 
 ### feat: Card Bolletta v1.0 — Package completo energia elettrica
@@ -14,14 +31,7 @@
 - Popup **Impostazioni**: slider tariffa Octopus, bonus, soglia alert potenza, sandbox simulatore (inserisci kWh → calcola bolletta)
 - Configuratore entity ID (⚙ in header o `configure()`)
 
-**bolletta_riccardo.yaml v1.0** (nuovo package, fusione di 5 sorgenti)
-- Integration sensor W→kWh + 5 utility meter (giornaliero/settimanale/mensile/trimestrale/annuale)
-- REST ARERA auto-aggiornamento (24h) con 16 tariffe regolatorie; fallback su `input_number.br_fb_*`
-- 14 sensori template di calcolo (perdite, dispacciamento, mercato capacità, DISPbt, PNO, commercializzazione, trasporto x3, UC3, UC6 x2, ARIM, ASOS, accise, IVA, canone RAI)
-- Bolletta mensile, giornaliera, proiezione, costo al kWh, media giornaliera, media settimanale, simulatore sandbox
-- Storico 12+12 mesi (€+kWh), archiviazione anno a fine dicembre
-- Toggle notifiche granulari, alert soglia potenza (W) con finestra oraria, report mattutino 08:00
-- Script `br_reset_sensori_energia`, input_datetime fasce notifiche, 8 automazioni
+**bolletta_riccardo.yaml v1.0** (package bolletta fusione 5 sorgenti — sostituito da frarik_bolletta.yaml)
 
 ## 1.6.89 — 2026-06-29
 
