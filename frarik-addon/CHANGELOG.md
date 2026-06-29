@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.6.88 — 2026-06-29
+
+### feat: Antizanzare v2.3 — ⚙ Impostazioni user-facing, live update fix
+
+- ⚙ apre ora **Impostazioni** user-facing: automazione ON/OFF, durata manuale, soglia blocco pioggia, target cicli mensili
+- `configure()` (modalità modifica dashboard) apre il configuratore entità (`_azOpenEntCfg`)
+- "Impostazioni globali" rimossa da 📅 Programma settimanale — ora c'è solo il bottone "Fatto" per chiudere
+- **Live update fix**: `_azComputeSig` include ora `pk_cicli_target`, `pk_durata_manuale`, `pk_soglia_pioggia` — cambiarli aggiorna la card in tempo reale senza uscire
+- `_azPkgDef` aggiunge `pk_durata_manuale` e `pk_soglia_pioggia` come chiavi configurabili
+
 ## 1.6.87 — 2026-06-29
 
 ### feat: Differenziata v2.4 — doppio rifiuto per giorno, tipi semplificati, bidone per "nessuno"

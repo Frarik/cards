@@ -1111,20 +1111,22 @@ window.customCards.push({ version: '1.5',
 
   function _azPkgDef() {
     return {
-      pk_prefix:        'anti_zanzare',
-      pk_stato:         'sensor.stato_anti_zanzare',
-      pk_auto:          'input_boolean.anti_zanzare_automazione_attiva',
-      pk_manuale:       'input_boolean.anti_zanzare_manuale_attiva',
-      pk_timer_ciclo:   'timer.anti_zanzare_ciclo_timer',
-      pk_timer_manuale: 'timer.anti_zanzare_manuale_timer',
-      pk_cicli_mensili: 'counter.anti_zanzare_cicli_mensili',
-      pk_cicli_target:  'input_number.anti_zanzare_cicli_target_mensili',
-      pk_pioggia:       'sensor.probabilita_pioggia',
-      pk_blocco_meteo:  'binary_sensor.blocco_meteo_attivo',
-      pk_btn_auto_on:   'input_button.anti_zanzare_start_automazione',
-      pk_btn_auto_off:  'input_button.anti_zanzare_stop_automazione',
-      pk_btn_man_on:    'input_button.anti_zanzare_start_manuale',
-      pk_btn_man_off:   'input_button.anti_zanzare_stop_manuale',
+      pk_prefix:          'anti_zanzare',
+      pk_stato:           'sensor.stato_anti_zanzare',
+      pk_auto:            'input_boolean.anti_zanzare_automazione_attiva',
+      pk_manuale:         'input_boolean.anti_zanzare_manuale_attiva',
+      pk_timer_ciclo:     'timer.anti_zanzare_ciclo_timer',
+      pk_timer_manuale:   'timer.anti_zanzare_manuale_timer',
+      pk_cicli_mensili:   'counter.anti_zanzare_cicli_mensili',
+      pk_cicli_target:    'input_number.anti_zanzare_cicli_target_mensili',
+      pk_pioggia:         'sensor.probabilita_pioggia',
+      pk_blocco_meteo:    'binary_sensor.blocco_meteo_attivo',
+      pk_durata_manuale:  'input_number.anti_zanzare_durata_manuale',
+      pk_soglia_pioggia:  'input_number.anti_zanzare_soglia_pioggia',
+      pk_btn_auto_on:     'input_button.anti_zanzare_start_automazione',
+      pk_btn_auto_off:    'input_button.anti_zanzare_stop_automazione',
+      pk_btn_man_on:      'input_button.anti_zanzare_start_manuale',
+      pk_btn_man_off:     'input_button.anti_zanzare_stop_manuale',
     };
   }
 
@@ -1340,23 +1342,11 @@ window.customCards.push({ version: '1.5',
         + '<button class="az-dedit" data-day="' + d + '" style="padding:4px 9px;border-radius:7px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);font-size:10px;color:#fff;cursor:pointer;flex-shrink:0">✏ Cicli</button>'
         + '</div>';
     }).join('');
-    var durM   = Math.round(_azNum(_azS(h,'input_number.'+prefix+'_durata_manuale'))||60);
-    var soglia = Math.round(_azNum(_azS(h,'input_number.'+prefix+'_soglia_pioggia'))||50);
-    var tarMens = Math.round(_azNum(_azS(h,'input_number.'+prefix+'_cicli_target_mensili'))||100);
     var content = '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#22c55e;padding-bottom:5px;border-bottom:1px solid rgba(34,197,94,.2);margin-bottom:8px">Giorni e cicli</div>'
       + dayRows
-      + '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#22c55e;padding-bottom:5px;border-bottom:1px solid rgba(34,197,94,.2);margin:16px 0 10px">Impostazioni globali</div>'
-      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:9px"><span style="font-size:11px;color:#fff;flex:1">Durata manuale</span>'
-      + '<input id="azpm-dur" type="number" min="10" max="7200" step="10" value="' + durM + '" style="width:80px;padding:6px 9px;border-radius:7px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:12px;outline:none;text-align:right">'
-      + '<span style="font-size:10px;color:rgba(255,255,255,.4);flex-shrink:0">sec</span></div>'
-      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:9px"><span style="font-size:11px;color:#fff;flex:1">Soglia blocco pioggia</span>'
-      + '<input id="azpm-sog" type="number" min="0" max="100" step="5" value="' + soglia + '" style="width:80px;padding:6px 9px;border-radius:7px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:12px;outline:none;text-align:right">'
-      + '<span style="font-size:10px;color:rgba(255,255,255,.4);flex-shrink:0">%</span></div>'
-      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><span style="font-size:11px;color:#fff;flex:1">Target cicli mensili</span>'
-      + '<input id="azpm-tar" type="number" min="1" max="999" step="1" value="' + tarMens + '" style="width:80px;padding:6px 9px;border-radius:7px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:12px;outline:none;text-align:right">'
-      + '<span style="font-size:10px;color:rgba(255,255,255,.4);flex-shrink:0">cicli</span></div>'
-      + '<button id="azpm-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#22c55e;color:#022c1b">💾 Salva impostazioni globali</button>';
-    var ov = _azMkOv(_azPopShell('📅','34,197,94','Programma settimanale','Giorni attivi e impostazioni','az-pm-cl',content),'az-pm-cl');
+      + '<button id="azpm-ok" style="width:100%;padding:10px;border-radius:11px;border:1px solid rgba(255,255,255,.12);cursor:pointer;font-weight:700;font-size:13px;background:rgba(255,255,255,.07);color:#fff;margin-top:14px">Fatto</button>';
+    var ov = _azMkOv(_azPopShell('📅','34,197,94','Programma settimanale','Giorni attivi — usa ⚙ per soglia/target/durata','az-pm-cl',content),'az-pm-cl');
+    ov.querySelector('#azpm-ok').addEventListener('click', function() { ov._close(); if (el) el._fcSig = null; });
     ov.querySelectorAll('.az-dtog').forEach(function(tog) {
       tog.addEventListener('click', function() {
         var wasOn = tog.dataset.on === '1';
@@ -1368,16 +1358,6 @@ window.customCards.push({ version: '1.5',
     });
     ov.querySelectorAll('.az-dedit').forEach(function(btn) {
       btn.addEventListener('click', function() { _azOpenDayDetail(card, btn.dataset.day, prefix); });
-    });
-    ov.querySelector('#azpm-save').addEventListener('click', function() {
-      var h2 = _azH();
-      var dv = (ov.querySelector('#azpm-dur')||{}).value;
-      var sv = (ov.querySelector('#azpm-sog')||{}).value;
-      var tv = (ov.querySelector('#azpm-tar')||{}).value;
-      if (dv && h2 && h2.callService) h2.callService('input_number','set_value',{entity_id:'input_number.'+prefix+'_durata_manuale',value:parseFloat(dv)});
-      if (sv && h2 && h2.callService) h2.callService('input_number','set_value',{entity_id:'input_number.'+prefix+'_soglia_pioggia',value:parseFloat(sv)});
-      if (tv && h2 && h2.callService) h2.callService('input_number','set_value',{entity_id:'input_number.'+prefix+'_cicli_target_mensili',value:parseFloat(tv)});
-      ov._close(); if (el) el._fcSig = null;
     });
   }
 
@@ -1417,7 +1397,67 @@ window.customCards.push({ version: '1.5',
     });
   }
 
-  function _azOpenCfg(card, el) {
+  function _azOpenUserCfg(card, el) {
+    var h = _azH(), c = _azCfgFor(card);
+    var autoOn  = _azIsOn(h, c.pk_auto);
+    var durM    = Math.round(_azNum(_azS(h, c.pk_durata_manuale)) || 60);
+    var soglia  = Math.round(_azNum(_azS(h, c.pk_soglia_pioggia)) || 50);
+    var tarMens = Math.round(_azNum(_azS(h, c.pk_cicli_target)) || 100);
+
+    function ntog(label, sya, isOn) {
+      return '<div data-sya="' + sya + '" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:8px 4px;border-radius:9px;'
+        + 'background:rgba(' + (isOn?'34,197,94':'100,116,139') + ',.1);border:1px solid rgba(' + (isOn?'34,197,94':'100,116,139') + ',' + (isOn?'.35':'.15') + ');transition:all .2s">'
+        + '<div style="font-size:18px">' + (isOn ? '✅' : '⭕') + '</div>'
+        + '<div style="font-size:10px;font-weight:800;color:' + (isOn?'#22c55e':'rgba(255,255,255,.35)') + '">' + label + '</div>'
+        + '<div style="font-size:9px;font-weight:700;color:' + (isOn?'#fff':'rgba(255,255,255,.25)') + '">' + (isOn?'ON':'OFF') + '</div>'
+        + '</div>';
+    }
+    function numRow(id, label, val, unit, min, max, step) {
+      return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">'
+        + '<span style="font-size:11px;color:#fff;flex:1">' + label + '</span>'
+        + '<input id="azuc-' + id + '" type="number" min="' + min + '" max="' + max + '" step="' + step + '" value="' + val + '" style="width:85px;padding:6px 9px;border-radius:7px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:13px;outline:none;text-align:right">'
+        + '<span style="font-size:10px;color:rgba(255,255,255,.4);width:32px;flex-shrink:0">' + unit + '</span>'
+        + '</div>';
+    }
+    function sec(t) { return '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#22c55e;padding-bottom:4px;border-bottom:1px solid rgba(34,197,94,.18);margin:14px 0 10px">' + t + '</div>'; }
+
+    var content = sec('Automazione')
+      + '<div style="display:flex;gap:8px;margin-bottom:4px">' + ntog('Automazione', 'ucfg-auto', autoOn) + '</div>'
+      + sec('Avvio manuale')
+      + numRow('dur', 'Durata avvio manuale', durM, 'sec', 10, 7200, 10)
+      + sec('Meteo e obiettivo')
+      + numRow('sog', 'Soglia blocco pioggia', soglia, '%', 0, 100, 5)
+      + numRow('tar', 'Target cicli mensili', tarMens, 'cicli', 1, 999, 1)
+      + '<button id="azuc-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#22c55e;color:#022c1b;margin-top:4px">💾 Salva</button>';
+
+    var ov = _azMkOv(_azPopShell('⚙','34,197,94','Impostazioni',c.name||'Anti Zanzare','azuc-cl',content),'azuc-cl');
+    ov.querySelectorAll('[data-sya^="ucfg-"]').forEach(function(tog) {
+      tog.addEventListener('click', function() {
+        var sya = tog.dataset.sya;
+        var wasOn = tog.querySelector('div:last-child').textContent === 'ON';
+        var eid = sya === 'ucfg-auto' ? c.pk_auto : null;
+        if (eid) _azCallSvc('input_boolean', wasOn ? 'turn_off' : 'turn_on', {entity_id: eid});
+        tog.style.background = 'rgba(' + (wasOn?'100,116,139':'34,197,94') + ',.1)';
+        tog.style.borderColor = 'rgba(' + (wasOn?'100,116,139':'34,197,94') + ',' + (wasOn?'.15':'.35') + ')';
+        tog.querySelector('div:first-child').textContent = wasOn ? '⭕' : '✅';
+        tog.querySelector('div:nth-child(2)').style.color = wasOn ? 'rgba(255,255,255,.35)' : '#22c55e';
+        var lv = tog.querySelector('div:last-child'); lv.textContent = wasOn ? 'OFF' : 'ON'; lv.style.color = wasOn ? 'rgba(255,255,255,.25)' : '#fff';
+      });
+    });
+    ov.querySelector('#azuc-save').addEventListener('click', function() {
+      var h2 = _azH();
+      var dv = (ov.querySelector('#azuc-dur')||{}).value;
+      var sv = (ov.querySelector('#azuc-sog')||{}).value;
+      var tv = (ov.querySelector('#azuc-tar')||{}).value;
+      if (dv && h2 && h2.callService) h2.callService('input_number','set_value',{entity_id:c.pk_durata_manuale,value:parseFloat(dv)});
+      if (sv && h2 && h2.callService) h2.callService('input_number','set_value',{entity_id:c.pk_soglia_pioggia,value:parseFloat(sv)});
+      if (tv && h2 && h2.callService) h2.callService('input_number','set_value',{entity_id:c.pk_cicli_target,value:parseFloat(tv)});
+      ov._close();
+      if (el) el._fcSig = null;
+    });
+  }
+
+  function _azOpenEntCfg(card, el) {
     var c = _azCfgFor(card);
     function fld(key, label, ph) {
       return '<div style="margin-bottom:10px">'
@@ -1441,14 +1481,16 @@ window.customCards.push({ version: '1.5',
       + fld('pk_manuale','Manuale boolean','input_boolean.anti_zanzare_manuale_attiva')
       + fld('pk_timer_ciclo','Timer ciclo','timer.anti_zanzare_ciclo_timer')
       + fld('pk_timer_manuale','Timer manuale','timer.anti_zanzare_manuale_timer')
+      + fld('pk_durata_manuale','Durata manuale','input_number.anti_zanzare_durata_manuale')
+      + fld('pk_soglia_pioggia','Soglia pioggia','input_number.anti_zanzare_soglia_pioggia')
       + sec('Pulsanti azione')
       + fld('pk_btn_auto_on','Avvia automazione','input_button.anti_zanzare_start_automazione')
       + fld('pk_btn_auto_off','Ferma automazione','input_button.anti_zanzare_stop_automazione')
       + fld('pk_btn_man_on','Avvia manuale','input_button.anti_zanzare_start_manuale')
       + fld('pk_btn_man_off','Ferma manuale','input_button.anti_zanzare_stop_manuale')
-      + '<button id="az-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#22c55e;color:#022c1b;margin-top:8px">💾 Salva</button>';
-    var ov = _azMkOv(_azPopShell('🦟','34,197,94','Impostazioni',c.name||'Anti Zanzare','az-cfg-cl',content),'az-cfg-cl');
-    ov.querySelector('#az-save').addEventListener('click', function() {
+      + '<button id="az-ent-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#22c55e;color:#022c1b;margin-top:8px">💾 Salva</button>';
+    var ov = _azMkOv(_azPopShell('🔧','34,197,94','Entità',c.name||'Anti Zanzare','az-ent-cl',content),'az-ent-cl');
+    ov.querySelector('#az-ent-save').addEventListener('click', function() {
       var pk = _azPkgDef(), saved = {};
       Object.keys(pk).forEach(function(k) { var i = ov.querySelector('#azf-'+k); if (i) saved[k] = i.value.trim(); });
       var ni = ov.querySelector('#azf-name'); if (ni) saved.name = ni.value.trim();
@@ -1467,12 +1509,15 @@ window.customCards.push({ version: '1.5',
     var dk = ['lunedi','martedi','mercoledi','giovedi','venerdi','sabato','domenica'];
     var dsg = dk.map(function(d){return _azIsOn(h,'input_boolean.'+px+'_'+d)?'1':'0';}).join('');
     var tc = _azS(h,c.pk_timer_ciclo), tm = _azS(h,c.pk_timer_manuale);
-    return ['2.1az',_azS(h,c.pk_stato),_azS(h,c.pk_auto),_azS(h,c.pk_manuale),tc,tm,_azS(h,c.pk_cicli_mensili),_azS(h,c.pk_blocco_meteo),_azS(h,c.pk_pioggia),dsg].join('|');
+    return ['2.3az',_azS(h,c.pk_stato),_azS(h,c.pk_auto),_azS(h,c.pk_manuale),tc,tm,
+            _azS(h,c.pk_cicli_mensili),_azS(h,c.pk_cicli_target),
+            _azS(h,c.pk_blocco_meteo),_azS(h,c.pk_pioggia),
+            _azS(h,c.pk_durata_manuale),_azS(h,c.pk_soglia_pioggia),dsg].join('|');
   }
 
   function _azMount(card, hass, el) {
-    if (el._fcBound === '2.1az') return;
-    el._fcBound = '2.1az';
+    if (el._fcBound === '2.3az') return;
+    el._fcBound = '2.3az';
     if (el._fcHandler) el.removeEventListener('click', el._fcHandler);
     el._fcHandler = function(e) {
       var t = e.target.closest('[data-sya]'); if (!t) return;
@@ -1482,7 +1527,7 @@ window.customCards.push({ version: '1.5',
       if (a === 'auto-on')   _azCallSvc('input_button','press',{entity_id:c.pk_btn_auto_on});
       if (a === 'auto-off')  _azCallSvc('input_button','press',{entity_id:c.pk_btn_auto_off});
       if (a === 'programma') _azOpenProgramma(card, el);
-      if (a === 'popup-cfg') _azOpenCfg(card, el);
+      if (a === 'popup-cfg') _azOpenUserCfg(card, el);
       if (a.length > 4 && a.slice(0,4) === 'day-') _azOpenDayDetail(card, a.slice(4), _azCfgFor(card).pk_prefix||'anti_zanzare');
     };
     el.addEventListener('click', el._fcHandler);
@@ -1510,12 +1555,12 @@ window.customCards.push({ version: '1.5',
   }
 
   var _AZ_CARD = {
-    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.2',
+    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.3',
     desc: 'Controllo sistema anti zanzare: schedule settimanale, timer, statistiche mensili e blocco meteo.',
     render:    function(card) { return _azRender(card); },
     mount:     function(card, hass, el) { _azMount(card, hass, el); },
     update:    function(card, hass, el) { _azUpdate(card, hass, el); },
-    configure: function(card, el) { _azOpenCfg(card, el); },
+    configure: function(card, el) { _azOpenEntCfg(card, el); },
     frarik_pkg_check:   'sensor.stato_anti_zanzare',
     frarik_pkg_id:      'frarik_antizanzare',
     frarik_pkg_version: '1.0',
