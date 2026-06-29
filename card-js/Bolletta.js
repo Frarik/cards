@@ -400,21 +400,21 @@
   }
 
   // ── mount ──────────────────────────────────────────────────────────────────
-  function _bMount(card) {
-    if (card._bBound === _bVer) return;
-    card._bBound = _bVer;
+  function _bMount(card, el) {
+    if (el._bBound === _bVer) return;
+    el._bBound = _bVer;
 
     var lastSig = '';
     var iv = setInterval(function() {
-      if (!document.contains(card)) { clearInterval(iv); return; }
+      if (!document.contains(el)) { clearInterval(iv); return; }
       var h = _bH(), c = _bCfg(card);
       var sig = _bSig(h, c);
       if (sig === lastSig) return;
       lastSig = sig;
-      card.innerHTML = _bRender(card);
+      el.innerHTML = _bRender(card);
     }, 2000);
 
-    card.addEventListener('click', function(e) {
+    el.addEventListener('click', function(e) {
       var tgt = e.target.closest('[data-bact]');
       if (!tgt) return;
       var a = tgt.dataset.bact;
@@ -1969,19 +1969,20 @@ automation:
     frarik_pkg_version: '1.0',
 
     render: function(card) {
-      card.innerHTML = _bRender(card);
+      return _bRender(card);
     },
 
-    mount: function(card) {
-      _bMount(card);
+    mount: function(card, hass, el) {
+      _bMount(card, el);
     },
 
-    update: function(card) {
+    update: function(card, hass, el) {
       var h = _bH(), c = _bCfg(card);
       var sig = _bSig(h, c);
-      if (card._bLastSig !== sig) {
-        card._bLastSig = sig;
-        card.innerHTML = _bRender(card);
+      if ((el._bLastSig || '') !== sig) {
+        el._bLastSig = sig;
+        el.innerHTML = _bRender(card);
+        _bMount(card, el);
       }
     },
 
