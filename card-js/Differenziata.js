@@ -823,7 +823,7 @@ window.customCards.push({ version: '1.0',
       + '#' + rid + ' .fc-hero{display:flex;align-items:center;padding:14px 14px 10px;gap:14px;flex:1}'
       + '#' + rid + ' .fc-hero-bin{flex-shrink:0;display:flex;align-items:center;justify-content:center}'
       + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:8px;min-width:0}'
-      + '#' + rid + ' .fc-waste-main{font-size:18px;font-weight:900;line-height:1.1;word-break:break-word}'
+      + '#' + rid + ' .fc-waste-main{font-size:26px;font-weight:900;line-height:1.1;word-break:break-word}'
       + '#' + rid + ' .fc-waste-sub{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px}'
       + '#' + rid + ' .fc-tmr-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid rgba(255,255,255,.06)}'
       + '#' + rid + ' .fc-tmr-lbl{font-size:10px;font-weight:700;color:rgba(255,255,255,.4);white-space:nowrap}'
@@ -851,9 +851,28 @@ window.customCards.push({ version: '1.0',
 
     var weekHtml = '<div class="fc-week">' + weekChips + '</div>';
 
+    // Notification toggles
+    var nPush   = _dIsOn(h, c.pk_npush);
+    var nGoogle = _dIsOn(h, c.pk_ngoogle);
+    var nAlexa  = _dIsOn(h, c.pk_nalexa);
+    function _dNtogBtn(label, sya, isOn) {
+      return '<div data-sya="' + sya + '" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:7px 4px;border-radius:9px;background:rgba(' + (isOn?'34,197,94':'100,116,139') + ',.1);border:1px solid rgba(' + (isOn?'34,197,94':'100,116,139') + ',' + (isOn?'.35':'.15') + ');transition:all .2s">'
+        + '<div style="font-size:13px">' + (isOn ? '🔔' : '🔕') + '</div>'
+        + '<div style="font-size:9px;font-weight:800;color:' + (isOn ? '#22c55e' : 'rgba(255,255,255,.35)') + '">' + label + '</div>'
+        + '<div style="font-size:8px;font-weight:700;color:' + (isOn ? '#fff' : 'rgba(255,255,255,.25)') + '">' + (isOn ? 'ON' : 'OFF') + '</div>'
+        + '</div>';
+    }
+    var notifHtml = '<div style="padding:0 14px 10px">'
+      + '<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.35);margin-bottom:7px">Notifiche</div>'
+      + '<div style="display:flex;gap:8px">'
+      + _dNtogBtn('Push', 'ntoggle-push', nPush)
+      + _dNtogBtn('Google', 'ntoggle-google', nGoogle)
+      + _dNtogBtn('Alexa', 'ntoggle-alexa', nAlexa)
+      + '</div></div>';
+
     var btnsHtml = '<div class="fc-btns">'
       + '<div class="fc-btn" data-sya="popup-edit">✏ Modifica giorni</div>'
-      + '<div class="fc-btn" data-sya="popup-cfg">⚙ Impostazioni</div>'
+      + '<div class="fc-btn" data-sya="popup-cfg" style="flex:0.7">⚙</div>'
       + '</div>';
 
     return css
@@ -863,7 +882,7 @@ window.customCards.push({ version: '1.0',
       + '<div class="fc-hdr-tit">' + (c.name || 'Raccolta Differenziata') + '</div>'
       + '<div class="fc-hdr-pill"><div class="fc-dot"></div>' + statusLabel + '</div>'
       + '</div>'
-      + '<div class="fc-scroll">' + heroHtml + weekHtml + btnsHtml + '</div>'
+      + '<div class="fc-scroll">' + heroHtml + weekHtml + notifHtml + btnsHtml + '</div>'
       + '</div></div>';
   }
 
@@ -954,15 +973,22 @@ window.customCards.push({ version: '1.0',
     });
   }
 
+  function _dCallSvc(domain, svc, data) {
+    try { var h = _dH(); if (h && h.callService) { h.callService(domain, svc, data); return; } if (window.callSvc) window.callSvc(domain, svc, data); } catch(e) {}
+  }
+
   function _dMount(card, hass, el) {
-    if (el._fcBound === '2.0diff') return;
-    el._fcBound = '2.0diff';
+    if (el._fcBound === '2.1diff') return;
+    el._fcBound = '2.1diff';
     if (el._fcHandler) el.removeEventListener('click', el._fcHandler);
     el._fcHandler = function(e) {
       var t = e.target.closest('[data-sya]'); if (!t) return;
-      var a = t.dataset.sya;
+      var a = t.dataset.sya, c = _dCfgFor(card), h = _dH();
       if (a === 'popup-edit') _dOpenEdit(card, el);
       if (a === 'popup-cfg')  _dOpenCfg(card, el);
+      if (a === 'ntoggle-push')   _dCallSvc('input_boolean', _dIsOn(h,c.pk_npush)   ? 'turn_off' : 'turn_on', {entity_id:c.pk_npush});
+      if (a === 'ntoggle-google') _dCallSvc('input_boolean', _dIsOn(h,c.pk_ngoogle) ? 'turn_off' : 'turn_on', {entity_id:c.pk_ngoogle});
+      if (a === 'ntoggle-alexa')  _dCallSvc('input_boolean', _dIsOn(h,c.pk_nalexa)  ? 'turn_off' : 'turn_on', {entity_id:c.pk_nalexa});
     };
     el.addEventListener('click', el._fcHandler);
   }
@@ -970,13 +996,13 @@ window.customCards.push({ version: '1.0',
   function _dUpdate(card, hass, el) {
     var h = _dH(), c = _dCfgFor(card);
     var days = ['pk_lunedi','pk_martedi','pk_mercoledi','pk_giovedi','pk_venerdi','pk_sabato','pk_domenica'];
-    var sig = ['2.0diff'].concat(days.map(function(k){return _dS(h,c[k])||'';})).join('|');
+    var sig = ['2.1diff'].concat(days.map(function(k){return _dS(h,c[k])||'';})).concat([_dIsOn(h,c.pk_npush)?'1':'0',_dIsOn(h,c.pk_ngoogle)?'1':'0',_dIsOn(h,c.pk_nalexa)?'1':'0']).join('|');
     if (!el.querySelector('.fc-card') || el._fcSig !== sig) { el._fcSig = sig; el.innerHTML = _dRender(card); }
     _dMount(card, hass, el);
   }
 
   var _DIFF_CARD = {
-    id: 'differenziata', name: 'Raccolta Differenziata', icon: '♻️', version: '2.0',
+    id: 'differenziata', name: 'Raccolta Differenziata', icon: '♻️', version: '2.1',
     desc: 'Calendario raccolta differenziata settimanale con notifiche push, Google e Alexa.',
     render:    function(card) { return _dRender(card); },
     mount:     function(card, hass, el) { _dMount(card, hass, el); },

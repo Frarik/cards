@@ -1263,6 +1263,7 @@ window.customCards.push({ version: '1.0',
 
   function _iPkgDef() {
     return {
+      pk_prefix:        'irrigazione',
       pk_stato:         'sensor.stato_irrigazione',
       pk_auto:          'input_boolean.irrigazione_automazione_attiva',
       pk_manuale:       'input_boolean.irrigazione_manuale_attiva',
@@ -1423,9 +1424,25 @@ window.customCards.push({ version: '1.0',
       + '<div class="fc-sb"><div class="fc-sb-n" style="color:' + (rubOn?col:'#64748b') + '">' + (rubOn?'ON':'OFF') + '</div><div class="fc-sb-l">Rubinetto</div></div>'
       + '</div>';
 
+    // Day chips
+    var iPrefix = c.pk_prefix || 'irrigazione';
+    var iDayIds = ['lunedi','martedi','mercoledi','giovedi','venerdi','sabato','domenica'];
+    var iDayShort = ['LU','MA','ME','GI','VE','SA','DO'];
+    var iDayChipsInner = iDayShort.map(function(dn, i) {
+      var isDay = _iIsOn(h, 'input_boolean.' + iPrefix + '_' + iDayIds[i]);
+      return '<div data-sya="day-' + iDayIds[i] + '" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 2px">'
+        + '<div style="font-size:9px;font-weight:800;color:' + (isDay ? '#fff' : 'rgba(255,255,255,.28)') + '">' + dn + '</div>'
+        + '<div style="width:100%;max-width:30px;height:30px;border-radius:8px;background:rgba(' + (isDay ? colRgb : '100,116,139') + ',.12);border:1px solid rgba(' + (isDay ? colRgb : '100,116,139') + ',' + (isDay ? '.45' : '.14') + ');display:flex;align-items:center;justify-content:center">'
+        + '<div style="width:8px;height:8px;border-radius:50%;background:' + (isDay ? col : '#2d3748') + '"></div>'
+        + '</div></div>';
+    }).join('');
+    var iDayChipsHtml = '<div style="display:flex;padding:4px 10px 10px;gap:1px;border-top:1px solid rgba(255,255,255,.06)">' + iDayChipsInner + '</div>';
+
     var btnsHtml = '<div class="fc-btns">'
       + '<div class="fc-btn' + (manOn?' fc-btn-act':'') + '" data-sya="' + (manOn?'man-off':'man-on') + '">' + (manOn?'⏹ Ferma Man.':'▶ Manuale') + '</div>'
-      + '<div class="fc-btn' + (autoOn?' fc-btn-act':'') + '" data-sya="' + (autoOn?'auto-off':'auto-on') + '">' + (autoOn?'⏹ Stop Auto':'▶ Automazione') + '</div>'
+      + '<div class="fc-btn' + (autoOn?' fc-btn-act':'') + '" data-sya="' + (autoOn?'auto-off':'auto-on') + '">' + (autoOn?'⏹ Stop Auto':'▶ Auto') + '</div>'
+      + '<div class="fc-btn" data-sya="programma" style="flex:0.65;background:rgba(56,189,248,.07);border-color:rgba(56,189,248,.22)">📅</div>'
+      + '<div class="fc-btn" data-sya="popup-cfg" style="flex:0.55">⚙</div>'
       + '</div>';
 
     return css
@@ -1434,9 +1451,8 @@ window.customCards.push({ version: '1.0',
       + '<div class="fc-hdr-iw">💧</div>'
       + '<div class="fc-hdr-tit">' + (c.name || 'Irrigazione Smart') + '</div>'
       + '<div class="fc-hdr-pill"><div class="fc-dot"></div>' + statusLabel + '</div>'
-      + '<div style="cursor:pointer;padding:4px 6px;border-radius:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:11px;color:#fff;margin-left:6px" data-sya="popup-cfg">⚙</div>'
       + '</div>'
-      + '<div class="fc-scroll">' + heroHtml + pwBarHtml + statsHtml + btnsHtml + '</div>'
+      + '<div class="fc-scroll">' + heroHtml + pwBarHtml + statsHtml + iDayChipsHtml + btnsHtml + '</div>'
       + '</div></div>';
   }
 
@@ -1464,6 +1480,107 @@ window.customCards.push({ version: '1.0',
       + '</div>';
   }
 
+  function _iOpenProgramma(card, el) {
+    var h = _iH(), c = _iCfgFor(card);
+    var prefix = c.pk_prefix || 'irrigazione';
+    var dayIds = ['lunedi','martedi','mercoledi','giovedi','venerdi','sabato','domenica'];
+    var dayLabels = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato','Domenica'];
+    var dayRows = dayIds.map(function(d, i) {
+      var isOn = _iIsOn(h, 'input_boolean.' + prefix + '_' + d);
+      var nC = Math.round(_iNum(_iS(h, 'input_number.' + prefix + '_' + d + '_num_cicli')) || 0);
+      var t1 = _iS(h, 'input_datetime.' + prefix + '_' + d + '_orario_ciclo1') || '';
+      return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
+        + '<div style="font-size:11px;font-weight:700;color:#fff;width:76px;flex-shrink:0">' + dayLabels[i] + '</div>'
+        + '<div class="irr-dtog" data-eid="input_boolean.' + prefix + '_' + d + '" data-on="' + (isOn?'1':'0') + '" '
+        + 'style="width:36px;height:20px;border-radius:10px;flex-shrink:0;cursor:pointer;background:' + (isOn?'#38bdf8':'rgba(255,255,255,.15)') + ';position:relative;transition:background .2s">'
+        + '<div style="position:absolute;top:2px;' + (isOn?'right:2px':'left:2px') + ';width:16px;height:16px;border-radius:50%;background:#fff;transition:all .2s"></div>'
+        + '</div>'
+        + '<div style="flex:1;min-width:0">'
+        + (isOn
+          ? '<span style="font-size:11px;color:#38bdf8;font-weight:700">' + nC + ' cicli</span>'
+          + (t1 ? '<span style="font-size:10px;color:rgba(255,255,255,.4)"> · ' + t1.slice(0,5) + '</span>' : '')
+          : '<span style="font-size:10px;color:rgba(255,255,255,.28)">Disattivato</span>')
+        + '</div>'
+        + '<button class="irr-dedit" data-day="' + d + '" style="padding:4px 9px;border-radius:7px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);font-size:10px;color:#fff;cursor:pointer;flex-shrink:0">✏ Cicli</button>'
+        + '</div>';
+    }).join('');
+    var durM    = Math.round(_iNum(_iS(h,'input_number.'+prefix+'_durata_manuale'))||60);
+    var soglia  = Math.round(_iNum(_iS(h,'input_number.'+prefix+'_soglia_pioggia'))||50);
+    var tarMens = Math.round(_iNum(_iS(h,'input_number.'+prefix+'_cicli_target_mensili'))||30);
+    var content = '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding-bottom:5px;border-bottom:1px solid rgba(56,189,248,.2);margin-bottom:8px">Giorni e cicli</div>'
+      + dayRows
+      + '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding-bottom:5px;border-bottom:1px solid rgba(56,189,248,.2);margin:16px 0 10px">Impostazioni globali</div>'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:9px"><span style="font-size:11px;color:#fff;flex:1">Durata manuale</span>'
+      + '<input id="irrpm-dur" type="number" min="10" max="7200" step="10" value="' + durM + '" style="width:80px;padding:6px 9px;border-radius:7px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:12px;outline:none;text-align:right">'
+      + '<span style="font-size:10px;color:rgba(255,255,255,.4);flex-shrink:0">sec</span></div>'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:9px"><span style="font-size:11px;color:#fff;flex:1">Soglia blocco pioggia</span>'
+      + '<input id="irrpm-sog" type="number" min="0" max="100" step="5" value="' + soglia + '" style="width:80px;padding:6px 9px;border-radius:7px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:12px;outline:none;text-align:right">'
+      + '<span style="font-size:10px;color:rgba(255,255,255,.4);flex-shrink:0">%</span></div>'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><span style="font-size:11px;color:#fff;flex:1">Target cicli mensili</span>'
+      + '<input id="irrpm-tar" type="number" min="1" max="999" step="1" value="' + tarMens + '" style="width:80px;padding:6px 9px;border-radius:7px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:12px;outline:none;text-align:right">'
+      + '<span style="font-size:10px;color:rgba(255,255,255,.4);flex-shrink:0">cicli</span></div>'
+      + '<button id="irrpm-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#38bdf8;color:#04111a">💾 Salva impostazioni globali</button>';
+    var ov = _iMkOv(_iPopShell('📅','56,189,248','Programma settimanale','Giorni attivi e impostazioni','irr-pm-cl',content),'irr-pm-cl');
+    ov.querySelectorAll('.irr-dtog').forEach(function(tog) {
+      tog.addEventListener('click', function() {
+        var wasOn = tog.dataset.on === '1';
+        _iCallSvc('input_boolean', wasOn?'turn_off':'turn_on', {entity_id:tog.dataset.eid});
+        tog.dataset.on = wasOn ? '0' : '1';
+        tog.style.background = wasOn ? 'rgba(255,255,255,.15)' : '#38bdf8';
+        var k = tog.querySelector('div'); if (k) { k.style.right = wasOn?'':'2px'; k.style.left = wasOn?'2px':''; }
+      });
+    });
+    ov.querySelectorAll('.irr-dedit').forEach(function(btn) {
+      btn.addEventListener('click', function() { _iOpenDayDetail(card, btn.dataset.day, prefix); });
+    });
+    ov.querySelector('#irrpm-save').addEventListener('click', function() {
+      var h2 = _iH();
+      var dv = (ov.querySelector('#irrpm-dur')||{}).value;
+      var sv = (ov.querySelector('#irrpm-sog')||{}).value;
+      var tv = (ov.querySelector('#irrpm-tar')||{}).value;
+      if (dv && h2 && h2.callService) h2.callService('input_number','set_value',{entity_id:'input_number.'+prefix+'_durata_manuale',value:parseFloat(dv)});
+      if (sv && h2 && h2.callService) h2.callService('input_number','set_value',{entity_id:'input_number.'+prefix+'_soglia_pioggia',value:parseFloat(sv)});
+      if (tv && h2 && h2.callService) h2.callService('input_number','set_value',{entity_id:'input_number.'+prefix+'_cicli_target_mensili',value:parseFloat(tv)});
+      ov._close(); if (el) el._fcSig = null;
+    });
+  }
+
+  function _iOpenDayDetail(card, day, prefix) {
+    var h = _iH();
+    var lbl = {lunedi:'Lunedì',martedi:'Martedì',mercoledi:'Mercoledì',giovedi:'Giovedì',venerdi:'Venerdì',sabato:'Sabato',domenica:'Domenica'}[day]||day;
+    var nC = Math.round(_iNum(_iS(h,'input_number.'+prefix+'_'+day+'_num_cicli'))||0);
+    var rows = '';
+    for (var i = 1; i <= 5; i++) {
+      var tv = _iS(h,'input_datetime.'+prefix+'_'+day+'_orario_ciclo'+i) || '07:00:00';
+      var dv = Math.round(_iNum(_iS(h,'input_number.'+prefix+'_'+day+'_durata_ciclo'+i))||60);
+      var dim = i > nC ? 'opacity:0.33;' : '';
+      rows += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:9px;' + dim + '">'
+        + '<div style="font-size:11px;font-weight:900;color:#38bdf8;width:22px;flex-shrink:0">C' + i + '</div>'
+        + '<input type="time" value="' + tv.slice(0,5) + '" id="irrdd-t' + i + '" style="flex:1;padding:7px 9px;border-radius:8px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:13px;outline:none">'
+        + '<input type="number" value="' + dv + '" id="irrdd-d' + i + '" min="10" max="7200" step="10" style="width:70px;padding:7px 8px;border-radius:8px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:12px;outline:none;text-align:right">'
+        + '<span style="font-size:9px;color:rgba(255,255,255,.4);flex-shrink:0">sec</span></div>';
+    }
+    var content = '<div style="display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:12px">'
+      + '<span style="font-size:12px;color:#fff;flex:1">Cicli attivi (0-5)</span>'
+      + '<input id="irrdd-nc" type="number" min="0" max="5" step="1" value="' + nC + '" style="width:62px;padding:7px;border-radius:8px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(56,189,248,.35);font-size:17px;font-weight:800;outline:none;text-align:center">'
+      + '</div>'
+      + '<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#38bdf8;margin-bottom:8px">Orario avvio · Durata per ciclo</div>'
+      + rows
+      + '<button id="irrdd-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#38bdf8;color:#04111a;margin-top:4px">💾 Salva ' + lbl + '</button>';
+    var ov2 = _iMkOv(_iPopShell('📅','56,189,248',lbl,'Orari e durate cicli','irrdd-cl',content),'irrdd-cl');
+    ov2.querySelector('#irrdd-save').addEventListener('click', function() {
+      var h2 = _iH();
+      var ncv = parseInt((ov2.querySelector('#irrdd-nc')||{}).value)||0;
+      if (h2&&h2.callService) h2.callService('input_number','set_value',{entity_id:'input_number.'+prefix+'_'+day+'_num_cicli',value:ncv});
+      for (var j = 1; j <= 5; j++) {
+        var ti = ov2.querySelector('#irrdd-t'+j), di = ov2.querySelector('#irrdd-d'+j);
+        if (ti&&ti.value&&h2&&h2.callService) h2.callService('input_datetime','set_datetime',{entity_id:'input_datetime.'+prefix+'_'+day+'_orario_ciclo'+j,time:ti.value+':00'});
+        if (di&&di.value&&h2&&h2.callService) h2.callService('input_number','set_value',{entity_id:'input_number.'+prefix+'_'+day+'_durata_ciclo'+j,value:parseFloat(di.value)});
+      }
+      ov2._close();
+    });
+  }
+
   function _iOpenCfg(card, el) {
     var c = _iCfgFor(card);
     function fld(key, label, ph) {
@@ -1475,6 +1592,8 @@ window.customCards.push({ version: '1.0',
     function sec(t) { return '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding-bottom:4px;border-bottom:1px solid rgba(56,189,248,.18);margin:14px 0 10px">' + t + '</div>'; }
     var content = '<div style="margin-bottom:10px"><div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px">Nome card</div>'
       + '<input id="irrf-name" type="text" placeholder="Irrigazione Smart" value="' + (c.name||'').replace(/"/g,'&quot;') + '" style="width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:11px;box-sizing:border-box;outline:none"></div>'
+      + sec('Prefisso entità PKG')
+      + fld('pk_prefix','Prefisso schedule','irrigazione')
       + sec('Sensori di stato')
       + fld('pk_stato','Sensore stato','sensor.stato_irrigazione')
       + fld('pk_pioggia','Probabilità pioggia','sensor.probabilita_pioggia')
@@ -1509,8 +1628,8 @@ window.customCards.push({ version: '1.0',
   }
 
   function _iMount(card, hass, el) {
-    if (el._fcBound === '2.0irr') return;
-    el._fcBound = '2.0irr';
+    if (el._fcBound === '2.1irr') return;
+    el._fcBound = '2.1irr';
     if (el._fcHandler) el.removeEventListener('click', el._fcHandler);
     el._fcHandler = function(e) {
       var t = e.target.closest('[data-sya]'); if (!t) return;
@@ -1519,7 +1638,9 @@ window.customCards.push({ version: '1.0',
       if (a === 'man-off')   _iCallSvc('input_button','press',{entity_id:c.pk_btn_man_off});
       if (a === 'auto-on')   _iCallSvc('input_button','press',{entity_id:c.pk_btn_auto_on});
       if (a === 'auto-off')  _iCallSvc('input_button','press',{entity_id:c.pk_btn_auto_off});
+      if (a === 'programma') _iOpenProgramma(card, el);
       if (a === 'popup-cfg') _iOpenCfg(card, el);
+      if (a.length > 4 && a.slice(0,4) === 'day-') _iOpenDayDetail(card, a.slice(4), _iCfgFor(card).pk_prefix||'irrigazione');
     };
     el.addEventListener('click', el._fcHandler);
   }
@@ -1527,7 +1648,10 @@ window.customCards.push({ version: '1.0',
   function _iUpdate(card, hass, el) {
     var h = _iH(), c = _iCfgFor(card);
     var tc = _iS(h,c.pk_timer_ciclo), tm = _iS(h,c.pk_timer_manuale);
-    var sig = ['2.0irr',_iS(h,c.pk_stato),_iS(h,c.pk_auto),_iS(h,c.pk_manuale),tc,tm,_iS(h,c.pk_cicli_oggi),_iS(h,c.pk_blocco_meteo),_iS(h,c.pk_pioggia),_iS(h,c.pk_rubinetto)].join('|');
+    var iPrefix2 = c.pk_prefix||'irrigazione';
+    var iDayIds3 = ['lunedi','martedi','mercoledi','giovedi','venerdi','sabato','domenica'];
+    var iDaySig = iDayIds3.map(function(d){return _iIsOn(h,'input_boolean.'+iPrefix2+'_'+d)?'1':'0';}).join('');
+    var sig = ['2.1irr',_iS(h,c.pk_stato),_iS(h,c.pk_auto),_iS(h,c.pk_manuale),tc,tm,_iS(h,c.pk_cicli_oggi),_iS(h,c.pk_blocco_meteo),_iS(h,c.pk_pioggia),_iS(h,c.pk_rubinetto),iDaySig].join('|');
     if (tc === 'active' || tm === 'active') {
       clearTimeout(el._irrTick);
       el._irrTick = setTimeout(function() { el._fcSig = null; }, 1000);
@@ -1537,7 +1661,7 @@ window.customCards.push({ version: '1.0',
   }
 
   var _IRR_CARD = {
-    id: 'irrigazione', name: 'Irrigazione Smart', icon: '💧', version: '2.0',
+    id: 'irrigazione', name: 'Irrigazione Smart', icon: '💧', version: '2.1',
     desc: 'Controllo irrigazione: schedule settimanale, timer animato, blocco meteo e storico.',
     render:    function(card) { return _iRender(card); },
     mount:     function(card, hass, el) { _iMount(card, hass, el); },

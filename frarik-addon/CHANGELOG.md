@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.83 — 2026-06-29
+
+### feat: card v2.1 — schedule settimanale editabile, toggle notifiche, testo rifiuto più grande
+
+- `Antizanzare.js` v2.1: aggiunto `pk_prefix` per entità schedule; chip giorni settimana sulla card (attivi/disattivi); bottone 📅 Programma — popup con toggle per ogni giorno, num cicli, primo orario; sotto-popup per ogni giorno con 5 slot ciclo (orario + durata editabili); impostazioni globali (durata manuale, soglia pioggia, target mensile) salvabili; firma sig aggiornata per includere stati giorni
+- `Irrigazione.js` v2.1: stessa struttura di Antizanzare con prefisso `irrigazione`; popup Programma con toggle giorni e dettaglio cicli per giorno
+- `Differenziata.js` v2.1: testo raccolta principale 26px (era 18px); toggle notifiche Push/Google/Alexa direttamente sulla card con stato ON/OFF visualizzato; click toggle chiama `input_boolean.turn_on/off` in HA; sig aggiornata per includere stati notifiche
+
 ## 1.6.82 — 2026-06-29
 
 ### feat: redesign card Antizanzare, Irrigazione, Differenziata — stile elettrodomestici
