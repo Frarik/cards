@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.6.86 — 2026-06-29
+
+### feat: elettrodomestico-base v2.0 — layout Asciugatrice, stati 3 livelli, sig-based update
+
+- `elettrodomestico-base.js` v2.0: rewrite completo grafica — layout hero (SVG/immagine a sinistra + stats a destra) identico ad Asciugatrice; power bar con gradiente colore; stats bar (cicli/tempo/kWh/costo oggi)
+- 3 stati running corretti: IN FUNZIONE (binary_sensor on) · ACCESO (pw>10W, binary_sensor off) · STANDBY — fix: televisore a 106W non mostrava più STANDBY se effettivamente in uso
+- Update sig-based: re-render solo quando cambiano pw/running/kwh_oggi/cicli_oggi/tempo_oggi/costo_oggi — zero re-render inutili
+- Rimosso bottone "Riconfigura PKG" dalla card; sostituito con ⚙ Impostazioni (popup HA toggles/sliders)
+- 3 bottoni: 📅 Ultimi 7gg (cicli + grid 7gg) | 📊 Statistiche (energia + costi) | ⚙ Impostazioni (toggles HA)
+- configure(card) dal menu modifica dashboard → openCfg (entity configurator con autocomplete entità)
+- Event delegation mount con data-sya; allowMultiple:true mantenuto
+
 ## 1.6.85 — 2026-06-29
 
 ### fix: allowMultiple — card js-custom con flag allowMultiple sempre aggiungibili dallo store
