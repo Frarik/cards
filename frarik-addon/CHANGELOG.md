@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.79 — 2026-06-29
+
+### fix: oblò Lavatrice/Asciugatrice ben centrato — non tocca il fondo
+
+- Lavatrice v2.0, Asciugatrice v1.8: drum spostato a cy=47 (era 53) e ridotto a r=21 (era 25)
+- Risultato: oblò top=y26, bottom=y68 — 6 unità sopra pannello comandi, 14 unità sotto prima del filtro
+- Pannello filtro spostato a y=70 con spazio proprio, piedini a y=80 di nuovo visibili
+
 ## 1.6.78 — 2026-06-29
 
 ### fix: pannello filtro Lavatrice/Asciugatrice non sovrapposto all'oblò

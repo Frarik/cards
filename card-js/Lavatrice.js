@@ -1,4 +1,4 @@
-/* frarik-version: 1.9 */
+/* frarik-version: 2.0 */
 (function () {
   'use strict';
 
@@ -45,7 +45,7 @@
 
   /* ── FRIDGE SVG ── */
   function _washSVG(running) {
-    var cx = 32, cy = 53;
+    var cx = 32, cy = 47;
     var spinStyle = running ? 'style="transform-origin:' + cx + 'px ' + cy + 'px;animation:wspin 3s linear infinite"' : '';
     var keyframes = running ? '@keyframes wspin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes wbub{0%,100%{opacity:.25;transform:translateY(0)}50%{opacity:.8;transform:translateY(-2px)}}@keyframes wled{0%,100%{opacity:.5}50%{opacity:1}}' : '';
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 82" style="display:block;width:100%;height:100%;filter:drop-shadow(0 0 10px rgba(56,189,248,' + (running ? '.3' : '.1') + '))">'
@@ -72,52 +72,55 @@
       // Pulsante giri
       + '<rect x="46" y="13" width="14" height="4.5" rx="2" fill="' + (running ? 'rgba(56,189,248,.08)' : '#0a1525') + '" stroke="' + (running ? '#38bdf8' : '#162035') + '" stroke-width=".4"/>'
       + '<text x="53" y="16.5" text-anchor="middle" font-size="3" fill="' + (running ? '#7dd3fc' : '#1a3050') + '" font-family="system-ui">1200</text>'
-      // Oblò — anello esterno
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="25" fill="#070f1c" stroke="#38bdf8" stroke-width="1.5"/>'
+      // Oblò — anello esterno (cy=47, r=21 → top y=26, bottom y=68 — ben centrato nel corpo)
+      + '<circle cx="' + cx + '" cy="' + cy + '" r="21" fill="#070f1c" stroke="#38bdf8" stroke-width="1.5"/>'
       // Guarnizione gomma (anelli)
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="22.5" fill="none" stroke="rgba(56,189,248,.18)" stroke-width="1.2"/>'
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="21" fill="none" stroke="rgba(56,189,248,.07)" stroke-width=".5"/>'
+      + '<circle cx="' + cx + '" cy="' + cy + '" r="18.5" fill="none" stroke="rgba(56,189,248,.18)" stroke-width="1.2"/>'
+      + '<circle cx="' + cx + '" cy="' + cy + '" r="17" fill="none" stroke="rgba(56,189,248,.07)" stroke-width=".5"/>'
       // Vetro oblò
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="19.5" fill="' + (running ? '#040c1a' : '#030912') + '" stroke="#0d1f38" stroke-width=".6"/>'
+      + '<circle cx="' + cx + '" cy="' + cy + '" r="15.5" fill="' + (running ? '#040c1a' : '#030912') + '" stroke="#0d1f38" stroke-width=".6"/>'
       // Cestello (ruota quando in funzione)
       + '<g ' + spinStyle + '>'
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="17" fill="' + (running ? '#050e1e' : '#040b16') + '" stroke="rgba(56,189,248,.1)" stroke-width=".5"/>'
-      // Fori cestello — corona esterna
-      + '<circle cx="' + cx + '" cy="' + (cy-12) + '" r=".9" fill="#0b1f35"/>'
-      + '<circle cx="' + (cx+10.4) + '" cy="' + (cy-6) + '" r=".9" fill="#0b1f35"/>'
-      + '<circle cx="' + (cx+10.4) + '" cy="' + (cy+6) + '" r=".9" fill="#0b1f35"/>'
-      + '<circle cx="' + cx + '" cy="' + (cy+12) + '" r=".9" fill="#0b1f35"/>'
-      + '<circle cx="' + (cx-10.4) + '" cy="' + (cy+6) + '" r=".9" fill="#0b1f35"/>'
-      + '<circle cx="' + (cx-10.4) + '" cy="' + (cy-6) + '" r=".9" fill="#0b1f35"/>'
-      // Fori corona interna
-      + '<circle cx="' + cx + '" cy="' + (cy-7) + '" r=".6" fill="#0b1f35" opacity=".5"/>'
-      + '<circle cx="' + (cx+6.1) + '" cy="' + (cy+3.5) + '" r=".6" fill="#0b1f35" opacity=".5"/>'
-      + '<circle cx="' + (cx-6.1) + '" cy="' + (cy+3.5) + '" r=".6" fill="#0b1f35" opacity=".5"/>'
+      + '<circle cx="' + cx + '" cy="' + cy + '" r="13.5" fill="' + (running ? '#050e1e' : '#040b16') + '" stroke="rgba(56,189,248,.1)" stroke-width=".5"/>'
+      // Fori cestello — corona esterna (r≈10 dal centro)
+      + '<circle cx="' + cx + '" cy="' + (cy-10) + '" r=".8" fill="#0b1f35"/>'
+      + '<circle cx="' + (cx+8.7) + '" cy="' + (cy-5) + '" r=".8" fill="#0b1f35"/>'
+      + '<circle cx="' + (cx+8.7) + '" cy="' + (cy+5) + '" r=".8" fill="#0b1f35"/>'
+      + '<circle cx="' + cx + '" cy="' + (cy+10) + '" r=".8" fill="#0b1f35"/>'
+      + '<circle cx="' + (cx-8.7) + '" cy="' + (cy+5) + '" r=".8" fill="#0b1f35"/>'
+      + '<circle cx="' + (cx-8.7) + '" cy="' + (cy-5) + '" r=".8" fill="#0b1f35"/>'
+      // Fori corona interna (r≈6 dal centro)
+      + '<circle cx="' + cx + '" cy="' + (cy-6) + '" r=".5" fill="#0b1f35" opacity=".5"/>'
+      + '<circle cx="' + (cx+5.2) + '" cy="' + (cy+3) + '" r=".5" fill="#0b1f35" opacity=".5"/>'
+      + '<circle cx="' + (cx-5.2) + '" cy="' + (cy+3) + '" r=".5" fill="#0b1f35" opacity=".5"/>'
       // 3 palette/alzatori a 0° 120° 240°
-      + '<rect x="30.5" y="' + (cy-17) + '" width="3" height="8" rx="1.5" fill="#1a3050"/>'
-      + '<rect x="30.5" y="' + (cy-17) + '" width="3" height="8" rx="1.5" fill="#1a3050" transform="rotate(120 ' + cx + ' ' + cy + ')"/>'
-      + '<rect x="30.5" y="' + (cy-17) + '" width="3" height="8" rx="1.5" fill="#1a3050" transform="rotate(240 ' + cx + ' ' + cy + ')"/>'
+      + '<rect x="30.5" y="' + (cy-14) + '" width="3" height="7" rx="1.5" fill="#1a3050"/>'
+      + '<rect x="30.5" y="' + (cy-14) + '" width="3" height="7" rx="1.5" fill="#1a3050" transform="rotate(120 ' + cx + ' ' + cy + ')"/>'
+      + '<rect x="30.5" y="' + (cy-14) + '" width="3" height="7" rx="1.5" fill="#1a3050" transform="rotate(240 ' + cx + ' ' + cy + ')"/>'
       + '</g>'
-      // Acqua + bolle (statiche, rimangono in basso per gravità)
+      // Acqua + bolle (in basso per gravità)
       + (running
-        ? '<path d="M' + (cx-18) + ' ' + (cy+8) + ' Q' + cx + ' ' + (cy+5) + ' ' + (cx+18) + ' ' + (cy+8) + ' L' + (cx+18) + ' ' + (cy+15) + ' L' + (cx-18) + ' ' + (cy+15) + ' Z" fill="rgba(56,189,248,.07)"/>'
-          + '<circle cx="' + (cx-7) + '" cy="' + (cy+5) + '" r="1.5" fill="rgba(56,189,248,.35)" style="animation:wbub 2.1s ease-in-out infinite"/>'
-          + '<circle cx="' + (cx+2) + '" cy="' + (cy+3) + '" r="1" fill="rgba(56,189,248,.28)" style="animation:wbub 2.6s ease-in-out infinite .5s"/>'
-          + '<circle cx="' + (cx+8) + '" cy="' + (cy+6) + '" r="1.3" fill="rgba(56,189,248,.22)" style="animation:wbub 1.9s ease-in-out infinite .9s"/>'
-          + '<circle cx="' + (cx-2) + '" cy="' + (cy+9) + '" r=".8" fill="rgba(56,189,248,.18)" style="animation:wbub 3s ease-in-out infinite 1.3s"/>'
+        ? '<path d="M' + (cx-15) + ' ' + (cy+7) + ' Q' + cx + ' ' + (cy+4) + ' ' + (cx+15) + ' ' + (cy+7) + ' L' + (cx+15) + ' ' + (cy+13) + ' L' + (cx-15) + ' ' + (cy+13) + ' Z" fill="rgba(56,189,248,.07)"/>'
+          + '<circle cx="' + (cx-6) + '" cy="' + (cy+4) + '" r="1.2" fill="rgba(56,189,248,.35)" style="animation:wbub 2.1s ease-in-out infinite"/>'
+          + '<circle cx="' + (cx+2) + '" cy="' + (cy+3) + '" r=".9" fill="rgba(56,189,248,.28)" style="animation:wbub 2.6s ease-in-out infinite .5s"/>'
+          + '<circle cx="' + (cx+7) + '" cy="' + (cy+5) + '" r="1.1" fill="rgba(56,189,248,.22)" style="animation:wbub 1.9s ease-in-out infinite .9s"/>'
+          + '<circle cx="' + (cx-2) + '" cy="' + (cy+8) + '" r=".7" fill="rgba(56,189,248,.18)" style="animation:wbub 3s ease-in-out infinite 1.3s"/>'
         : '')
-      // Riflesso vetro (statico, sempre sopra)
-      + '<path d="M' + (cx-8) + ' ' + (cy-17) + ' Q' + (cx-2) + ' ' + (cy-20) + ' ' + (cx+6) + ' ' + (cy-16) + '" stroke="rgba(255,255,255,.1)" stroke-width="2.5" fill="none" stroke-linecap="round"/>'
-      + '<path d="M' + (cx-16) + ' ' + (cy-8) + ' Q' + (cx-19) + ' ' + (cy-2) + ' ' + (cx-16) + ' ' + (cy+4) + '" stroke="rgba(255,255,255,.05)" stroke-width="1.5" fill="none" stroke-linecap="round"/>'
+      // Riflesso vetro
+      + '<path d="M' + (cx-7) + ' ' + (cy-14) + ' Q' + (cx-2) + ' ' + (cy-17) + ' ' + (cx+5) + ' ' + (cy-13) + '" stroke="rgba(255,255,255,.1)" stroke-width="2" fill="none" stroke-linecap="round"/>'
+      + '<path d="M' + (cx-13) + ' ' + (cy-7) + ' Q' + (cx-16) + ' ' + (cy-2) + ' ' + (cx-13) + ' ' + (cy+3) + '" stroke="rgba(255,255,255,.05)" stroke-width="1.2" fill="none" stroke-linecap="round"/>'
       // Maniglia oblò (destra)
-      + '<rect x="57" y="' + (cy-6) + '" width="4" height="12" rx="2" fill="#0f1e35" stroke="#1e3a5f" stroke-width=".6"/>'
-      // Pannello inferiore (sotto l'oblò, non sovrapposto)
-      + '<rect x="2" y="79" width="60" height="3" rx="1.5" fill="#070f1c" stroke="#162035" stroke-width=".5"/>'
+      + '<rect x="57" y="' + (cy-5) + '" width="4" height="10" rx="2" fill="#0f1e35" stroke="#1e3a5f" stroke-width=".6"/>'
+      // Pannello inferiore (y=70-80 — ben sotto l'oblò che finisce a y=68)
+      + '<rect x="2" y="70" width="60" height="10" rx="3" fill="#070f1c" stroke="#162035" stroke-width=".5"/>'
       // Sportellino filtro
-      + '<rect x="4" y="79.5" width="12" height="2" rx="1" fill="#0a1525" stroke="#1e3a5f" stroke-width=".5"/>'
-      + '<circle cx="10" cy="80.5" r="1" fill="' + (running ? 'rgba(56,189,248,.2)' : '#0d2040') + '"/>'
+      + '<rect x="4" y="71.5" width="14" height="6" rx="2" fill="#0a1525" stroke="#1e3a5f" stroke-width=".5"/>'
+      + '<circle cx="11" cy="74.5" r="1.5" fill="' + (running ? 'rgba(56,189,248,.2)' : '#0d2040') + '"/>'
       // LED on/off pannello basso
-      + '<circle cx="56" cy="80.5" r="1.2" fill="' + (running ? '#22c55e' : '#0a1a2e') + '"' + (running ? ' style="animation:wled 2s ease-in-out infinite"' : '') + '/>'
+      + '<circle cx="56" cy="74.5" r="1.5" fill="' + (running ? '#22c55e' : '#0a1a2e') + '"' + (running ? ' style="animation:wled 2s ease-in-out infinite"' : '') + '/>'
+      // Piedini
+      + '<rect x="5" y="80" width="10" height="2" rx="1" fill="#060d1a"/>'
+      + '<rect x="49" y="80" width="10" height="2" rx="1" fill="#060d1a"/>'
       + '</svg>';
   }
 

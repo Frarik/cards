@@ -1,4 +1,4 @@
-﻿/* frarik-version: 1.7 */
+﻿/* frarik-version: 1.8 */
 (function () {
   'use strict';
 
@@ -45,7 +45,7 @@
 
   /* ── DRYER SVG ── */
   function _dryerSVG(running) {
-    var cx = 32, cy = 53;
+    var cx = 32, cy = 47;
     var spinStyle = running ? 'style="transform-origin:' + cx + 'px ' + cy + 'px;animation:aspin 4s linear infinite"' : '';
     var keyframes = running ? '@keyframes aspin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes aheat{0%,100%{opacity:.12;transform:translateY(0) scaleX(1)}50%{opacity:.45;transform:translateY(-4px) scaleX(.85)}}@keyframes aled{0%,100%{opacity:.5}50%{opacity:1}}' : '';
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 82" style="display:block;width:100%;height:100%;filter:drop-shadow(0 0 10px rgba(249,115,22,' + (running ? '.25' : '.08') + '))">'
@@ -72,50 +72,53 @@
       // Pulsante tempo asciugatura
       + '<rect x="46" y="13" width="14" height="4.5" rx="2" fill="' + (running ? 'rgba(249,115,22,.08)' : '#0a1525') + '" stroke="' + (running ? '#f97316' : '#162035') + '" stroke-width=".4"/>'
       + '<text x="53" y="16.5" text-anchor="middle" font-size="3" fill="' + (running ? '#fdba74' : '#1a3050') + '" font-family="system-ui">85min</text>'
-      // Oblò — anello esterno
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="25" fill="#070f1c" stroke="' + (running ? '#f97316' : '#38bdf8') + '" stroke-width="1.5"/>'
+      // Oblò — anello esterno (cy=47, r=21 → top y=26, bottom y=68 — ben centrato nel corpo)
+      + '<circle cx="' + cx + '" cy="' + cy + '" r="21" fill="#070f1c" stroke="' + (running ? '#f97316' : '#38bdf8') + '" stroke-width="1.5"/>'
       // Guarnizione gomma
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="22.5" fill="none" stroke="' + (running ? 'rgba(249,115,22,.18)' : 'rgba(56,189,248,.18)') + '" stroke-width="1.2"/>'
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="21" fill="none" stroke="' + (running ? 'rgba(249,115,22,.07)' : 'rgba(56,189,248,.07)') + '" stroke-width=".5"/>'
+      + '<circle cx="' + cx + '" cy="' + cy + '" r="18.5" fill="none" stroke="' + (running ? 'rgba(249,115,22,.18)' : 'rgba(56,189,248,.18)') + '" stroke-width="1.2"/>'
+      + '<circle cx="' + cx + '" cy="' + cy + '" r="17" fill="none" stroke="' + (running ? 'rgba(249,115,22,.07)' : 'rgba(56,189,248,.07)') + '" stroke-width=".5"/>'
       // Vetro oblò
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="19.5" fill="' + (running ? '#100800' : '#030912') + '" stroke="#0d1f38" stroke-width=".6"/>'
+      + '<circle cx="' + cx + '" cy="' + cy + '" r="15.5" fill="' + (running ? '#100800' : '#030912') + '" stroke="#0d1f38" stroke-width=".6"/>'
       // Cestello (ruota)
       + '<g ' + spinStyle + '>'
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="17" fill="' + (running ? '#0e0600' : '#040b16') + '" stroke="rgba(249,115,22,.1)" stroke-width=".5"/>'
-      // Fori cestello — corona esterna
-      + '<circle cx="' + cx + '" cy="' + (cy-12) + '" r=".9" fill="#1a1000"/>'
-      + '<circle cx="' + (cx+10.4) + '" cy="' + (cy-6) + '" r=".9" fill="#1a1000"/>'
-      + '<circle cx="' + (cx+10.4) + '" cy="' + (cy+6) + '" r=".9" fill="#1a1000"/>'
-      + '<circle cx="' + cx + '" cy="' + (cy+12) + '" r=".9" fill="#1a1000"/>'
-      + '<circle cx="' + (cx-10.4) + '" cy="' + (cy+6) + '" r=".9" fill="#1a1000"/>'
-      + '<circle cx="' + (cx-10.4) + '" cy="' + (cy-6) + '" r=".9" fill="#1a1000"/>'
-      // Fori corona interna
-      + '<circle cx="' + cx + '" cy="' + (cy-7) + '" r=".6" fill="#1a1000" opacity=".5"/>'
-      + '<circle cx="' + (cx+6.1) + '" cy="' + (cy+3.5) + '" r=".6" fill="#1a1000" opacity=".5"/>'
-      + '<circle cx="' + (cx-6.1) + '" cy="' + (cy+3.5) + '" r=".6" fill="#1a1000" opacity=".5"/>'
+      + '<circle cx="' + cx + '" cy="' + cy + '" r="13.5" fill="' + (running ? '#0e0600' : '#040b16') + '" stroke="rgba(249,115,22,.1)" stroke-width=".5"/>'
+      // Fori cestello — corona esterna (r≈10 dal centro)
+      + '<circle cx="' + cx + '" cy="' + (cy-10) + '" r=".8" fill="#1a1000"/>'
+      + '<circle cx="' + (cx+8.7) + '" cy="' + (cy-5) + '" r=".8" fill="#1a1000"/>'
+      + '<circle cx="' + (cx+8.7) + '" cy="' + (cy+5) + '" r=".8" fill="#1a1000"/>'
+      + '<circle cx="' + cx + '" cy="' + (cy+10) + '" r=".8" fill="#1a1000"/>'
+      + '<circle cx="' + (cx-8.7) + '" cy="' + (cy+5) + '" r=".8" fill="#1a1000"/>'
+      + '<circle cx="' + (cx-8.7) + '" cy="' + (cy-5) + '" r=".8" fill="#1a1000"/>'
+      // Fori corona interna (r≈6 dal centro)
+      + '<circle cx="' + cx + '" cy="' + (cy-6) + '" r=".5" fill="#1a1000" opacity=".5"/>'
+      + '<circle cx="' + (cx+5.2) + '" cy="' + (cy+3) + '" r=".5" fill="#1a1000" opacity=".5"/>'
+      + '<circle cx="' + (cx-5.2) + '" cy="' + (cy+3) + '" r=".5" fill="#1a1000" opacity=".5"/>'
       // 3 palette a 0° 120° 240°
-      + '<rect x="30.5" y="' + (cy-17) + '" width="3" height="8" rx="1.5" fill="#2d1500"/>'
-      + '<rect x="30.5" y="' + (cy-17) + '" width="3" height="8" rx="1.5" fill="#2d1500" transform="rotate(120 ' + cx + ' ' + cy + ')"/>'
-      + '<rect x="30.5" y="' + (cy-17) + '" width="3" height="8" rx="1.5" fill="#2d1500" transform="rotate(240 ' + cx + ' ' + cy + ')"/>'
+      + '<rect x="30.5" y="' + (cy-14) + '" width="3" height="7" rx="1.5" fill="#2d1500"/>'
+      + '<rect x="30.5" y="' + (cy-14) + '" width="3" height="7" rx="1.5" fill="#2d1500" transform="rotate(120 ' + cx + ' ' + cy + ')"/>'
+      + '<rect x="30.5" y="' + (cy-14) + '" width="3" height="7" rx="1.5" fill="#2d1500" transform="rotate(240 ' + cx + ' ' + cy + ')"/>'
       + '</g>'
       // Calore — onde ascendenti animate quando in funzione
       + (running
-        ? '<path d="M' + (cx-7) + ' ' + (cy+6) + ' Q' + (cx-5) + ' ' + (cy+2) + ' ' + (cx-1) + ' ' + (cy+4) + ' Q' + (cx+3) + ' ' + (cy+6) + ' ' + (cx+5) + ' ' + (cy+2) + '" stroke="rgba(249,115,22,.4)" stroke-width="1.5" fill="none" stroke-linecap="round" style="animation:aheat 1.8s ease-in-out infinite"/>'
-          + '<path d="M' + (cx-6) + ' ' + cy + ' Q' + (cx-4) + ' ' + (cy-4) + ' ' + cx + ' ' + (cy-2) + ' Q' + (cx+4) + ' ' + (cy) + ' ' + (cx+6) + ' ' + (cy-4) + '" stroke="rgba(249,115,22,.28)" stroke-width="1.2" fill="none" stroke-linecap="round" style="animation:aheat 2.3s ease-in-out infinite .5s"/>'
-          + '<path d="M' + (cx-5) + ' ' + (cy-5) + ' Q' + (cx-3) + ' ' + (cy-9) + ' ' + cx + ' ' + (cy-7) + ' Q' + (cx+3) + ' ' + (cy-5) + ' ' + (cx+5) + ' ' + (cy-9) + '" stroke="rgba(249,115,22,.16)" stroke-width="1" fill="none" stroke-linecap="round" style="animation:aheat 2.8s ease-in-out infinite 1s"/>'
+        ? '<path d="M' + (cx-6) + ' ' + (cy+5) + ' Q' + (cx-4) + ' ' + (cy+2) + ' ' + (cx-1) + ' ' + (cy+3) + ' Q' + (cx+3) + ' ' + (cy+5) + ' ' + (cx+5) + ' ' + (cy+2) + '" stroke="rgba(249,115,22,.4)" stroke-width="1.5" fill="none" stroke-linecap="round" style="animation:aheat 1.8s ease-in-out infinite"/>'
+          + '<path d="M' + (cx-5) + ' ' + cy + ' Q' + (cx-3) + ' ' + (cy-3) + ' ' + cx + ' ' + (cy-2) + ' Q' + (cx+3) + ' ' + cy + ' ' + (cx+5) + ' ' + (cy-3) + '" stroke="rgba(249,115,22,.28)" stroke-width="1.2" fill="none" stroke-linecap="round" style="animation:aheat 2.3s ease-in-out infinite .5s"/>'
+          + '<path d="M' + (cx-4) + ' ' + (cy-4) + ' Q' + (cx-2) + ' ' + (cy-7) + ' ' + cx + ' ' + (cy-6) + ' Q' + (cx+2) + ' ' + (cy-4) + ' ' + (cx+4) + ' ' + (cy-7) + '" stroke="rgba(249,115,22,.16)" stroke-width="1" fill="none" stroke-linecap="round" style="animation:aheat 2.8s ease-in-out infinite 1s"/>'
         : '')
       // Riflesso vetro
-      + '<path d="M' + (cx-8) + ' ' + (cy-17) + ' Q' + (cx-2) + ' ' + (cy-20) + ' ' + (cx+6) + ' ' + (cy-16) + '" stroke="rgba(255,255,255,.08)" stroke-width="2.5" fill="none" stroke-linecap="round"/>'
-      + '<path d="M' + (cx-16) + ' ' + (cy-8) + ' Q' + (cx-19) + ' ' + (cy-2) + ' ' + (cx-16) + ' ' + (cy+4) + '" stroke="rgba(255,255,255,.04)" stroke-width="1.5" fill="none" stroke-linecap="round"/>'
+      + '<path d="M' + (cx-7) + ' ' + (cy-14) + ' Q' + (cx-2) + ' ' + (cy-17) + ' ' + (cx+5) + ' ' + (cy-13) + '" stroke="rgba(255,255,255,.08)" stroke-width="2" fill="none" stroke-linecap="round"/>'
+      + '<path d="M' + (cx-13) + ' ' + (cy-7) + ' Q' + (cx-16) + ' ' + (cy-2) + ' ' + (cx-13) + ' ' + (cy+3) + '" stroke="rgba(255,255,255,.04)" stroke-width="1.2" fill="none" stroke-linecap="round"/>'
       // Maniglia oblò (destra)
-      + '<rect x="57" y="' + (cy-6) + '" width="4" height="12" rx="2" fill="#0f1e35" stroke="#1e3a5f" stroke-width=".6"/>'
-      // Pannello inferiore (sotto l'oblò, non sovrapposto)
-      + '<rect x="2" y="79" width="60" height="3" rx="1.5" fill="#070f1c" stroke="#162035" stroke-width=".5"/>'
+      + '<rect x="57" y="' + (cy-5) + '" width="4" height="10" rx="2" fill="#0f1e35" stroke="#1e3a5f" stroke-width=".6"/>'
+      // Pannello inferiore (y=70-80 — ben sotto l'oblò che finisce a y=68)
+      + '<rect x="2" y="70" width="60" height="10" rx="3" fill="#070f1c" stroke="#162035" stroke-width=".5"/>'
       // Sportellino filtro pelucchi
-      + '<rect x="4" y="79.5" width="12" height="2" rx="1" fill="#0a1525" stroke="#1e3a5f" stroke-width=".5"/>'
-      + '<circle cx="10" cy="80.5" r="1" fill="' + (running ? 'rgba(249,115,22,.3)' : '#0d2040') + '"/>'
+      + '<rect x="4" y="71.5" width="14" height="6" rx="2" fill="#0a1525" stroke="#1e3a5f" stroke-width=".5"/>'
+      + '<circle cx="11" cy="74.5" r="1.5" fill="' + (running ? 'rgba(249,115,22,.3)' : '#0d2040') + '"/>'
       // LED on/off
-      + '<circle cx="56" cy="80.5" r="1.2" fill="' + (running ? '#22c55e' : '#0a1a2e') + '"' + (running ? ' style="animation:aled 2s ease-in-out infinite"' : '') + '/>'
+      + '<circle cx="56" cy="74.5" r="1.5" fill="' + (running ? '#22c55e' : '#0a1a2e') + '"' + (running ? ' style="animation:aled 2s ease-in-out infinite"' : '') + '/>'
+      // Piedini
+      + '<rect x="5" y="80" width="10" height="2" rx="1" fill="#060d1a"/>'
+      + '<rect x="49" y="80" width="10" height="2" rx="1" fill="#060d1a"/>'
       + '</svg>';
   }
 
