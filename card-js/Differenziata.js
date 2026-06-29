@@ -731,6 +731,7 @@ window.customCards.push({ version: '1.0',
     var st = _dLoad(card), pk = _dPkgDef(), r = {};
     Object.keys(pk).forEach(function(k) { r[k] = (st[k] !== undefined && st[k] !== '') ? st[k] : pk[k]; });
     r.name = st.name || 'Raccolta Differenziata';
+    r.custom_colors = (st.custom_colors && typeof st.custom_colors === 'object') ? st.custom_colors : {};
     return r;
   }
 
@@ -749,10 +750,16 @@ window.customCards.push({ version: '1.0',
     nessuno:         {col:'#1e293b', rgb:'30,41,59',   abbr:'—',   label:'Nessun ritiro',   icon:''},
   };
 
-  function _dWasteInfo(raw) {
+  function _dWasteInfo(raw, cc) {
     if (!raw || !raw.trim()) return _dWASTE.nessuno;
     var key = raw.trim().toLowerCase().replace(/[^a-z]/g, '');
-    return _dWASTE[key] || {col:'#475569', rgb:'71,85,105', abbr:raw.slice(0,3).toUpperCase(), label:raw, icon:'♻️'};
+    var base = _dWASTE[key] || {col:'#475569', rgb:'71,85,105', abbr:raw.slice(0,3).toUpperCase(), label:raw, icon:'♻️'};
+    if (cc && cc[key]) {
+      var hex = cc[key];
+      var r2 = parseInt(hex.slice(1,3),16)||0, g2 = parseInt(hex.slice(3,5),16)||0, b2 = parseInt(hex.slice(5,7),16)||0;
+      return {col:hex, rgb:r2+','+g2+','+b2, abbr:base.abbr, label:base.label, icon:base.icon};
+    }
+    return base;
   }
 
   function _dBinSVG(col, colRgb, abbr, size) {
@@ -767,7 +774,6 @@ window.customCards.push({ version: '1.0',
       + '<path d="M 8 20 L 12 92 H 52 L 56 20 Z" fill="#0b1929" stroke="' + col + '" stroke-width="1"/>'
       + '<path d="M 12 22 L 15 86" stroke="rgba(255,255,255,.05)" stroke-width="8" stroke-linecap="round" fill="none"/>'
       + '<rect x="18" y="32" width="28" height="44" rx="6" fill="rgba(' + colRgb + ',.12)" stroke="rgba(' + colRgb + ',.3)" stroke-width=".7"/>'
-      + '<text x="32" y="58" text-anchor="middle" font-size="16" font-weight="900" font-family="system-ui,sans-serif" fill="' + col + '" opacity=".9">' + abbr + '</text>'
       + '<circle cx="16" cy="96" r="7" fill="#060e1c" stroke="#1e3a5f" stroke-width=".7"/>'
       + '<circle cx="16" cy="96" r="3" fill="#0c1929" stroke="#1e3a5f" stroke-width=".4"/>'
       + '<circle cx="48" cy="96" r="7" fill="#060e1c" stroke="#1e3a5f" stroke-width=".7"/>'
@@ -785,7 +791,8 @@ window.customCards.push({ version: '1.0',
     var tmrIdx = (todayIdx + 1) % 7;
     var todayRaw = _dS(h, c[days[todayIdx]]) || '';
     var tmrRaw = _dS(h, c[days[tmrIdx]]) || '';
-    var todayW = _dWasteInfo(todayRaw), tmrW = _dWasteInfo(tmrRaw);
+    var cc = c.custom_colors || {};
+    var todayW = _dWasteInfo(todayRaw, cc), tmrW = _dWasteInfo(tmrRaw, cc);
     var hasPickup = todayW !== _dWASTE.nessuno && todayRaw.trim();
     var orario = _dS(h, c.pk_orario) || '--:--';
     var orarioStr = orario.length >= 5 ? orario.slice(0,5) : orario;
@@ -795,7 +802,7 @@ window.customCards.push({ version: '1.0',
 
     var weekChips = dayNames.map(function(dn, i) {
       var raw = _dS(h, c[days[i]]) || '';
-      var w = _dWasteInfo(raw);
+      var w = _dWasteInfo(raw, cc);
       var isToday = i === todayIdx;
       var hasPk = !!raw.trim() && w !== _dWASTE.nessuno;
       return '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1">'
@@ -823,10 +830,10 @@ window.customCards.push({ version: '1.0',
       + '#' + rid + ' .fc-hero{display:flex;align-items:center;padding:14px 14px 10px;gap:14px;flex:1}'
       + '#' + rid + ' .fc-hero-bin{flex-shrink:0;display:flex;align-items:center;justify-content:center}'
       + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:8px;min-width:0}'
-      + '#' + rid + ' .fc-waste-main{font-size:26px;font-weight:900;line-height:1.1;word-break:break-word}'
-      + '#' + rid + ' .fc-waste-sub{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px}'
+      + '#' + rid + ' .fc-waste-main{font-size:28px;font-weight:900;line-height:1.1;word-break:break-word;color:#fff}'
+      + '#' + rid + ' .fc-waste-sub{font-size:13px;color:#fff;margin-top:2px;font-weight:600}'
       + '#' + rid + ' .fc-tmr-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid rgba(255,255,255,.06)}'
-      + '#' + rid + ' .fc-tmr-lbl{font-size:10px;font-weight:700;color:rgba(255,255,255,.4);white-space:nowrap}'
+      + '#' + rid + ' .fc-tmr-lbl{font-size:12px;font-weight:700;color:#fff;white-space:nowrap}'
       + '#' + rid + ' .fc-week{display:flex;padding:0 10px 12px;gap:3px;border-top:1px solid rgba(255,255,255,.06);padding-top:10px}'
       + '#' + rid + ' .fc-btns{display:flex;gap:6px;padding:0 14px 12px}'
       + '#' + rid + ' .fc-btn{flex:1;padding:8px 4px;border-radius:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:10px;font-weight:700;color:#fff;text-align:center;cursor:pointer;transition:all .15s}'
@@ -837,15 +844,15 @@ window.customCards.push({ version: '1.0',
     var heroHtml = '<div class="fc-hero">'
       + '<div class="fc-hero-bin">' + _dBinSVG(col, colRgb, hasPickup ? todayW.abbr : '—', 64) + '</div>'
       + '<div class="fc-hero-r">'
-      + '<div class="fc-waste-main" style="color:' + (hasPickup ? col : 'rgba(255,255,255,.3)') + '">' + (hasPickup ? todayW.label : 'Nessun ritiro') + '</div>'
+      + '<div class="fc-waste-main">' + (hasPickup ? todayW.label : 'Nessun ritiro') + '</div>'
       + '<div class="fc-waste-sub">' + (hasPickup ? '🗓 Esponi il bidone oggi' : '✓ Giornata libera') + '</div>'
       + '<div class="fc-tmr-row">'
       + '<span class="fc-tmr-lbl">Domani:</span>'
-      + '<span style="font-size:11px;font-weight:700;color:' + (tmrRaw.trim() ? tmrW.col : 'rgba(255,255,255,.3)') + '">' + (tmrRaw.trim() ? tmrW.label : 'Nessun ritiro') + '</span>'
+      + '<span style="font-size:13px;font-weight:700;color:#fff">' + (tmrRaw.trim() ? tmrW.label : 'Nessun ritiro') + '</span>'
       + '</div>'
       + '<div class="fc-tmr-row">'
       + '<span class="fc-tmr-lbl">Notifica:</span>'
-      + '<span style="font-size:11px;font-weight:700;color:#fff">' + orarioStr + '</span>'
+      + '<span style="font-size:13px;font-weight:700;color:#fff">' + orarioStr + '</span>'
       + '</div>'
       + '</div></div>';
 
@@ -923,9 +930,11 @@ window.customCards.push({ version: '1.0',
 
   function _dOpenCfg(card, el) {
     var h = _dH(), c = _dCfgFor(card);
+    var cc = c.custom_colors || {};
     var days = ['pk_lunedi','pk_martedi','pk_mercoledi','pk_giovedi','pk_venerdi','pk_sabato','pk_domenica'];
     var dayLabels = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato','Domenica'];
     var suggestions = ['Organico','Carta','Cartone','Plastica','Vetro','Indifferenziato','Multimateriale','Ingombranti','Nessuno'];
+    var stdWastes = ['Organico','Umido','Carta','Cartone','Plastica','Vetro','Indifferenziato','Multimateriale','Ingombranti','Lattine','Secco'];
     var nPush   = _dIsOn(h, c.pk_npush);
     var nGoogle = _dIsOn(h, c.pk_ngoogle);
     var nAlexa  = _dIsOn(h, c.pk_nalexa);
@@ -939,17 +948,30 @@ window.customCards.push({ version: '1.0',
     }
     var dayFlds = days.map(function(k, i) {
       var val = (_dS(h, c[k]) || '').replace(/"/g,'&quot;');
-      var w = _dWasteInfo(_dS(h, c[k]) || '');
+      var w = _dWasteInfo(_dS(h, c[k]) || '', cc);
       return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
         + '<div style="font-size:10px;font-weight:800;color:#94a3b8;width:82px;flex-shrink:0">' + dayLabels[i] + '</div>'
-        + '<div style="width:8px;height:8px;border-radius:50%;background:' + w.col + ';flex-shrink:0"></div>'
+        + '<div style="width:10px;height:10px;border-radius:50%;background:' + w.col + ';flex-shrink:0"></div>'
         + '<input id="dcf-' + k + '" type="text" list="dcf-datalist" placeholder="es. Organico" value="' + val + '" style="flex:1;padding:7px 9px;border-radius:8px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:12px;box-sizing:border-box;outline:none">'
         + '</div>';
     }).join('');
+    var colorFlds = stdWastes.map(function(wl) {
+      var key = wl.toLowerCase().replace(/[^a-z]/g, '');
+      var defCol = (_dWASTE[key] && _dWASTE[key].col) ? _dWASTE[key].col : '#475569';
+      var curCol = cc[key] || defCol;
+      return '<div style="display:flex;align-items:center;gap:9px;margin-bottom:7px">'
+        + '<div style="width:12px;height:12px;border-radius:50%;background:' + curCol + ';flex-shrink:0;border:1px solid rgba(255,255,255,.12)"></div>'
+        + '<div style="font-size:11px;color:#fff;flex:1">' + wl + '</div>'
+        + '<input type="color" id="dcc-' + key + '" value="' + curCol + '" style="width:44px;height:30px;border:1px solid rgba(255,255,255,.15);border-radius:7px;background:#0b1422;cursor:pointer;padding:2px 3px">'
+        + '</div>';
+    }).join('');
+    function sec(t) { return '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#22c55e;padding-bottom:4px;border-bottom:1px solid rgba(34,197,94,.18);margin:14px 0 10px">' + t + '</div>'; }
     var content = '<datalist id="dcf-datalist">' + suggestions.map(function(s){return '<option value="'+s+'">';}).join('') + '</datalist>'
-      + '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#22c55e;padding-bottom:4px;border-bottom:1px solid rgba(34,197,94,.18);margin-bottom:10px">Programmazione giorni</div>'
+      + sec('Programmazione giorni')
       + dayFlds
-      + '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#22c55e;padding-bottom:4px;border-bottom:1px solid rgba(34,197,94,.18);margin:14px 0 10px">Notifiche</div>'
+      + sec('Colori per tipo di rifiuto')
+      + colorFlds
+      + sec('Notifiche')
       + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">'
       + '<span style="font-size:11px;color:#fff;flex:1">Orario notifica</span>'
       + '<input id="dcf-orario" type="time" value="' + orario.slice(0,5) + '" style="width:110px;padding:6px 9px;border-radius:7px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:13px;outline:none">'
@@ -959,7 +981,6 @@ window.customCards.push({ version: '1.0',
       + '</div>'
       + '<button id="d-cfg-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#22c55e;color:#022c1b">💾 Salva</button>';
     var ov = _dMkOv(_dPopShell('⚙','34,197,94','Impostazioni',c.name||'Raccolta Differenziata','d-cfg-cl',content),'d-cfg-cl');
-    // Notification toggles inside cfg popup
     ov.querySelectorAll('[data-sya^="ncfg-"]').forEach(function(tog) {
       tog.addEventListener('click', function() {
         var sya = tog.dataset.sya;
@@ -967,7 +988,7 @@ window.customCards.push({ version: '1.0',
         var wasOn = tog.querySelector('div:last-child').textContent === 'ON';
         _dCallSvc('input_boolean', wasOn ? 'turn_off' : 'turn_on', {entity_id: eid});
         tog.style.background = 'rgba(' + (wasOn?'100,116,139':'34,197,94') + ',.1)';
-        tog.style.border = '1px solid rgba(' + (wasOn?'100,116,139':'34,197,94') + ',' + (wasOn?'.15':'.35') + ')';
+        tog.style.borderColor = 'rgba(' + (wasOn?'100,116,139':'34,197,94') + ',' + (wasOn?'.15':'.35') + ')';
         tog.querySelector('div:first-child').textContent = wasOn ? '🔕' : '🔔';
         tog.querySelector('div:nth-child(2)').style.color = wasOn ? 'rgba(255,255,255,.35)' : '#22c55e';
         var lv = tog.querySelector('div:last-child'); lv.textContent = wasOn ? 'OFF' : 'ON'; lv.style.color = wasOn ? 'rgba(255,255,255,.25)' : '#fff';
@@ -983,6 +1004,14 @@ window.customCards.push({ version: '1.0',
       });
       var ori = ov.querySelector('#dcf-orario');
       if (ori && ori.value && h2 && h2.callService) h2.callService('input_datetime','set_datetime',{entity_id:c.pk_orario, time:ori.value+':00'});
+      // Save custom colors
+      var newCc = {};
+      stdWastes.forEach(function(wl) {
+        var key = wl.toLowerCase().replace(/[^a-z]/g, '');
+        var inp = ov.querySelector('#dcc-' + key);
+        if (inp) newCc[key] = inp.value;
+      });
+      var st = _dLoad(card); st.custom_colors = newCc; _dSave(card, st);
       ov._close();
       if (el) el._fcSig = null;
     });
@@ -1055,7 +1084,7 @@ window.customCards.push({ version: '1.0',
   }
 
   var _DIFF_CARD = {
-    id: 'differenziata', name: 'Raccolta Differenziata', icon: '♻️', version: '2.2',
+    id: 'differenziata', name: 'Raccolta Differenziata', icon: '♻️', version: '2.3',
     desc: 'Calendario raccolta differenziata settimanale con notifiche push, Google e Alexa.',
     render:    function(card) { return _dRender(card); },
     mount:     function(card, hass, el) { _dMount(card, hass, el); },

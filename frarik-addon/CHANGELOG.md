@@ -7,6 +7,14 @@
 - `main.js`: le 3 sezioni store (GitHub free, predefinite, premium) escludono da `usedInCurPage` le card con `allowMultiple:true` — il bottone "Aggiungi" rimane attivo anche se la card è già in plancia
 - `elettrodomestico-base.js` v1.3: aggiunto `allowMultiple:true` + re-render immediato dopo installazione PKG
 
+### feat: Differenziata v2.3 — abbr bidone rimossa, testi bianchi, colori custom per rifiuto
+
+- Rimossa la scritta (ORG/PLA/CAR ecc.) dall'interno del bidone SVG — il colore del bidone è sufficiente
+- Testi affianco al bidone: font 28px (nome raccolta), 13px (sottotitolo/domani/notifica), tutti `color:#fff`
+- Colori personalizzabili per ogni tipo di rifiuto: sezione "Colori per tipo di rifiuto" nel popup ⚙ Impostazioni con color picker per Organico, Carta, Plastica, Vetro, ecc. — salvati in localStorage, applicati in tempo reale a bidone, chip settimana e header
+- `_dWasteInfo(raw, cc)` accetta ora i colori custom come secondo parametro
+- `_dCfgFor` carica `custom_colors` dallo storage
+
 ## 1.6.84 — 2026-06-29
 
 ### fix: live update card + ristrutturazione impostazioni Differenziata
