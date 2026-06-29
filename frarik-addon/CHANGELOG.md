@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.6.89 — 2026-06-29
+
+### feat: Antizanzare v2.4 + Differenziata v2.5 — cicli live + hero domani
+
+**Antizanzare v2.4**
+- Chip giorno redesign: mostra numero di cicli attivi + 5 puntini indicatori
+- Pulsanti **−** e **+** direttamente sui chip: incrementano/decrementano `num_cicli`, accendono/spengono il giorno automaticamente (0 cicli = giorno OFF)
+- `_azComputeSig` include ora i valori `num_cicli` di tutti i 7 giorni → aggiornamento live immediato senza uscire dalla card
+- Clic sul quadrato del giorno apre ancora il dettaglio orari/durata
+
+**Differenziata v2.5**
+- Hero mostra il rifiuto di **domani** (quello da esporre stasera), non quello di oggi
+- Status pill: "RITIRO DOMANI" / "DUE RITIRI" / "NESSUN RITIRO"
+- Riga secondaria: "Dopodomani:" (era "Domani:")
+- Testo hero: "🌙 Esponi il bidone stasera" / "✓ Nessuna raccolta domani"
+- I chip settimanali evidenziano comunque il giorno corrente
+
 ## 1.6.88 — 2026-06-29
 
 ### feat: Antizanzare v2.3 — ⚙ Impostazioni user-facing, live update fix

@@ -1267,14 +1267,30 @@ window.customCards.push({ version: '1.5',
     var dayIds2 = ['lunedi','martedi','mercoledi','giovedi','venerdi','sabato','domenica'];
     var dayShort2 = ['LU','MA','ME','GI','VE','SA','DO'];
     var dayChipsInner = dayShort2.map(function(dn, i) {
-      var isDay = _azIsOn(h, 'input_boolean.' + prefix + '_' + dayIds2[i]);
-      return '<div data-sya="day-' + dayIds2[i] + '" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 2px">'
-        + '<div style="font-size:9px;font-weight:800;color:' + (isDay ? '#fff' : 'rgba(255,255,255,.28)') + '">' + dn + '</div>'
-        + '<div style="width:100%;max-width:30px;height:30px;border-radius:8px;background:rgba(' + (isDay ? colRgb : '100,116,139') + ',.12);border:1px solid rgba(' + (isDay ? colRgb : '100,116,139') + ',' + (isDay ? '.45' : '.14') + ');display:flex;align-items:center;justify-content:center">'
-        + '<div style="width:8px;height:8px;border-radius:50%;background:' + (isDay ? col : '#2d3748') + '"></div>'
-        + '</div></div>';
+      var d2 = dayIds2[i];
+      var isDay = _azIsOn(h, 'input_boolean.' + prefix + '_' + d2);
+      var nC = Math.round(_azNum(_azS(h, 'input_number.' + prefix + '_' + d2 + '_num_cicli')) || 0);
+      var boxBg = isDay && nC > 0 ? 'rgba(' + colRgb + ',.15)' : 'rgba(255,255,255,.05)';
+      var boxBd = isDay && nC > 0 ? 'rgba(' + colRgb + ',.45)' : 'rgba(255,255,255,.09)';
+      var boxTxt = isDay && nC > 0 ? col : (isDay ? '#94a3b8' : '#374151');
+      var lblCol = isDay ? '#fff' : 'rgba(255,255,255,.28)';
+      var dotsHtml = '<div style="display:flex;gap:1px;margin-top:1px">'
+        + [0,1,2,3,4].map(function(j) {
+            return '<div style="width:4px;height:4px;border-radius:50%;background:' + (j < nC && isDay ? col : 'rgba(255,255,255,.1)') + '"></div>';
+          }).join('') + '</div>';
+      return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 1px">'
+        + '<div style="font-size:8px;font-weight:800;color:' + lblCol + '">' + dn + '</div>'
+        + '<div data-sya="day-' + d2 + '" style="width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;cursor:pointer;background:' + boxBg + ';border:1px solid ' + boxBd + ';color:' + boxTxt + '">'
+        + (nC > 0 ? String(nC) : (isDay ? '0' : '—'))
+        + '</div>'
+        + dotsHtml
+        + '<div style="display:flex;gap:1px;margin-top:1px">'
+        + '<div data-sya="ncm-' + d2 + '" style="width:13px;height:13px;border-radius:3px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#94a3b8;cursor:pointer;line-height:1">−</div>'
+        + '<div data-sya="ncp-' + d2 + '" style="width:13px;height:13px;border-radius:3px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#94a3b8;cursor:pointer;line-height:1">+</div>'
+        + '</div>'
+        + '</div>';
     }).join('');
-    var dayChipsHtml = '<div style="display:flex;padding:4px 10px 10px;gap:1px;border-top:1px solid rgba(255,255,255,.06)">' + dayChipsInner + '</div>';
+    var dayChipsHtml = '<div style="display:flex;padding:4px 10px 10px;gap:0;border-top:1px solid rgba(255,255,255,.06)">' + dayChipsInner + '</div>';
 
     var btnsHtml = '<div class="fc-btns">'
       + '<div class="fc-btn' + (manOn?' fc-btn-act':'') + '" data-sya="' + (manOn?'man-off':'man-on') + '">' + (manOn?'⏹ Ferma Man.':'▶ Manuale') + '</div>'
@@ -1508,11 +1524,12 @@ window.customCards.push({ version: '1.5',
     var px = c.pk_prefix||'anti_zanzare';
     var dk = ['lunedi','martedi','mercoledi','giovedi','venerdi','sabato','domenica'];
     var dsg = dk.map(function(d){return _azIsOn(h,'input_boolean.'+px+'_'+d)?'1':'0';}).join('');
+    var ncsg = dk.map(function(d){return Math.round(_azNum(_azS(h,'input_number.'+px+'_'+d+'_num_cicli'))||0);}).join('');
     var tc = _azS(h,c.pk_timer_ciclo), tm = _azS(h,c.pk_timer_manuale);
     return ['2.3az',_azS(h,c.pk_stato),_azS(h,c.pk_auto),_azS(h,c.pk_manuale),tc,tm,
             _azS(h,c.pk_cicli_mensili),_azS(h,c.pk_cicli_target),
             _azS(h,c.pk_blocco_meteo),_azS(h,c.pk_pioggia),
-            _azS(h,c.pk_durata_manuale),_azS(h,c.pk_soglia_pioggia),dsg].join('|');
+            _azS(h,c.pk_durata_manuale),_azS(h,c.pk_soglia_pioggia),dsg,ncsg].join('|');
   }
 
   function _azMount(card, hass, el) {
@@ -1528,6 +1545,22 @@ window.customCards.push({ version: '1.5',
       if (a === 'auto-off')  _azCallSvc('input_button','press',{entity_id:c.pk_btn_auto_off});
       if (a === 'programma') _azOpenProgramma(card, el);
       if (a === 'popup-cfg') _azOpenUserCfg(card, el);
+      if (a.length > 4 && a.slice(0,4) === 'ncp-') {
+        var _azNcpPx = (_azCfgFor(card).pk_prefix||'anti_zanzare'), _azNcpH = _azH(), _azNcpD = a.slice(4);
+        var _azNcpId = 'input_number.' + _azNcpPx + '_' + _azNcpD + '_num_cicli';
+        var _azNcpCur = Math.round(_azNum(_azS(_azNcpH, _azNcpId)) || 0);
+        _azCallSvc('input_number','set_value',{entity_id:_azNcpId,value:Math.min(5,_azNcpCur+1)});
+        if (!_azIsOn(_azNcpH, 'input_boolean.' + _azNcpPx + '_' + _azNcpD))
+          _azCallSvc('input_boolean','turn_on',{entity_id:'input_boolean.' + _azNcpPx + '_' + _azNcpD});
+      }
+      if (a.length > 4 && a.slice(0,4) === 'ncm-') {
+        var _azNcmPx = (_azCfgFor(card).pk_prefix||'anti_zanzare'), _azNcmH = _azH(), _azNcmD = a.slice(4);
+        var _azNcmId = 'input_number.' + _azNcmPx + '_' + _azNcmD + '_num_cicli';
+        var _azNcmCur = Math.round(_azNum(_azS(_azNcmH, _azNcmId)) || 0);
+        var _azNcmNv = Math.max(0, _azNcmCur - 1);
+        _azCallSvc('input_number','set_value',{entity_id:_azNcmId,value:_azNcmNv});
+        if (_azNcmNv === 0) _azCallSvc('input_boolean','turn_off',{entity_id:'input_boolean.' + _azNcmPx + '_' + _azNcmD});
+      }
       if (a.length > 4 && a.slice(0,4) === 'day-') _azOpenDayDetail(card, a.slice(4), _azCfgFor(card).pk_prefix||'anti_zanzare');
     };
     el.addEventListener('click', el._fcHandler);
@@ -1555,7 +1588,7 @@ window.customCards.push({ version: '1.5',
   }
 
   var _AZ_CARD = {
-    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.3',
+    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.4',
     desc: 'Controllo sistema anti zanzare: schedule settimanale, timer, statistiche mensili e blocco meteo.',
     render:    function(card) { return _azRender(card); },
     mount:     function(card, hass, el) { _azMount(card, hass, el); },

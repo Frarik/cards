@@ -805,14 +805,19 @@ window.customCards.push({ version: '1.0',
     var cc = c.custom_colors || {};
     var todayArr = _dParseDay(todayRaw, cc);
     var tmrArr = _dParseDay(tmrRaw, cc);
-    var todayW = todayArr[0];
-    var hasPickup = !!todayRaw.trim() && todayW !== _dWASTE.nessuno;
-    var hasTwo = todayArr.length >= 2;
+    // Hero mostra DOMANI — rifiuto da esporre stasera
+    var mainArr = tmrArr;
+    var mainW = mainArr[0];
+    var hasPickup = !!tmrRaw.trim() && mainW !== _dWASTE.nessuno;
+    var hasTwo = mainArr.length >= 2;
+    var dddIdx = (todayIdx + 2) % 7;
+    var dddRaw = _dS(h, c[days[dddIdx]]) || '';
+    var dddArr = _dParseDay(dddRaw, cc);
     var orario = _dS(h, c.pk_orario) || '--:--';
     var orarioStr = orario.length >= 5 ? orario.slice(0,5) : orario;
-    var col = todayW.col;
-    var colRgb = todayW.rgb;
-    var statusLabel = hasTwo ? 'DUE RITIRI' : hasPickup ? 'RITIRO OGGI' : 'NESSUN RITIRO';
+    var col = mainW.col;
+    var colRgb = mainW.rgb;
+    var statusLabel = hasTwo ? 'DUE RITIRI' : hasPickup ? 'RITIRO DOMANI' : 'NESSUN RITIRO';
 
     var weekChips = dayNames.map(function(dn, i) {
       var raw = _dS(h, c[days[i]]) || '';
@@ -867,10 +872,10 @@ window.customCards.push({ version: '1.0',
       + (hasPickup ? '@keyframes dPulse{0%,100%{opacity:.6}50%{opacity:1}}' : '')
       + '</style>';
 
-    var tmrLabel = tmrRaw.trim() ? tmrArr.map(function(w){return w.label;}).join(' + ') : 'Nessun ritiro';
+    var dddLabel = dddRaw.trim() ? dddArr.map(function(w){return w.label;}).join(' + ') : 'Nessun ritiro';
     var heroHtml;
     if (hasTwo) {
-      var w1 = todayArr[0], w2 = todayArr[1];
+      var w1 = mainArr[0], w2 = mainArr[1];
       heroHtml = '<div class="fc-hero" style="flex-direction:column;align-items:stretch;gap:10px">'
         + '<div style="display:flex;gap:16px;justify-content:center;align-items:flex-end">'
         + '<div style="display:flex;flex-direction:column;align-items:center;gap:6px">'
@@ -882,17 +887,17 @@ window.customCards.push({ version: '1.0',
         + '<div style="font-size:18px;font-weight:900;color:#fff;line-height:1.1;text-align:center">' + w2.label + '</div>'
         + '</div>'
         + '</div>'
-        + '<div class="fc-waste-sub" style="text-align:center">🗓 Esponi i bidoni oggi</div>'
-        + '<div class="fc-tmr-row"><span class="fc-tmr-lbl">Domani:</span><span style="font-size:13px;font-weight:700;color:#fff">' + tmrLabel + '</span></div>'
+        + '<div class="fc-waste-sub" style="text-align:center">🌙 Esponi i bidoni stasera</div>'
+        + '<div class="fc-tmr-row"><span class="fc-tmr-lbl">Dopodomani:</span><span style="font-size:13px;font-weight:700;color:#fff">' + dddLabel + '</span></div>'
         + '<div class="fc-tmr-row"><span class="fc-tmr-lbl">Notifica:</span><span style="font-size:13px;font-weight:700;color:#fff">' + orarioStr + '</span></div>'
         + '</div>';
     } else {
       heroHtml = '<div class="fc-hero">'
         + '<div class="fc-hero-bin">' + _dBinSVG(col, colRgb, 'x', 64) + '</div>'
         + '<div class="fc-hero-r">'
-        + '<div class="fc-waste-main">' + (hasPickup ? todayW.label : 'Nessun ritiro') + '</div>'
-        + '<div class="fc-waste-sub">' + (hasPickup ? '🗓 Esponi il bidone oggi' : '✓ Giornata libera') + '</div>'
-        + '<div class="fc-tmr-row"><span class="fc-tmr-lbl">Domani:</span><span style="font-size:13px;font-weight:700;color:#fff">' + tmrLabel + '</span></div>'
+        + '<div class="fc-waste-main">' + (hasPickup ? mainW.label : 'Nessun ritiro') + '</div>'
+        + '<div class="fc-waste-sub">' + (hasPickup ? '🌙 Esponi il bidone stasera' : '✓ Nessuna raccolta domani') + '</div>'
+        + '<div class="fc-tmr-row"><span class="fc-tmr-lbl">Dopodomani:</span><span style="font-size:13px;font-weight:700;color:#fff">' + dddLabel + '</span></div>'
         + '<div class="fc-tmr-row"><span class="fc-tmr-lbl">Notifica:</span><span style="font-size:13px;font-weight:700;color:#fff">' + orarioStr + '</span></div>'
         + '</div></div>';
     }
@@ -1155,7 +1160,7 @@ window.customCards.push({ version: '1.0',
   }
 
   var _DIFF_CARD = {
-    id: 'differenziata', name: 'Raccolta Differenziata', icon: '♻️', version: '2.4',
+    id: 'differenziata', name: 'Raccolta Differenziata', icon: '♻️', version: '2.5',
     desc: 'Calendario raccolta differenziata settimanale con notifiche push, Google e Alexa.',
     render:    function(card) { return _dRender(card); },
     mount:     function(card, hass, el) { _dMount(card, hass, el); },
