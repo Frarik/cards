@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.85 — 2026-06-29
+
+### fix: allowMultiple — card js-custom con flag allowMultiple sempre aggiungibili dallo store
+
+- `main.js`: le 3 sezioni store (GitHub free, predefinite, premium) escludono da `usedInCurPage` le card con `allowMultiple:true` — il bottone "Aggiungi" rimane attivo anche se la card è già in plancia
+- `elettrodomestico-base.js` v1.3: aggiunto `allowMultiple:true` + re-render immediato dopo installazione PKG
+
 ## 1.6.84 — 2026-06-29
 
 ### fix: live update card + ristrutturazione impostazioni Differenziata
