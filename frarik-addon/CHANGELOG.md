@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.6.80 — 2026-06-29
+
+### feat: card Scaldabagno elettrico
+
+- Nuova card `Scaldabagno.js` v1.0 per scaldabagno elettrico a parete
+- SVG dettagliato: serbatoio cilindrico, pannello comandi, manopola termostato, display temperatura, tubi H/C, valvola sicurezza, resistenza elettrica, glow animato in riscaldamento
+- Stati: RISCALDAMENTO (switch on + potenza > soglia) / PRONTO / SPENTO
+- Hero: temperatura acqua, setpoint, consumo W, energia oggi
+- Barra consumo, stats bar (kWh oggi/mese, € oggi/mese)
+- Popup Energia con temperatura, potenza, energia storica e costi
+- Popup Impostazioni con autocomplete entità HA
+
 ## 1.6.79 — 2026-06-29
 
 ### fix: oblò Lavatrice/Asciugatrice ben centrato — non tocca il fondo
