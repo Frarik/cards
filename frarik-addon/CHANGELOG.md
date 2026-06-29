@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.6.90 — 2026-06-29
+
+### feat: Card Bolletta v1.0 — Package completo energia elettrica
+
+**Bolletta.js v1.0** (nuova card)
+- Hero con spesa mensile (€), badge kWh, badge costo al kWh tutto incluso, badge scadenza Octopus
+- Stats live: costo oggi, kWh oggi, potenza istantanea in W
+- Mini grafico a barre ultimi 6 mesi
+- Barra avanzamento mese (gg passati vs totale)
+- Popup **Dettaglio voci**: materia energia, trasporto, oneri, accise, IVA, canone RAI, bonus; badge ARERA trimestre
+- Popup **Storico 12 mesi**: grafico a barre doppio (anno corrente vs precedente) + lista con delta €
+- Popup **Impostazioni**: slider tariffa Octopus, bonus, soglia alert potenza, sandbox simulatore (inserisci kWh → calcola bolletta)
+- Configuratore entity ID (⚙ in header o `configure()`)
+
+**bolletta_riccardo.yaml v1.0** (nuovo package, fusione di 5 sorgenti)
+- Integration sensor W→kWh + 5 utility meter (giornaliero/settimanale/mensile/trimestrale/annuale)
+- REST ARERA auto-aggiornamento (24h) con 16 tariffe regolatorie; fallback su `input_number.br_fb_*`
+- 14 sensori template di calcolo (perdite, dispacciamento, mercato capacità, DISPbt, PNO, commercializzazione, trasporto x3, UC3, UC6 x2, ARIM, ASOS, accise, IVA, canone RAI)
+- Bolletta mensile, giornaliera, proiezione, costo al kWh, media giornaliera, media settimanale, simulatore sandbox
+- Storico 12+12 mesi (€+kWh), archiviazione anno a fine dicembre
+- Toggle notifiche granulari, alert soglia potenza (W) con finestra oraria, report mattutino 08:00
+- Script `br_reset_sensori_energia`, input_datetime fasce notifiche, 8 automazioni
+
 ## 1.6.89 — 2026-06-29
 
 ### feat: Antizanzare v2.4 + Differenziata v2.5 — cicli live + hero domani
