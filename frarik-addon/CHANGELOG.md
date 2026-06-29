@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.6.92 — 2026-06-29
+
+### fix: frarik_bolletta — rename entità da `br_` a `bolletta_`
+
+**frarik_bolletta.yaml + Bolletta.js**
+- Tutti gli entity ID rinominati da prefisso `br_` → `bolletta_` (es. `sensor.bolletta_mensile`, `input_number.bolletta_tariffa_energia`)
+- `_bDefs` card aggiornati con i nuovi ID
+- Template `_BOLL_PKG_YAML` nel wizard aggiornato; wizard installa in `frarik/frarik_bolletta.yaml`
+- Solo `sensor.frarik_bolletta_versione` rimane invariato (rilevamento pkg store)
+
 ## 1.6.91 — 2026-06-29
 
 ### feat: frarik_bolletta.yaml v1.0 — Package formato Frarik standard
@@ -10,12 +20,12 @@
 - `notify.frarik_bolletta` gruppo push — `group.notifiche_bolletta` toggle
 - Sensore `frarik_bolletta_versione` per rilevamento automatico pkg nella card
 - Integration sensor W→kWh + 5 utility meter (giornaliero/settimanale/mensile/trimestrale/annuale)
-- REST ARERA auto-aggiornamento (24h) con 16 tariffe regolatorie; fallback su `input_number.br_fb_*`
+- REST ARERA auto-aggiornamento (24h) con 16 tariffe regolatorie; fallback su `input_number.bolletta_fb_*`
 - 14 sensori template di calcolo (perdite, dispacciamento, mercato capacità, DISPbt, PNO, commercializzazione, trasporto x3, UC3, UC6 x2, ARIM, ASOS, accise, IVA, canone RAI)
 - Bolletta mensile, giornaliera, proiezione, costo al kWh, media giornaliera, media settimanale, simulatore sandbox
 - Storico 12+12 mesi (€+kWh), archiviazione anno a fine dicembre, backup anti-reset ogni 15 min
 - Toggle notifiche granulari, alert soglia potenza (W) con finestra oraria, report mattutino 08:00, alert scadenza Octopus
-- Script `br_reset_sensori_energia`, 8 automazioni
+- Script `bolletta_reset_sensori_energia`, 8 automazioni
 
 ## 1.6.90 — 2026-06-29
 
