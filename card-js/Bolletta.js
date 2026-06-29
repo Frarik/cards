@@ -57,7 +57,10 @@
                 'Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
 
   // ── helpers ────────────────────────────────────────────────────────────────
-  function _bH()  { return window.frarikHass || window.hs || {}; }
+  function _bH()  {
+    try { if (typeof window.frarikHass === 'function') { var _fh = window.frarikHass(); if (_fh && _fh.states) return _fh; } } catch(e) {}
+    return {};
+  }
   function _bS(h, id) {
     var s = (h.states || {})[id];
     return s ? String(s.state) : '';
@@ -67,7 +70,7 @@
 
   function _bCfg(card) {
     var raw = {};
-    try { raw = JSON.parse(localStorage.getItem('fcfg_' + _bId + '_' + (card.dataset.cid || '0')) || '{}'); } catch(e) {}
+    try { raw = JSON.parse(localStorage.getItem('fcfg_' + _bId + '_' + ((card.dataset && card.dataset.cid) || card.cid || card.id || '0')) || '{}'); } catch(e) {}
     var c = {};
     Object.keys(_bDefs).forEach(function(k) { c[k] = raw[k] || _bDefs[k]; });
     return c;
@@ -223,27 +226,28 @@
   function _bOpenSettings(card) {
     var h = _bH(), c = _bCfg(card);
 
-    var sliderRow = function(label, eid, suffix, step, min, max) {
+    var sliderRow = function(label, eid, suffix, step) {
       var val = _bN(_bS(h, eid));
+      var decimals = step < 0.01 ? 6 : (step < 1 ? 2 : 0);
       return '<div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,.07)">'
         + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
         + '<span style="font-size:13px;color:rgba(255,255,255,.8)">' + label + '</span>'
-        + '<span id="bsval_' + eid.replace(/\./g,'_') + '" style="font-size:13px;font-weight:700;color:' + _bCol + '">' + val.toFixed(step < 0.01 ? 6 : (step < 1 ? 2 : 0)) + ' ' + suffix + '</span>'
+        + '<span style="font-size:12px;color:rgba(255,255,255,.4)">' + suffix + '</span>'
         + '</div>'
-        + '<input type="range" min="' + min + '" max="' + max + '" step="' + step + '" value="' + val + '" '
+        + '<input type="text" inputmode="decimal" value="' + val.toFixed(decimals) + '" '
         + 'data-bslider="' + eid + '" '
-        + 'style="width:100%;accent-color:' + _bCol + '">'
+        + 'style="width:100%;padding:8px 11px;border-radius:10px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:13px;font-family:monospace;box-sizing:border-box;outline:none">'
         + '</div>';
     };
 
     var html =
       '<div style="font-size:11px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Tariffe</div>'
-      + sliderRow('Prezzo Octopus (€/kWh)', c.pk_tariffa, '€/kWh', 0.000001, 0, 0.5)
-      + sliderRow('Bonus mese corrente', c.pk_bonus, '€', 0.5, 0, 200)
-      + sliderRow('Soglia alert potenza', c.pk_soglia_w, 'W', 50, 100, 9000)
+      + sliderRow('Prezzo Octopus (€/kWh)', c.pk_tariffa, '€/kWh', 0.000001)
+      + sliderRow('Bonus mese corrente', c.pk_bonus, '€', 0.5)
+      + sliderRow('Soglia alert potenza', c.pk_soglia_w, 'W', 50)
       + '<div style="font-size:11px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px">Simulatore Bolletta</div>'
-      + sliderRow('kWh test', c.pk_test_kwh, 'kWh', 1, 0, 1000)
-      + sliderRow('Bonus test', c.pk_test_bonus, '€', 1, 0, 200)
+      + sliderRow('kWh test', c.pk_test_kwh, 'kWh', 1)
+      + sliderRow('Bonus test', c.pk_test_bonus, '€', 1)
       + '<div style="margin-top:12px;padding:12px 14px;background:rgba(' + _bRgb + ',.1);border-radius:10px">'
       + '<div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:4px">Bolletta simulata</div>'
       + '<div style="font-size:20px;font-weight:800;color:' + _bCol + '">' + _bFmt(_bS(h, c.pk_simulazione)) + ' €</div>'
@@ -252,16 +256,9 @@
     _bPopShell('⚙️', 'Impostazioni', 'Tariffe e configurazione', 'bset', html);
 
     document.querySelectorAll('[data-bslider]').forEach(function(inp) {
-      inp.addEventListener('input', function() {
-        var eid = inp.dataset.bslider;
-        var v = parseFloat(inp.value);
-        var span = document.getElementById('bsval_' + eid.replace(/\./g, '_'));
-        if (span) span.textContent = v;
-      });
       inp.addEventListener('change', function() {
-        var eid = inp.dataset.bslider;
         var v = parseFloat(inp.value);
-        _bCallSvc('input_number', 'set_value', { entity_id: eid, value: v });
+        if (!isNaN(v)) _bCallSvc('input_number', 'set_value', { entity_id: inp.dataset.bslider, value: v });
       });
     });
   }
@@ -449,7 +446,7 @@
     document.getElementById('bwiz_save') && document.getElementById('bwiz_save').addEventListener('click', function() {
       var newCfg = {};
       document.querySelectorAll('[data-wcfg]').forEach(function(inp) { newCfg[inp.dataset.wcfg] = inp.value.trim(); });
-      localStorage.setItem('fcfg_' + _bId + '_' + (card.dataset.cid || '0'), JSON.stringify(newCfg));
+      localStorage.setItem('fcfg_' + _bId + '_' + ((card.dataset && card.dataset.cid) || card.cid || card.id || '0'), JSON.stringify(newCfg));
       var bd = document.getElementById('bwiz_bd');
       if (bd) bd.remove();
       var root = document.getElementById('frarik-overlay-root');
@@ -1877,10 +1874,10 @@ automation:
         + '<div><div class="wd-sec">Contratto</div>'
         + '<div class="wd-lbl">Tariffa Energia (€/kWh)</div>'
         + '<p class="wd-note">Prezzo fisso del tuo contratto, es. 0.09 per Octopus Fissa 12M</p>'
-        + '<div class="wd-frow"><input class="wd-inp" id="f-tariffa" type="number" step="0.000001" min="0" max="1" placeholder="0.090000" value="' + ((saved && saved.tariffa) || '') + '"></div>'
+        + '<div class="wd-frow"><input class="wd-inp" id="f-tariffa" type="text" inputmode="decimal" placeholder="0.090000" value="' + ((saved && saved.tariffa) || '') + '"></div>'
         + '<div class="wd-lbl">Potenza Impegnata (kW)</div>'
         + '<p class="wd-note">La potenza contrattuale. Valori comuni: 3.0 / 4.5 / 6.0</p>'
-        + '<div class="wd-frow"><input class="wd-inp" id="f-kw" type="number" step="0.5" min="1.5" max="15" placeholder="4.5" value="' + ((saved && saved.kw) || '') + '"></div>'
+        + '<div class="wd-frow"><input class="wd-inp" id="f-kw" type="text" inputmode="decimal" placeholder="4.5" value="' + ((saved && saved.kw) || '') + '"></div>'
         + '</div>'
 
         + '<div><div class="wd-sec">Notifiche Push</div>'
