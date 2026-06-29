@@ -433,3 +433,294 @@ window.customCards.push({ version: '1.0',
   name:        'Raccolta Differenziata',
   description: 'Bidoni, programmazione settimanale, notifiche push e Alexa.',
 })
+
+// ─── FratechStore Integration ────────────────────────────────────────────────
+;(function () {
+  'use strict';
+
+  var _DIFF_WIZ_KEY = 'frarik_pkg_wizard_differenziata';
+  var _IND = '          ';
+
+  var _DIFF_PKG_YAML = 'homeassistant:\n'
+    + '  customize:\n'
+    + '    package.node_anchors:\n'
+    + '      customize: &customize\n'
+    + '        package: \'Centro Controllo Raccolta Differenziata 1.0\'\n'
+    + '      setting:\n'
+    + '        Lista MediaPlayer Google: &google\n'
+    + _IND + 'IL_TUO_MEDIA_PLAYER_GOOGLE_1\n'
+    + '        Lista mediaplayer alexa: &alexa\n'
+    + _IND + 'IL_TUO_MEDIA_PLAYER_ALEXA_1\n'
+    + '        Device per notifica push: &push\n'
+    + _IND + '- service: IL_TUO_MOBILE_APP_1\n'
+    + 'notify:\n'
+    + '  - name: Gruppo Centro Raccolta Differenziata\n'
+    + '    platform: group\n'
+    + '    services: *push\n'
+    + 'input_select:\n'
+    + '  inserimento_rifiuti:\n'
+    + '    name: Inserimento Rifiuti\n'
+    + '    options:\n'
+    + '      - Rifiuti\n'
+    + 'input_text:\n'
+    + '  rifiuto_lunedi: {name: "Rifiuto Lunedì", icon: mdi:delete-variant}\n'
+    + '  rifiuto_martedi: {name: "Rifiuto Martedì", icon: mdi:delete-variant}\n'
+    + '  rifiuto_mercoledi: {name: "Rifiuto Mercoledì", icon: mdi:delete-variant}\n'
+    + '  rifiuto_giovedi: {name: "Rifiuto Giovedì", icon: mdi:delete-variant}\n'
+    + '  rifiuto_venerdi: {name: "Rifiuto Venerdì", icon: mdi:delete-variant}\n'
+    + '  rifiuto_sabato: {name: "Rifiuto Sabato", icon: mdi:delete-variant}\n'
+    + '  rifiuto_domenica: {name: "Rifiuto Domenica", icon: mdi:delete-variant}\n'
+    + 'input_datetime:\n'
+    + '  orario_notifica_differenziata:\n'
+    + '    name: Orario Notifica Raccolta Differenziata\n'
+    + '    has_date: false\n'
+    + '    has_time: true\n'
+    + 'input_boolean:\n'
+    + '  notify_push_raccolta_differenziata: {name: "Notifica Push", icon: mdi:bell}\n'
+    + '  notify_google_raccolta_differenziata: {name: "Notifica Google", icon: mdi:google-home}\n'
+    + '  notify_alexa_raccolta_differenziata: {name: "Notifica Alexa", icon: mdi:amazon-alexa}\n'
+    + '  aggiornamento_pkg_raccolta_differenziata: {name: "Aggiornamento PKG Differenziata"}\n'
+    + 'template:\n'
+    + '  - sensor:\n'
+    + '      - name: Raccolta Differenziata\n'
+    + '        state: >-\n'
+    + '          {% if now().weekday() == 0 %}{{ states(\'input_text.rifiuto_lunedi\') }}\n'
+    + '          {% elif now().weekday() == 1 %}{{ states(\'input_text.rifiuto_martedi\') }}\n'
+    + '          {% elif now().weekday() == 2 %}{{ states(\'input_text.rifiuto_mercoledi\') }}\n'
+    + '          {% elif now().weekday() == 3 %}{{ states(\'input_text.rifiuto_giovedi\') }}\n'
+    + '          {% elif now().weekday() == 4 %}{{ states(\'input_text.rifiuto_venerdi\') }}\n'
+    + '          {% elif now().weekday() == 5 %}{{ states(\'input_text.rifiuto_sabato\') }}\n'
+    + '          {% elif now().weekday() == 6 %}{{ states(\'input_text.rifiuto_domenica\') }}\n'
+    + '          {% endif %}\n'
+    + 'automation:\n'
+    + '  - id: raccolta_differenziata_notifica\n'
+    + '    alias: "Raccolta Differenziata - Notifica"\n'
+    + '    trigger:\n'
+    + '      - platform: time\n'
+    + '        at: input_datetime.orario_notifica_differenziata\n'
+    + '    action:\n'
+    + '      - choose:\n'
+    + '        - conditions:\n'
+    + '          - condition: state\n'
+    + '            entity_id: input_boolean.notify_google_raccolta_differenziata\n'
+    + '            state: \'on\'\n'
+    + '          - condition: not\n'
+    + '            conditions:\n'
+    + '              - condition: state\n'
+    + '                entity_id: sensor.raccolta_differenziata\n'
+    + '                state: "Nessun Ritiro"\n'
+    + '          sequence:\n'
+    + '          - service: tts.google_translate_say\n'
+    + '            entity_id: *google\n'
+    + '            data:\n'
+    + '              message: "Ricordati di buttare {{ states(\'sensor.raccolta_differenziata\') }}"\n'
+    + '      - choose:\n'
+    + '        - conditions:\n'
+    + '          - condition: state\n'
+    + '            entity_id: input_boolean.notify_push_raccolta_differenziata\n'
+    + '            state: \'on\'\n'
+    + '          sequence:\n'
+    + '          - data_template:\n'
+    + '              message: "{{ states(\'sensor.raccolta_differenziata\') }}"\n'
+    + '              title: "Raccolta Differenziata ♻"\n'
+    + '            service: notify.gruppo_centro_raccolta_differenziata\n'
+    + '      - choose:\n'
+    + '        - conditions:\n'
+    + '          - condition: state\n'
+    + '            entity_id: input_boolean.notify_alexa_raccolta_differenziata\n'
+    + '            state: \'on\'\n'
+    + '          sequence:\n'
+    + '          - service: notify.alexa_media\n'
+    + '            data:\n'
+    + '              target: *alexa\n'
+    + '              data: {type: announce, method: spoken}\n'
+    + '              message: "Oggi ricordati di buttare {{ states(\'sensor.raccolta_differenziata\') }}"\n';
+
+  function _buildPkgDIFF(push, google, alexa) {
+    var pushLines = (push && push.length)
+      ? push.map(function(p) { return _IND + '- service: ' + p; }).join('\n')
+      : _IND + '- service: mobile_app_smartphone';
+    var googleLines = (google && google.length)
+      ? google.map(function(p) { return _IND + '- ' + p; }).join('\n')
+      : _IND + '- media_player.google_home';
+    var alexaLines = (alexa && alexa.length)
+      ? alexa.map(function(p) { return _IND + '- ' + p; }).join('\n')
+      : _IND + '- media_player.alexa_casa';
+    return _DIFF_PKG_YAML
+      .replace(_IND + '- service: IL_TUO_MOBILE_APP_1', pushLines)
+      .replace(_IND + 'IL_TUO_MEDIA_PLAYER_GOOGLE_1', googleLines)
+      .replace(_IND + 'IL_TUO_MEDIA_PLAYER_ALEXA_1', alexaLines);
+  }
+
+  function _openWizardDIFF(hass, onDone) {
+    var states = (hass && hass.states) || {};
+    var mediaIds = Object.keys(states).filter(function(id) { return /^media_player\./.test(id); }).sort();
+    var saved = null;
+    try { saved = JSON.parse(localStorage.getItem(_DIFF_WIZ_KEY) || 'null'); } catch(e) {}
+    var pushRows   = (saved && saved.push   && saved.push.length)   ? saved.push.slice()   : [''];
+    var googleRows = (saved && saved.google && saved.google.length) ? saved.google.slice() : [''];
+    var alexaRows  = (saved && saved.alexa  && saved.alexa.length)  ? saved.alexa.slice()  : [''];
+
+    var host = document.createElement('div');
+    var sr = host.attachShadow({mode: 'open'});
+    document.body.appendChild(host);
+    function destroy() { try { document.body.removeChild(host); } catch(e) {} }
+
+    function setupAC(inp, drop, ids) {
+      if (!inp || !drop) return;
+      function show() {
+        var q = inp.value.toLowerCase().trim();
+        var hits = (q ? ids.filter(function(id) { return id.toLowerCase().includes(q); }) : ids).slice(0, 50);
+        if (!hits.length) { drop.style.display = 'none'; return; }
+        drop.innerHTML = hits.map(function(id) { return '<div class="wd-item" data-pick="' + id + '">' + id + '</div>'; }).join('');
+        drop.style.display = 'block';
+        drop.querySelectorAll('[data-pick]').forEach(function(row) {
+          row.addEventListener('mousedown', function(ev) { ev.preventDefault(); inp.value = row.getAttribute('data-pick'); drop.style.display = 'none'; });
+          row.addEventListener('mouseover', function() { row.style.background = 'rgba(255,255,255,.08)'; });
+          row.addEventListener('mouseout', function() { row.style.background = ''; });
+        });
+      }
+      inp.addEventListener('focus', show);
+      inp.addEventListener('input', show);
+      inp.addEventListener('blur', function() { setTimeout(function() { drop.style.display = 'none'; }, 200); });
+    }
+
+    function multiRows(rows, cls, placeholder) {
+      return rows.map(function(v, i) {
+        return '<div class="wd-push-row"><div style="position:relative;flex:1"><input class="wd-inp ' + cls + '" type="text" autocomplete="off" placeholder="' + placeholder + '" value="' + (v || '').replace(/"/g, '&quot;') + '"><div class="wd-drop"></div></div><button class="wd-rm" data-rm="' + i + '">✕</button></div>';
+      }).join('');
+    }
+
+    function renderWiz() {
+      sr.innerHTML = '<style>'
+        + ':host{all:initial;font-family:system-ui,sans-serif}'
+        + '.wd-bd{position:fixed;inset:0;z-index:200000;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);display:flex;align-items:flex-end}'
+        + '.wd-panel{width:100%;max-height:88vh;display:flex;flex-direction:column;background:#080f18;border:1px solid rgba(56,189,248,.3);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:wUp .22s cubic-bezier(.32,1.12,.56,1)}'
+        + '@keyframes wUp{from{transform:translateY(100%)}to{transform:translateY(0)}}'
+        + '.wd-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}'
+        + '.wd-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.3);flex-shrink:0}'
+        + '.wd-tit{font-size:14px;font-weight:800}.wd-sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:1px}'
+        + '.wd-x{margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none}'
+        + '.wd-body{flex:1;overflow-y:auto;padding:16px;scrollbar-width:none;display:flex;flex-direction:column;gap:14px}'
+        + '.wd-body::-webkit-scrollbar{display:none}'
+        + '.wd-sec{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding-bottom:5px;border-bottom:1px solid rgba(56,189,248,.18);margin-bottom:10px}'
+        + '.wd-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px}'
+        + '.wd-frow{position:relative;margin-bottom:10px}'
+        + '.wd-inp{width:100%;padding:9px 11px;border-radius:10px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none}'
+        + '.wd-inp:focus{border-color:rgba(56,189,248,.5)}'
+        + '.wd-drop{position:absolute;left:0;right:0;top:100%;z-index:10;max-height:150px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 9px 9px;display:none}'
+        + '.wd-item{padding:5px 10px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04);color:#e2e8f0}'
+        + '.wd-push-row{display:flex;gap:6px;margin-bottom:6px}'
+        + '.wd-rm{width:30px;height:38px;border-radius:8px;background:rgba(255,255,255,.07);border:none;color:#fff;cursor:pointer;font-size:14px;flex-shrink:0}'
+        + '.wd-add{padding:6px 12px;border-radius:8px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.25);color:#38bdf8;font-size:11px;font-weight:700;cursor:pointer}'
+        + '.wd-note{font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;margin:0 0 10px}'
+        + '.wd-foot{padding:12px 16px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:8px;flex-shrink:0}'
+        + '.wd-cancel{flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:rgba(255,255,255,.1);color:#fff}'
+        + '.wd-install{flex:2;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#38bdf8;color:#060d14}'
+        + '.wd-loading{opacity:.6;pointer-events:none}'
+        + '</style>'
+        + '<div class="wd-bd" id="wd-bd"><div class="wd-panel">'
+        + '<div class="wd-hdr"><div class="wd-ico">♻️</div>'
+        + '<div><div class="wd-tit">Installa PKG Raccolta Differenziata</div><div class="wd-sub">frarik_differenziata.yaml → config/packages/</div></div>'
+        + '<button class="wd-x" id="wd-x">✕</button></div>'
+        + '<div class="wd-body">'
+        + '<div><div class="wd-sec">Notifiche Push</div>'
+        + '<p class="wd-note">mobile_app dei dispositivi per notifiche push (es. <code>mobile_app_iphone</code>).</p>'
+        + '<div id="push-rows">' + multiRows(pushRows, 'push-inp', 'mobile_app_...') + '</div>'
+        + '<button class="wd-add" id="push-add">+ Aggiungi dispositivo</button>'
+        + '</div>'
+        + '<div><div class="wd-sec">Notifiche Google / Chromecast</div>'
+        + '<p class="wd-note">media_player Google Home (es. <code>media_player.google_cucina</code>). Lascia vuoto per non usare.</p>'
+        + '<div id="google-rows">' + multiRows(googleRows, 'google-inp', 'media_player.google_...') + '</div>'
+        + '<button class="wd-add" id="google-add">+ Aggiungi Google</button>'
+        + '</div>'
+        + '<div><div class="wd-sec">Notifiche Alexa</div>'
+        + '<p class="wd-note">media_player Alexa (es. <code>media_player.echo_cucina</code>). Lascia vuoto per non usare.</p>'
+        + '<div id="alexa-rows">' + multiRows(alexaRows, 'alexa-inp', 'media_player.echo_...') + '</div>'
+        + '<button class="wd-add" id="alexa-add">+ Aggiungi Echo</button>'
+        + '</div>'
+        + '</div>'
+        + '<div class="wd-foot">'
+        + '<button class="wd-cancel" id="wd-cancel">Annulla</button>'
+        + '<button class="wd-install" id="wd-install">📦 Installa PKG</button>'
+        + '</div></div></div>';
+
+      sr.getElementById('wd-x').addEventListener('click', destroy);
+      sr.getElementById('wd-cancel').addEventListener('click', destroy);
+      sr.getElementById('wd-bd').addEventListener('click', function(e) { if (e.target === sr.getElementById('wd-bd')) destroy(); });
+
+      function bindMulti(containerId, rows, cls, addId) {
+        sr.getElementById(containerId).addEventListener('click', function(e) {
+          var btn = e.target.closest('[data-rm]'); if (!btn) return;
+          rows.length = 0;
+          Array.from(sr.querySelectorAll('.' + cls)).forEach(function(i) { rows.push(i.value); });
+          rows.splice(+btn.dataset.rm, 1);
+          if (!rows.length) rows.push('');
+          renderWiz();
+        });
+        sr.getElementById(addId).addEventListener('click', function() {
+          Array.from(sr.querySelectorAll('.' + cls)).forEach(function(i, idx) { rows[idx] = i.value; });
+          rows.push('');
+          renderWiz();
+        });
+      }
+      bindMulti('push-rows',   pushRows,   'push-inp',   'push-add');
+      bindMulti('google-rows', googleRows, 'google-inp', 'google-add');
+      bindMulti('alexa-rows',  alexaRows,  'alexa-inp',  'alexa-add');
+
+      sr.querySelectorAll('.google-inp').forEach(function(inp) { setupAC(inp, inp.parentElement.querySelector('.wd-drop'), mediaIds); });
+      sr.querySelectorAll('.alexa-inp').forEach(function(inp)  { setupAC(inp, inp.parentElement.querySelector('.wd-drop'), mediaIds); });
+
+      sr.getElementById('wd-install').addEventListener('click', function() {
+        var push   = Array.from(sr.querySelectorAll('.push-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
+        var google = Array.from(sr.querySelectorAll('.google-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
+        var alexa  = Array.from(sr.querySelectorAll('.alexa-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
+        try { localStorage.setItem(_DIFF_WIZ_KEY, JSON.stringify({push: push, google: google, alexa: alexa})); } catch(e) {}
+        var yaml = _buildPkgDIFF(push, google, alexa);
+        var m = location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
+        var base = location.origin + (m ? m[1] : '');
+        var btn = sr.getElementById('wd-install');
+        btn.classList.add('wd-loading'); btn.textContent = 'Installazione…';
+        fetch(base + '/api/frarik/pkg/install', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({name: 'frarik/frarik_differenziata.yaml', content: yaml})
+        }).then(function(r) { return r.json().then(function(j) { return {r: r, j: j}; }); })
+          .then(function(res) {
+            destroy();
+            if (res.r.ok && res.j.ok) {
+              try { if (typeof window.showToast === 'function') window.showToast('📦 PKG Raccolta Differenziata installato! Riavvia HA.'); } catch(e) {}
+              if (typeof onDone === 'function') onDone();
+            } else {
+              try { if (typeof window.showToast === 'function') window.showToast('⚠️ Errore installazione PKG: ' + ((res.j && res.j.error) || '')); } catch(e) {}
+            }
+          }).catch(function() {
+            destroy();
+            try { if (typeof window.showToast === 'function') window.showToast('⚠️ Errore connessione al PKG install'); } catch(e) {}
+          });
+      });
+    }
+    renderWiz();
+  }
+
+  var _DIFF_CARD = {
+    id: 'differenziata', name: 'Raccolta Differenziata', icon: '♻️', version: '1.0',
+    desc: 'Calendario raccolta differenziata settimanale con notifiche push, Google e Alexa.',
+    render:  function(card) { return '<differenziata-card></differenziata-card>'; },
+    mount:   function(card, hass, el) {},
+    update:  function(card, hass, el) {
+      var c = el.querySelector('differenziata-card');
+      if (!c) { el.innerHTML = '<differenziata-card></differenziata-card>'; c = el.querySelector('differenziata-card'); }
+      if (c && hass) c.hass = hass;
+    },
+    frarik_pkg_check:   'sensor.raccolta_differenziata',
+    frarik_pkg_id:      'frarik_differenziata',
+    frarik_pkg_version: '1.0',
+    openWizard: _openWizardDIFF,
+  };
+  window.FratechCardRegistry = window.FratechCardRegistry || {};
+  window.FratechCardRegistry[_DIFF_CARD.id] = _DIFF_CARD;
+  window.FratechCards = window.FratechCards || {};
+  window.FratechCards[_DIFF_CARD.id] = _DIFF_CARD;
+  try { console.log('[FratechStore] Card registrata: differenziata v' + _DIFF_CARD.version); } catch(e) {}
+})();

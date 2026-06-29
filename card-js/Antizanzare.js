@@ -734,3 +734,379 @@ window.customCards.push({ version: '1.5',
   name:        'Anti Zanzare',
   description: 'Controllo sistema anti zanzare: schedule, timer, statistiche mensili.',
 })
+
+// ─── FratechStore Integration ────────────────────────────────────────────────
+;(function () {
+  'use strict';
+
+  var _AZ_WIZ_KEY = 'frarik_pkg_wizard_antizanzare';
+
+  var _AZ_PKG_YAML = 'input_boolean:\n'
+    + '  anti_zanzare_lunedi: {name: "Anti Zanzare Lunedì", icon: mdi:calendar}\n'
+    + '  anti_zanzare_martedi: {name: "Anti Zanzare Martedì", icon: mdi:calendar}\n'
+    + '  anti_zanzare_mercoledi: {name: "Anti Zanzare Mercoledì", icon: mdi:calendar}\n'
+    + '  anti_zanzare_giovedi: {name: "Anti Zanzare Giovedì", icon: mdi:calendar}\n'
+    + '  anti_zanzare_venerdi: {name: "Anti Zanzare Venerdì", icon: mdi:calendar}\n'
+    + '  anti_zanzare_sabato: {name: "Anti Zanzare Sabato", icon: mdi:calendar}\n'
+    + '  anti_zanzare_domenica: {name: "Anti Zanzare Domenica", icon: mdi:calendar}\n'
+    + '  anti_zanzare_automazione_attiva: {name: "Automazione Anti Zanzare Attiva", icon: mdi:autorenew}\n'
+    + '  anti_zanzare_manuale_attiva: {name: "Anti Zanzare Manuale Attiva", icon: mdi:hand-back-right}\n'
+    + 'input_number:\n'
+    + '  anti_zanzare_lunedi_num_cicli: {name: "Lun N.Cicli", min: 0, max: 5, step: 1, mode: slider, icon: mdi:counter}\n'
+    + '  anti_zanzare_lunedi_durata_ciclo1: {name: "Lun C1 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_lunedi_durata_ciclo2: {name: "Lun C2 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_lunedi_durata_ciclo3: {name: "Lun C3 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_lunedi_durata_ciclo4: {name: "Lun C4 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_lunedi_durata_ciclo5: {name: "Lun C5 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_martedi_num_cicli: {name: "Mar N.Cicli", min: 0, max: 5, step: 1, mode: slider, icon: mdi:counter}\n'
+    + '  anti_zanzare_martedi_durata_ciclo1: {name: "Mar C1 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_martedi_durata_ciclo2: {name: "Mar C2 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_martedi_durata_ciclo3: {name: "Mar C3 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_martedi_durata_ciclo4: {name: "Mar C4 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_martedi_durata_ciclo5: {name: "Mar C5 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_mercoledi_num_cicli: {name: "Mer N.Cicli", min: 0, max: 5, step: 1, mode: slider, icon: mdi:counter}\n'
+    + '  anti_zanzare_mercoledi_durata_ciclo1: {name: "Mer C1 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_mercoledi_durata_ciclo2: {name: "Mer C2 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_mercoledi_durata_ciclo3: {name: "Mer C3 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_mercoledi_durata_ciclo4: {name: "Mer C4 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_mercoledi_durata_ciclo5: {name: "Mer C5 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_giovedi_num_cicli: {name: "Gio N.Cicli", min: 0, max: 5, step: 1, mode: slider, icon: mdi:counter}\n'
+    + '  anti_zanzare_giovedi_durata_ciclo1: {name: "Gio C1 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_giovedi_durata_ciclo2: {name: "Gio C2 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_giovedi_durata_ciclo3: {name: "Gio C3 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_giovedi_durata_ciclo4: {name: "Gio C4 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_giovedi_durata_ciclo5: {name: "Gio C5 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_venerdi_num_cicli: {name: "Ven N.Cicli", min: 0, max: 5, step: 1, mode: slider, icon: mdi:counter}\n'
+    + '  anti_zanzare_venerdi_durata_ciclo1: {name: "Ven C1 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_venerdi_durata_ciclo2: {name: "Ven C2 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_venerdi_durata_ciclo3: {name: "Ven C3 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_venerdi_durata_ciclo4: {name: "Ven C4 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_venerdi_durata_ciclo5: {name: "Ven C5 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_sabato_num_cicli: {name: "Sab N.Cicli", min: 0, max: 5, step: 1, mode: slider, icon: mdi:counter}\n'
+    + '  anti_zanzare_sabato_durata_ciclo1: {name: "Sab C1 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_sabato_durata_ciclo2: {name: "Sab C2 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_sabato_durata_ciclo3: {name: "Sab C3 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_sabato_durata_ciclo4: {name: "Sab C4 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_sabato_durata_ciclo5: {name: "Sab C5 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_domenica_num_cicli: {name: "Dom N.Cicli", min: 0, max: 5, step: 1, mode: slider, icon: mdi:counter}\n'
+    + '  anti_zanzare_domenica_durata_ciclo1: {name: "Dom C1 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_domenica_durata_ciclo2: {name: "Dom C2 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_domenica_durata_ciclo3: {name: "Dom C3 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_domenica_durata_ciclo4: {name: "Dom C4 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_domenica_durata_ciclo5: {name: "Dom C5 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
+    + '  anti_zanzare_durata_manuale: {name: "Durata Manuale", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec, icon: mdi:timer-cog}\n'
+    + '  anti_zanzare_soglia_pioggia: {name: "Soglia Pioggia %", min: 0, max: 100, step: 5, mode: slider, unit_of_measurement: "%", icon: mdi:weather-rainy}\n'
+    + '  anti_zanzare_cicli_target_mensili: {name: "Cicli Target Mensili", min: 1, max: 200, step: 1, mode: box, unit_of_measurement: cicli, icon: mdi:target}\n'
+    + 'input_datetime:\n'
+    + '  anti_zanzare_lunedi_orario_ciclo1: {name: "Lun C1 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_lunedi_orario_ciclo2: {name: "Lun C2 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_lunedi_orario_ciclo3: {name: "Lun C3 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_lunedi_orario_ciclo4: {name: "Lun C4 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_lunedi_orario_ciclo5: {name: "Lun C5 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_martedi_orario_ciclo1: {name: "Mar C1 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_martedi_orario_ciclo2: {name: "Mar C2 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_martedi_orario_ciclo3: {name: "Mar C3 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_martedi_orario_ciclo4: {name: "Mar C4 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_martedi_orario_ciclo5: {name: "Mar C5 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_mercoledi_orario_ciclo1: {name: "Mer C1 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_mercoledi_orario_ciclo2: {name: "Mer C2 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_mercoledi_orario_ciclo3: {name: "Mer C3 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_mercoledi_orario_ciclo4: {name: "Mer C4 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_mercoledi_orario_ciclo5: {name: "Mer C5 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_giovedi_orario_ciclo1: {name: "Gio C1 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_giovedi_orario_ciclo2: {name: "Gio C2 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_giovedi_orario_ciclo3: {name: "Gio C3 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_giovedi_orario_ciclo4: {name: "Gio C4 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_giovedi_orario_ciclo5: {name: "Gio C5 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_venerdi_orario_ciclo1: {name: "Ven C1 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_venerdi_orario_ciclo2: {name: "Ven C2 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_venerdi_orario_ciclo3: {name: "Ven C3 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_venerdi_orario_ciclo4: {name: "Ven C4 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_venerdi_orario_ciclo5: {name: "Ven C5 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_sabato_orario_ciclo1: {name: "Sab C1 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_sabato_orario_ciclo2: {name: "Sab C2 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_sabato_orario_ciclo3: {name: "Sab C3 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_sabato_orario_ciclo4: {name: "Sab C4 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_sabato_orario_ciclo5: {name: "Sab C5 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_domenica_orario_ciclo1: {name: "Dom C1 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_domenica_orario_ciclo2: {name: "Dom C2 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_domenica_orario_ciclo3: {name: "Dom C3 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_domenica_orario_ciclo4: {name: "Dom C4 Orario", has_date: false, has_time: true}\n'
+    + '  anti_zanzare_domenica_orario_ciclo5: {name: "Dom C5 Orario", has_date: false, has_time: true}\n'
+    + 'input_button:\n'
+    + '  anti_zanzare_start_automazione: {name: "Avvia Automazione Anti Zanzare", icon: mdi:play-circle}\n'
+    + '  anti_zanzare_stop_automazione: {name: "Ferma Automazione Anti Zanzare", icon: mdi:stop-circle}\n'
+    + '  anti_zanzare_start_manuale: {name: "Avvia Anti Zanzare Manuale", icon: mdi:play-circle-outline}\n'
+    + '  anti_zanzare_stop_manuale: {name: "Ferma Anti Zanzare Manuale", icon: mdi:stop-circle-outline}\n'
+    + 'timer:\n'
+    + '  anti_zanzare_ciclo_timer: {name: "Timer Ciclo Anti Zanzare", icon: mdi:clock, restore: true}\n'
+    + '  anti_zanzare_manuale_timer: {name: "Timer Anti Zanzare Manuale", icon: mdi:hand-back-right, restore: true}\n'
+    + 'counter:\n'
+    + '  anti_zanzare_cicli_mensili: {name: "Cicli Anti Zanzare Questo Mese", step: 1, icon: mdi:counter}\n'
+    + '  anti_zanzare_cicli_rimanenti: {name: "Cicli Anti Zanzare Rimanenti", step: 1, icon: mdi:counter-outline}\n'
+    + 'template:\n'
+    + '  - sensor:\n'
+    + '      - name: "Stato Anti Zanzare"\n'
+    + '        unique_id: anti_zanzare_stato_sistema\n'
+    + '        state: >\n'
+    + '          {% if is_state(\'input_boolean.anti_zanzare_manuale_attiva\', \'on\') %}\n'
+    + '            Manuale Attiva\n'
+    + '          {% elif is_state(\'timer.anti_zanzare_ciclo_timer\', \'active\') %}\n'
+    + '            Ciclo in Corso\n'
+    + '          {% elif is_state(\'input_boolean.anti_zanzare_automazione_attiva\', \'on\') %}\n'
+    + '            Automazione Attiva\n'
+    + '          {% else %}\n'
+    + '            Spenta\n'
+    + '          {% endif %}\n'
+    + '        icon: mdi:sprinkler-variant\n'
+    + '  - binary_sensor:\n'
+    + '      - name: "Blocco Meteo Attivo"\n'
+    + '        unique_id: anti_zanzare_blocco_meteo\n'
+    + '        state: >\n'
+    + '          {{ states(\'sensor.probabilita_pioggia\') | float(0) >= states(\'input_number.anti_zanzare_soglia_pioggia\') | float(50) or\n'
+    + '             is_state(\'binary_sensor.pioggia_in_corso\', \'on\') }}\n'
+    + '        icon: mdi:weather-rainy\n'
+    + 'automation:\n'
+    + '  - id: anti_zanzare_avvio_automazione\n'
+    + '    alias: "Anti Zanzare - Avvio Automazione"\n'
+    + '    trigger:\n'
+    + '      - platform: state\n'
+    + '        entity_id: input_button.anti_zanzare_start_automazione\n'
+    + '    action:\n'
+    + '      - service: input_boolean.turn_on\n'
+    + '        target: {entity_id: input_boolean.anti_zanzare_automazione_attiva}\n'
+    + '  - id: anti_zanzare_stop_automazione_handler\n'
+    + '    alias: "Anti Zanzare - Stop Automazione"\n'
+    + '    trigger:\n'
+    + '      - platform: state\n'
+    + '        entity_id: input_button.anti_zanzare_stop_automazione\n'
+    + '    action:\n'
+    + '      - service: input_boolean.turn_off\n'
+    + '        target: {entity_id: input_boolean.anti_zanzare_automazione_attiva}\n'
+    + '      - service: timer.cancel\n'
+    + '        target: {entity_id: timer.anti_zanzare_ciclo_timer}\n'
+    + '  - id: anti_zanzare_avvio_manuale\n'
+    + '    alias: "Anti Zanzare - Avvio Manuale"\n'
+    + '    trigger:\n'
+    + '      - platform: state\n'
+    + '        entity_id: input_button.anti_zanzare_start_manuale\n'
+    + '    action:\n'
+    + '      - service: input_boolean.turn_on\n'
+    + '        target: {entity_id: input_boolean.anti_zanzare_manuale_attiva}\n'
+    + '      - service: timer.start\n'
+    + '        target: {entity_id: timer.anti_zanzare_manuale_timer}\n'
+    + '        data:\n'
+    + '          duration: "{{ states(\'input_number.anti_zanzare_durata_manuale\') | int(60) }}"\n'
+    + '      - service: switch.turn_on\n'
+    + '        target: {entity_id: IL_TUO_SWITCH_AZ}\n'
+    + '  - id: anti_zanzare_stop_manuale_handler\n'
+    + '    alias: "Anti Zanzare - Stop Manuale"\n'
+    + '    trigger:\n'
+    + '      - platform: state\n'
+    + '        entity_id: input_button.anti_zanzare_stop_manuale\n'
+    + '    action:\n'
+    + '      - service: input_boolean.turn_off\n'
+    + '        target: {entity_id: input_boolean.anti_zanzare_manuale_attiva}\n'
+    + '      - service: timer.cancel\n'
+    + '        target: {entity_id: timer.anti_zanzare_manuale_timer}\n'
+    + '      - service: switch.turn_off\n'
+    + '        target: {entity_id: IL_TUO_SWITCH_AZ}\n'
+    + '  - id: anti_zanzare_timer_ciclo_finito\n'
+    + '    alias: "Anti Zanzare - Timer Ciclo Finito"\n'
+    + '    trigger:\n'
+    + '      - platform: event\n'
+    + '        event_type: timer.finished\n'
+    + '        event_data: {entity_id: timer.anti_zanzare_ciclo_timer}\n'
+    + '    action:\n'
+    + '      - service: switch.turn_off\n'
+    + '        target: {entity_id: IL_TUO_SWITCH_AZ}\n'
+    + '  - id: anti_zanzare_timer_manuale_finito\n'
+    + '    alias: "Anti Zanzare - Timer Manuale Finito"\n'
+    + '    trigger:\n'
+    + '      - platform: event\n'
+    + '        event_type: timer.finished\n'
+    + '        event_data: {entity_id: timer.anti_zanzare_manuale_timer}\n'
+    + '    action:\n'
+    + '      - service: input_boolean.turn_off\n'
+    + '        target: {entity_id: input_boolean.anti_zanzare_manuale_attiva}\n'
+    + '      - service: switch.turn_off\n'
+    + '        target: {entity_id: IL_TUO_SWITCH_AZ}\n'
+    + '  - id: anti_zanzare_reset_mensile\n'
+    + '    alias: "Anti Zanzare - Reset Cicli Mensili"\n'
+    + '    trigger:\n'
+    + '      - platform: time\n'
+    + '        at: "00:00:00"\n'
+    + '    condition:\n'
+    + '      - condition: template\n'
+    + '        value_template: "{{ now().day == 1 }}"\n'
+    + '    action:\n'
+    + '      - service: counter.reset\n'
+    + '        target: {entity_id: counter.anti_zanzare_cicli_mensili}\n';
+
+  function _buildPkgAZ(sw, push) {
+    var ind = '          ';
+    var pushLines = (push && push.length)
+      ? push.map(function(p) { return ind + '- service: ' + p; }).join('\n')
+      : ind + '- service: mobile_app_smartphone';
+    return _AZ_PKG_YAML.split('IL_TUO_SWITCH_AZ').join(sw || 'switch.presa_anti_zanzare');
+  }
+
+  function _openWizardAZ(hass, onDone) {
+    var states = (hass && hass.states) || {};
+    var switchIds = Object.keys(states).filter(function(id) { return /^switch\./.test(id); }).sort();
+    var saved = null;
+    try { saved = JSON.parse(localStorage.getItem(_AZ_WIZ_KEY) || 'null'); } catch(e) {}
+    var pushRows = (saved && saved.push && saved.push.length) ? saved.push.slice() : [''];
+
+    var host = document.createElement('div');
+    var sr = host.attachShadow({mode: 'open'});
+    document.body.appendChild(host);
+    function destroy() { try { document.body.removeChild(host); } catch(e) {} }
+
+    function setupAC(inp, drop, ids) {
+      if (!inp || !drop) return;
+      function show() {
+        var q = inp.value.toLowerCase().trim();
+        var hits = (q ? ids.filter(function(id) { return id.toLowerCase().includes(q); }) : ids).slice(0, 50);
+        if (!hits.length) { drop.style.display = 'none'; return; }
+        drop.innerHTML = hits.map(function(id) { return '<div class="wd-item" data-pick="' + id + '">' + id + '</div>'; }).join('');
+        drop.style.display = 'block';
+        drop.querySelectorAll('[data-pick]').forEach(function(row) {
+          row.addEventListener('mousedown', function(ev) { ev.preventDefault(); inp.value = row.getAttribute('data-pick'); drop.style.display = 'none'; });
+          row.addEventListener('mouseover', function() { row.style.background = 'rgba(255,255,255,.08)'; });
+          row.addEventListener('mouseout', function() { row.style.background = ''; });
+        });
+      }
+      inp.addEventListener('focus', show);
+      inp.addEventListener('input', show);
+      inp.addEventListener('blur', function() { setTimeout(function() { drop.style.display = 'none'; }, 200); });
+    }
+
+    function multiRows(rows, cls, placeholder) {
+      return rows.map(function(v, i) {
+        return '<div class="wd-push-row"><div style="position:relative;flex:1"><input class="wd-inp ' + cls + '" type="text" autocomplete="off" placeholder="' + placeholder + '" value="' + (v || '').replace(/"/g, '&quot;') + '"><div class="wd-drop"></div></div><button class="wd-rm" data-rm="' + i + '">✕</button></div>';
+      }).join('');
+    }
+
+    function renderWiz() {
+      var swVal = (saved && saved.sw) || '';
+      sr.innerHTML = '<style>'
+        + ':host{all:initial;font-family:system-ui,sans-serif}'
+        + '.wd-bd{position:fixed;inset:0;z-index:200000;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);display:flex;align-items:flex-end}'
+        + '.wd-panel{width:100%;max-height:88vh;display:flex;flex-direction:column;background:#080f18;border:1px solid rgba(56,189,248,.3);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:wUp .22s cubic-bezier(.32,1.12,.56,1)}'
+        + '@keyframes wUp{from{transform:translateY(100%)}to{transform:translateY(0)}}'
+        + '.wd-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}'
+        + '.wd-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.3);flex-shrink:0}'
+        + '.wd-tit{font-size:14px;font-weight:800}.wd-sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:1px}'
+        + '.wd-x{margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none}'
+        + '.wd-body{flex:1;overflow-y:auto;padding:16px;scrollbar-width:none;display:flex;flex-direction:column;gap:14px}'
+        + '.wd-body::-webkit-scrollbar{display:none}'
+        + '.wd-sec{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding-bottom:5px;border-bottom:1px solid rgba(56,189,248,.18);margin-bottom:10px}'
+        + '.wd-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px}'
+        + '.wd-frow{position:relative;margin-bottom:10px}'
+        + '.wd-inp{width:100%;padding:9px 11px;border-radius:10px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none}'
+        + '.wd-inp:focus{border-color:rgba(56,189,248,.5)}'
+        + '.wd-drop{position:absolute;left:0;right:0;top:100%;z-index:10;max-height:150px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 9px 9px;display:none}'
+        + '.wd-item{padding:5px 10px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04);color:#e2e8f0}'
+        + '.wd-push-row{display:flex;gap:6px;margin-bottom:6px}'
+        + '.wd-rm{width:30px;height:38px;border-radius:8px;background:rgba(255,255,255,.07);border:none;color:#fff;cursor:pointer;font-size:14px;flex-shrink:0}'
+        + '.wd-add{padding:6px 12px;border-radius:8px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.25);color:#38bdf8;font-size:11px;font-weight:700;cursor:pointer}'
+        + '.wd-note{font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;margin:0 0 10px}'
+        + '.wd-foot{padding:12px 16px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:8px;flex-shrink:0}'
+        + '.wd-cancel{flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:rgba(255,255,255,.1);color:#fff}'
+        + '.wd-install{flex:2;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#38bdf8;color:#060d14}'
+        + '.wd-loading{opacity:.6;pointer-events:none}'
+        + '</style>'
+        + '<div class="wd-bd" id="wd-bd"><div class="wd-panel">'
+        + '<div class="wd-hdr"><div class="wd-ico">🦟</div>'
+        + '<div><div class="wd-tit">Installa PKG Anti Zanzare</div><div class="wd-sub">frarik_antizanzare.yaml → config/packages/</div></div>'
+        + '<button class="wd-x" id="wd-x">✕</button></div>'
+        + '<div class="wd-body">'
+        + '<div><div class="wd-sec">Switch Anti Zanzare</div>'
+        + '<p class="wd-note">Switch/presa che controlla il dispositivo antizanzare (es. nebulizzatore, diffusore).</p>'
+        + '<div class="wd-lbl">Entity Switch</div>'
+        + '<div class="wd-frow"><input class="wd-inp" id="f-switch" type="text" autocomplete="off" placeholder="switch.presa_anti_zanzare" value="' + swVal.replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-switch"></div></div>'
+        + '</div>'
+        + '<div><div class="wd-sec">Notifiche Push</div>'
+        + '<p class="wd-note">mobile_app dei dispositivi che ricevono le notifiche (es. <code>mobile_app_iphone</code>). Lascia vuoto per saltare.</p>'
+        + '<div id="push-rows">' + multiRows(pushRows, 'push-inp', 'mobile_app_...') + '</div>'
+        + '<button class="wd-add" id="push-add">+ Aggiungi dispositivo</button>'
+        + '</div>'
+        + '</div>'
+        + '<div class="wd-foot">'
+        + '<button class="wd-cancel" id="wd-cancel">Annulla</button>'
+        + '<button class="wd-install" id="wd-install">📦 Installa PKG</button>'
+        + '</div></div></div>';
+
+      sr.getElementById('wd-x').addEventListener('click', destroy);
+      sr.getElementById('wd-cancel').addEventListener('click', destroy);
+      sr.getElementById('wd-bd').addEventListener('click', function(e) { if (e.target === sr.getElementById('wd-bd')) destroy(); });
+
+      sr.getElementById('push-rows').addEventListener('click', function(e) {
+        var btn = e.target.closest('[data-rm]'); if (!btn) return;
+        pushRows.length = 0;
+        Array.from(sr.querySelectorAll('.push-inp')).forEach(function(i) { pushRows.push(i.value); });
+        pushRows.splice(+btn.dataset.rm, 1);
+        if (!pushRows.length) pushRows.push('');
+        renderWiz();
+      });
+      sr.getElementById('push-add').addEventListener('click', function() {
+        Array.from(sr.querySelectorAll('.push-inp')).forEach(function(i, idx) { pushRows[idx] = i.value; });
+        pushRows.push('');
+        renderWiz();
+      });
+
+      setupAC(sr.getElementById('f-switch'), sr.getElementById('d-switch'), switchIds);
+
+      sr.getElementById('wd-install').addEventListener('click', function() {
+        var sw   = sr.getElementById('f-switch').value.trim();
+        var push = Array.from(sr.querySelectorAll('.push-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
+        try { localStorage.setItem(_AZ_WIZ_KEY, JSON.stringify({sw: sw, push: push})); } catch(e) {}
+        var yaml = _buildPkgAZ(sw, push);
+        var m = location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
+        var base = location.origin + (m ? m[1] : '');
+        var btn = sr.getElementById('wd-install');
+        btn.classList.add('wd-loading'); btn.textContent = 'Installazione…';
+        fetch(base + '/api/frarik/pkg/install', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({name: 'frarik/frarik_antizanzare.yaml', content: yaml})
+        }).then(function(r) { return r.json().then(function(j) { return {r: r, j: j}; }); })
+          .then(function(res) {
+            destroy();
+            if (res.r.ok && res.j.ok) {
+              try { if (typeof window.showToast === 'function') window.showToast('📦 PKG Anti Zanzare installato! Riavvia HA.'); } catch(e) {}
+              if (typeof onDone === 'function') onDone();
+            } else {
+              try { if (typeof window.showToast === 'function') window.showToast('⚠️ Errore installazione PKG: ' + ((res.j && res.j.error) || '')); } catch(e) {}
+            }
+          }).catch(function() {
+            destroy();
+            try { if (typeof window.showToast === 'function') window.showToast('⚠️ Errore connessione al PKG install'); } catch(e) {}
+          });
+      });
+    }
+    renderWiz();
+  }
+
+  var _AZ_CARD = {
+    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '1.5',
+    desc: 'Controllo sistema anti zanzare: schedule settimanale, timer, statistiche mensili e blocco meteo.',
+    render:  function(card) { return '<antizanzare-card></antizanzare-card>'; },
+    mount:   function(card, hass, el) {},
+    update:  function(card, hass, el) {
+      var c = el.querySelector('antizanzare-card');
+      if (!c) { el.innerHTML = '<antizanzare-card></antizanzare-card>'; c = el.querySelector('antizanzare-card'); }
+      if (c && hass) c.hass = hass;
+    },
+    frarik_pkg_check:   'sensor.stato_anti_zanzare',
+    frarik_pkg_id:      'frarik_antizanzare',
+    frarik_pkg_version: '1.0',
+    openWizard: _openWizardAZ,
+  };
+  window.FratechCardRegistry = window.FratechCardRegistry || {};
+  window.FratechCardRegistry[_AZ_CARD.id] = _AZ_CARD;
+  window.FratechCards = window.FratechCards || {};
+  window.FratechCards[_AZ_CARD.id] = _AZ_CARD;
+  try { console.log('[FratechStore] Card registrata: antizanzare v' + _AZ_CARD.version); } catch(e) {}
+})();

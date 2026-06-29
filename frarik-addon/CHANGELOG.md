@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.6.81 — 2026-06-29
+
+### feat: PKG e store integration per Antizanzare, Irrigazione, Raccolta Differenziata
+
+- `Antizanzare.js` v1.5: aggiunto blocco FratechCardRegistry con wizard PKG (switch entity + push), PKG YAML core embedded
+- `Irrigazione.js` v1.0: aggiunto blocco FratechCardRegistry con wizard PKG (switch rubinetto + push), PKG YAML core embedded
+- `Differenziata.js` v1.0: aggiunto blocco FratechCardRegistry con wizard PKG (push/Google/Alexa)
+- `pkg/centro_controllo_antizanzare.yaml`: PKG completo anti zanzare aggiunto alla cartella pkg
+- `pkg/centro_controllo_irrigazione.yaml`: nuovo PKG irrigazione (entità + automazioni base)
+- `pkg/centro_controllo_differenziata.yaml`: PKG raccolta differenziata aggiunto alla cartella pkg
+- Tutte e 3 le card ora visibili nello store Frarik con pulsante "Installa PKG"
+
 ## 1.6.80 — 2026-06-29
 
 ### feat: card Scaldabagno elettrico

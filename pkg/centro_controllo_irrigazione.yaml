@@ -1,0 +1,708 @@
+# INPUT BOOLEAN - Giorni attivi
+input_boolean:
+  irrigazione_lunedi:
+    name: "Irrigazione Lunedì"
+    icon: mdi:calendar
+  irrigazione_martedi:
+    name: "Irrigazione Martedì"
+    icon: mdi:calendar
+  irrigazione_mercoledi:
+    name: "Irrigazione Mercoledì"
+    icon: mdi:calendar
+  irrigazione_giovedi:
+    name: "Irrigazione Giovedì"
+    icon: mdi:calendar
+  irrigazione_venerdi:
+    name: "Irrigazione Venerdì"
+    icon: mdi:calendar
+  irrigazione_sabato:
+    name: "Irrigazione Sabato"
+    icon: mdi:calendar
+  irrigazione_domenica:
+    name: "Irrigazione Domenica"
+    icon: mdi:calendar
+
+  irrigazione_automazione_attiva:
+    name: "Automazione Irrigazione Attiva"
+    icon: mdi:autorenew
+  irrigazione_manuale_attiva:
+    name: "Irrigazione Manuale Attiva"
+    icon: mdi:hand-back-right
+
+# INPUT NUMBER - Cicli per giorno
+input_number:
+  # LUNEDÌ
+  irrigazione_lunedi_num_cicli:
+    name: "Lunedì - Numero Cicli"
+    min: 0
+    max: 5
+    step: 1
+    mode: slider
+    icon: mdi:counter
+  irrigazione_lunedi_durata_ciclo1:
+    name: "Lunedì - Durata Ciclo 1"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  irrigazione_lunedi_durata_ciclo2:
+    name: "Lunedì - Durata Ciclo 2"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  irrigazione_lunedi_durata_ciclo3:
+    name: "Lunedì - Durata Ciclo 3"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  irrigazione_lunedi_durata_ciclo4:
+    name: "Lunedì - Durata Ciclo 4"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  irrigazione_lunedi_durata_ciclo5:
+    name: "Lunedì - Durata Ciclo 5"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  # MARTEDÌ
+  irrigazione_martedi_num_cicli:
+    name: "Martedì - Numero Cicli"
+    min: 0
+    max: 5
+    step: 1
+    mode: slider
+    icon: mdi:counter
+  irrigazione_martedi_durata_ciclo1:
+    name: "Martedì - Durata Ciclo 1"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  irrigazione_martedi_durata_ciclo2:
+    name: "Martedì - Durata Ciclo 2"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  irrigazione_martedi_durata_ciclo3:
+    name: "Martedì - Durata Ciclo 3"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  irrigazione_martedi_durata_ciclo4:
+    name: "Martedì - Durata Ciclo 4"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  irrigazione_martedi_durata_ciclo5:
+    name: "Martedì - Durata Ciclo 5"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  # MERCOLEDÌ
+  irrigazione_mercoledi_num_cicli:
+    name: "Mercoledì - Numero Cicli"
+    min: 0
+    max: 5
+    step: 1
+    mode: slider
+    icon: mdi:counter
+  irrigazione_mercoledi_durata_ciclo1:
+    name: "Mercoledì - Durata Ciclo 1"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  irrigazione_mercoledi_durata_ciclo2:
+    name: "Mercoledì - Durata Ciclo 2"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  irrigazione_mercoledi_durata_ciclo3:
+    name: "Mercoledì - Durata Ciclo 3"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  irrigazione_mercoledi_durata_ciclo4:
+    name: "Mercoledì - Durata Ciclo 4"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  irrigazione_mercoledi_durata_ciclo5:
+    name: "Mercoledì - Durata Ciclo 5"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  # GIOVEDÌ
+  irrigazione_giovedi_num_cicli:
+    name: "Giovedì - Numero Cicli"
+    min: 0
+    max: 5
+    step: 1
+    mode: slider
+    icon: mdi:counter
+  irrigazione_giovedi_durata_ciclo1:
+    name: "Giovedì - Durata Ciclo 1"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  irrigazione_giovedi_durata_ciclo2:
+    name: "Giovedì - Durata Ciclo 2"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  irrigazione_giovedi_durata_ciclo3:
+    name: "Giovedì - Durata Ciclo 3"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  irrigazione_giovedi_durata_ciclo4:
+    name: "Giovedì - Durata Ciclo 4"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  irrigazione_giovedi_durata_ciclo5:
+    name: "Giovedì - Durata Ciclo 5"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  # VENERDÌ
+  irrigazione_venerdi_num_cicli:
+    name: "Venerdì - Numero Cicli"
+    min: 0
+    max: 5
+    step: 1
+    mode: slider
+    icon: mdi:counter
+  irrigazione_venerdi_durata_ciclo1:
+    name: "Venerdì - Durata Ciclo 1"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  irrigazione_venerdi_durata_ciclo2:
+    name: "Venerdì - Durata Ciclo 2"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  irrigazione_venerdi_durata_ciclo3:
+    name: "Venerdì - Durata Ciclo 3"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  irrigazione_venerdi_durata_ciclo4:
+    name: "Venerdì - Durata Ciclo 4"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  irrigazione_venerdi_durata_ciclo5:
+    name: "Venerdì - Durata Ciclo 5"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  # SABATO
+  irrigazione_sabato_num_cicli:
+    name: "Sabato - Numero Cicli"
+    min: 0
+    max: 5
+    step: 1
+    mode: slider
+    icon: mdi:counter
+  irrigazione_sabato_durata_ciclo1:
+    name: "Sabato - Durata Ciclo 1"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  irrigazione_sabato_durata_ciclo2:
+    name: "Sabato - Durata Ciclo 2"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  irrigazione_sabato_durata_ciclo3:
+    name: "Sabato - Durata Ciclo 3"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  irrigazione_sabato_durata_ciclo4:
+    name: "Sabato - Durata Ciclo 4"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  irrigazione_sabato_durata_ciclo5:
+    name: "Sabato - Durata Ciclo 5"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  # DOMENICA
+  irrigazione_domenica_num_cicli:
+    name: "Domenica - Numero Cicli"
+    min: 0
+    max: 5
+    step: 1
+    mode: slider
+    icon: mdi:counter
+  irrigazione_domenica_durata_ciclo1:
+    name: "Domenica - Durata Ciclo 1"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  irrigazione_domenica_durata_ciclo2:
+    name: "Domenica - Durata Ciclo 2"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  irrigazione_domenica_durata_ciclo3:
+    name: "Domenica - Durata Ciclo 3"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  irrigazione_domenica_durata_ciclo4:
+    name: "Domenica - Durata Ciclo 4"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  irrigazione_domenica_durata_ciclo5:
+    name: "Domenica - Durata Ciclo 5"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  irrigazione_durata_manuale:
+    name: "Durata Irrigazione Manuale"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer-cog
+
+  irrigazione_soglia_pioggia:
+    name: "Soglia Probabilità Pioggia (%)"
+    min: 0
+    max: 100
+    step: 5
+    mode: slider
+    unit_of_measurement: "%"
+    icon: mdi:weather-rainy
+
+# INPUT DATETIME - Orari cicli
+input_datetime:
+  # LUNEDÌ
+  irrigazione_lunedi_orario_ciclo1:
+    name: "Lunedì - Orario Ciclo 1"
+    has_date: false
+    has_time: true
+  irrigazione_lunedi_orario_ciclo2:
+    name: "Lunedì - Orario Ciclo 2"
+    has_date: false
+    has_time: true
+  irrigazione_lunedi_orario_ciclo3:
+    name: "Lunedì - Orario Ciclo 3"
+    has_date: false
+    has_time: true
+  irrigazione_lunedi_orario_ciclo4:
+    name: "Lunedì - Orario Ciclo 4"
+    has_date: false
+    has_time: true
+  irrigazione_lunedi_orario_ciclo5:
+    name: "Lunedì - Orario Ciclo 5"
+    has_date: false
+    has_time: true
+  # MARTEDÌ
+  irrigazione_martedi_orario_ciclo1:
+    name: "Martedì - Orario Ciclo 1"
+    has_date: false
+    has_time: true
+  irrigazione_martedi_orario_ciclo2:
+    name: "Martedì - Orario Ciclo 2"
+    has_date: false
+    has_time: true
+  irrigazione_martedi_orario_ciclo3:
+    name: "Martedì - Orario Ciclo 3"
+    has_date: false
+    has_time: true
+  irrigazione_martedi_orario_ciclo4:
+    name: "Martedì - Orario Ciclo 4"
+    has_date: false
+    has_time: true
+  irrigazione_martedi_orario_ciclo5:
+    name: "Martedì - Orario Ciclo 5"
+    has_date: false
+    has_time: true
+  # MERCOLEDÌ
+  irrigazione_mercoledi_orario_ciclo1:
+    name: "Mercoledì - Orario Ciclo 1"
+    has_date: false
+    has_time: true
+  irrigazione_mercoledi_orario_ciclo2:
+    name: "Mercoledì - Orario Ciclo 2"
+    has_date: false
+    has_time: true
+  irrigazione_mercoledi_orario_ciclo3:
+    name: "Mercoledì - Orario Ciclo 3"
+    has_date: false
+    has_time: true
+  irrigazione_mercoledi_orario_ciclo4:
+    name: "Mercoledì - Orario Ciclo 4"
+    has_date: false
+    has_time: true
+  irrigazione_mercoledi_orario_ciclo5:
+    name: "Mercoledì - Orario Ciclo 5"
+    has_date: false
+    has_time: true
+  # GIOVEDÌ
+  irrigazione_giovedi_orario_ciclo1:
+    name: "Giovedì - Orario Ciclo 1"
+    has_date: false
+    has_time: true
+  irrigazione_giovedi_orario_ciclo2:
+    name: "Giovedì - Orario Ciclo 2"
+    has_date: false
+    has_time: true
+  irrigazione_giovedi_orario_ciclo3:
+    name: "Giovedì - Orario Ciclo 3"
+    has_date: false
+    has_time: true
+  irrigazione_giovedi_orario_ciclo4:
+    name: "Giovedì - Orario Ciclo 4"
+    has_date: false
+    has_time: true
+  irrigazione_giovedi_orario_ciclo5:
+    name: "Giovedì - Orario Ciclo 5"
+    has_date: false
+    has_time: true
+  # VENERDÌ
+  irrigazione_venerdi_orario_ciclo1:
+    name: "Venerdì - Orario Ciclo 1"
+    has_date: false
+    has_time: true
+  irrigazione_venerdi_orario_ciclo2:
+    name: "Venerdì - Orario Ciclo 2"
+    has_date: false
+    has_time: true
+  irrigazione_venerdi_orario_ciclo3:
+    name: "Venerdì - Orario Ciclo 3"
+    has_date: false
+    has_time: true
+  irrigazione_venerdi_orario_ciclo4:
+    name: "Venerdì - Orario Ciclo 4"
+    has_date: false
+    has_time: true
+  irrigazione_venerdi_orario_ciclo5:
+    name: "Venerdì - Orario Ciclo 5"
+    has_date: false
+    has_time: true
+  # SABATO
+  irrigazione_sabato_orario_ciclo1:
+    name: "Sabato - Orario Ciclo 1"
+    has_date: false
+    has_time: true
+  irrigazione_sabato_orario_ciclo2:
+    name: "Sabato - Orario Ciclo 2"
+    has_date: false
+    has_time: true
+  irrigazione_sabato_orario_ciclo3:
+    name: "Sabato - Orario Ciclo 3"
+    has_date: false
+    has_time: true
+  irrigazione_sabato_orario_ciclo4:
+    name: "Sabato - Orario Ciclo 4"
+    has_date: false
+    has_time: true
+  irrigazione_sabato_orario_ciclo5:
+    name: "Sabato - Orario Ciclo 5"
+    has_date: false
+    has_time: true
+  # DOMENICA
+  irrigazione_domenica_orario_ciclo1:
+    name: "Domenica - Orario Ciclo 1"
+    has_date: false
+    has_time: true
+  irrigazione_domenica_orario_ciclo2:
+    name: "Domenica - Orario Ciclo 2"
+    has_date: false
+    has_time: true
+  irrigazione_domenica_orario_ciclo3:
+    name: "Domenica - Orario Ciclo 3"
+    has_date: false
+    has_time: true
+  irrigazione_domenica_orario_ciclo4:
+    name: "Domenica - Orario Ciclo 4"
+    has_date: false
+    has_time: true
+  irrigazione_domenica_orario_ciclo5:
+    name: "Domenica - Orario Ciclo 5"
+    has_date: false
+    has_time: true
+
+# INPUT BUTTON - Comandi
+input_button:
+  irrigazione_start_automazione:
+    name: "Avvia Automazione Irrigazione"
+    icon: mdi:play-circle
+  irrigazione_stop_automazione:
+    name: "Ferma Automazione Irrigazione"
+    icon: mdi:stop-circle
+  irrigazione_start_manuale:
+    name: "Avvia Irrigazione Manuale"
+    icon: mdi:play-circle-outline
+  irrigazione_stop_manuale:
+    name: "Ferma Irrigazione Manuale"
+    icon: mdi:stop-circle-outline
+
+# TIMER
+timer:
+  irrigazione_ciclo_timer:
+    name: "Timer Ciclo Irrigazione"
+    icon: mdi:clock
+    restore: true
+  irrigazione_manuale_timer:
+    name: "Timer Irrigazione Manuale"
+    icon: mdi:hand-back-right
+    restore: true
+
+# COUNTER
+counter:
+  irrigazione_cicli_giornalieri:
+    name: "Cicli Irrigazione Oggi"
+    step: 1
+    icon: mdi:counter
+
+# SENSORI TEMPLATE
+template:
+  - sensor:
+      - name: "Stato Irrigazione"
+        unique_id: irrigazione_stato_sistema
+        state: >
+          {% if is_state('input_boolean.irrigazione_manuale_attiva', 'on') %}
+            Manuale Attiva
+          {% elif is_state('timer.irrigazione_ciclo_timer', 'active') %}
+            Ciclo in Corso
+          {% elif is_state('input_boolean.irrigazione_automazione_attiva', 'on') %}
+            Automazione Attiva
+          {% else %}
+            Spenta
+          {% endif %}
+        icon: >
+          {% if is_state('input_boolean.irrigazione_manuale_attiva', 'on') %}
+            mdi:hand-back-right
+          {% elif is_state('timer.irrigazione_ciclo_timer', 'active') %}
+            mdi:sprinkler
+          {% elif is_state('input_boolean.irrigazione_automazione_attiva', 'on') %}
+            mdi:autorenew
+          {% else %}
+            mdi:sprinkler-variant-off
+          {% endif %}
+
+  - binary_sensor:
+      - name: "Blocco Meteo Irrigazione"
+        unique_id: irrigazione_blocco_meteo
+        state: >
+          {{ states('sensor.probabilita_pioggia') | float(0) >= states('input_number.irrigazione_soglia_pioggia') | float(50) or
+             is_state('binary_sensor.pioggia_in_corso', 'on') }}
+        icon: >
+          {{ 'mdi:weather-rainy' if is_state('binary_sensor.blocco_meteo_irrigazione', 'on') else 'mdi:weather-partly-cloudy' }}
+
+# AUTOMAZIONI BASE
+automation:
+  - id: irrigazione_avvio_automazione
+    alias: "Irrigazione - Avvio Automazione"
+    trigger:
+      - platform: state
+        entity_id: input_button.irrigazione_start_automazione
+    action:
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.irrigazione_automazione_attiva
+
+  - id: irrigazione_stop_automazione_handler
+    alias: "Irrigazione - Stop Automazione"
+    trigger:
+      - platform: state
+        entity_id: input_button.irrigazione_stop_automazione
+    action:
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.irrigazione_automazione_attiva
+      - service: timer.cancel
+        target:
+          entity_id: timer.irrigazione_ciclo_timer
+
+  - id: irrigazione_avvio_manuale
+    alias: "Irrigazione - Avvio Manuale"
+    trigger:
+      - platform: state
+        entity_id: input_button.irrigazione_start_manuale
+    action:
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.irrigazione_manuale_attiva
+      - service: timer.start
+        target:
+          entity_id: timer.irrigazione_manuale_timer
+        data:
+          duration: "{{ states('input_number.irrigazione_durata_manuale') | int(60) }}"
+      # Attiva il rubinetto
+      - service: switch.turn_on
+        target:
+          entity_id: switch.rubinetto_esterno_interruttore
+
+  - id: irrigazione_stop_manuale
+    alias: "Irrigazione - Stop Manuale"
+    trigger:
+      - platform: state
+        entity_id: input_button.irrigazione_stop_manuale
+    action:
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.irrigazione_manuale_attiva
+      - service: timer.cancel
+        target:
+          entity_id: timer.irrigazione_manuale_timer
+      - service: switch.turn_off
+        target:
+          entity_id: switch.rubinetto_esterno_interruttore
+
+  - id: irrigazione_timer_ciclo_finito
+    alias: "Irrigazione - Timer Ciclo Finito"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.irrigazione_ciclo_timer
+    action:
+      - service: switch.turn_off
+        target:
+          entity_id: switch.rubinetto_esterno_interruttore
+
+  - id: irrigazione_timer_manuale_finito
+    alias: "Irrigazione - Timer Manuale Finito"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.irrigazione_manuale_timer
+    action:
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.irrigazione_manuale_attiva
+      - service: switch.turn_off
+        target:
+          entity_id: switch.rubinetto_esterno_interruttore
+
+  - id: irrigazione_reset_cicli_giornalieri
+    alias: "Irrigazione - Reset Cicli Giornalieri"
+    trigger:
+      - platform: time
+        at: "00:00:00"
+    action:
+      - service: counter.reset
+        target:
+          entity_id: counter.irrigazione_cicli_giornalieri
