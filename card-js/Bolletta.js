@@ -421,24 +421,21 @@
       if (a === 'bact_det')  _bOpenDettaglio(card);
       if (a === 'bact_stor') _bOpenStorico(card);
       if (a === 'bact_set')  _bOpenSettings(card);
-      if (a === 'cfg' || a === 'bact_cfg') {
-        if (window.FratechCardRegistry && window.FratechCardRegistry[_bId] && window.FratechCardRegistry[_bId].openWizard)
-          window.FratechCardRegistry[_bId].openWizard(card);
-      }
+      if (a === 'cfg' || a === 'bact_cfg') _bOpenCfg(card);
     });
   }
 
-  // ── configure wizard ───────────────────────────────────────────────────────
-  function _bOpenWizard(card) {
+  // ── entity configurator (⚙ dentro la card) ───────────────────────────────
+  function _bOpenCfg(card) {
     var c = _bCfg(card);
     var mainKeys = ['pk_consumo_ist','pk_bolletta_m','pk_bolletta_g','pk_kwh_m','pk_kwh_g',
                     'pk_proiezione','pk_saldo','pk_scadenza','pk_costo_kwh','pk_arera_trim'];
     var labels = {
-      pk_consumo_ist:'Sensore potenza istantanea (W)',pk_bolletta_m:'Bolletta mensile (€)',
-      pk_bolletta_g:'Bolletta giornaliera (€)',pk_kwh_m:'Energia mensile (kWh)',
-      pk_kwh_g:'Energia giornaliera (kWh)',pk_proiezione:'Proiezione fine mese (€)',
-      pk_saldo:'Saldo Octopus (€)',pk_scadenza:'Giorni scadenza offerta',
-      pk_costo_kwh:'Costo al kWh (tutto incluso)',pk_arera_trim:'Trimestre ARERA'
+      pk_consumo_ist:'Sensore potenza istantanea (W)', pk_bolletta_m:'Bolletta mensile (€)',
+      pk_bolletta_g:'Bolletta giornaliera (€)',         pk_kwh_m:'Energia mensile (kWh)',
+      pk_kwh_g:'Energia giornaliera (kWh)',             pk_proiezione:'Proiezione fine mese (€)',
+      pk_saldo:'Saldo Octopus (€)',                     pk_scadenza:'Giorni scadenza offerta',
+      pk_costo_kwh:'Costo al kWh (tutto incluso)',      pk_arera_trim:'Trimestre ARERA'
     };
     var fields = mainKeys.map(function(k) {
       return '<div style="margin-bottom:12px">'
@@ -447,21 +444,1458 @@
         + 'style="width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:8px 10px;color:#fff;font-size:12px;outline:none;box-sizing:border-box">'
         + '</div>';
     }).join('');
-
     var saveBtn = '<div id="bwiz_save" style="margin-top:8px;padding:12px;background:' + _bCol + ';border-radius:10px;text-align:center;cursor:pointer;font-size:14px;font-weight:700;color:#000">Salva configurazione</div>';
     _bPopShell('⚙️', 'Configura Card Bolletta', 'Entity ID sensori', 'bwiz', fields + saveBtn);
-
     document.getElementById('bwiz_save') && document.getElementById('bwiz_save').addEventListener('click', function() {
       var newCfg = {};
-      document.querySelectorAll('[data-wcfg]').forEach(function(inp) {
-        newCfg[inp.dataset.wcfg] = inp.value.trim();
-      });
+      document.querySelectorAll('[data-wcfg]').forEach(function(inp) { newCfg[inp.dataset.wcfg] = inp.value.trim(); });
       localStorage.setItem('fcfg_' + _bId + '_' + (card.dataset.cid || '0'), JSON.stringify(newCfg));
       var bd = document.getElementById('bwiz_bd');
       if (bd) bd.remove();
       var root = document.getElementById('frarik-overlay-root');
       if (root && !root.querySelector('[data-bclose]')) root.style.pointerEvents = 'none';
     });
+  }
+
+  // ── PKG install wizard ─────────────────────────────────────────────────────
+  var _BOLL_WIZ_KEY = 'frarik_pkg_wizard_bolletta';
+
+  var _BOLL_PKG_YAML = `###############################################################
+#                                                             #
+#   ███████╗██████╗  █████╗ ██████╗ ██╗██╗  ██╗             #
+#   ██╔════╝██╔══██╗██╔══██╗██╔══██╗██║██║ ██╔╝             #
+#   █████╗  ██████╔╝███████║██████╔╝██║█████╔╝              #
+#   ██╔══╝  ██╔══██╗██╔══██║██╔══██╗██║██╔═██╗              #
+#   ██║     ██║  ██║██║  ██║██║  ██║██║██║  ██╗             #
+#   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝            #
+#                                                             #
+#   Package: Centro Controllo Bolletta Elettrica              #
+#   Versione: 1.0  |  Frarik / Fratech                       #
+#                                                             #
+###############################################################
+
+homeassistant:
+  customize:
+    package.node_anchors:
+      customize: &customize
+        package: 'Frarik — Centro Controllo Bolletta'
+        author: 'Frarik / Fratech'
+        version: '1.0'
+      setting:
+        Sensore Potenza Casa: &sensore_potenza
+          "sensor.consumo_istantaneo"
+        Sensore Saldo Octopus: &sensore_saldo_octopus
+          "sensor.a_563293ae_saldo_elettricita"
+        Sensore Scadenza Octopus: &sensore_scadenza_octopus
+          "sensor.a_563293ae_giorni_alla_scadenza_contratto_elettrico"
+        Tariffa Contratto: &tariffa_contratto 0.090000
+        Potenza Contrattuale: &potenza_kw 4.5
+        Notifiche Push: &push
+          - service: mobile_app_a065
+          # - service: IL_TUO_MOBILE_APP_2
+
+notify:
+  - name: frarik_bolletta
+    platform: group
+    services: *push
+
+group:
+  notifiche_bolletta:
+    name: "Bolletta — Notifiche"
+    entities:
+      - input_boolean.br_notify_push_soglia
+      - input_boolean.br_notify_push_giornaliero
+      - input_boolean.br_notify_push_mensile
+      - input_boolean.br_notify_push_annuale
+
+sensor:
+  - platform: integration
+    source: *sensore_potenza
+    name: "BR Energia Totale Casa"
+    unique_id: br_energia_totale_casa
+    unit_prefix: k
+    unit_time: h
+    round: 3
+    method: left
+
+utility_meter:
+  br_energia_giornaliera:
+    source: sensor.br_energia_totale_casa
+    name: "BR Energia Giornaliera"
+    cycle: daily
+  br_energia_settimanale:
+    source: sensor.br_energia_totale_casa
+    name: "BR Energia Settimanale"
+    cycle: weekly
+  br_energia_mensile:
+    source: sensor.br_energia_totale_casa
+    name: "BR Energia Mensile"
+    cycle: monthly
+  br_energia_trimestrale:
+    source: sensor.br_energia_totale_casa
+    name: "BR Energia Trimestrale"
+    cycle: quarterly
+  br_energia_annuale:
+    source: sensor.br_energia_totale_casa
+    name: "BR Energia Annuale"
+    cycle: yearly
+
+input_boolean:
+  br_reset_consumo_mensile:
+    name: "BR Reset Consumo Mensile"
+    icon: mdi:restart
+  br_notify_push_soglia:
+    name: "BR Notifica Push Soglia Potenza"
+    icon: mdi:bell
+  br_notify_push_giornaliero:
+    name: "BR Notifica Push Costi Giornalieri"
+    icon: mdi:bell-ring
+  br_notify_push_mensile:
+    name: "BR Notifica Push Costi Mensili"
+    icon: mdi:bell-ring
+  br_notify_push_annuale:
+    name: "BR Notifica Push Costi Annuali"
+    icon: mdi:bell-ring
+
+input_datetime:
+  br_orario_inizio_notifiche_soglia:
+    name: "BR Inizio Notifiche Soglia"
+    has_date: false
+    has_time: true
+  br_orario_fine_notifiche_soglia:
+    name: "BR Fine Notifiche Soglia"
+    has_date: false
+    has_time: true
+
+input_number:
+  br_backup_energia_giornaliera:
+    name: "BR Backup kWh Giornaliero"
+    min: 0
+    max: 200
+    step: 0.001
+    mode: box
+    unit_of_measurement: "kWh"
+    icon: mdi:content-save
+  br_backup_energia_settimanale:
+    name: "BR Backup kWh Settimanale"
+    min: 0
+    max: 1000
+    step: 0.001
+    mode: box
+    unit_of_measurement: "kWh"
+    icon: mdi:content-save
+  br_backup_energia_mensile:
+    name: "BR Backup kWh Mensile"
+    min: 0
+    max: 2000
+    step: 0.001
+    mode: box
+    unit_of_measurement: "kWh"
+    icon: mdi:content-save
+  br_tariffa_energia:
+    name: "BR Tariffa Energia Fissa"
+    min: 0
+    max: 1
+    step: 0.000001
+    initial: *tariffa_contratto
+    mode: box
+    unit_of_measurement: "€/kWh"
+    icon: mdi:lightning-bolt
+  br_spread_energia:
+    name: "BR Spread Energia"
+    min: 0
+    max: 0.5
+    step: 0.000001
+    initial: 0.000000
+    mode: box
+    unit_of_measurement: "€/kWh"
+    icon: mdi:chart-line
+  br_potenza_impegnata:
+    name: "BR Potenza Impegnata"
+    min: 1.5
+    max: 15
+    step: 0.5
+    initial: *potenza_kw
+    mode: box
+    unit_of_measurement: "kW"
+    icon: mdi:flash
+  br_fb_perdite_perc:
+    name: "BR Fallback Perdite Rete %"
+    min: 0
+    max: 20
+    step: 0.01
+    initial: 8.73
+    mode: box
+    unit_of_measurement: "%"
+    icon: mdi:transmission-tower
+  br_fb_dispbt:
+    name: "BR Fallback DISPbt"
+    min: 0
+    max: 5
+    step: 0.000001
+    initial: 0.102592
+    mode: box
+    unit_of_measurement: "€/mese"
+  br_fb_dispacciamento:
+    name: "BR Fallback Dispacciamento"
+    min: 0
+    max: 0.5
+    step: 0.000001
+    initial: 0.010660
+    mode: box
+    unit_of_measurement: "€/kWh"
+  br_fb_mercato_capacita:
+    name: "BR Fallback Mercato Capacità"
+    min: 0
+    max: 0.5
+    step: 0.000001
+    initial: 0.010583
+    mode: box
+    unit_of_measurement: "€/kWh"
+  br_fb_pno:
+    name: "BR Fallback PNO"
+    min: 0
+    max: 0.5
+    step: 0.000001
+    initial: 0.000000
+    mode: box
+    unit_of_measurement: "€/mese"
+  br_fb_commercializzazione:
+    name: "BR Fallback Commercializzazione"
+    min: 0
+    max: 20
+    step: 0.01
+    initial: 6.00
+    mode: box
+    unit_of_measurement: "€/mese"
+  br_fb_trasporto_energia:
+    name: "BR Fallback Trasporto Energia"
+    min: 0
+    max: 0.5
+    step: 0.000001
+    initial: 0.011900
+    mode: box
+    unit_of_measurement: "€/kWh"
+  br_fb_trasporto_fisso:
+    name: "BR Fallback Trasporto Fisso"
+    min: 0
+    max: 10
+    step: 0.01
+    initial: 1.92
+    mode: box
+    unit_of_measurement: "€/mese"
+  br_fb_trasporto_potenza:
+    name: "BR Fallback Trasporto Potenza"
+    min: 0
+    max: 10
+    step: 0.01
+    initial: 2.22
+    mode: box
+    unit_of_measurement: "€/kW"
+  br_fb_uc3:
+    name: "BR Fallback UC3"
+    min: 0
+    max: 0.5
+    step: 0.000001
+    initial: 0.002760
+    mode: box
+    unit_of_measurement: "€/kWh"
+  br_fb_uc6_fisso:
+    name: "BR Fallback UC6 Fisso"
+    min: 0
+    max: 1
+    step: 0.000001
+    initial: 0.070000
+    mode: box
+    unit_of_measurement: "€/kW"
+  br_fb_uc6_variabile:
+    name: "BR Fallback UC6 Variabile"
+    min: 0
+    max: 0.5
+    step: 0.000001
+    initial: 0.000070
+    mode: box
+    unit_of_measurement: "€/kWh"
+  br_fb_arim:
+    name: "BR Fallback ARIM"
+    min: 0
+    max: 0.5
+    step: 0.000001
+    initial: 0.001638
+    mode: box
+    unit_of_measurement: "€/kWh"
+  br_fb_asos:
+    name: "BR Fallback ASOS"
+    min: 0
+    max: 0.5
+    step: 0.000001
+    initial: 0.028657
+    mode: box
+    unit_of_measurement: "€/kWh"
+  br_fb_accise:
+    name: "BR Fallback Accise"
+    min: 0
+    max: 0.5
+    step: 0.000001
+    initial: 0.022700
+    mode: box
+    unit_of_measurement: "€/kWh"
+  br_fb_iva_perc:
+    name: "BR Fallback IVA %"
+    min: 0
+    max: 30
+    step: 0.1
+    initial: 10.0
+    mode: box
+    unit_of_measurement: "%"
+  br_bonus_mese_corrente:
+    name: "BR Bonus Mese Corrente"
+    min: 0
+    max: 500
+    step: 0.01
+    initial: 0
+    mode: box
+    unit_of_measurement: "€"
+    icon: mdi:gift
+  br_bonus_sociale:
+    name: "BR Bonus Sociale"
+    min: 0
+    max: 1000
+    step: 0.01
+    initial: 0
+    mode: box
+    unit_of_measurement: "€"
+    icon: mdi:account-heart
+  br_soglia_costo_giornaliero:
+    name: "BR Soglia Alert Costo Giornaliero"
+    min: 0
+    max: 20
+    step: 0.5
+    initial: 5
+    mode: box
+    unit_of_measurement: "€"
+    icon: mdi:alarm-light
+  br_soglia_consumo_giornaliero:
+    name: "BR Soglia Alert Consumo Giornaliero"
+    min: 0
+    max: 50
+    step: 1
+    initial: 15
+    mode: box
+    unit_of_measurement: "kWh"
+    icon: mdi:alarm-light
+  br_soglia_lavoro_w:
+    name: "BR Soglia Consumo W"
+    min: 100
+    max: 9000
+    step: 50
+    initial: 3500
+    mode: box
+    unit_of_measurement: "W"
+    icon: mdi:flash-alert
+  br_ritardo_soglia_sec:
+    name: "BR Ritardo Alert Soglia"
+    min: 10
+    max: 360
+    step: 10
+    initial: 60
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timelapse
+  br_test_consumo_kwh:
+    name: "BR Sandbox kWh"
+    min: 0
+    max: 5000
+    step: 1
+    initial: 0
+    mode: box
+    unit_of_measurement: "kWh"
+    icon: mdi:calculator
+  br_test_bonus_euro:
+    name: "BR Sandbox Bonus"
+    min: 0
+    max: 500
+    step: 1
+    initial: 0
+    mode: box
+    unit_of_measurement: "€"
+    icon: mdi:piggy-bank
+  br_storico_costo_ieri:
+    name: "BR Costo Ieri"
+    min: 0
+    max: 50
+    step: 0.01
+    initial: 0
+    mode: box
+    unit_of_measurement: "€"
+    icon: mdi:calendar-today
+  br_storico_kwh_ieri:
+    name: "BR kWh Ieri"
+    min: 0
+    max: 100
+    step: 0.01
+    initial: 0
+    mode: box
+    unit_of_measurement: "kWh"
+    icon: mdi:flash
+  br_storico_costo_lun: {name: "BR Costo Lunedì",    min: 0, max: 50, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€",   icon: mdi:calendar-week}
+  br_storico_costo_mar: {name: "BR Costo Martedì",   min: 0, max: 50, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€",   icon: mdi:calendar-week}
+  br_storico_costo_mer: {name: "BR Costo Mercoledì", min: 0, max: 50, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€",   icon: mdi:calendar-week}
+  br_storico_costo_gio: {name: "BR Costo Giovedì",   min: 0, max: 50, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€",   icon: mdi:calendar-week}
+  br_storico_costo_ven: {name: "BR Costo Venerdì",   min: 0, max: 50, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€",   icon: mdi:calendar-week}
+  br_storico_costo_sab: {name: "BR Costo Sabato",    min: 0, max: 50, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€",   icon: mdi:calendar-week}
+  br_storico_costo_dom: {name: "BR Costo Domenica",  min: 0, max: 50, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€",   icon: mdi:calendar-week}
+  br_storico_kwh_lun:   {name: "BR kWh Lunedì",      min: 0, max: 100, step: 0.1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  br_storico_kwh_mar:   {name: "BR kWh Martedì",     min: 0, max: 100, step: 0.1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  br_storico_kwh_mer:   {name: "BR kWh Mercoledì",   min: 0, max: 100, step: 0.1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  br_storico_kwh_gio:   {name: "BR kWh Giovedì",     min: 0, max: 100, step: 0.1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  br_storico_kwh_ven:   {name: "BR kWh Venerdì",     min: 0, max: 100, step: 0.1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  br_storico_kwh_sab:   {name: "BR kWh Sabato",      min: 0, max: 100, step: 0.1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  br_storico_kwh_dom:   {name: "BR kWh Domenica",    min: 0, max: 100, step: 0.1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  br_storico_mese_curr_01: {name: "BR Bolletta Gen", min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  br_storico_mese_curr_02: {name: "BR Bolletta Feb", min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  br_storico_mese_curr_03: {name: "BR Bolletta Mar", min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  br_storico_mese_curr_04: {name: "BR Bolletta Apr", min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  br_storico_mese_curr_05: {name: "BR Bolletta Mag", min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  br_storico_mese_curr_06: {name: "BR Bolletta Giu", min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  br_storico_mese_curr_07: {name: "BR Bolletta Lug", min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  br_storico_mese_curr_08: {name: "BR Bolletta Ago", min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  br_storico_mese_curr_09: {name: "BR Bolletta Set", min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  br_storico_mese_curr_10: {name: "BR Bolletta Ott", min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  br_storico_mese_curr_11: {name: "BR Bolletta Nov", min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  br_storico_mese_curr_12: {name: "BR Bolletta Dic", min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  br_storico_mese_prev_01: {name: "BR Bolletta Gen Prec", min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  br_storico_mese_prev_02: {name: "BR Bolletta Feb Prec", min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  br_storico_mese_prev_03: {name: "BR Bolletta Mar Prec", min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  br_storico_mese_prev_04: {name: "BR Bolletta Apr Prec", min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  br_storico_mese_prev_05: {name: "BR Bolletta Mag Prec", min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  br_storico_mese_prev_06: {name: "BR Bolletta Giu Prec", min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  br_storico_mese_prev_07: {name: "BR Bolletta Lug Prec", min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  br_storico_mese_prev_08: {name: "BR Bolletta Ago Prec", min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  br_storico_mese_prev_09: {name: "BR Bolletta Set Prec", min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  br_storico_mese_prev_10: {name: "BR Bolletta Ott Prec", min: 0, max: 500, step: 0.01, initial: 64.98, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  br_storico_mese_prev_11: {name: "BR Bolletta Nov Prec", min: 0, max: 500, step: 0.01, initial: 26.13, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  br_storico_mese_prev_12: {name: "BR Bolletta Dic Prec", min: 0, max: 500, step: 0.01, initial: 61.36, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  br_storico_kwh_curr_01: {name: "BR kWh Gen", min: 0, max: 2000, step: 1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  br_storico_kwh_curr_02: {name: "BR kWh Feb", min: 0, max: 2000, step: 1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  br_storico_kwh_curr_03: {name: "BR kWh Mar", min: 0, max: 2000, step: 1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  br_storico_kwh_curr_04: {name: "BR kWh Apr", min: 0, max: 2000, step: 1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  br_storico_kwh_curr_05: {name: "BR kWh Mag", min: 0, max: 2000, step: 1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  br_storico_kwh_curr_06: {name: "BR kWh Giu", min: 0, max: 2000, step: 1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  br_storico_kwh_curr_07: {name: "BR kWh Lug", min: 0, max: 2000, step: 1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  br_storico_kwh_curr_08: {name: "BR kWh Ago", min: 0, max: 2000, step: 1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  br_storico_kwh_curr_09: {name: "BR kWh Set", min: 0, max: 2000, step: 1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  br_storico_kwh_curr_10: {name: "BR kWh Ott", min: 0, max: 2000, step: 1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  br_storico_kwh_curr_11: {name: "BR kWh Nov", min: 0, max: 2000, step: 1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  br_storico_kwh_curr_12: {name: "BR kWh Dic", min: 0, max: 2000, step: 1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  br_storico_kwh_prev_01: {name: "BR kWh Gen Prec", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  br_storico_kwh_prev_02: {name: "BR kWh Feb Prec", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  br_storico_kwh_prev_03: {name: "BR kWh Mar Prec", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  br_storico_kwh_prev_04: {name: "BR kWh Apr Prec", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  br_storico_kwh_prev_05: {name: "BR kWh Mag Prec", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  br_storico_kwh_prev_06: {name: "BR kWh Giu Prec", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  br_storico_kwh_prev_07: {name: "BR kWh Lug Prec", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  br_storico_kwh_prev_08: {name: "BR kWh Ago Prec", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  br_storico_kwh_prev_09: {name: "BR kWh Set Prec", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  br_storico_kwh_prev_10: {name: "BR kWh Ott Prec", min: 0, max: 2000, step: 1, initial: 178, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  br_storico_kwh_prev_11: {name: "BR kWh Nov Prec", min: 0, max: 2000, step: 1, initial: 184, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  br_storico_kwh_prev_12: {name: "BR kWh Dic Prec", min: 0, max: 2000, step: 1, initial: 206, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+
+rest:
+  - resource: https://raw.githubusercontent.com/bobsilvio/arera-tariffe/main/data/tariffe_arera.json
+    scan_interval: 86400
+    sensor:
+      - name: br_arera_trimestre
+        unique_id: br_arera_trimestre
+        value_template: "{{ value_json._info.trimestre }}"
+        icon: mdi:calendar-clock
+      - name: br_arera_aggiornato_il
+        unique_id: br_arera_aggiornato_il
+        value_template: "{{ value_json._info.aggiornato_il }}"
+        icon: mdi:calendar-check
+      - name: br_arera_perdite_rete_perc
+        unique_id: br_arera_perdite_rete_perc
+        value_template: "{{ value_json.materia_energia.perdite_rete_perc }}"
+        unit_of_measurement: "%"
+        icon: mdi:transmission-tower
+      - name: br_arera_dispbt
+        unique_id: br_arera_dispbt
+        value_template: "{{ value_json.materia_energia.dispbt }}"
+        unit_of_measurement: "€/mese"
+      - name: br_arera_dispacciamento
+        unique_id: br_arera_dispacciamento
+        value_template: "{{ value_json.materia_energia.dispacciamento }}"
+        unit_of_measurement: "€/kWh"
+      - name: br_arera_mercato_capacita
+        unique_id: br_arera_mercato_capacita
+        value_template: "{{ value_json.materia_energia.mercato_capacita }}"
+        unit_of_measurement: "€/kWh"
+      - name: br_arera_pno
+        unique_id: br_arera_pno
+        value_template: "{{ value_json.materia_energia.pno }}"
+        unit_of_measurement: "€/mese"
+      - name: br_arera_trasporto_quota_energia
+        unique_id: br_arera_trasporto_quota_energia
+        value_template: "{{ value_json.trasporto.quota_energia }}"
+        unit_of_measurement: "€/kWh"
+      - name: br_arera_trasporto_quota_fissa
+        unique_id: br_arera_trasporto_quota_fissa
+        value_template: "{{ value_json.trasporto.quota_fissa }}"
+        unit_of_measurement: "€/mese"
+      - name: br_arera_trasporto_quota_potenza
+        unique_id: br_arera_trasporto_quota_potenza
+        value_template: "{{ value_json.trasporto.quota_potenza }}"
+        unit_of_measurement: "€/kW"
+      - name: br_arera_uc3
+        unique_id: br_arera_uc3
+        value_template: "{{ value_json.trasporto.uc3 }}"
+        unit_of_measurement: "€/kWh"
+      - name: br_arera_uc6_fisso
+        unique_id: br_arera_uc6_fisso
+        value_template: "{{ value_json.trasporto.uc6_fisso }}"
+        unit_of_measurement: "€/kW"
+      - name: br_arera_uc6_variabile
+        unique_id: br_arera_uc6_variabile
+        value_template: "{{ value_json.trasporto.uc6_variabile }}"
+        unit_of_measurement: "€/kWh"
+      - name: br_arera_asos
+        unique_id: br_arera_asos
+        value_template: "{{ value_json.oneri_sistema.asos }}"
+        unit_of_measurement: "€/kWh"
+      - name: br_arera_arim
+        unique_id: br_arera_arim
+        value_template: "{{ value_json.oneri_sistema.arim }}"
+        unit_of_measurement: "€/kWh"
+      - name: br_arera_erariale
+        unique_id: br_arera_erariale
+        value_template: "{{ value_json.imposte.erariale_domestico_residente_over3kw }}"
+        unit_of_measurement: "€/kWh"
+      - name: br_arera_iva_perc
+        unique_id: br_arera_iva_perc
+        value_template: "{{ value_json.imposte.iva_perc }}"
+        unit_of_measurement: "%"
+
+template:
+  - sensor:
+      - name: "Frarik Bolletta Versione"
+        unique_id: frarik_bolletta_versione
+        state: "1.0"
+        icon: mdi:package-variant-closed
+      - name: "BR Energia Giornaliera Safe"
+        unique_id: br_energia_giornaliera_safe
+        unit_of_measurement: "kWh"
+        state_class: total_increasing
+        device_class: energy
+        icon: mdi:lightning-bolt
+        state: >
+          {% set v = states('sensor.br_energia_giornaliera') %}
+          {% if v not in ['unknown','unavailable',''] %}
+            {{ v | float(0) }}
+          {% else %}
+            {{ states('input_number.br_backup_energia_giornaliera') | float(0) }}
+          {% endif %}
+      - name: "BR Energia Settimanale Safe"
+        unique_id: br_energia_settimanale_safe
+        unit_of_measurement: "kWh"
+        state_class: total_increasing
+        device_class: energy
+        icon: mdi:calendar-week
+        state: >
+          {% set v = states('sensor.br_energia_settimanale') %}
+          {% if v not in ['unknown','unavailable',''] %}
+            {{ v | float(0) }}
+          {% else %}
+            {{ states('input_number.br_backup_energia_settimanale') | float(0) }}
+          {% endif %}
+      - name: "BR Energia Mensile Safe"
+        unique_id: br_energia_mensile_safe
+        unit_of_measurement: "kWh"
+        state_class: total_increasing
+        device_class: energy
+        icon: mdi:calendar-month
+        state: >
+          {% set v = states('sensor.br_energia_mensile') %}
+          {% if v not in ['unknown','unavailable',''] %}
+            {{ v | float(0) }}
+          {% else %}
+            {{ states('input_number.br_backup_energia_mensile') | float(0) }}
+          {% endif %}
+      - name: "BR Perdite Rete Perc"
+        unique_id: br_perdite_rete_perc
+        unit_of_measurement: "%"
+        icon: mdi:transmission-tower
+        state: >
+          {{ states('sensor.br_arera_perdite_rete_perc') | float(
+             states('input_number.br_fb_perdite_perc') | float(8.73)) }}
+      - name: "BR IVA Perc"
+        unique_id: br_iva_perc_eff
+        unit_of_measurement: "%"
+        icon: mdi:percent
+        state: >
+          {{ states('sensor.br_arera_iva_perc') | float(
+             states('input_number.br_fb_iva_perc') | float(10)) }}
+      - name: "BR Costo Mensile Energia"
+        unique_id: br_costo_mensile_energia
+        unit_of_measurement: "€"
+        icon: mdi:flash
+        state: >
+          {% set kwh = states('sensor.br_energia_mensile_safe') | float(0) %}
+          {% set p = states('input_number.br_tariffa_energia') | float(0) + states('input_number.br_spread_energia') | float(0) %}
+          {{ (kwh * p) | round(4) }}
+      - name: "BR Costo Mensile Perdite"
+        unique_id: br_costo_mensile_perdite
+        unit_of_measurement: "€"
+        icon: mdi:transmission-tower
+        state: >
+          {% set kwh = states('sensor.br_energia_mensile_safe') | float(0) %}
+          {% set perc = states('sensor.br_perdite_rete_perc') | float(8.73) %}
+          {% set kp = kwh * perc / 100 %}
+          {% set p = states('input_number.br_tariffa_energia') | float(0) + states('input_number.br_spread_energia') | float(0) %}
+          {{ (kp * p) | round(4) }}
+      - name: "BR Costo Mensile Dispacciamento"
+        unique_id: br_costo_mensile_dispacciamento
+        unit_of_measurement: "€"
+        icon: mdi:transmission-tower
+        state: >
+          {% set kwh = states('sensor.br_energia_mensile_safe') | float(0) %}
+          {% set perc = states('sensor.br_perdite_rete_perc') | float(8.73) %}
+          {% set kwh_tot = kwh * (1 + perc / 100) %}
+          {% set t = states('sensor.br_arera_dispacciamento') | float(states('input_number.br_fb_dispacciamento') | float(0.01066)) %}
+          {{ (kwh_tot * t) | round(4) }}
+      - name: "BR Costo Mensile Mercato Capacità"
+        unique_id: br_costo_mensile_mercato_capacita
+        unit_of_measurement: "€"
+        icon: mdi:power-plug
+        state: >
+          {% set kwh = states('sensor.br_energia_mensile_safe') | float(0) %}
+          {% set perc = states('sensor.br_perdite_rete_perc') | float(8.73) %}
+          {% set kwh_tot = kwh * (1 + perc / 100) %}
+          {% set t = states('sensor.br_arera_mercato_capacita') | float(states('input_number.br_fb_mercato_capacita') | float(0.010583)) %}
+          {{ (kwh_tot * t) | round(4) }}
+      - name: "BR Costo Mensile DISPbt"
+        unique_id: br_costo_mensile_dispbt
+        unit_of_measurement: "€"
+        icon: mdi:transmission-tower
+        state: >
+          {{ states('sensor.br_arera_dispbt') | float(states('input_number.br_fb_dispbt') | float(0.102592)) | round(4) }}
+      - name: "BR Costo Mensile PNO"
+        unique_id: br_costo_mensile_pno
+        unit_of_measurement: "€"
+        icon: mdi:transmission-tower
+        state: >
+          {{ states('sensor.br_arera_pno') | float(states('input_number.br_fb_pno') | float(0)) | round(4) }}
+      - name: "BR Costo Mensile Commercializzazione"
+        unique_id: br_costo_mensile_commercializzazione
+        unit_of_measurement: "€"
+        icon: mdi:store
+        state: >
+          {{ states('input_number.br_fb_commercializzazione') | float(6) | round(2) }}
+      - name: "BR Costo Mensile Trasporto Energia"
+        unique_id: br_costo_mensile_trasporto_energia
+        unit_of_measurement: "€"
+        icon: mdi:transmission-tower
+        state: >
+          {% set kwh = states('sensor.br_energia_mensile_safe') | float(0) %}
+          {% set t = states('sensor.br_arera_trasporto_quota_energia') | float(states('input_number.br_fb_trasporto_energia') | float(0.0119)) %}
+          {{ (kwh * t) | round(4) }}
+      - name: "BR Costo Mensile Trasporto Fisso"
+        unique_id: br_costo_mensile_trasporto_fisso
+        unit_of_measurement: "€"
+        icon: mdi:transmission-tower
+        state: >
+          {{ states('sensor.br_arera_trasporto_quota_fissa') | float(states('input_number.br_fb_trasporto_fisso') | float(1.92)) | round(4) }}
+      - name: "BR Costo Mensile Trasporto Potenza"
+        unique_id: br_costo_mensile_trasporto_potenza
+        unit_of_measurement: "€"
+        icon: mdi:transmission-tower
+        state: >
+          {% set kw = states('input_number.br_potenza_impegnata') | float(4.5) %}
+          {% set t = states('sensor.br_arera_trasporto_quota_potenza') | float(states('input_number.br_fb_trasporto_potenza') | float(2.22)) %}
+          {{ (kw * t) | round(4) }}
+      - name: "BR Costo Mensile UC3"
+        unique_id: br_costo_mensile_uc3
+        unit_of_measurement: "€"
+        icon: mdi:transmission-tower
+        state: >
+          {% set kwh = states('sensor.br_energia_mensile_safe') | float(0) %}
+          {% set t = states('sensor.br_arera_uc3') | float(states('input_number.br_fb_uc3') | float(0.00276)) %}
+          {{ (kwh * t) | round(4) }}
+      - name: "BR Costo Mensile UC6 Fisso"
+        unique_id: br_costo_mensile_uc6_fisso
+        unit_of_measurement: "€"
+        icon: mdi:transmission-tower
+        state: >
+          {% set kw = states('input_number.br_potenza_impegnata') | float(4.5) %}
+          {% set t = states('sensor.br_arera_uc6_fisso') | float(states('input_number.br_fb_uc6_fisso') | float(0.07)) %}
+          {{ (kw * t) | round(4) }}
+      - name: "BR Costo Mensile UC6 Variabile"
+        unique_id: br_costo_mensile_uc6_variabile
+        unit_of_measurement: "€"
+        icon: mdi:transmission-tower
+        state: >
+          {% set kwh = states('sensor.br_energia_mensile_safe') | float(0) %}
+          {% set t = states('sensor.br_arera_uc6_variabile') | float(states('input_number.br_fb_uc6_variabile') | float(0.00007)) %}
+          {{ (kwh * t) | round(4) }}
+      - name: "BR Costo Mensile ARIM"
+        unique_id: br_costo_mensile_arim
+        unit_of_measurement: "€"
+        icon: mdi:transmission-tower
+        state: >
+          {% set kwh = states('sensor.br_energia_mensile_safe') | float(0) %}
+          {% set t = states('sensor.br_arera_arim') | float(states('input_number.br_fb_arim') | float(0.001638)) %}
+          {{ (kwh * t) | round(4) }}
+      - name: "BR Costo Mensile ASOS"
+        unique_id: br_costo_mensile_asos
+        unit_of_measurement: "€"
+        icon: mdi:transmission-tower
+        state: >
+          {% set kwh = states('sensor.br_energia_mensile_safe') | float(0) %}
+          {% set t = states('sensor.br_arera_asos') | float(states('input_number.br_fb_asos') | float(0.028657)) %}
+          {{ (kwh * t) | round(4) }}
+      - name: "BR Costo Mensile Accise"
+        unique_id: br_costo_mensile_accise
+        unit_of_measurement: "€"
+        icon: mdi:cash
+        state: >
+          {% set kwh = states('sensor.br_energia_mensile_safe') | float(0) %}
+          {% set t = states('sensor.br_arera_erariale') | float(states('input_number.br_fb_accise') | float(0.0227)) %}
+          {{ (kwh * t) | round(4) }}
+      - name: "BR Canone RAI Mensile"
+        unique_id: br_canone_rai_mensile
+        unit_of_measurement: "€"
+        icon: mdi:television-classic
+        state: >
+          {{ 9.00 if now().month in [1,2,4,7,10] else 0.00 }}
+      - name: "BR Materia Energia Mensile"
+        unique_id: br_materia_energia_mensile
+        unit_of_measurement: "€"
+        icon: mdi:lightning-bolt
+        state: >
+          {{ (states('sensor.br_costo_mensile_energia') | float(0)
+            + states('sensor.br_costo_mensile_perdite') | float(0)
+            + states('sensor.br_costo_mensile_dispacciamento') | float(0)
+            + states('sensor.br_costo_mensile_mercato_capacita') | float(0)
+            + states('sensor.br_costo_mensile_dispbt') | float(0)
+            + states('sensor.br_costo_mensile_pno') | float(0)
+            + states('sensor.br_costo_mensile_commercializzazione') | float(0)) | round(2) }}
+      - name: "BR Trasporto Mensile"
+        unique_id: br_trasporto_mensile
+        unit_of_measurement: "€"
+        icon: mdi:truck
+        state: >
+          {{ (states('sensor.br_costo_mensile_trasporto_energia') | float(0)
+            + states('sensor.br_costo_mensile_trasporto_fisso') | float(0)
+            + states('sensor.br_costo_mensile_trasporto_potenza') | float(0)
+            + states('sensor.br_costo_mensile_uc3') | float(0)
+            + states('sensor.br_costo_mensile_uc6_fisso') | float(0)
+            + states('sensor.br_costo_mensile_uc6_variabile') | float(0)) | round(2) }}
+      - name: "BR Oneri Sistema Mensili"
+        unique_id: br_oneri_sistema_mensili
+        unit_of_measurement: "€"
+        icon: mdi:lightning-bolt-outline
+        state: >
+          {{ (states('sensor.br_costo_mensile_arim') | float(0)
+            + states('sensor.br_costo_mensile_asos') | float(0)) | round(2) }}
+      - name: "BR Imponibile Mensile"
+        unique_id: br_imponibile_mensile
+        unit_of_measurement: "€"
+        icon: mdi:calculator
+        state: >
+          {{ (states('sensor.br_materia_energia_mensile') | float(0)
+            + states('sensor.br_trasporto_mensile') | float(0)
+            + states('sensor.br_oneri_sistema_mensili') | float(0)) | round(2) }}
+      - name: "BR IVA Mensile"
+        unique_id: br_iva_mensile
+        unit_of_measurement: "€"
+        icon: mdi:percent
+        state: >
+          {% set base = states('sensor.br_imponibile_mensile') | float(0)
+                      + states('sensor.br_costo_mensile_accise') | float(0) %}
+          {% set iva = states('sensor.br_iva_perc') | float(10) %}
+          {{ (base * iva / 100) | round(2) }}
+      - name: "BR Bolletta Mensile"
+        unique_id: br_bolletta_mensile
+        unit_of_measurement: "€"
+        icon: mdi:cash-multiple
+        state: >
+          {% set imp = states('sensor.br_imponibile_mensile') | float(0) %}
+          {% set acc = states('sensor.br_costo_mensile_accise') | float(0) %}
+          {% set iva = states('sensor.br_iva_mensile') | float(0) %}
+          {% set rai = states('sensor.br_canone_rai_mensile') | float(0) %}
+          {% set bon = states('input_number.br_bonus_mese_corrente') | float(0)
+                     + states('input_number.br_bonus_sociale') | float(0) %}
+          {{ (imp + acc + iva + rai - bon) | round(2) }}
+      - name: "BR Bolletta Giornaliera"
+        unique_id: br_bolletta_giornaliera
+        unit_of_measurement: "€"
+        icon: mdi:calendar-today
+        state: >
+          {% set kwh = states('sensor.br_energia_giornaliera_safe') | float(0) %}
+          {% set perc = states('sensor.br_perdite_rete_perc') | float(8.73) %}
+          {% set kp = kwh * perc / 100 %}
+          {% set kwh_tot = kwh + kp %}
+          {% set pE = states('input_number.br_tariffa_energia') | float(0) + states('input_number.br_spread_energia') | float(0) %}
+          {% set gm = ((now().replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)).day %}
+          {% set kw = states('input_number.br_potenza_impegnata') | float(4.5) %}
+          {% set imp = kwh * pE + kp * pE
+            + kwh_tot * states('sensor.br_arera_dispacciamento') | float(states('input_number.br_fb_dispacciamento') | float(0.01066))
+            + kwh_tot * states('sensor.br_arera_mercato_capacita') | float(states('input_number.br_fb_mercato_capacita') | float(0.010583))
+            + states('sensor.br_arera_dispbt') | float(states('input_number.br_fb_dispbt') | float(0.102592)) / gm
+            + states('sensor.br_arera_pno') | float(states('input_number.br_fb_pno') | float(0)) / gm
+            + states('input_number.br_fb_commercializzazione') | float(6) / gm
+            + kwh * states('sensor.br_arera_trasporto_quota_energia') | float(states('input_number.br_fb_trasporto_energia') | float(0.0119))
+            + states('sensor.br_arera_trasporto_quota_fissa') | float(states('input_number.br_fb_trasporto_fisso') | float(1.92)) / gm
+            + kw * states('sensor.br_arera_trasporto_quota_potenza') | float(states('input_number.br_fb_trasporto_potenza') | float(2.22)) / gm
+            + kwh * states('sensor.br_arera_uc3') | float(states('input_number.br_fb_uc3') | float(0.00276))
+            + kw * states('sensor.br_arera_uc6_fisso') | float(states('input_number.br_fb_uc6_fisso') | float(0.07)) / gm
+            + kwh * states('sensor.br_arera_uc6_variabile') | float(states('input_number.br_fb_uc6_variabile') | float(0.00007))
+            + kwh * states('sensor.br_arera_arim') | float(states('input_number.br_fb_arim') | float(0.001638))
+            + kwh * states('sensor.br_arera_asos') | float(states('input_number.br_fb_asos') | float(0.028657)) %}
+          {% set acc = kwh * states('sensor.br_arera_erariale') | float(states('input_number.br_fb_accise') | float(0.0227)) %}
+          {% set iva = (imp + acc) * states('sensor.br_iva_perc') | float(10) / 100 %}
+          {{ (imp + acc + iva) | round(2) }}
+      - name: "BR Costo Per kWh"
+        unique_id: br_costo_per_kwh
+        unit_of_measurement: "€/kWh"
+        icon: mdi:currency-eur
+        state: >
+          {% set kwh = states('sensor.br_energia_mensile_safe') | float(0) %}
+          {% set spesa = states('sensor.br_bolletta_mensile') | float(0) %}
+          {% if kwh >= 30 %}{{ (spesa / kwh) | round(4) }}
+          {% else %}{{ (states('input_number.br_tariffa_energia') | float(0) + states('input_number.br_spread_energia') | float(0)) | round(4) }}{% endif %}
+      - name: "BR Proiezione Fine Mese"
+        unique_id: br_proiezione_fine_mese
+        unit_of_measurement: "€"
+        icon: mdi:crystal-ball
+        state: >
+          {% set oggi = now().day %}
+          {% set gm = ((now().replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)).day %}
+          {% set speso = states('sensor.br_bolletta_mensile') | float(0) %}
+          {% if oggi > 0 %}{{ ((speso / oggi) * gm) | round(2) }}{% else %}0{% endif %}
+      - name: "BR Previsione kWh Fine Mese"
+        unique_id: br_previsione_kwh_fine_mese
+        unit_of_measurement: "kWh"
+        icon: mdi:crystal-ball
+        state: >
+          {% set oggi = now().day %}
+          {% set gm = ((now().replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)).day %}
+          {% set kwh = states('sensor.br_energia_mensile_safe') | float(0) %}
+          {% if oggi > 0 %}{{ ((kwh / oggi) * gm) | round(0) | int }}{% else %}0{% endif %}
+      - name: "BR Consumo Medio Giornaliero"
+        unique_id: br_consumo_medio_giornaliero
+        unit_of_measurement: "kWh"
+        icon: mdi:chart-line
+        state: >
+          {% set oggi = now().day %}
+          {% set kwh = states('sensor.br_energia_mensile_safe') | float(0) %}
+          {% if oggi > 0 %}{{ (kwh / oggi) | round(1) }}{% else %}0{% endif %}
+      - name: "BR Media Settimanale kWh"
+        unique_id: br_media_settimanale_kwh
+        unit_of_measurement: "kWh"
+        icon: mdi:chart-bar
+        state: >
+          {{ ((states('input_number.br_storico_kwh_lun') | float(0)
+             + states('input_number.br_storico_kwh_mar') | float(0)
+             + states('input_number.br_storico_kwh_mer') | float(0)
+             + states('input_number.br_storico_kwh_gio') | float(0)
+             + states('input_number.br_storico_kwh_ven') | float(0)
+             + states('input_number.br_storico_kwh_sab') | float(0)
+             + states('input_number.br_storico_kwh_dom') | float(0)) / 7) | round(1) }}
+      - name: "BR Totale Anno Corrente"
+        unique_id: br_totale_anno_corrente
+        unit_of_measurement: "€"
+        icon: mdi:calendar
+        state: >
+          {% set m = now().month %}{% set tot = namespace(v=0) %}
+          {% for i in range(1, m) %}{% set tot.v = tot.v + states('input_number.br_storico_mese_curr_%02d' | format(i)) | float(0) %}{% endfor %}
+          {{ (tot.v + states('sensor.br_bolletta_mensile') | float(0)) | round(2) }}
+      - name: "BR Totale Anno Precedente"
+        unique_id: br_totale_anno_precedente
+        unit_of_measurement: "€"
+        icon: mdi:calendar
+        state: >
+          {% set tot = namespace(v=0) %}
+          {% for i in range(1, 13) %}{% set tot.v = tot.v + states('input_number.br_storico_mese_prev_%02d' | format(i)) | float(0) %}{% endfor %}
+          {{ tot.v | round(2) }}
+      - name: "BR Consumo Anno Corrente"
+        unique_id: br_consumo_anno_corrente
+        unit_of_measurement: "kWh"
+        icon: mdi:flash
+        state: >
+          {% set m = now().month %}{% set tot = namespace(v=0) %}
+          {% for i in range(1, m) %}{% set tot.v = tot.v + states('input_number.br_storico_kwh_curr_%02d' | format(i)) | float(0) %}{% endfor %}
+          {{ (tot.v + states('sensor.br_energia_mensile_safe') | float(0)) | round(1) }}
+      - name: "BR Consumo Anno Precedente"
+        unique_id: br_consumo_anno_precedente
+        unit_of_measurement: "kWh"
+        icon: mdi:flash
+        state: >
+          {% set tot = namespace(v=0) %}
+          {% for i in range(1, 13) %}{% set tot.v = tot.v + states('input_number.br_storico_kwh_prev_%02d' | format(i)) | float(0) %}{% endfor %}
+          {{ tot.v | round(0) }}
+      - name: "BR Differenza vs Anno Scorso"
+        unique_id: br_differenza_vs_anno_scorso
+        unit_of_measurement: "€"
+        icon: mdi:compare
+        state: >
+          {% set m = now().month %}
+          {% set c = states('sensor.br_bolletta_mensile') | float(0) %}
+          {% set p = states('input_number.br_storico_mese_prev_%02d' | format(m)) | float(0) %}
+          {{ (c - p) | round(2) }}
+        attributes:
+          percentuale: >
+            {% set m = now().month %}
+            {% set c = states('sensor.br_bolletta_mensile') | float(0) %}
+            {% set p = states('input_number.br_storico_mese_prev_%02d' | format(m)) | float(0) %}
+            {% if p > 0 %}{{ (((c - p) / p) * 100) | round(1) }}%{% else %}N/A{% endif %}
+      - name: "BR Saldo Octopus"
+        unique_id: br_saldo_octopus
+        unit_of_measurement: "€"
+        icon: mdi:cash
+        state: >
+          {{ states('sensor.a_563293ae_saldo_elettricita') | float(0) | round(2) }}
+      - name: "BR Giorni Scadenza Offerta"
+        unique_id: br_giorni_scadenza_offerta
+        unit_of_measurement: "giorni"
+        icon: mdi:calendar-clock
+        state: >
+          {{ states('sensor.a_563293ae_giorni_alla_scadenza_contratto_elettrico') | int(999) }}
+      - name: "BR Simulazione Bolletta"
+        unique_id: br_simulazione_bolletta
+        unit_of_measurement: "€"
+        icon: mdi:calculator
+        state: >
+          {% set kwh = states('input_number.br_test_consumo_kwh') | float(0) %}
+          {% set perc = states('sensor.br_perdite_rete_perc') | float(8.73) %}
+          {% set kp = kwh * perc / 100 %}{% set kwh_tot = kwh + kp %}
+          {% set pE = states('input_number.br_tariffa_energia') | float(0) + states('input_number.br_spread_energia') | float(0) %}
+          {% set kw = states('input_number.br_potenza_impegnata') | float(4.5) %}
+          {% set imp = kwh * pE + kp * pE
+            + kwh_tot * states('sensor.br_arera_dispacciamento') | float(states('input_number.br_fb_dispacciamento') | float(0.01066))
+            + kwh_tot * states('sensor.br_arera_mercato_capacita') | float(states('input_number.br_fb_mercato_capacita') | float(0.010583))
+            + states('sensor.br_arera_dispbt') | float(states('input_number.br_fb_dispbt') | float(0.102592))
+            + states('sensor.br_arera_pno') | float(states('input_number.br_fb_pno') | float(0))
+            + states('input_number.br_fb_commercializzazione') | float(6)
+            + kwh * states('sensor.br_arera_trasporto_quota_energia') | float(states('input_number.br_fb_trasporto_energia') | float(0.0119))
+            + states('sensor.br_arera_trasporto_quota_fissa') | float(states('input_number.br_fb_trasporto_fisso') | float(1.92))
+            + kw * states('sensor.br_arera_trasporto_quota_potenza') | float(states('input_number.br_fb_trasporto_potenza') | float(2.22))
+            + kwh * states('sensor.br_arera_uc3') | float(states('input_number.br_fb_uc3') | float(0.00276))
+            + kw * states('sensor.br_arera_uc6_fisso') | float(states('input_number.br_fb_uc6_fisso') | float(0.07))
+            + kwh * states('sensor.br_arera_uc6_variabile') | float(states('input_number.br_fb_uc6_variabile') | float(0.00007))
+            + kwh * states('sensor.br_arera_arim') | float(states('input_number.br_fb_arim') | float(0.001638))
+            + kwh * states('sensor.br_arera_asos') | float(states('input_number.br_fb_asos') | float(0.028657)) %}
+          {% set acc = kwh * states('sensor.br_arera_erariale') | float(states('input_number.br_fb_accise') | float(0.0227)) %}
+          {% set iva = (imp + acc) * states('sensor.br_iva_perc') | float(10) / 100 %}
+          {% set bon = states('input_number.br_test_bonus_euro') | float(0) %}
+          {{ (imp + acc + iva - bon) | round(2) }}
+
+script:
+  br_reset_sensori_energia:
+    alias: "Frarik — Bolletta: Reset Contatori"
+    icon: mdi:restart
+    sequence:
+      - service: utility_meter.calibrate
+        data: { value: "0" }
+        target:
+          entity_id:
+            - sensor.br_energia_giornaliera
+            - sensor.br_energia_settimanale
+            - sensor.br_energia_mensile
+            - sensor.br_energia_trimestrale
+            - sensor.br_energia_annuale
+      - service: input_boolean.turn_off
+        target: { entity_id: input_boolean.br_reset_consumo_mensile }
+
+automation:
+  - alias: "Frarik — Bolletta: Backup Energia Automatico"
+    trigger:
+      - platform: time_pattern
+        minutes: "/15"
+      - platform: homeassistant
+        event: start
+    action:
+      - service: input_number.set_value
+        target: { entity_id: input_number.br_backup_energia_giornaliera }
+        data: { value: "{{ states('sensor.br_energia_giornaliera') | float(0) }}" }
+      - service: input_number.set_value
+        target: { entity_id: input_number.br_backup_energia_settimanale }
+        data: { value: "{{ states('sensor.br_energia_settimanale') | float(0) }}" }
+      - service: input_number.set_value
+        target: { entity_id: input_number.br_backup_energia_mensile }
+        data: { value: "{{ states('sensor.br_energia_mensile') | float(0) }}" }
+
+  - alias: "Frarik — Bolletta: Salva Storico Ieri e Settimanale"
+    trigger:
+      - platform: time
+        at: "23:59:00"
+    action:
+      - service: input_number.set_value
+        target: { entity_id: input_number.br_storico_costo_ieri }
+        data: { value: "{{ states('sensor.br_bolletta_giornaliera') | float(0) }}" }
+      - service: input_number.set_value
+        target: { entity_id: input_number.br_storico_kwh_ieri }
+        data: { value: "{{ states('sensor.br_energia_giornaliera_safe') | float(0) }}" }
+      - choose:
+          - conditions: "{{ now().weekday() == 0 }}"
+            sequence:
+              - service: input_number.set_value
+                target: { entity_id: input_number.br_storico_costo_lun }
+                data: { value: "{{ states('sensor.br_bolletta_giornaliera') | float(0) }}" }
+              - service: input_number.set_value
+                target: { entity_id: input_number.br_storico_kwh_lun }
+                data: { value: "{{ states('sensor.br_energia_giornaliera_safe') | float(0) }}" }
+          - conditions: "{{ now().weekday() == 1 }}"
+            sequence:
+              - service: input_number.set_value
+                target: { entity_id: input_number.br_storico_costo_mar }
+                data: { value: "{{ states('sensor.br_bolletta_giornaliera') | float(0) }}" }
+              - service: input_number.set_value
+                target: { entity_id: input_number.br_storico_kwh_mar }
+                data: { value: "{{ states('sensor.br_energia_giornaliera_safe') | float(0) }}" }
+          - conditions: "{{ now().weekday() == 2 }}"
+            sequence:
+              - service: input_number.set_value
+                target: { entity_id: input_number.br_storico_costo_mer }
+                data: { value: "{{ states('sensor.br_bolletta_giornaliera') | float(0) }}" }
+              - service: input_number.set_value
+                target: { entity_id: input_number.br_storico_kwh_mer }
+                data: { value: "{{ states('sensor.br_energia_giornaliera_safe') | float(0) }}" }
+          - conditions: "{{ now().weekday() == 3 }}"
+            sequence:
+              - service: input_number.set_value
+                target: { entity_id: input_number.br_storico_costo_gio }
+                data: { value: "{{ states('sensor.br_bolletta_giornaliera') | float(0) }}" }
+              - service: input_number.set_value
+                target: { entity_id: input_number.br_storico_kwh_gio }
+                data: { value: "{{ states('sensor.br_energia_giornaliera_safe') | float(0) }}" }
+          - conditions: "{{ now().weekday() == 4 }}"
+            sequence:
+              - service: input_number.set_value
+                target: { entity_id: input_number.br_storico_costo_ven }
+                data: { value: "{{ states('sensor.br_bolletta_giornaliera') | float(0) }}" }
+              - service: input_number.set_value
+                target: { entity_id: input_number.br_storico_kwh_ven }
+                data: { value: "{{ states('sensor.br_energia_giornaliera_safe') | float(0) }}" }
+          - conditions: "{{ now().weekday() == 5 }}"
+            sequence:
+              - service: input_number.set_value
+                target: { entity_id: input_number.br_storico_costo_sab }
+                data: { value: "{{ states('sensor.br_bolletta_giornaliera') | float(0) }}" }
+              - service: input_number.set_value
+                target: { entity_id: input_number.br_storico_kwh_sab }
+                data: { value: "{{ states('sensor.br_energia_giornaliera_safe') | float(0) }}" }
+          - conditions: "{{ now().weekday() == 6 }}"
+            sequence:
+              - service: input_number.set_value
+                target: { entity_id: input_number.br_storico_costo_dom }
+                data: { value: "{{ states('sensor.br_bolletta_giornaliera') | float(0) }}" }
+              - service: input_number.set_value
+                target: { entity_id: input_number.br_storico_kwh_dom }
+                data: { value: "{{ states('sensor.br_energia_giornaliera_safe') | float(0) }}" }
+
+  - alias: "Frarik — Bolletta: Salva Storico Mensile"
+    trigger:
+      - platform: time
+        at: "23:55:00"
+    condition:
+      - condition: template
+        value_template: "{{ (now() + timedelta(days=1)).day == 1 }}"
+    action:
+      - service: input_number.set_value
+        target:
+          entity_id: "input_number.br_storico_mese_curr_{{ now().strftime('%m') }}"
+        data:
+          value: "{{ states('sensor.br_bolletta_mensile') | float(0) }}"
+      - service: input_number.set_value
+        target:
+          entity_id: "input_number.br_storico_kwh_curr_{{ now().strftime('%m') }}"
+        data:
+          value: "{{ states('sensor.br_energia_mensile_safe') | float(0) }}"
+      - service: input_number.set_value
+        target: { entity_id: input_number.br_bonus_mese_corrente }
+        data: { value: 0 }
+      - service: notify.frarik_bolletta
+        data:
+          title: "Frarik Bolletta — Fine mese"
+          message: >
+            Storico salvato: {{ now().strftime('%B %Y') }}
+            Bolletta: {{ states('sensor.br_bolletta_mensile') }} €
+            Consumo: {{ states('sensor.br_energia_mensile_safe') }} kWh
+
+  - alias: "Frarik — Bolletta: Reset Mensile Manuale"
+    trigger:
+      - platform: state
+        entity_id: input_boolean.br_reset_consumo_mensile
+        to: "on"
+    action:
+      - service: utility_meter.reset
+        target: { entity_id: sensor.br_energia_mensile }
+      - service: input_boolean.turn_off
+        target: { entity_id: input_boolean.br_reset_consumo_mensile }
+
+  - alias: "Frarik — Bolletta: Report Mattutino"
+    trigger:
+      - platform: time
+        at: "08:00:00"
+    condition:
+      - condition: state
+        entity_id: input_boolean.br_notify_push_giornaliero
+        state: "on"
+    action:
+      - service: notify.frarik_bolletta
+        data:
+          title: "Buongiorno — Report Energia"
+          message: >
+            Ieri: {{ states('input_number.br_storico_kwh_ieri') }} kWh = {{ states('input_number.br_storico_costo_ieri') }} €
+            Mese: {{ states('sensor.br_energia_mensile_safe') }} kWh = {{ states('sensor.br_bolletta_mensile') }} €
+            Proiezione: {{ states('sensor.br_proiezione_fine_mese') }} €
+            Saldo Octopus: {{ states('sensor.br_saldo_octopus') }} €
+
+  - alias: "Frarik — Bolletta: Alert Costo Giornaliero"
+    trigger:
+      - platform: time
+        at: "22:00:00"
+    condition:
+      - condition: template
+        value_template: >
+          {{ states('sensor.br_bolletta_giornaliera') | float(0) > states('input_number.br_soglia_costo_giornaliero') | float(5) }}
+      - condition: state
+        entity_id: input_boolean.br_notify_push_giornaliero
+        state: "on"
+    action:
+      - service: notify.frarik_bolletta
+        data:
+          title: "Costo giornaliero elevato"
+          message: >
+            Oggi: {{ states('sensor.br_bolletta_giornaliera') }} €
+            Consumo: {{ states('sensor.br_energia_giornaliera_safe') }} kWh
+
+  - alias: "Frarik — Bolletta: Alert Soglia Potenza"
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.consumo_istantaneo
+        above: input_number.br_soglia_lavoro_w
+        for:
+          seconds: "{{ states('input_number.br_ritardo_soglia_sec') | int(60) }}"
+    condition:
+      - condition: time
+        after: input_datetime.br_orario_inizio_notifiche_soglia
+        before: input_datetime.br_orario_fine_notifiche_soglia
+      - condition: state
+        entity_id: input_boolean.br_notify_push_soglia
+        state: "on"
+    action:
+      - service: notify.frarik_bolletta
+        data:
+          title: "Consumo elevato"
+          message: >
+            Soglia {{ states('input_number.br_soglia_lavoro_w') | int }} W superata!
+            Costo stimato oggi: {{ states('sensor.br_bolletta_giornaliera') }} €
+
+  - alias: "Frarik — Bolletta: Report Mensile"
+    trigger:
+      - platform: time
+        at: "09:00:00"
+    condition:
+      - condition: template
+        value_template: "{{ now().day == 1 }}"
+      - condition: state
+        entity_id: input_boolean.br_notify_push_mensile
+        state: "on"
+    action:
+      - service: notify.frarik_bolletta
+        data:
+          title: "Report Bolletta Mese Scorso"
+          message: >
+            {% set m = now().month - 1 %}{% if m == 0 %}{% set m = 12 %}{% endif %}
+            {% set mm = '%02d' | format(m) %}
+            Bolletta: {{ states('input_number.br_storico_mese_curr_' ~ mm) }} €
+            Consumo: {{ states('input_number.br_storico_kwh_curr_' ~ mm) }} kWh
+            Saldo Octopus: {{ states('sensor.br_saldo_octopus') }} €
+
+  - alias: "Frarik — Bolletta: Archiviazione Anno Nuovo"
+    trigger:
+      - platform: time
+        at: "23:59:30"
+    condition:
+      - condition: template
+        value_template: "{{ now().month == 12 and now().day == 31 }}"
+    action:
+      - service: input_number.set_value
+        target: { entity_id: input_number.br_storico_mese_prev_01 }
+        data: { value: "{{ states('input_number.br_storico_mese_curr_01') | float(0) }}" }
+      - service: input_number.set_value
+        target: { entity_id: input_number.br_storico_mese_prev_02 }
+        data: { value: "{{ states('input_number.br_storico_mese_curr_02') | float(0) }}" }
+      - service: input_number.set_value
+        target: { entity_id: input_number.br_storico_mese_prev_03 }
+        data: { value: "{{ states('input_number.br_storico_mese_curr_03') | float(0) }}" }
+      - service: input_number.set_value
+        target: { entity_id: input_number.br_storico_mese_prev_04 }
+        data: { value: "{{ states('input_number.br_storico_mese_curr_04') | float(0) }}" }
+      - service: input_number.set_value
+        target: { entity_id: input_number.br_storico_mese_prev_05 }
+        data: { value: "{{ states('input_number.br_storico_mese_curr_05') | float(0) }}" }
+      - service: input_number.set_value
+        target: { entity_id: input_number.br_storico_mese_prev_06 }
+        data: { value: "{{ states('input_number.br_storico_mese_curr_06') | float(0) }}" }
+      - service: input_number.set_value
+        target: { entity_id: input_number.br_storico_mese_prev_07 }
+        data: { value: "{{ states('input_number.br_storico_mese_curr_07') | float(0) }}" }
+      - service: input_number.set_value
+        target: { entity_id: input_number.br_storico_mese_prev_08 }
+        data: { value: "{{ states('input_number.br_storico_mese_curr_08') | float(0) }}" }
+      - service: input_number.set_value
+        target: { entity_id: input_number.br_storico_mese_prev_09 }
+        data: { value: "{{ states('input_number.br_storico_mese_curr_09') | float(0) }}" }
+      - service: input_number.set_value
+        target: { entity_id: input_number.br_storico_mese_prev_10 }
+        data: { value: "{{ states('input_number.br_storico_mese_curr_10') | float(0) }}" }
+      - service: input_number.set_value
+        target: { entity_id: input_number.br_storico_mese_prev_11 }
+        data: { value: "{{ states('input_number.br_storico_mese_curr_11') | float(0) }}" }
+      - service: input_number.set_value
+        target: { entity_id: input_number.br_storico_mese_prev_12 }
+        data: { value: "{{ states('sensor.br_bolletta_mensile') | float(0) }}" }
+      - service: input_number.set_value
+        target: { entity_id: input_number.br_storico_kwh_prev_01 }
+        data: { value: "{{ states('input_number.br_storico_kwh_curr_01') | float(0) }}" }
+      - service: input_number.set_value
+        target: { entity_id: input_number.br_storico_kwh_prev_02 }
+        data: { value: "{{ states('input_number.br_storico_kwh_curr_02') | float(0) }}" }
+      - service: input_number.set_value
+        target: { entity_id: input_number.br_storico_kwh_prev_03 }
+        data: { value: "{{ states('input_number.br_storico_kwh_curr_03') | float(0) }}" }
+      - service: input_number.set_value
+        target: { entity_id: input_number.br_storico_kwh_prev_04 }
+        data: { value: "{{ states('input_number.br_storico_kwh_curr_04') | float(0) }}" }
+      - service: input_number.set_value
+        target: { entity_id: input_number.br_storico_kwh_prev_05 }
+        data: { value: "{{ states('input_number.br_storico_kwh_curr_05') | float(0) }}" }
+      - service: input_number.set_value
+        target: { entity_id: input_number.br_storico_kwh_prev_06 }
+        data: { value: "{{ states('input_number.br_storico_kwh_curr_06') | float(0) }}" }
+      - service: input_number.set_value
+        target: { entity_id: input_number.br_storico_kwh_prev_07 }
+        data: { value: "{{ states('input_number.br_storico_kwh_curr_07') | float(0) }}" }
+      - service: input_number.set_value
+        target: { entity_id: input_number.br_storico_kwh_prev_08 }
+        data: { value: "{{ states('input_number.br_storico_kwh_curr_08') | float(0) }}" }
+      - service: input_number.set_value
+        target: { entity_id: input_number.br_storico_kwh_prev_09 }
+        data: { value: "{{ states('input_number.br_storico_kwh_curr_09') | float(0) }}" }
+      - service: input_number.set_value
+        target: { entity_id: input_number.br_storico_kwh_prev_10 }
+        data: { value: "{{ states('input_number.br_storico_kwh_curr_10') | float(0) }}" }
+      - service: input_number.set_value
+        target: { entity_id: input_number.br_storico_kwh_prev_11 }
+        data: { value: "{{ states('input_number.br_storico_kwh_curr_11') | float(0) }}" }
+      - service: input_number.set_value
+        target: { entity_id: input_number.br_storico_kwh_prev_12 }
+        data: { value: "{{ states('sensor.br_energia_mensile_safe') | float(0) }}" }
+      - service: notify.frarik_bolletta
+        data:
+          title: "Frarik Bolletta — Anno Archiviato"
+          message: "Anno {{ now().year }} archiviato."
+
+  - alias: "Frarik — Bolletta: Alert Scadenza Octopus"
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.br_giorni_scadenza_offerta
+        below: 61
+    condition:
+      - condition: template
+        value_template: "{{ states('sensor.br_giorni_scadenza_offerta') | int(999) in [60,30,15,7] }}"
+    action:
+      - service: notify.frarik_bolletta
+        data:
+          title: "Scadenza Offerta Octopus"
+          message: >
+            Mancano {{ states('sensor.br_giorni_scadenza_offerta') }} giorni.
+            Ricordati di rinnovare l'offerta Fissa 12M!
+`;
+
+  function _bBuildPkg(potenza, saldo, scadenza, tariffa, kw, push) {
+    var ind = '          ';
+    var pushLines = (push && push.length)
+      ? push.map(function(p) { return ind + '- service: ' + p; }).join('\n')
+      : ind + '- service: mobile_app_smartphone';
+    var yaml = _BOLL_PKG_YAML
+      .split('sensor.consumo_istantaneo').join(potenza || 'sensor.consumo_istantaneo')
+      .split('sensor.a_563293ae_saldo_elettricita').join(saldo || 'sensor.a_563293ae_saldo_elettricita')
+      .split('sensor.a_563293ae_giorni_alla_scadenza_contratto_elettrico').join(scadenza || 'sensor.a_563293ae_giorni_alla_scadenza_contratto_elettrico')
+      .split('&tariffa_contratto 0.090000').join('&tariffa_contratto ' + (parseFloat(tariffa) || 0.09).toFixed(6))
+      .split('&potenza_kw 4.5').join('&potenza_kw ' + (parseFloat(kw) || 4.5));
+    yaml = yaml.split('          - service: mobile_app_a065\n          # - service: IL_TUO_MOBILE_APP_2').join(pushLines);
+    return yaml;
+  }
+
+  function _bOpenWizard(hass, onDone) {
+    var states = (hass && hass.states) || (window.frarikHass && window.frarikHass.states) || {};
+    var allIds = Object.keys(states).sort();
+    var sensorIds = allIds.filter(function(id) { return /^sensor\./.test(id); });
+    var saved = null;
+    try { saved = JSON.parse(localStorage.getItem(_BOLL_WIZ_KEY) || 'null'); } catch(e) {}
+    var pushRows = (saved && saved.push && saved.push.length) ? saved.push.slice() : [''];
+
+    var host = document.createElement('div');
+    var sr = host.attachShadow({mode: 'open'});
+    document.body.appendChild(host);
+    function destroy() { try { document.body.removeChild(host); } catch(e) {} }
+
+    function setupAC(inp, drop, ids) {
+      if (!inp || !drop) return;
+      function show() {
+        var q = inp.value.toLowerCase().trim();
+        var hits = (q ? ids.filter(function(id) { return id.toLowerCase().includes(q); }) : ids).slice(0, 50);
+        if (!hits.length) { drop.style.display = 'none'; return; }
+        drop.innerHTML = hits.map(function(id) { return '<div class="wd-item" data-pick="' + id + '">' + id + '</div>'; }).join('');
+        drop.style.display = 'block';
+        drop.querySelectorAll('[data-pick]').forEach(function(row) {
+          row.addEventListener('mousedown', function(ev) { ev.preventDefault(); inp.value = row.getAttribute('data-pick'); drop.style.display = 'none'; });
+          row.addEventListener('mouseover', function() { row.style.background = 'rgba(255,255,255,.08)'; });
+          row.addEventListener('mouseout',  function() { row.style.background = ''; });
+        });
+      }
+      inp.addEventListener('focus', show);
+      inp.addEventListener('input', show);
+      inp.addEventListener('blur', function() { setTimeout(function() { drop.style.display = 'none'; }, 200); });
+    }
+
+    function multiRows(rows, cls, placeholder) {
+      return rows.map(function(v, i) {
+        return '<div class="wd-push-row"><div style="position:relative;flex:1"><input class="wd-inp ' + cls + '" type="text" autocomplete="off" placeholder="' + placeholder + '" value="' + (v || '').replace(/"/g, '&quot;') + '"><div class="wd-drop"></div></div><button class="wd-rm" data-rm="' + i + '">✕</button></div>';
+      }).join('');
+    }
+
+    function renderWiz() {
+      sr.innerHTML = '<style>'
+        + ':host{all:initial;font-family:system-ui,sans-serif}'
+        + '.wd-bd{position:fixed;inset:0;z-index:200000;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);display:flex;align-items:flex-end}'
+        + '.wd-panel{width:100%;max-height:88vh;display:flex;flex-direction:column;background:#080f18;border:1px solid rgba(6,182,212,.3);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:wUp .22s cubic-bezier(.32,1.12,.56,1)}'
+        + '@keyframes wUp{from{transform:translateY(100%)}to{transform:translateY(0)}}'
+        + '.wd-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}'
+        + '.wd-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(6,182,212,.15);border:1px solid rgba(6,182,212,.3);flex-shrink:0}'
+        + '.wd-tit{font-size:14px;font-weight:800}'
+        + '.wd-sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:1px}'
+        + '.wd-x{margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none}'
+        + '.wd-body{flex:1;overflow-y:auto;padding:16px;scrollbar-width:none;display:flex;flex-direction:column;gap:14px}'
+        + '.wd-body::-webkit-scrollbar{display:none}'
+        + '.wd-sec{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#06b6d4;padding-bottom:5px;border-bottom:1px solid rgba(6,182,212,.18);margin-bottom:10px}'
+        + '.wd-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px}'
+        + '.wd-frow{position:relative;margin-bottom:10px}'
+        + '.wd-inp{width:100%;padding:9px 11px;border-radius:10px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none}'
+        + '.wd-inp:focus{border-color:rgba(6,182,212,.5)}'
+        + '.wd-drop{position:absolute;left:0;right:0;top:100%;z-index:10;max-height:150px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 9px 9px;display:none}'
+        + '.wd-item{padding:5px 10px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04);color:#e2e8f0}'
+        + '.wd-push-row{display:flex;gap:6px;margin-bottom:6px}'
+        + '.wd-push-row .wd-inp{flex:1}'
+        + '.wd-rm{width:30px;height:38px;border-radius:8px;background:rgba(255,255,255,.07);border:none;color:#fff;cursor:pointer;font-size:14px;flex-shrink:0}'
+        + '.wd-add{padding:6px 12px;border-radius:8px;background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.25);color:#06b6d4;font-size:11px;font-weight:700;cursor:pointer}'
+        + '.wd-note{font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;margin:0 0 10px}'
+        + '.wd-foot{padding:12px 16px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:8px;flex-shrink:0}'
+        + '.wd-cancel{flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:rgba(255,255,255,.1);color:#fff}'
+        + '.wd-install{flex:2;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#06b6d4;color:#000}'
+        + '.wd-loading{opacity:.6;pointer-events:none}'
+        + '</style>'
+        + '<div class="wd-bd" id="wd-bd">'
+        + '<div class="wd-panel">'
+        + '<div class="wd-hdr"><div class="wd-ico">⚡</div>'
+        + '<div><div class="wd-tit">Installa PKG Bolletta</div><div class="wd-sub">frarik_bolletta.yaml → config/packages/frarik/</div></div>'
+        + '<button class="wd-x" id="wd-x">✕</button></div>'
+        + '<div class="wd-body">'
+
+        + '<div><div class="wd-sec">Sensori</div>'
+        + '<div class="wd-lbl">Sensore Potenza Istantanea Casa (W)</div>'
+        + '<p class="wd-note">Sensore che misura i Watt istantanei dell\'intera casa (es. Shelly EM, contatore BUS)</p>'
+        + '<div class="wd-frow"><input class="wd-inp" id="f-potenza" type="text" autocomplete="off" placeholder="sensor.consumo_istantaneo" value="' + ((saved && saved.potenza) || '').replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-potenza"></div></div>'
+        + '<div class="wd-lbl">Sensore Saldo Octopus Energy (€)</div>'
+        + '<p class="wd-note">Lascia il default se usi Octopus Energy. Metti il sensore corretto o "sensor.vuoto" se non usi Octopus.</p>'
+        + '<div class="wd-frow"><input class="wd-inp" id="f-saldo" type="text" autocomplete="off" placeholder="sensor.a_563293ae_saldo_elettricita" value="' + ((saved && saved.saldo) || '').replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-saldo"></div></div>'
+        + '<div class="wd-lbl">Sensore Giorni Scadenza Offerta</div>'
+        + '<div class="wd-frow"><input class="wd-inp" id="f-scad" type="text" autocomplete="off" placeholder="sensor.a_563293ae_giorni_alla_scadenza_contratto_elettrico" value="' + ((saved && saved.scadenza) || '').replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-scad"></div></div>'
+        + '</div>'
+
+        + '<div><div class="wd-sec">Contratto</div>'
+        + '<div class="wd-lbl">Tariffa Energia (€/kWh)</div>'
+        + '<p class="wd-note">Prezzo fisso del tuo contratto, es. 0.09 per Octopus Fissa 12M</p>'
+        + '<div class="wd-frow"><input class="wd-inp" id="f-tariffa" type="number" step="0.000001" min="0" max="1" placeholder="0.090000" value="' + ((saved && saved.tariffa) || '') + '"></div>'
+        + '<div class="wd-lbl">Potenza Impegnata (kW)</div>'
+        + '<p class="wd-note">La potenza contrattuale. Valori comuni: 3.0 / 4.5 / 6.0</p>'
+        + '<div class="wd-frow"><input class="wd-inp" id="f-kw" type="number" step="0.5" min="1.5" max="15" placeholder="4.5" value="' + ((saved && saved.kw) || '') + '"></div>'
+        + '</div>'
+
+        + '<div><div class="wd-sec">Notifiche Push</div>'
+        + '<p class="wd-note">mobile_app dei dispositivi che ricevono le notifiche push (es. <code>mobile_app_iphone</code>)</p>'
+        + '<div id="push-rows">' + multiRows(pushRows, 'push-inp', 'mobile_app_...') + '</div>'
+        + '<button class="wd-add" id="push-add">+ Aggiungi dispositivo</button>'
+        + '</div>'
+
+        + '</div>'
+        + '<div class="wd-foot">'
+        + '<button class="wd-cancel" id="wd-cancel">Annulla</button>'
+        + '<button class="wd-install" id="wd-install">📦 Installa PKG</button>'
+        + '</div>'
+        + '</div>'
+        + '</div>';
+
+      sr.getElementById('wd-x').addEventListener('click', destroy);
+      sr.getElementById('wd-cancel').addEventListener('click', destroy);
+      sr.getElementById('wd-bd').addEventListener('click', function(e) { if (e.target === sr.getElementById('wd-bd')) destroy(); });
+
+      sr.getElementById('push-rows').addEventListener('click', function(e) {
+        var btn = e.target.closest('[data-rm]'); if (!btn) return;
+        Array.from(sr.querySelectorAll('.push-inp')).forEach(function(i, idx) { pushRows[idx] = i.value; });
+        pushRows.splice(+btn.dataset.rm, 1);
+        if (!pushRows.length) pushRows.push('');
+        renderWiz();
+      });
+      sr.getElementById('push-add').addEventListener('click', function() {
+        Array.from(sr.querySelectorAll('.push-inp')).forEach(function(i, idx) { pushRows[idx] = i.value; });
+        pushRows.push('');
+        renderWiz();
+      });
+
+      setupAC(sr.getElementById('f-potenza'), sr.getElementById('d-potenza'), sensorIds);
+      setupAC(sr.getElementById('f-saldo'),   sr.getElementById('d-saldo'),   sensorIds);
+      setupAC(sr.getElementById('f-scad'),    sr.getElementById('d-scad'),    sensorIds);
+      sr.querySelectorAll('.push-inp').forEach(function(inp) { setupAC(inp, inp.parentElement.querySelector('.wd-drop'), []); });
+
+      sr.getElementById('wd-install').addEventListener('click', function() {
+        var potenza  = sr.getElementById('f-potenza').value.trim();
+        var saldo    = sr.getElementById('f-saldo').value.trim();
+        var scadenza = sr.getElementById('f-scad').value.trim();
+        var tariffa  = sr.getElementById('f-tariffa').value.trim();
+        var kw       = sr.getElementById('f-kw').value.trim();
+        var push     = Array.from(sr.querySelectorAll('.push-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
+        try { localStorage.setItem(_BOLL_WIZ_KEY, JSON.stringify({potenza:potenza, saldo:saldo, scadenza:scadenza, tariffa:tariffa, kw:kw, push:push})); } catch(e) {}
+        var yaml = _bBuildPkg(potenza, saldo, scadenza, tariffa, kw, push);
+        var m = location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
+        var base = location.origin + (m ? m[1] : '');
+        var btn = sr.getElementById('wd-install');
+        btn.classList.add('wd-loading');
+        btn.textContent = 'Installazione…';
+        fetch(base + '/api/frarik/pkg/install', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({name: 'frarik/frarik_bolletta.yaml', content: yaml})
+        }).then(function(r) { return r.json().then(function(j) { return {r:r,j:j}; }); })
+          .then(function(res) {
+            destroy();
+            if (res.r.ok && res.j.ok) {
+              try { if (typeof window.showToast === 'function') window.showToast('📦 PKG Bolletta installato! Riavvia HA.'); } catch(e) {}
+              if (typeof onDone === 'function') onDone();
+            } else {
+              try { if (typeof window.showToast === 'function') window.showToast('⚠️ Errore: ' + ((res.j && res.j.error) || '')); } catch(e) {}
+            }
+          }).catch(function() {
+            destroy();
+            try { if (typeof window.showToast === 'function') window.showToast('⚠️ Errore connessione al PKG install'); } catch(e) {}
+          });
+      });
+    }
+
+    renderWiz();
   }
 
   // ── registration ───────────────────────────────────────────────────────────
@@ -494,11 +1928,11 @@
     },
 
     configure: function(card) {
-      _bOpenWizard(card);
+      _bOpenCfg(card);
     },
 
-    openWizard: function(card) {
-      _bOpenWizard(card);
+    openWizard: function(hass, onDone) {
+      _bOpenWizard(hass, onDone);
     }
   };
 })();
