@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.6.87 — 2026-06-29
+
+### feat: Differenziata v2.4 — doppio rifiuto per giorno, tipi semplificati, bidone per "nessuno"
+
+- Supporto a **2 rifiuti lo stesso giorno**: hero mostra 2 bidoni affiancati con label, chip settimanale mostra 2 rettangoli colorati sovrapposti
+- Tipi rifiuto semplificati a 5: **Umido, Carta, Plastica, Vetro, Secco** (alias retrocompatibili: Organico→Umido, Cartone→Carta, ecc.)
+- **Nessun ritiro** ottiene ora il suo color picker — bidone scuro colorabile come gli altri tipi
+- ⚙ Impostazioni: ogni giorno ha 2 select dropdown (1° rifiuto + 2° opzionale) invece del campo testo libero
+- Colori custom ridotti a 6 voci (5 tipi + Nessun ritiro); `_hexToRgb` helper interno; `_dParseDay()` parser comma-separated
+
 ## 1.6.86 — 2026-06-29
 
 ### feat: elettrodomestico-base v2.0 — layout Asciugatrice, stati 3 livelli, sig-based update
