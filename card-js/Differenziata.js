@@ -703,16 +703,285 @@ window.customCards.push({ version: '1.0',
     renderWiz();
   }
 
+  // ── Store helpers ────────────────────────────────────────────────────
+  function _dH() { try { return (typeof window.frarikHass === 'function' && window.frarikHass()) || {}; } catch(e) { return {}; } }
+  function _dKey(c) { return 'frarik_diffcard_' + (c.id || 'x'); }
+  function _dLoad(c) { try { return JSON.parse(localStorage.getItem(_dKey(c)) || '{}') || {}; } catch(e) { return {}; } }
+  function _dSave(c, o) { try { localStorage.setItem(_dKey(c), JSON.stringify(o)); } catch(e) {} }
+  function _dS(h, id) { return (h && h.states && h.states[id] && h.states[id].state) || null; }
+  function _dIsOn(h, id) { return !!(h && h.states && h.states[id] && h.states[id].state === 'on'); }
+
+  function _dPkgDef() {
+    return {
+      pk_lunedi:    'input_text.rifiuto_lunedi',
+      pk_martedi:   'input_text.rifiuto_martedi',
+      pk_mercoledi: 'input_text.rifiuto_mercoledi',
+      pk_giovedi:   'input_text.rifiuto_giovedi',
+      pk_venerdi:   'input_text.rifiuto_venerdi',
+      pk_sabato:    'input_text.rifiuto_sabato',
+      pk_domenica:  'input_text.rifiuto_domenica',
+      pk_orario:    'input_datetime.orario_notifica_differenziata',
+      pk_npush:     'input_boolean.notify_push_raccolta_differenziata',
+      pk_ngoogle:   'input_boolean.notify_google_raccolta_differenziata',
+      pk_nalexa:    'input_boolean.notify_alexa_raccolta_differenziata',
+    };
+  }
+
+  function _dCfgFor(card) {
+    var st = _dLoad(card), pk = _dPkgDef(), r = {};
+    Object.keys(pk).forEach(function(k) { r[k] = (st[k] !== undefined && st[k] !== '') ? st[k] : pk[k]; });
+    r.name = st.name || 'Raccolta Differenziata';
+    return r;
+  }
+
+  var _dWASTE = {
+    organico:        {col:'#b45309', rgb:'180,83,9',   abbr:'ORG', label:'Organico',        icon:'🍃'},
+    umido:           {col:'#b45309', rgb:'180,83,9',   abbr:'UMI', label:'Umido',           icon:'🍃'},
+    carta:           {col:'#2563eb', rgb:'37,99,235',  abbr:'CAR', label:'Carta/Cartone',   icon:'📄'},
+    cartone:         {col:'#2563eb', rgb:'37,99,235',  abbr:'CAR', label:'Carta/Cartone',   icon:'📄'},
+    plastica:        {col:'#ca8a04', rgb:'202,138,4',  abbr:'PLA', label:'Plastica',        icon:'♻️'},
+    lattine:         {col:'#ca8a04', rgb:'202,138,4',  abbr:'LAT', label:'Lattine',         icon:'🥫'},
+    multimateriale:  {col:'#ca8a04', rgb:'202,138,4',  abbr:'MLT', label:'Multimateriale',  icon:'♻️'},
+    vetro:           {col:'#15803d', rgb:'21,128,61',  abbr:'VET', label:'Vetro',           icon:'🍾'},
+    indifferenziato: {col:'#4b5563', rgb:'75,85,99',   abbr:'IND', label:'Indifferenziato', icon:'🗑️'},
+    secco:           {col:'#4b5563', rgb:'75,85,99',   abbr:'SEC', label:'Secco',           icon:'🗑️'},
+    ingombranti:     {col:'#7c3aed', rgb:'124,58,237', abbr:'ING', label:'Ingombranti',     icon:'📦'},
+    nessuno:         {col:'#1e293b', rgb:'30,41,59',   abbr:'—',   label:'Nessun ritiro',   icon:''},
+  };
+
+  function _dWasteInfo(raw) {
+    if (!raw || !raw.trim()) return _dWASTE.nessuno;
+    var key = raw.trim().toLowerCase().replace(/[^a-z]/g, '');
+    return _dWASTE[key] || {col:'#475569', rgb:'71,85,105', abbr:raw.slice(0,3).toUpperCase(), label:raw, icon:'♻️'};
+  }
+
+  function _dBinSVG(col, colRgb, abbr, size) {
+    size = size || 64;
+    var scale = size / 64;
+    var glow = 'drop-shadow(0 0 10px rgba(' + colRgb + ',.35))';
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 108" style="display:block;width:' + size + 'px;height:auto;filter:' + glow + '">'
+      + '<defs><linearGradient id="dBg' + abbr + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="' + col + '" stop-opacity=".9"/><stop offset="100%" stop-color="' + col + '" stop-opacity=".4"/></linearGradient></defs>'
+      + '<rect x="5" y="8" width="54" height="12" rx="4" fill="url(#dBg' + abbr + ')"/>'
+      + '<rect x="22" y="3" width="20" height="8" rx="3" fill="' + col + '" opacity=".85"/>'
+      + '<rect x="28" y="1" width="8" height="6" rx="2" fill="#060e1c" stroke="' + col + '" stroke-width=".6"/>'
+      + '<path d="M 8 20 L 12 92 H 52 L 56 20 Z" fill="#0b1929" stroke="' + col + '" stroke-width="1"/>'
+      + '<path d="M 12 22 L 15 86" stroke="rgba(255,255,255,.05)" stroke-width="8" stroke-linecap="round" fill="none"/>'
+      + '<rect x="18" y="32" width="28" height="44" rx="6" fill="rgba(' + colRgb + ',.12)" stroke="rgba(' + colRgb + ',.3)" stroke-width=".7"/>'
+      + '<text x="32" y="58" text-anchor="middle" font-size="16" font-weight="900" font-family="system-ui,sans-serif" fill="' + col + '" opacity=".9">' + abbr + '</text>'
+      + '<circle cx="16" cy="96" r="7" fill="#060e1c" stroke="#1e3a5f" stroke-width=".7"/>'
+      + '<circle cx="16" cy="96" r="3" fill="#0c1929" stroke="#1e3a5f" stroke-width=".4"/>'
+      + '<circle cx="48" cy="96" r="7" fill="#060e1c" stroke="#1e3a5f" stroke-width=".7"/>'
+      + '<circle cx="48" cy="96" r="3" fill="#0c1929" stroke="#1e3a5f" stroke-width=".4"/>'
+      + '<rect x="13" y="88" width="38" height="5" rx="2.5" fill="#090f1e" stroke="#1e3a5f" stroke-width=".4"/>'
+      + '</svg>';
+  }
+
+  function _dRender(card) {
+    var h = _dH(), c = _dCfgFor(card);
+    var rid = 'frdiff' + (card.id || 'diff');
+    var days = ['pk_lunedi','pk_martedi','pk_mercoledi','pk_giovedi','pk_venerdi','pk_sabato','pk_domenica'];
+    var dayNames = ['LU','MA','ME','GI','VE','SA','DO'];
+    var todayIdx = (new Date().getDay() + 6) % 7;
+    var tmrIdx = (todayIdx + 1) % 7;
+    var todayRaw = _dS(h, c[days[todayIdx]]) || '';
+    var tmrRaw = _dS(h, c[days[tmrIdx]]) || '';
+    var todayW = _dWasteInfo(todayRaw), tmrW = _dWasteInfo(tmrRaw);
+    var hasPickup = todayW !== _dWASTE.nessuno && todayRaw.trim();
+    var orario = _dS(h, c.pk_orario) || '--:--';
+    var orarioStr = orario.length >= 5 ? orario.slice(0,5) : orario;
+    var col = hasPickup ? todayW.col : '#1e293b';
+    var colRgb = hasPickup ? todayW.rgb : '30,41,59';
+    var statusLabel = hasPickup ? 'RITIRO OGGI' : 'NESSUN RITIRO';
+
+    var weekChips = dayNames.map(function(dn, i) {
+      var raw = _dS(h, c[days[i]]) || '';
+      var w = _dWasteInfo(raw);
+      var isToday = i === todayIdx;
+      var hasPk = !!raw.trim() && w !== _dWASTE.nessuno;
+      return '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1">'
+        + '<div style="font-size:8px;font-weight:800;color:' + (isToday ? '#fff' : 'rgba(255,255,255,.4)') + ';text-transform:uppercase">' + dn + '</div>'
+        + '<div style="width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;'
+        + 'background:rgba(' + (hasPk ? w.rgb : '100,116,139') + ',.15);'
+        + 'border:1px solid rgba(' + (hasPk ? w.rgb : '100,116,139') + ',' + (isToday ? '.6' : '.25') + ');'
+        + 'color:' + (hasPk ? w.col : '#4b5563') + ';'
+        + (isToday ? 'box-shadow:0 0 8px rgba(' + (hasPk ? w.rgb : '100,116,139') + ',.3);' : '')
+        + '">' + (hasPk ? w.abbr : '—') + '</div>'
+        + '</div>';
+    }).join('');
+
+    var css = '<style>'
+      + '#' + rid + '{position:relative;width:100%;height:100%;min-height:280px;font-family:system-ui,sans-serif;display:block}'
+      + '#' + rid + ' .fc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#08101a 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
+      + '#' + rid + ' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(' + colRgb + ',.08) 0%,transparent 65%);pointer-events:none}'
+      + '#' + rid + ' .fc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
+      + '#' + rid + ' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;background:rgba(' + colRgb + ',.1);border:1px solid rgba(' + colRgb + ',.2)}'
+      + '#' + rid + ' .fc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+      + '#' + rid + ' .fc-hdr-pill{font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;white-space:nowrap;display:flex;align-items:center;gap:4px;background:rgba(' + colRgb + ',.1);border:1px solid rgba(' + colRgb + ',.28);color:' + col + '}'
+      + '#' + rid + ' .fc-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:' + col + (hasPickup?';animation:dPulse 2s ease-in-out infinite':'') + '}'
+      + '#' + rid + ' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
+      + '#' + rid + ' .fc-scroll::-webkit-scrollbar{display:none}'
+      + '#' + rid + ' .fc-hero{display:flex;align-items:center;padding:14px 14px 10px;gap:14px;flex:1}'
+      + '#' + rid + ' .fc-hero-bin{flex-shrink:0;display:flex;align-items:center;justify-content:center}'
+      + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:8px;min-width:0}'
+      + '#' + rid + ' .fc-waste-main{font-size:18px;font-weight:900;line-height:1.1;word-break:break-word}'
+      + '#' + rid + ' .fc-waste-sub{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px}'
+      + '#' + rid + ' .fc-tmr-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid rgba(255,255,255,.06)}'
+      + '#' + rid + ' .fc-tmr-lbl{font-size:10px;font-weight:700;color:rgba(255,255,255,.4);white-space:nowrap}'
+      + '#' + rid + ' .fc-week{display:flex;padding:0 10px 12px;gap:3px;border-top:1px solid rgba(255,255,255,.06);padding-top:10px}'
+      + '#' + rid + ' .fc-btns{display:flex;gap:6px;padding:0 14px 12px}'
+      + '#' + rid + ' .fc-btn{flex:1;padding:8px 4px;border-radius:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:10px;font-weight:700;color:#fff;text-align:center;cursor:pointer;transition:all .15s}'
+      + '#' + rid + ' .fc-btn:hover{background:rgba(' + colRgb + ',.12);border-color:rgba(' + colRgb + ',.3);color:' + col + '}'
+      + (hasPickup ? '@keyframes dPulse{0%,100%{opacity:.6}50%{opacity:1}}' : '')
+      + '</style>';
+
+    var heroHtml = '<div class="fc-hero">'
+      + '<div class="fc-hero-bin">' + _dBinSVG(col, colRgb, hasPickup ? todayW.abbr : '—', 64) + '</div>'
+      + '<div class="fc-hero-r">'
+      + '<div class="fc-waste-main" style="color:' + (hasPickup ? col : 'rgba(255,255,255,.3)') + '">' + (hasPickup ? todayW.label : 'Nessun ritiro') + '</div>'
+      + '<div class="fc-waste-sub">' + (hasPickup ? '🗓 Esponi il bidone oggi' : '✓ Giornata libera') + '</div>'
+      + '<div class="fc-tmr-row">'
+      + '<span class="fc-tmr-lbl">Domani:</span>'
+      + '<span style="font-size:11px;font-weight:700;color:' + (tmrRaw.trim() ? tmrW.col : 'rgba(255,255,255,.3)') + '">' + (tmrRaw.trim() ? tmrW.label : 'Nessun ritiro') + '</span>'
+      + '</div>'
+      + '<div class="fc-tmr-row">'
+      + '<span class="fc-tmr-lbl">Notifica:</span>'
+      + '<span style="font-size:11px;font-weight:700;color:#fff">' + orarioStr + '</span>'
+      + '</div>'
+      + '</div></div>';
+
+    var weekHtml = '<div class="fc-week">' + weekChips + '</div>';
+
+    var btnsHtml = '<div class="fc-btns">'
+      + '<div class="fc-btn" data-sya="popup-edit">✏ Modifica giorni</div>'
+      + '<div class="fc-btn" data-sya="popup-cfg">⚙ Impostazioni</div>'
+      + '</div>';
+
+    return css
+      + '<div id="' + rid + '"><div class="fc-card">'
+      + '<div class="fc-hdr">'
+      + '<div class="fc-hdr-iw">♻️</div>'
+      + '<div class="fc-hdr-tit">' + (c.name || 'Raccolta Differenziata') + '</div>'
+      + '<div class="fc-hdr-pill"><div class="fc-dot"></div>' + statusLabel + '</div>'
+      + '</div>'
+      + '<div class="fc-scroll">' + heroHtml + weekHtml + btnsHtml + '</div>'
+      + '</div></div>';
+  }
+
+  function _dMkOv(html, closeId) {
+    var ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:flex-end;background:rgba(0,0,0,.6);backdrop-filter:blur(4px)';
+    ov.innerHTML = html;
+    document.body.appendChild(ov);
+    var close = function() { try { document.body.removeChild(ov); } catch(e) {} };
+    var btn = ov.querySelector('#' + closeId); if (btn) btn.addEventListener('click', close);
+    ov.addEventListener('click', function(e) { if (e.target === ov) close(); });
+    ov._close = close;
+    return ov;
+  }
+
+  function _dPopShell(icon, rgb, title, sub, closeId, content) {
+    return '<style>@keyframes dUP{from{transform:translateY(100%)}to{transform:translateY(0)}}.dpc{overflow-y:auto;scrollbar-width:none}.dpc::-webkit-scrollbar{display:none}</style>'
+      + '<div style="width:100%;max-height:78vh;display:flex;flex-direction:column;background:#060d14;border:1px solid rgba(' + rgb + ',.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:dUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
+      + '<div style="display:flex;align-items:center;gap:10px;padding:13px 15px 11px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
+      + '<div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(' + rgb + ',.15);border:1px solid rgba(' + rgb + ',.3)">' + icon + '</div>'
+      + '<div><div style="font-size:14px;font-weight:800;color:#fff">' + title + '</div><div style="font-size:11px;color:#fff;margin-top:1px">' + sub + '</div></div>'
+      + '<button id="' + closeId + '" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none">✕</button>'
+      + '</div>'
+      + '<div class="dpc" style="flex:1;overflow-y:auto;padding:13px 15px;display:flex;flex-direction:column;gap:0">' + content + '</div>'
+      + '</div>';
+  }
+
+  function _dOpenEdit(card, el) {
+    var h = _dH(), c = _dCfgFor(card);
+    var days = ['pk_lunedi','pk_martedi','pk_mercoledi','pk_giovedi','pk_venerdi','pk_sabato','pk_domenica'];
+    var dayLabels = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato','Domenica'];
+    var suggestions = ['Organico','Carta','Cartone','Plastica','Vetro','Indifferenziato','Multimateriale','Ingombranti'];
+    function fld(key, label) {
+      var val = (_dS(h, c[key]) || '').replace(/"/g,'&quot;');
+      var opts = suggestions.map(function(s) { return '<option value="' + s + '">' + s + '</option>'; }).join('');
+      return '<div style="margin-bottom:8px;display:flex;align-items:center;gap:8px">'
+        + '<div style="font-size:10px;font-weight:800;color:#94a3b8;width:80px;flex-shrink:0">' + label + '</div>'
+        + '<input id="df-' + key + '" type="text" list="df-datalist" placeholder="es. Organico" value="' + val + '" style="flex:1;padding:7px 9px;border-radius:8px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:12px;box-sizing:border-box;outline:none">'
+        + '</div>';
+    }
+    var content = '<datalist id="df-datalist">' + suggestions.map(function(s){return '<option value="'+s+'">';}).join('') + '</datalist>'
+      + days.map(function(k,i) { return fld(k, dayLabels[i]); }).join('')
+      + '<button id="d-edit-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#22c55e;color:#022c1b;margin-top:8px">💾 Salva programmazione</button>';
+    var ov = _dMkOv(_dPopShell('📅','34,197,94','Programmazione settimanale','Modifica i rifiuti per ogni giorno','d-edit-cl',content),'d-edit-cl');
+    ov.querySelector('#d-edit-save').addEventListener('click', function() {
+      var h2 = _dH();
+      days.forEach(function(k) {
+        var inp = ov.querySelector('#df-'+k);
+        if (!inp) return;
+        var val = inp.value.trim();
+        var eid = c[k];
+        if (eid && h2 && h2.callService) h2.callService('input_text','set_value',{entity_id:eid,value:val});
+      });
+      ov._close();
+      if (el) el._fcSig = null;
+    });
+  }
+
+  function _dOpenCfg(card, el) {
+    var c = _dCfgFor(card);
+    function fld(key, label, ph) {
+      return '<div style="margin-bottom:10px">'
+        + '<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px">' + label + '</div>'
+        + '<input id="dcf-' + key + '" type="text" autocomplete="off" placeholder="' + ph + '" value="' + (c[key]||'').replace(/"/g,'&quot;') + '" style="width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:11px;font-family:monospace;box-sizing:border-box;outline:none">'
+        + '</div>';
+    }
+    function sec(t) { return '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#22c55e;padding-bottom:4px;border-bottom:1px solid rgba(34,197,94,.18);margin:14px 0 10px">' + t + '</div>'; }
+    var days = ['pk_lunedi','pk_martedi','pk_mercoledi','pk_giovedi','pk_venerdi','pk_sabato','pk_domenica'];
+    var dayLabels = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato','Domenica'];
+    var content = '<div style="margin-bottom:10px"><div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px">Nome card</div>'
+      + '<input id="dcf-name" type="text" placeholder="Raccolta Differenziata" value="' + (c.name||'').replace(/"/g,'&quot;') + '" style="width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:11px;box-sizing:border-box;outline:none"></div>'
+      + sec('Entità giorni')
+      + days.map(function(k,i){ return fld(k, dayLabels[i], 'input_text.rifiuto_'+dayLabels[i].toLowerCase().replace('à','a').replace('ì','i').replace('ù','u')); }).join('')
+      + sec('Notifiche')
+      + fld('pk_orario','Orario notifica','input_datetime.orario_notifica_differenziata')
+      + fld('pk_npush','Boolean push','input_boolean.notify_push_raccolta_differenziata')
+      + fld('pk_ngoogle','Boolean Google','input_boolean.notify_google_raccolta_differenziata')
+      + fld('pk_nalexa','Boolean Alexa','input_boolean.notify_alexa_raccolta_differenziata')
+      + '<button id="d-cfg-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#22c55e;color:#022c1b;margin-top:8px">💾 Salva</button>';
+    var ov = _dMkOv(_dPopShell('⚙','34,197,94','Impostazioni',c.name||'Raccolta Differenziata','d-cfg-cl',content),'d-cfg-cl');
+    ov.querySelector('#d-cfg-save').addEventListener('click', function() {
+      var pk = _dPkgDef(), saved = {};
+      Object.keys(pk).forEach(function(k) { var i = ov.querySelector('#dcf-'+k); if (i) saved[k] = i.value.trim(); });
+      var ni = ov.querySelector('#dcf-name'); if (ni) saved.name = ni.value.trim();
+      _dSave(card, saved);
+      ov._close();
+      if (el) el._fcSig = null;
+    });
+  }
+
+  function _dMount(card, hass, el) {
+    if (el._fcBound === '2.0diff') return;
+    el._fcBound = '2.0diff';
+    if (el._fcHandler) el.removeEventListener('click', el._fcHandler);
+    el._fcHandler = function(e) {
+      var t = e.target.closest('[data-sya]'); if (!t) return;
+      var a = t.dataset.sya;
+      if (a === 'popup-edit') _dOpenEdit(card, el);
+      if (a === 'popup-cfg')  _dOpenCfg(card, el);
+    };
+    el.addEventListener('click', el._fcHandler);
+  }
+
+  function _dUpdate(card, hass, el) {
+    var h = _dH(), c = _dCfgFor(card);
+    var days = ['pk_lunedi','pk_martedi','pk_mercoledi','pk_giovedi','pk_venerdi','pk_sabato','pk_domenica'];
+    var sig = ['2.0diff'].concat(days.map(function(k){return _dS(h,c[k])||'';})).join('|');
+    if (!el.querySelector('.fc-card') || el._fcSig !== sig) { el._fcSig = sig; el.innerHTML = _dRender(card); }
+    _dMount(card, hass, el);
+  }
+
   var _DIFF_CARD = {
-    id: 'differenziata', name: 'Raccolta Differenziata', icon: '♻️', version: '1.0',
+    id: 'differenziata', name: 'Raccolta Differenziata', icon: '♻️', version: '2.0',
     desc: 'Calendario raccolta differenziata settimanale con notifiche push, Google e Alexa.',
-    render:  function(card) { return '<differenziata-card></differenziata-card>'; },
-    mount:   function(card, hass, el) {},
-    update:  function(card, hass, el) {
-      var c = el.querySelector('differenziata-card');
-      if (!c) { el.innerHTML = '<differenziata-card></differenziata-card>'; c = el.querySelector('differenziata-card'); }
-      if (c && hass) c.hass = hass;
-    },
+    render:    function(card) { return _dRender(card); },
+    mount:     function(card, hass, el) { _dMount(card, hass, el); },
+    update:    function(card, hass, el) { _dUpdate(card, hass, el); },
+    configure: function(card, el) { _dOpenCfg(card, el); },
     frarik_pkg_check:   'sensor.raccolta_differenziata',
     frarik_pkg_id:      'frarik_differenziata',
     frarik_pkg_version: '1.0',

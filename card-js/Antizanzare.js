@@ -1089,16 +1089,295 @@ window.customCards.push({ version: '1.5',
     renderWiz();
   }
 
+  // ── Store helpers ────────────────────────────────────────────────────
+  function _azH() { try { return (typeof window.frarikHass === 'function' && window.frarikHass()) || {}; } catch(e) { return {}; } }
+  function _azKey(c) { return 'frarik_azcard_' + (c.id || 'x'); }
+  function _azLoad(c) { try { return JSON.parse(localStorage.getItem(_azKey(c)) || '{}') || {}; } catch(e) { return {}; } }
+  function _azSave(c, o) { try { localStorage.setItem(_azKey(c), JSON.stringify(o)); } catch(e) {} }
+  function _azS(h, id) { return (h && h.states && h.states[id] && h.states[id].state) || null; }
+  function _azAttr(h, id, a) { var s = h && h.states && h.states[id]; return (s && s.attributes && s.attributes[a] != null) ? s.attributes[a] : null; }
+  function _azNum(v) { var x = parseFloat(String(v != null ? v : '').replace(',','.')); return isNaN(x) ? null : x; }
+  function _azIsOn(h, id) { return !!(h && h.states && h.states[id] && h.states[id].state === 'on'); }
+
+  function _azFmtTimer(h, tid) {
+    if (_azS(h, tid) !== 'active') return {rem:'--:--', pct:0, active:false};
+    var fa = _azAttr(h, tid, 'finishes_at'), dur = _azAttr(h, tid, 'duration');
+    var remSec = fa ? Math.max(0, Math.floor((new Date(fa).getTime() - Date.now()) / 1000)) : 0;
+    var durSec = 0;
+    if (dur) { var p = String(dur).split(':').map(Number); durSec = (p[0]||0)*3600+(p[1]||0)*60+(p[2]||0); }
+    var pct = durSec > 0 ? Math.max(0, Math.min(100, (remSec / durSec) * 100)) : 0;
+    return {rem:('0'+Math.floor(remSec/60)).slice(-2)+':'+('0'+(remSec%60)).slice(-2), pct:pct, active:true};
+  }
+
+  function _azPkgDef() {
+    return {
+      pk_stato:         'sensor.stato_anti_zanzare',
+      pk_auto:          'input_boolean.anti_zanzare_automazione_attiva',
+      pk_manuale:       'input_boolean.anti_zanzare_manuale_attiva',
+      pk_timer_ciclo:   'timer.anti_zanzare_ciclo_timer',
+      pk_timer_manuale: 'timer.anti_zanzare_manuale_timer',
+      pk_cicli_mensili: 'counter.anti_zanzare_cicli_mensili',
+      pk_cicli_target:  'input_number.anti_zanzare_cicli_target_mensili',
+      pk_pioggia:       'sensor.probabilita_pioggia',
+      pk_blocco_meteo:  'binary_sensor.blocco_meteo_attivo',
+      pk_btn_auto_on:   'input_button.anti_zanzare_start_automazione',
+      pk_btn_auto_off:  'input_button.anti_zanzare_stop_automazione',
+      pk_btn_man_on:    'input_button.anti_zanzare_start_manuale',
+      pk_btn_man_off:   'input_button.anti_zanzare_stop_manuale',
+    };
+  }
+
+  function _azCfgFor(card) {
+    var st = _azLoad(card), pk = _azPkgDef(), r = {};
+    Object.keys(pk).forEach(function(k) { r[k] = (st[k] !== undefined && st[k] !== '') ? st[k] : pk[k]; });
+    r.name = st.name || 'Anti Zanzare';
+    return r;
+  }
+
+  function _azDevSVG(stato, col, colRgb, timerRem) {
+    var active = stato === 'Ciclo in Corso' || stato === 'Manuale Attiva';
+    var glow = active ? 'drop-shadow(0 0 10px rgba(' + colRgb + ',.3))' : 'drop-shadow(0 0 6px rgba(' + colRgb + ',.12))';
+    var kf = active ? '@keyframes azBled{0%,100%{opacity:.5}50%{opacity:1}}@keyframes azHeat{0%,100%{opacity:.06}50%{opacity:.22}}' : '';
+    var remTxt = active ? (timerRem || 'ATTIVO') : 'STAND';
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 108" style="display:block;width:100%;height:100%;filter:' + glow + '">'
+      + (kf ? '<defs><style>' + kf + '</style></defs>' : '')
+      + '<rect x="8" y="96" width="48" height="7" rx="3.5" fill="#090f1e" stroke="' + col + '" stroke-width=".5" opacity=".5"/>'
+      + '<rect x="14" y="24" width="34" height="72" rx="16" fill="#0b1929" stroke="' + col + '" stroke-width=".85"/>'
+      + '<rect x="16" y="30" width="6" height="60" rx="3" fill="rgba(255,255,255,.04)"/>'
+      + (active ? '<rect x="16" y="54" width="30" height="42" rx="4" fill="rgba(' + colRgb + ',.08)" style="animation:azHeat 2.4s ease-in-out infinite"/>' : '')
+      + '<ellipse cx="31" cy="32" rx="15.5" ry="5" fill="#0d2040" stroke="rgba(' + colRgb + ',.12)" stroke-width=".5"/>'
+      + '<ellipse cx="31" cy="88" rx="15.5" ry="4.5" fill="#090f1e" stroke="rgba(' + colRgb + ',.08)" stroke-width=".5"/>'
+      + '<text x="31" y="46" text-anchor="middle" font-size="5.5" fill="rgba(255,255,255,.07)" font-family="system-ui,sans-serif" font-weight="800">4L</text>'
+      + '<rect x="18" y="50" width="26" height="30" rx="4" fill="#060e1c" stroke="rgba(' + colRgb + ',.2)" stroke-width=".6"/>'
+      + '<circle cx="31" cy="58" r="7.5" fill="#091526" stroke="' + col + '" stroke-width=".85"/>'
+      + '<circle cx="31" cy="58" r="4.5" fill="#040a12"/>'
+      + '<circle cx="31" cy="58" r="2.8" fill="' + col + '" opacity="' + (active ? '.9' : '.35') + '"' + (active ? ' style="animation:azBled 1.4s ease-in-out infinite"' : '') + '/>'
+      + '<rect x="19.5" y="68.5" width="23" height="6.5" rx="1.8" fill="#02060e" stroke="rgba(' + colRgb + ',.3)" stroke-width=".5"/>'
+      + '<text x="31" y="73.5" text-anchor="middle" font-size="4" font-weight="bold" font-family="monospace,system-ui" fill="' + col + '">' + remTxt + '</text>'
+      + '<circle cx="31" cy="82" r="3" fill="#060e1c" stroke="rgba(' + colRgb + ',.15)" stroke-width=".6"/>'
+      + '<circle cx="31" cy="82" r="1" fill="' + col + '" opacity=".4"/>'
+      + '<rect x="43" y="22" width="5" height="10" rx="2.5" fill="#0b1929" stroke="#1e3a5f" stroke-width=".55"/>'
+      + '<rect x="43" y="16" width="16" height="5.5" rx="2.75" fill="#0b1929" stroke="#1e3a5f" stroke-width=".55"/>'
+      + '<ellipse cx="57" cy="18.75" rx="3" ry="6" fill="#0a1525" stroke="rgba(' + colRgb + ',.3)" stroke-width=".6"/>'
+      + '<line x1="45" y1="22" x2="45" y2="27" stroke="#1e3a5f" stroke-width="2" stroke-linecap="round"/>'
+      + (active ? (
+          '<g opacity=".8">'
+        + '<line x1="59" y1="9" x2="63" y2="5" stroke="' + col + '" stroke-width="1.5" stroke-linecap="round"><animate attributeName="opacity" values="1;.2;1" dur="0.9s" repeatCount="indefinite"/></line>'
+        + '<line x1="60" y1="17" x2="64" y2="15" stroke="' + col + '" stroke-width="1.2" stroke-linecap="round"><animate attributeName="opacity" values="1;.2;1" dur="1.1s" begin=".3s" repeatCount="indefinite"/></line>'
+        + '<line x1="59" y1="25" x2="63" y2="28" stroke="' + col + '" stroke-width="1" stroke-linecap="round"><animate attributeName="opacity" values="1;.2;1" dur="0.8s" begin=".6s" repeatCount="indefinite"/></line>'
+        + '<circle cx="62" cy="13" r="1.5" fill="' + col + '"><animate attributeName="r" values="1.5;3;1.5" dur="1.2s" begin=".15s" repeatCount="indefinite"/><animate attributeName="opacity" values=".8;0;.8" dur="1.2s" begin=".15s" repeatCount="indefinite"/></circle>'
+        + '</g>'
+      ) : '')
+      + '</svg>';
+  }
+
+  function _azRender(card) {
+    var h = _azH(), c = _azCfgFor(card);
+    var rid = 'fraz' + (card.id || 'az');
+    var stato = _azS(h, c.pk_stato) || 'Spenta';
+    var autoOn = _azIsOn(h, c.pk_auto), manOn = _azIsOn(h, c.pk_manuale);
+    var blocco = _azIsOn(h, c.pk_blocco_meteo);
+    var timerC = _azFmtTimer(h, c.pk_timer_ciclo), timerM = _azFmtTimer(h, c.pk_timer_manuale);
+    var cicliM = _azNum(_azS(h, c.pk_cicli_mensili)) || 0;
+    var target = _azNum(_azS(h, c.pk_cicli_target)) || 100;
+    var pioggia = _azNum(_azS(h, c.pk_pioggia)) || 0;
+    var activeTimer = timerC.active ? timerC : timerM;
+    var timerActive = timerC.active || timerM.active;
+    var timerLabel = timerC.active ? 'CICLO' : 'MANUALE';
+    var col = '#64748b', colRgb = '100,116,139', statusLabel = 'SPENTA', statusText = 'Spenta';
+    if (blocco)                              { col = '#f59e0b'; colRgb = '245,158,11';  statusLabel = 'METEO';     statusText = 'Blocco meteo'; }
+    else if (stato === 'Manuale Attiva')     { col = '#f97316'; colRgb = '249,115,22';  statusLabel = 'MANUALE';   statusText = 'Manuale attiva'; }
+    else if (stato === 'Ciclo in Corso')     { col = '#22c55e'; colRgb = '34,197,94';   statusLabel = 'CICLO';     statusText = 'Ciclo in corso'; }
+    else if (stato === 'Automazione Attiva') { col = '#06b6d4'; colRgb = '6,182,212';   statusLabel = 'IN ATTESA'; statusText = 'Automazione attiva'; }
+    var cicliPct = Math.min(100, target > 0 ? (cicliM / target) * 100 : 0);
+    var css = '<style>'
+      + '#' + rid + '{position:relative;width:100%;height:100%;min-height:280px;font-family:system-ui,sans-serif;display:block}'
+      + '#' + rid + ' .fc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#08101a 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
+      + '#' + rid + ' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(' + colRgb + ',.08) 0%,transparent 65%);pointer-events:none}'
+      + '#' + rid + ' .fc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
+      + '#' + rid + ' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;background:rgba(' + colRgb + ',.1);border:1px solid rgba(' + colRgb + ',.2)}'
+      + '#' + rid + ' .fc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+      + '#' + rid + ' .fc-hdr-pill{font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;white-space:nowrap;display:flex;align-items:center;gap:4px;background:rgba(' + colRgb + ',.1);border:1px solid rgba(' + colRgb + ',.28);color:' + col + '}'
+      + '#' + rid + ' .fc-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:' + col + (timerActive ? ';animation:azPulse 1.5s ease-in-out infinite' : '') + '}'
+      + '#' + rid + ' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
+      + '#' + rid + ' .fc-scroll::-webkit-scrollbar{display:none}'
+      + '#' + rid + ' .fc-hero{display:flex;align-items:stretch;padding:10px 14px 8px;flex:1}'
+      + '#' + rid + ' .fc-hero-img{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;max-height:130px}'
+      + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:6px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:10px;overflow:hidden}'
+      + '#' + rid + ' .fc-st{display:flex;align-items:center;justify-content:flex-end;gap:7px;font-size:14px;font-weight:800;color:' + col + ';padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06)}'
+      + '#' + rid + ' .fc-stdot{width:8px;height:8px;border-radius:50%;background:' + col + ';flex-shrink:0' + (timerActive ? ';animation:azPulse 1.5s ease-in-out infinite' : '') + '}'
+      + '#' + rid + ' .fc-met{display:flex;align-items:center;justify-content:space-between;gap:4px}'
+      + '#' + rid + ' .fc-met-lbl{font-size:11px;font-weight:700;color:#fff;flex-shrink:0}'
+      + '#' + rid + ' .fc-met-v{font-size:15px;font-weight:800;color:#fff;text-align:right}'
+      + '#' + rid + ' .fc-tmr{display:flex;flex-direction:column;align-items:flex-end;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06)}'
+      + '#' + rid + ' .fc-tmr-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:rgba(255,255,255,.4)}'
+      + '#' + rid + ' .fc-tmr-v{font-size:22px;font-weight:900;color:' + col + ';font-variant-numeric:tabular-nums;letter-spacing:-.02em}'
+      + '#' + rid + ' .fc-pwfull{margin:0 14px 10px}'
+      + '#' + rid + ' .fc-pwfull-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}'
+      + '#' + rid + ' .fc-pwfull-lbl{font-size:10px;font-weight:700;color:#fff}'
+      + '#' + rid + ' .fc-pwfull-v{font-size:18px;font-weight:900;color:' + col + ';line-height:1}'
+      + '#' + rid + ' .fc-pw-bar{height:5px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden}'
+      + '#' + rid + ' .fc-pw-fill{height:100%;border-radius:2px;transition:width .6s,background .4s}'
+      + '#' + rid + ' .fc-stats{display:flex;margin:0 14px 8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden}'
+      + '#' + rid + ' .fc-sb{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 3px;gap:2px}'
+      + '#' + rid + ' .fc-sb-sep{width:1px;background:rgba(255,255,255,.08);flex-shrink:0}'
+      + '#' + rid + ' .fc-sb-n{font-size:12px;font-weight:900;color:' + col + ';height:18px;display:flex;align-items:center;justify-content:center}'
+      + '#' + rid + ' .fc-sb-l{font-size:8px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.4px;text-align:center}'
+      + '#' + rid + ' .fc-btns{display:flex;gap:6px;padding:0 14px 12px}'
+      + '#' + rid + ' .fc-btn{flex:1;padding:8px 4px;border-radius:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:10px;font-weight:700;color:#fff;text-align:center;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:3px}'
+      + '#' + rid + ' .fc-btn:hover{background:rgba(' + colRgb + ',.12);border-color:rgba(' + colRgb + ',.3);color:' + col + '}'
+      + '#' + rid + ' .fc-btn-act{background:rgba(' + colRgb + ',.15);border-color:rgba(' + colRgb + ',.35);color:' + col + '}'
+      + (timerActive ? '@keyframes azPulse{0%,100%{opacity:.6}50%{opacity:1}}' : '')
+      + '</style>';
+
+    var heroHtml = '<div class="fc-hero">'
+      + '<div class="fc-hero-img">' + _azDevSVG(stato, col, colRgb, timerActive ? activeTimer.rem : null) + '</div>'
+      + '<div class="fc-hero-r">'
+      + (timerActive
+          ? '<div class="fc-tmr"><div class="fc-tmr-lbl">' + timerLabel + '</div><div class="fc-tmr-v">' + activeTimer.rem + '</div></div>'
+          : '<div class="fc-st">' + statusText + '<div class="fc-stdot"></div></div>')
+      + '<div class="fc-met"><span class="fc-met-lbl">Cicli mese</span><span class="fc-met-v">' + cicliM + ' / ' + target + '</span></div>'
+      + '<div class="fc-met"><span class="fc-met-lbl">Rimanenti</span><span class="fc-met-v">' + Math.max(0, target - cicliM) + '</span></div>'
+      + '<div class="fc-met"><span class="fc-met-lbl">Prob. pioggia</span><span class="fc-met-v" style="color:' + (pioggia > 50 ? '#f59e0b' : '#fff') + '">' + pioggia.toFixed(0) + ' %</span></div>'
+      + '</div></div>';
+
+    var barPct = timerActive ? activeTimer.pct : cicliPct;
+    var barLbl = timerActive ? (timerLabel + ' in corso') : 'Cicli questo mese';
+    var barVal = timerActive ? activeTimer.rem : (cicliM + ' / ' + target);
+    var pwBarHtml = '<div class="fc-pwfull">'
+      + '<div class="fc-pwfull-hd"><span class="fc-pwfull-lbl">' + barLbl + '</span><span class="fc-pwfull-v">' + barVal + '</span></div>'
+      + '<div class="fc-pw-bar"><div class="fc-pw-fill" style="width:' + barPct.toFixed(1) + '%;background:' + col + ';box-shadow:0 0 6px ' + col + '88"></div></div>'
+      + '</div>';
+
+    var statsHtml = '<div class="fc-stats">'
+      + '<div class="fc-sb"><div class="fc-sb-n">' + cicliM + '</div><div class="fc-sb-l">Cicli/mese</div></div>'
+      + '<div class="fc-sb-sep"></div>'
+      + '<div class="fc-sb"><div class="fc-sb-n">' + pioggia.toFixed(0) + '%</div><div class="fc-sb-l">Pioggia</div></div>'
+      + '<div class="fc-sb-sep"></div>'
+      + '<div class="fc-sb"><div class="fc-sb-n" style="color:' + (blocco?'#f59e0b':'#22c55e') + '">' + (blocco?'⛈':'✓') + '</div><div class="fc-sb-l">Meteo</div></div>'
+      + '<div class="fc-sb-sep"></div>'
+      + '<div class="fc-sb"><div class="fc-sb-n" style="color:' + (autoOn?col:'#64748b') + '">' + (autoOn?'ON':'OFF') + '</div><div class="fc-sb-l">Auto</div></div>'
+      + '</div>';
+
+    var btnsHtml = '<div class="fc-btns">'
+      + '<div class="fc-btn' + (manOn?' fc-btn-act':'') + '" data-sya="' + (manOn?'man-off':'man-on') + '">' + (manOn?'⏹ Ferma Man.':'▶ Manuale') + '</div>'
+      + '<div class="fc-btn' + (autoOn?' fc-btn-act':'') + '" data-sya="' + (autoOn?'auto-off':'auto-on') + '">' + (autoOn?'⏹ Stop Auto':'▶ Automazione') + '</div>'
+      + '</div>';
+
+    return css
+      + '<div id="' + rid + '"><div class="fc-card">'
+      + '<div class="fc-hdr">'
+      + '<div class="fc-hdr-iw">🦟</div>'
+      + '<div class="fc-hdr-tit">' + (c.name || 'Anti Zanzare') + '</div>'
+      + '<div class="fc-hdr-pill"><div class="fc-dot"></div>' + statusLabel + '</div>'
+      + '<div style="cursor:pointer;padding:4px 6px;border-radius:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:11px;color:#fff;margin-left:6px" data-sya="popup-cfg">⚙</div>'
+      + '</div>'
+      + '<div class="fc-scroll">' + heroHtml + pwBarHtml + statsHtml + btnsHtml + '</div>'
+      + '</div></div>';
+  }
+
+  function _azMkOv(html, closeId) {
+    var ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:flex-end;background:rgba(0,0,0,.6);backdrop-filter:blur(4px)';
+    ov.innerHTML = html;
+    document.body.appendChild(ov);
+    var close = function() { try { document.body.removeChild(ov); } catch(e) {} };
+    var btn = ov.querySelector('#' + closeId); if (btn) btn.addEventListener('click', close);
+    ov.addEventListener('click', function(e) { if (e.target === ov) close(); });
+    ov._close = close;
+    return ov;
+  }
+
+  function _azPopShell(icon, rgb, title, sub, closeId, content) {
+    return '<style>@keyframes azUP{from{transform:translateY(100%)}to{transform:translateY(0)}}.azpc{overflow-y:auto;scrollbar-width:none}.azpc::-webkit-scrollbar{display:none}</style>'
+      + '<div style="width:100%;max-height:78vh;display:flex;flex-direction:column;background:#060d14;border:1px solid rgba(' + rgb + ',.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:azUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
+      + '<div style="display:flex;align-items:center;gap:10px;padding:13px 15px 11px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
+      + '<div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(' + rgb + ',.15);border:1px solid rgba(' + rgb + ',.3)">' + icon + '</div>'
+      + '<div><div style="font-size:14px;font-weight:800;color:#fff">' + title + '</div><div style="font-size:11px;color:#fff;margin-top:1px">' + sub + '</div></div>'
+      + '<button id="' + closeId + '" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none">✕</button>'
+      + '</div>'
+      + '<div class="azpc" style="flex:1;overflow-y:auto;padding:13px 15px;display:flex;flex-direction:column;gap:0">' + content + '</div>'
+      + '</div>';
+  }
+
+  function _azOpenCfg(card, el) {
+    var c = _azCfgFor(card);
+    function fld(key, label, ph) {
+      return '<div style="margin-bottom:10px">'
+        + '<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px">' + label + '</div>'
+        + '<input id="azf-' + key + '" type="text" autocomplete="off" placeholder="' + ph + '" value="' + (c[key]||'').replace(/"/g,'&quot;') + '" style="width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:11px;font-family:monospace;box-sizing:border-box;outline:none">'
+        + '</div>';
+    }
+    function sec(t) { return '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#22c55e;padding-bottom:4px;border-bottom:1px solid rgba(34,197,94,.18);margin:14px 0 10px">' + t + '</div>'; }
+    var content = '<div style="margin-bottom:10px"><div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px">Nome card</div>'
+      + '<input id="azf-name" type="text" placeholder="Anti Zanzare" value="' + (c.name||'').replace(/"/g,'&quot;') + '" style="width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:11px;box-sizing:border-box;outline:none"></div>'
+      + sec('Sensori di stato')
+      + fld('pk_stato','Sensore stato','sensor.stato_anti_zanzare')
+      + fld('pk_pioggia','Probabilità pioggia','sensor.probabilita_pioggia')
+      + fld('pk_blocco_meteo','Binary blocco meteo','binary_sensor.blocco_meteo_attivo')
+      + fld('pk_cicli_mensili','Cicli mensili','counter.anti_zanzare_cicli_mensili')
+      + fld('pk_cicli_target','Target mensile','input_number.anti_zanzare_cicli_target_mensili')
+      + sec('Controllo')
+      + fld('pk_auto','Automazione boolean','input_boolean.anti_zanzare_automazione_attiva')
+      + fld('pk_manuale','Manuale boolean','input_boolean.anti_zanzare_manuale_attiva')
+      + fld('pk_timer_ciclo','Timer ciclo','timer.anti_zanzare_ciclo_timer')
+      + fld('pk_timer_manuale','Timer manuale','timer.anti_zanzare_manuale_timer')
+      + sec('Pulsanti azione')
+      + fld('pk_btn_auto_on','Avvia automazione','input_button.anti_zanzare_start_automazione')
+      + fld('pk_btn_auto_off','Ferma automazione','input_button.anti_zanzare_stop_automazione')
+      + fld('pk_btn_man_on','Avvia manuale','input_button.anti_zanzare_start_manuale')
+      + fld('pk_btn_man_off','Ferma manuale','input_button.anti_zanzare_stop_manuale')
+      + '<button id="az-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#22c55e;color:#022c1b;margin-top:8px">💾 Salva</button>';
+    var ov = _azMkOv(_azPopShell('🦟','34,197,94','Impostazioni',c.name||'Anti Zanzare','az-cfg-cl',content),'az-cfg-cl');
+    ov.querySelector('#az-save').addEventListener('click', function() {
+      var pk = _azPkgDef(), saved = {};
+      Object.keys(pk).forEach(function(k) { var i = ov.querySelector('#azf-'+k); if (i) saved[k] = i.value.trim(); });
+      var ni = ov.querySelector('#azf-name'); if (ni) saved.name = ni.value.trim();
+      _azSave(card, saved);
+      ov._close();
+      if (el) el._fcSig = null;
+    });
+  }
+
+  function _azCallSvc(domain, svc, data) {
+    try { var h = _azH(); if (h && h.callService) { h.callService(domain, svc, data); return; } if (window.callSvc) window.callSvc(domain, svc, data); } catch(e) {}
+  }
+
+  function _azMount(card, hass, el) {
+    if (el._fcBound === '2.0az') return;
+    el._fcBound = '2.0az';
+    if (el._fcHandler) el.removeEventListener('click', el._fcHandler);
+    el._fcHandler = function(e) {
+      var t = e.target.closest('[data-sya]'); if (!t) return;
+      var a = t.dataset.sya, c = _azCfgFor(card);
+      if (a === 'man-on')    _azCallSvc('input_button','press',{entity_id:c.pk_btn_man_on});
+      if (a === 'man-off')   _azCallSvc('input_button','press',{entity_id:c.pk_btn_man_off});
+      if (a === 'auto-on')   _azCallSvc('input_button','press',{entity_id:c.pk_btn_auto_on});
+      if (a === 'auto-off')  _azCallSvc('input_button','press',{entity_id:c.pk_btn_auto_off});
+      if (a === 'popup-cfg') _azOpenCfg(card, el);
+    };
+    el.addEventListener('click', el._fcHandler);
+  }
+
+  function _azUpdate(card, hass, el) {
+    var h = _azH(), c = _azCfgFor(card);
+    var tc = _azS(h,c.pk_timer_ciclo), tm = _azS(h,c.pk_timer_manuale);
+    var sig = ['2.0az',_azS(h,c.pk_stato),_azS(h,c.pk_auto),_azS(h,c.pk_manuale),tc,tm,_azS(h,c.pk_cicli_mensili),_azS(h,c.pk_blocco_meteo),_azS(h,c.pk_pioggia)].join('|');
+    if (tc === 'active' || tm === 'active') {
+      clearTimeout(el._azTick);
+      el._azTick = setTimeout(function() { el._fcSig = null; }, 1000);
+    }
+    if (!el.querySelector('.fc-card') || el._fcSig !== sig) { el._fcSig = sig; el.innerHTML = _azRender(card); }
+    _azMount(card, hass, el);
+  }
+
   var _AZ_CARD = {
-    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '1.5',
+    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.0',
     desc: 'Controllo sistema anti zanzare: schedule settimanale, timer, statistiche mensili e blocco meteo.',
-    render:  function(card) { return '<antizanzare-card></antizanzare-card>'; },
-    mount:   function(card, hass, el) {},
-    update:  function(card, hass, el) {
-      var c = el.querySelector('antizanzare-card');
-      if (!c) { el.innerHTML = '<antizanzare-card></antizanzare-card>'; c = el.querySelector('antizanzare-card'); }
-      if (c && hass) c.hass = hass;
-    },
+    render:    function(card) { return _azRender(card); },
+    mount:     function(card, hass, el) { _azMount(card, hass, el); },
+    update:    function(card, hass, el) { _azUpdate(card, hass, el); },
+    configure: function(card, el) { _azOpenCfg(card, el); },
     frarik_pkg_check:   'sensor.stato_anti_zanzare',
     frarik_pkg_id:      'frarik_antizanzare',
     frarik_pkg_version: '1.0',

@@ -1241,16 +1241,308 @@ window.customCards.push({ version: '1.0',
     renderWiz();
   }
 
+  // ── Store helpers ────────────────────────────────────────────────────
+  function _iH() { try { return (typeof window.frarikHass === 'function' && window.frarikHass()) || {}; } catch(e) { return {}; } }
+  function _iKey(c) { return 'frarik_irrcard_' + (c.id || 'x'); }
+  function _iLoad(c) { try { return JSON.parse(localStorage.getItem(_iKey(c)) || '{}') || {}; } catch(e) { return {}; } }
+  function _iSave(c, o) { try { localStorage.setItem(_iKey(c), JSON.stringify(o)); } catch(e) {} }
+  function _iS(h, id) { return (h && h.states && h.states[id] && h.states[id].state) || null; }
+  function _iAttr(h, id, a) { var s = h && h.states && h.states[id]; return (s && s.attributes && s.attributes[a] != null) ? s.attributes[a] : null; }
+  function _iNum(v) { var x = parseFloat(String(v != null ? v : '').replace(',','.')); return isNaN(x) ? null : x; }
+  function _iIsOn(h, id) { return !!(h && h.states && h.states[id] && h.states[id].state === 'on'); }
+
+  function _iFmtTimer(h, tid) {
+    if (_iS(h, tid) !== 'active') return {rem:'--:--', pct:0, active:false};
+    var fa = _iAttr(h, tid, 'finishes_at'), dur = _iAttr(h, tid, 'duration');
+    var remSec = fa ? Math.max(0, Math.floor((new Date(fa).getTime() - Date.now()) / 1000)) : 0;
+    var durSec = 0;
+    if (dur) { var p = String(dur).split(':').map(Number); durSec = (p[0]||0)*3600+(p[1]||0)*60+(p[2]||0); }
+    var pct = durSec > 0 ? Math.max(0, Math.min(100, (remSec / durSec) * 100)) : 0;
+    return {rem:('0'+Math.floor(remSec/60)).slice(-2)+':'+('0'+(remSec%60)).slice(-2), pct:pct, active:true};
+  }
+
+  function _iPkgDef() {
+    return {
+      pk_stato:         'sensor.stato_irrigazione',
+      pk_auto:          'input_boolean.irrigazione_automazione_attiva',
+      pk_manuale:       'input_boolean.irrigazione_manuale_attiva',
+      pk_timer_ciclo:   'timer.irrigazione_ciclo_timer',
+      pk_timer_manuale: 'timer.irrigazione_manuale_timer',
+      pk_cicli_oggi:    'counter.irrigazione_cicli_giornalieri',
+      pk_acqua:         'sensor.consumo_acqua_irrigazione',
+      pk_pioggia:       'sensor.probabilita_pioggia',
+      pk_blocco_meteo:  'binary_sensor.blocco_meteo_irrigazione',
+      pk_rubinetto:     'switch.rubinetto_esterno_interruttore',
+      pk_btn_auto_on:   'input_button.irrigazione_start_automazione',
+      pk_btn_auto_off:  'input_button.irrigazione_stop_automazione',
+      pk_btn_man_on:    'input_button.irrigazione_start_manuale',
+      pk_btn_man_off:   'input_button.irrigazione_stop_manuale',
+    };
+  }
+
+  function _iCfgFor(card) {
+    var st = _iLoad(card), pk = _iPkgDef(), r = {};
+    Object.keys(pk).forEach(function(k) { r[k] = (st[k] !== undefined && st[k] !== '') ? st[k] : pk[k]; });
+    r.name = st.name || 'Irrigazione Smart';
+    return r;
+  }
+
+  function _iSprinklerSVG(stato, col, colRgb) {
+    var active = stato === 'Ciclo in Corso' || stato === 'Manuale Attiva';
+    var glow = active ? 'drop-shadow(0 0 10px rgba(' + colRgb + ',.3))' : 'drop-shadow(0 0 6px rgba(' + colRgb + ',.12))';
+    var kf = active ? '@keyframes iBled{0%,100%{opacity:.5}50%{opacity:1}}' : '';
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 108" style="display:block;width:100%;height:100%;filter:' + glow + '">'
+      + (kf ? '<defs><style>' + kf + '</style></defs>' : '')
+      // Pipe stem from ground up
+      + '<rect x="29" y="62" width="6" height="34" rx="3" fill="#0b1929" stroke="#1e3a5f" stroke-width=".6"/>'
+      // Ground plate
+      + '<ellipse cx="32" cy="97" rx="16" ry="4" fill="#090f1e" stroke="#1e3a5f" stroke-width=".5"/>'
+      // Coupling ring
+      + '<rect x="25" y="57" width="14" height="9" rx="4.5" fill="#0b1929" stroke="#1e3a5f" stroke-width=".55"/>'
+      // Main sprinkler body (horizontal disc)
+      + '<ellipse cx="32" cy="52" rx="22" ry="8" fill="#0b1929" stroke="' + col + '" stroke-width=".85"/>'
+      + '<ellipse cx="32" cy="50" rx="20" ry="7" fill="#060e1c" stroke="rgba(' + colRgb + ',.12)" stroke-width=".4"/>'
+      // 3D highlight
+      + '<ellipse cx="24" cy="48" rx="5" ry="3.5" fill="rgba(255,255,255,.04)"/>'
+      // Top dome
+      + '<ellipse cx="32" cy="44" rx="13" ry="8" fill="#0d2040" stroke="rgba(' + colRgb + ',.2)" stroke-width=".5"/>'
+      // Center rotor
+      + '<circle cx="32" cy="44" r="6" fill="#091526" stroke="' + col + '" stroke-width=".85"/>'
+      + '<circle cx="32" cy="44" r="3.5" fill="#040a12"/>'
+      + '<circle cx="32" cy="44" r="1.8" fill="' + col + '" opacity="' + (active?'.9':'.35') + '"' + (active?' style="animation:iBled 1.5s ease-in-out infinite"':'') + '/>'
+      // Spray nozzle holes (4 around)
+      + '<circle cx="39" cy="39" r="1.8" fill="rgba(' + colRgb + ',.3)" stroke="rgba(' + colRgb + ',.5)" stroke-width=".4"/>'
+      + '<circle cx="25" cy="39" r="1.8" fill="rgba(' + colRgb + ',.3)" stroke="rgba(' + colRgb + ',.5)" stroke-width=".4"/>'
+      + '<circle cx="32" cy="37" r="1.8" fill="rgba(' + colRgb + ',.3)" stroke="rgba(' + colRgb + ',.5)" stroke-width=".4"/>'
+      + '<circle cx="38" cy="48" r="1.6" fill="rgba(' + colRgb + ',.2)" stroke="rgba(' + colRgb + ',.4)" stroke-width=".4"/>'
+      // Flow valve on side
+      + '<rect x="4" y="58" width="14" height="6" rx="3" fill="#0b1929" stroke="#1e3a5f" stroke-width=".55"/>'
+      + '<rect x="3" y="54" width="4" height="14" rx="2" fill="#0c1d35" stroke="#1e3a5f" stroke-width=".4"/>'
+      + '<text x="11" y="63" text-anchor="middle" font-size="4" fill="' + col + '" font-family="system-ui,sans-serif" font-weight="800">V</text>'
+      // Water arcs when active
+      + (active ? (
+          '<g>'
+        + '<path d="M 16 42 Q 6 25 2 14" fill="none" stroke="' + col + '" stroke-width="1.2" stroke-linecap="round" opacity=".65"><animate attributeName="opacity" values=".7;.15;.7" dur="1.2s" repeatCount="indefinite"/></path>'
+        + '<path d="M 48 42 Q 58 25 62 14" fill="none" stroke="' + col + '" stroke-width="1.2" stroke-linecap="round" opacity=".55"><animate attributeName="opacity" values=".6;.1;.6" dur="1.4s" begin=".3s" repeatCount="indefinite"/></path>'
+        + '<path d="M 32 37 Q 32 20 32 8" fill="none" stroke="' + col + '" stroke-width="1.2" stroke-linecap="round" opacity=".6"><animate attributeName="opacity" values=".65;.1;.65" dur="1s" begin=".6s" repeatCount="indefinite"/></path>'
+        + '<circle cx="4" cy="12" r="1.8" fill="' + col + '"><animate attributeName="cy" values="12;22;12" dur="1.2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;0" dur="1.2s" repeatCount="indefinite"/></circle>'
+        + '<circle cx="60" cy="12" r="1.6" fill="' + col + '"><animate attributeName="cy" values="12;20;12" dur="1.4s" begin=".4s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;0" dur="1.4s" begin=".4s" repeatCount="indefinite"/></circle>'
+        + '<circle cx="32" cy="6" r="1.4" fill="' + col + '"><animate attributeName="cy" values="6;16;6" dur="1s" begin=".2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;0" dur="1s" begin=".2s" repeatCount="indefinite"/></circle>'
+        + '</g>'
+      ) : '')
+      + '</svg>';
+  }
+
+  function _iRender(card) {
+    var h = _iH(), c = _iCfgFor(card);
+    var rid = 'frirr' + (card.id || 'irr');
+    var stato = _iS(h, c.pk_stato) || 'Spenta';
+    var autoOn = _iIsOn(h, c.pk_auto), manOn = _iIsOn(h, c.pk_manuale);
+    var blocco = _iIsOn(h, c.pk_blocco_meteo);
+    var rubOn = _iIsOn(h, c.pk_rubinetto);
+    var timerC = _iFmtTimer(h, c.pk_timer_ciclo), timerM = _iFmtTimer(h, c.pk_timer_manuale);
+    var cicliOggi = _iNum(_iS(h, c.pk_cicli_oggi)) || 0;
+    var acqua = _iNum(_iS(h, c.pk_acqua));
+    var pioggia = _iNum(_iS(h, c.pk_pioggia)) || 0;
+    var activeTimer = timerC.active ? timerC : timerM;
+    var timerActive = timerC.active || timerM.active;
+    var timerLabel = timerC.active ? 'CICLO' : 'MANUALE';
+    var col = '#64748b', colRgb = '100,116,139', statusLabel = 'SPENTA', statusText = 'Spenta';
+    if (blocco)                              { col = '#f59e0b'; colRgb = '245,158,11';  statusLabel = 'METEO';     statusText = 'Blocco meteo'; }
+    else if (stato === 'Manuale Attiva')     { col = '#f97316'; colRgb = '249,115,22';  statusLabel = 'MANUALE';   statusText = 'Manuale attiva'; }
+    else if (stato === 'Ciclo in Corso')     { col = '#38bdf8'; colRgb = '56,189,248';  statusLabel = 'CICLO';     statusText = 'Ciclo in corso'; }
+    else if (stato === 'Automazione Attiva') { col = '#06b6d4'; colRgb = '6,182,212';   statusLabel = 'IN ATTESA'; statusText = 'Automazione attiva'; }
+
+    var barPct = timerActive ? activeTimer.pct : 0;
+    var barLbl = timerActive ? (timerLabel + ' in corso') : 'Cicli oggi';
+    var barVal = timerActive ? activeTimer.rem : (cicliOggi + ' cicli');
+
+    var css = '<style>'
+      + '#' + rid + '{position:relative;width:100%;height:100%;min-height:280px;font-family:system-ui,sans-serif;display:block}'
+      + '#' + rid + ' .fc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#08101a 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
+      + '#' + rid + ' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(' + colRgb + ',.08) 0%,transparent 65%);pointer-events:none}'
+      + '#' + rid + ' .fc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
+      + '#' + rid + ' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;background:rgba(' + colRgb + ',.1);border:1px solid rgba(' + colRgb + ',.2)}'
+      + '#' + rid + ' .fc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+      + '#' + rid + ' .fc-hdr-pill{font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;white-space:nowrap;display:flex;align-items:center;gap:4px;background:rgba(' + colRgb + ',.1);border:1px solid rgba(' + colRgb + ',.28);color:' + col + '}'
+      + '#' + rid + ' .fc-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:' + col + (timerActive?';animation:irrPulse 1.5s ease-in-out infinite':'') + '}'
+      + '#' + rid + ' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
+      + '#' + rid + ' .fc-scroll::-webkit-scrollbar{display:none}'
+      + '#' + rid + ' .fc-hero{display:flex;align-items:stretch;padding:10px 14px 8px;flex:1}'
+      + '#' + rid + ' .fc-hero-img{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;max-height:130px}'
+      + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:6px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:10px;overflow:hidden}'
+      + '#' + rid + ' .fc-st{display:flex;align-items:center;justify-content:flex-end;gap:7px;font-size:14px;font-weight:800;color:' + col + ';padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06)}'
+      + '#' + rid + ' .fc-stdot{width:8px;height:8px;border-radius:50%;background:' + col + ';flex-shrink:0' + (timerActive?';animation:irrPulse 1.5s ease-in-out infinite':'') + '}'
+      + '#' + rid + ' .fc-met{display:flex;align-items:center;justify-content:space-between;gap:4px}'
+      + '#' + rid + ' .fc-met-lbl{font-size:11px;font-weight:700;color:#fff;flex-shrink:0}'
+      + '#' + rid + ' .fc-met-v{font-size:15px;font-weight:800;color:#fff;text-align:right}'
+      + '#' + rid + ' .fc-tmr{display:flex;flex-direction:column;align-items:flex-end;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06)}'
+      + '#' + rid + ' .fc-tmr-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:rgba(255,255,255,.4)}'
+      + '#' + rid + ' .fc-tmr-v{font-size:22px;font-weight:900;color:' + col + ';font-variant-numeric:tabular-nums;letter-spacing:-.02em}'
+      + '#' + rid + ' .fc-pwfull{margin:0 14px 10px}'
+      + '#' + rid + ' .fc-pwfull-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}'
+      + '#' + rid + ' .fc-pwfull-lbl{font-size:10px;font-weight:700;color:#fff}'
+      + '#' + rid + ' .fc-pwfull-v{font-size:18px;font-weight:900;color:' + col + ';line-height:1}'
+      + '#' + rid + ' .fc-pw-bar{height:5px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden}'
+      + '#' + rid + ' .fc-pw-fill{height:100%;border-radius:2px;transition:width .6s,background .4s}'
+      + '#' + rid + ' .fc-stats{display:flex;margin:0 14px 8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden}'
+      + '#' + rid + ' .fc-sb{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 3px;gap:2px}'
+      + '#' + rid + ' .fc-sb-sep{width:1px;background:rgba(255,255,255,.08);flex-shrink:0}'
+      + '#' + rid + ' .fc-sb-n{font-size:12px;font-weight:900;color:' + col + ';height:18px;display:flex;align-items:center;justify-content:center}'
+      + '#' + rid + ' .fc-sb-l{font-size:8px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.4px;text-align:center}'
+      + '#' + rid + ' .fc-btns{display:flex;gap:6px;padding:0 14px 12px}'
+      + '#' + rid + ' .fc-btn{flex:1;padding:8px 4px;border-radius:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:10px;font-weight:700;color:#fff;text-align:center;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:3px}'
+      + '#' + rid + ' .fc-btn:hover{background:rgba(' + colRgb + ',.12);border-color:rgba(' + colRgb + ',.3);color:' + col + '}'
+      + '#' + rid + ' .fc-btn-act{background:rgba(' + colRgb + ',.15);border-color:rgba(' + colRgb + ',.35);color:' + col + '}'
+      + (timerActive ? '@keyframes irrPulse{0%,100%{opacity:.6}50%{opacity:1}}' : '')
+      + '</style>';
+
+    var heroHtml = '<div class="fc-hero">'
+      + '<div class="fc-hero-img">' + _iSprinklerSVG(stato, col, colRgb) + '</div>'
+      + '<div class="fc-hero-r">'
+      + (timerActive
+          ? '<div class="fc-tmr"><div class="fc-tmr-lbl">' + timerLabel + '</div><div class="fc-tmr-v">' + activeTimer.rem + '</div></div>'
+          : '<div class="fc-st">' + statusText + '<div class="fc-stdot"></div></div>')
+      + '<div class="fc-met"><span class="fc-met-lbl">Cicli oggi</span><span class="fc-met-v">' + cicliOggi + '</span></div>'
+      + '<div class="fc-met"><span class="fc-met-lbl">Acqua</span><span class="fc-met-v">' + (acqua != null ? acqua.toFixed(1) + ' L' : '— L') + '</span></div>'
+      + '<div class="fc-met"><span class="fc-met-lbl">Pioggia</span><span class="fc-met-v" style="color:' + (pioggia > 50 ? '#f59e0b' : '#fff') + '">' + pioggia.toFixed(0) + ' %</span></div>'
+      + '</div></div>';
+
+    var pwBarHtml = '<div class="fc-pwfull">'
+      + '<div class="fc-pwfull-hd"><span class="fc-pwfull-lbl">' + barLbl + '</span><span class="fc-pwfull-v">' + barVal + '</span></div>'
+      + '<div class="fc-pw-bar"><div class="fc-pw-fill" style="width:' + barPct.toFixed(1) + '%;background:' + col + ';box-shadow:0 0 6px ' + col + '88"></div></div>'
+      + '</div>';
+
+    var statsHtml = '<div class="fc-stats">'
+      + '<div class="fc-sb"><div class="fc-sb-n">' + cicliOggi + '</div><div class="fc-sb-l">Cicli/giorno</div></div>'
+      + '<div class="fc-sb-sep"></div>'
+      + '<div class="fc-sb"><div class="fc-sb-n">' + pioggia.toFixed(0) + '%</div><div class="fc-sb-l">Pioggia</div></div>'
+      + '<div class="fc-sb-sep"></div>'
+      + '<div class="fc-sb"><div class="fc-sb-n" style="color:' + (blocco?'#f59e0b':'#22c55e') + '">' + (blocco?'⛈':'✓') + '</div><div class="fc-sb-l">Meteo</div></div>'
+      + '<div class="fc-sb-sep"></div>'
+      + '<div class="fc-sb"><div class="fc-sb-n" style="color:' + (rubOn?col:'#64748b') + '">' + (rubOn?'ON':'OFF') + '</div><div class="fc-sb-l">Rubinetto</div></div>'
+      + '</div>';
+
+    var btnsHtml = '<div class="fc-btns">'
+      + '<div class="fc-btn' + (manOn?' fc-btn-act':'') + '" data-sya="' + (manOn?'man-off':'man-on') + '">' + (manOn?'⏹ Ferma Man.':'▶ Manuale') + '</div>'
+      + '<div class="fc-btn' + (autoOn?' fc-btn-act':'') + '" data-sya="' + (autoOn?'auto-off':'auto-on') + '">' + (autoOn?'⏹ Stop Auto':'▶ Automazione') + '</div>'
+      + '</div>';
+
+    return css
+      + '<div id="' + rid + '"><div class="fc-card">'
+      + '<div class="fc-hdr">'
+      + '<div class="fc-hdr-iw">💧</div>'
+      + '<div class="fc-hdr-tit">' + (c.name || 'Irrigazione Smart') + '</div>'
+      + '<div class="fc-hdr-pill"><div class="fc-dot"></div>' + statusLabel + '</div>'
+      + '<div style="cursor:pointer;padding:4px 6px;border-radius:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:11px;color:#fff;margin-left:6px" data-sya="popup-cfg">⚙</div>'
+      + '</div>'
+      + '<div class="fc-scroll">' + heroHtml + pwBarHtml + statsHtml + btnsHtml + '</div>'
+      + '</div></div>';
+  }
+
+  function _iMkOv(html, closeId) {
+    var ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:flex-end;background:rgba(0,0,0,.6);backdrop-filter:blur(4px)';
+    ov.innerHTML = html;
+    document.body.appendChild(ov);
+    var close = function() { try { document.body.removeChild(ov); } catch(e) {} };
+    var btn = ov.querySelector('#' + closeId); if (btn) btn.addEventListener('click', close);
+    ov.addEventListener('click', function(e) { if (e.target === ov) close(); });
+    ov._close = close;
+    return ov;
+  }
+
+  function _iPopShell(icon, rgb, title, sub, closeId, content) {
+    return '<style>@keyframes iUP{from{transform:translateY(100%)}to{transform:translateY(0)}}.ipc{overflow-y:auto;scrollbar-width:none}.ipc::-webkit-scrollbar{display:none}</style>'
+      + '<div style="width:100%;max-height:78vh;display:flex;flex-direction:column;background:#060d14;border:1px solid rgba(' + rgb + ',.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:iUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
+      + '<div style="display:flex;align-items:center;gap:10px;padding:13px 15px 11px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
+      + '<div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(' + rgb + ',.15);border:1px solid rgba(' + rgb + ',.3)">' + icon + '</div>'
+      + '<div><div style="font-size:14px;font-weight:800;color:#fff">' + title + '</div><div style="font-size:11px;color:#fff;margin-top:1px">' + sub + '</div></div>'
+      + '<button id="' + closeId + '" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none">✕</button>'
+      + '</div>'
+      + '<div class="ipc" style="flex:1;overflow-y:auto;padding:13px 15px;display:flex;flex-direction:column;gap:0">' + content + '</div>'
+      + '</div>';
+  }
+
+  function _iOpenCfg(card, el) {
+    var c = _iCfgFor(card);
+    function fld(key, label, ph) {
+      return '<div style="margin-bottom:10px">'
+        + '<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px">' + label + '</div>'
+        + '<input id="irrf-' + key + '" type="text" autocomplete="off" placeholder="' + ph + '" value="' + (c[key]||'').replace(/"/g,'&quot;') + '" style="width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:11px;font-family:monospace;box-sizing:border-box;outline:none">'
+        + '</div>';
+    }
+    function sec(t) { return '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding-bottom:4px;border-bottom:1px solid rgba(56,189,248,.18);margin:14px 0 10px">' + t + '</div>'; }
+    var content = '<div style="margin-bottom:10px"><div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px">Nome card</div>'
+      + '<input id="irrf-name" type="text" placeholder="Irrigazione Smart" value="' + (c.name||'').replace(/"/g,'&quot;') + '" style="width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:11px;box-sizing:border-box;outline:none"></div>'
+      + sec('Sensori di stato')
+      + fld('pk_stato','Sensore stato','sensor.stato_irrigazione')
+      + fld('pk_pioggia','Probabilità pioggia','sensor.probabilita_pioggia')
+      + fld('pk_blocco_meteo','Binary blocco meteo','binary_sensor.blocco_meteo_irrigazione')
+      + fld('pk_cicli_oggi','Cicli giornalieri','counter.irrigazione_cicli_giornalieri')
+      + fld('pk_acqua','Consumo acqua','sensor.consumo_acqua_irrigazione')
+      + sec('Controllo')
+      + fld('pk_auto','Automazione boolean','input_boolean.irrigazione_automazione_attiva')
+      + fld('pk_manuale','Manuale boolean','input_boolean.irrigazione_manuale_attiva')
+      + fld('pk_rubinetto','Switch rubinetto','switch.rubinetto_esterno_interruttore')
+      + fld('pk_timer_ciclo','Timer ciclo','timer.irrigazione_ciclo_timer')
+      + fld('pk_timer_manuale','Timer manuale','timer.irrigazione_manuale_timer')
+      + sec('Pulsanti azione')
+      + fld('pk_btn_auto_on','Avvia automazione','input_button.irrigazione_start_automazione')
+      + fld('pk_btn_auto_off','Ferma automazione','input_button.irrigazione_stop_automazione')
+      + fld('pk_btn_man_on','Avvia manuale','input_button.irrigazione_start_manuale')
+      + fld('pk_btn_man_off','Ferma manuale','input_button.irrigazione_stop_manuale')
+      + '<button id="irr-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#38bdf8;color:#041622;margin-top:8px">💾 Salva</button>';
+    var ov = _iMkOv(_iPopShell('💧','56,189,248','Impostazioni',c.name||'Irrigazione Smart','irr-cfg-cl',content),'irr-cfg-cl');
+    ov.querySelector('#irr-save').addEventListener('click', function() {
+      var pk = _iPkgDef(), saved = {};
+      Object.keys(pk).forEach(function(k) { var i = ov.querySelector('#irrf-'+k); if (i) saved[k] = i.value.trim(); });
+      var ni = ov.querySelector('#irrf-name'); if (ni) saved.name = ni.value.trim();
+      _iSave(card, saved);
+      ov._close();
+      if (el) el._fcSig = null;
+    });
+  }
+
+  function _iCallSvc(domain, svc, data) {
+    try { var h = _iH(); if (h && h.callService) { h.callService(domain, svc, data); return; } if (window.callSvc) window.callSvc(domain, svc, data); } catch(e) {}
+  }
+
+  function _iMount(card, hass, el) {
+    if (el._fcBound === '2.0irr') return;
+    el._fcBound = '2.0irr';
+    if (el._fcHandler) el.removeEventListener('click', el._fcHandler);
+    el._fcHandler = function(e) {
+      var t = e.target.closest('[data-sya]'); if (!t) return;
+      var a = t.dataset.sya, c = _iCfgFor(card);
+      if (a === 'man-on')    _iCallSvc('input_button','press',{entity_id:c.pk_btn_man_on});
+      if (a === 'man-off')   _iCallSvc('input_button','press',{entity_id:c.pk_btn_man_off});
+      if (a === 'auto-on')   _iCallSvc('input_button','press',{entity_id:c.pk_btn_auto_on});
+      if (a === 'auto-off')  _iCallSvc('input_button','press',{entity_id:c.pk_btn_auto_off});
+      if (a === 'popup-cfg') _iOpenCfg(card, el);
+    };
+    el.addEventListener('click', el._fcHandler);
+  }
+
+  function _iUpdate(card, hass, el) {
+    var h = _iH(), c = _iCfgFor(card);
+    var tc = _iS(h,c.pk_timer_ciclo), tm = _iS(h,c.pk_timer_manuale);
+    var sig = ['2.0irr',_iS(h,c.pk_stato),_iS(h,c.pk_auto),_iS(h,c.pk_manuale),tc,tm,_iS(h,c.pk_cicli_oggi),_iS(h,c.pk_blocco_meteo),_iS(h,c.pk_pioggia),_iS(h,c.pk_rubinetto)].join('|');
+    if (tc === 'active' || tm === 'active') {
+      clearTimeout(el._irrTick);
+      el._irrTick = setTimeout(function() { el._fcSig = null; }, 1000);
+    }
+    if (!el.querySelector('.fc-card') || el._fcSig !== sig) { el._fcSig = sig; el.innerHTML = _iRender(card); }
+    _iMount(card, hass, el);
+  }
+
   var _IRR_CARD = {
-    id: 'irrigazione', name: 'Irrigazione Smart', icon: '💧', version: '1.0',
+    id: 'irrigazione', name: 'Irrigazione Smart', icon: '💧', version: '2.0',
     desc: 'Controllo irrigazione: schedule settimanale, timer animato, blocco meteo e storico.',
-    render:  function(card) { return '<irrigazione-card></irrigazione-card>'; },
-    mount:   function(card, hass, el) {},
-    update:  function(card, hass, el) {
-      var c = el.querySelector('irrigazione-card');
-      if (!c) { el.innerHTML = '<irrigazione-card></irrigazione-card>'; c = el.querySelector('irrigazione-card'); }
-      if (c && hass) c.hass = hass;
-    },
+    render:    function(card) { return _iRender(card); },
+    mount:     function(card, hass, el) { _iMount(card, hass, el); },
+    update:    function(card, hass, el) { _iUpdate(card, hass, el); },
+    configure: function(card, el) { _iOpenCfg(card, el); },
     frarik_pkg_check:   'sensor.stato_irrigazione',
     frarik_pkg_id:      'frarik_irrigazione',
     frarik_pkg_version: '1.0',

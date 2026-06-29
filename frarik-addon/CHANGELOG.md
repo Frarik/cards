@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.6.82 — 2026-06-29
+
+### feat: redesign card Antizanzare, Irrigazione, Differenziata — stile elettrodomestici
+
+- `Antizanzare.js` v2.0: rewrite completo FratechStore — SVG nebulizzatore animato, hero + metrics, barra timer/cicli, stats bar (cicli/pioggia/meteo/auto), bottoni Manuale/Automazione, popup impostazioni con entità configurabili
+- `Irrigazione.js` v2.0: rewrite completo FratechStore — SVG sprinkler con archi d'acqua animati, hero + metrics, barra timer, stats bar (cicli/pioggia/meteo/rubinetto), bottoni Manuale/Automazione, popup impostazioni
+- `Differenziata.js` v2.0: rewrite completo FratechStore — SVG bidone colorato dinamico (colore per tipo rifiuto), hero con rifiuto di oggi + domani, chip settimana colorati, popup "Modifica giorni" (aggiorna input_text via HA), popup impostazioni
+- Tutte e 3 le card: entità 100% configurabili via localStorage, design dark glass identico agli elettrodomestici, countdown timer live per Antizanzare/Irrigazione
+
 ## 1.6.81 — 2026-06-29
 
 ### feat: PKG e store integration per Antizanzare, Irrigazione, Raccolta Differenziata
