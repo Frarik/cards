@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.02 — 2026-06-30
+
+### fix: store — _ghsPreviewCard esposta su window
+
+- Aggiunta `_ghsPreviewCard` al blocco `Object.assign(window, {...})` — senza questo, `data-action="_ghsPreviewCard"` non trovava la funzione e il bottone non faceva nulla
+
 ## 1.7.01 — 2026-06-30
 
 ### feat: store — anteprima card con dati simulati

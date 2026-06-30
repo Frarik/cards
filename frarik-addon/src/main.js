@@ -17876,6 +17876,7 @@ Object.assign(window, {
   _ghsInstall,
   _ghsMoveCard,
   _ghsPreview,
+  _ghsPreviewCard,
   _ghsPublish,
   _ghsReloadTab,
   _ghsYamlAdd,
