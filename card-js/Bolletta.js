@@ -694,8 +694,8 @@
       .replace('          - service: IL_TUO_MOBILE_APP_1', pushLines);
   }
 
-  function openWizard(card, el) {
-    var h = H(), states = (h && h.states) || {};
+  function openWizard(hass, onDone) {
+    var states = (hass && hass.states) || {};
     var allIds = Object.keys(states).sort();
     var iSt = 'width:100%;padding:8px 10px;border-radius:8px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none;margin-top:3px';
     var stDrop = 'position:absolute;left:0;right:0;top:calc(100% + 2px);z-index:200;max-height:130px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.15);border-radius:8px;display:none;scrollbar-width:none';
@@ -717,6 +717,7 @@
       + '<div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px">Copia e salva come <b>frarik_bolletta.yaml</b> in config/packages/</div>'
       + '<textarea id="wz-yaml" readonly style="width:100%;height:240px;background:#020810;color:#7dd3fc;border:1px solid rgba(255,255,255,.1);border-radius:8px;font-size:10px;font-family:monospace;padding:8px;box-sizing:border-box;resize:vertical"></textarea>'
       + '<button id="wz-copy" style="width:100%;margin-top:6px;padding:9px;border-radius:8px;background:rgba(255,255,255,.08);color:#fff;font-size:12px;font-weight:700;border:none;cursor:pointer">📋 Copia negli appunti</button>'
+      + '<button id="wz-install" style="width:100%;margin-top:6px;padding:11px;border-radius:10px;background:#22c55e;color:#000;font-size:13px;font-weight:800;border:none;cursor:pointer">⬇ Installa su Home Assistant</button>'
       + '</div>';
 
     var ov = mkOv(popShell('📦', 'Installa Package Bolletta', 'Wizard configurazione', 'wz-close', formHtml), 'wz-close');
@@ -753,6 +754,32 @@
       var ta = ov.querySelector('#wz-yaml');
       try { navigator.clipboard.writeText(ta.value).then(function() { ov.querySelector('#wz-copy').textContent = '✅ Copiato!'; }); } catch(e) { ta.select(); document.execCommand('copy'); ov.querySelector('#wz-copy').textContent = '✅ Copiato!'; }
     });
+    ov.querySelector('#wz-install') && ov.querySelector('#wz-install').addEventListener('click', function() {
+      var yaml = (ov.querySelector('#wz-yaml') || {}).value || '';
+      if (!yaml) { ov.querySelector('#wz-gen').click(); yaml = (ov.querySelector('#wz-yaml') || {}).value || ''; }
+      if (!yaml) return;
+      var btn = ov.querySelector('#wz-install');
+      btn.textContent = 'Installazione…'; btn.disabled = true;
+      var m = location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
+      var base = location.origin + (m ? m[1] : '');
+      fetch(base + '/api/frarik/pkg/install', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({name: 'frarik/centro_controllo_bolletta.yaml', content: yaml})
+      }).then(function(r) { return r.json().then(function(j) { return {r: r, j: j}; }); })
+        .then(function(res) {
+          ov._close();
+          if (res.r.ok && res.j.ok) {
+            try { if (typeof window.showToast === 'function') window.showToast('📦 PKG Bolletta installato! Riavvia HA.'); } catch(e) {}
+            if (typeof onDone === 'function') onDone();
+          } else {
+            try { if (typeof window.showToast === 'function') window.showToast('⚠️ Errore installazione PKG: ' + ((res.j && res.j.error) || '')); } catch(e) {}
+          }
+        }).catch(function() {
+          ov._close();
+          try { if (typeof window.showToast === 'function') window.showToast('⚠️ Errore connessione installazione PKG'); } catch(e) {}
+        });
+    });
   }
 
   /* ── REGISTER ── */
@@ -766,6 +793,10 @@
     render: render,
     mount: mount,
     update: update,
+    frarik_pkg_check: 'sensor.frarik_bolletta_versione',
+    frarik_pkg_id: 'centro_controllo_bolletta',
+    frarik_pkg_version: '1.0',
+    openWizard: openWizard,
   };
 
 })();

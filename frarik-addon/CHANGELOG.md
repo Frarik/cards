@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.08 — 2026-06-30
+
+### fix: Bolletta.js — wizard PKG integrato nello store
+
+- Aggiunti `frarik_pkg_check`, `frarik_pkg_id`, `frarik_pkg_version`, `openWizard` al registro
+- Lo store ora riconosce che la card richiede un PKG e mostra il wizard all'installazione
+- `openWizard(hass, onDone)`: firma corretta; aggiunto pulsante "⬇ Installa su Home Assistant" che chiama `/api/frarik/pkg/install` e chiude automaticamente la card store
+- Mantenuto pulsante "Copia negli appunti" per install manuale
+
 ## 1.7.07 — 2026-06-30
 
 ### fix: PKG — consolidamento in pkg/ unica cartella
