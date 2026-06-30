@@ -378,11 +378,16 @@
       + lbl('IVA (%)') + inp('bp-iva', N(S(h,c.pk_fb_iva)).toFixed(1), '10.0')
       + '</div>';
 
+    var haFvNow = S(h, c.pk_ha_fv) === 'on';
     var pMensili = '<div class="bp-panel" id="bp-p-mensili">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);margin-bottom:6px">'
+      + '<span style="font-size:12px;color:rgba(255,255,255,.8)">☀️ Ho il Fotovoltaico</span>'
+      + '<button id="bp-fv-toggle" style="padding:4px 14px;border-radius:20px;border:none;cursor:pointer;font-size:11px;font-weight:800;background:' + (haFvNow ? 'rgba(74,222,128,.2);color:#4ade80' : 'rgba(255,255,255,.06);color:rgba(255,255,255,.35)') + '">' + (haFvNow ? '✅ ON' : 'OFF') + '</button>'
+      + '</div>'
+      + lbl('Credito GSE - Scambio sul Posto (€)') + inp('bp-gse', N(S(h,c.pk_credito_gse)).toFixed(2), '0.00')
+      + '<div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:4px;margin-bottom:10px">Il credito GSE viene aggiornato manualmente quando si riceve il rendiconto trimestrale</div>'
       + lbl('Bonus mese corrente (€)') + inp('bp-bonus', N(S(h,c.pk_bonus)).toFixed(2), '0.00')
       + lbl('Bonus sociale (€)') + inp('bp-bonus-soc', N(S(h,c.pk_bonus_soc)).toFixed(2), '0.00')
-      + lbl('Credito GSE - Scambio sul Posto (€)') + inp('bp-gse', N(S(h,c.pk_credito_gse)).toFixed(2), '0.00')
-      + '<div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:6px">Il credito GSE viene aggiornato manualmente quando si riceve il rendiconto trimestrale</div>'
       + '</div>';
 
     var pSensori = '<div class="bp-panel" id="bp-p-sensori">'
@@ -413,6 +418,17 @@
     });
 
     function g(id) { var e = ov.querySelector('#' + id); return e ? e.value.trim() : ''; }
+
+    var bpFvBtn = ov.querySelector('#bp-fv-toggle');
+    if (bpFvBtn) {
+      bpFvBtn.addEventListener('click', function() {
+        callSvc('input_boolean', 'toggle', {entity_id: c.pk_ha_fv});
+        var nowOn = bpFvBtn.textContent.includes('ON');
+        bpFvBtn.textContent = nowOn ? 'OFF' : '✅ ON';
+        bpFvBtn.style.background = nowOn ? 'rgba(255,255,255,.06)' : 'rgba(74,222,128,.2)';
+        bpFvBtn.style.color = nowOn ? 'rgba(255,255,255,.35)' : '#4ade80';
+      });
+    }
 
     ov.querySelector('#bp-imp-cancel').addEventListener('click', function() { ov._close(); });
     ov.querySelector('#bp-imp-save').addEventListener('click', function() {
@@ -706,19 +722,13 @@
         + '<div id="' + id + '-d" style="' + stDrop + '"></div></div>';
     }
 
-    var formHtml = '<div style="font-size:11px;color:rgba(255,255,255,.4);background:rgba(' + RGB + ',.08);border-radius:8px;padding:10px;margin-bottom:12px">Configura i sensori e scarica il file <b style="color:' + COL + '">frarik_bolletta.yaml</b> da aggiungere in <code>config/packages/</code> di Home Assistant.</div>'
+    var formHtml = '<div style="font-size:11px;color:rgba(255,255,255,.4);background:rgba(' + RGB + ',.08);border-radius:8px;padding:10px;margin-bottom:12px">Inserisci i dati del tuo impianto — il package verrà installato automaticamente su Home Assistant.</div>'
       + wfield('wz-pot', '⚡ Sensore Potenza Casa (W)', 'sensor.potenza_istantanea')
       + wfield('wz-tar', '💰 Tariffa Energia (€/kWh)', '0.090000')
       + wfield('wz-kw',  '🔌 Potenza Impegnata (kW)',   '4.5')
-      + '<div style="margin-bottom:10px"><label style="font-size:11px;color:rgba(255,255,255,.6);display:block;margin-bottom:2px">📱 App notifica push</label>'
+      + '<div style="margin-bottom:14px"><label style="font-size:11px;color:rgba(255,255,255,.6);display:block;margin-bottom:2px">📱 App notifica push</label>'
       + '<input id="wz-push" type="text" placeholder="notify.mobile_app_smartphone" style="' + iSt + '"></div>'
-      + '<button id="wz-gen" style="width:100%;padding:11px;border-radius:10px;background:' + COL + ';color:#000;font-size:14px;font-weight:800;border:none;cursor:pointer">Genera YAML</button>'
-      + '<div id="wz-out" style="display:none;margin-top:12px">'
-      + '<div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px">Copia e salva come <b>frarik_bolletta.yaml</b> in config/packages/</div>'
-      + '<textarea id="wz-yaml" readonly style="width:100%;height:240px;background:#020810;color:#7dd3fc;border:1px solid rgba(255,255,255,.1);border-radius:8px;font-size:10px;font-family:monospace;padding:8px;box-sizing:border-box;resize:vertical"></textarea>'
-      + '<button id="wz-copy" style="width:100%;margin-top:6px;padding:9px;border-radius:8px;background:rgba(255,255,255,.08);color:#fff;font-size:12px;font-weight:700;border:none;cursor:pointer">📋 Copia negli appunti</button>'
-      + '<button id="wz-install" style="width:100%;margin-top:6px;padding:11px;border-radius:10px;background:#22c55e;color:#000;font-size:13px;font-weight:800;border:none;cursor:pointer">⬇ Installa su Home Assistant</button>'
-      + '</div>';
+      + '<button id="wz-install" style="width:100%;padding:13px;border-radius:10px;background:#22c55e;color:#000;font-size:14px;font-weight:800;border:none;cursor:pointer">⬇ Installa PKG</button>';
 
     var ov = mkOv(popShell('📦', 'Installa Package Bolletta', 'Wizard configurazione', 'wz-close', formHtml), 'wz-close');
 
@@ -744,19 +754,8 @@
 
     function g3(id) { var e = ov.querySelector('#'+id); return e ? e.value.trim() : ''; }
 
-    ov.querySelector('#wz-gen').addEventListener('click', function() {
+    ov.querySelector('#wz-install').addEventListener('click', function() {
       var yaml = _bBuildPkg(g3('wz-pot'), g3('wz-tar'), g3('wz-kw'), g3('wz-push') ? [g3('wz-push')] : null);
-      var out = ov.querySelector('#wz-out'), ta = ov.querySelector('#wz-yaml');
-      ta.value = yaml;
-      out.style.display = 'block';
-    });
-    ov.querySelector('#wz-copy') && ov.querySelector('#wz-copy').addEventListener('click', function() {
-      var ta = ov.querySelector('#wz-yaml');
-      try { navigator.clipboard.writeText(ta.value).then(function() { ov.querySelector('#wz-copy').textContent = '✅ Copiato!'; }); } catch(e) { ta.select(); document.execCommand('copy'); ov.querySelector('#wz-copy').textContent = '✅ Copiato!'; }
-    });
-    ov.querySelector('#wz-install') && ov.querySelector('#wz-install').addEventListener('click', function() {
-      var yaml = (ov.querySelector('#wz-yaml') || {}).value || '';
-      if (!yaml) { ov.querySelector('#wz-gen').click(); yaml = (ov.querySelector('#wz-yaml') || {}).value || ''; }
       if (!yaml) return;
       var btn = ov.querySelector('#wz-install');
       btn.textContent = 'Installazione…'; btn.disabled = true;

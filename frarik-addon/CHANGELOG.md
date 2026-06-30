@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.09 — 2026-06-30
+
+### fix: Bolletta — wizard diretto + toggle FV in impostazioni
+
+- Wizard PKG: rimosso step "Genera YAML" — pulsante "⬇ Installa PKG" installa direttamente senza mostrare l'area testo
+- Impostazioni → tab Mensili: aggiunto toggle "☀️ Ho il Fotovoltaico" (chiama `input_boolean.bolletta_ha_fotovoltaico` immediatamente); spostato Credito GSE prima dei bonus
+
 ## 1.7.08 — 2026-06-30
 
 ### fix: Bolletta.js — wizard PKG integrato nello store
