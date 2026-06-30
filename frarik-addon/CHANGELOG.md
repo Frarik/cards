@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.16 — 2026-06-30
+
+### fix: PKG Posta — file rinominato in frarik_posta.yaml per compatibilità store
+
+- Aggiunto `pkg/frarik_posta.yaml` (nome atteso dal wizard); il vecchio `posta.yaml` resta come alias
+
 ## 1.7.15 — 2026-06-30
 
 ### fix: Bolletta v3.5 + PKG antizanzare/differenziata — formula corretta + testi bianchi + prefissi frarik_
