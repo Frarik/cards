@@ -465,9 +465,9 @@ input_number:
   bolletta_storico_mese_prev_07: {name: "Bolletta Lug Prec", min: 0, max: 500, step: 0.01, initial: 0,     mode: box, unit_of_measurement: "€", icon: mdi:calendar}
   bolletta_storico_mese_prev_08: {name: "Bolletta Ago Prec", min: 0, max: 500, step: 0.01, initial: 0,     mode: box, unit_of_measurement: "€", icon: mdi:calendar}
   bolletta_storico_mese_prev_09: {name: "Bolletta Set Prec", min: 0, max: 500, step: 0.01, initial: 0,     mode: box, unit_of_measurement: "€", icon: mdi:calendar}
-  bolletta_storico_mese_prev_10: {name: "Bolletta Ott Prec", min: 0, max: 500, step: 0.01, initial: 64.98, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
-  bolletta_storico_mese_prev_11: {name: "Bolletta Nov Prec", min: 0, max: 500, step: 0.01, initial: 26.13, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
-  bolletta_storico_mese_prev_12: {name: "Bolletta Dic Prec", min: 0, max: 500, step: 0.01, initial: 61.36, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  bolletta_storico_mese_prev_10: {name: "Bolletta Ott Prec", min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  bolletta_storico_mese_prev_11: {name: "Bolletta Nov Prec", min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  bolletta_storico_mese_prev_12: {name: "Bolletta Dic Prec", min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
   bolletta_storico_kwh_curr_01: {name: "Bolletta kWh Gen", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
   bolletta_storico_kwh_curr_02: {name: "Bolletta kWh Feb", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
   bolletta_storico_kwh_curr_03: {name: "Bolletta kWh Mar", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
@@ -489,9 +489,9 @@ input_number:
   bolletta_storico_kwh_prev_07: {name: "Bolletta kWh Lug Prec", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
   bolletta_storico_kwh_prev_08: {name: "Bolletta kWh Ago Prec", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
   bolletta_storico_kwh_prev_09: {name: "Bolletta kWh Set Prec", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  bolletta_storico_kwh_prev_10: {name: "Bolletta kWh Ott Prec", min: 0, max: 2000, step: 1, initial: 178, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  bolletta_storico_kwh_prev_11: {name: "Bolletta kWh Nov Prec", min: 0, max: 2000, step: 1, initial: 184, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  bolletta_storico_kwh_prev_12: {name: "Bolletta kWh Dic Prec", min: 0, max: 2000, step: 1, initial: 206, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  bolletta_storico_kwh_prev_10: {name: "Bolletta kWh Ott Prec", min: 0, max: 2000, step: 1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  bolletta_storico_kwh_prev_11: {name: "Bolletta kWh Nov Prec", min: 0, max: 2000, step: 1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  bolletta_storico_kwh_prev_12: {name: "Bolletta kWh Dic Prec", min: 0, max: 2000, step: 1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
 
 ####################################################
 #                     REST                         #
