@@ -536,81 +536,48 @@ function _acpOpenYaml(secId,col){ document.getElementById('add-col-menu')?.remov
 
 function _openAddCardPopup(secId,col,startTab){
   document.getElementById('acp-ov')?.remove();
-  _cleanupYamlOverlay('acpprev');
-  if(_acpYamlTimer){ clearInterval(_acpYamlTimer); _acpYamlTimer=null; }
-  _acpSecId=secId; _acpCol=col; _acpYamlCurrentConfig=null; _acpYamlContent='';
+  _acpSecId=secId; _acpCol=col;
   _pendingDropSec=secId; _pendingDropCol=col;
-  if(!document.getElementById('_acp-style')){
-    const s=document.createElement('style'); s.id='_acp-style';
-    s.textContent=`
-      #acp-ov{position:fixed;inset:0;z-index:15000;background:rgba(0,0,0,.78);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;animation:acpFi .15s ease}
-      @keyframes acpFi{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
-      #acp-modal{width:min(980px,96vw);height:min(680px,92vh);background:#06060f;border:1px solid rgba(139,92,246,.28);border-radius:20px;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.85);overflow:hidden}
-      #acp-tabs{display:flex;gap:4px;padding:8px 16px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
-      .acp-tab{border-radius:8px;padding:6px 14px;font-size:11px;font-weight:600;cursor:pointer;transition:all .12s;border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.5);background:rgba(255,255,255,.04);white-space:nowrap}
-      .acp-tab.on{background:rgba(139,92,246,.18);border-color:rgba(139,92,246,.38);color:#c4b5fd}
-      .acp-tab:hover:not(.on){background:rgba(255,255,255,.07);color:rgba(255,255,255,.8)}
-      #acp-body{flex:1;overflow-y:auto;padding:14px 16px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;min-height:0}
-      .acp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px}
-      .acp-tile{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px 12px 12px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;transition:border-color .12s,background .12s}
-      .acp-tile:hover{border-color:rgba(139,92,246,.35);background:rgba(139,92,246,.05)}
-      .acp-tile-icon{font-size:26px;line-height:1}
-      .acp-tile-name{font-size:12px;font-weight:600;color:#fff;line-height:1.3;margin-top:2px}
-      .acp-tile-desc{font-size:10px;color:rgba(255,255,255,.38);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;flex:1}
-      .acp-tile-btn{margin-top:6px;background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.3);color:#c4b5fd;border-radius:8px;padding:6px 10px;font-size:10px;font-weight:600;cursor:pointer;width:100%;transition:background .12s;letter-spacing:.2px}
-      .acp-tile-btn:hover{background:rgba(139,92,246,.32)}
-      #acp-yaml-wrap{display:flex;height:100%;gap:0}
-      #acp-yaml-left{flex:1;display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.06)}
-      #acp-yaml-right{flex:1;display:flex;flex-direction:column}
-      #acp-yaml-editor-area{display:flex;flex:1;overflow:hidden;position:relative;background:#030307}
-      #acp-yaml-lines{font-size:11px;font-family:monospace;line-height:1.6;padding:11px 0 11px 10px;color:rgba(99,102,241,.5);user-select:none;overflow:hidden;text-align:right;min-width:28px;border-right:1px solid rgba(255,255,255,.05);white-space:pre}
-      #acp-yaml-inp{flex:1;background:transparent;border:none;resize:none;color:#c4d8f5;font-size:11px;font-family:monospace;line-height:1.6;padding:11px 14px;outline:none;overflow-y:auto;tab-size:2}
-      #acp-yaml-prev-wrap{flex:1;overflow-y:auto;padding:14px;min-height:0;position:relative;background:rgba(255,255,255,.015)}
-    `;
-    document.head.appendChild(s);
-  }
+  window._acpStoreMode=true;
+  let acpStyle=document.getElementById('_acp-style');
+  if(!acpStyle){ acpStyle=document.createElement('style'); acpStyle.id='_acp-style'; document.head.appendChild(acpStyle); }
+  acpStyle.textContent=`
+    #acp-ov{position:fixed;inset:0;z-index:15000;background:rgba(0,0,0,.78);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;animation:acpFi .15s ease}
+    @keyframes acpFi{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
+    #acp-modal{width:min(980px,96vw);height:min(720px,92vh);background:#06060f;border:1px solid rgba(139,92,246,.28);border-radius:20px;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.85);overflow:hidden}
+    #acp-modal #ep-content-store{display:flex!important;flex-direction:column;flex:1;overflow:hidden;padding:6px 14px 14px;min-height:0}
+    #acp-modal .ep-tab-hdr{display:none!important}
+    #acp-modal #ghs-list{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;min-height:0}
+  `;
   const ov=document.createElement('div'); ov.id='acp-ov';
   ov.innerHTML=`<div id="acp-modal">
-    <div style="display:flex;align-items:center;padding:16px 20px 10px;flex-shrink:0;gap:12px">
+    <div style="display:flex;align-items:center;padding:14px 20px 10px;flex-shrink:0;gap:12px;border-bottom:1px solid rgba(255,255,255,.06)">
       <div style="width:32px;height:32px;border-radius:10px;background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🧩</div>
-      <div style="flex:1"><div style="font-size:14px;font-weight:700;color:#fff">Aggiungi card</div><div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:1px">Card installate, predefinite o inserisci YAML</div></div>
+      <div style="flex:1"><div style="font-size:14px;font-weight:700;color:#fff">Aggiungi card alla plancia</div><div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:1px">Scegli una card dallo Store</div></div>
       <button id="acp-close" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:13px;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
     </div>
-    <div id="acp-tabs">
-      <button class="acp-tab" data-acp-tab="installed">📦 Installate</button>
-      <button class="acp-tab" data-acp-tab="builtin">⭐ Predefinite</button>
-      <button class="acp-tab" data-acp-tab="yaml">📋 Card YAML</button>
-      <button class="acp-tab" data-acp-tab="saved">💾 Salvate</button>
-      <button class="acp-tab" data-acp-tab="popup">🪟 Popup (apre una vista)</button>
-    </div>
-    <div id="acp-body"></div>
   </div>`;
+  const modal=ov.querySelector('#acp-modal');
+  const storeEl=document.getElementById('ep-content-store');
+  if(storeEl){
+    storeEl._acpOrig={parent:storeEl.parentNode,next:storeEl.nextSibling,display:storeEl.style.display};
+    modal.appendChild(storeEl);
+  }
   document.body.appendChild(ov);
   ov.addEventListener('click',e=>{
-    if(e.target===ov){ _acpClose(); return; }
-    if(e.target.id==='acp-close'||e.target.closest('#acp-close')){ _acpClose(); return; }
-    const tb=e.target.closest('[data-acp-tab]');
-    if(tb){ _acpSetTab(tb.dataset.acpTab); return; }
-    const ab=e.target.closest('[data-acp-add]');
-    if(ab&&ab.dataset.acpAdd){ _acpAddJs(ab.dataset.acpAdd); return; }
-    if(e.target.closest('#acp-yaml-add-btn')){ _acpYamlAdd(); return; }
-    if(e.target.closest('[data-acp-fmt]')){ _acpYamlFormat(); return; }
+    if(e.target===ov||e.target.id==='acp-close'||e.target.closest?.('#acp-close')) _acpClose();
   });
-  _acpSetTab(startTab||'installed');
+  ghStoreTab(startTab||'js');
 }
 function _acpClose(){
-  _cleanupYamlOverlay('acpprev');
-  if(_acpYamlTimer){ clearInterval(_acpYamlTimer); _acpYamlTimer=null; }
-  const ov=document.getElementById('acp-ov');
-  if(ov){
-    const prev=ov.querySelector('#acp-yaml-prev');
-    if(prev){
-      if(prev._yamlRO) try{prev._yamlRO.disconnect();}catch(_){}
-      if(prev._yamlScrollOff) try{prev._yamlScrollOff();}catch(_){}
-      if(prev._ghsYamlTimer){ clearInterval(prev._ghsYamlTimer); prev._ghsYamlTimer=null; }
-    }
-    ov.remove();
+  window._acpStoreMode=false;
+  const storeEl=document.getElementById('ep-content-store');
+  if(storeEl&&storeEl._acpOrig){
+    storeEl.style.display=storeEl._acpOrig.display;
+    storeEl._acpOrig.parent.insertBefore(storeEl,storeEl._acpOrig.next||null);
+    delete storeEl._acpOrig;
   }
+  document.getElementById('acp-ov')?.remove();
 }
 function _acpSetTab(tab){
   document.querySelectorAll('.acp-tab').forEach(b=>b.classList.toggle('on',b.dataset.acpTab===tab));
@@ -2493,7 +2460,7 @@ function _ghStoreRenderInstallate(q){
     const effTab=_cardEffectiveTab(f,idFile);
     const tabBdg=TAB_LBL[effTab]?`<span class="ghc-bdg" style="background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.15);color:rgba(255,255,255,.55);font-size:9px">${TAB_LBL[effTab]}</span>`:'';
     const updBtn=hasUpdate?`<button class="ghc-btn ghc-btn-upd" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-update"></i> Aggiorna</button>`:'';
-    const addBtn=cardId?(inCurPage?`<span class="ghc-indash"><i class="mdi mdi-check-circle-outline"></i> ${_inLabel}</span>`:`<button class="ghc-btn ghc-btn-add" data-action="_jsStoreAddAndRefresh" data-action-args='["${cardId}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`):'';
+    const addBtn=!hasUpdate&&cardId?(inCurPage?`<span class="ghc-indash"><i class="mdi mdi-check-circle-outline"></i> ${_inLabel}</span>`:`<button class="ghc-btn ghc-btn-add" data-action="_jsStoreAddAndRefresh" data-action-args='["${cardId}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`):'';
     const mvBtn=`<button class="ghc-btn-del" data-action="_ghsMoveCard" data-action-arg="${enc}" title="Sposta in altro tab" style="color:rgba(255,255,255,.5)"><i class="mdi mdi-swap-horizontal"></i></button>`;
     const delBtn=cardId?`<button class="ghc-btn-del" data-action="_ghsDeleteInstalled" data-action-arg="${cardId}" title="Disinstalla"><i class="mdi mdi-delete-outline"></i></button>`:'';
     return `<div class="ghc-tile st-${st}"><div class="ghc-strip ${st}"></div>
@@ -13480,7 +13447,7 @@ function _openGhStoreClean(){ document.getElementById('add-col-menu')?.remove();
 function _pasteCardToClean(secId,col){ document.getElementById('add-col-menu')?.remove(); pasteCardTo(secId,col); }
 function _closeViewsAndOpenTM(){ closeViewsMenu(); openTM(); }
 function _closeViewsAndSetPage(i){ closeViewsMenu(); setActivePage(i); }
-function _jsStoreAddAndRefresh(id){ jsStoreAddCard(id); setTimeout(_ghStoreRender,50); }
+function _jsStoreAddAndRefresh(id){ if(window._acpStoreMode){_pendingDropSec=_acpSecId;_pendingDropCol=_acpCol;} jsStoreAddCard(id); setTimeout(_ghStoreRender,50); }
 function _deleteSavedAt(i){ deleteSaved(i, null); }
 function _appChipPopupAt(cardId, gi){ appChipPopup(cardId, gi, null); }
 function _setActivePageAndSync(i){ setActivePage(i); setTimeout(window._navbarSync,30); }

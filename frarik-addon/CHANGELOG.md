@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.96 — 2026-06-30
+
+### fix+feat: store — 3 fix grafici/UX
+
+- **Bug Aggiorna+In vista**: nel tab Installate, quando una card ha un aggiornamento disponibile, ora mostra solo "Aggiorna" senza sovrapporre anche "✓ In vista" (layout pulito)
+- **Tab uniformi**: rimossi stili speciali (bordo dorato/viola/blu) dai tab Premium, Card YAML e Predefinite — ora hanno lo stesso aspetto degli altri tab
+- **Popup "Aggiungi card"**: il popup in modifica plancia ora mostra lo stesso Store completo (tutti i tab: Cards, Elettrodomestici, Installate, Chips, Distintivi, Premium, Card YAML, Predefinite, Locali, Salvate) invece dei vecchi 4 tab limitati. Funziona tramite DOM-move di `#ep-content-store`; ogni "Aggiungi" aggiunge la card alla sezione/colonna corretta
+
 ## 1.6.95 — 2026-06-30
 
 ### fix: store — categorizzazione corretta Frigorifero/Induzione/Bolletta + rename tab Cards
