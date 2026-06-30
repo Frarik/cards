@@ -2215,10 +2215,10 @@ async function _ghsPreviewCard(enc){
   const name=decodeURIComponent(enc);
   const nm=name.replace(/\.(js|ya?ml)$/i,'');
   _ghsShowPreviewModal(nm);
-  // Cerca il file in tutti i cache
+  // Cerca file nei cache
   let f=_ghsFind(name);
   if(!f){ for(const t of ['js','chips','distintivi','predefinite','elettrodomestici']){ const h=(_ghsCache[t]||[]).find(x=>x.name===name); if(h){f=h;break;} } }
-  // Ottieni il codice JS
+  // Ottieni codice
   let code=f?_ghCodeCache[f.sha]:null;
   if(!code&&f?.download_url){
     try{
@@ -2229,31 +2229,42 @@ async function _ghsPreviewCard(enc){
   const wrap=document.getElementById('ghs-prev-card-wrap');
   if(!wrap) return;
   if(!code){ wrap.innerHTML='<div class="ghs-prev-loading">⚠️ Impossibile caricare il codice della card</div>'; return; }
-  // Trova il tag name e registra l'elemento
+  // Registra la card e ottieni il tag name dal valore di ritorno di _installCardCode
   window.FratechCardRegistry=window.FratechCardRegistry||{};
   let tagName=null;
-  const tmA=code.match(/customElements\.define\s*\(\s*['"]([a-z][a-z0-9-]*)['"]/);
-  const tmB=code.match(/customElements\.get\s*\(\s*['"]([a-z][a-z0-9-]*)['"]/);
-  tagName=tmA?.[1]||tmB?.[1]||null;
-  if(tagName&&!customElements.get(tagName)){ try{ _installCardCode(code); }catch(e){} }
-  else if(!tagName){ try{ _installCardCode(code); const tm2=code.match(/customElements\.(?:define|get)\s*\(\s*['"]([a-z][a-z0-9-]*)['"]/); tagName=tm2?.[1]||null; }catch(e){} }
-  if(!tagName||!customElements.get(tagName)){ wrap.innerHTML='<div class="ghs-prev-loading">⚠️ Impossibile istanziare questa card</div>'; return; }
+  try{
+    const res=_installCardCode(code);
+    tagName=res?.tags?.[0]||null;
+    // fallback regex nel caso i tag non siano stati rilevati (card già registrata)
+    if(!tagName){ const tm=code.match(/(?:window\.)?customElements\.(?:define|get)\s*\(\s*['"]([a-z][a-z0-9-]*)['"]/); tagName=tm?.[1]||null; }
+  }catch(e){ const tm=code.match(/(?:window\.)?customElements\.(?:define|get)\s*\(\s*['"]([a-z][a-z0-9-]*)['"]/); tagName=tm?.[1]||null; }
+  if(!tagName||!customElements.get(tagName)){ wrap.innerHTML='<div class="ghs-prev-loading">⚠️ Anteprima non disponibile per questa card</div>'; return; }
+  // Pulisci localStorage __prev__ per evitare dati residui
+  try{ Object.keys(localStorage).filter(k=>k.includes('__prev__')).forEach(k=>localStorage.removeItem(k)); }catch(e){}
+  // Istanzia la card
   try{
     const CardClass=customElements.get(tagName);
-    const stub=CardClass?.getStubConfig?.()||{};
-    const cfg=_ghsPreviewFillCfg({storageKey:'__prev__',...stub});
+    let stub={}; try{ stub=CardClass?.getStubConfig?.()||{}; }catch(e){}
+    const cfg=_ghsPreviewFillCfg(stub);
     const card=document.createElement(tagName);
     card.style.cssText='display:block;width:100%';
-    try{ card.setConfig?.(cfg); }catch(e){}
-    card.hass=_createMockHass();
+    // Prova setConfig con varianti fallback
+    const variants=[cfg,{storageKey:'__prev__',entityId:'sensor.temperatura'},{storageKey:'__prev__'},{}];
+    for(const c of variants){ try{ card.setConfig?.(c); break; }catch(e){} }
+    try{ card.hass=_createMockHass(); }catch(e){}
     wrap.innerHTML='';
     wrap.appendChild(card);
-  }catch(e){ wrap.innerHTML=`<div class="ghs-prev-loading">⚠️ Errore rendering: ${eh(e.message||'sconosciuto')}</div>`; }
+    // Secondo push hass per card async
+    setTimeout(()=>{ try{ card.hass=_createMockHass(); }catch(e){}  },120);
+  }catch(e){ wrap.innerHTML=`<div class="ghs-prev-loading">⚠️ Errore: ${eh(e.message||'sconosciuto')}</div>`; }
 }
-function _ghsPreviewFillCfg(cfg){
-  const MAP={entityId:'sensor.temperatura',entity:'sensor.temperatura',tempEntity:'sensor.temperatura',temperatureEntity:'sensor.temperatura',humidityEntity:'sensor.umidita',powerEntity:'sensor.consumo',energyEntity:'sensor.energia',weatherEntity:'weather.casa',lightEntity:'light.soggiorno',climateEntity:'climate.termostato',sensorEntity:'sensor.consumo_lavatrice',applianceEntity:'sensor.lavatrice'};
-  const r={...cfg};
-  for(const[k,v]of Object.entries(MAP)) if(k in r&&(!r[k]||r[k]==='')) r[k]=v;
+function _ghsPreviewFillCfg(stub){
+  // Mappa di default per tutti i campi comuni — applicata sempre, non solo se già presente nello stub
+  const DEFAULTS={storageKey:'__prev__',entityId:'sensor.temperatura',entity:'sensor.temperatura',tempEntity:'sensor.temperatura',temperatureEntity:'sensor.temperatura',humidityEntity:'sensor.umidita',powerEntity:'sensor.consumo',energyEntity:'sensor.energia',weatherEntity:'weather.casa',lightEntity:'light.soggiorno',climateEntity:'climate.termostato',sensorEntity:'sensor.consumo_lavatrice',applianceEntity:'sensor.lavatrice',personEntity:'person.francesco',switchEntity:'switch.cucina',binarySensorEntity:'binary_sensor.porta_ingresso'};
+  const r={...DEFAULTS,...stub};
+  // Sovrascrive i campi vuoti o stringa vuota con i default
+  for(const[k,v]of Object.entries(DEFAULTS)) if(!r[k]) r[k]=v;
+  r.storageKey='__prev__';
   return r;
 }
 function _createMockHass(){

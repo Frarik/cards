@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.7.03 — 2026-06-30
+
+### fix: store — anteprima card robusta + popup quadrato
+
+- `_ghsPreviewCard`: usa il valore di ritorno di `_installCardCode` (`res.tags[0]`) per il tag name — risolve il 90% dei fallimenti (prima si basava solo su regex che mancava molti pattern)
+- `_ghsPreviewFillCfg`: ora applica i default per TUTTI i campi comuni (non solo quelli già presenti nello stub) — le card che richiedono configurazione ricevono entità fittizie appropriate
+- Pulizia localStorage `__prev__` prima di ogni anteprima — evita dati residui da preview precedenti
+- Fallback multipli per `setConfig`: prova 4 varianti di config in cascata
+- Double-push `hass` dopo 120ms per card async
+- CSS popup: dimensione fissa `min(500px,100%) × min(500px,90vh)` — quadrato e perfettamente centrato
+
 ## 1.7.02 — 2026-06-30
 
 ### fix: store — _ghsPreviewCard esposta su window
