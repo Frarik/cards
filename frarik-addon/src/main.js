@@ -2312,7 +2312,7 @@ function _ghStoreRender(){
 function _ghStoreRenderInstalled(q, originFilter){
   const list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
   // Includi sempre le card di sistema (builtin) nella tab 'local'
-  let items=_jsStoreList().filter(i=>((i.origin||'github')===originFilter)||(originFilter==='local'&&i._builtin));
+  let items=_jsStoreList().filter(i=>!i._builtin&&(i.origin||'github')===originFilter);
   const all=items.length;
   if(q) items=items.filter(i=>((i.meta||{}).name||(i.meta||{}).id||'').toLowerCase().includes(q));
   const lbl=originFilter==='local'?'card locali':'card da GitHub';

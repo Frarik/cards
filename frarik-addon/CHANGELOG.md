@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.99 — 2026-06-30
+
+### fix: store — card SOS rimossa dal tab Locali
+
+- `_ghStoreRenderInstalled`: rimossa la condizione che includeva le card `_builtin` nel tab Locali — la card SOS (predefinita di sistema) non compare più tra le card locali
+- Le card builtin restano visibili solo nel tab Predefinite
+
 ## 1.6.98 — 2026-06-30
 
 ### feat: store — gerarchia tab a due livelli (Cards + sub-tab)
