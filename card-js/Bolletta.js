@@ -1,4 +1,4 @@
-/* frarik-version: 3.0 */
+/* frarik-version: 3.1 */
 (function () {
   'use strict';
 
@@ -23,72 +23,75 @@
   function pkDefaults() {
     return {
       pk_consumo_ist:   'sensor.consumo_istantaneo',
-      pk_kwh_oggi:      'sensor.bolletta_energia_giornaliera_safe',
-      pk_kwh_mese:      'sensor.bolletta_energia_mensile_safe',
-      pk_costo_oggi:    'sensor.bolletta_giornaliera',
-      pk_costo_mese:    'sensor.bolletta_mensile',
-      pk_proiezione_e:  'sensor.bolletta_proiezione_fine_mese',
-      pk_proiezione_k:  'sensor.bolletta_previsione_kwh_fine_mese',
-      pk_anno:          'sensor.bolletta_totale_anno_corrente',
-      pk_arera_trim:    'sensor.bolletta_arera_trimestre',
-      pk_materia:       'sensor.bolletta_materia_energia_mensile',
-      pk_trasporto:     'sensor.bolletta_trasporto_mensile',
-      pk_oneri:         'sensor.bolletta_oneri_sistema_mensili',
-      pk_accise:        'sensor.bolletta_costo_mensile_accise',
-      pk_iva:           'sensor.bolletta_iva_mensile',
-      pk_canone_rai:    'sensor.bolletta_canone_rai_mensile',
-      pk_costo_kwh:     'sensor.bolletta_costo_per_kwh',
-      pk_media_g:       'sensor.bolletta_consumo_medio_giornaliero',
-      pk_diff_anno:     'sensor.bolletta_differenza_vs_anno_scorso',
-      pk_tariffa:       'input_number.bolletta_tariffa_energia',
-      pk_spread:        'input_number.bolletta_spread_energia',
-      pk_potenza:       'input_number.bolletta_potenza_impegnata',
-      pk_bonus:         'input_number.bolletta_bonus_mese_corrente',
-      pk_bonus_soc:     'input_number.bolletta_bonus_sociale',
-      pk_credito_gse:   'input_number.bolletta_credito_gse',
-      pk_ha_fv:         'input_boolean.bolletta_ha_fotovoltaico',
-      pk_test_kwh:      'input_number.bolletta_test_consumo_kwh',
-      pk_test_bonus:    'input_number.bolletta_test_bonus_euro',
-      pk_fb_perdite:    'input_number.bolletta_fb_perdite_perc',
-      pk_fb_dispbt:     'input_number.bolletta_fb_dispbt',
-      pk_fb_disp:       'input_number.bolletta_fb_dispacciamento',
-      pk_fb_mc:         'input_number.bolletta_fb_mercato_capacita',
-      pk_fb_pno:        'input_number.bolletta_fb_pno',
-      pk_fb_comm:       'input_number.bolletta_fb_commercializzazione',
-      pk_fb_tr_en:      'input_number.bolletta_fb_trasporto_energia',
-      pk_fb_tr_fis:     'input_number.bolletta_fb_trasporto_fisso',
-      pk_fb_tr_pot:     'input_number.bolletta_fb_trasporto_potenza',
-      pk_fb_uc3:        'input_number.bolletta_fb_uc3',
-      pk_fb_uc6f:       'input_number.bolletta_fb_uc6_fisso',
-      pk_fb_uc6v:       'input_number.bolletta_fb_uc6_variabile',
-      pk_fb_arim:       'input_number.bolletta_fb_arim',
-      pk_fb_asos:       'input_number.bolletta_fb_asos',
-      pk_fb_accise:     'input_number.bolletta_fb_accise',
-      pk_fb_iva:        'input_number.bolletta_fb_iva_perc',
-      pk_m_01:'input_number.bolletta_storico_mese_curr_01', pk_m_02:'input_number.bolletta_storico_mese_curr_02',
-      pk_m_03:'input_number.bolletta_storico_mese_curr_03', pk_m_04:'input_number.bolletta_storico_mese_curr_04',
-      pk_m_05:'input_number.bolletta_storico_mese_curr_05', pk_m_06:'input_number.bolletta_storico_mese_curr_06',
-      pk_m_07:'input_number.bolletta_storico_mese_curr_07', pk_m_08:'input_number.bolletta_storico_mese_curr_08',
-      pk_m_09:'input_number.bolletta_storico_mese_curr_09', pk_m_10:'input_number.bolletta_storico_mese_curr_10',
-      pk_m_11:'input_number.bolletta_storico_mese_curr_11', pk_m_12:'input_number.bolletta_storico_mese_curr_12',
-      pk_p_01:'input_number.bolletta_storico_mese_prev_01', pk_p_02:'input_number.bolletta_storico_mese_prev_02',
-      pk_p_03:'input_number.bolletta_storico_mese_prev_03', pk_p_04:'input_number.bolletta_storico_mese_prev_04',
-      pk_p_05:'input_number.bolletta_storico_mese_prev_05', pk_p_06:'input_number.bolletta_storico_mese_prev_06',
-      pk_p_07:'input_number.bolletta_storico_mese_prev_07', pk_p_08:'input_number.bolletta_storico_mese_prev_08',
-      pk_p_09:'input_number.bolletta_storico_mese_prev_09', pk_p_10:'input_number.bolletta_storico_mese_prev_10',
-      pk_p_11:'input_number.bolletta_storico_mese_prev_11', pk_p_12:'input_number.bolletta_storico_mese_prev_12',
-      pk_k_01:'input_number.bolletta_storico_kwh_curr_01',  pk_k_02:'input_number.bolletta_storico_kwh_curr_02',
-      pk_k_03:'input_number.bolletta_storico_kwh_curr_03',  pk_k_04:'input_number.bolletta_storico_kwh_curr_04',
-      pk_k_05:'input_number.bolletta_storico_kwh_curr_05',  pk_k_06:'input_number.bolletta_storico_kwh_curr_06',
-      pk_k_07:'input_number.bolletta_storico_kwh_curr_07',  pk_k_08:'input_number.bolletta_storico_kwh_curr_08',
-      pk_k_09:'input_number.bolletta_storico_kwh_curr_09',  pk_k_10:'input_number.bolletta_storico_kwh_curr_10',
-      pk_k_11:'input_number.bolletta_storico_kwh_curr_11',  pk_k_12:'input_number.bolletta_storico_kwh_curr_12',
-      pk_kp_01:'input_number.bolletta_storico_kwh_prev_01', pk_kp_02:'input_number.bolletta_storico_kwh_prev_02',
-      pk_kp_03:'input_number.bolletta_storico_kwh_prev_03', pk_kp_04:'input_number.bolletta_storico_kwh_prev_04',
-      pk_kp_05:'input_number.bolletta_storico_kwh_prev_05', pk_kp_06:'input_number.bolletta_storico_kwh_prev_06',
-      pk_kp_07:'input_number.bolletta_storico_kwh_prev_07', pk_kp_08:'input_number.bolletta_storico_kwh_prev_08',
-      pk_kp_09:'input_number.bolletta_storico_kwh_prev_09', pk_kp_10:'input_number.bolletta_storico_kwh_prev_10',
-      pk_kp_11:'input_number.bolletta_storico_kwh_prev_11', pk_kp_12:'input_number.bolletta_storico_kwh_prev_12',
+      pk_kwh_oggi:      'sensor.frarik_bolletta_energia_giornaliera_safe',
+      pk_kwh_mese:      'sensor.frarik_bolletta_energia_mensile_safe',
+      pk_costo_oggi:    'sensor.frarik_bolletta_giornaliera',
+      pk_costo_mese:    'sensor.frarik_bolletta_mensile',
+      pk_proiezione_e:  'sensor.frarik_bolletta_proiezione_fine_mese',
+      pk_proiezione_k:  'sensor.frarik_bolletta_previsione_kwh_fine_mese',
+      pk_anno:          'sensor.frarik_bolletta_totale_anno_corrente',
+      pk_arera_trim:    'sensor.frarik_bolletta_arera_trimestre',
+      pk_materia:       'sensor.frarik_bolletta_materia_energia_mensile',
+      pk_trasporto:     'sensor.frarik_bolletta_trasporto_mensile',
+      pk_oneri:         'sensor.frarik_bolletta_oneri_sistema_mensili',
+      pk_accise:        'sensor.frarik_bolletta_costo_mensile_accise',
+      pk_iva:           'sensor.frarik_bolletta_iva_mensile',
+      pk_canone_rai:    'sensor.frarik_bolletta_canone_rai_mensile',
+      pk_costo_kwh:     'sensor.frarik_bolletta_costo_per_kwh',
+      pk_media_g:       'sensor.frarik_bolletta_consumo_medio_giornaliero',
+      pk_diff_anno:     'sensor.frarik_bolletta_differenza_vs_anno_scorso',
+      pk_tariffa:       'input_number.frarik_bolletta_tariffa_energia',
+      pk_spread:        'input_number.frarik_bolletta_spread_energia',
+      pk_potenza:       'input_number.frarik_bolletta_potenza_impegnata',
+      pk_bonus:         'input_number.frarik_bolletta_bonus_mese_corrente',
+      pk_bonus_soc:     'input_number.frarik_bolletta_bonus_sociale',
+      pk_credito_gse:   'input_number.frarik_bolletta_credito_gse',
+      pk_ha_fv:         'input_boolean.frarik_bolletta_ha_fotovoltaico',
+      pk_fv_prod_ist:   '',
+      pk_fv_kwh_oggi:   '',
+      pk_fv_kwh_mese:   '',
+      pk_test_kwh:      'input_number.frarik_bolletta_test_consumo_kwh',
+      pk_test_bonus:    'input_number.frarik_bolletta_test_bonus_euro',
+      pk_fb_perdite:    'input_number.frarik_bolletta_fb_perdite_perc',
+      pk_fb_dispbt:     'input_number.frarik_bolletta_fb_dispbt',
+      pk_fb_disp:       'input_number.frarik_bolletta_fb_dispacciamento',
+      pk_fb_mc:         'input_number.frarik_bolletta_fb_mercato_capacita',
+      pk_fb_pno:        'input_number.frarik_bolletta_fb_pno',
+      pk_fb_comm:       'input_number.frarik_bolletta_fb_commercializzazione',
+      pk_fb_tr_en:      'input_number.frarik_bolletta_fb_trasporto_energia',
+      pk_fb_tr_fis:     'input_number.frarik_bolletta_fb_trasporto_fisso',
+      pk_fb_tr_pot:     'input_number.frarik_bolletta_fb_trasporto_potenza',
+      pk_fb_uc3:        'input_number.frarik_bolletta_fb_uc3',
+      pk_fb_uc6f:       'input_number.frarik_bolletta_fb_uc6_fisso',
+      pk_fb_uc6v:       'input_number.frarik_bolletta_fb_uc6_variabile',
+      pk_fb_arim:       'input_number.frarik_bolletta_fb_arim',
+      pk_fb_asos:       'input_number.frarik_bolletta_fb_asos',
+      pk_fb_accise:     'input_number.frarik_bolletta_fb_accise',
+      pk_fb_iva:        'input_number.frarik_bolletta_fb_iva_perc',
+      pk_m_01:'input_number.frarik_bolletta_storico_mese_curr_01', pk_m_02:'input_number.frarik_bolletta_storico_mese_curr_02',
+      pk_m_03:'input_number.frarik_bolletta_storico_mese_curr_03', pk_m_04:'input_number.frarik_bolletta_storico_mese_curr_04',
+      pk_m_05:'input_number.frarik_bolletta_storico_mese_curr_05', pk_m_06:'input_number.frarik_bolletta_storico_mese_curr_06',
+      pk_m_07:'input_number.frarik_bolletta_storico_mese_curr_07', pk_m_08:'input_number.frarik_bolletta_storico_mese_curr_08',
+      pk_m_09:'input_number.frarik_bolletta_storico_mese_curr_09', pk_m_10:'input_number.frarik_bolletta_storico_mese_curr_10',
+      pk_m_11:'input_number.frarik_bolletta_storico_mese_curr_11', pk_m_12:'input_number.frarik_bolletta_storico_mese_curr_12',
+      pk_p_01:'input_number.frarik_bolletta_storico_mese_prev_01', pk_p_02:'input_number.frarik_bolletta_storico_mese_prev_02',
+      pk_p_03:'input_number.frarik_bolletta_storico_mese_prev_03', pk_p_04:'input_number.frarik_bolletta_storico_mese_prev_04',
+      pk_p_05:'input_number.frarik_bolletta_storico_mese_prev_05', pk_p_06:'input_number.frarik_bolletta_storico_mese_prev_06',
+      pk_p_07:'input_number.frarik_bolletta_storico_mese_prev_07', pk_p_08:'input_number.frarik_bolletta_storico_mese_prev_08',
+      pk_p_09:'input_number.frarik_bolletta_storico_mese_prev_09', pk_p_10:'input_number.frarik_bolletta_storico_mese_prev_10',
+      pk_p_11:'input_number.frarik_bolletta_storico_mese_prev_11', pk_p_12:'input_number.frarik_bolletta_storico_mese_prev_12',
+      pk_k_01:'input_number.frarik_bolletta_storico_kwh_curr_01',  pk_k_02:'input_number.frarik_bolletta_storico_kwh_curr_02',
+      pk_k_03:'input_number.frarik_bolletta_storico_kwh_curr_03',  pk_k_04:'input_number.frarik_bolletta_storico_kwh_curr_04',
+      pk_k_05:'input_number.frarik_bolletta_storico_kwh_curr_05',  pk_k_06:'input_number.frarik_bolletta_storico_kwh_curr_06',
+      pk_k_07:'input_number.frarik_bolletta_storico_kwh_curr_07',  pk_k_08:'input_number.frarik_bolletta_storico_kwh_curr_08',
+      pk_k_09:'input_number.frarik_bolletta_storico_kwh_curr_09',  pk_k_10:'input_number.frarik_bolletta_storico_kwh_curr_10',
+      pk_k_11:'input_number.frarik_bolletta_storico_kwh_curr_11',  pk_k_12:'input_number.frarik_bolletta_storico_kwh_curr_12',
+      pk_kp_01:'input_number.frarik_bolletta_storico_kwh_prev_01', pk_kp_02:'input_number.frarik_bolletta_storico_kwh_prev_02',
+      pk_kp_03:'input_number.frarik_bolletta_storico_kwh_prev_03', pk_kp_04:'input_number.frarik_bolletta_storico_kwh_prev_04',
+      pk_kp_05:'input_number.frarik_bolletta_storico_kwh_prev_05', pk_kp_06:'input_number.frarik_bolletta_storico_kwh_prev_06',
+      pk_kp_07:'input_number.frarik_bolletta_storico_kwh_prev_07', pk_kp_08:'input_number.frarik_bolletta_storico_kwh_prev_08',
+      pk_kp_09:'input_number.frarik_bolletta_storico_kwh_prev_09', pk_kp_10:'input_number.frarik_bolletta_storico_kwh_prev_10',
+      pk_kp_11:'input_number.frarik_bolletta_storico_kwh_prev_11', pk_kp_12:'input_number.frarik_bolletta_storico_kwh_prev_12',
     };
   }
 
@@ -101,22 +104,22 @@
 
   /* ── BILL CALCULATION (mirrors PKG formula) ── */
   function calcBill(kwh, h, cf) {
-    var perdPerc  = N(S(h,'sensor.bolletta_arera_perdite_rete_perc'))  || N(S(h,cf.pk_fb_perdite))  || 8.73;
-    var dispbt    = N(S(h,'sensor.bolletta_arera_dispbt'))             || N(S(h,cf.pk_fb_dispbt))    || 0.102592;
-    var disp      = N(S(h,'sensor.bolletta_arera_dispacciamento'))     || N(S(h,cf.pk_fb_disp))      || 0.010660;
-    var mc        = N(S(h,'sensor.bolletta_arera_mercato_capacita'))   || N(S(h,cf.pk_fb_mc))        || 0.010583;
-    var pno       = N(S(h,'sensor.bolletta_arera_pno'))                || N(S(h,cf.pk_fb_pno))       || 0;
+    var perdPerc  = N(S(h,'sensor.frarik_bolletta_arera_perdite_rete_perc'))  || N(S(h,cf.pk_fb_perdite))  || 8.73;
+    var dispbt    = N(S(h,'sensor.frarik_bolletta_arera_dispbt'))             || N(S(h,cf.pk_fb_dispbt))    || 0.102592;
+    var disp      = N(S(h,'sensor.frarik_bolletta_arera_dispacciamento'))     || N(S(h,cf.pk_fb_disp))      || 0.010660;
+    var mc        = N(S(h,'sensor.frarik_bolletta_arera_mercato_capacita'))   || N(S(h,cf.pk_fb_mc))        || 0.010583;
+    var pno       = N(S(h,'sensor.frarik_bolletta_arera_pno'))                || N(S(h,cf.pk_fb_pno))       || 0;
     var comm      = N(S(h,cf.pk_fb_comm))  || 6;
-    var tr_en     = N(S(h,'sensor.bolletta_arera_trasporto_quota_energia'))  || N(S(h,cf.pk_fb_tr_en))  || 0.0119;
-    var tr_fis    = N(S(h,'sensor.bolletta_arera_trasporto_quota_fissa'))    || N(S(h,cf.pk_fb_tr_fis)) || 1.92;
-    var tr_pot    = N(S(h,'sensor.bolletta_arera_trasporto_quota_potenza'))  || N(S(h,cf.pk_fb_tr_pot)) || 2.22;
-    var uc3       = N(S(h,'sensor.bolletta_arera_uc3'))         || N(S(h,cf.pk_fb_uc3))   || 0.00276;
-    var uc6f      = N(S(h,'sensor.bolletta_arera_uc6_fisso'))   || N(S(h,cf.pk_fb_uc6f))  || 0.07;
-    var uc6v      = N(S(h,'sensor.bolletta_arera_uc6_variabile'))|| N(S(h,cf.pk_fb_uc6v)) || 0.00007;
-    var arim      = N(S(h,'sensor.bolletta_arera_arim'))         || N(S(h,cf.pk_fb_arim))  || 0.001638;
-    var asos      = N(S(h,'sensor.bolletta_arera_asos'))         || N(S(h,cf.pk_fb_asos))  || 0.028657;
-    var erariale  = N(S(h,'sensor.bolletta_arera_erariale'))     || N(S(h,cf.pk_fb_accise))|| 0.022700;
-    var iva_perc  = N(S(h,'sensor.bolletta_arera_iva_perc'))     || N(S(h,cf.pk_fb_iva))   || 10;
+    var tr_en     = N(S(h,'sensor.frarik_bolletta_arera_trasporto_quota_energia'))  || N(S(h,cf.pk_fb_tr_en))  || 0.0119;
+    var tr_fis    = N(S(h,'sensor.frarik_bolletta_arera_trasporto_quota_fissa'))    || N(S(h,cf.pk_fb_tr_fis)) || 1.92;
+    var tr_pot    = N(S(h,'sensor.frarik_bolletta_arera_trasporto_quota_potenza'))  || N(S(h,cf.pk_fb_tr_pot)) || 2.22;
+    var uc3       = N(S(h,'sensor.frarik_bolletta_arera_uc3'))         || N(S(h,cf.pk_fb_uc3))   || 0.00276;
+    var uc6f      = N(S(h,'sensor.frarik_bolletta_arera_uc6_fisso'))   || N(S(h,cf.pk_fb_uc6f))  || 0.07;
+    var uc6v      = N(S(h,'sensor.frarik_bolletta_arera_uc6_variabile'))|| N(S(h,cf.pk_fb_uc6v)) || 0.00007;
+    var arim      = N(S(h,'sensor.frarik_bolletta_arera_arim'))         || N(S(h,cf.pk_fb_arim))  || 0.001638;
+    var asos      = N(S(h,'sensor.frarik_bolletta_arera_asos'))         || N(S(h,cf.pk_fb_asos))  || 0.028657;
+    var erariale  = N(S(h,'sensor.frarik_bolletta_arera_erariale'))     || N(S(h,cf.pk_fb_accise))|| 0.022700;
+    var iva_perc  = N(S(h,'sensor.frarik_bolletta_arera_iva_perc'))     || N(S(h,cf.pk_fb_iva))   || 10;
     var pE        = N(S(h,cf.pk_tariffa)) + N(S(h,cf.pk_spread));
     var kw        = N(S(h,cf.pk_potenza)) || 4.5;
 
@@ -202,7 +205,7 @@
       + '</div>'
       + sec('Dettaglio Tariffe ARERA ' + trim)
       + row('kWh Consumati', kwh.toFixed(1) + ' kWh', '#fff')
-      + row('Prezzo Energia', (N(S(h,c.pk_tariffa)) * 100).toFixed(4) + ' c€/kWh', '#fff')
+      + row('Prezzo Energia', (N(S(h,c.pk_tariffa)) * 100).toFixed(2) + ' c€/kWh', '#fff')
       + row('Costo All-in/kWh', (costoKwh * 100).toFixed(3) + ' c€/kWh', COL)
       + row('Mese', MESIL[now.getMonth()] + ' ' + now.getFullYear(), 'rgba(255,255,255,.5)');
 
@@ -330,38 +333,41 @@
   }
 
   /* ── POPUP: IMPOSTAZIONI ── */
-  function openImpostazioni(card, c) {
+  function openImpostazioni(card, c, el) {
     var h = H();
     var iSt = 'width:100%;padding:8px 10px;border-radius:8px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.15);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none;margin-top:3px';
+    var iStDis = iSt + ';opacity:.35;pointer-events:none';
     var lSt = 'font-size:11px;color:rgba(255,255,255,.6);display:block;margin-top:8px';
 
-    function inp(id, val, ph) {
-      return '<input id="' + id + '" type="text" inputmode="decimal" value="' + (val || '') + '" placeholder="' + (ph || '') + '" style="' + iSt + '">';
+    function inp(id, val, ph, dis) {
+      return '<input id="' + id + '" type="text" inputmode="decimal" value="' + (val || '') + '" placeholder="' + (ph || '') + '" style="' + (dis ? iStDis : iSt) + '"' + (dis ? ' disabled' : '') + '>';
     }
-    function lbl(t) { return '<label style="' + lSt + '">' + t + '</label>'; }
+    function inpTxt(id, val, ph, dis) {
+      return '<input id="' + id + '" type="text" value="' + (val || '') + '" placeholder="' + (ph || '') + '" style="' + (dis ? iStDis : iSt) + '"' + (dis ? ' disabled' : '') + '>';
+    }
+    function lbl(t, dis) { return '<label style="' + lSt + (dis ? ';opacity:.35' : '') + '">' + t + '</label>'; }
 
     var tabCSS = '<style>'
       + '.bp-tab{flex:1;padding:8px 4px;text-align:center;font-size:11px;font-weight:700;cursor:pointer;border-radius:8px;transition:all .15s;color:rgba(255,255,255,.5);border:none;background:transparent}'
       + '.bp-tab.active{background:rgba(' + RGB + ',.18);color:' + COL + ';border:1px solid rgba(' + RGB + ',.3)}'
       + '.bp-panel{display:none}.bp-panel.active{display:block}'
+      + '.fv-field{transition:opacity .2s}'
       + '</style>';
 
     var tabs = '<div style="display:flex;gap:4px;background:rgba(255,255,255,.04);border-radius:10px;padding:3px;margin-bottom:12px">'
-      + '<button class="bp-tab active" data-tab="contratto">Contratto</button>'
-      + '<button class="bp-tab" data-tab="arera">ARERA</button>'
-      + '<button class="bp-tab" data-tab="mensili">Mensili</button>'
+      + '<button class="bp-tab active" data-tab="tariffa">Tariffa</button>'
+      + '<button class="bp-tab" data-tab="fv">☀️ FV</button>'
       + '<button class="bp-tab" data-tab="sensori">Sensori</button>'
       + '</div>';
 
-    var pContratto = '<div class="bp-panel active" id="bp-p-contratto">'
+    var pTariffa = '<div class="bp-panel active" id="bp-p-tariffa">'
       + lbl('Prezzo fisso energia (€/kWh)') + inp('bp-tariffa', N(S(h,c.pk_tariffa)).toFixed(6), '0.090000')
       + lbl('Spread energia (€/kWh)') + inp('bp-spread', N(S(h,c.pk_spread)).toFixed(6), '0.000000')
       + lbl('Potenza impegnata (kW)') + inp('bp-potenza', N(S(h,c.pk_potenza)).toFixed(1), '4.5')
       + lbl('Commercializzazione (€/mese)') + inp('bp-comm', N(S(h,c.pk_fb_comm)).toFixed(2), '6.00')
-      + '</div>';
-
-    var pArera = '<div class="bp-panel" id="bp-p-arera">'
-      + '<div style="font-size:10px;color:rgba(255,255,255,.35);margin-bottom:8px">Valori fallback — usati se ARERA REST non disponibile</div>'
+      + lbl('Bonus mese corrente (€)') + inp('bp-bonus', N(S(h,c.pk_bonus)).toFixed(2), '0.00')
+      + lbl('Bonus sociale (€)') + inp('bp-bonus-soc', N(S(h,c.pk_bonus_soc)).toFixed(2), '0.00')
+      + '<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 4px;padding-bottom:3px;border-bottom:1px solid rgba(255,255,255,.07)">Fallback ARERA — usati se REST non disponibile</div>'
       + lbl('Perdite rete (%)') + inp('bp-perdite', N(S(h,c.pk_fb_perdite)).toFixed(2), '8.73')
       + lbl('DISPbt (€/mese)') + inp('bp-dispbt', N(S(h,c.pk_fb_dispbt)).toFixed(6), '0.102592')
       + lbl('Dispacciamento (€/kWh)') + inp('bp-disp', N(S(h,c.pk_fb_disp)).toFixed(6), '0.010660')
@@ -379,25 +385,31 @@
       + '</div>';
 
     var haFvNow = S(h, c.pk_ha_fv) === 'on';
-    var pMensili = '<div class="bp-panel" id="bp-p-mensili">'
-      + '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);margin-bottom:6px">'
-      + '<span style="font-size:12px;color:rgba(255,255,255,.8)">☀️ Ho il Fotovoltaico</span>'
-      + '<button id="bp-fv-toggle" style="padding:4px 14px;border-radius:20px;border:none;cursor:pointer;font-size:11px;font-weight:800;background:' + (haFvNow ? 'rgba(74,222,128,.2);color:#4ade80' : 'rgba(255,255,255,.06);color:rgba(255,255,255,.35)') + '">' + (haFvNow ? '✅ ON' : 'OFF') + '</button>'
+    var fvDis = !haFvNow;
+    var pFv = '<div class="bp-panel" id="bp-p-fv">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:10px">'
+      + '<span style="font-size:13px;font-weight:700;color:#fff">☀️ Fotovoltaico</span>'
+      + '<button id="bp-fv-toggle" style="padding:5px 16px;border-radius:20px;border:none;cursor:pointer;font-size:12px;font-weight:800;background:' + (haFvNow ? 'rgba(74,222,128,.2);color:#4ade80' : 'rgba(255,255,255,.06);color:rgba(255,255,255,.4)') + '">' + (haFvNow ? '✅ ON' : 'OFF') + '</button>'
       + '</div>'
-      + lbl('Credito GSE - Scambio sul Posto (€)') + inp('bp-gse', N(S(h,c.pk_credito_gse)).toFixed(2), '0.00')
-      + '<div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:4px;margin-bottom:10px">Il credito GSE viene aggiornato manualmente quando si riceve il rendiconto trimestrale</div>'
-      + lbl('Bonus mese corrente (€)') + inp('bp-bonus', N(S(h,c.pk_bonus)).toFixed(2), '0.00')
-      + lbl('Bonus sociale (€)') + inp('bp-bonus-soc', N(S(h,c.pk_bonus_soc)).toFixed(2), '0.00')
+      + '<div id="bp-fv-fields" style="opacity:' + (haFvNow ? '1' : '.35') + ';transition:opacity .2s">'
+      + lbl('Sensore Potenza Produzione FV (W)') + inpTxt('bp-s-fv-pow', c.pk_fv_prod_ist || '', 'sensor.potenza_fotovoltaico', fvDis)
+      + lbl('Sensore kWh Produzione Oggi') + inpTxt('bp-s-fv-og', c.pk_fv_kwh_oggi || '', 'sensor.energia_fv_oggi', fvDis)
+      + lbl('Sensore kWh Produzione Mese') + inpTxt('bp-s-fv-me', c.pk_fv_kwh_mese || '', 'sensor.energia_fv_mese', fvDis)
+      + '<div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.07)">'
+      + lbl('Credito GSE - Scambio sul Posto (€)') + inp('bp-gse', N(S(h,c.pk_credito_gse)).toFixed(2), '0.00', fvDis)
+      + '<div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:4px">Aggiornato manualmente ogni trimestre</div>'
+      + '</div>'
+      + '</div>'
       + '</div>';
 
     var pSensori = '<div class="bp-panel" id="bp-p-sensori">'
       + '<div style="font-size:10px;color:rgba(255,255,255,.35);margin-bottom:8px">ID entità HA — lascia vuoto per usare il default PKG</div>'
-      + lbl('Potenza istantanea (W)') + '<input id="bp-s-ist" type="text" value="' + c.pk_consumo_ist + '" style="' + iSt + '">'
-      + lbl('Costo Mensile (€)') + '<input id="bp-s-cm" type="text" value="' + c.pk_costo_mese + '" style="' + iSt + '">'
-      + lbl('Costo Oggi (€)') + '<input id="bp-s-cg" type="text" value="' + c.pk_costo_oggi + '" style="' + iSt + '">'
-      + lbl('kWh Mese') + '<input id="bp-s-km" type="text" value="' + c.pk_kwh_mese + '" style="' + iSt + '">'
-      + lbl('kWh Oggi') + '<input id="bp-s-kg" type="text" value="' + c.pk_kwh_oggi + '" style="' + iSt + '">'
-      + lbl('Proiezione Fine Mese (€)') + '<input id="bp-s-prj" type="text" value="' + c.pk_proiezione_e + '" style="' + iSt + '">'
+      + lbl('Potenza istantanea (W)') + inpTxt('bp-s-ist', c.pk_consumo_ist, '')
+      + lbl('Costo Mensile (€)') + inpTxt('bp-s-cm', c.pk_costo_mese, '')
+      + lbl('Costo Oggi (€)') + inpTxt('bp-s-cg', c.pk_costo_oggi, '')
+      + lbl('kWh Mese') + inpTxt('bp-s-km', c.pk_kwh_mese, '')
+      + lbl('kWh Oggi') + inpTxt('bp-s-kg', c.pk_kwh_oggi, '')
+      + lbl('Proiezione Fine Mese (€)') + inpTxt('bp-s-prj', c.pk_proiezione_e, '')
       + '</div>';
 
     var saveBtn = '<div style="display:flex;gap:8px;margin-top:14px">'
@@ -405,7 +417,7 @@
       + '<button id="bp-imp-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:' + COL + ';color:#000">Salva</button>'
       + '</div>';
 
-    var ov = mkOv(popShell('⚙', 'Impostazioni Bolletta', 'Contratto · ARERA · Mensili · Sensori', 'bp-imp-close', tabCSS + tabs + pContratto + pArera + pMensili + pSensori + saveBtn), 'bp-imp-close');
+    var ov = mkOv(popShell('⚙', 'Impostazioni Bolletta', 'Tariffa · FV · Sensori', 'bp-imp-close', tabCSS + tabs + pTariffa + pFv + pSensori + saveBtn), 'bp-imp-close');
 
     ov.querySelectorAll('.bp-tab').forEach(function(t) {
       t.addEventListener('click', function() {
@@ -420,13 +432,19 @@
     function g(id) { var e = ov.querySelector('#' + id); return e ? e.value.trim() : ''; }
 
     var bpFvBtn = ov.querySelector('#bp-fv-toggle');
+    var bpFvFields = ov.querySelector('#bp-fv-fields');
+    var _fvOn = haFvNow;
     if (bpFvBtn) {
       bpFvBtn.addEventListener('click', function() {
         callSvc('input_boolean', 'toggle', {entity_id: c.pk_ha_fv});
-        var nowOn = bpFvBtn.textContent.includes('ON');
-        bpFvBtn.textContent = nowOn ? 'OFF' : '✅ ON';
-        bpFvBtn.style.background = nowOn ? 'rgba(255,255,255,.06)' : 'rgba(74,222,128,.2)';
-        bpFvBtn.style.color = nowOn ? 'rgba(255,255,255,.35)' : '#4ade80';
+        _fvOn = !_fvOn;
+        bpFvBtn.textContent = _fvOn ? '✅ ON' : 'OFF';
+        bpFvBtn.style.background = _fvOn ? 'rgba(74,222,128,.2)' : 'rgba(255,255,255,.06)';
+        bpFvBtn.style.color = _fvOn ? '#4ade80' : 'rgba(255,255,255,.4)';
+        if (bpFvFields) {
+          bpFvFields.style.opacity = _fvOn ? '1' : '.35';
+          bpFvFields.querySelectorAll('input').forEach(function(inp2) { inp2.disabled = !_fvOn; });
+        }
       });
     }
 
@@ -436,6 +454,8 @@
       setNum(c.pk_spread,      g('bp-spread'));
       setNum(c.pk_potenza,     g('bp-potenza'));
       setNum(c.pk_fb_comm,     g('bp-comm'));
+      setNum(c.pk_bonus,       g('bp-bonus'));
+      setNum(c.pk_bonus_soc,   g('bp-bonus-soc'));
       setNum(c.pk_fb_perdite,  g('bp-perdite'));
       setNum(c.pk_fb_dispbt,   g('bp-dispbt'));
       setNum(c.pk_fb_disp,     g('bp-disp'));
@@ -450,8 +470,6 @@
       setNum(c.pk_fb_asos,     g('bp-asos'));
       setNum(c.pk_fb_accise,   g('bp-accise'));
       setNum(c.pk_fb_iva,      g('bp-iva'));
-      setNum(c.pk_bonus,       g('bp-bonus'));
-      setNum(c.pk_bonus_soc,   g('bp-bonus-soc'));
       setNum(c.pk_credito_gse, g('bp-gse'));
       var stored = load(card);
       stored.pk_consumo_ist  = g('bp-s-ist')  || stored.pk_consumo_ist;
@@ -460,8 +478,12 @@
       stored.pk_kwh_mese     = g('bp-s-km')   || stored.pk_kwh_mese;
       stored.pk_kwh_oggi     = g('bp-s-kg')   || stored.pk_kwh_oggi;
       stored.pk_proiezione_e = g('bp-s-prj')  || stored.pk_proiezione_e;
+      stored.pk_fv_prod_ist  = g('bp-s-fv-pow');
+      stored.pk_fv_kwh_oggi  = g('bp-s-fv-og');
+      stored.pk_fv_kwh_mese  = g('bp-s-fv-me');
       save(card, stored);
       ov._close();
+      if (el) { el._fcSig = ''; el._fcBound = null; el.innerHTML = render(card); mount(card, H(), el); }
     });
   }
 
@@ -554,6 +576,9 @@
     var trim     = S(h, c.pk_arera_trim) || '—';
     var haFv     = S(h, c.pk_ha_fv) === 'on';
     var gseCredit= N(S(h, c.pk_credito_gse));
+    var fvPowW   = c.pk_fv_prod_ist  ? N(S(h, c.pk_fv_prod_ist))  : 0;
+    var fvKwhG   = c.pk_fv_kwh_oggi  ? N(S(h, c.pk_fv_kwh_oggi))  : 0;
+    var fvKwhM   = c.pk_fv_kwh_mese  ? N(S(h, c.pk_fv_kwh_mese))  : 0;
 
     var daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
     var dayNow = now.getDate();
@@ -612,7 +637,7 @@
       + '@keyframes fbPulse{0%,100%{opacity:.6}50%{opacity:1}}'
       + '</style>';
 
-    var heroHtml = '<div class="fb-hero" data-sya="popup-dettaglio">'
+    var heroHtml = '<div class="fb-hero">'
       + '<div class="fb-hero-val">' + costoM.toFixed(2).replace('.',',') + '<span class="fb-hero-eur">€</span></div>'
       + '<div class="fb-hero-sub">' + MESIL[now.getMonth()] + ' ' + now.getFullYear() + ' · ' + kwhM.toFixed(1) + ' kWh</div>'
       + '<div class="fb-pills">'
@@ -625,16 +650,28 @@
 
     var statsHtml = '<div class="fb-stats">'
       + '<div class="fb-stat"><div class="fb-stat-lbl">📅 Oggi</div><div class="fb-stat-val">' + costoG.toFixed(2) + ' €</div><div class="fb-stat-sub">' + kwhG.toFixed(2) + ' kWh</div></div>'
-      + '<div class="fb-stat" data-sya="popup-simulatore"><div class="fb-stat-lbl">🔮 Proiezione</div><div class="fb-stat-val">' + proiE.toFixed(0) + ' €</div><div class="fb-stat-sub">' + proiK.toFixed(0) + ' kWh</div></div>'
+      + '<div class="fb-stat"><div class="fb-stat-lbl">🔮 Proiezione</div><div class="fb-stat-val">' + proiE.toFixed(0) + ' €</div><div class="fb-stat-sub">' + proiK.toFixed(0) + ' kWh</div></div>'
       + '<div class="fb-stat"><div class="fb-stat-lbl">⚡ Live</div><div class="fb-stat-val" style="color:' + wCol + '">' + wFmt + '</div><div class="fb-stat-sub">' + (wLive > 3000 ? 'Alto' : wLive > 1000 ? 'Medio' : 'Basso') + '</div></div>'
       + '</div>';
+
+    var fvHtml = haFv ? '<div style="margin:0 10px 8px;padding:9px 12px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.15);border-radius:12px">'
+      + '<div style="font-size:10px;font-weight:700;color:' + COL + ';text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px">☀️ Fotovoltaico</div>'
+      + '<div style="display:flex;gap:8px">'
+      + '<div style="flex:1;text-align:center"><div style="font-size:16px;font-weight:800;color:#fff">' + (fvPowW >= 1000 ? (fvPowW/1000).toFixed(2)+' kW' : fvPowW.toFixed(0)+' W') + '</div><div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:1px">Live</div></div>'
+      + '<div style="width:1px;background:rgba(255,255,255,.08)"></div>'
+      + '<div style="flex:1;text-align:center"><div style="font-size:16px;font-weight:800;color:#fff">' + fvKwhG.toFixed(2) + ' <span style="font-size:10px;font-weight:500;color:rgba(255,255,255,.5)">kWh</span></div><div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:1px">Oggi</div></div>'
+      + '<div style="width:1px;background:rgba(255,255,255,.08)"></div>'
+      + '<div style="flex:1;text-align:center"><div style="font-size:16px;font-weight:800;color:#fff">' + fvKwhM.toFixed(1) + ' <span style="font-size:10px;font-weight:500;color:rgba(255,255,255,.5)">kWh</span></div><div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:1px">Mese</div></div>'
+      + '</div>'
+      + (gseCredit > 0 ? '<div style="margin-top:7px;font-size:10px;color:rgba(74,222,128,.8);font-weight:600">Credito GSE: ' + gseCredit.toFixed(2) + ' €</div>' : '')
+      + '</div>' : '';
 
     var progHtml = '<div class="fb-prog">'
       + '<div class="fb-prog-hd"><span style="font-size:10px;color:rgba(255,255,255,.4)">Avanzamento mese</span><span style="font-size:10px;color:rgba(255,255,255,.5)">' + dayNow + '/' + daysInMonth + ' gg</span></div>'
       + '<div class="fb-prog-bar"><div style="height:100%;width:' + percMese + '%;background:rgba(' + RGB + ',.5);border-radius:2px"></div></div>'
       + '</div>';
 
-    var chartHtml = '<div class="fb-chart" data-sya="popup-storico">'
+    var chartHtml = '<div class="fb-chart">'
       + '<div class="fb-chart-hd"><span style="font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.03em">Ultimi 6 mesi</span>'
       + '<span style="font-size:10px;color:rgba(255,255,255,.4)">Anno: ' + annoTot.toFixed(0) + ' €</span></div>'
       + '<div style="display:flex;gap:3px;align-items:flex-end;height:82px">' + miniBar + '</div>'
@@ -653,11 +690,12 @@
       + '<div class="fb-hdr">'
       + '<div class="fb-hdr-iw">⚡</div>'
       + '<div class="fb-hdr-tit">' + (c.name || 'Bolletta') + '</div>'
-      + '<div style="font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;background:rgba(' + RGB + ',.12);border:1px solid rgba(' + RGB + ',.25);color:' + COL + '">ARERA ' + trim + '</div>'
+      + (trim && trim !== '—' && !trim.toLowerCase().startsWith('unav') ? '<div style="font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;background:rgba(' + RGB + ',.12);border:1px solid rgba(' + RGB + ',.25);color:' + COL + '">ARERA ' + trim + '</div>' : '')
       + '</div>'
       + '<div class="fb-scroll">'
       + heroHtml
       + statsHtml
+      + fvHtml
       + progHtml
       + chartHtml
       + btnsHtml
@@ -667,13 +705,14 @@
   }
 
   /* ── UPDATE / MOUNT ── */
-  var CARD = { id: 'bolletta', version: '3.0', name: 'Bolletta Elettrica', icon: '⚡', color: COL };
+  var CARD = { id: 'bolletta', version: '3.1', name: 'Bolletta Elettrica', icon: '⚡', color: COL };
 
   function update(card, hass, el) {
-    var h = H(), c = cfgFor(card);
-    var sig = [CARD.version, S(h,c.pk_costo_mese), S(h,c.pk_costo_oggi), S(h,c.pk_kwh_mese), S(h,c.pk_consumo_ist), S(h,c.pk_proiezione_e), S(h,c.pk_arera_trim)].join('|');
+    var h = hass || H(), c = cfgFor(card);
+    var sig = [CARD.version, S(h,c.pk_costo_mese), S(h,c.pk_costo_oggi), S(h,c.pk_kwh_mese), S(h,c.pk_consumo_ist), S(h,c.pk_proiezione_e), S(h,c.pk_arera_trim), S(h,c.pk_ha_fv), S(h,c.pk_credito_gse), S(h,c.pk_anno), c.pk_fv_prod_ist ? S(h,c.pk_fv_prod_ist) : '', c.pk_fv_kwh_oggi ? S(h,c.pk_fv_kwh_oggi) : '', c.pk_fv_kwh_mese ? S(h,c.pk_fv_kwh_mese) : ''].join('|');
     if (!el.querySelector('.fb-card') || el._fcSig !== sig) {
       el._fcSig = sig;
+      el._fcBound = null;
       el.innerHTML = render(card);
     }
     mount(card, hass, el);
@@ -690,14 +729,14 @@
       if (a === 'popup-dettaglio')    { openDettaglio(c); return; }
       if (a === 'popup-simulatore')   { openSimulatore(card, c); return; }
       if (a === 'popup-storico')      { openStorico(c); return; }
-      if (a === 'popup-impostazioni') { openImpostazioni(card, c); return; }
+      if (a === 'popup-impostazioni') { openImpostazioni(card, c, el); return; }
       if (a === 'popup-cfg')          { openCfg(card, el); return; }
     };
     el.addEventListener('click', el._fcHandler);
   }
 
   /* ── PKG YAML EMBEDDED ── */
-  var _BOLL_PKG_YAML = '###############################################################\n#\n#   Package: Centro Controllo Bolletta Elettrica\n#   Versione: 1.0  |  Frarik / Fratech\n#\n###############################################################\n#\n# Installazione tramite wizard Frarik o manuale:\n# Modifica le IMPOSTAZIONI PACKAGE e copia in config/packages/\n#\n###############################################################\n\nhomeassistant:\n  customize:\n    package.node_anchors:\n      customize: &customize\n        package: \'Centro Controllo Bolletta Elettrica 1.0 — Frarik\'\n\n      setting:\n        Sensore Potenza Casa: &sensore_potenza_bolletta\n          \'IL_TUO_SENSORE_POTENZA_BOLLETTA\'\n        Tariffa Contratto: &tariffa_contratto IL_TUA_TARIFFA_KWHE\n        Potenza Contrattuale: &potenza_kw IL_TUA_POTENZA_KW\n        Device per notifica push: &push\n          - service: IL_TUO_MOBILE_APP_1\n\nnotify:\n  - name: frarik_bolletta\n    platform: group\n    services: *push\n\nutility_meter:\n  bolletta_energia_giornaliera:\n    source: sensor.bolletta_energia_totale_casa\n    name: "Bolletta Energia Giornaliera"\n    cycle: daily\n  bolletta_energia_mensile:\n    source: sensor.bolletta_energia_totale_casa\n    name: "Bolletta Energia Mensile"\n    cycle: monthly\n  bolletta_energia_annuale:\n    source: sensor.bolletta_energia_totale_casa\n    name: "Bolletta Energia Annuale"\n    cycle: yearly\n\nsensor:\n  - platform: integration\n    source: *sensore_potenza_bolletta\n    name: "Bolletta Energia Totale Casa"\n    unique_id: bolletta_energia_totale_casa\n    unit_prefix: k\n    unit_time: h\n    round: 3\n    method: left\n\ninput_boolean:\n  bolletta_ha_fotovoltaico:\n    name: "Bolletta Ha Fotovoltaico"\n    icon: mdi:solar-panel\n\ninput_number:\n  bolletta_tariffa_energia:\n    name: "Bolletta Tariffa Energia Fissa"\n    min: 0\n    max: 1\n    step: 0.000001\n    initial: *tariffa_contratto\n    mode: box\n    unit_of_measurement: "€/kWh"\n  bolletta_potenza_impegnata:\n    name: "Bolletta Potenza Impegnata"\n    min: 1.5\n    max: 15\n    step: 0.5\n    initial: *potenza_kw\n    mode: box\n    unit_of_measurement: "kW"\n  bolletta_bonus_mese_corrente:\n    name: "Bolletta Bonus Mese Corrente"\n    min: 0\n    max: 500\n    step: 0.01\n    initial: 0\n    mode: box\n    unit_of_measurement: "€"\n  bolletta_credito_gse:\n    name: "Bolletta Credito GSE (FV)"\n    min: 0\n    max: 2000\n    step: 0.01\n    initial: 0\n    mode: box\n    unit_of_measurement: "€"\n\n# (file completo: installare frarik_bolletta.yaml da config/packages/)\n';
+  var _BOLL_PKG_YAML = '###############################################################\n#\n#   Package: Centro Controllo Bolletta Elettrica\n#   Versione: 1.0  |  Frarik / Fratech\n#\n###############################################################\n#\n# Installazione tramite wizard Frarik o manuale:\n# Modifica le IMPOSTAZIONI PACKAGE e copia in config/packages/\n#\n###############################################################\n\nhomeassistant:\n  customize:\n    package.node_anchors:\n      customize: &customize\n        package: \'Centro Controllo Bolletta Elettrica 1.0 — Frarik\'\n\n      setting:\n        Sensore Potenza Casa: &sensore_potenza_bolletta\n          \'IL_TUO_SENSORE_POTENZA_BOLLETTA\'\n        Tariffa Contratto: &tariffa_contratto IL_TUA_TARIFFA_KWHE\n        Potenza Contrattuale: &potenza_kw IL_TUA_POTENZA_KW\n        Device per notifica push: &push\n          - service: IL_TUO_MOBILE_APP_1\n\nnotify:\n  - name: frarik_bolletta\n    platform: group\n    services: *push\n\nutility_meter:\n  frarik_bolletta_energia_giornaliera:\n    source: sensor.frarik_bolletta_energia_totale_casa\n    name: "Bolletta Energia Giornaliera"\n    cycle: daily\n  frarik_bolletta_energia_mensile:\n    source: sensor.frarik_bolletta_energia_totale_casa\n    name: "Bolletta Energia Mensile"\n    cycle: monthly\n  frarik_bolletta_energia_annuale:\n    source: sensor.frarik_bolletta_energia_totale_casa\n    name: "Bolletta Energia Annuale"\n    cycle: yearly\n\nsensor:\n  - platform: integration\n    source: *sensore_potenza_bolletta\n    name: "Bolletta Energia Totale Casa"\n    unique_id: frarik_bolletta_energia_totale_casa\n    unit_prefix: k\n    unit_time: h\n    round: 3\n    method: left\n\ninput_boolean:\n  frarik_bolletta_ha_fotovoltaico:\n    name: "Bolletta Ha Fotovoltaico"\n    icon: mdi:solar-panel\n\ninput_number:\n  frarik_bolletta_tariffa_energia:\n    name: "Bolletta Tariffa Energia Fissa"\n    min: 0\n    max: 1\n    step: 0.000001\n    initial: *tariffa_contratto\n    mode: box\n    unit_of_measurement: "€/kWh"\n  frarik_bolletta_potenza_impegnata:\n    name: "Bolletta Potenza Impegnata"\n    min: 1.5\n    max: 15\n    step: 0.5\n    initial: *potenza_kw\n    mode: box\n    unit_of_measurement: "kW"\n  frarik_bolletta_bonus_mese_corrente:\n    name: "Bolletta Bonus Mese Corrente"\n    min: 0\n    max: 500\n    step: 0.01\n    initial: 0\n    mode: box\n    unit_of_measurement: "€"\n  frarik_bolletta_credito_gse:\n    name: "Bolletta Credito GSE (FV)"\n    min: 0\n    max: 2000\n    step: 0.01\n    initial: 0\n    mode: box\n    unit_of_measurement: "€"\n\n# (file completo: installare frarik_bolletta.yaml da config/packages/)\n';
 
   function _bBuildPkg(potenza, tariffa, kw, push) {
     var pushLines = (push && push.length)

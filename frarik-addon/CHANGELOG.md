@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.7.11 — 2026-06-30
+
+### fix: Bolletta v3.1 — impostazioni ristrutturate + sezione FV live
+
+- Impostazioni: 3 tab (Tariffa, ☀️ FV, Sensori) — Contratto+ARERA uniti; Mensili rinominato FV
+- Tab FV: campi sensori FV (potenza live, kWh oggi/mese) disabilitati se FV toggle OFF; abilitati se ON
+- Card principale: sezione FV visibile quando fotovoltaico attivo (produzione W live, kWh oggi, kWh mese, credito GSE)
+- Fix aggiornamento real-time: `update()` include sig FV sensori; `el._fcBound=null` prima del re-render
+- Salvataggio impostazioni: re-render immediato della card senza uscire/rientrare
+- Entità PKG: prefisso corretto `frarik_bolletta_` su tutti i sensori in `pkDefaults()`
+
 ## 1.7.10 — 2026-06-30
 
 ### fix: PKG bolletta rinominato in frarik_bolletta.yaml
