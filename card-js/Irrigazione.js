@@ -1210,15 +1210,23 @@ window.customCards.push({ version: '1.0',
 
       setupAC(sr.getElementById('f-switch'), sr.getElementById('d-switch'), switchIds);
 
-      sr.getElementById('wd-install').addEventListener('click', function() {
+      sr.getElementById('wd-install').addEventListener('click', async function() {
         var sw   = sr.getElementById('f-switch').value.trim();
         var push = Array.from(sr.querySelectorAll('.push-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
         try { localStorage.setItem(_IRR_WIZ_KEY, JSON.stringify({sw: sw, push: push})); } catch(e) {}
-        var yaml = _buildPkgIRR(sw, push);
+        var btn = sr.getElementById('wd-install');
+        btn.classList.add('wd-loading'); btn.textContent = 'Download PKG…';
+        var yaml;
+        try {
+          var ghR = await fetch('https://raw.githubusercontent.com/Frarik/cards/main/pkg/centro_controllo_irrigazione.yaml');
+          if (ghR.ok) {
+            yaml = (await ghR.text()).split('IL_TUO_SWITCH_IRRIGAZIONE').join(sw || 'switch.rubinetto_esterno_interruttore');
+          }
+        } catch(e) {}
+        if (!yaml) yaml = _buildPkgIRR(sw, push);
+        btn.textContent = 'Installazione…';
         var m = location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
         var base = location.origin + (m ? m[1] : '');
-        var btn = sr.getElementById('wd-install');
-        btn.classList.add('wd-loading'); btn.textContent = 'Installazione…';
         fetch(base + '/api/frarik/pkg/install', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},

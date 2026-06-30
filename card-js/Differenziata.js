@@ -247,12 +247,12 @@ class DifferenziataCard extends HTMLElement {
 
   _buildKey_() {
     if (!this._hass) return null
-    const texts = DD_DAYS.map(d => this._g(`input_text.rifiuto_${d}`,'')).join('|')
+    const texts = DD_DAYS.map(d => this._g(`input_text.frarik_differenziata_rifiuto_${d}`,'')).join('|')
     return [
       texts,
-      this._g('input_datetime.orario_notifica_differenziata',''),
-      this._g('input_boolean.notify_push_raccolta_differenziata',''),
-      this._g('input_boolean.notify_alexa_raccolta_differenziata',''),
+      this._g('input_datetime.frarik_differenziata_orario_notifica',''),
+      this._g('input_boolean.frarik_differenziata_notifica_push',''),
+      this._g('input_boolean.frarik_differenziata_notifica_alexa',''),
       this._settingsOpen?'1':'0',
       this._editOpen?'1':'0',
     ].join('||')
@@ -269,12 +269,12 @@ class DifferenziataCard extends HTMLElement {
         this._editOpen = !this._editOpen
         this._buildKey = null; this._buildDOM(); break
       case 'togglePush':
-        this._svc('input_boolean','toggle',{entity_id:'input_boolean.notify_push_raccolta_differenziata'}); break
+        this._svc('input_boolean','toggle',{entity_id:'input_boolean.frarik_differenziata_notifica_push'}); break
       case 'toggleAlexa':
-        this._svc('input_boolean','toggle',{entity_id:'input_boolean.notify_alexa_raccolta_differenziata'}); break
+        this._svc('input_boolean','toggle',{entity_id:'input_boolean.frarik_differenziata_notifica_alexa'}); break
       case 'preset':
         this._svc('input_text','set_value',{
-          entity_id: `input_text.rifiuto_${btn.dataset.day}`,
+          entity_id: `input_text.frarik_differenziata_rifiuto_${btn.dataset.day}`,
           value: btn.dataset.val,
         }); break
     }
@@ -292,7 +292,7 @@ class DifferenziataCard extends HTMLElement {
     if (el.dataset.action === 'setTime') {
       if (!el.value) return
       this._svc('input_datetime','set_datetime',{
-        entity_id: 'input_datetime.orario_notifica_differenziata',
+        entity_id: 'input_datetime.frarik_differenziata_orario_notifica',
         time: `${el.value}:00`,
       })
     }
@@ -306,13 +306,13 @@ class DifferenziataCard extends HTMLElement {
     const tmrIdx   = (todayIdx + 1) % 7
     const dateStr  = `${DD_FULL[todayIdx]}, ${now.getDate()} ${DD_MONTH[now.getMonth()]} ${now.getFullYear()}`
 
-    const wastes  = DD_DAYS.map(d => this._g(`input_text.rifiuto_${d}`,''))
+    const wastes  = DD_DAYS.map(d => this._g(`input_text.frarik_differenziata_rifiuto_${d}`,''))
     const todayW  = wasteInfo(wastes[todayIdx])
     const tmrW    = wasteInfo(wastes[tmrIdx])
 
-    const pushOn  = this._g('input_boolean.notify_push_raccolta_differenziata') === 'on'
-    const alexaOn = this._g('input_boolean.notify_alexa_raccolta_differenziata') === 'on'
-    const notifT  = (this._g('input_datetime.orario_notifica_differenziata','00:00:00') || '00:00:00').slice(0,5)
+    const pushOn  = this._g('input_boolean.frarik_differenziata_notifica_push') === 'on'
+    const alexaOn = this._g('input_boolean.frarik_differenziata_notifica_alexa') === 'on'
+    const notifT  = (this._g('input_datetime.frarik_differenziata_orario_notifica','00:00:00') || '00:00:00').slice(0,5)
 
     // Card border glow by today's waste
     const cardStyle = todayW.hasPickup && todayW.glow !== 'none'
@@ -445,7 +445,7 @@ window.customCards.push({ version: '1.0',
     + '  customize:\n'
     + '    package.node_anchors:\n'
     + '      customize: &customize\n'
-    + '        package: \'Centro Controllo Raccolta Differenziata 1.0\'\n'
+    + '        package: \'Frarik — Centro Controllo Raccolta Differenziata 1.1\'\n'
     + '      setting:\n'
     + '        Lista MediaPlayer Google: &google\n'
     + _IND + 'IL_TUO_MEDIA_PLAYER_GOOGLE_1\n'
@@ -454,89 +454,95 @@ window.customCards.push({ version: '1.0',
     + '        Device per notifica push: &push\n'
     + _IND + '- service: IL_TUO_MOBILE_APP_1\n'
     + 'notify:\n'
-    + '  - name: Gruppo Centro Raccolta Differenziata\n'
+    + '  - name: frarik_differenziata\n'
     + '    platform: group\n'
     + '    services: *push\n'
-    + 'input_select:\n'
-    + '  inserimento_rifiuti:\n'
-    + '    name: Inserimento Rifiuti\n'
-    + '    options:\n'
-    + '      - Rifiuti\n'
     + 'input_text:\n'
-    + '  rifiuto_lunedi: {name: "Rifiuto Lunedì", icon: mdi:delete-variant}\n'
-    + '  rifiuto_martedi: {name: "Rifiuto Martedì", icon: mdi:delete-variant}\n'
-    + '  rifiuto_mercoledi: {name: "Rifiuto Mercoledì", icon: mdi:delete-variant}\n'
-    + '  rifiuto_giovedi: {name: "Rifiuto Giovedì", icon: mdi:delete-variant}\n'
-    + '  rifiuto_venerdi: {name: "Rifiuto Venerdì", icon: mdi:delete-variant}\n'
-    + '  rifiuto_sabato: {name: "Rifiuto Sabato", icon: mdi:delete-variant}\n'
-    + '  rifiuto_domenica: {name: "Rifiuto Domenica", icon: mdi:delete-variant}\n'
+    + '  frarik_differenziata_rifiuto_lunedi: {name: "Differenziata — Rifiuto Lunedì", icon: mdi:delete-variant}\n'
+    + '  frarik_differenziata_rifiuto_martedi: {name: "Differenziata — Rifiuto Martedì", icon: mdi:delete-variant}\n'
+    + '  frarik_differenziata_rifiuto_mercoledi: {name: "Differenziata — Rifiuto Mercoledì", icon: mdi:delete-variant}\n'
+    + '  frarik_differenziata_rifiuto_giovedi: {name: "Differenziata — Rifiuto Giovedì", icon: mdi:delete-variant}\n'
+    + '  frarik_differenziata_rifiuto_venerdi: {name: "Differenziata — Rifiuto Venerdì", icon: mdi:delete-variant}\n'
+    + '  frarik_differenziata_rifiuto_sabato: {name: "Differenziata — Rifiuto Sabato", icon: mdi:delete-variant}\n'
+    + '  frarik_differenziata_rifiuto_domenica: {name: "Differenziata — Rifiuto Domenica", icon: mdi:delete-variant}\n'
     + 'input_datetime:\n'
-    + '  orario_notifica_differenziata:\n'
-    + '    name: Orario Notifica Raccolta Differenziata\n'
+    + '  frarik_differenziata_orario_notifica:\n'
+    + '    name: "Differenziata — Orario Notifica"\n'
     + '    has_date: false\n'
     + '    has_time: true\n'
+    + '    icon: mdi:bell-ring-outline\n'
     + 'input_boolean:\n'
-    + '  notify_push_raccolta_differenziata: {name: "Notifica Push", icon: mdi:bell}\n'
-    + '  notify_google_raccolta_differenziata: {name: "Notifica Google", icon: mdi:google-home}\n'
-    + '  notify_alexa_raccolta_differenziata: {name: "Notifica Alexa", icon: mdi:amazon-alexa}\n'
-    + '  aggiornamento_pkg_raccolta_differenziata: {name: "Aggiornamento PKG Differenziata"}\n'
+    + '  frarik_differenziata_notifica_push: {name: "Differenziata — Notifica Push", icon: mdi:cellphone-message}\n'
+    + '  frarik_differenziata_notifica_google: {name: "Differenziata — Annuncio Google", icon: mdi:google-assistant}\n'
+    + '  frarik_differenziata_notifica_alexa: {name: "Differenziata — Annuncio Alexa", icon: mdi:amazon-alexa}\n'
     + 'template:\n'
     + '  - sensor:\n'
-    + '      - name: Raccolta Differenziata\n'
+    + '      - name: "Frarik Differenziata Versione"\n'
+    + '        unique_id: frarik_differenziata_versione\n'
+    + '        state: "1.1"\n'
+    + '        icon: mdi:package-variant-closed\n'
+    + '      - name: "Frarik Differenziata Raccolta"\n'
+    + '        unique_id: frarik_differenziata_raccolta\n'
+    + '        icon: mdi:recycle\n'
     + '        state: >-\n'
-    + '          {% if now().weekday() == 0 %}{{ states(\'input_text.rifiuto_lunedi\') }}\n'
-    + '          {% elif now().weekday() == 1 %}{{ states(\'input_text.rifiuto_martedi\') }}\n'
-    + '          {% elif now().weekday() == 2 %}{{ states(\'input_text.rifiuto_mercoledi\') }}\n'
-    + '          {% elif now().weekday() == 3 %}{{ states(\'input_text.rifiuto_giovedi\') }}\n'
-    + '          {% elif now().weekday() == 4 %}{{ states(\'input_text.rifiuto_venerdi\') }}\n'
-    + '          {% elif now().weekday() == 5 %}{{ states(\'input_text.rifiuto_sabato\') }}\n'
-    + '          {% elif now().weekday() == 6 %}{{ states(\'input_text.rifiuto_domenica\') }}\n'
+    + '          {% if now().weekday() == 0 %}{{ states(\'input_text.frarik_differenziata_rifiuto_lunedi\') }}\n'
+    + '          {% elif now().weekday() == 1 %}{{ states(\'input_text.frarik_differenziata_rifiuto_martedi\') }}\n'
+    + '          {% elif now().weekday() == 2 %}{{ states(\'input_text.frarik_differenziata_rifiuto_mercoledi\') }}\n'
+    + '          {% elif now().weekday() == 3 %}{{ states(\'input_text.frarik_differenziata_rifiuto_giovedi\') }}\n'
+    + '          {% elif now().weekday() == 4 %}{{ states(\'input_text.frarik_differenziata_rifiuto_venerdi\') }}\n'
+    + '          {% elif now().weekday() == 5 %}{{ states(\'input_text.frarik_differenziata_rifiuto_sabato\') }}\n'
+    + '          {% elif now().weekday() == 6 %}{{ states(\'input_text.frarik_differenziata_rifiuto_domenica\') }}\n'
     + '          {% endif %}\n'
     + 'automation:\n'
-    + '  - id: raccolta_differenziata_notifica\n'
-    + '    alias: "Raccolta Differenziata - Notifica"\n'
+    + '  - id: frarik_differenziata_notifiche\n'
+    + '    alias: "Frarik — Differenziata (notifiche)"\n'
     + '    trigger:\n'
     + '      - platform: time\n'
-    + '        at: input_datetime.orario_notifica_differenziata\n'
+    + '        at: input_datetime.frarik_differenziata_orario_notifica\n'
+    + '    condition:\n'
+    + '      - condition: not\n'
+    + '        conditions:\n'
+    + '          - condition: state\n'
+    + '            entity_id: sensor.frarik_differenziata_raccolta\n'
+    + '            state: ""\n'
     + '    action:\n'
-    + '      - choose:\n'
-    + '        - conditions:\n'
-    + '          - condition: state\n'
-    + '            entity_id: input_boolean.notify_google_raccolta_differenziata\n'
-    + '            state: \'on\'\n'
-    + '          - condition: not\n'
-    + '            conditions:\n'
+    + '      - parallel:\n'
+    + '          - choose:\n'
+    + '            - conditions:\n'
     + '              - condition: state\n'
-    + '                entity_id: sensor.raccolta_differenziata\n'
-    + '                state: "Nessun Ritiro"\n'
-    + '          sequence:\n'
-    + '          - service: tts.google_translate_say\n'
-    + '            entity_id: *google\n'
-    + '            data:\n'
-    + '              message: "Ricordati di buttare {{ states(\'sensor.raccolta_differenziata\') }}"\n'
-    + '      - choose:\n'
-    + '        - conditions:\n'
-    + '          - condition: state\n'
-    + '            entity_id: input_boolean.notify_push_raccolta_differenziata\n'
-    + '            state: \'on\'\n'
-    + '          sequence:\n'
-    + '          - data_template:\n'
-    + '              message: "{{ states(\'sensor.raccolta_differenziata\') }}"\n'
-    + '              title: "Raccolta Differenziata ♻"\n'
-    + '            service: notify.gruppo_centro_raccolta_differenziata\n'
-    + '      - choose:\n'
-    + '        - conditions:\n'
-    + '          - condition: state\n'
-    + '            entity_id: input_boolean.notify_alexa_raccolta_differenziata\n'
-    + '            state: \'on\'\n'
-    + '          sequence:\n'
-    + '          - service: notify.alexa_media\n'
-    + '            data:\n'
-    + '              target: *alexa\n'
-    + '              data: {type: announce, method: spoken}\n'
-    + '              message: "Oggi ricordati di buttare {{ states(\'sensor.raccolta_differenziata\') }}"\n';
+    + '                entity_id: input_boolean.frarik_differenziata_notifica_push\n'
+    + '                state: \'on\'\n'
+    + '              sequence:\n'
+    + '              - service: notify.frarik_differenziata\n'
+    + '                data:\n'
+    + '                  title: "♻️ Frarik — Differenziata"\n'
+    + '                  message: "Oggi ricordati di buttare {{ states(\'sensor.frarik_differenziata_raccolta\') }}"\n'
+    + '          - choose:\n'
+    + '            - conditions:\n'
+    + '              - condition: state\n'
+    + '                entity_id: input_boolean.frarik_differenziata_notifica_google\n'
+    + '                state: \'on\'\n'
+    + '              sequence:\n'
+    + '              - service: tts.google_translate_say\n'
+    + '                continue_on_error: true\n'
+    + '                data:\n'
+    + '                  entity_id: *google\n'
+    + '                  language: \'it\'\n'
+    + '                  message: "Oggi ricordati di buttare {{ states(\'sensor.frarik_differenziata_raccolta\') }}"\n'
+    + '          - choose:\n'
+    + '            - conditions:\n'
+    + '              - condition: state\n'
+    + '                entity_id: input_boolean.frarik_differenziata_notifica_alexa\n'
+    + '                state: \'on\'\n'
+    + '              sequence:\n'
+    + '              - service: notify.alexa_media\n'
+    + '                continue_on_error: true\n'
+    + '                data:\n'
+    + '                  target: *alexa\n'
+    + '                  data: {type: announce, method: spoken}\n'
+    + '                  message: "Oggi ricordati di buttare {{ states(\'sensor.frarik_differenziata_raccolta\') }}"\n';
 
-  function _buildPkgDIFF(push, google, alexa) {
+  function _buildPkgDIFF(push, google, alexa, baseYaml) {
     var pushLines = (push && push.length)
       ? push.map(function(p) { return _IND + '- service: ' + p; }).join('\n')
       : _IND + '- service: mobile_app_smartphone';
@@ -546,7 +552,7 @@ window.customCards.push({ version: '1.0',
     var alexaLines = (alexa && alexa.length)
       ? alexa.map(function(p) { return _IND + '- ' + p; }).join('\n')
       : _IND + '- media_player.alexa_casa';
-    return _DIFF_PKG_YAML
+    return (baseYaml || _DIFF_PKG_YAML)
       .replace(_IND + '- service: IL_TUO_MOBILE_APP_1', pushLines)
       .replace(_IND + 'IL_TUO_MEDIA_PLAYER_GOOGLE_1', googleLines)
       .replace(_IND + 'IL_TUO_MEDIA_PLAYER_ALEXA_1', alexaLines);
@@ -671,16 +677,24 @@ window.customCards.push({ version: '1.0',
       sr.querySelectorAll('.google-inp').forEach(function(inp) { setupAC(inp, inp.parentElement.querySelector('.wd-drop'), mediaIds); });
       sr.querySelectorAll('.alexa-inp').forEach(function(inp)  { setupAC(inp, inp.parentElement.querySelector('.wd-drop'), mediaIds); });
 
-      sr.getElementById('wd-install').addEventListener('click', function() {
+      sr.getElementById('wd-install').addEventListener('click', async function() {
         var push   = Array.from(sr.querySelectorAll('.push-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
         var google = Array.from(sr.querySelectorAll('.google-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
         var alexa  = Array.from(sr.querySelectorAll('.alexa-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
         try { localStorage.setItem(_DIFF_WIZ_KEY, JSON.stringify({push: push, google: google, alexa: alexa})); } catch(e) {}
-        var yaml = _buildPkgDIFF(push, google, alexa);
         var m = location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
         var base = location.origin + (m ? m[1] : '');
         var btn = sr.getElementById('wd-install');
-        btn.classList.add('wd-loading'); btn.textContent = 'Installazione…';
+        btn.classList.add('wd-loading'); btn.textContent = 'Download PKG…';
+        var yaml;
+        try {
+          var ghR = await fetch('https://raw.githubusercontent.com/Frarik/cards/main/pkg/centro_controllo_differenziata.yaml');
+          if (ghR.ok) {
+            yaml = _buildPkgDIFF(push, google, alexa, await ghR.text());
+          }
+        } catch(e) {}
+        if (!yaml) yaml = _buildPkgDIFF(push, google, alexa);
+        btn.textContent = 'Installazione…';
         fetch(base + '/api/frarik/pkg/install', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
@@ -713,17 +727,17 @@ window.customCards.push({ version: '1.0',
 
   function _dPkgDef() {
     return {
-      pk_lunedi:    'input_text.rifiuto_lunedi',
-      pk_martedi:   'input_text.rifiuto_martedi',
-      pk_mercoledi: 'input_text.rifiuto_mercoledi',
-      pk_giovedi:   'input_text.rifiuto_giovedi',
-      pk_venerdi:   'input_text.rifiuto_venerdi',
-      pk_sabato:    'input_text.rifiuto_sabato',
-      pk_domenica:  'input_text.rifiuto_domenica',
-      pk_orario:    'input_datetime.orario_notifica_differenziata',
-      pk_npush:     'input_boolean.notify_push_raccolta_differenziata',
-      pk_ngoogle:   'input_boolean.notify_google_raccolta_differenziata',
-      pk_nalexa:    'input_boolean.notify_alexa_raccolta_differenziata',
+      pk_lunedi:    'input_text.frarik_differenziata_rifiuto_lunedi',
+      pk_martedi:   'input_text.frarik_differenziata_rifiuto_martedi',
+      pk_mercoledi: 'input_text.frarik_differenziata_rifiuto_mercoledi',
+      pk_giovedi:   'input_text.frarik_differenziata_rifiuto_giovedi',
+      pk_venerdi:   'input_text.frarik_differenziata_rifiuto_venerdi',
+      pk_sabato:    'input_text.frarik_differenziata_rifiuto_sabato',
+      pk_domenica:  'input_text.frarik_differenziata_rifiuto_domenica',
+      pk_orario:    'input_datetime.frarik_differenziata_orario_notifica',
+      pk_npush:     'input_boolean.frarik_differenziata_notifica_push',
+      pk_ngoogle:   'input_boolean.frarik_differenziata_notifica_google',
+      pk_nalexa:    'input_boolean.frarik_differenziata_notifica_alexa',
     };
   }
 
@@ -1109,10 +1123,10 @@ window.customCards.push({ version: '1.0',
       + sec('Entità giorni (input_text)')
       + days.map(function(k,i){ return fld(k, dayLabels[i], 'input_text.rifiuto_'+['lunedi','martedi','mercoledi','giovedi','venerdi','sabato','domenica'][i]); }).join('')
       + sec('Entità notifiche')
-      + fld('pk_orario','Orario notifica','input_datetime.orario_notifica_differenziata')
-      + fld('pk_npush','Boolean push','input_boolean.notify_push_raccolta_differenziata')
-      + fld('pk_ngoogle','Boolean Google','input_boolean.notify_google_raccolta_differenziata')
-      + fld('pk_nalexa','Boolean Alexa','input_boolean.notify_alexa_raccolta_differenziata')
+      + fld('pk_orario','Orario notifica','input_datetime.frarik_differenziata_orario_notifica')
+      + fld('pk_npush','Boolean push','input_boolean.frarik_differenziata_notifica_push')
+      + fld('pk_ngoogle','Boolean Google','input_boolean.frarik_differenziata_notifica_google')
+      + fld('pk_nalexa','Boolean Alexa','input_boolean.frarik_differenziata_notifica_alexa')
       + '<button id="dent-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#22c55e;color:#022c1b;margin-top:8px">💾 Salva</button>';
     var ov = _dMkOv(_dPopShell('🔧','34,197,94','Entità',c.name||'Raccolta Differenziata','dent-cl',content),'dent-cl');
     ov.querySelector('#dent-save').addEventListener('click', function() {
@@ -1166,7 +1180,7 @@ window.customCards.push({ version: '1.0',
     mount:     function(card, hass, el) { _dMount(card, hass, el); },
     update:    function(card, hass, el) { _dUpdate(card, hass, el); },
     configure: function(card, el) { _dOpenEntCfg(card, el); },
-    frarik_pkg_check:   'sensor.raccolta_differenziata',
+    frarik_pkg_check:   'sensor.frarik_differenziata_raccolta',
     frarik_pkg_id:      'frarik_differenziata',
     frarik_pkg_version: '1.0',
     openWizard: _openWizardDIFF,

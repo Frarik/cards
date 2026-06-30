@@ -1603,7 +1603,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   - id: frarik_antizanzare_lunedi_ciclo2
     alias: "Anti Zanzare - Lunedì Ciclo 2"
@@ -1641,7 +1641,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   - id: frarik_antizanzare_lunedi_ciclo3
     alias: "Anti Zanzare - Lunedì Ciclo 3"
@@ -1679,7 +1679,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   - id: frarik_antizanzare_lunedi_ciclo4
     alias: "Anti Zanzare - Lunedì Ciclo 4"
@@ -1717,7 +1717,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   - id: frarik_antizanzare_lunedi_ciclo5
     alias: "Anti Zanzare - Lunedì Ciclo 5"
@@ -1755,7 +1755,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   # MARTEDÌ - TUTTI I CICLI
   - id: frarik_antizanzare_martedi_ciclo1
@@ -1794,7 +1794,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   - id: frarik_antizanzare_martedi_ciclo2
     alias: "Anti Zanzare - Martedì Ciclo 2"
@@ -1832,7 +1832,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   - id: frarik_antizanzare_martedi_ciclo3
     alias: "Anti Zanzare - Martedì Ciclo 3"
@@ -1870,7 +1870,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   - id: frarik_antizanzare_martedi_ciclo4
     alias: "Anti Zanzare - Martedì Ciclo 4"
@@ -1911,7 +1911,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   - id: frarik_antizanzare_martedi_ciclo5
     alias: "Anti Zanzare - Martedì Ciclo 5"
@@ -1949,7 +1949,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   # MERCOLEDÌ - TUTTI I CICLI
   - id: frarik_antizanzare_mercoledi_ciclo1
@@ -1989,7 +1989,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   - id: frarik_antizanzare_mercoledi_ciclo2
     alias: "Anti Zanzare - Mercoledì Ciclo 2"
@@ -2028,7 +2028,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   - id: frarik_antizanzare_mercoledi_ciclo3
     alias: "Anti Zanzare - Mercoledì Ciclo 3"
@@ -2067,7 +2067,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   - id: frarik_antizanzare_mercoledi_ciclo4
     alias: "Anti Zanzare - Mercoledì Ciclo 4"
@@ -2106,7 +2106,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   - id: frarik_antizanzare_mercoledi_ciclo5
     alias: "Anti Zanzare - Mercoledì Ciclo 5"
@@ -2145,7 +2145,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   # GIOVEDÌ - TUTTI I CICLI
   - id: frarik_antizanzare_giovedi_ciclo1
@@ -2185,7 +2185,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   - id: frarik_antizanzare_giovedi_ciclo2
     alias: "Anti Zanzare - Giovedì Ciclo 2"
@@ -2224,7 +2224,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   - id: frarik_antizanzare_giovedi_ciclo3
     alias: "Anti Zanzare - Giovedì Ciclo 3"
@@ -2263,7 +2263,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   - id: frarik_antizanzare_giovedi_ciclo4
     alias: "Anti Zanzare - Giovedì Ciclo 4"
@@ -2302,7 +2302,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   - id: frarik_antizanzare_giovedi_ciclo5
     alias: "Anti Zanzare - Giovedì Ciclo 5"
@@ -2341,7 +2341,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   # VENERDÌ - TUTTI I CICLI
   - id: frarik_antizanzare_venerdi_ciclo1
@@ -2381,7 +2381,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   - id: frarik_antizanzare_venerdi_ciclo2
     alias: "Anti Zanzare - Venerdì Ciclo 2"
@@ -2420,7 +2420,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   - id: frarik_antizanzare_venerdi_ciclo3
     alias: "Anti Zanzare - Venerdì Ciclo 3"
@@ -2459,7 +2459,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   - id: frarik_antizanzare_venerdi_ciclo4
     alias: "Anti Zanzare - Venerdì Ciclo 4"
@@ -2498,7 +2498,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   - id: frarik_antizanzare_venerdi_ciclo5
     alias: "Anti Zanzare - Venerdì Ciclo 5"
@@ -2537,7 +2537,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   # SABATO - TUTTI I CICLI
   - id: frarik_antizanzare_sabato_ciclo1
@@ -2577,7 +2577,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   - id: frarik_antizanzare_sabato_ciclo2
     alias: "Anti Zanzare - Sabato Ciclo 2"
@@ -2616,7 +2616,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   - id: frarik_antizanzare_sabato_ciclo3
     alias: "Anti Zanzare - Sabato Ciclo 3"
@@ -2655,7 +2655,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   - id: frarik_antizanzare_sabato_ciclo4
     alias: "Anti Zanzare - Sabato Ciclo 4"
@@ -2694,7 +2694,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   - id: frarik_antizanzare_sabato_ciclo5
     alias: "Anti Zanzare - Sabato Ciclo 5"
@@ -2733,7 +2733,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   # DOMENICA - TUTTI I CICLI
   - id: frarik_antizanzare_domenica_ciclo1
@@ -2773,7 +2773,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   - id: frarik_antizanzare_domenica_ciclo2
     alias: "Anti Zanzare - Domenica Ciclo 2"
@@ -2812,7 +2812,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   - id: frarik_antizanzare_domenica_ciclo3
     alias: "Anti Zanzare - Domenica Ciclo 3"
@@ -2851,7 +2851,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   - id: frarik_antizanzare_domenica_ciclo4
     alias: "Anti Zanzare - Domenica Ciclo 4"
@@ -2890,7 +2890,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   - id: frarik_antizanzare_domenica_ciclo5
     alias: "Anti Zanzare - Domenica Ciclo 5"
@@ -2929,7 +2929,7 @@ automation:
           entity_id: counter.frarik_antizanzare_cicli_rimanenti
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   # SISTEMA COMPLETATO - FUNZIONA!
 
@@ -2949,7 +2949,7 @@ automation:
       # Disattiva pompa reale
       - service: switch.turn_off
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
       - service: timer.cancel
         target:
           entity_id: timer.frarik_antizanzare_ciclo_timer
@@ -2971,7 +2971,7 @@ automation:
       # Disattivare pompa (TEMPORANEO: sostituire con switch reale)
       - service: switch.turn_off
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
   # Disattivazione automazione per condizioni meteo
   - id: frarik_antizanzare_disattiva_automazione_meteo
@@ -3030,7 +3030,7 @@ automation:
       # Attiva pompa reale
       - service: switch.turn_on
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
       # Incrementa contatore mensile
       - service: counter.increment
         target:
@@ -3069,7 +3069,7 @@ automation:
       # Spegne pompa (sostituire con switch reale se necessario)
       - service: switch.turn_off
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
     mode: restart
 
   # Fine anti_zanzare manuale - Timer finito
@@ -3088,7 +3088,7 @@ automation:
       # Spegni pompa reale
       - service: switch.turn_off
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
       # Disattiva boolean manuale
       - service: input_boolean.turn_off
         target:
@@ -3113,7 +3113,7 @@ automation:
       # Spegni pompa
       - service: switch.turn_off
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
 
 ####automazioni###
   # Automazioni di notifica anti_zanzare
@@ -3191,7 +3191,7 @@ automation:
     action:
       - service: switch.turn_off
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
       - service: notify.mobile_app_iphone_di_francesco
         data:
           message: "⚠️ Rilevata perdita nella cassetta! Controllare immediatamente. ⚠️"
@@ -3262,7 +3262,7 @@ automation:
         to: "on"
       # Caso B: La pompa si accende (magari perché è scattato l'orario)
       - platform: state
-        entity_id: switch.presa_anti_zanzare
+        entity_id: IL_TUO_SWITCH_AZ
         to: "on"
     condition:
       # L'automazione prosegue SOLO se entrambe le cose sono vere contemporaneamente
@@ -3270,13 +3270,13 @@ automation:
         entity_id: binary_sensor.telecamera_giardino_dx_persona
         state: "on"
       - condition: state
-        entity_id: switch.presa_anti_zanzare
+        entity_id: IL_TUO_SWITCH_AZ
         state: "on"
     action:
       # 1. Spegni subito la pompa (PRIORITÀ ASSOLUTA)
       - service: switch.turn_off
         target:
-          entity_id: switch.presa_anti_zanzare
+          entity_id: IL_TUO_SWITCH_AZ
       
       # 2. Annulla Timer Automatico
       - service: timer.cancel

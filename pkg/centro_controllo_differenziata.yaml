@@ -99,19 +99,19 @@ homeassistant:
         #   - media_player.google_home_cucina
         # ─────────────────────────────────────────────────
         Lista MediaPlayer Google: &google
-          - media_player.IL_TUO_GOOGLE_HOME
+          IL_TUO_MEDIA_PLAYER_GOOGLE_1
 
         # ─────────────────────────────────────────────────
         # DISPOSITIVI AMAZON ALEXA / ECHO
         # ─────────────────────────────────────────────────
         Lista MediaPlayer Alexa: &alexa
-          - media_player.LA_TUA_ALEXA
+          IL_TUO_MEDIA_PLAYER_ALEXA_1
 
         # ─────────────────────────────────────────────────
         # SERVIZI NOTIFICA PUSH (smartphone)
         # ─────────────────────────────────────────────────
         Device per notifica push: &push
-          - service: IL_TUO_MOBILE_APP
+          - service: IL_TUO_MOBILE_APP_1
 
 
 ####################################################

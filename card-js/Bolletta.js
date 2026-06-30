@@ -878,11 +878,29 @@
 
     function g3(id) { var e = ov.querySelector('#'+id); return e ? e.value.trim() : ''; }
 
-    ov.querySelector('#wz-install').addEventListener('click', function() {
-      var yaml = _bBuildPkg(g3('wz-pot'), g3('wz-tar'), g3('wz-kw'), g3('wz-push') ? [g3('wz-push')] : null);
-      if (!yaml) return;
+    ov.querySelector('#wz-install').addEventListener('click', async function() {
+      var pot = g3('wz-pot'), tar = g3('wz-tar'), kw = g3('wz-kw');
+      var push = g3('wz-push') ? [g3('wz-push')] : null;
       var btn = ov.querySelector('#wz-install');
-      btn.textContent = 'Installazione…'; btn.disabled = true;
+      btn.textContent = 'Download PKG…'; btn.disabled = true;
+      var yaml;
+      try {
+        var ghR = await fetch('https://raw.githubusercontent.com/Frarik/cards/main/pkg/frarik_bolletta.yaml');
+        if (ghR.ok) {
+          var ghBase = await ghR.text();
+          var pushLines = (push && push.length)
+            ? push.map(function(p) { return '          - service: ' + p; }).join('\n')
+            : '          - service: mobile_app_smartphone';
+          yaml = ghBase
+            .split('IL_TUO_SENSORE_POTENZA_BOLLETTA').join(pot || 'sensor.consumo_istantaneo')
+            .split('IL_TUA_TARIFFA_KWHE').join((parseFloat(tar) || 0.09).toFixed(6))
+            .split('IL_TUA_POTENZA_KW').join(String(parseFloat(kw) || 4.5))
+            .replace('          - service: IL_TUO_MOBILE_APP_1', pushLines);
+        }
+      } catch(e) {}
+      if (!yaml) yaml = _bBuildPkg(pot, tar, kw, push);
+      if (!yaml) { btn.textContent = '⬇ Installa PKG'; btn.disabled = false; return; }
+      btn.textContent = 'Installazione…';
       var m = location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
       var base = location.origin + (m ? m[1] : '');
       fetch(base + '/api/frarik/pkg/install', {

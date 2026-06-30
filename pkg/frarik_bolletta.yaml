@@ -60,7 +60,7 @@ notify:
     services: *push
 
 group:
-  notifiche_bolletta:
+  frarik_notifiche_bolletta:
     name: "Bolletta — Notifiche"
     entities:
       - input_boolean.frarik_bolletta_notify_push_soglia

@@ -652,7 +652,7 @@ automation:
       # Attiva il rubinetto
       - service: switch.turn_on
         target:
-          entity_id: switch.rubinetto_esterno_interruttore
+          entity_id: IL_TUO_SWITCH_IRRIGAZIONE
 
   - id: irrigazione_stop_manuale
     alias: "Irrigazione - Stop Manuale"
@@ -668,7 +668,7 @@ automation:
           entity_id: timer.irrigazione_manuale_timer
       - service: switch.turn_off
         target:
-          entity_id: switch.rubinetto_esterno_interruttore
+          entity_id: IL_TUO_SWITCH_IRRIGAZIONE
 
   - id: irrigazione_timer_ciclo_finito
     alias: "Irrigazione - Timer Ciclo Finito"
@@ -680,7 +680,7 @@ automation:
     action:
       - service: switch.turn_off
         target:
-          entity_id: switch.rubinetto_esterno_interruttore
+          entity_id: IL_TUO_SWITCH_IRRIGAZIONE
 
   - id: irrigazione_timer_manuale_finito
     alias: "Irrigazione - Timer Manuale Finito"
@@ -695,7 +695,7 @@ automation:
           entity_id: input_boolean.irrigazione_manuale_attiva
       - service: switch.turn_off
         target:
-          entity_id: switch.rubinetto_esterno_interruttore
+          entity_id: IL_TUO_SWITCH_IRRIGAZIONE
 
   - id: irrigazione_reset_cicli_giornalieri
     alias: "Irrigazione - Reset Cicli Giornalieri"
