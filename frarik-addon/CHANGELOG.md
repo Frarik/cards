@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.17 — 2026-06-30
+
+### feat: Differenziata v3.0 — layout 2 colonne + doppio rifiuto
+
+- Card ridisegnata: colonna sinistra con bidoni SVG, colonna destra con data/domani/settimana
+- Supporto doppio rifiuto: nella modifica (✏️) ogni giorno ha due righe con preset colorati
+- Quando configurato, la colonna sinistra mostra 2 bidoni affiancati
+- PKG aggiornato con entità `frarik_differenziata_rifiuto2_*` per il secondo rifiuto
+
 ## 1.7.16 — 2026-06-30
 
 ### fix: PKG Posta — file rinominato in frarik_posta.yaml per compatibilità store
