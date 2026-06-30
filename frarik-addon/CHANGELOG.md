@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.10 — 2026-06-30
+
+### fix: PKG bolletta rinominato in frarik_bolletta.yaml
+
+- `pkg/centro_controllo_bolletta.yaml` → `pkg/frarik_bolletta.yaml`
+- Bolletta.js: aggiornati `frarik_pkg_id` e path API install
+
 ## 1.7.09 — 2026-06-30
 
 ### fix: Bolletta — wizard diretto + toggle FV in impostazioni

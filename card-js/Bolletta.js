@@ -764,7 +764,7 @@
       fetch(base + '/api/frarik/pkg/install', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({name: 'frarik/centro_controllo_bolletta.yaml', content: yaml})
+        body: JSON.stringify({name: 'frarik/frarik_bolletta.yaml', content: yaml})
       }).then(function(r) { return r.json().then(function(j) { return {r: r, j: j}; }); })
         .then(function(res) {
           ov._close();
@@ -793,7 +793,7 @@
     mount: mount,
     update: update,
     frarik_pkg_check: 'sensor.frarik_bolletta_versione',
-    frarik_pkg_id: 'centro_controllo_bolletta',
+    frarik_pkg_id: 'frarik_bolletta',
     frarik_pkg_version: '1.0',
     openWizard: openWizard,
   };
