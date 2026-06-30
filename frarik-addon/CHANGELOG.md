@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.7.05 — 2026-06-30
+
+### fix: store — popup centrato (BUG ROOT CAUSE) + anteprima con hass reale
+
+- **Root cause centering**: in style.css era presente CSS legacy `#ghs-prev-modal{position:fixed;inset:0}` (da una versione precedente) che faceva sì che il modal fosse `position:fixed` a tutto schermo, ancorato in alto-sinistra — anche con inline styles sull'overlay il modal scappava dal flusso. Fix: rimosso tutto il CSS `ghs-prev-*` da style.css; iniettato via `<style>` tag in `document.head` (stesso pattern di `_openAddCardPopup` che funziona correttamente)
+- `#ghs-prev-modal` ora ha `position:relative` esplicito nel CSS iniettato — immune da conflitti futuri
+- **Anteprima**: ora usa `_haHassObj()` (hass reale di HA) invece del mock — bolletta, person e qualsiasi card funzionano perché ricevono i dati veri dell'installazione. Mock usato solo come fallback se HA non disponibile
+- `setConfig` usa `storageKey:'__preview__'` (non `__prev__`) per non toccare la configurazione reale dell'utente
+- Descrizione popup aggiornata: "Dati live dalla tua installazione"
+
 ## 1.7.04 — 2026-06-30
 
 ### fix: store — popup centrato + preview bolletta/person

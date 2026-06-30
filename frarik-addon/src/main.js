@@ -2195,31 +2195,35 @@ async function _ghFetchVerLabels(tab){
   await Promise.all(Array.from({length:Math.min(CONC,files.length)}, worker));
   if(_ghsTab===tab) _ghStoreRender();
 }
-/* ═══ STORE PREVIEW CARD — Anteprima con dati simulati ═══ */
+/* ═══ STORE PREVIEW CARD ═══ */
 function _ghsShowPreviewModal(nm){
   document.getElementById('ghs-prev-ov')?.remove();
+  // Pattern identico a _openAddCardPopup: <style> in document.head, nessuna inline sul div
+  let ps=document.getElementById('_ghsprev-style');
+  if(!ps){ ps=document.createElement('style'); ps.id='_ghsprev-style'; document.head.appendChild(ps); }
+  ps.textContent=`
+    #ghs-prev-ov{position:fixed;inset:0;z-index:20000;background:rgba(0,0,0,.84);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;animation:acpFi .15s ease}
+    #ghs-prev-modal{width:min(500px,100%);height:min(500px,90vh);background:#06060f;border:1px solid rgba(139,92,246,.28);border-radius:20px;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.88);overflow:hidden;flex-shrink:0;position:relative}
+    #ghs-prev-body{flex:1;overflow-y:auto;overflow-x:hidden;padding:20px;min-height:0;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent}
+    #ghs-prev-close:hover{background:rgba(255,255,255,.14)!important;color:#fff!important}
+  `;
   const ov=document.createElement('div'); ov.id='ghs-prev-ov';
-  // Inline styles — evita problemi di CSS caching / stacking context HA
-  ov.style.cssText='position:fixed;inset:0;z-index:20000;background:rgba(0,0,0,.84);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;box-sizing:border-box;padding:16px';
-  const modal=document.createElement('div'); modal.id='ghs-prev-modal';
-  modal.style.cssText='width:min(500px,100%);height:min(500px,90vh);background:#06060f;border:1px solid rgba(139,92,246,.28);border-radius:20px;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.88);overflow:hidden;flex-shrink:0';
-  modal.innerHTML=`
+  ov.innerHTML=`<div id="ghs-prev-modal">
     <div style="display:flex;align-items:center;gap:12px;padding:14px 18px 12px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">
       <div style="width:34px;height:34px;border-radius:10px;background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.3);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">🔮</div>
-      <div style="flex:1"><div style="font-size:13px;font-weight:700;color:#fff">Anteprima — ${eh(nm)}</div><div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px">Rendering con dati simulati</div></div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:700;color:#fff">Anteprima — ${eh(nm)}</div><div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px">Dati live dalla tua installazione</div></div>
       <button id="ghs-prev-close" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:14px;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
     </div>
-    <div id="ghs-prev-body" style="flex:1;overflow-y:auto;overflow-x:hidden;padding:20px;min-height:0;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent">
-      <div id="ghs-prev-card-wrap" style="width:100%"><div style="padding:60px 16px;text-align:center;color:rgba(255,255,255,.4);font-size:12px;line-height:1.8"><div style="font-size:28px;margin-bottom:10px">⚙️</div>Caricamento card…</div></div>
+    <div id="ghs-prev-body">
+      <div id="ghs-prev-card-wrap" style="width:100%"><div style="padding:60px 16px;text-align:center;color:rgba(255,255,255,.4);font-size:13px;line-height:1.8"><div style="font-size:28px;margin-bottom:10px">⚙️</div>Caricamento…</div></div>
     </div>
-    <div style="padding:9px 18px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0;font-size:10px;color:rgba(255,255,255,.28);text-align:center">🔬 Dati simulati — l'aspetto reale varia in base alla configurazione</div>`;
-  ov.appendChild(modal);
+    <div style="padding:9px 18px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0;font-size:10px;color:rgba(255,255,255,.28);text-align:center">🏠 Anteprima con i dati reali di Home Assistant</div>
+  </div>`;
   document.body.appendChild(ov);
   ov.addEventListener('click',e=>{ if(e.target===ov||e.target.closest?.('#ghs-prev-close')) _ghsPreviewClose(); });
 }
 function _ghsPreviewClose(){
   document.getElementById('ghs-prev-ov')?.remove();
-  // Ripristina window.frarikHass all'originale
   if(window._ghsPrevOrigHass!==undefined){ window.frarikHass=window._ghsPrevOrigHass; delete window._ghsPrevOrigHass; }
 }
 async function _ghsPreviewCard(enc){
@@ -2239,8 +2243,8 @@ async function _ghsPreviewCard(enc){
   }
   const wrap=document.getElementById('ghs-prev-card-wrap');
   if(!wrap) return;
-  if(!code){ wrap.innerHTML='<div style="padding:60px 16px;text-align:center;color:rgba(255,255,255,.4);font-size:12px">⚠️ Impossibile caricare il codice della card</div>'; return; }
-  // Registra la card e ottieni il tag name dal valore di ritorno di _installCardCode
+  if(!code){ wrap.innerHTML='<div style="padding:60px 16px;text-align:center;color:rgba(255,255,255,.4);font-size:12px">⚠️ Impossibile caricare il codice</div>'; return; }
+  // Registra la card e ottieni il tag name
   window.FratechCardRegistry=window.FratechCardRegistry||{};
   let tagName=null;
   try{
@@ -2249,26 +2253,23 @@ async function _ghsPreviewCard(enc){
     if(!tagName){ const tm=code.match(/(?:window\.)?customElements\.(?:define|get)\s*\(\s*['"]([a-z][a-z0-9-]*)['"]/); tagName=tm?.[1]||null; }
   }catch(e){ const tm=code.match(/(?:window\.)?customElements\.(?:define|get)\s*\(\s*['"]([a-z][a-z0-9-]*)['"]/); tagName=tm?.[1]||null; }
   if(!tagName||!customElements.get(tagName)){ wrap.innerHTML='<div style="padding:60px 16px;text-align:center;color:rgba(255,255,255,.4);font-size:12px">⚠️ Anteprima non disponibile per questa card</div>'; return; }
-  // Override window.frarikHass con mock — card che usano window.frarikHass?.() ricevono dati simulati
-  const mockH=_createMockHass();
-  if(window._ghsPrevOrigHass===undefined) window._ghsPrevOrigHass=window.frarikHass;
-  window.frarikHass=()=>mockH;
-  // Pulisci localStorage __prev__
-  try{ Object.keys(localStorage).filter(k=>k.includes('__prev__')).forEach(k=>localStorage.removeItem(k)); }catch(e){}
+  // Usa hass reale — garantisce che bolletta, person e qualsiasi card funzioni con i dati veri
+  const hass=_haHassObj()||_createMockHass();
   // Istanzia la card
   try{
     const CardClass=customElements.get(tagName);
     let stub={}; try{ stub=CardClass?.getStubConfig?.()||{}; }catch(e){}
-    const cfg=_ghsPreviewFillCfg(stub);
     const card=document.createElement(tagName);
     card.style.cssText='display:block;width:100%';
-    const variants=[cfg,{storageKey:'__prev__',entityId:'sensor.temperatura'},{storageKey:'__prev__'},{}];
-    for(const c of variants){ try{ card.setConfig?.(c); break; }catch(e){} }
-    try{ card.hass=mockH; }catch(e){}
+    // setConfig: usa stub + storageKey preview (non tocca la config reale dell'utente)
+    const cfg={...stub,storageKey:'__preview__'};
+    try{ card.setConfig(cfg); }catch(e){ try{ card.setConfig({storageKey:'__preview__'}); }catch(e2){} }
+    try{ card.hass=hass; }catch(e){}
     wrap.innerHTML='';
     wrap.appendChild(card);
-    setTimeout(()=>{ try{ card.hass=mockH; }catch(e){}  },120);
-  }catch(e){ wrap.innerHTML=`<div style="padding:60px 16px;text-align:center;color:rgba(255,255,255,.4);font-size:12px">⚠️ Errore: ${eh(e.message||'sconosciuto')}</div>`; }
+    // Secondo push hass per card async
+    setTimeout(()=>{ try{ card.hass=hass; }catch(e){}  },200);
+  }catch(e){ wrap.innerHTML=`<div style="padding:60px 16px;text-align:center;color:rgba(255,255,255,.4);font-size:12px">⚠️ ${eh(e.message||'Errore sconosciuto')}</div>`; }
 }
 function _ghsPreviewFillCfg(stub){
   // Mappa di default per tutti i campi comuni — applicata sempre, non solo se già presente nello stub

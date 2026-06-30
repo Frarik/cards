@@ -995,19 +995,7 @@ body.editing .col-add-btn{display:flex}
 #ghsy-prev-wrap::-webkit-scrollbar-thumb{background:rgba(139,92,246,.25);border-radius:2px}
 #ghsy-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-size:11px;color:rgba(255,255,255,.2);text-align:center;padding:16px;pointer-events:none;line-height:1.6}
 #ghsy-prev{min-height:0}
-/* ═══ STORE CARD PREVIEW MODAL (ghs-prev-*) ═══ */
-#ghs-prev-ov{position:fixed;inset:0;z-index:20000;background:rgba(0,0,0,.82);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;animation:acpFi .15s ease}
-#ghs-prev-modal{width:min(500px,100%);height:min(500px,90vh);background:#06060f;border:1px solid rgba(139,92,246,.28);border-radius:20px;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.85);overflow:hidden;flex-shrink:0}
-.ghs-prev-hdr{display:flex;align-items:center;gap:12px;padding:14px 18px 12px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0}
-.ghs-prev-hdr-ico{width:34px;height:34px;border-radius:10px;background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.3);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
-.ghs-prev-hdr-title{font-size:13px;font-weight:700;color:#fff}
-.ghs-prev-hdr-sub{font-size:10px;color:rgba(255,255,255,.4);margin-top:2px}
-.ghs-prev-close{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:13px;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
-.ghs-prev-close:hover{background:rgba(255,255,255,.14);color:#fff}
-#ghs-prev-body{flex:1;overflow-y:auto;overflow-x:hidden;padding:20px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;min-height:0}
-#ghs-prev-card-wrap{width:100%}
-.ghs-prev-loading{padding:60px 16px;text-align:center;color:rgba(255,255,255,.4);font-size:12px;line-height:1.7}
-.ghs-prev-foot{padding:9px 18px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0;font-size:10px;color:rgba(255,255,255,.3);text-align:center}
+/* ghs-prev-* CSS moved to JS <style> injection (see _ghsShowPreviewModal) */
 /* ═══ YAML IMPORT MODAL (ymd-*) ═══ */
 #yaml-modal{position:fixed;inset:0;z-index:9600;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
 #yaml-modal.off{display:none}
@@ -1041,15 +1029,7 @@ body.editing .col-add-btn{display:flex}
 #ymd-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-size:11px;color:rgba(255,255,255,.2);text-align:center;padding:20px;pointer-events:none}
 #ymd-ph-icon{font-size:18px;font-family:monospace;opacity:.35;letter-spacing:-1px}
 #ymd-prev{min-height:0}
-/* ═══ STORE PREVIEW MODAL ═══ */
-#ghs-prev-modal{position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
-#ghs-prev-modal.off{display:none}
-#ghs-prev-box{background:var(--panel);border:1px solid var(--bd2);border-radius:18px;width:380px;max-width:94vw;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.7)}
-#ghs-prev-hdr{display:flex;align-items:center;padding:14px 16px 10px;gap:8px;border-bottom:1px solid var(--bd)}
-#ghs-prev-title{flex:1;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#ghs-prev-body{padding:16px;display:flex;flex-direction:column;gap:10px}
-#ghs-prev-card{width:100%;min-height:160px;border-radius:14px;overflow:hidden;position:relative;background:var(--panel2);border:1px solid var(--bd)}
-#ghs-prev-note{font-size:10px;color:var(--muted);text-align:center;min-height:14px}
+/* legacy ghs-prev-* removed — see _ghsShowPreviewModal */
 
 /* ═══ TOAST ═══ */
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#1e293b;border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:8px 18px;font-size:11px;font-weight:600;color:#fff;z-index:13000;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap}
