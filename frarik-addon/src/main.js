@@ -2941,7 +2941,7 @@ async function _ghsDeleteFromGithub(enc){
         await _ghDelete(path, 'Elimina '+name+' dallo store (chiave verificata)');
         try{ const g=_ghCfg(); if(g.shas) delete g.shas[name]; if(g.fileVersions) delete g.fileVersions[name];
              if(g.idFile){ for(const id in g.idFile){ if(g.idFile[id]===name) delete g.idFile[id]; } } saveCfg(); _haSaveCfg&&_haSaveCfg(); }catch(e){}
-        if(_ghsCache[_ghsTab]) _ghsCache[_ghsTab]=_ghsCache[_ghsTab].filter(x=>x.name!==name);
+        const _dft=_ghsFolderTab(_ghsTab); if(_ghsCache[_dft]) _ghsCache[_dft]=_ghsCache[_dft].filter(x=>x.name!==name);
         _ghStoreRender();
         showToast('✅ «'+nm+'» eliminata definitivamente da GitHub');
       }catch(e){ showToast('⚠️ Errore eliminazione GitHub: '+(e.message||e)); }
@@ -2949,16 +2949,18 @@ async function _ghsDeleteFromGithub(enc){
     'Elimina da GitHub', 'Annulla'
   );
 }
-function _ghsFind(name){ name=decodeURIComponent(name); return (_ghsCache[_ghsTab]||[]).find(f=>f.name===name); }
+/* tab virtuali (elettrodomestici, installate) condividono la cache e la cartella di 'js' */
+function _ghsFolderTab(tab){ return (tab==='elettrodomestici'||tab==='installate')?'js':tab; }
+function _ghsFind(name){ name=decodeURIComponent(name); return (_ghsCache[_ghsFolderTab(_ghsTab)]||[]).find(f=>f.name===name); }
 /* ricarica (se serve) la lista file della cartella corrente e ritrova il file:
    evita il caso "dopo l'eliminazione il tasto Installa non fa nulla" (cache vuota/stale) */
 async function _ghsEnsureFile(name){
   let f=_ghsFind(name);
   if(f) return f;
-  const fol=_GHS_FOLDERS[_ghsTab]; if(!fol) return null;
+  const ft=_ghsFolderTab(_ghsTab); const fol=_GHS_FOLDERS[ft]; if(!fol) return null;
   try{
     const files=await _ghListFolder(fol.path);
-    _ghsCache[_ghsTab]=files.filter(x=>fol.ext.test(x.name)&&!(fol.exclude&&fol.exclude.test(x.name)));
+    _ghsCache[ft]=files.filter(x=>fol.ext.test(x.name)&&!(fol.exclude&&fol.exclude.test(x.name)));
   }catch(e){ return null; }
   return _ghsFind(name);
 }

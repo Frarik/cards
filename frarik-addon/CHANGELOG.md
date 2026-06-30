@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.6.97 — 2026-06-30
+
+### fix: store — Installa non funzionava da tab Elettrodomestici e Installate
+
+- `_ghsFolderTab(tab)`: nuova funzione che mappa i tab virtuali (`elettrodomestici`, `installate`) al tab fisico `js` (stessa cartella GitHub)
+- `_ghsFind`: usa `_ghsFolderTab` per cercare nella cache corretta (`_ghsCache['js']`)
+- `_ghsEnsureFile`: usa `_ghsFolderTab` per ricaricare dalla cartella `card-js` quando il tab attivo è virtuale
+- `_ghsDeleteFromGithub`: usa `_ghsFolderTab` per invalidare la cache corretta dopo eliminazione
+
 ## 1.6.96 — 2026-06-30
 
 ### fix+feat: store — 3 fix grafici/UX
