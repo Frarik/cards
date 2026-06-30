@@ -736,41 +736,30 @@ window.customCards.push({ version: '1.0',
   }
 
   var _dWASTE = {
-    umido:   {col:'#92400e', rgb:'146,64,14',  init:'U', label:'Umido',         icon:'🍃'},
-    carta:   {col:'#1d4ed8', rgb:'29,78,216',  init:'C', label:'Carta',         icon:'📄'},
-    plastica:{col:'#b45309', rgb:'180,83,9',   init:'P', label:'Plastica',       icon:'♻️'},
-    vetro:   {col:'#15803d', rgb:'21,128,61',  init:'V', label:'Vetro',         icon:'🍾'},
-    secco:   {col:'#475569', rgb:'71,85,105',  init:'S', label:'Secco',         icon:'🗑️'},
-    nessuno: {col:'#1e293b', rgb:'30,41,59',   init:'—', label:'Nessun ritiro', icon:''},
+    organico:        {col:'#b45309', rgb:'180,83,9',   abbr:'ORG', label:'Organico',        icon:'🍃'},
+    umido:           {col:'#b45309', rgb:'180,83,9',   abbr:'UMI', label:'Umido',           icon:'🍃'},
+    carta:           {col:'#2563eb', rgb:'37,99,235',  abbr:'CAR', label:'Carta/Cartone',   icon:'📄'},
+    cartone:         {col:'#2563eb', rgb:'37,99,235',  abbr:'CAR', label:'Carta/Cartone',   icon:'📄'},
+    plastica:        {col:'#ca8a04', rgb:'202,138,4',  abbr:'PLA', label:'Plastica',        icon:'♻️'},
+    lattine:         {col:'#ca8a04', rgb:'202,138,4',  abbr:'LAT', label:'Lattine',         icon:'🥫'},
+    multimateriale:  {col:'#ca8a04', rgb:'202,138,4',  abbr:'MLT', label:'Multimateriale',  icon:'♻️'},
+    vetro:           {col:'#15803d', rgb:'21,128,61',  abbr:'VET', label:'Vetro',           icon:'🍾'},
+    indifferenziato: {col:'#4b5563', rgb:'75,85,99',   abbr:'IND', label:'Indifferenziato', icon:'🗑️'},
+    secco:           {col:'#4b5563', rgb:'75,85,99',   abbr:'SEC', label:'Secco',           icon:'🗑️'},
+    ingombranti:     {col:'#7c3aed', rgb:'124,58,237', abbr:'ING', label:'Ingombranti',     icon:'📦'},
+    nessuno:         {col:'#1e293b', rgb:'30,41,59',   abbr:'—',   label:'Nessun ritiro',   icon:''},
   };
 
-  function _hexToRgb(hex) {
-    return (parseInt(hex.slice(1,3),16)||0)+','+(parseInt(hex.slice(3,5),16)||0)+','+(parseInt(hex.slice(5,7),16)||0);
-  }
-
   function _dWasteInfo(raw, cc) {
-    if (!raw || !raw.trim()) {
-      var nb = _dWASTE.nessuno;
-      return (cc && cc.nessuno) ? {col:cc.nessuno, rgb:_hexToRgb(cc.nessuno), init:'—', label:'Nessun ritiro', icon:''} : nb;
-    }
+    if (!raw || !raw.trim()) return _dWASTE.nessuno;
     var key = raw.trim().toLowerCase().replace(/[^a-z]/g, '');
-    if (key === 'organico') key = 'umido';
-    if (key === 'cartone') key = 'carta';
-    if (key === 'indifferenziato' || key === 'lattine' || key === 'multimateriale') key = 'secco';
-    if (key === 'nessunoritiro' || key === 'niente' || key === 'no') key = 'nessuno';
-    var base = _dWASTE[key] || _dWASTE.nessuno;
+    var base = _dWASTE[key] || {col:'#475569', rgb:'71,85,105', abbr:raw.slice(0,3).toUpperCase(), label:raw, icon:'♻️'};
     if (cc && cc[key]) {
       var hex = cc[key];
-      return {col:hex, rgb:_hexToRgb(hex), init:base.init, label:base.label, icon:base.icon};
+      var r2 = parseInt(hex.slice(1,3),16)||0, g2 = parseInt(hex.slice(3,5),16)||0, b2 = parseInt(hex.slice(5,7),16)||0;
+      return {col:hex, rgb:r2+','+g2+','+b2, abbr:base.abbr, label:base.label, icon:base.icon};
     }
     return base;
-  }
-
-  function _dParseDay(raw, cc) {
-    if (!raw || !raw.trim()) return [_dWasteInfo('', cc)];
-    var parts = raw.split(',').map(function(s){return s.trim();}).filter(Boolean).slice(0,2);
-    if (!parts.length) return [_dWasteInfo('', cc)];
-    return parts.map(function(p){return _dWasteInfo(p, cc);});
   }
 
   function _dBinSVG(col, colRgb, abbr, size) {
@@ -803,48 +792,28 @@ window.customCards.push({ version: '1.0',
     var todayRaw = _dS(h, c[days[todayIdx]]) || '';
     var tmrRaw = _dS(h, c[days[tmrIdx]]) || '';
     var cc = c.custom_colors || {};
-    var todayArr = _dParseDay(todayRaw, cc);
-    var tmrArr = _dParseDay(tmrRaw, cc);
-    // Hero mostra DOMANI — rifiuto da esporre stasera
-    var mainArr = tmrArr;
-    var mainW = mainArr[0];
-    var hasPickup = !!tmrRaw.trim() && mainW !== _dWASTE.nessuno;
-    var hasTwo = mainArr.length >= 2;
-    var dddIdx = (todayIdx + 2) % 7;
-    var dddRaw = _dS(h, c[days[dddIdx]]) || '';
-    var dddArr = _dParseDay(dddRaw, cc);
+    var todayW = _dWasteInfo(todayRaw, cc), tmrW = _dWasteInfo(tmrRaw, cc);
+    var hasPickup = todayW !== _dWASTE.nessuno && todayRaw.trim();
     var orario = _dS(h, c.pk_orario) || '--:--';
     var orarioStr = orario.length >= 5 ? orario.slice(0,5) : orario;
-    var col = mainW.col;
-    var colRgb = mainW.rgb;
-    var statusLabel = hasTwo ? 'DUE RITIRI' : hasPickup ? 'RITIRO DOMANI' : 'NESSUN RITIRO';
+    var col = hasPickup ? todayW.col : '#1e293b';
+    var colRgb = hasPickup ? todayW.rgb : '30,41,59';
+    var statusLabel = hasPickup ? 'RITIRO OGGI' : 'NESSUN RITIRO';
 
     var weekChips = dayNames.map(function(dn, i) {
       var raw = _dS(h, c[days[i]]) || '';
-      var wArr = _dParseDay(raw, cc);
+      var w = _dWasteInfo(raw, cc);
       var isToday = i === todayIdx;
-      var chipsHtml;
-      if (wArr.length >= 2) {
-        chipsHtml = '<div style="display:flex;flex-direction:column;gap:2px;align-items:center">'
-          + wArr.slice(0,2).map(function(w) {
-            var hp = w !== _dWASTE.nessuno;
-            return '<div style="width:28px;height:13px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:900;'
-              + 'background:rgba(' + w.rgb + ',.2);'
-              + 'border:1px solid rgba(' + w.rgb + ',' + (isToday ? '.65' : '.25') + ');'
-              + 'color:' + w.col + '">' + (hp ? w.init : '—') + '</div>';
-          }).join('') + '</div>';
-      } else {
-        var w0 = wArr[0], hp0 = w0 !== _dWASTE.nessuno;
-        chipsHtml = '<div style="width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;'
-          + 'background:rgba(' + w0.rgb + ',.15);'
-          + 'border:1px solid rgba(' + w0.rgb + ',' + (isToday ? '.6' : '.25') + ');'
-          + 'color:' + w0.col + ';'
-          + (isToday ? 'box-shadow:0 0 8px rgba(' + w0.rgb + ',.3);' : '')
-          + '">' + (hp0 ? w0.init : '—') + '</div>';
-      }
+      var hasPk = !!raw.trim() && w !== _dWASTE.nessuno;
       return '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1">'
         + '<div style="font-size:8px;font-weight:800;color:' + (isToday ? '#fff' : 'rgba(255,255,255,.4)') + ';text-transform:uppercase">' + dn + '</div>'
-        + chipsHtml + '</div>';
+        + '<div style="width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;'
+        + 'background:rgba(' + (hasPk ? w.rgb : '100,116,139') + ',.15);'
+        + 'border:1px solid rgba(' + (hasPk ? w.rgb : '100,116,139') + ',' + (isToday ? '.6' : '.25') + ');'
+        + 'color:' + (hasPk ? w.col : '#4b5563') + ';'
+        + (isToday ? 'box-shadow:0 0 8px rgba(' + (hasPk ? w.rgb : '100,116,139') + ',.3);' : '')
+        + '">' + (hasPk ? w.abbr : '—') + '</div>'
+        + '</div>';
     }).join('');
 
     var css = '<style>'
@@ -872,38 +841,26 @@ window.customCards.push({ version: '1.0',
       + (hasPickup ? '@keyframes dPulse{0%,100%{opacity:.6}50%{opacity:1}}' : '')
       + '</style>';
 
-    var dddLabel = dddRaw.trim() ? dddArr.map(function(w){return w.label;}).join(' + ') : 'Nessun ritiro';
-    var heroHtml;
-    if (hasTwo) {
-      var w1 = mainArr[0], w2 = mainArr[1];
-      heroHtml = '<div class="fc-hero" style="flex-direction:column;align-items:stretch;gap:10px">'
-        + '<div style="display:flex;gap:16px;justify-content:center;align-items:flex-end">'
-        + '<div style="display:flex;flex-direction:column;align-items:center;gap:6px">'
-        + _dBinSVG(w1.col, w1.rgb, 'a', 54)
-        + '<div style="font-size:18px;font-weight:900;color:#fff;line-height:1.1;text-align:center">' + w1.label + '</div>'
-        + '</div>'
-        + '<div style="display:flex;flex-direction:column;align-items:center;gap:6px">'
-        + _dBinSVG(w2.col, w2.rgb, 'b', 54)
-        + '<div style="font-size:18px;font-weight:900;color:#fff;line-height:1.1;text-align:center">' + w2.label + '</div>'
-        + '</div>'
-        + '</div>'
-        + '<div class="fc-waste-sub" style="text-align:center">🌙 Esponi i bidoni stasera</div>'
-        + '<div class="fc-tmr-row"><span class="fc-tmr-lbl">Dopodomani:</span><span style="font-size:13px;font-weight:700;color:#fff">' + dddLabel + '</span></div>'
-        + '<div class="fc-tmr-row"><span class="fc-tmr-lbl">Notifica:</span><span style="font-size:13px;font-weight:700;color:#fff">' + orarioStr + '</span></div>'
-        + '</div>';
-    } else {
-      heroHtml = '<div class="fc-hero">'
-        + '<div class="fc-hero-bin">' + _dBinSVG(col, colRgb, 'x', 64) + '</div>'
-        + '<div class="fc-hero-r">'
-        + '<div class="fc-waste-main">' + (hasPickup ? mainW.label : 'Nessun ritiro') + '</div>'
-        + '<div class="fc-waste-sub">' + (hasPickup ? '🌙 Esponi il bidone stasera' : '✓ Nessuna raccolta domani') + '</div>'
-        + '<div class="fc-tmr-row"><span class="fc-tmr-lbl">Dopodomani:</span><span style="font-size:13px;font-weight:700;color:#fff">' + dddLabel + '</span></div>'
-        + '<div class="fc-tmr-row"><span class="fc-tmr-lbl">Notifica:</span><span style="font-size:13px;font-weight:700;color:#fff">' + orarioStr + '</span></div>'
-        + '</div></div>';
-    }
+    var heroHtml = '<div class="fc-hero">'
+      + '<div class="fc-hero-bin">' + _dBinSVG(col, colRgb, hasPickup ? todayW.abbr : '—', 64) + '</div>'
+      + '<div class="fc-hero-r">'
+      + '<div class="fc-waste-main">' + (hasPickup ? todayW.label : 'Nessun ritiro') + '</div>'
+      + '<div class="fc-waste-sub">' + (hasPickup ? '🗓 Esponi il bidone oggi' : '✓ Giornata libera') + '</div>'
+      + '<div class="fc-tmr-row">'
+      + '<span class="fc-tmr-lbl">Domani:</span>'
+      + '<span style="font-size:13px;font-weight:700;color:#fff">' + (tmrRaw.trim() ? tmrW.label : 'Nessun ritiro') + '</span>'
+      + '</div>'
+      + '<div class="fc-tmr-row">'
+      + '<span class="fc-tmr-lbl">Notifica:</span>'
+      + '<span style="font-size:13px;font-weight:700;color:#fff">' + orarioStr + '</span>'
+      + '</div>'
+      + '</div></div>';
 
     var weekHtml = '<div class="fc-week">' + weekChips + '</div>';
-    var btnsHtml = '<div class="fc-btns"><div class="fc-btn" data-sya="popup-cfg">⚙ Impostazioni</div></div>';
+
+    var btnsHtml = '<div class="fc-btns">'
+      + '<div class="fc-btn" data-sya="popup-cfg">⚙ Impostazioni</div>'
+      + '</div>';
 
     return css
       + '<div id="' + rid + '"><div class="fc-card">'
@@ -976,21 +933,12 @@ window.customCards.push({ version: '1.0',
     var cc = c.custom_colors || {};
     var days = ['pk_lunedi','pk_martedi','pk_mercoledi','pk_giovedi','pk_venerdi','pk_sabato','pk_domenica'];
     var dayLabels = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato','Domenica'];
-    var wasteKeys   = ['umido','carta','plastica','vetro','secco'];
-    var wasteLabels = ['Umido','Carta','Plastica','Vetro','Secco'];
-    var colorTypes  = [
-      {key:'umido',    label:'Umido'},
-      {key:'carta',    label:'Carta'},
-      {key:'plastica', label:'Plastica'},
-      {key:'vetro',    label:'Vetro'},
-      {key:'secco',    label:'Secco'},
-      {key:'nessuno',  label:'Nessun ritiro'},
-    ];
+    var suggestions = ['Organico','Carta','Cartone','Plastica','Vetro','Indifferenziato','Multimateriale','Ingombranti','Nessuno'];
+    var stdWastes = ['Organico','Umido','Carta','Cartone','Plastica','Vetro','Indifferenziato','Multimateriale','Ingombranti','Lattine','Secco'];
     var nPush   = _dIsOn(h, c.pk_npush);
     var nGoogle = _dIsOn(h, c.pk_ngoogle);
     var nAlexa  = _dIsOn(h, c.pk_nalexa);
     var orario  = _dS(h, c.pk_orario) || '08:00:00';
-
     function ntog(label, sya, isOn) {
       return '<div data-sya="' + sya + '" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:8px 4px;border-radius:9px;background:rgba(' + (isOn?'34,197,94':'100,116,139') + ',.1);border:1px solid rgba(' + (isOn?'34,197,94':'100,116,139') + ',' + (isOn?'.35':'.15') + ');transition:all .2s">'
         + '<div style="font-size:15px">' + (isOn ? '🔔' : '🔕') + '</div>'
@@ -998,48 +946,28 @@ window.customCards.push({ version: '1.0',
         + '<div style="font-size:9px;font-weight:700;color:' + (isOn ? '#fff' : 'rgba(255,255,255,.25)') + '">' + (isOn ? 'ON' : 'OFF') + '</div>'
         + '</div>';
     }
-    function selSt() { return 'flex:1;min-width:0;padding:6px 6px;border-radius:8px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:11px;box-sizing:border-box;outline:none'; }
-    function mkOpts(selected) {
-      return '<option value="nessuno"' + (selected === 'nessuno' ? ' selected' : '') + '>—</option>'
-        + wasteKeys.map(function(k2,j) {
-            return '<option value="' + k2 + '"' + (k2 === selected ? ' selected' : '') + '>' + wasteLabels[j] + '</option>';
-          }).join('');
-    }
-    function normalizeKey(raw) {
-      if (!raw) return 'nessuno';
-      var k = raw.trim().toLowerCase().replace(/[^a-z]/g,'');
-      if (k === 'organico') k = 'umido';
-      if (k === 'cartone') k = 'carta';
-      if (k === 'indifferenziato' || k === 'lattine' || k === 'multimateriale') k = 'secco';
-      return wasteKeys.indexOf(k) >= 0 ? k : 'nessuno';
-    }
-
     var dayFlds = days.map(function(k, i) {
-      var raw = (_dS(h, c[k]) || '').trim();
-      var parts = raw.split(',').map(function(s){ return normalizeKey(s); });
-      var sel1 = parts[0] || 'nessuno', sel2 = parts[1] || 'nessuno';
-      var w1 = _dWasteInfo(sel1, cc), w2 = _dWasteInfo(sel2, cc);
-      return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">'
-        + '<div style="font-size:10px;font-weight:800;color:#94a3b8;width:72px;flex-shrink:0">' + dayLabels[i] + '</div>'
-        + '<div style="width:8px;height:8px;border-radius:50%;background:' + w1.col + ';flex-shrink:0"></div>'
-        + '<select id="dcf-' + k + '-1" style="' + selSt() + '">' + mkOpts(sel1) + '</select>'
-        + '<div style="width:8px;height:8px;border-radius:50%;background:' + w2.col + ';flex-shrink:0"></div>'
-        + '<select id="dcf-' + k + '-2" style="' + selSt() + '">' + mkOpts(sel2) + '</select>'
+      var val = (_dS(h, c[k]) || '').replace(/"/g,'&quot;');
+      var w = _dWasteInfo(_dS(h, c[k]) || '', cc);
+      return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+        + '<div style="font-size:10px;font-weight:800;color:#94a3b8;width:82px;flex-shrink:0">' + dayLabels[i] + '</div>'
+        + '<div style="width:10px;height:10px;border-radius:50%;background:' + w.col + ';flex-shrink:0"></div>'
+        + '<input id="dcf-' + k + '" type="text" list="dcf-datalist" placeholder="es. Organico" value="' + val + '" style="flex:1;padding:7px 9px;border-radius:8px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:12px;box-sizing:border-box;outline:none">'
         + '</div>';
     }).join('');
-
-    var colorFlds = colorTypes.map(function(ct) {
-      var defCol = _dWASTE[ct.key] ? _dWASTE[ct.key].col : '#475569';
-      var curCol = cc[ct.key] || defCol;
+    var colorFlds = stdWastes.map(function(wl) {
+      var key = wl.toLowerCase().replace(/[^a-z]/g, '');
+      var defCol = (_dWASTE[key] && _dWASTE[key].col) ? _dWASTE[key].col : '#475569';
+      var curCol = cc[key] || defCol;
       return '<div style="display:flex;align-items:center;gap:9px;margin-bottom:7px">'
         + '<div style="width:12px;height:12px;border-radius:50%;background:' + curCol + ';flex-shrink:0;border:1px solid rgba(255,255,255,.12)"></div>'
-        + '<div style="font-size:11px;color:#fff;flex:1">' + ct.label + '</div>'
-        + '<input type="color" id="dcc-' + ct.key + '" value="' + curCol + '" style="width:44px;height:30px;border:1px solid rgba(255,255,255,.15);border-radius:7px;background:#0b1422;cursor:pointer;padding:2px 3px">'
+        + '<div style="font-size:11px;color:#fff;flex:1">' + wl + '</div>'
+        + '<input type="color" id="dcc-' + key + '" value="' + curCol + '" style="width:44px;height:30px;border:1px solid rgba(255,255,255,.15);border-radius:7px;background:#0b1422;cursor:pointer;padding:2px 3px">'
         + '</div>';
     }).join('');
-
     function sec(t) { return '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#22c55e;padding-bottom:4px;border-bottom:1px solid rgba(34,197,94,.18);margin:14px 0 10px">' + t + '</div>'; }
-    var content = sec('Programmazione giorni')
+    var content = '<datalist id="dcf-datalist">' + suggestions.map(function(s){return '<option value="'+s+'">';}).join('') + '</datalist>'
+      + sec('Programmazione giorni')
       + dayFlds
       + sec('Colori per tipo di rifiuto')
       + colorFlds
@@ -1052,7 +980,6 @@ window.customCards.push({ version: '1.0',
       + ntog('Push', 'ncfg-push', nPush) + ntog('Google', 'ncfg-google', nGoogle) + ntog('Alexa', 'ncfg-alexa', nAlexa)
       + '</div>'
       + '<button id="d-cfg-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#22c55e;color:#022c1b">💾 Salva</button>';
-
     var ov = _dMkOv(_dPopShell('⚙','34,197,94','Impostazioni',c.name||'Raccolta Differenziata','d-cfg-cl',content),'d-cfg-cl');
     ov.querySelectorAll('[data-sya^="ncfg-"]').forEach(function(tog) {
       tog.addEventListener('click', function() {
@@ -1070,22 +997,19 @@ window.customCards.push({ version: '1.0',
     ov.querySelector('#d-cfg-save').addEventListener('click', function() {
       var h2 = _dH();
       days.forEach(function(k) {
-        var s1 = ov.querySelector('#dcf-'+k+'-1');
-        var s2 = ov.querySelector('#dcf-'+k+'-2');
-        if (!s1) return;
-        var idx1 = wasteKeys.indexOf(s1.value), idx2 = s2 ? wasteKeys.indexOf(s2.value) : -1;
-        var v1 = idx1 >= 0 ? wasteLabels[idx1] : '';
-        var v2 = idx2 >= 0 ? wasteLabels[idx2] : '';
-        var val = v1 + (v1 && v2 ? ',' + v2 : v2);
+        var inp = ov.querySelector('#dcf-'+k);
+        if (!inp) return;
         var eid = c[k];
-        if (eid && h2 && h2.callService) h2.callService('input_text','set_value',{entity_id:eid,value:val});
+        if (eid && h2 && h2.callService) h2.callService('input_text','set_value',{entity_id:eid, value:inp.value.trim()});
       });
       var ori = ov.querySelector('#dcf-orario');
-      if (ori && ori.value && h2 && h2.callService) h2.callService('input_datetime','set_datetime',{entity_id:c.pk_orario,time:ori.value+':00'});
+      if (ori && ori.value && h2 && h2.callService) h2.callService('input_datetime','set_datetime',{entity_id:c.pk_orario, time:ori.value+':00'});
+      // Save custom colors
       var newCc = {};
-      colorTypes.forEach(function(ct) {
-        var inp = ov.querySelector('#dcc-'+ct.key);
-        if (inp) newCc[ct.key] = inp.value;
+      stdWastes.forEach(function(wl) {
+        var key = wl.toLowerCase().replace(/[^a-z]/g, '');
+        var inp = ov.querySelector('#dcc-' + key);
+        if (inp) newCc[key] = inp.value;
       });
       var st = _dLoad(card); st.custom_colors = newCc; _dSave(card, st);
       ov._close();
@@ -1160,7 +1084,7 @@ window.customCards.push({ version: '1.0',
   }
 
   var _DIFF_CARD = {
-    id: 'differenziata', name: 'Raccolta Differenziata', icon: '♻️', version: '2.5',
+    id: 'differenziata', name: 'Raccolta Differenziata', icon: '♻️', version: '2.3',
     desc: 'Calendario raccolta differenziata settimanale con notifiche push, Google e Alexa.',
     render:    function(card) { return _dRender(card); },
     mount:     function(card, hass, el) { _dMount(card, hass, el); },
