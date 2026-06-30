@@ -161,6 +161,34 @@ input_text:
     name: "Differenziata — Rifiuto Domenica"
     icon: mdi:delete-variant
 
+  frarik_differenziata_rifiuto2_lunedi:
+    name: "Differenziata — 2° Rifiuto Lunedì"
+    icon: mdi:delete-variant
+
+  frarik_differenziata_rifiuto2_martedi:
+    name: "Differenziata — 2° Rifiuto Martedì"
+    icon: mdi:delete-variant
+
+  frarik_differenziata_rifiuto2_mercoledi:
+    name: "Differenziata — 2° Rifiuto Mercoledì"
+    icon: mdi:delete-variant
+
+  frarik_differenziata_rifiuto2_giovedi:
+    name: "Differenziata — 2° Rifiuto Giovedì"
+    icon: mdi:delete-variant
+
+  frarik_differenziata_rifiuto2_venerdi:
+    name: "Differenziata — 2° Rifiuto Venerdì"
+    icon: mdi:delete-variant
+
+  frarik_differenziata_rifiuto2_sabato:
+    name: "Differenziata — 2° Rifiuto Sabato"
+    icon: mdi:delete-variant
+
+  frarik_differenziata_rifiuto2_domenica:
+    name: "Differenziata — 2° Rifiuto Domenica"
+    icon: mdi:delete-variant
+
 
 ####################################################
 #                                                  #

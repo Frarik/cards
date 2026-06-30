@@ -94,88 +94,89 @@ const CSS = `
 .hdr { display:flex;align-items:center;gap:10px;padding:14px 14px 12px;border-bottom:1px solid rgba(255,255,255,.06); }
 .hdr-icon { width:40px;height:40px;border-radius:11px;flex-shrink:0;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25);display:flex;align-items:center;justify-content:center;color:#22c55e; }
 .hdr-text { flex:1;min-width:0; }
-.hdr-title { font-size:15px;font-weight:700;color:var(--primary-text-color,#f1f5f9); }
+.hdr-title { font-size:15px;font-weight:700;color:#fff; }
 .hdr-date  { font-size:10px;font-weight:500;color:var(--secondary-text-color,#64748b);margin-top:2px; }
 .hdr-right { display:flex;align-items:center;gap:6px;flex-shrink:0; }
 .icon-btn { width:30px;height:30px;border-radius:8px;border:none;background:rgba(255,255,255,.05);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--secondary-text-color,#64748b);transition:background .15s; }
 .icon-btn:hover { background:rgba(255,255,255,.1); }
-.icon-btn.on { background:rgba(255,255,255,.12);color:var(--primary-text-color,#f1f5f9); }
+.icon-btn.on { background:rgba(255,255,255,.12);color:#fff; }
 button[data-action="toggleSettings"] { display: var(--fgear, none); }
 
-/* Hero */
-.hero {
-  position:relative;
-  padding:22px 16px 16px;
-  display:flex;flex-direction:column;align-items:center;gap:8px;
-  border-bottom:1px solid rgba(255,255,255,.06);
-  overflow:hidden;
+/* ── 2-colonne body ──────────────────────────────────────────────────────── */
+.body { display:flex;min-height:180px;border-bottom:1px solid rgba(255,255,255,.06); }
+
+/* Colonna sinistra — bidoni */
+.col-bins {
+  width:44%;border-right:1px solid rgba(255,255,255,.06);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;padding:16px 6px;position:relative;overflow:hidden;
 }
-.hero-glow {
-  position:absolute;width:200px;height:200px;border-radius:50%;
-  filter:blur(60px);opacity:.15;pointer-events:none;
-  top:0;left:50%;transform:translateX(-50%);
+.bins-glow {
+  position:absolute;width:150px;height:150px;border-radius:50%;
+  filter:blur(55px);opacity:.18;pointer-events:none;
+  top:50%;left:50%;transform:translate(-50%,-50%);
 }
-.hero-today-tag {
+.today-tag {
   font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;
-  padding:3px 10px;border-radius:20px;border:1px solid currentColor;
+  padding:2px 9px;border-radius:20px;border:1px solid currentColor;
   position:relative;z-index:1;
 }
-.hero-bin { position:relative;z-index:1;display:flex;align-items:center;justify-content:center; }
-.hero-label { font-size:24px;font-weight:900;letter-spacing:-.5px;text-align:center;line-height:1.2;position:relative;z-index:1; }
-.hero-sub { font-size:11px;color:var(--secondary-text-color,#64748b);font-weight:500;position:relative;z-index:1; }
+.bin-row { display:flex;align-items:flex-end;justify-content:center;gap:6px;position:relative;z-index:1; }
+.bin-labels { display:flex;flex-direction:column;align-items:center;gap:1px;position:relative;z-index:1; }
+.bin-label1 { font-size:13px;font-weight:800;text-align:center;line-height:1.3; }
+.bin-label2 { font-size:11px;font-weight:700;text-align:center;line-height:1.3; }
+.bin-sub { font-size:9px;font-weight:600;text-align:center;color:var(--secondary-text-color,#64748b);position:relative;z-index:1; }
 
-/* Tomorrow strip */
-.tomorrow {
-  display:flex;align-items:center;gap:8px;
-  padding:8px 16px;
-  border-bottom:1px solid rgba(255,255,255,.05);
-  background:rgba(255,255,255,.025);
-}
-.tmr-tag {
-  display:flex;align-items:center;gap:4px;
-  font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
-  color:var(--secondary-text-color,#64748b);min-width:58px;
-}
-.tmr-bin { display:flex;align-items:center;flex-shrink:0; }
-.tmr-waste { font-size:13px;font-weight:600;color:var(--primary-text-color,#f1f5f9); }
-.tmr-none  { font-size:13px;font-weight:500;color:var(--secondary-text-color,#64748b); }
+/* Colonna destra — info + calendario */
+.col-info { flex:1;display:flex;flex-direction:column;min-width:0; }
+.info-date { padding:10px 12px 8px;border-bottom:1px solid rgba(255,255,255,.04); }
+.info-date-txt { font-size:10px;font-weight:600;color:var(--secondary-text-color,#64748b); }
 
-/* Week grid */
+/* Domani (nella colonna destra) */
+.tmr { display:flex;align-items:center;gap:6px;padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.04);background:rgba(255,255,255,.02); }
+.tmr-tag { font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--secondary-text-color,#64748b);flex-shrink:0; }
+.tmr-bins { display:flex;gap:2px;align-items:center;flex-shrink:0; }
+.tmr-txt  { font-size:11px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.tmr-none { font-size:11px;font-weight:500;color:var(--secondary-text-color,#64748b); }
+
+/* Settimana (nella colonna destra) */
 .week {
   display:grid;grid-template-columns:repeat(7,1fr);
-  gap:5px;padding:10px 10px 8px;
-  border-bottom:1px solid rgba(255,255,255,.06);
+  gap:3px;padding:7px 6px 9px;
 }
 .day-chip {
-  display:flex;flex-direction:column;align-items:center;gap:3px;
-  padding:7px 2px 6px;border-radius:10px;
+  display:flex;flex-direction:column;align-items:center;gap:1px;
+  padding:5px 1px 4px;border-radius:8px;
   border:1px solid rgba(255,255,255,.05);
   background:rgba(255,255,255,.02);
 }
 .day-chip.today { border-color:#fff;background:rgba(255,255,255,.07); }
-.day-chip-lbl { font-size:9px;font-weight:700;color:var(--secondary-text-color,#64748b); }
-.day-chip.today .day-chip-lbl { color:var(--primary-text-color,#f1f5f9); }
-.day-chip-bin { display:flex;align-items:center;justify-content:center; }
-.day-chip-short { font-size:8px;font-weight:800; }
+.day-chip-lbl { font-size:8px;font-weight:700;color:var(--secondary-text-color,#64748b); }
+.day-chip.today .day-chip-lbl { color:#fff; }
+.day-chip-bins { display:flex;flex-direction:column;align-items:center;gap:1px; }
+.day-chip-short { font-size:7px;font-weight:800;line-height:1.1; }
 
 /* Edit panel */
-.edit-panel { display:none;padding:10px 14px 12px;border-top:1px solid rgba(255,255,255,.06); }
+.edit-panel { display:none;padding:10px 12px 12px;border-top:1px solid rgba(255,255,255,.06); }
 .edit-panel.open { display:block; }
 .panel-title { font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--secondary-text-color,#64748b);margin-bottom:8px; }
-.edit-row { display:flex;align-items:center;gap:5px;margin-bottom:5px; }
-.edit-row:last-of-type { margin-bottom:0; }
+.edit-day { margin-bottom:8px; }
+.edit-day:last-of-type { margin-bottom:0; }
+.edit-row { display:flex;align-items:center;gap:4px;margin-bottom:3px; }
 .edit-day-lbl { font-size:10px;font-weight:700;color:var(--secondary-text-color,#64748b);min-width:18px;text-align:center;flex-shrink:0; }
+.edit-day-lbl.r2 { color:transparent;user-select:none; }
 .edit-input {
-  flex:1;height:27px;padding:0 8px;
+  flex:1;height:26px;padding:0 7px;
   border-radius:7px;border:1px solid rgba(255,255,255,.1);
-  background:rgba(255,255,255,.05);color:var(--primary-text-color,#f1f5f9);
+  background:rgba(255,255,255,.05);color:#fff;
   font-size:11px;font-weight:500;font-family:inherit;
 }
+.edit-input.r2 { border-color:rgba(255,255,255,.06);background:rgba(255,255,255,.03); }
 .edit-input:focus { outline:none;border-color:rgba(34,197,94,.45); }
 .presets { display:flex;gap:2px;flex-shrink:0; }
 .preset-btn {
-  width:19px;height:19px;border-radius:4px;border:none;
-  font-size:8px;font-weight:800;cursor:pointer;color:#fff;
+  width:18px;height:18px;border-radius:4px;border:none;
+  font-size:7px;font-weight:800;cursor:pointer;color:#fff;
   display:flex;align-items:center;justify-content:center;
   transition:opacity .12s,transform .1s;flex-shrink:0;
 }
@@ -186,7 +187,7 @@ button[data-action="toggleSettings"] { display: var(--fgear, none); }
 .set-panel.open { display:block; }
 .set-row { display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.04); }
 .set-row:last-child { border-bottom:none; }
-.set-lbl { font-size:12px;font-weight:600;color:var(--primary-text-color,#f1f5f9); }
+.set-lbl { font-size:12px;font-weight:600;color:#fff; }
 .set-sub { font-size:10px;color:var(--secondary-text-color,#64748b);margin-top:1px; }
 .set-icon { display:flex;align-items:center;gap:7px; }
 .toggle { width:40px;height:22px;border-radius:11px;border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0; }
@@ -198,7 +199,7 @@ button[data-action="toggleSettings"] { display: var(--fgear, none); }
 .time-input {
   height:30px;padding:0 10px;border-radius:8px;
   border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);
-  color:var(--primary-text-color,#f1f5f9);font-size:13px;font-weight:600;font-family:inherit;
+  color:#fff;font-size:13px;font-weight:600;font-family:inherit;
 }
 .time-input:focus { outline:none;border-color:rgba(34,197,94,.5); }
 `
@@ -247,9 +248,10 @@ class DifferenziataCard extends HTMLElement {
 
   _buildKey_() {
     if (!this._hass) return null
-    const texts = DD_DAYS.map(d => this._g(`input_text.frarik_differenziata_rifiuto_${d}`,'')).join('|')
+    const r1 = DD_DAYS.map(d => this._g(`input_text.frarik_differenziata_rifiuto_${d}`,'')).join('|')
+    const r2 = DD_DAYS.map(d => this._g(`input_text.frarik_differenziata_rifiuto2_${d}`,'')).join('|')
     return [
-      texts,
+      r1, r2,
       this._g('input_datetime.frarik_differenziata_orario_notifica',''),
       this._g('input_boolean.frarik_differenziata_notifica_push',''),
       this._g('input_boolean.frarik_differenziata_notifica_alexa',''),
@@ -277,6 +279,11 @@ class DifferenziataCard extends HTMLElement {
           entity_id: `input_text.frarik_differenziata_rifiuto_${btn.dataset.day}`,
           value: btn.dataset.val,
         }); break
+      case 'preset2':
+        this._svc('input_text','set_value',{
+          entity_id: `input_text.frarik_differenziata_rifiuto2_${btn.dataset.day}`,
+          value: btn.dataset.val,
+        }); break
     }
   }
 
@@ -285,7 +292,13 @@ class DifferenziataCard extends HTMLElement {
     const el = e.target
     if (el.dataset.action === 'setWaste') {
       this._svc('input_text','set_value',{
-        entity_id: `input_text.rifiuto_${el.dataset.day}`,
+        entity_id: `input_text.frarik_differenziata_rifiuto_${el.dataset.day}`,
+        value: el.value,
+      })
+    }
+    if (el.dataset.action === 'setWaste2') {
+      this._svc('input_text','set_value',{
+        entity_id: `input_text.frarik_differenziata_rifiuto2_${el.dataset.day}`,
         value: el.value,
       })
     }
@@ -302,61 +315,91 @@ class DifferenziataCard extends HTMLElement {
     if (!this._hass) return
 
     const now      = new Date()
-    const todayIdx = (now.getDay() + 6) % 7  // 0 = lunedì
+    const todayIdx = (now.getDay() + 6) % 7
     const tmrIdx   = (todayIdx + 1) % 7
     const dateStr  = `${DD_FULL[todayIdx]}, ${now.getDate()} ${DD_MONTH[now.getMonth()]} ${now.getFullYear()}`
 
-    const wastes  = DD_DAYS.map(d => this._g(`input_text.frarik_differenziata_rifiuto_${d}`,''))
-    const todayW  = wasteInfo(wastes[todayIdx])
-    const tmrW    = wasteInfo(wastes[tmrIdx])
+    const wastes1 = DD_DAYS.map(d => this._g(`input_text.frarik_differenziata_rifiuto_${d}`,''))
+    const wastes2 = DD_DAYS.map(d => this._g(`input_text.frarik_differenziata_rifiuto2_${d}`,''))
+    const todayW1 = wasteInfo(wastes1[todayIdx])
+    const todayW2 = wasteInfo(wastes2[todayIdx])
+    const tmrW1   = wasteInfo(wastes1[tmrIdx])
+    const tmrW2   = wasteInfo(wastes2[tmrIdx])
 
     const pushOn  = this._g('input_boolean.frarik_differenziata_notifica_push') === 'on'
     const alexaOn = this._g('input_boolean.frarik_differenziata_notifica_alexa') === 'on'
     const notifT  = (this._g('input_datetime.frarik_differenziata_orario_notifica','00:00:00') || '00:00:00').slice(0,5)
 
-    // Card border glow by today's waste
-    const cardStyle = todayW.hasPickup && todayW.glow !== 'none'
-      ? `style="border-color:${todayW.color}44;box-shadow:0 8px 32px ${todayW.color}18"`
-      : ''
+    const cardStyle = todayW1.hasPickup && todayW1.glow !== 'none'
+      ? `style="border-color:${todayW1.color}44;box-shadow:0 8px 32px ${todayW1.color}18"` : ''
 
-    // Hero section
-    const heroGlow = todayW.hasPickup && todayW.glow !== 'none'
-      ? `<div class="hero-glow" style="background:${todayW.color}"></div>` : ''
-    const heroBin = todayW.hasPickup ? binSvg(todayW.color, 84) : emptyBinSvg(84)
+    // ── Colonna sinistra: bidoni oggi ──
+    const binsGlow = todayW1.hasPickup && todayW1.glow !== 'none'
+      ? `<div class="bins-glow" style="background:${todayW1.color}"></div>` : ''
 
-    // Tomorrow
-    const tmrBin = tmrW.hasPickup ? binSvg(tmrW.color, 22) : emptyBinSvg(22)
+    const binSize = todayW2.hasPickup ? 68 : 82
+    const todayBins = todayW1.hasPickup
+      ? binSvg(todayW1.color, binSize) + (todayW2.hasPickup ? binSvg(todayW2.color, binSize) : '')
+      : emptyBinSvg(82)
 
-    // Week chips
+    const label1Html = `<span class="bin-label1" style="color:${todayW1.hasPickup?todayW1.color:'var(--secondary-text-color,#64748b)'}">${todayW1.label}</span>`
+    const label2Html = todayW2.hasPickup
+      ? `<span class="bin-label2" style="color:${todayW2.color}">${todayW2.label}</span>` : ''
+
+    // ── Domani: nella colonna destra ──
+    const tmrBinsHtml = tmrW1.hasPickup
+      ? binSvg(tmrW1.color, 20) + (tmrW2.hasPickup ? binSvg(tmrW2.color, 20) : '')
+      : emptyBinSvg(20)
+    const tmrLabel = tmrW1.hasPickup
+      ? `<span class="tmr-txt" style="color:${tmrW1.color}">${tmrW1.label}${tmrW2.hasPickup?' + '+tmrW2.label:''}</span>`
+      : `<span class="tmr-none">Nessun ritiro</span>`
+
+    // ── Settimana ──
     const weekChips = DD_DAYS.map((d, i) => {
-      const info = wasteInfo(wastes[i])
+      const w1 = wasteInfo(wastes1[i])
+      const w2 = wasteInfo(wastes2[i])
       const isToday = i === todayIdx
-      const mb = info.hasPickup ? binSvg(info.color, 28) : emptyBinSvg(28)
+      const b1 = w1.hasPickup ? binSvg(w1.color, 20) : emptyBinSvg(20)
+      const b2 = w2.hasPickup ? binSvg(w2.color, 20) : ''
+      const shorts = w1.hasPickup
+        ? `<span class="day-chip-short" style="color:${w1.color}">${w1.short}</span>${w2.hasPickup?`<span class="day-chip-short" style="color:${w2.color}">${w2.short}</span>`:''}`
+        : `<span class="day-chip-short" style="color:var(--secondary-text-color,#4b5563)">—</span>`
       return `<div class="day-chip ${isToday?'today':''}">
         <span class="day-chip-lbl">${DD_LBL[i]}</span>
-        <div class="day-chip-bin">${mb}</div>
-        <span class="day-chip-short" style="${info.hasPickup?'color:'+info.color:'color:var(--secondary-text-color,#4b5563)'}">${info.hasPickup?info.short:'—'}</span>
+        <div class="day-chip-bins">${b1}${b2}</div>
+        ${shorts}
       </div>`
     }).join('')
 
-    // Edit panel
+    // ── Edit panel con doppio rifiuto ──
     const editHTML = this._editOpen ? `
       <div class="edit-panel open">
-        <div class="panel-title">Configura raccolta settimanale</div>
+        <div class="panel-title">Configura raccolta — Rif.1 e Rif.2 opzionale</div>
         ${DD_DAYS.map((d,i) => {
-          const presets = PRESETS.map(p =>
+          const p1 = PRESETS.map(p =>
             `<button class="preset-btn" style="background:${p.bg}" data-action="preset" data-day="${d}" data-val="${p.val}" title="${p.val}">${p.short}</button>`
           ).join('')
-          return `<div class="edit-row">
-            <span class="edit-day-lbl">${DD_LBL[i]}</span>
-            <input class="edit-input" type="text" value="${wastes[i]||''}" placeholder="es. Organico"
-              data-action="setWaste" data-day="${d}">
-            <div class="presets">${presets}</div>
+          const p2 = PRESETS.map(p =>
+            `<button class="preset-btn" style="background:${p.bg}" data-action="preset2" data-day="${d}" data-val="${p.val}" title="${p.val}">${p.short}</button>`
+          ).join('')
+          return `<div class="edit-day">
+            <div class="edit-row">
+              <span class="edit-day-lbl">${DD_LBL[i]}</span>
+              <input class="edit-input" type="text" value="${wastes1[i]||''}" placeholder="es. Organico"
+                data-action="setWaste" data-day="${d}">
+              <div class="presets">${p1}</div>
+            </div>
+            <div class="edit-row">
+              <span class="edit-day-lbl r2">${DD_LBL[i]}</span>
+              <input class="edit-input r2" type="text" value="${wastes2[i]||''}" placeholder="2° rifiuto (opzionale)"
+                data-action="setWaste2" data-day="${d}">
+              <div class="presets">${p2}</div>
+            </div>
           </div>`
         }).join('')}
       </div>` : `<div class="edit-panel"></div>`
 
-    // Settings panel
+    // ── Settings panel ──
     const settingsHTML = this._settingsOpen ? `
       <div class="set-panel open">
         <div class="set-row">
@@ -397,26 +440,27 @@ class DifferenziataCard extends HTMLElement {
     </div>
   </div>
 
-  <!-- Hero: oggi -->
-  <div class="hero">
-    ${heroGlow}
-    <div class="hero-today-tag" style="color:${todayW.hasPickup?todayW.color:'var(--secondary-text-color)'}">OGGI</div>
-    <div class="hero-bin">${heroBin}</div>
-    <div class="hero-label" style="${todayW.hasPickup?'color:'+todayW.color:''}">${todayW.label}</div>
-    <div class="hero-sub">${todayW.hasPickup ? 'Esponi il bidone oggi' : 'Nessun ritiro oggi'}</div>
+  <!-- Body 2 colonne -->
+  <div class="body">
+    <!-- Colonna sinistra: bidoni -->
+    <div class="col-bins">
+      ${binsGlow}
+      <span class="today-tag" style="color:${todayW1.hasPickup?todayW1.color:'var(--secondary-text-color,#64748b)'}">OGGI</span>
+      <div class="bin-row">${todayBins}</div>
+      <div class="bin-labels">${label1Html}${label2Html}</div>
+      <div class="bin-sub">${todayW1.hasPickup ? 'Esponi il bidone' : 'Nessun ritiro'}</div>
+    </div>
+    <!-- Colonna destra: info + calendario -->
+    <div class="col-info">
+      <div class="info-date"><div class="info-date-txt">${dateStr}</div></div>
+      <div class="tmr">
+        <span class="tmr-tag">${IC.arrow} Domani</span>
+        <div class="tmr-bins">${tmrBinsHtml}</div>
+        ${tmrLabel}
+      </div>
+      <div class="week">${weekChips}</div>
+    </div>
   </div>
-
-  <!-- Domani -->
-  <div class="tomorrow">
-    <span class="tmr-tag">${IC.arrow} Domani</span>
-    <div class="tmr-bin">${tmrBin}</div>
-    ${tmrW.hasPickup
-      ? `<span class="tmr-waste" style="color:${tmrW.color}">${tmrW.label}</span>`
-      : `<span class="tmr-none">Nessun ritiro</span>`}
-  </div>
-
-  <!-- Settimana -->
-  <div class="week">${weekChips}</div>
 
   ${editHTML}
   ${settingsHTML}
@@ -465,6 +509,13 @@ window.customCards.push({ version: '1.0',
     + '  frarik_differenziata_rifiuto_venerdi: {name: "Differenziata — Rifiuto Venerdì", icon: mdi:delete-variant}\n'
     + '  frarik_differenziata_rifiuto_sabato: {name: "Differenziata — Rifiuto Sabato", icon: mdi:delete-variant}\n'
     + '  frarik_differenziata_rifiuto_domenica: {name: "Differenziata — Rifiuto Domenica", icon: mdi:delete-variant}\n'
+    + '  frarik_differenziata_rifiuto2_lunedi: {name: "Differenziata — 2° Rifiuto Lunedì", icon: mdi:delete-variant}\n'
+    + '  frarik_differenziata_rifiuto2_martedi: {name: "Differenziata — 2° Rifiuto Martedì", icon: mdi:delete-variant}\n'
+    + '  frarik_differenziata_rifiuto2_mercoledi: {name: "Differenziata — 2° Rifiuto Mercoledì", icon: mdi:delete-variant}\n'
+    + '  frarik_differenziata_rifiuto2_giovedi: {name: "Differenziata — 2° Rifiuto Giovedì", icon: mdi:delete-variant}\n'
+    + '  frarik_differenziata_rifiuto2_venerdi: {name: "Differenziata — 2° Rifiuto Venerdì", icon: mdi:delete-variant}\n'
+    + '  frarik_differenziata_rifiuto2_sabato: {name: "Differenziata — 2° Rifiuto Sabato", icon: mdi:delete-variant}\n'
+    + '  frarik_differenziata_rifiuto2_domenica: {name: "Differenziata — 2° Rifiuto Domenica", icon: mdi:delete-variant}\n'
     + 'input_datetime:\n'
     + '  frarik_differenziata_orario_notifica:\n'
     + '    name: "Differenziata — Orario Notifica"\n'
