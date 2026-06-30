@@ -2141,7 +2141,8 @@ function ghStoreTab(tab){
   const _isCardsSub=_GHS_CARDS_SUB.includes(tab);
   const _grpBtn=document.getElementById('ghs-tab-cards-grp'); if(_grpBtn) _grpBtn.classList.toggle('on',_isCardsSub);
   const _subBar=document.getElementById('ghs-subtabs-cards'); if(_subBar) _subBar.style.display=_isCardsSub?'flex':'none';
-  const s=document.getElementById('ghs-search'); if(s){ s.value=''; s.style.display=(tab==='card-yaml'||tab==='saved')?'none':''; }
+  const s=document.getElementById('ghs-search'); if(s) s.value='';
+  const sw=document.getElementById('ghs-search-wrap'); if(sw) sw.style.display=(tab==='card-yaml'||tab==='saved')?'none':'';
   const loadEl=document.getElementById('ghs-load'); if(loadEl) loadEl.style.display=(tab==='local')?'':'none';
   if(tab==='predefinite'){ _ghStoreRender(); return; }
   if(tab==='local'){ _ghStoreRender(); _ghStoreInitDropzone(); return; }

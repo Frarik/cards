@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.7.00 — 2026-06-30
+
+### feat: store — redesign UI futuristico
+
+- **Card tile**: `border-radius` 18→20px, `backdrop-filter:blur(6px)`, hover con lift+scale, strip 3→4px, preview 200→175px, bottoni 30% più alti (9px padding vs 6px), testo più leggibile (13px nome, 10.5px desc)
+- **Grid**: min-width 182→215px, gap 12→14px; responsive: 160px su mobile `<620px`, 230px su schermi `>1100px`
+- **Search bar**: wrap con icona 🔍 posizionata absolute, padding-left 40px, font-size 13px, border-radius 14px, placeholder semitrasparente; JS aggiorna `ghs-search-wrap` per hide/show
+- **Section dots**: `.ghc-sec-dot.ok` verde con glow, `.ghc-sec-dot.new` viola con glow
+- **Sub-tab bar**: i tab in `#ghs-subtabs-cards` diventano pill orizzontali (flex-direction:row, border-radius:20px) invece di stack verticali
+- **Empty state**: font-size 12→13px, line-height 1.8, colore semitrasparente
+- **Delete button**: 28→33px, border-radius 8→9px
+
 ## 1.6.99 — 2026-06-30
 
 ### fix: store — card SOS rimossa dal tab Locali
