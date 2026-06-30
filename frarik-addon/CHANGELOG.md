@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.6.98 — 2026-06-30
+
+### feat: store — gerarchia tab a due livelli (Cards + sub-tab)
+
+- **Tab Cards** diventa un tab parent nel menu principale; cliccandolo mostra una riga di sub-tab
+- **Sub-tab di Cards**: Cards (js), Elettrodomestici, Chips, Distintivi, Predefinite, Card YAML
+- **Tab standalone rimasti**: Installate, Premium, Locali, Salvate
+- `ghStoreTab`: aggiunta logica per evidenziare il parent `ghs-tab-cards-grp` e mostrare/nascondere `#ghs-subtabs-cards` in base al tab attivo
+- Sub-tab stilizzati con `ghc-tab-sm` (più compatti rispetto ai tab principali)
+
 ## 1.6.97 — 2026-06-30
 
 ### fix: store — Installa non funzionava da tab Elettrodomestici e Installate

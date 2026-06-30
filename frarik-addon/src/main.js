@@ -2134,9 +2134,13 @@ async function _ghsPreview(enc, nm, cardId){
   }
   note.textContent=isTemp?'Anteprima temporanea — non ancora installata':'';
 }
+const _GHS_CARDS_SUB=['js','elettrodomestici','chips','distintivi','predefinite','card-yaml'];
 function ghStoreTab(tab){
   _ghsTab=tab;
   ['js','chips','distintivi','premium','yaml','pkg','local','card-yaml','predefinite','saved','elettrodomestici','installate'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
+  const _isCardsSub=_GHS_CARDS_SUB.includes(tab);
+  const _grpBtn=document.getElementById('ghs-tab-cards-grp'); if(_grpBtn) _grpBtn.classList.toggle('on',_isCardsSub);
+  const _subBar=document.getElementById('ghs-subtabs-cards'); if(_subBar) _subBar.style.display=_isCardsSub?'flex':'none';
   const s=document.getElementById('ghs-search'); if(s){ s.value=''; s.style.display=(tab==='card-yaml'||tab==='saved')?'none':''; }
   const loadEl=document.getElementById('ghs-load'); if(loadEl) loadEl.style.display=(tab==='local')?'':'none';
   if(tab==='predefinite'){ _ghStoreRender(); return; }

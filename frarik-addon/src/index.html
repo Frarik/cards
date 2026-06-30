@@ -865,46 +865,54 @@
         <!-- ── STORE ── -->
         <div id="ep-content-store" class="ep-tab-content">
           <div class="ep-tab-hdr"><div class="ep-tab-hdr-ico">🛒</div><div class="ep-tab-hdr-title">Store</div></div>
-          <div class="ghc-tabbar">
-            <div class="ghc-tabs-main">
-              <button class="ghc-tab on" id="ghs-tab-js"         data-action="ghStoreTab" data-action-arg="js">
+          <div class="ghc-tabbar" style="flex-direction:column;align-items:stretch">
+            <div style="display:flex;align-items:flex-start;gap:0">
+              <div class="ghc-tabs-main">
+                <button class="ghc-tab on" id="ghs-tab-cards-grp" data-action="ghStoreTab" data-action-arg="js">
+                  <span class="ghc-tab-ico">⚡</span><span class="ghc-tab-lbl">Cards</span>
+                </button>
+                <button class="ghc-tab" id="ghs-tab-installate" data-action="ghStoreTab" data-action-arg="installate">
+                  <span class="ghc-tab-ico">🗂</span><span class="ghc-tab-lbl">Installate</span>
+                </button>
+                <button class="ghc-tab" id="ghs-tab-premium" data-action="ghStoreTab" data-action-arg="premium">
+                  <span class="ghc-tab-ico">💎</span><span class="ghc-tab-lbl">Premium</span>
+                </button>
+                <button class="ghc-tab" id="ghs-tab-local" data-action="ghStoreTab" data-action-arg="local">
+                  <span class="ghc-tab-ico">📁</span><span class="ghc-tab-lbl">Locali</span>
+                </button>
+                <button class="ghc-tab" id="ghs-tab-saved" data-action="ghStoreTab" data-action-arg="saved">
+                  <span class="ghc-tab-ico">💾</span><span class="ghc-tab-lbl">Salvate</span>
+                </button>
+              </div>
+              <div class="ghc-tab-sep"></div>
+              <div class="ghc-tabs-util">
+                <button class="ghc-tab ghc-tab-sm" data-action="_ghsReloadTab" title="Ricarica da GitHub">
+                  <span class="ghc-tab-ico" style="font-size:17px">↻</span><span class="ghc-tab-lbl">Sync</span>
+                </button>
+                <button class="ghc-tab ghc-tab-sm" data-action="openGitHubCfg" title="Impostazioni GitHub">
+                  <span class="ghc-tab-ico" style="font-size:16px">⚙️</span><span class="ghc-tab-lbl">Config</span>
+                </button>
+              </div>
+            </div>
+            <!-- Sub-tab row: visibile solo quando Cards è attivo -->
+            <div id="ghs-subtabs-cards" style="display:flex;gap:4px;padding:4px 2px 2px;border-top:1px solid rgba(255,255,255,.06);margin-top:4px;overflow-x:auto;scrollbar-width:none">
+              <button class="ghc-tab ghc-tab-sm on" id="ghs-tab-js" data-action="ghStoreTab" data-action-arg="js">
                 <span class="ghc-tab-ico">⚡</span><span class="ghc-tab-lbl">Cards</span>
               </button>
-              <button class="ghc-tab" id="ghs-tab-elettrodomestici" data-action="ghStoreTab" data-action-arg="elettrodomestici">
+              <button class="ghc-tab ghc-tab-sm" id="ghs-tab-elettrodomestici" data-action="ghStoreTab" data-action-arg="elettrodomestici">
                 <span class="ghc-tab-ico">🔌</span><span class="ghc-tab-lbl">Elettrodomestici</span>
               </button>
-              <button class="ghc-tab" id="ghs-tab-installate" data-action="ghStoreTab" data-action-arg="installate">
-                <span class="ghc-tab-ico">🗂</span><span class="ghc-tab-lbl">Installate</span>
-              </button>
-              <button class="ghc-tab" id="ghs-tab-chips"      data-action="ghStoreTab" data-action-arg="chips">
+              <button class="ghc-tab ghc-tab-sm" id="ghs-tab-chips" data-action="ghStoreTab" data-action-arg="chips">
                 <span class="ghc-tab-ico">🔹</span><span class="ghc-tab-lbl">Chips</span>
               </button>
-              <button class="ghc-tab" id="ghs-tab-distintivi" data-action="ghStoreTab" data-action-arg="distintivi">
+              <button class="ghc-tab ghc-tab-sm" id="ghs-tab-distintivi" data-action="ghStoreTab" data-action-arg="distintivi">
                 <span class="ghc-tab-ico">🏷️</span><span class="ghc-tab-lbl">Distintivi</span>
               </button>
-              <button class="ghc-tab" id="ghs-tab-premium" data-action="ghStoreTab" data-action-arg="premium">
-                <span class="ghc-tab-ico">💎</span><span class="ghc-tab-lbl">Premium</span>
-              </button>
-              <button class="ghc-tab" id="ghs-tab-card-yaml" data-action="ghStoreTab" data-action-arg="card-yaml">
-                <span class="ghc-tab-ico">📝</span><span class="ghc-tab-lbl">Card YAML</span>
-              </button>
-              <button class="ghc-tab" id="ghs-tab-predefinite" data-action="ghStoreTab" data-action-arg="predefinite">
+              <button class="ghc-tab ghc-tab-sm" id="ghs-tab-predefinite" data-action="ghStoreTab" data-action-arg="predefinite">
                 <span class="ghc-tab-ico">🛡️</span><span class="ghc-tab-lbl">Predefinite</span>
               </button>
-              <button class="ghc-tab" id="ghs-tab-local" data-action="ghStoreTab" data-action-arg="local">
-                <span class="ghc-tab-ico">📁</span><span class="ghc-tab-lbl">Locali</span>
-              </button>
-              <button class="ghc-tab" id="ghs-tab-saved" data-action="ghStoreTab" data-action-arg="saved">
-                <span class="ghc-tab-ico">💾</span><span class="ghc-tab-lbl">Salvate</span>
-              </button>
-            </div>
-            <div class="ghc-tab-sep"></div>
-            <div class="ghc-tabs-util">
-              <button class="ghc-tab ghc-tab-sm" data-action="_ghsReloadTab" title="Ricarica da GitHub">
-                <span class="ghc-tab-ico" style="font-size:17px">↻</span><span class="ghc-tab-lbl">Sync</span>
-              </button>
-              <button class="ghc-tab ghc-tab-sm" data-action="openGitHubCfg" title="Impostazioni GitHub">
-                <span class="ghc-tab-ico" style="font-size:16px">⚙️</span><span class="ghc-tab-lbl">Config</span>
+              <button class="ghc-tab ghc-tab-sm" id="ghs-tab-card-yaml" data-action="ghStoreTab" data-action-arg="card-yaml">
+                <span class="ghc-tab-ico">📝</span><span class="ghc-tab-lbl">Card YAML</span>
               </button>
             </div>
           </div>
