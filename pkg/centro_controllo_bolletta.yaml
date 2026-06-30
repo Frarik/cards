@@ -116,6 +116,9 @@ input_boolean:
   bolletta_reset_consumo_mensile:
     name: "Bolletta Reset Consumo Mensile"
     icon: mdi:restart
+  bolletta_ha_fotovoltaico:
+    name: "Bolletta Ha Fotovoltaico"
+    icon: mdi:solar-panel
   bolletta_notify_push_soglia:
     name: "Bolletta Notifica Soglia Potenza"
     icon: mdi:bell
@@ -346,6 +349,15 @@ input_number:
     mode: box
     unit_of_measurement: "€"
     icon: mdi:account-heart
+  bolletta_credito_gse:
+    name: "Bolletta Credito GSE (FV)"
+    min: 0
+    max: 2000
+    step: 0.01
+    initial: 0
+    mode: box
+    unit_of_measurement: "€"
+    icon: mdi:solar-power
   bolletta_soglia_costo_giornaliero:
     name: "Bolletta Soglia Alert Costo Giornaliero"
     min: 0
@@ -753,7 +765,7 @@ template:
         unit_of_measurement: "€"
         icon: mdi:television-classic
         state: >
-          {{ 9.00 if now().month in [1,2,4,7,10] else 0.00 }}
+          {{ 9.00 if now().month not in [7,8] else 0.00 }}
       - name: "Bolletta Materia Energia Mensile"
         unique_id: bolletta_materia_energia_mensile
         unit_of_measurement: "€"
