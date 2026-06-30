@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.07 — 2026-06-30
+
+### fix: PKG — consolidamento in pkg/ unica cartella
+
+- Spostati tutti i PKG da `frarik-addon/pkgs/` → `pkg/` (cartella unica)
+- `centro_controllo_frigorifero.yaml`: aggiornato a v1.3 (era v1.2 hardcoded) con placeholder wizard generici
+- `frarik_statistiche_minipc.yaml` e `posta.yaml`: spostati in `pkg/`
+- Cartella `frarik-addon/pkgs/` ora vuota e rimossa dal repo
+
 ## 1.7.06 — 2026-06-30
 
 ### feat: Card Bolletta v3.0 — riscrittura completa stile Frarik

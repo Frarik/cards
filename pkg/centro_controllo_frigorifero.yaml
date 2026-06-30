@@ -12,34 +12,13 @@
 #                                                             #
 ###############################################################
 #
-# COSA FA QUESTO PACKAGE
+# INSTALLAZIONE TRAMITE WIZARD FRARIK
 # ──────────────────────────────────────────────────────────
-#  ▸ Monitoraggio potenza istantanea compressore (W)
-#  ▸ Tracciamento energia consumata (kWh) giorno/mese/anno
-#  ▸ Calcolo costi energetici (usa input_number.costo_energia)
-#  ▸ Conteggio cicli compressore oggi/mese/anno
-#  ▸ Durata cicli e storico 7 giorni
-#  ▸ Notifiche fine ciclo (Push / Alexa / Google)
-#  ▸ Orario notifiche e spegnimento automatico
+#  Il wizard della card Frigorifero installa questo file
+#  automaticamente in config/packages/ con i tuoi sensori.
 #
-###############################################################
-#
-# INSTALLAZIONE
-# ──────────────────────────────────────────────────────────
-#  1. Verifica che configuration.yaml contenga:
-#
-#       homeassistant:
-#         packages: !include_dir_named packages
-#
-#  2. Copia questo file nella cartella "packages"
-#
-#  3. Modifica le 2 righe sotto "IMPOSTAZIONI PACKAGE":
-#     - Sensore potenza della presa (es. sensor.presa_frigo_potenza)
-#     - Switch della presa (es. switch.presa_frigo)
-#
-#  4. Riavvia Home Assistant
-#
-#  5. Nella card Frarik → Configura → collega le entità pkg
+#  Installazione manuale: modifica le 2 righe sotto
+#  "IMPOSTAZIONI PACKAGE" e copia in config/packages/
 #
 ###############################################################
 
@@ -47,7 +26,7 @@ homeassistant:
   customize:
     package.node_anchors:
       customize: &customize
-        package: 'Centro Controllo Frigorifero 1.2 — Frarik'
+        package: 'Centro Controllo Frigorifero 1.3 — Frarik'
 
       setting:
 
@@ -59,14 +38,13 @@ homeassistant:
         Switch Frigo:          &switch_frigo 'switch.presa_frigorifero'
 
         Lista MediaPlayer Google: &google
-          - media_player.tv_sala
+          - IL_TUO_MEDIA_PLAYER_GOOGLE_1
 
         Lista mediaplayer alexa: &alexa
-          - media_player.alexa_cameretta
+          - IL_TUO_MEDIA_PLAYER_ALEXA_1
 
         Device per notifica push: &push
-          - service: mobile_app_a065
-          - service: mobile_app_iphone_giulia
+          - service: IL_TUO_MOBILE_APP_1
 
 ####################################################
 #                  NOTIFICHE                       #
@@ -408,7 +386,7 @@ template:
         state: *sensore_potenza_frigo
 
       - name: "frarik_frigorifero_versione"
-        state: "1.2"
+        state: "1.3"
 
 ####################################################
 #                   COUNTER                        #
@@ -480,31 +458,21 @@ input_datetime:
 
 input_text:
   frigo_data_reset:
-
   frigo_nome:
-
   frigo_messaggio:
-
   frigo_ultimo_ciclo:
-
   lunedi_frigo_cicli:
   lunedi_frigo_tempo:
-
   martedi_frigo_cicli:
   martedi_frigo_tempo:
-
   mercoledi_frigo_cicli:
   mercoledi_frigo_tempo:
-
   giovedi_frigo_cicli:
   giovedi_frigo_tempo:
-
   venerdi_frigo_cicli:
   venerdi_frigo_tempo:
-
   sabato_frigo_cicli:
   sabato_frigo_tempo:
-
   domenica_frigo_cicli:
   domenica_frigo_tempo:
 
@@ -634,9 +602,7 @@ automation:
   - choose:
     - conditions:
       - condition: trigger
-        id:
-          - incremento_statistiche_7gg
-          - fine_ciclo
+        id: incremento_statistiche_7gg
       sequence:
 
       - service: input_text.set_value
