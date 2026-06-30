@@ -756,17 +756,16 @@
   }
 
   /* ── REGISTER ── */
-  if (typeof FratechCardRegistry !== 'undefined') {
-    FratechCardRegistry.define({
-      id: CARD.id,
-      version: CARD.version,
-      name: CARD.name,
-      icon: CARD.icon,
-      color: CARD.color,
-      render: render,
-      mount: mount,
-      update: update,
-    });
-  }
+  window.FratechCardRegistry = window.FratechCardRegistry || {};
+  window.FratechCardRegistry[CARD.id] = {
+    id: CARD.id,
+    version: CARD.version,
+    name: CARD.name,
+    icon: CARD.icon,
+    color: CARD.color,
+    render: render,
+    mount: mount,
+    update: update,
+  };
 
 })();
