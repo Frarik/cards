@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.7.14 — 2026-06-30
+
+### fix: Bolletta v3.4 — formula calcBill corretta + dettaglio con fallback calcolo
+
+- calcBill: perdite di rete applicate SOLO alla materia energia (non a disp/mc)
+- calcBill: canone RAI default 7€/mese (€70/anno) configurabile da impostazioni
+- Impostazioni tab Tariffa: aggiunto campo "Canone RAI (€/mese)" — metti 0 se esente
+- Dettaglio: se i sensori PKG sono 0 (PKG non installato), calcola le voci con calcBill
+- Dettaglio: prezzo energia letto da localStorage, non solo da entità HA
+
 ## 1.7.13 — 2026-06-30
 
 ### fix: Bolletta v3.3 — salvataggio tariffe in localStorage + autocomplete sensori FV

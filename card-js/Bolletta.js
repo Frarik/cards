@@ -1,4 +1,4 @@
-/* frarik-version: 3.3 */
+/* frarik-version: 3.4 */
 (function () {
   'use strict';
 
@@ -135,11 +135,12 @@
     var kw       = nc('potenza',cf.pk_potenza,4.5);
 
     var kp      = kwh * perdPerc / 100;
-    var kwh_tot = kwh + kp;
+    var kwh_en  = kwh + kp;  /* perdite solo su materia energia, non su disp/mc */
+    var rai_men = nc('rai_mensile','',7);
 
-    var mat = kwh * pE + kp * pE
-            + kwh_tot * disp
-            + kwh_tot * mc
+    var mat = kwh_en * pE               /* energia: prezzo × (kwh + perdite) */
+            + kwh * disp                /* dispacciamento: kWh misurati */
+            + kwh * mc                  /* mercato capacità: kWh misurati */
             + dispbt + pno + comm;
     var tras = kwh * tr_en + tr_fis + kw * tr_pot
              + kwh * uc3 + kw * uc6f + kwh * uc6v;
@@ -148,10 +149,10 @@
     var imp   = mat + tras + oneri;
     var iva   = (imp + acc) * iva_perc / 100;
     var now   = new Date();
-    var rai   = (now.getMonth() + 1 === 7 || now.getMonth() + 1 === 8) ? 0 : 9;
+    var rai   = (now.getMonth() + 1 === 7 || now.getMonth() + 1 === 8) ? 0 : rai_men;
 
     return { mat:mat, tras:tras, oneri:oneri, acc:acc, imp:imp, iva:iva, rai:rai,
-             kp:kp, kwh_tot:kwh_tot, pE:pE, kw:kw, iva_perc:iva_perc };
+             kp:kp, kwh_en:kwh_en, pE:pE, kw:kw, iva_perc:iva_perc };
   }
 
   /* ── POPUP HELPERS ── */
@@ -187,6 +188,13 @@
   /* ── POPUP: DETTAGLIO VOCI ── */
   function openDettaglio(c) {
     var h = H();
+    var _n   = (load()._nums) || {};
+    var kwh  = N(S(h, c.pk_kwh_mese));
+    var gse  = N(S(h, c.pk_credito_gse));
+    var trim = S(h, c.pk_arera_trim) || '—';
+    var now  = new Date();
+
+    /* leggi voci dalla PKG; se tutte 0 → calcola con calcBill */
     var mat   = N(S(h, c.pk_materia));
     var tras  = N(S(h, c.pk_trasporto));
     var oneri = N(S(h, c.pk_oneri));
@@ -194,29 +202,37 @@
     var iva   = N(S(h, c.pk_iva));
     var rai   = N(S(h, c.pk_canone_rai));
     var bon   = N(S(h, c.pk_bonus)) + N(S(h, c.pk_bonus_soc));
-    var gse   = N(S(h, c.pk_credito_gse));
     var tot   = N(S(h, c.pk_costo_mese));
-    var kwh   = N(S(h, c.pk_kwh_mese));
     var costoKwh = N(S(h, c.pk_costo_kwh));
-    var trim  = S(h, c.pk_arera_trim) || '—';
-    var now   = new Date();
+    var fromCalc = false;
 
-    var content = sec('Componenti Bolletta')
+    if ((mat + tras + oneri + iva) < 0.01 && kwh > 0) {
+      var r = calcBill(kwh, h, c);
+      mat = r.mat; tras = r.tras; oneri = r.oneri; acc = r.acc; iva = r.iva; rai = r.rai;
+      tot = r.imp + r.acc + r.iva + r.rai - bon - gse;
+      costoKwh = kwh > 0 ? tot / kwh : 0;
+      fromCalc = true;
+    }
+
+    /* tariffa: leggi da localStorage, poi HA entity */
+    var tariffaEur = (_n.tariffa !== undefined && _n.tariffa !== '') ? parseFloat(_n.tariffa) : N(S(h, c.pk_tariffa));
+
+    var content = sec('Componenti Bolletta' + (fromCalc ? ' (calcolate)' : ''))
       + row('⚡ Materia Energia',  mat.toFixed(2)  + ' €', COL)
       + row('🚛 Trasporto e Rete', tras.toFixed(2) + ' €', '#fff')
       + row('🔧 Oneri di Sistema', oneri.toFixed(2)+ ' €', '#fff')
       + row('📋 Accise',           acc.toFixed(2)  + ' €', '#fff')
       + row('💸 IVA',              iva.toFixed(2)  + ' €', 'rgba(255,255,255,.6)')
       + row('📺 Canone RAI',       rai.toFixed(2)  + ' €', 'rgba(255,255,255,.6)')
-      + (bon > 0 ? row('🎁 Bonus detratto', '− ' + bon.toFixed(2) + ' €', '#4ade80') : '')
+      + (bon > 0 ? row('🎁 Bonus (pre-IVA)', '− ' + bon.toFixed(2) + ' €', '#4ade80') : '')
       + (gse > 0 ? row('☀️ Credito GSE', '− ' + gse.toFixed(2) + ' €', '#4ade80') : '')
       + '<div style="display:flex;justify-content:space-between;align-items:center;background:rgba(' + RGB + ',.12);border-radius:10px;padding:12px 14px;margin-top:10px">'
       + '<span style="font-size:14px;font-weight:800;color:' + COL + '">TOTALE DA PAGARE</span>'
       + '<span style="font-size:18px;font-weight:900;color:' + COL + '">' + tot.toFixed(2) + ' €</span>'
       + '</div>'
-      + sec('Dettaglio Tariffe ARERA ' + trim)
+      + sec('Tariffe ' + trim)
       + row('kWh Consumati', kwh.toFixed(1) + ' kWh', '#fff')
-      + row('Prezzo Energia', (N(S(h,c.pk_tariffa)) * 100).toFixed(2) + ' c€/kWh', '#fff')
+      + row('Prezzo Energia', (tariffaEur * 100).toFixed(2) + ' c€/kWh', '#fff')
       + row('Costo All-in/kWh', (costoKwh * 100).toFixed(3) + ' c€/kWh', COL)
       + row('Mese', MESIL[now.getMonth()] + ' ' + now.getFullYear(), 'rgba(255,255,255,.5)');
 
@@ -389,6 +405,7 @@
       + lbl('Spread energia (€/kWh)') + inp('bp-spread', nval('spread',c.pk_spread,6), '0.000000')
       + lbl('Potenza impegnata (kW)') + inp('bp-potenza', nval('potenza',c.pk_potenza,1), '4.5')
       + lbl('Commercializzazione (€/mese)') + inp('bp-comm', nval('comm',c.pk_fb_comm,2), '6.00')
+      + lbl('Canone RAI (€/mese, 0 se esente)') + inp('bp-rai', nval('rai_mensile','',1), '7.0')
       + lbl('Bonus mese corrente (€)') + inp('bp-bonus', nval('bonus',c.pk_bonus,2), '0.00')
       + lbl('Bonus sociale (€)') + inp('bp-bonus-soc', nval('bonus_soc',c.pk_bonus_soc,2), '0.00')
       + '<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 4px;padding-bottom:3px;border-bottom:1px solid rgba(255,255,255,.07)">Fallback ARERA — usati se REST non disponibile</div>'
@@ -520,11 +537,14 @@
       setNum(c.pk_fb_accise,   g('bp-accise'));
       setNum(c.pk_fb_iva,      g('bp-iva'));
       setNum(c.pk_credito_gse, g('bp-gse'));
+      setNum(c.pk_bonus,       g('bp-bonus'));
+      setNum(c.pk_bonus_soc,   g('bp-bonus-soc'));
       /* always save to localStorage — source of truth */
       var stored = load();
       stored._nums = {
         tariffa:   g('bp-tariffa'),   spread:    g('bp-spread'),
         potenza:   g('bp-potenza'),   comm:      g('bp-comm'),
+        rai_mensile: g('bp-rai'),
         bonus:     g('bp-bonus'),     bonus_soc: g('bp-bonus-soc'),
         perdite:   g('bp-perdite'),   dispbt:    g('bp-dispbt'),
         disp:      g('bp-disp'),      mc:        g('bp-mc'),
@@ -770,7 +790,7 @@
   }
 
   /* ── UPDATE / MOUNT ── */
-  var CARD = { id: 'bolletta', version: '3.3', name: 'Bolletta Elettrica', icon: '⚡', color: COL };
+  var CARD = { id: 'bolletta', version: '3.4', name: 'Bolletta Elettrica', icon: '⚡', color: COL };
 
   function update(card, hass, el) {
     var h = hass || H(), c = cfgFor(card);
