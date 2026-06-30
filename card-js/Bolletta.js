@@ -1,4 +1,4 @@
-/* frarik-version: 3.2 */
+/* frarik-version: 3.3 */
 (function () {
   'use strict';
 
@@ -104,24 +104,35 @@
 
   /* ── BILL CALCULATION (mirrors PKG formula) ── */
   function calcBill(kwh, h, cf) {
-    var perdPerc  = N(S(h,'sensor.frarik_bolletta_arera_perdite_rete_perc'))  || N(S(h,cf.pk_fb_perdite))  || 8.73;
-    var dispbt    = N(S(h,'sensor.frarik_bolletta_arera_dispbt'))             || N(S(h,cf.pk_fb_dispbt))    || 0.102592;
-    var disp      = N(S(h,'sensor.frarik_bolletta_arera_dispacciamento'))     || N(S(h,cf.pk_fb_disp))      || 0.010660;
-    var mc        = N(S(h,'sensor.frarik_bolletta_arera_mercato_capacita'))   || N(S(h,cf.pk_fb_mc))        || 0.010583;
-    var pno       = N(S(h,'sensor.frarik_bolletta_arera_pno'))                || N(S(h,cf.pk_fb_pno))       || 0;
-    var comm      = N(S(h,cf.pk_fb_comm))  || 6;
-    var tr_en     = N(S(h,'sensor.frarik_bolletta_arera_trasporto_quota_energia'))  || N(S(h,cf.pk_fb_tr_en))  || 0.0119;
-    var tr_fis    = N(S(h,'sensor.frarik_bolletta_arera_trasporto_quota_fissa'))    || N(S(h,cf.pk_fb_tr_fis)) || 1.92;
-    var tr_pot    = N(S(h,'sensor.frarik_bolletta_arera_trasporto_quota_potenza'))  || N(S(h,cf.pk_fb_tr_pot)) || 2.22;
-    var uc3       = N(S(h,'sensor.frarik_bolletta_arera_uc3'))         || N(S(h,cf.pk_fb_uc3))   || 0.00276;
-    var uc6f      = N(S(h,'sensor.frarik_bolletta_arera_uc6_fisso'))   || N(S(h,cf.pk_fb_uc6f))  || 0.07;
-    var uc6v      = N(S(h,'sensor.frarik_bolletta_arera_uc6_variabile'))|| N(S(h,cf.pk_fb_uc6v)) || 0.00007;
-    var arim      = N(S(h,'sensor.frarik_bolletta_arera_arim'))         || N(S(h,cf.pk_fb_arim))  || 0.001638;
-    var asos      = N(S(h,'sensor.frarik_bolletta_arera_asos'))         || N(S(h,cf.pk_fb_asos))  || 0.028657;
-    var erariale  = N(S(h,'sensor.frarik_bolletta_arera_erariale'))     || N(S(h,cf.pk_fb_accise))|| 0.022700;
-    var iva_perc  = N(S(h,'sensor.frarik_bolletta_arera_iva_perc'))     || N(S(h,cf.pk_fb_iva))   || 10;
-    var pE        = N(S(h,cf.pk_tariffa)) + N(S(h,cf.pk_spread));
-    var kw        = N(S(h,cf.pk_potenza)) || 4.5;
+    var _n = (load()._nums) || {};
+    /* priority: ARERA REST sensor → _nums localStorage → HA input_number → hardcoded default */
+    function nf(arera, nk, fbEid, def) {
+      var a = N(S(h, arera)); if (a) return a;
+      var lv = _n[nk]; if (lv !== undefined && lv !== '') { var p = parseFloat(lv); if (p) return p; }
+      return N(S(h, fbEid)) || def;
+    }
+    function nc(nk, eid, def) {
+      var lv = _n[nk]; if (lv !== undefined && lv !== '') { var p = parseFloat(lv); if (!isNaN(p) && p !== 0) return p; }
+      return N(S(h, eid)) || def;
+    }
+    var perdPerc = nf('sensor.frarik_bolletta_arera_perdite_rete_perc','perdite',cf.pk_fb_perdite,8.73);
+    var dispbt   = nf('sensor.frarik_bolletta_arera_dispbt','dispbt',cf.pk_fb_dispbt,0.102592);
+    var disp     = nf('sensor.frarik_bolletta_arera_dispacciamento','disp',cf.pk_fb_disp,0.010660);
+    var mc       = nf('sensor.frarik_bolletta_arera_mercato_capacita','mc',cf.pk_fb_mc,0.010583);
+    var pno      = nf('sensor.frarik_bolletta_arera_pno','pno',cf.pk_fb_pno,0);
+    var comm     = nc('comm',cf.pk_fb_comm,6);
+    var tr_en    = nf('sensor.frarik_bolletta_arera_trasporto_quota_energia','tr_en',cf.pk_fb_tr_en,0.0119);
+    var tr_fis   = nf('sensor.frarik_bolletta_arera_trasporto_quota_fissa','tr_fis',cf.pk_fb_tr_fis,1.92);
+    var tr_pot   = nf('sensor.frarik_bolletta_arera_trasporto_quota_potenza','tr_pot',cf.pk_fb_tr_pot,2.22);
+    var uc3      = nf('sensor.frarik_bolletta_arera_uc3','uc3',cf.pk_fb_uc3,0.00276);
+    var uc6f     = nf('sensor.frarik_bolletta_arera_uc6_fisso','uc6f',cf.pk_fb_uc6f,0.07);
+    var uc6v     = nf('sensor.frarik_bolletta_arera_uc6_variabile','uc6v',cf.pk_fb_uc6v,0.00007);
+    var arim     = nf('sensor.frarik_bolletta_arera_arim','arim',cf.pk_fb_arim,0.001638);
+    var asos     = nf('sensor.frarik_bolletta_arera_asos','asos',cf.pk_fb_asos,0.028657);
+    var erariale = nf('sensor.frarik_bolletta_arera_erariale','accise',cf.pk_fb_accise,0.022700);
+    var iva_perc = nf('sensor.frarik_bolletta_arera_iva_perc','iva',cf.pk_fb_iva,10);
+    var pE       = nc('tariffa',cf.pk_tariffa,0) + nc('spread',cf.pk_spread,0);
+    var kw       = nc('potenza',cf.pk_potenza,4.5);
 
     var kp      = kwh * perdPerc / 100;
     var kwh_tot = kwh + kp;
@@ -335,23 +346,36 @@
   /* ── POPUP: IMPOSTAZIONI ── */
   function openImpostazioni(card, c, el) {
     var h = H();
+    var _st0 = load();
+    var _nums = _st0._nums || {};
     var iSt = 'width:100%;padding:8px 10px;border-radius:8px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.15);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none;margin-top:3px';
-    var iStDis = iSt;
     var lSt = 'font-size:11px;color:rgba(255,255,255,.6);display:block;margin-top:8px';
+    var stDrop = 'position:absolute;left:0;right:0;top:calc(100% + 2px);z-index:300;max-height:160px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-radius:9px;display:none;scrollbar-width:none';
+    var allIds = Object.keys((h && h.states) || {}).sort();
 
-    function inp(id, val, ph, dis) {
-      return '<input id="' + id + '" type="text" inputmode="decimal" value="' + (val || '') + '" placeholder="' + (ph || '') + '" style="' + (dis ? iStDis : iSt) + '"' + (dis ? ' disabled' : '') + '>';
+    /* read saved numeric → fallback HA entity → 0 */
+    function nval(key, haId, dec) {
+      var loc = _nums[key];
+      if (loc !== undefined && loc !== '') return parseFloat(loc).toFixed(dec);
+      return N(S(h, haId)).toFixed(dec);
     }
-    function inpTxt(id, val, ph, dis) {
-      return '<input id="' + id + '" type="text" value="' + (val || '') + '" placeholder="' + (ph || '') + '" style="' + (dis ? iStDis : iSt) + '"' + (dis ? ' disabled' : '') + '>';
+
+    function lbl(t) { return '<label style="' + lSt + '">' + t + '</label>'; }
+    function inp(id, val, ph) {
+      return '<input id="' + id + '" type="text" inputmode="decimal" value="' + (val || '') + '" placeholder="' + (ph || '') + '" style="' + iSt + '" autocomplete="off">';
     }
-    function lbl(t, dis) { return '<label style="' + lSt + (dis ? ';opacity:.35' : '') + '">' + t + '</label>'; }
+    /* entity search input with dropdown */
+    function entField(id, val, ph) {
+      return '<div style="position:relative;margin-top:3px">'
+        + '<input id="' + id + '" type="text" value="' + (val || '') + '" placeholder="' + (ph || 'Cerca entità…') + '" autocomplete="off" style="' + iSt + ';margin-top:0">'
+        + '<div id="' + id + '-d" style="' + stDrop + '"></div>'
+        + '</div>';
+    }
 
     var tabCSS = '<style>'
       + '.bp-tab{flex:1;padding:8px 4px;text-align:center;font-size:11px;font-weight:700;cursor:pointer;border-radius:8px;transition:all .15s;color:rgba(255,255,255,.5);border:none;background:transparent}'
       + '.bp-tab.active{background:rgba(' + RGB + ',.18);color:' + COL + ';border:1px solid rgba(' + RGB + ',.3)}'
       + '.bp-panel{display:none}.bp-panel.active{display:block}'
-      + '.fv-field{transition:opacity .2s}'
       + '</style>';
 
     var tabs = '<div style="display:flex;gap:4px;background:rgba(255,255,255,.04);border-radius:10px;padding:3px;margin-bottom:12px">'
@@ -361,43 +385,41 @@
       + '</div>';
 
     var pTariffa = '<div class="bp-panel active" id="bp-p-tariffa">'
-      + lbl('Prezzo fisso energia (€/kWh)') + inp('bp-tariffa', N(S(h,c.pk_tariffa)).toFixed(6), '0.090000')
-      + lbl('Spread energia (€/kWh)') + inp('bp-spread', N(S(h,c.pk_spread)).toFixed(6), '0.000000')
-      + lbl('Potenza impegnata (kW)') + inp('bp-potenza', N(S(h,c.pk_potenza)).toFixed(1), '4.5')
-      + lbl('Commercializzazione (€/mese)') + inp('bp-comm', N(S(h,c.pk_fb_comm)).toFixed(2), '6.00')
-      + lbl('Bonus mese corrente (€)') + inp('bp-bonus', N(S(h,c.pk_bonus)).toFixed(2), '0.00')
-      + lbl('Bonus sociale (€)') + inp('bp-bonus-soc', N(S(h,c.pk_bonus_soc)).toFixed(2), '0.00')
+      + lbl('Prezzo fisso energia (€/kWh)') + inp('bp-tariffa', nval('tariffa',c.pk_tariffa,6), '0.090000')
+      + lbl('Spread energia (€/kWh)') + inp('bp-spread', nval('spread',c.pk_spread,6), '0.000000')
+      + lbl('Potenza impegnata (kW)') + inp('bp-potenza', nval('potenza',c.pk_potenza,1), '4.5')
+      + lbl('Commercializzazione (€/mese)') + inp('bp-comm', nval('comm',c.pk_fb_comm,2), '6.00')
+      + lbl('Bonus mese corrente (€)') + inp('bp-bonus', nval('bonus',c.pk_bonus,2), '0.00')
+      + lbl('Bonus sociale (€)') + inp('bp-bonus-soc', nval('bonus_soc',c.pk_bonus_soc,2), '0.00')
       + '<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 4px;padding-bottom:3px;border-bottom:1px solid rgba(255,255,255,.07)">Fallback ARERA — usati se REST non disponibile</div>'
-      + lbl('Perdite rete (%)') + inp('bp-perdite', N(S(h,c.pk_fb_perdite)).toFixed(2), '8.73')
-      + lbl('DISPbt (€/mese)') + inp('bp-dispbt', N(S(h,c.pk_fb_dispbt)).toFixed(6), '0.102592')
-      + lbl('Dispacciamento (€/kWh)') + inp('bp-disp', N(S(h,c.pk_fb_disp)).toFixed(6), '0.010660')
-      + lbl('Mercato Capacità (€/kWh)') + inp('bp-mc', N(S(h,c.pk_fb_mc)).toFixed(6), '0.010583')
-      + lbl('Trasporto Energia (€/kWh)') + inp('bp-tr-en', N(S(h,c.pk_fb_tr_en)).toFixed(6), '0.011900')
-      + lbl('Trasporto Fisso (€/mese)') + inp('bp-tr-fis', N(S(h,c.pk_fb_tr_fis)).toFixed(2), '1.92')
-      + lbl('Trasporto Potenza (€/kW)') + inp('bp-tr-pot', N(S(h,c.pk_fb_tr_pot)).toFixed(2), '2.22')
-      + lbl('UC3 (€/kWh)') + inp('bp-uc3', N(S(h,c.pk_fb_uc3)).toFixed(6), '0.002760')
-      + lbl('UC6 Fisso (€/kW)') + inp('bp-uc6f', N(S(h,c.pk_fb_uc6f)).toFixed(6), '0.070000')
-      + lbl('UC6 Variabile (€/kWh)') + inp('bp-uc6v', N(S(h,c.pk_fb_uc6v)).toFixed(6), '0.000070')
-      + lbl('ARIM (€/kWh)') + inp('bp-arim', N(S(h,c.pk_fb_arim)).toFixed(6), '0.001638')
-      + lbl('ASOS (€/kWh)') + inp('bp-asos', N(S(h,c.pk_fb_asos)).toFixed(6), '0.028657')
-      + lbl('Accise (€/kWh)') + inp('bp-accise', N(S(h,c.pk_fb_accise)).toFixed(6), '0.022700')
-      + lbl('IVA (%)') + inp('bp-iva', N(S(h,c.pk_fb_iva)).toFixed(1), '10.0')
+      + lbl('Perdite rete (%)') + inp('bp-perdite', nval('perdite',c.pk_fb_perdite,2), '8.73')
+      + lbl('DISPbt (€/mese)') + inp('bp-dispbt', nval('dispbt',c.pk_fb_dispbt,6), '0.102592')
+      + lbl('Dispacciamento (€/kWh)') + inp('bp-disp', nval('disp',c.pk_fb_disp,6), '0.010660')
+      + lbl('Mercato Capacità (€/kWh)') + inp('bp-mc', nval('mc',c.pk_fb_mc,6), '0.010583')
+      + lbl('Trasporto Energia (€/kWh)') + inp('bp-tr-en', nval('tr_en',c.pk_fb_tr_en,6), '0.011900')
+      + lbl('Trasporto Fisso (€/mese)') + inp('bp-tr-fis', nval('tr_fis',c.pk_fb_tr_fis,2), '1.92')
+      + lbl('Trasporto Potenza (€/kW)') + inp('bp-tr-pot', nval('tr_pot',c.pk_fb_tr_pot,2), '2.22')
+      + lbl('UC3 (€/kWh)') + inp('bp-uc3', nval('uc3',c.pk_fb_uc3,6), '0.002760')
+      + lbl('UC6 Fisso (€/kW)') + inp('bp-uc6f', nval('uc6f',c.pk_fb_uc6f,6), '0.070000')
+      + lbl('UC6 Variabile (€/kWh)') + inp('bp-uc6v', nval('uc6v',c.pk_fb_uc6v,6), '0.000070')
+      + lbl('ARIM (€/kWh)') + inp('bp-arim', nval('arim',c.pk_fb_arim,6), '0.001638')
+      + lbl('ASOS (€/kWh)') + inp('bp-asos', nval('asos',c.pk_fb_asos,6), '0.028657')
+      + lbl('Accise (€/kWh)') + inp('bp-accise', nval('accise',c.pk_fb_accise,6), '0.022700')
+      + lbl('IVA (%)') + inp('bp-iva', nval('iva',c.pk_fb_iva,1), '10.0')
       + '</div>';
 
-    var _st0 = load();
     var haFvNow = (_st0._fv_active !== undefined) ? _st0._fv_active : (S(h, c.pk_ha_fv) === 'on');
-    var fvDis = !haFvNow;
     var pFv = '<div class="bp-panel" id="bp-p-fv">'
       + '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:10px">'
       + '<span style="font-size:13px;font-weight:700;color:#fff">☀️ Fotovoltaico</span>'
-      + '<button id="bp-fv-toggle" style="padding:5px 16px;border-radius:20px;border:none;cursor:pointer;font-size:12px;font-weight:800;background:' + (haFvNow ? 'rgba(74,222,128,.2);color:#4ade80' : 'rgba(255,255,255,.06);color:rgba(255,255,255,.4)') + '">' + (haFvNow ? '✅ ON' : 'OFF') + '</button>'
+      + '<button id="bp-fv-toggle" style="padding:5px 16px;border-radius:20px;border:none;cursor:pointer;font-size:12px;font-weight:800;background:' + (haFvNow ? 'rgba(74,222,128,.2)' : 'rgba(255,255,255,.06)') + ';color:' + (haFvNow ? '#4ade80' : 'rgba(255,255,255,.4)') + '">' + (haFvNow ? '✅ ON' : 'OFF') + '</button>'
       + '</div>'
-      + '<div id="bp-fv-fields" style="opacity:' + (haFvNow ? '1' : '.35') + ';transition:opacity .2s">'
-      + lbl('Sensore Potenza Produzione FV (W)') + inpTxt('bp-s-fv-pow', c.pk_fv_prod_ist || '', 'sensor.potenza_fotovoltaico', fvDis)
-      + lbl('Sensore kWh Produzione Oggi') + inpTxt('bp-s-fv-og', c.pk_fv_kwh_oggi || '', 'sensor.energia_fv_oggi', fvDis)
-      + lbl('Sensore kWh Produzione Mese') + inpTxt('bp-s-fv-me', c.pk_fv_kwh_mese || '', 'sensor.energia_fv_mese', fvDis)
+      + '<div id="bp-fv-fields" style="opacity:' + (haFvNow ? '1' : '.35') + ';pointer-events:' + (haFvNow ? 'auto' : 'none') + ';transition:opacity .2s">'
+      + lbl('Sensore Potenza Produzione FV (W)') + entField('bp-s-fv-pow', c.pk_fv_prod_ist, 'sensor.potenza_fotovoltaico')
+      + lbl('Sensore kWh Produzione Oggi') + entField('bp-s-fv-og', c.pk_fv_kwh_oggi, 'sensor.energia_fv_oggi')
+      + lbl('Sensore kWh Produzione Mese') + entField('bp-s-fv-me', c.pk_fv_kwh_mese, 'sensor.energia_fv_mese')
       + '<div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.07)">'
-      + lbl('Credito GSE - Scambio sul Posto (€)') + inp('bp-gse', N(S(h,c.pk_credito_gse)).toFixed(2), '0.00', fvDis)
+      + lbl('Credito GSE - Scambio sul Posto (€)') + inp('bp-gse', nval('gse',c.pk_credito_gse,2), '0.00')
       + '<div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:4px">Aggiornato manualmente ogni trimestre</div>'
       + '</div>'
       + '</div>'
@@ -405,12 +427,12 @@
 
     var pSensori = '<div class="bp-panel" id="bp-p-sensori">'
       + '<div style="font-size:10px;color:rgba(255,255,255,.35);margin-bottom:8px">ID entità HA — lascia vuoto per usare il default PKG</div>'
-      + lbl('Potenza istantanea (W)') + inpTxt('bp-s-ist', c.pk_consumo_ist, '')
-      + lbl('Costo Mensile (€)') + inpTxt('bp-s-cm', c.pk_costo_mese, '')
-      + lbl('Costo Oggi (€)') + inpTxt('bp-s-cg', c.pk_costo_oggi, '')
-      + lbl('kWh Mese') + inpTxt('bp-s-km', c.pk_kwh_mese, '')
-      + lbl('kWh Oggi') + inpTxt('bp-s-kg', c.pk_kwh_oggi, '')
-      + lbl('Proiezione Fine Mese (€)') + inpTxt('bp-s-prj', c.pk_proiezione_e, '')
+      + lbl('Potenza istantanea (W)') + entField('bp-s-ist', c.pk_consumo_ist, '')
+      + lbl('Costo Mensile (€)') + entField('bp-s-cm', c.pk_costo_mese, '')
+      + lbl('Costo Oggi (€)') + entField('bp-s-cg', c.pk_costo_oggi, '')
+      + lbl('kWh Mese') + entField('bp-s-km', c.pk_kwh_mese, '')
+      + lbl('kWh Oggi') + entField('bp-s-kg', c.pk_kwh_oggi, '')
+      + lbl('Proiezione Fine Mese (€)') + entField('bp-s-prj', c.pk_proiezione_e, '')
       + '</div>';
 
     var saveBtn = '<div style="display:flex;gap:8px;margin-top:14px">'
@@ -430,6 +452,31 @@
       });
     });
 
+    /* autocomplete for entity search fields */
+    var entFieldIds = ['bp-s-fv-pow','bp-s-fv-og','bp-s-fv-me','bp-s-ist','bp-s-cm','bp-s-cg','bp-s-km','bp-s-kg','bp-s-prj'];
+    entFieldIds.forEach(function(fid) {
+      var inp2 = ov.querySelector('#' + fid), drop2 = ov.querySelector('#' + fid + '-d');
+      if (!inp2 || !drop2) return;
+      function showDrop2() {
+        if (inp2.disabled) return;
+        var q = inp2.value.toLowerCase().trim();
+        var hits = (q ? allIds.filter(function(id) { return id.toLowerCase().includes(q); }) : allIds).slice(0,40);
+        if (!hits.length) { drop2.style.display = 'none'; return; }
+        drop2.style.display = 'block';
+        drop2.innerHTML = hits.map(function(id) {
+          return '<div data-pick="' + id + '" style="padding:6px 10px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04);color:#e2e8f0">' + id + '</div>';
+        }).join('');
+        drop2.querySelectorAll('[data-pick]').forEach(function(r) {
+          r.addEventListener('mousedown', function(ev) { ev.preventDefault(); inp2.value = r.getAttribute('data-pick'); drop2.style.display = 'none'; });
+          r.addEventListener('mouseover', function() { r.style.background = 'rgba(255,255,255,.08)'; });
+          r.addEventListener('mouseout', function() { r.style.background = ''; });
+        });
+      }
+      inp2.addEventListener('focus', showDrop2);
+      inp2.addEventListener('input', showDrop2);
+      inp2.addEventListener('blur', function() { setTimeout(function() { drop2.style.display = 'none'; }, 200); });
+    });
+
     function g(id) { var e = ov.querySelector('#' + id); return e ? e.value.trim() : ''; }
 
     var bpFvBtn = ov.querySelector('#bp-fv-toggle');
@@ -444,16 +491,14 @@
         bpFvBtn.style.color = _fvOn ? '#4ade80' : 'rgba(255,255,255,.4)';
         if (bpFvFields) {
           bpFvFields.style.opacity = _fvOn ? '1' : '.35';
-          bpFvFields.querySelectorAll('input').forEach(function(inp2) {
-            inp2.disabled = !_fvOn;
-            inp2.style.opacity = _fvOn ? '1' : '.35';
-          });
+          bpFvFields.style.pointerEvents = _fvOn ? 'auto' : 'none';
         }
       });
     }
 
     ov.querySelector('#bp-imp-cancel').addEventListener('click', function() { ov._close(); });
     ov.querySelector('#bp-imp-save').addEventListener('click', function() {
+      /* also send to HA if PKG is installed */
       setNum(c.pk_tariffa,     g('bp-tariffa'));
       setNum(c.pk_spread,      g('bp-spread'));
       setNum(c.pk_potenza,     g('bp-potenza'));
@@ -475,7 +520,21 @@
       setNum(c.pk_fb_accise,   g('bp-accise'));
       setNum(c.pk_fb_iva,      g('bp-iva'));
       setNum(c.pk_credito_gse, g('bp-gse'));
+      /* always save to localStorage — source of truth */
       var stored = load();
+      stored._nums = {
+        tariffa:   g('bp-tariffa'),   spread:    g('bp-spread'),
+        potenza:   g('bp-potenza'),   comm:      g('bp-comm'),
+        bonus:     g('bp-bonus'),     bonus_soc: g('bp-bonus-soc'),
+        perdite:   g('bp-perdite'),   dispbt:    g('bp-dispbt'),
+        disp:      g('bp-disp'),      mc:        g('bp-mc'),
+        tr_en:     g('bp-tr-en'),     tr_fis:    g('bp-tr-fis'),
+        tr_pot:    g('bp-tr-pot'),    uc3:       g('bp-uc3'),
+        uc6f:      g('bp-uc6f'),      uc6v:      g('bp-uc6v'),
+        arim:      g('bp-arim'),      asos:      g('bp-asos'),
+        accise:    g('bp-accise'),    iva:       g('bp-iva'),
+        gse:       g('bp-gse'),
+      };
       stored.pk_consumo_ist  = g('bp-s-ist')  || stored.pk_consumo_ist;
       stored.pk_costo_mese   = g('bp-s-cm')   || stored.pk_costo_mese;
       stored.pk_costo_oggi   = g('bp-s-cg')   || stored.pk_costo_oggi;
@@ -711,7 +770,7 @@
   }
 
   /* ── UPDATE / MOUNT ── */
-  var CARD = { id: 'bolletta', version: '3.2', name: 'Bolletta Elettrica', icon: '⚡', color: COL };
+  var CARD = { id: 'bolletta', version: '3.3', name: 'Bolletta Elettrica', icon: '⚡', color: COL };
 
   function update(card, hass, el) {
     var h = hass || H(), c = cfgFor(card);

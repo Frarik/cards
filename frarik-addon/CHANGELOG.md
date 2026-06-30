@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.7.13 — 2026-06-30
+
+### fix: Bolletta v3.3 — salvataggio tariffe in localStorage + autocomplete sensori FV
+
+- Tariffe salvate in localStorage (`_nums`): sopravvivono a rimozione card e assenza PKG
+- calcBill usa _nums come fallback intermedio: ARERA REST → localStorage → HA entity → default
+- Tab FV: sensori con dropdown autocomplete (lista entità HA come nel tab Sensori e wizard)
+- Tab FV: toggle usa pointer-events invece di disabled per bloccare il container (non singoli input)
+- Tab Sensori: stessa dropdown autocomplete aggiunta anche ai campi
+
 ## 1.7.12 — 2026-06-30
 
 ### fix: Bolletta v3.2 — impostazioni persistenti + fix FV toggle
