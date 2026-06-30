@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.7.04 — 2026-06-30
+
+### fix: store — popup centrato + preview bolletta/person
+
+- `_ghsShowPreviewModal`: riscritta con **inline styles** (non CSS class) — garantisce centratura `position:fixed` corretta indipendentemente dal stacking context HA
+- `_ghsPreviewCard`: override `window.frarikHass = () => mockH` prima del render, ripristino su chiusura modal — card che chiamano `window.frarikHass?.()` (bolletta, person, ecc.) ora ricevono dati simulati
+- `_ghsPreviewClose`: nuova funzione che rimuove il popup e ripristina `window.frarikHass` originale
+- `_createMockHass`: aggiunte entità per bolletta/energia: `sensor.energia_mese/mensile/oggi`, `sensor.costo_mese/oggi/energia`, `input_number.costo_kwh/potenza_contratto`, `sensor.bolletta_mensile`, `sensor.fasce_orarie`, `sensor.potenza_attuale`
+- `_createMockHass`: aggiunte entità person/device_tracker: `person.riccardo`, `device_tracker.iphone_francesco/riccardo`
+- Proxy fallback esteso: gestisce `input_number`, `person`, `device_tracker` con stati appropriati
+- `_ghsPreviewFillCfg`: aggiunti campi per bolletta (`costEntity`, `dailyCostEntity`, `billEntity`, ecc.) e person
+
 ## 1.7.03 — 2026-06-30
 
 ### fix: store — anteprima card robusta + popup quadrato

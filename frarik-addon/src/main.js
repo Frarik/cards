@@ -2199,17 +2199,28 @@ async function _ghFetchVerLabels(tab){
 function _ghsShowPreviewModal(nm){
   document.getElementById('ghs-prev-ov')?.remove();
   const ov=document.createElement('div'); ov.id='ghs-prev-ov';
-  ov.innerHTML=`<div id="ghs-prev-modal">
-    <div class="ghs-prev-hdr">
-      <div class="ghs-prev-hdr-ico">🔮</div>
-      <div style="flex:1"><div class="ghs-prev-hdr-title">Anteprima — ${eh(nm)}</div><div class="ghs-prev-hdr-sub">Rendering con dati simulati</div></div>
-      <button id="ghs-prev-close" class="ghs-prev-close">✕</button>
+  // Inline styles — evita problemi di CSS caching / stacking context HA
+  ov.style.cssText='position:fixed;inset:0;z-index:20000;background:rgba(0,0,0,.84);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;box-sizing:border-box;padding:16px';
+  const modal=document.createElement('div'); modal.id='ghs-prev-modal';
+  modal.style.cssText='width:min(500px,100%);height:min(500px,90vh);background:#06060f;border:1px solid rgba(139,92,246,.28);border-radius:20px;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.88);overflow:hidden;flex-shrink:0';
+  modal.innerHTML=`
+    <div style="display:flex;align-items:center;gap:12px;padding:14px 18px 12px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">
+      <div style="width:34px;height:34px;border-radius:10px;background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.3);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">🔮</div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:700;color:#fff">Anteprima — ${eh(nm)}</div><div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px">Rendering con dati simulati</div></div>
+      <button id="ghs-prev-close" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.6);font-size:14px;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
     </div>
-    <div id="ghs-prev-body"><div id="ghs-prev-card-wrap"><div class="ghs-prev-loading"><div style="font-size:24px;margin-bottom:8px">⚙️</div>Caricamento card…</div></div></div>
-    <div class="ghs-prev-foot">🔬 Dati simulati — l'aspetto reale può variare in base alla tua configurazione</div>
-  </div>`;
+    <div id="ghs-prev-body" style="flex:1;overflow-y:auto;overflow-x:hidden;padding:20px;min-height:0;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent">
+      <div id="ghs-prev-card-wrap" style="width:100%"><div style="padding:60px 16px;text-align:center;color:rgba(255,255,255,.4);font-size:12px;line-height:1.8"><div style="font-size:28px;margin-bottom:10px">⚙️</div>Caricamento card…</div></div>
+    </div>
+    <div style="padding:9px 18px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0;font-size:10px;color:rgba(255,255,255,.28);text-align:center">🔬 Dati simulati — l'aspetto reale varia in base alla configurazione</div>`;
+  ov.appendChild(modal);
   document.body.appendChild(ov);
-  ov.addEventListener('click',e=>{ if(e.target===ov||e.target.closest?.('#ghs-prev-close')) ov.remove(); });
+  ov.addEventListener('click',e=>{ if(e.target===ov||e.target.closest?.('#ghs-prev-close')) _ghsPreviewClose(); });
+}
+function _ghsPreviewClose(){
+  document.getElementById('ghs-prev-ov')?.remove();
+  // Ripristina window.frarikHass all'originale
+  if(window._ghsPrevOrigHass!==undefined){ window.frarikHass=window._ghsPrevOrigHass; delete window._ghsPrevOrigHass; }
 }
 async function _ghsPreviewCard(enc){
   const name=decodeURIComponent(enc);
@@ -2228,18 +2239,21 @@ async function _ghsPreviewCard(enc){
   }
   const wrap=document.getElementById('ghs-prev-card-wrap');
   if(!wrap) return;
-  if(!code){ wrap.innerHTML='<div class="ghs-prev-loading">⚠️ Impossibile caricare il codice della card</div>'; return; }
+  if(!code){ wrap.innerHTML='<div style="padding:60px 16px;text-align:center;color:rgba(255,255,255,.4);font-size:12px">⚠️ Impossibile caricare il codice della card</div>'; return; }
   // Registra la card e ottieni il tag name dal valore di ritorno di _installCardCode
   window.FratechCardRegistry=window.FratechCardRegistry||{};
   let tagName=null;
   try{
     const res=_installCardCode(code);
     tagName=res?.tags?.[0]||null;
-    // fallback regex nel caso i tag non siano stati rilevati (card già registrata)
     if(!tagName){ const tm=code.match(/(?:window\.)?customElements\.(?:define|get)\s*\(\s*['"]([a-z][a-z0-9-]*)['"]/); tagName=tm?.[1]||null; }
   }catch(e){ const tm=code.match(/(?:window\.)?customElements\.(?:define|get)\s*\(\s*['"]([a-z][a-z0-9-]*)['"]/); tagName=tm?.[1]||null; }
-  if(!tagName||!customElements.get(tagName)){ wrap.innerHTML='<div class="ghs-prev-loading">⚠️ Anteprima non disponibile per questa card</div>'; return; }
-  // Pulisci localStorage __prev__ per evitare dati residui
+  if(!tagName||!customElements.get(tagName)){ wrap.innerHTML='<div style="padding:60px 16px;text-align:center;color:rgba(255,255,255,.4);font-size:12px">⚠️ Anteprima non disponibile per questa card</div>'; return; }
+  // Override window.frarikHass con mock — card che usano window.frarikHass?.() ricevono dati simulati
+  const mockH=_createMockHass();
+  if(window._ghsPrevOrigHass===undefined) window._ghsPrevOrigHass=window.frarikHass;
+  window.frarikHass=()=>mockH;
+  // Pulisci localStorage __prev__
   try{ Object.keys(localStorage).filter(k=>k.includes('__prev__')).forEach(k=>localStorage.removeItem(k)); }catch(e){}
   // Istanzia la card
   try{
@@ -2248,19 +2262,35 @@ async function _ghsPreviewCard(enc){
     const cfg=_ghsPreviewFillCfg(stub);
     const card=document.createElement(tagName);
     card.style.cssText='display:block;width:100%';
-    // Prova setConfig con varianti fallback
     const variants=[cfg,{storageKey:'__prev__',entityId:'sensor.temperatura'},{storageKey:'__prev__'},{}];
     for(const c of variants){ try{ card.setConfig?.(c); break; }catch(e){} }
-    try{ card.hass=_createMockHass(); }catch(e){}
+    try{ card.hass=mockH; }catch(e){}
     wrap.innerHTML='';
     wrap.appendChild(card);
-    // Secondo push hass per card async
-    setTimeout(()=>{ try{ card.hass=_createMockHass(); }catch(e){}  },120);
-  }catch(e){ wrap.innerHTML=`<div class="ghs-prev-loading">⚠️ Errore: ${eh(e.message||'sconosciuto')}</div>`; }
+    setTimeout(()=>{ try{ card.hass=mockH; }catch(e){}  },120);
+  }catch(e){ wrap.innerHTML=`<div style="padding:60px 16px;text-align:center;color:rgba(255,255,255,.4);font-size:12px">⚠️ Errore: ${eh(e.message||'sconosciuto')}</div>`; }
 }
 function _ghsPreviewFillCfg(stub){
   // Mappa di default per tutti i campi comuni — applicata sempre, non solo se già presente nello stub
-  const DEFAULTS={storageKey:'__prev__',entityId:'sensor.temperatura',entity:'sensor.temperatura',tempEntity:'sensor.temperatura',temperatureEntity:'sensor.temperatura',humidityEntity:'sensor.umidita',powerEntity:'sensor.consumo',energyEntity:'sensor.energia',weatherEntity:'weather.casa',lightEntity:'light.soggiorno',climateEntity:'climate.termostato',sensorEntity:'sensor.consumo_lavatrice',applianceEntity:'sensor.lavatrice',personEntity:'person.francesco',switchEntity:'switch.cucina',binarySensorEntity:'binary_sensor.porta_ingresso'};
+  const DEFAULTS={
+    storageKey:'__prev__',entityId:'sensor.temperatura',entity:'sensor.temperatura',
+    tempEntity:'sensor.temperatura',temperatureEntity:'sensor.temperatura',
+    humidityEntity:'sensor.umidita',powerEntity:'sensor.consumo',
+    energyEntity:'sensor.energia_oggi',energyMonthEntity:'sensor.energia_mensile',
+    weatherEntity:'weather.casa',lightEntity:'light.soggiorno',
+    climateEntity:'climate.termostato',sensorEntity:'sensor.consumo_lavatrice',
+    applianceEntity:'sensor.lavatrice',personEntity:'person.francesco',
+    switchEntity:'switch.cucina',binarySensorEntity:'binary_sensor.porta_ingresso',
+    // Bolletta / costi
+    costEntity:'sensor.costo_mese',dailyCostEntity:'sensor.costo_oggi',
+    dailyEnergyEntity:'sensor.energia_oggi',monthlyEnergyEntity:'sensor.energia_mensile',
+    costPerKwhEntity:'input_number.costo_kwh',powerContractEntity:'input_number.potenza_contratto',
+    billEntity:'sensor.bolletta_mensile',tariffEntity:'sensor.fasce_orarie',
+    instantPowerEntity:'sensor.consumo',
+    // Person / tracker
+    person:'person.francesco',person1:'person.francesco',person2:'person.riccardo',
+    trackerEntity:'device_tracker.iphone_francesco',
+  };
   const r={...DEFAULTS,...stub};
   // Sovrascrive i campi vuoti o stringa vuota con i default
   for(const[k,v]of Object.entries(DEFAULTS)) if(!r[k]) r[k]=v;
@@ -2284,10 +2314,28 @@ function _createMockHass(){
     'sensor.lavatrice':{state:'lavaggio',attributes:{friendly_name:'Lavatrice'},last_changed:dt(9,30),last_updated:now,entity_id:'sensor.lavatrice'},
     'sensor.consumo_lavatrice':{state:'850',attributes:{unit_of_measurement:'W',friendly_name:'Consumo Lavatrice',device_class:'power'},last_changed:now,last_updated:now,entity_id:'sensor.consumo_lavatrice'},
     'binary_sensor.porta_ingresso':{state:'off',attributes:{friendly_name:'Porta Ingresso',device_class:'door'},last_changed:dt(9),last_updated:now,entity_id:'binary_sensor.porta_ingresso'},
-    'person.francesco':{state:'home',attributes:{friendly_name:'Francesco',entity_picture:''},last_changed:dt(9,15),last_updated:now,entity_id:'person.francesco'},
+    // Person / device_tracker
+    'person.francesco':{state:'home',attributes:{friendly_name:'Francesco',entity_picture:'',source:'device_tracker.iphone_francesco',user_id:'mock-user'},last_changed:dt(9,15),last_updated:now,entity_id:'person.francesco'},
+    'person.riccardo':{state:'not_home',attributes:{friendly_name:'Riccardo',entity_picture:'',source:'device_tracker.iphone_riccardo'},last_changed:dt(8),last_updated:now,entity_id:'person.riccardo'},
+    'device_tracker.iphone_francesco':{state:'home',attributes:{friendly_name:'iPhone Francesco',gps_accuracy:10,latitude:41.9028,longitude:12.4964,source_type:'gps'},last_changed:dt(9,15),last_updated:now,entity_id:'device_tracker.iphone_francesco'},
+    'device_tracker.iphone_riccardo':{state:'not_home',attributes:{friendly_name:'iPhone Riccardo',gps_accuracy:50,source_type:'gps'},last_changed:dt(8),last_updated:now,entity_id:'device_tracker.iphone_riccardo'},
+    // Bolletta / energia
+    'sensor.energia_mese':{state:'187.4',attributes:{unit_of_measurement:'kWh',friendly_name:'Energia Mese',device_class:'energy',state_class:'total'},last_changed:dt(6),last_updated:now,entity_id:'sensor.energia_mese'},
+    'sensor.energia_mensile':{state:'187.4',attributes:{unit_of_measurement:'kWh',friendly_name:'Energia Mensile',device_class:'energy',state_class:'total'},last_changed:dt(6),last_updated:now,entity_id:'sensor.energia_mensile'},
+    'sensor.energia_oggi':{state:'12.4',attributes:{unit_of_measurement:'kWh',friendly_name:'Energia Oggi',device_class:'energy',state_class:'total'},last_changed:now,last_updated:now,entity_id:'sensor.energia_oggi'},
+    'sensor.energia_giornaliera':{state:'12.4',attributes:{unit_of_measurement:'kWh',friendly_name:'Energia Giornaliera',device_class:'energy'},last_changed:now,last_updated:now,entity_id:'sensor.energia_giornaliera'},
+    'sensor.consumo_giornaliero':{state:'12.4',attributes:{unit_of_measurement:'kWh',friendly_name:'Consumo Giornaliero',device_class:'energy'},last_changed:now,last_updated:now,entity_id:'sensor.consumo_giornaliero'},
+    'sensor.costo_energia':{state:'38.20',attributes:{unit_of_measurement:'€',friendly_name:'Costo Energia'},last_changed:dt(6),last_updated:now,entity_id:'sensor.costo_energia'},
+    'sensor.costo_mese':{state:'38.20',attributes:{unit_of_measurement:'€',friendly_name:'Costo Mese'},last_changed:dt(6),last_updated:now,entity_id:'sensor.costo_mese'},
+    'sensor.costo_oggi':{state:'2.48',attributes:{unit_of_measurement:'€',friendly_name:'Costo Oggi'},last_changed:now,last_updated:now,entity_id:'sensor.costo_oggi'},
+    'sensor.potenza_attuale':{state:'1250',attributes:{unit_of_measurement:'W',friendly_name:'Potenza Attuale',device_class:'power'},last_changed:now,last_updated:now,entity_id:'sensor.potenza_attuale'},
+    'input_number.costo_kwh':{state:'0.25',attributes:{unit_of_measurement:'€/kWh',friendly_name:'Costo kWh',min:0,max:2,step:0.01},last_changed:dt(8),last_updated:now,entity_id:'input_number.costo_kwh'},
+    'input_number.potenza_contratto':{state:'3300',attributes:{unit_of_measurement:'W',friendly_name:'Potenza Contratto',min:1000,max:6000,step:100},last_changed:dt(8),last_updated:now,entity_id:'input_number.potenza_contratto'},
+    'sensor.bolletta_mensile':{state:'38.20',attributes:{unit_of_measurement:'€',friendly_name:'Bolletta Mensile'},last_changed:dt(6),last_updated:now,entity_id:'sensor.bolletta_mensile'},
+    'sensor.fasce_orarie':{state:'F1',attributes:{friendly_name:'Fascia Oraria'},last_changed:now,last_updated:now,entity_id:'sensor.fasce_orarie'},
   };
   const states=new Proxy(S,{
-    get(t,p){ if(typeof p!=='string'||p in t) return t[p]; if(p==='then'||p==='__esModule') return undefined; const dom=p.split('.')[0],fn=(p.split('.')[1]||p).replace(/_/g,' '),base={last_changed:now,last_updated:now,entity_id:p}; switch(dom){ case'sensor':return{...base,state:'42',attributes:{unit_of_measurement:'',friendly_name:fn,device_class:''}}; case'light':return{...base,state:'on',attributes:{brightness:150,friendly_name:fn,supported_features:44}}; case'switch':return{...base,state:'off',attributes:{friendly_name:fn}}; case'climate':return{...base,state:'heat',attributes:{current_temperature:20,temperature:21,friendly_name:fn,hvac_modes:['off','heat']}}; case'weather':return S['weather.casa']; case'binary_sensor':return{...base,state:'off',attributes:{friendly_name:fn,device_class:'motion'}}; default:return{...base,state:'on',attributes:{friendly_name:fn}}; } },
+    get(t,p){ if(typeof p!=='string'||p in t) return t[p]; if(p==='then'||p==='__esModule') return undefined; const dom=p.split('.')[0],fn=(p.split('.')[1]||p).replace(/_/g,' '),base={last_changed:now,last_updated:now,entity_id:p}; switch(dom){ case'sensor':return{...base,state:'42',attributes:{unit_of_measurement:'',friendly_name:fn,device_class:'',state_class:'measurement'}}; case'light':return{...base,state:'on',attributes:{brightness:150,friendly_name:fn,supported_features:44}}; case'switch':return{...base,state:'off',attributes:{friendly_name:fn}}; case'climate':return{...base,state:'heat',attributes:{current_temperature:20,temperature:21,friendly_name:fn,hvac_modes:['off','heat']}}; case'weather':return S['weather.casa']; case'binary_sensor':return{...base,state:'off',attributes:{friendly_name:fn,device_class:'motion'}}; case'input_number':return{...base,state:'0',attributes:{friendly_name:fn,min:0,max:100,step:1,unit_of_measurement:''}}; case'person':return{...base,state:'home',attributes:{friendly_name:fn,entity_picture:''}}; case'device_tracker':return{...base,state:'home',attributes:{friendly_name:fn,source_type:'gps'}}; default:return{...base,state:'on',attributes:{friendly_name:fn}}; } },
     has(){ return true; }
   });
   return {
@@ -17888,6 +17936,7 @@ Object.assign(window, {
   _ghsMoveCard,
   _ghsPreview,
   _ghsPreviewCard,
+  _ghsPreviewClose,
   _ghsPublish,
   _ghsReloadTab,
   _ghsYamlAdd,
