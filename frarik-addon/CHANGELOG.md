@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.7.15 — 2026-06-30
+
+### fix: Bolletta v3.5 + PKG antizanzare/differenziata — formula corretta + testi bianchi + prefissi frarik_
+
+- Bolletta calcBill: costanti ARERA aggiornate ad aprile 2026 (perdite 10.3261%, CdispD 0.015531, mc=0, dispbt=0, UC6f 0.016567, RAI 9€)
+- Bolletta calcBill: placeholder in impostazioni aggiornati con i valori corretti
+- Bolletta: tutti i testi principali portati a #fff (rimosso rgba < 100% dal row(), label, simulator, wizard)
+- PKG antizanzare: aggiunto header Frarik ASCII; tutte le entità rinominate a prefisso `frarik_antizanzare_`; aggiunto sensor.frarik_antizanzare_versione
+- PKG differenziata: riscritto da zero con header Frarik, prefisso `frarik_differenziata_`, entità pulite e automazione semplificata
+
 ## 1.7.14 — 2026-06-30
 
 ### fix: Bolletta v3.4 — formula calcBill corretta + dettaglio con fallback calcolo

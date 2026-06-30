@@ -1,4 +1,4 @@
-/* frarik-version: 3.4 */
+/* frarik-version: 3.5 */
 (function () {
   'use strict';
 
@@ -115,17 +115,17 @@
       var lv = _n[nk]; if (lv !== undefined && lv !== '') { var p = parseFloat(lv); if (!isNaN(p) && p !== 0) return p; }
       return N(S(h, eid)) || def;
     }
-    var perdPerc = nf('sensor.frarik_bolletta_arera_perdite_rete_perc','perdite',cf.pk_fb_perdite,8.73);
-    var dispbt   = nf('sensor.frarik_bolletta_arera_dispbt','dispbt',cf.pk_fb_dispbt,0.102592);
-    var disp     = nf('sensor.frarik_bolletta_arera_dispacciamento','disp',cf.pk_fb_disp,0.010660);
-    var mc       = nf('sensor.frarik_bolletta_arera_mercato_capacita','mc',cf.pk_fb_mc,0.010583);
+    var perdPerc = nf('sensor.frarik_bolletta_arera_perdite_rete_perc','perdite',cf.pk_fb_perdite,10.3261);
+    var dispbt   = nf('sensor.frarik_bolletta_arera_dispbt','dispbt',cf.pk_fb_dispbt,0);
+    var disp     = nf('sensor.frarik_bolletta_arera_dispacciamento','disp',cf.pk_fb_disp,0.015531);
+    var mc       = nf('sensor.frarik_bolletta_arera_mercato_capacita','mc',cf.pk_fb_mc,0);
     var pno      = nf('sensor.frarik_bolletta_arera_pno','pno',cf.pk_fb_pno,0);
     var comm     = nc('comm',cf.pk_fb_comm,6);
     var tr_en    = nf('sensor.frarik_bolletta_arera_trasporto_quota_energia','tr_en',cf.pk_fb_tr_en,0.0119);
     var tr_fis   = nf('sensor.frarik_bolletta_arera_trasporto_quota_fissa','tr_fis',cf.pk_fb_tr_fis,1.92);
     var tr_pot   = nf('sensor.frarik_bolletta_arera_trasporto_quota_potenza','tr_pot',cf.pk_fb_tr_pot,2.22);
     var uc3      = nf('sensor.frarik_bolletta_arera_uc3','uc3',cf.pk_fb_uc3,0.00276);
-    var uc6f     = nf('sensor.frarik_bolletta_arera_uc6_fisso','uc6f',cf.pk_fb_uc6f,0.07);
+    var uc6f     = nf('sensor.frarik_bolletta_arera_uc6_fisso','uc6f',cf.pk_fb_uc6f,0.016567);
     var uc6v     = nf('sensor.frarik_bolletta_arera_uc6_variabile','uc6v',cf.pk_fb_uc6v,0.00007);
     var arim     = nf('sensor.frarik_bolletta_arera_arim','arim',cf.pk_fb_arim,0.001638);
     var asos     = nf('sensor.frarik_bolletta_arera_asos','asos',cf.pk_fb_asos,0.028657);
@@ -136,7 +136,7 @@
 
     var kp      = kwh * perdPerc / 100;
     var kwh_en  = kwh + kp;  /* perdite solo su materia energia, non su disp/mc */
-    var rai_men = nc('rai_mensile','',7);
+    var rai_men = nc('rai_mensile','',9);
 
     var mat = kwh_en * pE               /* energia: prezzo × (kwh + perdite) */
             + kwh * disp                /* dispacciamento: kWh misurati */
@@ -179,7 +179,7 @@
       + '</div>';
   }
   function row(lbl, val, col) {
-    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)"><span style="font-size:12px;color:rgba(255,255,255,.8)">' + lbl + '</span><span style="font-size:13px;font-weight:800;color:' + (col || '#fff') + '">' + val + '</span></div>';
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)"><span style="font-size:12px;color:#fff">' + lbl + '</span><span style="font-size:13px;font-weight:800;color:' + (col || '#fff') + '">' + val + '</span></div>';
   }
   function sec(lbl) {
     return '<div style="font-size:10px;font-weight:700;color:' + COL + ';text-transform:uppercase;letter-spacing:.06em;margin:12px 0 4px;padding-bottom:3px;border-bottom:1px solid rgba(' + RGB + ',.2)">' + lbl + '</div>';
@@ -222,8 +222,8 @@
       + row('🚛 Trasporto e Rete', tras.toFixed(2) + ' €', '#fff')
       + row('🔧 Oneri di Sistema', oneri.toFixed(2)+ ' €', '#fff')
       + row('📋 Accise',           acc.toFixed(2)  + ' €', '#fff')
-      + row('💸 IVA',              iva.toFixed(2)  + ' €', 'rgba(255,255,255,.6)')
-      + row('📺 Canone RAI',       rai.toFixed(2)  + ' €', 'rgba(255,255,255,.6)')
+      + row('💸 IVA',              iva.toFixed(2)  + ' €')
+      + row('📺 Canone RAI',       rai.toFixed(2)  + ' €')
       + (bon > 0 ? row('🎁 Bonus (pre-IVA)', '− ' + bon.toFixed(2) + ' €', '#4ade80') : '')
       + (gse > 0 ? row('☀️ Credito GSE', '− ' + gse.toFixed(2) + ' €', '#4ade80') : '')
       + '<div style="display:flex;justify-content:space-between;align-items:center;background:rgba(' + RGB + ',.12);border-radius:10px;padding:12px 14px;margin-top:10px">'
@@ -234,7 +234,7 @@
       + row('kWh Consumati', kwh.toFixed(1) + ' kWh', '#fff')
       + row('Prezzo Energia', (tariffaEur * 100).toFixed(2) + ' c€/kWh', '#fff')
       + row('Costo All-in/kWh', (costoKwh * 100).toFixed(3) + ' c€/kWh', COL)
-      + row('Mese', MESIL[now.getMonth()] + ' ' + now.getFullYear(), 'rgba(255,255,255,.5)');
+      + row('Mese', MESIL[now.getMonth()] + ' ' + now.getFullYear());
 
     mkOv(popShell('🧾', 'Dettaglio Bolletta', MESIL[now.getMonth()] + ' ' + now.getFullYear(), 'bp-det-close', content), 'bp-det-close');
   }
@@ -258,12 +258,12 @@
         + '<div style="font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Bolletta Simulata</div>'
         + '<div style="font-size:36px;font-weight:900;color:' + COL + ';line-height:1">' + tot.toFixed(2) + '<span style="font-size:16px;font-weight:600;color:rgba(255,255,255,.5);margin-left:3px">€</span></div>'
         + '<div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:4px">'
-        + '<div style="font-size:11px;color:rgba(255,255,255,.5)">Materia: <b style="color:#fff">' + b.mat.toFixed(2) + ' €</b></div>'
-        + '<div style="font-size:11px;color:rgba(255,255,255,.5)">Trasporto: <b style="color:#fff">' + b.tras.toFixed(2) + ' €</b></div>'
-        + '<div style="font-size:11px;color:rgba(255,255,255,.5)">Oneri: <b style="color:#fff">' + b.oneri.toFixed(2) + ' €</b></div>'
-        + '<div style="font-size:11px;color:rgba(255,255,255,.5)">Accise: <b style="color:#fff">' + b.acc.toFixed(2) + ' €</b></div>'
-        + '<div style="font-size:11px;color:rgba(255,255,255,.5)">IVA ' + b.iva_perc.toFixed(0) + '%: <b style="color:#fff">' + b.iva.toFixed(2) + ' €</b></div>'
-        + '<div style="font-size:11px;color:rgba(255,255,255,.5)">RAI: <b style="color:#fff">' + b.rai.toFixed(2) + ' €</b></div>'
+        + '<div style="font-size:11px;color:#fff">Materia: <b style="color:#fff">' + b.mat.toFixed(2) + ' €</b></div>'
+        + '<div style="font-size:11px;color:#fff">Trasporto: <b style="color:#fff">' + b.tras.toFixed(2) + ' €</b></div>'
+        + '<div style="font-size:11px;color:#fff">Oneri: <b style="color:#fff">' + b.oneri.toFixed(2) + ' €</b></div>'
+        + '<div style="font-size:11px;color:#fff">Accise: <b style="color:#fff">' + b.acc.toFixed(2) + ' €</b></div>'
+        + '<div style="font-size:11px;color:#fff">IVA ' + b.iva_perc.toFixed(0) + '%: <b style="color:#fff">' + b.iva.toFixed(2) + ' €</b></div>'
+        + '<div style="font-size:11px;color:#fff">RAI: <b style="color:#fff">' + b.rai.toFixed(2) + ' €</b></div>'
         + (bon > 0 ? '<div style="font-size:11px;color:#4ade80">Bonus: <b>− ' + bon.toFixed(2) + ' €</b></div>' : '')
         + (gse > 0 ? '<div style="font-size:11px;color:#4ade80">GSE: <b>− ' + gse.toFixed(2) + ' €</b></div>' : '')
         + '<div style="font-size:11px;color:rgba(255,255,255,.5)">€/kWh: <b style="color:' + COL + '">' + (kwh > 0 ? (tot/kwh).toFixed(4) : '—') + '</b></div>'
@@ -273,15 +273,15 @@
 
     var content = sec('Simula la tua bolletta')
       + '<div style="margin-bottom:10px">'
-      + '<label style="font-size:12px;color:rgba(255,255,255,.7)">kWh consumati nel mese</label>'
+      + '<label style="font-size:12px;color:#fff">kWh consumati nel mese</label>'
       + '<input id="sim-kwh" type="text" inputmode="decimal" value="' + kwhInit.toFixed(0) + '" style="' + iSt + '" placeholder="es. 250">'
       + '</div>'
       + '<div style="margin-bottom:10px">'
-      + '<label style="font-size:12px;color:rgba(255,255,255,.7)">Bonus / sconti (€)</label>'
+      + '<label style="font-size:12px;color:#fff">Bonus / sconti (€)</label>'
       + '<input id="sim-bon" type="text" inputmode="decimal" value="' + bonInit.toFixed(2) + '" style="' + iSt + '" placeholder="es. 0.00">'
       + '</div>'
       + '<div style="margin-bottom:10px">'
-      + '<label style="font-size:12px;color:rgba(255,255,255,.7)">Credito GSE (€, solo FV)</label>'
+      + '<label style="font-size:12px;color:#fff">Credito GSE (€, solo FV)</label>'
       + '<input id="sim-gse" type="text" inputmode="decimal" value="' + gseInit.toFixed(2) + '" style="' + iSt + '" placeholder="es. 0.00">'
       + '</div>'
       + '<button id="sim-calc" style="width:100%;padding:11px;border-radius:10px;background:' + COL + ';color:#000;font-size:14px;font-weight:800;border:none;cursor:pointer">Calcola Bolletta</button>'
@@ -365,7 +365,7 @@
     var _st0 = load();
     var _nums = _st0._nums || {};
     var iSt = 'width:100%;padding:8px 10px;border-radius:8px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.15);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none;margin-top:3px';
-    var lSt = 'font-size:11px;color:rgba(255,255,255,.6);display:block;margin-top:8px';
+    var lSt = 'font-size:11px;color:#fff;display:block;margin-top:8px';
     var stDrop = 'position:absolute;left:0;right:0;top:calc(100% + 2px);z-index:300;max-height:160px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-radius:9px;display:none;scrollbar-width:none';
     var allIds = Object.keys((h && h.states) || {}).sort();
 
@@ -405,19 +405,19 @@
       + lbl('Spread energia (€/kWh)') + inp('bp-spread', nval('spread',c.pk_spread,6), '0.000000')
       + lbl('Potenza impegnata (kW)') + inp('bp-potenza', nval('potenza',c.pk_potenza,1), '4.5')
       + lbl('Commercializzazione (€/mese)') + inp('bp-comm', nval('comm',c.pk_fb_comm,2), '6.00')
-      + lbl('Canone RAI (€/mese, 0 se esente)') + inp('bp-rai', nval('rai_mensile','',1), '7.0')
+      + lbl('Canone RAI (€/mese, 0 se esente)') + inp('bp-rai', nval('rai_mensile','',1), '9.0')
       + lbl('Bonus mese corrente (€)') + inp('bp-bonus', nval('bonus',c.pk_bonus,2), '0.00')
       + lbl('Bonus sociale (€)') + inp('bp-bonus-soc', nval('bonus_soc',c.pk_bonus_soc,2), '0.00')
       + '<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 4px;padding-bottom:3px;border-bottom:1px solid rgba(255,255,255,.07)">Fallback ARERA — usati se REST non disponibile</div>'
-      + lbl('Perdite rete (%)') + inp('bp-perdite', nval('perdite',c.pk_fb_perdite,2), '8.73')
-      + lbl('DISPbt (€/mese)') + inp('bp-dispbt', nval('dispbt',c.pk_fb_dispbt,6), '0.102592')
-      + lbl('Dispacciamento (€/kWh)') + inp('bp-disp', nval('disp',c.pk_fb_disp,6), '0.010660')
-      + lbl('Mercato Capacità (€/kWh)') + inp('bp-mc', nval('mc',c.pk_fb_mc,6), '0.010583')
+      + lbl('Perdite rete (%)') + inp('bp-perdite', nval('perdite',c.pk_fb_perdite,4), '10.3261')
+      + lbl('DISPbt (€/mese)') + inp('bp-dispbt', nval('dispbt',c.pk_fb_dispbt,6), '0.000000')
+      + lbl('Dispacciamento CdispD (€/kWh)') + inp('bp-disp', nval('disp',c.pk_fb_disp,6), '0.015531')
+      + lbl('Mercato Capacità (€/kWh)') + inp('bp-mc', nval('mc',c.pk_fb_mc,6), '0.000000')
       + lbl('Trasporto Energia (€/kWh)') + inp('bp-tr-en', nval('tr_en',c.pk_fb_tr_en,6), '0.011900')
       + lbl('Trasporto Fisso (€/mese)') + inp('bp-tr-fis', nval('tr_fis',c.pk_fb_tr_fis,2), '1.92')
       + lbl('Trasporto Potenza (€/kW)') + inp('bp-tr-pot', nval('tr_pot',c.pk_fb_tr_pot,2), '2.22')
       + lbl('UC3 (€/kWh)') + inp('bp-uc3', nval('uc3',c.pk_fb_uc3,6), '0.002760')
-      + lbl('UC6 Fisso (€/kW)') + inp('bp-uc6f', nval('uc6f',c.pk_fb_uc6f,6), '0.070000')
+      + lbl('UC6 Fisso (€/kW)') + inp('bp-uc6f', nval('uc6f',c.pk_fb_uc6f,6), '0.016567')
       + lbl('UC6 Variabile (€/kWh)') + inp('bp-uc6v', nval('uc6v',c.pk_fb_uc6v,6), '0.000070')
       + lbl('ARIM (€/kWh)') + inp('bp-arim', nval('arim',c.pk_fb_arim,6), '0.001638')
       + lbl('ASOS (€/kWh)') + inp('bp-asos', nval('asos',c.pk_fb_asos,6), '0.028657')
@@ -580,7 +580,7 @@
     var stDrop = 'position:absolute;left:0;right:0;top:calc(100% + 2px);z-index:200;max-height:150px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-radius:9px;display:none;scrollbar-width:none';
 
     function field(fid, lbl2, val) {
-      return '<div style="margin-bottom:9px;position:relative"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:rgba(255,255,255,.5);display:block;margin-bottom:2px">' + lbl2 + '</label>'
+      return '<div style="margin-bottom:9px;position:relative"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#fff;display:block;margin-bottom:2px">' + lbl2 + '</label>'
         + '<input id="' + fid + '" type="text" value="' + (val || '') + '" autocomplete="off" placeholder="Cerca entità…" style="' + iSt + '">'
         + '<div id="' + fid + '-d" style="' + stDrop + '"></div></div>';
     }
@@ -790,7 +790,7 @@
   }
 
   /* ── UPDATE / MOUNT ── */
-  var CARD = { id: 'bolletta', version: '3.4', name: 'Bolletta Elettrica', icon: '⚡', color: COL };
+  var CARD = { id: 'bolletta', version: '3.5', name: 'Bolletta Elettrica', icon: '⚡', color: COL };
 
   function update(card, hass, el) {
     var h = hass || H(), c = cfgFor(card);
@@ -841,7 +841,7 @@
     var stDrop = 'position:absolute;left:0;right:0;top:calc(100% + 2px);z-index:200;max-height:130px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.15);border-radius:8px;display:none;scrollbar-width:none';
 
     function wfield(id, lbl2, ph) {
-      return '<div style="margin-bottom:10px;position:relative"><label style="font-size:11px;color:rgba(255,255,255,.6);display:block;margin-bottom:2px">' + lbl2 + '</label>'
+      return '<div style="margin-bottom:10px;position:relative"><label style="font-size:11px;color:#fff;display:block;margin-bottom:2px">' + lbl2 + '</label>'
         + '<input id="' + id + '" type="text" autocomplete="off" placeholder="' + ph + '" style="' + iSt + '">'
         + '<div id="' + id + '-d" style="' + stDrop + '"></div></div>';
     }
