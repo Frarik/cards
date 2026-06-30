@@ -1,4 +1,4 @@
-/* frarik-version: 3.1 */
+/* frarik-version: 3.2 */
 (function () {
   'use strict';
 
@@ -15,9 +15,9 @@
   function setNum(eid, val) { var v = parseFloat(val); if (!isNaN(v)) callSvc('input_number','set_value',{entity_id:eid,value:v}); }
 
   /* ── STORAGE ── */
-  function keyOf(c) { return 'frarik_bollettacard_' + (c.id || 'x'); }
-  function load(c) { try { return JSON.parse(localStorage.getItem(keyOf(c)) || '{}') || {}; } catch(e) { return {}; } }
-  function save(c, o) { try { localStorage.setItem(keyOf(c), JSON.stringify(o)); } catch(e) {} }
+  var _STORE_KEY = 'frarik_bolletta_cfg_v1';
+  function load() { try { return JSON.parse(localStorage.getItem(_STORE_KEY) || '{}') || {}; } catch(e) { return {}; } }
+  function save(o) { try { localStorage.setItem(_STORE_KEY, JSON.stringify(o)); } catch(e) {} }
 
   /* ── DEFAULTS ── */
   function pkDefaults() {
@@ -96,7 +96,7 @@
   }
 
   function cfgFor(card) {
-    var c = load(card), pk = pkDefaults(), r = {};
+    var c = load(), pk = pkDefaults(), r = {};
     Object.keys(pk).forEach(function(k) { r[k] = (c[k] !== undefined && c[k] !== '') ? c[k] : pk[k]; });
     r.name = c.name || 'Bolletta';
     return r;
@@ -336,7 +336,7 @@
   function openImpostazioni(card, c, el) {
     var h = H();
     var iSt = 'width:100%;padding:8px 10px;border-radius:8px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.15);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none;margin-top:3px';
-    var iStDis = iSt + ';opacity:.35;pointer-events:none';
+    var iStDis = iSt;
     var lSt = 'font-size:11px;color:rgba(255,255,255,.6);display:block;margin-top:8px';
 
     function inp(id, val, ph, dis) {
@@ -384,7 +384,8 @@
       + lbl('IVA (%)') + inp('bp-iva', N(S(h,c.pk_fb_iva)).toFixed(1), '10.0')
       + '</div>';
 
-    var haFvNow = S(h, c.pk_ha_fv) === 'on';
+    var _st0 = load();
+    var haFvNow = (_st0._fv_active !== undefined) ? _st0._fv_active : (S(h, c.pk_ha_fv) === 'on');
     var fvDis = !haFvNow;
     var pFv = '<div class="bp-panel" id="bp-p-fv">'
       + '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:10px">'
@@ -443,7 +444,10 @@
         bpFvBtn.style.color = _fvOn ? '#4ade80' : 'rgba(255,255,255,.4)';
         if (bpFvFields) {
           bpFvFields.style.opacity = _fvOn ? '1' : '.35';
-          bpFvFields.querySelectorAll('input').forEach(function(inp2) { inp2.disabled = !_fvOn; });
+          bpFvFields.querySelectorAll('input').forEach(function(inp2) {
+            inp2.disabled = !_fvOn;
+            inp2.style.opacity = _fvOn ? '1' : '.35';
+          });
         }
       });
     }
@@ -471,7 +475,7 @@
       setNum(c.pk_fb_accise,   g('bp-accise'));
       setNum(c.pk_fb_iva,      g('bp-iva'));
       setNum(c.pk_credito_gse, g('bp-gse'));
-      var stored = load(card);
+      var stored = load();
       stored.pk_consumo_ist  = g('bp-s-ist')  || stored.pk_consumo_ist;
       stored.pk_costo_mese   = g('bp-s-cm')   || stored.pk_costo_mese;
       stored.pk_costo_oggi   = g('bp-s-cg')   || stored.pk_costo_oggi;
@@ -481,7 +485,8 @@
       stored.pk_fv_prod_ist  = g('bp-s-fv-pow');
       stored.pk_fv_kwh_oggi  = g('bp-s-fv-og');
       stored.pk_fv_kwh_mese  = g('bp-s-fv-me');
-      save(card, stored);
+      stored._fv_active      = _fvOn;
+      save(stored);
       ov._close();
       if (el) { el._fcSig = ''; el._fcBound = null; el.innerHTML = render(card); mount(card, H(), el); }
     });
@@ -541,7 +546,7 @@
     function g(id) { var e = ov.querySelector('#'+id); return e ? e.value.trim() : ''; }
     ov.querySelector('#bc-cancel').addEventListener('click', function() { ov._close(); });
     ov.querySelector('#bc-save').addEventListener('click', function() {
-      var stored = load(card);
+      var stored = load();
       stored.pk_consumo_ist  = g('bc-ist')  || pkDefaults().pk_consumo_ist;
       stored.pk_costo_mese   = g('bc-cm')   || pkDefaults().pk_costo_mese;
       stored.pk_costo_oggi   = g('bc-cg')   || pkDefaults().pk_costo_oggi;
@@ -551,7 +556,7 @@
       stored.pk_materia      = g('bc-mat')  || pkDefaults().pk_materia;
       stored.pk_trasporto    = g('bc-tras') || pkDefaults().pk_trasporto;
       stored.pk_arera_trim   = g('bc-trim') || pkDefaults().pk_arera_trim;
-      save(card, stored);
+      save(stored);
       ov._close();
       try { el._fcSig = ''; el.innerHTML = render(card); } catch(e) {}
     });
@@ -574,7 +579,8 @@
     var mediaG   = N(S(h, c.pk_media_g));
     var annoTot  = N(S(h, c.pk_anno));
     var trim     = S(h, c.pk_arera_trim) || '—';
-    var haFv     = S(h, c.pk_ha_fv) === 'on';
+    var _st = load();
+    var haFv     = (_st._fv_active !== undefined) ? _st._fv_active : (S(h, c.pk_ha_fv) === 'on');
     var gseCredit= N(S(h, c.pk_credito_gse));
     var fvPowW   = c.pk_fv_prod_ist  ? N(S(h, c.pk_fv_prod_ist))  : 0;
     var fvKwhG   = c.pk_fv_kwh_oggi  ? N(S(h, c.pk_fv_kwh_oggi))  : 0;
@@ -705,7 +711,7 @@
   }
 
   /* ── UPDATE / MOUNT ── */
-  var CARD = { id: 'bolletta', version: '3.1', name: 'Bolletta Elettrica', icon: '⚡', color: COL };
+  var CARD = { id: 'bolletta', version: '3.2', name: 'Bolletta Elettrica', icon: '⚡', color: COL };
 
   function update(card, hass, el) {
     var h = hass || H(), c = cfgFor(card);

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.12 — 2026-06-30
+
+### fix: Bolletta v3.2 — impostazioni persistenti + fix FV toggle
+
+- Impostazioni persistenti: chiave localStorage fissa (`frarik_bolletta_cfg_v1`); eliminare e reinserire la card non azzera le impostazioni
+- FV toggle: stato ON/OFF salvato in localStorage → rimane ON dopo salva/esci/rientra
+- FV toggle: campi di testo ora editabili dopo click ON (rimosso `pointer-events:none` dallo stile disabled)
+
 ## 1.7.11 — 2026-06-30
 
 ### fix: Bolletta v3.1 — impostazioni ristrutturate + sezione FV live
