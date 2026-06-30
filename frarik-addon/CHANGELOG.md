@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.7.01 — 2026-06-30
+
+### feat: store — anteprima card con dati simulati
+
+- Bottone 👁 viola su ogni tile dello Store (Cards, Da installare, Elettrodomestici)
+- `_ghsPreviewCard(enc)`: apre un popup che carica dinamicamente il JS della card, la istanzia come custom element e la renderizza con `hass` simulato
+- `_createMockHass()`: oggetto `hass` completo con entità fittizie (sensori temp/umidità/consumo, weather con forecast 5 giorni, lavatrice, climate, lights) + `Proxy` per restituire dati plausibili per qualunque `entity_id` richiesto
+- `_ghsPreviewFillCfg()`: pre-compila i campi vuoti in `getStubConfig()` con entity IDs fittizie appropriate per tipo
+- Supporto `callApi` history: restituisce dati sintetici per i popup grafici delle card
+- CSS: modale `#ghs-prev-ov` / `#ghs-prev-modal` con header, body scrollable, footer disclaimer
+
 ## 1.7.00 — 2026-06-30
 
 ### feat: store — redesign UI futuristico

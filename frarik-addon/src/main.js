@@ -2195,6 +2195,107 @@ async function _ghFetchVerLabels(tab){
   await Promise.all(Array.from({length:Math.min(CONC,files.length)}, worker));
   if(_ghsTab===tab) _ghStoreRender();
 }
+/* ═══ STORE PREVIEW CARD — Anteprima con dati simulati ═══ */
+function _ghsShowPreviewModal(nm){
+  document.getElementById('ghs-prev-ov')?.remove();
+  const ov=document.createElement('div'); ov.id='ghs-prev-ov';
+  ov.innerHTML=`<div id="ghs-prev-modal">
+    <div class="ghs-prev-hdr">
+      <div class="ghs-prev-hdr-ico">🔮</div>
+      <div style="flex:1"><div class="ghs-prev-hdr-title">Anteprima — ${eh(nm)}</div><div class="ghs-prev-hdr-sub">Rendering con dati simulati</div></div>
+      <button id="ghs-prev-close" class="ghs-prev-close">✕</button>
+    </div>
+    <div id="ghs-prev-body"><div id="ghs-prev-card-wrap"><div class="ghs-prev-loading"><div style="font-size:24px;margin-bottom:8px">⚙️</div>Caricamento card…</div></div></div>
+    <div class="ghs-prev-foot">🔬 Dati simulati — l'aspetto reale può variare in base alla tua configurazione</div>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click',e=>{ if(e.target===ov||e.target.closest?.('#ghs-prev-close')) ov.remove(); });
+}
+async function _ghsPreviewCard(enc){
+  const name=decodeURIComponent(enc);
+  const nm=name.replace(/\.(js|ya?ml)$/i,'');
+  _ghsShowPreviewModal(nm);
+  // Cerca il file in tutti i cache
+  let f=_ghsFind(name);
+  if(!f){ for(const t of ['js','chips','distintivi','predefinite','elettrodomestici']){ const h=(_ghsCache[t]||[]).find(x=>x.name===name); if(h){f=h;break;} } }
+  // Ottieni il codice JS
+  let code=f?_ghCodeCache[f.sha]:null;
+  if(!code&&f?.download_url){
+    try{
+      const r=await fetch(f.download_url+(f.download_url.includes('?')?'&':'?')+'_t='+Date.now(),{cache:'no-store'});
+      if(r.ok){ code=await r.text(); if(f.sha) _ghCodeCache[f.sha]=code; }
+    }catch(e){}
+  }
+  const wrap=document.getElementById('ghs-prev-card-wrap');
+  if(!wrap) return;
+  if(!code){ wrap.innerHTML='<div class="ghs-prev-loading">⚠️ Impossibile caricare il codice della card</div>'; return; }
+  // Trova il tag name e registra l'elemento
+  window.FratechCardRegistry=window.FratechCardRegistry||{};
+  let tagName=null;
+  const tmA=code.match(/customElements\.define\s*\(\s*['"]([a-z][a-z0-9-]*)['"]/);
+  const tmB=code.match(/customElements\.get\s*\(\s*['"]([a-z][a-z0-9-]*)['"]/);
+  tagName=tmA?.[1]||tmB?.[1]||null;
+  if(tagName&&!customElements.get(tagName)){ try{ _installCardCode(code); }catch(e){} }
+  else if(!tagName){ try{ _installCardCode(code); const tm2=code.match(/customElements\.(?:define|get)\s*\(\s*['"]([a-z][a-z0-9-]*)['"]/); tagName=tm2?.[1]||null; }catch(e){} }
+  if(!tagName||!customElements.get(tagName)){ wrap.innerHTML='<div class="ghs-prev-loading">⚠️ Impossibile istanziare questa card</div>'; return; }
+  try{
+    const CardClass=customElements.get(tagName);
+    const stub=CardClass?.getStubConfig?.()||{};
+    const cfg=_ghsPreviewFillCfg({storageKey:'__prev__',...stub});
+    const card=document.createElement(tagName);
+    card.style.cssText='display:block;width:100%';
+    try{ card.setConfig?.(cfg); }catch(e){}
+    card.hass=_createMockHass();
+    wrap.innerHTML='';
+    wrap.appendChild(card);
+  }catch(e){ wrap.innerHTML=`<div class="ghs-prev-loading">⚠️ Errore rendering: ${eh(e.message||'sconosciuto')}</div>`; }
+}
+function _ghsPreviewFillCfg(cfg){
+  const MAP={entityId:'sensor.temperatura',entity:'sensor.temperatura',tempEntity:'sensor.temperatura',temperatureEntity:'sensor.temperatura',humidityEntity:'sensor.umidita',powerEntity:'sensor.consumo',energyEntity:'sensor.energia',weatherEntity:'weather.casa',lightEntity:'light.soggiorno',climateEntity:'climate.termostato',sensorEntity:'sensor.consumo_lavatrice',applianceEntity:'sensor.lavatrice'};
+  const r={...cfg};
+  for(const[k,v]of Object.entries(MAP)) if(k in r&&(!r[k]||r[k]==='')) r[k]=v;
+  return r;
+}
+function _createMockHass(){
+  const now=new Date().toISOString();
+  const dt=(h,m=0)=>{ const d=new Date(); d.setHours(h,m,0,0); return d.toISOString(); };
+  const fc=(off,cond,hi,lo,rain=0)=>({datetime:new Date(Date.now()+off*86400000).toISOString(),condition:cond,temperature:hi,templow:lo,precipitation:rain,wind_speed:10+off*2});
+  const S={
+    'sensor.temperatura':{state:'22.5',attributes:{unit_of_measurement:'°C',friendly_name:'Temperatura',device_class:'temperature',state_class:'measurement'},last_changed:dt(10,30),last_updated:now,entity_id:'sensor.temperatura'},
+    'sensor.umidita':{state:'65',attributes:{unit_of_measurement:'%',friendly_name:'Umidità',device_class:'humidity'},last_changed:dt(10,30),last_updated:now,entity_id:'sensor.umidita'},
+    'sensor.consumo':{state:'1250',attributes:{unit_of_measurement:'W',friendly_name:'Consumo Casa',device_class:'power'},last_changed:now,last_updated:now,entity_id:'sensor.consumo'},
+    'sensor.energia':{state:'12.4',attributes:{unit_of_measurement:'kWh',friendly_name:'Energia Totale',device_class:'energy',state_class:'total_increasing'},last_changed:dt(8),last_updated:now,entity_id:'sensor.energia'},
+    'sensor.temperatura_esterna':{state:'18.2',attributes:{unit_of_measurement:'°C',friendly_name:'Temperatura Esterna',device_class:'temperature'},last_changed:dt(10,15),last_updated:now,entity_id:'sensor.temperatura_esterna'},
+    'light.soggiorno':{state:'on',attributes:{brightness:180,friendly_name:'Soggiorno',color_temp:370,supported_features:44},last_changed:dt(9),last_updated:now,entity_id:'light.soggiorno'},
+    'switch.cucina':{state:'off',attributes:{friendly_name:'Cucina'},last_changed:dt(8,30),last_updated:now,entity_id:'switch.cucina'},
+    'climate.termostato':{state:'heat',attributes:{current_temperature:20.5,temperature:21,friendly_name:'Termostato',hvac_modes:['off','heat','cool','auto'],hvac_action:'heating',min_temp:15,max_temp:30},last_changed:dt(7),last_updated:now,entity_id:'climate.termostato'},
+    'weather.casa':{state:'sunny',attributes:{temperature:18,humidity:60,wind_speed:12,friendly_name:'Meteo Casa',forecast:[fc(0,'sunny',20,14),fc(1,'partlycloudy',18,12,2),fc(2,'rainy',15,11,8),fc(3,'cloudy',17,13,3),fc(4,'sunny',21,15)]},last_changed:dt(6),last_updated:now,entity_id:'weather.casa'},
+    'sensor.lavatrice':{state:'lavaggio',attributes:{friendly_name:'Lavatrice'},last_changed:dt(9,30),last_updated:now,entity_id:'sensor.lavatrice'},
+    'sensor.consumo_lavatrice':{state:'850',attributes:{unit_of_measurement:'W',friendly_name:'Consumo Lavatrice',device_class:'power'},last_changed:now,last_updated:now,entity_id:'sensor.consumo_lavatrice'},
+    'binary_sensor.porta_ingresso':{state:'off',attributes:{friendly_name:'Porta Ingresso',device_class:'door'},last_changed:dt(9),last_updated:now,entity_id:'binary_sensor.porta_ingresso'},
+    'person.francesco':{state:'home',attributes:{friendly_name:'Francesco',entity_picture:''},last_changed:dt(9,15),last_updated:now,entity_id:'person.francesco'},
+  };
+  const states=new Proxy(S,{
+    get(t,p){ if(typeof p!=='string'||p in t) return t[p]; if(p==='then'||p==='__esModule') return undefined; const dom=p.split('.')[0],fn=(p.split('.')[1]||p).replace(/_/g,' '),base={last_changed:now,last_updated:now,entity_id:p}; switch(dom){ case'sensor':return{...base,state:'42',attributes:{unit_of_measurement:'',friendly_name:fn,device_class:''}}; case'light':return{...base,state:'on',attributes:{brightness:150,friendly_name:fn,supported_features:44}}; case'switch':return{...base,state:'off',attributes:{friendly_name:fn}}; case'climate':return{...base,state:'heat',attributes:{current_temperature:20,temperature:21,friendly_name:fn,hvac_modes:['off','heat']}}; case'weather':return S['weather.casa']; case'binary_sensor':return{...base,state:'off',attributes:{friendly_name:fn,device_class:'motion'}}; default:return{...base,state:'on',attributes:{friendly_name:fn}}; } },
+    has(){ return true; }
+  });
+  return {
+    states,
+    language:'it',
+    locale:{language:'it',number_format:'comma_decimal',time_format:'24'},
+    config:{latitude:41.9028,longitude:12.4964,elevation:21,unit_system:{temperature:'°C',length:'km',mass:'kg',volume:'L',wind_speed:'km/h',accumulated_precipitation:'mm'}},
+    user:{name:'Francesco',id:'mock-user',is_admin:true,is_owner:true},
+    themes:{theme:'default',themes:{}},
+    localize:(k='')=>k?.split?.('.').pop()||k,
+    connection:{subscribeEvents:()=>Promise.resolve(()=>{}),sendMessagePromise:()=>Promise.resolve({}),subscribeMessage:()=>Promise.resolve(()=>{})},
+    callApi:(method,path)=>{ if(path&&path.includes('history/period')){ const pts=Array.from({length:24},(_,i)=>({state:String(+(18+Math.sin(i/4)*3).toFixed(1)),last_changed:new Date(Date.now()-(23-i)*3600000).toISOString()})); return Promise.resolve([pts]); } return Promise.resolve([]); },
+    callService:()=>Promise.resolve(),
+    callWS:()=>Promise.resolve({}),
+    formatEntityState:(s)=>s?.state||'',
+    formatEntityAttributeValue:(s,a)=>s?.attributes?.[a]||'',
+    panelUrl:'/panel',
+  };
+}
 function _ghStoreRender(){
   const tab=_ghsTab, list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
   const q=(document.getElementById('ghs-search').value||'').toLowerCase().trim();
@@ -2274,11 +2375,12 @@ function _ghStoreRender(){
       :`<button class="ghc-btn ghc-btn-add" data-action="_jsStoreAddAndRefresh" data-action-args='["${cardId}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`)
       :`<button class="ghc-btn ghc-btn-inst" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>`;
     const delBtn=cardId?`<button class="ghc-btn-del" data-action="_ghsDeleteInstalled" data-action-arg="${cardId}" title="Disinstalla"><i class="mdi mdi-delete-outline"></i></button>`:'';
+    const prevBtn=`<button class="ghc-btn-del" style="color:rgba(139,92,246,.8);background:rgba(139,92,246,.08);border-color:rgba(139,92,246,.22)" data-action="_ghsPreviewCard" data-action-arg="${enc}" title="Anteprima"><i class="mdi mdi-eye-outline"></i></button>`;
     return `<div class="ghc-tile st-${st}"><div class="ghc-strip ${st}"></div>
       <div class="ghc-prev">${prevHtml}<div class="ghc-prev-fade"></div>${bdg}${pkgBdgInst}</div>
       <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico">${_iconHtml(icon)}</div><div class="ghc-meta"><div class="ghc-name">${eh(nm)}</div>${verLbl?`<div class="ghc-ver">${eh(verLbl)}</div>`:''}</div></div>
       ${desc?`<div class="ghc-desc">${eh(desc)}</div>`:''}
-      <div class="ghc-acts">${pkgUpdBtn}${updBtn}${addBtn}${delBtn}</div></div></div>`;
+      <div class="ghc-acts">${pkgUpdBtn}${updBtn}${addBtn}${prevBtn}${delBtn}</div></div></div>`;
   };
 
   const tileToInstall=(f)=>{
@@ -2291,11 +2393,12 @@ function _ghStoreRender(){
     const pkgBdgNew=_pkgBadgeHtml(pkgInfoNew);
     const ghDel=`<button class="ghc-btn-del" data-action="_ghsDeleteFromGithub" data-action-arg="${enc}" title="Elimina da GitHub"><i class="mdi mdi-delete-forever-outline"></i></button>`;
     const mvBtn=`<button class="ghc-btn-del" data-action="_ghsMoveCard" data-action-arg="${enc}" title="Sposta in altro tab" style="color:rgba(255,255,255,.5)"><i class="mdi mdi-swap-horizontal"></i></button>`;
+    const prevBtn=`<button class="ghc-btn-del" style="color:rgba(139,92,246,.8);background:rgba(139,92,246,.08);border-color:rgba(139,92,246,.22)" data-action="_ghsPreviewCard" data-action-arg="${enc}" title="Anteprima"><i class="mdi mdi-eye-outline"></i></button>`;
     return `<div class="ghc-tile st-new"><div class="ghc-strip new"></div>
       <div class="ghc-prev"><div class="ghc-prev-inner" data-prev-sha="${eh(f.sha)}"></div><div class="ghc-prev-fade"></div><span class="ghc-bdg new">⬇ Disponibile</span>${pkgBdgNew}</div>
       <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico">${_iconHtml(icon)}</div><div class="ghc-meta"><div class="ghc-name">${eh(nm)}</div>${verLbl?`<div class="ghc-ver">v${eh(verLbl)}</div>`:''}</div></div>
       ${desc?`<div class="ghc-desc">${eh(desc)}</div>`:''}
-      <div class="ghc-acts"><button class="ghc-btn ghc-btn-inst" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>${mvBtn}${ghDel}</div></div></div>`;
+      <div class="ghc-acts"><button class="ghc-btn ghc-btn-inst" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>${prevBtn}${mvBtn}${ghDel}</div></div></div>`;
   };
 
   list.innerHTML='<div class="ghc-grid">'
@@ -2513,7 +2616,8 @@ function _ghStoreRenderElettr(q){
     const desc=rawDesc||_ghcSmartDesc(nm,'');
     const icon=_ghIconCache[f.sha]||_ghcSmartIcon(nm)||'🔌';
     const mvBtn=`<button class="ghc-btn-del" data-action="_ghsMoveCard" data-action-arg="${enc}" title="Sposta in altro tab" style="color:rgba(255,255,255,.5)"><i class="mdi mdi-swap-horizontal"></i></button>`;
-    return `<div class="ghc-tile st-new"><div class="ghc-strip new"></div><div class="ghc-prev"><div class="ghc-prev-inner" data-prev-sha="${eh(f.sha)}"></div><div class="ghc-prev-fade"></div><span class="ghc-bdg new">⬇ Disponibile</span></div><div class="ghc-body"><div class="ghc-head"><div class="ghc-ico">${_iconHtml(icon)}</div><div class="ghc-meta"><div class="ghc-name">${eh(nm)}</div>${verLbl?`<div class="ghc-ver">v${eh(verLbl)}</div>`:''}</div></div>${desc?`<div class="ghc-desc">${eh(desc)}</div>`:''}<div class="ghc-acts"><button class="ghc-btn ghc-btn-inst" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>${mvBtn}</div></div></div>`;
+    const prevBtn=`<button class="ghc-btn-del" style="color:rgba(139,92,246,.8);background:rgba(139,92,246,.08);border-color:rgba(139,92,246,.22)" data-action="_ghsPreviewCard" data-action-arg="${enc}" title="Anteprima"><i class="mdi mdi-eye-outline"></i></button>`;
+    return `<div class="ghc-tile st-new"><div class="ghc-strip new"></div><div class="ghc-prev"><div class="ghc-prev-inner" data-prev-sha="${eh(f.sha)}"></div><div class="ghc-prev-fade"></div><span class="ghc-bdg new">⬇ Disponibile</span></div><div class="ghc-body"><div class="ghc-head"><div class="ghc-ico">${_iconHtml(icon)}</div><div class="ghc-meta"><div class="ghc-name">${eh(nm)}</div>${verLbl?`<div class="ghc-ver">v${eh(verLbl)}</div>`:''}</div></div>${desc?`<div class="ghc-desc">${eh(desc)}</div>`:''}<div class="ghc-acts"><button class="ghc-btn ghc-btn-inst" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>${prevBtn}${mvBtn}</div></div></div>`;
   };
   list.innerHTML=hdr+'<div class="ghc-grid">'+files.map(tileToInstall).join('')+'</div>';
   requestAnimationFrame(()=>{
