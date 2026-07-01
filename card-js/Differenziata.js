@@ -452,7 +452,8 @@
   ].join('\n');
 
   /* ── registrazione store ── */
-  var _CARD = {
+  window.FratechCardRegistry = window.FratechCardRegistry || {};
+  window.FratechCardRegistry['differenziata-card'] = {
     id: 'differenziata-card',
     name: 'Raccolta Differenziata',
     description: 'Card rifiuti differenziata con multi-selezione per giorno, bidoni realistici e colori personalizzabili.',
@@ -460,34 +461,10 @@
     version: '5.0',
     frarik_pkg_check: 'sensor.frarik_differenziata_versione',
     frarik_pkg_id: 'frarik_differenziata',
-    frarik_pkg_version: '2.0'
+    frarik_pkg_version: '2.0',
+    render:  render,
+    mount:   mount,
+    update:  update,
+    pkgYaml: function() { return _DIFF_PKG; }
   };
-
-  if (window.FratechStore) {
-    window.FratechStore.register(_CARD, {
-      render:  render,
-      mount:   mount,
-      update:  update,
-      pkgYaml: function() { return _DIFF_PKG; }
-    });
-  }
-
-  if (!customElements.get('differenziata-card')) {
-    var DC = function() { var e = HTMLElement.call(this); return e; };
-    DC.prototype = Object.create(HTMLElement.prototype);
-    DC.prototype.constructor = DC;
-    DC.prototype.setConfig = function(c) { this._cfg = c; };
-    DC.prototype.getCardSize = function() { return 4; };
-    Object.defineProperty(DC.prototype, 'hass', {
-      set: function(h) {
-        this._h = h;
-        var bk = DAYS.map(function(d) { return h && h.states && (h.states['input_text.frarik_differenziata_rifiuto_'+d]||{}).state; }).join('|') + JSON.stringify(getClrs());
-        if (bk === this._bk) return;
-        this._bk = bk;
-        this.innerHTML = render(this._cfg || {});
-        mount(this._cfg || {}, h, this);
-      }
-    });
-    try { customElements.define('differenziata-card', DC); } catch(e) {}
-  }
 })();

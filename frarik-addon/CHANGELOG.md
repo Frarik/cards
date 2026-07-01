@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.27 — 2026-07-01
+
+### fix: card Differenziata non appariva nella dashboard
+
+- Corretto il meccanismo di registrazione: `window.FratechStore.register()` non esiste — le card scrivono direttamente in `window.FratechCardRegistry[id]` con render/mount/update inclusi
+- Rimosso il fallback `customElements.define` ES5 (non necessario e potenzialmente confusionario)
+- La card ora compare correttamente nella dashboard dopo l'aggiornamento JS dallo store
+
 ## 1.7.26 — 2026-07-01
 
 ### feat: card Differenziata v5 — stile elettrodomestici
