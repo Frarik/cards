@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.28 — 2026-07-01
+
+### feat: Differenziata v5.1 — bidone migliorato + popup rifatto
+
+- Bidone SVG completamente ridisegnato: gradiente corpo più morbido, highlight bordo sinistro, shadow drop, ruote con highlight speculare, coperchio con radial gradient, proporzioni più pulite
+- Rimossa la settimana mini con pallini in fondo alla card — lo spazio va ai bidoni hero (ora più grandi)
+- Popup impostazioni: giorni con nome completo e pill con pallino colorato, sezione colori con quadrato di anteprima + palette ridisegnata con ring di selezione, toggle più grandi (44×26px) con transizione fluida, titolo popup aggiornato
+
 ## 1.7.27 — 2026-07-01
 
 ### fix: card Differenziata non appariva nella dashboard

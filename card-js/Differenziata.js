@@ -1,4 +1,4 @@
-/* frarik-version: 5.0 */
+/* frarik-version: 5.1 */
 ;(function () {
   'use strict';
 
@@ -36,99 +36,90 @@
   }
   function todayIdx() { const d = new Date().getDay(); return d === 0 ? 6 : d - 1; }
 
-  /* ── bidone SVG ultra-realistico ── */
+  /* ── bidone SVG illustrativo ── */
   function binSvg(color, sz) {
-    const uid  = 'dd' + color.replace('#','');
-    const lgt  = shade(color, 55);
+    const uid = 'b' + color.replace(/[^a-f0-9]/gi,'').slice(0,6) + sz;
+    const lgt  = shade(color, 60);
     const mid  = color;
-    const drk  = shade(color, -45);
-    const drk2 = shade(color, -65);
-    const lid  = shade(color, 25);
-    const lidH = shade(color, 60);
-    return `<svg width="${sz}" height="${Math.round(sz*1.25)}" viewBox="0 0 100 126" fill="none" xmlns="http://www.w3.org/2000/svg">
+    const drk  = shade(color, -50);
+    const drk2 = shade(color, -70);
+    const lidT = shade(color, 40);
+    const lidB = shade(color, -20);
+    const h = Math.round(sz * 1.3);
+    return `<svg width="${sz}" height="${h}" viewBox="0 0 80 104" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="${uid}b" x1="0" y1="0" x2="1" y2="0">
+    <linearGradient id="${uid}bg" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0%"   stop-color="${lgt}"/>
-      <stop offset="30%"  stop-color="${mid}"/>
+      <stop offset="28%"  stop-color="${mid}"/>
       <stop offset="100%" stop-color="${drk}"/>
     </linearGradient>
-    <linearGradient id="${uid}l" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%"   stop-color="${lidH}"/>
-      <stop offset="60%"  stop-color="${lid}"/>
-      <stop offset="100%" stop-color="${drk}"/>
+    <linearGradient id="${uid}ld" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"   stop-color="${lidT}"/>
+      <stop offset="100%" stop-color="${lidB}"/>
     </linearGradient>
-    <linearGradient id="${uid}tb" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%"   stop-color="rgba(255,255,255,.06)"/>
-      <stop offset="100%" stop-color="rgba(0,0,0,.22)"/>
+    <linearGradient id="${uid}sh" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="rgba(255,255,255,.08)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,.18)"/>
     </linearGradient>
-    <filter id="${uid}sh" x="-15%" y="-10%" width="130%" height="130%">
-      <feDropShadow dx="2" dy="4" stdDeviation="4" flood-color="rgba(0,0,0,.45)"/>
-    </filter>
-    <radialGradient id="${uid}lsp" cx="25%" cy="25%" r="65%">
-      <stop offset="0%"   stop-color="rgba(255,255,255,.35)"/>
+    <radialGradient id="${uid}sp" cx="28%" cy="28%" r="60%">
+      <stop offset="0%"   stop-color="rgba(255,255,255,.45)"/>
       <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
     </radialGradient>
+    <filter id="${uid}dr" x="-20%" y="-10%" width="140%" height="130%">
+      <feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="rgba(0,0,0,.5)"/>
+    </filter>
   </defs>
   <!-- ombra terreno -->
-  <ellipse cx="50" cy="123" rx="32" ry="4.5" fill="rgba(0,0,0,.28)"/>
+  <ellipse cx="40" cy="101" rx="26" ry="3.5" fill="rgba(0,0,0,.25)"/>
   <!-- assale -->
-  <rect x="20" y="108" width="60" height="6" rx="3" fill="${drk2}"/>
-  <!-- ruote -->
-  <circle cx="26" cy="114" r="9" fill="${drk2}"/>
-  <circle cx="74" cy="114" r="9" fill="${drk2}"/>
-  <circle cx="26" cy="114" r="5.5" fill="#111"/>
-  <circle cx="74" cy="114" r="5.5" fill="#111"/>
-  <circle cx="26" cy="114" r="2"   fill="#222"/>
-  <circle cx="74" cy="114" r="2"   fill="#222"/>
-  <line x1="26" y1="108.5" x2="26" y2="119.5" stroke="#333" stroke-width=".8"/>
-  <line x1="20.5" y1="114" x2="31.5" y2="114" stroke="#333" stroke-width=".8"/>
-  <line x1="74" y1="108.5" x2="74" y2="119.5" stroke="#333" stroke-width=".8"/>
-  <line x1="68.5" y1="114" x2="79.5" y2="114" stroke="#333" stroke-width=".8"/>
-  <circle cx="24" cy="112" r="1.2" fill="rgba(255,255,255,.25)"/>
-  <circle cx="72" cy="112" r="1.2" fill="rgba(255,255,255,.25)"/>
-  <!-- corpo principale (trapezio: stretto in alto, largo in basso) -->
-  <path d="M20 30 L14 105 Q14 110 21 110 H79 Q86 110 86 105 L80 30 Z" fill="url(#${uid}b)" filter="url(#${uid}sh)"/>
-  <path d="M20 30 L14 105 Q14 110 21 110 H79 Q86 110 86 105 L80 30 Z" fill="url(#${uid}tb)"/>
-  <!-- highlight bordo sinistro -->
-  <path d="M20 30 L14 105 Q14 110 21 110 H24 L18 30 Z" fill="rgba(255,255,255,.18)"/>
-  <!-- ombra bordo destro -->
-  <path d="M80 30 L86 105 Q86 110 79 110 H76 L82 30 Z" fill="rgba(0,0,0,.22)"/>
-  <!-- ribs orizzontali -->
-  <path d="M16 48 Q50 45 84 48" stroke="rgba(0,0,0,.18)" stroke-width="2" fill="none"/>
-  <path d="M16 47 Q50 44 84 47" stroke="rgba(255,255,255,.07)" stroke-width="1" fill="none"/>
-  <path d="M15 65 Q50 62 85 65" stroke="rgba(0,0,0,.18)" stroke-width="2" fill="none"/>
-  <path d="M15 64 Q50 61 85 64" stroke="rgba(255,255,255,.07)" stroke-width="1" fill="none"/>
-  <path d="M15 82 Q50 79 85 82" stroke="rgba(0,0,0,.18)" stroke-width="2" fill="none"/>
-  <path d="M15 81 Q50 78 85 81" stroke="rgba(255,255,255,.07)" stroke-width="1" fill="none"/>
-  <path d="M14 99 Q50 96 86 99" stroke="rgba(0,0,0,.18)" stroke-width="2" fill="none"/>
-  <!-- pannello frontale etichetta -->
-  <rect x="28" y="52" width="44" height="24" rx="4" fill="rgba(255,255,255,.09)"/>
-  <rect x="28" y="52" width="44" height="4"  rx="4" fill="rgba(255,255,255,.18)"/>
-  <!-- bordo coperchio (rim) -->
-  <rect x="13" y="22" width="74" height="10" rx="5" fill="${drk}"/>
-  <rect x="13" y="22" width="74" height="4"  rx="5" fill="rgba(255,255,255,.15)"/>
+  <rect x="14" y="85" width="52" height="5" rx="2.5" fill="${drk2}"/>
+  <!-- ruote sx -->
+  <circle cx="19" cy="90"  r="7.5" fill="${drk2}"/>
+  <circle cx="19" cy="90"  r="4"   fill="#0e0e0e"/>
+  <circle cx="19" cy="90"  r="1.8" fill="#1c1c1c"/>
+  <circle cx="17" cy="88"  r="1"   fill="rgba(255,255,255,.18)"/>
+  <!-- ruote dx -->
+  <circle cx="61" cy="90"  r="7.5" fill="${drk2}"/>
+  <circle cx="61" cy="90"  r="4"   fill="#0e0e0e"/>
+  <circle cx="61" cy="90"  r="1.8" fill="#1c1c1c"/>
+  <circle cx="59" cy="88"  r="1"   fill="rgba(255,255,255,.18)"/>
+  <!-- corpo bidone (trapezio) -->
+  <path d="M17 22 L10 82 Q10 87 16 87 H64 Q70 87 70 82 L63 22 Z" fill="url(#${uid}bg)" filter="url(#${uid}dr)"/>
+  <path d="M17 22 L10 82 Q10 87 16 87 H64 Q70 87 70 82 L63 22 Z" fill="url(#${uid}sh)"/>
+  <!-- bordo luminoso sinistra -->
+  <path d="M17 22 L10 82 Q10 87 16 87 H19 L12 22 Z" fill="rgba(255,255,255,.22)"/>
+  <!-- ombra destra -->
+  <path d="M63 22 L70 82 Q70 87 64 87 H61 L68 22 Z" fill="rgba(0,0,0,.2)"/>
+  <!-- striscia frontale decorativa -->
+  <rect x="22" y="46" width="36" height="3" rx="1.5" fill="rgba(255,255,255,.13)"/>
+  <rect x="22" y="56" width="36" height="3" rx="1.5" fill="rgba(255,255,255,.08)"/>
+  <rect x="22" y="66" width="36" height="3" rx="1.5" fill="rgba(255,255,255,.05)"/>
+  <!-- bordo sotto coperchio (rim) -->
+  <rect x="9"  y="17" width="62" height="7" rx="3.5" fill="${drk}"/>
+  <rect x="9"  y="17" width="62" height="3" rx="3.5" fill="rgba(255,255,255,.18)"/>
   <!-- coperchio -->
-  <rect x="11" y="10" width="78" height="14" rx="6" fill="url(#${uid}l)"/>
-  <!-- speculare coperchio -->
-  <rect x="11" y="10" width="78" height="14" rx="6" fill="url(#${uid}lsp)"/>
-  <!-- cerniera -->
-  <rect x="38" y="9" width="24" height="4" rx="2" fill="${drk2}"/>
+  <rect x="7"  y="6"  width="66" height="13" rx="5" fill="url(#${uid}ld)"/>
+  <rect x="7"  y="6"  width="66" height="13" rx="5" fill="url(#${uid}sp)"/>
+  <!-- cerniera centrale -->
+  <rect x="32" y="5"  width="16" height="3.5" rx="1.75" fill="${drk2}"/>
   <!-- manico -->
-  <path d="M34 3 Q50 -1 66 3 L66 10 Q50 6 34 10 Z" fill="${drk}"/>
-  <path d="M34 3 Q50 -1 66 3 L66 5.5 Q50 1.5 34 5.5 Z" fill="rgba(255,255,255,.25)"/>
+  <path d="M30 1 Q40 -3 50 1 L50 5 Q40 1 30 5 Z" fill="${drk}"/>
+  <path d="M30 1 Q40 -3 50 1 L50 2.8 Q40 -1 30 2.8 Z" fill="rgba(255,255,255,.3)"/>
 </svg>`;
   }
 
   function emptyBinSvg(sz) {
-    return `<svg width="${sz}" height="${Math.round(sz*1.25)}" viewBox="0 0 100 126" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <ellipse cx="50" cy="123" rx="32" ry="4.5" fill="rgba(255,255,255,.04)"/>
-  <rect x="20" y="108" width="60" height="6" rx="3" fill="rgba(255,255,255,.05)"/>
-  <circle cx="26" cy="114" r="9" fill="rgba(255,255,255,.05)"/>
-  <circle cx="74" cy="114" r="9" fill="rgba(255,255,255,.05)"/>
-  <path d="M20 30 L14 105 Q14 110 21 110 H79 Q86 110 86 105 L80 30 Z" fill="rgba(255,255,255,.04)"/>
-  <rect x="13" y="22" width="74" height="10" rx="5" fill="rgba(255,255,255,.05)"/>
-  <rect x="11" y="10" width="78" height="14" rx="6" fill="rgba(255,255,255,.06)"/>
-  <path d="M30 40 L70 90 M70 40 L30 90" stroke="rgba(255,255,255,.1)" stroke-width="4" stroke-linecap="round"/>
+    const h = Math.round(sz * 1.3);
+    return `<svg width="${sz}" height="${h}" viewBox="0 0 80 104" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="40" cy="101" rx="26" ry="3.5" fill="rgba(255,255,255,.03)"/>
+  <rect x="14" y="85" width="52" height="5" rx="2.5" fill="rgba(255,255,255,.04)"/>
+  <circle cx="19" cy="90" r="7.5" fill="rgba(255,255,255,.04)"/>
+  <circle cx="61" cy="90" r="7.5" fill="rgba(255,255,255,.04)"/>
+  <path d="M17 22 L10 82 Q10 87 16 87 H64 Q70 87 70 82 L63 22 Z" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.08)" stroke-width="1"/>
+  <rect x="9"  y="17" width="62" height="7"  rx="3.5" fill="rgba(255,255,255,.05)"/>
+  <rect x="7"  y="6"  width="66" height="13" rx="5"   fill="rgba(255,255,255,.06)"/>
+  <line x1="27" y1="38" x2="53" y2="78" stroke="rgba(255,255,255,.12)" stroke-width="4" stroke-linecap="round"/>
+  <line x1="53" y1="38" x2="27" y2="78" stroke="rgba(255,255,255,.12)" stroke-width="4" stroke-linecap="round"/>
 </svg>`;
   }
 
@@ -175,12 +166,12 @@
     const statusCol   = hasPickup ? '34,197,94' : '100,116,139';
 
     /* bidoni hero */
-    const binSz = todayWastes.length <= 1 ? 82 : todayWastes.length === 2 ? 66 : 52;
+    const binSz = todayWastes.length <= 1 ? 96 : todayWastes.length === 2 ? 74 : 58;
     let binsHtml = '';
     if (!hasPickup) {
-      binsHtml = '<div style="display:flex;justify-content:center">' + emptyBinSvg(72) + '</div>';
+      binsHtml = '<div style="display:flex;justify-content:center;align-items:flex-end;height:100%">' + emptyBinSvg(86) + '</div>';
     } else {
-      binsHtml = '<div style="display:flex;align-items:flex-end;justify-content:center;gap:4px">'
+      binsHtml = '<div style="display:flex;align-items:flex-end;justify-content:center;gap:6px;height:100%">'
         + todayWastes.map(function(id) { return binSvg(getClr(id), binSz); }).join('')
         + '</div>';
     }
@@ -205,37 +196,21 @@
       : '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.4);margin-top:10px;margin-bottom:5px">Per domani</div>'
         + '<div style="font-size:11px;color:rgba(255,255,255,.3);padding:6px 0">Nessun ritiro</div>';
 
-    /* settimana mini */
-    const weekHtml = DAYS.map(function(d, i) {
-      const ws = parseWastes(S(h, 'input_text.frarik_differenziata_rifiuto_' + d) || '');
-      const isToday = i === ti;
-      const dots = ws.length
-        ? ws.map(function(id) {
-            return '<div style="width:7px;height:7px;border-radius:50%;background:' + getClr(id) + '"></div>';
-          }).join('')
-        : '<div style="width:7px;height:2px;border-radius:1px;background:rgba(255,255,255,.12);margin:2px auto"></div>';
-      return '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 2px;border-radius:7px;background:' + (isToday ? 'rgba(255,255,255,.07)' : 'rgba(255,255,255,.02)') + ';border:1px solid ' + (isToday ? 'rgba(255,255,255,.2)' : 'rgba(255,255,255,.05)') + '">'
-        + '<div style="font-size:7px;font-weight:' + (isToday ? '800' : '600') + ';color:' + (isToday ? '#fff' : 'rgba(255,255,255,.4)') + '">' + DLBL[i] + '</div>'
-        + '<div style="display:flex;flex-direction:column;align-items:center;gap:1px">' + dots + '</div>'
-        + '</div>';
-    }).join('');
-
     const css = '<style>'
       + '#' + rid + '{position:relative;width:100%;height:100%;min-height:260px;font-family:system-ui,sans-serif;display:block}'
       + '#' + rid + ' .fc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
-      + '#' + rid + ' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(34,197,94,.06) 0%,transparent 65%);pointer-events:none}'
+      + '#' + rid + ' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:220px;background:radial-gradient(ellipse at 20% 0%,rgba(34,197,94,.07) 0%,transparent 65%);pointer-events:none}'
       + '#' + rid + ' .fc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
       + '#' + rid + ' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.22)}'
       + '#' + rid + ' .fc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
       + '#' + rid + ' .fc-hdr-pill{font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;white-space:nowrap;display:flex;align-items:center;gap:4px}'
       + '#' + rid + ' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
       + '#' + rid + ' .fc-scroll::-webkit-scrollbar{display:none}'
-      + '#' + rid + ' .fc-hero{display:flex;align-items:stretch;padding:10px 14px 8px;flex:1}'
-      + '#' + rid + ' .fc-hero-img{flex:1;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;max-height:140px}'
+      + '#' + rid + ' .fc-hero{display:flex;align-items:stretch;padding:12px 14px 10px;flex:1;min-height:0}'
+      + '#' + rid + ' .fc-hero-img{flex:0 0 48%;display:flex;align-items:flex-end;justify-content:center;overflow:hidden}'
       + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;justify-content:flex-start;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:12px;overflow:hidden}'
-      + '#' + rid + ' .fc-week{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin:0 14px 10px;padding-top:8px;border-top:1px solid rgba(255,255,255,.05)}'
-      + '#' + rid + ' .fc-btns{display:flex;gap:6px;padding:0 14px 12px}'
-      + '#' + rid + ' .fc-btn{flex:1;padding:8px 4px;border-radius:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:10px;font-weight:700;color:#fff;text-align:center;cursor:pointer;transition:all .15s}'
+      + '#' + rid + ' .fc-btns{display:flex;gap:6px;padding:0 14px 12px;flex-shrink:0}'
+      + '#' + rid + ' .fc-btn{flex:1;padding:9px 4px;border-radius:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:10px;font-weight:700;color:#fff;text-align:center;cursor:pointer;transition:all .15s}'
       + '#' + rid + ' .fc-btn:hover{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.3);color:#4ade80}'
       + '#' + rid + ' [data-sya]{cursor:pointer}'
       + '</style>';
@@ -257,7 +232,6 @@
       + tomorrow
       + '</div>'
       + '</div>'
-      + '<div class="fc-week">' + weekHtml + '</div>'
       + '<div class="fc-btns">'
       + '<div class="fc-btn" data-sya="popup-imp">⚙ Impostazioni</div>'
       + '</div>'
@@ -292,36 +266,43 @@
     const googleOn = S(h, 'input_boolean.frarik_differenziata_notifica_google') === 'on';
     const notifT   = (S(h, 'input_datetime.frarik_differenziata_orario_notifica') || '00:00:00').slice(0,5);
 
-    /* pills giorni */
+    /* pills giorni — layout a blocco per giorno */
     function renderGiorni() {
       return DAYS.map(function(d, i) {
+        var hasSel = dayState[d].size > 0;
         var pills = TIPI.map(function(t) {
           var sel = dayState[d].has(t.id);
-          var bc = sel ? getClr(t.id) : 'rgba(255,255,255,.12)';
-          var bg = sel ? 'rgba(' + parseInt(getClr(t.id).slice(1,3),16)+','+parseInt(getClr(t.id).slice(3,5),16)+','+parseInt(getClr(t.id).slice(5,7),16)+',.15)' : 'rgba(255,255,255,.04)';
-          var fc = sel ? '#fff' : 'rgba(255,255,255,.5)';
-          return '<button data-di="' + d + '" data-ti="' + t.id + '" style="padding:4px 9px;border-radius:20px;border:1.5px solid ' + bc + ';background:' + bg + ';color:' + fc + ';font-size:11px;font-weight:700;cursor:pointer;font-family:system-ui">' + t.label + '</button>';
+          var c = getClr(t.id);
+          var border = sel ? c : 'rgba(255,255,255,.1)';
+          var bg     = sel ? 'rgba(0,0,0,.25)' : 'rgba(255,255,255,.03)';
+          var dot    = '<div style="width:8px;height:8px;border-radius:50%;background:' + (sel ? c : 'rgba(255,255,255,.2)') + ';flex-shrink:0"></div>';
+          var fc     = sel ? '#fff' : 'rgba(255,255,255,.45)';
+          return '<button data-di="' + d + '" data-ti="' + t.id + '" style="display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;border:1.5px solid ' + border + ';background:' + bg + ';color:' + fc + ';font-size:11px;font-weight:700;cursor:pointer;font-family:system-ui;transition:all .15s">'
+            + dot + t.label + '</button>';
         }).join('');
-        return '<div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
-          + '<div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.45);width:22px;flex-shrink:0">' + DLBL[i] + '</div>'
-          + '<div style="display:flex;gap:4px;flex-wrap:wrap">' + pills + '</div>'
+        var dayColor = hasSel ? '#fff' : 'rgba(255,255,255,.35)';
+        return '<div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
+          + '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:' + dayColor + ';margin-bottom:6px">' + DFULL[i] + '</div>'
+          + '<div style="display:flex;gap:5px;flex-wrap:wrap">' + pills + '</div>'
           + '</div>';
       }).join('');
     }
 
-    /* swatches colori */
-    const PALETTE = ['#92400e','#b45309','#d97706','#16a34a','#15803d','#1d4ed8','#2563eb','#4b5563','#374151','#7c3aed','#db2777','#e11d48'];
+    /* colori — una riga per tipo, palette colorata */
+    const PALETTE = ['#92400e','#c2410c','#d97706','#ca8a04','#16a34a','#15803d','#0284c7','#1d4ed8','#374151','#4b5563','#7c3aed','#9333ea','#db2777','#e11d48'];
     function renderColori() {
       return TIPI.map(function(t) {
         var cur = getClr(t.id);
         var sws = PALETTE.map(function(c) {
-          var active = c === cur ? ';outline:2px solid #fff;outline-offset:1px;transform:scale(1.15)' : '';
-          return '<div data-ci="' + t.id + '" data-cv="' + c + '" style="width:20px;height:20px;border-radius:50%;background:' + c + ';cursor:pointer;flex-shrink:0' + active + '"></div>';
+          var ring = c === cur ? ';box-shadow:0 0 0 2px #fff,0 0 0 4px ' + c + ';transform:scale(1.12)' : '';
+          return '<div data-ci="' + t.id + '" data-cv="' + c + '" style="width:22px;height:22px;border-radius:50%;background:' + c + ';cursor:pointer;flex-shrink:0;transition:transform .12s' + ring + '"></div>';
         }).join('');
-        return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
-          + '<div style="font-size:12px;font-weight:700;color:#fff;width:60px;flex-shrink:0">' + t.label + '</div>'
-          + '<div style="display:flex;gap:4px;flex-wrap:wrap;flex:1">' + sws
-          + '<input type="color" data-ci="' + t.id + '" value="' + cur + '" style="width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.15);cursor:pointer;padding:0;background:none;flex-shrink:0" title="Colore personalizzato">'
+        return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
+          + '<div style="width:30px;height:30px;border-radius:9px;background:' + cur + ';flex-shrink:0;border:2px solid rgba(255,255,255,.18)"></div>'
+          + '<div style="font-size:12px;font-weight:700;color:#fff;width:56px;flex-shrink:0">' + t.label + '</div>'
+          + '<div style="display:flex;gap:4px;flex-wrap:wrap;flex:1;align-items:center">'
+          + sws
+          + '<input type="color" data-ci="' + t.id + '" value="' + cur + '" style="width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.15);cursor:pointer;padding:0;background:none;flex-shrink:0" title="Colore libero">'
           + '</div>'
           + '</div>';
       }).join('');
@@ -329,34 +310,35 @@
 
     /* toggle */
     function tog(id, on, lbl, sub) {
-      var onCs = on ? 'background:#22c55e' : 'background:rgba(255,255,255,.15)';
-      var knob = on ? 'left:20px' : 'left:3px';
-      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
-        + '<div><div style="font-size:13px;font-weight:700;color:#fff">' + lbl + '</div><div style="font-size:10px;color:rgba(255,255,255,.4)">' + sub + '</div></div>'
-        + '<div data-tg="' + id + '" style="width:38px;height:22px;border-radius:11px;' + onCs + ';cursor:pointer;position:relative;flex-shrink:0;transition:background .2s">'
-        + '<div style="position:absolute;top:3px;' + knob + ';width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s"></div>'
+      var bg   = on ? '#22c55e' : 'rgba(255,255,255,.12)';
+      var knob = on ? 'left:22px' : 'left:3px';
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
+        + '<div><div style="font-size:13px;font-weight:700;color:#fff">' + lbl + '</div>'
+        + '<div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:1px">' + sub + '</div></div>'
+        + '<div data-tg="' + id + '" style="width:44px;height:26px;border-radius:13px;background:' + bg + ';cursor:pointer;position:relative;flex-shrink:0;transition:background .18s">'
+        + '<div style="position:absolute;top:3px;' + knob + ';width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.4);transition:left .18s"></div>'
         + '</div>'
         + '</div>';
     }
 
-    /* salva btn */
-    const saveBtn = '<button id="dd-save" style="width:100%;margin-top:14px;padding:14px;border-radius:13px;background:#22c55e;border:none;color:#060d14;font-size:14px;font-weight:900;cursor:pointer;font-family:system-ui">💾 Salva impostazioni</button>';
+    const saveBtn = '<button id="dd-save" style="width:100%;margin-top:16px;padding:14px;border-radius:13px;background:#22c55e;border:none;color:#060d14;font-size:14px;font-weight:900;cursor:pointer;font-family:system-ui;letter-spacing:.01em">💾 Salva impostazioni</button>';
 
-    const content = sttl('🗓 Giorni — scegli i rifiuti (multiplo)')
+    const content = sttl('📅 Rifiuti per giorno')
       + '<div id="dd-giorni">' + renderGiorni() + '</div>'
       + sttl('🎨 Colori per tipo')
       + '<div id="dd-colori">' + renderColori() + '</div>'
       + sttl('🔔 Notifiche')
-      + tog('push',   pushOn,   '📱 Push',   'Notifica app mobile')
+      + tog('push',   pushOn,   '📱 Push',   'Notifica su app mobile')
       + tog('alexa',  alexaOn,  '🗣 Alexa',  'Annuncio vocale Alexa')
       + tog('google', googleOn, '🔊 Google', 'Annuncio vocale Google')
-      + '<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0">'
-      + '<div><div style="font-size:13px;font-weight:700;color:#fff">⏰ Orario</div><div style="font-size:10px;color:rgba(255,255,255,.4)">Il giorno della raccolta</div></div>'
-      + '<input type="time" id="dd-time" value="' + notifT + '" style="height:30px;padding:0 8px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;font-size:13px;font-family:system-ui">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0">'
+      + '<div><div style="font-size:13px;font-weight:700;color:#fff">⏰ Orario</div>'
+      + '<div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:1px">Il giorno della raccolta</div></div>'
+      + '<input type="time" id="dd-time" value="' + notifT + '" style="height:32px;padding:0 10px;border-radius:9px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:#fff;font-size:13px;font-family:system-ui">'
       + '</div>'
       + saveBtn;
 
-    var ov = mkOv(popShell('🗑️', '34,197,94', 'Impostazioni Differenziata', 'Giorni, colori, notifiche', 'dd-close', content), 'dd-close');
+    var ov = mkOv(popShell('♻️', '34,197,94', 'Raccolta Differenziata', 'Configura giorni, colori e notifiche', 'dd-close', content), 'dd-close');
 
     /* pill click */
     ov.querySelector('#dd-giorni').addEventListener('click', function(e) {
@@ -376,35 +358,33 @@
     ov.querySelector('#dd-colori').addEventListener('input', function(e) {
       var inp = e.target.closest('input[type="color"][data-ci]'); if (!inp) return;
       saveClr(inp.dataset.ci, inp.value);
+      ov.querySelector('#dd-colori').innerHTML = renderColori();
       ov.querySelector('#dd-giorni').innerHTML = renderGiorni();
     });
 
     /* toggle click */
     ov.addEventListener('click', function(e) {
       var tg = e.target.closest('[data-tg]'); if (!tg) return;
-      var on = tg.style.background === 'rgb(34, 197, 94)';
-      tg.style.background = on ? 'rgba(255,255,255,.15)' : 'rgb(34,197,94)';
+      var on = tg.style.background === 'rgb(34, 197, 94)' || tg.style.background === '#22c55e';
+      tg.style.background = on ? 'rgba(255,255,255,.12)' : '#22c55e';
       var knob = tg.querySelector('div');
-      if (knob) knob.style.left = on ? '3px' : '20px';
+      if (knob) knob.style.left = on ? '3px' : '22px';
     });
 
     /* salva */
     ov.querySelector('#dd-save').addEventListener('click', function() {
-      /* giorni */
       DAYS.forEach(function(d) {
         callSvc('input_text', 'set_value', { entity_id: 'input_text.frarik_differenziata_rifiuto_' + d, value: [...dayState[d]].join(',') });
       });
-      /* notifiche toggles */
       ov.querySelectorAll('[data-tg]').forEach(function(tg) {
         var id = tg.dataset.tg;
-        var on = tg.style.background === 'rgb(34,197,94)' || tg.style.background === 'rgb(34, 197, 94)';
+        var on = tg.style.background === '#22c55e' || tg.style.background === 'rgb(34, 197, 94)';
         callSvc('input_boolean', on ? 'turn_on' : 'turn_off', { entity_id: 'input_boolean.frarik_differenziata_notifica_' + id });
       });
-      /* orario */
-      var tv = ov.querySelector('#dd-time'); if (tv && tv.value) callSvc('input_datetime', 'set_datetime', { entity_id: 'input_datetime.frarik_differenziata_orario_notifica', time: tv.value + ':00' });
-      /* feedback */
+      var tv = ov.querySelector('#dd-time');
+      if (tv && tv.value) callSvc('input_datetime', 'set_datetime', { entity_id: 'input_datetime.frarik_differenziata_orario_notifica', time: tv.value + ':00' });
       var sb = ov.querySelector('#dd-save');
-      sb.textContent = '✅ Salvato!'; sb.style.background = 'rgba(34,197,94,.6)';
+      sb.textContent = '✅ Salvato!'; sb.style.background = 'rgba(34,197,94,.5)';
       setTimeout(function() { sb.textContent = '💾 Salva impostazioni'; sb.style.background = '#22c55e'; }, 2000);
     });
   }
@@ -458,7 +438,7 @@
     name: 'Raccolta Differenziata',
     description: 'Card rifiuti differenziata con multi-selezione per giorno, bidoni realistici e colori personalizzabili.',
     icon: 'mdi:recycle',
-    version: '5.0',
+    version: '5.1',
     frarik_pkg_check: 'sensor.frarik_differenziata_versione',
     frarik_pkg_id: 'frarik_differenziata',
     frarik_pkg_version: '2.0',
