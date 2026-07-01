@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.36 — 2026-07-01
+
+### fix: Differenziata v5.8 — ripristino background identico a Lavatrice
+
+- fc-card torna a background:linear-gradient(155deg,...) + border-radius:18px identico a Lavatrice/Frigorifero
+
 ## 1.7.35 — 2026-07-01
 
 ### fix: Differenziata v5.7 — ripristino sfondo card
