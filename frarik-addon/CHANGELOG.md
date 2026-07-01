@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.19 — 2026-07-01
+
+### fix: rimosse PKG duplicate + fix installazione PKG senza wizard
+
+- Rimossi `pkg/centro_controllo_*.yaml` (11 file) e `pkg/posta.yaml` — rimangono solo i `frarik_*.yaml`
+- Fix `_pkgGenericInstall`: non usava più `_ghsCache.pkg` (mai popolato) ma ora scarica il YAML direttamente da `raw.githubusercontent.com`
+
 ## 1.7.18 — 2026-07-01
 
 ### feat: PKG elettrodomestici rinominati in standard frarik_ + card JS allineate

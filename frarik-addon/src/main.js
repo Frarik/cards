@@ -3283,12 +3283,13 @@ async function _pkgGenericInstall(cardId,pkgVer,pkgInfo,f,code,res){
   const file=pkgInfo?.file||'';
   if(!file){ showToast('⚠️ Wizard non disponibile e nessun file pkg specificato'); return; }
   const pkgName=file.split('/').pop();
-  const ghFiles=(_ghsCache.pkg||[]);
-  const ghFile=ghFiles.find(x=>x.name===pkgName||x.name===file.split('/').pop());
-  if(!ghFile){ showToast('⚠️ Package "'+pkgName+'" non trovato nel repo — caricarlo manualmente nel tab Packages'); return; }
   showToast('⏳ Installo package…');
   try{
-    const content=await _ghDownload(ghFile);
+    const g=_ghCfg();
+    const rawUrl=`https://raw.githubusercontent.com/${g.owner||'Frarik'}/${g.repo||'cards'}/${g.branch||'main'}/pkg/${pkgName}`;
+    const ghR=await fetch(rawUrl);
+    if(!ghR.ok){ showToast('⚠️ Package "'+pkgName+'" non trovato nel repo — caricarlo manualmente nel tab Packages'); return; }
+    const content=await ghR.text();
     const r=await fetch(ADDON_BASE+'/api/frarik/pkg/install',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:file,content})});
     const d=await r.json();
     if(!d.ok){ showToast('⚠️ Errore installazione: '+(d.error||'?')); return; }
