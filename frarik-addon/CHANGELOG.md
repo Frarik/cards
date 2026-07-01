@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.38 — 2026-07-01
+
+### fix: Differenziata v5.9 — sfondo uniforme, no zona scura sui bottoni
+
+- fc-card background cambiato da linear-gradient 155° (che scuriva bordi top/bottom, zona bottoni visibilmente più scura) a #070d18 uniforme
+- Ripristinati main.js e tutte le altre card JS al loro stato precedente
+
 ## 1.7.37 — 2026-07-01
 
 ### fix: doppio sfondo su tutte le card JS eliminato
