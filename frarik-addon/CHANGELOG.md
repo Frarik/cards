@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.25 — 2026-07-01
+
+### fix: "Aggiorna PKG" non installava il YAML su HA
+
+- `_pkgUpdateCard`: rimosso il ramo `openWizard` per gli aggiornamenti — il wizard è solo per l'installazione iniziale dove l'utente configura i placeholder; negli update si usa sempre `_pkgGenericInstall` che scarica e scrive il YAML da GitHub
+- `_pkgGenericInstall`: guardia su `f`/`res` null (chiamata da update path) — evita crash TypeError `null.newCards` che impediva `_pkgPostInstall` e mostrava un errore fuorviante
+
 ## 1.7.24 — 2026-07-01
 
 ### fix: Differenziata — "Aggiorna PKG" non funzionava

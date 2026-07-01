@@ -3296,7 +3296,8 @@ async function _pkgGenericInstall(cardId,pkgVer,pkgInfo,f,code,res){
     const d=await r.json();
     if(!d.ok){ showToast('⚠️ Errore installazione: '+(d.error||'?')); return; }
     _savePkgVer(cardId,pkgVer);
-    _ghsDoInstall(f,code,res);
+    if(f&&res) _ghsDoInstall(f,code,res);
+    else{ if(typeof _ghStoreRender==='function') _ghStoreRender(); }
     await _pkgPostInstall(cardId,pkgVer);
   }catch(e){ showToast('⚠️ '+e.message); }
 }
@@ -3402,20 +3403,11 @@ async function _pkgUpdateCard(cardId, silent=false){
     return;
   }
 
-  /* nessuna config salvata oppure chiamata manuale → apri wizard */
-  const _ctor3=customElements.get(cardId);
-  const _reg3=window.FratechCardRegistry?.[cardId]??window.FratechCardRegistry?.[cardId.toLowerCase()];
-  const CardClass=typeof _ctor3?.openWizard==='function'?_ctor3:(_reg3??_ctor3);
-  if(typeof CardClass?.openWizard==='function'){
-    CardClass.openWizard(_haHassObj(),()=>{
-      _savePkgVer(cardId,pkgInfo.ver);
-      _loadHaInstalledPkgs().then(()=>{ if(typeof _ghStoreRender==='function') _ghStoreRender(); });
-    });
-  } else {
-    await _pkgGenericInstall(cardId,pkgInfo.ver,pkgInfo,null,it.code,null);
-    _savePkgVer(cardId,pkgInfo.ver);
-    _loadHaInstalledPkgs().then(()=>{ if(typeof _ghStoreRender==='function') _ghStoreRender(); });
-  }
+  /* aggiornamento: reinstalla sempre il YAML da GitHub senza aprire wizard.
+     Il wizard (openWizard) è solo per l'install iniziale dove l'utente deve
+     configurare i placeholder — in update il YAML è già configurato su HA. */
+  await _pkgGenericInstall(cardId,pkgInfo.ver,pkgInfo,null,it.code,null);
+  _loadHaInstalledPkgs().then(()=>{ if(typeof _ghStoreRender==='function') _ghStoreRender(); });
 }
 
 async function _ghsCopy(name){
