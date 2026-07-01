@@ -18,15 +18,15 @@
   /* ── DEFAULT ENTITIES ── */
   function pkDefaults() {
     return {
-      pk_power:      'sensor.potenza_scaldabagno_w',
+      pk_power:      'sensor.frarik_scaldabagno_potenza_w',
       pk_switch:     'switch.presa_scaldabagno',
       pk_temp_acqua: 'sensor.scaldabagno_temperatura_acqua',
       pk_temp_set:   'number.scaldabagno_setpoint',
-      pk_kwh_oggi:   'sensor.scaldabagno_energy_oggi',
-      pk_kwh_mese:   'sensor.scaldabagno_energy_mese',
-      pk_kwh_anno:   'sensor.scaldabagno_energy_anno',
-      pk_time_on:    'sensor.time_on_scaldabagno',
-      pk_soglia:     'input_number.scaldabagno_soglia_w',
+      pk_kwh_oggi:   'sensor.frarik_scaldabagno_energy_oggi',
+      pk_kwh_mese:   'sensor.frarik_scaldabagno_energy_mese',
+      pk_kwh_anno:   'sensor.frarik_scaldabagno_energy_anno',
+      pk_time_on:    'sensor.frarik_scaldabagno_time_on',
+      pk_soglia:     'input_number.frarik_scaldabagno_soglia_w',
     };
   }
 
@@ -337,17 +337,17 @@
 
     const formHtml = '<div style="margin-bottom:10px"><label style="' + stLbl + '">Nome card</label><input id="fc-name" type="text" value="' + (c.name || '').replace(/"/g, '&quot;') + '" placeholder="es. Scaldabagno bagno" style="' + stInp.replace('monospace', 'system-ui') + '"></div>'
       + '<div style="' + stSec + '">Sensori principali</div>'
-      + field('fc-power',    'Potenza istantanea (W)',   c.pk_power,      'sensor.potenza_scaldabagno_w')
+      + field('fc-power',    'Potenza istantanea (W)',   c.pk_power,      'sensor.frarik_scaldabagno_potenza_w')
       + field('fc-switch',   'Switch / presa',            c.pk_switch,     'switch.presa_scaldabagno')
       + field('fc-temp-acq', 'Temperatura acqua (°C)', c.pk_temp_acqua, 'sensor.scaldabagno_temperatura_acqua')
       + field('fc-temp-set', 'Setpoint temperatura',     c.pk_temp_set,   'number.scaldabagno_setpoint')
       + '<div style="' + stSec + '">PKG — Energia (kWh)</div>'
-      + field('fc-kwh-oggi', 'kWh oggi',  c.pk_kwh_oggi, 'sensor.scaldabagno_energy_oggi')
-      + field('fc-kwh-mese', 'kWh mese',  c.pk_kwh_mese, 'sensor.scaldabagno_energy_mese')
-      + field('fc-kwh-anno', 'kWh anno',  c.pk_kwh_anno, 'sensor.scaldabagno_energy_anno')
+      + field('fc-kwh-oggi', 'kWh oggi',  c.pk_kwh_oggi, 'sensor.frarik_scaldabagno_energy_oggi')
+      + field('fc-kwh-mese', 'kWh mese',  c.pk_kwh_mese, 'sensor.frarik_scaldabagno_energy_mese')
+      + field('fc-kwh-anno', 'kWh anno',  c.pk_kwh_anno, 'sensor.frarik_scaldabagno_energy_anno')
       + '<div style="' + stSec + '">PKG — Statistiche</div>'
-      + field('fc-time-on',  'Sensore time_on', c.pk_time_on, 'sensor.time_on_scaldabagno')
-      + field('fc-soglia',   'Soglia riscaldamento (W)', c.pk_soglia, 'input_number.scaldabagno_soglia_w')
+      + field('fc-time-on',  'Sensore time_on', c.pk_time_on, 'sensor.frarik_scaldabagno_time_on')
+      + field('fc-soglia',   'Soglia riscaldamento (W)', c.pk_soglia, 'input_number.frarik_scaldabagno_soglia_w')
       + '<div style="display:flex;gap:8px;margin-top:16px">'
       + '<button id="fc-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button>'
       + '<button id="fc-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#f97316;color:#060d14">Salva</button>'

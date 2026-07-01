@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.7.18 — 2026-07-01
+
+### feat: PKG elettrodomestici rinominati in standard frarik_ + card JS allineate
+
+- Creati 9 PKG `frarik_[nome].yaml` per tutti gli elettrodomestici (lavatrice, asciugatrice, lavastoviglie, friggitrice, forno, microonde, induzione, frigorifero, scaldabagno)
+- Tutte le entità interne rinominate con prefisso `frarik_[nome]_*` (nessun più senza prefisso)
+- Placeholder utente standardizzati: `IL_TUO_SENSORE_POTENZA`, `IL_TUO_SWITCH`, `IL_TUO_MEDIA_PLAYER_*`, `IL_TUO_MOBILE_APP_*`
+- Creato `frarik_scaldabagno.yaml` da zero (nessun sorgente precedente)
+- Card JS (8 elettrodomestici): `pkDefaults()` aggiornati con nomi entità `frarik_*`, template embedded sostituiti con PKG corretti, fix copy-paste "Frigo" in Lavatrice.js
+- Card JS: Scaldabagno.js `pkDefaults()` aggiornato con entità `frarik_scaldabagno_*`
+- Creati `frarik_differenziata.yaml`, `frarik_irrigazione.yaml`, `frarik_antizanzare.yaml`
+- Aggiornati URL fetch GitHub in Differenziata.js, Irrigazione.js, Antizanzare.js → puntano a `frarik_*.yaml`
+
 ## 1.7.17 — 2026-06-30
 
 ### feat: Differenziata v3.0 — layout 2 colonne + doppio rifiuto

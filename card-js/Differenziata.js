@@ -739,7 +739,7 @@ window.customCards.push({ version: '1.0',
         btn.classList.add('wd-loading'); btn.textContent = 'Download PKG…';
         var yaml;
         try {
-          var ghR = await fetch('https://raw.githubusercontent.com/Frarik/cards/main/pkg/centro_controllo_differenziata.yaml');
+          var ghR = await fetch('https://raw.githubusercontent.com/Frarik/cards/main/pkg/frarik_differenziata.yaml');
           if (ghR.ok) {
             yaml = _buildPkgDIFF(push, google, alexa, await ghR.text());
           }

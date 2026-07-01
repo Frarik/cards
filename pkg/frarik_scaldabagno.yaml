@@ -1,0 +1,406 @@
+###############################################################
+#                                                             #
+#   ███████╗██████╗  █████╗ ██████╗ ██╗██╗  ██╗             #
+#   ██╔════╝██╔══██╗██╔══██╗██╔══██╗██║██║ ██╔╝             #
+#   █████╗  ██████╔╝███████║██████╔╝██║█████╔╝              #
+#   ██╔══╝  ██╔══██╗██╔══██║██╔══██╗██║██╔═██╗              #
+#   ██║     ██║  ██║██║  ██║██║  ██║██║██║  ██╗             #
+#   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝            #
+#                                                             #
+#   Package: Frarik — Centro Controllo Scaldabagno           #
+#   Versione: 1.0  |  Frarik / Fratech                       #
+#                                                             #
+###############################################################
+#
+# COSA FA QUESTO PACKAGE
+# ──────────────────────────────────────────────────────────
+#  ▸ Monitoraggio potenza istantanea riscaldamento (W)
+#  ▸ Tracciamento energia consumata (kWh) giorno/mese/anno
+#  ▸ Calcolo costi energetici (usa input_number.costo_energia)
+#  ▸ Sensore time_on con attributi costo giornaliero
+#  ▸ Notifiche riscaldamento completato (Push / Alexa / Google)
+#  ▸ Soglia riscaldamento configurabile
+#
+###############################################################
+#
+# INSTALLAZIONE
+# ──────────────────────────────────────────────────────────
+#  1. Verifica che configuration.yaml contenga:
+#
+#       homeassistant:
+#         packages: !include_dir_named packages
+#
+#  2. Copia questo file nella cartella "packages/frarik"
+#
+#  3. Modifica le righe nella sezione IMPOSTAZIONI:
+#     - Sensore potenza della presa (es. sensor.presa_scaldabagno_potenza)
+#     - Switch della presa (es. switch.presa_scaldabagno)
+#     - Sensore temperatura acqua (opzionale)
+#     - Setpoint temperatura (opzionale)
+#
+#  4. Riavvia Home Assistant
+#
+#  5. Nella card Frarik → Configura → collega le entità pkg
+#
+###############################################################
+#
+# ENTITÀ CREATE DA QUESTO PACKAGE
+# ──────────────────────────────────────────────────────────
+#  sensor.frarik_scaldabagno_potenza_w      ← potenza istantanea
+#  sensor.frarik_scaldabagno_kwh            ← kWh totali (integration)
+#  sensor.frarik_scaldabagno_energy_oggi    ← kWh oggi (utility meter)
+#  sensor.frarik_scaldabagno_energy_mese    ← kWh mese
+#  sensor.frarik_scaldabagno_energy_anno    ← kWh anno
+#  sensor.frarik_scaldabagno_time_on        ← tempo attivo + attributi costo
+#  binary_sensor.frarik_scaldabagno_motore  ← riscaldamento attivo
+#  input_number.frarik_scaldabagno_soglia_w ← soglia rilevamento (W)
+#  input_boolean.frarik_scaldabagno_switch         ← sync switch
+#  input_boolean.frarik_scaldabagno_notify_push
+#  input_boolean.frarik_scaldabagno_notify_google
+#  input_boolean.frarik_scaldabagno_notify_alexa
+#  input_text.frarik_scaldabagno_nome       ← nome personalizzato
+#  input_text.frarik_scaldabagno_messaggio  ← messaggio notifica
+#  input_datetime.frarik_scaldabagno_notifiche_inizio
+#  input_datetime.frarik_scaldabagno_notifiche_fine
+#  input_datetime.frarik_scaldabagno_off    ← spegnimento automatico
+#  notify.frarik_scaldabagno               ← gruppo notifiche push
+#  sensor.frarik_scaldabagno_versione      ← versione package
+#
+###############################################################
+
+
+####################################################
+#                                                  #
+#                  IMPOSTAZIONI                    #
+#          ↓  MODIFICA SOLO QUESTA SEZIONE  ↓      #
+#                                                  #
+####################################################
+
+homeassistant:
+  customize:
+    package.node_anchors:
+      customize: &customize
+        package: 'Frarik — Centro Controllo Scaldabagno 1.0 — Frarik'
+
+      setting:
+
+####################################################
+#              IMPOSTAZIONI PACKAGE                #
+####################################################
+
+        Sensore Potenza Scaldabagno: &sensore_potenza_scaldabagno "{{ states('IL_TUO_SENSORE_POTENZA') | float(0) }}"
+        Switch Scaldabagno:          &switch_scaldabagno 'IL_TUO_SWITCH'
+
+        Lista MediaPlayer Google: &google
+          - IL_TUO_MEDIA_PLAYER_GOOGLE_1
+
+        Lista mediaplayer alexa: &alexa
+          - IL_TUO_MEDIA_PLAYER_ALEXA_1
+
+        Device per notifica push: &push
+          - service: IL_TUO_MOBILE_APP_1
+
+####################################################
+#                  NOTIFICHE                       #
+####################################################
+
+notify:
+  - name: frarik_scaldabagno
+    platform: group
+    services: *push
+
+####################################################
+#                    SENSORI                       #
+####################################################
+
+sensor:
+  - platform: integration
+    source: sensor.frarik_scaldabagno_potenza_w
+    name: frarik_scaldabagno_kwh
+    unit_prefix: k
+    method: left
+    round: 2
+
+####################################################
+#                INPUT NUMBER                      #
+####################################################
+
+input_number:
+  frarik_scaldabagno_soglia_w:
+    name: Soglia Riscaldamento Scaldabagno W
+    icon: mdi:flash
+    min: 0
+    max: 5000
+    step: 1.00
+    unit_of_measurement: "w"
+    mode: box
+
+  frarik_scaldabagno_tempo_innesco_m:
+    name: Tempo Innesco Scaldabagno M
+    icon: mdi:timer
+    min: 0
+    max: 60
+    step: 1.00
+    unit_of_measurement: "m"
+    mode: box
+
+  frarik_scaldabagno_avvio_ritardato_s:
+    name: Avvio Ritardato Scaldabagno S
+    icon: mdi:timer-sand
+    min: 0
+    max: 60
+    step: 1.00
+    unit_of_measurement: "s"
+    mode: box
+
+####################################################
+#                 UTILITY METER                    #
+####################################################
+
+utility_meter:
+
+  frarik_scaldabagno_energy_oggi:
+    source: sensor.frarik_scaldabagno_kwh
+    cycle: daily
+
+  frarik_scaldabagno_energy_mese:
+    source: sensor.frarik_scaldabagno_kwh
+    cycle: monthly
+
+  frarik_scaldabagno_energy_anno:
+    source: sensor.frarik_scaldabagno_kwh
+    cycle: yearly
+
+####################################################
+#                TEMPLATE                          #
+####################################################
+
+template:
+  - binary_sensor:
+      - name: frarik_scaldabagno_motore
+        icon: mdi:water-boiler
+        state: >-
+          {{ 'on' if (states('sensor.frarik_scaldabagno_potenza_w') | int(0)) >
+             states('input_number.frarik_scaldabagno_soglia_w') | int(0) else 'off' }}
+        delay_off: "00:{{ states('input_number.frarik_scaldabagno_tempo_innesco_m') | int(0) }}:00"
+        delay_on:  "00:00:{{ states('input_number.frarik_scaldabagno_avvio_ritardato_s') | int(0) }}"
+
+  - sensor:
+      - name: "frarik_scaldabagno_time_on"
+        icon: mdi:history
+        state: >-
+          {% if is_state('binary_sensor.frarik_scaldabagno_motore', 'on') and
+                (as_timestamp(states.binary_sensor.frarik_scaldabagno_motore.last_changed) + 1) <= as_timestamp(now()) %}
+            {{ ((as_timestamp(now()) - as_timestamp(states.binary_sensor.frarik_scaldabagno_motore.last_changed)) / 3600) }}
+          {% else %} 0 {% endif %}
+        attributes:
+          Oggi: >
+            {% set hours = states('sensor.frarik_scaldabagno_energy_oggi') | float(0) %}
+            {{ hours | round(3) }} kWh
+          Mese: >
+            {% set kwh = states('sensor.frarik_scaldabagno_energy_mese') | float(0) %}
+            {{ kwh | round(3) }} kWh
+          Anno: >
+            {% set kwh = states('sensor.frarik_scaldabagno_energy_anno') | float(0) %}
+            {{ kwh | round(3) }} kWh
+          costo_oggi_scaldabagno: >-
+            {{ ((states('sensor.frarik_scaldabagno_energy_oggi') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+          costo_mese_scaldabagno: >-
+            {{ ((states('sensor.frarik_scaldabagno_energy_mese') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+          costo_anno_scaldabagno: >-
+            {{ ((states('sensor.frarik_scaldabagno_energy_anno') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+          costo_ieri_scaldabagno: >-
+            {{ ((state_attr('sensor.frarik_scaldabagno_energy_oggi', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+          costo_mese_prec_scaldabagno: >-
+            {{ ((state_attr('sensor.frarik_scaldabagno_energy_mese', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+
+      - name: "frarik_scaldabagno_potenza_w"
+        unit_of_measurement: 'W'
+        device_class: power
+        state_class: measurement
+        icon: mdi:flash
+        state: *sensore_potenza_scaldabagno
+
+      - name: "frarik_scaldabagno_versione"
+        state: "1.0"
+
+####################################################
+#                INPUT BOOLEAN                     #
+####################################################
+
+input_boolean:
+  frarik_scaldabagno_switch:
+    name: Switch Scaldabagno
+    icon: mdi:power
+
+  frarik_scaldabagno_notify_push:
+    name: Notifica Push Scaldabagno
+
+  frarik_scaldabagno_notify_alexa:
+    name: Notifica Alexa Scaldabagno
+
+  frarik_scaldabagno_notify_google:
+    name: Notifica Google Scaldabagno
+
+####################################################
+#                 INPUT DATETIME                   #
+####################################################
+
+input_datetime:
+  frarik_scaldabagno_notifiche_inizio:
+    name: Orario Inizio Notifiche Scaldabagno
+    has_date: false
+    has_time: true
+
+  frarik_scaldabagno_notifiche_fine:
+    name: Orario Fine Notifiche Scaldabagno
+    has_date: false
+    has_time: true
+
+  frarik_scaldabagno_off:
+    name: Scaldabagno Spegnimento Automatico
+    has_date: false
+    has_time: true
+
+####################################################
+#                  INPUT TEXT                      #
+####################################################
+
+input_text:
+  frarik_scaldabagno_nome:
+
+  frarik_scaldabagno_messaggio:
+
+####################################################
+#                  AUTOMAZIONI                     #
+####################################################
+
+automation:
+- alias: frarik_scaldabagno_automazioni
+  id: frarik_scaldabagno_automazioni
+  max_exceeded: silent
+  trigger:
+
+  - platform: state
+    entity_id:
+      - input_boolean.frarik_scaldabagno_switch
+      - *switch_scaldabagno
+    from: 'on'
+    to: 'off'
+    id: switch_off
+
+  - platform: state
+    entity_id:
+      - input_boolean.frarik_scaldabagno_switch
+      - *switch_scaldabagno
+    from: 'off'
+    to: 'on'
+    id: switch_on
+
+  action:
+
+  - choose:
+    - alias: SWITCH OFF
+      conditions:
+      - condition: trigger
+        id: switch_off
+      sequence:
+      - service: switch.turn_off
+        target:
+          entity_id: *switch_scaldabagno
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.frarik_scaldabagno_switch
+
+  - choose:
+    - alias: SWITCH ON
+      conditions:
+      - condition: trigger
+        id: switch_on
+      sequence:
+      - service: switch.turn_on
+        target:
+          entity_id: *switch_scaldabagno
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.frarik_scaldabagno_switch
+
+  - parallel:
+    - choose:
+      - conditions:
+        - condition: trigger
+          id: switch_off
+        - condition: time
+          after: 'input_datetime.frarik_scaldabagno_notifiche_inizio'
+          before: 'input_datetime.frarik_scaldabagno_notifiche_fine'
+        - condition: state
+          entity_id: input_boolean.frarik_scaldabagno_notify_google
+          state: 'on'
+        sequence:
+        - service: tts.google_translate_say
+          continue_on_error: true
+          data:
+            entity_id: *google
+            message: "{{ states('input_text.frarik_scaldabagno_messaggio') }}"
+
+    - choose:
+      - conditions:
+        - condition: trigger
+          id: switch_off
+        - condition: time
+          after: 'input_datetime.frarik_scaldabagno_notifiche_inizio'
+          before: 'input_datetime.frarik_scaldabagno_notifiche_fine'
+        - condition: state
+          entity_id: input_boolean.frarik_scaldabagno_notify_alexa
+          state: 'on'
+        sequence:
+        - service: notify.alexa_media
+          continue_on_error: true
+          data:
+            target: *alexa
+            data:
+              type: announce
+              method: spoken
+            message: "{{ states('input_text.frarik_scaldabagno_messaggio') }}"
+
+    - choose:
+      - conditions:
+        - condition: trigger
+          id: switch_off
+        - condition: state
+          entity_id: input_boolean.frarik_scaldabagno_notify_push
+          state: 'on'
+        sequence:
+        - data_template:
+            message: >-
+              🚿 {{ states('input_text.frarik_scaldabagno_nome') }}
+
+              ⚡ Consumati oggi: {{ state_attr('sensor.frarik_scaldabagno_time_on','Oggi') }}
+
+              💰 Costo oggi: {{ state_attr('sensor.frarik_scaldabagno_time_on','costo_oggi_scaldabagno') }} €
+            title: "Scaldabagno"
+          service: notify.frarik_scaldabagno
+          continue_on_error: true
+
+- alias: frarik_scaldabagno_off_automatico
+  id: frarik_scaldabagno_off_automatico
+  trigger:
+    - platform: time
+      at: 'input_datetime.frarik_scaldabagno_off'
+      id: scaldabagno_automatico_off
+  condition: []
+  action:
+    - choose:
+      - conditions:
+        - condition: trigger
+          id: scaldabagno_automatico_off
+        - condition: state
+          entity_id: *switch_scaldabagno
+          state: 'on'
+        sequence:
+        - entity_id: *switch_scaldabagno
+          service: switch.turn_off
+
+###############################################################
+#  Fine package — Frarik Centro Controllo Scaldabagno v1.0
+###############################################################

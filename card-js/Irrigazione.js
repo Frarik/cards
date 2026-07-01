@@ -1218,7 +1218,7 @@ window.customCards.push({ version: '1.0',
         btn.classList.add('wd-loading'); btn.textContent = 'Download PKG…';
         var yaml;
         try {
-          var ghR = await fetch('https://raw.githubusercontent.com/Frarik/cards/main/pkg/centro_controllo_irrigazione.yaml');
+          var ghR = await fetch('https://raw.githubusercontent.com/Frarik/cards/main/pkg/frarik_irrigazione.yaml');
           if (ghR.ok) {
             yaml = (await ghR.text()).split('IL_TUO_SWITCH_IRRIGAZIONE').join(sw || 'switch.rubinetto_esterno_interruttore');
           }

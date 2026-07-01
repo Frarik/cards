@@ -20,18 +20,18 @@
 
   function pkDefaults() {
     return {
-      pk_power:      'sensor.potenza_friggitrice_w',
-      pk_running:    'binary_sensor.resistenza_friggitrice',
+      pk_power:      'sensor.frarik_friggitrice_potenza_w',
+      pk_running:    'binary_sensor.frarik_friggitrice_motore',
       pk_switch:     'switch.presa_friggitrice',
-      pk_kwh_oggi:   'sensor.friggitrice_energy_oggi',
-      pk_kwh_mese:   'sensor.friggitrice_energy_mese',
-      pk_kwh_anno:   'sensor.friggitrice_energy_anno',
-      pk_cicli_oggi: 'sensor.friggitrice_cicli_oggi',
-      pk_cicli_mese: 'sensor.friggitrice_cicli_mese',
-      pk_cicli_anno: 'sensor.friggitrice_cicli_anno',
-      pk_cicli_tot:  'counter.friggitrice_cicli_totale',
-      pk_time_on:    'sensor.time_on_friggitrice',
-      pk_soglia:     'input_number.friggitrice_soglia_w',
+      pk_kwh_oggi:   'sensor.frarik_friggitrice_energy_oggi',
+      pk_kwh_mese:   'sensor.frarik_friggitrice_energy_mese',
+      pk_kwh_anno:   'sensor.frarik_friggitrice_energy_anno',
+      pk_cicli_oggi: 'sensor.frarik_friggitrice_cicli_oggi',
+      pk_cicli_mese: 'sensor.frarik_friggitrice_cicli_mese',
+      pk_cicli_anno: 'sensor.frarik_friggitrice_cicli_anno',
+      pk_cicli_tot:  'counter.frarik_friggitrice_cicli_totale',
+      pk_time_on:    'sensor.frarik_friggitrice_time_on',
+      pk_soglia:     'input_number.frarik_friggitrice_soglia_w',
       pk_versione:   'sensor.frarik_friggitrice_versione',
     };
   }
@@ -350,21 +350,21 @@
 
     const formHtml = '<div style="margin-bottom:10px"><label style="' + stLbl + '">Nome card</label><input id="fc-name" type="text" value="' + (cf.name || '').replace(/"/g, '&quot;') + '" placeholder="es. Friggitrice cucina" style="' + stInp.replace('monospace', 'system-ui') + '"></div>'
       + '<div style="' + stSec + '">Sensori base</div>'
-      + field('fc-power',   'Potenza istantanea (W)', cf.pk_power,   'sensor.potenza_friggitrice_w')
-      + field('fc-running', 'Resistenza on/off',     cf.pk_running, 'binary_sensor.resistenza_friggitrice')
+      + field('fc-power',   'Potenza istantanea (W)', cf.pk_power,   'sensor.frarik_friggitrice_potenza_w')
+      + field('fc-running', 'Resistenza on/off',     cf.pk_running, 'binary_sensor.frarik_friggitrice_motore')
       + field('fc-switch',  'Switch presa',           cf.pk_switch,  'switch.presa_friggitrice')
       + '<div style="' + stSec + '">PKG — Energia (kWh)</div>'
-      + field('fc-kwh-oggi', 'kWh oggi', cf.pk_kwh_oggi, 'sensor.friggitrice_energy_oggi')
-      + field('fc-kwh-mese', 'kWh mese', cf.pk_kwh_mese, 'sensor.friggitrice_energy_mese')
-      + field('fc-kwh-anno', 'kWh anno', cf.pk_kwh_anno, 'sensor.friggitrice_energy_anno')
+      + field('fc-kwh-oggi', 'kWh oggi', cf.pk_kwh_oggi, 'sensor.frarik_friggitrice_energy_oggi')
+      + field('fc-kwh-mese', 'kWh mese', cf.pk_kwh_mese, 'sensor.frarik_friggitrice_energy_mese')
+      + field('fc-kwh-anno', 'kWh anno', cf.pk_kwh_anno, 'sensor.frarik_friggitrice_energy_anno')
       + '<div style="' + stSec + '">PKG — Cicli</div>'
-      + field('fc-cic-oggi', 'Cicli oggi',    cf.pk_cicli_oggi, 'sensor.friggitrice_cicli_oggi')
-      + field('fc-cic-mese', 'Cicli mese',    cf.pk_cicli_mese, 'sensor.friggitrice_cicli_mese')
-      + field('fc-cic-anno', 'Cicli anno',    cf.pk_cicli_anno, 'sensor.friggitrice_cicli_anno')
-      + field('fc-cic-tot',  'Cicli totale',  cf.pk_cicli_tot,  'counter.friggitrice_cicli_totale')
+      + field('fc-cic-oggi', 'Cicli oggi',    cf.pk_cicli_oggi, 'sensor.frarik_friggitrice_cicli_oggi')
+      + field('fc-cic-mese', 'Cicli mese',    cf.pk_cicli_mese, 'sensor.frarik_friggitrice_cicli_mese')
+      + field('fc-cic-anno', 'Cicli anno',    cf.pk_cicli_anno, 'sensor.frarik_friggitrice_cicli_anno')
+      + field('fc-cic-tot',  'Cicli totale',  cf.pk_cicli_tot,  'counter.frarik_friggitrice_cicli_totale')
       + '<div style="' + stSec + '">PKG — Statistiche</div>'
-      + field('fc-time-on', 'Sensore time_on',  cf.pk_time_on, 'sensor.time_on_friggitrice')
-      + field('fc-soglia',  'Soglia lavoro (W)', cf.pk_soglia,  'input_number.friggitrice_soglia_w')
+      + field('fc-time-on', 'Sensore time_on',  cf.pk_time_on, 'sensor.frarik_friggitrice_time_on')
+      + field('fc-soglia',  'Soglia lavoro (W)', cf.pk_soglia,  'input_number.frarik_friggitrice_soglia_w')
       + '<div style="display:flex;gap:8px;margin-top:16px">'
       + '<button id="fc-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button>'
       + '<button id="fc-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#38bdf8;color:#060d14">Salva</button>'
@@ -467,7 +467,7 @@
 
     dSec('🔌 Elettrodomestico');
     dToggle('input_boolean.friggitrice_switch', 'Switch presa');
-    dNum('input_number.friggitrice_soglia_w',          'Soglia lavoro',  'W',   0, 5000, 1);
+    dNum('input_number.frarik_friggitrice_soglia_w',          'Soglia lavoro',  'W',   0, 5000, 1);
     dNum('input_number.friggitrice_tempo_innesco_m',   'Delay spegnimento', 'min', 0, 60, 1);
     dNum('input_number.friggitrice_avvio_ritardato_s', 'Delay riavvio',  's',   0, 300, 1);
 
@@ -517,7 +517,7 @@
 
     const rb = ov.querySelector('#fi-reset');
     if (rb) rb.addEventListener('click', function() {
-      callSvc('script', 'turn_on', {entity_id: 'script.friggitrice_reset_sensori'});
+      callSvc('script', 'turn_on', {entity_id: 'script.frarik_friggitrice_reset_sensori'});
       rb.textContent = '✅ Reset avviato!'; rb.style.color = '#4ade80';
       setTimeout(function() { try { ov._close(); } catch(e) {} }, 1500);
     });
@@ -549,7 +549,7 @@
   }
 
   /* ── PKG YAML EMBEDDED ── */
-  var _FRIGO_PKG_YAML = `###############################################################
+  var _FRIGGITRICE_PKG_YAML = `﻿###############################################################
 #                                                             #
 #   ███████╗██████╗  █████╗ ██████╗ ██╗██╗  ██╗             #
 #   ██╔════╝██╔══██╗██╔══██╗██╔══██╗██║██║ ██╔╝             #
@@ -558,21 +558,56 @@
 #   ██║     ██║  ██║██║  ██║██║  ██║██║██║  ██╗             #
 #   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝            #
 #                                                             #
-#   Package: Centro Controllo Friggitrice                     #
-#   Versione: 1.3  |  Frarik / Fratech                       #
+#   Package: Frarik — Centro Controllo Friggitrice                     #
+#   Versione: 1.0  |  Frarik / Fratech                       #
 #                                                             #
+###############################################################
+#
+# COSA FA QUESTO PACKAGE
+# ──────────────────────────────────────────────────────────
+#  ▸ Monitoraggio potenza istantanea motore (W)
+#  ▸ Tracciamento energia consumata (kWh) giorno/mese/anno
+#  ▸ Calcolo costi energetici (usa input_number.costo_energia)
+#  ▸ Conteggio cicli motore oggi/mese/anno
+#  ▸ Durata cicli e storico 7 giorni
+#  ▸ Notifiche fine ciclo (Push / Alexa / Google)
+#  ▸ Orario notifiche e spegnimento automatico
+#
+###############################################################
+#
+# INSTALLAZIONE
+# ──────────────────────────────────────────────────────────
+#  1. Verifica che configuration.yaml contenga:
+#
+#       homeassistant:
+#         packages: !include_dir_named packages
+#
+#  2. Copia questo file nella cartella "packages/frarik"
+#
+#  3. Modifica le 2 righe sotto "IMPOSTAZIONI PACKAGE":
+#     - Sensore potenza della presa (es. sensor.presa_friggitrice_potenza)
+#     - Switch della presa (es. switch.presa_friggitrice)
+#
+#  4. Riavvia Home Assistant
+#
+#  5. Nella card Frarik → Configura → collega le entità pkg
+#
 ###############################################################
 
 homeassistant:
   customize:
     package.node_anchors:
       customize: &customize
-        package: 'Centro Controllo Friggitrice 1.3 — Frarik'
+        package: 'Frarik — Centro Controllo Friggitrice 1.0 — Frarik'
 
       setting:
 
-        Sensore Potenza Friggitrice: &sensore_potenza_friggitrice "{{ states('IL_TUO_SENSORE_POTENZA_FRIGGITRICE') | float(0) }}"
-        Switch Friggitrice:          &switch_friggitrice 'IL_TUO_SWITCH_FRIGGITRICE'
+####################################################
+#              IMPOSTAZIONI PACKAGE                #
+####################################################
+
+        Sensore Potenza Friggitrice: &sensore_potenza_friggitrice "{{ states('IL_TUO_SENSORE_POTENZA') | float(0) }}"
+        Switch Friggitrice:          &switch_friggitrice 'IL_TUO_SWITCH'
 
         Lista MediaPlayer Google: &google
           - IL_TUO_MEDIA_PLAYER_GOOGLE_1
@@ -582,22 +617,35 @@ homeassistant:
 
         Device per notifica push: &push
           - service: IL_TUO_MOBILE_APP_1
+          - service: IL_TUO_MOBILE_APP_2
+
+####################################################
+#                  NOTIFICHE                       #
+####################################################
 
 notify:
   - name: Friggitrice
     platform: group
     services: *push
 
+####################################################
+#                    SENSORI                       #
+####################################################
+
 sensor:
   - platform: integration
-    source: sensor.potenza_friggitrice_w
-    name: kwh_friggitrice
+    source: sensor.frarik_friggitrice_potenza_w
+    name: frarik_friggitrice_kwh
     unit_prefix: k
     method: left
     round: 2
 
+####################################################
+#                INPUT NUMBER                      #
+####################################################
+
 input_number:
-  friggitrice_soglia_w:
+  frarik_friggitrice_soglia_w:
     name: Soglia Lavoro Friggitrice W
     icon: mdi:flash
     min: 0
@@ -606,7 +654,7 @@ input_number:
     unit_of_measurement: "w"
     mode: box
 
-  friggitrice_tempo_innesco_m:
+  frarik_friggitrice_tempo_innesco_m:
     name: Tempo Innesco Friggitrice M
     icon: mdi:timer
     min: 0
@@ -615,7 +663,7 @@ input_number:
     unit_of_measurement: "m"
     mode: box
 
-  friggitrice_avvio_ritardato_s:
+  frarik_friggitrice_avvio_ritardato_s:
     name: Avvio Ritardato Friggitrice S
     icon: mdi:timer-sand
     min: 0
@@ -624,196 +672,204 @@ input_number:
     unit_of_measurement: "s"
     mode: box
 
-  lunedi_friggitrice_consumo:
+  frarik_friggitrice_consumo_lunedi:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "kwh"
 
-  lunedi_friggitrice_costo:
+  frarik_friggitrice_costo_lunedi:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "€"
 
-  martedi_friggitrice_consumo:
+  frarik_friggitrice_consumo_martedi:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "kwh"
 
-  martedi_friggitrice_costo:
+  frarik_friggitrice_costo_martedi:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "€"
 
-  mercoledi_friggitrice_consumo:
+  frarik_friggitrice_consumo_mercoledi:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "kwh"
 
-  mercoledi_friggitrice_costo:
+  frarik_friggitrice_costo_mercoledi:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "€"
 
-  giovedi_friggitrice_consumo:
+  frarik_friggitrice_consumo_giovedi:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "kwh"
 
-  giovedi_friggitrice_costo:
+  frarik_friggitrice_costo_giovedi:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "€"
 
-  venerdi_friggitrice_consumo:
+  frarik_friggitrice_consumo_venerdi:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "kwh"
 
-  venerdi_friggitrice_costo:
+  frarik_friggitrice_costo_venerdi:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "€"
 
-  sabato_friggitrice_consumo:
+  frarik_friggitrice_consumo_sabato:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "kwh"
 
-  sabato_friggitrice_costo:
+  frarik_friggitrice_costo_sabato:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "€"
 
-  domenica_friggitrice_consumo:
+  frarik_friggitrice_consumo_domenica:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "kwh"
 
-  domenica_friggitrice_costo:
+  frarik_friggitrice_costo_domenica:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "€"
+
+####################################################
+#                 UTILITY METER                    #
+####################################################
 
 utility_meter:
 
-  friggitrice_tempo_oggi:
-    source: sensor.time_on_friggitrice
+  frarik_friggitrice_tempo_oggi:
+    source: sensor.frarik_friggitrice_time_on
     cycle: daily
 
-  friggitrice_tempo_mese:
-    source: sensor.time_on_friggitrice
+  frarik_friggitrice_tempo_mese:
+    source: sensor.frarik_friggitrice_time_on
     cycle: monthly
 
-  friggitrice_tempo_anno:
-    source: sensor.time_on_friggitrice
+  frarik_friggitrice_tempo_anno:
+    source: sensor.frarik_friggitrice_time_on
     cycle: yearly
 
-  friggitrice_cicli_oggi:
-    source: counter.friggitrice_cicli_totale
+  frarik_friggitrice_cicli_oggi:
+    source: counter.frarik_friggitrice_cicli_totale
     cycle: daily
 
-  friggitrice_cicli_mese:
-    source: counter.friggitrice_cicli_totale
+  frarik_friggitrice_cicli_mese:
+    source: counter.frarik_friggitrice_cicli_totale
     cycle: monthly
 
-  friggitrice_cicli_anno:
-    source: counter.friggitrice_cicli_totale
+  frarik_friggitrice_cicli_anno:
+    source: counter.frarik_friggitrice_cicli_totale
     cycle: yearly
 
-  friggitrice_energy_oggi:
-    source: sensor.kwh_friggitrice
+  frarik_friggitrice_energy_oggi:
+    source: sensor.frarik_friggitrice_kwh
     cycle: daily
 
-  friggitrice_energy_mese:
-    source: sensor.kwh_friggitrice
+  frarik_friggitrice_energy_mese:
+    source: sensor.frarik_friggitrice_kwh
     cycle: monthly
 
-  friggitrice_energy_anno:
-    source: sensor.kwh_friggitrice
+  frarik_friggitrice_energy_anno:
+    source: sensor.frarik_friggitrice_kwh
     cycle: yearly
+
+####################################################
+#                TEMPLATE                          #
+####################################################
 
 template:
   - binary_sensor:
-      - name: resistenza_friggitrice
-        icon: mdi:snowflake
+      - name: frarik_friggitrice_motore
+        icon: mdi:washing-machine
         state: >-
-          {{ 'on' if (states('sensor.potenza_friggitrice_w') | int(0)) >
-             states('input_number.friggitrice_soglia_w') | int(0) else 'off' }}
-        delay_off: "00:{{ states('input_number.friggitrice_tempo_innesco_m') | int(0) }}:00"
-        delay_on:  "00:00:{{ states('input_number.friggitrice_avvio_ritardato_s') | int(0) }}"
+          {{ 'on' if (states('sensor.frarik_friggitrice_potenza_w') | int(0)) >
+             states('input_number.frarik_friggitrice_soglia_w') | int(0) else 'off' }}
+        delay_off: "00:{{ states('input_number.frarik_friggitrice_tempo_innesco_m') | int(0) }}:00"
+        delay_on:  "00:00:{{ states('input_number.frarik_friggitrice_avvio_ritardato_s') | int(0) }}"
 
   - trigger:
       - platform: state
-        entity_id: input_boolean.friggitrice_ciclo_attivo
+        entity_id: input_boolean.frarik_friggitrice_ciclo_attivo
         from: "off"
         to: "on"
     sensor:
-      - name: inizio_ciclo_friggitrice
-        state: "{{ states('sensor.kwh_friggitrice') }}"
+      - name: frarik_friggitrice_inizio_ciclo
+        state: "{{ states('sensor.frarik_friggitrice_kwh') }}"
 
   - trigger:
       - platform: state
-        entity_id: binary_sensor.resistenza_friggitrice
+        entity_id: binary_sensor.frarik_friggitrice_motore
         from: "on"
         to: "off"
     sensor:
-      - name: fine_ciclo_friggitrice
+      - name: frarik_friggitrice_fine_ciclo
         state: "{{ now().strftime('%d/%m/%Y %H:%M') }}"
 
   - trigger:
       - platform: state
-        entity_id: input_boolean.friggitrice_ciclo_attivo
+        entity_id: input_boolean.frarik_friggitrice_ciclo_attivo
         from: "off"
         to: "on"
     sensor:
-      - name: tempo_riavvio_friggitrice
+      - name: frarik_friggitrice_tempo_riavvio
         state: "{{ as_timestamp(now()) }}"
 
   - sensor:
-      - name: "time_on_friggitrice"
+      - name: "frarik_friggitrice_time_on"
         icon: mdi:history
         state: >-
-          {% if is_state('binary_sensor.resistenza_friggitrice', 'on') and
-                (as_timestamp(states.binary_sensor.resistenza_friggitrice.last_changed) + 1) <= as_timestamp(now()) %}
-            {{ ((as_timestamp(now()) - as_timestamp(states.binary_sensor.resistenza_friggitrice.last_changed)) / 3600) }}
+          {% if is_state('binary_sensor.frarik_friggitrice_motore', 'on') and
+                (as_timestamp(states.binary_sensor.frarik_friggitrice_motore.last_changed) + 1) <= as_timestamp(now()) %}
+            {{ ((as_timestamp(now()) - as_timestamp(states.binary_sensor.frarik_friggitrice_motore.last_changed)) / 3600) }}
           {% else %} 0 {% endif %}
         attributes:
           terminato: >-
-            {{ states('sensor.fine_ciclo_friggitrice') if is_state('binary_sensor.resistenza_friggitrice', 'off') else 'In funzione' }}
+            {{ states('sensor.frarik_friggitrice_fine_ciclo') if is_state('binary_sensor.frarik_friggitrice_motore', 'off') else 'In funzione' }}
           tempo_ciclo_friggitrice: >
-            {% set hours = (as_timestamp(now()) - states('sensor.tempo_riavvio_friggitrice') | float(0)) / 3600 %}
+            {% set hours = (as_timestamp(now()) - states('sensor.frarik_friggitrice_tempo_riavvio') | float(0)) / 3600 %}
             {% set minutes = ((hours % 1) * 60) | int(0) %}
             {% set hours = (hours - (hours % 1)) | int(0) %}
             {% set day = ((hours | int(0) / 24)) | int(0) %}
-            {% if is_state('input_boolean.friggitrice_ciclo_attivo', 'on') %}
+            {% if is_state('input_boolean.frarik_friggitrice_ciclo_attivo', 'on') %}
               {% if day | int(0) > 0 %}
                 {{ day }}d {{ (hours | int(0)) - (day * 24) }}h {{ minutes }}m
               {% elif hours | int(0) > 0 %}
@@ -822,10 +878,10 @@ template:
                 {{ minutes }}min
               {% endif %}
             {% else %}
-              {{ states('input_text.friggitrice_ultimo_ciclo') }}
+              {{ states('input_text.frarik_friggitrice_ultimo_ciclo') }}
             {% endif %}
           Oggi: >
-            {% set hours = states('sensor.friggitrice_tempo_oggi') | float(0) %}
+            {% set hours = states('sensor.frarik_friggitrice_tempo_oggi') | float(0) %}
             {% set minutes = ((hours % 1) * 60) | int(0) %}
             {% set hours = (hours - (hours % 1)) | int(0) %}
             {% if hours | int(0) > 0 %}
@@ -834,7 +890,7 @@ template:
               {{ minutes }}min
             {% endif %}
           Mese: >
-            {% set hours = states('sensor.friggitrice_tempo_mese') | float(0) %}
+            {% set hours = states('sensor.frarik_friggitrice_tempo_mese') | float(0) %}
             {% set minutes = ((hours % 1) * 60) | int(0) %}
             {% set hours = (hours - (hours % 1)) | int(0) %}
             {% set day = ((hours | int / 24)) | int(0) %}
@@ -846,7 +902,7 @@ template:
               {{ minutes }}min
             {% endif %}
           Anno: >
-            {% set hours = states('sensor.friggitrice_tempo_anno') | float(0) %}
+            {% set hours = states('sensor.frarik_friggitrice_tempo_anno') | float(0) %}
             {% set minutes = ((hours % 1) * 60) | int(0) %}
             {% set hours = (hours - (hours % 1)) | int(0) %}
             {% set day = ((hours | int(0) / 24)) | int(0) %}
@@ -858,7 +914,7 @@ template:
               {{ minutes }}min
             {% endif %}
           Ieri: >
-            {% set hours = state_attr('sensor.friggitrice_tempo_oggi', 'last_period') | float(0) %}
+            {% set hours = state_attr('sensor.frarik_friggitrice_tempo_oggi', 'last_period') | float(0) %}
             {% set minutes = ((hours % 1) * 60) | int(0) %}
             {% set hours = (hours - (hours % 1)) | int(0) %}
             {% if hours | int(0) > 0 %}
@@ -867,7 +923,7 @@ template:
               {{ minutes }}min
             {% endif %}
           Mese Precedente: >
-            {% set hours = state_attr('sensor.friggitrice_tempo_mese', 'last_period') | float(0) %}
+            {% set hours = state_attr('sensor.frarik_friggitrice_tempo_mese', 'last_period') | float(0) %}
             {% set minutes = ((hours % 1) * 60) | int(0) %}
             {% set hours = (hours - (hours % 1)) | int(0) %}
             {% set day = ((hours | int / 24)) | int(0) %}
@@ -879,23 +935,23 @@ template:
               {{ minutes }}min
             {% endif %}
           consumo_ciclo_friggitrice: >-
-            {{ (states('sensor.kwh_friggitrice') | float(0) - states('sensor.inizio_ciclo_friggitrice') | float(0)) | round(3) }} kWh
+            {{ (states('sensor.frarik_friggitrice_kwh') | float(0) - states('sensor.frarik_friggitrice_inizio_ciclo') | float(0)) | round(3) }} kWh
           costo_ciclo_friggitrice: >-
-            {{ ((states('sensor.kwh_friggitrice') | float(0) - states('sensor.inizio_ciclo_friggitrice') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(3, default=0) }}
+            {{ ((states('sensor.frarik_friggitrice_kwh') | float(0) - states('sensor.frarik_friggitrice_inizio_ciclo') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(3, default=0) }}
           costo_oggi_friggitrice: >-
-            {{ ((states('sensor.friggitrice_energy_oggi') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+            {{ ((states('sensor.frarik_friggitrice_energy_oggi') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
           costo_mese_friggitrice: >-
-            {{ ((states('sensor.friggitrice_energy_mese') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+            {{ ((states('sensor.frarik_friggitrice_energy_mese') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
           costo_anno_friggitrice: >-
-            {{ ((states('sensor.friggitrice_energy_anno') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+            {{ ((states('sensor.frarik_friggitrice_energy_anno') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
           costo_ieri_friggitrice: >-
-            {{ ((state_attr('sensor.friggitrice_energy_oggi', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+            {{ ((state_attr('sensor.frarik_friggitrice_energy_oggi', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
           costo_mese_prec_friggitrice: >-
-            {{ ((state_attr('sensor.friggitrice_energy_mese', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+            {{ ((state_attr('sensor.frarik_friggitrice_energy_mese', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
           costo_anno_prec_friggitrice: >-
-            {{ ((state_attr('sensor.friggitrice_energy_anno', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+            {{ ((state_attr('sensor.frarik_friggitrice_energy_anno', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
 
-      - name: "potenza_friggitrice_w"
+      - name: "frarik_friggitrice_potenza_w"
         unit_of_measurement: 'W'
         device_class: power
         state_class: measurement
@@ -903,159 +959,197 @@ template:
         state: *sensore_potenza_friggitrice
 
       - name: "frarik_friggitrice_versione"
-        state: "1.2"
+        state: "1.0"
+
+####################################################
+#                   COUNTER                        #
+####################################################
 
 counter:
-  friggitrice_cicli_totale:
+  frarik_friggitrice_cicli_totale:
     name: Cicli Resistenza Friggitrice
     initial: 0
     step: 1
 
+####################################################
+#                INPUT BOOLEAN                     #
+####################################################
+
 input_boolean:
-  friggitrice_switch:
+  frarik_friggitrice_switch:
     name: Switch Friggitrice
     icon: mdi:power
 
-  friggitrice_ciclo_attivo:
+  frarik_friggitrice_ciclo_attivo:
     name: Ciclo Attivo Friggitrice
 
-  friggitrice_notify_push:
+  frarik_friggitrice_notify_push:
     name: Notifica Push Friggitrice
 
-  friggitrice_notify_alexa:
+  frarik_friggitrice_notify_alexa:
     name: Notifica Alexa Friggitrice
 
-  friggitrice_notify_google:
+  frarik_friggitrice_notify_google:
     name: Notifica Google Friggitrice
 
+####################################################
+#                     GROUP                        #
+####################################################
+
 group:
-  friggitrice_notifiche:
+  frarik_friggitrice_notifiche:
     entities:
-      - input_boolean.friggitrice_notify_google
-      - input_boolean.friggitrice_notify_alexa
-      - input_boolean.friggitrice_notify_push
-      - automation.friggitrice_off_automatico
-      - input_boolean.friggitrice_switch
+      - input_boolean.frarik_friggitrice_notify_google
+      - input_boolean.frarik_friggitrice_notify_alexa
+      - input_boolean.frarik_friggitrice_notify_push
+      - automation.frarik_friggitrice_off_automatico
+      - input_boolean.frarik_friggitrice_switch
+
+####################################################
+#                 INPUT DATETIME                   #
+####################################################
 
 input_datetime:
-  friggitrice_notifiche_inizio:
+  frarik_friggitrice_notifiche_inizio:
     name: Orario Inizio Notifiche Friggitrice
     has_date: false
     has_time: true
 
-  friggitrice_notifiche_fine:
+  frarik_friggitrice_notifiche_fine:
     name: Orario Fine Notifiche Friggitrice
     has_date: false
     has_time: true
 
-  friggitrice_off:
+  frarik_friggitrice_off:
     name: Friggitrice Spegnimento Automatico
     has_date: false
     has_time: true
 
+####################################################
+#                  INPUT TEXT                      #
+####################################################
+
 input_text:
-  friggitrice_data_reset:
-  friggitrice_nome:
-  friggitrice_messaggio:
-  friggitrice_ultimo_ciclo:
-  lunedi_friggitrice_cicli:
-  lunedi_friggitrice_tempo:
-  martedi_friggitrice_cicli:
-  martedi_friggitrice_tempo:
-  mercoledi_friggitrice_cicli:
-  mercoledi_friggitrice_tempo:
-  giovedi_friggitrice_cicli:
-  giovedi_friggitrice_tempo:
-  venerdi_friggitrice_cicli:
-  venerdi_friggitrice_tempo:
-  sabato_friggitrice_cicli:
-  sabato_friggitrice_tempo:
-  domenica_friggitrice_cicli:
-  domenica_friggitrice_tempo:
+  frarik_friggitrice_data_reset:
+
+  frarik_friggitrice_nome:
+
+  frarik_friggitrice_messaggio:
+
+  frarik_friggitrice_ultimo_ciclo:
+
+  frarik_friggitrice_cicli_lunedi:
+  frarik_friggitrice_tempo_lunedi:
+
+  frarik_friggitrice_cicli_martedi:
+  frarik_friggitrice_tempo_martedi:
+
+  frarik_friggitrice_cicli_mercoledi:
+  frarik_friggitrice_tempo_mercoledi:
+
+  frarik_friggitrice_cicli_giovedi:
+  frarik_friggitrice_tempo_giovedi:
+
+  frarik_friggitrice_cicli_venerdi:
+  frarik_friggitrice_tempo_venerdi:
+
+  frarik_friggitrice_cicli_sabato:
+  frarik_friggitrice_tempo_sabato:
+
+  frarik_friggitrice_cicli_domenica:
+  frarik_friggitrice_tempo_domenica:
+
+####################################################
+#                     SCRIPT                       #
+####################################################
 
 script:
-  friggitrice_reset_sensori:
+  frarik_friggitrice_reset_sensori:
     sequence:
     - service: input_text.set_value
       data:
         value: "{{ now().strftime('%d/%m/%Y %H:%M') }}"
       target:
-        entity_id: input_text.friggitrice_data_reset
+        entity_id: input_text.frarik_friggitrice_data_reset
 
     - service: utility_meter.calibrate
       data:
         value: '0'
       target:
         entity_id:
-          - sensor.friggitrice_cicli_oggi
-          - sensor.friggitrice_cicli_mese
-          - sensor.friggitrice_cicli_anno
-          - sensor.friggitrice_energy_oggi
-          - sensor.friggitrice_energy_mese
-          - sensor.friggitrice_energy_anno
-          - sensor.friggitrice_tempo_oggi
-          - sensor.friggitrice_tempo_mese
-          - sensor.friggitrice_tempo_anno
+          - sensor.frarik_friggitrice_cicli_oggi
+          - sensor.frarik_friggitrice_cicli_mese
+          - sensor.frarik_friggitrice_cicli_anno
+          - sensor.frarik_friggitrice_energy_oggi
+          - sensor.frarik_friggitrice_energy_mese
+          - sensor.frarik_friggitrice_energy_anno
+          - sensor.frarik_friggitrice_tempo_oggi
+          - sensor.frarik_friggitrice_tempo_mese
+          - sensor.frarik_friggitrice_tempo_anno
 
     - service: input_number.set_value
       data:
         value: '0'
       target:
         entity_id:
-          - input_number.lunedi_friggitrice_consumo
-          - input_number.martedi_friggitrice_consumo
-          - input_number.mercoledi_friggitrice_consumo
-          - input_number.giovedi_friggitrice_consumo
-          - input_number.venerdi_friggitrice_consumo
-          - input_number.sabato_friggitrice_consumo
-          - input_number.domenica_friggitrice_consumo
-          - input_number.lunedi_friggitrice_costo
-          - input_number.martedi_friggitrice_costo
-          - input_number.mercoledi_friggitrice_costo
-          - input_number.giovedi_friggitrice_costo
-          - input_number.venerdi_friggitrice_costo
-          - input_number.sabato_friggitrice_costo
-          - input_number.domenica_friggitrice_costo
+          - input_number.frarik_friggitrice_consumo_lunedi
+          - input_number.frarik_friggitrice_consumo_martedi
+          - input_number.frarik_friggitrice_consumo_mercoledi
+          - input_number.frarik_friggitrice_consumo_giovedi
+          - input_number.frarik_friggitrice_consumo_venerdi
+          - input_number.frarik_friggitrice_consumo_sabato
+          - input_number.frarik_friggitrice_consumo_domenica
+          - input_number.frarik_friggitrice_costo_lunedi
+          - input_number.frarik_friggitrice_costo_martedi
+          - input_number.frarik_friggitrice_costo_mercoledi
+          - input_number.frarik_friggitrice_costo_giovedi
+          - input_number.frarik_friggitrice_costo_venerdi
+          - input_number.frarik_friggitrice_costo_sabato
+          - input_number.frarik_friggitrice_costo_domenica
 
     - service: input_text.set_value
       data:
         value: '0'
       target:
         entity_id:
-          - input_text.lunedi_friggitrice_cicli
-          - input_text.martedi_friggitrice_cicli
-          - input_text.mercoledi_friggitrice_cicli
-          - input_text.giovedi_friggitrice_cicli
-          - input_text.venerdi_friggitrice_cicli
-          - input_text.sabato_friggitrice_cicli
-          - input_text.domenica_friggitrice_cicli
-          - input_text.lunedi_friggitrice_tempo
-          - input_text.martedi_friggitrice_tempo
-          - input_text.mercoledi_friggitrice_tempo
-          - input_text.giovedi_friggitrice_tempo
-          - input_text.venerdi_friggitrice_tempo
-          - input_text.sabato_friggitrice_tempo
-          - input_text.domenica_friggitrice_tempo
+          - input_text.frarik_friggitrice_cicli_lunedi
+          - input_text.frarik_friggitrice_cicli_martedi
+          - input_text.frarik_friggitrice_cicli_mercoledi
+          - input_text.frarik_friggitrice_cicli_giovedi
+          - input_text.frarik_friggitrice_cicli_venerdi
+          - input_text.frarik_friggitrice_cicli_sabato
+          - input_text.frarik_friggitrice_cicli_domenica
+          - input_text.frarik_friggitrice_tempo_lunedi
+          - input_text.frarik_friggitrice_tempo_martedi
+          - input_text.frarik_friggitrice_tempo_mercoledi
+          - input_text.frarik_friggitrice_tempo_giovedi
+          - input_text.frarik_friggitrice_tempo_venerdi
+          - input_text.frarik_friggitrice_tempo_sabato
+          - input_text.frarik_friggitrice_tempo_domenica
 
     - service: counter.reset
       target:
         entity_id:
-          - counter.friggitrice_cicli_totale
+          - counter.frarik_friggitrice_cicli_totale
+
+####################################################
+#                  AUTOMAZIONI                     #
+####################################################
 
 automation:
-- alias: friggitrice_automazioni
-  id: friggitrice_automazioni
+- alias: frarik_friggitrice_automazioni
+  id: frarik_friggitrice_automazioni
   max_exceeded: silent
   trigger:
 
   - platform: state
-    entity_id: binary_sensor.resistenza_friggitrice
+    entity_id: binary_sensor.frarik_friggitrice_motore
     from: 'off'
     to: 'on'
     id: inizio_ciclo
 
   - platform: state
-    entity_id: binary_sensor.resistenza_friggitrice
+    entity_id: binary_sensor.frarik_friggitrice_motore
     from: 'on'
     to: 'off'
     id: fine_ciclo
@@ -1066,7 +1160,7 @@ automation:
 
   - platform: state
     entity_id:
-      - input_boolean.friggitrice_switch
+      - input_boolean.frarik_friggitrice_switch
       - *switch_friggitrice
     from: 'on'
     to: 'off'
@@ -1074,7 +1168,7 @@ automation:
 
   - platform: state
     entity_id:
-      - input_boolean.friggitrice_switch
+      - input_boolean.frarik_friggitrice_switch
       - *switch_friggitrice
     from: 'off'
     to: 'on'
@@ -1082,8 +1176,8 @@ automation:
 
   - platform: template
     value_template: >-
-      {{ is_state('binary_sensor.resistenza_friggitrice','off') and
-         is_state('input_boolean.friggitrice_ciclo_attivo','on') }}
+      {{ is_state('binary_sensor.frarik_friggitrice_motore','off') and
+         is_state('input_boolean.frarik_friggitrice_ciclo_attivo','on') }}
     id: controllo_ciclo
 
   action:
@@ -1091,68 +1185,70 @@ automation:
   - choose:
     - conditions:
       - condition: trigger
-        id: incremento_statistiche_7gg
+        id:
+          - incremento_statistiche_7gg
+          - fine_ciclo
       sequence:
 
       - service: input_text.set_value
         target:
           entity_id: >
             {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
-            {% if today == "Monday" %}    input_text.lunedi_friggitrice_cicli
-            {% elif today == "Tuesday" %} input_text.martedi_friggitrice_cicli
-            {% elif today == "Wednesday" %} input_text.mercoledi_friggitrice_cicli
-            {% elif today == "Thursday" %} input_text.giovedi_friggitrice_cicli
-            {% elif today == "Friday" %}  input_text.venerdi_friggitrice_cicli
-            {% elif today == "Saturday" %} input_text.sabato_friggitrice_cicli
-            {% elif today == "Sunday" %}  input_text.domenica_friggitrice_cicli
+            {% if today == "Monday" %}    input_text.frarik_friggitrice_cicli_lunedi
+            {% elif today == "Tuesday" %} input_text.frarik_friggitrice_cicli_martedi
+            {% elif today == "Wednesday" %} input_text.frarik_friggitrice_cicli_mercoledi
+            {% elif today == "Thursday" %} input_text.frarik_friggitrice_cicli_giovedi
+            {% elif today == "Friday" %}  input_text.frarik_friggitrice_cicli_venerdi
+            {% elif today == "Saturday" %} input_text.frarik_friggitrice_cicli_sabato
+            {% elif today == "Sunday" %}  input_text.frarik_friggitrice_cicli_domenica
             {% endif %}
         data:
-          value: "{{ states('sensor.friggitrice_cicli_oggi') }}"
+          value: "{{ states('sensor.frarik_friggitrice_cicli_oggi') }}"
 
       - service: input_text.set_value
         target:
           entity_id: >
             {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
-            {% if today == "Monday" %}    input_text.lunedi_friggitrice_tempo
-            {% elif today == "Tuesday" %} input_text.martedi_friggitrice_tempo
-            {% elif today == "Wednesday" %} input_text.mercoledi_friggitrice_tempo
-            {% elif today == "Thursday" %} input_text.giovedi_friggitrice_tempo
-            {% elif today == "Friday" %}  input_text.venerdi_friggitrice_tempo
-            {% elif today == "Saturday" %} input_text.sabato_friggitrice_tempo
-            {% elif today == "Sunday" %}  input_text.domenica_friggitrice_tempo
+            {% if today == "Monday" %}    input_text.frarik_friggitrice_tempo_lunedi
+            {% elif today == "Tuesday" %} input_text.frarik_friggitrice_tempo_martedi
+            {% elif today == "Wednesday" %} input_text.frarik_friggitrice_tempo_mercoledi
+            {% elif today == "Thursday" %} input_text.frarik_friggitrice_tempo_giovedi
+            {% elif today == "Friday" %}  input_text.frarik_friggitrice_tempo_venerdi
+            {% elif today == "Saturday" %} input_text.frarik_friggitrice_tempo_sabato
+            {% elif today == "Sunday" %}  input_text.frarik_friggitrice_tempo_domenica
             {% endif %}
         data:
-          value: "{{ state_attr('sensor.time_on_friggitrice','Oggi') }}"
+          value: "{{ state_attr('sensor.frarik_friggitrice_time_on','Oggi') }}"
 
       - service: input_number.set_value
         target:
           entity_id: >
             {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
-            {% if today == "Monday" %}    input_number.lunedi_friggitrice_consumo
-            {% elif today == "Tuesday" %} input_number.martedi_friggitrice_consumo
-            {% elif today == "Wednesday" %} input_number.mercoledi_friggitrice_consumo
-            {% elif today == "Thursday" %} input_number.giovedi_friggitrice_consumo
-            {% elif today == "Friday" %}  input_number.venerdi_friggitrice_consumo
-            {% elif today == "Saturday" %} input_number.sabato_friggitrice_consumo
-            {% elif today == "Sunday" %}  input_number.domenica_friggitrice_consumo
+            {% if today == "Monday" %}    input_number.frarik_friggitrice_consumo_lunedi
+            {% elif today == "Tuesday" %} input_number.frarik_friggitrice_consumo_martedi
+            {% elif today == "Wednesday" %} input_number.frarik_friggitrice_consumo_mercoledi
+            {% elif today == "Thursday" %} input_number.frarik_friggitrice_consumo_giovedi
+            {% elif today == "Friday" %}  input_number.frarik_friggitrice_consumo_venerdi
+            {% elif today == "Saturday" %} input_number.frarik_friggitrice_consumo_sabato
+            {% elif today == "Sunday" %}  input_number.frarik_friggitrice_consumo_domenica
             {% endif %}
         data:
-          value: "{{ states('sensor.friggitrice_energy_oggi') }}"
+          value: "{{ states('sensor.frarik_friggitrice_energy_oggi') }}"
 
       - service: input_number.set_value
         target:
           entity_id: >
             {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
-            {% if today == "Monday" %}    input_number.lunedi_friggitrice_costo
-            {% elif today == "Tuesday" %} input_number.martedi_friggitrice_costo
-            {% elif today == "Wednesday" %} input_number.mercoledi_friggitrice_costo
-            {% elif today == "Thursday" %} input_number.giovedi_friggitrice_costo
-            {% elif today == "Friday" %}  input_number.venerdi_friggitrice_costo
-            {% elif today == "Saturday" %} input_number.sabato_friggitrice_costo
-            {% elif today == "Sunday" %}  input_number.domenica_friggitrice_costo
+            {% if today == "Monday" %}    input_number.frarik_friggitrice_costo_lunedi
+            {% elif today == "Tuesday" %} input_number.frarik_friggitrice_costo_martedi
+            {% elif today == "Wednesday" %} input_number.frarik_friggitrice_costo_mercoledi
+            {% elif today == "Thursday" %} input_number.frarik_friggitrice_costo_giovedi
+            {% elif today == "Friday" %}  input_number.frarik_friggitrice_costo_venerdi
+            {% elif today == "Saturday" %} input_number.frarik_friggitrice_costo_sabato
+            {% elif today == "Sunday" %}  input_number.frarik_friggitrice_costo_domenica
             {% endif %}
         data:
-          value: "{{ state_attr('sensor.time_on_friggitrice','costo_oggi_friggitrice') }}"
+          value: "{{ state_attr('sensor.frarik_friggitrice_time_on','costo_oggi_friggitrice') }}"
 
   - choose:
     - alias: SWITCH OFF
@@ -1165,7 +1261,7 @@ automation:
           entity_id: *switch_friggitrice
       - service: input_boolean.turn_off
         target:
-          entity_id: input_boolean.friggitrice_switch
+          entity_id: input_boolean.frarik_friggitrice_switch
 
   - choose:
     - alias: SWITCH ON
@@ -1178,7 +1274,7 @@ automation:
           entity_id: *switch_friggitrice
       - service: input_boolean.turn_on
         target:
-          entity_id: input_boolean.friggitrice_switch
+          entity_id: input_boolean.frarik_friggitrice_switch
 
   - choose:
     - conditions:
@@ -1186,7 +1282,7 @@ automation:
         id: controllo_ciclo
       sequence:
       - delay: '00:01:00'
-      - entity_id: input_boolean.friggitrice_ciclo_attivo
+      - entity_id: input_boolean.frarik_friggitrice_ciclo_attivo
         service: input_boolean.turn_off
 
   - choose:
@@ -1194,7 +1290,7 @@ automation:
       - condition: trigger
         id: inizio_ciclo
       sequence:
-      - entity_id: input_boolean.friggitrice_ciclo_attivo
+      - entity_id: input_boolean.frarik_friggitrice_ciclo_attivo
         service: input_boolean.turn_on
 
   - choose:
@@ -1205,17 +1301,17 @@ automation:
 
       - service: input_text.set_value
         target:
-          entity_id: input_text.friggitrice_ultimo_ciclo
+          entity_id: input_text.frarik_friggitrice_ultimo_ciclo
         data:
-          value: "{{ state_attr('sensor.time_on_friggitrice','tempo_ciclo_friggitrice') }}"
+          value: "{{ state_attr('sensor.frarik_friggitrice_time_on','tempo_ciclo_friggitrice') }}"
 
       - service: counter.increment
         target:
-          entity_id: counter.friggitrice_cicli_totale
+          entity_id: counter.frarik_friggitrice_cicli_totale
 
       - delay: '00:00:05'
 
-      - entity_id: input_boolean.friggitrice_ciclo_attivo
+      - entity_id: input_boolean.frarik_friggitrice_ciclo_attivo
         service: input_boolean.turn_off
 
   - parallel:
@@ -1224,27 +1320,27 @@ automation:
         - condition: trigger
           id: fine_ciclo
         - condition: time
-          after: 'input_datetime.friggitrice_notifiche_inizio'
-          before: 'input_datetime.friggitrice_notifiche_fine'
+          after: 'input_datetime.frarik_friggitrice_notifiche_inizio'
+          before: 'input_datetime.frarik_friggitrice_notifiche_fine'
         - condition: state
-          entity_id: input_boolean.friggitrice_notify_google
+          entity_id: input_boolean.frarik_friggitrice_notify_google
           state: 'on'
         sequence:
         - service: tts.google_translate_say
           continue_on_error: true
           data:
             entity_id: *google
-            message: "{{ states('input_text.friggitrice_messaggio') }} in {{ state_attr('sensor.time_on_friggitrice','tempo_ciclo_friggitrice') }}"
+            message: "{{ states('input_text.frarik_friggitrice_messaggio') }} in {{ state_attr('sensor.frarik_friggitrice_time_on','tempo_ciclo_friggitrice') }}"
 
     - choose:
       - conditions:
         - condition: trigger
           id: fine_ciclo
         - condition: time
-          after: 'input_datetime.friggitrice_notifiche_inizio'
-          before: 'input_datetime.friggitrice_notifiche_fine'
+          after: 'input_datetime.frarik_friggitrice_notifiche_inizio'
+          before: 'input_datetime.frarik_friggitrice_notifiche_fine'
         - condition: state
-          entity_id: input_boolean.friggitrice_notify_alexa
+          entity_id: input_boolean.frarik_friggitrice_notify_alexa
           state: 'on'
         sequence:
         - service: notify.alexa_media
@@ -1254,34 +1350,34 @@ automation:
             data:
               type: announce
               method: spoken
-            message: "{{ states('input_text.friggitrice_messaggio') }} in {{ state_attr('sensor.time_on_friggitrice','tempo_ciclo_friggitrice') }}"
+            message: "{{ states('input_text.frarik_friggitrice_messaggio') }} in {{ state_attr('sensor.frarik_friggitrice_time_on','tempo_ciclo_friggitrice') }}"
 
     - choose:
       - conditions:
         - condition: trigger
           id: fine_ciclo
         - condition: state
-          entity_id: input_boolean.friggitrice_notify_push
+          entity_id: input_boolean.frarik_friggitrice_notify_push
           state: 'on'
         sequence:
         - data_template:
             message: >-
-              🍟 {{ states('input_text.friggitrice_nome') }}
+              🍟 {{ states('input_text.frarik_friggitrice_nome') }}
 
-              ⏱ Ciclo durato: {{ state_attr('sensor.time_on_friggitrice','tempo_ciclo_friggitrice') }}
+              ⏱ Ciclo durato: {{ state_attr('sensor.frarik_friggitrice_time_on','tempo_ciclo_friggitrice') }}
 
-              ⚡ Consumati: {{ state_attr('sensor.time_on_friggitrice','consumo_ciclo_friggitrice') }}
+              ⚡ Consumati: {{ state_attr('sensor.frarik_friggitrice_time_on','consumo_ciclo_friggitrice') }}
 
-              💰 Spesi: {{ state_attr('sensor.time_on_friggitrice','costo_ciclo_friggitrice') }} €
+              💰 Spesi: {{ state_attr('sensor.frarik_friggitrice_time_on','costo_ciclo_friggitrice') }} €
             title: "Friggitrice"
-          service: notify.friggitrice
+          service: notify.frarik_friggitrice
           continue_on_error: true
 
-- alias: friggitrice_off_automatico
-  id: friggitrice_off_automatico
+- alias: frarik_friggitrice_off_automatico
+  id: frarik_friggitrice_off_automatico
   trigger:
     - platform: time
-      at: 'input_datetime.friggitrice_off'
+      at: 'input_datetime.frarik_friggitrice_off'
       id: friggitrice_automatico_off
   condition: []
   action:
@@ -1294,7 +1390,8 @@ automation:
           state: 'on'
         sequence:
         - entity_id: *switch_friggitrice
-          service: switch.turn_off`;
+          service: switch.turn_off
+`;
 
   /* ── PKG BUILD ── */
   var _FRG_WIZ_KEY = 'frarik_pkg_wizard_friggitrice';
@@ -1310,9 +1407,9 @@ automation:
     var alexaLines = (alexa && alexa.length)
       ? alexa.map(function(p) { return ind + '- ' + p; }).join('\n')
       : ind + '- media_player.alexa_cameretta';
-    var yaml = _FRIGO_PKG_YAML
-      .split('IL_TUO_SENSORE_POTENZA_FRIGGITRICE').join(potenza || 'sensor.non_configurato')
-      .split('IL_TUO_SWITCH_FRIGGITRICE').join(sw || 'switch.non_configurato');
+    var yaml = _FRIGGITRICE_PKG_YAML
+      .split('IL_TUO_SENSORE_POTENZA').join(potenza || 'sensor.non_configurato')
+      .split('IL_TUO_SWITCH').join(sw || 'switch.non_configurato');
     yaml = yaml.replace(ind + '- service: IL_TUO_MOBILE_APP_1', pushLines);
     yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_GOOGLE_1', googleLines);
     yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_ALEXA_1', alexaLines);

@@ -1068,7 +1068,7 @@ window.customCards.push({ version: '1.5',
         btn.classList.add('wd-loading'); btn.textContent = 'Download PKG…';
         var yaml;
         try {
-          var ghR = await fetch('https://raw.githubusercontent.com/Frarik/cards/main/pkg/centro_controllo_antizanzare.yaml');
+          var ghR = await fetch('https://raw.githubusercontent.com/Frarik/cards/main/pkg/frarik_antizanzare.yaml');
           if (ghR.ok) {
             yaml = (await ghR.text()).split('IL_TUO_SWITCH_AZ').join(sw || 'switch.presa_anti_zanzare');
           }
