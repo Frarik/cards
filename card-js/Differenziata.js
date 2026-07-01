@@ -1,4 +1,4 @@
-/* frarik-version: 5.2 */
+/* frarik-version: 5.3 */
 ;(function () {
   'use strict';
 
@@ -136,89 +136,141 @@
 
   /* ── RENDER ── */
   function render(card) {
-    const h = H();
+    const h   = H();
     const rid = 'frd' + (card.id || Math.random().toString(36).slice(2,8));
+    const ACC     = '#4ade80';
+    const ACC_RGB = '74,222,128';
 
-    const ti = todayIdx();
-    const tmrI = (ti + 1) % 7;
-    const todayWastes = parseWastes(S(h, 'input_text.frarik_differenziata_rifiuto_' + DAYS[ti]) || '');
+    const ti          = todayIdx();
+    const tmrI        = (ti + 1) % 7;
+    const todayWastes = parseWastes(S(h, 'input_text.frarik_differenziata_rifiuto_' + DAYS[ti])  || '');
     const tmrWastes   = parseWastes(S(h, 'input_text.frarik_differenziata_rifiuto_' + DAYS[tmrI]) || '');
     const hasPickup   = todayWastes.length > 0;
+    const col         = hasPickup ? ACC : '#64748b';
+    const colRgb      = hasPickup ? ACC_RGB : '100,116,139';
 
-    /* status pill */
-    const statusLabel = hasPickup ? 'RACCOLTA' : 'NESSUN RITIRO';
-    const statusCol   = hasPickup ? '34,197,94' : '100,116,139';
+    /* conteggio settimana */
+    var weekCount = 0;
+    DAYS.forEach(function(d) {
+      if (parseWastes(S(h, 'input_text.frarik_differenziata_rifiuto_' + d) || '').length) weekCount++;
+    });
 
-    /* bidoni hero */
-    const binSz = todayWastes.length <= 1 ? 96 : todayWastes.length === 2 ? 74 : 58;
-    let binsHtml = '';
-    if (!hasPickup) {
-      binsHtml = '<div style="display:flex;justify-content:center;align-items:flex-end;height:100%">' + emptyBinSvg(86) + '</div>';
-    } else {
-      binsHtml = '<div style="display:flex;align-items:flex-end;justify-content:center;gap:6px;height:100%">'
-        + todayWastes.map(function(id) { return binSvg(getClr(id), binSz); }).join('')
-        + '</div>';
+    /* prossima raccolta */
+    var nextFull = '', nextAbbr = '', nextDaysAway = 0;
+    for (var dd = 1; dd <= 7; dd++) {
+      var ni = (ti + dd) % 7;
+      if (parseWastes(S(h, 'input_text.frarik_differenziata_rifiuto_' + DAYS[ni]) || '').length) {
+        nextFull = DFULL[ni]; nextAbbr = DLBL[ni]; nextDaysAway = dd; break;
+      }
     }
+    var nextLabel = nextFull
+      ? (nextDaysAway === 1 ? 'Domani' : nextFull + ' (tra ' + nextDaysAway + ' gg)')
+      : 'Nessuna';
 
-    /* colonna destra */
-    function wasteChip(id) {
-      const t = TIPI.find(function(x) { return x.id === id; });
-      const c = getClr(id);
-      return '<div style="display:flex;align-items:center;gap:6px;padding:5px 0">'
-        + '<div style="width:10px;height:10px;border-radius:50%;background:' + c + ';flex-shrink:0;box-shadow:0 0 6px ' + c + '88"></div>'
-        + '<span style="font-size:13px;font-weight:700;color:#fff">' + (t ? t.label : id) + '</span>'
-        + '</div>';
+    /* bidoni */
+    const binSz = todayWastes.length <= 1 ? 90 : todayWastes.length === 2 ? 70 : 56;
+    var binsHtml = hasPickup
+      ? '<div style="display:flex;align-items:flex-end;justify-content:center;gap:4px;height:100%;width:100%">'
+          + todayWastes.map(function(id) { return binSvg(getClr(id), binSz); }).join('') + '</div>'
+      : emptyBinSvg(82);
+
+    /* riga rifiuto (colonna destra) */
+    function wasteRow(id) {
+      var t = TIPI.find(function(x) { return x.id === id; }), c = getClr(id);
+      return '<div class="fc-met"><span class="fc-met-lbl" style="display:flex;align-items:center;gap:6px">'
+        + '<div style="width:8px;height:8px;border-radius:50%;background:' + c + ';box-shadow:0 0 5px ' + c + '88;flex-shrink:0"></div>'
+        + (t ? t.label : id) + '</span></div>';
     }
-    const tonight = hasPickup
-      ? '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.4);margin-bottom:5px">Questa sera</div>'
-        + todayWastes.map(wasteChip).join('')
-      : '<div style="font-size:11px;color:rgba(255,255,255,.3);padding:6px 0">Nessun ritiro</div>';
-
-    const tomorrow = tmrWastes.length
-      ? '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.4);margin-top:10px;margin-bottom:5px">Per domani (' + DFULL[tmrI] + ')</div>'
-        + tmrWastes.map(wasteChip).join('')
-      : '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.4);margin-top:10px;margin-bottom:5px">Per domani</div>'
-        + '<div style="font-size:11px;color:rgba(255,255,255,.3);padding:6px 0">Nessun ritiro</div>';
+    var tonightRows = hasPickup
+      ? todayWastes.map(wasteRow).join('')
+      : '<div class="fc-met"><span class="fc-met-lbl" style="color:rgba(255,255,255,.3)">Niente da esporre</span></div>';
+    var tmrRows = tmrWastes.length
+      ? tmrWastes.map(wasteRow).join('')
+      : '<div class="fc-met"><span class="fc-met-lbl" style="color:rgba(255,255,255,.3)">Nessun ritiro</span></div>';
 
     const css = '<style>'
-      + '#' + rid + '{position:relative;width:100%;height:100%;min-height:260px;font-family:system-ui,sans-serif;display:block}'
+      + '#' + rid + '{position:relative;width:100%;height:100%;min-height:280px;font-family:system-ui,sans-serif;display:block}'
       + '#' + rid + ' .fc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
-      + '#' + rid + ' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:220px;background:radial-gradient(ellipse at 20% 0%,rgba(34,197,94,.07) 0%,transparent 65%);pointer-events:none}'
+      + '#' + rid + ' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(' + ACC_RGB + ',.08) 0%,transparent 65%);pointer-events:none}'
       + '#' + rid + ' .fc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
-      + '#' + rid + ' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.22)}'
+      + '#' + rid + ' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;background:rgba(' + ACC_RGB + ',.1);border:1px solid rgba(' + ACC_RGB + ',.2)}'
       + '#' + rid + ' .fc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
       + '#' + rid + ' .fc-hdr-pill{font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;white-space:nowrap;display:flex;align-items:center;gap:4px}'
+      + '#' + rid + ' .fc-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:' + col + (hasPickup ? ';box-shadow:0 0 5px ' + ACC + ';animation:fcPulse 1.5s ease-in-out infinite' : '') + '}'
       + '#' + rid + ' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
       + '#' + rid + ' .fc-scroll::-webkit-scrollbar{display:none}'
-      + '#' + rid + ' .fc-hero{display:flex;align-items:stretch;padding:12px 14px 10px;flex:1;min-height:0}'
-      + '#' + rid + ' .fc-hero-img{flex:0 0 48%;display:flex;align-items:flex-end;justify-content:center;overflow:hidden}'
-      + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;justify-content:flex-start;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:12px;overflow:hidden}'
-      + '#' + rid + ' .fc-btns{display:flex;gap:6px;padding:0 14px 12px;flex-shrink:0}'
-      + '#' + rid + ' .fc-btn{flex:1;padding:9px 4px;border-radius:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:10px;font-weight:700;color:#fff;text-align:center;cursor:pointer;transition:all .15s}'
-      + '#' + rid + ' .fc-btn:hover{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.3);color:#4ade80}'
+      + '#' + rid + ' .fc-hero{display:flex;align-items:stretch;padding:10px 14px 8px;flex:1}'
+      + '#' + rid + ' .fc-hero-img{flex:1;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;max-height:130px}'
+      + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:5px;justify-content:flex-start;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:10px;overflow:hidden}'
+      + '#' + rid + ' .fc-st{display:flex;align-items:center;justify-content:flex-end;gap:7px;font-size:14px;font-weight:800;color:' + col + ';padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,.06)}'
+      + '#' + rid + ' .fc-stdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:' + col + (hasPickup ? ';box-shadow:0 0 7px ' + ACC + ';animation:fcPulse 1.5s ease-in-out infinite' : '') + '}'
+      + '#' + rid + ' .fc-sub{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.35);margin-top:4px}'
+      + '#' + rid + ' .fc-pwfull{margin:0 14px 12px}'
+      + '#' + rid + ' .fc-pwfull-hd{display:flex;align-items:center;justify-content:space-between}'
+      + '#' + rid + ' .fc-pwfull-lbl{font-size:10px;font-weight:700;color:#fff}'
+      + '#' + rid + ' .fc-pwfull-v{font-size:15px;font-weight:900;color:' + col + ';line-height:1}'
+      + '#' + rid + ' .fc-met{display:flex;align-items:center;gap:4px}'
+      + '#' + rid + ' .fc-met-lbl{font-size:12px;font-weight:700;color:#fff;flex-shrink:0}'
+      + '#' + rid + ' .fc-stats{display:flex;margin:0 14px 8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden}'
+      + '#' + rid + ' .fc-sb{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 3px;gap:2px}'
+      + '#' + rid + ' .fc-sb-sep{width:1px;background:rgba(255,255,255,.08);flex-shrink:0}'
+      + '#' + rid + ' .fc-sb-n{font-size:12px;font-weight:900;color:' + ACC + ';height:18px;display:flex;align-items:center;justify-content:center}'
+      + '#' + rid + ' .fc-sb-l{font-size:8px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.4px;text-align:center}'
+      + '#' + rid + ' .fc-btns{display:flex;gap:6px;padding:0 14px 12px}'
+      + '#' + rid + ' .fc-btn{flex:1;padding:8px 4px;border-radius:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:10px;font-weight:700;color:#fff;text-align:center;cursor:pointer;transition:all .15s}'
+      + '#' + rid + ' .fc-btn:hover{background:rgba(' + ACC_RGB + ',.12);border-color:rgba(' + ACC_RGB + ',.3);color:' + ACC + '}'
       + '#' + rid + ' [data-sya]{cursor:pointer}'
+      + (hasPickup ? '@keyframes fcPulse{0%,100%{opacity:.6}50%{opacity:1}}' : '')
       + '</style>';
+
+    const heroHtml = '<div class="fc-hero">'
+      + '<div class="fc-hero-img">' + binsHtml + '</div>'
+      + '<div class="fc-hero-r">'
+      + '<div class="fc-st">Questa sera<div class="fc-stdot"></div></div>'
+      + tonightRows
+      + '<div class="fc-sub">Per domani (' + DFULL[tmrI] + ')</div>'
+      + tmrRows
+      + '</div>'
+      + '</div>';
+
+    const nextHtml = '<div class="fc-pwfull">'
+      + '<div class="fc-pwfull-hd">'
+      + '<span class="fc-pwfull-lbl">Prossima raccolta</span>'
+      + '<span class="fc-pwfull-v">' + nextLabel + '</span>'
+      + '</div>'
+      + '</div>';
+
+    const statsHtml = '<div class="fc-stats">'
+      + '<div class="fc-sb"><div class="fc-sb-n">' + (todayWastes.length || '—') + '</div><div class="fc-sb-l">Questa sera</div></div>'
+      + '<div class="fc-sb-sep"></div>'
+      + '<div class="fc-sb"><div class="fc-sb-n">' + (tmrWastes.length || '—') + '</div><div class="fc-sb-l">Domani</div></div>'
+      + '<div class="fc-sb-sep"></div>'
+      + '<div class="fc-sb"><div class="fc-sb-n">' + weekCount + '</div><div class="fc-sb-l">Settimana</div></div>'
+      + '<div class="fc-sb-sep"></div>'
+      + '<div class="fc-sb"><div class="fc-sb-n" style="font-size:10px">' + (nextAbbr || '—') + '</div><div class="fc-sb-l">Prossima</div></div>'
+      + '</div>';
+
+    const btnsHtml = '<div class="fc-btns">'
+      + '<div class="fc-btn" data-sya="popup-settimana">📅 Settimana</div>'
+      + '<div class="fc-btn" data-sya="popup-imp">⚙ Impostazioni</div>'
+      + '</div>';
 
     return css
       + '<div id="' + rid + '">'
       + '<div class="fc-card">'
       + '<div class="fc-hdr">'
-      + '<div class="fc-hdr-iw">🗑️</div>'
+      + '<div class="fc-hdr-iw">♻️</div>'
       + '<div class="fc-hdr-tit">Raccolta Differenziata</div>'
-      + '<div class="fc-hdr-pill" style="background:rgba(' + statusCol + ',.1);border:1px solid rgba(' + statusCol + ',.28);color:rgb(' + statusCol + ')">'
-      + statusLabel + '</div>'
+      + '<div class="fc-hdr-pill" style="background:rgba(' + colRgb + ',.1);border:1px solid rgba(' + colRgb + ',.28);color:' + col + '">'
+      + '<div class="fc-dot"></div>'
+      + (hasPickup ? 'RACCOLTA' : 'NESSUN RITIRO')
+      + '</div>'
       + '</div>'
       + '<div class="fc-scroll">'
-      + '<div class="fc-hero">'
-      + '<div class="fc-hero-img">' + binsHtml + '</div>'
-      + '<div class="fc-hero-r">'
-      + tonight
-      + tomorrow
-      + '</div>'
-      + '</div>'
-      + '<div class="fc-btns">'
-      + '<div class="fc-btn" data-sya="popup-imp">⚙ Impostazioni</div>'
-      + '</div>'
+      + heroHtml
+      + nextHtml
+      + statsHtml
+      + btnsHtml
       + '</div>'
       + '</div>'
       + '</div>';
@@ -231,12 +283,13 @@
     el.addEventListener('click', function(e) {
       const t = e.target.closest('[data-sya]');
       if (!t) return;
-      if (t.dataset.sya === 'popup-imp') openImpostazioni(card);
+      if (t.dataset.sya === 'popup-imp')       openImpostazioni(card);
+      if (t.dataset.sya === 'popup-settimana') openSettimana(card);
     });
   }
 
   function update(card, hass, el) {
-    const h = H();
+    const h    = H();
     const ti   = todayIdx();
     const tmrI = (ti + 1) % 7;
     const sig  = [
@@ -248,6 +301,31 @@
       el._diffSig = sig;
       el.innerHTML = render(card);
     }
+  }
+
+  /* ── POPUP SETTIMANA ── */
+  function openSettimana(card) {
+    const h  = H();
+    const ti = todayIdx();
+    const content = DAYS.map(function(d, i) {
+      var ws = parseWastes(S(h, 'input_text.frarik_differenziata_rifiuto_' + d) || '');
+      var isToday = i === ti;
+      var dots = ws.length
+        ? ws.map(function(id) {
+            var t = TIPI.find(function(x) { return x.id === id; }), c = getClr(id);
+            return '<div style="display:flex;align-items:center;gap:5px">'
+              + '<div style="width:8px;height:8px;border-radius:50%;background:' + c + ';box-shadow:0 0 4px ' + c + '88;flex-shrink:0"></div>'
+              + '<span style="font-size:12px;font-weight:700;color:#fff">' + (t ? t.label : id) + '</span>'
+              + '</div>';
+          }).join('')
+        : '<span style="font-size:11px;color:rgba(255,255,255,.3)">Nessun ritiro</span>';
+      return '<div style="padding:10px;border-radius:10px;border:1px solid ' + (isToday ? 'rgba(74,222,128,.3)' : 'rgba(255,255,255,.06)') + ';background:' + (isToday ? 'rgba(74,222,128,.05)' : 'rgba(255,255,255,.02)') + ';margin-bottom:6px">'
+        + '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:' + (isToday ? '#4ade80' : 'rgba(255,255,255,.45)') + ';margin-bottom:6px">'
+        + DFULL[i] + (isToday ? ' — OGGI' : '') + '</div>'
+        + '<div style="display:flex;flex-wrap:wrap;gap:8px">' + dots + '</div>'
+        + '</div>';
+    }).join('');
+    mkOv(popShell('📅', '74,222,128', 'Rifiuti della settimana', 'Panoramica raccolta settimanale', 'ds-close', content), 'ds-close');
   }
 
   /* ── POPUP IMPOSTAZIONI ── */
@@ -437,7 +515,7 @@
     name: 'Raccolta Differenziata',
     description: 'Card rifiuti differenziata con multi-selezione per giorno, bidoni realistici e colori personalizzabili.',
     icon: 'mdi:recycle',
-    version: '5.2',
+    version: '5.3',
     frarik_pkg_check: 'sensor.frarik_differenziata_versione',
     frarik_pkg_id: 'frarik_differenziata',
     frarik_pkg_version: '2.0',

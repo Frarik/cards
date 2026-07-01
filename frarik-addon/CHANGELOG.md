@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.7.31 — 2026-07-01
+
+### feat: Differenziata v5.3 — layout identico agli elettrodomestici
+
+- Render completamente riscritto con le stesse classi CSS di Lavatrice/Frigorifero: `fc-card`, `fc-hdr`, `fc-hero`, `fc-st`, `fc-met`, `fc-stats`, `fc-sb`, `fc-btns`
+- Header: icona ♻️ verde + pill "RACCOLTA"/"NESSUN RITIRO" con punto pulsante animato (come COMPRESSORE ON)
+- Hero: colonna sinistra = bidoni SVG, colonna destra = "Questa sera" con dot pulsante + lista rifiuti + "Per domani (Giorno)"
+- "Prossima raccolta" con la data (equivalente di "Consumo istantaneo 59W")
+- Stat boxes (4): Questa sera / Domani / Settimana / Prossima — stessa struttura dei contatori elettrodomestici
+- Bottoni: "📅 Settimana" (popup panoramica 7 giorni con colori per tipo) + "⚙ Impostazioni"
+- Colore accento verde (#4ade80) coerente con tema raccolta
+
 ## 1.7.30 — 2026-07-01
 
 ### fix/feat: Differenziata v5.2 — bidone ridisegnato + update funzionante + 2 bidoni
