@@ -13527,19 +13527,20 @@ connect();
     // Solo errori dal bundle Frarik (index-*.js) o senza sorgente
     return f && !f.includes('index-') && !f.includes('frarik');
   }
+  // Errori noti da card con pattern ES5 o da browser interni — da ignorare
+  const _KNOWN_CARD_ERRS = /Failed to construct.*HTMLElement|Please use the 'new' operator|CustomElementRegistry|already been used with this registry|exitFullscreen|exitfullscreen|ResizeObserver/i;
   window.onerror = function(msg, src, line, col, err){
     if(isExternal(src)) return false; // errore da script terzo — ignora
+    const fullMsg=err instanceof Error?(err.message||msg):String(msg||'');
+    if(_KNOWN_CARD_ERRS.test(fullMsg)) return false; // errore noto da card/browser — ignora
     const file=(src||'').split('/').pop();
-    // Mostra messaggio completo: tipo errore + eventuale stack ridotto
-    const fullMsg=err instanceof Error?(err.message||msg):msg;
     const detail=file?file+':'+line+(col?':'+col:'')+'  '+fullMsg:fullMsg;
     _pushErr('⚠️ Errore JS', detail);
     return false;
   };
   window.addEventListener('unhandledrejection', function(e){
     const msg=e.reason instanceof Error?e.reason.message:String(e.reason||'Promise rejection');
-    // Ignora errori comuni da componenti HA (CustomElementRegistry, exitfullscreen, ecc.)
-    if(/CustomElementRegistry|exitFullscreen|exitfullscreen|already been used|ResizeObserver/i.test(msg)) return;
+    if(_KNOWN_CARD_ERRS.test(msg)) return; // usa lo stesso filtro di onerror
     _pushErr('⚠️ Errore asincrono', msg);
   });
 })();

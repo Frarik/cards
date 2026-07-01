@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.29 — 2026-07-01
+
+### fix: errore "Failed to construct HTMLElement" non appare più nelle notifiche
+
+- Aggiunto filtro in `window.onerror` per errori noti di customElements ES5 (`Failed to construct HTMLElement`, `Please use the 'new' operator`, `CustomElementRegistry`, `already been used`, `ResizeObserver`, `exitFullscreen`) — questi errori vengono ignorati silenziosamente
+- Stesso filtro applicato all'handler `unhandledrejection` (unificato con `_KNOWN_CARD_ERRS`)
+- La causa originale dell'errore (card Differenziata con pattern ES5) è già rimossa in v5.1
+
 ## 1.7.28 — 2026-07-01
 
 ### feat: Differenziata v5.1 — bidone migliorato + popup rifatto
