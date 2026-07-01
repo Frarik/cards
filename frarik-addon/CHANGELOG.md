@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.24 — 2026-07-01
+
+### fix: Differenziata — "Aggiorna PKG" non funzionava
+
+- Rimosso `openWizard` dal registro FratechStore: la sua presenza faceva sì che `_pkgUpdateCard` aprisse il popup impostazioni invece di chiamare `_pkgGenericInstall`, che è l'unico che scarica e installa il YAML su HA
+- Il bottone ⚙ nella card apre comunque le impostazioni direttamente
+
 ## 1.7.23 — 2026-07-01
 
 ### feat: card Raccolta Differenziata v4 — riscrittura completa

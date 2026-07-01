@@ -586,12 +586,6 @@ automation:
       const c = el.querySelector('differenziata-card')
       if (c) c.hass = hass
     },
-    pkgYaml() { return _DIFF_PKG },
-    openWizard(hass, onDone) {
-      const inst = document.querySelector('differenziata-card') || new DifferenziataCard()
-      inst._hass = hass
-      inst._openImpostazioni()
-      if (typeof onDone === 'function') setTimeout(onDone, 500)
-    }
+    pkgYaml() { return _DIFF_PKG }
   })
 })()
