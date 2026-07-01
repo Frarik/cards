@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.40 — 2026-07-01
+
+### fix: Differenziata v5.11 — rimosso glow parziale che scuriva zona bottoni
+
+- Rimosso fc-card::before (radial gradient verde height:200px) — copriva solo la parte alta della card rendendo la zona bottoni più scura per contrasto
+
 ## 1.7.39 — 2026-07-01
 
 ### fix: Differenziata v5.10 — doppio sfondo eliminato alla radice
