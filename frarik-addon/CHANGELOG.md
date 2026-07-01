@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.34 — 2026-07-01
+
+### fix: Differenziata v5.6 — doppio sfondo e prossima rimossi
+
+- Rimossa riga "Prossima / Domani" dalla colonna destra
+- Aggiunto `border-radius:18px;overflow:hidden` all'outer `#rid` per eliminare il doppio sfondo (i corner arrotondati di fc-card mostravano il layer del container HA)
+
 ## 1.7.33 — 2026-07-01
 
 ### feat: Differenziata v5.5 — bidone ridisegnato a livello lavatrice + colonna destra riscritta

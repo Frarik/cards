@@ -1,4 +1,4 @@
-/* frarik-version: 5.5 */
+/* frarik-version: 5.6 */
 ;(function () {
   'use strict';
 
@@ -197,7 +197,7 @@
       : '<div class="fc-met"><span class="fc-met-lbl" style="color:rgba(255,255,255,.3)">Nessun ritiro</span></div>';
 
     const css = '<style>'
-      + '#' + rid + '{position:relative;width:100%;height:100%;min-height:280px;font-family:system-ui,sans-serif;display:block}'
+      + '#' + rid + '{position:relative;width:100%;height:100%;min-height:280px;font-family:system-ui,sans-serif;display:block;border-radius:18px;overflow:hidden}'
       + '#' + rid + ' .fc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
       + '#' + rid + ' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(' + ACC_RGB + ',.08) 0%,transparent 65%);pointer-events:none}'
       + '#' + rid + ' .fc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
@@ -233,10 +233,6 @@
       + '<div style="border-top:1px solid rgba(255,255,255,.07);margin:8px 0 6px"></div>'
       + secHdr('Domani — ' + DFULL[tmrI].slice(0,3), null)
       + tmrRows
-      + '<div style="margin-top:auto;padding-top:8px;border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between">'
-      + '<span style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.3)">Prossima</span>'
-      + '<span style="font-size:10px;font-weight:800;color:' + ACC + '">' + nextLabel + '</span>'
-      + '</div>'
       + '</div>'
       + '</div>';
 
@@ -503,7 +499,7 @@
     name: 'Raccolta Differenziata',
     description: 'Card rifiuti differenziata con multi-selezione per giorno, bidoni realistici e colori personalizzabili.',
     icon: 'mdi:recycle',
-    version: '5.5',
+    version: '5.6',
     frarik_pkg_check: 'sensor.frarik_differenziata_versione',
     frarik_pkg_id: 'frarik_differenziata',
     frarik_pkg_version: '2.0',
