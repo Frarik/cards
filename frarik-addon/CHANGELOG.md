@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.32 — 2026-07-01
+
+### feat: Differenziata v5.4 — bidone stile prodotto + layout colonna destra migliorato
+
+- Bidone SVG completamente ridisegnato: corpo navy scuro (#10203a→#060e1c) + coperchio colorato con gradiente (colore rifiuto), radial gradient speculare sul coperchio, drop-shadow inline, viewBox 64×82 — stile illustrazione prodotto come lavatrice
+- Rimossi i 4 stat box (Questa sera / Domani / Settimana / Prossima) dalla card principale
+- Colonna destra: nome rifiuto a sinistra + pallino colorato a destra (fc-met con justify-content:space-between)
+- Hero img altezza massima aumentata da 130px a 160px per valorizzare il bidone
+
 ## 1.7.31 — 2026-07-01
 
 ### feat: Differenziata v5.3 — layout identico agli elettrodomestici

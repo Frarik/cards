@@ -1,4 +1,4 @@
-/* frarik-version: 5.3 */
+/* frarik-version: 5.4 */
 ;(function () {
   'use strict';
 
@@ -36,74 +36,79 @@
   }
   function todayIdx() { const d = new Date().getDay(); return d === 0 ? 6 : d - 1; }
 
-  /* ── bidone SVG ── */
+  /* ── bidone SVG stile prodotto (corpo navy, coperchio colorato) ── */
   function binSvg(color, sz) {
     const uid = 'b' + color.replace(/[^0-9a-f]/gi,'').slice(0,6) + String(sz);
-    const L   = shade(color,  68);
-    const D   = shade(color, -48);
-    const D2  = shade(color, -72);
-    const lL  = shade(color,  42);
-    const lD  = shade(color, -28);
+    const lL  = shade(color,  48);
+    const lD  = shade(color, -32);
     const h   = Math.round(sz * 1.46);
-    return `<svg width="${sz}" height="${h}" viewBox="0 0 56 82" fill="none" xmlns="http://www.w3.org/2000/svg">
+    return `<svg width="${sz}" height="${h}" viewBox="0 0 64 82" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 8px 14px rgba(0,0,0,.65))">
   <defs>
-    <linearGradient id="${uid}bg" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%"   stop-color="${L}"/>
-      <stop offset="32%"  stop-color="${color}"/>
-      <stop offset="100%" stop-color="${D}"/>
+    <linearGradient id="${uid}bd" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"   stop-color="#10203a"/>
+      <stop offset="38%"  stop-color="#0a1728"/>
+      <stop offset="100%" stop-color="#060e1c"/>
     </linearGradient>
     <linearGradient id="${uid}ld" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%"   stop-color="${lL}"/>
       <stop offset="100%" stop-color="${lD}"/>
     </linearGradient>
-    <filter id="${uid}sh" x="-25%" y="-10%" width="150%" height="130%">
-      <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="rgba(0,0,0,.55)"/>
-    </filter>
+    <radialGradient id="${uid}sp" cx="24%" cy="28%" r="58%">
+      <stop offset="0%"   stop-color="rgba(255,255,255,.38)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </radialGradient>
   </defs>
-  <!-- shadow -->
-  <ellipse cx="28" cy="80" rx="19" ry="2.8" fill="rgba(0,0,0,.25)"/>
+  <!-- ground shadow -->
+  <ellipse cx="32" cy="80" rx="24" ry="3.5" fill="rgba(0,0,0,.28)"/>
   <!-- axle -->
-  <rect x="10" y="63" width="36" height="5" rx="2.5" fill="${D2}"/>
+  <rect x="10" y="63" width="44" height="5.5" rx="2.75" fill="#050c18"/>
   <!-- left wheel -->
-  <circle cx="15" cy="68" r="7.5" fill="${D2}"/>
-  <circle cx="15" cy="68" r="4"   fill="#0c0c0c"/>
-  <circle cx="13" cy="66" r="1.4" fill="rgba(255,255,255,.2)"/>
+  <circle cx="16" cy="70" r="8.5" fill="#060d1c"/>
+  <circle cx="16" cy="70" r="4.5" fill="#030810"/>
+  <circle cx="14" cy="68" r="1.5" fill="rgba(255,255,255,.14)"/>
   <!-- right wheel -->
-  <circle cx="41" cy="68" r="7.5" fill="${D2}"/>
-  <circle cx="41" cy="68" r="4"   fill="#0c0c0c"/>
-  <circle cx="39" cy="66" r="1.4" fill="rgba(255,255,255,.2)"/>
-  <!-- body -->
-  <path d="M12,23 L7,65 Q7,70 13,70 H43 Q49,70 49,65 L44,23 Z" fill="url(#${uid}bg)" filter="url(#${uid}sh)"/>
-  <!-- left shine -->
-  <path d="M12,23 L7,65 Q7,70 13,70 H16 L11,23 Z" fill="rgba(255,255,255,.26)"/>
-  <!-- right shade -->
-  <path d="M44,23 L49,65 Q49,70 43,70 H40 L45,23 Z" fill="rgba(0,0,0,.22)"/>
+  <circle cx="48" cy="70" r="8.5" fill="#060d1c"/>
+  <circle cx="48" cy="70" r="4.5" fill="#030810"/>
+  <circle cx="46" cy="68" r="1.5" fill="rgba(255,255,255,.14)"/>
+  <!-- body (navy scuro) -->
+  <path d="M14,22 L8,65 Q8,70 14,70 H50 Q56,70 56,65 L50,22 Z" fill="url(#${uid}bd)"/>
+  <!-- left edge shine -->
+  <path d="M14,22 L8,65 Q8,70 14,70 H17 L11,22 Z" fill="rgba(255,255,255,.1)"/>
+  <!-- right edge shadow -->
+  <path d="M50,22 L56,65 Q56,70 50,70 H47 L53,22 Z" fill="rgba(0,0,0,.25)"/>
+  <!-- horizontal rib lines (subtle) -->
+  <path d="M10,38 Q32,36.5 54,38" stroke="rgba(255,255,255,.055)" stroke-width="1.2" fill="none"/>
+  <path d="M9,54  Q32,52.5 55,54"  stroke="rgba(255,255,255,.04)"  stroke-width="1.2" fill="none"/>
+  <!-- front label panel -->
+  <rect x="20" y="42" width="24" height="15" rx="3.5" fill="rgba(255,255,255,.03)" stroke="rgba(255,255,255,.07)" stroke-width=".7"/>
   <!-- lid rim -->
-  <rect x="7"  y="16" width="42" height="9"  rx="4.5" fill="${D}"/>
-  <!-- lid -->
-  <rect x="4"  y="4"  width="48" height="14" rx="6"   fill="url(#${uid}ld)"/>
+  <rect x="8"  y="16" width="48" height="8"  rx="4"   fill="#060d1c"/>
+  <rect x="8"  y="16" width="48" height="3"  rx="4"   fill="rgba(255,255,255,.06)"/>
+  <!-- lid colorato con colore rifiuto -->
+  <rect x="5"  y="4"  width="54" height="14" rx="6"   fill="url(#${uid}ld)"/>
+  <rect x="5"  y="4"  width="54" height="14" rx="6"   fill="url(#${uid}sp)"/>
   <!-- lid gloss -->
-  <rect x="8"  y="7"  width="20" height="4"  rx="2"   fill="rgba(255,255,255,.35)"/>
+  <rect x="9"  y="7"  width="22" height="3.5" rx="1.75" fill="rgba(255,255,255,.22)"/>
   <!-- hinge -->
-  <rect x="20" y="3.5" width="16" height="4" rx="2"   fill="${D2}"/>
-  <!-- handle bar -->
-  <rect x="18" y="0"  width="20" height="5"  rx="2.5" fill="${D}"/>
-  <rect x="20" y="0"  width="10" height="2"  rx="1"   fill="rgba(255,255,255,.28)"/>
+  <rect x="24" y="3.5" width="16" height="4"  rx="2"   fill="#050c18"/>
+  <!-- handle -->
+  <rect x="21" y="0.5" width="22" height="5.5" rx="2.75" fill="#050c18"/>
+  <rect x="23" y="1"   width="10" height="2"   rx="1"    fill="rgba(255,255,255,.1)"/>
 </svg>`;
   }
 
   function emptyBinSvg(sz) {
     const h = Math.round(sz * 1.46);
-    return `<svg width="${sz}" height="${h}" viewBox="0 0 56 82" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <ellipse cx="28" cy="80" rx="19" ry="2.8" fill="rgba(255,255,255,.03)"/>
-  <rect x="10" y="63" width="36" height="5" rx="2.5" fill="rgba(255,255,255,.05)"/>
-  <circle cx="15" cy="68" r="7.5" fill="rgba(255,255,255,.05)"/>
-  <circle cx="41" cy="68" r="7.5" fill="rgba(255,255,255,.05)"/>
-  <path d="M12,23 L7,65 Q7,70 13,70 H43 Q49,70 49,65 L44,23 Z" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.1)" stroke-width="1.2"/>
-  <rect x="7"  y="16" width="42" height="9"  rx="4.5" fill="rgba(255,255,255,.06)"/>
-  <rect x="4"  y="4"  width="48" height="14" rx="6"   fill="rgba(255,255,255,.07)"/>
-  <line x1="16" y1="32" x2="40" y2="60" stroke="rgba(255,255,255,.14)" stroke-width="3.5" stroke-linecap="round"/>
-  <line x1="40" y1="32" x2="16" y2="60" stroke="rgba(255,255,255,.14)" stroke-width="3.5" stroke-linecap="round"/>
+    return `<svg width="${sz}" height="${h}" viewBox="0 0 64 82" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 6px 10px rgba(0,0,0,.4))">
+  <ellipse cx="32" cy="80" rx="24" ry="3.5" fill="rgba(255,255,255,.03)"/>
+  <rect x="10" y="63" width="44" height="5.5" rx="2.75" fill="rgba(255,255,255,.04)"/>
+  <circle cx="16" cy="70" r="8.5" fill="rgba(255,255,255,.04)"/>
+  <circle cx="48" cy="70" r="8.5" fill="rgba(255,255,255,.04)"/>
+  <path d="M14,22 L8,65 Q8,70 14,70 H50 Q56,70 56,65 L50,22 Z" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.1)" stroke-width="1.2"/>
+  <rect x="8"  y="16" width="48" height="8"  rx="4" fill="rgba(255,255,255,.05)"/>
+  <rect x="5"  y="4"  width="54" height="14" rx="6" fill="rgba(255,255,255,.06)"/>
+  <line x1="20" y1="34" x2="44" y2="62" stroke="rgba(255,255,255,.14)" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="44" y1="34" x2="20" y2="62" stroke="rgba(255,255,255,.14)" stroke-width="3.5" stroke-linecap="round"/>
 </svg>`;
   }
 
@@ -177,9 +182,10 @@
     /* riga rifiuto (colonna destra) */
     function wasteRow(id) {
       var t = TIPI.find(function(x) { return x.id === id; }), c = getClr(id);
-      return '<div class="fc-met"><span class="fc-met-lbl" style="display:flex;align-items:center;gap:6px">'
+      return '<div class="fc-met">'
+        + '<span class="fc-met-lbl">' + (t ? t.label : id) + '</span>'
         + '<div style="width:8px;height:8px;border-radius:50%;background:' + c + ';box-shadow:0 0 5px ' + c + '88;flex-shrink:0"></div>'
-        + (t ? t.label : id) + '</span></div>';
+        + '</div>';
     }
     var tonightRows = hasPickup
       ? todayWastes.map(wasteRow).join('')
@@ -200,7 +206,7 @@
       + '#' + rid + ' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
       + '#' + rid + ' .fc-scroll::-webkit-scrollbar{display:none}'
       + '#' + rid + ' .fc-hero{display:flex;align-items:stretch;padding:10px 14px 8px;flex:1}'
-      + '#' + rid + ' .fc-hero-img{flex:1;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;max-height:130px}'
+      + '#' + rid + ' .fc-hero-img{flex:1;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;max-height:160px}'
       + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:5px;justify-content:flex-start;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:10px;overflow:hidden}'
       + '#' + rid + ' .fc-st{display:flex;align-items:center;justify-content:flex-end;gap:7px;font-size:14px;font-weight:800;color:' + col + ';padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,.06)}'
       + '#' + rid + ' .fc-stdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:' + col + (hasPickup ? ';box-shadow:0 0 7px ' + ACC + ';animation:fcPulse 1.5s ease-in-out infinite' : '') + '}'
@@ -209,13 +215,8 @@
       + '#' + rid + ' .fc-pwfull-hd{display:flex;align-items:center;justify-content:space-between}'
       + '#' + rid + ' .fc-pwfull-lbl{font-size:10px;font-weight:700;color:#fff}'
       + '#' + rid + ' .fc-pwfull-v{font-size:15px;font-weight:900;color:' + col + ';line-height:1}'
-      + '#' + rid + ' .fc-met{display:flex;align-items:center;gap:4px}'
+      + '#' + rid + ' .fc-met{display:flex;align-items:center;justify-content:space-between;gap:6px}'
       + '#' + rid + ' .fc-met-lbl{font-size:12px;font-weight:700;color:#fff;flex-shrink:0}'
-      + '#' + rid + ' .fc-stats{display:flex;margin:0 14px 8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden}'
-      + '#' + rid + ' .fc-sb{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 3px;gap:2px}'
-      + '#' + rid + ' .fc-sb-sep{width:1px;background:rgba(255,255,255,.08);flex-shrink:0}'
-      + '#' + rid + ' .fc-sb-n{font-size:12px;font-weight:900;color:' + ACC + ';height:18px;display:flex;align-items:center;justify-content:center}'
-      + '#' + rid + ' .fc-sb-l{font-size:8px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.4px;text-align:center}'
       + '#' + rid + ' .fc-btns{display:flex;gap:6px;padding:0 14px 12px}'
       + '#' + rid + ' .fc-btn{flex:1;padding:8px 4px;border-radius:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:10px;font-weight:700;color:#fff;text-align:center;cursor:pointer;transition:all .15s}'
       + '#' + rid + ' .fc-btn:hover{background:rgba(' + ACC_RGB + ',.12);border-color:rgba(' + ACC_RGB + ',.3);color:' + ACC + '}'
@@ -240,16 +241,6 @@
       + '</div>'
       + '</div>';
 
-    const statsHtml = '<div class="fc-stats">'
-      + '<div class="fc-sb"><div class="fc-sb-n">' + (todayWastes.length || '—') + '</div><div class="fc-sb-l">Questa sera</div></div>'
-      + '<div class="fc-sb-sep"></div>'
-      + '<div class="fc-sb"><div class="fc-sb-n">' + (tmrWastes.length || '—') + '</div><div class="fc-sb-l">Domani</div></div>'
-      + '<div class="fc-sb-sep"></div>'
-      + '<div class="fc-sb"><div class="fc-sb-n">' + weekCount + '</div><div class="fc-sb-l">Settimana</div></div>'
-      + '<div class="fc-sb-sep"></div>'
-      + '<div class="fc-sb"><div class="fc-sb-n" style="font-size:10px">' + (nextAbbr || '—') + '</div><div class="fc-sb-l">Prossima</div></div>'
-      + '</div>';
-
     const btnsHtml = '<div class="fc-btns">'
       + '<div class="fc-btn" data-sya="popup-settimana">📅 Settimana</div>'
       + '<div class="fc-btn" data-sya="popup-imp">⚙ Impostazioni</div>'
@@ -269,7 +260,6 @@
       + '<div class="fc-scroll">'
       + heroHtml
       + nextHtml
-      + statsHtml
       + btnsHtml
       + '</div>'
       + '</div>'
@@ -515,7 +505,7 @@
     name: 'Raccolta Differenziata',
     description: 'Card rifiuti differenziata con multi-selezione per giorno, bidoni realistici e colori personalizzabili.',
     icon: 'mdi:recycle',
-    version: '5.3',
+    version: '5.4',
     frarik_pkg_check: 'sensor.frarik_differenziata_versione',
     frarik_pkg_id: 'frarik_differenziata',
     frarik_pkg_version: '2.0',
