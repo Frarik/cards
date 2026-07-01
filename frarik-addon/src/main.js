@@ -5408,9 +5408,8 @@ function buildCard(card){
   el.className='card'+(t==='picture-elements'?' card-pe':t==='appliances'?' card-app':t==='header-bar'?' card-hbar':t==='footer-bar'?' card-fbar':(t==='weather'||t==='weather-forecast')?' card-wtc':'');
   el.id='card-'+card.id;
   el.dataset.id=card.id;
-  if(t==='yaml-card'){
-    // La card YAML porta il PROPRIO sfondo ha-card → il wrapper Frarik deve essere trasparente
-    // (niente "cornice" attorno): nessuno sfondo, bordo, ombra o blur.
+  if(t==='yaml-card'||t==='js-custom'){
+    // Card con render proprio → wrapper trasparente, nessuna cornice duplicata
     el.style.background='transparent';
     el.style.border='none';
     el.style.boxShadow='none';

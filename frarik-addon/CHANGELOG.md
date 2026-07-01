@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.37 — 2026-07-01
+
+### fix: doppio sfondo su tutte le card JS eliminato
+
+- main.js: `js-custom` card ora trattate come `yaml-card` → container wrapper trasparente senza bordo/sfondo (il render della card porta il proprio background)
+- Tutte le card JS (Lavatrice, Frigorifero, Differenziata e altre 9) ricevono `box-shadow` diretto su `fc-card` per mantenere la profondità
+
 ## 1.7.36 — 2026-07-01
 
 ### fix: Differenziata v5.8 — ripristino background identico a Lavatrice
