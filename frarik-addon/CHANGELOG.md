@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.41 — 2026-07-01
+
+### fix: Differenziata v5.12 — bottoni ancorati al fondo della card
+
+- fc-btns: aggiunto margin-top:auto per ancorare i bottoni al bordo inferiore indipendentemente dall'altezza del contenuto
+
 ## 1.7.40 — 2026-07-01
 
 ### fix: Differenziata v5.11 — rimosso glow parziale che scuriva zona bottoni

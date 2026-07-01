@@ -1,4 +1,4 @@
-/* frarik-version: 5.11 */
+/* frarik-version: 5.12 */
 ;(function () {
   'use strict';
 
@@ -211,7 +211,7 @@
       + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:5px;justify-content:flex-start;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:10px;overflow:hidden}'
       + '#' + rid + ' .fc-met{display:flex;align-items:center;justify-content:space-between;gap:6px}'
       + '#' + rid + ' .fc-met-lbl{font-size:12px;font-weight:700;color:#fff;flex-shrink:0}'
-      + '#' + rid + ' .fc-btns{display:flex;gap:6px;padding:0 14px 12px}'
+      + '#' + rid + ' .fc-btns{display:flex;gap:6px;padding:0 14px 12px;margin-top:auto}'
       + '#' + rid + ' .fc-btn{flex:1;padding:8px 4px;border-radius:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:10px;font-weight:700;color:#fff;text-align:center;cursor:pointer;transition:all .15s}'
       + '#' + rid + ' .fc-btn:hover{background:rgba(' + ACC_RGB + ',.12);border-color:rgba(' + ACC_RGB + ',.3);color:' + ACC + '}'
       + '#' + rid + ' [data-sya]{cursor:pointer}'
@@ -498,7 +498,7 @@
     name: 'Raccolta Differenziata',
     description: 'Card rifiuti differenziata con multi-selezione per giorno, bidoni realistici e colori personalizzabili.',
     icon: 'mdi:recycle',
-    version: '5.11',
+    version: '5.12',
     frarik_pkg_check: 'sensor.frarik_differenziata_versione',
     frarik_pkg_id: 'frarik_differenziata',
     frarik_pkg_version: '2.0',
