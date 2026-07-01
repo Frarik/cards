@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.33 — 2026-07-01
+
+### feat: Differenziata v5.5 — bidone ridisegnato a livello lavatrice + colonna destra riscritta
+
+- Bidone SVG completamente rifatto con ~40 elementi (uguale livello di dettaglio della lavatrice): ruote con 4 anelli concentrici + 6 raggi + highlight mozzo; corpo navy con gradiente L→R, bordo sinistro chiaro, bordo destro scuro, 2 righe texture, pannello frontale incassato, banda colorata al top del corpo; coperchio con gradiente colore rifiuto + radial gloss + 2 riflessi arco; maniglia con dettaglio interno — viewBox 64×100
+- Colonna destra riscritta: "QUESTA SERA" header piccolo accent-color con pallino pulsante + items; separatore; "DOMANI — Gio" header grigio + items; "PROSSIMA / Domani" in fondo auto-posizionato — gerarchia visiva chiara
+- Rimosso nextHtml separato (integrato nella colonna destra)
+
 ## 1.7.32 — 2026-07-01
 
 ### feat: Differenziata v5.4 — bidone stile prodotto + layout colonna destra migliorato

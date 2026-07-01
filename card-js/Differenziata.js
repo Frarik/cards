@@ -1,4 +1,4 @@
-/* frarik-version: 5.4 */
+/* frarik-version: 5.5 */
 ;(function () {
   'use strict';
 
@@ -36,80 +36,82 @@
   }
   function todayIdx() { const d = new Date().getDay(); return d === 0 ? 6 : d - 1; }
 
-  /* ── bidone SVG stile prodotto (corpo navy, coperchio colorato) ── */
+  /* ── bidone SVG — illustrazione prodotto (corpo navy + coperchio colorato) ── */
   function binSvg(color, sz) {
     const uid = 'b' + color.replace(/[^0-9a-f]/gi,'').slice(0,6) + String(sz);
-    const lL  = shade(color,  48);
-    const lD  = shade(color, -32);
-    const h   = Math.round(sz * 1.46);
-    return `<svg width="${sz}" height="${h}" viewBox="0 0 64 82" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 8px 14px rgba(0,0,0,.65))">
-  <defs>
-    <linearGradient id="${uid}bd" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%"   stop-color="#10203a"/>
-      <stop offset="38%"  stop-color="#0a1728"/>
-      <stop offset="100%" stop-color="#060e1c"/>
-    </linearGradient>
-    <linearGradient id="${uid}ld" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%"   stop-color="${lL}"/>
-      <stop offset="100%" stop-color="${lD}"/>
-    </linearGradient>
-    <radialGradient id="${uid}sp" cx="24%" cy="28%" r="58%">
-      <stop offset="0%"   stop-color="rgba(255,255,255,.38)"/>
-      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
-    </radialGradient>
-  </defs>
-  <!-- ground shadow -->
-  <ellipse cx="32" cy="80" rx="24" ry="3.5" fill="rgba(0,0,0,.28)"/>
-  <!-- axle -->
-  <rect x="10" y="63" width="44" height="5.5" rx="2.75" fill="#050c18"/>
-  <!-- left wheel -->
-  <circle cx="16" cy="70" r="8.5" fill="#060d1c"/>
-  <circle cx="16" cy="70" r="4.5" fill="#030810"/>
-  <circle cx="14" cy="68" r="1.5" fill="rgba(255,255,255,.14)"/>
-  <!-- right wheel -->
-  <circle cx="48" cy="70" r="8.5" fill="#060d1c"/>
-  <circle cx="48" cy="70" r="4.5" fill="#030810"/>
-  <circle cx="46" cy="68" r="1.5" fill="rgba(255,255,255,.14)"/>
-  <!-- body (navy scuro) -->
-  <path d="M14,22 L8,65 Q8,70 14,70 H50 Q56,70 56,65 L50,22 Z" fill="url(#${uid}bd)"/>
-  <!-- left edge shine -->
-  <path d="M14,22 L8,65 Q8,70 14,70 H17 L11,22 Z" fill="rgba(255,255,255,.1)"/>
-  <!-- right edge shadow -->
-  <path d="M50,22 L56,65 Q56,70 50,70 H47 L53,22 Z" fill="rgba(0,0,0,.25)"/>
-  <!-- horizontal rib lines (subtle) -->
-  <path d="M10,38 Q32,36.5 54,38" stroke="rgba(255,255,255,.055)" stroke-width="1.2" fill="none"/>
-  <path d="M9,54  Q32,52.5 55,54"  stroke="rgba(255,255,255,.04)"  stroke-width="1.2" fill="none"/>
-  <!-- front label panel -->
-  <rect x="20" y="42" width="24" height="15" rx="3.5" fill="rgba(255,255,255,.03)" stroke="rgba(255,255,255,.07)" stroke-width=".7"/>
-  <!-- lid rim -->
-  <rect x="8"  y="16" width="48" height="8"  rx="4"   fill="#060d1c"/>
-  <rect x="8"  y="16" width="48" height="3"  rx="4"   fill="rgba(255,255,255,.06)"/>
-  <!-- lid colorato con colore rifiuto -->
-  <rect x="5"  y="4"  width="54" height="14" rx="6"   fill="url(#${uid}ld)"/>
-  <rect x="5"  y="4"  width="54" height="14" rx="6"   fill="url(#${uid}sp)"/>
-  <!-- lid gloss -->
-  <rect x="9"  y="7"  width="22" height="3.5" rx="1.75" fill="rgba(255,255,255,.22)"/>
-  <!-- hinge -->
-  <rect x="24" y="3.5" width="16" height="4"  rx="2"   fill="#050c18"/>
-  <!-- handle -->
-  <rect x="21" y="0.5" width="22" height="5.5" rx="2.75" fill="#050c18"/>
-  <rect x="23" y="1"   width="10" height="2"   rx="1"    fill="rgba(255,255,255,.1)"/>
-</svg>`;
+    const lL  = shade(color,  58);
+    const lD  = shade(color, -28);
+    const h   = Math.round(sz * 1.56);
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 100" width="' + sz + '" height="' + h + '" style="display:block;filter:drop-shadow(0 6px 18px rgba(0,0,0,.7))">'
+      + '<defs>'
+      + '<linearGradient id="' + uid + 'bd" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#1a3255"/><stop offset="30%" stop-color="#0b1929"/><stop offset="100%" stop-color="#050d1a"/></linearGradient>'
+      + '<linearGradient id="' + uid + 'ld" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="' + lL + '"/><stop offset="100%" stop-color="' + lD + '"/></linearGradient>'
+      + '<radialGradient id="' + uid + 'sp" cx="26%" cy="28%" r="58%"><stop offset="0%" stop-color="rgba(255,255,255,.52)"/><stop offset="100%" stop-color="rgba(255,255,255,0)"/></radialGradient>'
+      + '</defs>'
+      + '<ellipse cx="32" cy="97" rx="26" ry="3.5" fill="rgba(0,0,0,.35)"/>'
+      + '<rect x="9" y="79" width="46" height="5" rx="2.5" fill="#040912"/>'
+      + '<circle cx="17" cy="87" r="10" fill="#0a1828"/>'
+      + '<circle cx="17" cy="87" r="8" fill="#070e1c"/>'
+      + '<circle cx="17" cy="87" r="5.5" fill="#050b16"/>'
+      + '<circle cx="17" cy="87" r="2.5" fill="#030910"/>'
+      + '<circle cx="15.5" cy="85.5" r="1" fill="rgba(255,255,255,.15)"/>'
+      + '<line x1="17" y1="79" x2="17" y2="82" stroke="#0e1e33" stroke-width="1.8" stroke-linecap="round"/>'
+      + '<line x1="17" y1="92" x2="17" y2="95" stroke="#0e1e33" stroke-width="1.8" stroke-linecap="round"/>'
+      + '<line x1="9.3" y1="82.5" x2="12" y2="84.8" stroke="#0e1e33" stroke-width="1.8" stroke-linecap="round"/>'
+      + '<line x1="22" y1="89.2" x2="24.7" y2="91.5" stroke="#0e1e33" stroke-width="1.8" stroke-linecap="round"/>'
+      + '<line x1="9.3" y1="91.5" x2="12" y2="89.2" stroke="#0e1e33" stroke-width="1.8" stroke-linecap="round"/>'
+      + '<line x1="22" y1="84.8" x2="24.7" y2="82.5" stroke="#0e1e33" stroke-width="1.8" stroke-linecap="round"/>'
+      + '<circle cx="47" cy="87" r="10" fill="#0a1828"/>'
+      + '<circle cx="47" cy="87" r="8" fill="#070e1c"/>'
+      + '<circle cx="47" cy="87" r="5.5" fill="#050b16"/>'
+      + '<circle cx="47" cy="87" r="2.5" fill="#030910"/>'
+      + '<circle cx="45.5" cy="85.5" r="1" fill="rgba(255,255,255,.15)"/>'
+      + '<line x1="47" y1="79" x2="47" y2="82" stroke="#0e1e33" stroke-width="1.8" stroke-linecap="round"/>'
+      + '<line x1="47" y1="92" x2="47" y2="95" stroke="#0e1e33" stroke-width="1.8" stroke-linecap="round"/>'
+      + '<line x1="39.3" y1="82.5" x2="42" y2="84.8" stroke="#0e1e33" stroke-width="1.8" stroke-linecap="round"/>'
+      + '<line x1="52" y1="89.2" x2="54.7" y2="91.5" stroke="#0e1e33" stroke-width="1.8" stroke-linecap="round"/>'
+      + '<line x1="39.3" y1="91.5" x2="42" y2="89.2" stroke="#0e1e33" stroke-width="1.8" stroke-linecap="round"/>'
+      + '<line x1="52" y1="84.8" x2="54.7" y2="82.5" stroke="#0e1e33" stroke-width="1.8" stroke-linecap="round"/>'
+      + '<path d="M10,24 L12,80 Q12,84 17,84 H47 Q52,84 52,80 L54,24 Z" fill="url(#' + uid + 'bd)" stroke="#0a1e38" stroke-width=".8"/>'
+      + '<path d="M10,24 L12,80 Q12,84 17,84 H19 L17,24 Z" fill="rgba(255,255,255,.08)"/>'
+      + '<path d="M54,24 L52,80 Q52,84 47,84 H45 L53,24 Z" fill="rgba(0,0,0,.22)"/>'
+      + '<path d="M11,42 Q32,40.5 53,42" stroke="rgba(255,255,255,.05)" stroke-width="1.2" fill="none"/>'
+      + '<path d="M11.5,61 Q32,59.5 52.5,61" stroke="rgba(255,255,255,.035)" stroke-width="1.2" fill="none"/>'
+      + '<rect x="19" y="36" width="26" height="34" rx="4" fill="rgba(0,0,0,.2)" stroke="rgba(255,255,255,.06)" stroke-width=".7"/>'
+      + '<path d="M10.5,25 L11,33 Q32,31 53,33 L53.5,25 Z" fill="' + color + '" opacity=".2"/>'
+      + '<path d="M10.5,25 Q32,23.5 53.5,25 L53.5,26.5 Q32,25 10.5,26.5 Z" fill="' + color + '" opacity=".12"/>'
+      + '<rect x="8" y="18" width="48" height="8" rx="3.5" fill="#070f1c" stroke="#0a1e38" stroke-width=".7"/>'
+      + '<rect x="8" y="18" width="48" height="2.5" rx="3.5" fill="rgba(255,255,255,.05)"/>'
+      + '<rect x="26" y="16" width="12" height="5" rx="2.5" fill="#050c1a"/>'
+      + '<rect x="5" y="5" width="54" height="15" rx="5.5" fill="url(#' + uid + 'ld)"/>'
+      + '<rect x="5" y="5" width="54" height="15" rx="5.5" fill="url(#' + uid + 'sp)"/>'
+      + '<rect x="5" y="5" width="54" height="15" rx="5.5" fill="none" stroke="' + lD + '" stroke-width=".7" opacity=".5"/>'
+      + '<path d="M10,7 Q32,5.5 54,7" stroke="rgba(255,255,255,.15)" stroke-width=".8" fill="none"/>'
+      + '<path d="M10,10 Q25,6.5 44,9" stroke="rgba(255,255,255,.42)" stroke-width="3" fill="none" stroke-linecap="round"/>'
+      + '<path d="M10,13 Q22,11 36,12.5" stroke="rgba(255,255,255,.12)" stroke-width="1.5" fill="none" stroke-linecap="round"/>'
+      + '<rect x="22" y=".5" width="20" height="6" rx="3" fill="#060d1c" stroke="#0a1e38" stroke-width=".7"/>'
+      + '<rect x="24" y="1.5" width="8" height="2" rx="1" fill="rgba(255,255,255,.12)"/>'
+      + '</svg>';
   }
 
   function emptyBinSvg(sz) {
-    const h = Math.round(sz * 1.46);
-    return `<svg width="${sz}" height="${h}" viewBox="0 0 64 82" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 6px 10px rgba(0,0,0,.4))">
-  <ellipse cx="32" cy="80" rx="24" ry="3.5" fill="rgba(255,255,255,.03)"/>
-  <rect x="10" y="63" width="44" height="5.5" rx="2.75" fill="rgba(255,255,255,.04)"/>
-  <circle cx="16" cy="70" r="8.5" fill="rgba(255,255,255,.04)"/>
-  <circle cx="48" cy="70" r="8.5" fill="rgba(255,255,255,.04)"/>
-  <path d="M14,22 L8,65 Q8,70 14,70 H50 Q56,70 56,65 L50,22 Z" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.1)" stroke-width="1.2"/>
-  <rect x="8"  y="16" width="48" height="8"  rx="4" fill="rgba(255,255,255,.05)"/>
-  <rect x="5"  y="4"  width="54" height="14" rx="6" fill="rgba(255,255,255,.06)"/>
-  <line x1="20" y1="34" x2="44" y2="62" stroke="rgba(255,255,255,.14)" stroke-width="3.5" stroke-linecap="round"/>
-  <line x1="44" y1="34" x2="20" y2="62" stroke="rgba(255,255,255,.14)" stroke-width="3.5" stroke-linecap="round"/>
-</svg>`;
+    const h = Math.round(sz * 1.56);
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 100" width="' + sz + '" height="' + h + '" style="display:block;filter:drop-shadow(0 4px 8px rgba(0,0,0,.4))">'
+      + '<ellipse cx="32" cy="97" rx="26" ry="3.5" fill="rgba(255,255,255,.02)"/>'
+      + '<rect x="9" y="79" width="46" height="5" rx="2.5" fill="rgba(255,255,255,.04)"/>'
+      + '<circle cx="17" cy="87" r="10" fill="rgba(255,255,255,.04)"/>'
+      + '<circle cx="17" cy="87" r="8" fill="rgba(255,255,255,.03)"/>'
+      + '<circle cx="17" cy="87" r="5.5" fill="rgba(255,255,255,.02)"/>'
+      + '<circle cx="47" cy="87" r="10" fill="rgba(255,255,255,.04)"/>'
+      + '<circle cx="47" cy="87" r="8" fill="rgba(255,255,255,.03)"/>'
+      + '<circle cx="47" cy="87" r="5.5" fill="rgba(255,255,255,.02)"/>'
+      + '<path d="M10,24 L12,80 Q12,84 17,84 H47 Q52,84 52,80 L54,24 Z" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.1)" stroke-width="1.2"/>'
+      + '<rect x="8" y="18" width="48" height="8" rx="3.5" fill="rgba(255,255,255,.05)"/>'
+      + '<rect x="5" y="5" width="54" height="15" rx="5.5" fill="rgba(255,255,255,.06)" stroke="rgba(255,255,255,.08)" stroke-width=".7"/>'
+      + '<rect x="22" y=".5" width="20" height="6" rx="3" fill="rgba(255,255,255,.04)"/>'
+      + '<line x1="21" y1="38" x2="43" y2="68" stroke="rgba(255,255,255,.15)" stroke-width="3.5" stroke-linecap="round"/>'
+      + '<line x1="43" y1="38" x2="21" y2="68" stroke="rgba(255,255,255,.15)" stroke-width="3.5" stroke-linecap="round"/>'
+      + '</svg>';
   }
 
   /* ── popup helpers (stile elettrodomestici) ── */
@@ -208,13 +210,6 @@
       + '#' + rid + ' .fc-hero{display:flex;align-items:stretch;padding:10px 14px 8px;flex:1}'
       + '#' + rid + ' .fc-hero-img{flex:1;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;max-height:160px}'
       + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:5px;justify-content:flex-start;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:10px;overflow:hidden}'
-      + '#' + rid + ' .fc-st{display:flex;align-items:center;justify-content:flex-end;gap:7px;font-size:14px;font-weight:800;color:' + col + ';padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,.06)}'
-      + '#' + rid + ' .fc-stdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:' + col + (hasPickup ? ';box-shadow:0 0 7px ' + ACC + ';animation:fcPulse 1.5s ease-in-out infinite' : '') + '}'
-      + '#' + rid + ' .fc-sub{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.35);margin-top:4px}'
-      + '#' + rid + ' .fc-pwfull{margin:0 14px 12px}'
-      + '#' + rid + ' .fc-pwfull-hd{display:flex;align-items:center;justify-content:space-between}'
-      + '#' + rid + ' .fc-pwfull-lbl{font-size:10px;font-weight:700;color:#fff}'
-      + '#' + rid + ' .fc-pwfull-v{font-size:15px;font-weight:900;color:' + col + ';line-height:1}'
       + '#' + rid + ' .fc-met{display:flex;align-items:center;justify-content:space-between;gap:6px}'
       + '#' + rid + ' .fc-met-lbl{font-size:12px;font-weight:700;color:#fff;flex-shrink:0}'
       + '#' + rid + ' .fc-btns{display:flex;gap:6px;padding:0 14px 12px}'
@@ -224,20 +219,24 @@
       + (hasPickup ? '@keyframes fcPulse{0%,100%{opacity:.6}50%{opacity:1}}' : '')
       + '</style>';
 
+    const dot = (c, pulse) => '<div style="width:6px;height:6px;border-radius:50%;background:' + c + ';flex-shrink:0' + (pulse ? ';box-shadow:0 0 6px ' + c + ';animation:fcPulse 1.5s ease-in-out infinite' : '') + '"></div>';
+    const secHdr = (label, c) => '<div style="display:flex;align-items:center;gap:5px;margin-bottom:5px">'
+      + dot(c || 'rgba(255,255,255,.25)', !!(c && hasPickup))
+      + '<span style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:' + (c || 'rgba(255,255,255,.35)') + '">' + label + '</span>'
+      + '</div>';
+
     const heroHtml = '<div class="fc-hero">'
       + '<div class="fc-hero-img">' + binsHtml + '</div>'
       + '<div class="fc-hero-r">'
-      + '<div class="fc-st">Questa sera<div class="fc-stdot"></div></div>'
+      + secHdr('Questa sera', col)
       + tonightRows
-      + '<div class="fc-sub">Per domani (' + DFULL[tmrI] + ')</div>'
+      + '<div style="border-top:1px solid rgba(255,255,255,.07);margin:8px 0 6px"></div>'
+      + secHdr('Domani — ' + DFULL[tmrI].slice(0,3), null)
       + tmrRows
+      + '<div style="margin-top:auto;padding-top:8px;border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between">'
+      + '<span style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.3)">Prossima</span>'
+      + '<span style="font-size:10px;font-weight:800;color:' + ACC + '">' + nextLabel + '</span>'
       + '</div>'
-      + '</div>';
-
-    const nextHtml = '<div class="fc-pwfull">'
-      + '<div class="fc-pwfull-hd">'
-      + '<span class="fc-pwfull-lbl">Prossima raccolta</span>'
-      + '<span class="fc-pwfull-v">' + nextLabel + '</span>'
       + '</div>'
       + '</div>';
 
@@ -259,7 +258,6 @@
       + '</div>'
       + '<div class="fc-scroll">'
       + heroHtml
-      + nextHtml
       + btnsHtml
       + '</div>'
       + '</div>'
@@ -505,7 +503,7 @@
     name: 'Raccolta Differenziata',
     description: 'Card rifiuti differenziata con multi-selezione per giorno, bidoni realistici e colori personalizzabili.',
     icon: 'mdi:recycle',
-    version: '5.4',
+    version: '5.5',
     frarik_pkg_check: 'sensor.frarik_differenziata_versione',
     frarik_pkg_id: 'frarik_differenziata',
     frarik_pkg_version: '2.0',
