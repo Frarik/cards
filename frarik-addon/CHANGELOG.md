@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.35 — 2026-07-01
+
+### fix: Differenziata v5.7 — ripristino sfondo card
+
+- Rimosso overflow:hidden da #rid (rompeva il layout nella widget frame)
+- fc-card usa background:#070d18 solido + border-radius:inherit (eredita dal container HA, no doppio sfondo)
+
 ## 1.7.34 — 2026-07-01
 
 ### fix: Differenziata v5.6 — doppio sfondo e prossima rimossi
