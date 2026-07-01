@@ -1,4 +1,4 @@
-/* frarik-version: 5.1 */
+/* frarik-version: 5.2 */
 ;(function () {
   'use strict';
 
@@ -36,90 +36,74 @@
   }
   function todayIdx() { const d = new Date().getDay(); return d === 0 ? 6 : d - 1; }
 
-  /* ── bidone SVG illustrativo ── */
+  /* ── bidone SVG ── */
   function binSvg(color, sz) {
-    const uid = 'b' + color.replace(/[^a-f0-9]/gi,'').slice(0,6) + sz;
-    const lgt  = shade(color, 60);
-    const mid  = color;
-    const drk  = shade(color, -50);
-    const drk2 = shade(color, -70);
-    const lidT = shade(color, 40);
-    const lidB = shade(color, -20);
-    const h = Math.round(sz * 1.3);
-    return `<svg width="${sz}" height="${h}" viewBox="0 0 80 104" fill="none" xmlns="http://www.w3.org/2000/svg">
+    const uid = 'b' + color.replace(/[^0-9a-f]/gi,'').slice(0,6) + String(sz);
+    const L   = shade(color,  68);
+    const D   = shade(color, -48);
+    const D2  = shade(color, -72);
+    const lL  = shade(color,  42);
+    const lD  = shade(color, -28);
+    const h   = Math.round(sz * 1.46);
+    return `<svg width="${sz}" height="${h}" viewBox="0 0 56 82" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="${uid}bg" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%"   stop-color="${lgt}"/>
-      <stop offset="28%"  stop-color="${mid}"/>
-      <stop offset="100%" stop-color="${drk}"/>
+      <stop offset="0%"   stop-color="${L}"/>
+      <stop offset="32%"  stop-color="${color}"/>
+      <stop offset="100%" stop-color="${D}"/>
     </linearGradient>
     <linearGradient id="${uid}ld" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%"   stop-color="${lidT}"/>
-      <stop offset="100%" stop-color="${lidB}"/>
+      <stop offset="0%"   stop-color="${lL}"/>
+      <stop offset="100%" stop-color="${lD}"/>
     </linearGradient>
-    <linearGradient id="${uid}sh" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%"   stop-color="rgba(255,255,255,.08)"/>
-      <stop offset="100%" stop-color="rgba(0,0,0,.18)"/>
-    </linearGradient>
-    <radialGradient id="${uid}sp" cx="28%" cy="28%" r="60%">
-      <stop offset="0%"   stop-color="rgba(255,255,255,.45)"/>
-      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
-    </radialGradient>
-    <filter id="${uid}dr" x="-20%" y="-10%" width="140%" height="130%">
-      <feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="rgba(0,0,0,.5)"/>
+    <filter id="${uid}sh" x="-25%" y="-10%" width="150%" height="130%">
+      <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="rgba(0,0,0,.55)"/>
     </filter>
   </defs>
-  <!-- ombra terreno -->
-  <ellipse cx="40" cy="101" rx="26" ry="3.5" fill="rgba(0,0,0,.25)"/>
-  <!-- assale -->
-  <rect x="14" y="85" width="52" height="5" rx="2.5" fill="${drk2}"/>
-  <!-- ruote sx -->
-  <circle cx="19" cy="90"  r="7.5" fill="${drk2}"/>
-  <circle cx="19" cy="90"  r="4"   fill="#0e0e0e"/>
-  <circle cx="19" cy="90"  r="1.8" fill="#1c1c1c"/>
-  <circle cx="17" cy="88"  r="1"   fill="rgba(255,255,255,.18)"/>
-  <!-- ruote dx -->
-  <circle cx="61" cy="90"  r="7.5" fill="${drk2}"/>
-  <circle cx="61" cy="90"  r="4"   fill="#0e0e0e"/>
-  <circle cx="61" cy="90"  r="1.8" fill="#1c1c1c"/>
-  <circle cx="59" cy="88"  r="1"   fill="rgba(255,255,255,.18)"/>
-  <!-- corpo bidone (trapezio) -->
-  <path d="M17 22 L10 82 Q10 87 16 87 H64 Q70 87 70 82 L63 22 Z" fill="url(#${uid}bg)" filter="url(#${uid}dr)"/>
-  <path d="M17 22 L10 82 Q10 87 16 87 H64 Q70 87 70 82 L63 22 Z" fill="url(#${uid}sh)"/>
-  <!-- bordo luminoso sinistra -->
-  <path d="M17 22 L10 82 Q10 87 16 87 H19 L12 22 Z" fill="rgba(255,255,255,.22)"/>
-  <!-- ombra destra -->
-  <path d="M63 22 L70 82 Q70 87 64 87 H61 L68 22 Z" fill="rgba(0,0,0,.2)"/>
-  <!-- striscia frontale decorativa -->
-  <rect x="22" y="46" width="36" height="3" rx="1.5" fill="rgba(255,255,255,.13)"/>
-  <rect x="22" y="56" width="36" height="3" rx="1.5" fill="rgba(255,255,255,.08)"/>
-  <rect x="22" y="66" width="36" height="3" rx="1.5" fill="rgba(255,255,255,.05)"/>
-  <!-- bordo sotto coperchio (rim) -->
-  <rect x="9"  y="17" width="62" height="7" rx="3.5" fill="${drk}"/>
-  <rect x="9"  y="17" width="62" height="3" rx="3.5" fill="rgba(255,255,255,.18)"/>
-  <!-- coperchio -->
-  <rect x="7"  y="6"  width="66" height="13" rx="5" fill="url(#${uid}ld)"/>
-  <rect x="7"  y="6"  width="66" height="13" rx="5" fill="url(#${uid}sp)"/>
-  <!-- cerniera centrale -->
-  <rect x="32" y="5"  width="16" height="3.5" rx="1.75" fill="${drk2}"/>
-  <!-- manico -->
-  <path d="M30 1 Q40 -3 50 1 L50 5 Q40 1 30 5 Z" fill="${drk}"/>
-  <path d="M30 1 Q40 -3 50 1 L50 2.8 Q40 -1 30 2.8 Z" fill="rgba(255,255,255,.3)"/>
+  <!-- shadow -->
+  <ellipse cx="28" cy="80" rx="19" ry="2.8" fill="rgba(0,0,0,.25)"/>
+  <!-- axle -->
+  <rect x="10" y="63" width="36" height="5" rx="2.5" fill="${D2}"/>
+  <!-- left wheel -->
+  <circle cx="15" cy="68" r="7.5" fill="${D2}"/>
+  <circle cx="15" cy="68" r="4"   fill="#0c0c0c"/>
+  <circle cx="13" cy="66" r="1.4" fill="rgba(255,255,255,.2)"/>
+  <!-- right wheel -->
+  <circle cx="41" cy="68" r="7.5" fill="${D2}"/>
+  <circle cx="41" cy="68" r="4"   fill="#0c0c0c"/>
+  <circle cx="39" cy="66" r="1.4" fill="rgba(255,255,255,.2)"/>
+  <!-- body -->
+  <path d="M12,23 L7,65 Q7,70 13,70 H43 Q49,70 49,65 L44,23 Z" fill="url(#${uid}bg)" filter="url(#${uid}sh)"/>
+  <!-- left shine -->
+  <path d="M12,23 L7,65 Q7,70 13,70 H16 L11,23 Z" fill="rgba(255,255,255,.26)"/>
+  <!-- right shade -->
+  <path d="M44,23 L49,65 Q49,70 43,70 H40 L45,23 Z" fill="rgba(0,0,0,.22)"/>
+  <!-- lid rim -->
+  <rect x="7"  y="16" width="42" height="9"  rx="4.5" fill="${D}"/>
+  <!-- lid -->
+  <rect x="4"  y="4"  width="48" height="14" rx="6"   fill="url(#${uid}ld)"/>
+  <!-- lid gloss -->
+  <rect x="8"  y="7"  width="20" height="4"  rx="2"   fill="rgba(255,255,255,.35)"/>
+  <!-- hinge -->
+  <rect x="20" y="3.5" width="16" height="4" rx="2"   fill="${D2}"/>
+  <!-- handle bar -->
+  <rect x="18" y="0"  width="20" height="5"  rx="2.5" fill="${D}"/>
+  <rect x="20" y="0"  width="10" height="2"  rx="1"   fill="rgba(255,255,255,.28)"/>
 </svg>`;
   }
 
   function emptyBinSvg(sz) {
-    const h = Math.round(sz * 1.3);
-    return `<svg width="${sz}" height="${h}" viewBox="0 0 80 104" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <ellipse cx="40" cy="101" rx="26" ry="3.5" fill="rgba(255,255,255,.03)"/>
-  <rect x="14" y="85" width="52" height="5" rx="2.5" fill="rgba(255,255,255,.04)"/>
-  <circle cx="19" cy="90" r="7.5" fill="rgba(255,255,255,.04)"/>
-  <circle cx="61" cy="90" r="7.5" fill="rgba(255,255,255,.04)"/>
-  <path d="M17 22 L10 82 Q10 87 16 87 H64 Q70 87 70 82 L63 22 Z" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.08)" stroke-width="1"/>
-  <rect x="9"  y="17" width="62" height="7"  rx="3.5" fill="rgba(255,255,255,.05)"/>
-  <rect x="7"  y="6"  width="66" height="13" rx="5"   fill="rgba(255,255,255,.06)"/>
-  <line x1="27" y1="38" x2="53" y2="78" stroke="rgba(255,255,255,.12)" stroke-width="4" stroke-linecap="round"/>
-  <line x1="53" y1="38" x2="27" y2="78" stroke="rgba(255,255,255,.12)" stroke-width="4" stroke-linecap="round"/>
+    const h = Math.round(sz * 1.46);
+    return `<svg width="${sz}" height="${h}" viewBox="0 0 56 82" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="28" cy="80" rx="19" ry="2.8" fill="rgba(255,255,255,.03)"/>
+  <rect x="10" y="63" width="36" height="5" rx="2.5" fill="rgba(255,255,255,.05)"/>
+  <circle cx="15" cy="68" r="7.5" fill="rgba(255,255,255,.05)"/>
+  <circle cx="41" cy="68" r="7.5" fill="rgba(255,255,255,.05)"/>
+  <path d="M12,23 L7,65 Q7,70 13,70 H43 Q49,70 49,65 L44,23 Z" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.1)" stroke-width="1.2"/>
+  <rect x="7"  y="16" width="42" height="9"  rx="4.5" fill="rgba(255,255,255,.06)"/>
+  <rect x="4"  y="4"  width="48" height="14" rx="6"   fill="rgba(255,255,255,.07)"/>
+  <line x1="16" y1="32" x2="40" y2="60" stroke="rgba(255,255,255,.14)" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="40" y1="32" x2="16" y2="60" stroke="rgba(255,255,255,.14)" stroke-width="3.5" stroke-linecap="round"/>
 </svg>`;
   }
 
@@ -242,14 +226,29 @@
 
   /* ── MOUNT / UPDATE / EVENTS ── */
   function mount(card, hass, el) {
+    if (el._diffBound) return;
+    el._diffBound = true;
     el.addEventListener('click', function(e) {
       const t = e.target.closest('[data-sya]');
       if (!t) return;
-      const a = t.getAttribute('data-sya');
-      if (a === 'popup-imp') openImpostazioni(card);
+      if (t.dataset.sya === 'popup-imp') openImpostazioni(card);
     });
   }
-  function update(card, hass, el) {}
+
+  function update(card, hass, el) {
+    const h = H();
+    const ti   = todayIdx();
+    const tmrI = (ti + 1) % 7;
+    const sig  = [
+      S(h, 'input_text.frarik_differenziata_rifiuto_' + DAYS[ti]),
+      S(h, 'input_text.frarik_differenziata_rifiuto_' + DAYS[tmrI]),
+      JSON.stringify(getClrs())
+    ].join('|');
+    if (!el.querySelector('.fc-card') || el._diffSig !== sig) {
+      el._diffSig = sig;
+      el.innerHTML = render(card);
+    }
+  }
 
   /* ── POPUP IMPOSTAZIONI ── */
   function openImpostazioni(card) {
@@ -438,7 +437,7 @@
     name: 'Raccolta Differenziata',
     description: 'Card rifiuti differenziata con multi-selezione per giorno, bidoni realistici e colori personalizzabili.',
     icon: 'mdi:recycle',
-    version: '5.1',
+    version: '5.2',
     frarik_pkg_check: 'sensor.frarik_differenziata_versione',
     frarik_pkg_id: 'frarik_differenziata',
     frarik_pkg_version: '2.0',

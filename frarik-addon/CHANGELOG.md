@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.30 — 2026-07-01
+
+### fix/feat: Differenziata v5.2 — bidone ridisegnato + update funzionante + 2 bidoni
+
+- Bidone SVG completamente rifatto: viewBox 56×82, forme bold e pulite (5 elementi invece di 30+), gradiente corpo orizzontale L→D, lid con gradiente diagonale, gloss bianco, maniglia flat, ruote con highlight — scala bene da 58 a 96px
+- Corretta funzione `update()` che era vuota: ora calcola una firma sullo stato (`input_text` oggi + domani + colori), se cambia rigenera il contenuto — i bidoni ora si aggiornano in tempo reale quando si salvano le impostazioni
+- Corretta funzione `mount()` con guard anti-duplicati (`el._diffBound`) per evitare listener multipli sullo stesso elemento
+- Con 2 rifiuti selezionati per il giorno corrente appaiono correttamente 2 bidoni affiancati colorati
+
 ## 1.7.29 — 2026-07-01
 
 ### fix: errore "Failed to construct HTMLElement" non appare più nelle notifiche
