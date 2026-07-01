@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.7.23 — 2026-07-01
+
+### feat: card Raccolta Differenziata v4 — riscrittura completa
+
+- Layout 2 colonne stile elettrodomestici: bidoni realistici a sinistra, dati a destra
+- Multi-selezione rifiuti per ogni giorno (chips cliccabili): umido, secco, carta, plastica, vetro
+- Colori personalizzabili per tipo di rifiuto (palette + color picker nativo), salvati in localStorage
+- Bidoni SVG fotorealistici con gradienti 3D, ribs, ruote, manico e ombra
+- Calendario settimanale con puntini colorati per tipo di rifiuto
+- Popup impostazioni: sezione giorni + sezione colori + sezione notifiche con pulsante Salva
+- PKG `frarik_differenziata.yaml` v2.0: rimosse entità `rifiuto2_*` (ora tutto in `rifiuto_GIORNO` come CSV), `max: 255` sulle input_text
+
 ## 1.7.22 — 2026-07-01
 
 ### fix: PKG posta doppio-prefisso + notify group nomi errati

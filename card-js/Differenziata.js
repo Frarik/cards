@@ -1,1244 +1,597 @@
-﻿/**
- * differenziata-card.js — Raccolta Differenziata Lovelace Card
- * Entità: input_text x7, input_datetime, input_boolean x2, sensor
+/**
+ * differenziata-card.js — Raccolta Differenziata v4
+ * Multi-selezione rifiuti, bidoni realistici, colori personalizzabili
  */
 
-const DD_DAYS  = ['lunedi','martedi','mercoledi','giovedi','venerdi','sabato','domenica']
-const DD_LBL   = ['LU','MA','ME','GI','VE','SA','DO']
-const DD_FULL  = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato','Domenica']
-const DD_MONTH = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre']
+const _DD_DAYS = ['lunedi','martedi','mercoledi','giovedi','venerdi','sabato','domenica']
+const _DD_LBL  = ['Lu','Ma','Me','Gi','Ve','Sa','Do']
+const _DD_FULL = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato','Domenica']
 
-const PRESETS = [
-  { val:'Organico',        short:'U', color:'#92400e', bg:'rgba(180,83,9,.85)'  },
-  { val:'Carta',           short:'C', color:'#1e40af', bg:'rgba(37,99,235,.85)' },
-  { val:'Plastica',        short:'P', color:'#b45309', bg:'rgba(217,119,6,.85)' },
-  { val:'Vetro',           short:'V', color:'#15803d', bg:'rgba(22,163,74,.85)' },
-  { val:'Indifferenziato', short:'I', color:'#4b5563', bg:'rgba(75,85,99,.85)'  },
-  { val:'Nessun Ritiro',   short:'✕', color:'#374151', bg:'rgba(55,65,81,.75)'  },
+const _TIPI = [
+  { id:'umido',    label:'Umido',    icon:'🟤', defColor:'#92400e' },
+  { id:'secco',    label:'Secco',    icon:'⚫', defColor:'#4b5563' },
+  { id:'carta',    label:'Carta',    icon:'🔵', defColor:'#1d4ed8' },
+  { id:'plastica', label:'Plastica', icon:'🟡', defColor:'#d97706' },
+  { id:'vetro',    label:'Vetro',    icon:'🟢', defColor:'#15803d' },
 ]
+const _DD_CLRS_KEY = 'frarik_diff_v4_colors'
 
-function wasteInfo(text) {
-  const t = (text || '').toLowerCase().trim()
-  if (!t) return { label:'—', short:'?', color:'#374151', glow:'none', hasPickup:false }
-  if (t.includes('nessun') || t.includes('niente') || t === 'no')
-    return { label:'Nessun Ritiro', short:'—', color:'#4b5563', glow:'none', hasPickup:false }
-  if (t.includes('organ') || t.includes('umido'))
-    return { label:text, short:'Org', color:'#b45309', glow:'rgba(180,83,9,.4)',   hasPickup:true }
-  if (t.includes('carta') || t.includes('carton'))
-    return { label:text, short:'Car', color:'#3b82f6', glow:'rgba(59,130,246,.4)', hasPickup:true }
-  if (t.includes('plastic') || t.includes('metall') || t.includes('latt'))
-    return { label:text, short:'Pla', color:'#eab308', glow:'rgba(234,179,8,.4)',  hasPickup:true }
-  if (t.includes('vetro'))
-    return { label:text, short:'Vet', color:'#22c55e', glow:'rgba(34,197,94,.4)',  hasPickup:true }
-  if (t.includes('indiff') || t.includes('secco'))
-    return { label:text, short:'Ind', color:'#6b7280', glow:'rgba(107,114,128,.3)',hasPickup:true }
-  if (t.includes('multi') || t.includes('misto'))
-    return { label:text, short:'Mul', color:'#a78bfa', glow:'rgba(167,139,250,.4)',hasPickup:true }
-  return { label:text, short:text.slice(0,3), color:'#06b6d4', glow:'rgba(6,182,212,.4)', hasPickup:true }
+function _ddClrs() { try { return JSON.parse(localStorage.getItem(_DD_CLRS_KEY)||'{}') } catch(e) { return {} } }
+function _ddClr(id) { const c=_ddClrs(), t=_TIPI.find(x=>x.id===id); return c[id]||(t?t.defColor:'#6b7280') }
+function _ddSaveClr(id, val) { const c=_ddClrs(); c[id]=val; try{localStorage.setItem(_DD_CLRS_KEY,JSON.stringify(c))}catch(e){} }
+function _ddShade(hex, n) {
+  const x=parseInt(hex.slice(1),16)||0
+  const r=Math.max(0,Math.min(255,((x>>16)&255)+n))
+  const g=Math.max(0,Math.min(255,((x>>8)&255)+n))
+  const b=Math.max(0,Math.min(255,(x&255)+n))
+  return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('')
+}
+function _parseWastes(str) {
+  if (!str||!str.trim()) return []
+  return str.split(',').map(s=>s.trim().toLowerCase()).filter(s=>_TIPI.some(t=>t.id===s))
 }
 
-// Bidone a ruote SVG — colore personalizzato
-function binSvg(color, sz) {
-  return `<svg width="${sz}" height="${sz}" viewBox="0 0 48 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="17" y="0" width="14" height="7" rx="3.5" fill="${color}" opacity="0.55"/>
-    <rect x="3" y="6" width="42" height="10" rx="3" fill="${color}"/>
-    <path d="M7 18 L9.5 47.5 Q9.5 52 14 52 H34 Q38.5 52 38.5 47.5 L41 18 Z" fill="${color}" opacity="0.88"/>
-    <rect x="15.5" y="21" width="2.5" height="25" rx="1.3" fill="rgba(255,255,255,.22)"/>
-    <rect x="23" y="21" width="2.5" height="25" rx="1.3" fill="rgba(255,255,255,.22)"/>
-    <circle cx="13.5" cy="56" r="4.2" fill="${color}" opacity="0.65"/>
-    <circle cx="34.5" cy="56" r="4.2" fill="${color}" opacity="0.65"/>
-  </svg>`
+/* ─── Bidone SVG realistico ─────────────────────────────────────────────── */
+function _binSvg(color, sz) {
+  const gid = 'dg'+Math.abs(color.split('').reduce((a,c)=>a+c.charCodeAt(0),0))
+  const light  = _ddShade(color, 45)
+  const dark   = _ddShade(color,-40)
+  const darker = _ddShade(color,-55)
+  const lid    = _ddShade(color, 20)
+  return `<svg width="${sz}" height="${Math.round(sz*1.18)}" viewBox="0 0 80 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="${gid}b" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="${light}"/>
+      <stop offset="38%"  stop-color="${color}"/>
+      <stop offset="100%" stop-color="${dark}"/>
+    </linearGradient>
+    <linearGradient id="${gid}l" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="${lid}"/>
+      <stop offset="100%" stop-color="${dark}"/>
+    </linearGradient>
+    <linearGradient id="${gid}tb" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="rgba(255,255,255,.05)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,.18)"/>
+    </linearGradient>
+  </defs>
+  <!-- Ground shadow -->
+  <ellipse cx="40" cy="93" rx="28" ry="4" fill="rgba(0,0,0,.22)"/>
+  <!-- Axle -->
+  <rect x="18" y="83" width="44" height="5" rx="2.5" fill="${darker}"/>
+  <!-- Wheels -->
+  <circle cx="22" cy="87" r="7" fill="${darker}"/>
+  <circle cx="58" cy="87" r="7" fill="${darker}"/>
+  <circle cx="22" cy="87" r="4" fill="#0f172a"/>
+  <circle cx="58" cy="87" r="4" fill="#0f172a"/>
+  <circle cx="21" cy="86" r="1.4" fill="rgba(255,255,255,.3)"/>
+  <circle cx="57" cy="86" r="1.4" fill="rgba(255,255,255,.3)"/>
+  <!-- Body -->
+  <path d="M13 30 L16 79 Q16 83 23 83 H57 Q64 83 64 79 L67 30 Z" fill="url(#${gid}b)"/>
+  <path d="M13 30 L16 79 Q16 83 23 83 H57 Q64 83 64 79 L67 30 Z" fill="url(#${gid}tb)"/>
+  <!-- Left highlight -->
+  <path d="M13 30 L16 79 Q16 83 23 83 H25 L22 30 Z" fill="rgba(255,255,255,.18)"/>
+  <!-- Right shadow -->
+  <path d="M67 30 L64 79 Q64 83 57 83 H55 L58 30 Z" fill="rgba(0,0,0,.18)"/>
+  <!-- Ribs -->
+  <path d="M14 43 Q40 41 66 43" stroke="rgba(0,0,0,.13)" stroke-width="1.5" fill="none"/>
+  <path d="M14 42 Q40 40 66 42" stroke="rgba(255,255,255,.07)" stroke-width="1" fill="none"/>
+  <path d="M14 55 Q40 53 66 55" stroke="rgba(0,0,0,.13)" stroke-width="1.5" fill="none"/>
+  <path d="M14 54 Q40 52 66 54" stroke="rgba(255,255,255,.07)" stroke-width="1" fill="none"/>
+  <path d="M15 67 Q40 65 65 67" stroke="rgba(0,0,0,.13)" stroke-width="1.5" fill="none"/>
+  <path d="M15 66 Q40 64 65 66" stroke="rgba(255,255,255,.07)" stroke-width="1" fill="none"/>
+  <!-- Front label panel -->
+  <rect x="24" y="45" width="32" height="20" rx="3" fill="rgba(255,255,255,.1)"/>
+  <rect x="24" y="45" width="32" height="3" rx="3" fill="rgba(255,255,255,.18)"/>
+  <!-- Lid ledge -->
+  <rect x="10" y="21" width="60" height="11" rx="4" fill="${dark}"/>
+  <rect x="10" y="21" width="60" height="4" rx="4" fill="rgba(255,255,255,.12)"/>
+  <!-- Lid -->
+  <rect x="8" y="9" width="64" height="14" rx="5" fill="url(#${gid}l)"/>
+  <!-- Lid top shine -->
+  <rect x="8" y="9" width="64" height="5" rx="5" fill="rgba(255,255,255,.28)"/>
+  <!-- Lid right shadow -->
+  <rect x="56" y="9" width="16" height="14" rx="5" fill="rgba(0,0,0,.1)"/>
+  <!-- Handle -->
+  <path d="M28 2 Q40 -2 52 2 L52 9 Q40 5 28 9 Z" fill="${darker}"/>
+  <path d="M28 2 Q40 -2 52 2 L52 4.5 Q40 .5 28 4.5 Z" fill="rgba(255,255,255,.22)"/>
+</svg>`
 }
 
-// Bidone vuoto per "Nessun Ritiro"
-function emptyBinSvg(sz) {
-  return `<svg width="${sz}" height="${sz}" viewBox="0 0 48 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="17" y="0" width="14" height="7" rx="3.5" fill="rgba(255,255,255,.08)"/>
-    <rect x="3" y="6" width="42" height="10" rx="3" fill="rgba(255,255,255,.1)"/>
-    <path d="M7 18 L9.5 47.5 Q9.5 52 14 52 H34 Q38.5 52 38.5 47.5 L41 18 Z" fill="rgba(255,255,255,.05)"/>
-    <rect x="15.5" y="21" width="2.5" height="25" rx="1.3" fill="rgba(255,255,255,.05)"/>
-    <rect x="23" y="21" width="2.5" height="25" rx="1.3" fill="rgba(255,255,255,.05)"/>
-    <circle cx="13.5" cy="56" r="4.2" fill="rgba(255,255,255,.08)"/>
-    <circle cx="34.5" cy="56" r="4.2" fill="rgba(255,255,255,.08)"/>
-    <line x1="17" y1="25" x2="31" y2="39" stroke="rgba(255,255,255,.2)" stroke-width="2.5" stroke-linecap="round"/>
-    <line x1="31" y1="25" x2="17" y2="39" stroke="rgba(255,255,255,.2)" stroke-width="2.5" stroke-linecap="round"/>
-  </svg>`
+function _emptyBinSvg(sz) {
+  return `<svg width="${sz}" height="${Math.round(sz*1.18)}" viewBox="0 0 80 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="40" cy="93" rx="28" ry="4" fill="rgba(255,255,255,.03)"/>
+  <rect x="18" y="83" width="44" height="5" rx="2.5" fill="rgba(255,255,255,.05)"/>
+  <circle cx="22" cy="87" r="7" fill="rgba(255,255,255,.05)"/>
+  <circle cx="58" cy="87" r="7" fill="rgba(255,255,255,.05)"/>
+  <path d="M13 30 L16 79 Q16 83 23 83 H57 Q64 83 64 79 L67 30 Z" fill="rgba(255,255,255,.04)"/>
+  <path d="M10 21 H70 Q70 32 10 32 Z" fill="rgba(255,255,255,.04)"/>
+  <rect x="8" y="9" width="64" height="14" rx="5" fill="rgba(255,255,255,.05)"/>
+  <path d="M22 38 L58 74 M58 38 L22 74" stroke="rgba(255,255,255,.12)" stroke-width="3" stroke-linecap="round"/>
+</svg>`
 }
 
-// ─── Icone SVG ────────────────────────────────────────────────────────────────
-const IC = {
-  trash:  `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>`,
-  pencil: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
-  gear:   `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
-  bell:   `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`,
-  phone:  `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>`,
-  alexa:  `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>`,
-  arrow:  `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>`,
-}
-
-// ─── CSS ──────────────────────────────────────────────────────────────────────
-const CSS = `
-:host { display:block; }
-* { box-sizing:border-box; margin:0; padding:0; }
-.card {
-  background:var(--ha-card-background,#111827);
-  border-radius:var(--ha-card-border-radius,16px);
-  border:1px solid rgba(255,255,255,.08);
-  overflow:hidden;
-  font-family:var(--primary-font-family,system-ui,sans-serif);
-  box-shadow:0 8px 32px rgba(0,0,0,.3);
-  transition:border-color .4s, box-shadow .4s;
-}
-
-/* Header */
-.hdr { display:flex;align-items:center;gap:10px;padding:14px 14px 12px;border-bottom:1px solid rgba(255,255,255,.06); }
-.hdr-icon { width:40px;height:40px;border-radius:11px;flex-shrink:0;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25);display:flex;align-items:center;justify-content:center;color:#22c55e; }
-.hdr-text { flex:1;min-width:0; }
-.hdr-title { font-size:15px;font-weight:700;color:#fff; }
-.hdr-date  { font-size:10px;font-weight:500;color:var(--secondary-text-color,#64748b);margin-top:2px; }
-.hdr-right { display:flex;align-items:center;gap:6px;flex-shrink:0; }
-.icon-btn { width:30px;height:30px;border-radius:8px;border:none;background:rgba(255,255,255,.05);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--secondary-text-color,#64748b);transition:background .15s; }
-.icon-btn:hover { background:rgba(255,255,255,.1); }
-.icon-btn.on { background:rgba(255,255,255,.12);color:#fff; }
-button[data-action="toggleSettings"] { display: var(--fgear, none); }
-
-/* ── 2-colonne body ──────────────────────────────────────────────────────── */
-.body { display:flex;min-height:180px;border-bottom:1px solid rgba(255,255,255,.06); }
-
-/* Colonna sinistra — bidoni */
-.col-bins {
-  width:44%;border-right:1px solid rgba(255,255,255,.06);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:8px;padding:16px 6px;position:relative;overflow:hidden;
-}
-.bins-glow {
-  position:absolute;width:150px;height:150px;border-radius:50%;
-  filter:blur(55px);opacity:.18;pointer-events:none;
-  top:50%;left:50%;transform:translate(-50%,-50%);
-}
-.today-tag {
-  font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;
-  padding:2px 9px;border-radius:20px;border:1px solid currentColor;
-  position:relative;z-index:1;
-}
-.bin-row { display:flex;align-items:flex-end;justify-content:center;gap:6px;position:relative;z-index:1; }
-.bin-labels { display:flex;flex-direction:column;align-items:center;gap:1px;position:relative;z-index:1; }
-.bin-label1 { font-size:13px;font-weight:800;text-align:center;line-height:1.3; }
-.bin-label2 { font-size:11px;font-weight:700;text-align:center;line-height:1.3; }
-.bin-sub { font-size:9px;font-weight:600;text-align:center;color:var(--secondary-text-color,#64748b);position:relative;z-index:1; }
-
-/* Colonna destra — info + calendario */
-.col-info { flex:1;display:flex;flex-direction:column;min-width:0; }
-.info-date { padding:10px 12px 8px;border-bottom:1px solid rgba(255,255,255,.04); }
-.info-date-txt { font-size:10px;font-weight:600;color:var(--secondary-text-color,#64748b); }
-
-/* Domani (nella colonna destra) */
-.tmr { display:flex;align-items:center;gap:6px;padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.04);background:rgba(255,255,255,.02); }
-.tmr-tag { font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--secondary-text-color,#64748b);flex-shrink:0; }
-.tmr-bins { display:flex;gap:2px;align-items:center;flex-shrink:0; }
-.tmr-txt  { font-size:11px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
-.tmr-none { font-size:11px;font-weight:500;color:var(--secondary-text-color,#64748b); }
-
-/* Settimana (nella colonna destra) */
-.week {
-  display:grid;grid-template-columns:repeat(7,1fr);
-  gap:3px;padding:7px 6px 9px;
-}
-.day-chip {
-  display:flex;flex-direction:column;align-items:center;gap:1px;
-  padding:5px 1px 4px;border-radius:8px;
-  border:1px solid rgba(255,255,255,.05);
-  background:rgba(255,255,255,.02);
-}
-.day-chip.today { border-color:#fff;background:rgba(255,255,255,.07); }
-.day-chip-lbl { font-size:8px;font-weight:700;color:var(--secondary-text-color,#64748b); }
-.day-chip.today .day-chip-lbl { color:#fff; }
-.day-chip-bins { display:flex;flex-direction:column;align-items:center;gap:1px; }
-.day-chip-short { font-size:7px;font-weight:800;line-height:1.1; }
-
-/* Edit panel */
-.edit-panel { display:none;padding:10px 12px 12px;border-top:1px solid rgba(255,255,255,.06); }
-.edit-panel.open { display:block; }
-.panel-title { font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--secondary-text-color,#64748b);margin-bottom:8px; }
-.edit-day { margin-bottom:8px; }
-.edit-day:last-of-type { margin-bottom:0; }
-.edit-row { display:flex;align-items:center;gap:4px;margin-bottom:3px; }
-.edit-day-lbl { font-size:10px;font-weight:700;color:var(--secondary-text-color,#64748b);min-width:18px;text-align:center;flex-shrink:0; }
-.edit-day-lbl.r2 { color:transparent;user-select:none; }
-.edit-input {
-  flex:1;height:26px;padding:0 7px;
-  border-radius:7px;border:1px solid rgba(255,255,255,.1);
-  background:rgba(255,255,255,.05);color:#fff;
-  font-size:11px;font-weight:500;font-family:inherit;
-}
-.edit-input.r2 { border-color:rgba(255,255,255,.06);background:rgba(255,255,255,.03); }
-.edit-input:focus { outline:none;border-color:rgba(34,197,94,.45); }
-.presets { display:flex;gap:2px;flex-shrink:0; }
-.preset-btn {
-  width:18px;height:18px;border-radius:4px;border:none;
-  font-size:7px;font-weight:800;cursor:pointer;color:#fff;
-  display:flex;align-items:center;justify-content:center;
-  transition:opacity .12s,transform .1s;flex-shrink:0;
-}
-.preset-btn:hover { opacity:.85;transform:scale(1.12); }
-
-/* Settings panel */
-.set-panel { display:none;border-top:1px solid rgba(255,255,255,.06); }
-.set-panel.open { display:block; }
-.set-row { display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.04); }
-.set-row:last-child { border-bottom:none; }
-.set-lbl { font-size:12px;font-weight:600;color:#fff; }
-.set-sub { font-size:10px;color:var(--secondary-text-color,#64748b);margin-top:1px; }
-.set-icon { display:flex;align-items:center;gap:7px; }
-.toggle { width:40px;height:22px;border-radius:11px;border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0; }
-.toggle.on  { background:#22c55e; }
-.toggle.off { background:rgba(255,255,255,.15); }
-.toggle::after { content:'';position:absolute;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s; }
-.toggle.on::after  { left:21px; }
-.toggle.off::after { left:3px; }
-.time-input {
-  height:30px;padding:0 10px;border-radius:8px;
-  border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);
-  color:#fff;font-size:13px;font-weight:600;font-family:inherit;
-}
-.time-input:focus { outline:none;border-color:rgba(34,197,94,.5); }
+/* ─── CSS ────────────────────────────────────────────────────────────────── */
+const _DD_CSS = `
+:host{display:block}
+*{box-sizing:border-box;margin:0;padding:0}
+.card{background:var(--ha-card-background,#111827);border-radius:var(--ha-card-border-radius,16px);border:1px solid rgba(255,255,255,.08);overflow:hidden;font-family:var(--primary-font-family,system-ui,sans-serif);box-shadow:0 8px 32px rgba(0,0,0,.3)}
+.hdr{display:flex;align-items:center;gap:10px;padding:14px 14px 12px;border-bottom:1px solid rgba(255,255,255,.06)}
+.hdr-ico{width:40px;height:40px;border-radius:11px;flex-shrink:0;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25);display:flex;align-items:center;justify-content:center;font-size:20px}
+.hdr-txt{flex:1;min-width:0}
+.hdr-title{font-size:15px;font-weight:700;color:#fff}
+.hdr-date{font-size:10px;color:rgba(255,255,255,.45);margin-top:2px}
+.hdr-btn{width:30px;height:30px;border-radius:8px;border:none;background:rgba(255,255,255,.05);cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.5);transition:background .15s;flex-shrink:0}
+.hdr-btn:hover{background:rgba(255,255,255,.1);color:#fff}
+button[data-a="settings"]{display:var(--fgear,none)}
+.body{display:flex;min-height:170px;border-bottom:1px solid rgba(255,255,255,.06)}
+/* ── Colonna sinistra ── */
+.col-l{width:44%;border-right:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:14px 6px;position:relative;overflow:hidden}
+.col-l-glow{position:absolute;width:160px;height:160px;border-radius:50%;filter:blur(60px);opacity:.15;pointer-events:none;top:50%;left:50%;transform:translate(-50%,-50%)}
+.col-l-tag{font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;padding:2px 8px;border-radius:20px;border:1px solid currentColor;position:relative;z-index:1}
+.bins-row{display:flex;align-items:flex-end;justify-content:center;gap:4px;position:relative;z-index:1}
+.bins-labels{display:flex;flex-direction:column;align-items:center;gap:2px;position:relative;z-index:1}
+.bins-lbl{font-size:11px;font-weight:700;color:#fff;display:flex;align-items:center;gap:5px}
+.bins-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.bins-sub{font-size:9px;color:rgba(255,255,255,.4);position:relative;z-index:1}
+/* ── Colonna destra ── */
+.col-r{flex:1;display:flex;flex-direction:column;min-width:0}
+.next-row{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.04);background:rgba(255,255,255,.02)}
+.next-tag{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:rgba(255,255,255,.4);margin-bottom:3px}
+.next-items{display:flex;flex-direction:column;gap:2px}
+.next-item{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:#fff}
+.next-none{font-size:11px;color:rgba(255,255,255,.3)}
+/* ── Week ── */
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:7px 5px 9px}
+.wday{display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 1px 4px;border-radius:7px;border:1px solid rgba(255,255,255,.05);background:rgba(255,255,255,.02)}
+.wday.today{border-color:rgba(255,255,255,.25);background:rgba(255,255,255,.06)}
+.wday-lbl{font-size:7px;font-weight:700;color:rgba(255,255,255,.4)}
+.wday.today .wday-lbl{color:#fff}
+.wday-dots{display:flex;flex-direction:column;align-items:center;gap:1px}
+.wday-dot{width:7px;height:7px;border-radius:50%}
+.wday-none{width:7px;height:2px;border-radius:1px;background:rgba(255,255,255,.1);margin:3px 0}
 `
 
-// ─── Card Class ───────────────────────────────────────────────────────────────
+/* ─── Popup impostazioni ─────────────────────────────────────────────────── */
+const _POPUP_CSS = `
+*{box-sizing:border-box;margin:0;padding:0}
+.ov{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.72);backdrop-filter:blur(6px)}
+.mo{width:100%;max-height:90vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(34,197,94,.22);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.8);animation:su .22s cubic-bezier(.32,1.12,.56,1)}
+@keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.mhdr{display:flex;align-items:center;gap:12px;padding:18px 18px 14px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
+.mico{width:40px;height:40px;border-radius:12px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.28);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.mtit{font-size:15px;font-weight:900;color:#fff;font-family:system-ui,sans-serif}
+.msub{font-size:11px;color:rgba(255,255,255,.4);font-family:system-ui,sans-serif;margin-top:2px}
+.mxbtn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:6px 12px;color:#fff;font-size:13px;cursor:pointer;font-family:system-ui,sans-serif}
+.mbody{flex:1;overflow-y:auto;padding:0 0 4px;scrollbar-width:none}
+.mbody::-webkit-scrollbar{display:none}
+.sec{padding:14px 18px 4px}
+.sec-ttl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.4);margin-bottom:10px;font-family:system-ui,sans-serif}
+/* giorni */
+.drow{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.drow:last-child{border-bottom:none}
+.dlbl{font-size:11px;font-weight:700;color:rgba(255,255,255,.5);width:26px;flex-shrink:0;font-family:system-ui,sans-serif}
+.dpills{display:flex;gap:4px;flex-wrap:wrap;flex:1}
+.dpill{padding:4px 9px;border-radius:20px;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:rgba(255,255,255,.55);font-size:11px;font-weight:700;cursor:pointer;font-family:system-ui,sans-serif;transition:all .15s;white-space:nowrap}
+.dpill.sel{color:#fff;border-color:transparent}
+/* colori */
+.crow{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.crow:last-child{border-bottom:none}
+.clbl{font-size:13px;font-weight:600;color:#fff;flex:1;font-family:system-ui,sans-serif}
+.cpalette{display:flex;gap:4px;flex-wrap:wrap}
+.cswatch{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .12s,border-color .12s;flex-shrink:0}
+.cswatch.active{border-color:#fff;transform:scale(1.18)}
+.cinput{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,.15);cursor:pointer;padding:0;overflow:hidden;background:none;flex-shrink:0}
+/* notifiche */
+.nrow{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.nrow:last-child{border-bottom:none}
+.nlbl{font-size:13px;font-weight:600;color:#fff;font-family:system-ui,sans-serif}
+.nsub{font-size:10px;color:rgba(255,255,255,.4);font-family:system-ui,sans-serif;margin-top:1px}
+.tog{width:42px;height:24px;border-radius:12px;border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.tog.on{background:#22c55e}.tog.off{background:rgba(255,255,255,.15)}
+.tog::after{content:'';position:absolute;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s}
+.tog.on::after{left:21px}.tog.off::after{left:3px}
+.tinp{height:32px;padding:0 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;font-size:13px;font-weight:600;font-family:system-ui,sans-serif}
+.tinp:focus{outline:none;border-color:rgba(34,197,94,.5)}
+/* footer */
+.mftr{padding:12px 18px 28px;flex-shrink:0;border-top:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;gap:8px}
+.sbtn{width:100%;padding:14px;border-radius:13px;background:#22c55e;border:none;color:#0a0816;font-size:14px;font-weight:900;cursor:pointer;font-family:system-ui,sans-serif}
+.sbtn:active{filter:brightness(.9)}
+`
+
+const _PALETTE = ['#92400e','#b45309','#d97706','#16a34a','#15803d','#1d4ed8','#2563eb','#4b5563','#374151','#7c3aed','#db2777','#e11d48']
+
+/* ─── Card Class ──────────────────────────────────────────────────────────── */
 class DifferenziataCard extends HTMLElement {
   constructor() {
     super()
-    this.attachShadow({ mode:'open' })
-    this._hass         = null
-    this._config       = {}
-    this._settingsOpen = false
-    this._editOpen     = false
-    this._buildKey     = null
-    this._onClick      = this._handleClick.bind(this)
-    this._onChange     = this._handleChange.bind(this)
+    this.attachShadow({mode:'open'})
+    this._hass = null
+    this._bk   = null
   }
 
   static getStubConfig() { return {} }
-  setConfig(config) { this._config = config || {} }
+  setConfig(c) { this._cfg = c||{} }
   getCardSize() { return 5 }
+  configure() { this._openImpostazioni() }
 
-  configure() { this._settingsOpen = true; this._buildKey = null; this._buildDOM(); }
-
-  connectedCallback() {
-    this.shadowRoot.addEventListener('click', this._onClick)
-    this.shadowRoot.addEventListener('change', this._onChange)
+  set hass(h) {
+    this._hass = h
+    const bk = this._bk_()
+    if (bk !== this._bk) { this._bk = bk; this._buildDOM() }
   }
 
-  disconnectedCallback() {
-    this.shadowRoot.removeEventListener('click', this._onClick)
-    this.shadowRoot.removeEventListener('change', this._onChange)
-  }
+  _s(id, fb='') { return this._hass?.states?.[id]?.state ?? fb }
+  _svc(d, s, data) { this._hass?.callService(d, s, data) }
+  _todayIdx() { return new Date().getDay()===0 ? 6 : new Date().getDay()-1 }
 
-  set hass(hass) {
-    this._hass = hass
-    const bk = this._buildKey_()
-    if (bk !== this._buildKey) {
-      this._buildKey = bk
-      this._buildDOM()
-    }
-  }
-
-  _g(id, fb = null)          { return this._hass?.states?.[id]?.state ?? fb }
-  _svc(domain, svc, data={}) { return this._hass?.callService(domain, svc, data) }
-
-  _buildKey_() {
+  _bk_() {
     if (!this._hass) return null
-    const r1 = DD_DAYS.map(d => this._g(`input_text.frarik_differenziata_rifiuto_${d}`,'')).join('|')
-    const r2 = DD_DAYS.map(d => this._g(`input_text.frarik_differenziata_rifiuto2_${d}`,'')).join('|')
-    return [
-      r1, r2,
-      this._g('input_datetime.frarik_differenziata_orario_notifica',''),
-      this._g('input_boolean.frarik_differenziata_notifica_push',''),
-      this._g('input_boolean.frarik_differenziata_notifica_alexa',''),
-      this._settingsOpen?'1':'0',
-      this._editOpen?'1':'0',
-    ].join('||')
+    return _DD_DAYS.map(d=>this._s(`input_text.frarik_differenziata_rifiuto_${d}`,'')).join('|')
+      + '|' + this._s('input_boolean.frarik_differenziata_notifica_push','')
+      + '|' + JSON.stringify(_ddClrs())
   }
 
-  _handleClick(e) {
-    const btn = e.target.closest('[data-action]')
-    if (!btn || !this._hass) return
-    switch(btn.dataset.action) {
-      case 'toggleSettings':
-        this._settingsOpen = !this._settingsOpen
-        this._buildKey = null; this._buildDOM(); break
-      case 'toggleEdit':
-        this._editOpen = !this._editOpen
-        this._buildKey = null; this._buildDOM(); break
-      case 'togglePush':
-        this._svc('input_boolean','toggle',{entity_id:'input_boolean.frarik_differenziata_notifica_push'}); break
-      case 'toggleAlexa':
-        this._svc('input_boolean','toggle',{entity_id:'input_boolean.frarik_differenziata_notifica_alexa'}); break
-      case 'preset':
-        this._svc('input_text','set_value',{
-          entity_id: `input_text.frarik_differenziata_rifiuto_${btn.dataset.day}`,
-          value: btn.dataset.val,
-        }); break
-      case 'preset2':
-        this._svc('input_text','set_value',{
-          entity_id: `input_text.frarik_differenziata_rifiuto2_${btn.dataset.day}`,
-          value: btn.dataset.val,
-        }); break
-    }
-  }
-
-  _handleChange(e) {
-    if (!this._hass) return
-    const el = e.target
-    if (el.dataset.action === 'setWaste') {
-      this._svc('input_text','set_value',{
-        entity_id: `input_text.frarik_differenziata_rifiuto_${el.dataset.day}`,
-        value: el.value,
-      })
-    }
-    if (el.dataset.action === 'setWaste2') {
-      this._svc('input_text','set_value',{
-        entity_id: `input_text.frarik_differenziata_rifiuto2_${el.dataset.day}`,
-        value: el.value,
-      })
-    }
-    if (el.dataset.action === 'setTime') {
-      if (!el.value) return
-      this._svc('input_datetime','set_datetime',{
-        entity_id: 'input_datetime.frarik_differenziata_orario_notifica',
-        time: `${el.value}:00`,
-      })
-    }
+  _todayWastes() {
+    const idx = this._todayIdx()
+    return _parseWastes(this._s(`input_text.frarik_differenziata_rifiuto_${_DD_DAYS[idx]}`,''))
   }
 
   _buildDOM() {
-    if (!this._hass) return
+    const today = this._todayIdx()
+    const tmrIdx = (today+1) % 7
+    const now = new Date()
+    const months = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre']
+    const dateStr = `${_DD_FULL[today]} ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`
 
-    const now      = new Date()
-    const todayIdx = (now.getDay() + 6) % 7
-    const tmrIdx   = (todayIdx + 1) % 7
-    const dateStr  = `${DD_FULL[todayIdx]}, ${now.getDate()} ${DD_MONTH[now.getMonth()]} ${now.getFullYear()}`
+    const todayWastes = _parseWastes(this._s(`input_text.frarik_differenziata_rifiuto_${_DD_DAYS[today]}`,''))
+    const tmrWastes   = _parseWastes(this._s(`input_text.frarik_differenziata_rifiuto_${_DD_DAYS[tmrIdx]}`,''))
 
-    const wastes1 = DD_DAYS.map(d => this._g(`input_text.frarik_differenziata_rifiuto_${d}`,''))
-    const wastes2 = DD_DAYS.map(d => this._g(`input_text.frarik_differenziata_rifiuto2_${d}`,''))
-    const todayW1 = wasteInfo(wastes1[todayIdx])
-    const todayW2 = wasteInfo(wastes2[todayIdx])
-    const tmrW1   = wasteInfo(wastes1[tmrIdx])
-    const tmrW2   = wasteInfo(wastes2[tmrIdx])
+    /* ── Colonna sinistra: bidoni oggi ── */
+    const hasPickup = todayWastes.length > 0
+    const glowColor = hasPickup ? _ddClr(todayWastes[0]) : 'transparent'
 
-    const pushOn  = this._g('input_boolean.frarik_differenziata_notifica_push') === 'on'
-    const alexaOn = this._g('input_boolean.frarik_differenziata_notifica_alexa') === 'on'
-    const notifT  = (this._g('input_datetime.frarik_differenziata_orario_notifica','00:00:00') || '00:00:00').slice(0,5)
+    let binsHtml = ''
+    if (!hasPickup) {
+      binsHtml = `<div class="bins-row">${_emptyBinSvg(62)}</div>`
+    } else if (todayWastes.length === 1) {
+      binsHtml = `<div class="bins-row">${_binSvg(_ddClr(todayWastes[0]), 72)}</div>`
+    } else if (todayWastes.length === 2) {
+      binsHtml = `<div class="bins-row">${_binSvg(_ddClr(todayWastes[0]),58)}${_binSvg(_ddClr(todayWastes[1]),58)}</div>`
+    } else {
+      const mid = todayWastes.slice(1)
+      binsHtml = `<div class="bins-row">${_binSvg(_ddClr(todayWastes[0]),48)}` +
+        mid.map(id=>`${_binSvg(_ddClr(id),42)}`).join('') + `</div>`
+    }
 
-    const cardStyle = todayW1.hasPickup && todayW1.glow !== 'none'
-      ? `style="border-color:${todayW1.color}44;box-shadow:0 8px 32px ${todayW1.color}18"` : ''
+    const labelsHtml = hasPickup
+      ? todayWastes.map(id=>{
+          const t = _TIPI.find(x=>x.id===id)
+          return `<div class="bins-lbl"><span class="bins-dot" style="background:${_ddClr(id)}"></span>${t?t.label:id}</div>`
+        }).join('')
+      : `<div class="bins-lbl" style="color:rgba(255,255,255,.35)">Nessun ritiro</div>`
 
-    // ── Colonna sinistra: bidoni oggi ──
-    const binsGlow = todayW1.hasPickup && todayW1.glow !== 'none'
-      ? `<div class="bins-glow" style="background:${todayW1.color}"></div>` : ''
+    /* ── Colonna destra: domani ── */
+    let tmrHtml
+    if (tmrWastes.length === 0) {
+      tmrHtml = `<div class="next-none">Nessun ritiro domani</div>`
+    } else {
+      tmrHtml = `<div class="next-items">${tmrWastes.map(id=>{
+        const t=_TIPI.find(x=>x.id===id)
+        return `<div class="next-item"><span class="bins-dot" style="background:${_ddClr(id)}"></span>${t?t.label:id}</div>`
+      }).join('')}</div>`
+    }
 
-    const binSize = todayW2.hasPickup ? 68 : 82
-    const todayBins = todayW1.hasPickup
-      ? binSvg(todayW1.color, binSize) + (todayW2.hasPickup ? binSvg(todayW2.color, binSize) : '')
-      : emptyBinSvg(82)
-
-    const label1Html = `<span class="bin-label1" style="color:${todayW1.hasPickup?todayW1.color:'var(--secondary-text-color,#64748b)'}">${todayW1.label}</span>`
-    const label2Html = todayW2.hasPickup
-      ? `<span class="bin-label2" style="color:${todayW2.color}">${todayW2.label}</span>` : ''
-
-    // ── Domani: nella colonna destra ──
-    const tmrBinsHtml = tmrW1.hasPickup
-      ? binSvg(tmrW1.color, 20) + (tmrW2.hasPickup ? binSvg(tmrW2.color, 20) : '')
-      : emptyBinSvg(20)
-    const tmrLabel = tmrW1.hasPickup
-      ? `<span class="tmr-txt" style="color:${tmrW1.color}">${tmrW1.label}${tmrW2.hasPickup?' + '+tmrW2.label:''}</span>`
-      : `<span class="tmr-none">Nessun ritiro</span>`
-
-    // ── Settimana ──
-    const weekChips = DD_DAYS.map((d, i) => {
-      const w1 = wasteInfo(wastes1[i])
-      const w2 = wasteInfo(wastes2[i])
-      const isToday = i === todayIdx
-      const b1 = w1.hasPickup ? binSvg(w1.color, 20) : emptyBinSvg(20)
-      const b2 = w2.hasPickup ? binSvg(w2.color, 20) : ''
-      const shorts = w1.hasPickup
-        ? `<span class="day-chip-short" style="color:${w1.color}">${w1.short}</span>${w2.hasPickup?`<span class="day-chip-short" style="color:${w2.color}">${w2.short}</span>`:''}`
-        : `<span class="day-chip-short" style="color:var(--secondary-text-color,#4b5563)">—</span>`
-      return `<div class="day-chip ${isToday?'today':''}">
-        <span class="day-chip-lbl">${DD_LBL[i]}</span>
-        <div class="day-chip-bins">${b1}${b2}</div>
-        ${shorts}
+    /* ── Settimana ── */
+    const weekHtml = _DD_DAYS.map((d,i)=>{
+      const ws = _parseWastes(this._s(`input_text.frarik_differenziata_rifiuto_${d}`,''))
+      const isToday = i===today
+      const dotsHtml = ws.length
+        ? ws.map(id=>`<div class="wday-dot" style="background:${_ddClr(id)}"></div>`).join('')
+        : `<div class="wday-none"></div>`
+      return `<div class="wday${isToday?' today':''}">
+        <div class="wday-lbl">${_DD_LBL[i]}</div>
+        <div class="wday-dots">${dotsHtml}</div>
       </div>`
     }).join('')
 
-    // ── Edit panel con doppio rifiuto ──
-    const editHTML = this._editOpen ? `
-      <div class="edit-panel open">
-        <div class="panel-title">Configura raccolta — Rif.1 e Rif.2 opzionale</div>
-        ${DD_DAYS.map((d,i) => {
-          const p1 = PRESETS.map(p =>
-            `<button class="preset-btn" style="background:${p.bg}" data-action="preset" data-day="${d}" data-val="${p.val}" title="${p.val}">${p.short}</button>`
-          ).join('')
-          const p2 = PRESETS.map(p =>
-            `<button class="preset-btn" style="background:${p.bg}" data-action="preset2" data-day="${d}" data-val="${p.val}" title="${p.val}">${p.short}</button>`
-          ).join('')
-          return `<div class="edit-day">
-            <div class="edit-row">
-              <span class="edit-day-lbl">${DD_LBL[i]}</span>
-              <input class="edit-input" type="text" value="${wastes1[i]||''}" placeholder="es. Organico"
-                data-action="setWaste" data-day="${d}">
-              <div class="presets">${p1}</div>
-            </div>
-            <div class="edit-row">
-              <span class="edit-day-lbl r2">${DD_LBL[i]}</span>
-              <input class="edit-input r2" type="text" value="${wastes2[i]||''}" placeholder="2° rifiuto (opzionale)"
-                data-action="setWaste2" data-day="${d}">
-              <div class="presets">${p2}</div>
-            </div>
-          </div>`
-        }).join('')}
-      </div>` : `<div class="edit-panel"></div>`
-
-    // ── Settings panel ──
-    const settingsHTML = this._settingsOpen ? `
-      <div class="set-panel open">
-        <div class="set-row">
-          <div class="set-icon">
-            ${IC.bell}
-            <div><div class="set-lbl">Orario notifica</div><div class="set-sub">Promemoria giornaliero</div></div>
-          </div>
-          <input class="time-input" type="time" value="${notifT}" data-action="setTime">
-        </div>
-        <div class="set-row">
-          <div class="set-icon">
-            ${IC.phone}
-            <div><div class="set-lbl">Notifica Push</div><div class="set-sub">Invia notifica su app</div></div>
-          </div>
-          <button class="toggle ${pushOn?'on':'off'}" data-action="togglePush"></button>
-        </div>
-        <div class="set-row">
-          <div class="set-icon">
-            ${IC.alexa}
-            <div><div class="set-lbl">Notifica Alexa</div><div class="set-sub">Annuncio tramite Amazon Echo</div></div>
-          </div>
-          <button class="toggle ${alexaOn?'on':'off'}" data-action="toggleAlexa"></button>
-        </div>
-      </div>` : `<div class="set-panel"></div>`
-
-    this.shadowRoot.innerHTML = `<style>${CSS}</style>
-<div class="card" ${cardStyle}>
-
+    /* ── DOM ── */
+    this.shadowRoot.innerHTML = `<style>${_DD_CSS}</style>
+<div class="card">
   <div class="hdr">
-    <div class="hdr-icon">${IC.trash}</div>
-    <div class="hdr-text">
+    <div class="hdr-ico">🗑️</div>
+    <div class="hdr-txt">
       <div class="hdr-title">Raccolta Differenziata</div>
       <div class="hdr-date">${dateStr}</div>
     </div>
-    <div class="hdr-right">
-      <button class="icon-btn ${this._editOpen?'on':''}" data-action="toggleEdit" title="Modifica">${IC.pencil}</button>
-      <button class="icon-btn ${this._settingsOpen?'on':''}" data-action="toggleSettings" title="Impostazioni">${IC.gear}</button>
-    </div>
+    <button class="hdr-btn" data-a="settings" title="Impostazioni">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
   </div>
-
-  <!-- Body 2 colonne -->
   <div class="body">
-    <!-- Colonna sinistra: bidoni -->
-    <div class="col-bins">
-      ${binsGlow}
-      <span class="today-tag" style="color:${todayW1.hasPickup?todayW1.color:'var(--secondary-text-color,#64748b)'}">OGGI</span>
-      <div class="bin-row">${todayBins}</div>
-      <div class="bin-labels">${label1Html}${label2Html}</div>
-      <div class="bin-sub">${todayW1.hasPickup ? 'Esponi il bidone' : 'Nessun ritiro'}</div>
+    <div class="col-l">
+      <div class="col-l-glow" style="background:${glowColor}"></div>
+      <div class="col-l-tag" style="color:${hasPickup?_ddClr(todayWastes[0]):'rgba(255,255,255,.3)'}">Oggi</div>
+      ${binsHtml}
+      <div class="bins-labels">${labelsHtml}</div>
+      <div class="bins-sub">${hasPickup?'Esponi il bidone':'Nessun ritiro oggi'}</div>
     </div>
-    <!-- Colonna destra: info + calendario -->
-    <div class="col-info">
-      <div class="info-date"><div class="info-date-txt">${dateStr}</div></div>
-      <div class="tmr">
-        <span class="tmr-tag">${IC.arrow} Domani</span>
-        <div class="tmr-bins">${tmrBinsHtml}</div>
-        ${tmrLabel}
+    <div class="col-r">
+      <div class="next-row">
+        <div class="next-tag">Domani · ${_DD_FULL[tmrIdx]}</div>
+        ${tmrHtml}
       </div>
-      <div class="week">${weekChips}</div>
+      <div class="week">${weekHtml}</div>
     </div>
   </div>
-
-  ${editHTML}
-  ${settingsHTML}
-
 </div>`
+
+    this.shadowRoot.querySelector('[data-a="settings"]')
+      ?.addEventListener('click', ()=>this._openImpostazioni())
+  }
+
+  /* ─── Popup Impostazioni ─────────────────────────────────────────── */
+  _openImpostazioni() {
+    document.getElementById('__frk_diff_imp__')?.remove()
+    const host = document.createElement('div')
+    host.id = '__frk_diff_imp__'
+    host.attachShadow({mode:'open'})
+    document.body.appendChild(host)
+
+    /* stato locale toggle: giorno → Set of waste IDs */
+    const dayState = {}
+    _DD_DAYS.forEach(d=>{
+      dayState[d] = new Set(_parseWastes(this._s(`input_text.frarik_differenziata_rifiuto_${d}`,'')))
+    })
+    /* notifiche */
+    const pushOn   = this._s('input_boolean.frarik_differenziata_notifica_push') === 'on'
+    const alexaOn  = this._s('input_boolean.frarik_differenziata_notifica_alexa') === 'on'
+    const googleOn = this._s('input_boolean.frarik_differenziata_notifica_google') === 'on'
+    const notifT   = (this._s('input_datetime.frarik_differenziata_orario_notifica','00:00:00')||'00:00:00').slice(0,5)
+
+    const renderGiorni = () => _DD_DAYS.map((d,i)=>{
+      const pills = _TIPI.map(t=>{
+        const sel = dayState[d].has(t.id)
+        const style = sel ? `background:${_ddClr(t.id)};border-color:${_ddClr(t.id)}` : ''
+        return `<button class="dpill${sel?' sel':''}" data-d="${d}" data-tid="${t.id}" style="${style}">${t.label}</button>`
+      }).join('')
+      return `<div class="drow"><div class="dlbl">${_DD_LBL[i]}</div><div class="dpills">${pills}</div></div>`
+    }).join('')
+
+    const renderColori = () => _TIPI.map(t=>{
+      const cur = _ddClr(t.id)
+      const swatches = _PALETTE.map(c=>`<div class="cswatch${c===cur?' active':''}" data-tid="${t.id}" data-c="${c}" style="background:${c}"></div>`).join('')
+      return `<div class="crow">
+        <div class="clbl">${t.label}</div>
+        <div class="cpalette">${swatches}<input type="color" class="cinput" data-tid="${t.id}" value="${cur}" title="Colore personalizzato"></div>
+      </div>`
+    }).join('')
+
+    const togHtml = (id, on, lbl, sub) =>
+      `<div class="nrow"><div><div class="nlbl">${lbl}</div><div class="nsub">${sub}</div></div><button class="tog ${on?'on':'off'}" data-tid="${id}"></button></div>`
+
+    host.shadowRoot.innerHTML = `<style>${_POPUP_CSS}</style>
+<div class="ov">
+  <div class="mo">
+    <div class="mhdr">
+      <div class="mico">🗑️</div>
+      <div class="mtxt">
+        <div class="mtit">Impostazioni Differenziata</div>
+        <div class="msub">Giorni, colori e notifiche</div>
+      </div>
+      <button class="mxbtn" id="pclose">✕</button>
+    </div>
+    <div class="mbody">
+      <div class="sec">
+        <div class="sec-ttl">🗓 Giorni — scegli i rifiuti (multiplo)</div>
+        <div id="giorni-list">${renderGiorni()}</div>
+      </div>
+      <div class="sec" style="padding-top:12px">
+        <div class="sec-ttl">🎨 Colori per tipo di rifiuto</div>
+        <div id="colori-list">${renderColori()}</div>
+      </div>
+      <div class="sec" style="padding-top:12px">
+        <div class="sec-ttl">🔔 Notifiche</div>
+        ${togHtml('push',  pushOn,  '📱 Push',  'Notifica app mobile')}
+        ${togHtml('alexa', alexaOn, '🗣 Alexa', 'Annuncio vocale Alexa')}
+        ${togHtml('google',googleOn,'🔊 Google','Annuncio vocale Google')}
+        <div class="nrow">
+          <div><div class="nlbl">⏰ Orario notifica</div><div class="nsub">Il giorno della raccolta</div></div>
+          <input type="time" class="tinp" id="p-time" value="${notifT}">
+        </div>
+      </div>
+    </div>
+    <div class="mftr">
+      <button class="sbtn" id="p-save">💾 Salva impostazioni</button>
+    </div>
+  </div>
+</div>`
+
+    const sr = host.shadowRoot
+
+    /* Pill toggle (giorno/tipo) */
+    sr.getElementById('giorni-list').addEventListener('click', e=>{
+      const p = e.target.closest('.dpill'); if (!p) return
+      const {d, tid} = p.dataset
+      if (dayState[d].has(tid)) dayState[d].delete(tid)
+      else dayState[d].add(tid)
+      sr.getElementById('giorni-list').innerHTML = renderGiorni()
+      /* ri-attach listener non serve: event delegation */
+    })
+
+    /* Swatch color */
+    sr.getElementById('colori-list').addEventListener('click', e=>{
+      const sw = e.target.closest('.cswatch'); if (!sw) return
+      _ddSaveClr(sw.dataset.tid, sw.dataset.c)
+      sr.getElementById('colori-list').innerHTML = renderColori()
+      sr.getElementById('giorni-list').innerHTML = renderGiorni()
+    })
+    sr.getElementById('colori-list').addEventListener('input', e=>{
+      const inp = e.target.closest('.cinput'); if (!inp) return
+      _ddSaveClr(inp.dataset.tid, inp.value)
+      sr.getElementById('giorni-list').innerHTML = renderGiorni()
+    })
+
+    /* Toggle notifiche */
+    sr.querySelector('.mbody').addEventListener('click', e=>{
+      const tog = e.target.closest('.tog[data-tid]'); if (!tog) return
+      tog.classList.toggle('on'); tog.classList.toggle('off')
+    })
+
+    /* Chiudi */
+    const destroy = ()=>host.remove()
+    sr.getElementById('pclose').addEventListener('click', destroy)
+    sr.querySelector('.ov').addEventListener('click', e=>{ if(e.target===sr.querySelector('.ov')) destroy() })
+
+    /* Salva */
+    sr.getElementById('p-save').addEventListener('click', ()=>{
+      /* giorni → HA */
+      _DD_DAYS.forEach(d=>{
+        const val = [...dayState[d]].join(',')
+        this._svc('input_text','set_value',{entity_id:`input_text.frarik_differenziata_rifiuto_${d}`,value:val})
+      })
+      /* notifiche push/alexa/google */
+      const togEls = sr.querySelectorAll('.tog[data-tid]')
+      togEls.forEach(t=>{
+        const on = t.classList.contains('on')
+        const id = t.dataset.tid
+        const entity = `input_boolean.frarik_differenziata_notifica_${id}`
+        this._svc('input_boolean', on?'turn_on':'turn_off', {entity_id:entity})
+      })
+      /* orario */
+      const tv = sr.getElementById('p-time')?.value
+      if (tv) this._svc('input_datetime','set_datetime',{entity_id:'input_datetime.frarik_differenziata_orario_notifica',time:tv+':00'})
+      /* feedback */
+      const sb = sr.getElementById('p-save')
+      sb.textContent='✅ Salvato!'; sb.style.background='rgba(34,197,94,.7)'
+      setTimeout(()=>{sb.textContent='💾 Salva impostazioni'; sb.style.background=''},2000)
+      /* aggiorna card */
+      this._bk = null
+    })
   }
 }
 
-customElements.define('differenziata-card', DifferenziataCard)
+if (!customElements.get('differenziata-card'))
+  customElements.define('differenziata-card', DifferenziataCard)
 
-window.customCards = window.customCards || []
-window.customCards.push({ version: '1.0',
-  type:        'differenziata-card',
-  name:        'Raccolta Differenziata',
-  description: 'Bidoni, programmazione settimanale, notifiche push e Alexa.',
-})
-
-// ─── FratechStore Integration ────────────────────────────────────────────────
 ;(function () {
-  'use strict';
-
-  var _DIFF_WIZ_KEY = 'frarik_pkg_wizard_differenziata';
-  var _IND = '          ';
-
-  var _DIFF_PKG_YAML = 'homeassistant:\n'
-    + '  customize:\n'
-    + '    package.node_anchors:\n'
-    + '      customize: &customize\n'
-    + '        package: \'Frarik — Centro Controllo Raccolta Differenziata 1.1\'\n'
-    + '      setting:\n'
-    + '        Lista MediaPlayer Google: &google\n'
-    + _IND + 'IL_TUO_MEDIA_PLAYER_GOOGLE_1\n'
-    + '        Lista mediaplayer alexa: &alexa\n'
-    + _IND + 'IL_TUO_MEDIA_PLAYER_ALEXA_1\n'
-    + '        Device per notifica push: &push\n'
-    + _IND + '- service: IL_TUO_MOBILE_APP_1\n'
-    + 'notify:\n'
-    + '  - name: frarik_differenziata\n'
-    + '    platform: group\n'
-    + '    services: *push\n'
-    + 'input_text:\n'
-    + '  frarik_differenziata_rifiuto_lunedi: {name: "Differenziata — Rifiuto Lunedì", icon: mdi:delete-variant}\n'
-    + '  frarik_differenziata_rifiuto_martedi: {name: "Differenziata — Rifiuto Martedì", icon: mdi:delete-variant}\n'
-    + '  frarik_differenziata_rifiuto_mercoledi: {name: "Differenziata — Rifiuto Mercoledì", icon: mdi:delete-variant}\n'
-    + '  frarik_differenziata_rifiuto_giovedi: {name: "Differenziata — Rifiuto Giovedì", icon: mdi:delete-variant}\n'
-    + '  frarik_differenziata_rifiuto_venerdi: {name: "Differenziata — Rifiuto Venerdì", icon: mdi:delete-variant}\n'
-    + '  frarik_differenziata_rifiuto_sabato: {name: "Differenziata — Rifiuto Sabato", icon: mdi:delete-variant}\n'
-    + '  frarik_differenziata_rifiuto_domenica: {name: "Differenziata — Rifiuto Domenica", icon: mdi:delete-variant}\n'
-    + '  frarik_differenziata_rifiuto2_lunedi: {name: "Differenziata — 2° Rifiuto Lunedì", icon: mdi:delete-variant}\n'
-    + '  frarik_differenziata_rifiuto2_martedi: {name: "Differenziata — 2° Rifiuto Martedì", icon: mdi:delete-variant}\n'
-    + '  frarik_differenziata_rifiuto2_mercoledi: {name: "Differenziata — 2° Rifiuto Mercoledì", icon: mdi:delete-variant}\n'
-    + '  frarik_differenziata_rifiuto2_giovedi: {name: "Differenziata — 2° Rifiuto Giovedì", icon: mdi:delete-variant}\n'
-    + '  frarik_differenziata_rifiuto2_venerdi: {name: "Differenziata — 2° Rifiuto Venerdì", icon: mdi:delete-variant}\n'
-    + '  frarik_differenziata_rifiuto2_sabato: {name: "Differenziata — 2° Rifiuto Sabato", icon: mdi:delete-variant}\n'
-    + '  frarik_differenziata_rifiuto2_domenica: {name: "Differenziata — 2° Rifiuto Domenica", icon: mdi:delete-variant}\n'
-    + 'input_datetime:\n'
-    + '  frarik_differenziata_orario_notifica:\n'
-    + '    name: "Differenziata — Orario Notifica"\n'
-    + '    has_date: false\n'
-    + '    has_time: true\n'
-    + '    icon: mdi:bell-ring-outline\n'
-    + 'input_boolean:\n'
-    + '  frarik_differenziata_notifica_push: {name: "Differenziata — Notifica Push", icon: mdi:cellphone-message}\n'
-    + '  frarik_differenziata_notifica_google: {name: "Differenziata — Annuncio Google", icon: mdi:google-assistant}\n'
-    + '  frarik_differenziata_notifica_alexa: {name: "Differenziata — Annuncio Alexa", icon: mdi:amazon-alexa}\n'
-    + 'template:\n'
-    + '  - sensor:\n'
-    + '      - name: "Frarik Differenziata Versione"\n'
-    + '        unique_id: frarik_differenziata_versione\n'
-    + '        state: "1.1"\n'
-    + '        icon: mdi:package-variant-closed\n'
-    + '      - name: "Frarik Differenziata Raccolta"\n'
-    + '        unique_id: frarik_differenziata_raccolta\n'
-    + '        icon: mdi:recycle\n'
-    + '        state: >-\n'
-    + '          {% if now().weekday() == 0 %}{{ states(\'input_text.frarik_differenziata_rifiuto_lunedi\') }}\n'
-    + '          {% elif now().weekday() == 1 %}{{ states(\'input_text.frarik_differenziata_rifiuto_martedi\') }}\n'
-    + '          {% elif now().weekday() == 2 %}{{ states(\'input_text.frarik_differenziata_rifiuto_mercoledi\') }}\n'
-    + '          {% elif now().weekday() == 3 %}{{ states(\'input_text.frarik_differenziata_rifiuto_giovedi\') }}\n'
-    + '          {% elif now().weekday() == 4 %}{{ states(\'input_text.frarik_differenziata_rifiuto_venerdi\') }}\n'
-    + '          {% elif now().weekday() == 5 %}{{ states(\'input_text.frarik_differenziata_rifiuto_sabato\') }}\n'
-    + '          {% elif now().weekday() == 6 %}{{ states(\'input_text.frarik_differenziata_rifiuto_domenica\') }}\n'
-    + '          {% endif %}\n'
-    + 'automation:\n'
-    + '  - id: frarik_differenziata_notifiche\n'
-    + '    alias: "Frarik — Differenziata (notifiche)"\n'
-    + '    trigger:\n'
-    + '      - platform: time\n'
-    + '        at: input_datetime.frarik_differenziata_orario_notifica\n'
-    + '    condition:\n'
-    + '      - condition: not\n'
-    + '        conditions:\n'
-    + '          - condition: state\n'
-    + '            entity_id: sensor.frarik_differenziata_raccolta\n'
-    + '            state: ""\n'
-    + '    action:\n'
-    + '      - parallel:\n'
-    + '          - choose:\n'
-    + '            - conditions:\n'
-    + '              - condition: state\n'
-    + '                entity_id: input_boolean.frarik_differenziata_notifica_push\n'
-    + '                state: \'on\'\n'
-    + '              sequence:\n'
-    + '              - service: notify.frarik_differenziata\n'
-    + '                data:\n'
-    + '                  title: "♻️ Frarik — Differenziata"\n'
-    + '                  message: "Oggi ricordati di buttare {{ states(\'sensor.frarik_differenziata_raccolta\') }}"\n'
-    + '          - choose:\n'
-    + '            - conditions:\n'
-    + '              - condition: state\n'
-    + '                entity_id: input_boolean.frarik_differenziata_notifica_google\n'
-    + '                state: \'on\'\n'
-    + '              sequence:\n'
-    + '              - service: tts.google_translate_say\n'
-    + '                continue_on_error: true\n'
-    + '                data:\n'
-    + '                  entity_id: *google\n'
-    + '                  language: \'it\'\n'
-    + '                  message: "Oggi ricordati di buttare {{ states(\'sensor.frarik_differenziata_raccolta\') }}"\n'
-    + '          - choose:\n'
-    + '            - conditions:\n'
-    + '              - condition: state\n'
-    + '                entity_id: input_boolean.frarik_differenziata_notifica_alexa\n'
-    + '                state: \'on\'\n'
-    + '              sequence:\n'
-    + '              - service: notify.alexa_media\n'
-    + '                continue_on_error: true\n'
-    + '                data:\n'
-    + '                  target: *alexa\n'
-    + '                  data: {type: announce, method: spoken}\n'
-    + '                  message: "Oggi ricordati di buttare {{ states(\'sensor.frarik_differenziata_raccolta\') }}"\n';
-
-  function _buildPkgDIFF(push, google, alexa, baseYaml) {
-    var pushLines = (push && push.length)
-      ? push.map(function(p) { return _IND + '- service: ' + p; }).join('\n')
-      : _IND + '- service: mobile_app_smartphone';
-    var googleLines = (google && google.length)
-      ? google.map(function(p) { return _IND + '- ' + p; }).join('\n')
-      : _IND + '- media_player.google_home';
-    var alexaLines = (alexa && alexa.length)
-      ? alexa.map(function(p) { return _IND + '- ' + p; }).join('\n')
-      : _IND + '- media_player.alexa_casa';
-    return (baseYaml || _DIFF_PKG_YAML)
-      .replace(_IND + '- service: IL_TUO_MOBILE_APP_1', pushLines)
-      .replace(_IND + 'IL_TUO_MEDIA_PLAYER_GOOGLE_1', googleLines)
-      .replace(_IND + 'IL_TUO_MEDIA_PLAYER_ALEXA_1', alexaLines);
+  const _CARD = {
+    id:'differenziata-card', name:'Raccolta Differenziata',
+    description:'Card rifiuti con multi-selezione per giorno, bidoni realistici e colori personalizzabili.',
+    icon:'mdi:recycle', version:'4.0',
+    frarik_pkg_check:'sensor.frarik_differenziata_versione',
+    frarik_pkg_id:'frarik_differenziata',
+    frarik_pkg_version:'2.0'
   }
 
-  function _openWizardDIFF(hass, onDone) {
-    var states = (hass && hass.states) || {};
-    var mediaIds = Object.keys(states).filter(function(id) { return /^media_player\./.test(id); }).sort();
-    var saved = null;
-    try { saved = JSON.parse(localStorage.getItem(_DIFF_WIZ_KEY) || 'null'); } catch(e) {}
-    var pushRows   = (saved && saved.push   && saved.push.length)   ? saved.push.slice()   : [''];
-    var googleRows = (saved && saved.google && saved.google.length) ? saved.google.slice() : [''];
-    var alexaRows  = (saved && saved.alexa  && saved.alexa.length)  ? saved.alexa.slice()  : [''];
+  var _DIFF_PKG = `homeassistant:
+  customize:
+    package.node_anchors:
+      customize: &customize
+        package: 'Frarik — Raccolta Differenziata 2.0'
 
-    var host = document.createElement('div');
-    var sr = host.attachShadow({mode: 'open'});
-    document.body.appendChild(host);
-    function destroy() { try { document.body.removeChild(host); } catch(e) {} }
+notify:
+  - name: frarik_differenziata
+    platform: group
+    services:
+      - service: IL_TUO_MOBILE_APP_1
 
-    function setupAC(inp, drop, ids) {
-      if (!inp || !drop) return;
-      function show() {
-        var q = inp.value.toLowerCase().trim();
-        var hits = (q ? ids.filter(function(id) { return id.toLowerCase().includes(q); }) : ids).slice(0, 50);
-        if (!hits.length) { drop.style.display = 'none'; return; }
-        drop.innerHTML = hits.map(function(id) { return '<div class="wd-item" data-pick="' + id + '">' + id + '</div>'; }).join('');
-        drop.style.display = 'block';
-        drop.querySelectorAll('[data-pick]').forEach(function(row) {
-          row.addEventListener('mousedown', function(ev) { ev.preventDefault(); inp.value = row.getAttribute('data-pick'); drop.style.display = 'none'; });
-          row.addEventListener('mouseover', function() { row.style.background = 'rgba(255,255,255,.08)'; });
-          row.addEventListener('mouseout', function() { row.style.background = ''; });
-        });
-      }
-      inp.addEventListener('focus', show);
-      inp.addEventListener('input', show);
-      inp.addEventListener('blur', function() { setTimeout(function() { drop.style.display = 'none'; }, 200); });
+input_text:
+  frarik_differenziata_rifiuto_lunedi:    {name: "Differenziata — Lunedì",    icon: mdi:recycle}
+  frarik_differenziata_rifiuto_martedi:   {name: "Differenziata — Martedì",   icon: mdi:recycle}
+  frarik_differenziata_rifiuto_mercoledi: {name: "Differenziata — Mercoledì", icon: mdi:recycle}
+  frarik_differenziata_rifiuto_giovedi:   {name: "Differenziata — Giovedì",   icon: mdi:recycle}
+  frarik_differenziata_rifiuto_venerdi:   {name: "Differenziata — Venerdì",   icon: mdi:recycle}
+  frarik_differenziata_rifiuto_sabato:    {name: "Differenziata — Sabato",    icon: mdi:recycle}
+  frarik_differenziata_rifiuto_domenica:  {name: "Differenziata — Domenica",  icon: mdi:recycle}
+
+input_datetime:
+  frarik_differenziata_orario_notifica:
+    name: "Orario Notifica Differenziata"
+    has_date: false
+    has_time: true
+
+input_boolean:
+  frarik_differenziata_notifica_push:   {name: "Differenziata — Push",   icon: mdi:cellphone-message}
+  frarik_differenziata_notifica_google: {name: "Differenziata — Google", icon: mdi:google-assistant}
+  frarik_differenziata_notifica_alexa:  {name: "Differenziata — Alexa",  icon: mdi:amazon-alexa}
+
+template:
+  - sensor:
+      - name: frarik_differenziata_versione
+        state: "2.0"
+        unique_id: frarik_differenziata_versione
+      - name: frarik_differenziata_raccolta
+        unique_id: frarik_differenziata_raccolta
+        state: >
+          {% set wd = now().weekday() %}
+          {% set giorni = ['lunedi','martedi','mercoledi','giovedi','venerdi','sabato','domenica'] %}
+          {{ states('input_text.frarik_differenziata_rifiuto_' + giorni[wd]) }}
+
+automation:
+  - id: frarik_differenziata_notifiche
+    alias: "Frarik — Differenziata (notifiche)"
+    trigger:
+      - platform: time
+        at: input_datetime.frarik_differenziata_orario_notifica
+    condition:
+      - condition: template
+        value_template: "{{ states('sensor.frarik_differenziata_raccolta') not in ['','nessun rifiuto'] }}"
+    action:
+      - choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.frarik_differenziata_notifica_push
+            state: 'on'
+          sequence:
+          - service: notify.frarik_differenziata
+            continue_on_error: true
+            data:
+              title: "🗑️ Raccolta differenziata"
+              message: "Oggi esponi: {{ states('sensor.frarik_differenziata_raccolta') }}"
+      - choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.frarik_differenziata_notifica_google
+            state: 'on'
+          sequence:
+          - service: tts.google_translate_say
+            continue_on_error: true
+            data:
+              entity_id: IL_TUO_MEDIA_PLAYER_GOOGLE_1
+              message: "Oggi devi esporre {{ states('sensor.frarik_differenziata_raccolta') }}"
+      - choose:
+        - conditions:
+          - condition: state
+            entity_id: input_boolean.frarik_differenziata_notifica_alexa
+            state: 'on'
+          sequence:
+          - service: notify.alexa_media
+            continue_on_error: true
+            data:
+              target: IL_TUO_MEDIA_PLAYER_ALEXA_1
+              data:
+                type: announce
+              message: "Oggi devi esporre {{ states('sensor.frarik_differenziata_raccolta') }}"
+`
+
+  if (window.FratechStore) window.FratechStore.register(_CARD, {
+    render(card) {
+      return `<differenziata-card style="display:block;width:100%;height:100%"></differenziata-card>`
+    },
+    mount(card, hass, el) {
+      const c = el.querySelector('differenziata-card')
+      if (c) { try { c.setConfig(card||{}) } catch(e){} ; c.hass = hass }
+    },
+    update(card, hass, el) {
+      const c = el.querySelector('differenziata-card')
+      if (c) c.hass = hass
+    },
+    pkgYaml() { return _DIFF_PKG },
+    openWizard(hass, onDone) {
+      const inst = document.querySelector('differenziata-card') || new DifferenziataCard()
+      inst._hass = hass
+      inst._openImpostazioni()
+      if (typeof onDone === 'function') setTimeout(onDone, 500)
     }
-
-    function multiRows(rows, cls, placeholder) {
-      return rows.map(function(v, i) {
-        return '<div class="wd-push-row"><div style="position:relative;flex:1"><input class="wd-inp ' + cls + '" type="text" autocomplete="off" placeholder="' + placeholder + '" value="' + (v || '').replace(/"/g, '&quot;') + '"><div class="wd-drop"></div></div><button class="wd-rm" data-rm="' + i + '">✕</button></div>';
-      }).join('');
-    }
-
-    function renderWiz() {
-      sr.innerHTML = '<style>'
-        + ':host{all:initial;font-family:system-ui,sans-serif}'
-        + '.wd-bd{position:fixed;inset:0;z-index:200000;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);display:flex;align-items:flex-end}'
-        + '.wd-panel{width:100%;max-height:88vh;display:flex;flex-direction:column;background:#080f18;border:1px solid rgba(56,189,248,.3);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:wUp .22s cubic-bezier(.32,1.12,.56,1)}'
-        + '@keyframes wUp{from{transform:translateY(100%)}to{transform:translateY(0)}}'
-        + '.wd-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}'
-        + '.wd-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.3);flex-shrink:0}'
-        + '.wd-tit{font-size:14px;font-weight:800}.wd-sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:1px}'
-        + '.wd-x{margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none}'
-        + '.wd-body{flex:1;overflow-y:auto;padding:16px;scrollbar-width:none;display:flex;flex-direction:column;gap:14px}'
-        + '.wd-body::-webkit-scrollbar{display:none}'
-        + '.wd-sec{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding-bottom:5px;border-bottom:1px solid rgba(56,189,248,.18);margin-bottom:10px}'
-        + '.wd-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px}'
-        + '.wd-frow{position:relative;margin-bottom:10px}'
-        + '.wd-inp{width:100%;padding:9px 11px;border-radius:10px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none}'
-        + '.wd-inp:focus{border-color:rgba(56,189,248,.5)}'
-        + '.wd-drop{position:absolute;left:0;right:0;top:100%;z-index:10;max-height:150px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 9px 9px;display:none}'
-        + '.wd-item{padding:5px 10px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04);color:#e2e8f0}'
-        + '.wd-push-row{display:flex;gap:6px;margin-bottom:6px}'
-        + '.wd-rm{width:30px;height:38px;border-radius:8px;background:rgba(255,255,255,.07);border:none;color:#fff;cursor:pointer;font-size:14px;flex-shrink:0}'
-        + '.wd-add{padding:6px 12px;border-radius:8px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.25);color:#38bdf8;font-size:11px;font-weight:700;cursor:pointer}'
-        + '.wd-note{font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;margin:0 0 10px}'
-        + '.wd-foot{padding:12px 16px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:8px;flex-shrink:0}'
-        + '.wd-cancel{flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:rgba(255,255,255,.1);color:#fff}'
-        + '.wd-install{flex:2;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#38bdf8;color:#060d14}'
-        + '.wd-loading{opacity:.6;pointer-events:none}'
-        + '</style>'
-        + '<div class="wd-bd" id="wd-bd"><div class="wd-panel">'
-        + '<div class="wd-hdr"><div class="wd-ico">♻️</div>'
-        + '<div><div class="wd-tit">Installa PKG Raccolta Differenziata</div><div class="wd-sub">frarik_differenziata.yaml → config/packages/</div></div>'
-        + '<button class="wd-x" id="wd-x">✕</button></div>'
-        + '<div class="wd-body">'
-        + '<div><div class="wd-sec">Notifiche Push</div>'
-        + '<p class="wd-note">mobile_app dei dispositivi per notifiche push (es. <code>mobile_app_iphone</code>).</p>'
-        + '<div id="push-rows">' + multiRows(pushRows, 'push-inp', 'mobile_app_...') + '</div>'
-        + '<button class="wd-add" id="push-add">+ Aggiungi dispositivo</button>'
-        + '</div>'
-        + '<div><div class="wd-sec">Notifiche Google / Chromecast</div>'
-        + '<p class="wd-note">media_player Google Home (es. <code>media_player.google_cucina</code>). Lascia vuoto per non usare.</p>'
-        + '<div id="google-rows">' + multiRows(googleRows, 'google-inp', 'media_player.google_...') + '</div>'
-        + '<button class="wd-add" id="google-add">+ Aggiungi Google</button>'
-        + '</div>'
-        + '<div><div class="wd-sec">Notifiche Alexa</div>'
-        + '<p class="wd-note">media_player Alexa (es. <code>media_player.echo_cucina</code>). Lascia vuoto per non usare.</p>'
-        + '<div id="alexa-rows">' + multiRows(alexaRows, 'alexa-inp', 'media_player.echo_...') + '</div>'
-        + '<button class="wd-add" id="alexa-add">+ Aggiungi Echo</button>'
-        + '</div>'
-        + '</div>'
-        + '<div class="wd-foot">'
-        + '<button class="wd-cancel" id="wd-cancel">Annulla</button>'
-        + '<button class="wd-install" id="wd-install">📦 Installa PKG</button>'
-        + '</div></div></div>';
-
-      sr.getElementById('wd-x').addEventListener('click', destroy);
-      sr.getElementById('wd-cancel').addEventListener('click', destroy);
-      sr.getElementById('wd-bd').addEventListener('click', function(e) { if (e.target === sr.getElementById('wd-bd')) destroy(); });
-
-      function bindMulti(containerId, rows, cls, addId) {
-        sr.getElementById(containerId).addEventListener('click', function(e) {
-          var btn = e.target.closest('[data-rm]'); if (!btn) return;
-          rows.length = 0;
-          Array.from(sr.querySelectorAll('.' + cls)).forEach(function(i) { rows.push(i.value); });
-          rows.splice(+btn.dataset.rm, 1);
-          if (!rows.length) rows.push('');
-          renderWiz();
-        });
-        sr.getElementById(addId).addEventListener('click', function() {
-          Array.from(sr.querySelectorAll('.' + cls)).forEach(function(i, idx) { rows[idx] = i.value; });
-          rows.push('');
-          renderWiz();
-        });
-      }
-      bindMulti('push-rows',   pushRows,   'push-inp',   'push-add');
-      bindMulti('google-rows', googleRows, 'google-inp', 'google-add');
-      bindMulti('alexa-rows',  alexaRows,  'alexa-inp',  'alexa-add');
-
-      sr.querySelectorAll('.google-inp').forEach(function(inp) { setupAC(inp, inp.parentElement.querySelector('.wd-drop'), mediaIds); });
-      sr.querySelectorAll('.alexa-inp').forEach(function(inp)  { setupAC(inp, inp.parentElement.querySelector('.wd-drop'), mediaIds); });
-
-      sr.getElementById('wd-install').addEventListener('click', async function() {
-        var push   = Array.from(sr.querySelectorAll('.push-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
-        var google = Array.from(sr.querySelectorAll('.google-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
-        var alexa  = Array.from(sr.querySelectorAll('.alexa-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
-        try { localStorage.setItem(_DIFF_WIZ_KEY, JSON.stringify({push: push, google: google, alexa: alexa})); } catch(e) {}
-        var m = location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
-        var base = location.origin + (m ? m[1] : '');
-        var btn = sr.getElementById('wd-install');
-        btn.classList.add('wd-loading'); btn.textContent = 'Download PKG…';
-        var yaml;
-        try {
-          var ghR = await fetch('https://raw.githubusercontent.com/Frarik/cards/main/pkg/frarik_differenziata.yaml');
-          if (ghR.ok) {
-            yaml = _buildPkgDIFF(push, google, alexa, await ghR.text());
-          }
-        } catch(e) {}
-        if (!yaml) yaml = _buildPkgDIFF(push, google, alexa);
-        btn.textContent = 'Installazione…';
-        fetch(base + '/api/frarik/pkg/install', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({name: 'frarik/frarik_differenziata.yaml', content: yaml})
-        }).then(function(r) { return r.json().then(function(j) { return {r: r, j: j}; }); })
-          .then(function(res) {
-            destroy();
-            if (res.r.ok && res.j.ok) {
-              try { if (typeof window.showToast === 'function') window.showToast('📦 PKG Raccolta Differenziata installato! Riavvia HA.'); } catch(e) {}
-              if (typeof onDone === 'function') onDone();
-            } else {
-              try { if (typeof window.showToast === 'function') window.showToast('⚠️ Errore installazione PKG: ' + ((res.j && res.j.error) || '')); } catch(e) {}
-            }
-          }).catch(function() {
-            destroy();
-            try { if (typeof window.showToast === 'function') window.showToast('⚠️ Errore connessione al PKG install'); } catch(e) {}
-          });
-      });
-    }
-    renderWiz();
-  }
-
-  // ── Store helpers ────────────────────────────────────────────────────
-  function _dH() { try { return (typeof window.frarikHass === 'function' && window.frarikHass()) || {}; } catch(e) { return {}; } }
-  function _dKey(c) { return 'frarik_diffcard_' + (c.id || 'x'); }
-  function _dLoad(c) { try { return JSON.parse(localStorage.getItem(_dKey(c)) || '{}') || {}; } catch(e) { return {}; } }
-  function _dSave(c, o) { try { localStorage.setItem(_dKey(c), JSON.stringify(o)); } catch(e) {} }
-  function _dS(h, id) { return (h && h.states && h.states[id] && h.states[id].state) || null; }
-  function _dIsOn(h, id) { return !!(h && h.states && h.states[id] && h.states[id].state === 'on'); }
-
-  function _dPkgDef() {
-    return {
-      pk_lunedi:    'input_text.frarik_differenziata_rifiuto_lunedi',
-      pk_martedi:   'input_text.frarik_differenziata_rifiuto_martedi',
-      pk_mercoledi: 'input_text.frarik_differenziata_rifiuto_mercoledi',
-      pk_giovedi:   'input_text.frarik_differenziata_rifiuto_giovedi',
-      pk_venerdi:   'input_text.frarik_differenziata_rifiuto_venerdi',
-      pk_sabato:    'input_text.frarik_differenziata_rifiuto_sabato',
-      pk_domenica:  'input_text.frarik_differenziata_rifiuto_domenica',
-      pk_orario:    'input_datetime.frarik_differenziata_orario_notifica',
-      pk_npush:     'input_boolean.frarik_differenziata_notifica_push',
-      pk_ngoogle:   'input_boolean.frarik_differenziata_notifica_google',
-      pk_nalexa:    'input_boolean.frarik_differenziata_notifica_alexa',
-    };
-  }
-
-  function _dCfgFor(card) {
-    var st = _dLoad(card), pk = _dPkgDef(), r = {};
-    Object.keys(pk).forEach(function(k) { r[k] = (st[k] !== undefined && st[k] !== '') ? st[k] : pk[k]; });
-    r.name = st.name || 'Raccolta Differenziata';
-    r.custom_colors = (st.custom_colors && typeof st.custom_colors === 'object') ? st.custom_colors : {};
-    return r;
-  }
-
-  var _dWASTE = {
-    umido:   {col:'#92400e', rgb:'146,64,14',  init:'U', label:'Umido',         icon:'🍃'},
-    carta:   {col:'#1d4ed8', rgb:'29,78,216',  init:'C', label:'Carta',         icon:'📄'},
-    plastica:{col:'#b45309', rgb:'180,83,9',   init:'P', label:'Plastica',       icon:'♻️'},
-    vetro:   {col:'#15803d', rgb:'21,128,61',  init:'V', label:'Vetro',         icon:'🍾'},
-    secco:   {col:'#475569', rgb:'71,85,105',  init:'S', label:'Secco',         icon:'🗑️'},
-    nessuno: {col:'#1e293b', rgb:'30,41,59',   init:'—', label:'Nessun ritiro', icon:''},
-  };
-
-  function _hexToRgb(hex) {
-    return (parseInt(hex.slice(1,3),16)||0)+','+(parseInt(hex.slice(3,5),16)||0)+','+(parseInt(hex.slice(5,7),16)||0);
-  }
-
-  function _dWasteInfo(raw, cc) {
-    if (!raw || !raw.trim()) {
-      var nb = _dWASTE.nessuno;
-      return (cc && cc.nessuno) ? {col:cc.nessuno, rgb:_hexToRgb(cc.nessuno), init:'—', label:'Nessun ritiro', icon:''} : nb;
-    }
-    var key = raw.trim().toLowerCase().replace(/[^a-z]/g, '');
-    if (key === 'organico') key = 'umido';
-    if (key === 'cartone') key = 'carta';
-    if (key === 'indifferenziato' || key === 'lattine' || key === 'multimateriale') key = 'secco';
-    if (key === 'nessunoritiro' || key === 'niente' || key === 'no') key = 'nessuno';
-    var base = _dWASTE[key] || _dWASTE.nessuno;
-    if (cc && cc[key]) {
-      var hex = cc[key];
-      return {col:hex, rgb:_hexToRgb(hex), init:base.init, label:base.label, icon:base.icon};
-    }
-    return base;
-  }
-
-  function _dParseDay(raw, cc) {
-    if (!raw || !raw.trim()) return [_dWasteInfo('', cc)];
-    var parts = raw.split(',').map(function(s){return s.trim();}).filter(Boolean).slice(0,2);
-    if (!parts.length) return [_dWasteInfo('', cc)];
-    return parts.map(function(p){return _dWasteInfo(p, cc);});
-  }
-
-  function _dBinSVG(col, colRgb, abbr, size) {
-    size = size || 64;
-    var scale = size / 64;
-    var glow = 'drop-shadow(0 0 10px rgba(' + colRgb + ',.35))';
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 108" style="display:block;width:' + size + 'px;height:auto;filter:' + glow + '">'
-      + '<defs><linearGradient id="dBg' + abbr + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="' + col + '" stop-opacity=".9"/><stop offset="100%" stop-color="' + col + '" stop-opacity=".4"/></linearGradient></defs>'
-      + '<rect x="5" y="8" width="54" height="12" rx="4" fill="url(#dBg' + abbr + ')"/>'
-      + '<rect x="22" y="3" width="20" height="8" rx="3" fill="' + col + '" opacity=".85"/>'
-      + '<rect x="28" y="1" width="8" height="6" rx="2" fill="#060e1c" stroke="' + col + '" stroke-width=".6"/>'
-      + '<path d="M 8 20 L 12 92 H 52 L 56 20 Z" fill="#0b1929" stroke="' + col + '" stroke-width="1"/>'
-      + '<path d="M 12 22 L 15 86" stroke="rgba(255,255,255,.05)" stroke-width="8" stroke-linecap="round" fill="none"/>'
-      + '<rect x="18" y="32" width="28" height="44" rx="6" fill="rgba(' + colRgb + ',.12)" stroke="rgba(' + colRgb + ',.3)" stroke-width=".7"/>'
-      + '<circle cx="16" cy="96" r="7" fill="#060e1c" stroke="#1e3a5f" stroke-width=".7"/>'
-      + '<circle cx="16" cy="96" r="3" fill="#0c1929" stroke="#1e3a5f" stroke-width=".4"/>'
-      + '<circle cx="48" cy="96" r="7" fill="#060e1c" stroke="#1e3a5f" stroke-width=".7"/>'
-      + '<circle cx="48" cy="96" r="3" fill="#0c1929" stroke="#1e3a5f" stroke-width=".4"/>'
-      + '<rect x="13" y="88" width="38" height="5" rx="2.5" fill="#090f1e" stroke="#1e3a5f" stroke-width=".4"/>'
-      + '</svg>';
-  }
-
-  function _dRender(card) {
-    var h = _dH(), c = _dCfgFor(card);
-    var rid = 'frdiff' + (card.id || 'diff');
-    var days = ['pk_lunedi','pk_martedi','pk_mercoledi','pk_giovedi','pk_venerdi','pk_sabato','pk_domenica'];
-    var dayNames = ['LU','MA','ME','GI','VE','SA','DO'];
-    var todayIdx = (new Date().getDay() + 6) % 7;
-    var tmrIdx = (todayIdx + 1) % 7;
-    var todayRaw = _dS(h, c[days[todayIdx]]) || '';
-    var tmrRaw = _dS(h, c[days[tmrIdx]]) || '';
-    var cc = c.custom_colors || {};
-    var todayArr = _dParseDay(todayRaw, cc);
-    var tmrArr = _dParseDay(tmrRaw, cc);
-    // Hero mostra DOMANI — rifiuto da esporre stasera
-    var mainArr = tmrArr;
-    var mainW = mainArr[0];
-    var hasPickup = !!tmrRaw.trim() && mainW !== _dWASTE.nessuno;
-    var hasTwo = mainArr.length >= 2;
-    var dddIdx = (todayIdx + 2) % 7;
-    var dddRaw = _dS(h, c[days[dddIdx]]) || '';
-    var dddArr = _dParseDay(dddRaw, cc);
-    var orario = _dS(h, c.pk_orario) || '--:--';
-    var orarioStr = orario.length >= 5 ? orario.slice(0,5) : orario;
-    var col = mainW.col;
-    var colRgb = mainW.rgb;
-    var statusLabel = hasTwo ? 'DUE RITIRI' : hasPickup ? 'RITIRO DOMANI' : 'NESSUN RITIRO';
-
-    var weekChips = dayNames.map(function(dn, i) {
-      var raw = _dS(h, c[days[i]]) || '';
-      var wArr = _dParseDay(raw, cc);
-      var isToday = i === todayIdx;
-      var chipsHtml;
-      if (wArr.length >= 2) {
-        chipsHtml = '<div style="display:flex;flex-direction:column;gap:2px;align-items:center">'
-          + wArr.slice(0,2).map(function(w) {
-            var hp = w !== _dWASTE.nessuno;
-            return '<div style="width:28px;height:13px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:900;'
-              + 'background:rgba(' + w.rgb + ',.2);'
-              + 'border:1px solid rgba(' + w.rgb + ',' + (isToday ? '.65' : '.25') + ');'
-              + 'color:' + w.col + '">' + (hp ? w.init : '—') + '</div>';
-          }).join('') + '</div>';
-      } else {
-        var w0 = wArr[0], hp0 = w0 !== _dWASTE.nessuno;
-        chipsHtml = '<div style="width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;'
-          + 'background:rgba(' + w0.rgb + ',.15);'
-          + 'border:1px solid rgba(' + w0.rgb + ',' + (isToday ? '.6' : '.25') + ');'
-          + 'color:' + w0.col + ';'
-          + (isToday ? 'box-shadow:0 0 8px rgba(' + w0.rgb + ',.3);' : '')
-          + '">' + (hp0 ? w0.init : '—') + '</div>';
-      }
-      return '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1">'
-        + '<div style="font-size:8px;font-weight:800;color:' + (isToday ? '#fff' : 'rgba(255,255,255,.4)') + ';text-transform:uppercase">' + dn + '</div>'
-        + chipsHtml + '</div>';
-    }).join('');
-
-    var css = '<style>'
-      + '#' + rid + '{position:relative;width:100%;height:100%;min-height:280px;font-family:system-ui,sans-serif;display:block}'
-      + '#' + rid + ' .fc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#08101a 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
-      + '#' + rid + ' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(' + colRgb + ',.08) 0%,transparent 65%);pointer-events:none}'
-      + '#' + rid + ' .fc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
-      + '#' + rid + ' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;background:rgba(' + colRgb + ',.1);border:1px solid rgba(' + colRgb + ',.2)}'
-      + '#' + rid + ' .fc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
-      + '#' + rid + ' .fc-hdr-pill{font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;white-space:nowrap;display:flex;align-items:center;gap:4px;background:rgba(' + colRgb + ',.1);border:1px solid rgba(' + colRgb + ',.28);color:' + col + '}'
-      + '#' + rid + ' .fc-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:' + col + (hasPickup?';animation:dPulse 2s ease-in-out infinite':'') + '}'
-      + '#' + rid + ' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
-      + '#' + rid + ' .fc-scroll::-webkit-scrollbar{display:none}'
-      + '#' + rid + ' .fc-hero{display:flex;align-items:center;padding:14px 14px 10px;gap:14px;flex:1}'
-      + '#' + rid + ' .fc-hero-bin{flex-shrink:0;display:flex;align-items:center;justify-content:center}'
-      + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:8px;min-width:0}'
-      + '#' + rid + ' .fc-waste-main{font-size:28px;font-weight:900;line-height:1.1;word-break:break-word;color:#fff}'
-      + '#' + rid + ' .fc-waste-sub{font-size:13px;color:#fff;margin-top:2px;font-weight:600}'
-      + '#' + rid + ' .fc-tmr-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid rgba(255,255,255,.06)}'
-      + '#' + rid + ' .fc-tmr-lbl{font-size:12px;font-weight:700;color:#fff;white-space:nowrap}'
-      + '#' + rid + ' .fc-week{display:flex;padding:0 10px 12px;gap:3px;border-top:1px solid rgba(255,255,255,.06);padding-top:10px}'
-      + '#' + rid + ' .fc-btns{display:flex;gap:6px;padding:0 14px 12px}'
-      + '#' + rid + ' .fc-btn{flex:1;padding:8px 4px;border-radius:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:10px;font-weight:700;color:#fff;text-align:center;cursor:pointer;transition:all .15s}'
-      + '#' + rid + ' .fc-btn:hover{background:rgba(' + colRgb + ',.12);border-color:rgba(' + colRgb + ',.3);color:' + col + '}'
-      + (hasPickup ? '@keyframes dPulse{0%,100%{opacity:.6}50%{opacity:1}}' : '')
-      + '</style>';
-
-    var dddLabel = dddRaw.trim() ? dddArr.map(function(w){return w.label;}).join(' + ') : 'Nessun ritiro';
-    var heroHtml;
-    if (hasTwo) {
-      var w1 = mainArr[0], w2 = mainArr[1];
-      heroHtml = '<div class="fc-hero" style="flex-direction:column;align-items:stretch;gap:10px">'
-        + '<div style="display:flex;gap:16px;justify-content:center;align-items:flex-end">'
-        + '<div style="display:flex;flex-direction:column;align-items:center;gap:6px">'
-        + _dBinSVG(w1.col, w1.rgb, 'a', 54)
-        + '<div style="font-size:18px;font-weight:900;color:#fff;line-height:1.1;text-align:center">' + w1.label + '</div>'
-        + '</div>'
-        + '<div style="display:flex;flex-direction:column;align-items:center;gap:6px">'
-        + _dBinSVG(w2.col, w2.rgb, 'b', 54)
-        + '<div style="font-size:18px;font-weight:900;color:#fff;line-height:1.1;text-align:center">' + w2.label + '</div>'
-        + '</div>'
-        + '</div>'
-        + '<div class="fc-waste-sub" style="text-align:center">🌙 Esponi i bidoni stasera</div>'
-        + '<div class="fc-tmr-row"><span class="fc-tmr-lbl">Dopodomani:</span><span style="font-size:13px;font-weight:700;color:#fff">' + dddLabel + '</span></div>'
-        + '<div class="fc-tmr-row"><span class="fc-tmr-lbl">Notifica:</span><span style="font-size:13px;font-weight:700;color:#fff">' + orarioStr + '</span></div>'
-        + '</div>';
-    } else {
-      heroHtml = '<div class="fc-hero">'
-        + '<div class="fc-hero-bin">' + _dBinSVG(col, colRgb, 'x', 64) + '</div>'
-        + '<div class="fc-hero-r">'
-        + '<div class="fc-waste-main">' + (hasPickup ? mainW.label : 'Nessun ritiro') + '</div>'
-        + '<div class="fc-waste-sub">' + (hasPickup ? '🌙 Esponi il bidone stasera' : '✓ Nessuna raccolta domani') + '</div>'
-        + '<div class="fc-tmr-row"><span class="fc-tmr-lbl">Dopodomani:</span><span style="font-size:13px;font-weight:700;color:#fff">' + dddLabel + '</span></div>'
-        + '<div class="fc-tmr-row"><span class="fc-tmr-lbl">Notifica:</span><span style="font-size:13px;font-weight:700;color:#fff">' + orarioStr + '</span></div>'
-        + '</div></div>';
-    }
-
-    var weekHtml = '<div class="fc-week">' + weekChips + '</div>';
-    var btnsHtml = '<div class="fc-btns"><div class="fc-btn" data-sya="popup-cfg">⚙ Impostazioni</div></div>';
-
-    return css
-      + '<div id="' + rid + '"><div class="fc-card">'
-      + '<div class="fc-hdr">'
-      + '<div class="fc-hdr-iw">♻️</div>'
-      + '<div class="fc-hdr-tit">' + (c.name || 'Raccolta Differenziata') + '</div>'
-      + '<div class="fc-hdr-pill"><div class="fc-dot"></div>' + statusLabel + '</div>'
-      + '</div>'
-      + '<div class="fc-scroll">' + heroHtml + weekHtml + btnsHtml + '</div>'
-      + '</div></div>';
-  }
-
-  function _dMkOv(html, closeId) {
-    var ov = document.createElement('div');
-    ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:flex-end;background:rgba(0,0,0,.6);backdrop-filter:blur(4px)';
-    ov.innerHTML = html;
-    document.body.appendChild(ov);
-    var close = function() { try { document.body.removeChild(ov); } catch(e) {} };
-    var btn = ov.querySelector('#' + closeId); if (btn) btn.addEventListener('click', close);
-    ov.addEventListener('click', function(e) { if (e.target === ov) close(); });
-    ov._close = close;
-    return ov;
-  }
-
-  function _dPopShell(icon, rgb, title, sub, closeId, content) {
-    return '<style>@keyframes dUP{from{transform:translateY(100%)}to{transform:translateY(0)}}.dpc{overflow-y:auto;scrollbar-width:none}.dpc::-webkit-scrollbar{display:none}</style>'
-      + '<div style="width:100%;max-height:78vh;display:flex;flex-direction:column;background:#060d14;border:1px solid rgba(' + rgb + ',.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:dUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
-      + '<div style="display:flex;align-items:center;gap:10px;padding:13px 15px 11px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
-      + '<div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(' + rgb + ',.15);border:1px solid rgba(' + rgb + ',.3)">' + icon + '</div>'
-      + '<div><div style="font-size:14px;font-weight:800;color:#fff">' + title + '</div><div style="font-size:11px;color:#fff;margin-top:1px">' + sub + '</div></div>'
-      + '<button id="' + closeId + '" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none">✕</button>'
-      + '</div>'
-      + '<div class="dpc" style="flex:1;overflow-y:auto;padding:13px 15px;display:flex;flex-direction:column;gap:0">' + content + '</div>'
-      + '</div>';
-  }
-
-  function _dOpenEdit(card, el) {
-    var h = _dH(), c = _dCfgFor(card);
-    var days = ['pk_lunedi','pk_martedi','pk_mercoledi','pk_giovedi','pk_venerdi','pk_sabato','pk_domenica'];
-    var dayLabels = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato','Domenica'];
-    var suggestions = ['Organico','Carta','Cartone','Plastica','Vetro','Indifferenziato','Multimateriale','Ingombranti'];
-    function fld(key, label) {
-      var val = (_dS(h, c[key]) || '').replace(/"/g,'&quot;');
-      var opts = suggestions.map(function(s) { return '<option value="' + s + '">' + s + '</option>'; }).join('');
-      return '<div style="margin-bottom:8px;display:flex;align-items:center;gap:8px">'
-        + '<div style="font-size:10px;font-weight:800;color:#94a3b8;width:80px;flex-shrink:0">' + label + '</div>'
-        + '<input id="df-' + key + '" type="text" list="df-datalist" placeholder="es. Organico" value="' + val + '" style="flex:1;padding:7px 9px;border-radius:8px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:12px;box-sizing:border-box;outline:none">'
-        + '</div>';
-    }
-    var content = '<datalist id="df-datalist">' + suggestions.map(function(s){return '<option value="'+s+'">';}).join('') + '</datalist>'
-      + days.map(function(k,i) { return fld(k, dayLabels[i]); }).join('')
-      + '<button id="d-edit-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#22c55e;color:#022c1b;margin-top:8px">💾 Salva programmazione</button>';
-    var ov = _dMkOv(_dPopShell('📅','34,197,94','Programmazione settimanale','Modifica i rifiuti per ogni giorno','d-edit-cl',content),'d-edit-cl');
-    ov.querySelector('#d-edit-save').addEventListener('click', function() {
-      var h2 = _dH();
-      days.forEach(function(k) {
-        var inp = ov.querySelector('#df-'+k);
-        if (!inp) return;
-        var val = inp.value.trim();
-        var eid = c[k];
-        if (eid && h2 && h2.callService) h2.callService('input_text','set_value',{entity_id:eid,value:val});
-      });
-      ov._close();
-      if (el) el._fcSig = null;
-    });
-  }
-
-  function _dOpenCfg(card, el) {
-    var h = _dH(), c = _dCfgFor(card);
-    var cc = c.custom_colors || {};
-    var days = ['pk_lunedi','pk_martedi','pk_mercoledi','pk_giovedi','pk_venerdi','pk_sabato','pk_domenica'];
-    var dayLabels = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato','Domenica'];
-    var wasteKeys   = ['umido','carta','plastica','vetro','secco'];
-    var wasteLabels = ['Umido','Carta','Plastica','Vetro','Secco'];
-    var colorTypes  = [
-      {key:'umido',    label:'Umido'},
-      {key:'carta',    label:'Carta'},
-      {key:'plastica', label:'Plastica'},
-      {key:'vetro',    label:'Vetro'},
-      {key:'secco',    label:'Secco'},
-      {key:'nessuno',  label:'Nessun ritiro'},
-    ];
-    var nPush   = _dIsOn(h, c.pk_npush);
-    var nGoogle = _dIsOn(h, c.pk_ngoogle);
-    var nAlexa  = _dIsOn(h, c.pk_nalexa);
-    var orario  = _dS(h, c.pk_orario) || '08:00:00';
-
-    function ntog(label, sya, isOn) {
-      return '<div data-sya="' + sya + '" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:8px 4px;border-radius:9px;background:rgba(' + (isOn?'34,197,94':'100,116,139') + ',.1);border:1px solid rgba(' + (isOn?'34,197,94':'100,116,139') + ',' + (isOn?'.35':'.15') + ');transition:all .2s">'
-        + '<div style="font-size:15px">' + (isOn ? '🔔' : '🔕') + '</div>'
-        + '<div style="font-size:10px;font-weight:800;color:' + (isOn ? '#22c55e' : 'rgba(255,255,255,.35)') + '">' + label + '</div>'
-        + '<div style="font-size:9px;font-weight:700;color:' + (isOn ? '#fff' : 'rgba(255,255,255,.25)') + '">' + (isOn ? 'ON' : 'OFF') + '</div>'
-        + '</div>';
-    }
-    function selSt() { return 'flex:1;min-width:0;padding:6px 6px;border-radius:8px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:11px;box-sizing:border-box;outline:none'; }
-    function mkOpts(selected) {
-      return '<option value="nessuno"' + (selected === 'nessuno' ? ' selected' : '') + '>—</option>'
-        + wasteKeys.map(function(k2,j) {
-            return '<option value="' + k2 + '"' + (k2 === selected ? ' selected' : '') + '>' + wasteLabels[j] + '</option>';
-          }).join('');
-    }
-    function normalizeKey(raw) {
-      if (!raw) return 'nessuno';
-      var k = raw.trim().toLowerCase().replace(/[^a-z]/g,'');
-      if (k === 'organico') k = 'umido';
-      if (k === 'cartone') k = 'carta';
-      if (k === 'indifferenziato' || k === 'lattine' || k === 'multimateriale') k = 'secco';
-      return wasteKeys.indexOf(k) >= 0 ? k : 'nessuno';
-    }
-
-    var dayFlds = days.map(function(k, i) {
-      var raw = (_dS(h, c[k]) || '').trim();
-      var parts = raw.split(',').map(function(s){ return normalizeKey(s); });
-      var sel1 = parts[0] || 'nessuno', sel2 = parts[1] || 'nessuno';
-      var w1 = _dWasteInfo(sel1, cc), w2 = _dWasteInfo(sel2, cc);
-      return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">'
-        + '<div style="font-size:10px;font-weight:800;color:#94a3b8;width:72px;flex-shrink:0">' + dayLabels[i] + '</div>'
-        + '<div style="width:8px;height:8px;border-radius:50%;background:' + w1.col + ';flex-shrink:0"></div>'
-        + '<select id="dcf-' + k + '-1" style="' + selSt() + '">' + mkOpts(sel1) + '</select>'
-        + '<div style="width:8px;height:8px;border-radius:50%;background:' + w2.col + ';flex-shrink:0"></div>'
-        + '<select id="dcf-' + k + '-2" style="' + selSt() + '">' + mkOpts(sel2) + '</select>'
-        + '</div>';
-    }).join('');
-
-    var colorFlds = colorTypes.map(function(ct) {
-      var defCol = _dWASTE[ct.key] ? _dWASTE[ct.key].col : '#475569';
-      var curCol = cc[ct.key] || defCol;
-      return '<div style="display:flex;align-items:center;gap:9px;margin-bottom:7px">'
-        + '<div style="width:12px;height:12px;border-radius:50%;background:' + curCol + ';flex-shrink:0;border:1px solid rgba(255,255,255,.12)"></div>'
-        + '<div style="font-size:11px;color:#fff;flex:1">' + ct.label + '</div>'
-        + '<input type="color" id="dcc-' + ct.key + '" value="' + curCol + '" style="width:44px;height:30px;border:1px solid rgba(255,255,255,.15);border-radius:7px;background:#0b1422;cursor:pointer;padding:2px 3px">'
-        + '</div>';
-    }).join('');
-
-    function sec(t) { return '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#22c55e;padding-bottom:4px;border-bottom:1px solid rgba(34,197,94,.18);margin:14px 0 10px">' + t + '</div>'; }
-    var content = sec('Programmazione giorni')
-      + dayFlds
-      + sec('Colori per tipo di rifiuto')
-      + colorFlds
-      + sec('Notifiche')
-      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">'
-      + '<span style="font-size:11px;color:#fff;flex:1">Orario notifica</span>'
-      + '<input id="dcf-orario" type="time" value="' + orario.slice(0,5) + '" style="width:110px;padding:6px 9px;border-radius:7px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:13px;outline:none">'
-      + '</div>'
-      + '<div style="display:flex;gap:8px;margin-bottom:14px">'
-      + ntog('Push', 'ncfg-push', nPush) + ntog('Google', 'ncfg-google', nGoogle) + ntog('Alexa', 'ncfg-alexa', nAlexa)
-      + '</div>'
-      + '<button id="d-cfg-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#22c55e;color:#022c1b">💾 Salva</button>';
-
-    var ov = _dMkOv(_dPopShell('⚙','34,197,94','Impostazioni',c.name||'Raccolta Differenziata','d-cfg-cl',content),'d-cfg-cl');
-    ov.querySelectorAll('[data-sya^="ncfg-"]').forEach(function(tog) {
-      tog.addEventListener('click', function() {
-        var sya = tog.dataset.sya;
-        var eid = sya === 'ncfg-push' ? c.pk_npush : sya === 'ncfg-google' ? c.pk_ngoogle : c.pk_nalexa;
-        var wasOn = tog.querySelector('div:last-child').textContent === 'ON';
-        _dCallSvc('input_boolean', wasOn ? 'turn_off' : 'turn_on', {entity_id: eid});
-        tog.style.background = 'rgba(' + (wasOn?'100,116,139':'34,197,94') + ',.1)';
-        tog.style.borderColor = 'rgba(' + (wasOn?'100,116,139':'34,197,94') + ',' + (wasOn?'.15':'.35') + ')';
-        tog.querySelector('div:first-child').textContent = wasOn ? '🔕' : '🔔';
-        tog.querySelector('div:nth-child(2)').style.color = wasOn ? 'rgba(255,255,255,.35)' : '#22c55e';
-        var lv = tog.querySelector('div:last-child'); lv.textContent = wasOn ? 'OFF' : 'ON'; lv.style.color = wasOn ? 'rgba(255,255,255,.25)' : '#fff';
-      });
-    });
-    ov.querySelector('#d-cfg-save').addEventListener('click', function() {
-      var h2 = _dH();
-      days.forEach(function(k) {
-        var s1 = ov.querySelector('#dcf-'+k+'-1');
-        var s2 = ov.querySelector('#dcf-'+k+'-2');
-        if (!s1) return;
-        var idx1 = wasteKeys.indexOf(s1.value), idx2 = s2 ? wasteKeys.indexOf(s2.value) : -1;
-        var v1 = idx1 >= 0 ? wasteLabels[idx1] : '';
-        var v2 = idx2 >= 0 ? wasteLabels[idx2] : '';
-        var val = v1 + (v1 && v2 ? ',' + v2 : v2);
-        var eid = c[k];
-        if (eid && h2 && h2.callService) h2.callService('input_text','set_value',{entity_id:eid,value:val});
-      });
-      var ori = ov.querySelector('#dcf-orario');
-      if (ori && ori.value && h2 && h2.callService) h2.callService('input_datetime','set_datetime',{entity_id:c.pk_orario,time:ori.value+':00'});
-      var newCc = {};
-      colorTypes.forEach(function(ct) {
-        var inp = ov.querySelector('#dcc-'+ct.key);
-        if (inp) newCc[ct.key] = inp.value;
-      });
-      var st = _dLoad(card); st.custom_colors = newCc; _dSave(card, st);
-      ov._close();
-      if (el) el._fcSig = null;
-    });
-  }
-
-  function _dOpenEntCfg(card, el) {
-    var c = _dCfgFor(card);
-    function fld(key, label, ph) {
-      return '<div style="margin-bottom:10px">'
-        + '<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px">' + label + '</div>'
-        + '<input id="dent-' + key + '" type="text" autocomplete="off" placeholder="' + ph + '" value="' + (c[key]||'').replace(/"/g,'&quot;') + '" style="width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:11px;font-family:monospace;box-sizing:border-box;outline:none">'
-        + '</div>';
-    }
-    function sec(t) { return '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#22c55e;padding-bottom:4px;border-bottom:1px solid rgba(34,197,94,.18);margin:14px 0 10px">' + t + '</div>'; }
-    var days = ['pk_lunedi','pk_martedi','pk_mercoledi','pk_giovedi','pk_venerdi','pk_sabato','pk_domenica'];
-    var dayLabels = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato','Domenica'];
-    var content = '<div style="margin-bottom:10px"><div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px">Nome card</div>'
-      + '<input id="dent-name" type="text" placeholder="Raccolta Differenziata" value="' + (c.name||'').replace(/"/g,'&quot;') + '" style="width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:11px;box-sizing:border-box;outline:none"></div>'
-      + sec('Entità giorni (input_text)')
-      + days.map(function(k,i){ return fld(k, dayLabels[i], 'input_text.rifiuto_'+['lunedi','martedi','mercoledi','giovedi','venerdi','sabato','domenica'][i]); }).join('')
-      + sec('Entità notifiche')
-      + fld('pk_orario','Orario notifica','input_datetime.frarik_differenziata_orario_notifica')
-      + fld('pk_npush','Boolean push','input_boolean.frarik_differenziata_notifica_push')
-      + fld('pk_ngoogle','Boolean Google','input_boolean.frarik_differenziata_notifica_google')
-      + fld('pk_nalexa','Boolean Alexa','input_boolean.frarik_differenziata_notifica_alexa')
-      + '<button id="dent-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#22c55e;color:#022c1b;margin-top:8px">💾 Salva</button>';
-    var ov = _dMkOv(_dPopShell('🔧','34,197,94','Entità',c.name||'Raccolta Differenziata','dent-cl',content),'dent-cl');
-    ov.querySelector('#dent-save').addEventListener('click', function() {
-      var pk = _dPkgDef(), saved = {};
-      Object.keys(pk).forEach(function(k) { var i = ov.querySelector('#dent-'+k); if (i) saved[k] = i.value.trim(); });
-      var ni = ov.querySelector('#dent-name'); if (ni) saved.name = ni.value.trim();
-      _dSave(card, saved);
-      ov._close();
-      if (el) el._fcSig = null;
-    });
-  }
-
-  function _dCallSvc(domain, svc, data) {
-    try { var h = _dH(); if (h && h.callService) { h.callService(domain, svc, data); return; } if (window.callSvc) window.callSvc(domain, svc, data); } catch(e) {}
-  }
-
-  function _dMount(card, hass, el) {
-    if (el._fcBound === '2.1diff') return;
-    el._fcBound = '2.1diff';
-    if (el._fcHandler) el.removeEventListener('click', el._fcHandler);
-    el._fcHandler = function(e) {
-      var t = e.target.closest('[data-sya]'); if (!t) return;
-      var a = t.dataset.sya;
-      if (a === 'popup-cfg') _dOpenCfg(card, el);
-    };
-    el.addEventListener('click', el._fcHandler);
-    clearInterval(el._dPoll);
-    el._dPoll = setInterval(function() {
-      try {
-        if (!el._fcBound) { clearInterval(el._dPoll); return; }
-        var h = _dH(), c2 = _dCfgFor(card);
-        var days2 = ['pk_lunedi','pk_martedi','pk_mercoledi','pk_giovedi','pk_venerdi','pk_sabato','pk_domenica'];
-        var sig = ['2.1diff'].concat(days2.map(function(k){return _dS(h,c2[k])||'';})).concat([_dIsOn(h,c2.pk_npush)?'1':'0',_dIsOn(h,c2.pk_ngoogle)?'1':'0',_dIsOn(h,c2.pk_nalexa)?'1':'0']).join('|');
-        if (el._fcSig !== sig) { el._fcSig = sig; el.innerHTML = _dRender(card); }
-      } catch(e) {}
-    }, 2000);
-  }
-
-  function _dUpdate(card, hass, el) {
-    var h = _dH(), c = _dCfgFor(card);
-    var days = ['pk_lunedi','pk_martedi','pk_mercoledi','pk_giovedi','pk_venerdi','pk_sabato','pk_domenica'];
-    var sig = ['2.1diff'].concat(days.map(function(k){return _dS(h,c[k])||'';})).concat([_dIsOn(h,c.pk_npush)?'1':'0',_dIsOn(h,c.pk_ngoogle)?'1':'0',_dIsOn(h,c.pk_nalexa)?'1':'0']).join('|');
-    if (!el.querySelector('.fc-card') || el._fcSig !== sig) { el._fcSig = sig; el.innerHTML = _dRender(card); }
-    _dMount(card, hass, el);
-  }
-
-  var _DIFF_CARD = {
-    id: 'differenziata', name: 'Raccolta Differenziata', icon: '♻️', version: '2.5',
-    desc: 'Calendario raccolta differenziata settimanale con notifiche push, Google e Alexa.',
-    render:    function(card) { return _dRender(card); },
-    mount:     function(card, hass, el) { _dMount(card, hass, el); },
-    update:    function(card, hass, el) { _dUpdate(card, hass, el); },
-    configure: function(card, el) { _dOpenEntCfg(card, el); },
-    frarik_pkg_check:   'sensor.frarik_differenziata_raccolta',
-    frarik_pkg_id:      'frarik_differenziata',
-    frarik_pkg_version: '1.0',
-    openWizard: _openWizardDIFF,
-  };
-  window.FratechCardRegistry = window.FratechCardRegistry || {};
-  window.FratechCardRegistry[_DIFF_CARD.id] = _DIFF_CARD;
-  window.FratechCards = window.FratechCards || {};
-  window.FratechCards[_DIFF_CARD.id] = _DIFF_CARD;
-  try { console.log('[FratechStore] Card registrata: differenziata v' + _DIFF_CARD.version); } catch(e) {}
-})();
+  })
+})()

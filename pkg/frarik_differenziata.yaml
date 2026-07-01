@@ -8,7 +8,7 @@
 #   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝            #
 #                                                             #
 #   Package: Centro Controllo Raccolta Differenziata          #
-#   Versione: 1.1  |  Frarik / Fratech                       #
+#   Versione: 2.0  |  Frarik / Fratech                       #
 #                                                             #
 ###############################################################
 #
@@ -16,7 +16,9 @@
 # ──────────────────────────────────────────────────────────
 # Gestisce la raccolta differenziata settimanale:
 #
-#  ▸ Testo rifiuto per ogni giorno della settimana
+#  ▸ Rifiuti per ogni giorno (lista separata da virgole)
+#    es. "plastica,vetro"
+#  ▸ Tipi supportati: umido, secco, carta, plastica, vetro
 #  ▸ Sensore raccolta odierna (auto-aggiornato)
 #  ▸ Notifiche push, Google Home e Alexa
 #  ▸ Orario notifica configurabile
@@ -58,13 +60,7 @@
 # ──────────────────────────────────────────────────────────
 #  sensor.frarik_differenziata_versione        ← versione pkg
 #  sensor.frarik_differenziata_raccolta        ← rifiuto di oggi
-#  input_text.frarik_differenziata_rifiuto_lunedi
-#  input_text.frarik_differenziata_rifiuto_martedi
-#  input_text.frarik_differenziata_rifiuto_mercoledi
-#  input_text.frarik_differenziata_rifiuto_giovedi
-#  input_text.frarik_differenziata_rifiuto_venerdi
-#  input_text.frarik_differenziata_rifiuto_sabato
-#  input_text.frarik_differenziata_rifiuto_domenica
+#  input_text.frarik_differenziata_rifiuto_GIORNO  (× 7)
 #  input_datetime.frarik_differenziata_orario_notifica
 #  input_boolean.frarik_differenziata_notifica_push
 #  input_boolean.frarik_differenziata_notifica_google
@@ -88,7 +84,7 @@ homeassistant:
       customize: &customize
         package: 'Frarik — Centro Controllo Raccolta Differenziata'
         author: 'Frarik / Fratech'
-        version: '1.1'
+        version: '2.0'
 
       setting:
 
@@ -129,6 +125,9 @@ notify:
 ####################################################
 #                                                  #
 #                  INPUT TEXT                      #
+#    Ogni giorno memorizza i rifiuti selezionati   #
+#    come lista separata da virgole                #
+#    es. "plastica,vetro"                          #
 #                                                  #
 ####################################################
 
@@ -136,58 +135,37 @@ input_text:
   frarik_differenziata_rifiuto_lunedi:
     name: "Differenziata — Rifiuto Lunedì"
     icon: mdi:delete-variant
+    max: 255
 
   frarik_differenziata_rifiuto_martedi:
     name: "Differenziata — Rifiuto Martedì"
     icon: mdi:delete-variant
+    max: 255
 
   frarik_differenziata_rifiuto_mercoledi:
     name: "Differenziata — Rifiuto Mercoledì"
     icon: mdi:delete-variant
+    max: 255
 
   frarik_differenziata_rifiuto_giovedi:
     name: "Differenziata — Rifiuto Giovedì"
     icon: mdi:delete-variant
+    max: 255
 
   frarik_differenziata_rifiuto_venerdi:
     name: "Differenziata — Rifiuto Venerdì"
     icon: mdi:delete-variant
+    max: 255
 
   frarik_differenziata_rifiuto_sabato:
     name: "Differenziata — Rifiuto Sabato"
     icon: mdi:delete-variant
+    max: 255
 
   frarik_differenziata_rifiuto_domenica:
     name: "Differenziata — Rifiuto Domenica"
     icon: mdi:delete-variant
-
-  frarik_differenziata_rifiuto2_lunedi:
-    name: "Differenziata — 2° Rifiuto Lunedì"
-    icon: mdi:delete-variant
-
-  frarik_differenziata_rifiuto2_martedi:
-    name: "Differenziata — 2° Rifiuto Martedì"
-    icon: mdi:delete-variant
-
-  frarik_differenziata_rifiuto2_mercoledi:
-    name: "Differenziata — 2° Rifiuto Mercoledì"
-    icon: mdi:delete-variant
-
-  frarik_differenziata_rifiuto2_giovedi:
-    name: "Differenziata — 2° Rifiuto Giovedì"
-    icon: mdi:delete-variant
-
-  frarik_differenziata_rifiuto2_venerdi:
-    name: "Differenziata — 2° Rifiuto Venerdì"
-    icon: mdi:delete-variant
-
-  frarik_differenziata_rifiuto2_sabato:
-    name: "Differenziata — 2° Rifiuto Sabato"
-    icon: mdi:delete-variant
-
-  frarik_differenziata_rifiuto2_domenica:
-    name: "Differenziata — 2° Rifiuto Domenica"
-    icon: mdi:delete-variant
+    max: 255
 
 
 ####################################################
@@ -234,28 +212,16 @@ template:
   - sensor:
       - name: "Frarik Differenziata Versione"
         unique_id: frarik_differenziata_versione
-        state: "1.1"
+        state: "2.0"
         icon: mdi:package-variant-closed
 
       - name: "Frarik Differenziata Raccolta"
         unique_id: frarik_differenziata_raccolta
         icon: mdi:recycle
         state: >-
-          {% if now().weekday() == 0 %}
-            {{ states('input_text.frarik_differenziata_rifiuto_lunedi') }}
-          {% elif now().weekday() == 1 %}
-            {{ states('input_text.frarik_differenziata_rifiuto_martedi') }}
-          {% elif now().weekday() == 2 %}
-            {{ states('input_text.frarik_differenziata_rifiuto_mercoledi') }}
-          {% elif now().weekday() == 3 %}
-            {{ states('input_text.frarik_differenziata_rifiuto_giovedi') }}
-          {% elif now().weekday() == 4 %}
-            {{ states('input_text.frarik_differenziata_rifiuto_venerdi') }}
-          {% elif now().weekday() == 5 %}
-            {{ states('input_text.frarik_differenziata_rifiuto_sabato') }}
-          {% else %}
-            {{ states('input_text.frarik_differenziata_rifiuto_domenica') }}
-          {% endif %}
+          {% set wd = now().weekday() %}
+          {% set giorni = ['lunedi','martedi','mercoledi','giovedi','venerdi','sabato','domenica'] %}
+          {{ states('input_text.frarik_differenziata_rifiuto_' + giorni[wd]) }}
 
 
 ####################################################
@@ -268,7 +234,7 @@ automation:
 
   - alias: "Frarik — Differenziata (notifiche)"
     id: frarik_differenziata_notifiche
-    description: "Notifica giornaliera rifiuto da buttare"
+    description: "Notifica giornaliera rifiuti da buttare"
     mode: single
 
     trigger:
@@ -294,10 +260,11 @@ automation:
                 state: 'on'
               sequence:
               - service: notify.frarik_differenziata
+                continue_on_error: true
                 data:
                   title: "♻️ Frarik — Differenziata"
                   message: >-
-                    Oggi ricordati di buttare {{ states('sensor.frarik_differenziata_raccolta') }}
+                    Oggi esponi: {{ states('sensor.frarik_differenziata_raccolta') }}
 
           # ── Annuncio Google Home ───────────────────
           - choose:
@@ -312,7 +279,7 @@ automation:
                   entity_id: *google
                   language: 'it'
                   message: >-
-                    Oggi ricordati di buttare {{ states('sensor.frarik_differenziata_raccolta') }}
+                    Oggi devi esporre {{ states('sensor.frarik_differenziata_raccolta') }}
 
           # ── Annuncio Alexa ─────────────────────────
           - choose:
@@ -329,8 +296,8 @@ automation:
                     type: announce
                     method: spoken
                   message: >-
-                    Oggi ricordati di buttare {{ states('sensor.frarik_differenziata_raccolta') }}
+                    Oggi devi esporre {{ states('sensor.frarik_differenziata_raccolta') }}
 
 ###############################################################
-#  Fine package — Frarik Centro Controllo Raccolta Differenziata v1.1
+#  Fine package — Frarik Centro Controllo Raccolta Differenziata v2.0
 ###############################################################
