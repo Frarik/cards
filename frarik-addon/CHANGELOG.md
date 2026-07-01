@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.39 — 2026-07-01
+
+### fix: Differenziata v5.10 — doppio sfondo eliminato alla radice
+
+- Root cause: container esterno usa border-radius:20px (--card-r) mentre fc-card aveva 18px — quei 2px mostravano sfondo glass verde del wrapper
+- Fix: #rid prende background:#070d18 + border-radius:var(--card-r,20px) + overflow:hidden; fc-card diventa trasparente con border-radius:0
+
 ## 1.7.38 — 2026-07-01
 
 ### fix: Differenziata v5.9 — sfondo uniforme, no zona scura sui bottoni
