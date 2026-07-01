@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.7.26 — 2026-07-01
+
+### feat: card Differenziata v5 — stile elettrodomestici
+
+- Riscritto completamente nello stile delle card elettrodomestici (IIFE, FratechStore, mkOv/popShell)
+- Rimossa icona ⚙ dall'header; pulsante "⚙ Impostazioni" in fondo alla card come negli altri elettrodomestici
+- Colonna destra: "Questa sera" + "Per domani (giorno)" con chip colorati per tipo rifiuto
+- Bidoni SVG v2: versione ultra-realistica con gradienti multipli, filtro ombra SVG, speculare radiale sul coperchio, ribs curve, ruote con raggi, asimmetria 3D
+- Settimana mini in basso con puntini colorati per giorno
+- Popup impostazioni: pills multi-selezione per giorno + palette colori + notifiche con pulsante Salva
+- Background gradient scuro + glow verde come elettrodomestici
+
 ## 1.7.25 — 2026-07-01
 
 ### fix: "Aggiorna PKG" non installava il YAML su HA
