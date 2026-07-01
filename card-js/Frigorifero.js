@@ -451,27 +451,27 @@
     }
 
     dSec('🔔 Notifiche push & vocali');
-    dToggle('input_boolean.frigo_notify_push',   '📱 Push');
-    dToggle('input_boolean.frigo_notify_google', '🔊 Google');
-    dToggle('input_boolean.frigo_notify_alexa',  '🗣 Alexa');
-    dTime('input_datetime.frigo_notifiche_inizio', '⏰ Orario inizio notifiche');
-    dTime('input_datetime.frigo_notifiche_fine',   '⏰ Orario fine notifiche');
+    dToggle('input_boolean.frarik_frigorifero_notify_push',   '📱 Push');
+    dToggle('input_boolean.frarik_frigorifero_notify_google', '🔊 Google');
+    dToggle('input_boolean.frarik_frigorifero_notify_alexa',  '🗣 Alexa');
+    dTime('input_datetime.frarik_frigorifero_notifiche_inizio', '⏰ Orario inizio notifiche');
+    dTime('input_datetime.frarik_frigorifero_notifiche_fine',   '⏰ Orario fine notifiche');
 
     dSec('🔌 Elettrodomestico');
-    dToggle('input_boolean.frigo_switch', 'Switch presa');
+    dToggle('input_boolean.frarik_frigorifero_switch', 'Switch presa');
     dNum('input_number.frarik_frigorifero_soglia_w',          'Soglia lavoro',  'W',   0, 5000, 1);
-    dNum('input_number.frigo_tempo_innesco_m',   'Delay spegnimento', 'min', 0, 60, 1);
-    dNum('input_number.frigo_avvio_ritardato_s', 'Delay riavvio',  's',   0, 300, 1);
+    dNum('input_number.frarik_frigorifero_tempo_innesco_m',   'Delay spegnimento', 'min', 0, 60, 1);
+    dNum('input_number.frarik_frigorifero_avvio_ritardato_s', 'Delay riavvio',  's',   0, 300, 1);
 
     dSec('⏰ Spegnimento automatico');
-    dToggle('automation.frigo_off_automatico', 'Auto OFF abilitato');
-    dTime('input_datetime.frigo_off', 'Orario spegnimento');
+    dToggle('automation.frarik_frigorifero_off_automatico', 'Auto OFF abilitato');
+    dTime('input_datetime.frarik_frigorifero_off', 'Orario spegnimento');
 
     dSec('📝 Personalizzazione');
-    dText('input_text.frigo_nome',      'Nome elettrodomestico');
-    dText('input_text.frigo_messaggio', 'Messaggio notifica');
+    dText('input_text.frarik_frigorifero_nome',      'Nome elettrodomestico');
+    dText('input_text.frarik_frigorifero_messaggio', 'Messaggio notifica');
     dNum('input_number.costo_energia',  'Costo energia', '€/kWh', 0, 2, 0.001);
-    dInfo('Ultimo reset contatori', ss('input_text.frigo_data_reset'));
+    dInfo('Ultimo reset contatori', ss('input_text.frarik_frigorifero_data_reset'));
 
     const swCss = '<style>'
       + '.fi-sw{width:44px;height:26px;border-radius:13px;cursor:pointer;position:relative;flex-shrink:0;transition:background .25s}'
@@ -480,20 +480,25 @@
       + '.fi-sw.on .fi-knob{left:21px}.fi-sw.off .fi-knob{left:3px}'
       + '.fi-inp:focus{border-color:rgba(56,189,248,.55)!important;box-shadow:0 0 0 2px rgba(56,189,248,.12)}'
       + '</style>';
-    const resetBtn = '<button id="fi-reset" style="width:100%;margin-top:16px;padding:12px;border-radius:12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);color:#f87171;font-size:13px;font-weight:700;cursor:pointer">🔄 Reset Contatori</button>';
+    const saveBtn = '<button id="fi-save" style="width:100%;margin-top:12px;padding:13px;border-radius:12px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.4);color:#38bdf8;font-size:14px;font-weight:700;cursor:pointer">💾 Salva impostazioni</button>';
+    const resetBtn = '<button id="fi-reset" style="width:100%;margin-top:8px;padding:12px;border-radius:12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);color:#f87171;font-size:13px;font-weight:700;cursor:pointer">🔄 Reset Contatori</button>';
     const closeId = 'fi-cl-' + Math.random().toString(36).slice(2, 6);
-    const ov = mkOv(popShell('⚙', '100,116,139', 'Impostazioni', c.name || 'Frigorifero', closeId, swCss + rows.join('') + resetBtn), closeId);
+    const ov = mkOv(popShell('⚙', '100,116,139', 'Impostazioni', c.name || 'Frigorifero', closeId, swCss + rows.join('') + saveBtn + resetBtn), closeId);
 
     ov.querySelectorAll('.fi-sw').forEach(function(sw) {
       sw.addEventListener('click', function() {
-        const entity = sw.dataset.entity; if (!entity) return;
-        callSvc(entity.split('.')[0], 'toggle', {entity_id: entity});
         sw.classList.toggle('on'); sw.classList.toggle('off');
       });
     });
 
-    ov.querySelectorAll('.fi-inp').forEach(function(inp) {
-      inp.addEventListener('change', function() {
+    const sb = ov.querySelector('#fi-save');
+    if (sb) sb.addEventListener('click', function() {
+      ov.querySelectorAll('.fi-sw[data-entity]').forEach(function(sw) {
+        const entity = sw.dataset.entity;
+        const svc = sw.classList.contains('on') ? 'turn_on' : 'turn_off';
+        callSvc(entity.split('.')[0], svc, {entity_id: entity});
+      });
+      ov.querySelectorAll('.fi-inp[data-entity]').forEach(function(inp) {
         const entity = inp.dataset.entity, type = inp.dataset.svctype;
         if (!entity) return;
         if (type === 'time') {
@@ -505,6 +510,16 @@
           callSvc('input_text', 'set_value', {entity_id: entity, value: inp.value});
         }
       });
+      sb.textContent = '✅ Salvato!';
+      sb.style.background = 'rgba(34,197,94,.15)';
+      sb.style.borderColor = 'rgba(34,197,94,.4)';
+      sb.style.color = '#4ade80';
+      setTimeout(function() {
+        sb.textContent = '💾 Salva impostazioni';
+        sb.style.background = '';
+        sb.style.borderColor = '';
+        sb.style.color = '';
+      }, 2000);
     });
 
     const rb = ov.querySelector('#fi-reset');

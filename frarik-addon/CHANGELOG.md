@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.21 — 2026-07-01
+
+### fix: impostazioni elettrodomestici — entity names corretti + pulsante Salva
+
+- Fix entità nel popup Impostazioni: tutti gli 8 elettrodomestici usavano nomi senza prefisso `frarik_` (es. `lavatrice_notify_push` invece di `frarik_lavatrice_notify_push`) → le chiamate HA non avevano effetto
+- Aggiunto pulsante "💾 Salva impostazioni": i toggle e i campi ora applicano le modifiche solo al click Salva, con feedback visivo "✅ Salvato!"
+- Frigorifero: fix speciale `frigo_*` → `frarik_frigorifero_*`
+
 ## 1.7.20 — 2026-07-01
 
 ### fix: wizard PKG non si apriva (openWizard non trovato)
