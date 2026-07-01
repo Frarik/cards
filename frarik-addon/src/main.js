@@ -3265,7 +3265,9 @@ function _ghsPkgAskPopup(cardId,pkgVer,f,code,res){
   /* pkg non installato → apre il wizard di configurazione */
   sr.getElementById('pa_no').addEventListener('click',()=>{
     destroy();
-    const CardClass=window.FratechCardRegistry?.[cardId]??window.FratechCardRegistry?.[cardId.toLowerCase()]??customElements.get(cardId);
+    const _ctor=customElements.get(cardId);
+    const _reg=window.FratechCardRegistry?.[cardId]??window.FratechCardRegistry?.[cardId.toLowerCase()];
+    const CardClass=typeof _ctor?.openWizard==='function'?_ctor:(_reg??_ctor);
     if(typeof CardClass?.openWizard==='function'){
       CardClass.openWizard(_haHassObj(),async ()=>{
         _savePkgVer(cardId,pkgVer);
@@ -3376,7 +3378,9 @@ async function _pkgUpdateCard(cardId, silent=false){
 
   if(savedCfg){
     /* silent reinstall usando config salvata tramite _buildPkgFromConfig o openWizard headless */
-    const CardClass=window.FratechCardRegistry?.[cardId]??window.FratechCardRegistry?.[cardId.toLowerCase()]??customElements.get(cardId);
+    const _ctor2=customElements.get(cardId);
+    const _reg2=window.FratechCardRegistry?.[cardId]??window.FratechCardRegistry?.[cardId.toLowerCase()];
+    const CardClass=typeof _ctor2?._buildPkgFromConfig==='function'?_ctor2:(_reg2??_ctor2);
     let yaml='';
     if(typeof CardClass?._buildPkgFromConfig==='function'){
       yaml=CardClass._buildPkgFromConfig(savedCfg);
@@ -3399,7 +3403,9 @@ async function _pkgUpdateCard(cardId, silent=false){
   }
 
   /* nessuna config salvata oppure chiamata manuale → apri wizard */
-  const CardClass=window.FratechCardRegistry?.[cardId]??window.FratechCardRegistry?.[cardId.toLowerCase()]??customElements.get(cardId);
+  const _ctor3=customElements.get(cardId);
+  const _reg3=window.FratechCardRegistry?.[cardId]??window.FratechCardRegistry?.[cardId.toLowerCase()];
+  const CardClass=typeof _ctor3?.openWizard==='function'?_ctor3:(_reg3??_ctor3);
   if(typeof CardClass?.openWizard==='function'){
     CardClass.openWizard(_haHassObj(),()=>{
       _savePkgVer(cardId,pkgInfo.ver);

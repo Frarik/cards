@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.20 — 2026-07-01
+
+### fix: wizard PKG non si apriva (openWizard non trovato)
+
+- `_ghsPkgAskPopup` e `_pkgUpdateCard`: il lookup `CardClass` usava `FratechCardRegistry` (wrapper senza `openWizard`) e il `??` non scendeva a `customElements.get` — ora si controlla prima il costruttore custom element
+
 ## 1.7.19 — 2026-07-01
 
 ### fix: rimosse PKG duplicate + fix installazione PKG senza wizard
