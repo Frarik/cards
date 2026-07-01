@@ -73,7 +73,7 @@ homeassistant:
 ####################################################
 
 notify:
-  - name: Forno
+  - name: frarik_forno
     platform: group
     services: *push
 

@@ -51,7 +51,7 @@ homeassistant:
 ####################################################
 
 notify:
-  - name: Frigorifero
+  - name: frarik_frigorifero
     platform: group
     services: *push
 

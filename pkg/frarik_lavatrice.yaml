@@ -73,7 +73,7 @@ homeassistant:
 ####################################################
 
 notify:
-  - name: Lavatrice
+  - name: frarik_lavatrice
     platform: group
     services: *push
 

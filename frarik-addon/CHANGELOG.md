@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.22 — 2026-07-01
+
+### fix: PKG posta doppio-prefisso + notify group nomi errati
+
+- `frarik_posta.yaml`: rimosso `binary_sensor.` davanti al placeholder — il wizard ora incolla l'entity_id completo dell'utente senza duplicarlo
+- PKG 8 elettrodomestici: `name: Lavatrice` → `name: frarik_lavatrice` (e così per tutti gli altri) — il gruppo notify ha ora lo stesso nome richiesto dall'automazione
+
 ## 1.7.21 — 2026-07-01
 
 ### fix: impostazioni elettrodomestici — entity names corretti + pulsante Salva

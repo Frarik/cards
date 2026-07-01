@@ -73,7 +73,7 @@ homeassistant:
 ####################################################
 
 notify:
-  - name: Induzione
+  - name: frarik_induzione
     platform: group
     services: *push
 

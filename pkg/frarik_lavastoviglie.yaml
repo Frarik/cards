@@ -73,7 +73,7 @@ homeassistant:
 ####################################################
 
 notify:
-  - name: Lavastoviglie
+  - name: frarik_lavastoviglie
     platform: group
     services: *push
 

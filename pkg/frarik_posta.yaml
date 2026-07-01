@@ -115,7 +115,7 @@ homeassistant:
         #   binary_sensor.sensore_posta_ingresso
         # ─────────────────────────────────────────────────
         Sensore Cassetta: &sensore_cassetta
-          "binary_sensor.IL_TUO_SENSORE_CASSETTA_POSTALE"
+          "IL_TUO_SENSORE_CASSETTA_POSTALE"
 
         # ─────────────────────────────────────────────────
         # SPEAKER GOOGLE HOME / NEST

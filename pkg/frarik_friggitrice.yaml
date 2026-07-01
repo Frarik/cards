@@ -73,7 +73,7 @@ homeassistant:
 ####################################################
 
 notify:
-  - name: Friggitrice
+  - name: frarik_friggitrice
     platform: group
     services: *push
 

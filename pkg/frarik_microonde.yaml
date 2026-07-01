@@ -73,7 +73,7 @@ homeassistant:
 ####################################################
 
 notify:
-  - name: Microonde
+  - name: frarik_microonde
     platform: group
     services: *push
 
