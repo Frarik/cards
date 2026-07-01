@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.42 — 2026-07-02
+
+### fix: Differenziata v5.13 — bottoni separati dal contenuto
+
+- fc-btns: margin-top:14px fisso + border-top separatore + padding-top:10px (la card è auto-height quindi margin-top:auto non funzionava)
+
 ## 1.7.41 — 2026-07-01
 
 ### fix: Differenziata v5.12 — bottoni ancorati al fondo della card
