@@ -1874,6 +1874,10 @@ async function _ghCheckPkg(pkgFiles){
   }catch(e){}
   _pkgPending=newPending;
   if(any){ _ntfUpdateBell(); try{saveCfg();}catch(e){} }
+  // Aggiorna le tile dello store se è aperto (con o senza nuove notifiche)
+  if(Object.keys(newPending).length){
+    try{ const el=document.getElementById('ghs-list'); if(el) _ghStoreRender(); }catch(e){}
+  }
 }
 
 /* ricarica dashboard/store dopo un'installazione */
@@ -1963,8 +1967,10 @@ function _ntfHandleAction(action){
       try{
         const sha=_pkgPending[fileName]||_ghCfg().pkgNotifiedShas?.[fileName];
         if(sha){ const g=_ghCfg(); g.pkgShas=g.pkgShas||{}; g.pkgShas[fileName]=sha; saveCfg(); }
+        delete _pkgPending[fileName];
       }catch(e){}
       try{ _ntfClearPkg(fileName); }catch(e){}
+      try{ const el=document.getElementById('ghs-list'); if(el) _ghStoreRender(); }catch(e){}
     };
     const note=hasCfg
       ? 'La configurazione salvata verrà riapplicata automaticamente.'
@@ -2527,8 +2533,8 @@ function _ghStoreRender(){
     const pkgFileName=(pkgInfoInst?.file||'').split('/').pop();
     const hasPkgUpdPending=!!(pkgFileName&&_pkgPending[pkgFileName]);
     const wizConfigOk=cardId?_pkgWizardConfigExists(cardId):false;
-    const hasPkgUpd=((pkgVerChanged||hasPkgUpdPending)&&pkgIsOnHANow)&&!wizConfigOk;
-    if(((pkgVerChanged||hasPkgUpdPending)&&pkgIsOnHANow)&&wizConfigOk&&cardId) _schedulePkgSilentUpd(cardId);
+    const hasPkgUpd=(pkgVerChanged&&pkgIsOnHANow)||hasPkgUpdPending;
+    if(hasPkgUpd&&wizConfigOk&&cardId) _schedulePkgSilentUpd(cardId);
     const pkgBdgInst=hasPkgUpd
       ?`<span class="ghc-bdg pkg-upd ghc-bdgl"><i class="mdi mdi-package-up"></i> PKG update</span>`
       :_pkgBadgeHtml(pkgInfoInst);

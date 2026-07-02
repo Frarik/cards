@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.60 — 2026-07-02
+
+### fix: badge PKG update appare correttamente sulle tile dello store
+
+- `_ghCheckPkg`: dopo aver popolato `_pkgPending` chiama `_ghStoreRender()` se lo store è aperto — prima le tile non si aggiornavam mai
+- `hasPkgUpd` rimosso il doppio blocco `&&pkgIsOnHANow&&!wizConfigOk` — il badge ora appare sempre quando c'è un update pendente, anche se il wizard era già configurato
+- `_ntfHandleAction doUpdate`: cancella `_pkgPending[fileName]` dopo aggiornamento riuscito + ri-renderizza le tile per rimuovere il badge
+- `hasPkgUpdPending` non richiede più `pkgIsOnHANow` (se è in `_pkgPending` è già installato per definizione)
+
 ## 1.7.59 — 2026-07-02
 
 ### chore: bump versione tutti i PKG
