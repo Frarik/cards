@@ -400,7 +400,7 @@ template:
         state: *sensore_potenza_lavatrice
 
       - name: "frarik_lavatrice_versione"
-        state: "1.1"
+        state: "1.2"
 
 ####################################################
 #                   COUNTER                        #

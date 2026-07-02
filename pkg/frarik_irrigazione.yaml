@@ -1,4 +1,4 @@
-# Package: Frarik — Centro Controllo Irrigazione  |  Versione: 1.1
+# Package: Frarik — Centro Controllo Irrigazione  |  Versione: 1.2
 # INPUT BOOLEAN - Giorni attivi
 input_boolean:
   frarik_irrigazione_lunedi:

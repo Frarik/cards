@@ -688,7 +688,7 @@ template:
   - sensor:
       - name: "Frarik Anti Zanzare Versione"
         unique_id: frarik_antizanzare_versione
-        state: "1.1"
+        state: "1.2"
         icon: mdi:package-variant-closed
 
   - trigger:

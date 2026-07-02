@@ -400,7 +400,7 @@ template:
         state: *sensore_potenza_microonde
 
       - name: "frarik_microonde_versione"
-        state: "1.1"
+        state: "1.2"
 
 ####################################################
 #                   COUNTER                        #

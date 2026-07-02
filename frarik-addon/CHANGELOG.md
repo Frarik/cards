@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.57 — 2026-07-02
+
+### chore: bump versione tutti i PKG (test badge aggiornamento store)
+
+- Tutti i `pkg/frarik_*.yaml` bumped alla versione successiva per testare il badge "📦 Aggiornamento" nella tab PKG dello store
+
 ## 1.7.56 — 2026-07-02
 
 ### feat: aggiornamenti PKG visibili nello Store (tab PKG)
