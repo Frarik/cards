@@ -215,7 +215,7 @@ template:
         state: *sensore_potenza_scaldabagno
 
       - name: "frarik_scaldabagno_versione"
-        state: "1.0"
+        state: "1.1"
 
 ####################################################
 #                INPUT BOOLEAN                     #

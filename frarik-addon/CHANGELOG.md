@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.55 — 2026-07-02
+
+### chore: bump versione tutti i PKG (trigger notifica aggiornamento)
+
+- Tutti i `pkg/frarik_*.yaml` bumped alla versione successiva per far scattare la notifica campanella "📦 PKG aggiornato" agli utenti che li hanno già installati
+
 ## 1.7.54 — 2026-07-02
 
 ### feat: notifica campanella quando un PKG installato viene aggiornato su GitHub
