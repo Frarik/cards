@@ -88,17 +88,14 @@ homeassistant:
 #              IMPOSTAZIONI PACKAGE                #
 ####################################################
 
-        Sensore Potenza Scaldabagno: &sensore_potenza_scaldabagno "{{ states('IL_TUO_SENSORE_POTENZA') | float(0) }}"
-        Switch Scaldabagno:          &switch_scaldabagno 'IL_TUO_SWITCH'
+        Sensore Potenza Scaldabagno: &sensore_potenza_scaldabagno
+        Switch Scaldabagno:          &switch_scaldabagno
 
         Lista MediaPlayer Google: &google
-          - IL_TUO_MEDIA_PLAYER_GOOGLE_1
 
         Lista mediaplayer alexa: &alexa
-          - IL_TUO_MEDIA_PLAYER_ALEXA_1
 
         Device per notifica push: &push
-          - service: IL_TUO_MOBILE_APP_1
 
 ####################################################
 #                  NOTIFICHE                       #

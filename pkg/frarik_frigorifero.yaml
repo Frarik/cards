@@ -34,17 +34,14 @@ homeassistant:
 #              IMPOSTAZIONI PACKAGE                #
 ####################################################
 
-        Sensore Potenza Frigo: &sensore_potenza_frigo "{{ states('IL_TUO_SENSORE_POTENZA') | float(0) }}"
-        Switch Frigo:          &switch_frigo 'IL_TUO_SWITCH'
+        Sensore Potenza Frigo: &sensore_potenza_frigo
+        Switch Frigo:          &switch_frigo
 
         Lista MediaPlayer Google: &google
-          - IL_TUO_MEDIA_PLAYER_GOOGLE_1
 
         Lista mediaplayer alexa: &alexa
-          - IL_TUO_MEDIA_PLAYER_ALEXA_1
 
         Device per notifica push: &push
-          - service: IL_TUO_MOBILE_APP_1
 
 ####################################################
 #                  NOTIFICHE                       #

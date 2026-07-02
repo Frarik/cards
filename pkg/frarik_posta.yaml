@@ -115,7 +115,6 @@ homeassistant:
         #   binary_sensor.sensore_posta_ingresso
         # ─────────────────────────────────────────────────
         Sensore Cassetta: &sensore_cassetta
-          "IL_TUO_SENSORE_CASSETTA_POSTALE"
 
         # ─────────────────────────────────────────────────
         # SPEAKER GOOGLE HOME / NEST
@@ -127,8 +126,6 @@ homeassistant:
         #   - media_player.nest_mini_salotto
         # ─────────────────────────────────────────────────
         MediaPlayer Google: &google
-          - media_player.IL_TUO_GOOGLE_HOME_1
-          # - media_player.IL_TUO_GOOGLE_HOME_2
 
         # ─────────────────────────────────────────────────
         # DISPOSITIVI AMAZON ALEXA / ECHO
@@ -140,8 +137,6 @@ homeassistant:
         #   - media_player.echo_dot_camera
         # ─────────────────────────────────────────────────
         MediaPlayer Alexa: &alexa
-          - media_player.LA_TUA_ALEXA_1
-          # - media_player.LA_TUA_ALEXA_2
 
         # ─────────────────────────────────────────────────
         # SERVIZI NOTIFICA PUSH (smartphone)
@@ -155,8 +150,6 @@ homeassistant:
         #   - service: mobile_app_samsung_giulia
         # ─────────────────────────────────────────────────
         Notifiche Push: &push
-          - service: IL_TUO_MOBILE_APP_1
-          # - service: IL_TUO_MOBILE_APP_2
 
 
 ####################################################

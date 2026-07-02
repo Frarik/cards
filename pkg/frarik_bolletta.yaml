@@ -35,20 +35,16 @@ homeassistant:
 ####################################################
 
         Sensore Potenza Casa: &sensore_potenza_bolletta
-          'IL_TUO_SENSORE_POTENZA_BOLLETTA'
 
         Sensore Saldo Octopus: &sensore_saldo_octopus
-          'IL_TUO_SENSORE_SALDO_OCTOPUS'
 
         Sensore Scadenza Offerta: &sensore_scadenza_octopus
-          'IL_TUO_SENSORE_SCADENZA_OCTOPUS'
 
-        Tariffa Contratto: &tariffa_contratto IL_TUA_TARIFFA_KWHE
+        Tariffa Contratto: &tariffa_contratto
 
-        Potenza Contrattuale: &potenza_kw IL_TUA_POTENZA_KW
+        Potenza Contrattuale: &potenza_kw
 
         Device per notifica push: &push
-          - service: IL_TUO_MOBILE_APP_1
 
 ####################################################
 #                  NOTIFICHE                       #

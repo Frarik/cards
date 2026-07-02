@@ -55,18 +55,14 @@ homeassistant:
 #              IMPOSTAZIONI PACKAGE                #
 ####################################################
 
-        Sensore Potenza Microonde: &sensore_potenza_microonde "{{ states('IL_TUO_SENSORE_POTENZA') | float(0) }}"
-        Switch Microonde:          &switch_microonde 'IL_TUO_SWITCH'
+        Sensore Potenza Microonde: &sensore_potenza_microonde
+        Switch Microonde:          &switch_microonde
 
         Lista MediaPlayer Google: &google
-          - IL_TUO_MEDIA_PLAYER_GOOGLE_1
 
         Lista mediaplayer alexa: &alexa
-          - IL_TUO_MEDIA_PLAYER_ALEXA_1
 
         Device per notifica push: &push
-          - service: IL_TUO_MOBILE_APP_1
-          # - service: IL_TUO_MOBILE_APP_2
 
 ####################################################
 #                  NOTIFICHE                       #

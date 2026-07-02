@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.46 — 2026-07-02
+
+### fix: PKG — rimossi valori placeholder dalle sezioni IMPOSTAZIONI (13 package)
+
+- Tutti gli anchor `&sensore_xxx`, `&switch_xxx`, `&google`, `&alexa`, `&push` ora partono vuoti nei file GitHub
+- I valori `IL_TUO_*` / `IL_TUA_*` / `LA_TUA_*` rimossi: lavatrice, asciugatrice, forno, microonde, induzione, lavastoviglie, friggitrice, frigorifero, scaldabagno, bolletta, differenziata, posta, statistiche_minipc
+- Il wizard inserisce le entità reali durante l'installazione — gli anchor vuoti su GitHub sono il comportamento corretto
+
 ## 1.7.45 — 2026-07-02
 
 ### fix: antizanzare — rimosso nome iPhone hardcoded
