@@ -55,14 +55,14 @@ homeassistant:
 #              IMPOSTAZIONI PACKAGE                #
 ####################################################
 
-        Sensore Potenza Asciugatrice: &sensore_potenza_asciugatrice
-        Switch Asciugatrice:          &switch_asciugatrice
+        Sensore Potenza Asciugatrice: &sensore_potenza_asciugatrice sensor.non_configurato
+        Switch Asciugatrice:          &switch_asciugatrice switch.non_configurato
 
-        Lista MediaPlayer Google: &google
+        Lista MediaPlayer Google: &google []
 
-        Lista mediaplayer alexa: &alexa
+        Lista mediaplayer alexa: &alexa []
 
-        Device per notifica push: &push
+        Device per notifica push: &push []
 
 ####################################################
 #                  NOTIFICHE                       #

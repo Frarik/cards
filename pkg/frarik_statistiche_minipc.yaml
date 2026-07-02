@@ -133,7 +133,7 @@ homeassistant:
         #   sensor.presa_server_power
         #   sensor.shelly_plug_server_power
         # ─────────────────────────────────────────────────
-        Sensore Potenza Server: &power_server
+        Sensore Potenza Server: &power_server sensor.non_configurato
 
         # ─────────────────────────────────────────────────
         # SENSORE TEMPERATURA CPU
@@ -143,7 +143,7 @@ homeassistant:
         #   sensor.processor_temperature
         #   sensor.cpu_temp
         # ─────────────────────────────────────────────────
-        Sensore Temperatura: &temp
+        Sensore Temperatura: &temp sensor.non_configurato
 
         # ─────────────────────────────────────────────────
         # SENSORE CERTIFICATO SSL
@@ -153,7 +153,7 @@ homeassistant:
         #   sensor.xxx_scadenza_del_certificato
         #   sensor.certificato_ssl
         # ─────────────────────────────────────────────────
-        Sensore Certificato SSL: &cert_ssl
+        Sensore Certificato SSL: &cert_ssl sensor.non_configurato
 
         # ─────────────────────────────────────────────────
         # SWITCH VENTOLA RACK
@@ -163,7 +163,7 @@ homeassistant:
         #   switch.presa_ventola_rack
         #   switch.presa_ventola_armadietto_sala
         # ─────────────────────────────────────────────────
-        Ventola Rack: &ventola_rack
+        Ventola Rack: &ventola_rack switch.non_configurato
 
         # ─────────────────────────────────────────────────
         # SERVIZI NOTIFICA PUSH (smartphone)
@@ -176,7 +176,7 @@ homeassistant:
         #   - service: mobile_app_iphone_di_mario
         #   - service: mobile_app_samsung_giulia
         # ─────────────────────────────────────────────────
-        Notifiche Push: &push
+        Notifiche Push: &push []
 
 
 ####################################################

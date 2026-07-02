@@ -38,14 +38,11 @@ homeassistant:
         Sensore Cassetta: &sensore_cassetta
           "%%SENSORE_CASSETTA%%"
 
-        MediaPlayer Google: &google
-%%GOOGLE_LINES%%
+        MediaPlayer Google: &google%%GOOGLE_INLINE%%
 
-        MediaPlayer Alexa: &alexa
-%%ALEXA_LINES%%
+        MediaPlayer Alexa: &alexa%%ALEXA_INLINE%%
 
-        Notifiche Push: &push
-%%PUSH_LINES%%
+        Notifiche Push: &push%%PUSH_INLINE%%
 
 
 ####################################################
@@ -399,9 +396,9 @@ function _buildCustomPkg(sensor,google,alexa,push){
   const ind='          ';
   return _PKG_YAML
     .replace('%%SENSORE_CASSETTA%%',sensor||'binary_sensor.IL_TUO_SENSORE')
-    .replace('%%GOOGLE_LINES%%',google.length?google.map(e=>`${ind}- ${e}`).join('\n'):`${ind}# - media_player.IL_TUO_GOOGLE`)
-    .replace('%%ALEXA_LINES%%',alexa.length?alexa.map(e=>`${ind}- ${e}`).join('\n'):`${ind}# - media_player.LA_TUA_ALEXA`)
-    .replace('%%PUSH_LINES%%',push.length?push.map(s=>`${ind}- service: ${s}`).join('\n'):`${ind}# - service: IL_TUO_MOBILE_APP`);
+    .replace('%%GOOGLE_INLINE%%',google.length?'\n'+google.map(e=>`${ind}- ${e}`).join('\n'):' []')
+    .replace('%%ALEXA_INLINE%%',alexa.length?'\n'+alexa.map(e=>`${ind}- ${e}`).join('\n'):' []')
+    .replace('%%PUSH_INLINE%%',push.length?'\n'+push.map(s=>`${ind}- service: ${s}`).join('\n'):' []');
 }
 
 /* ── Autocomplete ─────────────────────────────────────── */

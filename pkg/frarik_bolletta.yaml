@@ -34,17 +34,17 @@ homeassistant:
 #              IMPOSTAZIONI PACKAGE                #
 ####################################################
 
-        Sensore Potenza Casa: &sensore_potenza_bolletta
+        Sensore Potenza Casa: &sensore_potenza_bolletta sensor.non_configurato
 
-        Sensore Saldo Octopus: &sensore_saldo_octopus
+        Sensore Saldo Octopus: &sensore_saldo_octopus sensor.non_configurato
 
-        Sensore Scadenza Offerta: &sensore_scadenza_octopus
+        Sensore Scadenza Offerta: &sensore_scadenza_octopus sensor.non_configurato
 
-        Tariffa Contratto: &tariffa_contratto
+        Tariffa Contratto: &tariffa_contratto 0.09
 
-        Potenza Contrattuale: &potenza_kw
+        Potenza Contrattuale: &potenza_kw 4.5
 
-        Device per notifica push: &push
+        Device per notifica push: &push []
 
 ####################################################
 #                  NOTIFICHE                       #

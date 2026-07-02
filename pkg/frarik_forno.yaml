@@ -55,14 +55,14 @@ homeassistant:
 #              IMPOSTAZIONI PACKAGE                #
 ####################################################
 
-        Sensore Potenza Forno: &sensore_potenza_forno
-        Switch Forno:          &switch_forno
+        Sensore Potenza Forno: &sensore_potenza_forno sensor.non_configurato
+        Switch Forno:          &switch_forno switch.non_configurato
 
-        Lista MediaPlayer Google: &google
+        Lista MediaPlayer Google: &google []
 
-        Lista mediaplayer alexa: &alexa
+        Lista mediaplayer alexa: &alexa []
 
-        Device per notifica push: &push
+        Device per notifica push: &push []
 
 ####################################################
 #                  NOTIFICHE                       #

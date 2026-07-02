@@ -55,14 +55,14 @@ homeassistant:
 #              IMPOSTAZIONI PACKAGE                #
 ####################################################
 
-        Sensore Potenza Lavatrice: &sensore_potenza_lavatrice
-        Switch Lavatrice:          &switch_lavatrice
+        Sensore Potenza Lavatrice: &sensore_potenza_lavatrice sensor.non_configurato
+        Switch Lavatrice:          &switch_lavatrice switch.non_configurato
 
-        Lista MediaPlayer Google: &google
+        Lista MediaPlayer Google: &google []
 
-        Lista mediaplayer alexa: &alexa
+        Lista mediaplayer alexa: &alexa []
 
-        Device per notifica push: &push
+        Device per notifica push: &push []
 
 ####################################################
 #                  NOTIFICHE                       #

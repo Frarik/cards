@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.48 — 2026-07-02
+
+### fix: anchor null nei pkg GitHub + wizard Scaldabagno + posta-card fallback vuoto
+
+- **pkg/*.yaml** (13 file): ripristinati valori non-null a tutti gli anchor azzerati da v1.7.46 — `&push []`, `&google []`, `&alexa []`, entity anchor → `sensor.non_configurato` / `switch.non_configurato`, number anchor → `0.09` / `4.5`. Risolve errori HA: `for_each: null`, `entity_id: null`, `source: null`, `initial: null`
+- **Scaldabagno.js**: aggiunto wizard completo (PKG YAML embedded, `_buildPkg`, `_openWizard`) + campi `frarik_pkg_*` nella registrazione CARD — risolve assenza popup installazione pkg
+- **posta-card.js**: anchor `&google`, `&alexa`, `&push` ora inline con `[]` quando la lista è vuota (era: commento YAML → anchor null → `for_each: null`)
+- **Differenziata.js**: corretta formattazione array `_DIFF_PKG` (due elementi su riga singola)
+
 ## 1.7.47 — 2026-07-02
 
 ### fix: card-js — rimosso notify.group deprecato dai template YAML embedded (12 card)

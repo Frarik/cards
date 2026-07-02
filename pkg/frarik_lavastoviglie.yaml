@@ -55,14 +55,14 @@ homeassistant:
 #              IMPOSTAZIONI PACKAGE                #
 ####################################################
 
-        Sensore Potenza Lavastoviglie: &sensore_potenza_lavastoviglie
-        Switch Lavastoviglie:          &switch_lavastoviglie
+        Sensore Potenza Lavastoviglie: &sensore_potenza_lavastoviglie sensor.non_configurato
+        Switch Lavastoviglie:          &switch_lavastoviglie switch.non_configurato
 
-        Lista MediaPlayer Google: &google
+        Lista MediaPlayer Google: &google []
 
-        Lista mediaplayer alexa: &alexa
+        Lista mediaplayer alexa: &alexa []
 
-        Device per notifica push: &push
+        Device per notifica push: &push []
 
 ####################################################
 #                  NOTIFICHE                       #

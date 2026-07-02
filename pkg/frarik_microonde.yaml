@@ -55,14 +55,14 @@ homeassistant:
 #              IMPOSTAZIONI PACKAGE                #
 ####################################################
 
-        Sensore Potenza Microonde: &sensore_potenza_microonde
-        Switch Microonde:          &switch_microonde
+        Sensore Potenza Microonde: &sensore_potenza_microonde sensor.non_configurato
+        Switch Microonde:          &switch_microonde switch.non_configurato
 
-        Lista MediaPlayer Google: &google
+        Lista MediaPlayer Google: &google []
 
-        Lista mediaplayer alexa: &alexa
+        Lista mediaplayer alexa: &alexa []
 
-        Device per notifica push: &push
+        Device per notifica push: &push []
 
 ####################################################
 #                  NOTIFICHE                       #

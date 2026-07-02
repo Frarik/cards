@@ -94,17 +94,17 @@ homeassistant:
         # Esempi:
         #   - media_player.google_home_cucina
         # ─────────────────────────────────────────────────
-        Lista MediaPlayer Google: &google
+        Lista MediaPlayer Google: &google []
 
         # ─────────────────────────────────────────────────
         # DISPOSITIVI AMAZON ALEXA / ECHO
         # ─────────────────────────────────────────────────
-        Lista MediaPlayer Alexa: &alexa
+        Lista MediaPlayer Alexa: &alexa []
 
         # ─────────────────────────────────────────────────
         # SERVIZI NOTIFICA PUSH (smartphone)
         # ─────────────────────────────────────────────────
-        Device per notifica push: &push
+        Device per notifica push: &push []
 
 
 ####################################################

@@ -88,14 +88,14 @@ homeassistant:
 #              IMPOSTAZIONI PACKAGE                #
 ####################################################
 
-        Sensore Potenza Scaldabagno: &sensore_potenza_scaldabagno
-        Switch Scaldabagno:          &switch_scaldabagno
+        Sensore Potenza Scaldabagno: &sensore_potenza_scaldabagno sensor.non_configurato
+        Switch Scaldabagno:          &switch_scaldabagno switch.non_configurato
 
-        Lista MediaPlayer Google: &google
+        Lista MediaPlayer Google: &google []
 
-        Lista mediaplayer alexa: &alexa
+        Lista mediaplayer alexa: &alexa []
 
-        Device per notifica push: &push
+        Device per notifica push: &push []
 
 ####################################################
 #                  NOTIFICHE                       #

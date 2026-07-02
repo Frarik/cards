@@ -55,14 +55,14 @@ homeassistant:
 #              IMPOSTAZIONI PACKAGE                #
 ####################################################
 
-        Sensore Potenza Friggitrice: &sensore_potenza_friggitrice
-        Switch Friggitrice:          &switch_friggitrice
+        Sensore Potenza Friggitrice: &sensore_potenza_friggitrice sensor.non_configurato
+        Switch Friggitrice:          &switch_friggitrice switch.non_configurato
 
-        Lista MediaPlayer Google: &google
+        Lista MediaPlayer Google: &google []
 
-        Lista mediaplayer alexa: &alexa
+        Lista mediaplayer alexa: &alexa []
 
-        Device per notifica push: &push
+        Device per notifica push: &push []
 
 ####################################################
 #                  NOTIFICHE                       #

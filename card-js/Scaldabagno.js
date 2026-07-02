@@ -420,11 +420,566 @@
     mount(card, hass, el);
   }
 
+  /* ── PKG YAML EMBEDDED ── */
+  var _SCALDABAGNO_PKG_YAML = `###############################################################
+#                                                             #
+#   ███████╗██████╗  █████╗ ██████╗ ██╗██╗  ██╗             #
+#   ██╔════╝██╔══██╗██╔══██╗██╔══██╗██║██║ ██╔╝             #
+#   █████╗  ██████╔╝███████║██████╔╝██║█████╔╝              #
+#   ██╔══╝  ██╔══██╗██╔══██║██╔══██╗██║██╔═██╗              #
+#   ██║     ██║  ██║██║  ██║██║  ██║██║██║  ██╗             #
+#   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝            #
+#                                                             #
+#   Package: Frarik — Centro Controllo Scaldabagno           #
+#   Versione: 1.0  |  Frarik / Fratech                       #
+#                                                             #
+###############################################################
+#
+# COSA FA QUESTO PACKAGE
+# ──────────────────────────────────────────────────────────
+#  ▸ Monitoraggio potenza istantanea riscaldamento (W)
+#  ▸ Tracciamento energia consumata (kWh) giorno/mese/anno
+#  ▸ Calcolo costi energetici (usa input_number.costo_energia)
+#  ▸ Sensore time_on con attributi costo giornaliero
+#  ▸ Notifiche riscaldamento completato (Push / Alexa / Google)
+#  ▸ Soglia riscaldamento configurabile
+#
+###############################################################
+
+homeassistant:
+  customize:
+    package.node_anchors:
+      customize: &customize
+        package: 'Frarik — Centro Controllo Scaldabagno 1.0 — Frarik'
+
+      setting:
+
+####################################################
+#              IMPOSTAZIONI PACKAGE                #
+####################################################
+
+        Sensore Potenza Scaldabagno: &sensore_potenza_scaldabagno "{{ states('IL_TUO_SENSORE_POTENZA') | float(0) }}"
+        Switch Scaldabagno:          &switch_scaldabagno 'IL_TUO_SWITCH'
+
+        Lista MediaPlayer Google: &google
+          - IL_TUO_MEDIA_PLAYER_GOOGLE_1
+
+        Lista mediaplayer alexa: &alexa
+          - IL_TUO_MEDIA_PLAYER_ALEXA_1
+
+        Device per notifica push: &push
+          - service: IL_TUO_MOBILE_APP_1
+
+####################################################
+#                    SENSORI                       #
+####################################################
+
+sensor:
+  - platform: integration
+    source: sensor.frarik_scaldabagno_potenza_w
+    name: frarik_scaldabagno_kwh
+    unit_prefix: k
+    method: left
+    round: 2
+
+####################################################
+#                INPUT NUMBER                      #
+####################################################
+
+input_number:
+  frarik_scaldabagno_soglia_w:
+    name: Soglia Riscaldamento Scaldabagno W
+    icon: mdi:flash
+    min: 0
+    max: 5000
+    step: 1.00
+    unit_of_measurement: "w"
+    mode: box
+
+  frarik_scaldabagno_tempo_innesco_m:
+    name: Tempo Innesco Scaldabagno M
+    icon: mdi:timer
+    min: 0
+    max: 60
+    step: 1.00
+    unit_of_measurement: "m"
+    mode: box
+
+  frarik_scaldabagno_avvio_ritardato_s:
+    name: Avvio Ritardato Scaldabagno S
+    icon: mdi:timer-sand
+    min: 0
+    max: 60
+    step: 1.00
+    unit_of_measurement: "s"
+    mode: box
+
+####################################################
+#                 UTILITY METER                    #
+####################################################
+
+utility_meter:
+
+  frarik_scaldabagno_energy_oggi:
+    source: sensor.frarik_scaldabagno_kwh
+    cycle: daily
+
+  frarik_scaldabagno_energy_mese:
+    source: sensor.frarik_scaldabagno_kwh
+    cycle: monthly
+
+  frarik_scaldabagno_energy_anno:
+    source: sensor.frarik_scaldabagno_kwh
+    cycle: yearly
+
+####################################################
+#                TEMPLATE                          #
+####################################################
+
+template:
+  - binary_sensor:
+      - name: frarik_scaldabagno_motore
+        icon: mdi:water-boiler
+        state: >-
+          {{ 'on' if (states('sensor.frarik_scaldabagno_potenza_w') | int(0)) >
+             states('input_number.frarik_scaldabagno_soglia_w') | int(0) else 'off' }}
+        delay_off: "00:{{ states('input_number.frarik_scaldabagno_tempo_innesco_m') | int(0) }}:00"
+        delay_on:  "00:00:{{ states('input_number.frarik_scaldabagno_avvio_ritardato_s') | int(0) }}"
+
+  - sensor:
+      - name: "frarik_scaldabagno_time_on"
+        icon: mdi:history
+        state: >-
+          {% if is_state('binary_sensor.frarik_scaldabagno_motore', 'on') and
+                (as_timestamp(states.binary_sensor.frarik_scaldabagno_motore.last_changed) + 1) <= as_timestamp(now()) %}
+            {{ ((as_timestamp(now()) - as_timestamp(states.binary_sensor.frarik_scaldabagno_motore.last_changed)) / 3600) }}
+          {% else %} 0 {% endif %}
+        attributes:
+          Oggi: >
+            {% set hours = states('sensor.frarik_scaldabagno_energy_oggi') | float(0) %}
+            {{ hours | round(3) }} kWh
+          Mese: >
+            {% set kwh = states('sensor.frarik_scaldabagno_energy_mese') | float(0) %}
+            {{ kwh | round(3) }} kWh
+          Anno: >
+            {% set kwh = states('sensor.frarik_scaldabagno_energy_anno') | float(0) %}
+            {{ kwh | round(3) }} kWh
+          costo_oggi_scaldabagno: >-
+            {{ ((states('sensor.frarik_scaldabagno_energy_oggi') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+          costo_mese_scaldabagno: >-
+            {{ ((states('sensor.frarik_scaldabagno_energy_mese') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+          costo_anno_scaldabagno: >-
+            {{ ((states('sensor.frarik_scaldabagno_energy_anno') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+          costo_ieri_scaldabagno: >-
+            {{ ((state_attr('sensor.frarik_scaldabagno_energy_oggi', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+          costo_mese_prec_scaldabagno: >-
+            {{ ((state_attr('sensor.frarik_scaldabagno_energy_mese', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+
+      - name: "frarik_scaldabagno_potenza_w"
+        unit_of_measurement: 'W'
+        device_class: power
+        state_class: measurement
+        icon: mdi:flash
+        state: *sensore_potenza_scaldabagno
+
+      - name: "frarik_scaldabagno_versione"
+        state: "1.0"
+
+####################################################
+#                INPUT BOOLEAN                     #
+####################################################
+
+input_boolean:
+  frarik_scaldabagno_switch:
+    name: Switch Scaldabagno
+    icon: mdi:power
+
+  frarik_scaldabagno_notify_push:
+    name: Notifica Push Scaldabagno
+
+  frarik_scaldabagno_notify_alexa:
+    name: Notifica Alexa Scaldabagno
+
+  frarik_scaldabagno_notify_google:
+    name: Notifica Google Scaldabagno
+
+####################################################
+#                 INPUT DATETIME                   #
+####################################################
+
+input_datetime:
+  frarik_scaldabagno_notifiche_inizio:
+    name: Orario Inizio Notifiche Scaldabagno
+    has_date: false
+    has_time: true
+
+  frarik_scaldabagno_notifiche_fine:
+    name: Orario Fine Notifiche Scaldabagno
+    has_date: false
+    has_time: true
+
+  frarik_scaldabagno_off:
+    name: Scaldabagno Spegnimento Automatico
+    has_date: false
+    has_time: true
+
+####################################################
+#                  INPUT TEXT                      #
+####################################################
+
+input_text:
+  frarik_scaldabagno_nome:
+
+  frarik_scaldabagno_messaggio:
+
+####################################################
+#                  AUTOMAZIONI                     #
+####################################################
+
+automation:
+- alias: frarik_scaldabagno_automazioni
+  id: frarik_scaldabagno_automazioni
+  max_exceeded: silent
+  trigger:
+
+  - platform: state
+    entity_id:
+      - input_boolean.frarik_scaldabagno_switch
+      - *switch_scaldabagno
+    from: 'on'
+    to: 'off'
+    id: switch_off
+
+  - platform: state
+    entity_id:
+      - input_boolean.frarik_scaldabagno_switch
+      - *switch_scaldabagno
+    from: 'off'
+    to: 'on'
+    id: switch_on
+
+  action:
+
+  - choose:
+    - alias: SWITCH OFF
+      conditions:
+      - condition: trigger
+        id: switch_off
+      sequence:
+      - service: switch.turn_off
+        target:
+          entity_id: *switch_scaldabagno
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.frarik_scaldabagno_switch
+
+  - choose:
+    - alias: SWITCH ON
+      conditions:
+      - condition: trigger
+        id: switch_on
+      sequence:
+      - service: switch.turn_on
+        target:
+          entity_id: *switch_scaldabagno
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.frarik_scaldabagno_switch
+
+  - parallel:
+    - choose:
+      - conditions:
+        - condition: trigger
+          id: switch_off
+        - condition: time
+          after: 'input_datetime.frarik_scaldabagno_notifiche_inizio'
+          before: 'input_datetime.frarik_scaldabagno_notifiche_fine'
+        - condition: state
+          entity_id: input_boolean.frarik_scaldabagno_notify_google
+          state: 'on'
+        sequence:
+        - service: tts.google_translate_say
+          continue_on_error: true
+          data:
+            entity_id: *google
+            message: "{{ states('input_text.frarik_scaldabagno_messaggio') }}"
+
+    - choose:
+      - conditions:
+        - condition: trigger
+          id: switch_off
+        - condition: time
+          after: 'input_datetime.frarik_scaldabagno_notifiche_inizio'
+          before: 'input_datetime.frarik_scaldabagno_notifiche_fine'
+        - condition: state
+          entity_id: input_boolean.frarik_scaldabagno_notify_alexa
+          state: 'on'
+        sequence:
+        - service: notify.alexa_media
+          continue_on_error: true
+          data:
+            target: *alexa
+            data:
+              type: announce
+              method: spoken
+            message: "{{ states('input_text.frarik_scaldabagno_messaggio') }}"
+
+    - choose:
+      - conditions:
+        - condition: trigger
+          id: switch_off
+        - condition: state
+          entity_id: input_boolean.frarik_scaldabagno_notify_push
+          state: 'on'
+        sequence:
+        - repeat:
+            for_each: *push
+            sequence:
+              - service: "{{ repeat.item.service }}"
+                continue_on_error: true
+                data:
+                  message: >-
+                    🚿 {{ states('input_text.frarik_scaldabagno_nome') }}
+
+                    ⚡ Consumati oggi: {{ state_attr('sensor.frarik_scaldabagno_time_on','Oggi') }}
+
+                    💰 Costo oggi: {{ state_attr('sensor.frarik_scaldabagno_time_on','costo_oggi_scaldabagno') }} €
+                  title: "Scaldabagno"
+
+- alias: frarik_scaldabagno_off_automatico
+  id: frarik_scaldabagno_off_automatico
+  trigger:
+    - platform: time
+      at: 'input_datetime.frarik_scaldabagno_off'
+      id: scaldabagno_automatico_off
+  condition: []
+  action:
+    - choose:
+      - conditions:
+        - condition: trigger
+          id: scaldabagno_automatico_off
+        - condition: state
+          entity_id: *switch_scaldabagno
+          state: 'on'
+        sequence:
+        - entity_id: *switch_scaldabagno
+          service: switch.turn_off
+
+###############################################################
+#  Fine package — Frarik Centro Controllo Scaldabagno v1.0
+###############################################################
+`;
+
+  /* ── PKG BUILD ── */
+  var _SCA_WIZ_KEY = 'frarik_pkg_wizard_scaldabagno';
+
+  function _buildPkg(potenza, sw, push, google, alexa) {
+    var ind = '          ';
+    var pushLines = (push && push.length)
+      ? push.map(function(p) { return ind + '- service: ' + p; }).join('\n')
+      : ind + '- service: mobile_app_smartphone';
+    var googleLines = (google && google.length)
+      ? google.map(function(p) { return ind + '- ' + p; }).join('\n')
+      : ind + '- media_player.tv_sala';
+    var alexaLines = (alexa && alexa.length)
+      ? alexa.map(function(p) { return ind + '- ' + p; }).join('\n')
+      : ind + '- media_player.alexa_cameretta';
+    var yaml = _SCALDABAGNO_PKG_YAML
+      .split('IL_TUO_SENSORE_POTENZA').join(potenza || 'sensor.non_configurato')
+      .split('IL_TUO_SWITCH').join(sw || 'switch.non_configurato');
+    yaml = yaml.replace(ind + '- service: IL_TUO_MOBILE_APP_1', pushLines);
+    yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_GOOGLE_1', googleLines);
+    yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_ALEXA_1', alexaLines);
+    return yaml;
+  }
+
+  /* ── WIZARD ── */
+  function _openWizard(hass, onDone) {
+    var states = (hass && hass.states) || {};
+    var allIds = Object.keys(states).sort();
+    var sensorIds = allIds.filter(function(id) { return /^sensor\./.test(id); });
+    var switchIds = allIds.filter(function(id) { return /^switch\./.test(id); });
+    var mediaIds  = allIds.filter(function(id) { return /^media_player\./.test(id); });
+    var saved = null;
+    try { saved = JSON.parse(localStorage.getItem(_SCA_WIZ_KEY) || 'null'); } catch(e) {}
+    var pushRows   = (saved && saved.push   && saved.push.length)   ? saved.push.slice()   : [''];
+    var googleRows = (saved && saved.google && saved.google.length) ? saved.google.slice() : [''];
+    var alexaRows  = (saved && saved.alexa  && saved.alexa.length)  ? saved.alexa.slice()  : [''];
+
+    var host = document.createElement('div');
+    var sr = host.attachShadow({mode: 'open'});
+    document.body.appendChild(host);
+    function destroy() { try { document.body.removeChild(host); } catch(e) {} }
+
+    function setupAC(inp, drop, ids) {
+      if (!inp || !drop) return;
+      function show() {
+        var q = inp.value.toLowerCase().trim();
+        var hits = (q ? ids.filter(function(id) { return id.toLowerCase().includes(q); }) : ids).slice(0, 50);
+        if (!hits.length) { drop.style.display = 'none'; return; }
+        drop.innerHTML = hits.map(function(id) { return '<div class="wd-item" data-pick="' + id + '">' + id + '</div>'; }).join('');
+        drop.style.display = 'block';
+        drop.querySelectorAll('[data-pick]').forEach(function(row) {
+          row.addEventListener('mousedown', function(ev) { ev.preventDefault(); inp.value = row.getAttribute('data-pick'); drop.style.display = 'none'; });
+          row.addEventListener('mouseover', function() { row.style.background = 'rgba(255,255,255,.08)'; });
+          row.addEventListener('mouseout', function() { row.style.background = ''; });
+        });
+      }
+      inp.addEventListener('focus', show);
+      inp.addEventListener('input', show);
+      inp.addEventListener('blur', function() { setTimeout(function() { drop.style.display = 'none'; }, 200); });
+    }
+
+    function multiRows(rows, cls, placeholder) {
+      return rows.map(function(v, i) {
+        return '<div class="wd-push-row"><div style="position:relative;flex:1"><input class="wd-inp ' + cls + '" type="text" autocomplete="off" placeholder="' + placeholder + '" value="' + (v || '').replace(/"/g, '&quot;') + '"><div class="wd-drop"></div></div><button class="wd-rm" data-rm="' + i + '">✕</button></div>';
+      }).join('');
+    }
+
+    function renderWiz() {
+      sr.innerHTML = '<style>'
+        + ':host{all:initial;font-family:system-ui,sans-serif}'
+        + '.wd-bd{position:fixed;inset:0;z-index:200000;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);display:flex;align-items:flex-end}'
+        + '.wd-panel{width:100%;max-height:88vh;display:flex;flex-direction:column;background:#080f18;border:1px solid rgba(56,189,248,.3);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:wUp .22s cubic-bezier(.32,1.12,.56,1)}'
+        + '@keyframes wUp{from{transform:translateY(100%)}to{transform:translateY(0)}}'
+        + '.wd-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}'
+        + '.wd-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.3);flex-shrink:0}'
+        + '.wd-tit{font-size:14px;font-weight:800}'
+        + '.wd-sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:1px}'
+        + '.wd-x{margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none}'
+        + '.wd-body{flex:1;overflow-y:auto;padding:16px;scrollbar-width:none;display:flex;flex-direction:column;gap:14px}'
+        + '.wd-body::-webkit-scrollbar{display:none}'
+        + '.wd-sec{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding-bottom:5px;border-bottom:1px solid rgba(56,189,248,.18);margin-bottom:10px}'
+        + '.wd-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px}'
+        + '.wd-frow{position:relative;margin-bottom:10px}'
+        + '.wd-inp{width:100%;padding:9px 11px;border-radius:10px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none}'
+        + '.wd-inp:focus{border-color:rgba(56,189,248,.5)}'
+        + '.wd-drop{position:absolute;left:0;right:0;top:100%;z-index:10;max-height:150px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 9px 9px;display:none}'
+        + '.wd-item{padding:5px 10px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04);color:#e2e8f0}'
+        + '.wd-push-row{display:flex;gap:6px;margin-bottom:6px}'
+        + '.wd-push-row .wd-inp{flex:1}'
+        + '.wd-rm{width:30px;height:38px;border-radius:8px;background:rgba(255,255,255,.07);border:none;color:#fff;cursor:pointer;font-size:14px;flex-shrink:0}'
+        + '.wd-add{padding:6px 12px;border-radius:8px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.25);color:#38bdf8;font-size:11px;font-weight:700;cursor:pointer}'
+        + '.wd-note{font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;margin:0 0 10px}'
+        + '.wd-foot{padding:12px 16px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:8px;flex-shrink:0}'
+        + '.wd-cancel{flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:rgba(255,255,255,.1);color:#fff}'
+        + '.wd-install{flex:2;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#38bdf8;color:#060d14}'
+        + '.wd-loading{opacity:.6;pointer-events:none}'
+        + '</style>'
+        + '<div class="wd-bd" id="wd-bd">'
+        + '<div class="wd-panel">'
+        + '<div class="wd-hdr"><div class="wd-ico">🛁</div>'
+        + '<div><div class="wd-tit">Installa PKG Scaldabagno</div><div class="wd-sub">frarik_scaldabagno.yaml → config/packages/</div></div>'
+        + '<button class="wd-x" id="wd-x">✕</button></div>'
+        + '<div class="wd-body">'
+
+        + '<div><div class="wd-sec">Sensori</div>'
+        + '<div class="wd-lbl">Sensore Potenza (W)</div>'
+        + '<div class="wd-frow"><input class="wd-inp" id="f-potenza" type="text" autocomplete="off" placeholder="sensor.presa_scaldabagno_potenza" value="' + ((saved && saved.potenza) || '').replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-potenza"></div></div>'
+        + '<div class="wd-lbl">Switch Presa Scaldabagno</div>'
+        + '<div class="wd-frow"><input class="wd-inp" id="f-switch" type="text" autocomplete="off" placeholder="switch.presa_scaldabagno" value="' + ((saved && saved.sw) || '').replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-switch"></div></div>'
+        + '</div>'
+
+        + '<div><div class="wd-sec">Notifiche Push</div>'
+        + '<p class="wd-note">mobile_app dei dispositivi che ricevono le notifiche push (es. <code>mobile_app_iphone</code>).</p>'
+        + '<div id="push-rows">' + multiRows(pushRows, 'push-inp', 'mobile_app_...') + '</div>'
+        + '<button class="wd-add" id="push-add">+ Aggiungi dispositivo</button>'
+        + '</div>'
+
+        + '<div><div class="wd-sec">Notifiche Google / Chromecast</div>'
+        + '<p class="wd-note">media_player dei dispositivi Google Home / Chromecast (es. <code>media_player.google_cucina</code>). Lascia vuoto per non usare.</p>'
+        + '<div id="google-rows">' + multiRows(googleRows, 'google-inp', 'media_player.google_cucina') + '</div>'
+        + '<button class="wd-add" id="google-add">+ Aggiungi speaker Google</button>'
+        + '</div>'
+
+        + '<div><div class="wd-sec">Notifiche Alexa</div>'
+        + '<p class="wd-note">media_player dei dispositivi Alexa (es. <code>media_player.echo_cucina</code>). Lascia vuoto per non usare.</p>'
+        + '<div id="alexa-rows">' + multiRows(alexaRows, 'alexa-inp', 'media_player.echo_cucina') + '</div>'
+        + '<button class="wd-add" id="alexa-add">+ Aggiungi Echo</button>'
+        + '</div>'
+
+        + '</div>'
+        + '<div class="wd-foot">'
+        + '<button class="wd-cancel" id="wd-cancel">Annulla</button>'
+        + '<button class="wd-install" id="wd-install">📦 Installa PKG</button>'
+        + '</div>'
+        + '</div>'
+        + '</div>';
+
+      sr.getElementById('wd-x').addEventListener('click', destroy);
+      sr.getElementById('wd-cancel').addEventListener('click', destroy);
+      sr.getElementById('wd-bd').addEventListener('click', function(e) { if (e.target === sr.getElementById('wd-bd')) destroy(); });
+
+      function bindMulti(containerId, rows, cls, addId) {
+        sr.getElementById(containerId).addEventListener('click', function(e) {
+          var btn = e.target.closest('[data-rm]'); if (!btn) return;
+          rows.length = 0;
+          Array.from(sr.querySelectorAll('.' + cls)).forEach(function(i) { rows.push(i.value); });
+          rows.splice(+btn.dataset.rm, 1);
+          if (!rows.length) rows.push('');
+          renderWiz();
+        });
+        sr.getElementById(addId).addEventListener('click', function() {
+          Array.from(sr.querySelectorAll('.' + cls)).forEach(function(i, idx) { rows[idx] = i.value; });
+          rows.push('');
+          renderWiz();
+        });
+      }
+      bindMulti('push-rows',   pushRows,   'push-inp',   'push-add');
+      bindMulti('google-rows', googleRows, 'google-inp', 'google-add');
+      bindMulti('alexa-rows',  alexaRows,  'alexa-inp',  'alexa-add');
+
+      setupAC(sr.getElementById('f-potenza'), sr.getElementById('d-potenza'), sensorIds);
+      setupAC(sr.getElementById('f-switch'),  sr.getElementById('d-switch'),  switchIds);
+      sr.querySelectorAll('.google-inp').forEach(function(inp) { setupAC(inp, inp.parentElement.querySelector('.wd-drop'), mediaIds); });
+      sr.querySelectorAll('.alexa-inp').forEach(function(inp)  { setupAC(inp, inp.parentElement.querySelector('.wd-drop'), mediaIds); });
+
+      sr.getElementById('wd-install').addEventListener('click', function() {
+        var potenza = sr.getElementById('f-potenza').value.trim();
+        var sw      = sr.getElementById('f-switch').value.trim();
+        var push    = Array.from(sr.querySelectorAll('.push-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
+        var google  = Array.from(sr.querySelectorAll('.google-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
+        var alexa   = Array.from(sr.querySelectorAll('.alexa-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
+        try { localStorage.setItem(_SCA_WIZ_KEY, JSON.stringify({potenza: potenza, sw: sw, push: push, google: google, alexa: alexa})); } catch(e) {}
+        var yaml = _buildPkg(potenza, sw, push, google, alexa);
+        var m = location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
+        var base = location.origin + (m ? m[1] : '');
+        var btn = sr.getElementById('wd-install');
+        btn.classList.add('wd-loading');
+        btn.textContent = 'Installazione…';
+        fetch(base + '/api/frarik/pkg/install', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({name: 'frarik/frarik_scaldabagno.yaml', content: yaml})
+        }).then(function(r) { return r.json().then(function(j) { return {r: r, j: j}; }); })
+          .then(function(res) {
+            destroy();
+            if (res.r.ok && res.j.ok) {
+              try { if (typeof window.showToast === 'function') window.showToast('📦 PKG Scaldabagno installato! Riavvia HA.'); } catch(e) {}
+              if (typeof onDone === 'function') onDone();
+            } else {
+              try { if (typeof window.showToast === 'function') window.showToast('⚠️ Errore installazione PKG: ' + ((res.j && res.j.error) || '')); } catch(e) {}
+            }
+          }).catch(function() {
+            destroy();
+            try { if (typeof window.showToast === 'function') window.showToast('⚠️ Errore connessione al PKG install'); } catch(e) {}
+          });
+      });
+    }
+
+    renderWiz();
+  }
+
   /* ── REGISTRATION ── */
   const CARD = {
     id: 'scaldabagno', name: 'Scaldabagno', icon: '🛁', version: '1.0',
     desc: 'Scaldabagno elettrico — temperatura acqua, riscaldamento, consumo, energia e costi.',
     render: render, mount: mount, update: update, configure: openCfg,
+    frarik_pkg_check: 'sensor.frarik_scaldabagno_versione',
+    frarik_pkg_id: 'frarik_scaldabagno',
+    frarik_pkg_version: '1.0',
+    openWizard: _openWizard,
+    _buildPkgFromConfig: function(cfg) { return _buildPkg(cfg.potenza || '', cfg.sw || '', cfg.push || [], cfg.google || [], cfg.alexa || []); },
   };
   window.FratechCardRegistry = window.FratechCardRegistry || {};
   window.FratechCardRegistry[CARD.id] = CARD;

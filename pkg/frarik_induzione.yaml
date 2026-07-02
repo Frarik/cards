@@ -55,14 +55,14 @@ homeassistant:
 #              IMPOSTAZIONI PACKAGE                #
 ####################################################
 
-        Sensore Potenza Induzione: &sensore_potenza_induzione
-        Switch Induzione:          &switch_induzione
+        Sensore Potenza Induzione: &sensore_potenza_induzione sensor.non_configurato
+        Switch Induzione:          &switch_induzione switch.non_configurato
 
-        Lista MediaPlayer Google: &google
+        Lista MediaPlayer Google: &google []
 
-        Lista mediaplayer alexa: &alexa
+        Lista mediaplayer alexa: &alexa []
 
-        Device per notifica push: &push
+        Device per notifica push: &push []
 
 ####################################################
 #                  NOTIFICHE                       #

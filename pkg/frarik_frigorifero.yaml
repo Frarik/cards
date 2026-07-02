@@ -34,14 +34,14 @@ homeassistant:
 #              IMPOSTAZIONI PACKAGE                #
 ####################################################
 
-        Sensore Potenza Frigo: &sensore_potenza_frigo
-        Switch Frigo:          &switch_frigo
+        Sensore Potenza Frigo: &sensore_potenza_frigo sensor.non_configurato
+        Switch Frigo:          &switch_frigo switch.non_configurato
 
-        Lista MediaPlayer Google: &google
+        Lista MediaPlayer Google: &google []
 
-        Lista mediaplayer alexa: &alexa
+        Lista mediaplayer alexa: &alexa []
 
-        Device per notifica push: &push
+        Device per notifica push: &push []
 
 ####################################################
 #                  NOTIFICHE                       #
