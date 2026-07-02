@@ -2099,8 +2099,8 @@ function _ghcPrevPh(icon, name){
 function _pkgBadgeHtml(pkgInfo){
   if(!pkgInfo) return '';
   const on=pkgInfo.file?_pkgIsOnHA(pkgInfo.file):false;
-  if(on) return '<span class="ghc-bdg pkg-ok"><i class="mdi mdi-package-variant-closed-check"></i> PKG ✓</span>';
-  return '<span class="ghc-bdg pkg-req"><i class="mdi mdi-package-variant"></i> PKG richiesto</span>';
+  if(on) return '<span class="ghc-bdg pkg-ok ghc-bdgl"><i class="mdi mdi-package-variant-closed-check"></i> PKG ✓</span>';
+  return '<span class="ghc-bdg pkg-req ghc-bdgl"><i class="mdi mdi-package-variant"></i> PKG richiesto</span>';
 }
 
 function _ghcDesc(cardId, sha){
@@ -2524,11 +2524,13 @@ function _ghStoreRender(){
     const pkgVerSaved=Object.entries(g.pkgVersions||{}).find(([k])=>k.toLowerCase()===(cardId||'').toLowerCase())?.[1]||'';
     const pkgIsOnHANow=pkgInfoInst?.file?_pkgIsOnHA(pkgInfoInst.file):false;
     const pkgVerChanged=!!(pkgVerLatest&&pkgIsOnHANow&&pkgVerLatest!==pkgVerSaved);
+    const pkgFileName=(pkgInfoInst?.file||'').split('/').pop();
+    const hasPkgUpdPending=!!(pkgFileName&&_pkgPending[pkgFileName]);
     const wizConfigOk=cardId?_pkgWizardConfigExists(cardId):false;
-    const hasPkgUpd=pkgVerChanged&&!wizConfigOk;
-    if(pkgVerChanged&&wizConfigOk&&cardId) _schedulePkgSilentUpd(cardId);
+    const hasPkgUpd=((pkgVerChanged||hasPkgUpdPending)&&pkgIsOnHANow)&&!wizConfigOk;
+    if(((pkgVerChanged||hasPkgUpdPending)&&pkgIsOnHANow)&&wizConfigOk&&cardId) _schedulePkgSilentUpd(cardId);
     const pkgBdgInst=hasPkgUpd
-      ?`<span class="ghc-bdg pkg-upd"><i class="mdi mdi-package-up"></i> PKG update</span>`
+      ?`<span class="ghc-bdg pkg-upd ghc-bdgl"><i class="mdi mdi-package-up"></i> PKG update</span>`
       :_pkgBadgeHtml(pkgInfoInst);
     const _inLabel=reg?.isDistintivo?'In intestazione':'In vista';
     const bdg=hasUpdate?`<span class="ghc-bdg upd">↑ Aggiornamento</span>`

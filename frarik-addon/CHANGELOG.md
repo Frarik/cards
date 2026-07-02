@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.58 — 2026-07-02
+
+### fix: badge PKG a sinistra (no sovrapposizione) + PKG update visibile su tile card
+
+- Badge PKG (✓ / richiesto / update) spostati a sinistra dell'anteprima con `.ghc-bdgl` — non si sovrappongono più al badge di stato (Installata / Aggiornamento / In vista) che rimane a destra
+- Tile card nel tab JS: `hasPkgUpd` ora include anche `_pkgPending` (SHA GitHub cambiato) — mostra badge "PKG update" e pulsante "Aggiorna PKG" anche quando rilevato dal controllo SHA, non solo dal confronto versioni
+
 ## 1.7.57 — 2026-07-02
 
 ### chore: bump versione tutti i PKG (test badge aggiornamento store)
