@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.59 — 2026-07-02
+
+### chore: bump versione tutti i PKG
+
+- Tutti i `pkg/frarik_*.yaml` bumped per inviare aggiornamento agli utenti installati
+
 ## 1.7.58 — 2026-07-02
 
 ### fix: badge PKG a sinistra (no sovrapposizione) + PKG update visibile su tile card
