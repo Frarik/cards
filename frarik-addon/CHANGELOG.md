@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.61 — 2026-07-02
+
+### chore: bump versione tutti i PKG (test badge store)
+
+- Tutti i `pkg/frarik_*.yaml` bumped per testare il badge "📦 PKG update" sulle tile dello store
+
 ## 1.7.60 — 2026-07-02
 
 ### fix: badge PKG update appare correttamente sulle tile dello store

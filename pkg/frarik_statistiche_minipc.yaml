@@ -507,7 +507,7 @@ template:
 
       - name: "Frarik Statistiche Minipc Versione"
         unique_id: frarik_statistiche_minipc_versione
-        state: "2.11"
+        state: "2.12"
         icon: mdi:package-variant-closed
 
       - name: "Sensore Potenza Server W"

@@ -249,7 +249,7 @@ template:
   - sensor:
       - name: "Frarik Posta Versione"
         unique_id: frarik_posta_versione
-        state: "1.3"
+        state: "1.4"
         icon: mdi:package-variant-closed
 
   - binary_sensor:
