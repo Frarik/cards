@@ -672,16 +672,10 @@ homeassistant:
 
         Device per notifica push: &push
           - service: IL_TUO_MOBILE_APP_1
-          - service: IL_TUO_MOBILE_APP_2
 
 ####################################################
 #                  NOTIFICHE                       #
 ####################################################
-
-notify:
-  - name: Lavatrice
-    platform: group
-    services: *push
 
 ####################################################
 #                    SENSORI                       #
@@ -1415,18 +1409,21 @@ automation:
           entity_id: input_boolean.frarik_lavatrice_notify_push
           state: 'on'
         sequence:
-        - data_template:
-            message: >-
-              🫧 {{ states('input_text.frarik_lavatrice_nome') }}
+        - repeat:
+            for_each: *push
+            sequence:
+              - service: "{{ repeat.item.service }}"
+                continue_on_error: true
+                data:
+                  message: >-
+                    🫧 {{ states('input_text.frarik_lavatrice_nome') }}
 
-              ⏱ Ciclo durato: {{ state_attr('sensor.frarik_lavatrice_time_on','tempo_ciclo_lavatrice') }}
+                    ⏱ Ciclo durato: {{ state_attr('sensor.frarik_lavatrice_time_on','tempo_ciclo_lavatrice') }}
 
-              ⚡ Consumati: {{ state_attr('sensor.frarik_lavatrice_time_on','consumo_ciclo_lavatrice') }}
+                    ⚡ Consumati: {{ state_attr('sensor.frarik_lavatrice_time_on','consumo_ciclo_lavatrice') }}
 
-              💰 Spesi: {{ state_attr('sensor.frarik_lavatrice_time_on','costo_ciclo_lavatrice') }} €
-            title: "Lavatrice"
-          service: notify.frarik_lavatrice
-          continue_on_error: true
+                    💰 Spesi: {{ state_attr('sensor.frarik_lavatrice_time_on','costo_ciclo_lavatrice') }} €
+                  title: "Lavatrice"
 
 - alias: frarik_lavatrice_off_automatico
   id: frarik_lavatrice_off_automatico

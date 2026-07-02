@@ -49,11 +49,6 @@ homeassistant:
 
 
 ####################################################
-notify:
-  - name: frarik_posta
-    platform: group
-    services: *push
-
 
 ####################################################
 counter:
@@ -260,14 +255,18 @@ automation:
                     after: input_datetime.frarik_posta_notifiche_push_inizio
                     before: input_datetime.frarik_posta_notifiche_push_fine
                 sequence:
-                  - service: notify.frarik_posta
-                    data:
-                      title: "🏡 Frarik — Posta"
-                      message: >-
-                        📭 Posta in arrivo!
-                        🕐 Ore {{ now().strftime('%H:%M') }}
-                        📦 {{ states('counter.frarik_posta_oggi') }}ª consegna di oggi
-                        📅 Settimana: {{ states('counter.frarik_posta_settimana') }} consegne
+                  - repeat:
+                      for_each: *push
+                      sequence:
+                        - service: "{{ repeat.item.service }}"
+                          continue_on_error: true
+                          data:
+                            title: "🏡 Frarik — Posta"
+                            message: >-
+                              📭 Posta in arrivo!
+                              🕐 Ore {{ now().strftime('%H:%M') }}
+                              📦 {{ states('counter.frarik_posta_oggi') }}ª consegna di oggi
+                              📅 Settimana: {{ states('counter.frarik_posta_settimana') }} consegne
 
           - choose:
               - conditions:

@@ -655,16 +655,10 @@ homeassistant:
 
         Device per notifica push: &push
           - service: IL_TUO_MOBILE_APP_1
-          - service: IL_TUO_MOBILE_APP_2
 
 ####################################################
 #                  NOTIFICHE                       #
 ####################################################
-
-notify:
-  - name: Microonde
-    platform: group
-    services: *push
 
 ####################################################
 #                    SENSORI                       #
@@ -1398,18 +1392,21 @@ automation:
           entity_id: input_boolean.frarik_microonde_notify_push
           state: 'on'
         sequence:
-        - data_template:
-            message: >-
-              📡 {{ states('input_text.frarik_microonde_nome') }}
+        - repeat:
+            for_each: *push
+            sequence:
+              - service: "{{ repeat.item.service }}"
+                continue_on_error: true
+                data:
+                  message: >-
+                    📡 {{ states('input_text.frarik_microonde_nome') }}
 
-              ⏱ Ciclo durato: {{ state_attr('sensor.frarik_microonde_time_on','tempo_ciclo_microonde') }}
+                    ⏱ Ciclo durato: {{ state_attr('sensor.frarik_microonde_time_on','tempo_ciclo_microonde') }}
 
-              ⚡ Consumati: {{ state_attr('sensor.frarik_microonde_time_on','consumo_ciclo_microonde') }}
+                    ⚡ Consumati: {{ state_attr('sensor.frarik_microonde_time_on','consumo_ciclo_microonde') }}
 
-              💰 Spesi: {{ state_attr('sensor.frarik_microonde_time_on','costo_ciclo_microonde') }} €
-            title: "Microonde"
-          service: notify.frarik_microonde
-          continue_on_error: true
+                    💰 Spesi: {{ state_attr('sensor.frarik_microonde_time_on','costo_ciclo_microonde') }} €
+                  title: "Microonde"
 
 - alias: frarik_microonde_off_automatico
   id: frarik_microonde_off_automatico

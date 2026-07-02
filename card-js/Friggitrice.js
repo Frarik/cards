@@ -632,16 +632,10 @@ homeassistant:
 
         Device per notifica push: &push
           - service: IL_TUO_MOBILE_APP_1
-          - service: IL_TUO_MOBILE_APP_2
 
 ####################################################
 #                  NOTIFICHE                       #
 ####################################################
-
-notify:
-  - name: Friggitrice
-    platform: group
-    services: *push
 
 ####################################################
 #                    SENSORI                       #
@@ -1375,18 +1369,21 @@ automation:
           entity_id: input_boolean.frarik_friggitrice_notify_push
           state: 'on'
         sequence:
-        - data_template:
-            message: >-
-              🍟 {{ states('input_text.frarik_friggitrice_nome') }}
+        - repeat:
+            for_each: *push
+            sequence:
+              - service: "{{ repeat.item.service }}"
+                continue_on_error: true
+                data:
+                  message: >-
+                    🍟 {{ states('input_text.frarik_friggitrice_nome') }}
 
-              ⏱ Ciclo durato: {{ state_attr('sensor.frarik_friggitrice_time_on','tempo_ciclo_friggitrice') }}
+                    ⏱ Ciclo durato: {{ state_attr('sensor.frarik_friggitrice_time_on','tempo_ciclo_friggitrice') }}
 
-              ⚡ Consumati: {{ state_attr('sensor.frarik_friggitrice_time_on','consumo_ciclo_friggitrice') }}
+                    ⚡ Consumati: {{ state_attr('sensor.frarik_friggitrice_time_on','consumo_ciclo_friggitrice') }}
 
-              💰 Spesi: {{ state_attr('sensor.frarik_friggitrice_time_on','costo_ciclo_friggitrice') }} €
-            title: "Friggitrice"
-          service: notify.frarik_friggitrice
-          continue_on_error: true
+                    💰 Spesi: {{ state_attr('sensor.frarik_friggitrice_time_on','costo_ciclo_friggitrice') }} €
+                  title: "Friggitrice"
 
 - alias: frarik_friggitrice_off_automatico
   id: frarik_friggitrice_off_automatico

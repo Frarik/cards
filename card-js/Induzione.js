@@ -637,16 +637,10 @@ homeassistant:
 
         Device per notifica push: &push
           - service: IL_TUO_MOBILE_APP_1
-          - service: IL_TUO_MOBILE_APP_2
 
 ####################################################
 #                  NOTIFICHE                       #
 ####################################################
-
-notify:
-  - name: Induzione
-    platform: group
-    services: *push
 
 ####################################################
 #                    SENSORI                       #
@@ -1380,18 +1374,21 @@ automation:
           entity_id: input_boolean.frarik_induzione_notify_push
           state: 'on'
         sequence:
-        - data_template:
-            message: >-
-              🍳 {{ states('input_text.frarik_induzione_nome') }}
+        - repeat:
+            for_each: *push
+            sequence:
+              - service: "{{ repeat.item.service }}"
+                continue_on_error: true
+                data:
+                  message: >-
+                    🍳 {{ states('input_text.frarik_induzione_nome') }}
 
-              ⏱ Ciclo durato: {{ state_attr('sensor.frarik_induzione_time_on','tempo_ciclo_induzione') }}
+                    ⏱ Ciclo durato: {{ state_attr('sensor.frarik_induzione_time_on','tempo_ciclo_induzione') }}
 
-              ⚡ Consumati: {{ state_attr('sensor.frarik_induzione_time_on','consumo_ciclo_induzione') }}
+                    ⚡ Consumati: {{ state_attr('sensor.frarik_induzione_time_on','consumo_ciclo_induzione') }}
 
-              💰 Spesi: {{ state_attr('sensor.frarik_induzione_time_on','costo_ciclo_induzione') }} €
-            title: "Induzione"
-          service: notify.frarik_induzione
-          continue_on_error: true
+                    💰 Spesi: {{ state_attr('sensor.frarik_induzione_time_on','costo_ciclo_induzione') }} €
+                  title: "Induzione"
 
 - alias: frarik_induzione_off_automatico
   id: frarik_induzione_off_automatico

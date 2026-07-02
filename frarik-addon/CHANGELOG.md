@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.7.47 — 2026-07-02
+
+### fix: card-js — rimosso notify.group deprecato dai template YAML embedded (12 card)
+
+- Il wizard usa il template YAML embedded nel JS (non il file GitHub): la fix precedente sui pkg/*.yaml non era sufficiente
+- Rimosso blocco `notify: platform: group` da: Lavatrice, Asciugatrice, Forno, Microonde, Induzione, Lavastoviglie, Friggitrice, Frigorifero, Bolletta, Differenziata, posta-card, system-card
+- Le automazioni ora usano `repeat.for_each: *push` → `service: "{{ repeat.item.service }}"` (stesso pattern dei pkg/*.yaml)
+- Rimossa riga `- service: IL_TUO_MOBILE_APP_2` attiva (non commentata) dalla sezione `&push` degli elettrodomestici
+- Fixato typo `notify.frarik_frigoriferorifero` → `notify.frarik_frigorifero` in Frigorifero.js
+- Risolve "group.notify: Invalid config" dopo installazione tramite wizard
+
 ## 1.7.46 — 2026-07-02
 
 ### fix: PKG — rimossi valori placeholder dalle sezioni IMPOSTAZIONI (13 package)

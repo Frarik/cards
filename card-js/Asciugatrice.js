@@ -670,16 +670,10 @@ homeassistant:
 
         Device per notifica push: &push
           - service: IL_TUO_MOBILE_APP_1
-          - service: IL_TUO_MOBILE_APP_2
 
 ####################################################
 #                  NOTIFICHE                       #
 ####################################################
-
-notify:
-  - name: Asciugatrice
-    platform: group
-    services: *push
 
 ####################################################
 #                    SENSORI                       #
@@ -1413,18 +1407,21 @@ automation:
           entity_id: input_boolean.frarik_asciugatrice_notify_push
           state: 'on'
         sequence:
-        - data_template:
-            message: >-
-              🫧 {{ states('input_text.frarik_asciugatrice_nome') }}
+        - repeat:
+            for_each: *push
+            sequence:
+              - service: "{{ repeat.item.service }}"
+                continue_on_error: true
+                data:
+                  message: >-
+                    🫧 {{ states('input_text.frarik_asciugatrice_nome') }}
 
-              ⏱ Ciclo durato: {{ state_attr('sensor.frarik_asciugatrice_time_on','tempo_ciclo_asciugatrice') }}
+                    ⏱ Ciclo durato: {{ state_attr('sensor.frarik_asciugatrice_time_on','tempo_ciclo_asciugatrice') }}
 
-              ⚡ Consumati: {{ state_attr('sensor.frarik_asciugatrice_time_on','consumo_ciclo_asciugatrice') }}
+                    ⚡ Consumati: {{ state_attr('sensor.frarik_asciugatrice_time_on','consumo_ciclo_asciugatrice') }}
 
-              💰 Spesi: {{ state_attr('sensor.frarik_asciugatrice_time_on','costo_ciclo_asciugatrice') }} €
-            title: "Asciugatrice"
-          service: notify.frarik_asciugatrice
-          continue_on_error: true
+                    💰 Spesi: {{ state_attr('sensor.frarik_asciugatrice_time_on','costo_ciclo_asciugatrice') }} €
+                  title: "Asciugatrice"
 
 - alias: frarik_asciugatrice_off_automatico
   id: frarik_asciugatrice_off_automatico

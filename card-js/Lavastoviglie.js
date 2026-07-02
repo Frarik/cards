@@ -627,16 +627,10 @@ homeassistant:
 
         Device per notifica push: &push
           - service: IL_TUO_MOBILE_APP_1
-          - service: IL_TUO_MOBILE_APP_2
 
 ####################################################
 #                  NOTIFICHE                       #
 ####################################################
-
-notify:
-  - name: Lavastoviglie
-    platform: group
-    services: *push
 
 ####################################################
 #                    SENSORI                       #
@@ -1370,18 +1364,21 @@ automation:
           entity_id: input_boolean.frarik_lavastoviglie_notify_push
           state: 'on'
         sequence:
-        - data_template:
-            message: >-
-              🍽 {{ states('input_text.frarik_lavastoviglie_nome') }}
+        - repeat:
+            for_each: *push
+            sequence:
+              - service: "{{ repeat.item.service }}"
+                continue_on_error: true
+                data:
+                  message: >-
+                    🍽 {{ states('input_text.frarik_lavastoviglie_nome') }}
 
-              ⏱ Ciclo durato: {{ state_attr('sensor.frarik_lavastoviglie_time_on','tempo_ciclo_lavastoviglie') }}
+                    ⏱ Ciclo durato: {{ state_attr('sensor.frarik_lavastoviglie_time_on','tempo_ciclo_lavastoviglie') }}
 
-              ⚡ Consumati: {{ state_attr('sensor.frarik_lavastoviglie_time_on','consumo_ciclo_lavastoviglie') }}
+                    ⚡ Consumati: {{ state_attr('sensor.frarik_lavastoviglie_time_on','consumo_ciclo_lavastoviglie') }}
 
-              💰 Spesi: {{ state_attr('sensor.frarik_lavastoviglie_time_on','costo_ciclo_lavastoviglie') }} €
-            title: "Lavastoviglie"
-          service: notify.frarik_lavastoviglie
-          continue_on_error: true
+                    💰 Spesi: {{ state_attr('sensor.frarik_lavastoviglie_time_on','costo_ciclo_lavastoviglie') }} €
+                  title: "Lavastoviglie"
 
 - alias: frarik_lavastoviglie_off_automatico
   id: frarik_lavastoviglie_off_automatico
