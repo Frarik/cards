@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.56 — 2026-07-02
+
+### feat: aggiornamenti PKG visibili nello Store (tab PKG)
+
+- Nella tab PKG dello store, i package installati su HA con un aggiornamento disponibile mostrano ora un badge arancio "📦 Aggiornamento" accanto al nome
+- Aggiunto pulsante "Aggiorna" arancio direttamente nella riga del PKG (stessa azione del clic ✓ nella campanella)
+- Nessuna modifica al flusso di aggiornamento: conferma → reinstalla PKG con wizard config già salvata
+
 ## 1.7.55 — 2026-07-02
 
 ### chore: bump versione tutti i PKG (trigger notifica aggiornamento)

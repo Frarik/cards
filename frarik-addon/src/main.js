@@ -3701,7 +3701,7 @@ function _ghStoreRenderPkg(q){
 
   status.textContent=`${haList.length} installati su HA  ·  ${ghFiles.length} su GitHub`;
 
-  const pkgRow=(filename,origin,acts)=>{
+  const pkgRow=(filename,origin,acts,badge='')=>{
     const nm=filename.split('/').pop().replace(/\.ya?ml$/i,'');
     const cardName=cardPkgMap[filename.toLowerCase()]||cardPkgMap[filename.split('/').pop().toLowerCase()]||'';
     const originLbl=origin==='ha'
@@ -3710,7 +3710,7 @@ function _ghStoreRenderPkg(q){
     return `<div class="ghs-row" style="align-items:flex-start">
       <div class="ghs-ico" style="font-size:22px;padding-top:2px">📦</div>
       <div class="ghs-info" style="flex:1;min-width:0">
-        <div class="ghs-name">${eh(nm)}</div>
+        <div class="ghs-name" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">${eh(nm)}${badge}</div>
         <div class="ghs-sub" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:2px">
           ${originLbl}
           ${cardName?`<span style="color:rgba(255,255,255,.45);font-size:10px">Card: ${eh(cardName)}</span>`:''}
@@ -3728,9 +3728,19 @@ function _ghStoreRenderPkg(q){
   if(haList.length){
     html+=haList.map(f=>{
       const enc=encodeURIComponent(f);
+      const baseName=f.split('/').pop();
+      const hasPkgUpd=!!_pkgPending[baseName];
+      const badge=hasPkgUpd
+        ?`<span style="background:rgba(251,146,60,.2);border:1px solid rgba(251,146,60,.5);color:#fb923c;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px">📦 Aggiornamento</span>`
+        :'';
+      const updBtn=hasPkgUpd
+        ?`<button class="ghs-btn ghs-btn-upd" data-action="_ghsPkgUpdFromPending" data-action-arg="${encodeURIComponent(baseName)}" style="background:rgba(251,146,60,.15);border-color:rgba(251,146,60,.4);color:#fb923c"><i class="mdi mdi-package-up"></i> Aggiorna</button>`
+        :'';
       return pkgRow(f,'ha',
+        updBtn+
         `<button class="ghs-btn" data-action="_pkgViewOnHA" data-action-arg="${enc}" title="Visualizza YAML"><i class="mdi mdi-eye-outline"></i></button>`+
-        `<button class="ghs-btn ghs-ibtn-del" data-action="_pkgUninstallFromHA" data-action-arg="${enc}" title="Rimuovi da HA" style="color:#f87171;border-color:rgba(248,113,113,.3)"><i class="mdi mdi-delete-outline"></i> Rimuovi</button>`
+        `<button class="ghs-btn ghs-ibtn-del" data-action="_pkgUninstallFromHA" data-action-arg="${enc}" title="Rimuovi da HA" style="color:#f87171;border-color:rgba(248,113,113,.3)"><i class="mdi mdi-delete-outline"></i> Rimuovi</button>`,
+        badge
       );
     }).join('');
   } else {
@@ -3794,6 +3804,11 @@ function _ghsPkgDeleteLocal(name){
   _pkgStoreDelete(name);
   showToast('🗑️ "'+name+'" rimosso dallo store locale');
   if(_ghsTab==='pkg') _ghStoreRender();
+}
+
+function _ghsPkgUpdFromPending(encodedName){
+  const fileName=decodeURIComponent(encodedName);
+  if(typeof _ntfHandleAction==='function') _ntfHandleAction('pkg:'+fileName);
 }
 
 function _ghsPkgCopyLocal(name){
@@ -18341,5 +18356,5 @@ Object.assign(window, {
   _vanessaRenderSettings, _vanessaSave, _vanessaTest, _vanessaValidateKey,
   _vanessaRunCard, _vanessaSimulateCard, _vanessaUndoCard, _vanessaCardPopup, _vanessaClearLog, _vnssToggleVacation,
   _pkgUninstallFromHA, _pkgViewOnHA, _pkgGenericInstall, _pkgPostInstall,
-  _ghsPkgInstallFromGH, _pkgInstallLocalToHA, _pkgUpdateCard,
+  _ghsPkgInstallFromGH, _pkgInstallLocalToHA, _pkgUpdateCard, _ghsPkgUpdFromPending,
 });
