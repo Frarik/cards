@@ -449,42 +449,365 @@
     });
   }
 
-  /* ── PKG YAML embedded ── */
-  var _DIFF_PKG = [
-    'homeassistant:',
-    '  customize:',
-    '    package.node_anchors:',
-    '      customize: &customize',
-    '        package: "Frarik — Raccolta Differenziata 2.0"',
-    'input_text:',
-    '  frarik_differenziata_rifiuto_lunedi:    {name: "Differenziata — Lunedì",    icon: mdi:recycle, max: 255}',
-    '  frarik_differenziata_rifiuto_martedi:   {name: "Differenziata — Martedì",   icon: mdi:recycle, max: 255}',
-    '  frarik_differenziata_rifiuto_mercoledi: {name: "Differenziata — Mercoledì", icon: mdi:recycle, max: 255}',
-    '  frarik_differenziata_rifiuto_giovedi:   {name: "Differenziata — Giovedì",   icon: mdi:recycle, max: 255}',
-    '  frarik_differenziata_rifiuto_venerdi:   {name: "Differenziata — Venerdì",   icon: mdi:recycle, max: 255}',
-    '  frarik_differenziata_rifiuto_sabato:    {name: "Differenziata — Sabato",    icon: mdi:recycle, max: 255}',
-    '  frarik_differenziata_rifiuto_domenica:  {name: "Differenziata — Domenica",  icon: mdi:recycle, max: 255}',
-    'input_datetime:',
-    '  frarik_differenziata_orario_notifica:',
-    '    name: "Orario Notifica Differenziata"',
-    '    has_date: false',
-    '    has_time: true',
-    'input_boolean:',
-    '  frarik_differenziata_notifica_push:   {name: "Differenziata — Push",   icon: mdi:cellphone-message}',
-    '  frarik_differenziata_notifica_google: {name: "Differenziata — Google", icon: mdi:google-assistant}',
-    '  frarik_differenziata_notifica_alexa:  {name: "Differenziata — Alexa",  icon: mdi:amazon-alexa}',
-    'template:',
-    '  - sensor:',
-    '      - name: frarik_differenziata_versione',
-    '        state: "2.0"',
-    '        unique_id: frarik_differenziata_versione',
-    '      - name: frarik_differenziata_raccolta',
-    '        unique_id: frarik_differenziata_raccolta',
-    '        state: >',
-    '          {% set wd = now().weekday() %}',
-    '          {% set g = ["lunedi","martedi","mercoledi","giovedi","venerdi","sabato","domenica"] %}',
-    '          {{ states("input_text.frarik_differenziata_rifiuto_" + g[wd]) }}',
-  ].join('\n');
+  /* ── PKG YAML EMBEDDED ── */
+  var _DIFF_PKG_YAML = `###############################################################
+#                                                             #
+#   Package: Centro Controllo Raccolta Differenziata          #
+#   Versione: 2.0  |  Frarik / Fratech                       #
+#                                                             #
+###############################################################
+
+homeassistant:
+  customize:
+    package.node_anchors:
+      customize: &customize
+        package: 'Frarik — Centro Controllo Raccolta Differenziata'
+        author: 'Frarik / Fratech'
+        version: '2.0'
+
+      setting:
+
+        Lista MediaPlayer Google: &google
+          - IL_TUO_MEDIA_PLAYER_GOOGLE_1
+
+        Lista MediaPlayer Alexa: &alexa
+          - IL_TUO_MEDIA_PLAYER_ALEXA_1
+
+        Device per notifica push: &push
+          - service: IL_TUO_MOBILE_APP_1
+
+
+input_text:
+  frarik_differenziata_rifiuto_lunedi:
+    name: "Differenziata — Rifiuto Lunedì"
+    icon: mdi:delete-variant
+    max: 255
+
+  frarik_differenziata_rifiuto_martedi:
+    name: "Differenziata — Rifiuto Martedì"
+    icon: mdi:delete-variant
+    max: 255
+
+  frarik_differenziata_rifiuto_mercoledi:
+    name: "Differenziata — Rifiuto Mercoledì"
+    icon: mdi:delete-variant
+    max: 255
+
+  frarik_differenziata_rifiuto_giovedi:
+    name: "Differenziata — Rifiuto Giovedì"
+    icon: mdi:delete-variant
+    max: 255
+
+  frarik_differenziata_rifiuto_venerdi:
+    name: "Differenziata — Rifiuto Venerdì"
+    icon: mdi:delete-variant
+    max: 255
+
+  frarik_differenziata_rifiuto_sabato:
+    name: "Differenziata — Rifiuto Sabato"
+    icon: mdi:delete-variant
+    max: 255
+
+  frarik_differenziata_rifiuto_domenica:
+    name: "Differenziata — Rifiuto Domenica"
+    icon: mdi:delete-variant
+    max: 255
+
+
+input_datetime:
+  frarik_differenziata_orario_notifica:
+    name: "Differenziata — Orario Notifica"
+    has_date: false
+    has_time: true
+    icon: mdi:bell-ring-outline
+
+
+input_boolean:
+  frarik_differenziata_notifica_push:
+    name: "Differenziata — Notifica Push"
+    icon: mdi:cellphone-message
+
+  frarik_differenziata_notifica_google:
+    name: "Differenziata — Annuncio Google"
+    icon: mdi:google-assistant
+
+  frarik_differenziata_notifica_alexa:
+    name: "Differenziata — Annuncio Alexa"
+    icon: mdi:amazon-alexa
+
+
+template:
+  - sensor:
+      - name: "Frarik Differenziata Versione"
+        unique_id: frarik_differenziata_versione
+        state: "2.0"
+        icon: mdi:package-variant-closed
+
+      - name: "Frarik Differenziata Raccolta"
+        unique_id: frarik_differenziata_raccolta
+        icon: mdi:recycle
+        state: >-
+          {% set wd = now().weekday() %}
+          {% set giorni = ['lunedi','martedi','mercoledi','giovedi','venerdi','sabato','domenica'] %}
+          {{ states('input_text.frarik_differenziata_rifiuto_' + giorni[wd]) }}
+
+
+automation:
+
+  - alias: "Frarik — Differenziata (notifiche)"
+    id: frarik_differenziata_notifiche
+    description: "Notifica giornaliera rifiuti da buttare"
+    mode: single
+
+    trigger:
+      - platform: time
+        at: 'input_datetime.frarik_differenziata_orario_notifica'
+
+    condition:
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: sensor.frarik_differenziata_raccolta
+            state: ""
+
+    action:
+
+      - parallel:
+
+          - choose:
+            - conditions:
+              - condition: state
+                entity_id: input_boolean.frarik_differenziata_notifica_push
+                state: 'on'
+              sequence:
+              - repeat:
+                  for_each: *push
+                  sequence:
+                    - service: "{{ repeat.item.service }}"
+                      continue_on_error: true
+                      data:
+                        title: "♻️ Frarik — Differenziata"
+                        message: >-
+                          Oggi esponi: {{ states('sensor.frarik_differenziata_raccolta') }}
+
+          - choose:
+            - conditions:
+              - condition: state
+                entity_id: input_boolean.frarik_differenziata_notifica_google
+                state: 'on'
+              sequence:
+              - service: tts.google_translate_say
+                continue_on_error: true
+                data:
+                  entity_id: *google
+                  language: 'it'
+                  message: >-
+                    Oggi devi esporre {{ states('sensor.frarik_differenziata_raccolta') }}
+
+          - choose:
+            - conditions:
+              - condition: state
+                entity_id: input_boolean.frarik_differenziata_notifica_alexa
+                state: 'on'
+              sequence:
+              - service: notify.alexa_media
+                continue_on_error: true
+                data:
+                  target: *alexa
+                  data:
+                    type: announce
+                    method: spoken
+                  message: >-
+                    Oggi devi esporre {{ states('sensor.frarik_differenziata_raccolta') }}
+
+###############################################################
+#  Fine package — Frarik Centro Controllo Raccolta Differenziata v2.0
+###############################################################
+`;
+
+  /* ── PKG BUILD ── */
+  var _DIFF_WIZ_KEY = 'frarik_pkg_wizard_differenziata';
+
+  function _diffBuildPkg(push, google, alexa) {
+    var ind = '          ';
+    var pushLines = (push && push.length)
+      ? push.map(function(p) { return ind + '- service: ' + p; }).join('\n')
+      : ind + '- service: mobile_app_smartphone';
+    var googleLines = (google && google.length)
+      ? google.map(function(p) { return ind + '- ' + p; }).join('\n')
+      : ind + '- media_player.tv_sala';
+    var alexaLines = (alexa && alexa.length)
+      ? alexa.map(function(p) { return ind + '- ' + p; }).join('\n')
+      : ind + '- media_player.alexa_cameretta';
+    var yaml = _DIFF_PKG_YAML;
+    yaml = yaml.replace(ind + '- service: IL_TUO_MOBILE_APP_1', pushLines);
+    yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_GOOGLE_1', googleLines);
+    yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_ALEXA_1', alexaLines);
+    return yaml;
+  }
+
+  /* ── WIZARD ── */
+  function _diffOpenWizard(hass, onDone) {
+    var states = (hass && hass.states) || {};
+    var allIds = Object.keys(states).sort();
+    var mediaIds = allIds.filter(function(id) { return /^media_player\./.test(id); });
+    var saved = null;
+    try { saved = JSON.parse(localStorage.getItem(_DIFF_WIZ_KEY) || 'null'); } catch(e) {}
+    var pushRows   = (saved && saved.push   && saved.push.length)   ? saved.push.slice()   : [''];
+    var googleRows = (saved && saved.google && saved.google.length) ? saved.google.slice() : [''];
+    var alexaRows  = (saved && saved.alexa  && saved.alexa.length)  ? saved.alexa.slice()  : [''];
+
+    var host = document.createElement('div');
+    var sr = host.attachShadow({mode: 'open'});
+    document.body.appendChild(host);
+    function destroy() { try { document.body.removeChild(host); } catch(e) {} }
+
+    function setupAC(inp, drop, ids) {
+      if (!inp || !drop) return;
+      function show() {
+        var q = inp.value.toLowerCase().trim();
+        var hits = (q ? ids.filter(function(id) { return id.toLowerCase().includes(q); }) : ids).slice(0, 50);
+        if (!hits.length) { drop.style.display = 'none'; return; }
+        drop.innerHTML = hits.map(function(id) { return '<div class="wd-item" data-pick="' + id + '">' + id + '</div>'; }).join('');
+        drop.style.display = 'block';
+        drop.querySelectorAll('[data-pick]').forEach(function(row) {
+          row.addEventListener('mousedown', function(ev) { ev.preventDefault(); inp.value = row.getAttribute('data-pick'); drop.style.display = 'none'; });
+          row.addEventListener('mouseover', function() { row.style.background = 'rgba(255,255,255,.08)'; });
+          row.addEventListener('mouseout', function() { row.style.background = ''; });
+        });
+      }
+      inp.addEventListener('focus', show);
+      inp.addEventListener('input', show);
+      inp.addEventListener('blur', function() { setTimeout(function() { drop.style.display = 'none'; }, 200); });
+    }
+
+    function multiRows(rows, cls, placeholder) {
+      return rows.map(function(v, i) {
+        return '<div class="wd-push-row"><div style="position:relative;flex:1"><input class="wd-inp ' + cls + '" type="text" autocomplete="off" placeholder="' + placeholder + '" value="' + (v || '').replace(/"/g, '&quot;') + '"><div class="wd-drop"></div></div><button class="wd-rm" data-rm="' + i + '">✕</button></div>';
+      }).join('');
+    }
+
+    function renderWiz() {
+      sr.innerHTML = '<style>'
+        + ':host{all:initial;font-family:system-ui,sans-serif}'
+        + '.wd-bd{position:fixed;inset:0;z-index:200000;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);display:flex;align-items:flex-end}'
+        + '.wd-panel{width:100%;max-height:88vh;display:flex;flex-direction:column;background:#080f18;border:1px solid rgba(56,189,248,.3);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:wUp .22s cubic-bezier(.32,1.12,.56,1)}'
+        + '@keyframes wUp{from{transform:translateY(100%)}to{transform:translateY(0)}}'
+        + '.wd-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}'
+        + '.wd-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.3);flex-shrink:0}'
+        + '.wd-tit{font-size:14px;font-weight:800}'
+        + '.wd-sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:1px}'
+        + '.wd-x{margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none}'
+        + '.wd-body{flex:1;overflow-y:auto;padding:16px;scrollbar-width:none;display:flex;flex-direction:column;gap:14px}'
+        + '.wd-body::-webkit-scrollbar{display:none}'
+        + '.wd-sec{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding-bottom:5px;border-bottom:1px solid rgba(56,189,248,.18);margin-bottom:10px}'
+        + '.wd-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px}'
+        + '.wd-inp{width:100%;padding:9px 11px;border-radius:10px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none}'
+        + '.wd-inp:focus{border-color:rgba(56,189,248,.5)}'
+        + '.wd-drop{position:absolute;left:0;right:0;top:100%;z-index:10;max-height:150px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 9px 9px;display:none}'
+        + '.wd-item{padding:5px 10px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04);color:#e2e8f0}'
+        + '.wd-push-row{display:flex;gap:6px;margin-bottom:6px}'
+        + '.wd-push-row .wd-inp{flex:1}'
+        + '.wd-rm{width:30px;height:38px;border-radius:8px;background:rgba(255,255,255,.07);border:none;color:#fff;cursor:pointer;font-size:14px;flex-shrink:0}'
+        + '.wd-add{padding:6px 12px;border-radius:8px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.25);color:#38bdf8;font-size:11px;font-weight:700;cursor:pointer}'
+        + '.wd-note{font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;margin:0 0 10px}'
+        + '.wd-foot{padding:12px 16px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:8px;flex-shrink:0}'
+        + '.wd-cancel{flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:rgba(255,255,255,.1);color:#fff}'
+        + '.wd-install{flex:2;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#38bdf8;color:#060d14}'
+        + '.wd-loading{opacity:.6;pointer-events:none}'
+        + '</style>'
+        + '<div class="wd-bd" id="wd-bd">'
+        + '<div class="wd-panel">'
+        + '<div class="wd-hdr"><div class="wd-ico">♻️</div>'
+        + '<div><div class="wd-tit">Installa PKG Differenziata</div><div class="wd-sub">frarik_differenziata.yaml → config/packages/</div></div>'
+        + '<button class="wd-x" id="wd-x">✕</button></div>'
+        + '<div class="wd-body">'
+
+        + '<div><div class="wd-sec">Notifiche Push</div>'
+        + '<p class="wd-note">mobile_app dei dispositivi che ricevono le notifiche push (es. <code>mobile_app_iphone</code>). Lascia vuoto per non usare.</p>'
+        + '<div id="push-rows">' + multiRows(pushRows, 'push-inp', 'mobile_app_...') + '</div>'
+        + '<button class="wd-add" id="push-add">+ Aggiungi dispositivo</button>'
+        + '</div>'
+
+        + '<div><div class="wd-sec">Notifiche Google / Chromecast</div>'
+        + '<p class="wd-note">media_player dei dispositivi Google Home / Chromecast (es. <code>media_player.google_cucina</code>). Lascia vuoto per non usare.</p>'
+        + '<div id="google-rows">' + multiRows(googleRows, 'google-inp', 'media_player.google_cucina') + '</div>'
+        + '<button class="wd-add" id="google-add">+ Aggiungi speaker Google</button>'
+        + '</div>'
+
+        + '<div><div class="wd-sec">Notifiche Alexa</div>'
+        + '<p class="wd-note">media_player dei dispositivi Alexa (es. <code>media_player.echo_cucina</code>). Lascia vuoto per non usare.</p>'
+        + '<div id="alexa-rows">' + multiRows(alexaRows, 'alexa-inp', 'media_player.echo_cucina') + '</div>'
+        + '<button class="wd-add" id="alexa-add">+ Aggiungi Echo</button>'
+        + '</div>'
+
+        + '</div>'
+        + '<div class="wd-foot">'
+        + '<button class="wd-cancel" id="wd-cancel">Annulla</button>'
+        + '<button class="wd-install" id="wd-install">📦 Installa PKG</button>'
+        + '</div>'
+        + '</div>'
+        + '</div>';
+
+      sr.getElementById('wd-x').addEventListener('click', destroy);
+      sr.getElementById('wd-cancel').addEventListener('click', destroy);
+      sr.getElementById('wd-bd').addEventListener('click', function(e) { if (e.target === sr.getElementById('wd-bd')) destroy(); });
+
+      function bindMulti(containerId, rows, cls, addId) {
+        sr.getElementById(containerId).addEventListener('click', function(e) {
+          var btn = e.target.closest('[data-rm]'); if (!btn) return;
+          rows.length = 0;
+          Array.from(sr.querySelectorAll('.' + cls)).forEach(function(i) { rows.push(i.value); });
+          rows.splice(+btn.dataset.rm, 1);
+          if (!rows.length) rows.push('');
+          renderWiz();
+        });
+        sr.getElementById(addId).addEventListener('click', function() {
+          Array.from(sr.querySelectorAll('.' + cls)).forEach(function(i, idx) { rows[idx] = i.value; });
+          rows.push('');
+          renderWiz();
+        });
+      }
+      bindMulti('push-rows',   pushRows,   'push-inp',   'push-add');
+      bindMulti('google-rows', googleRows, 'google-inp', 'google-add');
+      bindMulti('alexa-rows',  alexaRows,  'alexa-inp',  'alexa-add');
+
+      sr.querySelectorAll('.google-inp').forEach(function(inp) { setupAC(inp, inp.parentElement.querySelector('.wd-drop'), mediaIds); });
+      sr.querySelectorAll('.alexa-inp').forEach(function(inp)  { setupAC(inp, inp.parentElement.querySelector('.wd-drop'), mediaIds); });
+
+      sr.getElementById('wd-install').addEventListener('click', function() {
+        var push   = Array.from(sr.querySelectorAll('.push-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
+        var google = Array.from(sr.querySelectorAll('.google-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
+        var alexa  = Array.from(sr.querySelectorAll('.alexa-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
+        try { localStorage.setItem(_DIFF_WIZ_KEY, JSON.stringify({push: push, google: google, alexa: alexa})); } catch(e) {}
+        var yaml = _diffBuildPkg(push, google, alexa);
+        var m = location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
+        var base = location.origin + (m ? m[1] : '');
+        var btn = sr.getElementById('wd-install');
+        btn.classList.add('wd-loading');
+        btn.textContent = 'Installazione…';
+        fetch(base + '/api/frarik/pkg/install', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({name: 'frarik/frarik_differenziata.yaml', content: yaml})
+        }).then(function(r) { return r.json().then(function(j) { return {r: r, j: j}; }); })
+          .then(function(res) {
+            destroy();
+            if (res.r.ok && res.j.ok) {
+              try { if (typeof window.showToast === 'function') window.showToast('📦 PKG Differenziata installato! Riavvia HA.'); } catch(e) {}
+              if (typeof onDone === 'function') onDone();
+            } else {
+              try { if (typeof window.showToast === 'function') window.showToast('⚠️ Errore installazione PKG: ' + ((res.j && res.j.error) || '')); } catch(e) {}
+            }
+          }).catch(function() {
+            destroy();
+            try { if (typeof window.showToast === 'function') window.showToast('⚠️ Errore connessione al PKG install'); } catch(e) {}
+          });
+      });
+    }
+
+    renderWiz();
+  }
 
   /* ── registrazione store ── */
   window.FratechCardRegistry = window.FratechCardRegistry || {};
@@ -500,6 +823,7 @@
     render:  render,
     mount:   mount,
     update:  update,
-    pkgYaml: function() { return _DIFF_PKG; }
+    openWizard: _diffOpenWizard,
+    _buildPkgFromConfig: function(cfg) { return _diffBuildPkg(cfg.push || [], cfg.google || [], cfg.alexa || []); },
   };
 })();

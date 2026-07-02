@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.7.49 — 2026-07-02
+
+### fix: Differenziata — wizard notifiche + YAML completo con automazioni
+
+- Rimosso stub `_DIFF_PKG` (solo entità, nessuna automazione)
+- Aggiunto `_DIFF_PKG_YAML` embedded con YAML completo (entità + automazioni notifiche)
+- Aggiunto `_diffOpenWizard` che chiede push/google/alexa (Differenziata non ha sensori da configurare)
+- CARD export: sostituito `pkgYaml` con `openWizard` — ora mostra il wizard prima di installare
+- Il pkg installato include le automazioni notifica con i dispositivi scelti nel wizard
+
 ## 1.7.48 — 2026-07-02
 
 ### fix: anchor null nei pkg GitHub + wizard Scaldabagno + posta-card fallback vuoto
