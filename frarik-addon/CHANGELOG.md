@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.45 — 2026-07-02
+
+### fix: antizanzare — rimosso nome iPhone hardcoded
+
+- Sostituito `notify.mobile_app_iphone_di_francesco` (nome reale dello sviluppatore) con il placeholder `IL_TUO_MOBILE_APP_1` in tutti i 12 punti — risolve Spook "Unknown actions" dopo reinstallazione
+
 ## 1.7.44 — 2026-07-02
 
 ### fix: PKG — IL_TUO_MOBILE_APP_2 commentato (7 pkg)
