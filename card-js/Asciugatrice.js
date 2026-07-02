@@ -1032,12 +1032,15 @@ input_boolean:
 
   frarik_asciugatrice_notify_push:
     name: Notifica Push Asciugatrice
+    initial: on
 
   frarik_asciugatrice_notify_alexa:
     name: Notifica Alexa Asciugatrice
+    initial: on
 
   frarik_asciugatrice_notify_google:
     name: Notifica Google Asciugatrice
+    initial: on
 
 ####################################################
 #                     GROUP                        #
@@ -1350,7 +1353,7 @@ automation:
         target:
           entity_id: input_text.frarik_asciugatrice_ultimo_ciclo
         data:
-          value: "{{ state_attr('sensor.frarik_asciugatrice_time_on','tempo_ciclo_asciugatrice') }}"
+          value: "{{ state_attr('sensor.frarik_asciugatrice_time_on','tempo_ciclo_asciugatrice') | trim }}"
 
       - service: counter.increment
         target:
@@ -1377,7 +1380,7 @@ automation:
           continue_on_error: true
           data:
             entity_id: *google
-            message: "{{ states('input_text.frarik_asciugatrice_messaggio') }} in {{ state_attr('sensor.frarik_asciugatrice_time_on','tempo_ciclo_asciugatrice') }}"
+            message: "{{ states('input_text.frarik_asciugatrice_messaggio') }} in {{ states('input_text.frarik_asciugatrice_ultimo_ciclo') | trim }}"
 
     - choose:
       - conditions:
@@ -1397,7 +1400,7 @@ automation:
             data:
               type: announce
               method: spoken
-            message: "{{ states('input_text.frarik_asciugatrice_messaggio') }} in {{ state_attr('sensor.frarik_asciugatrice_time_on','tempo_ciclo_asciugatrice') }}"
+            message: "{{ states('input_text.frarik_asciugatrice_messaggio') }} in {{ states('input_text.frarik_asciugatrice_ultimo_ciclo') | trim }}"
 
     - choose:
       - conditions:
@@ -1416,7 +1419,7 @@ automation:
                   message: >-
                     🫧 {{ states('input_text.frarik_asciugatrice_nome') }}
 
-                    ⏱ Ciclo durato: {{ state_attr('sensor.frarik_asciugatrice_time_on','tempo_ciclo_asciugatrice') }}
+                    ⏱ Ciclo durato: {{ states('input_text.frarik_asciugatrice_ultimo_ciclo') | trim }}
 
                     ⚡ Consumati: {{ state_attr('sensor.frarik_asciugatrice_time_on','consumo_ciclo_asciugatrice') }}
 

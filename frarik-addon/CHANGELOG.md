@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.7.53 — 2026-07-02
+
+### fix: elettrodomestici PKG — push abilitato + "unknown" in Alexa risolto
+
+- `input_boolean frarik_XXX_notify_push/alexa/google`: aggiunto `initial: on` a tutti i PKG elettrodomestici (lavatrice, asciugatrice, lavastoviglie, forno, microonde, induzione, friggitrice, frigorifero, scaldabagno) — prima partivano disabilitati, le notifiche non arrivavano mai
+- Messaggi Alexa/Google: `state_attr(...,'tempo_ciclo_XXX')` → `states('input_text.frarik_XXX_ultimo_ciclo') | trim` — elimina la race condition post `ciclo_attivo=off` che causava "lavaggio terminato in unknown"
+- Notifica push: stessa correzione su "⏱ Ciclo durato"
+- Save action (`input_text.set_value ultimo_ciclo`): aggiunto `| trim` per pulire spazi dal template
+- Stesse fix nei file JS embedded (Lavatrice.js, Asciugatrice.js, Forno.js, Microonde.js, Induzione.js, Lavastoviglie.js, Friggitrice.js, Frigorifero.js, Scaldabagno.js)
+
 ## 1.7.52 — 2026-07-02
 
 ### fix: Differenziata PKG — push abilitato + annuncio in italiano con articoli

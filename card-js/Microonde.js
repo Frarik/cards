@@ -1017,12 +1017,15 @@ input_boolean:
 
   frarik_microonde_notify_push:
     name: Notifica Push Microonde
+    initial: on
 
   frarik_microonde_notify_alexa:
     name: Notifica Alexa Microonde
+    initial: on
 
   frarik_microonde_notify_google:
     name: Notifica Google Microonde
+    initial: on
 
 ####################################################
 #                     GROUP                        #
@@ -1335,7 +1338,7 @@ automation:
         target:
           entity_id: input_text.frarik_microonde_ultimo_ciclo
         data:
-          value: "{{ state_attr('sensor.frarik_microonde_time_on','tempo_ciclo_microonde') }}"
+          value: "{{ state_attr('sensor.frarik_microonde_time_on','tempo_ciclo_microonde') | trim }}"
 
       - service: counter.increment
         target:
@@ -1362,7 +1365,7 @@ automation:
           continue_on_error: true
           data:
             entity_id: *google
-            message: "{{ states('input_text.frarik_microonde_messaggio') }} in {{ state_attr('sensor.frarik_microonde_time_on','tempo_ciclo_microonde') }}"
+            message: "{{ states('input_text.frarik_microonde_messaggio') }} in {{ states('input_text.frarik_microonde_ultimo_ciclo') | trim }}"
 
     - choose:
       - conditions:
@@ -1382,7 +1385,7 @@ automation:
             data:
               type: announce
               method: spoken
-            message: "{{ states('input_text.frarik_microonde_messaggio') }} in {{ state_attr('sensor.frarik_microonde_time_on','tempo_ciclo_microonde') }}"
+            message: "{{ states('input_text.frarik_microonde_messaggio') }} in {{ states('input_text.frarik_microonde_ultimo_ciclo') | trim }}"
 
     - choose:
       - conditions:
@@ -1401,7 +1404,7 @@ automation:
                   message: >-
                     📡 {{ states('input_text.frarik_microonde_nome') }}
 
-                    ⏱ Ciclo durato: {{ state_attr('sensor.frarik_microonde_time_on','tempo_ciclo_microonde') }}
+                    ⏱ Ciclo durato: {{ states('input_text.frarik_microonde_ultimo_ciclo') | trim }}
 
                     ⚡ Consumati: {{ state_attr('sensor.frarik_microonde_time_on','consumo_ciclo_microonde') }}
 

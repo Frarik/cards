@@ -989,12 +989,15 @@ input_boolean:
 
   frarik_lavastoviglie_notify_push:
     name: Notifica Push Lavastoviglie
+    initial: on
 
   frarik_lavastoviglie_notify_alexa:
     name: Notifica Alexa Lavastoviglie
+    initial: on
 
   frarik_lavastoviglie_notify_google:
     name: Notifica Google Lavastoviglie
+    initial: on
 
 ####################################################
 #                     GROUP                        #
@@ -1307,7 +1310,7 @@ automation:
         target:
           entity_id: input_text.frarik_lavastoviglie_ultimo_ciclo
         data:
-          value: "{{ state_attr('sensor.frarik_lavastoviglie_time_on','tempo_ciclo_lavastoviglie') }}"
+          value: "{{ state_attr('sensor.frarik_lavastoviglie_time_on','tempo_ciclo_lavastoviglie') | trim }}"
 
       - service: counter.increment
         target:
@@ -1334,7 +1337,7 @@ automation:
           continue_on_error: true
           data:
             entity_id: *google
-            message: "{{ states('input_text.frarik_lavastoviglie_messaggio') }} in {{ state_attr('sensor.frarik_lavastoviglie_time_on','tempo_ciclo_lavastoviglie') }}"
+            message: "{{ states('input_text.frarik_lavastoviglie_messaggio') }} in {{ states('input_text.frarik_lavastoviglie_ultimo_ciclo') | trim }}"
 
     - choose:
       - conditions:
@@ -1354,7 +1357,7 @@ automation:
             data:
               type: announce
               method: spoken
-            message: "{{ states('input_text.frarik_lavastoviglie_messaggio') }} in {{ state_attr('sensor.frarik_lavastoviglie_time_on','tempo_ciclo_lavastoviglie') }}"
+            message: "{{ states('input_text.frarik_lavastoviglie_messaggio') }} in {{ states('input_text.frarik_lavastoviglie_ultimo_ciclo') | trim }}"
 
     - choose:
       - conditions:
@@ -1373,7 +1376,7 @@ automation:
                   message: >-
                     🍽 {{ states('input_text.frarik_lavastoviglie_nome') }}
 
-                    ⏱ Ciclo durato: {{ state_attr('sensor.frarik_lavastoviglie_time_on','tempo_ciclo_lavastoviglie') }}
+                    ⏱ Ciclo durato: {{ states('input_text.frarik_lavastoviglie_ultimo_ciclo') | trim }}
 
                     ⚡ Consumati: {{ state_attr('sensor.frarik_lavastoviglie_time_on','consumo_ciclo_lavastoviglie') }}
 

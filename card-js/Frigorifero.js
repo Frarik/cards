@@ -965,12 +965,15 @@ input_boolean:
 
   frarik_frigorifero_notify_push:
     name: Notifica Push Frigo
+    initial: on
 
   frarik_frigorifero_notify_alexa:
     name: Notifica Alexa Frigo
+    initial: on
 
   frarik_frigorifero_notify_google:
     name: Notifica Google Frigo
+    initial: on
 
 ####################################################
 #                     GROUP                        #
@@ -1271,7 +1274,7 @@ automation:
         target:
           entity_id: input_text.frarik_frigorifero_ultimo_ciclo
         data:
-          value: "{{ state_attr('sensor.frarik_frigorifero_time_on','tempo_ciclo_frigo') }}"
+          value: "{{ state_attr('sensor.frarik_frigorifero_time_on','tempo_ciclo_frigo') | trim }}"
 
       - service: counter.increment
         target:
@@ -1298,7 +1301,7 @@ automation:
           continue_on_error: true
           data:
             entity_id: *google
-            message: "{{ states('input_text.frarik_frigorifero_messaggio') }} in {{ state_attr('sensor.frarik_frigorifero_time_on','tempo_ciclo_frigo') }}"
+            message: "{{ states('input_text.frarik_frigorifero_messaggio') }} in {{ states('input_text.frarik_frigorifero_ultimo_ciclo') | trim }}"
 
     - choose:
       - conditions:
@@ -1318,7 +1321,7 @@ automation:
             data:
               type: announce
               method: spoken
-            message: "{{ states('input_text.frarik_frigorifero_messaggio') }} in {{ state_attr('sensor.frarik_frigorifero_time_on','tempo_ciclo_frigo') }}"
+            message: "{{ states('input_text.frarik_frigorifero_messaggio') }} in {{ states('input_text.frarik_frigorifero_ultimo_ciclo') | trim }}"
 
     - choose:
       - conditions:
@@ -1337,7 +1340,7 @@ automation:
                   message: >-
                     🧊 {{ states('input_text.frarik_frigorifero_nome') }}
 
-                    ⏱ Ciclo durato: {{ state_attr('sensor.frarik_frigorifero_time_on','tempo_ciclo_frigo') }}
+                    ⏱ Ciclo durato: {{ states('input_text.frarik_frigorifero_ultimo_ciclo') | trim }}
 
                     ⚡ Consumati: {{ state_attr('sensor.frarik_frigorifero_time_on','consumo_ciclo_frigo') }}
 

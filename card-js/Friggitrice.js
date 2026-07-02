@@ -994,12 +994,15 @@ input_boolean:
 
   frarik_friggitrice_notify_push:
     name: Notifica Push Friggitrice
+    initial: on
 
   frarik_friggitrice_notify_alexa:
     name: Notifica Alexa Friggitrice
+    initial: on
 
   frarik_friggitrice_notify_google:
     name: Notifica Google Friggitrice
+    initial: on
 
 ####################################################
 #                     GROUP                        #
@@ -1312,7 +1315,7 @@ automation:
         target:
           entity_id: input_text.frarik_friggitrice_ultimo_ciclo
         data:
-          value: "{{ state_attr('sensor.frarik_friggitrice_time_on','tempo_ciclo_friggitrice') }}"
+          value: "{{ state_attr('sensor.frarik_friggitrice_time_on','tempo_ciclo_friggitrice') | trim }}"
 
       - service: counter.increment
         target:
@@ -1339,7 +1342,7 @@ automation:
           continue_on_error: true
           data:
             entity_id: *google
-            message: "{{ states('input_text.frarik_friggitrice_messaggio') }} in {{ state_attr('sensor.frarik_friggitrice_time_on','tempo_ciclo_friggitrice') }}"
+            message: "{{ states('input_text.frarik_friggitrice_messaggio') }} in {{ states('input_text.frarik_friggitrice_ultimo_ciclo') | trim }}"
 
     - choose:
       - conditions:
@@ -1359,7 +1362,7 @@ automation:
             data:
               type: announce
               method: spoken
-            message: "{{ states('input_text.frarik_friggitrice_messaggio') }} in {{ state_attr('sensor.frarik_friggitrice_time_on','tempo_ciclo_friggitrice') }}"
+            message: "{{ states('input_text.frarik_friggitrice_messaggio') }} in {{ states('input_text.frarik_friggitrice_ultimo_ciclo') | trim }}"
 
     - choose:
       - conditions:
@@ -1378,7 +1381,7 @@ automation:
                   message: >-
                     🍟 {{ states('input_text.frarik_friggitrice_nome') }}
 
-                    ⏱ Ciclo durato: {{ state_attr('sensor.frarik_friggitrice_time_on','tempo_ciclo_friggitrice') }}
+                    ⏱ Ciclo durato: {{ states('input_text.frarik_friggitrice_ultimo_ciclo') | trim }}
 
                     ⚡ Consumati: {{ state_attr('sensor.frarik_friggitrice_time_on','consumo_ciclo_friggitrice') }}
 

@@ -999,12 +999,15 @@ input_boolean:
 
   frarik_induzione_notify_push:
     name: Notifica Push Induzione
+    initial: on
 
   frarik_induzione_notify_alexa:
     name: Notifica Alexa Induzione
+    initial: on
 
   frarik_induzione_notify_google:
     name: Notifica Google Induzione
+    initial: on
 
 ####################################################
 #                     GROUP                        #
@@ -1317,7 +1320,7 @@ automation:
         target:
           entity_id: input_text.frarik_induzione_ultimo_ciclo
         data:
-          value: "{{ state_attr('sensor.frarik_induzione_time_on','tempo_ciclo_induzione') }}"
+          value: "{{ state_attr('sensor.frarik_induzione_time_on','tempo_ciclo_induzione') | trim }}"
 
       - service: counter.increment
         target:
@@ -1344,7 +1347,7 @@ automation:
           continue_on_error: true
           data:
             entity_id: *google
-            message: "{{ states('input_text.frarik_induzione_messaggio') }} in {{ state_attr('sensor.frarik_induzione_time_on','tempo_ciclo_induzione') }}"
+            message: "{{ states('input_text.frarik_induzione_messaggio') }} in {{ states('input_text.frarik_induzione_ultimo_ciclo') | trim }}"
 
     - choose:
       - conditions:
@@ -1364,7 +1367,7 @@ automation:
             data:
               type: announce
               method: spoken
-            message: "{{ states('input_text.frarik_induzione_messaggio') }} in {{ state_attr('sensor.frarik_induzione_time_on','tempo_ciclo_induzione') }}"
+            message: "{{ states('input_text.frarik_induzione_messaggio') }} in {{ states('input_text.frarik_induzione_ultimo_ciclo') | trim }}"
 
     - choose:
       - conditions:
@@ -1383,7 +1386,7 @@ automation:
                   message: >-
                     🍳 {{ states('input_text.frarik_induzione_nome') }}
 
-                    ⏱ Ciclo durato: {{ state_attr('sensor.frarik_induzione_time_on','tempo_ciclo_induzione') }}
+                    ⏱ Ciclo durato: {{ states('input_text.frarik_induzione_ultimo_ciclo') | trim }}
 
                     ⚡ Consumati: {{ state_attr('sensor.frarik_induzione_time_on','consumo_ciclo_induzione') }}
 

@@ -985,12 +985,15 @@ input_boolean:
 
   frarik_forno_notify_push:
     name: Notifica Push Forno
+    initial: on
 
   frarik_forno_notify_alexa:
     name: Notifica Alexa Forno
+    initial: on
 
   frarik_forno_notify_google:
     name: Notifica Google Forno
+    initial: on
 
 ####################################################
 #                     GROUP                        #
@@ -1303,7 +1306,7 @@ automation:
         target:
           entity_id: input_text.frarik_forno_ultimo_ciclo
         data:
-          value: "{{ state_attr('sensor.frarik_forno_time_on','tempo_ciclo_forno') }}"
+          value: "{{ state_attr('sensor.frarik_forno_time_on','tempo_ciclo_forno') | trim }}"
 
       - service: counter.increment
         target:
@@ -1330,7 +1333,7 @@ automation:
           continue_on_error: true
           data:
             entity_id: *google
-            message: "{{ states('input_text.frarik_forno_messaggio') }} in {{ state_attr('sensor.frarik_forno_time_on','tempo_ciclo_forno') }}"
+            message: "{{ states('input_text.frarik_forno_messaggio') }} in {{ states('input_text.frarik_forno_ultimo_ciclo') | trim }}"
 
     - choose:
       - conditions:
@@ -1350,7 +1353,7 @@ automation:
             data:
               type: announce
               method: spoken
-            message: "{{ states('input_text.frarik_forno_messaggio') }} in {{ state_attr('sensor.frarik_forno_time_on','tempo_ciclo_forno') }}"
+            message: "{{ states('input_text.frarik_forno_messaggio') }} in {{ states('input_text.frarik_forno_ultimo_ciclo') | trim }}"
 
     - choose:
       - conditions:
@@ -1369,7 +1372,7 @@ automation:
                   message: >-
                     🥘 {{ states('input_text.frarik_forno_nome') }}
 
-                    ⏱ Ciclo durato: {{ state_attr('sensor.frarik_forno_time_on','tempo_ciclo_forno') }}
+                    ⏱ Ciclo durato: {{ states('input_text.frarik_forno_ultimo_ciclo') | trim }}
 
                     ⚡ Consumati: {{ state_attr('sensor.frarik_forno_time_on','consumo_ciclo_forno') }}
 
