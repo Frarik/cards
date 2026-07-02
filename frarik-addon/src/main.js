@@ -5,7 +5,7 @@ import jsyaml from 'js-yaml';
 import _mdiMetaRaw from './mdi-names.js';
 import { uid, eh, ea, _lightenHex, showToast, showConfirm } from './utils.js';
 import { _ntfPushLog, _ntfDismissById, _ntfUpdateBell, ntfMarkAllRead, ntfClearAll,
-         _ntfClearGh, _ntfClearGhExcept, renderNotifCenter, toggleNotifCenter, closeNotifCenter } from './notifications.js';
+         _ntfClearGh, _ntfClearGhExcept, _ntfClearPkg, renderNotifCenter, toggleNotifCenter, closeNotifCenter } from './notifications.js';
 window.Chart  = Chart;
 window.jsyaml = jsyaml;
 
@@ -1540,11 +1540,14 @@ async function _ecRemoveSel(){
    Controlla un repo GitHub; quando una card cambia (SHA diverso) mostra una notifica
    in alto che, cliccata, scarica e aggiorna la card (e la sincronizza su tutti i dispositivi). */
 let _ghPending=[], _ghDismissedSig='', _ghTimer=null, _ghLastSig='';
+let _pkgPending={};  // yamlFileName → sha — PKG aggiornati disponibili
 function _ghCfg(){
   if(!cfg.githubSync) cfg.githubSync={owner:'Frarik',repo:'cards',path:'card-js',branch:'main',auto:true,shas:{}};
   if(!cfg.githubSync.shas) cfg.githubSync.shas={};
   if(!cfg.githubSync.fileVersions) cfg.githubSync.fileVersions={};   // versione installata per file (auto-versioning)
   if(!cfg.githubSync.notifiedShas) cfg.githubSync.notifiedShas={};   // (file→sha) già notificati: una notifica sola, persistita tra i reload
+  if(!cfg.githubSync.pkgShas) cfg.githubSync.pkgShas={};             // (yamlFile→sha) versione PKG installata su HA
+  if(!cfg.githubSync.pkgNotifiedShas) cfg.githubSync.pkgNotifiedShas={};  // (yamlFile→sha) già notificati per aggiornamento PKG
   // migrazione una-tantum: il repo ora usa cartelle → le card .js stanno in card-js/
   if(!cfg.githubSync._foldersMigrated){
     if(!cfg.githubSync.path) cfg.githubSync.path='card-js';
@@ -1599,9 +1602,8 @@ async function _ghFetchApi(url, g){
   if(r.status===401 && g.token) r=await fetch(url,{headers:{'Accept':'application/vnd.github.v3+json'}});
   return r;
 }
-/* Lista TUTTE le card .js da tutte le cartelle installabili (card-js, card-chips, card-distintivi)
-   con UNA sola richiesta (git tree), così il controllo automatico copre ogni cartella senza esaurire il limite. */
-async function _ghApiListAll(){
+/* Fetch albero git completo e ritorna {cards, pkgFiles} con una sola richiesta API. */
+async function _ghApiListAllWithPkgs(){
   const g=_ghCfg(); if(!g.owner||!g.repo) throw new Error('Configura proprietario e repository');
   const branch=g.branch||'main';
   const r=await _ghFetchApi(`https://api.github.com/repos/${g.owner}/${g.repo}/git/trees/${encodeURIComponent(branch)}?recursive=1`,g);
@@ -1609,10 +1611,19 @@ async function _ghApiListAll(){
   if(r.status===404) throw new Error('Repo o branch non trovati');
   if(!r.ok) throw new Error('GitHub HTTP '+r.status);
   const j=await r.json();
-  const folders=Object.values(_GHS_FOLDERS).filter(f=>f.kind==='install').map(f=>f.path);
-  return ((j&&j.tree)||[]).filter(t=>t.type==='blob' && /\.js$/i.test(t.path) && folders.some(p=>t.path.startsWith(p+'/')) && !/^frarik[-.]/i.test(t.path.split('/').pop()))
-    .map(t=>({ name:t.path.split('/').pop(), sha:t.sha, path:t.path,
-      download_url:`https://raw.githubusercontent.com/${g.owner}/${g.repo}/${branch}/${t.path.split('/').map(encodeURIComponent).join('/')}` }));
+  const tree=(j&&j.tree)||[];
+  const mkUrl=p=>`https://raw.githubusercontent.com/${g.owner}/${g.repo}/${branch}/${p.split('/').map(encodeURIComponent).join('/')}`;
+  const cardFolders=Object.values(_GHS_FOLDERS).filter(f=>f.kind==='install').map(f=>f.path);
+  const cards=tree.filter(t=>t.type==='blob'&&/\.js$/i.test(t.path)&&cardFolders.some(p=>t.path.startsWith(p+'/'))&&!/^frarik[-.]/i.test(t.path.split('/').pop()))
+    .map(t=>({name:t.path.split('/').pop(),sha:t.sha,path:t.path,download_url:mkUrl(t.path)}));
+  const pkgFiles=tree.filter(t=>t.type==='blob'&&/\.ya?ml$/i.test(t.path)&&t.path.startsWith('pkg/'))
+    .map(t=>({name:t.path.split('/').pop(),sha:t.sha,path:t.path,download_url:mkUrl(t.path)}));
+  return {cards,pkgFiles};
+}
+/* Lista TUTTE le card .js da tutte le cartelle installabili (card-js, card-chips, card-distintivi)
+   con UNA sola richiesta (git tree), così il controllo automatico copre ogni cartella senza esaurire il limite. */
+async function _ghApiListAll(){
+  return (await _ghApiListAllWithPkgs()).cards;
 }
 async function _ghDownload(file){
   const url=file.download_url+(file.download_url.includes('?')?'&':'?')+'_t='+Date.now();
@@ -1768,9 +1779,10 @@ async function _ghInstallFile(file){
 /* controllo: confronta gli SHA e mostra la notifica se ci sono cambiamenti */
 async function _ghCheck(force){
   const g=_ghCfg(); if(!g.owner||!g.repo){ if(force) _ghStatus('Configura proprietario e repository'); return; }
-  let files;
-  try{ files=await _ghApiListAll(); }
+  let result;
+  try{ result=await _ghApiListAllWithPkgs(); }
   catch(e){ if(force){ _ghStatus('⚠️ '+e.message); showToast('⚠️ GitHub: '+e.message);} return; }
+  const files=result.cards;
   _ghPending = files.filter(f=> !g.shas[f.name] || g.shas[f.name]!==f.sha);
   if(force) _ghStatus(files.length+' card nel repo · '+_ghPending.length+' da aggiornare');
   // self-heal: togli le notifiche di card non più in sospeso (installate/aggiornate altrove)
@@ -1795,10 +1807,75 @@ async function _ghCheck(force){
     });
     if(any){ _ntfUpdateBell(); saveCfg(); }
   }catch(e){}
+  // Controlla aggiornamenti PKG (usa lo stesso albero già scaricato)
+  _ghCheckPkg(result.pkgFiles).catch(e=>console.warn('[frarik] pkg check:',e));
 }
 function _ghDismiss(){
   _ghDismissedSig=_ghPending.map(f=>f.name+':'+f.sha).sort().join('|');
 }
+
+/* Cerca la card installata che referenzia il file PKG dato */
+function _pkgFindCardForFile(filePath){
+  try{
+    const fp=(filePath||'').toLowerCase();
+    for(const item of _jsStoreList()){
+      if(!item.code) continue;
+      const info=_parsePkgInfo(item.code);
+      if(!info||!info.file) continue;
+      if(info.file.toLowerCase()===fp||info.file.toLowerCase().split('/').pop()===fp.split('/').pop()) return (item.meta||{}).id||null;
+    }
+  }catch(e){}
+  return null;
+}
+
+/* Nome leggibile della card dato il suo ID (da store o registry) */
+function _pkgFriendlyName(cardId){
+  if(!cardId) return null;
+  try{
+    const it=_jsStoreList().find(i=>(i.meta||{}).id?.toLowerCase()===(cardId||'').toLowerCase());
+    if(it?.meta?.name) return it.meta.name;
+    const reg=window.FratechCardRegistry?.[cardId];
+    if(reg?.name) return reg.name;
+  }catch(e){}
+  return null;
+}
+
+/* Controlla aggiornamenti PKG: notifica (campanella) se un PKG installato su HA è cambiato su GitHub */
+async function _ghCheckPkg(pkgFiles){
+  if(!pkgFiles||!pkgFiles.length) return;
+  const g=_ghCfg();
+  g.pkgShas=g.pkgShas||{};
+  g.pkgNotifiedShas=g.pkgNotifiedShas||{};
+  // Carica elenco PKG installati su HA se non ancora fatto
+  if(!_haInstalledPkgs.size) await _loadHaInstalledPkgs();
+  const newPending={};
+  let any=false;
+  pkgFiles.forEach(f=>{
+    const isInstalled=_pkgIsOnHA(f.name)||_pkgIsOnHA('frarik/'+f.name);
+    if(!isInstalled) return;
+    if(!g.pkgShas[f.name]){
+      // Prima volta che vediamo questo PKG installato: salva SHA baseline, nessuna notifica
+      g.pkgShas[f.name]=f.sha;
+      return;
+    }
+    if(g.pkgShas[f.name]===f.sha) return;   // già aggiornato
+    newPending[f.name]=f.sha;
+    if(g.pkgNotifiedShas[f.name]===f.sha) return;   // già notificato per questa versione
+    const cardId=_pkgFindCardForFile('frarik/'+f.name)||_pkgFindCardForFile(f.name);
+    const cardName=(cardId&&_pkgFriendlyName(cardId))||f.name.replace(/\.ya?ml$/i,'').replace(/^frarik_/,'');
+    _ntfPushLog('📦 PKG aggiornato', 'Il package «'+cardName+'» è stato aggiornato — premi ✓ per aggiornarlo subito.', '📦', 'pkg:'+f.name);
+    g.pkgNotifiedShas[f.name]=f.sha; any=true;
+  });
+  // self-heal: rimuovi notifiche per PKG non più in sospeso
+  try{
+    const keepPkg=new Set(Object.keys(newPending).map(n=>'pkg:'+n));
+    let ch=false;
+    // (accediamo al log tramite _ntfClearPkg indirettamente; per ora gestiamo solo l'aggiunta)
+  }catch(e){}
+  _pkgPending=newPending;
+  if(any){ _ntfUpdateBell(); try{saveCfg();}catch(e){} }
+}
+
 /* ricarica dashboard/store dopo un'installazione */
 function _ghAfterInstall(){
   saveCfg(); _haSaveCfg();
@@ -1867,6 +1944,35 @@ function _ntfHandleAction(action){
       if(f&&f.path){ if(f.path.indexOf('card-chips/')===0) tab='chips'; else if(f.path.indexOf('card-distintivi/')===0) tab='distintivi'; }
     }
     try{ openGhStore(); if(tab!=='js') setTimeout(()=>{ try{ ghStoreTab(tab); }catch(e){} }, 60); }catch(e){}
+    return;
+  }
+  if(action.indexOf('pkg:')===0){
+    const fileName=action.slice(4);
+    try{ closeNotifCenter(); }catch(e){}
+    const cardId=_pkgFindCardForFile('frarik/'+fileName)||_pkgFindCardForFile(fileName);
+    if(!cardId){
+      showToast('⚠️ Card non trovata per il PKG «'+fileName+'»');
+      try{ openGhStore(); setTimeout(()=>{ try{ ghStoreTab('pkg'); }catch(e){} }, 60); }catch(e){}
+      return;
+    }
+    const hasCfg=_pkgWizardConfigExists(cardId);
+    const friendlyName=_pkgFriendlyName(cardId)||fileName.replace(/\.ya?ml$/i,'').replace(/^frarik_/,'');
+    const doUpdate=async()=>{
+      await _pkgUpdateCard(cardId, hasCfg);
+      // Segna SHA come installato così la notifica non riappare
+      try{
+        const sha=_pkgPending[fileName]||_ghCfg().pkgNotifiedShas?.[fileName];
+        if(sha){ const g=_ghCfg(); g.pkgShas=g.pkgShas||{}; g.pkgShas[fileName]=sha; saveCfg(); }
+      }catch(e){}
+      try{ _ntfClearPkg(fileName); }catch(e){}
+    };
+    const note=hasCfg
+      ? 'La configurazione salvata verrà riapplicata automaticamente.'
+      : 'Nota: configura i dispositivi dal wizard dopo l\'aggiornamento.';
+    showConfirm(
+      'Aggiorno il package <b>'+eh(friendlyName)+'</b>?<br><span style="font-size:11px;opacity:.7">'+note+'</span>',
+      doUpdate, 'Aggiorna PKG'
+    );
     return;
   }
 }

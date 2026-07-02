@@ -25,6 +25,18 @@ export function _ntfDismissById(id){
   _ntfSaveLog(); _ntfUpdateBell(); renderNotifCenter();
 }
 
+/* Rimuove le notifiche PKG.
+   - senza argomenti: tutte le 'pkg:...'
+   - con fileName: solo quella specifica */
+export function _ntfClearPkg(fileName){
+  _ntfLog = _ntfLog.filter(n=>{
+    if(!n.action) return true;
+    if(fileName) return n.action !== 'pkg:'+fileName;
+    return n.action.indexOf('pkg:') !== 0;
+  });
+  _ntfSaveLog(); _ntfUpdateBell(); _ntfRenderIfOpen();
+}
+
 /* Rimuove le notifiche relative alle card GitHub.
    - senza argomenti: tutte (action 'gh' legacy + 'gh:<file>')
    - con fileName: solo quella card */

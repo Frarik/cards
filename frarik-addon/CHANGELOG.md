@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.7.54 — 2026-07-02
+
+### feat: notifica campanella quando un PKG installato viene aggiornato su GitHub
+
+- Quando `_ghCheck()` gira (all'avvio e automaticamente), controlla anche i file `pkg/*.yaml` su GitHub con la stessa singola chiamata API del git tree
+- Se un PKG è installato su HA e il suo SHA GitHub è cambiato rispetto all'ultima versione installata → notifica nella campanella "📦 PKG aggiornato"
+- Clic ✓ sulla notifica: conferma e aggiorna il PKG automaticamente (usa config wizard salvata se disponibile, altrimenti reinstalla)
+- Prima volta che un PKG viene visto installato: SHA salvato come baseline senza notifica (evita falsi positivi al primo avvio)
+- SHA salvato dopo aggiornamento riuscito: la notifica non ricompare per la stessa versione
+
 ## 1.7.53 — 2026-07-02
 
 ### fix: elettrodomestici PKG — push abilitato + "unknown" in Alexa risolto
