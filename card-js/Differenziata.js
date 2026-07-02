@@ -526,14 +526,17 @@ input_boolean:
   frarik_differenziata_notifica_push:
     name: "Differenziata — Notifica Push"
     icon: mdi:cellphone-message
+    initial: on
 
   frarik_differenziata_notifica_google:
     name: "Differenziata — Annuncio Google"
     icon: mdi:google-assistant
+    initial: on
 
   frarik_differenziata_notifica_alexa:
     name: "Differenziata — Annuncio Alexa"
     icon: mdi:amazon-alexa
+    initial: on
 
 
 template:
@@ -588,7 +591,12 @@ automation:
                       data:
                         title: "♻️ Frarik — Differenziata"
                         message: >-
-                          Oggi esponi: {{ states('sensor.frarik_differenziata_raccolta') }}
+                          {%- set rif = states('sensor.frarik_differenziata_raccolta') | lower | trim -%}
+                          {%- set mappa = {'umido': "l'umido", 'secco': 'il secco', 'carta': 'la carta', 'plastica': 'la plastica', 'vetro': 'il vetro', 'organico': "l'organico", 'lattine': 'le lattine', 'metalli': 'i metalli', 'indifferenziata': "l'indifferenziata"} -%}
+                          {%- set items = rif.split(',') | map('trim') | select | list -%}
+                          {%- set ns = namespace(voci=[]) -%}
+                          {%- for i in items -%}{%- set ns.voci = ns.voci + [mappa.get(i, i)] -%}{%- endfor -%}
+                          {%- if ns.voci | length == 1 -%}Stasera metti fuori {{ ns.voci[0] }}{%- elif ns.voci | length > 1 -%}Stasera metti fuori {{ ns.voci[:-1] | join(', ') }} e {{ ns.voci[-1] }}{%- else -%}Nessun rifiuto stasera{%- endif -%}
 
           - choose:
             - conditions:
@@ -602,7 +610,12 @@ automation:
                   entity_id: *google
                   language: 'it'
                   message: >-
-                    Oggi devi esporre {{ states('sensor.frarik_differenziata_raccolta') }}
+                    {%- set rif = states('sensor.frarik_differenziata_raccolta') | lower | trim -%}
+                    {%- set mappa = {'umido': "l'umido", 'secco': 'il secco', 'carta': 'la carta', 'plastica': 'la plastica', 'vetro': 'il vetro', 'organico': "l'organico", 'lattine': 'le lattine', 'metalli': 'i metalli', 'indifferenziata': "l'indifferenziata"} -%}
+                    {%- set items = rif.split(',') | map('trim') | select | list -%}
+                    {%- set ns = namespace(voci=[]) -%}
+                    {%- for i in items -%}{%- set ns.voci = ns.voci + [mappa.get(i, i)] -%}{%- endfor -%}
+                    {%- if ns.voci | length == 1 -%}Stasera metti fuori {{ ns.voci[0] }}{%- elif ns.voci | length > 1 -%}Stasera metti fuori {{ ns.voci[:-1] | join(', ') }} e {{ ns.voci[-1] }}{%- else -%}Nessun rifiuto stasera{%- endif -%}
 
           - choose:
             - conditions:
@@ -618,7 +631,12 @@ automation:
                     type: announce
                     method: spoken
                   message: >-
-                    Oggi devi esporre {{ states('sensor.frarik_differenziata_raccolta') }}
+                    {%- set rif = states('sensor.frarik_differenziata_raccolta') | lower | trim -%}
+                    {%- set mappa = {'umido': "l'umido", 'secco': 'il secco', 'carta': 'la carta', 'plastica': 'la plastica', 'vetro': 'il vetro', 'organico': "l'organico", 'lattine': 'le lattine', 'metalli': 'i metalli', 'indifferenziata': "l'indifferenziata"} -%}
+                    {%- set items = rif.split(',') | map('trim') | select | list -%}
+                    {%- set ns = namespace(voci=[]) -%}
+                    {%- for i in items -%}{%- set ns.voci = ns.voci + [mappa.get(i, i)] -%}{%- endfor -%}
+                    {%- if ns.voci | length == 1 -%}Stasera metti fuori {{ ns.voci[0] }}{%- elif ns.voci | length > 1 -%}Stasera metti fuori {{ ns.voci[:-1] | join(', ') }} e {{ ns.voci[-1] }}{%- else -%}Nessun rifiuto stasera{%- endif -%}
 
 ###############################################################
 #  Fine package — Frarik Centro Controllo Raccolta Differenziata v2.0

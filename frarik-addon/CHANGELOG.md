@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.52 — 2026-07-02
+
+### fix: Differenziata PKG — push abilitato + annuncio in italiano con articoli
+
+- `input_boolean frarik_differenziata_notifica_*`: aggiunto `initial: on` — prima partivano disabilitati, push e Google/Alexa non arrivavano mai
+- Messaggio Alexa/Google/Push: da "Oggi devi esporre …" a "Stasera metti fuori la plastica e il vetro" / "Stasera metti fuori l'umido" ecc. — template Jinja2 con mappa articoli italiani (umido→l'umido, plastica→la plastica, vetro→il vetro…), gestisce liste multiple con virgola e "e" finale
+
 ## 1.7.51 — 2026-07-02
 
 ### fix: Differenziata — wizard non compariva (registry key errata)
