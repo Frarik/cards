@@ -1048,30 +1048,8 @@ PostaCard.openWizard=function(hass,onDone){
     const _vals=g=>[...sr.querySelectorAll(`#w_${g}_list .winp`)].map(i=>i.value.trim()).filter(Boolean);
     const gVals=_vals('google'), aVals=_vals('alexa'), pVals=_vals('push');
     const btn=sr.getElementById('wiz_install'), errBnr=sr.getElementById('wiz_inst_err');
-    btn.textContent='⚙️ Download PKG…'; btn.disabled=true; errBnr.style.display='none';
-    let yaml;
-    try {
-      const ghR=await fetch('https://raw.githubusercontent.com/Frarik/cards/main/pkg/frarik_posta.yaml');
-      if(ghR.ok){
-        const ind='          ';
-        let gh=await ghR.text();
-        gh=gh.split('IL_TUO_SENSORE_CASSETTA_POSTALE').join(sensor||'binary_sensor.cassetta_postale');
-        gh=gh.replace(ind+'- media_player.IL_TUO_GOOGLE_HOME_1\n'+ind+'          # - media_player.IL_TUO_GOOGLE_HOME_2',
-          gVals.length?gVals.map(e=>ind+'- '+e).join('\n'):ind+'# - media_player.google_home');
-        gh=gh.replace(ind+'- media_player.IL_TUO_GOOGLE_HOME_1',
-          gVals.length?gVals.map(e=>ind+'- '+e).join('\n'):ind+'# - media_player.google_home');
-        gh=gh.replace(ind+'- media_player.LA_TUA_ALEXA_1\n'+ind+'          # - media_player.LA_TUA_ALEXA_2',
-          aVals.length?aVals.map(e=>ind+'- '+e).join('\n'):ind+'# - media_player.alexa');
-        gh=gh.replace(ind+'- media_player.LA_TUA_ALEXA_1',
-          aVals.length?aVals.map(e=>ind+'- '+e).join('\n'):ind+'# - media_player.alexa');
-        gh=gh.replace(ind+'- service: IL_TUO_MOBILE_APP_1\n'+ind+'          # - service: IL_TUO_MOBILE_APP_2',
-          pVals.length?pVals.map(p=>ind+'- service: '+p).join('\n'):ind+'# - service: mobile_app_smartphone');
-        gh=gh.replace(ind+'- service: IL_TUO_MOBILE_APP_1',
-          pVals.length?pVals.map(p=>ind+'- service: '+p).join('\n'):ind+'# - service: mobile_app_smartphone');
-        yaml=gh;
-      }
-    }catch(e){}
-    if(!yaml) yaml=_buildCustomPkg(sensor,gVals,aVals,pVals);
+    btn.textContent='⚙️ Installazione…'; btn.disabled=true; errBnr.style.display='none';
+    let yaml=_buildCustomPkg(sensor,gVals,aVals,pVals);
     btn.textContent='⚙️ Installazione…';
     try{
       const m=location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);

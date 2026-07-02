@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.50 — 2026-07-02
+
+### fix: wizard PKG — rimosso GitHub fetch, usa sempre YAML embedded
+
+- **Bolletta.js**: `_BOLL_PKG_YAML` ora contiene il YAML completo (1344 righe) con placeholder `IL_TUO_*`; rimosso `fetch` a GitHub che scaricava il file con `sensor.non_configurato` ignorando le impostazioni utente
+- **posta-card.js**, **Irrigazione.js**, **Antizanzare.js**: stesso fix — il wizard installa ora il YAML embedded tramite `_buildCustomPkg` / `_buildPkgIRR` / `_buildPkgAZ` senza passare per GitHub
+- Risolve: gli input del wizard (sensore, switch, notifiche) venivano ignorati perché le sostituzioni `IL_TUO_*` non trovavano corrispondenza nel file GitHub aggiornato da v1.7.48
+
 ## 1.7.49 — 2026-07-02
 
 ### fix: Differenziata — wizard notifiche + YAML completo con automazioni
