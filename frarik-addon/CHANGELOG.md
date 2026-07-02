@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.51 — 2026-07-02
+
+### fix: Differenziata — wizard non compariva (registry key errata)
+
+- `FratechCardRegistry['differenziata-card']` → `['differenziata']`: il store cerca il wizard tramite `FratechCardRegistry[filename.toLowerCase()]` (= `'differenziata'`), il suffisso `-card` causava lookup fallito → nessun wizard, installazione diretta senza configurazione push/google/alexa
+
 ## 1.7.50 — 2026-07-02
 
 ### fix: wizard PKG — rimosso GitHub fetch, usa sempre YAML embedded

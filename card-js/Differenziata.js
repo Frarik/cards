@@ -811,8 +811,8 @@ automation:
 
   /* ── registrazione store ── */
   window.FratechCardRegistry = window.FratechCardRegistry || {};
-  window.FratechCardRegistry['differenziata-card'] = {
-    id: 'differenziata-card',
+  window.FratechCardRegistry['differenziata'] = {
+    id: 'differenziata',
     name: 'Raccolta Differenziata',
     description: 'Card rifiuti differenziata con multi-selezione per giorno, bidoni realistici e colori personalizzabili.',
     icon: 'mdi:recycle',
