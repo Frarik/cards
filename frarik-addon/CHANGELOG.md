@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.44 — 2026-07-02
+
+### fix: PKG — IL_TUO_MOBILE_APP_2 commentato (7 pkg)
+
+- Commentato `- service: IL_TUO_MOBILE_APP_2` nei pkg elettrodomestici (lavatrice, asciugatrice, forno, microonde, induzione, lavastoviglie, friggitrice) — era attivo come secondo device push ma deve restare placeholder disabilitato come negli altri pkg
+
 ## 1.7.43 — 2026-07-02
 
 ### fix: PKG — rimosso notify.group deprecato (13 package)
