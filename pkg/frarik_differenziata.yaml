@@ -116,10 +116,6 @@ homeassistant:
 #                                                  #
 ####################################################
 
-notify:
-  - name: frarik_differenziata
-    platform: group
-    services: *push
 
 
 ####################################################
@@ -259,12 +255,15 @@ automation:
                 entity_id: input_boolean.frarik_differenziata_notifica_push
                 state: 'on'
               sequence:
-              - service: notify.frarik_differenziata
-                continue_on_error: true
-                data:
-                  title: "♻️ Frarik — Differenziata"
-                  message: >-
-                    Oggi esponi: {{ states('sensor.frarik_differenziata_raccolta') }}
+              - repeat:
+                  for_each: *push
+                  sequence:
+                    - service: "{{ repeat.item.service }}"
+                      continue_on_error: true
+                      data:
+                        title: "♻️ Frarik — Differenziata"
+                        message: >-
+                          Oggi esponi: {{ states('sensor.frarik_differenziata_raccolta') }}
 
           # ── Annuncio Google Home ───────────────────
           - choose:

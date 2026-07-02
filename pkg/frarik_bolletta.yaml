@@ -54,10 +54,6 @@ homeassistant:
 #                  NOTIFICHE                       #
 ####################################################
 
-notify:
-  - name: frarik_bolletta
-    platform: group
-    services: *push
 
 group:
   frarik_notifiche_bolletta:
@@ -1122,13 +1118,17 @@ automation:
       - service: input_number.set_value
         target: { entity_id: input_number.frarik_bolletta_bonus_mese_corrente }
         data: { value: 0 }
-      - service: notify.frarik_bolletta
-        data:
-          title: "Frarik Bolletta — Fine mese"
-          message: >
-            Storico salvato: {{ now().strftime('%B %Y') }}
-            Bolletta: {{ states('sensor.frarik_bolletta_mensile') }} €
-            Consumo: {{ states('sensor.frarik_bolletta_energia_mensile_safe') }} kWh
+      - repeat:
+          for_each: *push
+          sequence:
+            - service: "{{ repeat.item.service }}"
+              continue_on_error: true
+              data:
+                title: "Frarik Bolletta — Fine mese"
+                message: >
+                  Storico salvato: {{ now().strftime('%B %Y') }}
+                  Bolletta: {{ states('sensor.frarik_bolletta_mensile') }} €
+                  Consumo: {{ states('sensor.frarik_bolletta_energia_mensile_safe') }} kWh
 
   - alias: "Frarik — Bolletta: Reset Mensile Manuale"
     trigger:
@@ -1150,14 +1150,18 @@ automation:
         entity_id: input_boolean.frarik_bolletta_notify_push_giornaliero
         state: "on"
     action:
-      - service: notify.frarik_bolletta
-        data:
-          title: "Buongiorno — Report Energia"
-          message: >
-            Ieri: {{ states('input_number.frarik_bolletta_storico_kwh_ieri') }} kWh = {{ states('input_number.frarik_bolletta_storico_costo_ieri') }} €
-            Mese: {{ states('sensor.frarik_bolletta_energia_mensile_safe') }} kWh = {{ states('sensor.frarik_bolletta_mensile') }} €
-            Proiezione: {{ states('sensor.frarik_bolletta_proiezione_fine_mese') }} €
-            Saldo Octopus: {{ states('sensor.frarik_bolletta_saldo_octopus') }} €
+      - repeat:
+          for_each: *push
+          sequence:
+            - service: "{{ repeat.item.service }}"
+              continue_on_error: true
+              data:
+                title: "Buongiorno — Report Energia"
+                message: >
+                  Ieri: {{ states('input_number.frarik_bolletta_storico_kwh_ieri') }} kWh = {{ states('input_number.frarik_bolletta_storico_costo_ieri') }} €
+                  Mese: {{ states('sensor.frarik_bolletta_energia_mensile_safe') }} kWh = {{ states('sensor.frarik_bolletta_mensile') }} €
+                  Proiezione: {{ states('sensor.frarik_bolletta_proiezione_fine_mese') }} €
+                  Saldo Octopus: {{ states('sensor.frarik_bolletta_saldo_octopus') }} €
 
   - alias: "Frarik — Bolletta: Alert Costo Giornaliero"
     trigger:
@@ -1171,12 +1175,16 @@ automation:
         entity_id: input_boolean.frarik_bolletta_notify_push_giornaliero
         state: "on"
     action:
-      - service: notify.frarik_bolletta
-        data:
-          title: "Costo giornaliero elevato"
-          message: >
-            Oggi: {{ states('sensor.frarik_bolletta_giornaliera') }} €
-            Consumo: {{ states('sensor.frarik_bolletta_energia_giornaliera_safe') }} kWh
+      - repeat:
+          for_each: *push
+          sequence:
+            - service: "{{ repeat.item.service }}"
+              continue_on_error: true
+              data:
+                title: "Costo giornaliero elevato"
+                message: >
+                  Oggi: {{ states('sensor.frarik_bolletta_giornaliera') }} €
+                  Consumo: {{ states('sensor.frarik_bolletta_energia_giornaliera_safe') }} kWh
 
   - alias: "Frarik — Bolletta: Alert Soglia Potenza"
     trigger:
@@ -1193,12 +1201,16 @@ automation:
         entity_id: input_boolean.frarik_bolletta_notify_push_soglia
         state: "on"
     action:
-      - service: notify.frarik_bolletta
-        data:
-          title: "Consumo elevato"
-          message: >
-            Soglia {{ states('input_number.frarik_bolletta_soglia_lavoro_w') | int }} W superata!
-            Costo stimato oggi: {{ states('sensor.frarik_bolletta_giornaliera') }} €
+      - repeat:
+          for_each: *push
+          sequence:
+            - service: "{{ repeat.item.service }}"
+              continue_on_error: true
+              data:
+                title: "Consumo elevato"
+                message: >
+                  Soglia {{ states('input_number.frarik_bolletta_soglia_lavoro_w') | int }} W superata!
+                  Costo stimato oggi: {{ states('sensor.frarik_bolletta_giornaliera') }} €
 
   - alias: "Frarik — Bolletta: Report Mensile"
     trigger:
@@ -1211,15 +1223,19 @@ automation:
         entity_id: input_boolean.frarik_bolletta_notify_push_mensile
         state: "on"
     action:
-      - service: notify.frarik_bolletta
-        data:
-          title: "Report Bolletta Mese Scorso"
-          message: >
-            {% set m = now().month - 1 %}{% if m == 0 %}{% set m = 12 %}{% endif %}
-            {% set mm = '%02d' | format(m) %}
-            Bolletta: {{ states('input_number.frarik_bolletta_storico_mese_curr_' ~ mm) }} €
-            Consumo: {{ states('input_number.frarik_bolletta_storico_kwh_curr_' ~ mm) }} kWh
-            Saldo Octopus: {{ states('sensor.frarik_bolletta_saldo_octopus') }} €
+      - repeat:
+          for_each: *push
+          sequence:
+            - service: "{{ repeat.item.service }}"
+              continue_on_error: true
+              data:
+                title: "Report Bolletta Mese Scorso"
+                message: >
+                  {% set m = now().month - 1 %}{% if m == 0 %}{% set m = 12 %}{% endif %}
+                  {% set mm = '%02d' | format(m) %}
+                  Bolletta: {{ states('input_number.frarik_bolletta_storico_mese_curr_' ~ mm) }} €
+                  Consumo: {{ states('input_number.frarik_bolletta_storico_kwh_curr_' ~ mm) }} kWh
+                  Saldo Octopus: {{ states('sensor.frarik_bolletta_saldo_octopus') }} €
 
   - alias: "Frarik — Bolletta: Archiviazione Anno Nuovo"
     trigger:
@@ -1301,10 +1317,14 @@ automation:
       - service: input_number.set_value
         target: { entity_id: input_number.frarik_bolletta_storico_kwh_prev_12 }
         data: { value: "{{ states('sensor.frarik_bolletta_energia_mensile_safe') | float(0) }}" }
-      - service: notify.frarik_bolletta
-        data:
-          title: "Frarik Bolletta — Anno Archiviato"
-          message: "Anno {{ now().year }} archiviato."
+      - repeat:
+          for_each: *push
+          sequence:
+            - service: "{{ repeat.item.service }}"
+              continue_on_error: true
+              data:
+                title: "Frarik Bolletta — Anno Archiviato"
+                message: "Anno {{ now().year }} archiviato."
 
   - alias: "Frarik — Bolletta: Alert Scadenza Octopus"
     trigger:
@@ -1315,9 +1335,13 @@ automation:
       - condition: template
         value_template: "{{ states('sensor.frarik_bolletta_giorni_scadenza_offerta') | int(999) in [60,30,15,7] }}"
     action:
-      - service: notify.frarik_bolletta
-        data:
-          title: "Scadenza Offerta Octopus"
-          message: >
-            Mancano {{ states('sensor.frarik_bolletta_giorni_scadenza_offerta') }} giorni.
-            Ricordati di rinnovare l'offerta!
+      - repeat:
+          for_each: *push
+          sequence:
+            - service: "{{ repeat.item.service }}"
+              continue_on_error: true
+              data:
+                title: "Scadenza Offerta Octopus"
+                message: >
+                  Mancano {{ states('sensor.frarik_bolletta_giorni_scadenza_offerta') }} giorni.
+                  Ricordati di rinnovare l'offerta!

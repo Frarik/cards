@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.43 — 2026-07-02
+
+### fix: PKG — rimosso notify.group deprecato (13 package)
+
+- Eliminato il blocco `notify: platform: group` da tutti i package (lavatrice, asciugatrice, forno, microonde, induzione, lavastoviglie, friggitrice, frigorifero, scaldabagno, differenziata, posta, bolletta, statistiche_minipc)
+- Le automazioni ora chiamano i servizi push direttamente con `repeat.for_each: *push` → `service: "{{ repeat.item.service }}"` — nessuna modifica alla configurazione utente necessaria
+- Risolve le 6+ notifiche di riparazione HA "uses an unknown action: notify.frarik_xxx"
+
 ## 1.7.42 — 2026-07-02
 
 ### fix: Differenziata v5.13 — bottoni separati dal contenuto

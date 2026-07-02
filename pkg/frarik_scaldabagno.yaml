@@ -104,10 +104,6 @@ homeassistant:
 #                  NOTIFICHE                       #
 ####################################################
 
-notify:
-  - name: frarik_scaldabagno
-    platform: group
-    services: *push
 
 ####################################################
 #                    SENSORI                       #
@@ -371,16 +367,19 @@ automation:
           entity_id: input_boolean.frarik_scaldabagno_notify_push
           state: 'on'
         sequence:
-        - data_template:
-            message: >-
-              🚿 {{ states('input_text.frarik_scaldabagno_nome') }}
+        - repeat:
+            for_each: *push
+            sequence:
+              - service: "{{ repeat.item.service }}"
+                continue_on_error: true
+                data:
+                  message: >-
+                    🚿 {{ states('input_text.frarik_scaldabagno_nome') }}
 
-              ⚡ Consumati oggi: {{ state_attr('sensor.frarik_scaldabagno_time_on','Oggi') }}
+                    ⚡ Consumati oggi: {{ state_attr('sensor.frarik_scaldabagno_time_on','Oggi') }}
 
-              💰 Costo oggi: {{ state_attr('sensor.frarik_scaldabagno_time_on','costo_oggi_scaldabagno') }} €
-            title: "Scaldabagno"
-          service: notify.frarik_scaldabagno
-          continue_on_error: true
+                    💰 Costo oggi: {{ state_attr('sensor.frarik_scaldabagno_time_on','costo_oggi_scaldabagno') }} €
+                  title: "Scaldabagno"
 
 - alias: frarik_scaldabagno_off_automatico
   id: frarik_scaldabagno_off_automatico

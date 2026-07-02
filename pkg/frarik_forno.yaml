@@ -72,10 +72,6 @@ homeassistant:
 #                  NOTIFICHE                       #
 ####################################################
 
-notify:
-  - name: frarik_forno
-    platform: group
-    services: *push
 
 ####################################################
 #                    SENSORI                       #
@@ -809,18 +805,21 @@ automation:
           entity_id: input_boolean.frarik_forno_notify_push
           state: 'on'
         sequence:
-        - data_template:
-            message: >-
-              🥘 {{ states('input_text.frarik_forno_nome') }}
+        - repeat:
+            for_each: *push
+            sequence:
+              - service: "{{ repeat.item.service }}"
+                continue_on_error: true
+                data:
+                  message: >-
+                    🥘 {{ states('input_text.frarik_forno_nome') }}
 
-              ⏱ Ciclo durato: {{ state_attr('sensor.frarik_forno_time_on','tempo_ciclo_forno') }}
+                    ⏱ Ciclo durato: {{ state_attr('sensor.frarik_forno_time_on','tempo_ciclo_forno') }}
 
-              ⚡ Consumati: {{ state_attr('sensor.frarik_forno_time_on','consumo_ciclo_forno') }}
+                    ⚡ Consumati: {{ state_attr('sensor.frarik_forno_time_on','consumo_ciclo_forno') }}
 
-              💰 Spesi: {{ state_attr('sensor.frarik_forno_time_on','costo_ciclo_forno') }} €
-            title: "Forno"
-          service: notify.frarik_forno
-          continue_on_error: true
+                    💰 Spesi: {{ state_attr('sensor.frarik_forno_time_on','costo_ciclo_forno') }} €
+                  title: "Forno"
 
 - alias: frarik_forno_off_automatico
   id: frarik_forno_off_automatico

@@ -50,10 +50,6 @@ homeassistant:
 #                  NOTIFICHE                       #
 ####################################################
 
-notify:
-  - name: frarik_frigorifero
-    platform: group
-    services: *push
 
 ####################################################
 #                    SENSORI                       #
@@ -775,18 +771,21 @@ automation:
           entity_id: input_boolean.frarik_frigorifero_notify_push
           state: 'on'
         sequence:
-        - data_template:
-            message: >-
-              🧊 {{ states('input_text.frarik_frigorifero_nome') }}
+        - repeat:
+            for_each: *push
+            sequence:
+              - service: "{{ repeat.item.service }}"
+                continue_on_error: true
+                data:
+                  message: >-
+                    🧊 {{ states('input_text.frarik_frigorifero_nome') }}
 
-              ⏱ Ciclo durato: {{ state_attr('sensor.frarik_frigorifero_time_on','tempo_ciclo_frigo') }}
+                    ⏱ Ciclo durato: {{ state_attr('sensor.frarik_frigorifero_time_on','tempo_ciclo_frigo') }}
 
-              ⚡ Consumati: {{ state_attr('sensor.frarik_frigorifero_time_on','consumo_ciclo_frigo') }}
+                    ⚡ Consumati: {{ state_attr('sensor.frarik_frigorifero_time_on','consumo_ciclo_frigo') }}
 
-              💰 Spesi: {{ state_attr('sensor.frarik_frigorifero_time_on','costo_ciclo_frigo') }} €
-            title: "Frigorifero"
-          service: notify.frarik_frigoriferorifero
-          continue_on_error: true
+                    💰 Spesi: {{ state_attr('sensor.frarik_frigorifero_time_on','costo_ciclo_frigo') }} €
+                  title: "Frigorifero"
 
 - alias: frarik_frigorifero_off_automatico
   id: frarik_frigorifero_off_automatico

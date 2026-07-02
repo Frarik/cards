@@ -191,10 +191,6 @@ homeassistant:
 #                                                  #
 ####################################################
 
-notify:
-  - name: frarik_server
-    platform: group
-    services: *push
 
 
 ####################################################
@@ -722,10 +718,14 @@ script:
     alias: "Frarik — Backup HA"
     icon: mdi:backup-restore
     sequence:
-      - service: notify.frarik_server
-        data:
-          title: "📌 Backup Home Assistant"
-          message: "💾 Backup in corso…"
+      - repeat:
+          for_each: *push
+          sequence:
+            - service: "{{ repeat.item.service }}"
+              continue_on_error: true
+              data:
+                title: "📌 Backup Home Assistant"
+                message: "💾 Backup in corso…"
       - service: hassio.backup_full
         data_template:
           name: "Backup del {{ now().strftime('%d-%m-%Y') }}"
@@ -827,25 +827,29 @@ automation:
               or (is_state('input_boolean.ha_report_sabato','on') and d=='Saturday')
               or (is_state('input_boolean.ha_report_domenica','on') and d=='Sunday') }}
           sequence:
-          - service: notify.frarik_server
-            data:
-              title: "📥 Report Home Assistant"
-              message: >
-                🕐 {{ now().strftime('%d/%m/%Y %H:%M') }}
+          - repeat:
+              for_each: *push
+              sequence:
+                - service: "{{ repeat.item.service }}"
+                  continue_on_error: true
+                  data:
+                    title: "📥 Report Home Assistant"
+                    message: >
+                      🕐 {{ now().strftime('%d/%m/%Y %H:%M') }}
 
-                SERVER: attivo da {{ states('sensor.tempo_avvio_server') }}
-                HOME ASSISTANT: avviato da {{ states('sensor.template_tempo_di_avvio_homeassistant') }}
-                ENTITÀ: {{ states('sensor.conteggio_entita') }}
+                      SERVER: attivo da {{ states('sensor.tempo_avvio_server') }}
+                      HOME ASSISTANT: avviato da {{ states('sensor.template_tempo_di_avvio_homeassistant') }}
+                      ENTITÀ: {{ states('sensor.conteggio_entita') }}
 
-                CORE: {% if state_attr('sensor.updater_core','update_available') == false %}✅ Aggiornato ({{ state_attr('sensor.updater_core','current_version') }}){% else %}⚠️ Aggiornamento disponibile → {{ state_attr('sensor.updater_core','newest_version') }}{% endif %}
+                      CORE: {% if state_attr('sensor.updater_core','update_available') == false %}✅ Aggiornato ({{ state_attr('sensor.updater_core','current_version') }}){% else %}⚠️ Aggiornamento disponibile → {{ state_attr('sensor.updater_core','newest_version') }}{% endif %}
 
-                SUPERVISOR: {% if state_attr('sensor.supervisor_updates','update_available') == false %}✅ Aggiornato{% else %}⚠️ Aggiornamento disponibile{% endif %}
+                      SUPERVISOR: {% if state_attr('sensor.supervisor_updates','update_available') == false %}✅ Aggiornato{% else %}⚠️ Aggiornamento disponibile{% endif %}
 
-                ADD-ON: {% if states('sensor.supervisor_updates') | int(0) > 0 %}⚠️ {{ states('sensor.supervisor_updates') }} add-on da aggiornare{% else %}✅ Aggiornati{% endif %}
+                      ADD-ON: {% if states('sensor.supervisor_updates') | int(0) > 0 %}⚠️ {{ states('sensor.supervisor_updates') }} add-on da aggiornare{% else %}✅ Aggiornati{% endif %}
 
-                HACS: {% if states('sensor.hacs') | int(0) > 0 %}⚠️ {{ states('sensor.hacs') }} aggiornamenti{% else %}✅ Aggiornato{% endif %}
+                      HACS: {% if states('sensor.hacs') | int(0) > 0 %}⚠️ {{ states('sensor.hacs') }} aggiornamenti{% else %}✅ Aggiornato{% endif %}
 
-                BACKUP: {{ states('sensor.ultimo_backup_google_drive') }}
+                      BACKUP: {{ states('sensor.ultimo_backup_google_drive') }}
 
       # ── Alert RAM ───────────────────────────────
       - choose:
@@ -859,10 +863,14 @@ automation:
             entity_id: input_boolean.on_off_alert_ha
             state: 'on'
           sequence:
-          - service: notify.frarik_server
-            data:
-              title: "⚠️ Server — RAM"
-              message: "Utilizzo RAM al {{ states('sensor.memory_use_percent') }}%"
+          - repeat:
+              for_each: *push
+              sequence:
+                - service: "{{ repeat.item.service }}"
+                  continue_on_error: true
+                  data:
+                    title: "⚠️ Server — RAM"
+                    message: "Utilizzo RAM al {{ states('sensor.memory_use_percent') }}%"
 
       # ── Alert Temperatura ───────────────────────
       - choose:
@@ -876,10 +884,14 @@ automation:
             entity_id: input_boolean.on_off_alert_ha
             state: 'on'
           sequence:
-          - service: notify.frarik_server
-            data:
-              title: "⚠️ Server — Temperatura"
-              message: "🌡 Temperatura CPU: {{ states('sensor.cpu_temperatura') }}°C"
+          - repeat:
+              for_each: *push
+              sequence:
+                - service: "{{ repeat.item.service }}"
+                  continue_on_error: true
+                  data:
+                    title: "⚠️ Server — Temperatura"
+                    message: "🌡 Temperatura CPU: {{ states('sensor.cpu_temperatura') }}°C"
 
       # ── Alert CPU ───────────────────────────────
       - choose:
@@ -893,10 +905,14 @@ automation:
             entity_id: input_boolean.on_off_alert_ha
             state: 'on'
           sequence:
-          - service: notify.frarik_server
-            data:
-              title: "⚠️ Server — CPU"
-              message: "Utilizzo CPU al {{ states('sensor.processor_use') }}%"
+          - repeat:
+              for_each: *push
+              sequence:
+                - service: "{{ repeat.item.service }}"
+                  continue_on_error: true
+                  data:
+                    title: "⚠️ Server — CPU"
+                    message: "Utilizzo CPU al {{ states('sensor.processor_use') }}%"
 
       # ── Alert Disco ─────────────────────────────
       - choose:
@@ -910,10 +926,14 @@ automation:
             entity_id: input_boolean.on_off_alert_ha
             state: 'on'
           sequence:
-          - service: notify.frarik_server
-            data:
-              title: "⚠️ Server — Disco"
-              message: "Utilizzo disco al {{ states('sensor.disk_use_percent') }}%"
+          - repeat:
+              for_each: *push
+              sequence:
+                - service: "{{ repeat.item.service }}"
+                  continue_on_error: true
+                  data:
+                    title: "⚠️ Server — Disco"
+                    message: "Utilizzo disco al {{ states('sensor.disk_use_percent') }}%"
 
       # ── Alert SSL ───────────────────────────────
       - choose:
@@ -924,10 +944,14 @@ automation:
             entity_id: input_boolean.notifica_certificato_scaduto
             state: 'on'
           sequence:
-          - service: notify.frarik_server
-            data:
-              title: "⚠️ Certificato SSL"
-              message: "🔐 Certificato SSL — verifica la scadenza"
+          - repeat:
+              for_each: *push
+              sequence:
+                - service: "{{ repeat.item.service }}"
+                  continue_on_error: true
+                  data:
+                    title: "⚠️ Certificato SSL"
+                    message: "🔐 Certificato SSL — verifica la scadenza"
 
       # ── Avvio HA ────────────────────────────────
       - choose:
@@ -939,10 +963,14 @@ automation:
             state: 'on'
           sequence:
           - delay: '00:00:05'
-          - service: notify.frarik_server
-            data:
-              title: "🖥 Server"
-              message: "✅ Home Assistant avviato"
+          - repeat:
+              for_each: *push
+              sequence:
+                - service: "{{ repeat.item.service }}"
+                  continue_on_error: true
+                  data:
+                    title: "🖥 Server"
+                    message: "✅ Home Assistant avviato"
 
       # ── Tempo avvio HA ──────────────────────────
       - choose:
@@ -954,10 +982,14 @@ automation:
             state: 'on'
           sequence:
           - delay: '00:01:00'
-          - service: notify.frarik_server
-            data:
-              title: "⏱ Server"
-              message: "{{ states('sensor.homeassistant_start') }}"
+          - repeat:
+              for_each: *push
+              sequence:
+                - service: "{{ repeat.item.service }}"
+                  continue_on_error: true
+                  data:
+                    title: "⏱ Server"
+                    message: "{{ states('sensor.homeassistant_start') }}"
 
       # ── Login errato ────────────────────────────
       - choose:
@@ -968,10 +1000,14 @@ automation:
             entity_id: input_boolean.notifica_login_errato
             state: 'on'
           sequence:
-          - service: notify.frarik_server
-            data:
-              title: "⛔ Accesso Fallito"
-              message: "Login errato — {{ as_timestamp(now()) | timestamp_custom('%d/%m/%Y %H:%M', True) }}"
+          - repeat:
+              for_each: *push
+              sequence:
+                - service: "{{ repeat.item.service }}"
+                  continue_on_error: true
+                  data:
+                    title: "⛔ Accesso Fallito"
+                    message: "Login errato — {{ as_timestamp(now()) | timestamp_custom('%d/%m/%Y %H:%M', True) }}"
 
       # ── Notifica aggiornamenti Core ─────────────
       - choose:
@@ -997,10 +1033,14 @@ automation:
               or (is_state('input_boolean.ha_update_sabato','on') and d=='Saturday')
               or (is_state('input_boolean.ha_update_domenica','on') and d=='Sunday') }}
           sequence:
-          - service: notify.frarik_server
-            data:
-              title: "📥 Aggiornamento Core"
-              message: "{{ state_attr('sensor.updater_core','current_version') }} → {{ state_attr('sensor.updater_core','newest_version') }}"
+          - repeat:
+              for_each: *push
+              sequence:
+                - service: "{{ repeat.item.service }}"
+                  continue_on_error: true
+                  data:
+                    title: "📥 Aggiornamento Core"
+                    message: "{{ state_attr('sensor.updater_core','current_version') }} → {{ state_attr('sensor.updater_core','newest_version') }}"
 
       # ── Notifica aggiornamenti Supervisor ───────
       - choose:
@@ -1016,10 +1056,14 @@ automation:
           - condition: template
             value_template: "{{ state_attr('sensor.supervisor_updates','update_available') == true }}"
           sequence:
-          - service: notify.frarik_server
-            data:
-              title: "📥 Aggiornamento Supervisor"
-              message: "{{ state_attr('sensor.supervisor_updates','current_version') }} → {{ state_attr('sensor.supervisor_updates','newest_version') }}"
+          - repeat:
+              for_each: *push
+              sequence:
+                - service: "{{ repeat.item.service }}"
+                  continue_on_error: true
+                  data:
+                    title: "📥 Aggiornamento Supervisor"
+                    message: "{{ state_attr('sensor.supervisor_updates','current_version') }} → {{ state_attr('sensor.supervisor_updates','newest_version') }}"
 
       # ── Notifica aggiornamenti Add-on ───────────
       - choose:
@@ -1035,13 +1079,17 @@ automation:
           - condition: template
             value_template: "{{ states('sensor.supervisor_updates') | int(0) > 0 }}"
           sequence:
-          - service: notify.frarik_server
-            data:
-              title: "📥 Aggiornamento Add-on"
-              message: >
-                {% for addon in state_attr('sensor.supervisor_updates','addons') %}
-                📌 {{ addon.name }} ({{ addon.version }} → {{ addon.version_latest }})
-                {% endfor %}
+          - repeat:
+              for_each: *push
+              sequence:
+                - service: "{{ repeat.item.service }}"
+                  continue_on_error: true
+                  data:
+                    title: "📥 Aggiornamento Add-on"
+                    message: >
+                      {% for addon in state_attr('sensor.supervisor_updates','addons') %}
+                      📌 {{ addon.name }} ({{ addon.version }} → {{ addon.version_latest }})
+                      {% endfor %}
 
       # ── Notifica aggiornamenti HACS ─────────────
       - choose:
@@ -1057,10 +1105,14 @@ automation:
           - condition: template
             value_template: "{{ states('sensor.hacs') | int(0) > 0 }}"
           sequence:
-          - service: notify.frarik_server
-            data:
-              title: "📥 Aggiornamento HACS"
-              message: "{{ states('sensor.hacs') }} aggiornamenti disponibili"
+          - repeat:
+              for_each: *push
+              sequence:
+                - service: "{{ repeat.item.service }}"
+                  continue_on_error: true
+                  data:
+                    title: "📥 Aggiornamento HACS"
+                    message: "{{ states('sensor.hacs') }} aggiornamenti disponibili"
 
       # ── Backup programmato ──────────────────────
       - choose:
@@ -1103,10 +1155,14 @@ automation:
               or (is_state('input_boolean.ha_riavvio_sabato','on') and d=='Saturday')
               or (is_state('input_boolean.ha_riavvio_domenica','on') and d=='Sunday') }}
           sequence:
-          - service: notify.frarik_server
-            data:
-              title: "🕐 Riavvio Home Assistant"
-              message: "Riavvio programmato — {{ now().strftime('%d/%m/%Y %H:%M') }}"
+          - repeat:
+              for_each: *push
+              sequence:
+                - service: "{{ repeat.item.service }}"
+                  continue_on_error: true
+                  data:
+                    title: "🕐 Riavvio Home Assistant"
+                    message: "Riavvio programmato — {{ now().strftime('%d/%m/%Y %H:%M') }}"
           - delay: '00:00:05'
           - service: homeassistant.restart
 
@@ -1129,10 +1185,14 @@ automation:
               or (is_state('input_boolean.server_riavvio_sabato','on') and d=='Saturday')
               or (is_state('input_boolean.server_riavvio_domenica','on') and d=='Sunday') }}
           sequence:
-          - service: notify.frarik_server
-            data:
-              title: "🕐 Riavvio Server"
-              message: "Riavvio programmato — {{ now().strftime('%d/%m/%Y %H:%M') }}"
+          - repeat:
+              for_each: *push
+              sequence:
+                - service: "{{ repeat.item.service }}"
+                  continue_on_error: true
+                  data:
+                    title: "🕐 Riavvio Server"
+                    message: "Riavvio programmato — {{ now().strftime('%d/%m/%Y %H:%M') }}"
           - delay: '00:00:05'
           - service: hassio.host_reboot
 
@@ -1142,10 +1202,14 @@ automation:
           - condition: trigger
             id: ventola_rack_on
           sequence:
-          - service: notify.frarik_server
-            data:
-              title: "⚠️ Temperatura Alta"
-              message: "Avvio ventola rack — CPU a {{ states('sensor.cpu_temperatura') }}°C"
+          - repeat:
+              for_each: *push
+              sequence:
+                - service: "{{ repeat.item.service }}"
+                  continue_on_error: true
+                  data:
+                    title: "⚠️ Temperatura Alta"
+                    message: "Avvio ventola rack — CPU a {{ states('sensor.cpu_temperatura') }}°C"
           - service: homeassistant.turn_on
             target:
               entity_id: *ventola_rack
@@ -1156,10 +1220,14 @@ automation:
           - condition: trigger
             id: ventola_rack_off
           sequence:
-          - service: notify.frarik_server
-            data:
-              title: "✅ Temperatura OK"
-              message: "Ventola rack spenta — CPU a {{ states('sensor.cpu_temperatura') }}°C"
+          - repeat:
+              for_each: *push
+              sequence:
+                - service: "{{ repeat.item.service }}"
+                  continue_on_error: true
+                  data:
+                    title: "✅ Temperatura OK"
+                    message: "Ventola rack spenta — CPU a {{ states('sensor.cpu_temperatura') }}°C"
           - service: homeassistant.turn_off
             target:
               entity_id: *ventola_rack
