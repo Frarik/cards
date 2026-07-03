@@ -409,7 +409,6 @@ template:
 counter:
   frarik_lavastoviglie_cicli_totale:
     name: Cicli Pompa Lavastoviglie
-    initial: 0
     step: 1
 
 ####################################################
@@ -426,15 +425,12 @@ input_boolean:
 
   frarik_lavastoviglie_notify_push:
     name: Notifica Push Lavastoviglie
-    initial: on
 
   frarik_lavastoviglie_notify_alexa:
     name: Notifica Alexa Lavastoviglie
-    initial: on
 
   frarik_lavastoviglie_notify_google:
     name: Notifica Google Lavastoviglie
-    initial: on
 
 ####################################################
 #                     GROUP                        #

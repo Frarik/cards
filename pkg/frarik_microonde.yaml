@@ -409,7 +409,6 @@ template:
 counter:
   frarik_microonde_cicli_totale:
     name: Cicli Magnetron Microonde
-    initial: 0
     step: 1
 
 ####################################################
@@ -426,15 +425,12 @@ input_boolean:
 
   frarik_microonde_notify_push:
     name: Notifica Push Microonde
-    initial: on
 
   frarik_microonde_notify_alexa:
     name: Notifica Alexa Microonde
-    initial: on
 
   frarik_microonde_notify_google:
     name: Notifica Google Microonde
-    initial: on
 
 ####################################################
 #                     GROUP                        #

@@ -172,7 +172,6 @@ input_number:
     min: 0
     max: 1
     step: 0.000001
-    initial: *tariffa_contratto
     mode: box
     unit_of_measurement: "€/kWh"
     icon: mdi:lightning-bolt
@@ -181,7 +180,6 @@ input_number:
     min: 0
     max: 0.5
     step: 0.000001
-    initial: 0.000000
     mode: box
     unit_of_measurement: "€/kWh"
     icon: mdi:chart-line
@@ -190,7 +188,6 @@ input_number:
     min: 1.5
     max: 15
     step: 0.5
-    initial: *potenza_kw
     mode: box
     unit_of_measurement: "kW"
     icon: mdi:flash
@@ -199,7 +196,6 @@ input_number:
     min: 0
     max: 20
     step: 0.01
-    initial: 8.73
     mode: box
     unit_of_measurement: "%"
     icon: mdi:transmission-tower
@@ -208,7 +204,6 @@ input_number:
     min: 0
     max: 5
     step: 0.000001
-    initial: 0.102592
     mode: box
     unit_of_measurement: "€/mese"
   frarik_bolletta_fb_dispacciamento:
@@ -216,7 +211,6 @@ input_number:
     min: 0
     max: 0.5
     step: 0.000001
-    initial: 0.010660
     mode: box
     unit_of_measurement: "€/kWh"
   frarik_bolletta_fb_mercato_capacita:
@@ -224,7 +218,6 @@ input_number:
     min: 0
     max: 0.5
     step: 0.000001
-    initial: 0.010583
     mode: box
     unit_of_measurement: "€/kWh"
   frarik_bolletta_fb_pno:
@@ -232,7 +225,6 @@ input_number:
     min: 0
     max: 0.5
     step: 0.000001
-    initial: 0.000000
     mode: box
     unit_of_measurement: "€/mese"
   frarik_bolletta_fb_commercializzazione:
@@ -240,7 +232,6 @@ input_number:
     min: 0
     max: 20
     step: 0.01
-    initial: 6.00
     mode: box
     unit_of_measurement: "€/mese"
   frarik_bolletta_fb_trasporto_energia:
@@ -248,7 +239,6 @@ input_number:
     min: 0
     max: 0.5
     step: 0.000001
-    initial: 0.011900
     mode: box
     unit_of_measurement: "€/kWh"
   frarik_bolletta_fb_trasporto_fisso:
@@ -256,7 +246,6 @@ input_number:
     min: 0
     max: 10
     step: 0.01
-    initial: 1.92
     mode: box
     unit_of_measurement: "€/mese"
   frarik_bolletta_fb_trasporto_potenza:
@@ -264,7 +253,6 @@ input_number:
     min: 0
     max: 10
     step: 0.01
-    initial: 2.22
     mode: box
     unit_of_measurement: "€/kW"
   frarik_bolletta_fb_uc3:
@@ -272,7 +260,6 @@ input_number:
     min: 0
     max: 0.5
     step: 0.000001
-    initial: 0.002760
     mode: box
     unit_of_measurement: "€/kWh"
   frarik_bolletta_fb_uc6_fisso:
@@ -280,7 +267,6 @@ input_number:
     min: 0
     max: 1
     step: 0.000001
-    initial: 0.070000
     mode: box
     unit_of_measurement: "€/kW"
   frarik_bolletta_fb_uc6_variabile:
@@ -288,7 +274,6 @@ input_number:
     min: 0
     max: 0.5
     step: 0.000001
-    initial: 0.000070
     mode: box
     unit_of_measurement: "€/kWh"
   frarik_bolletta_fb_arim:
@@ -296,7 +281,6 @@ input_number:
     min: 0
     max: 0.5
     step: 0.000001
-    initial: 0.001638
     mode: box
     unit_of_measurement: "€/kWh"
   frarik_bolletta_fb_asos:
@@ -304,7 +288,6 @@ input_number:
     min: 0
     max: 0.5
     step: 0.000001
-    initial: 0.028657
     mode: box
     unit_of_measurement: "€/kWh"
   frarik_bolletta_fb_accise:
@@ -312,7 +295,6 @@ input_number:
     min: 0
     max: 0.5
     step: 0.000001
-    initial: 0.022700
     mode: box
     unit_of_measurement: "€/kWh"
   frarik_bolletta_fb_iva_perc:
@@ -320,7 +302,6 @@ input_number:
     min: 0
     max: 30
     step: 0.1
-    initial: 10.0
     mode: box
     unit_of_measurement: "%"
   frarik_bolletta_bonus_mese_corrente:
@@ -328,7 +309,6 @@ input_number:
     min: 0
     max: 500
     step: 0.01
-    initial: 0
     mode: box
     unit_of_measurement: "€"
     icon: mdi:gift
@@ -337,7 +317,6 @@ input_number:
     min: 0
     max: 1000
     step: 0.01
-    initial: 0
     mode: box
     unit_of_measurement: "€"
     icon: mdi:account-heart
@@ -346,7 +325,6 @@ input_number:
     min: 0
     max: 2000
     step: 0.01
-    initial: 0
     mode: box
     unit_of_measurement: "€"
     icon: mdi:solar-power
@@ -355,7 +333,6 @@ input_number:
     min: 0
     max: 20
     step: 0.5
-    initial: 5
     mode: box
     unit_of_measurement: "€"
     icon: mdi:alarm-light
@@ -364,7 +341,6 @@ input_number:
     min: 0
     max: 50
     step: 1
-    initial: 15
     mode: box
     unit_of_measurement: "kWh"
     icon: mdi:alarm-light
@@ -373,7 +349,6 @@ input_number:
     min: 100
     max: 9000
     step: 50
-    initial: 3500
     mode: box
     unit_of_measurement: "W"
     icon: mdi:flash-alert
@@ -382,7 +357,6 @@ input_number:
     min: 10
     max: 360
     step: 10
-    initial: 60
     mode: box
     unit_of_measurement: "sec"
     icon: mdi:timelapse
@@ -391,7 +365,6 @@ input_number:
     min: 0
     max: 5000
     step: 1
-    initial: 0
     mode: box
     unit_of_measurement: "kWh"
     icon: mdi:calculator
@@ -400,7 +373,6 @@ input_number:
     min: 0
     max: 500
     step: 1
-    initial: 0
     mode: box
     unit_of_measurement: "€"
     icon: mdi:piggy-bank
@@ -409,7 +381,6 @@ input_number:
     min: 0
     max: 50
     step: 0.01
-    initial: 0
     mode: box
     unit_of_measurement: "€"
     icon: mdi:calendar-today
@@ -418,72 +389,71 @@ input_number:
     min: 0
     max: 100
     step: 0.01
-    initial: 0
     mode: box
     unit_of_measurement: "kWh"
     icon: mdi:flash
-  frarik_bolletta_storico_costo_lun: {name: "Bolletta Costo Lunedì",    min: 0, max: 50, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€",   icon: mdi:calendar-week}
-  frarik_bolletta_storico_costo_mar: {name: "Bolletta Costo Martedì",   min: 0, max: 50, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€",   icon: mdi:calendar-week}
-  frarik_bolletta_storico_costo_mer: {name: "Bolletta Costo Mercoledì", min: 0, max: 50, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€",   icon: mdi:calendar-week}
-  frarik_bolletta_storico_costo_gio: {name: "Bolletta Costo Giovedì",   min: 0, max: 50, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€",   icon: mdi:calendar-week}
-  frarik_bolletta_storico_costo_ven: {name: "Bolletta Costo Venerdì",   min: 0, max: 50, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€",   icon: mdi:calendar-week}
-  frarik_bolletta_storico_costo_sab: {name: "Bolletta Costo Sabato",    min: 0, max: 50, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€",   icon: mdi:calendar-week}
-  frarik_bolletta_storico_costo_dom: {name: "Bolletta Costo Domenica",  min: 0, max: 50, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€",   icon: mdi:calendar-week}
-  frarik_bolletta_storico_kwh_lun:   {name: "Bolletta kWh Lunedì",      min: 0, max: 100, step: 0.1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  frarik_bolletta_storico_kwh_mar:   {name: "Bolletta kWh Martedì",     min: 0, max: 100, step: 0.1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  frarik_bolletta_storico_kwh_mer:   {name: "Bolletta kWh Mercoledì",   min: 0, max: 100, step: 0.1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  frarik_bolletta_storico_kwh_gio:   {name: "Bolletta kWh Giovedì",     min: 0, max: 100, step: 0.1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  frarik_bolletta_storico_kwh_ven:   {name: "Bolletta kWh Venerdì",     min: 0, max: 100, step: 0.1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  frarik_bolletta_storico_kwh_sab:   {name: "Bolletta kWh Sabato",      min: 0, max: 100, step: 0.1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  frarik_bolletta_storico_kwh_dom:   {name: "Bolletta kWh Domenica",    min: 0, max: 100, step: 0.1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  frarik_bolletta_storico_mese_curr_01: {name: "Bolletta Gen",      min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
-  frarik_bolletta_storico_mese_curr_02: {name: "Bolletta Feb",      min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
-  frarik_bolletta_storico_mese_curr_03: {name: "Bolletta Mar",      min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
-  frarik_bolletta_storico_mese_curr_04: {name: "Bolletta Apr",      min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
-  frarik_bolletta_storico_mese_curr_05: {name: "Bolletta Mag",      min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
-  frarik_bolletta_storico_mese_curr_06: {name: "Bolletta Giu",      min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
-  frarik_bolletta_storico_mese_curr_07: {name: "Bolletta Lug",      min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
-  frarik_bolletta_storico_mese_curr_08: {name: "Bolletta Ago",      min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
-  frarik_bolletta_storico_mese_curr_09: {name: "Bolletta Set",      min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
-  frarik_bolletta_storico_mese_curr_10: {name: "Bolletta Ott",      min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
-  frarik_bolletta_storico_mese_curr_11: {name: "Bolletta Nov",      min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
-  frarik_bolletta_storico_mese_curr_12: {name: "Bolletta Dic",      min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
-  frarik_bolletta_storico_mese_prev_01: {name: "Bolletta Gen Prec", min: 0, max: 500, step: 0.01, initial: 0,     mode: box, unit_of_measurement: "€", icon: mdi:calendar}
-  frarik_bolletta_storico_mese_prev_02: {name: "Bolletta Feb Prec", min: 0, max: 500, step: 0.01, initial: 0,     mode: box, unit_of_measurement: "€", icon: mdi:calendar}
-  frarik_bolletta_storico_mese_prev_03: {name: "Bolletta Mar Prec", min: 0, max: 500, step: 0.01, initial: 0,     mode: box, unit_of_measurement: "€", icon: mdi:calendar}
-  frarik_bolletta_storico_mese_prev_04: {name: "Bolletta Apr Prec", min: 0, max: 500, step: 0.01, initial: 0,     mode: box, unit_of_measurement: "€", icon: mdi:calendar}
-  frarik_bolletta_storico_mese_prev_05: {name: "Bolletta Mag Prec", min: 0, max: 500, step: 0.01, initial: 0,     mode: box, unit_of_measurement: "€", icon: mdi:calendar}
-  frarik_bolletta_storico_mese_prev_06: {name: "Bolletta Giu Prec", min: 0, max: 500, step: 0.01, initial: 0,     mode: box, unit_of_measurement: "€", icon: mdi:calendar}
-  frarik_bolletta_storico_mese_prev_07: {name: "Bolletta Lug Prec", min: 0, max: 500, step: 0.01, initial: 0,     mode: box, unit_of_measurement: "€", icon: mdi:calendar}
-  frarik_bolletta_storico_mese_prev_08: {name: "Bolletta Ago Prec", min: 0, max: 500, step: 0.01, initial: 0,     mode: box, unit_of_measurement: "€", icon: mdi:calendar}
-  frarik_bolletta_storico_mese_prev_09: {name: "Bolletta Set Prec", min: 0, max: 500, step: 0.01, initial: 0,     mode: box, unit_of_measurement: "€", icon: mdi:calendar}
-  frarik_bolletta_storico_mese_prev_10: {name: "Bolletta Ott Prec", min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
-  frarik_bolletta_storico_mese_prev_11: {name: "Bolletta Nov Prec", min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
-  frarik_bolletta_storico_mese_prev_12: {name: "Bolletta Dic Prec", min: 0, max: 500, step: 0.01, initial: 0, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
-  frarik_bolletta_storico_kwh_curr_01: {name: "Bolletta kWh Gen", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  frarik_bolletta_storico_kwh_curr_02: {name: "Bolletta kWh Feb", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  frarik_bolletta_storico_kwh_curr_03: {name: "Bolletta kWh Mar", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  frarik_bolletta_storico_kwh_curr_04: {name: "Bolletta kWh Apr", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  frarik_bolletta_storico_kwh_curr_05: {name: "Bolletta kWh Mag", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  frarik_bolletta_storico_kwh_curr_06: {name: "Bolletta kWh Giu", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  frarik_bolletta_storico_kwh_curr_07: {name: "Bolletta kWh Lug", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  frarik_bolletta_storico_kwh_curr_08: {name: "Bolletta kWh Ago", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  frarik_bolletta_storico_kwh_curr_09: {name: "Bolletta kWh Set", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  frarik_bolletta_storico_kwh_curr_10: {name: "Bolletta kWh Ott", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  frarik_bolletta_storico_kwh_curr_11: {name: "Bolletta kWh Nov", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  frarik_bolletta_storico_kwh_curr_12: {name: "Bolletta kWh Dic", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  frarik_bolletta_storico_kwh_prev_01: {name: "Bolletta kWh Gen Prec", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  frarik_bolletta_storico_kwh_prev_02: {name: "Bolletta kWh Feb Prec", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  frarik_bolletta_storico_kwh_prev_03: {name: "Bolletta kWh Mar Prec", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  frarik_bolletta_storico_kwh_prev_04: {name: "Bolletta kWh Apr Prec", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  frarik_bolletta_storico_kwh_prev_05: {name: "Bolletta kWh Mag Prec", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  frarik_bolletta_storico_kwh_prev_06: {name: "Bolletta kWh Giu Prec", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  frarik_bolletta_storico_kwh_prev_07: {name: "Bolletta kWh Lug Prec", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  frarik_bolletta_storico_kwh_prev_08: {name: "Bolletta kWh Ago Prec", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  frarik_bolletta_storico_kwh_prev_09: {name: "Bolletta kWh Set Prec", min: 0, max: 2000, step: 1, initial: 0,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  frarik_bolletta_storico_kwh_prev_10: {name: "Bolletta kWh Ott Prec", min: 0, max: 2000, step: 1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  frarik_bolletta_storico_kwh_prev_11: {name: "Bolletta kWh Nov Prec", min: 0, max: 2000, step: 1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
-  frarik_bolletta_storico_kwh_prev_12: {name: "Bolletta kWh Dic Prec", min: 0, max: 2000, step: 1, initial: 0, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  frarik_bolletta_storico_costo_lun: {name: "Bolletta Costo Lunedì",    min: 0, max: 50, step: 0.01, mode: box, unit_of_measurement: "€",   icon: mdi:calendar-week}
+  frarik_bolletta_storico_costo_mar: {name: "Bolletta Costo Martedì",   min: 0, max: 50, step: 0.01, mode: box, unit_of_measurement: "€",   icon: mdi:calendar-week}
+  frarik_bolletta_storico_costo_mer: {name: "Bolletta Costo Mercoledì", min: 0, max: 50, step: 0.01, mode: box, unit_of_measurement: "€",   icon: mdi:calendar-week}
+  frarik_bolletta_storico_costo_gio: {name: "Bolletta Costo Giovedì",   min: 0, max: 50, step: 0.01, mode: box, unit_of_measurement: "€",   icon: mdi:calendar-week}
+  frarik_bolletta_storico_costo_ven: {name: "Bolletta Costo Venerdì",   min: 0, max: 50, step: 0.01, mode: box, unit_of_measurement: "€",   icon: mdi:calendar-week}
+  frarik_bolletta_storico_costo_sab: {name: "Bolletta Costo Sabato",    min: 0, max: 50, step: 0.01, mode: box, unit_of_measurement: "€",   icon: mdi:calendar-week}
+  frarik_bolletta_storico_costo_dom: {name: "Bolletta Costo Domenica",  min: 0, max: 50, step: 0.01, mode: box, unit_of_measurement: "€",   icon: mdi:calendar-week}
+  frarik_bolletta_storico_kwh_lun:   {name: "Bolletta kWh Lunedì",      min: 0, max: 100, step: 0.1, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  frarik_bolletta_storico_kwh_mar:   {name: "Bolletta kWh Martedì",     min: 0, max: 100, step: 0.1, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  frarik_bolletta_storico_kwh_mer:   {name: "Bolletta kWh Mercoledì",   min: 0, max: 100, step: 0.1, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  frarik_bolletta_storico_kwh_gio:   {name: "Bolletta kWh Giovedì",     min: 0, max: 100, step: 0.1, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  frarik_bolletta_storico_kwh_ven:   {name: "Bolletta kWh Venerdì",     min: 0, max: 100, step: 0.1, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  frarik_bolletta_storico_kwh_sab:   {name: "Bolletta kWh Sabato",      min: 0, max: 100, step: 0.1, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  frarik_bolletta_storico_kwh_dom:   {name: "Bolletta kWh Domenica",    min: 0, max: 100, step: 0.1, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  frarik_bolletta_storico_mese_curr_01: {name: "Bolletta Gen",      min: 0, max: 500, step: 0.01, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  frarik_bolletta_storico_mese_curr_02: {name: "Bolletta Feb",      min: 0, max: 500, step: 0.01, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  frarik_bolletta_storico_mese_curr_03: {name: "Bolletta Mar",      min: 0, max: 500, step: 0.01, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  frarik_bolletta_storico_mese_curr_04: {name: "Bolletta Apr",      min: 0, max: 500, step: 0.01, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  frarik_bolletta_storico_mese_curr_05: {name: "Bolletta Mag",      min: 0, max: 500, step: 0.01, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  frarik_bolletta_storico_mese_curr_06: {name: "Bolletta Giu",      min: 0, max: 500, step: 0.01, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  frarik_bolletta_storico_mese_curr_07: {name: "Bolletta Lug",      min: 0, max: 500, step: 0.01, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  frarik_bolletta_storico_mese_curr_08: {name: "Bolletta Ago",      min: 0, max: 500, step: 0.01, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  frarik_bolletta_storico_mese_curr_09: {name: "Bolletta Set",      min: 0, max: 500, step: 0.01, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  frarik_bolletta_storico_mese_curr_10: {name: "Bolletta Ott",      min: 0, max: 500, step: 0.01, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  frarik_bolletta_storico_mese_curr_11: {name: "Bolletta Nov",      min: 0, max: 500, step: 0.01, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  frarik_bolletta_storico_mese_curr_12: {name: "Bolletta Dic",      min: 0, max: 500, step: 0.01, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  frarik_bolletta_storico_mese_prev_01: {name: "Bolletta Gen Prec", min: 0, max: 500, step: 0.01,     mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  frarik_bolletta_storico_mese_prev_02: {name: "Bolletta Feb Prec", min: 0, max: 500, step: 0.01,     mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  frarik_bolletta_storico_mese_prev_03: {name: "Bolletta Mar Prec", min: 0, max: 500, step: 0.01,     mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  frarik_bolletta_storico_mese_prev_04: {name: "Bolletta Apr Prec", min: 0, max: 500, step: 0.01,     mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  frarik_bolletta_storico_mese_prev_05: {name: "Bolletta Mag Prec", min: 0, max: 500, step: 0.01,     mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  frarik_bolletta_storico_mese_prev_06: {name: "Bolletta Giu Prec", min: 0, max: 500, step: 0.01,     mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  frarik_bolletta_storico_mese_prev_07: {name: "Bolletta Lug Prec", min: 0, max: 500, step: 0.01,     mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  frarik_bolletta_storico_mese_prev_08: {name: "Bolletta Ago Prec", min: 0, max: 500, step: 0.01,     mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  frarik_bolletta_storico_mese_prev_09: {name: "Bolletta Set Prec", min: 0, max: 500, step: 0.01,     mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  frarik_bolletta_storico_mese_prev_10: {name: "Bolletta Ott Prec", min: 0, max: 500, step: 0.01, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  frarik_bolletta_storico_mese_prev_11: {name: "Bolletta Nov Prec", min: 0, max: 500, step: 0.01, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  frarik_bolletta_storico_mese_prev_12: {name: "Bolletta Dic Prec", min: 0, max: 500, step: 0.01, mode: box, unit_of_measurement: "€", icon: mdi:calendar}
+  frarik_bolletta_storico_kwh_curr_01: {name: "Bolletta kWh Gen", min: 0, max: 2000, step: 1,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  frarik_bolletta_storico_kwh_curr_02: {name: "Bolletta kWh Feb", min: 0, max: 2000, step: 1,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  frarik_bolletta_storico_kwh_curr_03: {name: "Bolletta kWh Mar", min: 0, max: 2000, step: 1,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  frarik_bolletta_storico_kwh_curr_04: {name: "Bolletta kWh Apr", min: 0, max: 2000, step: 1,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  frarik_bolletta_storico_kwh_curr_05: {name: "Bolletta kWh Mag", min: 0, max: 2000, step: 1,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  frarik_bolletta_storico_kwh_curr_06: {name: "Bolletta kWh Giu", min: 0, max: 2000, step: 1,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  frarik_bolletta_storico_kwh_curr_07: {name: "Bolletta kWh Lug", min: 0, max: 2000, step: 1,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  frarik_bolletta_storico_kwh_curr_08: {name: "Bolletta kWh Ago", min: 0, max: 2000, step: 1,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  frarik_bolletta_storico_kwh_curr_09: {name: "Bolletta kWh Set", min: 0, max: 2000, step: 1,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  frarik_bolletta_storico_kwh_curr_10: {name: "Bolletta kWh Ott", min: 0, max: 2000, step: 1,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  frarik_bolletta_storico_kwh_curr_11: {name: "Bolletta kWh Nov", min: 0, max: 2000, step: 1,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  frarik_bolletta_storico_kwh_curr_12: {name: "Bolletta kWh Dic", min: 0, max: 2000, step: 1,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  frarik_bolletta_storico_kwh_prev_01: {name: "Bolletta kWh Gen Prec", min: 0, max: 2000, step: 1,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  frarik_bolletta_storico_kwh_prev_02: {name: "Bolletta kWh Feb Prec", min: 0, max: 2000, step: 1,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  frarik_bolletta_storico_kwh_prev_03: {name: "Bolletta kWh Mar Prec", min: 0, max: 2000, step: 1,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  frarik_bolletta_storico_kwh_prev_04: {name: "Bolletta kWh Apr Prec", min: 0, max: 2000, step: 1,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  frarik_bolletta_storico_kwh_prev_05: {name: "Bolletta kWh Mag Prec", min: 0, max: 2000, step: 1,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  frarik_bolletta_storico_kwh_prev_06: {name: "Bolletta kWh Giu Prec", min: 0, max: 2000, step: 1,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  frarik_bolletta_storico_kwh_prev_07: {name: "Bolletta kWh Lug Prec", min: 0, max: 2000, step: 1,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  frarik_bolletta_storico_kwh_prev_08: {name: "Bolletta kWh Ago Prec", min: 0, max: 2000, step: 1,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  frarik_bolletta_storico_kwh_prev_09: {name: "Bolletta kWh Set Prec", min: 0, max: 2000, step: 1,   mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  frarik_bolletta_storico_kwh_prev_10: {name: "Bolletta kWh Ott Prec", min: 0, max: 2000, step: 1, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  frarik_bolletta_storico_kwh_prev_11: {name: "Bolletta kWh Nov Prec", min: 0, max: 2000, step: 1, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
+  frarik_bolletta_storico_kwh_prev_12: {name: "Bolletta kWh Dic Prec", min: 0, max: 2000, step: 1, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
 
 ####################################################
 #                     REST                         #

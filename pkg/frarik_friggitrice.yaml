@@ -409,7 +409,6 @@ template:
 counter:
   frarik_friggitrice_cicli_totale:
     name: Cicli Resistenza Friggitrice
-    initial: 0
     step: 1
 
 ####################################################
@@ -426,15 +425,12 @@ input_boolean:
 
   frarik_friggitrice_notify_push:
     name: Notifica Push Friggitrice
-    initial: on
 
   frarik_friggitrice_notify_alexa:
     name: Notifica Alexa Friggitrice
-    initial: on
 
   frarik_friggitrice_notify_google:
     name: Notifica Google Friggitrice
-    initial: on
 
 ####################################################
 #                     GROUP                        #

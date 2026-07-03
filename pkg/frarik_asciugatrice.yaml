@@ -409,7 +409,6 @@ template:
 counter:
   frarik_asciugatrice_cicli_totale:
     name: Cicli Resistenza Asciugatrice
-    initial: 0
     step: 1
 
 ####################################################
@@ -426,15 +425,12 @@ input_boolean:
 
   frarik_asciugatrice_notify_push:
     name: Notifica Push Asciugatrice
-    initial: on
 
   frarik_asciugatrice_notify_alexa:
     name: Notifica Alexa Asciugatrice
-    initial: on
 
   frarik_asciugatrice_notify_google:
     name: Notifica Google Asciugatrice
-    initial: on
 
 ####################################################
 #                     GROUP                        #

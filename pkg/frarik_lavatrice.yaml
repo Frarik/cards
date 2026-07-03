@@ -409,7 +409,6 @@ template:
 counter:
   frarik_lavatrice_cicli_totale:
     name: Cicli Motore Lavatrice
-    initial: 0
     step: 1
 
 ####################################################
@@ -426,15 +425,12 @@ input_boolean:
 
   frarik_lavatrice_notify_push:
     name: Notifica Push Lavatrice
-    initial: on
 
   frarik_lavatrice_notify_alexa:
     name: Notifica Alexa Lavatrice
-    initial: on
 
   frarik_lavatrice_notify_google:
     name: Notifica Google Lavatrice
-    initial: on
 
 ####################################################
 #                     GROUP                        #

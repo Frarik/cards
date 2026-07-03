@@ -409,7 +409,6 @@ template:
 counter:
   frarik_induzione_cicli_totale:
     name: Cicli Piano Induzione
-    initial: 0
     step: 1
 
 ####################################################
@@ -426,15 +425,12 @@ input_boolean:
 
   frarik_induzione_notify_push:
     name: Notifica Push Induzione
-    initial: on
 
   frarik_induzione_notify_alexa:
     name: Notifica Alexa Induzione
-    initial: on
 
   frarik_induzione_notify_google:
     name: Notifica Google Induzione
-    initial: on
 
 ####################################################
 #                     GROUP                        #

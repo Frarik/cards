@@ -409,7 +409,6 @@ template:
 counter:
   frarik_forno_cicli_totale:
     name: Cicli Resistenza Forno
-    initial: 0
     step: 1
 
 ####################################################
@@ -426,15 +425,12 @@ input_boolean:
 
   frarik_forno_notify_push:
     name: Notifica Push Forno
-    initial: on
 
   frarik_forno_notify_alexa:
     name: Notifica Alexa Forno
-    initial: on
 
   frarik_forno_notify_google:
     name: Notifica Google Forno
-    initial: on
 
 ####################################################
 #                     GROUP                        #

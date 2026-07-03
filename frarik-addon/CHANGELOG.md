@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.70 — 2026-07-03
+
+### fix(pkg): rimozione `initial:` da tutti i PKG — impostazioni ora persistono al riavvio HA
+
+- **Root cause**: `input_boolean` e `input_number` definiti in YAML con `initial:` vengono resettati al valore iniziale ad ogni riavvio di HA, ignorando le modifiche salvate dall'utente
+- **Fix**: rimosso `initial:` da tutti i file PKG — senza `initial:`, HA ripristina l'ultimo stato da `.storage/core.restore_state`
+- **File modificati**: frarik_lavatrice, frarik_asciugatrice, frarik_lavastoviglie, frarik_forno, frarik_microonde, frarik_induzione, frarik_friggitrice, frarik_frigorifero, frarik_scaldabagno, frarik_differenziata, frarik_bolletta
+- In bolletta rimosso anche `initial: 0` dalle righe inline degli storico (impediva il ripristino dei dati storici)
+
 ## 1.7.69 — 2026-07-03
 
 ### feat(antizanzare): card v2.6 — redesign completo UI + impostazioni programma settimanale

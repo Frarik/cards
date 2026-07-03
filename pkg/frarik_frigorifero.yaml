@@ -388,7 +388,6 @@ template:
 counter:
   frarik_frigorifero_cicli_totale:
     name: Cicli Compressore Frigo
-    initial: 0
     step: 1
 
 ####################################################
@@ -405,15 +404,12 @@ input_boolean:
 
   frarik_frigorifero_notify_push:
     name: Notifica Push Frigo
-    initial: on
 
   frarik_frigorifero_notify_alexa:
     name: Notifica Alexa Frigo
-    initial: on
 
   frarik_frigorifero_notify_google:
     name: Notifica Google Frigo
-    initial: on
 
 ####################################################
 #                     GROUP                        #
