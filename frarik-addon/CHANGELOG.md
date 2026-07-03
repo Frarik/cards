@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.7.72 — 2026-07-04
+
+### feat(antizanzare): card v2.8 — animazione SVG fix, layout sensori aggiornato, notifiche toggle
+
+- **Animazione SVG**: sostituiti @keyframes CSS con SVG native `<animate>` — funzionano correttamente anche con innerHTML; `active` ora basato su `timerRem !== null` (timer attivo) anziché string di stato
+- **4 riquadri**: 💨 Vento / 🌧 Pioggia in corso / 🌂 Prob.pioggia / ☀️⛈ Meteo
+- **3 pill**: 💧🚨 Allagamento / ⚡ Pompa (W, non L) / 🪣 Livello acqua
+- **Notifiche**: sostituito campo testo con toggle ON/OFF; usa entity `c.pk_notifiche` o default `input_boolean.frarik_antizanzare_notifiche`; sempre visibile nel popup ⚙
+- **Modalità modifica**: configure ora no-op (non apre nulla)
+
 ## 1.7.71 — 2026-07-03
 
 ### feat(antizanzare): card v2.7 — status ACCESA, sensori nel popup ⚙, autocomplete entità

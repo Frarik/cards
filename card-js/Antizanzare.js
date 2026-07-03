@@ -1164,23 +1164,23 @@ window.customCards.push({ version: '1.5',
   }
 
   function _azDevSVG(stato, col, colRgb, timerRem) {
-    var active = stato === 'Ciclo in Corso' || stato === 'Manuale Attiva';
+    var active = timerRem !== null;
     var glow = active ? 'drop-shadow(0 0 10px rgba(' + colRgb + ',.3))' : 'drop-shadow(0 0 6px rgba(' + colRgb + ',.12))';
-    var kf = active ? '@keyframes azBled{0%,100%{opacity:.5}50%{opacity:1}}@keyframes azHeat{0%,100%{opacity:.06}50%{opacity:.22}}' : '';
     var remTxt = active ? (timerRem || 'ATTIVO') : 'STAND';
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 108" style="display:block;width:100%;height:100%;filter:' + glow + '">'
-      + (kf ? '<defs><style>' + kf + '</style></defs>' : '')
       + '<rect x="8" y="96" width="48" height="7" rx="3.5" fill="#090f1e" stroke="' + col + '" stroke-width=".5" opacity=".5"/>'
       + '<rect x="14" y="24" width="34" height="72" rx="16" fill="#0b1929" stroke="' + col + '" stroke-width=".85"/>'
       + '<rect x="16" y="30" width="6" height="60" rx="3" fill="rgba(255,255,255,.04)"/>'
-      + (active ? '<rect x="16" y="54" width="30" height="42" rx="4" fill="rgba(' + colRgb + ',.08)" style="animation:azHeat 2.4s ease-in-out infinite"/>' : '')
+      + (active ? '<rect x="16" y="54" width="30" height="42" rx="4" fill="rgba(' + colRgb + ',.15)" opacity=".06"><animate attributeName="opacity" values=".06;.22;.06" dur="2.4s" repeatCount="indefinite"/></rect>' : '')
       + '<ellipse cx="31" cy="32" rx="15.5" ry="5" fill="#0d2040" stroke="rgba(' + colRgb + ',.12)" stroke-width=".5"/>'
       + '<ellipse cx="31" cy="88" rx="15.5" ry="4.5" fill="#090f1e" stroke="rgba(' + colRgb + ',.08)" stroke-width=".5"/>'
       + '<text x="31" y="46" text-anchor="middle" font-size="5.5" fill="rgba(255,255,255,.07)" font-family="system-ui,sans-serif" font-weight="800">4L</text>'
       + '<rect x="18" y="50" width="26" height="30" rx="4" fill="#060e1c" stroke="rgba(' + colRgb + ',.2)" stroke-width=".6"/>'
       + '<circle cx="31" cy="58" r="7.5" fill="#091526" stroke="' + col + '" stroke-width=".85"/>'
       + '<circle cx="31" cy="58" r="4.5" fill="#040a12"/>'
-      + '<circle cx="31" cy="58" r="2.8" fill="' + col + '" opacity="' + (active ? '.9' : '.35') + '"' + (active ? ' style="animation:azBled 1.4s ease-in-out infinite"' : '') + '/>'
+      + '<circle cx="31" cy="58" r="2.8" fill="' + col + '" opacity="' + (active ? '.9' : '.35') + '">'
+      + (active ? '<animate attributeName="opacity" values=".5;1;.5" dur="1.4s" repeatCount="indefinite"/>' : '')
+      + '</circle>'
       + '<rect x="19.5" y="68.5" width="23" height="6.5" rx="1.8" fill="#02060e" stroke="rgba(' + colRgb + ',.3)" stroke-width=".5"/>'
       + '<text x="31" y="73.5" text-anchor="middle" font-size="4" font-weight="bold" font-family="monospace,system-ui" fill="' + col + '">' + remTxt + '</text>'
       + '<circle cx="31" cy="82" r="3" fill="#060e1c" stroke="rgba(' + colRgb + ',.15)" stroke-width=".6"/>'
@@ -1305,17 +1305,16 @@ window.customCards.push({ version: '1.5',
         + '</div>';
     }
     var ventoDsp = vento !== null ? vento.toFixed(0) + ' m/s' : (c.pk_vento ? '--' : 'N/D');
-    var tanicaDsp = tanica !== null ? tanica.toFixed(0) + '%' : (c.pk_tanica ? '--' : 'N/D');
-    var pompaDsp = consumoPompa !== null ? consumoPompa.toFixed(1) + 'L' : '--';
     var pioggiaCol = pioggiaCorsoBool ? '#f59e0b' : '#22c55e';
+    var meteoCol = blocco ? '#f59e0b' : '#22c55e';
     var sensorGrid = '<div class="fc-grid">'
       + gc('💨', ventoDsp, 'Vento', vento !== null && vento > 10 ? '#f59e0b' : '#fff')
       + '<div class="fc-gc-sep"></div>'
-      + gc('🪣', tanicaDsp, 'Tanica', tanica !== null && tanica < 20 ? '#ef4444' : (tanica !== null && tanica < 40 ? '#f59e0b' : '#fff'))
-      + '<div class="fc-gc-sep"></div>'
-      + gc('⚡', pompaDsp, 'Pompa', col)
-      + '<div class="fc-gc-sep"></div>'
       + gc('🌧', pioggiaCorsoBool ? 'Sì' : 'No', 'Pioggia', pioggiaCol)
+      + '<div class="fc-gc-sep"></div>'
+      + gc('🌂', pioggia.toFixed(0) + '%', 'Prob.pioggia', pioggia > 50 ? '#f59e0b' : '#fff')
+      + '<div class="fc-gc-sep"></div>'
+      + gc(blocco ? '⛈' : '☀️', blocco ? 'Bloccato' : 'OK', 'Meteo', meteoCol)
       + '</div>';
 
     // Status pills row: prob. pioggia / blocco meteo / perdita cassetta
@@ -1326,18 +1325,16 @@ window.customCards.push({ version: '1.5',
         + '<div style="min-width:0"><div class="fc-pill-lbl">' + lbl + '</div><div class="fc-pill-v" style="color:' + vc + '">' + val + '</div></div>'
         + '</div>';
     }
+    var pompaDsp = consumoPompa !== null ? consumoPompa.toFixed(0) + ' W' : (c.pk_consumo_pompa ? '--' : 'N/D');
+    var tanicaDsp = tanica !== null ? tanica.toFixed(0) + '%' : (c.pk_tanica ? '--' : 'N/D');
+    var tanicaCol = tanica !== null && tanica < 20 ? '#ef4444' : (tanica !== null && tanica < 40 ? '#f59e0b' : '#fff');
     var statusRow = '<div class="fc-row">'
-      + pill('🌂', 'Prob. pioggia', pioggia.toFixed(0) + '%',
-          'rgba(255,255,255,.03)', 'rgba(255,255,255,.07)',
-          pioggia > 50 ? '#f59e0b' : '#fff')
-      + pill(blocco ? '⛈' : '☀️', 'Meteo', blocco ? 'Bloccato' : 'OK',
-          blocco ? 'rgba(245,158,11,.08)' : 'rgba(255,255,255,.03)',
-          blocco ? 'rgba(245,158,11,.25)' : 'rgba(255,255,255,.07)',
-          blocco ? '#f59e0b' : '#22c55e')
-      + pill(perdita ? '🚨' : '💧', 'Cassetta', perdita ? '⚠ Perdita' : 'OK',
+      + pill(perdita ? '🚨' : '💧', 'Allagamento', perdita ? '⚠ Perdita' : 'OK',
           perdita ? 'rgba(239,68,68,.08)' : 'rgba(255,255,255,.03)',
           perdita ? 'rgba(239,68,68,.25)' : 'rgba(255,255,255,.07)',
           perdita ? '#ef4444' : '#22c55e')
+      + pill('⚡', 'Pompa', pompaDsp, 'rgba(255,255,255,.03)', 'rgba(255,255,255,.07)', col)
+      + pill('🪣', 'Livello acqua', tanicaDsp, 'rgba(255,255,255,.03)', 'rgba(255,255,255,.07)', tanicaCol)
       + '</div>';
 
     var btnsHtml = '<div class="fc-btns">'
@@ -1509,7 +1506,8 @@ window.customCards.push({ version: '1.5',
     var prefix = c.pk_prefix || 'frarik_antizanzare';
     var autoOn  = _azIsOn(h, c.pk_auto);
     var sicOn   = !c.pk_auto_sic || _azS(h, c.pk_auto_sic) !== 'off';
-    var notifOn = c.pk_notifiche ? _azIsOn(h, c.pk_notifiche) : null;
+    var notifEntity = c.pk_notifiche || 'input_boolean.frarik_antizanzare_notifiche';
+    var notifOn = _azIsOn(h, notifEntity);
     var durM    = Math.round(_azNum(_azS(h, c.pk_durata_manuale)) || 60);
     var soglia  = Math.round(_azNum(_azS(h, c.pk_soglia_pioggia)) || 50);
     var tarMens = Math.round(_azNum(_azS(h, c.pk_cicli_target)) || 100);
@@ -1582,7 +1580,7 @@ window.customCards.push({ version: '1.5',
       + '<div style="display:flex;gap:8px;margin-bottom:6px">'
       + togBtn('azuc-tog-auto', 'Automazione', autoOn)
       + togBtn('azuc-tog-sic', 'Sicurezza', sicOn, '6,182,212')
-      + (notifOn !== null ? togBtn('azuc-tog-ntf', 'Notifiche', notifOn, '168,85,247') : '')
+      + togBtn('azuc-tog-ntf', 'Notifiche', notifOn, '168,85,247')
       + '</div>'
       + sec('Programma Settimanale')
       + schedHtml
@@ -1594,7 +1592,6 @@ window.customCards.push({ version: '1.5',
       + sensorFld('azuc-vento-id',  'Velocità vento (m/s)',  'sensor.velocita_vento',         c.pk_vento||'')
       + sensorFld('azuc-tanica-id', 'Livello tanica (%)',    'sensor.livello_tanica',          c.pk_tanica||'')
       + sensorFld('azuc-pompa-id',  'Consumo pompa (L)',     'sensor.consumo_pompa',           c.pk_consumo_pompa||'')
-      + sensorFld('azuc-notif-id',  'Notifiche boolean',     'input_boolean.frarik_az_notif',  c.pk_notifiche||'')
       + '<button id="azuc-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#22c55e;color:#022c1b;margin-top:4px">💾 Salva tutto</button>';
 
     var ov = _azMkOv(_azPopShell('⚙','34,197,94','Impostazioni',c.name||'Anti Zanzare','azuc-cl',content),'azuc-cl');
@@ -1612,7 +1609,7 @@ window.customCards.push({ version: '1.5',
         tb.querySelector('div:first-child').textContent = nowOn ? '✅' : '⭕';
         tb.querySelector('div:nth-child(2)').style.color = nowOn ? 'rgb('+onC+')' : 'rgba(255,255,255,.35)';
         var tv2 = tb.querySelector('.azuc-tov'); if(tv2){ tv2.textContent = nowOn?'ON':'OFF'; tv2.style.color = nowOn?'#fff':'rgba(255,255,255,.25)'; }
-        var eid = tid==='azuc-tog-auto' ? c.pk_auto : tid==='azuc-tog-sic' ? c.pk_auto_sic : c.pk_notifiche;
+        var eid = tid==='azuc-tog-auto' ? c.pk_auto : tid==='azuc-tog-sic' ? c.pk_auto_sic : notifEntity;
         var dom = tid==='azuc-tog-sic' ? 'automation' : 'input_boolean';
         if (eid) { _azCallSvc(dom, nowOn?'turn_on':'turn_off', {entity_id:eid}); if(el) el._fcSig=null; }
       });
@@ -1677,8 +1674,6 @@ window.customCards.push({ version: '1.5',
     azAC('azuc-vento-id');
     azAC('azuc-tanica-id');
     azAC('azuc-pompa-id');
-    azAC('azuc-notif-id');
-
     // Save
     ov.querySelector('#azuc-save').addEventListener('click', function() {
       var h2 = _azH();
@@ -1709,8 +1704,7 @@ window.customCards.push({ version: '1.5',
       var ve = (ov.querySelector('#azuc-vento-id')||{}).value||'';
       var ta = (ov.querySelector('#azuc-tanica-id')||{}).value||'';
       var po = (ov.querySelector('#azuc-pompa-id')||{}).value||'';
-      var no = (ov.querySelector('#azuc-notif-id')||{}).value||'';
-      savedCfg.pk_vento = ve; savedCfg.pk_tanica = ta; savedCfg.pk_consumo_pompa = po; savedCfg.pk_notifiche = no;
+      savedCfg.pk_vento = ve; savedCfg.pk_tanica = ta; savedCfg.pk_consumo_pompa = po;
       _azSave(card, savedCfg);
       ov._close();
       if (el) el._fcSig = null;
@@ -1800,12 +1794,12 @@ window.customCards.push({ version: '1.5',
   }
 
   var _AZ_CARD = {
-    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.7',
+    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.8',
     desc: 'Controllo sistema anti zanzare: schedule settimanale, timer, statistiche mensili, blocco meteo, sensori sicurezza.',
     render:    function(card) { return _azRender(card); },
     mount:     function(card, hass, el) { _azMount(card, hass, el); },
     update:    function(card, hass, el) { _azUpdate(card, hass, el); },
-    configure: function(card, el) { _azOpenUserCfg(card, el); },
+    configure: function(card, el) {},
     frarik_pkg_check:   'sensor.stato_anti_zanzare',
     frarik_pkg_id:      'frarik_antizanzare',
     frarik_pkg_version: '1.0',
