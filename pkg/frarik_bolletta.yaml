@@ -34,7 +34,7 @@ homeassistant:
 #              IMPOSTAZIONI PACKAGE                #
 ####################################################
 
-        Sensore Potenza Casa: &sensore_potenza_bolletta sensor.non_configurato
+        Sensore Potenza Casa: &sensore_potenza_bolletta sensor.consumo_istantaneo
 
         Sensore Saldo Octopus: &sensore_saldo_octopus sensor.non_configurato
 
@@ -188,6 +188,7 @@ input_number:
     min: 1.5
     max: 15
     step: 0.5
+    initial: *potenza_kw
     mode: box
     unit_of_measurement: "kW"
     icon: mdi:flash
