@@ -1120,7 +1120,7 @@ window.customCards.push({ version: '1.5',
     var durSec = 0;
     if (dur) { var p = String(dur).split(':').map(Number); durSec = (p[0]||0)*3600+(p[1]||0)*60+(p[2]||0); }
     var pct = durSec > 0 ? Math.max(0, Math.min(100, (remSec / durSec) * 100)) : 0;
-    return {rem:('0'+Math.floor(remSec/60)).slice(-2)+':'+('0'+(remSec%60)).slice(-2), pct:pct, active:true};
+    return {rem:('0'+Math.floor(remSec/60)).slice(-2)+':'+('0'+(remSec%60)).slice(-2), pct:pct, active:true, remSec:remSec, durSec:durSec};
   }
 
   function _azPkgDef() {
@@ -1149,6 +1149,10 @@ window.customCards.push({ version: '1.5',
       pk_cicli_rim:       'sensor.frarik_antizanzare_cicli_rimanenti_mensili',
       pk_avanzamento:     'sensor.frarik_antizanzare_avanzamento_mensile',
       pk_auto_sic:        'automation.frarik_antizanzare_sicurezza_persona_rilevata',
+      pk_vento:           '',
+      pk_tanica:          '',
+      pk_consumo_pompa:   '',
+      pk_notifiche:       '',
     };
   }
 
@@ -1202,164 +1206,152 @@ window.customCards.push({ version: '1.5',
     var stato = _azS(h, c.pk_stato) || 'Spenta';
     var autoOn = _azIsOn(h, c.pk_auto), manOn = _azIsOn(h, c.pk_manuale);
     var blocco = _azIsOn(h, c.pk_blocco_meteo);
+    var pioggiaCorsoBool = _azIsOn(h, c.pk_pioggia_corso);
     var timerC = _azFmtTimer(h, c.pk_timer_ciclo), timerM = _azFmtTimer(h, c.pk_timer_manuale);
     var cicliM = _azNum(_azS(h, c.pk_cicli_mensili)) || 0;
     var target = _azNum(_azS(h, c.pk_cicli_target)) || 100;
     var pioggia = _azNum(_azS(h, c.pk_pioggia)) || 0;
-    var persona = _azIsOn(h, c.pk_persona);
     var perdita = _azIsOn(h, c.pk_perdita);
     var prossimo = _azS(h, c.pk_prossimo) || '';
     var cicliRim = _azNum(_azS(h, c.pk_cicli_rim));
-    var avanzamento = _azNum(_azS(h, c.pk_avanzamento));
     var consumo = _azNum(_azS(h, c.pk_consumo_acqua));
-    var autoSicOn = !c.pk_auto_sic || _azS(h, c.pk_auto_sic) !== 'off';
+    var vento = c.pk_vento ? _azNum(_azS(h, c.pk_vento)) : null;
+    var tanica = c.pk_tanica ? _azNum(_azS(h, c.pk_tanica)) : null;
+    var consumoPompa = c.pk_consumo_pompa ? _azNum(_azS(h, c.pk_consumo_pompa)) : consumo;
     var activeTimer = timerC.active ? timerC : timerM;
     var timerActive = timerC.active || timerM.active;
     var timerLabel = timerC.active ? 'CICLO' : 'MANUALE';
-    var col = '#64748b', colRgb = '100,116,139', statusLabel = 'SPENTA', statusText = 'Spenta';
-    if (blocco)                              { col = '#f59e0b'; colRgb = '245,158,11';  statusLabel = 'METEO';     statusText = 'Blocco meteo'; }
-    else if (stato === 'Manuale Attiva')     { col = '#f97316'; colRgb = '249,115,22';  statusLabel = 'MANUALE';   statusText = 'Manuale attiva'; }
-    else if (stato === 'Ciclo in Corso')     { col = '#22c55e'; colRgb = '34,197,94';   statusLabel = 'CICLO';     statusText = 'Ciclo in corso'; }
-    else if (stato === 'Automazione Attiva') { col = '#06b6d4'; colRgb = '6,182,212';   statusLabel = 'IN ATTESA'; statusText = 'Automazione attiva'; }
-    var cicliPct = Math.min(100, target > 0 ? (cicliM / target) * 100 : 0);
+    var col = '#64748b', colRgb = '100,116,139', statusLabel = 'SPENTA';
+    if (blocco)                              { col = '#f59e0b'; colRgb = '245,158,11';  statusLabel = 'METEO'; }
+    else if (stato === 'Manuale Attiva')     { col = '#f97316'; colRgb = '249,115,22';  statusLabel = 'MANUALE'; }
+    else if (stato === 'Ciclo in Corso')     { col = '#22c55e'; colRgb = '34,197,94';   statusLabel = 'CICLO'; }
+    else if (stato === 'Automazione Attiva') { col = '#06b6d4'; colRgb = '6,182,212';   statusLabel = 'IN ATTESA'; }
+
     var css = '<style>'
-      + '#' + rid + '{position:relative;width:100%;height:100%;min-height:280px;font-family:system-ui,sans-serif;display:block}'
+      + '@keyframes azPulse{0%,100%{opacity:.6}50%{opacity:1}}'
+      + '@keyframes azTimerBar{from{width:100%}to{width:0%}}'
+      + '#' + rid + '{position:relative;width:100%;height:100%;min-height:260px;font-family:system-ui,sans-serif;display:block}'
       + '#' + rid + ' .fc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#08101a 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
-      + '#' + rid + ' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(' + colRgb + ',.08) 0%,transparent 65%);pointer-events:none}'
-      + '#' + rid + ' .fc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
+      + '#' + rid + ' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:180px;background:radial-gradient(ellipse at 20% 0%,rgba(' + colRgb + ',.09) 0%,transparent 65%);pointer-events:none}'
+      + '#' + rid + ' .fc-hdr{display:flex;align-items:center;gap:9px;padding:10px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
       + '#' + rid + ' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;background:rgba(' + colRgb + ',.1);border:1px solid rgba(' + colRgb + ',.2)}'
       + '#' + rid + ' .fc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
       + '#' + rid + ' .fc-hdr-pill{font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;white-space:nowrap;display:flex;align-items:center;gap:4px;background:rgba(' + colRgb + ',.1);border:1px solid rgba(' + colRgb + ',.28);color:' + col + '}'
       + '#' + rid + ' .fc-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:' + col + (timerActive ? ';animation:azPulse 1.5s ease-in-out infinite' : '') + '}'
       + '#' + rid + ' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
       + '#' + rid + ' .fc-scroll::-webkit-scrollbar{display:none}'
-      + '#' + rid + ' .fc-hero{display:flex;align-items:stretch;padding:10px 14px 8px;flex:1}'
-      + '#' + rid + ' .fc-hero-img{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;max-height:130px}'
-      + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:6px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:10px;overflow:hidden}'
-      + '#' + rid + ' .fc-st{display:flex;align-items:center;justify-content:flex-end;gap:7px;font-size:14px;font-weight:800;color:' + col + ';padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06)}'
-      + '#' + rid + ' .fc-stdot{width:8px;height:8px;border-radius:50%;background:' + col + ';flex-shrink:0' + (timerActive ? ';animation:azPulse 1.5s ease-in-out infinite' : '') + '}'
+      + '#' + rid + ' .fc-hero{display:flex;align-items:stretch;padding:9px 14px 7px}'
+      + '#' + rid + ' .fc-hero-img{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;max-height:120px}'
+      + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:5px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:10px}'
       + '#' + rid + ' .fc-met{display:flex;align-items:center;justify-content:space-between;gap:4px}'
       + '#' + rid + ' .fc-met-lbl{font-size:11px;font-weight:700;color:#fff;flex-shrink:0}'
-      + '#' + rid + ' .fc-met-v{font-size:15px;font-weight:800;color:#fff;text-align:right}'
-      + '#' + rid + ' .fc-tmr{display:flex;flex-direction:column;align-items:flex-end;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06)}'
-      + '#' + rid + ' .fc-tmr-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:rgba(255,255,255,.4)}'
-      + '#' + rid + ' .fc-tmr-v{font-size:22px;font-weight:900;color:' + col + ';font-variant-numeric:tabular-nums;letter-spacing:-.02em}'
-      + '#' + rid + ' .fc-pwfull{margin:0 14px 10px}'
-      + '#' + rid + ' .fc-pwfull-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}'
-      + '#' + rid + ' .fc-pwfull-lbl{font-size:10px;font-weight:700;color:#fff}'
-      + '#' + rid + ' .fc-pwfull-v{font-size:18px;font-weight:900;color:' + col + ';line-height:1}'
-      + '#' + rid + ' .fc-pw-bar{height:5px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden}'
-      + '#' + rid + ' .fc-pw-fill{height:100%;border-radius:2px;transition:width .6s,background .4s}'
-      + '#' + rid + ' .fc-stats{display:flex;margin:0 14px 8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden}'
-      + '#' + rid + ' .fc-sb{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 3px;gap:2px}'
-      + '#' + rid + ' .fc-sb-sep{width:1px;background:rgba(255,255,255,.08);flex-shrink:0}'
-      + '#' + rid + ' .fc-sb-n{font-size:12px;font-weight:900;color:' + col + ';height:18px;display:flex;align-items:center;justify-content:center}'
-      + '#' + rid + ' .fc-sb-l{font-size:8px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.4px;text-align:center}'
-      + '#' + rid + ' .fc-btns{display:flex;gap:6px;padding:0 14px 12px}'
+      + '#' + rid + ' .fc-met-v{font-size:14px;font-weight:800;color:#fff;text-align:right}'
+      + '#' + rid + ' .fc-tmr-v{font-size:22px;font-weight:900;color:' + col + ';font-variant-numeric:tabular-nums;letter-spacing:-.02em;text-align:right}'
+      + '#' + rid + ' .fc-tmr-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:rgba(255,255,255,.4);text-align:right}'
+      + '#' + rid + ' .fc-grid{display:flex;margin:0 10px 7px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;overflow:hidden}'
+      + '#' + rid + ' .fc-gc{flex:1;display:flex;flex-direction:column;align-items:center;padding:7px 2px;gap:2px;min-width:0}'
+      + '#' + rid + ' .fc-gc-sep{width:1px;background:rgba(255,255,255,.07);flex-shrink:0}'
+      + '#' + rid + ' .fc-gc-ico{font-size:14px;line-height:1}'
+      + '#' + rid + ' .fc-gc-v{font-size:11px;font-weight:800;color:#fff;text-align:center;white-space:nowrap}'
+      + '#' + rid + ' .fc-gc-l{font-size:8px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.03em;text-align:center}'
+      + '#' + rid + ' .fc-row{display:flex;gap:5px;padding:0 10px 7px}'
+      + '#' + rid + ' .fc-pill{flex:1;display:flex;align-items:center;gap:5px;padding:5px 7px;border-radius:8px;min-width:0}'
+      + '#' + rid + ' .fc-pill-ico{font-size:13px;flex-shrink:0}'
+      + '#' + rid + ' .fc-pill-lbl{font-size:8px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase}'
+      + '#' + rid + ' .fc-pill-v{font-size:11px;font-weight:800;color:#fff}'
+      + '#' + rid + ' .fc-btns{display:flex;gap:6px;padding:0 14px 11px}'
       + '#' + rid + ' .fc-btn{flex:1;padding:8px 4px;border-radius:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:10px;font-weight:700;color:#fff;text-align:center;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:3px}'
       + '#' + rid + ' .fc-btn:hover{background:rgba(' + colRgb + ',.12);border-color:rgba(' + colRgb + ',.3);color:' + col + '}'
       + '#' + rid + ' .fc-btn-act{background:rgba(' + colRgb + ',.15);border-color:rgba(' + colRgb + ',.35);color:' + col + '}'
-      + (timerActive ? '@keyframes azPulse{0%,100%{opacity:.6}50%{opacity:1}}' : '')
       + '</style>';
 
-    var heroHtml = '<div class="fc-hero">'
-      + '<div class="fc-hero-img">' + _azDevSVG(stato, col, colRgb, timerActive ? activeTimer.rem : null) + '</div>'
-      + '<div class="fc-hero-r">'
+    // Hero right column — no duplicate status (already in header pill)
+    var heroR = '<div class="fc-hero-r">'
       + (timerActive
-          ? '<div class="fc-tmr"><div class="fc-tmr-lbl">' + timerLabel + '</div><div class="fc-tmr-v">' + activeTimer.rem + '</div></div>'
-          : '<div class="fc-st">' + statusText + '<div class="fc-stdot"></div></div>')
+          ? '<div class="fc-tmr-lbl">' + timerLabel + ' IN CORSO</div><div class="fc-tmr-v">' + activeTimer.rem + '</div>'
+          : '')
       + '<div class="fc-met"><span class="fc-met-lbl">Cicli mese</span><span class="fc-met-v">' + cicliM + ' / ' + target + '</span></div>'
       + '<div class="fc-met"><span class="fc-met-lbl">Rimanenti</span><span class="fc-met-v" style="color:' + (cicliRim !== null && cicliRim <= 5 ? '#f59e0b' : '#fff') + '">' + (cicliRim !== null ? cicliRim : Math.max(0, target - cicliM)) + '</span></div>'
       + (prossimo && !timerActive
           ? '<div class="fc-met"><span class="fc-met-lbl">Prossimo</span><span class="fc-met-v" style="font-size:11px;color:' + col + '">' + prossimo + '</span></div>'
-          : '<div class="fc-met"><span class="fc-met-lbl">Prob. pioggia</span><span class="fc-met-v" style="color:' + (pioggia > 50 ? '#f59e0b' : '#fff') + '">' + pioggia.toFixed(0) + ' %</span></div>')
-      + '</div></div>';
-
-    var barPct = timerActive ? activeTimer.pct : cicliPct;
-    var barLbl = timerActive ? (timerLabel + ' in corso') : 'Cicli questo mese';
-    var barVal = timerActive ? activeTimer.rem : (cicliM + ' / ' + target);
-    var pwBarHtml = '<div class="fc-pwfull">'
-      + '<div class="fc-pwfull-hd"><span class="fc-pwfull-lbl">' + barLbl + '</span><span class="fc-pwfull-v">' + barVal + '</span></div>'
-      + '<div class="fc-pw-bar"><div class="fc-pw-fill" style="width:' + barPct.toFixed(1) + '%;background:' + col + ';box-shadow:0 0 6px ' + col + '88"></div></div>'
-      + (avanzamento !== null && !timerActive
-          ? '<div class="fc-pwfull-hd" style="margin-top:5px"><span class="fc-pwfull-lbl" style="font-size:9px;color:rgba(255,255,255,.4)">Avanzamento mensile</span><span style="font-size:13px;font-weight:800;color:rgba(255,255,255,.5)">' + avanzamento.toFixed(0) + '%</span></div>'
-          + '<div class="fc-pw-bar"><div class="fc-pw-fill" style="width:' + Math.min(100, avanzamento).toFixed(1) + '%;background:rgba(148,163,184,.4)"></div></div>'
-          : '')
+          : '<div class="fc-met"><span class="fc-met-lbl">Prob. pioggia</span><span class="fc-met-v" style="color:' + (pioggia > 50 ? '#f59e0b' : '#fff') + '">' + pioggia.toFixed(0) + '%</span></div>')
       + '</div>';
 
-    var statsHtml = '<div class="fc-stats">'
-      + '<div class="fc-sb"><div class="fc-sb-n">' + cicliM + '</div><div class="fc-sb-l">Cicli/mese</div></div>'
-      + '<div class="fc-sb-sep"></div>'
-      + '<div class="fc-sb"><div class="fc-sb-n">' + pioggia.toFixed(0) + '%</div><div class="fc-sb-l">Pioggia</div></div>'
-      + '<div class="fc-sb-sep"></div>'
-      + '<div class="fc-sb"><div class="fc-sb-n" style="color:' + (blocco?'#f59e0b':'#22c55e') + '">' + (blocco?'⛈':'✓') + '</div><div class="fc-sb-l">Meteo</div></div>'
-      + '<div class="fc-sb-sep"></div>'
-      + '<div class="fc-sb"><div class="fc-sb-n" style="color:' + (consumo !== null && consumo > 0 ? col : 'rgba(255,255,255,.3)') + '">' + (consumo !== null ? consumo.toFixed(1) : '--') + '</div><div class="fc-sb-l">Acqua L</div></div>'
-      + '</div>';
+    var heroHtml = '<div class="fc-hero">'
+      + '<div class="fc-hero-img">' + _azDevSVG(stato, col, colRgb, timerActive ? activeTimer.rem : null) + '</div>'
+      + heroR + '</div>';
 
-    var sensorsHtml = '<div style="display:flex;gap:6px;padding:0 14px 8px">'
-      + '<div style="flex:1;display:flex;flex-direction:column;gap:2px;padding:6px 8px;border-radius:9px;min-width:0;'
-      + (persona ? 'background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.28)' : 'background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07)')
-      + '"><div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:rgba(255,255,255,.4)">👤 Presenza</div>'
-      + '<div style="font-size:11px;font-weight:800;color:' + (persona ? '#ef4444' : '#22c55e') + '">' + (persona ? '⚠ Rilevata' : 'Libero') + '</div>'
-      + '</div>'
-      + '<div style="flex:1;display:flex;flex-direction:column;gap:2px;padding:6px 8px;border-radius:9px;min-width:0;'
-      + (perdita ? 'background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.28)' : 'background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07)')
-      + '"><div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:rgba(255,255,255,.4)">💧 Cassetta</div>'
-      + '<div style="font-size:11px;font-weight:800;color:' + (perdita ? '#ef4444' : '#22c55e') + '">' + (perdita ? '⚠ Perdita' : 'OK') + '</div>'
-      + '</div>'
-      + '<div data-sya="sic-toggle" style="flex:1;display:flex;flex-direction:column;gap:2px;padding:6px 8px;border-radius:9px;min-width:0;cursor:pointer;'
-      + (autoSicOn ? 'background:rgba(6,182,212,.07);border:1px solid rgba(6,182,212,.18)' : 'background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07)')
-      + '"><div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:rgba(255,255,255,.4)">🔒 Sicurezza</div>'
-      + '<div style="font-size:11px;font-weight:800;color:' + (autoSicOn ? '#06b6d4' : 'rgba(255,255,255,.25)') + '">' + (autoSicOn ? 'Attiva' : 'Off') + '</div>'
-      + '</div>'
-      + '</div>';
-
-    // Day chips
-    var prefix = c.pk_prefix || 'anti_zanzare';
-    var dayIds2 = ['lunedi','martedi','mercoledi','giovedi','venerdi','sabato','domenica'];
-    var dayShort2 = ['LU','MA','ME','GI','VE','SA','DO'];
-    var dayChipsInner = dayShort2.map(function(dn, i) {
-      var d2 = dayIds2[i];
-      var isDay = _azIsOn(h, 'input_boolean.' + prefix + '_' + d2);
-      var nC = Math.round(_azNum(_azS(h, 'input_number.' + prefix + '_' + d2 + '_num_cicli')) || 0);
-      var boxBg = isDay && nC > 0 ? 'rgba(' + colRgb + ',.15)' : 'rgba(255,255,255,.05)';
-      var boxBd = isDay && nC > 0 ? 'rgba(' + colRgb + ',.45)' : 'rgba(255,255,255,.09)';
-      var boxTxt = isDay && nC > 0 ? col : (isDay ? '#94a3b8' : '#374151');
-      var lblCol = isDay ? '#fff' : 'rgba(255,255,255,.28)';
-      var dotsHtml = '<div style="display:flex;gap:1px;margin-top:1px">'
-        + [0,1,2,3,4].map(function(j) {
-            return '<div style="width:4px;height:4px;border-radius:50%;background:' + (j < nC && isDay ? col : 'rgba(255,255,255,.1)') + '"></div>';
-          }).join('') + '</div>';
-      return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 1px">'
-        + '<div style="font-size:8px;font-weight:800;color:' + lblCol + '">' + dn + '</div>'
-        + '<div data-sya="day-' + d2 + '" style="width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;cursor:pointer;background:' + boxBg + ';border:1px solid ' + boxBd + ';color:' + boxTxt + '">'
-        + (nC > 0 ? String(nC) : (isDay ? '0' : '—'))
+    // Timer countdown bar — CSS animated for smooth scroll
+    var timerBarHtml = '';
+    if (timerActive && activeTimer.durSec > 0) {
+      var elapsed = Math.max(0, activeTimer.durSec - activeTimer.remSec);
+      timerBarHtml = '<div style="padding:0 14px 8px">'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
+        + '<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.45)">' + timerLabel + ' in corso</span>'
+        + '<span style="font-size:13px;font-weight:900;color:' + col + ';font-variant-numeric:tabular-nums">' + activeTimer.rem + '</span>'
         + '</div>'
-        + dotsHtml
-        + '<div style="display:flex;gap:1px;margin-top:1px">'
-        + '<div data-sya="ncm-' + d2 + '" style="width:13px;height:13px;border-radius:3px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#94a3b8;cursor:pointer;line-height:1">−</div>'
-        + '<div data-sya="ncp-' + d2 + '" style="width:13px;height:13px;border-radius:3px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#94a3b8;cursor:pointer;line-height:1">+</div>'
-        + '</div>'
+        + '<div style="height:5px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden">'
+        + '<div style="height:100%;background:' + col + ';border-radius:3px;box-shadow:0 0 8px ' + col + '88;'
+        + 'animation:azTimerBar ' + activeTimer.durSec + 's linear both;animation-delay:-' + elapsed + 's"></div>'
+        + '</div></div>';
+    }
+
+    // Sensor grid: Vento / Tanica / Consumo / Pioggia
+    function gc(ico, val, lbl, vc) {
+      return '<div class="fc-gc">'
+        + '<div class="fc-gc-ico">' + ico + '</div>'
+        + '<div class="fc-gc-v" style="color:' + (vc||'#fff') + '">' + val + '</div>'
+        + '<div class="fc-gc-l">' + lbl + '</div>'
         + '</div>';
-    }).join('');
-    var dayChipsHtml = '<div style="display:flex;padding:4px 10px 10px;gap:0;border-top:1px solid rgba(255,255,255,.06)">' + dayChipsInner + '</div>';
+    }
+    var ventoDsp = vento !== null ? vento.toFixed(0) + ' m/s' : (c.pk_vento ? '--' : 'N/D');
+    var tanicaDsp = tanica !== null ? tanica.toFixed(0) + '%' : (c.pk_tanica ? '--' : 'N/D');
+    var pompaDsp = consumoPompa !== null ? consumoPompa.toFixed(1) + 'L' : '--';
+    var pioggiaCol = pioggiaCorsoBool ? '#f59e0b' : '#22c55e';
+    var sensorGrid = '<div class="fc-grid">'
+      + gc('💨', ventoDsp, 'Vento', vento !== null && vento > 10 ? '#f59e0b' : '#fff')
+      + '<div class="fc-gc-sep"></div>'
+      + gc('🪣', tanicaDsp, 'Tanica', tanica !== null && tanica < 20 ? '#ef4444' : (tanica !== null && tanica < 40 ? '#f59e0b' : '#fff'))
+      + '<div class="fc-gc-sep"></div>'
+      + gc('⚡', pompaDsp, 'Pompa', col)
+      + '<div class="fc-gc-sep"></div>'
+      + gc('🌧', pioggiaCorsoBool ? 'Sì' : 'No', 'Pioggia', pioggiaCol)
+      + '</div>';
+
+    // Status pills row: prob. pioggia / blocco meteo / perdita cassetta
+    function pill(ico, lbl, val, bg, bd, vc, sya) {
+      return '<div class="fc-pill" style="background:' + bg + ';border:1px solid ' + bd + ';' + (sya?'cursor:pointer':'') + '"'
+        + (sya?' data-sya="'+sya+'"':'') + '>'
+        + '<div class="fc-pill-ico">' + ico + '</div>'
+        + '<div style="min-width:0"><div class="fc-pill-lbl">' + lbl + '</div><div class="fc-pill-v" style="color:' + vc + '">' + val + '</div></div>'
+        + '</div>';
+    }
+    var statusRow = '<div class="fc-row">'
+      + pill('🌂', 'Prob. pioggia', pioggia.toFixed(0) + '%',
+          'rgba(255,255,255,.03)', 'rgba(255,255,255,.07)',
+          pioggia > 50 ? '#f59e0b' : '#fff')
+      + pill(blocco ? '⛈' : '☀️', 'Meteo', blocco ? 'Bloccato' : 'OK',
+          blocco ? 'rgba(245,158,11,.08)' : 'rgba(255,255,255,.03)',
+          blocco ? 'rgba(245,158,11,.25)' : 'rgba(255,255,255,.07)',
+          blocco ? '#f59e0b' : '#22c55e')
+      + pill(perdita ? '🚨' : '💧', 'Cassetta', perdita ? '⚠ Perdita' : 'OK',
+          perdita ? 'rgba(239,68,68,.08)' : 'rgba(255,255,255,.03)',
+          perdita ? 'rgba(239,68,68,.25)' : 'rgba(255,255,255,.07)',
+          perdita ? '#ef4444' : '#22c55e')
+      + '</div>';
 
     var btnsHtml = '<div class="fc-btns">'
-      + '<div class="fc-btn' + (manOn?' fc-btn-act':'') + '" data-sya="' + (manOn?'man-off':'man-on') + '">' + (manOn?'⏹ Ferma Man.':'▶ Manuale') + '</div>'
+      + '<div class="fc-btn' + (manOn?' fc-btn-act':'') + '" data-sya="' + (manOn?'man-off':'man-on') + '">' + (manOn?'⏹ Ferma':'▶ Manuale') + '</div>'
       + '<div class="fc-btn' + (autoOn?' fc-btn-act':'') + '" data-sya="' + (autoOn?'auto-off':'auto-on') + '">' + (autoOn?'⏹ Stop Auto':'▶ Auto') + '</div>'
-      + '<div class="fc-btn" data-sya="programma" style="flex:0.65;background:rgba(34,197,94,.07);border-color:rgba(34,197,94,.22)">📅</div>'
       + '<div class="fc-btn" data-sya="popup-cfg" style="flex:0.55">⚙</div>'
       + '</div>';
 
     return css
       + '<div id="' + rid + '"><div class="fc-card">'
-      + '<div class="fc-hdr">'
-      + '<div class="fc-hdr-iw">🦟</div>'
+      + '<div class="fc-hdr"><div class="fc-hdr-iw">🦟</div>'
       + '<div class="fc-hdr-tit">' + (c.name || 'Anti Zanzare') + '</div>'
-      + '<div class="fc-hdr-pill"><div class="fc-dot"></div>' + statusLabel + '</div>'
-      + '</div>'
-      + '<div class="fc-scroll">' + heroHtml + pwBarHtml + statsHtml + sensorsHtml + dayChipsHtml + btnsHtml + '</div>'
+      + '<div class="fc-hdr-pill"><div class="fc-dot"></div>' + statusLabel + '</div></div>'
+      + '<div class="fc-scroll">' + heroHtml + timerBarHtml + sensorGrid + statusRow + btnsHtml + '</div>'
       + '</div></div>';
   }
 
@@ -1514,78 +1506,160 @@ window.customCards.push({ version: '1.5',
 
   function _azOpenUserCfg(card, el) {
     var h = _azH(), c = _azCfgFor(card);
+    var prefix = c.pk_prefix || 'frarik_antizanzare';
     var autoOn  = _azIsOn(h, c.pk_auto);
+    var sicOn   = !c.pk_auto_sic || _azS(h, c.pk_auto_sic) !== 'off';
+    var notifOn = c.pk_notifiche ? _azIsOn(h, c.pk_notifiche) : null;
     var durM    = Math.round(_azNum(_azS(h, c.pk_durata_manuale)) || 60);
     var soglia  = Math.round(_azNum(_azS(h, c.pk_soglia_pioggia)) || 50);
     var tarMens = Math.round(_azNum(_azS(h, c.pk_cicli_target)) || 100);
-    var sicOn   = !c.pk_auto_sic || _azS(h, c.pk_auto_sic) !== 'off';
-    var ucPersona   = _azIsOn(h, c.pk_persona);
-    var ucPerdita   = _azIsOn(h, c.pk_perdita);
-    var ucProssimo  = _azS(h, c.pk_prossimo) || '--';
-    var ucCicliRim  = _azNum(_azS(h, c.pk_cicli_rim));
-    var ucAvanz     = _azNum(_azS(h, c.pk_avanzamento));
+    var dayIds  = ['lunedi','martedi','mercoledi','giovedi','venerdi','sabato','domenica'];
+    var dayLbls = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato','Domenica'];
+    var dayShrt = ['LUN','MAR','MER','GIO','VEN','SAB','DOM'];
 
-    function ntog(label, sya, isOn) {
-      return '<div data-sya="' + sya + '" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:8px 4px;border-radius:9px;'
-        + 'background:rgba(' + (isOn?'34,197,94':'100,116,139') + ',.1);border:1px solid rgba(' + (isOn?'34,197,94':'100,116,139') + ',' + (isOn?'.35':'.15') + ');transition:all .2s">'
-        + '<div style="font-size:18px">' + (isOn ? '✅' : '⭕') + '</div>'
-        + '<div style="font-size:10px;font-weight:800;color:' + (isOn?'#22c55e':'rgba(255,255,255,.35)') + '">' + label + '</div>'
-        + '<div style="font-size:9px;font-weight:700;color:' + (isOn?'#fff':'rgba(255,255,255,.25)') + '">' + (isOn?'ON':'OFF') + '</div>'
-        + '</div>';
-    }
+    function sec(t) { return '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#22c55e;padding-bottom:5px;border-bottom:1px solid rgba(34,197,94,.18);margin:14px 0 10px">' + t + '</div>'; }
     function numRow(id, label, val, unit, min, max, step) {
       return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">'
         + '<span style="font-size:11px;color:#fff;flex:1">' + label + '</span>'
-        + '<input id="azuc-' + id + '" type="number" min="' + min + '" max="' + max + '" step="' + step + '" value="' + val + '" style="width:85px;padding:6px 9px;border-radius:7px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:13px;outline:none;text-align:right">'
+        + '<input id="azuc-' + id + '" type="number" min="' + min + '" max="' + max + '" step="' + step + '" value="' + val + '" style="width:80px;padding:6px 9px;border-radius:7px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:13px;outline:none;text-align:right">'
         + '<span style="font-size:10px;color:rgba(255,255,255,.4);width:32px;flex-shrink:0">' + unit + '</span>'
         + '</div>';
     }
-    function sec(t) { return '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#22c55e;padding-bottom:4px;border-bottom:1px solid rgba(34,197,94,.18);margin:14px 0 10px">' + t + '</div>'; }
-    function sRow(icon, label, val, col) {
-      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0">'
-        + '<span style="font-size:11px;color:rgba(255,255,255,.7)">' + icon + ' ' + label + '</span>'
-        + '<span style="font-size:11px;font-weight:800;color:' + (col||'#fff') + '">' + val + '</span>'
+    function togBtn(id, label, isOn, col) {
+      var onC = col || '34,197,94';
+      return '<div id="' + id + '" data-on="' + (isOn?'1':'0') + '" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:8px 4px;border-radius:9px;'
+        + 'background:rgba(' + (isOn?onC:'100,116,139') + ',.1);border:1px solid rgba(' + (isOn?onC:'100,116,139') + ',' + (isOn?'.35':'.15') + ');transition:all .2s">'
+        + '<div style="font-size:18px">' + (isOn ? '✅' : '⭕') + '</div>'
+        + '<div style="font-size:10px;font-weight:800;color:' + (isOn?'rgb('+onC+')':'rgba(255,255,255,.35)') + '">' + label + '</div>'
+        + '<div class="azuc-tov" style="font-size:9px;font-weight:700;color:' + (isOn?'#fff':'rgba(255,255,255,.25)') + '">' + (isOn?'ON':'OFF') + '</div>'
         + '</div>';
     }
 
-    var content = sec('Automazione')
-      + '<div style="display:flex;gap:8px;margin-bottom:4px">' + ntog('Automazione', 'ucfg-auto', autoOn) + ntog('Sicurezza', 'ucfg-sic', sicOn) + '</div>'
-      + sec('Avvio manuale')
-      + numRow('dur', 'Durata avvio manuale', durM, 'sec', 10, 7200, 10)
-      + sec('Meteo e obiettivo')
+    // Schedule section — one row per day
+    var schedHtml = dayIds.map(function(d, i) {
+      var isOn = _azIsOn(h, 'input_boolean.' + prefix + '_' + d);
+      var nc = Math.round(_azNum(_azS(h, 'input_number.' + prefix + '_' + d + '_num_cicli')) || 0);
+      var times = [];
+      for (var ci = 1; ci <= 5; ci++) {
+        times.push((_azS(h, 'input_datetime.' + prefix + '_' + d + '_orario_ciclo' + ci) || '07:00:00').slice(0,5));
+      }
+      var timeInputs = '';
+      for (var ti2 = 0; ti2 < 5; ti2++) {
+        var active = ti2 < nc;
+        timeInputs += '<input type="time" id="azs-t-' + d + '-' + (ti2+1) + '" value="' + times[ti2] + '"'
+          + ' style="flex:1;min-width:0;padding:4px 4px;border-radius:6px;background:#0b1422;color:' + (active?'#f1f5f9':'rgba(255,255,255,.2)') + ';'
+          + 'border:1px solid rgba(255,255,255,' + (active?'.15':'.06') + ');font-size:11px;outline:none"'
+          + (active ? '' : ' disabled') + '>';
+      }
+      return '<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:8px 10px;margin-bottom:7px">'
+        + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+        + '<div id="azs-tog-' + d + '" data-on="' + (isOn?'1':'0') + '" data-day="' + d + '"'
+        + ' style="width:34px;height:19px;border-radius:10px;flex-shrink:0;cursor:pointer;background:' + (isOn?'#22c55e':'rgba(255,255,255,.15)') + ';position:relative;transition:background .2s">'
+        + '<div style="position:absolute;top:2px;' + (isOn?'right:2px':'left:2px') + ';width:15px;height:15px;border-radius:50%;background:#fff;transition:all .2s"></div>'
+        + '</div>'
+        + '<span style="font-size:12px;font-weight:700;color:#fff;flex:1">' + dayLbls[i] + '</span>'
+        + '<div style="display:flex;align-items:center;gap:4px">'
+        + '<button id="azs-ncm-' + d + '" style="width:22px;height:22px;border-radius:6px;border:none;background:rgba(255,255,255,.08);color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700">−</button>'
+        + '<span id="azs-ncv-' + d + '" style="font-size:14px;font-weight:800;color:#22c55e;min-width:18px;text-align:center">' + nc + '</span>'
+        + '<input type="hidden" id="azs-nc-' + d + '" value="' + nc + '">'
+        + '<button id="azs-ncp-' + d + '" style="width:22px;height:22px;border-radius:6px;border:none;background:rgba(255,255,255,.08);color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700">+</button>'
+        + '<span style="font-size:10px;color:rgba(255,255,255,.35);margin-left:2px">cicli</span>'
+        + '</div></div>'
+        + '<div id="azs-times-' + d + '" style="display:flex;gap:4px;' + (nc===0?'display:none':'') + '">' + timeInputs + '</div>'
+        + '</div>';
+    }).join('');
+
+    var content = sec('Automazione & Sicurezza')
+      + '<div style="display:flex;gap:8px;margin-bottom:6px">'
+      + togBtn('azuc-tog-auto', 'Automazione', autoOn)
+      + togBtn('azuc-tog-sic', 'Sicurezza', sicOn, '6,182,212')
+      + (notifOn !== null ? togBtn('azuc-tog-ntf', 'Notifiche', notifOn, '168,85,247') : '')
+      + '</div>'
+      + sec('Programma Settimanale')
+      + schedHtml
+      + sec('Soglie & Durate')
       + numRow('sog', 'Soglia blocco pioggia', soglia, '%', 0, 100, 5)
+      + numRow('dur', 'Durata avvio manuale', durM, 'sec', 10, 7200, 10)
       + numRow('tar', 'Target cicli mensili', tarMens, 'cicli', 1, 999, 1)
-      + sec('Sensori')
-      + sRow('👤', 'Presenza', ucPersona ? '⚠ Rilevata' : 'Libero', ucPersona ? '#ef4444' : '#22c55e')
-      + sRow('💧', 'Cassetta', ucPerdita ? '⚠ Perdita' : 'OK', ucPerdita ? '#ef4444' : '#22c55e')
-      + sRow('📍', 'Prossimo ciclo', ucProssimo, '#fff')
-      + (ucCicliRim !== null ? sRow('🔢', 'Cicli rimanenti', ucCicliRim, ucCicliRim <= 5 ? '#f59e0b' : '#fff') : '')
-      + (ucAvanz !== null ? sRow('📈', 'Avanzamento mensile', ucAvanz.toFixed(0) + '%', '#fff') : '')
-      + '<button id="azuc-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#22c55e;color:#022c1b;margin-top:12px">💾 Salva</button>';
+      + '<button id="azuc-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#22c55e;color:#022c1b;margin-top:4px">💾 Salva tutto</button>';
 
     var ov = _azMkOv(_azPopShell('⚙','34,197,94','Impostazioni',c.name||'Anti Zanzare','azuc-cl',content),'azuc-cl');
-    ov.querySelectorAll('[data-sya^="ucfg-"]').forEach(function(tog) {
-      tog.addEventListener('click', function() {
-        var sya = tog.dataset.sya;
-        var wasOn = tog.querySelector('div:last-child').textContent === 'ON';
-        var eid = sya === 'ucfg-auto' ? c.pk_auto : sya === 'ucfg-sic' ? c.pk_auto_sic : null;
-        var domain = sya === 'ucfg-sic' ? 'automation' : 'input_boolean';
-        if (eid) _azCallSvc(domain, wasOn ? 'turn_off' : 'turn_on', {entity_id: eid});
-        tog.style.background = 'rgba(' + (wasOn?'100,116,139':'34,197,94') + ',.1)';
-        tog.style.borderColor = 'rgba(' + (wasOn?'100,116,139':'34,197,94') + ',' + (wasOn?'.15':'.35') + ')';
-        tog.querySelector('div:first-child').textContent = wasOn ? '⭕' : '✅';
-        tog.querySelector('div:nth-child(2)').style.color = wasOn ? 'rgba(255,255,255,.35)' : '#22c55e';
-        var lv = tog.querySelector('div:last-child'); lv.textContent = wasOn ? 'OFF' : 'ON'; lv.style.color = wasOn ? 'rgba(255,255,255,.25)' : '#fff';
+
+    // Toggle buttons (auto, sicurezza, notifiche)
+    ['azuc-tog-auto','azuc-tog-sic','azuc-tog-ntf'].forEach(function(tid) {
+      var tb = ov.querySelector('#' + tid); if (!tb) return;
+      tb.addEventListener('click', function() {
+        var wasOn = tb.dataset.on === '1';
+        var nowOn = !wasOn;
+        tb.dataset.on = nowOn ? '1' : '0';
+        var onC = tid === 'azuc-tog-sic' ? '6,182,212' : tid === 'azuc-tog-ntf' ? '168,85,247' : '34,197,94';
+        tb.style.background = 'rgba(' + (nowOn?onC:'100,116,139') + ',.1)';
+        tb.style.borderColor = 'rgba(' + (nowOn?onC:'100,116,139') + ',' + (nowOn?'.35':'.15') + ')';
+        tb.querySelector('div:first-child').textContent = nowOn ? '✅' : '⭕';
+        tb.querySelector('div:nth-child(2)').style.color = nowOn ? 'rgb('+onC+')' : 'rgba(255,255,255,.35)';
+        var tv2 = tb.querySelector('.azuc-tov'); if(tv2){ tv2.textContent = nowOn?'ON':'OFF'; tv2.style.color = nowOn?'#fff':'rgba(255,255,255,.25)'; }
+        var eid = tid==='azuc-tog-auto' ? c.pk_auto : tid==='azuc-tog-sic' ? c.pk_auto_sic : c.pk_notifiche;
+        var dom = tid==='azuc-tog-sic' ? 'automation' : 'input_boolean';
+        if (eid) { _azCallSvc(dom, nowOn?'turn_on':'turn_off', {entity_id:eid}); if(el) el._fcSig=null; }
       });
     });
+
+    // Schedule toggles (day on/off)
+    ov.querySelectorAll('[id^="azs-tog-"]').forEach(function(tog) {
+      tog.addEventListener('click', function() {
+        var wasOn = tog.dataset.on === '1';
+        tog.dataset.on = wasOn ? '0' : '1';
+        tog.style.background = wasOn ? 'rgba(255,255,255,.15)' : '#22c55e';
+        var k2 = tog.querySelector('div'); if(k2){ k2.style.right=wasOn?'':' 2px'; k2.style.left=wasOn?'2px':''; }
+      });
+    });
+
+    // Schedule num cicli +/-
+    dayIds.forEach(function(d) {
+      var ncH = ov.querySelector('#azs-nc-' + d);
+      var ncV = ov.querySelector('#azs-ncv-' + d);
+      var timesDiv = ov.querySelector('#azs-times-' + d);
+      function updateTimes(nc) {
+        if (!timesDiv) return;
+        timesDiv.style.display = nc === 0 ? 'none' : 'flex';
+        for (var i2 = 1; i2 <= 5; i2++) {
+          var ti3 = ov.querySelector('#azs-t-' + d + '-' + i2); if(!ti3) continue;
+          var act = i2 <= nc;
+          ti3.disabled = !act;
+          ti3.style.color = act ? '#f1f5f9' : 'rgba(255,255,255,.2)';
+          ti3.style.borderColor = 'rgba(255,255,255,' + (act?'.15':'.06') + ')';
+        }
+      }
+      var ncmBtn = ov.querySelector('#azs-ncm-' + d), ncpBtn = ov.querySelector('#azs-ncp-' + d);
+      if (ncmBtn) ncmBtn.addEventListener('click', function() { var v=Math.max(0,parseInt(ncH.value)-1); ncH.value=v; if(ncV) ncV.textContent=v; updateTimes(v); });
+      if (ncpBtn) ncpBtn.addEventListener('click', function() { var v=Math.min(5,parseInt(ncH.value)+1); ncH.value=v; if(ncV) ncV.textContent=v; updateTimes(v); });
+    });
+
+    // Save
     ov.querySelector('#azuc-save').addEventListener('click', function() {
       var h2 = _azH();
-      var dv = (ov.querySelector('#azuc-dur')||{}).value;
+      // Soglie
       var sv = (ov.querySelector('#azuc-sog')||{}).value;
+      var dv = (ov.querySelector('#azuc-dur')||{}).value;
       var tv = (ov.querySelector('#azuc-tar')||{}).value;
-      if (dv && h2 && h2.callService) h2.callService('input_number','set_value',{entity_id:c.pk_durata_manuale,value:parseFloat(dv)});
       if (sv && h2 && h2.callService) h2.callService('input_number','set_value',{entity_id:c.pk_soglia_pioggia,value:parseFloat(sv)});
+      if (dv && h2 && h2.callService) h2.callService('input_number','set_value',{entity_id:c.pk_durata_manuale,value:parseFloat(dv)});
       if (tv && h2 && h2.callService) h2.callService('input_number','set_value',{entity_id:c.pk_cicli_target,value:parseFloat(tv)});
+      // Schedule
+      dayIds.forEach(function(d) {
+        var togEl = ov.querySelector('#azs-tog-' + d);
+        var ncEl = ov.querySelector('#azs-nc-' + d);
+        var isOn = togEl ? togEl.dataset.on === '1' : false;
+        var nc = parseInt(ncEl ? ncEl.value : 0) || 0;
+        if (h2 && h2.callService) {
+          h2.callService('input_boolean', isOn?'turn_on':'turn_off', {entity_id:'input_boolean.'+prefix+'_'+d});
+          h2.callService('input_number','set_value',{entity_id:'input_number.'+prefix+'_'+d+'_num_cicli',value:nc});
+          for (var ci2 = 1; ci2 <= 5; ci2++) {
+            var tEl = ov.querySelector('#azs-t-' + d + '-' + ci2);
+            if (tEl && tEl.value) h2.callService('input_datetime','set_datetime',{entity_id:'input_datetime.'+prefix+'_'+d+'_orario_ciclo'+ci2,time:tEl.value+':00'});
+          }
+        }
+      });
       ov._close();
       if (el) el._fcSig = null;
     });
@@ -1629,6 +1703,11 @@ window.customCards.push({ version: '1.5',
       + fld('pk_cicli_rim','Sensor cicli rimanenti','sensor.frarik_antizanzare_cicli_rimanenti_mensili')
       + fld('pk_avanzamento','Sensor avanzamento mensile','sensor.frarik_antizanzare_avanzamento_mensile')
       + fld('pk_auto_sic','Automation sicurezza','automation.frarik_antizanzare_sicurezza_persona_rilevata')
+      + sec('Sensori opzionali')
+      + fld('pk_vento','Velocità vento (m/s)','sensor.velocita_vento')
+      + fld('pk_tanica','Livello tanica (%)','sensor.livello_tanica')
+      + fld('pk_consumo_pompa','Consumo pompa (L)','sensor.consumo_pompa')
+      + fld('pk_notifiche','Notifiche boolean','input_boolean.frarik_antizanzare_notifiche')
       + '<button id="az-ent-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#22c55e;color:#022c1b;margin-top:8px">💾 Salva</button>';
     var ov = _azMkOv(_azPopShell('🔧','34,197,94','Entità',c.name||'Anti Zanzare','az-ent-cl',content),'az-ent-cl');
     ov.querySelector('#az-ent-save').addEventListener('click', function() {
@@ -1651,18 +1730,20 @@ window.customCards.push({ version: '1.5',
     var dsg = dk.map(function(d){return _azIsOn(h,'input_boolean.'+px+'_'+d)?'1':'0';}).join('');
     var ncsg = dk.map(function(d){return Math.round(_azNum(_azS(h,'input_number.'+px+'_'+d+'_num_cicli'))||0);}).join('');
     var tc = _azS(h,c.pk_timer_ciclo), tm = _azS(h,c.pk_timer_manuale);
-    return ['2.4az',_azS(h,c.pk_stato),_azS(h,c.pk_auto),_azS(h,c.pk_manuale),tc,tm,
+    return ['2.5az',_azS(h,c.pk_stato),_azS(h,c.pk_auto),_azS(h,c.pk_manuale),tc,tm,
             _azS(h,c.pk_cicli_mensili),_azS(h,c.pk_cicli_target),
-            _azS(h,c.pk_blocco_meteo),_azS(h,c.pk_pioggia),
+            _azS(h,c.pk_blocco_meteo),_azS(h,c.pk_pioggia),_azS(h,c.pk_pioggia_corso),
             _azS(h,c.pk_durata_manuale),_azS(h,c.pk_soglia_pioggia),
             _azS(h,c.pk_persona),_azS(h,c.pk_perdita),_azS(h,c.pk_prossimo),
             _azS(h,c.pk_cicli_rim),_azS(h,c.pk_consumo_acqua),_azS(h,c.pk_auto_sic),
+            c.pk_vento?_azS(h,c.pk_vento):'',c.pk_tanica?_azS(h,c.pk_tanica):'',
+            c.pk_consumo_pompa?_azS(h,c.pk_consumo_pompa):'',
             dsg,ncsg].join('|');
   }
 
   function _azMount(card, hass, el) {
-    if (el._fcBound === '2.4az') return;
-    el._fcBound = '2.4az';
+    if (el._fcBound === '2.5az') return;
+    el._fcBound = '2.5az';
     if (el._fcHandler) el.removeEventListener('click', el._fcHandler);
     el._fcHandler = function(e) {
       var t = e.target.closest('[data-sya]'); if (!t) return;
@@ -1720,7 +1801,7 @@ window.customCards.push({ version: '1.5',
   }
 
   var _AZ_CARD = {
-    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.5',
+    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.6',
     desc: 'Controllo sistema anti zanzare: schedule settimanale, timer, statistiche mensili, blocco meteo, sensori sicurezza.',
     render:    function(card) { return _azRender(card); },
     mount:     function(card, hass, el) { _azMount(card, hass, el); },

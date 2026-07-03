@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.7.69 — 2026-07-03
+
+### feat(antizanzare): card v2.6 — redesign completo UI + impostazioni programma settimanale
+
+- **Nuovo layout principale**: griglia 4 sensori (💨 Vento / 🪣 Tanica / ⚡ Pompa / 🌧 Pioggia), 3 pill stato (Prob. pioggia / Meteo / Cassetta), solo 3 pulsanti (Manuale / Auto / ⚙)
+- **Timer bar**: barra countdown CSS animata (`azTimerBar`) con `animation-delay:-{elapsed}s` per scorrimento fluido in tempo reale; scompare a fine ciclo
+- **Status unico**: "Spenta/METEO/MANUALE/CICLO/IN ATTESA" solo nel pill header, rimosso dal corpo card
+- **Sensori opzionali**: `pk_vento`, `pk_tanica`, `pk_consumo_pompa` configurabili dall'editor entità; mostrano "N/D" se non configurati
+- **Impostazioni (⚙) riscritte**: toggle Automazione + Sicurezza + Notifiche, programma L-D con toggle per giorno + num cicli (+/-) + 5 orari per ciclo, soglie e durate, save unico
+- **Schedule live**: ogni modifica ai toggle/orari viene salvata su HA (`input_boolean`, `input_number`, `input_datetime`) con re-render immediato
+- Firma sig aggiornata a `2.5az` per forzare re-mount sui client esistenti
+- `_azOpenEntCfg`: aggiunti campi per pk_vento, pk_tanica, pk_consumo_pompa, pk_notifiche
+
 ## 1.7.68 — 2026-07-03
 
 ### fix(store): pulsante "Aggiorna" nel tab Aggiorna non funzionava
