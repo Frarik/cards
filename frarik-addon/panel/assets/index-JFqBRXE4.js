@@ -477,7 +477,7 @@ var py=Object.defineProperty;var fy=(e,t,n)=>t in e?py(e,t,{enumerable:!0,config
     <div class="card-inner">${p}${Mf(e)}</div>
     <div class="card-ov">
       <div class="ov-row">
-        <button class="ovb ovb-edit ovb-menu" data-action="cardMenu" data-action-arg="${e.id}" title="${l==="free"?"Modifica Canvas":"Modifica card"}">${l==="free"?"🎨":"✏️"}</button>
+        ${(()=>{var h;return l==="js-custom"&&e.jsCardId&&((h=(window.FratechCardRegistry||{})[e.jsCardId])==null?void 0:h.frarik_no_edit)?"":`<button class="ovb ovb-edit ovb-menu" data-action="cardMenu" data-action-arg="${e.id}" title="${l==="free"?"Modifica Canvas":"Modifica card"}">${l==="free"?"🎨":"✏️"}</button>`})()}
         <button class="ovb ovb-dots" data-action="cardDotMenu" data-action-args='["${e.id}"]' data-action-el="true" title="Azioni card"><i class="mdi mdi-dots-vertical"></i></button>
       </div>
     </div>

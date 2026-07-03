@@ -5791,7 +5791,7 @@ function buildCard(card){
     <div class="card-inner">${inner}${_renderCardBadgesHTML(card)}</div>
     <div class="card-ov">
       <div class="ov-row">
-        <button class="ovb ovb-edit ovb-menu" data-action="cardMenu" data-action-arg="${card.id}" title="${t==='free'?'Modifica Canvas':'Modifica card'}">${t==='free'?'🎨':'✏️'}</button>
+        ${(()=>{ const _nr=t==='js-custom'&&card.jsCardId&&(window.FratechCardRegistry||{})[card.jsCardId]?.frarik_no_edit; return _nr?'':(`<button class="ovb ovb-edit ovb-menu" data-action="cardMenu" data-action-arg="${card.id}" title="${t==='free'?'Modifica Canvas':'Modifica card'}">${t==='free'?'🎨':'✏️'}</button>`); })()}
         <button class="ovb ovb-dots" data-action="cardDotMenu" data-action-args='["${card.id}"]' data-action-el="true" title="Azioni card"><i class="mdi mdi-dots-vertical"></i></button>
       </div>
     </div>

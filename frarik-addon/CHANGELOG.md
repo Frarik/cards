@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.74 — 2026-07-04
+
+### feat(antizanzare): card v2.10 — rimozione matita in modalità modifica
+
+- Aggiunto `frarik_no_edit: true` a `_AZ_CARD`: segnala al FratechStore che la card gestisce internamente le proprie impostazioni (popup ⚙) e non ha bisogno dell'editor YAML generico
+- In `main.js`: il pulsante ✏️ nell'overlay modalità modifica viene omesso per le card `js-custom` con `frarik_no_edit: true` — rimane solo il menu ⋮ (duplica, elimina, ecc.)
+
 ## 1.7.73 — 2026-07-04
 
 ### feat(antizanzare): card v2.9 — timer bar fluida, bottoni verde/rosso, SVG illuminazione
