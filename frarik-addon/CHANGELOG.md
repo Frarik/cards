@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.78 — 2026-07-04
+
+### fix(bolletta): card v3.6 + PKG — entity ID sistematici corretti
+
+- **Bug sistematico entity ID**: il PKG creava entità con `sensor.bolletta_*` (nome senza "Frarik") ma leggeva `sensor.frarik_bolletta_*` — tutti i valori erano zero perché la catena era spezzata
+- **PKG installed** (`frarik_bolletta.yaml`): corrette 103 reference — `source:` degli utility_meter ora puntano a `sensor.bolletta_energia_totale_casa` (esistente); tutti i `states()` interni aggiornati a usare le entity ID effettive
+- **PKG repo** (`cards/pkg/frarik_bolletta.yaml`): stesso fix applicato per coerenza nelle installazioni future
+- **Card v3.6**: `pkDefaults()` aggiornati — tutti i `sensor.frarik_bolletta_*` → `sensor.bolletta_*` (esclusi ARERA, versione, Octopus che hanno già il prefisso corretto)
+
 ## 1.7.77 — 2026-07-04
 
 ### fix(antizanzare): card v2.13 — toggle persistenti + rimozione matita garantita
