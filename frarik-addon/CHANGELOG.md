@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.76 — 2026-07-04
+
+### fix(antizanzare): card v2.12 — notifiche persistenti, matita rimossa, sfondo ridotto
+
+- **Notifiche**: il Save ri-invia esplicitamente lo stato del toggle `azuc-tog-ntf` a HA via `_azCallSvc` — elimina la race condition in cui HA non aveva aggiornato il websocket prima del re-render
+- **Matita**: corretta posizione del check `frarik_no_edit` — si trovava nel blocco carte standard, non in quello `yaml-card||js-custom` (riga 5742) che le card JS usano effettivamente; il pulsante ✏️ è ora effettivamente omesso
+- **Sfondo card**: rimosso il secondo radial-gradient; opacità ridotta da `.28` → `.15` (attivo) e `.09` → `.07` (spento) — l'alone colorato è appena percettibile, non più un blob bianco visibile
+
 ## 1.7.75 — 2026-07-04
 
 ### feat(antizanzare): card v2.11 — countdown prossimo ciclo, pioggia SVG, background dinamico, testi bianchi

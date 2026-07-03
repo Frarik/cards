@@ -1261,8 +1261,7 @@ window.customCards.push({ version: '1.5',
     else if (stato === 'Ciclo in Corso')     { col = '#22c55e'; colRgb = '34,197,94';   statusLabel = 'ACCESA'; }
     else if (stato === 'Automazione Attiva') { col = '#06b6d4'; colRgb = '6,182,212';   statusLabel = 'ACCESA'; }
     var isAccesa = (autoOn || manOn || timerActive);
-    var bgOpacity = isAccesa ? '.28' : '.09';
-    var bgGlow2 = isAccesa ? 'radial-gradient(ellipse at 85% 100%,rgba(' + colRgb + ',.14) 0%,transparent 55%),' : '';
+    var bgOpacity = isAccesa ? '.15' : '.07';
 
     var prossimoHtml = '';
     if (prossimo && !timerActive) {
@@ -1280,7 +1279,7 @@ window.customCards.push({ version: '1.5',
       + '@keyframes azPulse{0%,100%{opacity:.6}50%{opacity:1}}'
       + '#' + rid + '{position:relative;width:100%;height:100%;min-height:260px;font-family:system-ui,sans-serif;display:block}'
       + '#' + rid + ' .fc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#08101a 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
-      + '#' + rid + ' .fc-card::before{content:"";position:absolute;inset:0;background:' + bgGlow2 + 'radial-gradient(ellipse at 20% 0%,rgba(' + colRgb + ',' + bgOpacity + ') 0%,transparent 65%);pointer-events:none;transition:background .6s}'
+      + '#' + rid + ' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:180px;background:radial-gradient(ellipse at 20% 0%,rgba(' + colRgb + ',' + bgOpacity + ') 0%,transparent 65%);pointer-events:none}'
       + '#' + rid + ' .fc-hdr{display:flex;align-items:center;gap:9px;padding:10px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
       + '#' + rid + ' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;background:rgba(' + colRgb + ',.1);border:1px solid rgba(' + colRgb + ',.2)}'
       + '#' + rid + ' .fc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
@@ -1750,6 +1749,11 @@ window.customCards.push({ version: '1.5',
           }
         }
       });
+      // Notifiche → HA (ri-inviato al salva per evitare race condition)
+      var ntfBtn = ov.querySelector('#azuc-tog-ntf');
+      if (ntfBtn && notifEntity) {
+        _azCallSvc('input_boolean', ntfBtn.dataset.on === '1' ? 'turn_on' : 'turn_off', {entity_id: notifEntity});
+      }
       // Sensori opzionali → localStorage
       var savedCfg = _azLoad(card);
       var ve = (ov.querySelector('#azuc-vento-id')||{}).value||'';
@@ -1860,7 +1864,7 @@ window.customCards.push({ version: '1.5',
   }
 
   var _AZ_CARD = {
-    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.11', frarik_no_edit: true,
+    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.12', frarik_no_edit: true,
     desc: 'Controllo sistema anti zanzare: schedule settimanale, timer, statistiche mensili, blocco meteo, sensori sicurezza.',
     render:    function(card) { return _azRender(card); },
     mount:     function(card, hass, el) { _azMount(card, hass, el); },

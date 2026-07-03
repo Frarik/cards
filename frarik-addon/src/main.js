@@ -5743,10 +5743,11 @@ function buildCard(card){
   if(t==='yaml-card'||t==='js-custom'){
     el.classList.add('card-jsc');
     el.style.cssText+='padding:0;cursor:default;';
+    const _jscNoEdit=t==='js-custom'&&card.jsCardId&&(window.FratechCardRegistry||{})[card.jsCardId]?.frarik_no_edit;
     el.innerHTML=`
       ${inner}
       <div class="card-ov" style="z-index:30"><div class="ov-row">
-          <button class="ovb ovb-edit ovb-menu" data-action="cardMenu" data-action-arg="${card.id}" title="Modifica card">✏️</button>
+          ${_jscNoEdit?'':'<button class="ovb ovb-edit ovb-menu" data-action="cardMenu" data-action-arg="'+card.id+'" title="Modifica card">✏️</button>'}
           <button class="ovb ovb-dots" data-action="cardDotMenu" data-action-args='["${card.id}"]' data-action-el="true" title="Azioni card"><i class="mdi mdi-dots-vertical"></i></button>
         </div></div>
       <div class="resize-handle" id="rh-${card.id}"></div>`;
