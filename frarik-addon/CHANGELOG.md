@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.7.67 — 2026-07-03
+
+### feat(antizanzare): card v2.5 — tutti i sensori PKG esposti + sicurezza + real-time fix
+
+- **Nuove entità PKG** nella card: presenza (telecamera giardino), perdita cassetta, prossimo ciclo, cicli rimanenti (sensor), avanzamento mensile, automation sicurezza
+- **Sezione sensori** nella card principale: 3 pill — 👤 Presenza, 💧 Cassetta, 🔒 Sicurezza (tappabile per toggle automation)
+- **Hero**: "Rimanenti" ora usa il sensor PKG; 4° riga mostra prossimo ciclo (se disponibile) al posto di prob. pioggia
+- **Stats**: 4° colonna cambiata da "Auto" a "Acqua L" (consumo_acqua)
+- **Barra avanzamento mensile** aggiunta sotto barra cicli mensili (quando dati disponibili)
+- **Settings popup (⚙)**: aggiunto toggle Sicurezza accanto ad Automazione; sezione "Sensori" con tutti i valori in tempo reale
+- **Real-time fix**: tutti i popup (day detail, programma toggle) resettano `el._fcSig=null` al salvataggio per forzare re-render immediato
+- `_azOpenEntCfg`: aggiunti campi configurazione per le 6 nuove entità
+- Firma sig aggiornata a `2.4az` per forzare re-mount sui client esistenti
+
 ## 1.7.66 — 2026-07-03
 
 ### fix(store): badge tab Aggiorna non si azzerava dopo aggiornamento card/PKG
