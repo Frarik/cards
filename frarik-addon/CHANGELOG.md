@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.71 — 2026-07-03
+
+### feat(antizanzare): card v2.7 — status ACCESA, sensori nel popup ⚙, autocomplete entità
+
+- Status "ACCESA" (al posto di "MANUALE" / "IN ATTESA" / "CICLO") quando il sistema è attivo in qualsiasi modalità; "SPENTA" solo quando tutto è fermo; "METEO" se bloccato
+- Sensori opzionali (vento, tanica, pompa, notifiche) spostati nel popup ⚙ nella sezione "Sensori Opzionali" — salvati in localStorage al "Salva tutto"
+- Autocomplete live: digitando nelle caselle sensore appaiono i match delle entità HA disponibili (filtra da 2 caratteri, max 8 risultati, click per selezionare)
+- Editor entità in modalità modifica eliminato — `configure` ora apre direttamente il popup ⚙
+
 ## 1.7.70 — 2026-07-03
 
 ### fix(pkg): rimozione `initial:` da tutti i PKG — impostazioni ora persistono al riavvio HA

@@ -1223,9 +1223,9 @@ window.customCards.push({ version: '1.5',
     var timerLabel = timerC.active ? 'CICLO' : 'MANUALE';
     var col = '#64748b', colRgb = '100,116,139', statusLabel = 'SPENTA';
     if (blocco)                              { col = '#f59e0b'; colRgb = '245,158,11';  statusLabel = 'METEO'; }
-    else if (stato === 'Manuale Attiva')     { col = '#f97316'; colRgb = '249,115,22';  statusLabel = 'MANUALE'; }
-    else if (stato === 'Ciclo in Corso')     { col = '#22c55e'; colRgb = '34,197,94';   statusLabel = 'CICLO'; }
-    else if (stato === 'Automazione Attiva') { col = '#06b6d4'; colRgb = '6,182,212';   statusLabel = 'IN ATTESA'; }
+    else if (stato === 'Manuale Attiva')     { col = '#f97316'; colRgb = '249,115,22';  statusLabel = 'ACCESA'; }
+    else if (stato === 'Ciclo in Corso')     { col = '#22c55e'; colRgb = '34,197,94';   statusLabel = 'ACCESA'; }
+    else if (stato === 'Automazione Attiva') { col = '#06b6d4'; colRgb = '6,182,212';   statusLabel = 'ACCESA'; }
 
     var css = '<style>'
       + '@keyframes azPulse{0%,100%{opacity:.6}50%{opacity:1}}'
@@ -1569,6 +1569,15 @@ window.customCards.push({ version: '1.5',
         + '</div>';
     }).join('');
 
+    function sensorFld(id, label, ph, val) {
+      return '<div style="position:relative;margin-bottom:8px">'
+        + '<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:rgba(255,255,255,.4);margin-bottom:3px">' + label + '</div>'
+        + '<input id="' + id + '" type="text" autocomplete="off" placeholder="' + ph + '" value="' + (val||'').replace(/"/g,'&quot;') + '"'
+        + ' style="width:100%;padding:7px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:11px;font-family:monospace;box-sizing:border-box;outline:none">'
+        + '<div id="' + id + '-drop" style="display:none;position:absolute;top:100%;left:0;right:0;background:#0b1422;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 9px 9px;z-index:300;max-height:140px;overflow-y:auto"></div>'
+        + '</div>';
+    }
+
     var content = sec('Automazione & Sicurezza')
       + '<div style="display:flex;gap:8px;margin-bottom:6px">'
       + togBtn('azuc-tog-auto', 'Automazione', autoOn)
@@ -1581,6 +1590,11 @@ window.customCards.push({ version: '1.5',
       + numRow('sog', 'Soglia blocco pioggia', soglia, '%', 0, 100, 5)
       + numRow('dur', 'Durata avvio manuale', durM, 'sec', 10, 7200, 10)
       + numRow('tar', 'Target cicli mensili', tarMens, 'cicli', 1, 999, 1)
+      + sec('Sensori Opzionali')
+      + sensorFld('azuc-vento-id',  'Velocità vento (m/s)',  'sensor.velocita_vento',         c.pk_vento||'')
+      + sensorFld('azuc-tanica-id', 'Livello tanica (%)',    'sensor.livello_tanica',          c.pk_tanica||'')
+      + sensorFld('azuc-pompa-id',  'Consumo pompa (L)',     'sensor.consumo_pompa',           c.pk_consumo_pompa||'')
+      + sensorFld('azuc-notif-id',  'Notifiche boolean',     'input_boolean.frarik_az_notif',  c.pk_notifiche||'')
       + '<button id="azuc-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#22c55e;color:#022c1b;margin-top:4px">💾 Salva tutto</button>';
 
     var ov = _azMkOv(_azPopShell('⚙','34,197,94','Impostazioni',c.name||'Anti Zanzare','azuc-cl',content),'azuc-cl');
@@ -1635,17 +1649,47 @@ window.customCards.push({ version: '1.5',
       if (ncpBtn) ncpBtn.addEventListener('click', function() { var v=Math.min(5,parseInt(ncH.value)+1); ncH.value=v; if(ncV) ncV.textContent=v; updateTimes(v); });
     });
 
+    // Autocomplete sensori
+    function azAC(inpId) {
+      var inp = ov.querySelector('#' + inpId);
+      var drop = ov.querySelector('#' + inpId + '-drop');
+      if (!inp || !drop) return;
+      inp.addEventListener('input', function() {
+        var q = inp.value.toLowerCase().trim();
+        drop.innerHTML = '';
+        if (q.length < 2) { drop.style.display = 'none'; return; }
+        var sts = (_azH().states) || {};
+        var matches = Object.keys(sts).filter(function(k) { return k.toLowerCase().indexOf(q) !== -1; }).sort().slice(0, 8);
+        if (!matches.length) { drop.style.display = 'none'; return; }
+        matches.forEach(function(m) {
+          var row = document.createElement('div');
+          row.textContent = m;
+          row.style.cssText = 'padding:6px 10px;font-size:11px;font-family:monospace;color:#94a3b8;cursor:pointer';
+          row.addEventListener('mouseover', function() { row.style.background='rgba(255,255,255,.07)'; row.style.color='#f1f5f9'; });
+          row.addEventListener('mouseout',  function() { row.style.background=''; row.style.color='#94a3b8'; });
+          row.addEventListener('mousedown', function(e) { e.preventDefault(); inp.value=m; drop.style.display='none'; });
+          drop.appendChild(row);
+        });
+        drop.style.display = 'block';
+      });
+      inp.addEventListener('blur', function() { setTimeout(function() { drop.style.display = 'none'; }, 200); });
+    }
+    azAC('azuc-vento-id');
+    azAC('azuc-tanica-id');
+    azAC('azuc-pompa-id');
+    azAC('azuc-notif-id');
+
     // Save
     ov.querySelector('#azuc-save').addEventListener('click', function() {
       var h2 = _azH();
-      // Soglie
+      // Soglie → HA
       var sv = (ov.querySelector('#azuc-sog')||{}).value;
       var dv = (ov.querySelector('#azuc-dur')||{}).value;
       var tv = (ov.querySelector('#azuc-tar')||{}).value;
       if (sv && h2 && h2.callService) h2.callService('input_number','set_value',{entity_id:c.pk_soglia_pioggia,value:parseFloat(sv)});
       if (dv && h2 && h2.callService) h2.callService('input_number','set_value',{entity_id:c.pk_durata_manuale,value:parseFloat(dv)});
       if (tv && h2 && h2.callService) h2.callService('input_number','set_value',{entity_id:c.pk_cicli_target,value:parseFloat(tv)});
-      // Schedule
+      // Schedule → HA
       dayIds.forEach(function(d) {
         var togEl = ov.querySelector('#azs-tog-' + d);
         var ncEl = ov.querySelector('#azs-nc-' + d);
@@ -1660,65 +1704,20 @@ window.customCards.push({ version: '1.5',
           }
         }
       });
+      // Sensori opzionali → localStorage
+      var savedCfg = _azLoad(card);
+      var ve = (ov.querySelector('#azuc-vento-id')||{}).value||'';
+      var ta = (ov.querySelector('#azuc-tanica-id')||{}).value||'';
+      var po = (ov.querySelector('#azuc-pompa-id')||{}).value||'';
+      var no = (ov.querySelector('#azuc-notif-id')||{}).value||'';
+      savedCfg.pk_vento = ve; savedCfg.pk_tanica = ta; savedCfg.pk_consumo_pompa = po; savedCfg.pk_notifiche = no;
+      _azSave(card, savedCfg);
       ov._close();
       if (el) el._fcSig = null;
     });
   }
 
-  function _azOpenEntCfg(card, el) {
-    var c = _azCfgFor(card);
-    function fld(key, label, ph) {
-      return '<div style="margin-bottom:10px">'
-        + '<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px">' + label + '</div>'
-        + '<input id="azf-' + key + '" type="text" autocomplete="off" placeholder="' + ph + '" value="' + (c[key]||'').replace(/"/g,'&quot;') + '" style="width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:11px;font-family:monospace;box-sizing:border-box;outline:none">'
-        + '</div>';
-    }
-    function sec(t) { return '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#22c55e;padding-bottom:4px;border-bottom:1px solid rgba(34,197,94,.18);margin:14px 0 10px">' + t + '</div>'; }
-    var content = '<div style="margin-bottom:10px"><div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px">Nome card</div>'
-      + '<input id="azf-name" type="text" placeholder="Anti Zanzare" value="' + (c.name||'').replace(/"/g,'&quot;') + '" style="width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:11px;box-sizing:border-box;outline:none"></div>'
-      + sec('Prefisso entità PKG')
-      + fld('pk_prefix','Prefisso schedule','anti_zanzare')
-      + sec('Sensori di stato')
-      + fld('pk_stato','Sensore stato','sensor.stato_anti_zanzare')
-      + fld('pk_pioggia','Probabilità pioggia','sensor.probabilita_pioggia')
-      + fld('pk_blocco_meteo','Binary blocco meteo','binary_sensor.blocco_meteo_attivo')
-      + fld('pk_cicli_mensili','Cicli mensili','counter.frarik_antizanzare_cicli_mensili')
-      + fld('pk_cicli_target','Target mensile','input_number.frarik_antizanzare_cicli_target_mensili')
-      + sec('Controllo')
-      + fld('pk_auto','Automazione boolean','input_boolean.frarik_antizanzare_automazione_attiva')
-      + fld('pk_manuale','Manuale boolean','input_boolean.frarik_antizanzare_manuale_attiva')
-      + fld('pk_timer_ciclo','Timer ciclo','timer.frarik_antizanzare_ciclo_timer')
-      + fld('pk_timer_manuale','Timer manuale','timer.frarik_antizanzare_manuale_timer')
-      + fld('pk_durata_manuale','Durata manuale','input_number.frarik_antizanzare_durata_manuale')
-      + fld('pk_soglia_pioggia','Soglia pioggia','input_number.frarik_antizanzare_soglia_pioggia')
-      + sec('Pulsanti azione')
-      + fld('pk_btn_auto_on','Avvia automazione','input_button.frarik_antizanzare_start_automazione')
-      + fld('pk_btn_auto_off','Ferma automazione','input_button.frarik_antizanzare_stop_automazione')
-      + fld('pk_btn_man_on','Avvia manuale','input_button.frarik_antizanzare_start_manuale')
-      + fld('pk_btn_man_off','Ferma manuale','input_button.frarik_antizanzare_stop_manuale')
-      + sec('Sicurezza e sensori')
-      + fld('pk_persona','Sensore presenza','binary_sensor.telecamera_giardino_dx_persona')
-      + fld('pk_perdita','Sensore perdita cassetta','binary_sensor.sensore_perdita_cassetta_ant_zanzare')
-      + fld('pk_prossimo','Sensor prossimo ciclo','sensor.frarik_antizanzare_prossimo_ciclo_completo')
-      + fld('pk_cicli_rim','Sensor cicli rimanenti','sensor.frarik_antizanzare_cicli_rimanenti_mensili')
-      + fld('pk_avanzamento','Sensor avanzamento mensile','sensor.frarik_antizanzare_avanzamento_mensile')
-      + fld('pk_auto_sic','Automation sicurezza','automation.frarik_antizanzare_sicurezza_persona_rilevata')
-      + sec('Sensori opzionali')
-      + fld('pk_vento','Velocità vento (m/s)','sensor.velocita_vento')
-      + fld('pk_tanica','Livello tanica (%)','sensor.livello_tanica')
-      + fld('pk_consumo_pompa','Consumo pompa (L)','sensor.consumo_pompa')
-      + fld('pk_notifiche','Notifiche boolean','input_boolean.frarik_antizanzare_notifiche')
-      + '<button id="az-ent-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#22c55e;color:#022c1b;margin-top:8px">💾 Salva</button>';
-    var ov = _azMkOv(_azPopShell('🔧','34,197,94','Entità',c.name||'Anti Zanzare','az-ent-cl',content),'az-ent-cl');
-    ov.querySelector('#az-ent-save').addEventListener('click', function() {
-      var pk = _azPkgDef(), saved = {};
-      Object.keys(pk).forEach(function(k) { var i = ov.querySelector('#azf-'+k); if (i) saved[k] = i.value.trim(); });
-      var ni = ov.querySelector('#azf-name'); if (ni) saved.name = ni.value.trim();
-      _azSave(card, saved);
-      ov._close();
-      if (el) el._fcSig = null;
-    });
-  }
+  function _azOpenEntCfg(card, el) { _azOpenUserCfg(card, el); }
 
   function _azCallSvc(domain, svc, data) {
     try { var h = _azH(); if (h && h.callService) { h.callService(domain, svc, data); return; } if (window.callSvc) window.callSvc(domain, svc, data); } catch(e) {}
@@ -1801,12 +1800,12 @@ window.customCards.push({ version: '1.5',
   }
 
   var _AZ_CARD = {
-    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.6',
+    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.7',
     desc: 'Controllo sistema anti zanzare: schedule settimanale, timer, statistiche mensili, blocco meteo, sensori sicurezza.',
     render:    function(card) { return _azRender(card); },
     mount:     function(card, hass, el) { _azMount(card, hass, el); },
     update:    function(card, hass, el) { _azUpdate(card, hass, el); },
-    configure: function(card, el) { _azOpenEntCfg(card, el); },
+    configure: function(card, el) { _azOpenUserCfg(card, el); },
     frarik_pkg_check:   'sensor.stato_anti_zanzare',
     frarik_pkg_id:      'frarik_antizanzare',
     frarik_pkg_version: '1.0',
