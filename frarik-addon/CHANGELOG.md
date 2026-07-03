@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.63 — 2026-07-03
+
+### fix: popup programma cicli Antizanzare — design glass pill + fix percorso rendering
+
+- `_azOpenProgramma`: ogni giorno ora è una glass pill card (sfondo/bordo tematico, badge cicli, orari riassuntivi, pulsante "✏ Modifica cicli" visibile solo se giorno attivo)
+- `_azOpenDayDetail`: cicli come glass pill (C1/C2/... con badge verde, pill scura se disattivo); numero cicli con +/− invece di campo numerico grezzo; durata mostrata come min/s con pulsanti +/−; legge orario da `input_datetime.*` (fix bug precedente che leggeva da `input_number.*`)
+- Queste sono le funzioni usate dal rendering FratechStore (non il web component), quindi ora le modifiche sono visibili nel pannello
+
 ## 1.7.62 — 2026-07-03
 
 ### fix + miglioramento: card Antizanzare — entity ID corretti + gestione cicli grafica

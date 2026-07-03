@@ -1355,36 +1355,45 @@ window.customCards.push({ version: '1.5',
     var prefix = c.pk_prefix || 'anti_zanzare';
     var dayIds = ['lunedi','martedi','mercoledi','giovedi','venerdi','sabato','domenica'];
     var dayLabels = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato','Domenica'];
+    var col = '#22c55e', rgb = '34,197,94';
     var dayRows = dayIds.map(function(d, i) {
       var isOn = _azIsOn(h, 'input_boolean.' + prefix + '_' + d);
       var nC = Math.round(_azNum(_azS(h, 'input_number.' + prefix + '_' + d + '_num_cicli')) || 0);
-      var t1 = _azS(h, 'input_datetime.' + prefix + '_' + d + '_orario_ciclo1') || '';
-      return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
-        + '<div style="font-size:11px;font-weight:700;color:#fff;width:76px;flex-shrink:0">' + dayLabels[i] + '</div>'
+      var times = [];
+      for (var ci = 1; ci <= Math.min(nC, 5); ci++) {
+        var t = _azS(h, 'input_datetime.' + prefix + '_' + d + '_orario_ciclo' + ci) || '';
+        if (t) times.push(t.slice(0, 5));
+      }
+      var pillBg = isOn && nC > 0 ? 'rgba(' + rgb + ',.07)' : 'rgba(255,255,255,.03)';
+      var pillBd = isOn && nC > 0 ? 'rgba(' + rgb + ',.22)' : 'rgba(255,255,255,.07)';
+      var badge = nC > 0
+        ? '<span style="background:rgba(' + rgb + ',.15);border:1px solid rgba(' + rgb + ',.3);border-radius:10px;padding:2px 8px;font-size:10px;font-weight:800;color:' + col + '">' + nC + ' cicl' + (nC===1?'o':'i') + '</span>'
+        : '<span style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:2px 8px;font-size:10px;font-weight:600;color:#475569">nessuno</span>';
+      return '<div style="background:' + pillBg + ';border:1px solid ' + pillBd + ';border-radius:14px;padding:10px 12px;margin-bottom:7px">'
+        + '<div style="display:flex;align-items:center;gap:8px">'
+        + '<span style="font-size:12px;font-weight:700;color:#fff;flex:1">' + dayLabels[i] + '</span>'
+        + badge
         + '<div class="az-dtog" data-eid="input_boolean.' + prefix + '_' + d + '" data-on="' + (isOn?'1':'0') + '" '
-        + 'style="width:36px;height:20px;border-radius:10px;flex-shrink:0;cursor:pointer;background:' + (isOn?'#22c55e':'rgba(255,255,255,.15)') + ';position:relative;transition:background .2s">'
+        + 'style="width:36px;height:20px;border-radius:10px;flex-shrink:0;cursor:pointer;background:' + (isOn?col:'rgba(255,255,255,.15)') + ';position:relative;transition:background .2s">'
         + '<div style="position:absolute;top:2px;' + (isOn?'right:2px':'left:2px') + ';width:16px;height:16px;border-radius:50%;background:#fff;transition:all .2s"></div>'
         + '</div>'
-        + '<div style="flex:1;min-width:0">'
-        + (isOn
-          ? '<span style="font-size:11px;color:#22c55e;font-weight:700">' + nC + ' cicli</span>'
-          + (t1 ? '<span style="font-size:10px;color:rgba(255,255,255,.4)"> · ' + t1.slice(0,5) + '</span>' : '')
-          : '<span style="font-size:10px;color:rgba(255,255,255,.28)">Disattivato</span>')
         + '</div>'
-        + '<button class="az-dedit" data-day="' + d + '" style="padding:4px 9px;border-radius:7px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);font-size:10px;color:#fff;cursor:pointer;flex-shrink:0">✏ Cicli</button>'
+        + (isOn ? '<div style="display:flex;align-items:center;gap:6px;margin-top:7px">'
+          + (times.length ? '<span style="font-size:10px;color:rgba(255,255,255,.45);flex:1">' + times.join(' · ') + '</span>' : '<span style="flex:1"></span>')
+          + '<button class="az-dedit" data-day="' + d + '" style="padding:4px 10px;border-radius:8px;border:1px solid rgba(' + rgb + ',.3);background:rgba(' + rgb + ',.1);font-size:10px;font-weight:700;color:' + col + ';cursor:pointer">✏ Modifica cicli</button>'
+          + '</div>' : '')
         + '</div>';
     }).join('');
-    var content = '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#22c55e;padding-bottom:5px;border-bottom:1px solid rgba(34,197,94,.2);margin-bottom:8px">Giorni e cicli</div>'
-      + dayRows
-      + '<button id="azpm-ok" style="width:100%;padding:10px;border-radius:11px;border:1px solid rgba(255,255,255,.12);cursor:pointer;font-weight:700;font-size:13px;background:rgba(255,255,255,.07);color:#fff;margin-top:14px">Fatto</button>';
-    var ov = _azMkOv(_azPopShell('📅','34,197,94','Programma settimanale','Giorni attivi — usa ⚙ per soglia/target/durata','az-pm-cl',content),'az-pm-cl');
+    var content = dayRows
+      + '<button id="azpm-ok" style="width:100%;padding:10px;border-radius:11px;border:1px solid rgba(255,255,255,.12);cursor:pointer;font-weight:700;font-size:13px;background:rgba(255,255,255,.07);color:#fff;margin-top:4px">Chiudi</button>';
+    var ov = _azMkOv(_azPopShell('📅',rgb,'Programma Settimanale','Attiva giorni e configura orari cicli','az-pm-cl',content),'az-pm-cl');
     ov.querySelector('#azpm-ok').addEventListener('click', function() { ov._close(); if (el) el._fcSig = null; });
     ov.querySelectorAll('.az-dtog').forEach(function(tog) {
       tog.addEventListener('click', function() {
         var wasOn = tog.dataset.on === '1';
         _azCallSvc('input_boolean', wasOn?'turn_off':'turn_on', {entity_id:tog.dataset.eid});
         tog.dataset.on = wasOn ? '0' : '1';
-        tog.style.background = wasOn ? 'rgba(255,255,255,.15)' : '#22c55e';
+        tog.style.background = wasOn ? 'rgba(255,255,255,.15)' : col;
         var k = tog.querySelector('div'); if (k) { k.style.right = wasOn?'':'2px'; k.style.left = wasOn?'2px':''; }
       });
     });
@@ -1397,33 +1406,69 @@ window.customCards.push({ version: '1.5',
     var h = _azH();
     var lbl = {lunedi:'Lunedì',martedi:'Martedì',mercoledi:'Mercoledì',giovedi:'Giovedì',venerdi:'Venerdì',sabato:'Sabato',domenica:'Domenica'}[day]||day;
     var nC = Math.round(_azNum(_azS(h,'input_number.'+prefix+'_'+day+'_num_cicli'))||0);
+    var col = '#22c55e', rgb = '34,197,94';
+    function fmtDv(v) { var m=Math.floor(v/60),s=v%60; return v>=60?(m+'min'+(s?' '+s+'s':'')):(v+'s'); }
     var rows = '';
     for (var i = 1; i <= 5; i++) {
-      var tv = _azS(h,'input_datetime.'+prefix+'_'+day+'_orario_ciclo'+i) || '07:00:00';
+      var tv = (_azS(h,'input_datetime.'+prefix+'_'+day+'_orario_ciclo'+i)||'07:00:00').slice(0,5);
       var dv = Math.round(_azNum(_azS(h,'input_number.'+prefix+'_'+day+'_durata_ciclo'+i))||60);
-      var dim = i > nC ? 'opacity:0.33;' : '';
-      rows += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:9px;' + dim + '">'
-        + '<div style="font-size:11px;font-weight:900;color:#22c55e;width:22px;flex-shrink:0">C' + i + '</div>'
-        + '<input type="time" value="' + tv.slice(0,5) + '" id="azdd-t' + i + '" style="flex:1;padding:7px 9px;border-radius:8px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:13px;outline:none">'
-        + '<input type="number" value="' + dv + '" id="azdd-d' + i + '" min="10" max="7200" step="10" style="width:70px;padding:7px 8px;border-radius:8px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:12px;outline:none;text-align:right">'
-        + '<span style="font-size:9px;color:rgba(255,255,255,.4);flex-shrink:0">sec</span></div>';
+      var active = i <= nC;
+      var pillBg = active ? 'rgba('+rgb+',.06)' : 'rgba(255,255,255,.03)';
+      var pillBd = active ? 'rgba('+rgb+',.2)' : 'rgba(255,255,255,.06)';
+      var badgeBg = active ? 'rgba('+rgb+',.15)' : 'rgba(255,255,255,.06)';
+      var badgeBd = active ? 'rgba('+rgb+',.3)' : 'rgba(255,255,255,.1)';
+      var cycleCol = active ? col : '#374151';
+      var dim = active ? '' : 'opacity:0.28;pointer-events:none;';
+      rows += '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;background:'+pillBg+';border:1px solid '+pillBd+';margin-bottom:6px;'+dim+'">'
+        + '<span style="font-size:10px;font-weight:800;color:'+cycleCol+';background:'+badgeBg+';border:1px solid '+badgeBd+';border-radius:6px;padding:2px 7px;flex-shrink:0">C'+i+'</span>'
+        + '<input type="time" value="'+tv+'" id="azdd-t'+i+'" style="flex:1;padding:5px 7px;border-radius:8px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:13px;outline:none;min-width:0">'
+        + '<div style="display:flex;align-items:center;gap:3px;flex-shrink:0">'
+        + '<button id="azdd-dm'+i+'" style="width:24px;height:24px;border-radius:6px;border:none;background:rgba(255,255,255,.08);color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center">−</button>'
+        + '<span id="azdd-dv'+i+'" style="font-size:10px;font-weight:700;color:#f1f5f9;min-width:42px;text-align:center">'+fmtDv(dv)+'</span>'
+        + '<button id="azdd-dp'+i+'" style="width:24px;height:24px;border-radius:6px;border:none;background:rgba(255,255,255,.08);color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center">+</button>'
+        + '<input type="hidden" id="azdd-d'+i+'" value="'+dv+'">'
+        + '</div>'
+        + '</div>';
     }
-    var content = '<div style="display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:12px">'
-      + '<span style="font-size:12px;color:#fff;flex:1">Cicli attivi (0-5)</span>'
-      + '<input id="azdd-nc" type="number" min="0" max="5" step="1" value="' + nC + '" style="width:62px;padding:7px;border-radius:8px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(56,189,248,.35);font-size:17px;font-weight:800;outline:none;text-align:center">'
+    var content = '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0 12px;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:10px">'
+      + '<span style="font-size:12px;font-weight:600;color:#fff">Cicli attivi (0–5)</span>'
+      + '<div style="display:flex;align-items:center;gap:7px">'
+      + '<button id="azdd-ncm" style="width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,255,255,.08);color:#fff;font-size:17px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center">−</button>'
+      + '<span id="azdd-ncv" style="font-size:20px;font-weight:800;color:'+col+';min-width:28px;text-align:center">'+nC+'</span>'
+      + '<input type="hidden" id="azdd-nc" value="'+nC+'">'
+      + '<button id="azdd-ncp" style="width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,255,255,.08);color:#fff;font-size:17px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center">+</button>'
       + '</div>'
-      + '<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#22c55e;margin-bottom:8px">Orario avvio · Durata per ciclo</div>'
+      + '</div>'
       + rows
-      + '<button id="azdd-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#22c55e;color:#022c1b;margin-top:4px">💾 Salva ' + lbl + '</button>';
-    var ov2 = _azMkOv(_azPopShell('📅','34,197,94',lbl,'Orari e durate cicli','azdd-cl',content),'azdd-cl');
+      + '<button id="azdd-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:'+col+';color:#022c1b;margin-top:8px">💾 Salva '+lbl+'</button>';
+    var ov2 = _azMkOv(_azPopShell('📅',rgb,lbl,'Orari e durate cicli','azdd-cl',content),'azdd-cl');
+    var ncInput = ov2.querySelector('#azdd-nc'), ncDisp = ov2.querySelector('#azdd-ncv');
+    ov2.querySelector('#azdd-ncm').addEventListener('click', function() {
+      var v = Math.max(0, parseInt(ncInput.value)-1); ncInput.value=v; ncDisp.textContent=v;
+    });
+    ov2.querySelector('#azdd-ncp').addEventListener('click', function() {
+      var v = Math.min(5, parseInt(ncInput.value)+1); ncInput.value=v; ncDisp.textContent=v;
+    });
+    for (var j = 1; j <= 5; j++) {
+      (function(ci) {
+        var dHid = ov2.querySelector('#azdd-d'+ci), dDisp = ov2.querySelector('#azdd-dv'+ci);
+        var dmBtn = ov2.querySelector('#azdd-dm'+ci), dpBtn = ov2.querySelector('#azdd-dp'+ci);
+        if (dmBtn) dmBtn.addEventListener('click', function() {
+          var v = Math.max(10, parseInt(dHid.value)-10); dHid.value=v; dDisp.textContent=fmtDv(v);
+        });
+        if (dpBtn) dpBtn.addEventListener('click', function() {
+          var v = Math.min(3600, parseInt(dHid.value)+10); dHid.value=v; dDisp.textContent=fmtDv(v);
+        });
+      })(j);
+    }
     ov2.querySelector('#azdd-save').addEventListener('click', function() {
       var h2 = _azH();
-      var ncv = parseInt((ov2.querySelector('#azdd-nc')||{}).value)||0;
+      var ncv = parseInt(ncInput.value)||0;
       if (h2&&h2.callService) h2.callService('input_number','set_value',{entity_id:'input_number.'+prefix+'_'+day+'_num_cicli',value:ncv});
-      for (var j = 1; j <= 5; j++) {
-        var ti = ov2.querySelector('#azdd-t'+j), di = ov2.querySelector('#azdd-d'+j);
-        if (ti&&ti.value&&h2&&h2.callService) h2.callService('input_datetime','set_datetime',{entity_id:'input_datetime.'+prefix+'_'+day+'_orario_ciclo'+j,time:ti.value+':00'});
-        if (di&&di.value&&h2&&h2.callService) h2.callService('input_number','set_value',{entity_id:'input_number.'+prefix+'_'+day+'_durata_ciclo'+j,value:parseFloat(di.value)});
+      for (var k = 1; k <= 5; k++) {
+        var ti = ov2.querySelector('#azdd-t'+k), di = ov2.querySelector('#azdd-d'+k);
+        if (ti&&ti.value&&h2&&h2.callService) h2.callService('input_datetime','set_datetime',{entity_id:'input_datetime.'+prefix+'_'+day+'_orario_ciclo'+k,time:ti.value+':00'});
+        if (di&&di.value&&h2&&h2.callService) h2.callService('input_number','set_value',{entity_id:'input_number.'+prefix+'_'+day+'_durata_ciclo'+k,value:parseFloat(di.value)});
       }
       ov2._close();
     });
