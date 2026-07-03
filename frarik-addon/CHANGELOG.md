@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.7.64 — 2026-07-03
+
+### feat: tab "Aggiornamenti" nello store
+
+- Nuovo tab **🔄 Aggiornamenti** nel FratechStore, dopo "Installate"
+- Mostra in un unico posto tutte le card JS installate con SHA diverso dalla versione GitHub (aggiornamenti disponibili) + tutti i PKG con aggiornamento disponibile
+- Badge dinamico sul tab: conta totale aggiornamenti in evidenza con sfondo arancione (aggiornato dopo ogni check GitHub e PKG)
+- Pulsante "Aggiorna" per ogni card, "Aggiorna PKG" per ogni package — stessi handler degli altri tab
+- Stato empty state ✅ con invito a fare Sync se non ci sono aggiornamenti rilevati
+
 ## 1.7.63 — 2026-07-03
 
 ### fix: popup programma cicli Antizanzare — design glass pill + fix percorso rendering
