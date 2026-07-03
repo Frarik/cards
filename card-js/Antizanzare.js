@@ -1659,9 +1659,6 @@ window.customCards.push({ version: '1.5',
         tb.querySelector('div:first-child').textContent = nowOn ? '✅' : '⭕';
         tb.querySelector('div:nth-child(2)').style.color = nowOn ? 'rgb('+onC+')' : 'rgba(255,255,255,.35)';
         var tv2 = tb.querySelector('.azuc-tov'); if(tv2){ tv2.textContent = nowOn?'ON':'OFF'; tv2.style.color = nowOn?'#fff':'rgba(255,255,255,.25)'; }
-        var eid = tid==='azuc-tog-auto' ? c.pk_auto : tid==='azuc-tog-sic' ? c.pk_auto_sic : notifEntity;
-        var dom = tid==='azuc-tog-sic' ? 'automation' : 'input_boolean';
-        if (eid) { _azCallSvc(dom, nowOn?'turn_on':'turn_off', {entity_id:eid}); if(el) el._fcSig=null; }
       });
     });
 
@@ -1749,11 +1746,13 @@ window.customCards.push({ version: '1.5',
           }
         }
       });
-      // Notifiche → HA (ri-inviato al salva per evitare race condition)
+      // Toggle → HA (tutti e tre inviati al salva, evita race condition)
+      var autoBtn = ov.querySelector('#azuc-tog-auto');
+      if (autoBtn && c.pk_auto) _azCallSvc('input_boolean', autoBtn.dataset.on==='1'?'turn_on':'turn_off', {entity_id:c.pk_auto});
+      var sicBtn = ov.querySelector('#azuc-tog-sic');
+      if (sicBtn && c.pk_auto_sic) _azCallSvc('automation', sicBtn.dataset.on==='1'?'turn_on':'turn_off', {entity_id:c.pk_auto_sic});
       var ntfBtn = ov.querySelector('#azuc-tog-ntf');
-      if (ntfBtn && notifEntity) {
-        _azCallSvc('input_boolean', ntfBtn.dataset.on === '1' ? 'turn_on' : 'turn_off', {entity_id: notifEntity});
-      }
+      if (ntfBtn && notifEntity) _azCallSvc('input_boolean', ntfBtn.dataset.on==='1'?'turn_on':'turn_off', {entity_id:notifEntity});
       // Sensori opzionali → localStorage
       var savedCfg = _azLoad(card);
       var ve = (ov.querySelector('#azuc-vento-id')||{}).value||'';
@@ -1792,6 +1791,9 @@ window.customCards.push({ version: '1.5',
   function _azMount(card, hass, el) {
     if (el._fcBound === '2.6az') return;
     el._fcBound = '2.6az';
+    // Rimuove la matita se renderizzata prima del caricamento del registry
+    var _azPencil = el.querySelector('.ovb-edit');
+    if (_azPencil) _azPencil.remove();
     var rid = 'fraz' + (card.id || 'az');
     if (el._fcHandler) el.removeEventListener('click', el._fcHandler);
     el._fcHandler = function(e) {
@@ -1864,7 +1866,7 @@ window.customCards.push({ version: '1.5',
   }
 
   var _AZ_CARD = {
-    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.12', frarik_no_edit: true,
+    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.13', frarik_no_edit: true,
     desc: 'Controllo sistema anti zanzare: schedule settimanale, timer, statistiche mensili, blocco meteo, sensori sicurezza.',
     render:    function(card) { return _azRender(card); },
     mount:     function(card, hass, el) { _azMount(card, hass, el); },

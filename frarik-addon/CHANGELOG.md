@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.77 — 2026-07-04
+
+### fix(antizanzare): card v2.13 — toggle persistenti + rimozione matita garantita
+
+- **Toggle tutti persistenti**: i service call per Automazione, Sicurezza e Notifiche vengono ora inviati **al Save** leggendo `dataset.on` visuale — eliminato il click-immediato che poteva non propagarsi a HA prima del re-render; i toggle aggiornano solo la visuale al click, tutto va a HA premendo Salva
+- **Matita rimossa garantita**: in `_azMount`, dopo il bind iniziale, rimuove esplicitamente `querySelector('.ovb-edit')` dal DOM — risolve il caso in cui `buildCardEl` viene eseguito prima che `FratechCardRegistry` sia popolato dal JS della card
+
 ## 1.7.76 — 2026-07-04
 
 ### fix(antizanzare): card v2.12 — notifiche persistenti, matita rimossa, sfondo ridotto
