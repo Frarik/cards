@@ -2720,7 +2720,7 @@ function _ghsUpdBadge(){
   const np=Object.keys(_pkgPending).length;
   const n=nc+np;
   const lbl=btn.querySelector('.ghc-tab-lbl');
-  if(lbl) lbl.textContent=n?'Aggiornamenti ('+n+')':'Aggiornamenti';
+  if(lbl) lbl.textContent=n?'Aggiorna ('+n+')':'Aggiorna';
   btn.style.background=n?'rgba(251,146,60,.1)':'';
   btn.style.borderColor=n?'rgba(251,146,60,.45)':'';
 }
