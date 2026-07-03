@@ -3299,7 +3299,7 @@ async function _ghsDeleteFromGithub(enc){
   );
 }
 /* tab virtuali (elettrodomestici, installate) condividono la cache e la cartella di 'js' */
-function _ghsFolderTab(tab){ return (tab==='elettrodomestici'||tab==='installate')?'js':tab; }
+function _ghsFolderTab(tab){ return (tab==='elettrodomestici'||tab==='installate'||tab==='updates')?'js':tab; }
 function _ghsFind(name){ name=decodeURIComponent(name); return (_ghsCache[_ghsFolderTab(_ghsTab)]||[]).find(f=>f.name===name); }
 /* ricarica (se serve) la lista file della cartella corrente e ritrova il file:
    evita il caso "dopo l'eliminazione il tasto Installa non fa nulla" (cache vuota/stale) */

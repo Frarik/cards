@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.68 — 2026-07-03
+
+### fix(store): pulsante "Aggiorna" nel tab Aggiorna non funzionava
+
+- `_ghsFolderTab` non mappava `'updates'` → `'js'`, quindi `_ghsEnsureFile` cercava in
+  `_GHS_FOLDERS['updates']` (inesistente) e ritornava null → "File non trovato su GitHub"
+- Fix: aggiunto `'updates'` alla mappa → ora risolve correttamente in `_ghsCache['js']`
+  (o lo scarica da GitHub se la cache non è ancora caricata)
+
 ## 1.7.67 — 2026-07-03
 
 ### feat(antizanzare): card v2.5 — tutti i sensori PKG esposti + sicurezza + real-time fix
