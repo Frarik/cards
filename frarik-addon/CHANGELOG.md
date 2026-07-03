@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.73 — 2026-07-04
+
+### feat(antizanzare): card v2.9 — timer bar fluida, bottoni verde/rosso, SVG illuminazione
+
+- **Timer bar fluida**: rimosso CSS `animation` che causava scatti ad ogni re-render; ora aggiornata via DOM tick 200ms (`el._azTimerTick`) che scrive direttamente `width:%` + `transition:.25s linear` — animazione continua senza jitter
+- **Timer bar colore**: `#00b4ff` (blu elettrico) con glow `box-shadow`
+- **Bottoni**: ▶ Manuale e ▶ Auto → sfondo/testo verde (`#22c55e`); ⏹ Ferma e ⏹ Ferma Auto → rosso (`#ef4444`); rinominato "Stop Auto" → "Ferma Auto"
+- **SVG illuminazione**: triplo drop-shadow quando attivo (`0 0 4px` + `0 0 16px` + `0 0 40px`); tank body con fill colorato e pulse animato; outer ring pulsante sul motore; spray acqua più luminoso con glow circle animate; pipette e ugello illuminati dal colore attivo
+
 ## 1.7.72 — 2026-07-04
 
 ### feat(antizanzare): card v2.8 — animazione SVG fix, layout sensori aggiornato, notifiche toggle

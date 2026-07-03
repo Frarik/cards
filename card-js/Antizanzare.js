@@ -1165,36 +1165,40 @@ window.customCards.push({ version: '1.5',
 
   function _azDevSVG(stato, col, colRgb, timerRem) {
     var active = timerRem !== null;
-    var glow = active ? 'drop-shadow(0 0 10px rgba(' + colRgb + ',.3))' : 'drop-shadow(0 0 6px rgba(' + colRgb + ',.12))';
+    var glow = active
+      ? 'drop-shadow(0 0 4px rgba(' + colRgb + ',1)) drop-shadow(0 0 16px rgba(' + colRgb + ',.65)) drop-shadow(0 0 40px rgba(' + colRgb + ',.28))'
+      : 'drop-shadow(0 0 6px rgba(' + colRgb + ',.18))';
     var remTxt = active ? (timerRem || 'ATTIVO') : 'STAND';
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 108" style="display:block;width:100%;height:100%;filter:' + glow + '">'
-      + '<rect x="8" y="96" width="48" height="7" rx="3.5" fill="#090f1e" stroke="' + col + '" stroke-width=".5" opacity=".5"/>'
-      + '<rect x="14" y="24" width="34" height="72" rx="16" fill="#0b1929" stroke="' + col + '" stroke-width=".85"/>'
-      + '<rect x="16" y="30" width="6" height="60" rx="3" fill="rgba(255,255,255,.04)"/>'
-      + (active ? '<rect x="16" y="54" width="30" height="42" rx="4" fill="rgba(' + colRgb + ',.15)" opacity=".06"><animate attributeName="opacity" values=".06;.22;.06" dur="2.4s" repeatCount="indefinite"/></rect>' : '')
-      + '<ellipse cx="31" cy="32" rx="15.5" ry="5" fill="#0d2040" stroke="rgba(' + colRgb + ',.12)" stroke-width=".5"/>'
-      + '<ellipse cx="31" cy="88" rx="15.5" ry="4.5" fill="#090f1e" stroke="rgba(' + colRgb + ',.08)" stroke-width=".5"/>'
-      + '<text x="31" y="46" text-anchor="middle" font-size="5.5" fill="rgba(255,255,255,.07)" font-family="system-ui,sans-serif" font-weight="800">4L</text>'
-      + '<rect x="18" y="50" width="26" height="30" rx="4" fill="#060e1c" stroke="rgba(' + colRgb + ',.2)" stroke-width=".6"/>'
-      + '<circle cx="31" cy="58" r="7.5" fill="#091526" stroke="' + col + '" stroke-width=".85"/>'
+      + '<rect x="8" y="96" width="48" height="7" rx="3.5" fill="#090f1e" stroke="' + col + '" stroke-width=".5" opacity="' + (active ? '.85' : '.5') + '"/>'
+      + '<rect x="14" y="24" width="34" height="72" rx="16" fill="' + (active ? 'rgba(' + colRgb + ',.06)' : '#0b1929') + '" stroke="' + col + '" stroke-width="' + (active ? '1.3' : '.85') + '"/>'
+      + '<rect x="16" y="30" width="6" height="60" rx="3" fill="rgba(255,255,255,' + (active ? '.1' : '.04') + ')"/>'
+      + (active ? '<rect x="15" y="40" width="32" height="56" rx="4" fill="rgba(' + colRgb + ',.22)"><animate attributeName="opacity" values=".22;.55;.22" dur="2.2s" repeatCount="indefinite"/></rect>' : '')
+      + '<ellipse cx="31" cy="32" rx="15.5" ry="5" fill="' + (active ? 'rgba(' + colRgb + ',.22)' : '#0d2040') + '" stroke="rgba(' + colRgb + ',' + (active ? '.6' : '.12') + ')" stroke-width="' + (active ? '.9' : '.5') + '"/>'
+      + '<ellipse cx="31" cy="88" rx="15.5" ry="4.5" fill="#090f1e" stroke="rgba(' + colRgb + ',' + (active ? '.35' : '.08') + ')" stroke-width=".5"/>'
+      + '<text x="31" y="46" text-anchor="middle" font-size="5.5" fill="rgba(255,255,255,' + (active ? '.18' : '.07') + ')" font-family="system-ui,sans-serif" font-weight="800">4L</text>'
+      + '<rect x="18" y="50" width="26" height="30" rx="4" fill="#060e1c" stroke="rgba(' + colRgb + ',' + (active ? '.5' : '.2') + ')" stroke-width="' + (active ? '.9' : '.6') + '"/>'
+      + (active ? '<circle cx="31" cy="58" r="10" fill="none" stroke="' + col + '" stroke-width="1.5"><animate attributeName="r" values="7.5;14;7.5" dur="1.8s" repeatCount="indefinite"/><animate attributeName="opacity" values=".6;0;.6" dur="1.8s" repeatCount="indefinite"/></circle>' : '')
+      + '<circle cx="31" cy="58" r="7.5" fill="#091526" stroke="' + col + '" stroke-width="' + (active ? '1.3' : '.85') + '"/>'
       + '<circle cx="31" cy="58" r="4.5" fill="#040a12"/>'
-      + '<circle cx="31" cy="58" r="2.8" fill="' + col + '" opacity="' + (active ? '.9' : '.35') + '">'
-      + (active ? '<animate attributeName="opacity" values=".5;1;.5" dur="1.4s" repeatCount="indefinite"/>' : '')
+      + '<circle cx="31" cy="58" r="2.8" fill="' + col + '" opacity="' + (active ? '1' : '.35') + '">'
+      + (active ? '<animate attributeName="r" values="2.8;4;2.8" dur="1.4s" repeatCount="indefinite"/><animate attributeName="opacity" values=".7;1;.7" dur="1.4s" repeatCount="indefinite"/>' : '')
       + '</circle>'
-      + '<rect x="19.5" y="68.5" width="23" height="6.5" rx="1.8" fill="#02060e" stroke="rgba(' + colRgb + ',.3)" stroke-width=".5"/>'
+      + '<rect x="19.5" y="68.5" width="23" height="6.5" rx="1.8" fill="#02060e" stroke="rgba(' + colRgb + ',' + (active ? '.55' : '.3') + ')" stroke-width=".5"/>'
       + '<text x="31" y="73.5" text-anchor="middle" font-size="4" font-weight="bold" font-family="monospace,system-ui" fill="' + col + '">' + remTxt + '</text>'
       + '<circle cx="31" cy="82" r="3" fill="#060e1c" stroke="rgba(' + colRgb + ',.15)" stroke-width=".6"/>'
       + '<circle cx="31" cy="82" r="1" fill="' + col + '" opacity=".4"/>'
-      + '<rect x="43" y="22" width="5" height="10" rx="2.5" fill="#0b1929" stroke="#1e3a5f" stroke-width=".55"/>'
-      + '<rect x="43" y="16" width="16" height="5.5" rx="2.75" fill="#0b1929" stroke="#1e3a5f" stroke-width=".55"/>'
-      + '<ellipse cx="57" cy="18.75" rx="3" ry="6" fill="#0a1525" stroke="rgba(' + colRgb + ',.3)" stroke-width=".6"/>'
-      + '<line x1="45" y1="22" x2="45" y2="27" stroke="#1e3a5f" stroke-width="2" stroke-linecap="round"/>'
+      + '<rect x="43" y="22" width="5" height="10" rx="2.5" fill="#0b1929" stroke="' + (active ? col : '#1e3a5f') + '" stroke-width=".55"/>'
+      + '<rect x="43" y="16" width="16" height="5.5" rx="2.75" fill="#0b1929" stroke="' + (active ? col : '#1e3a5f') + '" stroke-width=".55"/>'
+      + '<ellipse cx="57" cy="18.75" rx="3" ry="6" fill="#0a1525" stroke="rgba(' + colRgb + ',' + (active ? '.75' : '.3') + ')" stroke-width="' + (active ? '1' : '.6') + '"/>'
+      + '<line x1="45" y1="22" x2="45" y2="27" stroke="' + (active ? col : '#1e3a5f') + '" stroke-width="2" stroke-linecap="round"/>'
       + (active ? (
-          '<g opacity=".8">'
-        + '<line x1="59" y1="9" x2="63" y2="5" stroke="' + col + '" stroke-width="1.5" stroke-linecap="round"><animate attributeName="opacity" values="1;.2;1" dur="0.9s" repeatCount="indefinite"/></line>'
-        + '<line x1="60" y1="17" x2="64" y2="15" stroke="' + col + '" stroke-width="1.2" stroke-linecap="round"><animate attributeName="opacity" values="1;.2;1" dur="1.1s" begin=".3s" repeatCount="indefinite"/></line>'
-        + '<line x1="59" y1="25" x2="63" y2="28" stroke="' + col + '" stroke-width="1" stroke-linecap="round"><animate attributeName="opacity" values="1;.2;1" dur="0.8s" begin=".6s" repeatCount="indefinite"/></line>'
-        + '<circle cx="62" cy="13" r="1.5" fill="' + col + '"><animate attributeName="r" values="1.5;3;1.5" dur="1.2s" begin=".15s" repeatCount="indefinite"/><animate attributeName="opacity" values=".8;0;.8" dur="1.2s" begin=".15s" repeatCount="indefinite"/></circle>'
+          '<g>'
+        + '<line x1="59" y1="9" x2="64" y2="3" stroke="' + col + '" stroke-width="2.2" stroke-linecap="round"><animate attributeName="opacity" values="1;.05;1" dur="0.8s" repeatCount="indefinite"/></line>'
+        + '<line x1="60.5" y1="17" x2="66" y2="14" stroke="' + col + '" stroke-width="1.8" stroke-linecap="round"><animate attributeName="opacity" values="1;.05;1" dur="1.0s" begin=".22s" repeatCount="indefinite"/></line>'
+        + '<line x1="59" y1="25" x2="64" y2="30" stroke="' + col + '" stroke-width="1.5" stroke-linecap="round"><animate attributeName="opacity" values="1;.05;1" dur="0.75s" begin=".48s" repeatCount="indefinite"/></line>'
+        + '<circle cx="63" cy="6" r="2.2" fill="' + col + '"><animate attributeName="r" values="1;3.5;1" dur="1.0s" begin=".08s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0;1" dur="1.0s" begin=".08s" repeatCount="indefinite"/></circle>'
+        + '<circle cx="65" cy="16" r="1.8" fill="' + col + '"><animate attributeName="r" values="1;2.8;1" dur="1.2s" begin=".35s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0;.9" dur="1.2s" begin=".35s" repeatCount="indefinite"/></circle>'
         + '</g>'
       ) : '')
       + '</svg>';
@@ -1229,7 +1233,6 @@ window.customCards.push({ version: '1.5',
 
     var css = '<style>'
       + '@keyframes azPulse{0%,100%{opacity:.6}50%{opacity:1}}'
-      + '@keyframes azTimerBar{from{width:100%}to{width:0%}}'
       + '#' + rid + '{position:relative;width:100%;height:100%;min-height:260px;font-family:system-ui,sans-serif;display:block}'
       + '#' + rid + ' .fc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#08101a 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
       + '#' + rid + ' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:180px;background:radial-gradient(ellipse at 20% 0%,rgba(' + colRgb + ',.09) 0%,transparent 65%);pointer-events:none}'
@@ -1268,7 +1271,7 @@ window.customCards.push({ version: '1.5',
     // Hero right column — no duplicate status (already in header pill)
     var heroR = '<div class="fc-hero-r">'
       + (timerActive
-          ? '<div class="fc-tmr-lbl">' + timerLabel + ' IN CORSO</div><div class="fc-tmr-v">' + activeTimer.rem + '</div>'
+          ? '<div class="fc-tmr-lbl">' + timerLabel + ' IN CORSO</div><div id="' + rid + '-tt2" class="fc-tmr-v">' + activeTimer.rem + '</div>'
           : '')
       + '<div class="fc-met"><span class="fc-met-lbl">Cicli mese</span><span class="fc-met-v">' + cicliM + ' / ' + target + '</span></div>'
       + '<div class="fc-met"><span class="fc-met-lbl">Rimanenti</span><span class="fc-met-v" style="color:' + (cicliRim !== null && cicliRim <= 5 ? '#f59e0b' : '#fff') + '">' + (cicliRim !== null ? cicliRim : Math.max(0, target - cicliM)) + '</span></div>'
@@ -1281,18 +1284,17 @@ window.customCards.push({ version: '1.5',
       + '<div class="fc-hero-img">' + _azDevSVG(stato, col, colRgb, timerActive ? activeTimer.rem : null) + '</div>'
       + heroR + '</div>';
 
-    // Timer countdown bar — CSS animated for smooth scroll
+    // Timer countdown bar — aggiornata via DOM tick (no CSS animation, no re-render jitter)
     var timerBarHtml = '';
     if (timerActive && activeTimer.durSec > 0) {
-      var elapsed = Math.max(0, activeTimer.durSec - activeTimer.remSec);
+      var initPct = activeTimer.pct.toFixed(2);
       timerBarHtml = '<div style="padding:0 14px 8px">'
         + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
         + '<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.45)">' + timerLabel + ' in corso</span>'
-        + '<span style="font-size:13px;font-weight:900;color:' + col + ';font-variant-numeric:tabular-nums">' + activeTimer.rem + '</span>'
+        + '<span id="' + rid + '-tt" style="font-size:13px;font-weight:900;color:#00b4ff;font-variant-numeric:tabular-nums">' + activeTimer.rem + '</span>'
         + '</div>'
         + '<div style="height:5px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden">'
-        + '<div style="height:100%;background:' + col + ';border-radius:3px;box-shadow:0 0 8px ' + col + '88;'
-        + 'animation:azTimerBar ' + activeTimer.durSec + 's linear both;animation-delay:-' + elapsed + 's"></div>'
+        + '<div id="' + rid + '-tb" style="height:100%;background:#00b4ff;border-radius:3px;box-shadow:0 0 10px #00b4ff99;width:' + initPct + '%;transition:width .25s linear"></div>'
         + '</div></div>';
     }
 
@@ -1337,9 +1339,15 @@ window.customCards.push({ version: '1.5',
       + pill('🪣', 'Livello acqua', tanicaDsp, 'rgba(255,255,255,.03)', 'rgba(255,255,255,.07)', tanicaCol)
       + '</div>';
 
+    var manStyle = manOn
+      ? 'background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4);color:#ef4444'
+      : 'background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3);color:#22c55e';
+    var autoStyle = autoOn
+      ? 'background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4);color:#ef4444'
+      : 'background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3);color:#22c55e';
     var btnsHtml = '<div class="fc-btns">'
-      + '<div class="fc-btn' + (manOn?' fc-btn-act':'') + '" data-sya="' + (manOn?'man-off':'man-on') + '">' + (manOn?'⏹ Ferma':'▶ Manuale') + '</div>'
-      + '<div class="fc-btn' + (autoOn?' fc-btn-act':'') + '" data-sya="' + (autoOn?'auto-off':'auto-on') + '">' + (autoOn?'⏹ Stop Auto':'▶ Auto') + '</div>'
+      + '<div class="fc-btn" style="' + manStyle + '" data-sya="' + (manOn?'man-off':'man-on') + '">' + (manOn?'⏹ Ferma':'▶ Manuale') + '</div>'
+      + '<div class="fc-btn" style="' + autoStyle + '" data-sya="' + (autoOn?'auto-off':'auto-on') + '">' + (autoOn?'⏹ Ferma Auto':'▶ Auto') + '</div>'
       + '<div class="fc-btn" data-sya="popup-cfg" style="flex:0.55">⚙</div>'
       + '</div>';
 
@@ -1735,8 +1743,9 @@ window.customCards.push({ version: '1.5',
   }
 
   function _azMount(card, hass, el) {
-    if (el._fcBound === '2.5az') return;
-    el._fcBound = '2.5az';
+    if (el._fcBound === '2.6az') return;
+    el._fcBound = '2.6az';
+    var rid = 'fraz' + (card.id || 'az');
     if (el._fcHandler) el.removeEventListener('click', el._fcHandler);
     el._fcHandler = function(e) {
       var t = e.target.closest('[data-sya]'); if (!t) return;
@@ -1770,31 +1779,45 @@ window.customCards.push({ version: '1.5',
       if (a.length > 4 && a.slice(0,4) === 'day-') _azOpenDayDetail(card, a.slice(4), _azCfgFor(card).pk_prefix||'anti_zanzare', el);
     };
     el.addEventListener('click', el._fcHandler);
-    // Live polling — aggiorna la card ogni 2s se lo stato HA è cambiato
+    // Live polling — aggiorna la card ogni 2s solo se lo stato HA è cambiato
     clearInterval(el._azPoll);
     el._azPoll = setInterval(function() {
       try {
         if (!el._fcBound) { clearInterval(el._azPoll); return; }
         var h = _azH(), c2 = _azCfgFor(card);
         var sig = _azComputeSig(h, c2);
-        var tc2 = _azS(h,c2.pk_timer_ciclo), tm2 = _azS(h,c2.pk_timer_manuale);
-        if (tc2 === 'active' || tm2 === 'active') sig += '|' + Date.now(); // forza tick ogni ciclo
         if (el._fcSig !== sig) { el._fcSig = sig; el.innerHTML = _azRender(card); }
       } catch(e) {}
     }, 2000);
+    // Timer tick — aggiorna barra e conto alla rovescia ogni 200ms senza re-render
+    clearInterval(el._azTimerTick);
+    el._azTimerTick = setInterval(function() {
+      try {
+        if (!el._fcBound) { clearInterval(el._azTimerTick); return; }
+        var h2 = _azH(), c2 = _azCfgFor(card);
+        var tc2 = _azS(h2, c2.pk_timer_ciclo), tm2 = _azS(h2, c2.pk_timer_manuale);
+        var tKey = tc2 === 'active' ? c2.pk_timer_ciclo : (tm2 === 'active' ? c2.pk_timer_manuale : null);
+        if (!tKey) return;
+        var fmt = _azFmtTimer(h2, tKey);
+        var tb = el.querySelector('#' + rid + '-tb');
+        var tt = el.querySelector('#' + rid + '-tt');
+        var tt2 = el.querySelector('#' + rid + '-tt2');
+        if (tb) tb.style.width = fmt.pct.toFixed(2) + '%';
+        if (tt) tt.textContent = fmt.rem;
+        if (tt2) tt2.textContent = fmt.rem;
+      } catch(e) {}
+    }, 200);
   }
 
   function _azUpdate(card, hass, el) {
     var h = _azH(), c = _azCfgFor(card);
     var sig = _azComputeSig(h, c);
-    var tc = _azS(h,c.pk_timer_ciclo), tm = _azS(h,c.pk_timer_manuale);
-    if (tc === 'active' || tm === 'active') sig += '|' + Math.floor(Date.now()/1000);
     if (!el.querySelector('.fc-card') || el._fcSig !== sig) { el._fcSig = sig; el.innerHTML = _azRender(card); }
     _azMount(card, hass, el);
   }
 
   var _AZ_CARD = {
-    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.8',
+    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.9',
     desc: 'Controllo sistema anti zanzare: schedule settimanale, timer, statistiche mensili, blocco meteo, sensori sicurezza.',
     render:    function(card) { return _azRender(card); },
     mount:     function(card, hass, el) { _azMount(card, hass, el); },
