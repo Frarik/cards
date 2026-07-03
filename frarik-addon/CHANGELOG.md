@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.66 — 2026-07-03
+
+### fix(store): badge tab Aggiorna non si azzerava dopo aggiornamento card/PKG
+
+- `_ghAfterInstall` ora chiama `_ghsUpdBadge()` + re-render tab updates dopo ogni install card
+- `doUpdate` PKG ora chiama `_ghsUpdBadge()` subito dopo la pulizia di `_pkgPending`
+
 ## 1.7.65 — 2026-07-03
 
 ### fix(store): label tab "Aggiorna" accorciata per evitare overflow del tab bar

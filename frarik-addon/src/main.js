@@ -1888,6 +1888,8 @@ function _ghAfterInstall(){
   renderDash();
   if(typeof _jsStoreRenderList==='function') _jsStoreRenderList();
   if(typeof _epRenderJsStore==='function') _epRenderJsStore();
+  try{ _ghsUpdBadge(); }catch(e){}
+  try{ const el=document.getElementById('ghs-list'); if(el&&_ghsTab==='updates') _ghStoreRenderUpdates(); }catch(e){}
 }
 async function _ghInstallAll(){
   if(!_ghPending.length){ return; }
@@ -1972,6 +1974,7 @@ function _ntfHandleAction(action){
         delete _pkgPending[fileName];
       }catch(e){}
       try{ _ntfClearPkg(fileName); }catch(e){}
+      try{ _ghsUpdBadge(); }catch(e){}
       try{ const el=document.getElementById('ghs-list'); if(el) _ghStoreRender(); }catch(e){}
     };
     const note=hasCfg
