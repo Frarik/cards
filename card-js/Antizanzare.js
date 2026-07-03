@@ -3,17 +3,18 @@
  */
 
 const E = {
-  stato:         'sensor.stato_anti_zanzare',
+  stato:         'sensor.frarik_antizanzare_stato_sistema',
   autoAttiva:    'input_boolean.frarik_antizanzare_automazione_attiva',
   timerCiclo:    'timer.frarik_antizanzare_ciclo_timer',
   timerManuale:  'timer.frarik_antizanzare_manuale_timer',
-  pioggia:       'sensor.probabilita_pioggia',
-  pioggiaCors:   'binary_sensor.pioggia_in_corso',
+  pioggia:       'sensor.frarik_antizanzare_probabilita_pioggia',
+  pioggiaCors:   'binary_sensor.frarik_antizanzare_pioggia_corso',
+  consumoAcqua:  'sensor.frarik_antizanzare_consumo_acqua',
   durataManuale: 'input_number.frarik_antizanzare_durata_manuale',
   cicliMensili:  'counter.frarik_antizanzare_cicli_mensili',
   cicliTarget:   'input_number.frarik_antizanzare_cicli_target_mensili',
   sogliaPioggia: 'input_number.frarik_antizanzare_soglia_pioggia',
-  bloccoMeteo:   'binary_sensor.blocco_meteo_attivo',
+  bloccoMeteo:   'binary_sensor.frarik_antizanzare_blocco_meteo',
   btnStart:      'input_button.frarik_antizanzare_start_manuale',
   btnStop:       'input_button.frarik_antizanzare_stop_manuale',
 }
@@ -193,25 +194,28 @@ button[data-action="toggleSettings"] { display: var(--fgear, none); }
 .adj-sm { width:24px;height:24px;border-radius:6px;border:none;background:rgba(255,255,255,.08);color:var(--primary-text-color,#f1f5f9);font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;flex-shrink:0; }
 .adj-sm:hover { background:rgba(255,255,255,.15); }
 .set-val { font-size:13px;font-weight:700;color:#06b6d4;min-width:36px;text-align:center; }
-.sched-toggle { display:flex;align-items:center;justify-content:space-between;padding:8px 14px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04); }
-.sched-toggle:hover { background:rgba(255,255,255,.02); }
-.sched-chevron { color:var(--secondary-text-color,#64748b);display:inline-flex;transition:transform .2s; }
-.sched-chevron.open { transform:rotate(180deg); }
-.sched-body { padding:8px 14px 12px;border-bottom:1px solid rgba(255,255,255,.04); }
+.sched-panel { display:none;border-top:1px solid rgba(255,255,255,.06); }
+.sched-panel.open { display:block; }
+.sched-panel-hdr { display:flex;align-items:center;padding:9px 12px 4px; }
+.sched-panel-lbl { font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#06b6d4;display:flex;align-items:center;gap:5px; }
+.sched-body { padding:0 12px 12px; }
 .sched-tabs { display:flex;gap:3px;margin-bottom:10px; }
-.sched-tab { flex:1;height:26px;border-radius:6px;font-size:9px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.04);color:var(--secondary-text-color,#64748b);transition:all .15s; }
+.sched-tab { flex:1;height:28px;border-radius:7px;font-size:9px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.04);color:var(--secondary-text-color,#64748b);transition:all .15s; }
 .sched-tab.active { background:rgba(6,182,212,.18);color:#06b6d4;border-color:rgba(6,182,212,.4); }
 .sched-tab.day-on { border-color:rgba(6,182,212,.2); }
-.sched-num-row { display:flex;align-items:center;justify-content:space-between;padding:4px 0 8px;border-bottom:1px solid rgba(255,255,255,.05);margin-bottom:6px; }
+.sched-num-row { display:flex;align-items:center;justify-content:space-between;padding:4px 0 8px;border-bottom:1px solid rgba(255,255,255,.05);margin-bottom:8px; }
 .sched-lbl { font-size:11px;font-weight:600;color:var(--secondary-text-color,#64748b); }
 .sched-val { font-size:13px;font-weight:700;color:var(--primary-text-color,#f1f5f9);min-width:18px;text-align:center; }
-.cycle-row { display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.03); }
-.cycle-row:last-child { border-bottom:none; }
-.cycle-num { font-size:10px;font-weight:600;color:var(--secondary-text-color,#64748b);min-width:40px;flex-shrink:0; }
-.time-input { height:26px;padding:0 6px;border-radius:7px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:var(--primary-text-color,#f1f5f9);font-size:12px;font-weight:600;font-family:inherit;flex:1;min-width:0; }
+.cycle-row { display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(6,182,212,.1);margin-bottom:6px;transition:border-color .2s; }
+.cycle-row:last-child { margin-bottom:0; }
+.cycle-row:hover { border-color:rgba(6,182,212,.25); }
+.cycle-num { font-size:10px;font-weight:800;color:#06b6d4;background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.2);border-radius:6px;padding:2px 6px;min-width:40px;text-align:center;flex-shrink:0; }
+.time-input { height:28px;padding:0 7px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:var(--primary-text-color,#f1f5f9);font-size:12px;font-weight:600;font-family:inherit;flex:1;min-width:0; }
 .time-input:focus { outline:none;border-color:rgba(6,182,212,.5); }
-.sched-dur { font-size:11px;font-weight:700;color:var(--primary-text-color,#f1f5f9);min-width:34px;text-align:center; }
-.no-cycles { text-align:center;font-size:11px;color:var(--secondary-text-color,#64748b);padding:8px 0; }
+.sched-dur { font-size:11px;font-weight:700;color:var(--primary-text-color,#f1f5f9);min-width:36px;text-align:center; }
+.no-cycles { text-align:center;font-size:11px;color:var(--secondary-text-color,#64748b);padding:10px 0; }
+.btn-sched { height:24px;padding:0 8px;border-radius:7px;border:1px solid rgba(6,182,212,.2);background:rgba(6,182,212,.08);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;color:#06b6d4;font-size:9px;font-weight:700;transition:all .15s;flex-shrink:0;letter-spacing:.04em; }
+.btn-sched:hover,.btn-sched.open { background:rgba(6,182,212,.18);border-color:rgba(6,182,212,.4); }
 `
 
 class AntiZanzareCard extends HTMLElement {
@@ -397,6 +401,7 @@ class AntiZanzareCard extends HTMLElement {
       this._g(E.timerManuale),
       this._g(E.bloccoMeteo),
       this._g(E.pioggiaCors),
+      this._g(E.consumoAcqua),
       Math.round(parseFloat(this._g(E.cicliMensili,'0'))),
       Math.round(parseFloat(this._g(E.cicliTarget,'20'))),
       Math.round(parseFloat(this._g(E.sogliaPioggia,'50'))),
@@ -514,6 +519,8 @@ class AntiZanzareCard extends HTMLElement {
     const pctM       = target > 0 ? Math.min(100, cicliM/target*100) : 0
     const dur        = this._dur()
     const days       = DAYS.map(d => this._g(`input_boolean.frarik_antizanzare_${d}`) === 'on')
+    const consumoRaw  = parseFloat(this._g(E.consumoAcqua, '0')) || 0
+    const consumoUnit = this._a(E.consumoAcqua, 'unit_of_measurement') || 'L/min'
     const rainWarn   = pioggia >= soglia
     const cardClass  = cycleOn?'st-ciclo':manOn?'st-manual':autoOn?'st-wait':blocco?'st-block':''
 
@@ -584,18 +591,22 @@ class AntiZanzareCard extends HTMLElement {
             </div>`
           }).join('')
         : `<div class="no-cycles">Nessun ciclo — aumenta il numero sopra</div>`
-      schedHTML = `<div class="sched-body">
-        <div class="sched-tabs">${tabs}</div>
-        <div class="sched-num-row">
-          <span class="sched-lbl">Numero cicli</span>
-          <div class="num-ctrl">
-            <button class="adj-sm" data-action="numCicliMinus">−</button>
-            <span class="sched-val">${numCicli}</span>
-            <button class="adj-sm" data-action="numCicliPlus">+</button>
-          </div>
+      schedHTML = `
+        <div class="sched-panel-hdr">
+          <span class="sched-panel-lbl">${I.calend} Programma Cicli</span>
         </div>
-        ${cycles}
-      </div>`
+        <div class="sched-body">
+          <div class="sched-tabs">${tabs}</div>
+          <div class="sched-num-row">
+            <span class="sched-lbl">Numero cicli</span>
+            <div class="num-ctrl">
+              <button class="adj-sm" data-action="numCicliMinus">−</button>
+              <span class="sched-val">${numCicli}</span>
+              <button class="adj-sm" data-action="numCicliPlus">+</button>
+            </div>
+          </div>
+          ${cycles}
+        </div>`
     }
 
     const settingsHTML = this._settingsOpen ? `
@@ -620,11 +631,6 @@ class AntiZanzareCard extends HTMLElement {
             <button class="adj-sm" data-action="targetPlus">+</button>
           </div>
         </div>
-        <div class="sched-toggle" data-action="toggleSchedule">
-          <div><div class="set-lbl">Programmazione cicli</div><div class="set-sub">Orari e durate per ogni giorno</div></div>
-          <span class="sched-chevron ${this._schedOpen?'open':''}">${I.chevron}</span>
-        </div>
-        ${schedHTML}
       </div>` : `<div class="settings"></div>`
 
     this.shadowRoot.innerHTML = `<style>${CSS}</style>
@@ -675,7 +681,7 @@ class AntiZanzareCard extends HTMLElement {
       <div class="stat-body">
         ${timerBodyHTML}
       </div>
-      <div class="stat-foot">${isActive?'Rimanente':'Nessun timer'}</div>
+      <div class="stat-foot">${isActive ? (consumoRaw > 0 ? `${consumoRaw.toFixed(1)} ${consumoUnit}` : 'Rimanente') : 'Nessun timer'}</div>
     </div>
 
   </div>
@@ -699,6 +705,13 @@ class AntiZanzareCard extends HTMLElement {
   <div class="days">
     <span class="days-label">Giorni attivi</span>
     <div class="days-chips">${dayChips}</div>
+    <button class="btn-sched ${this._schedOpen?'open':''}" data-action="toggleSchedule">
+      ${I.calend} Programma
+    </button>
+  </div>
+
+  <div class="sched-panel ${this._schedOpen?'open':''}">
+    ${schedHTML}
   </div>
 
   <div class="controls">
@@ -1113,15 +1126,17 @@ window.customCards.push({ version: '1.5',
   function _azPkgDef() {
     return {
       pk_prefix:          'frarik_antizanzare',
-      pk_stato:           'sensor.stato_anti_zanzare',
+      pk_stato:           'sensor.frarik_antizanzare_stato_sistema',
       pk_auto:            'input_boolean.frarik_antizanzare_automazione_attiva',
       pk_manuale:         'input_boolean.frarik_antizanzare_manuale_attiva',
       pk_timer_ciclo:     'timer.frarik_antizanzare_ciclo_timer',
       pk_timer_manuale:   'timer.frarik_antizanzare_manuale_timer',
       pk_cicli_mensili:   'counter.frarik_antizanzare_cicli_mensili',
       pk_cicli_target:    'input_number.frarik_antizanzare_cicli_target_mensili',
-      pk_pioggia:         'sensor.probabilita_pioggia',
-      pk_blocco_meteo:    'binary_sensor.blocco_meteo_attivo',
+      pk_pioggia:         'sensor.frarik_antizanzare_probabilita_pioggia',
+      pk_pioggia_corso:   'binary_sensor.frarik_antizanzare_pioggia_corso',
+      pk_blocco_meteo:    'binary_sensor.frarik_antizanzare_blocco_meteo',
+      pk_consumo_acqua:   'sensor.frarik_antizanzare_consumo_acqua',
       pk_durata_manuale:  'input_number.frarik_antizanzare_durata_manuale',
       pk_soglia_pioggia:  'input_number.frarik_antizanzare_soglia_pioggia',
       pk_btn_auto_on:     'input_button.frarik_antizanzare_start_automazione',

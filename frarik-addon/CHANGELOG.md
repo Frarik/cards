@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.7.62 — 2026-07-03
+
+### fix + miglioramento: card Antizanzare — entity ID corretti + gestione cicli grafica
+
+- **Entity ID corretti** nella card (`E` object e `_azPkgDef`): `sensor.stato_anti_zanzare` → `sensor.frarik_antizanzare_stato_sistema`, `sensor.probabilita_pioggia` → `sensor.frarik_antizanzare_probabilita_pioggia`, `binary_sensor.pioggia_in_corso` → `binary_sensor.frarik_antizanzare_pioggia_corso`, `binary_sensor.blocco_meteo_attivo` → `binary_sensor.frarik_antizanzare_blocco_meteo`
+- **Aggiunto `sensor.frarik_antizanzare_consumo_acqua`** (portata acqua durante ciclo) — mostrato nel tile timer come `X L/min` quando un ciclo è attivo
+- **"Programma" spostato fuori dalle impostazioni**: il pulsante calendario ora appare direttamente nella riga giorni attivi, il pannello cicli si apre inline sotto i chip (non più nascosto dentro il ⚙)
+- **Cicli come glass pill**: ogni riga ciclo ha bordo ciano, sfondo frosted, label `C1/C2/...` con badge colorato — stile glassmorphism in linea con card elettrodomestici
+- `_azPkgDef` arricchito con `pk_pioggia_corso` e `pk_consumo_acqua`
+
 ## 1.7.61 — 2026-07-02
 
 ### chore: bump versione tutti i PKG (test badge store)
