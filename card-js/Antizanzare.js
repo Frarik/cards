@@ -1123,6 +1123,26 @@ window.customCards.push({ version: '1.5',
     return {rem:('0'+Math.floor(remSec/60)).slice(-2)+':'+('0'+(remSec%60)).slice(-2), pct:pct, active:true, remSec:remSec, durSec:durSec};
   }
 
+  function _azFmtProssimo(raw) {
+    if (!raw || raw === 'N/D' || raw === '--') return null;
+    var now = new Date(), target = null;
+    var m = String(raw).match(/(\d{1,2}):(\d{2})/);
+    if (m) {
+      target = new Date(now);
+      target.setHours(+m[1], +m[2], 0, 0);
+      if (target.getTime() - now.getTime() < -60000) target.setDate(target.getDate() + 1);
+    }
+    if (!target) { try { var d = new Date(raw); if (!isNaN(d.getTime())) target = d; } catch(ex){} }
+    if (!target) return { str: raw, pct: 0 };
+    var diffMs = target.getTime() - now.getTime();
+    if (diffMs < 0) return { str: raw, pct: 100 };
+    var diffMin = Math.round(diffMs / 60000);
+    var hr = Math.floor(diffMin / 60), mn = diffMin % 60;
+    var str = hr > 0 ? 'tra ' + hr + 'h ' + (mn > 0 ? mn + 'm' : '') : 'tra ' + mn + 'm';
+    var pct = Math.max(0, Math.min(100, 100 - (diffMin / (24 * 60)) * 100));
+    return { str: str.trim(), pct: pct };
+  }
+
   function _azPkgDef() {
     return {
       pk_prefix:          'frarik_antizanzare',
@@ -1163,13 +1183,13 @@ window.customCards.push({ version: '1.5',
     return r;
   }
 
-  function _azDevSVG(stato, col, colRgb, timerRem) {
+  function _azDevSVG(stato, col, colRgb, timerRem, blocco) {
     var active = timerRem !== null;
     var glow = active
       ? 'drop-shadow(0 0 4px rgba(' + colRgb + ',1)) drop-shadow(0 0 16px rgba(' + colRgb + ',.65)) drop-shadow(0 0 40px rgba(' + colRgb + ',.28))'
-      : 'drop-shadow(0 0 6px rgba(' + colRgb + ',.18))';
+      : (blocco ? 'drop-shadow(0 0 8px rgba(96,165,250,.5))' : 'drop-shadow(0 0 6px rgba(' + colRgb + ',.18))');
     var remTxt = active ? (timerRem || 'ATTIVO') : 'STAND';
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 108" style="display:block;width:100%;height:100%;filter:' + glow + '">'
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 108" overflow="hidden" style="display:block;width:100%;height:100%;filter:' + glow + '">'
       + '<rect x="8" y="96" width="48" height="7" rx="3.5" fill="#090f1e" stroke="' + col + '" stroke-width=".5" opacity="' + (active ? '.85' : '.5') + '"/>'
       + '<rect x="14" y="24" width="34" height="72" rx="16" fill="' + (active ? 'rgba(' + colRgb + ',.06)' : '#0b1929') + '" stroke="' + col + '" stroke-width="' + (active ? '1.3' : '.85') + '"/>'
       + '<rect x="16" y="30" width="6" height="60" rx="3" fill="rgba(255,255,255,' + (active ? '.1' : '.04') + ')"/>'
@@ -1201,6 +1221,16 @@ window.customCards.push({ version: '1.5',
         + '<circle cx="65" cy="16" r="1.8" fill="' + col + '"><animate attributeName="r" values="1;2.8;1" dur="1.2s" begin=".35s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0;.9" dur="1.2s" begin=".35s" repeatCount="indefinite"/></circle>'
         + '</g>'
       ) : '')
+      + (blocco ? (
+          '<g opacity=".85">'
+        + '<line x1="7" y1="5" x2="5" y2="16" stroke="#60a5fa" stroke-width="1.6" stroke-linecap="round"><animateTransform attributeName="transform" type="translate" values="0,-20;0,115" dur="0.88s" begin="0s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;.85;.85;0" dur="0.88s" begin="0s" repeatCount="indefinite"/></line>'
+        + '<line x1="19" y1="5" x2="17" y2="15" stroke="#93c5fd" stroke-width="1.2" stroke-linecap="round"><animateTransform attributeName="transform" type="translate" values="0,-20;0,115" dur="0.76s" begin="0.18s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;.75;.75;0" dur="0.76s" begin="0.18s" repeatCount="indefinite"/></line>'
+        + '<line x1="31" y1="5" x2="29" y2="16" stroke="#60a5fa" stroke-width="1.4" stroke-linecap="round"><animateTransform attributeName="transform" type="translate" values="0,-20;0,115" dur="0.95s" begin="0.38s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;.8;.8;0" dur="0.95s" begin="0.38s" repeatCount="indefinite"/></line>'
+        + '<line x1="44" y1="5" x2="42" y2="15" stroke="#bfdbfe" stroke-width="1.1" stroke-linecap="round"><animateTransform attributeName="transform" type="translate" values="0,-20;0,115" dur="0.82s" begin="0.55s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;.7;.7;0" dur="0.82s" begin="0.55s" repeatCount="indefinite"/></line>'
+        + '<line x1="57" y1="5" x2="55" y2="16" stroke="#93c5fd" stroke-width="1.5" stroke-linecap="round"><animateTransform attributeName="transform" type="translate" values="0,-20;0,115" dur="0.9s" begin="0.72s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;.8;.8;0" dur="0.9s" begin="0.72s" repeatCount="indefinite"/></line>'
+        + '<line x1="13" y1="5" x2="11" y2="14" stroke="#60a5fa" stroke-width="1" stroke-linecap="round"><animateTransform attributeName="transform" type="translate" values="0,-20;0,115" dur="1.0s" begin="0.08s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;.6;.6;0" dur="1.0s" begin="0.08s" repeatCount="indefinite"/></line>'
+        + '</g>'
+      ) : '')
       + '</svg>';
   }
 
@@ -1230,12 +1260,27 @@ window.customCards.push({ version: '1.5',
     else if (stato === 'Manuale Attiva')     { col = '#f97316'; colRgb = '249,115,22';  statusLabel = 'ACCESA'; }
     else if (stato === 'Ciclo in Corso')     { col = '#22c55e'; colRgb = '34,197,94';   statusLabel = 'ACCESA'; }
     else if (stato === 'Automazione Attiva') { col = '#06b6d4'; colRgb = '6,182,212';   statusLabel = 'ACCESA'; }
+    var isAccesa = (autoOn || manOn || timerActive);
+    var bgOpacity = isAccesa ? '.28' : '.09';
+    var bgGlow2 = isAccesa ? 'radial-gradient(ellipse at 85% 100%,rgba(' + colRgb + ',.14) 0%,transparent 55%),' : '';
+
+    var prossimoHtml = '';
+    if (prossimo && !timerActive) {
+      var fp = _azFmtProssimo(prossimo);
+      if (fp) {
+        prossimoHtml = '<div class="fc-met"><span class="fc-met-lbl">Prossimo</span><span class="fc-met-v" style="font-size:11px;color:' + col + '">' + fp.str + '</span></div>'
+          + '<div style="height:3px;margin:1px 0 2px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden">'
+          + '<div style="height:100%;width:' + fp.pct.toFixed(1) + '%;background:' + col + ';border-radius:2px"></div></div>';
+      }
+    } else if (!timerActive) {
+      prossimoHtml = '<div class="fc-met"><span class="fc-met-lbl">Prob. pioggia</span><span class="fc-met-v" style="color:' + (pioggia > 50 ? '#f59e0b' : '#fff') + '">' + pioggia.toFixed(0) + '%</span></div>';
+    }
 
     var css = '<style>'
       + '@keyframes azPulse{0%,100%{opacity:.6}50%{opacity:1}}'
       + '#' + rid + '{position:relative;width:100%;height:100%;min-height:260px;font-family:system-ui,sans-serif;display:block}'
       + '#' + rid + ' .fc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#08101a 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
-      + '#' + rid + ' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:180px;background:radial-gradient(ellipse at 20% 0%,rgba(' + colRgb + ',.09) 0%,transparent 65%);pointer-events:none}'
+      + '#' + rid + ' .fc-card::before{content:"";position:absolute;inset:0;background:' + bgGlow2 + 'radial-gradient(ellipse at 20% 0%,rgba(' + colRgb + ',' + bgOpacity + ') 0%,transparent 65%);pointer-events:none;transition:background .6s}'
       + '#' + rid + ' .fc-hdr{display:flex;align-items:center;gap:9px;padding:10px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
       + '#' + rid + ' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;background:rgba(' + colRgb + ',.1);border:1px solid rgba(' + colRgb + ',.2)}'
       + '#' + rid + ' .fc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
@@ -1250,17 +1295,17 @@ window.customCards.push({ version: '1.5',
       + '#' + rid + ' .fc-met-lbl{font-size:11px;font-weight:700;color:#fff;flex-shrink:0}'
       + '#' + rid + ' .fc-met-v{font-size:14px;font-weight:800;color:#fff;text-align:right}'
       + '#' + rid + ' .fc-tmr-v{font-size:22px;font-weight:900;color:' + col + ';font-variant-numeric:tabular-nums;letter-spacing:-.02em;text-align:right}'
-      + '#' + rid + ' .fc-tmr-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:rgba(255,255,255,.4);text-align:right}'
+      + '#' + rid + ' .fc-tmr-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#fff;text-align:right}'
       + '#' + rid + ' .fc-grid{display:flex;margin:0 10px 7px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;overflow:hidden}'
       + '#' + rid + ' .fc-gc{flex:1;display:flex;flex-direction:column;align-items:center;padding:7px 2px;gap:2px;min-width:0}'
       + '#' + rid + ' .fc-gc-sep{width:1px;background:rgba(255,255,255,.07);flex-shrink:0}'
       + '#' + rid + ' .fc-gc-ico{font-size:14px;line-height:1}'
       + '#' + rid + ' .fc-gc-v{font-size:11px;font-weight:800;color:#fff;text-align:center;white-space:nowrap}'
-      + '#' + rid + ' .fc-gc-l{font-size:8px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.03em;text-align:center}'
+      + '#' + rid + ' .fc-gc-l{font-size:8px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.03em;text-align:center}'
       + '#' + rid + ' .fc-row{display:flex;gap:5px;padding:0 10px 7px}'
       + '#' + rid + ' .fc-pill{flex:1;display:flex;align-items:center;gap:5px;padding:5px 7px;border-radius:8px;min-width:0}'
       + '#' + rid + ' .fc-pill-ico{font-size:13px;flex-shrink:0}'
-      + '#' + rid + ' .fc-pill-lbl{font-size:8px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase}'
+      + '#' + rid + ' .fc-pill-lbl{font-size:8px;font-weight:700;color:#fff;text-transform:uppercase}'
       + '#' + rid + ' .fc-pill-v{font-size:11px;font-weight:800;color:#fff}'
       + '#' + rid + ' .fc-btns{display:flex;gap:6px;padding:0 14px 11px}'
       + '#' + rid + ' .fc-btn{flex:1;padding:8px 4px;border-radius:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:10px;font-weight:700;color:#fff;text-align:center;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:3px}'
@@ -1275,13 +1320,11 @@ window.customCards.push({ version: '1.5',
           : '')
       + '<div class="fc-met"><span class="fc-met-lbl">Cicli mese</span><span class="fc-met-v">' + cicliM + ' / ' + target + '</span></div>'
       + '<div class="fc-met"><span class="fc-met-lbl">Rimanenti</span><span class="fc-met-v" style="color:' + (cicliRim !== null && cicliRim <= 5 ? '#f59e0b' : '#fff') + '">' + (cicliRim !== null ? cicliRim : Math.max(0, target - cicliM)) + '</span></div>'
-      + (prossimo && !timerActive
-          ? '<div class="fc-met"><span class="fc-met-lbl">Prossimo</span><span class="fc-met-v" style="font-size:11px;color:' + col + '">' + prossimo + '</span></div>'
-          : '<div class="fc-met"><span class="fc-met-lbl">Prob. pioggia</span><span class="fc-met-v" style="color:' + (pioggia > 50 ? '#f59e0b' : '#fff') + '">' + pioggia.toFixed(0) + '%</span></div>')
+      + prossimoHtml
       + '</div>';
 
     var heroHtml = '<div class="fc-hero">'
-      + '<div class="fc-hero-img">' + _azDevSVG(stato, col, colRgb, timerActive ? activeTimer.rem : null) + '</div>'
+      + '<div class="fc-hero-img">' + _azDevSVG(stato, col, colRgb, timerActive ? activeTimer.rem : null, blocco) + '</div>'
       + heroR + '</div>';
 
     // Timer countdown bar — aggiornata via DOM tick (no CSS animation, no re-render jitter)
@@ -1290,7 +1333,7 @@ window.customCards.push({ version: '1.5',
       var initPct = activeTimer.pct.toFixed(2);
       timerBarHtml = '<div style="padding:0 14px 8px">'
         + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
-        + '<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.45)">' + timerLabel + ' in corso</span>'
+        + '<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#fff">' + timerLabel + ' in corso</span>'
         + '<span id="' + rid + '-tt" style="font-size:13px;font-weight:900;color:#00b4ff;font-variant-numeric:tabular-nums">' + activeTimer.rem + '</span>'
         + '</div>'
         + '<div style="height:5px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden">'
@@ -1817,7 +1860,7 @@ window.customCards.push({ version: '1.5',
   }
 
   var _AZ_CARD = {
-    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.10', frarik_no_edit: true,
+    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.11', frarik_no_edit: true,
     desc: 'Controllo sistema anti zanzare: schedule settimanale, timer, statistiche mensili, blocco meteo, sensori sicurezza.',
     render:    function(card) { return _azRender(card); },
     mount:     function(card, hass, el) { _azMount(card, hass, el); },

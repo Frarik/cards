@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.75 — 2026-07-04
+
+### feat(antizanzare): card v2.11 — countdown prossimo ciclo, pioggia SVG, background dinamico, testi bianchi
+
+- **Countdown prossimo ciclo**: il sensore `prossimo_ciclo_completo` viene parsato come orario (HH:MM o ISO); mostra "tra Xh Ym" al posto dell'orario grezzo + barra di avanzamento colorata verso il ciclo successivo (più è piena, più siamo vicini)
+- **Pioggia SVG**: quando `blocco_meteo` è attivo, 6 gocce animate con `animateTransform` cadono sull'SVG (colore `#60a5fa`/`#93c5fd`, stagger di fase differente per effetto realistico); il glow del dispositivo diventa blu pioggia
+- **Background dinamico**: quando il sistema è ACCESO (auto/manuale/timer attivo), `::before` passa da `.09` a `.28` di opacità + secondo radial-gradient in basso a destra — effetto "acceso" visibile su tutta la card
+- **Testi bianchi**: rimosso `rgba(255,255,255,.4/.45)` da tutti i testi — `.fc-tmr-lbl`, `.fc-gc-l`, `.fc-pill-lbl` e label barra timer ora a `#fff` pieno
+
 ## 1.7.74 — 2026-07-04
 
 ### feat(antizanzare): card v2.10 — rimozione matita in modalità modifica
