@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.98 — 2026-07-04
+
+### fix+feat(GruppoTemperatura): v1.1 — testi bianchi + sensori media chip
+
+- **Tutti i testi a #fff**: etichette "TEMPERATURA"/"UMIDITÀ", scale "0°"/"40°", "°C"/"%", "Non disponibile" e tutti i label del configuratore ora sono bianchi al 100%
+- **Sensori media per il chip**: nuova sezione nel configuratore per impostare `sensor.media_temperatura` e `sensor.media_umidita`; la chip li mostra direttamente invece di calcolare min–max dai singoli sensori
+- **Sensori stanza separati**: il popup continua a mostrare tutti i sensori individuali per stanza configurati
+- Icone nei pannelli aumentate a 14px per maggiore leggibilità
+
 ## 1.7.97 — 2026-07-04
 
 ### feat(distintivi): nuovo badge Gruppo Temperatura
