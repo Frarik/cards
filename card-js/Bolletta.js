@@ -1,4 +1,4 @@
-/* frarik-version: 3.9 */
+/* frarik-version: 4.0 */
 (function () {
   'use strict';
 
@@ -471,7 +471,13 @@
       + '<button id="bp-imp-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:' + COL + ';color:#000">Salva</button>'
       + '</div>';
 
-    var ov = mkOv(popShell('⚙', 'Impostazioni Bolletta', 'Tariffa · FV · Sensori', 'bp-imp-close', tabCSS + tabs + pTariffa + pFv + pSensori + saveBtn), 'bp-imp-close');
+    var _notifOn0 = (_st0._push !== false);
+    var notifSection = '<div style="display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-top:1px solid rgba(255,255,255,.08);margin-top:4px">'
+      + '<div><div style="font-size:13px;font-weight:700;color:#fff">🔔 Notifiche Push</div><div style="font-size:10px;color:#fff;margin-top:2px">Avvisi consumi e bolletta</div></div>'
+      + '<button id="bp-notif-btn" style="padding:5px 16px;border-radius:20px;border:none;cursor:pointer;font-size:12px;font-weight:800;background:' + (_notifOn0 ? 'rgba(74,222,128,.2)' : 'rgba(255,255,255,.06)') + ';color:' + (_notifOn0 ? '#4ade80' : 'rgba(255,255,255,.4)') + '">' + (_notifOn0 ? '✅ ON' : 'OFF') + '</button>'
+      + '</div>';
+
+    var ov = mkOv(popShell('⚙', 'Impostazioni Bolletta', 'Tariffa · FV · Sensori', 'bp-imp-close', tabCSS + tabs + pTariffa + pFv + pSensori + notifSection + saveBtn), 'bp-imp-close');
 
     ov.querySelectorAll('.bp-tab').forEach(function(t) {
       t.addEventListener('click', function() {
@@ -583,6 +589,18 @@
       ov._close();
       if (el) { el._fcSig = ''; el._fcBound = null; el.innerHTML = render(card); mount(card, H(), el); }
     });
+
+    var _notifBtn = ov.querySelector('#bp-notif-btn');
+    var _notifOn = _notifOn0;
+    if (_notifBtn) {
+      _notifBtn.addEventListener('click', function() {
+        _notifOn = !_notifOn;
+        var _st2 = load(); _st2._push = _notifOn; save(_st2);
+        _notifBtn.textContent = _notifOn ? '✅ ON' : 'OFF';
+        _notifBtn.style.background = _notifOn ? 'rgba(74,222,128,.2)' : 'rgba(255,255,255,.06)';
+        _notifBtn.style.color = _notifOn ? '#4ade80' : 'rgba(255,255,255,.4)';
+      });
+    }
   }
 
   /* ── POPUP: CONFIGURA ENTITÀ (wizard) ── */
@@ -734,9 +752,17 @@
       + '</style>';
 
     var heroHtml = '<div class="fb-hero">'
-      + '<div class="fb-hero-val">' + costoM.toFixed(2).replace('.',',') + '<span class="fb-hero-eur">€</span></div>'
-      + '<div class="fb-hero-sub">' + MESIL[now.getMonth()] + ' ' + now.getFullYear() + ' · ' + kwhM.toFixed(1) + ' kWh · Giorno ' + dayNow + '/' + daysInMonth + '</div>'
-      + ((haFv || gseCredit > 0) ? '<div class="fb-pills">'
+      + '<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:8px">'
+      + '<div style="text-align:left;flex:1;min-width:0">'
+      + '<div style="font-size:9px;color:#fff;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;font-weight:700">Consumo Mese</div>'
+      + '<div style="font-size:44px;font-weight:900;color:#fff;line-height:1;letter-spacing:-2px;white-space:nowrap">' + kwhM.toFixed(0) + '<span style="font-size:17px;font-weight:600;color:#fff;margin-left:3px">kWh</span></div>'
+      + '</div>'
+      + '<div style="text-align:right;flex:1;min-width:0">'
+      + '<div style="font-size:9px;color:#fff;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;font-weight:700">Costo Mese</div>'
+      + '<div style="font-size:44px;font-weight:900;color:' + COL + ';line-height:1;letter-spacing:-2px;white-space:nowrap">' + costoM.toFixed(2).replace('.',',') + '<span style="font-size:17px;font-weight:600;color:' + COL + ';margin-left:3px">€</span></div>'
+      + '</div>'
+      + '</div>'
+      + ((haFv || gseCredit > 0) ? '<div class="fb-pills" style="justify-content:flex-start;margin-top:8px">'
         + (haFv ? '<div class="fb-pill" style="background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);color:#fbbf24">☀️ FV</div>' : '')
         + (gseCredit > 0 ? '<div class="fb-pill" style="background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);color:#4ade80">GSE −' + gseCredit.toFixed(0) + '€</div>' : '')
         + '</div>' : '')
@@ -760,10 +786,16 @@
       + (gseCredit > 0 ? '<div style="margin-top:7px;font-size:10px;color:rgba(74,222,128,.8);font-weight:600">Credito GSE: ' + gseCredit.toFixed(2) + ' €</div>' : '')
       + '</div>' : '';
 
-    var chartHtml = '<div class="fb-chart">'
-      + '<div class="fb-chart-hd"><span style="font-size:10px;color:#fff;text-transform:uppercase;letter-spacing:.03em">Ultimi 6 mesi</span>'
-      + '<span style="font-size:10px;color:#fff">Anno: ' + annoTot.toFixed(0) + ' €</span></div>'
-      + '<div style="display:flex;gap:3px;align-items:flex-end;height:82px">' + miniBar + '</div>'
+    var progHtml = '<div style="margin:2px 14px 10px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">'
+      + '<span style="font-size:10px;color:#fff;font-weight:600">Giorno ' + dayNow + ' di ' + daysInMonth + '</span>'
+      + '<span style="font-size:11px;color:' + COL + ';font-weight:800">' + percMese + '%</span>'
+      + '</div>'
+      + '<div style="height:8px;background:rgba(255,255,255,.07);border-radius:4px;position:relative">'
+      + '<div style="height:100%;width:' + percMese + '%;background:linear-gradient(90deg,rgba(' + RGB + ',.45),rgba(' + RGB + ',.9));border-radius:4px;box-shadow:0 0 10px rgba(' + RGB + ',.4),0 0 22px rgba(' + RGB + ',.15);position:relative;min-width:' + (percMese > 0 ? '10' : '0') + 'px">'
+      + (percMese > 0 && percMese < 100 ? '<div style="position:absolute;right:-5px;top:50%;transform:translateY(-50%);width:14px;height:14px;border-radius:50%;background:' + COL + ';box-shadow:0 0 8px ' + COL + ',0 0 18px rgba(' + RGB + ',.7)"></div>' : '')
+      + '</div>'
+      + '</div>'
       + '</div>';
 
     var btnsHtml = '<div class="fb-btns">'
@@ -779,12 +811,13 @@
       + '<div class="fb-hdr">'
       + '<div class="fb-hdr-iw">⚡</div>'
       + '<div class="fb-hdr-tit">' + (c.name || 'Bolletta') + '</div>'
+      + '<div style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:rgba(' + RGB + ',.12);border:1px solid rgba(' + RGB + ',.25);color:' + COL + ';flex-shrink:0">' + MESIL[now.getMonth()] + '</div>'
       + '</div>'
       + '<div class="fb-scroll">'
       + heroHtml
       + statsHtml
       + fvHtml
-      + chartHtml
+      + progHtml
       + btnsHtml
       + '</div>'
       + '</div>'
@@ -792,7 +825,7 @@
   }
 
   /* ── UPDATE / MOUNT ── */
-  var CARD = { id: 'bolletta', version: '3.9', name: 'Bolletta Elettrica', icon: '⚡', color: COL };
+  var CARD = { id: 'bolletta', version: '4.0', name: 'Bolletta Elettrica', icon: '⚡', color: COL };
 
   function update(card, hass, el) {
     var h = hass || H(), c = cfgFor(card);
@@ -2261,6 +2294,7 @@ automation:
     render: render,
     mount: mount,
     update: update,
+    frarik_no_edit: true,
     frarik_pkg_check: 'sensor.frarik_bolletta_versione',
     frarik_pkg_id: 'frarik_bolletta',
     frarik_pkg_version: '1.0',

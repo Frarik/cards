@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.7.92 — 2026-07-04
+
+### feat(bolletta): card v4.0 — UI principale ridisegnata
+
+- **Hero split**: kWh mensili a sinistra + costo mensile a destra, entrambi 44px peso 900; etichette 100% bianche
+- **Badge mese** in alto a destra (es. "Luglio") dove era il badge ARERA
+- **Barra progresso illuminata**: sostituisce il mini-grafico degli ultimi 6 mesi — mostra giorno X/Y con barra gialla glowing e punto luminoso sul fronte
+- **Grafico 6 mesi**: rimosso dalla card principale (rimane nel popup Storico)
+- **Toggle Notifiche Push** nelle Impostazioni: ON/OFF salvato in localStorage
+- **Matita rimossa** in modalità modifica: `frarik_no_edit: true` nel registry — rimangono solo i 3 pallini (⋯)
+
 ## 1.7.91 — 2026-07-04
 
 ### fix(bolletta): card v3.9 — UI principale e popup semplificati
