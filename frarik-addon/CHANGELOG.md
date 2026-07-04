@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.7.95 — 2026-07-04
+
+### feat(bolletta): card v4.3 — Canone RAI gestito dall'utente
+
+- **RAI escluso da tutti i totali automatici**: sensore `frarik_bolletta_mensile`, proiezione fine mese e calcolo JS non includono più il canone RAI nel totale
+- **Toggle in Dettaglio Bolletta**: pulsante "+ Includi / Rimuovi" accanto alla voce RAI; aggiunge/rimuove i 9€ dal totale in tempo reale; preferenza salvata in localStorage
+- **Toggle in Simulatore**: pulsante RAI nella form (stile pieno = incluso, trasparente = escluso); il calcolo si aggiorna istantaneamente al click senza premere "Calcola"; preferenza condivisa con il Dettaglio
+- In luglio/agosto il RAI non appare nei comandi (non dovuto), il toggle è nascosto
+- Fix anche per la proiezione: i 9€ RAI non vengono più proiettati automaticamente
+
 ## 1.7.94 — 2026-07-04
 
 ### fix(bolletta): card v4.2 — proiezione fine mese corretta

@@ -739,10 +739,9 @@ template:
           {% set imp = states('sensor.frarik_bolletta_imponibile_mensile') | float(0) %}
           {% set acc = states('sensor.frarik_bolletta_costo_mensile_accise') | float(0) %}
           {% set iva = states('sensor.frarik_bolletta_iva_mensile') | float(0) %}
-          {% set rai = states('sensor.frarik_bolletta_canone_rai_mensile') | float(0) %}
           {% set bon = states('input_number.frarik_bolletta_bonus_mese_corrente') | float(0)
                      + states('input_number.frarik_bolletta_bonus_sociale') | float(0) %}
-          {{ (imp + acc + iva + rai - bon) | round(2) }}
+          {{ (imp + acc + iva - bon) | round(2) }}
       - name: "Frarik Bolletta Giornaliera"
         unit_of_measurement: "€"
         icon: mdi:calendar-today
@@ -808,9 +807,8 @@ template:
               + kwh * states('sensor.frarik_bolletta_arera_asos') | float(states('input_number.frarik_bolletta_fb_asos') | float(0.028657)) %}
             {% set acc = kwh * states('sensor.frarik_bolletta_arera_erariale') | float(states('input_number.frarik_bolletta_fb_accise') | float(0.0227)) %}
             {% set iva = (imp + acc) * states('sensor.frarik_bolletta_iva_perc') | float(10) / 100 %}
-            {% set rai = 9.00 if now().month not in [7,8] else 0.00 %}
             {% set bon = states('input_number.frarik_bolletta_bonus_mese_corrente') | float(0) + states('input_number.frarik_bolletta_bonus_sociale') | float(0) %}
-            {{ (imp + acc + iva + rai - bon) | round(2) }}
+            {{ (imp + acc + iva - bon) | round(2) }}
           {% else %}0{% endif %}
       - name: "Frarik Bolletta Previsione kWh Fine Mese"
         unit_of_measurement: "kWh"

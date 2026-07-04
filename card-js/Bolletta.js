@@ -1,4 +1,4 @@
-/* frarik-version: 4.2 */
+/* frarik-version: 4.3 */
 (function () {
   'use strict';
 
@@ -209,7 +209,7 @@
     if ((mat + tras + oneri + iva) < 0.01 && kwh > 0) {
       var r = calcBill(kwh, h, c);
       mat = r.mat; tras = r.tras; oneri = r.oneri; acc = r.acc; iva = r.iva; rai = r.rai;
-      tot = r.imp + r.acc + r.iva + r.rai - bon - gse;
+      tot = r.imp + r.acc + r.iva - bon - gse;
       costoKwh = kwh > 0 ? tot / kwh : 0;
       fromCalc = true;
     }
@@ -218,8 +218,22 @@
     var tariffaEur = (_n.tariffa !== undefined && _n.tariffa !== '') ? parseFloat(_n.tariffa) : N(S(h, c.pk_tariffa));
 
     var raiIsJulAug = (now.getMonth() === 6 || now.getMonth() === 7);
+    var _st = load();
+    var _raiOn = !!(_st._rai_on);
+    var baseTot = tot;
     var costoKwhStr = kwh >= 30 ? (costoKwh * 100).toFixed(2) + ' c€/kWh' : '—';
     var costoKwhCol = kwh >= 30 ? COL : 'rgba(255,255,255,.35)';
+
+    var bSt = 'font-size:11px;font-weight:700;padding:3px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.07);color:#fff;cursor:pointer';
+    var raiRow = '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
+      + '<span style="font-size:13px;color:#fff;font-weight:600">📺 Canone RAI</span>'
+      + '<div style="display:flex;align-items:center;gap:8px">'
+      + '<span id="bp-rai-val" style="font-size:13px;font-weight:700;color:' + (_raiOn && !raiIsJulAug ? '#fff' : 'rgba(255,255,255,.35)') + '">'
+        + (raiIsJulAug ? '— (lug/ago)' : (_raiOn ? rai.toFixed(2) + ' €' : '— (escluso)'))
+      + '</span>'
+      + (raiIsJulAug ? '' : '<button id="bp-rai-btn" style="' + bSt + '">' + (_raiOn ? 'Rimuovi' : '+ Includi') + '</button>')
+      + '</div>'
+      + '</div>';
 
     var content = sec('Componenti Bolletta' + (fromCalc ? ' (stimate)' : ''))
       + row('⚡ Materia Energia',  mat.toFixed(2)  + ' €', COL)
@@ -227,17 +241,28 @@
       + row('🔧 Oneri di Sistema', oneri.toFixed(2)+ ' €', '#fff')
       + row('📋 Accise',           acc.toFixed(2)  + ' €', '#fff')
       + row('💸 IVA',              iva.toFixed(2)  + ' €')
-      + row('📺 Canone RAI', raiIsJulAug ? '— (lug/ago escluso)' : rai.toFixed(2) + ' €', raiIsJulAug ? 'rgba(255,255,255,.35)' : '#fff')
+      + raiRow
       + (bon > 0 ? row('🎁 Bonus', '− ' + bon.toFixed(2) + ' €', '#4ade80') : '')
       + (gse > 0 ? row('☀️ Credito GSE', '− ' + gse.toFixed(2) + ' €', '#4ade80') : '')
       + '<div style="display:flex;justify-content:space-between;align-items:center;background:rgba(' + RGB + ',.12);border-radius:10px;padding:12px 14px;margin-top:10px">'
       + '<span style="font-size:14px;font-weight:800;color:' + COL + '">TOTALE DA PAGARE</span>'
-      + '<span style="font-size:18px;font-weight:900;color:' + COL + '">' + tot.toFixed(2) + ' €</span>'
+      + '<span id="bp-det-tot" style="font-size:18px;font-weight:900;color:' + COL + '">' + (baseTot + (_raiOn && !raiIsJulAug ? rai : 0)).toFixed(2) + ' €</span>'
       + '</div>'
       + row('📆 kWh consumati', kwh.toFixed(1) + ' kWh', '#fff')
       + row('📅 Mese', MESIL[now.getMonth()] + ' ' + now.getFullYear());
 
-    mkOv(popShell('🧾', 'Dettaglio Bolletta', MESIL[now.getMonth()] + ' ' + now.getFullYear(), 'bp-det-close', content), 'bp-det-close');
+    var ov = mkOv(popShell('🧾', 'Dettaglio Bolletta', MESIL[now.getMonth()] + ' ' + now.getFullYear(), 'bp-det-close', content), 'bp-det-close');
+    if (!raiIsJulAug) {
+      ov.querySelector('#bp-rai-btn').addEventListener('click', function() {
+        var st = load();
+        var newOn = !st._rai_on;
+        save(Object.assign({}, st, {_rai_on: newOn}));
+        ov.querySelector('#bp-rai-btn').textContent = newOn ? 'Rimuovi' : '+ Includi';
+        ov.querySelector('#bp-rai-val').textContent = newOn ? rai.toFixed(2) + ' €' : '— (escluso)';
+        ov.querySelector('#bp-rai-val').style.color = newOn ? '#fff' : 'rgba(255,255,255,.35)';
+        ov.querySelector('#bp-det-tot').textContent = (baseTot + (newOn ? rai : 0)).toFixed(2) + ' €';
+      });
+    }
   }
 
   /* ── POPUP: SIMULATORE ── */
@@ -249,14 +274,12 @@
     var bonInit  = N(S(h, c.pk_test_bonus))  || 0;
     var gseInit  = N(S(h, c.pk_credito_gse)) || 0;
 
-    var r = calcBill(kwhInit, h, c);
-    var totInit = r.imp + r.acc + r.iva + r.rai - bonInit - gseInit;
-
-    function buildResult(kwh, bon, gse) {
+    function buildResult(kwh, bon, gse, inclRai) {
       var b = calcBill(kwh, h, c);
-      var tot = b.imp + b.acc + b.iva + b.rai - bon - gse;
       var simNow = new Date();
       var simJulAug = (simNow.getMonth() === 6 || simNow.getMonth() === 7);
+      var raiAmt = (!simJulAug && inclRai) ? b.rai : 0;
+      var tot = b.imp + b.acc + b.iva + raiAmt - bon - gse;
       function simRow(lbl, val, col) {
         return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
           + '<span style="font-size:12px;color:' + (col || '#fff') + '">' + lbl + '</span>'
@@ -273,7 +296,9 @@
         + simRow('💸 IVA ' + b.iva_perc.toFixed(0) + '%', b.iva.toFixed(2) + ' €')
         + (simJulAug
             ? simRow('📺 Canone RAI', '— (lug/ago escluso)', 'rgba(255,255,255,.35)')
-            : simRow('📺 Canone RAI', b.rai.toFixed(2) + ' €'))
+            : (inclRai
+                ? simRow('📺 Canone RAI', b.rai.toFixed(2) + ' €')
+                : simRow('📺 Canone RAI', '— (escluso)', 'rgba(255,255,255,.35)')))
         + (bon > 0 ? simRow('🎁 Bonus', '− ' + bon.toFixed(2) + ' €', '#4ade80') : '')
         + (gse > 0 ? simRow('☀️ Credito GSE', '− ' + gse.toFixed(2) + ' €', '#4ade80') : '')
         + (kwh >= 30
@@ -285,6 +310,10 @@
         + '</div>';
     }
 
+    var _simRaiOn = !!(load()._rai_on);
+    var bSim = function(on) {
+      return 'width:100%;font-size:12px;font-weight:700;padding:8px 14px;border-radius:9px;border:1px solid rgba(255,255,255,.2);background:' + (on ? COL : 'rgba(255,255,255,.07)') + ';color:' + (on ? '#000' : '#fff') + ';cursor:pointer';
+    };
     var content = sec('Simula la tua bolletta')
       + '<div style="margin-bottom:10px">'
       + '<label style="font-size:12px;color:#fff">kWh consumati nel mese</label>'
@@ -298,15 +327,32 @@
       + '<label style="font-size:12px;color:#fff">Credito GSE (€, solo FV)</label>'
       + '<input id="sim-gse" type="text" inputmode="decimal" value="' + gseInit.toFixed(2) + '" style="' + iSt + '" placeholder="es. 0.00">'
       + '</div>'
+      + '<div style="margin-bottom:10px">'
+      + '<label style="font-size:12px;color:#fff;display:block;margin-bottom:5px">📺 Canone RAI (9 €/mese)</label>'
+      + '<button id="sim-rai-btn" data-on="' + (_simRaiOn ? '1' : '0') + '" style="' + bSim(_simRaiOn) + '">' + (_simRaiOn ? '✓ Incluso nel totale' : 'Non incluso — clicca per aggiungere') + '</button>'
+      + '</div>'
       + '<button id="sim-calc" style="width:100%;padding:11px;border-radius:10px;background:' + COL + ';color:#000;font-size:14px;font-weight:800;border:none;cursor:pointer">Calcola Bolletta</button>'
-      + '<div id="sim-result">' + buildResult(kwhInit, bonInit, gseInit) + '</div>';
+      + '<div id="sim-result">' + buildResult(kwhInit, bonInit, gseInit, _simRaiOn) + '</div>';
 
     var ov = mkOv(popShell('🧮', 'Simulatore Bolletta', 'Stima costi mensili', 'bp-sim-close', content), 'bp-sim-close');
+    var raiBtn = ov.querySelector('#sim-rai-btn');
+    raiBtn.addEventListener('click', function() {
+      var newOn = raiBtn.dataset.on !== '1';
+      raiBtn.dataset.on = newOn ? '1' : '0';
+      raiBtn.style.cssText = bSim(newOn);
+      raiBtn.textContent = newOn ? '✓ Incluso nel totale' : 'Non incluso — clicca per aggiungere';
+      save(Object.assign({}, load(), {_rai_on: newOn}));
+      var kwh = N(ov.querySelector('#sim-kwh').value);
+      var bon = N(ov.querySelector('#sim-bon').value);
+      var gse = N(ov.querySelector('#sim-gse').value);
+      ov.querySelector('#sim-result').innerHTML = buildResult(kwh, bon, gse, newOn);
+    });
     ov.querySelector('#sim-calc').addEventListener('click', function() {
       var kwh = N(ov.querySelector('#sim-kwh').value);
       var bon = N(ov.querySelector('#sim-bon').value);
       var gse = N(ov.querySelector('#sim-gse').value);
-      ov.querySelector('#sim-result').innerHTML = buildResult(kwh, bon, gse);
+      var inclRai = raiBtn.dataset.on === '1';
+      ov.querySelector('#sim-result').innerHTML = buildResult(kwh, bon, gse, inclRai);
       setNum(c.pk_test_kwh, kwh);
       setNum(c.pk_test_bonus, bon);
     });
@@ -699,7 +745,7 @@
     var dayNow = now.getDate();
     var proiK = (dayNow > 0 && kwhM > 0) ? Math.round((kwhM / dayNow) * daysInMonth) : 0;
     var _prb = proiK > 0 ? calcBill(proiK, h, c) : null;
-    var proiE = _prb ? (_prb.imp + _prb.acc + _prb.iva + _prb.rai) : 0;
+    var proiE = _prb ? (_prb.imp + _prb.acc + _prb.iva) : 0;
     var percMese = Math.min(100, Math.round((dayNow / daysInMonth) * 100));
 
     var curr6 = [], labs6 = [];
@@ -826,7 +872,7 @@
   }
 
   /* ── UPDATE / MOUNT ── */
-  var CARD = { id: 'bolletta', version: '4.2', name: 'Bolletta Elettrica', icon: '⚡', color: COL };
+  var CARD = { id: 'bolletta', version: '4.3', name: 'Bolletta Elettrica', icon: '⚡', color: COL };
 
   function update(card, hass, el) {
     var h = hass || H(), c = cfgFor(card);
@@ -1671,10 +1717,9 @@ template:
           {% set imp = states('sensor.frarik_bolletta_imponibile_mensile') | float(0) %}
           {% set acc = states('sensor.frarik_bolletta_costo_mensile_accise') | float(0) %}
           {% set iva = states('sensor.frarik_bolletta_iva_mensile') | float(0) %}
-          {% set rai = states('sensor.frarik_bolletta_canone_rai_mensile') | float(0) %}
           {% set bon = states('input_number.frarik_bolletta_bonus_mese_corrente') | float(0)
                      + states('input_number.frarik_bolletta_bonus_sociale') | float(0) %}
-          {{ (imp + acc + iva + rai - bon) | round(2) }}
+          {{ (imp + acc + iva - bon) | round(2) }}
       - name: "Bolletta Giornaliera"
         unique_id: frarik_bolletta_giornaliera
         unit_of_measurement: "€"
@@ -1743,9 +1788,8 @@ template:
               + kwh * states('sensor.frarik_bolletta_arera_asos') | float(states('input_number.frarik_bolletta_fb_asos') | float(0.028657)) %}
             {% set acc = kwh * states('sensor.frarik_bolletta_arera_erariale') | float(states('input_number.frarik_bolletta_fb_accise') | float(0.0227)) %}
             {% set iva = (imp + acc) * states('sensor.frarik_bolletta_iva_perc') | float(10) / 100 %}
-            {% set rai = 9.00 if now().month not in [7,8] else 0.00 %}
             {% set bon = states('input_number.frarik_bolletta_bonus_mese_corrente') | float(0) + states('input_number.frarik_bolletta_bonus_sociale') | float(0) %}
-            {{ (imp + acc + iva + rai - bon) | round(2) }}
+            {{ (imp + acc + iva - bon) | round(2) }}
           {% else %}0{% endif %}
       - name: "Bolletta Previsione kWh Fine Mese"
         unique_id: frarik_bolletta_previsione_kwh_fine_mese
