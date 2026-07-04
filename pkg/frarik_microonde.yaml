@@ -51,7 +51,7 @@ homeassistant:
 #              IMPOSTAZIONI PACKAGE                #
 ####################################################
 
-        Sensore Potenza Microonde: &sensore_potenza   "IL_TUO_SENSORE_POTENZA"
+        Sensore Potenza Microonde: &sensore_potenza   "{{ states('IL_TUO_SENSORE_POTENZA') | float(0) }}"
         Switch Microonde:          &switch_microonde   "IL_TUO_SWITCH"
 
         Lista MediaPlayer Google: &google

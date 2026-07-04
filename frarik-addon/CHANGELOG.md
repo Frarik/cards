@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.8.1 — 2026-07-04
+
+### fix(card-elettrodomestici): YAML embedded v2.0 + Jinja anchor sensore potenza
+
+- **YAML embedded aggiornato**: tutte e 9 le card ora hanno lo YAML del PKG v2.0 incorporato — wizard e reinstall silenziosi installano lo stesso PKG di GitHub (non più la v1.0)
+- **Jinja anchor corretto**: `&sensore_potenza` usa ora `{{ states('IL_TUO_SENSORE_POTENZA') | float(0) }}` — `state: *sensore_potenza` nel template sensor funziona correttamente in HA
+- **Placeholder unificati**: `IL_TUO_MOBILE_APP`, `IL_TUO_MEDIA_PLAYER_GOOGLE`, `IL_TUO_MEDIA_PLAYER_ALEXA` (rimosso suffisso `_1`) — allineati tra YAML embedded e `_buildPkg`
+- **PKG GitHub aggiornati**: stessa fix Jinja applicata ai 9 file `pkg/frarik_*.yaml` su GitHub
+
 ## 1.8.0 — 2026-07-04
 
 ### fix(card-elettrodomestici): aggiornamento entità e impostazioni tutte e 9 le card

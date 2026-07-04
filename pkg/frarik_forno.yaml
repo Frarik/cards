@@ -51,7 +51,7 @@ homeassistant:
 #              IMPOSTAZIONI PACKAGE                #
 ####################################################
 
-        Sensore Potenza Forno: &sensore_potenza   "IL_TUO_SENSORE_POTENZA"
+        Sensore Potenza Forno: &sensore_potenza   "{{ states('IL_TUO_SENSORE_POTENZA') | float(0) }}"
         Switch Forno:          &switch_forno   "IL_TUO_SWITCH"
 
         Lista MediaPlayer Google: &google

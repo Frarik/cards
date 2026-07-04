@@ -479,19 +479,36 @@
 #   ██║     ██║  ██║██║  ██║██║  ██║██║██║  ██╗             #
 #   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝            #
 #                                                             #
-#   Package: Frarik — Centro Controllo Scaldabagno           #
-#   Versione: 1.0  |  Frarik / Fratech                       #
+#   Package: Frarik — Centro Controllo Scaldabagno        #
+#   Versione: 2.0  |  Frarik / Fratech                       #
 #                                                             #
 ###############################################################
 #
 # COSA FA QUESTO PACKAGE
 # ──────────────────────────────────────────────────────────
-#  ▸ Monitoraggio potenza istantanea riscaldamento (W)
+#  ▸ Monitoraggio potenza istantanea (W) e rilevamento ciclo
 #  ▸ Tracciamento energia consumata (kWh) giorno/mese/anno
 #  ▸ Calcolo costi energetici (usa input_number.costo_energia)
-#  ▸ Sensore time_on con attributi costo giornaliero
-#  ▸ Notifiche riscaldamento completato (Push / Alexa / Google)
-#  ▸ Soglia riscaldamento configurabile
+#  ▸ Conteggio cicli oggi/mese/anno e storico 7 giorni
+#  ▸ Durata ciclo live e storico con statistiche settimanali
+#  ▸ Notifiche fine ciclo: Push / Alexa / Google (orario custom)
+#  ▸ Spegnimento automatico programmato
+#
+###############################################################
+#
+# INSTALLAZIONE TRAMITE STORE FRARIK
+# ──────────────────────────────────────────────────────────
+#  Il wizard sostituisce automaticamente i segnaposto IL_TUO_*
+#  con le entita' che inserisci durante la configurazione.
+#
+# INSTALLAZIONE MANUALE
+# ──────────────────────────────────────────────────────────
+#  1. configuration.yaml deve contenere:
+#        homeassistant:
+#          packages: !include_dir_named packages
+#  2. Copia in packages/frarik/
+#  3. Sostituisci i segnaposto IL_TUO_* con le tue entita'
+#  4. Riavvia Home Assistant
 #
 ###############################################################
 
@@ -499,25 +516,33 @@ homeassistant:
   customize:
     package.node_anchors:
       customize: &customize
-        package: 'Frarik — Centro Controllo Scaldabagno 1.0 — Frarik'
-
+        package: 'Frarik — Centro Controllo Scaldabagno 2.0 — Frarik'
       setting:
 
 ####################################################
 #              IMPOSTAZIONI PACKAGE                #
 ####################################################
 
-        Sensore Potenza Scaldabagno: &sensore_potenza_scaldabagno "{{ states('IL_TUO_SENSORE_POTENZA') | float(0) }}"
-        Switch Scaldabagno:          &switch_scaldabagno 'IL_TUO_SWITCH'
+        Sensore Potenza Scaldabagno: &sensore_potenza   "{{ states('IL_TUO_SENSORE_POTENZA') | float(0) }}"
+        Switch Scaldabagno:          &switch_scaldabagno   "IL_TUO_SWITCH"
 
         Lista MediaPlayer Google: &google
-          - IL_TUO_MEDIA_PLAYER_GOOGLE_1
+          - IL_TUO_MEDIA_PLAYER_GOOGLE
 
-        Lista mediaplayer alexa: &alexa
-          - IL_TUO_MEDIA_PLAYER_ALEXA_1
+        Lista MediaPlayer Alexa: &alexa
+          - IL_TUO_MEDIA_PLAYER_ALEXA
 
         Device per notifica push: &push
-          - service: IL_TUO_MOBILE_APP_1
+          - service: IL_TUO_MOBILE_APP
+
+####################################################
+#                  NOTIFICHE                       #
+####################################################
+
+notify:
+  - name: frarik_scaldabagno_notify
+    platform: group
+    services: *push
 
 ####################################################
 #                    SENSORI                       #
@@ -532,12 +557,13 @@ sensor:
     round: 2
 
 ####################################################
-#                INPUT NUMBER                      #
+#                 INPUT NUMBER                     #
 ####################################################
 
 input_number:
+
   frarik_scaldabagno_soglia_w:
-    name: Soglia Riscaldamento Scaldabagno W
+    name: Soglia Lavoro Scaldabagno W
     icon: mdi:flash
     min: 0
     max: 5000
@@ -564,10 +590,134 @@ input_number:
     mode: box
 
 ####################################################
+
+  frarik_scaldabagno_consumo_lunedi:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "kwh"
+
+  frarik_scaldabagno_costo_lunedi:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "€"
+
+  frarik_scaldabagno_consumo_martedi:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "kwh"
+
+  frarik_scaldabagno_costo_martedi:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "€"
+
+  frarik_scaldabagno_consumo_mercoledi:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "kwh"
+
+  frarik_scaldabagno_costo_mercoledi:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "€"
+
+  frarik_scaldabagno_consumo_giovedi:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "kwh"
+
+  frarik_scaldabagno_costo_giovedi:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "€"
+
+  frarik_scaldabagno_consumo_venerdi:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "kwh"
+
+  frarik_scaldabagno_costo_venerdi:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "€"
+
+  frarik_scaldabagno_consumo_sabato:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "kwh"
+
+  frarik_scaldabagno_costo_sabato:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "€"
+
+  frarik_scaldabagno_consumo_domenica:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "kwh"
+
+  frarik_scaldabagno_costo_domenica:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "€"
+
+####################################################
 #                 UTILITY METER                    #
 ####################################################
 
 utility_meter:
+
+  frarik_scaldabagno_tempo_oggi:
+    source: sensor.frarik_scaldabagno_time_on
+    cycle: daily
+
+  frarik_scaldabagno_tempo_mese:
+    source: sensor.frarik_scaldabagno_time_on
+    cycle: monthly
+
+  frarik_scaldabagno_tempo_anno:
+    source: sensor.frarik_scaldabagno_time_on
+    cycle: yearly
+
+  frarik_scaldabagno_cicli_oggi:
+    source: counter.frarik_scaldabagno_cicli_totale
+    cycle: daily
+
+  frarik_scaldabagno_cicli_mese:
+    source: counter.frarik_scaldabagno_cicli_totale
+    cycle: monthly
+
+  frarik_scaldabagno_cicli_anno:
+    source: counter.frarik_scaldabagno_cicli_totale
+    cycle: yearly
 
   frarik_scaldabagno_energy_oggi:
     source: sensor.frarik_scaldabagno_kwh
@@ -582,10 +732,11 @@ utility_meter:
     cycle: yearly
 
 ####################################################
-#                TEMPLATE                          #
+#                   TEMPLATE                       #
 ####################################################
 
 template:
+
   - binary_sensor:
       - name: frarik_scaldabagno_motore
         icon: mdi:water-boiler
@@ -595,8 +746,41 @@ template:
         delay_off: "00:{{ states('input_number.frarik_scaldabagno_tempo_innesco_m') | int(0) }}:00"
         delay_on:  "00:00:{{ states('input_number.frarik_scaldabagno_avvio_ritardato_s') | int(0) }}"
 
+####################################################
+
+  - trigger:
+      - platform: state
+        entity_id: input_boolean.frarik_scaldabagno_ciclo_attivo
+        from: "off"
+        to: "on"
+    sensor:
+      - name: frarik_scaldabagno_inizio_ciclo
+        state: "{{ states('sensor.frarik_scaldabagno_kwh') }}"
+
+  - trigger:
+      - platform: state
+        entity_id: binary_sensor.frarik_scaldabagno_motore
+        from: "on"
+        to: "off"
+    sensor:
+      - name: frarik_scaldabagno_fine_ciclo
+        state: "{{ now().strftime('%d/%m/%Y %H:%M') }}"
+
+####################################################
+
+  - trigger:
+      - platform: state
+        entity_id: input_boolean.frarik_scaldabagno_ciclo_attivo
+        from: "off"
+        to: "on"
+    sensor:
+      - name: frarik_scaldabagno_tempo_riavvio
+        state: "{{ as_timestamp(now()) }}"
+
+####################################################
+
   - sensor:
-      - name: "frarik_scaldabagno_time_on"
+      - name: frarik_scaldabagno_time_on
         icon: mdi:history
         state: >-
           {% if is_state('binary_sensor.frarik_scaldabagno_motore', 'on') and
@@ -604,44 +788,136 @@ template:
             {{ ((as_timestamp(now()) - as_timestamp(states.binary_sensor.frarik_scaldabagno_motore.last_changed)) / 3600) }}
           {% else %} 0 {% endif %}
         attributes:
+          terminato: >-
+            {{ states('sensor.frarik_scaldabagno_fine_ciclo') if is_state('binary_sensor.frarik_scaldabagno_motore', 'off') else 'In funzione' }}
+          tempo_ciclo_scaldabagno: >
+            {% set hours = (as_timestamp(now()) - states('sensor.frarik_scaldabagno_tempo_riavvio') | float(0)) / 3600 %}
+            {% set minutes = ((hours % 1) * 60) | int(0) %}
+            {% set hours = (hours - (hours % 1)) | int(0) %}
+            {% set day = ((hours | int(0) / 24)) | int(0) %}
+            {% if is_state('input_boolean.frarik_scaldabagno_ciclo_attivo', 'on') %}
+              {% if day | int(0) > 0 %}
+                {{ day }}d {{ (hours | int(0)) - (day * 24) }}h {{ minutes }}m
+              {% elif hours | int(0) > 0 %}
+                {{ hours }}h {{ minutes }}m
+              {% else %}
+                {{ minutes }}min
+              {% endif %}
+            {% else %}
+              {{ states('input_text.frarik_scaldabagno_ultimo_ciclo') }}
+            {% endif %}
           Oggi: >
-            {% set hours = states('sensor.frarik_scaldabagno_energy_oggi') | float(0) %}
-            {{ hours | round(3) }} kWh
+            {% set hours = states('sensor.frarik_scaldabagno_tempo_oggi') | float(0) %}
+            {% set minutes = ((hours % 1) * 60) | int(0) %}
+            {% set hours = (hours - (hours % 1)) | int(0) %}
+            {% if hours | int(0) > 0 %}
+              {{ hours }}h {{ minutes }}m
+            {% else %}
+              {{ minutes }}min
+            {% endif %}
           Mese: >
-            {% set kwh = states('sensor.frarik_scaldabagno_energy_mese') | float(0) %}
-            {{ kwh | round(3) }} kWh
+            {% set hours = states('sensor.frarik_scaldabagno_tempo_mese') | float(0) %}
+            {% set minutes = ((hours % 1) * 60) | int(0) %}
+            {% set hours = (hours - (hours % 1)) | int(0) %}
+            {% set day = ((hours | int / 24)) | int(0) %}
+            {% if day | int(0) > 0 %}
+              {{ day }}d {{ (hours | int) - (day * 24) }}h {{ minutes }}m
+            {% elif hours | int(0) > 0 %}
+              {{ hours }}h {{ minutes }}m
+            {% else %}
+              {{ minutes }}min
+            {% endif %}
           Anno: >
-            {% set kwh = states('sensor.frarik_scaldabagno_energy_anno') | float(0) %}
-            {{ kwh | round(3) }} kWh
+            {% set hours = states('sensor.frarik_scaldabagno_tempo_anno') | float(0) %}
+            {% set minutes = ((hours % 1) * 60) | int(0) %}
+            {% set hours = (hours - (hours % 1)) | int(0) %}
+            {% set day = ((hours | int(0) / 24)) | int(0) %}
+            {% if day | int(0) > 0 %}
+              {{ day }}d {{ (hours | int(0)) - (day * 24) }}h {{ minutes }}m
+            {% elif hours | int(0) > 0 %}
+              {{ hours }}h {{ minutes }}m
+            {% else %}
+              {{ minutes }}min
+            {% endif %}
+          Ieri: >
+            {% set hours = state_attr('sensor.frarik_scaldabagno_tempo_oggi', 'last_period') | float(0) %}
+            {% set minutes = ((hours % 1) * 60) | int(0) %}
+            {% set hours = (hours - (hours % 1)) | int(0) %}
+            {% if hours | int(0) > 0 %}
+              {{ hours }}h {{ minutes }}m
+            {% else %}
+              {{ minutes }}min
+            {% endif %}
+          Mese Precedente: >
+            {% set hours = state_attr('sensor.frarik_scaldabagno_tempo_mese', 'last_period') | float(0) %}
+            {% set minutes = ((hours % 1) * 60) | int(0) %}
+            {% set hours = (hours - (hours % 1)) | int(0) %}
+            {% set day = ((hours | int / 24)) | int(0) %}
+            {% if day | int(0) > 0 %}
+              {{ day }}d {{ (hours | int) - (day * 24) }}h {{ minutes }}m
+            {% elif hours | int(0) > 0 %}
+              {{ hours }}h {{ minutes }}m
+            {% else %}
+              {{ minutes }}min
+            {% endif %}
+          Anno Precedente: >
+            {% set hours = state_attr('sensor.frarik_scaldabagno_tempo_anno', 'last_period') | float(0) %}
+            {% set minutes = ((hours % 1) * 60) | int(0) %}
+            {% set hours = (hours - (hours % 1)) | int(0) %}
+            {% set day = ((hours | int(0) / 24)) | int(0) %}
+            {% if day | int(0) > 0 %}
+              {{ day }}d {{ (hours | int(0)) - (day * 24) }}h {{ minutes }}m
+            {% elif hours | int(0) > 0 %}
+              {{ hours }}h {{ minutes }}m
+            {% else %}
+              {{ minutes }}min
+            {% endif %}
+          consumo_ciclo_scaldabagno: >-
+            {{ (states('sensor.frarik_scaldabagno_kwh') | float(0) - states('sensor.frarik_scaldabagno_inizio_ciclo') | float(0)) | round(2) }} kWh
+          costo_ciclo_scaldabagno: >-
+            {{ ((states('sensor.frarik_scaldabagno_kwh') | float(0) - states('sensor.frarik_scaldabagno_inizio_ciclo') | float(0)) * states('input_number.costo_energia') | float(0)) | round(2) }}
           costo_oggi_scaldabagno: >-
-            {{ ((states('sensor.frarik_scaldabagno_energy_oggi') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+            {{ (states('sensor.frarik_scaldabagno_energy_oggi') | float(0) * states('input_number.costo_energia') | float(0)) | round(2) }}
           costo_mese_scaldabagno: >-
-            {{ ((states('sensor.frarik_scaldabagno_energy_mese') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+            {{ (states('sensor.frarik_scaldabagno_energy_mese') | float(0) * states('input_number.costo_energia') | float(0)) | round(2) }}
           costo_anno_scaldabagno: >-
-            {{ ((states('sensor.frarik_scaldabagno_energy_anno') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+            {{ (states('sensor.frarik_scaldabagno_energy_anno') | float(0) * states('input_number.costo_energia') | float(0)) | round(2) }}
           costo_ieri_scaldabagno: >-
-            {{ ((state_attr('sensor.frarik_scaldabagno_energy_oggi', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+            {{ (state_attr('sensor.frarik_scaldabagno_energy_oggi', 'last_period') | float(0) * states('input_number.costo_energia') | float(0)) | round(2) }}
           costo_mese_precedente_scaldabagno: >-
-            {{ ((state_attr('sensor.frarik_scaldabagno_energy_mese', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+            {{ (state_attr('sensor.frarik_scaldabagno_energy_mese', 'last_period') | float(0) * states('input_number.costo_energia') | float(0)) | round(2) }}
+          costo_anno_precedente_scaldabagno: >-
+            {{ (state_attr('sensor.frarik_scaldabagno_energy_anno', 'last_period') | float(0) * states('input_number.costo_energia') | float(0)) | round(2) }}
 
-      - name: "frarik_scaldabagno_potenza_w"
-        unit_of_measurement: 'W'
+      - name: frarik_scaldabagno_potenza_w
+        unit_of_measurement: "W"
         device_class: power
         state_class: measurement
         icon: mdi:flash
-        state: *sensore_potenza_scaldabagno
-
-      - name: "frarik_scaldabagno_versione"
-        state: "1.0"
+        state: *sensore_potenza
 
 ####################################################
-#                INPUT BOOLEAN                     #
+#                    COUNTER                       #
+####################################################
+
+counter:
+  frarik_scaldabagno_cicli_totale:
+    name: Cicli Scaldabagno Totale
+    initial: 0
+    step: 1
+
+####################################################
+#                 INPUT BOOLEAN                    #
 ####################################################
 
 input_boolean:
+
   frarik_scaldabagno_switch:
     name: Switch Scaldabagno
     icon: mdi:power
+
+  frarik_scaldabagno_ciclo_attivo:
+    name: Ciclo Attivo Scaldabagno
 
   frarik_scaldabagno_notify_push:
     name: Notifica Push Scaldabagno
@@ -653,10 +929,23 @@ input_boolean:
     name: Notifica Google Scaldabagno
 
 ####################################################
-#                 INPUT DATETIME                   #
+#                     GROUP                        #
+####################################################
+
+group:
+  frarik_scaldabagno_controlli:
+    entities:
+      - input_boolean.frarik_scaldabagno_notify_google
+      - input_boolean.frarik_scaldabagno_notify_alexa
+      - input_boolean.frarik_scaldabagno_notify_push
+      - input_boolean.frarik_scaldabagno_switch
+
+####################################################
+#                INPUT DATETIME                    #
 ####################################################
 
 input_datetime:
+
   frarik_scaldabagno_orario_inizio_notifiche:
     name: Orario Inizio Notifiche Scaldabagno
     has_date: false
@@ -668,7 +957,7 @@ input_datetime:
     has_time: true
 
   frarik_scaldabagno_off_automatico:
-    name: Scaldabagno Spegnimento Automatico
+    name: Scaldabagno Off Automatico
     has_date: false
     has_time: true
 
@@ -677,19 +966,131 @@ input_datetime:
 ####################################################
 
 input_text:
+
+  frarik_scaldabagno_data_reset:
+
   frarik_scaldabagno_nome:
 
   frarik_scaldabagno_messaggio:
+
+  frarik_scaldabagno_ultimo_ciclo:
+
+  frarik_scaldabagno_cicli_lunedi:
+  frarik_scaldabagno_tempo_lunedi:
+
+  frarik_scaldabagno_cicli_martedi:
+  frarik_scaldabagno_tempo_martedi:
+
+  frarik_scaldabagno_cicli_mercoledi:
+  frarik_scaldabagno_tempo_mercoledi:
+
+  frarik_scaldabagno_cicli_giovedi:
+  frarik_scaldabagno_tempo_giovedi:
+
+  frarik_scaldabagno_cicli_venerdi:
+  frarik_scaldabagno_tempo_venerdi:
+
+  frarik_scaldabagno_cicli_sabato:
+  frarik_scaldabagno_tempo_sabato:
+
+  frarik_scaldabagno_cicli_domenica:
+  frarik_scaldabagno_tempo_domenica:
+
+####################################################
+#                    SCRIPT                        #
+####################################################
+
+script:
+  frarik_scaldabagno_reset_sensori:
+    sequence:
+    - service: input_text.set_value
+      data:
+        value: "{{ now().strftime('%d/%m/%Y %H:%M') }}"
+      target:
+        entity_id: input_text.frarik_scaldabagno_data_reset
+    - service: utility_meter.calibrate
+      data:
+        value: '0'
+      target:
+        entity_id:
+          - sensor.frarik_scaldabagno_cicli_oggi
+          - sensor.frarik_scaldabagno_cicli_mese
+          - sensor.frarik_scaldabagno_cicli_anno
+          - sensor.frarik_scaldabagno_energy_oggi
+          - sensor.frarik_scaldabagno_energy_mese
+          - sensor.frarik_scaldabagno_energy_anno
+          - sensor.frarik_scaldabagno_tempo_oggi
+          - sensor.frarik_scaldabagno_tempo_mese
+          - sensor.frarik_scaldabagno_tempo_anno
+    - service: input_number.set_value
+      data:
+        value: '0'
+      target:
+        entity_id:
+          - input_number.frarik_scaldabagno_consumo_lunedi
+          - input_number.frarik_scaldabagno_consumo_martedi
+          - input_number.frarik_scaldabagno_consumo_mercoledi
+          - input_number.frarik_scaldabagno_consumo_giovedi
+          - input_number.frarik_scaldabagno_consumo_venerdi
+          - input_number.frarik_scaldabagno_consumo_sabato
+          - input_number.frarik_scaldabagno_consumo_domenica
+          - input_number.frarik_scaldabagno_costo_lunedi
+          - input_number.frarik_scaldabagno_costo_martedi
+          - input_number.frarik_scaldabagno_costo_mercoledi
+          - input_number.frarik_scaldabagno_costo_giovedi
+          - input_number.frarik_scaldabagno_costo_venerdi
+          - input_number.frarik_scaldabagno_costo_sabato
+          - input_number.frarik_scaldabagno_costo_domenica
+    - service: input_text.set_value
+      data:
+        value: '0'
+      target:
+        entity_id:
+          - input_text.frarik_scaldabagno_cicli_lunedi
+          - input_text.frarik_scaldabagno_cicli_martedi
+          - input_text.frarik_scaldabagno_cicli_mercoledi
+          - input_text.frarik_scaldabagno_cicli_giovedi
+          - input_text.frarik_scaldabagno_cicli_venerdi
+          - input_text.frarik_scaldabagno_cicli_sabato
+          - input_text.frarik_scaldabagno_cicli_domenica
+          - input_text.frarik_scaldabagno_tempo_lunedi
+          - input_text.frarik_scaldabagno_tempo_martedi
+          - input_text.frarik_scaldabagno_tempo_mercoledi
+          - input_text.frarik_scaldabagno_tempo_giovedi
+          - input_text.frarik_scaldabagno_tempo_venerdi
+          - input_text.frarik_scaldabagno_tempo_sabato
+          - input_text.frarik_scaldabagno_tempo_domenica
+    - service: counter.reset
+      target:
+        entity_id:
+          - counter.frarik_scaldabagno_cicli_totale
 
 ####################################################
 #                  AUTOMAZIONI                     #
 ####################################################
 
 automation:
-- alias: frarik_scaldabagno_automazioni
-  id: frarik_scaldabagno_automazioni
+
+- alias: frarik_scaldabagno_automazione
+  id: frarik_scaldabagno_automazione
   max_exceeded: silent
   trigger:
+
+  - platform: state
+    entity_id: binary_sensor.frarik_scaldabagno_motore
+    from: 'off'
+    to: 'on'
+    id: inizio_ciclo
+
+  - platform: state
+    entity_id: binary_sensor.frarik_scaldabagno_motore
+    from: 'on'
+    to: 'off'
+    id: fine_ciclo
+
+  - platform: time
+    at: '23:59:59'
+    id: statistiche_settimanali
 
   - platform: state
     entity_id:
@@ -707,11 +1108,50 @@ automation:
     to: 'on'
     id: switch_on
 
+  - platform: template
+    value_template: >-
+      {{ is_state('binary_sensor.frarik_scaldabagno_motore','off') and
+         is_state('input_boolean.frarik_scaldabagno_ciclo_attivo','on') }}
+    id: controllo_ciclo
+
   action:
 
   - choose:
-    - alias: SWITCH OFF
-      conditions:
+    - conditions:
+      - condition: trigger
+        id: statistiche_settimanali
+      sequence:
+      - service: input_text.set_value
+        target:
+          entity_id: >
+            {% set g = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
+            {{ {'Monday':'input_text.frarik_scaldabagno_cicli_lunedi','Tuesday':'input_text.frarik_scaldabagno_cicli_martedi','Wednesday':'input_text.frarik_scaldabagno_cicli_mercoledi','Thursday':'input_text.frarik_scaldabagno_cicli_giovedi','Friday':'input_text.frarik_scaldabagno_cicli_venerdi','Saturday':'input_text.frarik_scaldabagno_cicli_sabato','Sunday':'input_text.frarik_scaldabagno_cicli_domenica'}[g] }}
+        data:
+          value: "{{ states('sensor.frarik_scaldabagno_cicli_oggi') }}"
+      - service: input_text.set_value
+        target:
+          entity_id: >
+            {% set g = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
+            {{ {'Monday':'input_text.frarik_scaldabagno_tempo_lunedi','Tuesday':'input_text.frarik_scaldabagno_tempo_martedi','Wednesday':'input_text.frarik_scaldabagno_tempo_mercoledi','Thursday':'input_text.frarik_scaldabagno_tempo_giovedi','Friday':'input_text.frarik_scaldabagno_tempo_venerdi','Saturday':'input_text.frarik_scaldabagno_tempo_sabato','Sunday':'input_text.frarik_scaldabagno_tempo_domenica'}[g] }}
+        data:
+          value: "{{ state_attr('sensor.frarik_scaldabagno_time_on','Oggi') }}"
+      - service: input_number.set_value
+        target:
+          entity_id: >
+            {% set g = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
+            {{ {'Monday':'input_number.frarik_scaldabagno_consumo_lunedi','Tuesday':'input_number.frarik_scaldabagno_consumo_martedi','Wednesday':'input_number.frarik_scaldabagno_consumo_mercoledi','Thursday':'input_number.frarik_scaldabagno_consumo_giovedi','Friday':'input_number.frarik_scaldabagno_consumo_venerdi','Saturday':'input_number.frarik_scaldabagno_consumo_sabato','Sunday':'input_number.frarik_scaldabagno_consumo_domenica'}[g] }}
+        data:
+          value: "{{ states('sensor.frarik_scaldabagno_energy_oggi') }}"
+      - service: input_number.set_value
+        target:
+          entity_id: >
+            {% set g = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
+            {{ {'Monday':'input_number.frarik_scaldabagno_costo_lunedi','Tuesday':'input_number.frarik_scaldabagno_costo_martedi','Wednesday':'input_number.frarik_scaldabagno_costo_mercoledi','Thursday':'input_number.frarik_scaldabagno_costo_giovedi','Friday':'input_number.frarik_scaldabagno_costo_venerdi','Saturday':'input_number.frarik_scaldabagno_costo_sabato','Sunday':'input_number.frarik_scaldabagno_costo_domenica'}[g] }}
+        data:
+          value: "{{ state_attr('sensor.frarik_scaldabagno_time_on','costo_oggi_scaldabagno') }}"
+
+  - choose:
+    - conditions:
       - condition: trigger
         id: switch_off
       sequence:
@@ -723,8 +1163,7 @@ automation:
           entity_id: input_boolean.frarik_scaldabagno_switch
 
   - choose:
-    - alias: SWITCH ON
-      conditions:
+    - conditions:
       - condition: trigger
         id: switch_on
       sequence:
@@ -735,11 +1174,47 @@ automation:
         target:
           entity_id: input_boolean.frarik_scaldabagno_switch
 
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: controllo_ciclo
+      sequence:
+      - delay: '00:01:00'
+      - entity_id: input_boolean.frarik_scaldabagno_ciclo_attivo
+        service: input_boolean.turn_off
+
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: inizio_ciclo
+      sequence:
+      - entity_id: input_boolean.frarik_scaldabagno_ciclo_attivo
+        service: input_boolean.turn_on
+
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: fine_ciclo
+      sequence:
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.frarik_scaldabagno_ultimo_ciclo
+        data:
+          value: "{{ state_attr('sensor.frarik_scaldabagno_time_on','tempo_ciclo_scaldabagno') | trim }}"
+      - service: counter.increment
+        target:
+          entity_id:
+            - counter.frarik_scaldabagno_cicli_totale
+      - delay: '00:00:05'
+      - entity_id: input_boolean.frarik_scaldabagno_ciclo_attivo
+        service: input_boolean.turn_off
+
   - parallel:
+
     - choose:
       - conditions:
         - condition: trigger
-          id: switch_off
+          id: fine_ciclo
         - condition: time
           after: 'input_datetime.frarik_scaldabagno_orario_inizio_notifiche'
           before: 'input_datetime.frarik_scaldabagno_orario_fine_notifiche'
@@ -751,12 +1226,19 @@ automation:
           continue_on_error: true
           data:
             entity_id: *google
-            message: "{{ states('input_text.frarik_scaldabagno_messaggio') }}"
+            message: >-
+              {%- set dur=states('input_text.frarik_scaldabagno_ultimo_ciclo')|trim -%}
+              {%- set h=dur.split('h')[0]|int(0) if 'h' in dur else 0 -%}
+              {%- set m=((dur.split('h')[1] if 'h' in dur else dur)|replace('min','')|replace('m','')|trim)|int(0) -%}
+              {%- set hv='' if h==0 else ("un'ora" if h==1 else h|string+' ore') -%}
+              {%- set mv='' if m==0 else ('un minuto' if m==1 else m|string+' minuti') -%}
+              {%- set sep=' e ' if h>0 and m>0 else '' -%}
+              {{- states('input_text.frarik_scaldabagno_messaggio') }} in {{ hv+sep+mv -}}
 
     - choose:
       - conditions:
         - condition: trigger
-          id: switch_off
+          id: fine_ciclo
         - condition: time
           after: 'input_datetime.frarik_scaldabagno_orario_inizio_notifiche'
           before: 'input_datetime.frarik_scaldabagno_orario_fine_notifiche'
@@ -771,12 +1253,19 @@ automation:
             data:
               type: announce
               method: spoken
-            message: "{{ states('input_text.frarik_scaldabagno_messaggio') }}"
+            message: >-
+              {%- set dur=states('input_text.frarik_scaldabagno_ultimo_ciclo')|trim -%}
+              {%- set h=dur.split('h')[0]|int(0) if 'h' in dur else 0 -%}
+              {%- set m=((dur.split('h')[1] if 'h' in dur else dur)|replace('min','')|replace('m','')|trim)|int(0) -%}
+              {%- set hv='' if h==0 else ("un'ora" if h==1 else h|string+' ore') -%}
+              {%- set mv='' if m==0 else ('un minuto' if m==1 else m|string+' minuti') -%}
+              {%- set sep=' e ' if h>0 and m>0 else '' -%}
+              {{- states('input_text.frarik_scaldabagno_messaggio') }} in {{ hv+sep+mv -}}
 
     - choose:
       - conditions:
         - condition: trigger
-          id: switch_off
+          id: fine_ciclo
         - condition: state
           entity_id: input_boolean.frarik_scaldabagno_notify_push
           state: 'on'
@@ -784,29 +1273,33 @@ automation:
         - repeat:
             for_each: *push
             sequence:
-              - service: "notify.{{ repeat.item.service }}"
-                continue_on_error: true
-                data:
-                  message: >-
-                    🚿 {{ states('input_text.frarik_scaldabagno_nome') }}
+            - service: "notify.{{ repeat.item.service }}"
+              continue_on_error: true
+              data:
+                title: "{{ states('input_text.frarik_scaldabagno_nome') }}"
+                message: >-
+                  🫧 {{ states('input_text.frarik_scaldabagno_messaggio') }}
 
-                    ⚡ Consumati oggi: {{ state_attr('sensor.frarik_scaldabagno_time_on','Oggi') }}
+                  ⏱ Ciclo durato: {{ states('input_text.frarik_scaldabagno_ultimo_ciclo') | trim }}
 
-                    💰 Costo oggi: {{ state_attr('sensor.frarik_scaldabagno_time_on','costo_oggi_scaldabagno') }} €
-                  title: "Scaldabagno"
+                  ⚡ Consumati: {{ state_attr('sensor.frarik_scaldabagno_time_on','consumo_ciclo_scaldabagno') }}
+
+                  💰 Spesi: {{ state_attr('sensor.frarik_scaldabagno_time_on','costo_ciclo_scaldabagno') }} €
+
+####################################################
 
 - alias: frarik_scaldabagno_off_automatico
   id: frarik_scaldabagno_off_automatico
   trigger:
     - platform: time
       at: 'input_datetime.frarik_scaldabagno_off_automatico'
-      id: scaldabagno_automatico_off
+      id: auto_off
   condition: []
   action:
     - choose:
       - conditions:
         - condition: trigger
-          id: scaldabagno_automatico_off
+          id: auto_off
         - condition: state
           entity_id: *switch_scaldabagno
           state: 'on'
@@ -814,9 +1307,8 @@ automation:
         - entity_id: *switch_scaldabagno
           service: switch.turn_off
 
-###############################################################
-#  Fine package — Frarik Centro Controllo Scaldabagno v1.0
-###############################################################
+####################################################
+
 `;
 
   /* ── PKG BUILD ── */
@@ -836,9 +1328,9 @@ automation:
     var yaml = _SCALDABAGNO_PKG_YAML
       .split('IL_TUO_SENSORE_POTENZA').join(potenza || 'sensor.non_configurato')
       .split('IL_TUO_SWITCH').join(sw || 'switch.non_configurato');
-    yaml = yaml.replace(ind + '- service: IL_TUO_MOBILE_APP_1', pushLines);
-    yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_GOOGLE_1', googleLines);
-    yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_ALEXA_1', alexaLines);
+    yaml = yaml.replace(ind + '- service: IL_TUO_MOBILE_APP', pushLines);
+    yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_GOOGLE', googleLines);
+    yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_ALEXA', alexaLines);
     return yaml;
   }
 

@@ -51,7 +51,7 @@ homeassistant:
 #              IMPOSTAZIONI PACKAGE                #
 ####################################################
 
-        Sensore Potenza Frigorifero: &sensore_potenza   "IL_TUO_SENSORE_POTENZA"
+        Sensore Potenza Frigorifero: &sensore_potenza   "{{ states('IL_TUO_SENSORE_POTENZA') | float(0) }}"
         Switch Frigorifero:          &switch_frigorifero   "IL_TUO_SWITCH"
 
         Lista MediaPlayer Google: &google

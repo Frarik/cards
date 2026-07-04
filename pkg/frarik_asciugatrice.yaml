@@ -51,7 +51,7 @@ homeassistant:
 #              IMPOSTAZIONI PACKAGE                #
 ####################################################
 
-        Sensore Potenza Asciugatrice: &sensore_potenza   "IL_TUO_SENSORE_POTENZA"
+        Sensore Potenza Asciugatrice: &sensore_potenza   "{{ states('IL_TUO_SENSORE_POTENZA') | float(0) }}"
         Switch Asciugatrice:          &switch_asciugatrice   "IL_TUO_SWITCH"
 
         Lista MediaPlayer Google: &google

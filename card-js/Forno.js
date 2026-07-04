@@ -555,7 +555,7 @@
   }
 
   /* ── PKG YAML EMBEDDED ── */
-  var _FORNO_PKG_YAML = `﻿###############################################################
+  var _FORNO_PKG_YAML = `###############################################################
 #                                                             #
 #   ███████╗██████╗  █████╗ ██████╗ ██╗██╗  ██╗             #
 #   ██╔════╝██╔══██╗██╔══██╗██╔══██╗██║██║ ██╔╝             #
@@ -564,39 +564,36 @@
 #   ██║     ██║  ██║██║  ██║██║  ██║██║██║  ██╗             #
 #   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝            #
 #                                                             #
-#   Package: Frarik — Centro Controllo Forno                     #
-#   Versione: 1.0  |  Frarik / Fratech                       #
+#   Package: Frarik — Centro Controllo Forno        #
+#   Versione: 2.0  |  Frarik / Fratech                       #
 #                                                             #
 ###############################################################
 #
 # COSA FA QUESTO PACKAGE
 # ──────────────────────────────────────────────────────────
-#  ▸ Monitoraggio potenza istantanea motore (W)
+#  ▸ Monitoraggio potenza istantanea (W) e rilevamento ciclo
 #  ▸ Tracciamento energia consumata (kWh) giorno/mese/anno
 #  ▸ Calcolo costi energetici (usa input_number.costo_energia)
-#  ▸ Conteggio cicli motore oggi/mese/anno
-#  ▸ Durata cicli e storico 7 giorni
-#  ▸ Notifiche fine ciclo (Push / Alexa / Google)
-#  ▸ Orario notifiche e spegnimento automatico
+#  ▸ Conteggio cicli oggi/mese/anno e storico 7 giorni
+#  ▸ Durata ciclo live e storico con statistiche settimanali
+#  ▸ Notifiche fine ciclo: Push / Alexa / Google (orario custom)
+#  ▸ Spegnimento automatico programmato
 #
 ###############################################################
 #
-# INSTALLAZIONE
+# INSTALLAZIONE TRAMITE STORE FRARIK
 # ──────────────────────────────────────────────────────────
-#  1. Verifica che configuration.yaml contenga:
+#  Il wizard sostituisce automaticamente i segnaposto IL_TUO_*
+#  con le entita' che inserisci durante la configurazione.
 #
-#       homeassistant:
-#         packages: !include_dir_named packages
-#
-#  2. Copia questo file nella cartella "packages/frarik"
-#
-#  3. Modifica le 2 righe sotto "IMPOSTAZIONI PACKAGE":
-#     - Sensore potenza della presa (es. sensor.presa_forno_potenza)
-#     - Switch della presa (es. switch.presa_forno)
-#
+# INSTALLAZIONE MANUALE
+# ──────────────────────────────────────────────────────────
+#  1. configuration.yaml deve contenere:
+#        homeassistant:
+#          packages: !include_dir_named packages
+#  2. Copia in packages/frarik/
+#  3. Sostituisci i segnaposto IL_TUO_* con le tue entita'
 #  4. Riavvia Home Assistant
-#
-#  5. Nella card Frarik → Configura → collega le entità pkg
 #
 ###############################################################
 
@@ -604,29 +601,33 @@ homeassistant:
   customize:
     package.node_anchors:
       customize: &customize
-        package: 'Frarik — Centro Controllo Forno 1.0 — Frarik'
-
+        package: 'Frarik — Centro Controllo Forno 2.0 — Frarik'
       setting:
 
 ####################################################
 #              IMPOSTAZIONI PACKAGE                #
 ####################################################
 
-        Sensore Potenza Forno: &sensore_potenza_forno "{{ states('IL_TUO_SENSORE_POTENZA') | float(0) }}"
-        Switch Forno:          &switch_forno 'IL_TUO_SWITCH'
+        Sensore Potenza Forno: &sensore_potenza   "{{ states('IL_TUO_SENSORE_POTENZA') | float(0) }}"
+        Switch Forno:          &switch_forno   "IL_TUO_SWITCH"
 
         Lista MediaPlayer Google: &google
-          - IL_TUO_MEDIA_PLAYER_GOOGLE_1
+          - IL_TUO_MEDIA_PLAYER_GOOGLE
 
-        Lista mediaplayer alexa: &alexa
-          - IL_TUO_MEDIA_PLAYER_ALEXA_1
+        Lista MediaPlayer Alexa: &alexa
+          - IL_TUO_MEDIA_PLAYER_ALEXA
 
         Device per notifica push: &push
-          - service: IL_TUO_MOBILE_APP_1
+          - service: IL_TUO_MOBILE_APP
 
 ####################################################
 #                  NOTIFICHE                       #
 ####################################################
+
+notify:
+  - name: frarik_forno_notify
+    platform: group
+    services: *push
 
 ####################################################
 #                    SENSORI                       #
@@ -641,10 +642,11 @@ sensor:
     round: 2
 
 ####################################################
-#                INPUT NUMBER                      #
+#                 INPUT NUMBER                     #
 ####################################################
 
 input_number:
+
   frarik_forno_soglia_w:
     name: Soglia Lavoro Forno W
     icon: mdi:flash
@@ -671,6 +673,8 @@ input_number:
     step: 1.00
     unit_of_measurement: "s"
     mode: box
+
+####################################################
 
   frarik_forno_consumo_lunedi:
     icon: mdi:counter
@@ -813,18 +817,21 @@ utility_meter:
     cycle: yearly
 
 ####################################################
-#                TEMPLATE                          #
+#                   TEMPLATE                       #
 ####################################################
 
 template:
+
   - binary_sensor:
       - name: frarik_forno_motore
-        icon: mdi:washing-machine
+        icon: mdi:stove
         state: >-
           {{ 'on' if (states('sensor.frarik_forno_potenza_w') | int(0)) >
              states('input_number.frarik_forno_soglia_w') | int(0) else 'off' }}
         delay_off: "00:{{ states('input_number.frarik_forno_tempo_innesco_m') | int(0) }}:00"
         delay_on:  "00:00:{{ states('input_number.frarik_forno_avvio_ritardato_s') | int(0) }}"
+
+####################################################
 
   - trigger:
       - platform: state
@@ -844,6 +851,8 @@ template:
       - name: frarik_forno_fine_ciclo
         state: "{{ now().strftime('%d/%m/%Y %H:%M') }}"
 
+####################################################
+
   - trigger:
       - platform: state
         entity_id: input_boolean.frarik_forno_ciclo_attivo
@@ -853,8 +862,10 @@ template:
       - name: frarik_forno_tempo_riavvio
         state: "{{ as_timestamp(now()) }}"
 
+####################################################
+
   - sensor:
-      - name: "frarik_forno_time_on"
+      - name: frarik_forno_time_on
         icon: mdi:history
         state: >-
           {% if is_state('binary_sensor.frarik_forno_motore', 'on') and
@@ -934,48 +945,58 @@ template:
             {% else %}
               {{ minutes }}min
             {% endif %}
+          Anno Precedente: >
+            {% set hours = state_attr('sensor.frarik_forno_tempo_anno', 'last_period') | float(0) %}
+            {% set minutes = ((hours % 1) * 60) | int(0) %}
+            {% set hours = (hours - (hours % 1)) | int(0) %}
+            {% set day = ((hours | int(0) / 24)) | int(0) %}
+            {% if day | int(0) > 0 %}
+              {{ day }}d {{ (hours | int(0)) - (day * 24) }}h {{ minutes }}m
+            {% elif hours | int(0) > 0 %}
+              {{ hours }}h {{ minutes }}m
+            {% else %}
+              {{ minutes }}min
+            {% endif %}
           consumo_ciclo_forno: >-
-            {{ (states('sensor.frarik_forno_kwh') | float(0) - states('sensor.frarik_forno_inizio_ciclo') | float(0)) | round(3) }} kWh
+            {{ (states('sensor.frarik_forno_kwh') | float(0) - states('sensor.frarik_forno_inizio_ciclo') | float(0)) | round(2) }} kWh
           costo_ciclo_forno: >-
-            {{ ((states('sensor.frarik_forno_kwh') | float(0) - states('sensor.frarik_forno_inizio_ciclo') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(3, default=0) }}
+            {{ ((states('sensor.frarik_forno_kwh') | float(0) - states('sensor.frarik_forno_inizio_ciclo') | float(0)) * states('input_number.costo_energia') | float(0)) | round(2) }}
           costo_oggi_forno: >-
-            {{ ((states('sensor.frarik_forno_energy_oggi') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+            {{ (states('sensor.frarik_forno_energy_oggi') | float(0) * states('input_number.costo_energia') | float(0)) | round(2) }}
           costo_mese_forno: >-
-            {{ ((states('sensor.frarik_forno_energy_mese') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+            {{ (states('sensor.frarik_forno_energy_mese') | float(0) * states('input_number.costo_energia') | float(0)) | round(2) }}
           costo_anno_forno: >-
-            {{ ((states('sensor.frarik_forno_energy_anno') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+            {{ (states('sensor.frarik_forno_energy_anno') | float(0) * states('input_number.costo_energia') | float(0)) | round(2) }}
           costo_ieri_forno: >-
-            {{ ((state_attr('sensor.frarik_forno_energy_oggi', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+            {{ (state_attr('sensor.frarik_forno_energy_oggi', 'last_period') | float(0) * states('input_number.costo_energia') | float(0)) | round(2) }}
           costo_mese_precedente_forno: >-
-            {{ ((state_attr('sensor.frarik_forno_energy_mese', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+            {{ (state_attr('sensor.frarik_forno_energy_mese', 'last_period') | float(0) * states('input_number.costo_energia') | float(0)) | round(2) }}
           costo_anno_precedente_forno: >-
-            {{ ((state_attr('sensor.frarik_forno_energy_anno', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+            {{ (state_attr('sensor.frarik_forno_energy_anno', 'last_period') | float(0) * states('input_number.costo_energia') | float(0)) | round(2) }}
 
-      - name: "frarik_forno_potenza_w"
-        unit_of_measurement: 'W'
+      - name: frarik_forno_potenza_w
+        unit_of_measurement: "W"
         device_class: power
         state_class: measurement
         icon: mdi:flash
-        state: *sensore_potenza_forno
-
-      - name: "frarik_forno_versione"
-        state: "1.0"
+        state: *sensore_potenza
 
 ####################################################
-#                   COUNTER                        #
+#                    COUNTER                       #
 ####################################################
 
 counter:
   frarik_forno_cicli_totale:
-    name: Cicli Resistenza Forno
+    name: Cicli Forno Totale
     initial: 0
     step: 1
 
 ####################################################
-#                INPUT BOOLEAN                     #
+#                 INPUT BOOLEAN                    #
 ####################################################
 
 input_boolean:
+
   frarik_forno_switch:
     name: Switch Forno
     icon: mdi:power
@@ -997,19 +1018,19 @@ input_boolean:
 ####################################################
 
 group:
-  frarik_forno_notifiche:
+  frarik_forno_controlli:
     entities:
       - input_boolean.frarik_forno_notify_google
       - input_boolean.frarik_forno_notify_alexa
       - input_boolean.frarik_forno_notify_push
-      - automation.frarik_forno_off_automatico
       - input_boolean.frarik_forno_switch
 
 ####################################################
-#                 INPUT DATETIME                   #
+#                INPUT DATETIME                    #
 ####################################################
 
 input_datetime:
+
   frarik_forno_orario_inizio_notifiche:
     name: Orario Inizio Notifiche Forno
     has_date: false
@@ -1021,7 +1042,7 @@ input_datetime:
     has_time: true
 
   frarik_forno_off_automatico:
-    name: Forno Spegnimento Automatico
+    name: Forno Off Automatico
     has_date: false
     has_time: true
 
@@ -1030,6 +1051,7 @@ input_datetime:
 ####################################################
 
 input_text:
+
   frarik_forno_data_reset:
 
   frarik_forno_nome:
@@ -1060,7 +1082,7 @@ input_text:
   frarik_forno_tempo_domenica:
 
 ####################################################
-#                     SCRIPT                       #
+#                    SCRIPT                        #
 ####################################################
 
 script:
@@ -1071,7 +1093,6 @@ script:
         value: "{{ now().strftime('%d/%m/%Y %H:%M') }}"
       target:
         entity_id: input_text.frarik_forno_data_reset
-
     - service: utility_meter.calibrate
       data:
         value: '0'
@@ -1086,7 +1107,6 @@ script:
           - sensor.frarik_forno_tempo_oggi
           - sensor.frarik_forno_tempo_mese
           - sensor.frarik_forno_tempo_anno
-
     - service: input_number.set_value
       data:
         value: '0'
@@ -1106,7 +1126,6 @@ script:
           - input_number.frarik_forno_costo_venerdi
           - input_number.frarik_forno_costo_sabato
           - input_number.frarik_forno_costo_domenica
-
     - service: input_text.set_value
       data:
         value: '0'
@@ -1126,7 +1145,6 @@ script:
           - input_text.frarik_forno_tempo_venerdi
           - input_text.frarik_forno_tempo_sabato
           - input_text.frarik_forno_tempo_domenica
-
     - service: counter.reset
       target:
         entity_id:
@@ -1137,8 +1155,9 @@ script:
 ####################################################
 
 automation:
-- alias: frarik_forno_automazioni
-  id: frarik_forno_automazioni
+
+- alias: frarik_forno_automazione
+  id: frarik_forno_automazione
   max_exceeded: silent
   trigger:
 
@@ -1156,7 +1175,7 @@ automation:
 
   - platform: time
     at: '23:59:59'
-    id: incremento_statistiche_7gg
+    id: statistiche_settimanali
 
   - platform: state
     entity_id:
@@ -1185,74 +1204,39 @@ automation:
   - choose:
     - conditions:
       - condition: trigger
-        id:
-          - incremento_statistiche_7gg
-          - fine_ciclo
+        id: statistiche_settimanali
       sequence:
-
       - service: input_text.set_value
         target:
           entity_id: >
-            {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
-            {% if today == "Monday" %}    input_text.frarik_forno_cicli_lunedi
-            {% elif today == "Tuesday" %} input_text.frarik_forno_cicli_martedi
-            {% elif today == "Wednesday" %} input_text.frarik_forno_cicli_mercoledi
-            {% elif today == "Thursday" %} input_text.frarik_forno_cicli_giovedi
-            {% elif today == "Friday" %}  input_text.frarik_forno_cicli_venerdi
-            {% elif today == "Saturday" %} input_text.frarik_forno_cicli_sabato
-            {% elif today == "Sunday" %}  input_text.frarik_forno_cicli_domenica
-            {% endif %}
+            {% set g = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
+            {{ {'Monday':'input_text.frarik_forno_cicli_lunedi','Tuesday':'input_text.frarik_forno_cicli_martedi','Wednesday':'input_text.frarik_forno_cicli_mercoledi','Thursday':'input_text.frarik_forno_cicli_giovedi','Friday':'input_text.frarik_forno_cicli_venerdi','Saturday':'input_text.frarik_forno_cicli_sabato','Sunday':'input_text.frarik_forno_cicli_domenica'}[g] }}
         data:
           value: "{{ states('sensor.frarik_forno_cicli_oggi') }}"
-
       - service: input_text.set_value
         target:
           entity_id: >
-            {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
-            {% if today == "Monday" %}    input_text.frarik_forno_tempo_lunedi
-            {% elif today == "Tuesday" %} input_text.frarik_forno_tempo_martedi
-            {% elif today == "Wednesday" %} input_text.frarik_forno_tempo_mercoledi
-            {% elif today == "Thursday" %} input_text.frarik_forno_tempo_giovedi
-            {% elif today == "Friday" %}  input_text.frarik_forno_tempo_venerdi
-            {% elif today == "Saturday" %} input_text.frarik_forno_tempo_sabato
-            {% elif today == "Sunday" %}  input_text.frarik_forno_tempo_domenica
-            {% endif %}
+            {% set g = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
+            {{ {'Monday':'input_text.frarik_forno_tempo_lunedi','Tuesday':'input_text.frarik_forno_tempo_martedi','Wednesday':'input_text.frarik_forno_tempo_mercoledi','Thursday':'input_text.frarik_forno_tempo_giovedi','Friday':'input_text.frarik_forno_tempo_venerdi','Saturday':'input_text.frarik_forno_tempo_sabato','Sunday':'input_text.frarik_forno_tempo_domenica'}[g] }}
         data:
           value: "{{ state_attr('sensor.frarik_forno_time_on','Oggi') }}"
-
       - service: input_number.set_value
         target:
           entity_id: >
-            {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
-            {% if today == "Monday" %}    input_number.frarik_forno_consumo_lunedi
-            {% elif today == "Tuesday" %} input_number.frarik_forno_consumo_martedi
-            {% elif today == "Wednesday" %} input_number.frarik_forno_consumo_mercoledi
-            {% elif today == "Thursday" %} input_number.frarik_forno_consumo_giovedi
-            {% elif today == "Friday" %}  input_number.frarik_forno_consumo_venerdi
-            {% elif today == "Saturday" %} input_number.frarik_forno_consumo_sabato
-            {% elif today == "Sunday" %}  input_number.frarik_forno_consumo_domenica
-            {% endif %}
+            {% set g = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
+            {{ {'Monday':'input_number.frarik_forno_consumo_lunedi','Tuesday':'input_number.frarik_forno_consumo_martedi','Wednesday':'input_number.frarik_forno_consumo_mercoledi','Thursday':'input_number.frarik_forno_consumo_giovedi','Friday':'input_number.frarik_forno_consumo_venerdi','Saturday':'input_number.frarik_forno_consumo_sabato','Sunday':'input_number.frarik_forno_consumo_domenica'}[g] }}
         data:
           value: "{{ states('sensor.frarik_forno_energy_oggi') }}"
-
       - service: input_number.set_value
         target:
           entity_id: >
-            {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
-            {% if today == "Monday" %}    input_number.frarik_forno_costo_lunedi
-            {% elif today == "Tuesday" %} input_number.frarik_forno_costo_martedi
-            {% elif today == "Wednesday" %} input_number.frarik_forno_costo_mercoledi
-            {% elif today == "Thursday" %} input_number.frarik_forno_costo_giovedi
-            {% elif today == "Friday" %}  input_number.frarik_forno_costo_venerdi
-            {% elif today == "Saturday" %} input_number.frarik_forno_costo_sabato
-            {% elif today == "Sunday" %}  input_number.frarik_forno_costo_domenica
-            {% endif %}
+            {% set g = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
+            {{ {'Monday':'input_number.frarik_forno_costo_lunedi','Tuesday':'input_number.frarik_forno_costo_martedi','Wednesday':'input_number.frarik_forno_costo_mercoledi','Thursday':'input_number.frarik_forno_costo_giovedi','Friday':'input_number.frarik_forno_costo_venerdi','Saturday':'input_number.frarik_forno_costo_sabato','Sunday':'input_number.frarik_forno_costo_domenica'}[g] }}
         data:
           value: "{{ state_attr('sensor.frarik_forno_time_on','costo_oggi_forno') }}"
 
   - choose:
-    - alias: SWITCH OFF
-      conditions:
+    - conditions:
       - condition: trigger
         id: switch_off
       sequence:
@@ -1264,8 +1248,7 @@ automation:
           entity_id: input_boolean.frarik_forno_switch
 
   - choose:
-    - alias: SWITCH ON
-      conditions:
+    - conditions:
       - condition: trigger
         id: switch_on
       sequence:
@@ -1298,23 +1281,21 @@ automation:
       - condition: trigger
         id: fine_ciclo
       sequence:
-
       - service: input_text.set_value
         target:
           entity_id: input_text.frarik_forno_ultimo_ciclo
         data:
           value: "{{ state_attr('sensor.frarik_forno_time_on','tempo_ciclo_forno') | trim }}"
-
       - service: counter.increment
         target:
-          entity_id: counter.frarik_forno_cicli_totale
-
+          entity_id:
+            - counter.frarik_forno_cicli_totale
       - delay: '00:00:05'
-
       - entity_id: input_boolean.frarik_forno_ciclo_attivo
         service: input_boolean.turn_off
 
   - parallel:
+
     - choose:
       - conditions:
         - condition: trigger
@@ -1377,37 +1358,42 @@ automation:
         - repeat:
             for_each: *push
             sequence:
-              - service: "notify.{{ repeat.item.service }}"
-                continue_on_error: true
-                data:
-                  message: >-
-                    🥘 {{ states('input_text.frarik_forno_nome') }}
+            - service: "notify.{{ repeat.item.service }}"
+              continue_on_error: true
+              data:
+                title: "{{ states('input_text.frarik_forno_nome') }}"
+                message: >-
+                  🫧 {{ states('input_text.frarik_forno_messaggio') }}
 
-                    ⏱ Ciclo durato: {{ states('input_text.frarik_forno_ultimo_ciclo') | trim }}
+                  ⏱ Ciclo durato: {{ states('input_text.frarik_forno_ultimo_ciclo') | trim }}
 
-                    ⚡ Consumati: {{ state_attr('sensor.frarik_forno_time_on','consumo_ciclo_forno') }}
+                  ⚡ Consumati: {{ state_attr('sensor.frarik_forno_time_on','consumo_ciclo_forno') }}
 
-                    💰 Spesi: {{ state_attr('sensor.frarik_forno_time_on','costo_ciclo_forno') }} €
-                  title: "Forno"
+                  💰 Spesi: {{ state_attr('sensor.frarik_forno_time_on','costo_ciclo_forno') }} €
+
+####################################################
 
 - alias: frarik_forno_off_automatico
   id: frarik_forno_off_automatico
   trigger:
     - platform: time
       at: 'input_datetime.frarik_forno_off_automatico'
-      id: forno_automatico_off
+      id: auto_off
   condition: []
   action:
     - choose:
       - conditions:
         - condition: trigger
-          id: forno_automatico_off
+          id: auto_off
         - condition: state
           entity_id: *switch_forno
           state: 'on'
         sequence:
         - entity_id: *switch_forno
           service: switch.turn_off
+
+####################################################
+
 `;
 
   /* ── PKG BUILD ── */
@@ -1427,9 +1413,9 @@ automation:
     var yaml = _FORNO_PKG_YAML
       .split('IL_TUO_SENSORE_POTENZA').join(potenza || 'sensor.non_configurato')
       .split('IL_TUO_SWITCH').join(sw || 'switch.non_configurato');
-    yaml = yaml.replace(ind + '- service: IL_TUO_MOBILE_APP_1', pushLines);
-    yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_GOOGLE_1', googleLines);
-    yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_ALEXA_1', alexaLines);
+    yaml = yaml.replace(ind + '- service: IL_TUO_MOBILE_APP', pushLines);
+    yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_GOOGLE', googleLines);
+    yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_ALEXA', alexaLines);
     return yaml;
   }
 

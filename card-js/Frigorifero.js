@@ -565,18 +565,36 @@
 #   ██║     ██║  ██║██║  ██║██║  ██║██║██║  ██╗             #
 #   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝            #
 #                                                             #
-#   Package: Frarik — Centro Controllo Frigorifero                     #
-#   Versione: 1.3  |  Frarik / Fratech                       #
+#   Package: Frarik — Centro Controllo Frigorifero        #
+#   Versione: 2.0  |  Frarik / Fratech                       #
 #                                                             #
 ###############################################################
 #
-# INSTALLAZIONE TRAMITE WIZARD FRARIK
+# COSA FA QUESTO PACKAGE
 # ──────────────────────────────────────────────────────────
-#  Il wizard della card Frigorifero installa questo file
-#  automaticamente in config/packages/ con i tuoi sensori.
+#  ▸ Monitoraggio potenza istantanea (W) e rilevamento ciclo
+#  ▸ Tracciamento energia consumata (kWh) giorno/mese/anno
+#  ▸ Calcolo costi energetici (usa input_number.costo_energia)
+#  ▸ Conteggio cicli oggi/mese/anno e storico 7 giorni
+#  ▸ Durata ciclo live e storico con statistiche settimanali
+#  ▸ Notifiche fine ciclo: Push / Alexa / Google (orario custom)
+#  ▸ Spegnimento automatico programmato
 #
-#  Installazione manuale: modifica le 2 righe sotto
-#  "IMPOSTAZIONI PACKAGE" e copia in config/packages/
+###############################################################
+#
+# INSTALLAZIONE TRAMITE STORE FRARIK
+# ──────────────────────────────────────────────────────────
+#  Il wizard sostituisce automaticamente i segnaposto IL_TUO_*
+#  con le entita' che inserisci durante la configurazione.
+#
+# INSTALLAZIONE MANUALE
+# ──────────────────────────────────────────────────────────
+#  1. configuration.yaml deve contenere:
+#        homeassistant:
+#          packages: !include_dir_named packages
+#  2. Copia in packages/frarik/
+#  3. Sostituisci i segnaposto IL_TUO_* con le tue entita'
+#  4. Riavvia Home Assistant
 #
 ###############################################################
 
@@ -584,29 +602,33 @@ homeassistant:
   customize:
     package.node_anchors:
       customize: &customize
-        package: 'Frarik — Centro Controllo Frigorifero 1.3 — Frarik'
-
+        package: 'Frarik — Centro Controllo Frigorifero 2.0 — Frarik'
       setting:
 
 ####################################################
 #              IMPOSTAZIONI PACKAGE                #
 ####################################################
 
-        Sensore Potenza Frigo: &sensore_potenza_frigo "{{ states('IL_TUO_SENSORE_POTENZA') | float(0) }}"
-        Switch Frigo:          &switch_frigo 'IL_TUO_SWITCH'
+        Sensore Potenza Frigorifero: &sensore_potenza   "{{ states('IL_TUO_SENSORE_POTENZA') | float(0) }}"
+        Switch Frigorifero:          &switch_frigorifero   "IL_TUO_SWITCH"
 
         Lista MediaPlayer Google: &google
-          - IL_TUO_MEDIA_PLAYER_GOOGLE_1
+          - IL_TUO_MEDIA_PLAYER_GOOGLE
 
-        Lista mediaplayer alexa: &alexa
-          - IL_TUO_MEDIA_PLAYER_ALEXA_1
+        Lista MediaPlayer Alexa: &alexa
+          - IL_TUO_MEDIA_PLAYER_ALEXA
 
         Device per notifica push: &push
-          - service: IL_TUO_MOBILE_APP_1
+          - service: IL_TUO_MOBILE_APP
 
 ####################################################
 #                  NOTIFICHE                       #
 ####################################################
+
+notify:
+  - name: frarik_frigorifero_notify
+    platform: group
+    services: *push
 
 ####################################################
 #                    SENSORI                       #
@@ -621,12 +643,13 @@ sensor:
     round: 2
 
 ####################################################
-#                INPUT NUMBER                      #
+#                 INPUT NUMBER                     #
 ####################################################
 
 input_number:
+
   frarik_frigorifero_soglia_w:
-    name: Soglia Lavoro Frigo W
+    name: Soglia Lavoro Frigorifero W
     icon: mdi:flash
     min: 0
     max: 5000
@@ -635,7 +658,7 @@ input_number:
     mode: box
 
   frarik_frigorifero_tempo_innesco_m:
-    name: Tempo Innesco Frigo M
+    name: Tempo Innesco Frigorifero M
     icon: mdi:timer
     min: 0
     max: 60
@@ -644,13 +667,15 @@ input_number:
     mode: box
 
   frarik_frigorifero_avvio_ritardato_s:
-    name: Avvio Ritardato Frigo S
+    name: Avvio Ritardato Frigorifero S
     icon: mdi:timer-sand
     min: 0
     max: 60
     step: 1.00
     unit_of_measurement: "s"
     mode: box
+
+####################################################
 
   frarik_frigorifero_consumo_lunedi:
     icon: mdi:counter
@@ -793,18 +818,21 @@ utility_meter:
     cycle: yearly
 
 ####################################################
-#                TEMPLATE                          #
+#                   TEMPLATE                       #
 ####################################################
 
 template:
+
   - binary_sensor:
       - name: frarik_frigorifero_motore
-        icon: mdi:snowflake
+        icon: mdi:fridge
         state: >-
           {{ 'on' if (states('sensor.frarik_frigorifero_potenza_w') | int(0)) >
              states('input_number.frarik_frigorifero_soglia_w') | int(0) else 'off' }}
         delay_off: "00:{{ states('input_number.frarik_frigorifero_tempo_innesco_m') | int(0) }}:00"
         delay_on:  "00:00:{{ states('input_number.frarik_frigorifero_avvio_ritardato_s') | int(0) }}"
+
+####################################################
 
   - trigger:
       - platform: state
@@ -824,6 +852,8 @@ template:
       - name: frarik_frigorifero_fine_ciclo
         state: "{{ now().strftime('%d/%m/%Y %H:%M') }}"
 
+####################################################
+
   - trigger:
       - platform: state
         entity_id: input_boolean.frarik_frigorifero_ciclo_attivo
@@ -833,8 +863,10 @@ template:
       - name: frarik_frigorifero_tempo_riavvio
         state: "{{ as_timestamp(now()) }}"
 
+####################################################
+
   - sensor:
-      - name: "frarik_frigorifero_time_on"
+      - name: frarik_frigorifero_time_on
         icon: mdi:history
         state: >-
           {% if is_state('binary_sensor.frarik_frigorifero_motore', 'on') and
@@ -914,94 +946,104 @@ template:
             {% else %}
               {{ minutes }}min
             {% endif %}
+          Anno Precedente: >
+            {% set hours = state_attr('sensor.frarik_frigorifero_tempo_anno', 'last_period') | float(0) %}
+            {% set minutes = ((hours % 1) * 60) | int(0) %}
+            {% set hours = (hours - (hours % 1)) | int(0) %}
+            {% set day = ((hours | int(0) / 24)) | int(0) %}
+            {% if day | int(0) > 0 %}
+              {{ day }}d {{ (hours | int(0)) - (day * 24) }}h {{ minutes }}m
+            {% elif hours | int(0) > 0 %}
+              {{ hours }}h {{ minutes }}m
+            {% else %}
+              {{ minutes }}min
+            {% endif %}
           consumo_ciclo_frigorifero: >-
-            {{ (states('sensor.frarik_frigorifero_kwh') | float(0) - states('sensor.frarik_frigorifero_inizio_ciclo') | float(0)) | round(3) }} kWh
+            {{ (states('sensor.frarik_frigorifero_kwh') | float(0) - states('sensor.frarik_frigorifero_inizio_ciclo') | float(0)) | round(2) }} kWh
           costo_ciclo_frigorifero: >-
-            {{ ((states('sensor.frarik_frigorifero_kwh') | float(0) - states('sensor.frarik_frigorifero_inizio_ciclo') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(3, default=0) }}
+            {{ ((states('sensor.frarik_frigorifero_kwh') | float(0) - states('sensor.frarik_frigorifero_inizio_ciclo') | float(0)) * states('input_number.costo_energia') | float(0)) | round(2) }}
           costo_oggi_frigorifero: >-
-            {{ ((states('sensor.frarik_frigorifero_energy_oggi') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+            {{ (states('sensor.frarik_frigorifero_energy_oggi') | float(0) * states('input_number.costo_energia') | float(0)) | round(2) }}
           costo_mese_frigorifero: >-
-            {{ ((states('sensor.frarik_frigorifero_energy_mese') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+            {{ (states('sensor.frarik_frigorifero_energy_mese') | float(0) * states('input_number.costo_energia') | float(0)) | round(2) }}
           costo_anno_frigorifero: >-
-            {{ ((states('sensor.frarik_frigorifero_energy_anno') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+            {{ (states('sensor.frarik_frigorifero_energy_anno') | float(0) * states('input_number.costo_energia') | float(0)) | round(2) }}
           costo_ieri_frigorifero: >-
-            {{ ((state_attr('sensor.frarik_frigorifero_energy_oggi', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+            {{ (state_attr('sensor.frarik_frigorifero_energy_oggi', 'last_period') | float(0) * states('input_number.costo_energia') | float(0)) | round(2) }}
           costo_mese_precedente_frigorifero: >-
-            {{ ((state_attr('sensor.frarik_frigorifero_energy_mese', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+            {{ (state_attr('sensor.frarik_frigorifero_energy_mese', 'last_period') | float(0) * states('input_number.costo_energia') | float(0)) | round(2) }}
           costo_anno_precedente_frigorifero: >-
-            {{ ((state_attr('sensor.frarik_frigorifero_energy_anno', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
+            {{ (state_attr('sensor.frarik_frigorifero_energy_anno', 'last_period') | float(0) * states('input_number.costo_energia') | float(0)) | round(2) }}
 
-      - name: "frarik_frigorifero_potenza_w"
-        unit_of_measurement: 'W'
+      - name: frarik_frigorifero_potenza_w
+        unit_of_measurement: "W"
         device_class: power
         state_class: measurement
         icon: mdi:flash
-        state: *sensore_potenza_frigo
-
-      - name: "frarik_frigorifero_versione"
-        state: "1.3"
+        state: *sensore_potenza
 
 ####################################################
-#                   COUNTER                        #
+#                    COUNTER                       #
 ####################################################
 
 counter:
   frarik_frigorifero_cicli_totale:
-    name: Cicli Compressore Frigo
+    name: Cicli Frigorifero Totale
     initial: 0
     step: 1
 
 ####################################################
-#                INPUT BOOLEAN                     #
+#                 INPUT BOOLEAN                    #
 ####################################################
 
 input_boolean:
+
   frarik_frigorifero_switch:
-    name: Switch Frigo
+    name: Switch Frigorifero
     icon: mdi:power
 
   frarik_frigorifero_ciclo_attivo:
-    name: Ciclo Attivo Frigo
+    name: Ciclo Attivo Frigorifero
 
   frarik_frigorifero_notify_push:
-    name: Notifica Push Frigo
+    name: Notifica Push Frigorifero
 
   frarik_frigorifero_notify_alexa:
-    name: Notifica Alexa Frigo
+    name: Notifica Alexa Frigorifero
 
   frarik_frigorifero_notify_google:
-    name: Notifica Google Frigo
+    name: Notifica Google Frigorifero
 
 ####################################################
 #                     GROUP                        #
 ####################################################
 
 group:
-  frarik_frigorifero_notifiche:
+  frarik_frigorifero_controlli:
     entities:
       - input_boolean.frarik_frigorifero_notify_google
       - input_boolean.frarik_frigorifero_notify_alexa
       - input_boolean.frarik_frigorifero_notify_push
-      - automation.frarik_frigorifero_off_automatico
       - input_boolean.frarik_frigorifero_switch
 
 ####################################################
-#                 INPUT DATETIME                   #
+#                INPUT DATETIME                    #
 ####################################################
 
 input_datetime:
+
   frarik_frigorifero_orario_inizio_notifiche:
-    name: Orario Inizio Notifiche Frigo
+    name: Orario Inizio Notifiche Frigorifero
     has_date: false
     has_time: true
 
   frarik_frigorifero_orario_fine_notifiche:
-    name: Orario Fine Notifiche Frigo
+    name: Orario Fine Notifiche Frigorifero
     has_date: false
     has_time: true
 
   frarik_frigorifero_off_automatico:
-    name: Frigo Spegnimento Automatico
+    name: Frigorifero Off Automatico
     has_date: false
     has_time: true
 
@@ -1010,27 +1052,38 @@ input_datetime:
 ####################################################
 
 input_text:
+
   frarik_frigorifero_data_reset:
+
   frarik_frigorifero_nome:
+
   frarik_frigorifero_messaggio:
+
   frarik_frigorifero_ultimo_ciclo:
+
   frarik_frigorifero_cicli_lunedi:
   frarik_frigorifero_tempo_lunedi:
+
   frarik_frigorifero_cicli_martedi:
   frarik_frigorifero_tempo_martedi:
+
   frarik_frigorifero_cicli_mercoledi:
   frarik_frigorifero_tempo_mercoledi:
+
   frarik_frigorifero_cicli_giovedi:
   frarik_frigorifero_tempo_giovedi:
+
   frarik_frigorifero_cicli_venerdi:
   frarik_frigorifero_tempo_venerdi:
+
   frarik_frigorifero_cicli_sabato:
   frarik_frigorifero_tempo_sabato:
+
   frarik_frigorifero_cicli_domenica:
   frarik_frigorifero_tempo_domenica:
 
 ####################################################
-#                     SCRIPT                       #
+#                    SCRIPT                        #
 ####################################################
 
 script:
@@ -1041,7 +1094,6 @@ script:
         value: "{{ now().strftime('%d/%m/%Y %H:%M') }}"
       target:
         entity_id: input_text.frarik_frigorifero_data_reset
-
     - service: utility_meter.calibrate
       data:
         value: '0'
@@ -1056,7 +1108,6 @@ script:
           - sensor.frarik_frigorifero_tempo_oggi
           - sensor.frarik_frigorifero_tempo_mese
           - sensor.frarik_frigorifero_tempo_anno
-
     - service: input_number.set_value
       data:
         value: '0'
@@ -1076,7 +1127,6 @@ script:
           - input_number.frarik_frigorifero_costo_venerdi
           - input_number.frarik_frigorifero_costo_sabato
           - input_number.frarik_frigorifero_costo_domenica
-
     - service: input_text.set_value
       data:
         value: '0'
@@ -1096,7 +1146,6 @@ script:
           - input_text.frarik_frigorifero_tempo_venerdi
           - input_text.frarik_frigorifero_tempo_sabato
           - input_text.frarik_frigorifero_tempo_domenica
-
     - service: counter.reset
       target:
         entity_id:
@@ -1107,8 +1156,9 @@ script:
 ####################################################
 
 automation:
-- alias: frarik_frigorifero_automazioni
-  id: frarik_frigorifero_automazioni
+
+- alias: frarik_frigorifero_automazione
+  id: frarik_frigorifero_automazione
   max_exceeded: silent
   trigger:
 
@@ -1126,12 +1176,12 @@ automation:
 
   - platform: time
     at: '23:59:59'
-    id: incremento_statistiche_7gg
+    id: statistiche_settimanali
 
   - platform: state
     entity_id:
       - input_boolean.frarik_frigorifero_switch
-      - *switch_frigo
+      - *switch_frigorifero
     from: 'on'
     to: 'off'
     id: switch_off
@@ -1139,7 +1189,7 @@ automation:
   - platform: state
     entity_id:
       - input_boolean.frarik_frigorifero_switch
-      - *switch_frigo
+      - *switch_frigorifero
     from: 'off'
     to: 'on'
     id: switch_on
@@ -1155,91 +1205,57 @@ automation:
   - choose:
     - conditions:
       - condition: trigger
-        id: incremento_statistiche_7gg
+        id: statistiche_settimanali
       sequence:
-
       - service: input_text.set_value
         target:
           entity_id: >
-            {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
-            {% if today == "Monday" %}    input_text.frarik_frigorifero_cicli_lunedi
-            {% elif today == "Tuesday" %} input_text.frarik_frigorifero_cicli_martedi
-            {% elif today == "Wednesday" %} input_text.frarik_frigorifero_cicli_mercoledi
-            {% elif today == "Thursday" %} input_text.frarik_frigorifero_cicli_giovedi
-            {% elif today == "Friday" %}  input_text.frarik_frigorifero_cicli_venerdi
-            {% elif today == "Saturday" %} input_text.frarik_frigorifero_cicli_sabato
-            {% elif today == "Sunday" %}  input_text.frarik_frigorifero_cicli_domenica
-            {% endif %}
+            {% set g = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
+            {{ {'Monday':'input_text.frarik_frigorifero_cicli_lunedi','Tuesday':'input_text.frarik_frigorifero_cicli_martedi','Wednesday':'input_text.frarik_frigorifero_cicli_mercoledi','Thursday':'input_text.frarik_frigorifero_cicli_giovedi','Friday':'input_text.frarik_frigorifero_cicli_venerdi','Saturday':'input_text.frarik_frigorifero_cicli_sabato','Sunday':'input_text.frarik_frigorifero_cicli_domenica'}[g] }}
         data:
           value: "{{ states('sensor.frarik_frigorifero_cicli_oggi') }}"
-
       - service: input_text.set_value
         target:
           entity_id: >
-            {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
-            {% if today == "Monday" %}    input_text.frarik_frigorifero_tempo_lunedi
-            {% elif today == "Tuesday" %} input_text.frarik_frigorifero_tempo_martedi
-            {% elif today == "Wednesday" %} input_text.frarik_frigorifero_tempo_mercoledi
-            {% elif today == "Thursday" %} input_text.frarik_frigorifero_tempo_giovedi
-            {% elif today == "Friday" %}  input_text.frarik_frigorifero_tempo_venerdi
-            {% elif today == "Saturday" %} input_text.frarik_frigorifero_tempo_sabato
-            {% elif today == "Sunday" %}  input_text.frarik_frigorifero_tempo_domenica
-            {% endif %}
+            {% set g = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
+            {{ {'Monday':'input_text.frarik_frigorifero_tempo_lunedi','Tuesday':'input_text.frarik_frigorifero_tempo_martedi','Wednesday':'input_text.frarik_frigorifero_tempo_mercoledi','Thursday':'input_text.frarik_frigorifero_tempo_giovedi','Friday':'input_text.frarik_frigorifero_tempo_venerdi','Saturday':'input_text.frarik_frigorifero_tempo_sabato','Sunday':'input_text.frarik_frigorifero_tempo_domenica'}[g] }}
         data:
           value: "{{ state_attr('sensor.frarik_frigorifero_time_on','Oggi') }}"
-
       - service: input_number.set_value
         target:
           entity_id: >
-            {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
-            {% if today == "Monday" %}    input_number.frarik_frigorifero_consumo_lunedi
-            {% elif today == "Tuesday" %} input_number.frarik_frigorifero_consumo_martedi
-            {% elif today == "Wednesday" %} input_number.frarik_frigorifero_consumo_mercoledi
-            {% elif today == "Thursday" %} input_number.frarik_frigorifero_consumo_giovedi
-            {% elif today == "Friday" %}  input_number.frarik_frigorifero_consumo_venerdi
-            {% elif today == "Saturday" %} input_number.frarik_frigorifero_consumo_sabato
-            {% elif today == "Sunday" %}  input_number.frarik_frigorifero_consumo_domenica
-            {% endif %}
+            {% set g = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
+            {{ {'Monday':'input_number.frarik_frigorifero_consumo_lunedi','Tuesday':'input_number.frarik_frigorifero_consumo_martedi','Wednesday':'input_number.frarik_frigorifero_consumo_mercoledi','Thursday':'input_number.frarik_frigorifero_consumo_giovedi','Friday':'input_number.frarik_frigorifero_consumo_venerdi','Saturday':'input_number.frarik_frigorifero_consumo_sabato','Sunday':'input_number.frarik_frigorifero_consumo_domenica'}[g] }}
         data:
           value: "{{ states('sensor.frarik_frigorifero_energy_oggi') }}"
-
       - service: input_number.set_value
         target:
           entity_id: >
-            {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
-            {% if today == "Monday" %}    input_number.frarik_frigorifero_costo_lunedi
-            {% elif today == "Tuesday" %} input_number.frarik_frigorifero_costo_martedi
-            {% elif today == "Wednesday" %} input_number.frarik_frigorifero_costo_mercoledi
-            {% elif today == "Thursday" %} input_number.frarik_frigorifero_costo_giovedi
-            {% elif today == "Friday" %}  input_number.frarik_frigorifero_costo_venerdi
-            {% elif today == "Saturday" %} input_number.frarik_frigorifero_costo_sabato
-            {% elif today == "Sunday" %}  input_number.frarik_frigorifero_costo_domenica
-            {% endif %}
+            {% set g = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
+            {{ {'Monday':'input_number.frarik_frigorifero_costo_lunedi','Tuesday':'input_number.frarik_frigorifero_costo_martedi','Wednesday':'input_number.frarik_frigorifero_costo_mercoledi','Thursday':'input_number.frarik_frigorifero_costo_giovedi','Friday':'input_number.frarik_frigorifero_costo_venerdi','Saturday':'input_number.frarik_frigorifero_costo_sabato','Sunday':'input_number.frarik_frigorifero_costo_domenica'}[g] }}
         data:
           value: "{{ state_attr('sensor.frarik_frigorifero_time_on','costo_oggi_frigorifero') }}"
 
   - choose:
-    - alias: SWITCH OFF
-      conditions:
+    - conditions:
       - condition: trigger
         id: switch_off
       sequence:
       - service: switch.turn_off
         target:
-          entity_id: *switch_frigo
+          entity_id: *switch_frigorifero
       - service: input_boolean.turn_off
         target:
           entity_id: input_boolean.frarik_frigorifero_switch
 
   - choose:
-    - alias: SWITCH ON
-      conditions:
+    - conditions:
       - condition: trigger
         id: switch_on
       sequence:
       - service: switch.turn_on
         target:
-          entity_id: *switch_frigo
+          entity_id: *switch_frigorifero
       - service: input_boolean.turn_on
         target:
           entity_id: input_boolean.frarik_frigorifero_switch
@@ -1266,23 +1282,21 @@ automation:
       - condition: trigger
         id: fine_ciclo
       sequence:
-
       - service: input_text.set_value
         target:
           entity_id: input_text.frarik_frigorifero_ultimo_ciclo
         data:
           value: "{{ state_attr('sensor.frarik_frigorifero_time_on','tempo_ciclo_frigorifero') | trim }}"
-
       - service: counter.increment
         target:
-          entity_id: counter.frarik_frigorifero_cicli_totale
-
+          entity_id:
+            - counter.frarik_frigorifero_cicli_totale
       - delay: '00:00:05'
-
       - entity_id: input_boolean.frarik_frigorifero_ciclo_attivo
         service: input_boolean.turn_off
 
   - parallel:
+
     - choose:
       - conditions:
         - condition: trigger
@@ -1345,37 +1359,42 @@ automation:
         - repeat:
             for_each: *push
             sequence:
-              - service: "notify.{{ repeat.item.service }}"
-                continue_on_error: true
-                data:
-                  message: >-
-                    🧊 {{ states('input_text.frarik_frigorifero_nome') }}
+            - service: "notify.{{ repeat.item.service }}"
+              continue_on_error: true
+              data:
+                title: "{{ states('input_text.frarik_frigorifero_nome') }}"
+                message: >-
+                  🫧 {{ states('input_text.frarik_frigorifero_messaggio') }}
 
-                    ⏱ Ciclo durato: {{ states('input_text.frarik_frigorifero_ultimo_ciclo') | trim }}
+                  ⏱ Ciclo durato: {{ states('input_text.frarik_frigorifero_ultimo_ciclo') | trim }}
 
-                    ⚡ Consumati: {{ state_attr('sensor.frarik_frigorifero_time_on','consumo_ciclo_frigorifero') }}
+                  ⚡ Consumati: {{ state_attr('sensor.frarik_frigorifero_time_on','consumo_ciclo_frigorifero') }}
 
-                    💰 Spesi: {{ state_attr('sensor.frarik_frigorifero_time_on','costo_ciclo_frigorifero') }} €
-                  title: "Frigorifero"
+                  💰 Spesi: {{ state_attr('sensor.frarik_frigorifero_time_on','costo_ciclo_frigorifero') }} €
+
+####################################################
 
 - alias: frarik_frigorifero_off_automatico
   id: frarik_frigorifero_off_automatico
   trigger:
     - platform: time
       at: 'input_datetime.frarik_frigorifero_off_automatico'
-      id: frigo_automatico_off
+      id: auto_off
   condition: []
   action:
     - choose:
       - conditions:
         - condition: trigger
-          id: frigo_automatico_off
+          id: auto_off
         - condition: state
-          entity_id: *switch_frigo
+          entity_id: *switch_frigorifero
           state: 'on'
         sequence:
-        - entity_id: *switch_frigo
+        - entity_id: *switch_frigorifero
           service: switch.turn_off
+
+####################################################
+
 `;
 
   /* ── PKG BUILD ── */
@@ -1395,9 +1414,9 @@ automation:
     var yaml = _FRIGORIFERO_PKG_YAML
       .split('IL_TUO_SENSORE_POTENZA').join(potenza || 'sensor.non_configurato')
       .split('IL_TUO_SWITCH').join(sw || 'switch.non_configurato');
-    yaml = yaml.replace(ind + '- service: IL_TUO_MOBILE_APP_1', pushLines);
-    yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_GOOGLE_1', googleLines);
-    yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_ALEXA_1', alexaLines);
+    yaml = yaml.replace(ind + '- service: IL_TUO_MOBILE_APP', pushLines);
+    yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_GOOGLE', googleLines);
+    yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_ALEXA', alexaLines);
     return yaml;
   }
 
