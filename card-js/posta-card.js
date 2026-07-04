@@ -508,12 +508,12 @@ function _svgMailbox(count,isOpen){
 }
 
 /* ── Genera YAML con i dati utente ──────────────────────── */
-function _buildCustomPkg(sensor,google,alexa,push){
+function _buildCustomPkg(sensor,google,alexa,push,_tpl){
   var ind='          ';
   var googleLines=(google&&google.length)?google.map(function(e){return ind+'- '+e;}).join('\n'):ind+'- media_player.tv';
   var alexaLines=(alexa&&alexa.length)?alexa.map(function(e){return ind+'- '+e;}).join('\n'):ind+'- media_player.alexa';
   var pushLines=(push&&push.length)?push.map(function(s){return ind+'- service: '+s;}).join('\n'):ind+'- service: mobile_app_smartphone';
-  return _PKG_YAML
+  return (_tpl||_PKG_YAML)
     .replace('IL_TUO_SENSORE_CASSETTA',sensor||'binary_sensor.cassetta_posta')
     .replace(ind+'- IL_TUO_MEDIA_PLAYER_GOOGLE',googleLines)
     .replace(ind+'- IL_TUO_MEDIA_PLAYER_ALEXA',alexaLines)
@@ -1087,7 +1087,7 @@ if(!customElements.get('posta-card')){
 /* ══════════════════════════════════════════════════════════════
    openWizard — chiamato dallo Store quando si installa la card
    ══════════════════════════════════════════════════════════════ */
-PostaCard.openWizard=function(hass,onDone){
+PostaCard.openWizard=function(hass,onDone,_tpl){
   document.getElementById('__frk_posta_wizard__')?.remove();
   const host=document.createElement('div');
   host.id='__frk_posta_wizard__';
@@ -1245,7 +1245,7 @@ PostaCard.openWizard=function(hass,onDone){
     const gVals=_vals('google'), aVals=_vals('alexa'), pVals=_vals('push');
     const btn=sr.getElementById('wiz_install'), errBnr=sr.getElementById('wiz_inst_err');
     btn.textContent='⚙️ Installazione…'; btn.disabled=true; errBnr.style.display='none';
-    let yaml=_buildCustomPkg(sensor,gVals,aVals,pVals);
+    let yaml=_buildCustomPkg(sensor,gVals,aVals,pVals,_tpl);
     btn.textContent='⚙️ Installazione…';
     try{
       const m=location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
@@ -1294,8 +1294,8 @@ PostaCard.openWizard=function(hass,onDone){
 };
 
 /* Reinstalla il PKG con config già nota — usato per silent auto-update dallo store */
-PostaCard._buildPkgFromConfig=function(cfg){
-  return _buildCustomPkg(cfg.sensor||'',cfg.google||[],cfg.alexa||[],cfg.push||[]);
+PostaCard._buildPkgFromConfig=function(cfg,_tpl){
+  return _buildCustomPkg(cfg.sensor||'',cfg.google||[],cfg.alexa||[],cfg.push||[],_tpl);
 };
 
 /* ── registrazione customCards ── */

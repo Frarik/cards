@@ -772,7 +772,7 @@ automation:
   /* ── PKG BUILD ── */
   var _DIFF_WIZ_KEY = 'frarik_pkg_wizard_differenziata';
 
-  function _diffBuildPkg(push, google, alexa) {
+  function _diffBuildPkg(push, google, alexa, _tpl) {
     var ind = '          ';
     var pushLines = (push && push.length)
       ? push.map(function(p) { return ind + '- service: ' + p; }).join('\n')
@@ -783,7 +783,7 @@ automation:
     var alexaLines = (alexa && alexa.length)
       ? alexa.map(function(p) { return ind + '- ' + p; }).join('\n')
       : ind + '- media_player.alexa_cameretta';
-    var yaml = _DIFF_PKG_YAML;
+    var yaml = (_tpl || _DIFF_PKG_YAML);
     yaml = yaml.replace(ind + '- service: IL_TUO_MOBILE_APP', pushLines);
     yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_GOOGLE', googleLines);
     yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_ALEXA', alexaLines);
@@ -791,7 +791,7 @@ automation:
   }
 
   /* ── WIZARD ── */
-  function _diffOpenWizard(hass, onDone) {
+  function _diffOpenWizard(hass, onDone, _tpl) {
     var states = (hass && hass.states) || {};
     var allIds = Object.keys(states).sort();
     var mediaIds = allIds.filter(function(id) { return /^media_player\./.test(id); });
@@ -924,7 +924,7 @@ automation:
         var google = Array.from(sr.querySelectorAll('.google-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
         var alexa  = Array.from(sr.querySelectorAll('.alexa-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
         try { localStorage.setItem(_DIFF_WIZ_KEY, JSON.stringify({push: push, google: google, alexa: alexa})); } catch(e) {}
-        var yaml = _diffBuildPkg(push, google, alexa);
+        var yaml = _diffBuildPkg(push, google, alexa, _tpl);
         var m = location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
         var base = location.origin + (m ? m[1] : '');
         var btn = sr.getElementById('wd-install');
@@ -974,6 +974,6 @@ automation:
     update:  update,
     configure: null,
     openWizard: _diffOpenWizard,
-    _buildPkgFromConfig: function(cfg) { return _diffBuildPkg(cfg.push || [], cfg.google || [], cfg.alexa || []); },
+    _buildPkgFromConfig: function(cfg, _tpl) { return _diffBuildPkg(cfg.push || [], cfg.google || [], cfg.alexa || [], _tpl); },
   };
 })();

@@ -1431,7 +1431,7 @@ automation:
   /* ── PKG BUILD ── */
   var _MON_WIZ_KEY = 'frarik_pkg_wizard_microonde';
 
-  function _buildPkg(potenza, sw, push, google, alexa) {
+  function _buildPkg(potenza, sw, push, google, alexa, _tpl) {
     var ind = '          ';
     var pushLines = (push && push.length)
       ? push.map(function(p) { return ind + '- service: ' + p; }).join('\n')
@@ -1442,7 +1442,7 @@ automation:
     var alexaLines = (alexa && alexa.length)
       ? alexa.map(function(p) { return ind + '- ' + p; }).join('\n')
       : ind + '- media_player.alexa_cameretta';
-    var yaml = _MICROONDE_PKG_YAML
+    var yaml = (_tpl || _MICROONDE_PKG_YAML)
       .split('IL_TUO_SENSORE_POTENZA').join(potenza || 'sensor.non_configurato')
       .split('IL_TUO_SWITCH').join(sw || 'switch.non_configurato');
     yaml = yaml.replace(ind + '- service: IL_TUO_MOBILE_APP', pushLines);
@@ -1452,7 +1452,7 @@ automation:
   }
 
   /* ── WIZARD ── */
-  function _openWizard(hass, onDone) {
+  function _openWizard(hass, onDone, _tpl) {
     var states = (hass && hass.states) || {};
     var allIds = Object.keys(states).sort();
     var sensorIds = allIds.filter(function(id) { return /^sensor\./.test(id); });
@@ -1603,7 +1603,7 @@ automation:
         var google  = Array.from(sr.querySelectorAll('.google-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
         var alexa   = Array.from(sr.querySelectorAll('.alexa-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
         try { localStorage.setItem(_MON_WIZ_KEY, JSON.stringify({potenza: potenza, sw: sw, push: push, google: google, alexa: alexa})); } catch(e) {}
-        var yaml = _buildPkg(potenza, sw, push, google, alexa);
+        var yaml = _buildPkg(potenza, sw, push, google, alexa, _tpl);
         var m = location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
         var base = location.origin + (m ? m[1] : '');
         var btn = sr.getElementById('wd-install');
@@ -1641,7 +1641,7 @@ automation:
     frarik_pkg_id: 'frarik_microonde',
     frarik_pkg_version: '1.0',
     openWizard: _openWizard,
-    _buildPkgFromConfig: function(cfg) { return _buildPkg(cfg.potenza || '', cfg.sw || '', cfg.push || [], cfg.google || [], cfg.alexa || []); },
+    _buildPkgFromConfig: function(cfg, _tpl) { return _buildPkg(cfg.potenza || '', cfg.sw || '', cfg.push || [], cfg.google || [], cfg.alexa || [], _tpl); },
   };
   window.FratechCardRegistry = window.FratechCardRegistry || {};
   window.FratechCardRegistry[CARD.id] = CARD;

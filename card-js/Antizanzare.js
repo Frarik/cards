@@ -4133,12 +4133,12 @@ automation:
           title: "Anti Zanzare - Sicurezza"
           message: "✅ Area libera. Sistema riarmato e pronto."`;
 
-  function _buildPkgAZ(sw, push, pioggia) {
+  function _buildPkgAZ(sw, push, pioggia, _tpl) {
     var ind = '          ';
     var pushLines = (push && push.length)
       ? push.map(function(p) { return ind + '- service: ' + p; }).join('\n')
       : ind + '- service: mobile_app_smartphone';
-    var yaml = _AZ_PKG_YAML
+    var yaml = (_tpl || _AZ_PKG_YAML)
       .split('IL_TUO_SWITCH_AZ').join(sw || 'switch.presa_anti_zanzare')
       .split('IL_TUO_SENSORE_PIOGGIA').join(pioggia || 'sensor.probabilita_pioggia')
       .split('IL_TUO_SENSORE_ACQUA').join('sensor.consumo_acqua');
@@ -4275,7 +4275,7 @@ automation:
   }
   window._azOpenImpostazioni = _azOpenImpostazioni;
 
-  function _openWizardAZ(hass, onDone) {
+  function _openWizardAZ(hass, onDone, _tpl) {
     var states = (hass && hass.states) || {};
     var switchIds = Object.keys(states).filter(function(id) { return /^switch\./.test(id); }).sort();
     var saved = null;
@@ -4390,7 +4390,7 @@ automation:
         var base = location.origin + (m ? m[1] : '');
         var btn = sr.getElementById('wd-install');
         btn.classList.add('wd-loading'); btn.textContent = 'Installazione…';
-        var yaml = _buildPkgAZ(sw, push, '');
+        var yaml = _buildPkgAZ(sw, push, '', _tpl);
         btn.textContent = 'Installazione…';
         fetch(base + '/api/frarik/pkg/install', {
           method: 'POST',
@@ -5187,7 +5187,7 @@ automation:
     frarik_pkg_id:      'frarik_antizanzare',
     frarik_pkg_version: '2.0',
     openWizard: _openWizardAZ,
-    _buildPkgFromConfig: function(cfg) { return _buildPkgAZ(cfg.sw || '', cfg.push || [], cfg.pioggia || ''); },
+    _buildPkgFromConfig: function(cfg, _tpl) { return _buildPkgAZ(cfg.sw || '', cfg.push || [], cfg.pioggia || '', _tpl); },
   };
   window.FratechCardRegistry = window.FratechCardRegistry || {};
   window.FratechCardRegistry[_AZ_CARD.id] = _AZ_CARD;

@@ -2088,12 +2088,12 @@ automation:
 
   var _SRV_WIZ_KEY='frarik_pkg_wizard_system-card';
 
-  function _srvBuildPkg(power,temp,cert,ventola,push){
+  function _srvBuildPkg(power,temp,cert,ventola,push,_tpl){
     var ind='          ';
     var pushLines=push&&push.length
       ?push.map(function(p){return ind+'- service: '+p;}).join('\n')
       :ind+'- service: IL_TUO_MOBILE_APP_1';
-    var yaml=_SRV_PKG_YAML
+    var yaml=(_tpl||_SRV_PKG_YAML)
       .split('IL_TUO_SENSORE_POTENZA_W').join(power||'sensor.non_configurato')
       .split('IL_TUO_SENSORE_TEMPERATURA_CPU').join(temp||'sensor.non_configurato')
       .split('IL_TUO_SENSORE_CERT_SSL').join(cert||'sensor.non_configurato')
@@ -2101,7 +2101,7 @@ automation:
     return yaml.replace(ind+'- service: IL_TUO_MOBILE_APP_1',pushLines);
   }
 
-  function _srvOpenWizard(hass,onDone){
+  function _srvOpenWizard(hass,onDone,_tpl){
     var states=(hass&&hass.states)||{};
     var allIds=Object.keys(states).sort();
     var saved=null;
@@ -2273,7 +2273,7 @@ automation:
       var cfg={power:power,temp:temp,cert:cert,ventola:ventola,push:push};
       try{localStorage.setItem(_SRV_WIZ_KEY,JSON.stringify(cfg));}catch(e){}
 
-      var yaml=_srvBuildPkg(power,temp,cert,ventola,push);
+      var yaml=_srvBuildPkg(power,temp,cert,ventola,push,_tpl);
       var _m=location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
       var basePath=location.origin+(_m?_m[1]:'');
       fetch(basePath+'/api/frarik/pkg/install',{
@@ -2304,7 +2304,7 @@ automation:
     frarik_pkg_id:'frarik_statistiche_minipc',
     frarik_pkg_version:'2.8',
     openWizard:_srvOpenWizard,
-    _buildPkgFromConfig:function(cfg){return _srvBuildPkg(cfg.power||'',cfg.temp||'',cfg.cert||'',cfg.ventola||'',cfg.push||[]);},
+    _buildPkgFromConfig:function(cfg,_tpl){return _srvBuildPkg(cfg.power||'',cfg.temp||'',cfg.cert||'',cfg.ventola||'',cfg.push||[],_tpl);},
   };
   window.FratechCardRegistry=window.FratechCardRegistry||{};
   window.FratechCardRegistry[CARD.id]=CARD;

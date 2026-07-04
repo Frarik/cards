@@ -2236,7 +2236,7 @@ automation:
                   Ricordati di rinnovare l'offerta!
 `;
 
-  function _bBuildPkg(potenza, tariffa, kw, push) {
+  function _bBuildPkg(potenza, tariffa, kw, push, _tpl) {
     var pushLines = (push && push.length)
       ? push.map(function(p) { return '          - service: ' + p; }).join('\n')
       : '          - service: mobile_app_smartphone';
@@ -2247,7 +2247,7 @@ automation:
       .replace('          - service: IL_TUO_MOBILE_APP', pushLines);
   }
 
-  function openWizard(hass, onDone) {
+  function openWizard(hass, onDone, _tpl) {
     var states = (hass && hass.states) || {};
     var allIds = Object.keys(states).sort();
     var iSt = 'width:100%;padding:8px 10px;border-radius:8px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none;margin-top:3px';
@@ -2296,7 +2296,7 @@ automation:
       var push = g3('wz-push') ? [g3('wz-push')] : null;
       var btn = ov.querySelector('#wz-install');
       btn.textContent = 'Installazione…'; btn.disabled = true;
-      var yaml = _bBuildPkg(pot, tar, kw, push);
+      var yaml = _bBuildPkg(pot, tar, kw, push, _tpl);
       var m = location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
       var base = location.origin + (m ? m[1] : '');
       fetch(base + '/api/frarik/pkg/install', {
@@ -2342,7 +2342,7 @@ automation:
     frarik_pkg_id: 'frarik_bolletta',
     frarik_pkg_version: '2.0',
     openWizard: openWizard,
-    _buildPkgFromConfig: function(cfg) { return _bBuildPkg(cfg.potenza || '', cfg.tariffa || '0.09', cfg.kw || '4.5', cfg.push || []); },
+    _buildPkgFromConfig: function(cfg, _tpl) { return _bBuildPkg(cfg.potenza || '', cfg.tariffa || '0.09', cfg.kw || '4.5', cfg.push || [], _tpl); },
   };
 
 })();

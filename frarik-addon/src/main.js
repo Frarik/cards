@@ -3475,21 +3475,35 @@ function _ghsPkgAskPopup(cardId,pkgVer,f,code,res){
     showToast('✅ Card installata — usa ➕ Aggiungi per metterla in dashboard');
   });
   /* pkg non installato → apre il wizard di configurazione */
-  sr.getElementById('pa_no').addEventListener('click',()=>{
+  sr.getElementById('pa_no').addEventListener('click',async ()=>{
     destroy();
     const _ctor=customElements.get(cardId);
     const _reg=window.FratechCardRegistry?.[cardId]??window.FratechCardRegistry?.[cardId.toLowerCase()];
     const CardClass=typeof _ctor?.openWizard==='function'?_ctor:(_reg??_ctor);
     if(typeof CardClass?.openWizard==='function'){
+      const ghTpl=await _downloadPkgRaw(pkgInfo);  // scarica template aggiornato da GitHub
       CardClass.openWizard(_haHassObj(),async ()=>{
         _savePkgVer(cardId,pkgVer);
         _ghsDoInstall(f,code,res);
         await _pkgPostInstall(cardId,pkgVer);
-      });
+      }, ghTpl||undefined);
     } else {
       _pkgGenericInstall(cardId,pkgVer,pkgInfo,f,code,res);
     }
   });
+}
+
+/* Scarica il template YAML grezzo (con IL_TUO_*) dalla cartella pkg/ su GitHub */
+async function _downloadPkgRaw(pkgInfo){
+  try{
+    const file=(pkgInfo?.file||'').split('/').pop();
+    if(!file) return null;
+    const g=_ghCfg();
+    const url=`https://raw.githubusercontent.com/${g.owner||'Frarik'}/${g.repo||'cards'}/${g.branch||'main'}/pkg/${file}?_t=${Date.now()}`;
+    const r=await fetch(url,{cache:'no-store'});
+    if(!r.ok) return null;
+    return await r.text();
+  }catch(e){ return null; }
 }
 
 /* Installazione generica per card senza openWizard(): scarica il pkg da GitHub e lo installa */
@@ -3590,13 +3604,14 @@ async function _pkgUpdateCard(cardId, silent=false){
   const savedCfg=silent?JSON.parse(localStorage.getItem(wizKey)||'null'):null;
 
   if(savedCfg){
-    /* silent reinstall usando config salvata tramite _buildPkgFromConfig o openWizard headless */
+    /* silent reinstall: scarica il template aggiornato da GitHub e applica la config salvata */
     const _ctor2=customElements.get(cardId);
     const _reg2=window.FratechCardRegistry?.[cardId]??window.FratechCardRegistry?.[cardId.toLowerCase()];
     const CardClass=typeof _ctor2?._buildPkgFromConfig==='function'?_ctor2:(_reg2??_ctor2);
     let yaml='';
     if(typeof CardClass?._buildPkgFromConfig==='function'){
-      yaml=CardClass._buildPkgFromConfig(savedCfg);
+      const ghTpl=await _downloadPkgRaw(pkgInfo);  // template aggiornato da GitHub (o null)
+      yaml=CardClass._buildPkgFromConfig(savedCfg, ghTpl||undefined);
     } else { if(!silent) showToast('⚠️ Build PKG non disponibile'); return; }
     if(!yaml){ if(!silent) showToast('⚠️ YAML PKG vuoto'); return; }
     try{

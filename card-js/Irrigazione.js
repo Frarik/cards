@@ -1677,7 +1677,7 @@ automation:
           entity_id: counter.irrigazione_cicli_giornalieri
 `;
 
-  function _buildPkgIRR(sw, push, pioggia) {
+  function _buildPkgIRR(sw, push, pioggia, _tpl) {
     var ind = '          ';
     var pushLines = (push && push.length)
       ? push.map(function(p) { return ind + '- service: ' + p; }).join('\n')
@@ -1786,7 +1786,7 @@ automation:
     if (target) target.appendChild(ov);
   }
 
-  function _openWizardIRR(hass, onDone) {
+  function _openWizardIRR(hass, onDone, _tpl) {
     var states = (hass && hass.states) || {};
     var switchIds = Object.keys(states).filter(function(id) { return /^switch\./.test(id); }).sort();
     var saved = null;
@@ -1899,7 +1899,7 @@ automation:
         try { localStorage.setItem(_IRR_WIZ_KEY, JSON.stringify({sw: sw, push: push})); } catch(e) {}
         var btn = sr.getElementById('wd-install');
         btn.classList.add('wd-loading'); btn.textContent = 'Installazione…';
-        var yaml = _buildPkgIRR(sw, push, '');
+        var yaml = _buildPkgIRR(sw, push, '', _tpl);
         btn.textContent = 'Installazione…';
         var m = location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
         var base = location.origin + (m ? m[1] : '');
@@ -2372,7 +2372,7 @@ automation:
     frarik_pkg_id:      'frarik_irrigazione',
     frarik_pkg_version: '2.0',
     openWizard: _openWizardIRR,
-    _buildPkgFromConfig: function(cfg) { return _buildPkgIRR(cfg.sw || '', cfg.push || [], cfg.pioggia || ''); },
+    _buildPkgFromConfig: function(cfg, _tpl) { return _buildPkgIRR(cfg.sw || '', cfg.push || [], cfg.pioggia || '', _tpl); },
   };
   window.FratechCardRegistry = window.FratechCardRegistry || {};
   window.FratechCardRegistry[_IRR_CARD.id] = _IRR_CARD;
