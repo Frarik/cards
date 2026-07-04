@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.94 — 2026-07-04
+
+### fix(bolletta): card v4.2 — proiezione fine mese corretta
+
+- **Bug critico rimosso**: la proiezione scalava i costi fissi (comm 6€, tr_fis 1.92€, tr_pot 8.82€) per i giorni rimanenti → risultato gonfiato (es. 148€ invece di ~55€)
+- **Nuova formula**: proietta prima i kWh (`kWh_mensili / giorni_trascorsi × giorni_nel_mese`), poi calcola la bolletta completa con la stessa formula del Simulatore
+- La proiezione ora è identica a "apri il simulatore e inserisci i kWh proiettati"
+- Fix applicato sia nella card JS (calcolo inline, nessuna dipendenza dal sensore HA) che nei template PKG Jinja (repo e installato)
+
 ## 1.7.93 — 2026-07-04
 
 ### fix(bolletta): card v4.1 — aggiornamento valori ARERA e correzione formula
