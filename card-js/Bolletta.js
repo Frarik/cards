@@ -217,22 +217,15 @@
     /* tariffa: leggi da localStorage, poi HA entity */
     var tariffaEur = (_n.tariffa !== undefined && _n.tariffa !== '') ? parseFloat(_n.tariffa) : N(S(h, c.pk_tariffa));
 
-    var raiIsJulAug = (now.getMonth() === 6 || now.getMonth() === 7);
-    var _st = load();
-    var _raiOn = !!(_st._rai_on);
+    var _raiInit = load()._rai_amt || 0;
     var baseTot = tot;
     var costoKwhStr = kwh >= 30 ? (costoKwh * 100).toFixed(2) + ' c€/kWh' : '—';
     var costoKwhCol = kwh >= 30 ? COL : 'rgba(255,255,255,.35)';
 
-    var bSt = 'font-size:11px;font-weight:700;padding:3px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.07);color:#fff;cursor:pointer';
+    var inpSt = 'width:80px;padding:5px 8px;border-radius:7px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:13px;font-family:monospace;text-align:right;outline:none;box-sizing:border-box';
     var raiRow = '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
       + '<span style="font-size:13px;color:#fff;font-weight:600">📺 Canone RAI</span>'
-      + '<div style="display:flex;align-items:center;gap:8px">'
-      + '<span id="bp-rai-val" style="font-size:13px;font-weight:700;color:' + (_raiOn && !raiIsJulAug ? '#fff' : 'rgba(255,255,255,.35)') + '">'
-        + (raiIsJulAug ? '— (lug/ago)' : (_raiOn ? rai.toFixed(2) + ' €' : '— (escluso)'))
-      + '</span>'
-      + (raiIsJulAug ? '' : '<button id="bp-rai-btn" style="' + bSt + '">' + (_raiOn ? 'Rimuovi' : '+ Includi') + '</button>')
-      + '</div>'
+      + '<input id="bp-rai-inp" type="text" inputmode="decimal" value="' + (_raiInit > 0 ? _raiInit.toFixed(2) : '') + '" placeholder="0.00 €" style="' + inpSt + '">'
       + '</div>';
 
     var content = sec('Componenti Bolletta' + (fromCalc ? ' (stimate)' : ''))
@@ -246,23 +239,17 @@
       + (gse > 0 ? row('☀️ Credito GSE', '− ' + gse.toFixed(2) + ' €', '#4ade80') : '')
       + '<div style="display:flex;justify-content:space-between;align-items:center;background:rgba(' + RGB + ',.12);border-radius:10px;padding:12px 14px;margin-top:10px">'
       + '<span style="font-size:14px;font-weight:800;color:' + COL + '">TOTALE DA PAGARE</span>'
-      + '<span id="bp-det-tot" style="font-size:18px;font-weight:900;color:' + COL + '">' + (baseTot + (_raiOn && !raiIsJulAug ? rai : 0)).toFixed(2) + ' €</span>'
+      + '<span id="bp-det-tot" style="font-size:18px;font-weight:900;color:' + COL + '">' + (baseTot + _raiInit).toFixed(2) + ' €</span>'
       + '</div>'
       + row('📆 kWh consumati', kwh.toFixed(1) + ' kWh', '#fff')
       + row('📅 Mese', MESIL[now.getMonth()] + ' ' + now.getFullYear());
 
     var ov = mkOv(popShell('🧾', 'Dettaglio Bolletta', MESIL[now.getMonth()] + ' ' + now.getFullYear(), 'bp-det-close', content), 'bp-det-close');
-    if (!raiIsJulAug) {
-      ov.querySelector('#bp-rai-btn').addEventListener('click', function() {
-        var st = load();
-        var newOn = !st._rai_on;
-        save(Object.assign({}, st, {_rai_on: newOn}));
-        ov.querySelector('#bp-rai-btn').textContent = newOn ? 'Rimuovi' : '+ Includi';
-        ov.querySelector('#bp-rai-val').textContent = newOn ? rai.toFixed(2) + ' €' : '— (escluso)';
-        ov.querySelector('#bp-rai-val').style.color = newOn ? '#fff' : 'rgba(255,255,255,.35)';
-        ov.querySelector('#bp-det-tot').textContent = (baseTot + (newOn ? rai : 0)).toFixed(2) + ' €';
-      });
-    }
+    ov.querySelector('#bp-rai-inp').addEventListener('input', function() {
+      var raiVal = N(this.value) || 0;
+      save(Object.assign({}, load(), {_rai_amt: raiVal}));
+      ov.querySelector('#bp-det-tot').textContent = (baseTot + raiVal).toFixed(2) + ' €';
+    });
   }
 
   /* ── POPUP: SIMULATORE ── */
@@ -274,12 +261,9 @@
     var bonInit  = N(S(h, c.pk_test_bonus))  || 0;
     var gseInit  = N(S(h, c.pk_credito_gse)) || 0;
 
-    function buildResult(kwh, bon, gse, inclRai) {
+    function buildResult(kwh, bon, gse, rai) {
       var b = calcBill(kwh, h, c);
-      var simNow = new Date();
-      var simJulAug = (simNow.getMonth() === 6 || simNow.getMonth() === 7);
-      var raiAmt = (!simJulAug && inclRai) ? b.rai : 0;
-      var tot = b.imp + b.acc + b.iva + raiAmt - bon - gse;
+      var tot = b.imp + b.acc + b.iva + rai - bon - gse;
       function simRow(lbl, val, col) {
         return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
           + '<span style="font-size:12px;color:' + (col || '#fff') + '">' + lbl + '</span>'
@@ -294,11 +278,7 @@
         + simRow('🔧 Oneri di Sistema', b.oneri.toFixed(2) + ' €')
         + simRow('📋 Accise', b.acc.toFixed(2) + ' €')
         + simRow('💸 IVA ' + b.iva_perc.toFixed(0) + '%', b.iva.toFixed(2) + ' €')
-        + (simJulAug
-            ? simRow('📺 Canone RAI', '— (lug/ago escluso)', 'rgba(255,255,255,.35)')
-            : (inclRai
-                ? simRow('📺 Canone RAI', b.rai.toFixed(2) + ' €')
-                : simRow('📺 Canone RAI', '— (escluso)', 'rgba(255,255,255,.35)')))
+        + (rai > 0 ? simRow('📺 Canone RAI', rai.toFixed(2) + ' €') : simRow('📺 Canone RAI', '— (non incluso)', 'rgba(255,255,255,.35)'))
         + (bon > 0 ? simRow('🎁 Bonus', '− ' + bon.toFixed(2) + ' €', '#4ade80') : '')
         + (gse > 0 ? simRow('☀️ Credito GSE', '− ' + gse.toFixed(2) + ' €', '#4ade80') : '')
         + (kwh >= 30
@@ -310,10 +290,7 @@
         + '</div>';
     }
 
-    var _simRaiOn = !!(load()._rai_on);
-    var bSim = function(on) {
-      return 'width:100%;font-size:12px;font-weight:700;padding:8px 14px;border-radius:9px;border:1px solid rgba(255,255,255,.2);background:' + (on ? COL : 'rgba(255,255,255,.07)') + ';color:' + (on ? '#000' : '#fff') + ';cursor:pointer';
-    };
+    var raiInit = load()._rai_amt || 0;
     var content = sec('Simula la tua bolletta')
       + '<div style="margin-bottom:10px">'
       + '<label style="font-size:12px;color:#fff">kWh consumati nel mese</label>'
@@ -328,33 +305,22 @@
       + '<input id="sim-gse" type="text" inputmode="decimal" value="' + gseInit.toFixed(2) + '" style="' + iSt + '" placeholder="es. 0.00">'
       + '</div>'
       + '<div style="margin-bottom:10px">'
-      + '<label style="font-size:12px;color:#fff;display:block;margin-bottom:5px">📺 Canone RAI (9 €/mese)</label>'
-      + '<button id="sim-rai-btn" data-on="' + (_simRaiOn ? '1' : '0') + '" style="' + bSim(_simRaiOn) + '">' + (_simRaiOn ? '✓ Incluso nel totale' : 'Non incluso — clicca per aggiungere') + '</button>'
+      + '<label style="font-size:12px;color:#fff">📺 Canone RAI (€)</label>'
+      + '<input id="sim-rai" type="text" inputmode="decimal" value="' + (raiInit > 0 ? raiInit.toFixed(2) : '') + '" style="' + iSt + '" placeholder="es. 9.00">'
       + '</div>'
       + '<button id="sim-calc" style="width:100%;padding:11px;border-radius:10px;background:' + COL + ';color:#000;font-size:14px;font-weight:800;border:none;cursor:pointer">Calcola Bolletta</button>'
-      + '<div id="sim-result">' + buildResult(kwhInit, bonInit, gseInit, _simRaiOn) + '</div>';
+      + '<div id="sim-result">' + buildResult(kwhInit, bonInit, gseInit, raiInit) + '</div>';
 
     var ov = mkOv(popShell('🧮', 'Simulatore Bolletta', 'Stima costi mensili', 'bp-sim-close', content), 'bp-sim-close');
-    var raiBtn = ov.querySelector('#sim-rai-btn');
-    raiBtn.addEventListener('click', function() {
-      var newOn = raiBtn.dataset.on !== '1';
-      raiBtn.dataset.on = newOn ? '1' : '0';
-      raiBtn.style.cssText = bSim(newOn);
-      raiBtn.textContent = newOn ? '✓ Incluso nel totale' : 'Non incluso — clicca per aggiungere';
-      save(Object.assign({}, load(), {_rai_on: newOn}));
-      var kwh = N(ov.querySelector('#sim-kwh').value);
-      var bon = N(ov.querySelector('#sim-bon').value);
-      var gse = N(ov.querySelector('#sim-gse').value);
-      ov.querySelector('#sim-result').innerHTML = buildResult(kwh, bon, gse, newOn);
-    });
     ov.querySelector('#sim-calc').addEventListener('click', function() {
       var kwh = N(ov.querySelector('#sim-kwh').value);
       var bon = N(ov.querySelector('#sim-bon').value);
       var gse = N(ov.querySelector('#sim-gse').value);
-      var inclRai = raiBtn.dataset.on === '1';
-      ov.querySelector('#sim-result').innerHTML = buildResult(kwh, bon, gse, inclRai);
+      var rai = N(ov.querySelector('#sim-rai').value) || 0;
+      ov.querySelector('#sim-result').innerHTML = buildResult(kwh, bon, gse, rai);
       setNum(c.pk_test_kwh, kwh);
       setNum(c.pk_test_bonus, bon);
+      save(Object.assign({}, load(), {_rai_amt: rai}));
     });
   }
 
