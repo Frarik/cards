@@ -2098,7 +2098,7 @@ automation:
       .split('IL_TUO_SENSORE_TEMPERATURA_CPU').join(temp||'sensor.non_configurato')
       .split('IL_TUO_SENSORE_CERT_SSL').join(cert||'sensor.non_configurato')
       .split('IL_TUO_SWITCH_VENTOLA_RACK').join(ventola||'switch.non_configurato');
-    return yaml.replace(ind+'- service: IL_TUO_MOBILE_APP_1',pushLines);
+    return yaml.replace(/[ 	]*- service: IL_TUO_MOBILE_APP_1/, pushLines);
   }
 
   function _srvOpenWizard(hass,onDone,_tpl){

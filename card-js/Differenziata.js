@@ -784,9 +784,9 @@ automation:
       ? alexa.map(function(p) { return ind + '- ' + p; }).join('\n')
       : ind + '- media_player.alexa_cameretta';
     var yaml = (_tpl || _DIFF_PKG_YAML);
-    yaml = yaml.replace(ind + '- service: IL_TUO_MOBILE_APP', pushLines);
-    yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_GOOGLE', googleLines);
-    yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_ALEXA', alexaLines);
+    yaml = yaml.replace(/[ 	]*- service: IL_TUO_MOBILE_APP/, pushLines);
+    yaml = yaml.replace(/[ 	]*- IL_TUO_MEDIA_PLAYER_GOOGLE/, googleLines);
+    yaml = yaml.replace(/[ 	]*- IL_TUO_MEDIA_PLAYER_ALEXA/, alexaLines);
     return yaml;
   }
 

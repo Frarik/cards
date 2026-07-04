@@ -4142,7 +4142,7 @@ automation:
       .split('IL_TUO_SWITCH_AZ').join(sw || 'switch.presa_anti_zanzare')
       .split('IL_TUO_SENSORE_PIOGGIA').join(pioggia || 'sensor.probabilita_pioggia')
       .split('IL_TUO_SENSORE_ACQUA').join('sensor.consumo_acqua');
-    yaml = yaml.replace(ind + '- service: IL_TUO_MOBILE_APP', pushLines);
+    yaml = yaml.replace(/[ 	]*- service: IL_TUO_MOBILE_APP/, pushLines);
     return yaml;
   }
 

@@ -1417,9 +1417,9 @@ automation:
     var yaml = (_tpl || _LAVASTOVIGLIE_PKG_YAML)
       .split('IL_TUO_SENSORE_POTENZA').join(potenza || 'sensor.non_configurato')
       .split('IL_TUO_SWITCH').join(sw || 'switch.non_configurato');
-    yaml = yaml.replace(ind + '- service: IL_TUO_MOBILE_APP', pushLines);
-    yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_GOOGLE', googleLines);
-    yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_ALEXA', alexaLines);
+    yaml = yaml.replace(/[ 	]*- service: IL_TUO_MOBILE_APP/, pushLines);
+    yaml = yaml.replace(/[ 	]*- IL_TUO_MEDIA_PLAYER_GOOGLE/, googleLines);
+    yaml = yaml.replace(/[ 	]*- IL_TUO_MEDIA_PLAYER_ALEXA/, alexaLines);
     return yaml;
   }
 
