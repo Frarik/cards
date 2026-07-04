@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.90 — 2026-07-04
+
+### fix(bolletta): card v3.8 — popup Dettaglio e Simulatore migliorati
+
+- **Costo effettivo/kWh**: sostituisce "Costo All-in/kWh" — mostra `—` quando i kWh consumati sono < 30 (evita di mostrare la tariffa base come se fosse il costo reale all-in)
+- **Tariffa energia**: rinominata da "Prezzo Energia" per distinguerla chiaramente dal costo effettivo/kWh (che include tutte le voci)
+- **Canone RAI**: mostra `— (lug/ago escluso)` nei mesi di luglio e agosto invece di `0.00 €`
+- **Simulatore**: risultato redesignato — lista leggibile con icone, stessa struttura del popup Dettaglio; "Costo effettivo/kWh" visibile solo se kWh ≥ 30
+
 ## 1.7.80 — 2026-07-04
 
 ### fix(bolletta): PKG — unique_id ripristinato su integration sensor

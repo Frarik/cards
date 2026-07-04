@@ -1,4 +1,4 @@
-/* frarik-version: 3.7 */
+/* frarik-version: 3.8 */
 (function () {
   'use strict';
 
@@ -217,24 +217,28 @@
     /* tariffa: leggi da localStorage, poi HA entity */
     var tariffaEur = (_n.tariffa !== undefined && _n.tariffa !== '') ? parseFloat(_n.tariffa) : N(S(h, c.pk_tariffa));
 
-    var content = sec('Componenti Bolletta' + (fromCalc ? ' (calcolate)' : ''))
+    var raiIsJulAug = (now.getMonth() === 6 || now.getMonth() === 7);
+    var costoKwhStr = kwh >= 30 ? (costoKwh * 100).toFixed(2) + ' c€/kWh' : '—';
+    var costoKwhCol = kwh >= 30 ? COL : 'rgba(255,255,255,.35)';
+
+    var content = sec('Componenti Bolletta' + (fromCalc ? ' (stimate)' : ''))
       + row('⚡ Materia Energia',  mat.toFixed(2)  + ' €', COL)
       + row('🚛 Trasporto e Rete', tras.toFixed(2) + ' €', '#fff')
       + row('🔧 Oneri di Sistema', oneri.toFixed(2)+ ' €', '#fff')
       + row('📋 Accise',           acc.toFixed(2)  + ' €', '#fff')
       + row('💸 IVA',              iva.toFixed(2)  + ' €')
-      + row('📺 Canone RAI',       rai.toFixed(2)  + ' €')
-      + (bon > 0 ? row('🎁 Bonus (pre-IVA)', '− ' + bon.toFixed(2) + ' €', '#4ade80') : '')
+      + row('📺 Canone RAI', raiIsJulAug ? '— (lug/ago escluso)' : rai.toFixed(2) + ' €', raiIsJulAug ? 'rgba(255,255,255,.35)' : '#fff')
+      + (bon > 0 ? row('🎁 Bonus', '− ' + bon.toFixed(2) + ' €', '#4ade80') : '')
       + (gse > 0 ? row('☀️ Credito GSE', '− ' + gse.toFixed(2) + ' €', '#4ade80') : '')
       + '<div style="display:flex;justify-content:space-between;align-items:center;background:rgba(' + RGB + ',.12);border-radius:10px;padding:12px 14px;margin-top:10px">'
       + '<span style="font-size:14px;font-weight:800;color:' + COL + '">TOTALE DA PAGARE</span>'
       + '<span style="font-size:18px;font-weight:900;color:' + COL + '">' + tot.toFixed(2) + ' €</span>'
       + '</div>'
-      + sec('Tariffe ' + trim)
-      + row('kWh Consumati', kwh.toFixed(1) + ' kWh', '#fff')
-      + row('Prezzo Energia', (tariffaEur * 100).toFixed(2) + ' c€/kWh', '#fff')
-      + row('Costo All-in/kWh', (costoKwh * 100).toFixed(3) + ' c€/kWh', COL)
-      + row('Mese', MESIL[now.getMonth()] + ' ' + now.getFullYear());
+      + sec('Tariffe ARERA ' + trim)
+      + row('kWh consumati', kwh.toFixed(1) + ' kWh', '#fff')
+      + row('Tariffa energia', (tariffaEur * 100).toFixed(2) + ' c€/kWh', '#fff')
+      + row('Costo effettivo/kWh', costoKwhStr, costoKwhCol)
+      + row('Mese di riferimento', MESIL[now.getMonth()] + ' ' + now.getFullYear());
 
     mkOv(popShell('🧾', 'Dettaglio Bolletta', MESIL[now.getMonth()] + ' ' + now.getFullYear(), 'bp-det-close', content), 'bp-det-close');
   }
@@ -254,20 +258,33 @@
     function buildResult(kwh, bon, gse) {
       var b = calcBill(kwh, h, c);
       var tot = b.imp + b.acc + b.iva + b.rai - bon - gse;
-      return '<div style="background:rgba(' + RGB + ',.1);border-radius:12px;padding:14px;margin-top:14px">'
-        + '<div style="font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Bolletta Simulata</div>'
-        + '<div style="font-size:36px;font-weight:900;color:' + COL + ';line-height:1">' + tot.toFixed(2) + '<span style="font-size:16px;font-weight:600;color:rgba(255,255,255,.5);margin-left:3px">€</span></div>'
-        + '<div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:4px">'
-        + '<div style="font-size:11px;color:#fff">Materia: <b style="color:#fff">' + b.mat.toFixed(2) + ' €</b></div>'
-        + '<div style="font-size:11px;color:#fff">Trasporto: <b style="color:#fff">' + b.tras.toFixed(2) + ' €</b></div>'
-        + '<div style="font-size:11px;color:#fff">Oneri: <b style="color:#fff">' + b.oneri.toFixed(2) + ' €</b></div>'
-        + '<div style="font-size:11px;color:#fff">Accise: <b style="color:#fff">' + b.acc.toFixed(2) + ' €</b></div>'
-        + '<div style="font-size:11px;color:#fff">IVA ' + b.iva_perc.toFixed(0) + '%: <b style="color:#fff">' + b.iva.toFixed(2) + ' €</b></div>'
-        + '<div style="font-size:11px;color:#fff">RAI: <b style="color:#fff">' + b.rai.toFixed(2) + ' €</b></div>'
-        + (bon > 0 ? '<div style="font-size:11px;color:#4ade80">Bonus: <b>− ' + bon.toFixed(2) + ' €</b></div>' : '')
-        + (gse > 0 ? '<div style="font-size:11px;color:#4ade80">GSE: <b>− ' + gse.toFixed(2) + ' €</b></div>' : '')
-        + '<div style="font-size:11px;color:rgba(255,255,255,.5)">€/kWh: <b style="color:' + COL + '">' + (kwh > 0 ? (tot/kwh).toFixed(4) : '—') + '</b></div>'
-        + '</div>'
+      var simNow = new Date();
+      var simJulAug = (simNow.getMonth() === 6 || simNow.getMonth() === 7);
+      function simRow(lbl, val, col) {
+        return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
+          + '<span style="font-size:12px;color:' + (col || '#fff') + '">' + lbl + '</span>'
+          + '<span style="font-size:12px;font-weight:700;color:' + (col || '#fff') + '">' + val + '</span>'
+          + '</div>';
+      }
+      return '<div style="background:rgba(' + RGB + ',.08);border:1px solid rgba(' + RGB + ',.18);border-radius:14px;padding:16px;margin-top:14px">'
+        + '<div style="font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Bolletta Simulata</div>'
+        + '<div style="font-size:36px;font-weight:900;color:' + COL + ';line-height:1;margin-bottom:14px">' + tot.toFixed(2) + '<span style="font-size:16px;font-weight:600;color:rgba(255,255,255,.45);margin-left:4px">€</span></div>'
+        + simRow('⚡ Materia Energia', b.mat.toFixed(2) + ' €', COL)
+        + simRow('🚛 Trasporto e Rete', b.tras.toFixed(2) + ' €')
+        + simRow('🔧 Oneri di Sistema', b.oneri.toFixed(2) + ' €')
+        + simRow('📋 Accise', b.acc.toFixed(2) + ' €')
+        + simRow('💸 IVA ' + b.iva_perc.toFixed(0) + '%', b.iva.toFixed(2) + ' €')
+        + (simJulAug
+            ? simRow('📺 Canone RAI', '— (lug/ago escluso)', 'rgba(255,255,255,.35)')
+            : simRow('📺 Canone RAI', b.rai.toFixed(2) + ' €'))
+        + (bon > 0 ? simRow('🎁 Bonus', '− ' + bon.toFixed(2) + ' €', '#4ade80') : '')
+        + (gse > 0 ? simRow('☀️ Credito GSE', '− ' + gse.toFixed(2) + ' €', '#4ade80') : '')
+        + (kwh >= 30
+            ? '<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,.07);display:flex;justify-content:space-between">'
+              + '<span style="font-size:11px;color:rgba(255,255,255,.5)">Costo effettivo/kWh</span>'
+              + '<span style="font-size:12px;font-weight:700;color:' + COL + '">' + (tot / kwh).toFixed(4) + ' €/kWh</span>'
+              + '</div>'
+            : '')
         + '</div>';
     }
 
