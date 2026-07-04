@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.7.97 — 2026-07-04
+
+### feat(distintivi): nuovo badge Gruppo Temperatura
+
+- **Distintivo Temperatura/Umidità**: nuovo `GruppoTemperatura.js` con design a card per ogni sensore
+- Ogni card mostra temperatura e umidità come pannelli affiancati con valore grande, colore dinamico e barra scala (0°–40° / 0%–100%)
+- **Colori dinamici**: azzurro (freddo) → verde (comfort 19-25°C) → giallo → arancio → rosso (caldo); umidità con scala analoga (40-60% = verde)
+- **Badge comfort**: 🌿 Comfort / 😊 Buono / 🌡 Attenzione / ⚠️ Critico calcolato da temp+umidità combinati
+- **Chip**: mostra range min–max°C tra tutti i sensori, colorato in base al valore più estremo
+- **Configuratore**: aggiungi quanti sensori vuoi; per ciascuno: entità temperatura, entità umidità (opzionale), nome personalizzato; autocomplete sulle entità HA
+
 ## 1.7.96 — 2026-07-04
 
 ### fix(elettrodomestici): notifiche voce italiana, push e toggle persistenti
