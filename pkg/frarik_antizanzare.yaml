@@ -734,8 +734,7 @@ counter:
 notify:
   - name: frarik_antizanzare_notify
     platform: group
-    services:
-      - service: IL_TUO_MOBILE_APP
+    services: *push_az
 
 # SENSORI TEMPLATE
 template:
@@ -1279,7 +1278,7 @@ template:
       # Sensore consumo acqua (collegato a sensore reale)
       - name: "Consumo Acqua Anti Zanzare"
         unique_id: frarik_antizanzare_consumo_acqua
-        state: "{{ states('sensor.rubinetto_esterno_volume_flow_rate') | float(0) }}"
+        state: "{{ states('IL_TUO_SENSORE_ACQUA') | float(0) }}"
         unit_of_measurement: "L/min"
         icon: mdi:water-pump
 
@@ -1528,18 +1527,17 @@ template:
       # Sensore pioggia in corso (collegato a sensore meteo reale)
       - name: "Pioggia in Corso"
         unique_id: frarik_antizanzare_pioggia_corso
-        state: "{{ states('binary_sensor.sensore_pioggia') }}"
+        state: "{{ states('IL_TUO_SENSORE_PIOGGIA') }}"
         icon: >
-          {{ 'mdi:weather-rainy' if is_state('binary_sensor.pioggia_in_corso', 'on') else 'mdi:weather-cloudy' }}
+          {{ 'mdi:weather-rainy' if states('IL_TUO_SENSORE_PIOGGIA') | float(0) > 0 else 'mdi:weather-cloudy' }}
 
       # Sensore blocco per condizioni meteo
       - name: "Blocco Meteo Attivo"
         unique_id: frarik_antizanzare_blocco_meteo
         state: >
-          {{ is_state('binary_sensor.sensore_pioggia', 'on') or 
-             states('sensor.openmeteo_precipitation_probability') | float(0) >= states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) }}
+          {{ states('IL_TUO_SENSORE_PIOGGIA') | float(0) >= states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) }}
         icon: >
-          {{ 'mdi:weather-rainy' if is_state('binary_sensor.blocco_meteo_attivo', 'on') else 'mdi:weather-partly-cloudy' }}
+          {{ 'mdi:weather-rainy' if states('IL_TUO_SENSORE_PIOGGIA') | float(0) >= states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) else 'mdi:weather-partly-cloudy' }}
 
 
 
@@ -3177,7 +3175,7 @@ automation:
         entity_id: timer.frarik_antizanzare_ciclo_timer
         to: 'active'
     action:
-      - service: IL_TUO_MOBILE_APP_1
+      - service: notify.frarik_antizanzare_notify
         data:
           message: "🦟 Ciclo Anti Zanzare Automatico Avviato. 🦟"
           title: "🦟 Anti Zanzare 🦟 "
@@ -3188,7 +3186,7 @@ automation:
         entity_id: timer.frarik_antizanzare_ciclo_timer
         to: 'idle'
     action:
-      - service: IL_TUO_MOBILE_APP_1
+      - service: notify.frarik_antizanzare_notify
         data:
           message: "🦟 Ciclo Anti Zanzare Automatico Terminato. 🦟"
           title: "🦟 Anti Zanzare 🦟 "
@@ -3199,7 +3197,7 @@ automation:
         entity_id: timer.frarik_antizanzare_manuale_timer
         to: 'active'
     action:
-      - service: IL_TUO_MOBILE_APP_1
+      - service: notify.frarik_antizanzare_notify
         data:
           message: "🦟 Ciclo Manuale Anti Zanzare Avviato. 🦟"
           title: "🦟 Anti Zanzare 🦟 "
@@ -3210,7 +3208,7 @@ automation:
         entity_id: timer.frarik_antizanzare_manuale_timer
         to: 'idle'
     action:
-      - service: IL_TUO_MOBILE_APP_1
+      - service: notify.frarik_antizanzare_notify
         data:
           message: "🦟 Ciclo Manuale Anti Zanzare Terminato. 🦟"
           title: "🦟 Anti Zanzare 🦟 "
@@ -3221,7 +3219,7 @@ automation:
         entity_id: binary_sensor.blocco_meteo_attivo
         to: 'on'
     action:
-      - service: IL_TUO_MOBILE_APP_1
+      - service: notify.frarik_antizanzare_notify
         data:
           message: "⚠️ Automazioni Anti Zanzare Bloccate da condizioni avverse ⚠️"
           title: "🦟 Anti Zanzare 🦟 "
@@ -3232,7 +3230,7 @@ automation:
         entity_id: binary_sensor.blocco_meteo_attivo
         to: 'off'
     action:
-      - service: IL_TUO_MOBILE_APP_1
+      - service: notify.frarik_antizanzare_notify
         data:
           message: "✅ Automazioni Anti Zanzare Riattivate: condizioni meteo favorevoli ✅"
           title: "🦟 Anti Zanzare 🦟"
@@ -3246,7 +3244,7 @@ automation:
       - service: switch.turn_off
         target:
           entity_id: IL_TUO_SWITCH_AZ
-      - service: IL_TUO_MOBILE_APP_1
+      - service: notify.frarik_antizanzare_notify
         data:
           message: "⚠️ Rilevata perdita nella cassetta! Controllare immediatamente. ⚠️"
           title: "🦟 Anti Zanzare 🦟 "
@@ -3265,7 +3263,7 @@ automation:
                 below: 11
                 above: 9
             sequence:
-              - service: IL_TUO_MOBILE_APP_1
+              - service: notify.frarik_antizanzare_notify
                 data:
                   message: "⚠️ 10 CICLI RIMASTI NELLA TANICA ⚠️"
                   title: "🦟 Anti Zanzare 🦟 "
@@ -3277,7 +3275,7 @@ automation:
                 below: 6
                 above: 4
             sequence:
-              - service: IL_TUO_MOBILE_APP_1
+              - service: notify.frarik_antizanzare_notify
                 data:
                   message: "⚠️ 5 CICLI RIMASTI NELLA TANICA ⚠️"
                   title: "🦟 Anti Zanzare 🦟 "
@@ -3294,7 +3292,7 @@ automation:
                       entity_id: sensor.cicli_rimanenti_questo_mese
                       below: 3
                   sequence:
-                    - service: IL_TUO_MOBILE_APP_1
+                    - service: notify.frarik_antizanzare_notify
                       data:
                         message: "⚠️ RIEMPIRE IMMEDIATAMENTE TANICA ⚠️"
                         title: "🦟 Anti Zanzare 🦟 "
@@ -3353,7 +3351,7 @@ automation:
           entity_id: input_boolean.frarik_antizanzare_automazione_attiva
 
       # 6. Notifica Push
-      - service: IL_TUO_MOBILE_APP_1
+      - service: notify.frarik_antizanzare_notify
         data:
           title: "Rilevata Persona Antizanzare"
           message: "⚠️ Stop immediato! Rilevata persona mentre la pompa era attiva."
@@ -3374,7 +3372,7 @@ automation:
           entity_id: input_boolean.frarik_antizanzare_automazione_attiva
       
       # 2. Notifica di ripristino
-      - service: IL_TUO_MOBILE_APP_1
+      - service: notify.frarik_antizanzare_notify
         data:
           title: "Anti Zanzare - Sicurezza"
           message: "✅ Area libera. Sistema riarmato e pronto."

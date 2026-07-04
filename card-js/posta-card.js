@@ -136,7 +136,7 @@ template:
   - sensor:
       - name: "Frarik Posta Versione"
         unique_id: frarik_posta_versione
-        state: "1.2"
+        state: "2.0"
         icon: mdi:package-variant-closed
 
   - binary_sensor:
@@ -347,7 +347,7 @@ automation:
                   entity_id: counter.frarik_posta_mese
 
 ###############################################################
-#  Fine package — Frarik Centro Controllo Posta v1.2
+#  Fine package — Frarik Centro Controllo Posta v2.0
 ###############################################################
 `;
 

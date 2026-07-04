@@ -5,17 +5,17 @@
 // ── Entity IDs ───────────────────────────────────────────────────────────────
 const E = {
   stato:         'sensor.stato_irrigazione',
-  autoAttiva:    'input_boolean.irrigazione_automazione_attiva',
-  manualeAttiva: 'input_boolean.irrigazione_manuale_attiva',
-  timerCiclo:    'timer.irrigazione_ciclo_timer',
-  timerManuale:  'timer.irrigazione_manuale_timer',
+  autoAttiva:    'input_boolean.frarik_irrigazione_automazione_attiva',
+  manualeAttiva: 'input_boolean.frarik_irrigazione_manuale_attiva',
+  timerCiclo:    'timer.frarik_irrigazione_ciclo_timer',
+  timerManuale:  'timer.frarik_irrigazione_manuale_timer',
   rubinetto:     'switch.rubinetto_esterno_interruttore',
   flusso:        'sensor.consumo_acqua_irrigazione',
   pioggia:       'sensor.probabilita_pioggia',
   pioggiaCors:   'binary_sensor.pioggia_in_corso',
-  durataManuale: 'input_number.irrigazione_durata_manuale',
-  cicliOggi:     'counter.irrigazione_cicli_giornalieri',
-  sogliaPioggia: 'input_number.irrigazione_soglia_pioggia',
+  durataManuale: 'input_number.frarik_irrigazione_durata_manuale',
+  cicliOggi:     'counter.frarik_irrigazione_cicli_giornalieri',
+  sogliaPioggia: 'input_number.frarik_irrigazione_soglia_pioggia',
   bloccoMeteo:   'binary_sensor.blocco_meteo_attivo',
   btnAutoStart:  'input_button.irrigazione_start_automazione',
   btnAutoStop:   'input_button.irrigazione_stop_automazione',
@@ -484,17 +484,17 @@ class IrrigazioneCard extends HTMLElement {
     const cands = []
     for (let off = 0; off < 8; off++) {
       const idx = (todayIdx + off) % 7, d = DAYS[idx]
-      if (this._g(`input_boolean.irrigazione_${d}`) !== 'on') continue
-      const numC = Math.round(parseFloat(this._g(`input_number.irrigazione_${d}_num_cicli`, '0')))
+      if (this._g(`input_boolean.frarik_irrigazione_${d}`) !== 'on') continue
+      const numC = Math.round(parseFloat(this._g(`input_number.frarik_irrigazione_${d}_num_cicli`, '0')))
       if (!numC) continue
       const dt = new Date(today); dt.setDate(today.getDate() + off)
       const dateStr = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`
       for (let c = 1; c <= numC; c++) {
-        const t = this._g(`input_datetime.irrigazione_${d}_orario_ciclo${c}`, null)
+        const t = this._g(`input_datetime.frarik_irrigazione_${d}_orario_ciclo${c}`, null)
         if (!t || t === 'unknown' || t === 'unavailable') continue
         const ts = new Date(`${dateStr}T${t.slice(0,5)}:00`).getTime()
         if (off === 0 && ts <= now) continue
-        cands.push({ ts, off, idx, time: t.slice(0,5), dur: Math.round(parseFloat(this._g(`input_number.irrigazione_${d}_durata_ciclo${c}`, '0'))) })
+        cands.push({ ts, off, idx, time: t.slice(0,5), dur: Math.round(parseFloat(this._g(`input_number.frarik_irrigazione_${d}_durata_ciclo${c}`, '0'))) })
       }
     }
     if (!cands.length) return { label:'Nessun ciclo programmato', timeLabel:'', dur:0 }
@@ -511,21 +511,21 @@ class IrrigazioneCard extends HTMLElement {
   _buildKey_() {
     if (!this._hass) return null
     const allSched = DAYS.map(d => {
-      const n = Math.round(parseFloat(this._g(`input_number.irrigazione_${d}_num_cicli`, '0')))
+      const n = Math.round(parseFloat(this._g(`input_number.frarik_irrigazione_${d}_num_cicli`, '0')))
       if (!n) return `${d}:0`
-      return `${d}:${n}:` + Array.from({length:n},(_,i)=>this._g(`input_datetime.irrigazione_${d}_orario_ciclo${i+1}`,'')).join(',')
+      return `${d}:${n}:` + Array.from({length:n},(_,i)=>this._g(`input_datetime.frarik_irrigazione_${d}_orario_ciclo${i+1}`,'')).join(',')
     }).join('|')
     const d    = DAYS[this._schedDay]
-    const numC = this._schedOpen ? Math.round(parseFloat(this._g(`input_number.irrigazione_${d}_num_cicli`,'0'))) : 0
+    const numC = this._schedOpen ? Math.round(parseFloat(this._g(`input_number.frarik_irrigazione_${d}_num_cicli`,'0'))) : 0
     const schedDur = this._schedOpen
-      ? Array.from({length:numC},(_,i)=>Math.round(parseFloat(this._g(`input_number.irrigazione_${d}_durata_ciclo${i+1}`,'0')))).join(';') : ''
+      ? Array.from({length:numC},(_,i)=>Math.round(parseFloat(this._g(`input_number.frarik_irrigazione_${d}_durata_ciclo${i+1}`,'0')))).join(';') : ''
     return [
       this._g(E.stato), this._g(E.autoAttiva), this._g(E.timerCiclo), this._g(E.timerManuale),
       this._g(E.rubinetto), this._g(E.bloccoMeteo), this._g(E.pioggiaCors),
       Math.round(parseFloat(this._g(E.cicliOggi,'0'))),
       Math.round(parseFloat(this._g(E.sogliaPioggia,'50'))),
       this._dur(),
-      DAYS.map(day=>this._g(`input_boolean.irrigazione_${day}`)==='on'?'1':'0').join(''),
+      DAYS.map(day=>this._g(`input_boolean.frarik_irrigazione_${day}`)==='on'?'1':'0').join(''),
       allSched,
       this._settingsOpen?'1':'0', this._historyOpen?'1':'0',
       this._schedOpen?'1':'0', this._schedDay, schedDur,
@@ -556,7 +556,7 @@ class IrrigazioneCard extends HTMLElement {
       case 'stopManuale':   this._svc('input_button','press',{entity_id:E.btnManStop});    break
       case 'startAuto':     this._svc('input_button','press',{entity_id:E.btnAutoStart}); break
       case 'stopAuto':      this._svc('input_button','press',{entity_id:E.btnAutoStop});  break
-      case 'toggleDay':     this._svc('input_boolean','toggle',{entity_id:`input_boolean.irrigazione_${btn.dataset.day}`}); break
+      case 'toggleDay':     this._svc('input_boolean','toggle',{entity_id:`input_boolean.frarik_irrigazione_${btn.dataset.day}`}); break
       case 'toggleAuto':    this._svc('input_boolean','toggle',{entity_id:E.autoAttiva}); break
       case 'durMinus': {
         const v = Math.max(10, this._dur()-30); this._localDur = v
@@ -577,22 +577,22 @@ class IrrigazioneCard extends HTMLElement {
         this._svc('input_number','set_value',{entity_id:E.sogliaPioggia,value:Math.min(100,cur+5)}); break
       }
       case 'numCicliMinus': {
-        const d=DAYS[this._schedDay], id=`input_number.irrigazione_${d}_num_cicli`
+        const d=DAYS[this._schedDay], id=`input_number.frarik_irrigazione_${d}_num_cicli`
         const cur=Math.round(parseFloat(this._g(id,'0')))
         this._svc('input_number','set_value',{entity_id:id,value:Math.max(0,cur-1)}); break
       }
       case 'numCicliPlus': {
-        const d=DAYS[this._schedDay], id=`input_number.irrigazione_${d}_num_cicli`
+        const d=DAYS[this._schedDay], id=`input_number.frarik_irrigazione_${d}_num_cicli`
         const cur=Math.round(parseFloat(this._g(id,'0')))
         this._svc('input_number','set_value',{entity_id:id,value:Math.min(5,cur+1)}); break
       }
       case 'durCicloMinus': {
-        const id=`input_number.irrigazione_${btn.dataset.day}_durata_ciclo${btn.dataset.ciclo}`
+        const id=`input_number.frarik_irrigazione_${btn.dataset.day}_durata_ciclo${btn.dataset.ciclo}`
         const cur=Math.round(parseFloat(this._g(id,'60')))
         this._svc('input_number','set_value',{entity_id:id,value:Math.max(10,cur-10)}); break
       }
       case 'durCicloPlus': {
-        const id=`input_number.irrigazione_${btn.dataset.day}_durata_ciclo${btn.dataset.ciclo}`
+        const id=`input_number.frarik_irrigazione_${btn.dataset.day}_durata_ciclo${btn.dataset.ciclo}`
         const cur=Math.round(parseFloat(this._g(id,'60')))
         this._svc('input_number','set_value',{entity_id:id,value:Math.min(3600,cur+10)}); break
       }
@@ -603,7 +603,7 @@ class IrrigazioneCard extends HTMLElement {
     const input = e.target.closest('[data-action="timeChange"]')
     if (!input || !this._hass || !input.value) return
     this._svc('input_datetime','set_datetime',{
-      entity_id:`input_datetime.irrigazione_${input.dataset.day}_orario_ciclo${input.dataset.ciclo}`,
+      entity_id:`input_datetime.frarik_irrigazione_${input.dataset.day}_orario_ciclo${input.dataset.ciclo}`,
       time:`${input.value}:00`,
     })
   }
@@ -625,7 +625,7 @@ class IrrigazioneCard extends HTMLElement {
     const cicliOggi  = parseInt(this._g(E.cicliOggi, '0'))
     const flusso     = parseFloat(this._g(E.flusso, '0')) || 0
     const dur        = this._dur()
-    const days       = DAYS.map(d => this._g(`input_boolean.irrigazione_${d}`) === 'on')
+    const days       = DAYS.map(d => this._g(`input_boolean.frarik_irrigazione_${d}`) === 'on')
     const rainWarn   = pioggia >= soglia
     const cardClass  = cycleOn?'st-ciclo':manOn?'st-manual':autoOn?'st-wait':blocco?'st-block':''
     const nx         = this._computeNextCycle()
@@ -730,7 +730,7 @@ class IrrigazioneCard extends HTMLElement {
     let schedHTML = ''
     if (this._schedOpen) {
       const d      = DAYS[this._schedDay]
-      const numCicli = Math.round(parseFloat(this._g(`input_number.irrigazione_${d}_num_cicli`,'0')))
+      const numCicli = Math.round(parseFloat(this._g(`input_number.frarik_irrigazione_${d}_num_cicli`,'0')))
       const tabs   = DAYS.map((day,i) =>
         `<button class="sched-tab ${i===this._schedDay?'active':''} ${days[i]?'day-on':''}"
           data-action="selectSchedDay" data-day-idx="${i}">${DAY_LBL[i]}</button>`
@@ -738,8 +738,8 @@ class IrrigazioneCard extends HTMLElement {
       const cycles = numCicli > 0
         ? Array.from({length:numCicli},(_,ci) => {
             const c      = ci+1
-            const orario = (this._g(`input_datetime.irrigazione_${d}_orario_ciclo${c}`,'08:00:00')||'08:00:00').slice(0,5)
-            const durC   = Math.round(parseFloat(this._g(`input_number.irrigazione_${d}_durata_ciclo${c}`,'120')))
+            const orario = (this._g(`input_datetime.frarik_irrigazione_${d}_orario_ciclo${c}`,'08:00:00')||'08:00:00').slice(0,5)
+            const durC   = Math.round(parseFloat(this._g(`input_number.frarik_irrigazione_${d}_durata_ciclo${c}`,'120')))
             return `<div class="cycle-row">
               <span class="cycle-num">Ciclo ${c}</span>
               <input class="time-input" type="time" value="${orario}"
@@ -909,202 +909,783 @@ window.customCards.push({ version: '1.0',
 
   var _IRR_WIZ_KEY = 'frarik_pkg_wizard_irrigazione';
 
-  var _IRR_PKG_YAML = 'input_boolean:\n'
-    + '  irrigazione_lunedi: {name: "Irrigazione Lunedì", icon: mdi:calendar}\n'
-    + '  irrigazione_martedi: {name: "Irrigazione Martedì", icon: mdi:calendar}\n'
-    + '  irrigazione_mercoledi: {name: "Irrigazione Mercoledì", icon: mdi:calendar}\n'
-    + '  irrigazione_giovedi: {name: "Irrigazione Giovedì", icon: mdi:calendar}\n'
-    + '  irrigazione_venerdi: {name: "Irrigazione Venerdì", icon: mdi:calendar}\n'
-    + '  irrigazione_sabato: {name: "Irrigazione Sabato", icon: mdi:calendar}\n'
-    + '  irrigazione_domenica: {name: "Irrigazione Domenica", icon: mdi:calendar}\n'
-    + '  irrigazione_automazione_attiva: {name: "Automazione Irrigazione Attiva", icon: mdi:autorenew}\n'
-    + '  irrigazione_manuale_attiva: {name: "Irrigazione Manuale Attiva", icon: mdi:hand-back-right}\n'
-    + '  irrigazione_notify_push: {name: "Notifiche Push Irrigazione", icon: mdi:bell}\n'
-    + '  irrigazione_notify_alexa: {name: "Notifiche Alexa Irrigazione", icon: mdi:speaker}\n'
-    + 'input_number:\n'
-    + '  irrigazione_lunedi_num_cicli: {name: "Lun N.Cicli", min: 0, max: 5, step: 1, mode: slider, icon: mdi:counter}\n'
-    + '  irrigazione_lunedi_durata_ciclo1: {name: "Lun C1 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_lunedi_durata_ciclo2: {name: "Lun C2 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_lunedi_durata_ciclo3: {name: "Lun C3 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_lunedi_durata_ciclo4: {name: "Lun C4 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_lunedi_durata_ciclo5: {name: "Lun C5 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_martedi_num_cicli: {name: "Mar N.Cicli", min: 0, max: 5, step: 1, mode: slider, icon: mdi:counter}\n'
-    + '  irrigazione_martedi_durata_ciclo1: {name: "Mar C1 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_martedi_durata_ciclo2: {name: "Mar C2 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_martedi_durata_ciclo3: {name: "Mar C3 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_martedi_durata_ciclo4: {name: "Mar C4 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_martedi_durata_ciclo5: {name: "Mar C5 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_mercoledi_num_cicli: {name: "Mer N.Cicli", min: 0, max: 5, step: 1, mode: slider, icon: mdi:counter}\n'
-    + '  irrigazione_mercoledi_durata_ciclo1: {name: "Mer C1 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_mercoledi_durata_ciclo2: {name: "Mer C2 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_mercoledi_durata_ciclo3: {name: "Mer C3 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_mercoledi_durata_ciclo4: {name: "Mer C4 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_mercoledi_durata_ciclo5: {name: "Mer C5 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_giovedi_num_cicli: {name: "Gio N.Cicli", min: 0, max: 5, step: 1, mode: slider, icon: mdi:counter}\n'
-    + '  irrigazione_giovedi_durata_ciclo1: {name: "Gio C1 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_giovedi_durata_ciclo2: {name: "Gio C2 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_giovedi_durata_ciclo3: {name: "Gio C3 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_giovedi_durata_ciclo4: {name: "Gio C4 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_giovedi_durata_ciclo5: {name: "Gio C5 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_venerdi_num_cicli: {name: "Ven N.Cicli", min: 0, max: 5, step: 1, mode: slider, icon: mdi:counter}\n'
-    + '  irrigazione_venerdi_durata_ciclo1: {name: "Ven C1 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_venerdi_durata_ciclo2: {name: "Ven C2 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_venerdi_durata_ciclo3: {name: "Ven C3 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_venerdi_durata_ciclo4: {name: "Ven C4 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_venerdi_durata_ciclo5: {name: "Ven C5 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_sabato_num_cicli: {name: "Sab N.Cicli", min: 0, max: 5, step: 1, mode: slider, icon: mdi:counter}\n'
-    + '  irrigazione_sabato_durata_ciclo1: {name: "Sab C1 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_sabato_durata_ciclo2: {name: "Sab C2 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_sabato_durata_ciclo3: {name: "Sab C3 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_sabato_durata_ciclo4: {name: "Sab C4 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_sabato_durata_ciclo5: {name: "Sab C5 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_domenica_num_cicli: {name: "Dom N.Cicli", min: 0, max: 5, step: 1, mode: slider, icon: mdi:counter}\n'
-    + '  irrigazione_domenica_durata_ciclo1: {name: "Dom C1 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_domenica_durata_ciclo2: {name: "Dom C2 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_domenica_durata_ciclo3: {name: "Dom C3 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_domenica_durata_ciclo4: {name: "Dom C4 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_domenica_durata_ciclo5: {name: "Dom C5 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  irrigazione_durata_manuale: {name: "Durata Manuale Irrigazione", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec, icon: mdi:timer-cog}\n'
-    + '  irrigazione_soglia_pioggia: {name: "Soglia Pioggia %", min: 0, max: 100, step: 5, mode: slider, unit_of_measurement: "%", icon: mdi:weather-rainy}\n'
-    + 'input_datetime:\n'
-    + '  irrigazione_lunedi_orario_ciclo1: {name: "Lun C1 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_lunedi_orario_ciclo2: {name: "Lun C2 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_lunedi_orario_ciclo3: {name: "Lun C3 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_lunedi_orario_ciclo4: {name: "Lun C4 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_lunedi_orario_ciclo5: {name: "Lun C5 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_martedi_orario_ciclo1: {name: "Mar C1 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_martedi_orario_ciclo2: {name: "Mar C2 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_martedi_orario_ciclo3: {name: "Mar C3 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_martedi_orario_ciclo4: {name: "Mar C4 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_martedi_orario_ciclo5: {name: "Mar C5 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_mercoledi_orario_ciclo1: {name: "Mer C1 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_mercoledi_orario_ciclo2: {name: "Mer C2 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_mercoledi_orario_ciclo3: {name: "Mer C3 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_mercoledi_orario_ciclo4: {name: "Mer C4 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_mercoledi_orario_ciclo5: {name: "Mer C5 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_giovedi_orario_ciclo1: {name: "Gio C1 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_giovedi_orario_ciclo2: {name: "Gio C2 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_giovedi_orario_ciclo3: {name: "Gio C3 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_giovedi_orario_ciclo4: {name: "Gio C4 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_giovedi_orario_ciclo5: {name: "Gio C5 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_venerdi_orario_ciclo1: {name: "Ven C1 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_venerdi_orario_ciclo2: {name: "Ven C2 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_venerdi_orario_ciclo3: {name: "Ven C3 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_venerdi_orario_ciclo4: {name: "Ven C4 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_venerdi_orario_ciclo5: {name: "Ven C5 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_sabato_orario_ciclo1: {name: "Sab C1 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_sabato_orario_ciclo2: {name: "Sab C2 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_sabato_orario_ciclo3: {name: "Sab C3 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_sabato_orario_ciclo4: {name: "Sab C4 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_sabato_orario_ciclo5: {name: "Sab C5 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_domenica_orario_ciclo1: {name: "Dom C1 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_domenica_orario_ciclo2: {name: "Dom C2 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_domenica_orario_ciclo3: {name: "Dom C3 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_domenica_orario_ciclo4: {name: "Dom C4 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_domenica_orario_ciclo5: {name: "Dom C5 Orario", has_date: false, has_time: true}\n'
-    + '  irrigazione_orario_inizio_notifiche: {name: "Orario Inizio Notifiche", has_date: false, has_time: true}\n'
-    + '  irrigazione_orario_fine_notifiche: {name: "Orario Fine Notifiche", has_date: false, has_time: true}\n'
-    + 'input_button:\n'
-    + '  irrigazione_start_automazione: {name: "Avvia Automazione Irrigazione", icon: mdi:play-circle}\n'
-    + '  irrigazione_stop_automazione: {name: "Ferma Automazione Irrigazione", icon: mdi:stop-circle}\n'
-    + '  irrigazione_start_manuale: {name: "Avvia Irrigazione Manuale", icon: mdi:play-circle-outline}\n'
-    + '  irrigazione_stop_manuale: {name: "Ferma Irrigazione Manuale", icon: mdi:stop-circle-outline}\n'
-    + 'timer:\n'
-    + '  irrigazione_ciclo_timer: {name: "Timer Ciclo Irrigazione", icon: mdi:clock, restore: true}\n'
-    + '  irrigazione_manuale_timer: {name: "Timer Irrigazione Manuale", icon: mdi:hand-back-right, restore: true}\n'
-    + 'counter:\n'
-    + '  irrigazione_cicli_giornalieri: {name: "Cicli Irrigazione Oggi", step: 1, icon: mdi:counter}\n'
-    + 'template:\n'
-    + '  - sensor:\n'
-    + '      - name: "Stato Irrigazione"\n'
-    + '        unique_id: irrigazione_stato_sistema\n'
-    + '        state: >\n'
-    + '          {% if is_state(\'input_boolean.irrigazione_manuale_attiva\', \'on\') %}\n'
-    + '            Manuale Attiva\n'
-    + '          {% elif is_state(\'timer.irrigazione_ciclo_timer\', \'active\') %}\n'
-    + '            Ciclo in Corso\n'
-    + '          {% elif is_state(\'input_boolean.irrigazione_automazione_attiva\', \'on\') %}\n'
-    + '            Automazione Attiva\n'
-    + '          {% else %}\n'
-    + '            Spenta\n'
-    + '          {% endif %}\n'
-    + '        icon: mdi:sprinkler\n'
-    + 'automation:\n'
-    + '  - id: irrigazione_avvio_automazione\n'
-    + '    alias: "Irrigazione - Avvio Automazione"\n'
-    + '    trigger:\n'
-    + '      - platform: state\n'
-    + '        entity_id: input_button.irrigazione_start_automazione\n'
-    + '    action:\n'
-    + '      - service: input_boolean.turn_on\n'
-    + '        target: {entity_id: input_boolean.irrigazione_automazione_attiva}\n'
-    + '  - id: irrigazione_stop_automazione_handler\n'
-    + '    alias: "Irrigazione - Stop Automazione"\n'
-    + '    trigger:\n'
-    + '      - platform: state\n'
-    + '        entity_id: input_button.irrigazione_stop_automazione\n'
-    + '    action:\n'
-    + '      - service: input_boolean.turn_off\n'
-    + '        target: {entity_id: input_boolean.irrigazione_automazione_attiva}\n'
-    + '      - service: timer.cancel\n'
-    + '        target: {entity_id: timer.irrigazione_ciclo_timer}\n'
-    + '  - id: irrigazione_avvio_manuale\n'
-    + '    alias: "Irrigazione - Avvio Manuale"\n'
-    + '    trigger:\n'
-    + '      - platform: state\n'
-    + '        entity_id: input_button.irrigazione_start_manuale\n'
-    + '    action:\n'
-    + '      - service: input_boolean.turn_on\n'
-    + '        target: {entity_id: input_boolean.irrigazione_manuale_attiva}\n'
-    + '      - service: timer.start\n'
-    + '        target: {entity_id: timer.irrigazione_manuale_timer}\n'
-    + '        data:\n'
-    + '          duration: "{{ states(\'input_number.irrigazione_durata_manuale\') | int(60) }}"\n'
-    + '      - service: switch.turn_on\n'
-    + '        target: {entity_id: IL_TUO_SWITCH_IRR}\n'
-    + '  - id: irrigazione_stop_manuale_handler\n'
-    + '    alias: "Irrigazione - Stop Manuale"\n'
-    + '    trigger:\n'
-    + '      - platform: state\n'
-    + '        entity_id: input_button.irrigazione_stop_manuale\n'
-    + '    action:\n'
-    + '      - service: input_boolean.turn_off\n'
-    + '        target: {entity_id: input_boolean.irrigazione_manuale_attiva}\n'
-    + '      - service: timer.cancel\n'
-    + '        target: {entity_id: timer.irrigazione_manuale_timer}\n'
-    + '      - service: switch.turn_off\n'
-    + '        target: {entity_id: IL_TUO_SWITCH_IRR}\n'
-    + '  - id: irrigazione_timer_ciclo_finito\n'
-    + '    alias: "Irrigazione - Timer Ciclo Finito"\n'
-    + '    trigger:\n'
-    + '      - platform: event\n'
-    + '        event_type: timer.finished\n'
-    + '        event_data: {entity_id: timer.irrigazione_ciclo_timer}\n'
-    + '    action:\n'
-    + '      - service: switch.turn_off\n'
-    + '        target: {entity_id: IL_TUO_SWITCH_IRR}\n'
-    + '  - id: irrigazione_timer_manuale_finito\n'
-    + '    alias: "Irrigazione - Timer Manuale Finito"\n'
-    + '    trigger:\n'
-    + '      - platform: event\n'
-    + '        event_type: timer.finished\n'
-    + '        event_data: {entity_id: timer.irrigazione_manuale_timer}\n'
-    + '    action:\n'
-    + '      - service: input_boolean.turn_off\n'
-    + '        target: {entity_id: input_boolean.irrigazione_manuale_attiva}\n'
-    + '      - service: switch.turn_off\n'
-    + '        target: {entity_id: IL_TUO_SWITCH_IRR}\n'
-    + '  - id: irrigazione_reset_giornaliero\n'
-    + '    alias: "Irrigazione - Reset Cicli Giornalieri"\n'
-    + '    trigger:\n'
-    + '      - platform: time\n'
-    + '        at: "00:00:00"\n'
-    + '    action:\n'
-    + '      - service: counter.reset\n'
-    + '        target: {entity_id: counter.irrigazione_cicli_giornalieri}\n';
+  var _IRR_PKG_YAML = `###############################################################
+#                                                             #
+#   ███████╗██████╗  █████╗ ██████╗ ██╗██╗  ██╗             #
+#   ██╔════╝██╔══██╗██╔══██╗██╔══██╗██║██║ ██╔╝             #
+#   █████╗  ██████╔╝███████║██████╔╝██║█████╔╝              #
+#   ██╔══╝  ██╔══██╗██╔══██║██╔══██╗██║██╔═██╗              #
+#   ██║     ██║  ██║██║  ██║██║  ██║██║██║  ██╗             #
+#   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝            #
+#                                                             #
+#   Package: Centro Controllo Irrigazione                     #
+#   Versione: 2.0  |  Frarik / Fratech                       #
+#                                                             #
+###############################################################
 
-  function _buildPkgIRR(sw, push) {
-    return _IRR_PKG_YAML.split('IL_TUO_SWITCH_IRR').join(sw || 'switch.rubinetto_esterno_interruttore');
+homeassistant:
+  customize:
+    package.node_anchors:
+      customize: &customize
+        package: 'Frarik — Centro Controllo Irrigazione'
+        author: 'Frarik / Fratech'
+        version: '2.0'
+
+      setting:
+        Sensore Pioggia: &sensore_pioggia_irr "IL_TUO_SENSORE_PIOGGIA"
+        Device push: &push_irr
+          - service: IL_TUO_MOBILE_APP
+        Device Alexa: &alexa_irr
+          - IL_TUO_MEDIA_PLAYER_ALEXA
+
+# INPUT BOOLEAN - Giorni attivi
+input_boolean:
+  frarik_irrigazione_lunedi:
+    name: "Irrigazione Lunedì"
+    icon: mdi:calendar
+  frarik_irrigazione_martedi:
+    name: "Irrigazione Martedì"
+    icon: mdi:calendar
+  frarik_irrigazione_mercoledi:
+    name: "Irrigazione Mercoledì"
+    icon: mdi:calendar
+  frarik_irrigazione_giovedi:
+    name: "Irrigazione Giovedì"
+    icon: mdi:calendar
+  frarik_irrigazione_venerdi:
+    name: "Irrigazione Venerdì"
+    icon: mdi:calendar
+  frarik_irrigazione_sabato:
+    name: "Irrigazione Sabato"
+    icon: mdi:calendar
+  frarik_irrigazione_domenica:
+    name: "Irrigazione Domenica"
+    icon: mdi:calendar
+
+  frarik_irrigazione_automazione_attiva:
+    name: "Automazione Irrigazione Attiva"
+    icon: mdi:autorenew
+  frarik_irrigazione_manuale_attiva:
+    name: "Irrigazione Manuale Attiva"
+    icon: mdi:hand-back-right
+  frarik_irrigazione_notify_push:
+    name: "Notifiche Push Irrigazione"
+    icon: mdi:bell
+  frarik_irrigazione_notify_alexa:
+    name: "Notifiche Alexa Irrigazione"
+    icon: mdi:speaker
+
+# INPUT NUMBER - Cicli per giorno
+input_number:
+  # LUNEDÌ
+  frarik_irrigazione_lunedi_num_cicli:
+    name: "Lunedì - Numero Cicli"
+    min: 0
+    max: 5
+    step: 1
+    mode: slider
+    icon: mdi:counter
+  frarik_irrigazione_lunedi_durata_ciclo1:
+    name: "Lunedì - Durata Ciclo 1"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  frarik_irrigazione_lunedi_durata_ciclo2:
+    name: "Lunedì - Durata Ciclo 2"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  frarik_irrigazione_lunedi_durata_ciclo3:
+    name: "Lunedì - Durata Ciclo 3"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  frarik_irrigazione_lunedi_durata_ciclo4:
+    name: "Lunedì - Durata Ciclo 4"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  frarik_irrigazione_lunedi_durata_ciclo5:
+    name: "Lunedì - Durata Ciclo 5"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  # MARTEDÌ
+  frarik_irrigazione_martedi_num_cicli:
+    name: "Martedì - Numero Cicli"
+    min: 0
+    max: 5
+    step: 1
+    mode: slider
+    icon: mdi:counter
+  frarik_irrigazione_martedi_durata_ciclo1:
+    name: "Martedì - Durata Ciclo 1"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  frarik_irrigazione_martedi_durata_ciclo2:
+    name: "Martedì - Durata Ciclo 2"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  frarik_irrigazione_martedi_durata_ciclo3:
+    name: "Martedì - Durata Ciclo 3"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  frarik_irrigazione_martedi_durata_ciclo4:
+    name: "Martedì - Durata Ciclo 4"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  frarik_irrigazione_martedi_durata_ciclo5:
+    name: "Martedì - Durata Ciclo 5"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  # MERCOLEDÌ
+  frarik_irrigazione_mercoledi_num_cicli:
+    name: "Mercoledì - Numero Cicli"
+    min: 0
+    max: 5
+    step: 1
+    mode: slider
+    icon: mdi:counter
+  frarik_irrigazione_mercoledi_durata_ciclo1:
+    name: "Mercoledì - Durata Ciclo 1"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  frarik_irrigazione_mercoledi_durata_ciclo2:
+    name: "Mercoledì - Durata Ciclo 2"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  frarik_irrigazione_mercoledi_durata_ciclo3:
+    name: "Mercoledì - Durata Ciclo 3"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  frarik_irrigazione_mercoledi_durata_ciclo4:
+    name: "Mercoledì - Durata Ciclo 4"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  frarik_irrigazione_mercoledi_durata_ciclo5:
+    name: "Mercoledì - Durata Ciclo 5"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  # GIOVEDÌ
+  frarik_irrigazione_giovedi_num_cicli:
+    name: "Giovedì - Numero Cicli"
+    min: 0
+    max: 5
+    step: 1
+    mode: slider
+    icon: mdi:counter
+  frarik_irrigazione_giovedi_durata_ciclo1:
+    name: "Giovedì - Durata Ciclo 1"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  frarik_irrigazione_giovedi_durata_ciclo2:
+    name: "Giovedì - Durata Ciclo 2"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  frarik_irrigazione_giovedi_durata_ciclo3:
+    name: "Giovedì - Durata Ciclo 3"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  frarik_irrigazione_giovedi_durata_ciclo4:
+    name: "Giovedì - Durata Ciclo 4"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  frarik_irrigazione_giovedi_durata_ciclo5:
+    name: "Giovedì - Durata Ciclo 5"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  # VENERDÌ
+  frarik_irrigazione_venerdi_num_cicli:
+    name: "Venerdì - Numero Cicli"
+    min: 0
+    max: 5
+    step: 1
+    mode: slider
+    icon: mdi:counter
+  frarik_irrigazione_venerdi_durata_ciclo1:
+    name: "Venerdì - Durata Ciclo 1"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  frarik_irrigazione_venerdi_durata_ciclo2:
+    name: "Venerdì - Durata Ciclo 2"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  frarik_irrigazione_venerdi_durata_ciclo3:
+    name: "Venerdì - Durata Ciclo 3"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  frarik_irrigazione_venerdi_durata_ciclo4:
+    name: "Venerdì - Durata Ciclo 4"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  frarik_irrigazione_venerdi_durata_ciclo5:
+    name: "Venerdì - Durata Ciclo 5"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  # SABATO
+  frarik_irrigazione_sabato_num_cicli:
+    name: "Sabato - Numero Cicli"
+    min: 0
+    max: 5
+    step: 1
+    mode: slider
+    icon: mdi:counter
+  frarik_irrigazione_sabato_durata_ciclo1:
+    name: "Sabato - Durata Ciclo 1"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  frarik_irrigazione_sabato_durata_ciclo2:
+    name: "Sabato - Durata Ciclo 2"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  frarik_irrigazione_sabato_durata_ciclo3:
+    name: "Sabato - Durata Ciclo 3"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  frarik_irrigazione_sabato_durata_ciclo4:
+    name: "Sabato - Durata Ciclo 4"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  frarik_irrigazione_sabato_durata_ciclo5:
+    name: "Sabato - Durata Ciclo 5"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  # DOMENICA
+  frarik_irrigazione_domenica_num_cicli:
+    name: "Domenica - Numero Cicli"
+    min: 0
+    max: 5
+    step: 1
+    mode: slider
+    icon: mdi:counter
+  frarik_irrigazione_domenica_durata_ciclo1:
+    name: "Domenica - Durata Ciclo 1"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  frarik_irrigazione_domenica_durata_ciclo2:
+    name: "Domenica - Durata Ciclo 2"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  frarik_irrigazione_domenica_durata_ciclo3:
+    name: "Domenica - Durata Ciclo 3"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  frarik_irrigazione_domenica_durata_ciclo4:
+    name: "Domenica - Durata Ciclo 4"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+  frarik_irrigazione_domenica_durata_ciclo5:
+    name: "Domenica - Durata Ciclo 5"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  frarik_irrigazione_durata_manuale:
+    name: "Durata Irrigazione Manuale"
+    min: 10
+    max: 7200
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer-cog
+
+  frarik_irrigazione_soglia_pioggia:
+    name: "Soglia Probabilità Pioggia (%)"
+    min: 0
+    max: 100
+    step: 5
+    mode: slider
+    unit_of_measurement: "%"
+    icon: mdi:weather-rainy
+
+# INPUT DATETIME - Orari cicli
+input_datetime:
+  # LUNEDÌ
+  frarik_irrigazione_lunedi_orario_ciclo1:
+    name: "Lunedì - Orario Ciclo 1"
+    has_date: false
+    has_time: true
+  frarik_irrigazione_lunedi_orario_ciclo2:
+    name: "Lunedì - Orario Ciclo 2"
+    has_date: false
+    has_time: true
+  frarik_irrigazione_lunedi_orario_ciclo3:
+    name: "Lunedì - Orario Ciclo 3"
+    has_date: false
+    has_time: true
+  frarik_irrigazione_lunedi_orario_ciclo4:
+    name: "Lunedì - Orario Ciclo 4"
+    has_date: false
+    has_time: true
+  frarik_irrigazione_lunedi_orario_ciclo5:
+    name: "Lunedì - Orario Ciclo 5"
+    has_date: false
+    has_time: true
+  # MARTEDÌ
+  frarik_irrigazione_martedi_orario_ciclo1:
+    name: "Martedì - Orario Ciclo 1"
+    has_date: false
+    has_time: true
+  frarik_irrigazione_martedi_orario_ciclo2:
+    name: "Martedì - Orario Ciclo 2"
+    has_date: false
+    has_time: true
+  frarik_irrigazione_martedi_orario_ciclo3:
+    name: "Martedì - Orario Ciclo 3"
+    has_date: false
+    has_time: true
+  frarik_irrigazione_martedi_orario_ciclo4:
+    name: "Martedì - Orario Ciclo 4"
+    has_date: false
+    has_time: true
+  frarik_irrigazione_martedi_orario_ciclo5:
+    name: "Martedì - Orario Ciclo 5"
+    has_date: false
+    has_time: true
+  # MERCOLEDÌ
+  frarik_irrigazione_mercoledi_orario_ciclo1:
+    name: "Mercoledì - Orario Ciclo 1"
+    has_date: false
+    has_time: true
+  frarik_irrigazione_mercoledi_orario_ciclo2:
+    name: "Mercoledì - Orario Ciclo 2"
+    has_date: false
+    has_time: true
+  frarik_irrigazione_mercoledi_orario_ciclo3:
+    name: "Mercoledì - Orario Ciclo 3"
+    has_date: false
+    has_time: true
+  frarik_irrigazione_mercoledi_orario_ciclo4:
+    name: "Mercoledì - Orario Ciclo 4"
+    has_date: false
+    has_time: true
+  frarik_irrigazione_mercoledi_orario_ciclo5:
+    name: "Mercoledì - Orario Ciclo 5"
+    has_date: false
+    has_time: true
+  # GIOVEDÌ
+  frarik_irrigazione_giovedi_orario_ciclo1:
+    name: "Giovedì - Orario Ciclo 1"
+    has_date: false
+    has_time: true
+  frarik_irrigazione_giovedi_orario_ciclo2:
+    name: "Giovedì - Orario Ciclo 2"
+    has_date: false
+    has_time: true
+  frarik_irrigazione_giovedi_orario_ciclo3:
+    name: "Giovedì - Orario Ciclo 3"
+    has_date: false
+    has_time: true
+  frarik_irrigazione_giovedi_orario_ciclo4:
+    name: "Giovedì - Orario Ciclo 4"
+    has_date: false
+    has_time: true
+  frarik_irrigazione_giovedi_orario_ciclo5:
+    name: "Giovedì - Orario Ciclo 5"
+    has_date: false
+    has_time: true
+  # VENERDÌ
+  frarik_irrigazione_venerdi_orario_ciclo1:
+    name: "Venerdì - Orario Ciclo 1"
+    has_date: false
+    has_time: true
+  frarik_irrigazione_venerdi_orario_ciclo2:
+    name: "Venerdì - Orario Ciclo 2"
+    has_date: false
+    has_time: true
+  frarik_irrigazione_venerdi_orario_ciclo3:
+    name: "Venerdì - Orario Ciclo 3"
+    has_date: false
+    has_time: true
+  frarik_irrigazione_venerdi_orario_ciclo4:
+    name: "Venerdì - Orario Ciclo 4"
+    has_date: false
+    has_time: true
+  frarik_irrigazione_venerdi_orario_ciclo5:
+    name: "Venerdì - Orario Ciclo 5"
+    has_date: false
+    has_time: true
+  # SABATO
+  frarik_irrigazione_sabato_orario_ciclo1:
+    name: "Sabato - Orario Ciclo 1"
+    has_date: false
+    has_time: true
+  frarik_irrigazione_sabato_orario_ciclo2:
+    name: "Sabato - Orario Ciclo 2"
+    has_date: false
+    has_time: true
+  frarik_irrigazione_sabato_orario_ciclo3:
+    name: "Sabato - Orario Ciclo 3"
+    has_date: false
+    has_time: true
+  frarik_irrigazione_sabato_orario_ciclo4:
+    name: "Sabato - Orario Ciclo 4"
+    has_date: false
+    has_time: true
+  frarik_irrigazione_sabato_orario_ciclo5:
+    name: "Sabato - Orario Ciclo 5"
+    has_date: false
+    has_time: true
+  # DOMENICA
+  frarik_irrigazione_domenica_orario_ciclo1:
+    name: "Domenica - Orario Ciclo 1"
+    has_date: false
+    has_time: true
+  frarik_irrigazione_domenica_orario_ciclo2:
+    name: "Domenica - Orario Ciclo 2"
+    has_date: false
+    has_time: true
+  frarik_irrigazione_domenica_orario_ciclo3:
+    name: "Domenica - Orario Ciclo 3"
+    has_date: false
+    has_time: true
+  frarik_irrigazione_domenica_orario_ciclo4:
+    name: "Domenica - Orario Ciclo 4"
+    has_date: false
+    has_time: true
+  frarik_irrigazione_domenica_orario_ciclo5:
+    name: "Domenica - Orario Ciclo 5"
+    has_date: false
+    has_time: true
+  frarik_irrigazione_orario_inizio_notifiche:
+    name: "Orario Inizio Notifiche Irrigazione"
+    has_date: false
+    has_time: true
+  frarik_irrigazione_orario_fine_notifiche:
+    name: "Orario Fine Notifiche Irrigazione"
+    has_date: false
+    has_time: true
+
+# INPUT TEXT
+input_text:
+  frarik_irrigazione_nome:
+    name: "Nome Irrigazione"
+    max: 64
+
+# INPUT BUTTON - Comandi
+input_button:
+  frarik_irrigazione_start_automazione:
+    name: "Avvia Automazione Irrigazione"
+    icon: mdi:play-circle
+  frarik_irrigazione_stop_automazione:
+    name: "Ferma Automazione Irrigazione"
+    icon: mdi:stop-circle
+  frarik_irrigazione_start_manuale:
+    name: "Avvia Irrigazione Manuale"
+    icon: mdi:play-circle-outline
+  frarik_irrigazione_stop_manuale:
+    name: "Ferma Irrigazione Manuale"
+    icon: mdi:stop-circle-outline
+
+# TIMER
+timer:
+  frarik_irrigazione_ciclo_timer:
+    name: "Timer Ciclo Irrigazione"
+    icon: mdi:clock
+    restore: true
+  frarik_irrigazione_manuale_timer:
+    name: "Timer Irrigazione Manuale"
+    icon: mdi:hand-back-right
+    restore: true
+
+# COUNTER
+counter:
+  frarik_irrigazione_cicli_giornalieri:
+    name: "Cicli Irrigazione Oggi"
+    step: 1
+    icon: mdi:counter
+
+# NOTIFY GROUP
+notify:
+  - name: frarik_irrigazione_notify
+    platform: group
+    services: *push_irr
+
+# SENSORI TEMPLATE
+template:
+  - sensor:
+      - name: "Frarik Irrigazione Versione"
+        unique_id: frarik_irrigazione_versione
+        state: "2.0"
+        icon: mdi:package-variant-closed
+      - name: "Stato Irrigazione"
+        unique_id: frarik_irrigazione_stato_sistema
+        state: >
+          {% if is_state('input_boolean.frarik_irrigazione_manuale_attiva', 'on') %}
+            Manuale Attiva
+          {% elif is_state('timer.irrigazione_ciclo_timer', 'active') %}
+            Ciclo in Corso
+          {% elif is_state('input_boolean.frarik_irrigazione_automazione_attiva', 'on') %}
+            Automazione Attiva
+          {% else %}
+            Spenta
+          {% endif %}
+        icon: >
+          {% if is_state('input_boolean.frarik_irrigazione_manuale_attiva', 'on') %}
+            mdi:hand-back-right
+          {% elif is_state('timer.irrigazione_ciclo_timer', 'active') %}
+            mdi:sprinkler
+          {% elif is_state('input_boolean.frarik_irrigazione_automazione_attiva', 'on') %}
+            mdi:autorenew
+          {% else %}
+            mdi:sprinkler-variant-off
+          {% endif %}
+
+  - binary_sensor:
+      - name: "Blocco Meteo Irrigazione"
+        unique_id: frarik_irrigazione_blocco_meteo
+        state: >
+          {{ states('IL_TUO_SENSORE_PIOGGIA') | float(0) >= states('input_number.frarik_irrigazione_soglia_pioggia') | float(50) }}
+        icon: >
+          {{ 'mdi:weather-rainy' if is_state('binary_sensor.blocco_meteo_irrigazione', 'on') else 'mdi:weather-partly-cloudy' }}
+
+# AUTOMAZIONI BASE
+automation:
+  - id: frarik_irrigazione_avvio_automazione
+    alias: "Irrigazione - Avvio Automazione"
+    trigger:
+      - platform: state
+        entity_id: input_button.irrigazione_start_automazione
+    action:
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.frarik_irrigazione_automazione_attiva
+
+  - id: frarik_irrigazione_stop_automazione_handler
+    alias: "Irrigazione - Stop Automazione"
+    trigger:
+      - platform: state
+        entity_id: input_button.irrigazione_stop_automazione
+    action:
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.frarik_irrigazione_automazione_attiva
+      - service: timer.cancel
+        target:
+          entity_id: timer.irrigazione_ciclo_timer
+
+  - id: frarik_irrigazione_avvio_manuale
+    alias: "Irrigazione - Avvio Manuale"
+    trigger:
+      - platform: state
+        entity_id: input_button.irrigazione_start_manuale
+    action:
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.frarik_irrigazione_manuale_attiva
+      - service: timer.start
+        target:
+          entity_id: timer.irrigazione_manuale_timer
+        data:
+          duration: "{{ states('input_number.frarik_irrigazione_durata_manuale') | int(60) }}"
+      # Attiva il rubinetto
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH
+
+  - id: frarik_irrigazione_stop_manuale
+    alias: "Irrigazione - Stop Manuale"
+    trigger:
+      - platform: state
+        entity_id: input_button.irrigazione_stop_manuale
+    action:
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.frarik_irrigazione_manuale_attiva
+      - service: timer.cancel
+        target:
+          entity_id: timer.irrigazione_manuale_timer
+      - service: switch.turn_off
+        target:
+          entity_id: IL_TUO_SWITCH
+
+  - id: frarik_irrigazione_timer_ciclo_finito
+    alias: "Irrigazione - Timer Ciclo Finito"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.irrigazione_ciclo_timer
+    action:
+      - service: switch.turn_off
+        target:
+          entity_id: IL_TUO_SWITCH
+
+  - id: frarik_irrigazione_timer_manuale_finito
+    alias: "Irrigazione - Timer Manuale Finito"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.irrigazione_manuale_timer
+    action:
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.frarik_irrigazione_manuale_attiva
+      - service: switch.turn_off
+        target:
+          entity_id: IL_TUO_SWITCH
+
+  - id: frarik_irrigazione_reset_cicli_giornalieri
+    alias: "Irrigazione - Reset Cicli Giornalieri"
+    trigger:
+      - platform: time
+        at: "00:00:00"
+    action:
+      - service: counter.reset
+        target:
+          entity_id: counter.irrigazione_cicli_giornalieri
+`;
+
+  function _buildPkgIRR(sw, push, pioggia) {
+    var ind = '          ';
+    var pushLines = (push && push.length)
+      ? push.map(function(p) { return ind + '- service: ' + p; }).join('\n')
+      : ind + '- service: mobile_app_smartphone';
+    return _IRR_PKG_YAML
+      .split('IL_TUO_SWITCH').join(sw || 'switch.rubinetto_esterno_interruttore')
+      .split('IL_TUO_SENSORE_PIOGGIA').join(pioggia || 'sensor.probabilita_pioggia')
+      .replace(ind + '- service: IL_TUO_MOBILE_APP', pushLines);
   }
 
   function _iOpenImpostazioniHA(card) {
@@ -1318,7 +1899,7 @@ window.customCards.push({ version: '1.0',
         try { localStorage.setItem(_IRR_WIZ_KEY, JSON.stringify({sw: sw, push: push})); } catch(e) {}
         var btn = sr.getElementById('wd-install');
         btn.classList.add('wd-loading'); btn.textContent = 'Installazione…';
-        var yaml = _buildPkgIRR(sw, push);
+        var yaml = _buildPkgIRR(sw, push, '');
         btn.textContent = 'Installazione…';
         var m = location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
         var base = location.origin + (m ? m[1] : '');
@@ -1366,13 +1947,13 @@ window.customCards.push({ version: '1.0',
 
   function _iPkgDef() {
     return {
-      pk_prefix:        'irrigazione',
+      pk_prefix:        'frarik_irrigazione',
       pk_stato:         'sensor.stato_irrigazione',
-      pk_auto:          'input_boolean.irrigazione_automazione_attiva',
-      pk_manuale:       'input_boolean.irrigazione_manuale_attiva',
-      pk_timer_ciclo:   'timer.irrigazione_ciclo_timer',
-      pk_timer_manuale: 'timer.irrigazione_manuale_timer',
-      pk_cicli_oggi:    'counter.irrigazione_cicli_giornalieri',
+      pk_auto:          'input_boolean.frarik_irrigazione_automazione_attiva',
+      pk_manuale:       'input_boolean.frarik_irrigazione_manuale_attiva',
+      pk_timer_ciclo:   'timer.frarik_irrigazione_ciclo_timer',
+      pk_timer_manuale: 'timer.frarik_irrigazione_manuale_timer',
+      pk_cicli_oggi:    'counter.frarik_irrigazione_cicli_giornalieri',
       pk_acqua:         'sensor.consumo_acqua_irrigazione',
       pk_pioggia:       'sensor.probabilita_pioggia',
       pk_blocco_meteo:  'binary_sensor.blocco_meteo_irrigazione',
@@ -1701,14 +2282,14 @@ window.customCards.push({ version: '1.0',
       + fld('pk_stato','Sensore stato','sensor.stato_irrigazione')
       + fld('pk_pioggia','Probabilità pioggia','sensor.probabilita_pioggia')
       + fld('pk_blocco_meteo','Binary blocco meteo','binary_sensor.blocco_meteo_irrigazione')
-      + fld('pk_cicli_oggi','Cicli giornalieri','counter.irrigazione_cicli_giornalieri')
+      + fld('pk_cicli_oggi','Cicli giornalieri','counter.frarik_irrigazione_cicli_giornalieri')
       + fld('pk_acqua','Consumo acqua','sensor.consumo_acqua_irrigazione')
       + sec('Controllo')
-      + fld('pk_auto','Automazione boolean','input_boolean.irrigazione_automazione_attiva')
-      + fld('pk_manuale','Manuale boolean','input_boolean.irrigazione_manuale_attiva')
+      + fld('pk_auto','Automazione boolean','input_boolean.frarik_irrigazione_automazione_attiva')
+      + fld('pk_manuale','Manuale boolean','input_boolean.frarik_irrigazione_manuale_attiva')
       + fld('pk_rubinetto','Switch rubinetto','switch.rubinetto_esterno_interruttore')
-      + fld('pk_timer_ciclo','Timer ciclo','timer.irrigazione_ciclo_timer')
-      + fld('pk_timer_manuale','Timer manuale','timer.irrigazione_manuale_timer')
+      + fld('pk_timer_ciclo','Timer ciclo','timer.frarik_irrigazione_ciclo_timer')
+      + fld('pk_timer_manuale','Timer manuale','timer.frarik_irrigazione_manuale_timer')
       + sec('Pulsanti azione')
       + fld('pk_btn_auto_on','Avvia automazione','input_button.irrigazione_start_automazione')
       + fld('pk_btn_auto_off','Ferma automazione','input_button.irrigazione_stop_automazione')
@@ -1791,6 +2372,7 @@ window.customCards.push({ version: '1.0',
     frarik_pkg_id:      'frarik_irrigazione',
     frarik_pkg_version: '2.0',
     openWizard: _openWizardIRR,
+    _buildPkgFromConfig: function(cfg) { return _buildPkgIRR(cfg.sw || '', cfg.push || [], cfg.pioggia || ''); },
   };
   window.FratechCardRegistry = window.FratechCardRegistry || {};
   window.FratechCardRegistry[_IRR_CARD.id] = _IRR_CARD;

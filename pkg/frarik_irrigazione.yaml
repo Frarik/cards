@@ -628,8 +628,7 @@ counter:
 notify:
   - name: frarik_irrigazione_notify
     platform: group
-    services:
-      - service: IL_TUO_MOBILE_APP
+    services: *push_irr
 
 # SENSORI TEMPLATE
 template:
@@ -665,8 +664,7 @@ template:
       - name: "Blocco Meteo Irrigazione"
         unique_id: frarik_irrigazione_blocco_meteo
         state: >
-          {{ states('sensor.probabilita_pioggia') | float(0) >= states('input_number.frarik_irrigazione_soglia_pioggia') | float(50) or
-             is_state('binary_sensor.pioggia_in_corso', 'on') }}
+          {{ states('IL_TUO_SENSORE_PIOGGIA') | float(0) >= states('input_number.frarik_irrigazione_soglia_pioggia') | float(50) }}
         icon: >
           {{ 'mdi:weather-rainy' if is_state('binary_sensor.blocco_meteo_irrigazione', 'on') else 'mdi:weather-partly-cloudy' }}
 

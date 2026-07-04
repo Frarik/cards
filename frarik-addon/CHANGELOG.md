@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.8.2 — 2026-07-04
+
+### fix(pkg+card): PKG completi e struttura notifiche corretta — Antizanzare, Irrigazione, Bolletta, Differenziata, Posta
+
+- **Antizanzare**: YAML embedded sostituito con PKG GitHub completo (3379 righe vs 206 precedenti); notify group usa `services: *push_az`; automazioni usano `notify.frarik_antizanzare_notify`; rimossi sensori hardcoded (pioggia, acqua → placeholder `IL_TUO_SENSORE_PIOGGIA`, `IL_TUO_SENSORE_ACQUA`)
+- **Irrigazione**: YAML embedded sostituito con PKG GitHub completo (768 righe vs 194 precedenti); notify group usa `services: *push_irr`; `_buildPkgIRR` aggiornato per sostituire correttamente l'anchor push a 10 spazi con supporto multi-dispositivo
+- **Bolletta**: versione sensore corretta da `1.0` a `2.0`; PKG GitHub anchor `&push` da `[]` a `- service: IL_TUO_MOBILE_APP`
+- **Differenziata**: placeholder unificati (`IL_TUO_MEDIA_PLAYER_GOOGLE`, `IL_TUO_MEDIA_PLAYER_ALEXA`, `IL_TUO_MOBILE_APP` senza suffisso `_1`); PKG GitHub anchor corretto con liste valori
+- **Posta, Differenziata, Irrigazione**: aggiunto `_buildPkgFromConfig` per reinstall silenziosi via `_pkgUpdateCard`
+- Tutte le card ora installano il PKG completo e corretto sia dal wizard sia da reinstall automatico
+
 ## 1.8.1 — 2026-07-04
 
 ### fix(card-elettrodomestici): YAML embedded v2.0 + Jinja anchor sensore potenza

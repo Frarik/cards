@@ -44,7 +44,8 @@ homeassistant:
 
         Potenza Contrattuale: &potenza_kw 4.5
 
-        Device per notifica push: &push []
+        Device per notifica push: &push
+          - service: IL_TUO_MOBILE_APP
 
 ####################################################
 #                  NOTIFICHE                       #

@@ -754,220 +754,3396 @@ window.customCards.push({ version: '1.5',
 
   var _AZ_WIZ_KEY = 'frarik_pkg_wizard_antizanzare';
 
-  var _AZ_PKG_YAML = 'input_boolean:\n'
-    + '  frarik_antizanzare_lunedi: {name: "Anti Zanzare Lunedì", icon: mdi:calendar}\n'
-    + '  frarik_antizanzare_martedi: {name: "Anti Zanzare Martedì", icon: mdi:calendar}\n'
-    + '  frarik_antizanzare_mercoledi: {name: "Anti Zanzare Mercoledì", icon: mdi:calendar}\n'
-    + '  frarik_antizanzare_giovedi: {name: "Anti Zanzare Giovedì", icon: mdi:calendar}\n'
-    + '  frarik_antizanzare_venerdi: {name: "Anti Zanzare Venerdì", icon: mdi:calendar}\n'
-    + '  frarik_antizanzare_sabato: {name: "Anti Zanzare Sabato", icon: mdi:calendar}\n'
-    + '  frarik_antizanzare_domenica: {name: "Anti Zanzare Domenica", icon: mdi:calendar}\n'
-    + '  frarik_antizanzare_automazione_attiva: {name: "Automazione Anti Zanzare Attiva", icon: mdi:autorenew}\n'
-    + '  frarik_antizanzare_manuale_attiva: {name: "Anti Zanzare Manuale Attiva", icon: mdi:hand-back-right}\n'
-    + '  frarik_antizanzare_notify_push: {name: "Notifiche Push Anti Zanzare", icon: mdi:bell}\n'
-    + '  frarik_antizanzare_notify_alexa: {name: "Notifiche Alexa Anti Zanzare", icon: mdi:speaker}\n'
-    + '  frarik_antizanzare_presenza_attiva: {name: "Pausa per Presenza", icon: mdi:motion-sensor}\n'
-    + 'input_number:\n'
-    + '  frarik_antizanzare_lunedi_num_cicli: {name: "Lun N.Cicli", min: 0, max: 5, step: 1, mode: slider, icon: mdi:counter}\n'
-    + '  frarik_antizanzare_lunedi_durata_ciclo1: {name: "Lun C1 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_lunedi_durata_ciclo2: {name: "Lun C2 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_lunedi_durata_ciclo3: {name: "Lun C3 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_lunedi_durata_ciclo4: {name: "Lun C4 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_lunedi_durata_ciclo5: {name: "Lun C5 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_martedi_num_cicli: {name: "Mar N.Cicli", min: 0, max: 5, step: 1, mode: slider, icon: mdi:counter}\n'
-    + '  frarik_antizanzare_martedi_durata_ciclo1: {name: "Mar C1 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_martedi_durata_ciclo2: {name: "Mar C2 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_martedi_durata_ciclo3: {name: "Mar C3 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_martedi_durata_ciclo4: {name: "Mar C4 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_martedi_durata_ciclo5: {name: "Mar C5 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_mercoledi_num_cicli: {name: "Mer N.Cicli", min: 0, max: 5, step: 1, mode: slider, icon: mdi:counter}\n'
-    + '  frarik_antizanzare_mercoledi_durata_ciclo1: {name: "Mer C1 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_mercoledi_durata_ciclo2: {name: "Mer C2 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_mercoledi_durata_ciclo3: {name: "Mer C3 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_mercoledi_durata_ciclo4: {name: "Mer C4 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_mercoledi_durata_ciclo5: {name: "Mer C5 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_giovedi_num_cicli: {name: "Gio N.Cicli", min: 0, max: 5, step: 1, mode: slider, icon: mdi:counter}\n'
-    + '  frarik_antizanzare_giovedi_durata_ciclo1: {name: "Gio C1 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_giovedi_durata_ciclo2: {name: "Gio C2 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_giovedi_durata_ciclo3: {name: "Gio C3 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_giovedi_durata_ciclo4: {name: "Gio C4 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_giovedi_durata_ciclo5: {name: "Gio C5 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_venerdi_num_cicli: {name: "Ven N.Cicli", min: 0, max: 5, step: 1, mode: slider, icon: mdi:counter}\n'
-    + '  frarik_antizanzare_venerdi_durata_ciclo1: {name: "Ven C1 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_venerdi_durata_ciclo2: {name: "Ven C2 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_venerdi_durata_ciclo3: {name: "Ven C3 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_venerdi_durata_ciclo4: {name: "Ven C4 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_venerdi_durata_ciclo5: {name: "Ven C5 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_sabato_num_cicli: {name: "Sab N.Cicli", min: 0, max: 5, step: 1, mode: slider, icon: mdi:counter}\n'
-    + '  frarik_antizanzare_sabato_durata_ciclo1: {name: "Sab C1 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_sabato_durata_ciclo2: {name: "Sab C2 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_sabato_durata_ciclo3: {name: "Sab C3 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_sabato_durata_ciclo4: {name: "Sab C4 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_sabato_durata_ciclo5: {name: "Sab C5 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_domenica_num_cicli: {name: "Dom N.Cicli", min: 0, max: 5, step: 1, mode: slider, icon: mdi:counter}\n'
-    + '  frarik_antizanzare_domenica_durata_ciclo1: {name: "Dom C1 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_domenica_durata_ciclo2: {name: "Dom C2 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_domenica_durata_ciclo3: {name: "Dom C3 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_domenica_durata_ciclo4: {name: "Dom C4 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_domenica_durata_ciclo5: {name: "Dom C5 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
-    + '  frarik_antizanzare_durata_manuale: {name: "Durata Manuale", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec, icon: mdi:timer-cog}\n'
-    + '  frarik_antizanzare_soglia_pioggia: {name: "Soglia Pioggia %", min: 0, max: 100, step: 5, mode: slider, unit_of_measurement: "%", icon: mdi:weather-rainy}\n'
-    + '  frarik_antizanzare_cicli_target_mensili: {name: "Cicli Target Mensili", min: 1, max: 200, step: 1, mode: box, unit_of_measurement: cicli, icon: mdi:target}\n'
-    + '  frarik_antizanzare_soglia_vento: {name: "Soglia Vento km/h", min: 0, max: 100, step: 1, mode: slider, unit_of_measurement: "km/h", icon: mdi:weather-windy}\n'
-    + 'input_datetime:\n'
-    + '  frarik_antizanzare_lunedi_orario_ciclo1: {name: "Lun C1 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_lunedi_orario_ciclo2: {name: "Lun C2 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_lunedi_orario_ciclo3: {name: "Lun C3 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_lunedi_orario_ciclo4: {name: "Lun C4 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_lunedi_orario_ciclo5: {name: "Lun C5 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_martedi_orario_ciclo1: {name: "Mar C1 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_martedi_orario_ciclo2: {name: "Mar C2 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_martedi_orario_ciclo3: {name: "Mar C3 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_martedi_orario_ciclo4: {name: "Mar C4 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_martedi_orario_ciclo5: {name: "Mar C5 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_mercoledi_orario_ciclo1: {name: "Mer C1 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_mercoledi_orario_ciclo2: {name: "Mer C2 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_mercoledi_orario_ciclo3: {name: "Mer C3 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_mercoledi_orario_ciclo4: {name: "Mer C4 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_mercoledi_orario_ciclo5: {name: "Mer C5 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_giovedi_orario_ciclo1: {name: "Gio C1 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_giovedi_orario_ciclo2: {name: "Gio C2 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_giovedi_orario_ciclo3: {name: "Gio C3 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_giovedi_orario_ciclo4: {name: "Gio C4 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_giovedi_orario_ciclo5: {name: "Gio C5 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_venerdi_orario_ciclo1: {name: "Ven C1 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_venerdi_orario_ciclo2: {name: "Ven C2 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_venerdi_orario_ciclo3: {name: "Ven C3 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_venerdi_orario_ciclo4: {name: "Ven C4 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_venerdi_orario_ciclo5: {name: "Ven C5 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_sabato_orario_ciclo1: {name: "Sab C1 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_sabato_orario_ciclo2: {name: "Sab C2 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_sabato_orario_ciclo3: {name: "Sab C3 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_sabato_orario_ciclo4: {name: "Sab C4 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_sabato_orario_ciclo5: {name: "Sab C5 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_domenica_orario_ciclo1: {name: "Dom C1 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_domenica_orario_ciclo2: {name: "Dom C2 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_domenica_orario_ciclo3: {name: "Dom C3 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_domenica_orario_ciclo4: {name: "Dom C4 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_domenica_orario_ciclo5: {name: "Dom C5 Orario", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_orario_inizio_notifiche: {name: "Orario Inizio Notifiche", has_date: false, has_time: true}\n'
-    + '  frarik_antizanzare_orario_fine_notifiche: {name: "Orario Fine Notifiche", has_date: false, has_time: true}\n'
-    + 'input_button:\n'
-    + '  frarik_antizanzare_start_automazione: {name: "Avvia Automazione Anti Zanzare", icon: mdi:play-circle}\n'
-    + '  frarik_antizanzare_stop_automazione: {name: "Ferma Automazione Anti Zanzare", icon: mdi:stop-circle}\n'
-    + '  frarik_antizanzare_start_manuale: {name: "Avvia Anti Zanzare Manuale", icon: mdi:play-circle-outline}\n'
-    + '  frarik_antizanzare_stop_manuale: {name: "Ferma Anti Zanzare Manuale", icon: mdi:stop-circle-outline}\n'
-    + 'timer:\n'
-    + '  frarik_antizanzare_ciclo_timer: {name: "Timer Ciclo Anti Zanzare", icon: mdi:clock, restore: true}\n'
-    + '  frarik_antizanzare_manuale_timer: {name: "Timer Anti Zanzare Manuale", icon: mdi:hand-back-right, restore: true}\n'
-    + 'counter:\n'
-    + '  frarik_antizanzare_cicli_mensili: {name: "Cicli Anti Zanzare Questo Mese", step: 1, icon: mdi:counter}\n'
-    + '  frarik_antizanzare_cicli_rimanenti: {name: "Cicli Anti Zanzare Rimanenti", step: 1, icon: mdi:counter-outline}\n'
-    + 'template:\n'
-    + '  - sensor:\n'
-    + '      - name: "Stato Anti Zanzare"\n'
-    + '        unique_id: frarik_antizanzare_stato_sistema\n'
-    + '        state: >\n'
-    + '          {% if is_state(\'input_boolean.frarik_antizanzare_manuale_attiva\', \'on\') %}\n'
-    + '            Manuale Attiva\n'
-    + '          {% elif is_state(\'timer.frarik_antizanzare_ciclo_timer\', \'active\') %}\n'
-    + '            Ciclo in Corso\n'
-    + '          {% elif is_state(\'input_boolean.frarik_antizanzare_automazione_attiva\', \'on\') %}\n'
-    + '            Automazione Attiva\n'
-    + '          {% else %}\n'
-    + '            Spenta\n'
-    + '          {% endif %}\n'
-    + '        icon: mdi:sprinkler-variant\n'
-    + '  - binary_sensor:\n'
-    + '      - name: "Blocco Meteo Attivo"\n'
-    + '        unique_id: frarik_antizanzare_blocco_meteo\n'
-    + '        state: >\n'
-    + '          {{ states(\'sensor.probabilita_pioggia\') | float(0) >= states(\'input_number.frarik_antizanzare_soglia_pioggia\') | float(50) or\n'
-    + '             is_state(\'binary_sensor.pioggia_in_corso\', \'on\') }}\n'
-    + '        icon: mdi:weather-rainy\n'
-    + 'automation:\n'
-    + '  - id: frarik_antizanzare_avvio_automazione\n'
-    + '    alias: "Anti Zanzare - Avvio Automazione"\n'
-    + '    trigger:\n'
-    + '      - platform: state\n'
-    + '        entity_id: input_button.frarik_antizanzare_start_automazione\n'
-    + '    action:\n'
-    + '      - service: input_boolean.turn_on\n'
-    + '        target: {entity_id: input_boolean.frarik_antizanzare_automazione_attiva}\n'
-    + '  - id: frarik_antizanzare_stop_automazione_handler\n'
-    + '    alias: "Anti Zanzare - Stop Automazione"\n'
-    + '    trigger:\n'
-    + '      - platform: state\n'
-    + '        entity_id: input_button.frarik_antizanzare_stop_automazione\n'
-    + '    action:\n'
-    + '      - service: input_boolean.turn_off\n'
-    + '        target: {entity_id: input_boolean.frarik_antizanzare_automazione_attiva}\n'
-    + '      - service: timer.cancel\n'
-    + '        target: {entity_id: timer.frarik_antizanzare_ciclo_timer}\n'
-    + '  - id: frarik_antizanzare_avvio_manuale\n'
-    + '    alias: "Anti Zanzare - Avvio Manuale"\n'
-    + '    trigger:\n'
-    + '      - platform: state\n'
-    + '        entity_id: input_button.frarik_antizanzare_start_manuale\n'
-    + '    action:\n'
-    + '      - service: input_boolean.turn_on\n'
-    + '        target: {entity_id: input_boolean.frarik_antizanzare_manuale_attiva}\n'
-    + '      - service: timer.start\n'
-    + '        target: {entity_id: timer.frarik_antizanzare_manuale_timer}\n'
-    + '        data:\n'
-    + '          duration: "{{ states(\'input_number.frarik_antizanzare_durata_manuale\') | int(60) }}"\n'
-    + '      - service: switch.turn_on\n'
-    + '        target: {entity_id: IL_TUO_SWITCH_AZ}\n'
-    + '  - id: frarik_antizanzare_stop_manuale_handler\n'
-    + '    alias: "Anti Zanzare - Stop Manuale"\n'
-    + '    trigger:\n'
-    + '      - platform: state\n'
-    + '        entity_id: input_button.frarik_antizanzare_stop_manuale\n'
-    + '    action:\n'
-    + '      - service: input_boolean.turn_off\n'
-    + '        target: {entity_id: input_boolean.frarik_antizanzare_manuale_attiva}\n'
-    + '      - service: timer.cancel\n'
-    + '        target: {entity_id: timer.frarik_antizanzare_manuale_timer}\n'
-    + '      - service: switch.turn_off\n'
-    + '        target: {entity_id: IL_TUO_SWITCH_AZ}\n'
-    + '  - id: frarik_antizanzare_timer_ciclo_finito\n'
-    + '    alias: "Anti Zanzare - Timer Ciclo Finito"\n'
-    + '    trigger:\n'
-    + '      - platform: event\n'
-    + '        event_type: timer.finished\n'
-    + '        event_data: {entity_id: timer.frarik_antizanzare_ciclo_timer}\n'
-    + '    action:\n'
-    + '      - service: switch.turn_off\n'
-    + '        target: {entity_id: IL_TUO_SWITCH_AZ}\n'
-    + '  - id: frarik_antizanzare_timer_manuale_finito\n'
-    + '    alias: "Anti Zanzare - Timer Manuale Finito"\n'
-    + '    trigger:\n'
-    + '      - platform: event\n'
-    + '        event_type: timer.finished\n'
-    + '        event_data: {entity_id: timer.frarik_antizanzare_manuale_timer}\n'
-    + '    action:\n'
-    + '      - service: input_boolean.turn_off\n'
-    + '        target: {entity_id: input_boolean.frarik_antizanzare_manuale_attiva}\n'
-    + '      - service: switch.turn_off\n'
-    + '        target: {entity_id: IL_TUO_SWITCH_AZ}\n'
-    + '  - id: frarik_antizanzare_reset_mensile\n'
-    + '    alias: "Anti Zanzare - Reset Cicli Mensili"\n'
-    + '    trigger:\n'
-    + '      - platform: time\n'
-    + '        at: "00:00:00"\n'
-    + '    condition:\n'
-    + '      - condition: template\n'
-    + '        value_template: "{{ now().day == 1 }}"\n'
-    + '    action:\n'
-    + '      - service: counter.reset\n'
-    + '        target: {entity_id: counter.frarik_antizanzare_cicli_mensili}\n';
+  var _AZ_PKG_YAML = `###############################################################
+#                                                             #
+#   ███████╗██████╗  █████╗ ██████╗ ██╗██╗  ██╗             #
+#   ██╔════╝██╔══██╗██╔══██╗██╔══██╗██║██║ ██╔╝             #
+#   █████╗  ██████╔╝███████║██████╔╝██║█████╔╝              #
+#   ██╔══╝  ██╔══██╗██╔══██║██╔══██╗██║██╔═██╗              #
+#   ██║     ██║  ██║██║  ██║██║  ██║██║██║  ██╗             #
+#   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝            #
+#                                                             #
+#   Package: Centro Controllo Anti Zanzare                    #
+#   Versione: 2.0  |  Frarik / Fratech                       #
+#                                                             #
+###############################################################
 
-  function _buildPkgAZ(sw, push) {
+homeassistant:
+  customize:
+    package.node_anchors:
+      customize: &customize
+        package: 'Frarik — Centro Controllo Anti Zanzare'
+        author: 'Frarik / Fratech'
+        version: '2.0'
+
+      setting:
+        Sensore Vento: &sensore_vento         "IL_TUO_SENSORE_VENTO"
+        Sensore Pioggia: &sensore_pioggia_az  "IL_TUO_SENSORE_PIOGGIA"
+        Sensore Presenza: &sensore_presenza   "IL_TUO_SENSORE_PRESENZA"
+        Device push: &push_az
+          - service: IL_TUO_MOBILE_APP
+        Device Alexa: &alexa_az
+          - IL_TUO_MEDIA_PLAYER_ALEXA
+
+# INPUT BOOLEAN - Giorni attivi
+input_boolean:
+  frarik_antizanzare_lunedi:
+    name: "Anti Zanzare Lunedì"
+    icon: mdi:calendar
+  frarik_antizanzare_martedi:
+    name: "Anti Zanzare Martedì"
+    icon: mdi:calendar
+  frarik_antizanzare_mercoledi:
+    name: "Anti Zanzare Mercoledì"
+    icon: mdi:calendar
+  frarik_antizanzare_giovedi:
+    name: "Anti Zanzare Giovedì"
+    icon: mdi:calendar
+  frarik_antizanzare_venerdi:
+    name: "Anti Zanzare Venerdì"
+    icon: mdi:calendar
+  frarik_antizanzare_sabato:
+    name: "Anti Zanzare Sabato"
+    icon: mdi:calendar
+  frarik_antizanzare_domenica:
+    name: "Anti Zanzare Domenica"
+    icon: mdi:calendar
+
+  # Stati sistema
+  frarik_antizanzare_automazione_attiva:
+    name: "Automazione Anti Zanzare Attiva"
+    icon: mdi:autorenew
+  frarik_antizanzare_manuale_attiva:
+    name: "Anti Zanzare Manuale Attiva"
+    icon: mdi:hand-back-right
+  frarik_antizanzare_notify_push:
+    name: "Notifiche Push Anti Zanzare"
+    icon: mdi:bell
+  frarik_antizanzare_notify_alexa:
+    name: "Notifiche Alexa Anti Zanzare"
+    icon: mdi:speaker
+  frarik_antizanzare_presenza_attiva:
+    name: "Pausa per Presenza"
+    icon: mdi:motion-sensor
+
+# INPUT NUMBER - Cicli per giorno
+input_number:
+  # SISTEMA GIORNALIERO - Numero cicli per giorno
+  # LUNEDÌ
+  frarik_antizanzare_lunedi_num_cicli:
+    name: "Lunedì - Numero Cicli"
+    min: 0
+    max: 5
+    step: 1
+    mode: slider
+    icon: mdi:counter
+
+  frarik_antizanzare_lunedi_durata_ciclo1:
+    name: "Lunedì - Durata Ciclo 1"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  frarik_antizanzare_lunedi_durata_ciclo2:
+    name: "Lunedì - Durata Ciclo 2"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  frarik_antizanzare_lunedi_durata_ciclo3:
+    name: "Lunedì - Durata Ciclo 3"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  frarik_antizanzare_lunedi_durata_ciclo4:
+    name: "Lunedì - Durata Ciclo 4"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  frarik_antizanzare_lunedi_durata_ciclo5:
+    name: "Lunedì - Durata Ciclo 5"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  # MARTEDÌ
+  frarik_antizanzare_martedi_num_cicli:
+    name: "Martedì - Numero Cicli"
+    min: 0
+    max: 5
+    step: 1
+    mode: slider
+    icon: mdi:counter
+
+  frarik_antizanzare_martedi_durata_ciclo1:
+    name: "Martedì - Durata Ciclo 1"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  frarik_antizanzare_martedi_durata_ciclo2:
+    name: "Martedì - Durata Ciclo 2"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  frarik_antizanzare_martedi_durata_ciclo3:
+    name: "Martedì - Durata Ciclo 3"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  frarik_antizanzare_martedi_durata_ciclo4:
+    name: "Martedì - Durata Ciclo 4"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  frarik_antizanzare_martedi_durata_ciclo5:
+    name: "Martedì - Durata Ciclo 5"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  # MERCOLEDÌ
+  frarik_antizanzare_mercoledi_num_cicli:
+    name: "Mercoledì - Numero Cicli"
+    min: 0
+    max: 5
+    step: 1
+    mode: slider
+    icon: mdi:counter
+
+  frarik_antizanzare_mercoledi_durata_ciclo1:
+    name: "Mercoledì - Durata Ciclo 1"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  frarik_antizanzare_mercoledi_durata_ciclo2:
+    name: "Mercoledì - Durata Ciclo 2"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  frarik_antizanzare_mercoledi_durata_ciclo3:
+    name: "Mercoledì - Durata Ciclo 3"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  frarik_antizanzare_mercoledi_durata_ciclo4:
+    name: "Mercoledì - Durata Ciclo 4"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  frarik_antizanzare_mercoledi_durata_ciclo5:
+    name: "Mercoledì - Durata Ciclo 5"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  # GIOVEDÌ
+  frarik_antizanzare_giovedi_num_cicli:
+    name: "Giovedì - Numero Cicli"
+    min: 0
+    max: 5
+    step: 1
+    mode: slider
+    icon: mdi:counter
+
+  frarik_antizanzare_giovedi_durata_ciclo1:
+    name: "Giovedì - Durata Ciclo 1"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  frarik_antizanzare_giovedi_durata_ciclo2:
+    name: "Giovedì - Durata Ciclo 2"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  frarik_antizanzare_giovedi_durata_ciclo3:
+    name: "Giovedì - Durata Ciclo 3"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  frarik_antizanzare_giovedi_durata_ciclo4:
+    name: "Giovedì - Durata Ciclo 4"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  frarik_antizanzare_giovedi_durata_ciclo5:
+    name: "Giovedì - Durata Ciclo 5"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  # VENERDÌ
+  frarik_antizanzare_venerdi_num_cicli:
+    name: "Venerdì - Numero Cicli"
+    min: 0
+    max: 5
+    step: 1
+    mode: slider
+    icon: mdi:counter
+
+  frarik_antizanzare_venerdi_durata_ciclo1:
+    name: "Venerdì - Durata Ciclo 1"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  frarik_antizanzare_venerdi_durata_ciclo2:
+    name: "Venerdì - Durata Ciclo 2"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  frarik_antizanzare_venerdi_durata_ciclo3:
+    name: "Venerdì - Durata Ciclo 3"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  frarik_antizanzare_venerdi_durata_ciclo4:
+    name: "Venerdì - Durata Ciclo 4"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  frarik_antizanzare_venerdi_durata_ciclo5:
+    name: "Venerdì - Durata Ciclo 5"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  # SABATO
+  frarik_antizanzare_sabato_num_cicli:
+    name: "Sabato - Numero Cicli"
+    min: 0
+    max: 5
+    step: 1
+    mode: slider
+    icon: mdi:counter
+
+  frarik_antizanzare_sabato_durata_ciclo1:
+    name: "Sabato - Durata Ciclo 1"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  frarik_antizanzare_sabato_durata_ciclo2:
+    name: "Sabato - Durata Ciclo 2"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  frarik_antizanzare_sabato_durata_ciclo3:
+    name: "Sabato - Durata Ciclo 3"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  frarik_antizanzare_sabato_durata_ciclo4:
+    name: "Sabato - Durata Ciclo 4"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  frarik_antizanzare_sabato_durata_ciclo5:
+    name: "Sabato - Durata Ciclo 5"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  # DOMENICA
+  frarik_antizanzare_domenica_num_cicli:
+    name: "Domenica - Numero Cicli"
+    min: 0
+    max: 5
+    step: 1
+    mode: slider
+    icon: mdi:counter
+
+  frarik_antizanzare_domenica_durata_ciclo1:
+    name: "Domenica - Durata Ciclo 1"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  frarik_antizanzare_domenica_durata_ciclo2:
+    name: "Domenica - Durata Ciclo 2"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  frarik_antizanzare_domenica_durata_ciclo3:
+    name: "Domenica - Durata Ciclo 3"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  frarik_antizanzare_domenica_durata_ciclo4:
+    name: "Domenica - Durata Ciclo 4"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  frarik_antizanzare_domenica_durata_ciclo5:
+    name: "Domenica - Durata Ciclo 5"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer
+
+  # Anti Zanzare manuale
+  frarik_antizanzare_durata_manuale:
+    name: "Durata Anti Zanzare Manuale"
+    min: 10
+    max: 3600
+    step: 10
+    mode: box
+    unit_of_measurement: "sec"
+    icon: mdi:timer-cog
+
+  # Soglia probabilità pioggia
+  frarik_antizanzare_soglia_pioggia:
+    name: "Soglia Probabilità Pioggia (%)"
+    min: 0
+    max: 100
+    step: 5
+    mode: slider
+    unit_of_measurement: "%"
+    icon: mdi:weather-rainy
+
+  # CICLI TARGET MENSILI
+  frarik_antizanzare_cicli_target_mensili:
+    name: "Cicli Target Mensili"
+    min: 1
+    max: 200
+    step: 1
+    mode: box
+    unit_of_measurement: "cicli"
+    icon: mdi:target
+  frarik_antizanzare_soglia_vento:
+    name: "Soglia Velocità Vento (km/h)"
+    min: 0
+    max: 100
+    step: 1
+    mode: slider
+    unit_of_measurement: "km/h"
+    icon: mdi:weather-windy
+
+# INPUT DATETIME - Orari cicli
+input_datetime:
+  # SISTEMA GIORNALIERO - Orari cicli per giorno
+  # LUNEDÌ
+  frarik_antizanzare_lunedi_orario_ciclo1:
+    name: "Lunedì - Orario Ciclo 1"
+    has_date: false
+    has_time: true
+
+  frarik_antizanzare_lunedi_orario_ciclo2:
+    name: "Lunedì - Orario Ciclo 2"
+    has_date: false
+    has_time: true
+
+  frarik_antizanzare_lunedi_orario_ciclo3:
+    name: "Lunedì - Orario Ciclo 3"
+    has_date: false
+    has_time: true
+
+  frarik_antizanzare_lunedi_orario_ciclo4:
+    name: "Lunedì - Orario Ciclo 4"
+    has_date: false
+    has_time: true
+
+  frarik_antizanzare_lunedi_orario_ciclo5:
+    name: "Lunedì - Orario Ciclo 5"
+    has_date: false
+    has_time: true
+
+  # MARTEDÌ
+  frarik_antizanzare_martedi_orario_ciclo1:
+    name: "Martedì - Orario Ciclo 1"
+    has_date: false
+    has_time: true
+
+  frarik_antizanzare_martedi_orario_ciclo2:
+    name: "Martedì - Orario Ciclo 2"
+    has_date: false
+    has_time: true
+
+  frarik_antizanzare_martedi_orario_ciclo3:
+    name: "Martedì - Orario Ciclo 3"
+    has_date: false
+    has_time: true
+
+  frarik_antizanzare_martedi_orario_ciclo4:
+    name: "Martedì - Orario Ciclo 4"
+    has_date: false
+    has_time: true
+
+  frarik_antizanzare_martedi_orario_ciclo5:
+    name: "Martedì - Orario Ciclo 5"
+    has_date: false
+    has_time: true
+
+  # MERCOLEDÌ
+  frarik_antizanzare_mercoledi_orario_ciclo1:
+    name: "Mercoledì - Orario Ciclo 1"
+    has_date: false
+    has_time: true
+
+  frarik_antizanzare_mercoledi_orario_ciclo2:
+    name: "Mercoledì - Orario Ciclo 2"
+    has_date: false
+    has_time: true
+
+  frarik_antizanzare_mercoledi_orario_ciclo3:
+    name: "Mercoledì - Orario Ciclo 3"
+    has_date: false
+    has_time: true
+
+  frarik_antizanzare_mercoledi_orario_ciclo4:
+    name: "Mercoledì - Orario Ciclo 4"
+    has_date: false
+    has_time: true
+
+  frarik_antizanzare_mercoledi_orario_ciclo5:
+    name: "Mercoledì - Orario Ciclo 5"
+    has_date: false
+    has_time: true
+
+  # GIOVEDÌ
+  frarik_antizanzare_giovedi_orario_ciclo1:
+    name: "Giovedì - Orario Ciclo 1"
+    has_date: false
+    has_time: true
+
+  frarik_antizanzare_giovedi_orario_ciclo2:
+    name: "Giovedì - Orario Ciclo 2"
+    has_date: false
+    has_time: true
+
+  frarik_antizanzare_giovedi_orario_ciclo3:
+    name: "Giovedì - Orario Ciclo 3"
+    has_date: false
+    has_time: true
+
+  frarik_antizanzare_giovedi_orario_ciclo4:
+    name: "Giovedì - Orario Ciclo 4"
+    has_date: false
+    has_time: true
+
+  frarik_antizanzare_giovedi_orario_ciclo5:
+    name: "Giovedì - Orario Ciclo 5"
+    has_date: false
+    has_time: true
+
+  # VENERDÌ
+  frarik_antizanzare_venerdi_orario_ciclo1:
+    name: "Venerdì - Orario Ciclo 1"
+    has_date: false
+    has_time: true
+
+  frarik_antizanzare_venerdi_orario_ciclo2:
+    name: "Venerdì - Orario Ciclo 2"
+    has_date: false
+    has_time: true
+
+  frarik_antizanzare_venerdi_orario_ciclo3:
+    name: "Venerdì - Orario Ciclo 3"
+    has_date: false
+    has_time: true
+
+  frarik_antizanzare_venerdi_orario_ciclo4:
+    name: "Venerdì - Orario Ciclo 4"
+    has_date: false
+    has_time: true
+
+  frarik_antizanzare_venerdi_orario_ciclo5:
+    name: "Venerdì - Orario Ciclo 5"
+    has_date: false
+    has_time: true
+
+  # SABATO
+  frarik_antizanzare_sabato_orario_ciclo1:
+    name: "Sabato - Orario Ciclo 1"
+    has_date: false
+    has_time: true
+
+  frarik_antizanzare_sabato_orario_ciclo2:
+    name: "Sabato - Orario Ciclo 2"
+    has_date: false
+    has_time: true
+
+  frarik_antizanzare_sabato_orario_ciclo3:
+    name: "Sabato - Orario Ciclo 3"
+    has_date: false
+    has_time: true
+
+  frarik_antizanzare_sabato_orario_ciclo4:
+    name: "Sabato - Orario Ciclo 4"
+    has_date: false
+    has_time: true
+
+  frarik_antizanzare_sabato_orario_ciclo5:
+    name: "Sabato - Orario Ciclo 5"
+    has_date: false
+    has_time: true
+
+  # DOMENICA
+  frarik_antizanzare_domenica_orario_ciclo1:
+    name: "Domenica - Orario Ciclo 1"
+    has_date: false
+    has_time: true
+
+  frarik_antizanzare_domenica_orario_ciclo2:
+    name: "Domenica - Orario Ciclo 2"
+    has_date: false
+    has_time: true
+
+  frarik_antizanzare_domenica_orario_ciclo3:
+    name: "Domenica - Orario Ciclo 3"
+    has_date: false
+    has_time: true
+
+  frarik_antizanzare_domenica_orario_ciclo4:
+    name: "Domenica - Orario Ciclo 4"
+    has_date: false
+    has_time: true
+
+  frarik_antizanzare_domenica_orario_ciclo5:
+    name: "Domenica - Orario Ciclo 5"
+    has_date: false
+    has_time: true
+  frarik_antizanzare_orario_inizio_notifiche:
+    name: "Orario Inizio Notifiche Anti Zanzare"
+    has_date: false
+    has_time: true
+  frarik_antizanzare_orario_fine_notifiche:
+    name: "Orario Fine Notifiche Anti Zanzare"
+    has_date: false
+    has_time: true
+
+# INPUT TEXT
+input_text:
+  frarik_antizanzare_nome:
+    name: "Nome Anti Zanzare"
+    max: 64
+
+# INPUT BUTTON - Comandi
+input_button:
+  frarik_antizanzare_start_automazione:
+    name: "Avvia Automazione Anti Zanzare"
+    icon: mdi:play-circle
+
+  frarik_antizanzare_stop_automazione:
+    name: "Ferma Automazione Anti Zanzare"
+    icon: mdi:stop-circle
+
+  frarik_antizanzare_start_manuale:
+    name: "Avvia Anti Zanzare Manuale"
+    icon: mdi:play-circle-outline
+
+  frarik_antizanzare_stop_manuale:
+    name: "Ferma Anti Zanzare Manuale"
+    icon: mdi:stop-circle-outline
+
+# TIMER
+timer:
+  frarik_antizanzare_ciclo_timer:
+    name: "Timer Ciclo Anti Zanzare"
+    icon: mdi:clock
+    restore: true
+
+  frarik_antizanzare_manuale_timer:
+    name: "Timer Anti Zanzare Manuale"
+    icon: mdi:hand-back-right
+    restore: true
+
+# COUNTER
+counter:
+  frarik_antizanzare_cicli_mensili:
+    name: "Cicli Anti Zanzare Questo Mese"
+    step: 1
+    icon: mdi:counter
+
+  frarik_antizanzare_cicli_rimanenti:
+    name: "Cicli Anti Zanzare Rimanenti Questo Mese"
+    step: 1
+    icon: mdi:counter-outline
+
+# NOTIFY GROUP
+notify:
+  - name: frarik_antizanzare_notify
+    platform: group
+    services: *push_az
+
+# SENSORI TEMPLATE
+template:
+  - sensor:
+      - name: "Frarik Anti Zanzare Versione"
+        unique_id: frarik_antizanzare_versione
+        state: "2.0"
+        icon: mdi:package-variant-closed
+
+  - trigger:
+      - platform: time_pattern
+        seconds: "/1"  # Aggiorna ogni secondo
+    sensor:
+      # Sensore stato anti_zanzare
+      - name: "Stato Anti Zanzare"
+        unique_id: frarik_antizanzare_stato_sistema
+        state: >
+          {% if is_state('input_boolean.frarik_antizanzare_manuale_attiva', 'on') %}
+            Manuale Attiva
+          {% elif is_state('timer.frarik_antizanzare_ciclo_timer', 'active') %}
+            Ciclo in Corso
+          {% elif is_state('input_boolean.frarik_antizanzare_automazione_attiva', 'on') %}
+            Automazione Attiva
+          {% else %}
+            Spenta
+          {% endif %}
+        icon: >
+          {% if is_state('input_boolean.frarik_antizanzare_manuale_attiva', 'on') %}
+            mdi:hand-back-right
+          {% elif is_state('timer.frarik_antizanzare_ciclo_timer', 'active') %}
+            mdi:sprinkler-variant
+          {% elif is_state('input_boolean.frarik_antizanzare_automazione_attiva', 'on') %}
+            mdi:autorenew
+          {% else %}
+            mdi:sprinkler-variant-off
+          {% endif %}
+
+      # Sensore prossimo ciclo completo - trova il prossimo ciclo tra tutti quelli configurati
+      - name: "Prossimo Ciclo Anti Zanzare"
+        unique_id: frarik_antizanzare_prossimo_ciclo_completo
+        state: >
+          {% if not is_state('input_boolean.frarik_antizanzare_automazione_attiva', 'on') %}
+            Automazione Disattivata
+          {% else %}
+            {% set current_time = now() %}
+            {% set current_day = current_time.weekday() %}
+            {% set current_timestamp = as_timestamp(current_time) %}
+            {% set day_names = ['lunedi', 'martedi', 'mercoledi', 'giovedi', 'venerdi', 'sabato', 'domenica'] %}
+            {% set day_labels = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'] %}
+            {% set day_entities = [
+              'input_boolean.frarik_antizanzare_lunedi',
+              'input_boolean.frarik_antizanzare_martedi', 
+              'input_boolean.frarik_antizanzare_mercoledi',
+              'input_boolean.frarik_antizanzare_giovedi',
+              'input_boolean.frarik_antizanzare_venerdi',
+              'input_boolean.frarik_antizanzare_sabato',
+              'input_boolean.frarik_antizanzare_domenica'
+            ] %}
+
+            {% set next_cycles = [] %}
+
+            {# Cicla attraverso i prossimi 7 giorni #}
+            {% for day_offset in range(8) %}
+              {% set check_day = (current_day + day_offset) % 7 %}
+              {% set check_date = (current_time + timedelta(days=day_offset)).date() %}
+              {% set day_name = day_names[check_day] %}
+              {% set day_label = day_labels[check_day] %}
+
+              {# Controlla solo se il giorno è attivo #}
+              {% if is_state(day_entities[check_day], 'on') %}
+                {% set num_cicli = states('input_number.frarik_antizanzare_' + day_name + '_num_cicli') | int(0) %}
+
+                {# Cicla attraverso tutti i cicli del giorno #}
+                {% for ciclo in range(1, num_cicli + 1) %}
+                  {% set orario_entity = 'input_datetime.frarik_antizanzare_' + day_name + '_orario_ciclo' + ciclo|string %}
+                  {% set durata_entity = 'input_number.frarik_antizanzare_' + day_name + '_durata_ciclo' + ciclo|string %}
+
+                  {% if states(orario_entity) not in ['unknown', 'unavailable'] and 
+                        states(durata_entity) not in ['unknown', 'unavailable'] %}
+
+                    {% set orario = states(orario_entity) %}
+                    {% set durata = states(durata_entity) | int(0) %}
+
+                    {# Crea timestamp del ciclo #}
+                    {% set cycle_time = strptime(check_date.strftime('%Y-%m-%d') + ' ' + orario, '%Y-%m-%d %H:%M:%S') %}
+                    {% set cycle_timestamp = as_timestamp(cycle_time) %}
+
+                    {# Se è oggi, controlla che non sia già passato #}
+                    {% if day_offset == 0 and cycle_timestamp <= current_timestamp %}
+                      {# Ciclo già passato oggi, salta #}
+                    {% else %}
+                      {% set next_cycles = next_cycles + [
+                        {
+                          'timestamp': cycle_timestamp,
+                          'day': day_label,
+                          'ciclo': ciclo,
+                          'orario': orario,
+                          'durata': durata,
+                          'day_offset': day_offset
+                        }
+                      ] %}
+                    {% endif %}
+                  {% endif %}
+                {% endfor %}
+              {% endif %}
+            {% endfor %}
+
+            {# Ordina per timestamp e prendi il primo #}
+            {% if next_cycles %}
+              {% set sorted_cycles = next_cycles | sort(attribute='timestamp') %}
+              {% set next_cycle = sorted_cycles[0] %}
+              {% if next_cycle.day_offset == 0 %}
+                Oggi {{ next_cycle.orario[:5] }} - Ciclo {{ next_cycle.ciclo }}
+              {% elif next_cycle.day_offset == 1 %}
+                Domani {{ next_cycle.orario[:5] }} - Ciclo {{ next_cycle.ciclo }}
+              {% else %}
+                {{ next_cycle.day }} {{ next_cycle.orario[:5] }} - Ciclo {{ next_cycle.ciclo }}
+              {% endif %}
+            {% else %}
+              Nessun ciclo programmato
+            {% endif %}
+          {% endif %}
+        icon: mdi:calendar-clock
+        attributes:
+          next_cycle_timestamp: >
+            {% if is_state('input_boolean.frarik_antizanzare_automazione_attiva', 'on') %}
+              {% set current_time = now() %}
+              {% set current_day = current_time.weekday() %}
+              {% set current_timestamp = as_timestamp(current_time) %}
+              {% set day_names = ['lunedi', 'martedi', 'mercoledi', 'giovedi', 'venerdi', 'sabato', 'domenica'] %}
+              {% set day_entities = [
+                'input_boolean.frarik_antizanzare_lunedi',
+                'input_boolean.frarik_antizanzare_martedi', 
+                'input_boolean.frarik_antizanzare_mercoledi',
+                'input_boolean.frarik_antizanzare_giovedi',
+                'input_boolean.frarik_antizanzare_venerdi',
+                'input_boolean.frarik_antizanzare_sabato',
+                'input_boolean.frarik_antizanzare_domenica'
+              ] %}
+              {% set next_cycles = [] %}
+
+              {% for day_offset in range(8) %}
+                {% set check_day = (current_day + day_offset) % 7 %}
+                {% set check_date = (current_time + timedelta(days=day_offset)).date() %}
+                {% set day_name = day_names[check_day] %}
+
+                {% if is_state(day_entities[check_day], 'on') %}
+                  {% set num_cicli = states('input_number.frarik_antizanzare_' + day_name + '_num_cicli') | int(0) %}
+
+                  {% for ciclo in range(1, num_cicli + 1) %}
+                    {% set orario_entity = 'input_datetime.frarik_antizanzare_' + day_name + '_orario_ciclo' + ciclo|string %}
+                    {% set durata_entity = 'input_number.frarik_antizanzare_' + day_name + '_durata_ciclo' + ciclo|string %}
+
+                    {% if states(orario_entity) not in ['unknown', 'unavailable'] and 
+                          states(durata_entity) not in ['unknown', 'unavailable'] %}
+                      {% set orario = states(orario_entity) %}
+                      {% set durata = states(durata_entity) | int(0) %}
+                      {% set cycle_time = strptime(check_date.strftime('%Y-%m-%d') + ' ' + orario, '%Y-%m-%d %H:%M:%S') %}
+                      {% set cycle_timestamp = as_timestamp(cycle_time) %}
+
+                      {% if day_offset > 0 or cycle_timestamp > current_timestamp %}
+                        {% set next_cycles = next_cycles + [
+                          {
+                            'timestamp': cycle_timestamp,
+                            'durata': durata
+                          }
+                        ] %}
+                      {% endif %}
+                    {% endif %}
+                  {% endfor %}
+                {% endif %}
+              {% endfor %}
+
+              {% if next_cycles %}
+                {% set sorted_cycles = next_cycles | sort(attribute='timestamp') %}
+                {{ sorted_cycles[0].timestamp }}
+              {% endif %}
+            {% endif %}
+          next_cycle_duration: >
+            {% if is_state('input_boolean.frarik_antizanzare_automazione_attiva', 'on') %}
+              {% set current_time = now() %}
+              {% set current_day = current_time.weekday() %}
+              {% set current_timestamp = as_timestamp(current_time) %}
+              {% set day_names = ['lunedi', 'martedi', 'mercoledi', 'giovedi', 'venerdi', 'sabato', 'domenica'] %}
+              {% set day_entities = [
+                'input_boolean.frarik_antizanzare_lunedi',
+                'input_boolean.frarik_antizanzare_martedi', 
+                'input_boolean.frarik_antizanzare_mercoledi',
+                'input_boolean.frarik_antizanzare_giovedi',
+                'input_boolean.frarik_antizanzare_venerdi',
+                'input_boolean.frarik_antizanzare_sabato',
+                'input_boolean.frarik_antizanzare_domenica'
+              ] %}
+              {% set next_cycles = [] %}
+
+              {% for day_offset in range(8) %}
+                {% set check_day = (current_day + day_offset) % 7 %}
+                {% set check_date = (current_time + timedelta(days=day_offset)).date() %}
+                {% set day_name = day_names[check_day] %}
+
+                {% if is_state(day_entities[check_day], 'on') %}
+                  {% set num_cicli = states('input_number.frarik_antizanzare_' + day_name + '_num_cicli') | int(0) %}
+
+                  {% for ciclo in range(1, num_cicli + 1) %}
+                    {% set orario_entity = 'input_datetime.frarik_antizanzare_' + day_name + '_orario_ciclo' + ciclo|string %}
+                    {% set durata_entity = 'input_number.frarik_antizanzare_' + day_name + '_durata_ciclo' + ciclo|string %}
+
+                    {% if states(orario_entity) not in ['unknown', 'unavailable'] and 
+                          states(durata_entity) not in ['unknown', 'unavailable'] %}
+                      {% set orario = states(orario_entity) %}
+                      {% set durata = states(durata_entity) | int(0) %}
+                      {% set cycle_time = strptime(check_date.strftime('%Y-%m-%d') + ' ' + orario, '%Y-%m-%d %H:%M:%S') %}
+                      {% set cycle_timestamp = as_timestamp(cycle_time) %}
+
+                      {% if day_offset > 0 or cycle_timestamp > current_timestamp %}
+                        {% set next_cycles = next_cycles + [
+                          {
+                            'timestamp': cycle_timestamp,
+                            'durata': durata
+                          }
+                        ] %}
+                      {% endif %}
+                    {% endif %}
+                  {% endfor %}
+                {% endif %}
+              {% endfor %}
+
+              {% if next_cycles %}
+                {% set sorted_cycles = next_cycles | sort(attribute='timestamp') %}
+                {{ sorted_cycles[0].durata }}
+              {% endif %}
+            {% endif %}
+
+
+
+
+            {% if is_state('input_boolean.frarik_antizanzare_automazione_attiva', 'on') %}
+              {% set current_time = now() %}
+              {% set current_timestamp = as_timestamp(current_time) %}
+              {% set current_day = current_time.weekday() %} 
+              {% set day_names = ['lunedi', 'martedi', 'mercoledi', 'giovedi', 'venerdi', 'sabato', 'domenica'] %}
+              {% set day_entities = [
+                'input_boolean.frarik_antizanzare_lunedi',
+                'input_boolean.frarik_antizanzare_martedi', 
+                'input_boolean.frarik_antizanzare_mercoledi',
+                'input_boolean.frarik_antizanzare_giovedi',
+                'input_boolean.frarik_antizanzare_venerdi',
+                'input_boolean.frarik_antizanzare_sabato',
+                'input_boolean.frarik_antizanzare_domenica'
+              ] %}
+
+              {% set next_cycles = [] %}
+
+              {# Cicla attraverso i prossimi 7 giorni #}
+              {% for day_offset in range(8) %}
+                {% set check_day = (current_day + day_offset) % 7 %}
+                {% set check_date = (current_time + timedelta(days=day_offset)).date() %}
+                {% set day_name = day_names[check_day] %}
+
+                {# Controlla solo se il giorno è attivo #}
+                {% if is_state(day_entities[check_day], 'on') %}
+                  {% set num_cicli = states('input_number.frarik_antizanzare_' + day_name + '_num_cicli') | int(0) %}
+
+                  {# Cicla attraverso tutti i cicli del giorno #}
+                  {% for ciclo in range(1, num_cicli + 1) %}
+                    {% set orario_entity = 'input_datetime.frarik_antizanzare_' + day_name + '_orario_ciclo' + ciclo|string %}
+                    {% set durata_entity = 'input_number.frarik_antizanzare_' + day_name + '_durata_ciclo' + ciclo|string %}
+
+                    {% if states(orario_entity) not in ['unknown', 'unavailable'] and 
+                          states(durata_entity) not in ['unknown', 'unavailable'] %}
+
+                      {% set orario = states(orario_entity) %}
+                      {% set durata = states(durata_entity) | int(0) %}
+
+                      {# Crea timestamp del ciclo #}
+                      {% set cycle_time = strptime(check_date.strftime('%Y-%m-%d') + ' ' + orario, '%Y-%m-%d %H:%M:%S') %}
+                      {% set cycle_timestamp = as_timestamp(cycle_time) %}
+
+                      {# Se è oggi, controlla che non sia già passato #}
+                      {% if day_offset == 0 and cycle_timestamp <= current_timestamp %}
+                        {# Ciclo già passato oggi, salta #}
+                      {% else %}
+                        {% set next_cycles = next_cycles + [
+                          {
+                            'timestamp': cycle_timestamp,
+                            'time_diff': cycle_timestamp - current_timestamp
+                          }
+                        ] %}
+                      {% endif %}
+                    {% endif %}
+                  {% endfor %}
+                {% endif %}
+              {% endfor %}
+
+              {# Trova il ciclo più vicino #}
+              {% if next_cycles | length > 0 %}
+                {% set sorted_cycles = next_cycles | sort(attribute='timestamp') %}
+                {% set next_cycle = sorted_cycles[0] %}
+                {% if next_cycle.time_diff > 0 %}
+                  {{ next_cycle.time_diff | int }}
+                {% else %}
+                  0
+                {% endif %}
+              {% else %}
+                999999
+              {% endif %}
+            {% else %}
+              999999
+            {% endif %}
+          within_10_minutes: >
+            {% if is_state('input_boolean.frarik_antizanzare_automazione_attiva', 'on') %}
+              {% set current_time = now() %}
+              {% set current_timestamp = as_timestamp(current_time) %}
+              {% set current_day = current_time.weekday() %} 
+              {% set day_names = ['lunedi', 'martedi', 'mercoledi', 'giovedi', 'venerdi', 'sabato', 'domenica'] %}
+              {% set day_entities = [
+                'input_boolean.frarik_antizanzare_lunedi',
+                'input_boolean.frarik_antizanzare_martedi', 
+                'input_boolean.frarik_antizanzare_mercoledi',
+                'input_boolean.frarik_antizanzare_giovedi',
+                'input_boolean.frarik_antizanzare_venerdi',
+                'input_boolean.frarik_antizanzare_sabato',
+                'input_boolean.frarik_antizanzare_domenica'
+              ] %}
+
+              {% set next_cycles = [] %}
+
+              {# Cicla attraverso i prossimi 7 giorni #}
+              {% for day_offset in range(8) %}
+                {% set check_day = (current_day + day_offset) % 7 %}
+                {% set check_date = (current_time + timedelta(days=day_offset)).date() %}
+                {% set day_name = day_names[check_day] %}
+
+                {# Controlla solo se il giorno è attivo #}
+                {% if is_state(day_entities[check_day], 'on') %}
+                  {% set num_cicli = states('input_number.frarik_antizanzare_' + day_name + '_num_cicli') | int(0) %}
+
+                  {# Cicla attraverso tutti i cicli del giorno #}
+                  {% for ciclo in range(1, num_cicli + 1) %}
+                    {% set orario_entity = 'input_datetime.frarik_antizanzare_' + day_name + '_orario_ciclo' + ciclo|string %}
+
+                    {% if states(orario_entity) not in ['unknown', 'unavailable'] %}
+                      {% set orario = states(orario_entity) %}
+
+                      {# Crea timestamp del ciclo #}
+                      {% set cycle_time = strptime(check_date.strftime('%Y-%m-%d') + ' ' + orario, '%Y-%m-%d %H:%M:%S') %}
+                      {% set cycle_timestamp = as_timestamp(cycle_time) %}
+
+                      {# Se è oggi, controlla che non sia già passato #}
+                      {% if day_offset == 0 and cycle_timestamp <= current_timestamp %}
+                        {# Ciclo già passato oggi, salta #}
+                      {% else %}
+                        {% set time_diff = cycle_timestamp - current_timestamp %}
+                        {% set next_cycles = next_cycles + [time_diff] %}
+                      {% endif %}
+                    {% endif %}
+                  {% endfor %}
+                {% endif %}
+              {% endfor %}
+
+              {# Trova il tempo minimo #}
+              {% if next_cycles | length > 0 %}
+                {% set min_time = next_cycles | min %}
+                {{ min_time <= 600 and min_time > 0 }}
+              {% else %}
+                false
+              {% endif %}
+            {% else %}
+              false
+            {% endif %}
+
+      # Sensore che mostra il prossimo ciclo configurato tra tutti i giorni
+      - name: "Prossimo Ciclo Semplice"
+        unique_id: prossimo_ciclo_semplice
+        state: >
+          {% if is_state('input_boolean.frarik_antizanzare_automazione_attiva', 'on') %}
+            {% set current_time = now() %}
+            {% set current_timestamp = as_timestamp(current_time) %}
+            {% set current_day = current_time.weekday() %}
+            {% set day_names = ['lunedi', 'martedi', 'mercoledi', 'giovedi', 'venerdi', 'sabato', 'domenica'] %}
+            {% set day_labels = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'] %}
+            {% set day_entities = [
+              'input_boolean.frarik_antizanzare_lunedi',
+              'input_boolean.frarik_antizanzare_martedi', 
+              'input_boolean.frarik_antizanzare_mercoledi',
+              'input_boolean.frarik_antizanzare_giovedi',
+              'input_boolean.frarik_antizanzare_venerdi',
+              'input_boolean.frarik_antizanzare_sabato',
+              'input_boolean.frarik_antizanzare_domenica'
+            ] %}
+
+            {% set next_cycles = [] %}
+
+            {# Cicla attraverso i prossimi 7 giorni #}
+            {% for day_offset in range(8) %}
+              {% set check_day = (current_day + day_offset) % 7 %}
+              {% set check_date = (current_time + timedelta(days=day_offset)).date() %}
+              {% set day_name = day_names[check_day] %}
+              {% set day_label = day_labels[check_day] %}
+
+              {# Controlla solo se il giorno è attivo #}
+              {% if is_state(day_entities[check_day], 'on') %}
+                {% set num_cicli = states('input_number.frarik_antizanzare_' + day_name + '_num_cicli') | int(0) %}
+
+                {# Cicla attraverso tutti i cicli del giorno #}
+                {% for ciclo in range(1, num_cicli + 1) %}
+                  {% set orario_entity = 'input_datetime.frarik_antizanzare_' + day_name + '_orario_ciclo' + ciclo|string %}
+
+                  {% if states(orario_entity) not in ['unknown', 'unavailable'] %}
+                    {% set orario = states(orario_entity) %}
+
+                    {# Crea timestamp del ciclo #}
+                    {% set cycle_time = strptime(check_date.strftime('%Y-%m-%d') + ' ' + orario, '%Y-%m-%d %H:%M:%S') %}
+                    {% set cycle_timestamp = as_timestamp(cycle_time) %}
+
+                    {# Se è oggi, controlla che non sia già passato #}
+                    {% if day_offset == 0 and cycle_timestamp <= current_timestamp %}
+                      {# Ciclo già passato oggi, salta #}
+                    {% else %}
+                      {% set next_cycles = next_cycles + [
+                        {
+                          'timestamp': cycle_timestamp,
+                          'day_label': day_label,
+                          'orario': orario,
+                          'ciclo': ciclo
+                        }
+                      ] %}
+                    {% endif %}
+                  {% endif %}
+                {% endfor %}
+              {% endif %}
+            {% endfor %}
+
+            {# Trova il ciclo più vicino #}
+            {% if next_cycles | length > 0 %}
+              {% set sorted_cycles = next_cycles | sort(attribute='timestamp') %}
+              {% set next_cycle = sorted_cycles[0] %}
+              {{ next_cycle.day_label }} {{ next_cycle.orario[:5] }} - Ciclo {{ next_cycle.ciclo }}
+            {% else %}
+              Nessun ciclo configurato
+            {% endif %}
+          {% else %}
+            Automazione disattivata
+          {% endif %}
+        icon: mdi:calendar-clock
+
+      # Sensore tempo al prossimo ciclo semplificato (formato umano)
+      - name: "Tempo al Prossimo Ciclo"
+        unique_id: tempo_al_prossimo_ciclo
+        icon: mdi:clock-outline
+        state: >
+          {% if is_state('input_boolean.frarik_antizanzare_automazione_attiva', 'on') %}
+            {% set current_time = now() %}
+            {% set current_timestamp = as_timestamp(current_time) %}
+            {% set current_day = current_time.weekday() %}
+            {% set day_names = ['lunedi', 'martedi', 'mercoledi', 'giovedi', 'venerdi', 'sabato', 'domenica'] %}
+            {% set day_entities = [
+              'input_boolean.frarik_antizanzare_lunedi',
+              'input_boolean.frarik_antizanzare_martedi', 
+              'input_boolean.frarik_antizanzare_mercoledi',
+              'input_boolean.frarik_antizanzare_giovedi',
+              'input_boolean.frarik_antizanzare_venerdi',
+              'input_boolean.frarik_antizanzare_sabato',
+              'input_boolean.frarik_antizanzare_domenica'
+            ] %}
+
+            {% set next_cycles = [] %}
+
+            {# Cicla attraverso i prossimi 7 giorni #}
+            {% for day_offset in range(8) %}
+              {% set check_day = (current_day + day_offset) % 7 %}
+              {% set check_date = (current_time + timedelta(days=day_offset)).date() %}
+              {% set day_name = day_names[check_day] %}
+
+              {# Controlla solo se il giorno è attivo #}
+              {% if is_state(day_entities[check_day], 'on') %}
+                {% set num_cicli = states('input_number.frarik_antizanzare_' + day_name + '_num_cicli') | int(0) %}
+
+                {# Cicla attraverso tutti i cicli del giorno #}
+                {% for ciclo in range(1, num_cicli + 1) %}
+                  {% set orario_entity = 'input_datetime.frarik_antizanzare_' + day_name + '_orario_ciclo' + ciclo|string %}
+
+                  {% if states(orario_entity) not in ['unknown', 'unavailable'] %}
+                    {% set orario = states(orario_entity) %}
+
+                    {# Crea timestamp del ciclo #}
+                    {% set cycle_time = strptime(check_date.strftime('%Y-%m-%d') + ' ' + orario, '%Y-%m-%d %H:%M:%S') %}
+                    {% set cycle_timestamp = as_timestamp(cycle_time) %}
+
+                    {# Se è oggi, controlla che non sia già passato #}
+                    {% if day_offset == 0 and cycle_timestamp <= current_timestamp %}
+                      {# Ciclo già passato oggi, salta #}
+                    {% else %}
+                      {% set time_diff = cycle_timestamp - current_timestamp %}
+                      {% set next_cycles = next_cycles + [time_diff] %}
+                    {% endif %}
+                  {% endif %}
+                {% endfor %}
+              {% endif %}
+            {% endfor %}
+
+            {# Trova il tempo minimo #}
+            {% if next_cycles | length > 0 %}
+              {% set min_time = next_cycles | min %}
+              {% if min_time > 0 %}
+                {% if min_time < 3600 %}
+                  {% set minutes = (min_time // 60) | int %}
+                  {{ '%d minuti' | format(minutes) }}
+                {% elif min_time < 86400 %}
+                  {% set hours = (min_time // 3600) | int %}
+                  {% set minutes = ((min_time % 3600) // 60) | int %}
+                  {{ '%d:%02d ore' | format(hours, minutes) }}
+                {% else %}
+                  {% set days = (min_time // 86400) | int %}
+                  {% set hours = ((min_time % 86400) // 3600) | int %}
+                  {{ '%d giorni %d ore' | format(days, hours) }}
+                {% endif %}
+              {% else %}
+                Avvio imminente
+              {% endif %}
+            {% else %}
+              Nessun ciclo configurato
+            {% endif %}
+          {% else %}
+            --
+          {% endif %}
+
+      # Sensore secondi rimanenti per bar-card (compatibile con countdown dal sistema day-based)
+      - name: "Tempo al Prossimo Ciclo Secondi"
+        unique_id: tempo_al_prossimo_ciclo_secondi
+        unit_of_measurement: "sec"
+        icon: mdi:timer
+        state: >
+          {% set seconds_remaining = state_attr('sensor.countdown_prossimo_ciclo', 'seconds_remaining') | int(0) %}
+          {% if seconds_remaining <= 600 and seconds_remaining > 0 %}
+            {{ (600 - seconds_remaining) | max(0) | min(600) | int }}
+          {% else %}
+            0
+          {% endif %}
+
+      # Sensore consumo acqua (collegato a sensore reale)
+      - name: "Consumo Acqua Anti Zanzare"
+        unique_id: frarik_antizanzare_consumo_acqua
+        state: "{{ states('IL_TUO_SENSORE_ACQUA') | float(0) }}"
+        unit_of_measurement: "L/min"
+        icon: mdi:water-pump
+
+      # Sensore timer manuale percentuale (decresce da 100 a 0)
+      - name: "Anti Zanzare Timer Manuale Percentage"
+        unique_id: frarik_antizanzare_timer_manuale_percent
+        unit_of_measurement: "%"
+        icon: mdi:timer
+        state: >-
+          {% if is_state('timer.frarik_antizanzare_manuale_timer', 'active') %}
+            {% set remaining = state_attr('timer.frarik_antizanzare_manuale_timer', 'remaining') %}
+            {% set duration = state_attr('timer.frarik_antizanzare_manuale_timer', 'duration') %}
+            {% if remaining and duration %}
+              {% set rem_seconds = remaining.split(':')[0]|int * 3600 + remaining.split(':')[1]|int * 60 + remaining.split(':')[2]|int %}
+              {% set dur_seconds = duration.split(':')[0]|int * 3600 + duration.split(':')[1]|int * 60 + duration.split(':')[2]|int %}
+              {% if dur_seconds > 0 %}
+                {{ (rem_seconds / dur_seconds * 100) | round(1) }}
+              {% else %}
+                0
+              {% endif %}
+            {% else %}
+              0
+            {% endif %}
+          {% else %}
+            0
+          {% endif %}
+        attributes:
+          remaining_time: >-
+            {% if is_state('timer.frarik_antizanzare_manuale_timer', 'active') %}
+              {{ state_attr('timer.frarik_antizanzare_manuale_timer', 'remaining') }}
+            {% else %}
+              "00:00:00"
+            {% endif %}
+          duration: >-
+            {% if is_state('timer.frarik_antizanzare_manuale_timer', 'active') %}
+              {{ state_attr('timer.frarik_antizanzare_manuale_timer', 'duration') }}
+            {% else %}
+              "00:00:00"
+            {% endif %}
+
+      # Sensore timer manuale - tempo rimanente mm:ss
+      - name: "Timer Anti Zanzare Manuale Countdown"
+        unique_id: timer_frarik_antizanzare_manuale_countdown
+        icon: mdi:timer
+        state: >-
+          {% if is_state('timer.frarik_antizanzare_manuale_timer', 'active') %}
+            {% set finishes_at = state_attr('timer.frarik_antizanzare_manuale_timer', 'finishes_at') %}
+            {% if finishes_at %}
+              {% set finish_time = as_timestamp(finishes_at) %}
+              {% set current_time = as_timestamp(now()) %}
+              {% set remaining_seconds = (finish_time - current_time) | int %}
+              {% if remaining_seconds > 0 %}
+                {% set minutes = (remaining_seconds // 60) %}
+                {% set seconds = (remaining_seconds % 60) %}
+                {{ '%02d:%02d' | format(minutes, seconds) }}
+              {% else %}
+                00:00
+              {% endif %}
+            {% else %}
+              --:--
+            {% endif %}
+          {% else %}
+            00:00
+          {% endif %}
+
+      # Sensore timer manuale percentuale per bar-card
+      - name: "Timer Anti Zanzare Manuale"
+        unique_id: timer_frarik_antizanzare_manuale_bar
+        unit_of_measurement: "%"
+        icon: mdi:timer
+        state: >-
+          {% if is_state('timer.frarik_antizanzare_manuale_timer', 'active') %}
+            {% set finishes_at = state_attr('timer.frarik_antizanzare_manuale_timer', 'finishes_at') %}
+            {% if finishes_at %}
+              {% set finish_time = as_timestamp(finishes_at) %}
+              {% set current_time = as_timestamp(now()) %}
+              {% set remaining_seconds = finish_time - current_time %}
+              {% set duration_seconds = states('input_number.frarik_antizanzare_durata_manuale') | int %}
+              {% if duration_seconds > 0 %}
+                {% set remaining_percent = (remaining_seconds / duration_seconds * 100) %}
+                {{ [0, remaining_percent] | max | round(1) }}
+              {% else %}
+                0
+              {% endif %}
+            {% else %}
+              100
+            {% endif %}
+          {% else %}
+            0
+          {% endif %}
+
+      # Sensore timer ciclo - tempo rimanente mm:ss
+      - name: "Timer Anti Zanzare Ciclo Countdown"
+        unique_id: timer_frarik_antizanzare_ciclo_countdown
+        icon: mdi:timer
+        state: >-
+          {% if is_state('timer.frarik_antizanzare_ciclo_timer', 'active') %}
+            {% set finishes_at = state_attr('timer.frarik_antizanzare_ciclo_timer', 'finishes_at') %}
+            {% if finishes_at %}
+              {% set finish_time = as_timestamp(finishes_at) %}
+              {% set current_time = as_timestamp(now()) %}
+              {% set remaining_seconds = (finish_time - current_time) | int %}
+              {% if remaining_seconds > 0 %}
+                {% set minutes = (remaining_seconds // 60) %}
+                {% set seconds = (remaining_seconds % 60) %}
+                {{ '%02d:%02d' | format(minutes, seconds) }}
+              {% else %}
+                00:00
+              {% endif %}
+            {% else %}
+              --:--
+            {% endif %}
+          {% else %}
+            00:00
+          {% endif %}
+
+      # Sensore timer ciclo percentuale per bar-card
+      - name: "Timer Anti Zanzare Ciclo"
+        unique_id: timer_frarik_antizanzare_ciclo_bar
+        unit_of_measurement: "%"
+        icon: mdi:timer
+        state: >-
+          {% if is_state('timer.frarik_antizanzare_ciclo_timer', 'active') %}
+            {% set finishes_at = state_attr('timer.frarik_antizanzare_ciclo_timer', 'finishes_at') %}
+            {% set duration = state_attr('timer.frarik_antizanzare_ciclo_timer', 'duration') %}
+            {% if finishes_at and duration %}
+              {% set finish_time = as_timestamp(finishes_at) %}
+              {% set current_time = as_timestamp(now()) %}
+              {% set remaining_seconds = finish_time - current_time %}
+              {% set dur_parts = duration.split(':') %}
+              {% set duration_seconds = dur_parts[0]|int * 3600 + dur_parts[1]|int * 60 + dur_parts[2]|int %}
+              {% if duration_seconds > 0 %}
+                {% set remaining_percent = (remaining_seconds / duration_seconds * 100) %}
+                {{ [0, remaining_percent] | max | round(1) }}
+              {% else %}
+                0
+              {% endif %}
+            {% else %}
+              100
+            {% endif %}
+          {% else %}
+            0
+          {% endif %}
+
+      # Sensore timer ciclo automatico percentuale (decresce da 100 a 0)
+      - name: "Anti Zanzare Timer Ciclo Percentage"
+        unique_id: frarik_antizanzare_timer_ciclo_percentage
+        unit_of_measurement: "%"
+        icon: mdi:timer
+        state: >-
+          {% if is_state('timer.frarik_antizanzare_ciclo_timer', 'active') %}
+            {% set remaining = state_attr('timer.frarik_antizanzare_ciclo_timer', 'remaining') %}
+            {% set duration = state_attr('timer.frarik_antizanzare_ciclo_timer', 'duration') %}
+            {% if remaining and duration %}
+              {% set rem_seconds = remaining.split(':')[0]|int * 3600 + remaining.split(':')[1]|int * 60 + remaining.split(':')[2]|int %}
+              {% set dur_seconds = duration.split(':')[0]|int * 3600 + duration.split(':')[1]|int * 60 + duration.split(':')[2]|int %}
+              {% if dur_seconds > 0 %}
+                {{ (rem_seconds / dur_seconds * 100) | round(1) }}
+              {% else %}
+                0
+              {% endif %}
+            {% else %}
+              0
+            {% endif %}
+          {% else %}
+            0
+          {% endif %}
+
+      # Sensore probabilità pioggia (collegato a sensore meteo reale)
+      - name: "Probabilità Pioggia"
+        unique_id: frarik_antizanzare_probabilita_pioggia
+        state: "{{ states('sensor.openmeteo_precipitation_probability') | int(0) }}"
+        unit_of_measurement: "%"
+        icon: mdi:weather-rainy
+
+      # Sensore cicli rimanenti mensili
+      - name: "Cicli Rimanenti Questo Mese"
+        unique_id: frarik_antizanzare_cicli_rimanenti_mensili
+        state: >
+          {% set target = states('input_number.frarik_antizanzare_cicli_target_mensili') | int(0) %}
+          {% set completati = states('counter.frarik_antizanzare_cicli_mensili') | int(0) %}
+          {% set rimanenti = target - completati %}
+          {{ [0, rimanenti] | max }}
+        unit_of_measurement: "cicli"
+        icon: mdi:counter-outline
+        attributes:
+          cicli_target: "{{ states('input_number.frarik_antizanzare_cicli_target_mensili') | int(0) }}"
+          cicli_completati: "{{ states('counter.frarik_antizanzare_cicli_mensili') | int(0) }}"
+          percentuale_completamento: >
+            {% set target = states('input_number.frarik_antizanzare_cicli_target_mensili') | int(1) %}
+            {% set completati = states('counter.frarik_antizanzare_cicli_mensili') | int(0) %}
+            {% if target > 0 %}
+              {{ ((completati / target) * 100) | round(1) }}
+            {% else %}
+              0
+            {% endif %}
+
+      # Sensore avanzamento mensile
+      - name: "Avanzamento Cicli Mensile"
+        unique_id: frarik_antizanzare_avanzamento_mensile
+        state: >
+          {% set target = states('input_number.frarik_antizanzare_cicli_target_mensili') | int(1) %}
+          {% set completati = states('counter.frarik_antizanzare_cicli_mensili') | int(0) %}
+          {% if completati >= target %}
+            Obiettivo Raggiunto!
+          {% else %}
+            {{ completati }} / {{ target }} cicli
+          {% endif %}
+        icon: >
+          {% set target = states('input_number.frarik_antizanzare_cicli_target_mensili') | int(1) %}
+          {% set completati = states('counter.frarik_antizanzare_cicli_mensili') | int(0) %}
+          {% if completati >= target %}
+            mdi:check-circle
+          {% elif completati >= target * 0.8 %}
+            mdi:progress-check
+          {% elif completati >= target * 0.5 %}
+            mdi:progress-clock
+          {% else %}
+            mdi:progress-alert
+          {% endif %}
+        attributes:
+          percentuale: >
+            {% set target = states('input_number.frarik_antizanzare_cicli_target_mensili') | int(1) %}
+            {% set completati = states('counter.frarik_antizanzare_cicli_mensili') | int(0) %}
+            {{ ((completati / target) * 100) | round(1) }}
+          giorni_rimasti_nel_mese: >
+            {% set oggi = now() %}
+            {% set prossimo_mese = oggi.replace(day=28) + timedelta(days=4) %}
+            {% set ultimo_giorno_mese = (prossimo_mese - timedelta(days=prossimo_mese.day)).day %}
+            {{ ultimo_giorno_mese - oggi.day + 1 }}
+          media_cicli_giornalieri_necessaria: >
+            {% set target = states('input_number.frarik_antizanzare_cicli_target_mensili') | int(1) %}
+            {% set completati = states('counter.frarik_antizanzare_cicli_mensili') | int(0) %}
+            {% set rimanenti = target - completati %}
+            {% set oggi = now() %}
+            {% set prossimo_mese = oggi.replace(day=28) + timedelta(days=4) %}
+            {% set ultimo_giorno_mese = (prossimo_mese - timedelta(days=prossimo_mese.day)).day %}
+            {% set giorni_rimasti = ultimo_giorno_mese - oggi.day + 1 %}
+            {% if giorni_rimasti > 0 and rimanenti > 0 %}
+              {{ (rimanenti / giorni_rimasti) | round(1) }}
+            {% else %}
+              0
+            {% endif %}
+
+  - binary_sensor:
+      # Sensore pioggia in corso (collegato a sensore meteo reale)
+      - name: "Pioggia in Corso"
+        unique_id: frarik_antizanzare_pioggia_corso
+        state: "{{ states('IL_TUO_SENSORE_PIOGGIA') }}"
+        icon: >
+          {{ 'mdi:weather-rainy' if states('IL_TUO_SENSORE_PIOGGIA') | float(0) > 0 else 'mdi:weather-cloudy' }}
+
+      # Sensore blocco per condizioni meteo
+      - name: "Blocco Meteo Attivo"
+        unique_id: frarik_antizanzare_blocco_meteo
+        state: >
+          {{ states('IL_TUO_SENSORE_PIOGGIA') | float(0) >= states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) }}
+        icon: >
+          {{ 'mdi:weather-rainy' if states('IL_TUO_SENSORE_PIOGGIA') | float(0) >= states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) else 'mdi:weather-partly-cloudy' }}
+
+
+
+# AUTOMAZIONI
+automation:
+  # Reset contatori il primo del mese
+  - id: frarik_antizanzare_reset_contatori
+    alias: "Anti Zanzare - Reset Contatori Mensili"
+    trigger:
+    action:
+      - service: counter.reset
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.set_value
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+        data:
+          value: "{{ states('input_number.frarik_antizanzare_cicli_target_mensili') | int }}"
+
+  # Inizializza counter rimanenti quando cambia il target
+  - id: frarik_antizanzare_inizializza_counter_rimanenti
+    alias: "Anti Zanzare - Inizializza Counter Rimanenti"
+    trigger:
+      - platform: state
+        entity_id: input_number.frarik_antizanzare_cicli_target_mensili
+    action:
+      - service: counter.set_value
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+        data:
+          value: >
+            {% set target = trigger.to_state.state | int %}
+            {% set completati = states('counter.frarik_antizanzare_cicli_mensili') | int(0) %}
+            {% set rimanenti = target - completati %}
+            {{ [0, rimanenti] | max }}
+
+  # Inizializza counter rimanenti all'avvio di Home Assistant
+  - id: frarik_antizanzare_inizializza_counter_avvio
+    alias: "Anti Zanzare - Inizializza Counter all'Avvio"
+    trigger:
+      - platform: homeassistant
+        event: start
+    action:
+      - delay: "00:00:30"  # Aspetta che tutte le entità siano caricate
+      - service: counter.set_value
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+        data:
+          value: >
+            {% set target = states('input_number.frarik_antizanzare_cicli_target_mensili') | int %}
+            {% set completati = states('counter.frarik_antizanzare_cicli_mensili') | int(0) %}
+            {% set rimanenti = target - completati %}
+            {{ [0, rimanenti] | max }}
+
+  # Avvio automazione
+  - id: frarik_antizanzare_avvio_automazione
+    alias: "Anti Zanzare - Avvio Automazione"
+    trigger:
+      - platform: state
+        entity_id: input_button.frarik_antizanzare_start_automazione
+    action:
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+
+  # Stop automazione
+  - id: frarik_antizanzare_stop_automazione
+    alias: "Anti Zanzare - Stop Automazione"
+    trigger:
+      - platform: state
+        entity_id: input_button.frarik_antizanzare_stop_automazione
+    action:
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+      - service: timer.cancel
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+
+  # SISTEMA SEMPLICE - FUNZIONA DAVVERO!
+  # Automazioni dirette per ogni giorno - LUNEDÌ
+  - id: frarik_antizanzare_lunedi_ciclo1
+    alias: "Anti Zanzare - Lunedì Ciclo 1"
+    trigger:
+    condition:
+      - condition: time
+        weekday: mon
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_lunedi
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_lunedi_num_cicli') | int >= 1 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: "{{ states('input_number.frarik_antizanzare_lunedi_durata_ciclo1') | int(0) }}"
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  - id: frarik_antizanzare_lunedi_ciclo2
+    alias: "Anti Zanzare - Lunedì Ciclo 2"
+    trigger:
+    condition:
+      - condition: time
+        weekday: mon
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_lunedi
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_lunedi_num_cicli') | int >= 2 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: "{{ states('input_number.frarik_antizanzare_lunedi_durata_ciclo2') | int(0) }}"
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  - id: frarik_antizanzare_lunedi_ciclo3
+    alias: "Anti Zanzare - Lunedì Ciclo 3"
+    trigger:
+    condition:
+      - condition: time
+        weekday: mon
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_lunedi
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_lunedi_num_cicli') | int >= 3 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: "{{ states('input_number.frarik_antizanzare_lunedi_durata_ciclo3') | int(0) }}"
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  - id: frarik_antizanzare_lunedi_ciclo4
+    alias: "Anti Zanzare - Lunedì Ciclo 4"
+    trigger:
+    condition:
+      - condition: time
+        weekday: mon
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_lunedi
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_lunedi_num_cicli') | int >= 4 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: "{{ states('input_number.frarik_antizanzare_lunedi_durata_ciclo4') | int(0) }}"
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  - id: frarik_antizanzare_lunedi_ciclo5
+    alias: "Anti Zanzare - Lunedì Ciclo 5"
+    trigger:
+    condition:
+      - condition: time
+        weekday: mon
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_lunedi
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_lunedi_num_cicli') | int >= 5 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: "{{ states('input_number.frarik_antizanzare_lunedi_durata_ciclo5') | int(0) }}"
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  # MARTEDÌ - TUTTI I CICLI
+  - id: frarik_antizanzare_martedi_ciclo1
+    alias: "Anti Zanzare - Martedì Ciclo 1"
+    trigger:
+    condition:
+      - condition: time
+        weekday: tue
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_martedi
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_martedi_num_cicli') | int >= 1 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: "{{ states('input_number.frarik_antizanzare_martedi_durata_ciclo1') | int(0) }}"
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  - id: frarik_antizanzare_martedi_ciclo2
+    alias: "Anti Zanzare - Martedì Ciclo 2"
+    trigger:
+    condition:
+      - condition: time
+        weekday: tue
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_martedi
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_martedi_num_cicli') | int >= 2 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: "{{ states('input_number.frarik_antizanzare_martedi_durata_ciclo2') | int(0) }}"
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  - id: frarik_antizanzare_martedi_ciclo3
+    alias: "Anti Zanzare - Martedì Ciclo 3"
+    trigger:
+    condition:
+      - condition: time
+        weekday: tue
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_martedi
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_martedi_num_cicli') | int >= 3 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: "{{ states('input_number.frarik_antizanzare_martedi_durata_ciclo3') | int(0) }}"
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  - id: frarik_antizanzare_martedi_ciclo4
+    alias: "Anti Zanzare - Martedì Ciclo 4"
+    trigger:
+    condition:
+      - condition: time
+        weekday: tue
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_martedi
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_martedi_num_cicli') | int >= 4 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: "{{ states('input_number.frarik_antizanzare_martedi_durata_ciclo4') | int(0) }}"
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  - id: frarik_antizanzare_martedi_ciclo5
+    alias: "Anti Zanzare - Martedì Ciclo 5"
+    trigger:
+    condition:
+      - condition: time
+        weekday: tue
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_martedi
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_martedi_num_cicli') | int >= 5 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: "{{ states('input_number.frarik_antizanzare_martedi_durata_ciclo5') | int(0) }}"
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  # MERCOLEDÌ - TUTTI I CICLI
+  - id: frarik_antizanzare_mercoledi_ciclo1
+    alias: "Anti Zanzare - Mercoledì Ciclo 1"
+    trigger:
+    condition:
+      - condition: time
+        weekday: wed
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_mercoledi
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_mercoledi_num_cicli') | int >= 1 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: >
+            {{ '00:%02d:%02d' | format((states('input_number.frarik_antizanzare_mercoledi_durata_ciclo1') | int // 60), (states('input_number.frarik_antizanzare_mercoledi_durata_ciclo1') | int % 60)) }}
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  - id: frarik_antizanzare_mercoledi_ciclo2
+    alias: "Anti Zanzare - Mercoledì Ciclo 2"
+    trigger:
+    condition:
+      - condition: time
+        weekday: wed
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_mercoledi
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_mercoledi_num_cicli') | int >= 2 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: >
+            {{ '00:%02d:%02d' | format((states('input_number.frarik_antizanzare_mercoledi_durata_ciclo2') | int // 60), (states('input_number.frarik_antizanzare_mercoledi_durata_ciclo2') | int % 60)) }}
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  - id: frarik_antizanzare_mercoledi_ciclo3
+    alias: "Anti Zanzare - Mercoledì Ciclo 3"
+    trigger:
+    condition:
+      - condition: time
+        weekday: wed
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_mercoledi
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_mercoledi_num_cicli') | int >= 3 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: >
+            {{ '00:%02d:%02d' | format((states('input_number.frarik_antizanzare_mercoledi_durata_ciclo3') | int // 60), (states('input_number.frarik_antizanzare_mercoledi_durata_ciclo3') | int % 60)) }}
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  - id: frarik_antizanzare_mercoledi_ciclo4
+    alias: "Anti Zanzare - Mercoledì Ciclo 4"
+    trigger:
+    condition:
+      - condition: time
+        weekday: wed
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_mercoledi
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_mercoledi_num_cicli') | int >= 4 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: >
+            {{ '00:%02d:%02d' | format((states('input_number.frarik_antizanzare_mercoledi_durata_ciclo4') | int // 60), (states('input_number.frarik_antizanzare_mercoledi_durata_ciclo4') | int % 60)) }}
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  - id: frarik_antizanzare_mercoledi_ciclo5
+    alias: "Anti Zanzare - Mercoledì Ciclo 5"
+    trigger:
+    condition:
+      - condition: time
+        weekday: wed
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_mercoledi
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_mercoledi_num_cicli') | int >= 5 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: >
+            {{ '00:%02d:%02d' | format((states('input_number.frarik_antizanzare_mercoledi_durata_ciclo5') | int // 60), (states('input_number.frarik_antizanzare_mercoledi_durata_ciclo5') | int % 60)) }}
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  # GIOVEDÌ - TUTTI I CICLI
+  - id: frarik_antizanzare_giovedi_ciclo1
+    alias: "Anti Zanzare - Giovedì Ciclo 1"
+    trigger:
+    condition:
+      - condition: time
+        weekday: thu
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_giovedi
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_giovedi_num_cicli') | int >= 1 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: >
+            {{ '00:%02d:%02d' | format((states('input_number.frarik_antizanzare_giovedi_durata_ciclo1') | int // 60), (states('input_number.frarik_antizanzare_giovedi_durata_ciclo1') | int % 60)) }}
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  - id: frarik_antizanzare_giovedi_ciclo2
+    alias: "Anti Zanzare - Giovedì Ciclo 2"
+    trigger:
+    condition:
+      - condition: time
+        weekday: thu
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_giovedi
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_giovedi_num_cicli') | int >= 2 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: >
+            {{ '00:%02d:%02d' | format((states('input_number.frarik_antizanzare_giovedi_durata_ciclo2') | int // 60), (states('input_number.frarik_antizanzare_giovedi_durata_ciclo2') | int % 60)) }}
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  - id: frarik_antizanzare_giovedi_ciclo3
+    alias: "Anti Zanzare - Giovedì Ciclo 3"
+    trigger:
+    condition:
+      - condition: time
+        weekday: thu
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_giovedi
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_giovedi_num_cicli') | int >= 3 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: >
+            {{ '00:%02d:%02d' | format((states('input_number.frarik_antizanzare_giovedi_durata_ciclo3') | int // 60), (states('input_number.frarik_antizanzare_giovedi_durata_ciclo3') | int % 60)) }}
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  - id: frarik_antizanzare_giovedi_ciclo4
+    alias: "Anti Zanzare - Giovedì Ciclo 4"
+    trigger:
+    condition:
+      - condition: time
+        weekday: thu
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_giovedi
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_giovedi_num_cicli') | int >= 4 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: >
+            {{ '00:%02d:%02d' | format((states('input_number.frarik_antizanzare_giovedi_durata_ciclo4') | int // 60), (states('input_number.frarik_antizanzare_giovedi_durata_ciclo4') | int % 60)) }}
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  - id: frarik_antizanzare_giovedi_ciclo5
+    alias: "Anti Zanzare - Giovedì Ciclo 5"
+    trigger:
+    condition:
+      - condition: time
+        weekday: thu
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_giovedi
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_giovedi_num_cicli') | int >= 5 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: >
+            {{ '00:%02d:%02d' | format((states('input_number.frarik_antizanzare_giovedi_durata_ciclo5') | int // 60), (states('input_number.frarik_antizanzare_giovedi_durata_ciclo5') | int % 60)) }}
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  # VENERDÌ - TUTTI I CICLI
+  - id: frarik_antizanzare_venerdi_ciclo1
+    alias: "Anti Zanzare - Venerdì Ciclo 1"
+    trigger:
+    condition:
+      - condition: time
+        weekday: fri
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_venerdi
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_venerdi_num_cicli') | int >= 1 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: >
+            {{ '00:%02d:%02d' | format((states('input_number.frarik_antizanzare_venerdi_durata_ciclo1') | int // 60), (states('input_number.frarik_antizanzare_venerdi_durata_ciclo1') | int % 60)) }}
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  - id: frarik_antizanzare_venerdi_ciclo2
+    alias: "Anti Zanzare - Venerdì Ciclo 2"
+    trigger:
+    condition:
+      - condition: time
+        weekday: fri
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_venerdi
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_venerdi_num_cicli') | int >= 2 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: >
+            {{ '00:%02d:%02d' | format((states('input_number.frarik_antizanzare_venerdi_durata_ciclo2') | int // 60), (states('input_number.frarik_antizanzare_venerdi_durata_ciclo2') | int % 60)) }}
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  - id: frarik_antizanzare_venerdi_ciclo3
+    alias: "Anti Zanzare - Venerdì Ciclo 3"
+    trigger:
+    condition:
+      - condition: time
+        weekday: fri
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_venerdi
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_venerdi_num_cicli') | int >= 3 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: >
+            {{ '00:%02d:%02d' | format((states('input_number.frarik_antizanzare_venerdi_durata_ciclo3') | int // 60), (states('input_number.frarik_antizanzare_venerdi_durata_ciclo3') | int % 60)) }}
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  - id: frarik_antizanzare_venerdi_ciclo4
+    alias: "Anti Zanzare - Venerdì Ciclo 4"
+    trigger:
+    condition:
+      - condition: time
+        weekday: fri
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_venerdi
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_venerdi_num_cicli') | int >= 4 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: >
+            {{ '00:%02d:%02d' | format((states('input_number.frarik_antizanzare_venerdi_durata_ciclo4') | int // 60), (states('input_number.frarik_antizanzare_venerdi_durata_ciclo4') | int % 60)) }}
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  - id: frarik_antizanzare_venerdi_ciclo5
+    alias: "Anti Zanzare - Venerdì Ciclo 5"
+    trigger:
+    condition:
+      - condition: time
+        weekday: fri
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_venerdi
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_venerdi_num_cicli') | int >= 5 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: >
+            {{ '00:%02d:%02d' | format((states('input_number.frarik_antizanzare_venerdi_durata_ciclo5') | int // 60), (states('input_number.frarik_antizanzare_venerdi_durata_ciclo5') | int % 60)) }}
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  # SABATO - TUTTI I CICLI
+  - id: frarik_antizanzare_sabato_ciclo1
+    alias: "Anti Zanzare - Sabato Ciclo 1"
+    trigger:
+    condition:
+      - condition: time
+        weekday: sat
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_sabato
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_sabato_num_cicli') | int >= 1 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: >
+            {{ '00:%02d:%02d' | format((states('input_number.frarik_antizanzare_sabato_durata_ciclo1') | int // 60), (states('input_number.frarik_antizanzare_sabato_durata_ciclo1') | int % 60)) }}
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  - id: frarik_antizanzare_sabato_ciclo2
+    alias: "Anti Zanzare - Sabato Ciclo 2"
+    trigger:
+    condition:
+      - condition: time
+        weekday: sat
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_sabato
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_sabato_num_cicli') | int >= 2 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: >
+            {{ '00:%02d:%02d' | format((states('input_number.frarik_antizanzare_sabato_durata_ciclo2') | int // 60), (states('input_number.frarik_antizanzare_sabato_durata_ciclo2') | int % 60)) }}
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  - id: frarik_antizanzare_sabato_ciclo3
+    alias: "Anti Zanzare - Sabato Ciclo 3"
+    trigger:
+    condition:
+      - condition: time
+        weekday: sat
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_sabato
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_sabato_num_cicli') | int >= 3 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: >
+            {{ '00:%02d:%02d' | format((states('input_number.frarik_antizanzare_sabato_durata_ciclo3') | int // 60), (states('input_number.frarik_antizanzare_sabato_durata_ciclo3') | int % 60)) }}
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  - id: frarik_antizanzare_sabato_ciclo4
+    alias: "Anti Zanzare - Sabato Ciclo 4"
+    trigger:
+    condition:
+      - condition: time
+        weekday: sat
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_sabato
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_sabato_num_cicli') | int >= 4 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: >
+            {{ '00:%02d:%02d' | format((states('input_number.frarik_antizanzare_sabato_durata_ciclo4') | int // 60), (states('input_number.frarik_antizanzare_sabato_durata_ciclo4') | int % 60)) }}
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  - id: frarik_antizanzare_sabato_ciclo5
+    alias: "Anti Zanzare - Sabato Ciclo 5"
+    trigger:
+    condition:
+      - condition: time
+        weekday: sat
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_sabato
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_sabato_num_cicli') | int >= 5 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: >
+            {{ '00:%02d:%02d' | format((states('input_number.frarik_antizanzare_sabato_durata_ciclo5') | int // 60), (states('input_number.frarik_antizanzare_sabato_durata_ciclo5') | int % 60)) }}
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  # DOMENICA - TUTTI I CICLI
+  - id: frarik_antizanzare_domenica_ciclo1
+    alias: "Anti Zanzare - Domenica Ciclo 1"
+    trigger:
+    condition:
+      - condition: time
+        weekday: sun
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_domenica
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_domenica_num_cicli') | int >= 1 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: >
+            {{ '00:%02d:%02d' | format((states('input_number.frarik_antizanzare_domenica_durata_ciclo1') | int // 60), (states('input_number.frarik_antizanzare_domenica_durata_ciclo1') | int % 60)) }}
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  - id: frarik_antizanzare_domenica_ciclo2
+    alias: "Anti Zanzare - Domenica Ciclo 2"
+    trigger:
+    condition:
+      - condition: time
+        weekday: sun
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_domenica
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_domenica_num_cicli') | int >= 2 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: >
+            {{ '00:%02d:%02d' | format((states('input_number.frarik_antizanzare_domenica_durata_ciclo2') | int // 60), (states('input_number.frarik_antizanzare_domenica_durata_ciclo2') | int % 60)) }}
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  - id: frarik_antizanzare_domenica_ciclo3
+    alias: "Anti Zanzare - Domenica Ciclo 3"
+    trigger:
+    condition:
+      - condition: time
+        weekday: sun
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_domenica
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_domenica_num_cicli') | int >= 3 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: >
+            {{ '00:%02d:%02d' | format((states('input_number.frarik_antizanzare_domenica_durata_ciclo3') | int // 60), (states('input_number.frarik_antizanzare_domenica_durata_ciclo3') | int % 60)) }}
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  - id: frarik_antizanzare_domenica_ciclo4
+    alias: "Anti Zanzare - Domenica Ciclo 4"
+    trigger:
+    condition:
+      - condition: time
+        weekday: sun
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_domenica
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_domenica_num_cicli') | int >= 4 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: >
+            {{ '00:%02d:%02d' | format((states('input_number.frarik_antizanzare_domenica_durata_ciclo4') | int // 60), (states('input_number.frarik_antizanzare_domenica_durata_ciclo4') | int % 60)) }}
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  - id: frarik_antizanzare_domenica_ciclo5
+    alias: "Anti Zanzare - Domenica Ciclo 5"
+    trigger:
+    condition:
+      - condition: time
+        weekday: sun
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_domenica
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        state: "off"
+      - condition: not
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+      - condition: template
+        value_template: "{{ states('input_number.frarik_antizanzare_domenica_num_cicli') | int >= 5 }}"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+        data:
+          duration: >
+            {{ '00:%02d:%02d' | format((states('input_number.frarik_antizanzare_domenica_durata_ciclo5') | int // 60), (states('input_number.frarik_antizanzare_domenica_durata_ciclo5') | int % 60)) }}
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  # SISTEMA COMPLETATO - FUNZIONA!
+
+  # Stop anti_zanzare automatica quando timer finisce
+  - id: frarik_antizanzare_stop_automatica
+    alias: "Anti Zanzare - Stop Automatica"
+    trigger:
+      - platform: state
+        entity_id: timer.frarik_antizanzare_ciclo_timer
+        from: "active"
+        to: "idle"
+    condition:
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_manuale_attiva
+        state: "off"
+    action:
+      # Disattiva pompa reale
+      - service: switch.turn_off
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+      - service: timer.cancel
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+
+  # Blocco per pioggia e soglia probabilità
+  - id: frarik_antizanzare_blocco_meteo
+    alias: "Anti Zanzare - Blocco per Condizioni Meteo"
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        to: "on"
+    action:
+      - service: timer.cancel
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.frarik_antizanzare_manuale_attiva
+      # Disattivare pompa (TEMPORANEO: sostituire con switch reale)
+      - service: switch.turn_off
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+  # Disattivazione automazione per condizioni meteo
+  - id: frarik_antizanzare_disattiva_automazione_meteo
+    alias: "Anti Zanzare - Disattiva Automazione per Meteo"
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        to: "on"
+        for: "00:00:01"
+    condition:
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "on"
+    action:
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+          
+  # Riattivazione automazione per condizioni meteo migliorate           
+  - id: frarik_antizanzare_riattiva_automazione_meteo
+    alias: "Anti Zanzare - Riattiva Automazione per Meteo"
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        to: "off"
+        for: "00:01:00"  # Aspetta 1 minuti prima di riattivare automazione
+    condition:
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+        state: "off"
+    action:
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.frarik_antizanzare_automazione_attiva          
+          
+
+  # Avvio anti_zanzare manuale
+  - id: frarik_antizanzare_avvio_manuale
+    alias: "Anti Zanzare - Avvio Manuale"
+    trigger:
+      - platform: state
+        entity_id: input_boolean.frarik_antizanzare_manuale_attiva
+        to: "on"
+    action:
+      # Ferma automazione se attiva
+      - service: timer.cancel
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+      # Avvia timer manuale con durata impostata
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_manuale_timer
+        data:
+          duration: >
+            {{ '00:%02d:%02d' | format((states('input_number.frarik_antizanzare_durata_manuale') | int // 60), (states('input_number.frarik_antizanzare_durata_manuale') | int % 60)) }}
+      # Attiva pompa reale
+      - service: switch.turn_on
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+      # Incrementa contatore mensile
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      # Decrementa contatore rimanenti
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+
+  # Avvio manuale da pulsante (imposta il boolean e quindi scatena l'automazione esistente)
+  - id: frarik_antizanzare_avvio_manuale_button
+    alias: "Anti Zanzare - Avvio Manuale (Button)"
+    trigger:
+      - platform: state
+        entity_id: input_button.frarik_antizanzare_start_manuale
+    condition: []
+    action:
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.frarik_antizanzare_manuale_attiva
+    mode: single
+
+  # Stop manuale da pulsante (spegne tutto e cancella timer)
+  - id: frarik_antizanzare_stop_manuale_button
+    alias: "Anti Zanzare - Stop Manuale (Button)"
+    trigger:
+      - platform: state
+        entity_id: input_button.frarik_antizanzare_stop_manuale
+    action:
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.frarik_antizanzare_manuale_attiva
+      - service: timer.cancel
+        target:
+          entity_id: timer.frarik_antizanzare_manuale_timer
+      # Spegne pompa (sostituire con switch reale se necessario)
+      - service: switch.turn_off
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+    mode: restart
+
+  # Fine anti_zanzare manuale - Timer finito
+  - id: frarik_antizanzare_fine_timer_manuale
+    alias: "Anti Zanzare - Fine Timer Manuale"
+    trigger:
+      - platform: state
+        entity_id: timer.frarik_antizanzare_manuale_timer
+        from: "active"
+        to: "idle"
+    condition:
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_manuale_attiva
+        state: "on"
+    action:
+      # Spegni pompa reale
+      - service: switch.turn_off
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+      # Disattiva boolean manuale
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.frarik_antizanzare_manuale_attiva
+
+  # Stop manuale - Interruzione timer
+  - id: frarik_antizanzare_stop_manuale_forzato
+    alias: "Anti Zanzare - Stop Manuale Forzato"
+    trigger:
+      - platform: state
+        entity_id: input_boolean.frarik_antizanzare_manuale_attiva
+        to: "off"
+    condition:
+      - condition: state
+        entity_id: timer.frarik_antizanzare_manuale_timer
+        state: "active"
+    action:
+      # Ferma timer manuale
+      - service: timer.cancel
+        target:
+          entity_id: timer.frarik_antizanzare_manuale_timer
+      # Spegni pompa
+      - service: switch.turn_off
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+
+####automazioni###
+  # Automazioni di notifica anti_zanzare
+  - alias: Notifica inizio ciclo automatico anti_zanzare
+    trigger:
+      - platform: state
+        entity_id: timer.frarik_antizanzare_ciclo_timer
+        to: 'active'
+    action:
+      - service: notify.frarik_antizanzare_notify
+        data:
+          message: "🦟 Ciclo Anti Zanzare Automatico Avviato. 🦟"
+          title: "🦟 Anti Zanzare 🦟 "
+
+  - alias: Notifica fine ciclo automatico anti_zanzare
+    trigger:
+      - platform: state
+        entity_id: timer.frarik_antizanzare_ciclo_timer
+        to: 'idle'
+    action:
+      - service: notify.frarik_antizanzare_notify
+        data:
+          message: "🦟 Ciclo Anti Zanzare Automatico Terminato. 🦟"
+          title: "🦟 Anti Zanzare 🦟 "
+
+  - alias: Notifica inizio ciclo manuale anti_zanzare
+    trigger:
+      - platform: state
+        entity_id: timer.frarik_antizanzare_manuale_timer
+        to: 'active'
+    action:
+      - service: notify.frarik_antizanzare_notify
+        data:
+          message: "🦟 Ciclo Manuale Anti Zanzare Avviato. 🦟"
+          title: "🦟 Anti Zanzare 🦟 "
+
+  - alias: Notifica fine ciclo manuale anti_zanzare
+    trigger:
+      - platform: state
+        entity_id: timer.frarik_antizanzare_manuale_timer
+        to: 'idle'
+    action:
+      - service: notify.frarik_antizanzare_notify
+        data:
+          message: "🦟 Ciclo Manuale Anti Zanzare Terminato. 🦟"
+          title: "🦟 Anti Zanzare 🦟 "
+
+  - alias: Notifica stop automazione per meteo
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        to: 'on'
+    action:
+      - service: notify.frarik_antizanzare_notify
+        data:
+          message: "⚠️ Automazioni Anti Zanzare Bloccate da condizioni avverse ⚠️"
+          title: "🦟 Anti Zanzare 🦟 "
+
+  - alias: Notifica riattivazione automazione per meteo
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.blocco_meteo_attivo
+        to: 'off'
+    action:
+      - service: notify.frarik_antizanzare_notify
+        data:
+          message: "✅ Automazioni Anti Zanzare Riattivate: condizioni meteo favorevoli ✅"
+          title: "🦟 Anti Zanzare 🦟"
+
+  - alias: Perdita cassetta spegne anti zanzare e notifica
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.sensore_perdita_cassetta_ant_zanzare
+        to: 'on'
+    action:
+      - service: switch.turn_off
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+      - service: notify.frarik_antizanzare_notify
+        data:
+          message: "⚠️ Rilevata perdita nella cassetta! Controllare immediatamente. ⚠️"
+          title: "🦟 Anti Zanzare 🦟 "
+
+  - alias: Notifica Cicli Rimanenti - Unificata
+    trigger:
+      - platform: state
+        entity_id: sensor.cicli_rimanenti_questo_mese
+    condition: []
+    action:
+      - choose:
+          # Caso: 10 cicli rimasti
+          - conditions:
+              - condition: numeric_state
+                entity_id: sensor.cicli_rimanenti_questo_mese
+                below: 11
+                above: 9
+            sequence:
+              - service: notify.frarik_antizanzare_notify
+                data:
+                  message: "⚠️ 10 CICLI RIMASTI NELLA TANICA ⚠️"
+                  title: "🦟 Anti Zanzare 🦟 "
+     
+          # Caso: 5 cicli rimasti
+          - conditions:
+              - condition: numeric_state
+                entity_id: sensor.cicli_rimanenti_questo_mese
+                below: 6
+                above: 4
+            sequence:
+              - service: notify.frarik_antizanzare_notify
+                data:
+                  message: "⚠️ 5 CICLI RIMASTI NELLA TANICA ⚠️"
+                  title: "🦟 Anti Zanzare 🦟 "
+     
+          # Caso: 2 cicli rimasti - Notifica ripetuta ogni 5 secondi
+          - conditions:
+              - condition: numeric_state
+                entity_id: sensor.cicli_rimanenti_questo_mese
+                below: 3
+            sequence:
+              - repeat:
+                  while:
+                    - condition: numeric_state
+                      entity_id: sensor.cicli_rimanenti_questo_mese
+                      below: 3
+                  sequence:
+                    - service: notify.frarik_antizanzare_notify
+                      data:
+                        message: "⚠️ RIEMPIRE IMMEDIATAMENTE TANICA ⚠️"
+                        title: "🦟 Anti Zanzare 🦟 "
+                    - delay: "00:30:00"
+    mode: single
+# ----------------------------------------------------------------------
+  # SICUREZZA PERSONA (Telecamera Giardino DX)
+  # ----------------------------------------------------------------------
+
+  # Blocco immediato se:
+  # 1. Viene rilevata una persona MENTRE la pompa è accesa.
+  # 2. La pompa si accende MENTRE c'è una persona.
+  - id: frarik_antizanzare_sicurezza_persona_rilevata
+    alias: "Anti Zanzare - Sicurezza: Persona Rilevata con Pompa Attiva"
+    trigger:
+      # Caso A: Arriva una persona
+      - platform: state
+        entity_id: binary_sensor.telecamera_giardino_dx_persona
+        to: "on"
+      # Caso B: La pompa si accende (magari perché è scattato l'orario)
+      - platform: state
+        entity_id: IL_TUO_SWITCH_AZ
+        to: "on"
+    condition:
+      # L'automazione prosegue SOLO se entrambe le cose sono vere contemporaneamente
+      - condition: state
+        entity_id: binary_sensor.telecamera_giardino_dx_persona
+        state: "on"
+      - condition: state
+        entity_id: IL_TUO_SWITCH_AZ
+        state: "on"
+    action:
+      # 1. Spegni subito la pompa (PRIORITÀ ASSOLUTA)
+      - service: switch.turn_off
+        target:
+          entity_id: IL_TUO_SWITCH_AZ
+      
+      # 2. Annulla Timer Automatico
+      - service: timer.cancel
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+
+      # 3. Annulla Timer Manuale
+      - service: timer.cancel
+        target:
+          entity_id: timer.frarik_antizanzare_manuale_timer
+
+      # 4. Spegni stato Manuale
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.frarik_antizanzare_manuale_attiva
+      
+      # 5. Disattiva l'Automazione Generale (impedisce nuovi avvii immediati)
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+
+      # 6. Notifica Push
+      - service: notify.frarik_antizanzare_notify
+        data:
+          title: "Rilevata Persona Antizanzare"
+          message: "⚠️ Stop immediato! Rilevata persona mentre la pompa era attiva."
+
+  # Riattivazione automatica quando la persona va via
+  - id: frarik_antizanzare_sicurezza_persona_assente
+    alias: "Anti Zanzare - Sicurezza: Persona Assente (Ripristino)"
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.telecamera_giardino_dx_persona
+        to: "off"
+        for: "00:01:00" # Aspetta 1 minuto che la persona sia andata via davvero
+    condition: [] # Nessuna condizione: riattiva SEMPRE l'automazione generale
+    action:
+      # 1. Riattiva l'automazione generale
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.frarik_antizanzare_automazione_attiva
+      
+      # 2. Notifica di ripristino
+      - service: notify.frarik_antizanzare_notify
+        data:
+          title: "Anti Zanzare - Sicurezza"
+          message: "✅ Area libera. Sistema riarmato e pronto."`;
+
+  function _buildPkgAZ(sw, push, pioggia) {
     var ind = '          ';
     var pushLines = (push && push.length)
       ? push.map(function(p) { return ind + '- service: ' + p; }).join('\n')
       : ind + '- service: mobile_app_smartphone';
-    return _AZ_PKG_YAML.split('IL_TUO_SWITCH_AZ').join(sw || 'switch.presa_anti_zanzare');
+    var yaml = _AZ_PKG_YAML
+      .split('IL_TUO_SWITCH_AZ').join(sw || 'switch.presa_anti_zanzare')
+      .split('IL_TUO_SENSORE_PIOGGIA').join(pioggia || 'sensor.probabilita_pioggia')
+      .split('IL_TUO_SENSORE_ACQUA').join('sensor.consumo_acqua');
+    yaml = yaml.replace(ind + '- service: IL_TUO_MOBILE_APP', pushLines);
+    return yaml;
   }
 
   function _azOpenImpostazioni() {
@@ -1214,7 +4390,7 @@ window.customCards.push({ version: '1.5',
         var base = location.origin + (m ? m[1] : '');
         var btn = sr.getElementById('wd-install');
         btn.classList.add('wd-loading'); btn.textContent = 'Installazione…';
-        var yaml = _buildPkgAZ(sw, push);
+        var yaml = _buildPkgAZ(sw, push, '');
         btn.textContent = 'Installazione…';
         fetch(base + '/api/frarik/pkg/install', {
           method: 'POST',
@@ -2011,6 +5187,7 @@ window.customCards.push({ version: '1.5',
     frarik_pkg_id:      'frarik_antizanzare',
     frarik_pkg_version: '2.0',
     openWizard: _openWizardAZ,
+    _buildPkgFromConfig: function(cfg) { return _buildPkgAZ(cfg.sw || '', cfg.push || [], cfg.pioggia || ''); },
   };
   window.FratechCardRegistry = window.FratechCardRegistry || {};
   window.FratechCardRegistry[_AZ_CARD.id] = _AZ_CARD;

@@ -94,17 +94,20 @@ homeassistant:
         # Esempi:
         #   - media_player.google_home_cucina
         # ─────────────────────────────────────────────────
-        Lista MediaPlayer Google: &google []
+        Lista MediaPlayer Google: &google
+          - IL_TUO_MEDIA_PLAYER_GOOGLE
 
         # ─────────────────────────────────────────────────
         # DISPOSITIVI AMAZON ALEXA / ECHO
         # ─────────────────────────────────────────────────
-        Lista MediaPlayer Alexa: &alexa []
+        Lista MediaPlayer Alexa: &alexa
+          - IL_TUO_MEDIA_PLAYER_ALEXA
 
         # ─────────────────────────────────────────────────
         # SERVIZI NOTIFICA PUSH (smartphone)
         # ─────────────────────────────────────────────────
-        Device per notifica push: &push []
+        Device per notifica push: &push
+          - service: IL_TUO_MOBILE_APP
 
 
 ####################################################
@@ -255,7 +258,7 @@ automation:
               - repeat:
                   for_each: *push
                   sequence:
-                    - service: "{{ repeat.item.service }}"
+                    - service: "notify.{{ repeat.item.service }}"
                       continue_on_error: true
                       data:
                         title: "♻️ Frarik — Differenziata"

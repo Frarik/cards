@@ -914,7 +914,7 @@ homeassistant:
         Potenza Contrattuale: &potenza_kw IL_TUA_POTENZA_KW
 
         Device per notifica push: &push
-          - service: IL_TUO_MOBILE_APP_1
+          - service: IL_TUO_MOBILE_APP
 
 ####################################################
 #                  NOTIFICHE                       #
@@ -1441,7 +1441,7 @@ template:
   - sensor:
       - name: "Frarik Bolletta Versione"
         unique_id: frarik_bolletta_versione
-        state: "1.0"
+        state: "2.0"
         icon: mdi:package-variant-closed
       - name: "Bolletta Energia Giornaliera Safe"
         unique_id: frarik_bolletta_energia_giornaliera_safe
@@ -2244,7 +2244,7 @@ automation:
       .split('IL_TUO_SENSORE_POTENZA_BOLLETTA').join(potenza || 'sensor.consumo_istantaneo')
       .split('IL_TUA_TARIFFA_KWHE').join((parseFloat(tariffa) || 0.09).toFixed(6))
       .split('IL_TUA_POTENZA_KW').join(String(parseFloat(kw) || 4.5))
-      .replace('          - service: IL_TUO_MOBILE_APP_1', pushLines);
+      .replace('          - service: IL_TUO_MOBILE_APP', pushLines);
   }
 
   function openWizard(hass, onDone) {
@@ -2342,6 +2342,7 @@ automation:
     frarik_pkg_id: 'frarik_bolletta',
     frarik_pkg_version: '2.0',
     openWizard: openWizard,
+    _buildPkgFromConfig: function(cfg) { return _bBuildPkg(cfg.potenza || '', cfg.tariffa || '0.09', cfg.kw || '4.5', cfg.push || []); },
   };
 
 })();

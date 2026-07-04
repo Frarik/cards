@@ -468,13 +468,13 @@ homeassistant:
       setting:
 
         Lista MediaPlayer Google: &google
-          - IL_TUO_MEDIA_PLAYER_GOOGLE_1
+          - IL_TUO_MEDIA_PLAYER_GOOGLE
 
         Lista MediaPlayer Alexa: &alexa
-          - IL_TUO_MEDIA_PLAYER_ALEXA_1
+          - IL_TUO_MEDIA_PLAYER_ALEXA
 
         Device per notifica push: &push
-          - service: IL_TUO_MOBILE_APP_1
+          - service: IL_TUO_MOBILE_APP
 
 
 input_text:
@@ -655,9 +655,9 @@ automation:
       ? alexa.map(function(p) { return ind + '- ' + p; }).join('\n')
       : ind + '- media_player.alexa_cameretta';
     var yaml = _DIFF_PKG_YAML;
-    yaml = yaml.replace(ind + '- service: IL_TUO_MOBILE_APP_1', pushLines);
-    yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_GOOGLE_1', googleLines);
-    yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_ALEXA_1', alexaLines);
+    yaml = yaml.replace(ind + '- service: IL_TUO_MOBILE_APP', pushLines);
+    yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_GOOGLE', googleLines);
+    yaml = yaml.replace(ind + '- IL_TUO_MEDIA_PLAYER_ALEXA', alexaLines);
     return yaml;
   }
 
