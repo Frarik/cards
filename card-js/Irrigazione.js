@@ -1682,7 +1682,7 @@ automation:
     var pushLines = (push && push.length)
       ? push.map(function(p) { return ind + '- service: ' + p; }).join('\n')
       : ind + '- service: mobile_app_smartphone';
-    return _IRR_PKG_YAML
+    return (_tpl || _IRR_PKG_YAML)
       .split('IL_TUO_SWITCH').join(sw || 'switch.rubinetto_esterno_interruttore')
       .split('IL_TUO_SENSORE_PIOGGIA').join(pioggia || 'sensor.probabilita_pioggia')
       .replace(ind + '- service: IL_TUO_MOBILE_APP', pushLines);
