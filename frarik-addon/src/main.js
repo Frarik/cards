@@ -2266,7 +2266,18 @@ function ghStoreTab(tab){
   if(tab==='card-yaml'){ _ghStoreRender(); return; }
   if(tab==='saved'){ _ghStoreRender(); return; }
   if(tab==='updates'){ _ghStoreRender(); return; }
-  if(tab==='pkg'){ _loadHaInstalledPkgs().then(()=>{ if(_ghsTab==='pkg') _ghStoreRender(); }); _ghStoreRender(); return; }
+  if(tab==='pkg'){
+    _loadHaInstalledPkgs().then(()=>{ if(_ghsTab==='pkg') _ghStoreRender(); });
+    _ghStoreRender();
+    if(!_ghsCache.pkg){
+      const fPkg=_GHS_FOLDERS['pkg'];
+      _ghListFolder(fPkg.path).then(files=>{
+        _ghsCache.pkg=files.filter(x=>fPkg.ext.test(x.name));
+        if(_ghsTab==='pkg') _ghStoreRender();
+      }).catch(()=>{});
+    }
+    return;
+  }
   if(tab==='elettrodomestici'||tab==='installate'){
     if(_ghsCache['js']){ _ghStoreRender(); return; }
     document.getElementById('ghs-status').textContent='⏳ Carico da GitHub…';
@@ -3734,7 +3745,8 @@ async function _ghsPkgInstallFromGH(filename){
   const decoded=decodeURIComponent(filename);
   showToast('⬇️ Download pkg da GitHub...');
   try{
-    const url=`https://raw.githubusercontent.com/Frarik/cards/main/pkg/${decoded}`;
+    const g=_ghCfg();
+    const url=`https://raw.githubusercontent.com/${g.owner||'Frarik'}/${g.repo||'cards'}/${g.branch||'main'}/pkg/${decoded}`;
     const r=await fetch(url); if(!r.ok) throw new Error('Download fallito');
     const yaml=await r.text();
     const res=await fetch(ADDON_BASE+'/api/frarik/pkg/install',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:decoded,content:yaml})});
