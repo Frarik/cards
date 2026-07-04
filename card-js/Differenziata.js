@@ -526,17 +526,14 @@ input_boolean:
   frarik_differenziata_notifica_push:
     name: "Differenziata — Notifica Push"
     icon: mdi:cellphone-message
-    initial: on
 
   frarik_differenziata_notifica_google:
     name: "Differenziata — Annuncio Google"
     icon: mdi:google-assistant
-    initial: on
 
   frarik_differenziata_notifica_alexa:
     name: "Differenziata — Annuncio Alexa"
     icon: mdi:amazon-alexa
-    initial: on
 
 
 template:
@@ -586,7 +583,7 @@ automation:
               - repeat:
                   for_each: *push
                   sequence:
-                    - service: "{{ repeat.item.service }}"
+                    - service: "notify.{{ repeat.item.service }}"
                       continue_on_error: true
                       data:
                         title: "♻️ Frarik — Differenziata"

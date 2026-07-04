@@ -255,7 +255,7 @@ automation:
                   - repeat:
                       for_each: *push
                       sequence:
-                        - service: "{{ repeat.item.service }}"
+                        - service: "notify.{{ repeat.item.service }}"
                           continue_on_error: true
                           data:
                             title: "🏡 Frarik — Posta"

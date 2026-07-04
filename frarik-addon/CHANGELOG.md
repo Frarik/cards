@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.96 — 2026-07-04
+
+### fix(elettrodomestici): notifiche voce italiana, push e toggle persistenti
+
+- **Push non arrivava**: `service: "{{ repeat.item.service }}"` mancava il prefisso `notify.` → fix su tutti gli elettrodomestici (Lavatrice, Asciugatrice, Lavastoviglie, Forno, Microonde, Friggitrice, Induzione, Frigorifero, Scaldabagno, Differenziata)
+- **Alexa/Google messaggio sbagliato**: la durata "1h 10m" veniva letta lettera per lettera → ora genera testo italiano naturale ("un'ora e 10 minuti", "45 minuti", "2 ore e 5 minuti") con Jinja inline per tutti gli elettrodomestici con ciclo
+- **Toggle notifiche si resettavano**: `initial: on` negli `input_boolean` causava il reset ad ogni riavvio HA → rimosso da tutti i toggle push/alexa/google in tutti i file PKG sorgente e installati
+
 ## 1.7.95 — 2026-07-04
 
 ### feat(bolletta): card v4.3 — Canone RAI gestito dall'utente

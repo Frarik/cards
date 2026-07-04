@@ -1563,7 +1563,7 @@ script:
       - repeat:
           for_each: *push
           sequence:
-            - service: "{{ repeat.item.service }}"
+            - service: "notify.{{ repeat.item.service }}"
               continue_on_error: true
               data:
                 title: "📌 Backup Home Assistant"
@@ -1672,7 +1672,7 @@ automation:
           - repeat:
               for_each: *push
               sequence:
-                - service: "{{ repeat.item.service }}"
+                - service: "notify.{{ repeat.item.service }}"
                   continue_on_error: true
                   data:
                     title: "📥 Report Home Assistant"
@@ -1708,7 +1708,7 @@ automation:
           - repeat:
               for_each: *push
               sequence:
-                - service: "{{ repeat.item.service }}"
+                - service: "notify.{{ repeat.item.service }}"
                   continue_on_error: true
                   data:
                     title: "⚠️ Server — RAM"
@@ -1729,7 +1729,7 @@ automation:
           - repeat:
               for_each: *push
               sequence:
-                - service: "{{ repeat.item.service }}"
+                - service: "notify.{{ repeat.item.service }}"
                   continue_on_error: true
                   data:
                     title: "⚠️ Server — Temperatura"
@@ -1750,7 +1750,7 @@ automation:
           - repeat:
               for_each: *push
               sequence:
-                - service: "{{ repeat.item.service }}"
+                - service: "notify.{{ repeat.item.service }}"
                   continue_on_error: true
                   data:
                     title: "⚠️ Server — CPU"
@@ -1771,7 +1771,7 @@ automation:
           - repeat:
               for_each: *push
               sequence:
-                - service: "{{ repeat.item.service }}"
+                - service: "notify.{{ repeat.item.service }}"
                   continue_on_error: true
                   data:
                     title: "⚠️ Server — Disco"
@@ -1789,7 +1789,7 @@ automation:
           - repeat:
               for_each: *push
               sequence:
-                - service: "{{ repeat.item.service }}"
+                - service: "notify.{{ repeat.item.service }}"
                   continue_on_error: true
                   data:
                     title: "⚠️ Certificato SSL"
@@ -1808,7 +1808,7 @@ automation:
           - repeat:
               for_each: *push
               sequence:
-                - service: "{{ repeat.item.service }}"
+                - service: "notify.{{ repeat.item.service }}"
                   continue_on_error: true
                   data:
                     title: "🖥 Server"
@@ -1827,7 +1827,7 @@ automation:
           - repeat:
               for_each: *push
               sequence:
-                - service: "{{ repeat.item.service }}"
+                - service: "notify.{{ repeat.item.service }}"
                   continue_on_error: true
                   data:
                     title: "⏱ Server"
@@ -1845,7 +1845,7 @@ automation:
           - repeat:
               for_each: *push
               sequence:
-                - service: "{{ repeat.item.service }}"
+                - service: "notify.{{ repeat.item.service }}"
                   continue_on_error: true
                   data:
                     title: "⛔ Accesso Fallito"
@@ -1878,7 +1878,7 @@ automation:
           - repeat:
               for_each: *push
               sequence:
-                - service: "{{ repeat.item.service }}"
+                - service: "notify.{{ repeat.item.service }}"
                   continue_on_error: true
                   data:
                     title: "📥 Aggiornamento Core"
@@ -1901,7 +1901,7 @@ automation:
           - repeat:
               for_each: *push
               sequence:
-                - service: "{{ repeat.item.service }}"
+                - service: "notify.{{ repeat.item.service }}"
                   continue_on_error: true
                   data:
                     title: "📥 Aggiornamento Supervisor"
@@ -1924,7 +1924,7 @@ automation:
           - repeat:
               for_each: *push
               sequence:
-                - service: "{{ repeat.item.service }}"
+                - service: "notify.{{ repeat.item.service }}"
                   continue_on_error: true
                   data:
                     title: "📥 Aggiornamento Add-on"
@@ -1950,7 +1950,7 @@ automation:
           - repeat:
               for_each: *push
               sequence:
-                - service: "{{ repeat.item.service }}"
+                - service: "notify.{{ repeat.item.service }}"
                   continue_on_error: true
                   data:
                     title: "📥 Aggiornamento HACS"
@@ -2000,7 +2000,7 @@ automation:
           - repeat:
               for_each: *push
               sequence:
-                - service: "{{ repeat.item.service }}"
+                - service: "notify.{{ repeat.item.service }}"
                   continue_on_error: true
                   data:
                     title: "🕐 Riavvio Home Assistant"
@@ -2030,7 +2030,7 @@ automation:
           - repeat:
               for_each: *push
               sequence:
-                - service: "{{ repeat.item.service }}"
+                - service: "notify.{{ repeat.item.service }}"
                   continue_on_error: true
                   data:
                     title: "🕐 Riavvio Server"
@@ -2047,7 +2047,7 @@ automation:
           - repeat:
               for_each: *push
               sequence:
-                - service: "{{ repeat.item.service }}"
+                - service: "notify.{{ repeat.item.service }}"
                   continue_on_error: true
                   data:
                     title: "⚠️ Temperatura Alta"
@@ -2065,7 +2065,7 @@ automation:
           - repeat:
               for_each: *push
               sequence:
-                - service: "{{ repeat.item.service }}"
+                - service: "notify.{{ repeat.item.service }}"
                   continue_on_error: true
                   data:
                     title: "✅ Temperatura OK"

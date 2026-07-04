@@ -2010,7 +2010,7 @@ automation:
       - repeat:
           for_each: *push
           sequence:
-            - service: "{{ repeat.item.service }}"
+            - service: "notify.{{ repeat.item.service }}"
               continue_on_error: true
               data:
                 title: "Frarik Bolletta — Fine mese"
@@ -2042,7 +2042,7 @@ automation:
       - repeat:
           for_each: *push
           sequence:
-            - service: "{{ repeat.item.service }}"
+            - service: "notify.{{ repeat.item.service }}"
               continue_on_error: true
               data:
                 title: "Buongiorno — Report Energia"
@@ -2067,7 +2067,7 @@ automation:
       - repeat:
           for_each: *push
           sequence:
-            - service: "{{ repeat.item.service }}"
+            - service: "notify.{{ repeat.item.service }}"
               continue_on_error: true
               data:
                 title: "Costo giornaliero elevato"
@@ -2093,7 +2093,7 @@ automation:
       - repeat:
           for_each: *push
           sequence:
-            - service: "{{ repeat.item.service }}"
+            - service: "notify.{{ repeat.item.service }}"
               continue_on_error: true
               data:
                 title: "Consumo elevato"
@@ -2115,7 +2115,7 @@ automation:
       - repeat:
           for_each: *push
           sequence:
-            - service: "{{ repeat.item.service }}"
+            - service: "notify.{{ repeat.item.service }}"
               continue_on_error: true
               data:
                 title: "Report Bolletta Mese Scorso"
@@ -2209,7 +2209,7 @@ automation:
       - repeat:
           for_each: *push
           sequence:
-            - service: "{{ repeat.item.service }}"
+            - service: "notify.{{ repeat.item.service }}"
               continue_on_error: true
               data:
                 title: "Frarik Bolletta — Anno Archiviato"
@@ -2227,7 +2227,7 @@ automation:
       - repeat:
           for_each: *push
           sequence:
-            - service: "{{ repeat.item.service }}"
+            - service: "notify.{{ repeat.item.service }}"
               continue_on_error: true
               data:
                 title: "Scadenza Offerta Octopus"
