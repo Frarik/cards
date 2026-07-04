@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.8.0 — 2026-07-04
+
+### fix(card-elettrodomestici): aggiornamento entità e impostazioni tutte e 9 le card
+
+- **Entity names allineate al nuovo PKG**: tutte le card (Lavatrice, Asciugatrice, Lavastoviglie, Forno, Microonde, Friggitrice, Induzione, Frigorifero, Scaldabagno) ora usano i nomi entità del PKG v2 (`orario_inizio_notifiche`, `orario_fine_notifiche`, `off_automatico`, `frarik_{id}_cicli_{day}`, `frarik_{id}_tempo_{day}`, `costo_mese_precedente`, `costo_anno_precedente`)
+- **Impostazioni senza sensori PKG**: il popup ⚙ Impostazioni non mostra più i sensori creati dal PKG; mostra solo le opzioni modificabili dall'utente (notifiche, orari, soglie, nome, messaggio)
+- **Persistenza HA**: tutte le impostazioni salvate nel popup vengono scritte sulle entità `input_*` di HA e restano anche dopo il riavvio
+- **Nome card da HA**: il titolo della card legge `input_text.frarik_{id}_nome` direttamente da HA; così il nome rimane aggiornato tra sessioni e riavvii
+- **configure: null**: rimosso il pulsante "Configura" dello store che apriva il popup dei sensori PKG
+- **Scaldabagno**: aggiunto `openImpostazioniHAPopup` (mancava): mostra notifiche, orari, soglia W, delay riavvio, nome, messaggio; con tasto 💾 Salva
+- **Frigorifero**: rinominati tutti gli attributi da `_frigo_` a `_frigorifero_` per allineamento col PKG v2
+- Versioni card portate tutte a `2.1`
+
 ## 1.7.99 — 2026-07-04
 
 ### fix(store): aggiornamento card distintivi/chips dal tab "Aggiorna"

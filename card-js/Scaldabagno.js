@@ -1,4 +1,4 @@
-/* frarik-version: 1.0 */
+/* frarik-version: 2.1 */
 (function () {
   'use strict';
 
@@ -234,7 +234,7 @@
       + '<div class="fc-card">'
       + '<div class="fc-hdr">'
       + '<div class="fc-hdr-iw">🛁</div>'
-      + '<div class="fc-hdr-tit">' + (c.name || 'Scaldabagno') + '</div>'
+      + '<div class="fc-hdr-tit">' + (S(h, 'input_text.frarik_scaldabagno_nome') || c.name || 'Scaldabagno') + '</div>'
       + '<div class="fc-hdr-pill"><div class="fc-dot"></div>' + statusLabel + '</div>'
       + '</div>'
       + '<div class="fc-scroll">'
@@ -305,7 +305,7 @@
       + row('Oggi',             fmtEur(Attr(h, ton, 'costo_oggi_scaldabagno')),        '#fb923c')
       + row('Ieri',             fmtEur(Attr(h, ton, 'costo_ieri_scaldabagno')),        '#fff')
       + row('Questo mese',      fmtEur(Attr(h, ton, 'costo_mese_scaldabagno')),        '#fb923c')
-      + row('Mese precedente',  fmtEur(Attr(h, ton, 'costo_mese_prec_scaldabagno')), '#fff')
+      + row('Mese precedente',  fmtEur(Attr(h, ton, 'costo_mese_precedente_scaldabagno')), '#fff')
       + row('Questo anno',      fmtEur(Attr(h, ton, 'costo_anno_scaldabagno')),        '#fb923c')
       + '<div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 4px">Tempo riscaldamento</div>'
       + row('Oggi',         Attr(h, ton, 'Oggi')   || '—', '#fdba74')
@@ -313,85 +313,134 @@
       + row('Questo mese',  Attr(h, ton, 'Mese')   || '—', '#fdba74')
       + row('Questo anno',  Attr(h, ton, 'Anno')   || '—', '#fdba74');
 
-    mkOv(popShell('🛁', '249,115,22', 'Energia & Costi', c.name || 'Scaldabagno', 'fc-en-close', content), 'fc-en-close');
+    mkOv(popShell('🛁', '249,115,22', 'Energia & Costi', S(h, 'input_text.frarik_scaldabagno_nome') || c.name || 'Scaldabagno', 'fc-en-close', content), 'fc-en-close');
   }
 
-  /* ── POPUP CONFIGURAZIONE ENTITÀ ── */
-  function openCfg(card, el) {
-    const h = H(), c = cfgFor(card);
-    const allIds = Object.keys((h && h.states) || {}).sort();
-    const stInp  = 'width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none';
-    const stDrop = 'position:absolute;left:0;right:0;top:calc(100% + 2px);z-index:200;max-height:160px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-radius:9px;display:none;scrollbar-width:none';
-    const stLbl  = 'font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px;display:block';
-    const stSec  = 'font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#f97316;margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid rgba(249,115,22,.2)';
+  /* ── IMPOSTAZIONI HA POPUP ── */
+  function openImpostazioniHAPopup(c) {
+    const h = H();
+    function bs(e) { return !!(h && h.states && h.states[e] && h.states[e].state === 'on'); }
+    function ss(e) { const st = h && h.states && h.states[e]; return (st && st.state) || ''; }
+    function ns(e) { return num(S(h, e)); }
 
-    function field(fid, lbl2, val, hint) {
-      return '<div style="margin-bottom:9px;position:relative">'
-        + '<label style="' + stLbl + '">' + lbl2
-        + (hint ? '<span style="font-weight:400;color:#475569;margin-left:6px;font-family:monospace;text-transform:none;letter-spacing:0">' + hint + '</span>' : '')
-        + '</label>'
-        + '<input id="' + fid + '" type="text" value="' + (val || '').replace(/"/g, '&quot;') + '" autocomplete="off" placeholder="Cerca entità…" style="' + stInp + '">'
-        + '<div id="' + fid + '-d" style="' + stDrop + '"></div>'
-        + '</div>';
+    const iBase = 'background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);border-radius:8px;font-size:12px;font-family:system-ui;box-sizing:border-box;outline:none;color-scheme:dark';
+    const rows = [];
+
+    function dSec(lbl) {
+      rows.push('<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#fb923c;padding:12px 0 6px;border-bottom:1px solid rgba(251,146,60,.15)">' + lbl + '</div>');
+    }
+    function dToggle(entity, lbl) {
+      const on = bs(entity);
+      rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
+        + '<span style="font-size:13px;color:#fff">' + lbl + '</span>'
+        + '<div class="fi-sw ' + (on ? 'on' : 'off') + '" data-entity="' + entity + '"><div class="fi-knob"></div></div>'
+        + '</div>');
+    }
+    function dTime(entity, lbl) {
+      const raw = ss(entity);
+      const val = raw && raw.length >= 5 ? raw.substring(0, 5) : '';
+      rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);gap:10px">'
+        + '<span style="font-size:13px;color:#fff;flex:1">' + lbl + '</span>'
+        + '<input type="time" class="fi-inp" data-entity="' + entity + '" data-svctype="time" value="' + val + '" style="' + iBase + ';width:108px;padding:6px 8px;text-align:center">'
+        + '</div>');
+    }
+    function dNum(entity, lbl, unit, mn, mx, step) {
+      const val = ns(entity);
+      rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);gap:10px">'
+        + '<span style="font-size:13px;color:#fff;flex:1">' + lbl + (unit ? ' <span style="font-size:10px;color:rgba(255,255,255,.6)">(' + unit + ')</span>' : '') + '</span>'
+        + '<input type="number" class="fi-inp" data-entity="' + entity + '" data-svctype="number" value="' + (val != null ? val : '') + '" min="' + (mn != null ? mn : 0) + '" max="' + (mx != null ? mx : 9999) + '" step="' + (step || 1) + '" style="' + iBase + ';width:90px;padding:6px 8px;text-align:right">'
+        + '</div>');
+    }
+    function dText(entity, lbl) {
+      const val = ss(entity);
+      rows.push('<div style="padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
+        + '<div style="font-size:13px;color:#fff;margin-bottom:5px">' + lbl + '</div>'
+        + '<input type="text" class="fi-inp" data-entity="' + entity + '" data-svctype="text" value="' + (val || '').replace(/"/g, '&quot;') + '" style="' + iBase + ';width:100%;padding:7px 10px">'
+        + '</div>');
+    }
+    function dInfo(lbl, val) {
+      rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
+        + '<span style="font-size:12px;color:rgba(255,255,255,.7)">' + lbl + '</span>'
+        + '<span style="font-size:12px;font-weight:700;color:#fff">' + (val || '—') + '</span>'
+        + '</div>');
     }
 
-    const formHtml = '<div style="margin-bottom:10px"><label style="' + stLbl + '">Nome card</label><input id="fc-name" type="text" value="' + (c.name || '').replace(/"/g, '&quot;') + '" placeholder="es. Scaldabagno bagno" style="' + stInp.replace('monospace', 'system-ui') + '"></div>'
-      + '<div style="' + stSec + '">Sensori principali</div>'
-      + field('fc-power',    'Potenza istantanea (W)',   c.pk_power,      'sensor.frarik_scaldabagno_potenza_w')
-      + field('fc-switch',   'Switch / presa',            c.pk_switch,     'switch.presa_scaldabagno')
-      + field('fc-temp-acq', 'Temperatura acqua (°C)', c.pk_temp_acqua, 'sensor.scaldabagno_temperatura_acqua')
-      + field('fc-temp-set', 'Setpoint temperatura',     c.pk_temp_set,   'number.scaldabagno_setpoint')
-      + '<div style="' + stSec + '">PKG — Energia (kWh)</div>'
-      + field('fc-kwh-oggi', 'kWh oggi',  c.pk_kwh_oggi, 'sensor.frarik_scaldabagno_energy_oggi')
-      + field('fc-kwh-mese', 'kWh mese',  c.pk_kwh_mese, 'sensor.frarik_scaldabagno_energy_mese')
-      + field('fc-kwh-anno', 'kWh anno',  c.pk_kwh_anno, 'sensor.frarik_scaldabagno_energy_anno')
-      + '<div style="' + stSec + '">PKG — Statistiche</div>'
-      + field('fc-time-on',  'Sensore time_on', c.pk_time_on, 'sensor.frarik_scaldabagno_time_on')
-      + field('fc-soglia',   'Soglia riscaldamento (W)', c.pk_soglia, 'input_number.frarik_scaldabagno_soglia_w')
-      + '<div style="display:flex;gap:8px;margin-top:16px">'
-      + '<button id="fc-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button>'
-      + '<button id="fc-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#f97316;color:#060d14">Salva</button>'
-      + '</div>';
+    dSec('🔔 Notifiche push & vocali');
+    dToggle('input_boolean.frarik_scaldabagno_notify_push',   '📱 Push');
+    dToggle('input_boolean.frarik_scaldabagno_notify_google', '🔊 Google');
+    dToggle('input_boolean.frarik_scaldabagno_notify_alexa',  '🗣 Alexa');
+    dTime('input_datetime.frarik_scaldabagno_orario_inizio_notifiche', '⏰ Orario inizio notifiche');
+    dTime('input_datetime.frarik_scaldabagno_orario_fine_notifiche',   '⏰ Orario fine notifiche');
 
-    const fieldIds = ['fc-power','fc-switch','fc-temp-acq','fc-temp-set','fc-kwh-oggi','fc-kwh-mese','fc-kwh-anno','fc-time-on','fc-soglia'];
-    const ov = mkOv(popShell('🛁', '249,115,22', 'Configura Scaldabagno', card.id || '', 'fc-cfg-close', formHtml), 'fc-cfg-close');
+    dSec('🛁 Scaldabagno');
+    dNum('input_number.frarik_scaldabagno_soglia_w',          'Soglia riscaldamento',  'W',   0, 5000, 1);
+    dNum('input_number.frarik_scaldabagno_tempo_innesco_m',   'Delay spegnimento',     'min', 0, 60,   1);
+    dNum('input_number.frarik_scaldabagno_avvio_ritardato_s', 'Delay riavvio',         's',   0, 300,  1);
 
-    ov.querySelector('#fc-cancel').addEventListener('click', function () { ov._close(); });
+    dSec('⏰ Spegnimento automatico');
+    dToggle('automation.frarik_scaldabagno_off_automatico', 'Auto OFF abilitato');
+    dTime('input_datetime.frarik_scaldabagno_off_automatico', 'Orario spegnimento');
 
-    fieldIds.forEach(function (fid) {
-      const inp = ov.querySelector('#' + fid), drop = ov.querySelector('#' + fid + '-d');
-      if (!inp || !drop) return;
-      function showDrop() {
-        const q = inp.value.toLowerCase().trim();
-        const hits = (q ? allIds.filter(function (id) { return id.toLowerCase().includes(q); }) : allIds).slice(0, 50);
-        if (!hits.length) { drop.style.display = 'none'; return; }
-        drop.style.display = 'block';
-        drop.innerHTML = hits.map(function (id) {
-          return '<div data-pick="' + id + '" style="padding:6px 10px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04);color:#e2e8f0">' + id + '</div>';
-        }).join('');
-        drop.querySelectorAll('[data-pick]').forEach(function (row) {
-          row.addEventListener('mousedown', function (ev) { ev.preventDefault(); inp.value = row.getAttribute('data-pick'); drop.style.display = 'none'; });
-          row.addEventListener('mouseover', function () { row.style.background = 'rgba(255,255,255,.08)'; });
-          row.addEventListener('mouseout', function () { row.style.background = ''; });
-        });
-      }
-      inp.addEventListener('focus', showDrop);
-      inp.addEventListener('input', showDrop);
-      inp.addEventListener('blur', function () { setTimeout(function () { drop.style.display = 'none'; }, 200); });
+    dSec('📝 Personalizzazione');
+    dText('input_text.frarik_scaldabagno_nome',      'Nome elettrodomestico');
+    dText('input_text.frarik_scaldabagno_messaggio', 'Messaggio notifica');
+    dNum('input_number.costo_energia', 'Costo energia', '€/kWh', 0, 2, 0.001);
+    dInfo('Ultimo reset contatori', ss('input_text.frarik_scaldabagno_data_reset'));
+
+    const swCss = '<style>'
+      + '.fi-sw{width:44px;height:26px;border-radius:13px;cursor:pointer;position:relative;flex-shrink:0;transition:background .25s}'
+      + '.fi-sw.on{background:#fb923c}.fi-sw.off{background:rgba(255,255,255,.12)}'
+      + '.fi-knob{position:absolute;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .25s;box-shadow:0 1px 4px rgba(0,0,0,.4)}'
+      + '.fi-sw.on .fi-knob{left:21px}.fi-sw.off .fi-knob{left:3px}'
+      + '.fi-inp:focus{border-color:rgba(251,146,60,.55)!important;box-shadow:0 0 0 2px rgba(251,146,60,.12)}'
+      + '</style>';
+    const saveBtn = '<button id="fi-save" style="width:100%;margin-top:12px;padding:13px;border-radius:12px;background:rgba(251,146,60,.15);border:1px solid rgba(251,146,60,.4);color:#fb923c;font-size:14px;font-weight:700;cursor:pointer">💾 Salva impostazioni</button>';
+    const resetBtn = '<button id="fi-reset" style="width:100%;margin-top:8px;padding:12px;border-radius:12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);color:#f87171;font-size:13px;font-weight:700;cursor:pointer">🔄 Reset Contatori</button>';
+    const closeId = 'fi-cl-' + Math.random().toString(36).slice(2, 6);
+    const ov = mkOv(popShell('⚙', '249,115,22', 'Impostazioni', S(h, 'input_text.frarik_scaldabagno_nome') || c.name || 'Scaldabagno', closeId, swCss + rows.join('') + saveBtn + resetBtn), closeId);
+
+    ov.querySelectorAll('.fi-sw').forEach(function(sw) {
+      sw.addEventListener('click', function() {
+        sw.classList.toggle('on'); sw.classList.toggle('off');
+      });
     });
 
-    function g(id) { const e = ov.querySelector('#' + id); return e ? e.value.trim() : ''; }
-
-    ov.querySelector('#fc-save').addEventListener('click', function () {
-      save(card, {
-        name:         g('fc-name'),
-        pk_power:     g('fc-power'),     pk_switch:    g('fc-switch'),
-        pk_temp_acqua: g('fc-temp-acq'), pk_temp_set:  g('fc-temp-set'),
-        pk_kwh_oggi:  g('fc-kwh-oggi'),  pk_kwh_mese:  g('fc-kwh-mese'),  pk_kwh_anno: g('fc-kwh-anno'),
-        pk_time_on:   g('fc-time-on'),   pk_soglia:    g('fc-soglia'),
+    const sb = ov.querySelector('#fi-save');
+    if (sb) sb.addEventListener('click', function() {
+      ov.querySelectorAll('.fi-sw[data-entity]').forEach(function(sw) {
+        const entity = sw.dataset.entity;
+        const svc = sw.classList.contains('on') ? 'turn_on' : 'turn_off';
+        callSvc(entity.split('.')[0], svc, {entity_id: entity});
       });
-      ov._close();
-      try { el._fcSig = ''; el.innerHTML = render(card); mount(card, null, el); } catch (e) {}
+      ov.querySelectorAll('.fi-inp[data-entity]').forEach(function(inp) {
+        const entity = inp.dataset.entity, type = inp.dataset.svctype;
+        if (!entity) return;
+        if (type === 'time') {
+          if (inp.value) callSvc('input_datetime', 'set_datetime', {entity_id: entity, time: inp.value + ':00'});
+        } else if (type === 'number') {
+          const v = parseFloat(inp.value);
+          if (!isNaN(v)) callSvc('input_number', 'set_value', {entity_id: entity, value: v});
+        } else if (type === 'text') {
+          callSvc('input_text', 'set_value', {entity_id: entity, value: inp.value});
+        }
+      });
+      sb.textContent = '✅ Salvato!';
+      sb.style.background = 'rgba(34,197,94,.15)';
+      sb.style.borderColor = 'rgba(34,197,94,.4)';
+      sb.style.color = '#4ade80';
+      setTimeout(function() {
+        sb.textContent = '💾 Salva impostazioni';
+        sb.style.background = '';
+        sb.style.borderColor = '';
+        sb.style.color = '';
+      }, 2000);
+    });
+
+    const rb = ov.querySelector('#fi-reset');
+    if (rb) rb.addEventListener('click', function() {
+      callSvc('script', 'turn_on', {entity_id: 'script.frarik_scaldabagno_reset_sensori'});
+      rb.textContent = '✅ Reset avviato!'; rb.style.color = '#4ade80';
+      setTimeout(function() { try { ov._close(); } catch(e) {} }, 1500);
     });
   }
 
@@ -404,7 +453,7 @@
       const sya = e.target.closest('[data-sya]'); if (!sya) return;
       const a = sya.dataset.sya;
       if (a === 'popup-energia') { openEnergiaPopup(cfgFor(card)); return; }
-      if (a === 'popup-cfg')     { openCfg(card, el); return; }
+      if (a === 'popup-cfg')     { openImpostazioniHAPopup(cfgFor(card)); return; }
     };
     el.addEventListener('click', el._fcHandler);
   }
@@ -572,7 +621,7 @@ template:
             {{ ((states('sensor.frarik_scaldabagno_energy_anno') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
           costo_ieri_scaldabagno: >-
             {{ ((state_attr('sensor.frarik_scaldabagno_energy_oggi', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
-          costo_mese_prec_scaldabagno: >-
+          costo_mese_precedente_scaldabagno: >-
             {{ ((state_attr('sensor.frarik_scaldabagno_energy_mese', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
 
       - name: "frarik_scaldabagno_potenza_w"
@@ -608,17 +657,17 @@ input_boolean:
 ####################################################
 
 input_datetime:
-  frarik_scaldabagno_notifiche_inizio:
+  frarik_scaldabagno_orario_inizio_notifiche:
     name: Orario Inizio Notifiche Scaldabagno
     has_date: false
     has_time: true
 
-  frarik_scaldabagno_notifiche_fine:
+  frarik_scaldabagno_orario_fine_notifiche:
     name: Orario Fine Notifiche Scaldabagno
     has_date: false
     has_time: true
 
-  frarik_scaldabagno_off:
+  frarik_scaldabagno_off_automatico:
     name: Scaldabagno Spegnimento Automatico
     has_date: false
     has_time: true
@@ -692,8 +741,8 @@ automation:
         - condition: trigger
           id: switch_off
         - condition: time
-          after: 'input_datetime.frarik_scaldabagno_notifiche_inizio'
-          before: 'input_datetime.frarik_scaldabagno_notifiche_fine'
+          after: 'input_datetime.frarik_scaldabagno_orario_inizio_notifiche'
+          before: 'input_datetime.frarik_scaldabagno_orario_fine_notifiche'
         - condition: state
           entity_id: input_boolean.frarik_scaldabagno_notify_google
           state: 'on'
@@ -709,8 +758,8 @@ automation:
         - condition: trigger
           id: switch_off
         - condition: time
-          after: 'input_datetime.frarik_scaldabagno_notifiche_inizio'
-          before: 'input_datetime.frarik_scaldabagno_notifiche_fine'
+          after: 'input_datetime.frarik_scaldabagno_orario_inizio_notifiche'
+          before: 'input_datetime.frarik_scaldabagno_orario_fine_notifiche'
         - condition: state
           entity_id: input_boolean.frarik_scaldabagno_notify_alexa
           state: 'on'
@@ -750,7 +799,7 @@ automation:
   id: frarik_scaldabagno_off_automatico
   trigger:
     - platform: time
-      at: 'input_datetime.frarik_scaldabagno_off'
+      at: 'input_datetime.frarik_scaldabagno_off_automatico'
       id: scaldabagno_automatico_off
   condition: []
   action:
@@ -972,9 +1021,9 @@ automation:
 
   /* ── REGISTRATION ── */
   const CARD = {
-    id: 'scaldabagno', name: 'Scaldabagno', icon: '🛁', version: '1.0',
+    id: 'scaldabagno', name: 'Scaldabagno', icon: '🛁', version: '2.1',
     desc: 'Scaldabagno elettrico — temperatura acqua, riscaldamento, consumo, energia e costi.',
-    render: render, mount: mount, update: update, configure: openCfg,
+    render: render, mount: mount, update: update, configure: null,
     frarik_pkg_check: 'sensor.frarik_scaldabagno_versione',
     frarik_pkg_id: 'frarik_scaldabagno',
     frarik_pkg_version: '1.0',

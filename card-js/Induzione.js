@@ -1,4 +1,4 @@
-﻿/* frarik-version: 1.3 */
+/* frarik-version: 2.1 */
 (function () {
   'use strict';
 
@@ -226,7 +226,7 @@
       + '<div class="fc-card">'
       + '<div class="fc-hdr">'
       + '<div class="fc-hdr-iw">🍳</div>'
-      + '<div class="fc-hdr-tit">' + (c.name || 'Induzione') + '</div>'
+      + '<div class="fc-hdr-tit">' + (S(h, 'input_text.frarik_induzione_nome') || c.name || 'Induzione') + '</div>'
       + '<div class="fc-hdr-pill" style="background:' + (running ? 'rgba(56,189,248,.1)' : 'rgba(56,189,248,.05)') + ';border:1px solid rgba(56,189,248,' + (running ? '.28' : '.15') + ');color:#38bdf8">'
       + '<div class="fc-dot"></div>'
       + statusLabel
@@ -290,9 +290,9 @@
       + row('Oggi', fmtEur(Attr(h, ton, 'costo_oggi_induzione')), '#7dd3fc')
       + row('Ieri', fmtEur(Attr(h, ton, 'costo_ieri_induzione')), '#fff')
       + row('Questo mese', fmtEur(Attr(h, ton, 'costo_mese_induzione')), '#7dd3fc')
-      + row('Mese precedente', fmtEur(Attr(h, ton, 'costo_mese_prec_induzione')), '#fff')
+      + row('Mese precedente', fmtEur(Attr(h, ton, 'costo_mese_precedente_induzione')), '#fff')
       + row('Questo anno', fmtEur(Attr(h, ton, 'costo_anno_induzione')), '#7dd3fc')
-      + row('Anno precedente', fmtEur(Attr(h, ton, 'costo_anno_prec_induzione')), '#fff');
+      + row('Anno precedente', fmtEur(Attr(h, ton, 'costo_anno_precedente_induzione')), '#fff');
     mkOv(popShell('⚡', '56,189,248', 'Energia & Costi', 'Induzione', 'fc-en-close', content), 'fc-en-close');
   }
 
@@ -310,8 +310,8 @@
     function cleanVal(v) { return (!v || v === 'unknown' || v === 'unavailable' || v === 'none') ? '—' : v; }
     DAYS.forEach(function (d, i) {
       const isToday = i === _todayIdx;
-      const cicli = isToday ? cleanVal(S(h, c.pk_cicli_oggi))      : cleanVal(S(h, 'input_text.' + d + '_induzione_cicli'));
-      const tempo = isToday ? cleanVal(Attr(h, ton, 'Oggi'))        : cleanVal(S(h, 'input_text.' + d + '_induzione_tempo'));
+      const cicli = isToday ? cleanVal(S(h, c.pk_cicli_oggi))      : cleanVal(S(h, 'input_text.frarik_induzione_cicli_' + d));
+      const tempo = isToday ? cleanVal(Attr(h, ton, 'Oggi'))        : cleanVal(S(h, 'input_text.frarik_induzione_tempo_' + d));
       weekHtml += '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;background:' + (isToday ? 'rgba(56,189,248,.12)' : 'rgba(56,189,248,.05)') + ';border:1px solid ' + (isToday ? 'rgba(56,189,248,.4)' : 'rgba(56,189,248,.1)') + ';border-radius:8px;padding:6px 2px' + (isToday ? ';box-shadow:0 0 8px rgba(56,189,248,.15)' : '') + '">'
         + '<div style="font-size:8px;font-weight:' + (isToday ? '900' : '700') + ';color:' + (isToday ? '#38bdf8' : '#fff') + '">' + DAY_LABELS[i] + '</div>'
         + '<div style="font-size:11px;font-weight:900;color:#38bdf8">' + cicli + '</div>'
@@ -467,8 +467,8 @@
     dToggle('input_boolean.frarik_induzione_notify_push',   '📱 Push');
     dToggle('input_boolean.frarik_induzione_notify_google', '🔊 Google');
     dToggle('input_boolean.frarik_induzione_notify_alexa',  '🗣 Alexa');
-    dTime('input_datetime.frarik_induzione_notifiche_inizio', '⏰ Orario inizio notifiche');
-    dTime('input_datetime.frarik_induzione_notifiche_fine',   '⏰ Orario fine notifiche');
+    dTime('input_datetime.frarik_induzione_orario_inizio_notifiche', '⏰ Orario inizio notifiche');
+    dTime('input_datetime.frarik_induzione_orario_fine_notifiche',   '⏰ Orario fine notifiche');
 
     dSec('🔌 Elettrodomestico');
     dToggle('input_boolean.frarik_induzione_switch', 'Switch presa');
@@ -478,7 +478,7 @@
 
     dSec('⏰ Spegnimento automatico');
     dToggle('automation.frarik_induzione_off_automatico', 'Auto OFF abilitato');
-    dTime('input_datetime.frarik_induzione_off', 'Orario spegnimento');
+    dTime('input_datetime.frarik_induzione_off_automatico', 'Orario spegnimento');
 
     dSec('📝 Personalizzazione');
     dText('input_text.frarik_induzione_nome',      'Nome elettrodomestico');
@@ -496,7 +496,7 @@
     const saveBtn = '<button id="fi-save" style="width:100%;margin-top:12px;padding:13px;border-radius:12px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.4);color:#38bdf8;font-size:14px;font-weight:700;cursor:pointer">💾 Salva impostazioni</button>';
     const resetBtn = '<button id="fi-reset" style="width:100%;margin-top:8px;padding:12px;border-radius:12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);color:#f87171;font-size:13px;font-weight:700;cursor:pointer">🔄 Reset Contatori</button>';
     const closeId = 'fi-cl-' + Math.random().toString(36).slice(2, 6);
-    const ov = mkOv(popShell('⚙', '100,116,139', 'Impostazioni', c.name || 'Induzione', closeId, swCss + rows.join('') + saveBtn + resetBtn), closeId);
+    const ov = mkOv(popShell('⚙', '100,116,139', 'Impostazioni', S(h, 'input_text.frarik_induzione_nome') || c.name || 'Induzione', closeId, swCss + rows.join('') + saveBtn + resetBtn), closeId);
 
     ov.querySelectorAll('.fi-sw').forEach(function(sw) {
       sw.addEventListener('click', function() {
@@ -960,9 +960,9 @@ template:
             {{ ((states('sensor.frarik_induzione_energy_anno') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
           costo_ieri_induzione: >-
             {{ ((state_attr('sensor.frarik_induzione_energy_oggi', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
-          costo_mese_prec_induzione: >-
+          costo_mese_precedente_induzione: >-
             {{ ((state_attr('sensor.frarik_induzione_energy_mese', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
-          costo_anno_prec_induzione: >-
+          costo_anno_precedente_induzione: >-
             {{ ((state_attr('sensor.frarik_induzione_energy_anno', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
 
       - name: "frarik_induzione_potenza_w"
@@ -1024,17 +1024,17 @@ group:
 ####################################################
 
 input_datetime:
-  frarik_induzione_notifiche_inizio:
+  frarik_induzione_orario_inizio_notifiche:
     name: Orario Inizio Notifiche Induzione
     has_date: false
     has_time: true
 
-  frarik_induzione_notifiche_fine:
+  frarik_induzione_orario_fine_notifiche:
     name: Orario Fine Notifiche Induzione
     has_date: false
     has_time: true
 
-  frarik_induzione_off:
+  frarik_induzione_off_automatico:
     name: Induzione Spegnimento Automatico
     has_date: false
     has_time: true
@@ -1334,8 +1334,8 @@ automation:
         - condition: trigger
           id: fine_ciclo
         - condition: time
-          after: 'input_datetime.frarik_induzione_notifiche_inizio'
-          before: 'input_datetime.frarik_induzione_notifiche_fine'
+          after: 'input_datetime.frarik_induzione_orario_inizio_notifiche'
+          before: 'input_datetime.frarik_induzione_orario_fine_notifiche'
         - condition: state
           entity_id: input_boolean.frarik_induzione_notify_google
           state: 'on'
@@ -1358,8 +1358,8 @@ automation:
         - condition: trigger
           id: fine_ciclo
         - condition: time
-          after: 'input_datetime.frarik_induzione_notifiche_inizio'
-          before: 'input_datetime.frarik_induzione_notifiche_fine'
+          after: 'input_datetime.frarik_induzione_orario_inizio_notifiche'
+          before: 'input_datetime.frarik_induzione_orario_fine_notifiche'
         - condition: state
           entity_id: input_boolean.frarik_induzione_notify_alexa
           state: 'on'
@@ -1408,7 +1408,7 @@ automation:
   id: frarik_induzione_off_automatico
   trigger:
     - platform: time
-      at: 'input_datetime.frarik_induzione_off'
+      at: 'input_datetime.frarik_induzione_off_automatico'
       id: induzione_automatico_off
   condition: []
   action:
@@ -1630,9 +1630,9 @@ automation:
 
   /* ── CARD ── */
   const CARD = {
-    id: 'induzione', name: 'Induzione', icon: '🍳', version: '1.2',
+    id: 'induzione', name: 'Induzione', icon: '🍳', version: '2.1',
     desc: 'Monitoraggio piano induzione, cicli, energia e costi. Richiede PKG Centro Controllo Induzione.',
-    render: render, mount: mount, update: update, configure: openCfg,
+    render: render, mount: mount, update: update, configure: null,
     frarik_pkg_check: 'sensor.frarik_induzione_versione',
     frarik_pkg_id: 'frarik_induzione',
     frarik_pkg_version: '1.0',

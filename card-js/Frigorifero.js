@@ -1,4 +1,4 @@
-/* frarik-version: 1.40 */
+/* frarik-version: 2.1 */
 (function () {
   'use strict';
 
@@ -86,13 +86,13 @@
     const ton     = c.pk_time_on;
 
     const terminato  = Attr(h, ton, 'terminato')           || '—';
-    const tempoC     = Attr(h, ton, 'tempo_ciclo_frigo')   || '—';
-    const consumoC   = Attr(h, ton, 'consumo_ciclo_frigo') || '—';
-    const costoC     = Attr(h, ton, 'costo_ciclo_frigo');
+    const tempoC     = Attr(h, ton, 'tempo_ciclo_frigorifero')   || '—';
+    const consumoC   = Attr(h, ton, 'consumo_ciclo_frigorifero') || '—';
+    const costoC     = Attr(h, ton, 'costo_ciclo_frigorifero');
     const kwOggi     = S(h, c.pk_kwh_oggi);
     const cicOggi    = S(h, c.pk_cicli_oggi);
     const timeOggi   = Attr(h, ton, 'Oggi')                || '—';
-    const costoOggi  = Attr(h, ton, 'costo_oggi_frigo');
+    const costoOggi  = Attr(h, ton, 'costo_oggi_frigorifero');
 
     const pw     = pwV || 0;
     const col    = running ? '#38bdf8' : '#64748b';
@@ -213,7 +213,7 @@
       + '<div class="fc-card">'
       + '<div class="fc-hdr">'
       + '<div class="fc-hdr-iw">🧊</div>'
-      + '<div class="fc-hdr-tit">' + (c.name || 'Frigorifero') + '</div>'
+      + '<div class="fc-hdr-tit">' + (S(h, 'input_text.frarik_frigorifero_nome') || c.name || 'Frigorifero') + '</div>'
       + '<div class="fc-hdr-pill" style="background:' + (running ? 'rgba(56,189,248,.1)' : 'rgba(56,189,248,.05)') + ';border:1px solid rgba(56,189,248,' + (running ? '.28' : '.15') + ');color:#38bdf8">'
       + '<div class="fc-dot"></div>'
       + statusLabel
@@ -274,12 +274,12 @@
       + row('Questo anno', fmtKwh(S(h, c.pk_kwh_anno)), '#bae6fd')
       + row('Anno precedente', fmtKwh(kwAnnoP), '#fff')
       + '<div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 4px">Costi</div>'
-      + row('Oggi', fmtEur(Attr(h, ton, 'costo_oggi_frigo')), '#7dd3fc')
-      + row('Ieri', fmtEur(Attr(h, ton, 'costo_ieri_frigo')), '#fff')
-      + row('Questo mese', fmtEur(Attr(h, ton, 'costo_mese_frigo')), '#7dd3fc')
-      + row('Mese precedente', fmtEur(Attr(h, ton, 'costo_mese_prec_frigo')), '#fff')
-      + row('Questo anno', fmtEur(Attr(h, ton, 'costo_anno_frigo')), '#7dd3fc')
-      + row('Anno precedente', fmtEur(Attr(h, ton, 'costo_anno_prec_frigo')), '#fff');
+      + row('Oggi', fmtEur(Attr(h, ton, 'costo_oggi_frigorifero')), '#7dd3fc')
+      + row('Ieri', fmtEur(Attr(h, ton, 'costo_ieri_frigorifero')), '#fff')
+      + row('Questo mese', fmtEur(Attr(h, ton, 'costo_mese_frigorifero')), '#7dd3fc')
+      + row('Mese precedente', fmtEur(Attr(h, ton, 'costo_mese_precedente_frigorifero')), '#fff')
+      + row('Questo anno', fmtEur(Attr(h, ton, 'costo_anno_frigorifero')), '#7dd3fc')
+      + row('Anno precedente', fmtEur(Attr(h, ton, 'costo_anno_precedente_frigorifero')), '#fff');
     mkOv(popShell('⚡', '56,189,248', 'Energia & Costi', 'Frigorifero', 'fc-en-close', content), 'fc-en-close');
   }
 
@@ -297,8 +297,8 @@
     function cleanVal(v) { return (!v || v === 'unknown' || v === 'unavailable' || v === 'none') ? '—' : v; }
     DAYS.forEach(function (d, i) {
       const isToday = i === _todayIdx;
-      const cicli = isToday ? cleanVal(S(h, c.pk_cicli_oggi))      : cleanVal(S(h, 'input_text.' + d + '_frigo_cicli'));
-      const tempo = isToday ? cleanVal(Attr(h, ton, 'Oggi'))        : cleanVal(S(h, 'input_text.' + d + '_frigo_tempo'));
+      const cicli = isToday ? cleanVal(S(h, c.pk_cicli_oggi))      : cleanVal(S(h, 'input_text.frarik_frigorifero_cicli_' + d));
+      const tempo = isToday ? cleanVal(Attr(h, ton, 'Oggi'))        : cleanVal(S(h, 'input_text.frarik_frigorifero_tempo_' + d));
       weekHtml += '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;background:' + (isToday ? 'rgba(56,189,248,.12)' : 'rgba(56,189,248,.05)') + ';border:1px solid ' + (isToday ? 'rgba(56,189,248,.4)' : 'rgba(56,189,248,.1)') + ';border-radius:8px;padding:6px 2px' + (isToday ? ';box-shadow:0 0 8px rgba(56,189,248,.15)' : '') + '">'
         + '<div style="font-size:8px;font-weight:' + (isToday ? '900' : '700') + ';color:' + (isToday ? '#38bdf8' : '#fff') + '">' + DAY_LABELS[i] + '</div>'
         + '<div style="font-size:11px;font-weight:900;color:#38bdf8">' + cicli + '</div>'
@@ -319,10 +319,10 @@
       + row('Mese precedente', Attr(h, ton, 'Mese Precedente') || '—', '#fff')
       + row('Questo anno', Attr(h, ton, 'Anno') || '—', '#7dd3fc')
       + '<div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 4px">Costo</div>'
-      + row('Ultimo ciclo', fmtEur(Attr(h, ton, 'costo_ciclo_frigo')), '#7dd3fc')
-      + row('Oggi', fmtEur(Attr(h, ton, 'costo_oggi_frigo')), '#7dd3fc')
-      + row('Questo mese', fmtEur(Attr(h, ton, 'costo_mese_frigo')), '#fff')
-      + row('Questo anno', fmtEur(Attr(h, ton, 'costo_anno_frigo')), '#fff');
+      + row('Ultimo ciclo', fmtEur(Attr(h, ton, 'costo_ciclo_frigorifero')), '#7dd3fc')
+      + row('Oggi', fmtEur(Attr(h, ton, 'costo_oggi_frigorifero')), '#7dd3fc')
+      + row('Questo mese', fmtEur(Attr(h, ton, 'costo_mese_frigorifero')), '#fff')
+      + row('Questo anno', fmtEur(Attr(h, ton, 'costo_anno_frigorifero')), '#fff');
     mkOv(popShell('❄', '56,189,248', 'Cicli & Statistiche', 'Compressore frigo', 'fc-ci-close', content), 'fc-ci-close');
   }
 
@@ -454,8 +454,8 @@
     dToggle('input_boolean.frarik_frigorifero_notify_push',   '📱 Push');
     dToggle('input_boolean.frarik_frigorifero_notify_google', '🔊 Google');
     dToggle('input_boolean.frarik_frigorifero_notify_alexa',  '🗣 Alexa');
-    dTime('input_datetime.frarik_frigorifero_notifiche_inizio', '⏰ Orario inizio notifiche');
-    dTime('input_datetime.frarik_frigorifero_notifiche_fine',   '⏰ Orario fine notifiche');
+    dTime('input_datetime.frarik_frigorifero_orario_inizio_notifiche', '⏰ Orario inizio notifiche');
+    dTime('input_datetime.frarik_frigorifero_orario_fine_notifiche',   '⏰ Orario fine notifiche');
 
     dSec('🔌 Elettrodomestico');
     dToggle('input_boolean.frarik_frigorifero_switch', 'Switch presa');
@@ -465,7 +465,7 @@
 
     dSec('⏰ Spegnimento automatico');
     dToggle('automation.frarik_frigorifero_off_automatico', 'Auto OFF abilitato');
-    dTime('input_datetime.frarik_frigorifero_off', 'Orario spegnimento');
+    dTime('input_datetime.frarik_frigorifero_off_automatico', 'Orario spegnimento');
 
     dSec('📝 Personalizzazione');
     dText('input_text.frarik_frigorifero_nome',      'Nome elettrodomestico');
@@ -483,7 +483,7 @@
     const saveBtn = '<button id="fi-save" style="width:100%;margin-top:12px;padding:13px;border-radius:12px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.4);color:#38bdf8;font-size:14px;font-weight:700;cursor:pointer">💾 Salva impostazioni</button>';
     const resetBtn = '<button id="fi-reset" style="width:100%;margin-top:8px;padding:12px;border-radius:12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);color:#f87171;font-size:13px;font-weight:700;cursor:pointer">🔄 Reset Contatori</button>';
     const closeId = 'fi-cl-' + Math.random().toString(36).slice(2, 6);
-    const ov = mkOv(popShell('⚙', '100,116,139', 'Impostazioni', c.name || 'Frigorifero', closeId, swCss + rows.join('') + saveBtn + resetBtn), closeId);
+    const ov = mkOv(popShell('⚙', '100,116,139', 'Impostazioni', S(h, 'input_text.frarik_frigorifero_nome') || c.name || 'Frigorifero', closeId, swCss + rows.join('') + saveBtn + resetBtn), closeId);
 
     ov.querySelectorAll('.fi-sw').forEach(function(sw) {
       sw.addEventListener('click', function() {
@@ -533,7 +533,7 @@
   /* ── UPDATE / MOUNT ── */
   function update(card, hass, el) {
     const h = H(), c = cfgFor(card);
-    const sig = [CARD.version, S(h, c.pk_power), S(h, c.pk_running), S(h, c.pk_kwh_oggi), S(h, c.pk_cicli_oggi), Attr(h, c.pk_time_on, 'Oggi'), Attr(h, c.pk_time_on, 'tempo_ciclo_frigo'), Attr(h, c.pk_time_on, 'costo_oggi_frigo')].join('|');
+    const sig = [CARD.version, S(h, c.pk_power), S(h, c.pk_running), S(h, c.pk_kwh_oggi), S(h, c.pk_cicli_oggi), Attr(h, c.pk_time_on, 'Oggi'), Attr(h, c.pk_time_on, 'tempo_ciclo_frigorifero'), Attr(h, c.pk_time_on, 'costo_oggi_frigorifero')].join('|');
     if (!el.querySelector('.fc-card') || el._fcSig !== sig) {
       el._fcSig = sig;
       el.innerHTML = render(card);
@@ -844,7 +844,7 @@ template:
         attributes:
           terminato: >-
             {{ states('sensor.frarik_frigorifero_fine_ciclo') if is_state('binary_sensor.frarik_frigorifero_motore', 'off') else 'In funzione' }}
-          tempo_ciclo_frigo: >
+          tempo_ciclo_frigorifero: >
             {% set hours = (as_timestamp(now()) - states('sensor.frarik_frigorifero_tempo_riavvio') | float(0)) / 3600 %}
             {% set minutes = ((hours % 1) * 60) | int(0) %}
             {% set hours = (hours - (hours % 1)) | int(0) %}
@@ -914,21 +914,21 @@ template:
             {% else %}
               {{ minutes }}min
             {% endif %}
-          consumo_ciclo_frigo: >-
+          consumo_ciclo_frigorifero: >-
             {{ (states('sensor.frarik_frigorifero_kwh') | float(0) - states('sensor.frarik_frigorifero_inizio_ciclo') | float(0)) | round(3) }} kWh
-          costo_ciclo_frigo: >-
+          costo_ciclo_frigorifero: >-
             {{ ((states('sensor.frarik_frigorifero_kwh') | float(0) - states('sensor.frarik_frigorifero_inizio_ciclo') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(3, default=0) }}
-          costo_oggi_frigo: >-
+          costo_oggi_frigorifero: >-
             {{ ((states('sensor.frarik_frigorifero_energy_oggi') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
-          costo_mese_frigo: >-
+          costo_mese_frigorifero: >-
             {{ ((states('sensor.frarik_frigorifero_energy_mese') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
-          costo_anno_frigo: >-
+          costo_anno_frigorifero: >-
             {{ ((states('sensor.frarik_frigorifero_energy_anno') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
-          costo_ieri_frigo: >-
+          costo_ieri_frigorifero: >-
             {{ ((state_attr('sensor.frarik_frigorifero_energy_oggi', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
-          costo_mese_prec_frigo: >-
+          costo_mese_precedente_frigorifero: >-
             {{ ((state_attr('sensor.frarik_frigorifero_energy_mese', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
-          costo_anno_prec_frigo: >-
+          costo_anno_precedente_frigorifero: >-
             {{ ((state_attr('sensor.frarik_frigorifero_energy_anno', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}
 
       - name: "frarik_frigorifero_potenza_w"
@@ -990,17 +990,17 @@ group:
 ####################################################
 
 input_datetime:
-  frarik_frigorifero_notifiche_inizio:
+  frarik_frigorifero_orario_inizio_notifiche:
     name: Orario Inizio Notifiche Frigo
     has_date: false
     has_time: true
 
-  frarik_frigorifero_notifiche_fine:
+  frarik_frigorifero_orario_fine_notifiche:
     name: Orario Fine Notifiche Frigo
     has_date: false
     has_time: true
 
-  frarik_frigorifero_off:
+  frarik_frigorifero_off_automatico:
     name: Frigo Spegnimento Automatico
     has_date: false
     has_time: true
@@ -1216,7 +1216,7 @@ automation:
             {% elif today == "Sunday" %}  input_number.frarik_frigorifero_costo_domenica
             {% endif %}
         data:
-          value: "{{ state_attr('sensor.frarik_frigorifero_time_on','costo_oggi_frigo') }}"
+          value: "{{ state_attr('sensor.frarik_frigorifero_time_on','costo_oggi_frigorifero') }}"
 
   - choose:
     - alias: SWITCH OFF
@@ -1271,7 +1271,7 @@ automation:
         target:
           entity_id: input_text.frarik_frigorifero_ultimo_ciclo
         data:
-          value: "{{ state_attr('sensor.frarik_frigorifero_time_on','tempo_ciclo_frigo') | trim }}"
+          value: "{{ state_attr('sensor.frarik_frigorifero_time_on','tempo_ciclo_frigorifero') | trim }}"
 
       - service: counter.increment
         target:
@@ -1288,8 +1288,8 @@ automation:
         - condition: trigger
           id: fine_ciclo
         - condition: time
-          after: 'input_datetime.frarik_frigorifero_notifiche_inizio'
-          before: 'input_datetime.frarik_frigorifero_notifiche_fine'
+          after: 'input_datetime.frarik_frigorifero_orario_inizio_notifiche'
+          before: 'input_datetime.frarik_frigorifero_orario_fine_notifiche'
         - condition: state
           entity_id: input_boolean.frarik_frigorifero_notify_google
           state: 'on'
@@ -1312,8 +1312,8 @@ automation:
         - condition: trigger
           id: fine_ciclo
         - condition: time
-          after: 'input_datetime.frarik_frigorifero_notifiche_inizio'
-          before: 'input_datetime.frarik_frigorifero_notifiche_fine'
+          after: 'input_datetime.frarik_frigorifero_orario_inizio_notifiche'
+          before: 'input_datetime.frarik_frigorifero_orario_fine_notifiche'
         - condition: state
           entity_id: input_boolean.frarik_frigorifero_notify_alexa
           state: 'on'
@@ -1353,16 +1353,16 @@ automation:
 
                     ⏱ Ciclo durato: {{ states('input_text.frarik_frigorifero_ultimo_ciclo') | trim }}
 
-                    ⚡ Consumati: {{ state_attr('sensor.frarik_frigorifero_time_on','consumo_ciclo_frigo') }}
+                    ⚡ Consumati: {{ state_attr('sensor.frarik_frigorifero_time_on','consumo_ciclo_frigorifero') }}
 
-                    💰 Spesi: {{ state_attr('sensor.frarik_frigorifero_time_on','costo_ciclo_frigo') }} €
+                    💰 Spesi: {{ state_attr('sensor.frarik_frigorifero_time_on','costo_ciclo_frigorifero') }} €
                   title: "Frigorifero"
 
 - alias: frarik_frigorifero_off_automatico
   id: frarik_frigorifero_off_automatico
   trigger:
     - platform: time
-      at: 'input_datetime.frarik_frigorifero_off'
+      at: 'input_datetime.frarik_frigorifero_off_automatico'
       id: frigo_automatico_off
   condition: []
   action:
@@ -1584,9 +1584,9 @@ automation:
 
   /* ── CARD ── */
   const CARD = {
-    id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '1.39',
+    id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '2.1',
     desc: 'Monitoraggio compressore, cicli, energia e costi. Richiede PKG Centro Controllo Frigorifero.',
-    render: render, mount: mount, update: update, configure: openCfg,
+    render: render, mount: mount, update: update, configure: null,
     frarik_pkg_check: 'sensor.frarik_frigorifero_versione',
     frarik_pkg_id: 'frarik_frigorifero',
     frarik_pkg_version: '1.3',
