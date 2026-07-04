@@ -568,7 +568,7 @@ template:
         icon: mdi:transmission-tower
         state: >
           {{ states('sensor.frarik_bolletta_arera_perdite_rete_perc') | float(
-             states('input_number.frarik_bolletta_fb_perdite_perc') | float(8.73)) }}
+             states('input_number.frarik_bolletta_fb_perdite_perc') | float(9.85)) }}
       - name: "Frarik Bolletta IVA Perc"
         unit_of_measurement: "%"
         icon: mdi:percent
@@ -587,7 +587,7 @@ template:
         icon: mdi:transmission-tower
         state: >
           {% set kwh = states('sensor.frarik_bolletta_energia_mensile_safe') | float(0) %}
-          {% set perc = states('sensor.frarik_bolletta_perdite_rete_perc') | float(8.73) %}
+          {% set perc = states('sensor.frarik_bolletta_perdite_rete_perc') | float(9.85) %}
           {% set kp = kwh * perc / 100 %}
           {% set p = states('input_number.frarik_bolletta_tariffa_energia') | float(0) + states('input_number.frarik_bolletta_spread_energia') | float(0) %}
           {{ (kp * p) | round(4) }}
@@ -596,19 +596,19 @@ template:
         icon: mdi:transmission-tower
         state: >
           {% set kwh = states('sensor.frarik_bolletta_energia_mensile_safe') | float(0) %}
-          {% set perc = states('sensor.frarik_bolletta_perdite_rete_perc') | float(8.73) %}
+          {% set perc = states('sensor.frarik_bolletta_perdite_rete_perc') | float(9.85) %}
           {% set kwh_tot = kwh * (1 + perc / 100) %}
-          {% set t = states('sensor.frarik_bolletta_arera_dispacciamento') | float(states('input_number.frarik_bolletta_fb_dispacciamento') | float(0.01066)) %}
-          {{ (kwh_tot * t) | round(4) }}
+          {% set t = states('sensor.frarik_bolletta_arera_dispacciamento') | float(states('input_number.frarik_bolletta_fb_dispacciamento') | float(0.019902)) %}
+          {{ (kwh * t) | round(4) }}
       - name: "Frarik Bolletta Costo Mensile Mercato Capacità"
         unit_of_measurement: "€"
         icon: mdi:power-plug
         state: >
           {% set kwh = states('sensor.frarik_bolletta_energia_mensile_safe') | float(0) %}
-          {% set perc = states('sensor.frarik_bolletta_perdite_rete_perc') | float(8.73) %}
+          {% set perc = states('sensor.frarik_bolletta_perdite_rete_perc') | float(9.85) %}
           {% set kwh_tot = kwh * (1 + perc / 100) %}
           {% set t = states('sensor.frarik_bolletta_arera_mercato_capacita') | float(states('input_number.frarik_bolletta_fb_mercato_capacita') | float(0.010583)) %}
-          {{ (kwh_tot * t) | round(4) }}
+          {{ (kwh * t) | round(4) }}
       - name: "Frarik Bolletta Costo Mensile DISPbt"
         unit_of_measurement: "€"
         icon: mdi:transmission-tower
@@ -641,7 +641,7 @@ template:
         icon: mdi:transmission-tower
         state: >
           {% set kw = states('input_number.frarik_bolletta_potenza_impegnata') | float(4.5) %}
-          {% set t = states('sensor.frarik_bolletta_arera_trasporto_quota_potenza') | float(states('input_number.frarik_bolletta_fb_trasporto_potenza') | float(2.22)) %}
+          {% set t = states('sensor.frarik_bolletta_arera_trasporto_quota_potenza') | float(states('input_number.frarik_bolletta_fb_trasporto_potenza') | float(1.96)) %}
           {{ (kw * t) | round(4) }}
       - name: "Frarik Bolletta Costo Mensile UC3"
         unit_of_measurement: "€"
@@ -748,21 +748,21 @@ template:
         icon: mdi:calendar-today
         state: >
           {% set kwh = states('sensor.frarik_bolletta_energia_giornaliera_safe') | float(0) %}
-          {% set perc = states('sensor.frarik_bolletta_perdite_rete_perc') | float(8.73) %}
+          {% set perc = states('sensor.frarik_bolletta_perdite_rete_perc') | float(9.85) %}
           {% set kp = kwh * perc / 100 %}
           {% set kwh_tot = kwh + kp %}
           {% set pE = states('input_number.frarik_bolletta_tariffa_energia') | float(0) + states('input_number.frarik_bolletta_spread_energia') | float(0) %}
           {% set gm = ((now().replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)).day %}
           {% set kw = states('input_number.frarik_bolletta_potenza_impegnata') | float(4.5) %}
           {% set imp = kwh * pE + kp * pE
-            + kwh_tot * states('sensor.frarik_bolletta_arera_dispacciamento') | float(states('input_number.frarik_bolletta_fb_dispacciamento') | float(0.01066))
-            + kwh_tot * states('sensor.frarik_bolletta_arera_mercato_capacita') | float(states('input_number.frarik_bolletta_fb_mercato_capacita') | float(0.010583))
+            + kwh * states('sensor.frarik_bolletta_arera_dispacciamento') | float(states('input_number.frarik_bolletta_fb_dispacciamento') | float(0.019902))
+            + kwh * states('sensor.frarik_bolletta_arera_mercato_capacita') | float(states('input_number.frarik_bolletta_fb_mercato_capacita') | float(0.010583))
             + states('sensor.frarik_bolletta_arera_dispbt') | float(states('input_number.frarik_bolletta_fb_dispbt') | float(0.102592)) / gm
             + states('sensor.frarik_bolletta_arera_pno') | float(states('input_number.frarik_bolletta_fb_pno') | float(0)) / gm
             + states('input_number.frarik_bolletta_fb_commercializzazione') | float(6) / gm
             + kwh * states('sensor.frarik_bolletta_arera_trasporto_quota_energia') | float(states('input_number.frarik_bolletta_fb_trasporto_energia') | float(0.0119))
             + states('sensor.frarik_bolletta_arera_trasporto_quota_fissa') | float(states('input_number.frarik_bolletta_fb_trasporto_fisso') | float(1.92)) / gm
-            + kw * states('sensor.frarik_bolletta_arera_trasporto_quota_potenza') | float(states('input_number.frarik_bolletta_fb_trasporto_potenza') | float(2.22)) / gm
+            + kw * states('sensor.frarik_bolletta_arera_trasporto_quota_potenza') | float(states('input_number.frarik_bolletta_fb_trasporto_potenza') | float(1.96)) / gm
             + kwh * states('sensor.frarik_bolletta_arera_uc3') | float(states('input_number.frarik_bolletta_fb_uc3') | float(0.00276))
             + kw * states('sensor.frarik_bolletta_arera_uc6_fisso') | float(states('input_number.frarik_bolletta_fb_uc6_fisso') | float(0.07)) / gm
             + kwh * states('sensor.frarik_bolletta_arera_uc6_variabile') | float(states('input_number.frarik_bolletta_fb_uc6_variabile') | float(0.00007))
@@ -870,19 +870,19 @@ template:
         icon: mdi:calculator
         state: >
           {% set kwh = states('input_number.frarik_bolletta_test_consumo_kwh') | float(0) %}
-          {% set perc = states('sensor.frarik_bolletta_perdite_rete_perc') | float(8.73) %}
+          {% set perc = states('sensor.frarik_bolletta_perdite_rete_perc') | float(9.85) %}
           {% set kp = kwh * perc / 100 %}{% set kwh_tot = kwh + kp %}
           {% set pE = states('input_number.frarik_bolletta_tariffa_energia') | float(0) + states('input_number.frarik_bolletta_spread_energia') | float(0) %}
           {% set kw = states('input_number.frarik_bolletta_potenza_impegnata') | float(4.5) %}
           {% set imp = kwh * pE + kp * pE
-            + kwh_tot * states('sensor.frarik_bolletta_arera_dispacciamento') | float(states('input_number.frarik_bolletta_fb_dispacciamento') | float(0.01066))
-            + kwh_tot * states('sensor.frarik_bolletta_arera_mercato_capacita') | float(states('input_number.frarik_bolletta_fb_mercato_capacita') | float(0.010583))
+            + kwh * states('sensor.frarik_bolletta_arera_dispacciamento') | float(states('input_number.frarik_bolletta_fb_dispacciamento') | float(0.019902))
+            + kwh * states('sensor.frarik_bolletta_arera_mercato_capacita') | float(states('input_number.frarik_bolletta_fb_mercato_capacita') | float(0.010583))
             + states('sensor.frarik_bolletta_arera_dispbt') | float(states('input_number.frarik_bolletta_fb_dispbt') | float(0.102592))
             + states('sensor.frarik_bolletta_arera_pno') | float(states('input_number.frarik_bolletta_fb_pno') | float(0))
             + states('input_number.frarik_bolletta_fb_commercializzazione') | float(6)
             + kwh * states('sensor.frarik_bolletta_arera_trasporto_quota_energia') | float(states('input_number.frarik_bolletta_fb_trasporto_energia') | float(0.0119))
             + states('sensor.frarik_bolletta_arera_trasporto_quota_fissa') | float(states('input_number.frarik_bolletta_fb_trasporto_fisso') | float(1.92))
-            + kw * states('sensor.frarik_bolletta_arera_trasporto_quota_potenza') | float(states('input_number.frarik_bolletta_fb_trasporto_potenza') | float(2.22))
+            + kw * states('sensor.frarik_bolletta_arera_trasporto_quota_potenza') | float(states('input_number.frarik_bolletta_fb_trasporto_potenza') | float(1.96))
             + kwh * states('sensor.frarik_bolletta_arera_uc3') | float(states('input_number.frarik_bolletta_fb_uc3') | float(0.00276))
             + kw * states('sensor.frarik_bolletta_arera_uc6_fisso') | float(states('input_number.frarik_bolletta_fb_uc6_fisso') | float(0.07))
             + kwh * states('sensor.frarik_bolletta_arera_uc6_variabile') | float(states('input_number.frarik_bolletta_fb_uc6_variabile') | float(0.00007))

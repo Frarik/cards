@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.7.93 — 2026-07-04
+
+### fix(bolletta): card v4.1 — aggiornamento valori ARERA e correzione formula
+
+- **CdispD aggiornato** da 0.015531 → 0.019902 €/kWh (delibera ARERA 98/2026, in vigore da giugno 2026)
+- **tr_pot aggiornato** da 2.22 → 1.96 €/kW (valore confermato da bolletta reale)
+- **Perdite di rete** default aggiornato a 9.85% (8.73 e 10.3261 erano obsoleti)
+- **Bug Jinja corretto**: CdispD e MC applicati ai kWh misurati, non a kWh+perdite
+- Stessi fix applicati al PKG repo e al PKG installato (tutti i template giornalieri, mensili, test)
+- Simulazione ora corrisponde alla bolletta reale (giugno 2026: 214 kWh → 62.38 € ± 0.02 €)
+
 ## 1.7.92 — 2026-07-04
 
 ### feat(bolletta): card v4.0 — UI principale ridisegnata
