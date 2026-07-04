@@ -4141,8 +4141,11 @@ automation:
     var yaml = (_tpl || _AZ_PKG_YAML)
       .split('IL_TUO_SWITCH_AZ').join(sw || 'switch.presa_anti_zanzare')
       .split('IL_TUO_SENSORE_PIOGGIA').join(pioggia || 'sensor.probabilita_pioggia')
-      .split('IL_TUO_SENSORE_ACQUA').join('sensor.consumo_acqua');
+      .split('IL_TUO_SENSORE_ACQUA').join('sensor.consumo_acqua')
+      .split('IL_TUO_SENSORE_VENTO').join('sensor.non_configurato')
+      .split('IL_TUO_SENSORE_PRESENZA').join('binary_sensor.non_configurato');
     yaml = yaml.replace(/[ 	]*- service: IL_TUO_MOBILE_APP/, pushLines);
+    yaml = yaml.replace(/[ 	]*- IL_TUO_MEDIA_PLAYER_ALEXA/, ind + '- media_player.non_configurato');
     return yaml;
   }
 
