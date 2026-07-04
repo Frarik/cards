@@ -2240,11 +2240,14 @@ automation:
     var pushLines = (push && push.length)
       ? push.map(function(p) { return '          - service: ' + p; }).join('\n')
       : '          - service: mobile_app_smartphone';
-    return (_tpl || _BOLL_PKG_YAML)
+    var yaml = (_tpl || _BOLL_PKG_YAML)
       .split('IL_TUO_SENSORE_POTENZA_BOLLETTA').join(potenza || 'sensor.consumo_istantaneo')
       .split('IL_TUA_TARIFFA_KWHE').join((parseFloat(tariffa) || 0.09).toFixed(6))
       .split('IL_TUA_POTENZA_KW').join(String(parseFloat(kw) || 4.5))
-      .replace('          - service: IL_TUO_MOBILE_APP', pushLines);
+      .split('IL_TUO_SENSORE_SALDO_OCTOPUS').join('sensor.non_configurato')
+      .split('IL_TUO_SENSORE_SCADENZA_OCTOPUS').join('sensor.non_configurato');
+    yaml = yaml.replace(/[ 	]*- service: IL_TUO_MOBILE_APP/, pushLines);
+    return yaml;
   }
 
   function openWizard(hass, onDone, _tpl) {

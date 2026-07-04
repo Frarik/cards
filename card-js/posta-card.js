@@ -515,9 +515,9 @@ function _buildCustomPkg(sensor,google,alexa,push,_tpl){
   var pushLines=(push&&push.length)?push.map(function(s){return ind+'- service: '+s;}).join('\n'):ind+'- service: mobile_app_smartphone';
   return (_tpl||_PKG_YAML)
     .replace('IL_TUO_SENSORE_CASSETTA',sensor||'binary_sensor.cassetta_posta')
-    .replace(ind+'- IL_TUO_MEDIA_PLAYER_GOOGLE',googleLines)
-    .replace(ind+'- IL_TUO_MEDIA_PLAYER_ALEXA',alexaLines)
-    .replace(ind+'- service: IL_TUO_MOBILE_APP',pushLines);
+    .replace(/[ 	]*- IL_TUO_MEDIA_PLAYER_GOOGLE/,googleLines)
+    .replace(/[ 	]*- IL_TUO_MEDIA_PLAYER_ALEXA/,alexaLines)
+    .replace(/[ 	]*- service: IL_TUO_MOBILE_APP/,pushLines);
 }
 
 /* ── Autocomplete ─────────────────────────────────────── */

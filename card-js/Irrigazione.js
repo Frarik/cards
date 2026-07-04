@@ -1682,10 +1682,12 @@ automation:
     var pushLines = (push && push.length)
       ? push.map(function(p) { return ind + '- service: ' + p; }).join('\n')
       : ind + '- service: mobile_app_smartphone';
-    return (_tpl || _IRR_PKG_YAML)
+    var yaml = (_tpl || _IRR_PKG_YAML)
       .split('IL_TUO_SWITCH').join(sw || 'switch.rubinetto_esterno_interruttore')
-      .split('IL_TUO_SENSORE_PIOGGIA').join(pioggia || 'sensor.probabilita_pioggia')
-      .replace(ind + '- service: IL_TUO_MOBILE_APP', pushLines);
+      .split('IL_TUO_SENSORE_PIOGGIA').join(pioggia || 'sensor.probabilita_pioggia');
+    yaml = yaml.replace(/[ 	]*- service: IL_TUO_MOBILE_APP/, pushLines);
+    yaml = yaml.replace(/[ 	]*- IL_TUO_MEDIA_PLAYER_ALEXA/, ind + '- media_player.non_configurato');
+    return yaml;
   }
 
   function _iOpenImpostazioniHA(card) {
