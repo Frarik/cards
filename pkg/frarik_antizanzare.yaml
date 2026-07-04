@@ -8,9 +8,26 @@
 #   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝            #
 #                                                             #
 #   Package: Centro Controllo Anti Zanzare                    #
-#   Versione: 1.0  |  Frarik / Fratech                       #
+#   Versione: 2.0  |  Frarik / Fratech                       #
 #                                                             #
 ###############################################################
+
+homeassistant:
+  customize:
+    package.node_anchors:
+      customize: &customize
+        package: 'Frarik — Centro Controllo Anti Zanzare'
+        author: 'Frarik / Fratech'
+        version: '2.0'
+
+      setting:
+        Sensore Vento: &sensore_vento         "IL_TUO_SENSORE_VENTO"
+        Sensore Pioggia: &sensore_pioggia_az  "IL_TUO_SENSORE_PIOGGIA"
+        Sensore Presenza: &sensore_presenza   "IL_TUO_SENSORE_PRESENZA"
+        Device push: &push_az
+          - service: IL_TUO_MOBILE_APP
+        Device Alexa: &alexa_az
+          - IL_TUO_MEDIA_PLAYER_ALEXA
 
 # INPUT BOOLEAN - Giorni attivi
 input_boolean:
@@ -43,6 +60,15 @@ input_boolean:
   frarik_antizanzare_manuale_attiva:
     name: "Anti Zanzare Manuale Attiva"
     icon: mdi:hand-back-right
+  frarik_antizanzare_notify_push:
+    name: "Notifiche Push Anti Zanzare"
+    icon: mdi:bell
+  frarik_antizanzare_notify_alexa:
+    name: "Notifiche Alexa Anti Zanzare"
+    icon: mdi:speaker
+  frarik_antizanzare_presenza_attiva:
+    name: "Pausa per Presenza"
+    icon: mdi:motion-sensor
 
 # INPUT NUMBER - Cicli per giorno
 input_number:
@@ -454,6 +480,14 @@ input_number:
     mode: box
     unit_of_measurement: "cicli"
     icon: mdi:target
+  frarik_antizanzare_soglia_vento:
+    name: "Soglia Velocità Vento (km/h)"
+    min: 0
+    max: 100
+    step: 1
+    mode: slider
+    unit_of_measurement: "km/h"
+    icon: mdi:weather-windy
 
 # INPUT DATETIME - Orari cicli
 input_datetime:
@@ -639,7 +673,20 @@ input_datetime:
     name: "Domenica - Orario Ciclo 5"
     has_date: false
     has_time: true
+  frarik_antizanzare_orario_inizio_notifiche:
+    name: "Orario Inizio Notifiche Anti Zanzare"
+    has_date: false
+    has_time: true
+  frarik_antizanzare_orario_fine_notifiche:
+    name: "Orario Fine Notifiche Anti Zanzare"
+    has_date: false
+    has_time: true
 
+# INPUT TEXT
+input_text:
+  frarik_antizanzare_nome:
+    name: "Nome Anti Zanzare"
+    max: 64
 
 # INPUT BUTTON - Comandi
 input_button:
@@ -683,12 +730,19 @@ counter:
     step: 1
     icon: mdi:counter-outline
 
+# NOTIFY GROUP
+notify:
+  - name: frarik_antizanzare_notify
+    platform: group
+    services:
+      - service: IL_TUO_MOBILE_APP
+
 # SENSORI TEMPLATE
 template:
   - sensor:
       - name: "Frarik Anti Zanzare Versione"
         unique_id: frarik_antizanzare_versione
-        state: "1.4"
+        state: "2.0"
         icon: mdi:package-variant-closed
 
   - trigger:

@@ -824,6 +824,11 @@ automation:
     renderWiz();
   }
 
+  /* ── IMPOSTAZIONI HA POPUP ── */
+  function openImpostazioniHAPopup(card) {
+    openImpostazioni(card);
+  }
+
   /* ── registrazione store ── */
   window.FratechCardRegistry = window.FratechCardRegistry || {};
   window.FratechCardRegistry['differenziata'] = {
@@ -838,6 +843,7 @@ automation:
     render:  render,
     mount:   mount,
     update:  update,
+    configure: null,
     openWizard: _diffOpenWizard,
     _buildPkgFromConfig: function(cfg) { return _diffBuildPkg(cfg.push || [], cfg.google || [], cfg.alexa || []); },
   };

@@ -1,4 +1,32 @@
-# Package: Frarik — Centro Controllo Irrigazione  |  Versione: 1.4
+###############################################################
+#                                                             #
+#   ███████╗██████╗  █████╗ ██████╗ ██╗██╗  ██╗             #
+#   ██╔════╝██╔══██╗██╔══██╗██╔══██╗██║██║ ██╔╝             #
+#   █████╗  ██████╔╝███████║██████╔╝██║█████╔╝              #
+#   ██╔══╝  ██╔══██╗██╔══██║██╔══██╗██║██╔═██╗              #
+#   ██║     ██║  ██║██║  ██║██║  ██║██║██║  ██╗             #
+#   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝            #
+#                                                             #
+#   Package: Centro Controllo Irrigazione                     #
+#   Versione: 2.0  |  Frarik / Fratech                       #
+#                                                             #
+###############################################################
+
+homeassistant:
+  customize:
+    package.node_anchors:
+      customize: &customize
+        package: 'Frarik — Centro Controllo Irrigazione'
+        author: 'Frarik / Fratech'
+        version: '2.0'
+
+      setting:
+        Sensore Pioggia: &sensore_pioggia_irr "IL_TUO_SENSORE_PIOGGIA"
+        Device push: &push_irr
+          - service: IL_TUO_MOBILE_APP
+        Device Alexa: &alexa_irr
+          - IL_TUO_MEDIA_PLAYER_ALEXA
+
 # INPUT BOOLEAN - Giorni attivi
 input_boolean:
   frarik_irrigazione_lunedi:
@@ -29,6 +57,12 @@ input_boolean:
   frarik_irrigazione_manuale_attiva:
     name: "Irrigazione Manuale Attiva"
     icon: mdi:hand-back-right
+  frarik_irrigazione_notify_push:
+    name: "Notifiche Push Irrigazione"
+    icon: mdi:bell
+  frarik_irrigazione_notify_alexa:
+    name: "Notifiche Alexa Irrigazione"
+    icon: mdi:speaker
 
 # INPUT NUMBER - Cicli per giorno
 input_number:
@@ -542,6 +576,20 @@ input_datetime:
     name: "Domenica - Orario Ciclo 5"
     has_date: false
     has_time: true
+  frarik_irrigazione_orario_inizio_notifiche:
+    name: "Orario Inizio Notifiche Irrigazione"
+    has_date: false
+    has_time: true
+  frarik_irrigazione_orario_fine_notifiche:
+    name: "Orario Fine Notifiche Irrigazione"
+    has_date: false
+    has_time: true
+
+# INPUT TEXT
+input_text:
+  frarik_irrigazione_nome:
+    name: "Nome Irrigazione"
+    max: 64
 
 # INPUT BUTTON - Comandi
 input_button:
@@ -576,9 +624,20 @@ counter:
     step: 1
     icon: mdi:counter
 
+# NOTIFY GROUP
+notify:
+  - name: frarik_irrigazione_notify
+    platform: group
+    services:
+      - service: IL_TUO_MOBILE_APP
+
 # SENSORI TEMPLATE
 template:
   - sensor:
+      - name: "Frarik Irrigazione Versione"
+        unique_id: frarik_irrigazione_versione
+        state: "2.0"
+        icon: mdi:package-variant-closed
       - name: "Stato Irrigazione"
         unique_id: frarik_irrigazione_stato_sistema
         state: >

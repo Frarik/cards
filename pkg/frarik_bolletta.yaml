@@ -8,7 +8,7 @@
 #   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝            #
 #                                                             #
 #   Package: Centro Controllo Bolletta Elettrica              #
-#   Versione: 1.0  |  Frarik / Fratech                       #
+#   Versione: 2.0  |  Frarik / Fratech                       #
 #                                                             #
 ###############################################################
 #
@@ -26,7 +26,7 @@ homeassistant:
   customize:
     package.node_anchors:
       customize: &customize
-        package: 'Centro Controllo Bolletta Elettrica 1.0 — Frarik'
+        package: 'Centro Controllo Bolletta Elettrica 2.0 — Frarik'
 
       setting:
 
@@ -525,7 +525,7 @@ template:
   - sensor:
       - name: "Frarik Bolletta Versione"
         unique_id: frarik_bolletta_versione
-        state: "1.4"
+        state: "2.0"
         icon: mdi:package-variant-closed
       - name: "Frarik Bolletta Energia Giornaliera Safe"
         unit_of_measurement: "kWh"

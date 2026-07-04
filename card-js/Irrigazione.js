@@ -919,6 +919,8 @@ window.customCards.push({ version: '1.0',
     + '  irrigazione_domenica: {name: "Irrigazione Domenica", icon: mdi:calendar}\n'
     + '  irrigazione_automazione_attiva: {name: "Automazione Irrigazione Attiva", icon: mdi:autorenew}\n'
     + '  irrigazione_manuale_attiva: {name: "Irrigazione Manuale Attiva", icon: mdi:hand-back-right}\n'
+    + '  irrigazione_notify_push: {name: "Notifiche Push Irrigazione", icon: mdi:bell}\n'
+    + '  irrigazione_notify_alexa: {name: "Notifiche Alexa Irrigazione", icon: mdi:speaker}\n'
     + 'input_number:\n'
     + '  irrigazione_lunedi_num_cicli: {name: "Lun N.Cicli", min: 0, max: 5, step: 1, mode: slider, icon: mdi:counter}\n'
     + '  irrigazione_lunedi_durata_ciclo1: {name: "Lun C1 Durata", min: 10, max: 7200, step: 10, mode: box, unit_of_measurement: sec}\n'
@@ -1000,6 +1002,8 @@ window.customCards.push({ version: '1.0',
     + '  irrigazione_domenica_orario_ciclo3: {name: "Dom C3 Orario", has_date: false, has_time: true}\n'
     + '  irrigazione_domenica_orario_ciclo4: {name: "Dom C4 Orario", has_date: false, has_time: true}\n'
     + '  irrigazione_domenica_orario_ciclo5: {name: "Dom C5 Orario", has_date: false, has_time: true}\n'
+    + '  irrigazione_orario_inizio_notifiche: {name: "Orario Inizio Notifiche", has_date: false, has_time: true}\n'
+    + '  irrigazione_orario_fine_notifiche: {name: "Orario Fine Notifiche", has_date: false, has_time: true}\n'
     + 'input_button:\n'
     + '  irrigazione_start_automazione: {name: "Avvia Automazione Irrigazione", icon: mdi:play-circle}\n'
     + '  irrigazione_stop_automazione: {name: "Ferma Automazione Irrigazione", icon: mdi:stop-circle}\n'
@@ -1101,6 +1105,104 @@ window.customCards.push({ version: '1.0',
 
   function _buildPkgIRR(sw, push) {
     return _IRR_PKG_YAML.split('IL_TUO_SWITCH_IRR').join(sw || 'switch.rubinetto_esterno_interruttore');
+  }
+
+  function _iOpenImpostazioniHA(card) {
+    var h;
+    try { h = typeof window.frarikHass === 'function' ? window.frarikHass() : null; } catch(e) { h = null; }
+    var c = _iCfgFor(card);
+    function bs(e) { return !!(h && h.states && h.states[e] && h.states[e].state === 'on'); }
+    function ss(e) { var st = h && h.states && h.states[e]; return (st && st.state) || ''; }
+    function ns(e) { var st = h && h.states && h.states[e]; var v = parseFloat(st ? st.state : ''); return isNaN(v) ? 0 : v; }
+    var px = c.pk_prefix || 'irrigazione';
+    var iBase = 'background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);border-radius:8px;font-size:12px;font-family:system-ui;box-sizing:border-box;outline:none;color-scheme:dark';
+    var rows = [];
+    function dSec(lbl) {
+      rows.push('<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding:12px 0 6px;border-bottom:1px solid rgba(56,189,248,.15)">' + lbl + '</div>');
+    }
+    function dToggle(entity, lbl) {
+      var on = bs(entity);
+      rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
+        + '<span style="font-size:13px;color:#fff">' + lbl + '</span>'
+        + '<div class="irr-sw ' + (on ? 'on' : 'off') + '" data-entity="' + entity + '"><div class="irr-knob"></div></div>'
+        + '</div>');
+    }
+    function dTime(entity, lbl) {
+      var raw = ss(entity), val = raw && raw.length >= 5 ? raw.substring(0, 5) : '';
+      rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);gap:10px">'
+        + '<span style="font-size:13px;color:#fff;flex:1">' + lbl + '</span>'
+        + '<input type="time" class="irr-inp" data-entity="' + entity + '" data-svctype="time" value="' + val + '" style="' + iBase + ';width:108px;padding:6px 8px;text-align:center">'
+        + '</div>');
+    }
+    function dNum(entity, lbl, unit, mn, mx, step) {
+      var val = ns(entity);
+      rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);gap:10px">'
+        + '<span style="font-size:13px;color:#fff;flex:1">' + lbl + (unit ? ' <span style="font-size:10px;color:rgba(255,255,255,.6)">(' + unit + ')</span>' : '') + '</span>'
+        + '<input type="number" class="irr-inp" data-entity="' + entity + '" data-svctype="number" value="' + val + '" min="' + (mn||0) + '" max="' + (mx||9999) + '" step="' + (step||1) + '" style="' + iBase + ';width:90px;padding:6px 8px;text-align:right">'
+        + '</div>');
+    }
+
+    dSec('🔔 Notifiche');
+    dToggle('input_boolean.' + px + '_notify_push',  '📱 Push');
+    dToggle('input_boolean.' + px + '_notify_alexa', '🔊 Alexa');
+    dTime('input_datetime.' + px + '_orario_inizio_notifiche', '⏰ Inizio notifiche');
+    dTime('input_datetime.' + px + '_orario_fine_notifiche',   '⏰ Fine notifiche');
+
+    dSec('🌧 Meteo');
+    dNum('input_number.' + px + '_soglia_pioggia', 'Soglia pioggia', '%', 0, 100, 5);
+
+    dSec('⚙ Automazioni');
+    dToggle('input_boolean.' + px + '_automazione_attiva', 'Automazione attiva');
+
+    dSec('⏱ Durata manuale');
+    dNum('input_number.' + px + '_durata_manuale', 'Durata', 'sec', 10, 7200, 10);
+
+    var swCss = '<style>'
+      + '.irr-sw{width:44px;height:26px;border-radius:13px;cursor:pointer;position:relative;flex-shrink:0;transition:background .25s}'
+      + '.irr-sw.on{background:#38bdf8}.irr-sw.off{background:rgba(255,255,255,.12)}'
+      + '.irr-knob{position:absolute;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .25s;box-shadow:0 1px 4px rgba(0,0,0,.4)}'
+      + '.irr-sw.on .irr-knob{left:21px}.irr-sw.off .irr-knob{left:3px}'
+      + '.irr-inp:focus{border-color:rgba(56,189,248,.55)!important}'
+      + '</style>';
+    var saveBtn = '<button id="irr-ha-save" style="width:100%;margin-top:12px;padding:13px;border-radius:12px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.4);color:#38bdf8;font-size:14px;font-weight:700;cursor:pointer">💾 Salva impostazioni</button>';
+    var closeId = 'irr-ha-' + Math.random().toString(36).slice(2,6);
+    var html = '<div id="' + closeId + '-bd" style="position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;pointer-events:auto">'
+      + '<div style="background:#0d1627;border-radius:18px;border:1px solid rgba(56,189,248,.3);width:min(96vw,430px);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.7)">'
+      + '<div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.07)">'
+      + '<span style="font-size:20px">⚙</span>'
+      + '<span style="font-size:15px;font-weight:800;color:#fff;flex:1">Impostazioni Irrigazione</span>'
+      + '<button id="' + closeId + '" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:20px;cursor:pointer;padding:4px">✕</button>'
+      + '</div>'
+      + '<div style="overflow-y:auto;padding:14px 16px;flex:1">'
+      + swCss + rows.join('') + saveBtn
+      + '</div>'
+      + '</div>'
+      + '</div>';
+    var host = document.createElement('div');
+    host.innerHTML = html;
+    var ov = host.firstChild;
+    ov.querySelector('#' + closeId).addEventListener('click', function() { if (ov.parentNode) ov.parentNode.removeChild(ov); });
+    ov.addEventListener('click', function(e) { if (e.target.id === closeId + '-bd') { if (ov.parentNode) ov.parentNode.removeChild(ov); } });
+    ov.querySelectorAll('.irr-sw').forEach(function(sw) {
+      sw.addEventListener('click', function() { sw.classList.toggle('on'); sw.classList.toggle('off'); });
+    });
+    var sb = ov.querySelector('#irr-ha-save');
+    if (sb) sb.addEventListener('click', function() {
+      ov.querySelectorAll('.irr-sw[data-entity]').forEach(function(sw) {
+        var entity = sw.dataset.entity;
+        _iCallSvc(entity.split('.')[0], sw.classList.contains('on') ? 'turn_on' : 'turn_off', {entity_id:entity});
+      });
+      ov.querySelectorAll('.irr-inp[data-entity]').forEach(function(inp) {
+        var entity = inp.dataset.entity, type = inp.dataset.svctype;
+        if (!entity) return;
+        if (type === 'time') { if (inp.value) _iCallSvc('input_datetime','set_datetime',{entity_id:entity,time:inp.value+':00'}); }
+        else if (type === 'number') { var v = parseFloat(inp.value); if (!isNaN(v)) _iCallSvc('input_number','set_value',{entity_id:entity,value:v}); }
+      });
+      sb.textContent = '✅ Salvato!'; sb.style.background='rgba(34,197,94,.15)'; sb.style.borderColor='rgba(34,197,94,.4)'; sb.style.color='#4ade80';
+      setTimeout(function() { sb.textContent='💾 Salva impostazioni'; sb.style.background=''; sb.style.borderColor=''; sb.style.color=''; }, 2000);
+    });
+    var target = document.querySelector('home-assistant') || document.body;
+    if (target) target.appendChild(ov);
   }
 
   function _openWizardIRR(hass, onDone) {
@@ -1684,10 +1786,10 @@ window.customCards.push({ version: '1.0',
     render:    function(card) { return _iRender(card); },
     mount:     function(card, hass, el) { _iMount(card, hass, el); },
     update:    function(card, hass, el) { _iUpdate(card, hass, el); },
-    configure: function(card, el) { _iOpenCfg(card, el); },
+    configure: null,
     frarik_pkg_check:   'sensor.stato_irrigazione',
     frarik_pkg_id:      'frarik_irrigazione',
-    frarik_pkg_version: '1.0',
+    frarik_pkg_version: '2.0',
     openWizard: _openWizardIRR,
   };
   window.FratechCardRegistry = window.FratechCardRegistry || {};

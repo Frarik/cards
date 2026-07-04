@@ -8,7 +8,7 @@
 #   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝            #
 #                                                             #
 #   Package: Centro Controllo Posta                           #
-#   Versione: 1.0  |  Frarik / Fratech                       #
+#   Versione: 2.0  |  Frarik / Fratech                       #
 #                                                             #
 ###############################################################
 #
@@ -100,7 +100,7 @@ homeassistant:
       customize: &customize
         package: 'Frarik — Centro Controllo Posta'
         author: 'Frarik / Fratech'
-        version: '1.0'
+        version: '2.0'
 
       setting:
 
@@ -249,7 +249,7 @@ template:
   - sensor:
       - name: "Frarik Posta Versione"
         unique_id: frarik_posta_versione
-        state: "1.4"
+        state: "2.0"
         icon: mdi:package-variant-closed
 
   - binary_sensor:
@@ -449,5 +449,5 @@ automation:
               entity_id: counter.frarik_posta_settimana
 
 ###############################################################
-#  Fine package — Frarik Centro Controllo Posta v1.0
+#  Fine package — Frarik Centro Controllo Posta v2.0
 ###############################################################

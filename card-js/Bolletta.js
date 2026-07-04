@@ -2319,6 +2319,12 @@ automation:
     });
   }
 
+  /* ── IMPOSTAZIONI HA POPUP ALIAS ── */
+  function openImpostazioniHAPopup(card) {
+    var h = H(), c = cfgFor(card);
+    openImpostazioni(card, c, null);
+  }
+
   /* ── REGISTER ── */
   window.FratechCardRegistry = window.FratechCardRegistry || {};
   window.FratechCardRegistry[CARD.id] = {
@@ -2330,10 +2336,11 @@ automation:
     render: render,
     mount: mount,
     update: update,
+    configure: null,
     frarik_no_edit: true,
     frarik_pkg_check: 'sensor.frarik_bolletta_versione',
     frarik_pkg_id: 'frarik_bolletta',
-    frarik_pkg_version: '1.0',
+    frarik_pkg_version: '2.0',
     openWizard: openWizard,
   };
 

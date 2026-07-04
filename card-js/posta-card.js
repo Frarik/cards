@@ -12,7 +12,7 @@
 const _PKG_YAML = `###############################################################
 #                                                             #
 #   Package: Centro Controllo Posta                           #
-#   Versione: 1.2  |  Frarik / Fratech                       #
+#   Versione: 2.0  |  Frarik / Fratech                       #
 #                                                             #
 ###############################################################
 #
@@ -32,7 +32,7 @@ homeassistant:
       customize: &customize
         package: 'Frarik — Centro Controllo Posta'
         author: 'Frarik / Fratech'
-        version: '1.2'
+        version: '2.0'
 
       setting:
         Sensore Cassetta: &sensore_cassetta
@@ -504,6 +504,83 @@ if(!customElements.get('posta-card')){
     }
 
     configure(card){ if(card?.id) this._frarikCard=card; this._openSettings(); }
+  openImpostazioniHAPopup() {
+    const h = window.frarikHass ? window.frarikHass() : null;
+    function bs(e) { return !!(h && h.states && h.states[e] && h.states[e].state === 'on'); }
+    function ss(e) { const st = h && h.states && h.states[e]; return (st && st.state) || ''; }
+    const iBase = 'background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);border-radius:8px;font-size:12px;font-family:system-ui;box-sizing:border-box;outline:none;color-scheme:dark';
+    const rows = [];
+    function dSec(lbl) { rows.push('<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding:12px 0 6px;border-bottom:1px solid rgba(56,189,248,.15)">' + lbl + '</div>'); }
+    function dToggle(entity, lbl) {
+      const on = bs(entity);
+      rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
+        + '<span style="font-size:13px;color:#fff">' + lbl + '</span>'
+        + '<div class="po-sw ' + (on ? 'on' : 'off') + '" data-entity="' + entity + '"><div class="po-knob"></div></div>'
+        + '</div>');
+    }
+    function dTime(entity, lbl) {
+      const raw = ss(entity), val = raw && raw.length >= 5 ? raw.substring(0, 5) : '';
+      rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);gap:10px">'
+        + '<span style="font-size:13px;color:#fff;flex:1">' + lbl + '</span>'
+        + '<input type="time" class="po-inp" data-entity="' + entity + '" data-svctype="time" value="' + val + '" style="' + iBase + ';width:108px;padding:6px 8px;text-align:center">'
+        + '</div>');
+    }
+    function csvc(d, s, data) { try { if (h && h.callService) h.callService(d, s, data||{}); } catch(e) {} }
+
+    dSec('🔔 Notifiche');
+    dToggle('input_boolean.frarik_posta_notifiche_attive', '🔔 Notifiche attive');
+    dToggle('input_boolean.frarik_posta_notifica_push',    '📱 Push');
+    dToggle('input_boolean.frarik_posta_notifica_google',  '🔊 Google');
+    dToggle('input_boolean.frarik_posta_notifica_alexa',   '🗣 Alexa');
+    dTime('input_datetime.frarik_posta_notifiche_inizio', '⏰ Inizio notifiche TTS');
+    dTime('input_datetime.frarik_posta_notifiche_fine',   '⏰ Fine notifiche TTS');
+
+    const swCss = '<style>'
+      + '.po-sw{width:44px;height:26px;border-radius:13px;cursor:pointer;position:relative;flex-shrink:0;transition:background .25s}'
+      + '.po-sw.on{background:#38bdf8}.po-sw.off{background:rgba(255,255,255,.12)}'
+      + '.po-knob{position:absolute;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .25s;box-shadow:0 1px 4px rgba(0,0,0,.4)}'
+      + '.po-sw.on .po-knob{left:21px}.po-sw.off .po-knob{left:3px}'
+      + '.po-inp:focus{border-color:rgba(56,189,248,.55)!important}'
+      + '</style>';
+    const saveBtn = '<button id="po-save" style="width:100%;margin-top:12px;padding:13px;border-radius:12px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.4);color:#38bdf8;font-size:14px;font-weight:700;cursor:pointer">💾 Salva impostazioni</button>';
+    const closeId = 'po-imp-' + Math.random().toString(36).slice(2,6);
+    const html = '<div id="' + closeId + '-bd" style="position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;pointer-events:auto">'
+      + '<div style="background:#0d1627;border-radius:18px;border:1px solid rgba(56,189,248,.3);width:min(96vw,430px);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.7)">'
+      + '<div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.07)">'
+      + '<span style="font-size:20px">📬</span>'
+      + '<span style="font-size:15px;font-weight:800;color:#fff;flex:1">Impostazioni Posta</span>'
+      + '<button id="' + closeId + '" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:20px;cursor:pointer;padding:4px">✕</button>'
+      + '</div>'
+      + '<div style="overflow-y:auto;padding:14px 16px;flex:1">'
+      + swCss + rows.join('') + saveBtn
+      + '</div>'
+      + '</div>'
+      + '</div>';
+    const host = document.createElement('div');
+    host.innerHTML = html;
+    const ov = host.firstChild;
+    ov.querySelector('#' + closeId).addEventListener('click', () => { ov.remove(); });
+    ov.addEventListener('click', e => { if (e.target.id === closeId + '-bd') ov.remove(); });
+    ov.querySelectorAll('.po-sw').forEach(sw => {
+      sw.addEventListener('click', () => { sw.classList.toggle('on'); sw.classList.toggle('off'); });
+    });
+    const sb = ov.querySelector('#po-save');
+    if (sb) sb.addEventListener('click', () => {
+      ov.querySelectorAll('.po-sw[data-entity]').forEach(sw => {
+        const entity = sw.dataset.entity;
+        csvc(entity.split('.')[0], sw.classList.contains('on') ? 'turn_on' : 'turn_off', {entity_id: entity});
+      });
+      ov.querySelectorAll('.po-inp[data-entity]').forEach(inp => {
+        const entity = inp.dataset.entity, type = inp.dataset.svctype;
+        if (!entity) return;
+        if (type === 'time' && inp.value) csvc('input_datetime','set_datetime',{entity_id:entity,time:inp.value+':00'});
+      });
+      sb.textContent = '✅ Salvato!'; sb.style.background='rgba(34,197,94,.15)'; sb.style.borderColor='rgba(34,197,94,.4)'; sb.style.color='#4ade80';
+      setTimeout(() => { sb.textContent='💾 Salva impostazioni'; sb.style.background=''; sb.style.borderColor=''; sb.style.color=''; }, 2000);
+    });
+    const target = document.querySelector('home-assistant') || document.body;
+    if (target) target.appendChild(ov);
+  }
     connectedCallback(){ this.shadowRoot.addEventListener('click',this._click); this.shadowRoot.addEventListener('change',this._change); }
     disconnectedCallback(){ this.shadowRoot.removeEventListener('click',this._click); this.shadowRoot.removeEventListener('change',this._change); this._destroyModal(); _acHide(); }
 
@@ -1105,6 +1182,6 @@ PostaCard._buildPkgFromConfig=function(cfg){
 /* ── registrazione customCards ── */
 const _ccArr=(window.customCards=window.customCards||[]);
 const _ccIdx=_ccArr.findIndex(c=>c&&c.type==='posta-card');
-const _ccEntry={type:'posta-card',name:'Centro Controllo Posta',description:'Monitora la cassetta postale: consegne giornaliere con orari, storico, notifiche push/Google/Alexa.',icon:'mdi:mailbox',frarik_pkg_check:'sensor.frarik_posta_versione',frarik_pkg_id:'frarik_posta',frarik_pkg_version:'1.2'};
+const _ccEntry={type:'posta-card',name:'Centro Controllo Posta',description:'Monitora la cassetta postale: consegne giornaliere con orari, storico, notifiche push/Google/Alexa.',icon:'mdi:mailbox',frarik_pkg_check:'sensor.frarik_posta_versione',frarik_pkg_id:'frarik_posta',frarik_pkg_version:'2.0'};
 if(_ccIdx>=0) _ccArr[_ccIdx]=_ccEntry; else _ccArr.push(_ccEntry);
 })();

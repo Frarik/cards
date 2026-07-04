@@ -238,7 +238,7 @@ class AntiZanzareCard extends HTMLElement {
   setConfig(config) { this._config = config || {} }
   getCardSize() { return 6 }
 
-  configure() { this._settingsOpen = true; this._buildKey = null; this._buildDOM(); }
+  configure() { if (typeof window._azOpenImpostazioni === 'function') { window._azOpenImpostazioni(); } else { this._settingsOpen = true; this._buildKey = null; this._buildDOM(); } }
 
   connectedCallback() {
     this.shadowRoot.addEventListener('click', this._onClick)
@@ -764,6 +764,9 @@ window.customCards.push({ version: '1.5',
     + '  frarik_antizanzare_domenica: {name: "Anti Zanzare Domenica", icon: mdi:calendar}\n'
     + '  frarik_antizanzare_automazione_attiva: {name: "Automazione Anti Zanzare Attiva", icon: mdi:autorenew}\n'
     + '  frarik_antizanzare_manuale_attiva: {name: "Anti Zanzare Manuale Attiva", icon: mdi:hand-back-right}\n'
+    + '  frarik_antizanzare_notify_push: {name: "Notifiche Push Anti Zanzare", icon: mdi:bell}\n'
+    + '  frarik_antizanzare_notify_alexa: {name: "Notifiche Alexa Anti Zanzare", icon: mdi:speaker}\n'
+    + '  frarik_antizanzare_presenza_attiva: {name: "Pausa per Presenza", icon: mdi:motion-sensor}\n'
     + 'input_number:\n'
     + '  frarik_antizanzare_lunedi_num_cicli: {name: "Lun N.Cicli", min: 0, max: 5, step: 1, mode: slider, icon: mdi:counter}\n'
     + '  frarik_antizanzare_lunedi_durata_ciclo1: {name: "Lun C1 Durata", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec}\n'
@@ -810,6 +813,7 @@ window.customCards.push({ version: '1.5',
     + '  frarik_antizanzare_durata_manuale: {name: "Durata Manuale", min: 10, max: 3600, step: 10, mode: box, unit_of_measurement: sec, icon: mdi:timer-cog}\n'
     + '  frarik_antizanzare_soglia_pioggia: {name: "Soglia Pioggia %", min: 0, max: 100, step: 5, mode: slider, unit_of_measurement: "%", icon: mdi:weather-rainy}\n'
     + '  frarik_antizanzare_cicli_target_mensili: {name: "Cicli Target Mensili", min: 1, max: 200, step: 1, mode: box, unit_of_measurement: cicli, icon: mdi:target}\n'
+    + '  frarik_antizanzare_soglia_vento: {name: "Soglia Vento km/h", min: 0, max: 100, step: 1, mode: slider, unit_of_measurement: "km/h", icon: mdi:weather-windy}\n'
     + 'input_datetime:\n'
     + '  frarik_antizanzare_lunedi_orario_ciclo1: {name: "Lun C1 Orario", has_date: false, has_time: true}\n'
     + '  frarik_antizanzare_lunedi_orario_ciclo2: {name: "Lun C2 Orario", has_date: false, has_time: true}\n'
@@ -846,6 +850,8 @@ window.customCards.push({ version: '1.5',
     + '  frarik_antizanzare_domenica_orario_ciclo3: {name: "Dom C3 Orario", has_date: false, has_time: true}\n'
     + '  frarik_antizanzare_domenica_orario_ciclo4: {name: "Dom C4 Orario", has_date: false, has_time: true}\n'
     + '  frarik_antizanzare_domenica_orario_ciclo5: {name: "Dom C5 Orario", has_date: false, has_time: true}\n'
+    + '  frarik_antizanzare_orario_inizio_notifiche: {name: "Orario Inizio Notifiche", has_date: false, has_time: true}\n'
+    + '  frarik_antizanzare_orario_fine_notifiche: {name: "Orario Fine Notifiche", has_date: false, has_time: true}\n'
     + 'input_button:\n'
     + '  frarik_antizanzare_start_automazione: {name: "Avvia Automazione Anti Zanzare", icon: mdi:play-circle}\n'
     + '  frarik_antizanzare_stop_automazione: {name: "Ferma Automazione Anti Zanzare", icon: mdi:stop-circle}\n'
@@ -963,6 +969,135 @@ window.customCards.push({ version: '1.5',
       : ind + '- service: mobile_app_smartphone';
     return _AZ_PKG_YAML.split('IL_TUO_SWITCH_AZ').join(sw || 'switch.presa_anti_zanzare');
   }
+
+  function _azOpenImpostazioni() {
+    var h;
+    try { h = typeof window.frarikHass === 'function' ? window.frarikHass() : null; } catch(e) { h = null; }
+    function bs(e) { return !!(h && h.states && h.states[e] && h.states[e].state === 'on'); }
+    function ss(e) { var st = h && h.states && h.states[e]; return (st && st.state) || ''; }
+    function ns(e) { var st = h && h.states && h.states[e]; var v = parseFloat(st ? st.state : ''); return isNaN(v) ? 0 : v; }
+    function csvc(d, s, data) { try { if (h && h.callService) h.callService(d, s, data||{}); } catch(e) {} }
+
+    var iBase = 'background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);border-radius:8px;font-size:12px;font-family:system-ui;box-sizing:border-box;outline:none;color-scheme:dark';
+    var rows = [];
+    function dSec(lbl) {
+      rows.push('<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding:12px 0 6px;border-bottom:1px solid rgba(56,189,248,.15)">' + lbl + '</div>');
+    }
+    function dToggle(entity, lbl) {
+      var on = bs(entity);
+      rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
+        + '<span style="font-size:13px;color:#fff">' + lbl + '</span>'
+        + '<div class="az-sw ' + (on ? 'on' : 'off') + '" data-entity="' + entity + '"><div class="az-knob"></div></div>'
+        + '</div>');
+    }
+    function dTime(entity, lbl) {
+      var raw = ss(entity), val = raw && raw.length >= 5 ? raw.substring(0, 5) : '';
+      rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);gap:10px">'
+        + '<span style="font-size:13px;color:#fff;flex:1">' + lbl + '</span>'
+        + '<input type="time" class="az-inp" data-entity="' + entity + '" data-svctype="time" value="' + val + '" style="' + iBase + ';width:108px;padding:6px 8px;text-align:center">'
+        + '</div>');
+    }
+    function dNum(entity, lbl, unit, mn, mx, step) {
+      var val = ns(entity);
+      rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);gap:10px">'
+        + '<span style="font-size:13px;color:#fff;flex:1">' + lbl + (unit ? ' <span style="font-size:10px;color:rgba(255,255,255,.6)">(' + unit + ')</span>' : '') + '</span>'
+        + '<input type="number" class="az-inp" data-entity="' + entity + '" data-svctype="number" value="' + val + '" min="' + (mn||0) + '" max="' + (mx||9999) + '" step="' + (step||1) + '" style="' + iBase + ';width:90px;padding:6px 8px;text-align:right">'
+        + '</div>');
+    }
+    function dText(entity, lbl) {
+      var val = ss(entity);
+      rows.push('<div style="padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
+        + '<div style="font-size:13px;color:#fff;margin-bottom:5px">' + lbl + '</div>'
+        + '<input type="text" class="az-inp" data-entity="' + entity + '" data-svctype="text" value="' + (val||'').replace(/"/g,'&quot;') + '" style="' + iBase + ';width:100%;padding:7px 10px">'
+        + '</div>');
+    }
+
+    dSec('🔔 Notifiche');
+    dToggle('input_boolean.frarik_antizanzare_notify_push',  '📱 Push');
+    dToggle('input_boolean.frarik_antizanzare_notify_alexa', '🔊 Alexa');
+    dTime('input_datetime.frarik_antizanzare_orario_inizio_notifiche', '⏰ Inizio notifiche');
+    dTime('input_datetime.frarik_antizanzare_orario_fine_notifiche',   '⏰ Fine notifiche');
+
+    dSec('🌬 Condizioni blocco');
+    dNum('input_number.frarik_antizanzare_soglia_vento',   'Soglia vento',   'km/h', 0, 100, 1);
+    dNum('input_number.frarik_antizanzare_soglia_pioggia', 'Soglia pioggia', '%',    0, 100, 5);
+
+    dSec('👤 Presenza');
+    dToggle('input_boolean.frarik_antizanzare_presenza_attiva', 'Pausa per presenza');
+
+    dSec('⚙ Automazioni');
+    dToggle('input_boolean.frarik_antizanzare_automazione_attiva', 'Automazione attiva');
+    dToggle('input_boolean.frarik_antizanzare_manuale_attiva',     'Manuale attiva');
+
+    dSec('🎯 Cicli mensili');
+    dNum('input_number.frarik_antizanzare_cicli_target_mensili', 'Target mensile', 'cicli', 1, 200, 1);
+
+    dSec('⏱ Durata manuale');
+    dNum('input_number.frarik_antizanzare_durata_manuale', 'Durata', 'sec', 10, 3600, 10);
+
+    dSec('📝 Nome');
+    dText('input_text.frarik_antizanzare_nome', 'Nome dispositivo');
+
+    var swCss = '<style>'
+      + '.az-sw{width:44px;height:26px;border-radius:13px;cursor:pointer;position:relative;flex-shrink:0;transition:background .25s}'
+      + '.az-sw.on{background:#06b6d4}.az-sw.off{background:rgba(255,255,255,.12)}'
+      + '.az-knob{position:absolute;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .25s;box-shadow:0 1px 4px rgba(0,0,0,.4)}'
+      + '.az-sw.on .az-knob{left:21px}.az-sw.off .az-knob{left:3px}'
+      + '.az-inp:focus{border-color:rgba(6,182,212,.55)!important}'
+      + '</style>';
+    var saveBtn = '<button id="az-save" style="width:100%;margin-top:12px;padding:13px;border-radius:12px;background:rgba(6,182,212,.15);border:1px solid rgba(6,182,212,.4);color:#06b6d4;font-size:14px;font-weight:700;cursor:pointer">💾 Salva impostazioni</button>';
+    var closeId = 'az-imp-' + Math.random().toString(36).slice(2,6);
+
+    /* build overlay using the page-level overlay helper if available */
+    var ov;
+    var html = '<div id="' + closeId + '-bd" style="position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;pointer-events:auto">'
+      + '<div style="background:#0d1627;border-radius:18px;border:1px solid rgba(6,182,212,.3);width:min(96vw,430px);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.7)">'
+      + '<div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.07)">'
+      + '<span style="font-size:20px">⚙</span>'
+      + '<span style="font-size:15px;font-weight:800;color:#fff;flex:1">Impostazioni Anti Zanzare</span>'
+      + '<button id="' + closeId + '" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:20px;cursor:pointer;padding:4px">✕</button>'
+      + '</div>'
+      + '<div style="overflow-y:auto;padding:14px 16px;flex:1">'
+      + swCss + rows.join('') + saveBtn
+      + '</div>'
+      + '</div>'
+      + '</div>';
+
+    var host = document.createElement('div');
+    host.innerHTML = html;
+    ov = host.firstChild;
+    var closeEl = ov.querySelector ? ov.querySelector('#' + closeId) : null;
+    if (closeEl) closeEl.addEventListener('click', function() { if (ov.parentNode) ov.parentNode.removeChild(ov); });
+    ov.addEventListener('click', function(e) { if (e.target.id === closeId + '-bd') { if (ov.parentNode) ov.parentNode.removeChild(ov); } });
+
+    ov.querySelectorAll('.az-sw').forEach(function(sw) {
+      sw.addEventListener('click', function() { sw.classList.toggle('on'); sw.classList.toggle('off'); });
+    });
+
+    var sb = ov.querySelector('#az-save');
+    if (sb) sb.addEventListener('click', function() {
+      ov.querySelectorAll('.az-sw[data-entity]').forEach(function(sw) {
+        var entity = sw.dataset.entity;
+        csvc(entity.split('.')[0], sw.classList.contains('on') ? 'turn_on' : 'turn_off', {entity_id: entity});
+      });
+      ov.querySelectorAll('.az-inp[data-entity]').forEach(function(inp) {
+        var entity = inp.dataset.entity, type = inp.dataset.svctype;
+        if (!entity) return;
+        if (type === 'time') { if (inp.value) csvc('input_datetime','set_datetime',{entity_id:entity,time:inp.value+':00'}); }
+        else if (type === 'number') { var v = parseFloat(inp.value); if (!isNaN(v)) csvc('input_number','set_value',{entity_id:entity,value:v}); }
+        else if (type === 'text') { csvc('input_text','set_value',{entity_id:entity,value:inp.value}); }
+      });
+      sb.textContent = '✅ Salvato!';
+      sb.style.background = 'rgba(34,197,94,.15)';
+      sb.style.borderColor = 'rgba(34,197,94,.4)';
+      sb.style.color = '#4ade80';
+      setTimeout(function() { sb.textContent = '💾 Salva impostazioni'; sb.style.background=''; sb.style.borderColor=''; sb.style.color=''; }, 2000);
+    });
+
+    var target = document.querySelector('home-assistant') || document.body;
+    if (target) target.appendChild(ov);
+  }
+  window._azOpenImpostazioni = _azOpenImpostazioni;
 
   function _openWizardAZ(hass, onDone) {
     var states = (hass && hass.states) || {};
@@ -1871,10 +2006,10 @@ window.customCards.push({ version: '1.5',
     render:    function(card) { return _azRender(card); },
     mount:     function(card, hass, el) { _azMount(card, hass, el); },
     update:    function(card, hass, el) { _azUpdate(card, hass, el); },
-    configure: function(card, el) {},
+    configure: null,
     frarik_pkg_check:   'sensor.stato_anti_zanzare',
     frarik_pkg_id:      'frarik_antizanzare',
-    frarik_pkg_version: '1.0',
+    frarik_pkg_version: '2.0',
     openWizard: _openWizardAZ,
   };
   window.FratechCardRegistry = window.FratechCardRegistry || {};

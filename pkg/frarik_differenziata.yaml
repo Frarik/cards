@@ -205,7 +205,7 @@ template:
   - sensor:
       - name: "Frarik Differenziata Versione"
         unique_id: frarik_differenziata_versione
-        state: "2.4"
+        state: "2.0"
         icon: mdi:package-variant-closed
 
       - name: "Frarik Differenziata Raccolta"
