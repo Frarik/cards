@@ -3630,7 +3630,23 @@ async function _pkgUpdateCard(cardId, silent=false){
     return;
   }
 
-  /* Nessuna config wizard salvata → scarica grezzo da GitHub (card senza wizard o primo install) */
+  /* Nessuna config wizard salvata */
+  if(!silent && typeof CardClass?.openWizard==='function'){
+    /* La card ha un wizard ma l'utente non ha mai configurato i placeholder →
+       riapri il wizard invece di installare il YAML grezzo con IL_TUO_* irrisolti */
+    const ghTpl=await _downloadPkgRaw(pkgInfo);
+    const pkgVer=pkgInfo.ver;
+    const f=_ghsFind(encodeURIComponent((pkgInfo.file||'').split('/').pop()));
+    CardClass.openWizard(_haHassObj(),async ()=>{
+      _savePkgVer(cardId,pkgVer);
+      if(f) _ghsDoInstall(f,it.code,null);
+      await _pkgPostInstall(cardId,pkgVer);
+      await _loadHaInstalledPkgs();
+      if(typeof _ghStoreRender==='function') _ghStoreRender();
+    }, ghTpl||undefined);
+    return;
+  }
+  /* Card senza wizard (o aggiornamento silenzioso senza config) → raw GitHub */
   await _pkgGenericInstall(cardId,pkgInfo.ver,pkgInfo,null,it.code,null);
   _loadHaInstalledPkgs().then(()=>{ if(typeof _ghStoreRender==='function') _ghStoreRender(); });
 }
