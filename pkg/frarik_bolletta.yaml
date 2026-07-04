@@ -68,6 +68,7 @@ sensor:
   - platform: integration
     source: *sensore_potenza_bolletta
     name: "Frarik Bolletta Energia Totale Casa"
+    unique_id: frarik_bolletta_energia_totale_casa
     unit_prefix: k
     unit_time: h
     round: 3

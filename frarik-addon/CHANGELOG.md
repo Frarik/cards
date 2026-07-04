@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.80 — 2026-07-04
+
+### fix(bolletta): PKG — unique_id ripristinato su integration sensor
+
+- **unique_id ripristinato**: `frarik_bolletta_energia_totale_casa` sull'integration sensor garantisce che HA crei `sensor.frarik_bolletta_energia_totale_casa` con entity_id stabile e corretto
+- **Riparazioni Spook**: le riparazioni "Unknown source" degli utility_meter si risolvono perché l'entità sorgente viene creata correttamente al restart
+- **Nota**: l'utente aveva già eliminato la vecchia entità con lo stesso unique_id dal registry — nessun conflitto
+
 ## 1.7.79 — 2026-07-04
 
 ### fix(bolletta): card v3.7 + PKG — entity ID con prefisso frarik_ garantito
