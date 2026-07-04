@@ -1,4 +1,4 @@
-/* frarik-version: 3.6 */
+/* frarik-version: 3.7 */
 (function () {
   'use strict';
 
@@ -23,23 +23,23 @@
   function pkDefaults() {
     return {
       pk_consumo_ist:   'sensor.consumo_istantaneo',
-      pk_kwh_oggi:      'sensor.bolletta_energia_giornaliera_safe',
-      pk_kwh_mese:      'sensor.bolletta_energia_mensile_safe',
-      pk_costo_oggi:    'sensor.bolletta_giornaliera',
-      pk_costo_mese:    'sensor.bolletta_mensile',
-      pk_proiezione_e:  'sensor.bolletta_proiezione_fine_mese',
-      pk_proiezione_k:  'sensor.bolletta_previsione_kwh_fine_mese',
-      pk_anno:          'sensor.bolletta_totale_anno_corrente',
+      pk_kwh_oggi:      'sensor.frarik_bolletta_energia_giornaliera_safe',
+      pk_kwh_mese:      'sensor.frarik_bolletta_energia_mensile_safe',
+      pk_costo_oggi:    'sensor.frarik_bolletta_giornaliera',
+      pk_costo_mese:    'sensor.frarik_bolletta_mensile',
+      pk_proiezione_e:  'sensor.frarik_bolletta_proiezione_fine_mese',
+      pk_proiezione_k:  'sensor.frarik_bolletta_previsione_kwh_fine_mese',
+      pk_anno:          'sensor.frarik_bolletta_totale_anno_corrente',
       pk_arera_trim:    'sensor.frarik_bolletta_arera_trimestre',
-      pk_materia:       'sensor.bolletta_materia_energia_mensile',
-      pk_trasporto:     'sensor.bolletta_trasporto_mensile',
-      pk_oneri:         'sensor.bolletta_oneri_sistema_mensili',
-      pk_accise:        'sensor.bolletta_costo_mensile_accise',
-      pk_iva:           'sensor.bolletta_iva_mensile',
-      pk_canone_rai:    'sensor.bolletta_canone_rai_mensile',
-      pk_costo_kwh:     'sensor.bolletta_costo_per_kwh',
-      pk_media_g:       'sensor.bolletta_consumo_medio_giornaliero',
-      pk_diff_anno:     'sensor.bolletta_differenza_vs_anno_scorso',
+      pk_materia:       'sensor.frarik_bolletta_materia_energia_mensile',
+      pk_trasporto:     'sensor.frarik_bolletta_trasporto_mensile',
+      pk_oneri:         'sensor.frarik_bolletta_oneri_sistema_mensili',
+      pk_accise:        'sensor.frarik_bolletta_costo_mensile_accise',
+      pk_iva:           'sensor.frarik_bolletta_iva_mensile',
+      pk_canone_rai:    'sensor.frarik_bolletta_canone_rai_mensile',
+      pk_costo_kwh:     'sensor.frarik_bolletta_costo_per_kwh',
+      pk_media_g:       'sensor.frarik_bolletta_consumo_medio_giornaliero',
+      pk_diff_anno:     'sensor.frarik_bolletta_differenza_vs_anno_scorso',
       pk_tariffa:       'input_number.frarik_bolletta_tariffa_energia',
       pk_spread:        'input_number.frarik_bolletta_spread_energia',
       pk_potenza:       'input_number.frarik_bolletta_potenza_impegnata',
@@ -790,7 +790,7 @@
   }
 
   /* ── UPDATE / MOUNT ── */
-  var CARD = { id: 'bolletta', version: '3.6', name: 'Bolletta Elettrica', icon: '⚡', color: COL };
+  var CARD = { id: 'bolletta', version: '3.7', name: 'Bolletta Elettrica', icon: '⚡', color: COL };
 
   function update(card, hass, el) {
     var h = hass || H(), c = cfgFor(card);
@@ -902,23 +902,23 @@ sensor:
 
 utility_meter:
   frarik_bolletta_energia_giornaliera:
-    source: sensor.bolletta_energia_totale_casa
+    source: sensor.frarik_bolletta_energia_totale_casa
     name: "Bolletta Energia Giornaliera"
     cycle: daily
   frarik_bolletta_energia_settimanale:
-    source: sensor.bolletta_energia_totale_casa
+    source: sensor.frarik_bolletta_energia_totale_casa
     name: "Bolletta Energia Settimanale"
     cycle: weekly
   frarik_bolletta_energia_mensile:
-    source: sensor.bolletta_energia_totale_casa
+    source: sensor.frarik_bolletta_energia_totale_casa
     name: "Bolletta Energia Mensile"
     cycle: monthly
   frarik_bolletta_energia_trimestrale:
-    source: sensor.bolletta_energia_totale_casa
+    source: sensor.frarik_bolletta_energia_totale_casa
     name: "Bolletta Energia Trimestrale"
     cycle: quarterly
   frarik_bolletta_energia_annuale:
-    source: sensor.bolletta_energia_totale_casa
+    source: sensor.frarik_bolletta_energia_totale_casa
     name: "Bolletta Energia Annuale"
     cycle: yearly
 
@@ -1402,7 +1402,7 @@ template:
         device_class: energy
         icon: mdi:lightning-bolt
         state: >
-          {% set v = states('sensor.bolletta_energia_giornaliera') %}
+          {% set v = states('sensor.frarik_bolletta_energia_giornaliera') %}
           {% if v not in ['unknown','unavailable',''] %}
             {{ v | float(0) }}
           {% else %}
@@ -1415,7 +1415,7 @@ template:
         device_class: energy
         icon: mdi:calendar-week
         state: >
-          {% set v = states('sensor.bolletta_energia_settimanale') %}
+          {% set v = states('sensor.frarik_bolletta_energia_settimanale') %}
           {% if v not in ['unknown','unavailable',''] %}
             {{ v | float(0) }}
           {% else %}
@@ -1428,7 +1428,7 @@ template:
         device_class: energy
         icon: mdi:calendar-month
         state: >
-          {% set v = states('sensor.bolletta_energia_mensile') %}
+          {% set v = states('sensor.frarik_bolletta_energia_mensile') %}
           {% if v not in ['unknown','unavailable',''] %}
             {{ v | float(0) }}
           {% else %}
@@ -1453,7 +1453,7 @@ template:
         unit_of_measurement: "€"
         icon: mdi:flash
         state: >
-          {% set kwh = states('sensor.bolletta_energia_mensile_safe') | float(0) %}
+          {% set kwh = states('sensor.frarik_bolletta_energia_mensile_safe') | float(0) %}
           {% set p = states('input_number.frarik_bolletta_tariffa_energia') | float(0) + states('input_number.frarik_bolletta_spread_energia') | float(0) %}
           {{ (kwh * p) | round(4) }}
       - name: "Bolletta Costo Mensile Perdite"
@@ -1461,8 +1461,8 @@ template:
         unit_of_measurement: "€"
         icon: mdi:transmission-tower
         state: >
-          {% set kwh = states('sensor.bolletta_energia_mensile_safe') | float(0) %}
-          {% set perc = states('sensor.bolletta_perdite_rete_perc') | float(8.73) %}
+          {% set kwh = states('sensor.frarik_bolletta_energia_mensile_safe') | float(0) %}
+          {% set perc = states('sensor.frarik_bolletta_perdite_rete_perc') | float(8.73) %}
           {% set kp = kwh * perc / 100 %}
           {% set p = states('input_number.frarik_bolletta_tariffa_energia') | float(0) + states('input_number.frarik_bolletta_spread_energia') | float(0) %}
           {{ (kp * p) | round(4) }}
@@ -1471,8 +1471,8 @@ template:
         unit_of_measurement: "€"
         icon: mdi:transmission-tower
         state: >
-          {% set kwh = states('sensor.bolletta_energia_mensile_safe') | float(0) %}
-          {% set perc = states('sensor.bolletta_perdite_rete_perc') | float(8.73) %}
+          {% set kwh = states('sensor.frarik_bolletta_energia_mensile_safe') | float(0) %}
+          {% set perc = states('sensor.frarik_bolletta_perdite_rete_perc') | float(8.73) %}
           {% set kwh_tot = kwh * (1 + perc / 100) %}
           {% set t = states('sensor.frarik_bolletta_arera_dispacciamento') | float(states('input_number.frarik_bolletta_fb_dispacciamento') | float(0.01066)) %}
           {{ (kwh_tot * t) | round(4) }}
@@ -1481,8 +1481,8 @@ template:
         unit_of_measurement: "€"
         icon: mdi:power-plug
         state: >
-          {% set kwh = states('sensor.bolletta_energia_mensile_safe') | float(0) %}
-          {% set perc = states('sensor.bolletta_perdite_rete_perc') | float(8.73) %}
+          {% set kwh = states('sensor.frarik_bolletta_energia_mensile_safe') | float(0) %}
+          {% set perc = states('sensor.frarik_bolletta_perdite_rete_perc') | float(8.73) %}
           {% set kwh_tot = kwh * (1 + perc / 100) %}
           {% set t = states('sensor.frarik_bolletta_arera_mercato_capacita') | float(states('input_number.frarik_bolletta_fb_mercato_capacita') | float(0.010583)) %}
           {{ (kwh_tot * t) | round(4) }}
@@ -1509,7 +1509,7 @@ template:
         unit_of_measurement: "€"
         icon: mdi:transmission-tower
         state: >
-          {% set kwh = states('sensor.bolletta_energia_mensile_safe') | float(0) %}
+          {% set kwh = states('sensor.frarik_bolletta_energia_mensile_safe') | float(0) %}
           {% set t = states('sensor.frarik_bolletta_arera_trasporto_quota_energia') | float(states('input_number.frarik_bolletta_fb_trasporto_energia') | float(0.0119)) %}
           {{ (kwh * t) | round(4) }}
       - name: "Bolletta Costo Mensile Trasporto Fisso"
@@ -1531,7 +1531,7 @@ template:
         unit_of_measurement: "€"
         icon: mdi:transmission-tower
         state: >
-          {% set kwh = states('sensor.bolletta_energia_mensile_safe') | float(0) %}
+          {% set kwh = states('sensor.frarik_bolletta_energia_mensile_safe') | float(0) %}
           {% set t = states('sensor.frarik_bolletta_arera_uc3') | float(states('input_number.frarik_bolletta_fb_uc3') | float(0.00276)) %}
           {{ (kwh * t) | round(4) }}
       - name: "Bolletta Costo Mensile UC6 Fisso"
@@ -1547,7 +1547,7 @@ template:
         unit_of_measurement: "€"
         icon: mdi:transmission-tower
         state: >
-          {% set kwh = states('sensor.bolletta_energia_mensile_safe') | float(0) %}
+          {% set kwh = states('sensor.frarik_bolletta_energia_mensile_safe') | float(0) %}
           {% set t = states('sensor.frarik_bolletta_arera_uc6_variabile') | float(states('input_number.frarik_bolletta_fb_uc6_variabile') | float(0.00007)) %}
           {{ (kwh * t) | round(4) }}
       - name: "Bolletta Costo Mensile ARIM"
@@ -1555,7 +1555,7 @@ template:
         unit_of_measurement: "€"
         icon: mdi:transmission-tower
         state: >
-          {% set kwh = states('sensor.bolletta_energia_mensile_safe') | float(0) %}
+          {% set kwh = states('sensor.frarik_bolletta_energia_mensile_safe') | float(0) %}
           {% set t = states('sensor.frarik_bolletta_arera_arim') | float(states('input_number.frarik_bolletta_fb_arim') | float(0.001638)) %}
           {{ (kwh * t) | round(4) }}
       - name: "Bolletta Costo Mensile ASOS"
@@ -1563,7 +1563,7 @@ template:
         unit_of_measurement: "€"
         icon: mdi:transmission-tower
         state: >
-          {% set kwh = states('sensor.bolletta_energia_mensile_safe') | float(0) %}
+          {% set kwh = states('sensor.frarik_bolletta_energia_mensile_safe') | float(0) %}
           {% set t = states('sensor.frarik_bolletta_arera_asos') | float(states('input_number.frarik_bolletta_fb_asos') | float(0.028657)) %}
           {{ (kwh * t) | round(4) }}
       - name: "Bolletta Costo Mensile Accise"
@@ -1571,7 +1571,7 @@ template:
         unit_of_measurement: "€"
         icon: mdi:cash
         state: >
-          {% set kwh = states('sensor.bolletta_energia_mensile_safe') | float(0) %}
+          {% set kwh = states('sensor.frarik_bolletta_energia_mensile_safe') | float(0) %}
           {% set t = states('sensor.frarik_bolletta_arera_erariale') | float(states('input_number.frarik_bolletta_fb_accise') | float(0.0227)) %}
           {{ (kwh * t) | round(4) }}
       - name: "Bolletta Canone RAI Mensile"
@@ -1585,57 +1585,57 @@ template:
         unit_of_measurement: "€"
         icon: mdi:lightning-bolt
         state: >
-          {{ (states('sensor.bolletta_costo_mensile_energia') | float(0)
-            + states('sensor.bolletta_costo_mensile_perdite') | float(0)
-            + states('sensor.bolletta_costo_mensile_dispacciamento') | float(0)
-            + states('sensor.bolletta_costo_mensile_mercato_capacita') | float(0)
-            + states('sensor.bolletta_costo_mensile_dispbt') | float(0)
-            + states('sensor.bolletta_costo_mensile_pno') | float(0)
-            + states('sensor.bolletta_costo_mensile_commercializzazione') | float(0)) | round(2) }}
+          {{ (states('sensor.frarik_bolletta_costo_mensile_energia') | float(0)
+            + states('sensor.frarik_bolletta_costo_mensile_perdite') | float(0)
+            + states('sensor.frarik_bolletta_costo_mensile_dispacciamento') | float(0)
+            + states('sensor.frarik_bolletta_costo_mensile_mercato_capacita') | float(0)
+            + states('sensor.frarik_bolletta_costo_mensile_dispbt') | float(0)
+            + states('sensor.frarik_bolletta_costo_mensile_pno') | float(0)
+            + states('sensor.frarik_bolletta_costo_mensile_commercializzazione') | float(0)) | round(2) }}
       - name: "Bolletta Trasporto Mensile"
         unique_id: frarik_bolletta_trasporto_mensile
         unit_of_measurement: "€"
         icon: mdi:truck
         state: >
-          {{ (states('sensor.bolletta_costo_mensile_trasporto_energia') | float(0)
-            + states('sensor.bolletta_costo_mensile_trasporto_fisso') | float(0)
-            + states('sensor.bolletta_costo_mensile_trasporto_potenza') | float(0)
-            + states('sensor.bolletta_costo_mensile_uc3') | float(0)
-            + states('sensor.bolletta_costo_mensile_uc6_fisso') | float(0)
-            + states('sensor.bolletta_costo_mensile_uc6_variabile') | float(0)) | round(2) }}
+          {{ (states('sensor.frarik_bolletta_costo_mensile_trasporto_energia') | float(0)
+            + states('sensor.frarik_bolletta_costo_mensile_trasporto_fisso') | float(0)
+            + states('sensor.frarik_bolletta_costo_mensile_trasporto_potenza') | float(0)
+            + states('sensor.frarik_bolletta_costo_mensile_uc3') | float(0)
+            + states('sensor.frarik_bolletta_costo_mensile_uc6_fisso') | float(0)
+            + states('sensor.frarik_bolletta_costo_mensile_uc6_variabile') | float(0)) | round(2) }}
       - name: "Bolletta Oneri Sistema Mensili"
         unique_id: frarik_bolletta_oneri_sistema_mensili
         unit_of_measurement: "€"
         icon: mdi:lightning-bolt-outline
         state: >
-          {{ (states('sensor.bolletta_costo_mensile_arim') | float(0)
-            + states('sensor.bolletta_costo_mensile_asos') | float(0)) | round(2) }}
+          {{ (states('sensor.frarik_bolletta_costo_mensile_arim') | float(0)
+            + states('sensor.frarik_bolletta_costo_mensile_asos') | float(0)) | round(2) }}
       - name: "Bolletta Imponibile Mensile"
         unique_id: frarik_bolletta_imponibile_mensile
         unit_of_measurement: "€"
         icon: mdi:calculator
         state: >
-          {{ (states('sensor.bolletta_materia_energia_mensile') | float(0)
-            + states('sensor.bolletta_trasporto_mensile') | float(0)
-            + states('sensor.bolletta_oneri_sistema_mensili') | float(0)) | round(2) }}
+          {{ (states('sensor.frarik_bolletta_materia_energia_mensile') | float(0)
+            + states('sensor.frarik_bolletta_trasporto_mensile') | float(0)
+            + states('sensor.frarik_bolletta_oneri_sistema_mensili') | float(0)) | round(2) }}
       - name: "Bolletta IVA Mensile"
         unique_id: frarik_bolletta_iva_mensile
         unit_of_measurement: "€"
         icon: mdi:percent
         state: >
-          {% set base = states('sensor.bolletta_imponibile_mensile') | float(0)
-                      + states('sensor.bolletta_costo_mensile_accise') | float(0) %}
-          {% set iva = states('sensor.bolletta_iva_perc') | float(10) %}
+          {% set base = states('sensor.frarik_bolletta_imponibile_mensile') | float(0)
+                      + states('sensor.frarik_bolletta_costo_mensile_accise') | float(0) %}
+          {% set iva = states('sensor.frarik_bolletta_iva_perc') | float(10) %}
           {{ (base * iva / 100) | round(2) }}
       - name: "Bolletta Mensile"
         unique_id: frarik_bolletta_mensile
         unit_of_measurement: "€"
         icon: mdi:cash-multiple
         state: >
-          {% set imp = states('sensor.bolletta_imponibile_mensile') | float(0) %}
-          {% set acc = states('sensor.bolletta_costo_mensile_accise') | float(0) %}
-          {% set iva = states('sensor.bolletta_iva_mensile') | float(0) %}
-          {% set rai = states('sensor.bolletta_canone_rai_mensile') | float(0) %}
+          {% set imp = states('sensor.frarik_bolletta_imponibile_mensile') | float(0) %}
+          {% set acc = states('sensor.frarik_bolletta_costo_mensile_accise') | float(0) %}
+          {% set iva = states('sensor.frarik_bolletta_iva_mensile') | float(0) %}
+          {% set rai = states('sensor.frarik_bolletta_canone_rai_mensile') | float(0) %}
           {% set bon = states('input_number.frarik_bolletta_bonus_mese_corrente') | float(0)
                      + states('input_number.frarik_bolletta_bonus_sociale') | float(0) %}
           {{ (imp + acc + iva + rai - bon) | round(2) }}
@@ -1644,8 +1644,8 @@ template:
         unit_of_measurement: "€"
         icon: mdi:calendar-today
         state: >
-          {% set kwh = states('sensor.bolletta_energia_giornaliera_safe') | float(0) %}
-          {% set perc = states('sensor.bolletta_perdite_rete_perc') | float(8.73) %}
+          {% set kwh = states('sensor.frarik_bolletta_energia_giornaliera_safe') | float(0) %}
+          {% set perc = states('sensor.frarik_bolletta_perdite_rete_perc') | float(8.73) %}
           {% set kp = kwh * perc / 100 %}
           {% set kwh_tot = kwh + kp %}
           {% set pE = states('input_number.frarik_bolletta_tariffa_energia') | float(0) + states('input_number.frarik_bolletta_spread_energia') | float(0) %}
@@ -1666,15 +1666,15 @@ template:
             + kwh * states('sensor.frarik_bolletta_arera_arim') | float(states('input_number.frarik_bolletta_fb_arim') | float(0.001638))
             + kwh * states('sensor.frarik_bolletta_arera_asos') | float(states('input_number.frarik_bolletta_fb_asos') | float(0.028657)) %}
           {% set acc = kwh * states('sensor.frarik_bolletta_arera_erariale') | float(states('input_number.frarik_bolletta_fb_accise') | float(0.0227)) %}
-          {% set iva = (imp + acc) * states('sensor.bolletta_iva_perc') | float(10) / 100 %}
+          {% set iva = (imp + acc) * states('sensor.frarik_bolletta_iva_perc') | float(10) / 100 %}
           {{ (imp + acc + iva) | round(2) }}
       - name: "Bolletta Costo Per kWh"
         unique_id: frarik_bolletta_costo_per_kwh
         unit_of_measurement: "€/kWh"
         icon: mdi:currency-eur
         state: >
-          {% set kwh = states('sensor.bolletta_energia_mensile_safe') | float(0) %}
-          {% set spesa = states('sensor.bolletta_mensile') | float(0) %}
+          {% set kwh = states('sensor.frarik_bolletta_energia_mensile_safe') | float(0) %}
+          {% set spesa = states('sensor.frarik_bolletta_mensile') | float(0) %}
           {% if kwh >= 30 %}{{ (spesa / kwh) | round(4) }}
           {% else %}{{ (states('input_number.frarik_bolletta_tariffa_energia') | float(0) + states('input_number.frarik_bolletta_spread_energia') | float(0)) | round(4) }}{% endif %}
       - name: "Bolletta Proiezione Fine Mese"
@@ -1684,7 +1684,7 @@ template:
         state: >
           {% set oggi = now().day %}
           {% set gm = ((now().replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)).day %}
-          {% set speso = states('sensor.bolletta_mensile') | float(0) %}
+          {% set speso = states('sensor.frarik_bolletta_mensile') | float(0) %}
           {% if oggi > 0 %}{{ ((speso / oggi) * gm) | round(2) }}{% else %}0{% endif %}
       - name: "Bolletta Previsione kWh Fine Mese"
         unique_id: frarik_bolletta_previsione_kwh_fine_mese
@@ -1693,7 +1693,7 @@ template:
         state: >
           {% set oggi = now().day %}
           {% set gm = ((now().replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)).day %}
-          {% set kwh = states('sensor.bolletta_energia_mensile_safe') | float(0) %}
+          {% set kwh = states('sensor.frarik_bolletta_energia_mensile_safe') | float(0) %}
           {% if oggi > 0 %}{{ ((kwh / oggi) * gm) | round(0) | int }}{% else %}0{% endif %}
       - name: "Bolletta Consumo Medio Giornaliero"
         unique_id: frarik_bolletta_consumo_medio_giornaliero
@@ -1701,7 +1701,7 @@ template:
         icon: mdi:chart-line
         state: >
           {% set oggi = now().day %}
-          {% set kwh = states('sensor.bolletta_energia_mensile_safe') | float(0) %}
+          {% set kwh = states('sensor.frarik_bolletta_energia_mensile_safe') | float(0) %}
           {% if oggi > 0 %}{{ (kwh / oggi) | round(1) }}{% else %}0{% endif %}
       - name: "Bolletta Media Settimanale kWh"
         unique_id: frarik_bolletta_media_settimanale_kwh
@@ -1722,7 +1722,7 @@ template:
         state: >
           {% set m = now().month %}{% set tot = namespace(v=0) %}
           {% for i in range(1, m) %}{% set tot.v = tot.v + states('input_number.frarik_bolletta_storico_mese_curr_%02d' | format(i)) | float(0) %}{% endfor %}
-          {{ (tot.v + states('sensor.bolletta_mensile') | float(0)) | round(2) }}
+          {{ (tot.v + states('sensor.frarik_bolletta_mensile') | float(0)) | round(2) }}
       - name: "Bolletta Totale Anno Precedente"
         unique_id: frarik_bolletta_totale_anno_precedente
         unit_of_measurement: "€"
@@ -1738,7 +1738,7 @@ template:
         state: >
           {% set m = now().month %}{% set tot = namespace(v=0) %}
           {% for i in range(1, m) %}{% set tot.v = tot.v + states('input_number.frarik_bolletta_storico_kwh_curr_%02d' | format(i)) | float(0) %}{% endfor %}
-          {{ (tot.v + states('sensor.bolletta_energia_mensile_safe') | float(0)) | round(1) }}
+          {{ (tot.v + states('sensor.frarik_bolletta_energia_mensile_safe') | float(0)) | round(1) }}
       - name: "Bolletta Consumo Anno Precedente"
         unique_id: frarik_bolletta_consumo_anno_precedente
         unit_of_measurement: "kWh"
@@ -1753,13 +1753,13 @@ template:
         icon: mdi:compare
         state: >
           {% set m = now().month %}
-          {% set c = states('sensor.bolletta_mensile') | float(0) %}
+          {% set c = states('sensor.frarik_bolletta_mensile') | float(0) %}
           {% set p = states('input_number.frarik_bolletta_storico_mese_prev_%02d' | format(m)) | float(0) %}
           {{ (c - p) | round(2) }}
         attributes:
           percentuale: >
             {% set m = now().month %}
-            {% set c = states('sensor.bolletta_mensile') | float(0) %}
+            {% set c = states('sensor.frarik_bolletta_mensile') | float(0) %}
             {% set p = states('input_number.frarik_bolletta_storico_mese_prev_%02d' | format(m)) | float(0) %}
             {% if p > 0 %}{{ (((c - p) / p) * 100) | round(1) }}%{% else %}N/A{% endif %}
       - name: "Bolletta Saldo Octopus"
@@ -1780,7 +1780,7 @@ template:
         icon: mdi:calculator
         state: >
           {% set kwh = states('input_number.frarik_bolletta_test_consumo_kwh') | float(0) %}
-          {% set perc = states('sensor.bolletta_perdite_rete_perc') | float(8.73) %}
+          {% set perc = states('sensor.frarik_bolletta_perdite_rete_perc') | float(8.73) %}
           {% set kp = kwh * perc / 100 %}{% set kwh_tot = kwh + kp %}
           {% set pE = states('input_number.frarik_bolletta_tariffa_energia') | float(0) + states('input_number.frarik_bolletta_spread_energia') | float(0) %}
           {% set kw = states('input_number.frarik_bolletta_potenza_impegnata') | float(4.5) %}
@@ -1799,7 +1799,7 @@ template:
             + kwh * states('sensor.frarik_bolletta_arera_arim') | float(states('input_number.frarik_bolletta_fb_arim') | float(0.001638))
             + kwh * states('sensor.frarik_bolletta_arera_asos') | float(states('input_number.frarik_bolletta_fb_asos') | float(0.028657)) %}
           {% set acc = kwh * states('sensor.frarik_bolletta_arera_erariale') | float(states('input_number.frarik_bolletta_fb_accise') | float(0.0227)) %}
-          {% set iva = (imp + acc) * states('sensor.bolletta_iva_perc') | float(10) / 100 %}
+          {% set iva = (imp + acc) * states('sensor.frarik_bolletta_iva_perc') | float(10) / 100 %}
           {% set bon = states('input_number.frarik_bolletta_test_bonus_euro') | float(0) %}
           {{ (imp + acc + iva - bon) | round(2) }}
 
@@ -1816,11 +1816,11 @@ script:
         data: { value: "0" }
         target:
           entity_id:
-            - sensor.bolletta_energia_giornaliera
-            - sensor.bolletta_energia_settimanale
-            - sensor.bolletta_energia_mensile
-            - sensor.bolletta_energia_trimestrale
-            - sensor.bolletta_energia_annuale
+            - sensor.frarik_bolletta_energia_giornaliera
+            - sensor.frarik_bolletta_energia_settimanale
+            - sensor.frarik_bolletta_energia_mensile
+            - sensor.frarik_bolletta_energia_trimestrale
+            - sensor.frarik_bolletta_energia_annuale
       - service: input_boolean.turn_off
         target: { entity_id: input_boolean.frarik_bolletta_reset_consumo_mensile }
 
@@ -1838,13 +1838,13 @@ automation:
     action:
       - service: input_number.set_value
         target: { entity_id: input_number.frarik_bolletta_backup_energia_giornaliera }
-        data: { value: "{{ states('sensor.bolletta_energia_giornaliera') | float(0) }}" }
+        data: { value: "{{ states('sensor.frarik_bolletta_energia_giornaliera') | float(0) }}" }
       - service: input_number.set_value
         target: { entity_id: input_number.frarik_bolletta_backup_energia_settimanale }
-        data: { value: "{{ states('sensor.bolletta_energia_settimanale') | float(0) }}" }
+        data: { value: "{{ states('sensor.frarik_bolletta_energia_settimanale') | float(0) }}" }
       - service: input_number.set_value
         target: { entity_id: input_number.frarik_bolletta_backup_energia_mensile }
-        data: { value: "{{ states('sensor.bolletta_energia_mensile') | float(0) }}" }
+        data: { value: "{{ states('sensor.frarik_bolletta_energia_mensile') | float(0) }}" }
 
   - alias: "Frarik — Bolletta: Salva Storico Ieri e Settimanale"
     trigger:
@@ -1853,67 +1853,67 @@ automation:
     action:
       - service: input_number.set_value
         target: { entity_id: input_number.frarik_bolletta_storico_costo_ieri }
-        data: { value: "{{ states('sensor.bolletta_giornaliera') | float(0) }}" }
+        data: { value: "{{ states('sensor.frarik_bolletta_giornaliera') | float(0) }}" }
       - service: input_number.set_value
         target: { entity_id: input_number.frarik_bolletta_storico_kwh_ieri }
-        data: { value: "{{ states('sensor.bolletta_energia_giornaliera_safe') | float(0) }}" }
+        data: { value: "{{ states('sensor.frarik_bolletta_energia_giornaliera_safe') | float(0) }}" }
       - choose:
           - conditions: "{{ now().weekday() == 0 }}"
             sequence:
               - service: input_number.set_value
                 target: { entity_id: input_number.frarik_bolletta_storico_costo_lun }
-                data: { value: "{{ states('sensor.bolletta_giornaliera') | float(0) }}" }
+                data: { value: "{{ states('sensor.frarik_bolletta_giornaliera') | float(0) }}" }
               - service: input_number.set_value
                 target: { entity_id: input_number.frarik_bolletta_storico_kwh_lun }
-                data: { value: "{{ states('sensor.bolletta_energia_giornaliera_safe') | float(0) }}" }
+                data: { value: "{{ states('sensor.frarik_bolletta_energia_giornaliera_safe') | float(0) }}" }
           - conditions: "{{ now().weekday() == 1 }}"
             sequence:
               - service: input_number.set_value
                 target: { entity_id: input_number.frarik_bolletta_storico_costo_mar }
-                data: { value: "{{ states('sensor.bolletta_giornaliera') | float(0) }}" }
+                data: { value: "{{ states('sensor.frarik_bolletta_giornaliera') | float(0) }}" }
               - service: input_number.set_value
                 target: { entity_id: input_number.frarik_bolletta_storico_kwh_mar }
-                data: { value: "{{ states('sensor.bolletta_energia_giornaliera_safe') | float(0) }}" }
+                data: { value: "{{ states('sensor.frarik_bolletta_energia_giornaliera_safe') | float(0) }}" }
           - conditions: "{{ now().weekday() == 2 }}"
             sequence:
               - service: input_number.set_value
                 target: { entity_id: input_number.frarik_bolletta_storico_costo_mer }
-                data: { value: "{{ states('sensor.bolletta_giornaliera') | float(0) }}" }
+                data: { value: "{{ states('sensor.frarik_bolletta_giornaliera') | float(0) }}" }
               - service: input_number.set_value
                 target: { entity_id: input_number.frarik_bolletta_storico_kwh_mer }
-                data: { value: "{{ states('sensor.bolletta_energia_giornaliera_safe') | float(0) }}" }
+                data: { value: "{{ states('sensor.frarik_bolletta_energia_giornaliera_safe') | float(0) }}" }
           - conditions: "{{ now().weekday() == 3 }}"
             sequence:
               - service: input_number.set_value
                 target: { entity_id: input_number.frarik_bolletta_storico_costo_gio }
-                data: { value: "{{ states('sensor.bolletta_giornaliera') | float(0) }}" }
+                data: { value: "{{ states('sensor.frarik_bolletta_giornaliera') | float(0) }}" }
               - service: input_number.set_value
                 target: { entity_id: input_number.frarik_bolletta_storico_kwh_gio }
-                data: { value: "{{ states('sensor.bolletta_energia_giornaliera_safe') | float(0) }}" }
+                data: { value: "{{ states('sensor.frarik_bolletta_energia_giornaliera_safe') | float(0) }}" }
           - conditions: "{{ now().weekday() == 4 }}"
             sequence:
               - service: input_number.set_value
                 target: { entity_id: input_number.frarik_bolletta_storico_costo_ven }
-                data: { value: "{{ states('sensor.bolletta_giornaliera') | float(0) }}" }
+                data: { value: "{{ states('sensor.frarik_bolletta_giornaliera') | float(0) }}" }
               - service: input_number.set_value
                 target: { entity_id: input_number.frarik_bolletta_storico_kwh_ven }
-                data: { value: "{{ states('sensor.bolletta_energia_giornaliera_safe') | float(0) }}" }
+                data: { value: "{{ states('sensor.frarik_bolletta_energia_giornaliera_safe') | float(0) }}" }
           - conditions: "{{ now().weekday() == 5 }}"
             sequence:
               - service: input_number.set_value
                 target: { entity_id: input_number.frarik_bolletta_storico_costo_sab }
-                data: { value: "{{ states('sensor.bolletta_giornaliera') | float(0) }}" }
+                data: { value: "{{ states('sensor.frarik_bolletta_giornaliera') | float(0) }}" }
               - service: input_number.set_value
                 target: { entity_id: input_number.frarik_bolletta_storico_kwh_sab }
-                data: { value: "{{ states('sensor.bolletta_energia_giornaliera_safe') | float(0) }}" }
+                data: { value: "{{ states('sensor.frarik_bolletta_energia_giornaliera_safe') | float(0) }}" }
           - conditions: "{{ now().weekday() == 6 }}"
             sequence:
               - service: input_number.set_value
                 target: { entity_id: input_number.frarik_bolletta_storico_costo_dom }
-                data: { value: "{{ states('sensor.bolletta_giornaliera') | float(0) }}" }
+                data: { value: "{{ states('sensor.frarik_bolletta_giornaliera') | float(0) }}" }
               - service: input_number.set_value
                 target: { entity_id: input_number.frarik_bolletta_storico_kwh_dom }
-                data: { value: "{{ states('sensor.bolletta_energia_giornaliera_safe') | float(0) }}" }
+                data: { value: "{{ states('sensor.frarik_bolletta_energia_giornaliera_safe') | float(0) }}" }
 
   - alias: "Frarik — Bolletta: Salva Storico Mensile"
     trigger:
@@ -1927,12 +1927,12 @@ automation:
         target:
           entity_id: "input_number.frarik_bolletta_storico_mese_curr_{{ now().strftime('%m') }}"
         data:
-          value: "{{ states('sensor.bolletta_mensile') | float(0) }}"
+          value: "{{ states('sensor.frarik_bolletta_mensile') | float(0) }}"
       - service: input_number.set_value
         target:
           entity_id: "input_number.frarik_bolletta_storico_kwh_curr_{{ now().strftime('%m') }}"
         data:
-          value: "{{ states('sensor.bolletta_energia_mensile_safe') | float(0) }}"
+          value: "{{ states('sensor.frarik_bolletta_energia_mensile_safe') | float(0) }}"
       - service: input_number.set_value
         target: { entity_id: input_number.frarik_bolletta_bonus_mese_corrente }
         data: { value: 0 }
@@ -1945,8 +1945,8 @@ automation:
                 title: "Frarik Bolletta — Fine mese"
                 message: >
                   Storico salvato: {{ now().strftime('%B %Y') }}
-                  Bolletta: {{ states('sensor.bolletta_mensile') }} €
-                  Consumo: {{ states('sensor.bolletta_energia_mensile_safe') }} kWh
+                  Bolletta: {{ states('sensor.frarik_bolletta_mensile') }} €
+                  Consumo: {{ states('sensor.frarik_bolletta_energia_mensile_safe') }} kWh
 
   - alias: "Frarik — Bolletta: Reset Mensile Manuale"
     trigger:
@@ -1955,7 +1955,7 @@ automation:
         to: "on"
     action:
       - service: utility_meter.reset
-        target: { entity_id: sensor.bolletta_energia_mensile }
+        target: { entity_id: sensor.frarik_bolletta_energia_mensile }
       - service: input_boolean.turn_off
         target: { entity_id: input_boolean.frarik_bolletta_reset_consumo_mensile }
 
@@ -1977,8 +1977,8 @@ automation:
                 title: "Buongiorno — Report Energia"
                 message: >
                   Ieri: {{ states('input_number.frarik_bolletta_storico_kwh_ieri') }} kWh = {{ states('input_number.frarik_bolletta_storico_costo_ieri') }} €
-                  Mese: {{ states('sensor.bolletta_energia_mensile_safe') }} kWh = {{ states('sensor.bolletta_mensile') }} €
-                  Proiezione: {{ states('sensor.bolletta_proiezione_fine_mese') }} €
+                  Mese: {{ states('sensor.frarik_bolletta_energia_mensile_safe') }} kWh = {{ states('sensor.frarik_bolletta_mensile') }} €
+                  Proiezione: {{ states('sensor.frarik_bolletta_proiezione_fine_mese') }} €
                   Saldo Octopus: {{ states('sensor.frarik_bolletta_saldo_octopus') }} €
 
   - alias: "Frarik — Bolletta: Alert Costo Giornaliero"
@@ -1988,7 +1988,7 @@ automation:
     condition:
       - condition: template
         value_template: >
-          {{ states('sensor.bolletta_giornaliera') | float(0) > states('input_number.frarik_bolletta_soglia_costo_giornaliero') | float(5) }}
+          {{ states('sensor.frarik_bolletta_giornaliera') | float(0) > states('input_number.frarik_bolletta_soglia_costo_giornaliero') | float(5) }}
       - condition: state
         entity_id: input_boolean.frarik_bolletta_notify_push_giornaliero
         state: "on"
@@ -2001,8 +2001,8 @@ automation:
               data:
                 title: "Costo giornaliero elevato"
                 message: >
-                  Oggi: {{ states('sensor.bolletta_giornaliera') }} €
-                  Consumo: {{ states('sensor.bolletta_energia_giornaliera_safe') }} kWh
+                  Oggi: {{ states('sensor.frarik_bolletta_giornaliera') }} €
+                  Consumo: {{ states('sensor.frarik_bolletta_energia_giornaliera_safe') }} kWh
 
   - alias: "Frarik — Bolletta: Alert Soglia Potenza"
     trigger:
@@ -2028,7 +2028,7 @@ automation:
                 title: "Consumo elevato"
                 message: >
                   Soglia {{ states('input_number.frarik_bolletta_soglia_lavoro_w') | int }} W superata!
-                  Costo stimato oggi: {{ states('sensor.bolletta_giornaliera') }} €
+                  Costo stimato oggi: {{ states('sensor.frarik_bolletta_giornaliera') }} €
 
   - alias: "Frarik — Bolletta: Report Mensile"
     trigger:
@@ -2098,7 +2098,7 @@ automation:
         data: { value: "{{ states('input_number.frarik_bolletta_storico_mese_curr_11') | float(0) }}" }
       - service: input_number.set_value
         target: { entity_id: input_number.frarik_bolletta_storico_mese_prev_12 }
-        data: { value: "{{ states('sensor.bolletta_mensile') | float(0) }}" }
+        data: { value: "{{ states('sensor.frarik_bolletta_mensile') | float(0) }}" }
       - service: input_number.set_value
         target: { entity_id: input_number.frarik_bolletta_storico_kwh_prev_01 }
         data: { value: "{{ states('input_number.frarik_bolletta_storico_kwh_curr_01') | float(0) }}" }
@@ -2134,7 +2134,7 @@ automation:
         data: { value: "{{ states('input_number.frarik_bolletta_storico_kwh_curr_11') | float(0) }}" }
       - service: input_number.set_value
         target: { entity_id: input_number.frarik_bolletta_storico_kwh_prev_12 }
-        data: { value: "{{ states('sensor.bolletta_energia_mensile_safe') | float(0) }}" }
+        data: { value: "{{ states('sensor.frarik_bolletta_energia_mensile_safe') | float(0) }}" }
       - repeat:
           for_each: *push
           sequence:

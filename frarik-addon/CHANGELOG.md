@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.79 — 2026-07-04
+
+### fix(bolletta): card v3.7 + PKG — entity ID con prefisso frarik_ garantito
+
+- **Entity ID univoci**: tutti i sensori creati dal PKG ora hanno `sensor.frarik_bolletta_*` — aggiunto "Frarik " ai nomi di integration sensor, utility_meter e template sensor
+- **Niente conflitti**: la rimozione del `unique_id` dai template sensor e dall'integration sensor forza HA a ricreare le entità con l'entity_id corretto dal nome, bypassando i vecchi valori nel registry
+- **Utility_meter**: sorgenti corrette a `sensor.frarik_bolletta_energia_totale_casa`; l'utente deve eliminare le vecchie `sensor.bolletta_energia_*` dal registry prima del restart
+- **Card v3.7**: pkDefaults aggiornati a `sensor.frarik_bolletta_*`
+
 ## 1.7.78 — 2026-07-04
 
 ### fix(bolletta): card v3.6 + PKG — entity ID sistematici corretti
