@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.99 — 2026-07-04
+
+### fix(store): aggiornamento card distintivi/chips dal tab "Aggiorna"
+
+- **Bug**: cliccando "Aggiorna" nel tab "Aggiorna (N)" per card in `card-chips` o `card-distintivi` compariva "File non trovato su GitHub" perché lo store cercava solo nella cache di `card-js`
+- **Fix**: `_ghsFind` e `_ghsEnsureFile` ora cercano in tutte le cartelle install quando il tab attivo è "updates" — così GruppoTemperatura, GruppoClima, chips e tutte le card non-js si aggiornano correttamente
+
 ## 1.7.98 — 2026-07-04
 
 ### fix+feat(GruppoTemperatura): v1.1 — testi bianchi + sensori media chip

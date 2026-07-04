@@ -3300,12 +3300,33 @@ async function _ghsDeleteFromGithub(enc){
 }
 /* tab virtuali (elettrodomestici, installate) condividono la cache e la cartella di 'js' */
 function _ghsFolderTab(tab){ return (tab==='elettrodomestici'||tab==='installate'||tab==='updates')?'js':tab; }
-function _ghsFind(name){ name=decodeURIComponent(name); return (_ghsCache[_ghsFolderTab(_ghsTab)]||[]).find(f=>f.name===name); }
+function _ghsFind(name){
+  name=decodeURIComponent(name);
+  /* nel tab "updates" gli aggiornamenti possono venire da qualsiasi cartella (js, chips, distintivi…) */
+  if(_ghsTab==='updates'){
+    for(const k of Object.keys(_GHS_FOLDERS)){ const found=(_ghsCache[k]||[]).find(f=>f.name===name); if(found) return found; }
+    return null;
+  }
+  return (_ghsCache[_ghsFolderTab(_ghsTab)]||[]).find(f=>f.name===name);
+}
 /* ricarica (se serve) la lista file della cartella corrente e ritrova il file:
    evita il caso "dopo l'eliminazione il tasto Installa non fa nulla" (cache vuota/stale) */
 async function _ghsEnsureFile(name){
   let f=_ghsFind(name);
   if(f) return f;
+  /* nel tab "updates" prova tutte le cartelle install fino a trovare il file */
+  if(_ghsTab==='updates'){
+    for(const [key,fol] of Object.entries(_GHS_FOLDERS)){
+      if(fol.kind!=='install') continue;
+      try{
+        const files=await _ghListFolder(fol.path);
+        _ghsCache[key]=files.filter(x=>fol.ext.test(x.name)&&!(fol.exclude&&fol.exclude.test(x.name)));
+      }catch(e){ continue; }
+      const found=(_ghsCache[key]||[]).find(x=>x.name===decodeURIComponent(name));
+      if(found) return found;
+    }
+    return null;
+  }
   const ft=_ghsFolderTab(_ghsTab); const fol=_GHS_FOLDERS[ft]; if(!fol) return null;
   try{
     const files=await _ghListFolder(fol.path);
