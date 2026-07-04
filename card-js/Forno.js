@@ -985,15 +985,12 @@ input_boolean:
 
   frarik_forno_notify_push:
     name: Notifica Push Forno
-    initial: on
 
   frarik_forno_notify_alexa:
     name: Notifica Alexa Forno
-    initial: on
 
   frarik_forno_notify_google:
     name: Notifica Google Forno
-    initial: on
 
 ####################################################
 #                     GROUP                        #
@@ -1333,7 +1330,14 @@ automation:
           continue_on_error: true
           data:
             entity_id: *google
-            message: "{{ states('input_text.frarik_forno_messaggio') }} in {{ states('input_text.frarik_forno_ultimo_ciclo') | trim }}"
+            message: >-
+              {%- set dur=states('input_text.frarik_forno_ultimo_ciclo')|trim -%}
+              {%- set h=dur.split('h')[0]|int(0) if 'h' in dur else 0 -%}
+              {%- set m=((dur.split('h')[1] if 'h' in dur else dur)|replace('min','')|replace('m','')|trim)|int(0) -%}
+              {%- set hv='' if h==0 else ("un'ora" if h==1 else h|string+' ore') -%}
+              {%- set mv='' if m==0 else ('un minuto' if m==1 else m|string+' minuti') -%}
+              {%- set sep=' e ' if h>0 and m>0 else '' -%}
+              {{- states('input_text.frarik_forno_messaggio') }} in {{ hv+sep+mv -}}
 
     - choose:
       - conditions:
@@ -1353,7 +1357,14 @@ automation:
             data:
               type: announce
               method: spoken
-            message: "{{ states('input_text.frarik_forno_messaggio') }} in {{ states('input_text.frarik_forno_ultimo_ciclo') | trim }}"
+            message: >-
+              {%- set dur=states('input_text.frarik_forno_ultimo_ciclo')|trim -%}
+              {%- set h=dur.split('h')[0]|int(0) if 'h' in dur else 0 -%}
+              {%- set m=((dur.split('h')[1] if 'h' in dur else dur)|replace('min','')|replace('m','')|trim)|int(0) -%}
+              {%- set hv='' if h==0 else ("un'ora" if h==1 else h|string+' ore') -%}
+              {%- set mv='' if m==0 else ('un minuto' if m==1 else m|string+' minuti') -%}
+              {%- set sep=' e ' if h>0 and m>0 else '' -%}
+              {{- states('input_text.frarik_forno_messaggio') }} in {{ hv+sep+mv -}}
 
     - choose:
       - conditions:
@@ -1366,7 +1377,7 @@ automation:
         - repeat:
             for_each: *push
             sequence:
-              - service: "{{ repeat.item.service }}"
+              - service: "notify.{{ repeat.item.service }}"
                 continue_on_error: true
                 data:
                   message: >-

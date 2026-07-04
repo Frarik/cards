@@ -596,15 +596,12 @@ input_boolean:
 
   frarik_scaldabagno_notify_push:
     name: Notifica Push Scaldabagno
-    initial: on
 
   frarik_scaldabagno_notify_alexa:
     name: Notifica Alexa Scaldabagno
-    initial: on
 
   frarik_scaldabagno_notify_google:
     name: Notifica Google Scaldabagno
-    initial: on
 
 ####################################################
 #                 INPUT DATETIME                   #
@@ -738,7 +735,7 @@ automation:
         - repeat:
             for_each: *push
             sequence:
-              - service: "{{ repeat.item.service }}"
+              - service: "notify.{{ repeat.item.service }}"
                 continue_on_error: true
                 data:
                   message: >-
