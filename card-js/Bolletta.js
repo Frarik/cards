@@ -1,4 +1,4 @@
-/* frarik-version: 3.8 */
+/* frarik-version: 3.9 */
 (function () {
   'use strict';
 
@@ -234,11 +234,8 @@
       + '<span style="font-size:14px;font-weight:800;color:' + COL + '">TOTALE DA PAGARE</span>'
       + '<span style="font-size:18px;font-weight:900;color:' + COL + '">' + tot.toFixed(2) + ' €</span>'
       + '</div>'
-      + sec('Tariffe ARERA ' + trim)
-      + row('kWh consumati', kwh.toFixed(1) + ' kWh', '#fff')
-      + row('Tariffa energia', (tariffaEur * 100).toFixed(2) + ' c€/kWh', '#fff')
-      + row('Costo effettivo/kWh', costoKwhStr, costoKwhCol)
-      + row('Mese di riferimento', MESIL[now.getMonth()] + ' ' + now.getFullYear());
+      + row('📆 kWh consumati', kwh.toFixed(1) + ' kWh', '#fff')
+      + row('📅 Mese', MESIL[now.getMonth()] + ' ' + now.getFullYear());
 
     mkOv(popShell('🧾', 'Dettaglio Bolletta', MESIL[now.getMonth()] + ' ' + now.getFullYear(), 'bp-det-close', content), 'bp-det-close');
   }
@@ -698,9 +695,9 @@
       var isLast = i === 5;
       var pct = Math.max(8, Math.round((v / maxC) * 60));
       return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">'
-        + '<div style="font-size:8px;color:rgba(255,255,255,.4)">' + (v > 0 ? v.toFixed(0) : '') + '</div>'
+        + '<div style="font-size:8px;color:#fff">' + (v > 0 ? v.toFixed(0) : '') + '</div>'
         + '<div style="width:100%;border-radius:3px 3px 0 0;height:' + pct + 'px;background:' + (isLast ? COL : 'rgba(' + RGB + ',.3)') + '"></div>'
-        + '<div style="font-size:7.5px;color:rgba(255,255,255,' + (isLast ? '1' : '.35') + ');font-weight:' + (isLast ? '700':'400') + '">' + labs6[i] + '</div>'
+        + '<div style="font-size:7.5px;color:#fff;font-weight:' + (isLast ? '700':'400') + '">' + labs6[i] + '</div>'
         + '</div>';
     }).join('');
 
@@ -719,17 +716,14 @@
       + '#' + rid + ' .fb-hero{padding:10px 14px 6px;text-align:center}'
       + '#' + rid + ' .fb-hero-val{font-size:52px;font-weight:900;color:#fff;line-height:1;letter-spacing:-2px}'
       + '#' + rid + ' .fb-hero-eur{font-size:22px;font-weight:600;color:rgba(255,255,255,.5);margin-left:2px}'
-      + '#' + rid + ' .fb-hero-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:3px}'
+      + '#' + rid + ' .fb-hero-sub{font-size:11px;color:#fff;margin-top:3px}'
       + '#' + rid + ' .fb-pills{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:8px}'
       + '#' + rid + ' .fb-pill{border-radius:20px;padding:4px 11px;font-size:11px;font-weight:700}'
       + '#' + rid + ' .fb-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:8px 14px}'
       + '#' + rid + ' .fb-stat{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:11px;padding:9px 6px;text-align:center}'
-      + '#' + rid + ' .fb-stat-lbl{font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.04em}'
+      + '#' + rid + ' .fb-stat-lbl{font-size:9px;color:#fff;text-transform:uppercase;letter-spacing:.04em}'
       + '#' + rid + ' .fb-stat-val{font-size:14px;font-weight:800;color:#fff;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
-      + '#' + rid + ' .fb-stat-sub{font-size:9px;color:rgba(255,255,255,.35);margin-top:2px}'
-      + '#' + rid + ' .fb-prog{margin:2px 14px 8px}'
-      + '#' + rid + ' .fb-prog-hd{display:flex;justify-content:space-between;margin-bottom:3px}'
-      + '#' + rid + ' .fb-prog-bar{height:4px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden}'
+      + '#' + rid + ' .fb-stat-sub{font-size:9px;color:#fff;margin-top:2px}'
       + '#' + rid + ' .fb-chart{margin:0 14px 8px}'
       + '#' + rid + ' .fb-chart-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}'
       + '#' + rid + ' .fb-btns{display:flex;gap:5px;padding:0 14px 12px}'
@@ -741,13 +735,11 @@
 
     var heroHtml = '<div class="fb-hero">'
       + '<div class="fb-hero-val">' + costoM.toFixed(2).replace('.',',') + '<span class="fb-hero-eur">€</span></div>'
-      + '<div class="fb-hero-sub">' + MESIL[now.getMonth()] + ' ' + now.getFullYear() + ' · ' + kwhM.toFixed(1) + ' kWh</div>'
-      + '<div class="fb-pills">'
-      + '<div class="fb-pill" style="background:rgba(' + RGB + ',.14);border:1px solid rgba(' + RGB + ',.3);color:' + COL + '">' + kwhM.toFixed(1) + ' kWh</div>'
-      + '<div class="fb-pill" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.7)">' + (costoKwh * 100).toFixed(2) + ' c€/kWh</div>'
-      + (haFv ? '<div class="fb-pill" style="background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);color:#fbbf24">☀️ FV</div>' : '')
-      + (gseCredit > 0 ? '<div class="fb-pill" style="background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);color:#4ade80">GSE −' + gseCredit.toFixed(0) + '€</div>' : '')
-      + '</div>'
+      + '<div class="fb-hero-sub">' + MESIL[now.getMonth()] + ' ' + now.getFullYear() + ' · ' + kwhM.toFixed(1) + ' kWh · Giorno ' + dayNow + '/' + daysInMonth + '</div>'
+      + ((haFv || gseCredit > 0) ? '<div class="fb-pills">'
+        + (haFv ? '<div class="fb-pill" style="background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);color:#fbbf24">☀️ FV</div>' : '')
+        + (gseCredit > 0 ? '<div class="fb-pill" style="background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);color:#4ade80">GSE −' + gseCredit.toFixed(0) + '€</div>' : '')
+        + '</div>' : '')
       + '</div>';
 
     var statsHtml = '<div class="fb-stats">'
@@ -768,14 +760,9 @@
       + (gseCredit > 0 ? '<div style="margin-top:7px;font-size:10px;color:rgba(74,222,128,.8);font-weight:600">Credito GSE: ' + gseCredit.toFixed(2) + ' €</div>' : '')
       + '</div>' : '';
 
-    var progHtml = '<div class="fb-prog">'
-      + '<div class="fb-prog-hd"><span style="font-size:10px;color:rgba(255,255,255,.4)">Avanzamento mese</span><span style="font-size:10px;color:rgba(255,255,255,.5)">' + dayNow + '/' + daysInMonth + ' gg</span></div>'
-      + '<div class="fb-prog-bar"><div style="height:100%;width:' + percMese + '%;background:rgba(' + RGB + ',.5);border-radius:2px"></div></div>'
-      + '</div>';
-
     var chartHtml = '<div class="fb-chart">'
-      + '<div class="fb-chart-hd"><span style="font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.03em">Ultimi 6 mesi</span>'
-      + '<span style="font-size:10px;color:rgba(255,255,255,.4)">Anno: ' + annoTot.toFixed(0) + ' €</span></div>'
+      + '<div class="fb-chart-hd"><span style="font-size:10px;color:#fff;text-transform:uppercase;letter-spacing:.03em">Ultimi 6 mesi</span>'
+      + '<span style="font-size:10px;color:#fff">Anno: ' + annoTot.toFixed(0) + ' €</span></div>'
       + '<div style="display:flex;gap:3px;align-items:flex-end;height:82px">' + miniBar + '</div>'
       + '</div>';
 
@@ -792,13 +779,11 @@
       + '<div class="fb-hdr">'
       + '<div class="fb-hdr-iw">⚡</div>'
       + '<div class="fb-hdr-tit">' + (c.name || 'Bolletta') + '</div>'
-      + (trim && trim !== '—' && !trim.toLowerCase().startsWith('unav') ? '<div style="font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;background:rgba(' + RGB + ',.12);border:1px solid rgba(' + RGB + ',.25);color:' + COL + '">ARERA ' + trim + '</div>' : '')
       + '</div>'
       + '<div class="fb-scroll">'
       + heroHtml
       + statsHtml
       + fvHtml
-      + progHtml
       + chartHtml
       + btnsHtml
       + '</div>'
@@ -807,7 +792,7 @@
   }
 
   /* ── UPDATE / MOUNT ── */
-  var CARD = { id: 'bolletta', version: '3.7', name: 'Bolletta Elettrica', icon: '⚡', color: COL };
+  var CARD = { id: 'bolletta', version: '3.9', name: 'Bolletta Elettrica', icon: '⚡', color: COL };
 
   function update(card, hass, el) {
     var h = hass || H(), c = cfgFor(card);

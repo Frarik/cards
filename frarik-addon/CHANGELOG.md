@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.7.91 — 2026-07-04
+
+### fix(bolletta): card v3.9 — UI principale e popup semplificati
+
+- **ARERA badge rimosso** dall'header della card principale
+- **Hero semplificato**: rimossi pill kWh e c€/kWh; giorno X/Y del mese integrato nella subtitle
+- **Barra avanzamento mese rimossa**: info giorno ora inline nell'hero (es. "Luglio 2026 · 223 kWh · Giorno 4/31")
+- **Testo 100% bianco** su tutta la card: etichette stat, valori mini-grafico, header chart
+- **Popup Dettaglio**: rimossa sezione "Tariffe ARERA" con tariff/c€/kWh; rimangono solo componenti bolletta e info kWh/mese
+
 ## 1.7.90 — 2026-07-04
 
 ### fix(bolletta): card v3.8 — popup Dettaglio e Simulatore migliorati
