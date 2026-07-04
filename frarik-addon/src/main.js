@@ -3593,7 +3593,8 @@ function _ghsPkgUpdatePopup(cardId,pkgVerNew){
 }
 
 /* aggiorna il PKG di una card installata.
-   silent=true → reinstalla con config salvata senza aprire wizard (auto-update) */
+   Scarica sempre il template aggiornato da GitHub e applica la config wizard salvata.
+   silent=true → no wizard, no toast interattivi (chiamato dall'auto-update in background) */
 async function _pkgUpdateCard(cardId, silent=false){
   const it=_jsStoreList().find(i=>(i.meta||{}).id?.toLowerCase()===(cardId||'').toLowerCase());
   if(!it){ if(!silent) showToast('⚠️ Card non trovata nello store locale'); return; }
@@ -3601,18 +3602,17 @@ async function _pkgUpdateCard(cardId, silent=false){
   if(!pkgInfo){ if(!silent) showToast('⚠️ Nessun package associato a questa card'); return; }
 
   const wizKey='frarik_pkg_wizard_'+(cardId||'').toLowerCase();
-  const savedCfg=silent?JSON.parse(localStorage.getItem(wizKey)||'null'):null;
+  const savedCfg=JSON.parse(localStorage.getItem(wizKey)||'null');  // sempre letta
 
-  if(savedCfg){
-    /* silent reinstall: scarica il template aggiornato da GitHub e applica la config salvata */
-    const _ctor2=customElements.get(cardId);
-    const _reg2=window.FratechCardRegistry?.[cardId]??window.FratechCardRegistry?.[cardId.toLowerCase()];
-    const CardClass=typeof _ctor2?._buildPkgFromConfig==='function'?_ctor2:(_reg2??_ctor2);
-    let yaml='';
-    if(typeof CardClass?._buildPkgFromConfig==='function'){
-      const ghTpl=await _downloadPkgRaw(pkgInfo);  // template aggiornato da GitHub (o null)
-      yaml=CardClass._buildPkgFromConfig(savedCfg, ghTpl||undefined);
-    } else { if(!silent) showToast('⚠️ Build PKG non disponibile'); return; }
+  const _ctor2=customElements.get(cardId);
+  const _reg2=window.FratechCardRegistry?.[cardId]??window.FratechCardRegistry?.[cardId.toLowerCase()];
+  const CardClass=typeof _ctor2?._buildPkgFromConfig==='function'?_ctor2:(_reg2??_ctor2);
+
+  if(savedCfg && typeof CardClass?._buildPkgFromConfig==='function'){
+    /* Scarica template da GitHub e riapplica la config wizard → versione GitHub + valori utente */
+    if(!silent) showToast('⬇️ Aggiorno PKG da GitHub…');
+    const ghTpl=await _downloadPkgRaw(pkgInfo);
+    const yaml=CardClass._buildPkgFromConfig(savedCfg, ghTpl||undefined);
     if(!yaml){ if(!silent) showToast('⚠️ YAML PKG vuoto'); return; }
     try{
       const m=location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
@@ -3622,7 +3622,7 @@ async function _pkgUpdateCard(cardId, silent=false){
       const j=await r.json().catch(()=>({}));
       if(r.ok&&j.ok){
         _savePkgVer(cardId,pkgInfo.ver);
-        if(!silent) showToast('📦 PKG aggiornato!');
+        if(!silent) showToast('✅ PKG aggiornato da GitHub!');
         await _loadHaInstalledPkgs();
         if(typeof _ghStoreRender==='function') _ghStoreRender();
       } else { if(!silent) showToast('⚠️ Errore PKG: '+(j.error||r.status)); }
@@ -3630,9 +3630,7 @@ async function _pkgUpdateCard(cardId, silent=false){
     return;
   }
 
-  /* aggiornamento: reinstalla sempre il YAML da GitHub senza aprire wizard.
-     Il wizard (openWizard) è solo per l'install iniziale dove l'utente deve
-     configurare i placeholder — in update il YAML è già configurato su HA. */
+  /* Nessuna config wizard salvata → scarica grezzo da GitHub (card senza wizard o primo install) */
   await _pkgGenericInstall(cardId,pkgInfo.ver,pkgInfo,null,it.code,null);
   _loadHaInstalledPkgs().then(()=>{ if(typeof _ghStoreRender==='function') _ghStoreRender(); });
 }
