@@ -11,20 +11,99 @@
    ══════════════════════════════════════════════════════════════ */
 const _PKG_YAML = `###############################################################
 #                                                             #
+#   ███████╗██████╗  █████╗ ██████╗ ██╗██╗  ██╗             #
+#   ██╔════╝██╔══██╗██╔══██╗██╔══██╗██║██║ ██╔╝             #
+#   █████╗  ██████╔╝███████║██████╔╝██║█████╔╝              #
+#   ██╔══╝  ██╔══██╗██╔══██║██╔══██╗██║██╔═██╗              #
+#   ██║     ██║  ██║██║  ██║██║  ██║██║██║  ██╗             #
+#   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝            #
+#                                                             #
 #   Package: Centro Controllo Posta                           #
 #   Versione: 2.0  |  Frarik / Fratech                       #
 #                                                             #
 ###############################################################
 #
-# INSTALLAZIONE COMPLETATA DA FRARIK DASHBOARD
-# Verifica che in configuration.yaml sia presente:
+# COSA FA QUESTO PACKAGE
+# ──────────────────────────────────────────────────────────
+# Monitora la cassetta postale e gestisce in automatico:
 #
-#   homeassistant:
-#     packages: !include_dir_named packages
-#
-# Poi: Strumenti sviluppatori → YAML → Ricarica tutto
+#  ▸ Contatore consegne giornaliero (reset a mezzanotte)
+#  ▸ Contatore consegne settimanale (reset ogni lunedì)
+#  ▸ Data e ora dell'ultima consegna ricevuta
+#  ▸ Storico testuale delle ultime consegne
+#  ▸ Notifiche push su smartphone (richissime di info)
+#  ▸ Annunci vocali Google Home / Nest
+#  ▸ Annunci vocali Amazon Alexa / Echo
+#  ▸ Finestra oraria per TTS (evita annunci di notte)
+#  ▸ Interruttore master per silenziare tutto
+#  ▸ Protezione anti-rimbalzo sul sensore fisico
 #
 ###############################################################
+#
+# INSTALLAZIONE — LEGGI PRIMA DI INIZIARE
+# ──────────────────────────────────────────────────────────
+#
+#  PASSO 1 — Abilita i package in configuration.yaml
+#  ───────────────────────────────────────────────────
+#  Apri il tuo configuration.yaml e verifica che sia
+#  presente questa sezione (aggiungila se manca):
+#
+#    homeassistant:
+#      packages: !include_dir_named packages
+#
+#  Poi copia questo file nella cartella "packages" e
+#  riavvia Home Assistant per attivare le modifiche.
+#
+#  PASSO 2 — Personalizza i segnaposto qui sotto
+#  ───────────────────────────────────────────────
+#  Nella sezione IMPOSTAZIONI trovi tutti i valori
+#  da sostituire. Ogni segnaposto ha il formato:
+#
+#    IL_TUO_VALORE_QUI
+#
+#  e un commento che spiega esattamente cosa inserire.
+#
+#  PASSO 3 — Ricarica la configurazione
+#  ───────────────────────────────────────────────
+#  Dopo aver salvato le modifiche:
+#  Strumenti per sviluppatori → YAML → Ricarica tutto
+#  (oppure riavvia Home Assistant)
+#
+#  PASSO 4 — Aggiungi la card dal pannello Frarik
+#  ───────────────────────────────────────────────
+#  Frarik Dashboard → Store → "Centro Controllo Posta"
+#  La card si collega automaticamente a questo package.
+#
+###############################################################
+#
+# ENTITÀ CREATE DA QUESTO PACKAGE
+# ──────────────────────────────────────────────────────────
+#  sensor.frarik_posta_versione              ← rilevamento pkg
+#  binary_sensor.frarik_posta_ricevuta_oggi  ← posta oggi?
+#  counter.frarik_posta_oggi                 ← consegne oggi
+#  counter.frarik_posta_settimana            ← consegne settimana
+#  input_datetime.frarik_posta_ultima_consegna
+#  input_datetime.frarik_posta_notifiche_inizio
+#  input_datetime.frarik_posta_notifiche_fine
+#  input_boolean.frarik_posta_notifiche_attive  ← master switch
+#  input_boolean.frarik_posta_notifica_push
+#  input_boolean.frarik_posta_notifica_google
+#  input_boolean.frarik_posta_notifica_alexa
+#  input_text.frarik_posta_storico           ← ultime consegne
+#  notify.frarik_posta                       ← gruppo push
+#  script.frarik_posta_reset                 ← reset manuale
+#  automation: Frarik — Posta (eventi)
+#  automation: Frarik — Posta (reset)
+#
+###############################################################
+
+
+####################################################
+#                                                  #
+#                  IMPOSTAZIONI                    #
+#          ↓  MODIFICA SOLO QUESTA SEZIONE  ↓      #
+#                                                  #
+####################################################
 
 homeassistant:
   customize:
@@ -35,19 +114,72 @@ homeassistant:
         version: '2.0'
 
       setting:
-        Sensore Cassetta: &sensore_cassetta
-          "%%SENSORE_CASSETTA%%"
 
-        MediaPlayer Google: &google%%GOOGLE_INLINE%%
+        # ─────────────────────────────────────────────────
+        # SENSORE CASSETTA POSTALE
+        # Inserisci l'entity_id del binary sensor che rileva
+        # l'apertura della tua cassetta postale.
+        # Il sensore deve essere 'on' quando la cassetta
+        # viene aperta (es. contatto magnetico, sensore vibrazione).
+        # Esempi:
+        #   binary_sensor.cassetta_postale
+        #   binary_sensor.sensore_posta_ingresso
+        # ─────────────────────────────────────────────────
+        Sensore Cassetta: &sensore_cassetta IL_TUO_SENSORE_CASSETTA
 
-        MediaPlayer Alexa: &alexa%%ALEXA_INLINE%%
+        # ─────────────────────────────────────────────────
+        # SPEAKER GOOGLE HOME / NEST
+        # Entità media player dei tuoi dispositivi Google.
+        # Rimuovi la riga se non hai Google Home.
+        # Puoi aggiungere più dispositivi su righe separate.
+        # Esempi:
+        #   - media_player.google_home_cucina
+        #   - media_player.nest_mini_salotto
+        # ─────────────────────────────────────────────────
+        MediaPlayer Google: &google
+          - IL_TUO_MEDIA_PLAYER_GOOGLE
 
-        Notifiche Push: &push%%PUSH_INLINE%%
+        # ─────────────────────────────────────────────────
+        # DISPOSITIVI AMAZON ALEXA / ECHO
+        # Entità media player dei tuoi dispositivi Alexa.
+        # Rimuovi la riga se non hai Alexa.
+        # Richiede l'integrazione Alexa Media Player.
+        # Esempi:
+        #   - media_player.alexa_cucina
+        #   - media_player.echo_dot_camera
+        # ─────────────────────────────────────────────────
+        MediaPlayer Alexa: &alexa
+          - IL_TUO_MEDIA_PLAYER_ALEXA
+
+        # ─────────────────────────────────────────────────
+        # SERVIZI NOTIFICA PUSH (smartphone)
+        # Inserisci il nome del servizio mobile_app per
+        # ogni smartphone che deve ricevere la notifica.
+        # Trovi i nomi in: Impostazioni → App Companion
+        # oppure in: Strumenti per sviluppatori → Servizi
+        # cercando "notify.mobile_app_".
+        # Esempi:
+        #   - service: mobile_app_iphone_di_mario
+        #   - service: mobile_app_samsung_giulia
+        # ─────────────────────────────────────────────────
+        Notifiche Push: &push
+          - service: IL_TUO_MOBILE_APP
 
 
 ####################################################
+#                                                  #
+#              NOTIFICHE GRUPPO PUSH               #
+#                                                  #
+####################################################
+
+
 
 ####################################################
+#                                                  #
+#                    CONTATORI                     #
+#                                                  #
+####################################################
+
 counter:
   frarik_posta_oggi:
     name: "Posta — Consegne Oggi"
@@ -57,12 +189,13 @@ counter:
     name: "Posta — Consegne Settimana"
     icon: mdi:calendar-week
 
-  frarik_posta_mese:
-    name: "Posta — Consegne Mese"
-    icon: mdi:calendar-month-outline
-
 
 ####################################################
+#                                                  #
+#               DATE E ORARI                       #
+#                                                  #
+####################################################
+
 input_datetime:
   frarik_posta_ultima_consegna:
     name: "Posta — Ultima Consegna"
@@ -70,36 +203,25 @@ input_datetime:
     has_time: true
     icon: mdi:clock-check-outline
 
-  frarik_posta_notifiche_media_inizio:
-    name: "Posta — Inizio Notifiche Media"
+  frarik_posta_notifiche_inizio:
+    name: "Posta — Inizio Notifiche TTS"
     has_date: false
     has_time: true
-    initial: "08:00"
     icon: mdi:bell-ring-outline
 
-  frarik_posta_notifiche_media_fine:
-    name: "Posta — Fine Notifiche Media"
+  frarik_posta_notifiche_fine:
+    name: "Posta — Fine Notifiche TTS"
     has_date: false
     has_time: true
-    initial: "22:00"
     icon: mdi:bell-off-outline
-
-  frarik_posta_notifiche_push_inizio:
-    name: "Posta — Inizio Notifiche Push"
-    has_date: false
-    has_time: true
-    initial: "07:00"
-    icon: mdi:cellphone-message
-
-  frarik_posta_notifiche_push_fine:
-    name: "Posta — Fine Notifiche Push"
-    has_date: false
-    has_time: true
-    initial: "23:00"
-    icon: mdi:cellphone-off
 
 
 ####################################################
+#                                                  #
+#               INTERRUTTORI                       #
+#                                                  #
+####################################################
+
 input_boolean:
   frarik_posta_notifiche_attive:
     name: "Posta — Notifiche Attive"
@@ -119,19 +241,24 @@ input_boolean:
 
 
 ####################################################
+#                                                  #
+#                   STORICO                        #
+#                                                  #
+####################################################
+
 input_text:
   frarik_posta_storico:
     name: "Posta — Storico Consegne"
     max: 255
     icon: mdi:history
 
-  frarik_posta_oggi_orari:
-    name: "Posta — Orari di Oggi"
-    max: 255
-    icon: mdi:clock-time-four-outline
-
 
 ####################################################
+#                                                  #
+#                    SENSORI                       #
+#                                                  #
+####################################################
+
 template:
   - sensor:
       - name: "Frarik Posta Versione"
@@ -148,9 +275,14 @@ template:
 
 
 ####################################################
+#                                                  #
+#                    SCRIPT                        #
+#                                                  #
+####################################################
+
 script:
-  frarik_posta_reset_oggi:
-    alias: "Frarik — Reset Posta Oggi"
+  frarik_posta_reset:
+    alias: "Frarik — Reset Contatore Posta"
     icon: mdi:restart
     sequence:
       - service: counter.reset
@@ -158,33 +290,25 @@ script:
           entity_id: counter.frarik_posta_oggi
       - service: input_text.set_value
         target:
-          entity_id: input_text.frarik_posta_oggi_orari
+          entity_id: input_text.frarik_posta_storico
         data:
           value: ""
 
-  frarik_posta_reset_settimana:
-    alias: "Frarik — Reset Posta Settimana"
-    icon: mdi:calendar-refresh
-    sequence:
-      - service: counter.reset
-        target:
-          entity_id: counter.frarik_posta_settimana
-
-  frarik_posta_reset_mese:
-    alias: "Frarik — Reset Posta Mese"
-    icon: mdi:calendar-month
-    sequence:
-      - service: counter.reset
-        target:
-          entity_id: counter.frarik_posta_mese
-
 
 ####################################################
+#                                                  #
+#                  AUTOMAZIONI                     #
+#                                                  #
+####################################################
+
 automation:
 
-  - alias: "Frarik — Posta (arrivo)"
+  ####################################################
+  # Gestione eventi cassetta postale
+
+  - alias: "Frarik — Posta (eventi)"
     id: frarik_posta_eventi
-    description: "Rileva arrivo posta, aggiorna contatori, storico orari e invia notifiche"
+    description: "Rileva arrivo posta, aggiorna contatori e invia notifiche"
     mode: single
 
     trigger:
@@ -192,123 +316,127 @@ automation:
         entity_id: *sensore_cassetta
         from: 'off'
         to: 'on'
+        id: posta_arrivata
 
     condition: []
 
     action:
+
+      # Anti-rimbalzo: aspetta 5s per filtrare aperture accidentali
       - delay: '00:00:05'
 
+      # Verifica che il sensore sia ancora attivo
       - condition: state
         entity_id: *sensore_cassetta
         state: 'on'
 
+      # Aggiorna contatore giornaliero
       - service: counter.increment
         target:
           entity_id: counter.frarik_posta_oggi
 
+      # Aggiorna contatore settimanale
       - service: counter.increment
         target:
           entity_id: counter.frarik_posta_settimana
 
-      - service: counter.increment
-        target:
-          entity_id: counter.frarik_posta_mese
-
+      # Salva data e ora ultima consegna
       - service: input_datetime.set_datetime
         target:
           entity_id: input_datetime.frarik_posta_ultima_consegna
         data:
           datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
 
-      - service: input_text.set_value
-        target:
-          entity_id: input_text.frarik_posta_oggi_orari
-        data:
-          value: >-
-            {% set cur = states('input_text.frarik_posta_oggi_orari') | trim %}
-            {% set nuovo = now().strftime('%H:%M') %}
-            {{ (cur ~ (',' if cur else '') ~ nuovo)[:255] }}
-
+      # Aggiorna storico (prepende la nuova voce, max 255 caratteri)
       - service: input_text.set_value
         target:
           entity_id: input_text.frarik_posta_storico
         data:
           value: >-
-            {% set cur = states('input_text.frarik_posta_storico') | trim %}
-            {% set nuovo = now().strftime('%d/%m %H:%M') %}
-            {{ (nuovo ~ (' · ' if cur else '') ~ cur)[:255] }}
+            {% set attuale = states('input_text.frarik_posta_storico') %}
+            {% set nuova = now().strftime('%d/%m %H:%M') %}
+            {% if attuale | length > 0 %}
+              {{ (nuova ~ ' · ' ~ attuale)[:255] }}
+            {% else %}
+              {{ nuova }}
+            {% endif %}
 
+      # Notifiche: procedi solo se il master switch è attivo
       - condition: state
         entity_id: input_boolean.frarik_posta_notifiche_attive
         state: 'on'
 
+      # Notifiche in parallelo
       - parallel:
-          - choose:
-              - conditions:
-                  - condition: state
-                    entity_id: input_boolean.frarik_posta_notifica_push
-                    state: 'on'
-                  - condition: time
-                    after: input_datetime.frarik_posta_notifiche_push_inizio
-                    before: input_datetime.frarik_posta_notifiche_push_fine
-                sequence:
-                  - repeat:
-                      for_each: *push
-                      sequence:
-                        - service: "notify.{{ repeat.item.service }}"
-                          continue_on_error: true
-                          data:
-                            title: "🏡 Frarik — Posta"
-                            message: >-
-                              📭 Posta in arrivo!
-                              🕐 Ore {{ now().strftime('%H:%M') }}
-                              📦 {{ states('counter.frarik_posta_oggi') }}ª consegna di oggi
-                              📅 Settimana: {{ states('counter.frarik_posta_settimana') }} consegne
 
+          # ── Notifica Push ──────────────────────────
           - choose:
-              - conditions:
-                  - condition: state
-                    entity_id: input_boolean.frarik_posta_notifica_google
-                    state: 'on'
-                  - condition: time
-                    after: input_datetime.frarik_posta_notifiche_media_inizio
-                    before: input_datetime.frarik_posta_notifiche_media_fine
-                sequence:
-                  - service: tts.google_translate_say
-                    data:
-                      entity_id: *google
-                      language: 'it'
-                      message: >-
-                        C'è Posta per Te!
-                        {% if states('counter.frarik_posta_oggi') | int(0) > 1 %}
-                        Sono {{ states('counter.frarik_posta_oggi') }} consegne oggi.
-                        {% endif %}
-
-          - choose:
-              - conditions:
-                  - condition: state
-                    entity_id: input_boolean.frarik_posta_notifica_alexa
-                    state: 'on'
-                  - condition: time
-                    after: input_datetime.frarik_posta_notifiche_media_inizio
-                    before: input_datetime.frarik_posta_notifiche_media_fine
-                sequence:
-                  - service: notify.alexa_media
-                    data:
-                      target: *alexa
+            - conditions:
+              - condition: state
+                entity_id: input_boolean.frarik_posta_notifica_push
+                state: 'on'
+              sequence:
+              - repeat:
+                  for_each: *push
+                  sequence:
+                    - service: "notify.{{ repeat.item.service }}"
+                      continue_on_error: true
                       data:
-                        type: announce
-                        method: spoken
-                      message: >-
-                        C'è Posta per Te!
-                        {% if states('counter.frarik_posta_oggi') | int(0) > 1 %}
-                        Sono {{ states('counter.frarik_posta_oggi') }} consegne oggi.
-                        {% endif %}
+                        title: "🏡 Frarik — Posta"
+                        message: >-
+                          📭 Posta in arrivo!
+                          🕐 Ore {{ now().strftime('%H:%M') }}
+                          📦 {{ states('counter.frarik_posta_oggi') }}ª consegna di oggi
+                          📅 Settimana: {{ states('counter.frarik_posta_settimana') }} consegne
 
+          # ── Annuncio Google Home ───────────────────
+          - choose:
+            - conditions:
+              - condition: state
+                entity_id: input_boolean.frarik_posta_notifica_google
+                state: 'on'
+              - condition: time
+                after: input_datetime.frarik_posta_notifiche_inizio
+                before: input_datetime.frarik_posta_notifiche_fine
+              sequence:
+              - service: tts.google_translate_say
+                data:
+                  entity_id: *google
+                  language: 'it'
+                  message: >-
+                    C'è Posta per Te!
+                    {% if states('counter.frarik_posta_oggi') | int(0) > 1 %}
+                    Sono {{ states('counter.frarik_posta_oggi') }} consegne oggi.
+                    {% endif %}
 
-  - alias: "Frarik — Posta (reset automatico)"
-    id: frarik_posta_reset_auto
-    description: "Reset automatico: ogni mezzanotte (oggi), lunedì (settimana), 1° del mese (mese)"
+          # ── Annuncio Alexa ─────────────────────────
+          - choose:
+            - conditions:
+              - condition: state
+                entity_id: input_boolean.frarik_posta_notifica_alexa
+                state: 'on'
+              - condition: time
+                after: input_datetime.frarik_posta_notifiche_inizio
+                before: input_datetime.frarik_posta_notifiche_fine
+              sequence:
+              - service: notify.alexa_media
+                data:
+                  target: *alexa
+                  data:
+                    type: announce
+                    method: spoken
+                  message: >-
+                    C'è Posta per Te!
+                    {% if states('counter.frarik_posta_oggi') | int(0) > 1 %}
+                    Sono {{ states('counter.frarik_posta_oggi') }} consegne oggi.
+                    {% endif %}
+
+  ####################################################
+  # Reset contatori
+
+  - alias: "Frarik — Posta (reset)"
+    id: frarik_posta_reset
+    description: "Reset giornaliero e settimanale dei contatori posta"
     mode: single
 
     trigger:
@@ -318,33 +446,21 @@ automation:
     condition: []
 
     action:
+
+      # Reset giornaliero — sempre a mezzanotte
       - service: counter.reset
         target:
           entity_id: counter.frarik_posta_oggi
 
-      - service: input_text.set_value
-        target:
-          entity_id: input_text.frarik_posta_oggi_orari
-        data:
-          value: ""
-
+      # Reset settimanale — solo il lunedì
       - choose:
-          - conditions:
-              - condition: template
-                value_template: "{{ now().weekday() == 0 }}"
-            sequence:
-              - service: counter.reset
-                target:
-                  entity_id: counter.frarik_posta_settimana
-
-      - choose:
-          - conditions:
-              - condition: template
-                value_template: "{{ now().day == 1 }}"
-            sequence:
-              - service: counter.reset
-                target:
-                  entity_id: counter.frarik_posta_mese
+        - conditions:
+          - condition: template
+            value_template: "{{ now().weekday() == 0 }}"
+          sequence:
+          - service: counter.reset
+            target:
+              entity_id: counter.frarik_posta_settimana
 
 ###############################################################
 #  Fine package — Frarik Centro Controllo Posta v2.0
@@ -393,12 +509,15 @@ function _svgMailbox(count,isOpen){
 
 /* ── Genera YAML con i dati utente ──────────────────────── */
 function _buildCustomPkg(sensor,google,alexa,push){
-  const ind='          ';
+  var ind='          ';
+  var googleLines=(google&&google.length)?google.map(function(e){return ind+'- '+e;}).join('\n'):ind+'- media_player.tv';
+  var alexaLines=(alexa&&alexa.length)?alexa.map(function(e){return ind+'- '+e;}).join('\n'):ind+'- media_player.alexa';
+  var pushLines=(push&&push.length)?push.map(function(s){return ind+'- service: '+s;}).join('\n'):ind+'- service: mobile_app_smartphone';
   return _PKG_YAML
-    .replace('%%SENSORE_CASSETTA%%',sensor||'binary_sensor.IL_TUO_SENSORE')
-    .replace('%%GOOGLE_INLINE%%',google.length?'\n'+google.map(e=>`${ind}- ${e}`).join('\n'):' []')
-    .replace('%%ALEXA_INLINE%%',alexa.length?'\n'+alexa.map(e=>`${ind}- ${e}`).join('\n'):' []')
-    .replace('%%PUSH_INLINE%%',push.length?'\n'+push.map(s=>`${ind}- service: ${s}`).join('\n'):' []');
+    .replace('IL_TUO_SENSORE_CASSETTA',sensor||'binary_sensor.cassetta_posta')
+    .replace(ind+'- IL_TUO_MEDIA_PLAYER_GOOGLE',googleLines)
+    .replace(ind+'- IL_TUO_MEDIA_PLAYER_ALEXA',alexaLines)
+    .replace(ind+'- service: IL_TUO_MOBILE_APP',pushLines);
 }
 
 /* ── Autocomplete ─────────────────────────────────────── */

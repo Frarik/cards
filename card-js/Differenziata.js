@@ -452,10 +452,83 @@
   /* ── PKG YAML EMBEDDED ── */
   var _DIFF_PKG_YAML = `###############################################################
 #                                                             #
+#   ███████╗██████╗  █████╗ ██████╗ ██╗██╗  ██╗             #
+#   ██╔════╝██╔══██╗██╔══██╗██╔══██╗██║██║ ██╔╝             #
+#   █████╗  ██████╔╝███████║██████╔╝██║█████╔╝              #
+#   ██╔══╝  ██╔══██╗██╔══██║██╔══██╗██║██╔═██╗              #
+#   ██║     ██║  ██║██║  ██║██║  ██║██║██║  ██╗             #
+#   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝            #
+#                                                             #
 #   Package: Centro Controllo Raccolta Differenziata          #
 #   Versione: 2.0  |  Frarik / Fratech                       #
 #                                                             #
 ###############################################################
+#
+# COSA FA QUESTO PACKAGE
+# ──────────────────────────────────────────────────────────
+# Gestisce la raccolta differenziata settimanale:
+#
+#  ▸ Rifiuti per ogni giorno (lista separata da virgole)
+#    es. "plastica,vetro"
+#  ▸ Tipi supportati: umido, secco, carta, plastica, vetro
+#  ▸ Sensore raccolta odierna (auto-aggiornato)
+#  ▸ Notifiche push, Google Home e Alexa
+#  ▸ Orario notifica configurabile
+#
+###############################################################
+#
+# INSTALLAZIONE — LEGGI PRIMA DI INIZIARE
+# ──────────────────────────────────────────────────────────
+#
+#  PASSO 1 — Abilita i package in configuration.yaml
+#  ───────────────────────────────────────────────────
+#  Apri il tuo configuration.yaml e verifica che sia
+#  presente questa sezione (aggiungila se manca):
+#
+#    homeassistant:
+#      packages: !include_dir_named packages
+#
+#  Poi copia questo file nella cartella "packages/frarik"
+#  e riavvia Home Assistant per attivare le modifiche.
+#
+#  PASSO 2 — Personalizza i segnaposto qui sotto
+#  ───────────────────────────────────────────────
+#  Nella sezione IMPOSTAZIONI trovi tutti i valori
+#  da sostituire. Ogni segnaposto ha il formato:
+#
+#    IL_TUO_VALORE_QUI
+#
+#  PASSO 3 — Ricarica la configurazione
+#  ───────────────────────────────────────────────
+#  Strumenti per sviluppatori → YAML → Ricarica tutto
+#
+#  PASSO 4 — Aggiungi la card dal pannello Frarik
+#  ───────────────────────────────────────────────
+#  Frarik Dashboard → Store → "Raccolta Differenziata"
+#
+###############################################################
+#
+# ENTITÀ CREATE DA QUESTO PACKAGE
+# ──────────────────────────────────────────────────────────
+#  sensor.frarik_differenziata_versione        ← versione pkg
+#  sensor.frarik_differenziata_raccolta        ← rifiuto di oggi
+#  input_text.frarik_differenziata_rifiuto_GIORNO  (× 7)
+#  input_datetime.frarik_differenziata_orario_notifica
+#  input_boolean.frarik_differenziata_notifica_push
+#  input_boolean.frarik_differenziata_notifica_google
+#  input_boolean.frarik_differenziata_notifica_alexa
+#  notify.frarik_differenziata                 ← gruppo push
+#  automation: Frarik — Differenziata (notifiche)
+#
+###############################################################
+
+
+####################################################
+#                                                  #
+#                  IMPOSTAZIONI                    #
+#          ↓  MODIFICA SOLO QUESTA SEZIONE  ↓      #
+#                                                  #
+####################################################
 
 homeassistant:
   customize:
@@ -467,15 +540,44 @@ homeassistant:
 
       setting:
 
+        # ─────────────────────────────────────────────────
+        # SPEAKER GOOGLE HOME / NEST
+        # Entità media player dei tuoi dispositivi Google.
+        # Esempi:
+        #   - media_player.google_home_cucina
+        # ─────────────────────────────────────────────────
         Lista MediaPlayer Google: &google
           - IL_TUO_MEDIA_PLAYER_GOOGLE
 
+        # ─────────────────────────────────────────────────
+        # DISPOSITIVI AMAZON ALEXA / ECHO
+        # ─────────────────────────────────────────────────
         Lista MediaPlayer Alexa: &alexa
           - IL_TUO_MEDIA_PLAYER_ALEXA
 
+        # ─────────────────────────────────────────────────
+        # SERVIZI NOTIFICA PUSH (smartphone)
+        # ─────────────────────────────────────────────────
         Device per notifica push: &push
           - service: IL_TUO_MOBILE_APP
 
+
+####################################################
+#                                                  #
+#              NOTIFICHE GRUPPO PUSH               #
+#                                                  #
+####################################################
+
+
+
+####################################################
+#                                                  #
+#                  INPUT TEXT                      #
+#    Ogni giorno memorizza i rifiuti selezionati   #
+#    come lista separata da virgole                #
+#    es. "plastica,vetro"                          #
+#                                                  #
+####################################################
 
 input_text:
   frarik_differenziata_rifiuto_lunedi:
@@ -514,6 +616,12 @@ input_text:
     max: 255
 
 
+####################################################
+#                                                  #
+#               DATE E ORARI                       #
+#                                                  #
+####################################################
+
 input_datetime:
   frarik_differenziata_orario_notifica:
     name: "Differenziata — Orario Notifica"
@@ -521,6 +629,12 @@ input_datetime:
     has_time: true
     icon: mdi:bell-ring-outline
 
+
+####################################################
+#                                                  #
+#               INTERRUTTORI                       #
+#                                                  #
+####################################################
 
 input_boolean:
   frarik_differenziata_notifica_push:
@@ -535,6 +649,12 @@ input_boolean:
     name: "Differenziata — Annuncio Alexa"
     icon: mdi:amazon-alexa
 
+
+####################################################
+#                                                  #
+#                    SENSORI                       #
+#                                                  #
+####################################################
 
 template:
   - sensor:
@@ -551,6 +671,12 @@ template:
           {% set giorni = ['lunedi','martedi','mercoledi','giovedi','venerdi','sabato','domenica'] %}
           {{ states('input_text.frarik_differenziata_rifiuto_' + giorni[wd]) }}
 
+
+####################################################
+#                                                  #
+#                  AUTOMAZIONI                     #
+#                                                  #
+####################################################
 
 automation:
 
@@ -574,6 +700,7 @@ automation:
 
       - parallel:
 
+          # ── Notifica Push ──────────────────────────
           - choose:
             - conditions:
               - condition: state
@@ -595,6 +722,7 @@ automation:
                           {%- for i in items -%}{%- set ns.voci = ns.voci + [mappa.get(i, i)] -%}{%- endfor -%}
                           {%- if ns.voci | length == 1 -%}Stasera metti fuori {{ ns.voci[0] }}{%- elif ns.voci | length > 1 -%}Stasera metti fuori {{ ns.voci[:-1] | join(', ') }} e {{ ns.voci[-1] }}{%- else -%}Nessun rifiuto stasera{%- endif -%}
 
+          # ── Annuncio Google Home ───────────────────
           - choose:
             - conditions:
               - condition: state
@@ -614,6 +742,7 @@ automation:
                     {%- for i in items -%}{%- set ns.voci = ns.voci + [mappa.get(i, i)] -%}{%- endfor -%}
                     {%- if ns.voci | length == 1 -%}Stasera metti fuori {{ ns.voci[0] }}{%- elif ns.voci | length > 1 -%}Stasera metti fuori {{ ns.voci[:-1] | join(', ') }} e {{ ns.voci[-1] }}{%- else -%}Nessun rifiuto stasera{%- endif -%}
 
+          # ── Annuncio Alexa ─────────────────────────
           - choose:
             - conditions:
               - condition: state

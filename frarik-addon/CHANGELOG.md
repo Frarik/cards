@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.8.3 — 2026-07-05
+
+### fix(pkg+card): YAML embedded = PKG GitHub completo — Differenziata e Posta
+
+- **Differenziata**: YAML embedded aggiornato a 318 righe (era 189) — ora corrisponde esattamente al PKG GitHub con intestazione ASCII, commenti sezione e tutti gli ancore `&google`, `&alexa`, `&push` con segnaposto `IL_TUO_*`; `_diffBuildPkg` invariata
+- **Posta**: YAML embedded aggiornato a 457 righe (era 341); PKG GitHub aggiornato con segnaposto IL_TUO_* (`IL_TUO_SENSORE_CASSETTA`, `IL_TUO_MEDIA_PLAYER_GOOGLE`, `IL_TUO_MEDIA_PLAYER_ALEXA`, `IL_TUO_MOBILE_APP`); `_buildCustomPkg` riscritta con sostituzione IL_TUO_* (rimossi i vecchi marcatori `%%`); corretto bug `service: "{{ repeat.item.service }}"` → `notify.{{ repeat.item.service }}`
+
 ## 1.8.2 — 2026-07-04
 
 ### fix(pkg+card): PKG completi e struttura notifiche corretta — Antizanzare, Irrigazione, Bolletta, Differenziata, Posta

@@ -114,7 +114,7 @@ homeassistant:
         #   binary_sensor.cassetta_postale
         #   binary_sensor.sensore_posta_ingresso
         # ─────────────────────────────────────────────────
-        Sensore Cassetta: &sensore_cassetta binary_sensor.non_configurato
+        Sensore Cassetta: &sensore_cassetta IL_TUO_SENSORE_CASSETTA
 
         # ─────────────────────────────────────────────────
         # SPEAKER GOOGLE HOME / NEST
@@ -125,7 +125,8 @@ homeassistant:
         #   - media_player.google_home_cucina
         #   - media_player.nest_mini_salotto
         # ─────────────────────────────────────────────────
-        MediaPlayer Google: &google []
+        MediaPlayer Google: &google
+          - IL_TUO_MEDIA_PLAYER_GOOGLE
 
         # ─────────────────────────────────────────────────
         # DISPOSITIVI AMAZON ALEXA / ECHO
@@ -136,7 +137,8 @@ homeassistant:
         #   - media_player.alexa_cucina
         #   - media_player.echo_dot_camera
         # ─────────────────────────────────────────────────
-        MediaPlayer Alexa: &alexa []
+        MediaPlayer Alexa: &alexa
+          - IL_TUO_MEDIA_PLAYER_ALEXA
 
         # ─────────────────────────────────────────────────
         # SERVIZI NOTIFICA PUSH (smartphone)
@@ -149,7 +151,8 @@ homeassistant:
         #   - service: mobile_app_iphone_di_mario
         #   - service: mobile_app_samsung_giulia
         # ─────────────────────────────────────────────────
-        Notifiche Push: &push []
+        Notifiche Push: &push
+          - service: IL_TUO_MOBILE_APP
 
 
 ####################################################
@@ -365,7 +368,7 @@ automation:
               - repeat:
                   for_each: *push
                   sequence:
-                    - service: "{{ repeat.item.service }}"
+                    - service: "notify.{{ repeat.item.service }}"
                       continue_on_error: true
                       data:
                         title: "🏡 Frarik — Posta"
