@@ -1844,6 +1844,8 @@ function _pkgFriendlyName(cardId){
 /* Controlla aggiornamenti PKG: notifica (campanella) se un PKG installato su HA è cambiato su GitHub */
 async function _ghCheckPkg(pkgFiles){
   if(!pkgFiles||!pkgFiles.length) return;
+  // Popola il cache PKG così _ghsPkgUpdFromPending può trovare i file anche senza aprire il tab PKG
+  if(!_ghsCache.pkg) _ghsCache.pkg=pkgFiles;
   const g=_ghCfg();
   g.pkgShas=g.pkgShas||{};
   g.pkgNotifiedShas=g.pkgNotifiedShas||{};
