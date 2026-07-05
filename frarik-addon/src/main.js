@@ -3639,7 +3639,8 @@ async function _ghsInstall(name){
   _ghsDoInstall(f,code,res);
   /* su aggiornamento: se la pkg version è cambiata avvisa l'utente */
   if(_pkgMatch&&_pkgVerNew&&_pkgVerNew!==(Object.entries(_ghCfg().pkgVersions||{}).find(([k])=>k.toLowerCase()===_instId.toLowerCase())?.[1]||'')){
-    _ghsPkgUpdatePopup(_instId.toLowerCase(),_pkgVerNew);
+    const _pkgInfoUpd=_parsePkgInfo(code)||{};
+    _ghsPkgUpdatePopup(_instId.toLowerCase(),_pkgVerNew,_pkgInfoUpd.file||('frarik/frarik_'+_instId.toLowerCase()+'.yaml'));
   } else {
     showToast('✅ '+f.name+(_isUpdate?' aggiornata':' installata — usa ➕ Aggiungi per metterla in dashboard'));
   }
@@ -3803,7 +3804,7 @@ async function _pkgGenericInstall(cardId,pkgVer,pkgInfo,f,code,res){
 }
 
 /* popup — avvisa che il package HA è stato aggiornato e offre di aggiornarlo */
-function _ghsPkgUpdatePopup(cardId,pkgVerNew){
+function _ghsPkgUpdatePopup(cardId,pkgVerNew,pkgFile){
   document.getElementById('__frk_pkg_upd__')?.remove();
   const host=document.createElement('div');
   host.id='__frk_pkg_upd__';
@@ -3844,7 +3845,7 @@ function _ghsPkgUpdatePopup(cardId,pkgVerNew){
         <div class="msg">
           La card è stata aggiornata e include una <strong>nuova versione del package HA</strong>.<br><br>
           Per attivare le nuove funzionalità, aggiorna anche il file<br>
-          <strong>/config/packages/frarik/frarik_posta.yaml</strong><br><br>
+          <strong>/config/packages/${pkgFile||('frarik/frarik_'+cardId+'.yaml')}</strong><br><br>
           Clicca <strong>Aggiorna pkg</strong> per rieseguire il wizard di configurazione e sovrascrivere il file.
         </div>
       </div>

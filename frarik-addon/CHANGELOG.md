@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.25 — 2026-07-05
+
+### fix(store): popup "Aggiorna pkg" mostrava sempre frarik_posta.yaml
+
+- `_ghsPkgUpdatePopup`: aggiunto parametro `pkgFile` (prima era hardcoded `frarik_posta.yaml`)
+- Al call site (aggiornamento card), ora viene passato il file risolto da `_parsePkgInfo(code).file`
+- Fallback: `frarik/frarik_${cardId}.yaml` se `_parsePkgInfo` non trova il campo `file`
+
 ## 1.9.24 — 2026-07-05
 
 ### feat(card/bolletta): nuova card Bolletta v5.0 per PKG frarik_bolletta v10
