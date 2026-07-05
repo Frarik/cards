@@ -130,7 +130,8 @@
     const rid = 'frc' + (card.id || Math.random().toString(36).slice(2, 8));
 
     const pwV     = num(S(h, c.pk_power));
-    const running = isOn(h, c.pk_running);
+    const soglia  = num(S(h, c.pk_soglia)) || 300;
+    const running = isOn(h, c.pk_running) || (pwV != null && pwV >= soglia);
     const ton     = c.pk_time_on;
 
     const terminato  = Attr(h, ton, 'terminato')           || '—';
@@ -145,7 +146,6 @@
     const pw     = pwV || 0;
     const col    = running ? '#38bdf8' : '#64748b';
     const statusLabel = running ? 'MOTORE ON' : 'STANDBY';
-    const soglia = num(S(h, c.pk_soglia)) || 300;
     const barPct = Math.min(100, (pw / soglia) * 100);
     const barCol = pw < 50 ? '#64748b' : pw <= 150 ? '#38bdf8' : pw <= 250 ? '#22c55e' : pw <= 400 ? '#f97316' : '#ef4444';
 
@@ -514,7 +514,7 @@
 
     dSec('🔌 Elettrodomestico');
     dToggle('input_boolean.frarik_lavatrice_switch', 'Switch presa');
-    dNum('input_number.frarik_lavatrice_soglia_w',          'Soglia lavoro',  'W',   0, 5000, 1);
+    dNum(c.pk_soglia,                                       'Soglia lavoro',  'W',   0, 5000, 1);
     dNum('input_number.frarik_lavatrice_tempo_innesco_m',   'Delay spegnimento', 'min', 0, 60, 1);
     dNum('input_number.frarik_lavatrice_avvio_ritardato_s', 'Delay riavvio',  's',   0, 300, 1);
 

@@ -393,7 +393,7 @@
     dTime('input_datetime.frarik_scaldabagno_orario_fine_notifiche',   '⏰ Orario fine notifiche');
 
     dSec('🛁 Scaldabagno');
-    dNum('input_number.frarik_scaldabagno_soglia_w',          'Soglia riscaldamento',  'W',   0, 5000, 1);
+    dNum(c.pk_soglia,                                         'Soglia riscaldamento',  'W',   0, 5000, 1);
     dNum('input_number.frarik_scaldabagno_tempo_innesco_m',   'Delay spegnimento',     'min', 0, 60,   1);
     dNum('input_number.frarik_scaldabagno_avvio_ritardato_s', 'Delay riavvio',         's',   0, 300,  1);
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.16 — 2026-07-05
+
+### fix(cards/all): running fallback e soglia configurabile in tutte le card elettrodomestici
+
+- **Tutte le card** (Lavatrice, Lavastoviglie, Induzione, Forno, Microonde, Friggitrice, Frigorifero, Scaldabagno, Montalatte, Asciugatrice): `running`/`heating` ora ha fallback diretto su `potenza >= soglia` quando il binary_sensor non è disponibile in HA
+- **Impostazioni popup**: campo "Soglia lavoro" usa `c.pk_soglia` (entità configurata) invece del nome hardcoded — il valore ora si legge e salva correttamente
+- `sogliaN` spostata prima di `running` nel render() così il fallback può usarla
+
 ## 1.9.15 — 2026-07-05
 
 ### fix(card/tostapane): animazione e soglia lavoro
