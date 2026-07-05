@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.8.4 — 2026-07-05
+
+### feat(store): redesign UI store con tab Cards/PKG e sotto-tab
+
+- **Nuova struttura tab**: Cards (Non installate | Installate) · PKG (Non installati | Installati) · Da aggiornare · Premium · Locali · Salvate
+- **Non installate**: mostra tutte le card disponibili da tutti i folder (js, chips, distintivi) non ancora installate
+- **Installate**: card installate e aggiornate raggruppate per categoria (Elettrodomestici | Altre card)
+- **PKG Non installati / Installati**: separati in sotto-tab dedicati
+- **Da aggiornare**: unico tab dove appaiono card e PKG con update — esclusi da tutti gli altri tab (niente più chip "Aggiorna" fuori da questo tab)
+- **Bottone "Già aggiornato"**: risolve falsi positivi per PKG installati manualmente senza passare dallo store
+- **Fix SHA tracking**: dopo installazione PKG da store, SHA salvato correttamente → niente più falsi update al prossimo sync
+
 ## 1.8.3 — 2026-07-05
 
 ### fix(pkg+card): YAML embedded = PKG GitHub completo — Differenziata e Posta
