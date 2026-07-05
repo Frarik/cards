@@ -3730,6 +3730,7 @@ function _ghsPkgAskPopup(cardId,pkgVer,f,code,res){
   const sr=host.shadowRoot;
   sr.getElementById('pa_close').addEventListener('click',()=>destroy());
   sr.getElementById('pa_cancel').addEventListener('click',()=>destroy());
+  sr.querySelector('.ov')?.addEventListener('click',e=>{if(e.target===sr.querySelector('.ov'))destroy();});
   /* pkg già installato → installa la card direttamente */
   sr.getElementById('pa_yes').addEventListener('click',()=>{
     destroy();
@@ -3845,6 +3846,7 @@ function _ghsPkgUpdatePopup(cardId,pkgVerNew){
   </div>`;
   const sr=host.shadowRoot;
   sr.getElementById('pu_close').addEventListener('click',()=>destroy());
+  sr.querySelector('.ov')?.addEventListener('click',e=>{if(e.target===sr.querySelector('.ov'))destroy();});
   sr.getElementById('pu_later').addEventListener('click',()=>{
     destroy();
     showToast('ℹ️ Ricorda di aggiornare il package HA per attivare le nuove funzionalità');
@@ -4038,12 +4040,13 @@ async function _pkgViewOnHA(filename){
     if(!r.ok){ console.error('[Frarik] pkg/read fallito',{url:_pkgUrl,status:r.status,decoded}); showToast('⚠️ File non trovato: /config/packages/'+decoded+' (HTTP '+r.status+')'); return; }
     const txt=await r.text();
     const mo=document.createElement('div');
-    mo.style.cssText='position:fixed;inset:0;z-index:9700;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.75);backdrop-filter:blur(6px)';
-    mo.innerHTML=`<div style="background:#0d1020;border:1px solid rgba(255,255,255,.12);border-radius:18px;width:min(640px,96vw);max-height:80vh;display:flex;flex-direction:column;overflow:hidden">
-      <div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.07)">
-        <span style="font-size:16px">📦</span>
-        <span style="flex:1;font-weight:700;color:#f1f5f9;font-size:14px">${eh(nm)}</span>
-        <button style="background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;cursor:pointer" id="_pv_close">✕</button>
+    mo.style.cssText='position:fixed;inset:0;z-index:9700;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.75);backdrop-filter:blur(6px)';
+    mo.innerHTML=`<style>@keyframes _pv_su{from{transform:translateY(100%)}to{transform:translateY(0)}}</style>
+    <div style="background:#0d1020;border:1px solid rgba(255,255,255,.12);border-radius:20px 20px 0 0;border-bottom:none;width:100%;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;animation:_pv_su .24s cubic-bezier(.32,1.12,.56,1)">
+      <div style="display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">
+        <div style="width:38px;height:38px;border-radius:12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">📦</div>
+        <span style="flex:1;font-weight:700;color:#fff;font-size:14px">${eh(nm)}</span>
+        <button id="_pv_close" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:6px 12px;color:#fff;font-size:13px;cursor:pointer">✕</button>
       </div>
       <pre style="flex:1;overflow:auto;padding:16px 18px;font-size:11px;line-height:1.6;color:#c4d8f5;font-family:monospace;margin:0;white-space:pre-wrap;word-break:break-all">${eh(txt)}</pre>
     </div>`;

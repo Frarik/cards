@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.9.5 — 2026-07-05
+
+### fix(popup): grafica unificata per tutti i popup PKG
+
+- `_pkgViewOnHA` (visualizzatore YAML): convertito da modal centrato a bottom sheet con slide-up, icona e bottone ✕ standard
+- `_ghsPkgAskPopup`: aggiunto click-outside sull'overlay per chiudere il popup
+- `_ghsPkgUpdatePopup`: aggiunto click-outside sull'overlay per chiudere il popup
+- Tutti i popup PKG ora rispettano lo stesso pattern: `align-items:flex-end`, `border-radius:20px 20px 0 0`, animazione slide-up, bottone ✕ e chiusura cliccando fuori
+
 ## 1.9.4 — 2026-07-05
 
 ### feat(pkg): wizard PKG apre dal basso + autocomplete entità HA nei campi
