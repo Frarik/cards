@@ -1598,8 +1598,8 @@ async function _ghApiList(){
 async function _ghFetchApi(url, g){
   const H={'Accept':'application/vnd.github.v3+json'};
   if(g.token) H['Authorization']='token '+g.token;
-  let r=await fetch(url,{headers:H});
-  if(r.status===401 && g.token) r=await fetch(url,{headers:{'Accept':'application/vnd.github.v3+json'}});
+  let r=await fetch(url,{headers:H,cache:'no-store'});
+  if(r.status===401 && g.token) r=await fetch(url,{headers:{'Accept':'application/vnd.github.v3+json'},cache:'no-store'});
   return r;
 }
 /* Fetch albero git completo e ritorna {cards, pkgFiles} con una sola richiesta API. */
@@ -1853,6 +1853,22 @@ async function _ghCheckPkg(pkgFiles){
   if(!_haInstalledPkgs.size) await _loadHaInstalledPkgs();
   const newPending={};
   let any=false;
+  // Traccia nuovi PKG mai visti e notifica se non installati
+  g.pkgKnown=g.pkgKnown||null;
+  const _isFirstPkgSync=g.pkgKnown===null;
+  const _knownPkgSet=new Set(g.pkgKnown||[]);
+  pkgFiles.forEach(f=>{
+    if(!_knownPkgSet.has(f.name)){
+      _knownPkgSet.add(f.name);
+      const _isInst=_pkgIsOnHA(f.name)||_pkgIsOnHA('frarik/'+f.name);
+      if(!_isFirstPkgSync&&!_isInst){
+        const _nm=f.name.replace(/\.ya?ml$/i,'').replace(/^frarik_/,'');
+        _ntfPushLog('📦 Nuovo PKG disponibile','Il package «'+_nm+'» è disponibile su GitHub — aprilo dallo store per installarlo.','📦','pkg:store');
+        any=true;
+      }
+    }
+  });
+  g.pkgKnown=[..._knownPkgSet];
   pkgFiles.forEach(f=>{
     const isInstalled=_pkgIsOnHA(f.name)||_pkgIsOnHA('frarik/'+f.name);
     if(!isInstalled) return;
@@ -1949,6 +1965,11 @@ function _ntfHandleAction(action){
   if(action==='gh' || action.indexOf('gh:')===0){
     try{ closeNotifCenter(); }catch(e){}
     try{ openGhStore(); setTimeout(()=>{ try{ ghStoreTab('updates'); }catch(e){} }, 60); }catch(e){}
+    return;
+  }
+  if(action==='pkg:store'){
+    try{ closeNotifCenter(); }catch(e){}
+    try{ openGhStore(); setTimeout(()=>{ try{ ghStoreTab('pkg'); }catch(e){} }, 60); }catch(e){}
     return;
   }
   if(action.indexOf('pkg:')===0){
@@ -2769,9 +2790,9 @@ function _ghStoreRenderInstallate(q){
   ((curPage()||{}).headerBadges||[]).forEach(b=>{ if(b.type==='jsd'&&b.jsCardId) usedInCurPage.add(b.jsCardId); });
   let files=(_ghsCache['js']||[]).filter(f=>g.shas[f.name]&&g.shas[f.name]===f.sha);
   if(q) files=files.filter(f=>f.name.toLowerCase().includes(q));
-  status.textContent=files.length+' card installate'+(q?' trovate':'');
+  const available=(_ghsCache['js']||[]).filter(f=>!g.shas[f.name]&&(!q||f.name.toLowerCase().includes(q)));
+  status.textContent=files.length+' installate · '+available.length+' disponibili';
   const TAB_LBL={'js':'⚡ Card JS','elettrodomestici':'🔌 Elettrodomestici'};
-  if(!files.length){ list.innerHTML=`<div class="ghs-empty">${q?`Nessun risultato per "${eh(q)}"`: 'Nessuna card JS installata da GitHub.'}</div>`; return; }
   const sorted=files.slice().sort((a,b)=>a.name.localeCompare(b.name));
   const tile=(f)=>{
     const nm=f.name.replace(/\.(js|ya?ml)$/i,''); const enc=encodeURIComponent(f.name);
@@ -2803,7 +2824,30 @@ function _ghStoreRenderInstallate(q){
       ${desc?`<div class="ghc-desc">${eh(desc)}</div>`:''}
       <div class="ghc-acts">${updBtn}${addBtn}${mvBtn}${delBtn}</div></div></div>`;
   };
-  list.innerHTML='<div class="ghc-grid">'+sorted.map(tile).join('')+'</div>';
+  const tileAvail=(f)=>{
+    const nm=f.name.replace(/\.(js|ya?ml)$/i,''); const enc=encodeURIComponent(f.name);
+    const verLbl=_ghVerCache[f.sha]||g.fileVersions[f.name]||'';
+    const icon=_ghIconCache[f.sha]||_ghcSmartIcon(nm)||'📦';
+    const desc=_ghDescCache[f.sha]||_ghcSmartDesc(nm,'');
+    const pkgBdg=_pkgBadgeHtml(_ghPkgCache[f.sha]||null);
+    return `<div class="ghc-tile st-new"><div class="ghc-strip new"></div>
+      <div class="ghc-prev"><div class="ghc-prev-inner" data-prev-sha="${eh(f.sha)}"></div><div class="ghc-prev-fade"></div><span class="ghc-bdg new">⬇ Disponibile</span>${pkgBdg}</div>
+      <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico">${_iconHtml(icon)}</div><div class="ghc-meta"><div class="ghc-name">${eh(nm)}</div>${verLbl?`<div class="ghc-ver">v${eh(verLbl)}</div>`:''}</div></div>
+      ${desc?`<div class="ghc-desc">${eh(desc)}</div>`:''}
+      <div class="ghc-acts"><button class="ghc-btn ghc-btn-inst" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button></div></div></div>`;
+  };
+  let _html='';
+  if(sorted.length){
+    _html+=`<div class="ghc-sec"><span class="ghc-sec-dot ok"></span>Installate<span class="ghc-sec-cnt">${sorted.length}</span></div>`;
+    _html+=sorted.map(tile).join('');
+  } else {
+    _html+=`<div style="grid-column:1/-1"><div class="ghs-empty">${q?`Nessun risultato per "${eh(q)}"`: 'Nessuna card JS installata da GitHub.'}</div></div>`;
+  }
+  if(available.length){
+    _html+=`<div class="ghc-sec"><span class="ghc-sec-dot new"></span>Da installare<span class="ghc-sec-cnt">${available.length}</span></div>`;
+    _html+=available.map(tileAvail).join('');
+  }
+  list.innerHTML='<div class="ghc-grid">'+_html+'</div>';
   requestAnimationFrame(()=>{
     list.querySelectorAll('[data-prev-id]').forEach(el=>{ _ghcLivePrev(el, el.dataset.prevId); });
     list.querySelectorAll('[data-prev-sha]').forEach(el=>{ _ghcLivePrevBySha(el, el.dataset.prevSha); });
