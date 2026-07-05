@@ -3985,12 +3985,29 @@ async function _pkgPostInstall(cardId,pkgVer){
 
 /* Disinstalla un pkg da HA (/config/packages/) */
 async function _pkgUninstallFromHA(filename){
-  try{
-    const r=await fetch(ADDON_BASE+'/api/frarik/pkg/uninstall',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:filename})});
-    const d=await r.json();
-    if(d.ok){ await _loadHaInstalledPkgs(); showToast('🗑 Package rimosso da HA'); if(_isPkgTab()) _ghStoreRender(); }
-    else showToast('⚠️ '+d.error);
-  }catch(e){ showToast('⚠️ Errore: '+e.message); }
+  const decoded=decodeURIComponent(filename);
+  const nm=decoded.split('/').pop().replace(/\.ya?ml$/i,'');
+  showConfirm(
+    `🗑️ Rimuovere il package <b>${eh(nm)}</b> da Home Assistant?<br><br>`+
+    `<span style="font-size:11px;opacity:.7">Il file verrà eliminato dal file editor di HA.<br>Potrai reinstallarlo in qualsiasi momento dallo store.</span>`,
+    async ()=>{
+      try{
+        const r=await fetch(ADDON_BASE+'/api/frarik/pkg/uninstall',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:decoded})});
+        const d=await r.json();
+        if(!d.ok){ showToast('⚠️ '+d.error); return; }
+        await _loadHaInstalledPkgs();
+        if(_isPkgTab()) _ghStoreRender();
+        showConfirm(
+          `🗑️ Package <b>${eh(nm)}</b> rimosso da HA.<br><br>`+
+          `Per applicare le modifiche è consigliato <b>riavviare Home Assistant</b>.<br>`+
+          `<span style="font-size:11px;opacity:.7">La dashboard si riconnetterà da sola dopo il riavvio.</span>`,
+          ()=>{ try{send({type:'call_service',domain:'homeassistant',service:'restart'});}catch(e){} showToast('🔄 Riavvio HA in corso…'); try{setC('wait');}catch(e){} },
+          '🔄 Riavvia HA ora','Lo faccio dopo'
+        );
+      }catch(e){ showToast('⚠️ Errore: '+e.message); }
+    },
+    '🗑️ Rimuovi','Annulla'
+  );
 }
 
 /* Visualizza YAML di un pkg installato su HA */

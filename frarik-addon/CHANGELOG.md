@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.8.6 — 2026-07-05
+
+### fix(pkg): conferma + offerta riavvio HA prima di rimuovere un PKG installato
+
+- Il tasto "Rimuovi" nei PKG installati ora mostra una dialog di conferma prima di procedere
+- Dopo la rimozione, viene chiesto se riavviare Home Assistant
+
 ## 1.8.5 — 2026-07-05
 
 ### feat(store): ripristinati tab Chips e Distintivi con sotto-tab Non installate / Installate
