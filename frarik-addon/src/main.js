@@ -567,7 +567,7 @@ function _openAddCardPopup(secId,col,startTab){
   ov.addEventListener('click',e=>{
     if(e.target===ov||e.target.id==='acp-close'||e.target.closest?.('#acp-close')) _acpClose();
   });
-  ghStoreTab(startTab||'js');
+  ghStoreTab(startTab||'cards-non-installate');
 }
 function _acpClose(){
   window._acpStoreMode=false;
@@ -2036,7 +2036,7 @@ const _GHS_FOLDERS={
   yaml:      {path:'card-yaml',       ext:/\.ya?ml$/i, ico:'📄',  kind:'copy'},
   pkg:       {path:'pkg',             ext:/\.ya?ml$/i, ico:'📦',  kind:'pkg'},
 };
-let _ghsTab='js', _ghsCache={};
+let _ghsTab='cards-non-installate', _ghsCache={};
 async function _ghListFolder(path){
   const g=_ghCfg(); if(!g.owner||!g.repo) throw new Error('Configura GitHub (proprietario/repository)');
   const p=path?path.split('/').map(encodeURIComponent).join('/'):'';
@@ -2049,8 +2049,13 @@ async function _ghListFolder(path){
   return Array.isArray(j) ? j.filter(f=>f.type==='file') : [];
 }
 function _ghsReloadTab(){
-  delete _ghsCache[_ghsTab];
-  if(_ghsTab==='predefinite') localStorage.removeItem('fratech_sos_store_hidden');
+  if(_GHS_CARDS_TABS.includes(_ghsTab)){
+    delete _ghsCache['js']; delete _ghsCache['chips']; delete _ghsCache['distintivi'];
+  } else if(_GHS_PKG_TABS.includes(_ghsTab)){
+    delete _ghsCache.pkg;
+  } else {
+    delete _ghsCache[_ghsTab];
+  }
   ghStoreTab(_ghsTab);
   showToast('🔄 Sincronizzazione con GitHub…');
 }
@@ -2242,58 +2247,50 @@ async function _ghsPreview(enc, nm, cardId){
   }
   note.textContent=isTemp?'Anteprima temporanea — non ancora installata':'';
 }
-const _GHS_CARDS_SUB=['js','elettrodomestici','chips','distintivi','predefinite','card-yaml'];
+const _GHS_CARDS_TABS=['cards-non-installate','cards-installate'];
+const _GHS_PKG_TABS=['pkg-non-installati','pkg-installati'];
+function _isPkgTab(){ return _GHS_PKG_TABS.includes(_ghsTab); }
+async function _ghsLoadAllCardCaches(){
+  const p=[];
+  for(const k of ['js','chips','distintivi']){
+    if(!_ghsCache[k]){ const f=_GHS_FOLDERS[k]; p.push(_ghListFolder(f.path).then(files=>{ _ghsCache[k]=files.filter(x=>f.ext.test(x.name)&&!(f.exclude&&f.exclude.test(x.name))); }).catch(()=>{ if(!_ghsCache[k]) _ghsCache[k]=[]; })); }
+  }
+  if(p.length) await Promise.all(p);
+}
 function ghStoreTab(tab){
   _ghsTab=tab;
-  ['js','chips','distintivi','premium','yaml','pkg','local','card-yaml','predefinite','saved','elettrodomestici','installate','updates'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
-  const _isCardsSub=_GHS_CARDS_SUB.includes(tab);
-  const _grpBtn=document.getElementById('ghs-tab-cards-grp'); if(_grpBtn) _grpBtn.classList.toggle('on',_isCardsSub);
-  const _subBar=document.getElementById('ghs-subtabs-cards'); if(_subBar) _subBar.style.display=_isCardsSub?'flex':'none';
+  const isCards=_GHS_CARDS_TABS.includes(tab);
+  const isPkg=_GHS_PKG_TABS.includes(tab);
+  [..._GHS_CARDS_TABS,..._GHS_PKG_TABS,'updates','premium','local','saved'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
+  const cardsGrp=document.getElementById('ghs-tab-cards-grp'); if(cardsGrp) cardsGrp.classList.toggle('on',isCards);
+  const pkgGrp=document.getElementById('ghs-tab-pkg-grp'); if(pkgGrp) pkgGrp.classList.toggle('on',isPkg);
+  const cardsSubBar=document.getElementById('ghs-subtabs-cards'); if(cardsSubBar) cardsSubBar.style.display=isCards?'flex':'none';
+  const pkgSubBar=document.getElementById('ghs-subtabs-pkg'); if(pkgSubBar) pkgSubBar.style.display=isPkg?'flex':'none';
   const s=document.getElementById('ghs-search'); if(s) s.value='';
-  const sw=document.getElementById('ghs-search-wrap'); if(sw) sw.style.display=(tab==='card-yaml'||tab==='saved'||tab==='updates')?'none':'';
+  const sw=document.getElementById('ghs-search-wrap'); if(sw) sw.style.display=(tab==='saved'||tab==='updates')?'none':'';
   const loadEl=document.getElementById('ghs-load'); if(loadEl) loadEl.style.display=(tab==='local')?'':'none';
-  if(tab==='predefinite'){ _ghStoreRender(); return; }
-  if(tab==='local'){ _ghStoreRender(); _ghStoreInitDropzone(); return; }
-  if(tab==='card-yaml'){ _ghStoreRender(); return; }
-  if(tab==='saved'){ _ghStoreRender(); return; }
-  if(tab==='updates'){ _ghStoreRender(); return; }
-  if(tab==='pkg'){
-    _loadHaInstalledPkgs().then(()=>{ if(_ghsTab==='pkg') _ghStoreRender(); });
+  if(isCards){
     _ghStoreRender();
-    if(!_ghsCache.pkg){
-      const fPkg=_GHS_FOLDERS['pkg'];
-      _ghListFolder(fPkg.path).then(files=>{
-        _ghsCache.pkg=files.filter(x=>fPkg.ext.test(x.name));
-        if(_ghsTab==='pkg') _ghStoreRender();
-      }).catch(()=>{});
-    }
+    _ghsLoadAllCardCaches().then(()=>{ if(_ghsTab===tab){ _ghFetchVerLabels('js'); _ghFetchVerLabels('chips'); _ghFetchVerLabels('distintivi'); _ghStoreRender(); } });
     return;
   }
-  if(tab==='elettrodomestici'||tab==='installate'){
-    if(_ghsCache['js']){ _ghStoreRender(); return; }
+  if(isPkg){
+    _loadHaInstalledPkgs().then(()=>{ if(_isPkgTab()) _ghStoreRender(); });
+    _ghStoreRender();
+    if(!_ghsCache.pkg){ const fPkg=_GHS_FOLDERS['pkg']; _ghListFolder(fPkg.path).then(files=>{ _ghsCache.pkg=files.filter(x=>fPkg.ext.test(x.name)); if(_isPkgTab()) _ghStoreRender(); }).catch(()=>{}); }
+    return;
+  }
+  if(tab==='updates'){ _ghStoreRender(); return; }
+  if(tab==='premium'){
+    if(_ghsCache['premium']!==undefined){ _ghStoreRender(); return; }
     document.getElementById('ghs-status').textContent='⏳ Carico da GitHub…';
     document.getElementById('ghs-list').innerHTML='';
-    const fEl=_GHS_FOLDERS['js'];
-    _ghListFolder(fEl.path).then(files=>{
-      _ghsCache['js']=files.filter(x=>fEl.ext.test(x.name)&&!(fEl.exclude&&fEl.exclude.test(x.name)));
-      if(_ghsTab===tab) _ghStoreRender();
-      _ghFetchVerLabels('js');
-    }).catch(e=>{ document.getElementById('ghs-status').textContent='⚠️ '+e.message; });
+    const f=_GHS_FOLDERS['premium']; if(!f) return;
+    _ghListFolder(f.path).then(files=>{ _ghsCache['premium']=files.filter(x=>f.ext.test(x.name)&&!(f.exclude&&f.exclude.test(x.name))); if(_ghsTab==='premium') _ghStoreRender(); _ghFetchVerLabels('premium'); }).catch(()=>{ _ghsCache['premium']=[]; if(_ghsTab==='premium') _ghStoreRender(); });
     return;
   }
-  if(tab==='premium'&&_ghsCache[tab]!==undefined){ _ghStoreRender(); return; }
-  if(tab!=='premium'&&_ghsCache[tab]){ _ghStoreRender(); return; }
-  document.getElementById('ghs-status').textContent='⏳ Carico da GitHub…';
-  document.getElementById('ghs-list').innerHTML='';
-  const f=_GHS_FOLDERS[tab]; if(!f) return;
-  _ghListFolder(f.path).then(files=>{
-    _ghsCache[tab]=files.filter(x=>f.ext.test(x.name)&&!(f.exclude&&f.exclude.test(x.name)));
-    if(_ghsTab===tab) _ghStoreRender();
-    if(f.kind==='install'||f.kind==='premium') _ghFetchVerLabels(tab);
-  }).catch(e=>{
-    if(tab==='premium'){ _ghsCache[tab]=[]; if(_ghsTab===tab) _ghStoreRender(); }
-    else document.getElementById('ghs-status').textContent='⚠️ '+e.message;
-  });
+  if(tab==='local'){ _ghStoreRender(); _ghStoreInitDropzone(); return; }
+  if(tab==='saved'){ _ghStoreRender(); return; }
 }
 /* Scarica e legge la versione (campo version:) dai file della cartella, con cache per
    sha (un solo fetch per versione di file). Aggiorna le etichette nello store. */
@@ -2479,14 +2476,13 @@ function _createMockHass(){
 function _ghStoreRender(){
   const tab=_ghsTab, list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
   const q=(document.getElementById('ghs-search').value||'').toLowerCase().trim();
-  if(tab==='predefinite'){ _ghStoreRenderPredefinite(q); return; }
+  if(tab==='cards-non-installate'){ _ghStoreRenderCardsNonInstallate(q); return; }
+  if(tab==='cards-installate'){ _ghStoreRenderCardsInstallate(q); return; }
+  if(tab==='pkg-non-installati'){ _ghStoreRenderPkgNonInstallati(q); return; }
+  if(tab==='pkg-installati'){ _ghStoreRenderPkgInstallati(q); return; }
   if(tab==='local'){ _ghStoreRenderInstalled(q,'local'); return; }
-  if(tab==='pkg'){ _ghStoreRenderPkg(q); return; }
   if(tab==='premium'){ _ghStoreRenderPremium(q); return; }
-  if(tab==='card-yaml'){ _ghStoreRenderYamlEditor(); return; }
   if(tab==='saved'){ _ghStoreRenderSaved(); return; }
-  if(tab==='elettrodomestici'){ _ghStoreRenderElettr(q); return; }
-  if(tab==='installate'){ _ghStoreRenderInstallate(q); return; }
   if(tab==='updates'){ _ghStoreRenderUpdates(); return; }
   const folder=_GHS_FOLDERS[tab]; const g=_ghCfg();
   let files=(_ghsCache[tab]||[]).slice();
@@ -2775,7 +2771,9 @@ function _ghStoreRenderUpdates(){
         +'<div class="ghs-info"><div class="ghs-name">'+eh(nm)+'</div></div>'
         +'<div class="ghs-acts"><button class="ghs-btn ghs-btn-upd" data-action="_ghsPkgUpdFromPending" data-action-arg="'+encodeURIComponent(fn)+'" '
         +'style="background:rgba(251,146,60,.15);border-color:rgba(251,146,60,.4);color:#fb923c">'
-        +'<i class="mdi mdi-package-up"></i> Aggiorna PKG</button></div></div>';
+        +'<i class="mdi mdi-package-up"></i> Aggiorna PKG</button>'
+        +'<button class="ghs-btn" data-action="_ghsPkgMarkUpdated" data-action-arg="'+encodeURIComponent(fn)+'" '
+        +'style="background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:#4ade80">✓ Già aggiornato</button></div></div>';
     }).join('');
   }
   list.innerHTML=html;
@@ -2852,6 +2850,158 @@ function _ghStoreRenderInstallate(q){
     list.querySelectorAll('[data-prev-id]').forEach(el=>{ _ghcLivePrev(el, el.dataset.prevId); });
     list.querySelectorAll('[data-prev-sha]').forEach(el=>{ _ghcLivePrevBySha(el, el.dataset.prevSha); });
   });
+}
+/* ── NON INSTALLATE: tutte le card non ancora installate da tutti i folder ── */
+function _ghStoreRenderCardsNonInstallate(q){
+  const list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
+  const g=_ghCfg();
+  const allFiles=[];
+  for(const k of ['js','chips','distintivi']){
+    (_ghsCache[k]||[]).forEach(f=>{ if(!g.shas[f.name]) allFiles.push(f); });
+  }
+  let files=allFiles;
+  if(q) files=files.filter(f=>f.name.toLowerCase().includes(q));
+  const sorted=files.slice().sort((a,b)=>a.name.localeCompare(b.name));
+  const hasCaches=_ghsCache['js']||_ghsCache['chips']||_ghsCache['distintivi'];
+  status.textContent=sorted.length+' card da installare'+(q?' trovate':'');
+  if(!sorted.length){
+    list.innerHTML=`<div class="ghs-empty">${q?`Nessun risultato per "${eh(q)}"`:hasCaches?'Tutte le card sono installate — vai su "Installate"':'⏳ Caricamento da GitHub…'}</div>`;
+    return;
+  }
+  const tileAvail=(f)=>{
+    const nm=f.name.replace(/\.(js|ya?ml)$/i,''); const enc=encodeURIComponent(f.name);
+    const verLbl=_ghVerCache[f.sha]||g.fileVersions[f.name]||'';
+    const icon=_ghIconCache[f.sha]||_ghcSmartIcon(nm)||'📦';
+    const desc=_ghDescCache[f.sha]||_ghcSmartDesc(nm,'');
+    const pkgBdg=_pkgBadgeHtml(_ghPkgCache[f.sha]||null);
+    const prevBtn=`<button class="ghc-btn-del" style="color:rgba(139,92,246,.8);background:rgba(139,92,246,.08);border-color:rgba(139,92,246,.22)" data-action="_ghsPreviewCard" data-action-arg="${enc}" title="Anteprima"><i class="mdi mdi-eye-outline"></i></button>`;
+    return `<div class="ghc-tile st-new"><div class="ghc-strip new"></div>
+      <div class="ghc-prev"><div class="ghc-prev-inner" data-prev-sha="${eh(f.sha)}"></div><div class="ghc-prev-fade"></div><span class="ghc-bdg new">⬇ Disponibile</span>${pkgBdg}</div>
+      <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico">${_iconHtml(icon)}</div><div class="ghc-meta"><div class="ghc-name">${eh(nm)}</div>${verLbl?`<div class="ghc-ver">v${eh(verLbl)}</div>`:''}</div></div>
+      ${desc?`<div class="ghc-desc">${eh(desc)}</div>`:''}
+      <div class="ghc-acts"><button class="ghc-btn ghc-btn-inst" data-action="_ghsInstall" data-action-arg="${enc}"><i class="mdi mdi-download"></i> Installa</button>${prevBtn}</div></div></div>`;
+  };
+  list.innerHTML='<div class="ghc-grid">'+sorted.map(tileAvail).join('')+'</div>';
+  requestAnimationFrame(()=>{
+    list.querySelectorAll('[data-prev-sha]').forEach(el=>{ _ghcLivePrevBySha(el, el.dataset.prevSha); });
+  });
+}
+/* ── INSTALLATE: card installate e aggiornate, raggruppate per categoria ── */
+function _ghStoreRenderCardsInstallate(q){
+  const list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
+  const g=_ghCfg(); const idFile=g.idFile||{};
+  const _cpCards=(curPage()||{cards:[]}).cards||[];
+  const usedInCurPage=new Set();
+  _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId&&!(window.FratechCardRegistry?.[c.jsCardId]?.isDistintivo)&&!(window.FratechCardRegistry?.[c.jsCardId]?.allowMultiple)) usedInCurPage.add(c.jsCardId); });
+  ((curPage()||{}).headerBadges||[]).forEach(b=>{ if(b.type==='jsd'&&b.jsCardId) usedInCurPage.add(b.jsCardId); });
+  const allInstalled=[];
+  for(const k of ['js','chips','distintivi']){
+    (_ghsCache[k]||[]).forEach(f=>{ if(g.shas[f.name]&&g.shas[f.name]===f.sha) allInstalled.push(f); });
+  }
+  let files=allInstalled;
+  if(q) files=files.filter(f=>f.name.toLowerCase().includes(q));
+  const sorted=files.slice().sort((a,b)=>a.name.localeCompare(b.name));
+  status.textContent=sorted.length+' card installate'+(q?' trovate':'');
+  const tile=(f)=>{
+    const nm=f.name.replace(/\.(js|ya?ml)$/i,''); const enc=encodeURIComponent(f.name);
+    const cardId=Object.keys(idFile).find(k=>idFile[k]===f.name)||null;
+    const verGH=_ghVerCache[f.sha]||g.fileVersions[f.name]||(cardId&&_curStoreVersion(cardId))||'';
+    const inCurPage=!!(cardId&&usedInCurPage.has(cardId));
+    const reg=cardId?window.FratechCardRegistry?.[cardId]:null;
+    const icon=(reg?.icon)||(_jsStoreList().find(i=>(i.meta||{}).id===cardId)?.meta?.icon)||'📦';
+    const desc=_ghcDesc(cardId,f.sha);
+    const _inLabel=reg?.isDistintivo?'In intestazione':'In vista';
+    const bdg=inCurPage?`<span class="ghc-bdg cur">✓ ${_inLabel}</span>`:`<span class="ghc-bdg ok">● Installata</span>`;
+    const prevHtml=cardId&&reg?`<div class="ghc-prev-inner" data-prev-id="${eh(cardId)}"></div>`:`<div class="ghc-prev-inner" data-prev-sha="${eh(f.sha)}"></div>`;
+    const pkgInfoInst=cardId?_pkgInfoForInstalledCard(cardId):(_ghPkgCache[f.sha]||null);
+    const pkgBdgInst=_pkgBadgeHtml(pkgInfoInst);
+    const addBtn=cardId?(inCurPage?`<span class="ghc-indash"><i class="mdi mdi-check-circle-outline"></i> ${_inLabel}</span>`:`<button class="ghc-btn ghc-btn-add" data-action="_jsStoreAddAndRefresh" data-action-args='["${cardId}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`):'';
+    const delBtn=cardId?`<button class="ghc-btn-del" data-action="_ghsDeleteInstalled" data-action-arg="${cardId}" title="Disinstalla"><i class="mdi mdi-delete-outline"></i></button>`:'';
+    return `<div class="ghc-tile st-ok"><div class="ghc-strip ok"></div>
+      <div class="ghc-prev">${prevHtml}<div class="ghc-prev-fade"></div>${bdg}${pkgBdgInst}</div>
+      <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico">${_iconHtml(icon)}</div><div class="ghc-meta"><div class="ghc-name">${eh(nm)}</div>${verGH?`<div class="ghc-ver">v${eh(verGH)}</div>`:''}</div></div>
+      ${desc?`<div class="ghc-desc">${eh(desc)}</div>`:''}
+      <div class="ghc-acts">${addBtn}${delBtn}</div></div></div>`;
+  };
+  const elettr=sorted.filter(f=>_isElettrCard(f,idFile));
+  const altre=sorted.filter(f=>!_isElettrCard(f,idFile));
+  let html='';
+  if(elettr.length){
+    html+=`<div class="ghc-sec"><span class="ghc-sec-dot ok"></span>🔌 Elettrodomestici<span class="ghc-sec-cnt">${elettr.length}</span></div>`;
+    html+=elettr.map(tile).join('');
+  }
+  if(altre.length){
+    html+=`<div class="ghc-sec" style="margin-top:${elettr.length?'16':'0'}px"><span class="ghc-sec-dot ok"></span>⚡ Altre card<span class="ghc-sec-cnt">${altre.length}</span></div>`;
+    html+=altre.map(tile).join('');
+  }
+  if(!sorted.length){
+    html=`<div style="grid-column:1/-1"><div class="ghs-empty">${q?`Nessun risultato per "${eh(q)}"`: 'Nessuna card installata. Vai su "Non installate" per installarne.'}</div></div>`;
+  }
+  list.innerHTML='<div class="ghc-grid">'+html+'</div>';
+  requestAnimationFrame(()=>{
+    list.querySelectorAll('[data-prev-id]').forEach(el=>{ _ghcLivePrev(el, el.dataset.prevId); });
+    list.querySelectorAll('[data-prev-sha]').forEach(el=>{ _ghcLivePrevBySha(el, el.dataset.prevSha); });
+  });
+}
+/* ── PKG NON INSTALLATI: pkg su GitHub non ancora su HA ── */
+function _ghStoreRenderPkgNonInstallati(q){
+  const list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
+  const ghFiles=(_ghsCache.pkg||[]).slice();
+  let ghNotHA=ghFiles.filter(f=>!_pkgIsOnHA('frarik/'+f.name)&&!_pkgIsOnHA(f.name));
+  if(q) ghNotHA=ghNotHA.filter(f=>f.name.toLowerCase().includes(q.toLowerCase()));
+  status.textContent=ghNotHA.length+' PKG da installare';
+  const pkgRow=(f)=>{
+    const nm=f.name.replace(/\.ya?ml$/i,''); const enc=encodeURIComponent(f.name);
+    return `<div class="ghs-row" style="align-items:flex-start">
+      <div class="ghs-ico" style="font-size:22px;padding-top:2px">📦</div>
+      <div class="ghs-info" style="flex:1;min-width:0"><div class="ghs-name">${eh(nm)}</div><div class="ghs-sub" style="color:rgba(255,255,255,.4);font-size:10px">${eh(f.name)}</div></div>
+      <div class="ghs-acts" style="flex-shrink:0">
+        <button class="ghs-btn ghs-btn-inst" data-action="_ghsPkgInstallFromGH" data-action-arg="${enc}"><i class="mdi mdi-package-down"></i> Installa su HA</button>
+        <button class="ghs-btn ghs-btn-cp" data-action="_ghsPkgDownloadGh" data-action-arg="${enc}"><i class="mdi mdi-download"></i></button>
+      </div>
+    </div>`;
+  };
+  if(!ghNotHA.length){
+    const msg=!_ghsCache.pkg?'⏳ Caricamento da GitHub…':q?`Nessun risultato per "${eh(q)}"`:ghFiles.length?'Tutti i PKG GitHub sono già installati su HA.':'Nessun PKG disponibile su GitHub.';
+    list.innerHTML=`<div class="ghs-empty">${msg}</div>`; return;
+  }
+  list.innerHTML=ghNotHA.map(pkgRow).join('');
+}
+/* ── PKG INSTALLATI: pkg su HA senza aggiornamenti pendenti ── */
+function _ghStoreRenderPkgInstallati(q){
+  const list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
+  let haList=Array.from(_haInstalledPkgs).filter(f=>{ const bn=f.split('/').pop(); return !_pkgPending[bn]; }).sort();
+  if(q) haList=haList.filter(f=>f.toLowerCase().includes(q.toLowerCase()));
+  status.textContent=haList.length+' PKG installati su HA';
+  const pkgRow=(f)=>{
+    const nm=f.split('/').pop().replace(/\.ya?ml$/i,''); const enc=encodeURIComponent(f);
+    return `<div class="ghs-row" style="align-items:flex-start">
+      <div class="ghs-ico" style="font-size:22px;padding-top:2px">📦</div>
+      <div class="ghs-info" style="flex:1;min-width:0"><div class="ghs-name">${eh(nm)}</div><div class="ghs-sub" style="color:#4ade80;font-size:10px;font-weight:700">✅ Su HA</div></div>
+      <div class="ghs-acts" style="flex-shrink:0">
+        <button class="ghs-btn" data-action="_pkgViewOnHA" data-action-arg="${enc}" title="Visualizza YAML"><i class="mdi mdi-eye-outline"></i></button>
+        <button class="ghs-btn ghs-ibtn-del" data-action="_pkgUninstallFromHA" data-action-arg="${enc}" title="Rimuovi da HA" style="color:#f87171;border-color:rgba(248,113,113,.3)"><i class="mdi mdi-delete-outline"></i> Rimuovi</button>
+      </div>
+    </div>`;
+  };
+  if(!haList.length){
+    list.innerHTML=`<div class="ghs-empty">${q?`Nessun risultato per "${eh(q)}"`:_haInstalledPkgs.size?'I PKG con aggiornamenti disponibili sono nel tab "Da aggiornare".':'Nessun PKG installato su Home Assistant.'}</div>`;
+    return;
+  }
+  list.innerHTML=haList.map(pkgRow).join('');
+}
+/* ── Marca un PKG come già aggiornato senza scaricarlo ── */
+async function _ghsPkgMarkUpdated(encodedName){
+  const fileName=decodeURIComponent(encodedName);
+  const f=(_ghsCache.pkg||[]).find(x=>x.name===fileName);
+  const sha=f?.sha||_pkgPending[fileName];
+  if(!sha){ showToast('⚠️ SHA non trovato per '+fileName); return; }
+  const g=_ghCfg(); g.pkgShas=g.pkgShas||{}; g.pkgShas[fileName]=sha; saveCfg();
+  delete _pkgPending[fileName];
+  try{ _ntfClearPkg(fileName); }catch(e){}
+  try{ _ghsUpdBadge(); }catch(e){}
+  showToast('✅ PKG marcato come aggiornato');
+  try{ _ghStoreRender(); }catch(e){}
 }
 /* ── TAB ELETTRODOMESTICI: filtro automatico su card-js ── */
 function _isElettrCard(f, idFile){
@@ -3327,12 +3477,16 @@ async function _ghsDeleteFromGithub(enc){
     'Elimina da GitHub', 'Annulla'
   );
 }
-/* tab virtuali (elettrodomestici, installate) condividono la cache e la cartella di 'js' */
-function _ghsFolderTab(tab){ return (tab==='elettrodomestici'||tab==='installate'||tab==='updates')?'js':tab; }
+/* tab virtuali condividono la cache e la cartella di 'js' */
+function _ghsFolderTab(tab){
+  if(['cards-non-installate','cards-installate','elettrodomestici','installate','updates'].includes(tab)) return 'js';
+  if(['pkg-non-installati','pkg-installati','pkg'].includes(tab)) return 'pkg';
+  return tab;
+}
 function _ghsFind(name){
   name=decodeURIComponent(name);
-  /* nel tab "updates" gli aggiornamenti possono venire da qualsiasi cartella (js, chips, distintivi…) */
-  if(_ghsTab==='updates'){
+  /* nel tab "updates" o nei tab card gli aggiornamenti possono venire da qualsiasi cartella */
+  if(_ghsTab==='updates'||_GHS_CARDS_TABS.includes(_ghsTab)){
     for(const k of Object.keys(_GHS_FOLDERS)){ const found=(_ghsCache[k]||[]).find(f=>f.name===name); if(found) return found; }
     return null;
   }
@@ -3745,7 +3899,7 @@ function _pkgInfoForInstalledCard(cardId){
 /* Dopo installazione PKG: aggiorna stato e offre restart */
 async function _pkgPostInstall(cardId,pkgVer){
   await _loadHaInstalledPkgs();
-  if(_ghsTab==='pkg') _ghStoreRender();
+  if(_isPkgTab()) _ghStoreRender();
   showConfirm(
     '📦 Package installato!<br><br>'+
     'Per attivare le nuove entità è necessario <b>riavviare Home Assistant</b>.<br>'+
@@ -3760,7 +3914,7 @@ async function _pkgUninstallFromHA(filename){
   try{
     const r=await fetch(ADDON_BASE+'/api/frarik/pkg/uninstall',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:filename})});
     const d=await r.json();
-    if(d.ok){ await _loadHaInstalledPkgs(); showToast('🗑 Package rimosso da HA'); if(_ghsTab==='pkg') _ghStoreRender(); }
+    if(d.ok){ await _loadHaInstalledPkgs(); showToast('🗑 Package rimosso da HA'); if(_isPkgTab()) _ghStoreRender(); }
     else showToast('⚠️ '+d.error);
   }catch(e){ showToast('⚠️ Errore: '+e.message); }
 }
@@ -3799,8 +3953,11 @@ async function _ghsPkgInstallFromGH(filename){
     const res=await fetch(ADDON_BASE+'/api/frarik/pkg/install',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:decoded,content:yaml})});
     if(!res.ok) throw new Error((await res.json()).error||'Errore installazione');
     await _pkgPostInstall(null,null);
+    const _pkgFile=(_ghsCache.pkg||[]).find(x=>x.name===decoded);
+    if(_pkgFile){ const _g=_ghCfg(); _g.pkgShas=_g.pkgShas||{}; _g.pkgShas[decoded]=_pkgFile.sha; saveCfg(); }
+    delete _pkgPending[decoded];
     showToast('✅ Package installato su HA');
-    ghStoreTab('pkg');
+    ghStoreTab('pkg-installati');
   }catch(e){ showToast('⚠️ '+e.message); }
 }
 
@@ -3814,7 +3971,7 @@ async function _pkgInstallLocalToHA(filename){
     if(!res.ok) throw new Error((await res.json()).error||'Errore installazione');
     await _pkgPostInstall(null,null);
     showToast('✅ Package installato su HA');
-    ghStoreTab('pkg');
+    ghStoreTab('pkg-installati');
   }catch(e){ showToast('⚠️ '+e.message); }
 }
 
@@ -3943,7 +4100,7 @@ function _ghsPkgLoadFile(name, content){
   if(!/\.ya?ml$/i.test(name)){ showToast('⚠️ Il file deve essere .yaml o .yml'); return; }
   _pkgStoreSave(name, content, 'local');
   showToast('✅ "'+name+'" aggiunto allo store locale PKG');
-  if(_ghsTab==='pkg') _ghStoreRender();
+  if(_isPkgTab()) _ghStoreRender();
 }
 
 async function _ghsPkgSaveLocal(encodedName){
@@ -3953,14 +4110,14 @@ async function _ghsPkgSaveLocal(encodedName){
   let content; try{ content=await _ghDownload(f); }catch(e){ showToast('⚠️ '+e.message); return; }
   _pkgStoreSave(name, content, 'github');
   showToast('✅ "'+name+'" salvato in locale');
-  if(_ghsTab==='pkg') _ghStoreRender();
+  if(_isPkgTab()) _ghStoreRender();
 }
 
 function _ghsPkgDeleteLocal(name){
   if(!confirm('Rimuovere "'+name+'" dallo store locale?')) return;
   _pkgStoreDelete(name);
   showToast('🗑️ "'+name+'" rimosso dallo store locale');
-  if(_ghsTab==='pkg') _ghStoreRender();
+  if(_isPkgTab()) _ghStoreRender();
 }
 
 async function _ghsPkgUpdFromPending(encodedName){
@@ -4048,7 +4205,7 @@ async function _ghsPkgPublish(encodedName){
     _pkgStoreSave(name, it.content, 'github');
     showToast('📤 "'+name+'" pubblicato in pkg/ su GitHub!');
     delete _ghsCache.pkg;
-    if(_ghsTab==='pkg') ghStoreTab('pkg');
+    if(_isPkgTab()) ghStoreTab(_ghsTab);
   }catch(e){ showToast('⚠️ '+e.message); }
 }
 
@@ -4068,7 +4225,7 @@ async function _ghsPkgDeleteFromGithub(encodedName){
         await _ghDelete('pkg/'+name, 'Elimina PKG '+name+' dallo store (chiave verificata)');
         if(_ghsCache.pkg) _ghsCache.pkg=_ghsCache.pkg.filter(x=>x.name!==name);
         showToast('✅ «'+nm+'» eliminato definitivamente da GitHub');
-        if(_ghsTab==='pkg') _ghStoreRender();
+        if(_isPkgTab()) _ghStoreRender();
       }catch(e){ showToast('⚠️ Errore eliminazione GitHub: '+(e.message||e)); }
     },
     'Elimina da GitHub', 'Annulla'
@@ -7350,7 +7507,7 @@ function _switchEpTab(tab){
     document.getElementById('fb-btn-form').style.display='none';
     try{_fbRenderList();}catch(_){}
   }
-  if(tab==='store'){ try{_ghsCache={};ghStoreTab('js');}catch(_){} }
+  if(tab==='store'){ try{_ghsCache={};ghStoreTab('cards-non-installate');}catch(_){} }
   if(tab==='notif'){ try{renderNotifRules();}catch(_){} try{_ntfUpdateSidebarBadges();}catch(_){} }
   if(tab==='sos'){ try{renderSOSCfgList();}catch(_){} }
   if(tab==='licenza'){ try{_epLicBadgeLoad();}catch(_){} }
@@ -18552,5 +18709,8 @@ Object.assign(window, {
   _vanessaRenderSettings, _vanessaSave, _vanessaTest, _vanessaValidateKey,
   _vanessaRunCard, _vanessaSimulateCard, _vanessaUndoCard, _vanessaCardPopup, _vanessaClearLog, _vnssToggleVacation,
   _pkgUninstallFromHA, _pkgViewOnHA, _pkgGenericInstall, _pkgPostInstall,
-  _ghsPkgInstallFromGH, _pkgInstallLocalToHA, _pkgUpdateCard, _ghsPkgUpdFromPending,
+  _ghsPkgInstallFromGH, _pkgInstallLocalToHA, _pkgUpdateCard, _ghsPkgUpdFromPending, _ghsPkgMarkUpdated,
+  _ghStoreRenderCardsNonInstallate, _ghStoreRenderCardsInstallate,
+  _ghStoreRenderPkgNonInstallati, _ghStoreRenderPkgInstallati,
+  _ghsLoadAllCardCaches, _isPkgTab,
 });

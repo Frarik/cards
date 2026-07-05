@@ -868,14 +868,14 @@
           <div class="ghc-tabbar" style="flex-direction:column;align-items:stretch">
             <div style="display:flex;align-items:flex-start;gap:0">
               <div class="ghc-tabs-main">
-                <button class="ghc-tab on" id="ghs-tab-cards-grp" data-action="ghStoreTab" data-action-arg="js">
+                <button class="ghc-tab on" id="ghs-tab-cards-grp" data-action="ghStoreTab" data-action-arg="cards-non-installate">
                   <span class="ghc-tab-ico">⚡</span><span class="ghc-tab-lbl">Cards</span>
                 </button>
-                <button class="ghc-tab" id="ghs-tab-installate" data-action="ghStoreTab" data-action-arg="installate">
-                  <span class="ghc-tab-ico">🗂</span><span class="ghc-tab-lbl">Installate</span>
+                <button class="ghc-tab" id="ghs-tab-pkg-grp" data-action="ghStoreTab" data-action-arg="pkg-non-installati">
+                  <span class="ghc-tab-ico">📦</span><span class="ghc-tab-lbl">PKG</span>
                 </button>
                 <button class="ghc-tab" id="ghs-tab-updates" data-action="ghStoreTab" data-action-arg="updates">
-                  <span class="ghc-tab-ico">🔄</span><span class="ghc-tab-lbl">Aggiorna</span>
+                  <span class="ghc-tab-ico">🔄</span><span class="ghc-tab-lbl">Da aggiornare</span>
                 </button>
                 <button class="ghc-tab" id="ghs-tab-premium" data-action="ghStoreTab" data-action-arg="premium">
                   <span class="ghc-tab-ico">💎</span><span class="ghc-tab-lbl">Premium</span>
@@ -897,25 +897,22 @@
                 </button>
               </div>
             </div>
-            <!-- Sub-tab row: visibile solo quando Cards è attivo -->
+            <!-- Sub-tab Cards: Non installate | Installate -->
             <div id="ghs-subtabs-cards" style="display:flex;gap:4px;padding:4px 2px 2px;border-top:1px solid rgba(255,255,255,.06);margin-top:4px;overflow-x:auto;scrollbar-width:none">
-              <button class="ghc-tab ghc-tab-sm on" id="ghs-tab-js" data-action="ghStoreTab" data-action-arg="js">
-                <span class="ghc-tab-ico">⚡</span><span class="ghc-tab-lbl">Cards</span>
+              <button class="ghc-tab ghc-tab-sm on" id="ghs-tab-cards-non-installate" data-action="ghStoreTab" data-action-arg="cards-non-installate">
+                <span class="ghc-tab-ico">⬇️</span><span class="ghc-tab-lbl">Non installate</span>
               </button>
-              <button class="ghc-tab ghc-tab-sm" id="ghs-tab-elettrodomestici" data-action="ghStoreTab" data-action-arg="elettrodomestici">
-                <span class="ghc-tab-ico">🔌</span><span class="ghc-tab-lbl">Elettrodomestici</span>
+              <button class="ghc-tab ghc-tab-sm" id="ghs-tab-cards-installate" data-action="ghStoreTab" data-action-arg="cards-installate">
+                <span class="ghc-tab-ico">✅</span><span class="ghc-tab-lbl">Installate</span>
               </button>
-              <button class="ghc-tab ghc-tab-sm" id="ghs-tab-chips" data-action="ghStoreTab" data-action-arg="chips">
-                <span class="ghc-tab-ico">🔹</span><span class="ghc-tab-lbl">Chips</span>
+            </div>
+            <!-- Sub-tab PKG: Non installati | Installati -->
+            <div id="ghs-subtabs-pkg" style="display:none;gap:4px;padding:4px 2px 2px;border-top:1px solid rgba(255,255,255,.06);margin-top:4px;overflow-x:auto;scrollbar-width:none">
+              <button class="ghc-tab ghc-tab-sm on" id="ghs-tab-pkg-non-installati" data-action="ghStoreTab" data-action-arg="pkg-non-installati">
+                <span class="ghc-tab-ico">⬇️</span><span class="ghc-tab-lbl">Non installati</span>
               </button>
-              <button class="ghc-tab ghc-tab-sm" id="ghs-tab-distintivi" data-action="ghStoreTab" data-action-arg="distintivi">
-                <span class="ghc-tab-ico">🏷️</span><span class="ghc-tab-lbl">Distintivi</span>
-              </button>
-              <button class="ghc-tab ghc-tab-sm" id="ghs-tab-predefinite" data-action="ghStoreTab" data-action-arg="predefinite">
-                <span class="ghc-tab-ico">🛡️</span><span class="ghc-tab-lbl">Predefinite</span>
-              </button>
-              <button class="ghc-tab ghc-tab-sm" id="ghs-tab-card-yaml" data-action="ghStoreTab" data-action-arg="card-yaml">
-                <span class="ghc-tab-ico">📝</span><span class="ghc-tab-lbl">Card YAML</span>
+              <button class="ghc-tab ghc-tab-sm" id="ghs-tab-pkg-installati" data-action="ghStoreTab" data-action-arg="pkg-installati">
+                <span class="ghc-tab-ico">✅</span><span class="ghc-tab-lbl">Installati</span>
               </button>
             </div>
           </div>
