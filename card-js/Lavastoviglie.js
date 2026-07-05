@@ -1615,7 +1615,7 @@ automation:
   const CARD = {
     id: 'lavastoviglie', name: 'Lavastoviglie', icon: '🍽', version: '2.2',
     desc: 'Monitoraggio pompa, cicli, energia e costi. Richiede PKG Centro Controllo Lavastoviglie.',
-    render: render, mount: mount, update: update, configure: null,
+    render: render, mount: mount, update: update, configure: null, frarik_no_edit: true,
     frarik_pkg_check: 'sensor.frarik_lavastoviglie_versione',
     frarik_pkg_id: 'frarik_lavastoviglie',
     frarik_pkg_version: '1.0',

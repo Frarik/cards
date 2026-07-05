@@ -1620,7 +1620,7 @@ automation:
   const CARD = {
     id: 'friggitrice', name: 'Friggitrice', icon: '🍟', version: '2.2',
     desc: 'Monitoraggio resistenza, cicli, energia e costi. Richiede PKG Centro Controllo Friggitrice.',
-    render: render, mount: mount, update: update, configure: null,
+    render: render, mount: mount, update: update, configure: null, frarik_no_edit: true,
     frarik_pkg_check: 'sensor.frarik_friggitrice_versione',
     frarik_pkg_id: 'frarik_friggitrice',
     frarik_pkg_version: '1.0',

@@ -992,6 +992,7 @@ script:
     desc: 'Monitoraggio resistenza, cicli tostatura, energia e costi. Richiede PKG Centro Controllo Tostapane.',
     render: render,
     update: update,
+    frarik_no_edit: true,
     pkg: {
       id: 'frarik_tostapane',
       name: 'Centro Controllo Tostapane',

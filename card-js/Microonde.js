@@ -1643,7 +1643,7 @@ automation:
   const CARD = {
     id: 'microonde', name: 'Microonde', icon: '📡', version: '2.2',
     desc: 'Monitoraggio magnetron, cicli, energia e costi. Richiede PKG Centro Controllo Microonde.',
-    render: render, mount: mount, update: update, configure: null,
+    render: render, mount: mount, update: update, configure: null, frarik_no_edit: true,
     frarik_pkg_check: 'sensor.frarik_microonde_versione',
     frarik_pkg_id: 'frarik_microonde',
     frarik_pkg_version: '1.0',

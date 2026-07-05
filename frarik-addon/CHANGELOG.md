@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.9.19 — 2026-07-05
+
+### feat(cards/all): nasconde matita e configurazione in modalità modifica per tutti gli elettrodomestici
+
+- **`frarik_no_edit: true`** aggiunto al CARD object di tutti gli 11 elettrodomestici
+- In edit mode il pulsante ✏️ e il popup "Configura Card" non compaiono più sulle card elettrodomestici
+
 ## 1.9.18 — 2026-07-05
 
 ### feat(cards/all): barra potenza con scala realistica e colori verde/giallo/arancio/rosso

@@ -1535,7 +1535,7 @@ automation:
   const CARD = {
     id: 'scaldabagno', name: 'Scaldabagno', icon: '🛁', version: '2.2',
     desc: 'Scaldabagno elettrico — temperatura acqua, riscaldamento, consumo, energia e costi.',
-    render: render, mount: mount, update: update, configure: null,
+    render: render, mount: mount, update: update, configure: null, frarik_no_edit: true,
     frarik_pkg_check: 'sensor.frarik_scaldabagno_versione',
     frarik_pkg_id: 'frarik_scaldabagno',
     frarik_pkg_version: '1.0',

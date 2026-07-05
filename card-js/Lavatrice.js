@@ -1660,7 +1660,7 @@ automation:
   const CARD = {
     id: 'lavatrice', name: 'Lavatrice', icon: '🫧', version: '2.2',
     desc: 'Monitoraggio motore, cicli, energia e costi. Richiede PKG Centro Controllo Lavatrice.',
-    render: render, mount: mount, update: update, configure: null,
+    render: render, mount: mount, update: update, configure: null, frarik_no_edit: true,
     frarik_pkg_check: 'sensor.frarik_lavatrice_versione',
     frarik_pkg_id: 'frarik_lavatrice',
     frarik_pkg_version: '1.0',

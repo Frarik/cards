@@ -1612,7 +1612,7 @@ automation:
   const CARD = {
     id: 'frigorifero', name: 'Frigorifero', icon: '🧊', version: '2.2',
     desc: 'Monitoraggio compressore, cicli, energia e costi. Richiede PKG Centro Controllo Frigorifero.',
-    render: render, mount: mount, update: update, configure: null,
+    render: render, mount: mount, update: update, configure: null, frarik_no_edit: true,
     frarik_pkg_check: 'sensor.frarik_frigorifero_versione',
     frarik_pkg_id: 'frarik_frigorifero',
     frarik_pkg_version: '1.3',

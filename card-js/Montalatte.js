@@ -1221,6 +1221,7 @@ script:
     desc: 'Monitoraggio riscaldatore, cicli, energia e costi. Richiede PKG Centro Controllo Montalatte.',
     render: render,
     update: update,
+    frarik_no_edit: true,
     pkg: {
       id: 'frarik_montalatte',
       name: 'Centro Controllo Montalatte',

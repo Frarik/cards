@@ -1658,7 +1658,7 @@ automation:
   const CARD = {
     id: 'asciugatrice', name: 'Asciugatrice', icon: '💨', version: '2.2',
     desc: 'Monitoraggio resistenza, cicli, energia e costi. Richiede PKG Centro Controllo Asciugatrice.',
-    render: render, mount: mount, update: update, configure: null,
+    render: render, mount: mount, update: update, configure: null, frarik_no_edit: true,
     frarik_pkg_check: 'sensor.frarik_asciugatrice_versione',
     frarik_pkg_id: 'frarik_asciugatrice',
     frarik_pkg_version: '1.0',

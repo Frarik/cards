@@ -1611,7 +1611,7 @@ automation:
   const CARD = {
     id: 'forno', name: 'Forno', icon: '🥘', version: '2.2',
     desc: 'Monitoraggio resistenza, cicli, energia e costi. Richiede PKG Centro Controllo Forno.',
-    render: render, mount: mount, update: update, configure: null,
+    render: render, mount: mount, update: update, configure: null, frarik_no_edit: true,
     frarik_pkg_check: 'sensor.frarik_forno_versione',
     frarik_pkg_id: 'frarik_forno',
     frarik_pkg_version: '1.0',

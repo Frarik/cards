@@ -1625,7 +1625,7 @@ automation:
   const CARD = {
     id: 'induzione', name: 'Induzione', icon: '🍳', version: '2.2',
     desc: 'Monitoraggio piano induzione, cicli, energia e costi. Richiede PKG Centro Controllo Induzione.',
-    render: render, mount: mount, update: update, configure: null,
+    render: render, mount: mount, update: update, configure: null, frarik_no_edit: true,
     frarik_pkg_check: 'sensor.frarik_induzione_versione',
     frarik_pkg_id: 'frarik_induzione',
     frarik_pkg_version: '1.0',
