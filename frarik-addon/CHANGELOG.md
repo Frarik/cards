@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.9.15 — 2026-07-05
+
+### fix(card/tostapane): animazione e soglia lavoro
+
+- `running` ora ha fallback diretto: se `binary_sensor.frarik_tostapane_motore` non esiste, si calcola da `pk_power >= soglia` → animazione funziona anche senza PKG completo
+- `openImpostazioniHAPopup`: campo "Soglia lavoro" ora usa `c.pk_soglia` (entità configurata dall'utente) invece del nome hardcoded
+
 ## 1.9.14 — 2026-07-05
 
 ### feat(card/tostapane): nuova card Tostapane con PKG embedded

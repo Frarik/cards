@@ -96,7 +96,8 @@
     const rid = 'frc' + (card.id || Math.random().toString(36).slice(2, 8));
 
     const pwV     = num(S(h, c.pk_power));
-    const running = isOn(h, c.pk_running);
+    const sogliaN = num(S(h, c.pk_soglia)) || 500;
+    const running = isOn(h, c.pk_running) || (pwV != null && pwV >= sogliaN);
     const ton     = c.pk_time_on;
 
     const terminato  = Attr(h, ton, 'terminato')                || '—';
@@ -111,8 +112,7 @@
     const pw     = pwV || 0;
     const col    = running ? '#f97316' : '#64748b';
     const statusLabel = running ? 'TOSTATURA ON' : 'STANDBY';
-    const soglia = num(S(h, c.pk_soglia)) || 500;
-    const barPct = Math.min(100, (pw / soglia) * 100);
+    const barPct = Math.min(100, (pw / sogliaN) * 100);
     const barCol = pw < 50 ? '#64748b' : pw <= 300 ? '#f97316' : pw <= 600 ? '#fb923c' : pw <= 900 ? '#f97316' : '#ef4444';
 
     let lastCycleFull = null;
@@ -473,7 +473,7 @@
     dTime('input_datetime.frarik_tostapane_orario_fine_notifiche',   '⏰ Orario fine notifiche');
     dSec('🔌 Elettrodomestico');
     dToggle('input_boolean.frarik_tostapane_switch', 'Switch presa');
-    dNum('input_number.frarik_tostapane_soglia_w',          'Soglia lavoro',     'W',   0, 5000, 1);
+    dNum(c.pk_soglia,                                        'Soglia lavoro',     'W',   0, 5000, 1);
     dNum('input_number.frarik_tostapane_tempo_innesco_m',   'Delay spegnimento', 'min', 0, 60,   1);
     dNum('input_number.frarik_tostapane_avvio_ritardato_s', 'Delay riavvio',     's',   0, 300,  1);
     dSec('⏰ Spegnimento automatico');
