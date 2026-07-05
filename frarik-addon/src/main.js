@@ -1040,7 +1040,8 @@ function _updateSectionPasteBtn(){
 function _epRenderJsStore(){
   const items = _jsStoreList();
   const countEl = document.getElementById('ep-jsstore-count');
-  if(countEl) countEl.textContent = items.length ? items.length+' card' : '';
+  const userItems = items.filter(i=>!i._builtin);
+  if(countEl) countEl.textContent = userItems.length ? userItems.length+' card' : '';
   const listEl  = document.getElementById('ep-jsstore-list');
   if(!listEl) return;
 

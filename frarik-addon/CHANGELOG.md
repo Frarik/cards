@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.9.1 — 2026-07-05
+
+### fix(store): contatore "N card" nel menu laterale esclude le card builtin
+
+- Il badge "Store → N card" nel menu laterale contava anche la SOS card (builtin) che non è installata dall'utente
+- Fix: il contatore mostra solo le card installate dall'utente (non `_builtin`)
+
 ## 1.9.0 — 2026-07-05
 
 ### fix(pkg): occhio - 404 su cartelle con spazi o lettere maiuscole nel nome
