@@ -2494,7 +2494,11 @@ function _ghStoreRender(){
   ((curPage()||{}).headerBadges||[]).forEach(b=>{ if(b.type==='jsd'&&b.jsCardId) usedInCurPage.add(b.jsCardId); });
   const sorted=files.filter(f=>f&&f.name).sort((a,b)=>a.name.localeCompare(b.name));
   const installed=[], toInstall=[];
-  sorted.forEach(f=>{ (g.shas[f.name]?installed:toInstall).push(f); });
+  sorted.forEach(f=>{
+    if(g.shas[f.name]){
+      if(g.shas[f.name]===f.sha) installed.push(f); // aggiornate → qui; con update → solo in tab "da aggiornare"
+    } else { toInstall.push(f); }
+  });
 
   const tileInstalled=(f)=>{
     const nm=f.name.replace(/\.(js|ya?ml)$/i,''); const enc=encodeURIComponent(f.name);
@@ -2761,7 +2765,7 @@ function _ghStoreRenderInstallate(q){
   const usedInCurPage=new Set();
   _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId&&!(window.FratechCardRegistry?.[c.jsCardId]?.isDistintivo)&&!(window.FratechCardRegistry?.[c.jsCardId]?.allowMultiple)) usedInCurPage.add(c.jsCardId); });
   ((curPage()||{}).headerBadges||[]).forEach(b=>{ if(b.type==='jsd'&&b.jsCardId) usedInCurPage.add(b.jsCardId); });
-  let files=(_ghsCache['js']||[]).filter(f=>g.shas[f.name]);
+  let files=(_ghsCache['js']||[]).filter(f=>g.shas[f.name]&&g.shas[f.name]===f.sha);
   if(q) files=files.filter(f=>f.name.toLowerCase().includes(q));
   status.textContent=files.length+' card installate'+(q?' trovate':'');
   const TAB_LBL={'js':'⚡ Card JS','elettrodomestici':'🔌 Elettrodomestici'};
@@ -3798,8 +3802,11 @@ function _ghStoreRenderPkg(q){
   const ghFiles=(_ghsCache.pkg||[]).slice();
   const ghNames=new Set(ghFiles.map(f=>f.name.toLowerCase()));
 
-  /* Pkg installati su HA */
-  const haList=Array.from(_haInstalledPkgs).filter(f=>!q||f.includes(q.toLowerCase())).sort();
+  /* Pkg installati su HA (escludi quelli con aggiornamento → vanno nel tab "da aggiornare") */
+  const haList=Array.from(_haInstalledPkgs).filter(f=>{
+    const bn=f.split('/').pop();
+    return (!q||f.includes(q.toLowerCase()))&&!_pkgPending[bn];
+  }).sort();
   /* Pkg su GitHub non ancora su HA */
   const ghNotHA=ghFiles.filter(f=>!_pkgIsOnHA('frarik/'+f.name)&&!_pkgIsOnHA(f.name)&&(!q||f.name.toLowerCase().includes(q.toLowerCase())));
 
@@ -14251,7 +14258,7 @@ function _adminShowFirstAccess(){
   function on(id, ev, fn){ const el=document.getElementById(id); if(el) el.addEventListener(ev,fn); }
   on('conn-wrap',   'click', ()=>confirmRestartHA());
   on('views-btn',   'click', e=>toggleViewsMenu(e));
-  on('notif-bell',  'click', ()=>{ try{ openGhStore(); setTimeout(()=>{ try{ ghStoreTab('updates'); }catch(x){} },60); }catch(x){} });
+  on('notif-bell',  'click', e=>toggleNotifCenter(e));
   on('kiosk-btn',   'click', ()=>toggleKiosk());
   on('backup-file-input','change',e=>{ const f=e.target.files&&e.target.files[0]; if(f) importBackupFile(f); });
   on('theme-file-input','change',e=>{ const f=e.target.files&&e.target.files[0]; if(f) importThemeFile(f); });
