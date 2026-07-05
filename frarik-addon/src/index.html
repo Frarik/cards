@@ -871,6 +871,12 @@
                 <button class="ghc-tab on" id="ghs-tab-cards-grp" data-action="ghStoreTab" data-action-arg="cards-non-installate">
                   <span class="ghc-tab-ico">⚡</span><span class="ghc-tab-lbl">Cards</span>
                 </button>
+                <button class="ghc-tab" id="ghs-tab-chips-grp" data-action="ghStoreTab" data-action-arg="chips-non-installate">
+                  <span class="ghc-tab-ico">🔹</span><span class="ghc-tab-lbl">Chips</span>
+                </button>
+                <button class="ghc-tab" id="ghs-tab-distintivi-grp" data-action="ghStoreTab" data-action-arg="distintivi-non-installate">
+                  <span class="ghc-tab-ico">🏷️</span><span class="ghc-tab-lbl">Distintivi</span>
+                </button>
                 <button class="ghc-tab" id="ghs-tab-pkg-grp" data-action="ghStoreTab" data-action-arg="pkg-non-installati">
                   <span class="ghc-tab-ico">📦</span><span class="ghc-tab-lbl">PKG</span>
                 </button>
@@ -904,6 +910,24 @@
               </button>
               <button class="ghc-tab ghc-tab-sm" id="ghs-tab-cards-installate" data-action="ghStoreTab" data-action-arg="cards-installate">
                 <span class="ghc-tab-ico">✅</span><span class="ghc-tab-lbl">Installate</span>
+              </button>
+            </div>
+            <!-- Sub-tab Chips: Non installate | Installate -->
+            <div id="ghs-subtabs-chips" style="display:none;gap:4px;padding:4px 2px 2px;border-top:1px solid rgba(255,255,255,.06);margin-top:4px;overflow-x:auto;scrollbar-width:none">
+              <button class="ghc-tab ghc-tab-sm on" id="ghs-tab-chips-non-installate" data-action="ghStoreTab" data-action-arg="chips-non-installate">
+                <span class="ghc-tab-ico">⬇️</span><span class="ghc-tab-lbl">Non installate</span>
+              </button>
+              <button class="ghc-tab ghc-tab-sm" id="ghs-tab-chips-installate" data-action="ghStoreTab" data-action-arg="chips-installate">
+                <span class="ghc-tab-ico">✅</span><span class="ghc-tab-lbl">Installate</span>
+              </button>
+            </div>
+            <!-- Sub-tab Distintivi: Non installati | Installati -->
+            <div id="ghs-subtabs-distintivi" style="display:none;gap:4px;padding:4px 2px 2px;border-top:1px solid rgba(255,255,255,.06);margin-top:4px;overflow-x:auto;scrollbar-width:none">
+              <button class="ghc-tab ghc-tab-sm on" id="ghs-tab-distintivi-non-installate" data-action="ghStoreTab" data-action-arg="distintivi-non-installate">
+                <span class="ghc-tab-ico">⬇️</span><span class="ghc-tab-lbl">Non installati</span>
+              </button>
+              <button class="ghc-tab ghc-tab-sm" id="ghs-tab-distintivi-installate" data-action="ghStoreTab" data-action-arg="distintivi-installate">
+                <span class="ghc-tab-ico">✅</span><span class="ghc-tab-lbl">Installati</span>
               </button>
             </div>
             <!-- Sub-tab PKG: Non installati | Installati -->

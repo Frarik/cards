@@ -2050,7 +2050,11 @@ async function _ghListFolder(path){
 }
 function _ghsReloadTab(){
   if(_GHS_CARDS_TABS.includes(_ghsTab)){
-    delete _ghsCache['js']; delete _ghsCache['chips']; delete _ghsCache['distintivi'];
+    delete _ghsCache['js'];
+  } else if(_GHS_CHIPS_TABS.includes(_ghsTab)){
+    delete _ghsCache['chips'];
+  } else if(_GHS_DISTINTIVI_TABS.includes(_ghsTab)){
+    delete _ghsCache['distintivi'];
   } else if(_GHS_PKG_TABS.includes(_ghsTab)){
     delete _ghsCache.pkg;
   } else {
@@ -2248,6 +2252,8 @@ async function _ghsPreview(enc, nm, cardId){
   note.textContent=isTemp?'Anteprima temporanea — non ancora installata':'';
 }
 const _GHS_CARDS_TABS=['cards-non-installate','cards-installate'];
+const _GHS_CHIPS_TABS=['chips-non-installate','chips-installate'];
+const _GHS_DISTINTIVI_TABS=['distintivi-non-installate','distintivi-installate'];
 const _GHS_PKG_TABS=['pkg-non-installati','pkg-installati'];
 function _isPkgTab(){ return _GHS_PKG_TABS.includes(_ghsTab); }
 async function _ghsLoadAllCardCaches(){
@@ -2257,21 +2263,42 @@ async function _ghsLoadAllCardCaches(){
   }
   if(p.length) await Promise.all(p);
 }
+function _ghsLoadFolderCache(key){
+  if(_ghsCache[key]) return Promise.resolve();
+  const f=_GHS_FOLDERS[key]; if(!f) return Promise.resolve();
+  return _ghListFolder(f.path).then(files=>{ _ghsCache[key]=files.filter(x=>f.ext.test(x.name)&&!(f.exclude&&f.exclude.test(x.name))); }).catch(()=>{ if(!_ghsCache[key]) _ghsCache[key]=[]; });
+}
 function ghStoreTab(tab){
   _ghsTab=tab;
   const isCards=_GHS_CARDS_TABS.includes(tab);
+  const isChips=_GHS_CHIPS_TABS.includes(tab);
+  const isDistintivi=_GHS_DISTINTIVI_TABS.includes(tab);
   const isPkg=_GHS_PKG_TABS.includes(tab);
-  [..._GHS_CARDS_TABS,..._GHS_PKG_TABS,'updates','premium','local','saved'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
+  [..._GHS_CARDS_TABS,..._GHS_CHIPS_TABS,..._GHS_DISTINTIVI_TABS,..._GHS_PKG_TABS,'updates','premium','local','saved'].forEach(t=>{ const b=document.getElementById('ghs-tab-'+t); if(b) b.classList.toggle('on',t===tab); });
   const cardsGrp=document.getElementById('ghs-tab-cards-grp'); if(cardsGrp) cardsGrp.classList.toggle('on',isCards);
+  const chipsGrp=document.getElementById('ghs-tab-chips-grp'); if(chipsGrp) chipsGrp.classList.toggle('on',isChips);
+  const distintiviGrp=document.getElementById('ghs-tab-distintivi-grp'); if(distintiviGrp) distintiviGrp.classList.toggle('on',isDistintivi);
   const pkgGrp=document.getElementById('ghs-tab-pkg-grp'); if(pkgGrp) pkgGrp.classList.toggle('on',isPkg);
   const cardsSubBar=document.getElementById('ghs-subtabs-cards'); if(cardsSubBar) cardsSubBar.style.display=isCards?'flex':'none';
+  const chipsSubBar=document.getElementById('ghs-subtabs-chips'); if(chipsSubBar) chipsSubBar.style.display=isChips?'flex':'none';
+  const distintiviSubBar=document.getElementById('ghs-subtabs-distintivi'); if(distintiviSubBar) distintiviSubBar.style.display=isDistintivi?'flex':'none';
   const pkgSubBar=document.getElementById('ghs-subtabs-pkg'); if(pkgSubBar) pkgSubBar.style.display=isPkg?'flex':'none';
   const s=document.getElementById('ghs-search'); if(s) s.value='';
   const sw=document.getElementById('ghs-search-wrap'); if(sw) sw.style.display=(tab==='saved'||tab==='updates')?'none':'';
   const loadEl=document.getElementById('ghs-load'); if(loadEl) loadEl.style.display=(tab==='local')?'':'none';
   if(isCards){
     _ghStoreRender();
-    _ghsLoadAllCardCaches().then(()=>{ if(_ghsTab===tab){ _ghFetchVerLabels('js'); _ghFetchVerLabels('chips'); _ghFetchVerLabels('distintivi'); _ghStoreRender(); } });
+    _ghsLoadFolderCache('js').then(()=>{ if(_GHS_CARDS_TABS.includes(_ghsTab)){ _ghFetchVerLabels('js'); _ghStoreRender(); } });
+    return;
+  }
+  if(isChips){
+    _ghStoreRender();
+    _ghsLoadFolderCache('chips').then(()=>{ if(_GHS_CHIPS_TABS.includes(_ghsTab)){ _ghFetchVerLabels('chips'); _ghStoreRender(); } });
+    return;
+  }
+  if(isDistintivi){
+    _ghStoreRender();
+    _ghsLoadFolderCache('distintivi').then(()=>{ if(_GHS_DISTINTIVI_TABS.includes(_ghsTab)){ _ghFetchVerLabels('distintivi'); _ghStoreRender(); } });
     return;
   }
   if(isPkg){
@@ -2280,7 +2307,11 @@ function ghStoreTab(tab){
     if(!_ghsCache.pkg){ const fPkg=_GHS_FOLDERS['pkg']; _ghListFolder(fPkg.path).then(files=>{ _ghsCache.pkg=files.filter(x=>fPkg.ext.test(x.name)); if(_isPkgTab()) _ghStoreRender(); }).catch(()=>{}); }
     return;
   }
-  if(tab==='updates'){ _ghStoreRender(); return; }
+  if(tab==='updates'){
+    _ghStoreRender();
+    _ghsLoadAllCardCaches().then(()=>{ if(_ghsTab==='updates') _ghStoreRender(); });
+    return;
+  }
   if(tab==='premium'){
     if(_ghsCache['premium']!==undefined){ _ghStoreRender(); return; }
     document.getElementById('ghs-status').textContent='⏳ Carico da GitHub…';
@@ -2478,6 +2509,10 @@ function _ghStoreRender(){
   const q=(document.getElementById('ghs-search').value||'').toLowerCase().trim();
   if(tab==='cards-non-installate'){ _ghStoreRenderCardsNonInstallate(q); return; }
   if(tab==='cards-installate'){ _ghStoreRenderCardsInstallate(q); return; }
+  if(tab==='chips-non-installate'){ _ghStoreRenderFolderNonInstallate(q,'chips','Tutte le chips sono installate — vai su "Installate"'); return; }
+  if(tab==='chips-installate'){ _ghStoreRenderFolderInstallate(q,'chips'); return; }
+  if(tab==='distintivi-non-installate'){ _ghStoreRenderFolderNonInstallate(q,'distintivi','Tutti i distintivi sono installati — vai su "Installati"'); return; }
+  if(tab==='distintivi-installate'){ _ghStoreRenderFolderInstallate(q,'distintivi'); return; }
   if(tab==='pkg-non-installati'){ _ghStoreRenderPkgNonInstallati(q); return; }
   if(tab==='pkg-installati'){ _ghStoreRenderPkgInstallati(q); return; }
   if(tab==='local'){ _ghStoreRenderInstalled(q,'local'); return; }
@@ -2851,22 +2886,17 @@ function _ghStoreRenderInstallate(q){
     list.querySelectorAll('[data-prev-sha]').forEach(el=>{ _ghcLivePrevBySha(el, el.dataset.prevSha); });
   });
 }
-/* ── NON INSTALLATE: tutte le card non ancora installate da tutti i folder ── */
-function _ghStoreRenderCardsNonInstallate(q){
+/* ── Funzione generica: folder non installate (js / chips / distintivi) ── */
+function _ghStoreRenderFolderNonInstallate(q, cacheKey, emptyMsg){
   const list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
   const g=_ghCfg();
-  const allFiles=[];
-  for(const k of ['js','chips','distintivi']){
-    (_ghsCache[k]||[]).forEach(f=>{ if(!g.shas[f.name]) allFiles.push(f); });
-  }
-  let files=allFiles;
+  let files=(_ghsCache[cacheKey]||[]).filter(f=>!g.shas[f.name]);
   if(q) files=files.filter(f=>f.name.toLowerCase().includes(q));
   const sorted=files.slice().sort((a,b)=>a.name.localeCompare(b.name));
-  const hasCaches=_ghsCache['js']||_ghsCache['chips']||_ghsCache['distintivi'];
-  status.textContent=sorted.length+' card da installare'+(q?' trovate':'');
+  status.textContent=sorted.length+' da installare'+(q?' trovati':'');
   if(!sorted.length){
-    list.innerHTML=`<div class="ghs-empty">${q?`Nessun risultato per "${eh(q)}"`:hasCaches?'Tutte le card sono installate — vai su "Installate"':'⏳ Caricamento da GitHub…'}</div>`;
-    return;
+    const msg=q?`Nessun risultato per "${eh(q)}"`:_ghsCache[cacheKey]?emptyMsg:'⏳ Caricamento da GitHub…';
+    list.innerHTML=`<div class="ghs-empty">${msg}</div>`; return;
   }
   const tileAvail=(f)=>{
     const nm=f.name.replace(/\.(js|ya?ml)$/i,''); const enc=encodeURIComponent(f.name);
@@ -2886,7 +2916,53 @@ function _ghStoreRenderCardsNonInstallate(q){
     list.querySelectorAll('[data-prev-sha]').forEach(el=>{ _ghcLivePrevBySha(el, el.dataset.prevSha); });
   });
 }
-/* ── INSTALLATE: card installate e aggiornate, raggruppate per categoria ── */
+/* ── Funzione generica: folder installate (chips / distintivi) senza raggruppamento ── */
+function _ghStoreRenderFolderInstallate(q, cacheKey){
+  const list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
+  const g=_ghCfg(); const idFile=g.idFile||{};
+  const _cpCards=(curPage()||{cards:[]}).cards||[];
+  const usedInCurPage=new Set();
+  _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId&&!(window.FratechCardRegistry?.[c.jsCardId]?.isDistintivo)&&!(window.FratechCardRegistry?.[c.jsCardId]?.allowMultiple)) usedInCurPage.add(c.jsCardId); });
+  ((curPage()||{}).headerBadges||[]).forEach(b=>{ if(b.type==='jsd'&&b.jsCardId) usedInCurPage.add(b.jsCardId); });
+  let files=(_ghsCache[cacheKey]||[]).filter(f=>g.shas[f.name]&&g.shas[f.name]===f.sha);
+  if(q) files=files.filter(f=>f.name.toLowerCase().includes(q));
+  const sorted=files.slice().sort((a,b)=>a.name.localeCompare(b.name));
+  status.textContent=sorted.length+' installate'+(q?' trovate':'');
+  if(!sorted.length){
+    list.innerHTML=`<div style="grid-column:1/-1"><div class="ghs-empty">${q?`Nessun risultato per "${eh(q)}"`: 'Nessuna card installata. Vai su "Non installate" per installarne.'}</div></div>`;
+    return;
+  }
+  const tile=(f)=>{
+    const nm=f.name.replace(/\.(js|ya?ml)$/i,''); const enc=encodeURIComponent(f.name);
+    const cardId=Object.keys(idFile).find(k=>idFile[k]===f.name)||null;
+    const verGH=_ghVerCache[f.sha]||g.fileVersions[f.name]||(cardId&&_curStoreVersion(cardId))||'';
+    const inCurPage=!!(cardId&&usedInCurPage.has(cardId));
+    const reg=cardId?window.FratechCardRegistry?.[cardId]:null;
+    const icon=(reg?.icon)||(_jsStoreList().find(i=>(i.meta||{}).id===cardId)?.meta?.icon)||'📦';
+    const desc=_ghcDesc(cardId,f.sha);
+    const _inLabel=reg?.isDistintivo?'In intestazione':'In vista';
+    const bdg=inCurPage?`<span class="ghc-bdg cur">✓ ${_inLabel}</span>`:`<span class="ghc-bdg ok">● Installata</span>`;
+    const prevHtml=cardId&&reg?`<div class="ghc-prev-inner" data-prev-id="${eh(cardId)}"></div>`:`<div class="ghc-prev-inner" data-prev-sha="${eh(f.sha)}"></div>`;
+    const pkgBdgInst=_pkgBadgeHtml(cardId?_pkgInfoForInstalledCard(cardId):(_ghPkgCache[f.sha]||null));
+    const addBtn=cardId?(inCurPage?`<span class="ghc-indash"><i class="mdi mdi-check-circle-outline"></i> ${_inLabel}</span>`:`<button class="ghc-btn ghc-btn-add" data-action="_jsStoreAddAndRefresh" data-action-args='["${cardId}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`):'';
+    const delBtn=cardId?`<button class="ghc-btn-del" data-action="_ghsDeleteInstalled" data-action-arg="${cardId}" title="Disinstalla"><i class="mdi mdi-delete-outline"></i></button>`:'';
+    return `<div class="ghc-tile st-ok"><div class="ghc-strip ok"></div>
+      <div class="ghc-prev">${prevHtml}<div class="ghc-prev-fade"></div>${bdg}${pkgBdgInst}</div>
+      <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico">${_iconHtml(icon)}</div><div class="ghc-meta"><div class="ghc-name">${eh(nm)}</div>${verGH?`<div class="ghc-ver">v${eh(verGH)}</div>`:''}</div></div>
+      ${desc?`<div class="ghc-desc">${eh(desc)}</div>`:''}
+      <div class="ghc-acts">${addBtn}${delBtn}</div></div></div>`;
+  };
+  list.innerHTML='<div class="ghc-grid">'+sorted.map(tile).join('')+'</div>';
+  requestAnimationFrame(()=>{
+    list.querySelectorAll('[data-prev-id]').forEach(el=>{ _ghcLivePrev(el, el.dataset.prevId); });
+    list.querySelectorAll('[data-prev-sha]').forEach(el=>{ _ghcLivePrevBySha(el, el.dataset.prevSha); });
+  });
+}
+/* ── NON INSTALLATE cards JS ── */
+function _ghStoreRenderCardsNonInstallate(q){
+  _ghStoreRenderFolderNonInstallate(q,'js','Tutte le card JS sono installate — vai su "Installate"');
+}
+/* ── INSTALLATE: card JS installate e aggiornate, raggruppate per categoria ── */
 function _ghStoreRenderCardsInstallate(q){
   const list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
   const g=_ghCfg(); const idFile=g.idFile||{};
@@ -2894,11 +2970,7 @@ function _ghStoreRenderCardsInstallate(q){
   const usedInCurPage=new Set();
   _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId&&!(window.FratechCardRegistry?.[c.jsCardId]?.isDistintivo)&&!(window.FratechCardRegistry?.[c.jsCardId]?.allowMultiple)) usedInCurPage.add(c.jsCardId); });
   ((curPage()||{}).headerBadges||[]).forEach(b=>{ if(b.type==='jsd'&&b.jsCardId) usedInCurPage.add(b.jsCardId); });
-  const allInstalled=[];
-  for(const k of ['js','chips','distintivi']){
-    (_ghsCache[k]||[]).forEach(f=>{ if(g.shas[f.name]&&g.shas[f.name]===f.sha) allInstalled.push(f); });
-  }
-  let files=allInstalled;
+  let files=(_ghsCache['js']||[]).filter(f=>g.shas[f.name]&&g.shas[f.name]===f.sha);
   if(q) files=files.filter(f=>f.name.toLowerCase().includes(q));
   const sorted=files.slice().sort((a,b)=>a.name.localeCompare(b.name));
   status.textContent=sorted.length+' card installate'+(q?' trovate':'');
@@ -3480,13 +3552,15 @@ async function _ghsDeleteFromGithub(enc){
 /* tab virtuali condividono la cache e la cartella di 'js' */
 function _ghsFolderTab(tab){
   if(['cards-non-installate','cards-installate','elettrodomestici','installate','updates'].includes(tab)) return 'js';
+  if(['chips-non-installate','chips-installate'].includes(tab)) return 'chips';
+  if(['distintivi-non-installate','distintivi-installate'].includes(tab)) return 'distintivi';
   if(['pkg-non-installati','pkg-installati','pkg'].includes(tab)) return 'pkg';
   return tab;
 }
 function _ghsFind(name){
   name=decodeURIComponent(name);
-  /* nel tab "updates" o nei tab card gli aggiornamenti possono venire da qualsiasi cartella */
-  if(_ghsTab==='updates'||_GHS_CARDS_TABS.includes(_ghsTab)){
+  /* nel tab "updates" o in qualsiasi tab card si cerca in tutte le cache */
+  if(_ghsTab==='updates'||_GHS_CARDS_TABS.includes(_ghsTab)||_GHS_CHIPS_TABS.includes(_ghsTab)||_GHS_DISTINTIVI_TABS.includes(_ghsTab)){
     for(const k of Object.keys(_GHS_FOLDERS)){ const found=(_ghsCache[k]||[]).find(f=>f.name===name); if(found) return found; }
     return null;
   }
@@ -18711,6 +18785,7 @@ Object.assign(window, {
   _pkgUninstallFromHA, _pkgViewOnHA, _pkgGenericInstall, _pkgPostInstall,
   _ghsPkgInstallFromGH, _pkgInstallLocalToHA, _pkgUpdateCard, _ghsPkgUpdFromPending, _ghsPkgMarkUpdated,
   _ghStoreRenderCardsNonInstallate, _ghStoreRenderCardsInstallate,
+  _ghStoreRenderFolderNonInstallate, _ghStoreRenderFolderInstallate,
   _ghStoreRenderPkgNonInstallati, _ghStoreRenderPkgInstallati,
-  _ghsLoadAllCardCaches, _isPkgTab,
+  _ghsLoadAllCardCaches, _ghsLoadFolderCache, _isPkgTab,
 });

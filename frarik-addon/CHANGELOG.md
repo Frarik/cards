@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.8.5 — 2026-07-05
+
+### feat(store): ripristinati tab Chips e Distintivi con sotto-tab Non installate / Installate
+
+- Tab Chips: Non installate | Installate (solo chips, cache separata)
+- Tab Distintivi: Non installati | Installati (solo distintivi, cache separata)
+- Tab Cards ora mostra solo le card JS
+- Funzioni generiche `_ghStoreRenderFolderNonInstallate` e `_ghStoreRenderFolderInstallate` riutilizzabili per ogni folder
+
 ## 1.8.4 — 2026-07-05
 
 ### feat(store): redesign UI store con tab Cards/PKG e sotto-tab
