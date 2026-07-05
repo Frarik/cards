@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.9 — 2026-07-05
+
+### fix(card/forno): aggiunto kWh e costo nella griglia settimanale
+
+- `openCicliPopup`: griglia 7 giorni ora mostra anche kWh (`input_number.frarik_forno_consumo_[giorno]`) e costo (`input_number.frarik_forno_costo_[giorno]`) per ogni giorno
+- Oggi: kWh da `c.pk_kwh_oggi`, costo da attributo `costo_oggi_forno`
+- Card bumped 2.1 → 2.2
+
 ## 1.9.8 — 2026-07-05
 
 ### fix(card/induzione): aggiunto kWh e costo nella griglia settimanale
