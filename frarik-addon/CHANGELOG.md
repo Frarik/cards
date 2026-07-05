@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.8.8 — 2026-07-05
+
+### fix(pkg): auto-refresh lista installati, badge file corrotto, messaggio errore occhio migliorato
+
+- `_ghStoreRenderPkgInstallati` ora chiama `_loadHaInstalledPkgs()` ad ogni render per evitare dati stale (es. file eliminati dal File Editor che comparivano ancora nella lista)
+- Voci con nome vuoto (es. `frarik/.yaml`, file corrotto) mostrano il path completo e un badge ⚠️ "File corrotto" invece di un campo nome vuoto
+- `_pkgViewOnHA`: quando il file non esiste su HA (404), il toast ora spiega che se si è eliminato il file dal File Editor bisogna premere ↻ per aggiornare la lista
+
 ## 1.8.7 — 2026-07-05
 
 ### fix(pkg): corretto "File non trovato" sul bottone occhio (visualizza YAML)
