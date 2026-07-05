@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.9.20 — 2026-07-05
+
+### feat(pkg/bolletta): allineamento stile v10 come elettrodomestici
+
+- Header rinnovato: rimosso ASCII art, aggiunto `author`, `reference`, `package: 'Frarik Bolletta 10'`
+- Versione PKG aggiornata da `"2.0"` a `"10"` (`sensor.frarik_bolletta_versione`)
+- Nome sensore versione normalizzato: `frarik_bolletta_versione` (minuscolo, come gli altri PKG)
+- Rimossi anchor morti `&sensore_saldo_octopus` / `&sensore_scadenza_octopus`
+- Placeholder potenza rinominato `IL_TUO_SENSORE_POTENZA_CASA` (coerente con il pattern degli altri PKG)
+- Commenti sezioni uniformati al formato `####` con righe bianche
+
 ## 1.9.19 — 2026-07-05
 
 ### feat(cards/all): nasconde matita e configurazione in modalità modifica per tutti gli elettrodomestici

@@ -1,44 +1,19 @@
-###############################################################
-#                                                             #
-#   ███████╗██████╗  █████╗ ██████╗ ██╗██╗  ██╗             #
-#   ██╔════╝██╔══██╗██╔══██╗██╔══██╗██║██║ ██╔╝             #
-#   █████╗  ██████╔╝███████║██████╔╝██║█████╔╝              #
-#   ██╔══╝  ██╔══██╗██╔══██║██╔══██╗██║██╔═██╗              #
-#   ██║     ██║  ██║██║  ██║██║  ██║██║██║  ██╗             #
-#   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝            #
-#                                                             #
-#   Package: Centro Controllo Bolletta Elettrica              #
-#   Versione: 2.0  |  Frarik / Fratech                       #
-#                                                             #
-###############################################################
-#
-# INSTALLAZIONE TRAMITE WIZARD FRARIK
-# ──────────────────────────────────────────────────────────
-#  Il wizard della card Bolletta installa questo file
-#  automaticamente in config/packages/ con i tuoi sensori.
-#
-#  Installazione manuale: modifica le righe sotto
-#  "IMPOSTAZIONI PACKAGE" e copia in config/packages/
-#
-###############################################################
-
 homeassistant:
   customize:
     package.node_anchors:
       customize: &customize
-        package: 'Centro Controllo Bolletta Elettrica 2.0 — Frarik'
-
+        package: 'Frarik Bolletta 10'
+        author: 'Frarik'
+        reference: 'github.com/Frarik/cards'
       setting:
 
 ####################################################
+#                                                  #
 #              IMPOSTAZIONI PACKAGE                #
+#                                                  #
 ####################################################
 
-        Sensore Potenza Casa: &sensore_potenza_bolletta sensor.consumo_istantaneo
-
-        Sensore Saldo Octopus: &sensore_saldo_octopus sensor.non_configurato
-
-        Sensore Scadenza Offerta: &sensore_scadenza_octopus sensor.non_configurato
+        Sensore Potenza Casa: &sensore_potenza_bolletta IL_TUO_SENSORE_POTENZA_CASA
 
         Tariffa Contratto: &tariffa_contratto 0.09
 
@@ -48,9 +23,10 @@ homeassistant:
           - service: IL_TUO_MOBILE_APP
 
 ####################################################
-#                  NOTIFICHE                       #
+#                                                  #
+#              NOTIFICHE GRUPPO                    #
+#                                                  #
 ####################################################
-
 
 group:
   frarik_notifiche_bolletta:
@@ -62,7 +38,9 @@ group:
       - input_boolean.frarik_bolletta_notify_push_annuale
 
 ####################################################
+#                                                  #
 #                    SENSORI                       #
+#                                                  #
 ####################################################
 
 sensor:
@@ -76,7 +54,9 @@ sensor:
     method: left
 
 ####################################################
+#                                                  #
 #                 UTILITY METER                    #
+#                                                  #
 ####################################################
 
 utility_meter:
@@ -102,7 +82,9 @@ utility_meter:
     cycle: yearly
 
 ####################################################
-#                INPUT BOOLEAN                     #
+#                                                  #
+#                 INPUT BOOLEAN                    #
+#                                                  #
 ####################################################
 
 input_boolean:
@@ -126,7 +108,9 @@ input_boolean:
     icon: mdi:bell-ring
 
 ####################################################
+#                                                  #
 #                 INPUT DATETIME                   #
+#                                                  #
 ####################################################
 
 input_datetime:
@@ -140,7 +124,9 @@ input_datetime:
     has_time: true
 
 ####################################################
+#                                                  #
 #                  INPUT NUMBER                    #
+#                                                  #
 ####################################################
 
 input_number:
@@ -458,7 +444,9 @@ input_number:
   frarik_bolletta_storico_kwh_prev_12: {name: "Frarik Bolletta kWh Dic Prec", min: 0, max: 2000, step: 1, mode: box, unit_of_measurement: "kWh", icon: mdi:flash}
 
 ####################################################
+#                                                  #
 #                     REST                         #
+#                                                  #
 ####################################################
 
 rest:
@@ -519,14 +507,16 @@ rest:
         unit_of_measurement: "%"
 
 ####################################################
+#                                                  #
 #                   TEMPLATE                       #
+#                                                  #
 ####################################################
 
 template:
   - sensor:
-      - name: "Frarik Bolletta Versione"
+      - name: "frarik_bolletta_versione"
         unique_id: frarik_bolletta_versione
-        state: "2.0"
+        state: "10"
         icon: mdi:package-variant-closed
       - name: "Frarik Bolletta Energia Giornaliera Safe"
         unit_of_measurement: "kWh"
@@ -918,7 +908,9 @@ template:
           {{ (imp + acc + iva - bon) | round(2) }}
 
 ####################################################
+#                                                  #
 #                    SCRIPT                        #
+#                                                  #
 ####################################################
 
 script:
@@ -939,7 +931,9 @@ script:
         target: { entity_id: input_boolean.frarik_bolletta_reset_consumo_mensile }
 
 ####################################################
+#                                                  #
 #                  AUTOMAZIONI                     #
+#                                                  #
 ####################################################
 
 automation:
