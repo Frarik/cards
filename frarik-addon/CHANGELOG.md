@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.13 — 2026-07-05
+
+### fix(card/scaldabagno): aggiunta griglia settimanale kWh e costo nel popup energia
+### feat(card/montalatte): nuova card Montalatte con PKG embedded
+
+- `Scaldabagno`: `openEnergiaPopup` ora mostra griglia 7 giorni con `input_number.frarik_scaldabagno_consumo_[giorno]` e `input_number.frarik_scaldabagno_costo_[giorno]`. Card bumped 2.1 → 2.2
+- `Montalatte`: nuova card creata da zero con SVG animato, popup cicli/energia/impostazioni, griglia settimanale kWh+costo e PKG embedded v2.0 completo. Versione 2.2
+
 ## 1.9.12 — 2026-07-05
 
 ### fix(card/frigorifero): aggiunto kWh e costo nella griglia settimanale

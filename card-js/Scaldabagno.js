@@ -1,4 +1,4 @@
-/* frarik-version: 2.1 */
+/* frarik-version: 2.2 */
 (function () {
   'use strict';
 
@@ -287,6 +287,25 @@
     const tempSet   = num(S(h, c.pk_temp_set));
     const pwV       = num(S(h, c.pk_power));
 
+    const DAYS       = ['lunedi','martedi','mercoledi','giovedi','venerdi','sabato','domenica'];
+    const DAY_LABELS = ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
+    const _todayIdx  = [6,0,1,2,3,4,5][new Date().getDay()];
+    let weekHtml = '<div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 6px">Ultimi 7 giorni</div>'
+      + '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:12px">';
+    DAYS.forEach(function (d, i) {
+      const isToday = i === _todayIdx;
+      const kwRaw   = isToday ? S(h, c.pk_kwh_oggi) : S(h, 'input_number.frarik_scaldabagno_consumo_' + d);
+      const costRaw = isToday ? Attr(h, ton, 'costo_oggi_scaldabagno') : S(h, 'input_number.frarik_scaldabagno_costo_' + d);
+      const kwFmt   = num(kwRaw)   != null ? num(kwRaw).toFixed(2)   + 'k' : '—';
+      const costFmt = num(costRaw) != null ? num(costRaw).toFixed(2) + '€' : '—';
+      weekHtml += '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;background:' + (isToday ? 'rgba(249,115,22,.15)' : 'rgba(249,115,22,.05)') + ';border:1px solid ' + (isToday ? 'rgba(249,115,22,.5)' : 'rgba(249,115,22,.15)') + ';border-radius:8px;padding:6px 2px' + (isToday ? ';box-shadow:0 0 8px rgba(249,115,22,.2)' : '') + '">'
+        + '<div style="font-size:8px;font-weight:' + (isToday ? '900' : '700') + ';color:' + (isToday ? '#f97316' : '#fff') + '">' + DAY_LABELS[i] + '</div>'
+        + '<div style="font-size:8px;color:rgba(253,186,116,.9);text-align:center">' + kwFmt + '</div>'
+        + '<div style="font-size:8px;color:rgba(251,191,36,.8);text-align:center">' + costFmt + '</div>'
+        + '</div>';
+    });
+    weekHtml += '</div>';
+
     const content = '<div style="background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.2);border-radius:12px;padding:12px 14px;text-align:center;margin-bottom:12px">'
       + '<div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Temperatura Acqua</div>'
       + '<div style="font-size:30px;font-weight:900;color:#f97316">' + (tempAcqua != null ? tempAcqua.toFixed(1) + ' °C' : '—') + '</div>'
@@ -307,6 +326,7 @@
       + row('Questo mese',      fmtEur(Attr(h, ton, 'costo_mese_scaldabagno')),        '#fb923c')
       + row('Mese precedente',  fmtEur(Attr(h, ton, 'costo_mese_precedente_scaldabagno')), '#fff')
       + row('Questo anno',      fmtEur(Attr(h, ton, 'costo_anno_scaldabagno')),        '#fb923c')
+      + weekHtml
       + '<div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 4px">Tempo riscaldamento</div>'
       + row('Oggi',         Attr(h, ton, 'Oggi')   || '—', '#fdba74')
       + row('Ieri',         Attr(h, ton, 'Ieri')   || '—', '#fff')
@@ -1513,7 +1533,7 @@ automation:
 
   /* ── REGISTRATION ── */
   const CARD = {
-    id: 'scaldabagno', name: 'Scaldabagno', icon: '🛁', version: '2.1',
+    id: 'scaldabagno', name: 'Scaldabagno', icon: '🛁', version: '2.2',
     desc: 'Scaldabagno elettrico — temperatura acqua, riscaldamento, consumo, energia e costi.',
     render: render, mount: mount, update: update, configure: null,
     frarik_pkg_check: 'sensor.frarik_scaldabagno_versione',
