@@ -397,6 +397,16 @@ utility_meter:
 # 5. CALCOLI TEMPLATE E ARCHIVIO
 # ==============================================================================
 template:
+  - trigger:
+      - platform: state
+        entity_id: *sensore_potenza_bolletta
+    sensor:
+      - name: "Frarik Bolletta Potenza Casa"
+        unique_id: frarik_bolletta_potenza_casa
+        unit_of_measurement: "W"
+        device_class: power
+        state: "{{ trigger.to_state.state | float(0) | round(0) }}"
+
   - sensor:
 
       - name: "frarik_bolletta_versione"
@@ -1033,7 +1043,7 @@ automation:
     mode: single
     trigger:
       - platform: numeric_state
-        entity_id: sensor.IL_TUO_SENSORE_POTENZA_CASA
+        entity_id: *sensore_potenza_bolletta
         above: input_number.frarik_bolletta_soglia_power
         for:
           seconds: "{{ states('input_number.frarik_bolletta_ritardo_soglia') | int(10) }}"
@@ -1049,10 +1059,10 @@ automation:
                 entity_id: input_boolean.frarik_bolletta_notify_push_active
                 state: 'on'
             then:
-              - service: notify.IL_TUO_MOBILE_APP
+              - service: *push
                 data:
                   title: "⚠️ SOVRACCARICO ELETTRICO"
-                  message: "Consumo: {{ states('sensor.IL_TUO_SENSORE_POTENZA_CASA') }} W. Riduci il carico!"
+                  message: "Consumo: {{ states('sensor.frarik_bolletta_potenza_casa') }} W. Riduci il carico!"
                   data:
                     push: { sound: { name: default, critical: 1, volume: 1.0 } }
 
@@ -1065,9 +1075,9 @@ automation:
               - service: notify.alexa_media
                 data:
                   target:
-                    - media_player.IL_TUO_ALEXA
+                    - *alexa
                   message: >
-                    Attenzione! Il consumo è {{ states('sensor.IL_TUO_SENSORE_POTENZA_CASA') }} Watt.
+                    Attenzione! Il consumo è {{ states('sensor.frarik_bolletta_potenza_casa') }} Watt.
                     Stacca subito qualcosa.
                   data:
                     type: announce
@@ -1089,7 +1099,7 @@ automation:
                 entity_id: input_boolean.frarik_bolletta_notify_daily
                 state: 'on'
             sequence:
-              - service: notify.IL_TUO_MOBILE_APP
+              - service: *push
                 data:
                   title: "⚡ Report Giornaliero"
                   message: >
@@ -1106,7 +1116,7 @@ automation:
                 entity_id: input_boolean.frarik_bolletta_notify_monthly
                 state: 'on'
             sequence:
-              - service: notify.IL_TUO_MOBILE_APP
+              - service: *push
                 data:
                   title: "📅 Report Mensile Concluso"
                   message: >
@@ -1123,7 +1133,7 @@ automation:
                 entity_id: input_boolean.frarik_bolletta_notify_yearly
                 state: 'on'
             sequence:
-              - service: notify.IL_TUO_MOBILE_APP
+              - service: *push
                 data:
                   title: "🎉 Report Annuale {{ now().year }}"
                   message: >

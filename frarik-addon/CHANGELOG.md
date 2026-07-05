@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.9.22 — 2026-07-05
+
+### fix(pkg/bolletta): corretto doppio prefisso sensor. nel trigger allarme, aggiunto sensor proxy potenza
+
+- Trigger `entity_id` allarme sovraccarico: da stringa hardcoded `sensor.IL_TUO_SENSORE_POTENZA_CASA` (che il wizard duplicava in `sensor.sensor.*`) ad anchor YAML `*sensore_potenza_bolletta`
+- Aggiunto template sensor `frarik_bolletta_potenza_casa` (trigger-based su `*sensore_potenza_bolletta`) per usare la potenza istantanea in Jinja2 senza hardcodare l'entity ID
+- Notify services: da stringhe hardcoded `notify.IL_TUO_MOBILE_APP` ad anchor `*push`
+- Alexa target: da stringa hardcoded `media_player.IL_TUO_ALEXA` ad anchor `*alexa`
+
 ## 1.9.21 — 2026-07-05
 
 ### fix(pkg): notifica aggiornamento PKG installati via wizard o apertura dashboard post-update
