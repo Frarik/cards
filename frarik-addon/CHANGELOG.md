@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.9.14 — 2026-07-05
+
+### feat(card/tostapane): nuova card Tostapane con PKG embedded
+
+- `Tostapane`: nuova card creata da zero con SVG animato (toast che si alza, resistenze animate), popup cicli/energia/impostazioni, griglia settimanale kWh+costo dal primo giorno e PKG embedded v2.0 completo. Versione 2.2
+- Entità: `frarik_tostapane_*`, attributo `costo_oggi_tostapane`
+
 ## 1.9.13 — 2026-07-05
 
 ### fix(card/scaldabagno): aggiunta griglia settimanale kWh e costo nel popup energia
