@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.9 — 2026-07-05
+
+### debug(pkg): occhio mostra path esatto e HTTP status code nell'errore
+
+- `_pkgViewOnHA`: il toast di errore mostra ora `/config/packages/<path>` e lo status HTTP per facilitare il debug
+
 ## 1.8.8 — 2026-07-05
 
 ### fix(pkg): auto-refresh lista installati, badge file corrotto, messaggio errore occhio migliorato

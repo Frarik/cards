@@ -4022,8 +4022,9 @@ async function _pkgViewOnHA(filename){
   const decoded=decodeURIComponent(filename);
   const nm=decoded.split('/').pop();
   try{
-    const r=await fetch(ADDON_BASE+'/api/frarik/pkg/read?name='+encodeURIComponent(decoded));
-    if(!r.ok){ showToast('⚠️ File non trovato su HA. Se hai eliminato il file dal File Editor, premi ↻ per aggiornare la lista.'); return; }
+    const _pkgUrl=ADDON_BASE+'/api/frarik/pkg/read?name='+encodeURIComponent(decoded);
+    const r=await fetch(_pkgUrl);
+    if(!r.ok){ console.error('[Frarik] pkg/read fallito',{url:_pkgUrl,status:r.status,decoded}); showToast('⚠️ File non trovato: /config/packages/'+decoded+' (HTTP '+r.status+')'); return; }
     const txt=await r.text();
     const mo=document.createElement('div');
     mo.style.cssText='position:fixed;inset:0;z-index:9700;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.75);backdrop-filter:blur(6px)';
