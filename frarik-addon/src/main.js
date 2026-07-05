@@ -3040,16 +3040,23 @@ function _ghStoreRenderPkgNonInstallati(q){
   list.innerHTML=ghNotHA.map(pkgRow).join('');
 }
 /* ── PKG INSTALLATI: pkg su HA senza aggiornamenti pendenti ── */
-function _ghStoreRenderPkgInstallati(q){
+async function _ghStoreRenderPkgInstallati(q){
   const list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
+  /* Ricarica sempre la lista da HA per evitare dati stale */
+  await _loadHaInstalledPkgs();
   let haList=Array.from(_haInstalledPkgs).filter(f=>{ const bn=f.split('/').pop(); return !_pkgPending[bn]; }).sort();
   if(q) haList=haList.filter(f=>f.toLowerCase().includes(q.toLowerCase()));
   status.textContent=haList.length+' PKG installati su HA';
   const pkgRow=(f)=>{
-    const nm=f.split('/').pop().replace(/\.ya?ml$/i,''); const enc=encodeURIComponent(f);
+    const base=f.split('/').pop();
+    /* nome visibile: se il file non ha nome (es. .yaml), mostra il path completo */
+    const nm=base.replace(/\.ya?ml$/i,'')||f;
+    const enc=encodeURIComponent(f);
+    const isCorrupt=!base.replace(/\.ya?ml$/i,'');
+    const corruptBadge=isCorrupt?`<span style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#f87171;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px">⚠️ File corrotto</span>`:'';
     return `<div class="ghs-row" style="align-items:flex-start">
       <div class="ghs-ico" style="font-size:22px;padding-top:2px">📦</div>
-      <div class="ghs-info" style="flex:1;min-width:0"><div class="ghs-name">${eh(nm)}</div><div class="ghs-sub" style="color:#4ade80;font-size:10px;font-weight:700">✅ Su HA</div></div>
+      <div class="ghs-info" style="flex:1;min-width:0"><div class="ghs-name">${eh(nm)}${corruptBadge}</div><div class="ghs-sub" style="color:#4ade80;font-size:10px;font-weight:700">✅ Su HA</div></div>
       <div class="ghs-acts" style="flex-shrink:0">
         <button class="ghs-btn" data-action="_pkgViewOnHA" data-action-arg="${enc}" title="Visualizza YAML"><i class="mdi mdi-eye-outline"></i></button>
         <button class="ghs-btn ghs-ibtn-del" data-action="_pkgUninstallFromHA" data-action-arg="${enc}" title="Rimuovi da HA" style="color:#f87171;border-color:rgba(248,113,113,.3)"><i class="mdi mdi-delete-outline"></i> Rimuovi</button>
@@ -4016,7 +4023,7 @@ async function _pkgViewOnHA(filename){
   const nm=decoded.split('/').pop();
   try{
     const r=await fetch(ADDON_BASE+'/api/frarik/pkg/read?name='+encodeURIComponent(decoded));
-    if(!r.ok){ showToast('⚠️ File non trovato'); return; }
+    if(!r.ok){ showToast('⚠️ File non trovato su HA. Se hai eliminato il file dal File Editor, premi ↻ per aggiornare la lista.'); return; }
     const txt=await r.text();
     const mo=document.createElement('div');
     mo.style.cssText='position:fixed;inset:0;z-index:9700;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.75);backdrop-filter:blur(6px)';
