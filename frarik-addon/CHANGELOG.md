@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.9.2 — 2026-07-05
+
+### feat(pkg): installazione PKG da GitHub va sempre in /config/packages/frarik/
+
+- `_ghsPkgInstallFromGH` ora installa con `name: 'frarik/' + filename` invece della root
+- La cartella `frarik/` viene creata automaticamente dal server alla prima installazione
+- I file legacy nella root vengono rimossi automaticamente dal server se presenti
+- Gli aggiornamenti PKG (`_ghsPkgUpdFromPending`) usavano già il path `frarik/` — allineati
+
 ## 1.9.1 — 2026-07-05
 
 ### fix(store): contatore "N card" nel menu laterale esclude le card builtin

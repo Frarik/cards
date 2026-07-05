@@ -4053,7 +4053,7 @@ async function _ghsPkgInstallFromGH(filename){
     const url=`https://raw.githubusercontent.com/${g.owner||'Frarik'}/${g.repo||'cards'}/${g.branch||'main'}/pkg/${decoded}`;
     const r=await fetch(url); if(!r.ok) throw new Error('Download fallito');
     const yaml=await r.text();
-    const res=await fetch(ADDON_BASE+'/api/frarik/pkg/install',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:decoded,content:yaml})});
+    const res=await fetch(ADDON_BASE+'/api/frarik/pkg/install',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'frarik/'+decoded,content:yaml})});
     if(!res.ok) throw new Error((await res.json()).error||'Errore installazione');
     await _pkgPostInstall(null,null);
     const _pkgFile=(_ghsCache.pkg||[]).find(x=>x.name===decoded);
