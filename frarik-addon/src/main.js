@@ -1874,8 +1874,17 @@ async function _ghCheckPkg(pkgFiles){
     const isInstalled=_pkgIsOnHA(f.name)||_pkgIsOnHA('frarik/'+f.name);
     if(!isInstalled) return;
     if(!g.pkgShas[f.name]){
-      // Prima volta che vediamo questo PKG installato: salva SHA baseline, nessuna notifica
       g.pkgShas[f.name]=f.sha;
+      // Prima sessione assoluta (pkgKnown era null): salta per evitare spam su primo avvio
+      if(_isFirstPkgSync) return;
+      // Sessione successiva: PKG installato via wizard/manuale → notifica se non già fatto
+      if(g.pkgNotifiedShas[f.name]!==f.sha){
+        newPending[f.name]=f.sha;
+        const cardId=_pkgFindCardForFile('frarik/'+f.name)||_pkgFindCardForFile(f.name);
+        const cardName=(cardId&&_pkgFriendlyName(cardId))||f.name.replace(/\.ya?ml$/i,'').replace(/^frarik_/,'');
+        _ntfPushLog('📦 PKG aggiornato','Il package «'+cardName+'» è stato aggiornato — premi ✓ per aggiornarlo subito.','📦','pkg:'+f.name);
+        g.pkgNotifiedShas[f.name]=f.sha; any=true;
+      }
       return;
     }
     if(g.pkgShas[f.name]===f.sha) return;   // già aggiornato

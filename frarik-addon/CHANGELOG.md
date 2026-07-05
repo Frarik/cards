@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.21 — 2026-07-05
+
+### fix(pkg): notifica aggiornamento PKG installati via wizard o apertura dashboard post-update
+
+- Corretto bug in `_ghCheckPkg`: quando un PKG non aveva ancora una SHA baseline (installato via wizard o dashboard aperta dopo un update), il nuovo SHA veniva silenziosamente salvato come baseline senza notificare l'utente
+- Ora se non è la prima sessione assoluta (`_isFirstPkgSync = false`) e il PKG è nuovo per `pkgShas`, viene inviata la notifica aggiornamento
+- La prima sessione assoluta continua a non notificare (evita spam su primo avvio)
+
 ## 1.9.20 — 2026-07-05
 
 ### feat(pkg/bolletta): allineamento stile v10 come elettrodomestici
