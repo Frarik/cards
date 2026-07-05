@@ -4012,8 +4012,10 @@ async function _pkgUninstallFromHA(filename){
 
 /* Visualizza YAML di un pkg installato su HA */
 async function _pkgViewOnHA(filename){
+  const decoded=decodeURIComponent(filename);
+  const nm=decoded.split('/').pop();
   try{
-    const r=await fetch(ADDON_BASE+'/api/frarik/pkg/read?name='+encodeURIComponent(filename));
+    const r=await fetch(ADDON_BASE+'/api/frarik/pkg/read?name='+encodeURIComponent(decoded));
     if(!r.ok){ showToast('⚠️ File non trovato'); return; }
     const txt=await r.text();
     const mo=document.createElement('div');
@@ -4021,7 +4023,7 @@ async function _pkgViewOnHA(filename){
     mo.innerHTML=`<div style="background:#0d1020;border:1px solid rgba(255,255,255,.12);border-radius:18px;width:min(640px,96vw);max-height:80vh;display:flex;flex-direction:column;overflow:hidden">
       <div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.07)">
         <span style="font-size:16px">📦</span>
-        <span style="flex:1;font-weight:700;color:#f1f5f9;font-size:14px">${eh(filename)}</span>
+        <span style="flex:1;font-weight:700;color:#f1f5f9;font-size:14px">${eh(nm)}</span>
         <button style="background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;cursor:pointer" id="_pv_close">✕</button>
       </div>
       <pre style="flex:1;overflow:auto;padding:16px 18px;font-size:11px;line-height:1.6;color:#c4d8f5;font-family:monospace;margin:0;white-space:pre-wrap;word-break:break-all">${eh(txt)}</pre>

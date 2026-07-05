@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.8.7 — 2026-07-05
+
+### fix(pkg): corretto "File non trovato" sul bottone occhio (visualizza YAML)
+
+- `_pkgViewOnHA` riceveva il filename già percent-encoded dall'attributo HTML e lo ri-codificava con `encodeURIComponent`, producendo un doppio encoding che il server non riconosceva
+- Fix: decode del filename prima di ri-encodarlo per la query string
+
 ## 1.8.6 — 2026-07-05
 
 ### fix(pkg): conferma + offerta riavvio HA prima di rimuovere un PKG installato
