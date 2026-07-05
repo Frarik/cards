@@ -3920,8 +3920,24 @@ function _ghsPkgDeleteLocal(name){
 async function _ghsPkgUpdFromPending(encodedName){
   const fileName=decodeURIComponent(encodedName);
   const cardId=_pkgFindCardForFile('frarik/'+fileName)||_pkgFindCardForFile(fileName);
-  if(!cardId){ showToast('⚠️ Card non trovata per il PKG «'+fileName+'»'); return; }
-  await _pkgUpdateCard(cardId, false);
+  if(cardId){
+    await _pkgUpdateCard(cardId, false);
+  } else {
+    /* PKG standalone (nessuna card JS associata) → scarica e installa grezzo da GitHub */
+    const f=(_ghsCache.pkg||[]).find(x=>x.name===fileName);
+    if(!f){ showToast('⚠️ PKG «'+fileName+'» non trovato su GitHub'); return; }
+    showToast('⬇️ Aggiorno PKG da GitHub…');
+    try{
+      const yaml=await _ghDownload(f);
+      if(!yaml){ showToast('⚠️ PKG vuoto'); return; }
+      const m=location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
+      const base=location.origin+(m?m[1]:'');
+      const r=await fetch(base+'/api/frarik/pkg/install',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'frarik/'+fileName,content:yaml})});
+      const j=await r.json().catch(()=>({}));
+      if(r.ok&&j.ok){ showToast('✅ PKG aggiornato!'); }
+      else{ showToast('⚠️ Errore PKG: '+(j.error||r.status)); return; }
+    }catch(e){ showToast('⚠️ '+e.message); return; }
+  }
   try{
     const sha=_pkgPending[fileName]||_ghCfg().pkgNotifiedShas?.[fileName];
     if(sha){ const g=_ghCfg(); g.pkgShas=g.pkgShas||{}; g.pkgShas[fileName]=sha; saveCfg(); }
