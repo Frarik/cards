@@ -1,4 +1,4 @@
-/* frarik-version: 5.0 */
+/* frarik-version: 5.1 */
 (function () {
   'use strict';
 
@@ -111,6 +111,137 @@
       + row('💰 Spesa totale anno', totAnno.toFixed(2) + ' €', COL);
 
     mkOv(popShell('🧾', 'Dettaglio Bolletta', MESIL[now.getMonth()] + ' ' + now.getFullYear(), 'bp-det-close', content), 'bp-det-close');
+  }
+
+  /* ── POPUP: SIMULATORE ── */
+  function openSimulatore() {
+    var h = H();
+    var now = new Date();
+    var pKwh    = N(S(h, 'sensor.frarik_bolletta_prezzo_unico_variabile'));
+    var fissi   = N(S(h, 'sensor.frarik_bolletta_totale_fissi_mese'));
+    var ivaPerc = N(S(h, 'input_number.frarik_bolletta_iva_perc')) || 10;
+    var canone  = N(S(h, 'input_number.frarik_bolletta_canone_rai')) || 9;
+    var haFV    = isOn(h, 'input_boolean.frarik_bolletta_ha_fotovoltaico');
+    var haBatt  = isOn(h, 'input_boolean.frarik_bolletta_ha_batteria');
+    var mNum    = now.getMonth() + 1;
+    var canoneAutoOn = (mNum >= 1 && mNum <= 10);
+
+    /* valori di partenza dal mese corrente */
+    var kwhInit   = Math.round(N(S(h, 'sensor.frarik_bolletta_consumo_mensile'))) || 0;
+    var bonusInit = N(S(h, 'input_number.frarik_bolletta_bonus_bolletta'));
+    var fvInit    = haFV   ? N(S(h, 'input_number.frarik_bolletta_autoconsumo_fv'))   : 0;
+    var battInit  = haBatt ? N(S(h, 'input_number.frarik_bolletta_autoconsumo_batt')) : 0;
+
+    var iSt = 'width:100%;padding:10px 13px;border-radius:10px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:15px;font-family:monospace;box-sizing:border-box;outline:none;text-align:right';
+    var lSt = 'font-size:11px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px';
+
+    function simRow(lbl, val, col, small) {
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:' + (small ? '5px' : '7px') + ' 0;border-bottom:1px solid rgba(255,255,255,.05)">'
+        + '<span style="font-size:' + (small ? '11' : '12') + 'px;color:' + (small ? 'rgba(255,255,255,.55)' : '#fff') + '">' + lbl + '</span>'
+        + '<span style="font-size:' + (small ? '12' : '13') + 'px;font-weight:800;color:' + (col || '#fff') + '">' + val + '</span>'
+        + '</div>';
+    }
+
+    function calcAndRender(kwh, bonus, fvKwh, battKwh, canOn) {
+      var kwhRete = Math.max(0, kwh - (haFV ? fvKwh : 0) - (haBatt ? battKwh : 0));
+      var compVar  = kwhRete * pKwh;
+      var impon    = compVar + fissi;
+      var iva      = impon * (ivaPerc / 100);
+      var canEff   = canOn ? canone : 0;
+      var totale   = impon + iva + canEff - bonus;
+      var cEff     = kwh > 0 ? totale / kwh : 0;
+      return {kwhRete: kwhRete, compVar: compVar, impon: impon, iva: iva, canEff: canEff, bonus: bonus, totale: totale, cEff: cEff};
+    }
+
+    var canOn = canoneAutoOn;
+    var togSt = function(on) {
+      return 'padding:5px 16px;border-radius:20px;border:none;cursor:pointer;font-size:11px;font-weight:800;background:' +
+        (on ? 'rgba(74,222,128,.2)' : 'rgba(255,255,255,.07)') + ';color:' + (on ? '#4ade80' : 'rgba(255,255,255,.4)') + ';flex-shrink:0';
+    };
+
+    var inputsHtml = sec('Parametri Simulazione')
+      /* kWh */
+      + '<div style="margin-bottom:14px">'
+      + '<label style="' + lSt + '">⚡ kWh consumati nel mese</label>'
+      + '<div style="display:flex;align-items:center;gap:10px">'
+      + '<input id="sim-kwh-range" type="range" min="0" max="800" step="1" value="' + kwhInit + '" style="flex:1;accent-color:' + COL + ';cursor:pointer">'
+      + '<input id="sim-kwh" type="number" min="0" max="9999" step="1" value="' + kwhInit + '" style="' + iSt + ';width:90px;flex-shrink:0">'
+      + '</div></div>'
+      /* Bonus */
+      + '<div style="margin-bottom:14px">'
+      + '<label style="' + lSt + '">🎁 Bonus / Sconto (€)</label>'
+      + '<input id="sim-bonus" type="number" min="0" max="999" step="0.01" value="' + bonusInit.toFixed(2) + '" style="' + iSt + '">'
+      + '</div>'
+      /* Canone RAI */
+      + '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:14px">'
+      + '<div><div style="font-size:13px;font-weight:700;color:#fff">📺 Canone RAI</div>'
+      + '<div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:2px">Auto: ' + (canoneAutoOn ? 'incluso (mesi gen–ott)' : 'escluso (mesi nov–dic)') + ' · ' + canone.toFixed(2) + ' €</div></div>'
+      + '<button id="sim-canone-tog" style="' + togSt(canOn) + '">' + (canOn ? '✅ Incluso' : 'Escluso') + '</button>'
+      + '</div>'
+      /* FV */
+      + (haFV ? '<div style="margin-bottom:14px"><label style="' + lSt + '">☀️ kWh da Pannelli FV (sottratti dalla rete)</label><input id="sim-fv" type="number" min="0" max="9999" step="1" value="' + fvInit.toFixed(0) + '" style="' + iSt + '"></div>' : '')
+      /* Batteria */
+      + (haBatt ? '<div style="margin-bottom:14px"><label style="' + lSt + '">🔋 kWh da Batteria (sottratti dalla rete)</label><input id="sim-batt" type="number" min="0" max="9999" step="1" value="' + battInit.toFixed(0) + '" style="' + iSt + '"></div>' : '');
+
+    var resultPlaceholder = '<div id="sim-result"></div>';
+
+    var ov = mkOv(popShell('🧮', 'Simulatore Bolletta', 'Stima costo mensile in tempo reale', 'bp-sim-close', inputsHtml + resultPlaceholder), 'bp-sim-close');
+
+    function g(id) { var e = ov.querySelector('#' + id); return e ? parseFloat(e.value) || 0 : 0; }
+
+    function renderResult() {
+      var kwh   = g('sim-kwh');
+      var bonus = g('sim-bonus');
+      var fvKwh = haFV   ? g('sim-fv')   : 0;
+      var bKwh  = haBatt ? g('sim-batt') : 0;
+      var r = calcAndRender(kwh, bonus, fvKwh, bKwh, canOn);
+      var res = ov.querySelector('#sim-result');
+      if (!res) return;
+
+      var totColor = r.totale > 0 ? COL : '#4ade80';
+      res.innerHTML = '<div style="background:rgba(' + RGB + ',.08);border:1px solid rgba(' + RGB + ',.2);border-radius:16px;padding:18px 16px;margin-top:4px">'
+        /* Big total */
+        + '<div style="text-align:center;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.08)">'
+        + '<div style="font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Bolletta Simulata</div>'
+        + '<div style="font-size:52px;font-weight:900;color:' + totColor + ';line-height:1;letter-spacing:-2px">'
+        + r.totale.toFixed(2).replace('.', ',')
+        + '<span style="font-size:20px;font-weight:600;color:rgba(251,191,36,.6);margin-left:4px">€</span></div>'
+        + (kwh > 0 ? '<div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:6px">Costo effettivo: <strong style="color:' + COL + '">' + (r.cEff * 100).toFixed(3) + ' c€/kWh</strong></div>' : '')
+        + '</div>'
+        /* Breakdown */
+        + simRow('⚡ Energia variabile (' + r.kwhRete.toFixed(0) + ' kWh × ' + pKwh.toFixed(4) + ' €)', r.compVar.toFixed(2) + ' €', COL)
+        + simRow('📋 Costi fissi mensili', r.impon > 0 ? fissi.toFixed(2) + ' €' : '—')
+        + simRow('📊 Imponibile totale', r.impon.toFixed(2) + ' €', 'rgba(255,255,255,.7)')
+        + simRow('💸 IVA ' + ivaPerc.toFixed(0) + '%', r.iva.toFixed(2) + ' €')
+        + (canOn ? simRow('📺 Canone RAI', r.canEff.toFixed(2) + ' €') : simRow('📺 Canone RAI', 'escluso', 'rgba(255,255,255,.3)', true))
+        + (bonus > 0 ? simRow('🎁 Bonus / Sconto', '− ' + bonus.toFixed(2) + ' €', '#4ade80') : '')
+        + ((haFV && fvKwh > 0) ? simRow('☀️ kWh FV (rete risparmiata)', '− ' + fvKwh.toFixed(0) + ' kWh', '#fbbf24', true) : '')
+        + ((haBatt && bKwh > 0) ? simRow('🔋 kWh Batteria', '− ' + bKwh.toFixed(0) + ' kWh', '#4ade80', true) : '')
+        + '</div>';
+    }
+
+    /* bind all inputs → live update */
+    var kwhNum   = ov.querySelector('#sim-kwh');
+    var kwhRange = ov.querySelector('#sim-kwh-range');
+    var togBtn   = ov.querySelector('#sim-canone-tog');
+
+    if (kwhNum && kwhRange) {
+      kwhNum.addEventListener('input', function() { kwhRange.value = kwhNum.value; renderResult(); });
+      kwhRange.addEventListener('input', function() { kwhNum.value = kwhRange.value; renderResult(); });
+    }
+    ['#sim-bonus', '#sim-fv', '#sim-batt'].forEach(function(sel) {
+      var el = ov.querySelector(sel); if (el) el.addEventListener('input', renderResult);
+    });
+    if (togBtn) {
+      togBtn.addEventListener('click', function() {
+        canOn = !canOn;
+        togBtn.textContent = canOn ? '✅ Incluso' : 'Escluso';
+        togBtn.style.cssText = togSt(canOn);
+        renderResult();
+      });
+    }
+
+    renderResult();
   }
 
   /* ── POPUP: STORICO ── */
@@ -265,7 +396,6 @@
     /* TAB FV/BATTERIA */
     var haFV   = isOn(h, 'input_boolean.frarik_bolletta_ha_fotovoltaico');
     var haBatt = isOn(h, 'input_boolean.frarik_bolletta_ha_batteria');
-    var simRes = N(S(h, 'sensor.frarik_bolletta_test_bolletta'));
     var pFV = '<div class="bp-panel" id="bp-p-fv">'
       + sec('Fotovoltaico')
       + togRow('input_boolean.frarik_bolletta_ha_fotovoltaico', haFV, '☀️ Pannelli Solari Attivi')
@@ -276,14 +406,6 @@
       + togRow('input_boolean.frarik_bolletta_ha_batteria', haBatt, '🔋 Batteria Attiva')
       + '<div id="bp-batt-fields" style="opacity:' + (haBatt ? '1' : '.4') + ';pointer-events:' + (haBatt ? 'auto' : 'none') + ';transition:opacity .2s">'
       + lbl('kWh da Batteria (mese corrente)') + inp('bp-batt-kwh', N(S(h, 'input_number.frarik_bolletta_autoconsumo_batt')).toFixed(1), '0.0')
-      + '</div>'
-      + sec('Simulatore Bolletta')
-      + lbl('kWh da simulare')
-      + inp('bp-sim-kwh', N(S(h, 'input_number.frarik_bolletta_test_kwh')).toFixed(0), '250')
-      + '<div style="margin-top:8px;padding:10px 12px;background:rgba(' + RGB + ',.07);border:1px solid rgba(' + RGB + ',.15);border-radius:10px">'
-      + '<div style="font-size:10px;color:rgba(255,255,255,.4);margin-bottom:4px">Bolletta simulata (calcolata da HA)</div>'
-      + '<div style="font-size:22px;font-weight:900;color:' + COL + '">' + simRes.toFixed(2) + ' €</div>'
-      + '<div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:2px">Salva per aggiornare</div>'
       + '</div>'
       + '</div>';
 
@@ -324,13 +446,6 @@
       });
     });
 
-    /* sim kWh input → send to HA (sensor updates async) */
-    var simInp = ov.querySelector('#bp-sim-kwh');
-    if (simInp) {
-      simInp.addEventListener('change', function() {
-        setNum('input_number.frarik_bolletta_test_kwh', simInp.value);
-      });
-    }
 
     function g(id) { var e = ov.querySelector('#' + id); return e ? e.value.trim() : ''; }
 
@@ -452,6 +567,7 @@
 
     var btnsHtml = '<div class="fb-btns">'
       + '<div class="fb-btn" data-sya="popup-dettaglio">🧾 Dettaglio</div>'
+      + '<div class="fb-btn" data-sya="popup-simulatore">🧮 Simula</div>'
       + '<div class="fb-btn" data-sya="popup-storico">📊 Storico</div>'
       + '<div class="fb-btn" data-sya="popup-impostazioni">⚙ Imposta</div>'
       + '</div>';
@@ -475,7 +591,7 @@
   function update(card, hass, el) {
     var h = hass || H();
     var sig = [
-      '5.0',
+      '5.1',
       S(h, 'sensor.frarik_bolletta_mese_corrente'),
       S(h, 'sensor.frarik_bolletta_consumo_mensile'),
       S(h, 'sensor.frarik_bolletta_potenza_casa'),
@@ -496,13 +612,14 @@
   }
 
   function mount(card, hass, el) {
-    if (el._fcBound === '5.0') return;
-    el._fcBound = '5.0';
+    if (el._fcBound === '5.1') return;
+    el._fcBound = '5.1';
     if (el._fcHandler) el.removeEventListener('click', el._fcHandler);
     el._fcHandler = function(e) {
       var sya = e.target.closest('[data-sya]'); if (!sya) return;
       var a = sya.dataset.sya;
       if (a === 'popup-dettaglio')    { openDettaglio(); return; }
+      if (a === 'popup-simulatore')   { openSimulatore(); return; }
       if (a === 'popup-storico')      { openStorico(); return; }
       if (a === 'popup-impostazioni') { openImpostazioni(card, el); return; }
     };
@@ -510,7 +627,7 @@
   }
 
   var CARD = {
-    id: 'bolletta', name: 'Bolletta Elettrica', icon: '⚡', version: '5.0',
+    id: 'bolletta', name: 'Bolletta Elettrica', icon: '⚡', version: '5.1',
     desc: 'Monitoraggio consumi, costi e previsioni bolletta elettrica. Richiede PKG Frarik Bolletta.',
     render: render, mount: mount, update: update, configure: null, frarik_no_edit: true,
     frarik_pkg_check: 'sensor.frarik_bolletta_versione',

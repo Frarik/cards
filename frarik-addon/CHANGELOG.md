@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.9.26 — 2026-07-05
+
+### feat(card/bolletta): popup Simulatore Bolletta dedicato (v5.1)
+
+- Nuovo popup `openSimulatore()` con calcolo live in tempo reale
+- Input: kWh (slider + campo numerico), Bonus/Sconto, toggle Canone RAI (auto-rilevamento gen–ott), kWh FV/Batteria (se attivi)
+- Risultato in tempo reale: totale in grande + breakdown (energia variabile, fissi, IVA, canone RAI, bonus, netto FV/batt)
+- Costo effettivo per kWh (c€/kWh) calcolato sul totale simulato
+- Bottone "🧮 Simula" aggiunto alla card (4 bottoni: Dettaglio · Simula · Storico · Imposta)
+- Rimosso il mini-simulatore dalla tab FV delle Impostazioni
+
 ## 1.9.25 — 2026-07-05
 
 ### fix(store): popup "Aggiorna pkg" mostrava sempre frarik_posta.yaml
