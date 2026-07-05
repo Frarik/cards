@@ -3044,7 +3044,7 @@ async function _ghStoreRenderPkgInstallati(q){
   const list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
   /* Ricarica sempre la lista da HA per evitare dati stale */
   await _loadHaInstalledPkgs();
-  let haList=Array.from(_haInstalledPkgs).filter(f=>{ const bn=f.split('/').pop(); return !_pkgPending[bn]; }).sort();
+  let haList=Array.from(_haInstalledPkgs).filter(f=>{ const bn=f.split('/').pop().toLowerCase(); return !_pkgPending[bn]; }).sort();
   if(q) haList=haList.filter(f=>f.toLowerCase().includes(q.toLowerCase()));
   status.textContent=haList.length+' PKG installati su HA';
   const pkgRow=(f)=>{
@@ -3957,7 +3957,8 @@ async function _loadHaInstalledPkgs(){
     const r=await fetch(ADDON_BASE+'/api/frarik/pkg/list');
     if(!r.ok) return;
     const d=await r.json();
-    _haInstalledPkgs=new Set((d.files||[]).map(f=>f.toLowerCase()));
+    /* Conserva il case esatto restituito dal filesystem — Linux è case-sensitive */
+    _haInstalledPkgs=new Set(d.files||[]);
   }catch(e){}
 }
 
@@ -3965,9 +3966,9 @@ async function _loadHaInstalledPkgs(){
 function _pkgIsOnHA(file){
   if(!file) return false;
   const f=file.toLowerCase();
-  if(_haInstalledPkgs.has(f)) return true;
+  for(const k of _haInstalledPkgs){ if(k.toLowerCase()===f) return true; }
   const base=f.split('/').pop();
-  for(const k of _haInstalledPkgs){ if(k===base||k.endsWith('/'+base)) return true; }
+  for(const k of _haInstalledPkgs){ if(k.toLowerCase().split('/').pop()===base) return true; }
   return false;
 }
 
@@ -4108,8 +4109,8 @@ function _ghStoreRenderPkg(q){
 
   /* Pkg installati su HA (escludi quelli con aggiornamento → vanno nel tab "da aggiornare") */
   const haList=Array.from(_haInstalledPkgs).filter(f=>{
-    const bn=f.split('/').pop();
-    return (!q||f.includes(q.toLowerCase()))&&!_pkgPending[bn];
+    const bn=f.split('/').pop().toLowerCase();
+    return (!q||f.toLowerCase().includes(q.toLowerCase()))&&!_pkgPending[bn];
   }).sort();
   /* Pkg su GitHub non ancora su HA */
   const ghNotHA=ghFiles.filter(f=>!_pkgIsOnHA('frarik/'+f.name)&&!_pkgIsOnHA(f.name)&&(!q||f.name.toLowerCase().includes(q.toLowerCase())));

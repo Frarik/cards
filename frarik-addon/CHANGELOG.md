@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.9.0 — 2026-07-05
+
+### fix(pkg): occhio - 404 su cartelle con spazi o lettere maiuscole nel nome
+
+- Causa: `_loadHaInstalledPkgs` applicava `.toLowerCase()` ai path restituiti da `pkg/list`, ma Linux (HA) ha il filesystem case-sensitive. Se la cartella si chiama `Pkg Lentini` su disco, cercarlo come `pkg lentini` causava 404
+- Fix: i path vengono ora salvati con il case esatto del filesystem
+- `_pkgIsOnHA` aggiornato per fare confronto case-insensitive invece di usare il Set direttamente
+- Tutti i filtri che usano `_pkgPending[bn]` ora lowercasano `bn` prima del confronto
+
 ## 1.8.9 — 2026-07-05
 
 ### debug(pkg): occhio mostra path esatto e HTTP status code nell'errore
