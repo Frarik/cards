@@ -1,4 +1,4 @@
-/* frarik-version: 2.1 */
+/* frarik-version: 2.2 */
 (function () {
   'use strict';
 
@@ -305,12 +305,19 @@
     function cleanVal(v) { return (!v || v === 'unknown' || v === 'unavailable' || v === 'none') ? '—' : v; }
     DAYS.forEach(function (d, i) {
       const isToday = i === _todayIdx;
-      const cicli = isToday ? cleanVal(S(h, c.pk_cicli_oggi))      : cleanVal(S(h, 'input_text.frarik_friggitrice_cicli_' + d));
-      const tempo = isToday ? cleanVal(Attr(h, ton, 'Oggi'))        : cleanVal(S(h, 'input_text.frarik_friggitrice_tempo_' + d));
-      weekHtml += '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;background:' + (isToday ? 'rgba(56,189,248,.12)' : 'rgba(56,189,248,.05)') + ';border:1px solid ' + (isToday ? 'rgba(56,189,248,.4)' : 'rgba(56,189,248,.1)') + ';border-radius:8px;padding:6px 2px' + (isToday ? ';box-shadow:0 0 8px rgba(56,189,248,.15)' : '') + '">'
+      const cicli   = isToday ? cleanVal(S(h, c.pk_cicli_oggi))      : cleanVal(S(h, 'input_text.frarik_friggitrice_cicli_' + d));
+      const tempo   = isToday ? cleanVal(Attr(h, ton, 'Oggi'))        : cleanVal(S(h, 'input_text.frarik_friggitrice_tempo_' + d));
+      const kwRaw   = isToday ? S(h, c.pk_kwh_oggi) : S(h, 'input_number.frarik_friggitrice_consumo_' + d);
+      const costRaw = isToday ? Attr(h, ton, 'costo_oggi_friggitrice') : S(h, 'input_number.frarik_friggitrice_costo_' + d);
+      const kwFmt   = num(kwRaw) != null ? num(kwRaw).toFixed(2) + 'k' : '—';
+      const costFmt = num(costRaw) != null ? num(costRaw).toFixed(2) + '€' : '—';
+      weekHtml += '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;background:' + (isToday ? 'rgba(56,189,248,.12)' : 'rgba(56,189,248,.05)') + ';border:1px solid ' + (isToday ? 'rgba(56,189,248,.4)' : 'rgba(56,189,248,.1)') + ';border-radius:8px;padding:6px 2px' + (isToday ? ';box-shadow:0 0 8px rgba(56,189,248,.15)' : '') + '">'
         + '<div style="font-size:8px;font-weight:' + (isToday ? '900' : '700') + ';color:' + (isToday ? '#38bdf8' : '#fff') + '">' + DAY_LABELS[i] + '</div>'
         + '<div style="font-size:11px;font-weight:900;color:#38bdf8">' + cicli + '</div>'
         + '<div style="font-size:8px;color:#fff;text-align:center;line-height:1.2">' + tempo + '</div>'
+        + '<div style="width:100%;height:1px;background:rgba(255,255,255,.07);margin:1px 0"></div>'
+        + '<div style="font-size:8px;color:rgba(56,189,248,.8);text-align:center">' + kwFmt + '</div>'
+        + '<div style="font-size:8px;color:rgba(251,191,36,.8);text-align:center">' + costFmt + '</div>'
         + '</div>';
     });
     weekHtml += '</div>';
@@ -1611,7 +1618,7 @@ automation:
 
   /* ── CARD ── */
   const CARD = {
-    id: 'friggitrice', name: 'Friggitrice', icon: '🍟', version: '2.1',
+    id: 'friggitrice', name: 'Friggitrice', icon: '🍟', version: '2.2',
     desc: 'Monitoraggio resistenza, cicli, energia e costi. Richiede PKG Centro Controllo Friggitrice.',
     render: render, mount: mount, update: update, configure: null,
     frarik_pkg_check: 'sensor.frarik_friggitrice_versione',

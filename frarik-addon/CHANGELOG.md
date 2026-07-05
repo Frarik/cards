@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.11 — 2026-07-05
+
+### fix(card/friggitrice): aggiunto kWh e costo nella griglia settimanale
+
+- `openCicliPopup`: griglia 7 giorni ora mostra anche kWh (`input_number.frarik_friggitrice_consumo_[giorno]`) e costo (`input_number.frarik_friggitrice_costo_[giorno]`) per ogni giorno
+- Oggi: kWh da `c.pk_kwh_oggi`, costo da attributo `costo_oggi_friggitrice`
+- Card bumped 2.1 → 2.2
+
 ## 1.9.10 — 2026-07-05
 
 ### fix(card/microonde): aggiunto kWh e costo nella griglia settimanale
