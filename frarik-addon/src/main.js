@@ -4082,41 +4082,67 @@ function _pkgParseInputs(yaml){
   return inputs;
 }
 
-/* Wizard modale: chiede i valori per i placeholder, restituisce YAML sostituito o null se annullato */
+/* Autocomplete entità HA su un campo input — usa window.hs come sorgente */
+function _frarikEntityAutocomplete(inp){
+  const all=Object.keys(window.hs||{}).sort();
+  const showDrop=()=>{
+    document.getElementById('_fac_drop')?.remove();
+    const q=inp.value.toLowerCase();
+    const filtered=(q?all.filter(e=>e.includes(q)):all).slice(0,80);
+    if(!filtered.length) return;
+    const rect=inp.getBoundingClientRect();
+    const d=document.createElement('div');
+    d.id='_fac_drop';
+    d.style.cssText=`position:fixed;left:${rect.left}px;top:${rect.bottom+2}px;width:${rect.width}px;z-index:99999;background:#1a1f35;border:1px solid rgba(255,255,255,.2);border-radius:10px;max-height:200px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.6)`;
+    d.innerHTML=filtered.map(e=>`<div data-v="${e}" style="padding:8px 12px;font-size:11px;font-family:monospace;color:#fff;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04)">${e}</div>`).join('');
+    d.querySelectorAll('[data-v]').forEach(item=>{
+      item.onmousedown=ev=>{ev.preventDefault();inp.value=item.dataset.v;d.remove();};
+      item.onmouseover=()=>item.style.background='rgba(255,255,255,.08)';
+      item.onmouseout=()=>item.style.background='';
+    });
+    document.body.appendChild(d);
+  };
+  inp.addEventListener('focus',showDrop);
+  inp.addEventListener('input',showDrop);
+  inp.addEventListener('blur',()=>setTimeout(()=>document.getElementById('_fac_drop')?.remove(),150));
+}
+
+/* Wizard bottom-sheet: chiede i valori per i placeholder, restituisce YAML sostituito o null se annullato */
 function _pkgShowWizard(pkgName,yaml,inputs){
   return new Promise(resolve=>{
     const nm=pkgName.replace(/\.ya?ml$/i,'').replace(/^frarik_/,'');
     const fields=inputs.map((inp,idx)=>`
-      <div style="margin-bottom:12px">
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.45);margin-bottom:5px">${eh(inp.label)}</div>
+      <div style="margin-bottom:14px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.45);margin-bottom:6px">${eh(inp.label)}</div>
         <input data-key="${eh(inp.placeholder)}" id="_pwz_f${idx}" autocomplete="off" spellcheck="false"
           type="text" placeholder="${eh(inp.placeholder)}"
           style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:10px 12px;color:#fff;font-size:12px;font-family:monospace;outline:none;box-sizing:border-box">
       </div>`).join('');
     const mo=document.createElement('div');
-    mo.style.cssText='position:fixed;inset:0;z-index:9800;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.8);backdrop-filter:blur(8px)';
-    mo.innerHTML=`<div style="background:#0d1020;border:1px solid rgba(255,255,255,.12);border-radius:18px;width:min(520px,96vw);max-height:88vh;display:flex;flex-direction:column;overflow:hidden">
+    mo.style.cssText='position:fixed;inset:0;z-index:9800;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.75);backdrop-filter:blur(6px)';
+    mo.innerHTML=`<style>@keyframes _pwz_su{from{transform:translateY(100%)}to{transform:translateY(0)}}</style>
+    <div style="background:#0d1020;border:1px solid rgba(255,255,255,.12);border-top:1px solid rgba(255,255,255,.12);border-radius:20px 20px 0 0;width:100%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;animation:_pwz_su .24s cubic-bezier(.32,1.12,.56,1)">
       <div style="display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">
         <div style="width:38px;height:38px;border-radius:12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">📦</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:14px;font-weight:700;color:#fff">Configura Package</div>
+          <div style="font-size:15px;font-weight:700;color:#fff">Configura Package</div>
           <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:1px">${eh(nm)}</div>
         </div>
-        <button id="_pwz_x" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;cursor:pointer;line-height:1">✕</button>
+        <button id="_pwz_x" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:6px 12px;color:#fff;font-size:13px;cursor:pointer">✕</button>
       </div>
       <div style="flex:1;overflow-y:auto;padding:16px 18px">
-        <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:14px;line-height:1.7">
+        <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:16px;line-height:1.7">
           Inserisci le entità di Home Assistant da usare in questo package.<br>
-          <span style="color:rgba(255,255,255,.3)">Puoi modificarle in seguito dal <b style="color:rgba(255,255,255,.45)">File Editor</b> di HA.</span>
+          <span style="color:rgba(255,255,255,.3)">Tocca un campo per vedere la lista delle entità disponibili.</span>
         </div>
         ${fields}
       </div>
-      <div style="padding:14px 18px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:10px;flex-shrink:0">
+      <div style="padding:14px 18px 28px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:10px;flex-shrink:0">
         <button id="_pwz_cancel" style="padding:12px 16px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6);font-size:13px;font-weight:600;cursor:pointer">Annulla</button>
-        <button id="_pwz_ok" style="flex:1;padding:12px;border-radius:12px;background:linear-gradient(135deg,#6366f1,#4f46e5);border:none;color:#fff;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(99,102,241,.35)">📦 Installa Package</button>
+        <button id="_pwz_ok" style="flex:1;padding:12px;border-radius:12px;background:linear-gradient(135deg,#6366f1,#4f46e5);border:none;color:#fff;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(99,102,241,.35)">📦 Installa Package</button>
       </div>
     </div>`;
-    const close=r=>{mo.remove();resolve(r);};
+    const close=r=>{document.getElementById('_fac_drop')?.remove();mo.remove();resolve(r);};
     mo.querySelector('#_pwz_x').onclick=()=>close(null);
     mo.querySelector('#_pwz_cancel').onclick=()=>close(null);
     mo.addEventListener('click',e=>{if(e.target===mo)close(null);});
@@ -4129,7 +4155,11 @@ function _pkgShowWizard(pkgName,yaml,inputs){
       close(out);
     };
     document.body.appendChild(mo);
-    setTimeout(()=>mo.querySelector('[data-key]')?.focus(),60);
+    /* attiva autocomplete entità su ogni campo */
+    setTimeout(()=>{
+      mo.querySelectorAll('[data-key]').forEach(inp=>_frarikEntityAutocomplete(inp));
+      mo.querySelector('[data-key]')?.focus();
+    },80);
   });
 }
 
@@ -18907,7 +18937,7 @@ Object.assign(window, {
   _vanessaRenderSettings, _vanessaSave, _vanessaTest, _vanessaValidateKey,
   _vanessaRunCard, _vanessaSimulateCard, _vanessaUndoCard, _vanessaCardPopup, _vanessaClearLog, _vnssToggleVacation,
   _pkgUninstallFromHA, _pkgViewOnHA, _pkgGenericInstall, _pkgPostInstall,
-  _pkgParseInputs, _pkgShowWizard,
+  _pkgParseInputs, _pkgShowWizard, _frarikEntityAutocomplete,
   _ghsPkgInstallFromGH, _pkgInstallLocalToHA, _pkgUpdateCard, _ghsPkgUpdFromPending, _ghsPkgMarkUpdated,
   _ghStoreRenderCardsNonInstallate, _ghStoreRenderCardsInstallate,
   _ghStoreRenderFolderNonInstallate, _ghStoreRenderFolderInstallate,

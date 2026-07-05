@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.9.4 — 2026-07-05
+
+### feat(pkg): wizard PKG apre dal basso + autocomplete entità HA nei campi
+
+- Il wizard di configurazione PKG è ora un bottom sheet (scorre dal basso) invece di un modal centrato
+- Ogni campo input mostra automaticamente la lista di tutte le entità HA disponibili al click/focus (filtrata mentre si digita)
+- `_frarikEntityAutocomplete`: funzione riutilizzabile per autocomplete entità su qualsiasi input
+- Memorizzato come standard UX: tutti i popup futuri apriranno dal basso
+
 ## 1.9.3 — 2026-07-05
 
 ### feat(pkg): wizard configurazione entità al momento dell'installazione PKG
