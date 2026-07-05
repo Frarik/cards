@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.9.23 — 2026-07-05
+
+### fix(store): PKG "non trovato su GitHub" — cache vuoto non veniva aggiornato dal periodic check
+
+- `_ghCheckPkg`: fix check `!_ghsCache.pkg || !_ghsCache.pkg.length` — un array vuoto `[]` è truthy in JS quindi il cache stale non veniva mai sovrascritto dai dati freschi del tree check
+- `_ghsPkgUpdFromPending`: se il cache non ha il file, ora ritenta il fetch dalla cartella `pkg/` su GitHub prima di mostrare l'errore
+
 ## 1.9.22 — 2026-07-05
 
 ### fix(pkg/bolletta): corretto doppio prefisso sensor. nel trigger allarme, aggiunto sensor proxy potenza

@@ -1846,7 +1846,8 @@ function _pkgFriendlyName(cardId){
 async function _ghCheckPkg(pkgFiles){
   if(!pkgFiles||!pkgFiles.length) return;
   // Popola il cache PKG così _ghsPkgUpdFromPending può trovare i file anche senza aprire il tab PKG
-  if(!_ghsCache.pkg) _ghsCache.pkg=pkgFiles;
+  // Usa !length così sovrascrive anche un array vuoto ([] è truthy in JS)
+  if(!_ghsCache.pkg||!_ghsCache.pkg.length) _ghsCache.pkg=pkgFiles;
   const g=_ghCfg();
   g.pkgShas=g.pkgShas||{};
   g.pkgNotifiedShas=g.pkgNotifiedShas||{};
@@ -4362,8 +4363,16 @@ function _ghsPkgDeleteLocal(name){
 
 async function _ghsPkgUpdFromPending(encodedName){
   const fileName=decodeURIComponent(encodedName);
-  /* 1. Trova il file PKG su GitHub */
-  const f=(_ghsCache.pkg||[]).find(x=>x.name===fileName);
+  /* 1. Trova il file PKG su GitHub — se il cache è vuoto/stale, ricarica prima di arrendersi */
+  let f=(_ghsCache.pkg||[]).find(x=>x.name===fileName);
+  if(!f){
+    try{
+      const fPkg=_GHS_FOLDERS['pkg'];
+      const files=await _ghListFolder(fPkg.path);
+      _ghsCache.pkg=files.filter(x=>fPkg.ext.test(x.name));
+      f=_ghsCache.pkg.find(x=>x.name===fileName);
+    }catch(e){}
+  }
   if(!f){ showToast('⚠️ PKG «'+fileName+'» non trovato su GitHub'); return; }
   showToast('⬇️ Aggiorno PKG da GitHub…');
   let yaml;
