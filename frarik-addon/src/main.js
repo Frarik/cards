@@ -1946,44 +1946,12 @@ function _ntfHandleAction(action){
   if(!action) return;
   if(action==='gh' || action.indexOf('gh:')===0){
     try{ closeNotifCenter(); }catch(e){}
-    let tab='js';
-    if(action.indexOf('gh:')===0){   // apri la scheda giusta in base alla cartella del file
-      const f=(_ghPending||[]).find(p=>p.name===action.slice(3));
-      if(f&&f.path){ if(f.path.indexOf('card-chips/')===0) tab='chips'; else if(f.path.indexOf('card-distintivi/')===0) tab='distintivi'; }
-    }
-    try{ openGhStore(); if(tab!=='js') setTimeout(()=>{ try{ ghStoreTab(tab); }catch(e){} }, 60); }catch(e){}
+    try{ openGhStore(); setTimeout(()=>{ try{ ghStoreTab('updates'); }catch(e){} }, 60); }catch(e){}
     return;
   }
   if(action.indexOf('pkg:')===0){
-    const fileName=action.slice(4);
     try{ closeNotifCenter(); }catch(e){}
-    const cardId=_pkgFindCardForFile('frarik/'+fileName)||_pkgFindCardForFile(fileName);
-    if(!cardId){
-      showToast('⚠️ Card non trovata per il PKG «'+fileName+'»');
-      try{ openGhStore(); setTimeout(()=>{ try{ ghStoreTab('pkg'); }catch(e){} }, 60); }catch(e){}
-      return;
-    }
-    const hasCfg=_pkgWizardConfigExists(cardId);
-    const friendlyName=_pkgFriendlyName(cardId)||fileName.replace(/\.ya?ml$/i,'').replace(/^frarik_/,'');
-    const doUpdate=async()=>{
-      await _pkgUpdateCard(cardId, hasCfg);
-      // Segna SHA come installato così la notifica non riappare
-      try{
-        const sha=_pkgPending[fileName]||_ghCfg().pkgNotifiedShas?.[fileName];
-        if(sha){ const g=_ghCfg(); g.pkgShas=g.pkgShas||{}; g.pkgShas[fileName]=sha; saveCfg(); }
-        delete _pkgPending[fileName];
-      }catch(e){}
-      try{ _ntfClearPkg(fileName); }catch(e){}
-      try{ _ghsUpdBadge(); }catch(e){}
-      try{ const el=document.getElementById('ghs-list'); if(el) _ghStoreRender(); }catch(e){}
-    };
-    const note=hasCfg
-      ? 'La configurazione salvata verrà riapplicata automaticamente.'
-      : 'Nota: configura i dispositivi dal wizard dopo l\'aggiornamento.';
-    showConfirm(
-      'Aggiorno il package <b>'+eh(friendlyName)+'</b>?<br><span style="font-size:11px;opacity:.7">'+note+'</span>',
-      doUpdate, 'Aggiorna PKG'
-    );
+    try{ openGhStore(); setTimeout(()=>{ try{ ghStoreTab('updates'); }catch(e){} }, 60); }catch(e){}
     return;
   }
 }
@@ -3942,9 +3910,19 @@ function _ghsPkgDeleteLocal(name){
   if(_ghsTab==='pkg') _ghStoreRender();
 }
 
-function _ghsPkgUpdFromPending(encodedName){
+async function _ghsPkgUpdFromPending(encodedName){
   const fileName=decodeURIComponent(encodedName);
-  if(typeof _ntfHandleAction==='function') _ntfHandleAction('pkg:'+fileName);
+  const cardId=_pkgFindCardForFile('frarik/'+fileName)||_pkgFindCardForFile(fileName);
+  if(!cardId){ showToast('⚠️ Card non trovata per il PKG «'+fileName+'»'); return; }
+  await _pkgUpdateCard(cardId, false);
+  try{
+    const sha=_pkgPending[fileName]||_ghCfg().pkgNotifiedShas?.[fileName];
+    if(sha){ const g=_ghCfg(); g.pkgShas=g.pkgShas||{}; g.pkgShas[fileName]=sha; saveCfg(); }
+    delete _pkgPending[fileName];
+  }catch(e){}
+  try{ _ntfClearPkg(fileName); }catch(e){}
+  try{ _ghsUpdBadge(); }catch(e){}
+  try{ const el=document.getElementById('ghs-list'); if(el) _ghStoreRender(); }catch(e){}
 }
 
 function _ghsPkgCopyLocal(name){
@@ -14273,7 +14251,7 @@ function _adminShowFirstAccess(){
   function on(id, ev, fn){ const el=document.getElementById(id); if(el) el.addEventListener(ev,fn); }
   on('conn-wrap',   'click', ()=>confirmRestartHA());
   on('views-btn',   'click', e=>toggleViewsMenu(e));
-  on('notif-bell',  'click', e=>toggleNotifCenter(e));
+  on('notif-bell',  'click', ()=>{ try{ openGhStore(); setTimeout(()=>{ try{ ghStoreTab('updates'); }catch(x){} },60); }catch(x){} });
   on('kiosk-btn',   'click', ()=>toggleKiosk());
   on('backup-file-input','change',e=>{ const f=e.target.files&&e.target.files[0]; if(f) importBackupFile(f); });
   on('theme-file-input','change',e=>{ const f=e.target.files&&e.target.files[0]; if(f) importThemeFile(f); });
