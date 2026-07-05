@@ -151,9 +151,9 @@
     const statusLabel = heating ? 'RISCALDAMENTO' : swOn ? 'PRONTO' : 'SPENTO';
     const statusText  = heating ? 'In riscaldamento' : swOn ? 'Pronto' : 'Spento';
 
-    const barMax = 2500;
+    const barMax = 3000;
     const barPct = Math.min(100, (pw / barMax) * 100);
-    const barCol = pw < 50 ? '#64748b' : pw <= 500 ? '#38bdf8' : pw <= 1500 ? '#22c55e' : pw <= 2000 ? '#f97316' : '#ef4444';
+    const barCol = pw < 50 ? '#64748b' : pw <= 800 ? '#22c55e' : pw <= 1600 ? '#eab308' : pw <= 2400 ? '#f97316' : '#ef4444';
 
     const kwOggiNum = num(kwOggi);
     const kwMeseNum = num(kwMese);

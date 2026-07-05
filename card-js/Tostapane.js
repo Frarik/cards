@@ -112,8 +112,8 @@
     const pw     = pwV || 0;
     const col    = running ? '#f97316' : '#64748b';
     const statusLabel = running ? 'TOSTATURA ON' : 'STANDBY';
-    const barPct = Math.min(100, (pw / sogliaN) * 100);
-    const barCol = pw < 50 ? '#64748b' : pw <= 300 ? '#f97316' : pw <= 600 ? '#fb923c' : pw <= 900 ? '#f97316' : '#ef4444';
+    const barMax = 1500; const barPct = Math.min(100, (pw / barMax) * 100);
+    const barCol = pw < 20 ? '#64748b' : pw <= 400 ? '#22c55e' : pw <= 800 ? '#eab308' : pw <= 1200 ? '#f97316' : '#ef4444';
 
     let lastCycleFull = null;
     if (!running && terminato && terminato !== '—') {

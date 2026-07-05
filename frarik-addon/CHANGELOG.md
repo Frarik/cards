@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.18 — 2026-07-05
+
+### feat(cards/all): barra potenza con scala realistica e colori verde/giallo/arancio/rosso
+
+- **barMax per ogni elettrodomestico**: la barra ora scala sulla potenza massima reale (es. frigorifero 300W, induzione 7200W)
+- **Colori corretti**: grigio = standby, verde = consumo basso, giallo = consumo medio, arancio = consumo alto, rosso = consumo massimo
+- **Soglie per appliance**: Frigorifero 300W, Microonde 1500W, Montalatte 1000W, Tostapane 1500W, Friggitrice 2000W, Lavatrice/Lavastoviglie 2500W, Forno 3500W, Scaldabagno 3000W, Asciugatrice 4000W, Induzione 7200W
+
 ## 1.9.17 — 2026-07-05
 
 ### fix(cards/all): soglia lavoro salvata in localStorage, default frigorifero 30W

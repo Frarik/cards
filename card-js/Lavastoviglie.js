@@ -101,8 +101,8 @@
     const pw     = pwV || 0;
     const col    = running ? '#38bdf8' : '#64748b';
     const statusLabel = running ? 'POMPA ON' : 'STANDBY';
-    const barPct = Math.min(100, (pw / soglia) * 100);
-    const barCol = pw < 50 ? '#64748b' : pw <= 150 ? '#38bdf8' : pw <= 250 ? '#22c55e' : pw <= 400 ? '#f97316' : '#ef4444';
+    const barMax = 2500; const barPct = Math.min(100, (pw / barMax) * 100);
+    const barCol = pw < 30 ? '#64748b' : pw <= 700 ? '#22c55e' : pw <= 1400 ? '#eab308' : pw <= 2000 ? '#f97316' : '#ef4444';
 
     let lastCycleFull = null;
     if (!running && terminato && terminato !== '—') {

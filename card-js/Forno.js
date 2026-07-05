@@ -97,8 +97,8 @@
     const pw     = pwV || 0;
     const col    = running ? '#38bdf8' : '#64748b';
     const statusLabel = running ? 'RESISTENZA ON' : 'STANDBY';
-    const barPct = Math.min(100, (pw / soglia) * 100);
-    const barCol = pw < 50 ? '#64748b' : pw <= 150 ? '#38bdf8' : pw <= 250 ? '#22c55e' : pw <= 400 ? '#f97316' : '#ef4444';
+    const barMax = 3500; const barPct = Math.min(100, (pw / barMax) * 100);
+    const barCol = pw < 50 ? '#64748b' : pw <= 900 ? '#22c55e' : pw <= 1800 ? '#eab308' : pw <= 2800 ? '#f97316' : '#ef4444';
 
     let lastCycleFull = null;
     if (!running && terminato && terminato !== '—') {
