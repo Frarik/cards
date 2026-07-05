@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.9.24 — 2026-07-05
+
+### feat(card/bolletta): nuova card Bolletta v5.0 per PKG frarik_bolletta v10
+
+- Riscrittura completa `card-js/Bolletta.js` per il nuovo PKG `frarik_bolletta.yaml`
+- Entità aggiornate al nuovo schema: `sensor.frarik_bolletta_*`, `input_number.frarik_bolletta_*`, `input_boolean.frarik_bolletta_*`
+- Main card: dual-hero kWh/€ mese, barra potenza live vs soglia, stats (oggi/previsione/€ per kWh), progress bar mese
+- Popup Dettaglio: breakdown calcolo bolletta (energia variabile, fissi, IVA, canone RAI, bonus), anno kWh/€
+- Popup Storico: grafico 12 mesi corrente vs anno precedente, tabella dettaglio, grafico settimanale kWh per giorno
+- Popup Impostazioni (3 tab): Notifiche (toggle tutti gli input_boolean), Prezzi (tutti i prezzi tariffari → scritti su HA via callService), FV/Batteria (toggle + autoconsumo + simulatore)
+- Registrazione via `window.FratechCardRegistry` con `frarik_pkg_check: sensor.frarik_bolletta_versione`
+
 ## 1.9.23 — 2026-07-05
 
 ### fix(store): PKG "non trovato su GitHub" — cache vuoto non veniva aggiornato dal periodic check
