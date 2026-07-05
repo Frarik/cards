@@ -1,79 +1,45 @@
-###############################################################
-#                                                             #
-#   ███████╗██████╗  █████╗ ██████╗ ██╗██╗  ██╗             #
-#   ██╔════╝██╔══██╗██╔══██╗██╔══██╗██║██║ ██╔╝             #
-#   █████╗  ██████╔╝███████║██████╔╝██║█████╔╝              #
-#   ██╔══╝  ██╔══██╗██╔══██║██╔══██╗██║██╔═██╗              #
-#   ██║     ██║  ██║██║  ██║██║  ██║██║██║  ██╗             #
-#   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝            #
-#                                                             #
-#   Package: Frarik — Centro Controllo Induzione        #
-#   Versione: 2.0  |  Frarik / Fratech                       #
-#                                                             #
-###############################################################
-#
-# COSA FA QUESTO PACKAGE
-# ──────────────────────────────────────────────────────────
-#  ▸ Monitoraggio potenza istantanea (W) e rilevamento ciclo
-#  ▸ Tracciamento energia consumata (kWh) giorno/mese/anno
-#  ▸ Calcolo costi energetici (usa input_number.costo_energia)
-#  ▸ Conteggio cicli oggi/mese/anno e storico 7 giorni
-#  ▸ Durata ciclo live e storico con statistiche settimanali
-#  ▸ Notifiche fine ciclo: Push / Alexa / Google (orario custom)
-#  ▸ Spegnimento automatico programmato
-#
-###############################################################
-#
-# INSTALLAZIONE TRAMITE STORE FRARIK
-# ──────────────────────────────────────────────────────────
-#  Il wizard sostituisce automaticamente i segnaposto IL_TUO_*
-#  con le entita' che inserisci durante la configurazione.
-#
-# INSTALLAZIONE MANUALE
-# ──────────────────────────────────────────────────────────
-#  1. configuration.yaml deve contenere:
-#        homeassistant:
-#          packages: !include_dir_named packages
-#  2. Copia in packages/frarik/
-#  3. Sostituisci i segnaposto IL_TUO_* con le tue entita'
-#  4. Riavvia Home Assistant
-#
-###############################################################
-
 homeassistant:
   customize:
     package.node_anchors:
       customize: &customize
-        package: 'Frarik — Centro Controllo Induzione 2.0 — Frarik'
+        package: 'Frarik Induzione 10'
+        author: 'Frarik'
+        reference: 'github.com/Frarik/cards'
       setting:
 
 ####################################################
+#                                                  #
 #              IMPOSTAZIONI PACKAGE                #
+#                                                  #
 ####################################################
 
-        Sensore Potenza Induzione: &sensore_potenza   "{{ states('IL_TUO_SENSORE_POTENZA') | float(0) }}"
-        Switch Induzione:          &switch_induzione   "IL_TUO_SWITCH"
+        Sensore Consumo Elettrodomestici: &sensore_consumo_induzione "{{ states('IL_TUO_SENSORE_POTENZA') | float(0) }}"
+        Switch Power Elettrodomestici: &switch_induzione 'IL_TUO_SWITCH'
 
         Lista MediaPlayer Google: &google
           - IL_TUO_MEDIA_PLAYER_GOOGLE
 
-        Lista MediaPlayer Alexa: &alexa
+        Lista mediaplayer alexa: &alexa
           - IL_TUO_MEDIA_PLAYER_ALEXA
 
         Device per notifica push: &push
           - service: IL_TUO_MOBILE_APP
 
 ####################################################
-#                  NOTIFICHE                       #
+#                                                  #
+#              NOTIFICHE GRUPPO                    #
+#                                                  #
 ####################################################
 
 notify:
-  - name: frarik_induzione_notify
+  - name: Frarik Induzione
     platform: group
     services: *push
 
 ####################################################
+#                                                  #
 #                    SENSORI                       #
+#                                                  #
 ####################################################
 
 sensor:
@@ -85,13 +51,14 @@ sensor:
     round: 2
 
 ####################################################
-#                 INPUT NUMBER                     #
+#                                                  #
+#                INPUT NUMBER                      #
+#                                                  #
 ####################################################
 
 input_number:
-
-  frarik_induzione_soglia_w:
-    name: Soglia Lavoro Induzione W
+  frarik_induzione_soglia_lavoro_w:
+    name: Soglia Lavoro Elettrodomestici W
     icon: mdi:flash
     min: 0
     max: 5000
@@ -100,8 +67,8 @@ input_number:
     mode: box
 
   frarik_induzione_tempo_innesco_m:
-    name: Tempo Innesco Induzione M
-    icon: mdi:timer
+    name: Tempo Innesco Elettrodomestici M
+    icon: mdi:flash
     min: 0
     max: 60
     step: 1.00
@@ -109,8 +76,8 @@ input_number:
     mode: box
 
   frarik_induzione_avvio_ritardato_s:
-    name: Avvio Ritardato Induzione S
-    icon: mdi:timer-sand
+    name: Avvio Ritardato Conteggio Elettrodomestici S
+    icon: mdi:flash
     min: 0
     max: 60
     step: 1.00
@@ -119,98 +86,14 @@ input_number:
 
 ####################################################
 
-  frarik_induzione_consumo_lunedi:
+  frarik_induzione_lunedi_consumo:
     icon: mdi:counter
     min: 0
     max: 999999
     mode: box
     unit_of_measurement: "kwh"
 
-  frarik_induzione_costo_lunedi:
-    icon: mdi:counter
-    min: 0
-    max: 999999
-    mode: box
-    unit_of_measurement: "€"
-
-  frarik_induzione_consumo_martedi:
-    icon: mdi:counter
-    min: 0
-    max: 999999
-    mode: box
-    unit_of_measurement: "kwh"
-
-  frarik_induzione_costo_martedi:
-    icon: mdi:counter
-    min: 0
-    max: 999999
-    mode: box
-    unit_of_measurement: "€"
-
-  frarik_induzione_consumo_mercoledi:
-    icon: mdi:counter
-    min: 0
-    max: 999999
-    mode: box
-    unit_of_measurement: "kwh"
-
-  frarik_induzione_costo_mercoledi:
-    icon: mdi:counter
-    min: 0
-    max: 999999
-    mode: box
-    unit_of_measurement: "€"
-
-  frarik_induzione_consumo_giovedi:
-    icon: mdi:counter
-    min: 0
-    max: 999999
-    mode: box
-    unit_of_measurement: "kwh"
-
-  frarik_induzione_costo_giovedi:
-    icon: mdi:counter
-    min: 0
-    max: 999999
-    mode: box
-    unit_of_measurement: "€"
-
-  frarik_induzione_consumo_venerdi:
-    icon: mdi:counter
-    min: 0
-    max: 999999
-    mode: box
-    unit_of_measurement: "kwh"
-
-  frarik_induzione_costo_venerdi:
-    icon: mdi:counter
-    min: 0
-    max: 999999
-    mode: box
-    unit_of_measurement: "€"
-
-  frarik_induzione_consumo_sabato:
-    icon: mdi:counter
-    min: 0
-    max: 999999
-    mode: box
-    unit_of_measurement: "kwh"
-
-  frarik_induzione_costo_sabato:
-    icon: mdi:counter
-    min: 0
-    max: 999999
-    mode: box
-    unit_of_measurement: "€"
-
-  frarik_induzione_consumo_domenica:
-    icon: mdi:counter
-    min: 0
-    max: 999999
-    mode: box
-    unit_of_measurement: "kwh"
-
-  frarik_induzione_costo_domenica:
+  frarik_induzione_lunedi_costo:
     icon: mdi:counter
     min: 0
     max: 999999
@@ -218,10 +101,110 @@ input_number:
     unit_of_measurement: "€"
 
 ####################################################
+
+  frarik_induzione_martedi_consumo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "kwh"
+
+  frarik_induzione_martedi_costo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "€"
+
+####################################################
+
+  frarik_induzione_mercoledi_consumo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "kwh"
+
+  frarik_induzione_mercoledi_costo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "€"
+
+####################################################
+
+  frarik_induzione_giovedi_consumo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "kwh"
+
+  frarik_induzione_giovedi_costo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "€"
+
+####################################################
+
+  frarik_induzione_venerdi_consumo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "kwh"
+
+  frarik_induzione_venerdi_costo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "€"
+
+####################################################
+
+  frarik_induzione_sabato_consumo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "kwh"
+
+  frarik_induzione_sabato_costo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "€"
+
+####################################################
+
+  frarik_induzione_domenica_consumo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "kwh"
+
+  frarik_induzione_domenica_costo:
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: "€"
+
+####################################################
+#                                                  #
 #                 UTILITY METER                    #
+#                                                  #
 ####################################################
 
 utility_meter:
+
+# Tempo
 
   frarik_induzione_tempo_oggi:
     source: sensor.frarik_induzione_time_on
@@ -235,6 +218,10 @@ utility_meter:
     source: sensor.frarik_induzione_time_on
     cycle: yearly
 
+####################################################
+
+# Cicli
+
   frarik_induzione_cicli_oggi:
     source: counter.frarik_induzione_cicli_totale
     cycle: daily
@@ -246,6 +233,10 @@ utility_meter:
   frarik_induzione_cicli_anno:
     source: counter.frarik_induzione_cicli_totale
     cycle: yearly
+
+####################################################
+
+# Consumi KWh
 
   frarik_induzione_energy_oggi:
     source: sensor.frarik_induzione_kwh
@@ -260,272 +251,312 @@ utility_meter:
     cycle: yearly
 
 ####################################################
-#                   TEMPLATE                       #
+#                                                  #
+#                TEMPLATE                          #
+#                                                  #
 ####################################################
 
 template:
-
   - binary_sensor:
-      - name: frarik_induzione_motore
-        icon: mdi:stove
-        state: >-
-          {{ 'on' if (states('sensor.frarik_induzione_potenza_w') | int(0)) >
-             states('input_number.frarik_induzione_soglia_w') | int(0) else 'off' }}
-        delay_off: "00:{{ states('input_number.frarik_induzione_tempo_innesco_m') | int(0) }}:00"
-        delay_on:  "00:00:{{ states('input_number.frarik_induzione_avvio_ritardato_s') | int(0) }}"
+      - name: frarik_induzione_ac
+        icon: mdi:state-machine
+        state: "{{ 'on' if (states('sensor.frarik_induzione_potenza_w') | int(0) ) > states('input_number.frarik_induzione_soglia_lavoro_w')|int(0) else 'off' }}"
+        delay_off: "00:{{ states('input_number.frarik_induzione_tempo_innesco_m')|int(0) }}:00"
+        delay_on: "00:00:{{ states('input_number.frarik_induzione_avvio_ritardato_s')|int(0) }}"
 
 ####################################################
 
   - trigger:
       - platform: state
-        entity_id: input_boolean.frarik_induzione_ciclo_attivo
+        entity_id: input_boolean.frarik_induzione_durata_ciclo_attivo
         from: "off"
         to: "on"
     sensor:
       - name: frarik_induzione_inizio_ciclo
-        state: "{{ states('sensor.frarik_induzione_kwh') }}"
+        state: "{{states('sensor.frarik_induzione_kwh')}}"
 
   - trigger:
       - platform: state
-        entity_id: binary_sensor.frarik_induzione_motore
+        entity_id: binary_sensor.frarik_induzione_ac
         from: "on"
         to: "off"
     sensor:
       - name: frarik_induzione_fine_ciclo
-        state: "{{ now().strftime('%d/%m/%Y %H:%M') }}"
+        state: "{{now().strftime('%d/%m/%Y %H:%M')}}"
 
 ####################################################
 
   - trigger:
       - platform: state
-        entity_id: input_boolean.frarik_induzione_ciclo_attivo
-        from: "off"
+        entity_id: input_boolean.frarik_induzione_durata_ciclo_attivo
+        from: 'off'
         to: "on"
     sensor:
       - name: frarik_induzione_tempo_riavvio
-        state: "{{ as_timestamp(now()) }}"
+        state: "{{as_timestamp(now())}}"
 
 ####################################################
 
   - sensor:
-      - name: frarik_induzione_time_on
+      - name: "frarik_induzione_time_on"
         icon: mdi:history
         state: >-
-          {% if is_state('binary_sensor.frarik_induzione_motore', 'on') and
-                (as_timestamp(states.binary_sensor.frarik_induzione_motore.last_changed) + 1) <= as_timestamp(now()) %}
-            {{ ((as_timestamp(now()) - as_timestamp(states.binary_sensor.frarik_induzione_motore.last_changed)) / 3600) }}
+          {%if is_state('binary_sensor.frarik_induzione_ac', 'on') and (as_timestamp(states.binary_sensor.frarik_induzione_ac.last_changed)+1) <= as_timestamp(now())%}
+            {{((as_timestamp(now()) - as_timestamp(states.binary_sensor.frarik_induzione_ac.last_changed))/3600)}}
           {% else %} 0 {% endif %}
         attributes:
-          terminato: >-
-            {{ states('sensor.frarik_induzione_fine_ciclo') if is_state('binary_sensor.frarik_induzione_motore', 'off') else 'In funzione' }}
-          tempo_ciclo_induzione: >
-            {% set hours = (as_timestamp(now()) - states('sensor.frarik_induzione_tempo_riavvio') | float(0)) / 3600 %}
-            {% set minutes = ((hours % 1) * 60) | int(0) %}
+          terminato: "{{ states('sensor.frarik_induzione_fine_ciclo') if is_state('binary_sensor.frarik_induzione_ac', 'off') else 'In funzione' }}"
+          frarik_induzione_tempo_ciclo: >
+            {%set hours =(as_timestamp(now()) - states('sensor.frarik_induzione_tempo_riavvio')|float(0))/3600 %}
+            {% set minutes = ((hours % 1) * 60) | int (0)%}
             {% set hours = (hours - (hours % 1)) | int(0) %}
-            {% set day = ((hours | int(0) / 24)) | int(0) %}
-            {% if is_state('input_boolean.frarik_induzione_ciclo_attivo', 'on') %}
-              {% if day | int(0) > 0 %}
-                {{ day }}d {{ (hours | int(0)) - (day * 24) }}h {{ minutes }}m
-              {% elif hours | int(0) > 0 %}
-                {{ hours }}h {{ minutes }}m
+            {%set day = ((hours |int(0) /24))|int(0) %}
+            {%if is_state('input_boolean.frarik_induzione_durata_ciclo_attivo', 'on')%}
+              {% if day|int(0) >0 %}
+                {{day}}d {{(hours|int(0))-(day*24)}}h {{minutes}}m
+              {% elif hours|int(0) >0 %}
+                {{hours}}h {{minutes}}m
               {% else %}
-                {{ minutes }}min
+                {{minutes}}min
               {% endif %}
-            {% else %}
-              {{ states('input_text.frarik_induzione_ultimo_ciclo') }}
-            {% endif %}
+            {%else%}
+            {{states('input_text.frarik_induzione_ultimo_ciclo')}}
+            {%endif%}
           Oggi: >
             {% set hours = states('sensor.frarik_induzione_tempo_oggi') | float(0) %}
             {% set minutes = ((hours % 1) * 60) | int(0) %}
             {% set hours = (hours - (hours % 1)) | int(0) %}
-            {% if hours | int(0) > 0 %}
-              {{ hours }}h {{ minutes }}m
-            {% else %}
-              {{ minutes }}min
-            {% endif %}
+              {% if hours|int(0) >0 %}
+                {{hours}}h {{minutes}}m
+              {% else %}
+                {{minutes}}min
+              {% endif %}
           Mese: >
             {% set hours = states('sensor.frarik_induzione_tempo_mese') | float(0) %}
             {% set minutes = ((hours % 1) * 60) | int(0) %}
             {% set hours = (hours - (hours % 1)) | int(0) %}
-            {% set day = ((hours | int / 24)) | int(0) %}
-            {% if day | int(0) > 0 %}
-              {{ day }}d {{ (hours | int) - (day * 24) }}h {{ minutes }}m
-            {% elif hours | int(0) > 0 %}
-              {{ hours }}h {{ minutes }}m
-            {% else %}
-              {{ minutes }}min
-            {% endif %}
+            {% set day = ((hours |int /24))|int(0) %}
+              {% if day|int(0) >0 %}
+                {{day}}d {{(hours|int)-(day*24)}}h {{minutes}}m
+              {% elif hours|int(0) >0 %}
+                {{hours}}h {{minutes}}m
+              {% else %}
+                {{minutes}}min
+              {% endif %}
           Anno: >
             {% set hours = states('sensor.frarik_induzione_tempo_anno') | float(0) %}
             {% set minutes = ((hours % 1) * 60) | int(0) %}
             {% set hours = (hours - (hours % 1)) | int(0) %}
-            {% set day = ((hours | int(0) / 24)) | int(0) %}
-            {% if day | int(0) > 0 %}
-              {{ day }}d {{ (hours | int(0)) - (day * 24) }}h {{ minutes }}m
-            {% elif hours | int(0) > 0 %}
-              {{ hours }}h {{ minutes }}m
-            {% else %}
-              {{ minutes }}min
-            {% endif %}
+            {% set day = ((hours |int(0) /24))|int(0) %}
+              {% if day|int(0) >0 %}
+                {{day}}d {{(hours|int(0))-(day*24)}}h {{minutes}}m
+              {% elif hours|int(0) >0 %}
+                {{hours}}h {{minutes}}m
+              {% else %}
+                {{minutes}}min
+              {% endif %}
           Ieri: >
             {% set hours = state_attr('sensor.frarik_induzione_tempo_oggi', 'last_period') | float(0) %}
             {% set minutes = ((hours % 1) * 60) | int(0) %}
             {% set hours = (hours - (hours % 1)) | int(0) %}
-            {% if hours | int(0) > 0 %}
-              {{ hours }}h {{ minutes }}m
-            {% else %}
-              {{ minutes }}min
-            {% endif %}
+              {% if hours|int(0) >0 %}
+                {{hours}}h {{minutes}}m
+              {% else %}
+                {{minutes}}min
+              {% endif %}
           Mese Precedente: >
             {% set hours = state_attr('sensor.frarik_induzione_tempo_mese', 'last_period') | float(0) %}
             {% set minutes = ((hours % 1) * 60) | int(0) %}
             {% set hours = (hours - (hours % 1)) | int(0) %}
-            {% set day = ((hours | int / 24)) | int(0) %}
-            {% if day | int(0) > 0 %}
-              {{ day }}d {{ (hours | int) - (day * 24) }}h {{ minutes }}m
-            {% elif hours | int(0) > 0 %}
-              {{ hours }}h {{ minutes }}m
-            {% else %}
-              {{ minutes }}min
-            {% endif %}
+            {% set day = ((hours |int /24))|int(0) %}
+              {% if day|int(0) >0 %}
+                {{day}}d {{(hours|int)-(day*24)}}h {{minutes}}m
+              {% elif hours|int(0) >0 %}
+                {{hours}}h {{minutes}}m
+              {% else %}
+                {{minutes}}min
+              {% endif %}
           Anno Precedente: >
             {% set hours = state_attr('sensor.frarik_induzione_tempo_anno', 'last_period') | float(0) %}
             {% set minutes = ((hours % 1) * 60) | int(0) %}
             {% set hours = (hours - (hours % 1)) | int(0) %}
-            {% set day = ((hours | int(0) / 24)) | int(0) %}
-            {% if day | int(0) > 0 %}
-              {{ day }}d {{ (hours | int(0)) - (day * 24) }}h {{ minutes }}m
-            {% elif hours | int(0) > 0 %}
-              {{ hours }}h {{ minutes }}m
-            {% else %}
-              {{ minutes }}min
-            {% endif %}
-          consumo_ciclo_induzione: >-
-            {{ (states('sensor.frarik_induzione_kwh') | float(0) - states('sensor.frarik_induzione_inizio_ciclo') | float(0)) | round(2) }} kWh
-          costo_ciclo_induzione: >-
-            {{ ((states('sensor.frarik_induzione_kwh') | float(0) - states('sensor.frarik_induzione_inizio_ciclo') | float(0)) * states('input_number.costo_energia') | float(0)) | round(2) }}
-          costo_oggi_induzione: >-
-            {{ (states('sensor.frarik_induzione_energy_oggi') | float(0) * states('input_number.costo_energia') | float(0)) | round(2) }}
-          costo_mese_induzione: >-
-            {{ (states('sensor.frarik_induzione_energy_mese') | float(0) * states('input_number.costo_energia') | float(0)) | round(2) }}
-          costo_anno_induzione: >-
-            {{ (states('sensor.frarik_induzione_energy_anno') | float(0) * states('input_number.costo_energia') | float(0)) | round(2) }}
-          costo_ieri_induzione: >-
-            {{ (state_attr('sensor.frarik_induzione_energy_oggi', 'last_period') | float(0) * states('input_number.costo_energia') | float(0)) | round(2) }}
-          costo_mese_precedente_induzione: >-
-            {{ (state_attr('sensor.frarik_induzione_energy_mese', 'last_period') | float(0) * states('input_number.costo_energia') | float(0)) | round(2) }}
-          costo_anno_precedente_induzione: >-
-            {{ (state_attr('sensor.frarik_induzione_energy_anno', 'last_period') | float(0) * states('input_number.costo_energia') | float(0)) | round(2) }}
+            {% set day = ((hours |int(0) /24))|int(0) %}
+              {% if day|int(0) >0 %}
+                {{day}}d {{(hours|int(0))-(day*24)}}h {{minutes}}m
+              {% elif hours|int(0) >0 %}
+                {{hours}}h {{minutes}}m
+              {% else %}
+                {{minutes}}min
+              {% endif %}
 
-      - name: frarik_induzione_potenza_w
-        unit_of_measurement: "W"
+          frarik_induzione_consumo_ciclo: "{{(states('sensor.frarik_induzione_kwh')|float(0)-states('sensor.frarik_induzione_inizio_ciclo')|float(0))|round(2)}} kWh"
+          frarik_induzione_costo_ciclo: "{{((states('sensor.frarik_induzione_kwh')|float(0)-states('sensor.frarik_induzione_inizio_ciclo')|float(0)) * (states('input_number.costo_energia')| float(0))) | round(2, default=0) }}"
+
+          frarik_induzione_costo_giornaliero: "{{((states('sensor.frarik_induzione_energy_oggi') | float(0)) * (states('input_number.costo_energia')| float(0))) | round(2, default=0) }}"
+          frarik_induzione_costo_mensile: "{{((states('sensor.frarik_induzione_energy_mese') | float(0)) * (states('input_number.costo_energia')| float(0))) | round(2, default=0) }}"
+          frarik_induzione_costo_annuale: "{{((states('sensor.frarik_induzione_energy_anno') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}"
+
+          frarik_induzione_costo_ieri: "{{((state_attr('sensor.frarik_induzione_energy_oggi', 'last_period') | float(0)) * (states('input_number.costo_energia')| float(0))) | round(2, default=0) }}"
+          frarik_induzione_costo_mese_precedente: "{{((state_attr('sensor.frarik_induzione_energy_mese', 'last_period') | float(0)) * (states('input_number.costo_energia')| float(0))) | round(2, default=0) }}"
+          frarik_induzione_costo_anno_precedente: "{{((state_attr('sensor.frarik_induzione_energy_anno', 'last_period') | float(0)) * (states('input_number.costo_energia') | float(0))) | round(2, default=0) }}"
+
+  - sensor:
+      - name: "frarik_induzione_potenza_w"
+        unit_of_measurement: 'W'
         device_class: power
         state_class: measurement
         icon: mdi:flash
-        state: *sensore_potenza
+        state: *sensore_consumo_induzione
+
+      - name: "frarik_induzione_versione"
+        state: "10"
 
 ####################################################
-#                    COUNTER                       #
+#                                                  #
+#                CUONTER                           #
+#                                                  #
 ####################################################
 
 counter:
   frarik_induzione_cicli_totale:
-    name: Cicli Induzione Totale
+    name: Cicli Funzionamento Elettrodomestici Totale
     initial: 0
     step: 1
 
 ####################################################
-#                 INPUT BOOLEAN                    #
+#                                                  #
+#                INPUT BOOLEAN                     #
+#                                                  #
 ####################################################
 
 input_boolean:
-
   frarik_induzione_switch:
-    name: Switch Induzione
-    icon: mdi:power
-
-  frarik_induzione_ciclo_attivo:
-    name: Ciclo Attivo Induzione
-
-  frarik_induzione_notify_push:
-    name: Notifica Push Induzione
-
-  frarik_induzione_notify_alexa:
-    name: Notifica Alexa Induzione
-
-  frarik_induzione_notify_google:
-    name: Notifica Google Induzione
+    name: Switch Elettrodomestici
+    icon: mdi:flash
 
 ####################################################
-#                     GROUP                        #
+
+  frarik_induzione_durata_ciclo_attivo:
+    name: Ciclo Attivo Elettrodomestici
+
+####################################################
+
+  frarik_induzione_notify_push:
+    name: Notifica Push
+
+####################################################
+
+  frarik_induzione_notify_alexa:
+    name: Notifica Alexa
+
+####################################################
+
+  frarik_induzione_notify_google:
+    name: Notifica Google
+
+####################################################
+#                                                  #
+#                      GROUP                       #
+#                                                  #
 ####################################################
 
 group:
-  frarik_induzione_controlli:
-    entities:
-      - input_boolean.frarik_induzione_notify_google
-      - input_boolean.frarik_induzione_notify_alexa
-      - input_boolean.frarik_induzione_notify_push
-      - input_boolean.frarik_induzione_switch
+ frarik_induzione_notifiche:
+  entities:
+    - input_boolean.frarik_induzione_notify_google
+    - input_boolean.frarik_induzione_notify_alexa
+    - input_boolean.frarik_induzione_notify_push
+    - automation.frarik_induzione_off_automatico
+    - input_boolean.frarik_induzione_switch
 
 ####################################################
-#                INPUT DATETIME                    #
+#                                                  #
+#                  INPUT DATETIME                  #
+#                                                  #
 ####################################################
 
 input_datetime:
 
-  frarik_induzione_orario_inizio_notifiche:
-    name: Orario Inizio Notifiche Induzione
+  orario_inizio_frarik_induzione_notifiche:
+    name: Orario Inizio Notifiche Elettrodomestici
     has_date: false
     has_time: true
 
-  frarik_induzione_orario_fine_notifiche:
-    name: Orario Fine Notifiche Induzione
+  ####################################################
+
+  orario_fine_frarik_induzione_notifiche:
+    name: Orario Fine Notifiche Elettrodomestici
     has_date: false
     has_time: true
 
-  frarik_induzione_off_automatico:
-    name: Induzione Off Automatico
+  ####################################################
+
+  frarik_induzione_off:
+    name: Elettrodomestici Off
     has_date: false
     has_time: true
 
 ####################################################
+#                                                  #
 #                  INPUT TEXT                      #
+#                                                  #
 ####################################################
 
 input_text:
-
   frarik_induzione_data_reset:
+
+####################################################
 
   frarik_induzione_nome:
 
+####################################################
+
   frarik_induzione_messaggio:
+
+####################################################
 
   frarik_induzione_ultimo_ciclo:
 
-  frarik_induzione_cicli_lunedi:
-  frarik_induzione_tempo_lunedi:
+####################################################
+####################################################
 
-  frarik_induzione_cicli_martedi:
-  frarik_induzione_tempo_martedi:
-
-  frarik_induzione_cicli_mercoledi:
-  frarik_induzione_tempo_mercoledi:
-
-  frarik_induzione_cicli_giovedi:
-  frarik_induzione_tempo_giovedi:
-
-  frarik_induzione_cicli_venerdi:
-  frarik_induzione_tempo_venerdi:
-
-  frarik_induzione_cicli_sabato:
-  frarik_induzione_tempo_sabato:
-
-  frarik_induzione_cicli_domenica:
-  frarik_induzione_tempo_domenica:
+  frarik_induzione_lunedi_cicli:
+  frarik_induzione_lunedi_tempo:
 
 ####################################################
-#                    SCRIPT                        #
+
+  frarik_induzione_martedi_cicli:
+  frarik_induzione_martedi_tempo:
+
+####################################################
+
+  frarik_induzione_mercoledi_cicli:
+  frarik_induzione_mercoledi_tempo:
+
+####################################################
+
+  frarik_induzione_giovedi_cicli:
+  frarik_induzione_giovedi_tempo:
+
+####################################################
+
+  frarik_induzione_venerdi_cicli:
+  frarik_induzione_venerdi_tempo:
+
+####################################################
+
+  frarik_induzione_sabato_cicli:
+  frarik_induzione_sabato_tempo:
+
+####################################################
+
+  frarik_induzione_domenica_cicli:
+  frarik_induzione_domenica_tempo:
+
+####################################################
+#                                                  #
+#                        SCRIPT                    #
+#                                                  #
 ####################################################
 
 script:
@@ -533,7 +564,8 @@ script:
     sequence:
     - service: input_text.set_value
       data:
-        value: "{{ now().strftime('%d/%m/%Y %H:%M') }}"
+        value: >-
+          {{now().strftime('%d/%m/%Y %H:%M')}}
       target:
         entity_id: input_text.frarik_induzione_data_reset
     - service: utility_meter.calibrate
@@ -550,75 +582,80 @@ script:
           - sensor.frarik_induzione_tempo_oggi
           - sensor.frarik_induzione_tempo_mese
           - sensor.frarik_induzione_tempo_anno
+
+
     - service: input_number.set_value
       data:
         value: '0'
       target:
         entity_id:
-          - input_number.frarik_induzione_consumo_lunedi
-          - input_number.frarik_induzione_consumo_martedi
-          - input_number.frarik_induzione_consumo_mercoledi
-          - input_number.frarik_induzione_consumo_giovedi
-          - input_number.frarik_induzione_consumo_venerdi
-          - input_number.frarik_induzione_consumo_sabato
-          - input_number.frarik_induzione_consumo_domenica
-          - input_number.frarik_induzione_costo_lunedi
-          - input_number.frarik_induzione_costo_martedi
-          - input_number.frarik_induzione_costo_mercoledi
-          - input_number.frarik_induzione_costo_giovedi
-          - input_number.frarik_induzione_costo_venerdi
-          - input_number.frarik_induzione_costo_sabato
-          - input_number.frarik_induzione_costo_domenica
+          - input_number.frarik_induzione_lunedi_consumo
+          - input_number.frarik_induzione_martedi_consumo
+          - input_number.frarik_induzione_mercoledi_consumo
+          - input_number.frarik_induzione_giovedi_consumo
+          - input_number.frarik_induzione_venerdi_consumo
+          - input_number.frarik_induzione_sabato_consumo
+          - input_number.frarik_induzione_domenica_consumo
+          - input_number.frarik_induzione_lunedi_costo
+          - input_number.frarik_induzione_martedi_costo
+          - input_number.frarik_induzione_mercoledi_costo
+          - input_number.frarik_induzione_giovedi_costo
+          - input_number.frarik_induzione_venerdi_costo
+          - input_number.frarik_induzione_sabato_costo
+          - input_number.frarik_induzione_domenica_costo
+
     - service: input_text.set_value
       data:
         value: '0'
       target:
         entity_id:
-          - input_text.frarik_induzione_cicli_lunedi
-          - input_text.frarik_induzione_cicli_martedi
-          - input_text.frarik_induzione_cicli_mercoledi
-          - input_text.frarik_induzione_cicli_giovedi
-          - input_text.frarik_induzione_cicli_venerdi
-          - input_text.frarik_induzione_cicli_sabato
-          - input_text.frarik_induzione_cicli_domenica
-          - input_text.frarik_induzione_tempo_lunedi
-          - input_text.frarik_induzione_tempo_martedi
-          - input_text.frarik_induzione_tempo_mercoledi
-          - input_text.frarik_induzione_tempo_giovedi
-          - input_text.frarik_induzione_tempo_venerdi
-          - input_text.frarik_induzione_tempo_sabato
-          - input_text.frarik_induzione_tempo_domenica
+          - input_text.frarik_induzione_lunedi_cicli
+          - input_text.frarik_induzione_martedi_cicli
+          - input_text.frarik_induzione_mercoledi_cicli
+          - input_text.frarik_induzione_giovedi_cicli
+          - input_text.frarik_induzione_venerdi_cicli
+          - input_text.frarik_induzione_sabato_cicli
+          - input_text.frarik_induzione_domenica_cicli
+          - input_text.frarik_induzione_lunedi_tempo
+          - input_text.frarik_induzione_martedi_tempo
+          - input_text.frarik_induzione_mercoledi_tempo
+          - input_text.frarik_induzione_giovedi_tempo
+          - input_text.frarik_induzione_venerdi_tempo
+          - input_text.frarik_induzione_sabato_tempo
+          - input_text.frarik_induzione_domenica_tempo
+
     - service: counter.reset
       target:
         entity_id:
           - counter.frarik_induzione_cicli_totale
 
 ####################################################
-#                  AUTOMAZIONI                     #
+#                                                  #
+#                      AUTOMAZIONI                 #
+#                                                  #
 ####################################################
 
 automation:
-
-- alias: frarik_induzione_automazione
-  id: frarik_induzione_automazione
+- alias: Frarik Induzione
+  id: frarik_induzione
   max_exceeded: silent
   trigger:
 
   - platform: state
-    entity_id: binary_sensor.frarik_induzione_motore
+    entity_id: binary_sensor.frarik_induzione_ac
     from: 'off'
     to: 'on'
     id: inizio_ciclo
 
   - platform: state
-    entity_id: binary_sensor.frarik_induzione_motore
+    entity_id: binary_sensor.frarik_induzione_ac
     from: 'on'
     to: 'off'
     id: fine_ciclo
 
   - platform: time
     at: '23:59:59'
-    id: statistiche_settimanali
+    id: incremento_sensori_7_giorni_elettrodomestici
 
   - platform: state
     entity_id:
@@ -637,49 +674,90 @@ automation:
     id: switch_on
 
   - platform: template
-    value_template: >-
-      {{ is_state('binary_sensor.frarik_induzione_motore','off') and
-         is_state('input_boolean.frarik_induzione_ciclo_attivo','on') }}
+    value_template: "{{ is_state('binary_sensor.frarik_induzione_ac','off') and is_state('input_boolean.frarik_induzione_durata_ciclo_attivo','on') }}"
     id: controllo_ciclo
 
   action:
 
-  - choose:
-    - conditions:
-      - condition: trigger
-        id: statistiche_settimanali
-      sequence:
-      - service: input_text.set_value
-        target:
-          entity_id: >
-            {% set g = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
-            {{ {'Monday':'input_text.frarik_induzione_cicli_lunedi','Tuesday':'input_text.frarik_induzione_cicli_martedi','Wednesday':'input_text.frarik_induzione_cicli_mercoledi','Thursday':'input_text.frarik_induzione_cicli_giovedi','Friday':'input_text.frarik_induzione_cicli_venerdi','Saturday':'input_text.frarik_induzione_cicli_sabato','Sunday':'input_text.frarik_induzione_cicli_domenica'}[g] }}
-        data:
-          value: "{{ states('sensor.frarik_induzione_cicli_oggi') }}"
-      - service: input_text.set_value
-        target:
-          entity_id: >
-            {% set g = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
-            {{ {'Monday':'input_text.frarik_induzione_tempo_lunedi','Tuesday':'input_text.frarik_induzione_tempo_martedi','Wednesday':'input_text.frarik_induzione_tempo_mercoledi','Thursday':'input_text.frarik_induzione_tempo_giovedi','Friday':'input_text.frarik_induzione_tempo_venerdi','Saturday':'input_text.frarik_induzione_tempo_sabato','Sunday':'input_text.frarik_induzione_tempo_domenica'}[g] }}
-        data:
-          value: "{{ state_attr('sensor.frarik_induzione_time_on','Oggi') }}"
-      - service: input_number.set_value
-        target:
-          entity_id: >
-            {% set g = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
-            {{ {'Monday':'input_number.frarik_induzione_consumo_lunedi','Tuesday':'input_number.frarik_induzione_consumo_martedi','Wednesday':'input_number.frarik_induzione_consumo_mercoledi','Thursday':'input_number.frarik_induzione_consumo_giovedi','Friday':'input_number.frarik_induzione_consumo_venerdi','Saturday':'input_number.frarik_induzione_consumo_sabato','Sunday':'input_number.frarik_induzione_consumo_domenica'}[g] }}
-        data:
-          value: "{{ states('sensor.frarik_induzione_energy_oggi') }}"
-      - service: input_number.set_value
-        target:
-          entity_id: >
-            {% set g = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
-            {{ {'Monday':'input_number.frarik_induzione_costo_lunedi','Tuesday':'input_number.frarik_induzione_costo_martedi','Wednesday':'input_number.frarik_induzione_costo_mercoledi','Thursday':'input_number.frarik_induzione_costo_giovedi','Friday':'input_number.frarik_induzione_costo_venerdi','Saturday':'input_number.frarik_induzione_costo_sabato','Sunday':'input_number.frarik_induzione_costo_domenica'}[g] }}
-        data:
-          value: "{{ state_attr('sensor.frarik_induzione_time_on','costo_oggi_induzione') }}"
+####################################################
+# Incremento 7 Giorni Statistiche
 
   - choose:
     - conditions:
+      - condition: trigger
+        id: incremento_sensori_7_giorni_elettrodomestici
+      sequence:
+
+# Cicli
+      - service: input_text.set_value
+        target:
+          entity_id: >
+            {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
+            {% if (today in ["Monday"]) %} input_text.frarik_induzione_lunedi_cicli
+            {% elif (today in ["Tuesday"]) %} input_text.frarik_induzione_martedi_cicli
+            {% elif (today in ["Wednesday"]) %} input_text.frarik_induzione_mercoledi_cicli
+            {% elif (today in ["Thursday"]) %} input_text.frarik_induzione_giovedi_cicli
+            {% elif (today in ["Friday"]) %} input_text.frarik_induzione_venerdi_cicli
+            {% elif (today in ["Saturday"]) %} input_text.frarik_induzione_sabato_cicli
+            {% elif (today in ["Sunday"]) %} input_text.frarik_induzione_domenica_cicli
+            {% endif %}
+        data:
+          value: "{{states('sensor.frarik_induzione_cicli_oggi')}}"
+
+# Tempo
+      - service: input_text.set_value
+        target:
+          entity_id: >
+            {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
+            {% if (today in ["Monday"]) %} input_text.frarik_induzione_lunedi_tempo
+            {% elif (today in ["Tuesday"]) %} input_text.frarik_induzione_martedi_tempo
+            {% elif (today in ["Wednesday"]) %} input_text.frarik_induzione_mercoledi_tempo
+            {% elif (today in ["Thursday"]) %} input_text.frarik_induzione_giovedi_tempo
+            {% elif (today in ["Friday"]) %} input_text.frarik_induzione_venerdi_tempo
+            {% elif (today in ["Saturday"]) %} input_text.frarik_induzione_sabato_tempo
+            {% elif (today in ["Sunday"]) %} input_text.frarik_induzione_domenica_tempo
+            {% endif %}
+        data:
+          value: "{{state_attr('sensor.frarik_induzione_time_on','Oggi')}}"
+
+# Consumo
+      - service: input_number.set_value
+        target:
+          entity_id: >
+            {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
+            {% if (today in ["Monday"]) %} input_number.frarik_induzione_lunedi_consumo
+            {% elif (today in ["Tuesday"]) %} input_number.frarik_induzione_martedi_consumo
+            {% elif (today in ["Wednesday"]) %} input_number.frarik_induzione_mercoledi_consumo
+            {% elif (today in ["Thursday"]) %} input_number.frarik_induzione_giovedi_consumo
+            {% elif (today in ["Friday"]) %} input_number.frarik_induzione_venerdi_consumo
+            {% elif (today in ["Saturday"]) %} input_number.frarik_induzione_sabato_consumo
+            {% elif (today in ["Sunday"]) %} input_number.frarik_induzione_domenica_consumo
+            {% endif %}
+        data:
+          value: "{{states('sensor.frarik_induzione_energy_oggi')}}"
+
+# Costi
+      - service: input_number.set_value
+        target:
+          entity_id: >
+            {% set today = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
+            {% if (today in ["Monday"]) %} input_number.frarik_induzione_lunedi_costo
+            {% elif (today in ["Tuesday"]) %} input_number.frarik_induzione_martedi_costo
+            {% elif (today in ["Wednesday"]) %} input_number.frarik_induzione_mercoledi_costo
+            {% elif (today in ["Thursday"]) %} input_number.frarik_induzione_giovedi_costo
+            {% elif (today in ["Friday"]) %} input_number.frarik_induzione_venerdi_costo
+            {% elif (today in ["Saturday"]) %} input_number.frarik_induzione_sabato_costo
+            {% elif (today in ["Sunday"]) %} input_number.frarik_induzione_domenica_costo
+            {% endif %}
+        data:
+          value: "{{state_attr('sensor.frarik_induzione_time_on','frarik_induzione_costo_giornaliero')}}"
+
+####################################################
+# Switch & Boolean OFF
+
+  - choose:
+    - alias: SWITCH E BOOLEAN OFF
+      conditions:
       - condition: trigger
         id: switch_off
       sequence:
@@ -690,8 +768,12 @@ automation:
         target:
           entity_id: input_boolean.frarik_induzione_switch
 
+####################################################
+# Switch & Boolean ON
+
   - choose:
-    - conditions:
+    - alias: SWITCH E BOOLEAN ON
+      conditions:
       - condition: trigger
         id: switch_on
       sequence:
@@ -702,50 +784,66 @@ automation:
         target:
           entity_id: input_boolean.frarik_induzione_switch
 
+####################################################
+# Controllo Ciclo
+
   - choose:
     - conditions:
       - condition: trigger
         id: controllo_ciclo
       sequence:
       - delay: '00:01:00'
-      - entity_id: input_boolean.frarik_induzione_ciclo_attivo
+      - entity_id: input_boolean.frarik_induzione_durata_ciclo_attivo
         service: input_boolean.turn_off
+
+####################################################
+# Inizio Ciclo
 
   - choose:
     - conditions:
       - condition: trigger
         id: inizio_ciclo
       sequence:
-      - entity_id: input_boolean.frarik_induzione_ciclo_attivo
+      - entity_id: input_boolean.frarik_induzione_durata_ciclo_attivo
         service: input_boolean.turn_on
+
+####################################################
+# Fine Ciclo
 
   - choose:
     - conditions:
       - condition: trigger
         id: fine_ciclo
       sequence:
+
       - service: input_text.set_value
         target:
           entity_id: input_text.frarik_induzione_ultimo_ciclo
         data:
-          value: "{{ state_attr('sensor.frarik_induzione_time_on','tempo_ciclo_induzione') | trim }}"
+          value: >-
+            {{state_attr('sensor.frarik_induzione_time_on','frarik_induzione_tempo_ciclo')}}
+
       - service: counter.increment
         target:
           entity_id:
             - counter.frarik_induzione_cicli_totale
+
       - delay: '00:00:05'
-      - entity_id: input_boolean.frarik_induzione_ciclo_attivo
+
+      - entity_id: input_boolean.frarik_induzione_durata_ciclo_attivo
         service: input_boolean.turn_off
 
-  - parallel:
+  ####################################################
+  # Fine Ciclo GOOGLE
 
+  - parallel:
     - choose:
       - conditions:
         - condition: trigger
           id: fine_ciclo
         - condition: time
-          after: 'input_datetime.frarik_induzione_orario_inizio_notifiche'
-          before: 'input_datetime.frarik_induzione_orario_fine_notifiche'
+          after: 'input_datetime.orario_inizio_frarik_induzione_notifiche'
+          before: 'input_datetime.orario_fine_frarik_induzione_notifiche'
         - condition: state
           entity_id: input_boolean.frarik_induzione_notify_google
           state: 'on'
@@ -754,22 +852,18 @@ automation:
           continue_on_error: true
           data:
             entity_id: *google
-            message: >-
-              {%- set dur=states('input_text.frarik_induzione_ultimo_ciclo')|trim -%}
-              {%- set h=dur.split('h')[0]|int(0) if 'h' in dur else 0 -%}
-              {%- set m=((dur.split('h')[1] if 'h' in dur else dur)|replace('min','')|replace('m','')|trim)|int(0) -%}
-              {%- set hv='' if h==0 else ("un'ora" if h==1 else h|string+' ore') -%}
-              {%- set mv='' if m==0 else ('un minuto' if m==1 else m|string+' minuti') -%}
-              {%- set sep=' e ' if h>0 and m>0 else '' -%}
-              {{- states('input_text.frarik_induzione_messaggio') }} in {{ hv+sep+mv -}}
+            message: "{{states('input_text.frarik_induzione_messaggio')}} in {{state_attr('sensor.frarik_induzione_time_on','frarik_induzione_tempo_ciclo')}}"
+
+  ####################################################
+  # Fine Ciclo ALEXA
 
     - choose:
       - conditions:
         - condition: trigger
           id: fine_ciclo
         - condition: time
-          after: 'input_datetime.frarik_induzione_orario_inizio_notifiche'
-          before: 'input_datetime.frarik_induzione_orario_fine_notifiche'
+          after: 'input_datetime.orario_inizio_frarik_induzione_notifiche'
+          before: 'input_datetime.orario_fine_frarik_induzione_notifiche'
         - condition: state
           entity_id: input_boolean.frarik_induzione_notify_alexa
           state: 'on'
@@ -781,14 +875,10 @@ automation:
             data:
               type: announce
               method: spoken
-            message: >-
-              {%- set dur=states('input_text.frarik_induzione_ultimo_ciclo')|trim -%}
-              {%- set h=dur.split('h')[0]|int(0) if 'h' in dur else 0 -%}
-              {%- set m=((dur.split('h')[1] if 'h' in dur else dur)|replace('min','')|replace('m','')|trim)|int(0) -%}
-              {%- set hv='' if h==0 else ("un'ora" if h==1 else h|string+' ore') -%}
-              {%- set mv='' if m==0 else ('un minuto' if m==1 else m|string+' minuti') -%}
-              {%- set sep=' e ' if h>0 and m>0 else '' -%}
-              {{- states('input_text.frarik_induzione_messaggio') }} in {{ hv+sep+mv -}}
+            message: "{{states('input_text.frarik_induzione_messaggio')}} in {{state_attr('sensor.frarik_induzione_time_on','frarik_induzione_tempo_ciclo')}}"
+
+  ####################################################
+  # Fine Ciclo CELLULARE
 
     - choose:
       - conditions:
@@ -798,36 +888,37 @@ automation:
           entity_id: input_boolean.frarik_induzione_notify_push
           state: 'on'
         sequence:
-        - repeat:
-            for_each: *push
-            sequence:
-            - service: "notify.{{ repeat.item.service }}"
-              continue_on_error: true
-              data:
-                title: "{{ states('input_text.frarik_induzione_nome') }}"
-                message: >-
-                  🫧 {{ states('input_text.frarik_induzione_messaggio') }}
+        - data_template:
+            message: >-
+              📌 {{states('input_text.frarik_induzione_messaggio')}}
 
-                  ⏱ Ciclo durato: {{ states('input_text.frarik_induzione_ultimo_ciclo') | trim }}
+              ⏱ {{state_attr('sensor.frarik_induzione_time_on','frarik_induzione_tempo_ciclo')}}
 
-                  ⚡ Consumati: {{ state_attr('sensor.frarik_induzione_time_on','consumo_ciclo_induzione') }}
+              ⚡️ Consumati: {{state_attr('sensor.frarik_induzione_time_on','frarik_induzione_consumo_ciclo')}}
 
-                  💰 Spesi: {{ state_attr('sensor.frarik_induzione_time_on','costo_ciclo_induzione') }} €
+              💰 Spesi: {{state_attr('sensor.frarik_induzione_time_on','frarik_induzione_costo_ciclo')}} €
+            title: "{{states('input_text.frarik_induzione_nome')}}"
+          service: notify.frarik_induzione
+          continue_on_error: true
 
 ####################################################
 
-- alias: frarik_induzione_off_automatico
+- alias: Frarik Induzione OFF Automatico
   id: frarik_induzione_off_automatico
   trigger:
     - platform: time
-      at: 'input_datetime.frarik_induzione_off_automatico'
-      id: auto_off
+      at: 'input_datetime.frarik_induzione_off'
+      id: elettrodomestici_automatico_off
   condition: []
   action:
+
+  ####################################################
+  # Elettrodomestici Auto OFF
+
     - choose:
       - conditions:
         - condition: trigger
-          id: auto_off
+          id: elettrodomestici_automatico_off
         - condition: state
           entity_id: *switch_induzione
           state: 'on'
@@ -835,4 +926,4 @@ automation:
         - entity_id: *switch_induzione
           service: switch.turn_off
 
-####################################################
+  ####################################################
