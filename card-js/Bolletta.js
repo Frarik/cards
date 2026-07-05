@@ -490,9 +490,11 @@
     var costoG = N(S(h, 'sensor.frarik_bolletta_costo_giornaliero'));
     var kwhG   = N(S(h, 'sensor.frarik_bolletta_consumo_giornaliero'));
     var prevM  = N(S(h, 'sensor.frarik_bolletta_previsione_costo_mese'));
-    var pKwh   = N(S(h, 'sensor.frarik_bolletta_prezzo_unico_variabile'));
-    var haFV   = isOn(h, 'input_boolean.frarik_bolletta_ha_fotovoltaico');
-    var haBatt = isOn(h, 'input_boolean.frarik_bolletta_ha_batteria');
+    var pKwh    = N(S(h, 'sensor.frarik_bolletta_prezzo_unico_variabile'));
+    var haFV    = isOn(h, 'input_boolean.frarik_bolletta_ha_fotovoltaico');
+    var haBatt  = isOn(h, 'input_boolean.frarik_bolletta_ha_batteria');
+    var fvKwh   = N(S(h, 'input_number.frarik_bolletta_autoconsumo_fv'));
+    var battKwh = N(S(h, 'input_number.frarik_bolletta_autoconsumo_batt'));
 
     var wPct = Math.min(100, Math.round((wLive / soglia) * 100));
     var wCol = wLive >= soglia ? '#f87171' : wLive > soglia * 0.75 ? '#fb923c' : wLive > soglia * 0.4 ? COL : '#4ade80';
@@ -554,6 +556,37 @@
       + '<div class="fb-stat"><div class="fb-stat-lbl">💰 €/kWh</div><div class="fb-stat-val" style="color:' + COL + '">' + pKwh.toFixed(4) + '</div><div class="fb-stat-sub">prezzo kwh</div></div>'
       + '</div>';
 
+    var energyPanelHtml = '';
+    if (haFV || haBatt) {
+      var kwhTotEst = kwhM + fvKwh + battKwh;
+      var fvRisp    = fvKwh * pKwh;
+      var battRisp  = battKwh * pKwh;
+      var fvPct     = kwhTotEst > 0 ? Math.round(fvKwh / kwhTotEst * 100) : 0;
+      var battPct   = kwhTotEst > 0 ? Math.round(battKwh / kwhTotEst * 100) : 0;
+
+      var fvCardH = haFV
+        ? '<div style="background:linear-gradient(135deg,rgba(251,191,36,.09),rgba(251,191,36,.04));border:1px solid rgba(251,191,36,.22);border-radius:13px;padding:10px 12px">'
+        + '<div style="font-size:10px;font-weight:800;color:#fbbf24;margin-bottom:7px;letter-spacing:.03em">☀️ Fotovoltaico</div>'
+        + '<div style="font-size:26px;font-weight:900;color:#fff;line-height:1;letter-spacing:-1px">' + fvKwh.toFixed(1).replace('.', ',') + '<span style="font-size:11px;font-weight:600;color:rgba(255,255,255,.5);margin-left:3px">kWh</span></div>'
+        + '<div style="font-size:11px;font-weight:700;color:#fbbf24;margin-top:5px">' + fvRisp.toFixed(2).replace('.', ',') + ' € <span style="font-weight:500;color:rgba(251,191,36,.65);font-size:9px">stima risp.</span></div>'
+        + '<div style="margin-top:6px;height:4px;background:rgba(255,255,255,.06);border-radius:2px"><div style="height:100%;width:' + fvPct + '%;background:#fbbf24;border-radius:2px;opacity:.65;min-width:' + (fvPct > 0 ? '6' : '0') + 'px"></div></div>'
+        + '<div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:3px">' + fvPct + '% del consumo totale</div>'
+        + '</div>' : '';
+
+      var battCardH = haBatt
+        ? '<div style="background:linear-gradient(135deg,rgba(74,222,128,.08),rgba(74,222,128,.03));border:1px solid rgba(74,222,128,.2);border-radius:13px;padding:10px 12px">'
+        + '<div style="font-size:10px;font-weight:800;color:#4ade80;margin-bottom:7px;letter-spacing:.03em">🔋 Batteria</div>'
+        + '<div style="font-size:26px;font-weight:900;color:#fff;line-height:1;letter-spacing:-1px">' + battKwh.toFixed(1).replace('.', ',') + '<span style="font-size:11px;font-weight:600;color:rgba(255,255,255,.5);margin-left:3px">kWh</span></div>'
+        + '<div style="font-size:11px;font-weight:700;color:#4ade80;margin-top:5px">' + battRisp.toFixed(2).replace('.', ',') + ' € <span style="font-weight:500;color:rgba(74,222,128,.6);font-size:9px">stima risp.</span></div>'
+        + '<div style="margin-top:6px;height:4px;background:rgba(255,255,255,.06);border-radius:2px"><div style="height:100%;width:' + battPct + '%;background:#4ade80;border-radius:2px;opacity:.65;min-width:' + (battPct > 0 ? '6' : '0') + 'px"></div></div>'
+        + '<div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:3px">' + battPct + '% del consumo totale</div>'
+        + '</div>' : '';
+
+      var eCols = (haFV && haBatt) ? '1fr 1fr' : '1fr';
+      energyPanelHtml = '<div style="display:grid;grid-template-columns:' + eCols + ';gap:7px;margin:2px 14px 8px">'
+        + fvCardH + battCardH + '</div>';
+    }
+
     var progHtml = '<div style="margin:2px 14px 10px">'
       + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
       + '<span style="font-size:10px;color:rgba(255,255,255,.5);font-weight:600">Giorno ' + dayNow + ' di ' + daysInMonth + '</span>'
@@ -582,6 +615,7 @@
       + '<div class="fb-scroll">'
       + heroHtml
       + statsHtml
+      + energyPanelHtml
       + progHtml
       + btnsHtml
       + '</div></div></div>';
@@ -591,7 +625,7 @@
   function update(card, hass, el) {
     var h = hass || H();
     var sig = [
-      '5.1',
+      '5.2',
       S(h, 'sensor.frarik_bolletta_mese_corrente'),
       S(h, 'sensor.frarik_bolletta_consumo_mensile'),
       S(h, 'sensor.frarik_bolletta_potenza_casa'),
@@ -602,6 +636,8 @@
       S(h, 'input_boolean.frarik_bolletta_ha_fotovoltaico'),
       S(h, 'input_boolean.frarik_bolletta_ha_batteria'),
       S(h, 'input_number.frarik_bolletta_soglia_power'),
+      S(h, 'input_number.frarik_bolletta_autoconsumo_fv'),
+      S(h, 'input_number.frarik_bolletta_autoconsumo_batt'),
     ].join('|');
     if (!el.querySelector('.fb-card') || el._fcSig !== sig) {
       el._fcSig = sig;
@@ -612,8 +648,8 @@
   }
 
   function mount(card, hass, el) {
-    if (el._fcBound === '5.1') return;
-    el._fcBound = '5.1';
+    if (el._fcBound === '5.2') return;
+    el._fcBound = '5.2';
     if (el._fcHandler) el.removeEventListener('click', el._fcHandler);
     el._fcHandler = function(e) {
       var sya = e.target.closest('[data-sya]'); if (!sya) return;
@@ -627,7 +663,7 @@
   }
 
   var CARD = {
-    id: 'bolletta', name: 'Bolletta Elettrica', icon: '⚡', version: '5.1',
+    id: 'bolletta', name: 'Bolletta Elettrica', icon: '⚡', version: '5.2',
     desc: 'Monitoraggio consumi, costi e previsioni bolletta elettrica. Richiede PKG Frarik Bolletta.',
     render: render, mount: mount, update: update, configure: null, frarik_no_edit: true,
     frarik_pkg_check: 'sensor.frarik_bolletta_versione',

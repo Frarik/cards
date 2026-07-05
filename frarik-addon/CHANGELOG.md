@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.9.27 — 2026-07-05
+
+### feat(card/bolletta): pannelli FV e Batteria nella schermata principale (v5.2)
+
+- Se `input_boolean.frarik_bolletta_ha_fotovoltaico` è ON: appare un riquadro ☀️ Fotovoltaico con kWh autoconsumo, risparmio € stimato e % del consumo totale coperto
+- Se `input_boolean.frarik_bolletta_ha_batteria` è ON: appare un riquadro 🔋 Batteria con kWh da batteria, risparmio € stimato e % coperta
+- Layout: 2 colonne se entrambi attivi, piena larghezza se solo uno
+- Barra progresso colorata (amber/verde) sotto ogni riquadro per visualizzare la % di copertura
+- I riquadri appaiono tra la riga stats e la progress bar del mese
+- Signature `update()` estesa con `input_number.frarik_bolletta_autoconsumo_fv/batt` per re-render al cambio dei valori
+
 ## 1.9.26 — 2026-07-05
 
 ### feat(card/bolletta): popup Simulatore Bolletta dedicato (v5.1)
