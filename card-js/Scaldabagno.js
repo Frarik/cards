@@ -143,7 +143,7 @@
     const ton       = c.pk_time_on;
 
     const pw      = pwV != null ? pwV : 0;
-    const soglia  = num(S(h, c.pk_soglia)) || 100;
+    var _sgCached = parseFloat(localStorage.getItem('_fsg_' + c.pk_soglia)); const soglia = !isNaN(_sgCached) ? _sgCached : (num(S(h, c.pk_soglia)) || 100);
     const heating = swOn && pw > soglia;
 
     const col    = heating ? '#f97316' : swOn ? '#38bdf8' : '#64748b';
@@ -364,8 +364,8 @@
         + '<input type="time" class="fi-inp" data-entity="' + entity + '" data-svctype="time" value="' + val + '" style="' + iBase + ';width:108px;padding:6px 8px;text-align:center">'
         + '</div>');
     }
-    function dNum(entity, lbl, unit, mn, mx, step) {
-      const val = ns(entity);
+    function dNum(entity, lbl, unit, mn, mx, step, _ov) {
+      const val = (_ov !== undefined && _ov !== null) ? _ov : ns(entity);
       rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);gap:10px">'
         + '<span style="font-size:13px;color:#fff;flex:1">' + lbl + (unit ? ' <span style="font-size:10px;color:rgba(255,255,255,.6)">(' + unit + ')</span>' : '') + '</span>'
         + '<input type="number" class="fi-inp" data-entity="' + entity + '" data-svctype="number" value="' + (val != null ? val : '') + '" min="' + (mn != null ? mn : 0) + '" max="' + (mx != null ? mx : 9999) + '" step="' + (step || 1) + '" style="' + iBase + ';width:90px;padding:6px 8px;text-align:right">'
@@ -393,7 +393,7 @@
     dTime('input_datetime.frarik_scaldabagno_orario_fine_notifiche',   '⏰ Orario fine notifiche');
 
     dSec('🛁 Scaldabagno');
-    dNum(c.pk_soglia,                                         'Soglia riscaldamento',  'W',   0, 5000, 1);
+    dNum(c.pk_soglia, 'Soglia riscaldamento', 'W', 0, 5000, 1, (function(){var _sv=parseFloat(localStorage.getItem('_fsg_'+c.pk_soglia));return isNaN(_sv)?undefined:_sv;})());
     dNum('input_number.frarik_scaldabagno_tempo_innesco_m',   'Delay spegnimento',     'min', 0, 60,   1);
     dNum('input_number.frarik_scaldabagno_avvio_ritardato_s', 'Delay riavvio',         's',   0, 300,  1);
 
@@ -439,7 +439,7 @@
           if (inp.value) callSvc('input_datetime', 'set_datetime', {entity_id: entity, time: inp.value + ':00'});
         } else if (type === 'number') {
           const v = parseFloat(inp.value);
-          if (!isNaN(v)) callSvc('input_number', 'set_value', {entity_id: entity, value: v});
+          if (!isNaN(v)) { callSvc('input_number', 'set_value', {entity_id: entity, value: v}); if (entity === c.pk_soglia) try { localStorage.setItem('_fsg_' + c.pk_soglia, v); } catch(e) {} }
         } else if (type === 'text') {
           callSvc('input_text', 'set_value', {entity_id: entity, value: inp.value});
         }

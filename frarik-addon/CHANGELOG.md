@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.9.17 — 2026-07-05
+
+### fix(cards/all): soglia lavoro salvata in localStorage, default frigorifero 30W
+
+- **Soglia lavoro ora si salva**: il valore viene scritto in `localStorage` (`_fsg_` + entity) indipendentemente dal PKG HA — funziona anche senza l'entità `input_number.frarik_*_soglia_w`
+- **Il popup mostra il valore salvato**: `dNum` legge da localStorage come override al valore HA
+- **Render legge localStorage**: `soglia` calcolata da localStorage → stato HA → default — la card si aggiorna senza PKG
+- **Frigorifero**: default soglia abbassato da 300W a 30W (compressore usa ~50-150W)
+
 ## 1.9.16 — 2026-07-05
 
 ### fix(cards/all): running fallback e soglia configurabile in tutte le card elettrodomestici
