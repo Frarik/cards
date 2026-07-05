@@ -3611,10 +3611,19 @@ async function _ghsInstall(name){
   const _pkgMatch=code.match(/frarik_pkg_check\s*:\s*['"]([^'"]+)['"]/);
   const _pkgVerMatch=code.match(/frarik_pkg_version\s*:\s*['"]([^'"]+)['"]/);
   const _pkgVerNew=_pkgVerMatch?_pkgVerMatch[1]:null;
-  /* mostra il popup pkg SOLO per nuove installazioni — non per aggiornamenti */
+  /* pkg: per nuove installazioni verifica che sia già su HA — non mostrare più il dialog */
   const _isUpdate=!!(_ghCfg().shas[f.name]);
   if(_pkgMatch&&!_isUpdate){
-    _ghsPkgAskPopup(_instId,_pkgVerNew,f,code,res);
+    await _loadHaInstalledPkgs();
+    const _pkgInfoChk=_parsePkgInfo(code)||{};
+    const _pkgFileChk=_pkgInfoChk.file||'';
+    if(_pkgFileChk&&!_pkgIsOnHA(_pkgFileChk)){
+      const _pkgNm=_pkgFileChk.split('/').pop().replace(/\.ya?ml$/i,'').replace(/^frarik_/,'');
+      showToast('⚠️ Installa prima il PKG "'+_pkgNm+'" dal tab PKG dello store');
+      return;
+    }
+    _savePkgVer(_instId,_pkgVerNew);
+    _ghsDoInstall(f,code,res);
     return;
   }
   _ghsDoInstall(f,code,res);
@@ -4044,6 +4053,86 @@ async function _pkgViewOnHA(filename){
   }catch(e){ showToast('⚠️ '+e.message); }
 }
 
+/* Estrae i placeholder IL_TUO_* dal YAML con label dal contesto */
+function _pkgParseInputs(yaml){
+  const inputs=[],seen=new Set(),lines=yaml.split('\n');
+  lines.forEach((line,i)=>{
+    (line.match(/IL_TUO_\w+/g)||[]).forEach(ph=>{
+      if(seen.has(ph)) return; seen.add(ph);
+      let label='';
+      /* inline: la chiave YAML è sulla stessa riga del placeholder */
+      if(!line.trim().startsWith('-')){
+        const m=line.match(/^\s*([A-Za-z][^:#&\n]+?):\s*/);
+        if(m) label=m[1].trim();
+      }
+      /* list item: cerca la chiave padre nelle righe precedenti */
+      if(!label){
+        for(let j=i-1;j>=0;j--){
+          if(!lines[j].trim()) continue;
+          const m=lines[j].match(/^\s*([A-Za-z][^:#\n]+?):\s*(?:&\w+)?\s*$/);
+          if(m){ label=m[1].trim(); break; }
+          if(!lines[j].trim().startsWith('-')) break;
+        }
+      }
+      /* fallback: genera dal nome del placeholder */
+      if(!label) label=ph.replace('IL_TUO_','').split('_').map(w=>w.charAt(0)+w.slice(1).toLowerCase()).join(' ');
+      inputs.push({placeholder:ph,label});
+    });
+  });
+  return inputs;
+}
+
+/* Wizard modale: chiede i valori per i placeholder, restituisce YAML sostituito o null se annullato */
+function _pkgShowWizard(pkgName,yaml,inputs){
+  return new Promise(resolve=>{
+    const nm=pkgName.replace(/\.ya?ml$/i,'').replace(/^frarik_/,'');
+    const fields=inputs.map((inp,idx)=>`
+      <div style="margin-bottom:12px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.45);margin-bottom:5px">${eh(inp.label)}</div>
+        <input data-key="${eh(inp.placeholder)}" id="_pwz_f${idx}" autocomplete="off" spellcheck="false"
+          type="text" placeholder="${eh(inp.placeholder)}"
+          style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:10px 12px;color:#fff;font-size:12px;font-family:monospace;outline:none;box-sizing:border-box">
+      </div>`).join('');
+    const mo=document.createElement('div');
+    mo.style.cssText='position:fixed;inset:0;z-index:9800;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.8);backdrop-filter:blur(8px)';
+    mo.innerHTML=`<div style="background:#0d1020;border:1px solid rgba(255,255,255,.12);border-radius:18px;width:min(520px,96vw);max-height:88vh;display:flex;flex-direction:column;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">
+        <div style="width:38px;height:38px;border-radius:12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">📦</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:700;color:#fff">Configura Package</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:1px">${eh(nm)}</div>
+        </div>
+        <button id="_pwz_x" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;cursor:pointer;line-height:1">✕</button>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:16px 18px">
+        <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:14px;line-height:1.7">
+          Inserisci le entità di Home Assistant da usare in questo package.<br>
+          <span style="color:rgba(255,255,255,.3)">Puoi modificarle in seguito dal <b style="color:rgba(255,255,255,.45)">File Editor</b> di HA.</span>
+        </div>
+        ${fields}
+      </div>
+      <div style="padding:14px 18px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:10px;flex-shrink:0">
+        <button id="_pwz_cancel" style="padding:12px 16px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6);font-size:13px;font-weight:600;cursor:pointer">Annulla</button>
+        <button id="_pwz_ok" style="flex:1;padding:12px;border-radius:12px;background:linear-gradient(135deg,#6366f1,#4f46e5);border:none;color:#fff;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(99,102,241,.35)">📦 Installa Package</button>
+      </div>
+    </div>`;
+    const close=r=>{mo.remove();resolve(r);};
+    mo.querySelector('#_pwz_x').onclick=()=>close(null);
+    mo.querySelector('#_pwz_cancel').onclick=()=>close(null);
+    mo.addEventListener('click',e=>{if(e.target===mo)close(null);});
+    mo.querySelector('#_pwz_ok').onclick=()=>{
+      let out=yaml;
+      mo.querySelectorAll('[data-key]').forEach(inp=>{
+        const val=inp.value.trim();
+        if(val){ const re=new RegExp(inp.dataset.key.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g'); out=out.replace(re,val); }
+      });
+      close(out);
+    };
+    document.body.appendChild(mo);
+    setTimeout(()=>mo.querySelector('[data-key]')?.focus(),60);
+  });
+}
+
 /* Installa un pkg da GitHub direttamente su HA */
 async function _ghsPkgInstallFromGH(filename){
   const decoded=decodeURIComponent(filename);
@@ -4052,7 +4141,13 @@ async function _ghsPkgInstallFromGH(filename){
     const g=_ghCfg();
     const url=`https://raw.githubusercontent.com/${g.owner||'Frarik'}/${g.repo||'cards'}/${g.branch||'main'}/pkg/${decoded}`;
     const r=await fetch(url); if(!r.ok) throw new Error('Download fallito');
-    const yaml=await r.text();
+    let yaml=await r.text();
+    /* Wizard configurazione se il YAML contiene placeholder IL_TUO_* */
+    const inputs=_pkgParseInputs(yaml);
+    if(inputs.length){
+      yaml=await _pkgShowWizard(decoded,yaml,inputs);
+      if(yaml===null){ showToast('⚠️ Installazione annullata'); return; }
+    }
     const res=await fetch(ADDON_BASE+'/api/frarik/pkg/install',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'frarik/'+decoded,content:yaml})});
     if(!res.ok) throw new Error((await res.json()).error||'Errore installazione');
     await _pkgPostInstall(null,null);
@@ -18812,6 +18907,7 @@ Object.assign(window, {
   _vanessaRenderSettings, _vanessaSave, _vanessaTest, _vanessaValidateKey,
   _vanessaRunCard, _vanessaSimulateCard, _vanessaUndoCard, _vanessaCardPopup, _vanessaClearLog, _vnssToggleVacation,
   _pkgUninstallFromHA, _pkgViewOnHA, _pkgGenericInstall, _pkgPostInstall,
+  _pkgParseInputs, _pkgShowWizard,
   _ghsPkgInstallFromGH, _pkgInstallLocalToHA, _pkgUpdateCard, _ghsPkgUpdFromPending, _ghsPkgMarkUpdated,
   _ghStoreRenderCardsNonInstallate, _ghStoreRenderCardsInstallate,
   _ghStoreRenderFolderNonInstallate, _ghStoreRenderFolderInstallate,

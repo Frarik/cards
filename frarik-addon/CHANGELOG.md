@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.9.3 — 2026-07-05
+
+### feat(pkg): wizard configurazione entità al momento dell'installazione PKG
+
+- Quando si installa un PKG dallo store, il frontend rileva automaticamente i placeholder `IL_TUO_*` nel YAML
+- Appare una modale che chiede le entità HA da configurare (sensore potenza, switch, media player, ecc.)
+- Le label dei campi vengono estratte dal contesto YAML (chiave sopra il placeholder)
+- I valori inseriti vengono sostituiti nel YAML prima dell'installazione su HA
+- Se il YAML non ha placeholder, il PKG viene installato direttamente senza wizard
+
+### feat(card): installazione card non chiede più il PKG
+
+- Rimosso il popup "Package richiesto" dall'installazione card
+- Se il PKG è già su HA → la card viene installata direttamente e silenziosamente
+- Se il PKG non è ancora su HA → toast che indica di installarlo prima dal tab PKG dello store
+
 ## 1.9.2 — 2026-07-05
 
 ### feat(pkg): installazione PKG da GitHub va sempre in /config/packages/frarik/
