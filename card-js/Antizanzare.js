@@ -4095,8 +4095,16 @@ automation:
     action:
       - service: notify.frarik_antizanzare_notify
         data:
-          message: "⚠️ Automazioni Anti Zanzare Bloccate da condizioni avverse ⚠️"
-          title: "🦟 Anti Zanzare 🦟 "
+          title: "🦟 Anti Zanzare — Cicli Bloccati"
+          message: >
+            🚫 Cicli bloccati!
+            {%- set prob = states('sensor.frarik_antizanzare_probabilita_pioggia') | float(0) %}
+            {%- set sp = states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) %}
+            {%- set vv = states('sensor.frarik_antizanzare_velocita_vento') | float(0) %}
+            {%- set sv = states('input_number.frarik_antizanzare_soglia_vento') | float(0) %}
+            {%- if sp > 0 and prob >= sp %} 🌧 Pioggia {{ prob | round(0) }}% (soglia {{ sp | round(0) }}%){% endif %}
+            {%- if sv > 0 and vv >= sv %} 💨 Vento {{ vv | round(0) }} m/s (soglia {{ sv | round(0) }} m/s){% endif %}
+            {%- if is_state('input_boolean.frarik_antizanzare_presenza_attiva', 'on') and is_state('IL_TUO_SENSORE_PRESENZA', 'on') %} 👤 Presenza rilevata{% endif %}
 
   - alias: Notifica riattivazione automazione per meteo
     trigger:
@@ -4112,7 +4120,7 @@ automation:
   - alias: Perdita cassetta spegne anti zanzare e notifica
     trigger:
       - platform: state
-        entity_id: binary_sensor.IL_TUO_SENSORE_PERDITA
+        entity_id: IL_TUO_SENSORE_PERDITA
         to: 'on'
     action:
       - service: switch.turn_off
@@ -4831,24 +4839,30 @@ automation:
       var reasons = [];
       if (bloccoPerPioggia) reasons.push('🌧 Prob. pioggia ' + pioggia.toFixed(0) + '% ≥ soglia ' + sogliaPioggia.toFixed(0) + '%');
       if (bloccoPerVento) reasons.push('💨 Vento ' + vento.toFixed(0) + ' m/s ≥ soglia ' + sogliaVento.toFixed(0) + ' m/s');
-      if (presenzaAttiva && !bloccoPerPioggia && !bloccoPerVento) reasons.push('👤 Presenza rilevata nell\'area');
+      if (presenzaAttiva && !(bloccoPerPioggia || bloccoPerVento)) reasons.push('👤 Presenza rilevata nell\'area');
+      else if (presenzaAttiva && (bloccoPerPioggia || bloccoPerVento)) reasons.push('👤 + Presenza rilevata nell\'area');
       if (reasons.length === 0) reasons.push('⛈ Condizioni sfavorevoli rilevate');
-      avvisoHtml = '<div style="margin:0 10px 7px;padding:9px 12px;border-radius:11px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.35)">'
-        + '<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#f59e0b;margin-bottom:4px">⚠ CICLI BLOCCATI</div>'
+      avvisoHtml = '<div style="margin:0 10px 7px;padding:9px 12px;border-radius:11px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3)">'
+        + '<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#ef4444;margin-bottom:4px">🚫 CICLI BLOCCATI</div>'
         + reasons.map(function(r) { return '<div style="font-size:11px;font-weight:600;color:#fff">' + r + '</div>'; }).join('')
         + '</div>';
     }
 
     var nextCycleInfo = !timerActive ? _azNextCycleInfo(h, c.pk_prefix || 'frarik_antizanzare') : null;
-    var nextCycleHtml = !timerActive
-      ? '<div style="margin:0 10px 7px;padding:9px 12px;border-radius:11px;'
-        + (nextCycleInfo ? 'background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.28)' : 'background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07)') + '">'
-        + '<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:' + (nextCycleInfo ? '#06b6d4' : '#475569') + ';margin-bottom:3px">📅 PROSSIMO CICLO</div>'
+    var nextCycleHtml = '';
+    if (!timerActive) {
+      var ncAutoOff = nextCycleInfo && !autoOn;
+      var ncBg = ncAutoOff ? 'rgba(245,158,11,.07)' : (nextCycleInfo ? 'rgba(6,182,212,.08)' : 'rgba(255,255,255,.03)');
+      var ncBd = ncAutoOff ? 'rgba(245,158,11,.3)' : (nextCycleInfo ? 'rgba(6,182,212,.28)' : 'rgba(255,255,255,.07)');
+      var ncCol = ncAutoOff ? '#f59e0b' : (nextCycleInfo ? '#06b6d4' : '#475569');
+      nextCycleHtml = '<div style="margin:0 10px 7px;padding:9px 12px;border-radius:11px;background:' + ncBg + ';border:1px solid ' + ncBd + '">'
+        + '<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:' + ncCol + ';margin-bottom:3px">📅 PROSSIMO CICLO</div>'
         + (nextCycleInfo
           ? '<div style="font-size:13px;font-weight:800;color:#fff">' + nextCycleInfo.day + ' alle ' + nextCycleInfo.time + '</div>'
+            + (ncAutoOff ? '<div style="font-size:10px;font-weight:600;color:#f59e0b;margin-top:2px">⚠ Automazione disattivata — il ciclo non partirà</div>' : '')
           : '<div style="font-size:11px;font-weight:600;color:#475569">Nessun ciclo programmato</div>')
-        + '</div>'
-      : '';
+        + '</div>';
+    }
 
     var css = '<style>'
       + '@keyframes azPulse{0%,100%{opacity:.6}50%{opacity:1}}'
@@ -5433,7 +5447,7 @@ automation:
   }
 
   var _AZ_CARD = {
-    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.19', frarik_no_edit: true,
+    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.20', frarik_no_edit: true,
     desc: 'Controllo sistema anti zanzare: schedule settimanale, timer, statistiche mensili, blocco meteo, sensori sicurezza.',
     render:    function(card) { return _azRender(card); },
     mount:     function(card, hass, el) { _azMount(card, hass, el); },

@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.9.32 — 2026-07-06
+
+### fix(antizanzare): v2.20 — avviso blocco, ciclo+automazione, notifiche specifiche
+
+- Riquadro ciclo programmato diventa ambra con "⚠ Automazione disattivata" quando autoOn=off
+- Avviso blocco ora mostra TUTTI i motivi anche combinati (presenza + pioggia/vento insieme)
+- Riquadro avviso cambiato in rosso (più urgente) invece di ambra
+- Notifica "cicli bloccati" ora include il motivo specifico (pioggia %, vento m/s, presenza)
+- Fix: `binary_sensor.IL_TUO_SENSORE_PERDITA` → `IL_TUO_SENSORE_PERDITA` (prefix duplicato)
+
 ## 1.9.31 — 2026-07-06
 
 ### fix(antizanzare/pkg): separazione sensore pioggia e probabilità pioggia (v2.19)
