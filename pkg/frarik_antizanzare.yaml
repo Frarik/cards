@@ -683,6 +683,11 @@ input_text:
     name: "Nome Anti Zanzare"
     max: 64
 
+  frarik_antizanzare_entity_presa:
+    name: "Entity Presa Anti Zanzare"
+    max: 128
+    initial: "IL_TUO_PRESA_ANTIZANZARE"
+
 # INPUT BUTTON - Comandi
 input_button:
   frarik_antizanzare_start_automazione:
@@ -1522,6 +1527,20 @@ template:
               0
             {% endif %}
 
+      # Sensore velocità vento (collegato a sensore reale)
+      - name: "Frarik Antizanzare Velocita Vento"
+        unique_id: frarik_antizanzare_velocita_vento
+        state: "{{ states('IL_TUO_SENSORE_VENTO') | float(0) }}"
+        unit_of_measurement: "m/s"
+        icon: mdi:weather-windy
+
+      # Sensore livello tanica (collegato a sensore reale)
+      - name: "Frarik Antizanzare Livello Tanica"
+        unique_id: frarik_antizanzare_livello_tanica
+        state: "{{ states('IL_TUO_SENSORE_LIVELLO_TANICA') | float(0) }}"
+        unit_of_measurement: "%"
+        icon: mdi:water-percent
+
   - binary_sensor:
       # Sensore pioggia in corso (collegato a sensore meteo reale)
       - name: "Frarik Antizanzare Pioggia Corso"
@@ -1530,13 +1549,32 @@ template:
         icon: >
           {{ 'mdi:weather-rainy' if states('IL_TUO_SENSORE_PIOGGIA') | float(0) > 0 else 'mdi:weather-cloudy' }}
 
-      # Sensore blocco per condizioni meteo
+      # Sensore blocco per condizioni meteo, vento e presenza
       - name: "Frarik Antizanzare Blocco Meteo"
         unique_id: frarik_antizanzare_blocco_meteo
         state: >
-          {{ states('IL_TUO_SENSORE_PIOGGIA') | float(0) >= states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) }}
+          {% set blocco_pioggia = states('IL_TUO_SENSORE_PIOGGIA') | float(0) >= states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) %}
+          {% set soglia_vento = states('input_number.frarik_antizanzare_soglia_vento') | float(0) %}
+          {% set blocco_vento = soglia_vento > 0 and states('IL_TUO_SENSORE_VENTO') | float(0) >= soglia_vento %}
+          {% set blocco_presenza = is_state('input_boolean.frarik_antizanzare_presenza_attiva', 'on') and is_state('IL_TUO_SENSORE_PRESENZA', 'on') %}
+          {{ blocco_pioggia or blocco_vento or blocco_presenza }}
         icon: >
-          {{ 'mdi:weather-rainy' if states('IL_TUO_SENSORE_PIOGGIA') | float(0) >= states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) else 'mdi:weather-partly-cloudy' }}
+          {% set blocco_pioggia = states('IL_TUO_SENSORE_PIOGGIA') | float(0) >= states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) %}
+          {% set soglia_vento = states('input_number.frarik_antizanzare_soglia_vento') | float(0) %}
+          {% set blocco_vento = soglia_vento > 0 and states('IL_TUO_SENSORE_VENTO') | float(0) >= soglia_vento %}
+          {% set blocco_presenza = is_state('input_boolean.frarik_antizanzare_presenza_attiva', 'on') and is_state('IL_TUO_SENSORE_PRESENZA', 'on') %}
+          {{ 'mdi:account-cancel' if blocco_presenza else ('mdi:weather-windy' if blocco_vento else ('mdi:weather-rainy' if blocco_pioggia else 'mdi:weather-partly-cloudy')) }}
+
+      # Sensore perdita acqua (collegato a sensore reale opzionale)
+      - name: "Frarik Antizanzare Perdita Acqua"
+        unique_id: frarik_antizanzare_perdita_acqua
+        state: >
+          {% if states('IL_TUO_SENSORE_PERDITA') in ['unavailable', 'unknown'] %}
+            off
+          {% else %}
+            {{ is_state('IL_TUO_SENSORE_PERDITA', 'on') }}
+          {% endif %}
+        icon: mdi:water-alert
 
 
 

@@ -754,8 +754,7 @@ window.customCards.push({ version: '1.5',
 
   var _AZ_WIZ_KEY = 'frarik_pkg_wizard_antizanzare';
 
-  var _AZ_PKG_YAML = `
-homeassistant:
+  var _AZ_PKG_YAML = `homeassistant:
   customize:
     package.node_anchors:
       customize: &customize
@@ -1439,6 +1438,11 @@ input_text:
   frarik_antizanzare_nome:
     name: "Nome Anti Zanzare"
     max: 64
+
+  frarik_antizanzare_entity_presa:
+    name: "Entity Presa Anti Zanzare"
+    max: 128
+    initial: "IL_TUO_PRESA_ANTIZANZARE"
 
 # INPUT BUTTON - Comandi
 input_button:
@@ -2279,6 +2283,20 @@ template:
               0
             {% endif %}
 
+      # Sensore velocità vento (collegato a sensore reale)
+      - name: "Frarik Antizanzare Velocita Vento"
+        unique_id: frarik_antizanzare_velocita_vento
+        state: "{{ states('IL_TUO_SENSORE_VENTO') | float(0) }}"
+        unit_of_measurement: "m/s"
+        icon: mdi:weather-windy
+
+      # Sensore livello tanica (collegato a sensore reale)
+      - name: "Frarik Antizanzare Livello Tanica"
+        unique_id: frarik_antizanzare_livello_tanica
+        state: "{{ states('IL_TUO_SENSORE_LIVELLO_TANICA') | float(0) }}"
+        unit_of_measurement: "%"
+        icon: mdi:water-percent
+
   - binary_sensor:
       # Sensore pioggia in corso (collegato a sensore meteo reale)
       - name: "Frarik Antizanzare Pioggia Corso"
@@ -2287,13 +2305,32 @@ template:
         icon: >
           {{ 'mdi:weather-rainy' if states('IL_TUO_SENSORE_PIOGGIA') | float(0) > 0 else 'mdi:weather-cloudy' }}
 
-      # Sensore blocco per condizioni meteo
+      # Sensore blocco per condizioni meteo, vento e presenza
       - name: "Frarik Antizanzare Blocco Meteo"
         unique_id: frarik_antizanzare_blocco_meteo
         state: >
-          {{ states('IL_TUO_SENSORE_PIOGGIA') | float(0) >= states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) }}
+          {% set blocco_pioggia = states('IL_TUO_SENSORE_PIOGGIA') | float(0) >= states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) %}
+          {% set soglia_vento = states('input_number.frarik_antizanzare_soglia_vento') | float(0) %}
+          {% set blocco_vento = soglia_vento > 0 and states('IL_TUO_SENSORE_VENTO') | float(0) >= soglia_vento %}
+          {% set blocco_presenza = is_state('input_boolean.frarik_antizanzare_presenza_attiva', 'on') and is_state('IL_TUO_SENSORE_PRESENZA', 'on') %}
+          {{ blocco_pioggia or blocco_vento or blocco_presenza }}
         icon: >
-          {{ 'mdi:weather-rainy' if states('IL_TUO_SENSORE_PIOGGIA') | float(0) >= states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) else 'mdi:weather-partly-cloudy' }}
+          {% set blocco_pioggia = states('IL_TUO_SENSORE_PIOGGIA') | float(0) >= states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) %}
+          {% set soglia_vento = states('input_number.frarik_antizanzare_soglia_vento') | float(0) %}
+          {% set blocco_vento = soglia_vento > 0 and states('IL_TUO_SENSORE_VENTO') | float(0) >= soglia_vento %}
+          {% set blocco_presenza = is_state('input_boolean.frarik_antizanzare_presenza_attiva', 'on') and is_state('IL_TUO_SENSORE_PRESENZA', 'on') %}
+          {{ 'mdi:account-cancel' if blocco_presenza else ('mdi:weather-windy' if blocco_vento else ('mdi:weather-rainy' if blocco_pioggia else 'mdi:weather-partly-cloudy')) }}
+
+      # Sensore perdita acqua (collegato a sensore reale opzionale)
+      - name: "Frarik Antizanzare Perdita Acqua"
+        unique_id: frarik_antizanzare_perdita_acqua
+        state: >
+          {% if states('IL_TUO_SENSORE_PERDITA') in ['unavailable', 'unknown'] %}
+            off
+          {% else %}
+            {{ is_state('IL_TUO_SENSORE_PERDITA', 'on') }}
+          {% endif %}
+        icon: mdi:water-alert
 
 
 
@@ -4203,10 +4240,9 @@ automation:
       - service: notify.frarik_antizanzare_notify
         data:
           title: "Anti Zanzare - Sicurezza"
-          message: "✅ Area libera. Sistema riarmato e pronto."
-`;
+          message: "✅ Area libera. Sistema riarmato e pronto."`;
 
-  function _buildPkgAZ(sw, push, pioggia, _tpl) {
+  function _buildPkgAZ(sw, push, pioggia, _tpl, vento, tanica, presenza, perdita) {
     var ind = '          ';
     var pushLines = (push && push.length)
       ? push.map(function(p) { return ind + '- service: ' + p; }).join('\n')
@@ -4214,9 +4250,10 @@ automation:
     var yaml = (_tpl || _AZ_PKG_YAML)
       .split('IL_TUO_PRESA_ANTIZANZARE').join(sw || 'switch.presa_anti_zanzare')
       .split('IL_TUO_SENSORE_PIOGGIA').join(pioggia || 'sensor.probabilita_pioggia')
-      .split('IL_TUO_SENSORE_LIVELLO_TANICA').join('sensor.consumo_acqua')
-      .split('IL_TUO_SENSORE_VENTO').join('sensor.non_configurato')
-      .split('IL_TUO_SENSORE_PRESENZA').join('binary_sensor.non_configurato');
+      .split('IL_TUO_SENSORE_LIVELLO_TANICA').join(tanica || 'sensor.non_configurato')
+      .split('IL_TUO_SENSORE_VENTO').join(vento || 'sensor.non_configurato')
+      .split('IL_TUO_SENSORE_PRESENZA').join(presenza || 'binary_sensor.non_configurato')
+      .split('IL_TUO_SENSORE_PERDITA').join(perdita || 'binary_sensor.non_configurato');
     yaml = yaml.replace(/[ 	]*- service: IL_TUO_MOBILE_APP/, pushLines);
     yaml = yaml.replace(/[ 	]*- IL_TUO_MEDIA_PLAYER_ALEXA/, ind + '- media_player.non_configurato');
     return yaml;
@@ -4353,7 +4390,9 @@ automation:
 
   function _openWizardAZ(hass, onDone, _tpl) {
     var states = (hass && hass.states) || {};
-    var switchIds = Object.keys(states).filter(function(id) { return /^switch\./.test(id); }).sort();
+    var switchIds  = Object.keys(states).filter(function(id) { return /^switch\./.test(id); }).sort();
+    var sensorIds  = Object.keys(states).filter(function(id) { return /^sensor\./.test(id); }).sort();
+    var bsIds      = Object.keys(states).filter(function(id) { return /^binary_sensor\./.test(id); }).sort();
     var saved = null;
     try { saved = JSON.parse(localStorage.getItem(_AZ_WIZ_KEY) || 'null'); } catch(e) {}
     var pushRows = (saved && saved.push && saved.push.length) ? saved.push.slice() : [''];
@@ -4389,7 +4428,11 @@ automation:
     }
 
     function renderWiz() {
-      var swVal = (saved && saved.sw) || '';
+      var swVal    = (saved && saved.sw)       || '';
+      var ventoVal = (saved && saved.vento)    || '';
+      var tanicaVal= (saved && saved.tanica)   || '';
+      var presVal  = (saved && saved.presenza) || '';
+      var perdVal  = (saved && saved.perdita)  || '';
       sr.innerHTML = '<style>'
         + ':host{all:initial;font-family:system-ui,sans-serif}'
         + '.wd-bd{position:fixed;inset:0;z-index:200000;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);display:flex;align-items:flex-end}'
@@ -4423,12 +4466,23 @@ automation:
         + '<button class="wd-x" id="wd-x">✕</button></div>'
         + '<div class="wd-body">'
         + '<div><div class="wd-sec">Switch Anti Zanzare</div>'
-        + '<p class="wd-note">Switch/presa che controlla il dispositivo antizanzare (es. nebulizzatore, diffusore).</p>'
+        + '<p class="wd-note">Switch/presa che controlla il dispositivo antizanzare.</p>'
         + '<div class="wd-lbl">Entity Switch</div>'
         + '<div class="wd-frow"><input class="wd-inp" id="f-switch" type="text" autocomplete="off" placeholder="switch.presa_anti_zanzare" value="' + swVal.replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-switch"></div></div>'
         + '</div>'
+        + '<div><div class="wd-sec">Sensori (opzionali)</div>'
+        + '<p class="wd-note">Lascia vuoto se non hai il sensore, il PKG usa valori di default.</p>'
+        + '<div class="wd-lbl">Velocità vento (sensor.*)</div>'
+        + '<div class="wd-frow"><input class="wd-inp" id="f-vento" type="text" autocomplete="off" placeholder="sensor.velocita_vento" value="' + ventoVal.replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-vento"></div></div>'
+        + '<div class="wd-lbl">Livello tanica % (sensor.*)</div>'
+        + '<div class="wd-frow"><input class="wd-inp" id="f-tanica" type="text" autocomplete="off" placeholder="sensor.livello_tanica" value="' + tanicaVal.replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-tanica"></div></div>'
+        + '<div class="wd-lbl">Rilevazione presenza (binary_sensor.*)</div>'
+        + '<div class="wd-frow"><input class="wd-inp" id="f-presenza" type="text" autocomplete="off" placeholder="binary_sensor.presenza_casa" value="' + presVal.replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-presenza"></div></div>'
+        + '<div class="wd-lbl">Perdita acqua (binary_sensor.*, opz.)</div>'
+        + '<div class="wd-frow"><input class="wd-inp" id="f-perdita" type="text" autocomplete="off" placeholder="binary_sensor.perdita_acqua" value="' + perdVal.replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-perdita"></div></div>'
+        + '</div>'
         + '<div><div class="wd-sec">Notifiche Push</div>'
-        + '<p class="wd-note">mobile_app dei dispositivi che ricevono le notifiche (es. <code>mobile_app_iphone</code>). Lascia vuoto per saltare.</p>'
+        + '<p class="wd-note">mobile_app dei dispositivi che ricevono le notifiche. Lascia vuoto per saltare.</p>'
         + '<div id="push-rows">' + multiRows(pushRows, 'push-inp', 'mobile_app_...') + '</div>'
         + '<button class="wd-add" id="push-add">+ Aggiungi dispositivo</button>'
         + '</div>'
@@ -4456,17 +4510,25 @@ automation:
         renderWiz();
       });
 
-      setupAC(sr.getElementById('f-switch'), sr.getElementById('d-switch'), switchIds);
+      setupAC(sr.getElementById('f-switch'),   sr.getElementById('d-switch'),   switchIds);
+      setupAC(sr.getElementById('f-vento'),    sr.getElementById('d-vento'),    sensorIds);
+      setupAC(sr.getElementById('f-tanica'),   sr.getElementById('d-tanica'),   sensorIds);
+      setupAC(sr.getElementById('f-presenza'), sr.getElementById('d-presenza'), bsIds);
+      setupAC(sr.getElementById('f-perdita'),  sr.getElementById('d-perdita'),  bsIds);
 
       sr.getElementById('wd-install').addEventListener('click', function() {
-        var sw   = sr.getElementById('f-switch').value.trim();
+        var sw       = sr.getElementById('f-switch').value.trim();
+        var vento    = sr.getElementById('f-vento').value.trim();
+        var tanica   = sr.getElementById('f-tanica').value.trim();
+        var presenza = sr.getElementById('f-presenza').value.trim();
+        var perdita  = sr.getElementById('f-perdita').value.trim();
         var push = Array.from(sr.querySelectorAll('.push-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
-        try { localStorage.setItem(_AZ_WIZ_KEY, JSON.stringify({sw: sw, push: push})); } catch(e) {}
+        try { localStorage.setItem(_AZ_WIZ_KEY, JSON.stringify({sw: sw, push: push, vento: vento, tanica: tanica, presenza: presenza, perdita: perdita})); } catch(e) {}
         var m = location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
         var base = location.origin + (m ? m[1] : '');
         var btn = sr.getElementById('wd-install');
         btn.classList.add('wd-loading'); btn.textContent = 'Installazione…';
-        var yaml = _buildPkgAZ(sw, push, '', _tpl);
+        var yaml = _buildPkgAZ(sw, push, '', _tpl, vento, tanica, presenza, perdita);
         btn.textContent = 'Installazione…';
         fetch(base + '/api/frarik/pkg/install', {
           method: 'POST',
@@ -4546,20 +4608,26 @@ automation:
       pk_consumo_acqua:   'sensor.frarik_antizanzare_consumo_acqua',
       pk_durata_manuale:  'input_number.frarik_antizanzare_durata_manuale',
       pk_soglia_pioggia:  'input_number.frarik_antizanzare_soglia_pioggia',
+      pk_soglia_vento:    'input_number.frarik_antizanzare_soglia_vento',
       pk_btn_auto_on:     'input_button.frarik_antizanzare_start_automazione',
       pk_btn_auto_off:    'input_button.frarik_antizanzare_stop_automazione',
       pk_btn_man_on:      'input_button.frarik_antizanzare_start_manuale',
       pk_btn_man_off:     'input_button.frarik_antizanzare_stop_manuale',
       pk_persona:         '',
-      pk_perdita:         '',
+      pk_perdita:         'binary_sensor.frarik_antizanzare_perdita_acqua',
       pk_prossimo:        'sensor.frarik_antizanzare_prossimo_ciclo_completo',
       pk_cicli_rim:       'sensor.frarik_antizanzare_cicli_rimanenti_mensili',
       pk_avanzamento:     'sensor.frarik_antizanzare_avanzamento_mensile',
       pk_auto_sic:        'automation.frarik_antizanzare_sicurezza_persona_rilevata',
-      pk_vento:           '',
-      pk_tanica:          '',
+      pk_vento:           'sensor.frarik_antizanzare_velocita_vento',
+      pk_tanica:          'sensor.frarik_antizanzare_livello_tanica',
       pk_consumo_pompa:   '',
-      pk_notifiche:       '',
+      pk_presenza_attiva: 'input_boolean.frarik_antizanzare_presenza_attiva',
+      pk_notify_push:     'input_boolean.frarik_antizanzare_notify_push',
+      pk_notify_alexa:    'input_boolean.frarik_antizanzare_notify_alexa',
+      pk_inizio_ntf:      'input_datetime.frarik_antizanzare_orario_inizio_notifiche',
+      pk_fine_ntf:        'input_datetime.frarik_antizanzare_orario_fine_notifiche',
+      pk_presa_entity:    'input_text.frarik_antizanzare_entity_presa',
     };
   }
 
@@ -4639,6 +4707,8 @@ automation:
     var vento = c.pk_vento ? _azNum(_azS(h, c.pk_vento)) : null;
     var tanica = c.pk_tanica ? _azNum(_azS(h, c.pk_tanica)) : null;
     var consumoPompa = c.pk_consumo_pompa ? _azNum(_azS(h, c.pk_consumo_pompa)) : consumo;
+    var presaId = c.pk_presa_entity ? _azS(h, c.pk_presa_entity) : null;
+    var presaOn = presaId ? _azIsOn(h, presaId) : false;
     var activeTimer = timerC.active ? timerC : timerM;
     var timerActive = timerC.active || timerM.active;
     var timerLabel = timerC.active ? 'CICLO' : 'MANUALE';
@@ -4774,9 +4844,13 @@ automation:
     var autoStyle = autoOn
       ? 'background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4);color:#ef4444'
       : 'background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3);color:#22c55e';
+    var presaStyle = presaOn
+      ? 'background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4);color:#ef4444'
+      : 'background:rgba(100,116,139,.08);border-color:rgba(100,116,139,.2);color:#94a3b8';
     var btnsHtml = '<div class="fc-btns">'
       + '<div class="fc-btn" style="' + manStyle + '" data-sya="' + (manOn?'man-off':'man-on') + '">' + (manOn?'⏹ Ferma':'▶ Manuale') + '</div>'
       + '<div class="fc-btn" style="' + autoStyle + '" data-sya="' + (autoOn?'auto-off':'auto-on') + '">' + (autoOn?'⏹ Ferma Auto':'▶ Auto') + '</div>'
+      + (presaId ? '<div class="fc-btn" style="' + presaStyle + '" data-sya="presa-tog">🔌 ' + (presaOn?'ON':'OFF') + '</div>' : '')
       + '<div class="fc-btn" data-sya="popup-cfg" style="flex:0.55">⚙</div>'
       + '</div>';
 
@@ -4941,13 +5015,17 @@ automation:
   function _azOpenUserCfg(card, el) {
     var h = _azH(), c = _azCfgFor(card);
     var prefix = c.pk_prefix || 'frarik_antizanzare';
-    var autoOn  = _azIsOn(h, c.pk_auto);
-    var sicOn   = !c.pk_auto_sic || _azS(h, c.pk_auto_sic) !== 'off';
-    var notifEntity = c.pk_notifiche || 'input_boolean.frarik_antizanzare_notifiche';
-    var notifOn = _azIsOn(h, notifEntity);
-    var durM    = Math.round(_azNum(_azS(h, c.pk_durata_manuale)) || 60);
-    var soglia  = Math.round(_azNum(_azS(h, c.pk_soglia_pioggia)) || 50);
-    var tarMens = Math.round(_azNum(_azS(h, c.pk_cicli_target)) || 100);
+    var autoOn       = _azIsOn(h, c.pk_auto);
+    var sicOn        = !c.pk_auto_sic || _azS(h, c.pk_auto_sic) !== 'off';
+    var presenzaOn   = _azIsOn(h, c.pk_presenza_attiva);
+    var notifyPushOn = _azIsOn(h, c.pk_notify_push);
+    var notifyAlexaOn= _azIsOn(h, c.pk_notify_alexa);
+    var durM         = Math.round(_azNum(_azS(h, c.pk_durata_manuale)) || 60);
+    var soglia       = Math.round(_azNum(_azS(h, c.pk_soglia_pioggia)) || 50);
+    var sogliaVento  = Math.round(_azNum(_azS(h, c.pk_soglia_vento)) || 0);
+    var tarMens      = Math.round(_azNum(_azS(h, c.pk_cicli_target)) || 100);
+    var inizioNtf    = (_azS(h, c.pk_inizio_ntf) || '00:00:00').slice(0, 5);
+    var fineNtf      = (_azS(h, c.pk_fine_ntf) || '23:59:00').slice(0, 5);
     var dayIds  = ['lunedi','martedi','mercoledi','giovedi','venerdi','sabato','domenica'];
     var dayLbls = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato','Domenica'];
     var dayShrt = ['LUN','MAR','MER','GIO','VEN','SAB','DOM'];
@@ -5015,32 +5093,40 @@ automation:
 
     var content = sec('Automazione & Sicurezza')
       + '<div style="display:flex;gap:8px;margin-bottom:6px">'
-      + togBtn('azuc-tog-auto', 'Automazione', autoOn)
+      + togBtn('azuc-tog-auto', 'Auto', autoOn)
       + togBtn('azuc-tog-sic', 'Sicurezza', sicOn, '6,182,212')
-      + togBtn('azuc-tog-ntf', 'Notifiche', notifOn, '168,85,247')
+      + togBtn('azuc-tog-pres', 'Presenza', presenzaOn, '245,158,11')
+      + '</div>'
+      + sec('Notifiche')
+      + '<div style="display:flex;gap:8px;margin-bottom:10px">'
+      + togBtn('azuc-tog-npush', 'Push', notifyPushOn, '168,85,247')
+      + togBtn('azuc-tog-nalexa', 'Alexa', notifyAlexaOn, '251,146,60')
+      + '</div>'
+      + '<div style="display:flex;gap:12px;margin-bottom:6px">'
+      + '<div style="flex:1"><div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:rgba(255,255,255,.4);margin-bottom:3px">Dalle</div>'
+      + '<input id="azuc-ntf-start" type="time" value="' + inizioNtf + '" style="width:100%;padding:7px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:13px;box-sizing:border-box;outline:none"></div>'
+      + '<div style="flex:1"><div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:rgba(255,255,255,.4);margin-bottom:3px">Alle</div>'
+      + '<input id="azuc-ntf-end" type="time" value="' + fineNtf + '" style="width:100%;padding:7px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:13px;box-sizing:border-box;outline:none"></div>'
       + '</div>'
       + sec('Programma Settimanale')
       + schedHtml
       + sec('Soglie & Durate')
       + numRow('sog', 'Soglia blocco pioggia', soglia, '%', 0, 100, 5)
+      + numRow('ven', 'Soglia blocco vento', sogliaVento, 'km/h', 0, 200, 5)
       + numRow('dur', 'Durata avvio manuale', durM, 'sec', 10, 7200, 10)
       + numRow('tar', 'Target cicli mensili', tarMens, 'cicli', 1, 999, 1)
-      + sec('Sensori Opzionali')
-      + sensorFld('azuc-vento-id',  'Velocità vento (m/s)',  'sensor.velocita_vento',         c.pk_vento||'')
-      + sensorFld('azuc-tanica-id', 'Livello tanica (%)',    'sensor.livello_tanica',          c.pk_tanica||'')
-      + sensorFld('azuc-pompa-id',  'Consumo pompa (L)',     'sensor.consumo_pompa',           c.pk_consumo_pompa||'')
       + '<button id="azuc-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#22c55e;color:#022c1b;margin-top:4px">💾 Salva tutto</button>';
 
     var ov = _azMkOv(_azPopShell('⚙','34,197,94','Impostazioni',c.name||'Anti Zanzare','azuc-cl',content),'azuc-cl');
 
-    // Toggle buttons (auto, sicurezza, notifiche)
-    ['azuc-tog-auto','azuc-tog-sic','azuc-tog-ntf'].forEach(function(tid) {
+    // Toggle buttons
+    ['azuc-tog-auto','azuc-tog-sic','azuc-tog-pres','azuc-tog-npush','azuc-tog-nalexa'].forEach(function(tid) {
       var tb = ov.querySelector('#' + tid); if (!tb) return;
       tb.addEventListener('click', function() {
         var wasOn = tb.dataset.on === '1';
         var nowOn = !wasOn;
         tb.dataset.on = nowOn ? '1' : '0';
-        var onC = tid === 'azuc-tog-sic' ? '6,182,212' : tid === 'azuc-tog-ntf' ? '168,85,247' : '34,197,94';
+        var onC = tid==='azuc-tog-sic' ? '6,182,212' : tid==='azuc-tog-pres' ? '245,158,11' : tid==='azuc-tog-npush' ? '168,85,247' : tid==='azuc-tog-nalexa' ? '251,146,60' : '34,197,94';
         tb.style.background = 'rgba(' + (nowOn?onC:'100,116,139') + ',.1)';
         tb.style.borderColor = 'rgba(' + (nowOn?onC:'100,116,139') + ',' + (nowOn?'.35':'.15') + ')';
         tb.querySelector('div:first-child').textContent = nowOn ? '✅' : '⭕';
@@ -5080,44 +5166,23 @@ automation:
       if (ncpBtn) ncpBtn.addEventListener('click', function() { var v=Math.min(5,parseInt(ncH.value)+1); ncH.value=v; if(ncV) ncV.textContent=v; updateTimes(v); });
     });
 
-    // Autocomplete sensori
-    function azAC(inpId) {
-      var inp = ov.querySelector('#' + inpId);
-      var drop = ov.querySelector('#' + inpId + '-drop');
-      if (!inp || !drop) return;
-      inp.addEventListener('input', function() {
-        var q = inp.value.toLowerCase().trim();
-        drop.innerHTML = '';
-        if (q.length < 2) { drop.style.display = 'none'; return; }
-        var sts = (_azH().states) || {};
-        var matches = Object.keys(sts).filter(function(k) { return k.toLowerCase().indexOf(q) !== -1; }).sort().slice(0, 8);
-        if (!matches.length) { drop.style.display = 'none'; return; }
-        matches.forEach(function(m) {
-          var row = document.createElement('div');
-          row.textContent = m;
-          row.style.cssText = 'padding:6px 10px;font-size:11px;font-family:monospace;color:#94a3b8;cursor:pointer';
-          row.addEventListener('mouseover', function() { row.style.background='rgba(255,255,255,.07)'; row.style.color='#f1f5f9'; });
-          row.addEventListener('mouseout',  function() { row.style.background=''; row.style.color='#94a3b8'; });
-          row.addEventListener('mousedown', function(e) { e.preventDefault(); inp.value=m; drop.style.display='none'; });
-          drop.appendChild(row);
-        });
-        drop.style.display = 'block';
-      });
-      inp.addEventListener('blur', function() { setTimeout(function() { drop.style.display = 'none'; }, 200); });
-    }
-    azAC('azuc-vento-id');
-    azAC('azuc-tanica-id');
-    azAC('azuc-pompa-id');
     // Save
     ov.querySelector('#azuc-save').addEventListener('click', function() {
       var h2 = _azH();
       // Soglie → HA
       var sv = (ov.querySelector('#azuc-sog')||{}).value;
+      var vv = (ov.querySelector('#azuc-ven')||{}).value;
       var dv = (ov.querySelector('#azuc-dur')||{}).value;
       var tv = (ov.querySelector('#azuc-tar')||{}).value;
-      if (sv && h2 && h2.callService) h2.callService('input_number','set_value',{entity_id:c.pk_soglia_pioggia,value:parseFloat(sv)});
-      if (dv && h2 && h2.callService) h2.callService('input_number','set_value',{entity_id:c.pk_durata_manuale,value:parseFloat(dv)});
-      if (tv && h2 && h2.callService) h2.callService('input_number','set_value',{entity_id:c.pk_cicli_target,value:parseFloat(tv)});
+      if (sv && c.pk_soglia_pioggia) _azCallSvc('input_number','set_value',{entity_id:c.pk_soglia_pioggia,value:parseFloat(sv)});
+      if (vv && c.pk_soglia_vento)   _azCallSvc('input_number','set_value',{entity_id:c.pk_soglia_vento,value:parseFloat(vv)});
+      if (dv && c.pk_durata_manuale) _azCallSvc('input_number','set_value',{entity_id:c.pk_durata_manuale,value:parseFloat(dv)});
+      if (tv && c.pk_cicli_target)   _azCallSvc('input_number','set_value',{entity_id:c.pk_cicli_target,value:parseFloat(tv)});
+      // Orari notifiche → HA
+      var ntfS = (ov.querySelector('#azuc-ntf-start')||{}).value;
+      var ntfE = (ov.querySelector('#azuc-ntf-end')||{}).value;
+      if (ntfS && c.pk_inizio_ntf) _azCallSvc('input_datetime','set_datetime',{entity_id:c.pk_inizio_ntf,time:ntfS+':00'});
+      if (ntfE && c.pk_fine_ntf)   _azCallSvc('input_datetime','set_datetime',{entity_id:c.pk_fine_ntf,time:ntfE+':00'});
       // Schedule → HA
       dayIds.forEach(function(d) {
         var togEl = ov.querySelector('#azs-tog-' + d);
@@ -5133,20 +5198,17 @@ automation:
           }
         }
       });
-      // Toggle → HA (tutti e tre inviati al salva, evita race condition)
+      // Toggle → HA
       var autoBtn = ov.querySelector('#azuc-tog-auto');
       if (autoBtn && c.pk_auto) _azCallSvc('input_boolean', autoBtn.dataset.on==='1'?'turn_on':'turn_off', {entity_id:c.pk_auto});
       var sicBtn = ov.querySelector('#azuc-tog-sic');
       if (sicBtn && c.pk_auto_sic) _azCallSvc('automation', sicBtn.dataset.on==='1'?'turn_on':'turn_off', {entity_id:c.pk_auto_sic});
-      var ntfBtn = ov.querySelector('#azuc-tog-ntf');
-      if (ntfBtn && notifEntity) _azCallSvc('input_boolean', ntfBtn.dataset.on==='1'?'turn_on':'turn_off', {entity_id:notifEntity});
-      // Sensori opzionali → localStorage
-      var savedCfg = _azLoad(card);
-      var ve = (ov.querySelector('#azuc-vento-id')||{}).value||'';
-      var ta = (ov.querySelector('#azuc-tanica-id')||{}).value||'';
-      var po = (ov.querySelector('#azuc-pompa-id')||{}).value||'';
-      savedCfg.pk_vento = ve; savedCfg.pk_tanica = ta; savedCfg.pk_consumo_pompa = po;
-      _azSave(card, savedCfg);
+      var presBtn = ov.querySelector('#azuc-tog-pres');
+      if (presBtn && c.pk_presenza_attiva) _azCallSvc('input_boolean', presBtn.dataset.on==='1'?'turn_on':'turn_off', {entity_id:c.pk_presenza_attiva});
+      var npushBtn = ov.querySelector('#azuc-tog-npush');
+      if (npushBtn && c.pk_notify_push) _azCallSvc('input_boolean', npushBtn.dataset.on==='1'?'turn_on':'turn_off', {entity_id:c.pk_notify_push});
+      var nalexaBtn = ov.querySelector('#azuc-tog-nalexa');
+      if (nalexaBtn && c.pk_notify_alexa) _azCallSvc('input_boolean', nalexaBtn.dataset.on==='1'?'turn_on':'turn_off', {entity_id:c.pk_notify_alexa});
       ov._close();
       if (el) el._fcSig = null;
     });
@@ -5164,14 +5226,17 @@ automation:
     var dsg = dk.map(function(d){return _azIsOn(h,'input_boolean.'+px+'_'+d)?'1':'0';}).join('');
     var ncsg = dk.map(function(d){return Math.round(_azNum(_azS(h,'input_number.'+px+'_'+d+'_num_cicli'))||0);}).join('');
     var tc = _azS(h,c.pk_timer_ciclo), tm = _azS(h,c.pk_timer_manuale);
-    return ['2.5az',_azS(h,c.pk_stato),_azS(h,c.pk_auto),_azS(h,c.pk_manuale),tc,tm,
+    var presaId = c.pk_presa_entity ? _azS(h,c.pk_presa_entity) : null;
+    return ['2.6az',_azS(h,c.pk_stato),_azS(h,c.pk_auto),_azS(h,c.pk_manuale),tc,tm,
             _azS(h,c.pk_cicli_mensili),_azS(h,c.pk_cicli_target),
             _azS(h,c.pk_blocco_meteo),_azS(h,c.pk_pioggia),_azS(h,c.pk_pioggia_corso),
             _azS(h,c.pk_durata_manuale),_azS(h,c.pk_soglia_pioggia),
             _azS(h,c.pk_persona),_azS(h,c.pk_perdita),_azS(h,c.pk_prossimo),
             _azS(h,c.pk_cicli_rim),_azS(h,c.pk_consumo_acqua),_azS(h,c.pk_auto_sic),
-            c.pk_vento?_azS(h,c.pk_vento):'',c.pk_tanica?_azS(h,c.pk_tanica):'',
+            _azS(h,c.pk_vento),_azS(h,c.pk_tanica),
             c.pk_consumo_pompa?_azS(h,c.pk_consumo_pompa):'',
+            _azS(h,c.pk_presenza_attiva),
+            presaId?_azS(h,presaId):'',
             dsg,ncsg].join('|');
   }
 
@@ -5192,6 +5257,10 @@ automation:
       if (a === 'auto-off')  _azCallSvc('input_button','press',{entity_id:c.pk_btn_auto_off});
       if (a === 'programma') _azOpenProgramma(card, el);
       if (a === 'popup-cfg') _azOpenUserCfg(card, el);
+      if (a === 'presa-tog') {
+        var prH = _azH(), prId = _azS(prH, c.pk_presa_entity);
+        if (prId) _azCallSvc('switch', _azIsOn(prH, prId)?'turn_off':'turn_on', {entity_id:prId});
+      }
       if (a === 'sic-toggle') {
         var sc = _azCfgFor(card);
         if (sc.pk_auto_sic) { var sH=_azH(), sOn=_azS(sH,sc.pk_auto_sic)!=='off'; _azCallSvc('automation',sOn?'turn_off':'turn_on',{entity_id:sc.pk_auto_sic}); if(el) el._fcSig=null; }
@@ -5253,7 +5322,7 @@ automation:
   }
 
   var _AZ_CARD = {
-    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.15', frarik_no_edit: true,
+    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.16', frarik_no_edit: true,
     desc: 'Controllo sistema anti zanzare: schedule settimanale, timer, statistiche mensili, blocco meteo, sensori sicurezza.',
     render:    function(card) { return _azRender(card); },
     mount:     function(card, hass, el) { _azMount(card, hass, el); },
