@@ -3966,6 +3966,8 @@ automation:
       pk_inizio_ntf:      'input_datetime.frarik_antizanzare_orario_inizio_notifiche',
       pk_fine_ntf:        'input_datetime.frarik_antizanzare_orario_fine_notifiche',
       pk_presa_entity:    'input_text.frarik_antizanzare_entity_presa',
+      pk_abilita_pioggia: 'input_boolean.frarik_antizanzare_abilita_soglia_pioggia',
+      pk_abilita_vento:   'input_boolean.frarik_antizanzare_abilita_soglia_vento',
     };
   }
 
@@ -4082,7 +4084,9 @@ automation:
     var timerLabel = timerC.active ? 'CICLO' : 'MANUALE';
     var sogliaPioggia = _azNum(_azS(h, c.pk_soglia_pioggia)) || 0;
     var sogliaVento = _azNum(_azS(h, c.pk_soglia_vento)) || 0;
-    var presenzaAttiva = _azIsOn(h, c.pk_presenza_attiva);
+    var presenzaAttiva  = _azIsOn(h, c.pk_presenza_attiva);
+    var abilitaPioggia  = _azIsOn(h, c.pk_abilita_pioggia);
+    var abilitaVento    = _azIsOn(h, c.pk_abilita_vento);
     var col = '#64748b', colRgb = '100,116,139', statusLabel = 'SPENTA';
     if (blocco)                              { col = '#f59e0b'; colRgb = '245,158,11';  statusLabel = 'METEO'; }
     else if (stato === 'Manuale Attiva')     { col = '#f97316'; colRgb = '249,115,22';  statusLabel = 'ACCESA'; }
@@ -4200,21 +4204,24 @@ automation:
         + '</div></div>';
     }
 
-    // Sensor grid: Vento / Tanica / Consumo / Pioggia
-    function gc(ico, val, lbl, vc) {
-      return '<div class="fc-gc">'
+    // Sensor grid: Vento / Pioggia / Prob.pioggia / Meteo
+    function gc(ico, val, lbl, vc, sya, badge) {
+      return '<div class="fc-gc"' + (sya ? ' data-sya="' + sya + '" style="cursor:pointer"' : '') + '>'
         + '<div class="fc-gc-ico">' + ico + '</div>'
         + '<div class="fc-gc-v" style="color:' + (vc||'#fff') + '">' + val + '</div>'
         + '<div class="fc-gc-l">' + lbl + '</div>'
+        + (badge ? '<div style="font-size:9px;font-weight:700;letter-spacing:.03em;margin-top:3px;padding:2px 7px;border-radius:5px;' + badge.s + '">' + badge.t + '</div>' : '')
         + '</div>';
     }
     var ventoDsp = vento !== null ? vento.toFixed(0) + ' m/s' : (c.pk_vento ? '--' : 'N/D');
     var pioggiaCol = pioggiaCorsoBool ? '#f59e0b' : '#22c55e';
     var meteoCol = blocco ? '#f59e0b' : '#22c55e';
+    var ventoBadge   = { t: abilitaVento   ? '✓ Attivo' : '✕ Inattivo', s: abilitaVento   ? 'background:rgba(34,197,94,.15);color:#22c55e'  : 'background:rgba(255,255,255,.06);color:#64748b' };
+    var pioggiaBadge = { t: abilitaPioggia ? '✓ Attivo' : '✕ Inattivo', s: abilitaPioggia ? 'background:rgba(34,197,94,.15);color:#22c55e'  : 'background:rgba(255,255,255,.06);color:#64748b' };
     var sensorGrid = '<div class="fc-grid">'
-      + gc('💨', ventoDsp, 'Vento', vento !== null && vento > 10 ? '#f59e0b' : '#fff')
+      + gc('💨', ventoDsp, 'Vento', vento !== null && vento > 10 ? '#f59e0b' : '#fff', 'tog-abilita-vento', ventoBadge)
       + '<div class="fc-gc-sep"></div>'
-      + gc('🌧', pioggiaCorsoBool ? 'Sì' : 'No', 'Pioggia', pioggiaCol)
+      + gc('🌧', pioggiaCorsoBool ? 'Sì' : 'No', 'Pioggia', pioggiaCol, 'tog-abilita-pioggia', pioggiaBadge)
       + '<div class="fc-gc-sep"></div>'
       + gc('🌂', pioggia.toFixed(0) + '%', 'Prob.pioggia', pioggia > 50 ? '#f59e0b' : '#fff')
       + '<div class="fc-gc-sep"></div>'
@@ -4641,6 +4648,8 @@ automation:
             c.pk_consumo_pompa?_azS(h,c.pk_consumo_pompa):'',
             _azS(h,c.pk_presenza_attiva),
             presaId?_azS(h,presaId):'',
+            c.pk_abilita_pioggia?_azS(h,c.pk_abilita_pioggia):'',
+            c.pk_abilita_vento?_azS(h,c.pk_abilita_vento):'',
             dsg,ncsg].join('|');
   }
 
@@ -4664,6 +4673,12 @@ automation:
       if (a === 'presa-tog') {
         var prH = _azH(), prId = _azS(prH, c.pk_presa_entity);
         if (prId) _azCallSvc('switch', _azIsOn(prH, prId)?'turn_off':'turn_on', {entity_id:prId});
+      }
+      if (a === 'tog-abilita-pioggia' && c.pk_abilita_pioggia) {
+        var apH = _azH(); _azCallSvc('input_boolean', _azIsOn(apH,c.pk_abilita_pioggia)?'turn_off':'turn_on', {entity_id:c.pk_abilita_pioggia}); if(el) el._fcSig=null;
+      }
+      if (a === 'tog-abilita-vento' && c.pk_abilita_vento) {
+        var avH = _azH(); _azCallSvc('input_boolean', _azIsOn(avH,c.pk_abilita_vento)?'turn_off':'turn_on', {entity_id:c.pk_abilita_vento}); if(el) el._fcSig=null;
       }
       if (a === 'sic-toggle') {
         var sc = _azCfgFor(card);
@@ -4726,7 +4741,7 @@ automation:
   }
 
   var _AZ_CARD = {
-    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.24', frarik_no_edit: true,
+    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.25', frarik_no_edit: true,
     desc: 'Controllo sistema anti zanzare: schedule settimanale, timer, statistiche mensili, blocco meteo, sensori sicurezza.',
     render:    function(card) { return _azRender(card); },
     mount:     function(card, hass, el) { _azMount(card, hass, el); },

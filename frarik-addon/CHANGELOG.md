@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.9.35 — 2026-07-06
+
+### feat(antizanzare): toggle blocco pioggia/vento visibili direttamente sulla card (v2.25)
+
+- Celle Vento e Pioggia nella sensor grid ora mostrano badge "✓ Attivo / ✕ Inattivo"
+- Click sulla cella Vento → abilita/disabilita blocco cicli per vento
+- Click sulla cella Pioggia → abilita/disabilita blocco cicli per pioggia
+- Aggiunti pk_abilita_pioggia / pk_abilita_vento alla config e alla firma di re-render
+- Card bumped to v2.25
+
 ## 1.9.34 — 2026-07-06
 
 ### fix(panel): rebuild panel con fix wizard PKG e blocco_meteo sempre attivo
