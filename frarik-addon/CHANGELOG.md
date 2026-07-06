@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.9.34 — 2026-07-06
+
+### fix(panel): rebuild panel con fix wizard PKG e blocco_meteo sempre attivo
+
+- Fix critico: `blocco_meteo` era sempre ON quando `soglia_pioggia=0` (default), bloccando tutti i cicli
+- Fix: `sicOn` mostrava sempre il toggle "Stop emergenza" come attivo anche quando l'entità non esisteva
+- Aggiunta durata per ogni slot ciclo nelle impostazioni programma settimanale
+- Rebuild panel: il wizard si apre correttamente su "Aggiorna PKG"
+
 ## 1.9.33 — 2026-07-06
 
 ### fix(store): "Aggiorna PKG" apre sempre il wizard con valori pre-compilati
