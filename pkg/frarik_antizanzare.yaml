@@ -66,6 +66,14 @@ input_boolean:
   frarik_antizanzare_presenza_attiva:
     name: "Pausa per Presenza"
     icon: mdi:motion-sensor
+  frarik_antizanzare_abilita_soglia_pioggia:
+    name: "Abilita Blocco Pioggia"
+    initial: false
+    icon: mdi:weather-rainy
+  frarik_antizanzare_abilita_soglia_vento:
+    name: "Abilita Blocco Vento"
+    initial: false
+    icon: mdi:weather-windy
 
 # INPUT NUMBER - Cicli per giorno
 input_number:
@@ -1564,16 +1572,20 @@ template:
         unique_id: frarik_antizanzare_blocco_meteo
         state: >
           {% set soglia_pioggia = states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) %}
-          {% set blocco_pioggia = soglia_pioggia > 0 and states('IL_TUO_SENSORE_PROBABILITA_PIOGGIA') | float(0) >= soglia_pioggia %}
+          {% set abilita_pioggia = is_state('input_boolean.frarik_antizanzare_abilita_soglia_pioggia', 'on') %}
+          {% set blocco_pioggia = abilita_pioggia and soglia_pioggia > 0 and states('IL_TUO_SENSORE_PROBABILITA_PIOGGIA') | float(0) >= soglia_pioggia %}
           {% set soglia_vento = states('input_number.frarik_antizanzare_soglia_vento') | float(0) %}
-          {% set blocco_vento = soglia_vento > 0 and states('IL_TUO_SENSORE_VENTO') | float(0) >= soglia_vento %}
+          {% set abilita_vento = is_state('input_boolean.frarik_antizanzare_abilita_soglia_vento', 'on') %}
+          {% set blocco_vento = abilita_vento and soglia_vento > 0 and states('IL_TUO_SENSORE_VENTO') | float(0) >= soglia_vento %}
           {% set blocco_presenza = is_state('input_boolean.frarik_antizanzare_presenza_attiva', 'on') and is_state('IL_TUO_SENSORE_PRESENZA', 'on') %}
           {{ blocco_pioggia or blocco_vento or blocco_presenza }}
         icon: >
           {% set soglia_pioggia = states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) %}
-          {% set blocco_pioggia = soglia_pioggia > 0 and states('IL_TUO_SENSORE_PROBABILITA_PIOGGIA') | float(0) >= soglia_pioggia %}
+          {% set abilita_pioggia = is_state('input_boolean.frarik_antizanzare_abilita_soglia_pioggia', 'on') %}
+          {% set blocco_pioggia = abilita_pioggia and soglia_pioggia > 0 and states('IL_TUO_SENSORE_PROBABILITA_PIOGGIA') | float(0) >= soglia_pioggia %}
           {% set soglia_vento = states('input_number.frarik_antizanzare_soglia_vento') | float(0) %}
-          {% set blocco_vento = soglia_vento > 0 and states('IL_TUO_SENSORE_VENTO') | float(0) >= soglia_vento %}
+          {% set abilita_vento = is_state('input_boolean.frarik_antizanzare_abilita_soglia_vento', 'on') %}
+          {% set blocco_vento = abilita_vento and soglia_vento > 0 and states('IL_TUO_SENSORE_VENTO') | float(0) >= soglia_vento %}
           {% set blocco_presenza = is_state('input_boolean.frarik_antizanzare_presenza_attiva', 'on') and is_state('IL_TUO_SENSORE_PRESENZA', 'on') %}
           {{ 'mdi:account-cancel' if blocco_presenza else ('mdi:weather-windy' if blocco_vento else ('mdi:weather-rainy' if blocco_pioggia else 'mdi:weather-partly-cloudy')) }}
 
