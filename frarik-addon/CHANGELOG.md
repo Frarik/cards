@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.9.36 — 2026-07-07
+
+### fix(antizanzare): cicli non partono all'orario impostato (v2.26)
+
+- Causa: `platform: time at: input_datetime.XXX` registra l'orario al caricamento di HA
+  e non si aggiorna dinamicamente quando l'utente cambia l'orario dalla card
+- Fix: tutte le 35 automazioni ciclo (7 giorni × 5 cicli) cambiate a `platform: time_pattern minutes: "/1"`
+  con condizione template che legge l'entity in tempo reale ogni minuto
+- Ora cambiare un orario dalla card è immediatamente efficace senza dover ricaricare HA
+- Card bumped to v2.26, PKG aggiornato
+
 ## 1.9.35 — 2026-07-06
 
 ### feat(antizanzare): toggle blocco pioggia/vento visibili direttamente sulla card (v2.25)

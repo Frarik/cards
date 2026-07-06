@@ -1695,11 +1695,14 @@ automation:
   - id: frarik_antizanzare_lunedi_ciclo1
     alias: "Anti Zanzare - Lunedì Ciclo 1"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_lunedi_orario_ciclo1
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: mon
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_lunedi_orario_ciclo1')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_lunedi
         state: "on"
@@ -1735,11 +1738,14 @@ automation:
   - id: frarik_antizanzare_lunedi_ciclo2
     alias: "Anti Zanzare - Lunedì Ciclo 2"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_lunedi_orario_ciclo2
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: mon
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_lunedi_orario_ciclo2')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_lunedi
         state: "on"
@@ -1775,11 +1781,14 @@ automation:
   - id: frarik_antizanzare_lunedi_ciclo3
     alias: "Anti Zanzare - Lunedì Ciclo 3"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_lunedi_orario_ciclo3
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: mon
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_lunedi_orario_ciclo3')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_lunedi
         state: "on"
@@ -1815,11 +1824,14 @@ automation:
   - id: frarik_antizanzare_lunedi_ciclo4
     alias: "Anti Zanzare - Lunedì Ciclo 4"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_lunedi_orario_ciclo4
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: mon
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_lunedi_orario_ciclo4')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_lunedi
         state: "on"
@@ -1855,11 +1867,14 @@ automation:
   - id: frarik_antizanzare_lunedi_ciclo5
     alias: "Anti Zanzare - Lunedì Ciclo 5"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_lunedi_orario_ciclo5
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: mon
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_lunedi_orario_ciclo5')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_lunedi
         state: "on"
@@ -1896,11 +1911,14 @@ automation:
   - id: frarik_antizanzare_martedi_ciclo1
     alias: "Anti Zanzare - Martedì Ciclo 1"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_martedi_orario_ciclo1
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: tue
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_martedi_orario_ciclo1')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_martedi
         state: "on"
@@ -1936,11 +1954,14 @@ automation:
   - id: frarik_antizanzare_martedi_ciclo2
     alias: "Anti Zanzare - Martedì Ciclo 2"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_martedi_orario_ciclo2
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: tue
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_martedi_orario_ciclo2')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_martedi
         state: "on"
@@ -1976,11 +1997,14 @@ automation:
   - id: frarik_antizanzare_martedi_ciclo3
     alias: "Anti Zanzare - Martedì Ciclo 3"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_martedi_orario_ciclo3
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: tue
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_martedi_orario_ciclo3')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_martedi
         state: "on"
@@ -2016,11 +2040,14 @@ automation:
   - id: frarik_antizanzare_martedi_ciclo4
     alias: "Anti Zanzare - Martedì Ciclo 4"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_martedi_orario_ciclo4
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: tue
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_martedi_orario_ciclo4')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_martedi
         state: "on"
@@ -2059,11 +2086,14 @@ automation:
   - id: frarik_antizanzare_martedi_ciclo5
     alias: "Anti Zanzare - Martedì Ciclo 5"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_martedi_orario_ciclo5
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: tue
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_martedi_orario_ciclo5')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_martedi
         state: "on"
@@ -2100,11 +2130,14 @@ automation:
   - id: frarik_antizanzare_mercoledi_ciclo1
     alias: "Anti Zanzare - Mercoledì Ciclo 1"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_mercoledi_orario_ciclo1
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: wed
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_mercoledi_orario_ciclo1')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_mercoledi
         state: "on"
@@ -2141,11 +2174,14 @@ automation:
   - id: frarik_antizanzare_mercoledi_ciclo2
     alias: "Anti Zanzare - Mercoledì Ciclo 2"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_mercoledi_orario_ciclo2
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: wed
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_mercoledi_orario_ciclo2')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_mercoledi
         state: "on"
@@ -2182,11 +2218,14 @@ automation:
   - id: frarik_antizanzare_mercoledi_ciclo3
     alias: "Anti Zanzare - Mercoledì Ciclo 3"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_mercoledi_orario_ciclo3
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: wed
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_mercoledi_orario_ciclo3')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_mercoledi
         state: "on"
@@ -2223,11 +2262,14 @@ automation:
   - id: frarik_antizanzare_mercoledi_ciclo4
     alias: "Anti Zanzare - Mercoledì Ciclo 4"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_mercoledi_orario_ciclo4
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: wed
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_mercoledi_orario_ciclo4')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_mercoledi
         state: "on"
@@ -2264,11 +2306,14 @@ automation:
   - id: frarik_antizanzare_mercoledi_ciclo5
     alias: "Anti Zanzare - Mercoledì Ciclo 5"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_mercoledi_orario_ciclo5
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: wed
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_mercoledi_orario_ciclo5')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_mercoledi
         state: "on"
@@ -2306,11 +2351,14 @@ automation:
   - id: frarik_antizanzare_giovedi_ciclo1
     alias: "Anti Zanzare - Giovedì Ciclo 1"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_giovedi_orario_ciclo1
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: thu
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_giovedi_orario_ciclo1')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_giovedi
         state: "on"
@@ -2347,11 +2395,14 @@ automation:
   - id: frarik_antizanzare_giovedi_ciclo2
     alias: "Anti Zanzare - Giovedì Ciclo 2"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_giovedi_orario_ciclo2
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: thu
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_giovedi_orario_ciclo2')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_giovedi
         state: "on"
@@ -2388,11 +2439,14 @@ automation:
   - id: frarik_antizanzare_giovedi_ciclo3
     alias: "Anti Zanzare - Giovedì Ciclo 3"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_giovedi_orario_ciclo3
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: thu
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_giovedi_orario_ciclo3')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_giovedi
         state: "on"
@@ -2429,11 +2483,14 @@ automation:
   - id: frarik_antizanzare_giovedi_ciclo4
     alias: "Anti Zanzare - Giovedì Ciclo 4"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_giovedi_orario_ciclo4
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: thu
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_giovedi_orario_ciclo4')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_giovedi
         state: "on"
@@ -2470,11 +2527,14 @@ automation:
   - id: frarik_antizanzare_giovedi_ciclo5
     alias: "Anti Zanzare - Giovedì Ciclo 5"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_giovedi_orario_ciclo5
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: thu
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_giovedi_orario_ciclo5')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_giovedi
         state: "on"
@@ -2512,11 +2572,14 @@ automation:
   - id: frarik_antizanzare_venerdi_ciclo1
     alias: "Anti Zanzare - Venerdì Ciclo 1"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_venerdi_orario_ciclo1
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: fri
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_venerdi_orario_ciclo1')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_venerdi
         state: "on"
@@ -2553,11 +2616,14 @@ automation:
   - id: frarik_antizanzare_venerdi_ciclo2
     alias: "Anti Zanzare - Venerdì Ciclo 2"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_venerdi_orario_ciclo2
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: fri
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_venerdi_orario_ciclo2')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_venerdi
         state: "on"
@@ -2594,11 +2660,14 @@ automation:
   - id: frarik_antizanzare_venerdi_ciclo3
     alias: "Anti Zanzare - Venerdì Ciclo 3"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_venerdi_orario_ciclo3
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: fri
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_venerdi_orario_ciclo3')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_venerdi
         state: "on"
@@ -2635,11 +2704,14 @@ automation:
   - id: frarik_antizanzare_venerdi_ciclo4
     alias: "Anti Zanzare - Venerdì Ciclo 4"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_venerdi_orario_ciclo4
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: fri
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_venerdi_orario_ciclo4')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_venerdi
         state: "on"
@@ -2676,11 +2748,14 @@ automation:
   - id: frarik_antizanzare_venerdi_ciclo5
     alias: "Anti Zanzare - Venerdì Ciclo 5"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_venerdi_orario_ciclo5
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: fri
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_venerdi_orario_ciclo5')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_venerdi
         state: "on"
@@ -2718,11 +2793,14 @@ automation:
   - id: frarik_antizanzare_sabato_ciclo1
     alias: "Anti Zanzare - Sabato Ciclo 1"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_sabato_orario_ciclo1
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: sat
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_sabato_orario_ciclo1')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_sabato
         state: "on"
@@ -2759,11 +2837,14 @@ automation:
   - id: frarik_antizanzare_sabato_ciclo2
     alias: "Anti Zanzare - Sabato Ciclo 2"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_sabato_orario_ciclo2
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: sat
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_sabato_orario_ciclo2')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_sabato
         state: "on"
@@ -2800,11 +2881,14 @@ automation:
   - id: frarik_antizanzare_sabato_ciclo3
     alias: "Anti Zanzare - Sabato Ciclo 3"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_sabato_orario_ciclo3
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: sat
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_sabato_orario_ciclo3')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_sabato
         state: "on"
@@ -2841,11 +2925,14 @@ automation:
   - id: frarik_antizanzare_sabato_ciclo4
     alias: "Anti Zanzare - Sabato Ciclo 4"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_sabato_orario_ciclo4
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: sat
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_sabato_orario_ciclo4')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_sabato
         state: "on"
@@ -2882,11 +2969,14 @@ automation:
   - id: frarik_antizanzare_sabato_ciclo5
     alias: "Anti Zanzare - Sabato Ciclo 5"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_sabato_orario_ciclo5
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: sat
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_sabato_orario_ciclo5')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_sabato
         state: "on"
@@ -2924,11 +3014,14 @@ automation:
   - id: frarik_antizanzare_domenica_ciclo1
     alias: "Anti Zanzare - Domenica Ciclo 1"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_domenica_orario_ciclo1
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: sun
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_domenica_orario_ciclo1')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_domenica
         state: "on"
@@ -2965,11 +3058,14 @@ automation:
   - id: frarik_antizanzare_domenica_ciclo2
     alias: "Anti Zanzare - Domenica Ciclo 2"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_domenica_orario_ciclo2
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: sun
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_domenica_orario_ciclo2')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_domenica
         state: "on"
@@ -3006,11 +3102,14 @@ automation:
   - id: frarik_antizanzare_domenica_ciclo3
     alias: "Anti Zanzare - Domenica Ciclo 3"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_domenica_orario_ciclo3
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: sun
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_domenica_orario_ciclo3')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_domenica
         state: "on"
@@ -3047,11 +3146,14 @@ automation:
   - id: frarik_antizanzare_domenica_ciclo4
     alias: "Anti Zanzare - Domenica Ciclo 4"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_domenica_orario_ciclo4
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: sun
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_domenica_orario_ciclo4')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_domenica
         state: "on"
@@ -3088,11 +3190,14 @@ automation:
   - id: frarik_antizanzare_domenica_ciclo5
     alias: "Anti Zanzare - Domenica Ciclo 5"
     trigger:
-      - platform: time
-        at: input_datetime.frarik_antizanzare_domenica_orario_ciclo5
+      - platform: time_pattern
+        minutes: "/1"
     condition:
       - condition: time
         weekday: sun
+      - condition: template
+        value_template: >
+          {{ now().strftime('%H:%M') == states('input_datetime.frarik_antizanzare_domenica_orario_ciclo5')[:5] }}
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_domenica
         state: "on"
@@ -4741,7 +4846,7 @@ automation:
   }
 
   var _AZ_CARD = {
-    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.25', frarik_no_edit: true,
+    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.26', frarik_no_edit: true,
     desc: 'Controllo sistema anti zanzare: schedule settimanale, timer, statistiche mensili, blocco meteo, sensori sicurezza.',
     render:    function(card) { return _azRender(card); },
     mount:     function(card, hass, el) { _azMount(card, hass, el); },
