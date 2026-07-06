@@ -773,7 +773,8 @@ window.customCards.push({ version: '1.5',
         Sensore Pioggia:        &sensore_pioggia_az 'IL_TUO_SENSORE_PIOGGIA'
         Sensore Presenza:       &sensore_presenza   'IL_TUO_SENSORE_PRESENZA'
         Sensore Livello Tanica: &sensore_livello    'IL_TUO_SENSORE_LIVELLO_TANICA'
-        Sensore Perdita Acqua:  &sensore_perdita    'binary_sensor.IL_TUO_SENSORE_PERDITA'
+        Sensore Perdita Acqua:  &sensore_perdita    'IL_TUO_SENSORE_PERDITA'
+        Sensore Pompa:          &sensore_pompa      'IL_TUO_SENSORE_POMPA'
         Presa Antizanzare:      &presa_az           'IL_TUO_PRESA_ANTIZANZARE'
         Device push:            &push_az
           - service: IL_TUO_MOBILE_APP
@@ -2207,12 +2208,19 @@ template:
             0
           {% endif %}
 
-      # Sensore probabilità pioggia (collegato a sensore meteo reale)
+      # Sensore probabilità pioggia (collegato a sensore reale)
       - name: "Frarik Antizanzare Probabilita Pioggia"
         unique_id: frarik_antizanzare_probabilita_pioggia
-        state: "{{ states('sensor.openmeteo_precipitation_probability') | int(0) }}"
+        state: "{{ states('IL_TUO_SENSORE_PIOGGIA') | float(0) | round(0) | int }}"
         unit_of_measurement: "%"
         icon: mdi:weather-rainy
+
+      # Sensore potenza pompa (collegato a sensore reale opzionale)
+      - name: "Frarik Antizanzare Potenza Pompa"
+        unique_id: frarik_antizanzare_potenza_pompa
+        state: "{{ states('IL_TUO_SENSORE_POMPA') | float(0) }}"
+        unit_of_measurement: "W"
+        icon: mdi:pump
 
       # Sensore cicli rimanenti mensili
       - name: "Frarik Antizanzare Cicli Rimanenti Mensili"
@@ -2298,12 +2306,12 @@ template:
         icon: mdi:water-percent
 
   - binary_sensor:
-      # Sensore pioggia in corso (collegato a sensore meteo reale)
+      # Sensore pioggia in corso: on se la probabilità supera il 30%
       - name: "Frarik Antizanzare Pioggia Corso"
         unique_id: frarik_antizanzare_pioggia_corso
-        state: "{{ states('IL_TUO_SENSORE_PIOGGIA') }}"
+        state: "{{ states('IL_TUO_SENSORE_PIOGGIA') | float(0) > 30 }}"
         icon: >
-          {{ 'mdi:weather-rainy' if states('IL_TUO_SENSORE_PIOGGIA') | float(0) > 0 else 'mdi:weather-cloudy' }}
+          {{ 'mdi:weather-rainy' if states('IL_TUO_SENSORE_PIOGGIA') | float(0) > 30 else 'mdi:weather-cloudy' }}
 
       # Sensore blocco per condizioni meteo, vento e presenza
       - name: "Frarik Antizanzare Blocco Meteo"
@@ -4240,9 +4248,39 @@ automation:
       - service: notify.frarik_antizanzare_notify
         data:
           title: "Anti Zanzare - Sicurezza"
-          message: "✅ Area libera. Sistema riarmato e pronto."`;
+          message: "✅ Area libera. Sistema riarmato e pronto."
 
-  function _buildPkgAZ(sw, push, pioggia, _tpl, vento, tanica, presenza, perdita) {
+  # ── SPEGNIMENTO TIMER ────────────────────────────────────────────────────────
+  # Quando il timer ciclo automatico finisce → spegni la presa
+  - id: frarik_antizanzare_timer_ciclo_finished
+    alias: "Anti Zanzare - Timer Ciclo Terminato"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+    action:
+      - service: switch.turn_off
+        target:
+          entity_id: IL_TUO_PRESA_ANTIZANZARE
+
+  # Quando il timer manuale finisce → spegni la presa e resetta lo stato
+  - id: frarik_antizanzare_timer_manuale_finished
+    alias: "Anti Zanzare - Timer Manuale Terminato"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.frarik_antizanzare_manuale_timer
+    action:
+      - service: switch.turn_off
+        target:
+          entity_id: IL_TUO_PRESA_ANTIZANZARE
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.frarik_antizanzare_manuale_attiva`;
+
+  function _buildPkgAZ(sw, push, pioggia, _tpl, vento, tanica, presenza, perdita, pompa) {
     var ind = '          ';
     var pushLines = (push && push.length)
       ? push.map(function(p) { return ind + '- service: ' + p; }).join('\n')
@@ -4253,7 +4291,8 @@ automation:
       .split('IL_TUO_SENSORE_LIVELLO_TANICA').join(tanica || 'sensor.non_configurato')
       .split('IL_TUO_SENSORE_VENTO').join(vento || 'sensor.non_configurato')
       .split('IL_TUO_SENSORE_PRESENZA').join(presenza || 'binary_sensor.non_configurato')
-      .split('IL_TUO_SENSORE_PERDITA').join(perdita || 'binary_sensor.non_configurato');
+      .split('IL_TUO_SENSORE_PERDITA').join(perdita || 'binary_sensor.non_configurato')
+      .split('IL_TUO_SENSORE_POMPA').join(pompa || 'sensor.non_configurato');
     yaml = yaml.replace(/[ 	]*- service: IL_TUO_MOBILE_APP/, pushLines);
     yaml = yaml.replace(/[ 	]*- IL_TUO_MEDIA_PLAYER_ALEXA/, ind + '- media_player.non_configurato');
     return yaml;
@@ -4429,10 +4468,12 @@ automation:
 
     function renderWiz() {
       var swVal    = (saved && saved.sw)       || '';
+      var pioggiaVal=(saved && saved.pioggia)  || '';
       var ventoVal = (saved && saved.vento)    || '';
       var tanicaVal= (saved && saved.tanica)   || '';
       var presVal  = (saved && saved.presenza) || '';
       var perdVal  = (saved && saved.perdita)  || '';
+      var pompaVal = (saved && saved.pompa)    || '';
       sr.innerHTML = '<style>'
         + ':host{all:initial;font-family:system-ui,sans-serif}'
         + '.wd-bd{position:fixed;inset:0;z-index:200000;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);display:flex;align-items:flex-end}'
@@ -4470,12 +4511,19 @@ automation:
         + '<div class="wd-lbl">Entity Switch</div>'
         + '<div class="wd-frow"><input class="wd-inp" id="f-switch" type="text" autocomplete="off" placeholder="switch.presa_anti_zanzare" value="' + swVal.replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-switch"></div></div>'
         + '</div>'
+        + '<div><div class="wd-sec">Sensori meteo</div>'
+        + '<p class="wd-note">Sensore che fornisce la probabilità pioggia in % (es. da OpenMeteo, Yr.no, ecc).</p>'
+        + '<div class="wd-lbl">Probabilità pioggia % (sensor.*)</div>'
+        + '<div class="wd-frow"><input class="wd-inp" id="f-pioggia" type="text" autocomplete="off" placeholder="sensor.probabilita_pioggia" value="' + pioggiaVal.replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-pioggia"></div></div>'
+        + '</div>'
         + '<div><div class="wd-sec">Sensori (opzionali)</div>'
         + '<p class="wd-note">Lascia vuoto se non hai il sensore, il PKG usa valori di default.</p>'
         + '<div class="wd-lbl">Velocità vento (sensor.*)</div>'
         + '<div class="wd-frow"><input class="wd-inp" id="f-vento" type="text" autocomplete="off" placeholder="sensor.velocita_vento" value="' + ventoVal.replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-vento"></div></div>'
         + '<div class="wd-lbl">Livello tanica % (sensor.*)</div>'
         + '<div class="wd-frow"><input class="wd-inp" id="f-tanica" type="text" autocomplete="off" placeholder="sensor.livello_tanica" value="' + tanicaVal.replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-tanica"></div></div>'
+        + '<div class="wd-lbl">Potenza pompa W (sensor.*)</div>'
+        + '<div class="wd-frow"><input class="wd-inp" id="f-pompa" type="text" autocomplete="off" placeholder="sensor.potenza_pompa" value="' + pompaVal.replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-pompa"></div></div>'
         + '<div class="wd-lbl">Rilevazione presenza (binary_sensor.*)</div>'
         + '<div class="wd-frow"><input class="wd-inp" id="f-presenza" type="text" autocomplete="off" placeholder="binary_sensor.presenza_casa" value="' + presVal.replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-presenza"></div></div>'
         + '<div class="wd-lbl">Perdita acqua (binary_sensor.*, opz.)</div>'
@@ -4511,24 +4559,28 @@ automation:
       });
 
       setupAC(sr.getElementById('f-switch'),   sr.getElementById('d-switch'),   switchIds);
+      setupAC(sr.getElementById('f-pioggia'),  sr.getElementById('d-pioggia'),  sensorIds);
       setupAC(sr.getElementById('f-vento'),    sr.getElementById('d-vento'),    sensorIds);
       setupAC(sr.getElementById('f-tanica'),   sr.getElementById('d-tanica'),   sensorIds);
+      setupAC(sr.getElementById('f-pompa'),    sr.getElementById('d-pompa'),    sensorIds);
       setupAC(sr.getElementById('f-presenza'), sr.getElementById('d-presenza'), bsIds);
       setupAC(sr.getElementById('f-perdita'),  sr.getElementById('d-perdita'),  bsIds);
 
       sr.getElementById('wd-install').addEventListener('click', function() {
         var sw       = sr.getElementById('f-switch').value.trim();
+        var pioggia  = sr.getElementById('f-pioggia').value.trim();
         var vento    = sr.getElementById('f-vento').value.trim();
         var tanica   = sr.getElementById('f-tanica').value.trim();
+        var pompa    = sr.getElementById('f-pompa').value.trim();
         var presenza = sr.getElementById('f-presenza').value.trim();
         var perdita  = sr.getElementById('f-perdita').value.trim();
         var push = Array.from(sr.querySelectorAll('.push-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
-        try { localStorage.setItem(_AZ_WIZ_KEY, JSON.stringify({sw: sw, push: push, vento: vento, tanica: tanica, presenza: presenza, perdita: perdita})); } catch(e) {}
+        try { localStorage.setItem(_AZ_WIZ_KEY, JSON.stringify({sw: sw, push: push, pioggia: pioggia, vento: vento, tanica: tanica, pompa: pompa, presenza: presenza, perdita: perdita})); } catch(e) {}
         var m = location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
         var base = location.origin + (m ? m[1] : '');
         var btn = sr.getElementById('wd-install');
         btn.classList.add('wd-loading'); btn.textContent = 'Installazione…';
-        var yaml = _buildPkgAZ(sw, push, '', _tpl, vento, tanica, presenza, perdita);
+        var yaml = _buildPkgAZ(sw, push, pioggia, _tpl, vento, tanica, presenza, perdita, pompa);
         btn.textContent = 'Installazione…';
         fetch(base + '/api/frarik/pkg/install', {
           method: 'POST',
@@ -4621,7 +4673,7 @@ automation:
       pk_auto_sic:        'automation.frarik_antizanzare_sicurezza_persona_rilevata',
       pk_vento:           'sensor.frarik_antizanzare_velocita_vento',
       pk_tanica:          'sensor.frarik_antizanzare_livello_tanica',
-      pk_consumo_pompa:   '',
+      pk_consumo_pompa:   'sensor.frarik_antizanzare_potenza_pompa',
       pk_presenza_attiva: 'input_boolean.frarik_antizanzare_presenza_attiva',
       pk_notify_push:     'input_boolean.frarik_antizanzare_notify_push',
       pk_notify_alexa:    'input_boolean.frarik_antizanzare_notify_alexa',
@@ -5028,27 +5080,42 @@ automation:
     var fineNtf      = (_azS(h, c.pk_fine_ntf) || '23:59:00').slice(0, 5);
     var dayIds  = ['lunedi','martedi','mercoledi','giovedi','venerdi','sabato','domenica'];
     var dayLbls = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato','Domenica'];
-    var dayShrt = ['LUN','MAR','MER','GIO','VEN','SAB','DOM'];
 
-    function sec(t) { return '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#22c55e;padding-bottom:5px;border-bottom:1px solid rgba(34,197,94,.18);margin:14px 0 10px">' + t + '</div>'; }
-    function numRow(id, label, val, unit, min, max, step) {
-      return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">'
-        + '<span style="font-size:11px;color:#fff;flex:1">' + label + '</span>'
-        + '<input id="azuc-' + id + '" type="number" min="' + min + '" max="' + max + '" step="' + step + '" value="' + val + '" style="width:80px;padding:6px 9px;border-radius:7px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:13px;outline:none;text-align:right">'
-        + '<span style="font-size:10px;color:rgba(255,255,255,.4);width:32px;flex-shrink:0">' + unit + '</span>'
-        + '</div>';
-    }
-    function togBtn(id, label, isOn, col) {
-      var onC = col || '34,197,94';
-      return '<div id="' + id + '" data-on="' + (isOn?'1':'0') + '" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:8px 4px;border-radius:9px;'
-        + 'background:rgba(' + (isOn?onC:'100,116,139') + ',.1);border:1px solid rgba(' + (isOn?onC:'100,116,139') + ',' + (isOn?'.35':'.15') + ');transition:all .2s">'
-        + '<div style="font-size:18px">' + (isOn ? '✅' : '⭕') + '</div>'
-        + '<div style="font-size:10px;font-weight:800;color:' + (isOn?'rgb('+onC+')':'rgba(255,255,255,.35)') + '">' + label + '</div>'
-        + '<div class="azuc-tov" style="font-size:9px;font-weight:700;color:' + (isOn?'#fff':'rgba(255,255,255,.25)') + '">' + (isOn?'ON':'OFF') + '</div>'
+    function sec(ico, t, col) {
+      var c2 = col || '34,197,94';
+      return '<div style="display:flex;align-items:center;gap:8px;padding:12px 0 8px;border-bottom:1px solid rgba(' + c2 + ',.2);margin-bottom:2px">'
+        + '<div style="font-size:15px">' + ico + '</div>'
+        + '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:rgb(' + c2 + ')">' + t + '</div>'
         + '</div>';
     }
 
-    // Schedule section — one row per day
+    function numRow(id, ico, label, val, unit, min, max, step) {
+      return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
+        + '<div style="font-size:16px;width:24px;text-align:center;flex-shrink:0">' + ico + '</div>'
+        + '<span style="font-size:12px;color:#fff;flex:1">' + label + '</span>'
+        + '<input id="azuc-' + id + '" type="number" min="' + min + '" max="' + max + '" step="' + step + '" value="' + val + '"'
+        + ' style="width:72px;padding:6px 8px;border-radius:8px;background:#0d1a2b;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:13px;font-weight:700;outline:none;text-align:right">'
+        + '<span style="font-size:10px;color:rgba(255,255,255,.4);width:28px;flex-shrink:0">' + unit + '</span>'
+        + '</div>';
+    }
+
+    function togRow(id, ico, label, desc, isOn, col) {
+      var c2 = col || '34,197,94';
+      return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
+        + '<div style="font-size:19px;width:26px;text-align:center;flex-shrink:0">' + ico + '</div>'
+        + '<div style="flex:1;min-width:0">'
+        + '<div style="font-size:12px;font-weight:700;color:#fff">' + label + '</div>'
+        + '<div style="font-size:10px;color:rgba(255,255,255,.38);margin-top:2px;line-height:1.3">' + desc + '</div>'
+        + '</div>'
+        + '<div id="' + id + '" data-on="' + (isOn?'1':'0') + '"'
+        + ' style="width:46px;height:26px;border-radius:13px;flex-shrink:0;cursor:pointer;'
+        + 'background:' + (isOn?'rgb('+c2+')':'rgba(255,255,255,.14)') + ';position:relative;transition:background .25s">'
+        + '<div style="position:absolute;top:3px;' + (isOn?'right:3px':'left:3px') + ';width:20px;height:20px;border-radius:50%;background:#fff;transition:all .25s;box-shadow:0 1px 4px rgba(0,0,0,.35)"></div>'
+        + '</div>'
+        + '</div>';
+    }
+
+    // Schedule section
     var schedHtml = dayIds.map(function(d, i) {
       var isOn = _azIsOn(h, 'input_boolean.' + prefix + '_' + d);
       var nc = Math.round(_azNum(_azS(h, 'input_number.' + prefix + '_' + d + '_num_cicli')) || 0);
@@ -5060,105 +5127,88 @@ automation:
       for (var ti2 = 0; ti2 < 5; ti2++) {
         var active = ti2 < nc;
         timeInputs += '<input type="time" id="azs-t-' + d + '-' + (ti2+1) + '" value="' + times[ti2] + '"'
-          + ' style="flex:1;min-width:0;padding:4px 4px;border-radius:6px;background:#0b1422;color:' + (active?'#f1f5f9':'rgba(255,255,255,.2)') + ';'
-          + 'border:1px solid rgba(255,255,255,' + (active?'.15':'.06') + ');font-size:11px;outline:none"'
+          + ' style="flex:1;min-width:0;padding:4px 3px;border-radius:6px;background:#0d1a2b;color:' + (active?'#f1f5f9':'rgba(255,255,255,.18)') + ';'
+          + 'border:1px solid rgba(255,255,255,' + (active?'.14':'.05') + ');font-size:10px;outline:none"'
           + (active ? '' : ' disabled') + '>';
       }
-      return '<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:8px 10px;margin-bottom:7px">'
-        + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+      return '<div style="background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);border-radius:11px;padding:9px 11px;margin-bottom:6px">'
+        + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">'
         + '<div id="azs-tog-' + d + '" data-on="' + (isOn?'1':'0') + '" data-day="' + d + '"'
-        + ' style="width:34px;height:19px;border-radius:10px;flex-shrink:0;cursor:pointer;background:' + (isOn?'#22c55e':'rgba(255,255,255,.15)') + ';position:relative;transition:background .2s">'
-        + '<div style="position:absolute;top:2px;' + (isOn?'right:2px':'left:2px') + ';width:15px;height:15px;border-radius:50%;background:#fff;transition:all .2s"></div>'
+        + ' style="width:36px;height:20px;border-radius:10px;flex-shrink:0;cursor:pointer;background:' + (isOn?'#22c55e':'rgba(255,255,255,.14)') + ';position:relative;transition:background .2s">'
+        + '<div style="position:absolute;top:2px;' + (isOn?'right:2px':'left:2px') + ';width:16px;height:16px;border-radius:50%;background:#fff;transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>'
         + '</div>'
         + '<span style="font-size:12px;font-weight:700;color:#fff;flex:1">' + dayLbls[i] + '</span>'
         + '<div style="display:flex;align-items:center;gap:4px">'
-        + '<button id="azs-ncm-' + d + '" style="width:22px;height:22px;border-radius:6px;border:none;background:rgba(255,255,255,.08);color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700">−</button>'
-        + '<span id="azs-ncv-' + d + '" style="font-size:14px;font-weight:800;color:#22c55e;min-width:18px;text-align:center">' + nc + '</span>'
+        + '<button id="azs-ncm-' + d + '" style="width:24px;height:24px;border-radius:7px;border:none;background:rgba(255,255,255,.08);color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;line-height:1">−</button>'
+        + '<span id="azs-ncv-' + d + '" style="font-size:15px;font-weight:800;color:#22c55e;min-width:20px;text-align:center">' + nc + '</span>'
         + '<input type="hidden" id="azs-nc-' + d + '" value="' + nc + '">'
-        + '<button id="azs-ncp-' + d + '" style="width:22px;height:22px;border-radius:6px;border:none;background:rgba(255,255,255,.08);color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700">+</button>'
-        + '<span style="font-size:10px;color:rgba(255,255,255,.35);margin-left:2px">cicli</span>'
+        + '<button id="azs-ncp-' + d + '" style="width:24px;height:24px;border-radius:7px;border:none;background:rgba(255,255,255,.08);color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;line-height:1">+</button>'
+        + '<span style="font-size:10px;color:rgba(255,255,255,.3);margin-left:2px">cicli</span>'
         + '</div></div>'
-        + '<div id="azs-times-' + d + '" style="display:flex;gap:4px;' + (nc===0?'display:none':'') + '">' + timeInputs + '</div>'
+        + '<div id="azs-times-' + d + '" style="display:' + (nc===0?'none':'flex') + ';gap:4px;">' + timeInputs + '</div>'
         + '</div>';
     }).join('');
 
-    function sensorFld(id, label, ph, val) {
-      return '<div style="position:relative;margin-bottom:8px">'
-        + '<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:rgba(255,255,255,.4);margin-bottom:3px">' + label + '</div>'
-        + '<input id="' + id + '" type="text" autocomplete="off" placeholder="' + ph + '" value="' + (val||'').replace(/"/g,'&quot;') + '"'
-        + ' style="width:100%;padding:7px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:11px;font-family:monospace;box-sizing:border-box;outline:none">'
-        + '<div id="' + id + '-drop" style="display:none;position:absolute;top:100%;left:0;right:0;background:#0b1422;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 9px 9px;z-index:300;max-height:140px;overflow-y:auto"></div>'
-        + '</div>';
-    }
-
-    var content = sec('Automazione & Sicurezza')
-      + '<div style="display:flex;gap:8px;margin-bottom:6px">'
-      + togBtn('azuc-tog-auto', 'Auto', autoOn)
-      + togBtn('azuc-tog-sic', 'Sicurezza', sicOn, '6,182,212')
-      + togBtn('azuc-tog-pres', 'Presenza', presenzaOn, '245,158,11')
+    var content = sec('⚡', 'Automazione & Sicurezza')
+      + togRow('azuc-tog-auto', '🔄', 'Automazione schedulata', 'Avvia i cicli automaticamente agli orari impostati', autoOn, '34,197,94')
+      + togRow('azuc-tog-sic', '🛡', 'Stop emergenza presenza', 'Spegne subito la presa se rileva una persona con pompa attiva', sicOn, '6,182,212')
+      + togRow('azuc-tog-pres', '👤', 'Blocco preventivo presenza', 'Impedisce nuovi cicli finché c\'è qualcuno nell\'area', presenzaOn, '245,158,11')
+      + sec('🔔', 'Notifiche', '168,85,247')
+      + togRow('azuc-tog-npush', '📱', 'Notifiche Push', 'Avvisi sullo smartphone (mobile_app configurate nel wizard)', notifyPushOn, '168,85,247')
+      + togRow('azuc-tog-nalexa', '🔊', 'Annunci Alexa', 'Annunci vocali tramite dispositivi Alexa configurati', notifyAlexaOn, '251,146,60')
+      + '<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
+      + '<div style="flex:1">'
+      + '<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:rgba(255,255,255,.38);margin-bottom:4px">Dalle</div>'
+      + '<input id="azuc-ntf-start" type="time" value="' + inizioNtf + '" style="width:100%;padding:8px 10px;border-radius:9px;background:#0d1a2b;color:#f1f5f9;border:1px solid rgba(255,255,255,.14);font-size:13px;box-sizing:border-box;outline:none">'
       + '</div>'
-      + sec('Notifiche')
-      + '<div style="display:flex;gap:8px;margin-bottom:10px">'
-      + togBtn('azuc-tog-npush', 'Push', notifyPushOn, '168,85,247')
-      + togBtn('azuc-tog-nalexa', 'Alexa', notifyAlexaOn, '251,146,60')
-      + '</div>'
-      + '<div style="display:flex;gap:12px;margin-bottom:6px">'
-      + '<div style="flex:1"><div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:rgba(255,255,255,.4);margin-bottom:3px">Dalle</div>'
-      + '<input id="azuc-ntf-start" type="time" value="' + inizioNtf + '" style="width:100%;padding:7px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:13px;box-sizing:border-box;outline:none"></div>'
-      + '<div style="flex:1"><div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:rgba(255,255,255,.4);margin-bottom:3px">Alle</div>'
-      + '<input id="azuc-ntf-end" type="time" value="' + fineNtf + '" style="width:100%;padding:7px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:13px;box-sizing:border-box;outline:none"></div>'
-      + '</div>'
-      + sec('Programma Settimanale')
+      + '<div style="flex:1">'
+      + '<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:rgba(255,255,255,.38);margin-bottom:4px">Alle</div>'
+      + '<input id="azuc-ntf-end" type="time" value="' + fineNtf + '" style="width:100%;padding:8px 10px;border-radius:9px;background:#0d1a2b;color:#f1f5f9;border:1px solid rgba(255,255,255,.14);font-size:13px;box-sizing:border-box;outline:none">'
+      + '</div></div>'
+      + sec('📅', 'Programma Settimanale')
       + schedHtml
-      + sec('Soglie & Durate')
-      + numRow('sog', 'Soglia blocco pioggia', soglia, '%', 0, 100, 5)
-      + numRow('ven', 'Soglia blocco vento', sogliaVento, 'km/h', 0, 200, 5)
-      + numRow('dur', 'Durata avvio manuale', durM, 'sec', 10, 7200, 10)
-      + numRow('tar', 'Target cicli mensili', tarMens, 'cicli', 1, 999, 1)
-      + '<button id="azuc-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#22c55e;color:#022c1b;margin-top:4px">💾 Salva tutto</button>';
+      + sec('⚙', 'Soglie & Durate')
+      + numRow('sog', '🌧', 'Soglia blocco pioggia', soglia, '%', 0, 100, 5)
+      + numRow('ven', '💨', 'Soglia blocco vento', sogliaVento, 'km/h', 0, 200, 5)
+      + numRow('dur', '⏱', 'Durata avvio manuale', durM, 's', 10, 7200, 10)
+      + numRow('tar', '🎯', 'Target cicli mensili', tarMens, 'cicli', 1, 999, 1)
+      + '<button id="azuc-save" style="width:100%;padding:13px;border-radius:12px;border:none;cursor:pointer;font-weight:800;font-size:14px;background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);color:#fff;margin-top:10px;box-shadow:0 4px 16px rgba(34,197,94,.28)">💾 Salva tutto</button>';
 
     var ov = _azMkOv(_azPopShell('⚙','34,197,94','Impostazioni',c.name||'Anti Zanzare','azuc-cl',content),'azuc-cl');
 
-    // Toggle buttons
-    ['azuc-tog-auto','azuc-tog-sic','azuc-tog-pres','azuc-tog-npush','azuc-tog-nalexa'].forEach(function(tid) {
+    // Toggle iOS-style handler
+    var togCols = {'azuc-tog-auto':'34,197,94','azuc-tog-sic':'6,182,212','azuc-tog-pres':'245,158,11','azuc-tog-npush':'168,85,247','azuc-tog-nalexa':'251,146,60'};
+    Object.keys(togCols).forEach(function(tid) {
       var tb = ov.querySelector('#' + tid); if (!tb) return;
       tb.addEventListener('click', function() {
-        var wasOn = tb.dataset.on === '1';
-        var nowOn = !wasOn;
+        var wasOn = tb.dataset.on === '1', nowOn = !wasOn;
         tb.dataset.on = nowOn ? '1' : '0';
-        var onC = tid==='azuc-tog-sic' ? '6,182,212' : tid==='azuc-tog-pres' ? '245,158,11' : tid==='azuc-tog-npush' ? '168,85,247' : tid==='azuc-tog-nalexa' ? '251,146,60' : '34,197,94';
-        tb.style.background = 'rgba(' + (nowOn?onC:'100,116,139') + ',.1)';
-        tb.style.borderColor = 'rgba(' + (nowOn?onC:'100,116,139') + ',' + (nowOn?'.35':'.15') + ')';
-        tb.querySelector('div:first-child').textContent = nowOn ? '✅' : '⭕';
-        tb.querySelector('div:nth-child(2)').style.color = nowOn ? 'rgb('+onC+')' : 'rgba(255,255,255,.35)';
-        var tv2 = tb.querySelector('.azuc-tov'); if(tv2){ tv2.textContent = nowOn?'ON':'OFF'; tv2.style.color = nowOn?'#fff':'rgba(255,255,255,.25)'; }
+        tb.style.background = nowOn ? 'rgb(' + togCols[tid] + ')' : 'rgba(255,255,255,.14)';
+        var knob = tb.querySelector('div'); if (knob) { knob.style.right = nowOn ? '3px' : ''; knob.style.left = nowOn ? '' : '3px'; }
       });
     });
 
-    // Schedule toggles (day on/off)
+    // Schedule toggles
     ov.querySelectorAll('[id^="azs-tog-"]').forEach(function(tog) {
       tog.addEventListener('click', function() {
-        var wasOn = tog.dataset.on === '1';
-        tog.dataset.on = wasOn ? '0' : '1';
-        tog.style.background = wasOn ? 'rgba(255,255,255,.15)' : '#22c55e';
-        var k2 = tog.querySelector('div'); if(k2){ k2.style.right=wasOn?'':' 2px'; k2.style.left=wasOn?'2px':''; }
+        var wasOn = tog.dataset.on === '1'; tog.dataset.on = wasOn ? '0' : '1';
+        tog.style.background = wasOn ? 'rgba(255,255,255,.14)' : '#22c55e';
+        var k = tog.querySelector('div'); if(k){ k.style.right=wasOn?'':' 2px'; k.style.left=wasOn?'2px':''; }
       });
     });
 
-    // Schedule num cicli +/-
+    // Schedule +/- cicli
     dayIds.forEach(function(d) {
-      var ncH = ov.querySelector('#azs-nc-' + d);
-      var ncV = ov.querySelector('#azs-ncv-' + d);
+      var ncH = ov.querySelector('#azs-nc-' + d), ncV = ov.querySelector('#azs-ncv-' + d);
       var timesDiv = ov.querySelector('#azs-times-' + d);
       function updateTimes(nc) {
         if (!timesDiv) return;
         timesDiv.style.display = nc === 0 ? 'none' : 'flex';
         for (var i2 = 1; i2 <= 5; i2++) {
           var ti3 = ov.querySelector('#azs-t-' + d + '-' + i2); if(!ti3) continue;
-          var act = i2 <= nc;
-          ti3.disabled = !act;
-          ti3.style.color = act ? '#f1f5f9' : 'rgba(255,255,255,.2)';
-          ti3.style.borderColor = 'rgba(255,255,255,' + (act?'.15':'.06') + ')';
+          var act = i2 <= nc; ti3.disabled = !act;
+          ti3.style.color = act ? '#f1f5f9' : 'rgba(255,255,255,.18)';
+          ti3.style.borderColor = 'rgba(255,255,255,' + (act?'.14':'.05') + ')';
         }
       }
       var ncmBtn = ov.querySelector('#azs-ncm-' + d), ncpBtn = ov.querySelector('#azs-ncp-' + d);
@@ -5169,7 +5219,6 @@ automation:
     // Save
     ov.querySelector('#azuc-save').addEventListener('click', function() {
       var h2 = _azH();
-      // Soglie → HA
       var sv = (ov.querySelector('#azuc-sog')||{}).value;
       var vv = (ov.querySelector('#azuc-ven')||{}).value;
       var dv = (ov.querySelector('#azuc-dur')||{}).value;
@@ -5178,15 +5227,12 @@ automation:
       if (vv && c.pk_soglia_vento)   _azCallSvc('input_number','set_value',{entity_id:c.pk_soglia_vento,value:parseFloat(vv)});
       if (dv && c.pk_durata_manuale) _azCallSvc('input_number','set_value',{entity_id:c.pk_durata_manuale,value:parseFloat(dv)});
       if (tv && c.pk_cicli_target)   _azCallSvc('input_number','set_value',{entity_id:c.pk_cicli_target,value:parseFloat(tv)});
-      // Orari notifiche → HA
       var ntfS = (ov.querySelector('#azuc-ntf-start')||{}).value;
       var ntfE = (ov.querySelector('#azuc-ntf-end')||{}).value;
       if (ntfS && c.pk_inizio_ntf) _azCallSvc('input_datetime','set_datetime',{entity_id:c.pk_inizio_ntf,time:ntfS+':00'});
       if (ntfE && c.pk_fine_ntf)   _azCallSvc('input_datetime','set_datetime',{entity_id:c.pk_fine_ntf,time:ntfE+':00'});
-      // Schedule → HA
       dayIds.forEach(function(d) {
-        var togEl = ov.querySelector('#azs-tog-' + d);
-        var ncEl = ov.querySelector('#azs-nc-' + d);
+        var togEl = ov.querySelector('#azs-tog-' + d), ncEl = ov.querySelector('#azs-nc-' + d);
         var isOn = togEl ? togEl.dataset.on === '1' : false;
         var nc = parseInt(ncEl ? ncEl.value : 0) || 0;
         if (h2 && h2.callService) {
@@ -5198,7 +5244,6 @@ automation:
           }
         }
       });
-      // Toggle → HA
       var autoBtn = ov.querySelector('#azuc-tog-auto');
       if (autoBtn && c.pk_auto) _azCallSvc('input_boolean', autoBtn.dataset.on==='1'?'turn_on':'turn_off', {entity_id:c.pk_auto});
       var sicBtn = ov.querySelector('#azuc-tog-sic');
@@ -5322,7 +5367,7 @@ automation:
   }
 
   var _AZ_CARD = {
-    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.16', frarik_no_edit: true,
+    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.17', frarik_no_edit: true,
     desc: 'Controllo sistema anti zanzare: schedule settimanale, timer, statistiche mensili, blocco meteo, sensori sicurezza.',
     render:    function(card) { return _azRender(card); },
     mount:     function(card, hass, el) { _azMount(card, hass, el); },

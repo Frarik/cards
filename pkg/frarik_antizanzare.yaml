@@ -17,7 +17,8 @@ homeassistant:
         Sensore Pioggia:        &sensore_pioggia_az 'IL_TUO_SENSORE_PIOGGIA'
         Sensore Presenza:       &sensore_presenza   'IL_TUO_SENSORE_PRESENZA'
         Sensore Livello Tanica: &sensore_livello    'IL_TUO_SENSORE_LIVELLO_TANICA'
-        Sensore Perdita Acqua:  &sensore_perdita    'binary_sensor.IL_TUO_SENSORE_PERDITA'
+        Sensore Perdita Acqua:  &sensore_perdita    'IL_TUO_SENSORE_PERDITA'
+        Sensore Pompa:          &sensore_pompa      'IL_TUO_SENSORE_POMPA'
         Presa Antizanzare:      &presa_az           'IL_TUO_PRESA_ANTIZANZARE'
         Device push:            &push_az
           - service: IL_TUO_MOBILE_APP
@@ -1451,12 +1452,19 @@ template:
             0
           {% endif %}
 
-      # Sensore probabilità pioggia (collegato a sensore meteo reale)
+      # Sensore probabilità pioggia (collegato a sensore reale)
       - name: "Frarik Antizanzare Probabilita Pioggia"
         unique_id: frarik_antizanzare_probabilita_pioggia
-        state: "{{ states('sensor.openmeteo_precipitation_probability') | int(0) }}"
+        state: "{{ states('IL_TUO_SENSORE_PIOGGIA') | float(0) | round(0) | int }}"
         unit_of_measurement: "%"
         icon: mdi:weather-rainy
+
+      # Sensore potenza pompa (collegato a sensore reale opzionale)
+      - name: "Frarik Antizanzare Potenza Pompa"
+        unique_id: frarik_antizanzare_potenza_pompa
+        state: "{{ states('IL_TUO_SENSORE_POMPA') | float(0) }}"
+        unit_of_measurement: "W"
+        icon: mdi:pump
 
       # Sensore cicli rimanenti mensili
       - name: "Frarik Antizanzare Cicli Rimanenti Mensili"
@@ -1542,12 +1550,12 @@ template:
         icon: mdi:water-percent
 
   - binary_sensor:
-      # Sensore pioggia in corso (collegato a sensore meteo reale)
+      # Sensore pioggia in corso: on se la probabilità supera il 30%
       - name: "Frarik Antizanzare Pioggia Corso"
         unique_id: frarik_antizanzare_pioggia_corso
-        state: "{{ states('IL_TUO_SENSORE_PIOGGIA') }}"
+        state: "{{ states('IL_TUO_SENSORE_PIOGGIA') | float(0) > 30 }}"
         icon: >
-          {{ 'mdi:weather-rainy' if states('IL_TUO_SENSORE_PIOGGIA') | float(0) > 0 else 'mdi:weather-cloudy' }}
+          {{ 'mdi:weather-rainy' if states('IL_TUO_SENSORE_PIOGGIA') | float(0) > 30 else 'mdi:weather-cloudy' }}
 
       # Sensore blocco per condizioni meteo, vento e presenza
       - name: "Frarik Antizanzare Blocco Meteo"
@@ -3485,3 +3493,33 @@ automation:
         data:
           title: "Anti Zanzare - Sicurezza"
           message: "✅ Area libera. Sistema riarmato e pronto."
+
+  # ── SPEGNIMENTO TIMER ────────────────────────────────────────────────────────
+  # Quando il timer ciclo automatico finisce → spegni la presa
+  - id: frarik_antizanzare_timer_ciclo_finished
+    alias: "Anti Zanzare - Timer Ciclo Terminato"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+    action:
+      - service: switch.turn_off
+        target:
+          entity_id: IL_TUO_PRESA_ANTIZANZARE
+
+  # Quando il timer manuale finisce → spegni la presa e resetta lo stato
+  - id: frarik_antizanzare_timer_manuale_finished
+    alias: "Anti Zanzare - Timer Manuale Terminato"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.frarik_antizanzare_manuale_timer
+    action:
+      - service: switch.turn_off
+        target:
+          entity_id: IL_TUO_PRESA_ANTIZANZARE
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.frarik_antizanzare_manuale_attiva
