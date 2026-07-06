@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.9.28 — 2026-07-06
+
+### feat(card/bolletta): box Oggi ridisegnato + tab FV/Batt come pannello dedicato (v5.3)
+
+- **Box "Oggi"**: kWh e € mostrati allo stesso peso visivo (14px bold) — prima € era grande e kWh era la piccola nota sotto
+- **Tab FV/Batteria** (Impostazioni): completamente ridisegnato come pannello dedicato
+  - Ogni fonte (pannelli, batteria) ha il proprio card container con header colorato
+  - Toggle direttamente nell'header, non più come riga separata
+  - Quando attivo: mini-stat con Autoconsumo kWh · Risparmio € · Copertura % + barra progresso
+  - Quando non attivo: placeholder testuale dashed
+  - Toggle click aggiorna dinamicamente stat/placeholder senza riaprire il popup
+  - Input kWh manuale sempre accessibile sotto le stat
+
 ## 1.9.27 — 2026-07-05
 
 ### feat(card/bolletta): pannelli FV e Batteria nella schermata principale (v5.2)

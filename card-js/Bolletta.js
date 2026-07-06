@@ -394,18 +394,66 @@
       + '</div>';
 
     /* TAB FV/BATTERIA */
-    var haFV   = isOn(h, 'input_boolean.frarik_bolletta_ha_fotovoltaico');
-    var haBatt = isOn(h, 'input_boolean.frarik_bolletta_ha_batteria');
-    var pFV = '<div class="bp-panel" id="bp-p-fv">'
-      + sec('Fotovoltaico')
-      + togRow('input_boolean.frarik_bolletta_ha_fotovoltaico', haFV, '☀️ Pannelli Solari Attivi')
-      + '<div id="bp-fv-fields" style="opacity:' + (haFV ? '1' : '.4') + ';pointer-events:' + (haFV ? 'auto' : 'none') + ';transition:opacity .2s">'
-      + lbl('kWh Autoconsumo FV (mese corrente)') + inp('bp-fv-kwh', N(S(h, 'input_number.frarik_bolletta_autoconsumo_fv')).toFixed(1), '0.0')
+    var haFV    = isOn(h, 'input_boolean.frarik_bolletta_ha_fotovoltaico');
+    var haBatt  = isOn(h, 'input_boolean.frarik_bolletta_ha_batteria');
+    var fvKwhV  = N(S(h, 'input_number.frarik_bolletta_autoconsumo_fv'));
+    var batKwhV = N(S(h, 'input_number.frarik_bolletta_autoconsumo_batt'));
+    var pKwhV   = N(S(h, 'sensor.frarik_bolletta_prezzo_unico_variabile'));
+    var kwhMV   = N(S(h, 'sensor.frarik_bolletta_consumo_mensile'));
+    var totEstV = kwhMV + fvKwhV + batKwhV;
+    var fvRispV  = fvKwhV * pKwhV;
+    var batRispV = batKwhV * pKwhV;
+    var fvPctV   = totEstV > 0 ? Math.round(fvKwhV  / totEstV * 100) : 0;
+    var batPctV  = totEstV > 0 ? Math.round(batKwhV / totEstV * 100) : 0;
+
+    function togBtn(eid, on) {
+      return '<button class="bp-tog" data-eid="' + eid + '" style="padding:4px 14px;border-radius:20px;border:none;cursor:pointer;font-size:11px;font-weight:800;background:' + (on ? 'rgba(74,222,128,.2)' : 'rgba(255,255,255,.07)') + ';color:' + (on ? '#4ade80' : 'rgba(255,255,255,.4)') + '">' + (on ? '✅ ON' : 'OFF') + '</button>';
+    }
+    function statRow(label, val, unit, col) {
+      return '<div style="text-align:center"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">' + label + '</div>'
+        + '<div style="font-size:15px;font-weight:800;color:' + col + '">' + val + '<span style="font-size:9px;color:' + col + ';opacity:.55;margin-left:2px">' + unit + '</span></div></div>';
+    }
+
+    var fvStatHtml = '<div id="bp-fv-stats" style="margin:10px 0;display:' + (haFV ? 'block' : 'none') + '">'
+      + '<div style="background:rgba(251,191,36,.08);border-radius:10px;padding:9px 6px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px">'
+      + statRow('Autoconsumo', fvKwhV.toFixed(1), 'kWh', '#fff')
+      + statRow('Risparmio',   fvRispV.toFixed(2), '€',  '#fbbf24')
+      + statRow('Copertura',   fvPctV + '',        '%',  '#fbbf24')
       + '</div>'
-      + sec('Batteria')
-      + togRow('input_boolean.frarik_bolletta_ha_batteria', haBatt, '🔋 Batteria Attiva')
-      + '<div id="bp-batt-fields" style="opacity:' + (haBatt ? '1' : '.4') + ';pointer-events:' + (haBatt ? 'auto' : 'none') + ';transition:opacity .2s">'
-      + lbl('kWh da Batteria (mese corrente)') + inp('bp-batt-kwh', N(S(h, 'input_number.frarik_bolletta_autoconsumo_batt')).toFixed(1), '0.0')
+      + '<div style="margin-top:6px;height:3px;background:rgba(255,255,255,.06);border-radius:2px"><div style="height:100%;width:' + fvPctV + '%;background:#fbbf24;border-radius:2px;opacity:.55;min-width:' + (fvPctV > 0 ? '6' : '0') + 'px"></div></div>'
+      + '</div>';
+    var fvPhHtml = '<div id="bp-fv-placeholder" style="margin:10px 0;padding:8px;border:1px dashed rgba(251,191,36,.2);border-radius:10px;text-align:center;font-size:11px;color:rgba(255,255,255,.3);display:' + (haFV ? 'none' : 'block') + '">Pannelli non attivi</div>';
+
+    var batStatHtml = '<div id="bp-batt-stats" style="margin:10px 0;display:' + (haBatt ? 'block' : 'none') + '">'
+      + '<div style="background:rgba(74,222,128,.07);border-radius:10px;padding:9px 6px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px">'
+      + statRow('Energia',   batKwhV.toFixed(1),  'kWh', '#fff')
+      + statRow('Risparmio', batRispV.toFixed(2), '€',   '#4ade80')
+      + statRow('Copertura', batPctV + '',        '%',   '#4ade80')
+      + '</div>'
+      + '<div style="margin-top:6px;height:3px;background:rgba(255,255,255,.06);border-radius:2px"><div style="height:100%;width:' + batPctV + '%;background:#4ade80;border-radius:2px;opacity:.55;min-width:' + (batPctV > 0 ? '6' : '0') + 'px"></div></div>'
+      + '</div>';
+    var batPhHtml = '<div id="bp-batt-placeholder" style="margin:10px 0;padding:8px;border:1px dashed rgba(74,222,128,.15);border-radius:10px;text-align:center;font-size:11px;color:rgba(255,255,255,.3);display:' + (haBatt ? 'none' : 'block') + '">Batteria non attiva</div>';
+
+    var pFV = '<div class="bp-panel" id="bp-p-fv">'
+      + '<div style="background:rgba(251,191,36,.04);border:1px solid rgba(251,191,36,.15);border-radius:14px;padding:12px;margin-bottom:10px">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between">'
+      + '<div style="font-size:13px;font-weight:800;color:#fbbf24">☀️ Pannelli Fotovoltaici</div>'
+      + togBtn('input_boolean.frarik_bolletta_ha_fotovoltaico', haFV)
+      + '</div>'
+      + fvStatHtml + fvPhHtml
+      + '<div id="bp-fv-fields">'
+      + lbl('kWh autoconsumo pannelli (mese)') + inp('bp-fv-kwh', fvKwhV.toFixed(1), '0.0')
+      + '</div>'
+      + '</div>'
+      + '<div style="background:rgba(74,222,128,.03);border:1px solid rgba(74,222,128,.12);border-radius:14px;padding:12px">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between">'
+      + '<div style="font-size:13px;font-weight:800;color:#4ade80">🔋 Batteria</div>'
+      + togBtn('input_boolean.frarik_bolletta_ha_batteria', haBatt)
+      + '</div>'
+      + batStatHtml + batPhHtml
+      + '<div id="bp-batt-fields">'
+      + lbl('kWh da batteria (mese)') + inp('bp-batt-kwh', batKwhV.toFixed(1), '0.0')
+      + '</div>'
       + '</div>'
       + '</div>';
 
@@ -438,10 +486,12 @@
         btn.style.background = on2 ? 'rgba(74,222,128,.2)' : 'rgba(255,255,255,.07)';
         btn.style.color = on2 ? '#4ade80' : 'rgba(255,255,255,.4)';
         if (eid === 'input_boolean.frarik_bolletta_ha_fotovoltaico') {
-          var ff = ov.querySelector('#bp-fv-fields'); if (ff) { ff.style.opacity = on2 ? '1' : '.4'; ff.style.pointerEvents = on2 ? 'auto' : 'none'; }
+          var fvS = ov.querySelector('#bp-fv-stats'); if (fvS) fvS.style.display = on2 ? 'block' : 'none';
+          var fvP = ov.querySelector('#bp-fv-placeholder'); if (fvP) fvP.style.display = on2 ? 'none' : 'block';
         }
         if (eid === 'input_boolean.frarik_bolletta_ha_batteria') {
-          var bf = ov.querySelector('#bp-batt-fields'); if (bf) { bf.style.opacity = on2 ? '1' : '.4'; bf.style.pointerEvents = on2 ? 'auto' : 'none'; }
+          var bS = ov.querySelector('#bp-batt-stats'); if (bS) bS.style.display = on2 ? 'block' : 'none';
+          var bP = ov.querySelector('#bp-batt-placeholder'); if (bP) bP.style.display = on2 ? 'none' : 'block';
         }
       });
     });
@@ -551,7 +601,10 @@
       + '</div>';
 
     var statsHtml = '<div class="fb-stats">'
-      + '<div class="fb-stat"><div class="fb-stat-lbl">📅 Oggi</div><div class="fb-stat-val">' + costoG.toFixed(2) + ' €</div><div class="fb-stat-sub">' + kwhG.toFixed(2) + ' kWh</div></div>'
+      + '<div class="fb-stat"><div class="fb-stat-lbl">📅 Oggi</div>'
+      + '<div style="font-size:14px;font-weight:800;color:#fff;margin-top:3px;white-space:nowrap">' + kwhG.toFixed(2) + '<span style="font-size:9px;font-weight:600;color:rgba(255,255,255,.45);margin-left:2px">kWh</span></div>'
+      + '<div style="font-size:14px;font-weight:800;color:' + COL + ';margin-top:2px;white-space:nowrap">' + costoG.toFixed(2) + '<span style="font-size:9px;font-weight:600;color:rgba(251,191,36,.45);margin-left:2px">€</span></div>'
+      + '</div>'
       + '<div class="fb-stat"><div class="fb-stat-lbl">🔮 Fine Mese</div><div class="fb-stat-val" style="color:#fb923c">' + prevM.toFixed(0) + ' €</div><div class="fb-stat-sub">previsione</div></div>'
       + '<div class="fb-stat"><div class="fb-stat-lbl">💰 €/kWh</div><div class="fb-stat-val" style="color:' + COL + '">' + pKwh.toFixed(4) + '</div><div class="fb-stat-sub">prezzo kwh</div></div>'
       + '</div>';
@@ -625,7 +678,7 @@
   function update(card, hass, el) {
     var h = hass || H();
     var sig = [
-      '5.2',
+      '5.3',
       S(h, 'sensor.frarik_bolletta_mese_corrente'),
       S(h, 'sensor.frarik_bolletta_consumo_mensile'),
       S(h, 'sensor.frarik_bolletta_potenza_casa'),
@@ -648,8 +701,8 @@
   }
 
   function mount(card, hass, el) {
-    if (el._fcBound === '5.2') return;
-    el._fcBound = '5.2';
+    if (el._fcBound === '5.3') return;
+    el._fcBound = '5.3';
     if (el._fcHandler) el.removeEventListener('click', el._fcHandler);
     el._fcHandler = function(e) {
       var sya = e.target.closest('[data-sya]'); if (!sya) return;
@@ -663,7 +716,7 @@
   }
 
   var CARD = {
-    id: 'bolletta', name: 'Bolletta Elettrica', icon: '⚡', version: '5.2',
+    id: 'bolletta', name: 'Bolletta Elettrica', icon: '⚡', version: '5.3',
     desc: 'Monitoraggio consumi, costi e previsioni bolletta elettrica. Richiede PKG Frarik Bolletta.',
     render: render, mount: mount, update: update, configure: null, frarik_no_edit: true,
     frarik_pkg_check: 'sensor.frarik_bolletta_versione',
