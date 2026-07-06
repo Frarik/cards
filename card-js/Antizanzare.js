@@ -742,7 +742,7 @@ class AntiZanzareCard extends HTMLElement {
 customElements.define('antizanzare-card', AntiZanzareCard)
 
 window.customCards = window.customCards || []
-window.customCards.push({ version: '2.21',
+window.customCards.push({ version: '2.22',
   type:        'antizanzare-card',
   name:        'Anti Zanzare',
   description: 'Controllo sistema anti zanzare: schedule, timer, statistiche mensili.',
@@ -1220,6 +1220,7 @@ input_number:
     min: 0
     max: 100
     step: 5
+    initial: 50
     mode: slider
     unit_of_measurement: "%"
     icon: mdi:weather-rainy
@@ -2318,13 +2319,15 @@ template:
       - name: "Frarik Antizanzare Blocco Meteo"
         unique_id: frarik_antizanzare_blocco_meteo
         state: >
-          {% set blocco_pioggia = states('IL_TUO_SENSORE_PROBABILITA_PIOGGIA') | float(0) >= states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) %}
+          {% set soglia_pioggia = states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) %}
+          {% set blocco_pioggia = soglia_pioggia > 0 and states('IL_TUO_SENSORE_PROBABILITA_PIOGGIA') | float(0) >= soglia_pioggia %}
           {% set soglia_vento = states('input_number.frarik_antizanzare_soglia_vento') | float(0) %}
           {% set blocco_vento = soglia_vento > 0 and states('IL_TUO_SENSORE_VENTO') | float(0) >= soglia_vento %}
           {% set blocco_presenza = is_state('input_boolean.frarik_antizanzare_presenza_attiva', 'on') and is_state('IL_TUO_SENSORE_PRESENZA', 'on') %}
           {{ blocco_pioggia or blocco_vento or blocco_presenza }}
         icon: >
-          {% set blocco_pioggia = states('IL_TUO_SENSORE_PROBABILITA_PIOGGIA') | float(0) >= states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) %}
+          {% set soglia_pioggia = states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) %}
+          {% set blocco_pioggia = soglia_pioggia > 0 and states('IL_TUO_SENSORE_PROBABILITA_PIOGGIA') | float(0) >= soglia_pioggia %}
           {% set soglia_vento = states('input_number.frarik_antizanzare_soglia_vento') | float(0) %}
           {% set blocco_vento = soglia_vento > 0 and states('IL_TUO_SENSORE_VENTO') | float(0) >= soglia_vento %}
           {% set blocco_presenza = is_state('input_boolean.frarik_antizanzare_presenza_attiva', 'on') and is_state('IL_TUO_SENSORE_PRESENZA', 'on') %}
@@ -5455,7 +5458,7 @@ automation:
   }
 
   var _AZ_CARD = {
-    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.21', frarik_no_edit: true,
+    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.22', frarik_no_edit: true,
     desc: 'Controllo sistema anti zanzare: schedule settimanale, timer, statistiche mensili, blocco meteo, sensori sicurezza.',
     render:    function(card) { return _azRender(card); },
     mount:     function(card, hass, el) { _azMount(card, hass, el); },
