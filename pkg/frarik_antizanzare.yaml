@@ -13,9 +13,10 @@ homeassistant:
 #                                                  #
 ####################################################
 
-        Sensore Vento:          &sensore_vento      'IL_TUO_SENSORE_VENTO'
-        Sensore Pioggia:        &sensore_pioggia_az 'IL_TUO_SENSORE_PIOGGIA'
-        Sensore Presenza:       &sensore_presenza   'IL_TUO_SENSORE_PRESENZA'
+        Sensore Vento:               &sensore_vento      'IL_TUO_SENSORE_VENTO'
+        Sensore Pioggia:             &sensore_pioggia_az 'IL_TUO_SENSORE_PIOGGIA'
+        Sensore Probabilità Pioggia: &sensore_prob_pioggia 'IL_TUO_SENSORE_PROBABILITA_PIOGGIA'
+        Sensore Presenza:            &sensore_presenza   'IL_TUO_SENSORE_PRESENZA'
         Sensore Livello Tanica: &sensore_livello    'IL_TUO_SENSORE_LIVELLO_TANICA'
         Sensore Perdita Acqua:  &sensore_perdita    'IL_TUO_SENSORE_PERDITA'
         Sensore Pompa:          &sensore_pompa      'IL_TUO_SENSORE_POMPA'
@@ -1452,10 +1453,10 @@ template:
             0
           {% endif %}
 
-      # Sensore probabilità pioggia (collegato a sensore reale)
+      # Sensore probabilità pioggia (collegato a sensore meteo reale, valore numerico %)
       - name: "Frarik Antizanzare Probabilita Pioggia"
         unique_id: frarik_antizanzare_probabilita_pioggia
-        state: "{{ states('IL_TUO_SENSORE_PIOGGIA') | float(0) | round(0) | int }}"
+        state: "{{ states('IL_TUO_SENSORE_PROBABILITA_PIOGGIA') | float(0) | round(0) | int }}"
         unit_of_measurement: "%"
         icon: mdi:weather-rainy
 
@@ -1550,24 +1551,24 @@ template:
         icon: mdi:water-percent
 
   - binary_sensor:
-      # Sensore pioggia in corso: on se la probabilità supera il 30%
+      # Sensore pioggia in corso: on se il sensore fisico di pioggia è attivo
       - name: "Frarik Antizanzare Pioggia Corso"
         unique_id: frarik_antizanzare_pioggia_corso
-        state: "{{ states('IL_TUO_SENSORE_PIOGGIA') | float(0) > 30 }}"
+        state: "{{ is_state('IL_TUO_SENSORE_PIOGGIA', 'on') }}"
         icon: >
-          {{ 'mdi:weather-rainy' if states('IL_TUO_SENSORE_PIOGGIA') | float(0) > 30 else 'mdi:weather-cloudy' }}
+          {{ 'mdi:weather-rainy' if is_state('IL_TUO_SENSORE_PIOGGIA', 'on') else 'mdi:weather-cloudy' }}
 
       # Sensore blocco per condizioni meteo, vento e presenza
       - name: "Frarik Antizanzare Blocco Meteo"
         unique_id: frarik_antizanzare_blocco_meteo
         state: >
-          {% set blocco_pioggia = states('IL_TUO_SENSORE_PIOGGIA') | float(0) >= states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) %}
+          {% set blocco_pioggia = states('IL_TUO_SENSORE_PROBABILITA_PIOGGIA') | float(0) >= states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) %}
           {% set soglia_vento = states('input_number.frarik_antizanzare_soglia_vento') | float(0) %}
           {% set blocco_vento = soglia_vento > 0 and states('IL_TUO_SENSORE_VENTO') | float(0) >= soglia_vento %}
           {% set blocco_presenza = is_state('input_boolean.frarik_antizanzare_presenza_attiva', 'on') and is_state('IL_TUO_SENSORE_PRESENZA', 'on') %}
           {{ blocco_pioggia or blocco_vento or blocco_presenza }}
         icon: >
-          {% set blocco_pioggia = states('IL_TUO_SENSORE_PIOGGIA') | float(0) >= states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) %}
+          {% set blocco_pioggia = states('IL_TUO_SENSORE_PROBABILITA_PIOGGIA') | float(0) >= states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) %}
           {% set soglia_vento = states('input_number.frarik_antizanzare_soglia_vento') | float(0) %}
           {% set blocco_vento = soglia_vento > 0 and states('IL_TUO_SENSORE_VENTO') | float(0) >= soglia_vento %}
           {% set blocco_presenza = is_state('input_boolean.frarik_antizanzare_presenza_attiva', 'on') and is_state('IL_TUO_SENSORE_PRESENZA', 'on') %}

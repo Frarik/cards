@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.9.31 — 2026-07-06
+
+### fix(antizanzare/pkg): separazione sensore pioggia e probabilità pioggia (v2.19)
+
+- Aggiunto placeholder `IL_TUO_SENSORE_PROBABILITA_PIOGGIA` distinto da `IL_TUO_SENSORE_PIOGGIA`
+- `Sensore Pioggia` = binary_sensor (sta piovendo? on/off), usato solo da `pioggia_corso`
+- `Sensore Probabilità Pioggia` = sensor numerico 0-100%, usato da `probabilita_pioggia` e `blocco_meteo`
+- `binary_sensor.pioggia_corso` ora usa `is_state(..., 'on')` invece di `float > 30`
+- Wizard aggiornato con campo separato per i due sensori
+
 ## 1.9.30 — 2026-07-06
 
 ### feat(antizanzare): avviso blocco + prossimo ciclo programmato (v2.18)

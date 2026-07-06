@@ -769,9 +769,10 @@ window.customCards.push({ version: '1.5',
 #                                                  #
 ####################################################
 
-        Sensore Vento:          &sensore_vento      'IL_TUO_SENSORE_VENTO'
-        Sensore Pioggia:        &sensore_pioggia_az 'IL_TUO_SENSORE_PIOGGIA'
-        Sensore Presenza:       &sensore_presenza   'IL_TUO_SENSORE_PRESENZA'
+        Sensore Vento:               &sensore_vento      'IL_TUO_SENSORE_VENTO'
+        Sensore Pioggia:             &sensore_pioggia_az 'IL_TUO_SENSORE_PIOGGIA'
+        Sensore Probabilità Pioggia: &sensore_prob_pioggia 'IL_TUO_SENSORE_PROBABILITA_PIOGGIA'
+        Sensore Presenza:            &sensore_presenza   'IL_TUO_SENSORE_PRESENZA'
         Sensore Livello Tanica: &sensore_livello    'IL_TUO_SENSORE_LIVELLO_TANICA'
         Sensore Perdita Acqua:  &sensore_perdita    'IL_TUO_SENSORE_PERDITA'
         Sensore Pompa:          &sensore_pompa      'IL_TUO_SENSORE_POMPA'
@@ -2208,10 +2209,10 @@ template:
             0
           {% endif %}
 
-      # Sensore probabilità pioggia (collegato a sensore reale)
+      # Sensore probabilità pioggia (collegato a sensore meteo reale, valore numerico %)
       - name: "Frarik Antizanzare Probabilita Pioggia"
         unique_id: frarik_antizanzare_probabilita_pioggia
-        state: "{{ states('IL_TUO_SENSORE_PIOGGIA') | float(0) | round(0) | int }}"
+        state: "{{ states('IL_TUO_SENSORE_PROBABILITA_PIOGGIA') | float(0) | round(0) | int }}"
         unit_of_measurement: "%"
         icon: mdi:weather-rainy
 
@@ -2306,24 +2307,24 @@ template:
         icon: mdi:water-percent
 
   - binary_sensor:
-      # Sensore pioggia in corso: on se la probabilità supera il 30%
+      # Sensore pioggia in corso: on se il sensore fisico di pioggia è attivo
       - name: "Frarik Antizanzare Pioggia Corso"
         unique_id: frarik_antizanzare_pioggia_corso
-        state: "{{ states('IL_TUO_SENSORE_PIOGGIA') | float(0) > 30 }}"
+        state: "{{ is_state('IL_TUO_SENSORE_PIOGGIA', 'on') }}"
         icon: >
-          {{ 'mdi:weather-rainy' if states('IL_TUO_SENSORE_PIOGGIA') | float(0) > 30 else 'mdi:weather-cloudy' }}
+          {{ 'mdi:weather-rainy' if is_state('IL_TUO_SENSORE_PIOGGIA', 'on') else 'mdi:weather-cloudy' }}
 
       # Sensore blocco per condizioni meteo, vento e presenza
       - name: "Frarik Antizanzare Blocco Meteo"
         unique_id: frarik_antizanzare_blocco_meteo
         state: >
-          {% set blocco_pioggia = states('IL_TUO_SENSORE_PIOGGIA') | float(0) >= states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) %}
+          {% set blocco_pioggia = states('IL_TUO_SENSORE_PROBABILITA_PIOGGIA') | float(0) >= states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) %}
           {% set soglia_vento = states('input_number.frarik_antizanzare_soglia_vento') | float(0) %}
           {% set blocco_vento = soglia_vento > 0 and states('IL_TUO_SENSORE_VENTO') | float(0) >= soglia_vento %}
           {% set blocco_presenza = is_state('input_boolean.frarik_antizanzare_presenza_attiva', 'on') and is_state('IL_TUO_SENSORE_PRESENZA', 'on') %}
           {{ blocco_pioggia or blocco_vento or blocco_presenza }}
         icon: >
-          {% set blocco_pioggia = states('IL_TUO_SENSORE_PIOGGIA') | float(0) >= states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) %}
+          {% set blocco_pioggia = states('IL_TUO_SENSORE_PROBABILITA_PIOGGIA') | float(0) >= states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) %}
           {% set soglia_vento = states('input_number.frarik_antizanzare_soglia_vento') | float(0) %}
           {% set blocco_vento = soglia_vento > 0 and states('IL_TUO_SENSORE_VENTO') | float(0) >= soglia_vento %}
           {% set blocco_presenza = is_state('input_boolean.frarik_antizanzare_presenza_attiva', 'on') and is_state('IL_TUO_SENSORE_PRESENZA', 'on') %}
@@ -4280,14 +4281,15 @@ automation:
         target:
           entity_id: input_boolean.frarik_antizanzare_manuale_attiva`;
 
-  function _buildPkgAZ(sw, push, pioggia, _tpl, vento, tanica, presenza, perdita, pompa) {
+  function _buildPkgAZ(sw, push, pioggia, _tpl, vento, tanica, presenza, perdita, pompa, probPioggia) {
     var ind = '          ';
     var pushLines = (push && push.length)
       ? push.map(function(p) { return ind + '- service: ' + p; }).join('\n')
       : ind + '- service: mobile_app_smartphone';
     var yaml = (_tpl || _AZ_PKG_YAML)
       .split('IL_TUO_PRESA_ANTIZANZARE').join(sw || 'switch.presa_anti_zanzare')
-      .split('IL_TUO_SENSORE_PIOGGIA').join(pioggia || 'sensor.probabilita_pioggia')
+      .split('IL_TUO_SENSORE_PROBABILITA_PIOGGIA').join(probPioggia || 'sensor.probabilita_pioggia')
+      .split('IL_TUO_SENSORE_PIOGGIA').join(pioggia || 'binary_sensor.pioggia')
       .split('IL_TUO_SENSORE_LIVELLO_TANICA').join(tanica || 'sensor.non_configurato')
       .split('IL_TUO_SENSORE_VENTO').join(vento || 'sensor.non_configurato')
       .split('IL_TUO_SENSORE_PRESENZA').join(presenza || 'binary_sensor.non_configurato')
@@ -4467,13 +4469,14 @@ automation:
     }
 
     function renderWiz() {
-      var swVal    = (saved && saved.sw)       || '';
-      var pioggiaVal=(saved && saved.pioggia)  || '';
-      var ventoVal = (saved && saved.vento)    || '';
-      var tanicaVal= (saved && saved.tanica)   || '';
-      var presVal  = (saved && saved.presenza) || '';
-      var perdVal  = (saved && saved.perdita)  || '';
-      var pompaVal = (saved && saved.pompa)    || '';
+      var swVal       = (saved && saved.sw)         || '';
+      var pioggiaVal  = (saved && saved.pioggia)    || '';
+      var probPiogVal = (saved && saved.probPioggia)|| '';
+      var ventoVal    = (saved && saved.vento)      || '';
+      var tanicaVal   = (saved && saved.tanica)     || '';
+      var presVal     = (saved && saved.presenza)   || '';
+      var perdVal     = (saved && saved.perdita)    || '';
+      var pompaVal    = (saved && saved.pompa)      || '';
       sr.innerHTML = '<style>'
         + ':host{all:initial;font-family:system-ui,sans-serif}'
         + '.wd-bd{position:fixed;inset:0;z-index:200000;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);display:flex;align-items:flex-end}'
@@ -4512,9 +4515,11 @@ automation:
         + '<div class="wd-frow"><input class="wd-inp" id="f-switch" type="text" autocomplete="off" placeholder="switch.presa_anti_zanzare" value="' + swVal.replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-switch"></div></div>'
         + '</div>'
         + '<div><div class="wd-sec">Sensori meteo</div>'
-        + '<p class="wd-note">Sensore che fornisce la probabilità pioggia in % (es. da OpenMeteo, Yr.no, ecc).</p>'
+        + '<p class="wd-note">Sensore fisico di pioggia (binary_sensor.*, on = sta piovendo) e sensore di probabilità pioggia in % (es. da OpenMeteo, Yr.no).</p>'
+        + '<div class="wd-lbl">Pioggia in corso (binary_sensor.*)</div>'
+        + '<div class="wd-frow"><input class="wd-inp" id="f-pioggia" type="text" autocomplete="off" placeholder="binary_sensor.pioggia" value="' + pioggiaVal.replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-pioggia"></div></div>'
         + '<div class="wd-lbl">Probabilità pioggia % (sensor.*)</div>'
-        + '<div class="wd-frow"><input class="wd-inp" id="f-pioggia" type="text" autocomplete="off" placeholder="sensor.probabilita_pioggia" value="' + pioggiaVal.replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-pioggia"></div></div>'
+        + '<div class="wd-frow"><input class="wd-inp" id="f-prob-pioggia" type="text" autocomplete="off" placeholder="sensor.probabilita_pioggia" value="' + probPiogVal.replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-prob-pioggia"></div></div>'
         + '</div>'
         + '<div><div class="wd-sec">Sensori (opzionali)</div>'
         + '<p class="wd-note">Lascia vuoto se non hai il sensore, il PKG usa valori di default.</p>'
@@ -4558,29 +4563,31 @@ automation:
         renderWiz();
       });
 
-      setupAC(sr.getElementById('f-switch'),   sr.getElementById('d-switch'),   switchIds);
-      setupAC(sr.getElementById('f-pioggia'),  sr.getElementById('d-pioggia'),  sensorIds);
-      setupAC(sr.getElementById('f-vento'),    sr.getElementById('d-vento'),    sensorIds);
+      setupAC(sr.getElementById('f-switch'),      sr.getElementById('d-switch'),      switchIds);
+      setupAC(sr.getElementById('f-pioggia'),     sr.getElementById('d-pioggia'),     bsIds);
+      setupAC(sr.getElementById('f-prob-pioggia'),sr.getElementById('d-prob-pioggia'),sensorIds);
+      setupAC(sr.getElementById('f-vento'),       sr.getElementById('d-vento'),       sensorIds);
       setupAC(sr.getElementById('f-tanica'),   sr.getElementById('d-tanica'),   sensorIds);
       setupAC(sr.getElementById('f-pompa'),    sr.getElementById('d-pompa'),    sensorIds);
       setupAC(sr.getElementById('f-presenza'), sr.getElementById('d-presenza'), bsIds);
       setupAC(sr.getElementById('f-perdita'),  sr.getElementById('d-perdita'),  bsIds);
 
       sr.getElementById('wd-install').addEventListener('click', function() {
-        var sw       = sr.getElementById('f-switch').value.trim();
-        var pioggia  = sr.getElementById('f-pioggia').value.trim();
-        var vento    = sr.getElementById('f-vento').value.trim();
-        var tanica   = sr.getElementById('f-tanica').value.trim();
-        var pompa    = sr.getElementById('f-pompa').value.trim();
-        var presenza = sr.getElementById('f-presenza').value.trim();
-        var perdita  = sr.getElementById('f-perdita').value.trim();
+        var sw         = sr.getElementById('f-switch').value.trim();
+        var pioggia    = sr.getElementById('f-pioggia').value.trim();
+        var probPioggia= sr.getElementById('f-prob-pioggia').value.trim();
+        var vento      = sr.getElementById('f-vento').value.trim();
+        var tanica     = sr.getElementById('f-tanica').value.trim();
+        var pompa      = sr.getElementById('f-pompa').value.trim();
+        var presenza   = sr.getElementById('f-presenza').value.trim();
+        var perdita    = sr.getElementById('f-perdita').value.trim();
         var push = Array.from(sr.querySelectorAll('.push-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
-        try { localStorage.setItem(_AZ_WIZ_KEY, JSON.stringify({sw: sw, push: push, pioggia: pioggia, vento: vento, tanica: tanica, pompa: pompa, presenza: presenza, perdita: perdita})); } catch(e) {}
+        try { localStorage.setItem(_AZ_WIZ_KEY, JSON.stringify({sw: sw, push: push, pioggia: pioggia, probPioggia: probPioggia, vento: vento, tanica: tanica, pompa: pompa, presenza: presenza, perdita: perdita})); } catch(e) {}
         var m = location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
         var base = location.origin + (m ? m[1] : '');
         var btn = sr.getElementById('wd-install');
         btn.classList.add('wd-loading'); btn.textContent = 'Installazione…';
-        var yaml = _buildPkgAZ(sw, push, pioggia, _tpl, vento, tanica, presenza, perdita, pompa);
+        var yaml = _buildPkgAZ(sw, push, pioggia, _tpl, vento, tanica, presenza, perdita, pompa, probPioggia);
         btn.textContent = 'Installazione…';
         fetch(base + '/api/frarik/pkg/install', {
           method: 'POST',
@@ -5426,7 +5433,7 @@ automation:
   }
 
   var _AZ_CARD = {
-    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.18', frarik_no_edit: true,
+    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.19', frarik_no_edit: true,
     desc: 'Controllo sistema anti zanzare: schedule settimanale, timer, statistiche mensili, blocco meteo, sensori sicurezza.',
     render:    function(card) { return _azRender(card); },
     mount:     function(card, hass, el) { _azMount(card, hass, el); },
@@ -5436,7 +5443,7 @@ automation:
     frarik_pkg_id:      'frarik_antizanzare',
     frarik_pkg_version: '2.0',
     openWizard: _openWizardAZ,
-    _buildPkgFromConfig: function(cfg, _tpl) { return _buildPkgAZ(cfg.sw || '', cfg.push || [], cfg.pioggia || '', _tpl); },
+    _buildPkgFromConfig: function(cfg, _tpl) { return _buildPkgAZ(cfg.sw || '', cfg.push || [], cfg.pioggia || '', _tpl, cfg.vento || '', cfg.tanica || '', cfg.presenza || '', cfg.perdita || '', cfg.pompa || '', cfg.probPioggia || ''); },
   };
   window.FratechCardRegistry = window.FratechCardRegistry || {};
   window.FratechCardRegistry[_AZ_CARD.id] = _AZ_CARD;
