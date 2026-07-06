@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.9.33 — 2026-07-06
+
+### fix(store): "Aggiorna PKG" apre sempre il wizard con valori pre-compilati
+
+- Prima: se esisteva una config salvata, "Aggiorna PKG" installava silenziosamente senza mostrare il wizard
+- Ora: clic manuale su "Aggiorna PKG" apre SEMPRE il wizard con i valori precedenti pre-compilati
+- L'aggiornamento silenzioso (auto-update in background) rimane invariato
+- Fix versione customCards: era '1.5', ora '2.20'
+
 ## 1.9.32 — 2026-07-06
 
 ### fix(antizanzare): v2.20 — avviso blocco, ciclo+automazione, notifiche specifiche

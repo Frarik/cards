@@ -3864,7 +3864,7 @@ function _ghsPkgUpdatePopup(cardId,pkgVerNew,pkgFile){
   });
   sr.getElementById('pu_update').addEventListener('click',()=>{
     destroy();
-    _pkgUpdateCard(cardId, _pkgWizardConfigExists(cardId));
+    _pkgUpdateCard(cardId, false);
   });
 }
 
@@ -3884,32 +3884,9 @@ async function _pkgUpdateCard(cardId, silent=false){
   const _reg2=window.FratechCardRegistry?.[cardId]??window.FratechCardRegistry?.[cardId.toLowerCase()];
   const CardClass=typeof _ctor2?._buildPkgFromConfig==='function'?_ctor2:(_reg2??_ctor2);
 
-  if(savedCfg && typeof CardClass?._buildPkgFromConfig==='function'){
-    /* Scarica template da GitHub e riapplica la config wizard → versione GitHub + valori utente */
-    if(!silent) showToast('⬇️ Aggiorno PKG da GitHub…');
-    const ghTpl=await _downloadPkgRaw(pkgInfo);
-    const yaml=CardClass._buildPkgFromConfig(savedCfg, ghTpl||undefined);
-    if(!yaml){ if(!silent) showToast('⚠️ YAML PKG vuoto'); return; }
-    try{
-      const m=location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
-      const base=location.origin+(m?m[1]:'');
-      const fname=pkgInfo.file||(pkgInfo.id?'frarik/'+pkgInfo.id+'.yaml':'');
-      const r=await fetch(base+'/api/frarik/pkg/install',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:fname,content:yaml})});
-      const j=await r.json().catch(()=>({}));
-      if(r.ok&&j.ok){
-        _savePkgVer(cardId,pkgInfo.ver);
-        if(!silent) showToast('✅ PKG aggiornato da GitHub!');
-        await _loadHaInstalledPkgs();
-        if(typeof _ghStoreRender==='function') _ghStoreRender();
-      } else { if(!silent) showToast('⚠️ Errore PKG: '+(j.error||r.status)); }
-    }catch(e){ if(!silent) showToast('⚠️ '+e.message); }
-    return;
-  }
-
-  /* Nessuna config wizard salvata */
+  /* Aggiornamento manuale (silent=false) con wizard disponibile → apri sempre il wizard.
+     I valori precedenti vengono riletti da localStorage e pre-compilati automaticamente. */
   if(!silent && typeof CardClass?.openWizard==='function'){
-    /* La card ha un wizard ma l'utente non ha mai configurato i placeholder →
-       riapri il wizard invece di installare il YAML grezzo con IL_TUO_* irrisolti */
     const ghTpl=await _downloadPkgRaw(pkgInfo);
     const pkgVer=pkgInfo.ver;
     const f=_ghsFind(encodeURIComponent((pkgInfo.file||'').split('/').pop()));
@@ -3920,6 +3897,26 @@ async function _pkgUpdateCard(cardId, silent=false){
       await _loadHaInstalledPkgs();
       if(typeof _ghStoreRender==='function') _ghStoreRender();
     }, ghTpl||undefined);
+    return;
+  }
+
+  /* Aggiornamento silenzioso (auto-update in background) → applica config salvata senza wizard */
+  if(savedCfg && typeof CardClass?._buildPkgFromConfig==='function'){
+    const ghTpl=await _downloadPkgRaw(pkgInfo);
+    const yaml=CardClass._buildPkgFromConfig(savedCfg, ghTpl||undefined);
+    if(!yaml){ return; }
+    try{
+      const m=location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
+      const base=location.origin+(m?m[1]:'');
+      const fname=pkgInfo.file||(pkgInfo.id?'frarik/'+pkgInfo.id+'.yaml':'');
+      const r=await fetch(base+'/api/frarik/pkg/install',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:fname,content:yaml})});
+      const j=await r.json().catch(()=>({}));
+      if(r.ok&&j.ok){
+        _savePkgVer(cardId,pkgInfo.ver);
+        await _loadHaInstalledPkgs();
+        if(typeof _ghStoreRender==='function') _ghStoreRender();
+      }
+    }catch(e){}
     return;
   }
   /* Card senza wizard (o aggiornamento silenzioso senza config) → raw GitHub */

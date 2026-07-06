@@ -742,7 +742,7 @@ class AntiZanzareCard extends HTMLElement {
 customElements.define('antizanzare-card', AntiZanzareCard)
 
 window.customCards = window.customCards || []
-window.customCards.push({ version: '1.5',
+window.customCards.push({ version: '2.20',
   type:        'antizanzare-card',
   name:        'Anti Zanzare',
   description: 'Controllo sistema anti zanzare: schedule, timer, statistiche mensili.',
