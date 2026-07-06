@@ -1,20 +1,20 @@
 /**
- * antizanzare-card.js v2.2
+ * antizanzare-card.js v2.3
  */
 
 const E = {
-  stato:         'sensor.stato_anti_zanzare',
+  stato:         'sensor.frarik_antizanzare_stato_sistema',
   autoAttiva:    'input_boolean.frarik_antizanzare_automazione_attiva',
   timerCiclo:    'timer.frarik_antizanzare_ciclo_timer',
   timerManuale:  'timer.frarik_antizanzare_manuale_timer',
-  pioggia:       'sensor.probabilita_pioggia',
-  pioggiaCors:   'binary_sensor.pioggia_in_corso',
-  consumoAcqua:  'sensor.consumo_acqua_anti_zanzare',
+  pioggia:       'sensor.frarik_antizanzare_probabilita_pioggia',
+  pioggiaCors:   'binary_sensor.frarik_antizanzare_pioggia_corso',
+  consumoAcqua:  'sensor.frarik_antizanzare_consumo_acqua',
   durataManuale: 'input_number.frarik_antizanzare_durata_manuale',
   cicliMensili:  'counter.frarik_antizanzare_cicli_mensili',
   cicliTarget:   'input_number.frarik_antizanzare_cicli_target_mensili',
   sogliaPioggia: 'input_number.frarik_antizanzare_soglia_pioggia',
-  bloccoMeteo:   'binary_sensor.blocco_meteo_attivo',
+  bloccoMeteo:   'binary_sensor.frarik_antizanzare_blocco_meteo',
   btnStart:      'input_button.frarik_antizanzare_start_manuale',
   btnStop:       'input_button.frarik_antizanzare_stop_manuale',
 }
@@ -1491,7 +1491,7 @@ notify:
 # SENSORI TEMPLATE
 template:
   - sensor:
-      - name: "Frarik Anti Zanzare Versione"
+      - name: "Frarik Antizanzare Versione"
         unique_id: frarik_antizanzare_versione
         state: "2.0"
         icon: mdi:package-variant-closed
@@ -1501,7 +1501,7 @@ template:
         seconds: "/1"  # Aggiorna ogni secondo
     sensor:
       # Sensore stato anti_zanzare
-      - name: "Stato Anti Zanzare"
+      - name: "Frarik Antizanzare Stato Sistema"
         unique_id: frarik_antizanzare_stato_sistema
         state: >
           {% if is_state('input_boolean.frarik_antizanzare_manuale_attiva', 'on') %}
@@ -1525,7 +1525,7 @@ template:
           {% endif %}
 
       # Sensore prossimo ciclo completo - trova il prossimo ciclo tra tutti quelli configurati
-      - name: "Prossimo Ciclo Anti Zanzare"
+      - name: "Frarik Antizanzare Prossimo Ciclo Completo"
         unique_id: frarik_antizanzare_prossimo_ciclo_completo
         state: >
           {% if not is_state('input_boolean.frarik_antizanzare_automazione_attiva', 'on') %}
@@ -1859,7 +1859,7 @@ template:
             {% endif %}
 
       # Sensore che mostra il prossimo ciclo configurato tra tutti i giorni
-      - name: "Prossimo Ciclo Semplice"
+      - name: "Frarik Antizanzare Prossimo Ciclo Semplice"
         unique_id: frarik_antizanzare_prossimo_ciclo_semplice
         state: >
           {% if is_state('input_boolean.frarik_antizanzare_automazione_attiva', 'on') %}
@@ -1934,7 +1934,7 @@ template:
         icon: mdi:calendar-clock
 
       # Sensore tempo al prossimo ciclo semplificato (formato umano)
-      - name: "Tempo al Prossimo Ciclo"
+      - name: "Frarik Antizanzare Tempo Al Prossimo Ciclo"
         unique_id: frarik_antizanzare_tempo_al_prossimo_ciclo
         icon: mdi:clock-outline
         state: >
@@ -2015,7 +2015,7 @@ template:
           {% endif %}
 
       # Sensore secondi rimanenti per bar-card (compatibile con countdown dal sistema day-based)
-      - name: "Tempo al Prossimo Ciclo Secondi"
+      - name: "Frarik Antizanzare Tempo Al Prossimo Ciclo Secondi"
         unique_id: frarik_antizanzare_tempo_al_prossimo_ciclo_secondi
         unit_of_measurement: "sec"
         icon: mdi:timer
@@ -2032,14 +2032,14 @@ template:
           {% endif %}
 
       # Sensore consumo acqua (collegato a sensore reale)
-      - name: "Consumo Acqua Anti Zanzare"
+      - name: "Frarik Antizanzare Consumo Acqua"
         unique_id: frarik_antizanzare_consumo_acqua
         state: "{{ states('IL_TUO_SENSORE_LIVELLO_TANICA') | float(0) }}"
         unit_of_measurement: "L/min"
         icon: mdi:water-pump
 
       # Sensore timer manuale percentuale (decresce da 100 a 0)
-      - name: "Anti Zanzare Timer Manuale Percentage"
+      - name: "Frarik Antizanzare Timer Manuale Percentage"
         unique_id: frarik_antizanzare_timer_manuale_percent
         unit_of_measurement: "%"
         icon: mdi:timer
@@ -2076,7 +2076,7 @@ template:
             {% endif %}
 
       # Sensore timer manuale - tempo rimanente mm:ss
-      - name: "Timer Anti Zanzare Manuale Countdown"
+      - name: "Frarik Antizanzare Manuale Countdown"
         unique_id: timer_frarik_antizanzare_manuale_countdown
         icon: mdi:timer
         state: >-
@@ -2101,7 +2101,7 @@ template:
           {% endif %}
 
       # Sensore timer manuale percentuale per bar-card
-      - name: "Timer Anti Zanzare Manuale"
+      - name: "Frarik Antizanzare Timer Manuale Bar"
         unique_id: timer_frarik_antizanzare_manuale_bar
         unit_of_measurement: "%"
         icon: mdi:timer
@@ -2127,7 +2127,7 @@ template:
           {% endif %}
 
       # Sensore timer ciclo - tempo rimanente mm:ss
-      - name: "Timer Anti Zanzare Ciclo Countdown"
+      - name: "Frarik Antizanzare Ciclo Countdown"
         unique_id: timer_frarik_antizanzare_ciclo_countdown
         icon: mdi:timer
         state: >-
@@ -2152,7 +2152,7 @@ template:
           {% endif %}
 
       # Sensore timer ciclo percentuale per bar-card
-      - name: "Timer Anti Zanzare Ciclo"
+      - name: "Frarik Antizanzare Timer Ciclo Bar"
         unique_id: timer_frarik_antizanzare_ciclo_bar
         unit_of_measurement: "%"
         icon: mdi:timer
@@ -2180,7 +2180,7 @@ template:
           {% endif %}
 
       # Sensore timer ciclo automatico percentuale (decresce da 100 a 0)
-      - name: "Anti Zanzare Timer Ciclo Percentage"
+      - name: "Frarik Antizanzare Timer Ciclo Percentage"
         unique_id: frarik_antizanzare_timer_ciclo_percentage
         unit_of_measurement: "%"
         icon: mdi:timer
@@ -2204,14 +2204,14 @@ template:
           {% endif %}
 
       # Sensore probabilità pioggia (collegato a sensore meteo reale)
-      - name: "Probabilità Pioggia"
+      - name: "Frarik Antizanzare Probabilita Pioggia"
         unique_id: frarik_antizanzare_probabilita_pioggia
         state: "{{ states('sensor.openmeteo_precipitation_probability') | int(0) }}"
         unit_of_measurement: "%"
         icon: mdi:weather-rainy
 
       # Sensore cicli rimanenti mensili
-      - name: "Cicli Rimanenti Questo Mese"
+      - name: "Frarik Antizanzare Cicli Rimanenti Mensili"
         unique_id: frarik_antizanzare_cicli_rimanenti_mensili
         state: >
           {% set target = states('input_number.frarik_antizanzare_cicli_target_mensili') | int(0) %}
@@ -2233,7 +2233,7 @@ template:
             {% endif %}
 
       # Sensore avanzamento mensile
-      - name: "Avanzamento Cicli Mensile"
+      - name: "Frarik Antizanzare Avanzamento Mensile"
         unique_id: frarik_antizanzare_avanzamento_mensile
         state: >
           {% set target = states('input_number.frarik_antizanzare_cicli_target_mensili') | int(1) %}
@@ -2281,14 +2281,14 @@ template:
 
   - binary_sensor:
       # Sensore pioggia in corso (collegato a sensore meteo reale)
-      - name: "Pioggia in Corso"
+      - name: "Frarik Antizanzare Pioggia Corso"
         unique_id: frarik_antizanzare_pioggia_corso
         state: "{{ states('IL_TUO_SENSORE_PIOGGIA') }}"
         icon: >
           {{ 'mdi:weather-rainy' if states('IL_TUO_SENSORE_PIOGGIA') | float(0) > 0 else 'mdi:weather-cloudy' }}
 
       # Sensore blocco per condizioni meteo
-      - name: "Blocco Meteo Attivo"
+      - name: "Frarik Antizanzare Blocco Meteo"
         unique_id: frarik_antizanzare_blocco_meteo
         state: >
           {{ states('IL_TUO_SENSORE_PIOGGIA') | float(0) >= states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) }}
@@ -2392,7 +2392,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -2432,7 +2432,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -2472,7 +2472,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -2512,7 +2512,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -2552,7 +2552,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -2593,7 +2593,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -2633,7 +2633,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -2673,7 +2673,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -2713,7 +2713,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -2756,7 +2756,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -2797,7 +2797,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -2838,7 +2838,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -2879,7 +2879,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -2920,7 +2920,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -2961,7 +2961,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -3003,7 +3003,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -3044,7 +3044,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -3085,7 +3085,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -3126,7 +3126,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -3167,7 +3167,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -3209,7 +3209,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -3250,7 +3250,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -3291,7 +3291,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -3332,7 +3332,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -3373,7 +3373,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -3415,7 +3415,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -3456,7 +3456,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -3497,7 +3497,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -3538,7 +3538,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -3579,7 +3579,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -3621,7 +3621,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -3662,7 +3662,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -3703,7 +3703,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -3744,7 +3744,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -3785,7 +3785,7 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_automazione_attiva
         state: "on"
       - condition: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         state: "off"
       - condition: not
         conditions:
@@ -3839,7 +3839,7 @@ automation:
     alias: "Anti Zanzare - Blocco per Condizioni Meteo"
     trigger:
       - platform: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         to: "on"
     action:
       - service: timer.cancel
@@ -3858,7 +3858,7 @@ automation:
     alias: "Anti Zanzare - Disattiva Automazione per Meteo"
     trigger:
       - platform: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         to: "on"
         for: "00:00:01"
     condition:
@@ -3875,7 +3875,7 @@ automation:
     alias: "Anti Zanzare - Riattiva Automazione per Meteo"
     trigger:
       - platform: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         to: "off"
         for: "00:01:00"  # Aspetta 1 minuti prima di riattivare automazione
     condition:
@@ -4044,7 +4044,7 @@ automation:
   - alias: Notifica stop automazione per meteo
     trigger:
       - platform: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         to: 'on'
     action:
       - service: notify.frarik_antizanzare_notify
@@ -4055,7 +4055,7 @@ automation:
   - alias: Notifica riattivazione automazione per meteo
     trigger:
       - platform: state
-        entity_id: binary_sensor.blocco_meteo_attivo
+        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
         to: 'off'
     action:
       - service: notify.frarik_antizanzare_notify
@@ -4533,17 +4533,17 @@ automation:
   function _azPkgDef() {
     return {
       pk_prefix:          'frarik_antizanzare',
-      pk_stato:           'sensor.stato_anti_zanzare',
+      pk_stato:           'sensor.frarik_antizanzare_stato_sistema',
       pk_auto:            'input_boolean.frarik_antizanzare_automazione_attiva',
       pk_manuale:         'input_boolean.frarik_antizanzare_manuale_attiva',
       pk_timer_ciclo:     'timer.frarik_antizanzare_ciclo_timer',
       pk_timer_manuale:   'timer.frarik_antizanzare_manuale_timer',
       pk_cicli_mensili:   'counter.frarik_antizanzare_cicli_mensili',
       pk_cicli_target:    'input_number.frarik_antizanzare_cicli_target_mensili',
-      pk_pioggia:         'sensor.probabilita_pioggia',
-      pk_pioggia_corso:   'binary_sensor.pioggia_in_corso',
-      pk_blocco_meteo:    'binary_sensor.blocco_meteo_attivo',
-      pk_consumo_acqua:   'sensor.consumo_acqua_anti_zanzare',
+      pk_pioggia:         'sensor.frarik_antizanzare_probabilita_pioggia',
+      pk_pioggia_corso:   'binary_sensor.frarik_antizanzare_pioggia_corso',
+      pk_blocco_meteo:    'binary_sensor.frarik_antizanzare_blocco_meteo',
+      pk_consumo_acqua:   'sensor.frarik_antizanzare_consumo_acqua',
       pk_durata_manuale:  'input_number.frarik_antizanzare_durata_manuale',
       pk_soglia_pioggia:  'input_number.frarik_antizanzare_soglia_pioggia',
       pk_btn_auto_on:     'input_button.frarik_antizanzare_start_automazione',
@@ -4552,9 +4552,9 @@ automation:
       pk_btn_man_off:     'input_button.frarik_antizanzare_stop_manuale',
       pk_persona:         '',
       pk_perdita:         '',
-      pk_prossimo:        'sensor.prossimo_ciclo_anti_zanzare',
-      pk_cicli_rim:       'sensor.cicli_rimanenti_questo_mese',
-      pk_avanzamento:     'sensor.avanzamento_cicli_mensile',
+      pk_prossimo:        'sensor.frarik_antizanzare_prossimo_ciclo_completo',
+      pk_cicli_rim:       'sensor.frarik_antizanzare_cicli_rimanenti_mensili',
+      pk_avanzamento:     'sensor.frarik_antizanzare_avanzamento_mensile',
       pk_auto_sic:        'automation.frarik_antizanzare_sicurezza_persona_rilevata',
       pk_vento:           '',
       pk_tanica:          '',
@@ -5253,13 +5253,13 @@ automation:
   }
 
   var _AZ_CARD = {
-    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.14', frarik_no_edit: true,
+    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.15', frarik_no_edit: true,
     desc: 'Controllo sistema anti zanzare: schedule settimanale, timer, statistiche mensili, blocco meteo, sensori sicurezza.',
     render:    function(card) { return _azRender(card); },
     mount:     function(card, hass, el) { _azMount(card, hass, el); },
     update:    function(card, hass, el) { _azUpdate(card, hass, el); },
     configure: null,
-    frarik_pkg_check:   'sensor.stato_anti_zanzare',
+    frarik_pkg_check:   'sensor.frarik_antizanzare_stato_sistema',
     frarik_pkg_id:      'frarik_antizanzare',
     frarik_pkg_version: '2.0',
     openWizard: _openWizardAZ,
