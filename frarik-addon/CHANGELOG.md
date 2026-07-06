@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.9.30 — 2026-07-06
+
+### feat(antizanzare): avviso blocco + prossimo ciclo programmato (v2.18)
+
+- Riquadro arancione che appare quando `blocco_meteo = on`, con il motivo preciso: prob. pioggia ≥ soglia, vento ≥ soglia, o presenza rilevata
+- Riquadro ciano con il prossimo ciclo programmato (giorno + orario) calcolato dinamicamente dalla settimana; mostra "Nessun ciclo programmato" se nessuna fascia è attiva
+- Il box prossimo ciclo si nasconde automaticamente quando un timer è già in corso
+- Aggiunto `pk_soglia_vento` al compute sig per ri-render immediato quando la soglia cambia
+
 ## 1.9.29 — 2026-07-06
 
 ### fix(wizard/pkg): dominio duplicato quando l'utente scrive l'entity ID completo
