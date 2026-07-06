@@ -742,7 +742,7 @@ class AntiZanzareCard extends HTMLElement {
 customElements.define('antizanzare-card', AntiZanzareCard)
 
 window.customCards = window.customCards || []
-window.customCards.push({ version: '2.20',
+window.customCards.push({ version: '2.21',
   type:        'antizanzare-card',
   name:        'Anti Zanzare',
   description: 'Controllo sistema anti zanzare: schedule, timer, statistiche mensili.',
@@ -5148,7 +5148,7 @@ automation:
     var h = _azH(), c = _azCfgFor(card);
     var prefix = c.pk_prefix || 'frarik_antizanzare';
     var autoOn       = _azIsOn(h, c.pk_auto);
-    var sicOn        = !c.pk_auto_sic || _azS(h, c.pk_auto_sic) !== 'off';
+    var sicOn        = c.pk_auto_sic ? (_azS(h, c.pk_auto_sic) === 'on') : false;
     var presenzaOn   = _azIsOn(h, c.pk_presenza_attiva);
     var notifyPushOn = _azIsOn(h, c.pk_notify_push);
     var notifyAlexaOn= _azIsOn(h, c.pk_notify_alexa);
@@ -5199,17 +5199,17 @@ automation:
     var schedHtml = dayIds.map(function(d, i) {
       var isOn = _azIsOn(h, 'input_boolean.' + prefix + '_' + d);
       var nc = Math.round(_azNum(_azS(h, 'input_number.' + prefix + '_' + d + '_num_cicli')) || 0);
-      var times = [];
+      var times = [], durs = [];
       for (var ci = 1; ci <= 5; ci++) {
         times.push((_azS(h, 'input_datetime.' + prefix + '_' + d + '_orario_ciclo' + ci) || '07:00:00').slice(0,5));
+        durs.push(Math.round(_azNum(_azS(h, 'input_number.' + prefix + '_' + d + '_durata_ciclo' + ci)) || 60));
       }
-      var timeInputs = '';
+      var timeInputs = '', durInputs = '';
       for (var ti2 = 0; ti2 < 5; ti2++) {
         var active = ti2 < nc;
-        timeInputs += '<input type="time" id="azs-t-' + d + '-' + (ti2+1) + '" value="' + times[ti2] + '"'
-          + ' style="flex:1;min-width:0;padding:4px 3px;border-radius:6px;background:#0d1a2b;color:' + (active?'#f1f5f9':'rgba(255,255,255,.18)') + ';'
-          + 'border:1px solid rgba(255,255,255,' + (active?'.14':'.05') + ');font-size:10px;outline:none"'
-          + (active ? '' : ' disabled') + '>';
+        var slotStyle = 'flex:1;min-width:0;padding:4px 3px;border-radius:6px;background:#0d1a2b;color:' + (active?'#f1f5f9':'rgba(255,255,255,.18)') + ';border:1px solid rgba(255,255,255,' + (active?'.14':'.05') + ');font-size:10px;outline:none';
+        timeInputs += '<input type="time" id="azs-t-' + d + '-' + (ti2+1) + '" value="' + times[ti2] + '" style="' + slotStyle + '"' + (active ? '' : ' disabled') + '>';
+        durInputs  += '<input type="number" id="azs-dur-' + d + '-' + (ti2+1) + '" value="' + durs[ti2] + '" min="10" max="7200" step="10" style="' + slotStyle + ';text-align:center"' + (active ? '' : ' disabled') + '>';
       }
       return '<div style="background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);border-radius:11px;padding:9px 11px;margin-bottom:6px">'
         + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">'
@@ -5225,7 +5225,12 @@ automation:
         + '<button id="azs-ncp-' + d + '" style="width:24px;height:24px;border-radius:7px;border:none;background:rgba(255,255,255,.08);color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;line-height:1">+</button>'
         + '<span style="font-size:10px;color:rgba(255,255,255,.3);margin-left:2px">cicli</span>'
         + '</div></div>'
-        + '<div id="azs-times-' + d + '" style="display:' + (nc===0?'none':'flex') + ';gap:4px;">' + timeInputs + '</div>'
+        + '<div id="azs-times-' + d + '" style="display:' + (nc===0?'none':'block') + '">'
+        + '<div style="font-size:9px;color:rgba(255,255,255,.3);margin-bottom:2px">⏰ Orari</div>'
+        + '<div style="display:flex;gap:4px">' + timeInputs + '</div>'
+        + '<div style="font-size:9px;color:rgba(255,255,255,.3);margin:5px 0 2px">⏱ Durate (sec)</div>'
+        + '<div style="display:flex;gap:4px">' + durInputs + '</div>'
+        + '</div>'
         + '</div>';
     }).join('');
 
@@ -5283,12 +5288,13 @@ automation:
       var timesDiv = ov.querySelector('#azs-times-' + d);
       function updateTimes(nc) {
         if (!timesDiv) return;
-        timesDiv.style.display = nc === 0 ? 'none' : 'flex';
+        timesDiv.style.display = nc === 0 ? 'none' : 'block';
         for (var i2 = 1; i2 <= 5; i2++) {
-          var ti3 = ov.querySelector('#azs-t-' + d + '-' + i2); if(!ti3) continue;
-          var act = i2 <= nc; ti3.disabled = !act;
-          ti3.style.color = act ? '#f1f5f9' : 'rgba(255,255,255,.18)';
-          ti3.style.borderColor = 'rgba(255,255,255,' + (act?'.14':'.05') + ')';
+          var act = i2 <= nc;
+          var ti3 = ov.querySelector('#azs-t-' + d + '-' + i2);
+          if (ti3) { ti3.disabled = !act; ti3.style.color = act?'#f1f5f9':'rgba(255,255,255,.18)'; ti3.style.borderColor='rgba(255,255,255,'+(act?'.14':'.05')+')'; }
+          var di3 = ov.querySelector('#azs-dur-' + d + '-' + i2);
+          if (di3) { di3.disabled = !act; di3.style.color = act?'#f1f5f9':'rgba(255,255,255,.18)'; di3.style.borderColor='rgba(255,255,255,'+(act?'.14':'.05')+')'; }
         }
       }
       var ncmBtn = ov.querySelector('#azs-ncm-' + d), ncpBtn = ov.querySelector('#azs-ncp-' + d);
@@ -5321,6 +5327,8 @@ automation:
           for (var ci2 = 1; ci2 <= 5; ci2++) {
             var tEl = ov.querySelector('#azs-t-' + d + '-' + ci2);
             if (tEl && tEl.value) h2.callService('input_datetime','set_datetime',{entity_id:'input_datetime.'+prefix+'_'+d+'_orario_ciclo'+ci2,time:tEl.value+':00'});
+            var dEl = ov.querySelector('#azs-dur-' + d + '-' + ci2);
+            if (dEl && !dEl.disabled && dEl.value) h2.callService('input_number','set_value',{entity_id:'input_number.'+prefix+'_'+d+'_durata_ciclo'+ci2,value:parseFloat(dEl.value)});
           }
         }
       });
@@ -5447,7 +5455,7 @@ automation:
   }
 
   var _AZ_CARD = {
-    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.20', frarik_no_edit: true,
+    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.21', frarik_no_edit: true,
     desc: 'Controllo sistema anti zanzare: schedule settimanale, timer, statistiche mensili, blocco meteo, sensori sicurezza.',
     render:    function(card) { return _azRender(card); },
     mount:     function(card, hass, el) { _azMount(card, hass, el); },
