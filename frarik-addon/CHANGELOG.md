@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.29 — 2026-07-06
+
+### fix(wizard/pkg): dominio duplicato quando l'utente scrive l'entity ID completo
+
+- Bug: YAML ha `sensor.IL_TUO_X`, utente scrive `sensor.consumo_istantaneo` → risultava `sensor.sensor.consumo_istantaneo`
+- Fix: prima della sostituzione, se il YAML ha già `domain.PLACEHOLDER` e il valore inserito inizia con lo stesso dominio, il prefisso viene rimosso automaticamente dal valore
+- Stesso fix per `media_player.`, `notify.`, `switch.`, e tutti gli altri domini
+
 ## 1.9.28 — 2026-07-06
 
 ### feat(card/bolletta): box Oggi ridisegnato + tab FV/Batt come pannello dedicato (v5.3)

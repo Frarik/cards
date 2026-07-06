@@ -4163,8 +4163,15 @@ function _pkgShowWizard(pkgName,yaml,inputs){
     mo.querySelector('#_pwz_ok').onclick=()=>{
       let out=yaml;
       mo.querySelectorAll('[data-key]').forEach(inp=>{
-        const val=inp.value.trim();
-        if(val){ const re=new RegExp(inp.dataset.key.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g'); out=out.replace(re,val); }
+        let val=inp.value.trim();
+        if(val){
+          /* Se il YAML ha già "domain.PLACEHOLDER" e l'utente scrive "domain.entity",
+             rimuovi il prefisso dominio dal valore per evitare "domain.domain.entity" */
+          const domPfx=(val.match(/^([a-z_]+)\./)||[])[1];
+          if(domPfx && out.includes(domPfx+'.'+inp.dataset.key)) val=val.slice(domPfx.length+1);
+          const re=new RegExp(inp.dataset.key.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g');
+          out=out.replace(re,val);
+        }
       });
       close(out);
     };
