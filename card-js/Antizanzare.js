@@ -4741,6 +4741,36 @@ automation:
       + '</svg>';
   }
 
+  function _azNextCycleInfo(h, prefix) {
+    var dayIds = ['lunedi','martedi','mercoledi','giovedi','venerdi','sabato','domenica'];
+    var dayLabels = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato','Domenica'];
+    var now = new Date();
+    var todayIdx = (now.getDay() + 6) % 7; // Mon=0..Sun=6
+    var nowMin = now.getHours() * 60 + now.getMinutes();
+    for (var offset = 0; offset < 7; offset++) {
+      var dayIdx = (todayIdx + offset) % 7;
+      var d = dayIds[dayIdx];
+      if (!_azIsOn(h, 'input_boolean.' + prefix + '_' + d)) continue;
+      var nC = Math.round(_azNum(_azS(h, 'input_number.' + prefix + '_' + d + '_num_cicli')) || 0);
+      if (nC <= 0) continue;
+      var times = [];
+      for (var ci = 1; ci <= Math.min(nC, 5); ci++) {
+        var t = _azS(h, 'input_datetime.' + prefix + '_' + d + '_orario_ciclo' + ci) || '';
+        if (t) {
+          var pts = t.slice(0, 5).split(':');
+          times.push({ min: parseInt(pts[0]) * 60 + parseInt(pts[1] || 0), str: t.slice(0, 5) });
+        }
+      }
+      times.sort(function(a, b) { return a.min - b.min; });
+      for (var ti = 0; ti < times.length; ti++) {
+        if (offset > 0 || times[ti].min > nowMin) {
+          return { day: dayLabels[dayIdx], time: times[ti].str };
+        }
+      }
+    }
+    return null;
+  }
+
   function _azRender(card) {
     var h = _azH(), c = _azCfgFor(card);
     var rid = 'fraz' + (card.id || 'az');
@@ -4764,6 +4794,9 @@ automation:
     var activeTimer = timerC.active ? timerC : timerM;
     var timerActive = timerC.active || timerM.active;
     var timerLabel = timerC.active ? 'CICLO' : 'MANUALE';
+    var sogliaPioggia = _azNum(_azS(h, c.pk_soglia_pioggia)) || 0;
+    var sogliaVento = _azNum(_azS(h, c.pk_soglia_vento)) || 0;
+    var presenzaAttiva = _azIsOn(h, c.pk_presenza_attiva);
     var col = '#64748b', colRgb = '100,116,139', statusLabel = 'SPENTA';
     if (blocco)                              { col = '#f59e0b'; colRgb = '245,158,11';  statusLabel = 'METEO'; }
     else if (stato === 'Manuale Attiva')     { col = '#f97316'; colRgb = '249,115,22';  statusLabel = 'ACCESA'; }
@@ -4783,6 +4816,32 @@ automation:
     } else if (!timerActive) {
       prossimoHtml = '<div class="fc-met"><span class="fc-met-lbl">Prob. pioggia</span><span class="fc-met-v" style="color:' + (pioggia > 50 ? '#f59e0b' : '#fff') + '">' + pioggia.toFixed(0) + '%</span></div>';
     }
+
+    var avvisoHtml = '';
+    if (blocco) {
+      var bloccoPerPioggia = sogliaPioggia > 0 && pioggia >= sogliaPioggia;
+      var bloccoPerVento = sogliaVento > 0 && vento !== null && vento >= sogliaVento;
+      var reasons = [];
+      if (bloccoPerPioggia) reasons.push('🌧 Prob. pioggia ' + pioggia.toFixed(0) + '% ≥ soglia ' + sogliaPioggia.toFixed(0) + '%');
+      if (bloccoPerVento) reasons.push('💨 Vento ' + vento.toFixed(0) + ' m/s ≥ soglia ' + sogliaVento.toFixed(0) + ' m/s');
+      if (presenzaAttiva && !bloccoPerPioggia && !bloccoPerVento) reasons.push('👤 Presenza rilevata nell\'area');
+      if (reasons.length === 0) reasons.push('⛈ Condizioni sfavorevoli rilevate');
+      avvisoHtml = '<div style="margin:0 10px 7px;padding:9px 12px;border-radius:11px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.35)">'
+        + '<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#f59e0b;margin-bottom:4px">⚠ CICLI BLOCCATI</div>'
+        + reasons.map(function(r) { return '<div style="font-size:11px;font-weight:600;color:#fff">' + r + '</div>'; }).join('')
+        + '</div>';
+    }
+
+    var nextCycleInfo = !timerActive ? _azNextCycleInfo(h, c.pk_prefix || 'frarik_antizanzare') : null;
+    var nextCycleHtml = !timerActive
+      ? '<div style="margin:0 10px 7px;padding:9px 12px;border-radius:11px;'
+        + (nextCycleInfo ? 'background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.28)' : 'background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07)') + '">'
+        + '<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:' + (nextCycleInfo ? '#06b6d4' : '#475569') + ';margin-bottom:3px">📅 PROSSIMO CICLO</div>'
+        + (nextCycleInfo
+          ? '<div style="font-size:13px;font-weight:800;color:#fff">' + nextCycleInfo.day + ' alle ' + nextCycleInfo.time + '</div>'
+          : '<div style="font-size:11px;font-weight:600;color:#475569">Nessun ciclo programmato</div>')
+        + '</div>'
+      : '';
 
     var css = '<style>'
       + '@keyframes azPulse{0%,100%{opacity:.6}50%{opacity:1}}'
@@ -4911,7 +4970,7 @@ automation:
       + '<div class="fc-hdr"><div class="fc-hdr-iw">🦟</div>'
       + '<div class="fc-hdr-tit">' + (c.name || 'Anti Zanzare') + '</div>'
       + '<div class="fc-hdr-pill"><div class="fc-dot"></div>' + statusLabel + '</div></div>'
-      + '<div class="fc-scroll">' + heroHtml + timerBarHtml + sensorGrid + statusRow + btnsHtml + '</div>'
+      + '<div class="fc-scroll">' + heroHtml + timerBarHtml + avvisoHtml + nextCycleHtml + sensorGrid + statusRow + btnsHtml + '</div>'
       + '</div></div>';
   }
 
@@ -5275,7 +5334,7 @@ automation:
     return ['2.6az',_azS(h,c.pk_stato),_azS(h,c.pk_auto),_azS(h,c.pk_manuale),tc,tm,
             _azS(h,c.pk_cicli_mensili),_azS(h,c.pk_cicli_target),
             _azS(h,c.pk_blocco_meteo),_azS(h,c.pk_pioggia),_azS(h,c.pk_pioggia_corso),
-            _azS(h,c.pk_durata_manuale),_azS(h,c.pk_soglia_pioggia),
+            _azS(h,c.pk_durata_manuale),_azS(h,c.pk_soglia_pioggia),_azS(h,c.pk_soglia_vento),
             _azS(h,c.pk_persona),_azS(h,c.pk_perdita),_azS(h,c.pk_prossimo),
             _azS(h,c.pk_cicli_rim),_azS(h,c.pk_consumo_acqua),_azS(h,c.pk_auto_sic),
             _azS(h,c.pk_vento),_azS(h,c.pk_tanica),
@@ -5367,7 +5426,7 @@ automation:
   }
 
   var _AZ_CARD = {
-    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.17', frarik_no_edit: true,
+    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.18', frarik_no_edit: true,
     desc: 'Controllo sistema anti zanzare: schedule settimanale, timer, statistiche mensili, blocco meteo, sensori sicurezza.',
     render:    function(card) { return _azRender(card); },
     mount:     function(card, hass, el) { _azMount(card, hass, el); },
