@@ -1,5 +1,5 @@
 /**
- * antizanzare-card.js v2.7
+ * antizanzare-card.js v2.8
  */
 
 // ─── FratechStore Integration ────────────────────────────────────────────────
@@ -1600,7 +1600,8 @@ template:
           {% set abilita_vento = is_state('input_boolean.frarik_antizanzare_abilita_soglia_vento', 'on') %}
           {% set blocco_vento = abilita_vento and soglia_vento > 0 and states('sensor.frarik_antizanzare_velocita_vento') | float(0) >= soglia_vento %}
           {% set blocco_presenza = is_state('input_boolean.frarik_antizanzare_presenza_attiva', 'on') and is_state('IL_TUO_SENSORE_PRESENZA', 'on') %}
-          {{ blocco_pioggia or blocco_vento or blocco_presenza }}
+          {% set blocco_pioggia_corso = is_state('IL_TUO_SENSORE_PIOGGIA', 'on') %}
+          {{ blocco_pioggia or blocco_vento or blocco_presenza or blocco_pioggia_corso }}
         icon: >
           {% set soglia_pioggia = states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) %}
           {% set abilita_pioggia = is_state('input_boolean.frarik_antizanzare_abilita_soglia_pioggia', 'on') %}
@@ -1609,7 +1610,8 @@ template:
           {% set abilita_vento = is_state('input_boolean.frarik_antizanzare_abilita_soglia_vento', 'on') %}
           {% set blocco_vento = abilita_vento and soglia_vento > 0 and states('sensor.frarik_antizanzare_velocita_vento') | float(0) >= soglia_vento %}
           {% set blocco_presenza = is_state('input_boolean.frarik_antizanzare_presenza_attiva', 'on') and is_state('IL_TUO_SENSORE_PRESENZA', 'on') %}
-          {{ 'mdi:account-cancel' if blocco_presenza else ('mdi:weather-windy' if blocco_vento else ('mdi:weather-rainy' if blocco_pioggia else 'mdi:weather-partly-cloudy')) }}
+          {% set blocco_pioggia_corso = is_state('IL_TUO_SENSORE_PIOGGIA', 'on') %}
+          {{ 'mdi:account-cancel' if blocco_presenza else ('mdi:weather-rainy' if (blocco_pioggia or blocco_pioggia_corso) else ('mdi:weather-windy' if blocco_vento else 'mdi:weather-partly-cloudy')) }}
 
       # Sensore perdita acqua (collegato a sensore reale opzionale)
       - name: "Frarik Antizanzare Perdita Acqua"
@@ -3328,14 +3330,12 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_manuale_attiva
         to: "on"
     action:
-      # Se il blocco presenza è attivo e c'è qualcuno nell'area, non avviare nulla:
-      # annulla subito lo stato "manuale attiva" così la card non resta bloccata su ON
+      # Se blocco_meteo è attivo (vento/pioggia/pioggia in corso/presenza), non
+      # avviare nulla: annulla subito lo stato "manuale attiva" così la card
+      # non resta bloccata su ON
       - if:
           - condition: state
-            entity_id: input_boolean.frarik_antizanzare_presenza_attiva
-            state: "on"
-          - condition: state
-            entity_id: *sensore_presenza
+            entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
             state: "on"
         then:
           - service: input_boolean.turn_off
@@ -3508,6 +3508,7 @@ automation:
             {%- set sv = states('input_number.frarik_antizanzare_soglia_vento') | float(0) %}
             {%- if sp > 0 and prob >= sp %} 🌧 Pioggia {{ prob | round(0) }}% (soglia {{ sp | round(0) }}%){% endif %}
             {%- if sv > 0 and vv >= sv %} 💨 Vento {{ vv | round(0) }} km/h (soglia {{ sv | round(0) }} km/h){% endif %}
+            {%- if is_state('IL_TUO_SENSORE_PIOGGIA', 'on') %} 🌧 Sta piovendo ora{% endif %}
             {%- if is_state('input_boolean.frarik_antizanzare_presenza_attiva', 'on') and is_state('IL_TUO_SENSORE_PRESENZA', 'on') %} 👤 Presenza rilevata{% endif %}
 
   - alias: Notifica riattivazione automazione per meteo

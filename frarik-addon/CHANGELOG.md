@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.9.41 — 2026-07-07
+
+### fix(antizanzare): blocco pioggia in corso mancante, avvio manuale non rispettava il blocco meteo (v2.8)
+
+- Il sensore "pioggia in corso" (sta piovendo sì/no) era mostrato in card ma non
+  bloccava MAI i cicli: aggiunto a `blocco_meteo` come condizione di blocco
+  (nessuna soglia/toggle necessari, se piove blocca sempre)
+- L'avvio manuale rispettava solo il blocco presenza, non vento/pioggia: ora
+  controlla `binary_sensor.blocco_meteo` nel suo complesso (vento, pioggia,
+  pioggia in corso, presenza) prima di partire
+- Promemoria: il blocco per vento e per probabilità pioggia restano disattivati
+  finché non si accendono i relativi interruttori in Impostazioni ⚙ → Soglie &
+  Durate ("Blocco per pioggia attivo" / "Blocco per vento attivo") — di default
+  sono spenti anche se si imposta una soglia
+- Risincronizzata la copia embedded del pkg nel wizard con questi fix
+
 ## 1.9.40 — 2026-07-07
 
 ### fix(antizanzare): vento in km/h, presenza unificata, wizard risincronizzato, pulizia notifiche (v2.7)
