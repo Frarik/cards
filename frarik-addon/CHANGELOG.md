@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.9.44 — 2026-07-07
+
+### fix(antizanzare): entità rinominate _2 dopo reinstall PKG (v2.27)
+
+- Rimossi 22 unique_id dai template sensor del PKG
+- unique_id causava conflitti nel registro entità HA → tutte le entità prendevano
+  suffisso _2 dopo ogni reinstallazione, rompendo card e automazioni
+- Senza unique_id, entity_id è assegnato dal nome (deterministico, nessun conflitto)
+- Card v2.27, addon v1.9.44
+
 ## 1.9.43 — 2026-07-07
 
 ### fix(antizanzare): notifica pioggia senza dettaglio, rimosso tasto ON/OFF rapido presa (v3.0)

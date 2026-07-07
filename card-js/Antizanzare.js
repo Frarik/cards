@@ -761,7 +761,6 @@ notify:
 template:
   - sensor:
       - name: "Frarik Antizanzare Versione"
-        unique_id: frarik_antizanzare_versione
         state: "2.0"
         icon: mdi:package-variant-closed
 
@@ -771,7 +770,6 @@ template:
     sensor:
       # Sensore stato anti_zanzare
       - name: "Frarik Antizanzare Stato Sistema"
-        unique_id: frarik_antizanzare_stato_sistema
         state: >
           {% if is_state('input_boolean.frarik_antizanzare_manuale_attiva', 'on') %}
             Manuale Attiva
@@ -795,7 +793,6 @@ template:
 
       # Sensore prossimo ciclo completo - trova il prossimo ciclo tra tutti quelli configurati
       - name: "Frarik Antizanzare Prossimo Ciclo Completo"
-        unique_id: frarik_antizanzare_prossimo_ciclo_completo
         state: >
           {% if not is_state('input_boolean.frarik_antizanzare_automazione_attiva', 'on') %}
             Automazione Disattivata
@@ -1129,7 +1126,6 @@ template:
 
       # Sensore che mostra il prossimo ciclo configurato tra tutti i giorni
       - name: "Frarik Antizanzare Prossimo Ciclo Semplice"
-        unique_id: frarik_antizanzare_prossimo_ciclo_semplice
         state: >
           {% if is_state('input_boolean.frarik_antizanzare_automazione_attiva', 'on') %}
             {% set current_time = now() %}
@@ -1204,7 +1200,6 @@ template:
 
       # Sensore tempo al prossimo ciclo semplificato (formato umano)
       - name: "Frarik Antizanzare Tempo Al Prossimo Ciclo"
-        unique_id: frarik_antizanzare_tempo_al_prossimo_ciclo
         icon: mdi:clock-outline
         state: >
           {% if is_state('input_boolean.frarik_antizanzare_automazione_attiva', 'on') %}
@@ -1285,7 +1280,6 @@ template:
 
       # Sensore secondi rimanenti per bar-card (compatibile con countdown dal sistema day-based)
       - name: "Frarik Antizanzare Tempo Al Prossimo Ciclo Secondi"
-        unique_id: frarik_antizanzare_tempo_al_prossimo_ciclo_secondi
         unit_of_measurement: "sec"
         icon: mdi:timer
         state: >
@@ -1302,14 +1296,12 @@ template:
 
       # Sensore consumo acqua (collegato a sensore reale)
       - name: "Frarik Antizanzare Consumo Acqua"
-        unique_id: frarik_antizanzare_consumo_acqua
         state: "{{ states('IL_TUO_SENSORE_LIVELLO_TANICA') | float(0) }}"
         unit_of_measurement: "L/min"
         icon: mdi:water-pump
 
       # Sensore timer manuale percentuale (decresce da 100 a 0)
       - name: "Frarik Antizanzare Timer Manuale Percentage"
-        unique_id: frarik_antizanzare_timer_manuale_percent
         unit_of_measurement: "%"
         icon: mdi:timer
         state: >-
@@ -1346,7 +1338,6 @@ template:
 
       # Sensore timer manuale - tempo rimanente mm:ss
       - name: "Frarik Antizanzare Manuale Countdown"
-        unique_id: timer_frarik_antizanzare_manuale_countdown
         icon: mdi:timer
         state: >-
           {% if is_state('timer.frarik_antizanzare_manuale_timer', 'active') %}
@@ -1371,7 +1362,6 @@ template:
 
       # Sensore timer manuale percentuale per bar-card
       - name: "Frarik Antizanzare Timer Manuale Bar"
-        unique_id: timer_frarik_antizanzare_manuale_bar
         unit_of_measurement: "%"
         icon: mdi:timer
         state: >-
@@ -1397,7 +1387,6 @@ template:
 
       # Sensore timer ciclo - tempo rimanente mm:ss
       - name: "Frarik Antizanzare Ciclo Countdown"
-        unique_id: timer_frarik_antizanzare_ciclo_countdown
         icon: mdi:timer
         state: >-
           {% if is_state('timer.frarik_antizanzare_ciclo_timer', 'active') %}
@@ -1422,7 +1411,6 @@ template:
 
       # Sensore timer ciclo percentuale per bar-card
       - name: "Frarik Antizanzare Timer Ciclo Bar"
-        unique_id: timer_frarik_antizanzare_ciclo_bar
         unit_of_measurement: "%"
         icon: mdi:timer
         state: >-
@@ -1450,7 +1438,6 @@ template:
 
       # Sensore timer ciclo automatico percentuale (decresce da 100 a 0)
       - name: "Frarik Antizanzare Timer Ciclo Percentage"
-        unique_id: frarik_antizanzare_timer_ciclo_percentage
         unit_of_measurement: "%"
         icon: mdi:timer
         state: >-
@@ -1474,21 +1461,18 @@ template:
 
       # Sensore probabilità pioggia (collegato a sensore meteo reale, valore numerico %)
       - name: "Frarik Antizanzare Probabilita Pioggia"
-        unique_id: frarik_antizanzare_probabilita_pioggia
         state: "{{ states('IL_TUO_SENSORE_PROBABILITA_PIOGGIA') | float(0) | round(0) | int }}"
         unit_of_measurement: "%"
         icon: mdi:weather-rainy
 
       # Sensore potenza pompa (collegato a sensore reale opzionale)
       - name: "Frarik Antizanzare Potenza Pompa"
-        unique_id: frarik_antizanzare_potenza_pompa
         state: "{{ states('IL_TUO_SENSORE_POMPA') | float(0) }}"
         unit_of_measurement: "W"
         icon: mdi:pump
 
       # Sensore cicli rimanenti mensili
       - name: "Frarik Antizanzare Cicli Rimanenti Mensili"
-        unique_id: frarik_antizanzare_cicli_rimanenti_mensili
         state: >
           {% set target = states('input_number.frarik_antizanzare_cicli_target_mensili') | int(0) %}
           {% set completati = states('counter.frarik_antizanzare_cicli_mensili') | int(0) %}
@@ -1510,7 +1494,6 @@ template:
 
       # Sensore avanzamento mensile
       - name: "Frarik Antizanzare Avanzamento Mensile"
-        unique_id: frarik_antizanzare_avanzamento_mensile
         state: >
           {% set target = states('input_number.frarik_antizanzare_cicli_target_mensili') | int(1) %}
           {% set completati = states('counter.frarik_antizanzare_cicli_mensili') | int(0) %}
@@ -1557,7 +1540,6 @@ template:
 
       # Sensore velocità vento (collegato a sensore reale, già in km/h — nessuna conversione)
       - name: "Frarik Antizanzare Velocita Vento"
-        unique_id: frarik_antizanzare_velocita_vento
         state: "{{ states('IL_TUO_SENSORE_VENTO') | float(0) | round(1) }}"
         unit_of_measurement: "km/h"
         icon: mdi:weather-windy
@@ -1567,7 +1549,6 @@ template:
       # asciutto/bagnato: se il valore non è numerico viene passato così com'è,
       # altrimenti viene convertito in float per il caso percentuale.
       - name: "Frarik Antizanzare Livello Tanica"
-        unique_id: frarik_antizanzare_livello_tanica
         state: >
           {% set raw = states('IL_TUO_SENSORE_LIVELLO_TANICA') %}
           {% if raw in ['unavailable', 'unknown', 'none', ''] %}
@@ -1583,14 +1564,12 @@ template:
   - binary_sensor:
       # Sensore pioggia in corso: on se il sensore fisico di pioggia è attivo
       - name: "Frarik Antizanzare Pioggia Corso"
-        unique_id: frarik_antizanzare_pioggia_corso
         state: "{{ is_state('IL_TUO_SENSORE_PIOGGIA', 'on') }}"
         icon: >
           {{ 'mdi:weather-rainy' if is_state('IL_TUO_SENSORE_PIOGGIA', 'on') else 'mdi:weather-cloudy' }}
 
       # Sensore blocco per condizioni meteo, vento e presenza
       - name: "Frarik Antizanzare Blocco Meteo"
-        unique_id: frarik_antizanzare_blocco_meteo
         state: >
           {% set soglia_pioggia = states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) %}
           {% set abilita_pioggia = is_state('input_boolean.frarik_antizanzare_abilita_soglia_pioggia', 'on') %}
@@ -1614,7 +1593,6 @@ template:
 
       # Sensore perdita acqua (collegato a sensore reale opzionale)
       - name: "Frarik Antizanzare Perdita Acqua"
-        unique_id: frarik_antizanzare_perdita_acqua
         state: >
           {% if states('IL_TUO_SENSORE_PERDITA') in ['unavailable', 'unknown'] %}
             off
@@ -4854,7 +4832,7 @@ automation:
   }
 
   var _AZ_CARD = {
-    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.26', frarik_no_edit: true,
+    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.27', frarik_no_edit: true,
     desc: 'Controllo sistema anti zanzare: schedule settimanale, timer, statistiche mensili, blocco meteo, sensori sicurezza.',
     render:    function(card) { return _azRender(card); },
     mount:     function(card, hass, el) { _azMount(card, hass, el); },
