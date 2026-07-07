@@ -3464,8 +3464,12 @@ automation:
 
   - alias: Notifica stop automazione per meteo
     trigger:
+      # from: 'off' evita che la notifica parta al riavvio di HA, quando il
+      # sensore passa da "sconosciuto" (avvio) a "on" invece che da un vero
+      # cambio di condizioni meteo
       - platform: state
         entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
+        from: 'off'
         to: 'on'
     action:
       - service: notify.frarik_antizanzare_notify
@@ -3483,9 +3487,15 @@ automation:
 
   - alias: Notifica riattivazione automazione per meteo
     trigger:
+      # from: 'on' evita che la notifica parta al riavvio di HA (il sensore
+      # spesso si inizializza direttamente a "off" all'avvio, senza che sia
+      # avvenuta una vera riattivazione). Il for: 1 minuto allinea la notifica
+      # al momento in cui l'automazione viene davvero riattivata.
       - platform: state
         entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
+        from: 'on'
         to: 'off'
+        for: "00:01:00"
     action:
       - service: notify.frarik_antizanzare_notify
         data:

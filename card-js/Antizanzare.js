@@ -1,5 +1,5 @@
 /**
- * antizanzare-card.js v2.5
+ * antizanzare-card.js v2.6
  */
 
 // ─── FratechStore Integration ────────────────────────────────────────────────
@@ -4535,6 +4535,7 @@ automation:
     var soglia       = Math.round(_azNum(_azS(h, c.pk_soglia_pioggia)) || 50);
     var sogliaVento  = Math.round(_azNum(_azS(h, c.pk_soglia_vento)) || 0);
     var tarMens      = Math.round(_azNum(_azS(h, c.pk_cicli_target)) || 100);
+    var cicliMAttuali = Math.round(_azNum(_azS(h, c.pk_cicli_mensili)) || 0);
     var inizioNtf    = (_azS(h, c.pk_inizio_ntf) || '00:00:00').slice(0, 5);
     var fineNtf      = (_azS(h, c.pk_fine_ntf) || '23:59:00').slice(0, 5);
     var dayIds  = ['lunedi','martedi','mercoledi','giovedi','venerdi','sabato','domenica'];
@@ -4638,6 +4639,7 @@ automation:
       + togRow('azuc-tog-vento', '💨', 'Blocco per vento attivo', 'Blocca i cicli quando il vento supera la soglia', abilitaVentoOn, '6,182,212')
       + numRow('dur', '⏱', 'Durata avvio manuale', durM, 's', 10, 7200, 10)
       + numRow('tar', '🎯', 'Target cicli mensili', tarMens, 'cicli', 1, 999, 1)
+      + '<button id="azuc-reset-cicli" data-armed="0" style="width:100%;padding:9px;border-radius:10px;border:1px solid rgba(239,68,68,.3);background:rgba(239,68,68,.08);color:#ef4444;font-weight:700;font-size:12px;cursor:pointer;margin:2px 0 10px">🔄 Reset cicli mensili (' + cicliMAttuali + ' fatti)</button>'
       + '<button id="azuc-save" style="width:100%;padding:13px;border-radius:12px;border:none;cursor:pointer;font-weight:800;font-size:14px;background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);color:#fff;margin-top:10px;box-shadow:0 4px 16px rgba(34,197,94,.28)">💾 Salva tutto</button>';
 
     var ov = _azMkOv(_azPopShell('⚙','34,197,94','Impostazioni',c.name||'Anti Zanzare','azuc-cl',content),'azuc-cl');
@@ -4653,6 +4655,30 @@ automation:
         var knob = tb.querySelector('div'); if (knob) { knob.style.right = nowOn ? '3px' : ''; knob.style.left = nowOn ? '' : '3px'; }
       });
     });
+
+    // Reset cicli mensili (richiede doppio click di conferma)
+    var resetBtn = ov.querySelector('#azuc-reset-cicli');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', function() {
+        if (resetBtn.dataset.armed !== '1') {
+          resetBtn.dataset.armed = '1';
+          resetBtn.textContent = '⚠️ Sicuro? Clicca di nuovo per confermare';
+          clearTimeout(resetBtn._azResetTimer);
+          resetBtn._azResetTimer = setTimeout(function() {
+            resetBtn.dataset.armed = '0';
+            resetBtn.textContent = '🔄 Reset cicli mensili (' + cicliMAttuali + ' fatti)';
+          }, 3000);
+          return;
+        }
+        clearTimeout(resetBtn._azResetTimer);
+        var tgt = Math.round(_azNum((ov.querySelector('#azuc-tar') || {}).value) || tarMens);
+        if (c.pk_cicli_mensili) _azCallSvc('counter', 'reset', { entity_id: c.pk_cicli_mensili });
+        _azCallSvc('counter', 'set_value', { entity_id: 'counter.' + prefix + '_cicli_rimanenti', value: tgt });
+        resetBtn.dataset.armed = '0';
+        resetBtn.textContent = '✅ Cicli azzerati';
+        if (el) el._fcSig = null;
+      });
+    }
 
     // Schedule toggles
     ov.querySelectorAll('[id^="azs-tog-"]').forEach(function(tog) {

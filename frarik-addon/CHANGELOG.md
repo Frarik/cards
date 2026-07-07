@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.9.39 — 2026-07-07
+
+### fix(antizanzare): reset cicli in impostazioni + notifiche false al riavvio HA (v2.6)
+
+- Aggiunto tasto "🔄 Reset cicli mensili" in Impostazioni ⚙, vicino a "Target cicli mensili"
+  (richiede doppio click di conferma). Azzera `counter.frarik_antizanzare_cicli_mensili` e
+  riporta `counter.frarik_antizanzare_cicli_rimanenti` al target impostato
+- Verificate le notifiche di blocco ciclo per meteo: esistono già ed elencano il motivo
+  specifico (pioggia/vento/presenza) in un unico messaggio — nessuna nuova notifica necessaria
+- Fix: la notifica "Automazioni Riattivate: condizioni meteo favorevoli" partiva ad ogni
+  riavvio di Home Assistant. Causa: il sensore `binary_sensor.frarik_antizanzare_blocco_meteo`
+  si inizializza sempre a "off" all'avvio (passando da stato sconosciuto), e il trigger della
+  notifica non distingueva questa inizializzazione da un vero cambio di condizioni meteo
+- Fix: aggiunto `from: 'on'` + `for: 1 minuto` al trigger di riattivazione (ora coerente con
+  il ritardo reale con cui l'automazione si riattiva) e `from: 'off'` al trigger di blocco,
+  per evitare lo stesso falso positivo speculare all'avvio con meteo già sfavorevole
+
 ## 1.9.38 — 2026-07-07
 
 ### feat(antizanzare): card e pkg — durata manuale in card, prossimo ciclo live, toggle in impostazioni, livello tanica asciutto/bagnato (v2.5)
