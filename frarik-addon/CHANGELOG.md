@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.9.43 — 2026-07-07
+
+### fix(antizanzare): notifica pioggia senza dettaglio, rimosso tasto ON/OFF rapido presa (v3.0)
+
+- Rimosso il tasto 🔌 ON/OFF affianco a Manuale/Ferma Auto: accendeva/spegneva la
+  presa senza controllare vento/pioggia/presenza, bypassando tutti i blocchi
+- Fix: la notifica "Cicli bloccati" per probabilità pioggia mostrava solo il
+  titolo senza dettaglio (a differenza del vento, che mostrava valore e soglia).
+  Causa: il controllo nella notifica usava il sensore derivato/arrotondato
+  invece del sensore raw usato da `blocco_meteo`, potendo divergere vicino alla
+  soglia. Allineato a leggere lo stesso identico valore, aggiunto anche il
+  controllo dell'interruttore "Blocco per pioggia/vento attivo" mancante
+- Risincronizzata la copia embedded del pkg nel wizard con questi fix
+
 ## 1.9.42 — 2026-07-07
 
 ### fix(antizanzare): tolta conversione vento errata, blocco pioggia/vento attivo di default (v2.9)

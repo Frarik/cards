@@ -1,5 +1,5 @@
 /**
- * antizanzare-card.js v2.9
+ * antizanzare-card.js v3.0
  */
 
 // ─── FratechStore Integration ────────────────────────────────────────────────
@@ -3501,12 +3501,14 @@ automation:
           title: "🦟 Anti Zanzare — Cicli Bloccati"
           message: >
             🚫 Cicli bloccati!
-            {%- set prob = states('sensor.frarik_antizanzare_probabilita_pioggia') | float(0) %}
+            {%- set abilita_pioggia = is_state('input_boolean.frarik_antizanzare_abilita_soglia_pioggia', 'on') %}
+            {%- set prob = states('IL_TUO_SENSORE_PROBABILITA_PIOGGIA') | float(0) %}
             {%- set sp = states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) %}
+            {%- set abilita_vento = is_state('input_boolean.frarik_antizanzare_abilita_soglia_vento', 'on') %}
             {%- set vv = states('sensor.frarik_antizanzare_velocita_vento') | float(0) %}
             {%- set sv = states('input_number.frarik_antizanzare_soglia_vento') | float(0) %}
-            {%- if sp > 0 and prob >= sp %} 🌧 Pioggia {{ prob | round(0) }}% (soglia {{ sp | round(0) }}%){% endif %}
-            {%- if sv > 0 and vv >= sv %} 💨 Vento {{ vv | round(0) }} km/h (soglia {{ sv | round(0) }} km/h){% endif %}
+            {%- if abilita_pioggia and sp > 0 and prob >= sp %} 🌧 Pioggia {{ prob | round(0) }}% (soglia {{ sp | round(0) }}%){% endif %}
+            {%- if abilita_vento and sv > 0 and vv >= sv %} 💨 Vento {{ vv | round(0) }} km/h (soglia {{ sv | round(0) }} km/h){% endif %}
             {%- if is_state('IL_TUO_SENSORE_PIOGGIA', 'on') %} 🌧 Sta piovendo ora{% endif %}
             {%- if is_state('input_boolean.frarik_antizanzare_presenza_attiva', 'on') and is_state('IL_TUO_SENSORE_PRESENZA', 'on') %} 👤 Presenza rilevata{% endif %}
 
@@ -4176,8 +4178,6 @@ automation:
     var vento = c.pk_vento ? _azNum(_azS(h, c.pk_vento)) : null;
     var tanicaRaw = c.pk_tanica ? _azS(h, c.pk_tanica) : null;
     var consumoPompa = c.pk_consumo_pompa ? _azNum(_azS(h, c.pk_consumo_pompa)) : consumo;
-    var presaId = c.pk_presa_entity ? _azS(h, c.pk_presa_entity) : null;
-    var presaOn = presaId ? _azIsOn(h, presaId) : false;
     var activeTimer = timerC.active ? timerC : timerM;
     var timerActive = timerC.active || timerM.active;
     var timerLabel = timerC.active ? 'CICLO' : 'MANUALE';
@@ -4347,13 +4347,9 @@ automation:
     var autoStyle = autoOn
       ? 'background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4);color:#ef4444'
       : 'background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3);color:#22c55e';
-    var presaStyle = presaOn
-      ? 'background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4);color:#ef4444'
-      : 'background:rgba(100,116,139,.08);border-color:rgba(100,116,139,.2);color:#94a3b8';
     var btnsHtml = '<div class="fc-btns">'
       + '<div class="fc-btn" style="' + manStyle + '" data-sya="' + (manOn?'man-off':'man-on') + '">' + (manOn?'⏹ Ferma':'▶ Manuale') + '</div>'
       + '<div class="fc-btn" style="' + autoStyle + '" data-sya="' + (autoOn?'auto-off':'auto-on') + '">' + (autoOn?'⏹ Ferma Auto':'▶ Auto') + '</div>'
-      + (presaId ? '<div class="fc-btn" style="' + presaStyle + '" data-sya="presa-tog">🔌 ' + (presaOn?'ON':'OFF') + '</div>' : '')
       + '<div class="fc-btn" data-sya="popup-cfg" style="flex:0.55">⚙</div>'
       + '</div>';
 
@@ -4793,10 +4789,6 @@ automation:
       if (a === 'auto-off')  _azCallSvc('input_button','press',{entity_id:c.pk_btn_auto_off});
       if (a === 'programma') _azOpenProgramma(card, el);
       if (a === 'popup-cfg') _azOpenUserCfg(card, el);
-      if (a === 'presa-tog') {
-        var prH = _azH(), prId = _azS(prH, c.pk_presa_entity);
-        if (prId) _azCallSvc('switch', _azIsOn(prH, prId)?'turn_off':'turn_on', {entity_id:prId});
-      }
       if (a === 'durman-plus' && c.pk_durata_manuale) {
         var dpH = _azH(), dpCur = Math.round(_azNum(_azS(dpH, c.pk_durata_manuale)) || 60);
         _azCallSvc('input_number','set_value',{entity_id:c.pk_durata_manuale,value:Math.min(7200,dpCur+10)}); if(el) el._fcSig=null;

@@ -3491,12 +3491,14 @@ automation:
           title: "🦟 Anti Zanzare — Cicli Bloccati"
           message: >
             🚫 Cicli bloccati!
-            {%- set prob = states('sensor.frarik_antizanzare_probabilita_pioggia') | float(0) %}
+            {%- set abilita_pioggia = is_state('input_boolean.frarik_antizanzare_abilita_soglia_pioggia', 'on') %}
+            {%- set prob = states('IL_TUO_SENSORE_PROBABILITA_PIOGGIA') | float(0) %}
             {%- set sp = states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) %}
+            {%- set abilita_vento = is_state('input_boolean.frarik_antizanzare_abilita_soglia_vento', 'on') %}
             {%- set vv = states('sensor.frarik_antizanzare_velocita_vento') | float(0) %}
             {%- set sv = states('input_number.frarik_antizanzare_soglia_vento') | float(0) %}
-            {%- if sp > 0 and prob >= sp %} 🌧 Pioggia {{ prob | round(0) }}% (soglia {{ sp | round(0) }}%){% endif %}
-            {%- if sv > 0 and vv >= sv %} 💨 Vento {{ vv | round(0) }} km/h (soglia {{ sv | round(0) }} km/h){% endif %}
+            {%- if abilita_pioggia and sp > 0 and prob >= sp %} 🌧 Pioggia {{ prob | round(0) }}% (soglia {{ sp | round(0) }}%){% endif %}
+            {%- if abilita_vento and sv > 0 and vv >= sv %} 💨 Vento {{ vv | round(0) }} km/h (soglia {{ sv | round(0) }} km/h){% endif %}
             {%- if is_state('IL_TUO_SENSORE_PIOGGIA', 'on') %} 🌧 Sta piovendo ora{% endif %}
             {%- if is_state('input_boolean.frarik_antizanzare_presenza_attiva', 'on') and is_state('IL_TUO_SENSORE_PRESENZA', 'on') %} 👤 Presenza rilevata{% endif %}
 
