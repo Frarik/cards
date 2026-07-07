@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.9.37 — 2026-07-07
+
+### fix(antizanzare): presa antizanzare mai collegata nelle automazioni
+
+- Causa: 49 riferimenti a `entity_id: IL_TUO_PRESA_ANTIZANZARE` erano testo letterale
+  invece dell'ancora YAML `*presa_az`, quindi non leggevano mai la presa configurata
+  in cima al pkg — ogni ciclo comandava un'entità inesistente
+- Fix: tutti i trigger/condition/target (cicli, stop, sicurezza persona, blocco perdita)
+  ora usano `*presa_az`, come già avveniva per `*sensore_presenza`
+- Anche il default dell'`input_text.frarik_antizanzare_entity_presa` ora riflette la presa configurata
+
 ## 1.9.36 — 2026-07-07
 
 ### fix(antizanzare): cicli non partono all'orario impostato (v2.26)
