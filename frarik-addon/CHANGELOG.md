@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.9.38 — 2026-07-07
+
+### feat(antizanzare): card e pkg — durata manuale in card, prossimo ciclo live, toggle in impostazioni, livello tanica asciutto/bagnato (v2.5)
+
+- Riquadro in alto a destra: rimosso "Prossimo" (duplicava il box "📅 Prossimo ciclo" sotto),
+  al suo posto "Durata manuale" con pulsanti −/+ (step 10s) per regolare la durata dell'avvio manuale
+  direttamente dalla card
+- "📅 Prossimo ciclo" ora si aggiorna da solo ogni minuto: prima restava fermo finché non
+  cambiava qualche altro stato (serviva quasi un refresh della pagina)
+- I due toggle "Attivo/Inattivo" per blocco vento/pioggia, prima cliccabili direttamente sulle
+  celle Vento/Pioggia della card, sono stati spostati dentro Impostazioni ⚙ → Soglie & Durate,
+  accanto alle rispettive soglie
+- "Livello acqua" ora supporta anche sensori binari asciutto/bagnato (non solo sensori %):
+  bagnato = tanica OK, asciutto = tanica vuota (avviso rosso). Il sensore template
+  `frarik_antizanzare_livello_tanica` nel pkg ora passa il valore grezzo quando non è numerico
+  invece di azzerarlo con `| float(0)`
+- Card v2.5
+
 ## 1.9.37 — 2026-07-07
 
 ### fix(antizanzare): presa antizanzare mai collegata nelle automazioni

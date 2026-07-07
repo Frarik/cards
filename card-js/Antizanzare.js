@@ -1,5 +1,5 @@
 /**
- * antizanzare-card.js v2.4
+ * antizanzare-card.js v2.5
  */
 
 // ─── FratechStore Integration ────────────────────────────────────────────────
@@ -3909,7 +3909,7 @@ automation:
         + '<p class="wd-note">Lascia vuoto se non hai il sensore, il PKG usa valori di default.</p>'
         + '<div class="wd-lbl">Velocità vento (sensor.*)</div>'
         + '<div class="wd-frow"><input class="wd-inp" id="f-vento" type="text" autocomplete="off" placeholder="sensor.velocita_vento" value="' + ventoVal.replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-vento"></div></div>'
-        + '<div class="wd-lbl">Livello tanica % (sensor.*)</div>'
+        + '<div class="wd-lbl">Livello tanica (sensor.* in % oppure binary_sensor.* asciutto/bagnato)</div>'
         + '<div class="wd-frow"><input class="wd-inp" id="f-tanica" type="text" autocomplete="off" placeholder="sensor.livello_tanica" value="' + tanicaVal.replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-tanica"></div></div>'
         + '<div class="wd-lbl">Potenza pompa W (sensor.*)</div>'
         + '<div class="wd-frow"><input class="wd-inp" id="f-pompa" type="text" autocomplete="off" placeholder="sensor.potenza_pompa" value="' + pompaVal.replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-pompa"></div></div>'
@@ -4015,24 +4015,25 @@ automation:
     return {rem:('0'+Math.floor(remSec/60)).slice(-2)+':'+('0'+(remSec%60)).slice(-2), pct:pct, active:true, remSec:remSec, durSec:durSec};
   }
 
-  function _azFmtProssimo(raw) {
-    if (!raw || raw === 'N/D' || raw === '--') return null;
-    var now = new Date(), target = null;
-    var m = String(raw).match(/(\d{1,2}):(\d{2})/);
-    if (m) {
-      target = new Date(now);
-      target.setHours(+m[1], +m[2], 0, 0);
-      if (target.getTime() - now.getTime() < -60000) target.setDate(target.getDate() + 1);
+  function _azFmtDurCompact(v) {
+    var m = Math.floor(v / 60), s = v % 60;
+    return v >= 60 ? (m + 'm' + (s ? (' ' + s + 's') : '')) : (v + 's');
+  }
+
+  // Supporta sia sensori % (0-100) sia binary_sensor/sensor asciutto-bagnato:
+  // bagnato = c'è ancora acqua nella tanica (OK), asciutto = tanica vuota.
+  function _azTanicaInfo(raw, configured) {
+    if (raw === null || raw === undefined || raw === '' || raw === 'unavailable' || raw === 'unknown') {
+      return { dsp: configured ? '--' : 'N/D', col: '#fff' };
     }
-    if (!target) { try { var d = new Date(raw); if (!isNaN(d.getTime())) target = d; } catch(ex){} }
-    if (!target) return { str: raw, pct: 0 };
-    var diffMs = target.getTime() - now.getTime();
-    if (diffMs < 0) return { str: raw, pct: 100 };
-    var diffMin = Math.round(diffMs / 60000);
-    var hr = Math.floor(diffMin / 60), mn = diffMin % 60;
-    var str = hr > 0 ? 'tra ' + hr + 'h ' + (mn > 0 ? mn + 'm' : '') : 'tra ' + mn + 'm';
-    var pct = Math.max(0, Math.min(100, 100 - (diffMin / (24 * 60)) * 100));
-    return { str: str.trim(), pct: pct };
+    var num = _azNum(raw);
+    if (num !== null) {
+      return { dsp: num.toFixed(0) + '%', col: num < 20 ? '#ef4444' : (num < 40 ? '#f59e0b' : '#fff') };
+    }
+    var s = String(raw).toLowerCase();
+    if (s === 'on' || s === 'bagnato' || s === 'wet') return { dsp: '💧 OK', col: '#22c55e' };
+    if (s === 'off' || s === 'asciutto' || s === 'dry') return { dsp: '⚠ Vuota', col: '#ef4444' };
+    return { dsp: String(raw), col: '#fff' };
   }
 
   function _azPkgDef() {
@@ -4176,11 +4177,10 @@ automation:
     var target = _azNum(_azS(h, c.pk_cicli_target)) || 100;
     var pioggia = _azNum(_azS(h, c.pk_pioggia)) || 0;
     var perdita = _azIsOn(h, c.pk_perdita);
-    var prossimo = _azS(h, c.pk_prossimo) || '';
     var cicliRim = _azNum(_azS(h, c.pk_cicli_rim));
     var consumo = _azNum(_azS(h, c.pk_consumo_acqua));
     var vento = c.pk_vento ? _azNum(_azS(h, c.pk_vento)) : null;
-    var tanica = c.pk_tanica ? _azNum(_azS(h, c.pk_tanica)) : null;
+    var tanicaRaw = c.pk_tanica ? _azS(h, c.pk_tanica) : null;
     var consumoPompa = c.pk_consumo_pompa ? _azNum(_azS(h, c.pk_consumo_pompa)) : consumo;
     var presaId = c.pk_presa_entity ? _azS(h, c.pk_presa_entity) : null;
     var presaOn = presaId ? _azIsOn(h, presaId) : false;
@@ -4190,8 +4190,6 @@ automation:
     var sogliaPioggia = _azNum(_azS(h, c.pk_soglia_pioggia)) || 0;
     var sogliaVento = _azNum(_azS(h, c.pk_soglia_vento)) || 0;
     var presenzaAttiva  = _azIsOn(h, c.pk_presenza_attiva);
-    var abilitaPioggia  = _azIsOn(h, c.pk_abilita_pioggia);
-    var abilitaVento    = _azIsOn(h, c.pk_abilita_vento);
     var col = '#64748b', colRgb = '100,116,139', statusLabel = 'SPENTA';
     if (blocco)                              { col = '#f59e0b'; colRgb = '245,158,11';  statusLabel = 'METEO'; }
     else if (stato === 'Manuale Attiva')     { col = '#f97316'; colRgb = '249,115,22';  statusLabel = 'ACCESA'; }
@@ -4200,16 +4198,15 @@ automation:
     var isAccesa = (autoOn || manOn || timerActive);
     var bgOpacity = isAccesa ? '.15' : '.07';
 
-    var prossimoHtml = '';
-    if (prossimo && !timerActive) {
-      var fp = _azFmtProssimo(prossimo);
-      if (fp) {
-        prossimoHtml = '<div class="fc-met"><span class="fc-met-lbl">Prossimo</span><span class="fc-met-v" style="font-size:11px;color:' + col + '">' + fp.str + '</span></div>'
-          + '<div style="height:3px;margin:1px 0 2px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden">'
-          + '<div style="height:100%;width:' + fp.pct.toFixed(1) + '%;background:' + col + ';border-radius:2px"></div></div>';
-      }
-    } else if (!timerActive) {
-      prossimoHtml = '<div class="fc-met"><span class="fc-met-lbl">Prob. pioggia</span><span class="fc-met-v" style="color:' + (pioggia > 50 ? '#f59e0b' : '#fff') + '">' + pioggia.toFixed(0) + '%</span></div>';
+    var durataManuale = Math.round(_azNum(_azS(h, c.pk_durata_manuale)) || 60);
+    var durManHtml = '';
+    if (!timerActive) {
+      durManHtml = '<div class="fc-met"><span class="fc-met-lbl">Durata manuale</span>'
+        + '<span style="display:flex;align-items:center;gap:4px">'
+        + '<div class="fc-stp-btn" data-sya="durman-minus" style="width:18px;height:18px;border-radius:5px;background:rgba(255,255,255,.1);color:#fff;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">−</div>'
+        + '<span class="fc-met-v" style="min-width:46px;text-align:center;font-size:12px">' + _azFmtDurCompact(durataManuale) + '</span>'
+        + '<div class="fc-stp-btn" data-sya="durman-plus" style="width:18px;height:18px;border-radius:5px;background:rgba(255,255,255,.1);color:#fff;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">+</div>'
+        + '</span></div>';
     }
 
     var avvisoHtml = '';
@@ -4288,7 +4285,7 @@ automation:
           : '')
       + '<div class="fc-met"><span class="fc-met-lbl">Cicli mese</span><span class="fc-met-v">' + cicliM + ' / ' + target + '</span></div>'
       + '<div class="fc-met"><span class="fc-met-lbl">Rimanenti</span><span class="fc-met-v" style="color:' + (cicliRim !== null && cicliRim <= 5 ? '#f59e0b' : '#fff') + '">' + (cicliRim !== null ? cicliRim : Math.max(0, target - cicliM)) + '</span></div>'
-      + prossimoHtml
+      + durManHtml
       + '</div>';
 
     var heroHtml = '<div class="fc-hero">'
@@ -4321,12 +4318,10 @@ automation:
     var ventoDsp = vento !== null ? vento.toFixed(0) + ' m/s' : (c.pk_vento ? '--' : 'N/D');
     var pioggiaCol = pioggiaCorsoBool ? '#f59e0b' : '#22c55e';
     var meteoCol = blocco ? '#f59e0b' : '#22c55e';
-    var ventoBadge   = { t: abilitaVento   ? '✓ Attivo' : '✕ Inattivo', s: abilitaVento   ? 'background:rgba(34,197,94,.15);color:#22c55e'  : 'background:rgba(255,255,255,.06);color:#64748b' };
-    var pioggiaBadge = { t: abilitaPioggia ? '✓ Attivo' : '✕ Inattivo', s: abilitaPioggia ? 'background:rgba(34,197,94,.15);color:#22c55e'  : 'background:rgba(255,255,255,.06);color:#64748b' };
     var sensorGrid = '<div class="fc-grid">'
-      + gc('💨', ventoDsp, 'Vento', vento !== null && vento > 10 ? '#f59e0b' : '#fff', 'tog-abilita-vento', ventoBadge)
+      + gc('💨', ventoDsp, 'Vento', vento !== null && vento > 10 ? '#f59e0b' : '#fff')
       + '<div class="fc-gc-sep"></div>'
-      + gc('🌧', pioggiaCorsoBool ? 'Sì' : 'No', 'Pioggia', pioggiaCol, 'tog-abilita-pioggia', pioggiaBadge)
+      + gc('🌧', pioggiaCorsoBool ? 'Sì' : 'No', 'Pioggia', pioggiaCol)
       + '<div class="fc-gc-sep"></div>'
       + gc('🌂', pioggia.toFixed(0) + '%', 'Prob.pioggia', pioggia > 50 ? '#f59e0b' : '#fff')
       + '<div class="fc-gc-sep"></div>'
@@ -4342,15 +4337,14 @@ automation:
         + '</div>';
     }
     var pompaDsp = consumoPompa !== null ? consumoPompa.toFixed(0) + ' W' : (c.pk_consumo_pompa ? '--' : 'N/D');
-    var tanicaDsp = tanica !== null ? tanica.toFixed(0) + '%' : (c.pk_tanica ? '--' : 'N/D');
-    var tanicaCol = tanica !== null && tanica < 20 ? '#ef4444' : (tanica !== null && tanica < 40 ? '#f59e0b' : '#fff');
+    var tanicaInfo = _azTanicaInfo(tanicaRaw, !!c.pk_tanica);
     var statusRow = '<div class="fc-row">'
       + pill(perdita ? '🚨' : '💧', 'Allagamento', perdita ? '⚠ Perdita' : 'OK',
           perdita ? 'rgba(239,68,68,.08)' : 'rgba(255,255,255,.03)',
           perdita ? 'rgba(239,68,68,.25)' : 'rgba(255,255,255,.07)',
           perdita ? '#ef4444' : '#22c55e')
       + pill('⚡', 'Pompa', pompaDsp, 'rgba(255,255,255,.03)', 'rgba(255,255,255,.07)', col)
-      + pill('🪣', 'Livello acqua', tanicaDsp, 'rgba(255,255,255,.03)', 'rgba(255,255,255,.07)', tanicaCol)
+      + pill('🪣', 'Livello acqua', tanicaInfo.dsp, 'rgba(255,255,255,.03)', 'rgba(255,255,255,.07)', tanicaInfo.col)
       + '</div>';
 
     var manStyle = manOn
@@ -4535,6 +4529,8 @@ automation:
     var presenzaOn   = _azIsOn(h, c.pk_presenza_attiva);
     var notifyPushOn = _azIsOn(h, c.pk_notify_push);
     var notifyAlexaOn= _azIsOn(h, c.pk_notify_alexa);
+    var abilitaPioggiaOn = c.pk_abilita_pioggia ? _azIsOn(h, c.pk_abilita_pioggia) : false;
+    var abilitaVentoOn   = c.pk_abilita_vento ? _azIsOn(h, c.pk_abilita_vento) : false;
     var durM         = Math.round(_azNum(_azS(h, c.pk_durata_manuale)) || 60);
     var soglia       = Math.round(_azNum(_azS(h, c.pk_soglia_pioggia)) || 50);
     var sogliaVento  = Math.round(_azNum(_azS(h, c.pk_soglia_vento)) || 0);
@@ -4637,7 +4633,9 @@ automation:
       + schedHtml
       + sec('⚙', 'Soglie & Durate')
       + numRow('sog', '🌧', 'Soglia blocco pioggia', soglia, '%', 0, 100, 5)
+      + togRow('azuc-tog-pioggia', '🌧', 'Blocco per pioggia attivo', 'Blocca i cicli quando la probabilità di pioggia supera la soglia', abilitaPioggiaOn, '6,182,212')
       + numRow('ven', '💨', 'Soglia blocco vento', sogliaVento, 'km/h', 0, 200, 5)
+      + togRow('azuc-tog-vento', '💨', 'Blocco per vento attivo', 'Blocca i cicli quando il vento supera la soglia', abilitaVentoOn, '6,182,212')
       + numRow('dur', '⏱', 'Durata avvio manuale', durM, 's', 10, 7200, 10)
       + numRow('tar', '🎯', 'Target cicli mensili', tarMens, 'cicli', 1, 999, 1)
       + '<button id="azuc-save" style="width:100%;padding:13px;border-radius:12px;border:none;cursor:pointer;font-weight:800;font-size:14px;background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);color:#fff;margin-top:10px;box-shadow:0 4px 16px rgba(34,197,94,.28)">💾 Salva tutto</button>';
@@ -4645,7 +4643,7 @@ automation:
     var ov = _azMkOv(_azPopShell('⚙','34,197,94','Impostazioni',c.name||'Anti Zanzare','azuc-cl',content),'azuc-cl');
 
     // Toggle iOS-style handler
-    var togCols = {'azuc-tog-auto':'34,197,94','azuc-tog-sic':'6,182,212','azuc-tog-pres':'245,158,11','azuc-tog-npush':'168,85,247','azuc-tog-nalexa':'251,146,60'};
+    var togCols = {'azuc-tog-auto':'34,197,94','azuc-tog-sic':'6,182,212','azuc-tog-pres':'245,158,11','azuc-tog-npush':'168,85,247','azuc-tog-nalexa':'251,146,60','azuc-tog-pioggia':'6,182,212','azuc-tog-vento':'6,182,212'};
     Object.keys(togCols).forEach(function(tid) {
       var tb = ov.querySelector('#' + tid); if (!tb) return;
       tb.addEventListener('click', function() {
@@ -4725,6 +4723,10 @@ automation:
       if (npushBtn && c.pk_notify_push) _azCallSvc('input_boolean', npushBtn.dataset.on==='1'?'turn_on':'turn_off', {entity_id:c.pk_notify_push});
       var nalexaBtn = ov.querySelector('#azuc-tog-nalexa');
       if (nalexaBtn && c.pk_notify_alexa) _azCallSvc('input_boolean', nalexaBtn.dataset.on==='1'?'turn_on':'turn_off', {entity_id:c.pk_notify_alexa});
+      var pioggiaTogBtn = ov.querySelector('#azuc-tog-pioggia');
+      if (pioggiaTogBtn && c.pk_abilita_pioggia) _azCallSvc('input_boolean', pioggiaTogBtn.dataset.on==='1'?'turn_on':'turn_off', {entity_id:c.pk_abilita_pioggia});
+      var ventoTogBtn = ov.querySelector('#azuc-tog-vento');
+      if (ventoTogBtn && c.pk_abilita_vento) _azCallSvc('input_boolean', ventoTogBtn.dataset.on==='1'?'turn_on':'turn_off', {entity_id:c.pk_abilita_vento});
       ov._close();
       if (el) el._fcSig = null;
     });
@@ -4743,6 +4745,10 @@ automation:
     var ncsg = dk.map(function(d){return Math.round(_azNum(_azS(h,'input_number.'+px+'_'+d+'_num_cicli'))||0);}).join('');
     var tc = _azS(h,c.pk_timer_ciclo), tm = _azS(h,c.pk_timer_manuale);
     var presaId = c.pk_presa_entity ? _azS(h,c.pk_presa_entity) : null;
+    // "Prossimo ciclo" dipende dall'ora corrente: forza un refresh ogni minuto
+    // quando nessun timer è attivo, altrimenti resterebbe fermo finché non
+    // cambia qualche altra entità (serve altrimenti un refresh manuale pagina).
+    var minuteTick = (tc !== 'active' && tm !== 'active') ? (function(){var n=new Date();return n.getHours()+':'+n.getMinutes();})() : '';
     return ['2.6az',_azS(h,c.pk_stato),_azS(h,c.pk_auto),_azS(h,c.pk_manuale),tc,tm,
             _azS(h,c.pk_cicli_mensili),_azS(h,c.pk_cicli_target),
             _azS(h,c.pk_blocco_meteo),_azS(h,c.pk_pioggia),_azS(h,c.pk_pioggia_corso),
@@ -4755,7 +4761,7 @@ automation:
             presaId?_azS(h,presaId):'',
             c.pk_abilita_pioggia?_azS(h,c.pk_abilita_pioggia):'',
             c.pk_abilita_vento?_azS(h,c.pk_abilita_vento):'',
-            dsg,ncsg].join('|');
+            dsg,ncsg,minuteTick].join('|');
   }
 
   function _azMount(card, hass, el) {
@@ -4779,11 +4785,13 @@ automation:
         var prH = _azH(), prId = _azS(prH, c.pk_presa_entity);
         if (prId) _azCallSvc('switch', _azIsOn(prH, prId)?'turn_off':'turn_on', {entity_id:prId});
       }
-      if (a === 'tog-abilita-pioggia' && c.pk_abilita_pioggia) {
-        var apH = _azH(); _azCallSvc('input_boolean', _azIsOn(apH,c.pk_abilita_pioggia)?'turn_off':'turn_on', {entity_id:c.pk_abilita_pioggia}); if(el) el._fcSig=null;
+      if (a === 'durman-plus' && c.pk_durata_manuale) {
+        var dpH = _azH(), dpCur = Math.round(_azNum(_azS(dpH, c.pk_durata_manuale)) || 60);
+        _azCallSvc('input_number','set_value',{entity_id:c.pk_durata_manuale,value:Math.min(7200,dpCur+10)}); if(el) el._fcSig=null;
       }
-      if (a === 'tog-abilita-vento' && c.pk_abilita_vento) {
-        var avH = _azH(); _azCallSvc('input_boolean', _azIsOn(avH,c.pk_abilita_vento)?'turn_off':'turn_on', {entity_id:c.pk_abilita_vento}); if(el) el._fcSig=null;
+      if (a === 'durman-minus' && c.pk_durata_manuale) {
+        var dmH = _azH(), dmCur = Math.round(_azNum(_azS(dmH, c.pk_durata_manuale)) || 60);
+        _azCallSvc('input_number','set_value',{entity_id:c.pk_durata_manuale,value:Math.max(10,dmCur-10)}); if(el) el._fcSig=null;
       }
       if (a === 'sic-toggle') {
         var sc = _azCfgFor(card);

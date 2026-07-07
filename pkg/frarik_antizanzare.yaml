@@ -1553,9 +1553,20 @@ template:
         icon: mdi:weather-windy
 
       # Sensore livello tanica (collegato a sensore reale)
+      # Supporta sia un sensore percentuale (0-100) sia un sensore/binary_sensor
+      # asciutto/bagnato: se il valore non è numerico viene passato così com'è,
+      # altrimenti viene convertito in float per il caso percentuale.
       - name: "Frarik Antizanzare Livello Tanica"
         unique_id: frarik_antizanzare_livello_tanica
-        state: "{{ states('IL_TUO_SENSORE_LIVELLO_TANICA') | float(0) }}"
+        state: >
+          {% set raw = states('IL_TUO_SENSORE_LIVELLO_TANICA') %}
+          {% if raw in ['unavailable', 'unknown', 'none', ''] %}
+            unknown
+          {% elif raw | float(none) is not none %}
+            {{ raw | float }}
+          {% else %}
+            {{ raw }}
+          {% endif %}
         unit_of_measurement: "%"
         icon: mdi:water-percent
 
