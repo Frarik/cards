@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.9.42 — 2026-07-07
+
+### fix(antizanzare): tolta conversione vento errata, blocco pioggia/vento attivo di default (v2.9)
+
+- Rimossa la conversione ×3.6 sul sensore vento: il sensore reale è già in km/h,
+  l'errore era solo l'etichetta della card che segnava "m/s" (già corretta la
+  volta scorsa) — la moltiplicazione era di troppo e falsava il valore
+- "Abilita Blocco Pioggia" e "Abilita Blocco Vento" ora nascono attivi di default
+  (`initial: true`, prima `false`). Vale solo per installazioni nuove: se gli
+  input_boolean esistono già spenti, vanno accesi una volta da Impostazioni ⚙
+- Risincronizzata la copia embedded del pkg nel wizard con questi fix
+
 ## 1.9.41 — 2026-07-07
 
 ### fix(antizanzare): blocco pioggia in corso mancante, avvio manuale non rispettava il blocco meteo (v2.8)

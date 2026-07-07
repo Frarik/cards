@@ -1,5 +1,5 @@
 /**
- * antizanzare-card.js v2.8
+ * antizanzare-card.js v2.9
  */
 
 // ─── FratechStore Integration ────────────────────────────────────────────────
@@ -78,11 +78,11 @@ input_boolean:
     icon: mdi:motion-sensor
   frarik_antizanzare_abilita_soglia_pioggia:
     name: "Abilita Blocco Pioggia"
-    initial: false
+    initial: true
     icon: mdi:weather-rainy
   frarik_antizanzare_abilita_soglia_vento:
     name: "Abilita Blocco Vento"
-    initial: false
+    initial: true
     icon: mdi:weather-windy
 
 # INPUT NUMBER - Cicli per giorno
@@ -1555,11 +1555,10 @@ template:
               0
             {% endif %}
 
-      # Sensore velocità vento (collegato a sensore reale, in m/s)
-      # Convertito in km/h per essere coerente con la soglia blocco vento (anch'essa in km/h)
+      # Sensore velocità vento (collegato a sensore reale, già in km/h — nessuna conversione)
       - name: "Frarik Antizanzare Velocita Vento"
         unique_id: frarik_antizanzare_velocita_vento
-        state: "{{ (states('IL_TUO_SENSORE_VENTO') | float(0) * 3.6) | round(1) }}"
+        state: "{{ states('IL_TUO_SENSORE_VENTO') | float(0) | round(1) }}"
         unit_of_measurement: "km/h"
         icon: mdi:weather-windy
 
