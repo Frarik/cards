@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.9.45 — 2026-07-07
+
+### fix(antizanzare): blocco_pioggia_corso non rispettava toggle abilita_pioggia (v2.28)
+
+- blocco_pioggia_corso bloccava tutto (anche manuale) quando il sensore pioggia era ON,
+  indipendentemente dal toggle "Abilita Blocco Pioggia" — ignorava completamente abilita_pioggia
+- Fix: aggiunto controllo abilita_pioggia prima di blocco_pioggia_corso
+  (coerente col resto: pioggia_corso blocca solo se il toggle è attivo)
+- Card v2.28, addon v1.9.45
+
 ## 1.9.44 — 2026-07-07
 
 ### fix(antizanzare): entità rinominate _2 dopo reinstall PKG (v2.27)

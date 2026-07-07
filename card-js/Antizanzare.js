@@ -1578,7 +1578,7 @@ template:
           {% set abilita_vento = is_state('input_boolean.frarik_antizanzare_abilita_soglia_vento', 'on') %}
           {% set blocco_vento = abilita_vento and soglia_vento > 0 and states('sensor.frarik_antizanzare_velocita_vento') | float(0) >= soglia_vento %}
           {% set blocco_presenza = is_state('input_boolean.frarik_antizanzare_presenza_attiva', 'on') and is_state('IL_TUO_SENSORE_PRESENZA', 'on') %}
-          {% set blocco_pioggia_corso = is_state('IL_TUO_SENSORE_PIOGGIA', 'on') %}
+          {% set blocco_pioggia_corso = abilita_pioggia and is_state('IL_TUO_SENSORE_PIOGGIA', 'on') %}
           {{ blocco_pioggia or blocco_vento or blocco_presenza or blocco_pioggia_corso }}
         icon: >
           {% set soglia_pioggia = states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) %}
@@ -1588,7 +1588,7 @@ template:
           {% set abilita_vento = is_state('input_boolean.frarik_antizanzare_abilita_soglia_vento', 'on') %}
           {% set blocco_vento = abilita_vento and soglia_vento > 0 and states('sensor.frarik_antizanzare_velocita_vento') | float(0) >= soglia_vento %}
           {% set blocco_presenza = is_state('input_boolean.frarik_antizanzare_presenza_attiva', 'on') and is_state('IL_TUO_SENSORE_PRESENZA', 'on') %}
-          {% set blocco_pioggia_corso = is_state('IL_TUO_SENSORE_PIOGGIA', 'on') %}
+          {% set blocco_pioggia_corso = abilita_pioggia and is_state('IL_TUO_SENSORE_PIOGGIA', 'on') %}
           {{ 'mdi:account-cancel' if blocco_presenza else ('mdi:weather-rainy' if (blocco_pioggia or blocco_pioggia_corso) else ('mdi:weather-windy' if blocco_vento else 'mdi:weather-partly-cloudy')) }}
 
       # Sensore perdita acqua (collegato a sensore reale opzionale)
@@ -4832,7 +4832,7 @@ automation:
   }
 
   var _AZ_CARD = {
-    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.27', frarik_no_edit: true,
+    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.28', frarik_no_edit: true,
     desc: 'Controllo sistema anti zanzare: schedule settimanale, timer, statistiche mensili, blocco meteo, sensori sicurezza.',
     render:    function(card) { return _azRender(card); },
     mount:     function(card, hass, el) { _azMount(card, hass, el); },
