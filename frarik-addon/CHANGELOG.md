@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.9.40 — 2026-07-07
+
+### fix(antizanzare): vento in km/h, presenza unificata, wizard risincronizzato, pulizia notifiche (v2.7)
+
+- Rimossa l'automazione "Notifica Cicli Rimanenti - Unificata" (avvisi 10/5/2 cicli e
+  "RIEMPIRE IMMEDIATAMENTE TANICA")
+- Velocità vento ora convertita e mostrata in km/h (prima m/s senza conversione, e il
+  confronto con la soglia — già in km/h — non tornava mai vero): sensore
+  `frarik_antizanzare_velocita_vento` moltiplica per 3.6, `blocco_meteo` confronta
+  sull'unità corretta, card e notifiche aggiornate di conseguenza
+- Rimossa "Durata avvio manuale" dal popup Impostazioni: ora si regola solo dallo
+  stepper +/- direttamente in card
+- Unificati "Stop emergenza presenza" e "Blocco preventivo presenza" in un solo
+  interruttore e comportamento: la presa si spegne SUBITO quando viene rilevata una
+  persona (senza toccare timer/automazione), resta bloccata anche per gli avvii
+  manuali finché l'area è occupata, e riprende da sola il ciclo interrotto quando
+  l'area si libera — senza più disattivare l'intera automazione generale. Notifica
+  singola alla rilevazione e singola al ritorno libero (prima nessuna, o duplicate)
+- **Fix importante**: la copia del pkg YAML incollata dentro la card per il wizard
+  (usata per generare il pacchetto personalizzato con i propri sensori) era ferma a
+  una versione molto vecchia — motivo per cui vento e altri sensori restavano fermi
+  anche dopo averli inseriti nel wizard. Risincronizzata con il pkg reale e aggiornato:
+  chi ha già configurato i sensori tramite wizard deve ripassarci per rigenerare un
+  pacchetto aggiornato
+
 ## 1.9.39 — 2026-07-07
 
 ### fix(antizanzare): reset cicli in impostazioni + notifiche false al riavvio HA (v2.6)

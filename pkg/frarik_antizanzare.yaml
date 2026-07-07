@@ -1545,11 +1545,12 @@ template:
               0
             {% endif %}
 
-      # Sensore velocità vento (collegato a sensore reale)
+      # Sensore velocità vento (collegato a sensore reale, in m/s)
+      # Convertito in km/h per essere coerente con la soglia blocco vento (anch'essa in km/h)
       - name: "Frarik Antizanzare Velocita Vento"
         unique_id: frarik_antizanzare_velocita_vento
-        state: "{{ states('IL_TUO_SENSORE_VENTO') | float(0) }}"
-        unit_of_measurement: "m/s"
+        state: "{{ (states('IL_TUO_SENSORE_VENTO') | float(0) * 3.6) | round(1) }}"
+        unit_of_measurement: "km/h"
         icon: mdi:weather-windy
 
       # Sensore livello tanica (collegato a sensore reale)
@@ -1587,7 +1588,7 @@ template:
           {% set blocco_pioggia = abilita_pioggia and soglia_pioggia > 0 and states('IL_TUO_SENSORE_PROBABILITA_PIOGGIA') | float(0) >= soglia_pioggia %}
           {% set soglia_vento = states('input_number.frarik_antizanzare_soglia_vento') | float(0) %}
           {% set abilita_vento = is_state('input_boolean.frarik_antizanzare_abilita_soglia_vento', 'on') %}
-          {% set blocco_vento = abilita_vento and soglia_vento > 0 and states('IL_TUO_SENSORE_VENTO') | float(0) >= soglia_vento %}
+          {% set blocco_vento = abilita_vento and soglia_vento > 0 and states('sensor.frarik_antizanzare_velocita_vento') | float(0) >= soglia_vento %}
           {% set blocco_presenza = is_state('input_boolean.frarik_antizanzare_presenza_attiva', 'on') and is_state('IL_TUO_SENSORE_PRESENZA', 'on') %}
           {{ blocco_pioggia or blocco_vento or blocco_presenza }}
         icon: >
@@ -1596,7 +1597,7 @@ template:
           {% set blocco_pioggia = abilita_pioggia and soglia_pioggia > 0 and states('IL_TUO_SENSORE_PROBABILITA_PIOGGIA') | float(0) >= soglia_pioggia %}
           {% set soglia_vento = states('input_number.frarik_antizanzare_soglia_vento') | float(0) %}
           {% set abilita_vento = is_state('input_boolean.frarik_antizanzare_abilita_soglia_vento', 'on') %}
-          {% set blocco_vento = abilita_vento and soglia_vento > 0 and states('IL_TUO_SENSORE_VENTO') | float(0) >= soglia_vento %}
+          {% set blocco_vento = abilita_vento and soglia_vento > 0 and states('sensor.frarik_antizanzare_velocita_vento') | float(0) >= soglia_vento %}
           {% set blocco_presenza = is_state('input_boolean.frarik_antizanzare_presenza_attiva', 'on') and is_state('IL_TUO_SENSORE_PRESENZA', 'on') %}
           {{ 'mdi:account-cancel' if blocco_presenza else ('mdi:weather-windy' if blocco_vento else ('mdi:weather-rainy' if blocco_pioggia else 'mdi:weather-partly-cloudy')) }}
 
@@ -3317,29 +3318,43 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_manuale_attiva
         to: "on"
     action:
-      # Ferma automazione se attiva
-      - service: timer.cancel
-        target:
-          entity_id: timer.frarik_antizanzare_ciclo_timer
-      # Avvia timer manuale con durata impostata
-      - service: timer.start
-        target:
-          entity_id: timer.frarik_antizanzare_manuale_timer
-        data:
-          duration: >
-            {{ '00:%02d:%02d' | format((states('input_number.frarik_antizanzare_durata_manuale') | int // 60), (states('input_number.frarik_antizanzare_durata_manuale') | int % 60)) }}
-      # Attiva pompa reale
-      - service: switch.turn_on
-        target:
-          entity_id: *presa_az
-      # Incrementa contatore mensile
-      - service: counter.increment
-        target:
-          entity_id: counter.frarik_antizanzare_cicli_mensili
-      # Decrementa contatore rimanenti
-      - service: counter.decrement
-        target:
-          entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      # Se il blocco presenza è attivo e c'è qualcuno nell'area, non avviare nulla:
+      # annulla subito lo stato "manuale attiva" così la card non resta bloccata su ON
+      - if:
+          - condition: state
+            entity_id: input_boolean.frarik_antizanzare_presenza_attiva
+            state: "on"
+          - condition: state
+            entity_id: *sensore_presenza
+            state: "on"
+        then:
+          - service: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.frarik_antizanzare_manuale_attiva
+        else:
+          # Ferma automazione se attiva
+          - service: timer.cancel
+            target:
+              entity_id: timer.frarik_antizanzare_ciclo_timer
+          # Avvia timer manuale con durata impostata
+          - service: timer.start
+            target:
+              entity_id: timer.frarik_antizanzare_manuale_timer
+            data:
+              duration: >
+                {{ '00:%02d:%02d' | format((states('input_number.frarik_antizanzare_durata_manuale') | int // 60), (states('input_number.frarik_antizanzare_durata_manuale') | int % 60)) }}
+          # Attiva pompa reale
+          - service: switch.turn_on
+            target:
+              entity_id: *presa_az
+          # Incrementa contatore mensile
+          - service: counter.increment
+            target:
+              entity_id: counter.frarik_antizanzare_cicli_mensili
+          # Decrementa contatore rimanenti
+          - service: counter.decrement
+            target:
+              entity_id: counter.frarik_antizanzare_cicli_rimanenti
 
   # Avvio manuale da pulsante (imposta il boolean e quindi scatena l'automazione esistente)
   - id: frarik_antizanzare_avvio_manuale_button
@@ -3482,7 +3497,7 @@ automation:
             {%- set vv = states('sensor.frarik_antizanzare_velocita_vento') | float(0) %}
             {%- set sv = states('input_number.frarik_antizanzare_soglia_vento') | float(0) %}
             {%- if sp > 0 and prob >= sp %} 🌧 Pioggia {{ prob | round(0) }}% (soglia {{ sp | round(0) }}%){% endif %}
-            {%- if sv > 0 and vv >= sv %} 💨 Vento {{ vv | round(0) }} m/s (soglia {{ sv | round(0) }} m/s){% endif %}
+            {%- if sv > 0 and vv >= sv %} 💨 Vento {{ vv | round(0) }} km/h (soglia {{ sv | round(0) }} km/h){% endif %}
             {%- if is_state('input_boolean.frarik_antizanzare_presenza_attiva', 'on') and is_state('IL_TUO_SENSORE_PRESENZA', 'on') %} 👤 Presenza rilevata{% endif %}
 
   - alias: Notifica riattivazione automazione per meteo
@@ -3516,133 +3531,92 @@ automation:
           message: "⚠️ Rilevata perdita nella cassetta! Controllare immediatamente. ⚠️"
           title: "🦟 Anti Zanzare 🦟 "
 
-  - alias: Notifica Cicli Rimanenti - Unificata
-    trigger:
-      - platform: state
-        entity_id: counter.frarik_antizanzare_cicli_rimanenti
-    condition: []
-    action:
-      - choose:
-          # Caso: 10 cicli rimasti
-          - conditions:
-              - condition: numeric_state
-                entity_id: counter.frarik_antizanzare_cicli_rimanenti
-                below: 11
-                above: 9
-            sequence:
-              - service: notify.frarik_antizanzare_notify
-                data:
-                  message: "⚠️ 10 CICLI RIMASTI NELLA TANICA ⚠️"
-                  title: "🦟 Anti Zanzare 🦟 "
-
-          # Caso: 5 cicli rimasti
-          - conditions:
-              - condition: numeric_state
-                entity_id: counter.frarik_antizanzare_cicli_rimanenti
-                below: 6
-                above: 4
-            sequence:
-              - service: notify.frarik_antizanzare_notify
-                data:
-                  message: "⚠️ 5 CICLI RIMASTI NELLA TANICA ⚠️"
-                  title: "🦟 Anti Zanzare 🦟 "
-
-          # Caso: 2 cicli rimasti - Notifica ripetuta ogni 30 minuti
-          - conditions:
-              - condition: numeric_state
-                entity_id: counter.frarik_antizanzare_cicli_rimanenti
-                below: 3
-            sequence:
-              - repeat:
-                  while:
-                    - condition: numeric_state
-                      entity_id: counter.frarik_antizanzare_cicli_rimanenti
-                      below: 3
-                  sequence:
-                    - service: notify.frarik_antizanzare_notify
-                      data:
-                        message: "⚠️ RIEMPIRE IMMEDIATAMENTE TANICA ⚠️"
-                        title: "🦟 Anti Zanzare 🦟 "
-                    - delay: "00:30:00"
-    mode: single
 # ----------------------------------------------------------------------
   # SICUREZZA PERSONA (Telecamera Giardino DX)
   # ----------------------------------------------------------------------
 
-  # Blocco immediato se:
-  # 1. Viene rilevata una persona MENTRE la pompa è accesa.
-  # 2. La pompa si accende MENTRE c'è una persona.
-  - id: frarik_antizanzare_sicurezza_persona_rilevata
-    alias: "Anti Zanzare - Sicurezza: Persona Rilevata con Pompa Attiva"
+  # Sistema unificato presenza: un solo interruttore (input_boolean.presenza_attiva,
+  # impostabile dalla card in Impostazioni) governa sia il blocco immediato che il
+  # blocco preventivo dei nuovi cicli. NON tocca i timer/automazione_attiva: spegne
+  # solo la presa, così il ciclo interrotto può riprendere da solo quando l'area si libera.
+
+  # 1. Persona rilevata → spegni SUBITO la presa (indipendentemente da cicli/timer)
+  - id: frarik_antizanzare_presenza_blocca
+    alias: "Anti Zanzare - Presenza: Blocco Immediato"
     trigger:
-      # Caso A: Arriva una persona
       - platform: state
         entity_id: *sensore_presenza
-        to: "on"
-      # Caso B: La pompa si accende (magari perché è scattato l'orario)
-      - platform: state
-        entity_id: *presa_az
         to: "on"
     condition:
-      # L'automazione prosegue SOLO se entrambe le cose sono vere contemporaneamente
       - condition: state
-        entity_id: *sensore_presenza
-        state: "on"
-      - condition: state
-        entity_id: *presa_az
+        entity_id: input_boolean.frarik_antizanzare_presenza_attiva
         state: "on"
     action:
-      # 1. Spegni subito la pompa (PRIORITÀ ASSOLUTA)
       - service: switch.turn_off
         target:
           entity_id: *presa_az
-      
-      # 2. Annulla Timer Automatico
-      - service: timer.cancel
-        target:
-          entity_id: timer.frarik_antizanzare_ciclo_timer
 
-      # 3. Annulla Timer Manuale
-      - service: timer.cancel
-        target:
-          entity_id: timer.frarik_antizanzare_manuale_timer
-
-      # 4. Spegni stato Manuale
-      - service: input_boolean.turn_off
-        target:
-          entity_id: input_boolean.frarik_antizanzare_manuale_attiva
-      
-      # 5. Disattiva l'Automazione Generale (impedisce nuovi avvii immediati)
-      - service: input_boolean.turn_off
-        target:
-          entity_id: input_boolean.frarik_antizanzare_automazione_attiva
-
-      # 6. Notifica Push
-      - service: notify.frarik_antizanzare_notify
-        data:
-          title: "Rilevata Persona Antizanzare"
-          message: "⚠️ Stop immediato! Rilevata persona mentre la pompa era attiva."
-
-  # Riattivazione automatica quando la persona va via
-  - id: frarik_antizanzare_sicurezza_persona_assente
-    alias: "Anti Zanzare - Sicurezza: Persona Assente (Ripristino)"
+  # 2. Persona non più presente → riaccendi la presa SOLO se un ciclo era ancora
+  #    in corso (timer attivo): significa che era stato interrotto dalla presenza,
+  #    quindi va ripreso. Se non c'era nessun ciclo in corso non fa nulla.
+  - id: frarik_antizanzare_presenza_riaccendi
+    alias: "Anti Zanzare - Presenza: Riprendi Ciclo se Interrotto"
     trigger:
       - platform: state
         entity_id: *sensore_presenza
         to: "off"
-        for: "00:01:00" # Aspetta 1 minuto che la persona sia andata via davvero
-    condition: [] # Nessuna condizione: riattiva SEMPRE l'automazione generale
+    condition:
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_presenza_attiva
+        state: "on"
+      - condition: or
+        conditions:
+          - condition: state
+            entity_id: timer.frarik_antizanzare_ciclo_timer
+            state: "active"
+          - condition: state
+            entity_id: timer.frarik_antizanzare_manuale_timer
+            state: "active"
     action:
-      # 1. Riattiva l'automazione generale
-      - service: input_boolean.turn_on
+      - service: switch.turn_on
         target:
-          entity_id: input_boolean.frarik_antizanzare_automazione_attiva
-      
-      # 2. Notifica di ripristino
+          entity_id: *presa_az
+
+  # 3. Notifica UNA sola volta quando viene rilevata una persona
+  - id: frarik_antizanzare_notifica_presenza_rilevata
+    alias: "Anti Zanzare - Notifica Presenza Rilevata"
+    trigger:
+      - platform: state
+        entity_id: *sensore_presenza
+        from: "off"
+        to: "on"
+    condition:
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_presenza_attiva
+        state: "on"
+    action:
       - service: notify.frarik_antizanzare_notify
         data:
-          title: "Anti Zanzare - Sicurezza"
-          message: "✅ Area libera. Sistema riarmato e pronto."
+          title: "🦟 Anti Zanzare 🦟"
+          message: "🚶 Persona rilevata in giardino: Anti Zanzare sospeso."
+
+  # 4. Notifica UNA sola volta quando l'area torna libera
+  - id: frarik_antizanzare_notifica_area_libera
+    alias: "Anti Zanzare - Notifica Area Libera"
+    trigger:
+      - platform: state
+        entity_id: *sensore_presenza
+        from: "on"
+        to: "off"
+    condition:
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_presenza_attiva
+        state: "on"
+    action:
+      - service: notify.frarik_antizanzare_notify
+        data:
+          title: "🦟 Anti Zanzare 🦟"
+          message: "✅ Giardino libero: Anti Zanzare riattivato."
 
   # ── SPEGNIMENTO TIMER ────────────────────────────────────────────────────────
   # Quando il timer ciclo automatico finisce → spegni la presa
