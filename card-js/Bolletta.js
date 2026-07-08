@@ -1,4 +1,4 @@
-/* frarik-version: 5.3 */
+/* frarik-version: 5.4 */
 (function () {
   'use strict';
 
@@ -735,6 +735,9 @@
     var mediaIds  = Object.keys(states).filter(function(id) { return /^media_player\./.test(id); }).sort();
     var saved = null;
     try { saved = JSON.parse(localStorage.getItem(_BLL_WIZ_KEY) || 'null'); } catch(e) {}
+    var savedPotenza = saved && typeof saved.potenza === 'string' ? saved.potenza : '';
+    var savedPush    = saved && typeof saved.push    === 'string' ? saved.push    : (saved && Array.isArray(saved.push) ? saved.push[0] || '' : '');
+    var savedAlexa   = saved && typeof saved.alexa   === 'string' ? saved.alexa   : '';
 
     var host = document.createElement('div');
     var sr = host.attachShadow({mode: 'open'});
@@ -794,15 +797,15 @@
         + '<div class="wd-body">'
         + '<div><div class="wd-sec">Sensori</div>'
         + '<div class="wd-lbl">Sensore Potenza Casa (W)</div>'
-        + '<div class="wd-frow"><input class="wd-inp" id="f-potenza" type="text" autocomplete="off" placeholder="sensor.shelly_potenza_casa" value="' + ((saved && saved.potenza) || '').replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-potenza"></div></div>'
+        + '<div class="wd-frow"><input class="wd-inp" id="f-potenza" type="text" autocomplete="off" placeholder="sensor.shelly_potenza_casa" value="' + savedPotenza.replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-potenza"></div></div>'
         + '</div>'
         + '<div><div class="wd-sec">Notifiche Push</div>'
         + '<p class="wd-note">Servizio mobile_app per le notifiche push (es. <code>mobile_app_iphone</code>).</p>'
-        + '<div class="wd-frow"><input class="wd-inp" id="f-push" type="text" autocomplete="off" placeholder="mobile_app_iphone" value="' + ((saved && saved.push) || '').replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-push"></div></div>'
+        + '<div class="wd-frow"><input class="wd-inp" id="f-push" type="text" autocomplete="off" placeholder="mobile_app_iphone" value="' + savedPush.replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-push"></div></div>'
         + '</div>'
         + '<div><div class="wd-sec">Notifiche Alexa</div>'
         + '<p class="wd-note">media_player del dispositivo Alexa (es. <code>media_player.echo_cucina</code>). Lascia vuoto per non usare.</p>'
-        + '<div class="wd-frow"><input class="wd-inp" id="f-alexa" type="text" autocomplete="off" placeholder="media_player.echo_cucina" value="' + ((saved && saved.alexa) || '').replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-alexa"></div></div>'
+        + '<div class="wd-frow"><input class="wd-inp" id="f-alexa" type="text" autocomplete="off" placeholder="media_player.echo_cucina" value="' + savedAlexa.replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-alexa"></div></div>'
         + '</div>'
         + '</div>'
         + '<div class="wd-foot">'
