@@ -505,6 +505,16 @@ input_number:
     unit_of_measurement: "km/h"
     icon: mdi:weather-windy
 
+  frarik_antizanzare_soglia_livello_tanica:
+    name: "Soglia Livello Tanica (%)"
+    min: 0
+    max: 100
+    step: 5
+    initial: 20
+    mode: slider
+    unit_of_measurement: "%"
+    icon: mdi:water-alert
+
 # INPUT DATETIME - Orari cicli
 input_datetime:
   # SISTEMA GIORNALIERO - Orari cicli per giorno
@@ -1567,6 +1577,22 @@ template:
         state: "{{ is_state('IL_TUO_SENSORE_PIOGGIA', 'on') }}"
         icon: >
           {{ 'mdi:weather-rainy' if is_state('IL_TUO_SENSORE_PIOGGIA', 'on') else 'mdi:weather-cloudy' }}
+
+      # Sensore blocco vento separato (per notifiche specifiche per vento)
+      - name: "Frarik Antizanzare Blocco Vento"
+        state: >
+          {% set abilita_vento = is_state('input_boolean.frarik_antizanzare_abilita_soglia_vento', 'on') %}
+          {% set soglia_vento = states('input_number.frarik_antizanzare_soglia_vento') | float(0) %}
+          {{ abilita_vento and soglia_vento > 0 and states('sensor.frarik_antizanzare_velocita_vento') | float(0) >= soglia_vento }}
+        icon: mdi:weather-windy-variant
+
+      # Sensore blocco probabilità pioggia separato (per notifiche specifiche)
+      - name: "Frarik Antizanzare Blocco Pioggia Prob"
+        state: >
+          {% set abilita_pioggia = is_state('input_boolean.frarik_antizanzare_abilita_soglia_pioggia', 'on') %}
+          {% set soglia_pioggia = states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) %}
+          {{ abilita_pioggia and soglia_pioggia > 0 and states('IL_TUO_SENSORE_PROBABILITA_PIOGGIA') | float(0) >= soglia_pioggia }}
+        icon: mdi:weather-pouring
 
       # Sensore blocco per condizioni meteo, vento e presenza
       - name: "Frarik Antizanzare Blocco Meteo"
@@ -3418,108 +3444,256 @@ automation:
         target:
           entity_id: *presa_az
 
-####automazioni###
-  # Automazioni di notifica anti_zanzare
+####################################################
+#             AUTOMAZIONI NOTIFICA                 #
+####################################################
+
+  # ── CICLI AUTOMATICI ─────────────────────────────────────────────────────────
   - alias: Notifica inizio ciclo automatico anti_zanzare
     trigger:
       - platform: state
         entity_id: timer.frarik_antizanzare_ciclo_timer
-        to: 'active'
+        to: "active"
+    condition:
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_notify_push
+        state: "on"
     action:
       - service: notify.frarik_antizanzare_notify
         data:
-          message: "🦟 Ciclo Anti Zanzare Automatico Avviato. 🦟"
-          title: "🦟 Anti Zanzare 🦟 "
+          title: "🌿 Anti Zanzare"
+          message: >
+            🌱 Ciclo automatico avviato.
+            ⏱️ Nebulizzazione in corso...
 
   - alias: Notifica fine ciclo automatico anti_zanzare
     trigger:
       - platform: state
         entity_id: timer.frarik_antizanzare_ciclo_timer
-        to: 'idle'
+        to: "idle"
+    condition:
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_notify_push
+        state: "on"
     action:
       - service: notify.frarik_antizanzare_notify
         data:
-          message: "🦟 Ciclo Anti Zanzare Automatico Terminato. 🦟"
-          title: "🦟 Anti Zanzare 🦟 "
+          title: "🌿 Anti Zanzare"
+          message: "✅ Ciclo automatico completato."
 
+  # ── CICLO MANUALE (nessuna condizione meteo/presenza) ────────────────────────
   - alias: Notifica inizio ciclo manuale anti_zanzare
     trigger:
       - platform: state
         entity_id: timer.frarik_antizanzare_manuale_timer
-        to: 'active'
+        to: "active"
+    condition:
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_notify_push
+        state: "on"
     action:
       - service: notify.frarik_antizanzare_notify
         data:
-          message: "🦟 Ciclo Manuale Anti Zanzare Avviato. 🦟"
-          title: "🦟 Anti Zanzare 🦟 "
+          title: "🔧 Anti Zanzare — Manuale"
+          message: >
+            🔧 Ciclo manuale avviato.
+            ⏱️ Durata: {{ (states('input_number.frarik_antizanzare_durata_manuale') | int(0) // 60) }} min {{ (states('input_number.frarik_antizanzare_durata_manuale') | int(0) % 60) }} sec
 
   - alias: Notifica fine ciclo manuale anti_zanzare
     trigger:
       - platform: state
         entity_id: timer.frarik_antizanzare_manuale_timer
-        to: 'idle'
+        to: "idle"
+    condition:
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_notify_push
+        state: "on"
     action:
       - service: notify.frarik_antizanzare_notify
         data:
-          message: "🦟 Ciclo Manuale Anti Zanzare Terminato. 🦟"
-          title: "🦟 Anti Zanzare 🦟 "
+          title: "🔧 Anti Zanzare — Manuale"
+          message: "✅ Ciclo manuale completato."
 
+  # ── VENTO ─────────────────────────────────────────────────────────────────────
   - alias: Notifica stop automazione per meteo
     trigger:
-      # from: 'off' evita che la notifica parta al riavvio di HA, quando il
-      # sensore passa da "sconosciuto" (avvio) a "on" invece che da un vero
-      # cambio di condizioni meteo
       - platform: state
-        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
-        from: 'off'
-        to: 'on'
+        entity_id: binary_sensor.frarik_antizanzare_blocco_vento
+        from: "off"
+        to: "on"
+        for: "00:05:00"
+    condition:
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_notify_push
+        state: "on"
+      - condition: template
+        value_template: >
+          {{ states('sensor.frarik_antizanzare_prossimo_ciclo_semplice') not in
+             ['Nessun ciclo configurato', 'Automazione disattivata'] }}
     action:
       - service: notify.frarik_antizanzare_notify
         data:
-          title: "🦟 Anti Zanzare — Cicli Bloccati"
+          title: "💨 Anti Zanzare — Cicli Bloccati"
           message: >
-            🚫 Cicli bloccati!
-            {%- set abilita_pioggia = is_state('input_boolean.frarik_antizanzare_abilita_soglia_pioggia', 'on') %}
-            {%- set prob = states('IL_TUO_SENSORE_PROBABILITA_PIOGGIA') | float(0) %}
-            {%- set sp = states('input_number.frarik_antizanzare_soglia_pioggia') | float(0) %}
-            {%- set abilita_vento = is_state('input_boolean.frarik_antizanzare_abilita_soglia_vento', 'on') %}
-            {%- set vv = states('sensor.frarik_antizanzare_velocita_vento') | float(0) %}
-            {%- set sv = states('input_number.frarik_antizanzare_soglia_vento') | float(0) %}
-            {%- if abilita_pioggia and sp > 0 and prob >= sp %} 🌧 Pioggia {{ prob | round(0) }}% (soglia {{ sp | round(0) }}%){% endif %}
-            {%- if abilita_vento and sv > 0 and vv >= sv %} 💨 Vento {{ vv | round(0) }} km/h (soglia {{ sv | round(0) }} km/h){% endif %}
-            {%- if is_state('IL_TUO_SENSORE_PIOGGIA', 'on') %} 🌧 Sta piovendo ora{% endif %}
-            {%- if is_state('input_boolean.frarik_antizanzare_presenza_attiva', 'on') and is_state('IL_TUO_SENSORE_PRESENZA', 'on') %} 👤 Presenza rilevata{% endif %}
+            💨 Vento oltre la soglia — cicli sospesi.
+            Velocità: {{ states('sensor.frarik_antizanzare_velocita_vento') | round(0) }} km/h (soglia {{ states('input_number.frarik_antizanzare_soglia_vento') | round(0) }} km/h)
+
+  - alias: Notifica riattivazione vento anti_zanzare
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.frarik_antizanzare_blocco_vento
+        from: "on"
+        to: "off"
+        for: "00:05:00"
+    condition:
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_notify_push
+        state: "on"
+      - condition: template
+        value_template: >
+          {{ states('sensor.frarik_antizanzare_prossimo_ciclo_semplice') not in
+             ['Nessun ciclo configurato', 'Automazione disattivata'] }}
+    action:
+      - service: notify.frarik_antizanzare_notify
+        data:
+          title: "✅ Anti Zanzare — Vento"
+          message: >
+            ✅ Vento rientrato — cicli riattivati.
+            Velocità attuale: {{ states('sensor.frarik_antizanzare_velocita_vento') | round(0) }} km/h
+
+  # ── PROBABILITÀ PIOGGIA ───────────────────────────────────────────────────────
+  - alias: Notifica blocco probabilita pioggia anti_zanzare
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.frarik_antizanzare_blocco_pioggia_prob
+        from: "off"
+        to: "on"
+        for: "00:05:00"
+    condition:
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_notify_push
+        state: "on"
+      - condition: template
+        value_template: >
+          {{ states('sensor.frarik_antizanzare_prossimo_ciclo_semplice') not in
+             ['Nessun ciclo configurato', 'Automazione disattivata'] }}
+    action:
+      - service: notify.frarik_antizanzare_notify
+        data:
+          title: "🌧️ Anti Zanzare — Cicli Bloccati"
+          message: >
+            🌧️ Alta probabilità pioggia — cicli sospesi.
+            Probabilità: {{ states('IL_TUO_SENSORE_PROBABILITA_PIOGGIA') | round(0) }}% (soglia {{ states('input_number.frarik_antizanzare_soglia_pioggia') | round(0) }}%)
 
   - alias: Notifica riattivazione automazione per meteo
     trigger:
-      # from: 'on' evita che la notifica parta al riavvio di HA (il sensore
-      # spesso si inizializza direttamente a "off" all'avvio, senza che sia
-      # avvenuta una vera riattivazione). Il for: 1 minuto allinea la notifica
-      # al momento in cui l'automazione viene davvero riattivata.
       - platform: state
-        entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
-        from: 'on'
-        to: 'off'
-        for: "00:01:00"
+        entity_id: binary_sensor.frarik_antizanzare_blocco_pioggia_prob
+        from: "on"
+        to: "off"
+        for: "00:05:00"
+    condition:
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_notify_push
+        state: "on"
+      - condition: template
+        value_template: >
+          {{ states('sensor.frarik_antizanzare_prossimo_ciclo_semplice') not in
+             ['Nessun ciclo configurato', 'Automazione disattivata'] }}
     action:
       - service: notify.frarik_antizanzare_notify
         data:
-          message: "✅ Automazioni Anti Zanzare Riattivate: condizioni meteo favorevoli ✅"
-          title: "🦟 Anti Zanzare 🦟"
+          title: "✅ Anti Zanzare — Pioggia"
+          message: >
+            ✅ Probabilità pioggia rientrata — cicli riattivati.
+            Probabilità attuale: {{ states('IL_TUO_SENSORE_PROBABILITA_PIOGGIA') | round(0) }}%
 
+  # ── PIOGGIA IN CORSO ──────────────────────────────────────────────────────────
+  - alias: Notifica pioggia in corso anti_zanzare
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.frarik_antizanzare_pioggia_corso
+        from: "off"
+        to: "on"
+        for: "00:03:00"
+    condition:
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_abilita_soglia_pioggia
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_notify_push
+        state: "on"
+      - condition: template
+        value_template: >
+          {{ states('sensor.frarik_antizanzare_prossimo_ciclo_semplice') not in
+             ['Nessun ciclo configurato', 'Automazione disattivata'] }}
+    action:
+      - service: notify.frarik_antizanzare_notify
+        data:
+          title: "🌧️ Anti Zanzare — Sta Piovendo"
+          message: "🌧️ Pioggia rilevata — cicli sospesi."
+
+  - alias: Notifica pioggia cessata anti_zanzare
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.frarik_antizanzare_pioggia_corso
+        from: "on"
+        to: "off"
+        for: "00:05:00"
+    condition:
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_abilita_soglia_pioggia
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_notify_push
+        state: "on"
+      - condition: template
+        value_template: >
+          {{ states('sensor.frarik_antizanzare_prossimo_ciclo_semplice') not in
+             ['Nessun ciclo configurato', 'Automazione disattivata'] }}
+    action:
+      - service: notify.frarik_antizanzare_notify
+        data:
+          title: "✅ Anti Zanzare — Pioggia"
+          message: "✅ Pioggia cessata — cicli riattivati."
+
+  # ── PERDITA ACQUA ─────────────────────────────────────────────────────────────
   - alias: Perdita cassetta spegne anti zanzare e notifica
     trigger:
       - platform: state
         entity_id: IL_TUO_SENSORE_PERDITA
-        to: 'on'
+        to: "on"
     action:
       - service: switch.turn_off
         target:
           entity_id: *presa_az
       - service: notify.frarik_antizanzare_notify
         data:
-          message: "⚠️ Rilevata perdita nella cassetta! Controllare immediatamente. ⚠️"
-          title: "🦟 Anti Zanzare 🦟 "
+          title: "⚠️ Anti Zanzare — PERDITA ACQUA"
+          message: >
+            ⚠️ Perdita d'acqua rilevata!
+            La nebulizzazione è stata interrotta automaticamente.
+            Controllare immediatamente la cassetta.
+
+  # ── LIVELLO TANICA ────────────────────────────────────────────────────────────
+  - alias: Notifica livello tanica basso anti_zanzare
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.frarik_antizanzare_livello_tanica
+        below: input_number.frarik_antizanzare_soglia_livello_tanica
+        for: "00:05:00"
+    condition:
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_notify_push
+        state: "on"
+    action:
+      - service: notify.frarik_antizanzare_notify
+        data:
+          title: "💧 Anti Zanzare — Tanica"
+          message: >
+            💧 Livello tanica basso!
+            Livello attuale: {{ states('sensor.frarik_antizanzare_livello_tanica') | round(0) }}%
+            Ricaricare la tanica al più presto.
 
 # ----------------------------------------------------------------------
   # SICUREZZA PERSONA (Telecamera Giardino DX)
@@ -3572,7 +3746,7 @@ automation:
         target:
           entity_id: *presa_az
 
-  # 3. Notifica UNA sola volta quando viene rilevata una persona
+  # ── PRESENZA ──────────────────────────────────────────────────────────────────
   - id: frarik_antizanzare_notifica_presenza_rilevata
     alias: "Anti Zanzare - Notifica Presenza Rilevata"
     trigger:
@@ -3580,17 +3754,24 @@ automation:
         entity_id: *sensore_presenza
         from: "off"
         to: "on"
+        for: "00:01:00"
     condition:
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_presenza_attiva
         state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_notify_push
+        state: "on"
+      - condition: template
+        value_template: >
+          {{ states('sensor.frarik_antizanzare_prossimo_ciclo_semplice') not in
+             ['Nessun ciclo configurato', 'Automazione disattivata'] }}
     action:
       - service: notify.frarik_antizanzare_notify
         data:
-          title: "🦟 Anti Zanzare 🦟"
-          message: "🚶 Persona rilevata in giardino: Anti Zanzare sospeso."
+          title: "🚶 Anti Zanzare — Presenza"
+          message: "🚶 Persona rilevata — nebulizzazione sospesa."
 
-  # 4. Notifica UNA sola volta quando l'area torna libera
   - id: frarik_antizanzare_notifica_area_libera
     alias: "Anti Zanzare - Notifica Area Libera"
     trigger:
@@ -3598,15 +3779,23 @@ automation:
         entity_id: *sensore_presenza
         from: "on"
         to: "off"
+        for: "00:02:00"
     condition:
       - condition: state
         entity_id: input_boolean.frarik_antizanzare_presenza_attiva
         state: "on"
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_notify_push
+        state: "on"
+      - condition: template
+        value_template: >
+          {{ states('sensor.frarik_antizanzare_prossimo_ciclo_semplice') not in
+             ['Nessun ciclo configurato', 'Automazione disattivata'] }}
     action:
       - service: notify.frarik_antizanzare_notify
         data:
-          title: "🦟 Anti Zanzare 🦟"
-          message: "✅ Giardino libero: Anti Zanzare riattivato."
+          title: "✅ Anti Zanzare — Presenza"
+          message: "✅ Area libera — nebulizzazione ripristinata."
 
   # ── SPEGNIMENTO TIMER ────────────────────────────────────────────────────────
   # Quando il timer ciclo automatico finisce → spegni la presa
@@ -4832,7 +5021,7 @@ automation:
   }
 
   var _AZ_CARD = {
-    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.28', frarik_no_edit: true,
+    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.29', frarik_no_edit: true,
     desc: 'Controllo sistema anti zanzare: schedule settimanale, timer, statistiche mensili, blocco meteo, sensori sicurezza.',
     render:    function(card) { return _azRender(card); },
     mount:     function(card, hass, el) { _azMount(card, hass, el); },

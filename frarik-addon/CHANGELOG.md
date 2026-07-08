@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.9.46 — 2026-07-08
+
+### feat(antizanzare): notifiche riscritte con condizioni e debounce (v2.29)
+
+- Riscritte tutte le notifiche: ogni evento ha ora il suo trigger specifico
+- Aggiunto controllo notify_push su tutte le notifiche
+- Notifiche meteo/presenza: richiedono automazione_attiva + cicli configurati
+- Ciclo manuale: notifica sempre (solo notify_push), ignora meteo/presenza
+- Aggiunto debounce for: 5 min su vento/pioggia_prob, 3 min su pioggia_corso, 1-2 min su presenza
+- Separati binary_sensor blocco_vento e blocco_pioggia_prob per trigger indipendenti
+- Aggiunto input_number soglia_livello_tanica (default 20%) e notifica livello basso
+- Messaggi notifiche riscritti con emoji e dettagli (velocità, percentuale, soglie)
+- Card v2.29, addon v1.9.46
+
 ## 1.9.45 — 2026-07-07
 
 ### fix(antizanzare): blocco_pioggia_corso non rispettava toggle abilita_pioggia (v2.28)
