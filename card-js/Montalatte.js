@@ -1,4 +1,4 @@
-/* frarik-version: 2.2 */
+/* frarik-version: 2.3 */
 (function () {
   'use strict';
 
@@ -1137,102 +1137,212 @@ script:
           value: "{{ now().strftime('%d/%m/%Y %H:%M') }}"
 `;
 
-  function _buildWizardYaml(card, tpl) {
-    const h = H(), c = cfgFor(card);
-    const states = (h && h.states) || {};
-    const allIds = Object.keys(states).sort();
-    const stInp = 'width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none';
-    const stDrop = 'position:absolute;left:0;right:0;top:calc(100% + 2px);z-index:200;max-height:160px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-radius:9px;display:none;scrollbar-width:none';
-    const stLbl = 'font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px;display:block';
+  /* ── PKG BUILD ── */
+  var _MLT_WIZ_KEY = 'frarik_pkg_wizard_montalatte';
 
-    function field2(fid, lbl2, hint) {
-      return '<div style="margin-bottom:12px;position:relative"><label style="' + stLbl + '">' + lbl2 + (hint ? '<span style="font-weight:400;color:#475569;margin-left:6px;font-family:monospace;text-transform:none;letter-spacing:0">' + hint + '</span>' : '') + '</label><input id="' + fid + '" type="text" autocomplete="off" placeholder="Cerca entità…" style="' + stInp + '"><div id="' + fid + '-d" style="' + stDrop + '"></div></div>';
-    }
+  function _buildPkgMLT(potenza, sw, push, google, alexa, _tpl) {
+    var ind = '          ';
+    var pushLines = (push && push.length)
+      ? push.map(function(p) { return ind + '- service: ' + p; }).join('\n')
+      : ind + '- service: mobile_app_smartphone';
+    var googleLines = (google && google.length)
+      ? google.map(function(p) { return ind + '- ' + p; }).join('\n')
+      : ind + '- media_player.google_home';
+    var alexaLines = (alexa && alexa.length)
+      ? alexa.map(function(p) { return ind + '- ' + p; }).join('\n')
+      : ind + '- media_player.alexa_cucina';
+    var yaml = (_tpl || _MONTALATTE_PKG_YAML)
+      .split('IL_TUO_SENSORE_POTENZA').join(potenza || 'sensor.non_configurato')
+      .split('IL_TUO_SWITCH').join(sw || 'switch.non_configurato');
+    yaml = yaml.replace(/[ \t]*- service: IL_TUO_MOBILE_APP/, pushLines);
+    yaml = yaml.replace(/[ \t]*- IL_TUO_MEDIA_PLAYER_GOOGLE/, googleLines);
+    yaml = yaml.replace(/[ \t]*- IL_TUO_MEDIA_PLAYER_ALEXA/, alexaLines);
+    return yaml;
+  }
 
-    const formHtml = '<div style="font-size:12px;color:rgba(255,255,255,.7);margin-bottom:14px;line-height:1.5">Inserisci i sensori della tua presa smart. Il PKG verrà configurato automaticamente.</div>'
-      + field2('wz-potenza', 'Sensore Potenza (W)', 'sensor.presa_montalatte_power')
-      + field2('wz-switch',  'Switch presa',         'switch.presa_montalatte')
-      + field2('wz-push',    'Notifica Push (mobile_app)', 'notify.mobile_app_iphone')
-      + field2('wz-google',  'Media Player Google',  'media_player.google_home')
-      + field2('wz-alexa',   'Media Player Alexa',   'media_player.alexa_cucina')
-      + '<div style="display:flex;gap:8px;margin-top:16px">'
-      + '<button id="wz-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button>'
-      + '<button id="wz-install" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#38bdf8;color:#060d14">Installa PKG</button>'
-      + '</div>';
+  /* ── WIZARD ── */
+  function _openWizardMLT(hass, onDone, _tpl, opts) {
+    var isUpdate = !!(opts && opts.isUpdate);
+    var states = (hass && hass.states) || {};
+    var allIds = Object.keys(states).sort();
+    var sensorIds = allIds.filter(function(id) { return /^sensor\./.test(id); });
+    var switchIds = allIds.filter(function(id) { return /^switch\./.test(id); });
+    var mediaIds  = allIds.filter(function(id) { return /^media_player\./.test(id); });
+    var saved = null;
+    try { saved = JSON.parse(localStorage.getItem(_MLT_WIZ_KEY) || 'null'); } catch(e) {}
+    var pushRows   = (saved && saved.push   && saved.push.length)   ? saved.push.slice()   : [''];
+    var googleRows = (saved && saved.google && saved.google.length) ? saved.google.slice() : [''];
+    var alexaRows  = (saved && saved.alexa  && saved.alexa.length)  ? saved.alexa.slice()  : [''];
 
-    const wfids = ['wz-potenza','wz-switch','wz-push','wz-google','wz-alexa'];
-    const ov = mkOv(popShell('🥛', '56,189,248', 'Installa PKG Montalatte', 'Configura i sensori', 'wz-close', formHtml), 'wz-close');
+    var host = document.createElement('div');
+    var sr = host.attachShadow({mode: 'open'});
+    document.body.appendChild(host);
+    function destroy() { try { document.body.removeChild(host); } catch(e) {} }
 
-    wfids.forEach(function(fid) {
-      const inp = ov.querySelector('#' + fid), drop = ov.querySelector('#' + fid + '-d');
+    function setupAC(inp, drop, ids) {
       if (!inp || !drop) return;
-      function showDrop2() {
-        const q = inp.value.toLowerCase().trim();
-        const hits = (q ? allIds.filter(function(id) { return id.toLowerCase().includes(q); }) : allIds).slice(0, 50);
+      function show() {
+        var q = inp.value.toLowerCase().trim();
+        var hits = (q ? ids.filter(function(id) { return id.toLowerCase().includes(q); }) : ids).slice(0, 50);
         if (!hits.length) { drop.style.display = 'none'; return; }
+        drop.innerHTML = hits.map(function(id) { return '<div class="wd-item" data-pick="' + id + '">' + id + '</div>'; }).join('');
         drop.style.display = 'block';
-        drop.innerHTML = hits.map(function(id) { return '<div data-pick="' + id + '" style="padding:6px 10px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04);color:#e2e8f0">' + id + '</div>'; }).join('');
         drop.querySelectorAll('[data-pick]').forEach(function(row) {
           row.addEventListener('mousedown', function(ev) { ev.preventDefault(); inp.value = row.getAttribute('data-pick'); drop.style.display = 'none'; });
           row.addEventListener('mouseover', function() { row.style.background = 'rgba(255,255,255,.08)'; });
           row.addEventListener('mouseout', function() { row.style.background = ''; });
         });
       }
-      inp.addEventListener('focus', showDrop2);
-      inp.addEventListener('input', showDrop2);
+      inp.addEventListener('focus', show);
+      inp.addEventListener('input', show);
       inp.addEventListener('blur', function() { setTimeout(function() { drop.style.display = 'none'; }, 200); });
-    });
+    }
 
-    function g2(id) { const e = ov.querySelector('#' + id); return e ? e.value.trim() : ''; }
+    function multiRows(rows, cls, placeholder) {
+      return rows.map(function(v, i) {
+        return '<div class="wd-push-row"><div style="position:relative;flex:1"><input class="wd-inp ' + cls + '" type="text" autocomplete="off" placeholder="' + placeholder + '" value="' + (v || '').replace(/"/g, '&quot;') + '"><div class="wd-drop"></div></div><button class="wd-rm" data-rm="' + i + '">✕</button></div>';
+      }).join('');
+    }
 
-    ov.querySelector('#wz-install').addEventListener('click', async function() {
-      const potenza = g2('wz-potenza');
-      const sw      = g2('wz-switch');
-      const push    = g2('wz-push');
-      const google  = g2('wz-google') || 'media_player.google_home';
-      const alexa   = g2('wz-alexa') || 'media_player.alexa_cucina';
+    function renderWiz() {
+      sr.innerHTML = '<style>'
+        + ':host{all:initial;font-family:system-ui,sans-serif}'
+        + '.wd-bd{position:fixed;inset:0;z-index:200000;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);display:flex;align-items:flex-end}'
+        + '.wd-panel{width:100%;max-height:88vh;display:flex;flex-direction:column;background:#080f18;border:1px solid rgba(56,189,248,.3);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);color:#fff;overflow:hidden;animation:wUp .22s cubic-bezier(.32,1.12,.56,1)}'
+        + '@keyframes wUp{from{transform:translateY(100%)}to{transform:translateY(0)}}'
+        + '.wd-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}'
+        + '.wd-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.3);flex-shrink:0}'
+        + '.wd-tit{font-size:14px;font-weight:800}.wd-sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:1px}'
+        + '.wd-x{margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none}'
+        + '.wd-body{flex:1;overflow-y:auto;padding:16px;scrollbar-width:none;display:flex;flex-direction:column;gap:14px}.wd-body::-webkit-scrollbar{display:none}'
+        + '.wd-sec{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding-bottom:5px;border-bottom:1px solid rgba(56,189,248,.18);margin-bottom:10px}'
+        + '.wd-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px}'
+        + '.wd-frow{position:relative;margin-bottom:10px}'
+        + '.wd-inp{width:100%;padding:9px 11px;border-radius:10px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none}'
+        + '.wd-inp:focus{border-color:rgba(56,189,248,.5)}'
+        + '.wd-drop{position:absolute;left:0;right:0;top:100%;z-index:10;max-height:150px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 9px 9px;display:none}'
+        + '.wd-item{padding:5px 10px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04);color:#e2e8f0}'
+        + '.wd-push-row{display:flex;gap:6px;margin-bottom:6px}.wd-push-row .wd-inp{flex:1}'
+        + '.wd-rm{width:30px;height:38px;border-radius:8px;background:rgba(255,255,255,.07);border:none;color:#fff;cursor:pointer;font-size:14px;flex-shrink:0}'
+        + '.wd-add{padding:6px 12px;border-radius:8px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.25);color:#38bdf8;font-size:11px;font-weight:700;cursor:pointer}'
+        + '.wd-note{font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;margin:0 0 10px}'
+        + '.wd-foot{padding:12px 16px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:8px;flex-shrink:0}'
+        + '.wd-cancel{flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:rgba(255,255,255,.1);color:#fff}'
+        + '.wd-install{flex:2;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#38bdf8;color:#060d14}'
+        + '.wd-loading{opacity:.6;pointer-events:none}'
+        + '</style>'
+        + '<div class="wd-bd" id="wd-bd"><div class="wd-panel">'
+        + '<div class="wd-hdr"><div class="wd-ico">🥛</div>'
+        + '<div><div class="wd-tit">' + (isUpdate ? 'Aggiorna PKG Montalatte' : 'Installa PKG Montalatte') + '</div><div class="wd-sub">frarik_montalatte.yaml → config/packages/</div></div>'
+        + '<button class="wd-x" id="wd-x">✕</button></div>'
+        + '<div class="wd-body">'
+        + '<div><div class="wd-sec">Sensori</div>'
+        + '<div class="wd-lbl">Sensore Potenza (W)</div>'
+        + '<div class="wd-frow"><input class="wd-inp" id="f-potenza" type="text" autocomplete="off" placeholder="sensor.presa_montalatte_power" value="' + ((saved && saved.potenza) || '').replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-potenza"></div></div>'
+        + '<div class="wd-lbl">Switch Presa</div>'
+        + '<div class="wd-frow"><input class="wd-inp" id="f-switch" type="text" autocomplete="off" placeholder="switch.presa_montalatte" value="' + ((saved && saved.sw) || '').replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-switch"></div></div>'
+        + '</div>'
+        + '<div><div class="wd-sec">Notifiche Push</div>'
+        + '<p class="wd-note">mobile_app dei dispositivi (es. <code>mobile_app_iphone</code>).</p>'
+        + '<div id="push-rows">' + multiRows(pushRows, 'push-inp', 'mobile_app_...') + '</div>'
+        + '<button class="wd-add" id="push-add">+ Aggiungi dispositivo</button>'
+        + '</div>'
+        + '<div><div class="wd-sec">Notifiche Google</div>'
+        + '<div id="google-rows">' + multiRows(googleRows, 'google-inp', 'media_player.google_cucina') + '</div>'
+        + '<button class="wd-add" id="google-add">+ Aggiungi speaker</button>'
+        + '</div>'
+        + '<div><div class="wd-sec">Notifiche Alexa</div>'
+        + '<div id="alexa-rows">' + multiRows(alexaRows, 'alexa-inp', 'media_player.echo_cucina') + '</div>'
+        + '<button class="wd-add" id="alexa-add">+ Aggiungi Echo</button>'
+        + '</div>'
+        + '</div>'
+        + '<div class="wd-foot"><button class="wd-cancel" id="wd-cancel">Annulla</button>'
+        + '<button class="wd-install" id="wd-install">' + (isUpdate ? '🔄 Aggiorna PKG' : '📦 Installa PKG') + '</button>'
+        + '</div></div></div>';
 
-      var yaml = (_MONTALATTE_PKG_YAML)
-        .split('IL_TUO_SENSORE_POTENZA').join(potenza || 'sensor.non_configurato')
-        .split('IL_TUO_SWITCH').join(sw || 'switch.non_configurato')
-        .split('IL_TUO_MOBILE_APP').join(push || 'notify.notify')
-        .split('IL_TUO_MEDIA_PLAYER_GOOGLE').join(google)
-        .split('IL_TUO_MEDIA_PLAYER_ALEXA').join(alexa);
+      sr.getElementById('wd-x').addEventListener('click', destroy);
+      sr.getElementById('wd-cancel').addEventListener('click', destroy);
+      sr.getElementById('wd-bd').addEventListener('click', function(e) { if (e.target === sr.getElementById('wd-bd')) destroy(); });
 
-      try {
-        const res = await callApi('POST', 'frarik/pkg/write', { name: 'frarik/frarik_montalatte.yaml', content: yaml });
-        if (res && res.ok) {
-          ov._close();
-          alert('PKG Montalatte installato! Riavvia Home Assistant per applicare le modifiche.');
-        } else {
-          alert('Errore durante l\'installazione. Riprova.');
-        }
-      } catch(e) {
-        alert('Errore: ' + e);
+      function bindMulti(containerId, rows, cls, addId) {
+        sr.getElementById(containerId).addEventListener('click', function(e) {
+          var btn = e.target.closest('[data-rm]'); if (!btn) return;
+          rows.length = 0;
+          Array.from(sr.querySelectorAll('.' + cls)).forEach(function(i) { rows.push(i.value); });
+          rows.splice(+btn.dataset.rm, 1);
+          if (!rows.length) rows.push('');
+          renderWiz();
+        });
+        sr.getElementById(addId).addEventListener('click', function() {
+          Array.from(sr.querySelectorAll('.' + cls)).forEach(function(i, idx) { rows[idx] = i.value; });
+          rows.push('');
+          renderWiz();
+        });
       }
-    });
+      bindMulti('push-rows',   pushRows,   'push-inp',   'push-add');
+      bindMulti('google-rows', googleRows, 'google-inp', 'google-add');
+      bindMulti('alexa-rows',  alexaRows,  'alexa-inp',  'alexa-add');
 
-    ov.querySelector('#wz-cancel') && ov.querySelector('#wz-cancel').addEventListener('click', function() { ov._close(); });
+      setupAC(sr.getElementById('f-potenza'), sr.getElementById('d-potenza'), sensorIds);
+      setupAC(sr.getElementById('f-switch'),  sr.getElementById('d-switch'),  switchIds);
+      sr.querySelectorAll('.google-inp').forEach(function(inp) { setupAC(inp, inp.parentElement.querySelector('.wd-drop'), mediaIds); });
+      sr.querySelectorAll('.alexa-inp').forEach(function(inp)  { setupAC(inp, inp.parentElement.querySelector('.wd-drop'), mediaIds); });
+
+      sr.getElementById('wd-install').addEventListener('click', function() {
+        var potenza = sr.getElementById('f-potenza').value.trim();
+        var sw      = sr.getElementById('f-switch').value.trim();
+        var push    = Array.from(sr.querySelectorAll('.push-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
+        var google  = Array.from(sr.querySelectorAll('.google-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
+        var alexa   = Array.from(sr.querySelectorAll('.alexa-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
+        try { localStorage.setItem(_MLT_WIZ_KEY, JSON.stringify({potenza: potenza, sw: sw, push: push, google: google, alexa: alexa})); } catch(e) {}
+        var yaml = _buildPkgMLT(potenza, sw, push, google, alexa, _tpl);
+        var m = location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
+        var base = location.origin + (m ? m[1] : '');
+        var btn = sr.getElementById('wd-install');
+        btn.classList.add('wd-loading');
+        btn.textContent = isUpdate ? 'Aggiornamento…' : 'Installazione…';
+        fetch(base + '/api/frarik/pkg/install', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({name: 'frarik/frarik_montalatte.yaml', content: yaml})
+        }).then(function(r) { return r.json().then(function(j) { return {r: r, j: j}; }); })
+          .then(function(res) {
+            destroy();
+            if (res.r.ok && res.j.ok) {
+              try { if (typeof window.showToast === 'function') window.showToast(isUpdate ? '🔄 PKG Montalatte aggiornato! Riavvia HA.' : '📦 PKG Montalatte installato! Riavvia HA.'); } catch(e) {}
+              if (typeof onDone === 'function') onDone();
+            } else {
+              try { if (typeof window.showToast === 'function') window.showToast('⚠️ Errore installazione PKG: ' + ((res.j && res.j.error) || '')); } catch(e) {}
+            }
+          }).catch(function() {
+            destroy();
+            try { if (typeof window.showToast === 'function') window.showToast('⚠️ Errore connessione al PKG install'); } catch(e) {}
+          });
+      });
+    }
+
+    renderWiz();
   }
 
   /* ── CARD REGISTRATION ── */
   const CARD = {
-    id: 'montalatte', name: 'Montalatte', icon: '🥛', version: '2.2',
+    id: 'montalatte', name: 'Montalatte', icon: '🥛', version: '2.3',
     desc: 'Monitoraggio riscaldatore, cicli, energia e costi. Richiede PKG Centro Controllo Montalatte.',
-    render: render,
-    update: update,
-    frarik_no_edit: true,
-    pkg: {
-      id: 'frarik_montalatte',
-      name: 'Centro Controllo Montalatte',
-      yaml: function() { return _MONTALATTE_PKG_YAML; },
-      wizard: _buildWizardYaml,
-    },
+    render: render, update: update, frarik_no_edit: true,
+    frarik_pkg_check: 'sensor.frarik_montalatte_versione',
+    frarik_pkg_id: 'frarik_montalatte',
+    frarik_pkg_version: '1.0',
+    openWizard: _openWizardMLT,
+    _buildPkgFromConfig: function(cfg, _tpl) { return _buildPkgMLT(cfg.potenza || '', cfg.sw || '', cfg.push || [], cfg.google || [], cfg.alexa || [], _tpl); },
   };
 
+  window.FratechCardRegistry = window.FratechCardRegistry || {};
+  window.FratechCardRegistry[CARD.id] = CARD;
+  window.FratechCards = window.FratechCards || {};
+  window.FratechCards[CARD.id] = CARD;
+  try { console.log('[FratechStore] Card registrata: montalatte v' + CARD.version); } catch(e) {}
   if (typeof window !== 'undefined') {
     window._frarikCards = window._frarikCards || [];
     window._frarikCards.push(CARD);
-    window.dispatchEvent(new CustomEvent('frarik-card-registered', { detail: CARD }));
   }
 })();

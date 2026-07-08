@@ -1,4 +1,4 @@
-/* frarik-version: 4.0 */
+/* frarik-version: 4.1 */
 /* Centro Controllo Posta — Frarik card standalone */
 (function(){
 'use strict';
@@ -1087,7 +1087,8 @@ if(!customElements.get('posta-card')){
 /* ══════════════════════════════════════════════════════════════
    openWizard — chiamato dallo Store quando si installa la card
    ══════════════════════════════════════════════════════════════ */
-PostaCard.openWizard=function(hass,onDone,_tpl){
+PostaCard.openWizard=function(hass,onDone,_tpl,opts){
+  const isUpdate=!!(opts&&opts.isUpdate);
   document.getElementById('__frk_posta_wizard__')?.remove();
   const host=document.createElement('div');
   host.id='__frk_posta_wizard__';
@@ -1136,7 +1137,7 @@ PostaCard.openWizard=function(hass,onDone,_tpl){
     <div class="mhdr">
       <div class="mico">📦</div>
       <div class="mtxt">
-        <div class="mtit">Configura Package Posta</div>
+        <div class="mtit">${isUpdate?'Aggiorna Package Posta':'Configura Package Posta'}</div>
         <div class="msub">Inserisci i tuoi sensori e dispositivi</div>
       </div>
       <button class="mxbtn" id="wiz_close">✕</button>
@@ -1182,7 +1183,7 @@ PostaCard.openWizard=function(hass,onDone,_tpl){
       </div>
     </div>
     <div class="mftr">
-      <button class="wbtn-ok" id="wiz_install">⚡ Installa Package</button>
+      <button class="wbtn-ok" id="wiz_install">${isUpdate?'🔄 Aggiorna Package':'⚡ Installa Package'}</button>
       <div class="winst-err" id="wiz_inst_err"></div>
     </div>
   </div></div>`;

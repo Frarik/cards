@@ -1,4 +1,4 @@
-/* frarik-version: 2.2 */
+/* frarik-version: 2.3 */
 (function () {
   'use strict';
 
@@ -1431,7 +1431,8 @@ automation:
   }
 
   /* ── WIZARD ── */
-  function _openWizard(hass, onDone, _tpl) {
+  function _openWizard(hass, onDone, _tpl, opts) {
+    var isUpdate = !!(opts && opts.isUpdate);
     var states = (hass && hass.states) || {};
     var allIds = Object.keys(states).sort();
     var sensorIds = allIds.filter(function(id) { return /^sensor\./.test(id); });
@@ -1506,7 +1507,7 @@ automation:
         + '<div class="wd-bd" id="wd-bd">'
         + '<div class="wd-panel">'
         + '<div class="wd-hdr"><div class="wd-ico">🍽</div>'
-        + '<div><div class="wd-tit">Installa PKG Lavastoviglie</div><div class="wd-sub">frarik_lavastoviglie.yaml → config/packages/</div></div>'
+        + '<div><div class="wd-tit">' + (isUpdate ? 'Aggiorna PKG Lavastoviglie' : 'Installa PKG Lavastoviglie') + '</div><div class="wd-sub">frarik_lavastoviglie.yaml → config/packages/</div></div>'
         + '<button class="wd-x" id="wd-x">✕</button></div>'
         + '<div class="wd-body">'
 
@@ -1542,7 +1543,7 @@ automation:
         + '</div>'
         + '<div class="wd-foot">'
         + '<button class="wd-cancel" id="wd-cancel">Annulla</button>'
-        + '<button class="wd-install" id="wd-install">📦 Installa PKG</button>'
+        + '<button class="wd-install" id="wd-install">' + (isUpdate ? '🔄 Aggiorna PKG' : '📦 Installa PKG') + '</button>'
         + '</div>'
         + '</div>'
         + '</div>';

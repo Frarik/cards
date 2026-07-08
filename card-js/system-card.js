@@ -1,4 +1,4 @@
-﻿/* frarik-version: 4.8 */
+﻿/* frarik-version: 4.9 */
 (function () {
   'use strict';
 
@@ -2101,7 +2101,8 @@ automation:
     return yaml.replace(/[ 	]*- service: IL_TUO_MOBILE_APP_1/, pushLines);
   }
 
-  function _srvOpenWizard(hass,onDone,_tpl){
+  function _srvOpenWizard(hass,onDone,_tpl,opts){
+    var isUpdate=!!(opts&&opts.isUpdate);
     var states=(hass&&hass.states)||{};
     var allIds=Object.keys(states).sort();
     var saved=null;
@@ -2158,7 +2159,7 @@ automation:
         +'<div class="sh">'
           +'<div class="hdr">'
             +'<div class="hico">🖥️</div>'
-            +'<div><div class="htitle">Configura PKG — Mini-PC</div><div class="hsub">Inserisci i sensori del tuo server</div></div>'
+            +'<div><div class="htitle">'+(isUpdate?'Aggiorna PKG — Mini-PC':'Configura PKG — Mini-PC')+'</div><div class="hsub">Inserisci i sensori del tuo server</div></div>'
             +'<button class="btn-x" id="btnX">✕</button>'
           +'</div>'
           +'<div class="body">'
@@ -2192,7 +2193,7 @@ automation:
           +'</div>'
           +'<div class="ftr">'
             +'<button class="btn-cancel" id="btnCancel">Annulla</button>'
-            +'<button class="btn-save" id="btnSave">✓ Installa PKG</button>'
+            +'<button class="btn-save" id="btnSave">'+(isUpdate?'🔄 Aggiorna PKG':'✓ Installa PKG')+'</button>'
           +'</div>'
         +'</div>'
       +'</div>';
