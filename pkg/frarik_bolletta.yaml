@@ -2,7 +2,7 @@ homeassistant:
   customize:
     package.node_anchors:
       customize: &customize
-        package: 'Frarik Bolletta 10'
+        package: 'Frarik Bolletta 11'
         author: 'Frarik'
         reference: 'github.com/Frarik/cards'
       setting:
@@ -281,6 +281,34 @@ input_number:
   frarik_bolletta_storico_prec_novembre_eur: { name: "Storico Prec Novembre Euro", min: 0, max: 9999, step: 0.01, mode: box }
   frarik_bolletta_storico_prec_dicembre_eur: { name: "Storico Prec Dicembre Euro", min: 0, max: 9999, step: 0.01, mode: box }
 
+  # --- BACKUP kWh (anti-reset PKG) ---
+  frarik_bolletta_backup_kwh_oggi:
+    name: "Backup kWh Giornaliero"
+    min: 0
+    max: 99999
+    step: 0.0001
+    unit_of_measurement: kWh
+    icon: mdi:counter
+    mode: box
+
+  frarik_bolletta_backup_kwh_mese:
+    name: "Backup kWh Mensile"
+    min: 0
+    max: 999999
+    step: 0.0001
+    unit_of_measurement: kWh
+    icon: mdi:counter
+    mode: box
+
+  frarik_bolletta_backup_kwh_anno:
+    name: "Backup kWh Annuale"
+    min: 0
+    max: 9999999
+    step: 0.0001
+    unit_of_measurement: kWh
+    icon: mdi:counter
+    mode: box
+
 # ==============================================================================
 # 2. INPUT BOOLEAN (INTERRUTTORI)
 # ==============================================================================
@@ -367,6 +395,11 @@ input_datetime:
     has_time: true
     initial: "00:00:00"
 
+  frarik_bolletta_backup_timestamp:
+    name: "Backup Timestamp kWh"
+    has_date: true
+    has_time: true
+
 # ==============================================================================
 # 3. SORGENTE DATI (INTEGRAL)
 # ==============================================================================
@@ -411,7 +444,7 @@ template:
 
       - name: "frarik_bolletta_versione"
         unique_id: frarik_bolletta_versione
-        state: "10"
+        state: "11"
 
       # 1. PREZZO REALE "FINITO" PER 1 kWh LETTO DAL CONTATORE
       - name: "Frarik Bolletta Prezzo Unico Variabile"
@@ -1139,6 +1172,88 @@ automation:
                   message: >
                     Consumo Totale Anno: {{ states('sensor.frarik_bolletta_consumo_annuale') }} kWh
                     (Costo basato sullo storico: {{ states('sensor.frarik_bolletta_totale_anno_euro') }} €)
+
+# ==============================================================================
+  # BACKUP kWh PERIODICO (salva ogni 5 min per sopravvivere ad aggiornamenti PKG)
+  # ==============================================================================
+  - alias: "Frarik Bolletta - Backup kWh Periodico"
+    id: frarik_bolletta_backup_kwh_periodico
+    trigger:
+      - platform: time_pattern
+        minutes: "/5"
+    action:
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.frarik_bolletta_backup_kwh_oggi
+        data:
+          value: "{{ [states('sensor.frarik_bolletta_consumo_giornaliero') | float(0), 0] | max }}"
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.frarik_bolletta_backup_kwh_mese
+        data:
+          value: "{{ [states('sensor.frarik_bolletta_consumo_mensile') | float(0), 0] | max }}"
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.frarik_bolletta_backup_kwh_anno
+        data:
+          value: "{{ [states('sensor.frarik_bolletta_consumo_annuale') | float(0), 0] | max }}"
+      - service: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.frarik_bolletta_backup_timestamp
+        data:
+          datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+
+# ==============================================================================
+  # RIPRISTINO kWh AL RIAVVIO (calibra i contatori dai valori salvati)
+  # ==============================================================================
+  - alias: "Frarik Bolletta - Ripristino kWh al Riavvio"
+    id: frarik_bolletta_ripristino_kwh
+    trigger:
+      - platform: homeassistant
+        event: start
+    action:
+      - delay: "00:00:45"
+      - variables:
+          backup_ts: "{{ states('input_datetime.frarik_bolletta_backup_timestamp') }}"
+          oggi: "{{ now().strftime('%Y-%m-%d') }}"
+          mese: "{{ now().strftime('%Y-%m') }}"
+          anno: "{{ now().strftime('%Y') }}"
+          backup_giorno: >
+            {% if backup_ts not in ['unknown', 'unavailable', ''] %}
+              {{ backup_ts[:10] }}
+            {% else %}{{ '' }}{% endif %}
+          backup_mese: >
+            {% if backup_ts not in ['unknown', 'unavailable', ''] %}
+              {{ backup_ts[:7] }}
+            {% else %}{{ '' }}{% endif %}
+          backup_anno: >
+            {% if backup_ts not in ['unknown', 'unavailable', ''] %}
+              {{ backup_ts[:4] }}
+            {% else %}{{ '' }}{% endif %}
+      - if:
+          - "{{ backup_giorno | trim == oggi }}"
+        then:
+          - service: utility_meter.calibrate
+            target:
+              entity_id: sensor.frarik_bolletta_consumo_giornaliero
+            data:
+              value: "{{ states('input_number.frarik_bolletta_backup_kwh_oggi') | float(0) }}"
+      - if:
+          - "{{ backup_mese | trim == mese }}"
+        then:
+          - service: utility_meter.calibrate
+            target:
+              entity_id: sensor.frarik_bolletta_consumo_mensile
+            data:
+              value: "{{ states('input_number.frarik_bolletta_backup_kwh_mese') | float(0) }}"
+      - if:
+          - "{{ backup_anno | trim == anno }}"
+        then:
+          - service: utility_meter.calibrate
+            target:
+              entity_id: sensor.frarik_bolletta_consumo_annuale
+            data:
+              value: "{{ states('input_number.frarik_bolletta_backup_kwh_anno') | float(0) }}"
 
 # ==============================================================================
 # 7. SCRIPT
