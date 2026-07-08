@@ -4392,7 +4392,7 @@ async function _ghsPkgUpdFromPending(encodedName){
       if(!yaml){ showToast('⚠️ PKG vuoto'); return; }
       /* Apri wizard con template aggiornato — i valori precedenti vengono pre-compilati da localStorage */
       CardClass.openWizard(_haHassObj(),async()=>{
-        /* onDone: l'installazione avviene dentro il wizard, qui aggiorniamo solo SHA e pending */
+        /* onDone: l'installazione avviene dentro il wizard, qui aggiorniamo SHA/pending e chiediamo riavvio */
         try{
           const sha=_pkgPending[fileName]||_ghCfg().pkgNotifiedShas?.[fileName];
           if(sha){ const g=_ghCfg(); g.pkgShas=g.pkgShas||{}; g.pkgShas[fileName]=sha; saveCfg(); }
@@ -4400,6 +4400,7 @@ async function _ghsPkgUpdFromPending(encodedName){
         }catch(e){}
         try{ _ntfClearPkg(fileName); }catch(e){}
         try{ _ghsUpdBadge(); }catch(e){}
+        try{ await _pkgPostInstall(cardId,null); }catch(e){}
         try{ await _loadHaInstalledPkgs(); if(typeof _ghStoreRender==='function') _ghStoreRender(); }catch(e){}
       }, yaml, {isUpdate:true});
       return;

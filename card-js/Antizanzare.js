@@ -3827,11 +3827,12 @@ automation:
         target:
           entity_id: input_boolean.frarik_antizanzare_manuale_attiva`;
 
-  function _buildPkgAZ(sw, push, pioggia, _tpl, vento, tanica, presenza, perdita, pompa, probPioggia) {
+  function _buildPkgAZ(sw, push, pioggia, _tpl, vento, tanica, presenza, perdita, pompa, probPioggia, alexa) {
     var ind = '          ';
     var pushLines = (push && push.length)
       ? push.map(function(p) { return ind + '- service: ' + p; }).join('\n')
       : ind + '- service: mobile_app_smartphone';
+    var alexaLine = ind + '- ' + (alexa || 'media_player.non_configurato');
     var yaml = (_tpl || _AZ_PKG_YAML)
       .split('IL_TUO_PRESA_ANTIZANZARE').join(sw || 'switch.presa_anti_zanzare')
       .split('IL_TUO_SENSORE_PROBABILITA_PIOGGIA').join(probPioggia || 'sensor.probabilita_pioggia')
@@ -3842,7 +3843,7 @@ automation:
       .split('IL_TUO_SENSORE_PERDITA').join(perdita || 'binary_sensor.non_configurato')
       .split('IL_TUO_SENSORE_POMPA').join(pompa || 'sensor.non_configurato');
     yaml = yaml.replace(/[ 	]*- service: IL_TUO_MOBILE_APP/, pushLines);
-    yaml = yaml.replace(/[ 	]*- IL_TUO_MEDIA_PLAYER_ALEXA/, ind + '- media_player.non_configurato');
+    yaml = yaml.replace(/[ 	]*- IL_TUO_MEDIA_PLAYER_ALEXA/, alexaLine);
     return yaml;
   }
 
@@ -3983,6 +3984,7 @@ automation:
     var switchIds  = Object.keys(states).filter(function(id) { return /^switch\./.test(id); }).sort();
     var sensorIds  = Object.keys(states).filter(function(id) { return /^sensor\./.test(id); }).sort();
     var bsIds      = Object.keys(states).filter(function(id) { return /^binary_sensor\./.test(id); }).sort();
+    var mpIds      = Object.keys(states).filter(function(id) { return /^media_player\./.test(id); }).sort();
     var saved = null;
     try { saved = JSON.parse(localStorage.getItem(_AZ_WIZ_KEY) || 'null'); } catch(e) {}
     var pushRows = (saved && saved.push && saved.push.length) ? saved.push.slice() : [''];
@@ -4026,6 +4028,7 @@ automation:
       var presVal     = (saved && saved.presenza)   || '';
       var perdVal     = (saved && saved.perdita)    || '';
       var pompaVal    = (saved && saved.pompa)      || '';
+      var alexaVal    = (saved && saved.alexa)      || '';
       sr.innerHTML = '<style>'
         + ':host{all:initial;font-family:system-ui,sans-serif}'
         + '.wd-bd{position:fixed;inset:0;z-index:200000;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);display:flex;align-items:flex-end}'
@@ -4088,6 +4091,11 @@ automation:
         + '<div id="push-rows">' + multiRows(pushRows, 'push-inp', 'mobile_app_...') + '</div>'
         + '<button class="wd-add" id="push-add">+ Aggiungi dispositivo</button>'
         + '</div>'
+        + '<div><div class="wd-sec">Notifiche Alexa (opzionale)</div>'
+        + '<p class="wd-note">Media player Alexa per annunci vocali. Lascia vuoto per disabilitare.</p>'
+        + '<div class="wd-lbl">Media Player Alexa (media_player.*)</div>'
+        + '<div class="wd-frow"><input class="wd-inp" id="f-alexa" type="text" autocomplete="off" placeholder="media_player.echo_soggiorno" value="' + alexaVal.replace(/"/g, '&quot;') + '"><div class="wd-drop" id="d-alexa"></div></div>'
+        + '</div>'
         + '</div>'
         + '<div class="wd-foot">'
         + '<button class="wd-cancel" id="wd-cancel">Annulla</button>'
@@ -4120,6 +4128,7 @@ automation:
       setupAC(sr.getElementById('f-pompa'),    sr.getElementById('d-pompa'),    sensorIds);
       setupAC(sr.getElementById('f-presenza'), sr.getElementById('d-presenza'), bsIds);
       setupAC(sr.getElementById('f-perdita'),  sr.getElementById('d-perdita'),  bsIds);
+      setupAC(sr.getElementById('f-alexa'),    sr.getElementById('d-alexa'),    mpIds);
 
       sr.getElementById('wd-install').addEventListener('click', function() {
         var sw         = sr.getElementById('f-switch').value.trim();
@@ -4130,13 +4139,14 @@ automation:
         var pompa      = sr.getElementById('f-pompa').value.trim();
         var presenza   = sr.getElementById('f-presenza').value.trim();
         var perdita    = sr.getElementById('f-perdita').value.trim();
+        var alexa      = sr.getElementById('f-alexa').value.trim();
         var push = Array.from(sr.querySelectorAll('.push-inp')).map(function(i) { return i.value.trim(); }).filter(Boolean);
-        try { localStorage.setItem(_AZ_WIZ_KEY, JSON.stringify({sw: sw, push: push, pioggia: pioggia, probPioggia: probPioggia, vento: vento, tanica: tanica, pompa: pompa, presenza: presenza, perdita: perdita})); } catch(e) {}
+        try { localStorage.setItem(_AZ_WIZ_KEY, JSON.stringify({sw: sw, push: push, pioggia: pioggia, probPioggia: probPioggia, vento: vento, tanica: tanica, pompa: pompa, presenza: presenza, perdita: perdita, alexa: alexa})); } catch(e) {}
         var m = location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
         var base = location.origin + (m ? m[1] : '');
         var btn = sr.getElementById('wd-install');
         btn.classList.add('wd-loading'); btn.textContent = 'Installazione…';
-        var yaml = _buildPkgAZ(sw, push, pioggia, _tpl, vento, tanica, presenza, perdita, pompa, probPioggia);
+        var yaml = _buildPkgAZ(sw, push, pioggia, _tpl, vento, tanica, presenza, perdita, pompa, probPioggia, alexa);
         btn.textContent = 'Installazione…';
         fetch(base + '/api/frarik/pkg/install', {
           method: 'POST',
@@ -5022,7 +5032,7 @@ automation:
   }
 
   var _AZ_CARD = {
-    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.30', frarik_no_edit: true,
+    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.31', frarik_no_edit: true,
     desc: 'Controllo sistema anti zanzare: schedule settimanale, timer, statistiche mensili, blocco meteo, sensori sicurezza.',
     render:    function(card) { return _azRender(card); },
     mount:     function(card, hass, el) { _azMount(card, hass, el); },
@@ -5032,7 +5042,7 @@ automation:
     frarik_pkg_id:      'frarik_antizanzare',
     frarik_pkg_version: '2.0',
     openWizard: _openWizardAZ,
-    _buildPkgFromConfig: function(cfg, _tpl) { return _buildPkgAZ(cfg.sw || '', cfg.push || [], cfg.pioggia || '', _tpl, cfg.vento || '', cfg.tanica || '', cfg.presenza || '', cfg.perdita || '', cfg.pompa || '', cfg.probPioggia || ''); },
+    _buildPkgFromConfig: function(cfg, _tpl) { return _buildPkgAZ(cfg.sw || '', cfg.push || [], cfg.pioggia || '', _tpl, cfg.vento || '', cfg.tanica || '', cfg.presenza || '', cfg.perdita || '', cfg.pompa || '', cfg.probPioggia || '', cfg.alexa || ''); },
   };
   window.FratechCardRegistry = window.FratechCardRegistry || {};
   window.FratechCardRegistry[_AZ_CARD.id] = _AZ_CARD;

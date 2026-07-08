@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.9.48 — 2026-07-08
+
+### fix(store): richiesta riavvio HA dopo aggiorna PKG + campo Alexa wizard (card v2.31)
+
+- Fix: dopo "Aggiorna PKG" ora appare il popup di riavvio HA (mancava chiamata _pkgPostInstall)
+- Aggiunto campo Alexa nel wizard: media_player.* con autocomplete tra i media_player di HA
+- Alexa salvata in localStorage e pre-compilata ai successivi aggiornamenti
+- _buildPkgAZ ora sostituisce IL_TUO_MEDIA_PLAYER_ALEXA con il valore inserito
+- _buildPkgFromConfig aggiornato per includere cfg.alexa
+
 ## 1.9.47 — 2026-07-08
 
 ### feat(store): wizard pre-compilato su aggiornamento PKG (card v2.30)
