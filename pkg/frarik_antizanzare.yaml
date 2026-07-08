@@ -3324,41 +3324,29 @@ automation:
         entity_id: input_boolean.frarik_antizanzare_manuale_attiva
         to: "on"
     action:
-      # Se blocco_meteo è attivo (vento/pioggia/pioggia in corso/presenza), non
-      # avviare nulla: annulla subito lo stato "manuale attiva" così la card
-      # non resta bloccata su ON
-      - if:
-          - condition: state
-            entity_id: binary_sensor.frarik_antizanzare_blocco_meteo
-            state: "on"
-        then:
-          - service: input_boolean.turn_off
-            target:
-              entity_id: input_boolean.frarik_antizanzare_manuale_attiva
-        else:
-          # Ferma automazione se attiva
-          - service: timer.cancel
-            target:
-              entity_id: timer.frarik_antizanzare_ciclo_timer
-          # Avvia timer manuale con durata impostata
-          - service: timer.start
-            target:
-              entity_id: timer.frarik_antizanzare_manuale_timer
-            data:
-              duration: >
-                {{ '00:%02d:%02d' | format((states('input_number.frarik_antizanzare_durata_manuale') | int // 60), (states('input_number.frarik_antizanzare_durata_manuale') | int % 60)) }}
-          # Attiva pompa reale
-          - service: switch.turn_on
-            target:
-              entity_id: *presa_az
-          # Incrementa contatore mensile
-          - service: counter.increment
-            target:
-              entity_id: counter.frarik_antizanzare_cicli_mensili
-          # Decrementa contatore rimanenti
-          - service: counter.decrement
-            target:
-              entity_id: counter.frarik_antizanzare_cicli_rimanenti
+      # Ferma ciclo automatico se attivo
+      - service: timer.cancel
+        target:
+          entity_id: timer.frarik_antizanzare_ciclo_timer
+      # Avvia timer manuale — sempre, indipendentemente da meteo/presenza
+      - service: timer.start
+        target:
+          entity_id: timer.frarik_antizanzare_manuale_timer
+        data:
+          duration: >
+            {{ '00:%02d:%02d' | format((states('input_number.frarik_antizanzare_durata_manuale') | int // 60), (states('input_number.frarik_antizanzare_durata_manuale') | int % 60)) }}
+      # Attiva pompa reale
+      - service: switch.turn_on
+        target:
+          entity_id: *presa_az
+      # Incrementa contatore mensile
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_mensili
+      # Decrementa contatore rimanenti
+      - service: counter.decrement
+        target:
+          entity_id: counter.frarik_antizanzare_cicli_rimanenti
 
   # Avvio manuale da pulsante (imposta il boolean e quindi scatena l'automazione esistente)
   - id: frarik_antizanzare_avvio_manuale_button
