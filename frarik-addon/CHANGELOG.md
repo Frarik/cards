@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.9.47 — 2026-07-08
+
+### feat(store): wizard pre-compilato su aggiornamento PKG (card v2.30)
+
+- "Aggiorna PKG" nel tab Aggiornamenti ora apre il wizard con i sensori già inseriti
+- Il titolo del wizard mostra "Aggiorna PKG" (invece di "Installa PKG") durante un update
+- Il bottone mostra "🔄 Aggiorna PKG" invece di "📦 Installa PKG"
+- Stesso comportamento anche per "Aggiorna PKG" dalla tile dello store
+- Fallback silenzioso mantenuto per card senza openWizard()
+
 ## 1.9.46 — 2026-07-08
 
 ### feat(antizanzare): notifiche riscritte con condizioni e debounce (v2.29)

@@ -3896,7 +3896,7 @@ async function _pkgUpdateCard(cardId, silent=false){
       await _pkgPostInstall(cardId,pkgVer);
       await _loadHaInstalledPkgs();
       if(typeof _ghStoreRender==='function') _ghStoreRender();
-    }, ghTpl||undefined);
+    }, ghTpl||undefined, {isUpdate:true});
     return;
   }
 
@@ -4379,13 +4379,38 @@ async function _ghsPkgUpdFromPending(encodedName){
     }catch(e){}
   }
   if(!f){ showToast('⚠️ PKG «'+fileName+'» non trovato su GitHub'); return; }
+
+  /* 2. Cerca la card associata e, se ha il wizard, aprilo con i valori pre-compilati */
+  const cardId=_pkgFindCardForFile('frarik/'+fileName)||_pkgFindCardForFile(fileName);
+  if(cardId){
+    const _ctor=customElements.get(cardId);
+    const _reg=window.FratechCardRegistry?.[cardId]??window.FratechCardRegistry?.[cardId.toLowerCase()];
+    const CardClass=typeof _ctor?._buildPkgFromConfig==='function'?_ctor:(_reg??_ctor);
+    if(typeof CardClass?.openWizard==='function'){
+      showToast('⬇️ Scarico PKG da GitHub…');
+      let yaml; try{ yaml=await _ghDownload(f); }catch(e){ showToast('⚠️ '+e.message); return; }
+      if(!yaml){ showToast('⚠️ PKG vuoto'); return; }
+      /* Apri wizard con template aggiornato — i valori precedenti vengono pre-compilati da localStorage */
+      CardClass.openWizard(_haHassObj(),async()=>{
+        /* onDone: l'installazione avviene dentro il wizard, qui aggiorniamo solo SHA e pending */
+        try{
+          const sha=_pkgPending[fileName]||_ghCfg().pkgNotifiedShas?.[fileName];
+          if(sha){ const g=_ghCfg(); g.pkgShas=g.pkgShas||{}; g.pkgShas[fileName]=sha; saveCfg(); }
+          delete _pkgPending[fileName];
+        }catch(e){}
+        try{ _ntfClearPkg(fileName); }catch(e){}
+        try{ _ghsUpdBadge(); }catch(e){}
+        try{ await _loadHaInstalledPkgs(); if(typeof _ghStoreRender==='function') _ghStoreRender(); }catch(e){}
+      }, yaml, {isUpdate:true});
+      return;
+    }
+  }
+
+  /* Fallback: card senza wizard → applica config salvata silenziosamente e installa */
   showToast('⬇️ Aggiorno PKG da GitHub…');
-  let yaml;
-  try{ yaml=await _ghDownload(f); }catch(e){ showToast('⚠️ '+e.message); return; }
+  let yaml; try{ yaml=await _ghDownload(f); }catch(e){ showToast('⚠️ '+e.message); return; }
   if(!yaml){ showToast('⚠️ PKG vuoto'); return; }
-  /* 2. Se esiste una config wizard salvata per la card associata, applicala */
   try{
-    const cardId=_pkgFindCardForFile('frarik/'+fileName)||_pkgFindCardForFile(fileName);
     if(cardId){
       const wizKey='frarik_pkg_wizard_'+cardId.toLowerCase();
       const savedCfg=JSON.parse(localStorage.getItem(wizKey)||'null');
@@ -4397,7 +4422,6 @@ async function _ghsPkgUpdFromPending(encodedName){
       }
     }
   }catch(e){}
-  /* 3. Installa su HA */
   try{
     const m=location.pathname.match(/^(.*\/api\/hassio_ingress\/[^/]+)/);
     const base=location.origin+(m?m[1]:'');
@@ -4406,7 +4430,6 @@ async function _ghsPkgUpdFromPending(encodedName){
     if(r.ok&&j.ok){ showToast('✅ PKG aggiornato!'); }
     else{ showToast('⚠️ Errore PKG: '+(j.error||r.status)); return; }
   }catch(e){ showToast('⚠️ '+e.message); return; }
-  /* 4. Aggiorna SHA e svuota pending */
   try{
     const sha=_pkgPending[fileName]||_ghCfg().pkgNotifiedShas?.[fileName];
     if(sha){ const g=_ghCfg(); g.pkgShas=g.pkgShas||{}; g.pkgShas[fileName]=sha; saveCfg(); }

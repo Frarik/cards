@@ -3977,7 +3977,8 @@ automation:
   }
   window._azOpenImpostazioni = _azOpenImpostazioni;
 
-  function _openWizardAZ(hass, onDone, _tpl) {
+  function _openWizardAZ(hass, onDone, _tpl, opts) {
+    var isUpdate = !!(opts && opts.isUpdate);
     var states = (hass && hass.states) || {};
     var switchIds  = Object.keys(states).filter(function(id) { return /^switch\./.test(id); }).sort();
     var sensorIds  = Object.keys(states).filter(function(id) { return /^sensor\./.test(id); }).sort();
@@ -4054,7 +4055,7 @@ automation:
         + '</style>'
         + '<div class="wd-bd" id="wd-bd"><div class="wd-panel">'
         + '<div class="wd-hdr"><div class="wd-ico">🦟</div>'
-        + '<div><div class="wd-tit">Installa PKG Anti Zanzare</div><div class="wd-sub">frarik_antizanzare.yaml → config/packages/</div></div>'
+        + '<div><div class="wd-tit">' + (isUpdate ? 'Aggiorna PKG Anti Zanzare' : 'Installa PKG Anti Zanzare') + '</div><div class="wd-sub">frarik_antizanzare.yaml → config/packages/</div></div>'
         + '<button class="wd-x" id="wd-x">✕</button></div>'
         + '<div class="wd-body">'
         + '<div><div class="wd-sec">Switch Anti Zanzare</div>'
@@ -4090,7 +4091,7 @@ automation:
         + '</div>'
         + '<div class="wd-foot">'
         + '<button class="wd-cancel" id="wd-cancel">Annulla</button>'
-        + '<button class="wd-install" id="wd-install">📦 Installa PKG</button>'
+        + '<button class="wd-install" id="wd-install">' + (isUpdate ? '🔄 Aggiorna PKG' : '📦 Installa PKG') + '</button>'
         + '</div></div></div>';
 
       sr.getElementById('wd-x').addEventListener('click', destroy);
@@ -5021,7 +5022,7 @@ automation:
   }
 
   var _AZ_CARD = {
-    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.29', frarik_no_edit: true,
+    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.30', frarik_no_edit: true,
     desc: 'Controllo sistema anti zanzare: schedule settimanale, timer, statistiche mensili, blocco meteo, sensori sicurezza.',
     render:    function(card) { return _azRender(card); },
     mount:     function(card, hass, el) { _azMount(card, hass, el); },
