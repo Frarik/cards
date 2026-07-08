@@ -1,3 +1,4 @@
+# Frarik Anti Zanzare PKG — v2.1
 homeassistant:
   customize:
     package.node_anchors:

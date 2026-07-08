@@ -8,7 +8,8 @@
 
   var _AZ_WIZ_KEY = 'frarik_pkg_wizard_antizanzare';
 
-  var _AZ_PKG_YAML = `homeassistant:
+  var _AZ_PKG_YAML = `# Frarik Anti Zanzare PKG — v2.1
+homeassistant:
   customize:
     package.node_anchors:
       customize: &customize
@@ -5032,7 +5033,7 @@ automation:
   }
 
   var _AZ_CARD = {
-    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.31', frarik_no_edit: true,
+    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.32', frarik_no_edit: true,
     desc: 'Controllo sistema anti zanzare: schedule settimanale, timer, statistiche mensili, blocco meteo, sensori sicurezza.',
     render:    function(card) { return _azRender(card); },
     mount:     function(card, hass, el) { _azMount(card, hass, el); },
