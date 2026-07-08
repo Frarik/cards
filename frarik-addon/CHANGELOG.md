@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.9.49 — 2026-07-08
+
+### fix(store): badge "Aggiorna (N)" ora sempre in sync col contenuto del tab
+
+- Badge aggiornato all'inizio di _ghStoreRenderUpdates() per eliminare il contatore stale
+- Risolto caso in cui badge mostrava (1) ma lista era vuota per race condition con _ghCheckPkg
+
 ## 1.9.48 — 2026-07-08
 
 ### fix(store): richiesta riavvio HA dopo aggiorna PKG + campo Alexa wizard (card v2.31)

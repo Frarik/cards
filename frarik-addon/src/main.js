@@ -2776,6 +2776,7 @@ function _ghsUpdBadge(){
   btn.style.borderColor=n?'rgba(251,146,60,.45)':'';
 }
 function _ghStoreRenderUpdates(){
+  try{ _ghsUpdBadge(); }catch(e){}
   const list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
   const g=_ghCfg();
   const cardUpd=_ghPending.filter(f=>g.shas[f.name]&&g.shas[f.name]!==f.sha);
