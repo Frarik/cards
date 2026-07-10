@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.9.74 — 2026-07-10
+
+### fix(distintivo): GruppoPrese v1.17 — €/costo a font 14px bold come W e kWh
+
 ## 1.9.73 — 2026-07-10
 
 ### fix(distintivo): GruppoPrese v1.16 — kWh grande come W + timer via localStorage
