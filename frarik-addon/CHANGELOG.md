@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.56 — 2026-07-10
+
+### fix(distintivo): GruppoPrese v1.3 — animazione snake + testo stato più visibile
+
+- Flusso animato: da 3 dot separati a un serpente unico (gradiente coda→testa che scorre)
+- Rimosso valore W dal lato destro della barra — il consumo è visibile nella riga stato
+- Testo "Accesa/Spenta" ingrandito (10px→13px, weight 700→800) e watt in grassetto 14px
+
 ## 1.9.55 — 2026-07-10
 
 ### fix(distintivo): GruppoPrese v1.2 — colori corretti e consumo/flusso visibili

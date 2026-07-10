@@ -1,4 +1,4 @@
-/* frarik-version: 1.2 */
+/* frarik-version: 1.3 */
 /**
  * GruppoPrese.js — Distintivo FratechStore v1.1
  * Chip contatore · popup con stato on/off/unavailable, consumo W real-time, flusso animato
@@ -118,11 +118,11 @@
 
   /* ── CSS condiviso (iniettato una volta) ── */
   const CSS = `
-    @keyframes gpflow{0%{left:-32px;opacity:0}12%{opacity:1}88%{opacity:1}100%{left:calc(100% + 32px);opacity:0}}
+    @keyframes gpsnake{0%{left:-55%}100%{left:105%}}
     @keyframes gppulse{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.7);opacity:0}}
     @keyframes gpblink{0%,100%{opacity:1}50%{opacity:.2}}
-    .gp-flow-track{position:relative;height:6px;border-radius:4px;overflow:hidden;background:rgba(255,255,255,.07)}
-    .gp-flow-dot{position:absolute;top:0;height:100%;width:28px;border-radius:4px;animation-name:gpflow;animation-timing-function:linear;animation-iteration-count:infinite}
+    .gp-flow-track{position:relative;height:8px;border-radius:5px;overflow:hidden;background:rgba(255,255,255,.07)}
+    .gp-snake{position:absolute;top:0;height:100%;width:55%;border-radius:5px;animation-name:gpsnake;animation-timing-function:linear;animation-iteration-count:infinite}
     .gp-dot-ring{position:absolute;border-radius:50%;animation:gppulse 1.6s ease-in-out infinite;pointer-events:none}
     .gp-blink{animation:gpblink 1s ease-in-out infinite}
   `;
@@ -163,9 +163,7 @@
         </div>
         <div class="gp-flow-track" style="height:7px">
           <div style="position:absolute;top:0;left:0;height:100%;width:${totalPct}%;background:${fCol};border-radius:3px;transition:width .6s"></div>
-          ${fSpd?`<div class="gp-flow-dot" style="background:rgba(255,255,255,.9);animation-duration:${fSpd}ms;animation-delay:0ms"></div>
-          <div class="gp-flow-dot" style="background:rgba(255,255,255,.9);animation-duration:${fSpd}ms;animation-delay:${Math.round(fSpd/3)}ms"></div>
-          <div class="gp-flow-dot" style="background:rgba(255,255,255,.9);animation-duration:${fSpd}ms;animation-delay:${Math.round(fSpd*2/3)}ms"></div>`:''}
+          ${fSpd?`<div class="gp-snake" style="background:linear-gradient(90deg,transparent 0%,${fCol}22 25%,${fCol}88 70%,${fCol} 90%,#fff 100%);animation-duration:${fSpd}ms"></div>`:''}
         </div>
         <div style="display:flex;justify-content:space-between;margin-top:4px">
           <span style="font-size:9px;color:rgba(255,255,255,.25)">${totalActive} pres${totalActive===1?'a':'e'} acces${totalActive===1?'a':'e'}</span>
@@ -212,13 +210,13 @@
       const wattStr = w!==null ? fmtW(w) : null;
       let statusLine;
       if (st.unavail) {
-        statusLine = `<span class="gp-blink" style="font-size:10px;color:${COL_UNAVL};font-weight:700">⚡ Non disponibile</span>`;
+        statusLine = `<span class="gp-blink" style="font-size:12px;color:${COL_UNAVL};font-weight:800">⚡ Non disponibile</span>`;
       } else if (st.unknown) {
-        statusLine = `<span class="gp-blink" style="font-size:10px;color:${COL_UNK};font-weight:700">❓ Sconosciuta</span>`;
+        statusLine = `<span class="gp-blink" style="font-size:12px;color:${COL_UNK};font-weight:800">❓ Sconosciuta</span>`;
       } else if (st.on) {
-        statusLine = `<span style="font-size:10px;color:${COL_ON};font-weight:700">● Accesa${wattStr?' · <strong style="font-size:12px">'+wattStr+'</strong>':''}</span>`;
+        statusLine = `<span style="font-size:13px;color:${COL_ON};font-weight:800">● Accesa${wattStr?` &nbsp;<strong style="font-size:14px;letter-spacing:-.3px">${wattStr}</strong>`:''}</span>`;
       } else {
-        statusLine = `<span style="font-size:10px;color:${COL_OFF};font-weight:700">● Spenta${hasPowerSensor&&w!==null?' · '+wattStr:''}</span>`;
+        statusLine = `<span style="font-size:13px;color:${COL_OFF};font-weight:800">● Spenta</span>`;
       }
 
       /* ── toggle ── */
@@ -238,17 +236,13 @@
         const barPct = pct!==null ? pct : 0;
         const barFill = pct!==null ? `<div style="position:absolute;inset:0;width:${barPct}%;background:${fCol2};border-radius:4px;transition:width .5s"></div>` : '';
         const dots = (fSpd2>0) ? `
-          <div class="gp-flow-dot" style="background:rgba(255,255,255,.9);animation-duration:${fSpd2}ms;animation-delay:0ms"></div>
-          <div class="gp-flow-dot" style="background:rgba(255,255,255,.9);animation-duration:${fSpd2}ms;animation-delay:${Math.round(fSpd2/3)}ms"></div>
-          <div class="gp-flow-dot" style="background:rgba(255,255,255,.9);animation-duration:${fSpd2}ms;animation-delay:${Math.round(fSpd2*2/3)}ms"></div>` : '';
-        const wLabel = w!==null ? `<span style="font-size:10px;font-weight:700;color:${fCol2};min-width:48px;text-align:right">${fmtW(w)}</span>` : `<span style="font-size:9px;color:rgba(255,255,255,.25)">—</span>`;
+          <div class="gp-snake" style="background:linear-gradient(90deg,transparent 0%,${fCol2}22 25%,${fCol2}88 70%,${fCol2} 90%,#fff 100%);animation-duration:${fSpd2}ms"></div>` : '';
         powerBar = `
-          <div style="padding:4px 16px 10px;display:flex;align-items:center;gap:8px">
-            <div class="gp-flow-track" style="flex:1;height:8px">
+          <div style="padding:4px 16px 10px">
+            <div class="gp-flow-track">
               ${barFill}
               ${dots}
             </div>
-            ${wLabel}
           </div>`;
       }
 
@@ -583,7 +577,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Prese', icon: '🔌',
     desc: 'Chip prese on/off · popup con stato, consumo W real-time, flusso animato e indicatori unavailable.',
-    version: '1.2', isDistintivo: true,
+    version: '1.3', isDistintivo: true,
     defaultCfg: { label:'Prese', icon:'🔌', color:'#fb923c', maxW:2300, entities:[] },
     chip, watchEntities, render, mount, update, configure,
   };
