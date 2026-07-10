@@ -1,7 +1,7 @@
-/* frarik-version: 1.7 */
+/* frarik-version: 1.8 */
 /**
- * GruppoPrese.js — Distintivo FratechStore v1.7
- * Chip contatore · riquadro riassuntivo · colori % carico · kWh giornalieri · icone per presa
+ * GruppoPrese.js — Distintivo FratechStore v1.8
+ * Chip · riquadro riassuntivo · colori % · kWh auto-accumulati · picker icona per presa
  */
 (function () {
   'use strict';
@@ -133,6 +133,18 @@
     document.head.appendChild(s);
   }
 
+  /* ── accumulo energia giornaliera (senza sensore) ──
+     Chiave localStorage: _gpkwh_{entity}_{yyyy-mm-dd}  (no frarik_ → non sincronizzata) */
+  function _todayKey() { return new Date().toISOString().slice(0,10); }
+  function _gpKwhKey(entityId) { return '_gpkwh_'+entityId+'_'+_todayKey(); }
+  function _gpGetKwh(entityId) { return parseFloat(localStorage.getItem(_gpKwhKey(entityId))||'0'); }
+  function _gpAddKwh(entityId, watts, deltaMs) {
+    if (!watts || watts<=0 || deltaMs<=0) return;
+    const k = _gpKwhKey(entityId);
+    const prev = parseFloat(localStorage.getItem(k)||'0');
+    localStorage.setItem(k, (prev + watts * deltaMs / 3600000).toFixed(5));
+  }
+
   /* ── render popup ── */
   function render(cfg, rawHass) {
     const c = loadCfg(cfg);
@@ -147,7 +159,9 @@
       ents.forEach(e=>{
         const st=socketStatus(h,e.entity); if(st.on) totalActive++;
         if(e.power_entity&&st.on){const w=numOf(h,e.power_entity);if(w!==null){sum+=w;hasPwr=true;}}
-        if(e.energy_entity){const kw=numOf(h,e.energy_entity);if(kw!==null){totalDailyKwh=(totalDailyKwh||0)+kw;}}
+        /* kWh giornalieri: usa sensore se configurato, altrimenti accumulo automatico */
+        const kw = e.energy_entity ? numOf(h,e.energy_entity) : _gpGetKwh(e.entity);
+        if(kw>0) totalDailyKwh=(totalDailyKwh||0)+kw;
       });
       if(hasPwr) totalW=sum;
     }
@@ -231,7 +245,7 @@
       const fSpd2 = flowSpeed(w);
       const fCol2 = flowColor(w, maxW);
       const mc = st.mainCol;
-      const dailyKwh = (h && e.energy_entity) ? numOf(h, e.energy_entity) : null;
+      const dailyKwh = h ? (e.energy_entity ? numOf(h,e.energy_entity) : _gpGetKwh(e.entity)||null) : null;
 
       /* ── cerchio stato (sinistra) ── */
       const isError = st.unavail || st.unknown;
@@ -390,10 +404,22 @@
     _mountHandlers(cfg, el);
     setTimeout(()=>_syncTitle(cfg,el), 0);
     if (el._gpPoll) return;
+    el._gpLastPoll = Date.now();
     el._gpPoll = setInterval(()=>{
       if (!el.isConnected) { clearInterval(el._gpPoll); delete el._gpPoll; return; }
       try {
         const h = H(); if (!h) return;
+        const now = Date.now();
+        const deltaMs = now - (el._gpLastPoll||now);
+        el._gpLastPoll = now;
+        /* accumulo kWh automatico per le prese attive con sensore watt */
+        const c2 = loadCfg(cfg);
+        (Array.isArray(c2.entities)?c2.entities:[]).forEach(e=>{
+          if(e.entity && e.power_entity && !e.energy_entity){
+            const st=socketStatus(h,e.entity);
+            if(st.on){ const w=numOf(h,e.power_entity); _gpAddKwh(e.entity,w,deltaMs); }
+          }
+        });
         el.innerHTML = render(cfg, h);
         _mountHandlers(cfg, el);
         _syncTitle(cfg, el);
@@ -494,8 +520,11 @@
         const extraSection=exp?`
           <div style="margin-top:6px;padding:8px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);display:flex;flex-direction:column;gap:6px">
             <div>
-              <div style="font-size:9px;color:rgba(255,255,255,.35);margin-bottom:3px">🎨 Icona (emoji o mdi:xxx)</div>
-              <input data-icon-idx="${i}" placeholder="🔌  oppure  mdi:power-socket" value="${eh(e.icon||'')}" style="width:100%;box-sizing:border-box;padding:6px 9px;border-radius:7px;border:1px solid rgba(251,147,60,.2);background:rgba(251,147,60,.04);color:#fff;font-size:13px;outline:none;font-family:inherit">
+              <div style="font-size:9px;color:rgba(255,255,255,.35);margin-bottom:3px">🎨 Icona</div>
+              <div style="display:flex;gap:6px;align-items:center">
+                <button data-icon-pick="${i}" style="width:38px;height:34px;border-radius:8px;border:1px solid rgba(251,147,60,.3);background:rgba(251,147,60,.08);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">${iconHtml(e.icon||'🔌',20)}</button>
+                <input data-icon-idx="${i}" placeholder="emoji o mdi:power-socket" value="${eh(e.icon||'')}" style="flex:1;box-sizing:border-box;padding:6px 9px;border-radius:7px;border:1px solid rgba(251,147,60,.2);background:rgba(251,147,60,.04);color:#fff;font-size:12px;outline:none;font-family:inherit">
+              </div>
             </div>
             <div>
               <div style="font-size:9px;color:rgba(255,255,255,.35);margin-bottom:3px">⚡ Sensore watt (opzionale)</div>
@@ -610,8 +639,30 @@
       ov.querySelectorAll('[data-rmpwr]').forEach(btn=>{ btn.addEventListener('click',()=>{ents[parseInt(btn.dataset.rmpwr)].power_entity='';attach();}); });
       ov.querySelectorAll('[data-rmenergy]').forEach(btn=>{ btn.addEventListener('click',()=>{ents[parseInt(btn.dataset.rmenergy)].energy_entity='';attach();}); });
       ov.querySelectorAll('[data-rmauto]').forEach(btn=>{ btn.addEventListener('click',()=>{ents[parseInt(btn.dataset.rmauto)].automation='';attach();}); });
+      ov.querySelectorAll('[data-icon-pick]').forEach(btn=>{
+        btn.addEventListener('click', ev=>{
+          ev.stopPropagation();
+          const i=parseInt(btn.dataset.iconPick);
+          if(typeof openIconPicker==='function'){
+            openIconPicker(val=>{
+              ents[i].icon=val;
+              const inp=ov.querySelector(`[data-icon-idx="${i}"]`);
+              if(inp) inp.value=val;
+              btn.innerHTML=iconHtml(val,20);
+            });
+            /* porta il modal icone sopra l'overlay configure */
+            const _ipm=document.getElementById('ntf-icon-modal');
+            if(_ipm) _ipm.style.zIndex='200000';
+          }
+        });
+      });
       ov.querySelectorAll('[data-icon-idx]').forEach(inp=>{
-        inp.addEventListener('blur',()=>{ents[parseInt(inp.dataset.iconIdx)].icon=(inp.value||'').trim();});
+        const i=parseInt(inp.dataset.iconIdx);
+        inp.addEventListener('input',()=>{
+          ents[i].icon=(inp.value||'').trim();
+          const btn=ov.querySelector(`[data-icon-pick="${i}"]`);
+          if(btn) btn.innerHTML=iconHtml(ents[i].icon||'🔌',20);
+        });
       });
       ov.querySelectorAll('[data-pwr-idx]').forEach(inp=>{
         const i=parseInt(inp.dataset.pwrIdx);
@@ -657,7 +708,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Prese', icon: '🔌',
     desc: 'Chip prese on/off · popup con stato, consumo W real-time, flusso animato e indicatori unavailable.',
-    version: '1.7', isDistintivo: true,
+    version: '1.8', isDistintivo: true,
     defaultCfg: { label:'Prese', icon:'🔌', color:'#fb923c', maxW:2300, entities:[] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -666,5 +717,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-prese v1.7'); } catch(e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-prese v1.8'); } catch(e) {}
 })();

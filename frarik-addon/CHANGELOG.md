@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.9.63 — 2026-07-10
+
+### feat(distintivo): GruppoPrese v1.8 — kWh automatici (senza sensore) + picker icona
+
+- **kWh giornalieri automatici**: non serve più configurare un sensore `energy_entity`
+  — il popup accumula W×Δt ogni 1.5s (metodo integrale di Riemann) e mostra i kWh di oggi
+  per ogni presa e come totale nel riquadro, azzerandosi automaticamente a mezzanotte
+  — se si configura un `energy_entity` (utility_meter HA), quel sensore ha la precedenza
+- **Picker icona per presa**: nel pannello ▾ di ogni presa, il bottone icona apre il
+  selettore grafico MDI (stessa libreria del resto della dashboard)
+  — si può anche digitare direttamente emoji o `mdi:xxx` nell'input accanto al bottone
+- L'icona personalizzata si aggiorna live nell'anteprima mentre si digita
+
 ## 1.9.62 — 2026-07-10
 
 ### feat(distintivo): GruppoPrese v1.7 — potenza kW configurabile, colori dinamici, kWh giornalieri, icone per presa
