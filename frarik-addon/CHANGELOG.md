@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.9.66 — 2026-07-10
+
+### fix(distintivo): GruppoPrese v1.10 — energia giornaliera da sensore cumulativo
+
+- Il campo `energy_entity` ora calcola il consumo di oggi come delta:
+  `kWh_oggi = valore_attuale − valore_a_mezzanotte`
+- Al primo avvio della giornata il valore corrente del sensore viene salvato
+  come "baseline" in localStorage (`_gpbase_{entity}_{yyyy-mm-dd}`)
+- A mezzanotte la chiave cambia data → baseline azzerata automaticamente
+- Funziona con qualsiasi sensore cumulativo (non serve un utility_meter giornaliero)
+- Stessa logica applicata al totale nel riquadro (somma dei delta di tutte le prese)
+
 ## 1.9.65 — 2026-07-10
 
 ### fix(distintivo): GruppoPrese — tutti i testi al 100% bianco

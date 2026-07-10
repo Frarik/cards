@@ -1,8 +1,8 @@
-/* frarik-version: 1.9 */
+/* frarik-version: 1.10 */
 /**
- * GruppoPrese.js — Distintivo FratechStore v1.9
- * Chip · riquadro riassuntivo · colori % · kWh auto-accumulati · picker icona per presa
- * v1.9: snake fluido (animation-delay negativo) · sensore energia sempre visibile senza ▾
+ * GruppoPrese.js — Distintivo FratechStore v1.10
+ * Chip · riquadro riassuntivo · colori % · kWh giornalieri · picker icona per presa
+ * v1.10: consumo oggi = delta (valore_attuale − baseline_mezzanotte) per sensori cumulativi
  */
 (function () {
   'use strict';
@@ -149,6 +149,22 @@
     localStorage.setItem(k, (prev + watts * deltaMs / 3600000).toFixed(5));
   }
 
+  /* ── delta giornaliero da sensore cumulativo ──
+     Il sensore sale indefinitamente (es. sensor.presa_energia = 2570 kWh totali).
+     Al primo avvio della giornata salviamo il valore come "baseline".
+     Consumo oggi = valore_attuale − baseline. Si azzera a mezzanotte (nuova chiave data). */
+  function _gpBaseKey(entityId) { return '_gpbase_'+entityId+'_'+_todayKey(); }
+  function _gpDailyFromSensor(h, entityId) {
+    if (!h || !entityId) return null;
+    const cur = numOf(h, entityId);
+    if (cur === null) return null;
+    const bk = _gpBaseKey(entityId);
+    let base = parseFloat(localStorage.getItem(bk)||'-1');
+    if (base < 0) { localStorage.setItem(bk, cur.toFixed(5)); return 0; }
+    const delta = cur - base;
+    return delta >= 0 ? parseFloat(delta.toFixed(3)) : 0;
+  }
+
   /* ── render popup ── */
   function render(cfg, rawHass) {
     const c = loadCfg(cfg);
@@ -163,8 +179,8 @@
       ents.forEach(e=>{
         const st=socketStatus(h,e.entity); if(st.on) totalActive++;
         if(e.power_entity&&st.on){const w=numOf(h,e.power_entity);if(w!==null){sum+=w;hasPwr=true;}}
-        /* kWh giornalieri: usa sensore se configurato, altrimenti accumulo automatico */
-        const kw = e.energy_entity ? numOf(h,e.energy_entity) : _gpGetKwh(e.entity);
+        /* kWh giornalieri: usa delta-sensore se configurato, altrimenti accumulo automatico */
+        const kw = e.energy_entity ? _gpDailyFromSensor(h,e.energy_entity) : _gpGetKwh(e.entity);
         if(kw>0) totalDailyKwh=(totalDailyKwh||0)+kw;
       });
       if(hasPwr) totalW=sum;
@@ -249,7 +265,7 @@
       const fSpd2 = flowSpeed(w);
       const fCol2 = flowColor(w, maxW);
       const mc = st.mainCol;
-      const dailyKwh = h ? (e.energy_entity ? numOf(h,e.energy_entity) : _gpGetKwh(e.entity)||null) : null;
+      const dailyKwh = h ? (e.energy_entity ? _gpDailyFromSensor(h,e.energy_entity) : _gpGetKwh(e.entity)||null) : null;
 
       /* ── cerchio stato (sinistra) ── */
       const isError = st.unavail || st.unknown;
@@ -724,7 +740,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Prese', icon: '🔌',
     desc: 'Chip prese on/off · popup con stato, consumo W real-time, flusso animato e indicatori unavailable.',
-    version: '1.9', isDistintivo: true,
+    version: '1.10', isDistintivo: true,
     defaultCfg: { label:'Prese', icon:'🔌', color:'#fb923c', maxW:2300, entities:[] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -733,5 +749,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-prese v1.9'); } catch(e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-prese v1.10'); } catch(e) {}
 })();
