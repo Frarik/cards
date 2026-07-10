@@ -1,4 +1,4 @@
-/* frarik-version: 1.4 */
+/* frarik-version: 1.5 */
 /**
  * GruppoPrese.js — Distintivo FratechStore v1.1
  * Chip contatore · popup con stato on/off/unavailable, consumo W real-time, flusso animato
@@ -76,11 +76,13 @@
     if (w>200)  return col;
     return '#4ade80';
   }
-  /* velocità flusso: ms per ciclo (meno = più veloce) — lineare 0W→fermo, 3600W→massima velocità */
+  /* velocità flusso: ms per ciclo (meno = più veloce)
+     Scala logaritmica: distingue bene i bassi consumi (9W vs 97W percettibilmente diversi)
+     1W→7000ms (lentissimo), 3600W→600ms (veloce) */
   function flowSpeed(w) {
     if (w===null||w<=0) return 0;
-    const ratio = Math.min(1, w / 3600);
-    return Math.round(3800 - ratio * (3800 - 340));
+    const ratio = Math.min(1, Math.max(0, Math.log(w) / Math.log(3600)));
+    return Math.round(7000 - ratio * (7000 - 600));
   }
 
   /* ── chip ── */
@@ -193,9 +195,10 @@
       const circBorder = `2px solid ${mc}`;
       const circIcon = st.unavail ? '⚠️' : st.unknown ? '❓' : iconHtml(e.icon||c.icon||'🔌', 18);
       const circIconCol = st.on ? COL_ON : mc;
-      /* ring pulsante solo quando accesa e sta consumando */
-      const pulseRing = (st.on && w!==null && w>10)
-        ? `<div class="gp-dot-ring" style="inset:-6px;border:2px solid ${fCol2};opacity:.6"></div>` : '';
+      /* ring pulsante sempre quando accesa */
+      const ringCol = (w!==null && w>10) ? fCol2 : COL_ON;
+      const pulseRing = st.on
+        ? `<div class="gp-dot-ring" style="inset:-6px;border:2px solid ${ringCol};opacity:.55"></div>` : '';
 
       const dot = `<div style="position:relative;width:44px;height:44px;flex-shrink:0">
         ${pulseRing}
@@ -575,7 +578,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Prese', icon: '🔌',
     desc: 'Chip prese on/off · popup con stato, consumo W real-time, flusso animato e indicatori unavailable.',
-    version: '1.4', isDistintivo: true,
+    version: '1.5', isDistintivo: true,
     defaultCfg: { label:'Prese', icon:'🔌', color:'#fb923c', maxW:2300, entities:[] },
     chip, watchEntities, render, mount, update, configure,
   };

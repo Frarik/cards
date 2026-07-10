@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.58 — 2026-07-10
+
+### fix(distintivo): GruppoPrese v1.5 — velocità snake logaritmica + ring pulsante su tutte le prese accese
+
+- Velocità snake: scala logaritmica invece di lineare — 9W e 97W ora percettibilmente diversi
+  - 1W → 7000ms (lentissimo), 100W → ~3400ms, 500W → ~2100ms, 3600W → 600ms
+- Ring pulsante: ora appare su TUTTE le prese accese, non solo su quelle con sensore watt >10W
+
 ## 1.9.57 — 2026-07-10
 
 ### fix(distintivo): GruppoPrese v1.4 — velocità snake proporzionale ai watt (0–3600W)
