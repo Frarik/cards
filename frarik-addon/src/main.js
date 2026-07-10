@@ -1303,6 +1303,7 @@ function _haLoadCfg(force){
     const now=Date.now();
     if(!force && now-_lastPull<1500) return;   // throttle
     _lastPull=now;
+    const _isFirstLoad=!_cfgSynced; // primo caricamento della sessione
     const _licHdr=localStorage.getItem(LIC_KEY)||'';
     fetch(ADDON_BASE+'/api/frarik/config', {headers:{'X-Frarik-Key':_licHdr}}).then(r=> r.ok ? r.json() : null).then(v=>{
       _cfgSynced=true;   // d'ora in poi le modifiche locali si auto-salvano
@@ -1312,19 +1313,23 @@ function _haLoadCfg(force){
       const hasRemote = v && ((v.cfg&&v.cfg.pages)||v.pages);
       if(!hasRemote && cfg && (cfg.pages||[]).length){
         _haSaveCfg(); // server vuoto → scrivi la plancia locale
-      } else if(hasRemote && _localTs>_remoteTs){
-        _haSaveCfgDebounced(); // locale più recente del server → sincronizza
+      } else if(hasRemote && _localTs>_remoteTs && !_isFirstLoad){
+        // Push solo sui poll successivi (non al primo caricamento):
+        // evita che un dispositivo aperto dopo l'ultimo salvataggio sovrascriva
+        // la config del server con una versione locale stantia.
+        _haSaveCfgDebounced();
       }
     }).catch(()=>{ /* offline: si tiene la copia locale */ });
   }catch(e){}
 }
 /* Adotta la plancia remota (file add-on) se più recente di quella locale. Se il remoto è
-   vuoto o più vecchio NON tocca nulla (così non si perde la plancia locale). */
-function _applyRemoteCfg(v){
+   vuoto o più vecchio NON tocca nulla (così non si perde la plancia locale).
+   Con force=true applica sempre, indipendentemente dai timestamp (usato da syncCfgFromHA). */
+function _applyRemoteCfg(v, force){
   const remoteCfg = v ? (v.cfg&&v.cfg.pages ? v.cfg : (v.pages ? v : null)) : null;
   const remoteTs  = v ? (v._ts || (remoteCfg&&remoteCfg._ts) || 0) : 0;
   const remoteJs  = (v&&Array.isArray(v.js)) ? v.js : null;
-  if(remoteCfg && remoteCfg.pages && remoteTs>(cfg._ts||0)){
+  if(remoteCfg && remoteCfg.pages && (force || remoteTs>(cfg._ts||0))){
     _cfgSyncing=true;
     if(Array.isArray(remoteJs) && typeof _jsStoreSave==='function'){
       remoteJs.forEach(it=>{ try{ if(it&&it.meta&&it.meta.id){ _jsStoreSave(it.meta.id,it.meta,it.code,it.origin); if(!window.FratechCardRegistry[it.meta.id]) try{ _installCardCode(it.code); }catch(e){} } }catch(e){} });
@@ -1370,6 +1375,20 @@ function syncCfgToHA(){
   cfg._ts=Date.now(); _saveCfgLocalOnly();
   // salvataggio "manuale" → mostra la conferma (gli auto-salvataggi sono silenziosi)
   _haSaveCfg(true);
+}
+/* Forza il pull dal server ignorando i timestamp: sovrascrive la config locale con quella
+   del server. Utile per allineare un dispositivo che ha un timestamp locale più recente. */
+function syncCfgFromHA(){
+  const _licHdr=localStorage.getItem(LIC_KEY)||'';
+  showToast('🔄 Scaricamento configurazione dal server…');
+  fetch(ADDON_BASE+'/api/frarik/config',{headers:{'X-Frarik-Key':_licHdr}}).then(r=>r.ok?r.json():null).then(v=>{
+    if(!v){ showToast('⚠️ Backend non raggiungibile'); return; }
+    const remoteCfg=v.cfg&&v.cfg.pages?v.cfg:(v.pages?v:null);
+    if(!remoteCfg||!remoteCfg.pages||!remoteCfg.pages.length){ showToast('⚠️ Configurazione server vuota'); return; }
+    _cfgSynced=true;
+    _applyRemoteCfg(v, true); // force=true: bypassa il check sul timestamp
+    showToast('✅ Configurazione sincronizzata dal server');
+  }).catch(()=>{ showToast('⚠️ Backend non raggiungibile'); });
 }
 
 /* ── BACKUP: esporta/ripristina TUTTO (layout + card JS) in un file .json ── */
@@ -18945,6 +18964,7 @@ Object.assign(window, {
   sosRemovePerson,
   sosUpdateContact,
   syncCfgToHA,
+  syncCfgFromHA,
   toggleEdit,
   toggleEntity,
   toggleFbarEnabled,

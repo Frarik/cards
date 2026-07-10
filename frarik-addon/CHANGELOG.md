@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.9.59 — 2026-07-10
+
+### fix(sync): sincronizzazione cross-device — forza pull da server + no push al primo caricamento
+
+- `_haLoadCfg`: il push locale→server (push-local-if-newer) ora è bloccato al primo caricamento
+  della sessione — evita che un dispositivo con timestamp locale più recente sovrascriva la
+  configurazione del server (es. tablet che sovrascriveva la config del PC)
+- `_applyRemoteCfg(v, force)`: nuovo parametro `force` che bypassa il check sul timestamp —
+  applica sempre la config remota se richiesto esplicitamente
+- Aggiunta `syncCfgFromHA()`: forza il pull dal server ignorando i timestamp locali
+- Nuovo bottone "Scarica da server (forza)" nel pannello Dati → da usare per allineare
+  manualmente un dispositivo che ha perso la sincronizzazione
+
 ## 1.9.58 — 2026-07-10
 
 ### fix(distintivo): GruppoPrese v1.5 — velocità snake logaritmica + ring pulsante su tutte le prese accese
