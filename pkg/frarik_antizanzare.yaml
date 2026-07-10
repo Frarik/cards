@@ -1,4 +1,4 @@
-# Frarik Anti Zanzare PKG — v2.1
+# Frarik Anti Zanzare PKG — v2.2
 homeassistant:
   customize:
     package.node_anchors:
@@ -762,7 +762,7 @@ notify:
 template:
   - sensor:
       - name: "Frarik Antizanzare Versione"
-        state: "2.0"
+        state: "2.2"
         icon: mdi:package-variant-closed
 
   - trigger:
@@ -3638,10 +3638,16 @@ automation:
 
   # ── PERDITA ACQUA ─────────────────────────────────────────────────────────────
   - alias: Perdita cassetta spegne anti zanzare e notifica
+    mode: single
     trigger:
       - platform: state
         entity_id: IL_TUO_SENSORE_PERDITA
         to: "on"
+        for: "00:00:10"
+    condition:
+      - condition: state
+        entity_id: input_boolean.frarik_antizanzare_notify_push
+        state: "on"
     action:
       - service: switch.turn_off
         target:

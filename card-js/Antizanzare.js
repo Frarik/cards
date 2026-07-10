@@ -1,5 +1,5 @@
 /**
- * antizanzare-card.js v3.0
+ * antizanzare-card.js v3.1
  */
 
 // ─── FratechStore Integration ────────────────────────────────────────────────
@@ -5021,7 +5021,7 @@ automation:
   }
 
   var _AZ_CARD = {
-    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.33', frarik_no_edit: true,
+    id: 'antizanzare', name: 'Anti Zanzare', icon: '🦟', version: '2.34', frarik_no_edit: true,
     desc: 'Controllo sistema anti zanzare: schedule settimanale, timer, statistiche mensili, blocco meteo, sensori sicurezza.',
     render:    function(card) { return _azRender(card); },
     mount:     function(card, hass, el) { _azMount(card, hass, el); },
@@ -5029,7 +5029,7 @@ automation:
     configure: null,
     frarik_pkg_check:   'sensor.frarik_antizanzare_stato_sistema',
     frarik_pkg_id:      'frarik_antizanzare',
-    frarik_pkg_version: '2.0',
+    frarik_pkg_version: '2.2',
     openWizard: _openWizardAZ,
     _buildPkgFromConfig: function(cfg, _tpl) { return _buildPkgAZ(cfg.sw || '', cfg.push || [], cfg.pioggia || '', _tpl, cfg.vento || '', cfg.tanica || '', cfg.presenza || '', cfg.perdita || '', cfg.pompa || '', cfg.probPioggia || '', cfg.alexa || ''); },
   };
