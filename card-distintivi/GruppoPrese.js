@@ -1,7 +1,7 @@
-/* frarik-version: 1.6 */
+/* frarik-version: 1.7 */
 /**
- * GruppoPrese.js — Distintivo FratechStore v1.6
- * Chip contatore · popup con riquadro riassuntivo (prese ON, W, % carico) + lista prese
+ * GruppoPrese.js — Distintivo FratechStore v1.7
+ * Chip contatore · riquadro riassuntivo · colori % carico · kWh giornalieri · icone per presa
  */
 (function () {
   'use strict';
@@ -68,13 +68,14 @@
     return { on, unavail:false, unknown:false, label: on?'Accesa':'Spenta', mainCol: on?COL_ON:COL_OFF, canToggle:true };
   }
 
-  /* colore flusso in base ai watt */
-  function flowColor(w, col) {
-    if (w===null) return col;
-    if (w>1500) return '#ef4444';
-    if (w>800)  return '#f59e0b';
-    if (w>200)  return col;
-    return '#4ade80';
+  /* colore flusso in base alla % sul max configurato (verde→giallo→arancio→rosso) */
+  function flowColor(w, maxW) {
+    if (w===null || w<=0) return '#4ade80';
+    const pct = Math.min(100, (w / (maxW || MAX_W_DEFAULT)) * 100);
+    if (pct >= 85) return '#ef4444'; // rosso
+    if (pct >= 65) return '#f97316'; // arancio
+    if (pct >= 40) return '#facc15'; // giallo
+    return '#4ade80';               // verde
   }
   /* velocità flusso: ms per ciclo (meno = più veloce)
      Scala logaritmica: distingue bene i bassi consumi (9W vs 97W percettibilmente diversi)
@@ -140,18 +141,19 @@
     const col = c.color || '#fb923c';
     const maxW = c.maxW || MAX_W_DEFAULT;
 
-    let totalW=null, totalActive=0;
+    let totalW=null, totalActive=0, totalDailyKwh=null;
     if (h) {
       let sum=0, hasPwr=false;
       ents.forEach(e=>{
         const st=socketStatus(h,e.entity); if(st.on) totalActive++;
         if(e.power_entity&&st.on){const w=numOf(h,e.power_entity);if(w!==null){sum+=w;hasPwr=true;}}
+        if(e.energy_entity){const kw=numOf(h,e.energy_entity);if(kw!==null){totalDailyKwh=(totalDailyKwh||0)+kw;}}
       });
       if(hasPwr) totalW=sum;
     }
 
     const totalPct = totalW!==null ? Math.min(100, Math.round((totalW/maxW)*100)) : null;
-    const fCol = flowColor(totalW, COL_ON);
+    const fCol = flowColor(totalW, maxW);
     const fSpd = flowSpeed(totalW);
 
     /* ── riquadro riassuntivo in cima (sempre visibile) ── */
@@ -170,10 +172,11 @@
            <div style="font-size:9px;color:rgba(255,255,255,.35);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">consumo</div>
          </div>`
       : '';
+    const maxKwLabel = maxW >= 1000 ? (maxW/1000).toFixed(1).replace('.0','')+' kW' : maxW+' W';
     const statPct = totalPct!==null
       ? `<div style="text-align:center">
-           <div style="font-size:22px;font-weight:900;color:rgba(255,255,255,.65);line-height:1">${totalPct}<span style="font-size:13px;font-weight:700">%</span></div>
-           <div style="font-size:9px;color:rgba(255,255,255,.35);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">di ${fmtW(maxW)}</div>
+           <div style="font-size:22px;font-weight:900;color:${fCol};line-height:1">${totalPct}<span style="font-size:13px;font-weight:700">%</span></div>
+           <div style="font-size:9px;color:rgba(255,255,255,.35);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">di ${maxKwLabel}</div>
          </div>`
       : '';
 
@@ -196,6 +199,13 @@
       </div>
       ${loadBar}` : '';
 
+    const dailyTotalRow = totalDailyKwh!==null
+      ? `<div style="text-align:center;margin-top:9px;padding-top:9px;border-top:1px solid rgba(255,255,255,.06)">
+           <span style="font-size:10px;color:rgba(255,255,255,.4)">📅 Oggi: </span>
+           <span style="font-size:12px;font-weight:800;color:rgba(255,255,255,.75)">${totalDailyKwh.toFixed(2)} kWh</span>
+           <span style="font-size:9px;color:rgba(255,255,255,.3)"> totali</span>
+         </div>` : '';
+
     const ctrlBtns = ents.length ? `
       <div style="display:flex;gap:8px;margin-top:12px">
         <button data-gp-all="on" style="flex:1;padding:7px 0;border-radius:8px;border:1px solid rgba(74,222,128,.4);background:rgba(74,222,128,.1);color:${COL_ON};font-size:11px;font-weight:700;cursor:pointer">⚡ Accendi tutte</button>
@@ -206,6 +216,7 @@
       <div style="padding:12px 14px 10px">
         <div style="border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);padding:14px">
           ${statsRow}
+          ${dailyTotalRow}
           ${ctrlBtns}
         </div>
       </div>` : '';
@@ -218,8 +229,9 @@
       const w = (h && hasPowerSensor) ? numOf(h, e.power_entity) : null;
       const pct = (w!==null && w>=0) ? Math.min(100, Math.round((w/maxW)*100)) : null;
       const fSpd2 = flowSpeed(w);
-      const fCol2 = flowColor(w, COL_ON);
+      const fCol2 = flowColor(w, maxW);
       const mc = st.mainCol;
+      const dailyKwh = (h && e.energy_entity) ? numOf(h, e.energy_entity) : null;
 
       /* ── cerchio stato (sinistra) ── */
       const isError = st.unavail || st.unknown;
@@ -280,6 +292,10 @@
           </div>`;
       }
 
+      /* ── kWh giornalieri presa ── */
+      const dailyBadge = dailyKwh!==null
+        ? `<span style="margin-left:8px;font-size:10px;color:rgba(255,255,255,.38);font-weight:600">📅 ${dailyKwh.toFixed(2)} kWh</span>` : '';
+
       /* ── automazione ── */
       let autoBadge = '';
       if (e.automation && h) {
@@ -292,7 +308,7 @@
           ${dot}
           <div style="flex:1;min-width:0">
             <div style="font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
-            <div style="margin-top:3px">${statusLine}</div>
+            <div style="margin-top:3px;display:flex;align-items:center;flex-wrap:wrap;gap:2px">${statusLine}${dailyBadge}</div>
           </div>
           ${toggle}
         </div>
@@ -474,14 +490,26 @@
         const exp=expandedFields.has(i);
         const hasPwr=!!(e.power_entity&&e.power_entity.trim());
         const hasAuto=!!(e.automation&&e.automation.trim());
+        const hasEnergy=!!(e.energy_entity&&e.energy_entity.trim());
         const extraSection=exp?`
           <div style="margin-top:6px;padding:8px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);display:flex;flex-direction:column;gap:6px">
+            <div>
+              <div style="font-size:9px;color:rgba(255,255,255,.35);margin-bottom:3px">🎨 Icona (emoji o mdi:xxx)</div>
+              <input data-icon-idx="${i}" placeholder="🔌  oppure  mdi:power-socket" value="${eh(e.icon||'')}" style="width:100%;box-sizing:border-box;padding:6px 9px;border-radius:7px;border:1px solid rgba(251,147,60,.2);background:rgba(251,147,60,.04);color:#fff;font-size:13px;outline:none;font-family:inherit">
+            </div>
             <div>
               <div style="font-size:9px;color:rgba(255,255,255,.35);margin-bottom:3px">⚡ Sensore watt (opzionale)</div>
               ${hasPwr?`<div style="display:flex;align-items:center;gap:6px">
                 <span style="flex:1;font-size:10px;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(e.power_entity)}</span>
                 <button data-rmpwr="${i}" style="font-size:9px;padding:2px 6px;border-radius:4px;border:1px solid rgba(248,113,113,.3);background:rgba(248,113,113,.1);color:#f87171;cursor:pointer">✕</button>
               </div>`:`<input data-pwr-idx="${i}" placeholder="🔍 Cerca sensor.xxx_power…" value="${eh(e.power_entity||'')}" style="width:100%;box-sizing:border-box;padding:6px 9px;border-radius:7px;border:1px solid rgba(251,147,60,.3);background:rgba(251,147,60,.06);color:#fff;font-size:11px;outline:none;font-family:inherit">`}
+            </div>
+            <div>
+              <div style="font-size:9px;color:rgba(255,255,255,.35);margin-bottom:3px">📅 Energia oggi (kWh) — opzionale</div>
+              ${hasEnergy?`<div style="display:flex;align-items:center;gap:6px">
+                <span style="flex:1;font-size:10px;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(e.energy_entity)}</span>
+                <button data-rmenergy="${i}" style="font-size:9px;padding:2px 6px;border-radius:4px;border:1px solid rgba(248,113,113,.3);background:rgba(248,113,113,.1);color:#f87171;cursor:pointer">✕</button>
+              </div>`:`<input data-energy-idx="${i}" placeholder="🔍 sensor.xxx_energy_today…" value="${eh(e.energy_entity||'')}" style="width:100%;box-sizing:border-box;padding:6px 9px;border-radius:7px;border:1px solid rgba(99,102,241,.3);background:rgba(99,102,241,.06);color:#fff;font-size:11px;outline:none;font-family:inherit">`}
             </div>
             <div>
               <div style="font-size:9px;color:rgba(255,255,255,.35);margin-bottom:3px">🤖 Automazione (opzionale)</div>
@@ -491,9 +519,10 @@
               </div>`:`<input data-auto-idx="${i}" placeholder="🔍 Cerca automazione…" value="${eh(e.automation||'')}" style="width:100%;box-sizing:border-box;padding:6px 9px;border-radius:7px;border:1px solid rgba(99,102,241,.3);background:rgba(99,102,241,.07);color:#fff;font-size:11px;outline:none;font-family:inherit">`}
             </div>
           </div>`:'';
+        const outletIcon = e.icon ? iconHtml(e.icon, 15) : (st.unavail?'⚠️':st.unknown?'❓':'🔌');
         return `<div style="padding:8px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid ${st.on?hex2rgba(col,.25):st.unavail?'rgba(239,68,68,.2)':st.unknown?'rgba(245,158,11,.2)':'rgba(255,255,255,.08)'};margin-bottom:6px">
           <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:15px;flex-shrink:0">${st.unavail?'⚠️':st.unknown?'❓':'🔌'}</span>
+            <span style="font-size:15px;flex-shrink:0">${outletIcon}</span>
             <div style="flex:1;min-width:0">
               <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
               <div style="font-size:9px;color:${st.unavail?'#ef4444':st.unknown?'#f59e0b':'rgba(255,255,255,.35)'}">${eh(e.entity)}</div>
@@ -524,7 +553,11 @@
             <div style="flex:0 0 50px"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">Colore</div><input type="color" id="gpcfg-color" value="${(c.color||'#fb923c').match(/^#[0-9a-f]{6}$/i)?c.color:'#fb923c'}" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:none;cursor:pointer;padding:2px"></div>
           </div>
           <div style="display:flex;gap:7px;margin-bottom:14px">
-            <div style="flex:1"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">⚡ Watt massimi presa (default 2300W)</div><input id="gpcfg-maxw" class="gpcinp" type="number" placeholder="2300" value="${eh(String(c.maxW||''))}"></div>
+            <div style="flex:1">
+              <div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">⚡ Potenza disponibile (kW) — es. 4.5 · 3 · 6</div>
+              <input id="gpcfg-maxw" class="gpcinp" type="number" step="0.1" min="0.5" placeholder="4.5" value="${eh(String(c.maxW ? (c.maxW/1000) : ''))}">
+              <div style="font-size:9px;color:rgba(255,255,255,.22);margin-top:3px">Serve per la % di carico e i colori (verde→giallo→arancio→rosso)</div>
+            </div>
           </div>
           ${ents.length?`<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.35);margin-bottom:6px">Prese (${ents.length}) <span style="font-size:8px;font-weight:400;opacity:.6">▾ = watt + automazione</span></div><div>${selRows}</div>`:''}
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.35);margin:${ents.length?'12px':0} 0 6px">Aggiungi presa</div>
@@ -575,11 +608,20 @@
         btn.addEventListener('click',()=>{ const i=parseInt(btn.dataset.expand); if(expandedFields.has(i))expandedFields.delete(i);else expandedFields.add(i); attach(); });
       });
       ov.querySelectorAll('[data-rmpwr]').forEach(btn=>{ btn.addEventListener('click',()=>{ents[parseInt(btn.dataset.rmpwr)].power_entity='';attach();}); });
+      ov.querySelectorAll('[data-rmenergy]').forEach(btn=>{ btn.addEventListener('click',()=>{ents[parseInt(btn.dataset.rmenergy)].energy_entity='';attach();}); });
       ov.querySelectorAll('[data-rmauto]').forEach(btn=>{ btn.addEventListener('click',()=>{ents[parseInt(btn.dataset.rmauto)].automation='';attach();}); });
+      ov.querySelectorAll('[data-icon-idx]').forEach(inp=>{
+        inp.addEventListener('blur',()=>{ents[parseInt(inp.dataset.iconIdx)].icon=(inp.value||'').trim();});
+      });
       ov.querySelectorAll('[data-pwr-idx]').forEach(inp=>{
         const i=parseInt(inp.dataset.pwrIdx);
         _setupAc(inp,_sensorMatches,(id)=>{ents[i].power_entity=id;inp.value=id;});
         inp.addEventListener('blur',()=>setTimeout(()=>{const v=(inp.value||'').trim();if(v)ents[i].power_entity=v;},200));
+      });
+      ov.querySelectorAll('[data-energy-idx]').forEach(inp=>{
+        const i=parseInt(inp.dataset.energyIdx);
+        _setupAc(inp,_sensorMatches,(id)=>{ents[i].energy_entity=id;inp.value=id;});
+        inp.addEventListener('blur',()=>setTimeout(()=>{const v=(inp.value||'').trim();if(v)ents[i].energy_entity=v;},200));
       });
       ov.querySelectorAll('[data-auto-idx]').forEach(inp=>{
         const i=parseInt(inp.dataset.autoIdx);
@@ -590,13 +632,18 @@
       if(addInp) _setupAc(addInp,_switchMatches,(id,name)=>{ if(!ents.find(e=>e.entity===id)) ents.push({entity:id,label:name||'',power_entity:'',automation:''}); addInp.value=''; attach(); });
 
       ov.querySelector('#gpcfg-save').addEventListener('click',()=>{
-        const maxWVal=parseInt(ov.querySelector('#gpcfg-maxw')?.value||'0')||MAX_W_DEFAULT;
+        const maxKwRaw=parseFloat(ov.querySelector('#gpcfg-maxw')?.value||'0');
+        const maxWVal = maxKwRaw>0 ? Math.round(maxKwRaw*1000) : MAX_W_DEFAULT;
         const newCfg={
           label:(ov.querySelector('#gpcfg-label')?.value||'Prese').trim(),
           icon: (ov.querySelector('#gpcfg-icon')?.value||'🔌').trim(),
           color: ov.querySelector('#gpcfg-color')?.value||'#fb923c',
           maxW: maxWVal,
-          entities: ents.filter(e=>e.entity).map(e=>({entity:e.entity.trim(),label:e.label||'',power_entity:e.power_entity||'',automation:e.automation||''})),
+          entities: ents.filter(e=>e.entity).map(e=>({
+            entity:e.entity.trim(), label:e.label||'', icon:e.icon||'',
+            power_entity:e.power_entity||'', energy_entity:e.energy_entity||'',
+            automation:e.automation||''
+          })),
         };
         closeOv(); if(typeof onSave==='function') onSave(newCfg);
       });
@@ -610,7 +657,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Prese', icon: '🔌',
     desc: 'Chip prese on/off · popup con stato, consumo W real-time, flusso animato e indicatori unavailable.',
-    version: '1.6', isDistintivo: true,
+    version: '1.7', isDistintivo: true,
     defaultCfg: { label:'Prese', icon:'🔌', color:'#fb923c', maxW:2300, entities:[] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -619,5 +666,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-prese v1.6'); } catch(e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-prese v1.7'); } catch(e) {}
 })();

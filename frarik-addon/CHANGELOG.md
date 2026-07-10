@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.9.62 — 2026-07-10
+
+### feat(distintivo): GruppoPrese v1.7 — potenza kW configurabile, colori dinamici, kWh giornalieri, icone per presa
+
+- **Potenza contrattuale in kW**: campo input nel configuratore (es. 4.5 → 4500W internamente)
+  — la % di carico e i colori si calcolano automaticamente su questa base
+- **Colori dinamici** verde→giallo→arancio→rosso basati su % del max configurato:
+  - 0–40% verde · 40–65% giallo · 65–85% arancio · 85–100% rosso
+  - Sia la barra totale che le barre delle singole prese usano questa scala
+- **Icona personalizzata per presa**: campo nel pannello ▾ di ogni presa (emoji o mdi:xxx)
+- **Energia giornaliera per presa**: campo `energy_entity` nel pannello ▾ (es. sensor.presa_energia_oggi)
+  — mostra "📅 X.XX kWh" accanto allo stato di ogni presa
+- **Totale kWh giornalieri** nel riquadro riassuntivo (somma di tutte le prese con sensore energia)
+- La % nel terzo riquadro ora usa il colore dinamico (stesso della barra)
+
 ## 1.9.61 — 2026-07-10
 
 ### feat(distintivo): GruppoPrese v1.6 — riquadro riassuntivo in cima al popup
