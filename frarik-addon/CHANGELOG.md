@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.9.67 — 2026-07-10
+
+### fix(distintivo): GruppoPrese — totale kWh visibile anche con consumo = 0
+
+- Il riquadro totale spariva quando tutti i delta-sensore erano 0 (primo avvio del giorno)
+- Fix: se `energy_entity` è configurato, il valore 0 viene incluso nel totale
+  (sensore presente ma ancora nessun consumo rilevato da mezzanotte)
+- Senza sensore (accumulo automatico) il comportamento rimane invariato: include solo se >0
+
 ## 1.9.66 — 2026-07-10
 
 ### fix(distintivo): GruppoPrese v1.10 — energia giornaliera da sensore cumulativo

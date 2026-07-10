@@ -181,7 +181,9 @@
         if(e.power_entity&&st.on){const w=numOf(h,e.power_entity);if(w!==null){sum+=w;hasPwr=true;}}
         /* kWh giornalieri: usa delta-sensore se configurato, altrimenti accumulo automatico */
         const kw = e.energy_entity ? _gpDailyFromSensor(h,e.energy_entity) : _gpGetKwh(e.entity);
-        if(kw>0) totalDailyKwh=(totalDailyKwh||0)+kw;
+        /* con sensore: includi anche 0 (sensore presente, consumo nullo finora)
+           senza sensore: includi solo se >0 (accumulo inizia da 0 per tutti) */
+        if(e.energy_entity ? kw!==null : kw>0) totalDailyKwh=(totalDailyKwh||0)+(kw||0);
       });
       if(hasPwr) totalW=sum;
     }
