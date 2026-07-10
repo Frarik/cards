@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.9.53 — 2026-07-10
+
+### fix(sync): card e sensori ora si sincronizzano correttamente su cell/tablet
+
+- Bug: all'avvio su un dispositivo nuovo (cell, tablet) saveCfg() veniva chiamata durante l'init
+  impostando cfg._ts = adesso, rendendo la config locale "più recente" di quella del server.
+  _applyRemoteCfg rifiutava la config del server (remoteTs < cfg._ts) → card non configurate.
+- Fix: cfg._ts si aggiorna solo dopo il primo sync (_cfgSynced=true). Prima di quel momento
+  l'init locale non produce un timestamp che blocca la config remota.
+- Risultato: aprire la dashboard su un nuovo dispositivo carica immediatamente card,
+  sensori e configurazioni esattamente come sul dispositivo principale.
+
 ## 1.9.52 — 2026-07-10
 
 ### fix(store): "Aggiorna" card non tocca più il PKG — i due bottoni sono completamente separati

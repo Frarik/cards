@@ -1187,7 +1187,9 @@ function loadCfg(){
 /* ── Salvataggio config + SINCRONIZZAZIONE su Home Assistant (dati utente, condivisi tra dispositivi) ── */
 let _haSaveTimer=null, _cfgSyncing=false, _cfgSynced=false, _lastPull=0;
 function saveCfg(){
-  if(!_cfgSyncing) cfg._ts=Date.now();      // timestamp ultima modifica (per "vince il più recente")
+  // cfg._ts si aggiorna SOLO dopo il primo sync: evita che l'init locale (avvio a freddo su un
+  // dispositivo nuovo) produca un ts "futuro" che blocca l'applicazione della config remota.
+  if(!_cfgSyncing && _cfgSynced) cfg._ts=Date.now();
   localStorage.setItem('hadb_cfg',JSON.stringify(cfg));
   // AUTO-PUSH su HA: solo dopo il primo caricamento da HA (_cfgSynced) → un dispositivo appena aperto
   // prima SCARICA la versione su HA, poi può inviare le sue modifiche (evita di sovrascrivere da vuoto).
