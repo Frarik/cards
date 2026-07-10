@@ -1,7 +1,8 @@
-/* frarik-version: 1.8 */
+/* frarik-version: 1.9 */
 /**
- * GruppoPrese.js — Distintivo FratechStore v1.8
+ * GruppoPrese.js — Distintivo FratechStore v1.9
  * Chip · riquadro riassuntivo · colori % · kWh auto-accumulati · picker icona per presa
+ * v1.9: snake fluido (animation-delay negativo) · sensore energia sempre visibile senza ▾
  */
 (function () {
   'use strict';
@@ -9,6 +10,9 @@
   const ID = 'gruppo-prese';
   const ON_STATES = ['on','open','unlocked','playing','heating','cooling','active','home','present','detected','wet','running','charging'];
   const MAX_W_DEFAULT = 2300; // watt massimi presa standard IT
+  /* timestamp fisso al caricamento del modulo: permette animation-delay negativo
+     per riprendere l'animazione snake da dove era arrivata invece di ripartire da 0 */
+  const _GP_ANIM_T0 = Date.now();
 
   /* ── helpers ── */
   function H() {
@@ -113,7 +117,7 @@
     const c = loadCfg(cfg);
     const ents = Array.isArray(c.entities) ? c.entities : [];
     const ids = ents.map(e=>e.entity).filter(Boolean);
-    ents.forEach(e=>{ if(e.power_entity) ids.push(e.power_entity); if(e.automation) ids.push(e.automation); });
+    ents.forEach(e=>{ if(e.power_entity) ids.push(e.power_entity); if(e.energy_entity) ids.push(e.energy_entity); if(e.automation) ids.push(e.automation); });
     return ids;
   }
 
@@ -177,20 +181,20 @@
       ? `<span style="color:${COL_OFF}">Tutto spento</span>`
       : allOn
         ? `<span style="color:${COL_ON}">Tutte accese</span>`
-        : `<span style="color:${COL_ON}">${totalActive}</span><span style="color:rgba(255,255,255,.35)"> / ${ents.length} accese</span>`;
+        : `<span style="color:${COL_ON}">${totalActive}</span><span style="color:#fff"> / ${ents.length} accese</span>`;
 
     /* stat W: mostra solo se almeno una presa ha sensore watt */
     const statW = totalW!==null
       ? `<div style="text-align:center;padding:0 8px;border-left:1px solid rgba(255,255,255,.07);border-right:1px solid rgba(255,255,255,.07)">
            <div style="font-size:22px;font-weight:900;letter-spacing:-.5px;color:${fCol};line-height:1">${fmtW(totalW)}</div>
-           <div style="font-size:9px;color:rgba(255,255,255,.35);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">consumo</div>
+           <div style="font-size:9px;color:#fff;margin-top:3px;text-transform:uppercase;letter-spacing:.5px">consumo</div>
          </div>`
       : '';
     const maxKwLabel = maxW >= 1000 ? (maxW/1000).toFixed(1).replace('.0','')+' kW' : maxW+' W';
     const statPct = totalPct!==null
       ? `<div style="text-align:center">
            <div style="font-size:22px;font-weight:900;color:${fCol};line-height:1">${totalPct}<span style="font-size:13px;font-weight:700">%</span></div>
-           <div style="font-size:9px;color:rgba(255,255,255,.35);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">di ${maxKwLabel}</div>
+           <div style="font-size:9px;color:#fff;margin-top:3px;text-transform:uppercase;letter-spacing:.5px">di ${maxKwLabel}</div>
          </div>`
       : '';
 
@@ -198,7 +202,7 @@
     const loadBar = totalW!==null ? `
       <div class="gp-flow-track" style="height:6px;margin:10px 0 0">
         <div style="position:absolute;top:0;left:0;height:100%;width:${totalPct}%;background:${fCol};border-radius:3px;transition:width .6s"></div>
-        ${fSpd?`<div class="gp-snake" style="background:linear-gradient(90deg,transparent 0%,${fCol}22 25%,${fCol}88 70%,${fCol} 90%,#fff 100%);animation-duration:${fSpd}ms"></div>`:''}
+        ${fSpd?`<div class="gp-snake" style="background:linear-gradient(90deg,transparent 0%,${fCol}22 25%,${fCol}88 70%,${fCol} 90%,#fff 100%);animation-duration:${fSpd}ms;animation-delay:-${(Date.now()-_GP_ANIM_T0)%fSpd}ms"></div>`:''}
       </div>` : '';
 
     const hasTwoStats = statW && statPct;
@@ -206,7 +210,7 @@
       <div style="display:grid;grid-template-columns:${hasTwoStats?'1fr 1fr 1fr':'1fr'};gap:0;align-items:center;padding:4px 0 2px">
         <div style="text-align:center">
           <div style="font-size:22px;font-weight:900;line-height:1">${statusLabel}</div>
-          <div style="font-size:9px;color:rgba(255,255,255,.35);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">prese</div>
+          <div style="font-size:9px;color:#fff;margin-top:3px;text-transform:uppercase;letter-spacing:.5px">prese</div>
         </div>
         ${statW}
         ${statPct}
@@ -215,9 +219,9 @@
 
     const dailyTotalRow = totalDailyKwh!==null
       ? `<div style="text-align:center;margin-top:9px;padding-top:9px;border-top:1px solid rgba(255,255,255,.06)">
-           <span style="font-size:10px;color:rgba(255,255,255,.4)">📅 Oggi: </span>
-           <span style="font-size:12px;font-weight:800;color:rgba(255,255,255,.75)">${totalDailyKwh.toFixed(2)} kWh</span>
-           <span style="font-size:9px;color:rgba(255,255,255,.3)"> totali</span>
+           <span style="font-size:10px;color:#fff">📅 Oggi: </span>
+           <span style="font-size:12px;font-weight:800;color:#fff">${totalDailyKwh.toFixed(2)} kWh</span>
+           <span style="font-size:9px;color:#fff"> totali</span>
          </div>` : '';
 
     const ctrlBtns = ents.length ? `
@@ -287,7 +291,7 @@
             <div style="position:absolute;top:3px;left:${thumbL};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.4);transition:left .18s;pointer-events:none"></div>
            </button>`
         : `<div style="width:46px;height:26px;border-radius:13px;background:rgba(255,255,255,.05);border:1px solid ${mc}44;flex-shrink:0;display:flex;align-items:center;justify-content:center">
-            <span style="font-size:9px;color:rgba(255,255,255,.3)">N/D</span>
+            <span style="font-size:9px;color:#fff">N/D</span>
            </div>`;
 
       /* ── barra consumo + flusso (solo se accesa e ha sensore watt) ── */
@@ -296,7 +300,7 @@
         const barPct = pct!==null ? pct : 0;
         const barFill = pct!==null ? `<div style="position:absolute;inset:0;width:${barPct}%;background:${fCol2};border-radius:4px;transition:width .5s"></div>` : '';
         const dots = (fSpd2>0) ? `
-          <div class="gp-snake" style="background:linear-gradient(90deg,transparent 0%,${fCol2}22 25%,${fCol2}88 70%,${fCol2} 90%,#fff 100%);animation-duration:${fSpd2}ms"></div>` : '';
+          <div class="gp-snake" style="background:linear-gradient(90deg,transparent 0%,${fCol2}22 25%,${fCol2}88 70%,${fCol2} 90%,#fff 100%);animation-duration:${fSpd2}ms;animation-delay:-${(Date.now()-_GP_ANIM_T0)%fSpd2}ms"></div>` : '';
         powerBar = `
           <div style="padding:4px 16px 10px">
             <div class="gp-flow-track">
@@ -308,7 +312,7 @@
 
       /* ── kWh giornalieri presa ── */
       const dailyBadge = dailyKwh!==null
-        ? `<span style="margin-left:8px;font-size:10px;color:rgba(255,255,255,.38);font-weight:600">📅 ${dailyKwh.toFixed(2)} kWh</span>` : '';
+        ? `<span style="margin-left:8px;font-size:10px;color:#fff;font-weight:600">📅 ${dailyKwh.toFixed(2)} kWh</span>` : '';
 
       /* ── automazione ── */
       let autoBadge = '';
@@ -331,8 +335,8 @@
       </div>`;
     }).join('');
 
-    const empty = `<div style="padding:32px 20px;text-align:center;color:rgba(255,255,255,.3);font-size:12px">
-      Nessuna presa configurata.<br><span style="font-size:10px;opacity:.6">Clicca ✏️ sulla chip per configurare.</span>
+    const empty = `<div style="padding:32px 20px;text-align:center;color:#fff;font-size:12px">
+      Nessuna presa configurata.<br><span style="font-size:10px">Clicca ✏️ sulla chip per configurare.</span>
     </div>`;
 
     return `<div id="gp-popup-body" style="font-family:system-ui,sans-serif">
@@ -458,7 +462,7 @@
           <span style="font-size:13px;flex-shrink:0">${m.icon||'📦'}</span>
           <div style="flex:1;min-width:0">
             <div style="font-size:11px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(m.name)}</div>
-            <div style="font-size:9px;color:rgba(255,255,255,.38)">${eh(m.id)}${m.stateLabel?` · <span style="color:rgba(251,147,60,.8)">${eh(m.stateLabel)}</span>`:''}</div>
+            <div style="font-size:9px;color:#fff">${eh(m.id)}${m.stateLabel?` · <span style="color:rgba(251,147,60,.9)">${eh(m.stateLabel)}</span>`:''}</div>
           </div>
         </div>`;
         r.addEventListener('mouseover',()=>{r.style.background='rgba(251,147,60,.08)';});
@@ -517,33 +521,44 @@
         const hasPwr=!!(e.power_entity&&e.power_entity.trim());
         const hasAuto=!!(e.automation&&e.automation.trim());
         const hasEnergy=!!(e.energy_entity&&e.energy_entity.trim());
+        /* ⚡ watt + 📅 energia: sempre visibili, side by side */
+        const sensorsRow = `
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px">
+            <div style="min-width:0">
+              <div style="font-size:8px;color:#fff;margin-bottom:3px;letter-spacing:.3px;text-transform:uppercase">⚡ Watt (opz.)</div>
+              ${hasPwr
+                ? `<div style="display:flex;align-items:center;gap:4px">
+                    <span style="flex:1;font-size:9px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(e.power_entity)}</span>
+                    <button data-rmpwr="${i}" style="font-size:8px;padding:1px 5px;border-radius:3px;border:1px solid rgba(248,113,113,.3);background:rgba(248,113,113,.1);color:#f87171;cursor:pointer;flex-shrink:0">✕</button>
+                  </div>`
+                : `<input data-pwr-idx="${i}" placeholder="sensor.presa_power" value="${eh(e.power_entity||'')}" style="width:100%;box-sizing:border-box;padding:4px 7px;border-radius:6px;border:1px solid rgba(251,147,60,.22);background:rgba(251,147,60,.05);color:#fff;font-size:9px;outline:none;font-family:inherit">`
+              }
+            </div>
+            <div style="min-width:0">
+              <div style="font-size:8px;color:#fff;margin-bottom:3px;letter-spacing:.3px;text-transform:uppercase">📅 Energia oggi (opz.)</div>
+              ${hasEnergy
+                ? `<div style="display:flex;align-items:center;gap:4px">
+                    <span style="flex:1;font-size:9px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(e.energy_entity)}</span>
+                    <button data-rmenergy="${i}" style="font-size:8px;padding:1px 5px;border-radius:3px;border:1px solid rgba(248,113,113,.3);background:rgba(248,113,113,.1);color:#f87171;cursor:pointer;flex-shrink:0">✕</button>
+                  </div>`
+                : `<input data-energy-idx="${i}" placeholder="sensor.presa_oggi" value="${eh(e.energy_entity||'')}" style="width:100%;box-sizing:border-box;padding:4px 7px;border-radius:6px;border:1px solid rgba(99,102,241,.22);background:rgba(99,102,241,.05);color:#fff;font-size:9px;outline:none;font-family:inherit">`
+              }
+            </div>
+          </div>`;
+        /* ▾ sezione espansa: solo icona + automazione */
         const extraSection=exp?`
           <div style="margin-top:6px;padding:8px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);display:flex;flex-direction:column;gap:6px">
             <div>
-              <div style="font-size:9px;color:rgba(255,255,255,.35);margin-bottom:3px">🎨 Icona</div>
+              <div style="font-size:9px;color:#fff;margin-bottom:3px">🎨 Icona</div>
               <div style="display:flex;gap:6px;align-items:center">
                 <button data-icon-pick="${i}" style="width:38px;height:34px;border-radius:8px;border:1px solid rgba(251,147,60,.3);background:rgba(251,147,60,.08);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">${iconHtml(e.icon||'🔌',20)}</button>
                 <input data-icon-idx="${i}" placeholder="emoji o mdi:power-socket" value="${eh(e.icon||'')}" style="flex:1;box-sizing:border-box;padding:6px 9px;border-radius:7px;border:1px solid rgba(251,147,60,.2);background:rgba(251,147,60,.04);color:#fff;font-size:12px;outline:none;font-family:inherit">
               </div>
             </div>
             <div>
-              <div style="font-size:9px;color:rgba(255,255,255,.35);margin-bottom:3px">⚡ Sensore watt (opzionale)</div>
-              ${hasPwr?`<div style="display:flex;align-items:center;gap:6px">
-                <span style="flex:1;font-size:10px;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(e.power_entity)}</span>
-                <button data-rmpwr="${i}" style="font-size:9px;padding:2px 6px;border-radius:4px;border:1px solid rgba(248,113,113,.3);background:rgba(248,113,113,.1);color:#f87171;cursor:pointer">✕</button>
-              </div>`:`<input data-pwr-idx="${i}" placeholder="🔍 Cerca sensor.xxx_power…" value="${eh(e.power_entity||'')}" style="width:100%;box-sizing:border-box;padding:6px 9px;border-radius:7px;border:1px solid rgba(251,147,60,.3);background:rgba(251,147,60,.06);color:#fff;font-size:11px;outline:none;font-family:inherit">`}
-            </div>
-            <div>
-              <div style="font-size:9px;color:rgba(255,255,255,.35);margin-bottom:3px">📅 Energia oggi (kWh) — opzionale</div>
-              ${hasEnergy?`<div style="display:flex;align-items:center;gap:6px">
-                <span style="flex:1;font-size:10px;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(e.energy_entity)}</span>
-                <button data-rmenergy="${i}" style="font-size:9px;padding:2px 6px;border-radius:4px;border:1px solid rgba(248,113,113,.3);background:rgba(248,113,113,.1);color:#f87171;cursor:pointer">✕</button>
-              </div>`:`<input data-energy-idx="${i}" placeholder="🔍 sensor.xxx_energy_today…" value="${eh(e.energy_entity||'')}" style="width:100%;box-sizing:border-box;padding:6px 9px;border-radius:7px;border:1px solid rgba(99,102,241,.3);background:rgba(99,102,241,.06);color:#fff;font-size:11px;outline:none;font-family:inherit">`}
-            </div>
-            <div>
-              <div style="font-size:9px;color:rgba(255,255,255,.35);margin-bottom:3px">🤖 Automazione (opzionale)</div>
+              <div style="font-size:9px;color:#fff;margin-bottom:3px">🤖 Automazione (opzionale)</div>
               ${hasAuto?`<div style="display:flex;align-items:center;gap:6px">
-                <span style="flex:1;font-size:10px;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(e.automation)}</span>
+                <span style="flex:1;font-size:10px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(e.automation)}</span>
                 <button data-rmauto="${i}" style="font-size:9px;padding:2px 6px;border-radius:4px;border:1px solid rgba(248,113,113,.3);background:rgba(248,113,113,.1);color:#f87171;cursor:pointer">✕</button>
               </div>`:`<input data-auto-idx="${i}" placeholder="🔍 Cerca automazione…" value="${eh(e.automation||'')}" style="width:100%;box-sizing:border-box;padding:6px 9px;border-radius:7px;border:1px solid rgba(99,102,241,.3);background:rgba(99,102,241,.07);color:#fff;font-size:11px;outline:none;font-family:inherit">`}
             </div>
@@ -554,44 +569,45 @@
             <span style="font-size:15px;flex-shrink:0">${outletIcon}</span>
             <div style="flex:1;min-width:0">
               <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
-              <div style="font-size:9px;color:${st.unavail?'#ef4444':st.unknown?'#f59e0b':'rgba(255,255,255,.35)'}">${eh(e.entity)}</div>
+              <div style="font-size:9px;color:${st.unavail?'#ef4444':st.unknown?'#f59e0b':'#fff'}">${eh(e.entity)}</div>
             </div>
-            <button data-expand="${i}" title="${exp?'Chiudi':'Watt / Automazione'}" style="width:26px;height:26px;border:none;border-radius:6px;background:${exp?hex2rgba(col,.18):'rgba(255,255,255,.07)'};color:${exp?col:'rgba(255,255,255,.4)'};cursor:pointer;font-size:12px;flex-shrink:0">${exp?'▲':'▾'}</button>
+            <button data-expand="${i}" title="${exp?'Chiudi':'Icona / Automazione'}" style="width:26px;height:26px;border:none;border-radius:6px;background:${exp?hex2rgba(col,.18):'rgba(255,255,255,.07)'};color:${exp?col:'#fff'};cursor:pointer;font-size:12px;flex-shrink:0">${exp?'▲':'▾'}</button>
             <button data-del="${i}" style="width:26px;height:26px;border:none;border-radius:6px;background:rgba(248,113,113,.15);color:#f87171;cursor:pointer;font-size:11px;flex-shrink:0">✕</button>
           </div>
+          ${sensorsRow}
           ${extraSection}
         </div>`;
       }).join('');
 
       const anim=_firstRender?'animation:gpCfgUp .22s cubic-bezier(.32,1.12,.56,1)':'';
       return `<div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0f0d1a;border:1px solid rgba(251,147,60,.22);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);color:#fff;${anim}">
-        <style>@keyframes gpCfgUp{from{transform:translateY(100%)}to{transform:translateY(0)}} .gpcinp{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;font-size:12px;outline:none;font-family:inherit;transition:border-color .15s} .gpcinp:focus{border-color:rgba(251,147,60,.5)} .gpcinp::placeholder{color:rgba(255,255,255,.3)} #gpcfg-body::-webkit-scrollbar{display:none}</style>
+        <style>@keyframes gpCfgUp{from{transform:translateY(100%)}to{transform:translateY(0)}} .gpcinp{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;font-size:12px;outline:none;font-family:inherit;transition:border-color .15s} .gpcinp:focus{border-color:rgba(251,147,60,.5)} .gpcinp::placeholder{color:rgba(255,255,255,.55)} #gpcfg-body::-webkit-scrollbar{display:none}</style>
         <div style="display:flex;align-items:center;gap:10px;padding:14px 18px 12px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">
           <div style="width:36px;height:36px;border-radius:10px;background:rgba(251,147,60,.13);border:1px solid rgba(251,147,60,.28);display:flex;align-items:center;justify-content:center;font-size:18px">🔌</div>
           <div style="flex:1">
             <div style="font-size:14px;font-weight:800">Configura — Gruppo Prese</div>
-            <div style="font-size:10px;color:rgba(255,255,255,.38)">${ents.length} pres${ents.length===1?'a':'e'} selezionat${ents.length===1?'a':'e'}</div>
+            <div style="font-size:10px;color:#fff">${ents.length} pres${ents.length===1?'a':'e'} selezionat${ents.length===1?'a':'e'}</div>
           </div>
           <button id="gpcfg-close" style="width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,255,255,.07);color:#fff;cursor:pointer;font-size:14px">✕</button>
         </div>
         <div id="gpcfg-body" style="flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;padding:14px 14px 4px">
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.35);margin-bottom:6px">Chip</div>
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Chip</div>
           <div style="display:flex;gap:7px;margin-bottom:10px">
-            <div style="flex:1"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">Nome</div><input id="gpcfg-label" class="gpcinp" placeholder="Prese" value="${eh(c.label||'Prese')}"></div>
-            <div style="flex:0 0 56px"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">Icona</div><button id="gpcfg-icon-btn" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);cursor:pointer;display:flex;align-items:center;justify-content:center;outline:none;color:#fff">${iconHtml(c.icon||'🔌',22)}</button><input type="hidden" id="gpcfg-icon" value="${eh(c.icon||'🔌')}"></div>
-            <div style="flex:0 0 50px"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">Colore</div><input type="color" id="gpcfg-color" value="${(c.color||'#fb923c').match(/^#[0-9a-f]{6}$/i)?c.color:'#fb923c'}" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:none;cursor:pointer;padding:2px"></div>
+            <div style="flex:1"><div style="font-size:9px;color:#fff;margin-bottom:3px">Nome</div><input id="gpcfg-label" class="gpcinp" placeholder="Prese" value="${eh(c.label||'Prese')}"></div>
+            <div style="flex:0 0 56px"><div style="font-size:9px;color:#fff;margin-bottom:3px">Icona</div><button id="gpcfg-icon-btn" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);cursor:pointer;display:flex;align-items:center;justify-content:center;outline:none;color:#fff">${iconHtml(c.icon||'🔌',22)}</button><input type="hidden" id="gpcfg-icon" value="${eh(c.icon||'🔌')}"></div>
+            <div style="flex:0 0 50px"><div style="font-size:9px;color:#fff;margin-bottom:3px">Colore</div><input type="color" id="gpcfg-color" value="${(c.color||'#fb923c').match(/^#[0-9a-f]{6}$/i)?c.color:'#fb923c'}" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:none;cursor:pointer;padding:2px"></div>
           </div>
           <div style="display:flex;gap:7px;margin-bottom:14px">
             <div style="flex:1">
-              <div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">⚡ Potenza disponibile (kW) — es. 4.5 · 3 · 6</div>
+              <div style="font-size:9px;color:#fff;margin-bottom:3px">⚡ Potenza disponibile (kW) — es. 4.5 · 3 · 6</div>
               <input id="gpcfg-maxw" class="gpcinp" type="number" step="0.1" min="0.5" placeholder="4.5" value="${eh(String(c.maxW ? (c.maxW/1000) : ''))}">
-              <div style="font-size:9px;color:rgba(255,255,255,.22);margin-top:3px">Serve per la % di carico e i colori (verde→giallo→arancio→rosso)</div>
+              <div style="font-size:9px;color:#fff;margin-top:3px">Serve per la % di carico e i colori (verde→giallo→arancio→rosso)</div>
             </div>
           </div>
-          ${ents.length?`<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.35);margin-bottom:6px">Prese (${ents.length}) <span style="font-size:8px;font-weight:400;opacity:.6">▾ = watt + automazione</span></div><div>${selRows}</div>`:''}
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.35);margin:${ents.length?'12px':0} 0 6px">Aggiungi presa</div>
+          ${ents.length?`<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Prese (${ents.length}) <span style="font-size:8px;font-weight:400">▾ = icona + automazione · il kWh totale si somma automaticamente</span></div><div>${selRows}</div>`:''}
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin:${ents.length?'12px':0} 0 6px">Aggiungi presa</div>
           <input id="gpcfg-add-entity" class="gpcinp" placeholder="🔍 Inizia a scrivere il nome della presa…" autocomplete="off">
-          <div style="font-size:9px;color:rgba(255,255,255,.25);margin-top:5px">switch.* compaiono per prime · usa ▾ per watt e automazione</div>
+          <div style="font-size:9px;color:#fff;margin-top:5px">switch.* compaiono per prime · inserisci watt + sensore energia direttamente · ▾ = icona + automazione</div>
           <div style="height:16px"></div>
         </div>
         <div style="display:flex;gap:8px;padding:12px 14px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0">
@@ -680,7 +696,7 @@
         inp.addEventListener('blur',()=>setTimeout(()=>{const v=(inp.value||'').trim();if(v)ents[i].automation=v;},200));
       });
       const addInp=ov.querySelector('#gpcfg-add-entity');
-      if(addInp) _setupAc(addInp,_switchMatches,(id,name)=>{ if(!ents.find(e=>e.entity===id)) ents.push({entity:id,label:name||'',power_entity:'',automation:''}); addInp.value=''; attach(); });
+      if(addInp) _setupAc(addInp,_switchMatches,(id,name)=>{ if(!ents.find(e=>e.entity===id)) ents.push({entity:id,label:name||'',power_entity:'',energy_entity:'',automation:''}); addInp.value=''; attach(); });
 
       ov.querySelector('#gpcfg-save').addEventListener('click',()=>{
         const maxKwRaw=parseFloat(ov.querySelector('#gpcfg-maxw')?.value||'0');
@@ -708,7 +724,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Prese', icon: '🔌',
     desc: 'Chip prese on/off · popup con stato, consumo W real-time, flusso animato e indicatori unavailable.',
-    version: '1.8', isDistintivo: true,
+    version: '1.9', isDistintivo: true,
     defaultCfg: { label:'Prese', icon:'🔌', color:'#fb923c', maxW:2300, entities:[] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -717,5 +733,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-prese v1.8'); } catch(e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-prese v1.9'); } catch(e) {}
 })();

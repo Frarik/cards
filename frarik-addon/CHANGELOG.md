@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.9.65 — 2026-07-10
+
+### fix(distintivo): GruppoPrese — tutti i testi al 100% bianco
+
+- Rimossi tutti i `rgba(255,255,255,X)` usati come colore testo nel popup e nel configuratore
+- Etichette, valori, ID entità, badge kWh, hint, titoli sezione: tutti `#fff` (100%)
+- Placeholder input mantenuto leggermente dimmed (55%) per distinguerlo dal testo reale
+
+## 1.9.64 — 2026-07-10
+
+### fix(distintivo): GruppoPrese v1.9 — snake fluido + energia sempre visibile senza ▾
+
+- **Snake senza scatti**: ogni re-render (ogni 1.5s) ripartiva l'animazione da capo causando
+  un salto visivo. Fix: `animation-delay` negativo calcolato da `_GP_ANIM_T0` (timestamp fisso
+  al caricamento del modulo) → la barra riprende esattamente da dove era arrivata
+- **Sensore energia visibile senza espandere ▾**: il campo `📅 Energia oggi` è ora affiancato
+  al campo `⚡ Watt` e sempre visibile per ogni presa nel configuratore
+  — il totale giornaliero nel riquadro si somma automaticamente da tutti i sensori configurati
+  — il ▾ ora espande solo Icona e Automazione
+- `watchEntities` ora include `energy_entity` tra le entità monitorate
+
 ## 1.9.63 — 2026-07-10
 
 ### feat(distintivo): GruppoPrese v1.8 — kWh automatici (senza sensore) + picker icona
