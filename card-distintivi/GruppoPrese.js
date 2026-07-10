@@ -1,4 +1,4 @@
-/* frarik-version: 1.12 */
+/* frarik-version: 1.13 */
 /**
  * GruppoPrese.js — Distintivo FratechStore v1.11
  * Chip · riquadro riassuntivo · colori % · kWh giornalieri · picker icona per presa
@@ -239,11 +239,11 @@
         ? `<span style="color:${COL_ON}">Tutte accese</span>`
         : `<span style="color:${COL_ON}">${totalActive}</span><span style="color:#fff"> / ${ents.length} accese</span>`;
 
-    /* stat W: mostra solo se almeno una presa ha sensore watt; include kWh giornalieri se disponibili */
+    /* stat W: mostra solo se almeno una presa ha sensore watt */
     const statW = totalW!==null
       ? `<div style="text-align:center;padding:0 8px;border-left:1px solid rgba(255,255,255,.07);border-right:1px solid rgba(255,255,255,.07)">
            <div style="font-size:22px;font-weight:900;letter-spacing:-.5px;color:${fCol};line-height:1">${fmtW(totalW)}</div>
-           <div style="font-size:9px;color:#fff;margin-top:3px;text-transform:uppercase;letter-spacing:.5px">consumo${totalDailyKwh!==null?' · 📅 '+totalDailyKwh.toFixed(2)+' kWh':''}</div>
+           <div style="font-size:9px;color:#fff;margin-top:3px;text-transform:uppercase;letter-spacing:.5px">consumo</div>
          </div>`
       : '';
     const maxKwLabel = maxW >= 1000 ? (maxW/1000).toFixed(1).replace('.0','')+' kW' : maxW+' W';
@@ -308,8 +308,8 @@
       const circIconCol = st.on ? COL_ON : mc;
       /* ring pulsante sempre quando accesa */
       const ringCol = (w!==null && w>10) ? fCol2 : COL_ON;
-      const pulseRing = st.on
-        ? `<div class="gp-dot-ring" style="inset:-6px;border:2px solid ${ringCol};opacity:.55"></div>` : '';
+      const pulseRing = isError
+        ? `<div class="gp-dot-ring" style="inset:-6px;border:2px solid ${mc};opacity:.55"></div>` : '';
 
       const dot = `<div style="position:relative;width:44px;height:44px;flex-shrink:0">
         ${pulseRing}
@@ -775,7 +775,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Prese', icon: '🔌',
     desc: 'Chip prese on/off · popup con stato, consumo W real-time, flusso animato e indicatori unavailable.',
-    version: '1.12', isDistintivo: true,
+    version: '1.13', isDistintivo: true,
     defaultCfg: { label:'Prese', icon:'🔌', color:'#fb923c', maxW:2300, entities:[] },
     chip, watchEntities, render, mount, update, configure,
   };

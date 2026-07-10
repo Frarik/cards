@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.9.70 — 2026-07-10
+
+### fix(distintivo): GruppoPrese v1.13 — rimozione kWh totale + ring solo offline
+
+- Rimosso totale kWh dal riquadro statistiche (era sotto CONSUMO, non richiesto)
+- Cerchio pulsante rimosso dalle prese accese: ora appare solo su prese offline/errore
+
 ## 1.9.69 — 2026-07-10
 
 ### fix(distintivo): GruppoPrese v1.12 — baseline corretta + layout kWh affianco consumo
