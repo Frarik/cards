@@ -1,4 +1,4 @@
-/* frarik-version: 1.3 */
+/* frarik-version: 1.4 */
 /**
  * GruppoPrese.js — Distintivo FratechStore v1.1
  * Chip contatore · popup con stato on/off/unavailable, consumo W real-time, flusso animato
@@ -76,13 +76,11 @@
     if (w>200)  return col;
     return '#4ade80';
   }
-  /* velocità flusso: ms per ciclo (meno = più veloce) */
+  /* velocità flusso: ms per ciclo (meno = più veloce) — lineare 0W→fermo, 3600W→massima velocità */
   function flowSpeed(w) {
     if (w===null||w<=0) return 0;
-    if (w>1500) return 600;
-    if (w>800)  return 900;
-    if (w>200)  return 1400;
-    return 2200;
+    const ratio = Math.min(1, w / 3600);
+    return Math.round(3800 - ratio * (3800 - 340));
   }
 
   /* ── chip ── */
@@ -577,7 +575,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Prese', icon: '🔌',
     desc: 'Chip prese on/off · popup con stato, consumo W real-time, flusso animato e indicatori unavailable.',
-    version: '1.3', isDistintivo: true,
+    version: '1.4', isDistintivo: true,
     defaultCfg: { label:'Prese', icon:'🔌', color:'#fb923c', maxW:2300, entities:[] },
     chip, watchEntities, render, mount, update, configure,
   };

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.9.57 — 2026-07-10
+
+### fix(distintivo): GruppoPrese v1.4 — velocità snake proporzionale ai watt (0–3600W)
+
+- Velocità animazione snake ora lineare: 0W = fermo, 3600W = massima velocità (340ms/ciclo)
+- Rimossi scalini fissi (200W/800W/1500W), ora interpolazione continua su tutto il range
+
 ## 1.9.56 — 2026-07-10
 
 ### fix(distintivo): GruppoPrese v1.3 — animazione snake + testo stato più visibile
