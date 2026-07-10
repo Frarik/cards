@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.9.60 — 2026-07-10
+
+### fix(sync): al primo caricamento della sessione il server è sempre la fonte di verità
+
+- `_haLoadCfg`: al primo caricamento (`_isFirstLoad=true`) chiama `_applyRemoteCfg(v, force=true)`
+  — il timestamp locale non conta più: la config del server viene sempre applicata
+- Questo risolve il caso in cui il tablet aveva un `cfg._ts` più recente del server (es. dopo
+  qualsiasi interazione precedente) e quindi rifiutava la configurazione aggiornata del PC
+- Comportamento sui poll successivi invariato: se locale è più recente → push al server
+
 ## 1.9.59 — 2026-07-10
 
 ### fix(sync): sincronizzazione cross-device — forza pull da server + no push al primo caricamento

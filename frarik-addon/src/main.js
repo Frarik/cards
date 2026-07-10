@@ -1309,14 +1309,15 @@ function _haLoadCfg(force){
       _cfgSynced=true;   // d'ora in poi le modifiche locali si auto-salvano
       const _localTs=cfg._ts||0;
       const _remoteTs=v?(v._ts||0):0;
-      _applyRemoteCfg(v);
+      // Al primo caricamento della sessione forziamo sempre la config del server:
+      // il server è la fonte di verità. Sui poll successivi usiamo i timestamp normali.
+      _applyRemoteCfg(v, _isFirstLoad);
       const hasRemote = v && ((v.cfg&&v.cfg.pages)||v.pages);
       if(!hasRemote && cfg && (cfg.pages||[]).length){
         _haSaveCfg(); // server vuoto → scrivi la plancia locale
       } else if(hasRemote && _localTs>_remoteTs && !_isFirstLoad){
         // Push solo sui poll successivi (non al primo caricamento):
-        // evita che un dispositivo aperto dopo l'ultimo salvataggio sovrascriva
-        // la config del server con una versione locale stantia.
+        // evita che un dispositivo appena aperto sovrascriva la config del server.
         _haSaveCfgDebounced();
       }
     }).catch(()=>{ /* offline: si tiene la copia locale */ });
