@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.9.50 — 2026-07-10
+
+### fix(sync): persistenza e sincronizzazione cross-device della plancia
+
+- Fix: GET/POST /api/frarik/config ora inviano sempre X-Frarik-Key header (prima usava solo il cookie, non ancora disponibile al primo caricamento → 403 silenzioso)
+- Fix: se la config locale è più recente di quella sul server la si ricarica automaticamente (push-local-if-newer), risolvendo il caso in cui un salvataggio precedente fosse fallito
+- Risultato: la dashboard sopravvive a riavvii, refresh e aggiornamenti dell'addon, e le modifiche da un dispositivo si propagano agli altri in ~3 secondi
+- Antizanzare PKG v2.2: aggiunto debounce 10 sec e mode:single sull'automazione "Perdita acqua" per eliminare le notifiche ripetute da sensor flapping
+
 ## 1.9.49 — 2026-07-08
 
 ### fix(store): badge "Aggiorna (N)" ora sempre in sync col contenuto del tab

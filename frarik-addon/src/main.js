@@ -1280,8 +1280,9 @@ function _haSaveCfg(manual){
     const cardCfgs={};
     try{ for(let _i=0;_i<localStorage.length;_i++){ const _k=localStorage.key(_i); if(_k&&_k.startsWith('frarik_')&&!_k.includes('___')) cardCfgs[_k]=localStorage.getItem(_k); } }catch(_e){}
     const payload={_ts:cfg._ts||Date.now(), cfg:_cfgNoPage, js:(typeof _jsStoreList==='function'?_jsStoreList():[]), cardCfgs};
+    const _licHdr=localStorage.getItem(LIC_KEY)||'';
     fetch(ADDON_BASE+'/api/frarik/config', {
-      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
+      method:'POST', headers:{'Content-Type':'application/json', 'X-Frarik-Key':_licHdr}, body:JSON.stringify(payload)
     }).then(r=>{
       if(r.ok){
         if(manual){
@@ -1300,12 +1301,18 @@ function _haLoadCfg(force){
     const now=Date.now();
     if(!force && now-_lastPull<1500) return;   // throttle
     _lastPull=now;
-    fetch(ADDON_BASE+'/api/frarik/config').then(r=> r.ok ? r.json() : null).then(v=>{
+    const _licHdr=localStorage.getItem(LIC_KEY)||'';
+    fetch(ADDON_BASE+'/api/frarik/config', {headers:{'X-Frarik-Key':_licHdr}}).then(r=> r.ok ? r.json() : null).then(v=>{
       _cfgSynced=true;   // d'ora in poi le modifiche locali si auto-salvano
+      const _localTs=cfg._ts||0;
+      const _remoteTs=v?(v._ts||0):0;
       _applyRemoteCfg(v);
-      // migrazione/seed automatico: file add-on vuoto ma qui c'è già una plancia → scrivila
       const hasRemote = v && ((v.cfg&&v.cfg.pages)||v.pages);
-      if(!hasRemote && cfg && (cfg.pages||[]).length){ _haSaveCfg(); }
+      if(!hasRemote && cfg && (cfg.pages||[]).length){
+        _haSaveCfg(); // server vuoto → scrivi la plancia locale
+      } else if(hasRemote && _localTs>_remoteTs){
+        _haSaveCfgDebounced(); // locale più recente del server → sincronizza
+      }
     }).catch(()=>{ /* offline: si tiene la copia locale */ });
   }catch(e){}
 }
