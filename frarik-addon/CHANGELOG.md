@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.51 — 2026-07-10
+
+### fix(store): aggiorna card con PKG non apre più il wizard se config già salvata
+
+- Fix: cliccare "Aggiorna" su una card che ha un PKG aggiornava il JS ma poi riapriva il wizard
+- Ora: se il wizard è già stato configurato in precedenza, il PKG viene aggiornato in background silenziosamente con i valori salvati
+- Il popup wizard appare solo se non esiste nessuna configurazione precedente (prima installazione)
+
 ## 1.9.50 — 2026-07-10
 
 ### fix(sync): persistenza e sincronizzazione cross-device della plancia

@@ -3645,10 +3645,21 @@ async function _ghsInstall(name){
     return;
   }
   _ghsDoInstall(f,code,res);
-  /* su aggiornamento: se la pkg version è cambiata avvisa l'utente */
+  /* su aggiornamento: se la pkg version è cambiata → aggiorna silenziosamente se c'è config salvata */
   if(_pkgMatch&&_pkgVerNew&&_pkgVerNew!==(Object.entries(_ghCfg().pkgVersions||{}).find(([k])=>k.toLowerCase()===_instId.toLowerCase())?.[1]||'')){
     const _pkgInfoUpd=_parsePkgInfo(code)||{};
-    _ghsPkgUpdatePopup(_instId.toLowerCase(),_pkgVerNew,_pkgInfoUpd.file||('frarik/frarik_'+_instId.toLowerCase()+'.yaml'));
+    const _cardIdLow=_instId.toLowerCase();
+    const _wizKey='frarik_pkg_wizard_'+_cardIdLow;
+    const _savedCfg=JSON.parse(localStorage.getItem(_wizKey)||'null');
+    const _regUpd=window.FratechCardRegistry?.[_cardIdLow]??window.FratechCardRegistry?.[_instId];
+    if(_savedCfg&&typeof _regUpd?._buildPkgFromConfig==='function'){
+      /* config wizard già presente → aggiorna PKG in background senza aprire il wizard */
+      _pkgUpdateCard(_cardIdLow,true);
+      showToast('✅ '+f.name+' aggiornata · PKG aggiornato in automatico');
+    } else {
+      /* prima installazione o config non trovata → popup con opzione wizard */
+      _ghsPkgUpdatePopup(_cardIdLow,_pkgVerNew,_pkgInfoUpd.file||('frarik/frarik_'+_instId.toLowerCase()+'.yaml'));
+    }
   } else {
     showToast('✅ '+f.name+(_isUpdate?' aggiornata':' installata — usa ➕ Aggiungi per metterla in dashboard'));
   }
