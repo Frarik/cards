@@ -1,14 +1,16 @@
-/* frarik-version: 1.0 */
+/* frarik-version: 1.1 */
 /**
- * GruppoPrese.js — Distintivo FratechStore v1.0
- * Chip contatore prese accese · popup toggle + watt real-time per ogni presa
+ * GruppoPrese.js — Distintivo FratechStore v1.1
+ * Chip contatore · popup con stato on/off/unavailable, consumo W real-time, flusso animato
  */
 (function () {
   'use strict';
 
   const ID = 'gruppo-prese';
   const ON_STATES = ['on','open','unlocked','playing','heating','cooling','active','home','present','detected','wet','running','charging'];
+  const MAX_W_DEFAULT = 2300; // watt massimi presa standard IT
 
+  /* ── helpers ── */
   function H() {
     try { if (typeof window.frarikHass === 'function') { const h = window.frarikHass(); if (h && h.states) return h; } } catch (e) {}
     return null;
@@ -16,52 +18,66 @@
   function loadCfg(cfg) { return cfg && typeof cfg === 'object' ? cfg : {}; }
   function nameOf(h, id) {
     const s = h && h.states && h.states[id];
-    return (s && s.attributes && s.attributes.friendly_name) || (id.includes('.') ? id.split('.')[1].replace(/_/g, ' ') : id);
+    return (s && s.attributes && s.attributes.friendly_name) || (id && id.includes('.') ? id.split('.')[1].replace(/_/g,' ') : (id||''));
   }
   function stateOf(h, id) { return (h && h.states && h.states[id] && h.states[id].state) || 'unknown'; }
   function isOn(h, id) { return ON_STATES.includes(stateOf(h, id).toLowerCase()); }
   function numOf(h, id) {
     if (!h || !id) return null;
-    const s = h.states && h.states[id];
-    if (!s) return null;
-    const v = parseFloat(s.state);
-    return isNaN(v) ? null : v;
+    const s = h && h.states && h.states[id]; if (!s) return null;
+    const v = parseFloat(s.state); return isNaN(v) ? null : v;
   }
   function callSvc(domain, svc, entityId) {
     if (typeof window.callSvc === 'function') { window.callSvc(domain, svc, entityId); return; }
     const hh = H(); if (hh && hh.callService) hh.callService(domain, svc, { entity_id: entityId });
   }
-  function eh(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function eh(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function hex2rgba(hex, a) {
-    let h = (hex || '').replace('#', '');
-    if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
-    if (h.length !== 6) return `rgba(255,255,255,${a})`;
+    let h = (hex||'').replace('#','');
+    if (h.length===3) h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+    if (h.length!==6) return `rgba(255,255,255,${a})`;
     return `rgba(${parseInt(h.slice(0,2),16)},${parseInt(h.slice(2,4),16)},${parseInt(h.slice(4,6),16)},${a})`;
   }
   function liveH(rawHass) { return H() || (rawHass && rawHass.states ? rawHass : null); }
   function iconHtml(ico, sz) {
-    sz = sz || 16;
-    if (typeof ico === 'string' && ico.startsWith('mdi:'))
+    sz = sz||16;
+    if (typeof ico==='string' && ico.startsWith('mdi:'))
       return `<span class="mdi mdi-${ico.slice(4)}" style="font-size:${sz}px;line-height:1;color:inherit"></span>`;
-    return `<span style="font-size:${sz}px;line-height:1">${ico || '🔌'}</span>`;
-  }
-  function _dynIcon(ico, on) {
-    const P = {
-      '🔌':        ['🔌', '🔌'],
-      'mdi:power-plug':        ['mdi:power-plug',        'mdi:power-plug-off'],
-      'mdi:power-plug-off':    ['mdi:power-plug',        'mdi:power-plug-off'],
-      'mdi:power-socket-eu':   ['mdi:power-socket-eu',   'mdi:power-socket-eu'],
-      'mdi:power-socket':      ['mdi:power-socket',      'mdi:power-socket'],
-      'mdi:socket-eu':         ['mdi:socket-eu',         'mdi:socket-eu'],
-    };
-    const pair = P[ico];
-    if (pair) return on ? pair[0] : pair[1];
-    return ico || (on ? 'mdi:power-plug' : 'mdi:power-plug-off');
+    return `<span style="font-size:${sz}px;line-height:1">${ico||'🔌'}</span>`;
   }
   function fmtW(w) {
-    if (w === null || w === undefined) return null;
-    if (w >= 1000) return (w / 1000).toFixed(1) + ' kW';
-    return Math.round(w) + ' W';
+    if (w===null||w===undefined) return null;
+    if (w>=1000) return (w/1000).toFixed(1)+' kW';
+    return Math.round(w)+' W';
+  }
+
+  /* ── stato presa: on / off / unavailable / unknown ── */
+  function socketStatus(h, entityId) {
+    if (!h || !h.states) return { on:false, unavail:true, unknown:false, label:'Non disponibile', dotColor:'#ef4444', canToggle:false };
+    const s = h.states[entityId];
+    if (!s) return { on:false, unavail:true, unknown:false, label:'Non disponibile', dotColor:'#ef4444', canToggle:false };
+    const st = (s.state||'').toLowerCase();
+    if (st==='unavailable') return { on:false, unavail:true,  unknown:false, label:'Non disponibile', dotColor:'#ef4444', canToggle:false };
+    if (st==='unknown')     return { on:false, unavail:false, unknown:true,  label:'Sconosciuta',     dotColor:'#f59e0b', canToggle:false };
+    const on = ON_STATES.includes(st);
+    return { on, unavail:false, unknown:false, label: on?'Accesa':'Spenta', dotColor: on?null:'rgba(255,255,255,.2)', canToggle:true };
+  }
+
+  /* colore flusso in base ai watt */
+  function flowColor(w, col) {
+    if (w===null) return col;
+    if (w>1500) return '#ef4444';
+    if (w>800)  return '#f59e0b';
+    if (w>200)  return col;
+    return '#4ade80';
+  }
+  /* velocità flusso: ms per ciclo (meno = più veloce) */
+  function flowSpeed(w) {
+    if (w===null||w<=0) return 0;
+    if (w>1500) return 600;
+    if (w>800)  return 900;
+    if (w>200)  return 1400;
+    return 2200;
   }
 
   /* ── chip ── */
@@ -69,43 +85,47 @@
     const c = loadCfg(cfg);
     const h = liveH(rawHass);
     const ents = Array.isArray(c.entities) ? c.entities : [];
-    const active = h ? ents.filter(e => isOn(h, e.entity)).length : 0;
     const col = c.color || '#fb923c';
-
-    // somma watt solo delle prese accese (se configurato)
-    let totalW = null;
+    let active=0, totalW=null, hasUnavail=false;
     if (h) {
-      let sum = 0, hasPwr = false;
+      let sum=0, hasPwr=false;
       ents.forEach(e => {
-        if (e.power_entity && isOn(h, e.entity)) {
-          const w = numOf(h, e.power_entity);
-          if (w !== null) { sum += w; hasPwr = true; }
-        }
+        const st = socketStatus(h, e.entity);
+        if (st.on) active++;
+        if (st.unavail||st.unknown) hasUnavail=true;
+        if (e.power_entity && st.on) { const w=numOf(h,e.power_entity); if(w!==null){sum+=w;hasPwr=true;} }
       });
-      if (hasPwr) totalW = sum;
+      if (hasPwr) totalW=sum;
     }
-
     const value = ents.length
-      ? (totalW !== null ? `${active}/${ents.length} · ${fmtW(totalW)}` : `${active}/${ents.length}`)
+      ? (totalW!==null ? `${active}/${ents.length} · ${fmtW(totalW)}` : `${active}/${ents.length}`)
       : '—';
-
-    return {
-      icon: iconHtml(c.icon || '🔌'),
-      label: c.label || 'Prese',
-      value,
-      color: active > 0 ? col : 'rgba(255,255,255,0.32)',
-    };
+    const chipCol = hasUnavail && active===0 ? '#ef4444' : active>0 ? col : 'rgba(255,255,255,0.32)';
+    return { icon: iconHtml(c.icon||'🔌'), label: c.label||'Prese', value, color: chipCol };
   }
 
   function watchEntities(cfg) {
     const c = loadCfg(cfg);
     const ents = Array.isArray(c.entities) ? c.entities : [];
-    const ids = ents.map(e => e.entity).filter(Boolean);
-    ents.forEach(e => {
-      if (e.power_entity) ids.push(e.power_entity);
-      if (e.automation)   ids.push(e.automation);
-    });
+    const ids = ents.map(e=>e.entity).filter(Boolean);
+    ents.forEach(e=>{ if(e.power_entity) ids.push(e.power_entity); if(e.automation) ids.push(e.automation); });
     return ids;
+  }
+
+  /* ── CSS condiviso (iniettato una volta) ── */
+  const CSS = `
+    @keyframes gpflow{0%{left:-28px;opacity:0}15%{opacity:1}85%{opacity:1}100%{left:calc(100% + 28px);opacity:0}}
+    @keyframes gppulse{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.55);opacity:0}}
+    @keyframes gpblink{0%,100%{opacity:1}50%{opacity:.35}}
+    .gp-flow-track{position:relative;height:5px;border-radius:3px;overflow:hidden;background:rgba(255,255,255,.06);flex-shrink:0}
+    .gp-flow-dot{position:absolute;top:50%;transform:translateY(-50%);width:22px;height:5px;border-radius:3px;animation:gpflow linear infinite;opacity:0}
+    .gp-dot-ring{position:absolute;inset:-4px;border-radius:50%;animation:gppulse 1.8s ease-in-out infinite;pointer-events:none}
+    .gp-unavail-blink{animation:gpblink 1.4s ease-in-out infinite}
+  `;
+  function _injectCss(){
+    if(document.getElementById('gp-style')) return;
+    const s=document.createElement('style'); s.id='gp-style'; s.textContent=CSS;
+    document.head.appendChild(s);
   }
 
   /* ── render popup ── */
@@ -114,73 +134,136 @@
     const h = liveH(rawHass);
     const ents = Array.isArray(c.entities) ? c.entities : [];
     const col = c.color || '#fb923c';
-    const active = h ? ents.filter(e => isOn(h, e.entity)).length : 0;
+    const maxW = c.maxW || MAX_W_DEFAULT;
 
-    // totale watt (solo accese)
-    let totalW = null;
+    let totalW=null, totalActive=0;
     if (h) {
-      let sum = 0, hasPwr = false;
-      ents.forEach(e => {
-        if (e.power_entity && isOn(h, e.entity)) {
-          const w = numOf(h, e.power_entity);
-          if (w !== null) { sum += w; hasPwr = true; }
-        }
+      let sum=0, hasPwr=false;
+      ents.forEach(e=>{
+        const st=socketStatus(h,e.entity); if(st.on) totalActive++;
+        if(e.power_entity&&st.on){const w=numOf(h,e.power_entity);if(w!==null){sum+=w;hasPwr=true;}}
       });
-      if (hasPwr) totalW = sum;
+      if(hasPwr) totalW=sum;
     }
 
+    const totalPct = totalW!==null ? Math.min(100, Math.round((totalW/maxW)*100)) : null;
+    const fCol = flowColor(totalW, col);
+    const fSpd = flowSpeed(totalW);
+
+    /* barra totale in cima */
+    const totalBar = totalW!==null ? `
+      <div style="padding:0 14px 10px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px">
+          <span style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.6px">Consumo totale</span>
+          <span style="font-size:16px;font-weight:900;color:${fCol}">${fmtW(totalW)}</span>
+        </div>
+        <div class="gp-flow-track" style="height:7px">
+          <div style="position:absolute;top:0;left:0;height:100%;width:${totalPct}%;background:${fCol};border-radius:3px;transition:width .6s"></div>
+          ${fSpd?`<div class="gp-flow-dot" style="background:#fff;opacity:.9;animation-duration:${fSpd}ms;animation-delay:0ms"></div>
+          <div class="gp-flow-dot" style="background:#fff;opacity:.9;animation-duration:${fSpd}ms;animation-delay:${Math.round(fSpd/3)}ms"></div>
+          <div class="gp-flow-dot" style="background:#fff;opacity:.9;animation-duration:${fSpd}ms;animation-delay:${Math.round(fSpd*2/3)}ms"></div>`:''}
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:4px">
+          <span style="font-size:9px;color:rgba(255,255,255,.25)">${totalActive} pres${totalActive===1?'a':'e'} acces${totalActive===1?'a':'e'}</span>
+          <span style="font-size:9px;color:rgba(255,255,255,.25)">${totalPct}% di ${fmtW(maxW)}</span>
+        </div>
+      </div>` : '';
+
     const ctrlBar = ents.length ? `
-      <div style="display:flex;gap:8px;padding:4px 14px 8px">
+      <div style="display:flex;gap:8px;padding:0 14px 10px">
         <button data-gp-all="on" style="flex:1;padding:7px;border-radius:8px;border:1px solid ${hex2rgba(col,.4)};background:${hex2rgba(col,.12)};color:${col};font-size:11px;font-weight:700;cursor:pointer">⚡ Accendi tutte</button>
-        <button data-gp-all="off" style="flex:1;padding:7px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:rgba(255,255,255,.6);font-size:11px;font-weight:700;cursor:pointer">⏻ Spegni tutte</button>
+        <button data-gp-all="off" style="flex:1;padding:7px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:rgba(255,255,255,.55);font-size:11px;font-weight:700;cursor:pointer">⏻ Spegni tutte</button>
       </div>` : '';
 
     const rows = ents.map((e, i) => {
       if (!e.entity) return '';
-      const on = h ? isOn(h, e.entity) : false;
+      const st = h ? socketStatus(h, e.entity) : { on:false, unavail:false, unknown:false, label:'—', dotColor:'rgba(255,255,255,.2)', canToggle:false };
       const lbl = e.label || nameOf(h, e.entity);
-      const swBg = on ? col : 'rgba(255,255,255,0.14)';
-      const thumbL = on ? '22px' : '2px';
-      const watt = (h && e.power_entity) ? numOf(h, e.power_entity) : null;
-      const wattTxt = watt !== null ? fmtW(watt) : (e.power_entity ? '— W' : null);
+      const w = (h && e.power_entity) ? numOf(h, e.power_entity) : null;
+      const pct = (w!==null) ? Math.min(100, Math.round((w/maxW)*100)) : null;
+      const dotCol = st.on ? (col) : st.dotColor;
+      const fSpd2 = flowSpeed(w);
+      const fCol2 = flowColor(w, col);
 
+      /* indicatore stato sinistra */
+      const dot = st.unavail
+        ? `<div style="width:38px;height:38px;border-radius:50%;background:rgba(239,68,68,.1);border:1.5px solid rgba(239,68,68,.35);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <span class="gp-unavail-blink" style="font-size:16px">⚠️</span>
+           </div>`
+        : st.unknown
+        ? `<div style="width:38px;height:38px;border-radius:50%;background:rgba(245,158,11,.1);border:1.5px solid rgba(245,158,11,.35);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <span style="font-size:16px">❓</span>
+           </div>`
+        : `<div style="position:relative;width:38px;height:38px;flex-shrink:0">
+            <div style="position:absolute;inset:0;border-radius:50%;background:${st.on?hex2rgba(col,.15):'rgba(255,255,255,.04)'};border:1.5px solid ${st.on?hex2rgba(col,.4):'rgba(255,255,255,.1)'}"></div>
+            ${st.on&&w&&w>5?`<div class="gp-dot-ring" style="border:2px solid ${fCol2};border-radius:50%;position:absolute;inset:-4px"></div>`:''}
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:${st.on?dotCol:'rgba(255,255,255,.25)'}">
+              ${iconHtml(e.icon||c.icon||'🔌',16)}
+            </div>
+           </div>`;
+
+      /* testo stato */
+      const stateLabel = st.unavail
+        ? `<span style="font-size:10px;color:#ef4444;font-weight:600">Non disponibile</span>`
+        : st.unknown
+        ? `<span style="font-size:10px;color:#f59e0b;font-weight:600">Sconosciuta</span>`
+        : st.on
+        ? `<span style="font-size:10px;color:${col};font-weight:700">${w!==null?fmtW(w):'Accesa'}</span>`
+        : `<span style="font-size:10px;color:rgba(255,255,255,.35)">Spenta</span>`;
+
+      /* toggle */
+      const swBg = st.on ? col : 'rgba(255,255,255,.12)';
+      const thumbL = st.on ? '22px' : '2px';
+      const toggle = st.canToggle
+        ? `<button data-gp-toggle="${i}" style="width:46px;height:26px;border-radius:13px;border:none;cursor:pointer;position:relative;background:${swBg};transition:background .2s;outline:none;flex-shrink:0">
+            <div style="position:absolute;top:3px;left:${thumbL};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3);transition:left .18s;pointer-events:none"></div>
+           </button>`
+        : `<div style="width:46px;height:26px;border-radius:13px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);flex-shrink:0;display:flex;align-items:center;justify-content:center">
+            <span style="font-size:9px;color:rgba(255,255,255,.25)">N/D</span>
+           </div>`;
+
+      /* barra watt + flusso */
+      const powerBar = (st.on && pct!==null) ? `
+        <div style="margin:6px 0 2px;display:flex;align-items:center;gap:6px">
+          <div class="gp-flow-track" style="flex:1">
+            <div style="position:absolute;top:0;left:0;height:100%;width:${pct}%;background:${fCol2};border-radius:3px;transition:width .5s"></div>
+            ${fSpd2?`<div class="gp-flow-dot" style="background:rgba(255,255,255,.8);animation-duration:${fSpd2}ms;animation-delay:0ms"></div>
+            <div class="gp-flow-dot" style="background:rgba(255,255,255,.8);animation-duration:${fSpd2}ms;animation-delay:${Math.round(fSpd2/3)}ms"></div>
+            <div class="gp-flow-dot" style="background:rgba(255,255,255,.8);animation-duration:${fSpd2}ms;animation-delay:${Math.round(fSpd2*2/3)}ms"></div>`:''}
+          </div>
+          <span style="font-size:9px;color:rgba(255,255,255,.3);flex-shrink:0;min-width:30px;text-align:right">${pct}%</span>
+        </div>` : '';
+
+      /* automazione */
       let autoBadge = '';
-      if (e.automation) {
-        const autoOn = h ? isOn(h, e.automation) : false;
-        const aBg  = autoOn ? 'rgba(74,222,128,.13)'  : 'rgba(248,113,113,.13)';
-        const aBdr = autoOn ? 'rgba(74,222,128,.38)'  : 'rgba(248,113,113,.38)';
-        const aCol = autoOn ? '#4ade80'               : '#f87171';
-        const aTxt = autoOn ? '🟢 Attiva'             : '🔴 Disattiva';
-        autoBadge = `<button data-gp-auto="${i}" style="padding:3px 8px;border-radius:6px;border:1px solid ${aBdr};background:${aBg};color:${aCol};cursor:pointer;font-size:9px;font-weight:700;white-space:nowrap;outline:none">${aTxt}</button>`;
+      if (e.automation && h) {
+        const autoOn = isOn(h, e.automation);
+        autoBadge = `<button data-gp-auto="${i}" style="margin-top:4px;padding:3px 8px;border-radius:6px;border:1px solid ${autoOn?'rgba(74,222,128,.38)':'rgba(248,113,113,.38)'};background:${autoOn?'rgba(74,222,128,.1)':'rgba(248,113,113,.1)'};color:${autoOn?'#4ade80':'#f87171'};cursor:pointer;font-size:9px;font-weight:700;white-space:nowrap">${autoOn?'🟢 Auto attiva':'🔴 Auto disattiva'}</button>`;
       }
 
       return `<div style="border-bottom:1px solid rgba(255,255,255,.04)">
-        <div style="display:flex;align-items:center;gap:12px;padding:11px 16px">
-          <div style="width:36px;height:36px;border-radius:50%;background:${on?hex2rgba(col,.15):'rgba(255,255,255,.05)'};border:1px solid ${on?hex2rgba(col,.3):'rgba(255,255,255,.1)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${on?col:'rgba(255,255,255,.4)'}">${iconHtml(_dynIcon(c.icon||'🔌', on), 18)}</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px 6px">
+          ${dot}
           <div style="flex:1;min-width:0">
             <div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
-            <div style="font-size:11px;color:${on?col:'rgba(255,255,255,.45)'};margin-top:1px;font-weight:${on?600:400}">${on ? (wattTxt ? wattTxt : 'Accesa') : 'Spenta'}</div>
+            <div style="margin-top:2px">${stateLabel}</div>
           </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
-            <button data-gp-toggle="${i}" style="width:46px;height:26px;border-radius:13px;border:none;cursor:pointer;position:relative;background:${swBg};transition:background .2s;outline:none">
-              <div style="position:absolute;top:3px;left:${thumbL};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3);transition:left .18s;pointer-events:none"></div>
-            </button>
-            ${autoBadge}
-          </div>
+          ${toggle}
         </div>
+        ${powerBar ? `<div style="padding:0 16px 4px">${powerBar}</div>` : ''}
+        ${autoBadge ? `<div style="padding:0 16px 8px">${autoBadge}</div>` : ''}
+        ${!powerBar && !autoBadge ? '<div style="height:6px"></div>' : ''}
       </div>`;
     }).join('');
 
-    const footer = totalW !== null ? `
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-top:1px solid rgba(255,255,255,.06);margin-top:2px">
-        <span style="font-size:11px;color:rgba(255,255,255,.45)">${active} pres${active===1?'a':'e'} accesa${active===1?'':'e'}</span>
-        <span style="font-size:13px;font-weight:700;color:${col}">${fmtW(totalW)} totali</span>
-      </div>` : '';
+    const empty = `<div style="padding:32px 20px;text-align:center;color:rgba(255,255,255,.3);font-size:12px">
+      Nessuna presa configurata.<br><span style="font-size:10px;opacity:.6">Clicca ✏️ sulla chip per configurare.</span>
+    </div>`;
 
-    return `<div id="gp-popup-body">
+    return `<div id="gp-popup-body" style="font-family:system-ui,sans-serif">
+      ${totalBar}
       ${ctrlBar}
-      <div>${rows || '<div style="padding:32px 20px;text-align:center;color:rgba(255,255,255,.3);font-size:12px">Nessuna presa configurata.<br><span style="font-size:10px;opacity:.6">Clicca ✏️ sulla chip per configurare.</span></div>'}</div>
-      ${footer}
+      <div>${rows||empty}</div>
     </div>`;
   }
 
@@ -188,136 +271,115 @@
   function _mountHandlers(cfg, el) {
     const c = loadCfg(cfg);
     const ents = Array.isArray(c.entities) ? c.entities : [];
-
     if (el._gpHandler) el.removeEventListener('click', el._gpHandler);
-
     const col = c.color || '#fb923c';
-
     function handler(ev) {
       const tog = ev.target.closest('[data-gp-toggle]');
       if (tog) {
         const e = ents[parseInt(tog.dataset.gpToggle)]; if (!e) return;
         const on = isOn(H(), e.entity);
-        tog.style.background = on ? 'rgba(255,255,255,0.14)' : col;
+        tog.style.background = on ? 'rgba(255,255,255,.12)' : col;
         const thumb = tog.querySelector('div');
-        if (thumb) { thumb.style.transition = 'left .18s'; thumb.style.left = on ? '2px' : '22px'; }
-        callSvc(e.entity.split('.')[0], on ? 'turn_off' : 'turn_on', e.entity);
+        if (thumb) { thumb.style.transition='left .18s'; thumb.style.left=on?'2px':'22px'; }
+        callSvc(e.entity.split('.')[0], on?'turn_off':'turn_on', e.entity);
         ev.stopPropagation(); return;
       }
       const auto = ev.target.closest('[data-gp-auto]');
       if (auto) {
-        const e = ents[parseInt(auto.dataset.gpAuto)]; if (!e || !e.automation) return;
+        const e = ents[parseInt(auto.dataset.gpAuto)]; if (!e||!e.automation) return;
         const autoOn = isOn(H(), e.automation);
-        auto.textContent = autoOn ? '🟢 Attiva' : '🔴 Disattiva';
-        auto.style.color      = autoOn ? '#4ade80' : '#f87171';
-        auto.style.borderColor= autoOn ? 'rgba(74,222,128,.38)' : 'rgba(248,113,113,.38)';
-        auto.style.background = autoOn ? 'rgba(74,222,128,.13)' : 'rgba(248,113,113,.13)';
-        callSvc('automation', autoOn ? 'turn_off' : 'turn_on', e.automation);
+        callSvc('automation', autoOn?'turn_off':'turn_on', e.automation);
         ev.stopPropagation(); return;
       }
       const allBtn = ev.target.closest('[data-gp-all]');
       if (allBtn) {
-        const svc = allBtn.dataset.gpAll === 'on' ? 'turn_on' : 'turn_off';
-        ents.forEach(e => { if (e.entity) callSvc(e.entity.split('.')[0], svc, e.entity); });
-        setTimeout(() => {
-          if (!el.isConnected) return;
-          el.innerHTML = render(cfg, null); _mountHandlers(cfg, el);
-        }, 1000);
+        const svc = allBtn.dataset.gpAll==='on'?'turn_on':'turn_off';
+        ents.forEach(e=>{ if(e.entity){ const st=socketStatus(H(),e.entity); if(st.canToggle) callSvc(e.entity.split('.')[0],svc,e.entity); } });
+        setTimeout(()=>{ if(!el.isConnected) return; el.innerHTML=render(cfg,null); _mountHandlers(cfg,el); },1000);
         ev.stopPropagation(); return;
       }
     }
-
     el._gpHandler = handler;
     el.addEventListener('click', handler);
   }
 
+  function _syncTitle(cfg, el) {
+    try {
+      const hdr = el.previousElementSibling; if (!hdr) return;
+      const textWrap = hdr.children?.[1]; if (!textWrap) return;
+      const titleEl = textWrap.firstElementChild; if (!titleEl) return;
+      const subEl = textWrap.children?.[1]; if (subEl) subEl.style.display='none';
+      const c = loadCfg(cfg);
+      const ents = Array.isArray(c.entities) ? c.entities : [];
+      const h = H(); if (!h) return;
+      const col = c.color || '#fb923c';
+      let active=0, totalW=null, hasPwr=false;
+      ents.forEach(e=>{
+        const st=socketStatus(h,e.entity); if(st.on) active++;
+        if(e.power_entity&&st.on){const w=numOf(h,e.power_entity);if(w!==null){totalW=(totalW||0)+w;hasPwr=true;}}
+      });
+      titleEl.style.color = active>0 ? col : '';
+      titleEl.textContent = active===0
+        ? 'Tutte spente'
+        : hasPwr && totalW!==null
+          ? `${active} acces${active===1?'a':'e'} · ${fmtW(totalW)}`
+          : `${active} pres${active===1?'a':'e'} acces${active===1?'a':'e'}`;
+    } catch(e) {}
+  }
+
   function mount(cfg, rawHass, el) {
+    _injectCss();
     _mountHandlers(cfg, el);
-
-    function _syncTitle() {
-      try {
-        const hdr = el.previousElementSibling; if (!hdr) return;
-        const textWrap = hdr.children?.[1]; if (!textWrap) return;
-        const titleEl = textWrap.firstElementChild; if (!titleEl) return;
-        const subEl = textWrap.children?.[1];
-        if (subEl) subEl.style.display = 'none';
-        const c = loadCfg(cfg);
-        const ents = Array.isArray(c.entities) ? c.entities : [];
-        const h = H();
-        const active = h ? ents.filter(e => isOn(h, e.entity)).length : 0;
-        const col = c.color || '#fb923c';
-        let totalW = null;
-        if (h) {
-          let sum = 0, hasPwr = false;
-          ents.forEach(e => {
-            if (e.power_entity && isOn(h, e.entity)) {
-              const w = numOf(h, e.power_entity); if (w !== null) { sum += w; hasPwr = true; }
-            }
-          });
-          if (hasPwr) totalW = sum;
-        }
-        titleEl.style.color = active > 0 ? col : '';
-        titleEl.textContent = active === 0
-          ? 'Tutte spente'
-          : (totalW !== null
-              ? `${active} acces${active===1?'a':'e'} · ${fmtW(totalW)}`
-              : `${active} pres${active===1?'a':'e'} acces${active===1?'a':'e'}`);
-      } catch(e) {}
-    }
-
-    setTimeout(_syncTitle, 0);
-
+    setTimeout(()=>_syncTitle(cfg,el), 0);
     if (el._gpPoll) return;
-    el._gpPoll = setInterval(() => {
+    el._gpPoll = setInterval(()=>{
       if (!el.isConnected) { clearInterval(el._gpPoll); delete el._gpPoll; return; }
       try {
         const h = H(); if (!h) return;
         el.innerHTML = render(cfg, h);
         _mountHandlers(cfg, el);
-        _syncTitle();
+        _syncTitle(cfg, el);
       } catch(e) {}
     }, 1500);
   }
 
   function update(cfg, rawHass, el) {
-    try { el.innerHTML = render(cfg, null); _mountHandlers(cfg, el); } catch(e) {}
+    try { el.innerHTML=render(cfg,null); _mountHandlers(cfg,el); } catch(e){}
   }
 
-  /* ── configure ── */
+  /* ── configure ── (stessa struttura v1.0, aggiunto campo maxW) */
   function configure(cfg, _el, onSave) {
     const c = loadCfg(cfg);
     const ents = JSON.parse(JSON.stringify(Array.isArray(c.entities) ? c.entities : []));
     const h = H();
-    let expandedFields = new Set(); // indici con campi extra espansi
+    let expandedFields = new Set();
     let _firstRender = true;
 
     let _acDrop = null;
-    function _closeAc() { if (_acDrop) { try { _acDrop.remove(); } catch(e) {} _acDrop = null; } }
+    function _closeAc() { if (_acDrop) { try { _acDrop.remove(); } catch(e){} _acDrop=null; } }
 
     function _openAc(inp, matches, onPick) {
       _closeAc();
       if (!matches.length) return;
       const rect = inp.getBoundingClientRect();
       const MAXH = 220;
-      const spaceBelow = window.innerHeight - rect.bottom - 6;
-      const spaceAbove = rect.top - 6;
-      const useAbove = spaceBelow < MAXH && spaceAbove > spaceBelow;
+      const useAbove = (window.innerHeight - rect.bottom - 6) < MAXH && rect.top > MAXH;
       _acDrop = document.createElement('div');
-      const pos = useAbove ? `bottom:${window.innerHeight - rect.top + 4}px` : `top:${rect.bottom + 4}px`;
-      _acDrop.style.cssText = `position:fixed;left:${rect.left}px;${pos};width:${rect.width}px;max-height:${MAXH}px;overflow-y:auto;z-index:100003;background:#1a1630;border:1px solid rgba(251,147,60,.3);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.88);scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent`;
-      matches.forEach(m => {
-        const r = document.createElement('div');
-        r.style.cssText = 'padding:9px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.05);transition:background .1s';
-        r.innerHTML = `<div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:13px;flex-shrink:0;filter:${m.on?'none':'grayscale(1) opacity(.4)'}">${m.icon||'📦'}</span>
+      const pos = useAbove ? `bottom:${window.innerHeight-rect.top+4}px` : `top:${rect.bottom+4}px`;
+      _acDrop.style.cssText=`position:fixed;left:${rect.left}px;${pos};width:${rect.width}px;max-height:${MAXH}px;overflow-y:auto;z-index:100003;background:#1a1630;border:1px solid rgba(251,147,60,.3);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.88);scrollbar-width:thin`;
+      matches.forEach(m=>{
+        const r=document.createElement('div');
+        r.style.cssText='padding:9px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.05);transition:background .1s';
+        r.innerHTML=`<div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:13px;flex-shrink:0">${m.icon||'📦'}</span>
           <div style="flex:1;min-width:0">
             <div style="font-size:11px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(m.name)}</div>
-            <div style="font-size:9px;color:rgba(255,255,255,.38);margin-top:1px">${eh(m.id)}${m.stateLabel?` · <span style="color:${m.on?'#fb923c':'rgba(255,255,255,.3)'}">${eh(m.stateLabel)}</span>`:''}</div>
+            <div style="font-size:9px;color:rgba(255,255,255,.38)">${eh(m.id)}${m.stateLabel?` · <span style="color:rgba(251,147,60,.8)">${eh(m.stateLabel)}</span>`:''}</div>
           </div>
         </div>`;
-        r.addEventListener('mouseover', () => { r.style.background = 'rgba(251,147,60,.08)'; });
-        r.addEventListener('mouseout',  () => { r.style.background = 'transparent'; });
-        r.addEventListener('mousedown', ev => { ev.preventDefault(); onPick(m.id, m.name); _closeAc(); });
+        r.addEventListener('mouseover',()=>{r.style.background='rgba(251,147,60,.08)';});
+        r.addEventListener('mouseout', ()=>{r.style.background='transparent';});
+        r.addEventListener('mousedown',ev=>{ev.preventDefault();onPick(m.id,m.name);_closeAc();});
         _acDrop.appendChild(r);
       });
       document.body.appendChild(_acDrop);
@@ -325,106 +387,74 @@
     }
 
     function _setupAc(inp, filterFn, onPick) {
-      inp.addEventListener('input', () => {
-        const q = (inp.value || '').toLowerCase().trim();
-        if (!q) { _closeAc(); return; }
-        _openAc(inp, filterFn(q).slice(0, 12), onPick);
-      });
-      inp.addEventListener('focus', () => {
-        const q = (inp.value || '').toLowerCase().trim();
-        if (q) _openAc(inp, filterFn(q).slice(0, 12), onPick);
-      });
-      inp.addEventListener('blur', () => setTimeout(_closeAc, 160));
+      inp.addEventListener('input',()=>{ const q=(inp.value||'').toLowerCase().trim(); if(!q){_closeAc();return;} _openAc(inp,filterFn(q).slice(0,12),onPick); });
+      inp.addEventListener('focus',()=>{ const q=(inp.value||'').toLowerCase().trim(); if(q) _openAc(inp,filterFn(q).slice(0,12),onPick); });
+      inp.addEventListener('blur', ()=>setTimeout(_closeAc,160));
     }
 
-    // switch.* per prime, poi tutti
     function _switchMatches(q) {
-      if (!h || !h.states) return [];
-      const lq = q.toLowerCase();
-      const icons = { switch:'🔌', light:'💡', automation:'🤖', sensor:'📡', binary_sensor:'🔵', fan:'💨', media_player:'📺', climate:'🌡️', cover:'🪟' };
+      if (!h||!h.states) return [];
+      const lq=q.toLowerCase();
+      const icons={switch:'🔌',light:'💡',automation:'🤖',sensor:'📡',binary_sensor:'🔵',fan:'💨',media_player:'📺',climate:'🌡️',cover:'🪟'};
       return Object.keys(h.states)
-        .filter(id => nameOf(h, id).toLowerCase().includes(lq) || id.toLowerCase().includes(lq))
-        .map(id => {
-          const dom = id.split('.')[0];
-          const on = isOn(h, id);
-          return { id, name: nameOf(h, id), on, icon: icons[dom] || '📦', stateLabel: on ? 'Accesa/On' : 'Spenta/Off' };
-        })
-        .sort((a, b) => {
-          const as = a.id.startsWith('switch.') ? 0 : 1;
-          const bs = b.id.startsWith('switch.') ? 0 : 1;
-          if (as !== bs) return as - bs;
-          return a.name.localeCompare(b.name);
-        });
+        .filter(id=>nameOf(h,id).toLowerCase().includes(lq)||id.toLowerCase().includes(lq))
+        .map(id=>{ const dom=id.split('.')[0]; const on=isOn(h,id); return {id,name:nameOf(h,id),on,icon:icons[dom]||'📦',stateLabel:on?'Accesa/On':'Spenta/Off'}; })
+        .sort((a,b)=>{ const as=a.id.startsWith('switch.')?0:1,bs=b.id.startsWith('switch.')?0:1; if(as!==bs) return as-bs; return a.name.localeCompare(b.name); });
     }
-
     function _sensorMatches(q) {
-      if (!h || !h.states) return [];
-      const lq = q.toLowerCase();
+      if (!h||!h.states) return [];
+      const lq=q.toLowerCase();
       return Object.keys(h.states)
-        .filter(id => (id.startsWith('sensor.') || id.startsWith('input_number.')) && (id.includes(lq) || nameOf(h, id).toLowerCase().includes(lq)))
-        .map(id => ({ id, name: nameOf(h, id), on: false, icon: '📡', stateLabel: (h.states[id].state || '—') + (h.states[id].attributes?.unit_of_measurement || '') }))
-        .sort((a, b) => a.name.localeCompare(b.name));
+        .filter(id=>(id.startsWith('sensor.')||id.startsWith('input_number.'))&&(id.includes(lq)||nameOf(h,id).toLowerCase().includes(lq)))
+        .map(id=>({id,name:nameOf(h,id),on:false,icon:'📡',stateLabel:(h.states[id].state||'—')+(h.states[id].attributes?.unit_of_measurement||'')}))
+        .sort((a,b)=>a.name.localeCompare(b.name));
     }
-
     function _autoMatches(q) {
-      if (!h || !h.states) return [];
+      if (!h||!h.states) return [];
       return Object.keys(h.states)
-        .filter(id => id.startsWith('automation.') && (id.includes(q) || nameOf(h, id).toLowerCase().includes(q)))
-        .map(id => ({ id, name: nameOf(h, id), icon: '🤖', on: false, stateLabel: '' }))
-        .sort((a, b) => a.name.localeCompare(b.name));
+        .filter(id=>id.startsWith('automation.')&&(id.includes(q)||nameOf(h,id).toLowerCase().includes(q)))
+        .map(id=>({id,name:nameOf(h,id),icon:'🤖',on:false,stateLabel:''}))
+        .sort((a,b)=>a.name.localeCompare(b.name));
     }
 
     const ov = document.createElement('div');
-    ov.style.cssText = 'position:fixed;inset:0;z-index:100001;display:flex;align-items:flex-end;background:rgba(0,0,0,.78);backdrop-filter:blur(7px);font-family:system-ui,sans-serif';
+    ov.style.cssText='position:fixed;inset:0;z-index:100001;display:flex;align-items:flex-end;background:rgba(0,0,0,.78);backdrop-filter:blur(7px);font-family:system-ui,sans-serif';
 
-    function closeOv() {
-      _closeAc();
-      try { document.body.removeChild(ov); } catch(e) {}
-      document.removeEventListener('keydown', escFn);
-    }
-    function escFn(ev) { if (ev.key === 'Escape') closeOv(); }
-    document.addEventListener('keydown', escFn);
+    function closeOv() { _closeAc(); try{document.body.removeChild(ov);}catch(e){} document.removeEventListener('keydown',escFn); }
+    function escFn(ev) { if(ev.key==='Escape') closeOv(); }
+    document.addEventListener('keydown',escFn);
 
     function renderForm() {
-      const col = c.color || '#fb923c';
-
-      const selRows = ents.map((e, i) => {
-        const lbl = e.label || nameOf(h, e.entity);
-        const on = h ? isOn(h, e.entity) : false;
-        const hasPwr  = !!(e.power_entity  && e.power_entity.trim());
-        const hasAuto = !!(e.automation    && e.automation.trim());
-        const exp = expandedFields.has(i);
-
-        const extraSection = exp ? `
+      const col = c.color||'#fb923c';
+      const selRows = ents.map((e,i)=>{
+        const lbl=e.label||nameOf(h,e.entity);
+        const st=h?socketStatus(h,e.entity):{on:false,unavail:false,unknown:false,dotColor:'rgba(255,255,255,.2)'};
+        const exp=expandedFields.has(i);
+        const hasPwr=!!(e.power_entity&&e.power_entity.trim());
+        const hasAuto=!!(e.automation&&e.automation.trim());
+        const extraSection=exp?`
           <div style="margin-top:6px;padding:8px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);display:flex;flex-direction:column;gap:6px">
             <div>
               <div style="font-size:9px;color:rgba(255,255,255,.35);margin-bottom:3px">⚡ Sensore watt (opzionale)</div>
-              ${hasPwr
-                ? `<div style="display:flex;align-items:center;gap:6px">
-                    <span style="flex:1;font-size:10px;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(e.power_entity)}</span>
-                    <button data-rmpwr="${i}" style="font-size:9px;padding:2px 6px;border-radius:4px;border:1px solid rgba(248,113,113,.3);background:rgba(248,113,113,.1);color:#f87171;cursor:pointer">✕</button>
-                  </div>`
-                : `<input data-pwr-idx="${i}" placeholder="🔍 Cerca sensor.xxx_power…" value="${eh(e.power_entity||'')}" style="width:100%;box-sizing:border-box;padding:6px 9px;border-radius:7px;border:1px solid rgba(251,147,60,.3);background:rgba(251,147,60,.06);color:#fff;font-size:11px;outline:none;font-family:inherit">`
-              }
+              ${hasPwr?`<div style="display:flex;align-items:center;gap:6px">
+                <span style="flex:1;font-size:10px;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(e.power_entity)}</span>
+                <button data-rmpwr="${i}" style="font-size:9px;padding:2px 6px;border-radius:4px;border:1px solid rgba(248,113,113,.3);background:rgba(248,113,113,.1);color:#f87171;cursor:pointer">✕</button>
+              </div>`:`<input data-pwr-idx="${i}" placeholder="🔍 Cerca sensor.xxx_power…" value="${eh(e.power_entity||'')}" style="width:100%;box-sizing:border-box;padding:6px 9px;border-radius:7px;border:1px solid rgba(251,147,60,.3);background:rgba(251,147,60,.06);color:#fff;font-size:11px;outline:none;font-family:inherit">`}
             </div>
             <div>
               <div style="font-size:9px;color:rgba(255,255,255,.35);margin-bottom:3px">🤖 Automazione (opzionale)</div>
-              ${hasAuto
-                ? `<div style="display:flex;align-items:center;gap:6px">
-                    <span style="flex:1;font-size:10px;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(e.automation)}</span>
-                    <button data-rmauto="${i}" style="font-size:9px;padding:2px 6px;border-radius:4px;border:1px solid rgba(248,113,113,.3);background:rgba(248,113,113,.1);color:#f87171;cursor:pointer">✕</button>
-                  </div>`
-                : `<input data-auto-idx="${i}" placeholder="🔍 Cerca automazione…" value="${eh(e.automation||'')}" style="width:100%;box-sizing:border-box;padding:6px 9px;border-radius:7px;border:1px solid rgba(99,102,241,.3);background:rgba(99,102,241,.07);color:#fff;font-size:11px;outline:none;font-family:inherit">`
-              }
+              ${hasAuto?`<div style="display:flex;align-items:center;gap:6px">
+                <span style="flex:1;font-size:10px;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(e.automation)}</span>
+                <button data-rmauto="${i}" style="font-size:9px;padding:2px 6px;border-radius:4px;border:1px solid rgba(248,113,113,.3);background:rgba(248,113,113,.1);color:#f87171;cursor:pointer">✕</button>
+              </div>`:`<input data-auto-idx="${i}" placeholder="🔍 Cerca automazione…" value="${eh(e.automation||'')}" style="width:100%;box-sizing:border-box;padding:6px 9px;border-radius:7px;border:1px solid rgba(99,102,241,.3);background:rgba(99,102,241,.07);color:#fff;font-size:11px;outline:none;font-family:inherit">`}
             </div>
-          </div>` : '';
-
-        return `<div style="padding:8px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid ${on?hex2rgba(col,.25):'rgba(255,255,255,.08)'};margin-bottom:6px">
+          </div>`:'';
+        return `<div style="padding:8px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid ${st.on?hex2rgba(col,.25):st.unavail?'rgba(239,68,68,.2)':st.unknown?'rgba(245,158,11,.2)':'rgba(255,255,255,.08)'};margin-bottom:6px">
           <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:15px;flex-shrink:0;filter:${on?'none':'grayscale(1) opacity(.4)'}">🔌</span>
+            <span style="font-size:15px;flex-shrink:0">${st.unavail?'⚠️':st.unknown?'❓':'🔌'}</span>
             <div style="flex:1;min-width:0">
               <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
-              <div style="font-size:9px;color:rgba(255,255,255,.35)">${eh(e.entity)}</div>
+              <div style="font-size:9px;color:${st.unavail?'#ef4444':st.unknown?'#f59e0b':'rgba(255,255,255,.35)'}">${eh(e.entity)}</div>
             </div>
             <button data-expand="${i}" title="${exp?'Chiudi':'Watt / Automazione'}" style="width:26px;height:26px;border:none;border-radius:6px;background:${exp?hex2rgba(col,.18):'rgba(255,255,255,.07)'};color:${exp?col:'rgba(255,255,255,.4)'};cursor:pointer;font-size:12px;flex-shrink:0">${exp?'▲':'▾'}</button>
             <button data-del="${i}" style="width:26px;height:26px;border:none;border-radius:6px;background:rgba(248,113,113,.15);color:#f87171;cursor:pointer;font-size:11px;flex-shrink:0">✕</button>
@@ -433,10 +463,9 @@
         </div>`;
       }).join('');
 
-      const anim = _firstRender ? 'animation:gpCfgUp .22s cubic-bezier(.32,1.12,.56,1)' : '';
+      const anim=_firstRender?'animation:gpCfgUp .22s cubic-bezier(.32,1.12,.56,1)':'';
       return `<div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0f0d1a;border:1px solid rgba(251,147,60,.22);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);color:#fff;${anim}">
-        <style>@keyframes gpCfgUp{from{transform:translateY(100%)}to{transform:translateY(0)}} .gpcinp{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;font-size:12px;outline:none;font-family:inherit;transition:border-color .15s} .gpcinp:focus{border-color:rgba(251,147,60,.5);background:rgba(251,147,60,.04)} .gpcinp::placeholder{color:rgba(255,255,255,.3)} #gpcfg-body::-webkit-scrollbar{display:none}</style>
-
+        <style>@keyframes gpCfgUp{from{transform:translateY(100%)}to{transform:translateY(0)}} .gpcinp{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;font-size:12px;outline:none;font-family:inherit;transition:border-color .15s} .gpcinp:focus{border-color:rgba(251,147,60,.5)} .gpcinp::placeholder{color:rgba(255,255,255,.3)} #gpcfg-body::-webkit-scrollbar{display:none}</style>
         <div style="display:flex;align-items:center;gap:10px;padding:14px 18px 12px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">
           <div style="width:36px;height:36px;border-radius:10px;background:rgba(251,147,60,.13);border:1px solid rgba(251,147,60,.28);display:flex;align-items:center;justify-content:center;font-size:18px">🔌</div>
           <div style="flex:1">
@@ -445,28 +474,22 @@
           </div>
           <button id="gpcfg-close" style="width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,255,255,.07);color:#fff;cursor:pointer;font-size:14px">✕</button>
         </div>
-
         <div id="gpcfg-body" style="flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;padding:14px 14px 4px">
-
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.35);margin-bottom:6px">Chip</div>
-          <div style="display:flex;gap:7px;margin-bottom:14px">
-            <div style="flex:1"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">Nome chip</div><input id="gpcfg-label" class="gpcinp" placeholder="Prese" value="${eh(c.label||'Prese')}"></div>
+          <div style="display:flex;gap:7px;margin-bottom:10px">
+            <div style="flex:1"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">Nome</div><input id="gpcfg-label" class="gpcinp" placeholder="Prese" value="${eh(c.label||'Prese')}"></div>
             <div style="flex:0 0 56px"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">Icona</div><button id="gpcfg-icon-btn" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);cursor:pointer;display:flex;align-items:center;justify-content:center;outline:none;color:#fff">${iconHtml(c.icon||'🔌',22)}</button><input type="hidden" id="gpcfg-icon" value="${eh(c.icon||'🔌')}"></div>
             <div style="flex:0 0 50px"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">Colore</div><input type="color" id="gpcfg-color" value="${(c.color||'#fb923c').match(/^#[0-9a-f]{6}$/i)?c.color:'#fb923c'}" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:none;cursor:pointer;padding:2px"></div>
           </div>
-
-          ${ents.length ? `
-            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.35);margin-bottom:6px">Prese selezionate (${ents.length}) <span style="font-size:8px;font-weight:400;opacity:.6">▾ = watt + automazione</span></div>
-            <div>${selRows}</div>
-          ` : ''}
-
+          <div style="display:flex;gap:7px;margin-bottom:14px">
+            <div style="flex:1"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">⚡ Watt massimi presa (default 2300W)</div><input id="gpcfg-maxw" class="gpcinp" type="number" placeholder="2300" value="${eh(String(c.maxW||''))}"></div>
+          </div>
+          ${ents.length?`<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.35);margin-bottom:6px">Prese (${ents.length}) <span style="font-size:8px;font-weight:400;opacity:.6">▾ = watt + automazione</span></div><div>${selRows}</div>`:''}
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.35);margin:${ents.length?'12px':0} 0 6px">Aggiungi presa</div>
           <input id="gpcfg-add-entity" class="gpcinp" placeholder="🔍 Inizia a scrivere il nome della presa…" autocomplete="off">
-          <div style="font-size:9px;color:rgba(255,255,255,.25);margin-top:5px">switch.* compaiono per prime · usa ▾ per aggiungere sensore watt e automazione</div>
-
+          <div style="font-size:9px;color:rgba(255,255,255,.25);margin-top:5px">switch.* compaiono per prime · usa ▾ per watt e automazione</div>
           <div style="height:16px"></div>
         </div>
-
         <div style="display:flex;gap:8px;padding:12px 14px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0">
           <button id="gpcfg-save" style="flex:1;padding:11px;border-radius:11px;border:none;background:#fb923c;color:#0a0816;font-weight:800;cursor:pointer;font-size:13px">💾 Salva</button>
           <button id="gpcfg-cancel" style="flex:0 0 80px;padding:11px;border-radius:11px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);color:#fff;cursor:pointer;font-size:13px">Annulla</button>
@@ -476,136 +499,64 @@
 
     function attach() {
       _closeAc();
-      const prevBody = ov.querySelector('#gpcfg-body');
-      const savedScroll = prevBody ? prevBody.scrollTop : 0;
+      const prevBody=ov.querySelector('#gpcfg-body');
+      const savedScroll=prevBody?prevBody.scrollTop:0;
+      const curLabel=ov.querySelector('#gpcfg-label')?.value;
+      const curIcon=ov.querySelector('#gpcfg-icon')?.value;
+      const curColor=ov.querySelector('#gpcfg-color')?.value;
+      ov.innerHTML=renderForm(); _firstRender=false;
+      const nb=ov.querySelector('#gpcfg-body'); if(nb&&savedScroll>0) nb.scrollTop=savedScroll;
+      if(curLabel!==undefined){const f=ov.querySelector('#gpcfg-label');if(f)f.value=curLabel;}
+      if(curIcon!==undefined){const f=ov.querySelector('#gpcfg-icon');if(f)f.value=curIcon;const b=ov.querySelector('#gpcfg-icon-btn');if(b)b.innerHTML=iconHtml(curIcon,22);}
+      if(curColor!==undefined){const f=ov.querySelector('#gpcfg-color');if(f)f.value=curColor;}
 
-      const curLabel = ov.querySelector('#gpcfg-label')?.value;
-      const curIcon  = ov.querySelector('#gpcfg-icon')?.value;
-      const curColor = ov.querySelector('#gpcfg-color')?.value;
-
-      ov.innerHTML = renderForm();
-      _firstRender = false;
-
-      const nb = ov.querySelector('#gpcfg-body');
-      if (nb && savedScroll > 0) nb.scrollTop = savedScroll;
-
-      if (curLabel !== undefined) { const f = ov.querySelector('#gpcfg-label'); if (f) f.value = curLabel; }
-      if (curIcon  !== undefined) {
-        const f = ov.querySelector('#gpcfg-icon');    if (f) f.value = curIcon;
-        const b = ov.querySelector('#gpcfg-icon-btn'); if (b) b.innerHTML = iconHtml(curIcon, 22);
-      }
-      if (curColor !== undefined) { const f = ov.querySelector('#gpcfg-color'); if (f) f.value = curColor; }
-
-      ov.querySelector('#gpcfg-icon-btn')?.addEventListener('click', ev => {
+      ov.querySelector('#gpcfg-icon-btn')?.addEventListener('click',ev=>{
         ev.stopPropagation();
-        if (typeof openIconPicker === 'function') {
-          openIconPicker(val => {
-            const f = ov.querySelector('#gpcfg-icon');    if (f) f.value = val;
-            const b = ov.querySelector('#gpcfg-icon-btn'); if (b) b.innerHTML = iconHtml(val, 22);
-          });
-          const _ipm = document.getElementById('ntf-icon-modal');
-          if (_ipm) {
-            _ipm.style.zIndex = '200000';
-            const _ipmS = document.getElementById('ipm-search');
-            if (_ipmS) _ipmS.addEventListener('focusout', function _rf() {
-              const m = document.getElementById('ntf-icon-modal');
-              if (!m || m.style.display === 'none') { _ipmS.removeEventListener('focusout', _rf); return; }
-              setTimeout(() => { if (document.getElementById('ntf-icon-modal')?.style.display !== 'none') document.getElementById('ipm-search')?.focus(); }, 50);
-            });
-          }
+        if(typeof openIconPicker==='function'){
+          openIconPicker(val=>{const f=ov.querySelector('#gpcfg-icon');if(f)f.value=val;const b=ov.querySelector('#gpcfg-icon-btn');if(b)b.innerHTML=iconHtml(val,22);});
+          const _ipm=document.getElementById('ntf-icon-modal'); if(_ipm) _ipm.style.zIndex='200000';
         }
       });
+      if(ov._ovClick) ov.removeEventListener('click',ov._ovClick);
+      ov._ovClick=ev=>{if(ev.target===ov)closeOv();};
+      ov.addEventListener('click',ov._ovClick);
+      ov.querySelector('#gpcfg-close').onclick=closeOv;
+      ov.querySelector('#gpcfg-cancel').onclick=closeOv;
 
-      if (ov._ovClick) ov.removeEventListener('click', ov._ovClick);
-      ov._ovClick = ev => { if (ev.target === ov) closeOv(); };
-      ov.addEventListener('click', ov._ovClick);
-
-      ov.querySelector('#gpcfg-close').onclick  = closeOv;
-      ov.querySelector('#gpcfg-cancel').onclick = closeOv;
-
-      // elimina presa
-      ov.querySelectorAll('[data-del]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const i = parseInt(btn.dataset.del);
-          ents.splice(i, 1); expandedFields.delete(i);
-          // ricalcola indici nel Set
-          const newExp = new Set();
-          expandedFields.forEach(idx => { if (idx > i) newExp.add(idx - 1); else if (idx < i) newExp.add(idx); });
-          expandedFields = newExp;
-          attach();
+      ov.querySelectorAll('[data-del]').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+          const i=parseInt(btn.dataset.del); ents.splice(i,1); expandedFields.delete(i);
+          const newExp=new Set(); expandedFields.forEach(idx=>{if(idx>i)newExp.add(idx-1);else if(idx<i)newExp.add(idx);}); expandedFields=newExp; attach();
         });
       });
-
-      // toggle espansione (watt + auto)
-      ov.querySelectorAll('[data-expand]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const i = parseInt(btn.dataset.expand);
-          if (expandedFields.has(i)) expandedFields.delete(i); else expandedFields.add(i);
-          attach();
-        });
+      ov.querySelectorAll('[data-expand]').forEach(btn=>{
+        btn.addEventListener('click',()=>{ const i=parseInt(btn.dataset.expand); if(expandedFields.has(i))expandedFields.delete(i);else expandedFields.add(i); attach(); });
       });
-
-      // rimuovi sensore watt
-      ov.querySelectorAll('[data-rmpwr]').forEach(btn => {
-        btn.addEventListener('click', () => { ents[parseInt(btn.dataset.rmpwr)].power_entity = ''; attach(); });
+      ov.querySelectorAll('[data-rmpwr]').forEach(btn=>{ btn.addEventListener('click',()=>{ents[parseInt(btn.dataset.rmpwr)].power_entity='';attach();}); });
+      ov.querySelectorAll('[data-rmauto]').forEach(btn=>{ btn.addEventListener('click',()=>{ents[parseInt(btn.dataset.rmauto)].automation='';attach();}); });
+      ov.querySelectorAll('[data-pwr-idx]').forEach(inp=>{
+        const i=parseInt(inp.dataset.pwrIdx);
+        _setupAc(inp,_sensorMatches,(id)=>{ents[i].power_entity=id;inp.value=id;});
+        inp.addEventListener('blur',()=>setTimeout(()=>{const v=(inp.value||'').trim();if(v)ents[i].power_entity=v;},200));
       });
-
-      // rimuovi automazione
-      ov.querySelectorAll('[data-rmauto]').forEach(btn => {
-        btn.addEventListener('click', () => { ents[parseInt(btn.dataset.rmauto)].automation = ''; attach(); });
+      ov.querySelectorAll('[data-auto-idx]').forEach(inp=>{
+        const i=parseInt(inp.dataset.autoIdx);
+        _setupAc(inp,_autoMatches,(id)=>{ents[i].automation=id;inp.value=id;});
+        inp.addEventListener('blur',()=>setTimeout(()=>{const v=(inp.value||'').trim();if(v)ents[i].automation=v;},200));
       });
+      const addInp=ov.querySelector('#gpcfg-add-entity');
+      if(addInp) _setupAc(addInp,_switchMatches,(id,name)=>{ if(!ents.find(e=>e.entity===id)) ents.push({entity:id,label:name||'',power_entity:'',automation:''}); addInp.value=''; attach(); });
 
-      // autocomplete sensore watt
-      ov.querySelectorAll('[data-pwr-idx]').forEach(inp => {
-        const i = parseInt(inp.dataset.pwrIdx);
-        _setupAc(inp, _sensorMatches, (id) => { ents[i].power_entity = id; inp.value = id; });
-        inp.addEventListener('blur', () => {
-          setTimeout(() => {
-            const v = (inp.value || '').trim();
-            if (v) ents[i].power_entity = v;
-          }, 200);
-        });
-      });
-
-      // autocomplete automazione
-      ov.querySelectorAll('[data-auto-idx]').forEach(inp => {
-        const i = parseInt(inp.dataset.autoIdx);
-        _setupAc(inp, _autoMatches, (id) => { ents[i].automation = id; inp.value = id; });
-        inp.addEventListener('blur', () => {
-          setTimeout(() => {
-            const v = (inp.value || '').trim();
-            if (v) ents[i].automation = v;
-          }, 200);
-        });
-      });
-
-      // autocomplete aggiunta presa
-      const addInp = ov.querySelector('#gpcfg-add-entity');
-      if (addInp) {
-        _setupAc(addInp, _switchMatches, (id, name) => {
-          if (!ents.find(e => e.entity === id)) {
-            ents.push({ entity: id, label: name || '', power_entity: '', automation: '' });
-          }
-          addInp.value = '';
-          attach();
-        });
-      }
-
-      // salva
-      ov.querySelector('#gpcfg-save').addEventListener('click', () => {
-        const newCfg = {
-          label:  (ov.querySelector('#gpcfg-label')?.value || 'Prese').trim(),
-          icon:   (ov.querySelector('#gpcfg-icon')?.value  || '🔌').trim(),
-          color:  ov.querySelector('#gpcfg-color')?.value  || '#fb923c',
-          entities: ents.filter(e => e.entity).map(e => ({
-            entity:       e.entity.trim(),
-            label:        e.label       || '',
-            power_entity: e.power_entity || '',
-            automation:   e.automation  || '',
-          })),
+      ov.querySelector('#gpcfg-save').addEventListener('click',()=>{
+        const maxWVal=parseInt(ov.querySelector('#gpcfg-maxw')?.value||'0')||MAX_W_DEFAULT;
+        const newCfg={
+          label:(ov.querySelector('#gpcfg-label')?.value||'Prese').trim(),
+          icon: (ov.querySelector('#gpcfg-icon')?.value||'🔌').trim(),
+          color: ov.querySelector('#gpcfg-color')?.value||'#fb923c',
+          maxW: maxWVal,
+          entities: ents.filter(e=>e.entity).map(e=>({entity:e.entity.trim(),label:e.label||'',power_entity:e.power_entity||'',automation:e.automation||''})),
         };
-        closeOv();
-        if (typeof onSave === 'function') onSave(newCfg);
+        closeOv(); if(typeof onSave==='function') onSave(newCfg);
       });
     }
 
@@ -616,9 +567,9 @@
   /* ── registrazione ── */
   const CARD = {
     id: ID, name: 'Gruppo Prese', icon: '🔌',
-    desc: 'Chip con contatore prese accese e watt totali. Clic → pannello toggle + consumo real-time.',
-    version: '1.0', isDistintivo: true,
-    defaultCfg: { label: 'Prese', icon: '🔌', color: '#fb923c', entities: [] },
+    desc: 'Chip prese on/off · popup con stato, consumo W real-time, flusso animato e indicatori unavailable.',
+    version: '1.1', isDistintivo: true,
+    defaultCfg: { label:'Prese', icon:'🔌', color:'#fb923c', maxW:2300, entities:[] },
     chip, watchEntities, render, mount, update, configure,
   };
 
@@ -626,5 +577,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-prese v1.0'); } catch(e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-prese v1.1'); } catch(e) {}
 })();

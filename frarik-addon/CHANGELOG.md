@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.9.54 — 2026-07-10
+
+### feat(distintivo): GruppoPrese.js v1.1 — redesign completo con stati, flussi e consumo W
+
+- Stato on/off/unavailable/unknown con icona e colore dedicati per ogni presa
+- Barra consumo W real-time per ogni presa (proporzionale a maxW, default 2300W IT)
+- Flusso animato (CSS keyframes 3 dot paralleli) velocità e colore proporzionali ai watt
+  - <200W → verde, >200W → colore badge, >800W → arancio, >1500W → rosso
+  - Ring pulsante attorno all'icona quando la presa sta consumando
+- Footer consumo totale con barra + percentuale del massimo
+- Pulsanti "Accendi tutte" / "Spegni tutte" in cima al popup
+- Badge automazione per ogni presa con toggle on/off inline
+- Titolo popup dinamico: n prese accese · tot W aggiornato ogni 1.5s
+- Campo maxW configurabile (default 2300W) nella form di configurazione
+- Chip aggiornata: mostra contatore accese + consumo totale live
+
 ## 1.9.53 — 2026-07-10
 
 ### fix(sync): card e sensori ora si sincronizzano correttamente su cell/tablet
