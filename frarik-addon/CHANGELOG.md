@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.9.55 — 2026-07-10
+
+### fix(distintivo): GruppoPrese v1.2 — colori corretti e consumo/flusso visibili
+
+- Cerchio stato: verde (#4ade80) se accesa, rosso (#ef4444) se spenta, rosso lampeggiante se unavailable/unknown
+- Barra consumo W + flusso animato ora visibili per ogni presa accesa con sensore watt configurato
+- Fix CSS animazione flusso: separati animation-name/timing-function/iteration-count dalla durata inline
+- Toggle switch verde quando acceso (era arancio), rosso quando spento
+- Pulsanti "Accendi tutte" verde, "Spegni tutte" rosso
+- Titolo popup: verde se accese, rosso se spente
+
 ## 1.9.54 — 2026-07-10
 
 ### feat(distintivo): GruppoPrese.js v1.1 — redesign completo con stati, flussi e consumo W

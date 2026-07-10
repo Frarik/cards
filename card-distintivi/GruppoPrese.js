@@ -1,4 +1,4 @@
-/* frarik-version: 1.1 */
+/* frarik-version: 1.2 */
 /**
  * GruppoPrese.js — Distintivo FratechStore v1.1
  * Chip contatore · popup con stato on/off/unavailable, consumo W real-time, flusso animato
@@ -51,16 +51,21 @@
     return Math.round(w)+' W';
   }
 
+  const COL_ON    = '#4ade80'; // verde accesa
+  const COL_OFF   = '#ef4444'; // rosso spenta
+  const COL_UNAVL = '#ef4444'; // rosso unavailable
+  const COL_UNK   = '#f87171'; // rosso chiaro unknown
+
   /* ── stato presa: on / off / unavailable / unknown ── */
   function socketStatus(h, entityId) {
-    if (!h || !h.states) return { on:false, unavail:true, unknown:false, label:'Non disponibile', dotColor:'#ef4444', canToggle:false };
+    if (!h || !h.states) return { on:false, unavail:true, unknown:false, label:'Non disponibile', mainCol:COL_UNAVL, canToggle:false };
     const s = h.states[entityId];
-    if (!s) return { on:false, unavail:true, unknown:false, label:'Non disponibile', dotColor:'#ef4444', canToggle:false };
+    if (!s) return { on:false, unavail:true, unknown:false, label:'Non disponibile', mainCol:COL_UNAVL, canToggle:false };
     const st = (s.state||'').toLowerCase();
-    if (st==='unavailable') return { on:false, unavail:true,  unknown:false, label:'Non disponibile', dotColor:'#ef4444', canToggle:false };
-    if (st==='unknown')     return { on:false, unavail:false, unknown:true,  label:'Sconosciuta',     dotColor:'#f59e0b', canToggle:false };
+    if (st==='unavailable') return { on:false, unavail:true,  unknown:false, label:'Non disponibile', mainCol:COL_UNAVL, canToggle:false };
+    if (st==='unknown')     return { on:false, unavail:false, unknown:true,  label:'Sconosciuta',     mainCol:COL_UNK,   canToggle:false };
     const on = ON_STATES.includes(st);
-    return { on, unavail:false, unknown:false, label: on?'Accesa':'Spenta', dotColor: on?null:'rgba(255,255,255,.2)', canToggle:true };
+    return { on, unavail:false, unknown:false, label: on?'Accesa':'Spenta', mainCol: on?COL_ON:COL_OFF, canToggle:true };
   }
 
   /* colore flusso in base ai watt */
@@ -85,7 +90,6 @@
     const c = loadCfg(cfg);
     const h = liveH(rawHass);
     const ents = Array.isArray(c.entities) ? c.entities : [];
-    const col = c.color || '#fb923c';
     let active=0, totalW=null, hasUnavail=false;
     if (h) {
       let sum=0, hasPwr=false;
@@ -100,7 +104,7 @@
     const value = ents.length
       ? (totalW!==null ? `${active}/${ents.length} · ${fmtW(totalW)}` : `${active}/${ents.length}`)
       : '—';
-    const chipCol = hasUnavail && active===0 ? '#ef4444' : active>0 ? col : 'rgba(255,255,255,0.32)';
+    const chipCol = hasUnavail && active===0 ? COL_UNAVL : active>0 ? COL_ON : 'rgba(255,255,255,0.32)';
     return { icon: iconHtml(c.icon||'🔌'), label: c.label||'Prese', value, color: chipCol };
   }
 
@@ -114,13 +118,13 @@
 
   /* ── CSS condiviso (iniettato una volta) ── */
   const CSS = `
-    @keyframes gpflow{0%{left:-28px;opacity:0}15%{opacity:1}85%{opacity:1}100%{left:calc(100% + 28px);opacity:0}}
-    @keyframes gppulse{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.55);opacity:0}}
-    @keyframes gpblink{0%,100%{opacity:1}50%{opacity:.35}}
-    .gp-flow-track{position:relative;height:5px;border-radius:3px;overflow:hidden;background:rgba(255,255,255,.06);flex-shrink:0}
-    .gp-flow-dot{position:absolute;top:50%;transform:translateY(-50%);width:22px;height:5px;border-radius:3px;animation:gpflow linear infinite;opacity:0}
-    .gp-dot-ring{position:absolute;inset:-4px;border-radius:50%;animation:gppulse 1.8s ease-in-out infinite;pointer-events:none}
-    .gp-unavail-blink{animation:gpblink 1.4s ease-in-out infinite}
+    @keyframes gpflow{0%{left:-32px;opacity:0}12%{opacity:1}88%{opacity:1}100%{left:calc(100% + 32px);opacity:0}}
+    @keyframes gppulse{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.7);opacity:0}}
+    @keyframes gpblink{0%,100%{opacity:1}50%{opacity:.2}}
+    .gp-flow-track{position:relative;height:6px;border-radius:4px;overflow:hidden;background:rgba(255,255,255,.07)}
+    .gp-flow-dot{position:absolute;top:0;height:100%;width:28px;border-radius:4px;animation-name:gpflow;animation-timing-function:linear;animation-iteration-count:infinite}
+    .gp-dot-ring{position:absolute;border-radius:50%;animation:gppulse 1.6s ease-in-out infinite;pointer-events:none}
+    .gp-blink{animation:gpblink 1s ease-in-out infinite}
   `;
   function _injectCss(){
     if(document.getElementById('gp-style')) return;
@@ -147,7 +151,7 @@
     }
 
     const totalPct = totalW!==null ? Math.min(100, Math.round((totalW/maxW)*100)) : null;
-    const fCol = flowColor(totalW, col);
+    const fCol = flowColor(totalW, COL_ON);
     const fSpd = flowSpeed(totalW);
 
     /* barra totale in cima */
@@ -159,9 +163,9 @@
         </div>
         <div class="gp-flow-track" style="height:7px">
           <div style="position:absolute;top:0;left:0;height:100%;width:${totalPct}%;background:${fCol};border-radius:3px;transition:width .6s"></div>
-          ${fSpd?`<div class="gp-flow-dot" style="background:#fff;opacity:.9;animation-duration:${fSpd}ms;animation-delay:0ms"></div>
-          <div class="gp-flow-dot" style="background:#fff;opacity:.9;animation-duration:${fSpd}ms;animation-delay:${Math.round(fSpd/3)}ms"></div>
-          <div class="gp-flow-dot" style="background:#fff;opacity:.9;animation-duration:${fSpd}ms;animation-delay:${Math.round(fSpd*2/3)}ms"></div>`:''}
+          ${fSpd?`<div class="gp-flow-dot" style="background:rgba(255,255,255,.9);animation-duration:${fSpd}ms;animation-delay:0ms"></div>
+          <div class="gp-flow-dot" style="background:rgba(255,255,255,.9);animation-duration:${fSpd}ms;animation-delay:${Math.round(fSpd/3)}ms"></div>
+          <div class="gp-flow-dot" style="background:rgba(255,255,255,.9);animation-duration:${fSpd}ms;animation-delay:${Math.round(fSpd*2/3)}ms"></div>`:''}
         </div>
         <div style="display:flex;justify-content:space-between;margin-top:4px">
           <span style="font-size:9px;color:rgba(255,255,255,.25)">${totalActive} pres${totalActive===1?'a':'e'} acces${totalActive===1?'a':'e'}</span>
@@ -171,88 +175,101 @@
 
     const ctrlBar = ents.length ? `
       <div style="display:flex;gap:8px;padding:0 14px 10px">
-        <button data-gp-all="on" style="flex:1;padding:7px;border-radius:8px;border:1px solid ${hex2rgba(col,.4)};background:${hex2rgba(col,.12)};color:${col};font-size:11px;font-weight:700;cursor:pointer">⚡ Accendi tutte</button>
-        <button data-gp-all="off" style="flex:1;padding:7px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:rgba(255,255,255,.55);font-size:11px;font-weight:700;cursor:pointer">⏻ Spegni tutte</button>
+        <button data-gp-all="on" style="flex:1;padding:7px;border-radius:8px;border:1px solid rgba(74,222,128,.4);background:rgba(74,222,128,.1);color:${COL_ON};font-size:11px;font-weight:700;cursor:pointer">⚡ Accendi tutte</button>
+        <button data-gp-all="off" style="flex:1;padding:7px;border-radius:8px;border:1px solid rgba(239,68,68,.3);background:rgba(239,68,68,.07);color:${COL_OFF};font-size:11px;font-weight:700;cursor:pointer">⏻ Spegni tutte</button>
       </div>` : '';
 
     const rows = ents.map((e, i) => {
       if (!e.entity) return '';
-      const st = h ? socketStatus(h, e.entity) : { on:false, unavail:false, unknown:false, label:'—', dotColor:'rgba(255,255,255,.2)', canToggle:false };
+      const st = h ? socketStatus(h, e.entity) : { on:false, unavail:false, unknown:false, label:'—', mainCol:COL_OFF, canToggle:false };
       const lbl = e.label || nameOf(h, e.entity);
-      const w = (h && e.power_entity) ? numOf(h, e.power_entity) : null;
-      const pct = (w!==null) ? Math.min(100, Math.round((w/maxW)*100)) : null;
-      const dotCol = st.on ? (col) : st.dotColor;
+      const hasPowerSensor = !!(e.power_entity && e.power_entity.trim());
+      const w = (h && hasPowerSensor) ? numOf(h, e.power_entity) : null;
+      const pct = (w!==null && w>=0) ? Math.min(100, Math.round((w/maxW)*100)) : null;
       const fSpd2 = flowSpeed(w);
-      const fCol2 = flowColor(w, col);
+      const fCol2 = flowColor(w, COL_ON);
+      const mc = st.mainCol;
 
-      /* indicatore stato sinistra */
-      const dot = st.unavail
-        ? `<div style="width:38px;height:38px;border-radius:50%;background:rgba(239,68,68,.1);border:1.5px solid rgba(239,68,68,.35);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <span class="gp-unavail-blink" style="font-size:16px">⚠️</span>
-           </div>`
-        : st.unknown
-        ? `<div style="width:38px;height:38px;border-radius:50%;background:rgba(245,158,11,.1);border:1.5px solid rgba(245,158,11,.35);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <span style="font-size:16px">❓</span>
-           </div>`
-        : `<div style="position:relative;width:38px;height:38px;flex-shrink:0">
-            <div style="position:absolute;inset:0;border-radius:50%;background:${st.on?hex2rgba(col,.15):'rgba(255,255,255,.04)'};border:1.5px solid ${st.on?hex2rgba(col,.4):'rgba(255,255,255,.1)'}"></div>
-            ${st.on&&w&&w>5?`<div class="gp-dot-ring" style="border:2px solid ${fCol2};border-radius:50%;position:absolute;inset:-4px"></div>`:''}
-            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:${st.on?dotCol:'rgba(255,255,255,.25)'}">
-              ${iconHtml(e.icon||c.icon||'🔌',16)}
-            </div>
-           </div>`;
+      /* ── cerchio stato (sinistra) ── */
+      const isError = st.unavail || st.unknown;
+      const blinkClass = isError ? ' class="gp-blink"' : '';
+      const circBg = isError ? `rgba(239,68,68,.15)` : st.on ? `rgba(74,222,128,.15)` : `rgba(239,68,68,.1)`;
+      const circBorder = `2px solid ${mc}`;
+      const circIcon = st.unavail ? '⚠️' : st.unknown ? '❓' : iconHtml(e.icon||c.icon||'🔌', 18);
+      const circIconCol = st.on ? COL_ON : mc;
+      /* ring pulsante solo quando accesa e sta consumando */
+      const pulseRing = (st.on && w!==null && w>10)
+        ? `<div class="gp-dot-ring" style="inset:-6px;border:2px solid ${fCol2};opacity:.6"></div>` : '';
 
-      /* testo stato */
-      const stateLabel = st.unavail
-        ? `<span style="font-size:10px;color:#ef4444;font-weight:600">Non disponibile</span>`
-        : st.unknown
-        ? `<span style="font-size:10px;color:#f59e0b;font-weight:600">Sconosciuta</span>`
-        : st.on
-        ? `<span style="font-size:10px;color:${col};font-weight:700">${w!==null?fmtW(w):'Accesa'}</span>`
-        : `<span style="font-size:10px;color:rgba(255,255,255,.35)">Spenta</span>`;
+      const dot = `<div style="position:relative;width:44px;height:44px;flex-shrink:0">
+        ${pulseRing}
+        <div${blinkClass} style="position:absolute;inset:0;border-radius:50%;background:${circBg};border:${circBorder};display:flex;align-items:center;justify-content:center;color:${circIconCol}">
+          ${circIcon}
+        </div>
+      </div>`;
 
-      /* toggle */
-      const swBg = st.on ? col : 'rgba(255,255,255,.12)';
-      const thumbL = st.on ? '22px' : '2px';
+      /* ── testi stato + watt ── */
+      const wattStr = w!==null ? fmtW(w) : null;
+      let statusLine;
+      if (st.unavail) {
+        statusLine = `<span class="gp-blink" style="font-size:10px;color:${COL_UNAVL};font-weight:700">⚡ Non disponibile</span>`;
+      } else if (st.unknown) {
+        statusLine = `<span class="gp-blink" style="font-size:10px;color:${COL_UNK};font-weight:700">❓ Sconosciuta</span>`;
+      } else if (st.on) {
+        statusLine = `<span style="font-size:10px;color:${COL_ON};font-weight:700">● Accesa${wattStr?' · <strong style="font-size:12px">'+wattStr+'</strong>':''}</span>`;
+      } else {
+        statusLine = `<span style="font-size:10px;color:${COL_OFF};font-weight:700">● Spenta${hasPowerSensor&&w!==null?' · '+wattStr:''}</span>`;
+      }
+
+      /* ── toggle ── */
+      const swBg = st.on ? COL_ON : 'rgba(255,255,255,.12)';
+      const thumbL = st.on ? '21px' : '2px';
       const toggle = st.canToggle
         ? `<button data-gp-toggle="${i}" style="width:46px;height:26px;border-radius:13px;border:none;cursor:pointer;position:relative;background:${swBg};transition:background .2s;outline:none;flex-shrink:0">
-            <div style="position:absolute;top:3px;left:${thumbL};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3);transition:left .18s;pointer-events:none"></div>
+            <div style="position:absolute;top:3px;left:${thumbL};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.4);transition:left .18s;pointer-events:none"></div>
            </button>`
-        : `<div style="width:46px;height:26px;border-radius:13px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);flex-shrink:0;display:flex;align-items:center;justify-content:center">
-            <span style="font-size:9px;color:rgba(255,255,255,.25)">N/D</span>
+        : `<div style="width:46px;height:26px;border-radius:13px;background:rgba(255,255,255,.05);border:1px solid ${mc}44;flex-shrink:0;display:flex;align-items:center;justify-content:center">
+            <span style="font-size:9px;color:rgba(255,255,255,.3)">N/D</span>
            </div>`;
 
-      /* barra watt + flusso */
-      const powerBar = (st.on && pct!==null) ? `
-        <div style="margin:6px 0 2px;display:flex;align-items:center;gap:6px">
-          <div class="gp-flow-track" style="flex:1">
-            <div style="position:absolute;top:0;left:0;height:100%;width:${pct}%;background:${fCol2};border-radius:3px;transition:width .5s"></div>
-            ${fSpd2?`<div class="gp-flow-dot" style="background:rgba(255,255,255,.8);animation-duration:${fSpd2}ms;animation-delay:0ms"></div>
-            <div class="gp-flow-dot" style="background:rgba(255,255,255,.8);animation-duration:${fSpd2}ms;animation-delay:${Math.round(fSpd2/3)}ms"></div>
-            <div class="gp-flow-dot" style="background:rgba(255,255,255,.8);animation-duration:${fSpd2}ms;animation-delay:${Math.round(fSpd2*2/3)}ms"></div>`:''}
-          </div>
-          <span style="font-size:9px;color:rgba(255,255,255,.3);flex-shrink:0;min-width:30px;text-align:right">${pct}%</span>
-        </div>` : '';
+      /* ── barra consumo + flusso (solo se accesa e ha sensore watt) ── */
+      let powerBar = '';
+      if (st.on && hasPowerSensor) {
+        const barPct = pct!==null ? pct : 0;
+        const barFill = pct!==null ? `<div style="position:absolute;inset:0;width:${barPct}%;background:${fCol2};border-radius:4px;transition:width .5s"></div>` : '';
+        const dots = (fSpd2>0) ? `
+          <div class="gp-flow-dot" style="background:rgba(255,255,255,.9);animation-duration:${fSpd2}ms;animation-delay:0ms"></div>
+          <div class="gp-flow-dot" style="background:rgba(255,255,255,.9);animation-duration:${fSpd2}ms;animation-delay:${Math.round(fSpd2/3)}ms"></div>
+          <div class="gp-flow-dot" style="background:rgba(255,255,255,.9);animation-duration:${fSpd2}ms;animation-delay:${Math.round(fSpd2*2/3)}ms"></div>` : '';
+        const wLabel = w!==null ? `<span style="font-size:10px;font-weight:700;color:${fCol2};min-width:48px;text-align:right">${fmtW(w)}</span>` : `<span style="font-size:9px;color:rgba(255,255,255,.25)">—</span>`;
+        powerBar = `
+          <div style="padding:4px 16px 10px;display:flex;align-items:center;gap:8px">
+            <div class="gp-flow-track" style="flex:1;height:8px">
+              ${barFill}
+              ${dots}
+            </div>
+            ${wLabel}
+          </div>`;
+      }
 
-      /* automazione */
+      /* ── automazione ── */
       let autoBadge = '';
       if (e.automation && h) {
         const autoOn = isOn(h, e.automation);
-        autoBadge = `<button data-gp-auto="${i}" style="margin-top:4px;padding:3px 8px;border-radius:6px;border:1px solid ${autoOn?'rgba(74,222,128,.38)':'rgba(248,113,113,.38)'};background:${autoOn?'rgba(74,222,128,.1)':'rgba(248,113,113,.1)'};color:${autoOn?'#4ade80':'#f87171'};cursor:pointer;font-size:9px;font-weight:700;white-space:nowrap">${autoOn?'🟢 Auto attiva':'🔴 Auto disattiva'}</button>`;
+        autoBadge = `<div style="padding:0 16px 10px"><button data-gp-auto="${i}" style="padding:4px 10px;border-radius:6px;border:1px solid ${autoOn?'rgba(74,222,128,.35)':'rgba(248,113,113,.35)'};background:${autoOn?'rgba(74,222,128,.08)':'rgba(248,113,113,.08)'};color:${autoOn?'#4ade80':'#f87171'};cursor:pointer;font-size:9px;font-weight:700">${autoOn?'🟢 Auto attiva':'🔴 Auto disattiva'}</button></div>`;
       }
 
-      return `<div style="border-bottom:1px solid rgba(255,255,255,.04)">
-        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px 6px">
+      return `<div style="border-bottom:1px solid rgba(255,255,255,.05)">
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px ${powerBar?'4px':'10px'}">
           ${dot}
           <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
-            <div style="margin-top:2px">${stateLabel}</div>
+            <div style="font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
+            <div style="margin-top:3px">${statusLine}</div>
           </div>
           ${toggle}
         </div>
-        ${powerBar ? `<div style="padding:0 16px 4px">${powerBar}</div>` : ''}
-        ${autoBadge ? `<div style="padding:0 16px 8px">${autoBadge}</div>` : ''}
-        ${!powerBar && !autoBadge ? '<div style="height:6px"></div>' : ''}
+        ${powerBar}
+        ${autoBadge}
       </div>`;
     }).join('');
 
@@ -272,13 +289,12 @@
     const c = loadCfg(cfg);
     const ents = Array.isArray(c.entities) ? c.entities : [];
     if (el._gpHandler) el.removeEventListener('click', el._gpHandler);
-    const col = c.color || '#fb923c';
     function handler(ev) {
       const tog = ev.target.closest('[data-gp-toggle]');
       if (tog) {
         const e = ents[parseInt(tog.dataset.gpToggle)]; if (!e) return;
         const on = isOn(H(), e.entity);
-        tog.style.background = on ? 'rgba(255,255,255,.12)' : col;
+        tog.style.background = on ? 'rgba(255,255,255,.12)' : COL_ON;
         const thumb = tog.querySelector('div');
         if (thumb) { thumb.style.transition='left .18s'; thumb.style.left=on?'2px':'22px'; }
         callSvc(e.entity.split('.')[0], on?'turn_off':'turn_on', e.entity);
@@ -312,13 +328,12 @@
       const c = loadCfg(cfg);
       const ents = Array.isArray(c.entities) ? c.entities : [];
       const h = H(); if (!h) return;
-      const col = c.color || '#fb923c';
       let active=0, totalW=null, hasPwr=false;
       ents.forEach(e=>{
         const st=socketStatus(h,e.entity); if(st.on) active++;
         if(e.power_entity&&st.on){const w=numOf(h,e.power_entity);if(w!==null){totalW=(totalW||0)+w;hasPwr=true;}}
       });
-      titleEl.style.color = active>0 ? col : '';
+      titleEl.style.color = active>0 ? COL_ON : COL_OFF;
       titleEl.textContent = active===0
         ? 'Tutte spente'
         : hasPwr && totalW!==null
@@ -568,7 +583,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Prese', icon: '🔌',
     desc: 'Chip prese on/off · popup con stato, consumo W real-time, flusso animato e indicatori unavailable.',
-    version: '1.1', isDistintivo: true,
+    version: '1.2', isDistintivo: true,
     defaultCfg: { label:'Prese', icon:'🔌', color:'#fb923c', maxW:2300, entities:[] },
     chip, watchEntities, render, mount, update, configure,
   };
