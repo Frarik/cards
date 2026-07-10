@@ -1,4 +1,4 @@
-/* frarik-version: 1.11 */
+/* frarik-version: 1.12 */
 /**
  * GruppoPrese.js — Distintivo FratechStore v1.11
  * Chip · riquadro riassuntivo · colori % · kWh giornalieri · picker icona per presa
@@ -160,7 +160,7 @@
      La baseline è il valore del sensore a mezzanotte, letto una sola volta al giorno
      via history/period. Consumo oggi = valore_attuale − baseline_mezzanotte.
      Si azzera automaticamente a mezzanotte (nuova chiave con nuova data). */
-  function _gpBaseKey(entityId) { return '_gpbase_'+entityId+'_'+_todayKey(); }
+  function _gpBaseKey(entityId) { return '_gpbase2_'+entityId+'_'+_todayKey(); }
   function _gpGetBase(entityId) {
     const v = localStorage.getItem(_gpBaseKey(entityId));
     return v !== null ? parseFloat(v) : null;
@@ -239,11 +239,11 @@
         ? `<span style="color:${COL_ON}">Tutte accese</span>`
         : `<span style="color:${COL_ON}">${totalActive}</span><span style="color:#fff"> / ${ents.length} accese</span>`;
 
-    /* stat W: mostra solo se almeno una presa ha sensore watt */
+    /* stat W: mostra solo se almeno una presa ha sensore watt; include kWh giornalieri se disponibili */
     const statW = totalW!==null
       ? `<div style="text-align:center;padding:0 8px;border-left:1px solid rgba(255,255,255,.07);border-right:1px solid rgba(255,255,255,.07)">
            <div style="font-size:22px;font-weight:900;letter-spacing:-.5px;color:${fCol};line-height:1">${fmtW(totalW)}</div>
-           <div style="font-size:9px;color:#fff;margin-top:3px;text-transform:uppercase;letter-spacing:.5px">consumo</div>
+           <div style="font-size:9px;color:#fff;margin-top:3px;text-transform:uppercase;letter-spacing:.5px">consumo${totalDailyKwh!==null?' · 📅 '+totalDailyKwh.toFixed(2)+' kWh':''}</div>
          </div>`
       : '';
     const maxKwLabel = maxW >= 1000 ? (maxW/1000).toFixed(1).replace('.0','')+' kW' : maxW+' W';
@@ -273,13 +273,6 @@
       </div>
       ${loadBar}` : '';
 
-    const dailyTotalRow = totalDailyKwh!==null
-      ? `<div style="text-align:center;margin-top:9px;padding-top:9px;border-top:1px solid rgba(255,255,255,.06)">
-           <span style="font-size:10px;color:#fff">📅 Oggi: </span>
-           <span style="font-size:12px;font-weight:800;color:#fff">${totalDailyKwh.toFixed(2)} kWh</span>
-           <span style="font-size:9px;color:#fff"> totali</span>
-         </div>` : '';
-
     const ctrlBtns = ents.length ? `
       <div style="display:flex;gap:8px;margin-top:12px">
         <button data-gp-all="on" style="flex:1;padding:7px 0;border-radius:8px;border:1px solid rgba(74,222,128,.4);background:rgba(74,222,128,.1);color:${COL_ON};font-size:11px;font-weight:700;cursor:pointer">⚡ Accendi tutte</button>
@@ -290,7 +283,6 @@
       <div style="padding:12px 14px 10px">
         <div style="border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);padding:14px">
           ${statsRow}
-          ${dailyTotalRow}
           ${ctrlBtns}
         </div>
       </div>` : '';
@@ -453,9 +445,7 @@
       titleEl.style.color = active>0 ? COL_ON : COL_OFF;
       titleEl.textContent = active===0
         ? 'Tutte spente'
-        : hasPwr && totalW!==null
-          ? `${active} acces${active===1?'a':'e'} · ${fmtW(totalW)}`
-          : `${active} pres${active===1?'a':'e'} acces${active===1?'a':'e'}`;
+        : `${active} pres${active===1?'a':'e'} acces${active===1?'a':'e'}`;
     } catch(e) {}
   }
 
@@ -785,7 +775,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Prese', icon: '🔌',
     desc: 'Chip prese on/off · popup con stato, consumo W real-time, flusso animato e indicatori unavailable.',
-    version: '1.11', isDistintivo: true,
+    version: '1.12', isDistintivo: true,
     defaultCfg: { label:'Prese', icon:'🔌', color:'#fb923c', maxW:2300, entities:[] },
     chip, watchEntities, render, mount, update, configure,
   };

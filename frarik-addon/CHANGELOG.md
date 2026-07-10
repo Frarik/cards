@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.9.69 — 2026-07-10
+
+### fix(distintivo): GruppoPrese v1.12 — baseline corretta + layout kWh affianco consumo
+
+- Fix baseline sbagliata: cambiato prefisso chiave localStorage da `_gpbase_` a `_gpbase2_`
+  in modo che le vecchie baseline (primo-avvio, non mezzanotte) vengano ignorate
+  e venga sempre eseguito il fetch via HA history API alla prima apertura del giorno
+- Totale kWh giornaliero spostato affianco a CONSUMO (W), non più su riga separata
+- Rimosso il watt (`· 341 W`) dal titolo del popup: era duplicato rispetto alla colonna CONSUMO
+
 ## 1.9.68 — 2026-07-10
 
 ### fix(distintivo): GruppoPrese v1.11 — baseline kWh dalla mezzanotte via HA history API
