@@ -1,8 +1,7 @@
-/* frarik-version: 1.14 */
+/* frarik-version: 1.15 */
 /**
- * GruppoPrese.js — Distintivo FratechStore v1.11
- * Chip · riquadro riassuntivo · colori % · kWh giornalieri · picker icona per presa
- * v1.11: baseline mezzanotte precisa via API history HA (non "primo avvio")
+ * GruppoPrese.js — Distintivo FratechStore v1.15
+ * Chip · riquadro riassuntivo · colori % · kWh giornalieri · timer · costo · standby
  */
 (function () {
   'use strict';
@@ -10,8 +9,6 @@
   const ID = 'gruppo-prese';
   const ON_STATES = ['on','open','unlocked','playing','heating','cooling','active','home','present','detected','wet','running','charging'];
   const MAX_W_DEFAULT = 2300; // watt massimi presa standard IT
-  /* timestamp fisso al caricamento del modulo: permette animation-delay negativo */
-  const _GP_ANIM_T0 = Date.now();
   /* base URL addon (stesso pattern di main.js) — usata per le chiamate API history */
   const _GP_INGRESS = (location.pathname.match(/^(\/api\/hassio_ingress\/[^/]+)/)||[])[1]||'';
   const _GP_API = location.origin + _GP_INGRESS;
@@ -55,6 +52,18 @@
     if (w===null||w===undefined) return null;
     if (w>=1000) return (w/1000).toFixed(1)+' kW';
     return Math.round(w)+' W';
+  }
+
+  function _timeSince(h, entityId) {
+    const s = h && h.states && h.states[entityId];
+    if (!s || !s.last_changed) return null;
+    const ms = Date.now() - new Date(s.last_changed).getTime();
+    if (ms < 0) return null;
+    const mins = Math.floor(ms / 60000);
+    if (mins < 1) return '< 1 min';
+    if (mins < 60) return `${mins} min`;
+    const hrs = Math.floor(mins / 60), rem = mins % 60;
+    return rem > 0 ? `${hrs}h ${rem}m` : `${hrs}h`;
   }
 
   const COL_ON    = '#4ade80'; // verde accesa
@@ -288,12 +297,27 @@
         </div>
       </div>` : '';
 
-    const rows = ents.map((e, i) => {
+    /* ordina: errori → accese per watt desc → standby → spente */
+    const displayEnts = h
+      ? [...ents].map((e,i)=>({e,i})).sort((a,b)=>{
+          const sA=socketStatus(h,a.e.entity), sB=socketStatus(h,b.e.entity);
+          const errA=(sA.unavail||sA.unknown)?1:0, errB=(sB.unavail||sB.unknown)?1:0;
+          if(errB!==errA) return errB-errA;
+          if(sA.on!==sB.on) return sA.on?-1:1;
+          const wA=(a.e.power_entity&&sA.on)?numOf(h,a.e.power_entity)??0:0;
+          const wB=(b.e.power_entity&&sB.on)?numOf(h,b.e.power_entity)??0:0;
+          if(wB!==wA) return wB-wA;
+          return a.i-b.i;
+        })
+      : ents.map((e,i)=>({e,i}));
+
+    const rows = displayEnts.map(({e, i}) => {
       if (!e.entity) return '';
       const st = h ? socketStatus(h, e.entity) : { on:false, unavail:false, unknown:false, label:'—', mainCol:COL_OFF, canToggle:false };
       const lbl = e.label || nameOf(h, e.entity);
       const hasPowerSensor = !!(e.power_entity && e.power_entity.trim());
       const w = (h && hasPowerSensor) ? numOf(h, e.power_entity) : null;
+      const standby = st.on && hasPowerSensor && w !== null && w < 2;
       const pct = (w!==null && w>=0) ? Math.min(100, Math.round((w/maxW)*100)) : null;
       const fSpd2 = flowSpeed(w);
       const fCol2 = flowColor(w, maxW);
@@ -303,12 +327,10 @@
       /* ── cerchio stato (sinistra) ── */
       const isError = st.unavail || st.unknown;
       const blinkClass = isError ? ' class="gp-blink"' : '';
-      const circBg = isError ? `rgba(239,68,68,.15)` : st.on ? `rgba(74,222,128,.15)` : `rgba(239,68,68,.1)`;
-      const circBorder = `2px solid ${mc}`;
+      const circBg = isError ? `rgba(239,68,68,.15)` : st.on ? (standby?`rgba(74,222,128,.06)`:`rgba(74,222,128,.15)`) : `rgba(239,68,68,.1)`;
+      const circBorder = isError ? `2px solid ${mc}` : st.on ? (standby?`2px solid rgba(74,222,128,.3)`:`2px solid ${COL_ON}`) : `2px solid ${mc}`;
       const circIcon = st.unavail ? '⚠️' : st.unknown ? '❓' : iconHtml(e.icon||c.icon||'🔌', 18);
-      const circIconCol = st.on ? COL_ON : mc;
-      /* ring pulsante sempre quando accesa */
-      const ringCol = (w!==null && w>10) ? fCol2 : COL_ON;
+      const circIconCol = st.on ? (standby?`rgba(74,222,128,.45)`:COL_ON) : mc;
       const pulseRing = isError
         ? `<div class="gp-dot-ring" style="inset:-6px;border:2px solid ${mc};opacity:.55"></div>` : '';
 
@@ -319,15 +341,19 @@
         </div>
       </div>`;
 
-      /* ── testi stato + watt ── */
+      /* ── testi stato + watt + timer ── */
       const wattStr = w!==null ? fmtW(w) : null;
+      const timer = (h && st.on) ? _timeSince(h, e.entity) : null;
+      const timerStr = timer ? `<span style="font-size:10px;color:rgba(255,255,255,.5);margin-left:5px">${timer}</span>` : '';
       let statusLine;
       if (st.unavail) {
         statusLine = `<span class="gp-blink" style="font-size:12px;color:${COL_UNAVL};font-weight:800">⚡ Non disponibile</span>`;
       } else if (st.unknown) {
         statusLine = `<span class="gp-blink" style="font-size:12px;color:${COL_UNK};font-weight:800">❓ Sconosciuta</span>`;
       } else if (st.on) {
-        statusLine = `<span style="font-size:13px;color:${COL_ON};font-weight:800">● Accesa${wattStr?` &nbsp;<strong style="font-size:14px;letter-spacing:-.3px">${wattStr}</strong>`:''}</span>`;
+        const stCol = standby ? `rgba(74,222,128,.5)` : COL_ON;
+        const stLabel = standby ? 'Standby' : `Accesa${wattStr?` &nbsp;<strong style="font-size:14px;letter-spacing:-.3px">${wattStr}</strong>`:''}`;
+        statusLine = `<span style="font-size:13px;color:${stCol};font-weight:800">● ${stLabel}</span>${timerStr}`;
       } else {
         statusLine = `<span style="font-size:13px;color:${COL_OFF};font-weight:800">● Spenta</span>`;
       }
@@ -358,9 +384,13 @@
           </div>`;
       }
 
-      /* ── kWh giornalieri presa ── */
-      const dailyBadge = dailyKwh!==null
-        ? `<span style="margin-left:8px;font-size:10px;color:#fff;font-weight:600">📅 ${dailyKwh.toFixed(2)} kWh</span>` : '';
+      /* ── kWh giornalieri + costo ── */
+      const price = c.pricePerKwh ? parseFloat(c.pricePerKwh) : null;
+      const dailyBadge = dailyKwh!==null ? (() => {
+        if (dailyKwh === 0) return `<span style="margin-left:8px;font-size:10px;color:rgba(255,255,255,.4);font-weight:600">📅 —</span>`;
+        const costStr = (price && price > 0) ? ` · <span style="color:rgba(251,147,60,.9)">€${(dailyKwh*price).toFixed(2)}</span>` : '';
+        return `<span style="margin-left:8px;font-size:10px;color:#fff;font-weight:600">📅 ${dailyKwh.toFixed(2)} kWh${costStr}</span>`;
+      })() : '';
 
       /* ── automazione ── */
       let autoBadge = '';
@@ -652,7 +682,12 @@
             <div style="flex:1">
               <div style="font-size:9px;color:#fff;margin-bottom:3px">⚡ Potenza disponibile (kW) — es. 4.5 · 3 · 6</div>
               <input id="gpcfg-maxw" class="gpcinp" type="number" step="0.1" min="0.5" placeholder="4.5" value="${eh(String(c.maxW ? (c.maxW/1000) : ''))}">
-              <div style="font-size:9px;color:#fff;margin-top:3px">Serve per la % di carico e i colori (verde→giallo→arancio→rosso)</div>
+              <div style="font-size:9px;color:#fff;margin-top:3px">Serve per % carico e colori</div>
+            </div>
+            <div style="flex:0 0 90px">
+              <div style="font-size:9px;color:#fff;margin-bottom:3px">💶 €/kWh (opz.)</div>
+              <input id="gpcfg-price" class="gpcinp" type="number" step="0.01" min="0" placeholder="0.25" value="${eh(String(c.pricePerKwh||''))}">
+              <div style="font-size:9px;color:#fff;margin-top:3px">Costo giornaliero</div>
             </div>
           </div>
           ${ents.length?`<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Prese (${ents.length}) <span style="font-size:8px;font-weight:400">▾ = icona + automazione · il kWh totale si somma automaticamente</span></div><div>${selRows}</div>`:''}
@@ -752,11 +787,13 @@
       ov.querySelector('#gpcfg-save').addEventListener('click',()=>{
         const maxKwRaw=parseFloat(ov.querySelector('#gpcfg-maxw')?.value||'0');
         const maxWVal = maxKwRaw>0 ? Math.round(maxKwRaw*1000) : MAX_W_DEFAULT;
+        const priceRaw=parseFloat(ov.querySelector('#gpcfg-price')?.value||'0');
         const newCfg={
           label:(ov.querySelector('#gpcfg-label')?.value||'Prese').trim(),
           icon: (ov.querySelector('#gpcfg-icon')?.value||'🔌').trim(),
           color: ov.querySelector('#gpcfg-color')?.value||'#fb923c',
           maxW: maxWVal,
+          pricePerKwh: priceRaw>0 ? priceRaw : null,
           entities: ents.filter(e=>e.entity).map(e=>({
             entity:e.entity.trim(), label:e.label||'', icon:e.icon||'',
             power_entity:e.power_entity||'', energy_entity:e.energy_entity||'',
@@ -775,7 +812,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Prese', icon: '🔌',
     desc: 'Chip prese on/off · popup con stato, consumo W real-time, flusso animato e indicatori unavailable.',
-    version: '1.14', isDistintivo: true,
+    version: '1.15', isDistintivo: true,
     defaultCfg: { label:'Prese', icon:'🔌', color:'#fb923c', maxW:2300, entities:[] },
     chip, watchEntities, render, mount, update, configure,
   };

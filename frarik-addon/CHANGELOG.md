@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.9.72 — 2026-07-10
+
+### feat(distintivo): GruppoPrese v1.15 — sort, timer, costo, standby, cleanup
+
+- **Ordine automatico**: prese ordinate per errori → watt decrescenti → standby → spente
+- **Timer accensione**: mostra da quanto tempo ogni presa è accesa (es. "2h 10m")
+- **Costo giornaliero**: campo €/kWh nel configuratore; appare accanto ai kWh (es. "€0.03")
+- **Standby visuale**: prese accese a 0W mostrano cerchio sbiadito e label "Standby"
+- **kWh a zero**: `0.00 kWh` sostituito con `—` (sensore pronto ma nessun consumo)
+- **Cleanup**: rimosso `_GP_ANIM_T0` (non più usato dopo fix animazione v1.14)
+
 ## 1.9.71 — 2026-07-10
 
 ### fix(distintivo): GruppoPrese v1.14 — flusso senza scatti via background-position
