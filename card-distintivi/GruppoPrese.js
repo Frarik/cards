@@ -1,4 +1,4 @@
-/* frarik-version: 1.15 */
+/* frarik-version: 1.16 */
 /**
  * GruppoPrese.js — Distintivo FratechStore v1.15
  * Chip · riquadro riassuntivo · colori % · kWh giornalieri · timer · costo · standby
@@ -55,10 +55,18 @@
   }
 
   function _timeSince(h, entityId) {
+    /* prova last_changed da HA, poi cade su tracking localStorage */
+    let ms = null;
     const s = h && h.states && h.states[entityId];
-    if (!s || !s.last_changed) return null;
-    const ms = Date.now() - new Date(s.last_changed).getTime();
-    if (ms < 0) return null;
+    if (s && s.last_changed) {
+      const t = new Date(s.last_changed).getTime();
+      if (!isNaN(t) && t > 0) ms = Date.now() - t;
+    }
+    if (ms === null || ms < 0) {
+      const v = localStorage.getItem('_gpon_' + entityId);
+      if (v) ms = Date.now() - parseInt(v);
+    }
+    if (ms === null || ms < 0) return null;
     const mins = Math.floor(ms / 60000);
     if (mins < 1) return '< 1 min';
     if (mins < 60) return `${mins} min`;
@@ -341,19 +349,26 @@
         </div>
       </div>`;
 
-      /* ── testi stato + watt + timer ── */
+      /* ── testi stato + watt + kWh + timer (stesso peso visivo) ── */
       const wattStr = w!==null ? fmtW(w) : null;
+      const price = c.pricePerKwh ? parseFloat(c.pricePerKwh) : null;
       const timer = (h && st.on) ? _timeSince(h, e.entity) : null;
-      const timerStr = timer ? `<span style="font-size:10px;color:rgba(255,255,255,.5);margin-left:5px">${timer}</span>` : '';
-      let statusLine;
+      let statusLine, dailyBadge='';
       if (st.unavail) {
         statusLine = `<span class="gp-blink" style="font-size:12px;color:${COL_UNAVL};font-weight:800">⚡ Non disponibile</span>`;
       } else if (st.unknown) {
         statusLine = `<span class="gp-blink" style="font-size:12px;color:${COL_UNK};font-weight:800">❓ Sconosciuta</span>`;
       } else if (st.on) {
         const stCol = standby ? `rgba(74,222,128,.5)` : COL_ON;
-        const stLabel = standby ? 'Standby' : `Accesa${wattStr?` &nbsp;<strong style="font-size:14px;letter-spacing:-.3px">${wattStr}</strong>`:''}`;
-        statusLine = `<span style="font-size:13px;color:${stCol};font-weight:800">● ${stLabel}</span>${timerStr}`;
+        const wPart = wattStr ? ` &nbsp;<strong style="font-size:14px;letter-spacing:-.3px">${wattStr}</strong>` : '';
+        const label = standby ? 'Standby' : `Accesa${wPart}`;
+        const kwhPart = dailyKwh!==null
+          ? (dailyKwh===0
+            ? ` &nbsp;<span style="font-size:13px;color:rgba(255,255,255,.35);font-weight:700">📅 —</span>`
+            : ` &nbsp;<span style="font-size:13px;color:#fff;font-weight:700">📅 <strong style="font-size:14px;letter-spacing:-.3px">${dailyKwh.toFixed(2)} kWh</strong>${price&&price>0?` <span style="font-size:12px;color:rgba(251,147,60,.9)">€${(dailyKwh*price).toFixed(2)}</span>`:''}</span>`)
+          : '';
+        const timerPart = timer ? ` &nbsp;<span style="font-size:11px;color:rgba(255,255,255,.45);font-weight:600">${timer}</span>` : '';
+        statusLine = `<span style="font-size:13px;color:${stCol};font-weight:800">● ${label}</span>${kwhPart}${timerPart}`;
       } else {
         statusLine = `<span style="font-size:13px;color:${COL_OFF};font-weight:800">● Spenta</span>`;
       }
@@ -383,14 +398,6 @@
             </div>
           </div>`;
       }
-
-      /* ── kWh giornalieri + costo ── */
-      const price = c.pricePerKwh ? parseFloat(c.pricePerKwh) : null;
-      const dailyBadge = dailyKwh!==null ? (() => {
-        if (dailyKwh === 0) return `<span style="margin-left:8px;font-size:10px;color:rgba(255,255,255,.4);font-weight:600">📅 —</span>`;
-        const costStr = (price && price > 0) ? ` · <span style="color:rgba(251,147,60,.9)">€${(dailyKwh*price).toFixed(2)}</span>` : '';
-        return `<span style="margin-left:8px;font-size:10px;color:#fff;font-weight:600">📅 ${dailyKwh.toFixed(2)} kWh${costStr}</span>`;
-      })() : '';
 
       /* ── automazione ── */
       let autoBadge = '';
@@ -497,12 +504,18 @@
         const now = Date.now();
         const deltaMs = now - (el._gpLastPoll||now);
         el._gpLastPoll = now;
-        /* accumulo kWh automatico per le prese attive con sensore watt */
+        /* accumulo kWh + tracking on-time per timer */
         const c2 = loadCfg(cfg);
         (Array.isArray(c2.entities)?c2.entities:[]).forEach(e=>{
-          if(e.entity && e.power_entity && !e.energy_entity){
-            const st=socketStatus(h,e.entity);
-            if(st.on){ const w=numOf(h,e.power_entity); _gpAddKwh(e.entity,w,deltaMs); }
+          if (!e.entity) return;
+          const st=socketStatus(h,e.entity);
+          /* timer: salva timestamp prima accensione del ciclo */
+          const tk='_gpon_'+e.entity;
+          if(st.on){ if(!localStorage.getItem(tk)) localStorage.setItem(tk,String(Date.now())); }
+          else { localStorage.removeItem(tk); }
+          /* kWh auto */
+          if(e.power_entity && !e.energy_entity && st.on){
+            const w=numOf(h,e.power_entity); _gpAddKwh(e.entity,w,deltaMs);
           }
         });
         el.innerHTML = render(cfg, h);
@@ -812,7 +825,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Prese', icon: '🔌',
     desc: 'Chip prese on/off · popup con stato, consumo W real-time, flusso animato e indicatori unavailable.',
-    version: '1.15', isDistintivo: true,
+    version: '1.16', isDistintivo: true,
     defaultCfg: { label:'Prese', icon:'🔌', color:'#fb923c', maxW:2300, entities:[] },
     chip, watchEntities, render, mount, update, configure,
   };

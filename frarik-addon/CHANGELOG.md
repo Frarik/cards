@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.9.73 — 2026-07-10
+
+### fix(distintivo): GruppoPrese v1.16 — kWh grande come W + timer via localStorage
+
+- kWh giornalieri ora mostrati con lo stesso `font-size:14px bold` dei watt (non più 10px)
+- Timer accensione: fallback su tracking localStorage (`_gpon_{entityId}`) quando
+  `last_changed` non è disponibile nel wrapper hass di Frarik
+- Tutto su un'unica riga: `● Accesa  58 W  📅 0.02 kWh  €0.01  2h 10m`
+
 ## 1.9.72 — 2026-07-10
 
 ### feat(distintivo): GruppoPrese v1.15 — sort, timer, costo, standby, cleanup
