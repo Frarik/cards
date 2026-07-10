@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.9.61 — 2026-07-10
+
+### feat(distintivo): GruppoPrese v1.6 — riquadro riassuntivo in cima al popup
+
+- Aggiunto riquadro sempre visibile in testa al popup con 3 statistiche:
+  - Prese accese (es. "3 / 5") con colore verde/rosso + label stato ("Tutte spente" / "Tutte accese")
+  - Watt totali (se almeno una presa ha sensore watt configurato)
+  - % di carico sul massimo configurato
+- Barra carico con animazione snake integrata nel riquadro
+- Pulsanti "Accendi tutte / Spegni tutte" spostati dentro il riquadro riassuntivo
+- Il riquadro è sempre presente (anche senza sensori watt)
+
 ## 1.9.60 — 2026-07-10
 
 ### fix(sync): al primo caricamento della sessione il server è sempre la fonte di verità

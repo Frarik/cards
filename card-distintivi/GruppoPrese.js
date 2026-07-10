@@ -1,7 +1,7 @@
-/* frarik-version: 1.5 */
+/* frarik-version: 1.6 */
 /**
- * GruppoPrese.js — Distintivo FratechStore v1.1
- * Chip contatore · popup con stato on/off/unavailable, consumo W real-time, flusso animato
+ * GruppoPrese.js — Distintivo FratechStore v1.6
+ * Chip contatore · popup con riquadro riassuntivo (prese ON, W, % carico) + lista prese
  */
 (function () {
   'use strict';
@@ -154,27 +154,60 @@
     const fCol = flowColor(totalW, COL_ON);
     const fSpd = flowSpeed(totalW);
 
-    /* barra totale in cima */
-    const totalBar = totalW!==null ? `
-      <div style="padding:0 14px 10px">
-        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px">
-          <span style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.6px">Consumo totale</span>
-          <span style="font-size:16px;font-weight:900;color:${fCol}">${fmtW(totalW)}</span>
-        </div>
-        <div class="gp-flow-track" style="height:7px">
-          <div style="position:absolute;top:0;left:0;height:100%;width:${totalPct}%;background:${fCol};border-radius:3px;transition:width .6s"></div>
-          ${fSpd?`<div class="gp-snake" style="background:linear-gradient(90deg,transparent 0%,${fCol}22 25%,${fCol}88 70%,${fCol} 90%,#fff 100%);animation-duration:${fSpd}ms"></div>`:''}
-        </div>
-        <div style="display:flex;justify-content:space-between;margin-top:4px">
-          <span style="font-size:9px;color:rgba(255,255,255,.25)">${totalActive} pres${totalActive===1?'a':'e'} acces${totalActive===1?'a':'e'}</span>
-          <span style="font-size:9px;color:rgba(255,255,255,.25)">${totalPct}% di ${fmtW(maxW)}</span>
-        </div>
+    /* ── riquadro riassuntivo in cima (sempre visibile) ── */
+    const allOff = totalActive === 0;
+    const allOn  = ents.length > 0 && totalActive === ents.length;
+    const statusLabel = allOff
+      ? `<span style="color:${COL_OFF}">Tutto spento</span>`
+      : allOn
+        ? `<span style="color:${COL_ON}">Tutte accese</span>`
+        : `<span style="color:${COL_ON}">${totalActive}</span><span style="color:rgba(255,255,255,.35)"> / ${ents.length} accese</span>`;
+
+    /* stat W: mostra solo se almeno una presa ha sensore watt */
+    const statW = totalW!==null
+      ? `<div style="text-align:center;padding:0 8px;border-left:1px solid rgba(255,255,255,.07);border-right:1px solid rgba(255,255,255,.07)">
+           <div style="font-size:22px;font-weight:900;letter-spacing:-.5px;color:${fCol};line-height:1">${fmtW(totalW)}</div>
+           <div style="font-size:9px;color:rgba(255,255,255,.35);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">consumo</div>
+         </div>`
+      : '';
+    const statPct = totalPct!==null
+      ? `<div style="text-align:center">
+           <div style="font-size:22px;font-weight:900;color:rgba(255,255,255,.65);line-height:1">${totalPct}<span style="font-size:13px;font-weight:700">%</span></div>
+           <div style="font-size:9px;color:rgba(255,255,255,.35);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">di ${fmtW(maxW)}</div>
+         </div>`
+      : '';
+
+    /* barra carico + snake (solo se ha sensori W) */
+    const loadBar = totalW!==null ? `
+      <div class="gp-flow-track" style="height:6px;margin:10px 0 0">
+        <div style="position:absolute;top:0;left:0;height:100%;width:${totalPct}%;background:${fCol};border-radius:3px;transition:width .6s"></div>
+        ${fSpd?`<div class="gp-snake" style="background:linear-gradient(90deg,transparent 0%,${fCol}22 25%,${fCol}88 70%,${fCol} 90%,#fff 100%);animation-duration:${fSpd}ms"></div>`:''}
       </div>` : '';
 
-    const ctrlBar = ents.length ? `
-      <div style="display:flex;gap:8px;padding:0 14px 10px">
-        <button data-gp-all="on" style="flex:1;padding:7px;border-radius:8px;border:1px solid rgba(74,222,128,.4);background:rgba(74,222,128,.1);color:${COL_ON};font-size:11px;font-weight:700;cursor:pointer">⚡ Accendi tutte</button>
-        <button data-gp-all="off" style="flex:1;padding:7px;border-radius:8px;border:1px solid rgba(239,68,68,.3);background:rgba(239,68,68,.07);color:${COL_OFF};font-size:11px;font-weight:700;cursor:pointer">⏻ Spegni tutte</button>
+    const hasTwoStats = statW && statPct;
+    const statsRow = ents.length ? `
+      <div style="display:grid;grid-template-columns:${hasTwoStats?'1fr 1fr 1fr':'1fr'};gap:0;align-items:center;padding:4px 0 2px">
+        <div style="text-align:center">
+          <div style="font-size:22px;font-weight:900;line-height:1">${statusLabel}</div>
+          <div style="font-size:9px;color:rgba(255,255,255,.35);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">prese</div>
+        </div>
+        ${statW}
+        ${statPct}
+      </div>
+      ${loadBar}` : '';
+
+    const ctrlBtns = ents.length ? `
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button data-gp-all="on" style="flex:1;padding:7px 0;border-radius:8px;border:1px solid rgba(74,222,128,.4);background:rgba(74,222,128,.1);color:${COL_ON};font-size:11px;font-weight:700;cursor:pointer">⚡ Accendi tutte</button>
+        <button data-gp-all="off" style="flex:1;padding:7px 0;border-radius:8px;border:1px solid rgba(239,68,68,.3);background:rgba(239,68,68,.07);color:${COL_OFF};font-size:11px;font-weight:700;cursor:pointer">⏻ Spegni tutte</button>
+      </div>` : '';
+
+    const totalBar = ents.length ? `
+      <div style="padding:12px 14px 10px">
+        <div style="border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);padding:14px">
+          ${statsRow}
+          ${ctrlBtns}
+        </div>
       </div>` : '';
 
     const rows = ents.map((e, i) => {
@@ -274,7 +307,6 @@
 
     return `<div id="gp-popup-body" style="font-family:system-ui,sans-serif">
       ${totalBar}
-      ${ctrlBar}
       <div>${rows||empty}</div>
     </div>`;
   }
@@ -578,7 +610,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Prese', icon: '🔌',
     desc: 'Chip prese on/off · popup con stato, consumo W real-time, flusso animato e indicatori unavailable.',
-    version: '1.5', isDistintivo: true,
+    version: '1.6', isDistintivo: true,
     defaultCfg: { label:'Prese', icon:'🔌', color:'#fb923c', maxW:2300, entities:[] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -587,5 +619,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-prese v1.1'); } catch(e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-prese v1.6'); } catch(e) {}
 })();
