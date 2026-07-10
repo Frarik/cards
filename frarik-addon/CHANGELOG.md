@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.9.52 — 2026-07-10
+
+### fix(store): "Aggiorna" card non tocca più il PKG — i due bottoni sono completamente separati
+
+- Fix: aggiornare una card JS non triggera più nessuna azione sul PKG (niente popup, niente wizard)
+- "Aggiorna" → aggiorna solo il codice JS della card
+- "Aggiorna PKG" → azione separata, apre il wizard pre-compilato con i valori precedenti
+- I badge "PKG update" nello store continuano a indicare quando il PKG ha una versione più recente
+
 ## 1.9.51 — 2026-07-10
 
 ### fix(store): aggiorna card con PKG non apre più il wizard se config già salvata
