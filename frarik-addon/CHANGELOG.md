@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.9.68 — 2026-07-10
+
+### fix(distintivo): GruppoPrese v1.11 — baseline kWh dalla mezzanotte via HA history API
+
+- Il consumo giornaliero ora usa il valore del sensore alla mezzanotte esatta come baseline,
+  letto tramite `GET /api/history/period/{mezzanotte}?end_time={+1h}` al primo caricamento
+- Eliminato il problema "21 kWh sbagliati": la baseline non è più il primo valore letto
+  all'apertura del dashboard, ma il valore reale del sensore a mezzanotte
+- Baseline memorizzata in localStorage (`_gpbase_{entity}_{yyyy-mm-dd}`) e non ricalcolata
+  durante il giorno; si azzera automaticamente a mezzanotte (nuova chiave con nuova data)
+- Fallback al valore corrente se l'API history non è raggiungibile
+- Fix: `_todayKey()` ora usa la data locale (non UTC), corretto per fusi orari UTC+1/+2
+
 ## 1.9.67 — 2026-07-10
 
 ### fix(distintivo): GruppoPrese — totale kWh visibile anche con consumo = 0

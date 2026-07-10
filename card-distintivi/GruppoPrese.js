@@ -1,8 +1,8 @@
-/* frarik-version: 1.10 */
+/* frarik-version: 1.11 */
 /**
- * GruppoPrese.js — Distintivo FratechStore v1.10
+ * GruppoPrese.js — Distintivo FratechStore v1.11
  * Chip · riquadro riassuntivo · colori % · kWh giornalieri · picker icona per presa
- * v1.10: consumo oggi = delta (valore_attuale − baseline_mezzanotte) per sensori cumulativi
+ * v1.11: baseline mezzanotte precisa via API history HA (non "primo avvio")
  */
 (function () {
   'use strict';
@@ -10,9 +10,11 @@
   const ID = 'gruppo-prese';
   const ON_STATES = ['on','open','unlocked','playing','heating','cooling','active','home','present','detected','wet','running','charging'];
   const MAX_W_DEFAULT = 2300; // watt massimi presa standard IT
-  /* timestamp fisso al caricamento del modulo: permette animation-delay negativo
-     per riprendere l'animazione snake da dove era arrivata invece di ripartire da 0 */
+  /* timestamp fisso al caricamento del modulo: permette animation-delay negativo */
   const _GP_ANIM_T0 = Date.now();
+  /* base URL addon (stesso pattern di main.js) — usata per le chiamate API history */
+  const _GP_INGRESS = (location.pathname.match(/^(\/api\/hassio_ingress\/[^/]+)/)||[])[1]||'';
+  const _GP_API = location.origin + _GP_INGRESS;
 
   /* ── helpers ── */
   function H() {
@@ -137,9 +139,13 @@
     document.head.appendChild(s);
   }
 
-  /* ── accumulo energia giornaliera (senza sensore) ──
-     Chiave localStorage: _gpkwh_{entity}_{yyyy-mm-dd}  (no frarik_ → non sincronizzata) */
-  function _todayKey() { return new Date().toISOString().slice(0,10); }
+  /* ── data locale (non UTC) per chiavi giornaliere ── */
+  function _todayKey() {
+    const d = new Date();
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+
+  /* ── accumulo kWh automatico (W×Δt) — fallback senza sensore energia ── */
   function _gpKwhKey(entityId) { return '_gpkwh_'+entityId+'_'+_todayKey(); }
   function _gpGetKwh(entityId) { return parseFloat(localStorage.getItem(_gpKwhKey(entityId))||'0'); }
   function _gpAddKwh(entityId, watts, deltaMs) {
@@ -149,18 +155,50 @@
     localStorage.setItem(k, (prev + watts * deltaMs / 3600000).toFixed(5));
   }
 
-  /* ── delta giornaliero da sensore cumulativo ──
-     Il sensore sale indefinitamente (es. sensor.presa_energia = 2570 kWh totali).
-     Al primo avvio della giornata salviamo il valore come "baseline".
-     Consumo oggi = valore_attuale − baseline. Si azzera a mezzanotte (nuova chiave data). */
+  /* ── baseline mezzanotte da API history HA ──
+     Chiave: _gpbase_{entityId}_{yyyy-mm-dd}  (data locale, non UTC)
+     La baseline è il valore del sensore a mezzanotte, letto una sola volta al giorno
+     via history/period. Consumo oggi = valore_attuale − baseline_mezzanotte.
+     Si azzera automaticamente a mezzanotte (nuova chiave con nuova data). */
   function _gpBaseKey(entityId) { return '_gpbase_'+entityId+'_'+_todayKey(); }
+  function _gpGetBase(entityId) {
+    const v = localStorage.getItem(_gpBaseKey(entityId));
+    return v !== null ? parseFloat(v) : null;
+  }
+
+  async function _gpFetchMidnightBase(entityId) {
+    if (_gpGetBase(entityId) !== null) return; // già memorizzata oggi
+    let baseVal = null;
+    try {
+      /* mezzanotte locale in ISO */
+      const d = new Date(); d.setHours(0,0,0,0);
+      const midStr = d.toISOString();
+      const endStr = new Date(d.getTime()+3600000).toISOString(); // + 1h
+      const url = _GP_API + '/api/history/period/' + midStr
+        + '?filter_entity_id=' + encodeURIComponent(entityId)
+        + '&end_time=' + encodeURIComponent(endStr)
+        + '&minimal_response=true&no_attributes=true&significant_changes_only=false';
+      const r = await fetch(url);
+      if (r.ok) {
+        const data = await r.json();
+        /* il primo elemento del primo array = stato alla mezzanotte */
+        if (data && data[0] && data[0][0]) {
+          const v = parseFloat(data[0][0].state);
+          if (!isNaN(v)) baseVal = v;
+        }
+      }
+    } catch(e) {}
+    /* fallback: valore corrente del sensore se API non raggiungibile */
+    if (baseVal === null) { const h=H(); if(h) baseVal=numOf(h,entityId); }
+    if (baseVal !== null) localStorage.setItem(_gpBaseKey(entityId), baseVal.toFixed(5));
+  }
+
   function _gpDailyFromSensor(h, entityId) {
     if (!h || !entityId) return null;
     const cur = numOf(h, entityId);
     if (cur === null) return null;
-    const bk = _gpBaseKey(entityId);
-    let base = parseFloat(localStorage.getItem(bk)||'-1');
-    if (base < 0) { localStorage.setItem(bk, cur.toFixed(5)); return 0; }
+    const base = _gpGetBase(entityId);
+    if (base === null) return null; // baseline in caricamento (async)
     const delta = cur - base;
     return delta >= 0 ? parseFloat(delta.toFixed(3)) : 0;
   }
@@ -427,6 +465,11 @@
     setTimeout(()=>_syncTitle(cfg,el), 0);
     if (el._gpPoll) return;
     el._gpLastPoll = Date.now();
+    /* avvia fetch baseline mezzanotte per tutti i sensori energia configurati */
+    const _c0 = loadCfg(cfg);
+    (Array.isArray(_c0.entities)?_c0.entities:[]).forEach(e=>{
+      if(e.energy_entity) _gpFetchMidnightBase(e.energy_entity);
+    });
     el._gpPoll = setInterval(()=>{
       if (!el.isConnected) { clearInterval(el._gpPoll); delete el._gpPoll; return; }
       try {
@@ -742,7 +785,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Prese', icon: '🔌',
     desc: 'Chip prese on/off · popup con stato, consumo W real-time, flusso animato e indicatori unavailable.',
-    version: '1.10', isDistintivo: true,
+    version: '1.11', isDistintivo: true,
     defaultCfg: { label:'Prese', icon:'🔌', color:'#fb923c', maxW:2300, entities:[] },
     chip, watchEntities, render, mount, update, configure,
   };
