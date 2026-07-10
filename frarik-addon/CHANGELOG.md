@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.9.71 — 2026-07-10
+
+### fix(distintivo): GruppoPrese v1.14 — flusso senza scatti via background-position
+
+- Rimosso il div `.gp-snake` mobile: era l'elemento che causava lo scatto a ogni re-render
+- Sostituito con gradient animato via `background-position` direttamente sulla barra di carico
+- `@keyframes gpflow` anima lo spostamento di un pattern ripetuto ogni 40px
+- Restart dell'animazione invisibile: il tile è identico a ogni ciclo, nessun salto visivo
+- Velocità proporzionale ai watt (stessa logica `flowSpeed`), applicata sia alla barra
+  globale che a quella per singola presa
+
 ## 1.9.70 — 2026-07-10
 
 ### fix(distintivo): GruppoPrese v1.13 — rimozione kWh totale + ring solo offline

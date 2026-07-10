@@ -1,4 +1,4 @@
-/* frarik-version: 1.13 */
+/* frarik-version: 1.14 */
 /**
  * GruppoPrese.js — Distintivo FratechStore v1.11
  * Chip · riquadro riassuntivo · colori % · kWh giornalieri · picker icona per presa
@@ -125,11 +125,10 @@
 
   /* ── CSS condiviso (iniettato una volta) ── */
   const CSS = `
-    @keyframes gpsnake{0%{left:-55%}100%{left:105%}}
+    @keyframes gpflow{0%{background-position:40px 0}100%{background-position:0 0}}
     @keyframes gppulse{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.7);opacity:0}}
     @keyframes gpblink{0%,100%{opacity:1}50%{opacity:.2}}
     .gp-flow-track{position:relative;height:8px;border-radius:5px;overflow:hidden;background:rgba(255,255,255,.07)}
-    .gp-snake{position:absolute;top:0;height:100%;width:55%;border-radius:5px;animation-name:gpsnake;animation-timing-function:linear;animation-iteration-count:infinite}
     .gp-dot-ring{position:absolute;border-radius:50%;animation:gppulse 1.6s ease-in-out infinite;pointer-events:none}
     .gp-blink{animation:gpblink 1s ease-in-out infinite}
   `;
@@ -254,11 +253,13 @@
          </div>`
       : '';
 
-    /* barra carico + snake (solo se ha sensori W) */
+    /* barra carico (gradient animato sul fill — nessun elemento separato) */
+    const _gFillBg = fSpd
+      ? `repeating-linear-gradient(90deg,${fCol}99 0,${fCol} 20px,${fCol}99 40px);background-size:40px 100%;animation:gpflow ${Math.max(500,Math.round(fSpd/4))}ms linear infinite`
+      : fCol;
     const loadBar = totalW!==null ? `
       <div class="gp-flow-track" style="height:6px;margin:10px 0 0">
-        <div style="position:absolute;top:0;left:0;height:100%;width:${totalPct}%;background:${fCol};border-radius:3px;transition:width .6s"></div>
-        ${fSpd?`<div class="gp-snake" style="background:linear-gradient(90deg,transparent 0%,${fCol}22 25%,${fCol}88 70%,${fCol} 90%,#fff 100%);animation-duration:${fSpd}ms;animation-delay:-${(Date.now()-_GP_ANIM_T0)%fSpd}ms"></div>`:''}
+        <div style="position:absolute;top:0;left:0;height:100%;width:${totalPct}%;background:${_gFillBg};border-radius:3px;transition:width .6s"></div>
       </div>` : '';
 
     const hasTwoStats = statW && statPct;
@@ -342,18 +343,17 @@
             <span style="font-size:9px;color:#fff">N/D</span>
            </div>`;
 
-      /* ── barra consumo + flusso (solo se accesa e ha sensore watt) ── */
+      /* ── barra consumo per outlet (gradient animato, nessun elemento separato) ── */
       let powerBar = '';
       if (st.on && hasPowerSensor) {
         const barPct = pct!==null ? pct : 0;
-        const barFill = pct!==null ? `<div style="position:absolute;inset:0;width:${barPct}%;background:${fCol2};border-radius:4px;transition:width .5s"></div>` : '';
-        const dots = (fSpd2>0) ? `
-          <div class="gp-snake" style="background:linear-gradient(90deg,transparent 0%,${fCol2}22 25%,${fCol2}88 70%,${fCol2} 90%,#fff 100%);animation-duration:${fSpd2}ms;animation-delay:-${(Date.now()-_GP_ANIM_T0)%fSpd2}ms"></div>` : '';
+        const _oFillBg = fSpd2
+          ? `repeating-linear-gradient(90deg,${fCol2}99 0,${fCol2} 20px,${fCol2}99 40px);background-size:40px 100%;animation:gpflow ${Math.max(500,Math.round(fSpd2/4))}ms linear infinite`
+          : fCol2;
         powerBar = `
           <div style="padding:4px 16px 10px">
             <div class="gp-flow-track">
-              ${barFill}
-              ${dots}
+              <div style="position:absolute;inset:0;width:${barPct}%;background:${_oFillBg};border-radius:4px;transition:width .5s"></div>
             </div>
           </div>`;
       }
@@ -775,7 +775,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Prese', icon: '🔌',
     desc: 'Chip prese on/off · popup con stato, consumo W real-time, flusso animato e indicatori unavailable.',
-    version: '1.13', isDistintivo: true,
+    version: '1.14', isDistintivo: true,
     defaultCfg: { label:'Prese', icon:'🔌', color:'#fb923c', maxW:2300, entities:[] },
     chip, watchEntities, render, mount, update, configure,
   };
