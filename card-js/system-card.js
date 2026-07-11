@@ -1,4 +1,4 @@
-﻿/* frarik-version: 5.1 */
+﻿/* frarik-version: 5.3 */
 (function () {
   'use strict';
 
@@ -265,14 +265,14 @@
       +'#'+rid+' .sc-scroll::-webkit-scrollbar{display:none}'
       +'#'+rid+' .sc-hero{display:flex;align-items:stretch;padding:10px 14px 8px;flex:1}'
       +'#'+rid+' .sc-img{width:90px;display:flex;align-items:center;justify-content:center;flex-shrink:0}'
-      +'#'+rid+' .sc-right{flex:1;display:flex;flex-direction:column;gap:4px;justify-content:center;border-left:1px solid rgba(255,255,255,.06);padding-left:12px}'
+      +'#'+rid+' .sc-right{flex:1;display:flex;flex-direction:column;gap:5px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.06);padding-left:12px}'
       +'#'+rid+' .sc-stats{display:flex;margin:0 14px 8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden}'
       +'#'+rid+' .sc-sb{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 3px;gap:2px}'
       +'#'+rid+' .sc-sb-sep{width:1px;background:rgba(255,255,255,.07);flex-shrink:0}'
       +'#'+rid+' .sc-sb-n{font-size:12px;font-weight:900;color:#fff;height:18px;display:flex;align-items:center;justify-content:center}'
       +'#'+rid+' .sc-sb-l{font-size:8px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.4px;text-align:center}'
       +'#'+rid+' .sc-btns{display:flex;gap:6px;padding:0 14px 12px;flex-shrink:0}'
-      +'#'+rid+' .sc-btn{flex:1;padding:8px 4px;border-radius:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:10px;font-weight:700;color:#fff;text-align:center;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:2px}'
+      +'#'+rid+' .sc-btn{flex:1;padding:8px 4px;border-radius:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:10px;font-weight:700;color:#fff;text-align:center;cursor:pointer;transition:all .15s}'
       +'#'+rid+' .sc-btn:hover{background:rgba(56,189,248,.1);border-color:rgba(56,189,248,.3);color:#38bdf8}'
       +'#'+rid+' [data-sya]{cursor:pointer}'
       +'#'+rid+' [data-sya]:active{transform:scale(.97)}'
@@ -313,10 +313,10 @@
             +'</div>'
           +'</div>'
           +'<div class="sc-btns">'
-            +'<button data-sya="popup-perf" class="sc-btn"><span style="font-size:14px">📊</span>Prestazioni</button>'
-            +'<button data-sya="popup-energia" class="sc-btn"><span style="font-size:14px">⚡</span>Energia</button>'
-            +'<button data-sya="popup-ha" class="sc-btn"><span style="font-size:14px">🏠</span>Sistema</button>'
-            +'<button data-sya="popup-notif" class="sc-btn"><span style="font-size:14px">⚙️</span>Gestione</button>'
+            +'<button data-sya="popup-perf" class="sc-btn">📊 Prestazioni</button>'
+            +'<button data-sya="popup-energia" class="sc-btn">⚡ Energia</button>'
+            +'<button data-sya="popup-ha" class="sc-btn">🏠 Sistema</button>'
+            +'<button data-sya="popup-notif" class="sc-btn">⚙️ Gestione</button>'
           +'</div>'
         +'</div>'
       +'</div>';
@@ -2290,7 +2290,7 @@ automation:
   }
 
   var CARD={
-    id:'system-card', name:'Mini-PC', icon:'🖥️', version:'5.2',
+    id:'system-card', name:'Mini-PC', icon:'🖥️', version:'5.3',
     desc:'Mini-PC/Server: SVG animato mini-PC, CPU/RAM/Temp/Potenza in evidenza. Popup: Prestazioni (ring CPU/RAM/Disco/Swap + load + rete), Energia & Costi, Sistema HA (uptime/aggiornamenti/entità), Gestione automazioni. Sensori autodetect + PKG completo.',
     colSpan:2, rowSpan:3,
     frarik_no_edit:true,
