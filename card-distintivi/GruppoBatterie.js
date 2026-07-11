@@ -224,7 +224,7 @@
         ${_section('📴', 'Offline',   '#ef4444', offlineItems,  false)}
         ${_section('🔴', 'Critiche',  '#f97316', criticalItems, false)}
         ${_section('🟡', 'Basse',     '#facc15', lowItems,      false)}
-        ${_section('✅', 'OK',        '#4ade80', okItems,       true)}
+        ${_section('✅', 'OK',        '#4ade80', okItems,       false)}
       </div>
     </div>`;
   }
