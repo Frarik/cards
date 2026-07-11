@@ -3038,7 +3038,8 @@ function _ghStoreRenderCardsInstallate(q){
   status.textContent=sorted.length+' card installate'+(q?' trovate':'');
   const tile=(f)=>{
     const nm=f.name.replace(/\.(js|ya?ml)$/i,''); const enc=encodeURIComponent(f.name);
-    const cardId=Object.keys(idFile).find(k=>idFile[k]===f.name)||null;
+    let cardId=Object.keys(idFile).find(k=>idFile[k]===f.name)||null;
+    if(!cardId){const _fnId=f.name.replace(/\.js$/i,'');const _regE=window.FratechCardRegistry?.[_fnId];if(_regE&&!_regE._lovelace&&_regE.id===_fnId){cardId=_fnId;const _g2=_ghCfg();_g2.idFile=_g2.idFile||{};_g2.idFile[_fnId]=f.name;try{saveCfg();_haSaveCfg();}catch(e){}}}
     const verGH=_ghVerCache[f.sha]||g.fileVersions[f.name]||(cardId&&_curStoreVersion(cardId))||'';
     const inCurPage=!!(cardId&&usedInCurPage.has(cardId));
     const reg=cardId?window.FratechCardRegistry?.[cardId]:null;
