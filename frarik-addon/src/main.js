@@ -11049,7 +11049,8 @@ function _haHassObj(){
       return Promise.resolve({context:{id:'frarik'}});
     },
     callApi(method,path,data){
-      return fetch(BASE+'/api/'+path,{method:method||'GET',headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'},body:data?JSON.stringify(data):undefined}).then(r=>r.json()).catch(()=>null);
+      const _h={'Content-Type':'application/json'}; if(TOKEN) _h['Authorization']='Bearer '+TOKEN;
+      return fetch(BASE+'/api/'+path,{method:method||'GET',headers:_h,body:data?JSON.stringify(data):undefined}).then(r=>r.json()).catch(()=>null);
     },
     sendWS(msg){ return sendAndWait(Object.assign({},msg)).then(m=> (m&&m.success)?m.result:Promise.reject((m&&m.error)||new Error('ws error'))); },
     callWS(msg){ return sendAndWait(Object.assign({},msg)).then(m=> (m&&m.success)?m.result:Promise.reject((m&&m.error)||new Error('ws error'))); },
