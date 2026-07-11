@@ -42,7 +42,7 @@
     var lbl  = ['L','M','M','G','V','S','D'];
     var vals = keys.map(function(k){ return N(h,'input_number.frarik_db_'+k,0); });
     var maxV = Math.max.apply(null, vals.concat([1]));
-    var W = 280, H2 = 90, pl = 28, pr = 4, pt = 8, pb = 18;
+    var W = 280, H2 = 70, pl = 26, pr = 4, pt = 6, pb = 16;
     var cW = W-pl-pr, cH = H2-pt-pb;
     var bW = Math.floor((cW - keys.length*3) / keys.length);
     var todayIdx = (new Date().getDay()+6)%7;
@@ -235,7 +235,7 @@
       +'<div style="font-size:28px;font-weight:900;color:'+ACCH+'">'+dimD+' '+dimU+'</div>'
       +'</div>'
       +pSec('📊 Andamento settimanale')
-      +'<div style="background:rgba(0,0,0,.2);border-radius:12px;padding:8px 6px 2px;margin:8px 0 10px">'+chartSVG(h)+'</div>'
+      +'<div style="background:rgba(0,0,0,.2);border-radius:10px;padding:6px 4px 0;margin:6px 0 8px;max-height:80px;overflow:hidden">'+chartSVG(h)+'</div>'
       +pSec('📈 Statistiche')
       +pRow('Dimensione attuale', dimD+' '+dimU)
       +pRow('Media 7 giorni', media>=1000?(media/1000).toFixed(1)+' GB':Math.round(media)+' MB')
