@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.9.95 — 2026-07-11
+
+### fix(GruppoEnergia): storico, grafico e stats ora funzionanti
+
+- `_fetchHist` usava `window.fetchHistory` che non esiste nel contesto Frarik → grafico e stats (kWh/costo/picco) bloccati a "Caricamento…" e "—"
+- Riscritto per usare `h.callApi('GET', history/period/...)` come GruppoTemperatura, con cache 10min
+- `_loadData`: passa `h` a `_fetchHist` e usa la stessa istanza hass anche per leggere il sensore kWhEntity
+- bump GruppoEnergia 2.9 → 3.1 · addon 1.9.94 → 1.9.95
+
 ## 1.9.94 — 2026-07-11
 
 ### fix(Store): anteprime distintivi installati usano config reale dell'utente

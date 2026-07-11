@@ -1,4 +1,4 @@
-/* frarik-version: 3.0 */
+/* frarik-version: 3.1 */
 /**
  * GruppoEnergia.js — Distintivo FratechStore v3.0
  * Flow shimmer · tralicio img data-URI · nodi uguali · speed reattiva
@@ -54,19 +54,27 @@
     return { w, pct: p, col: _col(p), label: _fmtPower(w), emo: _emo(p), maxW };
   }
 
-  /* ── history ── */
-  async function _fetchHist(entityId, hours) {
+  /* ── history via HA callApi ── */
+  const _GE_HIST = {};
+  const _GE_TTL  = 10 * 60 * 1000;
+
+  async function _fetchHist(h, entityId, hours) {
+    if (!h || !entityId) return [];
+    const key = entityId + '_' + hours;
+    const cached = _GE_HIST[key];
+    if (cached && (Date.now() - cached.ts < _GE_TTL)) return cached.pts;
     try {
-      if (typeof window.fetchHistory === 'function') {
-        const to  = new Promise(r => setTimeout(() => r([]), 9000));
-        const raw = await Promise.race([window.fetchHistory(entityId, hours), to]);
-        if (Array.isArray(raw) && raw.length) {
-          return raw.map(p => ({ t: +(p.t instanceof Date ? p.t : new Date(p.t)), v: +p.v }))
-                    .filter(p => isFinite(p.t) && !isNaN(p.v) && p.v >= 0);
-        }
-      }
-    } catch (e) {}
-    return [];
+      const start = new Date(Date.now() - hours * 3600000).toISOString();
+      const raw = await h.callApi('GET', `history/period/${start}?filter_entity_id=${entityId}&minimal_response=true&no_attributes=true`);
+      if (!Array.isArray(raw) || !raw[0] || !raw[0].length) return [];
+      const pts = raw[0]
+        .map(s => ({ t: +new Date(s.last_changed), v: parseFloat(s.state) }))
+        .filter(p => isFinite(p.t) && !isNaN(p.v) && p.v >= 0);
+      const DS = 120;
+      const out = pts.length > DS ? pts.filter((_, i) => i % Math.ceil(pts.length / DS) === 0) : pts;
+      _GE_HIST[key] = { ts: Date.now(), pts: out };
+      return out;
+    } catch (e) { return []; }
   }
 
   function _stats(pts) {
@@ -359,8 +367,10 @@
   async function _loadData(cfg, el) {
     const c = loadCfg(cfg);
     if (!c.entity) return;
+    const h = H();
+    if (!h) return;
     try {
-      const pts48 = await _fetchHist(c.entity, 48);
+      const pts48 = await _fetchHist(h, c.entity, 48);
       if (!el.isConnected) return;
 
       const now      = Date.now();
@@ -374,7 +384,7 @@
       const stY = _stats(ptsYest);
 
       const maxW  = (parseFloat(c.maxKw) || 3) * 1000;
-      const col   = _info(cfg, H()).col;
+      const col   = _info(cfg, h).col;
       const price = parseFloat(c.priceKwh) || 0;
 
       /* grafico 24h */
@@ -384,7 +394,7 @@
       /* kWh oggi (sensore diretto o stima) */
       let kwhT = null;
       if (c.kwhEntity) {
-        const kv = parseFloat(stateOf(H(), c.kwhEntity));
+        const kv = parseFloat(stateOf(h, c.kwhEntity));
         kwhT = isNaN(kv) ? null : kv;
       } else {
         kwhT = stT.kwh;
@@ -562,7 +572,7 @@
   /* ════════════════════════════════════════ REGISTRAZIONE ══ */
   const CARD = {
     id: ID, name: 'Gruppo Energia', icon: '⚡', desc: '',
-    version: '2.9', isDistintivo: true,
+    version: '3.1', isDistintivo: true,
     defaultCfg: { label: 'Energia', entity: '', maxKw: 3, priceKwh: 0, alertKw: 0, solarEntity: '', kwhEntity: '' },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -570,5 +580,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v2.9'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v3.1'); } catch (e) {}
 })();
