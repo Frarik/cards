@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.92 — 2026-07-11
+
+### feat(Store): anteprima simulata per GruppoTemperatura
+
+- Aggiunta funzione `preview()` al CARD di GruppoTemperatura che renderizza con 3 stanze demo (Soggiorno/Camera/Cucina) e dati fittizi realistici
+- `_ghsPreviewCard` usa `regCard.preview()` se disponibile, altrimenti fallback a `render()` — niente più mount che sovrascriveva il contenuto con hass reale e entità vuote
+- bump 1.9.91 → 1.9.92
+
 ## 1.9.91 — 2026-07-11
 
 ### fix(Store): icona e anteprima per distintivi non installati

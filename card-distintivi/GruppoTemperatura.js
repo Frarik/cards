@@ -812,6 +812,34 @@
     document.body.appendChild(ov);
   }
 
+  /* ── anteprima store ────────────────────────────────────────── */
+  function preview() {
+    _gteInjectCss();
+    const _orig = window.frarikHass;
+    window.frarikHass = null;
+    try {
+      const mockH = { states: {
+        'sensor.prev_t1': { state: '22.4', attributes: { friendly_name: 'Soggiorno', unit_of_measurement: '°C' } },
+        'sensor.prev_h1': { state: '58',   attributes: { friendly_name: 'Soggiorno', unit_of_measurement: '%' } },
+        'sensor.prev_t2': { state: '19.8', attributes: { friendly_name: 'Camera da Letto', unit_of_measurement: '°C' } },
+        'sensor.prev_h2': { state: '52',   attributes: { friendly_name: 'Camera da Letto', unit_of_measurement: '%' } },
+        'sensor.prev_t3': { state: '24.1', attributes: { friendly_name: 'Cucina', unit_of_measurement: '°C' } },
+        'sensor.prev_h3': { state: '65',   attributes: { friendly_name: 'Cucina', unit_of_measurement: '%' } },
+      }};
+      const mockCfg = {
+        label: 'Temperatura', color: '#38bdf8', avgTempEntity: '', avgHumEntity: '',
+        entities: [
+          { label: 'Soggiorno',       tempEntity: 'sensor.prev_t1', humEntity: 'sensor.prev_h1' },
+          { label: 'Camera da Letto', tempEntity: 'sensor.prev_t2', humEntity: 'sensor.prev_h2' },
+          { label: 'Cucina',          tempEntity: 'sensor.prev_t3', humEntity: 'sensor.prev_h3' },
+        ],
+      };
+      return render(mockCfg, mockH, true);
+    } finally {
+      window.frarikHass = _orig;
+    }
+  }
+
   /* ── registrazione ──────────────────────────────────────────── */
   const CARD = {
     id: ID,
@@ -821,7 +849,7 @@
     version: '1.9',
     isDistintivo: true,
     defaultCfg: { label: 'Temperatura', color: '#38bdf8', avgTempEntity: '', avgHumEntity: '', entities: [] },
-    chip, watchEntities, render, mount, update, configure,
+    chip, watchEntities, render, mount, update, configure, preview,
   };
 
   window.FratechCardRegistry = window.FratechCardRegistry || {};
