@@ -1,4 +1,4 @@
-﻿/* frarik-version: 5.4 */
+﻿/* frarik-version: 5.5 */
 (function () {
   'use strict';
 
@@ -259,7 +259,7 @@
     return '<style>'
       +'#'+rid+'{position:relative;width:100%;height:100%;min-height:280px;font-family:system-ui,sans-serif;display:block}'
       +'#'+rid+' .sc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
-      +'#'+rid+' .sc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:180px;background:radial-gradient(ellipse at 20% 0%,rgba(56,189,248,.06) 0%,transparent 65%);pointer-events:none}'
+      +'#'+rid+' .sc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:180px;background:radial-gradient(ellipse at 20% 0%,rgba(99,102,241,.09) 0%,transparent 65%);pointer-events:none}'
       +'#'+rid+' .sc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
       +'#'+rid+' .sc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
       +'#'+rid+' .sc-scroll::-webkit-scrollbar{display:none}'
@@ -2294,7 +2294,7 @@ automation:
   }
 
   var CARD={
-    id:'system-card', name:'Mini-PC', icon:'🖥️', version:'5.4',
+    id:'system-card', name:'Mini-PC', icon:'🖥️', version:'5.5',
     desc:'Mini-PC/Server: SVG animato mini-PC, CPU/RAM/Temp/Potenza in evidenza. Popup: Prestazioni (ring CPU/RAM/Disco/Swap + load + rete), Energia & Costi, Sistema HA (uptime/aggiornamenti/entità), Gestione automazioni. Sensori autodetect + PKG completo.',
     colSpan:2, rowSpan:3,
     frarik_no_edit:true,
