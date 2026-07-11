@@ -1,4 +1,4 @@
-/* frarik-version: 1.18 */
+/* frarik-version: 1.19 */
 /**
  * GruppoPrese.js — Distintivo FratechStore v1.15
  * Chip · riquadro riassuntivo · colori % · kWh giornalieri · timer · costo · standby
@@ -368,10 +368,10 @@
         const label = standby ? 'Standby' : `Accesa${wPart}`;
         const kwhPart = dailyKwh!==null
           ? (dailyKwh===0
-            ? ` &nbsp;<span style="font-size:13px;color:rgba(255,255,255,.35);font-weight:700">📅 —</span>`
+            ? ` &nbsp;<span style="font-size:13px;color:#fff;font-weight:700">📅 —</span>`
             : ` &nbsp;<span style="font-size:13px;color:#fff;font-weight:700">📅 <strong style="font-size:14px;letter-spacing:-.3px">${dailyKwh.toFixed(2)} kWh</strong>${price&&price>0?` <strong style="font-size:14px;letter-spacing:-.3px;color:rgba(251,147,60,.95)">€${(dailyKwh*price).toFixed(2)}</strong>`:''}</span>`)
           : '';
-        const timerPart = timer ? ` &nbsp;<strong style="font-size:14px;letter-spacing:-.3px;color:rgba(255,255,255,.5)">${timer}</strong>` : '';
+        const timerPart = timer ? ` &nbsp;<strong style="font-size:14px;letter-spacing:-.3px;color:#fff">${timer}</strong>` : '';
         statusLine = `<span style="font-size:13px;color:${stCol};font-weight:800">● ${label}</span>${kwhPart}${timerPart}`;
       } else {
         statusLine = `<span style="font-size:13px;color:${COL_OFF};font-weight:800">● Spenta</span>`;
@@ -829,7 +829,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Prese', icon: '🔌',
     desc: 'Chip prese on/off · popup con stato, consumo W real-time, flusso animato e indicatori unavailable.',
-    version: '1.18', isDistintivo: true,
+    version: '1.19', isDistintivo: true,
     defaultCfg: { label:'Prese', icon:'🔌', color:'#fb923c', maxW:2300, entities:[] },
     chip, watchEntities, render, mount, update, configure,
   };

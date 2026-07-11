@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.9.76 — 2026-07-11
+
+### fix(distintivo): GruppoPrese v1.19 — timer e badge — a #fff (100% bianco)
+
 ## 1.9.75 — 2026-07-11
 
 ### fix(distintivo): GruppoPrese v1.18 — timer grande + kWh su tutte le prese con sensore
