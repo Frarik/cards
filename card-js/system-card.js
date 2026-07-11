@@ -1,4 +1,4 @@
-﻿/* frarik-version: 5.0 */
+﻿/* frarik-version: 5.1 */
 (function () {
   'use strict';
 
@@ -152,264 +152,145 @@
     txt.setAttribute('fill',col); txt.textContent=pct==null?'—':Math.round(pct)+'%';
   }
 
+  /* ── MINI-PC SVG ── */
+  function pcSVG(cpu, temp) {
+    var cpuPct = Math.min(100, Math.max(0, cpu || 0));
+    var tmpV = temp || 0;
+    var hot = tmpV >= 70;
+    var crit = tmpV >= 85;
+    var ledCol = crit ? '#ef4444' : hot ? '#f97316' : '#22c55e';
+    var fanSpd = crit ? '0.3' : hot ? '0.6' : '1.5';
+    var cpuW = (cpuPct / 100 * 48).toFixed(1);
+    var cpuCol = cpuPct >= 90 ? '#ef4444' : cpuPct >= 75 ? '#f97316' : cpuPct >= 50 ? '#fbbf24' : '#22c55e';
+    return '<svg viewBox="0 0 80 106" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">'
+      +'<defs>'
+        +'<style>'
+          +'@keyframes scFan{to{transform:rotate(360deg)}}'
+          +'@keyframes scPwr{0%,100%{opacity:1}50%{opacity:.2}}'
+          +'@keyframes scNet{0%,100%{opacity:.2}20%,30%{opacity:1}60%,70%{opacity:1}}'
+          +'@keyframes scAct{0%,100%{opacity:.25}40%{opacity:1}}'
+          +'@keyframes scHeat{0%,100%{opacity:.25}50%{opacity:.75}}'
+        +'</style>'
+        +'<linearGradient id="scBg" x1="0" y1="0" x2="0" y2="1">'
+          +'<stop offset="0%" stop-color="#1c2640"/>'
+          +'<stop offset="100%" stop-color="#0e1628"/>'
+        +'</linearGradient>'
+        +'<linearGradient id="scFace" x1="0" y1="0" x2="0" y2="1">'
+          +'<stop offset="0%" stop-color="#111928"/>'
+          +'<stop offset="100%" stop-color="#0a1018"/>'
+        +'</linearGradient>'
+        +'<radialGradient id="scLed" cx="50%" cy="50%" r="50%">'
+          +'<stop offset="0%" stop-color="'+ledCol+'" stop-opacity=".7"/>'
+          +'<stop offset="100%" stop-color="'+ledCol+'" stop-opacity="0"/>'
+        +'</radialGradient>'
+        +(hot?'<radialGradient id="scHG" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="'+(crit?'#ef4444':'#f97316')+'" stop-opacity=".12"/><stop offset="100%" stop-color="'+(crit?'#ef4444':'#f97316')+'" stop-opacity="0"/></radialGradient>':'')
+      +'</defs>'
+      +'<ellipse cx="40" cy="103" rx="26" ry="2" fill="rgba(0,0,0,.35)"/>'
+      +'<rect x="9" y="12" width="66" height="84" rx="7" fill="#060a12"/>'
+      +'<rect x="7" y="10" width="66" height="84" rx="7" fill="url(#scBg)" stroke="#1c2c48" stroke-width="1"/>'
+      +'<rect x="7" y="10" width="66" height="38" rx="7" fill="#0e1828"/>'
+      +'<rect x="7" y="40" width="66" height="8" fill="#0e1828"/>'
+      +'<line x1="14" y1="20" x2="38" y2="20" stroke="rgba(255,255,255,.06)" stroke-width=".8"/>'
+      +'<line x1="14" y1="24" x2="38" y2="24" stroke="rgba(255,255,255,.06)" stroke-width=".8"/>'
+      +'<line x1="14" y1="28" x2="38" y2="28" stroke="rgba(255,255,255,.06)" stroke-width=".8"/>'
+      +'<line x1="14" y1="32" x2="38" y2="32" stroke="rgba(255,255,255,.06)" stroke-width=".8"/>'
+      +'<line x1="14" y1="36" x2="38" y2="36" stroke="rgba(255,255,255,.06)" stroke-width=".8"/>'
+      +'<circle cx="56" cy="26" r="17" fill="#080c18" stroke="#162038" stroke-width="1.5"/>'
+      +'<circle cx="56" cy="26" r="15" fill="#060a14"/>'
+      +'<g transform-origin="56 26" style="animation:scFan '+fanSpd+'s linear infinite">'
+        +'<path d="M56,26 L57.5,13 Q62,15 60,20 Z" fill="rgba(56,189,248,.3)"/>'
+        +'<path d="M56,26 L69,24 Q70,28 67,31 Z" fill="rgba(56,189,248,.3)"/>'
+        +'<path d="M56,26 L57.5,39 Q53,40 50,37 Z" fill="rgba(56,189,248,.3)"/>'
+        +'<path d="M56,26 L43,28 Q42,24 45,21 Z" fill="rgba(56,189,248,.3)"/>'
+        +'<path d="M56,26 L54.5,13 Q50,15 52,20 Z" fill="rgba(56,189,248,.18)"/>'
+        +'<path d="M56,26 L68,28 Q70,32 67,33 Z" fill="rgba(56,189,248,.18)"/>'
+        +'<path d="M56,26 L55,39 Q51,40 49,36 Z" fill="rgba(56,189,248,.18)"/>'
+        +'<path d="M56,26 L43,24 Q42,20 45,19 Z" fill="rgba(56,189,248,.18)"/>'
+      +'</g>'
+      +'<circle cx="56" cy="26" r="4.5" fill="#0e1828" stroke="#1e3050" stroke-width="1"/>'
+      +'<circle cx="56" cy="26" r="2" fill="#1a2840"/>'
+      +'<circle cx="56" cy="26" r="1" fill="#38bdf8" style="filter:drop-shadow(0 0 3px #38bdf8)"/>'
+      +'<line x1="7" y1="48" x2="73" y2="48" stroke="#162038" stroke-width=".8"/>'
+      +'<rect x="11" y="52" width="58" height="36" rx="5" fill="url(#scFace)" stroke="#141e30" stroke-width=".8"/>'
+      +'<circle cx="24" cy="64" r="7" fill="#0a1420" stroke="#1c2c48" stroke-width="1.2"/>'
+      +'<circle cx="24" cy="64" r="5.5" fill="#070e1a"/>'
+      +'<path d="M24 60.5 V64" stroke="'+ledCol+'" stroke-width="1.6" stroke-linecap="round"/>'
+      +'<path d="M20.8 61.5 A5 5 0 1 0 27.2 61.5" stroke="'+ledCol+'" stroke-width="1.4" fill="none" stroke-linecap="round"/>'
+      +'<circle cx="24" cy="64" r="7" fill="url(#scLed)" style="animation:scPwr 2.5s ease-in-out infinite"/>'
+      +'<rect x="36" y="56" width="10" height="6" rx="1.2" fill="#070e18" stroke="#1c2840" stroke-width=".8"/>'
+      +'<rect x="36" y="64" width="10" height="6" rx="1.2" fill="#070e18" stroke="#1c2840" stroke-width=".8"/>'
+      +'<line x1="37.5" y1="58.5" x2="44.5" y2="58.5" stroke="#1a2840" stroke-width=".7"/>'
+      +'<line x1="37.5" y1="66.5" x2="44.5" y2="66.5" stroke="#1a2840" stroke-width=".7"/>'
+      +'<rect x="51" y="60" width="8" height="5" rx="2.5" fill="#070e18" stroke="#1c2840" stroke-width=".8"/>'
+      +'<rect x="36" y="73" width="23" height="3.5" rx="1" fill="#070e18" stroke="#1a2840" stroke-width=".6"/>'
+      +'<circle cx="62" cy="57" r="2.5" fill="#38bdf8" opacity=".85" style="animation:scNet 1.6s ease-in-out infinite"/>'
+      +'<circle cx="66" cy="57" r="2.5" fill="#a78bfa" opacity=".85" style="animation:scNet 2.1s ease-in-out infinite .4s"/>'
+      +'<circle cx="64" cy="74" r="2.5" fill="'+ledCol+'" style="animation:scAct .7s ease-in-out infinite"/>'
+      +'<rect x="11" y="90" width="58" height="5" rx="2.5" fill="#060a14"/>'
+      +'<rect x="11" y="90" width="'+cpuW+'" height="5" rx="2.5" fill="'+cpuCol+'" style="filter:drop-shadow(0 0 3px '+cpuCol+')"/>'
+      +(cpuPct>0?'<text x="40" y="94.5" text-anchor="middle" dominant-baseline="middle" fill="rgba(255,255,255,.55)" font-size="3.5" font-weight="700" font-family="system-ui">CPU '+cpuPct.toFixed(0)+'%</text>':'')
+      +(hot?'<rect x="7" y="10" width="66" height="84" rx="7" fill="url(#scHG)" style="animation:scHeat 1.2s ease-in-out infinite"/>':'')
+      +'</svg>';
+  }
+
   /* ── RENDER ── */
   function render(card) {
-    const h=H(), c=cfgFor(card), rid='syc'+(card.id||Math.random().toString(36).slice(2,8));
-    const nm=load(card).name||'Mini-PC';
-    const activeTab=(function(){try{return localStorage.getItem('frarik_syctab_'+(card.id||'x'))||'monitor';}catch(e){return 'monitor';}})();
-    const drawerOpen=true;
-    const cpuV=num(S(h,c.cpu)), ramV=num(S(h,c.ram)), dskV=num(S(h,c.disk));
-    const tmpV=num(S(h,c.temp)), swpV=num(S(h,c.swap));
-    const l1=num(S(h,c.load1)), l5=num(S(h,c.load5)), l15=num(S(h,c.load15));
-    const niV=num(S(h,c.netin)), noV=num(S(h,c.netout));
-    const drV=num(S(h,c.diskr)), dwV=num(S(h,c.diskw));
-    const ip=S(h,c.ip);
-    const muV=num(S(h,c.memuse)), mfV=num(S(h,c.memfree));
-    const duV=num(S(h,c.diskuse)), dfV=num(S(h,c.diskfree));
-    const suV=num(S(h,c.swapuse));
-    const ramTot=num(S(h,c.pk_ram_tot)), dskTot=num(S(h,c.pk_disk_tot));
-    const tCol=tempColor(tmpV), cpuC=usageColor(cpuV), ramC='#a78bfa', dskC=usageColor(dskV), swpC=usageColor(swpV);
-    const hs=healthScore(cpuV,ramV,l1,tmpV,swpV), hCol=healthColor(hs);
-    const bdgs=statusBadges(cpuV,ramV,tmpV,l1,swpV);
-    const anyWarn=!(bdgs.length===1&&bdgs[0][0]==='✓ Sistema OK');
-    const ramSub=(muV!=null&&mfV!=null)?fmtGB(muV)+'/'+fmtGB(muV+mfV):ramTot!=null?fmtGB(ramTot):'';
-    const dskSub=(duV!=null&&dfV!=null)?fmtGB(duV)+'/'+fmtGB(duV+dfV):dskTot!=null?fmtGB(dskTot):'';
-    const swpSub=suV!=null?fmtGB(suV):'';
-    const pwV=num(S(h,c.pk_power));
-    const enOggi=S(h,c.pk_en_oggi), enMese=S(h,c.pk_en_mese), enAnno=S(h,c.pk_en_anno);
-    const coOggi=S(h,c.pk_co_oggi), coIeri=S(h,c.pk_co_ieri), coMese=S(h,c.pk_co_mese);
-    const coMeseP=S(h,c.pk_co_mese_p), coAnno=S(h,c.pk_co_anno), coAnnoP=S(h,c.pk_co_anno_p);
-    const haUptime=S(h,c.pk_ha_uptime), entCount=S(h,c.pk_entita);
-    const lastBk=S(h,c.pk_backup), haStart=S(h,c.pk_ha_start);
-    const coreOk=S(h,c.pk_core)==='Aggiornato', supOk=S(h,c.pk_sup)==='Aggiornato';
-    const addonOk=S(h,c.pk_addon)==='Aggiornati', hacsOk=S(h,c.pk_hacs_card)==='Aggiornato';
-    const hacsN=num(S(h,c.pk_hacs)), certS=c.pk_cert?S(h,c.pk_cert):null;
-    const anyUpd=!coreOk||!supOk||!addonOk||!hacsOk;
-    const alertOn=isOn(h,'input_boolean.on_off_alert_ha'), backupOn=isOn(h,'input_boolean.ha_backup');
-    const reportOn=isOn(h,'input_boolean.ha_report'), riavHaOn=isOn(h,'input_boolean.on_off_riavvio_ha');
-    const riavSrvOn=isOn(h,'input_boolean.on_off_riavvio_server'), ventolOn=isOn(h,'input_boolean.on_off_ventola_rack');
-    const aggOn=isOn(h,'input_boolean.on_off_aggiornamenti_ha');
-    const ventilaSwOn=c.pk_ventola?isOn(h,c.pk_ventola):false;
-    const certCol=certS==null?'rgba(255,255,255,.3)':(certS.toLowerCase().includes('scad')||certS==='off'?'#ef4444':'#22c55e');
+    var h = H(), c = cfgFor(card);
+    var rid = 'syc' + (card.id || Math.random().toString(36).slice(2,8));
+    var nm = load(card).name || 'Mini-PC';
+    var cpuV = num(S(h,c.cpu)), ramV = num(S(h,c.ram));
+    var tmpV = num(S(h,c.temp)), swpV = num(S(h,c.swap)), l1 = num(S(h,c.load1));
+    var pwV = num(S(h,c.pk_power));
+    var cpuC = usageColor(cpuV), tCol = tempColor(tmpV);
+    var hs = healthScore(cpuV, ramV, l1, tmpV, swpV);
+    var bdgs = statusBadges(cpuV, ramV, tmpV, l1, swpV);
+    var anyWarn = !(bdgs.length === 1 && bdgs[0][0] === '✓ Sistema OK');
+    var statusText = anyWarn ? bdgs[0][0] : 'Sistema OK';
+    var coreOk = S(h,c.pk_core) === 'Aggiornato', supOk = S(h,c.pk_sup) === 'Aggiornato';
+    var addonOk = S(h,c.pk_addon) === 'Aggiornati', hacsOk = S(h,c.pk_hacs_card) === 'Aggiornato';
+    var anyUpd = !coreOk || !supOk || !addonOk || !hacsOk;
 
-    function loadRow(lbl,v,k){
-      const p=Math.min(100,((v||0)/4)*100),col=loadColor(v);
-      return '<div class="lrow"><div class="llbl">'+lbl+'</div><div class="lbg"><div class="lbar" data-bar="'+k+'" style="width:'+p.toFixed(1)+'%;background:'+col+'"></div></div><div class="lval" data-syv="'+k+'" style="color:'+col+'">'+(v==null?'—':v.toFixed(2))+'</div></div>';
+    function sRow(lbl, val, col, un) {
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0">'
+        +'<div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.5px">'+lbl+'</div>'
+        +'<div style="font-size:15px;font-weight:900;color:'+(col||'#fff')+'">'+(val!==null&&val!==undefined?val:'—')+(un?'<span style="font-size:9px;font-weight:700;color:#fff;margin-left:2px">'+un+'</span>':'')+'</div>'
+        +'</div>';
     }
-    function tgl(eid,on){
-      return '<div class="tgl'+(on?' on':'')+'" data-sya="toggle" data-eid="'+eid+'"><div class="tgl-k"></div></div>';
-    }
-    function drwRow(ico,lbl,eid,on){
-      return '<div class="drw-row"><span class="drw-ri">'+ico+'</span><span class="drw-rl">'+lbl+'</span>'+tgl(eid,on)+'</div>';
-    }
-    function updBadge2(lbl,ok){
-      const col=ok?'#22c55e':'#f97316';
-      return '<div class="upd-badge" style="background:'+col+'12;border:1px solid '+col+'30"><div class="upd-lbl">'+lbl+'</div><div class="upd-ico" style="color:'+col+'">'+(ok?'✓':'!')+'</div></div>';
-    }
-
-    const css='<style>'
-      +'#'+rid+'{position:relative;width:100%;height:100%;min-height:300px;font-family:system-ui,sans-serif;display:block}'
-      +'#'+rid+' .card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#06080f 0%,#080c14 55%,#06090e 100%);border-radius:18px;overflow:hidden;position:relative}'
-      +'#'+rid+' .card::before{content:"";position:absolute;top:0;left:0;right:0;height:160px;background:radial-gradient(ellipse at 30% 0%,rgba(129,140,248,.07) 0%,transparent 70%);pointer-events:none}'
-      +'#'+rid+' .hdr{display:flex;align-items:center;gap:9px;padding:12px 15px 10px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
-      +'#'+rid+' .hdr-iw{width:28px;height:28px;border-radius:8px;background:rgba(129,140,248,.1);border:1px solid rgba(129,140,248,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}'
-      +'#'+rid+' .hdr-tit{flex:1;font-size:14px;font-weight:800;color:#fff;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
-      +'#'+rid+' .hdr-pill{font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;white-space:nowrap}'
-      +'#'+rid+' .hdr-ok{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:#22c55e}'
-      +'#'+rid+' .hdr-warn{background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.3);color:#f97316}'
-      +'#'+rid+' .bscroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
-      +'#'+rid+' .bscroll::-webkit-scrollbar{display:none}'
-      +'#'+rid+' .hero{display:flex;align-items:center;gap:14px;padding:13px 15px 10px}'
-      +'#'+rid+' .hero-info{flex:1;display:flex;flex-direction:column;gap:3px}'
-      +'#'+rid+' .hero-pw{font-size:38px;font-weight:900;color:#818cf8;line-height:1;letter-spacing:-2px}'
-      +'#'+rid+' .hero-lbl{font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.7px}'
-      +'#'+rid+' .hero-sub{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px}'
-      +'#'+rid+' .hero-chip{font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;border:1px solid}'
-      +'#'+rid+' .sec{padding:0 15px 10px}'
-      +'#'+rid+' .sec-hdr{display:flex;align-items:center;gap:7px;margin-bottom:8px}'
-      +'#'+rid+' .sec-ln{flex:1;height:1px;background:rgba(255,255,255,.05)}'
-      +'#'+rid+' .sec-lb{font-size:9px;font-weight:800;color:rgba(255,255,255,.22);text-transform:uppercase;letter-spacing:1px;white-space:nowrap}'
-      +'#'+rid+' .rings-row{display:flex;justify-content:space-around;margin-bottom:8px}'
-      +'#'+rid+' .load-area{display:flex;flex-direction:column;gap:4px;padding:6px 8px;background:rgba(255,255,255,.03);border-radius:10px}'
-      +'#'+rid+' .lrow{display:flex;align-items:center;gap:5px}'
-      +'#'+rid+' .llbl{width:22px;font-size:9px;font-weight:700;color:rgba(255,255,255,.4);flex-shrink:0}'
-      +'#'+rid+' .lbg{flex:1;height:4px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}'
-      +'#'+rid+' .lbar{height:100%;border-radius:99px;transition:width .9s ease-in-out,background .5s}'
-      +'#'+rid+' .lval{width:28px;text-align:right;font-size:10px;font-weight:800;flex-shrink:0}'
-      +'#'+rid+' .sparks-row{display:flex;gap:6px;margin-top:6px}'
-      +'#'+rid+' .sp-box{flex:1;background:rgba(255,255,255,.03);border-radius:8px;padding:5px 7px}'
-      +'#'+rid+' .sp-lbl{font-size:8px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}'
-      +'#'+rid+' .net-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}'
-      +'#'+rid+' .net-lbl{font-size:9px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em}'
-      +'#'+rid+' .net-vals{display:flex;gap:10px}'
-      +'#'+rid+' .stats{display:flex;margin:0 15px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden}'
-      +'#'+rid+' .stat-box{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:9px 6px;gap:2px;cursor:pointer}'
-      +'#'+rid+' .stat-box:hover{background:rgba(255,255,255,.03)}'
-      +'#'+rid+' .stat-n{font-size:13px;font-weight:900;color:#fff}'
-      +'#'+rid+' .stat-l{font-size:9px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px}'
-      +'#'+rid+' .stat-sep{width:1px;background:rgba(255,255,255,.06);flex-shrink:0}'
-      +'#'+rid+' .en-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}'
-      +'#'+rid+' .en-cell{padding:7px 8px;border-radius:9px;background:rgba(249,115,22,.06);border:1px solid rgba(249,115,22,.15)}'
-      +'#'+rid+' .en-lbl{font-size:8px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}'
-      +'#'+rid+' .en-val{font-size:12px;font-weight:800;color:#fb923c}'
-      +'#'+rid+' .ha-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}'
-      +'#'+rid+' .ha-cell{padding:7px 9px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)}'
-      +'#'+rid+' .ha-lbl{font-size:8px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}'
-      +'#'+rid+' .ha-val{font-size:11px;font-weight:800;color:#fff}'
-      +'#'+rid+' .upd-row{display:flex;gap:5px}'
-      +'#'+rid+' .upd-badge{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;border-radius:8px}'
-      +'#'+rid+' .upd-lbl{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:rgba(255,255,255,.55)}'
-      +'#'+rid+' .upd-ico{font-size:12px;font-weight:900}'
-      +'#'+rid+' .drw-toggle{display:flex;align-items:center;gap:10px;padding:10px 15px;cursor:pointer;border-top:1px solid rgba(255,255,255,.05);flex-shrink:0}'
-      +'#'+rid+' .drw-toggle:hover{background:rgba(255,255,255,.02)}'
-      +'#'+rid+' .drw-ico{font-size:14px}'
-      +'#'+rid+' .drw-lbl{flex:1;font-size:11px;font-weight:700;color:rgba(255,255,255,.45)}'
-      +'#'+rid+' .drw-chev{font-size:10px;color:rgba(255,255,255,.25)}'
-      +'#'+rid+' .drw{padding:0 15px 14px;display:flex;flex-direction:column}'
-      +'#'+rid+' .drw-sec{font-size:9px;font-weight:800;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:.1em;padding:8px 0 4px}'
-      +'#'+rid+' .drw-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)}'
-      +'#'+rid+' .drw-ri{font-size:13px}'
-      +'#'+rid+' .drw-rl{flex:1;font-size:12px;color:rgba(255,255,255,.75)}'
-      +'#'+rid+' .tgl{width:34px;height:20px;border-radius:10px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);position:relative;cursor:pointer;transition:background .18s;flex-shrink:0}'
-      +'#'+rid+' .tgl.on{background:rgba(34,197,94,.5);border-color:rgba(34,197,94,.5)}'
-      +'#'+rid+' .tgl-k{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left .18s}'
-      +'#'+rid+' .tgl.on .tgl-k{left:16px}'
+    var bS = 'flex:1;padding:9px 4px;border:none;cursor:pointer;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:#fff;background:rgba(255,255,255,.06);border-radius:9px;display:flex;flex-direction:column;align-items:center;gap:3px;transition:background .15s;border:1px solid rgba(255,255,255,.08)';
+    return '<style>'
+      +'#'+rid+'{position:relative;width:100%;height:100%;font-family:system-ui,sans-serif}'
+      +'#'+rid+' .sc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden}'
+      +'#'+rid+' .sc-hdr{display:flex;align-items:center;gap:8px;padding:11px 14px 10px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0}'
+      +'#'+rid+' .sc-body{flex:1;display:flex;align-items:center;gap:12px;padding:12px 14px}'
+      +'#'+rid+' .sc-btns{display:flex;gap:5px;padding:10px 12px 12px;flex-shrink:0}'
       +'#'+rid+' [data-sya]{cursor:pointer}'
-      +'#'+rid+' [data-sya]:hover{filter:brightness(1.12)}'
+      +'#'+rid+' [data-sya]:hover{filter:brightness(1.15)}'
       +'#'+rid+' [data-sya]:active{transform:scale(.97)}'
-      +'</style>';
-
-    /* hero */
-    const heroHtml='<div class="hero">'
-      +'<div>'+ringHTML('health',hs,hCol,'',80)+'</div>'
-      +'<div class="hero-info">'
-      +'<div class="hero-pw">'+(pwV==null?'—':pwV.toFixed(0)+' W')+'</div>'
-      +'<div class="hero-lbl">Potenza server</div>'
-      +'<div class="hero-sub">'
-      +(tmpV!=null?'<div class="hero-chip" style="color:'+tCol+';border-color:'+tCol+'30;background:'+tCol+'12">🌡 '+tmpV.toFixed(1)+'°C</div>':'')
-      +(ip?'<div class="hero-chip" style="color:#38bdf8;border-color:rgba(56,189,248,.3);background:rgba(56,189,248,.07);font-family:monospace">'+ip+'</div>':'')
-      +'</div>'
-      +'</div>'
-      +'</div>';
-
-    /* section Prestazioni */
-    const prestazioniHtml='<div class="sec">'
-      +'<div class="sec-hdr"><div class="sec-ln"></div><span class="sec-lb">Prestazioni</span><div class="sec-ln"></div></div>'
-      +'<div class="rings-row">'+ringHTML('cpu',cpuV,cpuC,'CPU',68,'')+ringHTML('ram',ramV,ramC,'RAM',68,ramSub)+ringHTML('dsk',dskV,dskC,'Disco',68,dskSub)+ringHTML('swp',swpV,swpC,'Swap',68,swpSub)+'</div>'
-      +'<div class="load-area">'+loadRow('1m',l1,'l1')+loadRow('5m',l5,'l5')+loadRow('15m',l15,'l15')+'</div>'
-      +'<div class="sparks-row">'
-      +'<div class="sp-box"><div class="sp-lbl" style="color:'+cpuC+'">▸ CPU</div><div data-syv="cpu-sp" style="height:32px"></div></div>'
-      +'<div class="sp-box"><div class="sp-lbl" style="color:'+ramC+'">▸ RAM</div><div data-syv="ram-sp" style="height:32px"></div></div>'
-      +'</div>'
-      +(c.diskr||c.diskw?'<div style="display:flex;gap:10px;padding:5px 8px;background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.12);border-radius:9px;margin-top:6px">'
-        +'<div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;flex-shrink:0;align-self:center">I/O Disco</div>'
-        +'<div style="flex:1;display:flex;gap:12px;justify-content:flex-end">'
-        +(c.diskr?'<div style="display:flex;flex-direction:column;align-items:flex-end"><div style="font-size:8px;color:rgba(255,255,255,.3)">Lettura</div><div data-syv="dr" style="font-size:11px;font-weight:700;color:#fbbf24">'+fmtIO(drV,unit(h,c.diskr))+'</div></div>':'')
-        +(c.diskw?'<div style="display:flex;flex-direction:column;align-items:flex-end"><div style="font-size:8px;color:rgba(255,255,255,.3)">Scrittura</div><div data-syv="dw" style="font-size:11px;font-weight:700;color:#f97316">'+fmtIO(dwV,unit(h,c.diskw))+'</div></div>':'')
-        +'</div>'+'</div>':'')
-      +'</div>';
-
-    /* section Rete */
-    const reteHtml=(c.netin||c.netout)?('<div class="sec">'
-      +'<div class="sec-hdr"><div class="sec-ln"></div><span class="sec-lb">🌐 Rete</span><div class="sec-ln"></div></div>'
-      +'<div class="net-hd"><div class="net-lbl">Traffico</div><div class="net-vals"><span data-syv="ni" style="font-size:10px;font-weight:700;color:#38bdf8">↓ '+fmtNet(niV)+'</span><span data-syv="no" style="font-size:10px;font-weight:700;color:#a78bfa">↑ '+fmtNet(noV)+'</span></div></div>'
-      +(ip?'<div style="font-size:9px;color:rgba(255,255,255,.3);font-family:monospace;margin-bottom:4px">'+ip+'</div>':'')
-      +'<div data-syv="net-sp" style="height:36px"></div>'
-      +'</div>'):'';
-
-    /* stats bar */
-    const statsHtml='<div class="stats">'
-      +'<div class="stat-box" data-sya="popup-energia"><span class="stat-n">'+(pwV==null?'—':pwV.toFixed(0)+' W')+'</span><span class="stat-l">Potenza</span></div>'
-      +'<div class="stat-sep"></div>'
-      +'<div class="stat-box" data-sya="popup-energia"><span class="stat-n">'+fmtKwh(enOggi)+'</span><span class="stat-l">kWh oggi</span></div>'
-      +'<div class="stat-sep"></div>'
-      +'<div class="stat-box" data-sya="popup-energia"><span class="stat-n">'+fmtEur(coOggi)+'</span><span class="stat-l">Costo oggi</span></div>'
-      +'</div>';
-
-    /* section Energia */
-    const energiaHtml='<div class="sec" data-sya="popup-energia">'
-      +'<div class="sec-hdr"><div class="sec-ln"></div><span class="sec-lb">⚡ Energia ›</span><div class="sec-ln"></div></div>'
-      +'<div class="en-grid">'
-      +'<div class="en-cell"><div class="en-lbl">kWh mese</div><div class="en-val">'+fmtKwh(enMese)+'</div></div>'
-      +'<div class="en-cell"><div class="en-lbl">kWh anno</div><div class="en-val">'+fmtKwh(enAnno)+'</div></div>'
-      +'<div class="en-cell"><div class="en-lbl">Costo mese</div><div class="en-val">'+fmtEur(coMese)+'</div></div>'
-      +'<div class="en-cell"><div class="en-lbl">Costo ieri</div><div class="en-val" style="color:#fdba74">'+fmtEur(coIeri)+'</div></div>'
-      +'<div class="en-cell"><div class="en-lbl">Costo anno</div><div class="en-val">'+fmtEur(coAnno)+'</div></div>'
-      +'<div class="en-cell"><div class="en-lbl">Mese prec.</div><div class="en-val" style="color:#fde68a">'+fmtEur(coMeseP)+'</div></div>'
-      +'</div>'
-      +'</div>';
-
-    /* section Home Assistant */
-    const haHtml='<div class="sec">'
-      +'<div class="sec-hdr"><div class="sec-ln"></div><span class="sec-lb">Home Assistant</span><div class="sec-ln"></div></div>'
-      +'<div class="ha-grid">'
-      +'<div class="ha-cell" data-sya="stat" data-eid="'+(c.pk_ha_uptime||'')+'" data-lbl="Uptime HA"><div class="ha-lbl">HA attivo da</div><div class="ha-val" style="color:#a78bfa">'+(haUptime||'—')+'</div></div>'
-      +'<div class="ha-cell" data-sya="stat" data-eid="'+(c.pk_srv_uptime||'')+'" data-lbl="Uptime Server"><div class="ha-lbl">Server attivo da</div><div class="ha-val" style="color:#818cf8">'+(c.pk_srv_uptime?uptimeText(h,c.pk_srv_uptime):'—')+'</div></div>'
-      +'<div class="ha-cell" data-sya="popup-entita"><div class="ha-lbl">Entità totali ›</div><div class="ha-val" style="color:#38bdf8">'+(entCount||'—')+'</div></div>'
-      +'<div class="ha-cell"><div class="ha-lbl">Ultimo backup</div><div class="ha-val" style="font-size:9px;color:#86efac">'+(lastBk||'—')+'</div></div>'
-      +'</div>'
-      +(haStart?'<div style="font-size:9px;color:rgba(255,255,255,.3);padding:5px 0 0;font-family:monospace">⏱ Avvio HA: '+haStart+'</div>':'')
-      +'</div>';
-
-    /* section Aggiornamenti */
-    const certStr=c.pk_cert?('<div class="upd-badge" style="background:'+certCol+'12;border:1px solid '+certCol+'30"><div class="upd-lbl">SSL</div><div class="upd-ico" style="color:'+certCol+'">🔐</div></div>'):'';
-    const hacsExtra=hacsN!=null&&hacsN>0?('<div class="upd-badge" style="background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.2)"><div class="upd-lbl">HACS</div><div class="upd-ico" style="color:#f97316">'+hacsN+'</div></div>'):'';
-    const aggHtml='<div class="sec" data-sya="popup-agg">'
-      +'<div class="sec-hdr"><div class="sec-ln"></div><span class="sec-lb" style="color:'+(anyUpd?'rgba(249,115,22,.7)':'rgba(255,255,255,.22)')+'">🔄 Aggiornamenti ›</span><div class="sec-ln"></div></div>'
-      +'<div class="upd-row">'+updBadge2('Core',coreOk)+updBadge2('Supv',supOk)+updBadge2('Addon',addonOk)+updBadge2('HACS',hacsOk)+hacsExtra+certStr+'</div>'
-      +'</div>';
-
-    /* drawer */
-    const drwHtml=drawerOpen?(
-      '<div class="drw">'
-      +'<div class="drw-sec">Automazioni</div>'
-      +drwRow('🚨','Alert soglie','input_boolean.on_off_alert_ha',alertOn)
-      +drwRow('💾','Backup HA','input_boolean.ha_backup',backupOn)
-      +drwRow('📊','Report periodico','input_boolean.ha_report',reportOn)
-      +drwRow('🔄','Riavvio HA programmato','input_boolean.on_off_riavvio_ha',riavHaOn)
-      +drwRow('🖥️','Riavvio Server programmato','input_boolean.on_off_riavvio_server',riavSrvOn)
-      +drwRow('🌡','Ventola auto (temperatura)','input_boolean.on_off_ventola_rack',ventolOn)
-      +drwRow('⬆','Notifiche aggiornamenti','input_boolean.on_off_aggiornamenti_ha',aggOn)
-      +(c.pk_ventola?drwRow('🔌','Ventola fisica rack',c.pk_ventola,ventilaSwOn):'')
-      +'<div class="drw-sec" style="margin-top:4px">Configurazione</div>'
-      +'<div class="drw-row" data-sya="popup-notif"><span class="drw-ri">🔔</span><span class="drw-rl">Notifiche e automazioni dettagliate</span><span style="font-size:11px;color:rgba(255,255,255,.3)">›</span></div>'
-      +'</div>'
-    ):'';
-
-    const statusText=anyWarn?bdgs[0][0]:'Sistema OK';
-
-    const tabBar='<div style="display:flex;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0;padding:0 15px;background:rgba(0,0,0,.15)">'
-      +[['monitor','🖥️ Monitor'],['gestione','⚙️ Gestione']].map(function(t){
-        const on=t[0]===activeTab;
-        return '<button data-sya="tab-switch" data-tab="'+t[0]+'" style="padding:9px 14px;border:none;background:transparent;color:'+(on?'#818cf8':'rgba(255,255,255,.4)')+';font-weight:'+(on?'800':'600')+';font-size:12px;cursor:pointer;border-bottom:2px solid '+(on?'#6366f1':'transparent')+';transition:all .15s;font-family:system-ui,sans-serif">'+t[1]+'</button>';
-      }).join('')
-      +'</div>';
-
-    const automazioni='<div class="sec"><div class="sec-hdr"><div class="sec-ln"></div><span class="sec-lb">⚙️ Automazioni</span><div class="sec-ln"></div></div>'
-      +'<div style="display:flex;flex-direction:column">'
-      +drwRow('🚨','Alert soglie','input_boolean.on_off_alert_ha',alertOn)
-      +drwRow('💾','Backup HA','input_boolean.ha_backup',backupOn)
-      +drwRow('📊','Report periodico','input_boolean.ha_report',reportOn)
-      +drwRow('🔄','Riavvio HA programmato','input_boolean.on_off_riavvio_ha',riavHaOn)
-      +drwRow('🖥️','Riavvio Server programmato','input_boolean.on_off_riavvio_server',riavSrvOn)
-      +drwRow('🌡','Ventola auto (temperatura)','input_boolean.on_off_ventola_rack',ventolOn)
-      +drwRow('⬆','Notifiche aggiornamenti','input_boolean.on_off_aggiornamenti_ha',aggOn)
-      +(c.pk_ventola?drwRow('🔌','Ventola fisica rack',c.pk_ventola,ventilaSwOn):'')
-      +'<div class="drw-row" data-sya="popup-notif"><span class="drw-ri">🔔</span><span class="drw-rl">Notifiche e automazioni dettagliate</span><span style="font-size:11px;color:rgba(255,255,255,.3)">›</span></div>'
-      +'</div></div>';
-
-    const monitorContent=heroHtml+prestazioniHtml+reteHtml+statsHtml;
-    const gestioneContent=energiaHtml+haHtml+aggHtml+automazioni;
-
-    return css
+      +'</style>'
       +'<div id="'+rid+'">'
-      +'<div class="card">'
-      +'<div class="hdr"><div class="hdr-iw">🖥️</div><div class="hdr-tit">'+nm+'</div><div class="hdr-pill '+(anyWarn?'hdr-warn':'hdr-ok')+'">'+statusText+'</div></div>'
-      +tabBar
-      +'<div class="bscroll">'
-      +(activeTab==='monitor'?monitorContent:gestioneContent)
-      +'</div>'
-      +'</div>'
+        +'<div class="sc-card">'
+          +'<div class="sc-hdr">'
+            +'<div style="width:26px;height:26px;border-radius:7px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">🖥️</div>'
+            +'<div style="flex:1;font-size:14px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+nm+'</div>'
+            +(anyUpd?'<div style="padding:2px 7px;border-radius:8px;font-size:9px;font-weight:800;background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.25);color:#f97316;white-space:nowrap;margin-right:4px">↑ Update</div>':'')
+            +'<div style="padding:3px 9px;border-radius:20px;font-size:10px;font-weight:800;background:'+(anyWarn?'rgba(249,115,22,.12)':'rgba(34,197,94,.12)')+';border:1px solid '+(anyWarn?'rgba(249,115,22,.3)':'rgba(34,197,94,.3)')+';color:'+(anyWarn?'#f97316':'#22c55e')+';white-space:nowrap">'+statusText+'</div>'
+          +'</div>'
+          +'<div class="sc-body">'
+            +'<div style="flex-shrink:0;width:88px;height:108px">'+pcSVG(cpuV, tmpV)+'</div>'
+            +'<div style="flex:1;display:flex;flex-direction:column;justify-content:center">'
+              +sRow('CPU', cpuV!=null?Math.round(cpuV)+'':'—', cpuC, cpuV!=null?'%':'')
+              +sRow('RAM', ramV!=null?Math.round(ramV)+'':'—', '#a78bfa', ramV!=null?'%':'')
+              +sRow('Temp', tmpV!=null?tmpV.toFixed(0):'—', tCol, tmpV!=null?'°C':'')
+              +sRow('Potenza', pwV!=null?pwV.toFixed(0):'—', '#f97316', pwV!=null?' W':'')
+            +'</div>'
+          +'</div>'
+          +'<div class="sc-btns">'
+            +'<button data-sya="popup-perf" style="'+bS+'"><span style="font-size:15px">📊</span>Prestazioni</button>'
+            +'<button data-sya="popup-energia" style="'+bS+'"><span style="font-size:15px">⚡</span>Energia</button>'
+            +'<button data-sya="popup-ha" style="'+bS+'"><span style="font-size:15px">🏠</span>Sistema</button>'
+            +'<button data-sya="popup-notif" style="'+bS+'"><span style="font-size:15px">⚙️</span>Gestione</button>'
+          +'</div>'
+        +'</div>'
       +'</div>';
   }
   /* ── POPUP HELPERS ── */
@@ -669,43 +550,109 @@
     });
   }
 
+  /* ── PRESTAZIONI POPUP ── */
+  function openPerfPopup(c) {
+    var h = H();
+    var cpuV=num(S(h,c.cpu)), ramV=num(S(h,c.ram)), dskV=num(S(h,c.disk)), swpV=num(S(h,c.swap));
+    var tmpV=num(S(h,c.temp)), l1=num(S(h,c.load1)), l5=num(S(h,c.load5)), l15=num(S(h,c.load15));
+    var niV=num(S(h,c.netin)), noV=num(S(h,c.netout));
+    var drV=num(S(h,c.diskr)), dwV=num(S(h,c.diskw));
+    var muV=num(S(h,c.memuse)), mfV=num(S(h,c.memfree));
+    var duV=num(S(h,c.diskuse)), dfV=num(S(h,c.diskfree));
+    var ramTot=num(S(h,c.pk_ram_tot)), dskTot=num(S(h,c.pk_disk_tot));
+    var ip=S(h,c.ip);
+    var cpuC=usageColor(cpuV), ramC='#a78bfa', dskC=usageColor(dskV), swpC=usageColor(swpV);
+    var ramSub=(muV!=null&&mfV!=null)?fmtGB(muV)+'/'+fmtGB(muV+mfV):ramTot!=null?fmtGB(ramTot):'';
+    var dskSub=(duV!=null&&dfV!=null)?fmtGB(duV)+'/'+fmtGB(duV+dfV):dskTot!=null?fmtGB(dskTot):'';
+    var rings='<div style="display:flex;justify-content:space-around;margin-bottom:12px">'
+      +ringHTML('cpu',cpuV,cpuC,'CPU',68,'')+ringHTML('ram',ramV,ramC,'RAM',68,ramSub)
+      +ringHTML('dsk',dskV,dskC,'Disco',68,dskSub)+ringHTML('swp',swpV,swpC,'Swap',68,'')
+      +'</div>';
+    function lrow(lbl,v) {
+      var p=Math.min(100,((v||0)/4)*100), col=loadColor(v);
+      return '<div style="display:flex;align-items:center;gap:6px;padding:3px 0">'
+        +'<div style="width:24px;font-size:9px;font-weight:700;color:#fff;flex-shrink:0">'+lbl+'</div>'
+        +'<div style="flex:1;height:4px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden"><div style="height:100%;border-radius:99px;background:'+col+';width:'+p.toFixed(1)+'%"></div></div>'
+        +'<div style="width:32px;text-align:right;font-size:10px;font-weight:800;color:'+col+'">'+(v==null?'—':v.toFixed(2))+'</div>'
+        +'</div>';
+    }
+    var loadArea=(l1!=null||l5!=null||l15!=null)?('<div style="margin-bottom:10px">'
+      +'<div style="font-size:9px;font-weight:800;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Load Average</div>'
+      +'<div style="background:rgba(255,255,255,.03);border-radius:10px;padding:7px 10px">'
+        +lrow('1m',l1)+lrow('5m',l5)+lrow('15m',l15)
+      +'</div></div>'):'';
+    var tempRow=tmpV!=null?('<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);margin-bottom:10px">'
+      +'<span style="font-size:12px;color:#fff">Temperatura CPU</span>'
+      +'<span style="font-size:16px;font-weight:900;color:'+tempColor(tmpV)+'">'+tmpV.toFixed(1)+'°C</span>'
+      +'</div>'):'';
+    var netSection=(niV!=null||noV!=null)?('<div style="margin-bottom:10px">'
+      +'<div style="font-size:9px;font-weight:800;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Rete</div>'
+      +'<div style="background:rgba(255,255,255,.03);border-radius:10px;padding:8px 12px">'
+        +'<div style="display:flex;justify-content:space-between">'
+          +'<div style="font-size:12px;font-weight:700;color:#38bdf8">↓ '+fmtNet(niV)+'</div>'
+          +'<div style="font-size:12px;font-weight:700;color:#a78bfa">↑ '+fmtNet(noV)+'</div>'
+        +'</div>'
+        +(ip?'<div style="font-size:9px;color:#fff;font-family:monospace;margin-top:4px">IP: '+ip+'</div>':'')
+      +'</div></div>'):'';
+    var ioSection=(drV!=null||dwV!=null)?('<div style="margin-bottom:10px">'
+      +'<div style="font-size:9px;font-weight:800;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">I/O Disco</div>'
+      +'<div style="background:rgba(255,255,255,.03);border-radius:10px;padding:8px 12px"><div style="display:flex;justify-content:space-between">'
+        +(drV!=null?'<div><div style="font-size:8px;color:rgba(255,255,255,.5)">Lettura</div><div style="font-size:12px;font-weight:700;color:#fbbf24">'+fmtIO(drV,unit(h,c.diskr))+'</div></div>':'')
+        +(dwV!=null?'<div><div style="font-size:8px;color:rgba(255,255,255,.5)">Scrittura</div><div style="font-size:12px;font-weight:700;color:#f97316">'+fmtIO(dwV,unit(h,c.diskw))+'</div></div>':'')
+      +'</div></div></div>'):'';
+    mkOv(popShell('📊','56,189,248','Prestazioni','CPU · RAM · Disco · Rete','pf-close',rings+tempRow+loadArea+netSection+ioSection),'pf-close');
+  }
+
+  /* ── SISTEMA HA POPUP ── */
+  function openHAPopup(c) {
+    var h = H();
+    var haUptime=S(h,c.pk_ha_uptime), srvUptime=c.pk_srv_uptime?uptimeText(h,c.pk_srv_uptime):null;
+    var entCount=S(h,c.pk_entita), lastBk=S(h,c.pk_backup), haStart=S(h,c.pk_ha_start);
+    var coreOk=S(h,c.pk_core)==='Aggiornato', supOk=S(h,c.pk_sup)==='Aggiornato';
+    var addonOk=S(h,c.pk_addon)==='Aggiornati', hacsOk=S(h,c.pk_hacs_card)==='Aggiornato';
+    var hacsN=num(S(h,c.pk_hacs)), certS=c.pk_cert?S(h,c.pk_cert):null;
+    function row(lbl,val,col){ return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)"><span style="font-size:12px;color:#fff">'+lbl+'</span><span style="font-size:12px;font-weight:800;color:'+(col||'#fff')+'">'+val+'</span></div>'; }
+    function badge(lbl,ok,txt){ var col=ok?'#22c55e':'#f97316'; return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:10px;background:'+col+'10;border:1px solid '+col+'25;margin-bottom:6px"><span style="font-size:12px;font-weight:700;color:#fff">'+lbl+'</span><span style="font-size:11px;font-weight:800;color:'+col+'">'+(ok?'✓ Aggiornato':'! '+(txt||'Da aggiornare'))+'</span></div>'; }
+    var content='<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Uptime & Info</div>'
+      +row('HA attivo da',haUptime||'—','#a78bfa')
+      +row('Server attivo da',srvUptime||'—','#818cf8')
+      +row('Entità totali',entCount||'—','#38bdf8')
+      +row('Ultimo backup',lastBk||'—','#22c55e')
+      +(haStart?row('Avvio HA',haStart,'rgba(255,255,255,.6)'):'')
+      +'<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px">Aggiornamenti</div>'
+      +badge('Core HA',coreOk,S(h,c.pk_core))
+      +badge('Supervisor',supOk,S(h,c.pk_sup))
+      +badge('Add-on',addonOk,S(h,c.pk_addon))
+      +badge('HACS',hacsOk,S(h,c.pk_hacs_card))
+      +(hacsN&&hacsN>0?'<div style="padding:8px 12px;border-radius:10px;background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.2);font-size:11px;color:#fdba74;margin-bottom:6px">'+hacsN+' aggiornamenti HACS disponibili</div>':'')
+      +(certS!=null?'<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:10px;background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.2)"><span style="font-size:11px;color:#fff">🔐 Certificato SSL</span><span style="font-size:11px;font-weight:800;color:#38bdf8">'+certS+'</span></div>':'');
+    mkOv(popShell('🏠','129,140,248','Sistema HA','Stato Home Assistant','ha-close',content),'ha-close');
+  }
+
   /* ── UPDATE / MOUNT ── */
   function update(card,hass,el) {
-    const h=H(), c=cfgFor(card);
-    const cpuV=num(S(h,c.cpu)), ramV=num(S(h,c.ram)), niV=num(S(h,c.netin)), noV=num(S(h,c.netout)), tmpV=num(S(h,c.temp));
-    pushBuf(el,'cpu',cpuV); pushBuf(el,'ram',ramV); pushBuf(el,'net',niV); pushBuf(el,'netout',noV); pushBuf(el,'temp',tmpV,30);
-    const sig=[S(h,c.cpu),S(h,c.ram),S(h,c.disk),S(h,c.temp),S(h,c.swap),S(h,c.load1),S(h,c.netin),S(h,c.netout),S(h,c.diskr),S(h,c.diskw),S(h,c.pk_power),S(h,c.pk_en_oggi),S(h,c.pk_co_oggi),S(h,c.pk_co_mese),uptimeText(h,c.pk_srv_uptime),S(h,c.pk_ha_uptime),S(h,c.pk_entita),S(h,c.pk_backup),S(h,c.pk_core),S(h,c.pk_sup),S(h,c.pk_addon),S(h,c.pk_hacs_card),isOn(h,'input_boolean.on_off_alert_ha'),isOn(h,'input_boolean.ha_backup'),isOn(h,'input_boolean.on_off_ventola_rack')].join('|');
-    if(!el.querySelector('.bscroll')||el._sycSig!==sig){
-      el._sycSig=sig;
-      var buf=el._sycBuf;
-      el.innerHTML=render(card); el._sycBuf=buf;
+    var h=H(), c=cfgFor(card);
+    var sig=[S(h,c.cpu),S(h,c.ram),S(h,c.disk),S(h,c.temp),S(h,c.swap),S(h,c.load1),S(h,c.netin),S(h,c.netout),S(h,c.pk_power),S(h,c.pk_en_oggi),S(h,c.pk_co_oggi),S(h,c.pk_core),S(h,c.pk_sup),S(h,c.pk_addon),S(h,c.pk_hacs_card),S(h,c.pk_entita),S(h,c.pk_backup),uptimeText(h,c.pk_srv_uptime)].join('|');
+    if(!el.querySelector('.sc-card')||el._scSig!==sig){
+      el._scSig=sig;
+      el.innerHTML=render(card);
     }
     mount(card,hass,el);
-    var rid=((el.querySelector('[id^="syc"]')||{}).id)||'sycx';
-    var ramC='#a78bfa', cpuC=usageColor(cpuV);
-    var cpuSp=el.querySelector('[data-syv="cpu-sp"]'); if(cpuSp) cpuSp.innerHTML=ekgSVG(el._sycBuf&&el._sycBuf.cpu||[],cpuSp.offsetWidth||160,32,cpuC,rid+'gc');
-    var ramSp=el.querySelector('[data-syv="ram-sp"]'); if(ramSp) ramSp.innerHTML=ekgSVG(el._sycBuf&&el._sycBuf.ram||[],ramSp.offsetWidth||160,32,ramC,rid+'gr');
-    var netSp=el.querySelector('[data-syv="net-sp"]'); if(netSp) netSp.innerHTML=dualNetSVG(el._sycBuf&&el._sycBuf.net||[],el._sycBuf&&el._sycBuf.netout||[],netSp.offsetWidth||220,36,rid+'ni',rid+'no');
   }
   function mount(card,hass,el) {
-    if(el._sycBound) return; el._sycBound=true;
-    el.addEventListener('click',function(e){
+    if(el._scBound===CARD.version) return;
+    if(el._scHandler) el.removeEventListener('click',el._scHandler);
+    el._scHandler=function(e){
       var sya=e.target.closest('[data-sya]'); if(!sya) return;
       var a=sya.dataset.sya;
-      if(a==='tab-switch'){
-        var newTab=sya.dataset.tab;
-        try{localStorage.setItem('frarik_syctab_'+(card.id||'x'),newTab);}catch(e){}
-        var buf=el._sycBuf; el._sycSig=''; el.innerHTML=render(card); el._sycBuf=buf;
-        mount(card,hass,el);
-        return;
-      }
       if(a==='toggle'){ var eid=sya.dataset.eid; var h=H(),cur=h&&h.states&&h.states[eid]&&h.states[eid].state; callSvc('homeassistant',cur==='on'?'turn_off':'turn_on',{entity_id:eid}); return; }
+      if(a==='popup-perf'){ openPerfPopup(cfgFor(card)); return; }
       if(a==='popup-energia'){ openEnergiaPopup(cfgFor(card)); return; }
-      if(a==='popup-agg'){ openAggPopup(cfgFor(card)); return; }
+      if(a==='popup-ha'){ openHAPopup(cfgFor(card)); return; }
       if(a==='popup-notif'){ openNotifPopup(); return; }
-      if(a==='popup-entita'){ openEntitaPopup(cfgFor(card)); return; }
-      if(a==='stat'&&sya.dataset.eid){ openHistPopup(sya.dataset.eid,sya.dataset.lbl||sya.dataset.eid); return; }
-    });
+    };
+    el.addEventListener('click',el._scHandler);
+    el._scBound=CARD.version;
   }
 
   /* ── SETTINGS ── */
@@ -2315,9 +2262,10 @@ automation:
   }
 
   var CARD={
-    id:'system-card', name:'Mini-PC', icon:'🖥️', version:'4.8',
-    desc:'Mini-PC/Server: ring CPU/RAM/Disco/Swap, energia & costi PKG, aggiornamenti, notifiche/alert con soglie editabili, orari e giorni settimana configurabili, grafici storici. Tutti i sensori PKG configurabili.',
-    colSpan:2, rowSpan:4,
+    id:'system-card', name:'Mini-PC', icon:'🖥️', version:'5.1',
+    desc:'Mini-PC/Server: SVG animato mini-PC, CPU/RAM/Temp/Potenza in evidenza. Popup: Prestazioni (ring CPU/RAM/Disco/Swap + load + rete), Energia & Costi, Sistema HA (uptime/aggiornamenti/entità), Gestione automazioni. Sensori autodetect + PKG completo.',
+    colSpan:2, rowSpan:3,
+    frarik_no_edit:true,
     render:render, mount:mount, update:update, configure:openCfg,
     frarik_pkg_check:'sensor.frarik_statistiche_minipc_versione',
     frarik_pkg_id:'frarik_statistiche_minipc',
