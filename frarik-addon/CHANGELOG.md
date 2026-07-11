@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.9.82 — 2026-07-11
+
+### feat(GruppoTemperatura): popup v1.3 — niente refresh, min/max temp+umid, situazione+consigli
+
+- Fix refresh ogni 3s: introdotto fingerprint `_gteKey()` — re-render SOLO se i dati cambiano
+- Card stanze non re-animano su ogni poll (flag `noAnim=true` su aggiornamenti dati)
+- Sezione cima ridisegnata: 4 stat (min temp, max temp, min umid, max umid) invece di 3
+- Riquadro "Situazione" spostato IN CIMA al popup (prima delle card per stanza)
+- Nuova funzione `_adviceLines()`: frasi situazionali per temperatura, umidità, combo afa/muffa, spread stanze
+- Consigli contestuali: "Temperatura elevata, ventila", "Umidità alta, arieggia", "Differenza X° tra stanze"
+
 ## 1.9.81 — 2026-07-11
 
 ### feat(GruppoTemperatura): popup v1.2 — summary bar, animazioni, barre a gradiente
