@@ -98,7 +98,7 @@
   }
 
   function alarmDef(state) {
-    return ALARM_DEF[state] || { lbl: state || 'Sconosciuto', col: 'rgba(255,255,255,.3)', ico: 'mdi:help-circle', pulse: false };
+    return ALARM_DEF[state] || { lbl: state || 'Sconosciuto', col: '#fff', ico: 'mdi:help-circle', pulse: false };
   }
   function isArmed(state) {
     return !!state && state !== 'disarmed' && state !== 'unknown' && state !== 'unavailable';
@@ -159,7 +159,7 @@
       <div id="cc-alarm-ovl-card" style="background:#150505;border:2px solid #f87171;border-radius:24px;padding:36px 44px;text-align:center;max-width:340px;width:90%;color:#fff">
         <div style="font-size:56px;margin-bottom:10px">🚨</div>
         <div style="font-size:24px;font-weight:900;color:#f87171;letter-spacing:1.5px;margin-bottom:6px">ALLARME IN CORSO</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:28px">${eh(alarmName)}</div>
+        <div style="font-size:12px;color:#fff;margin-bottom:28px">${eh(alarmName)}</div>
         <button id="cc-alarm-ovl-disarm" style="width:100%;padding:15px;border-radius:14px;border:none;background:#f87171;color:#0a0204;font-weight:900;font-size:17px;cursor:pointer;letter-spacing:.5px${hasSiren ? ';margin-bottom:10px' : ''}">🔓 DISARMA</button>
         ${hasSiren ? `<button id="cc-alarm-ovl-siren" style="width:100%;padding:12px;border-radius:14px;border:1px solid rgba(248,113,113,.4);background:rgba(248,113,113,.1);color:#f87171;font-weight:700;font-size:13px;cursor:pointer">${sirenOn ? '🔇 Spegni sirena' : '🔕 Sirena già spenta'}</button>` : ''}
       </div>`;
@@ -215,9 +215,9 @@
     bypassed = bypassed instanceof Set ? bypassed : new Set();
 
     if (!c.alarmEntity) {
-      return `<div style="padding:36px 20px;text-align:center;color:rgba(255,255,255,.3);font-size:12px;font-family:system-ui,sans-serif">
+      return `<div style="padding:36px 20px;text-align:center;color:#fff;font-size:12px;font-family:system-ui,sans-serif">
         Nessuna entità allarme configurata.<br>
-        <span style="font-size:10px;opacity:.6">Clicca ✏️ sulla chip per configurare.</span>
+        <span style="font-size:10px;">Clicca ✏️ sulla chip per configurare.</span>
       </div>`;
     }
 
@@ -237,7 +237,7 @@
       return ss === 'on' && !bypassed.has(s.entity);
     }).length;
 
-    const secLbl = 'font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:rgba(255,255,255,.28);margin-bottom:5px';
+    const secLbl = 'font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:#fff;margin-bottom:5px';
 
     const sensorRows = sensors.map((s, i) => {
       if (!s.entity) return '';
@@ -484,11 +484,11 @@
       const useAbove = (window.innerHeight - rect.bottom - 6 < MAXH) && (rect.top - 6 > MAXH / 2);
       _acDrop = document.createElement('div');
       const pos = useAbove ? `bottom:${window.innerHeight - rect.top + 4}px` : `top:${rect.bottom + 4}px`;
-      _acDrop.style.cssText = `position:fixed;left:${rect.left}px;${pos};width:${rect.width}px;max-height:${MAXH}px;overflow-y:auto;z-index:100003;background:#1a1630;border:1px solid rgba(249,115,22,.3);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.88);scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent`;
+      _acDrop.style.cssText = `position:fixed;left:${rect.left}px;${pos};width:${rect.width}px;max-height:${MAXH}px;overflow-y:auto;z-index:100003;background:#1a1630;border:1px solid rgba(249,115,22,.3);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.88);scrollbar-width:thin;scrollbar-color:#fff transparent`;
       matches.slice(0, 12).forEach(m => {
         const r = document.createElement('div');
         r.style.cssText = 'padding:8px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.05);transition:background .1s';
-        r.innerHTML = `<div style="font-size:11px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(m.name)}</div><div style="font-size:9px;color:rgba(255,255,255,.38);margin-top:1px">${eh(m.id)}</div>`;
+        r.innerHTML = `<div style="font-size:11px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(m.name)}</div><div style="font-size:9px;color:#fff;margin-top:1px">${eh(m.id)}</div>`;
         r.addEventListener('mouseover', () => r.style.background = 'rgba(249,115,22,.08)');
         r.addEventListener('mouseout',  () => r.style.background = 'transparent');
         r.addEventListener('mousedown', ev => { ev.preventDefault(); onPick(m.id, m.name); _closeAc(); });
@@ -550,7 +550,7 @@
       const curLabel   = ov.querySelector('#cacfg-label')?.value;
 
       const sinp = 'width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;font-size:12px;outline:none;font-family:inherit';
-      const secL = 'font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.35);margin-bottom:6px';
+      const secL = 'font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px';
 
       const modeChecks = ALL_MODES.map(m => {
         const checked = modes.has(m.key);
@@ -558,7 +558,7 @@
         return `<label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:6px 8px;border-radius:8px;border:1px solid ${checked ? hex2rgba(mCol,.3) : 'rgba(255,255,255,.07)'};background:${checked ? hex2rgba(mCol,.07) : 'rgba(255,255,255,.03)'};transition:background .15s">
           <input type="checkbox" data-ca-mode="${m.key}" ${checked ? 'checked' : ''} style="width:15px;height:15px;accent-color:${mCol};cursor:pointer;flex-shrink:0">
           <span style="font-size:13px;flex-shrink:0">${mdi(m.ico, 13)}</span>
-          <span style="font-size:12px;font-weight:600;color:${checked ? mCol : 'rgba(255,255,255,.55)'}">${eh(m.lbl)}</span>
+          <span style="font-size:12px;font-weight:600;color:${checked ? mCol : '#fff'}">${eh(m.lbl)}</span>
         </label>`;
       }).join('');
 
@@ -566,10 +566,10 @@
         const dc  = attrOf(h, s.entity, 'device_class') || 'door';
         const icoK = (DC_ICO[dc] || DC_DEFAULT).off;
         return `<div style="display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)">
-          <span style="font-size:14px;flex-shrink:0;color:rgba(255,255,255,.5)">${mdi(icoK, 14)}</span>
+          <span style="font-size:14px;flex-shrink:0;color:#fff">${mdi(icoK, 14)}</span>
           <div style="flex:1;min-width:0">
             <div style="font-size:11px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(s.label || nameOf(h, s.entity))}</div>
-            <div style="font-size:9px;color:rgba(255,255,255,.35)">${eh(s.entity)}</div>
+            <div style="font-size:9px;color:#fff">${eh(s.entity)}</div>
           </div>
           <button data-ca-delsensor="${i}" style="width:22px;height:22px;border:none;border-radius:5px;background:rgba(248,113,113,.15);color:#f87171;cursor:pointer;font-size:11px;flex-shrink:0">✕</button>
         </div>`;
@@ -584,7 +584,7 @@
           <div style="width:36px;height:36px;border-radius:10px;background:rgba(249,115,22,.13);border:1px solid rgba(249,115,22,.28);display:flex;align-items:center;justify-content:center;font-size:18px">🔒</div>
           <div style="flex:1">
             <div style="font-size:14px;font-weight:800">Configura — Gruppo Allarme</div>
-            <div style="font-size:10px;color:rgba(255,255,255,.38)">${sensors.length} sensori · ${[...modes].length} modalità</div>
+            <div style="font-size:10px;color:#fff">${sensors.length} sensori · ${[...modes].length} modalità</div>
           </div>
           <button id="cacfg-close" style="width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,255,255,.07);color:#fff;cursor:pointer;font-size:14px">✕</button>
         </div>

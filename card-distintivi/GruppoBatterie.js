@@ -130,16 +130,16 @@
     const h = liveH(rawHass);
 
     if (!h) {
-      return `<div style="padding:24px 20px;text-align:center;color:rgba(255,255,255,.3);font-size:12px;font-family:system-ui,sans-serif">Caricamento…</div>`;
+      return `<div style="padding:24px 20px;text-align:center;color:#fff;font-size:12px;font-family:system-ui,sans-serif">Caricamento…</div>`;
     }
 
     const { items, offline, critical, low, worstStatus, thrL, thrC, total } = _analyze(cfg, h);
     const col = STATUS_COL[worstStatus];
 
     if (total === 0) {
-      return `<div style="padding:36px 20px;text-align:center;color:rgba(255,255,255,.3);font-size:12px;font-family:system-ui,sans-serif">
+      return `<div style="padding:36px 20px;text-align:center;color:#fff;font-size:12px;font-family:system-ui,sans-serif">
         Nessun sensore batteria trovato.<br>
-        <span style="font-size:10px;opacity:.6">Verifica che le entità abbiano <code>device_class: battery</code>.</span>
+        <span style="font-size:10px;">Verifica che le entità abbiano <code>device_class: battery</code>.</span>
       </div>`;
     }
 
@@ -191,7 +191,7 @@
     function _col(label, emo, sc, colItems) {
       const cards = colItems.map(_battCard).join('');
       const empty = colItems.length === 0
-        ? `<div style="padding:12px 0;text-align:center;font-size:9px;color:rgba(255,255,255,.18)">nessuna</div>`
+        ? `<div style="padding:12px 0;text-align:center;font-size:9px;color:#fff">nessuna</div>`
         : '';
       return `<div style="display:flex;flex-direction:column;min-width:0">
         <div style="display:flex;align-items:center;gap:4px;padding:5px 6px 6px;border-bottom:1px solid ${sc}30;margin-bottom:6px">
@@ -213,7 +213,7 @@
 
       <div style="text-align:center;padding:4px 10px 10px">
         <div style="display:inline-block;padding:6px 16px;border-radius:20px;background:${col}18;border:1px solid ${col}44;font-size:11px;font-weight:700;color:${col}">${summaryTxt}</div>
-        <div style="font-size:9px;color:rgba(255,255,255,.25);margin-top:5px">Soglie: bassa &lt;${thrL}% · critica &lt;${thrC}%</div>
+        <div style="font-size:9px;color:#fff;margin-top:5px">Soglie: bassa &lt;${thrL}% · critica &lt;${thrC}%</div>
       </div>
 
       <style>.batt-scroll::-webkit-scrollbar{display:none}</style>
@@ -258,16 +258,16 @@
 
     const sinp  = 'width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;font-size:12px;outline:none;font-family:inherit';
     const sninp = 'width:80px;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;font-size:13px;outline:none;font-family:inherit;text-align:center';
-    const secL  = 'font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.35);margin-bottom:6px';
+    const secL  = 'font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px';
 
     /* preview count */
     const h   = H();
     const ids = h ? _getBatteryEntities(h) : [];
     const previewNote = ids.length
-      ? `<div style="padding:10px 12px;border-radius:9px;background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.2);font-size:11px;color:rgba(255,255,255,.65);margin-bottom:14px">
+      ? `<div style="padding:10px 12px;border-radius:9px;background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.2);font-size:11px;color:#fff;margin-bottom:14px">
            🔋 <b style="color:#4ade80">${ids.length}</b> sensori batteria rilevati automaticamente in Home Assistant
          </div>`
-      : `<div style="padding:10px 12px;border-radius:9px;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2);font-size:11px;color:rgba(255,255,255,.5);margin-bottom:14px">
+      : `<div style="padding:10px 12px;border-radius:9px;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2);font-size:11px;color:#fff;margin-bottom:14px">
            Nessun sensore con <code style="font-size:10px">device_class: battery</code> trovato al momento
          </div>`;
 
@@ -290,15 +290,15 @@
         <div style="${secL}">Soglie di allerta</div>
         <div style="display:flex;gap:12px;margin-bottom:4px">
           <div style="flex:1">
-            <div style="font-size:10px;color:rgba(255,255,255,.4);margin-bottom:6px">🟡 Bassa (sotto %)</div>
+            <div style="font-size:10px;color:#fff;margin-bottom:6px">🟡 Bassa (sotto %)</div>
             <input id="bcfg-thrL" type="number" min="1" max="99" style="${sninp}" value="${eh(String(c.threshLow ?? 20))}">
           </div>
           <div style="flex:1">
-            <div style="font-size:10px;color:rgba(255,255,255,.4);margin-bottom:6px">🔴 Critica (sotto %)</div>
+            <div style="font-size:10px;color:#fff;margin-bottom:6px">🔴 Critica (sotto %)</div>
             <input id="bcfg-thrC" type="number" min="1" max="99" style="${sninp}" value="${eh(String(c.threshCrit ?? 10))}">
           </div>
         </div>
-        <div style="font-size:9px;color:rgba(255,255,255,.28);margin-bottom:14px">Le entità <b>unavailable</b> o <b>unknown</b> vengono sempre segnalate come offline</div>
+        <div style="font-size:9px;color:#fff;margin-bottom:14px">Le entità <b>unavailable</b> o <b>unknown</b> vengono sempre segnalate come offline</div>
 
         <div style="height:6px"></div>
       </div>

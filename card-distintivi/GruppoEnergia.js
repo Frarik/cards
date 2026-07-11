@@ -82,7 +82,7 @@
   /* ── delta html (confronto vs ieri) ── */
   function _deltaHtml(today, yest) {
     if (today === null || yest === null || yest < 0.001)
-      return '<span style="font-size:9px;color:rgba(255,255,255,.2)">— vs ieri</span>';
+      return '<span style="font-size:9px;color:#fff">— vs ieri</span>';
     const diff = today - yest;
     const pct  = Math.round(Math.abs(diff / yest) * 100);
     const up   = diff > 0;
@@ -93,7 +93,7 @@
   /* ── grafico SVG compatto ── */
   function _chart(pts, maxW, col) {
     const W = 300, H = 70;
-    const noData = `<div style="height:${H}px;display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(255,255,255,.2)">Nessun dato storico disponibile</div>`;
+    const noData = `<div style="height:${H}px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff">Nessun dato storico disponibile</div>`;
     if (!pts || pts.length < 2) return noData;
     try {
       const now   = Date.now();
@@ -112,7 +112,7 @@
       const labels = [0, 6, 12, 18].map(hr => {
         const d = new Date(); d.setHours(hr, 0, 0, 0);
         const x = xf(+d); if (x < 14 || x > W - 14) return '';
-        return `<text x="${x.toFixed(1)}" y="${H + 12}" text-anchor="middle" fill="rgba(255,255,255,.22)" font-size="8">${String(hr).padStart(2, '0')}:00</text>`;
+        return `<text x="${x.toFixed(1)}" y="${H + 12}" text-anchor="middle" fill="#fff" font-size="8">${String(hr).padStart(2, '0')}:00</text>`;
       }).join('');
       return `<svg width="100%" height="${H + 18}" viewBox="0 0 ${W} ${H + 18}" style="display:block;overflow:visible">
         <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
@@ -205,8 +205,8 @@
     const h = liveH(rawHass);
 
     if (!c.entity) {
-      return `<div style="padding:40px 20px;text-align:center;color:rgba(255,255,255,.3);font-size:12px;font-family:system-ui,sans-serif">
-        Nessun sensore configurato.<br><span style="font-size:10px;opacity:.6">Clicca ✏️ sulla chip per configurare.</span>
+      return `<div style="padding:40px 20px;text-align:center;color:#fff;font-size:12px;font-family:system-ui,sans-serif">
+        Nessun sensore configurato.<br><span style="font-size:10px;">Clicca ✏️ sulla chip per configurare.</span>
       </div>`;
     }
 
@@ -253,7 +253,7 @@
       </div>`;
     }
 
-    const noSub = '<span style="font-size:9px;color:rgba(255,255,255,.2)">— vs ieri</span>';
+    const noSub = '<span style="font-size:9px;color:#fff">— vs ieri</span>';
 
     return `<div style="font-family:system-ui,sans-serif;padding:10px 14px 4px">
       <style>
@@ -274,13 +274,13 @@
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:14px">
         ${_box('⚡', '—', 'kWh oggi', 'e-kwh', noSub, 'e-kwh-delta')}
         ${_box('💶', priceOk ? '—' : 'n/d', 'Costo oggi', 'e-cost', noSub, 'e-cost-delta')}
-        ${_box('⬆️', '—', 'Picco oggi', 'e-peak', '<span style="font-size:9px;color:rgba(255,255,255,.2)">〰️ —</span>', 'e-avg-box')}
+        ${_box('⬆️', '—', 'Picco oggi', 'e-peak', '<span style="font-size:9px;color:#fff">〰️ —</span>', 'e-avg-box')}
       </div>
 
       <!-- GRAFICO -->
       <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#fff;margin-bottom:6px">Ultime 24 ore</div>
       <div class="e-chart" style="padding-bottom:6px">
-        <div style="height:88px;display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(255,255,255,.2)">⏳ Caricamento…</div>
+        <div style="height:88px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff">⏳ Caricamento…</div>
       </div>
     </div>`;
   }
@@ -408,16 +408,16 @@
       if (costEl) costEl.textContent = costT !== null ? '€ ' + costT.toFixed(2) : (price > 0 ? '—' : 'n/d');
       if (costDEl) {
         if (price > 0) costDEl.innerHTML = _deltaHtml(costT, costY);
-        else costDEl.innerHTML = '<span style="font-size:8px;color:rgba(255,255,255,.2)">Configura €/kWh</span>';
+        else costDEl.innerHTML = '<span style="font-size:8px;color:#fff">Configura €/kWh</span>';
       }
       if (peakEl) peakEl.textContent = stT.peak !== null ? _fmtPower(stT.peak) : '—';
       if (avgBox) avgBox.innerHTML   = stT.avg  !== null
-        ? `<span style="font-size:9px;color:rgba(255,255,255,.38)">〰️ ${_fmtPower(stT.avg)}</span>`
-        : '<span style="font-size:9px;color:rgba(255,255,255,.2)">〰️ —</span>';
+        ? `<span style="font-size:9px;color:#fff">〰️ ${_fmtPower(stT.avg)}</span>`
+        : '<span style="font-size:9px;color:#fff">〰️ —</span>';
 
     } catch (e) {
       const chartEl = el.querySelector('.e-chart');
-      if (chartEl) chartEl.innerHTML = `<div style="height:88px;display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(255,255,255,.2)">Nessun dato storico</div>`;
+      if (chartEl) chartEl.innerHTML = `<div style="height:88px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff">Nessun dato storico</div>`;
     }
   }
 
@@ -462,7 +462,7 @@
       matches.slice(0, 12).forEach(m => {
         const r = document.createElement('div');
         r.style.cssText = 'padding:8px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.05)';
-        r.innerHTML = `<div style="font-size:11px;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(m.name)}</div><div style="font-size:9px;color:rgba(255,255,255,.38)">${eh(m.id)}</div>`;
+        r.innerHTML = `<div style="font-size:11px;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(m.name)}</div><div style="font-size:9px;color:#fff">${eh(m.id)}</div>`;
         r.addEventListener('mouseover', () => r.style.background = 'rgba(74,222,128,.08)');
         r.addEventListener('mouseout',  () => r.style.background = '');
         r.addEventListener('mousedown', ev => { ev.preventDefault(); onPick(m.id); _closeAc(); });
@@ -493,7 +493,7 @@
     document.addEventListener('keydown', escFn);
 
     const sinp = 'width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;font-size:12px;outline:none;font-family:inherit';
-    const secL = 'font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.35);margin-bottom:6px';
+    const secL = 'font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px';
 
     ov.innerHTML = `<div style="width:100%;max-height:88vh;display:flex;flex-direction:column;background:#0f0d1a;border:1px solid rgba(74,222,128,.22);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);color:#fff;animation:ecfgUp .22s cubic-bezier(.32,1.12,.56,1)">
       <style>@keyframes ecfgUp{from{transform:translateY(100%)}to{transform:translateY(0)}} #ecfg-body::-webkit-scrollbar{display:none}</style>
@@ -515,18 +515,18 @@
 
         <div style="${secL}">Prezzo energia (€/kWh)</div>
         <input id="ecfg-price" type="number" step="0.001" min="0" max="5" style="${sinp};margin-bottom:4px" value="${eh(String(c.priceKwh || ''))}" placeholder="es. 0.254">
-        <div style="font-size:9px;color:rgba(255,255,255,.28);margin-bottom:14px">Necessario per calcolare il costo giornaliero in €</div>
+        <div style="font-size:9px;color:#fff;margin-bottom:14px">Necessario per calcolare il costo giornaliero in €</div>
 
         <div style="${secL}">Soglia alert (kW) — 0 = disabilitata</div>
         <input id="ecfg-alert" type="number" step="0.1" min="0" max="200" style="${sinp};margin-bottom:4px" value="${eh(String(c.alertKw || '0'))}" placeholder="es. 3.0">
-        <div style="font-size:9px;color:rgba(255,255,255,.28);margin-bottom:14px">Quando il consumo supera questa soglia il flow diventa rosso e appare un banner</div>
+        <div style="font-size:9px;color:#fff;margin-bottom:14px">Quando il consumo supera questa soglia il flow diventa rosso e appare un banner</div>
 
         <div style="${secL}">Produzione solare (opzionale)</div>
         <input id="ecfg-solar" style="${sinp};margin-bottom:14px" value="${eh(c.solarEntity || '')}" placeholder="🔍 sensor.fotovoltaico…" autocomplete="off">
 
         <div style="${secL}">Sensore kWh oggi diretto (opzionale)</div>
         <input id="ecfg-kwh" style="${sinp};margin-bottom:4px" value="${eh(c.kwhEntity || '')}" placeholder="🔍 sensor.energia_oggi…" autocomplete="off">
-        <div style="font-size:9px;color:rgba(255,255,255,.28);margin-bottom:14px">Se configurato usa il dato reale del contatore; altrimenti stima (~) dall'integrazione della potenza</div>
+        <div style="font-size:9px;color:#fff;margin-bottom:14px">Se configurato usa il dato reale del contatore; altrimenti stima (~) dall'integrazione della potenza</div>
 
         <div style="height:10px"></div>
       </div>

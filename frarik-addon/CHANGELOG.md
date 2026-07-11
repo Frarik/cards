@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.9.80 — 2026-07-11
+
+### fix(white): tutti i testi al 100% bianco in tutti i distintivi
+
+- Rimossi tutti i `rgba(255,255,255,X)` usati come colore testo (color, fill SVG)
+- Rimossi tutti gli `opacity:.X` da span e div di testo
+- Fix chip inactive color: tutti i distintivi ora mostrano il valore in bianco puro
+- Fix stColor/stCol variabili off-state: Spenta/Chiusa/Off → #fff
+- Fix ritorno colori da funzioni helper (GruppoClima, GruppoTemperatura)
+- GruppoAllarme: colore alarm sconosciuto → #fff
+- GruppoClima: bottoni modalità inattivi → #fff (render + handler ottimistico)
+
 ## 1.9.79 — 2026-07-11
 
 ### fix(card-audit): pulizia codice morto e bug fix su tutti i distintivi

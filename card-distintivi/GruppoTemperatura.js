@@ -11,7 +11,7 @@
 
   /* ── color helpers ─────────────────────────────────────────── */
   function _tempColor(v) {
-    if (v == null || isNaN(v)) return 'rgba(255,255,255,.35)';
+    if (v == null || isNaN(v)) return '#fff';
     if (v <= 10) return '#38bdf8';
     if (v <= 15) return '#7dd3fc';
     if (v <= 19) return '#86efac';
@@ -22,7 +22,7 @@
   }
 
   function _humColor(v) {
-    if (v == null || isNaN(v)) return 'rgba(255,255,255,.35)';
+    if (v == null || isNaN(v)) return '#fff';
     if (v < 25 || v > 75) return '#f87171';
     if (v < 30 || v > 65) return '#fb923c';
     if (v < 40 || v > 60) return '#facc15';
@@ -128,9 +128,9 @@
 
     if (!ents.length) {
       return `<div style="padding:40px 24px;text-align:center;color:#fff;font-size:12px">
-        <div style="font-size:36px;margin-bottom:10px;opacity:.4">🌡️</div>
+        <div style="font-size:36px;margin-bottom:10px;">🌡️</div>
         Nessun sensore configurato.<br>
-        <span style="font-size:10px;opacity:.6">Clicca ✏️ sulla chip per configurare.</span>
+        <span style="font-size:10px;">Clicca ✏️ sulla chip per configurare.</span>
       </div>`;
     }
 
@@ -165,7 +165,7 @@
           <!-- Header -->
           <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px">
             <div style="width:34px;height:34px;border-radius:10px;background:${unavail ? 'rgba(255,255,255,.06)' : hex2rgba(tCol,.14)};border:1px solid ${unavail ? 'rgba(255,255,255,.1)' : hex2rgba(tCol,.28)};display:flex;align-items:center;justify-content:center;flex-shrink:0">
-              <span class="mdi mdi-${tIcoName}" style="font-size:18px;color:${unavail ? 'rgba(255,255,255,.3)' : tCol}"></span>
+              <span class="mdi mdi-${tIcoName}" style="font-size:18px;color:${unavail ? '#fff' : tCol}"></span>
             </div>
             <span style="flex:1;font-size:14px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(label)}</span>
             ${!unavail
@@ -262,7 +262,7 @@
         const r = document.createElement('div');
         r.style.cssText = 'padding:8px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.05)';
         r.innerHTML = `<div style="font-size:11px;font-weight:600;color:#fff">${eh(m.name)}</div>
-          <div style="font-size:9px;color:#fff;margin-top:1px;opacity:.6">${eh(m.id)}${m.st ? ' · '+eh(m.st) : ''}</div>`;
+          <div style="font-size:9px;color:#fff;margin-top:1px;">${eh(m.id)}${m.st ? ' · '+eh(m.st) : ''}</div>`;
         r.onmouseover = () => r.style.background = 'rgba(56,189,248,.1)';
         r.onmouseout  = () => r.style.background = 'transparent';
         r.onmousedown = ev => { ev.preventDefault(); onPick(m.id, m.name); _closeAc(); };
@@ -336,7 +336,7 @@
           @keyframes gtCfgUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
           .gtinp{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;font-size:12px;outline:none;font-family:inherit;transition:border-color .15s}
           .gtinp:focus{border-color:rgba(56,189,248,.5);background:rgba(56,189,248,.04)}
-          .gtinp::placeholder{color:rgba(255,255,255,.4)}
+          .gtinp::placeholder{color:#fff}
           #gtcfg-body::-webkit-scrollbar{display:none}
           .gtsec{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:7px}
         </style>
@@ -346,7 +346,7 @@
           <div style="width:38px;height:38px;border-radius:11px;background:rgba(56,189,248,.13);border:1px solid rgba(56,189,248,.28);display:flex;align-items:center;justify-content:center;font-size:19px">🌡️</div>
           <div style="flex:1">
             <div style="font-size:14px;font-weight:800;color:#fff">Configura — Gruppo Temperatura</div>
-            <div style="font-size:10px;color:#fff;opacity:.7">${ents.length} sensor${ents.length===1?'e':'i'} configurati</div>
+            <div style="font-size:10px;color:#fff;">${ents.length} sensor${ents.length===1?'e':'i'} configurati</div>
           </div>
           <button id="gtcfg-close" style="width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,255,255,.07);color:#fff;cursor:pointer;font-size:14px">✕</button>
         </div>
@@ -370,7 +370,7 @@
           <!-- Sensori di media per il chip -->
           <div class="gtsec">Sensori media — mostrati nella chip (opz.)</div>
           <div style="padding:10px;border-radius:10px;background:rgba(56,189,248,.05);border:1px solid rgba(56,189,248,.18);margin-bottom:16px">
-            <div style="font-size:10px;color:#fff;margin-bottom:9px;opacity:.8">Se impostati, la chip mostra il valore di questi sensori (es. media di tutte le stanze). Altrimenti usa min–max dai sensori singoli.</div>
+            <div style="font-size:10px;color:#fff;margin-bottom:9px;">Se impostati, la chip mostra il valore di questi sensori (es. media di tutte le stanze). Altrimenti usa min–max dai sensori singoli.</div>
             <div style="display:flex;flex-direction:column;gap:6px">
               <div style="display:flex;align-items:center;gap:6px">
                 <span style="${lbl9}">🌡 Temp.</span>
@@ -391,7 +391,7 @@
 
           <div class="gtsec" style="margin-top:${ents.length?'14px':0}">Aggiungi stanza</div>
           <input id="gtcfg-add" class="gtinp" placeholder="🔍 Cerca sensore temperatura…" autocomplete="off">
-          <div style="font-size:9px;color:#fff;margin-top:5px;opacity:.7">Digita il nome o l'entity_id del sensore temperatura</div>
+          <div style="font-size:9px;color:#fff;margin-top:5px;">Digita il nome o l'entity_id del sensore temperatura</div>
           <div style="height:18px"></div>
         </div>
 

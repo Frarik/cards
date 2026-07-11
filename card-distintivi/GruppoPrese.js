@@ -128,7 +128,7 @@
     const value = ents.length
       ? (totalW!==null ? `${active}/${ents.length} · ${fmtW(totalW)}` : `${active}/${ents.length}`)
       : '—';
-    const chipCol = hasUnavail && active===0 ? COL_UNAVL : active>0 ? COL_ON : 'rgba(255,255,255,0.32)';
+    const chipCol = hasUnavail && active===0 ? COL_UNAVL : active>0 ? COL_ON : '#fff';
     return { icon: iconHtml(c.icon||'🔌'), label: c.label||'Prese', value, color: chipCol };
   }
 
@@ -615,7 +615,7 @@
       const col = c.color||'#fb923c';
       const selRows = ents.map((e,i)=>{
         const lbl=e.label||nameOf(h,e.entity);
-        const st=h?socketStatus(h,e.entity):{on:false,unavail:false,unknown:false,dotColor:'rgba(255,255,255,.2)'};
+        const st=h?socketStatus(h,e.entity):{on:false,unavail:false,unknown:false,dotColor:'#fff'};
         const exp=expandedFields.has(i);
         const hasPwr=!!(e.power_entity&&e.power_entity.trim());
         const hasAuto=!!(e.automation&&e.automation.trim());
@@ -680,7 +680,7 @@
 
       const anim=_firstRender?'animation:gpCfgUp .22s cubic-bezier(.32,1.12,.56,1)':'';
       return `<div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0f0d1a;border:1px solid rgba(251,147,60,.22);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);color:#fff;${anim}">
-        <style>@keyframes gpCfgUp{from{transform:translateY(100%)}to{transform:translateY(0)}} .gpcinp{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;font-size:12px;outline:none;font-family:inherit;transition:border-color .15s} .gpcinp:focus{border-color:rgba(251,147,60,.5)} .gpcinp::placeholder{color:rgba(255,255,255,.55)} #gpcfg-body::-webkit-scrollbar{display:none}</style>
+        <style>@keyframes gpCfgUp{from{transform:translateY(100%)}to{transform:translateY(0)}} .gpcinp{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;font-size:12px;outline:none;font-family:inherit;transition:border-color .15s} .gpcinp:focus{border-color:rgba(251,147,60,.5)} .gpcinp::placeholder{color:#fff} #gpcfg-body::-webkit-scrollbar{display:none}</style>
         <div style="display:flex;align-items:center;gap:10px;padding:14px 18px 12px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">
           <div style="width:36px;height:36px;border-radius:10px;background:rgba(251,147,60,.13);border:1px solid rgba(251,147,60,.28);display:flex;align-items:center;justify-content:center;font-size:18px">🔌</div>
           <div style="flex:1">

@@ -22,7 +22,7 @@
 
   // Temperatura ambiente: ottimale 19-25°C
   function _tempColor(val) {
-    if (val == null || isNaN(val)) return 'rgba(255,255,255,.4)';
+    if (val == null || isNaN(val)) return '#fff';
     if (val < 15 || val > 29) return '#f87171'; // rosso — troppo freddo/caldo
     if (val < 17 || val > 27) return '#fb923c'; // arancio
     if (val < 19 || val > 25) return '#facc15'; // giallo
@@ -31,7 +31,7 @@
 
   // Umidità relativa: ottimale 40-60%
   function _humColor(val) {
-    if (val == null || isNaN(val)) return 'rgba(255,255,255,.4)';
+    if (val == null || isNaN(val)) return '#fff';
     if (val < 25 || val > 75) return '#f87171'; // rosso — aria secca/troppo umida
     if (val < 30 || val > 65) return '#fb923c'; // arancio
     if (val < 40 || val > 60) return '#facc15'; // giallo
@@ -112,8 +112,8 @@
   function climaStCol(mode, action, col) {
     if (action === 'heating' || mode === 'heat')      return '#f97316';
     if (action === 'cooling' || mode === 'cool')      return '#38bdf8';
-    if (mode === 'off' || mode === 'unknown' || mode === 'unavailable') return 'rgba(255,255,255,.38)';
-    if (action === 'idle') return 'rgba(255,255,255,.5)';
+    if (mode === 'off' || mode === 'unknown' || mode === 'unavailable') return '#fff';
+    if (action === 'idle') return '#fff';
     return col || '#f97316';
   }
 
@@ -152,7 +152,7 @@
       icon: iconHtml(_dynIcon(c.icon||'🌡️', active > 0)),
       label: c.label || 'Clima',
       value: ents.length ? `${active}/${ents.length}` : '—',
-      color: active > 0 ? col : 'rgba(255,255,255,0.32)',
+      color: active > 0 ? col : '#fff',
     };
   }
 
@@ -176,7 +176,7 @@
     const col = c.color || '#f97316';
 
     const btnBase = 'width:26px;height:26px;border-radius:7px;cursor:pointer;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;outline:none;flex-shrink:0;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);color:#fff';
-    const secLbl  = 'font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:rgba(255,255,255,.28);margin-bottom:5px';
+    const secLbl  = 'font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:#fff;margin-bottom:5px';
 
     const rows = ents.map((e, i) => {
       if (!e.entity) return '';
@@ -231,17 +231,17 @@
       const modeBtns = hvacModes.map(m => {
         const mCol2 = HVAC_COL[m] || '#64748b';
         const mActive = mode === m;
-        return `<button data-cc-mode="${i}" data-val="${eh(m)}" data-entity="${eh(e.entity)}" style="padding:5px 9px;border-radius:8px;border:1px solid ${mActive?hex2rgba(mCol2,.4):'rgba(255,255,255,.1)'};background:${mActive?hex2rgba(mCol2,.2):'rgba(255,255,255,.05)'};color:${mActive?mCol2:'rgba(255,255,255,.45)'};cursor:pointer;font-size:10px;font-weight:700;white-space:nowrap;outline:none">${HVAC_ICO[m]||''} ${HVAC_LBL[m]||m}</button>`;
+        return `<button data-cc-mode="${i}" data-val="${eh(m)}" data-entity="${eh(e.entity)}" style="padding:5px 9px;border-radius:8px;border:1px solid ${mActive?hex2rgba(mCol2,.4):'rgba(255,255,255,.1)'};background:${mActive?hex2rgba(mCol2,.2):'rgba(255,255,255,.05)'};color:${mActive?mCol2:'#fff'};cursor:pointer;font-size:10px;font-weight:700;white-space:nowrap;outline:none">${HVAC_ICO[m]||''} ${HVAC_LBL[m]||m}</button>`;
       }).join('');
 
       const fanBtns = fanModes.length > 1 ? fanModes.map(m => {
         const fActive = curFan === m;
-        return `<button data-cc-fan="${i}" data-val="${eh(m)}" data-entity="${eh(e.entity)}" style="padding:4px 8px;border-radius:7px;border:1px solid ${fActive?'rgba(56,189,248,.38)':'rgba(255,255,255,.1)'};background:${fActive?'rgba(56,189,248,.18)':'rgba(255,255,255,.05)'};color:${fActive?'#38bdf8':'rgba(255,255,255,.45)'};cursor:pointer;font-size:10px;font-weight:700;outline:none">${FAN_LBL[m]||m}</button>`;
+        return `<button data-cc-fan="${i}" data-val="${eh(m)}" data-entity="${eh(e.entity)}" style="padding:4px 8px;border-radius:7px;border:1px solid ${fActive?'rgba(56,189,248,.38)':'rgba(255,255,255,.1)'};background:${fActive?'rgba(56,189,248,.18)':'rgba(255,255,255,.05)'};color:${fActive?'#38bdf8':'#fff'};cursor:pointer;font-size:10px;font-weight:700;outline:none">${FAN_LBL[m]||m}</button>`;
       }).join('') : '';
 
       const swingBtns = swingModes.length > 1 ? swingModes.map(m => {
         const sActive = curSwing === m;
-        return `<button data-cc-swing="${i}" data-val="${eh(m)}" data-entity="${eh(e.entity)}" style="padding:4px 8px;border-radius:7px;border:1px solid ${sActive?'rgba(167,139,250,.38)':'rgba(255,255,255,.1)'};background:${sActive?'rgba(167,139,250,.18)':'rgba(255,255,255,.05)'};color:${sActive?'#a78bfa':'rgba(255,255,255,.45)'};cursor:pointer;font-size:10px;font-weight:700;outline:none">${SWING_LBL[m]||m}</button>`;
+        return `<button data-cc-swing="${i}" data-val="${eh(m)}" data-entity="${eh(e.entity)}" style="padding:4px 8px;border-radius:7px;border:1px solid ${sActive?'rgba(167,139,250,.38)':'rgba(255,255,255,.1)'};background:${sActive?'rgba(167,139,250,.18)':'rgba(255,255,255,.05)'};color:${sActive?'#a78bfa':'#fff'};cursor:pointer;font-size:10px;font-weight:700;outline:none">${SWING_LBL[m]||m}</button>`;
       }).join('') : '';
 
       let autoBadge = '';
@@ -267,7 +267,7 @@
                 <button data-cc-down="${i}" style="${btnBase}">−</button>
                 <span data-cc-target="${i}" data-val="${targetDataVal}" style="font-size:13px;font-weight:700;color:#fff;min-width:48px;text-align:center">${displayTargetStr}</span>
                 <button data-cc-up="${i}" style="${btnBase}">+</button>
-                <button data-cc-expand="${i}" style="width:24px;height:24px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;outline:none;flex-shrink:0;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:rgba(255,255,255,.55)">${CHEV_RIGHT}</button>
+                <button data-cc-expand="${i}" style="width:24px;height:24px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;outline:none;flex-shrink:0;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff">${CHEV_RIGHT}</button>
               </div>
             </div>
             <div style="width:1px;height:46px;background:rgba(255,255,255,.1);flex-shrink:0"></div>
@@ -285,7 +285,7 @@
       </div>`;
     }).join('');
 
-    return `<div id="cc-popup-body"><div>${rows||'<div style="padding:32px 20px;text-align:center;color:rgba(255,255,255,.3);font-size:12px">Nessun clima configurato.<br><span style="font-size:10px;opacity:.6">Clicca ✏️ sulla chip per configurare.</span></div>'}</div></div>`;
+    return `<div id="cc-popup-body"><div>${rows||'<div style="padding:32px 20px;text-align:center;color:#fff;font-size:12px">Nessun clima configurato.<br><span style="font-size:10px;">Clicca ✏️ sulla chip per configurare.</span></div>'}</div></div>`;
   }
 
   /* ── mount + handlers ── */
@@ -381,7 +381,7 @@
           const mCol2 = HVAC_COL[b.dataset.val] || '#64748b';
           b.style.background  = mActive ? hex2rgba(mCol2, .2) : 'rgba(255,255,255,.05)';
           b.style.borderColor = mActive ? hex2rgba(mCol2, .4) : 'rgba(255,255,255,.1)';
-          b.style.color       = mActive ? mCol2 : 'rgba(255,255,255,.45)';
+          b.style.color       = mActive ? mCol2 : '#fff';
         });
         if (val === 'off') callSvc('climate', 'turn_off', entityId);
         else callSvcEx('climate', 'set_hvac_mode', { entity_id: entityId, hvac_mode: val });
@@ -399,7 +399,7 @@
           const fActive = b.dataset.val === val;
           b.style.background  = fActive ? 'rgba(56,189,248,.18)'  : 'rgba(255,255,255,.05)';
           b.style.borderColor = fActive ? 'rgba(56,189,248,.38)'  : 'rgba(255,255,255,.1)';
-          b.style.color       = fActive ? '#38bdf8' : 'rgba(255,255,255,.45)';
+          b.style.color       = fActive ? '#38bdf8' : '#fff';
         });
         callSvcEx('climate', 'set_fan_mode', { entity_id: entityId, fan_mode: val });
         ev.stopPropagation(); return;
@@ -416,7 +416,7 @@
           const sActive = b.dataset.val === val;
           b.style.background  = sActive ? 'rgba(167,139,250,.18)' : 'rgba(255,255,255,.05)';
           b.style.borderColor = sActive ? 'rgba(167,139,250,.38)' : 'rgba(255,255,255,.1)';
-          b.style.color       = sActive ? '#a78bfa' : 'rgba(255,255,255,.45)';
+          b.style.color       = sActive ? '#a78bfa' : '#fff';
         });
         callSvcEx('climate', 'set_swing_mode', { entity_id: entityId, swing_mode: val });
         ev.stopPropagation(); return;
@@ -509,7 +509,7 @@
       const useAbove = spaceBelow < MAXH && spaceAbove > spaceBelow;
       _acDrop = document.createElement('div');
       const pos = useAbove ? `bottom:${window.innerHeight - rect.top + 4}px` : `top:${rect.bottom + 4}px`;
-      _acDrop.style.cssText = `position:fixed;left:${rect.left}px;${pos};width:${rect.width}px;max-height:${MAXH}px;overflow-y:auto;z-index:100003;background:#1a1630;border:1px solid rgba(249,115,22,.3);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.88);scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent`;
+      _acDrop.style.cssText = `position:fixed;left:${rect.left}px;${pos};width:${rect.width}px;max-height:${MAXH}px;overflow-y:auto;z-index:100003;background:#1a1630;border:1px solid rgba(249,115,22,.3);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.88);scrollbar-width:thin;scrollbar-color:#fff transparent`;
       matches.forEach(m => {
         const r = document.createElement('div');
         r.style.cssText = 'padding:9px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.05);transition:background .1s';
@@ -517,7 +517,7 @@
           <span style="font-size:13px;flex-shrink:0;filter:${m.on?'none':'grayscale(1) opacity(.4)'}">${m.icon||'📦'}</span>
           <div style="flex:1;min-width:0">
             <div style="font-size:11px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(m.name)}</div>
-            <div style="font-size:9px;color:rgba(255,255,255,.38);margin-top:1px">${eh(m.id)}${m.stateLabel?` · <span style="color:rgba(255,255,255,.5)">${eh(m.stateLabel)}</span>`:''}</div>
+            <div style="font-size:9px;color:#fff;margin-top:1px">${eh(m.id)}${m.stateLabel?` · <span style="color:#fff">${eh(m.stateLabel)}</span>`:''}</div>
           </div>
         </div>`;
         r.addEventListener('mouseover', () => { r.style.background='rgba(249,115,22,.08)'; });
@@ -605,8 +605,8 @@
         const autoExpanded = expandedAuto.has(i);
         const autoSection = hasAuto
           ? `<div style="display:flex;align-items:center;gap:6px;margin-top:5px;padding:5px 7px;border-radius:7px;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.22)">
-              <span style="font-size:10px;opacity:.5">🤖</span>
-              <span style="flex:1;font-size:10px;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(e.automation)}</span>
+              <span style="font-size:10px;">🤖</span>
+              <span style="flex:1;font-size:10px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(e.automation)}</span>
               <button data-rmauto="${i}" style="font-size:9px;padding:2px 6px;border-radius:4px;border:1px solid rgba(248,113,113,.3);background:rgba(248,113,113,.1);color:#f87171;cursor:pointer">✕</button>
             </div>`
           : autoExpanded
@@ -614,24 +614,24 @@
                 <input data-auto-idx="${i}" placeholder="🔍 Cerca automazione…" value="${eh(e.automation||'')}" style="flex:1;padding:6px 9px;border-radius:7px;border:1px solid rgba(99,102,241,.35);background:rgba(99,102,241,.08);color:#fff;font-size:11px;outline:none;font-family:inherit">
                 <button data-saveauto="${i}" style="padding:6px 10px;border-radius:7px;border:none;background:#6366f1;color:#fff;cursor:pointer;font-size:11px;font-weight:700">OK</button>
               </div>`
-            : `<button data-addauto="${i}" style="margin-top:4px;font-size:9px;padding:3px 8px;border-radius:5px;border:1px dashed rgba(255,255,255,.2);background:transparent;color:rgba(255,255,255,.4);cursor:pointer">🤖 + Automazione (opz.)</button>`;
+            : `<button data-addauto="${i}" style="margin-top:4px;font-size:9px;padding:3px 8px;border-radius:5px;border:1px dashed rgba(255,255,255,.2);background:transparent;color:#fff;cursor:pointer">🤖 + Automazione (opz.)</button>`;
 
         return `<div style="padding:8px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid ${active?hex2rgba(col,.25):'rgba(255,255,255,.08)'};margin-bottom:6px">
           <div style="display:flex;align-items:center;gap:8px">
             <span style="font-size:15px;flex-shrink:0;filter:${active?'none':'grayscale(1) opacity(.4)'}">🌡️</span>
             <div style="flex:1;min-width:0">
               <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
-              <div style="font-size:9px;color:rgba(255,255,255,.35)">${eh(e.entity)}</div>
+              <div style="font-size:9px;color:#fff">${eh(e.entity)}</div>
             </div>
             <button data-del="${i}" style="width:22px;height:22px;border:none;border-radius:5px;background:rgba(248,113,113,.15);color:#f87171;cursor:pointer;font-size:11px;flex-shrink:0">✕</button>
           </div>
           <div style="display:flex;flex-direction:column;gap:5px;margin-top:7px;padding-top:7px;border-top:1px solid rgba(255,255,255,.06)">
             <div style="display:flex;align-items:center;gap:6px">
-              <span style="font-size:9px;color:rgba(255,255,255,.4);width:56px;flex-shrink:0">🌡 Temp.</span>
+              <span style="font-size:9px;color:#fff;width:56px;flex-shrink:0">🌡 Temp.</span>
               <input data-tempsensor-idx="${i}" value="${eh(e.tempSensor||'')}" placeholder="sensor.temperatura… (opz.)" style="${sinpSt}">
             </div>
             <div style="display:flex;align-items:center;gap:6px">
-              <span style="font-size:9px;color:rgba(255,255,255,.4);width:56px;flex-shrink:0">💧 Umidità</span>
+              <span style="font-size:9px;color:#fff;width:56px;flex-shrink:0">💧 Umidità</span>
               <input data-humsensor-idx="${i}" value="${eh(e.humSensor||'')}" placeholder="sensor.umidita… (opz.)" style="${sinpSt}">
             </div>
           </div>
@@ -641,33 +641,33 @@
 
       const anim = _firstRender ? 'animation:ccCfgUp .22s cubic-bezier(.32,1.12,.56,1)' : '';
       return `<div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0f0d1a;border:1px solid rgba(249,115,22,.22);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);color:#fff;${anim}">
-        <style>@keyframes ccCfgUp{from{transform:translateY(100%)}to{transform:translateY(0)}} .cccinp{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;font-size:12px;outline:none;font-family:inherit;transition:border-color .15s} .cccinp:focus{border-color:rgba(249,115,22,.5);background:rgba(249,115,22,.04)} .cccinp::placeholder{color:rgba(255,255,255,.3)} #cccfg-body::-webkit-scrollbar{display:none}</style>
+        <style>@keyframes ccCfgUp{from{transform:translateY(100%)}to{transform:translateY(0)}} .cccinp{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;font-size:12px;outline:none;font-family:inherit;transition:border-color .15s} .cccinp:focus{border-color:rgba(249,115,22,.5);background:rgba(249,115,22,.04)} .cccinp::placeholder{color:#fff} #cccfg-body::-webkit-scrollbar{display:none}</style>
 
         <div style="display:flex;align-items:center;gap:10px;padding:14px 18px 12px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">
           <div style="width:36px;height:36px;border-radius:10px;background:rgba(249,115,22,.13);border:1px solid rgba(249,115,22,.28);display:flex;align-items:center;justify-content:center;font-size:18px">🌡️</div>
           <div style="flex:1">
             <div style="font-size:14px;font-weight:800">Configura — Gruppo Clima</div>
-            <div style="font-size:10px;color:rgba(255,255,255,.38)">${ents.length} entit${ents.length===1?'à':'à'} selezionate</div>
+            <div style="font-size:10px;color:#fff">${ents.length} entit${ents.length===1?'à':'à'} selezionate</div>
           </div>
           <button id="cccfg-close" style="width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,255,255,.07);color:#fff;cursor:pointer;font-size:14px">✕</button>
         </div>
 
         <div id="cccfg-body" style="flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;padding:14px 14px 4px">
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.35);margin-bottom:6px">Chip</div>
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Chip</div>
           <div style="display:flex;gap:7px;margin-bottom:14px">
-            <div style="flex:1"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">Nome chip</div><input id="cccfg-label" class="cccinp" placeholder="Clima" value="${eh(c.label||'Clima')}"></div>
-            <div style="flex:0 0 56px"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">Icona</div><button id="cccfg-icon-btn" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);cursor:pointer;display:flex;align-items:center;justify-content:center;outline:none;color:#fff">${iconHtml(c.icon||'🌡️',22)}</button><input type="hidden" id="cccfg-icon" value="${eh(c.icon||'🌡️')}"></div>
-            <div style="flex:0 0 50px"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">Colore</div><input type="color" id="cccfg-color" value="${(c.color||'#f97316').match(/^#[0-9a-f]{6}$/i)?c.color:'#f97316'}" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:none;cursor:pointer;padding:2px"></div>
+            <div style="flex:1"><div style="font-size:9px;color:#fff;margin-bottom:3px">Nome chip</div><input id="cccfg-label" class="cccinp" placeholder="Clima" value="${eh(c.label||'Clima')}"></div>
+            <div style="flex:0 0 56px"><div style="font-size:9px;color:#fff;margin-bottom:3px">Icona</div><button id="cccfg-icon-btn" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);cursor:pointer;display:flex;align-items:center;justify-content:center;outline:none;color:#fff">${iconHtml(c.icon||'🌡️',22)}</button><input type="hidden" id="cccfg-icon" value="${eh(c.icon||'🌡️')}"></div>
+            <div style="flex:0 0 50px"><div style="font-size:9px;color:#fff;margin-bottom:3px">Colore</div><input type="color" id="cccfg-color" value="${(c.color||'#f97316').match(/^#[0-9a-f]{6}$/i)?c.color:'#f97316'}" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:none;cursor:pointer;padding:2px"></div>
           </div>
 
           ${ents.length ? `
-            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.35);margin-bottom:6px">Entità selezionate (${ents.length})</div>
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Entità selezionate (${ents.length})</div>
             <div>${selRows}</div>
           ` : ''}
 
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.35);margin:${ents.length?'12px':0} 0 6px">Aggiungi entità</div>
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin:${ents.length?'12px':0} 0 6px">Aggiungi entità</div>
           <input id="cccfg-add-entity" class="cccinp" placeholder="🔍 Inizia a scrivere il nome dell'entità…" autocomplete="off">
-          <div style="font-size:9px;color:rgba(255,255,255,.25);margin-top:5px">Mostra tutte le entità — climate.* compaiono per prime</div>
+          <div style="font-size:9px;color:#fff;margin-top:5px">Mostra tutte le entità — climate.* compaiono per prime</div>
           <div style="height:16px"></div>
         </div>
 
