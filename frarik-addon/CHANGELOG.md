@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.9.96 — 2026-07-12
+
+### feat(ups-card): nuova card UPS Tecnoware v1.0
+
+- SVG animato UPS con 5 segmenti batteria (riempimento dal basso, colore per livello: blu >40%, arancione 20-40%, rosso <20%)
+- LED status pulsante: verde=ON LINE, arancione=ON BATTERY, grigio=N/D
+- Hero destra: batteria % grande + barra + Carico / V-In / V-Out
+- Stats bar: blackout oggi / mese / anno / durata ultimo
+- Popup Storico: contatori blackout + dati ultimo evento
+- Popup Notifiche: toggle per i 3 input_boolean push
+- Popup Soglie: soglie avviso e spegnimento server + reset contatori + accesso config sensori
+- Config wizard con autocomplete per tutti i sensori del pkg (18 entità)
+- Catalogo card aggiornato (35 card totali)
+- bump 1.9.95 → 1.9.96
+
 ## 1.9.95 — 2026-07-11
 
 ### fix(GruppoEnergia): storico, grafico e stats ora funzionanti
