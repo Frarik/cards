@@ -281,7 +281,18 @@ function update(card,hass,el){
   mount(card,hass,el);
 }
 
-/* ── registrazione card Frarik ── */
-if(window.frarikCards) window.frarikCards['database-card']={render:render,mount:mount,update:update};
-
+  var CARD={
+    id:'database-card', name:'Database HA', icon:'🗄️', version:'1.0',
+    desc:'Monitora il database di Home Assistant: dimensione attuale, storico giornaliero Lun–Dom, repack automatico a orario o per dimensione massima, notifiche push, configurazione giorni settimana e avvio manuale repack.',
+    colSpan:2, rowSpan:3,
+    render:render, mount:mount, update:update,
+    frarik_pkg_check:'sensor.frarik_database_versione',
+    frarik_pkg_id:'frarik_database',
+    frarik_pkg_version:'1.0',
+  };
+  window.FratechCardRegistry=window.FratechCardRegistry||{};
+  window.FratechCardRegistry[CARD.id]=CARD;
+  window.FratechCards=window.FratechCards||{};
+  window.FratechCards[CARD.id]=CARD;
+  try{ console.log('[FratechStore] Card registrata: database-card v'+CARD.version); }catch(e){}
 })();
