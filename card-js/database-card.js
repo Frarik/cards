@@ -235,7 +235,7 @@
       +'<div style="font-size:28px;font-weight:900;color:'+ACCH+'">'+dimD+' '+dimU+'</div>'
       +'</div>'
       +pSec('📊 Andamento settimanale')
-      +'<div style="background:rgba(0,0,0,.2);border-radius:10px;padding:6px 4px 0;margin:6px 0 8px;max-height:80px;overflow:hidden">'+chartSVG(h)+'</div>'
+      +'<div style="background:rgba(0,0,0,.2);border-radius:10px;padding:6px 4px 2px;margin:6px 0 8px">'+chartSVG(h)+'</div>'
       +pSec('📈 Statistiche')
       +pRow('Dimensione attuale', dimD+' '+dimU)
       +pRow('Media 7 giorni', media>=1000?(media/1000).toFixed(1)+' GB':Math.round(media)+' MB')
