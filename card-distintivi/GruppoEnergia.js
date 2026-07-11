@@ -1,4 +1,4 @@
-/* frarik-version: 3.5 */
+/* frarik-version: 3.6 */
 /**
  * GruppoEnergia.js — Distintivo FratechStore v3.0
  * Flow shimmer · tralicio img data-URI · nodi uguali · speed reattiva
@@ -132,7 +132,6 @@
   /* ── grafico SVG compatto ── */
   function _chart(pts, maxW, col) {
     const W = 400, H = 100;
-    // contenitore responsivo: padding-bottom % → altezza proporzionale alla larghezza
     const _wrap = inner =>
       `<div style="position:relative;width:100%;padding-bottom:26%;min-height:120px">${inner}</div>`;
     const noData = _wrap(
@@ -142,30 +141,48 @@
     try {
       const now   = Date.now();
       const start = now - 24 * 3600000;
-      const maxV  = Math.max(...pts.map(p => p.v), maxW * 0.1);
+
+      // 90° percentile come tetto Y: i picchi estremi non schacciano la baseline
+      const sorted = [...pts.map(p => p.v)].sort((a, b) => a - b);
+      const p90    = sorted[Math.floor(sorted.length * 0.90)] || sorted[sorted.length - 1];
+      const maxV   = Math.max(p90 * 1.25, maxW * 0.05, 80); // +25% headroom, min 80W
+
       const xf = t => Math.max(0, Math.min(W, ((t - start) / (now - start)) * W));
-      const yf = v => Math.max(2, Math.min(H - 2, H - (v / maxV) * (H - 6)));
+      const yf = v => Math.max(1, Math.min(H - 1, H - (Math.min(v, maxV) / maxV) * (H - 4)));
+
+      // griglie orizzontali leggere
+      const grid = [0.25, 0.5, 0.75].map(r => {
+        const y = yf(maxV * r).toFixed(1);
+        return `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="rgba(255,255,255,.07)" stroke-width="1"/>`;
+      }).join('');
+
+      // linea soglia contratto (se supera il 50%)
+      const thr = maxV > maxW * 0.5
+        ? (() => { const y = yf(maxW * 0.5).toFixed(1); return `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="${col}" stroke-width="1" stroke-dasharray="5,4" opacity=".3"/>`; })()
+        : '';
+
       const line = pts.map(p => `${xf(p.t).toFixed(1)},${yf(p.v).toFixed(1)}`).join(' L ');
-      const area = `M ${line} L ${xf(pts[pts.length - 1].t).toFixed(1)},${H} L ${xf(pts[0].t).toFixed(1)},${H} Z`;
-      const thr  = [{ r: .50, c: '#4ade80' }, { r: .75, c: '#facc15' }, { r: .90, c: '#f97316' }]
-        .filter(t => maxV > maxW * t.r)
-        .map(t => { const y = yf(maxW * t.r).toFixed(1); return `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="${t.c}" stroke-width="1" stroke-dasharray="5,4" opacity=".4"/>`; })
-        .join('');
-      const pk  = pts.reduce((a, b) => b.v > a.v ? b : a);
+      const last = pts[pts.length - 1];
+      const area = `M ${line} L ${xf(last.t).toFixed(1)},${H} L ${xf(pts[0].t).toFixed(1)},${H} Z`;
+
       const gid = 'eg' + col.replace('#', '');
       const labels = [0, 3, 6, 9, 12, 15, 18, 21].map(hr => {
         const d = new Date(); d.setHours(hr, 0, 0, 0);
         const x = xf(+d); if (x < 14 || x > W - 14) return '';
-        return `<text x="${x.toFixed(1)}" y="${H + 16}" text-anchor="middle" fill="rgba(255,255,255,.65)" font-size="12" font-family="system-ui,sans-serif">${String(hr).padStart(2, '0')}:00</text>`;
+        return `<text x="${x.toFixed(1)}" y="${H + 16}" text-anchor="middle" fill="rgba(255,255,255,.55)" font-size="12" font-family="system-ui,sans-serif">${String(hr).padStart(2, '0')}:00</text>`;
       }).join('');
+
+      // piccolo dot al punto più recente (non al picco)
+      const lx = xf(last.t).toFixed(1), ly = yf(last.v).toFixed(1);
+
       return _wrap(`<svg style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 ${W} ${H + 22}" preserveAspectRatio="none">
         <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="${col}" stop-opacity=".45"/><stop offset="100%" stop-color="${col}" stop-opacity=".02"/>
+          <stop offset="0%" stop-color="${col}" stop-opacity=".5"/><stop offset="100%" stop-color="${col}" stop-opacity=".03"/>
         </linearGradient></defs>
-        ${thr}
+        ${grid}${thr}
         <path d="${area}" fill="url(#${gid})"/>
         <path d="M ${line}" fill="none" stroke="${col}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-        <circle cx="${xf(pk.t).toFixed(1)}" cy="${yf(pk.v).toFixed(1)}" r="4.5" fill="${col}" stroke="rgba(0,0,0,.5)" stroke-width="1.5"/>
+        <circle cx="${lx}" cy="${ly}" r="4" fill="${col}" stroke="#0a0816" stroke-width="2"/>
         ${labels}
       </svg>`);
     } catch (e) { return noData; }
@@ -655,7 +672,7 @@
   /* ════════════════════════════════════════ REGISTRAZIONE ══ */
   const CARD = {
     id: ID, name: 'Gruppo Energia', icon: '⚡', desc: '',
-    version: '3.5', isDistintivo: true,
+    version: '3.6', isDistintivo: true,
     defaultCfg: { label: 'Energia', entity: '', maxKw: 3, priceKwh: 0, alertKw: 0, solarEntity: '', kwhEntity: '' },
     chip, watchEntities, render, mount, update, configure, preview,
   };
@@ -663,5 +680,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v3.5'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v3.6'); } catch (e) {}
 })();
