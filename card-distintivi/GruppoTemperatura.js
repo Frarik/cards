@@ -1,9 +1,4 @@
-/* frarik-version: 1.3 */
-/**
- * GruppoTemperatura.js — Distintivo FratechStore v1.3
- * - Popup: sezione situazione/consigli in cima, min/max temp+umid, card stanze
- * - Re-render solo quando i dati cambiano (niente flash ogni 3s)
- */
+/* frarik-version: 1.4 */
 (function () {
   'use strict';
 
@@ -41,57 +36,45 @@
     return                                       { label: 'Attenzione', emoji: '🌡', color: '#fb923c' };
   }
 
-  /* ── frasi situazione + consigli ───────────────────────────── */
-  function _adviceLines(avgTemp, avgHum, minTemp, maxTemp, minHum, maxHum) {
+  function _adviceLines(avgTemp, avgHum, minTemp, maxTemp) {
     const lines = [];
     const spread = (minTemp != null && maxTemp != null) ? maxTemp - minTemp : null;
-
-    /* temperatura */
     if (avgTemp != null) {
       if (avgTemp >= 19 && avgTemp <= 25)
-        lines.push({ ico: '✅', txt: `Temperatura media ideale (${avgTemp.toFixed(1)}°). Nessuna azione necessaria.` });
+        lines.push({ ico: '✅', txt: 'Temperatura nella zona di comfort. Nessuna azione necessaria.' });
       else if (avgTemp > 28)
-        lines.push({ ico: '🥵', txt: `Temperatura elevata (${avgTemp.toFixed(1)}°). Ventila gli ambienti o abbassa il riscaldamento.` });
+        lines.push({ ico: '🥵', txt: `Caldo (${avgTemp.toFixed(1)}°). Ventila gli ambienti o abbassa il riscaldamento.` });
       else if (avgTemp > 25)
         lines.push({ ico: '☀️', txt: `Leggermente caldo (${avgTemp.toFixed(1)}°). Valuta di arieggiare.` });
       else if (avgTemp < 15)
-        lines.push({ ico: '🥶', txt: `Temperatura bassa (${avgTemp.toFixed(1)}°). Controlla il riscaldamento.` });
+        lines.push({ ico: '🥶', txt: `Freddo (${avgTemp.toFixed(1)}°). Controlla il riscaldamento.` });
       else if (avgTemp < 18)
-        lines.push({ ico: '🌡', txt: `Temperatura fresca (${avgTemp.toFixed(1)}°). Potresti aumentare il riscaldamento.` });
+        lines.push({ ico: '🌡', txt: `Fresco (${avgTemp.toFixed(1)}°). Potresti aumentare il riscaldamento.` });
     }
-
-    /* umidità */
     if (avgHum != null) {
       if (avgHum >= 40 && avgHum <= 60)
-        lines.push({ ico: '✅', txt: `Umidità nella norma (${Math.round(avgHum)}%). Condizioni ottimali.` });
+        lines.push({ ico: '✅', txt: `Umidità ottimale (${Math.round(avgHum)}%). Nessuna azione.` });
       else if (avgHum > 70)
-        lines.push({ ico: '💦', txt: `Umidità molto alta (${Math.round(avgHum)}%). Arieggia i locali per prevenire muffe e condensa.` });
+        lines.push({ ico: '💦', txt: `Umidità alta (${Math.round(avgHum)}%). Arieggia per prevenire muffe.` });
       else if (avgHum > 60)
-        lines.push({ ico: '🌧', txt: `Umidità un po' elevata (${Math.round(avgHum)}%). Apri le finestre quando possibile.` });
-      else if (avgHum < 25)
-        lines.push({ ico: '🏜', txt: `Aria molto secca (${Math.round(avgHum)}%). Un umidificatore migliorerebbe il comfort e la salute.` });
-      else if (avgHum < 35)
-        lines.push({ ico: '🌵', txt: `Umidità bassa (${Math.round(avgHum)}%). Valuta un umidificatore.` });
+        lines.push({ ico: '🌧', txt: `Umidità elevata (${Math.round(avgHum)}%). Apri le finestre.` });
+      else if (avgHum < 30)
+        lines.push({ ico: '🏜', txt: `Aria molto secca (${Math.round(avgHum)}%). Valuta un umidificatore.` });
+      else if (avgHum < 40)
+        lines.push({ ico: '🌵', txt: `Umidità bassa (${Math.round(avgHum)}%). Un po' di vapore aiuterebbe.` });
     }
-
-    /* combo caldo + umido = afa */
     if (avgTemp != null && avgHum != null && avgTemp > 26 && avgHum > 60)
-      lines.push({ ico: '😰', txt: 'Effetto afa: caldo e umidità combinati. Usa un deumidificatore e ventila nelle ore fresche.' });
-
-    /* combo freddo + umido = muffa */
+      lines.push({ ico: '😰', txt: 'Effetto afa: caldo e umidità combinati. Usa un deumidificatore.' });
     if (avgTemp != null && avgHum != null && avgTemp < 17 && avgHum > 65)
-      lines.push({ ico: '🍄', txt: 'Freddo e umidità: rischio muffe. Arieggia brevemente e scalda l\'ambiente.' });
-
-    /* differenza tra stanze */
+      lines.push({ ico: '🍄', txt: 'Freddo e umidità: rischio muffe. Scalda e arieggia brevemente.' });
     if (spread != null && spread > 5)
-      lines.push({ ico: '📊', txt: `Grande differenza tra le stanze (${spread.toFixed(1)}°). Verifica l'isolamento termico o la distribuzione del calore.` });
+      lines.push({ ico: '📊', txt: `Grande differenza tra le stanze (${spread.toFixed(1)}°). Verifica l'isolamento.` });
     else if (spread != null && spread > 3)
       lines.push({ ico: '📊', txt: `Differenza di ${spread.toFixed(1)}° tra la stanza più fredda e quella più calda.` });
-
     return lines;
   }
 
-  /* ── fingerprint dati (evita re-render inutili) ─────────────── */
+  /* ── fingerprint ─────────────────────────────────────────────── */
   function _gteKey(h, ents, c) {
     if (!h) return '';
     const parts = ents.map(e => {
@@ -116,7 +99,7 @@
     const s = h?.states?.[id];
     return s?.attributes?.friendly_name || (id?.includes('.') ? id.split('.')[1].replace(/_/g, ' ') : (id || ''));
   }
-  function eh(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function eh(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function hex2rgba(hex, a) {
     let h = (hex || '').replace('#', '');
     if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
@@ -126,10 +109,12 @@
 
   /* ── CSS ────────────────────────────────────────────────────── */
   const _GTE_CSS = `
-    @keyframes gte-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-    @keyframes gte-pulse{0%,100%{text-shadow:0 0 0 transparent}50%{text-shadow:0 0 12px currentColor}}
-    .gte-card{animation:gte-in .32s cubic-bezier(.22,1,.36,1) both}
-    .gte-val{animation:gte-pulse 3.5s ease-in-out infinite}
+    @keyframes gte-hero-in{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
+    @keyframes gte-row-in{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+    @keyframes gte-num{0%,100%{text-shadow:0 0 0 transparent}50%{text-shadow:0 0 18px currentColor}}
+    .gte-hero{animation:gte-hero-in .38s cubic-bezier(.22,1,.36,1) both}
+    .gte-row{animation:gte-row-in .3s cubic-bezier(.22,1,.36,1) both}
+    .gte-num{animation:gte-num 4s ease-in-out infinite}
   `;
   function _gteInjectCss() {
     if (document.getElementById('gte-style')) return;
@@ -152,10 +137,7 @@
     const h    = liveH(rawHass);
     const ents = Array.isArray(c.entities) ? c.entities : [];
     const col  = c.color || '#38bdf8';
-
-    let chipVal = '—';
-    let chipCol = col;
-
+    let chipVal = '—', chipCol = col;
     if (h) {
       if (c.avgTempEntity) {
         const avgT = parseFloat(stateOf(h, c.avgTempEntity));
@@ -170,17 +152,14 @@
       } else if (ents.length) {
         const temps = ents.map(e => parseFloat(stateOf(h, e.tempEntity))).filter(v => !isNaN(v));
         if (temps.length === 1) {
-          chipVal = `${temps[0].toFixed(1)}°`;
-          chipCol = _tempColor(temps[0]);
+          chipVal = `${temps[0].toFixed(1)}°`; chipCol = _tempColor(temps[0]);
         } else if (temps.length > 1) {
           const min = Math.min(...temps), max = Math.max(...temps);
           chipVal = `${min.toFixed(0)}°–${max.toFixed(0)}°`;
-          const extreme = Math.abs(max - 22) > Math.abs(min - 22) ? max : min;
-          chipCol = _tempColor(extreme);
+          chipCol = _tempColor(Math.abs(max-22) > Math.abs(min-22) ? max : min);
         }
       }
     }
-
     return {
       icon:  `<span class="mdi mdi-thermometer" style="font-size:16px;line-height:1;color:inherit"></span>`,
       label: c.label || 'Temperatura',
@@ -191,36 +170,32 @@
 
   /* ── watchEntities ──────────────────────────────────────────── */
   function watchEntities(cfg) {
-    const c    = loadCfg(cfg);
-    const ents = Array.isArray(c.entities) ? c.entities : [];
-    const ids  = [];
+    const c = loadCfg(cfg), ents = Array.isArray(c.entities) ? c.entities : [], ids = [];
     if (c.avgTempEntity) ids.push(c.avgTempEntity);
     if (c.avgHumEntity)  ids.push(c.avgHumEntity);
-    ents.forEach(e => {
-      if (e.tempEntity) ids.push(e.tempEntity);
-      if (e.humEntity)  ids.push(e.humEntity);
-    });
+    ents.forEach(e => { if (e.tempEntity) ids.push(e.tempEntity); if (e.humEntity) ids.push(e.humEntity); });
     return ids;
   }
 
-  /* ── render popup ───────────────────────────────────────────── */
+  /* ── render ─────────────────────────────────────────────────── */
   function render(cfg, rawHass, noAnim) {
     const c    = loadCfg(cfg);
     const h    = liveH(rawHass);
     const ents = Array.isArray(c.entities) ? c.entities : [];
 
     if (!ents.length) {
-      return `<div style="padding:40px 24px;text-align:center;color:#fff;font-size:12px">
-        <div style="font-size:36px;margin-bottom:10px">🌡️</div>
-        Nessun sensore configurato.<br>
-        <span style="font-size:10px">Clicca ✏️ sulla chip per configurare.</span>
+      return `<div style="padding:48px 24px;text-align:center;color:#fff;font-size:12px">
+        <div style="font-size:42px;margin-bottom:12px">🌡️</div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:6px">Nessun sensore configurato</div>
+        <div style="font-size:10px">Clicca ✏️ sulla chip per aggiungere le stanze.</div>
       </div>`;
     }
 
-    /* ── calcola statistiche globali ── */
+    /* statistiche globali */
     const allTemps = ents.map(e => e.tempEntity && h ? parseFloat(stateOf(h, e.tempEntity)) : NaN).filter(v => !isNaN(v));
     const allHums  = ents.map(e => e.humEntity  && h ? parseFloat(stateOf(h, e.humEntity))  : NaN).filter(v => !isNaN(v));
-    const hasHumGlobal = allHums.length > 0;
+    const hasHumG  = allHums.length > 0;
+    const multi    = ents.length > 1;
 
     const avgTemp = allTemps.length ? allTemps.reduce((a,b)=>a+b,0)/allTemps.length : null;
     const avgHum  = allHums.length  ? allHums.reduce((a,b)=>a+b,0)/allHums.length   : null;
@@ -229,154 +204,116 @@
     const minHum  = allHums.length  ? Math.min(...allHums)  : null;
     const maxHum  = allHums.length  ? Math.max(...allHums)  : null;
 
-    const comfort  = _comfortInfo(avgTemp, avgHum);
-    const advice   = _adviceLines(avgTemp, avgHum, minTemp, maxTemp, minHum, maxHum);
+    /* valori da mostrare nell'hero:
+       se sensore singolo → valori diretti
+       se multiplo → medie */
+    const heroTemp = multi ? avgTemp : (allTemps[0] ?? null);
+    const heroHum  = multi ? avgHum  : (allHums[0]  ?? null);
+    const heroLabel = multi ? 'media casa' : (ents[0].label || nameOf(h, ents[0].tempEntity) || 'sensore');
+    const comfort  = _comfortInfo(heroTemp, heroHum);
+    const advice   = _adviceLines(heroTemp, heroHum, minTemp, maxTemp);
 
-    /* ── SEZIONE CIMA: min/max ── */
-    const statCell = (lbl, val, col, unit) =>
-      `<div style="flex:1;text-align:center;padding:9px 4px">
-        <div style="font-size:7px;font-weight:800;color:#fff;letter-spacing:.6px;margin-bottom:3px">${lbl}</div>
-        <div style="font-size:18px;font-weight:900;color:${col};line-height:1">${val}<span style="font-size:11px;font-weight:700;color:#fff">${unit}</span></div>
-      </div>`;
-    const divider = `<div style="width:1px;background:rgba(255,255,255,.08);margin:6px 0"></div>`;
+    const tCol = _tempColor(heroTemp);
+    const hCol = _humColor(heroHum);
 
-    const topStats = `
-      <div style="display:flex;align-items:stretch;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.04);margin-bottom:10px">
-        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:9px 10px;border-right:1px solid rgba(255,255,255,.08);flex-shrink:0">
-          <span class="mdi mdi-thermometer" style="font-size:16px;color:#38bdf8"></span>
-          <span style="font-size:7px;color:#fff;font-weight:700;letter-spacing:.4px;margin-top:2px">TEMP.</span>
-        </div>
-        <div style="flex:1;display:flex;align-items:stretch">
-          ${statCell('MIN', minTemp!=null?minTemp.toFixed(1):'—', _tempColor(minTemp), minTemp!=null?'°':'')}
-          ${divider}
-          ${statCell('MAX', maxTemp!=null?maxTemp.toFixed(1):'—', _tempColor(maxTemp), maxTemp!=null?'°':'')}
-        </div>
-        ${hasHumGlobal ? `
-        <div style="width:1px;background:rgba(255,255,255,.08)"></div>
-        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:9px 10px;border-left:none;flex-shrink:0">
-          <span class="mdi mdi-water-percent" style="font-size:16px;color:#38bdf8"></span>
-          <span style="font-size:7px;color:#fff;font-weight:700;letter-spacing:.4px;margin-top:2px">UMID.</span>
-        </div>
-        <div style="flex:1;display:flex;align-items:stretch">
-          ${statCell('MIN', minHum!=null?Math.round(minHum)+'':'—', _humColor(minHum), minHum!=null?'%':'')}
-          ${divider}
-          ${statCell('MAX', maxHum!=null?Math.round(maxHum)+'':'—', _humColor(maxHum), maxHum!=null?'%':'')}
-        </div>` : ''}
+    /* footer min/max (solo se multi + ci sono dati) */
+    const footCell = (ico, lbl, val, col) =>
+      `<div style="text-align:center;padding:9px 4px">
+        <div style="font-size:7px;color:#fff;font-weight:700;letter-spacing:.5px;margin-bottom:2px">${ico} ${lbl}</div>
+        <div style="font-size:15px;font-weight:900;color:${col};line-height:1">${val}</div>
       </div>`;
 
-    /* ── SEZIONE SITUAZIONE + CONSIGLI ── */
-    const adviceRows = advice.map(a =>
-      `<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)">
-        <span style="font-size:14px;flex-shrink:0;line-height:1.4">${a.ico}</span>
-        <span style="font-size:11px;color:#fff;line-height:1.45">${a.txt}</span>
-      </div>`
-    ).join('');
+    const heroFooter = multi ? `
+      <div style="display:grid;grid-template-columns:${hasHumG?'1fr 1fr 1fr 1fr':'1fr 1fr'};border-top:1px solid rgba(255,255,255,.07)">
+        ${footCell('❄','MIN', minTemp!=null?minTemp.toFixed(1)+'°':'—', _tempColor(minTemp))}
+        ${footCell('🔥','MAX', maxTemp!=null?maxTemp.toFixed(1)+'°':'—', _tempColor(maxTemp))}
+        ${hasHumG ? footCell('💧','MIN', minHum!=null?Math.round(minHum)+'%':'—', _humColor(minHum)) : ''}
+        ${hasHumG ? footCell('💦','MAX', maxHum!=null?Math.round(maxHum)+'%':'—', _humColor(maxHum)) : ''}
+      </div>` : '';
 
-    const situationBox = `
-      <div style="border-radius:14px;overflow:hidden;border:1px solid ${hex2rgba(comfort.color,.28)};background:${hex2rgba(comfort.color,.07)};margin-bottom:10px">
-        <div style="display:flex;align-items:center;gap:9px;padding:10px 13px;border-bottom:${advice.length?'1px solid '+hex2rgba(comfort.color,.18):'none'}">
-          <span style="font-size:20px;line-height:1">${comfort.emoji}</span>
-          <div style="flex:1">
-            <div style="font-size:13px;font-weight:800;color:${comfort.color}">${comfort.label}</div>
-            <div style="font-size:10px;color:#fff;margin-top:1px">Situazione generale della casa</div>
+    const heroClass = noAnim ? '' : 'class="gte-hero"';
+    const numClass  = noAnim ? '' : 'class="gte-num"';
+
+    const hero = `
+      <div ${heroClass} style="border-radius:20px;overflow:hidden;border:1px solid ${hex2rgba(comfort.color,.28)};margin-bottom:10px;background:linear-gradient(145deg,#0a1828 0%,#0e2038 100%);position:relative">
+        <!-- glow radiale angolo -->
+        <div style="position:absolute;top:-40px;right:-40px;width:180px;height:180px;background:radial-gradient(circle at 50% 50%,${hex2rgba(comfort.color,.18)} 0%,transparent 68%);pointer-events:none"></div>
+
+        <div style="padding:16px 16px 14px;position:relative">
+          <!-- riga top: label + badge -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div style="display:flex;align-items:center;gap:5px">
+              <span class="mdi mdi-home-thermometer-outline" style="color:${comfort.color};font-size:15px"></span>
+              <span style="font-size:10px;font-weight:700;color:#fff;letter-spacing:.3px">${eh(heroLabel)}</span>
+            </div>
+            <span style="font-size:9px;font-weight:800;padding:4px 11px;border-radius:20px;background:${hex2rgba(comfort.color,.14)};border:1px solid ${hex2rgba(comfort.color,.36)};color:${comfort.color};white-space:nowrap">${comfort.emoji} ${comfort.label}</span>
+          </div>
+
+          <!-- valori principali -->
+          <div style="display:flex;align-items:flex-end;gap:16px">
+            <div style="flex:1">
+              <div ${numClass} style="font-size:58px;font-weight:900;color:${tCol};line-height:.95;letter-spacing:-3px">${heroTemp!=null?heroTemp.toFixed(1):'—'}<span style="font-size:24px;font-weight:700;color:#fff;letter-spacing:0">°</span></div>
+              <div style="font-size:9px;color:#fff;margin-top:5px;letter-spacing:.3px;font-weight:600">TEMPERATURA</div>
+            </div>
+            ${hasHumG && heroHum!=null ? `
+            <div style="text-align:right;padding-bottom:3px">
+              <div style="font-size:34px;font-weight:900;color:${hCol};line-height:.95;letter-spacing:-1px">${Math.round(heroHum)}<span style="font-size:16px;font-weight:700;color:#fff">%</span></div>
+              <div style="font-size:9px;color:#fff;margin-top:5px;letter-spacing:.3px;font-weight:600">UMIDITÀ</div>
+            </div>` : ''}
           </div>
         </div>
-        ${advice.length ? `<div style="padding:4px 13px 6px">${adviceRows}</div>` : ''}
+
+        ${heroFooter}
       </div>`;
 
-    /* ── card per stanza ── */
-    const cards = ents.map((e, idx) => {
-      if (!e.tempEntity) return '';
+    /* consigli (plain text, max 2) */
+    const adviceHtml = advice.length ? `
+      <div style="margin-bottom:10px;padding:0 2px">
+        ${advice.slice(0,2).map(a =>
+          `<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:7px">
+            <span style="font-size:14px;flex-shrink:0;line-height:1.35">${a.ico}</span>
+            <span style="font-size:11px;color:#fff;line-height:1.5">${a.txt}</span>
+          </div>`
+        ).join('')}
+      </div>` : '';
 
+    /* stanze */
+    const roomHeader = multi ? `<div style="font-size:9px;font-weight:700;color:#fff;letter-spacing:.8px;margin-bottom:7px;padding:0 2px">STANZE · ${ents.length}</div>` : '';
+
+    const roomRows = ents.map((e, idx) => {
+      if (!e.tempEntity) return '';
       const label   = e.label || nameOf(h, e.tempEntity);
       const tempRaw = h ? parseFloat(stateOf(h, e.tempEntity)) : NaN;
       const humRaw  = (e.humEntity && h) ? parseFloat(stateOf(h, e.humEntity)) : NaN;
       const tempVal = !isNaN(tempRaw) ? tempRaw : null;
       const humVal  = !isNaN(humRaw)  ? humRaw  : null;
-      const unavail = tempVal == null;
-
-      const tCol    = _tempColor(tempVal);
-      const hCol    = _humColor(humVal);
-      const roomComfort = _comfortInfo(tempVal, humVal);
-
-      const tPct = tempVal != null ? Math.min(98, Math.max(2, (tempVal / 40) * 100)) : 0;
-      const hPct = humVal  != null ? Math.min(98, Math.max(2, humVal)) : 0;
-
-      const tIcoName = (tempVal != null && tempVal <= 15) ? 'thermometer-low'
-                     : (tempVal != null && tempVal >= 28) ? 'thermometer-high'
-                     : 'thermometer';
-
-      const tempStr = tempVal != null ? tempVal.toFixed(1) : '—';
-      const humStr  = humVal  != null ? Math.round(humVal).toString() : '—';
+      const tC      = _tempColor(tempVal);
+      const hC      = _humColor(humVal);
+      const rc      = _comfortInfo(tempVal, humVal);
       const hasHum  = !!e.humEntity;
-
-      const cardClass = noAnim ? '' : `class="gte-card"`;
-      const delay = noAnim ? '' : `animation-delay:${idx * 55}ms`;
+      const rowClass = noAnim ? '' : `class="gte-row"`;
+      const rowDelay = noAnim ? '' : `animation-delay:${idx*50}ms`;
 
       return `
-        <div ${cardClass} style="margin-bottom:9px;border-radius:16px;overflow:hidden;border:1px solid ${unavail ? 'rgba(255,255,255,.08)' : hex2rgba(tCol,.28)};box-shadow:0 4px 16px ${unavail ? 'transparent' : hex2rgba(tCol,.1)};${delay}">
-          <div style="padding:11px 13px;background:linear-gradient(135deg,${hex2rgba(tCol,.12)} 0%,rgba(255,255,255,.02) 70%)">
-
-            <!-- header stanza -->
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-              <div style="width:28px;height:28px;border-radius:8px;background:${unavail ? 'rgba(255,255,255,.06)' : hex2rgba(tCol,.18)};border:1px solid ${unavail ? 'rgba(255,255,255,.1)' : hex2rgba(tCol,.38)};display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                <span class="mdi mdi-${tIcoName}" style="font-size:15px;color:${unavail ? '#fff' : tCol}"></span>
-              </div>
-              <span style="flex:1;font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(label)}</span>
-              ${!unavail
-                ? `<span style="font-size:8px;font-weight:700;padding:3px 8px;border-radius:20px;background:${hex2rgba(roomComfort.color,.15)};border:1px solid ${hex2rgba(roomComfort.color,.38)};color:${roomComfort.color};white-space:nowrap;flex-shrink:0">${roomComfort.emoji} ${roomComfort.label}</span>`
-                : `<span style="font-size:9px;color:#fff;font-style:italic;flex-shrink:0">N/D</span>`
-              }
-            </div>
-
-            <!-- valori -->
-            <div style="display:flex;gap:8px">
-
-              <div style="flex:1;padding:9px 11px;border-radius:12px;background:rgba(0,0,0,.18);border:1px solid ${hex2rgba(tCol,.2)}">
-                <div style="display:flex;align-items:center;gap:3px;margin-bottom:4px">
-                  <span class="mdi mdi-thermometer" style="font-size:11px;color:${tCol}"></span>
-                  <span style="font-size:7px;font-weight:800;color:#fff;letter-spacing:.5px">TEMPERATURA</span>
-                </div>
-                <div style="display:flex;align-items:baseline;gap:2px;margin-bottom:7px">
-                  <span class="gte-val" style="font-size:30px;font-weight:900;color:${tCol};line-height:1;letter-spacing:-1px">${tempStr}</span>
-                  <span style="font-size:14px;font-weight:700;color:#fff">°C</span>
-                </div>
-                <div style="position:relative;height:5px;border-radius:3px;overflow:visible;margin-bottom:4px">
-                  <div style="position:absolute;inset:0;border-radius:3px;background:linear-gradient(90deg,#38bdf8 0%,#4ade80 40%,#facc15 62%,#f87171 100%)"></div>
-                  <div style="position:absolute;top:-2px;left:${tPct}%;transform:translateX(-50%);width:3px;height:9px;background:#fff;border-radius:2px;box-shadow:0 0 6px rgba(255,255,255,.9),0 0 2px #000"></div>
-                </div>
-                <div style="display:flex;justify-content:space-between">
-                  <span style="font-size:7px;color:#fff">❄ 0°</span>
-                  <span style="font-size:7px;color:#fff">🔥 40°</span>
-                </div>
-              </div>
-
-              ${hasHum ? `
-              <div style="flex:1;padding:9px 11px;border-radius:12px;background:rgba(0,0,0,.18);border:1px solid ${hex2rgba(hCol,.2)}">
-                <div style="display:flex;align-items:center;gap:3px;margin-bottom:4px">
-                  <span class="mdi mdi-water-percent" style="font-size:11px;color:${hCol}"></span>
-                  <span style="font-size:7px;font-weight:800;color:#fff;letter-spacing:.5px">UMIDITÀ</span>
-                </div>
-                <div style="display:flex;align-items:baseline;gap:2px;margin-bottom:7px">
-                  <span class="gte-val" style="font-size:30px;font-weight:900;color:${hCol};line-height:1;letter-spacing:-1px">${humStr}</span>
-                  <span style="font-size:14px;font-weight:700;color:#fff">%</span>
-                </div>
-                <div style="position:relative;height:5px;border-radius:3px;overflow:visible;margin-bottom:4px">
-                  <div style="position:absolute;inset:0;border-radius:3px;background:linear-gradient(90deg,#f87171 0%,#facc15 22%,#4ade80 40%,#4ade80 60%,#facc15 78%,#f87171 100%)"></div>
-                  <div style="position:absolute;top:-2px;left:${hPct}%;transform:translateX(-50%);width:3px;height:9px;background:#fff;border-radius:2px;box-shadow:0 0 6px rgba(255,255,255,.9),0 0 2px #000"></div>
-                </div>
-                <div style="display:flex;justify-content:space-between">
-                  <span style="font-size:7px;color:#fff">🏜 0%</span>
-                  <span style="font-size:7px;color:#fff">💦 100%</span>
-                </div>
-              </div>` : ''}
-
-            </div>
+        <div ${rowClass} style="display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:13px;margin-bottom:6px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);border-left:3px solid ${tempVal!=null?tC:'rgba(255,255,255,.18)'};${rowDelay}">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(label)}</div>
+            ${hasHum && humVal!=null
+              ? `<div style="display:flex;align-items:center;gap:4px;margin-top:3px">
+                  <span class="mdi mdi-water-percent" style="font-size:11px;color:${hC}"></span>
+                  <span style="font-size:10px;color:${hC};font-weight:700">${Math.round(humVal)}%</span>
+                  <span style="font-size:9px;color:#fff;margin-left:2px">umidità</span>
+                </div>`
+              : ''}
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:24px;font-weight:900;color:${tempVal!=null?tC:'#fff'};line-height:1;letter-spacing:-1px">${tempVal!=null?tempVal.toFixed(1):'—'}<span style="font-size:12px;font-weight:700;color:#fff">°</span></div>
+            <div style="font-size:9px;color:${rc.color};margin-top:3px;font-weight:700">${rc.emoji} ${rc.label}</div>
           </div>
         </div>`;
     }).join('');
 
-    return `<div id="gte-popup-body" style="padding:10px 10px 4px">${topStats}${situationBox}${cards}</div>`;
+    return `<div id="gte-popup-body" style="padding:10px 10px 6px">${hero}${adviceHtml}${roomHeader}${roomRows}</div>`;
   }
 
   /* ── mount ──────────────────────────────────────────────────── */
@@ -446,8 +383,8 @@
     }
 
     function _setupAc(inp, filterFn, onPick) {
-      inp.oninput = () => { const q = (inp.value||'').toLowerCase().trim(); q ? _openAc(inp, filterFn(q).slice(0,10), onPick) : _closeAc(); };
-      inp.onfocus = () => { const q = (inp.value||'').toLowerCase().trim(); if (q) _openAc(inp, filterFn(q).slice(0,10), onPick); };
+      inp.oninput = () => { const q=(inp.value||'').toLowerCase().trim(); q?_openAc(inp,filterFn(q).slice(0,10),onPick):_closeAc(); };
+      inp.onfocus = () => { const q=(inp.value||'').toLowerCase().trim(); if(q)_openAc(inp,filterFn(q).slice(0,10),onPick); };
       inp.onblur  = () => setTimeout(_closeAc, 160);
     }
 
@@ -457,9 +394,8 @@
         .filter(id => (id.startsWith('sensor.') || id.startsWith('input_number.')) &&
                       (nameOf(h,id).toLowerCase().includes(q) || id.toLowerCase().includes(q)))
         .map(id => {
-          const s    = h.states[id];
-          const unit = s?.attributes?.unit_of_measurement || '';
-          return { id, name: nameOf(h,id), st: s?.state + (unit ? ' '+unit : '') };
+          const s = h.states[id], unit = s?.attributes?.unit_of_measurement || '';
+          return { id, name: nameOf(h,id), st: s?.state + (unit?' '+unit:'') };
         })
         .sort((a,b) => a.name.localeCompare(b.name));
     }
@@ -539,7 +475,7 @@
 
           <div class="gtsec">Sensori media — chip (opz.)</div>
           <div style="padding:10px;border-radius:10px;background:rgba(56,189,248,.05);border:1px solid rgba(56,189,248,.18);margin-bottom:16px">
-            <div style="font-size:10px;color:#fff;margin-bottom:9px">Se impostati, la chip mostra il valore di questi sensori. Altrimenti usa min–max dai sensori singoli.</div>
+            <div style="font-size:10px;color:#fff;margin-bottom:9px">Se impostati, la chip mostra questi valori invece del range min–max delle stanze.</div>
             <div style="display:flex;flex-direction:column;gap:6px">
               <div style="display:flex;align-items:center;gap:6px">
                 <span style="${lbl9}">🌡 Temp.</span>
@@ -569,22 +505,22 @@
 
     function attach() {
       _closeAc();
-      const prevBody    = ov.querySelector('#gtcfg-body');
+      const prevBody = ov.querySelector('#gtcfg-body');
       const savedScroll = prevBody ? prevBody.scrollTop : 0;
-      const curLabel    = ov.querySelector('#gtcfg-label')?.value;
-      const curColor    = ov.querySelector('#gtcfg-color')?.value;
-      const curAvgT     = ov.querySelector('#gtcfg-avg-temp')?.value;
-      const curAvgH     = ov.querySelector('#gtcfg-avg-hum')?.value;
+      const curLabel = ov.querySelector('#gtcfg-label')?.value;
+      const curColor = ov.querySelector('#gtcfg-color')?.value;
+      const curAvgT  = ov.querySelector('#gtcfg-avg-temp')?.value;
+      const curAvgH  = ov.querySelector('#gtcfg-avg-hum')?.value;
 
       ov.innerHTML = renderForm();
       _firstRender = false;
 
       const nb = ov.querySelector('#gtcfg-body');
       if (nb && savedScroll > 0) nb.scrollTop = savedScroll;
-      if (curLabel !== undefined) { const f = ov.querySelector('#gtcfg-label');    if (f) f.value = curLabel; }
-      if (curColor !== undefined) { const f = ov.querySelector('#gtcfg-color');    if (f) f.value = curColor; }
-      if (curAvgT  !== undefined) { const f = ov.querySelector('#gtcfg-avg-temp'); if (f) f.value = curAvgT;  }
-      if (curAvgH  !== undefined) { const f = ov.querySelector('#gtcfg-avg-hum');  if (f) f.value = curAvgH;  }
+      if (curLabel !== undefined) { const f=ov.querySelector('#gtcfg-label');    if(f) f.value=curLabel; }
+      if (curColor !== undefined) { const f=ov.querySelector('#gtcfg-color');    if(f) f.value=curColor; }
+      if (curAvgT  !== undefined) { const f=ov.querySelector('#gtcfg-avg-temp'); if(f) f.value=curAvgT;  }
+      if (curAvgH  !== undefined) { const f=ov.querySelector('#gtcfg-avg-hum');  if(f) f.value=curAvgH;  }
 
       const avgTInp = ov.querySelector('#gtcfg-avg-temp');
       if (avgTInp) _setupAc(avgTInp, _sensorMatches, id => { avgTInp.value = id; });
@@ -593,12 +529,12 @@
 
       ov.querySelectorAll('[data-temp-idx]').forEach(inp => {
         const i = parseInt(inp.dataset.tempIdx);
-        _setupAc(inp, _sensorMatches, id => { ents[i].tempEntity = id; inp.value = id; attach(); });
+        _setupAc(inp, _sensorMatches, id => { ents[i].tempEntity=id; inp.value=id; attach(); });
         inp.onchange = () => { ents[i].tempEntity = inp.value.trim(); };
       });
       ov.querySelectorAll('[data-hum-idx]').forEach(inp => {
         const i = parseInt(inp.dataset.humIdx);
-        _setupAc(inp, _sensorMatches, id => { ents[i].humEntity = id; inp.value = id; });
+        _setupAc(inp, _sensorMatches, id => { ents[i].humEntity=id; inp.value=id; });
         inp.onchange = () => { ents[i].humEntity = inp.value.trim(); };
       });
       ov.querySelectorAll('[data-lbl-idx]').forEach(inp => {
@@ -619,9 +555,7 @@
       const addInp = ov.querySelector('#gtcfg-add');
       if (addInp) {
         _setupAc(addInp, _sensorMatches, (id, name) => {
-          if (!ents.find(e => e.tempEntity === id)) {
-            ents.push({ tempEntity: id, humEntity: '', label: name || '' });
-          }
+          if (!ents.find(e => e.tempEntity === id)) ents.push({ tempEntity:id, humEntity:'', label:name||'' });
           addInp.value = ''; attach();
         });
       }
@@ -637,8 +571,8 @@
           avgHumEntity:  (ov.querySelector('#gtcfg-avg-hum')?.value  || '').trim(),
           entities: ents.filter(e => e.tempEntity).map(e => ({
             tempEntity: e.tempEntity.trim(),
-            humEntity:  (e.humEntity || '').trim(),
-            label:      (e.label     || '').trim(),
+            humEntity:  (e.humEntity||'').trim(),
+            label:      (e.label||'').trim(),
           })),
         };
         closeOv();
@@ -655,8 +589,8 @@
     id: ID,
     name: 'Gruppo Temperatura',
     icon: '🌡️',
-    desc: 'Chip con media temp/umidità; popup con min/max, situazione, consigli e card per stanza.',
-    version: '1.3',
+    desc: 'Chip con media temp/umidità; popup weather-style con hero, consigli e righe stanza.',
+    version: '1.4',
     isDistintivo: true,
     defaultCfg: { label: 'Temperatura', color: '#38bdf8', avgTempEntity: '', avgHumEntity: '', entities: [] },
     chip, watchEntities, render, mount, update, configure,
@@ -666,5 +600,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-temperatura v1.3'); } catch(e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-temperatura v1.4'); } catch(e) {}
 })();

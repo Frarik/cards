@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.9.83 — 2026-07-11
+
+### feat(GruppoTemperatura): popup v1.4 — redesign completo stile weather widget
+
+- Hero card: temperatura grande (58px), glow radiale comfort, badge situazione, umidità accanto
+- Footer hero: min/max temp e min/max umidità come strip compatta (solo se >1 stanza)
+- Consigli come testo plain senza box/bordi (max 2 righe)
+- Stanze come righe orizzontali compatte con bordo sinistro colorato + badge comfort
+- Niente più sub-pannelli doppi né barre progress — design pulito e leggibile
+- Sensore singolo: hero mostra i valori diretti (non "media casa")
+
 ## 1.9.82 — 2026-07-11
 
 ### feat(GruppoTemperatura): popup v1.3 — niente refresh, min/max temp+umid, situazione+consigli
