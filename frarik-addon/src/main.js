@@ -3039,7 +3039,26 @@ function _ghStoreRenderCardsInstallate(q){
   const tile=(f)=>{
     const nm=f.name.replace(/\.(js|ya?ml)$/i,''); const enc=encodeURIComponent(f.name);
     let cardId=Object.keys(idFile).find(k=>idFile[k]===f.name)||null;
-    if(!cardId){const _fnId=f.name.replace(/\.js$/i,'');const _regE=window.FratechCardRegistry?.[_fnId];if(_regE&&!_regE._lovelace&&_regE.id===_fnId){cardId=_fnId;const _g2=_ghCfg();_g2.idFile=_g2.idFile||{};_g2.idFile[_fnId]=f.name;try{saveCfg();_haSaveCfg();}catch(e){}}}
+    if(!cardId){
+      const _fnId=f.name.replace(/\.js$/i,'');
+      let _regE=window.FratechCardRegistry?.[_fnId];
+      // fallback 2: eval dal code cache GitHub (card installata prima che idFile venisse settato)
+      if(!_regE && _ghCodeCache[f.sha]){
+        try{
+          const _bef=Object.assign({},window.FratechCardRegistry||{});
+          (0,eval)(_ghCodeCache[f.sha]);
+          const _td=Object.keys(window.FratechCardRegistry||{}).filter(_k=>_bef[_k]!==window.FratechCardRegistry[_k]);
+          if(_td.length) _regE=window.FratechCardRegistry[_td[0]];
+        }catch(e){}
+      }
+      if(_regE&&!_regE._lovelace&&_regE.id===_fnId){
+        cardId=_fnId;
+        const _g2=_ghCfg(); _g2.idFile=_g2.idFile||{}; _g2.idFile[_fnId]=f.name;
+        const _cc=_ghCodeCache[f.sha]||'';
+        try{ _jsStoreSave(_fnId,{id:_fnId,name:_regE.name||_fnId,icon:_regE.icon||'📦',version:_parseCardVersion(_cc)||'1.0',desc:_regE.desc||''},_cc,'github'); }catch(e){}
+        try{saveCfg();_haSaveCfg();}catch(e){}
+      }
+    }
     const verGH=_ghVerCache[f.sha]||g.fileVersions[f.name]||(cardId&&_curStoreVersion(cardId))||'';
     const inCurPage=!!(cardId&&usedInCurPage.has(cardId));
     const reg=cardId?window.FratechCardRegistry?.[cardId]:null;
