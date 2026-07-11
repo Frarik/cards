@@ -227,7 +227,7 @@
     if (el._gtPoll) return;
     el._gtPoll = setInterval(() => {
       if (!el.isConnected) { clearInterval(el._gtPoll); delete el._gtPoll; return; }
-      try { const h = H(); if (!h) return; el.innerHTML = render(cfg, h); } catch(e) {}
+      try { const h=H(); if(!h) return; const _sp=el.parentElement,_st=_sp?_sp.scrollTop:0; el.innerHTML=render(cfg,h); if(_sp&&_st>0)_sp.scrollTop=_st; } catch(e) {}
     }, 3000);
   }
 

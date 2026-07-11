@@ -469,10 +469,12 @@
       try {
         const h = H(); if (!h) return;
         const openPanels = new Set(el._openPanels || []);
+        const _sp=el.parentElement, _st=_sp?_sp.scrollTop:0;
         el.innerHTML = render(cfg, h);
         _mountHandlers(cfg, el);
         _restorePanels(el, openPanels);
         _syncTitle();
+        if(_sp&&_st>0) _sp.scrollTop=_st;
       } catch(e) {}
     }, 1500);
   }

@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.9.78 — 2026-07-11
+
+### fix(distintivi): scroll mobile su tutte le card — popup non salta più ogni 1.5s
+
+- Applicato fix salva/ripristina `scrollTop` a tutti i poll loop delle card:
+  GruppoLuci, GruppoClima, GruppoTapparelle, GruppoFinestre, GruppoPorte,
+  GruppoAllarme, GruppoTemperatura
+- GruppoBatterie aveva già il fix internamente (non modificata)
+- GruppoPrese già fixata in v1.9.77
+
 ## 1.9.77 — 2026-07-11
 
 ### fix: icon picker perde focus + popup prese scorre da solo su mobile

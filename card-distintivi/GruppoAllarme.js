@@ -440,8 +440,10 @@
         if (ae && isArmed(stateOf(h, ae)) && el._bypassed?.size > 0) {
           el._bypassed.clear();
         }
+        const _sp=el.parentElement, _st=_sp?_sp.scrollTop:0;
         el.innerHTML = render(cfg, h, el._bypassed);
         _mountHandlers(cfg, el);
+        if(_sp&&_st>0) _sp.scrollTop=_st;
       } catch (e) {}
     }, 1500);
   }
