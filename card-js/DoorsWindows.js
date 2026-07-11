@@ -67,7 +67,7 @@
     return `
 #${rid}.dwc-root{position:relative;width:100%;height:100%;min-height:120px;border-radius:18px;overflow:auto;padding:14px 16px;box-sizing:border-box;
   font-family:var(--primary-font-family,'Inter',system-ui,sans-serif);color:#e8ebf5;display:flex;flex-direction:column;gap:12px;
-  background:linear-gradient(150deg,#0c1322 0%,#0a0f1c 60%,#0c1626 100%);border:1px solid rgba(99,102,241,.22);box-shadow:0 10px 40px rgba(0,0,0,.45);}
+  background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border:1px solid rgba(56,189,248,.15);box-shadow:0 10px 40px rgba(0,0,0,.45);}
 #${rid} .dwc-hdr{display:flex;align-items:center;gap:9px;}
 #${rid} .dwc-ico{font-size:18px;}
 #${rid} .dwc-tit{flex:1;font-size:14px;font-weight:800;}
@@ -116,7 +116,7 @@
           </div>
           <textarea id="dw-ents" style="width:100%;height:160px;border-radius:10px;background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.15);font-size:12px;font-family:monospace;padding:10px;resize:vertical;box-sizing:border-box">${cur.join('\n')}</textarea>
           <div style="display:flex;gap:8px;margin-top:4px">
-            <button id="dw-auto" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(99,102,241,.18);color:#a5b4fc">↻ Auto</button>
+            <button id="dw-auto" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(56,189,248,.18);color:#38bdf8">↻ Auto</button>
             <button id="dw-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button>
             <button id="dw-save" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#fbbf24;color:#0a0816">Salva</button>
           </div>

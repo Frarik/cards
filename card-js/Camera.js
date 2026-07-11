@@ -283,9 +283,9 @@
     el.querySelectorAll('[data-cam-idx]').forEach(function(thumb) {
       var i = parseInt(thumb.getAttribute('data-cam-idx'));
       var active = (i === newIdx);
-      thumb.style.outline       = '2px solid '+(active ? '#818cf8' : 'transparent');
+      thumb.style.outline       = '2px solid '+(active ? '#38bdf8' : 'transparent');
       thumb.style.outlineOffset = '1px';
-      thumb.style.boxShadow     = active ? '0 0 10px rgba(129,140,248,.45)' : '0 2px 8px rgba(0,0,0,.55)';
+      thumb.style.boxShadow     = active ? '0 0 10px rgba(56,189,248,.45)' : '0 2px 8px rgba(0,0,0,.55)';
     });
   }
 
@@ -396,8 +396,8 @@
           return '<div data-cam-idx="'+i+'" data-action="selcam" data-val="'+i+'" style="'
             +'flex:1;'+(multiRow?'min-width:80px;':'')+'cursor:pointer;position:relative;'
             +'border-radius:8px;overflow:hidden;background:#050810;'
-            +'outline:2px solid '+(active?'#818cf8':'transparent')+';outline-offset:1px;'
-            +'box-shadow:'+(active?'0 0 10px rgba(129,140,248,.45)':'0 2px 8px rgba(0,0,0,.55)')+'">'
+            +'outline:2px solid '+(active?'#38bdf8':'transparent')+';outline-offset:1px;'
+            +'box-shadow:'+(active?'0 0 10px rgba(56,189,248,.45)':'0 2px 8px rgba(0,0,0,.55)')+'">'
             +'<div style="padding-top:56.25%;position:relative"><div style="position:absolute;inset:0">'
               +(tUrl
                 ? '<img data-cam-thumb="'+i+'" src="'+eh(tUrl)+'" style="width:100%;height:100%;object-fit:cover;display:block'+(unavail?';opacity:.25':'')+'" onerror="this.style.opacity=\'.05\'" />'
@@ -462,7 +462,7 @@
     function buildRow(cam, i) {
       return '<div data-cam-row="'+i+'" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:11px;padding:11px 13px">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">'
-          +'<span style="font-size:11px;font-weight:800;color:#818cf8">📷 Telecamera '+(i+1)+'</span>'
+          +'<span style="font-size:11px;font-weight:800;color:#38bdf8">📷 Telecamera '+(i+1)+'</span>'
           +'<button data-action="delcam" data-idx="'+i+'" style="background:rgba(239,68,68,.18);border:1px solid rgba(239,68,68,.3);color:#fca5a5;border-radius:6px;padding:2px 8px;font-size:10px;cursor:pointer">🗑 Rimuovi</button>'
         +'</div>'
         +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
@@ -487,7 +487,7 @@
       return '<div id="cam-cfg-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">'
           +(cams.length ? cams.map(buildRow).join('') : '<div style="font-size:12px;color:#fff;text-align:center;padding:16px">Nessuna telecamera — clicca "Aggiungi" per iniziare</div>')
         +'</div>'
-        +'<button id="cam-cfg-add" style="width:100%;padding:9px;border-radius:9px;border:1px dashed rgba(129,140,248,.4);background:rgba(129,140,248,.07);color:#818cf8;cursor:pointer;font-size:12px;font-weight:700;margin-bottom:14px">+ Aggiungi telecamera</button>'
+        +'<button id="cam-cfg-add" style="width:100%;padding:9px;border-radius:9px;border:1px dashed rgba(56,189,248,.4);background:rgba(56,189,248,.07);color:#38bdf8;cursor:pointer;font-size:12px;font-weight:700;margin-bottom:14px">+ Aggiungi telecamera</button>'
         +'<div style="display:flex;gap:8px">'
           +'<button id="cam-cfg-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button>'
           +'<button id="cam-cfg-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#fbbf24;color:#0a0816">Salva</button>'

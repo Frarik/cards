@@ -1,4 +1,4 @@
-/* frarik-version: 2.4 */
+/* frarik-version: 2.5 */
 (function () {
   'use strict';
 
@@ -8,8 +8,8 @@
   function isOn(h, id) { return !!(h && h.states && h.states[id] && h.states[id].state === 'on'); }
   function callSvc(domain, service, data) { try { var h = H(); if (h && h.callService) h.callService(domain, service, data || {}); } catch (e) {} }
 
-  var ACC = '99,102,241';
-  var ACCH = '#818cf8';
+  var ACC = '56,189,248';
+  var ACCH = '#38bdf8';
 
   /* ──────────────────────────── SVG DATABASE ──────────────────────── */
   function dbSVG(busy) {
@@ -369,7 +369,7 @@
       + '<input type="number" id="dc-dm-'+rid2+'" style="'+iBase+';width:90px;padding:6px 8px;text-align:right;font-family:system-ui" value="'+dimMax+'" min="1" max="1000000" step="100">'
       + '</div>'
       + pSec('⚙ Repack Manuale')
-      + '<button id="dc-repack-'+rid2+'" style="width:100%;padding:12px;border-radius:11px;border:none;cursor:pointer;font-size:13px;font-weight:800;color:#fff;background:linear-gradient(135deg,#6366f1,#4f46e5);font-family:system-ui;margin-top:4px">🔄 Esegui Repack Ora</button>'
+      + '<button id="dc-repack-'+rid2+'" style="width:100%;padding:12px;border-radius:11px;border:none;cursor:pointer;font-size:13px;font-weight:800;color:#fff;background:linear-gradient(135deg,#38bdf8,#0ea5e9);font-family:system-ui;margin-top:4px">🔄 Esegui Repack Ora</button>'
       + '<button id="dc-save-'+rid2+'" style="width:100%;margin-top:8px;padding:13px;border-radius:12px;background:rgba('+ACC+',.15);border:1px solid rgba('+ACC+',.4);color:'+ACCH+';font-size:14px;font-weight:700;cursor:pointer;font-family:system-ui">💾 Salva impostazioni</button>';
 
     var ov = mkOv(popShell('⚙', ACC, 'Impostazioni', 'Database HA', rid2+'x', content), rid2+'x');

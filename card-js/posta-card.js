@@ -1,4 +1,4 @@
-/* frarik-version: 4.2 */
+/* frarik-version: 4.3 */
 /* Centro Controllo Posta — Frarik card standalone */
 (function(){
 'use strict';
@@ -557,11 +557,11 @@ function _acHide(){ document.getElementById('__frk_posta_ac__')?.remove(); }
    ══════════════════════════════════════════════════════════════ */
 
 function _svgEnvelope(count, isOpen){
-  const acc=isOpen?'#34d399':count>0?'#22d3ee':'rgba(255,255,255,.18)';
-  const bg=isOpen?'rgba(52,211,153,.09)':count>0?'rgba(34,211,238,.07)':'rgba(255,255,255,.03)';
+  const acc=isOpen?'#34d399':count>0?'#38bdf8':'rgba(255,255,255,.18)';
+  const bg=isOpen?'rgba(56,189,248,.09)':count>0?'rgba(56,189,248,.07)':'rgba(255,255,255,.03)';
   const flap=isOpen?`<path d="M2 2 L50 32 L98 2" fill="${acc}" fill-opacity=".18" stroke="${acc}" stroke-width="1.4" stroke-opacity=".7" stroke-linejoin="round"/>`:
     `<path d="M2 5 L50 34 L98 5" stroke="${acc}" stroke-width="1.5" stroke-opacity=".6" fill="none" stroke-linejoin="round"/>`;
-  const badge=count>0?`<circle cx="82" cy="16" r="13" fill="${count>0?'#22d3ee':'rgba(255,255,255,.12)'}"/><text x="82" y="20" text-anchor="middle" fill="#06080f" font-size="${count>9?'9':'11'}" font-weight="900" font-family="system-ui,sans-serif">${count>99?'99+':count}</text>`:'';
+  const badge=count>0?`<circle cx="82" cy="16" r="13" fill="${count>0?'#38bdf8':'rgba(255,255,255,.12)'}"/><text x="82" y="20" text-anchor="middle" fill="#060d14" font-size="${count>9?'9':'11'}" font-weight="900" font-family="system-ui,sans-serif">${count>99?'99+':count}</text>`:'';
   return `<svg viewBox="0 0 100 68" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
     <rect x="1" y="1" width="98" height="66" rx="8" fill="${bg}" stroke="${acc}" stroke-width="1.5" stroke-opacity=".5"/>
     <path d="M1 8 L1 67 L37 40 Z" fill="${acc}" fill-opacity=".04"/>
@@ -763,7 +763,7 @@ if(!customElements.get('posta-card')){
       return `<style>${this._css()}</style>
       <div class="card">
         <div class="hdr">
-          <div class="hdr-icon-wrap"><svg viewBox="0 0 24 24" fill="none" style="width:18px;height:18px"><path d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="#22d3ee" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="hdr-icon-wrap"><svg viewBox="0 0 24 24" fill="none" style="width:18px;height:18px"><path d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <div class="hdr-tit">${this._c.label||'Centro Posta'}</div>
         </div>
         <div class="ni">
@@ -787,7 +787,7 @@ if(!customElements.get('posta-card')){
       const mEnd=this._getTime('input_datetime.frarik_posta_notifiche_media_fine')||'22:00';
       const pStart=this._getTime('input_datetime.frarik_posta_notifiche_push_inizio')||'07:00';
       const pEnd=this._getTime('input_datetime.frarik_posta_notifiche_push_fine')||'23:00';
-      const acc=isOpen?'#34d399':today>0?'#22d3ee':'rgba(255,255,255,.2)';
+      const acc=isOpen?'#34d399':today>0?'#38bdf8':'rgba(255,255,255,.2)';
 
       const tgl=on=>`<div class="tgl${on?' on':''}"><div class="tgl-k"></div></div>`;
 
@@ -985,15 +985,15 @@ if(!customElements.get('posta-card')){
 @keyframes fade-up{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.7;transform:scale(.96)}}
 
-.card{height:100%;display:flex;flex-direction:column;background:linear-gradient(155deg,#06080f 0%,#080c14 55%,#06090e 100%);border-radius:16px;overflow:hidden;position:relative}
+.card{height:100%;display:flex;flex-direction:column;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}
 .card::before{content:'';position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(56,189,248,.08) 0%,transparent 65%);pointer-events:none}
 
 /* header */
 .hdr{display:flex;align-items:center;gap:9px;padding:12px 15px 10px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}
-.hdr-icon-wrap{width:28px;height:28px;border-radius:8px;background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hdr-icon-wrap{width:28px;height:28px;border-radius:8px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .hdr-tit{flex:1;font-size:14px;font-weight:800;color:#fff;letter-spacing:.2px}
-.hdr-pill{font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;background:rgba(34,211,238,.12);border:1px solid rgba(34,211,238,.3);color:#22d3ee;letter-spacing:.2px;animation:fade-up .2s ease}
-.hdr-pill.hdr-pill-open{background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.3);color:#34d399}
+.hdr-pill{font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3);color:#38bdf8;letter-spacing:.2px;animation:fade-up .2s ease}
+.hdr-pill.hdr-pill-open{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.3);color:#34d399}
 .hdr-dot-wrap{width:8px;height:8px;display:flex;align-items:center;justify-content:center}
 .hdr-dot-empty{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.12)}
 
@@ -1006,11 +1006,11 @@ if(!customElements.get('posta-card')){
 .hero-env{flex:0 0 42%;max-width:120px;aspect-ratio:100/68}
 .hero-info{flex:1;display:flex;flex-direction:column;gap:2px}
 .hero-n{font-size:54px;font-weight:900;color:rgba(255,255,255,.14);line-height:1;letter-spacing:-3px;transition:color .35s,text-shadow .35s}
-.hero-n.hero-n-act{color:#22d3ee;text-shadow:0 0 28px rgba(34,211,238,.35)}
-.hero-n.hero-n-open{color:#34d399;text-shadow:0 0 28px rgba(52,211,153,.35)}
+.hero-n.hero-n-act{color:#38bdf8;text-shadow:0 0 28px rgba(56,189,248,.35)}
+.hero-n.hero-n-open{color:#34d399;text-shadow:0 0 28px rgba(56,189,248,.35)}
 .hero-lbl{font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.7px;margin-top:1px}
 .hero-last{display:flex;align-items:center;gap:5px;margin-top:8px;padding:5px 9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;font-size:11px;color:rgba(255,255,255,.55);font-weight:600;line-height:1.3;animation:fade-up .2s ease}
-.open-pill{display:inline-flex;align-items:center;gap:4px;margin-top:6px;padding:4px 9px;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.25);border-radius:16px;font-size:10px;color:#34d399;font-weight:800;letter-spacing:.2px;animation:pulse 2.5s ease infinite}
+.open-pill{display:inline-flex;align-items:center;gap:4px;margin-top:6px;padding:4px 9px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.25);border-radius:18px;font-size:10px;color:#34d399;font-weight:800;letter-spacing:.2px;animation:pulse 2.5s ease infinite}
 
 /* section */
 .sec{padding:0 15px 10px}
@@ -1022,12 +1022,12 @@ if(!customElements.get('posta-card')){
 .tl{display:flex;flex-direction:column}
 .tl-row{display:flex;align-items:flex-start;gap:10px;padding:0 0 0 2px;animation:fade-up .18s ease both}
 .tl-line-wrap{display:flex;flex-direction:column;align-items:center;width:14px;flex-shrink:0;padding-top:3px}
-.tl-dot{width:8px;height:8px;border-radius:50%;background:rgba(34,211,238,.35);border:1.5px solid rgba(34,211,238,.55);flex-shrink:0;transition:all .3s}
-.tl-dot.tl-dot-last{background:#22d3ee;box-shadow:0 0 8px rgba(34,211,238,.6);border-color:#22d3ee;animation:pulse 2.5s ease infinite}
-.tl-line{flex:1;width:1.5px;background:linear-gradient(to bottom,rgba(34,211,238,.25),rgba(34,211,238,.08));min-height:14px;margin-top:2px}
+.tl-dot{width:8px;height:8px;border-radius:50%;background:rgba(56,189,248,.35);border:1.5px solid rgba(56,189,248,.55);flex-shrink:0;transition:all .3s}
+.tl-dot.tl-dot-last{background:#38bdf8;box-shadow:0 0 8px rgba(56,189,248,.6);border-color:#38bdf8;animation:pulse 2.5s ease infinite}
+.tl-line{flex:1;width:1.5px;background:linear-gradient(to bottom,rgba(56,189,248,.25),rgba(56,189,248,.08));min-height:14px;margin-top:2px}
 .tl-time{flex:1;font-size:17px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:.5px;line-height:1;padding-top:2px;padding-bottom:14px}
-.tl-last .tl-time{color:#22d3ee;padding-bottom:6px}
-.tl-badge{align-self:flex-start;margin-top:3px;font-size:9px;font-weight:800;padding:2px 7px;border-radius:10px;background:rgba(34,211,238,.12);border:1px solid rgba(34,211,238,.25);color:#22d3ee;text-transform:uppercase;letter-spacing:.5px}
+.tl-last .tl-time{color:#38bdf8;padding-bottom:6px}
+.tl-badge{align-self:flex-start;margin-top:3px;font-size:9px;font-weight:800;padding:2px 7px;border-radius:10px;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.25);color:#38bdf8;text-transform:uppercase;letter-spacing:.5px}
 .tl-empty{padding:13px;text-align:center;font-size:11px;color:rgba(255,255,255,.2);background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.06);border-radius:10px}
 
 /* stats */
@@ -1056,7 +1056,7 @@ if(!customElements.get('posta-card')){
 
 /* toggle */
 .tgl{width:40px;height:24px;border-radius:12px;background:rgba(255,255,255,.12);position:relative;transition:background .2s;flex-shrink:0}
-.tgl.on{background:#22d3ee}
+.tgl.on{background:#38bdf8}
 .tgl-k{width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform .18s;box-shadow:0 2px 4px rgba(0,0,0,.4)}
 .tgl.on .tgl-k{transform:translateX(16px)}
 
@@ -1064,7 +1064,7 @@ if(!customElements.get('posta-card')){
 .time-row{display:flex;align-items:center;gap:6px;padding:7px 11px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:10px}
 .tl-lbl{font-size:10px;color:rgba(255,255,255,.38);min-width:26px}
 .ti{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:#fff;font-size:12px;font-weight:700;padding:4px 6px;font-family:system-ui,sans-serif;appearance:none;text-align:center;outline:none}
-.ti:focus{border-color:rgba(34,211,238,.5);background:rgba(34,211,238,.07)}
+.ti:focus{border-color:rgba(56,189,248,.5);background:rgba(56,189,248,.07)}
 
 /* reset */
 .rst-row{display:flex;gap:6px}
@@ -1076,7 +1076,7 @@ if(!customElements.get('posta-card')){
 .ni-env{width:80px;height:54px;opacity:.4}
 .ni-title{font-size:16px;font-weight:900;color:#fff}
 .ni-sub{font-size:12px;color:rgba(255,255,255,.4);line-height:1.8;max-width:240px}
-.ni-sub strong{color:#22d3ee;opacity:1}
+.ni-sub strong{color:#38bdf8;opacity:1}
 `;}
   };
   customElements.define('posta-card',PostaCard);

@@ -640,7 +640,7 @@
                     <span style="flex:1;font-size:9px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(e.energy_entity)}</span>
                     <button data-rmenergy="${i}" style="font-size:8px;padding:1px 5px;border-radius:3px;border:1px solid rgba(248,113,113,.3);background:rgba(248,113,113,.1);color:#f87171;cursor:pointer;flex-shrink:0">✕</button>
                   </div>`
-                : `<input data-energy-idx="${i}" placeholder="sensor.presa_oggi" value="${eh(e.energy_entity||'')}" style="width:100%;box-sizing:border-box;padding:4px 7px;border-radius:6px;border:1px solid rgba(99,102,241,.22);background:rgba(99,102,241,.05);color:#fff;font-size:9px;outline:none;font-family:inherit">`
+                : `<input data-energy-idx="${i}" placeholder="sensor.presa_oggi" value="${eh(e.energy_entity||'')}" style="width:100%;box-sizing:border-box;padding:4px 7px;border-radius:6px;border:1px solid rgba(56,189,248,.22);background:rgba(56,189,248,.05);color:#fff;font-size:9px;outline:none;font-family:inherit">`
               }
             </div>
           </div>`;
@@ -659,7 +659,7 @@
               ${hasAuto?`<div style="display:flex;align-items:center;gap:6px">
                 <span style="flex:1;font-size:10px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(e.automation)}</span>
                 <button data-rmauto="${i}" style="font-size:9px;padding:2px 6px;border-radius:4px;border:1px solid rgba(248,113,113,.3);background:rgba(248,113,113,.1);color:#f87171;cursor:pointer">✕</button>
-              </div>`:`<input data-auto-idx="${i}" placeholder="🔍 Cerca automazione…" value="${eh(e.automation||'')}" style="width:100%;box-sizing:border-box;padding:6px 9px;border-radius:7px;border:1px solid rgba(99,102,241,.3);background:rgba(99,102,241,.07);color:#fff;font-size:11px;outline:none;font-family:inherit">`}
+              </div>`:`<input data-auto-idx="${i}" placeholder="🔍 Cerca automazione…" value="${eh(e.automation||'')}" style="width:100%;box-sizing:border-box;padding:6px 9px;border-radius:7px;border:1px solid rgba(56,189,248,.3);background:rgba(56,189,248,.07);color:#fff;font-size:11px;outline:none;font-family:inherit">`}
             </div>
           </div>`:'';
         const outletIcon = e.icon ? iconHtml(e.icon, 15) : (st.unavail?'⚠️':st.unknown?'❓':'🔌');
@@ -715,7 +715,7 @@
           <div style="height:16px"></div>
         </div>
         <div style="display:flex;gap:8px;padding:12px 14px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0">
-          <button id="gpcfg-save" style="flex:1;padding:11px;border-radius:11px;border:none;background:#6366f1;color:#fff;font-weight:800;cursor:pointer;font-size:13px">💾 Salva</button>
+          <button id="gpcfg-save" style="flex:1;padding:11px;border-radius:11px;border:none;background:#38bdf8;color:#fff;font-weight:800;cursor:pointer;font-size:13px">💾 Salva</button>
           <button id="gpcfg-cancel" style="flex:0 0 80px;padding:11px;border-radius:11px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);color:#fff;cursor:pointer;font-size:13px">Annulla</button>
         </div>
       </div>`;
