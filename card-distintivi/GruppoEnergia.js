@@ -1,4 +1,4 @@
-/* frarik-version: 3.4 */
+/* frarik-version: 3.5 */
 /**
  * GruppoEnergia.js — Distintivo FratechStore v3.0
  * Flow shimmer · tralicio img data-URI · nodi uguali · speed reattiva
@@ -131,8 +131,13 @@
 
   /* ── grafico SVG compatto ── */
   function _chart(pts, maxW, col) {
-    const W = 300, H = 120;
-    const noData = `<div style="height:${H}px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff">Nessun dato storico disponibile</div>`;
+    const W = 400, H = 100;
+    // contenitore responsivo: padding-bottom % → altezza proporzionale alla larghezza
+    const _wrap = inner =>
+      `<div style="position:relative;width:100%;padding-bottom:26%;min-height:120px">${inner}</div>`;
+    const noData = _wrap(
+      `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff">Nessun dato storico disponibile</div>`
+    );
     if (!pts || pts.length < 2) return noData;
     try {
       const now   = Date.now();
@@ -144,25 +149,25 @@
       const area = `M ${line} L ${xf(pts[pts.length - 1].t).toFixed(1)},${H} L ${xf(pts[0].t).toFixed(1)},${H} Z`;
       const thr  = [{ r: .50, c: '#4ade80' }, { r: .75, c: '#facc15' }, { r: .90, c: '#f97316' }]
         .filter(t => maxV > maxW * t.r)
-        .map(t => { const y = yf(maxW * t.r).toFixed(1); return `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="${t.c}" stroke-width="1" stroke-dasharray="4,3" opacity=".4"/>`; })
+        .map(t => { const y = yf(maxW * t.r).toFixed(1); return `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="${t.c}" stroke-width="1" stroke-dasharray="5,4" opacity=".4"/>`; })
         .join('');
       const pk  = pts.reduce((a, b) => b.v > a.v ? b : a);
       const gid = 'eg' + col.replace('#', '');
       const labels = [0, 3, 6, 9, 12, 15, 18, 21].map(hr => {
         const d = new Date(); d.setHours(hr, 0, 0, 0);
-        const x = xf(+d); if (x < 10 || x > W - 10) return '';
-        return `<text x="${x.toFixed(1)}" y="${H + 15}" text-anchor="middle" fill="rgba(255,255,255,.7)" font-size="10" font-family="system-ui,sans-serif">${String(hr).padStart(2, '0')}:00</text>`;
+        const x = xf(+d); if (x < 14 || x > W - 14) return '';
+        return `<text x="${x.toFixed(1)}" y="${H + 16}" text-anchor="middle" fill="rgba(255,255,255,.65)" font-size="12" font-family="system-ui,sans-serif">${String(hr).padStart(2, '0')}:00</text>`;
       }).join('');
-      return `<svg width="100%" height="${H + 22}" viewBox="0 0 ${W} ${H + 22}" preserveAspectRatio="none" style="display:block">
+      return _wrap(`<svg style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 ${W} ${H + 22}" preserveAspectRatio="none">
         <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stop-color="${col}" stop-opacity=".45"/><stop offset="100%" stop-color="${col}" stop-opacity=".02"/>
         </linearGradient></defs>
         ${thr}
         <path d="${area}" fill="url(#${gid})"/>
-        <path d="M ${line}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-        <circle cx="${xf(pk.t).toFixed(1)}" cy="${yf(pk.v).toFixed(1)}" r="4" fill="${col}" stroke="rgba(0,0,0,.4)" stroke-width="1.5"/>
+        <path d="M ${line}" fill="none" stroke="${col}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="${xf(pk.t).toFixed(1)}" cy="${yf(pk.v).toFixed(1)}" r="4.5" fill="${col}" stroke="rgba(0,0,0,.5)" stroke-width="1.5"/>
         ${labels}
-      </svg>`;
+      </svg>`);
     } catch (e) { return noData; }
   }
 
@@ -319,7 +324,9 @@
       <!-- GRAFICO -->
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#fff;margin-bottom:8px">Ultime 24 ore</div>
       <div class="e-chart" style="margin:0 -14px;padding-bottom:4px">
-        <div style="height:142px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff">⏳ Caricamento…</div>
+        <div style="position:relative;width:100%;padding-bottom:26%;min-height:120px">
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff">⏳ Caricamento…</div>
+        </div>
       </div>
     </div>`;
   }
@@ -648,7 +655,7 @@
   /* ════════════════════════════════════════ REGISTRAZIONE ══ */
   const CARD = {
     id: ID, name: 'Gruppo Energia', icon: '⚡', desc: '',
-    version: '3.4', isDistintivo: true,
+    version: '3.5', isDistintivo: true,
     defaultCfg: { label: 'Energia', entity: '', maxKw: 3, priceKwh: 0, alertKw: 0, solarEntity: '', kwhEntity: '' },
     chip, watchEntities, render, mount, update, configure, preview,
   };
@@ -656,5 +663,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v3.4'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v3.5'); } catch (e) {}
 })();
