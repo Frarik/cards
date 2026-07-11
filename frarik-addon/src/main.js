@@ -2211,7 +2211,8 @@ function _ghcLivePrev(host, cardId){
     } else {
       // Card JS frarik con render() + mount() (pattern legacy — NON usa customElements)
       const existingCard=(cfg.pages||[]).flatMap(p=>(p.cards||[])).find(c=>c.type==='js-custom'&&c.jsCardId===cardId&&c.id);
-      const previewCard=existingCard||{id:'__prev__',type:'js-custom',jsCardId:reg.id||cardId,label:reg.name||cardId,icon:reg.icon||'📦',color:'#818cf8',entity:'',colSpan:reg.colSpan||2,rowSpan:reg.rowSpan||2};
+      const existingBadge=(cfg.pages||[]).flatMap(p=>(p.headerBadges||[])).find(b=>b.jsCardId===cardId);
+      const previewCard=existingCard||existingBadge||{id:'__prev__',type:'js-custom',jsCardId:reg.id||cardId,label:reg.name||cardId,icon:reg.icon||'📦',color:'#818cf8',entity:'',colSpan:reg.colSpan||2,rowSpan:reg.rowSpan||2};
       const html=reg.render?reg.render(previewCard,hass):'';
       if(!html){ host.innerHTML=_ghcPrevPh(reg.icon||'📦', reg.name||cardId); return; }
       const wrap=document.createElement('div');
@@ -2449,13 +2450,12 @@ async function _ghsPreviewCard(enc){
     const _prevCardId=(_installRes?.newCards&&_installRes.newCards[0])||null;
     const _prevReg=_prevCardId?window.FratechCardRegistry?.[_prevCardId]:null;
     if(_prevReg&&!_prevReg._lovelace){
-      const _prevHass=_haHassObj()||_createMockHass();
-      const _prevCfg={id:'__preview__',type:'js-custom',jsCardId:_prevReg.id,label:_prevReg.name||nm,icon:_prevReg.icon||'📦',color:'#818cf8',entity:'',colSpan:2,rowSpan:2};
       try{
-        const _prevHtml=_prevReg.render?_prevReg.render(_prevCfg,_prevHass):'';
+        const _prevHtml=typeof _prevReg.preview==='function'
+          ?_prevReg.preview()
+          :(_prevReg.render?_prevReg.render({id:'__preview__',type:'js-custom',jsCardId:_prevReg.id,label:_prevReg.name||nm,icon:_prevReg.icon||'📦',color:'#818cf8',entity:'',colSpan:2,rowSpan:2},_haHassObj()||_createMockHass()):'');
         if(_prevHtml){
           wrap.innerHTML=`<div style="position:relative;width:100%;min-height:160px">${_prevHtml}</div>`;
-          if(typeof _prevReg.mount==='function') try{ _prevReg.mount(_prevCfg,_prevHass,wrap.firstElementChild); }catch(_){}
           return;
         }
       }catch(_){}

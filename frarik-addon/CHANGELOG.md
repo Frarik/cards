@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.9.94 — 2026-07-11
+
+### fix(Store): anteprime distintivi installati usano config reale dell'utente
+
+- `_ghcLivePrev`: cerca la config anche in `headerBadges` (dove vivono i distintivi) oltre che in `cards` — prima passava sempre una config vuota e i distintivi mostravano "Nessuna entità configurata"
+- bump 1.9.93 → 1.9.94
+
 ## 1.9.93 — 2026-07-11
 
 ### redesign(GruppoBatterie): popup colonna singola mobile-friendly
