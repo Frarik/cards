@@ -1745,8 +1745,13 @@ let _ghIconCache={};  // sha → icona estratta dal file
 let _ghCodeCache={};  // sha → codice sorgente completo (per preview dinamica)
 let _ghPkgCache={};   // sha → {check, id, ver, file} — info PKG estratta dal file JS
 function _parseCardIcon(code){
-  const m=String(code||'').match(/\bicon\s*:\s*['"`]([^'"`\n]{1,60})['"`]/);
-  return m?m[1].trim():'';
+  const re=/\bicon\s*:\s*['"`]([^'"`\n]{1,60})['"`]/g;
+  let m;
+  while((m=re.exec(String(code||'')))!==null){
+    const v=m[1].trim();
+    if(v&&!v.startsWith('<')) return v;
+  }
+  return '';
 }
 function _ghcSmartIcon(name){
   const n=(name||'').toLowerCase();
@@ -2434,13 +2439,29 @@ async function _ghsPreviewCard(enc){
   if(!code){ wrap.innerHTML='<div style="padding:60px 16px;text-align:center;color:rgba(255,255,255,.4);font-size:12px">⚠️ Impossibile caricare il codice</div>'; return; }
   // Registra la card e ottieni il tag name
   window.FratechCardRegistry=window.FratechCardRegistry||{};
-  let tagName=null;
+  let tagName=null, _installRes=null;
   try{
-    const res=_installCardCode(code);
-    tagName=res?.tags?.[0]||null;
+    _installRes=_installCardCode(code);
+    tagName=_installRes?.tags?.[0]||null;
     if(!tagName){ const tm=code.match(/(?:window\.)?customElements\.(?:define|get)\s*\(\s*['"]([a-z][a-z0-9-]*)['"]/); tagName=tm?.[1]||null; }
   }catch(e){ const tm=code.match(/(?:window\.)?customElements\.(?:define|get)\s*\(\s*['"]([a-z][a-z0-9-]*)['"]/); tagName=tm?.[1]||null; }
-  if(!tagName||!customElements.get(tagName)){ wrap.innerHTML='<div style="padding:60px 16px;text-align:center;color:rgba(255,255,255,.4);font-size:12px">⚠️ Anteprima non disponibile per questa card</div>'; return; }
+  if(!tagName||!customElements.get(tagName)){
+    const _prevCardId=(_installRes?.newCards&&_installRes.newCards[0])||null;
+    const _prevReg=_prevCardId?window.FratechCardRegistry?.[_prevCardId]:null;
+    if(_prevReg&&!_prevReg._lovelace){
+      const _prevHass=_haHassObj()||_createMockHass();
+      const _prevCfg={id:'__preview__',type:'js-custom',jsCardId:_prevReg.id,label:_prevReg.name||nm,icon:_prevReg.icon||'📦',color:'#818cf8',entity:'',colSpan:2,rowSpan:2};
+      try{
+        const _prevHtml=_prevReg.render?_prevReg.render(_prevCfg,_prevHass):'';
+        if(_prevHtml){
+          wrap.innerHTML=`<div style="position:relative;width:100%;min-height:160px">${_prevHtml}</div>`;
+          if(typeof _prevReg.mount==='function') try{ _prevReg.mount(_prevCfg,_prevHass,wrap.firstElementChild); }catch(_){}
+          return;
+        }
+      }catch(_){}
+    }
+    wrap.innerHTML='<div style="padding:60px 16px;text-align:center;color:rgba(255,255,255,.4);font-size:12px">⚠️ Anteprima non disponibile per questa card</div>'; return;
+  }
   // Usa hass reale — garantisce che bolletta, person e qualsiasi card funzioni con i dati veri
   const hass=_haHassObj()||_createMockHass();
   // Istanzia la card

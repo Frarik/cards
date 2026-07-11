@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.91 — 2026-07-11
+
+### fix(Store): icona e anteprima per distintivi non installati
+
+- `_parseCardIcon`: salta i valori icon che iniziano con `<` (HTML), evita di leggere l'icona HTML del chip invece di quella del CARD meta
+- `_ghsPreviewCard`: gestisce i distinctivi Frarik-native (IIFE / FratechCardRegistry) usando render+mount invece di customElements — prima mostrava sempre "Anteprima non disponibile"
+- bump 1.9.90 → 1.9.91
+
 ## 1.9.90 — 2026-07-11
 
 ### fix(GruppoTemperatura): hero — simboli ° e % in superscript (flex-start)
