@@ -1,6 +1,6 @@
-/* frarik-version: 2.2 */
+/* frarik-version: 2.3 */
 /**
- * GruppoAllarme.js — Distintivo FratechStore v2.2
+ * GruppoAllarme.js — Distintivo FratechStore v2.3
  * Chip stato allarme Alarmo + popup sensori/bypass + overlay triggered automatico
  *
  * v2.2: fix bypass — il bypass non viene più azzerato quando l'allarme si arma,
@@ -432,14 +432,19 @@
     if (h0) _updateOverlay(cfg, h0);
 
     if (el._caPoll) return;
+    el._prevAlarmState = ae ? stateOf(liveH(rawHass), ae) : 'unknown';
     el._caPoll = setInterval(() => {
       if (!el.isConnected) { clearInterval(el._caPoll); delete el._caPoll; return; }
       try {
         const h = H(); if (!h) return;
         _updateOverlay(cfg, h);
-        /* azzera bypass solo quando l'allarme torna disarmato */
-        if (ae && stateOf(h, ae) === 'disarmed' && el._bypassed?.size > 0) {
-          el._bypassed.clear();
+        /* azzera bypass SOLO al passaggio armato → disarmato (non mentre è già disarmato) */
+        if (ae) {
+          const cur = stateOf(h, ae);
+          if (isArmed(el._prevAlarmState) && cur === 'disarmed' && el._bypassed?.size > 0) {
+            el._bypassed.clear();
+          }
+          el._prevAlarmState = cur;
         }
         const _sp=el.parentElement, _st=_sp?_sp.scrollTop:0;
         el.innerHTML = render(cfg, h, el._bypassed);
