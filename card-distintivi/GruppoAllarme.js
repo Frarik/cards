@@ -1,10 +1,10 @@
-/* frarik-version: 2.3 */
+/* frarik-version: 2.4 */
 /**
- * GruppoAllarme.js — Distintivo FratechStore v2.3
+ * GruppoAllarme.js — Distintivo FratechStore v2.4
  * Chip stato allarme Alarmo + popup sensori/bypass + overlay triggered automatico
  *
- * v2.2: fix bypass — il bypass non viene più azzerato quando l'allarme si arma,
- *       ma solo quando torna disarmato (così i sensori esclusi restano esclusi)
+ * v2.3: fix bypass — azzera solo sulla transizione armato→disarmato, non mentre è già disarmato
+ * v2.4: bypass disponibile anche quando l'allarme è già armato; ri-arma Alarmo con il nuovo set
  */
 (function () {
   'use strict';
@@ -261,11 +261,9 @@
         tag = `<span style="font-size:10px;padding:3px 10px;border-radius:6px;background:rgba(74,222,128,.15);color:#4ade80;font-weight:700;flex-shrink:0">OK</span>`;
       }
 
-      if (!armed) {
-        bypassBtn = isBypassed
-          ? `<button data-ca-bypass="${i}" data-entity="${eh(s.entity)}" style="padding:5px 12px;border-radius:8px;border:1px solid rgba(250,204,21,.42);background:rgba(250,204,21,.14);color:#facc15;cursor:pointer;font-size:10px;font-weight:700;white-space:nowrap;outline:none;flex-shrink:0">✕ Includi</button>`
-          : `<button data-ca-bypass="${i}" data-entity="${eh(s.entity)}" style="padding:5px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.07);color:#fff;cursor:pointer;font-size:10px;font-weight:700;white-space:nowrap;outline:none;flex-shrink:0">🛡 Escludi</button>`;
-      }
+      bypassBtn = isBypassed
+        ? `<button data-ca-bypass="${i}" data-entity="${eh(s.entity)}" style="padding:5px 12px;border-radius:8px;border:1px solid rgba(250,204,21,.42);background:rgba(250,204,21,.14);color:#facc15;cursor:pointer;font-size:10px;font-weight:700;white-space:nowrap;outline:none;flex-shrink:0">✕ Includi</button>`
+        : `<button data-ca-bypass="${i}" data-entity="${eh(s.entity)}" style="padding:5px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.07);color:#fff;cursor:pointer;font-size:10px;font-weight:700;white-space:nowrap;outline:none;flex-shrink:0">🛡 Escludi</button>`;
 
       return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:11px;background:${rowBg};border:1px solid ${rowBdr}">
         <span style="color:${open && !isBypassed ? '#f87171' : isBypassed ? '#facc15' : '#4ade80'};flex-shrink:0">${mdi(sIco, 20)}</span>
@@ -357,10 +355,22 @@
       const bypassBtn = ev.target.closest('[data-ca-bypass]');
       if (bypassBtn) {
         const entityId = bypassBtn.dataset.entity;
-        /* el._bypassed è lo stesso oggetto di _bypassedState[ae] */
         if (!el._bypassed) el._bypassed = _bypassedState[ae] || (_bypassedState[ae] = new Set());
         if (el._bypassed.has(entityId)) el._bypassed.delete(entityId);
         else el._bypassed.add(entityId);
+        /* se l'allarme è già armato, aggiorna subito il bypass in Alarmo */
+        const hNow = H();
+        if (hNow && ae) {
+          const curState = stateOf(hNow, ae);
+          if (isArmed(curState)) {
+            const stateToMode = { armed_away:'away', armed_home:'home', armed_night:'night', armed_vacation:'vacation', armed_custom_bypass:'away' };
+            const mode = stateToMode[curState] || 'away';
+            const code = c.code ? String(c.code) : undefined;
+            const p = { entity_id: ae, mode, force: true, bypassed_sensors: [...el._bypassed] };
+            if (code) p.code = code;
+            callEx('alarmo', 'arm', p);
+          }
+        }
         el.innerHTML = render(cfg, null, el._bypassed);
         _mountHandlers(cfg, el);
         ev.stopPropagation(); return;
