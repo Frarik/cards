@@ -433,14 +433,20 @@
           </div>
 
           <!-- valori principali -->
-          <div style="display:flex;align-items:flex-end;gap:20px">
+          <div style="display:flex;align-items:flex-start;gap:20px">
             <div style="flex:1">
-              <div ${numClass} style="font-size:58px;font-weight:900;color:${tCol};line-height:.95;letter-spacing:-3px">${heroTemp!=null?heroTemp.toFixed(1):'—'}<span style="font-size:24px;font-weight:700;color:#fff;letter-spacing:0">°</span></div>
+              <div style="display:flex;align-items:flex-start;gap:2px">
+                <span ${numClass} style="font-size:58px;font-weight:900;color:${tCol};line-height:.95;letter-spacing:-2px">${heroTemp!=null?heroTemp.toFixed(1):'—'}</span>
+                <span style="font-size:22px;font-weight:700;color:#fff;margin-top:3px;line-height:1">°</span>
+              </div>
               <div style="font-size:9px;color:#fff;margin-top:5px;letter-spacing:.3px;font-weight:600">TEMPERATURA</div>
             </div>
             ${hasHumG && heroHum!=null ? `
             <div style="flex:1;text-align:right">
-              <div ${numClass} style="font-size:58px;font-weight:900;color:${hCol};line-height:.95;letter-spacing:-3px">${Math.round(heroHum)}<span style="font-size:24px;font-weight:700;color:#fff;letter-spacing:0">%</span></div>
+              <div style="display:flex;align-items:flex-start;justify-content:flex-end;gap:2px">
+                <span ${numClass} style="font-size:58px;font-weight:900;color:${hCol};line-height:.95;letter-spacing:-2px">${Math.round(heroHum)}</span>
+                <span style="font-size:22px;font-weight:700;color:#fff;margin-top:3px;line-height:1">%</span>
+              </div>
               <div style="font-size:9px;color:#fff;margin-top:5px;letter-spacing:.3px;font-weight:600">UMIDITÀ</div>
             </div>` : ''}
           </div>

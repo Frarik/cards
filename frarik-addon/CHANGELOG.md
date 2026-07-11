@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.90 — 2026-07-11
+
+### fix(GruppoTemperatura): hero — simboli ° e % in superscript (flex-start)
+
+- Usato display:flex + align-items:flex-start per attaccare il simbolo in alto al numero
+- Rimosso inline span dentro il numero da 58px (causava baseline drop)
+- bump 1.9.89 → 1.9.90
+
 ## 1.9.89 — 2026-07-11
 
 ### fix(GruppoTemperatura): hero — rimosso testo badge comfort, umidità stessa grandezza temp
