@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.9.75 — 2026-07-11
+
+### fix(distintivo): GruppoPrese v1.18 — timer grande + kWh su tutte le prese con sensore
+
+- Timer accensione ora a font-size:14px bold (stesso peso di W, kWh, €)
+- Badge kWh ora visibile su tutte le prese che hanno almeno `power_entity` o `energy_entity`
+  configurato: prima le prese con accumulo automatico a 0 kWh non mostravano nulla,
+  ora mostrano `—` (sensore presente, nessun consumo registrato ancora)
+
 ## 1.9.74 — 2026-07-10
 
 ### fix(distintivo): GruppoPrese v1.17 — €/costo a font 14px bold come W e kWh

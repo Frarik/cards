@@ -1,4 +1,4 @@
-/* frarik-version: 1.17 */
+/* frarik-version: 1.18 */
 /**
  * GruppoPrese.js — Distintivo FratechStore v1.15
  * Chip · riquadro riassuntivo · colori % · kWh giornalieri · timer · costo · standby
@@ -330,7 +330,11 @@
       const fSpd2 = flowSpeed(w);
       const fCol2 = flowColor(w, maxW);
       const mc = st.mainCol;
-      const dailyKwh = h ? (e.energy_entity ? _gpDailyFromSensor(h,e.energy_entity) : _gpGetKwh(e.entity)||null) : null;
+      /* mostra badge kWh se c'è almeno una fonte (energy_entity o power_entity); 0 → "—" */
+      const hasEnergySource = !!(e.energy_entity || e.power_entity);
+      const dailyKwh = (h && hasEnergySource)
+        ? (e.energy_entity ? _gpDailyFromSensor(h,e.energy_entity) : _gpGetKwh(e.entity))
+        : null;
 
       /* ── cerchio stato (sinistra) ── */
       const isError = st.unavail || st.unknown;
@@ -367,7 +371,7 @@
             ? ` &nbsp;<span style="font-size:13px;color:rgba(255,255,255,.35);font-weight:700">📅 —</span>`
             : ` &nbsp;<span style="font-size:13px;color:#fff;font-weight:700">📅 <strong style="font-size:14px;letter-spacing:-.3px">${dailyKwh.toFixed(2)} kWh</strong>${price&&price>0?` <strong style="font-size:14px;letter-spacing:-.3px;color:rgba(251,147,60,.95)">€${(dailyKwh*price).toFixed(2)}</strong>`:''}</span>`)
           : '';
-        const timerPart = timer ? ` &nbsp;<span style="font-size:11px;color:rgba(255,255,255,.45);font-weight:600">${timer}</span>` : '';
+        const timerPart = timer ? ` &nbsp;<strong style="font-size:14px;letter-spacing:-.3px;color:rgba(255,255,255,.5)">${timer}</strong>` : '';
         statusLine = `<span style="font-size:13px;color:${stCol};font-weight:800">● ${label}</span>${kwhPart}${timerPart}`;
       } else {
         statusLine = `<span style="font-size:13px;color:${COL_OFF};font-weight:800">● Spenta</span>`;
@@ -825,7 +829,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Prese', icon: '🔌',
     desc: 'Chip prese on/off · popup con stato, consumo W real-time, flusso animato e indicatori unavailable.',
-    version: '1.17', isDistintivo: true,
+    version: '1.18', isDistintivo: true,
     defaultCfg: { label:'Prese', icon:'🔌', color:'#fb923c', maxW:2300, entities:[] },
     chip, watchEntities, render, mount, update, configure,
   };
