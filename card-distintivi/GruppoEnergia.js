@@ -1,4 +1,4 @@
-/* frarik-version: 3.3 */
+/* frarik-version: 3.4 */
 /**
  * GruppoEnergia.js — Distintivo FratechStore v3.0
  * Flow shimmer · tralicio img data-URI · nodi uguali · speed reattiva
@@ -121,12 +121,12 @@
   /* ── delta html (confronto vs ieri) ── */
   function _deltaHtml(today, yest) {
     if (today === null || yest === null || yest < 0.001)
-      return '<span style="font-size:10px;color:#fff">— vs ieri</span>';
+      return '<span style="font-size:11px;color:#fff">— vs ieri</span>';
     const diff = today - yest;
     const pct  = Math.round(Math.abs(diff / yest) * 100);
     const up   = diff > 0;
     const col  = up ? '#ef4444' : '#4ade80';
-    return `<span style="font-size:10px;color:${col}">${up ? '▲' : '▼'} ${up ? '+' : '-'}${pct}% vs ieri</span>`;
+    return `<span style="font-size:11px;color:${col}">${up ? '▲' : '▼'} ${up ? '+' : '-'}${pct}% vs ieri</span>`;
   }
 
   /* ── grafico SVG compatto ── */
@@ -150,10 +150,10 @@
       const gid = 'eg' + col.replace('#', '');
       const labels = [0, 3, 6, 9, 12, 15, 18, 21].map(hr => {
         const d = new Date(); d.setHours(hr, 0, 0, 0);
-        const x = xf(+d); if (x < 12 || x > W - 12) return '';
-        return `<text x="${x.toFixed(1)}" y="${H + 14}" text-anchor="middle" fill="#fff" font-size="9">${String(hr).padStart(2, '0')}:00</text>`;
+        const x = xf(+d); if (x < 10 || x > W - 10) return '';
+        return `<text x="${x.toFixed(1)}" y="${H + 15}" text-anchor="middle" fill="rgba(255,255,255,.7)" font-size="10" font-family="system-ui,sans-serif">${String(hr).padStart(2, '0')}:00</text>`;
       }).join('');
-      return `<svg width="100%" height="${H + 22}" viewBox="0 0 ${W} ${H + 22}" style="display:block;overflow:visible">
+      return `<svg width="100%" height="${H + 22}" viewBox="0 0 ${W} ${H + 22}" preserveAspectRatio="none" style="display:block">
         <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stop-color="${col}" stop-opacity=".45"/><stop offset="100%" stop-color="${col}" stop-opacity=".02"/>
         </linearGradient></defs>
@@ -219,11 +219,11 @@
 
   /* ── stat box con sub-riga ── */
   function _box(ico, val, label, valCls, sub, subCls) {
-    return `<div style="padding:12px 8px 10px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);text-align:center">
-      <div style="font-size:20px;margin-bottom:5px">${ico}</div>
-      <div class="${valCls}" style="font-size:16px;font-weight:800;color:#fff;line-height:1.2">${val}</div>
-      <div style="font-size:9.5px;color:#fff;margin-top:3px;text-transform:uppercase;letter-spacing:.5px">${label}</div>
-      <div class="${subCls}" style="margin-top:5px;min-height:14px;line-height:1.2">${sub}</div>
+    return `<div style="padding:14px 8px 12px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);text-align:center">
+      <div style="font-size:22px;margin-bottom:6px">${ico}</div>
+      <div class="${valCls}" style="font-size:20px;font-weight:800;color:#fff;line-height:1.15">${val}</div>
+      <div style="font-size:11px;color:#fff;margin-top:4px;text-transform:uppercase;letter-spacing:.5px">${label}</div>
+      <div class="${subCls}" style="margin-top:6px;min-height:15px;line-height:1.2">${sub}</div>
     </div>`;
   }
 
@@ -318,7 +318,7 @@
 
       <!-- GRAFICO -->
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#fff;margin-bottom:8px">Ultime 24 ore</div>
-      <div class="e-chart" style="padding-bottom:8px">
+      <div class="e-chart" style="margin:0 -14px;padding-bottom:4px">
         <div style="height:142px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff">⏳ Caricamento…</div>
       </div>
     </div>`;
@@ -391,6 +391,28 @@
         });
       }
 
+      /* picco oggi in tempo reale */
+      const curW = info.w;
+      if (curW !== null && curW > (el._ePeakW || 0)) {
+        el._ePeakW = curW;
+        const peakEl = el.querySelector('.e-peak');
+        if (peakEl) peakEl.textContent = _fmtPower(curW);
+      }
+
+      /* kWh + costo in tempo reale se sensore kWh configurato */
+      if (c.kwhEntity) {
+        const kv = parseFloat(stateOf(h, c.kwhEntity));
+        if (!isNaN(kv)) {
+          const kwhEl  = el.querySelector('.e-kwh');
+          if (kwhEl) kwhEl.textContent = kv.toFixed(2) + ' kWh';
+          const price = parseFloat(c.priceKwh) || 0;
+          if (price > 0) {
+            const costEl = el.querySelector('.e-cost');
+            if (costEl) costEl.textContent = '€ ' + (kv * price).toFixed(2);
+          }
+        }
+      }
+
     } catch (e) {}
   }
 
@@ -444,13 +466,14 @@
       const peakEl  = el.querySelector('.e-peak');
       const avgBox  = el.querySelector('.e-avg-box');
 
-      if (kwhEl)  kwhEl.textContent  = kwhT !== null ? (c.kwhEntity ? kwhT.toFixed(2) : '~' + kwhT.toFixed(1)) + ' kWh' : '—';
+      if (kwhEl)  kwhEl.textContent  = kwhT !== null ? kwhT.toFixed(c.kwhEntity ? 2 : 1) + ' kWh' : '—';
       if (kwhDEl) kwhDEl.innerHTML   = _deltaHtml(kwhT, kwhY);
       if (costEl) costEl.textContent = costT !== null ? '€ ' + costT.toFixed(2) : (price > 0 ? '—' : 'n/d');
       if (costDEl) {
         if (price > 0) costDEl.innerHTML = _deltaHtml(costT, costY);
         else costDEl.innerHTML = '<span style="font-size:8px;color:#fff">Configura €/kWh</span>';
       }
+      el._ePeakW = stT.peak || 0;
       if (peakEl) peakEl.textContent = stT.peak !== null ? _fmtPower(stT.peak) : '—';
       if (avgBox) avgBox.innerHTML   = stT.avg  !== null
         ? `<span style="font-size:9px;color:#fff">〰️ ${_fmtPower(stT.avg)}</span>`
@@ -625,7 +648,7 @@
   /* ════════════════════════════════════════ REGISTRAZIONE ══ */
   const CARD = {
     id: ID, name: 'Gruppo Energia', icon: '⚡', desc: '',
-    version: '3.3', isDistintivo: true,
+    version: '3.4', isDistintivo: true,
     defaultCfg: { label: 'Energia', entity: '', maxKw: 3, priceKwh: 0, alertKw: 0, solarEntity: '', kwhEntity: '' },
     chip, watchEntities, render, mount, update, configure, preview,
   };
@@ -633,5 +656,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v3.3'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v3.4'); } catch (e) {}
 })();
