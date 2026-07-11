@@ -1,4 +1,4 @@
-/* frarik-version: 2.3 */
+/* frarik-version: 2.4 */
 (function () {
   'use strict';
 
@@ -173,7 +173,7 @@
     var css = '<style>'
       + '#'+rid+'{position:relative;width:100%;height:100%;min-height:280px;font-family:system-ui,sans-serif;display:block}'
       + '#'+rid+' .dc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
-      + '#'+rid+' .dc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:180px;background:radial-gradient(ellipse at 20% 0%,rgba('+ACC+',.09) 0%,transparent 65%);pointer-events:none}'
+      + '#'+rid+' .dc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(56,189,248,.08) 0%,transparent 65%);pointer-events:none}'
       + '#'+rid+' .dc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
       + '#'+rid+' .dc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;background:rgba('+ACC+',.12);border:1px solid rgba('+ACC+',.25)}'
       + '#'+rid+' .dc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
