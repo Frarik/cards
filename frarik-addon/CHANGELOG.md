@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.9.81 — 2026-07-11
+
+### feat(GruppoTemperatura): popup v1.2 — summary bar, animazioni, barre a gradiente
+
+- Barra sommario MIN/MEDIA/MAX + umidità media + comfort globale (se >1 stanza)
+- Barre temperatura e umidità a gradiente fisso con marcatore bianco animato
+  (posizione indica dove sei nella scala, con spring animation)
+- Animazione entrata staggered per ogni card (55ms di offset)
+- Subtle glow pulse sui valori numerici (gte-pulse keyframe)
+- Gradient overlay su ogni card basato sul colore temperatura
+- Barra umidità a zone: secco→ottimale→umido (rosso-verde-rosso)
+- Nascosto sottotitolo popup header via _syncTitle
+- Corretto placeholder input configurazione a rgba(.55)
+
 ## 1.9.80 — 2026-07-11
 
 ### fix(white): tutti i testi al 100% bianco in tutti i distintivi
