@@ -1,4 +1,4 @@
-/* frarik-version: 2.2 */
+/* frarik-version: 2.3 */
 (function () {
   'use strict';
 
@@ -7,8 +7,6 @@
   function N(h, id, fb) { var v = parseFloat(S(h, id)); return isNaN(v) ? (fb === undefined ? 0 : fb) : v; }
   function isOn(h, id) { return !!(h && h.states && h.states[id] && h.states[id].state === 'on'); }
   function callSvc(domain, service, data) { try { var h = H(); if (h && h.callService) h.callService(domain, service, data || {}); } catch (e) {} }
-  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
-  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 
   var ACC = '99,102,241';
   var ACCH = '#818cf8';
@@ -68,13 +66,7 @@
     var h = H();
     var rid = 'dbc' + (card.id || 'x').replace(/[^a-z0-9]/gi,'');
 
-    var senMode = lsGet('frarik_dbc_sen_'+card.id) || 'auto';
-    var s1      = lsGet('frarik_dbc_s1_'+card.id)  || 'sensor.home_assistant_v2_db_dimensione';
-    var s2      = lsGet('frarik_dbc_s2_'+card.id)  || 'sensor.maria_db_esterno';
-    var sc      = lsGet('frarik_dbc_sc_'+card.id)  || '';
-    var activeSen = senMode==='interno'?s1:senMode==='esterno'?s2:senMode==='custom'&&sc?sc:'sensor.frarik_db_dimensione';
-
-    var dimRaw = N(h, activeSen, 0);
+    var dimRaw = N(h, 'sensor.frarik_db_dimensione', 0);
     var dimD   = dimRaw >= 1000 ? (dimRaw/1000).toFixed(2) : Math.round(dimRaw)+'';
     var dimU   = dimRaw >= 1000 ? 'GB' : 'MB';
     var dimMax = Math.round(N(h,'input_number.frarik_db_dimensione_massima',1000));
@@ -254,10 +246,6 @@
   /* ──────────────────────────── POPUP IMPOSTAZIONI ────────────────── */
   function openImpostazioni(card) {
     var h = H();
-    var senMode = lsGet('frarik_dbc_sen_'+card.id) || 'auto';
-    var s1 = lsGet('frarik_dbc_s1_'+card.id) || 'sensor.home_assistant_v2_db_dimensione';
-    var s2 = lsGet('frarik_dbc_s2_'+card.id) || 'sensor.maria_db_esterno';
-    var sc = lsGet('frarik_dbc_sc_'+card.id)  || '';
     var orario = S(h,'input_datetime.frarik_db_orario_repack')||'';
     if (orario&&orario.length>=5) orario=orario.substring(0,5); else orario='';
     var giM = Math.round(N(h,'input_number.frarik_db_giorni_da_mantenere',30));
@@ -282,14 +270,6 @@
     });
     daysHtml += '</div>';
 
-    var senModes = [{k:'auto',l:'Auto PKG'},{k:'interno',l:'HA Interno'},{k:'esterno',l:'MariaDB'},{k:'custom',l:'Custom'}];
-    var senBtns = '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">';
-    senModes.forEach(function(m){
-      senBtns += '<button id="dc-sm-'+m.k+'-'+rid2+'" style="padding:5px 10px;border-radius:7px;border:none;cursor:pointer;font-size:10px;font-weight:700;font-family:system-ui;color:#fff;background:'+(senMode===m.k?'rgba('+ACC+',.4)':'rgba(255,255,255,.08)')+'">'+m.l+'</button>';
-    });
-    senBtns += '</div>';
-    var senDesc = {auto:'Usa sensor.frarik_db_dimensione (template PKG)',interno:'Sensore 1 PKG — DB interno HA',esterno:'Sensore 2 PKG — MariaDB esterno',custom:'Sensore personalizzato'}[senMode]||'';
-
     var content = pSec('⚡ Automazioni')
       + tog('input_boolean.frarik_db_repack_orario', isOn(h,'input_boolean.frarik_db_repack_orario'), 'Repack automatico a orario')
       + tog('input_boolean.frarik_db_repack_dimensione', isOn(h,'input_boolean.frarik_db_repack_dimensione'), 'Repack per dimensione massima')
@@ -309,14 +289,6 @@
       + '<span style="font-size:13px;color:#fff">Dimensione massima (MB)</span>'
       + '<input type="number" id="dc-dm-'+rid2+'" style="'+iBase+';width:90px;padding:6px 8px;text-align:right;font-family:system-ui" value="'+dimMax+'" min="1" max="1000000" step="100">'
       + '</div>'
-      + pSec('🔌 Sensore DB (2 opzioni PKG)')
-      + '<div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
-      + senBtns
-      + '<div style="font-size:10px;color:#fff;opacity:.5;margin-bottom:6px">'+senDesc+'</div>'
-      + (senMode==='interno'?'<div style="font-size:9px;color:#fff;opacity:.5;margin-bottom:3px">Entity ID HA interno (sensore 1)</div><input id="dc-s1-'+rid2+'" style="'+iBase+';width:100%;padding:7px 10px;font-family:monospace" value="'+s1+'">':'')
-      + (senMode==='esterno'?'<div style="font-size:9px;color:#fff;opacity:.5;margin-bottom:3px">Entity ID MariaDB (sensore 2)</div><input id="dc-s2-'+rid2+'" style="'+iBase+';width:100%;padding:7px 10px;font-family:monospace" value="'+s2+'">':'')
-      + (senMode==='custom'?'<div style="font-size:9px;color:#fff;opacity:.5;margin-bottom:3px">Entity ID personalizzato</div><input id="dc-sc-'+rid2+'" style="'+iBase+';width:100%;padding:7px 10px;font-family:monospace" placeholder="sensor.custom_db" value="'+sc+'">':'')
-      + '</div>'
       + pSec('⚙ Repack Manuale')
       + '<button id="dc-repack-'+rid2+'" style="width:100%;padding:12px;border-radius:11px;border:none;cursor:pointer;font-size:13px;font-weight:800;color:#fff;background:linear-gradient(135deg,#6366f1,#4f46e5);font-family:system-ui;margin-top:4px">🔄 Esegui Repack Ora</button>'
       + '<button id="dc-save-'+rid2+'" style="width:100%;margin-top:8px;padding:13px;border-radius:12px;background:rgba('+ACC+',.15);border:1px solid rgba('+ACC+',.4);color:'+ACCH+';font-size:14px;font-weight:700;cursor:pointer;font-family:system-ui">💾 Salva impostazioni</button>';
@@ -332,15 +304,6 @@
         } else {
           sw.classList.toggle('on'); sw.classList.toggle('off');
         }
-      });
-    });
-
-    senModes.forEach(function(m){
-      var b = ov.querySelector('#dc-sm-'+m.k+'-'+rid2);
-      if (!b) return;
-      b.addEventListener('click', function(){
-        lsSet('frarik_dbc_sen_'+card.id, m.k);
-        ov._close(); openImpostazioni(card);
       });
     });
 
@@ -360,9 +323,6 @@
       var ori = ov.querySelector('#dc-orario-'+rid2); if (ori&&ori.value) callSvc('input_datetime','set_datetime',{entity_id:'input_datetime.frarik_db_orario_repack',time:ori.value+':00'});
       var gmE = ov.querySelector('#dc-gm-'+rid2); if (gmE&&gmE.value) callSvc('input_number','set_value',{entity_id:'input_number.frarik_db_giorni_da_mantenere',value:parseFloat(gmE.value)});
       var dmE = ov.querySelector('#dc-dm-'+rid2); if (dmE&&dmE.value) callSvc('input_number','set_value',{entity_id:'input_number.frarik_db_dimensione_massima',value:parseFloat(dmE.value)});
-      var s1i = ov.querySelector('#dc-s1-'+rid2); if (s1i&&s1i.value.trim()) lsSet('frarik_dbc_s1_'+card.id, s1i.value.trim());
-      var s2i = ov.querySelector('#dc-s2-'+rid2); if (s2i&&s2i.value.trim()) lsSet('frarik_dbc_s2_'+card.id, s2i.value.trim());
-      var sci = ov.querySelector('#dc-sc-'+rid2); if (sci&&sci.value.trim()) lsSet('frarik_dbc_sc_'+card.id, sci.value.trim());
       sb.textContent='✅ Salvato!'; sb.style.background='rgba(34,197,94,.15)'; sb.style.borderColor='rgba(34,197,94,.4)'; sb.style.color='#4ade80';
       setTimeout(function(){ try{ov._close();}catch(e){} },1500);
     });
@@ -385,12 +345,7 @@
 
   function update(card, hass, el) {
     var h = H();
-    var senMode = lsGet('frarik_dbc_sen_'+card.id)||'auto';
-    var s1 = lsGet('frarik_dbc_s1_'+card.id)||'sensor.home_assistant_v2_db_dimensione';
-    var s2 = lsGet('frarik_dbc_s2_'+card.id)||'sensor.maria_db_esterno';
-    var sc = lsGet('frarik_dbc_sc_'+card.id)||'';
-    var activeSen = senMode==='interno'?s1:senMode==='esterno'?s2:senMode==='custom'&&sc?sc:'sensor.frarik_db_dimensione';
-    var sig = [CARD.version, S(h,activeSen), S(h,'input_text.frarik_db_stato'), S(h,'input_text.frarik_db_ultimo_repack'), S(h,'sensor.frarik_db_giorni_passati_repack'), S(h,'sensor.frarik_db_media_7_giorni')].join('|');
+    var sig = [CARD.version, S(h,'sensor.frarik_db_dimensione'), S(h,'input_text.frarik_db_stato'), S(h,'input_text.frarik_db_ultimo_repack'), S(h,'sensor.frarik_db_giorni_passati_repack'), S(h,'sensor.frarik_db_media_7_giorni')].join('|');
     if (!el.querySelector('.dc-card') || el._dcSig !== sig) {
       el._dcSig = sig;
       el.innerHTML = render(card);
@@ -399,7 +354,7 @@
   }
 
   var CARD = {
-    id: 'database-card', name: 'Database HA', icon: '🗄️', version: '2.2',
+    id: 'database-card', name: 'Database HA', icon: '🗄️', version: '2.3',
     desc: 'Monitoraggio database HA: dimensione, repack automatico, statistiche, 2 sensori configurabili.',
     colSpan: 2, rowSpan: 3,
     render: render, mount: mount, update: update,
