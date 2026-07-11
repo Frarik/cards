@@ -67,9 +67,7 @@
   }
 
   const RANK        = { offline: 3, critical: 2, low: 1, ok: 0 };
-  const STATUS_LABEL = { offline: 'Offline', critical: 'Critica', low: 'Bassa', ok: 'OK' };
   const STATUS_COL  = { offline: '#ef4444', critical: '#f97316', low: '#facc15', ok: '#4ade80' };
-  const STATUS_EMO  = { offline: '📴', critical: '🔴', low: '🟡', ok: '🟢' };
 
   function _analyze(cfg, h) {
     const c    = loadCfg(cfg);

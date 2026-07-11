@@ -219,7 +219,7 @@
     if (hasSolar) {
       const su = attrOf(h, c.solarEntity, 'unit_of_measurement') || 'W';
       solarW   = _parseW(stateOf(h, c.solarEntity), su);
-      solarLabel = c.solarLabel || nameOf(h, c.solarEntity) || 'Solare';
+      solarLabel = nameOf(h, c.solarEntity) || 'Solare';
     }
     const totalW = hasSolar && solarW !== null && info.w !== null ? (info.w || 0) + (solarW || 0) : info.w;
 

@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.9.79 — 2026-07-11
+
+### fix(card-audit): pulizia codice morto e bug fix su tutti i distintivi
+
+- **GruppoPrese v1.21**: rimosso `hasPwr`/`totalW` mai usati in `_syncTitle`; rimossa
+  variabile `dailyBadge` (sempre vuota); corretta versione in `console.log` (era v1.10)
+- **GruppoBatterie**: rimossi const `STATUS_LABEL` e `STATUS_EMO` mai referenziati
+- **GruppoEnergia**: rimosso `c.solarLabel` (campo non esiste in config)
+- **GruppoLuci, GruppoTapparelle, GruppoFinestre, GruppoPorte**: fix toggle automazione
+  ottimistico — mostrava stato CORRENTE invece dello stato SUCCESSIVO al click
+- **GruppoPorte**: rinominato `id="gp-popup-body"` → `gpor-popup-body` (collisione con
+  GruppoPrese); versione allineata a 1.1
+- **GruppoTapparelle**: rinominato `id="gt-popup-body"` → `gta-popup-body` (collisione
+  con GruppoTemperatura); console.log allineato a v1.1
+- **GruppoTemperatura**: rinominato `id="gt-popup-body"` → `gte-popup-body`;
+  aggiunto render iniziale in `mount()` (prima il contenuto appariva solo dopo 3s)
+- **GruppoLuci**: console.log allineato a v1.7
+
 ## 1.9.78 — 2026-07-11
 
 ### fix(distintivi): scroll mobile su tutte le card — popup non salta più ogni 1.5s

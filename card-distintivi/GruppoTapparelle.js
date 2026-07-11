@@ -153,7 +153,7 @@
       </div>`;
     }).join('');
 
-    return `<div id="gt-popup-body">
+    return `<div id="gta-popup-body">
       ${ctrlBar}
       <div>${rows||'<div style="padding:32px 20px;text-align:center;color:rgba(255,255,255,.3);font-size:12px">Nessuna tapparella configurata.<br><span style="font-size:10px;opacity:.6">Clicca ✏️ sulla chip per configurare.</span></div>'}</div>
     </div>`;
@@ -188,10 +188,11 @@
       if (auto) {
         const e = ents[parseInt(auto.dataset.gtAuto)]; if (!e||!e.automation) return;
         const autoOn = isOn(H(), e.automation);
-        const newCol = autoOn ? '#4ade80' : '#f87171';
-        const newBdr = autoOn ? 'rgba(74,222,128,.38)' : 'rgba(248,113,113,.38)';
-        const newBg  = autoOn ? 'rgba(74,222,128,.13)' : 'rgba(248,113,113,.13)';
-        auto.textContent = autoOn ? '🟢 Attiva' : '🔴 Disattiva';
+        const nextOn = !autoOn;
+        const newCol = nextOn ? '#4ade80' : '#f87171';
+        const newBdr = nextOn ? 'rgba(74,222,128,.38)' : 'rgba(248,113,113,.38)';
+        const newBg  = nextOn ? 'rgba(74,222,128,.13)' : 'rgba(248,113,113,.13)';
+        auto.textContent = nextOn ? '🟢 Attiva' : '🔴 Disattiva';
         auto.style.color = newCol; auto.style.borderColor = newBdr; auto.style.background = newBg;
         callSvc('automation', autoOn ? 'turn_off' : 'turn_on', e.automation);
         ev.stopPropagation(); return;
@@ -553,5 +554,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-tapparelle v1.0'); } catch(e){}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-tapparelle v1.1'); } catch(e){}
 })();

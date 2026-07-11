@@ -1,4 +1,4 @@
-/* frarik-version: 1.20 */
+/* frarik-version: 1.21 */
 /**
  * GruppoPrese.js — Distintivo FratechStore v1.15
  * Chip · riquadro riassuntivo · colori % · kWh giornalieri · timer · costo · standby
@@ -357,7 +357,7 @@
       const wattStr = w!==null ? fmtW(w) : null;
       const price = c.pricePerKwh ? parseFloat(c.pricePerKwh) : null;
       const timer = (h && st.on) ? _timeSince(h, e.entity) : null;
-      let statusLine, dailyBadge='';
+      let statusLine;
       if (st.unavail) {
         statusLine = `<span class="gp-blink" style="font-size:12px;color:${COL_UNAVL};font-weight:800">⚡ Non disponibile</span>`;
       } else if (st.unknown) {
@@ -415,7 +415,7 @@
           ${dot}
           <div style="flex:1;min-width:0">
             <div style="font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
-            <div style="margin-top:3px;display:flex;align-items:center;flex-wrap:wrap;gap:2px">${statusLine}${dailyBadge}</div>
+            <div style="margin-top:3px;display:flex;align-items:center;flex-wrap:wrap;gap:2px">${statusLine}</div>
           </div>
           ${toggle}
         </div>
@@ -478,11 +478,8 @@
       const c = loadCfg(cfg);
       const ents = Array.isArray(c.entities) ? c.entities : [];
       const h = H(); if (!h) return;
-      let active=0, totalW=null, hasPwr=false;
-      ents.forEach(e=>{
-        const st=socketStatus(h,e.entity); if(st.on) active++;
-        if(e.power_entity&&st.on){const w=numOf(h,e.power_entity);if(w!==null){totalW=(totalW||0)+w;hasPwr=true;}}
-      });
+      let active=0;
+      ents.forEach(e=>{ const st=socketStatus(h,e.entity); if(st.on) active++; });
       titleEl.style.color = active>0 ? COL_ON : COL_OFF;
       titleEl.textContent = active===0
         ? 'Tutte spente'
@@ -842,5 +839,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-prese v1.10'); } catch(e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-prese v1.21'); } catch(e) {}
 })();

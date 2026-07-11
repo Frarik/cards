@@ -160,11 +160,11 @@
       if (auto) {
         const e = ents[parseInt(auto.dataset.jsdAuto)]; if (!e||!e.automation) return;
         const autoOn = isOn(H(), e.automation);
-        // ottimistico immediato: cambia badge automazione
-        const newCol = autoOn ? '#4ade80' : '#f87171';
-        const newBdr = autoOn ? 'rgba(74,222,128,.38)' : 'rgba(248,113,113,.38)';
-        const newBg  = autoOn ? 'rgba(74,222,128,.13)' : 'rgba(248,113,113,.13)';
-        auto.textContent = autoOn ? '🟢 Attiva' : '🔴 Disattiva';
+        const nextOn = !autoOn;
+        const newCol = nextOn ? '#4ade80' : '#f87171';
+        const newBdr = nextOn ? 'rgba(74,222,128,.38)' : 'rgba(248,113,113,.38)';
+        const newBg  = nextOn ? 'rgba(74,222,128,.13)' : 'rgba(248,113,113,.13)';
+        auto.textContent = nextOn ? '🟢 Attiva' : '🔴 Disattiva';
         auto.style.color = newCol; auto.style.borderColor = newBdr; auto.style.background = newBg;
         callSvc('automation', autoOn ? 'turn_off' : 'turn_on', e.automation);
         ev.stopPropagation(); return;
@@ -543,5 +543,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-luci v1.3'); } catch(e){}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-luci v1.7'); } catch(e){}
 })();

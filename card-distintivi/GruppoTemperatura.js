@@ -219,12 +219,13 @@
         </div>`;
     }).join('');
 
-    return `<div id="gt-popup-body" style="padding:12px">${cards}</div>`;
+    return `<div id="gte-popup-body" style="padding:12px">${cards}</div>`;
   }
 
   /* ── mount ──────────────────────────────────────────────────── */
   function mount(cfg, rawHass, el) {
     if (el._gtPoll) return;
+    try { const h=H(); if(h) el.innerHTML=render(cfg,h); } catch(e) {}
     el._gtPoll = setInterval(() => {
       if (!el.isConnected) { clearInterval(el._gtPoll); delete el._gtPoll; return; }
       try { const h=H(); if(!h) return; const _sp=el.parentElement,_st=_sp?_sp.scrollTop:0; el.innerHTML=render(cfg,h); if(_sp&&_st>0)_sp.scrollTop=_st; } catch(e) {}
