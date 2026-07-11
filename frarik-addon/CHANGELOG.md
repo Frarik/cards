@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.9.86 — 2026-07-11
+
+### fix(GruppoTemperatura): popup v1.7 — ritorno card numeri grandi + scala sottile
+
+- Rimossi i grafici ad arco SVG (v1.6), tornati ai numeri grandi affiancati (v1.5)
+- Aggiunta barra scala sottile (4px) con marker dot colorato e animato per temp e umidità
+- Gradiente temperatura: blu→verde→giallo→rosso (freddo→comfort→caldo)
+- Gradiente umidità: rosso→verde→rosso (secco→ottimale→umido)
+- Label "comfort 19–25°" / "ideale 40–60%" sotto la scala come riferimento visivo
+- Rimosso `_svgGauge`, aggiunto `_scaleBar`; CSS semplificato
+- bump 1.9.85 → 1.9.86
+
 ## 1.9.85 — 2026-07-11
 
 ### feat(GruppoTemperatura): popup v1.6 — grafici ad arco SVG nelle card stanze
