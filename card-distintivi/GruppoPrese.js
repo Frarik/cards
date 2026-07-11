@@ -1,4 +1,4 @@
-/* frarik-version: 1.21 */
+/* frarik-version: 1.22 */
 /**
  * GruppoPrese.js — Distintivo FratechStore v1.15
  * Chip · riquadro riassuntivo · colori % · kWh giornalieri · timer · costo · standby
@@ -679,8 +679,8 @@
       }).join('');
 
       const anim=_firstRender?'animation:gpCfgUp .22s cubic-bezier(.32,1.12,.56,1)':'';
-      return `<div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0f0d1a;border:1px solid rgba(251,147,60,.22);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);color:#fff;${anim}">
-        <style>@keyframes gpCfgUp{from{transform:translateY(100%)}to{transform:translateY(0)}} .gpcinp{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;font-size:12px;outline:none;font-family:inherit;transition:border-color .15s} .gpcinp:focus{border-color:rgba(251,147,60,.5)} .gpcinp::placeholder{color:#fff} #gpcfg-body::-webkit-scrollbar{display:none}</style>
+      return `<div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);color:#fff;${anim}">
+        <style>@keyframes gpCfgUp{from{transform:translateY(100%)}to{transform:translateY(0)}} .gpcinp{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;font-size:12px;outline:none;font-family:inherit;transition:border-color .15s} .gpcinp:focus{border-color:rgba(255,255,255,.35);background:rgba(255,255,255,.08)} .gpcinp::placeholder{color:rgba(255,255,255,.55)} #gpcfg-body::-webkit-scrollbar{display:none}</style>
         <div style="display:flex;align-items:center;gap:10px;padding:14px 18px 12px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">
           <div style="width:36px;height:36px;border-radius:10px;background:rgba(251,147,60,.13);border:1px solid rgba(251,147,60,.28);display:flex;align-items:center;justify-content:center;font-size:18px">🔌</div>
           <div style="flex:1">
@@ -715,7 +715,7 @@
           <div style="height:16px"></div>
         </div>
         <div style="display:flex;gap:8px;padding:12px 14px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0">
-          <button id="gpcfg-save" style="flex:1;padding:11px;border-radius:11px;border:none;background:#fb923c;color:#0a0816;font-weight:800;cursor:pointer;font-size:13px">💾 Salva</button>
+          <button id="gpcfg-save" style="flex:1;padding:11px;border-radius:11px;border:none;background:#6366f1;color:#fff;font-weight:800;cursor:pointer;font-size:13px">💾 Salva</button>
           <button id="gpcfg-cancel" style="flex:0 0 80px;padding:11px;border-radius:11px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);color:#fff;cursor:pointer;font-size:13px">Annulla</button>
         </div>
       </div>`;
@@ -830,7 +830,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Prese', icon: '🔌',
     desc: 'Chip prese on/off · popup con stato, consumo W real-time, flusso animato e indicatori unavailable.',
-    version: '1.20', isDistintivo: true,
+    version: '1.22', isDistintivo: true,
     defaultCfg: { label:'Prese', icon:'🔌', color:'#fb923c', maxW:2300, entities:[] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -839,5 +839,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-prese v1.21'); } catch(e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-prese v1.22'); } catch(e) {}
 })();

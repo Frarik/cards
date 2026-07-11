@@ -1,4 +1,4 @@
-/* frarik-version: 1.3 */
+/* frarik-version: 1.4 */
 /**
  * GruppoClima.js — Distintivo FratechStore v1.3
  * Chip climi attivi + popup con temp/umidità da sensore, controlli HVAC/ventola/alette
@@ -640,7 +640,7 @@
       }).join('');
 
       const anim = _firstRender ? 'animation:ccCfgUp .22s cubic-bezier(.32,1.12,.56,1)' : '';
-      return `<div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0f0d1a;border:1px solid rgba(249,115,22,.22);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);color:#fff;${anim}">
+      return `<div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);color:#fff;${anim}">
         <style>@keyframes ccCfgUp{from{transform:translateY(100%)}to{transform:translateY(0)}} .cccinp{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;font-size:12px;outline:none;font-family:inherit;transition:border-color .15s} .cccinp:focus{border-color:rgba(249,115,22,.5);background:rgba(249,115,22,.04)} .cccinp::placeholder{color:#fff} #cccfg-body::-webkit-scrollbar{display:none}</style>
 
         <div style="display:flex;align-items:center;gap:10px;padding:14px 18px 12px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">
@@ -672,7 +672,7 @@
         </div>
 
         <div style="display:flex;gap:8px;padding:12px 14px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0">
-          <button id="cccfg-save" style="flex:1;padding:11px;border-radius:11px;border:none;background:#f97316;color:#0a0816;font-weight:800;cursor:pointer;font-size:13px">💾 Salva</button>
+          <button id="cccfg-save" style="flex:1;padding:11px;border-radius:11px;border:none;background:#6366f1;color:#fff;font-weight:800;cursor:pointer;font-size:13px">💾 Salva</button>
           <button id="cccfg-cancel" style="flex:0 0 80px;padding:11px;border-radius:11px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);color:#fff;cursor:pointer;font-size:13px">Annulla</button>
         </div>
       </div>`;
@@ -795,7 +795,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Clima', icon: '🌡️',
     desc: 'Chip climi attivi. Clic → temp/umidità da sensore, ±1°, ON/OFF, modalità HVAC, ventola, alette per ogni clima.',
-    version: '1.3', isDistintivo: true,
+    version: '1.4', isDistintivo: true,
     defaultCfg: { label: 'Clima', icon: '🌡️', color: '#f97316', entities: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -804,5 +804,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-clima v1.3'); } catch(e){}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-clima v1.4'); } catch(e){}
 })();

@@ -1,4 +1,4 @@
-/* frarik-version: 1.9.1 */
+/* frarik-version: 1.9.2 */
 (function () {
   'use strict';
 
@@ -669,7 +669,7 @@
       }).join('');
 
       const anim = _firstRender ? 'animation:gtCfgUp .22s cubic-bezier(.32,1.12,.56,1)' : '';
-      return `<div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0b1422;border:1px solid rgba(56,189,248,.22);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);color:#fff;${anim}">
+      return `<div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);color:#fff;${anim}">
         <style>
           @keyframes gtCfgUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
           .gtinp{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;font-size:12px;outline:none;font-family:inherit;transition:border-color .15s}
@@ -725,7 +725,7 @@
         </div>
 
         <div style="display:flex;gap:8px;padding:12px 14px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0">
-          <button id="gtcfg-save" style="flex:1;padding:11px;border-radius:11px;border:none;background:#38bdf8;color:#0a1628;font-weight:800;cursor:pointer;font-size:13px">💾 Salva</button>
+          <button id="gtcfg-save" style="flex:1;padding:11px;border-radius:11px;border:none;background:#6366f1;color:#fff;font-weight:800;cursor:pointer;font-size:13px">💾 Salva</button>
           <button id="gtcfg-cancel" style="flex:0 0 80px;padding:11px;border-radius:11px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);color:#fff;cursor:pointer;font-size:13px">Annulla</button>
         </div>
       </div>`;
@@ -846,7 +846,7 @@
     name: 'Gruppo Temperatura',
     icon: '🌡️',
     desc: 'Chip con media temp/umidità; popup weather-style con hero, consigli e righe stanza.',
-    version: '1.9',
+    version: '1.9.2',
     isDistintivo: true,
     defaultCfg: { label: 'Temperatura', color: '#38bdf8', avgTempEntity: '', avgHumEntity: '', entities: [] },
     chip, watchEntities, render, mount, update, configure, preview,
@@ -856,5 +856,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-temperatura v1.9'); } catch(e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-temperatura v1.9.2'); } catch(e) {}
 })();

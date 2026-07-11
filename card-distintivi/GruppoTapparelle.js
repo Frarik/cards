@@ -1,7 +1,8 @@
-/* frarik-version: 1.1 */
+/* frarik-version: 2.0 */
 /**
- * GruppoTapparelle.js — Distintivo FratechStore v1.1
- * Chip contatore tapparelle aperte + popup con Apri/Stop/Chiudi + posizione + automazione opzionale
+ * GruppoTapparelle.js — Distintivo FratechStore v2.0
+ * Chip: contatore + posizione media
+ * Popup: Apri/Stop/Chiudi + preset globali 25/50/75% + slider posizione per entità
  */
 (function () {
   'use strict';
@@ -38,6 +39,14 @@
     if (typeof window.callSvc === 'function') { window.callSvc(domain, svc, entityId); return; }
     const hh = H(); if (hh && hh.callService) hh.callService(domain, svc, { entity_id: entityId });
   }
+  function callSvcEx(domain, svc, data) {
+    if (typeof window.callSvc === 'function') {
+      const { entity_id, ...rest } = data;
+      window.callSvc(domain, svc, entity_id, Object.keys(rest).length ? rest : undefined);
+      return;
+    }
+    const hh = H(); if (hh && hh.callService) hh.callService(domain, svc, data);
+  }
   function eh(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function hex2rgba(hex, a) {
     let h = (hex||'').replace('#','');
@@ -72,12 +81,13 @@
     const h = liveH(rawHass);
     const ents = Array.isArray(c.entities) ? c.entities : [];
     const active = h ? ents.filter(e => isOn(h, e.entity)).length : 0;
+    const positions = h ? ents.map(e => coverPos(h, e.entity)).filter(p => p !== null) : [];
+    const avgPos = positions.length ? Math.round(positions.reduce((a, b) => a + b, 0) / positions.length) : null;
     const col = c.color || '#38bdf8';
-    const anyOpen = active > 0;
     return {
-      icon: iconHtml(_dynIcon(c.icon||'mdi:blinds', anyOpen)),
+      icon: iconHtml(_dynIcon(c.icon||'mdi:blinds', active > 0)),
       label: c.label || 'Tapparelle',
-      value: ents.length ? `${active}/${ents.length}` : '—',
+      value: ents.length ? `${active}/${ents.length}${avgPos !== null ? ' · ' + avgPos + '%' : ''}` : '—',
       color: active > 0 ? col : '#fff',
     };
   }
@@ -97,10 +107,14 @@
     const ents = Array.isArray(c.entities) ? c.entities : [];
     const col = c.color || '#38bdf8';
 
+    const bBase = `padding:7px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid`;
     const ctrlBar = ents.length ? `
-      <div style="display:flex;gap:8px;padding:4px 14px 8px">
-        <button data-gt-all="open" style="flex:1;padding:7px;border-radius:8px;border:1px solid ${hex2rgba(col,.4)};background:${hex2rgba(col,.12)};color:${col};font-size:11px;font-weight:700;cursor:pointer">↑ Apri tutte</button>
-        <button data-gt-all="close" style="flex:1;padding:7px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff;font-size:11px;font-weight:700;cursor:pointer">↓ Chiudi tutte</button>
+      <div style="display:flex;gap:6px;padding:4px 14px 8px;flex-wrap:wrap">
+        <button data-gt-all="open"  style="flex:1;min-width:60px;${bBase} ${hex2rgba(col,.4)};background:${hex2rgba(col,.12)};color:${col}">↑ Apri</button>
+        <button data-gt-preset="25" style="flex:1;min-width:40px;${bBase} rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff">25%</button>
+        <button data-gt-preset="50" style="flex:1;min-width:40px;${bBase} rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff">50%</button>
+        <button data-gt-preset="75" style="flex:1;min-width:40px;${bBase} rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff">75%</button>
+        <button data-gt-all="close" style="flex:1;min-width:60px;${bBase} rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff">↓ Chiudi</button>
       </div>` : '';
 
     const rows = ents.map((e, i) => {
@@ -113,12 +127,11 @@
       const stLbl = coverStateLbl(st);
       const stCol = on ? col : moving ? '#fbbf24' : '#fff';
 
-      const posBar = pos !== null ? `
-        <div style="display:flex;align-items:center;gap:6px;margin-top:5px">
-          <div style="flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden">
-            <div style="height:100%;width:${pos}%;background:${col};border-radius:2px;transition:width .4s"></div>
-          </div>
-          <span style="font-size:9px;color:#fff;flex-shrink:0">${pos}%</span>
+      const slider = pos !== null ? `
+        <div style="display:flex;align-items:center;gap:7px">
+          <input type="range" data-gt-pos="${i}" data-entity="${eh(e.entity)}" min="0" max="100" value="${pos}"
+            style="flex:1;accent-color:${col};cursor:pointer;outline:none;border:none;background:transparent">
+          <span data-gt-poslbl="${i}" style="font-size:10px;color:#fff;flex-shrink:0;width:30px;text-align:right;font-weight:600">${pos}%</span>
         </div>` : '';
 
       let autoBadge = '';
@@ -131,25 +144,25 @@
         autoBadge = `<button data-gt-auto="${i}" style="padding:3px 8px;border-radius:6px;border:1px solid ${aBdr};background:${aBg};color:${aCol};cursor:pointer;font-size:9px;font-weight:700;white-space:nowrap;outline:none">${aTxt}</button>`;
       }
 
-      const btnBase = 'width:30px;height:30px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:700;outline:none;flex-shrink:0';
+      const btnBase = 'width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;outline:none;flex-shrink:0';
       const ctrlBtns = `
-        <button data-gt-open="${i}" title="Apri" style="${btnBase};background:${hex2rgba(col,.15)};color:${col};border:1px solid ${hex2rgba(col,.3)}">↑</button>
-        <button data-gt-stop="${i}" title="Stop" style="${btnBase};background:rgba(255,255,255,.07);color:#fff;border:1px solid rgba(255,255,255,.15)">■</button>
+        <button data-gt-open="${i}"  title="Apri"  style="${btnBase};background:${hex2rgba(col,.15)};color:${col};border:1px solid ${hex2rgba(col,.3)}">↑</button>
+        <button data-gt-stop="${i}"  title="Stop"  style="${btnBase};background:rgba(255,255,255,.07);color:#fff;border:1px solid rgba(255,255,255,.15)">■</button>
         <button data-gt-close="${i}" title="Chiudi" style="${btnBase};background:rgba(255,255,255,.07);color:#fff;border:1px solid rgba(255,255,255,.15)">↓</button>`;
 
       return `<div style="border-bottom:1px solid rgba(255,255,255,.04)">
-        <div style="display:flex;align-items:center;gap:12px;padding:11px 16px">
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 16px 6px">
           <div style="width:36px;height:36px;border-radius:50%;background:${on?hex2rgba(col,.15):'rgba(255,255,255,.05)'};border:1px solid ${on?hex2rgba(col,.3):'rgba(255,255,255,.1)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${on||moving?col:'#fff'}">${iconHtml(_dynIcon(c.icon||'mdi:blinds',on||moving),18)}</div>
           <div style="flex:1;min-width:0">
             <div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
             <div style="font-size:11px;color:${stCol};margin-top:1px;font-weight:${on||moving?600:400}">${stLbl}</div>
-            ${posBar}
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
             <div style="display:flex;gap:4px">${ctrlBtns}</div>
             ${autoBadge}
           </div>
         </div>
+        ${slider ? `<div style="padding:0 16px 10px 64px">${slider}</div>` : '<div style="height:4px"></div>'}
       </div>`;
     }).join('');
 
@@ -163,37 +176,27 @@
   function _mountHandlers(cfg, el) {
     const c = loadCfg(cfg);
     const ents = Array.isArray(c.entities) ? c.entities : [];
-    if (el._gtHandler) el.removeEventListener('click', el._gtHandler);
+
+    if (el._gtHandler)       el.removeEventListener('click',  el._gtHandler);
+    if (el._gtInputHandler)  el.removeEventListener('input',  el._gtInputHandler);
+    if (el._gtChangeHandler) el.removeEventListener('change', el._gtChangeHandler);
 
     function handler(ev) {
       const openBtn = ev.target.closest('[data-gt-open]');
-      if (openBtn) {
-        const e = ents[parseInt(openBtn.dataset.gtOpen)]; if (!e) return;
-        callSvc('cover', 'open_cover', e.entity);
-        ev.stopPropagation(); return;
-      }
+      if (openBtn) { const e = ents[parseInt(openBtn.dataset.gtOpen)]; if (e) callSvc('cover', 'open_cover', e.entity); ev.stopPropagation(); return; }
       const stopBtn = ev.target.closest('[data-gt-stop]');
-      if (stopBtn) {
-        const e = ents[parseInt(stopBtn.dataset.gtStop)]; if (!e) return;
-        callSvc('cover', 'stop_cover', e.entity);
-        ev.stopPropagation(); return;
-      }
+      if (stopBtn) { const e = ents[parseInt(stopBtn.dataset.gtStop)]; if (e) callSvc('cover', 'stop_cover', e.entity); ev.stopPropagation(); return; }
       const closeBtn = ev.target.closest('[data-gt-close]');
-      if (closeBtn) {
-        const e = ents[parseInt(closeBtn.dataset.gtClose)]; if (!e) return;
-        callSvc('cover', 'close_cover', e.entity);
-        ev.stopPropagation(); return;
-      }
+      if (closeBtn) { const e = ents[parseInt(closeBtn.dataset.gtClose)]; if (e) callSvc('cover', 'close_cover', e.entity); ev.stopPropagation(); return; }
       const auto = ev.target.closest('[data-gt-auto]');
       if (auto) {
         const e = ents[parseInt(auto.dataset.gtAuto)]; if (!e||!e.automation) return;
         const autoOn = isOn(H(), e.automation);
         const nextOn = !autoOn;
-        const newCol = nextOn ? '#4ade80' : '#f87171';
-        const newBdr = nextOn ? 'rgba(74,222,128,.38)' : 'rgba(248,113,113,.38)';
-        const newBg  = nextOn ? 'rgba(74,222,128,.13)' : 'rgba(248,113,113,.13)';
         auto.textContent = nextOn ? '🟢 Attiva' : '🔴 Disattiva';
-        auto.style.color = newCol; auto.style.borderColor = newBdr; auto.style.background = newBg;
+        auto.style.color       = nextOn ? '#4ade80' : '#f87171';
+        auto.style.borderColor = nextOn ? 'rgba(74,222,128,.38)' : 'rgba(248,113,113,.38)';
+        auto.style.background  = nextOn ? 'rgba(74,222,128,.13)' : 'rgba(248,113,113,.13)';
         callSvc('automation', autoOn ? 'turn_off' : 'turn_on', e.automation);
         ev.stopPropagation(); return;
       }
@@ -201,30 +204,49 @@
       if (allBtn) {
         const svc = allBtn.dataset.gtAll === 'open' ? 'open_cover' : 'close_cover';
         ents.forEach(e => { if (e.entity) callSvc('cover', svc, e.entity); });
-        setTimeout(() => {
-          if (!el.isConnected) return;
-          el.innerHTML = render(cfg, null); _mountHandlers(cfg, el);
-        }, 1000);
+        ev.stopPropagation(); return;
+      }
+      const presetBtn = ev.target.closest('[data-gt-preset]');
+      if (presetBtn) {
+        const pos = parseInt(presetBtn.dataset.gtPreset);
+        ents.forEach(e => { if (e.entity) callSvcEx('cover', 'set_cover_position', { entity_id: e.entity, position: pos }); });
         ev.stopPropagation(); return;
       }
     }
 
-    el._gtHandler = handler;
-    el.addEventListener('click', handler);
+    function inputHandler(ev) {
+      const rangeEl = ev.target.closest('[data-gt-pos]');
+      if (!rangeEl) return;
+      const lbl = el.querySelector(`[data-gt-poslbl="${rangeEl.dataset.gtPos}"]`);
+      if (lbl) lbl.textContent = rangeEl.value + '%';
+      ev.stopPropagation();
+    }
+
+    function changeHandler(ev) {
+      const rangeEl = ev.target.closest('[data-gt-pos]');
+      if (!rangeEl) return;
+      const e = ents[parseInt(rangeEl.dataset.gtPos)]; if (!e) return;
+      callSvcEx('cover', 'set_cover_position', { entity_id: e.entity, position: parseInt(rangeEl.value) });
+      ev.stopPropagation();
+    }
+
+    el._gtHandler       = handler;
+    el._gtInputHandler  = inputHandler;
+    el._gtChangeHandler = changeHandler;
+    el.addEventListener('click',  handler);
+    el.addEventListener('input',  inputHandler);
+    el.addEventListener('change', changeHandler);
   }
 
   function mount(cfg, rawHass, el) {
     _mountHandlers(cfg, el);
 
-    // Aggiorna il titolo dell'header popup (el.previousElementSibling = hdr di _openJsdPopup)
     function _syncTitle() {
       try {
         const hdr = el.previousElementSibling; if (!hdr) return;
         const textWrap = hdr.children?.[1]; if (!textWrap) return;
         const titleEl = textWrap.firstElementChild; if (!titleEl) return;
-        // nasconde il sottotitolo (def.desc) nel popup
-        const subEl = textWrap.children?.[1];
-        if (subEl) subEl.style.display = 'none';
+        const subEl = textWrap.children?.[1]; if (subEl) subEl.style.display = 'none';
         const c = loadCfg(cfg);
         const ents = Array.isArray(c.entities) ? c.entities : [];
         const h = H();
@@ -275,22 +297,19 @@
       const spaceAbove = rect.top - 6;
       const useAbove = spaceBelow < MAXH && spaceAbove > spaceBelow;
       _acDrop = document.createElement('div');
-      const pos = useAbove
-        ? `bottom:${window.innerHeight - rect.top + 4}px`
-        : `top:${rect.bottom + 4}px`;
-      _acDrop.style.cssText = `position:fixed;left:${rect.left}px;${pos};width:${rect.width}px;max-height:${MAXH}px;overflow-y:auto;z-index:100003;background:#1a1630;border:1px solid rgba(56,189,248,.3);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.88);scrollbar-width:thin;scrollbar-color:#fff transparent`;
+      const pos = useAbove ? `bottom:${window.innerHeight - rect.top + 4}px` : `top:${rect.bottom + 4}px`;
+      _acDrop.style.cssText = `position:fixed;left:${rect.left}px;${pos};width:${rect.width}px;max-height:${MAXH}px;overflow-y:auto;z-index:100003;background:#1a1630;border:1px solid rgba(255,255,255,.2);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.88);scrollbar-width:thin;scrollbar-color:#fff transparent`;
       matches.forEach(m => {
         const r = document.createElement('div');
         r.style.cssText = 'padding:9px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.05);transition:background .1s';
-        const stColor = m.on ? '#38bdf8' : '#fff';
         r.innerHTML = `<div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:13px;flex-shrink:0;filter:${m.on?'none':'grayscale(1) opacity(.4)'}">${m.icon||'📦'}</span>
           <div style="flex:1;min-width:0">
             <div style="font-size:11px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(m.name)}</div>
-            <div style="font-size:9px;color:#fff;margin-top:1px">${eh(m.id)}${m.stateLabel?` · <span style="color:${stColor}">${eh(m.stateLabel)}</span>`:''}</div>
+            <div style="font-size:9px;color:#fff;margin-top:1px">${eh(m.id)}${m.stateLabel?` · <span style="color:#fff">${eh(m.stateLabel)}</span>`:''}</div>
           </div>
         </div>`;
-        r.addEventListener('mouseover', () => { r.style.background='rgba(56,189,248,.08)'; });
+        r.addEventListener('mouseover', () => { r.style.background='rgba(255,255,255,.06)'; });
         r.addEventListener('mouseout',  () => { r.style.background='transparent'; });
         r.addEventListener('mousedown', ev => { ev.preventDefault(); onPick(m.id, m.name); _closeAc(); });
         _acDrop.appendChild(r);
@@ -312,7 +331,6 @@
       inp.addEventListener('blur', () => setTimeout(_closeAc, 160));
     }
 
-    // Tutte le entità HA — cover.* per prime
     function _entityMatches(q) {
       if (!h||!h.states) return [];
       const lq = q.toLowerCase();
@@ -345,17 +363,12 @@
     const ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;z-index:100001;display:flex;align-items:flex-end;background:rgba(0,0,0,.78);backdrop-filter:blur(7px);font-family:system-ui,sans-serif';
 
-    function closeOv() {
-      _closeAc();
-      try { document.body.removeChild(ov); } catch(e){}
-      document.removeEventListener('keydown', escFn);
-    }
+    function closeOv() { _closeAc(); try { document.body.removeChild(ov); } catch(e){} document.removeEventListener('keydown', escFn); }
     function escFn(ev) { if (ev.key==='Escape') closeOv(); }
     document.addEventListener('keydown', escFn);
 
     function renderForm() {
       const col = c.color || '#38bdf8';
-
       const selRows = ents.map((e, i) => {
         const lbl = e.label || nameOf(h, e.entity);
         const on = h ? isOn(h, e.entity) : false;
@@ -388,8 +401,8 @@
       }).join('');
 
       const anim = _firstRender ? 'animation:gtCfgUp .22s cubic-bezier(.32,1.12,.56,1)' : '';
-      return `<div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0f0d1a;border:1px solid rgba(56,189,248,.22);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);color:#fff;${anim}">
-        <style>@keyframes gtCfgUp{from{transform:translateY(100%)}to{transform:translateY(0)}} .gtcinp{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;font-size:12px;outline:none;font-family:inherit;transition:border-color .15s} .gtcinp:focus{border-color:rgba(56,189,248,.5);background:rgba(56,189,248,.04)} .gtcinp::placeholder{color:#fff} #gtcfg-body::-webkit-scrollbar{display:none}</style>
+      return `<div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);color:#fff;${anim}">
+        <style>@keyframes gtCfgUp{from{transform:translateY(100%)}to{transform:translateY(0)}} .gtcinp{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;font-size:12px;outline:none;font-family:inherit;transition:border-color .15s} .gtcinp:focus{border-color:rgba(255,255,255,.35);background:rgba(255,255,255,.08)} .gtcinp::placeholder{color:rgba(255,255,255,.55)} #gtcfg-body::-webkit-scrollbar{display:none}</style>
 
         <div style="display:flex;align-items:center;gap:10px;padding:14px 18px 12px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">
           <div style="width:36px;height:36px;border-radius:10px;background:rgba(56,189,248,.13);border:1px solid rgba(56,189,248,.28);display:flex;align-items:center;justify-content:center;font-size:18px">🪟</div>
@@ -401,7 +414,6 @@
         </div>
 
         <div id="gtcfg-body" style="flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;padding:14px 14px 4px">
-
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Chip</div>
           <div style="display:flex;gap:7px;margin-bottom:14px">
             <div style="flex:1"><div style="font-size:9px;color:#fff;margin-bottom:3px">Nome chip</div><input id="gtcfg-label" class="gtcinp" placeholder="Tapparelle" value="${eh(c.label||'Tapparelle')}"></div>
@@ -417,12 +429,11 @@
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin:${ents.length?'12px':0} 0 6px">Aggiungi entità</div>
           <input id="gtcfg-add-entity" class="gtcinp" placeholder="🔍 Inizia a scrivere il nome dell'entità…" autocomplete="off">
           <div style="font-size:9px;color:#fff;margin-top:5px">Mostra tutte le entità — cover.* compaiono per prime</div>
-
           <div style="height:16px"></div>
         </div>
 
         <div style="display:flex;gap:8px;padding:12px 14px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0">
-          <button id="gtcfg-save" style="flex:1;padding:11px;border-radius:11px;border:none;background:#38bdf8;color:#0a0816;font-weight:800;cursor:pointer;font-size:13px">💾 Salva</button>
+          <button id="gtcfg-save" style="flex:1;padding:11px;border-radius:11px;border:none;background:#6366f1;color:#fff;font-weight:800;cursor:pointer;font-size:13px">💾 Salva</button>
           <button id="gtcfg-cancel" style="flex:0 0 80px;padding:11px;border-radius:11px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);color:#fff;cursor:pointer;font-size:13px">Annulla</button>
         </div>
       </div>`;
@@ -432,8 +443,6 @@
       _closeAc();
       const prevBody = ov.querySelector('#gtcfg-body');
       const savedBody = prevBody ? prevBody.scrollTop : 0;
-
-      // salva i valori correnti dei campi chip prima del re-render
       const curLabel = ov.querySelector('#gtcfg-label')?.value;
       const curIcon  = ov.querySelector('#gtcfg-icon')?.value;
       const curColor = ov.querySelector('#gtcfg-color')?.value;
@@ -443,8 +452,6 @@
 
       const nb = ov.querySelector('#gtcfg-body');
       if (nb && savedBody > 0) nb.scrollTop = savedBody;
-
-      // ripristina valori che l'utente stava modificando
       if (curLabel !== undefined) { const f = ov.querySelector('#gtcfg-label'); if (f) f.value = curLabel; }
       if (curIcon  !== undefined) {
         const f = ov.querySelector('#gtcfg-icon'); if (f) f.value = curIcon;
@@ -452,7 +459,6 @@
       }
       if (curColor !== undefined) { const f = ov.querySelector('#gtcfg-color'); if (f) f.value = curColor; }
 
-      // click sull'icona → apre il picker HA (emoji + MDI)
       ov.querySelector('#gtcfg-icon-btn')?.addEventListener('click', ev => {
         ev.stopPropagation();
         if (typeof openIconPicker === 'function') {
@@ -476,24 +482,18 @@
       if (ov._ovClick) ov.removeEventListener('click', ov._ovClick);
       ov._ovClick = ev => { if (ev.target === ov) closeOv(); };
       ov.addEventListener('click', ov._ovClick);
-
       ov.querySelector('#gtcfg-close').onclick = closeOv;
       ov.querySelector('#gtcfg-cancel').onclick = closeOv;
 
       ov.querySelectorAll('[data-del]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const i = parseInt(btn.dataset.del);
-          ents.splice(i, 1); expandedAuto.delete(i); attach();
-        });
+        btn.addEventListener('click', () => { const i = parseInt(btn.dataset.del); ents.splice(i, 1); expandedAuto.delete(i); attach(); });
       });
-
       ov.querySelectorAll('[data-addauto]').forEach(btn => {
         btn.addEventListener('click', () => {
           expandedAuto.add(parseInt(btn.dataset.addauto)); attach();
           setTimeout(() => { const inp = ov.querySelector(`[data-auto-idx="${btn.dataset.addauto}"]`); if (inp) inp.focus(); }, 40);
         });
       });
-
       ov.querySelectorAll('[data-saveauto]').forEach(btn => {
         btn.addEventListener('click', () => {
           const i = parseInt(btn.dataset.saveauto);
@@ -502,11 +502,9 @@
           expandedAuto.delete(i); attach();
         });
       });
-
       ov.querySelectorAll('[data-rmauto]').forEach(btn => {
         btn.addEventListener('click', () => { ents[parseInt(btn.dataset.rmauto)].automation = ''; attach(); });
       });
-
       ov.querySelectorAll('[data-auto-idx]').forEach(inp => {
         const i = parseInt(inp.dataset.autoIdx);
         _setupAc(inp, _autoMatches, id => { ents[i].automation = id; inp.value = id; });
@@ -515,11 +513,8 @@
       const addInp = ov.querySelector('#gtcfg-add-entity');
       if (addInp) {
         _setupAc(addInp, _entityMatches, (id, name) => {
-          if (!ents.find(e => e.entity === id)) {
-            ents.push({ entity: id, label: name || '', automation: '' });
-          }
-          addInp.value = '';
-          attach();
+          if (!ents.find(e => e.entity === id)) ents.push({ entity: id, label: name || '', automation: '' });
+          addInp.value = ''; attach();
         });
       }
 
@@ -544,8 +539,8 @@
   /* ── registrazione ── */
   const CARD = {
     id: ID, name: 'Gruppo Tapparelle', icon: '🪟',
-    desc: 'Chip con contatore tapparelle aperte. Clic → pannello Apri/Stop/Chiudi + posizione.',
-    version: '1.1', isDistintivo: true,
+    desc: 'Chip con contatore + posizione media. Popup: Apri/Stop/Chiudi, preset 25/50/75%, slider posizione per entità.',
+    version: '2.0', isDistintivo: true,
     defaultCfg: { label: 'Tapparelle', icon: 'mdi:blinds', color: '#38bdf8', entities: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -554,5 +549,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-tapparelle v1.1'); } catch(e){}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-tapparelle v2.0'); } catch(e){}
 })();
