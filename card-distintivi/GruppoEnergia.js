@@ -1,4 +1,4 @@
-/* frarik-version: 3.6 */
+/* frarik-version: 3.7 */
 /**
  * GruppoEnergia.js — Distintivo FratechStore v3.0
  * Flow shimmer · tralicio img data-URI · nodi uguali · speed reattiva
@@ -133,7 +133,7 @@
   function _chart(pts, maxW, col) {
     const W = 400, H = 100;
     const _wrap = inner =>
-      `<div style="position:relative;width:100%;padding-bottom:26%;min-height:120px">${inner}</div>`;
+      `<div style="position:relative;width:100%;padding-bottom:20%;min-height:100px">${inner}</div>`;
     const noData = _wrap(
       `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff">Nessun dato storico disponibile</div>`
     );
@@ -142,47 +142,66 @@
       const now   = Date.now();
       const start = now - 24 * 3600000;
 
-      // 90° percentile come tetto Y: i picchi estremi non schacciano la baseline
+      // 90° percentile come tetto Y
       const sorted = [...pts.map(p => p.v)].sort((a, b) => a - b);
       const p90    = sorted[Math.floor(sorted.length * 0.90)] || sorted[sorted.length - 1];
-      const maxV   = Math.max(p90 * 1.25, maxW * 0.05, 80); // +25% headroom, min 80W
+      const maxV   = Math.max(p90 * 1.25, maxW * 0.05, 80);
 
       const xf = t => Math.max(0, Math.min(W, ((t - start) / (now - start)) * W));
       const yf = v => Math.max(1, Math.min(H - 1, H - (Math.min(v, maxV) / maxV) * (H - 4)));
 
-      // griglie orizzontali leggere
+      // colore in base alla percentuale del valore rispetto al tetto
+      function _pc(v) {
+        const r = Math.min(v / maxV, 1);
+        if (r >= 0.85) return '#ef4444';
+        if (r >= 0.60) return '#f97316';
+        if (r >= 0.35) return '#facc15';
+        return '#4ade80';
+      }
+
+      // raggruppa punti consecutivi per colore → polyline per gruppo
+      const colorSegs = [];
+      let curC = null, curP = [];
+      pts.forEach((p, i) => {
+        const c = _pc(p.v);
+        if (c !== curC) {
+          if (curP.length > 1) colorSegs.push({ c: curC, p: curP });
+          curC = c; curP = i > 0 ? [pts[i - 1], p] : [p];
+        } else { curP.push(p); }
+      });
+      if (curP.length > 1) colorSegs.push({ c: curC, p: curP });
+      const segs = colorSegs.map(({ c, p: sp }) =>
+        `<polyline points="${sp.map(pt => `${xf(pt.t).toFixed(1)},${yf(pt.v).toFixed(1)}`).join(' ')}" fill="none" stroke="${c}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`
+      ).join('');
+
+      // area riempimento (sottile, neutro)
+      const last = pts[pts.length - 1];
+      const areaD = `M ${pts.map(p => `${xf(p.t).toFixed(1)},${yf(p.v).toFixed(1)}`).join(' L ')} L ${xf(last.t).toFixed(1)},${H} L ${xf(pts[0].t).toFixed(1)},${H} Z`;
+      const gid = 'eg' + col.replace('#', '');
+
+      // griglie orizzontali
       const grid = [0.25, 0.5, 0.75].map(r => {
         const y = yf(maxV * r).toFixed(1);
-        return `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="rgba(255,255,255,.07)" stroke-width="1"/>`;
+        return `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="rgba(255,255,255,.06)" stroke-width="1"/>`;
       }).join('');
 
-      // linea soglia contratto (se supera il 50%)
-      const thr = maxV > maxW * 0.5
-        ? (() => { const y = yf(maxW * 0.5).toFixed(1); return `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="${col}" stroke-width="1" stroke-dasharray="5,4" opacity=".3"/>`; })()
-        : '';
-
-      const line = pts.map(p => `${xf(p.t).toFixed(1)},${yf(p.v).toFixed(1)}`).join(' L ');
-      const last = pts[pts.length - 1];
-      const area = `M ${line} L ${xf(last.t).toFixed(1)},${H} L ${xf(pts[0].t).toFixed(1)},${H} Z`;
-
-      const gid = 'eg' + col.replace('#', '');
       const labels = [0, 3, 6, 9, 12, 15, 18, 21].map(hr => {
         const d = new Date(); d.setHours(hr, 0, 0, 0);
         const x = xf(+d); if (x < 14 || x > W - 14) return '';
-        return `<text x="${x.toFixed(1)}" y="${H + 16}" text-anchor="middle" fill="rgba(255,255,255,.55)" font-size="12" font-family="system-ui,sans-serif">${String(hr).padStart(2, '0')}:00</text>`;
+        return `<text x="${x.toFixed(1)}" y="${H + 16}" text-anchor="middle" fill="rgba(255,255,255,.5)" font-size="12" font-family="system-ui,sans-serif">${String(hr).padStart(2, '0')}:00</text>`;
       }).join('');
 
-      // piccolo dot al punto più recente (non al picco)
+      const dotCol = _pc(last.v);
       const lx = xf(last.t).toFixed(1), ly = yf(last.v).toFixed(1);
 
       return _wrap(`<svg style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 ${W} ${H + 22}" preserveAspectRatio="none">
         <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="${col}" stop-opacity=".5"/><stop offset="100%" stop-color="${col}" stop-opacity=".03"/>
+          <stop offset="0%" stop-color="#4ade80" stop-opacity=".08"/><stop offset="100%" stop-color="#4ade80" stop-opacity="0"/>
         </linearGradient></defs>
-        ${grid}${thr}
-        <path d="${area}" fill="url(#${gid})"/>
-        <path d="M ${line}" fill="none" stroke="${col}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-        <circle cx="${lx}" cy="${ly}" r="4" fill="${col}" stroke="#0a0816" stroke-width="2"/>
+        ${grid}
+        <path d="${areaD}" fill="url(#${gid})"/>
+        ${segs}
+        <circle cx="${lx}" cy="${ly}" r="3.5" fill="${dotCol}" stroke="#0a0816" stroke-width="1.5"/>
         ${labels}
       </svg>`);
     } catch (e) { return noData; }
@@ -341,7 +360,7 @@
       <!-- GRAFICO -->
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#fff;margin-bottom:8px">Ultime 24 ore</div>
       <div class="e-chart" style="margin:0 -14px;padding-bottom:4px">
-        <div style="position:relative;width:100%;padding-bottom:26%;min-height:120px">
+        <div style="position:relative;width:100%;padding-bottom:20%;min-height:100px">
           <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff">⏳ Caricamento…</div>
         </div>
       </div>
@@ -672,7 +691,7 @@
   /* ════════════════════════════════════════ REGISTRAZIONE ══ */
   const CARD = {
     id: ID, name: 'Gruppo Energia', icon: '⚡', desc: '',
-    version: '3.6', isDistintivo: true,
+    version: '3.7', isDistintivo: true,
     defaultCfg: { label: 'Energia', entity: '', maxKw: 3, priceKwh: 0, alertKw: 0, solarEntity: '', kwhEntity: '' },
     chip, watchEntities, render, mount, update, configure, preview,
   };
@@ -680,5 +699,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v3.6'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v3.7'); } catch (e) {}
 })();
