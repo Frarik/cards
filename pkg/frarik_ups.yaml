@@ -13,12 +13,11 @@ homeassistant:
 ####################################################
 
       setting:
-        UPS Status 1: &entity_ups_1 "{% if is_state('sensor.tecnoware_dati_di_stato', 'OB')  %} Batteria {% elif is_state('sensor.tecnoware_dati_di_stato' , 'OL')  %} Rete Elettrica {% else%} Non Disponibile {% endif %}"
-        UPS Status 2: &entity_ups_2 sensor.tecnoware_dati_di_stato
-        UPS Batteria: &entity_ups_batteria "{{states('sensor.tecnoware_carica_batterie')}}"
-        UPS Carico: &entity_carico_ups "{{states('sensor.tecnoware_carico')}}"
-        Volt Ingresso UPS: &volt_ingresso_ups "{{states('sensor.tecnoware_tensione_di_ingresso')}}"
-        Volt Uscita UPS: &volt_uscita_ups "{{states('sensor.tecnoware_tensione_di_uscita')}}"
+        UPS Stato (OL/OB/unknown): &entity_ups_stato IL_TUO_SENSORE_STATO_UPS
+        UPS Batteria (%): &entity_ups_batteria "{{states('IL_TUO_SENSORE_BATTERIA_UPS')}}"
+        UPS Carico (%): &entity_carico_ups "{{states('IL_TUO_SENSORE_CARICO_UPS')}}"
+        Volt Ingresso: &volt_ingresso_ups "{{states('IL_TUO_SENSORE_VOLT_INGRESSO')}}"
+        Volt Uscita: &volt_uscita_ups "{{states('IL_TUO_SENSORE_VOLT_USCITA')}}"
 
 ####################################################
 
@@ -213,12 +212,12 @@ script:
 
 template:
   - sensor:
-    - name: "Sensore Centro Controllo Ups Tecnoware"
-      state: "1.3"
-
     - name: Alimentazione UPS Tecnoware
       icon: mdi:flash
-      state: *entity_ups_1
+      state: >
+        {% if is_state('IL_TUO_SENSORE_STATO_UPS', 'OB') %} Batteria
+        {% elif is_state('IL_TUO_SENSORE_STATO_UPS', 'OL') %} Rete Elettrica
+        {% else %} Non Disponibile {% endif %}
       attributes:
         stato_display_blackout: "{% if is_state('input_boolean.durata_blackout', 'on') %}In Corso{% else %}Ultimo{% endif %}"
         durata_blackout: >
@@ -256,17 +255,17 @@ automation:
     id: Automazioni UPS Tecnoware
     trigger:
 
-      - entity_id: *entity_ups_2
+      - entity_id: *entity_ups_stato
         platform: state
         to: "OB"
         id: ups_batteria
 
-      - entity_id: *entity_ups_2
+      - entity_id: *entity_ups_stato
         platform: state
         to: "OL"
         id: ups_rete
 
-      - entity_id: *entity_ups_2
+      - entity_id: *entity_ups_stato
         platform: state
         to: "unknown"
         id: ups_offline

@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.9.98 — 2026-07-12
+
+### fix(pkg/ups): aggiunto placeholder IL_TUO_* per tutti i sensori UPS
+
+- `IL_TUO_SENSORE_STATO_UPS` — sensore stato OL/OB/unknown
+- `IL_TUO_SENSORE_BATTERIA_UPS` — sensore carica batteria %
+- `IL_TUO_SENSORE_CARICO_UPS` — sensore carico UPS %
+- `IL_TUO_SENSORE_VOLT_INGRESSO` — tensione ingresso V
+- `IL_TUO_SENSORE_VOLT_USCITA` — tensione uscita V
+- `IL_TUO_MOBILE_APP` — servizio notifiche push
+- Il wizard dello store ora chiede tutti i sensori durante l'installazione
+- bump 1.9.97 → 1.9.98
+
 ## 1.9.97 — 2026-07-12
 
 ### feat(pkg): aggiunto frarik_ups.yaml nel Frarik Store
