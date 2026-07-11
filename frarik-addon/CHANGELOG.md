@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.9.93 — 2026-07-11
+
+### redesign(GruppoBatterie): popup colonna singola mobile-friendly
+
+- Rimosso layout a 3 colonne affiancate (illeggibile su telefono)
+- Ogni batteria è ora una riga: emoji status | nome | barra | percentuale
+- Sezioni con header colorato: Offline · Critiche · Basse · OK
+- Batterie "OK" con riga compatta, problematiche con sfondo/bordo evidenziato
+- Counter pills sotto il summary (📴 🔴 🟡 ✅ con i conteggi)
+- bump GruppoBatterie 1.5 → 1.6 · addon 1.9.92 → 1.9.93
+
 ## 1.9.92 — 2026-07-11
 
 ### feat(Store): anteprima simulata per GruppoTemperatura

@@ -1,4 +1,4 @@
-/* frarik-version: 1.5 */
+/* frarik-version: 1.6 */
 /**
  * GruppoBatterie.js — Distintivo FratechStore v1.2
  * Rileva automaticamente TUTTE le entità con device_class: battery
@@ -137,89 +137,94 @@
     const col = STATUS_COL[worstStatus];
 
     if (total === 0) {
-      return `<div style="padding:36px 20px;text-align:center;color:#fff;font-size:12px;font-family:system-ui,sans-serif">
-        Nessun sensore batteria trovato.<br>
-        <span style="font-size:10px;">Verifica che le entità abbiano <code>device_class: battery</code>.</span>
+      return `<div style="padding:48px 20px;text-align:center;font-family:system-ui,sans-serif">
+        <div style="font-size:42px;margin-bottom:12px">🔋</div>
+        <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:6px">Nessun sensore batteria trovato</div>
+        <div style="font-size:10px;color:#fff">Verifica che le entità abbiano <code style="background:rgba(255,255,255,.08);padding:1px 4px;border-radius:3px">device_class: battery</code></div>
       </div>`;
     }
 
-    /* summary pill */
-    let summaryTxt;
-    if (worstStatus === 'ok') {
-      summaryTxt = `✅ Tutte le ${total} batterie sono OK`;
-    } else {
-      const pcs = [];
-      if (offline  > 0) pcs.push(`${offline} offline`);
-      if (critical > 0) pcs.push(`${critical} critica/e`);
-      if (low      > 0) pcs.push(`${low} bassa/e`);
-      summaryTxt = `⚠️ ${pcs.join(' · ')} su ${total}`;
-    }
+    const okCount = total - offline - critical - low;
 
-    /* ── sezione offline: pill orizzontali in cima ── */
-    const offlineItems   = items.filter(i => i.status === 'offline');
-    const criticalItems  = items.filter(i => i.status === 'critical');
-    const lowItems       = items.filter(i => i.status === 'low');
-    const okItems        = items.filter(i => i.status === 'ok');
+    /* ── summary hero ── */
+    const summaryTxt = worstStatus === 'ok'
+      ? `✅ Tutte le ${total} batterie sono OK`
+      : (() => {
+          const pcs = [];
+          if (offline  > 0) pcs.push(`${offline} offline`);
+          if (critical > 0) pcs.push(`${critical} critica/e`);
+          if (low      > 0) pcs.push(`${low} bassa/e`);
+          return `⚠️ ${pcs.join(' · ')} su ${total}`;
+        })();
 
-    const offlineRow = offlineItems.length ? `
-      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">
-        ${offlineItems.map(item => `
-          <div style="display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;border:1px solid #ef444440;background:#ef444412">
-            <span style="font-size:12px;flex-shrink:0">📴</span>
-            <span style="font-size:10px;font-weight:700;color:#ef4444;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px">${eh(item.name)}</span>
-          </div>`).join('')}
+    /* ── counter pills ── */
+    const pill = (emo, n, sc) => n > 0
+      ? `<div style="display:flex;align-items:center;gap:4px;padding:4px 9px;border-radius:10px;background:${sc}15;border:1px solid ${sc}30">
+           <span style="font-size:11px">${emo}</span>
+           <span style="font-size:11px;font-weight:700;color:${sc}">${n}</span>
+         </div>` : '';
+
+    const pillsRow = (offline + critical + low + okCount) > 0 ? `
+      <div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:8px">
+        ${pill('📴', offline,  '#ef4444')}
+        ${pill('🔴', critical, '#f97316')}
+        ${pill('🟡', low,      '#facc15')}
+        ${pill('✅', okCount,  '#4ade80')}
       </div>` : '';
 
-    /* ── card singola batteria ── */
-    function _battCard(item) {
+    /* ── riga singola ── */
+    function _row(item, compact) {
       const sc = STATUS_COL[item.status];
-      const bar = item.level !== null
-        ? `<div style="position:relative;height:3px;border-radius:2px;background:rgba(255,255,255,.08);margin:5px 0 3px">
-             <div style="position:absolute;top:0;left:0;height:100%;width:${Math.max(3, item.level)}%;background:${sc};border-radius:2px"></div>
-           </div>`
-        : '<div style="height:8px"></div>';
-      return `<div style="padding:7px 8px;border-radius:9px;border:1px solid ${sc}25;background:${sc}08;margin-bottom:4px">
-        <div style="font-size:10px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(item.name)}</div>
-        ${bar}
-        ${item.level !== null
-          ? `<div style="font-size:12px;font-weight:900;color:${sc};line-height:1">${Math.round(item.level)}%</div>`
-          : `<div style="font-size:9px;font-weight:700;color:${sc}">—</div>`}
+      const ico = { offline:'📴', critical:'🔴', low:'🟡', ok:'✅' }[item.status] || '🔋';
+      const barW = item.level !== null ? Math.max(3, Math.round(item.level)) : 0;
+      const barHtml = item.level !== null
+        ? `<div style="position:relative;height:4px;border-radius:2px;background:rgba(255,255,255,.08);width:80px;flex-shrink:0">
+             <div style="position:absolute;top:0;left:0;height:100%;width:${barW}%;background:${sc};border-radius:2px"></div>
+           </div>
+           <span style="font-size:${compact?'11':'12'}px;font-weight:700;color:${sc};min-width:30px;text-align:right">${Math.round(item.level)}%</span>`
+        : `<span style="font-size:10px;color:${sc};min-width:110px;text-align:right">—</span>`;
+
+      const bg = compact ? '' : `background:${sc}0d;border:1px solid ${sc}22;`;
+      return `<div style="display:flex;align-items:center;gap:10px;padding:${compact?'6px 8px':'9px 10px'};border-radius:10px;${bg}margin-bottom:4px">
+        <span style="font-size:${compact?'12':'14'}px;flex-shrink:0">${ico}</span>
+        <span style="font-size:${compact?'11':'12'}px;font-weight:${compact?'500':'600'};color:#fff;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(item.name)}</span>
+        ${barHtml}
       </div>`;
     }
 
-    /* ── colonna per categoria ── */
-    function _col(label, emo, sc, colItems) {
-      const cards = colItems.map(_battCard).join('');
-      const empty = colItems.length === 0
-        ? `<div style="padding:12px 0;text-align:center;font-size:9px;color:#fff">nessuna</div>`
-        : '';
-      return `<div style="display:flex;flex-direction:column;min-width:0">
-        <div style="display:flex;align-items:center;gap:4px;padding:5px 6px 6px;border-bottom:1px solid ${sc}30;margin-bottom:6px">
-          <span style="font-size:12px">${emo}</span>
-          <span style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:${sc}">${label}</span>
-          ${colItems.length ? `<span style="margin-left:auto;font-size:9px;font-weight:700;color:${sc};background:${sc}18;border-radius:8px;padding:1px 6px">${colItems.length}</span>` : ''}
+    /* ── sezione con header ── */
+    function _section(emo, label, sc, sItems, compact) {
+      if (!sItems.length) return '';
+      return `<div style="margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:6px;padding:6px 4px 5px">
+          <span style="font-size:11px">${emo}</span>
+          <span style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:${sc}">${label}</span>
+          <span style="font-size:9px;font-weight:700;color:${sc};background:${sc}18;border-radius:8px;padding:1px 6px">${sItems.length}</span>
+          <div style="flex:1;height:1px;background:${sc}25;margin-left:2px"></div>
         </div>
-        ${cards}${empty}
+        ${sItems.map(i => _row(i, compact)).join('')}
       </div>`;
     }
 
-    const col3 = `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-      ${_col('Critiche', '🔴', '#ef4444', criticalItems)}
-      ${_col('Basse',    '🟡', '#facc15', lowItems)}
-      ${_col('OK',       '🟢', '#4ade80', okItems)}
-    </div>`;
+    const offlineItems  = items.filter(i => i.status === 'offline');
+    const criticalItems = items.filter(i => i.status === 'critical');
+    const lowItems      = items.filter(i => i.status === 'low');
+    const okItems       = items.filter(i => i.status === 'ok');
 
     return `<div style="padding:10px 10px 0;font-family:system-ui,sans-serif">
 
       <div style="text-align:center;padding:4px 10px 10px">
         <div style="display:inline-block;padding:6px 16px;border-radius:20px;background:${col}18;border:1px solid ${col}44;font-size:11px;font-weight:700;color:${col}">${summaryTxt}</div>
-        <div style="font-size:9px;color:#fff;margin-top:5px">Soglie: bassa &lt;${thrL}% · critica &lt;${thrC}%</div>
+        ${pillsRow}
+        <div style="font-size:9px;color:#fff;margin-top:6px;opacity:.5">Soglie: bassa &lt;${thrL}% · critica &lt;${thrC}%</div>
       </div>
 
       <style>.batt-scroll::-webkit-scrollbar{display:none}</style>
       <div class="batt-scroll" style="max-height:55vh;overflow-y:auto;scrollbar-width:none;padding-bottom:10px">
-        ${offlineRow}
-        ${col3}
+        ${_section('📴', 'Offline',   '#ef4444', offlineItems,  false)}
+        ${_section('🔴', 'Critiche',  '#f97316', criticalItems, false)}
+        ${_section('🟡', 'Basse',     '#facc15', lowItems,      false)}
+        ${_section('✅', 'OK',        '#4ade80', okItems,       true)}
       </div>
     </div>`;
   }
@@ -330,7 +335,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Batterie', icon: '🔋',
     desc: '',
-    version: '1.5', isDistintivo: true,
+    version: '1.6', isDistintivo: true,
     defaultCfg: { label: 'Batterie', threshLow: 20, threshCrit: 10 },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -339,5 +344,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-batterie v1.5'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-batterie v1.6'); } catch (e) {}
 })();
