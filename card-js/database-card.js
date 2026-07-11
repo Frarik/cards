@@ -13,24 +13,103 @@
 
   /* ──────────────────────────── SVG DATABASE ──────────────────────── */
   function dbSVG(busy) {
-    var kf = busy ? '@keyframes dbspin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes dbpls{0%,100%{opacity:.5}50%{opacity:1}}' : '';
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 80" style="display:block;width:100%;height:100%;filter:drop-shadow(0 0 10px rgba(' + ACC + ',' + (busy ? '.35' : '.12') + '))">'
-      + (busy ? '<defs><style>' + kf + '</style></defs>' : '')
-      + '<ellipse cx="32" cy="66" rx="24" ry="7" fill="rgba(' + ACC + ',.08)"/>'
-      + '<ellipse cx="32" cy="56" rx="22" ry="6.5" fill="rgba(' + ACC + ',.06)" stroke="rgba(' + ACC + ',.25)" stroke-width="1"/>'
-      + '<rect x="10" y="49.5" width="44" height="13" fill="rgba(' + ACC + ',.06)"/>'
-      + '<ellipse cx="32" cy="56" rx="22" ry="6.5" fill="rgba(' + ACC + ',.1)"/>'
-      + '<ellipse cx="32" cy="40" rx="22" ry="6.5" fill="rgba(' + ACC + ',.06)" stroke="rgba(' + ACC + ',.25)" stroke-width="1"/>'
-      + '<rect x="10" y="33.5" width="44" height="13" fill="rgba(' + ACC + ',.08)"/>'
-      + '<ellipse cx="32" cy="40" rx="22" ry="6.5" fill="rgba(' + ACC + ',.12)"/>'
-      + '<ellipse cx="32" cy="24" rx="22" ry="6.5" fill="rgba(' + ACC + ',.06)" stroke="rgba(' + ACC + ',.3)" stroke-width="1.2"/>'
-      + '<rect x="10" y="17.5" width="44" height="13" fill="rgba(' + ACC + ',.1)"/>'
-      + '<ellipse cx="32" cy="24" rx="22" ry="6.5" fill="' + (busy ? 'rgba(' + ACC + ',.35)' : 'rgba(' + ACC + ',.18)') + '" stroke="rgba(' + ACC + ',.5)" stroke-width="1.2"' + (busy ? ' style="animation:dbpls 1s ease-in-out infinite"' : '') + '/>'
-      + '<line x1="17" y1="38" x2="47" y2="38" stroke="rgba(' + ACC + ',.18)" stroke-width=".8" stroke-dasharray="3,2"/>'
-      + '<line x1="17" y1="54" x2="47" y2="54" stroke="rgba(' + ACC + ',.12)" stroke-width=".8" stroke-dasharray="3,2"/>'
-      + '<circle cx="44" cy="24" r="2.5" fill="' + (busy ? '#22c55e' : 'rgba(' + ACC + ',.4)') + '"' + (busy ? ' style="animation:dbpls .8s ease-in-out infinite"' : '') + '/>'
-      + '<circle cx="50" cy="24" r="2.5" fill="' + (busy ? ACCH : 'rgba(' + ACC + ',.2)') + '"' + (busy ? ' style="animation:dbpls 1.2s ease-in-out infinite"' : '') + '/>'
-      + (busy ? '<g style="transform-origin:32px 40px;animation:dbspin 3s linear infinite"><path d="M32 33.5 L33.2 36 L35.8 36 L34 37.8 L35 40 L32 38.8 L29 40 L30 37.8 L28.2 36 L30.8 36 Z" fill="' + ACCH + '" opacity=".7"/></g>' : '')
+    var cx = 32, cy = 34;
+    var platDur = busy ? '.6s' : '5s';
+    var armAnim = busy
+      ? 'animation:dbArmB 1.2s ease-in-out infinite;transform-origin:'+cx+'px '+cy+'px'
+      : 'animation:dbArm 6s ease-in-out infinite;transform-origin:'+cx+'px '+cy+'px';
+    var kf = '<defs><style>'
+      + '@keyframes dbPlat{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}'
+      + '@keyframes dbArm{0%,100%{transform:rotate(-28deg)}50%{transform:rotate(22deg)}}'
+      + '@keyframes dbArmB{0%,100%{transform:rotate(-35deg)}50%{transform:rotate(35deg)}}'
+      + '@keyframes dbLed{0%,100%{opacity:.35}50%{opacity:1}}'
+      + '@keyframes dbGlow{0%,100%{opacity:.6}50%{opacity:1}}'
+      + (busy ? '@keyframes dbBit{0%{opacity:0;transform:scale(1.8)}60%{opacity:.9}100%{opacity:0;transform:scale(.2)}}' : '')
+      + '</style></defs>';
+
+    /* piatto rotante — settori di dati + track rings */
+    var platter = '<g style="transform-origin:'+cx+'px '+cy+'px;animation:dbPlat '+platDur+' linear infinite">'
+      /* tracce concentriche */
+      + '<circle cx="'+cx+'" cy="'+cy+'" r="24" fill="none" stroke="rgba('+ACC+',.07)" stroke-width=".8"/>'
+      + '<circle cx="'+cx+'" cy="'+cy+'" r="19" fill="none" stroke="rgba('+ACC+',.07)" stroke-width=".7"/>'
+      + '<circle cx="'+cx+'" cy="'+cy+'" r="14" fill="none" stroke="rgba('+ACC+',.06)" stroke-width=".6"/>'
+      + '<circle cx="'+cx+'" cy="'+cy+'" r="9"  fill="none" stroke="rgba('+ACC+',.05)" stroke-width=".5"/>'
+      /* settori dati (archi colorati sulle tracce) */
+      + '<path d="M'+cx+','+( cy-24)+' A24,24 0 0,1 '+(cx+20.8)+','+(cy-11.9)+'" fill="none" stroke="rgba('+ACC+',.35)" stroke-width="3.5" stroke-linecap="round"/>'
+      + '<path d="M'+(cx+16.6)+','+(cy+17.6)+' A24,24 0 0,1 '+(cx-9.3)+','+(cy+22.1)+'" fill="none" stroke="rgba('+ACC+',.22)" stroke-width="3.5" stroke-linecap="round"/>'
+      + '<path d="M'+cx+','+(cy-19)+' A19,19 0 0,1 '+(cx+13.4)+','+(cy-13.4)+'" fill="none" stroke="rgba('+ACC+',.45)" stroke-width="4" stroke-linecap="round"/>'
+      + '<path d="M'+(cx-6.5)+','+(cy+17.8)+' A19,19 0 0,0 '+(cx-18.1)+','+(cy+6.1)+'" fill="none" stroke="rgba('+ACC+',.28)" stroke-width="4" stroke-linecap="round"/>'
+      + '<path d="M'+cx+','+(cy-14)+' A14,14 0 0,1 '+(cx+9.9)+','+(cy-9.9)+'" fill="none" stroke="rgba('+ACC+',.55)" stroke-width="4.5" stroke-linecap="round"/>'
+      + '<path d="M'+(cx+14)+','+cy+' A14,14 0 0,1 '+(cx+9.9)+','+(cy+9.9)+'" fill="none" stroke="rgba('+ACC+',.32)" stroke-width="4.5" stroke-linecap="round"/>'
+      + '<path d="M'+cx+','+(cy-9)+' A9,9 0 0,1 '+(cx+6.4)+','+(cy-6.4)+'" fill="none" stroke="rgba('+ACC+',.6)" stroke-width="5" stroke-linecap="round"/>'
+      /* punti luminosi (bit di dati) */
+      + '<circle cx="'+cx+'" cy="'+(cy-24)+'" r="1.8" fill="'+ACCH+'" opacity=".8"/>'
+      + '<circle cx="'+(cx+20.8)+'" cy="'+(cy-11.9)+'" r="1.5" fill="'+ACCH+'" opacity=".65"/>'
+      + '<circle cx="'+(cx+13.4)+'" cy="'+(cy-13.4)+'" r="1.6" fill="'+ACCH+'" opacity=".7"/>'
+      + '<circle cx="'+(cx-18.1)+'" cy="'+(cy+6.1)+'" r="1.4" fill="'+ACCH+'" opacity=".5"/>'
+      + '</g>';
+
+    /* bit animati in entrata durante repack */
+    var bits = busy ? (
+      '<circle r="2" fill="'+ACCH+'" style="animation:dbBit 1.1s ease-in-out infinite"><animateMotion dur="1.1s" repeatCount="indefinite" path="M '+(cx+28)+','+cy+' L '+cx+','+cy+'"/></circle>'
+      + '<circle r="1.5" fill="'+ACCH+'" style="animation:dbBit 1.4s ease-in-out infinite .4s"><animateMotion dur="1.4s" repeatCount="indefinite" begin=".4s" path="M '+cx+','+(cy-28)+' L '+cx+','+cy+'"/></circle>'
+      + '<circle r="1.8" fill="#a5f3fc" style="animation:dbBit .9s ease-in-out infinite .2s"><animateMotion dur=".9s" repeatCount="indefinite" begin=".2s" path="M '+(cx-24)+','+(cy-14)+' L '+cx+','+cy+'"/></circle>'
+    ) : '';
+
+    /* braccio lettura/scrittura */
+    var arm = '<g style="'+armAnim+'">'
+      + '<line x1="'+cx+'" y1="'+cy+'" x2="'+cx+'" y2="'+(cy-25)+'" stroke="rgba(180,190,220,.55)" stroke-width="1.4" stroke-linecap="round"/>'
+      + '<line x1="'+cx+'" y1="'+cy+'" x2="'+(cx+8)+'" y2="'+(cy+4)+'" stroke="rgba(180,190,220,.35)" stroke-width="1" stroke-linecap="round"/>'
+      + '<rect x="'+(cx-3)+'" y="'+(cy-28)+'" width="6" height="4" rx="2" fill="'+ACCH+'" opacity=".9"/>'
+      + '<circle cx="'+cx+'" cy="'+(cy-22)+'" r="1.3" fill="rgba('+ACC+',.5)"/>'
+      + '<circle cx="'+cx+'" cy="'+(cy-14)+'" r=".9" fill="rgba('+ACC+',.3)"/>'
+      + '</g>';
+
+    /* corpo disco esterno */
+    var body = '<circle cx="'+cx+'" cy="'+cy+'" r="27" fill="#04091a" stroke="rgba('+ACC+',.5)" stroke-width="1.5"/>'
+      /* viti angoli */
+      + '<circle cx="9"  cy="11" r="2" fill="#0a1428" stroke="rgba('+ACC+',.25)" stroke-width=".8"/>'
+      + '<line x1="7.6" y1="11" x2="10.4" y2="11" stroke="rgba('+ACC+',.3)" stroke-width=".6"/>'
+      + '<line x1="9" y1="9.6" x2="9" y2="12.4" stroke="rgba('+ACC+',.3)" stroke-width=".6"/>'
+      + '<circle cx="55" cy="11" r="2" fill="#0a1428" stroke="rgba('+ACC+',.25)" stroke-width=".8"/>'
+      + '<line x1="53.6" y1="11" x2="56.4" y2="11" stroke="rgba('+ACC+',.3)" stroke-width=".6"/>'
+      + '<line x1="55" y1="9.6" x2="55" y2="12.4" stroke="rgba('+ACC+',.3)" stroke-width=".6"/>'
+      + '<circle cx="9"  cy="57" r="2" fill="#0a1428" stroke="rgba('+ACC+',.25)" stroke-width=".8"/>'
+      + '<line x1="7.6" y1="57" x2="10.4" y2="57" stroke="rgba('+ACC+',.3)" stroke-width=".6"/>'
+      + '<line x1="9" y1="55.6" x2="9" y2="58.4" stroke="rgba('+ACC+',.3)" stroke-width=".6"/>'
+      + '<circle cx="55" cy="57" r="2" fill="#0a1428" stroke="rgba('+ACC+',.25)" stroke-width=".8"/>'
+      + '<line x1="53.6" y1="57" x2="56.4" y2="57" stroke="rgba('+ACC+',.3)" stroke-width=".6"/>'
+      + '<line x1="55" y1="55.6" x2="55" y2="58.4" stroke="rgba('+ACC+',.3)" stroke-width=".6"/>';
+
+    /* mozzo centrale */
+    var hub = '<circle cx="'+cx+'" cy="'+cy+'" r="5.5" fill="#060d1f" stroke="rgba('+ACC+',.45)" stroke-width="1.2"/>'
+      + '<circle cx="'+cx+'" cy="'+cy+'" r="3" fill="rgba('+ACC+',.2)"/>'
+      + '<circle cx="'+cx+'" cy="'+cy+'" r="1.5" fill="'+ACCH+'" style="animation:dbGlow 2s ease-in-out infinite" opacity=".85"/>';
+
+    /* pannello status in basso */
+    var panel = '<rect x="5" y="68" width="54" height="12" rx="3" fill="#04091a" stroke="rgba('+ACC+',.2)" stroke-width=".8"/>'
+      /* LED */
+      + '<circle cx="13" cy="74" r="2.2" fill="'+(busy?'#22c55e':'rgba('+ACC+',.2)')+'" style="animation:dbLed '+(busy?'.6s':' 3s')+' ease-in-out infinite"/>'
+      + '<circle cx="20" cy="74" r="2.2" fill="'+(busy?ACCH:'rgba('+ACC+',.12)')+'" style="animation:dbLed '+(busy?'.9s':'4s')+' ease-in-out infinite '+(busy?'.15s':'.5s')+'"/>'
+      + '<circle cx="27" cy="74" r="2.2" fill="'+(busy?ACCH:'rgba('+ACC+',.08)')+'" style="animation:dbLed '+(busy?'1.1s':'5s')+' ease-in-out infinite '+(busy?'.3s':'1s')+'"/>'
+      /* barra attività */
+      + '<rect x="34" y="70.5" width="22" height="7" rx="2" fill="rgba('+ACC+',.08)" stroke="rgba('+ACC+',.15)" stroke-width=".6"/>'
+      + (busy
+        ? '<rect x="35" y="71.5" width="20" height="5" rx="1.5" fill="rgba('+ACC+',.35)" style="animation:dbGlow 1s ease-in-out infinite"/>'
+          + '<rect x="35" y="71.5" width="14" height="5" rx="1.5" fill="rgba('+ACC+',.6)"/>'
+          + '<text x="45" y="75.5" text-anchor="middle" font-size="4.2" font-weight="800" font-family="monospace" fill="'+ACCH+'">REPACK</text>'
+        : '<rect x="35" y="71.5" width="6" height="5" rx="1.5" fill="rgba('+ACC+',.25)"/>'
+          + '<text x="45" y="75.5" text-anchor="middle" font-size="4.5" font-weight="700" font-family="monospace" fill="rgba('+ACC+',.5)"> IDLE </text>'
+      );
+
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 82" style="display:block;width:100%;height:100%;filter:drop-shadow(0 0 12px rgba('+ACC+','+(busy?'.4':'.15')+'))">'
+      + kf
+      + body
+      + platter
+      + bits
+      + arm
+      + hub
+      + panel
       + '</svg>';
   }
 
