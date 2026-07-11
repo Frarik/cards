@@ -1,7 +1,7 @@
-/* frarik-version: 2.0 */
+/* frarik-version: 2.1 */
 /**
- * GruppoFinestre.js — Distintivo FratechStore v2.0
- * Chip contatore finestre aperte + popup con sommario, tempo da/fa, glow se aperta
+ * GruppoFinestre.js — Distintivo FratechStore v2.1
+ * Chip contatore finestre aperte + popup con sommario, illustrazione SVG animata, tempo da/fa
  */
 (function () {
   'use strict';
@@ -51,6 +51,36 @@
     const pair = P[ico];
     if (pair) return isOpen ? pair[0] : pair[1];
     return ico || (isOpen ? 'mdi:window-open' : 'mdi:window');
+  }
+
+  function _windowSvg(isOpen, idx) {
+    if (!isOpen) {
+      return `<svg viewBox="0 0 44 44" width="44" height="44" style="display:block">
+        <rect x="1" y="40" width="42" height="3" rx="1.5" fill="rgba(255,255,255,.2)"/>
+        <rect x="3" y="3" width="38" height="38" rx="3" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.22)" stroke-width="1.5"/>
+        <rect x="5" y="5" width="34" height="34" rx="2" fill="rgba(120,180,240,.12)"/>
+        <line x1="22" y1="5" x2="22" y2="37" stroke="rgba(255,255,255,.3)" stroke-width="2"/>
+        <line x1="5" y1="22" x2="39" y2="22" stroke="rgba(255,255,255,.3)" stroke-width="2"/>
+        <line x1="8" y1="8" x2="14" y2="14" stroke="rgba(255,255,255,.4)" stroke-width="1.2" stroke-linecap="round"/>
+        <line x1="26" y1="8" x2="32" y2="14" stroke="rgba(255,255,255,.4)" stroke-width="1.2" stroke-linecap="round"/>
+        <rect x="3" y="5" width="3" height="34" rx="1.5" fill="rgba(255,255,255,.1)"/>
+        <rect x="38" y="5" width="3" height="34" rx="1.5" fill="rgba(255,255,255,.1)"/>
+      </svg>`;
+    }
+    const sid = `gfbrz${idx}`;
+    return `<style>@keyframes ${sid}{0%,100%{transform:translateX(0) scaleY(1)}50%{transform:translateX(1.5px) scaleY(1.03)}}</style>
+      <svg viewBox="0 0 44 44" width="44" height="44" style="display:block;overflow:visible">
+        <rect x="1" y="40" width="42" height="3" rx="1.5" fill="rgba(255,255,255,.2)"/>
+        <rect x="3" y="3" width="38" height="38" rx="3" fill="rgba(248,113,113,.07)" stroke="rgba(248,113,113,.42)" stroke-width="1.5"/>
+        <rect x="5" y="20" width="34" height="18" rx="1" fill="rgba(120,180,240,.12)" stroke="rgba(255,255,255,.22)" stroke-width="1"/>
+        <rect x="5" y="5" width="34" height="12" rx="1" fill="rgba(120,180,240,.12)" stroke="rgba(255,255,255,.22)" stroke-width="1"/>
+        <rect x="6" y="17" width="32" height="3" rx="1" fill="rgba(255,210,70,.2)"/>
+        <line x1="22" y1="20" x2="22" y2="37" stroke="rgba(255,255,255,.28)" stroke-width="1.5"/>
+        <line x1="22" y1="5" x2="22" y2="16" stroke="rgba(255,255,255,.28)" stroke-width="1.5"/>
+        <line x1="8" y1="7" x2="13" y2="12" stroke="rgba(255,255,255,.35)" stroke-width="1.2" stroke-linecap="round"/>
+        <rect x="3" y="5" width="3.5" height="34" rx="1.5" fill="rgba(255,255,255,.16)" style="transform-origin:3px 22px;animation:${sid} 1.9s ease-in-out infinite"/>
+        <rect x="37.5" y="5" width="3.5" height="34" rx="1.5" fill="rgba(255,255,255,.16)" style="transform-origin:41px 22px;animation:${sid} 1.9s ease-in-out infinite .55s"/>
+      </svg>`;
   }
 
   function _timeAgo(isoStr) {
@@ -129,12 +159,6 @@
       const stCol = on ? '#f87171' : '#4ade80';
       const stBg  = on ? 'rgba(248,113,113,.14)' : 'rgba(74,222,128,.12)';
       const stBdr = on ? 'rgba(248,113,113,.32)' : 'rgba(74,222,128,.28)';
-      const rowIco = iconHtml(_dynIcon(c.icon||'🪟', on), 20);
-
-      const icoBg  = on ? 'rgba(248,113,113,.15)' : 'rgba(255,255,255,.05)';
-      const icoBdr = on ? 'rgba(248,113,113,.35)' : 'rgba(255,255,255,.1)';
-      const icoGlow = on ? ';box-shadow:0 0 14px rgba(248,113,113,.3)' : '';
-
       const lastChanged = h?.states?.[e.entity]?.last_changed;
       const timeStr   = h && lastChanged ? _timeAgo(lastChanged) : '';
       const timeLabel = on
@@ -153,8 +177,8 @@
       }
 
       return `<div style="border-bottom:1px solid rgba(255,255,255,.04)">
-        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px">
-          <div style="width:44px;height:44px;border-radius:14px;background:${icoBg};border:1px solid ${icoBdr};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${on?stCol:'rgba(255,255,255,.7)'}${icoGlow}">${rowIco}</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 16px">
+          <div style="flex-shrink:0">${_windowSvg(on, i)}</div>
           <div style="flex:1;min-width:0">
             <div style="font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
             ${timeLabel ? `<div style="font-size:10px;color:${timeColor};margin-top:2px">${eh(timeLabel)}</div>` : ''}
@@ -499,7 +523,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Finestre', icon: '🪟',
     desc: 'Chip con contatore finestre aperte. Clic → stato Aperta/Chiusa per ogni finestra.',
-    version: '2.0', isDistintivo: true,
+    version: '2.1', isDistintivo: true,
     defaultCfg: { label: 'Finestre', icon: '🪟', color: '#34d399', entities: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -508,5 +532,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-finestre v2.0'); } catch(e){}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-finestre v2.1'); } catch(e){}
 })();
