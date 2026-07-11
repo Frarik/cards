@@ -146,31 +146,46 @@
 
     const okCount = total - offline - critical - low;
 
-    /* ── summary hero ── */
-    const summaryTxt = worstStatus === 'ok'
-      ? `✅ Tutte le ${total} batterie sono OK`
+    /* ── hero card unica ── */
+    const heroTitle = worstStatus === 'ok'
+      ? 'Tutte le batterie sono OK'
       : (() => {
           const pcs = [];
           if (offline  > 0) pcs.push(`${offline} offline`);
           if (critical > 0) pcs.push(`${critical} critica/e`);
           if (low      > 0) pcs.push(`${low} bassa/e`);
-          return `⚠️ ${pcs.join(' · ')} su ${total}`;
+          return pcs.join(' · ');
         })();
+    const heroSub = worstStatus === 'ok'
+      ? `${total} dispositivi monitorati`
+      : `su ${total} dispositivi totali`;
 
-    /* ── counter pills ── */
-    const pill = (emo, n, sc) => n > 0
-      ? `<div style="display:flex;align-items:center;gap:4px;padding:4px 9px;border-radius:10px;background:${sc}15;border:1px solid ${sc}30">
-           <span style="font-size:11px">${emo}</span>
-           <span style="font-size:11px;font-weight:700;color:${sc}">${n}</span>
-         </div>` : '';
+    const statCell = (emo, n, sc, label) => {
+      const on = n > 0;
+      const tc = on ? sc : 'rgba(255,255,255,.2)';
+      return `<div style="flex:1;text-align:center;padding:8px 4px;border-radius:10px;background:${on ? sc+'12' : 'rgba(255,255,255,.03)'};border:1px solid ${on ? sc+'35' : 'rgba(255,255,255,.07)'}">
+        <div style="font-size:14px;line-height:1;margin-bottom:3px">${emo}</div>
+        <div style="font-size:18px;font-weight:900;color:${tc};line-height:1;margin-bottom:2px">${n}</div>
+        <div style="font-size:8px;font-weight:700;color:${tc};text-transform:uppercase;letter-spacing:.4px;opacity:${on?1:.6}">${label}</div>
+      </div>`;
+    };
 
-    const pillsRow = (offline + critical + low + okCount) > 0 ? `
-      <div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:8px">
-        ${pill('📴', offline,  '#ef4444')}
-        ${pill('🔴', critical, '#f97316')}
-        ${pill('🟡', low,      '#facc15')}
-        ${pill('✅', okCount,  '#4ade80')}
-      </div>` : '';
+    const hero = `<div style="background:${col}0a;border:1px solid ${col}35;border-radius:14px;padding:14px 14px 12px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <div style="width:38px;height:38px;border-radius:11px;background:${col}18;border:1px solid ${col}35;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🔋</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700;color:#fff;line-height:1.3">${heroTitle}</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.45);margin-top:2px">${heroSub}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px">
+        ${statCell('📴', offline,  '#ef4444', 'Offline')}
+        ${statCell('🔴', critical, '#f97316', 'Critiche')}
+        ${statCell('🟡', low,      '#facc15', 'Basse')}
+        ${statCell('✅', okCount,  '#4ade80', 'OK')}
+      </div>
+      <div style="font-size:9px;color:rgba(255,255,255,.3);margin-top:10px;text-align:center">Soglie: bassa &lt;${thrL}% · critica &lt;${thrC}%</div>
+    </div>`;
 
     /* ── riga singola ── */
     function _row(item, compact) {
@@ -213,11 +228,7 @@
 
     return `<div style="padding:10px 10px 0;font-family:system-ui,sans-serif">
 
-      <div style="text-align:center;padding:4px 10px 10px">
-        <div style="display:inline-block;padding:6px 16px;border-radius:20px;background:${col}18;border:1px solid ${col}44;font-size:11px;font-weight:700;color:${col}">${summaryTxt}</div>
-        ${pillsRow}
-        <div style="font-size:9px;color:#fff;margin-top:6px;opacity:.5">Soglie: bassa &lt;${thrL}% · critica &lt;${thrC}%</div>
-      </div>
+      ${hero}
 
       <style>.batt-scroll::-webkit-scrollbar{display:none}</style>
       <div class="batt-scroll" style="max-height:55vh;overflow-y:auto;scrollbar-width:none;padding-bottom:10px">
