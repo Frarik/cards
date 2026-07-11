@@ -1,335 +1,268 @@
-###############################################################
-#                                                             #
-#   ███████╗██████╗  █████╗ ██████╗ ██╗██╗  ██╗             #
-#   ██╔════╝██╔══██╗██╔══██╗██╔══██╗██║██║ ██╔╝             #
-#   █████╗  ██████╔╝███████║██████╔╝██║█████╔╝              #
-#   ██╔══╝  ██╔══██╗██╔══██║██╔══██╗██║██╔═██╗              #
-#   ██║     ██║  ██║██║  ██║██║  ██║██║██║  ██╗             #
-#   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝            #
-#                                                             #
-#   Package: Centro Controllo Database                        #
-#   Versione: 1.0  |  Frarik / Fratech                       #
-#                                                             #
-###############################################################
-#
-# COSA FA QUESTO PACKAGE
-# ──────────────────────────────────────────────────────────
-# Monitora e gestisce il database di Home Assistant:
-#
-#  ▸ Dimensione DB in tempo reale (MB)
-#  ▸ Storico dimensione giornaliero (Lun–Dom)
-#  ▸ Repack automatico a orario programmato
-#  ▸ Repack automatico al superamento dimensione massima
-#  ▸ Calcolo giorni dall'ultimo repack
-#  ▸ Selezione giorni settimana per il repack
-#  ▸ Notifiche push prima e dopo il repack
-#  ▸ Tracciamento ultimo repack e riduzione ottenuta
-#
-###############################################################
-#
-# INSTALLAZIONE — LEGGI PRIMA DI INIZIARE
-# ──────────────────────────────────────────────────────────
-#
-#  PASSO 1 — Abilita i package in configuration.yaml
-#  ───────────────────────────────────────────────────
-#  Apri il tuo configuration.yaml e verifica che sia
-#  presente questa sezione (aggiungila se manca):
-#
-#    homeassistant:
-#      packages: !include_dir_named packages
-#
-#  Poi copia questo file nella cartella "packages" e
-#  riavvia Home Assistant per attivare le modifiche.
-#
-#  PASSO 2 — Personalizza i segnaposto qui sotto
-#  ───────────────────────────────────────────────
-#  Nella sezione IMPOSTAZIONI trovi tutti i valori
-#  da sostituire. Ogni segnaposto ha il formato:
-#
-#    IL_TUO_VALORE_QUI
-#
-#  e un commento che spiega esattamente cosa inserire.
-#
-#  PASSO 3 — Ricarica la configurazione
-#  ───────────────────────────────────────────────
-#  Dopo aver salvato le modifiche:
-#  Strumenti per sviluppatori → YAML → Ricarica tutto
-#  (oppure riavvia Home Assistant)
-#
-#  PASSO 4 — Aggiungi la card dal pannello Frarik
-#  ───────────────────────────────────────────────
-#  Frarik Dashboard → Store → "Database"
-#  La card si collega automaticamente a questo package.
-#
-###############################################################
-#
-# ENTITÀ CREATE DA QUESTO PACKAGE
-# ──────────────────────────────────────────────────────────
-#  sensor.frarik_database_versione              ← rilevamento pkg
-#  sensor.frarik_db_dimensione                  ← dimensione DB attuale (MB)
-#  sensor.frarik_db_giorni_passati_repack       ← giorni dall'ultimo repack
-#  sensor.frarik_db_media_7_giorni              ← media dimensione 7 giorni
-#  input_number.frarik_db_giorni_da_mantenere   ← giorni storico da tenere
-#  input_number.frarik_db_dimensione_massima    ← soglia max per repack auto
-#  input_number.frarik_db_dimensione_precedente ← dimensione prima del repack
-#  input_number.frarik_db_lun … dom             ← dimensione giornaliera
-#  input_boolean.frarik_db_repack_orario        ← repack auto a orario
-#  input_boolean.frarik_db_repack_dimensione    ← repack auto per dimensione
-#  input_boolean.frarik_db_notifiche_push       ← notifiche push attive
-#  input_boolean.frarik_db_repack_lun … dom     ← giorni per repack orario
-#  input_datetime.frarik_db_orario_repack       ← orario repack programmato
-#  input_datetime.frarik_db_data_ultimo_repack  ← data/ora ultimo repack
-#  input_text.frarik_db_stato                   ← stato ("Standby"/"In Corso")
-#  input_text.frarik_db_ultimo_repack           ← timestamp ultimo repack
-#  input_text.frarik_db_data_reset              ← data ultimo reset sensori
-#  script.frarik_db_repack                      ← esegui repack manuale
-#  script.frarik_db_reset_sensori               ← azzera dimensioni giornaliere
-#  automation: Frarik — Database
-#
-###############################################################
-
-
-####################################################
-#                                                  #
-#                  IMPOSTAZIONI                    #
-#          ↓  MODIFICA SOLO QUESTA SEZIONE  ↓      #
-#                                                  #
-####################################################
-
 homeassistant:
   customize:
     package.node_anchors:
       customize: &customize
-        package: 'Frarik — Centro Controllo Database'
-        author: 'Frarik / Fratech'
-        version: '1.0'
-
+        package: 'Frarik Database 1'
+        author: 'Frarik'
+        reference: 'github.com/Frarik/cards'
       setting:
 
-        # ─────────────────────────────────────────────────
-        # SENSORE DIMENSIONE DATABASE
-        # Inserisci l'entity_id del sensore che riporta
-        # la dimensione del database HA in MB.
-        # Esempi:
-        #   sensor.home_assistant_v2_db_dimensione
-        #   sensor.maria_db_esterno
-        # ─────────────────────────────────────────────────
-        Sensore Database: &sensor_db sensor.non_configurato
-
-        # ─────────────────────────────────────────────────
-        # SERVIZI NOTIFICA PUSH (smartphone)
-        # Inserisci il nome del servizio mobile_app per
-        # ogni smartphone che deve ricevere le notifiche.
-        # Esempi:
-        #   - service: mobile_app_iphone_di_mario
-        #   - service: mobile_app_samsung_giulia
-        # ─────────────────────────────────────────────────
-        Notifiche Push: &push []
-
-
 ####################################################
 #                                                  #
-#               SOGLIE E IMPOSTAZIONI              #
+#              IMPOSTAZIONI PACKAGE                #
 #                                                  #
 ####################################################
 
-input_number:
+        Sensore Database: &sensore_db "{{states('sensor.home_assistant_v2_db_dimensione')}}"
+#        Sensore Database: &sensore_db "{{states('sensor.maria_db_esterno')}}"
 
-  frarik_db_giorni_da_mantenere:
-    name: "Database — Giorni da Mantenere"
-    min: 1
-    max: 365
-    step: 1
-    mode: box
-    unit_of_measurement: "giorni"
-    icon: mdi:calendar-today
-
-  frarik_db_dimensione_massima:
-    name: "Database — Dimensione Massima"
-    min: 1
-    max: 100000
-    step: 1
-    mode: box
-    unit_of_measurement: "MB"
-    icon: mdi:database-alert
-
-  frarik_db_dimensione_precedente:
-    name: "Database — Dimensione Prima del Repack"
-    min: 0
-    max: 999999
-    mode: box
-    unit_of_measurement: "MB"
-    icon: mdi:database-clock
-
-  # ── Storico giornaliero ─────────────────────────
-
-  frarik_db_lun:
-    name: "Database — Dimensione Lunedì"
-    icon: mdi:counter
-    min: 0
-    max: 999999
-    mode: box
-    unit_of_measurement: MB
-
-  frarik_db_mar:
-    name: "Database — Dimensione Martedì"
-    icon: mdi:counter
-    min: 0
-    max: 999999
-    mode: box
-    unit_of_measurement: MB
-
-  frarik_db_mer:
-    name: "Database — Dimensione Mercoledì"
-    icon: mdi:counter
-    min: 0
-    max: 999999
-    mode: box
-    unit_of_measurement: MB
-
-  frarik_db_gio:
-    name: "Database — Dimensione Giovedì"
-    icon: mdi:counter
-    min: 0
-    max: 999999
-    mode: box
-    unit_of_measurement: MB
-
-  frarik_db_ven:
-    name: "Database — Dimensione Venerdì"
-    icon: mdi:counter
-    min: 0
-    max: 999999
-    mode: box
-    unit_of_measurement: MB
-
-  frarik_db_sab:
-    name: "Database — Dimensione Sabato"
-    icon: mdi:counter
-    min: 0
-    max: 999999
-    mode: box
-    unit_of_measurement: MB
-
-  frarik_db_dom:
-    name: "Database — Dimensione Domenica"
-    icon: mdi:counter
-    min: 0
-    max: 999999
-    mode: box
-    unit_of_measurement: MB
-
+        Device per notifica push: &push
+          - service: IL_TUO_MOBILE_APP
 
 ####################################################
 #                                                  #
-#            INTERRUTTORI FUNZIONALITÀ             #
+#              NOTIFICHE GRUPPO                    #
 #                                                  #
 ####################################################
 
-input_boolean:
-
-  frarik_db_repack_orario:
-    name: "Database — Repack Automatico Orario"
-    icon: mdi:clock-check-outline
-
-  frarik_db_repack_dimensione:
-    name: "Database — Repack per Dimensione Massima"
-    icon: mdi:database-refresh
-
-  frarik_db_notifiche_push:
-    name: "Database — Notifiche Push"
-    icon: mdi:bell-outline
-
-  # ── Giorni per repack orario ─────────────────────
-
-  frarik_db_repack_lun:
-    name: "Database — Repack Lunedì"
-  frarik_db_repack_mar:
-    name: "Database — Repack Martedì"
-  frarik_db_repack_mer:
-    name: "Database — Repack Mercoledì"
-  frarik_db_repack_gio:
-    name: "Database — Repack Giovedì"
-  frarik_db_repack_ven:
-    name: "Database — Repack Venerdì"
-  frarik_db_repack_sab:
-    name: "Database — Repack Sabato"
-  frarik_db_repack_dom:
-    name: "Database — Repack Domenica"
-
+notify:
+  - name: Frarik Database
+    platform: group
+    services: *push
 
 ####################################################
 #                                                  #
-#                     ORARI                        #
+#                INPUT DATETIME                    #
 #                                                  #
 ####################################################
 
 input_datetime:
-
   frarik_db_orario_repack:
-    name: "Database — Orario Repack"
+    name: Database Orario Repack
     has_date: false
     has_time: true
     icon: mdi:clock-outline
 
+####################################################
+
   frarik_db_data_ultimo_repack:
-    name: "Database — Data Ultimo Repack"
     has_date: true
     has_time: false
-    icon: mdi:database-check
-
 
 ####################################################
 #                                                  #
-#                  TESTI STATO                     #
+#                INPUT NUMBER                      #
+#                                                  #
+####################################################
+
+input_number:
+  frarik_db_giorni_da_mantenere:
+    name: Database Giorni da Mantenere
+    min: 1
+    max: 365
+    unit_of_measurement: 'day'
+    step: 1
+    mode: box
+    icon: mdi:calendar-today
+
+####################################################
+
+  frarik_db_dimensione_massima:
+    name: Database Dimensione Massima
+    min: 1
+    max: 1000000
+    unit_of_measurement: 'MB'
+    step: 1
+    mode: box
+    icon: mdi:database-alert
+
+####################################################
+#                                                  #
+#          INPUT NUMBER DIMENSIONE DB              #
+#                                                  #
+####################################################
+
+  frarik_db_lunedi:
+    name: Database Dimensione Lunedì
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: MB
+
+####################################################
+
+  frarik_db_martedi:
+    name: Database Dimensione Martedì
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: MB
+
+####################################################
+
+  frarik_db_mercoledi:
+    name: Database Dimensione Mercoledì
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: MB
+
+####################################################
+
+  frarik_db_giovedi:
+    name: Database Dimensione Giovedì
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: MB
+
+####################################################
+
+  frarik_db_venerdi:
+    name: Database Dimensione Venerdì
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: MB
+
+####################################################
+
+  frarik_db_sabato:
+    name: Database Dimensione Sabato
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: MB
+
+####################################################
+
+  frarik_db_domenica:
+    name: Database Dimensione Domenica
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: MB
+
+####################################################
+
+  frarik_db_dimensione_precedente:
+    name: Database Dimensione Precedente
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    mode: box
+    unit_of_measurement: MB
+
+####################################################
+#                                                  #
+#                    BOOLEAN                       #
+#                                                  #
+####################################################
+
+input_boolean:
+  frarik_db_repack_orario:
+    name: Database Repack Automatico Orario
+
+####################################################
+
+  frarik_db_repack_dimensione:
+    name: Database Repack per Dimensione
+
+####################################################
+
+  frarik_db_notifiche_push:
+    name: Database Notifiche Push
+
+####################################################
+#                                                  #
+#                BOOLEAN GIORNI                    #
+#                                                  #
+####################################################
+
+  frarik_db_repack_lunedi:
+    name: Database Repack Lunedì
+
+#########################################################
+
+  frarik_db_repack_martedi:
+    name: Database Repack Martedì
+
+#########################################################
+
+  frarik_db_repack_mercoledi:
+    name: Database Repack Mercoledì
+
+#########################################################
+
+  frarik_db_repack_giovedi:
+    name: Database Repack Giovedì
+
+#########################################################
+
+  frarik_db_repack_venerdi:
+    name: Database Repack Venerdì
+
+#########################################################
+
+  frarik_db_repack_sabato:
+    name: Database Repack Sabato
+
+#########################################################
+
+  frarik_db_repack_domenica:
+    name: Database Repack Domenica
+
+####################################################
+#                                                  #
+#                    INPUT TEXT                    #
 #                                                  #
 ####################################################
 
 input_text:
-
   frarik_db_stato:
-    name: "Database — Stato Repack"
-    icon: mdi:information-outline
+
+####################################################
 
   frarik_db_ultimo_repack:
-    name: "Database — Ultimo Repack"
-    icon: mdi:calendar-clock
+
+####################################################
 
   frarik_db_data_reset:
-    name: "Database — Data Reset Sensori"
-    icon: mdi:calendar-remove
-
 
 ####################################################
 #                                                  #
-#              MEDIA SETTIMANALE                   #
+#                     SENSORI                      #
 #                                                  #
 ####################################################
 
 sensor:
   - platform: min_max
-    name: "Frarik DB Media 7 Giorni"
-    unique_id: frarik_db_media_7_giorni
+    name: Frarik DB Media 7 Giorni
     type: median
     entity_ids:
-      - input_number.frarik_db_lun
-      - input_number.frarik_db_mar
-      - input_number.frarik_db_mer
-      - input_number.frarik_db_gio
-      - input_number.frarik_db_ven
-      - input_number.frarik_db_sab
-      - input_number.frarik_db_dom
-
+      - input_number.frarik_db_lunedi
+      - input_number.frarik_db_martedi
+      - input_number.frarik_db_mercoledi
+      - input_number.frarik_db_giovedi
+      - input_number.frarik_db_venerdi
+      - input_number.frarik_db_sabato
+      - input_number.frarik_db_domenica
 
 ####################################################
 #                                                  #
-#                SENSORI TEMPLATE                  #
+#                     TEMPLATE                     #
 #                                                  #
 ####################################################
 
 template:
   - sensor:
-
       - name: "Frarik Database Versione"
         unique_id: frarik_database_versione
         state: "1.0"
@@ -338,10 +271,8 @@ template:
       - name: "Frarik DB Dimensione"
         unique_id: frarik_db_dimensione
         unit_of_measurement: MB
-        device_class: data_size
-        state_class: measurement
         icon: mdi:database
-        state: *sensor_db
+        state: *sensore_db
 
       - name: "Frarik DB Giorni Passati Repack"
         unique_id: frarik_db_giorni_passati_repack
@@ -353,108 +284,82 @@ template:
             0
           {% endif %}
 
-
 ####################################################
 #                                                  #
-#                    SCRIPT                        #
+#                      SCRIPT                      #
 #                                                  #
 ####################################################
 
 script:
-
   frarik_db_repack:
-    alias: "Frarik — Repack Database"
-    icon: mdi:database-refresh
+    alias: Database Repack
     sequence:
       - choose:
           - conditions:
               - condition: template
-                value_template: >
-                  {{ states('sensor.frarik_db_giorni_passati_repack') | int(0) >= states('input_number.frarik_db_giorni_da_mantenere') | int(0) }}
+                value_template: "{{ states('sensor.frarik_db_giorni_passati_repack') | int(0) >= states('input_number.frarik_db_giorni_da_mantenere') | int(0) }}"
             sequence:
-
-              - repeat:
-                  for_each: *push
-                  sequence:
-                    - service: "{{ repeat.item.service }}"
-                      continue_on_error: true
-                      data:
-                        title: "⚙️ Repack Database"
-                        message: "Repack avviato il {{ now().strftime('%d/%m/%Y - %H:%M') }}"
-
+              - service: notify.frarik_database
+                data:
+                  title: "⚙ Repack Database ⚙"
+                  message: 'Repack DB Avviato il {{ now().strftime("%d/%m/%Y - %H:%M") }}'
               - service: input_number.set_value
                 target:
                   entity_id: input_number.frarik_db_dimensione_precedente
                 data:
                   value: "{{ states('sensor.frarik_db_dimensione') }}"
-
               - service: input_text.set_value
                 target:
                   entity_id: input_text.frarik_db_stato
                 data:
                   value: "In Corso"
-
               - service: recorder.purge
                 data:
                   repack: true
                   keep_days: "{{ states('input_number.frarik_db_giorni_da_mantenere') | int(0) }}"
-
               - delay: "00:25:00"
-
               - service: input_text.set_value
                 target:
                   entity_id: input_text.frarik_db_stato
                 data:
                   value: "Standby"
-
               - service: input_text.set_value
                 target:
                   entity_id: input_text.frarik_db_ultimo_repack
                 data:
-                  value: "{{ now().strftime('%d/%m/%Y - %H:%M') }}"
-
+                  value: '{{ now().strftime("%d/%m/%Y - %H:%M") }}'
               - service: input_datetime.set_datetime
                 target:
                   entity_id: input_datetime.frarik_db_data_ultimo_repack
                 data:
-                  date: "{{ now().strftime('%Y-%m-%d') }}"
-
+                  date: '{{ now().strftime("%Y-%m-%d") }}'
               - condition: state
                 entity_id: input_boolean.frarik_db_notifiche_push
                 state: 'on'
-
-              - repeat:
-                  for_each: *push
-                  sequence:
-                    - service: "{{ repeat.item.service }}"
-                      continue_on_error: true
-                      data:
-                        title: "✅ Repack Completato"
-                        message: >
-                          Eseguito: {{ now().strftime('%d/%m/%Y - %H:%M') }}
-                          DB attuale: {{ states('sensor.frarik_db_dimensione') }} MB
-                          DB precedente: {{ states('input_number.frarik_db_dimensione_precedente') }} MB
-                          Ridotto di: {{ (states('input_number.frarik_db_dimensione_precedente') | float(0) - states('sensor.frarik_db_dimensione') | float(0)) | round(2) }} MB
-
+              - service: notify.frarik_database
+                data:
+                  title: "✅ Repack DB Eseguito ✅"
+                  message: >
+                    Repack Eseguito il: {{ now().strftime("%d/%m/%Y - %H:%M") }}
+                    DB Attuale: {{ states('sensor.frarik_db_dimensione') }} MB
+                    DB Precedente: {{ states('input_number.frarik_db_dimensione_precedente') }} MB
+                    DB Ridotto di: {{ (states('input_number.frarik_db_dimensione_precedente') | float(0) - states('sensor.frarik_db_dimensione') | float(0)) | round(2) }} MB
         default:
-          - repeat:
-              for_each: *push
-              sequence:
-                - service: "{{ repeat.item.service }}"
-                  continue_on_error: true
-                  data:
-                    title: "⚠️ Repack non eseguito"
-                    message: >
-                      Sono passati solo {{ states('sensor.frarik_db_giorni_passati_repack') }} giorni.
-                      Devono passarne almeno {{ states('input_number.frarik_db_giorni_da_mantenere') }}.
+          - service: notify.frarik_database
+            data:
+              title: "⚠️ Repack DB non eseguito ⚠️"
+              message: >
+                Repack non eseguito. Sono passati solo {{ states('sensor.frarik_db_giorni_passati_repack') }} giorni dall'ultimo.
+                Devono passare almeno {{ states('input_number.frarik_db_giorni_da_mantenere') }} giorni.
+
+####################################################
 
   frarik_db_reset_sensori:
-    alias: "Frarik — Reset Sensori Database"
-    icon: mdi:database-remove
     sequence:
       - service: input_text.set_value
         data:
-          value: "{{ now().strftime('%d/%m/%Y %H:%M') }}"
+          value: >-
+            {{now().strftime('%d/%m/%Y %H:%M')}}
         target:
           entity_id: input_text.frarik_db_data_reset
       - service: input_number.set_value
@@ -462,94 +367,86 @@ script:
           value: '0'
         target:
           entity_id:
-            - input_number.frarik_db_lun
-            - input_number.frarik_db_mar
-            - input_number.frarik_db_mer
-            - input_number.frarik_db_gio
-            - input_number.frarik_db_ven
-            - input_number.frarik_db_sab
-            - input_number.frarik_db_dom
-
+            - input_number.frarik_db_lunedi
+            - input_number.frarik_db_martedi
+            - input_number.frarik_db_mercoledi
+            - input_number.frarik_db_giovedi
+            - input_number.frarik_db_venerdi
+            - input_number.frarik_db_sabato
+            - input_number.frarik_db_domenica
 
 ####################################################
 #                                                  #
-#                  AUTOMAZIONI                     #
+#                   AUTOMAZIONI                    #
 #                                                  #
 ####################################################
 
 automation:
+- alias: Frarik Database
+  id: Frarik Database
+  trigger:
+  - platform: time
+    at: 'input_datetime.frarik_db_orario_repack'
+    id: repack_db_now
+  - platform: template
+    value_template: "{{ states('sensor.frarik_db_dimensione') | float(0) > states('input_number.frarik_db_dimensione_massima') | float(0) }}"
+    id: repack_db_size_max
+  - platform: time
+    at: '23:59:00'
+    id: incremento_db
+  action:
 
-  - alias: "Frarik — Database"
-    id: frarik_database
-    description: "Gestisce repack automatico e storico dimensione database"
-    mode: queued
+####################################################
+# Repack DB Automatico Fascia Oraria
 
-    trigger:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: repack_db_now
+      - condition: state
+        entity_id: input_boolean.frarik_db_repack_orario
+        state: 'on'
+      - condition: template
+        value_template: >-
+          {% set today = now().strftime('%A') %}
+          {% if (is_state("input_boolean.frarik_db_repack_lunedi", "on") and today == "Monday") %} true
+          {% elif (is_state("input_boolean.frarik_db_repack_martedi", "on") and today == "Tuesday") %} true
+          {% elif (is_state("input_boolean.frarik_db_repack_mercoledi", "on") and today == "Wednesday") %} true
+          {% elif (is_state("input_boolean.frarik_db_repack_giovedi", "on") and today == "Thursday") %} true
+          {% elif (is_state("input_boolean.frarik_db_repack_venerdi", "on") and today == "Friday") %} true
+          {% elif (is_state("input_boolean.frarik_db_repack_sabato", "on") and today == "Saturday") %} true
+          {% elif (is_state("input_boolean.frarik_db_repack_domenica", "on") and today == "Sunday") %} true
+          {% else %} false
+          {% endif %}
+      sequence:
+      - service: script.toggle
+        entity_id: script.frarik_db_repack
 
-      - platform: time
-        at: 'input_datetime.frarik_db_orario_repack'
-        id: repack_orario
+####################################################
+# Repack DB Automatico Dimensione Massima
 
-      - platform: template
-        value_template: >
-          {{ states('sensor.frarik_db_dimensione') | float(0) > states('input_number.frarik_db_dimensione_massima') | float(0) }}
-        id: repack_dimensione
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: repack_db_size_max
+      - condition: state
+        entity_id: input_boolean.frarik_db_repack_dimensione
+        state: 'on'
+      sequence:
+      - service: script.toggle
+        entity_id: script.frarik_db_repack
 
-      - platform: time
-        at: '23:59:00'
-        id: aggiorna_storico
+####################################################
+# Incremento DB giornaliero
 
-    condition: []
-
-    action:
-
-      # ── Repack automatico a orario ───────────────
-      - choose:
-        - conditions:
-          - condition: trigger
-            id: repack_orario
-          - condition: state
-            entity_id: input_boolean.frarik_db_repack_orario
-            state: 'on'
-          - condition: template
-            value_template: >
-              {% set d = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] %}
-              {{ (is_state('input_boolean.frarik_db_repack_lun','on') and d=='Monday')
-              or (is_state('input_boolean.frarik_db_repack_mar','on') and d=='Tuesday')
-              or (is_state('input_boolean.frarik_db_repack_mer','on') and d=='Wednesday')
-              or (is_state('input_boolean.frarik_db_repack_gio','on') and d=='Thursday')
-              or (is_state('input_boolean.frarik_db_repack_ven','on') and d=='Friday')
-              or (is_state('input_boolean.frarik_db_repack_sab','on') and d=='Saturday')
-              or (is_state('input_boolean.frarik_db_repack_dom','on') and d=='Sunday') }}
-          sequence:
-          - service: script.turn_on
-            entity_id: script.frarik_db_repack
-
-      # ── Repack automatico per dimensione ────────
-      - choose:
-        - conditions:
-          - condition: trigger
-            id: repack_dimensione
-          - condition: state
-            entity_id: input_boolean.frarik_db_repack_dimensione
-            state: 'on'
-          sequence:
-          - service: script.turn_on
-            entity_id: script.frarik_db_repack
-
-      # ── Aggiorna storico giornaliero ────────────
-      - choose:
-        - conditions:
-          - condition: trigger
-            id: aggiorna_storico
-          sequence:
-          - service: input_number.set_value
-            target:
-              entity_id: >
-                input_number.frarik_db_{{ ['lun','mar','mer','gio','ven','sab','dom'][now().weekday()] }}
-            data:
-              value: "{{ states('sensor.frarik_db_dimensione') }}"
-
-###############################################################
-#  Fine package — Frarik Centro Controllo Database v1.0
-###############################################################
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: incremento_db
+      sequence:
+      - service: input_number.set_value
+        target:
+          entity_id: >
+            input_number.frarik_db_{{ ['lunedi','martedi','mercoledi','giovedi','venerdi','sabato','domenica'][now().weekday()] }}
+        data:
+          value: "{{ states('sensor.frarik_db_dimensione') }}"

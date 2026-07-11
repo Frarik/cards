@@ -13,7 +13,7 @@ function callSvc(d,s,t){if(!_dbH)return;try{_dbH.callService(d,s,t);}catch(e){}}
 /* ── bar chart settimanale ── */
 function _chart(h){
   var days=['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
-  var keys=['lun','mar','mer','gio','ven','sab','dom'];
+  var keys=['lunedi','martedi','mercoledi','giovedi','venerdi','sabato','domenica'];
   var vals=keys.map(function(k){return N(h,'input_number.frarik_db_'+k,0);});
   var maxV=Math.max.apply(null,vals.concat([1]));
   var W=280,H=160,pad={t:10,r:4,b:24,l:38};
@@ -141,13 +141,13 @@ function render(card){
   var notifiche=S(h,'input_boolean.frarik_db_notifiche_push')==='on';
 
   /* giorni settimana */
-  var dayKeys=['lun','mar','mer','gio','ven','sab','dom'];
+  var dayKeys=['lunedi','martedi','mercoledi','giovedi','venerdi','sabato','domenica'];
   var dayLabels=['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
   var daysHtml='';
   dayKeys.forEach(function(k,i){
     var on=S(h,'input_boolean.frarik_db_repack_'+k)==='on';
     daysHtml+='<button class="dbc-day '+(on?'dbc-day-on':'dbc-day-off')+'"'
-      +' data-sya="day-toggle" data-key="frarik_db_repack_'+k+'" data-on="'+(on?'1':'0')+'">'+dayLabels[i]+'</button>';
+      +' data-sya="day-toggle" data-key="input_boolean.frarik_db_repack_'+k+'" data-on="'+(on?'1':'0')+'">'+dayLabels[i]+'</button>';
   });
 
   function toggleRow(ico,lbl,eid,on){
@@ -252,7 +252,7 @@ function mount(card,hass,el){
     if(a==='day-toggle'){
       var key=sya.dataset.key;
       var isOn=sya.dataset.on==='1';
-      callSvc('homeassistant',isOn?'turn_off':'turn_on',{entity_id:'input_boolean.'+key});
+      callSvc('homeassistant',isOn?'turn_off':'turn_on',{entity_id:key});
       return;
     }
     if(a==='repack-now'){
