@@ -6984,9 +6984,9 @@ function _openJsdPopup(b, ev){
   const sty=document.createElement('style');
   sty.textContent='@keyframes jsdSlUp{from{transform:translateY(100%)}to{transform:translateY(0)}}';
   const panel=document.createElement('div');
-  panel.style.cssText=`width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid ${_hex2rgba(col,.25)};border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);color:#fff;animation:jsdSlUp .22s cubic-bezier(.32,1.12,.56,1)`;
+  panel.style.cssText=`width:100%;height:88vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.8);color:#fff;animation:jsdSlUp .22s cubic-bezier(.32,1.12,.56,1)`;
   const hdr=document.createElement('div');
-  hdr.style.cssText=`display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid ${_hex2rgba(col,.15)};flex-shrink:0`;
+  hdr.style.cssText=`display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0`;
   let chip={}; try{ if(def.chip) chip=def.chip(b.cfg||{},{states:hs})||{}; }catch(e){}
   hdr.innerHTML=`<div style="width:38px;height:38px;border-radius:11px;background:${_hex2rgba(col,.15)};border:1px solid ${_hex2rgba(col,.3)};display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0">${chip.icon||def.icon||'📦'}</div><div style="flex:1"><div style="font-size:15px;font-weight:800">${eh(chip.label||def.name||b.jsCardId)}</div><div style="font-size:10px;opacity:.45">${eh(def.desc||'')}</div></div>`;
   const closeBtn=document.createElement('button');
