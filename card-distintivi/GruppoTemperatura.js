@@ -1,4 +1,4 @@
-/* frarik-version: 1.7 */
+/* frarik-version: 1.8 */
 (function () {
   'use strict';
 
@@ -172,14 +172,45 @@
     return null;
   }
 
-  /* ── barra scala con marker ─────────────────────────────────── */
-  function _scaleBar(value, maxVal, gradient, color) {
-    const pct = value != null ? Math.min(96, Math.max(4, (value / maxVal) * 100)) : null;
-    return `
-      <div style="position:relative;height:4px;border-radius:2px;margin-top:10px;overflow:visible">
-        <div style="position:absolute;inset:0;border-radius:2px;background:${gradient};opacity:.55"></div>
-        ${pct != null ? `<div style="position:absolute;top:-4px;left:${pct}%;transform:translateX(-50%);width:10px;height:10px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 0 6px ${color};transition:left .5s cubic-bezier(.34,1.56,.64,1)"></div>` : ''}
-      </div>`;
+  /* ── mini arco SVG affianco al numero ───────────────────────── */
+  function _miniArc(value, maxVal, color, czStartFrac, czEndFrac, noAnim, delay) {
+    const R = 28, CX = 35, CY = 35;
+    const circ   = 2 * Math.PI * R;
+    const arcLen = circ * 0.75;                          // 270°
+    const pct    = value != null ? Math.min(1, Math.max(0, value / maxVal)) : 0;
+    const valLen = pct * arcLen;
+
+    /* zona comfort (striscia verde tenua sul track) */
+    const czS = (czStartFrac || 0) * arcLen;
+    const czL = ((czEndFrac || 0) - (czStartFrac || 0)) * arcLen;
+
+    /* dot luminoso alla punta dell'arco */
+    const endAngle = (135 + pct * 270) * Math.PI / 180;
+    const dotX = (CX + R * Math.cos(endAngle)).toFixed(1);
+    const dotY = (CY + R * Math.sin(endAngle)).toFixed(1);
+
+    const arcAnim = noAnim
+      ? `stroke-dasharray:${valLen.toFixed(1)} ${circ.toFixed(1)}`
+      : `stroke-dasharray:${valLen.toFixed(1)} ${circ.toFixed(1)};stroke-dashoffset:${valLen.toFixed(1)};animation:gte-arc-draw .85s cubic-bezier(.22,1,.36,1) ${delay||0}ms both`;
+    const dotAnim = noAnim ? '' : `opacity:0;animation:gte-dot-in .25s ease ${(delay||0)+800}ms both`;
+
+    return `<svg viewBox="0 0 70 70" width="70" height="70" style="flex-shrink:0;overflow:visible">
+      <circle cx="${CX}" cy="${CY}" r="${R}" fill="none"
+        stroke="rgba(255,255,255,.09)" stroke-width="4.5" stroke-linecap="round"
+        style="stroke-dasharray:${arcLen.toFixed(1)} ${circ.toFixed(1)}"
+        transform="rotate(135 ${CX} ${CY})"/>
+      <circle cx="${CX}" cy="${CY}" r="${R}" fill="none"
+        stroke="rgba(74,222,128,.22)" stroke-width="4.5" stroke-linecap="butt"
+        style="stroke-dasharray:0 ${czS.toFixed(1)} ${czL.toFixed(1)} ${circ.toFixed(1)}"
+        transform="rotate(135 ${CX} ${CY})"/>
+      ${value != null ? `
+      <circle cx="${CX}" cy="${CY}" r="${R}" fill="none"
+        stroke="${color}" stroke-width="4.5" stroke-linecap="round"
+        style="${arcAnim}" transform="rotate(135 ${CX} ${CY})"/>
+      ${pct > 0.03 ? `<circle cx="${dotX}" cy="${dotY}" r="3.5" fill="${color}"
+        style="filter:drop-shadow(0 0 4px ${color});${dotAnim}"/>` : ''}
+      ` : ''}
+    </svg>`;
   }
 
   /* ── fingerprint ─────────────────────────────────────────────── */
@@ -220,6 +251,8 @@
     @keyframes gte-hero-in{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
     @keyframes gte-row-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
     @keyframes gte-num{0%,100%{text-shadow:0 0 0 transparent}50%{text-shadow:0 0 20px currentColor}}
+    @keyframes gte-arc-draw{to{stroke-dashoffset:0}}
+    @keyframes gte-dot-in{from{opacity:0;transform:scale(0)}to{opacity:1;transform:scale(1)}}
     .gte-hero{animation:gte-hero-in .38s cubic-bezier(.22,1,.36,1) both}
     .gte-row{animation:gte-row-in .35s cubic-bezier(.22,1,.36,1) both}
     .gte-num{animation:gte-num 4s ease-in-out infinite}
@@ -390,8 +423,9 @@
       ? `<div style="font-size:9px;font-weight:700;color:#fff;letter-spacing:.8px;margin-bottom:8px;padding:0 2px">STANZE · ${ents.length}</div>`
       : '';
 
-    const T_GRAD = 'linear-gradient(90deg,#38bdf8 0%,#4ade80 40%,#facc15 65%,#f87171 100%)';
-    const H_GRAD = 'linear-gradient(90deg,#f87171 0%,#facc15 20%,#4ade80 40%,#4ade80 60%,#facc15 80%,#f87171 100%)';
+    /* comfort zone fractions per gli archi */
+    const T_CZ_S = 19 / 40, T_CZ_E = 25 / 40;   // temp 19-25 su scala 0-40
+    const H_CZ_S = 0.40,    H_CZ_E = 0.60;       // hum 40-60 su scala 0-100
 
     const roomRows = ents.map((e, idx) => {
       if (!e.tempEntity) return '';
@@ -408,12 +442,25 @@
       const hasHum  = !!e.humEntity;
 
       const rowClass  = noAnim ? '' : `class="gte-row"`;
-      const cardDelay = noAnim ? '' : `animation-delay:${idx * 80}ms`;
+      const cardDelay = noAnim ? '' : `animation-delay:${idx * 90}ms`;
+      const arcDelay  = idx * 90 + 150;
 
       const tempDisplay = tempVal != null ? tempVal.toFixed(1) : '—';
       const humDisplay  = humVal  != null ? Math.round(humVal).toString() : '—';
+      const numClass    = noAnim ? '' : 'class="gte-num"';
 
-      const numClass = noAnim ? '' : 'class="gte-num"';
+      /* pannello singolo valore: numero grande + mini arco affianco */
+      const valPanel = (display, unit, color, arcVal, arcMax, czS, czE, aDelay, borderRight) => `
+        <div style="padding:16px 10px 15px${borderRight ? ';border-right:1px solid rgba(255,255,255,.07)' : ''}">
+          <div style="font-size:8px;font-weight:700;color:#fff;letter-spacing:.5px;opacity:.6;text-align:center;margin-bottom:10px">${unit === '°C' ? 'TEMPERATURA' : 'UMIDITÀ'}</div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:8px">
+            <div style="text-align:right;flex-shrink:0">
+              <div ${numClass} style="font-size:44px;font-weight:900;color:${color};line-height:1;letter-spacing:-2px">${display}</div>
+              <div style="font-size:14px;font-weight:700;color:#fff;margin-top:3px;text-align:right">${unit}</div>
+            </div>
+            ${_miniArc(arcVal, arcMax, color, czS, czE, noAnim, aDelay)}
+          </div>
+        </div>`;
 
       return `
         <div ${rowClass} style="margin-bottom:10px;border-radius:18px;overflow:hidden;background:rgba(255,255,255,.045);border:1px solid ${hex2rgba(rc.color,.28)};${cardDelay}">
@@ -427,34 +474,10 @@
             <span style="font-size:9px;font-weight:800;padding:4px 11px;border-radius:20px;background:${hex2rgba(rc.color,.14)};border:1px solid ${hex2rgba(rc.color,.32)};color:${rc.color};flex-shrink:0;white-space:nowrap">${rc.emoji} ${rc.label}</span>
           </div>
 
-          <!-- valori grandi -->
-          <div style="display:grid;grid-template-columns:1fr${hasHum?' 1fr':''};border-top:1px solid rgba(255,255,255,.07)${adv?';border-bottom:1px solid rgba(255,255,255,.07)':''}">
-
-            <div style="padding:16px 14px 14px;text-align:center${hasHum?';border-right:1px solid rgba(255,255,255,.07)':''}">
-              <div style="font-size:8px;font-weight:700;color:#fff;letter-spacing:.6px;margin-bottom:6px;opacity:.6">TEMPERATURA</div>
-              <div ${numClass} style="font-size:44px;font-weight:900;color:${tC};line-height:1;letter-spacing:-2px">${tempDisplay}</div>
-              <div style="font-size:15px;font-weight:700;color:#fff;margin-top:3px">°C</div>
-              ${_scaleBar(tempVal, 40, T_GRAD, tC)}
-              <div style="display:flex;justify-content:space-between;margin-top:5px">
-                <span style="font-size:8px;color:#fff;opacity:.45">0°</span>
-                <span style="font-size:7px;color:#4ade80;opacity:.7">comfort 19–25°</span>
-                <span style="font-size:8px;color:#fff;opacity:.45">40°</span>
-              </div>
-            </div>
-
-            ${hasHum ? `
-            <div style="padding:16px 14px 14px;text-align:center">
-              <div style="font-size:8px;font-weight:700;color:#fff;letter-spacing:.6px;margin-bottom:6px;opacity:.6">UMIDITÀ</div>
-              <div ${numClass} style="font-size:44px;font-weight:900;color:${hC};line-height:1;letter-spacing:-2px">${humDisplay}</div>
-              <div style="font-size:15px;font-weight:700;color:#fff;margin-top:3px">%</div>
-              ${_scaleBar(humVal, 100, H_GRAD, hC)}
-              <div style="display:flex;justify-content:space-between;margin-top:5px">
-                <span style="font-size:8px;color:#fff;opacity:.45">0%</span>
-                <span style="font-size:7px;color:#4ade80;opacity:.7">ideale 40–60%</span>
-                <span style="font-size:8px;color:#fff;opacity:.45">100%</span>
-              </div>
-            </div>` : ''}
-
+          <!-- valori + archi -->
+          <div style="display:grid;grid-template-columns:1fr${hasHum ? ' 1fr' : ''};border-top:1px solid rgba(255,255,255,.07)${adv ? ';border-bottom:1px solid rgba(255,255,255,.07)' : ''}">
+            ${valPanel(tempDisplay, '°C', tC, tempVal, 40, T_CZ_S, T_CZ_E, arcDelay, hasHum)}
+            ${hasHum ? valPanel(humDisplay, '%', hC, humVal, 100, H_CZ_S, H_CZ_E, arcDelay + 100, false) : ''}
           </div>
 
           <!-- consiglio -->
@@ -744,7 +767,7 @@
     name: 'Gruppo Temperatura',
     icon: '🌡️',
     desc: 'Chip con media temp/umidità; popup weather-style con hero, consigli e righe stanza.',
-    version: '1.7',
+    version: '1.8',
     isDistintivo: true,
     defaultCfg: { label: 'Temperatura', color: '#38bdf8', avgTempEntity: '', avgHumEntity: '', entities: [] },
     chip, watchEntities, render, mount, update, configure,
@@ -754,5 +777,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-temperatura v1.7'); } catch(e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-temperatura v1.8'); } catch(e) {}
 })();

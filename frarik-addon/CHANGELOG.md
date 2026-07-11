@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.9.87 — 2026-07-11
+
+### feat(GruppoTemperatura): popup v1.8 — numeri grandi + mini arco SVG affianco
+
+- Numero (44px) e mini arco SVG 270° (70×70) affiancati in ogni pannello valore
+- Numero resta il protagonista (a sinistra), arco è il contesto visivo (a destra)
+- Arco: track grigio + zona comfort verde (19-25° per temp, 40-60% per umid) + arco colorato + dot luminoso alla punta
+- Animazione fill arco al primo render (stroke-dashoffset), dot appare dopo con delay
+- Rimossa `_scaleBar`, aggiunta `_miniArc`; `valPanel` helper compatto riutilizzato per temp e umidità
+- bump 1.9.86 → 1.9.87
+
 ## 1.9.86 — 2026-07-11
 
 ### fix(GruppoTemperatura): popup v1.7 — ritorno card numeri grandi + scala sottile
