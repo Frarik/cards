@@ -1,0 +1,445 @@
+homeassistant:
+  customize:
+    package.node_anchors:
+      customize: &customize
+        package: 'Frarik UPS Tecnoware 1.0'
+        author: 'Frarik'
+        reference: 'github.com/Frarik/cards'
+
+####################################################
+#                                                  #
+#              IMPOSTAZIONI PACKAGE                #
+#                                                  #
+####################################################
+
+      setting:
+        UPS Status 1: &entity_ups_1 "{% if is_state('sensor.tecnoware_dati_di_stato', 'OB')  %} Batteria {% elif is_state('sensor.tecnoware_dati_di_stato' , 'OL')  %} Rete Elettrica {% else%} Non Disponibile {% endif %}"
+        UPS Status 2: &entity_ups_2 sensor.tecnoware_dati_di_stato
+        UPS Batteria: &entity_ups_batteria "{{states('sensor.tecnoware_carica_batterie')}}"
+        UPS Carico: &entity_carico_ups "{{states('sensor.tecnoware_carico')}}"
+        Volt Ingresso UPS: &volt_ingresso_ups "{{states('sensor.tecnoware_tensione_di_ingresso')}}"
+        Volt Uscita UPS: &volt_uscita_ups "{{states('sensor.tecnoware_tensione_di_uscita')}}"
+
+####################################################
+
+        Device per notifica push: &push
+          - service: IL_TUO_MOBILE_APP
+
+####################################################
+#                                                  #
+#              NOTIFICHE GRUPPO                    #
+#                                                  #
+####################################################
+
+notify:
+  - name: ups_tecnoware_group
+    platform: group
+    services: *push
+
+####################################################
+#                                                  #
+#               INPUT NUMBER                       #
+#                                                  #
+####################################################
+
+input_number:
+  soglia_avviso_batteria_tecnoware:
+    name: Soglia Avviso Batteria
+    unit_of_measurement: "%"
+    icon: mdi:flash
+    min: 1
+    max: 100
+    step: 1.00
+    mode: box
+
+####################################################
+
+  soglia_batteria_spegnimento_programmato_server_tecnoware:
+    name: Soglia Batteria Spegnimento Programmato Server
+    unit_of_measurement: "%"
+    icon: mdi:flash
+    min: 1
+    max: 100
+    step: 1.00
+    mode: box
+
+####################################################
+#                                                  #
+#                  INPUT BOOLEAN                   #
+#                                                  #
+####################################################
+
+input_boolean:
+  notify_push_ups_tecnoware_energia:
+    name: Notifica Push Energia
+
+####################################################
+
+  notify_push_ups_tecnoware_batteria_sotto_soglia:
+    name: Notifica Push Batteria Sotto Soglia
+
+####################################################
+
+  notify_push_ups_tecnoware_spegni_server:
+    name: Spegnimento Controllato Home Assistant
+
+####################################################
+
+  durata_blackout:
+    name: Durata Blackout
+
+####################################################
+#                                                  #
+#                     GROUP                        #
+#                                                  #
+####################################################
+
+group:
+  notifiche_ups_tecnoware:
+    entities:
+      - input_boolean.notify_push_ups_tecnoware_energia
+      - input_boolean.notify_push_ups_tecnoware_batteria_sotto_soglia
+      - input_boolean.notify_push_ups_tecnoware_spegni_server
+
+####################################################
+#                                                  #
+#                 INPUT TEXT                       #
+#                                                  #
+####################################################
+
+input_text:
+  data_ultimo_blackout:
+
+####################################################
+
+  data_ripristino_energia:
+
+####################################################
+
+  durata_ultimo_blackout:
+
+####################################################
+
+  data_reset_sensori_ups:
+
+####################################################
+#                                                  #
+#                 UTILITY METER                    #
+#                                                  #
+####################################################
+
+utility_meter:
+  cicli_blackout_oggi_ups:
+    source: counter.cicli_blackout_totale_ups
+    cycle: daily
+
+####################################################
+
+  cicli_blackout_mese_ups:
+    source: counter.cicli_blackout_totale_ups
+    cycle: monthly
+
+####################################################
+
+  cicli_blackout_anno_ups:
+    source: counter.cicli_blackout_totale_ups
+    cycle: yearly
+
+####################################################
+#                                                  #
+#               COUNTER                            #
+#                                                  #
+####################################################
+
+counter:
+  cicli_blackout_totale_ups:
+    name: Cicli Blackout Totale Ups
+    initial: 0
+    step: 1
+
+####################################################
+#                                                  #
+#                    SCRIPT                        #
+#                                                  #
+####################################################
+
+script:
+  reset_sensori_blackout_ups:
+    sequence:
+    - service: input_text.set_value
+      data:
+        value: >-
+          {{now().strftime('%d/%m/%Y %H:%M')}}
+      target:
+        entity_id: input_text.data_reset_sensori_ups
+
+    - service: input_text.set_value
+      data:
+        value: Reset Eseguito
+      target:
+        entity_id: input_text.data_ultimo_blackout
+
+    - service: input_text.set_value
+      data:
+        value: Reset Eseguito
+      target:
+        entity_id: input_text.data_ripristino_energia
+
+    - service: input_text.set_value
+      data:
+        value: Reset Eseguito
+      target:
+        entity_id: input_text.durata_ultimo_blackout
+
+    - service: utility_meter.calibrate
+      data:
+        value: '0'
+      target:
+        entity_id:
+          - sensor.cicli_blackout_oggi_ups
+          - sensor.cicli_blackout_mese_ups
+          - sensor.cicli_blackout_anno_ups
+
+    - service: counter.reset
+      target:
+        entity_id:
+          - counter.cicli_blackout_totale_ups
+
+####################################################
+#                                                  #
+#               TEMPLATE                           #
+#                                                  #
+####################################################
+
+template:
+  - sensor:
+    - name: "Sensore Centro Controllo Ups Tecnoware"
+      state: "1.3"
+
+    - name: Alimentazione UPS Tecnoware
+      icon: mdi:flash
+      state: *entity_ups_1
+      attributes:
+        stato_display_blackout: "{% if is_state('input_boolean.durata_blackout', 'on') %}In Corso{% else %}Ultimo{% endif %}"
+        durata_blackout: >
+            {%set hours = (as_timestamp(now())- as_timestamp(states.input_boolean.durata_blackout.last_changed) ) /3600%}
+            {% set minutes = ((hours % 1) * 60) | int (0)%}
+            {% set hours = (hours - (hours % 1)) | int(0) %}
+            {%set day = ((hours |int(0) /24))|int(0) %}
+            {% if is_state('input_boolean.durata_blackout','on') %}
+              {% if day|int(0) >0 %}
+                {{day}}d {{(hours|int(0))-(day*24)}}h {{minutes}}m
+              {% elif hours|int(0) >0 %}
+                {{hours}}h {{minutes}}m
+              {% else %}
+                {{minutes}} min
+              {% endif %}
+            {%else%}
+            {{states('input_text.durata_ultimo_blackout')}}
+            {%endif%}
+
+        data_ultimo_blackout: "{{states('input_text.data_ultimo_blackout')}}"
+        data_ripristino_energia: "{{states('input_text.data_ripristino_energia')}}"
+        livello_batteria: *entity_ups_batteria
+        carico_ups: *entity_carico_ups
+        volt_ingresso: *volt_ingresso_ups
+        volt_uscita: *volt_uscita_ups
+
+####################################################
+#                                                  #
+#                     AUTOMAZIONI                  #
+#                                                  #
+####################################################
+
+automation:
+  - alias: Automazioni UPS Tecnoware
+    id: Automazioni UPS Tecnoware
+    trigger:
+
+      - entity_id: *entity_ups_2
+        platform: state
+        to: "OB"
+        id: ups_batteria
+
+      - entity_id: *entity_ups_2
+        platform: state
+        to: "OL"
+        id: ups_rete
+
+      - entity_id: *entity_ups_2
+        platform: state
+        to: "unknown"
+        id: ups_offline
+
+      - platform: template
+        value_template: "{{ state_attr('sensor.alimentazione_ups_tecnoware','livello_batteria') |float(0) < (states('input_number.soglia_avviso_batteria_tecnoware'))|float(0) }}"
+        id: ups_soglia
+
+      - platform: template
+        value_template: "{{ state_attr('sensor.alimentazione_ups_tecnoware','livello_batteria') |float(0) < (states('input_number.soglia_batteria_spegnimento_programmato_server_tecnoware'))|float(0) }}"
+        id: ups_spegnimento_controllato
+
+    condition: []
+    action:
+
+####################################################
+# Durata Ultimo Blackout
+
+      - choose:
+        - conditions:
+          - condition: trigger
+            id: ups_rete
+          sequence:
+
+          - service: input_text.set_value
+            target:
+              entity_id: input_text.durata_ultimo_blackout
+            data:
+              value: >-
+                {{state_attr('sensor.alimentazione_ups_tecnoware','durata_blackout') }}
+
+####################################################
+# Data Ultimo Blackout
+
+      - choose:
+        - conditions:
+          - condition: trigger
+            id: ups_batteria
+          sequence:
+
+          - service: input_text.set_value
+            target:
+              entity_id: input_text.data_ultimo_blackout
+            data:
+              value: >-
+                {{ now().strftime("%d/%m/%Y - %H:%M") }}
+
+####################################################
+# Data Ripristino Energia
+
+      - choose:
+        - conditions:
+          - condition: trigger
+            id: ups_rete
+          sequence:
+
+          - service: input_text.set_value
+            target:
+              entity_id: input_text.data_ripristino_energia
+            data:
+              value: >-
+                {{ now().strftime("%d/%m/%Y - %H:%M") }}
+
+####################################################
+# Inizio Blackout
+
+      - choose:
+        - conditions:
+          - condition: trigger
+            id: ups_batteria
+          sequence:
+          - service: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.durata_blackout
+
+          - service: counter.increment
+            target:
+              entity_id:
+                - counter.cicli_blackout_totale_ups
+
+####################################################
+# Fine Blackout
+
+      - choose:
+        - conditions:
+          - condition: trigger
+            id: ups_rete
+          sequence:
+          - delay: "5"
+          - service: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.durata_blackout
+
+####################################################
+# Notifica BATTERIA - MANCANZA ENERGIA
+
+      - choose:
+          - conditions:
+              - condition: trigger
+                id: ups_batteria
+              - condition: state
+                entity_id: input_boolean.notify_push_ups_tecnoware_energia
+                state: "on"
+            sequence:
+              - data:
+                  message: ⚡️ Interruzione Energia Elettrica! [ 🕐 {{ state_attr('sensor.alimentazione_ups_tecnoware','data_ultimo_blackout') }} ] ⚡️
+                  title: "⚠️ ATTENZIONE ⚠️"
+                service: notify.ups_tecnoware_group
+
+####################################################
+# Notifica RIPRISTINO ENERGIA
+
+      - choose:
+          - conditions:
+              - condition: trigger
+                id: ups_rete
+              - condition: state
+                entity_id: input_boolean.notify_push_ups_tecnoware_energia
+                state: "on"
+            sequence:
+              - data:
+                  message: ⚡️ Energia Ripristinata! [ 🕐 {{state_attr('sensor.alimentazione_ups_tecnoware','data_ripristino_energia') }} ] - [ Durata Blackout ⌛️ {{ state_attr('sensor.alimentazione_ups_tecnoware','durata_blackout') }} ] ⚡️
+                  title: "⚠️ ATTENZIONE ⚠️"
+                service: notify.ups_tecnoware_group
+
+####################################################
+# Notifica ERRORE CONNESSIONE UPS
+
+      - choose:
+          - conditions:
+              - condition: trigger
+                id: ups_offline
+              - condition: state
+                entity_id: input_boolean.notify_push_ups_tecnoware_energia
+                state: "on"
+            sequence:
+              - data:
+                  message: ⚠️ Errore Connessione UPS 🔌 ⚠️
+                  title: "⚠️ ATTENZIONE ⚠️"
+                service: notify.ups_tecnoware_group
+
+####################################################
+# Notifica BATTERIA SOTTO SOGLIA
+
+      - choose:
+          - conditions:
+              - condition: trigger
+                id: ups_soglia
+              - condition: state
+                entity_id: input_boolean.notify_push_ups_tecnoware_batteria_sotto_soglia
+                state: "on"
+            sequence:
+              - data:
+                  message: ⚠️ Batteria UPS al 🔋 {{ state_attr('sensor.alimentazione_ups_tecnoware','livello_batteria')}}% ⚠️
+                  title: "⚠️ ATTENZIONE ⚠️"
+                service: notify.ups_tecnoware_group
+
+####################################################
+# Notifica BATTERIA CRITICA + SPEGNI SERVER
+
+      - choose:
+          - conditions:
+              - condition: trigger
+                id: ups_spegnimento_controllato
+              - condition: state
+                entity_id: input_boolean.notify_push_ups_tecnoware_spegni_server
+                state: "on"
+            sequence:
+              - data:
+                  message: ⚠️ Spegnimento Controllato Server [ Batteria al 🔋 {{ state_attr('sensor.alimentazione_ups_tecnoware','livello_batteria')}}% ] ⚠️
+                  title: "⚠️ ATTENZIONE ⚠️"
+                service: notify.ups_tecnoware_group
+              - delay: "5"
+              - service: hassio.host_shutdown
+
+####################################################

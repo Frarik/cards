@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.9.97 — 2026-07-12
+
+### feat(pkg): aggiunto frarik_ups.yaml nel Frarik Store
+
+- `pkg/frarik_ups.yaml` — package UPS Tecnoware ora disponibile nello store PKG
+- Header Frarik corretto (author: Frarik, reference: github.com/Frarik/cards)
+- Placeholder `IL_TUO_MOBILE_APP` per notifiche push
+- bump 1.9.96 → 1.9.97
+
 ## 1.9.96 — 2026-07-12
 
 ### feat(ups-card): nuova card UPS Tecnoware v1.0
