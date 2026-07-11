@@ -1,4 +1,4 @@
-/* frarik-version: 1.4 */
+/* frarik-version: 1.5 */
 (function () {
   'use strict';
 
@@ -72,6 +72,104 @@
     else if (spread != null && spread > 3)
       lines.push({ ico: '📊', txt: `Differenza di ${spread.toFixed(1)}° tra la stanza più fredda e quella più calda.` });
     return lines;
+  }
+
+  /* ── icona stanza rilevata dal nome ────────────────────────── */
+  function _roomIcon(label) {
+    const l = (label || '').toLowerCase();
+    if (l.includes('camera') || l.includes('letto') || l.includes('bedroom') || l.includes('notte')) return 'bed-king-outline';
+    if (l.includes('cucina') || l.includes('kitchen') || l.includes('cucinotto')) return 'chef-hat';
+    if (l.includes('bagno') || l.includes('bathroom') || l.includes('doccia') || l.includes('wc') || l.includes('toilet')) return 'shower';
+    if (l.includes('soggiorno') || l.includes('salotto') || l.includes('living') || l.includes('sala')) return 'sofa-outline';
+    if (l.includes('studio') || l.includes('ufficio') || l.includes('office') || l.includes('lavoro')) return 'desk';
+    if (l.includes('garage') || l.includes('box')) return 'garage-open-variant';
+    if (l.includes('cantina') || l.includes('cave') || l.includes('interrato')) return 'domain';
+    if (l.includes('terrazzo') || l.includes('balcone') || l.includes('balcony') || l.includes('terraza')) return 'balcony';
+    if (l.includes('giardino') || l.includes('garden') || l.includes('esterno') || l.includes('outdoor')) return 'tree-outline';
+    if (l.includes('corridoio') || l.includes('ingresso') || l.includes('entrata') || l.includes('hall')) return 'door-open';
+    if (l.includes('mansarda') || l.includes('soffitta') || l.includes('attico')) return 'home-roof';
+    if (l.includes('ripostiglio') || l.includes('lavanderia') || l.includes('laundry')) return 'washing-machine';
+    return 'home-thermometer-outline';
+  }
+
+  /* ── consiglio specifico per stanza ─────────────────────────── */
+  function _roomAdvice(label, temp, hum) {
+    const l = (label || '').toLowerCase();
+    const isBed  = l.includes('camera') || l.includes('letto') || l.includes('notte') || l.includes('bedroom');
+    const isKit  = l.includes('cucina') || l.includes('kitchen') || l.includes('cucinotto');
+    const isBath = l.includes('bagno') || l.includes('doccia') || l.includes('wc') || l.includes('toilet');
+    const isOut  = l.includes('esterno') || l.includes('giardino') || l.includes('terrazzo') || l.includes('balcone') || l.includes('outdoor');
+
+    const tOk = temp != null && temp >= 19 && temp <= 25;
+    const hOk = hum  == null || (hum >= 40 && hum <= 60);
+
+    if (temp == null && hum == null) return null;
+
+    /* camera da letto */
+    if (isBed) {
+      if (temp != null && temp >= 17 && temp <= 21 && hOk)
+        return { ico: '😴', txt: 'Temperatura ideale per dormire bene. Ottimo!' };
+      if (temp != null && temp > 22)
+        return { ico: '💤', txt: 'Un po\' caldo per dormire. Abbassa leggermente il riscaldamento la sera.' };
+      if (temp != null && temp < 16)
+        return { ico: '🥶', txt: 'Troppo freddo per dormire. Imposta il riscaldamento notturno almeno a 17°.' };
+      if (hum != null && hum > 65)
+        return { ico: '💦', txt: 'Umidità elevata: arieggia di mattina per ridurre il rischio di condensa.' };
+    }
+
+    /* cucina */
+    if (isKit) {
+      if (temp != null && temp > 26)
+        return { ico: '🌬', txt: 'La cucina si surriscalda durante la cottura. Usa la cappa e apri la finestra.' };
+      if (hum != null && hum > 65)
+        return { ico: '💨', txt: 'Vapore in cucina: usa la cappa aspirante e ventila per evitare condensa.' };
+      if (tOk && hOk)
+        return { ico: '✅', txt: 'Cucina ben ventilata e a temperatura ottimale.' };
+    }
+
+    /* bagno */
+    if (isBath) {
+      if (hum != null && hum > 75)
+        return { ico: '🍄', txt: 'Umidità molto alta: arieggia subito e considera un deumidificatore per prevenire le muffe.' };
+      if (hum != null && hum > 60)
+        return { ico: '💧', txt: 'Apri la finestra dopo la doccia per far scendere l\'umidità sotto al 60%.' };
+      if (hum != null && hum <= 60 && temp != null && temp >= 18)
+        return { ico: '✅', txt: 'Bagno ben ventilato. Nessuna azione necessaria.' };
+    }
+
+    /* esterno */
+    if (isOut) {
+      if (temp != null && temp > 32)
+        return { ico: '☀️', txt: 'Caldo intenso all\'esterno. Evita le ore centrali e idratati.' };
+      if (temp != null && temp < 5)
+        return { ico: '❄️', txt: 'Gelo possibile. Attenzione a tubi esposti e piante sensibili al freddo.' };
+      if (hum != null && hum > 80)
+        return { ico: '🌧', txt: 'Umidità esterna elevata. Probabile pioggia in arrivo.' };
+    }
+
+    /* consigli generici per qualsiasi stanza */
+    if (tOk && hOk)
+      return { ico: '✅', txt: 'Condizioni ottime. Temperatura e umidità nella norma.' };
+    if (temp != null && temp > 28 && hum != null && hum > 60)
+      return { ico: '😰', txt: 'Afa: caldo e umidità combinati. Usa un deumidificatore e ventila nelle ore fresche.' };
+    if (temp != null && temp < 16 && hum != null && hum > 65)
+      return { ico: '🍄', txt: 'Freddo e umido: rischio muffe. Scalda l\'ambiente e arieggia brevemente ogni giorno.' };
+    if (temp != null && temp > 27)
+      return { ico: '🔥', txt: 'Temperatura elevata. Apri le finestre nelle ore più fresche o abbassa il riscaldamento.' };
+    if (temp != null && temp < 16)
+      return { ico: '🥶', txt: 'Freddo: controlla il riscaldamento in questa stanza.' };
+    if (hum != null && hum > 70)
+      return { ico: '💦', txt: 'Umidità alta. Arieggia almeno 10 minuti al giorno per prevenire muffe.' };
+    if (hum != null && hum < 30)
+      return { ico: '🏜', txt: 'Aria molto secca. Un umidificatore migliora il comfort e riduce le irritazioni.' };
+    if (hum != null && hum < 40)
+      return { ico: '🌵', txt: 'Umidità un po\' bassa. Un umidificatore portatile può aiutare.' };
+    if (temp != null && temp > 25)
+      return { ico: '☀️', txt: 'Leggermente caldo. Valuta di arieggiare nelle ore serali.' };
+    if (temp != null && temp < 19)
+      return { ico: '🌡', txt: 'Fresco. Potresti aumentare leggermente il riscaldamento.' };
+
+    return null;
   }
 
   /* ── fingerprint ─────────────────────────────────────────────── */
@@ -278,7 +376,7 @@
       </div>` : '';
 
     /* stanze */
-    const roomHeader = multi ? `<div style="font-size:9px;font-weight:700;color:#fff;letter-spacing:.8px;margin-bottom:7px;padding:0 2px">STANZE · ${ents.length}</div>` : '';
+    const roomHeader = multi ? `<div style="font-size:9px;font-weight:700;color:#fff;letter-spacing:.8px;margin-bottom:8px;padding:0 2px">STANZE · ${ents.length}</div>` : '';
 
     const roomRows = ents.map((e, idx) => {
       if (!e.tempEntity) return '';
@@ -290,26 +388,53 @@
       const tC      = _tempColor(tempVal);
       const hC      = _humColor(humVal);
       const rc      = _comfortInfo(tempVal, humVal);
+      const adv     = _roomAdvice(label, tempVal, humVal);
+      const icon    = _roomIcon(label);
       const hasHum  = !!e.humEntity;
+
       const rowClass = noAnim ? '' : `class="gte-row"`;
-      const rowDelay = noAnim ? '' : `animation-delay:${idx*50}ms`;
+      const rowDelay = noAnim ? '' : `animation-delay:${idx*70}ms`;
+
+      const tempDisplay = tempVal != null ? tempVal.toFixed(1) : '—';
+      const humDisplay  = humVal  != null ? Math.round(humVal).toString() : '—';
 
       return `
-        <div ${rowClass} style="display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:13px;margin-bottom:6px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);border-left:3px solid ${tempVal!=null?tC:'rgba(255,255,255,.18)'};${rowDelay}">
-          <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(label)}</div>
-            ${hasHum && humVal!=null
-              ? `<div style="display:flex;align-items:center;gap:4px;margin-top:3px">
-                  <span class="mdi mdi-water-percent" style="font-size:11px;color:${hC}"></span>
-                  <span style="font-size:10px;color:${hC};font-weight:700">${Math.round(humVal)}%</span>
-                  <span style="font-size:9px;color:#fff;margin-left:2px">umidità</span>
-                </div>`
-              : ''}
+        <div ${rowClass} style="margin-bottom:9px;border-radius:16px;overflow:hidden;background:rgba(255,255,255,.04);border:1px solid ${hex2rgba(rc.color,.28)};${rowDelay}">
+
+          <!-- intestazione stanza -->
+          <div style="display:flex;align-items:center;gap:10px;padding:12px 14px 11px">
+            <div style="width:34px;height:34px;border-radius:10px;background:${hex2rgba(rc.color,.14)};border:1px solid ${hex2rgba(rc.color,.32)};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <span class="mdi mdi-${icon}" style="font-size:17px;color:${rc.color}"></span>
+            </div>
+            <span style="flex:1;font-size:14px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(label)}</span>
+            <span style="font-size:9px;font-weight:800;padding:4px 11px;border-radius:20px;background:${hex2rgba(rc.color,.14)};border:1px solid ${hex2rgba(rc.color,.32)};color:${rc.color};flex-shrink:0;white-space:nowrap">${rc.emoji} ${rc.label}</span>
           </div>
-          <div style="text-align:right;flex-shrink:0">
-            <div style="font-size:24px;font-weight:900;color:${tempVal!=null?tC:'#fff'};line-height:1;letter-spacing:-1px">${tempVal!=null?tempVal.toFixed(1):'—'}<span style="font-size:12px;font-weight:700;color:#fff">°</span></div>
-            <div style="font-size:9px;color:${rc.color};margin-top:3px;font-weight:700">${rc.emoji} ${rc.label}</div>
+
+          <!-- valori: temperatura + umidità alla stessa grandezza -->
+          <div style="display:grid;grid-template-columns:1fr${hasHum?' 1fr':''};border-top:1px solid rgba(255,255,255,.07)${adv?';border-bottom:1px solid rgba(255,255,255,.07)':''}">
+
+            <div style="padding:16px 12px 14px;text-align:center${hasHum?';border-right:1px solid rgba(255,255,255,.07)':''}">
+              <div style="font-size:9px;font-weight:700;color:#fff;letter-spacing:.6px;margin-bottom:8px;opacity:.7">TEMPERATURA</div>
+              <div style="font-size:42px;font-weight:900;color:${tC};line-height:1;letter-spacing:-2px">${tempDisplay}</div>
+              <div style="font-size:16px;font-weight:700;color:#fff;margin-top:4px">°C</div>
+            </div>
+
+            ${hasHum ? `
+            <div style="padding:16px 12px 14px;text-align:center">
+              <div style="font-size:9px;font-weight:700;color:#fff;letter-spacing:.6px;margin-bottom:8px;opacity:.7">UMIDITÀ</div>
+              <div style="font-size:42px;font-weight:900;color:${hC};line-height:1;letter-spacing:-2px">${humDisplay}</div>
+              <div style="font-size:16px;font-weight:700;color:#fff;margin-top:4px">%</div>
+            </div>` : ''}
+
           </div>
+
+          <!-- consiglio stanza -->
+          ${adv ? `
+          <div style="display:flex;align-items:flex-start;gap:9px;padding:10px 14px">
+            <span style="font-size:15px;flex-shrink:0;line-height:1.3">${adv.ico}</span>
+            <span style="font-size:11px;color:#fff;line-height:1.5">${adv.txt}</span>
+          </div>` : ''}
+
         </div>`;
     }).join('');
 
@@ -590,7 +715,7 @@
     name: 'Gruppo Temperatura',
     icon: '🌡️',
     desc: 'Chip con media temp/umidità; popup weather-style con hero, consigli e righe stanza.',
-    version: '1.4',
+    version: '1.5',
     isDistintivo: true,
     defaultCfg: { label: 'Temperatura', color: '#38bdf8', avgTempEntity: '', avgHumEntity: '', entities: [] },
     chip, watchEntities, render, mount, update, configure,
@@ -600,5 +725,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-temperatura v1.4'); } catch(e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-temperatura v1.5'); } catch(e) {}
 })();

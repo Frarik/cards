@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.9.84 — 2026-07-11
+
+### feat(GruppoTemperatura): popup v1.5 — card stanze completamente ridisegnate
+
+- Temperatura e umidità alla stessa grandezza (42px, stessa posizione, stesso peso)
+- Sfondo cards uniforme (rgba bianco.04) per tutte le stanze — solo il bordo cambia colore
+- Icona stanza rilevata automaticamente dal nome (camera → 🛏, cucina → 🍴, bagno → 🚿, ecc.)
+- Consiglio specifico per ogni stanza in base a tipo + condizioni (camera: soglia sonno, cucina: vapore, bagno: muffe, generico: afa/secco/freddo ecc.)
+- `_roomIcon(label)` — mappa 12 tipi di stanza
+- `_roomAdvice(label, temp, hum)` — 20+ casistiche dettagliate con testo descrittivo
+- bump 1.9.83 → 1.9.84
+
 ## 1.9.83 — 2026-07-11
 
 ### feat(GruppoTemperatura): popup v1.4 — redesign completo stile weather widget
