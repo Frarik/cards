@@ -355,8 +355,9 @@
 
   var CARD = {
     id: 'database-card', name: 'Database HA', icon: '🗄️', version: '2.3',
-    desc: 'Monitoraggio database HA: dimensione, repack automatico, statistiche, 2 sensori configurabili.',
+    desc: 'Monitoraggio database HA: dimensione, repack automatico, statistiche.',
     colSpan: 2, rowSpan: 3,
+    frarik_no_edit: true,
     render: render, mount: mount, update: update,
     frarik_pkg_check: 'sensor.frarik_database_versione',
     frarik_pkg_id: 'frarik_database',
