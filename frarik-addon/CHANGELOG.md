@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.9.77 — 2026-07-11
+
+### fix: icon picker perde focus + popup prese scorre da solo su mobile
+
+- **Icon picker (main.js)**: il campo di ricerca scompariva dopo ogni lettera perché
+  `_iconPickerRenderTab('mdi')` impostava `display:none` sulla search (condizione
+  non includeva il tab 'mdi'). Fix: aggiunto 'mdi' alla condizione + handler usa
+  `_ipmTab` (tab corrente) invece di hardcoded 'mdi'. Bug presente in tutte le
+  librerie icone del progetto, risolto globalmente.
+- **GruppoPrese popup (v1.20)**: su mobile il popup scorreva verso l'alto ogni 1.5s
+  perché `el.innerHTML = render(...)` azzerava `scrollTop` del parent. Fix: salvo
+  e ripristino `scrollTop` prima/dopo la sostituzione.
+
 ## 1.9.76 — 2026-07-11
 
 ### fix(distintivo): GruppoPrese v1.19 — timer e badge — a #fff (100% bianco)

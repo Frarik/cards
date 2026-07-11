@@ -1,4 +1,4 @@
-/* frarik-version: 1.19 */
+/* frarik-version: 1.20 */
 /**
  * GruppoPrese.js — Distintivo FratechStore v1.15
  * Chip · riquadro riassuntivo · colori % · kWh giornalieri · timer · costo · standby
@@ -522,9 +522,13 @@
             const w=numOf(h,e.power_entity); _gpAddKwh(e.entity,w,deltaMs);
           }
         });
+        /* salva scroll prima di sostituire innerHTML (evita jump su mobile) */
+        const _sp = el.parentElement;
+        const _st = _sp ? _sp.scrollTop : 0;
         el.innerHTML = render(cfg, h);
         _mountHandlers(cfg, el);
         _syncTitle(cfg, el);
+        if (_sp && _st > 0) _sp.scrollTop = _st;
       } catch(e) {}
     }, 1500);
   }
@@ -829,7 +833,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Prese', icon: '🔌',
     desc: 'Chip prese on/off · popup con stato, consumo W real-time, flusso animato e indicatori unavailable.',
-    version: '1.19', isDistintivo: true,
+    version: '1.20', isDistintivo: true,
     defaultCfg: { label:'Prese', icon:'🔌', color:'#fb923c', maxW:2300, entities:[] },
     chip, watchEntities, render, mount, update, configure,
   };

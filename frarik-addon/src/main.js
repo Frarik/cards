@@ -8338,7 +8338,7 @@ function _iconPickerRenderTab(tab){
   if(!m) return;
   m.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
   const s=document.getElementById('ipm-search');
-  if(s) s.style.display=(tab==='mdi-cat'||tab==='mdi-all')?'block':'none';
+  if(s) s.style.display=(tab==='mdi-cat'||tab==='mdi-all'||tab==='mdi')?'block':'none';
   const body=m.querySelector('.ipm-body');
   if(!body) return;
   if(tab==='emoji'){
@@ -14769,7 +14769,7 @@ function _adminShowFirstAccess(){
   // Store GitHub
   on('ghs-search',    'input',  ()=>_ghStoreRender());
   // Icon picker search
-  on('ipm-search',    'input',  ()=>_iconPickerRenderTab('mdi'));
+  on('ipm-search',    'input',  ()=>_iconPickerRenderTab(_ipmTab));
   // Free editor (canvas)
   on('fe-ep-q',       'input',  function(){ _feEpSearch(this.value); });
   on('fe-inp-w',      'input',  function(){ feUpdCard('canvasW', +this.value); });
