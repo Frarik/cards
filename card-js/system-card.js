@@ -250,13 +250,12 @@
     var addonOk = S(h,c.pk_addon) === 'Aggiornati', hacsOk = S(h,c.pk_hacs_card) === 'Aggiornato';
     var anyUpd = !coreOk || !supOk || !addonOk || !hacsOk;
 
-    function sRow(lbl, val, col, un) {
-      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0">'
-        +'<div style="font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.5px">'+lbl+'</div>'
-        +'<div style="font-size:15px;font-weight:900;color:'+(col||'#fff')+'">'+(val!==null&&val!==undefined?val:'—')+(un?'<span style="font-size:9px;font-weight:700;color:#fff;margin-left:2px">'+un+'</span>':'')+'</div>'
+    function met(lbl, val, col) {
+      return '<div style="display:flex;align-items:center;justify-content:space-between;gap:4px">'
+        +'<span style="font-size:11px;font-weight:700;color:#fff;flex-shrink:0">'+lbl+'</span>'
+        +'<span style="font-size:13px;font-weight:800;color:'+(col||'#fff')+'">'+val+'</span>'
         +'</div>';
     }
-    var bS = 'flex:1;padding:9px 4px;border:none;cursor:pointer;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:#fff;background:rgba(255,255,255,.06);border-radius:9px;display:flex;flex-direction:column;align-items:center;gap:3px;transition:background .15s;border:1px solid rgba(255,255,255,.08)';
     return '<style>'
       +'#'+rid+'{position:relative;width:100%;height:100%;min-height:280px;font-family:system-ui,sans-serif;display:block}'
       +'#'+rid+' .sc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
@@ -266,7 +265,7 @@
       +'#'+rid+' .sc-scroll::-webkit-scrollbar{display:none}'
       +'#'+rid+' .sc-hero{display:flex;align-items:stretch;padding:10px 14px 8px;flex:1}'
       +'#'+rid+' .sc-img{width:90px;display:flex;align-items:center;justify-content:center;flex-shrink:0}'
-      +'#'+rid+' .sc-right{flex:1;display:flex;flex-direction:column;gap:5px;justify-content:center;border-left:1px solid rgba(255,255,255,.06);padding-left:12px}'
+      +'#'+rid+' .sc-right{flex:1;display:flex;flex-direction:column;gap:4px;justify-content:center;border-left:1px solid rgba(255,255,255,.06);padding-left:12px}'
       +'#'+rid+' .sc-stats{display:flex;margin:0 14px 8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden}'
       +'#'+rid+' .sc-sb{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 3px;gap:2px}'
       +'#'+rid+' .sc-sb-sep{width:1px;background:rgba(255,255,255,.07);flex-shrink:0}'
@@ -290,10 +289,17 @@
             +'<div class="sc-hero">'
               +'<div class="sc-img">'+pcSVG(cpuV, tmpV)+'</div>'
               +'<div class="sc-right">'
-                +sRow('CPU', cpuV!=null?Math.round(cpuV)+'':'—', cpuC, cpuV!=null?'%':'')
-                +sRow('RAM', ramV!=null?Math.round(ramV)+'':'—', '#a78bfa', ramV!=null?'%':'')
-                +sRow('Temp', tmpV!=null?tmpV.toFixed(0):'—', tCol, tmpV!=null?'°C':'')
-                +sRow('Potenza', pwV!=null?pwV.toFixed(0):'—', '#f97316', pwV!=null?' W':'')
+                +'<div style="display:flex;align-items:baseline;gap:3px">'
+                  +'<span style="font-size:30px;font-weight:900;line-height:1;color:'+cpuC+'">'+(cpuV!=null?Math.round(cpuV):'—')+'</span>'
+                  +(cpuV!=null?'<span style="font-size:13px;font-weight:700;color:#fff">%</span>':'')
+                +'</div>'
+                +'<div style="height:5px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden">'
+                  +'<div style="height:100%;width:'+(cpuV!=null?Math.min(Math.round(cpuV),100):0)+'%;background:'+cpuC+';border-radius:3px"></div>'
+                +'</div>'
+                +'<div style="font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">CPU</div>'
+                +met('RAM', ramV!=null?Math.round(ramV)+'%':'—', '#a78bfa')
+                +met('Temp', tmpV!=null?tmpV.toFixed(0)+'°':'—', tCol)
+                +met('Potenza', pwV!=null?pwV.toFixed(0)+' W':'—', '#f97316')
               +'</div>'
             +'</div>'
             +'<div class="sc-stats">'
@@ -2284,7 +2290,7 @@ automation:
   }
 
   var CARD={
-    id:'system-card', name:'Mini-PC', icon:'🖥️', version:'5.1',
+    id:'system-card', name:'Mini-PC', icon:'🖥️', version:'5.2',
     desc:'Mini-PC/Server: SVG animato mini-PC, CPU/RAM/Temp/Potenza in evidenza. Popup: Prestazioni (ring CPU/RAM/Disco/Swap + load + rete), Energia & Costi, Sistema HA (uptime/aggiornamenti/entità), Gestione automazioni. Sensori autodetect + PKG completo.',
     colSpan:2, rowSpan:3,
     frarik_no_edit:true,
