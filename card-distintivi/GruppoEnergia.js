@@ -1,4 +1,4 @@
-/* frarik-version: 3.2 */
+/* frarik-version: 3.3 */
 /**
  * GruppoEnergia.js — Distintivo FratechStore v3.0
  * Flow shimmer · tralicio img data-URI · nodi uguali · speed reattiva
@@ -98,9 +98,11 @@
     }
 
     if (!rawPts.length) return [];
-    const pts = rawPts.filter(p => isFinite(p.t) && p.t > 0 && !isNaN(p.v) && p.v >= 0);
+    const pts = rawPts
+      .filter(p => isFinite(p.t) && p.t > 0 && !isNaN(p.v) && p.v >= 0)
+      .sort((a, b) => a.t - b.t); // garantisce ordine cronologico per integrale kWh
     if (!pts.length) return [];
-    const DS = 120;
+    const DS = 200;
     const out = pts.length > DS ? pts.filter((_, i) => i % Math.ceil(pts.length / DS) === 0) : pts;
     _GE_HIST[key] = { ts: Date.now(), pts: out };
     return out;
@@ -119,46 +121,46 @@
   /* ── delta html (confronto vs ieri) ── */
   function _deltaHtml(today, yest) {
     if (today === null || yest === null || yest < 0.001)
-      return '<span style="font-size:9px;color:#fff">— vs ieri</span>';
+      return '<span style="font-size:10px;color:#fff">— vs ieri</span>';
     const diff = today - yest;
     const pct  = Math.round(Math.abs(diff / yest) * 100);
     const up   = diff > 0;
     const col  = up ? '#ef4444' : '#4ade80';
-    return `<span style="font-size:9px;color:${col}">${up ? '▲' : '▼'} ${up ? '+' : '-'}${pct}% vs ieri</span>`;
+    return `<span style="font-size:10px;color:${col}">${up ? '▲' : '▼'} ${up ? '+' : '-'}${pct}% vs ieri</span>`;
   }
 
   /* ── grafico SVG compatto ── */
   function _chart(pts, maxW, col) {
-    const W = 300, H = 70;
-    const noData = `<div style="height:${H}px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff">Nessun dato storico disponibile</div>`;
+    const W = 300, H = 120;
+    const noData = `<div style="height:${H}px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff">Nessun dato storico disponibile</div>`;
     if (!pts || pts.length < 2) return noData;
     try {
       const now   = Date.now();
       const start = now - 24 * 3600000;
       const maxV  = Math.max(...pts.map(p => p.v), maxW * 0.1);
       const xf = t => Math.max(0, Math.min(W, ((t - start) / (now - start)) * W));
-      const yf = v => Math.max(1, Math.min(H - 1, H - (v / maxV) * (H - 4)));
+      const yf = v => Math.max(2, Math.min(H - 2, H - (v / maxV) * (H - 6)));
       const line = pts.map(p => `${xf(p.t).toFixed(1)},${yf(p.v).toFixed(1)}`).join(' L ');
       const area = `M ${line} L ${xf(pts[pts.length - 1].t).toFixed(1)},${H} L ${xf(pts[0].t).toFixed(1)},${H} Z`;
       const thr  = [{ r: .50, c: '#4ade80' }, { r: .75, c: '#facc15' }, { r: .90, c: '#f97316' }]
         .filter(t => maxV > maxW * t.r)
-        .map(t => { const y = yf(maxW * t.r).toFixed(1); return `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="${t.c}" stroke-width=".7" stroke-dasharray="4,3" opacity=".35"/>`; })
+        .map(t => { const y = yf(maxW * t.r).toFixed(1); return `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="${t.c}" stroke-width="1" stroke-dasharray="4,3" opacity=".4"/>`; })
         .join('');
       const pk  = pts.reduce((a, b) => b.v > a.v ? b : a);
       const gid = 'eg' + col.replace('#', '');
-      const labels = [0, 6, 12, 18].map(hr => {
+      const labels = [0, 3, 6, 9, 12, 15, 18, 21].map(hr => {
         const d = new Date(); d.setHours(hr, 0, 0, 0);
-        const x = xf(+d); if (x < 14 || x > W - 14) return '';
-        return `<text x="${x.toFixed(1)}" y="${H + 12}" text-anchor="middle" fill="#fff" font-size="8">${String(hr).padStart(2, '0')}:00</text>`;
+        const x = xf(+d); if (x < 12 || x > W - 12) return '';
+        return `<text x="${x.toFixed(1)}" y="${H + 14}" text-anchor="middle" fill="#fff" font-size="9">${String(hr).padStart(2, '0')}:00</text>`;
       }).join('');
-      return `<svg width="100%" height="${H + 18}" viewBox="0 0 ${W} ${H + 18}" style="display:block;overflow:visible">
+      return `<svg width="100%" height="${H + 22}" viewBox="0 0 ${W} ${H + 22}" style="display:block;overflow:visible">
         <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="${col}" stop-opacity=".4"/><stop offset="100%" stop-color="${col}" stop-opacity=".02"/>
+          <stop offset="0%" stop-color="${col}" stop-opacity=".45"/><stop offset="100%" stop-color="${col}" stop-opacity=".02"/>
         </linearGradient></defs>
         ${thr}
         <path d="${area}" fill="url(#${gid})"/>
-        <path d="M ${line}" fill="none" stroke="${col}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
-        <circle cx="${xf(pk.t).toFixed(1)}" cy="${yf(pk.v).toFixed(1)}" r="3.5" fill="${col}" stroke="rgba(0,0,0,.4)" stroke-width="1"/>
+        <path d="M ${line}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="${xf(pk.t).toFixed(1)}" cy="${yf(pk.v).toFixed(1)}" r="4" fill="${col}" stroke="rgba(0,0,0,.4)" stroke-width="1.5"/>
         ${labels}
       </svg>`;
     } catch (e) { return noData; }
@@ -217,11 +219,11 @@
 
   /* ── stat box con sub-riga ── */
   function _box(ico, val, label, valCls, sub, subCls) {
-    return `<div style="padding:9px 6px 8px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);text-align:center">
-      <div style="font-size:14px;margin-bottom:3px">${ico}</div>
-      <div class="${valCls}" style="font-size:11px;font-weight:800;color:#fff;line-height:1.15">${val}</div>
-      <div style="font-size:7.5px;color:#fff;margin-top:2px;text-transform:uppercase;letter-spacing:.4px">${label}</div>
-      <div class="${subCls}" style="margin-top:4px;min-height:13px;line-height:1.2">${sub}</div>
+    return `<div style="padding:12px 8px 10px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);text-align:center">
+      <div style="font-size:20px;margin-bottom:5px">${ico}</div>
+      <div class="${valCls}" style="font-size:16px;font-weight:800;color:#fff;line-height:1.2">${val}</div>
+      <div style="font-size:9.5px;color:#fff;margin-top:3px;text-transform:uppercase;letter-spacing:.5px">${label}</div>
+      <div class="${subCls}" style="margin-top:5px;min-height:14px;line-height:1.2">${sub}</div>
     </div>`;
   }
 
@@ -315,9 +317,9 @@
       </div>
 
       <!-- GRAFICO -->
-      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#fff;margin-bottom:6px">Ultime 24 ore</div>
-      <div class="e-chart" style="padding-bottom:6px">
-        <div style="height:88px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff">⏳ Caricamento…</div>
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#fff;margin-bottom:8px">Ultime 24 ore</div>
+      <div class="e-chart" style="padding-bottom:8px">
+        <div style="height:142px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff">⏳ Caricamento…</div>
       </div>
     </div>`;
   }
@@ -623,7 +625,7 @@
   /* ════════════════════════════════════════ REGISTRAZIONE ══ */
   const CARD = {
     id: ID, name: 'Gruppo Energia', icon: '⚡', desc: '',
-    version: '3.2', isDistintivo: true,
+    version: '3.3', isDistintivo: true,
     defaultCfg: { label: 'Energia', entity: '', maxKw: 3, priceKwh: 0, alertKw: 0, solarEntity: '', kwhEntity: '' },
     chip, watchEntities, render, mount, update, configure, preview,
   };
@@ -631,5 +633,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v3.2'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v3.3'); } catch (e) {}
 })();
