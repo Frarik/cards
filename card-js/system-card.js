@@ -1,4 +1,4 @@
-﻿/* frarik-version: 4.9 */
+﻿/* frarik-version: 5.0 */
 (function () {
   'use strict';
 
@@ -156,7 +156,8 @@
   function render(card) {
     const h=H(), c=cfgFor(card), rid='syc'+(card.id||Math.random().toString(36).slice(2,8));
     const nm=load(card).name||'Mini-PC';
-    const drawerOpen=(function(){try{return localStorage.getItem('frarik_sycdrw_'+(card.id||'x'))==='1';}catch(e){return false;}})();
+    const activeTab=(function(){try{return localStorage.getItem('frarik_syctab_'+(card.id||'x'))||'monitor';}catch(e){return 'monitor';}})();
+    const drawerOpen=true;
     const cpuV=num(S(h,c.cpu)), ramV=num(S(h,c.ram)), dskV=num(S(h,c.disk));
     const tmpV=num(S(h,c.temp)), swpV=num(S(h,c.swap));
     const l1=num(S(h,c.load1)), l5=num(S(h,c.load5)), l15=num(S(h,c.load15));
@@ -377,20 +378,36 @@
 
     const statusText=anyWarn?bdgs[0][0]:'Sistema OK';
 
+    const tabBar='<div style="display:flex;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0;padding:0 15px;background:rgba(0,0,0,.15)">'
+      +[['monitor','🖥️ Monitor'],['gestione','⚙️ Gestione']].map(function(t){
+        const on=t[0]===activeTab;
+        return '<button data-sya="tab-switch" data-tab="'+t[0]+'" style="padding:9px 14px;border:none;background:transparent;color:'+(on?'#818cf8':'rgba(255,255,255,.4)')+';font-weight:'+(on?'800':'600')+';font-size:12px;cursor:pointer;border-bottom:2px solid '+(on?'#6366f1':'transparent')+';transition:all .15s;font-family:system-ui,sans-serif">'+t[1]+'</button>';
+      }).join('')
+      +'</div>';
+
+    const automazioni='<div class="sec"><div class="sec-hdr"><div class="sec-ln"></div><span class="sec-lb">⚙️ Automazioni</span><div class="sec-ln"></div></div>'
+      +'<div style="display:flex;flex-direction:column">'
+      +drwRow('🚨','Alert soglie','input_boolean.on_off_alert_ha',alertOn)
+      +drwRow('💾','Backup HA','input_boolean.ha_backup',backupOn)
+      +drwRow('📊','Report periodico','input_boolean.ha_report',reportOn)
+      +drwRow('🔄','Riavvio HA programmato','input_boolean.on_off_riavvio_ha',riavHaOn)
+      +drwRow('🖥️','Riavvio Server programmato','input_boolean.on_off_riavvio_server',riavSrvOn)
+      +drwRow('🌡','Ventola auto (temperatura)','input_boolean.on_off_ventola_rack',ventolOn)
+      +drwRow('⬆','Notifiche aggiornamenti','input_boolean.on_off_aggiornamenti_ha',aggOn)
+      +(c.pk_ventola?drwRow('🔌','Ventola fisica rack',c.pk_ventola,ventilaSwOn):'')
+      +'<div class="drw-row" data-sya="popup-notif"><span class="drw-ri">🔔</span><span class="drw-rl">Notifiche e automazioni dettagliate</span><span style="font-size:11px;color:rgba(255,255,255,.3)">›</span></div>'
+      +'</div></div>';
+
+    const monitorContent=heroHtml+prestazioniHtml+reteHtml+statsHtml;
+    const gestioneContent=energiaHtml+haHtml+aggHtml+automazioni;
+
     return css
       +'<div id="'+rid+'">'
       +'<div class="card">'
       +'<div class="hdr"><div class="hdr-iw">🖥️</div><div class="hdr-tit">'+nm+'</div><div class="hdr-pill '+(anyWarn?'hdr-warn':'hdr-ok')+'">'+statusText+'</div></div>'
+      +tabBar
       +'<div class="bscroll">'
-      +heroHtml
-      +prestazioniHtml
-      +reteHtml
-      +statsHtml
-      +energiaHtml
-      +haHtml
-      +aggHtml
-      +'<div class="drw-toggle" data-sya="toggle-drawer"><span class="drw-ico">⚙</span><span class="drw-lbl">Automazioni e opzioni</span><span class="drw-chev">'+(drawerOpen?'▲':'▼')+'</span></div>'
-      +drwHtml
+      +(activeTab==='monitor'?monitorContent:gestioneContent)
       +'</div>'
       +'</div>'
       +'</div>';
@@ -675,10 +692,11 @@
     el.addEventListener('click',function(e){
       var sya=e.target.closest('[data-sya]'); if(!sya) return;
       var a=sya.dataset.sya;
-      if(a==='toggle-drawer'){
-        var nowOpen=!el.querySelector('.drw');
-        try{localStorage.setItem('frarik_sycdrw_'+(card.id||'x'),nowOpen?'1':'0');}catch(e){}
+      if(a==='tab-switch'){
+        var newTab=sya.dataset.tab;
+        try{localStorage.setItem('frarik_syctab_'+(card.id||'x'),newTab);}catch(e){}
         var buf=el._sycBuf; el._sycSig=''; el.innerHTML=render(card); el._sycBuf=buf;
+        mount(card,hass,el);
         return;
       }
       if(a==='toggle'){ var eid=sya.dataset.eid; var h=H(),cur=h&&h.states&&h.states[eid]&&h.states[eid].state; callSvc('homeassistant',cur==='on'?'turn_off':'turn_on',{entity_id:eid}); return; }
