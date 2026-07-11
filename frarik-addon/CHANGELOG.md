@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.9.88 — 2026-07-11
+
+### feat(GruppoTemperatura): popup v1.9 — sparkline history reale affianco ai valori
+
+- `_getHistory(h, entityId)`: fetch asincrona HA history API (ultimi 24h, campionata a 80pt, cache 10 min)
+- `_sparkline(pts, color, min, max)`: SVG polyline con area fill gradient + dot luminoso finale
+- `_loadGraphs(cfg, el)`: carica history in background, aggiorna solo i div `#gte-g-xxx` senza re-render
+- Al mount: render immediato con linea tratteggiata placeholder, poi grafico reale dopo fetch (~100-300ms)
+- Su poll: usa cache se < 10min, nessuna chiamata aggiuntiva
+- Rimosso `_miniArc` e CSS arc; rimane solo sparkline pura SVG
+- bump 1.9.87 → 1.9.88
+
 ## 1.9.87 — 2026-07-11
 
 ### feat(GruppoTemperatura): popup v1.8 — numeri grandi + mini arco SVG affianco

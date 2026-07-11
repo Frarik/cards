@@ -1,4 +1,4 @@
-/* frarik-version: 1.8 */
+/* frarik-version: 1.9 */
 (function () {
   'use strict';
 
@@ -172,45 +172,89 @@
     return null;
   }
 
-  /* ── mini arco SVG affianco al numero ───────────────────────── */
-  function _miniArc(value, maxVal, color, czStartFrac, czEndFrac, noAnim, delay) {
-    const R = 28, CX = 35, CY = 35;
-    const circ   = 2 * Math.PI * R;
-    const arcLen = circ * 0.75;                          // 270°
-    const pct    = value != null ? Math.min(1, Math.max(0, value / maxVal)) : 0;
-    const valLen = pct * arcLen;
+  /* ── history cache + fetch ───────────────────────────────────── */
+  const _GTE_HIST = {};
+  const _HIST_TTL = 10 * 60 * 1000; // 10 min
+  const _HIST_H   = 24;             // ore da mostrare
 
-    /* zona comfort (striscia verde tenua sul track) */
-    const czS = (czStartFrac || 0) * arcLen;
-    const czL = ((czEndFrac || 0) - (czStartFrac || 0)) * arcLen;
+  function _safeId(id) { return (id || '').replace(/[^a-zA-Z0-9]/g, '_'); }
 
-    /* dot luminoso alla punta dell'arco */
-    const endAngle = (135 + pct * 270) * Math.PI / 180;
-    const dotX = (CX + R * Math.cos(endAngle)).toFixed(1);
-    const dotY = (CY + R * Math.sin(endAngle)).toFixed(1);
+  async function _getHistory(h, entityId) {
+    const now = Date.now();
+    const c = _GTE_HIST[entityId];
+    if (c && now - c.ts < _HIST_TTL) return c.pts;
+    try {
+      const start = new Date(now - _HIST_H * 3600000).toISOString();
+      const res = await h.callApi('GET',
+        `history/period/${start}?filter_entity_id=${entityId}&minimal_response=true&no_attributes=true`);
+      const raw = res?.[0] || [];
+      const step = Math.max(1, Math.floor(raw.length / 80));
+      const pts = raw
+        .filter((_, i) => i % step === 0 || i === raw.length - 1)
+        .map(s => ({ t: new Date(s.last_changed).getTime(), v: parseFloat(s.state) }))
+        .filter(p => !isNaN(p.v));
+      _GTE_HIST[entityId] = { ts: now, pts };
+      return pts;
+    } catch(e) { return []; }
+  }
 
-    const arcAnim = noAnim
-      ? `stroke-dasharray:${valLen.toFixed(1)} ${circ.toFixed(1)}`
-      : `stroke-dasharray:${valLen.toFixed(1)} ${circ.toFixed(1)};stroke-dashoffset:${valLen.toFixed(1)};animation:gte-arc-draw .85s cubic-bezier(.22,1,.36,1) ${delay||0}ms both`;
-    const dotAnim = noAnim ? '' : `opacity:0;animation:gte-dot-in .25s ease ${(delay||0)+800}ms both`;
-
-    return `<svg viewBox="0 0 70 70" width="70" height="70" style="flex-shrink:0;overflow:visible">
-      <circle cx="${CX}" cy="${CY}" r="${R}" fill="none"
-        stroke="rgba(255,255,255,.09)" stroke-width="4.5" stroke-linecap="round"
-        style="stroke-dasharray:${arcLen.toFixed(1)} ${circ.toFixed(1)}"
-        transform="rotate(135 ${CX} ${CY})"/>
-      <circle cx="${CX}" cy="${CY}" r="${R}" fill="none"
-        stroke="rgba(74,222,128,.22)" stroke-width="4.5" stroke-linecap="butt"
-        style="stroke-dasharray:0 ${czS.toFixed(1)} ${czL.toFixed(1)} ${circ.toFixed(1)}"
-        transform="rotate(135 ${CX} ${CY})"/>
-      ${value != null ? `
-      <circle cx="${CX}" cy="${CY}" r="${R}" fill="none"
-        stroke="${color}" stroke-width="4.5" stroke-linecap="round"
-        style="${arcAnim}" transform="rotate(135 ${CX} ${CY})"/>
-      ${pct > 0.03 ? `<circle cx="${dotX}" cy="${dotY}" r="3.5" fill="${color}"
-        style="filter:drop-shadow(0 0 4px ${color});${dotAnim}"/>` : ''}
-      ` : ''}
+  /* ── sparkline SVG ───────────────────────────────────────────── */
+  function _sparkline(pts, color, scaleMin, scaleMax) {
+    const W = 100, H = 46, PAD = 3;
+    if (!pts || pts.length < 2) {
+      return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="none">
+        <line x1="${PAD}" y1="${H/2}" x2="${W-PAD}" y2="${H/2}"
+          stroke="rgba(255,255,255,.14)" stroke-width="1" stroke-dasharray="4 3"/>
+      </svg>`;
+    }
+    const tMin = pts[0].t, tRange = Math.max(pts[pts.length-1].t - tMin, 1);
+    const vRange = Math.max(scaleMax - scaleMin, 0.1);
+    const x = t => ((t - tMin) / tRange * (W - PAD*2) + PAD).toFixed(2);
+    const y = v => (H - PAD - (Math.min(scaleMax, Math.max(scaleMin, v)) - scaleMin) / vRange * (H - PAD*2)).toFixed(2);
+    const line = pts.map(p => `${x(p.t)},${y(p.v)}`).join(' ');
+    const lx = x(pts[pts.length-1].t), ly = y(pts[pts.length-1].v);
+    const area = `M ${pts.map(p=>`${x(p.t)} ${y(p.v)}`).join(' L ')} L ${lx} ${H-PAD} L ${PAD} ${H-PAD} Z`;
+    const gid  = `gsg${color.replace('#','')}`;
+    return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="none" style="overflow:visible;display:block">
+      <defs>
+        <linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="${color}" stop-opacity=".28"/>
+          <stop offset="100%" stop-color="${color}" stop-opacity=".02"/>
+        </linearGradient>
+      </defs>
+      <path d="${area}" fill="url(#${gid})"/>
+      <polyline points="${line}" fill="none" stroke="${color}" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round"
+        style="filter:drop-shadow(0 0 2px ${color})"/>
+      <circle cx="${lx}" cy="${ly}" r="3" fill="${color}"
+        style="filter:drop-shadow(0 0 5px ${color})"/>
     </svg>`;
+  }
+
+  /* ── aggiorna solo i div grafico dopo fetch asincrona ────────── */
+  async function _loadGraphs(cfg, el) {
+    const h = H();
+    if (!h || typeof h.callApi !== 'function') return;
+    const c    = loadCfg(cfg);
+    const ents = Array.isArray(c.entities) ? c.entities : [];
+    await Promise.allSettled(ents.flatMap(e => [
+      e.tempEntity ? _getHistory(h, e.tempEntity) : null,
+      e.humEntity  ? _getHistory(h, e.humEntity)  : null,
+    ].filter(Boolean)));
+    if (!el.isConnected) return;
+    ents.forEach(e => {
+      [
+        { id: e.tempEntity, scaleMax: 40,  colorFn: _tempColor },
+        { id: e.humEntity,  scaleMax: 100, colorFn: _humColor  },
+      ].forEach(({ id, scaleMax, colorFn }) => {
+        if (!id) return;
+        const div = el.querySelector('#gte-g-' + _safeId(id));
+        if (!div) return;
+        const v = parseFloat(stateOf(h, id));
+        const pts = _GTE_HIST[id]?.pts || [];
+        div.innerHTML = _sparkline(pts, colorFn(!isNaN(v) ? v : null), 0, scaleMax);
+      });
+    });
   }
 
   /* ── fingerprint ─────────────────────────────────────────────── */
@@ -251,8 +295,6 @@
     @keyframes gte-hero-in{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
     @keyframes gte-row-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
     @keyframes gte-num{0%,100%{text-shadow:0 0 0 transparent}50%{text-shadow:0 0 20px currentColor}}
-    @keyframes gte-arc-draw{to{stroke-dashoffset:0}}
-    @keyframes gte-dot-in{from{opacity:0;transform:scale(0)}to{opacity:1;transform:scale(1)}}
     .gte-hero{animation:gte-hero-in .38s cubic-bezier(.22,1,.36,1) both}
     .gte-row{animation:gte-row-in .35s cubic-bezier(.22,1,.36,1) both}
     .gte-num{animation:gte-num 4s ease-in-out infinite}
@@ -423,10 +465,6 @@
       ? `<div style="font-size:9px;font-weight:700;color:#fff;letter-spacing:.8px;margin-bottom:8px;padding:0 2px">STANZE · ${ents.length}</div>`
       : '';
 
-    /* comfort zone fractions per gli archi */
-    const T_CZ_S = 19 / 40, T_CZ_E = 25 / 40;   // temp 19-25 su scala 0-40
-    const H_CZ_S = 0.40,    H_CZ_E = 0.60;       // hum 40-60 su scala 0-100
-
     const roomRows = ents.map((e, idx) => {
       if (!e.tempEntity) return '';
       const label   = e.label || nameOf(h, e.tempEntity);
@@ -443,22 +481,27 @@
 
       const rowClass  = noAnim ? '' : `class="gte-row"`;
       const cardDelay = noAnim ? '' : `animation-delay:${idx * 90}ms`;
-      const arcDelay  = idx * 90 + 150;
 
       const tempDisplay = tempVal != null ? tempVal.toFixed(1) : '—';
       const humDisplay  = humVal  != null ? Math.round(humVal).toString() : '—';
       const numClass    = noAnim ? '' : 'class="gte-num"';
 
-      /* pannello singolo valore: numero grande + mini arco affianco */
-      const valPanel = (display, unit, color, arcVal, arcMax, czS, czE, aDelay, borderRight) => `
-        <div style="padding:16px 10px 15px${borderRight ? ';border-right:1px solid rgba(255,255,255,.07)' : ''}">
-          <div style="font-size:8px;font-weight:700;color:#fff;letter-spacing:.5px;opacity:.6;text-align:center;margin-bottom:10px">${unit === '°C' ? 'TEMPERATURA' : 'UMIDITÀ'}</div>
-          <div style="display:flex;align-items:center;justify-content:center;gap:8px">
-            <div style="text-align:right;flex-shrink:0">
+      /* history già in cache (se disponibile) */
+      const tPts = _GTE_HIST[e.tempEntity]?.pts || [];
+      const hPts = _GTE_HIST[e.humEntity]?.pts  || [];
+
+      /* pannello valore: numero grande + sparkline affianco */
+      const valPanel = (display, unit, color, pts, scaleMax, borderRight) => `
+        <div style="padding:15px 12px 14px${borderRight ? ';border-right:1px solid rgba(255,255,255,.07)' : ''}">
+          <div style="font-size:8px;font-weight:700;color:#fff;letter-spacing:.5px;opacity:.6;margin-bottom:9px">${unit === '°C' ? 'TEMPERATURA' : 'UMIDITÀ'}</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="flex-shrink:0">
               <div ${numClass} style="font-size:44px;font-weight:900;color:${color};line-height:1;letter-spacing:-2px">${display}</div>
-              <div style="font-size:14px;font-weight:700;color:#fff;margin-top:3px;text-align:right">${unit}</div>
+              <div style="font-size:14px;font-weight:700;color:#fff;margin-top:3px">${unit}</div>
             </div>
-            ${_miniArc(arcVal, arcMax, color, czS, czE, noAnim, aDelay)}
+            <div id="gte-g-${_safeId(unit==='°C'?e.tempEntity:e.humEntity)}" style="flex:1;min-width:0">
+              ${_sparkline(pts, color, 0, scaleMax)}
+            </div>
           </div>
         </div>`;
 
@@ -474,10 +517,10 @@
             <span style="font-size:9px;font-weight:800;padding:4px 11px;border-radius:20px;background:${hex2rgba(rc.color,.14)};border:1px solid ${hex2rgba(rc.color,.32)};color:${rc.color};flex-shrink:0;white-space:nowrap">${rc.emoji} ${rc.label}</span>
           </div>
 
-          <!-- valori + archi -->
+          <!-- valori + sparkline -->
           <div style="display:grid;grid-template-columns:1fr${hasHum ? ' 1fr' : ''};border-top:1px solid rgba(255,255,255,.07)${adv ? ';border-bottom:1px solid rgba(255,255,255,.07)' : ''}">
-            ${valPanel(tempDisplay, '°C', tC, tempVal, 40, T_CZ_S, T_CZ_E, arcDelay, hasHum)}
-            ${hasHum ? valPanel(humDisplay, '%', hC, humVal, 100, H_CZ_S, H_CZ_E, arcDelay + 100, false) : ''}
+            ${valPanel(tempDisplay, '°C', tC, tPts, 40, hasHum)}
+            ${hasHum ? valPanel(humDisplay, '%', hC, hPts, 100, false) : ''}
           </div>
 
           <!-- consiglio -->
@@ -504,6 +547,8 @@
       el._gteKey = _gteKey(h0, Array.isArray(c.entities)?c.entities:[], c);
     }
     setTimeout(() => _syncTitle(cfg, el), 0);
+    /* fetch history async — aggiorna solo i div grafico quando arriva */
+    _loadGraphs(cfg, el).catch(() => {});
     el._gtPoll = setInterval(() => {
       if (!el.isConnected) { clearInterval(el._gtPoll); delete el._gtPoll; return; }
       try {
@@ -767,7 +812,7 @@
     name: 'Gruppo Temperatura',
     icon: '🌡️',
     desc: 'Chip con media temp/umidità; popup weather-style con hero, consigli e righe stanza.',
-    version: '1.8',
+    version: '1.9',
     isDistintivo: true,
     defaultCfg: { label: 'Temperatura', color: '#38bdf8', avgTempEntity: '', avgHumEntity: '', entities: [] },
     chip, watchEntities, render, mount, update, configure,
@@ -777,5 +822,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-temperatura v1.8'); } catch(e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-temperatura v1.9'); } catch(e) {}
 })();
