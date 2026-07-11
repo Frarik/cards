@@ -1,10 +1,10 @@
-/* frarik-version: 2.1 */
+/* frarik-version: 2.2 */
 /**
- * GruppoAllarme.js — Distintivo FratechStore v2.1
+ * GruppoAllarme.js — Distintivo FratechStore v2.2
  * Chip stato allarme Alarmo + popup sensori/bypass + overlay triggered automatico
  *
- * v2.1: fix arm — chiama sempre alarm_control_panel (standard), più alarmo.arm con
- *       bypassed_sensors solo quando ci sono sensori esclusi dall'utente
+ * v2.2: fix bypass — il bypass non viene più azzerato quando l'allarme si arma,
+ *       ma solo quando torna disarmato (così i sensori esclusi restano esclusi)
  */
 (function () {
   'use strict';
@@ -437,8 +437,8 @@
       try {
         const h = H(); if (!h) return;
         _updateOverlay(cfg, h);
-        /* azzera bypass quando l'allarme diventa armato */
-        if (ae && isArmed(stateOf(h, ae)) && el._bypassed?.size > 0) {
+        /* azzera bypass solo quando l'allarme torna disarmato */
+        if (ae && stateOf(h, ae) === 'disarmed' && el._bypassed?.size > 0) {
           el._bypassed.clear();
         }
         const _sp=el.parentElement, _st=_sp?_sp.scrollTop:0;
@@ -685,7 +685,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Allarme', icon: '🔒',
     desc: '',
-    version: '2.1', isDistintivo: true,
+    version: '2.2', isDistintivo: true,
     defaultCfg: { label: 'Allarme', alarmEntity: '', code: '', modes: ['armed_away'], sensors: [], siren: '' },
     chip,
     watchEntities,
@@ -699,5 +699,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v2.1'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v2.2'); } catch (e) {}
 })();
