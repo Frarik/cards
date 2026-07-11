@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.89 — 2026-07-11
+
+### fix(GruppoTemperatura): hero — rimosso testo badge comfort, umidità stessa grandezza temp
+
+- Badge comfort: rimosso testo "Attenzione/Comfort/ecc.", rimane solo emoji (18px)
+- Umidità hero portata a 58px come la temperatura (stesso font-size, stesso peso, stessa riga)
+- Entrambi i valori con `flex:1` per occupare lo stesso spazio orizzontale
+
 ## 1.9.88 — 2026-07-11
 
 ### feat(GruppoTemperatura): popup v1.9 — sparkline history reale affianco ai valori

@@ -1,4 +1,4 @@
-/* frarik-version: 1.9 */
+/* frarik-version: 1.9.1 */
 (function () {
   'use strict';
 
@@ -429,18 +429,18 @@
               <span class="mdi mdi-home-thermometer-outline" style="color:${comfort.color};font-size:15px"></span>
               <span style="font-size:10px;font-weight:700;color:#fff;letter-spacing:.3px">${eh(heroLabel)}</span>
             </div>
-            <span style="font-size:9px;font-weight:800;padding:4px 11px;border-radius:20px;background:${hex2rgba(comfort.color,.14)};border:1px solid ${hex2rgba(comfort.color,.36)};color:${comfort.color};white-space:nowrap">${comfort.emoji} ${comfort.label}</span>
+            <span style="font-size:18px;line-height:1">${comfort.emoji}</span>
           </div>
 
           <!-- valori principali -->
-          <div style="display:flex;align-items:flex-end;gap:16px">
+          <div style="display:flex;align-items:flex-end;gap:20px">
             <div style="flex:1">
               <div ${numClass} style="font-size:58px;font-weight:900;color:${tCol};line-height:.95;letter-spacing:-3px">${heroTemp!=null?heroTemp.toFixed(1):'—'}<span style="font-size:24px;font-weight:700;color:#fff;letter-spacing:0">°</span></div>
               <div style="font-size:9px;color:#fff;margin-top:5px;letter-spacing:.3px;font-weight:600">TEMPERATURA</div>
             </div>
             ${hasHumG && heroHum!=null ? `
-            <div style="text-align:right;padding-bottom:3px">
-              <div style="font-size:34px;font-weight:900;color:${hCol};line-height:.95;letter-spacing:-1px">${Math.round(heroHum)}<span style="font-size:16px;font-weight:700;color:#fff">%</span></div>
+            <div style="flex:1;text-align:right">
+              <div ${numClass} style="font-size:58px;font-weight:900;color:${hCol};line-height:.95;letter-spacing:-3px">${Math.round(heroHum)}<span style="font-size:24px;font-weight:700;color:#fff;letter-spacing:0">%</span></div>
               <div style="font-size:9px;color:#fff;margin-top:5px;letter-spacing:.3px;font-weight:600">UMIDITÀ</div>
             </div>` : ''}
           </div>
