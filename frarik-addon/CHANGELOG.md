@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.9.85 — 2026-07-11
+
+### feat(GruppoTemperatura): popup v1.6 — grafici ad arco SVG nelle card stanze
+
+- `_svgGauge()`: grafico circolare 270° con track, zona comfort verde, arco colorato, dot di punta con glow
+- Animazione di "fill" al primo render: l'arco si disegna da 0 fino al valore (stroke-dashoffset CSS)
+- Temperatura: scala 0–40°C, zona comfort verde 19–25°C evidenziata sul track
+- Umidità: scala 0–100%, zona comfort verde 40–60% evidenziata sul track
+- Valore e unità centrati dentro il cerchio, label min/max sugli estremi dell'arco
+- Card uniformi, sfondo uguale per tutte, bordo comfort-colored
+- bump 1.9.84 → 1.9.85
+
 ## 1.9.84 — 2026-07-11
 
 ### feat(GruppoTemperatura): popup v1.5 — card stanze completamente ridisegnate

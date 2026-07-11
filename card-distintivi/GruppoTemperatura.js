@@ -1,4 +1,4 @@
-/* frarik-version: 1.5 */
+/* frarik-version: 1.6 */
 (function () {
   'use strict';
 
@@ -172,6 +172,73 @@
     return null;
   }
 
+  /* ── grafico ad arco SVG ────────────────────────────────────── */
+  function _svgGauge(value, maxVal, color, displayStr, unit, scaleMin, scaleMax, noAnim, animDelay) {
+    const R = 36, CX = 50, CY = 50;
+    const circ  = 2 * Math.PI * R;          // ≈ 226.2
+    const arcLen = circ * 0.75;             // 270° arc (gap at bottom)
+
+    const pct    = (value != null && !isNaN(value))
+      ? Math.min(1, Math.max(0, (value - (scaleMin||0)) / ((scaleMax||100) - (scaleMin||0))))
+      : 0;
+    const valLen = pct * arcLen;
+
+    /* zona comfort: temp 19-25°C → 47.5-62.5%, umidità 40-60% → 40-60% */
+    const isHum   = unit === '%';
+    const czS     = isHum ? 0.40 : ((19 - (scaleMin||0)) / ((scaleMax||40) - (scaleMin||0)));
+    const czE     = isHum ? 0.60 : ((25 - (scaleMin||0)) / ((scaleMax||40) - (scaleMin||0)));
+    const czStart = Math.max(0, czS) * arcLen;
+    const czLen   = Math.max(0, czE - czS) * arcLen;
+
+    /* posizioni estremità arco per le etichette (135° e 45°) */
+    const a0 = 135 * Math.PI / 180, a1 = 45 * Math.PI / 180;
+    const lx0 = (CX + R * Math.cos(a0)).toFixed(1);
+    const ly0 = (CY + R * Math.sin(a0) + 9).toFixed(1);
+    const lx1 = (CX + R * Math.cos(a1)).toFixed(1);
+    const ly1 = (CY + R * Math.sin(a1) + 9).toFixed(1);
+
+    const arcStyle = noAnim
+      ? `stroke-dasharray:${valLen.toFixed(1)} ${circ.toFixed(1)}`
+      : `stroke-dasharray:${valLen.toFixed(1)} ${circ.toFixed(1)};stroke-dashoffset:${valLen.toFixed(1)};animation:gte-arc-draw .9s cubic-bezier(.22,1,.36,1) ${animDelay||0}ms both`;
+
+    return `
+      <svg viewBox="0 0 100 100" style="width:100%;height:auto;display:block;overflow:visible">
+        <!-- track -->
+        <circle cx="${CX}" cy="${CY}" r="${R}" fill="none"
+          stroke="rgba(255,255,255,.08)" stroke-width="6" stroke-linecap="round"
+          style="stroke-dasharray:${arcLen.toFixed(1)} ${circ.toFixed(1)}"
+          transform="rotate(135 ${CX} ${CY})"/>
+        <!-- zona comfort (verde tenue) -->
+        <circle cx="${CX}" cy="${CY}" r="${R}" fill="none"
+          stroke="rgba(74,222,128,.22)" stroke-width="6" stroke-linecap="butt"
+          style="stroke-dasharray:0 ${czStart.toFixed(1)} ${czLen.toFixed(1)} ${circ.toFixed(1)}"
+          transform="rotate(135 ${CX} ${CY})"/>
+        <!-- arco valore -->
+        ${value != null ? `<circle cx="${CX}" cy="${CY}" r="${R}" fill="none"
+          stroke="${color}" stroke-width="6" stroke-linecap="round"
+          style="${arcStyle}"
+          transform="rotate(135 ${CX} ${CY})"/>` : ''}
+        <!-- dot di punta -->
+        ${value != null && pct > 0.02 ? (() => {
+          const endAngle = (135 + pct * 270) * Math.PI / 180;
+          const dx = (CX + R * Math.cos(endAngle)).toFixed(1);
+          const dy = (CY + R * Math.sin(endAngle)).toFixed(1);
+          return `<circle cx="${dx}" cy="${dy}" r="4" fill="${color}" style="filter:drop-shadow(0 0 4px ${color})${noAnim?'':`;opacity:0;animation:gte-dot-in .2s ease .${Math.round((animDelay||0)/100+9)}s both`}"/>`;
+        })() : ''}
+        <!-- valore centrale -->
+        <text x="${CX}" y="${CY - 2}" text-anchor="middle"
+          fill="${value != null ? color : 'rgba(255,255,255,.2)'}"
+          font-size="18" font-weight="900" font-family="system-ui,sans-serif">${displayStr}</text>
+        <text x="${CX}" y="${CY + 14}" text-anchor="middle"
+          fill="#fff" font-size="12" font-weight="700" font-family="system-ui,sans-serif">${unit}</text>
+        <!-- scala min/max -->
+        <text x="${lx0}" y="${ly0}" text-anchor="middle"
+          fill="rgba(255,255,255,.3)" font-size="7" font-family="system-ui,sans-serif">${scaleMin}${unit==='%'?'%':'°'}</text>
+        <text x="${lx1}" y="${ly1}" text-anchor="middle"
+          fill="rgba(255,255,255,.3)" font-size="7" font-family="system-ui,sans-serif">${scaleMax}${unit==='%'?'%':'°'}</text>
+      </svg>`;
+  }
+
   /* ── fingerprint ─────────────────────────────────────────────── */
   function _gteKey(h, ents, c) {
     if (!h) return '';
@@ -208,10 +275,12 @@
   /* ── CSS ────────────────────────────────────────────────────── */
   const _GTE_CSS = `
     @keyframes gte-hero-in{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
-    @keyframes gte-row-in{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+    @keyframes gte-row-in{from{opacity:0;transform:translateY(12px);opacity:0}to{opacity:1;transform:translateY(0)}}
     @keyframes gte-num{0%,100%{text-shadow:0 0 0 transparent}50%{text-shadow:0 0 18px currentColor}}
+    @keyframes gte-arc-draw{to{stroke-dashoffset:0}}
+    @keyframes gte-dot-in{from{opacity:0;transform:scale(0)}to{opacity:1;transform:scale(1)}}
     .gte-hero{animation:gte-hero-in .38s cubic-bezier(.22,1,.36,1) both}
-    .gte-row{animation:gte-row-in .3s cubic-bezier(.22,1,.36,1) both}
+    .gte-row{animation:gte-row-in .35s cubic-bezier(.22,1,.36,1) both}
     .gte-num{animation:gte-num 4s ease-in-out infinite}
   `;
   function _gteInjectCss() {
@@ -376,7 +445,9 @@
       </div>` : '';
 
     /* stanze */
-    const roomHeader = multi ? `<div style="font-size:9px;font-weight:700;color:#fff;letter-spacing:.8px;margin-bottom:8px;padding:0 2px">STANZE · ${ents.length}</div>` : '';
+    const roomHeader = multi
+      ? `<div style="font-size:9px;font-weight:700;color:#fff;letter-spacing:.8px;margin-bottom:8px;padding:0 2px">STANZE · ${ents.length}</div>`
+      : '';
 
     const roomRows = ents.map((e, idx) => {
       if (!e.tempEntity) return '';
@@ -393,46 +464,47 @@
       const hasHum  = !!e.humEntity;
 
       const rowClass = noAnim ? '' : `class="gte-row"`;
-      const rowDelay = noAnim ? '' : `animation-delay:${idx*70}ms`;
+      const cardDelay = noAnim ? '' : `animation-delay:${idx * 80}ms`;
+      const gaugeDelay = idx * 80 + 120; // arco parte dopo la card
 
       const tempDisplay = tempVal != null ? tempVal.toFixed(1) : '—';
       const humDisplay  = humVal  != null ? Math.round(humVal).toString() : '—';
 
+      const tempGauge = _svgGauge(tempVal, 40, tC, tempDisplay, '°C', 0, 40, noAnim, gaugeDelay);
+      const humGauge  = hasHum
+        ? _svgGauge(humVal, 100, hC, humDisplay, '%', 0, 100, noAnim, gaugeDelay + 80)
+        : '';
+
       return `
-        <div ${rowClass} style="margin-bottom:9px;border-radius:16px;overflow:hidden;background:rgba(255,255,255,.04);border:1px solid ${hex2rgba(rc.color,.28)};${rowDelay}">
+        <div ${rowClass} style="margin-bottom:10px;border-radius:18px;overflow:hidden;background:rgba(255,255,255,.045);border:1px solid ${hex2rgba(rc.color,.3)};${cardDelay}">
 
-          <!-- intestazione stanza -->
-          <div style="display:flex;align-items:center;gap:10px;padding:12px 14px 11px">
-            <div style="width:34px;height:34px;border-radius:10px;background:${hex2rgba(rc.color,.14)};border:1px solid ${hex2rgba(rc.color,.32)};display:flex;align-items:center;justify-content:center;flex-shrink:0">
-              <span class="mdi mdi-${icon}" style="font-size:17px;color:${rc.color}"></span>
+          <!-- intestazione -->
+          <div style="display:flex;align-items:center;gap:10px;padding:13px 15px 12px">
+            <div style="width:36px;height:36px;border-radius:10px;background:${hex2rgba(rc.color,.15)};border:1px solid ${hex2rgba(rc.color,.34)};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <span class="mdi mdi-${icon}" style="font-size:18px;color:${rc.color}"></span>
             </div>
-            <span style="flex:1;font-size:14px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(label)}</span>
-            <span style="font-size:9px;font-weight:800;padding:4px 11px;border-radius:20px;background:${hex2rgba(rc.color,.14)};border:1px solid ${hex2rgba(rc.color,.32)};color:${rc.color};flex-shrink:0;white-space:nowrap">${rc.emoji} ${rc.label}</span>
+            <span style="flex:1;font-size:15px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(label)}</span>
+            <span style="font-size:9px;font-weight:800;padding:4px 11px;border-radius:20px;background:${hex2rgba(rc.color,.14)};border:1px solid ${hex2rgba(rc.color,.34)};color:${rc.color};flex-shrink:0;white-space:nowrap">${rc.emoji} ${rc.label}</span>
           </div>
 
-          <!-- valori: temperatura + umidità alla stessa grandezza -->
-          <div style="display:grid;grid-template-columns:1fr${hasHum?' 1fr':''};border-top:1px solid rgba(255,255,255,.07)${adv?';border-bottom:1px solid rgba(255,255,255,.07)':''}">
-
-            <div style="padding:16px 12px 14px;text-align:center${hasHum?';border-right:1px solid rgba(255,255,255,.07)':''}">
-              <div style="font-size:9px;font-weight:700;color:#fff;letter-spacing:.6px;margin-bottom:8px;opacity:.7">TEMPERATURA</div>
-              <div style="font-size:42px;font-weight:900;color:${tC};line-height:1;letter-spacing:-2px">${tempDisplay}</div>
-              <div style="font-size:16px;font-weight:700;color:#fff;margin-top:4px">°C</div>
+          <!-- grafici ad arco -->
+          <div style="display:grid;grid-template-columns:1fr${hasHum?' 1fr':''};border-top:1px solid rgba(255,255,255,.07);padding:4px 10px 10px${adv?';border-bottom:1px solid rgba(255,255,255,.07)':''}">
+            <div style="padding:6px 4px 0${hasHum?';border-right:1px solid rgba(255,255,255,.06)':''}">
+              <div style="font-size:8px;font-weight:700;color:#fff;text-align:center;letter-spacing:.5px;margin-bottom:2px;opacity:.65">TEMPERATURA</div>
+              ${tempGauge}
             </div>
-
             ${hasHum ? `
-            <div style="padding:16px 12px 14px;text-align:center">
-              <div style="font-size:9px;font-weight:700;color:#fff;letter-spacing:.6px;margin-bottom:8px;opacity:.7">UMIDITÀ</div>
-              <div style="font-size:42px;font-weight:900;color:${hC};line-height:1;letter-spacing:-2px">${humDisplay}</div>
-              <div style="font-size:16px;font-weight:700;color:#fff;margin-top:4px">%</div>
+            <div style="padding:6px 4px 0">
+              <div style="font-size:8px;font-weight:700;color:#fff;text-align:center;letter-spacing:.5px;margin-bottom:2px;opacity:.65">UMIDITÀ</div>
+              ${humGauge}
             </div>` : ''}
-
           </div>
 
-          <!-- consiglio stanza -->
+          <!-- consiglio -->
           ${adv ? `
-          <div style="display:flex;align-items:flex-start;gap:9px;padding:10px 14px">
-            <span style="font-size:15px;flex-shrink:0;line-height:1.3">${adv.ico}</span>
-            <span style="font-size:11px;color:#fff;line-height:1.5">${adv.txt}</span>
+          <div style="display:flex;align-items:flex-start;gap:9px;padding:10px 15px 12px">
+            <span style="font-size:16px;flex-shrink:0;line-height:1.3">${adv.ico}</span>
+            <span style="font-size:11.5px;color:#fff;line-height:1.55">${adv.txt}</span>
           </div>` : ''}
 
         </div>`;
@@ -715,7 +787,7 @@
     name: 'Gruppo Temperatura',
     icon: '🌡️',
     desc: 'Chip con media temp/umidità; popup weather-style con hero, consigli e righe stanza.',
-    version: '1.5',
+    version: '1.6',
     isDistintivo: true,
     defaultCfg: { label: 'Temperatura', color: '#38bdf8', avgTempEntity: '', avgHumEntity: '', entities: [] },
     chip, watchEntities, render, mount, update, configure,
@@ -725,5 +797,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-temperatura v1.5'); } catch(e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-temperatura v1.6'); } catch(e) {}
 })();
