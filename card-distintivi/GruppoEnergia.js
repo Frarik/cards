@@ -1,4 +1,4 @@
-/* frarik-version: 3.1 */
+/* frarik-version: 3.2 */
 /**
  * GruppoEnergia.js — Distintivo FratechStore v3.0
  * Flow shimmer · tralicio img data-URI · nodi uguali · speed reattiva
@@ -63,18 +63,47 @@
     const key = entityId + '_' + hours;
     const cached = _GE_HIST[key];
     if (cached && (Date.now() - cached.ts < _GE_TTL)) return cached.pts;
-    try {
-      const start = new Date(Date.now() - hours * 3600000).toISOString();
-      const raw = await h.callApi('GET', `history/period/${start}?filter_entity_id=${entityId}&minimal_response=true&no_attributes=true`);
-      if (!Array.isArray(raw) || !raw[0] || !raw[0].length) return [];
-      const pts = raw[0]
-        .map(s => ({ t: +new Date(s.last_changed), v: parseFloat(s.state) }))
-        .filter(p => isFinite(p.t) && !isNaN(p.v) && p.v >= 0);
-      const DS = 120;
-      const out = pts.length > DS ? pts.filter((_, i) => i % Math.ceil(pts.length / DS) === 0) : pts;
-      _GE_HIST[key] = { ts: Date.now(), pts: out };
-      return out;
-    } catch (e) { return []; }
+
+    const start = new Date(Date.now() - hours * 3600000).toISOString();
+    let rawPts = [];
+
+    // WebSocket history/history_during_period (canale già autenticato)
+    if (typeof h.callWS === 'function') {
+      try {
+        const wsRes = await h.callWS({
+          type: 'history/history_during_period',
+          entity_ids: [entityId],
+          start_time: start,
+          minimal_response: true,
+          no_attributes: true,
+        });
+        const wsData = wsRes?.[entityId] || [];
+        if (wsData.length) {
+          rawPts = wsData.map(s => ({
+            t: s.lu != null ? Math.round(s.lu * 1000) : +new Date(s.last_updated || s.last_changed || 0),
+            v: parseFloat(s.s != null ? s.s : (s.state || 'NaN')),
+          }));
+        }
+      } catch (_) {}
+    }
+
+    // Fallback REST callApi
+    if (!rawPts.length && typeof h.callApi === 'function') {
+      try {
+        const raw = await h.callApi('GET', `history/period/${start}?filter_entity_id=${entityId}&minimal_response=true&no_attributes=true`);
+        if (Array.isArray(raw) && raw[0] && raw[0].length) {
+          rawPts = raw[0].map(s => ({ t: +new Date(s.last_changed), v: parseFloat(s.state) }));
+        }
+      } catch (_) {}
+    }
+
+    if (!rawPts.length) return [];
+    const pts = rawPts.filter(p => isFinite(p.t) && p.t > 0 && !isNaN(p.v) && p.v >= 0);
+    if (!pts.length) return [];
+    const DS = 120;
+    const out = pts.length > DS ? pts.filter((_, i) => i % Math.ceil(pts.length / DS) === 0) : pts;
+    _GE_HIST[key] = { ts: Date.now(), pts: out };
+    return out;
   }
 
   function _stats(pts) {
@@ -569,16 +598,38 @@
     document.body.appendChild(ov);
   }
 
+  /* ════════════════════════════════════════ PREVIEW STORE ══ */
+  function preview() {
+    const _orig = window.frarikHass;
+    window.frarikHass = null;
+    try {
+      const mockH = {
+        states: {
+          'sensor.prev_grid': { state: '1840', attributes: { friendly_name: 'Rete', unit_of_measurement: 'W' } },
+          'sensor.prev_solar': { state: '620', attributes: { friendly_name: 'Fotovoltaico', unit_of_measurement: 'W' } },
+        },
+      };
+      const mockCfg = {
+        label: 'Energia', entity: 'sensor.prev_grid',
+        maxKw: 3, priceKwh: 0.25, alertKw: 0,
+        solarEntity: 'sensor.prev_solar', kwhEntity: '',
+      };
+      return render(mockCfg, mockH);
+    } finally {
+      window.frarikHass = _orig;
+    }
+  }
+
   /* ════════════════════════════════════════ REGISTRAZIONE ══ */
   const CARD = {
     id: ID, name: 'Gruppo Energia', icon: '⚡', desc: '',
-    version: '3.1', isDistintivo: true,
+    version: '3.2', isDistintivo: true,
     defaultCfg: { label: 'Energia', entity: '', maxKw: 3, priceKwh: 0, alertKw: 0, solarEntity: '', kwhEntity: '' },
-    chip, watchEntities, render, mount, update, configure,
+    chip, watchEntities, render, mount, update, configure, preview,
   };
   window.FratechCardRegistry = window.FratechCardRegistry || {};
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v3.1'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v3.2'); } catch (e) {}
 })();
