@@ -1,6 +1,6 @@
-/* frarik-version: 3.9 */
+/* frarik-version: 4.0 */
 /**
- * GruppoEnergia.js — Distintivo FratechStore v3.0
+ * GruppoEnergia.js — Distintivo FratechStore v4.0
  * Flow shimmer · tralicio img data-URI · nodi uguali · speed reattiva
  */
 (function () {
@@ -129,11 +129,11 @@
     return `<span style="font-size:11px;color:${col}">${up ? '▲' : '▼'} ${up ? '+' : '-'}${pct}% vs ieri</span>`;
   }
 
-  /* ── grafico SVG compatto ── */
+  /* ── grafico SVG ── */
   function _chart(pts, maxW, col) {
-    const W = 400, H = 110;
+    const W = 400, H = 200;
     const _wrap = inner =>
-      `<div style="position:relative;width:100%;padding-bottom:22%;min-height:110px">${inner}</div>`;
+      `<div style="position:relative;width:100%;padding-bottom:42%;min-height:200px">${inner}</div>`;
     const noData = _wrap(
       `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff">Nessun dato storico disponibile</div>`
     );
@@ -175,16 +175,20 @@
       const areaD = `M ${pts.map(p => `${xf(p.t).toFixed(1)},${yf(p.v).toFixed(1)}`).join(' L ')} L ${xf(last.t).toFixed(1)},${H} L ${xf(pts[0].t).toFixed(1)},${H} Z`;
       const gid = 'eg' + col.replace('#', '');
 
-      // griglia Y + etichette watt (scala assoluta)
-      const yGrid = [0, 0.25, 0.5, 0.75, 1.0].map(r => {
-        const wv  = maxW * r;
+      // griglia Y: tacche ogni 500 W
+      const STEP = 500;
+      const yGridItems = [];
+      for (let wv = 0; wv <= maxW; wv += STEP) {
         const lbl = wv === 0 ? '0' : wv >= 1000
           ? ((wv / 1000) % 1 === 0 ? (wv / 1000) + 'k' : (wv / 1000).toFixed(1) + 'k')
-          : Math.round(wv) + '';
+          : wv + '';
         const y = yf(wv).toFixed(1);
-        return `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="rgba(255,255,255,.07)" stroke-width="1"/>
-                <text x="3" y="${Math.max(10, +y - 2).toFixed(1)}" fill="rgba(255,255,255,.45)" font-size="9" font-family="system-ui">${lbl}</text>`;
-      }).join('');
+        yGridItems.push(
+          `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="rgba(255,255,255,.07)" stroke-width="1"/>` +
+          `<text x="3" y="${Math.max(10, +y - 2).toFixed(1)}" fill="rgba(255,255,255,.45)" font-size="9" font-family="system-ui">${lbl}</text>`
+        );
+      }
+      const yGrid = yGridItems.join('');
 
       // tick + etichetta X ogni ora
       const firstHour = Math.ceil(start / 3600000) * 3600000;
@@ -368,7 +372,7 @@
       <!-- GRAFICO -->
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#fff;margin-bottom:8px">Ultime 24 ore</div>
       <div class="e-chart" style="margin:0 -14px;padding-bottom:4px">
-        <div style="position:relative;width:100%;padding-bottom:20%;min-height:100px">
+        <div style="position:relative;width:100%;padding-bottom:42%;min-height:200px">
           <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff">⏳ Caricamento…</div>
         </div>
       </div>
@@ -699,7 +703,7 @@
   /* ════════════════════════════════════════ REGISTRAZIONE ══ */
   const CARD = {
     id: ID, name: 'Gruppo Energia', icon: '⚡', desc: '',
-    version: '3.9', isDistintivo: true,
+    version: '4.0', isDistintivo: true,
     defaultCfg: { label: 'Energia', entity: '', maxKw: 3, priceKwh: 0, alertKw: 0, solarEntity: '', kwhEntity: '' },
     chip, watchEntities, render, mount, update, configure, preview,
   };
@@ -707,5 +711,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v3.9'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v4.0'); } catch (e) {}
 })();
