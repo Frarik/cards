@@ -1,7 +1,7 @@
-/* frarik-version: 2.1 */
+/* frarik-version: 2.2 */
 /**
- * GruppoPorte.js — Distintivo FratechStore v2.1
- * Chip contatore porte aperte + popup con sommario, illustrazione SVG animata, tempo da/fa
+ * GruppoPorte.js — Distintivo FratechStore v2.2
+ * Chip contatore porte aperte + popup con sommario, porta bianca SVG animata, tempo da/fa
  */
 (function () {
   'use strict';
@@ -56,29 +56,30 @@
 
   function _doorSvg(isOpen, idx) {
     if (!isOpen) {
-      return `<svg viewBox="0 0 44 56" width="44" height="56" style="display:block;overflow:visible">
-        <rect x="4" y="54" width="36" height="2" rx="1" fill="rgba(255,255,255,.2)"/>
-        <rect x="4" y="2" width="36" height="52" rx="3" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.22)" stroke-width="1.5"/>
-        <rect x="6" y="4" width="32" height="48" rx="2" fill="#7c5234"/>
-        <rect x="6" y="4" width="7" height="48" rx="2" fill="rgba(0,0,0,.16)"/>
-        <rect x="10" y="8" width="22" height="13" rx="1.5" fill="#9B6E4C" stroke="rgba(0,0,0,.18)" stroke-width=".8"/>
-        <rect x="10" y="25" width="22" height="22" rx="1.5" fill="#9B6E4C" stroke="rgba(0,0,0,.18)" stroke-width=".8"/>
-        <circle cx="34" cy="28" r="2.5" fill="#B8860B"/>
-        <circle cx="34" cy="28" r="1.1" fill="#FFD54F" opacity=".85"/>
+      return `<svg viewBox="0 0 52 72" width="52" height="72" style="display:block;overflow:visible">
+        <rect x="2" y="70" width="48" height="3" rx="1.5" fill="rgba(255,255,255,.35)"/>
+        <rect x="5" y="4" width="43" height="67" rx="3" fill="rgba(0,0,0,.25)"/>
+        <rect x="2" y="1" width="43" height="67" rx="3" fill="rgba(255,255,255,.07)" stroke="rgba(255,255,255,.3)" stroke-width="1.5"/>
+        <rect x="4" y="3" width="39" height="63" rx="2" fill="#f2f2f5"/>
+        <rect x="4" y="3" width="5" height="63" fill="rgba(0,0,0,.06)"/>
+        <rect x="8" y="8" width="28" height="19" rx="1.5" fill="none" stroke="rgba(0,0,0,.1)" stroke-width="1"/>
+        <rect x="8" y="31" width="28" height="30" rx="1.5" fill="none" stroke="rgba(0,0,0,.1)" stroke-width="1"/>
+        <circle cx="38" cy="38" r="4" fill="#c4c8d0" stroke="#a8acb4" stroke-width=".8"/>
+        <circle cx="38" cy="38" r="1.8" fill="#e4e6ec"/>
       </svg>`;
     }
     const sid = `gpdlg${idx}`;
-    return `<style>@keyframes ${sid}{0%,100%{opacity:.48}50%{opacity:.92}}</style>
-      <svg viewBox="0 0 44 56" width="44" height="56" style="display:block;overflow:visible">
-        <rect x="4" y="54" width="36" height="2" rx="1" fill="rgba(255,255,255,.2)"/>
-        <rect x="4" y="2" width="36" height="52" rx="3" fill="rgba(248,113,113,.07)" stroke="rgba(248,113,113,.42)" stroke-width="1.5"/>
-        <rect x="5" y="3" width="16" height="50" rx="2" fill="rgba(255,200,60,.22)" style="animation:${sid} 2.2s ease-in-out infinite"/>
-        <polygon points="39,4 23,6 23,52 39,52" fill="#7c5234"/>
-        <polygon points="37,4 39,4 39,52 37,52" fill="rgba(255,255,255,.08)"/>
-        <polygon points="26,12 36,11 36,23 26,13" fill="#9B6E4C" opacity=".82"/>
-        <polygon points="26,28 36,27 36,47 26,48" fill="#9B6E4C" opacity=".82"/>
-        <circle cx="27" cy="30" r="2" fill="#B8860B"/>
-        <circle cx="27" cy="30" r=".9" fill="#FFD54F" opacity=".8"/>
+    return `<style>@keyframes ${sid}{0%,100%{opacity:.4}50%{opacity:.88}}</style>
+      <svg viewBox="0 0 52 72" width="52" height="72" style="display:block;overflow:visible">
+        <rect x="2" y="70" width="48" height="3" rx="1.5" fill="rgba(255,255,255,.35)"/>
+        <rect x="2" y="1" width="43" height="67" rx="3" fill="rgba(248,113,113,.08)" stroke="rgba(248,113,113,.45)" stroke-width="1.5"/>
+        <rect x="3" y="2" width="19" height="65" rx="2" fill="rgba(255,200,60,.26)" style="animation:${sid} 2.2s ease-in-out infinite"/>
+        <polygon points="45,3 27,5 27,66 45,68" fill="#f2f2f5"/>
+        <polygon points="45,3 48,3 48,68 45,68" fill="#d2d2d6"/>
+        <polygon points="30,11 43,10 43,28 30,12" fill="none" stroke="rgba(0,0,0,.09)" stroke-width=".8"/>
+        <polygon points="30,32 43,31 43,60 30,61" fill="none" stroke="rgba(0,0,0,.09)" stroke-width=".8"/>
+        <circle cx="32" cy="41" r="3.5" fill="#c4c8d0" stroke="#a8acb4" stroke-width=".8"/>
+        <circle cx="32" cy="41" r="1.6" fill="#e4e6ec"/>
       </svg>`;
   }
 
@@ -522,7 +523,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Porte', icon: '🚪',
     desc: 'Chip con contatore porte aperte. Clic → stato Aperta/Chiusa per ogni porta.',
-    version: '2.1', isDistintivo: true,
+    version: '2.2', isDistintivo: true,
     defaultCfg: { label: 'Porte', icon: '🚪', color: '#fb923c', entities: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -531,5 +532,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-porte v2.1'); } catch(e){}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-porte v2.2'); } catch(e){}
 })();

@@ -1,7 +1,7 @@
-/* frarik-version: 2.1 */
+/* frarik-version: 2.2 */
 /**
- * GruppoFinestre.js — Distintivo FratechStore v2.1
- * Chip contatore finestre aperte + popup con sommario, illustrazione SVG animata, tempo da/fa
+ * GruppoFinestre.js — Distintivo FratechStore v2.2
+ * Chip contatore finestre aperte + popup con sommario, finestra bianca SVG animata, tempo da/fa
  */
 (function () {
   'use strict';
@@ -55,31 +55,38 @@
 
   function _windowSvg(isOpen, idx) {
     if (!isOpen) {
-      return `<svg viewBox="0 0 44 44" width="44" height="44" style="display:block">
-        <rect x="1" y="40" width="42" height="3" rx="1.5" fill="rgba(255,255,255,.2)"/>
-        <rect x="3" y="3" width="38" height="38" rx="3" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.22)" stroke-width="1.5"/>
-        <rect x="5" y="5" width="34" height="34" rx="2" fill="rgba(120,180,240,.12)"/>
-        <line x1="22" y1="5" x2="22" y2="37" stroke="rgba(255,255,255,.3)" stroke-width="2"/>
-        <line x1="5" y1="22" x2="39" y2="22" stroke="rgba(255,255,255,.3)" stroke-width="2"/>
-        <line x1="8" y1="8" x2="14" y2="14" stroke="rgba(255,255,255,.4)" stroke-width="1.2" stroke-linecap="round"/>
-        <line x1="26" y1="8" x2="32" y2="14" stroke="rgba(255,255,255,.4)" stroke-width="1.2" stroke-linecap="round"/>
-        <rect x="3" y="5" width="3" height="34" rx="1.5" fill="rgba(255,255,255,.1)"/>
-        <rect x="38" y="5" width="3" height="34" rx="1.5" fill="rgba(255,255,255,.1)"/>
+      return `<svg viewBox="0 0 60 60" width="60" height="60" style="display:block">
+        <rect x="0" y="56" width="60" height="4" rx="2" fill="rgba(255,255,255,.35)"/>
+        <rect x="3" y="3" width="54" height="54" rx="3" fill="rgba(0,0,0,.22)"/>
+        <rect x="2" y="2" width="54" height="54" rx="3" fill="#f0f0f4" stroke="rgba(255,255,255,.3)" stroke-width="1.5"/>
+        <rect x="5" y="5" width="23" height="42" rx="1" fill="rgba(140,200,248,.35)"/>
+        <rect x="32" y="5" width="23" height="42" rx="1" fill="rgba(140,200,248,.35)"/>
+        <rect x="28" y="4" width="5" height="44" rx="2" fill="#f0f0f4"/>
+        <rect x="4" y="4" width="53" height="5" rx="2" fill="#f0f0f4"/>
+        <rect x="4" y="48" width="53" height="5" rx="2" fill="#f0f0f4"/>
+        <line x1="8" y1="9" x2="15" y2="16" stroke="rgba(255,255,255,.65)" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="35" y1="9" x2="42" y2="16" stroke="rgba(255,255,255,.65)" stroke-width="1.8" stroke-linecap="round"/>
+        <circle cx="30" cy="49" r="4" fill="#c4c8d0" stroke="#a8acb4" stroke-width=".8"/>
+        <circle cx="30" cy="49" r="1.8" fill="#e4e6ec"/>
       </svg>`;
     }
     const sid = `gfbrz${idx}`;
-    return `<style>@keyframes ${sid}{0%,100%{transform:translateX(0) scaleY(1)}50%{transform:translateX(1.5px) scaleY(1.03)}}</style>
-      <svg viewBox="0 0 44 44" width="44" height="44" style="display:block;overflow:visible">
-        <rect x="1" y="40" width="42" height="3" rx="1.5" fill="rgba(255,255,255,.2)"/>
-        <rect x="3" y="3" width="38" height="38" rx="3" fill="rgba(248,113,113,.07)" stroke="rgba(248,113,113,.42)" stroke-width="1.5"/>
-        <rect x="5" y="20" width="34" height="18" rx="1" fill="rgba(120,180,240,.12)" stroke="rgba(255,255,255,.22)" stroke-width="1"/>
-        <rect x="5" y="5" width="34" height="12" rx="1" fill="rgba(120,180,240,.12)" stroke="rgba(255,255,255,.22)" stroke-width="1"/>
-        <rect x="6" y="17" width="32" height="3" rx="1" fill="rgba(255,210,70,.2)"/>
-        <line x1="22" y1="20" x2="22" y2="37" stroke="rgba(255,255,255,.28)" stroke-width="1.5"/>
-        <line x1="22" y1="5" x2="22" y2="16" stroke="rgba(255,255,255,.28)" stroke-width="1.5"/>
-        <line x1="8" y1="7" x2="13" y2="12" stroke="rgba(255,255,255,.35)" stroke-width="1.2" stroke-linecap="round"/>
-        <rect x="3" y="5" width="3.5" height="34" rx="1.5" fill="rgba(255,255,255,.16)" style="transform-origin:3px 22px;animation:${sid} 1.9s ease-in-out infinite"/>
-        <rect x="37.5" y="5" width="3.5" height="34" rx="1.5" fill="rgba(255,255,255,.16)" style="transform-origin:41px 22px;animation:${sid} 1.9s ease-in-out infinite .55s"/>
+    return `<style>@keyframes ${sid}{0%,100%{opacity:.38}50%{opacity:.85}}</style>
+      <svg viewBox="0 0 60 60" width="60" height="60" style="display:block;overflow:visible">
+        <rect x="0" y="56" width="60" height="4" rx="2" fill="rgba(255,255,255,.35)"/>
+        <rect x="2" y="2" width="54" height="54" rx="3" fill="#f0f0f4" stroke="rgba(248,113,113,.45)" stroke-width="1.5"/>
+        <rect x="4" y="4" width="53" height="5" rx="2" fill="#f0f0f4"/>
+        <rect x="4" y="48" width="53" height="5" rx="2" fill="#f0f0f4"/>
+        <rect x="28" y="4" width="5" height="44" rx="2" fill="#f0f0f4"/>
+        <rect x="32" y="5" width="23" height="42" rx="1" fill="rgba(140,200,248,.35)"/>
+        <line x1="35" y1="9" x2="42" y2="16" stroke="rgba(255,255,255,.65)" stroke-width="1.8" stroke-linecap="round"/>
+        <rect x="5" y="5" width="22" height="42" rx="1" fill="rgba(140,210,255,.2)" style="animation:${sid} 2s ease-in-out infinite"/>
+        <polygon points="27,5 14,7 14,51 27,53" fill="#f0f0f4" stroke="rgba(0,0,0,.07)" stroke-width="1"/>
+        <polygon points="14,7 10,8 10,50 14,51" fill="#d8d8dc"/>
+        <polygon points="25,7 15,9 15,49 25,51" fill="rgba(140,200,248,.35)"/>
+        <line x1="16" y1="12" x2="21" y2="17" stroke="rgba(255,255,255,.65)" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="30" cy="49" r="4" fill="#c4c8d0" stroke="#a8acb4" stroke-width=".8"/>
+        <circle cx="30" cy="49" r="1.8" fill="#e4e6ec"/>
       </svg>`;
   }
 
@@ -523,7 +530,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Finestre', icon: '🪟',
     desc: 'Chip con contatore finestre aperte. Clic → stato Aperta/Chiusa per ogni finestra.',
-    version: '2.1', isDistintivo: true,
+    version: '2.2', isDistintivo: true,
     defaultCfg: { label: 'Finestre', icon: '🪟', color: '#34d399', entities: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -532,5 +539,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-finestre v2.1'); } catch(e){}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-finestre v2.2'); } catch(e){}
 })();
