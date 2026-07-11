@@ -1,4 +1,4 @@
-﻿/* frarik-version: 5.3 */
+﻿/* frarik-version: 5.4 */
 (function () {
   'use strict';
 
@@ -18,10 +18,10 @@
   function autodetect(h) {
     const f = function() { const a = Array.prototype.slice.call(arguments); return a.find(function(id) { return has(h, id); }) || ''; };
     return {
-      cpu:     f('sensor.processor_use', 'sensor.cpu_usage'),
-      ram:     f('sensor.memory_use_percent', 'sensor.system_monitor_memory_use_percent'),
-      disk:    f('sensor.disk_use_percent', 'sensor.disk_use_percent_root', 'sensor.system_monitor_disk_use_percent_root'),
-      temp:    f('sensor.processor_temperature', 'sensor.system_monitor_processor_temperature', 'sensor.cpu_temperatura'),
+      cpu:     f('sensor.processor_use','sensor.system_monitor_processor_use','sensor.cpu_usage','sensor.processor_use_percent','sensor.glances_cpu','sensor.cpu_use','sensor.pve_cpu_used_percent'),
+      ram:     f('sensor.memory_use_percent','sensor.system_monitor_memory_use_percent','sensor.ram_use_percent','sensor.glances_memory_used','sensor.pve_memory_used_percent'),
+      disk:    f('sensor.disk_use_percent','sensor.disk_use_percent_root','sensor.system_monitor_disk_use_percent_root','sensor.pve_disk_used_percent'),
+      temp:    f('sensor.processor_temperature','sensor.system_monitor_processor_temperature','sensor.cpu_temperatura','sensor.cpu_temp','sensor.temperature_cpu'),
       boot:    f('sensor.last_boot', 'sensor.system_monitor_last_boot'),
       swap:    f('sensor.swap_use_percent', 'sensor.system_monitor_swap_use_percent'),
       load1:   f('sensor.load_1m', 'sensor.load_1_m', 'sensor.system_monitor_load_1m'),
@@ -416,7 +416,7 @@
   }
 
   /* ── NOTIFICHE & AUTOMAZIONI POPUP (con tabs) ── */
-  function openNotifPopup() {
+  function openNotifPopup(card, el) {
     const h=H();
     const DAYS=[['L','lunedi'],['M','martedi'],['Me','mercoledi'],['G','giovedi'],['V','venerdi'],['S','sabato'],['D','domenica']];
 
@@ -530,14 +530,18 @@
     const html=POP_CSS+'<div style="width:100%;max-height:84vh;display:flex;flex-direction:column;background:#080b14;border:1px solid rgba(139,92,246,.3);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);animation:syUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
       +'<div style="display:flex;align-items:center;gap:10px;padding:13px 15px 11px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
         +'<div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.3)">🔔</div>'
-        +'<div><div style="font-size:14px;font-weight:800;color:#fff">Notifiche & Automazioni</div><div style="font-size:11px;color:#fff">Configurazione completa pkg</div></div>'
-        +'<button id="nf-close" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none">✕</button>'
+        +'<div style="flex:1"><div style="font-size:14px;font-weight:800;color:#fff">Notifiche & Automazioni</div><div style="font-size:11px;color:#fff">Configurazione completa pkg</div></div>'
+        +'<button id="nf-cfg" style="padding:5px 10px;border-radius:8px;font-size:10px;font-weight:700;color:#fff;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.35);cursor:pointer;white-space:nowrap">⚙ Sensori</button>'
+        +'<button id="nf-close" style="margin-left:6px;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none">✕</button>'
       +'</div>'
       +tabBar
       +'<div class="sypc" style="flex:1;overflow-y:auto;padding:0 15px 14px">'+tabs+'</div>'
       +'</div>';
 
     const ov=mkOv(html,'nf-close');
+
+    var cfgBtn=ov.querySelector('#nf-cfg');
+    if(cfgBtn) cfgBtn.addEventListener('click',function(){ ov._close(); setTimeout(function(){ openCfg(card,el); },80); });
 
     ov.querySelectorAll('[data-tab]').forEach(function(btn){
       btn.addEventListener('click',function(){
@@ -677,7 +681,7 @@
       if(a==='popup-perf'){ openPerfPopup(cfgFor(card)); return; }
       if(a==='popup-energia'){ openEnergiaPopup(cfgFor(card)); return; }
       if(a==='popup-ha'){ openHAPopup(cfgFor(card)); return; }
-      if(a==='popup-notif'){ openNotifPopup(); return; }
+      if(a==='popup-notif'){ openNotifPopup(card,el); return; }
     };
     el.addEventListener('click',el._scHandler);
     el._scBound=CARD.version;
@@ -2290,7 +2294,7 @@ automation:
   }
 
   var CARD={
-    id:'system-card', name:'Mini-PC', icon:'🖥️', version:'5.3',
+    id:'system-card', name:'Mini-PC', icon:'🖥️', version:'5.4',
     desc:'Mini-PC/Server: SVG animato mini-PC, CPU/RAM/Temp/Potenza in evidenza. Popup: Prestazioni (ring CPU/RAM/Disco/Swap + load + rete), Energia & Costi, Sistema HA (uptime/aggiornamenti/entità), Gestione automazioni. Sensori autodetect + PKG completo.',
     colSpan:2, rowSpan:3,
     frarik_no_edit:true,
