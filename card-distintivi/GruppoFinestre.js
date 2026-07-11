@@ -1,7 +1,7 @@
-/* frarik-version: 1.2 */
+/* frarik-version: 2.0 */
 /**
- * GruppoFinestre.js — Distintivo FratechStore v1.1
- * Chip contatore finestre aperte + popup stato (solo Aperta/Chiusa) + automazione opzionale
+ * GruppoFinestre.js — Distintivo FratechStore v2.0
+ * Chip contatore finestre aperte + popup con sommario, tempo da/fa, glow se aperta
  */
 (function () {
   'use strict';
@@ -53,6 +53,18 @@
     return ico || (isOpen ? 'mdi:window-open' : 'mdi:window');
   }
 
+  function _timeAgo(isoStr) {
+    if (!isoStr) return '';
+    const diff = Date.now() - new Date(isoStr).getTime();
+    if (diff < 60000) return 'adesso';
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return mins + ' min';
+    const hrs = Math.floor(mins / 60);
+    const rem = mins % 60;
+    if (hrs < 24) return rem > 0 ? hrs + 'h ' + rem + 'min' : hrs + 'h';
+    return Math.floor(hrs / 24) + 'g';
+  }
+
   /* ── chip ── */
   function chip(cfg, rawHass) {
     const c = loadCfg(cfg);
@@ -84,15 +96,51 @@
     const ents = Array.isArray(c.entities) ? c.entities : [];
     const col = c.color || '#34d399';
 
+    const openCount   = h ? ents.filter(e => isOn(h, e.entity)).length : 0;
+    const closedCount = ents.length - openCount;
+
+    let summary = '';
+    if (ents.length) {
+      if (openCount === 0) {
+        summary = `<div style="padding:10px 16px 6px">
+          <div style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.22)">
+            <span style="font-size:14px">🔒</span>
+            <span style="font-size:12px;font-weight:700;color:#4ade80">Tutte chiuse</span>
+          </div>
+        </div>`;
+      } else {
+        summary = `<div style="display:flex;gap:7px;padding:10px 16px 6px;flex-wrap:wrap">
+          <div style="display:inline-flex;align-items:center;gap:5px;padding:5px 13px;border-radius:20px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.28)">
+            <span style="font-size:11px">🔓</span>
+            <span style="font-size:12px;font-weight:700;color:#f87171">${openCount} ${openCount===1?'aperta':'aperte'}</span>
+          </div>
+          ${closedCount ? `<div style="display:inline-flex;align-items:center;gap:5px;padding:5px 13px;border-radius:20px;background:rgba(74,222,128,.09);border:1px solid rgba(74,222,128,.2)">
+            <span style="font-size:12px;font-weight:700;color:#4ade80">✓ ${closedCount} ${closedCount===1?'chiusa':'chiuse'}</span>
+          </div>` : ''}
+        </div>`;
+      }
+    }
+
     const rows = ents.map((e, i) => {
       if (!e.entity) return '';
-      const on = h ? isOn(h, e.entity) : false;
-      const lbl = e.label || nameOf(h, e.entity);
+      const on    = h ? isOn(h, e.entity) : false;
+      const lbl   = e.label || nameOf(h, e.entity);
       const stLbl = on ? 'Aperta' : 'Chiusa';
       const stCol = on ? '#f87171' : '#4ade80';
       const stBg  = on ? 'rgba(248,113,113,.14)' : 'rgba(74,222,128,.12)';
       const stBdr = on ? 'rgba(248,113,113,.32)' : 'rgba(74,222,128,.28)';
-      const rowIco = iconHtml(_dynIcon(c.icon||'🪟', on), 18);
+      const rowIco = iconHtml(_dynIcon(c.icon||'🪟', on), 20);
+
+      const icoBg  = on ? 'rgba(248,113,113,.15)' : 'rgba(255,255,255,.05)';
+      const icoBdr = on ? 'rgba(248,113,113,.35)' : 'rgba(255,255,255,.1)';
+      const icoGlow = on ? ';box-shadow:0 0 14px rgba(248,113,113,.3)' : '';
+
+      const lastChanged = h?.states?.[e.entity]?.last_changed;
+      const timeStr   = h && lastChanged ? _timeAgo(lastChanged) : '';
+      const timeLabel = on
+        ? (timeStr === 'adesso' ? 'Appena aperta' : `Aperta da ${timeStr}`)
+        : (timeStr ? `Chiusa da ${timeStr}` : '');
+      const timeColor = on ? 'rgba(248,113,113,.75)' : 'rgba(255,255,255,.42)';
 
       let autoBadge = '';
       if (e.automation) {
@@ -101,26 +149,24 @@
         const aBdr = autoOn ? 'rgba(74,222,128,.38)'  : 'rgba(248,113,113,.38)';
         const aCol = autoOn ? '#4ade80'               : '#f87171';
         const aTxt = autoOn ? '🟢 Attiva'             : '🔴 Disattiva';
-        autoBadge = `<button data-gf-auto="${i}" style="padding:3px 8px;border-radius:6px;border:1px solid ${aBdr};background:${aBg};color:${aCol};cursor:pointer;font-size:9px;font-weight:700;white-space:nowrap;outline:none">${aTxt}</button>`;
+        autoBadge = `<button data-gf-auto="${i}" style="margin-top:5px;padding:3px 9px;border-radius:6px;border:1px solid ${aBdr};background:${aBg};color:${aCol};cursor:pointer;font-size:9px;font-weight:700;white-space:nowrap;outline:none">${aTxt}</button>`;
       }
 
-      const statePill = `<div style="padding:4px 10px;border-radius:20px;background:${stBg};border:1px solid ${stBdr};font-size:11px;font-weight:700;color:${stCol};white-space:nowrap">${stLbl}</div>`;
-
       return `<div style="border-bottom:1px solid rgba(255,255,255,.04)">
-        <div style="display:flex;align-items:center;gap:12px;padding:11px 16px">
-          <div style="width:36px;height:36px;border-radius:50%;background:${stBg};border:1px solid ${stBdr};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${stCol}">${rowIco}</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px">
+          <div style="width:44px;height:44px;border-radius:14px;background:${icoBg};border:1px solid ${icoBdr};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${on?stCol:'rgba(255,255,255,.7)'}${icoGlow}">${rowIco}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
-            ${statePill}
+            <div style="font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
+            ${timeLabel ? `<div style="font-size:10px;color:${timeColor};margin-top:2px">${eh(timeLabel)}</div>` : ''}
             ${autoBadge}
           </div>
+          <div style="padding:4px 12px;border-radius:20px;background:${stBg};border:1px solid ${stBdr};font-size:11px;font-weight:700;color:${stCol};white-space:nowrap;flex-shrink:0">${stLbl}</div>
         </div>
       </div>`;
     }).join('');
 
     return `<div id="gf-popup-body">
+      ${summary}
       <div>${rows||'<div style="padding:32px 20px;text-align:center;color:#fff;font-size:12px">Nessuna finestra configurata.<br><span style="font-size:10px;">Clicca ✏️ sulla chip per configurare.</span></div>'}</div>
     </div>`;
   }
@@ -453,7 +499,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Finestre', icon: '🪟',
     desc: 'Chip con contatore finestre aperte. Clic → stato Aperta/Chiusa per ogni finestra.',
-    version: '1.2', isDistintivo: true,
+    version: '2.0', isDistintivo: true,
     defaultCfg: { label: 'Finestre', icon: '🪟', color: '#34d399', entities: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -462,5 +508,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-finestre v1.2'); } catch(e){}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-finestre v2.0'); } catch(e){}
 })();
