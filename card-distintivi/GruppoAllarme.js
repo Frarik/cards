@@ -1,9 +1,10 @@
-/* frarik-version: 2.0 */
+/* frarik-version: 2.1 */
 /**
- * GruppoAllarme.js — Distintivo FratechStore v2.0
+ * GruppoAllarme.js — Distintivo FratechStore v2.1
  * Chip stato allarme Alarmo + popup sensori/bypass + overlay triggered automatico
  *
- * v2.0: contenuto più grande, alarmo.arm con bypassed_sensors per esclusione permanente
+ * v2.1: fix arm — chiama sempre alarm_control_panel (standard), più alarmo.arm con
+ *       bypassed_sensors solo quando ci sono sensori esclusi dall'utente
  */
 (function () {
   'use strict';
@@ -372,23 +373,18 @@
         const code   = c.code ? String(c.code) : undefined;
         const bypSet = el._bypassed instanceof Set ? el._bypassed : new Set();
         const modeMap = { alarm_arm_away:'away', alarm_arm_home:'home', alarm_arm_night:'night', alarm_arm_vacation:'vacation' };
-        const h2 = H();
-        const sensors2 = Array.isArray(c.sensors) ? c.sensors : [];
-        /* sensori attualmente aperti ma NON esplicitamente esclusi */
-        const anyOpen = sensors2.some(s => s.entity && h2 && stateOf(h2, s.entity) === 'on' && !bypSet.has(s.entity));
 
-        if (bypSet.size > 0 || anyOpen) {
-          /* usa alarmo.arm con force:true per armare anche con sensori aperti.
-             bypassed_sensors esclude quei sensori permanentemente finché l'allarme
-             è armato (non triggerano anche se si aprono dopo). */
-          const alarmoPayload = { entity_id: ae, mode: modeMap[svc] || 'away', force: true };
-          if (bypSet.size > 0) alarmoPayload.bypassed_sensors = [...bypSet];
+        /* chiama SEMPRE il servizio standard HA — funziona nei casi normali */
+        const stdPayload = { entity_id: ae };
+        if (code) stdPayload.code = code;
+        callEx('alarm_control_panel', svc, stdPayload);
+
+        /* se ci sono sensori esclusi, chiama ANCHE alarmo.arm con force:true +
+           bypassed_sensors → i sensori esclusi non triggerano mentre è armato */
+        if (bypSet.size > 0) {
+          const alarmoPayload = { entity_id: ae, mode: modeMap[svc] || 'away', force: true, bypassed_sensors: [...bypSet] };
           if (code) alarmoPayload.code = code;
           callEx('alarmo', 'arm', alarmoPayload);
-        } else {
-          const payload = { entity_id: ae };
-          if (code) payload.code = code;
-          callEx('alarm_control_panel', svc, payload);
         }
         ev.stopPropagation(); return;
       }
@@ -689,7 +685,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Allarme', icon: '🔒',
     desc: '',
-    version: '2.0', isDistintivo: true,
+    version: '2.1', isDistintivo: true,
     defaultCfg: { label: 'Allarme', alarmEntity: '', code: '', modes: ['armed_away'], sensors: [], siren: '' },
     chip,
     watchEntities,
@@ -703,5 +699,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v2.0'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v2.1'); } catch (e) {}
 })();
