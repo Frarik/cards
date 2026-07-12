@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.0.32 — 2026-07-12
+
+### feat(tv-card): struttura hero identica alle altre card v2.8
+
+- Hero section ristrutturata come Alexa/UPS/database card:
+  - `fc-hero-img` wrapper + `fc-art` con `width:140px;aspect-ratio:5/4` (ratio SVG TV)
+  - `fc-hero-r` (colonna info destra) con `border-left` e `padding-left:12px`
+- Art box: glow `box-shadow` animato (`tvArtPls`) quando TV è accesa — uguale ad Alexa `alArtPls`
+- Art box `overflow:visible` mantenuto per far uscire il drop-shadow SVG
+- Radial gradient sfondo header allargato a 240px per più profondità
+- Titolo principale 14px (era 13px), spaziatura info migliorata
+
 ## 2.0.31 — 2026-07-12
 
 ### feat(tv-card): TV SVG più grande e animazioni schermo vivide v2.7
