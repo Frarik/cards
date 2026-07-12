@@ -254,7 +254,7 @@ esistenti (in `card-js/`, `card-chips/`, `card-distintivi/`) per riusarne stile 
 ### 🔋 UPS  ·  `ups-card.js`
 - **ID:** `ups-card` · **versione:** 1.2 · **formato:** FratechStore
 - **Descrizione:** Monitoraggio UPS: batteria, carico, tensioni, storico blackout e notifiche push. Richiede PKG UPS Tecnoware.
-- **Hooks:** mount, update · **righe:** 488
+- **Hooks:** mount, update · **righe:** 549
 - **Pattern/API usati:** callSvc (chiama servizi HA) · grafica SVG inline · timer · interazione (listener) · popup/overlay
 
 ---

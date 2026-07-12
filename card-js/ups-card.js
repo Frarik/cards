@@ -1,4 +1,4 @@
-/* frarik-version: 1.2 */
+/* frarik-version: 1.3 */
 (function () {
   'use strict';
 
@@ -45,58 +45,119 @@
 
   /* ── UPS SVG ── */
   function _socket(x, y) {
-    return '<rect x="' + x + '" y="' + y + '" width="10" height="8" rx="2" fill="#060d1a" stroke="rgba(255,255,255,.1)" stroke-width=".5"/>'
-      + '<circle cx="' + (x + 3) + '" cy="' + (y + 4) + '" r="1.2" fill="#020810"/>'
-      + '<circle cx="' + (x + 7) + '" cy="' + (y + 4) + '" r="1.2" fill="#020810"/>';
+    return '<rect x="' + x + '" y="' + y + '" width="9" height="7" rx="1.5" fill="#040a14" stroke="rgba(255,255,255,.08)" stroke-width=".4"/>'
+      + '<circle cx="' + (x + 2.5) + '" cy="' + (y + 3) + '" r="1.1" fill="#010407"/>'
+      + '<circle cx="' + (x + 6.5) + '" cy="' + (y + 3) + '" r="1.1" fill="#010407"/>'
+      + '<rect x="' + (x + 3.5) + '" y="' + (y + 5) + '" width="2" height="1.5" rx=".4" fill="#010407"/>';
   }
 
   function _upsSVG(batV, status) {
     const isOL = status === 'OL';
     const isOB = status === 'OB';
+    const active = isOL || isOB;
     const batPct = batV != null ? Math.max(0, Math.min(100, Math.round(batV))) : null;
-    const batFilled = batPct != null ? Math.min(5, Math.ceil(batPct / 20)) : 0;
-    const batCol = batPct == null ? '#64748b' : batPct > 40 ? '#38bdf8' : batPct > 20 ? '#f97316' : '#ef4444';
-    const ledCol = isOL ? '#22c55e' : isOB ? '#f97316' : '#64748b';
+    const batSegs = batPct != null ? Math.min(5, Math.ceil(batPct / 20)) : 0;
+    const batCol = batPct == null ? '#64748b' : batPct > 40 ? '#22c55e' : batPct > 20 ? '#f97316' : '#ef4444';
     const accentCol = isOB ? '#f97316' : '#38bdf8';
     const glowRgb = isOB ? '249,115,22' : '56,189,248';
-    const active = isOL || isOB;
-    const kf = active ? '<defs><style>@keyframes uled{0%,100%{opacity:.4}50%{opacity:1}}</style></defs>' : '';
-    const ledAnim = active ? ' style="animation:uled ' + (isOB ? '.9' : '2.5') + 's ease-in-out infinite"' : '';
 
+    /* ── Battery bars: horizontal, bottom→top, staggered fade-in ── */
+    const BX = 5, BW = 48, BH = 3.5, BGAP = 1.5, BY_BOT = 62;
     let bars = '';
-    for (let seg = 0; seg < 5; seg++) {
-      const barY = 52 - seg * 7;
-      const filled = seg < batFilled;
-      bars += '<rect x="5" y="' + barY + '" width="20" height="5" rx="1.5"'
-        + ' fill="' + (filled ? batCol : 'rgba(255,255,255,.05)') + '"'
-        + ' stroke="rgba(255,255,255,.08)" stroke-width=".4"/>';
+    for (let i = 0; i < 5; i++) {
+      const by = BY_BOT - i * (BH + BGAP);
+      bars += '<rect x="' + BX + '" y="' + by + '" width="' + BW + '" height="' + BH + '" rx="1.2" fill="rgba(255,255,255,.035)" stroke="rgba(255,255,255,.07)" stroke-width=".3"/>';
+      if (i < batSegs) {
+        bars += '<rect x="' + BX + '" y="' + by + '" width="' + BW + '" height="' + BH + '" rx="1.2" fill="' + batCol + '"'
+          + ' style="opacity:.88;animation:_uBF .45s ' + (i * .09).toFixed(2) + 's ease-out both"/>';
+      }
     }
 
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 78" style="display:block;width:100%;height:100%;filter:drop-shadow(0 0 10px rgba(' + glowRgb + ',.15))">'
-      + kf
-      + '<rect x="1" y="3" width="62" height="72" rx="5" fill="#0b1929" stroke="' + accentCol + '" stroke-opacity=".3" stroke-width=".8"/>'
-      + '<rect x="1" y="3" width="62" height="20" rx="5" fill="#070f1c"/>'
-      + '<rect x="1" y="17" width="62" height="6" fill="#070f1c"/>'
-      + '<circle cx="13" cy="13" r="6" fill="#0a1830" stroke="' + accentCol + '" stroke-width=".7" stroke-opacity=".5"/>'
-      + '<circle cx="13" cy="13" r="2.5" fill="' + (active ? accentCol : '#0a1525') + '" opacity="' + (active ? '.35' : '1') + '"/>'
-      + '<line x1="13" y1="10" x2="13" y2="12.5" stroke="' + (active ? '#fff' : '#1a3050') + '" stroke-width="1.3" stroke-linecap="round"/>'
-      + '<circle cx="27" cy="13" r="3" fill="' + ledCol + '"' + ledAnim + '/>'
-      + '<circle cx="27" cy="13" r="1.2" fill="rgba(255,255,255,.25)"/>'
-      + '<rect x="34" y="5" width="27" height="16" rx="3" fill="#020810" stroke="' + accentCol + '" stroke-width=".5" stroke-opacity=".4"/>'
-      + '<text x="47.5" y="12" text-anchor="middle" font-size="4.5" font-family="monospace" font-weight="700" fill="' + accentCol + '" opacity=".6">' + (isOL ? 'ON LINE' : isOB ? 'ON BATTERY' : 'N / D') + '</text>'
-      + '<text x="47.5" y="18.5" text-anchor="middle" font-size="8" font-family="monospace" font-weight="900" fill="' + (batPct != null ? batCol : '#64748b') + '">' + (batPct != null ? batPct + '%' : '—') + '</text>'
-      + '<rect x="1" y="23" width="62" height=".7" fill="rgba(255,255,255,.06)"/>'
+    /* ── Charging bolt (right of bars, when OL) ── */
+    const boltX = BX + BW + 5;
+    const bolt = isOL
+      ? '<path d="M' + boltX + ',43 L' + (boltX - 5) + ',53 L' + boltX + ',53 L' + (boltX - 5) + ',65"'
+        + ' stroke="' + accentCol + '" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"'
+        + ' style="animation:_uBolt 1.3s ease-in-out infinite"/>'
+      : '';
+
+    /* ── Power flow lines ── */
+    const inC  = isOL ? accentCol : 'rgba(255,255,255,.06)';
+    const outC = active ? (isOB ? '#f97316' : '#22c55e') : 'rgba(255,255,255,.06)';
+    const inAnim  = isOL   ? ' style="animation:_uFL 1s linear infinite"' : '';
+    const outAnim = active  ? ' style="animation:_uFR 1s linear infinite"' : '';
+
+    /* ── Status LEDs ── */
+    const ledSpd  = isOB ? '.85' : '2.2';
+    const pwrFill  = isOL ? '#22c55e' : '#091509';
+    const battFill = isOB ? '#f97316' : '#190b00';
+    const pwrAnim  = isOL ? ' style="animation:_uPls ' + ledSpd + 's ease-in-out infinite"' : '';
+    const battAnim = isOB ? ' style="animation:_uPls ' + ledSpd + 's ease-in-out infinite"' : '';
+
+    const statusTxt = isOL ? 'ON LINE' : isOB ? 'ON BATT' : 'N / D';
+    const dispBat   = batPct != null ? batPct + '%' : '--';
+
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 96" style="display:block;width:100%;height:100%;filter:drop-shadow(0 0 12px rgba(' + glowRgb + ',.22))">'
+      + '<defs><style>'
+      + '@keyframes _uBF{from{opacity:0}to{opacity:.88}}'
+      + '@keyframes _uPls{0%,100%{opacity:.4}50%{opacity:1}}'
+      + '@keyframes _uFL{0%{stroke-dashoffset:14}100%{stroke-dashoffset:0}}'
+      + '@keyframes _uFR{0%{stroke-dashoffset:-14}100%{stroke-dashoffset:0}}'
+      + '@keyframes _uBolt{0%,100%{opacity:.15;stroke-width:1.5}50%{opacity:1;stroke-width:2.8}}'
+      + '@keyframes _uBdr{0%,100%{stroke-opacity:.22}50%{stroke-opacity:.58}}'
+      + '</style></defs>'
+
+      /* Body */
+      + '<rect x="1" y="1" width="62" height="94" rx="6" fill="#091727" stroke="' + accentCol + '" stroke-width=".8" style="animation:_uBdr 2.6s ease-in-out infinite"/>'
+
+      /* Header band */
+      + '<rect x="1" y="1" width="62" height="15" rx="6" fill="#060f1d"/>'
+      + '<rect x="1" y="10" width="62" height="6" fill="#060f1d"/>'
+      + '<text x="9" y="9.5" font-size="4" font-family="monospace" font-weight="900" fill="' + accentCol + '" opacity=".5" letter-spacing=".5">TECNOWARE</text>'
+
+      /* PWR LED */
+      + '<circle cx="46" cy="7" r="3" fill="' + pwrFill + '"' + pwrAnim + '/>'
+      + '<circle cx="46" cy="7" r="1.1" fill="rgba(255,255,255,.18)"/>'
+      + '<text x="46" y="13" text-anchor="middle" font-size="2.8" fill="rgba(255,255,255,.3)" font-family="system-ui">PWR</text>'
+
+      /* BATT LED */
+      + '<circle cx="56" cy="7" r="3" fill="' + battFill + '"' + battAnim + '/>'
+      + '<circle cx="56" cy="7" r="1.1" fill="rgba(255,255,255,.18)"/>'
+      + '<text x="56" y="13" text-anchor="middle" font-size="2.8" fill="rgba(255,255,255,.3)" font-family="system-ui">BATT</text>'
+
+      /* LCD Display */
+      + '<rect x="4" y="16" width="56" height="19" rx="3" fill="#030c16" stroke="rgba(' + glowRgb + ',.22)" stroke-width=".5"/>'
+      + '<text x="8" y="24" font-size="5" font-family="monospace" font-weight="700" fill="' + accentCol + '" opacity=".75">' + statusTxt + '</text>'
+      + '<text x="48" y="33" text-anchor="end" font-size="13" font-family="monospace" font-weight="900" fill="' + batCol + '">' + dispBat + '</text>'
+
+      /* Battery section label */
+      + '<text x="5" y="38.5" font-size="3.5" fill="rgba(255,255,255,.2)" font-family="system-ui" letter-spacing=".3">BATTERY LEVEL</text>'
+
+      /* Battery bars + charging bolt */
       + bars
-      + '<rect x="29" y="24" width=".7" height="34" fill="rgba(255,255,255,.06)"/>'
-      + '<text x="33" y="31" font-size="5" fill="rgba(255,255,255,.3)" font-family="system-ui">V-IN</text>'
-      + '<text x="33" y="39" font-size="7" font-weight="800" fill="rgba(56,189,248,.6)" font-family="monospace">230V</text>'
-      + '<text x="33" y="47" font-size="5" fill="rgba(255,255,255,.3)" font-family="system-ui">V-OUT</text>'
-      + '<text x="33" y="55" font-size="7" font-weight="800" fill="' + (isOB ? 'rgba(249,115,22,.6)' : 'rgba(52,211,153,.55)') + '" font-family="monospace">230V</text>'
-      + '<rect x="1" y="58" width="62" height=".7" fill="rgba(255,255,255,.06)"/>'
-      + '<text x="5" y="65" font-size="4.5" fill="rgba(255,255,255,.2)" font-family="system-ui">USCITE</text>'
-      + _socket(5, 66) + _socket(18, 66) + _socket(31, 66) + _socket(44, 66)
-      + '<rect x="56" y="66" width="7" height="8" rx="1.5" fill="#060d1a" stroke="rgba(255,255,255,.1)" stroke-width=".5"/>'
-      + '<rect x="57.5" y="67.5" width="4" height="5" rx=".5" fill="rgba(255,255,255,.05)"/>'
+      + bolt
+
+      /* Separator */
+      + '<rect x="1" y="67" width="62" height=".5" fill="rgba(255,255,255,.06)"/>'
+
+      /* Power flow labels + animated dashes */
+      + '<text x="4" y="71.5" font-size="3.2" fill="rgba(255,255,255,.22)" font-family="system-ui">AC IN</text>'
+      + '<line x1="16" y1="73" x2="30" y2="73" stroke="' + inC + '" stroke-width="1.5" stroke-dasharray="4 3"' + inAnim + '/>'
+      + '<text x="33" y="71.5" font-size="3.2" fill="rgba(255,255,255,.22)" font-family="system-ui">OUT</text>'
+      + '<line x1="41" y1="73" x2="62" y2="73" stroke="' + outC + '" stroke-width="1.5" stroke-dasharray="4 3"' + outAnim + '/>'
+
+      /* Separator 2 */
+      + '<rect x="1" y="75.5" width="62" height=".4" fill="rgba(255,255,255,.04)"/>'
+
+      /* Sockets */
+      + '<text x="4" y="79.5" font-size="3.2" fill="rgba(255,255,255,.15)" font-family="system-ui">USCITE</text>'
+      + _socket(3, 81) + _socket(14, 81) + _socket(25, 81) + _socket(36, 81) + _socket(47, 81)
+      + '<rect x="57" y="81" width="6" height="7" rx="1.5" fill="#040a14" stroke="rgba(255,255,255,.08)" stroke-width=".4"/>'
+      + '<rect x="58.5" y="82.5" width="3" height="4" rx=".5" fill="rgba(255,255,255,.04)"/>'
+
+      /* Bottom accent */
+      + '<rect x="1" y="90" width="62" height=".4" fill="rgba(255,255,255,.04)"/>'
+
       + '</svg>';
   }
 

@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.0.3 — 2026-07-12
+
+### feat(ups-card): nuovo SVG animato v1.3
+
+- Corpo UPS con viewBox 64×96 e border che pulsa (stroke-opacity animation)
+- 5 barre batteria orizzontali che appaiono una per una dal basso con fade-in sfalsato
+- LED PWR (verde, OL) e BATT (arancione, OB) con animazione pulse a velocità diversa
+- Display LCD in alto con stato (ON LINE / ON BATT / N/D) e percentuale batteria colorata
+- Bolt di ricarica ⚡ animato (stroke-width + opacity) visibile solo quando ON LINE
+- Linee AC IN / AC OUT con dashes animati (stroke-dashoffset) che mostrano flusso corrente
+- Socket IEC C13 con 3 fori (2 rotondi + 1 rettangolare) in fondo al pannello
+
 ## 2.0.2 — 2026-07-12
 
 ### fix(pkg-bolletta): rimosso prefisso media_player. dal template (evitava media_player.media_player.xxx)
