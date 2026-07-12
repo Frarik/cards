@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.0.30 — 2026-07-12
+
+### feat(tv-card): illustrazione TV realistica con animazioni v2.6
+
+- **Nuovo TVG SVG**: TV flat panel Philips con schermo, cornice, logo, LED, supporto — disegnato in SVG
+- **Animazioni ON**: cornice con drop-shadow pulsante, LED che lampeggia, riflesso sullo schermo
+- **Animazioni PLAYING**: scan line che scorre dall'alto verso il basso sulla schermata
+- **OFF**: schermo spento scuro, logo grigio, LED spento
+- Hero box allargato (106x86px) con bordo colorato accent
+- Info hero migliorata: titolo principale + sorgente/stato + pill ingresso + chip soundbar
+
 ## 2.0.29 — 2026-07-12
 
 ### fix(tv-card): testo bianco 100% + rimossi watt soundbar v2.5
