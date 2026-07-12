@@ -2,7 +2,7 @@
 
 > ⚠️ **File generato automaticamente** da `scripts/build-card-catalog.mjs` — non modificarlo a mano.
 > Rigenera con: `node scripts/build-card-catalog.mjs`
-> Ultima generazione: 2026-07-12 · Card trovate: 35
+> Ultima generazione: 2026-07-12 · Card trovate: 36
 
 Questo catalogo elenca le card realmente presenti nel repo e i pattern/API che usano.
 Serve come **riferimento vivo**: quando si crea una nuova card si possono leggere quelle
@@ -43,6 +43,7 @@ esistenti (in `card-js/`, `card-chips/`, `card-distintivi/`) per riusarne stile 
 | card-js | `system-card.js` | `notif` | 🖥️ Server — Soglia Temperatura Alert | 2.8 | FratechStore |
 | card-js | `posta-card.js` | `posta-card` | {{ Posta — Consegne Oggi | 2.0 | Lovelace |
 | card-js | `Scaldabagno.js` | `scaldabagno` | 🛁 frarik/frarik_scaldabagno.yaml | 2.2 | FratechStore |
+| card-js | `speedtest-card.js` | `speedtest-card` | 🌐 Speedtest | 1.0 | FratechStore |
 | card-js | `Tapparella.js` | `tapparella` | 🪟 Tapparella | 4.4 | FratechStore |
 | card-js | `Tostapane.js` | `tostapane` | 🍞 frarik/frarik_tostapane.yaml | 2.3 | FratechStore |
 | card-js | `Differenziata.js` | `umido` | mdi:recycle Differenziata — Rifiuto Lunedì | 2.0 | FratechStore |
@@ -232,6 +233,12 @@ esistenti (in `card-js/`, `card-chips/`, `card-distintivi/`) per riusarne stile 
 - **Descrizione:** Scaldabagno elettrico — temperatura acqua, riscaldamento, consumo, energia e costi.
 - **Hooks:** mount, update · **righe:** 1553
 - **Pattern/API usati:** callSvc (chiama servizi HA) · grafica SVG inline · timer · interazione (listener) · auto-scoperta device_class · popup/overlay
+
+### 🌐 Speedtest  ·  `speedtest-card.js`
+- **ID:** `speedtest-card` · **versione:** 1.0 · **formato:** FratechStore
+- **Descrizione:** Monitoraggio connessione internet: download, upload, ping, jitter e bufferbloat. Richiede integrazione Ookla Speedtest.
+- **Hooks:** mount, update · **righe:** 436
+- **Pattern/API usati:** callSvc (chiama servizi HA) · grafica SVG inline · timer · interazione (listener) · popup/overlay
 
 ### 🪟 Tapparella  ·  `Tapparella.js`
 - **ID:** `tapparella` · **versione:** 4.4 · **formato:** FratechStore

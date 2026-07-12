@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.0.4 — 2026-07-12
+
+### feat(speedtest-card): nuova card monitoraggio connessione internet
+
+- Doppio anello gauge animato: anello esterno = download, anello interno = upload
+- Colori dinamici: verde >70%, ciano/viola >35%, arancione sotto soglia
+- Tick marks sull'anello esterno con label 0 / metà / max velocità
+- Valori DL e UL visualizzati al centro del gauge SVG con glow filter
+- Colonna destra: Ping grande colorato (verde <20ms, ciano <50ms, arancione+ sopra)
+- Badge Bufferbloat Grade colorato A/B/C/D/F
+- Barra riepilogativa: DL, UL, Ping, Jitter
+- Righe ISP e Server
+- Pulsante "⚡ Avvia Test" con feedback visivo (3 sec)
+- Icona ⚙ in header per configurare tutti i sensori con autocomplete entità HA
+- Velocità massima configurabile (default 500 Mbit/s)
+- colSpan: 2, rowSpan: 3 — non richiede PKG (usa integrazione Ookla built-in HA)
+
 ## 2.0.3 — 2026-07-12
 
 ### feat(ups-card): nuovo SVG animato v1.3
