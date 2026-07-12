@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.27 — 2026-07-12
+
+### feat(tv-card): mute illuminato + tasto power soundbar + touchpad pulito v2.3
+
+- **Mute toggle**: pulsante 🔇 MUTE si illumina rosso con ✓ quando attivo, grigio quando disattivo — stato locale (IR non ha feedback)
+- **Power soundbar**: nuovo pulsante ⏻ che mostra stato reale da `sensor.presa_tv_sala_potenza` (verde=accesa, grigio=spenta). Invia comando Broadlink configurabile (default: `power`)
+- **Touchpad**: rimossi frecce e testi, solo simbolo ⊙ al centro — interfaccia più pulita
+- Config ⚙: aggiunto campo POWER per comando Broadlink accensione soundbar
+
 ## 2.0.26 — 2026-07-12
 
 ### fix(tv-card): tasto TV usa remote.send_command TV v2.2

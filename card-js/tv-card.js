@@ -1,8 +1,9 @@
-/* frarik-version: 2.2 */
+/* frarik-version: 2.3 */
 (function () {
   'use strict';
 
-  var CARD_VER = '2.2';
+  var CARD_VER = '2.3';
+  var _sbMuted = {};
 
   function H() { try { if (typeof window.frarikHass === 'function') { var h = window.frarikHass(); if (h && h.states) return h; } } catch (e) {} return null; }
   function keyOf(c) { return 'frarik_tvcard_' + (c.id || 'x'); }
@@ -29,6 +30,7 @@
       bl_vol_up:    c.bl_vol_up    || 'volume_su',
       bl_vol_down:  c.bl_vol_down  || 'volume_giu',
       bl_mute:      c.bl_mute      || 'mute',
+      bl_power:     c.bl_power     || 'power',
       pk_sb_sensor: c.pk_sb_sensor || 'sensor.presa_tv_sala_potenza',
       sb_threshold: parseFloat(c.sb_threshold) || 30,
       cmd_up:       c.cmd_up       || 'DPAD_UP',
@@ -185,13 +187,8 @@
     var touchpad = '<div class="tp-wrap">'
       +'<div style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:rgba(255,255,255,.2);margin-bottom:5px;padding:0">Touchpad</div>'
       +'<div class="tp-pad" id="'+rid+'-tp">'
-      +'<div class="tp-arr" style="top:8px;left:50%;transform:translateX(-50%)">▲</div>'
-      +'<div class="tp-arr" style="bottom:8px;left:50%;transform:translateX(-50%)">▼</div>'
-      +'<div class="tp-arr" style="left:10px;top:50%;transform:translateY(-50%)">◀</div>'
-      +'<div class="tp-arr" style="right:10px;top:50%;transform:translateY(-50%)">▶</div>'
       +'<div class="tp-center">'
       +'<div class="tp-ico">⊙</div>'
-      +'<div class="tp-hint">SCORRI • TOCCA = OK</div>'
       +'</div>'
       +'<div class="tp-rip" id="'+rid+'-rip"></div>'
       +'</div>'
@@ -239,11 +236,20 @@
       +'</div>';
 
     /* ─ SOUNDBAR ─ */
+    var isMuted = !!_sbMuted[cid];
+    var bSbPow = bBase+';width:100%;height:36px;font-size:11px;font-weight:800;gap:7px;border-radius:11px;margin-bottom:5px;'
+      +(sbOn?'background:rgba(74,222,128,.18);border:1px solid #4ade80;color:#4ade80;box-shadow:0 0 12px rgba(74,222,128,.3)'
+           :'background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.13);color:rgba(255,255,255,.5)');
+    var bMuteActive = bBase+';flex:1;height:38px;font-size:12px;font-weight:700;gap:5px;border-radius:11px;background:rgba(248,113,113,.22);border:1px solid #f87171;color:#f87171;box-shadow:0 0 12px rgba(248,113,113,.35)';
     var sbRow = '<div class="fc-sec" style="padding-top:2px;padding-bottom:10px">'
       +'<div style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:rgba(255,255,255,.2);margin-bottom:5px">🔊 Soundbar</div>'
+      +'<div style="'+bSbPow+';display:flex;align-items:center;justify-content:center" data-axa="sb-pw">'
+      +'<span>'+(sbOn?'●':'○')+'</span>'
+      +'<span>'+(sbOn?'Spegni Soundbar':'Accendi Soundbar')+'</span>'
+      +'</div>'
       +'<div style="display:flex;gap:5px">'
       +'<div style="'+bSb+'" data-axa="sb-dn">🔉 VOL −</div>'
-      +'<div style="'+bSbA+'" data-axa="sb-mu">🔇 MUTE</div>'
+      +'<div style="'+(isMuted?bMuteActive:bSb)+'" data-axa="sb-mu">🔇 MUTE'+(isMuted?' ✓':'')+'</div>'
       +'<div style="'+bSb+'" data-axa="sb-up">🔊 VOL +</div>'
       +'</div>'
       +'</div>';
@@ -361,6 +367,7 @@
       +'<div><label style="'+stLbl+'">VOL+</label><input id="tvc-bvu" type="text" value="'+_esc(c.bl_vol_up)+'" style="'+stInp+'"></div>'
       +'<div><label style="'+stLbl+'">VOL-</label><input id="tvc-bvd" type="text" value="'+_esc(c.bl_vol_down)+'" style="'+stInp+'"></div>'
       +'<div><label style="'+stLbl+'">MUTE</label><input id="tvc-bmu" type="text" value="'+_esc(c.bl_mute)+'" style="'+stInp+'"></div>'
+      +'<div><label style="'+stLbl+'">POWER</label><input id="tvc-bpw" type="text" value="'+_esc(c.bl_power)+'" style="'+stInp+'"></div>'
       +'</div>'
       +acFld('tvc-sbs','Sensore potenza SB',c.pk_sb_sensor,'sensor.presa_tv_sala_potenza',sensIds)
       +simFld('tvc-sbt','Soglia ON (W)',String(c.sb_threshold),'30')
@@ -410,7 +417,7 @@
     ov.querySelector('#tvc-sav').addEventListener('click',function(){
       function v(id){var e=ov.querySelector('#'+id);return e?e.value.trim():'';}
       save(card,{name:v('tvc-n'),pk_tv:v('tvc-tv'),pk_remote:v('tvc-rem'),
-        pk_bl:v('tvc-bl'),bl_device:v('tvc-bld'),bl_vol_up:v('tvc-bvu'),bl_vol_down:v('tvc-bvd'),bl_mute:v('tvc-bmu'),
+        pk_bl:v('tvc-bl'),bl_device:v('tvc-bld'),bl_vol_up:v('tvc-bvu'),bl_vol_down:v('tvc-bvd'),bl_mute:v('tvc-bmu'),bl_power:v('tvc-bpw'),
         pk_sb_sensor:v('tvc-sbs'),sb_threshold:parseFloat(v('tvc-sbt'))||30,
         cmd_up:v('tvc-cu'),cmd_down:v('tvc-cd'),cmd_left:v('tvc-cl'),cmd_right:v('tvc-cr'),
         cmd_ok:v('tvc-co'),cmd_back:v('tvc-cb'),cmd_home:v('tvc-ch'),cmd_menu:v('tvc-cm'),
@@ -489,7 +496,14 @@
       /* soundbar */
       if(a==='sb-up'){ blCmd(cfg().bl_vol_up);  return; }
       if(a==='sb-dn'){ blCmd(cfg().bl_vol_down); return; }
-      if(a==='sb-mu'){ blCmd(cfg().bl_mute);     return; }
+      if(a==='sb-pw'){ blCmd(cfg().bl_power); return; }
+      if(a==='sb-mu'){
+        var cid2=card.id||'x';
+        _sbMuted[cid2]=!_sbMuted[cid2];
+        blCmd(cfg().bl_mute);
+        el._tvSig=''; el._tvBound=null; el.innerHTML=render(card); mount(card,null,el);
+        return;
+      }
     };
     el.addEventListener('click', el._tvCH);
 
