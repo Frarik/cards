@@ -1,4 +1,4 @@
-/* frarik-version: 1.0 */
+/* frarik-version: 1.1 */
 (function () {
   'use strict';
 
@@ -11,6 +11,13 @@
   function num(v) { const x = parseFloat(String(v != null ? v : '').replace(',', '.')); return isNaN(x) ? null : x; }
   function callSvc(domain, service, data) { try { const h = H(); if (h && h.callService) h.callService(domain, service, data || {}); } catch (e) {} }
   function stateObj(h, id) { return h && id && h.states && h.states[id] ? h.states[id] : null; }
+
+  /* ── STATO TEST ── */
+  var _spTestTs = 0;
+  var _spJustDone = false;
+  var _spTimer = null;
+
+  function _spClrTimer() { if (_spTimer) { clearTimeout(_spTimer); _spTimer = null; } }
 
   function pkDefaults() {
     return {
@@ -46,7 +53,7 @@
   function gradeLetter(g) {
     if (!g) return '—';
     var l = String(g).trim()[0].toUpperCase();
-    return ['A','B','C','D','F'].indexOf(l) >= 0 ? l : g.length > 1 ? g : '—';
+    return ['A','B','C','D','F'].indexOf(l) >= 0 ? l : '—';
   }
 
   function arcD(cx, cy, r, sDeg, eDeg) {
@@ -59,15 +66,6 @@
   }
 
   var ARC_S = 225, ARC_SWEEP = 270;
-
-  function speedArc(cx, cy, r, val, maxVal, col, sw) {
-    var track = '<path d="' + arcD(cx, cy, r, ARC_S, ARC_S + ARC_SWEEP) + '" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="' + sw + '" stroke-linecap="round"/>';
-    if (val == null || val <= 0) return track;
-    var pct = Math.min(1, val / maxVal);
-    var endDeg = ARC_S + pct * ARC_SWEEP;
-    var fill = '<path d="' + arcD(cx, cy, r, ARC_S, endDeg) + '" fill="none" stroke="' + col + '" stroke-width="' + sw + '" stroke-linecap="round" filter="url(#spGlow)"/>';
-    return track + fill;
-  }
 
   function dlCol(v, maxVal) {
     if (v == null) return '#64748b';
@@ -98,7 +96,7 @@
     return v >= 100 ? v.toFixed(0) : v.toFixed(1);
   }
 
-  function fmtTime(h, id) {
+  function fmtLastTest(h, id) {
     var s = stateObj(h, id);
     if (!s) return null;
     var ts = s.last_updated || s.last_changed;
@@ -106,19 +104,45 @@
     try {
       var d = new Date(ts);
       if (isNaN(d.getTime())) return null;
-      var pad = function(n) { return String(n).padStart(2, '0'); };
+      var pad = function (n) { return String(n).padStart(2, '0'); };
       return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
     } catch (e) { return null; }
   }
 
-  function _speedSVG(dl, ul, maxVal, dlC, ulC) {
+  /* ── SVG GAUGE ── */
+  function _speedSVG(dl, ul, maxVal, dlC, ulC, isRunning, justDone) {
     var cx = 50, cy = 52;
     var outerR = 40, innerR = 28;
 
-    var glowDef = '<defs><filter id="spGlow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="1.8" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>';
+    var animDefs = '';
+    var rings = '';
 
-    var rings = speedArc(cx, cy, outerR, dl, maxVal, dlC, 5.5)
-      + speedArc(cx, cy, innerR, ul, maxVal, ulC, 4);
+    if (isRunning) {
+      animDefs = '@keyframes spRunO{from{stroke-dashoffset:0}to{stroke-dashoffset:-150}}'
+        + '@keyframes spRunI{from{stroke-dashoffset:0}to{stroke-dashoffset:120}}'
+        + '@keyframes spPls{0%,100%{opacity:.35}50%{opacity:.9}}'
+        + '@keyframes spBlink{0%,100%{opacity:0}50%{opacity:1}}';
+
+      var trackPath = arcD(cx, cy, outerR, ARC_S, ARC_S + ARC_SWEEP);
+      var innerPath = arcD(cx, cy, innerR, ARC_S, ARC_S + ARC_SWEEP);
+
+      rings = '<path d="' + trackPath + '" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="5.5" stroke-linecap="round"/>'
+        + '<path d="' + trackPath + '" fill="none" stroke="#38bdf8" stroke-width="5.5" stroke-linecap="round" stroke-dasharray="28 18" style="animation:spRunO 1.4s linear infinite;filter:url(#spGlow)"/>'
+        + '<path d="' + innerPath + '" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="4" stroke-linecap="round"/>'
+        + '<path d="' + innerPath + '" fill="none" stroke="#a78bfa" stroke-width="4" stroke-linecap="round" stroke-dasharray="20 14" style="animation:spRunI 1.1s linear infinite;filter:url(#spGlow)"/>';
+    } else {
+      var doneGlow = justDone ? ';filter:url(#spGlow)' : '';
+      rings = '<path d="' + arcD(cx, cy, outerR, ARC_S, ARC_S + ARC_SWEEP) + '" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="5.5" stroke-linecap="round"/>';
+      if (dl != null && dl > 0) {
+        var dlEnd = ARC_S + Math.min(1, dl / maxVal) * ARC_SWEEP;
+        rings += '<path d="' + arcD(cx, cy, outerR, ARC_S, dlEnd) + '" fill="none" stroke="' + dlC + '" stroke-width="5.5" stroke-linecap="round" filter="url(#spGlow)"' + doneGlow + '/>';
+      }
+      rings += '<path d="' + arcD(cx, cy, innerR, ARC_S, ARC_S + ARC_SWEEP) + '" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="4" stroke-linecap="round"/>';
+      if (ul != null && ul > 0) {
+        var ulEnd = ARC_S + Math.min(1, ul / maxVal) * ARC_SWEEP;
+        rings += '<path d="' + arcD(cx, cy, innerR, ARC_S, ulEnd) + '" fill="none" stroke="' + ulC + '" stroke-width="4" stroke-linecap="round" filter="url(#spGlow)"' + doneGlow + '/>';
+      }
+    }
 
     var ticks = '';
     for (var i = 0; i <= 10; i++) {
@@ -134,29 +158,39 @@
     function tickLbl(deg, lbl) {
       var tr2 = (deg - 90) * Math.PI / 180;
       var lx = cx + (outerR + 9) * Math.cos(tr2), ly = cy + (outerR + 9) * Math.sin(tr2);
-      return '<text x="' + lx.toFixed(1) + '" y="' + (ly + 1.2).toFixed(1) + '" text-anchor="middle" font-family="system-ui,sans-serif" font-size="4" fill="rgba(255,255,255,.35)">' + lbl + '</text>';
+      return '<text x="' + lx.toFixed(1) + '" y="' + (ly + 1.2).toFixed(1) + '" text-anchor="middle" font-family="system-ui,sans-serif" font-size="4" fill="rgba(255,255,255,.3)">' + lbl + '</text>';
     }
-    var labels = tickLbl(ARC_S, '0')
-      + tickLbl(ARC_S + 135, (maxVal / 2 >= 100 ? Math.round(maxVal / 2) : (maxVal / 2).toFixed(0)) + '')
-      + tickLbl(ARC_S + ARC_SWEEP, maxVal + '');
+    var labels = tickLbl(ARC_S, '0') + tickLbl(ARC_S + 135, Math.round(maxVal / 2) + '') + tickLbl(ARC_S + ARC_SWEEP, maxVal + '');
 
-    var dlTxt = fmtSpeed(dl);
-    var ulTxt = fmtSpeed(ul);
+    var center = '';
+    if (isRunning) {
+      center = '<text x="50" y="44" text-anchor="middle" font-family="system-ui,sans-serif" font-size="7" fill="#38bdf8" style="animation:spPls 1.2s ease-in-out infinite">⏳</text>'
+        + '<text x="50" y="54" text-anchor="middle" font-family="system-ui,sans-serif" font-size="5.5" font-weight="800" fill="#fff">Test in</text>'
+        + '<text x="50" y="62" text-anchor="middle" font-family="system-ui,sans-serif" font-size="5.5" font-weight="800" fill="#fff">corso</text>'
+        + '<text x="43" y="72" text-anchor="middle" font-family="system-ui,sans-serif" font-size="8" fill="#38bdf8" style="animation:spBlink 1s ease-in-out infinite">.</text>'
+        + '<text x="50" y="72" text-anchor="middle" font-family="system-ui,sans-serif" font-size="8" fill="#38bdf8" style="animation:spBlink 1s ease-in-out infinite;animation-delay:.35s">.</text>'
+        + '<text x="57" y="72" text-anchor="middle" font-family="system-ui,sans-serif" font-size="8" fill="#38bdf8" style="animation:spBlink 1s ease-in-out infinite;animation-delay:.7s">.</text>';
+    } else {
+      var dlTxt = fmtSpeed(dl), ulTxt = fmtSpeed(ul);
+      center = '<text x="50" y="42" text-anchor="middle" font-family="system-ui,sans-serif" font-size="4" font-weight="700" letter-spacing=".5" fill="rgba(255,255,255,.4)">SCARICAMENTO</text>'
+        + '<text x="50" y="54" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="900" fill="' + dlC + '">' + dlTxt + '</text>'
+        + '<text x="50" y="60" text-anchor="middle" font-family="system-ui,sans-serif" font-size="4.5" font-weight="600" fill="rgba(255,255,255,.45)">Mbit/s</text>'
+        + '<line x1="38" y1="63" x2="62" y2="63" stroke="rgba(255,255,255,.08)" stroke-width=".5"/>'
+        + '<text x="50" y="68" text-anchor="middle" font-family="system-ui,sans-serif" font-size="4" font-weight="700" letter-spacing=".4" fill="rgba(255,255,255,.35)">CARICAMENTO</text>'
+        + '<text x="50" y="77" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" font-weight="800" fill="' + ulC + '">' + ulTxt + '</text>'
+        + '<text x="50" y="82" text-anchor="middle" font-family="system-ui,sans-serif" font-size="4" font-weight="600" fill="rgba(255,255,255,.35)">Mbit/s</text>';
+    }
 
-    var center = '<text x="50" y="42" text-anchor="middle" font-family="system-ui,sans-serif" font-size="5" font-weight="700" letter-spacing=".5" fill="rgba(255,255,255,.45)">DOWNLOAD</text>'
-      + '<text x="50" y="54" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="900" fill="' + dlC + '">' + dlTxt + '</text>'
-      + '<text x="50" y="60" text-anchor="middle" font-family="system-ui,sans-serif" font-size="4.5" font-weight="600" fill="rgba(255,255,255,.5)">Mb/s</text>'
-      + '<line x1="38" y1="63" x2="62" y2="63" stroke="rgba(255,255,255,.08)" stroke-width=".5"/>'
-      + '<text x="50" y="68" text-anchor="middle" font-family="system-ui,sans-serif" font-size="4.5" font-weight="700" letter-spacing=".4" fill="rgba(255,255,255,.4)">UPLOAD</text>'
-      + '<text x="50" y="76" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" font-weight="800" fill="' + ulC + '">' + ulTxt + '</text>'
-      + '<text x="50" y="80.5" text-anchor="middle" font-family="system-ui,sans-serif" font-size="4" font-weight="600" fill="rgba(255,255,255,.4)">Mb/s</text>';
+    var dropShadow = justDone
+      ? 'filter:drop-shadow(0 0 12px rgba(34,197,94,.35))'
+      : 'filter:drop-shadow(0 0 8px rgba(56,189,248,.12))';
 
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 90" style="display:block;width:100%;height:100%;filter:drop-shadow(0 0 8px rgba(56,189,248,.12))">'
-      + glowDef
-      + rings
-      + ticks
-      + labels
-      + center
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 90" style="display:block;width:100%;height:100%;' + dropShadow + '">'
+      + '<defs>'
+      + (animDefs ? '<style>' + animDefs + '</style>' : '')
+      + '<filter id="spGlow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="1.8" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
+      + '</defs>'
+      + rings + ticks + labels + center
       + '</svg>';
   }
 
@@ -166,6 +200,9 @@
     const rid = 'fsp' + (card.id || Math.random().toString(36).slice(2, 8));
     const maxVal = c.max_speed;
 
+    const isRunning = _spTestTs > 0;
+    const justDone = _spJustDone;
+
     const dl    = num(S(h, c.pk_download));
     const ul    = num(S(h, c.pk_upload));
     const ping  = num(S(h, c.pk_ping));
@@ -173,34 +210,36 @@
     const rawGrade = S(h, c.pk_grade);
     const grade = gradeLetter(rawGrade);
     const grCol = gradeCol(rawGrade);
-    const isp    = S(h, c.pk_isp)    || Attr(h, c.pk_download, 'isp')    || '—';
+    const isp    = S(h, c.pk_isp)    || Attr(h, c.pk_download, 'isp')         || '—';
     const server = S(h, c.pk_server) || Attr(h, c.pk_download, 'server_name') || '—';
-    const lastTest = fmtTime(h, c.pk_download);
+    const lastTest = fmtLastTest(h, c.pk_download);
 
-    const dlC = dlCol(dl, maxVal);
-    const ulC = ulCol(ul, maxVal);
+    const dlC = isRunning ? '#64748b' : dlCol(dl, maxVal);
+    const ulC = isRunning ? '#64748b' : ulCol(ul, maxVal);
     const pinC = pingCol(ping);
 
     const isActive = dl != null || ul != null;
-    const dotCol = isActive ? '#22c55e' : '#64748b';
+    const dotCol = justDone ? '#22c55e' : isActive ? '#38bdf8' : '#64748b';
+    const statusLabel = isRunning ? 'IN CORSO' : justDone ? 'COMPLETATO' : (isActive ? 'OK' : 'N/D');
+    const statusRgb = isRunning ? '56,189,248' : justDone ? '34,197,94' : isActive ? '56,189,248' : '100,116,139';
 
     const css = '<style>'
-      + '#' + rid + '{position:relative;width:100%;height:100%;min-height:280px;font-family:system-ui,sans-serif;display:block}'
-      + '#' + rid + ' .fc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
+      + '#' + rid + '{position:relative;width:100%;height:100%;min-height:320px;font-family:system-ui,sans-serif;display:block}'
+      + '#' + rid + ' .fc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative'
+      + (justDone ? ';box-shadow:0 0 0 1px rgba(34,197,94,.25)' : '') + '}'
       + '#' + rid + ' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(56,189,248,.08) 0%,transparent 65%);pointer-events:none}'
       + '#' + rid + ' .fc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
       + '#' + rid + ' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2)}'
       + '#' + rid + ' .fc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
-      + '#' + rid + ' .fc-hdr-pill{font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;white-space:nowrap;display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#fff}'
-      + '#' + rid + ' .fc-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:' + dotCol + '}'
+      + '#' + rid + ' .fc-hdr-pill{font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;white-space:nowrap;display:flex;align-items:center;gap:4px;background:rgba(' + statusRgb + ',.08);border:1px solid rgba(' + statusRgb + ',.25);color:rgb(' + statusRgb + ')}'
+      + '#' + rid + ' .fc-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:' + dotCol
+      + (isRunning ? ';animation:spPilPls 1s ease-in-out infinite;box-shadow:0 0 5px #38bdf8' : justDone ? ';box-shadow:0 0 5px #22c55e' : '') + '}'
       + '#' + rid + ' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
       + '#' + rid + ' .fc-scroll::-webkit-scrollbar{display:none}'
       + '#' + rid + ' .fc-hero{display:flex;align-items:stretch;padding:10px 14px 6px;flex:1;gap:4px}'
-      + '#' + rid + ' .fc-hero-img{flex:1.2;display:flex;align-items:center;justify-content:center;overflow:hidden}'
+      + '#' + rid + ' .fc-hero-img{flex:1.3;display:flex;align-items:center;justify-content:center;overflow:hidden}'
       + '#' + rid + ' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:6px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:12px;overflow:hidden}'
-      + '#' + rid + ' .fc-met{display:flex;align-items:center;justify-content:space-between;gap:4px}'
-      + '#' + rid + ' .fc-met-lbl{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.5);flex-shrink:0}'
-      + '#' + rid + ' .fc-met-v{font-size:13px;font-weight:800;text-align:right}'
+      + '#' + rid + ' .fc-met-lbl{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.45)}'
       + '#' + rid + ' .fc-stats{display:flex;margin:0 14px 8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden}'
       + '#' + rid + ' .fc-sb{flex:1;display:flex;flex-direction:column;align-items:center;padding:7px 3px;gap:2px}'
       + '#' + rid + ' .fc-sb-sep{width:1px;background:rgba(255,255,255,.08);flex-shrink:0}'
@@ -208,54 +247,61 @@
       + '#' + rid + ' .fc-sb-l{font-size:8px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.4px;text-align:center}'
       + '#' + rid + ' .fc-info{display:flex;flex-direction:column;gap:3px;margin:0 14px 8px}'
       + '#' + rid + ' .fc-info-row{display:flex;align-items:center;gap:6px;padding:5px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:9px}'
-      + '#' + rid + ' .fc-info-lbl{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.45);flex-shrink:0;min-width:36px}'
+      + '#' + rid + ' .fc-info-lbl{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.4);flex-shrink:0;min-width:42px}'
       + '#' + rid + ' .fc-info-v{font-size:11px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
       + '#' + rid + ' .fc-btn-row{padding:0 14px 12px}'
-      + '#' + rid + ' .fc-run-btn{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(56,189,248,.3);background:rgba(56,189,248,.1);font-size:12px;font-weight:800;color:#38bdf8;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s}'
+      + '#' + rid + ' .fc-run-btn{width:100%;padding:10px;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s;border:1px solid rgba(56,189,248,.35);background:rgba(56,189,248,.1);color:#38bdf8}'
       + '#' + rid + ' .fc-run-btn:hover{background:rgba(56,189,248,.2);border-color:rgba(56,189,248,.5)}'
+      + '#' + rid + ' .fc-run-btn.running{cursor:default;opacity:.7;border-color:rgba(56,189,248,.2);background:rgba(56,189,248,.05)}'
       + '#' + rid + ' .fc-gear{margin-left:4px;cursor:pointer;width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#fff;flex-shrink:0}'
       + '#' + rid + ' .fc-gear:hover{background:rgba(255,255,255,.12)}'
+      + (isRunning ? '@keyframes spPilPls{0%,100%{opacity:.5}50%{opacity:1}}' : '')
       + '</style>';
 
+    const heroSvg = _speedSVG(dl, ul, maxVal, dlC, ulC, isRunning, justDone);
+
     const heroHtml = '<div class="fc-hero">'
-      + '<div class="fc-hero-img">' + _speedSVG(dl, ul, maxVal, dlC, ulC) + '</div>'
+      + '<div class="fc-hero-img">' + heroSvg + '</div>'
       + '<div class="fc-hero-r">'
       + '<div style="display:flex;flex-direction:column;gap:2px">'
       + '<div class="fc-met-lbl">Ping</div>'
       + '<div style="display:flex;align-items:baseline;gap:3px">'
-      + '<span style="font-size:28px;font-weight:900;line-height:1;color:' + pinC + '">' + (ping != null ? ping.toFixed(0) : '—') + '</span>'
-      + (ping != null ? '<span style="font-size:11px;font-weight:700;color:#fff">ms</span>' : '')
+      + '<span style="font-size:28px;font-weight:900;line-height:1;color:' + (isRunning ? '#64748b' : pinC) + '">' + (ping != null && !isRunning ? ping.toFixed(0) : '—') + '</span>'
+      + (ping != null && !isRunning ? '<span style="font-size:11px;font-weight:700;color:#fff">ms</span>' : '')
       + '</div>'
       + '</div>'
       + '<div style="height:1px;background:rgba(255,255,255,.07);margin:2px 0"></div>'
-      + '<div class="fc-met">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between">'
       + '<span class="fc-met-lbl">Jitter</span>'
-      + '<span class="fc-met-v" style="color:#fff">' + (jitter != null ? jitter.toFixed(1) + ' ms' : '—') + '</span>'
+      + '<span style="font-size:13px;font-weight:800;color:#fff">' + (jitter != null && !isRunning ? jitter.toFixed(1) + ' ms' : '—') + '</span>'
       + '</div>'
-      + '<div style="display:flex;align-items:center;justify-content:space-between;gap:4px">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between">'
       + '<span class="fc-met-lbl">Bufferbloat</span>'
-      + (rawGrade ? '<div style="min-width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;background:' + grCol + '22;border:1px solid ' + grCol + '55;color:' + grCol + '">' + grade + '</div>' : '<span style="font-size:13px;font-weight:800;color:#64748b">—</span>')
+      + (rawGrade && !isRunning ? '<div style="min-width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;background:' + grCol + '22;border:1px solid ' + grCol + '55;color:' + grCol + '">' + grade + '</div>' : '<span style="font-size:13px;font-weight:800;color:#64748b">—</span>')
       + '</div>'
       + '</div>'
       + '</div>';
 
     const statsHtml = '<div class="fc-stats">'
-      + '<div class="fc-sb"><div class="fc-sb-n" style="color:' + dlC + '">' + fmtSpeed(dl) + '</div><div class="fc-sb-l">DL Mb/s</div></div>'
+      + '<div class="fc-sb"><div class="fc-sb-n" style="color:' + (isRunning ? '#64748b' : dlC) + '">' + (isRunning ? '…' : fmtSpeed(dl)) + '</div><div class="fc-sb-l">↓ Mbit/s</div></div>'
       + '<div class="fc-sb-sep"></div>'
-      + '<div class="fc-sb"><div class="fc-sb-n" style="color:' + ulC + '">' + fmtSpeed(ul) + '</div><div class="fc-sb-l">UL Mb/s</div></div>'
+      + '<div class="fc-sb"><div class="fc-sb-n" style="color:' + (isRunning ? '#64748b' : ulC) + '">' + (isRunning ? '…' : fmtSpeed(ul)) + '</div><div class="fc-sb-l">↑ Mbit/s</div></div>'
       + '<div class="fc-sb-sep"></div>'
-      + '<div class="fc-sb"><div class="fc-sb-n" style="color:' + pinC + '">' + (ping != null ? ping.toFixed(0) : '—') + '</div><div class="fc-sb-l">Ping ms</div></div>'
+      + '<div class="fc-sb"><div class="fc-sb-n" style="color:' + (isRunning ? '#64748b' : pinC) + '">' + (ping != null && !isRunning ? ping.toFixed(0) : '…') + '</div><div class="fc-sb-l">Ping ms</div></div>'
       + '<div class="fc-sb-sep"></div>'
-      + '<div class="fc-sb"><div class="fc-sb-n" style="color:#fff">' + (jitter != null ? jitter.toFixed(1) : '—') + '</div><div class="fc-sb-l">Jitter ms</div></div>'
+      + '<div class="fc-sb"><div class="fc-sb-n" style="color:#fff">' + (jitter != null && !isRunning ? jitter.toFixed(1) : '…') + '</div><div class="fc-sb-l">Jitter ms</div></div>'
       + '</div>';
 
     const infoHtml = '<div class="fc-info">'
-      + '<div class="fc-info-row"><span class="fc-info-lbl">ISP</span><span class="fc-info-v">' + isp + '</span></div>'
+      + '<div class="fc-info-row"><span class="fc-info-lbl">Provider</span><span class="fc-info-v">' + isp + '</span></div>'
       + '<div class="fc-info-row"><span class="fc-info-lbl">Server</span><span class="fc-info-v">' + server + '</span></div>'
       + '</div>';
 
+    const btnLabel = isRunning ? '⏳ Test in corso...' : justDone ? '✅ Completato!' : '⚡ Avvia Test';
+    const btnCls = isRunning ? 'fc-run-btn running' : (justDone ? 'fc-run-btn' : 'fc-run-btn');
+    const btnStyle = justDone ? 'border-color:rgba(34,197,94,.4);background:rgba(34,197,94,.1);color:#22c55e' : '';
     const btnHtml = '<div class="fc-btn-row">'
-      + '<div class="fc-run-btn" data-sya="run-test">⚡ Avvia Test</div>'
+      + '<div class="' + btnCls + '"' + (btnStyle ? ' style="' + btnStyle + '"' : '') + (isRunning ? '' : ' data-sya="run-test"') + '>' + btnLabel + '</div>'
       + '</div>';
 
     return css
@@ -264,7 +310,7 @@
       + '<div class="fc-hdr">'
       + '<div class="fc-hdr-iw">🌐</div>'
       + '<div class="fc-hdr-tit">' + (c.name || 'Speedtest') + '</div>'
-      + (lastTest ? '<div class="fc-hdr-pill"><div class="fc-dot"></div>' + lastTest + '</div>' : '')
+      + (lastTest ? '<div class="fc-hdr-pill"><div class="fc-dot"></div>' + statusLabel + '</div>' : '<div class="fc-hdr-pill"><div class="fc-dot"></div>' + statusLabel + '</div>')
       + '<div class="fc-gear" data-sya="cfg">⚙</div>'
       + '</div>'
       + '<div class="fc-scroll">'
@@ -312,34 +358,33 @@
     const stSec = 'font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid rgba(56,189,248,.2)';
 
     function field(fid, lbl, val, hint) {
-      return '<div style="margin-bottom:9px;position:relative"><label style="' + stLbl + '">' + lbl + (hint ? '<span style="font-weight:400;color:#475569;margin-left:6px;font-family:monospace;text-transform:none;letter-spacing:0">' + hint + '</span>' : '') + '</label><input id="' + fid + '" type="text" value="' + (val || '').replace(/"/g, '&quot;') + '" autocomplete="off" placeholder="Cerca entità…" style="' + stInp + '"><div id="' + fid + '-d" style="' + stDrop + '"></div></div>';
-    }
-    function numField(fid, lbl, val, hint) {
-      return '<div style="margin-bottom:9px"><label style="' + stLbl + '">' + lbl + (hint ? '<span style="font-weight:400;color:#475569;margin-left:6px;font-family:monospace;text-transform:none;letter-spacing:0">' + hint + '</span>' : '') + '</label><input id="' + fid + '" type="number" value="' + (val || '') + '" min="1" max="10000" style="' + stInp + '"></div>';
+      return '<div style="margin-bottom:9px;position:relative"><label style="' + stLbl + '">' + lbl + (hint ? '<span style="font-weight:400;color:#475569;margin-left:6px;font-family:monospace;text-transform:none;letter-spacing:0">' + hint + '</span>' : '') + '</label>'
+        + '<input id="' + fid + '" type="text" value="' + (val || '').replace(/"/g, '&quot;') + '" autocomplete="off" placeholder="Cerca entità…" style="' + stInp + '">'
+        + '<div id="' + fid + '-d" style="' + stDrop + '"></div></div>';
     }
 
     const allFieldIds = ['fsc-dl','fsc-ul','fsc-ping','fsc-jitter','fsc-grade','fsc-isp','fsc-server','fsc-button'];
 
     const formHtml = '<div style="margin-bottom:10px"><label style="' + stLbl + '">Nome card</label><input id="fsc-name" type="text" value="' + (cf.name || '').replace(/"/g, '&quot;') + '" placeholder="es. Speedtest casa" style="' + stInp.replace('monospace', 'system-ui') + '"></div>'
-      + numField('fsc-maxspeed', 'Velocità massima (Mbit/s)', cf.max_speed, 'es. 500')
-      + '<div style="' + stSec + '">Sensori Speedtest</div>'
-      + field('fsc-dl',      'Download (Mbit/s)',   cf.pk_download, 'sensor.speedtest_download')
-      + field('fsc-ul',      'Upload (Mbit/s)',     cf.pk_upload,   'sensor.speedtest_upload')
-      + field('fsc-ping',    'Ping (ms)',            cf.pk_ping,     'sensor.speedtest_ping')
-      + field('fsc-jitter',  'Jitter (ms)',          cf.pk_jitter,   'sensor.speedtest_jitter')
-      + field('fsc-grade',   'Bufferbloat Grade',   cf.pk_grade,    'sensor.speedtest_download_bufferbloat')
-      + '<div style="' + stSec + '">Info connessione</div>'
-      + field('fsc-isp',    'ISP',                  cf.pk_isp,      'sensor.speedtest_isp')
-      + field('fsc-server', 'Server',               cf.pk_server,   'sensor.speedtest_server_name')
+      + '<div style="margin-bottom:9px"><label style="' + stLbl + '">Velocità massima (Mbit/s)<span style="font-weight:400;color:#475569;margin-left:6px;font-family:monospace;text-transform:none;letter-spacing:0">es. 500</span></label><input id="fsc-maxspeed" type="number" value="' + (cf.max_speed || 500) + '" min="1" max="10000" style="' + stInp + '"></div>'
+      + '<div style="' + stSec + '">Sensori Scaricamento / Caricamento</div>'
+      + field('fsc-dl',   'Scaricamento (Mbit/s)', cf.pk_download, 'sensor.speedtest_download')
+      + field('fsc-ul',   'Caricamento (Mbit/s)',  cf.pk_upload,   'sensor.speedtest_upload')
+      + '<div style="' + stSec + '">Sensori Qualità Connessione</div>'
+      + field('fsc-ping',   'Ping (ms)',           cf.pk_ping,     'sensor.speedtest_ping')
+      + field('fsc-jitter', 'Jitter (ms)',         cf.pk_jitter,   'sensor.speedtest_jitter')
+      + field('fsc-grade',  'Bufferbloat',         cf.pk_grade,    'sensor.speedtest_download_bufferbloat')
+      + '<div style="' + stSec + '">Info Connessione</div>'
+      + field('fsc-isp',    'Provider Internet',   cf.pk_isp,      'sensor.speedtest_isp')
+      + field('fsc-server', 'Server',              cf.pk_server,   'sensor.speedtest_server_name')
       + '<div style="' + stSec + '">Azione</div>'
-      + field('fsc-button', 'Pulsante avvia test',  cf.pk_button,   'button.ookla_speedtest')
+      + field('fsc-button', 'Pulsante Avvia Test', cf.pk_button,   'button.ookla_speedtest')
       + '<div style="display:flex;gap:8px;margin-top:16px">'
       + '<button id="fsc-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button>'
       + '<button id="fsc-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#38bdf8;color:#060d14">Salva</button>'
       + '</div>';
 
     const ov = mkOv(popShell('🌐', '56,189,248', 'Configura Speedtest', card.id || '', 'fsc-cfg-close', formHtml), 'fsc-cfg-close');
-
     ov.querySelector('#fsc-cancel').addEventListener('click', function () { ov._close(); });
 
     function g(id) { const e = ov.querySelector('#' + id); return e ? e.value.trim() : ''; }
@@ -366,16 +411,16 @@
 
     ov.querySelector('#fsc-save').addEventListener('click', function () {
       save(card, {
-        name: g('fsc-name'),
-        max_speed: g('fsc-maxspeed'),
+        name:        g('fsc-name'),
+        max_speed:   g('fsc-maxspeed'),
         pk_download: g('fsc-dl'),
-        pk_upload: g('fsc-ul'),
-        pk_ping: g('fsc-ping'),
-        pk_jitter: g('fsc-jitter'),
-        pk_grade: g('fsc-grade'),
-        pk_isp: g('fsc-isp'),
-        pk_server: g('fsc-server'),
-        pk_button: g('fsc-button'),
+        pk_upload:   g('fsc-ul'),
+        pk_ping:     g('fsc-ping'),
+        pk_jitter:   g('fsc-jitter'),
+        pk_grade:    g('fsc-grade'),
+        pk_isp:      g('fsc-isp'),
+        pk_server:   g('fsc-server'),
+        pk_button:   g('fsc-button'),
       });
       ov._close();
       try { el._fspSig = ''; el.innerHTML = render(card); } catch (e) {}
@@ -385,7 +430,34 @@
   /* ── UPDATE / MOUNT ── */
   function update(card, hass, el) {
     const h = H(), c = cfgFor(card);
-    const sig = [CARD.version, S(h, c.pk_download), S(h, c.pk_upload), S(h, c.pk_ping), S(h, c.pk_jitter), S(h, c.pk_grade)].join('|');
+
+    if (_spTestTs > 0) {
+      const so = stateObj(h, c.pk_download);
+      const luTs = so && so.last_updated ? new Date(so.last_updated).getTime() : 0;
+      if (luTs > _spTestTs) {
+        _spTestTs = 0;
+        _spJustDone = true;
+        _spClrTimer();
+        el._fspSig = '';
+        el.innerHTML = render(card);
+        mount(card, hass, el);
+        _spTimer = setTimeout(function () {
+          _spJustDone = false;
+          _spTimer = null;
+          try { el._fspSig = ''; el.innerHTML = render(card); mount(card, null, el); } catch (e) {}
+        }, 30000);
+        return;
+      }
+      var runSig = 'running|' + _spTestTs + '|' + CARD.version;
+      if (el._fspSig !== runSig) {
+        el._fspSig = runSig;
+        el.innerHTML = render(card);
+        mount(card, hass, el);
+      }
+      return;
+    }
+
+    const sig = [CARD.version, S(h, c.pk_download), S(h, c.pk_upload), S(h, c.pk_ping), S(h, c.pk_jitter), S(h, c.pk_grade), String(_spJustDone)].join('|');
     if (!el.querySelector('.fc-card') || el._fspSig !== sig) {
       el._fspSig = sig;
       el.innerHTML = render(card);
@@ -401,10 +473,20 @@
       const sya = e.target.closest('[data-sya]'); if (!sya) return;
       const a = sya.dataset.sya, c = cfgFor(card);
       if (a === 'run-test') {
+        if (_spTestTs > 0) return;
+        _spJustDone = false;
+        _spClrTimer();
+        _spTestTs = Date.now();
+        el._fspBound = null;
+        el._fspSig = '';
+        el.innerHTML = render(card);
+        mount(card, null, el);
         callSvc('button', 'press', { entity_id: c.pk_button });
-        sya.textContent = '⏳ Test avviato…';
-        sya.style.opacity = '.6';
-        setTimeout(function () { try { sya.textContent = '⚡ Avvia Test'; sya.style.opacity = ''; } catch (_) {} }, 3000);
+        _spTimer = setTimeout(function () {
+          _spTestTs = 0;
+          _spTimer = null;
+          try { el._fspSig = ''; el.innerHTML = render(card); mount(card, null, el); } catch (e) {}
+        }, 120000);
         return;
       }
       if (a === 'cfg') { openCfg(card, el); return; }
@@ -417,8 +499,8 @@
     id: 'speedtest-card',
     name: 'Speedtest',
     icon: '🌐',
-    version: '1.0',
-    desc: 'Monitoraggio connessione internet: download, upload, ping, jitter e bufferbloat. Richiede integrazione Ookla Speedtest.',
+    version: '1.1',
+    desc: 'Monitoraggio connessione internet: scaricamento, caricamento, ping, jitter e bufferbloat. Richiede integrazione Ookla Speedtest.',
     colSpan: 2,
     rowSpan: 3,
     frarik_no_edit: true,

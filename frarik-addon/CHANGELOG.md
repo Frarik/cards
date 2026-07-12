@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.0.5 — 2026-07-12
+
+### feat(speedtest-card): animazione test + etichette italiane + reset 30s v1.1
+
+- Etichette tutte in italiano: SCARICAMENTO / CARICAMENTO / Provider / Avvia Test / ecc.
+- Animazione running: doppio anello CSS con stroke-dashoffset in movimento, puntini lampeggianti, ⏳ pulsante
+- Barra statistiche mostra "…" durante il test (dati nascosti perché non aggiornati)
+- Pill header mostra IN CORSO / COMPLETATO / OK con colore dinamico
+- Rilevamento completamento test: confronto last_updated del sensore download con timestamp avvio
+- Bordo verde + bottone "✅ Completato!" per 30s dopo il test, poi reset automatico ad IDLE
+- Timeout automatico 120s se HA non aggiorna (fallback di sicurezza)
+- Sensori già configurati rimangono intatti al bump di versione (localStorage key invariata)
+- `el._fspBound = null` prima del re-render da click per forzare re-mount del handler
+
 ## 2.0.4 — 2026-07-12
 
 ### feat(speedtest-card): nuova card monitoraggio connessione internet
