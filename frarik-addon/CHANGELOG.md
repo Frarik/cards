@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.7 — 2026-07-12
+
+### fix(speedtest-card): altezza costante tra running e completato + timer 10s v1.3
+
+- `val()`: riga unità (Mbit/s / ms) sempre renderizzata, non solo quando v!=null → altezza box identica in tutti gli stati
+- Bufferbloat row: sempre presente (con "—" se non disponibile), non aggiunta solo dopo il test → niente salto di altezza
+- Timer fallback ridotto da 40s a 10s come richiesto
+
 ## 2.0.6 — 2026-07-12
 
 ### fix(speedtest-card): layout compatto + fix test bloccato + split hero 50/50
