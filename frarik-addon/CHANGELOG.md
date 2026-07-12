@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.26 — 2026-07-12
+
+### fix(tv-card): tasto TV usa remote.send_command TV v2.2
+
+- Pulsante "📡 TV" ora invia `remote.send_command` con `command: TV` (KEYCODE_TV) invece di `select_source` — torna ai canali TV dal vivo anche dalla home
+
 ## 2.0.25 — 2026-07-12
 
 ### fix(tv-card): default comandi navigazione DPAD_* v2.1

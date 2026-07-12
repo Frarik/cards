@@ -1,8 +1,8 @@
-/* frarik-version: 2.1 */
+/* frarik-version: 2.2 */
 (function () {
   'use strict';
 
-  var CARD_VER = '2.1';
+  var CARD_VER = '2.2';
 
   function H() { try { if (typeof window.frarikHass === 'function') { var h = window.frarikHass(); if (h && h.states) return h; } } catch (e) {} return null; }
   function keyOf(c) { return 'frarik_tvcard_' + (c.id || 'x'); }
@@ -483,7 +483,7 @@
       if(a==='app-netflix'){ callSvc('media_player','select_source',{entity_id:cfg().pk_tv,source:'Netflix'}); return; }
       if(a==='app-youtube'){ callSvc('media_player','select_source',{entity_id:cfg().pk_tv,source:'YouTube'}); return; }
       if(a==='app-spotify'){ callSvc('media_player','select_source',{entity_id:cfg().pk_tv,source:'Spotify'}); return; }
-      if(a==='app-tv')     { callSvc('media_player','select_source',{entity_id:cfg().pk_tv,source:'TV'});      return; }
+      if(a==='app-tv')     { remCmd('TV'); return; }
       /* number buttons */
       if(a&&a.startsWith('num-')){ remCmd(a.replace('num-','')); return; }
       /* soundbar */
