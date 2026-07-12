@@ -1,4 +1,4 @@
-/* frarik-version: 1.2 */
+/* frarik-version: 1.3 */
 (function () {
   'use strict';
 
@@ -46,14 +46,14 @@
     var kf = '', bars = '';
     base.forEach(function (h, i) {
       if (playing) kf += '@keyframes aleq' + i + '{0%,100%{height:' + h + 'px}50%{height:' + peak[i] + 'px}}';
-      bars += '<div style="width:4px;flex-shrink:0;border-radius:2px;align-self:flex-end;background:' + col + ';'
+      bars += '<div style="flex:1;min-width:3px;border-radius:2px;align-self:flex-end;background:' + col + ';'
         + (playing
-            ? 'height:' + h + 'px;animation:aleq' + i + ' ' + durs[i] + 's ease-in-out ' + dels[i] + 's infinite;box-shadow:0 0 4px ' + col + '88'
-            : 'height:' + h + 'px;opacity:.25')
+            ? 'height:' + h + 'px;animation:aleq' + i + ' ' + durs[i] + 's ease-in-out ' + dels[i] + 's infinite;box-shadow:0 0 5px ' + col + '99'
+            : 'height:' + h + 'px;opacity:.22')
         + '"></div>';
     });
     return (playing ? '<style>' + kf + '</style>' : '')
-      + '<div style="display:flex;align-items:flex-end;gap:3px;height:22px">' + bars + '</div>';
+      + '<div style="display:flex;align-items:flex-end;gap:3px;height:22px;width:100%">' + bars + '</div>';
   }
 
   /* ── VINYL SVG fallback ── */
@@ -93,8 +93,8 @@
     var album   = attrs.media_album_name || '';
     var pic     = attrs.entity_picture   || '';
     var vol     = Math.round((attrs.volume_level != null ? attrs.volume_level : 0.5) * 100);
-    var muted   = !!attrs.is_volume_muted;
-    var shuffle = !!attrs.shuffle;
+    var muted   = attrs.is_volume_muted === true || attrs.is_volume_muted === 'true';
+    var shuffle = attrs.shuffle === true || attrs.shuffle === 'true';
     var repeat  = attrs.repeat || 'off';
     var dur     = parseFloat(attrs.media_duration) || 0;
     var pos     = parseFloat(attrs.media_position) || 0;
@@ -337,19 +337,22 @@
 
   /* ── UPDATE ── */
   function update(card, hass, el) {
-    if (el._axVolDragging) return; /* don't interrupt active volume drag */
+    if (el._axVolDragging) return;
     var h = H(), c = cfgFor(card);
     var eid = c.pk_player;
     var st = S(h, eid);
     var at = (h && h.states && h.states[eid] && h.states[eid].attributes) || {};
     var sig = [CARD.version, st, at.media_title, at.media_artist, at.entity_picture,
-               Math.round((at.volume_level||0)*100), !!at.is_volume_muted,
-               !!at.shuffle, at.repeat, Math.floor(at.media_position||0)].join('|');
+               Math.round((at.volume_level||0)*100),
+               (at.is_volume_muted === true || at.is_volume_muted === 'true'),
+               (at.shuffle === true || at.shuffle === 'true'),
+               at.repeat, Math.floor(at.media_position||0)].join('|');
     if (!el.querySelector('.fc-card') || el._axSig !== sig) {
-      el._axSig = sig;
+      el._axSig  = sig;
+      el._axBound = null; /* reset: dopo re-render mount deve ri-attaccare i listener */
       el.innerHTML = render(card);
-      mount(card, hass, el);
     }
+    mount(card, hass, el); /* sempre, anche senza re-render (sicurezza al primo ciclo) */
   }
 
   /* ── MOUNT ── */
@@ -377,11 +380,12 @@
       }
       if (a==='shuffle') {
         var h3=H(), at3=(h3&&h3.states&&h3.states[eid()]&&h3.states[eid()].attributes)||{};
-        callSvc('media_player','shuffle_set',{entity_id:eid(),shuffle:!at3.shuffle}); return;
+        var curShuffle = at3.shuffle === true || at3.shuffle === 'true';
+        callSvc('media_player','shuffle_set',{entity_id:eid(),shuffle:!curShuffle}); return;
       }
       if (a==='repeat') {
         var h4=H(), at4=(h4&&h4.states&&h4.states[eid()]&&h4.states[eid()].attributes)||{};
-        var modes=['off','all','one'], cur=at4.repeat||'off';
+        var modes=['off','all','one'], cur=String(at4.repeat||'off');
         callSvc('media_player','repeat_set',{entity_id:eid(),repeat:modes[(modes.indexOf(cur)+1)%modes.length]}); return;
       }
     };
@@ -463,7 +467,7 @@
     id: 'alexa-card',
     name: 'Alexa Media',
     icon: '🔊',
-    version: '1.2',
+    version: '1.3',
     desc: 'Controllo media player Alexa/Amazon Echo: album art animata, equalizzatore, play/pausa/stop, shuffle, repeat, volume slide in tempo reale.',
     colSpan: 2,
     rowSpan: 3,

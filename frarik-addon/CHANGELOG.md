@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.12 — 2026-07-12
+
+### fix(alexa-card): tasti shuffle/repeat funzionanti + equalizzatore full-width v1.3
+
+- **Bug fix critico**: `update()` resettava `_axBound` solo al primo render → dopo ogni re-render i click handler puntavano al DOM vecchio → tasti non rispondevano. Fix: reset `_axBound = null` prima di ogni re-render + `mount()` chiamato sempre
+- **Bug fix shuffle/mute**: `attrs.shuffle` può essere stringa `'false'` → `!attrs.shuffle` = `false` (sempre disattivato). Fix: confronto esplicito `=== true || === 'true'` per shuffle, mute e repeat
+- **Equalizzatore**: barre `flex:1` + container `width:100%` → occupano tutta la larghezza della colonna destra
+- Barre con `box-shadow` glow potenziato a `99` durante riproduzione
+
 ## 2.0.11 — 2026-07-12
 
 ### fix(alexa-card): sfondo standard + equalizzatore esteso + glow attivi v1.2
