@@ -17,7 +17,7 @@ homeassistant:
 
         Device per notifica push: &push notify.IL_TUO_MOBILE_APP
 
-        Media Player Alexa: &alexa media_player.IL_TUO_ALEXA
+        Media Player Alexa: &alexa IL_TUO_ALEXA
 
 ####################################################
 #                                                  #

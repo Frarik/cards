@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.2 — 2026-07-12
+
+### fix(pkg-bolletta): rimosso prefisso media_player. dal template (evitava media_player.media_player.xxx)
+
+- frarik_bolletta.yaml: `media_player.IL_TUO_ALEXA` → `IL_TUO_ALEXA`
+- Il template ora usa solo il placeholder puro; l'utente inserisce l'entity ID completo nel wizard
+
 ## 2.0.1 — 2026-07-12
 
 ### fix(pkg): correzione errori YAML UPS e Bolletta + wizard pre-fill valori precedenti
