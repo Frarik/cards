@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.17 — 2026-07-12
+
+### feat(alexa-card): timer countdown + input personalizzato v1.8
+
+- **Timer countdown**: cliccando un preset il timer parte subito. Barra di avanzamento animata + countdown live (Xm XXs) aggiornato ogni secondo via setInterval diretto sul DOM (no re-render)
+- **Input personalizzato**: campo numerico accanto ai preset (1-240 min) + pulsante ▶. Invio con Enter. Rosso se valore non valido. Focus guard blocca re-render durante digitazione
+- **Annullamento**: pulsante ✕ accanto al countdown per cancellare il timer
+- **Timer stato**: persiste tra re-render tramite variabile di modulo `_timerState`; l'intervallo si riavvia correttamente dopo ogni re-render
+- **Sorgente**: popup mostra lista da `source_list` dell'entità; nota informativa per quando c'è solo "Local Speaker"
+
 ## 2.0.16 — 2026-07-12
 
 ### feat(alexa-card): preset volume + selezione sorgente + timer opzionale v1.7
