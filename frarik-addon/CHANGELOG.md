@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.8 — 2026-07-12
+
+### fix(speedtest-card): hero a altezza fissa — card identica in tutti gli stati v1.4
+
+- Hero container: cambiato da `flex:1` a `height:120px;flex-shrink:0` — il container non può mai crescere/restringersi con il contenuto
+- Righe box: ognuna con `flex:1;overflow:hidden` dentro il container fisso — si dividono lo spazio equamente (≈51px ciascuna), mai variabile
+- Box: `justify-content:center;overflow:hidden` — il contenuto si centra senza espandere il layout
+- Bufferbloat grade spostato nel footer (con badge colorato) — elimina riga extra nel corpo della card
+- Font value aumentato a 18px (da 16px) per migliore leggibilità nel nuovo layout più compatto
+
 ## 2.0.7 — 2026-07-12
 
 ### fix(speedtest-card): altezza costante tra running e completato + timer 10s v1.3

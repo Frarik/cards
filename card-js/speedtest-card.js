@@ -1,4 +1,4 @@
-/* frarik-version: 1.3 */
+/* frarik-version: 1.4 */
 (function () {
   'use strict';
 
@@ -159,42 +159,44 @@
 
     function val(v, unit, col) {
       var txt = (v != null && !isRunning) ? (unit === 'ms' ? v.toFixed(v<100?1:0) : fmtSpd(v)) : '—';
-      return '<div style="font-size:16px;font-weight:900;color:' + (isRunning ? '#475569' : col) + ';line-height:1.1">' + txt + '</div>'
-        + '<div style="font-size:9px;font-weight:600;color:rgba(255,255,255,.38);margin-top:1px">' + unit + '</div>';
+      return '<div style="font-size:18px;font-weight:900;color:' + (isRunning ? '#475569' : col) + ';line-height:1">' + txt + '</div>'
+        + '<div style="font-size:8px;font-weight:600;color:rgba(255,255,255,.38);margin-top:2px">' + unit + '</div>';
     }
 
     function box(icon, lbl, vNode) {
-      return '<div style="flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:1px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:7px 8px">'
-        + '<div style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:3px">' + icon + ' ' + lbl + '</div>'
+      return '<div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:2px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:0 8px;overflow:hidden">'
+        + '<div style="font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.4)">' + icon + ' ' + lbl + '</div>'
         + vNode
         + '</div>';
     }
 
-    const heroR = '<div style="flex:1;display:flex;flex-direction:column;gap:5px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:10px;overflow:hidden">'
-      + '<div style="display:flex;gap:5px">'
+    const heroR = '<div style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:10px;overflow:hidden">'
+      + '<div style="display:flex;gap:4px;flex:1;overflow:hidden">'
       + box('↓', 'Scaricamento', val(dl, 'Mbit/s', dlC))
       + box('↑', 'Caricamento',  val(ul, 'Mbit/s', ulC))
       + '</div>'
-      + '<div style="display:flex;gap:5px">'
+      + '<div style="display:flex;gap:4px;flex:1;overflow:hidden">'
       + box('⚡', 'Ping',         val(ping,   'ms', piC))
       + box('〜', 'Jitter',       val(jitter, 'ms', '#fff'))
       + '</div>'
-      + '<div style="display:flex;align-items:center;gap:6px;padding:4px 8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px">'
-        + '<span style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.4)">Bufferbloat</span>'
-        + (grade && !isRunning
-          ? '<div style="min-width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;background:' + grCol + '22;border:1px solid ' + grCol + '55;color:' + grCol + ';margin-left:auto">' + grade + '</div>'
-          : '<span style="font-size:13px;font-weight:800;color:#475569;margin-left:auto">—</span>')
-        + '</div>'
       + '</div>';
 
-    const footer = '<div style="display:flex;gap:5px;margin:0 14px 7px;flex-shrink:0">'
+    const grBadge = (grade && !isRunning)
+      ? '<div style="flex-shrink:0;min-width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;background:' + grCol + '22;border:1px solid ' + grCol + '55;color:' + grCol + '">' + grade + '</div>'
+      : '<span style="font-size:11px;font-weight:800;color:#475569">—</span>';
+
+    const footer = '<div style="display:flex;gap:5px;margin:0 14px 7px;flex-shrink:0;align-items:stretch">'
       + '<div style="flex:1;display:flex;align-items:center;gap:5px;padding:4px 8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;overflow:hidden">'
-      + '<span style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.38);flex-shrink:0">Provider</span>'
+      + '<span style="font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.38);flex-shrink:0">ISP</span>'
       + '<span style="font-size:10px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + isp + '</span>'
       + '</div>'
       + '<div style="flex:1;display:flex;align-items:center;gap:5px;padding:4px 8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;overflow:hidden">'
-      + '<span style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.38);flex-shrink:0">Server</span>'
+      + '<span style="font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.38);flex-shrink:0">Server</span>'
       + '<span style="font-size:10px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + server + '</span>'
+      + '</div>'
+      + '<div style="flex-shrink:0;display:flex;align-items:center;gap:4px;padding:4px 8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px">'
+      + '<span style="font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.38)">Grade</span>'
+      + grBadge
       + '</div>'
       + '</div>';
 
@@ -229,8 +231,8 @@
       + '<div class="fc-gear" data-sya="cfg">⚙</div>'
       + '</div>'
       + '<div class="fc-scroll">'
-      + '<div style="display:flex;align-items:stretch;padding:10px 14px 8px;flex:1;gap:0">'
-      + '<div style="flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;max-height:135px">' + _speedSVG(dl,ul,maxVal,dlC,ulC,isRunning,justDone) + '</div>'
+      + '<div style="display:flex;align-items:stretch;padding:8px 14px 6px;height:120px;flex-shrink:0;">'
+      + '<div style="flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center">' + _speedSVG(dl,ul,maxVal,dlC,ulC,isRunning,justDone) + '</div>'
       + heroR
       + '</div>'
       + footer
@@ -400,7 +402,7 @@
 
   /* ── CARD ── */
   var CARD = {
-    id: 'speedtest-card', name: 'Speedtest', icon: '🌐', version: '1.3',
+    id: 'speedtest-card', name: 'Speedtest', icon: '🌐', version: '1.4',
     desc: 'Monitoraggio connessione: scaricamento, caricamento, ping, jitter, bufferbloat. Richiede integrazione Ookla Speedtest.',
     colSpan: 2, rowSpan: 3, frarik_no_edit: true,
     render: function(card){ return render(card); },
