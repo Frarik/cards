@@ -1,4 +1,4 @@
-/* frarik-version: 1.0 */
+/* frarik-version: 1.1 */
 (function () {
   'use strict';
 
@@ -15,6 +15,8 @@
     return {
       pk_main:        'sensor.alimentazione_ups_tecnoware',
       pk_stato:       'sensor.tecnoware_dati_di_stato',
+      pk_tipo:        'sensor.tecnoware_tipo_di_ups',
+      pk_stato_txt:   'sensor.tecnoware_stato',
       pk_batteria:    'sensor.tecnoware_carica_batterie',
       pk_carico:      'sensor.tecnoware_carico',
       pk_vin:         'sensor.tecnoware_tensione_di_ingresso',
@@ -265,6 +267,8 @@
       + row('Data ripristino', S(h, c.pk_ripristino), '#fff')
       + sec('🔋 Stato UPS')
       + row('Stato', S(h, c.pk_stato), '#38bdf8')
+      + row('Stato testuale', S(h, c.pk_stato_txt), '#7dd3fc')
+      + row('Modello / Tipo', S(h, c.pk_tipo), '#fff')
       + row('Batteria', batVal != null ? batVal + ' %' : null, '#38bdf8')
       + row('Carico', caricoVal != null ? caricoVal + ' %' : null, '#a78bfa')
       + row('Tensione ingresso', vinVal != null ? vinVal + ' V' : null, '#7dd3fc')
@@ -359,8 +363,10 @@
     const formHtml = '<div style="margin-bottom:10px"><label style="' + stLbl + '">Nome card</label>'
       + '<input id="ups-cf-name" type="text" value="' + (cf.name || '').replace(/"/g, '&quot;') + '" placeholder="es. UPS Server" style="' + stInp.replace('monospace', 'system-ui') + '"></div>'
       + '<div style="' + stSec + '">Sensori principali</div>'
-      + field('ups-cf-main',   'Sensore aggregato',      cf.pk_main,    'sensor.alimentazione_ups_tecnoware')
-      + field('ups-cf-stato',  'Stato raw (OL/OB)',      cf.pk_stato,   'sensor.tecnoware_dati_di_stato')
+      + field('ups-cf-main',   'Sensore aggregato',      cf.pk_main,      'sensor.alimentazione_ups_tecnoware')
+      + field('ups-cf-stato',  'Stato raw (OL/OB)',      cf.pk_stato,     'sensor.tecnoware_dati_di_stato')
+      + field('ups-cf-tipo',   'Tipo / Modello UPS',     cf.pk_tipo,      'sensor.tecnoware_tipo_di_ups')
+      + field('ups-cf-stxt',   'Stato testuale',         cf.pk_stato_txt, 'sensor.tecnoware_stato')
       + '<div style="' + stSec + '">Sensori fisici</div>'
       + field('ups-cf-batt',   'Carica batteria %',      cf.pk_batteria, 'sensor.tecnoware_carica_batterie')
       + field('ups-cf-carico', 'Carico UPS %',           cf.pk_carico,   'sensor.tecnoware_carico')
@@ -386,7 +392,7 @@
       + '<button id="ups-cf-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#38bdf8;color:#060d14">Salva</button>'
       + '</div>';
 
-    const fieldIds = ['ups-cf-main','ups-cf-stato','ups-cf-batt','ups-cf-carico','ups-cf-vin','ups-cf-vout',
+    const fieldIds = ['ups-cf-main','ups-cf-stato','ups-cf-tipo','ups-cf-stxt','ups-cf-batt','ups-cf-carico','ups-cf-vin','ups-cf-vout',
       'ups-cf-bo-og','ups-cf-bo-me','ups-cf-bo-an','ups-cf-bo-tot',
       'ups-cf-dur','ups-cf-data','ups-cf-rip','ups-cf-sgav','ups-cf-sgspg','ups-cf-nte','ups-cf-ntb','ups-cf-nts'];
     const ov = mkOv(popShell('🔋', '56,189,248', 'Configura UPS', card.id || '', 'ups-cf-close', formHtml), 'ups-cf-close');
@@ -417,6 +423,7 @@
       save(card, {
         name: g('ups-cf-name'),
         pk_main: g('ups-cf-main'), pk_stato: g('ups-cf-stato'),
+        pk_tipo: g('ups-cf-tipo'), pk_stato_txt: g('ups-cf-stxt'),
         pk_batteria: g('ups-cf-batt'), pk_carico: g('ups-cf-carico'),
         pk_vin: g('ups-cf-vin'), pk_vout: g('ups-cf-vout'),
         pk_bo_oggi: g('ups-cf-bo-og'), pk_bo_mese: g('ups-cf-bo-me'),
@@ -460,7 +467,7 @@
     id: 'ups-card',
     name: 'UPS',
     icon: '🔋',
-    version: '1.0',
+    version: '1.1',
     colSpan: 2,
     rowSpan: 3,
     frarik_no_edit: true,

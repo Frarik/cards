@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.9.99 — 2026-07-12
+
+### feat(ups): aggiunto tipo UPS e stato testuale
+
+- `pkg/frarik_ups.yaml`: aggiunti `IL_TUO_SENSORE_TIPO_UPS` e `IL_TUO_SENSORE_STATO` come placeholder configurabili dal wizard
+- Template sensor: nuovi attributi `tipo_ups` e `stato_ups` nell'entità aggregata
+- `ups-card.js` v1.1: `pk_tipo` e `pk_stato_txt` in pkDefaults, mostrati nel popup Storico e nel config wizard
+- bump 1.9.98 → 1.9.99
+
 ## 1.9.98 — 2026-07-12
 
 ### fix(pkg/ups): aggiunto placeholder IL_TUO_* per tutti i sensori UPS
