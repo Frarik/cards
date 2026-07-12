@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.18 — 2026-07-12
+
+### fix(alexa-card): timer reale Alexa via sequence_command v1.9
+
+- Sostituito `notify` TTS con `alexa_media_player.sequence_command` + `Alexa.DeviceControls.SetTimer`
+- Alexa imposta ora il timer reale invece di leggerlo ad alta voce
+- `sequence_value` passa i secondi (min × 60) come intero
+
 ## 2.0.17 — 2026-07-12
 
 ### feat(alexa-card): timer countdown + input personalizzato v1.8

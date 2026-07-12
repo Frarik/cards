@@ -1,4 +1,4 @@
-/* frarik-version: 1.8 */
+/* frarik-version: 1.9 */
 (function () {
   'use strict';
 
@@ -442,7 +442,12 @@
     if(_timerState[cid]&&!_timerState[cid].done) startTimerIv();
 
     function startTimer(min){
-      sendTts(timerTtsMsg(min));
+      /* sequence_command sets a REAL Alexa timer, not TTS */
+      callSvc('alexa_media_player','sequence_command',{
+        entity_id:eid(),
+        sequence_type:'Alexa.DeviceControls.SetTimer',
+        sequence_value:min*60
+      });
       _timerState[cid]={startMs:Date.now(),durationMs:min*60000,minutes:min,done:false};
       startTimerIv();
       el._axSig='';el._axBound=null;el.innerHTML=render(card);mount(card,null,el);
@@ -536,7 +541,7 @@
 
   /* ── REGISTRATION ── */
   var CARD={
-    id:'alexa-card',name:'Alexa Media',icon:'🔊',version:'1.8',
+    id:'alexa-card',name:'Alexa Media',icon:'🔊',version:'1.9',
     desc:'Alexa: album art, equalizzatore, sorgente, preset volume, timer countdown, TTS inline.',
     colSpan:2,rowSpan:3,frarik_no_edit:true,
     render:function(card){return render(card);},
