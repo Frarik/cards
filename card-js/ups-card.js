@@ -1,4 +1,4 @@
-/* frarik-version: 1.1 */
+/* frarik-version: 1.2 */
 (function () {
   'use strict';
 
@@ -467,16 +467,21 @@
     id: 'ups-card',
     name: 'UPS',
     icon: '🔋',
-    version: '1.1',
+    version: '1.2',
+    desc: 'Monitoraggio UPS: batteria, carico, tensioni, storico blackout e notifiche push. Richiede PKG UPS Tecnoware.',
     colSpan: 2,
     rowSpan: 3,
     frarik_no_edit: true,
+    frarik_pkg_id: 'frarik_ups',
+    frarik_pkg_check: 'sensor.alimentazione_ups_tecnoware',
+    frarik_pkg_version: '1.0',
     render: function (card) { return render(card); },
     mount: function (card, hass, el) { return mount(card, hass, el); },
     update: function (card, hass, el) { return update(card, hass, el); },
   };
 
-  if (window.FratechCardRegistry && window.FratechCardRegistry.register) {
-    window.FratechCardRegistry.register(CARD);
-  }
+  window.FratechCardRegistry = window.FratechCardRegistry || {};
+  window.FratechCardRegistry[CARD.id] = CARD;
+  window.FratechCards = window.FratechCards || {};
+  window.FratechCards[CARD.id] = CARD;
 })();

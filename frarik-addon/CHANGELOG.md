@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.0.0 — 2026-07-12
+
+### fix(ups-card): registrazione corretta + fix tasto aggiungi/cancella store
+
+- **Bug critico**: `FratechCardRegistry.register()` non esiste → la card non si registrava mai → niente tasti Aggiungi/Cancella nello store
+- Corretto con `window.FratechCardRegistry[CARD.id] = CARD` (stesso pattern di Lavatrice e tutte le altre card)
+- Aggiunti `frarik_pkg_id: 'frarik_ups'`, `frarik_pkg_check`, `frarik_pkg_version` per il link PKG nello store
+- Aggiunta `desc` visibile nello store
+- ups-card v1.1 → v1.2
+
+### fix(store): wizard PKG riaperto all'aggiornamento per card senza openWizard
+
+- `_pkgGenericInstall`: se il YAML contiene placeholder `IL_TUO_*`, apre `_pkgShowWizard` prima di installare
+- Prima il PKG veniva reinstallato raw senza chiedere i sensori all'utente
+- bump 1.9.99 → 2.0.0
+
 ## 1.9.99 — 2026-07-12
 
 ### feat(ups): aggiunto tipo UPS e stato testuale
