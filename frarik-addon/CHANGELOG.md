@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.14 — 2026-07-12
+
+### fix(alexa-card): shuffle/repeat sempre attivi v1.5
+
+- Rimosso check `supported_features`: alexa_media_player non espone correttamente il bitmask → i tasti venivano disabilitati erroneamente
+- Shuffle, repeat, stop, volume e mute sempre cliccabili
+
 ## 2.0.13 — 2026-07-12
 
 ### feat(alexa-card): TTS inline + fix shuffle/repeat + supported_features check v1.4

@@ -1,4 +1,4 @@
-/* frarik-version: 1.4 */
+/* frarik-version: 1.5 */
 (function () {
   'use strict';
 
@@ -101,16 +101,8 @@
     var repeat  = attrs.repeat || 'off';
     var dur     = parseFloat(attrs.media_duration) || 0;
     var pos     = parseFloat(attrs.media_position) || 0;
-    var sf      = parseInt(attrs.supported_features) || 0;
-
-    /* feature flags */
-    var canShuffle = !!(sf & SF_SHUFFLE);
-    var canRepeat  = !!(sf & SF_REPEAT);
-    var canStop    = !!(sf & SF_STOP);
-    var canVol     = !!(sf & SF_VOLUME_SET);
-    var canMute    = !!(sf & SF_VOLUME_MUTE);
-    /* alexa_media_player sometimes reports 0 — treat 0 as "all supported" */
-    if (sf === 0) { canShuffle=true; canRepeat=true; canStop=true; canVol=true; canMute=true; }
+    /* alexa_media_player non espone correttamente supported_features — sempre attivi */
+    var canShuffle = true, canRepeat = true, canStop = true, canVol = true, canMute = true;
 
     var stateLabels = { playing:'In riproduzione', paused:'In pausa', idle:'Inattivo', standby:'Standby', off:'Spento', unavailable:'Non disponibile' };
     var stateLbl = stateLabels[state] || state;
@@ -502,7 +494,7 @@
 
   /* ── REGISTRATION ── */
   var CARD = {
-    id: 'alexa-card', name: 'Alexa Media', icon: '🔊', version: '1.4',
+    id: 'alexa-card', name: 'Alexa Media', icon: '🔊', version: '1.5',
     desc: 'Controllo Alexa: album art animata, equalizzatore, play/stop/shuffle/repeat, volume real-time, TTS inline.',
     colSpan: 2, rowSpan: 3, frarik_no_edit: true,
     render: function (card)          { return render(card); },
