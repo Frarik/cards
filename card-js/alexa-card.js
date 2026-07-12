@@ -1,4 +1,4 @@
-/* frarik-version: 2.0 */
+/* frarik-version: 2.1 */
 (function () {
   'use strict';
 
@@ -221,8 +221,8 @@
     var css='<style>'
       +'@keyframes alArtPls{0%,100%{box-shadow:0 0 0 2px '+col+',0 4px 20px rgba('+rgb+',.4)}50%{box-shadow:0 0 0 3px '+col+',0 4px 28px rgba('+rgb+',.6),0 0 30px rgba('+rgb+',.25)}}'
       +'@keyframes alDot{0%,100%{opacity:.5}50%{opacity:1}}'
-      +'#'+rid+'{position:relative;width:100%;height:100%;min-height:285px;font-family:system-ui,sans-serif;display:block}'
-      +'#'+rid+' .fc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
+      +'#'+rid+'{position:relative;width:100%;height:100%;min-height:375px;font-family:system-ui,sans-serif;display:block}'
+      +'#'+rid+' .fc-card{display:flex;flex-direction:column;height:100%;min-height:375px;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
       +'#'+rid+' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:220px;background:radial-gradient(ellipse at 30% 0%,rgba('+rgb+',.1) 0%,transparent 65%);pointer-events:none}'
       +'#'+rid+' .fc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
       +'#'+rid+' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;background:rgba('+rgb+',.12);border:1px solid rgba('+rgb+',.25)}'
@@ -540,7 +540,7 @@
 
   /* ── REGISTRATION ── */
   var CARD={
-    id:'alexa-card',name:'Alexa Media',icon:'🔊',version:'2.0',
+    id:'alexa-card',name:'Alexa Media',icon:'🔊',version:'2.1',
     desc:'Alexa: album art, equalizzatore, sorgente, preset volume, timer countdown, TTS inline.',
     colSpan:2,rowSpan:3,frarik_no_edit:true,
     render:function(card){return render(card);},

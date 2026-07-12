@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.20 — 2026-07-12
+
+### fix(alexa-card): altezza card fissa indipendente dallo stato v2.1
+
+- `min-height: 375px` su `#rid` e `.fc-card`: la card ha sempre la stessa altezza sia attiva che inattiva
+- La sezione hero si espande con `flex:1` per riempire lo spazio extra quando non c'è contenuto multimediale
+
 ## 2.0.19 — 2026-07-12
 
 ### fix(alexa-card): timer card-side + annuncio scadenza v2.0
