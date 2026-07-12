@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.0.10 — 2026-07-12
+
+### fix(alexa-card): layout 2 colonne + volume real-time v1.1
+
+- Layout: album art a sinistra (fc-hero-img) / info a destra (fc-hero-r) — identico a UPS/Speedtest
+- Vinile SVG fallback anch'esso nella colonna sinistra
+- Volume: `el._axVolDragging` blocca i re-render durante il drag → niente più scatti
+- Volume: `applyVolUI()` aggiorna fill/knob/label direttamente nel DOM senza re-render
+- Volume: callSvc throttled 80ms durante il trascinamento + chiamata finale su mouseup/touchend
+- Separatori 1px tra hero / controlli / volume (stile UPS)
+
 ## 2.0.9 — 2026-07-12
 
 ### feat(alexa-card): nuova card media player Alexa v1.0
