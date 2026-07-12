@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.19 — 2026-07-12
+
+### fix(alexa-card): timer card-side + annuncio scadenza v2.0
+
+- Timer gestito interamente nella card (countdown visivo). Non richiede servizi Alexa speciali
+- Allo scadere: Alexa annuncia via TTS "Timer di X minuti scaduto!"
+- Rimosso tentativo sequence_command (non disponibile nell'integrazione)
+
 ## 2.0.18 — 2026-07-12
 
 ### fix(alexa-card): timer reale Alexa via sequence_command v1.9
