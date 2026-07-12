@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.0.22 — 2026-07-12
+
+### fix(tv-card): riscrittura completa servizi corretti v1.1
+
+- **Navigazione TV**: usa `remote.send_command` → `remote.tv_sala` (Android TV Remote) con comandi `up/down/left/right/center/back/home/menu/info`
+- **App shortcuts**: Netflix, YouTube, Spotify, TV via `remote.tv_sala` con comandi `netflix/youtube/spotify/tv`
+- **Riproduzione**: `play_pause/rewind/fast_forward/channel_up/channel_down` via `remote.tv_sala`
+- **Soundbar (LG via Broadlink IR)**: `remote.send_command` → `remote.broadlink` + `device: soundbar_lg` + comandi `volume_su/volume_giu/mute`
+- **Stato soundbar**: da `sensor.presa_tv_sala_potenza` (soglia W configurabile, default 30W)
+- **Config ⚙**: campi dedicati Broadlink (entity, device, cmd vol+/vol-/mute), sensore potenza soundbar, soglia
+- Rimosso `media_player.volume_up/down` (non funzionante su questo setup)
+- Default pre-compilati per la configurazione dell'utente (`remote.tv_sala`, `remote.broadlink`, `soundbar_lg`, `sensor.presa_tv_sala_potenza`)
+
 ## 2.0.21 — 2026-07-12
 
 ### feat(tv-card): nuova card TV con telecomando completo v1.0
