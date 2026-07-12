@@ -2,14 +2,14 @@
 
 ## 2.0.8 — 2026-07-12
 
-### fix(speedtest-card): altezza card identica in tutti gli stati — stessa struttura delle altre card v1.4
+### fix(speedtest-card): layout top-down — altezza card identica in tutti gli stati v1.4
 
-- Rimossa riga Bufferbloat dal corpo hero (era la causa del cambiamento altezza: badge 24px vs span inline ~13px = 11px di differenza)
-- Grade Bufferbloat spostato nel footer accanto a ISP e Server
-- Badge grade e "—" nel footer entrambi `height:20px` — footer sempre stessa altezza
-- Hero `flex:1` identico a ups-card/system-card/database-card — stessa altezza delle altre card
-- Righe box con `flex-shrink:0;overflow:hidden` — contenuto non espande il layout
-- Font value aumentato a 18px, `line-height:1` — altezza riga deterministica
+- Bufferbloat rimosso dal corpo hero (era la causa del cambiamento: badge 24px vs span inline ~13px)
+- Grade spostato nel footer con badge e "—" entrambi `height:20px` — footer sempre uguale
+- Hero `flex:1` identico a ups-card/system-card/database-card
+- Righe box: `flex:1;min-height:0;overflow:hidden` — si dividono lo spazio del hero in modo top-down, non crescono dal basso in base al contenuto
+- Box: `min-height:0;overflow:hidden` — non può mai espandersi oltre il proprio slot
+- Val(): `line-height:1` esplicito sul div valore — altezza riga deterministica in tutti gli stati
 
 ## 2.0.7 — 2026-07-12
 

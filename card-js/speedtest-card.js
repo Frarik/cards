@@ -164,18 +164,18 @@
     }
 
     function box(icon, lbl, vNode) {
-      return '<div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:2px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:0 8px;overflow:hidden">'
+      return '<div style="flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:2px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:0 8px;overflow:hidden">'
         + '<div style="font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.4)">' + icon + ' ' + lbl + '</div>'
         + vNode
         + '</div>';
     }
 
-    const heroR = '<div style="flex:1;display:flex;flex-direction:column;gap:5px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:10px;overflow:hidden">'
-      + '<div style="display:flex;gap:5px;overflow:hidden;flex-shrink:0">'
+    const heroR = '<div style="flex:1;display:flex;flex-direction:column;gap:5px;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:10px;overflow:hidden">'
+      + '<div style="display:flex;gap:5px;flex:1;min-height:0;overflow:hidden">'
       + box('↓', 'Scaricamento', val(dl, 'Mbit/s', dlC))
       + box('↑', 'Caricamento',  val(ul, 'Mbit/s', ulC))
       + '</div>'
-      + '<div style="display:flex;gap:5px;overflow:hidden;flex-shrink:0">'
+      + '<div style="display:flex;gap:5px;flex:1;min-height:0;overflow:hidden">'
       + box('⚡', 'Ping',         val(ping,   'ms', piC))
       + box('〜', 'Jitter',       val(jitter, 'ms', '#fff'))
       + '</div>'
