@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.16 — 2026-07-12
+
+### feat(alexa-card): preset volume + selezione sorgente + timer opzionale v1.7
+
+- **Preset volume**: row con 4 bottoni rapidi 25% / 50% / 75% / 100% tra volume slider e TTS. Il bottone attivo viene illuminato
+- **Selezione sorgente**: pill cliccabile (SORGENTE ▾) nella colonna destra della hero. Apre popup slide-up con lista sorgenti da `source_list`. Chiama `media_player.select_source`
+- **Timer opzionale**: bottone ⏱ nella riga controlli. Click → mostra/nasconde row con preset 5m / 10m / 15m / 30m / 1h. Ogni preset invia TTS Alexa per impostare il timer. Stato timer persiste tra re-render (variabile di modulo)
+
 ## 2.0.15 — 2026-07-12
 
 ### feat(alexa-card): rinomina inline cliccando sul titolo v1.6
