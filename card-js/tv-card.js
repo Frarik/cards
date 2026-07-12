@@ -1,8 +1,8 @@
-/* frarik-version: 2.3 */
+/* frarik-version: 2.4 */
 (function () {
   'use strict';
 
-  var CARD_VER = '2.3';
+  var CARD_VER = '2.4';
   var _sbMuted = {};
 
   function H() { try { if (typeof window.frarikHass === 'function') { var h = window.frarikHass(); if (h && h.states) return h; } } catch (e) {} return null; }
@@ -237,15 +237,15 @@
 
     /* ─ SOUNDBAR ─ */
     var isMuted = !!_sbMuted[cid];
-    var bSbPow = bBase+';width:100%;height:36px;font-size:11px;font-weight:800;gap:7px;border-radius:11px;margin-bottom:5px;'
-      +(sbOn?'background:rgba(74,222,128,.18);border:1px solid #4ade80;color:#4ade80;box-shadow:0 0 12px rgba(74,222,128,.3)'
-           :'background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.13);color:rgba(255,255,255,.5)');
     var bMuteActive = bBase+';flex:1;height:38px;font-size:12px;font-weight:700;gap:5px;border-radius:11px;background:rgba(248,113,113,.22);border:1px solid #f87171;color:#f87171;box-shadow:0 0 12px rgba(248,113,113,.35)';
     var sbRow = '<div class="fc-sec" style="padding-top:2px;padding-bottom:10px">'
-      +'<div style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:rgba(255,255,255,.2);margin-bottom:5px">🔊 Soundbar</div>'
-      +'<div style="'+bSbPow+';display:flex;align-items:center;justify-content:center" data-axa="sb-pw">'
-      +'<span>'+(sbOn?'●':'○')+'</span>'
-      +'<span>'+(sbOn?'Spegni Soundbar':'Accendi Soundbar')+'</span>'
+      +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">'
+      +'<span style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:rgba(255,255,255,.2)">🔊 Soundbar</span>'
+      +'<span style="display:flex;align-items:center;gap:4px;padding:2px 7px;border-radius:7px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)">'
+      +'<span style="width:5px;height:5px;border-radius:50%;background:'+(sbOn?'#4ade80':'#475569')+';flex-shrink:0'+(sbOn?';box-shadow:0 0 4px #4ade80':'')+'">'
+      +'</span>'
+      +'<span style="font-size:9px;font-weight:700;color:'+(sbOn?'rgba(74,222,128,.9)':'rgba(255,255,255,.3)')+'">'+sbW.toFixed(0)+'W</span>'
+      +'</span>'
       +'</div>'
       +'<div style="display:flex;gap:5px">'
       +'<div style="'+bSb+'" data-axa="sb-dn">🔉 VOL −</div>'
@@ -496,8 +496,7 @@
       /* soundbar */
       if(a==='sb-up'){ blCmd(cfg().bl_vol_up);  return; }
       if(a==='sb-dn'){ blCmd(cfg().bl_vol_down); return; }
-      if(a==='sb-pw'){ blCmd(cfg().bl_power); return; }
-      if(a==='sb-mu'){
+if(a==='sb-mu'){
         var cid2=card.id||'x';
         _sbMuted[cid2]=!_sbMuted[cid2];
         blCmd(cfg().bl_mute);

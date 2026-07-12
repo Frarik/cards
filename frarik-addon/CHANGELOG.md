@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.28 — 2026-07-12
+
+### fix(tv-card): rimosso tasto power soundbar v2.4
+
+- Rimosso pulsante "Accendi/Spegni Soundbar" — la soundbar è già gestita da un'automazione HA collegata alla TV
+- Mantenuto chip stato (W) accanto al titolo sezione Soundbar
+- Mantenuti VOL−, MUTE (toggle illuminato), VOL+
+
 ## 2.0.27 — 2026-07-12
 
 ### feat(tv-card): mute illuminato + tasto power soundbar + touchpad pulito v2.3
