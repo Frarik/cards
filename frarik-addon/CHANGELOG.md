@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.0.33 — 2026-07-12
+
+### fix(alexa-card): tutte le scritte bianche al 100% v2.2
+
+- Artista, album, stato inattivo: `rgba(255,255,255,.65/.38/.28)` → `#fff`
+- Timestamp progresso (pos/dur): `rgba(255,255,255,.3)` → `#fff`
+- Label "SORGENTE" e freccia dropdown: `rgba(255,255,255,.35/.4)` → `#fff`
+- Bottoni inattivi (bOff, timer): `rgba(255,255,255,.6)` → `#fff`
+- Label "Timer in corso" e ✕ annulla: `rgba(255,255,255,.35/.3)` → `#fff`
+- Preset timer (pill): `rgba(255,255,255,.7)` → `#fff`
+- Preset volume inattivi: `rgba(255,255,255,.5)` → `#fff`
+- Label percentuale volume: `rgba(255,255,255,.45)` → `#fff`
+- Popup configurazione: label campi `#94a3b8` → `#fff`, testo input `#f1f5f9` → `#fff`, hint → `#fff`, dropdown items `#e2e8f0` → `#fff`
+- Popup sorgente: footer e "Nessuna sorgente" → `#fff`
+
 ## 2.0.32 — 2026-07-12
 
 ### feat(tv-card): struttura hero identica alle altre card v2.8

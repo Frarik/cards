@@ -113,35 +113,35 @@
     var infoRows='';
     if(isActive&&title){
       infoRows+='<div style="font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2">'+_esc(title)+'</div>';
-      if(artist) infoRows+='<div style="font-size:10px;font-weight:600;color:rgba(255,255,255,.65);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">'+_esc(artist)+'</div>';
-      if(album)  infoRows+='<div style="font-size:9px;font-weight:500;color:rgba(255,255,255,.38);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+_esc(album)+'</div>';
+      if(artist) infoRows+='<div style="font-size:10px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">'+_esc(artist)+'</div>';
+      if(album)  infoRows+='<div style="font-size:9px;font-weight:500;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+_esc(album)+'</div>';
     } else {
-      infoRows+='<div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.28)">'+stateLbl+'</div>';
+      infoRows+='<div style="font-size:12px;font-weight:700;color:#fff">'+stateLbl+'</div>';
     }
     if(isActive&&dur>0){
       infoRows+='<div style="margin-top:4px">'
         +'<div style="height:3px;border-radius:2px;background:rgba(255,255,255,.07);overflow:hidden">'
         +'<div style="height:100%;width:'+Math.round(Math.min(1,pos/dur)*100)+'%;background:'+col+';border-radius:2px"></div></div>'
         +'<div style="display:flex;justify-content:space-between;margin-top:2px">'
-        +'<span style="font-size:8px;color:rgba(255,255,255,.3)">'+fmtTime(pos)+'</span>'
-        +'<span style="font-size:8px;color:rgba(255,255,255,.3)">'+fmtTime(dur)+'</span>'
+        +'<span style="font-size:8px;color:#fff">'+fmtTime(pos)+'</span>'
+        +'<span style="font-size:8px;color:#fff">'+fmtTime(dur)+'</span>'
         +'</div></div>';
     }
     infoRows+='<div style="margin-top:5px">'+eqBars(isActive?col:'rgba(255,255,255,.18)',isPlaying)+'</div>';
     if(sourceList.length){
       infoRows+='<div data-axa="source-open" style="margin-top:5px;display:flex;align-items:center;gap:5px;cursor:pointer;padding:3px 7px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);overflow:hidden;user-select:none">'
-        +'<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.35);flex-shrink:0">SORGENTE</span>'
+        +'<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#fff;flex-shrink:0">SORGENTE</span>'
         +'<span style="font-size:10px;font-weight:600;color:#fff;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_esc(source||'—')+'</span>'
-        +'<span style="font-size:10px;color:rgba(255,255,255,.4);flex-shrink:0">▾</span>'
+        +'<span style="font-size:10px;color:#fff;flex-shrink:0">▾</span>'
         +'</div>';
     }
 
     /* button styles */
-    var bOff='width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);flex-shrink:0;user-select:none;-webkit-tap-highlight-color:transparent;font-size:13px;color:rgba(255,255,255,.6)';
+    var bOff='width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);flex-shrink:0;user-select:none;-webkit-tap-highlight-color:transparent;font-size:13px;color:#fff';
     var bOn='width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid '+col+';background:rgba('+rgb+',.22);color:'+col+';flex-shrink:0;user-select:none;-webkit-tap-highlight-color:transparent;font-size:13px;box-shadow:0 0 10px rgba('+rgb+',.5),inset 0 0 6px rgba('+rgb+',.1)';
     var bPP='width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid '+col+';background:rgba('+rgb+',.22);color:'+col+';flex-shrink:0;user-select:none;-webkit-tap-highlight-color:transparent;font-size:17px;box-shadow:0 0 14px rgba('+rgb+',.5),0 2px 10px rgba('+rgb+',.3)';
     var bTmr='width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;user-select:none;-webkit-tap-highlight-color:transparent;font-size:13px;'
-      +(timerOpen||timerState?'border:1px solid '+col+';background:rgba('+rgb+',.22);color:'+col+';box-shadow:0 0 8px rgba('+rgb+',.4)':'border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:rgba(255,255,255,.6)');
+      +(timerOpen||timerState?'border:1px solid '+col+';background:rgba('+rgb+',.22);color:'+col+';box-shadow:0 0 8px rgba('+rgb+',.4)':'border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#fff');
 
     var repIco=repeat==='one'?'🔂':'🔁';
     var ctrlHtml='<div style="display:flex;align-items:center;justify-content:center;gap:6px;padding:7px 14px;flex-shrink:0">'
@@ -163,10 +163,10 @@
       var fillPct=Math.min(100,elapsed/total*100);
       timerBarHtml='<div style="padding:2px 14px 8px;flex-shrink:0">'
         +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">'
-        +'<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.35)">⏱ Timer in corso</div>'
+        +'<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#fff">⏱ Timer in corso</div>'
         +'<div style="display:flex;align-items:center;gap:7px">'
         +'<span data-timer-label style="font-size:12px;font-weight:800;color:'+col+'">'+fmtCountdown(remaining)+'</span>'
-        +'<div data-axa="timer-cancel" style="cursor:pointer;font-size:10px;color:rgba(255,255,255,.3);width:18px;height:18px;border-radius:5px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05)">✕</div>'
+        +'<div data-axa="timer-cancel" style="cursor:pointer;font-size:10px;color:#fff;width:18px;height:18px;border-radius:5px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05)">✕</div>'
         +'</div></div>'
         +'<div style="height:5px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden">'
         +'<div data-timer-bar style="height:100%;width:'+fillPct+'%;background:linear-gradient(90deg,'+col+',rgba('+rgb+',.6));border-radius:3px;transition:none"></div>'
@@ -176,7 +176,7 @@
     /* timer panel (preset + custom input) */
     var timerPanelHtml='';
     if(timerOpen){
-      var tPill='flex:1;min-width:0;padding:6px 0;text-align:center;border-radius:8px;cursor:pointer;font-size:10px;font-weight:700;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);user-select:none;-webkit-tap-highlight-color:transparent';
+      var tPill='flex:1;min-width:0;padding:6px 0;text-align:center;border-radius:8px;cursor:pointer;font-size:10px;font-weight:700;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:#fff;user-select:none;-webkit-tap-highlight-color:transparent';
       timerPanelHtml='<div style="display:flex;gap:5px;align-items:center;padding:0 14px 8px;flex-shrink:0">'
         +[[5,'5m'],[10,'10m'],[15,'15m'],[30,'30m'],[60,'1h']].map(function(t){
           return '<div style="'+tPill+'" data-axa="timer-set" data-min="'+t[0]+'">'+t[1]+'</div>';
@@ -192,7 +192,7 @@
       +[25,50,75,100].map(function(p){
         var active=!muted&&vol===p;
         return '<div style="flex:1;padding:5px 0;text-align:center;border-radius:8px;cursor:pointer;font-size:10px;font-weight:700;user-select:none;-webkit-tap-highlight-color:transparent;'
-          +(active?'background:rgba('+rgb+',.22);border:1px solid '+col+';color:'+col:'background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5)')
+          +(active?'background:rgba('+rgb+',.22);border:1px solid '+col+';color:'+col:'background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#fff')
           +'" data-axa="vol-preset" data-vol="'+p+'">'+p+'%</div>';
       }).join('')+'</div>';
 
@@ -206,7 +206,7 @@
       +'<div data-vol-fill style="height:100%;width:'+dispVol+'%;background:'+col+';border-radius:2px;transition:none"></div></div>'
       +'<div data-vol-knob style="position:absolute;left:'+dispVol+'%;transform:translateX(-50%);width:12px;height:12px;border-radius:50%;background:'+col+';box-shadow:0 0 6px rgba('+rgb+',.7);pointer-events:none;top:50%;margin-top:-6px;transition:none"></div>'
       +'</div>'
-      +'<span data-vol-label style="font-size:9px;font-weight:700;color:rgba(255,255,255,.45);min-width:26px;text-align:right">'+(muted?'–':vol+'%')+'</span>'
+      +'<span data-vol-label style="font-size:9px;font-weight:700;color:#fff;min-width:26px;text-align:right">'+(muted?'–':vol+'%')+'</span>'
       +'</div>';
 
     /* TTS */
@@ -241,10 +241,10 @@
       +'#'+rid+' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:4px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:10px;overflow:hidden}'
       +'#'+rid+' .fc-sep{height:1px;background:rgba(255,255,255,.06);margin:0 14px;flex-shrink:0}'
       +'#'+rid+' [data-axa]:active{opacity:.72}'
-      +'#'+rid+' #axtts-'+rid+'::placeholder{color:rgba(255,255,255,.28)}'
+      +'#'+rid+' #axtts-'+rid+'::placeholder{color:rgba(255,255,255,.5)}'
       +'#'+rid+' #axtts-'+rid+':focus{border-color:rgba('+rgb+',.45);background:rgba('+rgb+',.06)}'
       +'#'+rid+' [data-axa="timer-custom"]::-webkit-outer-spin-button,[data-axa="timer-custom"]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}'
-      +'#'+rid+' [data-axa="timer-custom"]::placeholder{color:rgba(255,255,255,.3)}'
+      +'#'+rid+' [data-axa="timer-custom"]::placeholder{color:rgba(255,255,255,.5)}'
       +'#'+rid+' [data-axa="timer-custom"]:focus{border-color:rgba('+rgb+',.45);background:rgba('+rgb+',.06)}'
       +'</style>';
 
@@ -319,8 +319,8 @@
             +'<span style="font-size:12px;font-weight:'+(active?'800':'500')+';color:'+(active?col:'#fff')+'">'+_esc(src)+'</span>'
             +'</div>';
         }).join('')
-        +'<div style="padding:10px 16px;font-size:10px;color:rgba(255,255,255,.25);border-top:1px solid rgba(255,255,255,.05)">Le sorgenti disponibili dipendono dai servizi collegati al tuo account Amazon.</div>'
-      :'<div style="padding:20px;text-align:center;color:rgba(255,255,255,.35);font-size:12px">Nessuna sorgente disponibile</div>';
+        +'<div style="padding:10px 16px;font-size:10px;color:#fff;border-top:1px solid rgba(255,255,255,.05)">Le sorgenti disponibili dipendono dai servizi collegati al tuo account Amazon.</div>'
+      :'<div style="padding:20px;text-align:center;color:#fff;font-size:12px">Nessuna sorgente disponibile</div>';
     var ov=mkOv(popShell('🎵',rgb,'Sorgente audio',_esc(curSrc||'—'),'axsrc-close',listHtml),'axsrc-close');
     ov.querySelectorAll('[data-src]').forEach(function(row){
       row.addEventListener('mouseover',function(){row.style.background='rgba(255,255,255,.06)';});
@@ -334,8 +334,8 @@
     var h=H(),c=cfgFor(card);
     var states=(h&&h.states)||{};
     var mpIds=Object.keys(states).filter(function(id){return id.startsWith('media_player.');}).sort();
-    var stInp='width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none';
-    var stLbl='font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px;display:block';
+    var stInp='width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none';
+    var stLbl='font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#fff;margin-bottom:3px;display:block';
     var stSec='font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#f472b6;margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid rgba(244,114,182,.2)';
     var COLORS=['#f472b6','#818cf8','#38bdf8','#4ade80','#fb923c','#f87171','#facc15','#c084fc'];
     var colorPicker='<div style="margin-bottom:10px"><label style="'+stLbl+'">Colore accent</label>'
@@ -354,7 +354,7 @@
       +fldAC('axc-player','Media Player',c.pk_player,'media_player.sfera_piano_terra')
       +'<div style="'+stSec+'">TTS</div>'
       +fldAC('axc-notify','Servizio notify Alexa',c.pk_notify,'es. alexa_media')
-      +'<div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:-5px;margin-bottom:10px">Solitamente <code style="background:rgba(255,255,255,.08);padding:1px 5px;border-radius:4px">alexa_media</code></div>'
+      +'<div style="font-size:10px;color:#fff;margin-top:-5px;margin-bottom:10px">Solitamente <code style="background:rgba(255,255,255,.08);padding:1px 5px;border-radius:4px">alexa_media</code></div>'
       +'<div style="'+stSec+'">Aspetto</div>'
       +colorPicker
       +'<div style="display:flex;gap:8px;margin-top:16px">'
@@ -376,7 +376,7 @@
         var hits=(q?ids.filter(function(id){return id.toLowerCase().includes(q);}):ids).slice(0,30);
         if(!hits.length){drop.style.display='none';return;}
         drop.style.display='block';
-        drop.innerHTML=hits.map(function(id){return '<div data-pick="'+id+'" style="padding:6px 10px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04);color:#e2e8f0">'+id+'</div>';}).join('');
+        drop.innerHTML=hits.map(function(id){return '<div data-pick="'+id+'" style="padding:6px 10px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04);color:#fff">'+id+'</div>';}).join('');
         drop.querySelectorAll('[data-pick]').forEach(function(row){
           row.addEventListener('mousedown',function(ev){ev.preventDefault();inp.value=row.getAttribute('data-pick');drop.style.display='none';});
           row.addEventListener('mouseover',function(){row.style.background='rgba(255,255,255,.08)';});
@@ -540,7 +540,7 @@
 
   /* ── REGISTRATION ── */
   var CARD={
-    id:'alexa-card',name:'Alexa Media',icon:'🔊',version:'2.1',
+    id:'alexa-card',name:'Alexa Media',icon:'🔊',version:'2.2',
     desc:'Alexa: album art, equalizzatore, sorgente, preset volume, timer countdown, TTS inline.',
     colSpan:2,rowSpan:3,frarik_no_edit:true,
     render:function(card){return render(card);},
