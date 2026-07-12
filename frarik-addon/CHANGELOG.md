@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.0.9 — 2026-07-12
+
+### feat(alexa-card): nuova card media player Alexa v1.0
+
+- Album art animata con glow pulsante quando in riproduzione
+- Vinile SVG rotante come fallback quando non c'è cover art
+- Equalizzatore animato (7 barre) — attivo solo durante la riproduzione
+- Controlli: ⏮ precedente, ⏹ stop, ▶/⏸ play-pausa, ⏭ successivo
+- Shuffle e Repeat ciclico (off → all → one → off)
+- Slider volume interattivo con drag mouse e touch
+- Tasto mute
+- Barra di progresso con tempi (se il media player fornisce durata)
+- Badge stato animato nell'header (pulsante quando in riproduzione)
+- Popup config con autocomplete media_player.*, scelta nome e 8 colori accent
+- Popup standard: X di chiusura + click-outside
+
 ## 2.0.8 — 2026-07-12
 
 ### fix(speedtest-card): layout top-down — altezza card identica in tutti gli stati v1.4
