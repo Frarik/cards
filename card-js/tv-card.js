@@ -1,8 +1,8 @@
-/* frarik-version: 2.0 */
+/* frarik-version: 2.1 */
 (function () {
   'use strict';
 
-  var CARD_VER = '2.0';
+  var CARD_VER = '2.1';
 
   function H() { try { if (typeof window.frarikHass === 'function') { var h = window.frarikHass(); if (h && h.states) return h; } } catch (e) {} return null; }
   function keyOf(c) { return 'frarik_tvcard_' + (c.id || 'x'); }
@@ -31,11 +31,11 @@
       bl_mute:      c.bl_mute      || 'mute',
       pk_sb_sensor: c.pk_sb_sensor || 'sensor.presa_tv_sala_potenza',
       sb_threshold: parseFloat(c.sb_threshold) || 30,
-      cmd_up:       c.cmd_up       || 'UP',
-      cmd_down:     c.cmd_down     || 'DOWN',
-      cmd_left:     c.cmd_left     || 'LEFT',
-      cmd_right:    c.cmd_right    || 'RIGHT',
-      cmd_ok:       c.cmd_ok       || 'ENTER',
+      cmd_up:       c.cmd_up       || 'DPAD_UP',
+      cmd_down:     c.cmd_down     || 'DPAD_DOWN',
+      cmd_left:     c.cmd_left     || 'DPAD_LEFT',
+      cmd_right:    c.cmd_right    || 'DPAD_RIGHT',
+      cmd_ok:       c.cmd_ok       || 'DPAD_CENTER',
       cmd_back:     c.cmd_back     || 'BACK',
       cmd_home:     c.cmd_home     || 'HOME',
       cmd_menu:     c.cmd_menu     || 'MENU',

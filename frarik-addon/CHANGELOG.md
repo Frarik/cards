@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.25 — 2026-07-12
+
+### fix(tv-card): default comandi navigazione DPAD_* v2.1
+
+- Default comandi: `DPAD_UP`, `DPAD_DOWN`, `DPAD_LEFT`, `DPAD_RIGHT`, `DPAD_CENTER` (confermati funzionanti dall'utente con `androidtv_remote`)
+
 ## 2.0.24 — 2026-07-12
 
 ### feat(tv-card): riscrittura completa v2.0 — touchpad, numeri, comandi configurabili
