@@ -2,7 +2,7 @@
 
 > ⚠️ **File generato automaticamente** da `scripts/build-card-catalog.mjs` — non modificarlo a mano.
 > Rigenera con: `node scripts/build-card-catalog.mjs`
-> Ultima generazione: 2026-07-11 · Card trovate: 35
+> Ultima generazione: 2026-07-12 · Card trovate: 35
 
 Questo catalogo elenca le card realmente presenti nel repo e i pattern/API che usano.
 Serve come **riferimento vivo**: quando si crea una nuova card si possono leggere quelle
@@ -46,7 +46,7 @@ esistenti (in `card-js/`, `card-chips/`, `card-distintivi/`) per riusarne stile 
 | card-js | `Tapparella.js` | `tapparella` | 🪟 Tapparella | 4.4 | FratechStore |
 | card-js | `Tostapane.js` | `tostapane` | 🍞 frarik/frarik_tostapane.yaml | 2.3 | FratechStore |
 | card-js | `Differenziata.js` | `umido` | mdi:recycle Differenziata — Rifiuto Lunedì | 2.0 | FratechStore |
-| card-js | `ups-card.js` | `ups-card` | 🔋 UPS | 1.0 | — |
+| card-js | `ups-card.js` | `ups-card` | 🔋 UPS | 1.2 | FratechStore |
 
 ## Dettaglio
 
@@ -252,8 +252,9 @@ esistenti (in `card-js/`, `card-chips/`, `card-distintivi/`) per riusarne stile 
 - **Pattern/API usati:** callSvc (chiama servizi HA) · grafica SVG inline · timer · interazione (listener) · popup/overlay
 
 ### 🔋 UPS  ·  `ups-card.js`
-- **ID:** `ups-card` · **versione:** 1.0 · **formato:** —
-- **Hooks:** mount, update · **righe:** 476
+- **ID:** `ups-card` · **versione:** 1.2 · **formato:** FratechStore
+- **Descrizione:** Monitoraggio UPS: batteria, carico, tensioni, storico blackout e notifiche push. Richiede PKG UPS Tecnoware.
+- **Hooks:** mount, update · **righe:** 488
 - **Pattern/API usati:** callSvc (chiama servizi HA) · grafica SVG inline · timer · interazione (listener) · popup/overlay
 
 ---

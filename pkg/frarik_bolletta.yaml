@@ -13,7 +13,7 @@ homeassistant:
 #                                                  #
 ####################################################
 
-        Sensore Potenza Casa: &sensore_potenza_bolletta sensor.IL_TUO_SENSORE_POTENZA_CASA
+        Sensore Potenza Casa: &sensore_potenza_bolletta IL_TUO_SENSORE_POTENZA_CASA
 
         Device per notifica push: &push notify.IL_TUO_MOBILE_APP
 

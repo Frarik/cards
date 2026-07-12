@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.1 — 2026-07-12
+
+### fix(pkg): correzione errori YAML UPS e Bolletta + wizard pre-fill valori precedenti
+
+- **frarik_ups.yaml**: `- service:` → `- action:` nel notify.group (HA 2024+ richiede `action`)
+- **frarik_ups.yaml**: indentazione template sensor corretta (`sensor:` → `  - name:` a rientro 6 spazi)
+- **frarik_bolletta.yaml**: rimosso prefisso `sensor.` dal template del sensore potenza (causava `sensor.sensor.xxx`)
+- **wizard**: pre-fill automatico dei valori inseriti in precedenza (salvati in localStorage per pkg)
+- **wizard**: banner informativo "Valori precompilati" se sono disponibili valori precedenti
+
 ## 2.0.0 — 2026-07-12
 
 ### fix(ups-card): registrazione corretta + fix tasto aggiungi/cancella store

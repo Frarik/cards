@@ -3861,7 +3861,8 @@ async function _pkgGenericInstall(cardId,pkgVer,pkgInfo,f,code,res){
     let content=await ghR.text();
     const _pkgInputs=_pkgParseInputs(content);
     if(_pkgInputs.length){
-      content=await _pkgShowWizard(pkgName,content,_pkgInputs);
+      let _pkgSaved={};try{_pkgSaved=JSON.parse(localStorage.getItem('_frarik_pkg_inputs_'+pkgName.replace(/\.ya?ml$/i,''))||'{}');}catch(_){}
+      content=await _pkgShowWizard(pkgName,content,_pkgInputs,_pkgSaved);
       if(content===null){ showToast('⚠️ Installazione annullata'); return; }
     }
     const r=await fetch(ADDON_BASE+'/api/frarik/pkg/install',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:file,content})});
@@ -4190,14 +4191,18 @@ function _frarikEntityAutocomplete(inp){
 }
 
 /* Wizard bottom-sheet: chiede i valori per i placeholder, restituisce YAML sostituito o null se annullato */
-function _pkgShowWizard(pkgName,yaml,inputs){
+function _pkgShowWizard(pkgName,yaml,inputs,savedValues){
+  savedValues=savedValues||{};
   return new Promise(resolve=>{
     const nm=pkgName.replace(/\.ya?ml$/i,'').replace(/^frarik_/,'');
+    const pkgKey=pkgName.replace(/\.ya?ml$/i,'');
+    const hasSaved=Object.keys(savedValues).length>0;
     const fields=inputs.map((inp,idx)=>`
       <div style="margin-bottom:14px">
         <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.45);margin-bottom:6px">${eh(inp.label)}</div>
         <input data-key="${eh(inp.placeholder)}" id="_pwz_f${idx}" autocomplete="off" spellcheck="false"
           type="text" placeholder="${eh(inp.placeholder)}"
+          value="${eh(savedValues[inp.placeholder]||'')}"
           style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:10px 12px;color:#fff;font-size:12px;font-family:monospace;outline:none;box-sizing:border-box">
       </div>`).join('');
     const mo=document.createElement('div');
@@ -4217,6 +4222,7 @@ function _pkgShowWizard(pkgName,yaml,inputs){
           Inserisci le entità di Home Assistant da usare in questo package.<br>
           <span style="color:rgba(255,255,255,.3)">Tocca un campo per vedere la lista delle entità disponibili.</span>
         </div>
+        ${hasSaved?`<div style="margin-bottom:14px;padding:8px 12px;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.3);border-radius:10px;font-size:11px;color:rgba(99,102,241,.9)">✏️ Valori precompilati dall'installazione precedente — verifica e conferma.</div>`:''}
         ${fields}
       </div>
       <div style="padding:14px 18px 28px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:10px;flex-shrink:0">
@@ -4230,9 +4236,11 @@ function _pkgShowWizard(pkgName,yaml,inputs){
     mo.addEventListener('click',e=>{if(e.target===mo)close(null);});
     mo.querySelector('#_pwz_ok').onclick=()=>{
       let out=yaml;
+      const toSave={};
       mo.querySelectorAll('[data-key]').forEach(inp=>{
         let val=inp.value.trim();
         if(val){
+          toSave[inp.dataset.key]=val;
           /* Se il YAML ha già "domain.PLACEHOLDER" e l'utente scrive "domain.entity",
              rimuovi il prefisso dominio dal valore per evitare "domain.domain.entity" */
           const domPfx=(val.match(/^([a-z_]+)\./)||[])[1];
@@ -4241,6 +4249,7 @@ function _pkgShowWizard(pkgName,yaml,inputs){
           out=out.replace(re,val);
         }
       });
+      try{localStorage.setItem('_frarik_pkg_inputs_'+pkgKey,JSON.stringify(toSave));}catch(_){}
       close(out);
     };
     document.body.appendChild(mo);
@@ -4264,7 +4273,8 @@ async function _ghsPkgInstallFromGH(filename){
     /* Wizard configurazione se il YAML contiene placeholder IL_TUO_* */
     const inputs=_pkgParseInputs(yaml);
     if(inputs.length){
-      yaml=await _pkgShowWizard(decoded,yaml,inputs);
+      let _ghSaved={};try{_ghSaved=JSON.parse(localStorage.getItem('_frarik_pkg_inputs_'+decoded.replace(/\.ya?ml$/i,''))||'{}');}catch(_){}
+      yaml=await _pkgShowWizard(decoded,yaml,inputs,_ghSaved);
       if(yaml===null){ showToast('⚠️ Installazione annullata'); return; }
     }
     const res=await fetch(ADDON_BASE+'/api/frarik/pkg/install',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'frarik/'+decoded,content:yaml})});

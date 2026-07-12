@@ -24,7 +24,7 @@ homeassistant:
 ####################################################
 
         Device per notifica push: &push
-          - service: IL_TUO_MOBILE_APP
+          - action: IL_TUO_MOBILE_APP
 
 ####################################################
 #                                                  #
@@ -214,39 +214,39 @@ script:
 
 template:
   - sensor:
-    - name: Alimentazione UPS Tecnoware
-      icon: mdi:flash
-      state: >
-        {% if is_state('IL_TUO_SENSORE_STATO_UPS', 'OB') %} Batteria
-        {% elif is_state('IL_TUO_SENSORE_STATO_UPS', 'OL') %} Rete Elettrica
-        {% else %} Non Disponibile {% endif %}
-      attributes:
-        stato_display_blackout: "{% if is_state('input_boolean.durata_blackout', 'on') %}In Corso{% else %}Ultimo{% endif %}"
-        durata_blackout: >
-            {%set hours = (as_timestamp(now())- as_timestamp(states.input_boolean.durata_blackout.last_changed) ) /3600%}
-            {% set minutes = ((hours % 1) * 60) | int (0)%}
-            {% set hours = (hours - (hours % 1)) | int(0) %}
-            {%set day = ((hours |int(0) /24))|int(0) %}
-            {% if is_state('input_boolean.durata_blackout','on') %}
-              {% if day|int(0) >0 %}
-                {{day}}d {{(hours|int(0))-(day*24)}}h {{minutes}}m
-              {% elif hours|int(0) >0 %}
-                {{hours}}h {{minutes}}m
-              {% else %}
-                {{minutes}} min
-              {% endif %}
-            {%else%}
-            {{states('input_text.durata_ultimo_blackout')}}
-            {%endif%}
+      - name: Alimentazione UPS Tecnoware
+        icon: mdi:flash
+        state: >
+          {% if is_state('IL_TUO_SENSORE_STATO_UPS', 'OB') %} Batteria
+          {% elif is_state('IL_TUO_SENSORE_STATO_UPS', 'OL') %} Rete Elettrica
+          {% else %} Non Disponibile {% endif %}
+        attributes:
+          stato_display_blackout: "{% if is_state('input_boolean.durata_blackout', 'on') %}In Corso{% else %}Ultimo{% endif %}"
+          durata_blackout: >
+              {%set hours = (as_timestamp(now())- as_timestamp(states.input_boolean.durata_blackout.last_changed) ) /3600%}
+              {% set minutes = ((hours % 1) * 60) | int (0)%}
+              {% set hours = (hours - (hours % 1)) | int(0) %}
+              {%set day = ((hours |int(0) /24))|int(0) %}
+              {% if is_state('input_boolean.durata_blackout','on') %}
+                {% if day|int(0) >0 %}
+                  {{day}}d {{(hours|int(0))-(day*24)}}h {{minutes}}m
+                {% elif hours|int(0) >0 %}
+                  {{hours}}h {{minutes}}m
+                {% else %}
+                  {{minutes}} min
+                {% endif %}
+              {%else%}
+              {{states('input_text.durata_ultimo_blackout')}}
+              {%endif%}
 
-        data_ultimo_blackout: "{{states('input_text.data_ultimo_blackout')}}"
-        data_ripristino_energia: "{{states('input_text.data_ripristino_energia')}}"
-        tipo_ups: *entity_ups_tipo
-        stato_ups: *entity_ups_stato_txt
-        livello_batteria: *entity_ups_batteria
-        carico_ups: *entity_carico_ups
-        volt_ingresso: *volt_ingresso_ups
-        volt_uscita: *volt_uscita_ups
+          data_ultimo_blackout: "{{states('input_text.data_ultimo_blackout')}}"
+          data_ripristino_energia: "{{states('input_text.data_ripristino_energia')}}"
+          tipo_ups: *entity_ups_tipo
+          stato_ups: *entity_ups_stato_txt
+          livello_batteria: *entity_ups_batteria
+          carico_ups: *entity_carico_ups
+          volt_ingresso: *volt_ingresso_ups
+          volt_uscita: *volt_uscita_ups
 
 ####################################################
 #                                                  #
