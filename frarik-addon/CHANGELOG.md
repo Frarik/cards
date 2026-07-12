@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.23 — 2026-07-12
+
+### fix(tv-card): comandi navigazione corretti per androidtv_remote v1.2
+
+- **Navigazione**: cambiati da lowercase (`up/down/left/right/center`) → Android key codes (`DPAD_UP/DPAD_DOWN/DPAD_LEFT/DPAD_RIGHT/DPAD_CENTER`)
+- **Back/Home/Menu**: ora `BACK`, `HOME`, `MENU`, `INFO` (uppercase richiesto da androidtv_remote)
+- **Riproduzione**: ora `MEDIA_PLAY_PAUSE`, `MEDIA_FAST_FORWARD`, `MEDIA_REWIND`, `CHANNEL_UP`, `CHANNEL_DOWN`
+- **App shortcuts**: cambiati da `remote.send_command` → `media_player.select_source` (più affidabile per Android TV)
+
 ## 2.0.22 — 2026-07-12
 
 ### fix(tv-card): riscrittura completa servizi corretti v1.1

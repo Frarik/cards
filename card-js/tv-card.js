@@ -1,4 +1,4 @@
-/* frarik-version: 1.1 */
+/* frarik-version: 1.2 */
 (function () {
   'use strict';
 
@@ -417,27 +417,27 @@
         else callSvc('media_player','turn_off',{entity_id:tv()});
         return;
       }
-      /* navigation via remote.tv_sala */
-      if(a==='nav-up')   {tvCmd('up');   return;}
-      if(a==='nav-down') {tvCmd('down'); return;}
-      if(a==='nav-left') {tvCmd('left'); return;}
-      if(a==='nav-right'){tvCmd('right');return;}
-      if(a==='nav-ok')   {tvCmd('center');return;}
-      if(a==='nav-back') {tvCmd('back'); return;}
-      if(a==='nav-home') {tvCmd('home'); return;}
-      if(a==='nav-menu') {tvCmd('menu'); return;}
-      if(a==='info')     {tvCmd('info'); return;}
+      /* navigation via remote.tv_sala (androidtv_remote key codes) */
+      if(a==='nav-up')   {tvCmd('DPAD_UP');    return;}
+      if(a==='nav-down') {tvCmd('DPAD_DOWN');  return;}
+      if(a==='nav-left') {tvCmd('DPAD_LEFT');  return;}
+      if(a==='nav-right'){tvCmd('DPAD_RIGHT'); return;}
+      if(a==='nav-ok')   {tvCmd('DPAD_CENTER');return;}
+      if(a==='nav-back') {tvCmd('BACK');       return;}
+      if(a==='nav-home') {tvCmd('HOME');       return;}
+      if(a==='nav-menu') {tvCmd('MENU');       return;}
+      if(a==='info')     {tvCmd('INFO');       return;}
       /* playback via remote.tv_sala */
-      if(a==='pp')       {tvCmd('play_pause');   return;}
-      if(a==='rewind')   {tvCmd('rewind');        return;}
-      if(a==='ff')       {tvCmd('fast_forward');  return;}
-      if(a==='ch-up')    {tvCmd('channel_up');    return;}
-      if(a==='ch-down')  {tvCmd('channel_down');  return;}
-      /* app shortcuts via remote.tv_sala */
-      if(a==='app-netflix'){tvCmd('netflix'); return;}
-      if(a==='app-youtube'){tvCmd('youtube'); return;}
-      if(a==='app-spotify'){tvCmd('spotify'); return;}
-      if(a==='app-tv')     {tvCmd('tv');      return;}
+      if(a==='pp')       {tvCmd('MEDIA_PLAY_PAUSE');  return;}
+      if(a==='rewind')   {tvCmd('MEDIA_REWIND');      return;}
+      if(a==='ff')       {tvCmd('MEDIA_FAST_FORWARD');return;}
+      if(a==='ch-up')    {tvCmd('CHANNEL_UP');        return;}
+      if(a==='ch-down')  {tvCmd('CHANNEL_DOWN');      return;}
+      /* app shortcuts — usa select_source su media_player (più affidabile per Android TV) */
+      if(a==='app-netflix'){callSvc('media_player','select_source',{entity_id:cfgFor(card).pk_tv,source:'Netflix'}); return;}
+      if(a==='app-youtube'){callSvc('media_player','select_source',{entity_id:cfgFor(card).pk_tv,source:'YouTube'}); return;}
+      if(a==='app-spotify'){callSvc('media_player','select_source',{entity_id:cfgFor(card).pk_tv,source:'Spotify'}); return;}
+      if(a==='app-tv')     {callSvc('media_player','select_source',{entity_id:cfgFor(card).pk_tv,source:'TV'}); return;}
       /* soundbar via Broadlink */
       if(a==='sb-vol-up')  {blCmd(cfgFor(card).bl_vol_up);   return;}
       if(a==='sb-vol-down'){blCmd(cfgFor(card).bl_vol_down);  return;}
@@ -447,7 +447,7 @@
   }
 
   var CARD={
-    id:'tv-card', name:'TV Remote', icon:'📺', version:'1.1',
+    id:'tv-card', name:'TV Remote', icon:'📺', version:'1.2',
     desc:'TV Philips Android TV + Soundbar LG via Broadlink. Navigazione, app, volume, stato.',
     colSpan:2, rowSpan:4, frarik_no_edit:true,
     render:function(card){return render(card);},
