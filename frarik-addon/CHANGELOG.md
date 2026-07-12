@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.29 — 2026-07-12
+
+### fix(tv-card): testo bianco 100% + rimossi watt soundbar v2.5
+
+- Tutte le scritte bianche a #fff (niente rgba con opacità ridotta) — card e popup impostazioni
+- Rimossi watt (W) ovunque — chip soundbar nell'hero ora mostra "Accesa"/"Spenta" col pallino colorato
+- Sezione soundbar in basso senza chip stato ridondante
+
 ## 2.0.28 — 2026-07-12
 
 ### fix(tv-card): rimosso tasto power soundbar v2.4
