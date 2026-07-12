@@ -101,7 +101,7 @@
     }
     function tLbl(deg,lbl) {
       var tr2=(deg-90)*Math.PI/180,lx=cx+(oR+9)*Math.cos(tr2),ly=cy+(oR+9)*Math.sin(tr2);
-      return '<text x="'+lx.toFixed(1)+'" y="'+(ly+1.2).toFixed(1)+'" text-anchor="middle" font-family="system-ui" font-size="4" fill="rgba(255,255,255,.3)">'+lbl+'</text>';
+      return '<text x="'+lx.toFixed(1)+'" y="'+(ly+1.2).toFixed(1)+'" text-anchor="middle" font-family="system-ui" font-size="4" fill="#fff">'+lbl+'</text>';
     }
     var labels = tLbl(ARC_S,'0')+tLbl(ARC_S+135,Math.round(maxVal/2)+'')+tLbl(ARC_S+ARC_SW,maxVal+'');
 
@@ -114,13 +114,13 @@
         + '<text x="50" y="74" text-anchor="middle" font-family="system-ui" font-size="9" fill="#38bdf8" style="animation:spBl 1s infinite;animation-delay:.33s">.</text>'
         + '<text x="57" y="74" text-anchor="middle" font-family="system-ui" font-size="9" fill="#38bdf8" style="animation:spBl 1s infinite;animation-delay:.66s">.</text>';
     } else {
-      center = '<text x="50" y="43" text-anchor="middle" font-family="system-ui" font-size="3.8" font-weight="700" letter-spacing=".5" fill="rgba(255,255,255,.38)">SCARICAMENTO</text>'
+      center = '<text x="50" y="43" text-anchor="middle" font-family="system-ui" font-size="3.8" font-weight="700" letter-spacing=".5" fill="#fff">SCARICAMENTO</text>'
         + '<text x="50" y="55" text-anchor="middle" font-family="system-ui" font-size="14" font-weight="900" fill="' + dlC + '">' + fmtSpd(dl) + '</text>'
-        + '<text x="50" y="61" text-anchor="middle" font-family="system-ui" font-size="4.5" font-weight="600" fill="rgba(255,255,255,.42)">Mbit/s</text>'
+        + '<text x="50" y="61" text-anchor="middle" font-family="system-ui" font-size="4.5" font-weight="600" fill="#fff">Mbit/s</text>'
         + '<line x1="38" y1="64" x2="62" y2="64" stroke="rgba(255,255,255,.07)" stroke-width=".5"/>'
-        + '<text x="50" y="69" text-anchor="middle" font-family="system-ui" font-size="3.8" font-weight="700" letter-spacing=".4" fill="rgba(255,255,255,.33)">CARICAMENTO</text>'
+        + '<text x="50" y="69" text-anchor="middle" font-family="system-ui" font-size="3.8" font-weight="700" letter-spacing=".4" fill="#fff">CARICAMENTO</text>'
         + '<text x="50" y="78" text-anchor="middle" font-family="system-ui" font-size="10" font-weight="800" fill="' + ulC + '">' + fmtSpd(ul) + '</text>'
-        + '<text x="50" y="83" text-anchor="middle" font-family="system-ui" font-size="3.8" font-weight="600" fill="rgba(255,255,255,.3)">Mbit/s</text>';
+        + '<text x="50" y="83" text-anchor="middle" font-family="system-ui" font-size="3.8" font-weight="600" fill="#fff">Mbit/s</text>';
     }
 
     var shadow = justDone ? 'drop-shadow(0 0 12px rgba(34,197,94,.35))' : 'drop-shadow(0 0 8px rgba(56,189,248,.1))';
@@ -160,12 +160,12 @@
     function val(v, unit, col) {
       var txt = (v != null && !isRunning) ? (unit === 'ms' ? v.toFixed(v<100?1:0) : fmtSpd(v)) : '—';
       return '<div style="font-size:18px;font-weight:900;color:' + (isRunning ? '#475569' : col) + ';line-height:1">' + txt + '</div>'
-        + '<div style="font-size:8px;font-weight:600;color:rgba(255,255,255,.38);margin-top:2px">' + unit + '</div>';
+        + '<div style="font-size:8px;font-weight:600;color:#fff;margin-top:2px">' + unit + '</div>';
     }
 
     function box(icon, lbl, vNode) {
       return '<div style="flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:2px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:0 8px;overflow:hidden">'
-        + '<div style="font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.4)">' + icon + ' ' + lbl + '</div>'
+        + '<div style="font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#fff">' + icon + ' ' + lbl + '</div>'
         + vNode
         + '</div>';
     }
@@ -183,19 +183,19 @@
 
     const grBadge = (grade && !isRunning)
       ? '<div style="width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;background:' + grCol + '22;border:1px solid ' + grCol + '55;color:' + grCol + '">' + grade + '</div>'
-      : '<div style="width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#475569">—</div>';
+      : '<div style="width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff">—</div>';
 
     const footer = '<div style="display:flex;gap:5px;margin:0 14px 7px;flex-shrink:0;align-items:stretch">'
       + '<div style="flex:1;display:flex;align-items:center;gap:5px;padding:4px 8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;overflow:hidden">'
-      + '<span style="font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.38);flex-shrink:0">ISP</span>'
+      + '<span style="font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#fff;flex-shrink:0">ISP</span>'
       + '<span style="font-size:10px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + isp + '</span>'
       + '</div>'
       + '<div style="flex:1;display:flex;align-items:center;gap:5px;padding:4px 8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;overflow:hidden">'
-      + '<span style="font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.38);flex-shrink:0">Server</span>'
+      + '<span style="font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#fff;flex-shrink:0">Server</span>'
       + '<span style="font-size:10px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + server + '</span>'
       + '</div>'
       + '<div style="flex-shrink:0;display:flex;align-items:center;gap:4px;padding:4px 8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px">'
-      + '<span style="font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.38)">Grade</span>'
+      + '<span style="font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#fff">Grade</span>'
       + grBadge
       + '</div>'
       + '</div>';
@@ -274,13 +274,13 @@
     const h = H(), c = load(card), cf = cfgFor(card);
     const states = (h&&h.states)||{};
     const allIds = Object.keys(states).sort();
-    const stInp = 'width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none';
+    const stInp = 'width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none';
     const stDrop = 'position:absolute;left:0;right:0;top:calc(100% + 2px);z-index:200;max-height:160px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-radius:9px;display:none;scrollbar-width:none';
-    const stLbl = 'font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px;display:block';
+    const stLbl = 'font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#fff;margin-bottom:3px;display:block';
     const stSec = 'font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid rgba(56,189,248,.2)';
 
     function field(fid, lbl, val, hint) {
-      return '<div style="margin-bottom:9px;position:relative"><label style="'+stLbl+'">'+lbl+(hint?'<span style="font-weight:400;color:#475569;margin-left:6px;font-family:monospace;text-transform:none;letter-spacing:0">'+hint+'</span>':'')+'</label>'
+      return '<div style="margin-bottom:9px;position:relative"><label style="'+stLbl+'">'+lbl+(hint?'<span style="font-weight:400;color:#fff;margin-left:6px;font-family:monospace;text-transform:none;letter-spacing:0">'+hint+'</span>':'')+'</label>'
         +'<input id="'+fid+'" type="text" value="'+(val||'').replace(/"/g,'&quot;')+'" autocomplete="off" placeholder="Cerca entità…" style="'+stInp+'">'
         +'<div id="'+fid+'-d" style="'+stDrop+'"></div></div>';
     }
@@ -318,7 +318,7 @@
         const hits=(q?allIds.filter(function(id){return id.toLowerCase().includes(q);}):allIds).slice(0,50);
         if(!hits.length){drop.style.display='none';return;}
         drop.style.display='block';
-        drop.innerHTML=hits.map(function(id){return '<div data-pick="'+id+'" style="padding:6px 10px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04);color:#e2e8f0">'+id+'</div>';}).join('');
+        drop.innerHTML=hits.map(function(id){return '<div data-pick="'+id+'" style="padding:6px 10px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04);color:#fff">'+id+'</div>';}).join('');
         drop.querySelectorAll('[data-pick]').forEach(function(row){
           row.addEventListener('mousedown',function(ev){ev.preventDefault();inp.value=row.getAttribute('data-pick');drop.style.display='none';});
           row.addEventListener('mouseover',function(){row.style.background='rgba(255,255,255,.08)';});
@@ -402,7 +402,7 @@
 
   /* ── CARD ── */
   var CARD = {
-    id: 'speedtest-card', name: 'Speedtest', icon: '🌐', version: '1.4',
+    id: 'speedtest-card', name: 'Speedtest', icon: '🌐', version: '1.5',
     desc: 'Monitoraggio connessione: scaricamento, caricamento, ping, jitter, bufferbloat. Richiede integrazione Ookla Speedtest.',
     colSpan: 2, rowSpan: 3, frarik_no_edit: true,
     render: function(card){ return render(card); },

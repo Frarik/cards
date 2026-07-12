@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.34 — 2026-07-12
+
+### fix(speedtest-card): tutte le scritte bianche al 100% v1.5
+
+- SVG gauge: label 0/metà/max, "SCARICAMENTO", "CARICAMENTO", "Mbit/s" → `fill="#fff"`
+- Box metriche: label (↓ Scaricamento, ↑ Caricamento, ⚡ Ping, 〜 Jitter) → `#fff`
+- Unità (Mbit/s, ms) sotto i valori → `#fff`
+- Footer: label ISP, Server, Grade → `#fff`; badge "—" quando nessun grade → `#fff`
+- Popup configurazione: label campi `#94a3b8` → `#fff`, testo input `#f1f5f9` → `#fff`, hint/es. `#475569` → `#fff`, dropdown items `#e2e8f0` → `#fff`
+
 ## 2.0.33 — 2026-07-12
 
 ### fix(alexa-card): tutte le scritte bianche al 100% v2.2
