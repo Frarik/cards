@@ -1,4 +1,4 @@
-/* frarik-version: 1.5 */
+/* frarik-version: 1.6 */
 (function () {
   'use strict';
 
@@ -197,7 +197,7 @@
       + '#' + rid + ' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:220px;background:radial-gradient(ellipse at 30% 0%,rgba(' + rgb + ',.1) 0%,transparent 65%);pointer-events:none}'
       + '#' + rid + ' .fc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
       + '#' + rid + ' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;background:rgba(' + rgb + ',.12);border:1px solid rgba(' + rgb + ',.25)}'
-      + '#' + rid + ' .fc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+      + '#' + rid + ' .fc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:text}'
       + '#' + rid + ' .fc-pill{font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;white-space:nowrap;display:flex;align-items:center;gap:4px;background:rgba(' + stateRgb + ',.08);border:1px solid rgba(' + stateRgb + ',.25);color:' + stateHex + '}'
       + '#' + rid + ' .fc-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:' + stateHex + (isPlaying ? ';animation:alDot .8s ease-in-out infinite' : '') + '}'
       + '#' + rid + ' .fc-gear{margin-left:4px;cursor:pointer;width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#fff;flex-shrink:0}'
@@ -221,7 +221,7 @@
       + '<div class="fc-card">'
       + '<div class="fc-hdr">'
       + '<div class="fc-hdr-iw">🔊</div>'
-      + '<div class="fc-hdr-tit">' + _esc(c.name || 'Alexa') + '</div>'
+      + '<div class="fc-hdr-tit" data-axa="rename" title="Clicca per rinominare">' + _esc(c.name || 'Alexa') + '</div>'
       + '<div class="fc-pill"><div class="fc-dot"></div>' + stateLbl + '</div>'
       + '<div class="fc-gear" data-axa="cfg">⚙</div>'
       + '</div>'
@@ -413,7 +413,32 @@
     el._axHandler = function (e) {
       var t = e.target.closest('[data-axa]'); if (!t) return;
       var a = t.dataset.axa;
-      if (a === 'cfg')      { openCfg(card, el); return; }
+      if (a === 'cfg')    { openCfg(card, el); return; }
+      if (a === 'rename') {
+        var titleDiv = t;
+        var cur = cfgFor(card).name || 'Alexa';
+        titleDiv.innerHTML = '';
+        var inp = document.createElement('input');
+        inp.type = 'text';
+        inp.value = cur;
+        inp.style.cssText = 'width:100%;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.4);outline:none;color:#fff;font-size:13px;font-weight:800;font-family:system-ui;padding:0;line-height:1';
+        titleDiv.appendChild(inp);
+        inp.focus(); inp.select();
+        el._axTtsFocus = true;
+        function commitRename() {
+          var v = inp.value.trim() || cur;
+          var stored = load(card); stored.name = v; save(card, stored);
+          el._axTtsFocus = false;
+          el._axSig = ''; el._axBound = null;
+          el.innerHTML = render(card); mount(card, null, el);
+        }
+        inp.addEventListener('blur',    commitRename, { once: true });
+        inp.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter')  { inp.blur(); }
+          if (e.key === 'Escape') { inp.removeEventListener('blur', commitRename); titleDiv.textContent = cur; el._axTtsFocus = false; }
+        });
+        return;
+      }
       if (a === 'pp')       { callSvc('media_player','media_play_pause',    {entity_id:eid()}); return; }
       if (a === 'stop')     { callSvc('media_player','media_stop',          {entity_id:eid()}); return; }
       if (a === 'prev')     { callSvc('media_player','media_previous_track',{entity_id:eid()}); return; }
@@ -494,7 +519,7 @@
 
   /* ── REGISTRATION ── */
   var CARD = {
-    id: 'alexa-card', name: 'Alexa Media', icon: '🔊', version: '1.5',
+    id: 'alexa-card', name: 'Alexa Media', icon: '🔊', version: '1.6',
     desc: 'Controllo Alexa: album art animata, equalizzatore, play/stop/shuffle/repeat, volume real-time, TTS inline.',
     colSpan: 2, rowSpan: 3, frarik_no_edit: true,
     render: function (card)          { return render(card); },

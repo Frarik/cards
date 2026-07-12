@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.15 — 2026-07-12
+
+### feat(alexa-card): rinomina inline cliccando sul titolo v1.6
+
+- Clicca direttamente sul titolo "Alexa" nell'header → diventa input inline
+- Enter o click fuori → salva e aggiorna la card
+- Escape → annulla senza salvare
+- Cursore `text` sull'header title come hint visivo
+
 ## 2.0.14 — 2026-07-12
 
 ### fix(alexa-card): shuffle/repeat sempre attivi v1.5
