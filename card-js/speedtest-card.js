@@ -170,20 +170,20 @@
         + '</div>';
     }
 
-    const heroR = '<div style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:10px;overflow:hidden">'
-      + '<div style="display:flex;gap:4px;flex:1;overflow:hidden">'
+    const heroR = '<div style="flex:1;display:flex;flex-direction:column;gap:5px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:10px;overflow:hidden">'
+      + '<div style="display:flex;gap:5px;overflow:hidden;flex-shrink:0">'
       + box('↓', 'Scaricamento', val(dl, 'Mbit/s', dlC))
       + box('↑', 'Caricamento',  val(ul, 'Mbit/s', ulC))
       + '</div>'
-      + '<div style="display:flex;gap:4px;flex:1;overflow:hidden">'
+      + '<div style="display:flex;gap:5px;overflow:hidden;flex-shrink:0">'
       + box('⚡', 'Ping',         val(ping,   'ms', piC))
       + box('〜', 'Jitter',       val(jitter, 'ms', '#fff'))
       + '</div>'
       + '</div>';
 
     const grBadge = (grade && !isRunning)
-      ? '<div style="flex-shrink:0;min-width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;background:' + grCol + '22;border:1px solid ' + grCol + '55;color:' + grCol + '">' + grade + '</div>'
-      : '<span style="font-size:11px;font-weight:800;color:#475569">—</span>';
+      ? '<div style="width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;background:' + grCol + '22;border:1px solid ' + grCol + '55;color:' + grCol + '">' + grade + '</div>'
+      : '<div style="width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#475569">—</div>';
 
     const footer = '<div style="display:flex;gap:5px;margin:0 14px 7px;flex-shrink:0;align-items:stretch">'
       + '<div style="flex:1;display:flex;align-items:center;gap:5px;padding:4px 8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;overflow:hidden">'
@@ -231,8 +231,8 @@
       + '<div class="fc-gear" data-sya="cfg">⚙</div>'
       + '</div>'
       + '<div class="fc-scroll">'
-      + '<div style="display:flex;align-items:stretch;padding:8px 14px 6px;height:120px;flex-shrink:0;">'
-      + '<div style="flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center">' + _speedSVG(dl,ul,maxVal,dlC,ulC,isRunning,justDone) + '</div>'
+      + '<div style="display:flex;align-items:stretch;padding:10px 14px 8px;flex:1;">'
+      + '<div style="flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;max-height:130px">' + _speedSVG(dl,ul,maxVal,dlC,ulC,isRunning,justDone) + '</div>'
       + heroR
       + '</div>'
       + footer
