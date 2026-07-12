@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.13 — 2026-07-12
+
+### feat(alexa-card): TTS inline + fix shuffle/repeat + supported_features check v1.4
+
+- **TTS inline**: campo testo in fondo alla card con pulsante "Parla" + invio con Enter. Chiama `notify.alexa_media` (configurabile in ⚙). Blocco re-render durante digitazione (`_axTtsFocus`)
+- **Shuffle/Repeat**: controllo `supported_features` bitmask (SF_SHUFFLE=32768, SF_REPEAT=262144). Se non supportato: bottone visibile ma dimmed + `pointer-events:none`. Se `supported_features=0` (alexa_media_player non lo espone): tutti i tasti considerati supportati
+- **Config**: nuovo campo `pk_notify` per il servizio TTS (default `alexa_media`)
+- **Config save**: dopo salvataggio reset `_axBound` e re-render immediato
+
 ## 2.0.12 — 2026-07-12
 
 ### fix(alexa-card): tasti shuffle/repeat funzionanti + equalizzatore full-width v1.3
