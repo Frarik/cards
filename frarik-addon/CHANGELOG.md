@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.35 — 2026-07-12
+
+### feat(cards): 3 nuove card — deumidificatore, purificatore, VMC v1.0
+
+- **deumidificatore-card.js** v1.0: card per `humidifier.*`, SVG animato con ventola rotante, gocce d'acqua, display umidità; controlli on/off, target umidità ±5%, modalità
+- **purificatore-card.js** v1.0: card per `fan.*`, SVG torre purificatore con anello pulsante, particelle flottanti, display PM2.5; controlli on/off, presets velocità (10/25/50/75/100%), modalità
+- **vmc-card.js** v1.0: card per `fan.*`, SVG VMC a recupero con griglia doppia, scambiatore HRV, frecce flusso aria animate; sensori CO₂ e umidità opzionali; controlli on/off, portata (bassa/media/alta), modalità
+- Tutte le card: testi `#fff`, struttura hero uguale alle altre card, popup config con X + click-outside + autocomplete entità + color picker
+
 ## 2.0.34 — 2026-07-12
 
 ### fix(speedtest-card): tutte le scritte bianche al 100% v1.5
