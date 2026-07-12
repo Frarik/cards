@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.37 — 2026-07-12
+
+### fix(cards): immagine non più tagliata — art box più grande v1.2
+
+- Tutti e 3 (deumidificatore, purificatore, vmc): `overflow:hidden` → `overflow:visible` su `.fc-art` e `.fc-hero-img`
+- `max-width` art box: 110px → 130px; `max-height` hero-img: 130px → 160px
+
 ## 2.0.36 — 2026-07-12
 
 ### fix(cards): pill stato sempre bianca + SVG deumidificatore migliorato v1.1

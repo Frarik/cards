@@ -1,4 +1,4 @@
-/* frarik-version: 1.1 */
+/* frarik-version: 1.2 */
 (function () {
   'use strict';
 
@@ -197,8 +197,8 @@
       +'#'+rid+' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
       +'#'+rid+' .fc-scroll::-webkit-scrollbar{display:none}'
       +'#'+rid+' .fc-hero{display:flex;align-items:stretch;padding:10px 14px 8px;flex:1}'
-      +'#'+rid+' .fc-hero-img{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;max-height:130px}'
-      +'#'+rid+' .fc-art{width:100%;max-width:110px;aspect-ratio:1;border-radius:13px;overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,rgba('+rgb+',.18),rgba('+rgb+',.05));'+(isOn?'box-shadow:0 0 0 2px '+col+',0 4px 20px rgba('+rgb+',.4)':'box-shadow:0 4px 14px rgba(0,0,0,.5)')+'}'
+      +'#'+rid+' .fc-hero-img{flex:1;display:flex;align-items:center;justify-content:center;overflow:visible;max-height:160px}'
+      +'#'+rid+' .fc-art{width:100%;max-width:130px;aspect-ratio:1;border-radius:13px;overflow:visible;flex-shrink:0;background:linear-gradient(135deg,rgba('+rgb+',.18),rgba('+rgb+',.05));'+(isOn?'box-shadow:0 0 0 2px '+col+',0 4px 20px rgba('+rgb+',.4)':'box-shadow:0 4px 14px rgba(0,0,0,.5)')+'}'
       +'#'+rid+' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:4px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:10px;overflow:hidden}'
       +'#'+rid+' .fc-sep{height:1px;background:rgba(255,255,255,.06);margin:0 14px;flex-shrink:0}'
       +'#'+rid+' [data-pya]:active{opacity:.5}'
@@ -268,7 +268,7 @@
   }
 
   var CARD={
-    id:'purificatore-card',name:'Purificatore',icon:'🌿',version:'1.1',
+    id:'purificatore-card',name:'Purificatore',icon:'🌿',version:'1.2',
     desc:'Controllo purificatore aria: qualità PM2.5, velocità ventola, modalità. Richiede integrazione fan.',
     colSpan:2,rowSpan:3,frarik_no_edit:true,
     render:function(card){ return render(card); },
