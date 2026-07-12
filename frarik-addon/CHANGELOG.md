@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.36 — 2026-07-12
+
+### fix(cards): pill stato sempre bianca + SVG deumidificatore migliorato v1.1
+
+- **Tutti e 3** (deumidificatore, purificatore, vmc): pill "Acceso/Spento" → testo sempre `#fff`, il colore accent rimane solo su dot e bordo
+- **deumidificatore v1.1**: SVG completamente ridisegnato — corpo più luminoso con gradiente vivace, pale ventilatore a opacità `.7` (ben visibili), gocce d'acqua più grandi (r=2), anello pulsante intorno alla ventola quando acceso, glow drop-shadow animato sull'involucro
+
 ## 2.0.35 — 2026-07-12
 
 ### feat(cards): 3 nuove card — deumidificatore, purificatore, VMC v1.0

@@ -1,4 +1,4 @@
-/* frarik-version: 1.0 */
+/* frarik-version: 1.1 */
 (function () {
   'use strict';
 
@@ -28,56 +28,61 @@
     var uid = 'deu' + Math.floor(Math.random()*99999);
     var css = isOn
       ? '@keyframes '+uid+'Spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}'
-        + '@keyframes '+uid+'Drop{0%{opacity:.9;transform:translateY(0px)}80%{opacity:.35}100%{opacity:0;transform:translateY(16px)}}'
+        + '@keyframes '+uid+'Drp{0%{transform:translateY(0);opacity:.9}85%{opacity:.5}100%{transform:translateY(20px);opacity:0}}'
         + '@keyframes '+uid+'Led{0%,100%{opacity:.7}50%{opacity:1}}'
-        + '@keyframes '+uid+'Gw{0%,100%{opacity:.7}50%{opacity:1}}'
+        + '@keyframes '+uid+'Gw{0%,100%{filter:drop-shadow(0 0 6px rgba('+rgb+',.35))}50%{filter:drop-shadow(0 0 16px rgba('+rgb+',.75))}}'
+        + '@keyframes '+uid+'Pu{0%,100%{opacity:.25}50%{opacity:.6}}'
       : '';
 
-    var fanG = '<g style="transform-origin:50px 72px;'+(isOn?'animation:'+uid+'Spin 1.8s linear infinite':'')+'">'
-      + '<ellipse cx="50" cy="72" rx="11" ry="3.5" fill="rgba('+rgb+',.3)"/>'
-      + '<ellipse cx="50" cy="72" rx="11" ry="3.5" fill="rgba('+rgb+',.3)" transform="rotate(60,50,72)"/>'
-      + '<ellipse cx="50" cy="72" rx="11" ry="3.5" fill="rgba('+rgb+',.3)" transform="rotate(120,50,72)"/>'
+    var fanG = '<g style="transform-origin:50px 70px;'+(isOn?'animation:'+uid+'Spin 1.6s linear infinite':'')+'">'
+      + '<ellipse cx="50" cy="70" rx="11" ry="3.2" fill="rgba('+rgb+','+(isOn?'.7':'.3')+')" transform="rotate(0,50,70)"/>'
+      + '<ellipse cx="50" cy="70" rx="11" ry="3.2" fill="rgba('+rgb+','+(isOn?'.55':'.22')+')" transform="rotate(60,50,70)"/>'
+      + '<ellipse cx="50" cy="70" rx="11" ry="3.2" fill="rgba('+rgb+','+(isOn?'.7':'.3')+')" transform="rotate(120,50,70)"/>'
       + '</g>';
 
     var drops = isOn
-      ? '<circle cx="36" cy="65" r="1.3" fill="rgba(56,189,248,.9)" style="animation:'+uid+'Drop 1.3s ease-in infinite"/>'
-        + '<circle cx="50" cy="63" r="1.3" fill="rgba(56,189,248,.9)" style="animation:'+uid+'Drop 1.3s ease-in .45s infinite"/>'
-        + '<circle cx="64" cy="67" r="1.3" fill="rgba(56,189,248,.9)" style="animation:'+uid+'Drop 1.3s ease-in .85s infinite"/>'
+      ? '<circle cx="34" cy="55" r="2" fill="'+col+'" style="animation:'+uid+'Drp 1.2s ease-in infinite"/>'
+        + '<circle cx="50" cy="53" r="2" fill="'+col+'" style="animation:'+uid+'Drp 1.2s ease-in .42s infinite"/>'
+        + '<circle cx="66" cy="56" r="2" fill="'+col+'" style="animation:'+uid+'Drp 1.2s ease-in .8s infinite"/>'
       : '';
 
     var disp = curHum != null ? Math.round(curHum)+'%' : '—';
-    var dispCol = isOn ? col : '#1e3650';
 
     return '<svg viewBox="0 0 100 100" style="width:100%;height:100%;display:block;overflow:visible" preserveAspectRatio="xMidYMid meet">'
       + '<style>'+css+'</style>'
-      + '<defs><linearGradient id="'+uid+'Bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#18293d"/><stop offset="100%" stop-color="#0b1825"/></linearGradient></defs>'
+      + '<defs>'
+      + '<linearGradient id="'+uid+'Bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+(isOn?'#1c3358':'#111e35')+'"/><stop offset="100%" stop-color="#080f1e"/></linearGradient>'
+      + '<linearGradient id="'+uid+'Dp" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba('+rgb+',.22)"/><stop offset="100%" stop-color="rgba('+rgb+',.06)"/></linearGradient>'
+      + '</defs>'
       /* body */
-      + '<rect x="18" y="2" width="64" height="88" rx="10" fill="url(#'+uid+'Bg)" stroke="'+(isOn?col:'#1a3050')+'" stroke-width="'+(isOn?'1.5':'0.7')+'" '+(isOn?'style="filter:drop-shadow(0 0 8px rgba('+rgb+',.4))"':'')+'/>'
+      + '<rect x="14" y="3" width="72" height="89" rx="12" fill="url(#'+uid+'Bg)" stroke="'+(isOn?col:'#1e2f50')+'" stroke-width="'+(isOn?'1.5':'0.6')+'" '+(isOn?'style="animation:'+uid+'Gw 2.8s ease-in-out infinite"':'')+'/>'
+      /* side accent lines */
+      + '<line x1="14" y1="20" x2="14" y2="75" stroke="rgba('+rgb+',.15)" stroke-width="1.5"/>'
+      + '<line x1="86" y1="20" x2="86" y2="75" stroke="rgba('+rgb+',.1)" stroke-width="1"/>'
       /* top air grille */
-      + '<rect x="24" y="7" width="52" height="20" rx="3" fill="#08121e"/>'
-      + '<line x1="24" y1="12" x2="76" y2="12" stroke="rgba(255,255,255,.12)" stroke-width=".8"/>'
-      + '<line x1="24" y1="16" x2="76" y2="16" stroke="rgba(255,255,255,.12)" stroke-width=".8"/>'
-      + '<line x1="24" y1="20" x2="76" y2="20" stroke="rgba(255,255,255,.12)" stroke-width=".8"/>'
-      + '<line x1="24" y1="24" x2="76" y2="24" stroke="rgba(255,255,255,.12)" stroke-width=".8"/>'
+      + '<rect x="18" y="7" width="64" height="19" rx="4" fill="rgba(0,0,0,.4)"/>'
+      + '<line x1="18" y1="11.5" x2="82" y2="11.5" stroke="rgba(255,255,255,.15)" stroke-width="1"/>'
+      + '<line x1="18" y1="16" x2="82" y2="16" stroke="rgba(255,255,255,.1)" stroke-width=".8"/>'
+      + '<line x1="18" y1="20.5" x2="82" y2="20.5" stroke="rgba(255,255,255,.15)" stroke-width="1"/>'
       /* display panel */
-      + '<rect x="22" y="30" width="56" height="30" rx="6" fill="#05101b" stroke="rgba('+rgb+',.2)" stroke-width=".7"/>'
-      + '<text x="50" y="48" text-anchor="middle" font-family="monospace,system-ui" font-size="14" font-weight="900" fill="'+dispCol+'">'+disp+'</text>'
+      + '<rect x="18" y="28" width="64" height="24" rx="7" fill="url(#'+uid+'Dp)" stroke="rgba('+rgb+',.35)" stroke-width=".9"/>'
+      + '<text x="50" y="42" text-anchor="middle" font-family="monospace,system-ui" font-size="16" font-weight="900" fill="'+(isOn?col:'rgba('+rgb+',.55)')+'">'+disp+'</text>'
       + (targetHum!=null && isOn
-          ? '<text x="50" y="56" text-anchor="middle" font-family="system-ui" font-size="4.5" font-weight="700" fill="#fff">target '+Math.round(targetHum)+'%</text>'
-          : '<text x="50" y="56" text-anchor="middle" font-family="system-ui" font-size="4.5" font-weight="600" fill="rgba(255,255,255,.5)">umidità aria</text>')
-      /* fan chamber */
-      + '<rect x="24" y="63" width="52" height="24" rx="6" fill="#07111d"/>'
-      + '<circle cx="50" cy="72" r="11" fill="#050c17" stroke="rgba(255,255,255,.06)" stroke-width=".7"/>'
-      + fanG
-      + '<circle cx="50" cy="72" r="2.6" fill="'+(isOn?col:'#142435')+'"/>'
+          ? '<text x="50" y="50" text-anchor="middle" font-family="system-ui" font-size="4.5" font-weight="700" fill="#fff">↓ target '+Math.round(targetHum)+'%</text>'
+          : '<text x="50" y="50" text-anchor="middle" font-family="system-ui" font-size="4.5" font-weight="600" fill="rgba(255,255,255,.45)">umidità aria</text>')
       /* drops */
       + drops
-      /* water tank bar */
-      + '<rect x="18" y="92" width="64" height="6" rx="3" fill="#07111d"/>'
-      + '<rect x="19" y="93" width="40" height="4" rx="2" fill="rgba(56,189,248,'+(isOn?'.45':'.18')+')" />'
-      + '<text x="75" y="97" text-anchor="middle" font-family="system-ui" font-size="5" fill="rgba(56,189,248,.7)">💧</text>'
+      /* fan chamber */
+      + '<rect x="20" y="60" width="60" height="26" rx="8" fill="rgba(0,0,0,.45)"/>'
+      + '<circle cx="50" cy="70" r="13" fill="rgba(0,0,0,.35)" stroke="rgba('+rgb+',.12)" stroke-width=".8"/>'
+      + (isOn?'<circle cx="50" cy="70" r="13" fill="none" stroke="rgba('+rgb+',.15)" stroke-width="2" style="animation:'+uid+'Pu 2s ease-in-out infinite"/>':'')
+      + fanG
+      + '<circle cx="50" cy="70" r="3.5" fill="'+(isOn?col:'#1a2f50')+'"/>'
+      /* water bar */
+      + '<rect x="18" y="92" width="64" height="3.5" rx="1.5" fill="rgba(0,0,0,.4)"/>'
+      + '<rect x="19" y="92.5" width="36" height="2.5" rx="1.2" fill="rgba('+rgb+','+(isOn?'.55':'.2')+')" />'
       /* LED */
-      + '<circle cx="76" cy="10" r="2.2" fill="'+(isOn?col:'#0e2035')+'" '+(isOn?'style="filter:drop-shadow(0 0 4px '+col+');animation:'+uid+'Led 2s ease-in-out infinite"':'')+'/>'
+      + '<circle cx="79" cy="11" r="2.5" fill="'+(isOn?col:'#0e1a30')+'" '+(isOn?'style="filter:drop-shadow(0 0 5px '+col+');animation:'+uid+'Led 2s ease-in-out infinite"':'')+'/>'
       + '</svg>';
   }
 
@@ -155,7 +160,7 @@
 
     var stLbls={on:'Acceso',off:'Spento',unavailable:'Non disponibile'};
     var stateLbl=stLbls[state]||state;
-    var stateCol=isOn?col:'#475569', stateRgb=isOn?rgb:'71,85,105';
+    var stateCol=isOn?col:'#6b7fa8', stateRgb=isOn?rgb:'107,127,168';
 
     var artHtml='<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:6px;box-sizing:border-box">'
       +deumSVG(col,rgb,isOn,curHum,targetHum)+'</div>';
@@ -196,7 +201,7 @@
       +'#'+rid+' .fc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
       +'#'+rid+' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;background:rgba('+rgb+',.12);border:1px solid rgba('+rgb+',.25)}'
       +'#'+rid+' .fc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:text}'
-      +'#'+rid+' .fc-pill{font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;white-space:nowrap;display:flex;align-items:center;gap:4px;background:rgba('+stateRgb+',.08);border:1px solid rgba('+stateRgb+',.25);color:'+stateCol+'}'
+      +'#'+rid+' .fc-pill{font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;white-space:nowrap;display:flex;align-items:center;gap:4px;background:rgba('+stateRgb+',.08);border:1px solid rgba('+stateRgb+',.25);color:#fff}'
       +'#'+rid+' .fc-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:'+stateCol+(isOn?';animation:deuDot .9s ease-in-out infinite':'')+'}'
       +'#'+rid+' .fc-gear{margin-left:4px;cursor:pointer;width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#fff;flex-shrink:0}'
       +'#'+rid+' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
@@ -290,7 +295,7 @@
   }
 
   var CARD={
-    id:'deumidificatore-card',name:'Deumidificatore',icon:'💧',version:'1.0',
+    id:'deumidificatore-card',name:'Deumidificatore',icon:'💧',version:'1.1',
     desc:'Controllo deumidificatore: umidità attuale/target, modalità operative. Richiede integrazione humidifier.',
     colSpan:2,rowSpan:3,frarik_no_edit:true,
     render:function(card){ return render(card); },

@@ -1,4 +1,4 @@
-/* frarik-version: 1.0 */
+/* frarik-version: 1.1 */
 (function () {
   'use strict';
 
@@ -150,7 +150,7 @@
 
     var stLbls={on:'Attiva',off:'Spenta',unavailable:'Non disponibile'};
     var stateLbl=stLbls[state]||state;
-    var stateCol=isOn?col:'#475569', stateRgb=isOn?rgb:'71,85,105';
+    var stateCol=isOn?col:'#6b7fa8', stateRgb=isOn?rgb:'107,127,168';
 
     var artHtml='<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:6px;box-sizing:border-box">'+vmcSVG(col,rgb,isOn,pct)+'</div>';
 
@@ -199,7 +199,7 @@
       +'#'+rid+' .fc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
       +'#'+rid+' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;background:rgba('+rgb+',.12);border:1px solid rgba('+rgb+',.25)}'
       +'#'+rid+' .fc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:text}'
-      +'#'+rid+' .fc-pill{font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;white-space:nowrap;display:flex;align-items:center;gap:4px;background:rgba('+stateRgb+',.08);border:1px solid rgba('+stateRgb+',.25);color:'+stateCol+'}'
+      +'#'+rid+' .fc-pill{font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;white-space:nowrap;display:flex;align-items:center;gap:4px;background:rgba('+stateRgb+',.08);border:1px solid rgba('+stateRgb+',.25);color:#fff}'
       +'#'+rid+' .fc-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:'+stateCol+(isOn?';animation:vmcDot .9s ease-in-out infinite':'')+'}'
       +'#'+rid+' .fc-gear{margin-left:4px;cursor:pointer;width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#fff;flex-shrink:0}'
       +'#'+rid+' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
@@ -276,7 +276,7 @@
   }
 
   var CARD={
-    id:'vmc-card',name:'VMC',icon:'🌀',version:'1.0',
+    id:'vmc-card',name:'VMC',icon:'🌀',version:'1.1',
     desc:'Controllo VMC (Ventilazione Meccanica Controllata): CO₂, umidità, portata aria, modalità.',
     colSpan:2,rowSpan:3,frarik_no_edit:true,
     render:function(card){ return render(card); },
