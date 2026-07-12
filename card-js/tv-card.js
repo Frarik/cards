@@ -1,462 +1,583 @@
-/* frarik-version: 1.2 */
+/* frarik-version: 2.0 */
 (function () {
   'use strict';
+
+  var CARD_VER = '2.0';
 
   function H() { try { if (typeof window.frarikHass === 'function') { var h = window.frarikHass(); if (h && h.states) return h; } } catch (e) {} return null; }
   function keyOf(c) { return 'frarik_tvcard_' + (c.id || 'x'); }
   function load(c) { try { return JSON.parse(localStorage.getItem(keyOf(c)) || '{}') || {}; } catch (e) { return {}; } }
   function save(c, o) { try { localStorage.setItem(keyOf(c), JSON.stringify(o)); } catch (e) {} }
   function S(h, id) { var s = h && id && h.states && h.states[id]; return s ? s.state : null; }
-  function Attr(h, id, k) { var s = h && id && h.states && h.states[id]; return (s && s.attributes && s.attributes[k] != null) ? s.attributes[k] : null; }
-  function callSvc(d, s, data) { try { var h = H(); if (h && h.callService) h.callService(d, s, data || {}); } catch (e) {} }
-  function isBool(v) { return v === true || v === 'true'; }
-  function _esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function _esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  function callSvc(domain, service, data) {
+    try { var h = H(); if (h && h.callService) h.callService(domain, service, data || {}); } catch (e) {}
+  }
 
   function hexRgb(hex) {
-    try {
-      var s = (hex || '#38bdf8').replace('#', '');
-      if (s.length === 3) s = s[0]+s[0]+s[1]+s[1]+s[2]+s[2];
-      return parseInt(s.slice(0,2),16)+','+parseInt(s.slice(2,4),16)+','+parseInt(s.slice(4,6),16);
-    } catch(e) { return '56,189,248'; }
+    try { var s=(hex||'#38bdf8').replace('#',''); if(s.length===3)s=s[0]+s[0]+s[1]+s[1]+s[2]+s[2]; return parseInt(s.slice(0,2),16)+','+parseInt(s.slice(2,4),16)+','+parseInt(s.slice(4,6),16); } catch(e){return '56,189,248';}
   }
 
   function cfgFor(card) {
     var c = load(card);
     return {
-      pk_tv:        (c.pk_tv        && c.pk_tv        !== '') ? c.pk_tv        : 'media_player.tv_sala_2',
-      pk_remote:    (c.pk_remote    && c.pk_remote    !== '') ? c.pk_remote    : 'remote.tv_sala',
-      pk_bl:        (c.pk_bl        && c.pk_bl        !== '') ? c.pk_bl        : 'remote.broadlink',
-      bl_device:    (c.bl_device    && c.bl_device    !== '') ? c.bl_device    : 'soundbar_lg',
-      bl_vol_up:    (c.bl_vol_up    && c.bl_vol_up    !== '') ? c.bl_vol_up    : 'volume_su',
-      bl_vol_down:  (c.bl_vol_down  && c.bl_vol_down  !== '') ? c.bl_vol_down  : 'volume_giu',
-      bl_mute:      (c.bl_mute      && c.bl_mute      !== '') ? c.bl_mute      : 'mute',
-      pk_sb_sensor: (c.pk_sb_sensor && c.pk_sb_sensor !== '') ? c.pk_sb_sensor : 'sensor.presa_tv_sala_potenza',
-      sb_threshold: (c.sb_threshold != null && c.sb_threshold !== '') ? parseFloat(c.sb_threshold) : 30,
-      name:         c.name  || 'TV Sala',
-      color:        c.color || '#38bdf8',
+      pk_tv:        c.pk_tv        || 'media_player.tv_sala_2',
+      pk_remote:    c.pk_remote    || 'remote.tv_sala',
+      pk_bl:        c.pk_bl        || 'remote.broadlink',
+      bl_device:    c.bl_device    || 'soundbar_lg',
+      bl_vol_up:    c.bl_vol_up    || 'volume_su',
+      bl_vol_down:  c.bl_vol_down  || 'volume_giu',
+      bl_mute:      c.bl_mute      || 'mute',
+      pk_sb_sensor: c.pk_sb_sensor || 'sensor.presa_tv_sala_potenza',
+      sb_threshold: parseFloat(c.sb_threshold) || 30,
+      cmd_up:       c.cmd_up       || 'UP',
+      cmd_down:     c.cmd_down     || 'DOWN',
+      cmd_left:     c.cmd_left     || 'LEFT',
+      cmd_right:    c.cmd_right    || 'RIGHT',
+      cmd_ok:       c.cmd_ok       || 'ENTER',
+      cmd_back:     c.cmd_back     || 'BACK',
+      cmd_home:     c.cmd_home     || 'HOME',
+      cmd_menu:     c.cmd_menu     || 'MENU',
+      name:         c.name         || 'TV Sala',
+      color:        c.color        || '#38bdf8',
     };
   }
 
-  /* ── TV SVG ── */
-  function tvSVG(col, rgb, isOn, isPlaying) {
-    var scan = isPlaying
-      ? '<style>@keyframes tvSc{0%{opacity:.7;transform:translateY(0)}80%{opacity:0}100%{opacity:0;transform:translateY(36px)}}</style>'
-        + '<rect x="5" y="5" width="58" height="2" rx="1" fill="rgba('+rgb+',.55)" style="animation:tvSc 2.2s linear infinite"/>'
-      : '';
-    var screen = isOn
-      ? '<rect x="4" y="4" width="60" height="40" rx="3" fill="rgba('+rgb+',.06)"/>' + scan
-      : '<rect x="4" y="4" width="60" height="40" rx="3" fill="#020810"/>'
-        + '<line x1="27" y1="23" x2="41" y2="23" stroke="rgba(255,255,255,.07)" stroke-width="1.5"/>'
-        + '<line x1="34" y1="16" x2="34" y2="30" stroke="rgba(255,255,255,.07)" stroke-width="1.5"/>';
-    return '<svg viewBox="0 0 68 58" style="width:74px;height:62px;display:block;margin:auto">'
-      + '<style>@keyframes tvGlw{0%,100%{filter:drop-shadow(0 0 4px rgba('+rgb+',.4))}50%{filter:drop-shadow(0 0 9px rgba('+rgb+',.75))}}</style>'
-      + '<rect x="1" y="1" width="66" height="48" rx="7" fill="#030c1c" stroke="'+col+'" stroke-width="'+(isOn?'1.8':'0.5')+'" opacity="'+(isOn?'1':'.35')+'"'+(isOn?' style="animation:tvGlw 2.5s ease-in-out infinite"':'')+'/>'
-      + screen
-      + '<rect x="29" y="50" width="10" height="5" rx="1" fill="rgba(255,255,255,.08)"/>'
-      + '<rect x="12" y="55" width="44" height="3" rx="1.5" fill="rgba(255,255,255,.05)"/>'
-      + '<circle cx="62" cy="7" r="3.5" fill="'+(isOn?col:'rgba(255,255,255,.12)')+'"'+(isOn?' style="filter:drop-shadow(0 0 4px '+col+')"':'')+'/>'
-      + '</svg>';
-  }
-
-  /* ── RENDER ── */
+  /* ─────────────── RENDER ─────────────── */
   function render(card) {
     var h = H(), c = cfgFor(card), cid = card.id || 'x', rid = 'tv-' + cid;
     var col = c.color, rgb = hexRgb(col);
+
     var tvEid = c.pk_tv;
+    var tvSt  = S(h, tvEid) || 'unavailable';
+    var tvAt  = (h && h.states && h.states[tvEid] && h.states[tvEid].attributes) || {};
+    var isOn  = tvSt !== 'off' && tvSt !== 'unavailable' && tvSt !== 'standby';
+    var isPlay = tvSt === 'playing';
+    var isPause = tvSt === 'paused';
 
-    var tvState = S(h, tvEid) || 'unavailable';
-    var tvAttrs = (h && h.states && h.states[tvEid] && h.states[tvEid].attributes) || {};
-    var isOn    = tvState !== 'off' && tvState !== 'unavailable' && tvState !== 'standby';
-    var isPlay  = tvState === 'playing';
-    var isPause = tvState === 'paused';
+    var mediaTitle = tvAt.media_title || tvAt.app_name || '';
+    var source     = tvAt.source || '';
+    var sourceList = tvAt.source_list || [];
+    var pic        = tvAt.entity_picture || '';
 
-    var pic        = tvAttrs.entity_picture || '';
-    var mediaTitle = tvAttrs.media_title || tvAttrs.app_name || '';
-    var source     = tvAttrs.source || '';
-    var sourceList = tvAttrs.source_list || [];
+    var sbW  = parseFloat(S(h, c.pk_sb_sensor) || '0') || 0;
+    var sbOn = sbW > c.sb_threshold;
 
-    /* soundbar state from power sensor */
-    var sbSensorVal = parseFloat(S(h, c.pk_sb_sensor) || '0') || 0;
-    var sbOn = sbSensorVal > (c.sb_threshold || 30);
-
-    var stLbls = { playing:'In riproduzione', paused:'In pausa', idle:'Accesa', on:'Accesa', standby:'Standby', off:'Spenta', unavailable:'Non disponibile' };
-    var stateLbl = stLbls[tvState] || tvState;
-    var stateHex = isPlay ? col : isPause ? '#f59e0b' : isOn ? '#4ade80' : '#475569';
+    var stMap = { playing:'In riproduzione', paused:'In pausa', idle:'Accesa', on:'Accesa', standby:'Standby', off:'Spenta', unavailable:'Non disponibile' };
+    var stateLbl = stMap[tvSt] || tvSt;
+    var stateCol = isPlay ? col : isPause ? '#f59e0b' : isOn ? '#4ade80' : '#475569';
     var stateRgb = isPlay ? rgb : isPause ? '245,158,11' : isOn ? '74,222,128' : '71,85,105';
 
-    /* art */
-    var artContent;
-    if (pic && isOn) {
-      var src = pic.startsWith('http') ? pic : (window.location.origin + pic);
-      artContent = '<img src="'+src+'" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:10px" '
-        + 'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
-        + '<div style="display:none;width:100%;height:100%;align-items:center;justify-content:center">'+tvSVG(col,rgb,isOn,isPlay)+'</div>';
-    } else {
-      artContent = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center">'+tvSVG(col,rgb,isOn,isPlay)+'</div>';
-    }
-
-    /* right info */
-    var infoRows = '';
-    if (isOn && mediaTitle) {
-      infoRows += '<div style="font-size:12px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3">'+_esc(mediaTitle)+'</div>';
-    }
-    if (isOn && source) {
-      infoRows += '<div style="font-size:10px;font-weight:600;color:rgba(255,255,255,.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">'+_esc(source)+'</div>';
-    }
-    if (!isOn || (!mediaTitle && !source)) {
-      infoRows += '<div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.25)">'+stateLbl+'</div>';
-    }
-    /* source pill */
-    if (isOn && sourceList.length) {
-      infoRows += '<div data-axa="source-open" style="margin-top:5px;display:flex;align-items:center;gap:5px;cursor:pointer;padding:3px 8px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);overflow:hidden;user-select:none">'
-        +'<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.35);flex-shrink:0">INGRESSO</span>'
-        +'<span style="font-size:10px;font-weight:600;color:#fff;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_esc(source||'—')+'</span>'
-        +'<span style="font-size:10px;color:rgba(255,255,255,.4);flex-shrink:0">▾</span>'
+    /* art box */
+    var artSrc = pic ? (pic.startsWith('http') ? pic : window.location.origin + pic) : '';
+    var artHtml = artSrc
+      ? '<img src="'+artSrc+'" style="width:100%;height:100%;object-fit:cover;border-radius:10px" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">'
+        +'<div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;flex-direction:column;gap:4px">'
+        +'<span style="font-size:28px">📺</span>'
+        +'<span style="font-size:9px;color:rgba(255,255,255,.3);font-weight:700">'+_esc(stateLbl)+'</span>'
+        +'</div>'
+      : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px">'
+        +'<span style="font-size:28px">📺</span>'
+        +'<span style="font-size:9px;color:rgba(255,255,255,.3);font-weight:700">'+_esc(stateLbl)+'</span>'
         +'</div>';
-    }
-    /* soundbar status chip */
-    infoRows += '<div style="margin-top:6px;display:flex;align-items:center;gap:6px;padding:3px 8px;border-radius:7px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)">'
-      +'<span style="font-size:9px;font-weight:800;letter-spacing:.4px;color:rgba(255,255,255,.3)">SOUNDBAR</span>'
-      +'<span style="width:6px;height:6px;border-radius:50%;background:'+(sbOn?'#4ade80':'#475569')+';flex-shrink:0'+(sbOn?';box-shadow:0 0 5px #4ade80':'')+'">'
+
+    /* source pill */
+    var srcPill = (isOn && sourceList.length)
+      ? '<div data-axa="src" style="display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);cursor:pointer;overflow:hidden;min-width:0">'
+        +'<span style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:rgba(255,255,255,.3);flex-shrink:0">IN</span>'
+        +'<span style="font-size:10px;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0">'+_esc(source||'—')+'</span>'
+        +'<span style="color:rgba(255,255,255,.35);font-size:9px;flex-shrink:0">▾</span>'
+        +'</div>'
+      : '';
+
+    /* soundbar chip */
+    var sbChip = '<div style="display:flex;align-items:center;gap:5px;padding:3px 7px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)">'
+      +'<span style="font-size:9px;color:rgba(255,255,255,.3);font-weight:700">🔊</span>'
+      +'<span style="width:5px;height:5px;border-radius:50%;background:'+(sbOn?'#4ade80':'#475569')+';flex-shrink:0'+(sbOn?';box-shadow:0 0 4px #4ade80':'')+'">'
       +'</span>'
-      +'<span style="font-size:10px;font-weight:700;color:'+(sbOn?'rgba(74,222,128,.9)':'rgba(255,255,255,.3)')+'">'+sbSensorVal.toFixed(0)+' W</span>'
+      +'<span style="font-size:10px;font-weight:700;color:'+(sbOn?'rgba(74,222,128,.9)':'rgba(255,255,255,.3)')+'">'+sbW.toFixed(0)+'W</span>'
       +'</div>';
 
-    /* ── button helpers ── */
-    var bBase = 'display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:10px;user-select:none;-webkit-tap-highlight-color:transparent';
-    var bSm   = bBase+';width:38px;height:38px;font-size:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.11);color:rgba(255,255,255,.75);flex-shrink:0';
-    var bNav  = bBase+';width:46px;height:46px;font-size:18px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);color:#fff;flex-shrink:0';
-    var bOK   = bBase+';width:54px;height:54px;font-size:14px;font-weight:900;background:rgba('+rgb+',.2);border:2px solid '+col+';color:'+col+';box-shadow:0 0 16px rgba('+rgb+',.4);flex-shrink:0;letter-spacing:.5px';
-    var bPow  = bBase+';flex:1;height:38px;font-size:12px;font-weight:800;gap:6px;'
-      +(isOn?'background:rgba('+rgb+',.18);border:1px solid '+col+';color:'+col+';box-shadow:0 0 10px rgba('+rgb+',.3)'
-            :'background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.65)');
-    var bPb   = bBase+';width:40px;height:38px;font-size:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.11);color:rgba(255,255,255,.7)';
-    var bPP   = bBase+';width:46px;height:42px;font-size:18px;background:rgba('+rgb+',.18);border:1px solid '+col+';color:'+col+';box-shadow:0 0 10px rgba('+rgb+',.3)';
-    var bApp  = function(bg, txt) {
-      return bBase+';flex:1;height:34px;font-size:10px;font-weight:800;background:'+bg+';border:none;color:'+txt+';border-radius:9px;white-space:nowrap';
-    };
-    var bSb   = bBase+';flex:1;height:40px;font-size:13px;font-weight:700;gap:6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.75)';
-    var bSbOn = bBase+';flex:1;height:40px;font-size:13px;font-weight:700;gap:6px;background:rgba(248,113,113,.18);border:1px solid #f87171;color:#f87171';
-    var bNavSm = bBase+';flex:1;height:36px;font-size:10px;font-weight:700;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);color:rgba(255,255,255,.65)';
-    var bCh    = bBase+';width:38px;height:38px;font-size:11px;font-weight:800;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.11);color:rgba(255,255,255,.65)';
+    /* ── button styles ── */
+    var bBase = 'display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;transition:opacity .1s';
+    var bIcon = bBase+';width:42px;height:42px;border-radius:11px;font-size:17px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.8);flex-shrink:0';
+    var bPow  = bBase+';flex:1;height:40px;font-size:11px;font-weight:800;gap:6px;border-radius:11px;'
+      +(isOn?'background:rgba('+rgb+',.18);border:1px solid '+col+';color:'+col
+           :'background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.65)');
+    var bApp  = bBase+';height:32px;border-radius:9px;font-size:10px;font-weight:800;white-space:nowrap;flex:1';
+    var bNum  = bBase+';flex:1;height:36px;font-size:13px;font-weight:800;border-radius:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);color:rgba(255,255,255,.7)';
+    var bPb   = bBase+';flex:1;height:40px;font-size:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.65);border-radius:11px';
+    var bPP   = bBase+';flex:1;height:40px;font-size:18px;background:rgba('+rgb+',.2);border:1px solid '+col+';color:'+col+';box-shadow:0 0 12px rgba('+rgb+',.35);border-radius:11px';
+    var bCh   = bBase+';width:46px;height:40px;font-size:10px;font-weight:800;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);color:rgba(255,255,255,.5);border-radius:11px;flex-direction:column;gap:1px';
+    var bSb   = bBase+';flex:1;height:38px;font-size:12px;font-weight:700;gap:5px;border-radius:11px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.11);color:rgba(255,255,255,.75)';
+    var bSbA  = bBase+';flex:1;height:38px;font-size:12px;font-weight:700;gap:5px;border-radius:11px;background:rgba(248,113,113,.18);border:1px solid #f87171;color:#f87171;box-shadow:0 0 10px rgba(248,113,113,.3)';
+    var bNav  = bBase+';width:40px;height:40px;font-size:16px;border-radius:11px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);color:rgba(255,255,255,.85)';
+    var bNavSm = bBase+';flex:1;height:34px;font-size:10px;font-weight:700;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);color:rgba(255,255,255,.55)';
+    var bSrc  = bBase+';width:40px;height:40px;border-radius:11px;font-size:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.7);flex-shrink:0';
 
-    /* ── sections ── */
-    var powerRow = '<div style="display:flex;gap:7px;padding:6px 14px 4px;flex-shrink:0">'
-      +'<div style="'+bPow+'" data-axa="power">⏻ '+(isOn?'Spegni TV':'Accendi TV')+'</div>'
-      +(sourceList.length ? '<div style="'+bSm+'" data-axa="source-open" title="Ingresso">📥</div>' : '')
-      +'<div style="'+bSm+'" data-axa="info" title="Info">ℹ️</div>'
-      +'</div>';
+    /* ─ CSS ─ */
+    var css = '<style>'
+      +'@keyframes tvGl{0%,100%{box-shadow:0 0 0 1.5px '+col+',0 3px 16px rgba('+rgb+',.3)}50%{box-shadow:0 0 0 2px '+col+',0 4px 28px rgba('+rgb+',.55)}}'
+      +'@keyframes tvDot{0%,100%{opacity:.55}50%{opacity:1}}'
+      +'@keyframes tpRip{0%{transform:scale(0);opacity:.6}100%{transform:scale(2.5);opacity:0}}'
+      +'@keyframes fcUP{from{transform:translateY(100%)}to{transform:translateY(0)}}'
+      +'#'+rid+'{position:relative;width:100%;height:100%;min-height:620px;font-family:system-ui,sans-serif}'
+      +'#'+rid+' .fc-card{display:flex;flex-direction:column;height:100%;min-height:620px;background:linear-gradient(155deg,#060d14 0%,#09111e 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
+      +'#'+rid+' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 40% 0,rgba('+rgb+',.09) 0%,transparent 65%);pointer-events:none;z-index:0}'
+      +'#'+rid+' .fc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
+      +'#'+rid+' .fc-hdr-ico{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;background:rgba('+rgb+',.12);border:1px solid rgba('+rgb+',.25);flex-shrink:0}'
+      +'#'+rid+' .fc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:text}'
+      +'#'+rid+' .fc-pill{display:flex;align-items:center;gap:5px;font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;background:rgba('+stateRgb+',.08);border:1px solid rgba('+stateRgb+',.22);color:'+stateCol+'}'
+      +'#'+rid+' .fc-dot{width:6px;height:6px;border-radius:50%;background:'+stateCol+';flex-shrink:0'+(isPlay?';animation:tvDot .9s ease-in-out infinite':'')+'}'
+      +'#'+rid+' .fc-gear{margin-left:2px;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#fff;cursor:pointer;flex-shrink:0}'
+      +'#'+rid+' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
+      +'#'+rid+' .fc-scroll::-webkit-scrollbar{display:none}'
+      +'#'+rid+' .fc-hero{display:flex;align-items:stretch;padding:10px 14px 8px;gap:0}'
+      +'#'+rid+' .fc-art{width:82px;height:70px;border-radius:10px;overflow:hidden;flex-shrink:0;background:rgba('+rgb+',.08);'+(isOn&&isPlay?'animation:tvGl 2.5s ease-in-out infinite':'border:1px solid rgba(255,255,255,.07)')+'}'
+      +'#'+rid+' .fc-info{flex:1;padding-left:10px;border-left:1px solid rgba(255,255,255,.07);display:flex;flex-direction:column;gap:3px;min-width:0;justify-content:center}'
+      +'#'+rid+' .fc-sep{height:1px;background:rgba(255,255,255,.06);margin:0 14px;flex-shrink:0}'
+      +'#'+rid+' .fc-sec{padding:6px 14px 4px;flex-shrink:0}'
+      +'#'+rid+' .fc-sec-lbl{font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:rgba(255,255,255,.2);margin-bottom:5px}'
+      +'#'+rid+' [data-axa]:active{opacity:.5}'
+      +'#'+rid+' .tp-wrap{position:relative;padding:0 14px 6px;flex-shrink:0}'
+      +'#'+rid+' .tp-pad{border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);position:relative;overflow:hidden;height:140px;cursor:pointer;touch-action:none;user-select:none;-webkit-tap-highlight-color:transparent}'
+      +'#'+rid+' .tp-center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;pointer-events:none}'
+      +'#'+rid+' .tp-hint{font-size:9px;font-weight:700;color:rgba(255,255,255,.18);letter-spacing:.4px}'
+      +'#'+rid+' .tp-ico{font-size:22px;color:rgba(255,255,255,.12)}'
+      +'#'+rid+' .tp-arr{position:absolute;font-size:13px;color:rgba(255,255,255,.18);pointer-events:none}'
+      +'#'+rid+' .tp-rip{position:absolute;width:60px;height:60px;border-radius:50%;background:rgba('+rgb+',.35);transform:scale(0);pointer-events:none;margin-left:-30px;margin-top:-30px}'
+      +'</style>';
 
-    /* app shortcuts */
-    var appsRow = '<div style="display:flex;gap:6px;padding:0 14px 6px;flex-shrink:0">'
-      +'<div style="'+bApp('rgba(229,9,20,.85)','#fff')+'" data-axa="app-netflix">▶ Netflix</div>'
-      +'<div style="'+bApp('rgba(255,0,0,.75)','#fff')+'" data-axa="app-youtube">▶ YouTube</div>'
-      +'<div style="'+bApp('rgba(30,215,96,.85)','#0a1a0f')+'" data-axa="app-spotify">♪ Spotify</div>'
-      +'<div style="'+bApp('rgba(56,189,248,.15)','rgba(255,255,255,.7)')+';border:1px solid rgba(56,189,248,.2)" data-axa="app-tv">📡 TV</div>'
-      +'</div>';
-
-    /* d-pad */
-    var dpad = '<div style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:4px 14px 2px;flex-shrink:0">'
-      +'<div style="'+bNav+'" data-axa="nav-up">▲</div>'
-      +'<div style="display:flex;align-items:center;gap:5px">'
-      +'<div style="'+bNav+'" data-axa="nav-left">◀</div>'
-      +'<div style="'+bOK+'" data-axa="nav-ok">OK</div>'
-      +'<div style="'+bNav+'" data-axa="nav-right">▶</div>'
+    /* ─ HERO ─ */
+    var hero = '<div class="fc-hero">'
+      +'<div class="fc-art">'+artHtml+'</div>'
+      +'<div class="fc-info">'
+      +(isOn && mediaTitle ? '<div style="font-size:12px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3">'+_esc(mediaTitle)+'</div>' : '')
+      +(isOn && source ? '<div style="font-size:10px;color:rgba(255,255,255,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+_esc(source)+'</div>' : '')
+      +(!isOn || (!mediaTitle&&!source) ? '<div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.2)">'+_esc(stateLbl)+'</div>' : '')
+      +srcPill
+      +sbChip
       +'</div>'
-      +'<div style="'+bNav+'" data-axa="nav-down">▼</div>'
+      +'</div>';
+
+    /* ─ POWER + SOURCE ─ */
+    var powerRow = '<div class="fc-sec" style="padding-top:8px">'
+      +'<div style="display:flex;gap:7px">'
+      +'<div style="'+bPow+'" data-axa="power">⏻ '+(isOn?'Spegni':'Accendi TV')+'</div>'
+      +'<div style="'+bSrc+'" data-axa="src" title="Sorgente">📥</div>'
+      +'<div style="'+bSrc+'" data-axa="info" title="Info">ℹ️</div>'
       +'</div>'
-      +'<div style="display:flex;gap:6px;padding:2px 14px 6px;flex-shrink:0">'
+      +'</div>';
+
+    /* ─ APPS ─ */
+    var appsRow = '<div class="fc-sec">'
+      +'<div style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:rgba(255,255,255,.2);margin-bottom:5px">App</div>'
+      +'<div style="display:flex;gap:5px">'
+      +'<div style="'+bApp+';background:rgba(229,9,20,.82);color:#fff" data-axa="app-netflix">▶ Netflix</div>'
+      +'<div style="'+bApp+';background:rgba(255,0,0,.72);color:#fff" data-axa="app-youtube">▶ YouTube</div>'
+      +'<div style="'+bApp+';background:rgba(30,215,96,.82);color:#0a1a0f" data-axa="app-spotify">♪ Spotify</div>'
+      +'<div style="'+bApp+';background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.6)" data-axa="app-tv">📡 TV</div>'
+      +'</div>'
+      +'</div>';
+
+    /* ─ TOUCHPAD ─ */
+    var touchpad = '<div class="tp-wrap">'
+      +'<div style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:rgba(255,255,255,.2);margin-bottom:5px;padding:0">Touchpad</div>'
+      +'<div class="tp-pad" id="'+rid+'-tp">'
+      +'<div class="tp-arr" style="top:8px;left:50%;transform:translateX(-50%)">▲</div>'
+      +'<div class="tp-arr" style="bottom:8px;left:50%;transform:translateX(-50%)">▼</div>'
+      +'<div class="tp-arr" style="left:10px;top:50%;transform:translateY(-50%)">◀</div>'
+      +'<div class="tp-arr" style="right:10px;top:50%;transform:translateY(-50%)">▶</div>'
+      +'<div class="tp-center">'
+      +'<div class="tp-ico">⊙</div>'
+      +'<div class="tp-hint">SCORRI • TOCCA = OK</div>'
+      +'</div>'
+      +'<div class="tp-rip" id="'+rid+'-rip"></div>'
+      +'</div>'
+      +'</div>';
+
+    /* ─ SYSTEM BUTTONS ─ */
+    var sysRow = '<div class="fc-sec" style="padding-top:4px">'
+      +'<div style="display:flex;gap:5px">'
       +'<div style="'+bNavSm+'" data-axa="nav-back">← BACK</div>'
       +'<div style="'+bNavSm+'" data-axa="nav-home">⌂ HOME</div>'
       +'<div style="'+bNavSm+'" data-axa="nav-menu">☰ MENU</div>'
-      +'</div>';
-
-    /* playback + channel */
-    var pbRow = '<div style="display:flex;align-items:center;justify-content:center;gap:6px;padding:2px 14px 6px;flex-shrink:0">'
-      +'<div style="'+bCh+'" data-axa="ch-up" title="Canale +">CH+</div>'
-      +'<div style="'+bPb+'" data-axa="rewind">⏪</div>'
-      +'<div style="'+bPP+'" data-axa="pp">'+(isPlay?'⏸':'▶')+'</div>'
-      +'<div style="'+bPb+'" data-axa="ff">⏩</div>'
-      +'<div style="'+bCh+'" data-axa="ch-down" title="Canale -">CH-</div>'
-      +'</div>';
-
-    /* soundbar controls (via Broadlink) */
-    var sbRow = '<div style="padding:4px 14px 8px;flex-shrink:0">'
-      +'<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.25);margin-bottom:5px;padding-left:2px">🔊 Soundbar</div>'
-      +'<div style="display:flex;gap:6px">'
-      +'<div style="'+bSb+'" data-axa="sb-vol-down">🔉 VOL −</div>'
-      +'<div style="'+(false?bSbOn:bSb)+'" data-axa="sb-mute">🔇 MUTE</div>'
-      +'<div style="'+bSb+'" data-axa="sb-vol-up">🔊 VOL +</div>'
+      +'<div style="'+bNavSm+'" data-axa="nav-info">ℹ INFO</div>'
       +'</div>'
       +'</div>';
 
-    /* CSS */
-    var css = '<style>'
-      +'@keyframes tvDot{0%,100%{opacity:.5}50%{opacity:1}}'
-      +'@keyframes tvPls{0%,100%{box-shadow:0 0 0 1px '+col+',0 3px 14px rgba('+rgb+',.25)}50%{box-shadow:0 0 0 2px '+col+',0 4px 22px rgba('+rgb+',.5)}}'
-      +'#'+rid+'{position:relative;width:100%;height:100%;min-height:510px;font-family:system-ui,sans-serif;display:block}'
-      +'#'+rid+' .fc-card{display:flex;flex-direction:column;height:100%;min-height:510px;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
-      +'#'+rid+' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:180px;background:radial-gradient(ellipse at 35% 0%,rgba('+rgb+',.1) 0%,transparent 65%);pointer-events:none}'
-      +'#'+rid+' .fc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
-      +'#'+rid+' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;background:rgba('+rgb+',.12);border:1px solid rgba('+rgb+',.25)}'
-      +'#'+rid+' .fc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:text}'
-      +'#'+rid+' .fc-pill{font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;white-space:nowrap;display:flex;align-items:center;gap:4px;background:rgba('+stateRgb+',.08);border:1px solid rgba('+stateRgb+',.25);color:'+stateHex+'}'
-      +'#'+rid+' .fc-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:'+stateHex+(isPlay?';animation:tvDot .8s ease-in-out infinite':'')+'}'
-      +'#'+rid+' .fc-gear{margin-left:4px;cursor:pointer;width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#fff;flex-shrink:0}'
-      +'#'+rid+' .fc-gear:hover{background:rgba(255,255,255,.1)}'
-      +'#'+rid+' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
-      +'#'+rid+' .fc-scroll::-webkit-scrollbar{display:none}'
-      +'#'+rid+' .fc-hero{display:flex;align-items:center;padding:10px 14px 8px;gap:0}'
-      +'#'+rid+' .fc-art{width:90px;height:78px;border-radius:10px;overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,rgba('+rgb+',.14),rgba('+rgb+',.03));'+(isOn&&isPlay?'box-shadow:0 0 0 1.5px '+col+',0 4px 16px rgba('+rgb+',.4);animation:tvPls 2.5s ease-in-out infinite':'box-shadow:0 4px 12px rgba(0,0,0,.5)')+'}'
-      +'#'+rid+' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0;padding-left:11px;border-left:1px solid rgba(255,255,255,.07)}'
-      +'#'+rid+' .fc-sep{height:1px;background:rgba(255,255,255,.06);margin:0 14px;flex-shrink:0}'
-      +'#'+rid+' [data-axa]:active{opacity:.6}'
-      +'</style>';
+    /* ─ PLAYBACK + CHANNEL ─ */
+    var pbRow = '<div class="fc-sec" style="padding-top:4px">'
+      +'<div style="display:flex;gap:5px;align-items:center">'
+      +'<div style="'+bCh+'" data-axa="ch-up"><span>▲</span><span style="font-size:8px;font-weight:800;letter-spacing:.3px">CH</span></div>'
+      +'<div style="'+bPb+'" data-axa="rw">⏪</div>'
+      +'<div style="'+bPP+'" data-axa="pp">'+(isPlay?'⏸':'▶')+'</div>'
+      +'<div style="'+bPb+'" data-axa="ff">⏩</div>'
+      +'<div style="'+bCh+'" data-axa="ch-down"><span style="font-size:8px;font-weight:800;letter-spacing:.3px">CH</span><span>▼</span></div>'
+      +'</div>'
+      +'</div>';
+
+    /* ─ NUMBER PAD ─ */
+    var nums = ['1','2','3','4','5','6','7','8','9','','0',''];
+    var numRows = '';
+    for (var ri=0; ri<4; ri++) {
+      numRows += '<div style="display:flex;gap:5px;margin-bottom:5px">';
+      for (var ci=0; ci<3; ci++) {
+        var n = nums[ri*3+ci];
+        if (n === '') {
+          numRows += '<div style="flex:1;height:36px"></div>';
+        } else {
+          numRows += '<div style="'+bNum+'" data-axa="num-'+n+'">'+n+'</div>';
+        }
+      }
+      numRows += '</div>';
+    }
+    var numPad = '<div class="fc-sec" style="padding-top:4px">'
+      +'<div style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:rgba(255,255,255,.2);margin-bottom:5px">Canali</div>'
+      +numRows
+      +'</div>';
+
+    /* ─ SOUNDBAR ─ */
+    var sbRow = '<div class="fc-sec" style="padding-top:2px;padding-bottom:10px">'
+      +'<div style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:rgba(255,255,255,.2);margin-bottom:5px">🔊 Soundbar</div>'
+      +'<div style="display:flex;gap:5px">'
+      +'<div style="'+bSb+'" data-axa="sb-dn">🔉 VOL −</div>'
+      +'<div style="'+bSbA+'" data-axa="sb-mu">🔇 MUTE</div>'
+      +'<div style="'+bSb+'" data-axa="sb-up">🔊 VOL +</div>'
+      +'</div>'
+      +'</div>';
 
     return css
-      +'<div id="'+rid+'">'
-      +'<div class="fc-card">'
+      +'<div id="'+rid+'"><div class="fc-card">'
       +'<div class="fc-hdr">'
-      +'<div class="fc-hdr-iw">📺</div>'
-      +'<div class="fc-hdr-tit" data-axa="rename">'+_esc(c.name||'TV Sala')+'</div>'
-      +'<div class="fc-pill"><div class="fc-dot"></div>'+stateLbl+'</div>'
+      +'<div class="fc-hdr-ico">📺</div>'
+      +'<div class="fc-hdr-tit" data-axa="rename">'+_esc(c.name)+'</div>'
+      +'<div class="fc-pill"><div class="fc-dot"></div>'+_esc(stateLbl)+'</div>'
       +'<div class="fc-gear" data-axa="cfg">⚙</div>'
       +'</div>'
       +'<div class="fc-scroll">'
-      +'<div class="fc-hero">'
-      +'<div class="fc-art">'+artContent+'</div>'
-      +'<div class="fc-hero-r">'+infoRows+'</div>'
-      +'</div>'
+      + hero
       +'<div class="fc-sep"></div>'
       + powerRow
       + appsRow
-      +'<div class="fc-sep"></div>'
-      + dpad
-      +'<div class="fc-sep"></div>'
+      +'<div class="fc-sep" style="margin-top:4px"></div>'
+      + touchpad
+      + sysRow
+      +'<div class="fc-sep" style="margin-top:4px"></div>'
       + pbRow
+      +'<div class="fc-sep" style="margin-top:4px"></div>'
+      + numPad
       +'<div class="fc-sep"></div>'
       + sbRow
       +'</div>'
-      +'</div>'
-      +'</div>';
+      +'</div></div>';
   }
 
-  /* ── POPUP HELPERS ── */
+  /* ─────────────── SOURCE POPUP ─────────────── */
   function mkOv(html, closeId) {
-    var ov=document.createElement('div');
-    ov.style.cssText='position:fixed;inset:0;z-index:100000;display:flex;align-items:flex-end;background:rgba(0,0,0,.6);backdrop-filter:blur(4px)';
-    ov.innerHTML=html; document.body.appendChild(ov);
-    var close=function(){try{document.body.removeChild(ov);}catch(e){}};
-    var btn=ov.querySelector('#'+closeId); if(btn) btn.addEventListener('click',close);
-    ov.addEventListener('click',function(e){if(e.target===ov)close();});
-    ov._close=close; return ov;
+    var ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:flex-end;background:rgba(0,0,0,.6);backdrop-filter:blur(4px)';
+    ov.innerHTML = html; document.body.appendChild(ov);
+    var close = function(){ try{ document.body.removeChild(ov); }catch(e){} };
+    var btn = ov.querySelector('#'+closeId); if(btn) btn.addEventListener('click', close);
+    ov.addEventListener('click', function(e){ if(e.target===ov) close(); });
+    ov._close = close; return ov;
   }
 
-  var POP_CSS='<style>@keyframes fcUP{from{transform:translateY(100%)}to{transform:translateY(0)}}.fcpc{overflow-y:auto;scrollbar-width:none}.fcpc::-webkit-scrollbar{display:none}</style>';
-  function popShell(icon,rgb,title,sub,closeId,content){
-    return POP_CSS+'<div style="width:100%;max-height:78vh;display:flex;flex-direction:column;background:#060d14;border:1px solid rgba('+rgb+',.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:fcUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
+  var POP_BASE = '<style>@keyframes fcUP{from{transform:translateY(100%)}to{transform:translateY(0)}}.fcs{overflow-y:auto;scrollbar-width:none}.fcs::-webkit-scrollbar{display:none}</style>';
+
+  function popShell(icon, rgb, title, sub, closeId, content) {
+    return POP_BASE+'<div style="width:100%;max-height:80vh;display:flex;flex-direction:column;background:#060d14;border:1px solid rgba('+rgb+',.22);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:fcUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
       +'<div style="display:flex;align-items:center;gap:10px;padding:13px 15px 11px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
-      +'<div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba('+rgb+',.15);border:1px solid rgba('+rgb+',.3)">'+icon+'</div>'
-      +'<div><div style="font-size:14px;font-weight:800;color:#fff">'+title+'</div><div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:1px">'+sub+'</div></div>'
-      +'<button id="'+closeId+'" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none">✕</button>'
+      +'<div style="width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;background:rgba('+rgb+',.14);border:1px solid rgba('+rgb+',.28)">'+icon+'</div>'
+      +'<div><div style="font-size:14px;font-weight:800;color:#fff">'+title+'</div><div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:1px">'+sub+'</div></div>'
+      +'<button id="'+closeId+'" style="margin-left:auto;width:28px;height:28px;border-radius:8px;border:none;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07)">✕</button>'
       +'</div>'
-      +'<div class="fcpc" style="flex:1;overflow-y:auto;padding:0;display:flex;flex-direction:column">'+content+'</div>'
+      +'<div class="fcs" style="flex:1;overflow-y:auto">'+content+'</div>'
       +'</div>';
   }
 
-  /* ── SOURCE PICKER ── */
-  function openSourcePicker(card, el) {
-    var h=H(), c=cfgFor(card), eid=c.pk_tv;
-    var attrs=(h&&h.states&&h.states[eid]&&h.states[eid].attributes)||{};
-    var sources=attrs.source_list||[], curSrc=attrs.source||'', col=c.color, rgb=hexRgb(col);
+  function openSrcPicker(card) {
+    var h=H(), c=cfgFor(card);
+    var at=(h&&h.states&&h.states[c.pk_tv]&&h.states[c.pk_tv].attributes)||{};
+    var sources=at.source_list||[], curSrc=at.source||'', rgb=hexRgb(c.color);
     var listHtml = sources.length
-      ? sources.map(function(src){
-          var active=src===curSrc;
-          return '<div data-src="'+_esc(src)+'" style="padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.05);'+(active?'background:rgba('+rgb+',.1);':'')+'">'
-            +'<span style="width:18px;color:'+col+';font-size:13px">'+(active?'▶':'')+'</span>'
-            +'<span style="font-size:12px;font-weight:'+(active?'800':'500')+';color:'+(active?col:'#fff')+'">'+_esc(src)+'</span>'
+      ? sources.map(function(s){
+          var act=s===curSrc;
+          return '<div data-src="'+_esc(s)+'" style="padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.05);'+(act?'background:rgba('+rgb+',.1)':'')+'">'
+            +'<span style="width:16px;font-size:12px;color:'+c.color+'">'+( act?'▶':'' )+'</span>'
+            +'<span style="font-size:12px;font-weight:'+(act?'800':'500')+';color:'+(act?c.color:'#fff')+'">'+_esc(s)+'</span>'
             +'</div>';
         }).join('')
-      : '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.35);font-size:12px">Nessuna sorgente disponibile</div>';
-    var ov=mkOv(popShell('📥',rgb,'Ingresso / Sorgente',_esc(curSrc||'—'),'tvsrc-close',listHtml),'tvsrc-close');
+      : '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.3);font-size:12px">Nessuna sorgente</div>';
+    var ov=mkOv(popShell('📥',rgb,'Sorgente / Ingresso',curSrc||'—','src-close',listHtml),'src-close');
     ov.querySelectorAll('[data-src]').forEach(function(row){
-      row.addEventListener('mouseover',function(){row.style.background='rgba(255,255,255,.05)';});
-      row.addEventListener('mouseout', function(){row.style.background=(row.getAttribute('data-src')===curSrc?'rgba('+hexRgb(cfgFor(card).color)+',.1)':'');});
-      row.addEventListener('click',function(){callSvc('media_player','select_source',{entity_id:c.pk_tv,source:row.getAttribute('data-src')});ov._close();});
+      row.addEventListener('click',function(){
+        callSvc('media_player','select_source',{entity_id:cfgFor(card).pk_tv,source:row.getAttribute('data-src')});
+        ov._close();
+      });
     });
   }
 
-  /* ── CONFIG ── */
+  /* ─────────────── CONFIG POPUP ─────────────── */
   function openCfg(card, el) {
     var h=H(), c=cfgFor(card);
-    var states=(h&&h.states)||{};
-    var mpIds  = Object.keys(states).filter(function(id){return id.startsWith('media_player.');}).sort();
-    var remIds = Object.keys(states).filter(function(id){return id.startsWith('remote.');}).sort();
-    var sensIds= Object.keys(states).filter(function(id){return id.startsWith('sensor.');}).sort();
-    var stInp='width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none';
-    var stLbl='font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px;display:block';
-    var stSec='font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid rgba(56,189,248,.2)';
-    var COLORS=['#38bdf8','#818cf8','#f472b6','#4ade80','#fb923c','#f87171','#facc15','#c084fc'];
-    var colorPicker='<div style="margin-bottom:10px"><label style="'+stLbl+'">Colore accent</label>'
-      +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
-      +COLORS.map(function(clr){return '<div data-col="'+clr+'" style="width:24px;height:24px;border-radius:7px;cursor:pointer;background:'+clr+';border:2px solid '+(c.color===clr?'#fff':'transparent')+'"></div>';}).join('')+'</div></div>';
+    var allStates = (h&&h.states)||{};
+    var mpIds   = Object.keys(allStates).filter(function(id){return id.startsWith('media_player.');}).sort();
+    var remIds  = Object.keys(allStates).filter(function(id){return id.startsWith('remote.');}).sort();
+    var sensIds = Object.keys(allStates).filter(function(id){return id.startsWith('sensor.');}).sort();
+    var rgb = hexRgb(c.color);
 
-    function fldAC(fid,lbl,val,ph,ids){
-      return '<div style="margin-bottom:9px;position:relative"><label style="'+stLbl+'">'+lbl+'</label>'
+    var stInp='width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none';
+    var stLbl='font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px;display:block';
+    var stSec='font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:#38bdf8;margin:12px 0 7px;padding-bottom:3px;border-bottom:1px solid rgba(56,189,248,.18)';
+
+    function acFld(fid,lbl,val,ph,ids){
+      return '<div style="margin-bottom:8px;position:relative"><label style="'+stLbl+'">'+lbl+'</label>'
         +'<input id="'+fid+'" type="text" value="'+_esc(val||'')+'" autocomplete="off" placeholder="'+ph+'" style="'+stInp+'">'
-        +'<div id="'+fid+'-d" style="position:absolute;left:0;right:0;top:calc(100% + 2px);z-index:200;max-height:120px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-radius:9px;display:none;scrollbar-width:none"></div>'
+        +'<div id="'+fid+'-d" style="position:absolute;left:0;right:0;top:100%;margin-top:2px;z-index:300;max-height:110px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.15);border-radius:9px;display:none;scrollbar-width:none"></div>'
         +'</div>';
     }
-    function fldSimple(fid,lbl,val,ph){
-      return '<div style="margin-bottom:9px"><label style="'+stLbl+'">'+lbl+'</label>'
+    function simFld(fid,lbl,val,ph){
+      return '<div style="margin-bottom:8px"><label style="'+stLbl+'">'+lbl+'</label>'
         +'<input id="'+fid+'" type="text" value="'+_esc(val||'')+'" autocomplete="off" placeholder="'+ph+'" style="'+stInp+'"></div>';
     }
 
-    var formHtml='<div style="margin-bottom:10px"><label style="'+stLbl+'">Nome card</label>'
-      +'<input id="tvc-name" type="text" value="'+_esc(c.name)+'" style="'+stInp.replace('monospace','system-ui')+'"></div>'
-      +'<div style="'+stSec+'">TV</div>'
-      +fldAC('tvc-tv','Media Player',c.pk_tv,'media_player.tv_sala_2',mpIds)
-      +fldAC('tvc-remote','Remote (navigazione + app)',c.pk_remote,'remote.tv_sala',remIds)
-      +'<div style="'+stSec+'">Soundbar (Broadlink IR)</div>'
-      +fldAC('tvc-bl','Remote Broadlink',c.pk_bl,'remote.broadlink',remIds)
-      +fldSimple('tvc-bl-dev','Device Broadlink',c.bl_device,'es. soundbar_lg')
-      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:9px">'
-      +'<div><label style="'+stLbl+'">Cmd Vol+</label><input id="tvc-vup" type="text" value="'+_esc(c.bl_vol_up)+'" style="'+stInp+'"></div>'
-      +'<div><label style="'+stLbl+'">Cmd Vol-</label><input id="tvc-vdn" type="text" value="'+_esc(c.bl_vol_down)+'" style="'+stInp+'"></div>'
-      +'<div><label style="'+stLbl+'">Cmd Mute</label><input id="tvc-mute" type="text" value="'+_esc(c.bl_mute)+'" style="'+stInp+'"></div>'
+    var COLORS=['#38bdf8','#818cf8','#f472b6','#4ade80','#fb923c','#f87171','#facc15','#c084fc'];
+    var colorPicker='<div style="margin-bottom:8px"><label style="'+stLbl+'">Colore</label>'
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
+      +COLORS.map(function(clr){return '<div data-col="'+clr+'" style="width:24px;height:24px;border-radius:7px;cursor:pointer;background:'+clr+';border:2px solid '+(c.color===clr?'#fff':'transparent')+'"></div>';}).join('')+'</div></div>';
+
+    var form='<div style="padding:13px 15px 6px">'
+      +simFld('tvc-n','Nome card',c.name,'TV Sala')
+      +'<div style="'+stSec+'">TV + Remote</div>'
+      +acFld('tvc-tv','Media Player TV',c.pk_tv,'media_player.tv_sala_2',mpIds)
+      +acFld('tvc-rem','Remote (navigazione)',c.pk_remote,'remote.tv_sala',remIds)
+      +'<div style="'+stSec+'">Soundbar (Broadlink)</div>'
+      +acFld('tvc-bl','Remote Broadlink',c.pk_bl,'remote.broadlink',remIds)
+      +simFld('tvc-bld','Device',c.bl_device,'soundbar_lg')
+      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">'
+      +'<div><label style="'+stLbl+'">VOL+</label><input id="tvc-bvu" type="text" value="'+_esc(c.bl_vol_up)+'" style="'+stInp+'"></div>'
+      +'<div><label style="'+stLbl+'">VOL-</label><input id="tvc-bvd" type="text" value="'+_esc(c.bl_vol_down)+'" style="'+stInp+'"></div>'
+      +'<div><label style="'+stLbl+'">MUTE</label><input id="tvc-bmu" type="text" value="'+_esc(c.bl_mute)+'" style="'+stInp+'"></div>'
       +'</div>'
-      +fldAC('tvc-sb-sensor','Sensore potenza soundbar',c.pk_sb_sensor,'sensor.presa_tv_sala_potenza',sensIds)
-      +fldSimple('tvc-sb-thr','Soglia ON (watt)',String(c.sb_threshold),'es. 30')
+      +acFld('tvc-sbs','Sensore potenza SB',c.pk_sb_sensor,'sensor.presa_tv_sala_potenza',sensIds)
+      +simFld('tvc-sbt','Soglia ON (W)',String(c.sb_threshold),'30')
+      +'<div style="'+stSec+'">Comandi navigazione (remote.tv_sala)</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">'
+      +'<div><label style="'+stLbl+'">SU</label><input id="tvc-cu" type="text" value="'+_esc(c.cmd_up)+'" style="'+stInp+'"></div>'
+      +'<div><label style="'+stLbl+'">GIÙ</label><input id="tvc-cd" type="text" value="'+_esc(c.cmd_down)+'" style="'+stInp+'"></div>'
+      +'<div><label style="'+stLbl+'">SINISTRA</label><input id="tvc-cl" type="text" value="'+_esc(c.cmd_left)+'" style="'+stInp+'"></div>'
+      +'<div><label style="'+stLbl+'">DESTRA</label><input id="tvc-cr" type="text" value="'+_esc(c.cmd_right)+'" style="'+stInp+'"></div>'
+      +'<div><label style="'+stLbl+'">OK/ENTER</label><input id="tvc-co" type="text" value="'+_esc(c.cmd_ok)+'" style="'+stInp+'"></div>'
+      +'<div><label style="'+stLbl+'">BACK</label><input id="tvc-cb" type="text" value="'+_esc(c.cmd_back)+'" style="'+stInp+'"></div>'
+      +'<div><label style="'+stLbl+'">HOME</label><input id="tvc-ch" type="text" value="'+_esc(c.cmd_home)+'" style="'+stInp+'"></div>'
+      +'<div><label style="'+stLbl+'">MENU</label><input id="tvc-cm" type="text" value="'+_esc(c.cmd_menu)+'" style="'+stInp+'"></div>'
+      +'</div>'
       +'<div style="'+stSec+'">Aspetto</div>'
       +colorPicker
-      +'<div style="display:flex;gap:8px;margin-top:16px">'
-      +'<button id="tvc-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button>'
-      +'<button id="tvc-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#38bdf8;color:#040c1a">Salva</button>'
+      +'<div style="display:flex;gap:8px;margin-top:14px;margin-bottom:2px">'
+      +'<button id="tvc-can" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.09);color:#fff">Annulla</button>'
+      +'<button id="tvc-sav" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#38bdf8;color:#040c1a">Salva</button>'
+      +'</div>'
       +'</div>';
 
-    var ov=mkOv(popShell('📺','56,189,248','Configura TV',card.id||'','tvc-cfg-close','<div style="padding:13px 15px">'+formHtml+'</div>'),'tvc-cfg-close');
-    ov.querySelector('#tvc-cancel').addEventListener('click',function(){ov._close();});
+    var ov=mkOv(popShell('⚙',rgb,'Configura TV Card',card.id||'','tvc-cls',form),'tvc-cls');
+    ov.querySelector('#tvc-can').addEventListener('click',function(){ov._close();});
     var selColor=c.color;
     ov.querySelectorAll('[data-col]').forEach(function(dot){
       dot.addEventListener('click',function(){selColor=dot.getAttribute('data-col');ov.querySelectorAll('[data-col]').forEach(function(d){d.style.borderColor='transparent';});dot.style.borderColor='#fff';});
     });
-    [['tvc-tv',mpIds],['tvc-remote',remIds],['tvc-bl',remIds],['tvc-sb-sensor',sensIds]].forEach(function(pair){
-      var fid=pair[0],ids=pair[1];
-      var inp=ov.querySelector('#'+fid),drop=ov.querySelector('#'+fid+'-d');
+    [['tvc-tv',mpIds],['tvc-rem',remIds],['tvc-bl',remIds],['tvc-sbs',sensIds]].forEach(function(pr){
+      var inp=ov.querySelector('#'+pr[0]),drop=ov.querySelector('#'+pr[0]+'-d');
       if(!inp||!drop) return;
       function show(){
-        var q=inp.value.toLowerCase().trim();
-        var hits=(q?ids.filter(function(id){return id.toLowerCase().includes(q);}):ids).slice(0,25);
+        var q=inp.value.toLowerCase();
+        var hits=(q?pr[1].filter(function(id){return id.toLowerCase().includes(q);}):pr[1]).slice(0,22);
         if(!hits.length){drop.style.display='none';return;}
         drop.style.display='block';
-        drop.innerHTML=hits.map(function(id){return '<div data-pick="'+id+'" style="padding:6px 10px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04);color:#e2e8f0">'+id+'</div>';}).join('');
-        drop.querySelectorAll('[data-pick]').forEach(function(r){
-          r.addEventListener('mousedown',function(ev){ev.preventDefault();inp.value=r.getAttribute('data-pick');drop.style.display='none';});
+        drop.innerHTML=hits.map(function(id){return '<div data-p="'+id+'" style="padding:5px 10px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04);color:#e2e8f0">'+id+'</div>';}).join('');
+        drop.querySelectorAll('[data-p]').forEach(function(r){
+          r.addEventListener('mousedown',function(ev){ev.preventDefault();inp.value=r.getAttribute('data-p');drop.style.display='none';});
           r.addEventListener('mouseover',function(){r.style.background='rgba(255,255,255,.08)';});
-          r.addEventListener('mouseout', function(){r.style.background='';});
+          r.addEventListener('mouseout',function(){r.style.background='';});
         });
       }
       inp.addEventListener('focus',show); inp.addEventListener('input',show);
-      inp.addEventListener('blur',function(){setTimeout(function(){drop.style.display='none';},200);});
+      inp.addEventListener('blur',function(){setTimeout(function(){drop.style.display='none';},180);});
     });
-    ov.querySelector('#tvc-save').addEventListener('click',function(){
-      function v(id){var el=ov.querySelector('#'+id);return el?el.value.trim():'';}
-      save(card,{name:v('tvc-name'),pk_tv:v('tvc-tv'),pk_remote:v('tvc-remote'),
-        pk_bl:v('tvc-bl'),bl_device:v('tvc-bl-dev'),bl_vol_up:v('tvc-vup'),bl_vol_down:v('tvc-vdn'),bl_mute:v('tvc-mute'),
-        pk_sb_sensor:v('tvc-sb-sensor'),sb_threshold:parseFloat(v('tvc-sb-thr'))||30,color:selColor});
-      ov._close(); try{el._tvSig='';el._tvBound=null;el.innerHTML=render(card);mount(card,null,el);}catch(e){}
+    ov.querySelector('#tvc-sav').addEventListener('click',function(){
+      function v(id){var e=ov.querySelector('#'+id);return e?e.value.trim():'';}
+      save(card,{name:v('tvc-n'),pk_tv:v('tvc-tv'),pk_remote:v('tvc-rem'),
+        pk_bl:v('tvc-bl'),bl_device:v('tvc-bld'),bl_vol_up:v('tvc-bvu'),bl_vol_down:v('tvc-bvd'),bl_mute:v('tvc-bmu'),
+        pk_sb_sensor:v('tvc-sbs'),sb_threshold:parseFloat(v('tvc-sbt'))||30,
+        cmd_up:v('tvc-cu'),cmd_down:v('tvc-cd'),cmd_left:v('tvc-cl'),cmd_right:v('tvc-cr'),
+        cmd_ok:v('tvc-co'),cmd_back:v('tvc-cb'),cmd_home:v('tvc-ch'),cmd_menu:v('tvc-cm'),
+        color:selColor});
+      ov._close();
+      try{el._tvSig='';el._tvBound=null;el.innerHTML=render(card);mount(card,null,el);}catch(e){}
     });
   }
 
-  /* ── UPDATE ── */
+  /* ─────────────── UPDATE ─────────────── */
   function update(card, hass, el) {
-    if (el._tvDrag) return;
+    if (el._tvTouch) return;
     var h=H(), c=cfgFor(card);
     var tvSt=S(h,c.pk_tv), tvAt=(h&&h.states&&h.states[c.pk_tv]&&h.states[c.pk_tv].attributes)||{};
     var sbW=parseFloat(S(h,c.pk_sb_sensor)||'0')||0;
-    var sig=[CARD.version,tvSt,tvAt.media_title,tvAt.app_name,tvAt.entity_picture,tvAt.source,Math.floor(sbW)].join('|');
+    var sig=[CARD_VER,tvSt,tvAt.media_title,tvAt.app_name,tvAt.entity_picture,tvAt.source,Math.floor(sbW)].join('|');
     if(!el.querySelector('.fc-card')||el._tvSig!==sig){
       el._tvSig=sig; el._tvBound=null; el.innerHTML=render(card);
     }
     mount(card,hass,el);
   }
 
-  /* ── MOUNT ── */
+  /* ─────────────── MOUNT ─────────────── */
   function mount(card, hass, el) {
-    if (el._tvBound===CARD.version) return;
-    el._tvBound=CARD.version;
-    if(el._tvH) el.removeEventListener('click',el._tvH);
+    if (el._tvBound===CARD_VER) return;
+    el._tvBound=CARD_VER;
+    if(el._tvCH) el.removeEventListener('click',el._tvCH);
 
-    function tv()  { return cfgFor(card).pk_tv; }
-    function rem() { return cfgFor(card).pk_remote; }
-    function tvCmd(cmd) { callSvc('remote','send_command',{entity_id:rem(),command:cmd}); }
-    function blCmd(cmd) {
-      var c=cfgFor(card);
-      callSvc('remote','send_command',{entity_id:c.pk_bl,device:c.bl_device,command:cmd});
-    }
+    function cfg() { return cfgFor(card); }
+    function remCmd(cmd) { callSvc('remote','send_command',{entity_id:cfg().pk_remote,command:cmd}); }
+    function blCmd(cmd)  { var c=cfg(); callSvc('remote','send_command',{entity_id:c.pk_bl,device:c.bl_device,command:cmd}); }
 
-    el._tvH=function(e){
-      var t=e.target.closest('[data-axa]'); if(!t) return;
-      var a=t.dataset.axa;
-      if(a==='cfg'){openCfg(card,el);return;}
-      if(a==='rename'){
-        var cur=cfgFor(card).name; t.innerHTML='';
+    /* ─ CLICK HANDLER ─ */
+    el._tvCH = function(e) {
+      var t = e.target.closest('[data-axa]'); if(!t) return;
+      var a = t.dataset.axa;
+      if(a==='cfg')    { openCfg(card,el); return; }
+      if(a==='src')    { openSrcPicker(card); return; }
+      if(a==='rename') {
+        var cur=cfg().name; t.innerHTML='';
         var inp=document.createElement('input'); inp.type='text'; inp.value=cur;
         inp.style.cssText='width:100%;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.4);outline:none;color:#fff;font-size:13px;font-weight:800;font-family:system-ui;padding:0';
         t.appendChild(inp); inp.focus(); inp.select();
-        function commit(){var v=inp.value.trim()||cur;var s=load(card);s.name=v;save(card,s);el._tvSig='';el._tvBound=null;el.innerHTML=render(card);mount(card,null,el);}
+        var commit=function(){var v=inp.value.trim()||cur;var s=load(card);s.name=v;save(card,s);el._tvSig='';el._tvBound=null;el.innerHTML=render(card);mount(card,null,el);};
         inp.addEventListener('blur',commit,{once:true});
         inp.addEventListener('keydown',function(ev){if(ev.key==='Enter')inp.blur();if(ev.key==='Escape'){inp.removeEventListener('blur',commit);t.textContent=cur;}});
         return;
       }
-      if(a==='source-open'){openSourcePicker(card,el);return;}
       /* power */
-      if(a==='power'){
-        var h=H(), st=S(h,tv());
-        if(st==='off'||st==='unavailable'||st==='standby') callSvc('media_player','turn_on',{entity_id:tv()});
-        else callSvc('media_player','turn_off',{entity_id:tv()});
+      if(a==='power') {
+        var h=H(), st=S(h,cfg().pk_tv);
+        if(st==='off'||st==='unavailable'||st==='standby') callSvc('media_player','turn_on',{entity_id:cfg().pk_tv});
+        else callSvc('media_player','turn_off',{entity_id:cfg().pk_tv});
         return;
       }
-      /* navigation via remote.tv_sala (androidtv_remote key codes) */
-      if(a==='nav-up')   {tvCmd('DPAD_UP');    return;}
-      if(a==='nav-down') {tvCmd('DPAD_DOWN');  return;}
-      if(a==='nav-left') {tvCmd('DPAD_LEFT');  return;}
-      if(a==='nav-right'){tvCmd('DPAD_RIGHT'); return;}
-      if(a==='nav-ok')   {tvCmd('DPAD_CENTER');return;}
-      if(a==='nav-back') {tvCmd('BACK');       return;}
-      if(a==='nav-home') {tvCmd('HOME');       return;}
-      if(a==='nav-menu') {tvCmd('MENU');       return;}
-      if(a==='info')     {tvCmd('INFO');       return;}
-      /* playback via remote.tv_sala */
-      if(a==='pp')       {tvCmd('MEDIA_PLAY_PAUSE');  return;}
-      if(a==='rewind')   {tvCmd('MEDIA_REWIND');      return;}
-      if(a==='ff')       {tvCmd('MEDIA_FAST_FORWARD');return;}
-      if(a==='ch-up')    {tvCmd('CHANNEL_UP');        return;}
-      if(a==='ch-down')  {tvCmd('CHANNEL_DOWN');      return;}
-      /* app shortcuts — usa select_source su media_player (più affidabile per Android TV) */
-      if(a==='app-netflix'){callSvc('media_player','select_source',{entity_id:cfgFor(card).pk_tv,source:'Netflix'}); return;}
-      if(a==='app-youtube'){callSvc('media_player','select_source',{entity_id:cfgFor(card).pk_tv,source:'YouTube'}); return;}
-      if(a==='app-spotify'){callSvc('media_player','select_source',{entity_id:cfgFor(card).pk_tv,source:'Spotify'}); return;}
-      if(a==='app-tv')     {callSvc('media_player','select_source',{entity_id:cfgFor(card).pk_tv,source:'TV'}); return;}
-      /* soundbar via Broadlink */
-      if(a==='sb-vol-up')  {blCmd(cfgFor(card).bl_vol_up);   return;}
-      if(a==='sb-vol-down'){blCmd(cfgFor(card).bl_vol_down);  return;}
-      if(a==='sb-mute')    {blCmd(cfgFor(card).bl_mute);      return;}
+      /* info */
+      if(a==='info') { remCmd(cfg().cmd_menu); return; }
+      /* navigation (dai comandi configurabili) */
+      if(a==='nav-back'){ remCmd(cfg().cmd_back); return; }
+      if(a==='nav-home'){ remCmd(cfg().cmd_home); return; }
+      if(a==='nav-menu'){ remCmd(cfg().cmd_menu); return; }
+      if(a==='nav-info'){ remCmd('INFO');          return; }
+      /* playback */
+      if(a==='pp')    { remCmd('MEDIA_PLAY_PAUSE');  return; }
+      if(a==='rw')    { remCmd('MEDIA_REWIND');       return; }
+      if(a==='ff')    { remCmd('MEDIA_FAST_FORWARD'); return; }
+      if(a==='ch-up') { remCmd('CHANNEL_UP');         return; }
+      if(a==='ch-down'){ remCmd('CHANNEL_DOWN');      return; }
+      /* app shortcuts */
+      if(a==='app-netflix'){ callSvc('media_player','select_source',{entity_id:cfg().pk_tv,source:'Netflix'}); return; }
+      if(a==='app-youtube'){ callSvc('media_player','select_source',{entity_id:cfg().pk_tv,source:'YouTube'}); return; }
+      if(a==='app-spotify'){ callSvc('media_player','select_source',{entity_id:cfg().pk_tv,source:'Spotify'}); return; }
+      if(a==='app-tv')     { callSvc('media_player','select_source',{entity_id:cfg().pk_tv,source:'TV'});      return; }
+      /* number buttons */
+      if(a&&a.startsWith('num-')){ remCmd(a.replace('num-','')); return; }
+      /* soundbar */
+      if(a==='sb-up'){ blCmd(cfg().bl_vol_up);  return; }
+      if(a==='sb-dn'){ blCmd(cfg().bl_vol_down); return; }
+      if(a==='sb-mu'){ blCmd(cfg().bl_mute);     return; }
     };
-    el.addEventListener('click',el._tvH);
+    el.addEventListener('click', el._tvCH);
+
+    /* ─ TOUCHPAD ─ */
+    var rid = 'tv-' + (card.id||'x');
+    var tp  = el.querySelector('#'+rid+'-tp');
+    var rip = el.querySelector('#'+rid+'-rip');
+    if(!tp) return;
+
+    var tStart=null;
+    var MIN_SWIPE=28, SWIPE_ANGLE=35;
+    var tpActive=false;
+
+    function doRipple(x,y) {
+      if(!rip) return;
+      rip.style.left=x+'px'; rip.style.top=y+'px';
+      rip.style.animation='none'; rip.offsetHeight;
+      rip.style.animation='tpRip .4s ease-out forwards';
+    }
+
+    function onTpDown(ex,ey,rect) {
+      tStart={x:ex,y:ey,rx:ex-rect.left,ry:ey-rect.top,moved:false};
+      el._tvTouch=true;
+    }
+    function onTpMove(ex,ey) {
+      if(!tStart) return;
+      var dx=ex-tStart.x, dy=ey-tStart.y;
+      if(Math.abs(dx)>5||Math.abs(dy)>5) tStart.moved=true;
+    }
+    function onTpUp(ex,ey) {
+      if(!tStart){el._tvTouch=false;return;}
+      var dx=ex-tStart.x, dy=ey-tStart.y;
+      var dist=Math.sqrt(dx*dx+dy*dy);
+      doRipple(tStart.rx,tStart.ry);
+      if(dist<MIN_SWIPE) {
+        /* tap = OK */
+        remCmd(cfg().cmd_ok);
+      } else {
+        /* swipe direction */
+        var angle=Math.atan2(dy,dx)*180/Math.PI;
+        if(angle>-(90+SWIPE_ANGLE)&&angle<-(90-SWIPE_ANGLE)) { remCmd(cfg().cmd_up); }
+        else if(angle>(90-SWIPE_ANGLE)&&angle<(90+SWIPE_ANGLE)) { remCmd(cfg().cmd_down); }
+        else if(dist>=MIN_SWIPE&&(angle>180-SWIPE_ANGLE||angle<-(180-SWIPE_ANGLE))) { remCmd(cfg().cmd_left); }
+        else if(dist>=MIN_SWIPE&&angle>-SWIPE_ANGLE&&angle<SWIPE_ANGLE) { remCmd(cfg().cmd_right); }
+      }
+      tStart=null;
+      setTimeout(function(){el._tvTouch=false;},80);
+    }
+
+    /* touch */
+    tp.addEventListener('touchstart',function(e){
+      e.preventDefault();
+      var t=e.changedTouches[0], rect=tp.getBoundingClientRect();
+      onTpDown(t.clientX,t.clientY,rect);
+    },{passive:false});
+    tp.addEventListener('touchmove',function(e){
+      e.preventDefault();
+      var t=e.changedTouches[0];
+      onTpMove(t.clientX,t.clientY);
+    },{passive:false});
+    tp.addEventListener('touchend',function(e){
+      var t=e.changedTouches[0];
+      onTpUp(t.clientX,t.clientY);
+    },{passive:false});
+    /* mouse */
+    tp.addEventListener('mousedown',function(e){
+      var rect=tp.getBoundingClientRect();
+      onTpDown(e.clientX,e.clientY,rect);
+    });
+    tp.addEventListener('mousemove',function(e){
+      if(!tStart) return;
+      onTpMove(e.clientX,e.clientY);
+    });
+    tp.addEventListener('mouseup',function(e){ onTpUp(e.clientX,e.clientY); });
+    tp.addEventListener('mouseleave',function(e){ if(tStart) onTpUp(e.clientX,e.clientY); });
   }
 
-  var CARD={
-    id:'tv-card', name:'TV Remote', icon:'📺', version:'1.2',
-    desc:'TV Philips Android TV + Soundbar LG via Broadlink. Navigazione, app, volume, stato.',
-    colSpan:2, rowSpan:4, frarik_no_edit:true,
-    render:function(card){return render(card);},
-    mount:function(card,hass,el){return mount(card,hass,el);},
-    update:function(card,hass,el){return update(card,hass,el);},
+  var CARD = {
+    id:'tv-card', name:'TV Remote', icon:'📺', version:CARD_VER,
+    desc:'TV Philips Android TV + Soundbar LG. Touchpad, numeri, app, navigazione.',
+    colSpan:2, rowSpan:5, frarik_no_edit:true,
+    render:  function(c){return render(c);},
+    mount:   function(c,h,e){return mount(c,h,e);},
+    update:  function(c,h,e){return update(c,h,e);},
   };
-  window.FratechCardRegistry=window.FratechCardRegistry||{};
-  window.FratechCardRegistry[CARD.id]=CARD;
-  window.FratechCards=window.FratechCards||{};
-  window.FratechCards[CARD.id]=CARD;
-  try{console.log('[FratechStore] Card registrata: tv-card v1.1');}catch(e){}
+  window.FratechCardRegistry = window.FratechCardRegistry||{};
+  window.FratechCardRegistry[CARD.id] = CARD;
+  window.FratechCards = window.FratechCards||{};
+  window.FratechCards[CARD.id] = CARD;
+  try{console.log('[FratechStore] Card registrata: tv-card v'+CARD_VER);}catch(e){}
 })();

@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.0.24 — 2026-07-12
+
+### feat(tv-card): riscrittura completa v2.0 — touchpad, numeri, comandi configurabili
+
+- **Touchpad**: area swipe/tap. Scorri ↑↓←→ = navigazione, tocco = OK/ENTER. Effetto ripple visivo
+- **Numeri 0-9**: tastierino numerico per cambio canale via `remote.send_command`
+- **Comandi configurabili in ⚙**: tutti i comandi di navigazione (UP/DOWN/LEFT/RIGHT/ENTER/BACK/HOME/MENU) modificabili dall'utente — se UP non funziona puoi scrivere DPAD_UP senza toccare codice
+- **Soundbar**: `remote.broadlink` + device `soundbar_lg` + comandi `volume_su/volume_giu/mute` (invariato)
+- **App shortcuts**: `media_player.select_source` per Netflix/YouTube/Spotify/TV
+- **Playback**: `MEDIA_PLAY_PAUSE`, `MEDIA_FAST_FORWARD`, `MEDIA_REWIND`, `CHANNEL_UP`, `CHANNEL_DOWN`
+- **Default comandi**: `UP`, `DOWN`, `LEFT`, `RIGHT`, `ENTER`, `BACK`, `HOME`, `MENU`
+- **Layout migliorato**: Hero, App, Touchpad, Sistema, Riproduzione+CH, Numeri, Soundbar
+- `colSpan:2, rowSpan:5`
+
 ## 2.0.23 — 2026-07-12
 
 ### fix(tv-card): comandi navigazione corretti per androidtv_remote v1.2
