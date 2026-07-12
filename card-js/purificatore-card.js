@@ -1,4 +1,4 @@
-/* frarik-version: 1.2 */
+/* frarik-version: 1.3 */
 (function () {
   'use strict';
 
@@ -186,7 +186,7 @@
     var css='<style>'
       +'@keyframes purDot{0%,100%{opacity:.5}50%{opacity:1}}'
       +'#'+rid+'{position:relative;width:100%;height:100%;min-height:340px;font-family:system-ui,sans-serif}'
-      +'#'+rid+' .fc-card{display:flex;flex-direction:column;height:100%;min-height:340px;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
+      +'#'+rid+' .fc-card{display:flex;flex-direction:column;height:100%;min-height:340px;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:visible;position:relative}'
       +'#'+rid+' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:220px;background:radial-gradient(ellipse at 30% 0,rgba('+rgb+',.1) 0%,transparent 65%);pointer-events:none}'
       +'#'+rid+' .fc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
       +'#'+rid+' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;background:rgba('+rgb+',.12);border:1px solid rgba('+rgb+',.25)}'
@@ -196,9 +196,9 @@
       +'#'+rid+' .fc-gear{margin-left:4px;cursor:pointer;width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#fff;flex-shrink:0}'
       +'#'+rid+' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
       +'#'+rid+' .fc-scroll::-webkit-scrollbar{display:none}'
-      +'#'+rid+' .fc-hero{display:flex;align-items:stretch;padding:10px 14px 8px;flex:1}'
-      +'#'+rid+' .fc-hero-img{flex:1;display:flex;align-items:center;justify-content:center;overflow:visible;max-height:160px}'
-      +'#'+rid+' .fc-art{width:100%;max-width:130px;aspect-ratio:1;border-radius:13px;overflow:visible;flex-shrink:0;background:linear-gradient(135deg,rgba('+rgb+',.18),rgba('+rgb+',.05));'+(isOn?'box-shadow:0 0 0 2px '+col+',0 4px 20px rgba('+rgb+',.4)':'box-shadow:0 4px 14px rgba(0,0,0,.5)')+'}'
+      +'#'+rid+' .fc-hero{display:flex;align-items:stretch;padding:10px 14px 8px;flex-shrink:0}'
+      +'#'+rid+' .fc-hero-img{flex-shrink:0;display:flex;align-items:center;justify-content:center}'
+      +'#'+rid+' .fc-art{width:130px;height:130px;border-radius:13px;overflow:visible;flex-shrink:0;background:linear-gradient(135deg,rgba('+rgb+',.18),rgba('+rgb+',.05));'+(isOn?'box-shadow:0 0 0 2px '+col+',0 4px 20px rgba('+rgb+',.4)':'box-shadow:0 4px 14px rgba(0,0,0,.5)')+'}'
       +'#'+rid+' .fc-hero-r{flex:1;display:flex;flex-direction:column;gap:4px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.07);padding-left:10px;overflow:hidden}'
       +'#'+rid+' .fc-sep{height:1px;background:rgba(255,255,255,.06);margin:0 14px;flex-shrink:0}'
       +'#'+rid+' [data-pya]:active{opacity:.5}'
@@ -210,10 +210,10 @@
       +'<div class="fc-hdr-tit" data-pya="rename">'+_esc(c.name)+'</div>'
       +'<div class="fc-pill"><div class="fc-dot"></div>'+_esc(stateLbl)+'</div>'
       +'<div class="fc-gear" data-pya="cfg">⚙</div></div>'
-      +'<div class="fc-scroll">'
       +'<div class="fc-hero"><div class="fc-hero-img"><div class="fc-art">'+artHtml+'</div></div>'
       +'<div class="fc-hero-r">'+infoRows+'</div></div>'
       +'<div class="fc-sep"></div>'
+      +'<div class="fc-scroll">'
       +'<div style="padding:8px 14px 6px;flex-shrink:0"><div style="display:flex;gap:7px">'
       +'<div style="'+bPow+'" data-pya="power">⏻ '+(isOn?'Spegni':'Accendi')+'</div>'
       +'</div></div>'
@@ -268,7 +268,7 @@
   }
 
   var CARD={
-    id:'purificatore-card',name:'Purificatore',icon:'🌿',version:'1.2',
+    id:'purificatore-card',name:'Purificatore',icon:'🌿',version:'1.3',
     desc:'Controllo purificatore aria: qualità PM2.5, velocità ventola, modalità. Richiede integrazione fan.',
     colSpan:2,rowSpan:3,frarik_no_edit:true,
     render:function(card){ return render(card); },

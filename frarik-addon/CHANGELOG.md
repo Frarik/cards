@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.38 — 2026-07-12
+
+### fix(cards): immagine non tagliata — hero fuori dal container scroll v1.3
+
+- Tutti e 3: `.fc-hero` + primo `.fc-sep` spostati fuori da `.fc-scroll` (che aveva overflow-y:auto che clippava tutto)
+- `.fc-card`: overflow:hidden → overflow:visible (per non tagliare i glow effects)
+- `.fc-art`: dimensioni fisse 130×130px, overflow:visible garantito
+- Struttura: hdr → hero → sep → [scroll con i soli controlli]
+
 ## 2.0.37 — 2026-07-12
 
 ### fix(cards): immagine non più tagliata — art box più grande v1.2
