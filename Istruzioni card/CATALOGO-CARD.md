@@ -29,7 +29,7 @@ esistenti (in `card-js/`, `card-chips/`, `card-distintivi/`) per riusarne stile 
 | card-js | `Antizanzare.js` | `antizanzare` | 🦟 Anti Zanzare Lunedì | 2.34 | FratechStore |
 | card-js | `Asciugatrice.js` | `asciugatrice` | 💨 frarik/frarik_asciugatrice.yaml | 2.2 | FratechStore |
 | card-js | `Bolletta.js` | `bolletta` | ⚡ frarik/frarik_bolletta.yaml | 5.3 | FratechStore |
-| card-js | `database-card.js` | `database-card` | 🗄️ Database HA | 2.3 | FratechStore |
+| card-js | `database-card.js` | `database-card` | 🗄️ Database HA | 2.4 | FratechStore |
 | card-js | `Forno.js` | `forno` | 🥘 frarik/frarik_forno.yaml | 2.2 | FratechStore |
 | card-js | `Friggitrice.js` | `friggitrice` | 🍟 frarik/frarik_friggitrice.yaml | 2.2 | FratechStore |
 | card-js | `Frigorifero.js` | `frigorifero` | 🧊 frarik/frarik_frigorifero.yaml | 2.2 | FratechStore |
@@ -43,7 +43,7 @@ esistenti (in `card-js/`, `card-chips/`, `card-distintivi/`) per riusarne stile 
 | card-js | `system-card.js` | `notif` | 🖥️ Server — Soglia Temperatura Alert | 2.8 | FratechStore |
 | card-js | `posta-card.js` | `posta-card` | {{ Posta — Consegne Oggi | 2.0 | Lovelace |
 | card-js | `Scaldabagno.js` | `scaldabagno` | 🛁 frarik/frarik_scaldabagno.yaml | 2.2 | FratechStore |
-| card-js | `speedtest-card.js` | `speedtest-card` | 🌐 Speedtest | 1.1 | FratechStore |
+| card-js | `speedtest-card.js` | `speedtest-card` | 🌐 Speedtest | 1.2 | FratechStore |
 | card-js | `Tapparella.js` | `tapparella` | 🪟 Tapparella | 4.4 | FratechStore |
 | card-js | `Tostapane.js` | `tostapane` | 🍞 frarik/frarik_tostapane.yaml | 2.3 | FratechStore |
 | card-js | `Differenziata.js` | `umido` | mdi:recycle Differenziata — Rifiuto Lunedì | 2.0 | FratechStore |
@@ -151,7 +151,7 @@ esistenti (in `card-js/`, `card-chips/`, `card-distintivi/`) per riusarne stile 
 - **Pattern/API usati:** callSvc (chiama servizi HA) · timer · interazione (listener) · popup/overlay
 
 ### 🗄️ Database HA  ·  `database-card.js`
-- **ID:** `database-card` · **versione:** 2.3 · **formato:** FratechStore
+- **ID:** `database-card` · **versione:** 2.4 · **formato:** FratechStore
 - **Descrizione:** Monitoraggio database HA: dimensione, repack automatico, statistiche.
 - **Hooks:** mount, update · **righe:** 451
 - **Pattern/API usati:** callSvc (chiama servizi HA) · grafica SVG inline · timer · interazione (listener) · popup/overlay
@@ -235,9 +235,9 @@ esistenti (in `card-js/`, `card-chips/`, `card-distintivi/`) per riusarne stile 
 - **Pattern/API usati:** callSvc (chiama servizi HA) · grafica SVG inline · timer · interazione (listener) · auto-scoperta device_class · popup/overlay
 
 ### 🌐 Speedtest  ·  `speedtest-card.js`
-- **ID:** `speedtest-card` · **versione:** 1.1 · **formato:** FratechStore
-- **Descrizione:** Monitoraggio connessione internet: scaricamento, caricamento, ping, jitter e bufferbloat. Richiede integrazione Ookla Speedtest.
-- **Hooks:** mount, update · **righe:** 518
+- **ID:** `speedtest-card` · **versione:** 1.2 · **formato:** FratechStore
+- **Descrizione:** Monitoraggio connessione: scaricamento, caricamento, ping, jitter, bufferbloat. Richiede integrazione Ookla Speedtest.
+- **Hooks:** mount, update · **righe:** 415
 - **Pattern/API usati:** callSvc (chiama servizi HA) · grafica SVG inline · timer · interazione (listener) · popup/overlay
 
 ### 🪟 Tapparella  ·  `Tapparella.js`

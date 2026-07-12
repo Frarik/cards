@@ -1,5 +1,24 @@
 # Changelog
 
+## 2.0.6 — 2026-07-12
+
+### fix(speedtest-card): layout compatto + fix test bloccato + split hero 50/50
+### fix(system-card): immagine hero flex:1 (da width:90px fisso) come UPS
+### fix(database-card): immagine hero flex:1 (da width:90px fisso) come UPS
+
+**speedtest-card v1.2:**
+- Fix "test bloccato": rilevamento completamento tramite `last_updated !== _spInitLu` (snapshot pre-test), non confronto timestamp assoluti
+- Fallback timer ridotto a 40s (da 120s)
+- Layout hero rifatto: sinistra gauge 50%, destra 2x2 grid riquadri (Scaricamento/Caricamento/Ping/Jitter)
+- Barra statistiche rimossa (redundante, dati già nei riquadri)
+- Provider e Server: compact inline footer a 1 riga sotto l'hero
+- `statusLbl` in pill header: IN CORSO / COMPLETATO / —
+- Altezza card allineata alle altre (Mini-PC, Database, UPS)
+
+**system-card v5.7 / database-card v2.4:**
+- Hero image: da `width:90px;flex-shrink:0` a `flex:1;max-height:130px;overflow:hidden`
+- Tutti i card ora split 50/50 nell'area hero, identici a UPS
+
 ## 2.0.5 — 2026-07-12
 
 ### feat(speedtest-card): animazione test + etichette italiane + reset 30s v1.1

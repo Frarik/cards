@@ -1,4 +1,4 @@
-/* frarik-version: 2.5 */
+/* frarik-version: 2.6 */
 (function () {
   'use strict';
 
@@ -181,7 +181,7 @@
       + '#'+rid+' .dc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
       + '#'+rid+' .dc-scroll::-webkit-scrollbar{display:none}'
       + '#'+rid+' .dc-hero{display:flex;align-items:stretch;padding:10px 14px 8px;flex:1}'
-      + '#'+rid+' .dc-hero-img{width:90px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}'
+      + '#'+rid+' .dc-hero-img{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;max-height:130px}'
       + '#'+rid+' .dc-hero-r{flex:1;display:flex;flex-direction:column;gap:5px;justify-content:center;min-width:0;border-left:1px solid rgba(255,255,255,.06);padding-left:12px}'
       + '#'+rid+' .dc-dim{display:flex;align-items:baseline;gap:3px}'
       + '#'+rid+' .dc-dim-n{font-size:30px;font-weight:900;color:#fff;line-height:1}'
@@ -433,7 +433,7 @@
   }
 
   var CARD = {
-    id: 'database-card', name: 'Database HA', icon: '🗄️', version: '2.3',
+    id: 'database-card', name: 'Database HA', icon: '🗄️', version: '2.4',
     desc: 'Monitoraggio database HA: dimensione, repack automatico, statistiche.',
     colSpan: 2, rowSpan: 3,
     frarik_no_edit: true,
