@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.11 — 2026-07-12
+
+### fix(alexa-card): sfondo standard + equalizzatore esteso + glow attivi v1.2
+
+- Sfondo card: `linear-gradient(155deg,#060d14,#080f18)` — identico a UPS/Speedtest/Database
+- Equalizzatore: 9 barre (era 7), width 4px (era 3px), altezza max 22px (era 14px), glow sui singoli bar durante riproduzione
+- Bottoni shuffle/repeat attivi: bordo pieno `col`, background 22%, `box-shadow` glow esterno + interno — visibile a colpo d'occhio
+- Bottone play/pause: stesso glow potenziato
+
 ## 2.0.10 — 2026-07-12
 
 ### fix(alexa-card): layout 2 colonne + volume real-time v1.1

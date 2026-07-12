@@ -1,4 +1,4 @@
-/* frarik-version: 1.1 */
+/* frarik-version: 1.2 */
 (function () {
   'use strict';
 
@@ -37,22 +37,23 @@
     return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  /* ── EQUALIZER (7 HTML bars, CSS animation) ── */
+  /* ── EQUALIZER (9 HTML bars, CSS animation) ── */
   function eqBars(col, playing) {
-    var base = [5, 10, 7, 13, 8, 11, 4];
-    var durs = ['.50', '.62', '.45', '.70', '.55', '.48', '.60'];
-    var dels = ['0', '.10', '.20', '.07', '.15', '.05', '.18'];
+    var base = [6, 14, 9, 20, 11, 18, 7, 16, 5];
+    var peak = [22, 22, 22, 22, 22, 22, 22, 22, 22];
+    var durs = ['.52', '.65', '.48', '.72', '.57', '.50', '.62', '.55', '.45'];
+    var dels = ['0', '.12', '.22', '.07', '.17', '.05', '.20', '.10', '.28'];
     var kf = '', bars = '';
     base.forEach(function (h, i) {
-      if (playing) kf += '@keyframes aleq' + i + '{0%,100%{height:' + h + 'px}50%{height:14px}}';
-      bars += '<div style="width:3px;flex-shrink:0;border-radius:2px;align-self:flex-end;background:' + col + ';'
+      if (playing) kf += '@keyframes aleq' + i + '{0%,100%{height:' + h + 'px}50%{height:' + peak[i] + 'px}}';
+      bars += '<div style="width:4px;flex-shrink:0;border-radius:2px;align-self:flex-end;background:' + col + ';'
         + (playing
-            ? 'height:' + h + 'px;animation:aleq' + i + ' ' + durs[i] + 's ease-in-out ' + dels[i] + 's infinite'
-            : 'height:' + h + 'px;opacity:.3')
+            ? 'height:' + h + 'px;animation:aleq' + i + ' ' + durs[i] + 's ease-in-out ' + dels[i] + 's infinite;box-shadow:0 0 4px ' + col + '88'
+            : 'height:' + h + 'px;opacity:.25')
         + '"></div>';
     });
     return (playing ? '<style>' + kf + '</style>' : '')
-      + '<div style="display:flex;align-items:flex-end;gap:2px;height:14px">' + bars + '</div>';
+      + '<div style="display:flex;align-items:flex-end;gap:3px;height:22px">' + bars + '</div>';
   }
 
   /* ── VINYL SVG fallback ── */
@@ -143,9 +144,9 @@
     infoRows += '<div style="margin-top:6px">' + eqBars(isActive ? col : 'rgba(255,255,255,.18)', isPlaying) + '</div>';
 
     /* ── controls row ── */
-    var bs  = 'width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);flex-shrink:0;user-select:none;-webkit-tap-highlight-color:transparent;font-size:13px';
-    var bsA = 'width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid rgba(' + rgb + ',.35);background:rgba(' + rgb + ',.12);color:' + col + ';flex-shrink:0;user-select:none;-webkit-tap-highlight-color:transparent;font-size:13px';
-    var bPP = 'width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid rgba(' + rgb + ',.45);background:rgba(' + rgb + ',.18);color:' + col + ';flex-shrink:0;user-select:none;-webkit-tap-highlight-color:transparent;font-size:17px;box-shadow:0 2px 10px rgba(' + rgb + ',.2)';
+    var bs  = 'width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);flex-shrink:0;user-select:none;-webkit-tap-highlight-color:transparent;font-size:13px;color:rgba(255,255,255,.7)';
+    var bsA = 'width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid ' + col + ';background:rgba(' + rgb + ',.22);color:' + col + ';flex-shrink:0;user-select:none;-webkit-tap-highlight-color:transparent;font-size:13px;box-shadow:0 0 10px rgba(' + rgb + ',.45),inset 0 0 8px rgba(' + rgb + ',.1)';
+    var bPP = 'width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid ' + col + ';background:rgba(' + rgb + ',.22);color:' + col + ';flex-shrink:0;user-select:none;-webkit-tap-highlight-color:transparent;font-size:17px;box-shadow:0 0 14px rgba(' + rgb + ',.5),0 2px 10px rgba(' + rgb + ',.3)';
 
     var repIco = repeat === 'one' ? '🔂' : '🔁';
     var ctrlHtml = '<div style="display:flex;align-items:center;justify-content:center;gap:6px;padding:7px 14px;flex-shrink:0">'
@@ -175,7 +176,7 @@
       + '@keyframes alArtPls{0%,100%{box-shadow:0 0 0 2px ' + col + ',0 4px 20px rgba(' + rgb + ',.4)}50%{box-shadow:0 0 0 3px ' + col + ',0 4px 28px rgba(' + rgb + ',.6),0 0 30px rgba(' + rgb + ',.25)}}'
       + '@keyframes alDot{0%,100%{opacity:.5}50%{opacity:1}}'
       + '#' + rid + '{position:relative;width:100%;height:100%;min-height:285px;font-family:system-ui,sans-serif;display:block}'
-      + '#' + rid + ' .fc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#0a0614 0%,#0d0820 55%,#0a0614 100%);border-radius:18px;overflow:hidden;position:relative}'
+      + '#' + rid + ' .fc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
       + '#' + rid + ' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:220px;background:radial-gradient(ellipse at 30% 0%,rgba(' + rgb + ',.1) 0%,transparent 65%);pointer-events:none}'
       + '#' + rid + ' .fc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
       + '#' + rid + ' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;background:rgba(' + rgb + ',.12);border:1px solid rgba(' + rgb + ',.25)}'
@@ -462,7 +463,7 @@
     id: 'alexa-card',
     name: 'Alexa Media',
     icon: '🔊',
-    version: '1.1',
+    version: '1.2',
     desc: 'Controllo media player Alexa/Amazon Echo: album art animata, equalizzatore, play/pausa/stop, shuffle, repeat, volume slide in tempo reale.',
     colSpan: 2,
     rowSpan: 3,
@@ -476,5 +477,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Card registrata: alexa-card v' + CARD.version); } catch (e) {}
+  try { console.log('[FratechStore] Card registrata: alexa-card v1.2'); } catch (e) {}
 })();
