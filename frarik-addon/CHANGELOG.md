@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.0.31 — 2026-07-12
+
+### feat(tv-card): TV SVG più grande e animazioni schermo vivide v2.7
+
+- **Schermo ON molto più luminoso**: glow radiale accent (0.32 opacità) + centro bianco brillante (0.14) + punto focale (0.10) — effetto backlight reale
+- **Riflesso vetro**: gradiente bianco superiore che simula il riflesso della superficie
+- **Scan line visibile**: linea bianca 2.5px (opacity 0.85) quando in riproduzione
+- **Linee CRT**: tre linee orizzontali sottili per effetto display TV
+- **Cornice con glow forte**: drop-shadow doppio pulsante (8px → 18px, opacity 0.8 → 1.0)
+- **Art box più grande**: 130x106px (era 106x86px) — TV non più schiacciata
+- **Fix titolo package name**: se `media_title` è un package Java (`com.X.Y.Z`), usa `app_name` invece
+
 ## 2.0.30 — 2026-07-12
 
 ### feat(tv-card): illustrazione TV realistica con animazioni v2.6

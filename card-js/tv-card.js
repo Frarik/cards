@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  var CARD_VER = '2.6';
+  var CARD_VER = '2.7';
   var _sbMuted = {};
 
   function H() { try { if (typeof window.frarikHass === 'function') { var h = window.frarikHass(); if (h && h.states) return h; } } catch (e) {} return null; }
@@ -48,68 +48,58 @@
 
   /* ─────────────── TV SVG ─────────────── */
   function tvSVG(col, rgb, isOn, isPlay) {
-    var uid = 'tv' + Math.floor(Math.random()*9999);
-    var anims = '<style>'
-      + (isOn
-        ? '@keyframes '+uid+'Fr{0%,100%{filter:drop-shadow(0 2px 8px rgba('+rgb+',.5))}50%{filter:drop-shadow(0 2px 20px rgba('+rgb+',.85))}}'
-          + '@keyframes '+uid+'Led{0%,100%{opacity:.7}50%{opacity:1}}'
-          + (isPlay ? '@keyframes '+uid+'Sc{0%{transform:translateY(0);opacity:.65}80%{opacity:.3}100%{transform:translateY(54px);opacity:0}}' : '')
-        : '')
-      + '@keyframes '+uid+'Ref{0%{opacity:.18}50%{opacity:.28}100%{opacity:.18}}'
-      + '</style>';
-
-    /* screen layers */
-    var screenBase = isOn
-      ? '<rect x="8" y="8" width="84" height="50" fill="#040d18"/>'
-        + '<rect x="8" y="8" width="84" height="50" fill="url(#'+uid+'G)" opacity=".9"/>'
-        + '<rect x="8" y="8" width="84" height="18" fill="rgba(255,255,255,.025)" style="animation:'+uid+'Ref 4s ease-in-out infinite"/>'
-      : '<rect x="8" y="8" width="84" height="50" fill="#020508"/>'
-        + '<line x1="40" y1="33" x2="60" y2="33" stroke="rgba(255,255,255,.04)" stroke-width="1.2"/>'
-        + '<line x1="50" y1="23" x2="50" y2="43" stroke="rgba(255,255,255,.04)" stroke-width="1.2"/>';
-
-    var scanLine = (isOn && isPlay)
-      ? '<rect x="8" y="8" width="84" height="4" rx="1" fill="rgba('+rgb+',.5)" style="animation:'+uid+'Sc 2s linear infinite"/>'
+    var uid = 'tvs' + Math.floor(Math.random()*99999);
+    var css = isOn
+      ? '@keyframes '+uid+'Fr{'
+          +'0%,100%{filter:drop-shadow(0 0 8px rgba('+rgb+',.8)) drop-shadow(0 0 24px rgba('+rgb+',.4))}'
+          +'50%{filter:drop-shadow(0 0 18px rgba('+rgb+',1)) drop-shadow(0 0 48px rgba('+rgb+',.65))}'
+          +'}'
+        + '@keyframes '+uid+'Gw{0%,100%{opacity:.78}50%{opacity:1}}'
+        + '@keyframes '+uid+'Ld{0%,100%{opacity:.8}50%{opacity:1}}'
+        + (isPlay ? '@keyframes '+uid+'Sc{0%{transform:translateY(0px);opacity:.9}80%{opacity:.4}100%{transform:translateY(50px);opacity:0}}' : '')
       : '';
 
-    /* frame glow */
-    var frameStyle = isOn ? 'style="animation:'+uid+'Fr 3s ease-in-out infinite"' : '';
+    var screen = isOn
+      /* schermo ACCESO: glow intenso + riflesso + scan line */
+      ? '<rect x="8" y="8" width="84" height="50" fill="#030c17"/>'
+        + '<ellipse cx="50" cy="33" rx="44" ry="26" fill="rgba('+rgb+',.32)" style="animation:'+uid+'Gw 3s ease-in-out infinite"/>'
+        + '<ellipse cx="50" cy="31" rx="30" ry="18" fill="rgba('+rgb+',.22)"/>'
+        + '<ellipse cx="50" cy="28" rx="18" ry="11" fill="rgba(255,255,255,.14)"/>'
+        + '<ellipse cx="48" cy="26" rx="9" ry="5" fill="rgba(255,255,255,.1)"/>'
+        + '<rect x="8" y="8" width="84" height="14" fill="url(#'+uid+'TR)"/>'
+        + '<line x1="8" y1="22" x2="92" y2="22" stroke="rgba(255,255,255,.04)" stroke-width=".7"/>'
+        + '<line x1="8" y1="36" x2="92" y2="36" stroke="rgba(255,255,255,.04)" stroke-width=".7"/>'
+        + '<line x1="8" y1="48" x2="92" y2="48" stroke="rgba(255,255,255,.04)" stroke-width=".7"/>'
+        + (isPlay ? '<rect x="8" y="8" width="84" height="2.5" fill="rgba(255,255,255,.85)" style="animation:'+uid+'Sc 1.8s linear infinite"/>' : '')
+      /* schermo SPENTO: nero piatto */
+      : '<rect x="8" y="8" width="84" height="50" fill="#010407"/>'
+        + '<line x1="42" y1="29" x2="58" y2="37" stroke="rgba(255,255,255,.025)" stroke-width="1"/>'
+        + '<line x1="58" y1="29" x2="42" y2="37" stroke="rgba(255,255,255,.025)" stroke-width="1"/>';
 
-    /* LED */
-    var led = '<circle cx="90" cy="63" r="2.2" fill="'+(isOn?col:'#0d1a28')+'" '
-      + (isOn ? 'style="filter:drop-shadow(0 0 3px '+col+');animation:'+uid+'Led 2s ease-in-out infinite"' : '')+'"/>';
-
-    return '<svg viewBox="0 0 100 78" style="width:100%;height:100%;display:block;overflow:visible" preserveAspectRatio="xMidYMid meet">'
-      + anims
-      + '<defs>'
-      + (isOn
-        ? '<radialGradient id="'+uid+'G" cx="50%" cy="35%" r="70%" gradientUnits="objectBoundingBox">'
-          + '<stop offset="0%" stop-color="rgba('+rgb+',.32)"/>'
-          + '<stop offset="55%" stop-color="rgba('+rgb+',.12)"/>'
-          + '<stop offset="100%" stop-color="rgba('+rgb+',.04)"/>'
-          + '</radialGradient>'
-        : '')
-      + '</defs>'
-      /* outer bezel */
-      + '<rect x="1" y="1" width="98" height="65" rx="5" fill="#0e1722" stroke="'+(isOn?col:'#1b2840')+'" stroke-width="'+(isOn?'1.8':'0.7')+'" '+frameStyle+'/>'
-      /* screen border inner shadow */
-      + '<rect x="6" y="6" width="88" height="54" rx="2" fill="none" stroke="#060f1a" stroke-width="2.5"/>'
-      /* screen content */
-      + screenBase
-      + scanLine
-      /* bottom bezel */
-      + '<rect x="1" y="60" width="98" height="6" rx="0" fill="#0a1420"/>'
-      + '<rect x="1" y="60" width="98" height="1" fill="rgba(0,0,0,.4)"/>'
-      /* brand */
-      + '<text x="50" y="65" text-anchor="middle" font-size="4" font-weight="900" letter-spacing="2.5" fill="'+(isOn?'rgba('+rgb+',.7)':'#1b2840')+'" font-family="Arial,sans-serif">PHILIPS</text>'
+    return '<svg viewBox="0 0 100 80" style="width:100%;height:100%;display:block;overflow:visible" preserveAspectRatio="xMidYMid meet">'
+      +'<style>'+css+'</style>'
+      +'<defs>'
+      +'<linearGradient id="'+uid+'TR" x1="0" y1="0" x2="0" y2="1">'
+      +'<stop offset="0%" stop-color="rgba(255,255,255,.13)"/>'
+      +'<stop offset="100%" stop-color="rgba(255,255,255,0)"/>'
+      +'</linearGradient>'
+      +'</defs>'
+      /* cornice esterna */
+      +'<rect x="1" y="1" width="98" height="63" rx="5" fill="#0b141f" stroke="'+(isOn?col:'#16263a')+'" stroke-width="'+(isOn?'2':'0.7')+'" '+(isOn?'style="animation:'+uid+'Fr 2.5s ease-in-out infinite"':'')+'/>'
+      /* bordo interno schermo */
+      +'<rect x="6" y="6" width="88" height="53" rx="2" fill="none" stroke="#06101a" stroke-width="3"/>'
+      /* schermo */
+      + screen
+      /* pannello inferiore */
+      +'<rect x="1" y="59" width="98" height="5" fill="#080e1a"/>'
+      +'<text x="50" y="64.5" text-anchor="middle" font-size="3.5" font-weight="900" letter-spacing="3.5" fill="'+(isOn?'rgba('+rgb+',.6)':'#16263a')+'" font-family="Arial,sans-serif">PHILIPS</text>'
       /* LED */
-      + led
-      /* stand neck */
-      + '<rect x="43" y="67" width="14" height="6" rx="1" fill="#0a1420"/>'
-      + '<rect x="43" y="67" width="14" height="1.5" fill="rgba(255,255,255,.04)"/>'
-      /* stand base */
-      + '<rect x="20" y="73" width="60" height="5" rx="2.5" fill="#0a1420"/>'
-      + '<rect x="20" y="73" width="60" height="1.5" rx="1" fill="rgba(255,255,255,.04)"/>'
-      + '</svg>';
+      +'<circle cx="91" cy="62" r="2.2" fill="'+(isOn?col:'#101e2f')+'" '+(isOn?'style="filter:drop-shadow(0 0 5px '+col+');animation:'+uid+'Ld 2s ease-in-out infinite"':'')+'/>'
+      /* piedistallo */
+      +'<rect x="44" y="64" width="12" height="8" fill="#08111c"/>'
+      +'<rect x="22" y="72" width="56" height="5" rx="2.5" fill="#08111c"/>'
+      +'<rect x="22" y="72" width="56" height="1.5" rx="1" fill="rgba(255,255,255,.04)"/>'
+      +'</svg>';
   }
 
   /* ─────────────── RENDER ─────────────── */
@@ -124,7 +114,9 @@
     var isPlay = tvSt === 'playing';
     var isPause = tvSt === 'paused';
 
-    var mediaTitle = tvAt.media_title || tvAt.app_name || '';
+    var _rawTitle = tvAt.media_title || '';
+    var _isPkg = !!(_rawTitle && /^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*){2,}$/.test(_rawTitle));
+    var mediaTitle = _isPkg ? (tvAt.app_name || '') : (_rawTitle || tvAt.app_name || '');
     var source     = tvAt.source || '';
     var sourceList = tvAt.source_list || [];
     var pic        = tvAt.entity_picture || '';
@@ -194,7 +186,7 @@
       +'#'+rid+' .fc-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}'
       +'#'+rid+' .fc-scroll::-webkit-scrollbar{display:none}'
       +'#'+rid+' .fc-hero{display:flex;align-items:center;padding:12px 14px 10px;gap:0}'
-      +'#'+rid+' .fc-art{width:106px;height:86px;border-radius:12px;overflow:visible;flex-shrink:0;background:linear-gradient(135deg,rgba('+rgb+',.1) 0%,rgba('+rgb+',.03) 100%);border:1px solid rgba('+rgb+','+(isOn?'.22':'.08')+');display:flex;align-items:center;justify-content:center}'
+      +'#'+rid+' .fc-art{width:130px;height:106px;border-radius:14px;overflow:visible;flex-shrink:0;background:linear-gradient(135deg,rgba('+rgb+',.08) 0%,rgba('+rgb+',.02) 100%);border:1px solid rgba('+rgb+','+(isOn?'.2':'.06')+');display:flex;align-items:center;justify-content:center}'
       +'#'+rid+' .fc-info{flex:1;padding-left:12px;border-left:1px solid rgba(255,255,255,.07);display:flex;flex-direction:column;gap:4px;min-width:0;justify-content:center}'
       +'#'+rid+' .fc-sep{height:1px;background:rgba(255,255,255,.06);margin:0 14px;flex-shrink:0}'
       +'#'+rid+' .fc-sec{padding:6px 14px 4px;flex-shrink:0}'
