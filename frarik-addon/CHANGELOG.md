@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.0.21 — 2026-07-12
+
+### feat(tv-card): nuova card TV con telecomando completo v1.0
+
+- **Hero**: art/thumbnail del media corrente (con fallback SVG TV animato), stato, titolo, sorgente attiva, chip soundbar
+- **Controlli rapidi**: Accendi/Spegni, Mute audio, selettore ingresso (popup)
+- **D-pad navigazione**: ▲▼◀▶ + OK grande centrale + BACK/HOME/MENU. Usa `remote.send_command` (configurabile in ⚙)
+- **Riproduzione**: ⏮ ⏸/▶ ⏭ ⏹ + CH+/CH-
+- **Volume**: slider drag TV + bottoni +/- | slider soundbar opzionale
+- **Config ⚙**: entity TV, entity remote (navigazione), entity soundbar, nome, colore, nomi comandi navigazione personalizzabili
+- **Rinomina inline**: click sul titolo header
+- `colSpan:2, rowSpan:4, min-height:490px`
+
 ## 2.0.20 — 2026-07-12
 
 ### fix(alexa-card): altezza card fissa indipendente dallo stato v2.1
