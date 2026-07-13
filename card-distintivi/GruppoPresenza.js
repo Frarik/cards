@@ -1,4 +1,4 @@
-/* frarik-version: 1.2 */
+/* frarik-version: 1.3 */
 /**
  * GruppoPresenza.js — Distintivo FratechStore v1.1
  * Chip contatore sensori presenza/movimento attivi + popup con dettaglio e SVG animato
@@ -39,73 +39,78 @@
     return `<span style="font-size:${sz}px;line-height:1">${ico||'🚶'}</span>`;
   }
 
+  /*
+   * Vista LATERALE (profilo dx) — gambe e braccia oscillano avanti/indietro sull'asse X.
+   * Ogni arto pivot dall'articolazione e ruota attorno ad essa:
+   *   +rot = senso orario = piede/mano va a DESTRA (avanti per chi cammina a dx)
+   *   -rot = senso antiorario = piede/mano va a SINISTRA (indietro)
+   * Gamba1/Braccio2 in fase | Gamba2/Braccio1 in controfase → gait corretto.
+   */
   function _presenceSvg(isOn, idx) {
     const s = `gpS${idx}`;
 
+    /* ── FERMO: profilo laterale grigio ── */
     if (!isOn) {
-      return `<svg viewBox="0 0 56 80" width="42" height="60" style="display:block;overflow:visible">
-        <defs>
-          <linearGradient id="${s}hg" x1="30%" y1="20%" x2="70%" y2="80%">
-            <stop offset="0%" stop-color="rgba(148,163,184,.5)"/>
-            <stop offset="100%" stop-color="rgba(71,85,105,.25)"/>
-          </linearGradient>
-        </defs>
-        <!-- ombra -->
-        <ellipse cx="28" cy="72" rx="13" ry="2.5" fill="rgba(255,255,255,.05)"/>
-        <!-- testa -->
-        <circle cx="28" cy="11" r="7.5" fill="url(#${s}hg)" stroke="rgba(148,163,184,.4)" stroke-width="1.3"/>
-        <circle cx="25.5" cy="9.5" r="1.8" fill="rgba(148,163,184,.2)"/>
+      return `<svg viewBox="0 0 72 90" width="48" height="60" style="display:block;overflow:visible">
+        <ellipse cx="36" cy="85" rx="16" ry="3" fill="rgba(255,255,255,.05)"/>
+        <!-- testa, profilo verso destra -->
+        <circle cx="40" cy="11" r="8" fill="rgba(71,85,105,.5)" stroke="rgba(148,163,184,.38)" stroke-width="1.3"/>
+        <!-- naso (indicatore direzione destra) -->
+        <path d="M47,10 Q51,12 47,15" fill="rgba(100,116,139,.35)"/>
         <!-- collo -->
-        <rect x="25.5" y="18" width="5" height="4" rx="1" fill="rgba(100,116,139,.3)"/>
-        <!-- corpo/torso -->
-        <path d="M15,47C15,29 21,22 28,22C35,22 41,29 41,47L36,52L28,54L20,52Z" fill="rgba(71,85,105,.35)" stroke="rgba(100,116,139,.38)" stroke-width="1.3"/>
-        <!-- braccia -->
-        <line x1="15" y1="33" x2="5" y2="46" stroke="rgba(100,116,139,.42)" stroke-width="3.8" stroke-linecap="round"/>
-        <line x1="41" y1="33" x2="51" y2="46" stroke="rgba(100,116,139,.42)" stroke-width="3.8" stroke-linecap="round"/>
-        <!-- gambe -->
-        <line x1="22" y1="52" x2="20" y2="72" stroke="rgba(100,116,139,.42)" stroke-width="4.2" stroke-linecap="round"/>
-        <line x1="34" y1="52" x2="36" y2="72" stroke="rgba(100,116,139,.42)" stroke-width="4.2" stroke-linecap="round"/>
+        <line x1="39" y1="19" x2="36" y2="26" stroke="rgba(100,116,139,.5)" stroke-width="5" stroke-linecap="round"/>
+        <!-- torso (profilo = striscia stretta) -->
+        <line x1="36" y1="26" x2="33" y2="52" stroke="rgba(71,85,105,.45)" stroke-width="10" stroke-linecap="round"/>
+        <!-- braccia (ferme ai lati) -->
+        <line x1="37" y1="31" x2="31" y2="52" stroke="rgba(100,116,139,.42)" stroke-width="3.8" stroke-linecap="round"/>
+        <line x1="36" y1="31" x2="42" y2="52" stroke="rgba(100,116,139,.28)" stroke-width="3.5" stroke-linecap="round"/>
+        <!-- gambe (in piedi, quasi unite) -->
+        <line x1="34" y1="52" x2="33" y2="82" stroke="rgba(100,116,139,.42)" stroke-width="4.5" stroke-linecap="round"/>
+        <line x1="34" y1="52" x2="36" y2="82" stroke="rgba(100,116,139,.28)" stroke-width="4" stroke-linecap="round"/>
       </svg>`;
     }
 
-    /* persona che cammina — gambe e braccia pivotano sulle articolazioni */
+    /* ── RILEVATO: profilo laterale ambra, gambe che camminano ── */
     return `<style>
-      @keyframes ${s}Ll{0%,100%{transform:rotate(-32deg)}50%{transform:rotate(32deg)}}
-      @keyframes ${s}Rl{0%,100%{transform:rotate(32deg)}50%{transform:rotate(-32deg)}}
-      @keyframes ${s}La{0%,100%{transform:rotate(26deg)}50%{transform:rotate(-26deg)}}
-      @keyframes ${s}Ra{0%,100%{transform:rotate(-26deg)}50%{transform:rotate(26deg)}}
+      @keyframes ${s}L1{0%,100%{transform:rotate(30deg)}50%{transform:rotate(-30deg)}}
+      @keyframes ${s}L2{0%,100%{transform:rotate(-30deg)}50%{transform:rotate(30deg)}}
+      @keyframes ${s}A1{0%,100%{transform:rotate(-24deg)}50%{transform:rotate(24deg)}}
+      @keyframes ${s}A2{0%,100%{transform:rotate(24deg)}50%{transform:rotate(-24deg)}}
       @keyframes ${s}Gw{0%,100%{filter:drop-shadow(0 0 4px rgba(245,158,11,.4))}50%{filter:drop-shadow(0 0 11px rgba(245,158,11,.9))}}
     </style>
-    <svg viewBox="0 0 56 80" width="42" height="60" style="display:block;overflow:visible">
+    <svg viewBox="0 0 72 90" width="48" height="60" style="display:block;overflow:visible">
       <defs>
-        <linearGradient id="${s}hg" x1="25%" y1="15%" x2="75%" y2="85%">
-          <stop offset="0%" stop-color="#fcd34d" stop-opacity=".9"/>
-          <stop offset="100%" stop-color="#d97706" stop-opacity=".7"/>
+        <linearGradient id="${s}hg" x1="20%" y1="15%" x2="80%" y2="85%">
+          <stop offset="0%" stop-color="#fcd34d" stop-opacity=".95"/>
+          <stop offset="100%" stop-color="#d97706" stop-opacity=".75"/>
         </linearGradient>
       </defs>
-      <ellipse cx="28" cy="74" rx="13" ry="3" fill="rgba(245,158,11,.15)"/>
-      <!-- testa -->
-      <circle cx="28" cy="11" r="7.5" fill="url(#${s}hg)" stroke="#f59e0b" stroke-width="1.4" style="animation:${s}Gw 1.6s ease-in-out infinite"/>
-      <circle cx="25" cy="9" r="2" fill="rgba(255,255,255,.28)"/>
+      <ellipse cx="36" cy="85" rx="20" ry="3.5" fill="rgba(245,158,11,.15)"/>
+      <!-- testa profilo destra, glow -->
+      <circle cx="40" cy="11" r="8" fill="url(#${s}hg)" stroke="#f59e0b" stroke-width="1.4" style="animation:${s}Gw 1.6s ease-in-out infinite"/>
+      <!-- naso -->
+      <path d="M47,10 Q51,12 47,15" fill="rgba(245,158,11,.7)"/>
+      <!-- riflesso fronte -->
+      <circle cx="37" cy="8" r="2" fill="rgba(255,255,255,.28)"/>
       <!-- collo -->
-      <rect x="25.5" y="18.5" width="5" height="4" rx="1" fill="rgba(245,158,11,.6)"/>
-      <!-- torso statico -->
-      <path d="M17,47C17,30 21,22 28,22C35,22 39,30 39,47L35,51L28,53L21,51Z" fill="rgba(245,158,11,.5)" stroke="#f59e0b" stroke-width="1.3"/>
-      <!-- braccio sinistro — pivot spalla (17,32) -->
-      <g style="transform-origin:17px 32px;animation:${s}La .55s ease-in-out infinite">
-        <line x1="17" y1="32" x2="7" y2="47" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
+      <line x1="39" y1="19" x2="36" y2="26" stroke="#f59e0b" stroke-width="5.5" stroke-linecap="round"/>
+      <!-- torso (profilo, striscia stretta) -->
+      <line x1="36" y1="26" x2="33" y2="52" stroke="rgba(245,158,11,.65)" stroke-width="10" stroke-linecap="round"/>
+      <!-- braccio 1 (posteriore) — pivot spalla (37,30); oscilla dietro quando gamba1 avanza -->
+      <g style="transform-origin:37px 30px;animation:${s}A1 .55s ease-in-out infinite">
+        <line x1="37" y1="30" x2="37" y2="52" stroke="#f59e0b" stroke-width="3.8" stroke-linecap="round"/>
       </g>
-      <!-- braccio destro — pivot spalla (39,32) -->
-      <g style="transform-origin:39px 32px;animation:${s}Ra .55s ease-in-out infinite">
-        <line x1="39" y1="32" x2="49" y2="47" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
+      <!-- braccio 2 (anteriore) — pivot spalla (36,30); oscilla avanti quando gamba1 avanza -->
+      <g style="transform-origin:36px 30px;animation:${s}A2 .55s ease-in-out infinite">
+        <line x1="36" y1="30" x2="36" y2="52" stroke="rgba(245,158,11,.65)" stroke-width="3.5" stroke-linecap="round"/>
       </g>
-      <!-- gamba sinistra — pivot anca (21,51) -->
-      <g style="transform-origin:21px 51px;animation:${s}Ll .55s ease-in-out infinite">
-        <line x1="21" y1="51" x2="19" y2="74" stroke="#f59e0b" stroke-width="4.5" stroke-linecap="round"/>
+      <!-- gamba 1 (anteriore, parte avanti) — pivot anca (34,52) -->
+      <g style="transform-origin:34px 52px;animation:${s}L1 .55s ease-in-out infinite">
+        <line x1="34" y1="52" x2="34" y2="82" stroke="#f59e0b" stroke-width="4.5" stroke-linecap="round"/>
       </g>
-      <!-- gamba destra — pivot anca (35,51) -->
-      <g style="transform-origin:35px 51px;animation:${s}Rl .55s ease-in-out infinite">
-        <line x1="35" y1="51" x2="37" y2="74" stroke="#f59e0b" stroke-width="4.5" stroke-linecap="round"/>
+      <!-- gamba 2 (posteriore, parte indietro) — pivot anca (34,52) -->
+      <g style="transform-origin:34px 52px;animation:${s}L2 .55s ease-in-out infinite">
+        <line x1="34" y1="52" x2="34" y2="82" stroke="rgba(245,158,11,.65)" stroke-width="4" stroke-linecap="round"/>
       </g>
     </svg>`;
   }
@@ -378,7 +383,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Presenza', icon: 'mdi:motion-sensor',
     desc: 'Chip contatore sensori presenza/movimento attivi. Clic → stato rilevato/libero per ogni zona.',
-    version: '1.2', isDistintivo: true,
+    version: '1.3', isDistintivo: true,
     defaultCfg: { label: 'Presenza', icon: 'mdi:motion-sensor', color: '#f59e0b', entities: [] },
     chip, watchEntities, render, mount, update, configure,
   };

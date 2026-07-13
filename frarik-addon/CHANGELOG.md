@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.0.47 — 2026-07-13
+
+### fix(GruppoPresenza): v1.3 — omino profilo laterale, cammina avanti/indietro
+
+- Redesign completo _presenceSvg: vista laterale (profilo verso destra) invece che frontale
+- Gambe e braccia partono tutte dritte verso il basso dall'articolazione e oscillano sull'asse X (+rot=avanti, -rot=indietro)
+- Gamba1/Braccio2 in fase, Gamba2/Braccio1 in controfase → gait bipede corretto
+- Naso come indicatore direzione (triangolino verso destra)
+- Torso: linea stretta laterale (non più trapezio frontale)
+- Stato fermo: profilo grigio con gambe quasi unite
+
 ## 2.0.46 — 2026-07-13
 
 ### feat(GruppoPresenza): v1.2 — persona che cammina animata, rimossa scritta tempo
