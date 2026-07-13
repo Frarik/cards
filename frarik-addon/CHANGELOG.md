@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.0.53 — 2026-07-13
+
+### fix(distintivi): UI popup calendario + scadenze — testi bianchi, layout migliorato
+
+**GruppoCalendario:**
+- Popup: rimosso badge nome calendario accanto agli orari
+- Popup: font titolo evento 15px, orario 12px, padding righe più ampio (13px vs 9px)
+- Header giorno: font 13px, contatore eventi bianco (#fff) invece di rgba
+- Tutti i testi secondari (orario, location, nessun-evento) portati a #fff
+
+**GruppoScadenze:**
+- Chip: formato giorni separato — "tra 171 gg" invece di "171gg"
+- Popup: mostra solo scadenze entro 90 giorni (3 mesi); se tutte > 3 mesi mostra messaggio positivo
+- Popup: font nome scadenza 14px, tutti i testi secondari (costo) a #fff
+- Empty state differenziato: "nessuna configurata" vs "nessuna nei 3 mesi"
+
 ## 2.0.52 — 2026-07-13
 
 ### feat(distintivi): GruppoCalendario v2.0 + GruppoScadenze v2.0 — redesign completo

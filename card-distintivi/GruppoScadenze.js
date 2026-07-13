@@ -131,9 +131,8 @@
     const color = _statusColor(minStatus);
     const value = minDays === null ? '—'
       : minDays <= 0  ? 'SCADUTO'
-      : minDays === 0 ? 'OGGI'
       : minDays === 1 ? 'DOMANI'
-      : `${minDays}gg`;
+      : `tra ${minDays} gg`;
 
     return {
       icon:  _chipSvg(color),
@@ -212,7 +211,7 @@
       if (rank[a.status] !== rank[b.status]) return rank[a.status] - rank[b.status];
       if (a.days !== null && b.days !== null) return a.days - b.days;
       return 0;
-    });
+    }).filter(({ days }) => days === null || days <= 90); // mostra solo entro 3 mesi
 
     const rows = sorted.map(({ e, days, status }, i) => {
       if (!e.entity) return '';
@@ -227,20 +226,24 @@
       const rowBg  = status==='expired'||status==='urgent' ? 'background:rgba(248,113,113,.04)'
                    : status==='warning' ? 'background:rgba(245,158,11,.03)' : '';
 
-      return `<div style="border-bottom:1px solid rgba(255,255,255,.04);${rowBg}">
-        <div style="display:flex;align-items:center;gap:12px;padding:10px 16px">
+      return `<div style="border-bottom:1px solid rgba(255,255,255,.06);${rowBg}">
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 16px">
           <div style="flex-shrink:0">${_hourglassSvg(status, days, i)}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(name)}</div>
-            ${costStr ? `<div style="font-size:11px;color:rgba(255,255,255,.55);margin-top:3px">💰 ${eh(costStr)}</div>` : ''}
+            <div style="font-size:14px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(name)}</div>
+            ${costStr ? `<div style="font-size:11px;color:#fff;margin-top:3px">💰 ${eh(costStr)}</div>` : ''}
           </div>
           <div style="padding:4px 11px;border-radius:20px;background:${stBg};border:1px solid ${stBdr};font-size:10px;font-weight:700;color:${col};white-space:nowrap;flex-shrink:0;text-align:right">${eh(dLabel)}</div>
         </div>
       </div>`;
     }).join('');
 
+    const emptyMsg = !ents.length
+      ? '<div style="padding:36px 20px;text-align:center;color:#fff;font-size:13px">Nessuna scadenza configurata.<br><span style="font-size:11px;color:#fff">Clicca ✏️ sulla chip per configurare.</span></div>'
+      : '<div style="padding:36px 20px;text-align:center;color:#fff;font-size:13px">🎉 Nessuna scadenza nei prossimi 3 mesi!</div>';
+
     return `<div id="gscad-popup-body">
-      <div>${rows || '<div style="padding:36px 20px;text-align:center;color:#fff;font-size:12px">Nessuna scadenza configurata.<br><span style="font-size:10px;color:rgba(255,255,255,.5)">Clicca ✏️ sulla chip per configurare.</span></div>'}</div>
+      <div>${rows || emptyMsg}</div>
     </div>`;
   }
 

@@ -190,7 +190,7 @@
       return `<div style="padding:40px 20px;text-align:center;color:#fff">
         <div style="font-size:36px;margin-bottom:10px">🎉</div>
         <div style="font-size:13px;font-weight:700">Nessun evento nei prossimi 7 giorni</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:5px">La settimana è libera!</div>
+        <div style="font-size:11px;color:#fff;margin-top:5px">La settimana è libera!</div>
       </div>`;
     }
 
@@ -216,25 +216,24 @@
         const calColor = ev._calColor || '#818cf8';
         const calName  = ev._calName  || '';
 
-        return `<div style="display:flex;align-items:flex-start;gap:10px;padding:9px 16px 9px 14px;border-bottom:1px solid rgba(255,255,255,.04)">
-          <div style="padding-top:3px;flex-shrink:0">
-            <div style="width:8px;height:8px;border-radius:50%;background:${calColor}"></div>
+        return `<div style="display:flex;align-items:flex-start;gap:12px;padding:13px 16px 13px 14px;border-bottom:1px solid rgba(255,255,255,.06)">
+          <div style="padding-top:6px;flex-shrink:0">
+            <div style="width:10px;height:10px;border-radius:50%;background:${calColor}"></div>
           </div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(title)}</div>
-            <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:3px;align-items:center">
-              <span style="font-size:10px;color:rgba(255,255,255,.65);font-weight:600">${eh(timeStr)}</span>
-              ${calName ? `<span style="font-size:9px;padding:1px 6px;border-radius:10px;background:${calColor}22;color:${calColor};font-weight:700">${eh(calName)}</span>` : ''}
-              ${loc ? `<span style="font-size:9px;color:rgba(255,255,255,.45)">📍 ${eh(String(loc).slice(0,40))}</span>` : ''}
+            <div style="font-size:15px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(title)}</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:5px;align-items:center">
+              <span style="font-size:12px;color:#fff;font-weight:600">${eh(timeStr)}</span>
+              ${loc ? `<span style="font-size:11px;color:#fff">📍 ${eh(String(loc).slice(0,40))}</span>` : ''}
             </div>
           </div>
         </div>`;
       }).join('');
 
       return `<div>
-        <div style="padding:8px 16px 7px;background:linear-gradient(90deg,${hdrCol}20,transparent);border-left:3px solid ${hdrCol};display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;font-weight:800;color:${hdrCol};text-transform:capitalize">${eh(label)}</span>
-          <span style="font-size:9px;color:rgba(255,255,255,.4)">${nEvs} event${nEvs>1?'i':'o'}</span>
+        <div style="padding:10px 16px 9px;background:linear-gradient(90deg,${hdrCol}28,transparent);border-left:3px solid ${hdrCol};display:flex;align-items:center;gap:8px">
+          <span style="font-size:13px;font-weight:800;color:${hdrCol};text-transform:capitalize">${eh(label)}</span>
+          <span style="font-size:11px;color:#fff;font-weight:600">${nEvs} event${nEvs>1?'i':'o'}</span>
         </div>
         ${rows}
       </div>`;
