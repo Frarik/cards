@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.0.43 — 2026-07-13
+
+### feat(GruppoAllagamento): v1.1 — pk_group, SVG animati, chip dinamico
+
+- **pk_group**: campo opzionale per sensore gruppo HA (es. `group.allagamento`) — il chip mostra "OK"/"ALLAGATO" basandosi sul gruppo; se assente usa conteggio sensori individuali
+- **Chip icon dinamica**: SVG inline — goccia blu con checkmark verde se asciutto, goccia rossa pulsante con drop-shadow animato se allagamento
+- **Popup**: rimossa sezione summary (pill badges sotto il titolo); sostituita con hero SVG del sensore gruppo
+- **Hero SVG gruppo**: larghezza piena — scena acqua calma + casa + cerchio check se asciutto; acqua rossa alluvionale animata + anelli alert se allagamento
+- **SVG singolo sensore**: ridisegnato — goccia con gradiente, onde animate clippate dentro la goccia, anello pulsante esterno, gocce cadenti, badge checkmark/alert
+- **Configure**: aggiunto campo "Sensore gruppo principale" con autocomplete (mostra prima group.* poi binary_sensor.*)
+
 ## 2.0.42 — 2026-07-13
 
 ### feat(card-distintivi): GruppoPresenza e GruppoAllagamento v1.0
