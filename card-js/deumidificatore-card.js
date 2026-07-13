@@ -1,4 +1,4 @@
-/* frarik-version: 1.4 */
+/* frarik-version: 1.5 */
 (function () {
   'use strict';
 
@@ -17,11 +17,21 @@
     var c = load(card);
     return {
       pk_device:   c.pk_device   || 'humidifier.deumidificatore',
+      pk_fan:      c.pk_fan      || '',
+      pk_timer:    c.pk_timer    || '',
+      pk_ion:      c.pk_ion      || '',
+      pk_lock:     c.pk_lock     || '',
       pk_humidity: c.pk_humidity || '',
       name:        c.name        || 'Deumidificatore',
       color:       c.color       || '#38bdf8',
     };
   }
+  /* auto-derive companion entity IDs from main entity base name */
+  function _base(eid){ return eid.split('.').slice(1).join('.'); }
+  function _pkFan(c){ return c.pk_fan || ('fan.'+_base(c.pk_device)); }
+  function _pkTimer(c){ return c.pk_timer || ('select.'+_base(c.pk_device)+'_conto_alla_rovescia'); }
+  function _pkIon(c){ return c.pk_ion || ('switch.'+_base(c.pk_device)+'_ionizzatore'); }
+  function _pkLock(c){ return c.pk_lock || ('switch.'+_base(c.pk_device)+'_blocco_bambini'); }
 
   /* ── SVG ── */
   function deumSVG(col, rgb, isOn, curHum, targetHum) {
@@ -119,8 +129,13 @@
     function fld(fid,lbl,val){ return '<div style="margin-bottom:9px;position:relative"><label style="'+stLbl+'">'+lbl+'</label><input id="'+fid+'" type="text" value="'+_esc(val||'')+'" autocomplete="off" placeholder="Cerca entità…" style="'+stInp+'"><div id="'+fid+'-d" style="position:absolute;left:0;right:0;top:calc(100% + 2px);z-index:200;max-height:140px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-radius:9px;display:none;scrollbar-width:none"></div></div>'; }
     var colorPicker='<div style="margin-bottom:12px"><label style="'+stLbl+'">Colore accent</label><div style="display:flex;gap:6px;flex-wrap:wrap">'+COLORS.map(function(clr){ return '<div data-dcol="'+clr+'" style="width:24px;height:24px;border-radius:7px;cursor:pointer;background:'+clr+';border:2px solid '+(c.color===clr?'#fff':'transparent')+'"></div>'; }).join('')+'</div></div>';
     var formHtml='<div style="margin-bottom:10px"><label style="'+stLbl+'">Nome card</label><input id="dc-name" type="text" value="'+_esc(c.name||'')+'" placeholder="es. Deumidificatore Camera" style="'+stInp.replace('monospace','system-ui')+'"></div>'
-      +'<div style="'+stSec+'">Entità</div>'
+      +'<div style="'+stSec+'">Entità principali</div>'
       +fld('dc-dev','Deumidificatore (humidifier.*)',c.pk_device)
+      +fld('dc-fan','Ventola (fan.* — auto-derivata)',c.pk_fan)
+      +'<div style="'+stSec+'">Controlli extra (auto-derivati)</div>'
+      +fld('dc-timer','Timer (select.*_conto_alla_rovescia)',c.pk_timer)
+      +fld('dc-ion','Ionizzatore (switch.*_ionizzatore)',c.pk_ion)
+      +fld('dc-lock','Blocco bambini (switch.*_blocco_bambini)',c.pk_lock)
       +fld('dc-hum','Sensore umidità esterno (opzionale)',c.pk_humidity)
       +colorPicker
       +'<div style="display:flex;gap:8px;margin-top:12px"><button id="dc-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button><button id="dc-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:'+c.color+';color:#060d14">Salva</button></div>';
@@ -130,7 +145,7 @@
     ov.querySelectorAll('[data-dcol]').forEach(function(dot){
       dot.addEventListener('click',function(){ selColor=dot.getAttribute('data-dcol'); ov.querySelectorAll('[data-dcol]').forEach(function(d){ d.style.borderColor='transparent'; }); dot.style.borderColor='#fff'; });
     });
-    ['dc-dev','dc-hum'].forEach(function(fid){
+    ['dc-dev','dc-fan','dc-timer','dc-ion','dc-lock','dc-hum'].forEach(function(fid){
       var inp=ov.querySelector('#'+fid), drop=ov.querySelector('#'+fid+'-d');
       if(!inp||!drop) return;
       function show(){ var q=inp.value.toLowerCase().trim(); var hits=(q?allIds.filter(function(id){ return id.toLowerCase().includes(q); }):allIds).slice(0,30); if(!hits.length){ drop.style.display='none'; return; } drop.style.display='block'; drop.innerHTML=hits.map(function(id){ return '<div data-pick="'+id+'" style="padding:6px 10px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04);color:#fff">'+id+'</div>'; }).join(''); drop.querySelectorAll('[data-pick]').forEach(function(row){ row.addEventListener('mousedown',function(ev){ ev.preventDefault(); inp.value=row.getAttribute('data-pick'); drop.style.display='none'; }); row.addEventListener('mouseover',function(){ row.style.background='rgba(255,255,255,.08)'; }); row.addEventListener('mouseout',function(){ row.style.background=''; }); }); }
@@ -138,8 +153,8 @@
       inp.addEventListener('blur',function(){ setTimeout(function(){ drop.style.display='none'; },200); });
     });
     ov.querySelector('#dc-save').addEventListener('click',function(){
-      var n=ov.querySelector('#dc-name'),d=ov.querySelector('#dc-dev'),hm=ov.querySelector('#dc-hum');
-      save(card,{name:n?n.value.trim():c.name,pk_device:d?d.value.trim():c.pk_device,pk_humidity:hm?hm.value.trim():c.pk_humidity,color:selColor});
+      var g=function(id){ var el=ov.querySelector('#'+id); return el?el.value.trim():''; };
+      save(card,{name:g('dc-name')||c.name,pk_device:g('dc-dev')||c.pk_device,pk_fan:g('dc-fan'),pk_timer:g('dc-timer'),pk_ion:g('dc-ion'),pk_lock:g('dc-lock'),pk_humidity:g('dc-hum'),color:selColor});
       ov._close(); try{ el._deuSig=''; el._deuBound=null; el.innerHTML=render(card); mount(card,null,el); }catch(e){}
     });
   }
@@ -155,11 +170,20 @@
 
     var curHum = c.pk_humidity ? num(S(h,c.pk_humidity)) : num(attrs.current_humidity);
     var targetHum = num(attrs.humidity);
-    var mode = attrs.mode || attrs.preset_mode || '';
-    var availModes = attrs.available_modes || attrs.preset_modes || [];
-    var fanMode = attrs.fan_mode || '';
-    var fanModes = attrs.fan_modes || [];
-    var timerVal = attrs.timer_time_remaining != null ? attrs.timer_time_remaining : null;
+    /* fan entity */
+    var fanEid = _pkFan(c);
+    var fanState = S(h,fanEid)||'off';
+    var fanPct = num(Attr(h,fanEid,'percentage'));
+    var fanIsOn = fanState==='on';
+    /* timer select */
+    var timerEid = _pkTimer(c);
+    var timerState = S(h,timerEid)||'';
+    var timerOpts = (h&&h.states&&h.states[timerEid]&&h.states[timerEid].attributes&&h.states[timerEid].attributes.options)||[];
+    /* switches */
+    var ionEid = _pkIon(c);
+    var ionOn = S(h,ionEid)==='on';
+    var lockEid = _pkLock(c);
+    var lockOn = S(h,lockEid)==='on';
 
     var stLbls={on:'Acceso',off:'Spento',unavailable:'Non disponibile'};
     var stateLbl=stLbls[state]||state;
@@ -180,14 +204,16 @@
         +'<span style="font-size:9px;font-weight:800;color:#fff">TARGET</span>'
         +'<span style="font-size:13px;font-weight:900;color:'+col+'">'+Math.round(targetHum)+'%</span></div>';
     }
-    if(mode && isOn){
-      infoRows+='<div style="margin-top:4px;padding:3px 8px;border-radius:8px;background:rgba('+rgb+',.1);border:1px solid rgba('+rgb+',.22);display:inline-flex;align-items:center">'
-        +'<span style="font-size:9px;font-weight:800;color:'+col+'">'+mode.toUpperCase()+'</span></div>';
-    }
-    if(fanMode && isOn){
+    if(isOn && fanIsOn && fanPct!=null){
+      var fanLbl = fanPct<=50?'Bassa':'Alta';
       infoRows+='<div style="margin-top:3px;display:flex;align-items:center;gap:5px">'
         +'<span style="font-size:9px;font-weight:700;color:#fff">Ventola</span>'
-        +'<span style="font-size:9px;font-weight:800;padding:2px 7px;border-radius:7px;background:rgba('+rgb+',.12);border:1px solid rgba('+rgb+',.2);color:'+col+'">'+fanMode.toUpperCase()+'</span>'
+        +'<span style="font-size:9px;font-weight:800;padding:2px 7px;border-radius:7px;background:rgba('+rgb+',.12);border:1px solid rgba('+rgb+',.2);color:'+col+'">'+fanLbl.toUpperCase()+'</span>'
+        +'</div>';
+    }
+    if(ionOn){
+      infoRows+='<div style="margin-top:3px;display:flex;align-items:center;gap:5px">'
+        +'<span style="font-size:9px;font-weight:800;padding:2px 7px;border-radius:7px;background:rgba('+rgb+',.12);border:1px solid rgba('+rgb+',.2);color:'+col+'">⚡ ION</span>'
         +'</div>';
     }
 
@@ -196,15 +222,20 @@
     var bPow=isOn?'flex:1;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;user-select:none;font-size:11px;font-weight:800;border:1px solid '+col+';background:rgba('+rgb+',.18);color:'+col
                  :'flex:1;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;user-select:none;font-size:11px;font-weight:800;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff';
 
-    var modePills=availModes.map(function(m){
-      var active=m&&mode&&m.toLowerCase()===mode.toLowerCase();
-      return '<div style="'+(active?bOn:bOff)+'" data-dya="mode" data-mode="'+_esc(m)+'">'+_esc(m.charAt(0).toUpperCase()+m.slice(1))+'</div>';
+    /* ventola: 50%=Bassa, 100%=Alta */
+    var fanPills=[{lbl:'Bassa',pct:50},{lbl:'Alta',pct:100}].map(function(sp){
+      var active=fanIsOn&&fanPct!=null&&fanPct>=sp.pct-(sp.pct===50?25:25)&&fanPct<(sp.pct===50?76:101);
+      return '<div style="'+(active?bOn:bOff)+'" data-dya="fan" data-pct="'+sp.pct+'">'+sp.lbl+'</div>';
     }).join('');
-    function _fanLbl(m){ var l=m.toLowerCase(); return l==='low'||l==='bassa'?'Bassa':l==='high'||l==='alta'?'Alta':l==='medium'||l==='media'?'Media':m.charAt(0).toUpperCase()+m.slice(1); }
-    var fanPills=fanModes.map(function(m){
-      var active=fanMode&&m.toLowerCase()===fanMode.toLowerCase();
-      return '<div style="'+(active?bOn:bOff)+'" data-dya="fan" data-fan="'+_esc(m)+'">'+_fanLbl(m)+'</div>';
+    /* timer */
+    var timerPills=timerOpts.map(function(o){
+      var active=timerState&&timerState.toLowerCase()===o.toLowerCase();
+      var lbl=o==='cancel'?'✕ Stop':o;
+      return '<div style="'+(active?bOn:bOff)+'" data-dya="timer" data-opt="'+_esc(o)+'">'+_esc(lbl)+'</div>';
     }).join('');
+    /* toggle helpers */
+    var bTogOn='height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:5px;cursor:pointer;user-select:none;font-size:10px;font-weight:700;border:1px solid '+col+';background:rgba('+rgb+',.2);color:'+col+';flex:1';
+    var bTogOff='height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:5px;cursor:pointer;user-select:none;font-size:10px;font-weight:700;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:#fff;flex:1';
 
     var css='<style>'
       +'@keyframes deuDot{0%,100%{opacity:.5}50%{opacity:1}}'
@@ -252,22 +283,18 @@
           +'<div style="width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);font-size:17px;font-weight:700;color:#fff" data-dya="hum-up">+</div>'
           +'</div>'
           /* ventola */
-          +(fanModes.length
-            ? '<div style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#fff;margin-bottom:5px">Ventola</div>'
-              +'<div style="display:flex;gap:5px;margin-bottom:8px">'+fanPills+'</div>'
-            : '')
-          /* modalità */
-          +(availModes.length
-            ? '<div style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#fff;margin-bottom:5px">Modalità</div>'
-              +'<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px">'+modePills+'</div>'
-            : '')
+          +'<div style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#fff;margin-bottom:5px">Ventola</div>'
+          +'<div style="display:flex;gap:5px;margin-bottom:8px">'+fanPills+'</div>'
           /* timer */
-          +(timerVal!=null
-            ? '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)">'
-              +'<span style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#fff;flex:1">Conto alla rovescia</span>'
-              +'<span style="font-size:13px;font-weight:900;color:'+col+'">'+(_esc(String(timerVal))||'—')+'</span>'
-              +'</div>'
+          +(timerOpts.length
+            ? '<div style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#fff;margin-bottom:5px">Conto alla rovescia</div>'
+              +'<div style="display:flex;gap:5px;margin-bottom:8px">'+timerPills+'</div>'
             : '')
+          /* ionizzatore + blocco bambini */
+          +'<div style="display:flex;gap:5px">'
+          +'<div style="'+(ionOn?bTogOn:bTogOff)+'" data-dya="ion">⚡ Ionizzatore</div>'
+          +'<div style="'+(lockOn?bTogOn:bTogOff)+'" data-dya="lock">🔒 Blocco</div>'
+          +'</div>'
           +'</div>'
         : '')
       +'</div></div></div>';
@@ -278,7 +305,11 @@
     var h=H(), c=cfgFor(card), eid=c.pk_device;
     var st=S(h,eid), at=(h&&h.states&&h.states[eid]&&h.states[eid].attributes)||{};
     var curHum=c.pk_humidity?S(h,c.pk_humidity):at.current_humidity;
-    var sig=[CARD.version,st,at.humidity,curHum,at.mode,at.preset_mode,at.fan_mode,at.timer_time_remaining].join('|');
+    var fanAt=(h&&h.states&&h.states[_pkFan(c)])||{};
+    var timerSt=S(h,_pkTimer(c));
+    var ionSt=S(h,_pkIon(c));
+    var lockSt=S(h,_pkLock(c));
+    var sig=[CARD.version,st,at.humidity,curHum,fanAt.state,fanAt.attributes&&fanAt.attributes.percentage,timerSt,ionSt,lockSt].join('|');
     if(!el.querySelector('.fc-card')||el._deuSig!==sig){ el._deuSig=sig; el._deuBound=null; el.innerHTML=render(card); }
     mount(card,hass,el);
   }
@@ -314,12 +345,23 @@
         callSvc('humidifier','set_humidity',{entity_id:eid(),humidity:Math.round(next)});
         return;
       }
-      if(a==='mode'){
-        callSvc('humidifier','set_mode',{entity_id:eid(),mode:t.dataset.mode});
+      if(a==='fan'){
+        var pct=parseInt(t.dataset.pct)||50;
+        callSvc('fan','turn_on',{entity_id:_pkFan(cfgFor(card)),percentage:pct});
         return;
       }
-      if(a==='fan'){
-        callSvc('humidifier','set_fan_mode',{entity_id:eid(),fan_mode:t.dataset.fan});
+      if(a==='timer'){
+        callSvc('select','select_option',{entity_id:_pkTimer(cfgFor(card)),option:t.dataset.opt});
+        return;
+      }
+      if(a==='ion'){
+        var hx=H(), ix=_pkIon(cfgFor(card));
+        callSvc('switch',S(hx,ix)==='on'?'turn_off':'turn_on',{entity_id:ix});
+        return;
+      }
+      if(a==='lock'){
+        var hy=H(), ly=_pkLock(cfgFor(card));
+        callSvc('switch',S(hy,ly)==='on'?'turn_off':'turn_on',{entity_id:ly});
         return;
       }
     };
@@ -327,7 +369,7 @@
   }
 
   var CARD={
-    id:'deumidificatore-card',name:'Deumidificatore',icon:'💧',version:'1.4',
+    id:'deumidificatore-card',name:'Deumidificatore',icon:'💧',version:'1.5',
     desc:'Controllo deumidificatore: umidità attuale/target, modalità operative. Richiede integrazione humidifier.',
     colSpan:2,rowSpan:3,frarik_no_edit:true,
     render:function(card){ return render(card); },

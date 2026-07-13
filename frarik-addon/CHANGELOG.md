@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.0.41 — 2026-07-13
+
+### feat(deumidificatore-card): entità companion reali v1.5
+
+- Ventola: legge `fan.deumidificatore` (auto-derivata) → tasti Bassa(50%)/Alta(100%) → chiama `fan.turn_on` con percentage
+- Timer: legge `select.*_conto_alla_rovescia` → tasti cancel/1h/2h/3h → chiama `select.select_option`
+- Ionizzatore: legge/toggler `switch.*_ionizzatore` → pulsante illuminato se attivo
+- Blocco bambini: legge/toggler `switch.*_blocco_bambini` → pulsante illuminato se attivo
+- Tutte le entità auto-derivate dalla base del pk_device, sovrascrivibili in config
+- Config popup aggiornato con tutti i campi entità
+
 ## 2.0.40 — 2026-07-13
 
 ### feat(deumidificatore-card): ventola, conto alla rovescia, tutte le modalità v1.4
