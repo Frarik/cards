@@ -1808,7 +1808,7 @@ async function _ghInstallFile(file){
   _ghCfg().shas[file.name]=file.sha;
   _ghCfg().notifiedShas[file.name]=file.sha;   // installata = già "conosciuta": niente notifica al successivo delete
   try{ saveCfg(); }catch(e){}
-  try{ _ntfClearGh(file.name); }catch(e){}   // la card è installata → via la notifica relativa
+  try{ _ntfClearGh(file.path||file.name); }catch(e){}   // la card è installata → via la notifica relativa
   return card;
 }
 /* controllo: confronta gli SHA e mostra la notifica se ci sono cambiamenti */
@@ -1822,7 +1822,7 @@ async function _ghCheck(force){
   try{ _ghsUpdBadge(); }catch(e){}
   if(force) _ghStatus(files.length+' card nel repo · '+_ghPending.length+' da aggiornare');
   // self-heal: togli le notifiche di card non più in sospeso (installate/aggiornate altrove)
-  try{ _ntfClearGhExcept(_ghPending.map(f=>f.name)); }catch(e){}
+  try{ _ntfClearGhExcept(_ghPending.map(f=>f.path||f.name)); }catch(e){}
   // Notifica UNA SOLA VOLTA per ciascun (file, sha): la coppia viene memorizzata in
   // g.notifiedShas e persistita. Così la notifica NON riappare al reload né dopo i
   // cicli pubblica/elimina/reinserisci/rielimina. Un nuovo sha (card davvero
@@ -1833,11 +1833,17 @@ async function _ghCheck(force){
     _ghPending.forEach(f=>{
       if(g.notifiedShas[f.name]===f.sha) return;   // questa versione è già stata notificata
       const nm=_ghCardName(g, f.name);
+      const _fp=f.path||f.name;
+      const _isChip=_fp.startsWith('card-chips/');
+      const _isDist=_fp.startsWith('card-distintivi/');
+      const _kindLabel=_isDist?'distintivo':_isChip?'chip':'card';
+      const _kindIco=_isDist?'🏷️':_isChip?'🔹':'⚡';
+      const _kindArt=_isDist||_isChip?'o':'a';
       if(!g.shas[f.name]){
-        _ntfPushLog('➕ Nuova card', 'È presente una nuova card «'+nm+'» — vuoi installarla? Premi ✓ per aprire lo store.', '➕', 'gh:'+f.name);
+        _ntfPushLog('➕ Nuov'+_kindArt+' '+_kindLabel, 'È present'+_kindArt+' un'+(_isDist||_isChip?'':'a')+' nuov'+_kindArt+' '+_kindLabel+' «'+nm+'» — premi ✓ per aprire lo store.', _kindIco, 'gh:'+_fp);
       } else {
         const oldV=_ghFileVersion(g, f.name);
-        _ntfPushLog('🔄 Card aggiornata', 'La card «'+nm+'» è stata aggiornata su GitHub (avevi la v'+oldV+') — premi ✓ per aprire lo store e aggiornarla.', '🔄', 'gh:'+f.name);
+        _ntfPushLog('🔄 '+_kindLabel.charAt(0).toUpperCase()+_kindLabel.slice(1)+' aggiornata', 'Il '+_kindLabel+' «'+nm+'» è stato aggiornato su GitHub (avevi la v'+oldV+') — premi ✓ per aprire lo store.', '🔄', 'gh:'+_fp);
       }
       g.notifiedShas[f.name]=f.sha; any=true;
     });
@@ -1988,7 +1994,7 @@ function _ghAskInstall(fileName){
     const isNew=!g.shas[f.name];
     const q=isNew ? ('Vuoi installare la card <b>'+eh(nm)+'</b>?')
                   : ('Vuoi aggiornare la card <b>'+eh(nm)+'</b> alla v'+_bumpVer(_ghFileVersion(g,f.name))+'?');
-    showConfirm(q, ()=>{ _ntfClearGh(f.name); closeNotifCenter(); _ghInstallOne(f); }, isNew?'Installa':'Aggiorna');
+    showConfirm(q, ()=>{ _ntfClearGh(f.path||f.name); closeNotifCenter(); _ghInstallOne(f); }, isNew?'Installa':'Aggiorna');
     return;
   }
   // batch (tutte le pendenti)
@@ -2004,22 +2010,29 @@ function _ghAskInstall(fileName){
 }
 /* router click notifiche centro (campanella).
    Per le card GitHub NON installiamo automaticamente (potrebbero essere centinaia):
-   apriamo lo store della dashboard, dove l'utente sceglie cosa installare. */
+   apriamo lo store della dashboard, dove l'utente sceglie cosa installare.
+   Il tab viene scelto in base alla cartella del file (card-js, card-chips, card-distintivi…). */
 function _ntfHandleAction(action){
   if(!action) return;
   if(action==='gh' || action.indexOf('gh:')===0){
     try{ closeNotifCenter(); }catch(e){}
-    try{ openGhStore(); setTimeout(()=>{ try{ ghStoreTab('updates'); }catch(e){} }, 60); }catch(e){}
+    const _fp=action.slice(3); // es. 'card-js/Lavatrice.js' o 'Lavatrice.js' (legacy)
+    const _tab=_fp.startsWith('card-chips/')      ? 'chips-non-installate'
+              :_fp.startsWith('card-distintivi/') ? 'distintivi-non-installate'
+              :_fp.startsWith('card-yaml/')        ? 'yaml'
+              :_fp.startsWith('card-premium/')     ? 'premium'
+              :'cards-non-installate'; // card-js/ + fallback legacy
+    try{ openGhStore(); setTimeout(()=>{ try{ ghStoreTab(_tab); }catch(e){} }, 60); }catch(e){}
     return;
   }
   if(action==='pkg:store'){
     try{ closeNotifCenter(); }catch(e){}
-    try{ openGhStore(); setTimeout(()=>{ try{ ghStoreTab('pkg'); }catch(e){} }, 60); }catch(e){}
+    try{ openGhStore(); setTimeout(()=>{ try{ ghStoreTab('pkg-non-installati'); }catch(e){} }, 60); }catch(e){}
     return;
   }
   if(action.indexOf('pkg:')===0){
     try{ closeNotifCenter(); }catch(e){}
-    try{ openGhStore(); setTimeout(()=>{ try{ ghStoreTab('updates'); }catch(e){} }, 60); }catch(e){}
+    try{ openGhStore(); setTimeout(()=>{ try{ ghStoreTab('pkg-non-installati'); }catch(e){} }, 60); }catch(e){}
     return;
   }
 }
@@ -3725,7 +3738,7 @@ function _ghsDoInstall(f,code,res){
   }
   _ghCfg().shas[f.name]=f.sha;
   _ghCfg().notifiedShas[f.name]=f.sha;
-  try{_ntfClearGh(f.name);}catch(e){}
+  try{_ntfClearGh(f.path||f.name);}catch(e){}
   saveCfg(); _haSaveCfg();
   if(typeof _jsStoreRenderList==='function') _jsStoreRenderList();
   if(typeof _epRenderJsStore==='function') _epRenderJsStore();

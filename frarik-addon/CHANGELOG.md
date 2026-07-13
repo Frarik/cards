@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.0.49 — 2026-07-13
+
+### fix(notifiche): navigazione al tab corretto in base al tipo di contenuto
+
+- **_ntfHandleAction**: invece di andare sempre su "updates", ora naviga al tab specifico del tipo:
+  - `card-js/*` → tab **Card** (`cards-non-installate`)
+  - `card-chips/*` → tab **Chip** (`chips-non-installate`)
+  - `card-distintivi/*` → tab **Distintivi** (`distintivi-non-installate`)
+  - `card-yaml/*` → tab yaml; `card-premium/*` → tab premium
+  - `pkg:*` → tab **PKG** (`pkg-non-installati`)
+- **Action string**: cambiata da `'gh:filename.js'` a `'gh:card-js/filename.js'` (include la cartella), così il router sa che tipo è senza ricerche aggiuntive
+- **Titolo/icona notifica**: differenziati per tipo — ⚡ card, 🔹 chip, 🏷️ distintivo
+- **_ntfClearGh**: gestisce sia il nuovo formato path sia il vecchio formato solo-filename (backward compat)
+- **_ntfClearGhExcept**: stesso, usando `keepBase` per matching su vecchie notifiche in localStorage
+
 ## 2.0.48 — 2026-07-13
 
 ### feat: 2 nuovi distintivi — GruppoScadenze e GruppoCalendario

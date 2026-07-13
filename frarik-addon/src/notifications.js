@@ -39,26 +39,34 @@ export function _ntfClearPkg(fileName){
 
 /* Rimuove le notifiche relative alle card GitHub.
    - senza argomenti: tutte (action 'gh' legacy + 'gh:<file>')
-   - con fileName: solo quella card */
-export function _ntfClearGh(fileName){
+   - con filePath: solo quella voce (accetta sia 'card-js/Lavatrice.js' che 'Lavatrice.js' legacy) */
+export function _ntfClearGh(filePath){
   _ntfLog = _ntfLog.filter(n=>{
     if(!n.action) return true;
     if(n.action==='gh') return false;
-    if(fileName) return n.action !== 'gh:'+fileName;
+    if(filePath){
+      if(n.action === 'gh:'+filePath) return false;         // match esatto (nuovo formato path)
+      const _base = filePath.includes('/') ? filePath.split('/').pop() : filePath;
+      if(n.action === 'gh:'+_base) return false;            // match su vecchie notifiche (solo filename)
+      return true;
+    }
     return n.action.indexOf('gh:') !== 0;
   });
   _ntfSaveLog(); _ntfUpdateBell(); _ntfRenderIfOpen();
 }
 
 /* Tiene SOLO le notifiche card relative ai file ancora in sospeso; rimuove tutte
-   le altre (card ormai installate/aggiornate). Una sola passata, niente flicker. */
+   le altre (card ormai installate/aggiornate). Una sola passata, niente flicker.
+   keepFiles può contenere path completi ('card-js/Lavatrice.js') o solo filename (legacy). */
 export function _ntfClearGhExcept(keepFiles){
   const keep = new Set((keepFiles||[]).map(n=>'gh:'+n));
+  // set dei soli filename per gestire notifiche nel vecchio formato ('gh:Lavatrice.js')
+  const keepBase = new Set((keepFiles||[]).map(n=>{ const p=String(n); return 'gh:'+(p.includes('/')?p.split('/').pop():p); }));
   let changed=false;
   const next = _ntfLog.filter(n=>{
     if(!n.action) return true;
     if(n.action==='gh'){ changed=true; return false; }                       // formato legacy
-    if(n.action.indexOf('gh:')===0 && !keep.has(n.action)){ changed=true; return false; }
+    if(n.action.indexOf('gh:')===0 && !keep.has(n.action) && !keepBase.has(n.action)){ changed=true; return false; }
     return true;
   });
   if(changed){ _ntfLog=next; _ntfSaveLog(); _ntfUpdateBell(); _ntfRenderIfOpen(); }
