@@ -283,7 +283,7 @@
   /* ════════════════════════════════════════ CHIP ══ */
   function chip(cfg, rawHass) {
     const c = loadCfg(cfg); const h = liveH(rawHass); const i = _info(cfg, h);
-    return { label: c.label || 'Energia', value: `${i.emo} ${i.label}`, color: i.col };
+    return { label: c.label || 'Energia', value: `${i.emo} ${i.label}`, color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, h)) || i.col };
   }
 
   function watchEntities(cfg) {
@@ -564,6 +564,7 @@
   /* ════════════════════════════════════════ CONFIGURE ══ */
   function configure(cfg, _el, onSave) {
     const c = loadCfg(cfg);
+    let colorCfg = { mode: c.colorMode||'auto', fixed: c.colorFixed||'#60a5fa', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[] };
     const h = H();
 
     let _ac = null;
@@ -647,6 +648,7 @@
         <input id="ecfg-kwh" style="${sinp};margin-bottom:4px" value="${eh(c.kwhEntity || '')}" placeholder="🔍 sensor.energia_oggi…" autocomplete="off">
         <div style="font-size:9px;color:#fff;margin-bottom:14px">Se configurato usa il dato reale del contatore; altrimenti stima (~) dall'integrazione della potenza</div>
 
+        ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg) : ''}
         <div style="height:10px"></div>
       </div>
       <div style="display:flex;gap:8px;padding:12px 14px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0">
@@ -655,6 +657,8 @@
       </div>
     </div>`;
 
+    const _fcr = window.FratechColorRules;
+    if (_fcr) _fcr.attach(ov.querySelector('#fcr-section'), () => { colorCfg = _fcr.read(ov.querySelector('#fcr-section')) || colorCfg; });
     ov.querySelector('#ecfg-close').onclick  = closeOv;
     ov.querySelector('#ecfg-cancel').onclick = closeOv;
     ov.onclick = ev => { if (ev.target === ov) closeOv(); };
@@ -663,7 +667,9 @@
     _setupAc(ov.querySelector('#ecfg-kwh'),    id => { ov.querySelector('#ecfg-kwh').value    = id; });
 
     ov.querySelector('#ecfg-save').addEventListener('click', () => {
+      const _fcrData = _fcr ? (_fcr.read(ov.querySelector('#fcr-section')) || {}) : {};
       const newCfg = {
+        ..._fcrData,
         label:       (ov.querySelector('#ecfg-label')?.value  || 'Energia').trim(),
         entity:      (ov.querySelector('#ecfg-entity')?.value || '').trim(),
         maxKw:       parseFloat(ov.querySelector('#ecfg-maxkw')?.value)  || 3,
@@ -704,7 +710,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Energia', icon: '⚡', desc: '',
     version: '4.0', isDistintivo: true,
-    defaultCfg: { label: 'Energia', entity: '', maxKw: 3, priceKwh: 0, alertKw: 0, solarEntity: '', kwhEntity: '' },
+    defaultCfg: { label: 'Energia', entity: '', maxKw: 3, priceKwh: 0, alertKw: 0, solarEntity: '', kwhEntity: '', colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure, preview,
   };
   window.FratechCardRegistry = window.FratechCardRegistry || {};

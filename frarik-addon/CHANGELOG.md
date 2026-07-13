@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.0.54 — 2026-07-13
+
+### feat(distintivi): sistema colore dinamico per tutti i 14 distintivi
+
+- Aggiunto `_colorRules.js` — modulo condiviso `window.FratechColorRules` con 3 modalità colore:
+  - **Automatico**: logica colore built-in (comportamento precedente invariato)
+  - **Fisso**: colore hex fisso per il chip
+  - **Condizioni**: regole multiple, prima condizione soddisfatta vince (supporta 2+ colori)
+- Condizioni supportate: `any_on`, `all_on`, `any_off`, `all_off` (lista entità), `compare` (entità + attr opzionale + operatore + valore)
+- Operatori compare: `==`, `!=`, `>`, `<`, `>=`, `<=`, `contains`
+- Regola senza condizione = fallback (sempre abbinata)
+- Integrazione in tutti e 14 i file Gruppo*: `defaultCfg`, `chip()`, `configure()` (html sezione, attach, save)
+
 ## 2.0.53 — 2026-07-13
 
 ### fix(distintivi): UI popup calendario + scadenze — testi bianchi, layout migliorato

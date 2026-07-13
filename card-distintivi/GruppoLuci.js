@@ -65,7 +65,7 @@
       icon: iconHtml(c.icon || '💡'),
       label: c.label || 'Luci',
       value: ents.length ? `${active}/${ents.length}` : '—',
-      color: active > 0 ? col : '#fff',
+      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, h)) || (active > 0 ? col : '#fff'),
     };
   }
 
@@ -233,6 +233,7 @@
   /* ── configure ── */
   function configure(cfg, _el, onSave) {
     const c = loadCfg(cfg);
+    let colorCfg = { mode: c.colorMode||'auto', fixed: c.colorFixed||c.color||'#fbbf24', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[] };
     const ents = JSON.parse(JSON.stringify(Array.isArray(c.entities) ? c.entities : []));
     const h = H();
     let expandedAuto = new Set();
@@ -397,6 +398,7 @@
           <input id="glcfg-add-entity" class="glcinp" placeholder="🔍 Inizia a scrivere il nome dell'entità…" autocomplete="off">
           <div style="font-size:9px;color:#fff;margin-top:5px">Mostra tutte le entità — light.* compaiono per prime</div>
 
+          ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg) : ''}
           <div style="height:16px"></div>
         </div>
 
@@ -420,6 +422,8 @@
 
       ov.innerHTML = renderForm();
       _firstRender = false;
+      const _fcr = window.FratechColorRules;
+      if (_fcr) _fcr.attach(ov.querySelector('#fcr-section'), () => { colorCfg = _fcr.read(ov.querySelector('#fcr-section')) || colorCfg; });
 
       // ripristina scroll del body — sincrono: funziona subito dopo innerHTML
       const nb = ov.querySelector('#glcfg-body');
@@ -513,7 +517,9 @@
 
       // salva config
       ov.querySelector('#glcfg-save').addEventListener('click', () => {
+        const _fcrData = _fcr ? (_fcr.read(ov.querySelector('#fcr-section')) || {}) : {};
         const newCfg = {
+          ..._fcrData,
           label: (ov.querySelector('#glcfg-label')?.value || 'Luci').trim(),
           icon:  (ov.querySelector('#glcfg-icon')?.value  || '💡').trim(),
           color: ov.querySelector('#glcfg-color')?.value  || '#fbbf24',
@@ -535,7 +541,7 @@
     id: ID, name: 'Gruppo Luci', icon: '💡',
     desc: 'Chip con contatore luci accese. Clic → pannello toggle + Accendi/Spegni tutte.',
     version: '1.8', isDistintivo: true,
-    defaultCfg: { label: 'Luci', icon: '💡', color: '#fbbf24', entities: [] },
+    defaultCfg: { label: 'Luci', icon: '💡', color: '#fbbf24', entities: [], colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure,
   };
 

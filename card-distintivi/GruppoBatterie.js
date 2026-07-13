@@ -114,7 +114,7 @@
     return {
       label: c.label || 'Batterie',
       value,
-      color: STATUS_COL[worstStatus],
+      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, h)) || STATUS_COL[worstStatus],
       pulse: worstStatus === 'offline' || worstStatus === 'critical',
     };
   }
@@ -264,6 +264,7 @@
   /* ════════════════════════════════════════ CONFIGURE ══ */
   function configure(cfg, _el, onSave) {
     const c = loadCfg(cfg);
+    let colorCfg = { mode: c.colorMode||'auto', fixed: c.colorFixed||'#4ade80', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[] };
 
     const ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;z-index:100001;display:flex;align-items:flex-end;background:rgba(0,0,0,.78);backdrop-filter:blur(7px);font-family:system-ui,sans-serif';
@@ -316,6 +317,7 @@
         </div>
         <div style="font-size:9px;color:#fff;margin-bottom:14px">Le entità <b>unavailable</b> o <b>unknown</b> vengono sempre segnalate come offline</div>
 
+        ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg) : ''}
         <div style="height:6px"></div>
       </div>
 
@@ -325,12 +327,16 @@
       </div>
     </div>`;
 
+    const _fcr = window.FratechColorRules;
+    if (_fcr) _fcr.attach(ov.querySelector('#fcr-section'), () => { colorCfg = _fcr.read(ov.querySelector('#fcr-section')) || colorCfg; });
     ov.querySelector('#bcfg-close').onclick  = closeOv;
     ov.querySelector('#bcfg-cancel').onclick = closeOv;
     ov.onclick = ev => { if (ev.target === ov) closeOv(); };
 
     ov.querySelector('#bcfg-save').addEventListener('click', () => {
+      const _fcrData = _fcr ? (_fcr.read(ov.querySelector('#fcr-section')) || {}) : {};
       const newCfg = {
+        ..._fcrData,
         label:      (ov.querySelector('#bcfg-label')?.value || 'Batterie').trim(),
         threshLow:  parseFloat(ov.querySelector('#bcfg-thrL')?.value)  || 20,
         threshCrit: parseFloat(ov.querySelector('#bcfg-thrC')?.value)  || 10,
@@ -347,7 +353,7 @@
     id: ID, name: 'Gruppo Batterie', icon: '🔋',
     desc: '',
     version: '1.7', isDistintivo: true,
-    defaultCfg: { label: 'Batterie', threshLow: 20, threshCrit: 10 },
+    defaultCfg: { label: 'Batterie', threshLow: 20, threshCrit: 10, colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure,
   };
 

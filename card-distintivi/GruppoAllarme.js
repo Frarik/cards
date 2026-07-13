@@ -191,7 +191,7 @@
     return {
       label: c.label || 'Allarme',
       value: `${emo} ${def.lbl}`,
-      color: def.col,
+      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, h)) || def.col,
       pulse: def.pulse,
     };
   }
@@ -485,6 +485,7 @@
      ════════════════════════════════════════ */
   function configure(cfg, _el, onSave) {
     const c       = loadCfg(cfg);
+    let colorCfg = { mode: c.colorMode||'auto', fixed: c.colorFixed||'#4ade80', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[] };
     const sensors = JSON.parse(JSON.stringify(Array.isArray(c.sensors) ? c.sensors : []));
     const modes   = new Set(c.modes || ['armed_away']);
     const h       = H();
@@ -626,6 +627,7 @@
           <div style="${secL}">Sirena (opzionale)</div>
           <input id="cacfg-siren" style="${sinp};margin-bottom:14px" value="${eh(c.siren || '')}" placeholder="🔍 switch.sirena o siren.*…" autocomplete="off">
 
+          ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg) : ''}
           <div style="height:10px"></div>
         </div>
 
@@ -636,6 +638,8 @@
       </div>`;
 
       _first = false;
+      const _fcr = window.FratechColorRules;
+      if (_fcr) _fcr.attach(ov.querySelector('#fcr-section'), () => { colorCfg = _fcr.read(ov.querySelector('#fcr-section')) || colorCfg; });
       if (prevScroll) { const b = ov.querySelector('#cacfg-body'); if (b) b.scrollTop = prevScroll; }
       if (curAlarm !== undefined) { const f = ov.querySelector('#cacfg-alarm'); if (f) f.value = curAlarm; }
       if (curCode  !== undefined) { const f = ov.querySelector('#cacfg-code');  if (f) f.value = curCode; }
@@ -677,7 +681,9 @@
       ov.querySelector('#cacfg-cancel').onclick = closeOv;
 
       ov.querySelector('#cacfg-save').addEventListener('click', () => {
+        const _fcrData = _fcr ? (_fcr.read(ov.querySelector('#fcr-section')) || {}) : {};
         const newCfg = {
+          ..._fcrData,
           label:       (ov.querySelector('#cacfg-label')?.value || 'Allarme').trim(),
           alarmEntity: (ov.querySelector('#cacfg-alarm')?.value || '').trim(),
           code:        (ov.querySelector('#cacfg-code')?.value  || '').trim(),
@@ -701,7 +707,7 @@
     id: ID, name: 'Gruppo Allarme', icon: '🔒',
     desc: '',
     version: '2.2', isDistintivo: true,
-    defaultCfg: { label: 'Allarme', alarmEntity: '', code: '', modes: ['armed_away'], sensors: [], siren: '' },
+    defaultCfg: { label: 'Allarme', alarmEntity: '', code: '', modes: ['armed_away'], sensors: [], siren: '', colorMode: 'auto', colorRules: [] },
     chip,
     watchEntities,
     render: (cfg, rawHass) => render(cfg, rawHass, null),

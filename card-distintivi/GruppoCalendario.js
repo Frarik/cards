@@ -102,7 +102,7 @@
       icon: _chipSvg(days, count, isActive),
       label: c.label || 'Calendario',
       value,
-      color,
+      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, h)) || color,
     };
   }
 
@@ -310,6 +310,7 @@
   /* ─── configure() ─── */
   function configure(cfg, _el, onSave) {
     const c    = loadCfg(cfg);
+    let colorCfg = { mode: c.colorMode||'auto', fixed: c.colorFixed||c.color||'#60a5fa', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[] };
     const ents = JSON.parse(JSON.stringify(Array.isArray(c.entities) ? c.entities : []));
     const h    = H();
     let _firstRender = true, _acDrop = null;
@@ -410,6 +411,7 @@
           <div style="margin-top:5px;padding:7px 10px;border-radius:8px;background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.15);font-size:10px;color:rgba(255,255,255,.7)">
             💡 Usa entità <strong style="color:#60a5fa">calendar.*</strong>. Il popup mostra tutti gli eventi dei prossimi 7 giorni tramite API HA.
           </div>
+          ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg) : ''}
           <div style="height:18px"></div>
         </div>
         <div style="display:flex;gap:8px;padding:12px 14px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0">
@@ -425,6 +427,8 @@
       const saved = prevBody ? prevBody.scrollTop : 0;
       ov.innerHTML = renderForm();
       _firstRender = false;
+      const _fcr = window.FratechColorRules;
+      if (_fcr) _fcr.attach(ov.querySelector('#fcr-section'), () => { colorCfg = _fcr.read(ov.querySelector('#fcr-section')) || colorCfg; });
       const nb = ov.querySelector('#gcalcfg-body'); if (nb && saved > 0) nb.scrollTop = saved;
       if (ov._ovClick) ov.removeEventListener('click', ov._ovClick);
       ov._ovClick = ev => { if (ev.target === ov) closeOv(); };
@@ -443,7 +447,9 @@
       }
       ov.querySelector('#gcalcfg-save').addEventListener('click', () => {
         closeOv();
+        const _fcrData = _fcr ? (_fcr.read(ov.querySelector('#fcr-section')) || {}) : {};
         if (typeof onSave === 'function') onSave({
+          ..._fcrData,
           label:    (ov.querySelector('#gcalcfg-label')?.value || 'Calendario').trim(),
           color:    ov.querySelector('#gcalcfg-color')?.value || '#60a5fa',
           entities: ents.filter(e => e.entity||e).map(e => ({ entity:(e.entity||e).trim(), label:e.label||'' })),
@@ -460,7 +466,7 @@
     id: ID, name: 'Gruppo Calendario', icon: 'mdi:calendar',
     desc: 'Chip con count eventi del giorno più vicino + colore per giorni mancanti. Popup: 7 giorni di eventi via API HA.',
     version: '2.0', isDistintivo: true,
-    defaultCfg: { label:'Calendario', icon:'mdi:calendar', color:'#60a5fa', entities:[] },
+    defaultCfg: { label:'Calendario', icon:'mdi:calendar', color:'#60a5fa', entities:[], colorMode:'auto', colorRules:[] },
     chip, watchEntities, render, mount, update, configure,
   };
 

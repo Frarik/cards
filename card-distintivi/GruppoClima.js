@@ -152,7 +152,7 @@
       icon: iconHtml(_dynIcon(c.icon||'🌡️', active > 0)),
       label: c.label || 'Clima',
       value: ents.length ? `${active}/${ents.length}` : '—',
-      color: active > 0 ? col : '#fff',
+      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, h)) || (active > 0 ? col : '#fff'),
     };
   }
 
@@ -491,6 +491,7 @@
   /* ── configure ── */
   function configure(cfg, _el, onSave) {
     const c = loadCfg(cfg);
+    let colorCfg = { mode: c.colorMode||'auto', fixed: c.colorFixed||c.color||'#f97316', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[] };
     const ents = JSON.parse(JSON.stringify(Array.isArray(c.entities) ? c.entities : []));
     const h = H();
     let expandedAuto = new Set();
@@ -668,6 +669,7 @@
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin:${ents.length?'12px':0} 0 6px">Aggiungi entità</div>
           <input id="cccfg-add-entity" class="cccinp" placeholder="🔍 Inizia a scrivere il nome dell'entità…" autocomplete="off">
           <div style="font-size:9px;color:#fff;margin-top:5px">Mostra tutte le entità — climate.* compaiono per prime</div>
+          ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg) : ''}
           <div style="height:16px"></div>
         </div>
 
@@ -688,6 +690,8 @@
 
       ov.innerHTML = renderForm();
       _firstRender = false;
+      const _fcr = window.FratechColorRules;
+      if (_fcr) _fcr.attach(ov.querySelector('#fcr-section'), () => { colorCfg = _fcr.read(ov.querySelector('#fcr-section')) || colorCfg; });
 
       const nb = ov.querySelector('#cccfg-body');
       if (nb && savedBody > 0) nb.scrollTop = savedBody;
@@ -770,7 +774,9 @@
       }
 
       ov.querySelector('#cccfg-save').addEventListener('click', () => {
+        const _fcrData = _fcr ? (_fcr.read(ov.querySelector('#fcr-section')) || {}) : {};
         const newCfg = {
+          ..._fcrData,
           label: (ov.querySelector('#cccfg-label')?.value || 'Clima').trim(),
           icon:  (ov.querySelector('#cccfg-icon')?.value  || '🌡️').trim(),
           color: ov.querySelector('#cccfg-color')?.value  || '#f97316',
@@ -796,7 +802,7 @@
     id: ID, name: 'Gruppo Clima', icon: '🌡️',
     desc: 'Chip climi attivi. Clic → temp/umidità da sensore, ±1°, ON/OFF, modalità HVAC, ventola, alette per ogni clima.',
     version: '1.4', isDistintivo: true,
-    defaultCfg: { label: 'Clima', icon: '🌡️', color: '#f97316', entities: [] },
+    defaultCfg: { label: 'Clima', icon: '🌡️', color: '#f97316', entities: [], colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure,
   };
 

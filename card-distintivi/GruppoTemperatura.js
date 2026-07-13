@@ -347,7 +347,7 @@
       icon:  `<span class="mdi mdi-thermometer" style="font-size:16px;line-height:1;color:inherit"></span>`,
       label: c.label || 'Temperatura',
       value: chipVal,
-      color: chipCol,
+      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, h)) || chipCol,
     };
   }
 
@@ -579,6 +579,7 @@
   /* ── configure ──────────────────────────────────────────────── */
   function configure(cfg, _el, onSave) {
     const c    = loadCfg(cfg);
+    let colorCfg = { mode: c.colorMode||'auto', fixed: c.colorFixed||c.color||'#38bdf8', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[] };
     const ents = JSON.parse(JSON.stringify(Array.isArray(c.entities) ? c.entities : []));
     const h    = H();
     let _firstRender = true;
@@ -721,6 +722,7 @@
           <div class="gtsec" style="margin-top:${ents.length?'14px':0}">Aggiungi stanza</div>
           <input id="gtcfg-add" class="gtinp" placeholder="🔍 Cerca sensore temperatura…" autocomplete="off">
           <div style="font-size:9px;color:#fff;margin-top:5px">Digita il nome o l'entity_id del sensore temperatura</div>
+          ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg) : ''}
           <div style="height:18px"></div>
         </div>
 
@@ -742,6 +744,8 @@
 
       ov.innerHTML = renderForm();
       _firstRender = false;
+      const _fcr = window.FratechColorRules;
+      if (_fcr) _fcr.attach(ov.querySelector('#fcr-section'), () => { colorCfg = _fcr.read(ov.querySelector('#fcr-section')) || colorCfg; });
 
       const nb = ov.querySelector('#gtcfg-body');
       if (nb && savedScroll > 0) nb.scrollTop = savedScroll;
@@ -792,7 +796,9 @@
         ov.querySelectorAll('[data-lbl-idx]').forEach(inp => { ents[parseInt(inp.dataset.lblIdx)].label      = inp.value.trim(); });
         ov.querySelectorAll('[data-hum-idx]').forEach(inp => { ents[parseInt(inp.dataset.humIdx)].humEntity  = inp.value.trim(); });
         ov.querySelectorAll('[data-temp-idx]').forEach(inp => { ents[parseInt(inp.dataset.tempIdx)].tempEntity = inp.value.trim(); });
+        const _fcrData = _fcr ? (_fcr.read(ov.querySelector('#fcr-section')) || {}) : {};
         const newCfg = {
+          ..._fcrData,
           label:         (ov.querySelector('#gtcfg-label')?.value    || 'Temperatura').trim(),
           color:          ov.querySelector('#gtcfg-color')?.value     || '#38bdf8',
           avgTempEntity: (ov.querySelector('#gtcfg-avg-temp')?.value || '').trim(),
@@ -848,7 +854,7 @@
     desc: 'Chip con media temp/umidità; popup weather-style con hero, consigli e righe stanza.',
     version: '1.9.2',
     isDistintivo: true,
-    defaultCfg: { label: 'Temperatura', color: '#38bdf8', avgTempEntity: '', avgHumEntity: '', entities: [] },
+    defaultCfg: { label: 'Temperatura', color: '#38bdf8', avgTempEntity: '', avgHumEntity: '', entities: [], colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure, preview,
   };
 

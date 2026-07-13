@@ -138,7 +138,7 @@
       icon: iconHtml(c.icon || 'mdi:motion-sensor'),
       label: c.label || 'Presenza',
       value: ents.length ? `${active}/${ents.length}` : '—',
-      color: active > 0 ? col : '#fff',
+      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, h)) || (active > 0 ? col : '#fff'),
     };
   }
 
@@ -210,6 +210,7 @@
   /* ── configure ── */
   function configure(cfg, _el, onSave) {
     const c = loadCfg(cfg);
+    let colorCfg = { mode: c.colorMode||'auto', fixed: c.colorFixed||c.color||'#f59e0b', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[] };
     const ents = JSON.parse(JSON.stringify(Array.isArray(c.entities) ? c.entities : []));
     const h = H();
     let _firstRender = true;
@@ -327,6 +328,7 @@
 
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin:${ents.length?'12px':0} 0 6px">Aggiungi sensore</div>
           <input id="gpcfg-add-entity" class="gpcinp" placeholder="🔍 Cerca binary_sensor.* o sensor.*…" autocomplete="off">
+          ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg) : ''}
           <div style="height:16px"></div>
         </div>
 
@@ -343,6 +345,8 @@
       const savedBody = prevBody ? prevBody.scrollTop : 0;
       ov.innerHTML = renderForm();
       _firstRender = false;
+      const _fcr = window.FratechColorRules;
+      if (_fcr) _fcr.attach(ov.querySelector('#fcr-section'), () => { colorCfg = _fcr.read(ov.querySelector('#fcr-section')) || colorCfg; });
       const nb = ov.querySelector('#gpcfg-body');
       if (nb && savedBody > 0) nb.scrollTop = savedBody;
 
@@ -365,7 +369,9 @@
       }
 
       ov.querySelector('#gpcfg-save').addEventListener('click', () => {
+        const _fcrData = _fcr ? (_fcr.read(ov.querySelector('#fcr-section')) || {}) : {};
         const newCfg = {
+          ..._fcrData,
           label:    (ov.querySelector('#gpcfg-label')?.value || 'Presenza').trim(),
           color:    ov.querySelector('#gpcfg-color')?.value || '#f59e0b',
           entities: ents.filter(e => e.entity).map(e => ({ entity: e.entity.trim(), label: e.label||'' })),
@@ -384,7 +390,7 @@
     id: ID, name: 'Gruppo Presenza', icon: 'mdi:motion-sensor',
     desc: 'Chip contatore sensori presenza/movimento attivi. Clic → stato rilevato/libero per ogni zona.',
     version: '1.3', isDistintivo: true,
-    defaultCfg: { label: 'Presenza', icon: 'mdi:motion-sensor', color: '#f59e0b', entities: [] },
+    defaultCfg: { label: 'Presenza', icon: 'mdi:motion-sensor', color: '#f59e0b', entities: [], colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure,
   };
 

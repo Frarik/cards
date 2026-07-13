@@ -129,7 +129,7 @@
       ? (totalW!==null ? `${active}/${ents.length} · ${fmtW(totalW)}` : `${active}/${ents.length}`)
       : '—';
     const chipCol = hasUnavail && active===0 ? COL_UNAVL : active>0 ? COL_ON : '#fff';
-    return { icon: iconHtml(c.icon||'🔌'), label: c.label||'Prese', value, color: chipCol };
+    return { icon: iconHtml(c.icon||'🔌'), label: c.label||'Prese', value, color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, h)) || chipCol };
   }
 
   function watchEntities(cfg) {
@@ -537,6 +537,7 @@
   /* ── configure ── (stessa struttura v1.0, aggiunto campo maxW) */
   function configure(cfg, _el, onSave) {
     const c = loadCfg(cfg);
+    let colorCfg = { mode: c.colorMode||'auto', fixed: c.colorFixed||c.color||'#fb923c', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[] };
     const ents = JSON.parse(JSON.stringify(Array.isArray(c.entities) ? c.entities : []));
     const h = H();
     let expandedFields = new Set();
@@ -712,6 +713,7 @@
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin:${ents.length?'12px':0} 0 6px">Aggiungi presa</div>
           <input id="gpcfg-add-entity" class="gpcinp" placeholder="🔍 Inizia a scrivere il nome della presa…" autocomplete="off">
           <div style="font-size:9px;color:#fff;margin-top:5px">switch.* compaiono per prime · inserisci watt + sensore energia direttamente · ▾ = icona + automazione</div>
+          ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg) : ''}
           <div style="height:16px"></div>
         </div>
         <div style="display:flex;gap:8px;padding:12px 14px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0">
@@ -729,6 +731,8 @@
       const curIcon=ov.querySelector('#gpcfg-icon')?.value;
       const curColor=ov.querySelector('#gpcfg-color')?.value;
       ov.innerHTML=renderForm(); _firstRender=false;
+      const _fcr = window.FratechColorRules;
+      if (_fcr) _fcr.attach(ov.querySelector('#fcr-section'), () => { colorCfg = _fcr.read(ov.querySelector('#fcr-section')) || colorCfg; });
       const nb=ov.querySelector('#gpcfg-body'); if(nb&&savedScroll>0) nb.scrollTop=savedScroll;
       if(curLabel!==undefined){const f=ov.querySelector('#gpcfg-label');if(f)f.value=curLabel;}
       if(curIcon!==undefined){const f=ov.querySelector('#gpcfg-icon');if(f)f.value=curIcon;const b=ov.querySelector('#gpcfg-icon-btn');if(b)b.innerHTML=iconHtml(curIcon,22);}
@@ -806,7 +810,9 @@
         const maxKwRaw=parseFloat(ov.querySelector('#gpcfg-maxw')?.value||'0');
         const maxWVal = maxKwRaw>0 ? Math.round(maxKwRaw*1000) : MAX_W_DEFAULT;
         const priceRaw=parseFloat(ov.querySelector('#gpcfg-price')?.value||'0');
+        const _fcrData = _fcr ? (_fcr.read(ov.querySelector('#fcr-section')) || {}) : {};
         const newCfg={
+          ..._fcrData,
           label:(ov.querySelector('#gpcfg-label')?.value||'Prese').trim(),
           icon: (ov.querySelector('#gpcfg-icon')?.value||'🔌').trim(),
           color: ov.querySelector('#gpcfg-color')?.value||'#fb923c',
@@ -831,7 +837,7 @@
     id: ID, name: 'Gruppo Prese', icon: '🔌',
     desc: 'Chip prese on/off · popup con stato, consumo W real-time, flusso animato e indicatori unavailable.',
     version: '1.22', isDistintivo: true,
-    defaultCfg: { label:'Prese', icon:'🔌', color:'#fb923c', maxW:2300, entities:[] },
+    defaultCfg: { label:'Prese', icon:'🔌', color:'#fb923c', maxW:2300, entities:[], colorMode:'auto', colorRules:[] },
     chip, watchEntities, render, mount, update, configure,
   };
 

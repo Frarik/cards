@@ -81,7 +81,7 @@
       icon: _chipSvg(isAlert),
       label: c.label || 'Allagamento',
       value,
-      color: isAlert ? '#f87171' : '#4ade80',
+      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, h)) || (isAlert ? '#f87171' : '#4ade80'),
     };
   }
 
@@ -325,6 +325,7 @@
   /* ─── configure ─── */
   function configure(cfg, _el, onSave) {
     const c = loadCfg(cfg);
+    let colorCfg = { mode: c.colorMode||'auto', fixed: c.colorFixed||c.color||'#38bdf8', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[] };
     let pkGroup = c.pk_group || '';
     const ents = JSON.parse(JSON.stringify(Array.isArray(c.entities) ? c.entities : []));
     const h = H();
@@ -461,6 +462,7 @@
             💡 Seleziona il <strong style="color:#38bdf8">group binary_sensor</strong> che aggrega tutti i sensori allagamento
           </div>
 
+          ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg) : ''}
           <!-- sensori individuali -->
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.5);margin-bottom:6px">Sensori individuali${ents.length ? ` (${ents.length})` : ''}</div>
           ${ents.length ? `<div style="margin-bottom:10px">${selRows}</div>` : ''}
@@ -481,6 +483,8 @@
       const savedScroll = prevBody ? prevBody.scrollTop : 0;
       ov.innerHTML = renderForm();
       _firstRender = false;
+      const _fcr = window.FratechColorRules;
+      if (_fcr) _fcr.attach(ov.querySelector('#fcr-section'), () => { colorCfg = _fcr.read(ov.querySelector('#fcr-section')) || colorCfg; });
       const nb = ov.querySelector('#gaacfg-body');
       if (nb && savedScroll > 0) nb.scrollTop = savedScroll;
 
@@ -516,7 +520,9 @@
       }
 
       ov.querySelector('#gaacfg-save').addEventListener('click', () => {
+        const _fcrData = _fcr ? (_fcr.read(ov.querySelector('#fcr-section')) || {}) : {};
         const newCfg = {
+          ..._fcrData,
           label:    (ov.querySelector('#gaacfg-label')?.value || 'Allagamento').trim(),
           color:    ov.querySelector('#gaacfg-color')?.value || '#38bdf8',
           pk_group: pkGroup,
@@ -536,7 +542,7 @@
     id: ID, name: 'Gruppo Allagamento', icon: 'mdi:water-alert',
     desc: 'Chip sensori allagamento. Chip blu/verde = asciutto, rosso pulsante = allarme. Popup con vista gruppo + sensori individuali.',
     version: '1.2', isDistintivo: true,
-    defaultCfg: { label: 'Allagamento', icon: 'mdi:water-alert', color: '#38bdf8', pk_group: '', entities: [] },
+    defaultCfg: { label: 'Allagamento', icon: 'mdi:water-alert', color: '#38bdf8', pk_group: '', entities: [], colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure,
   };
 

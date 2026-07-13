@@ -88,7 +88,7 @@
       icon: iconHtml(_dynIcon(c.icon||'mdi:blinds', active > 0)),
       label: c.label || 'Tapparelle',
       value: ents.length ? `${active}/${ents.length}${avgPos !== null ? ' · ' + avgPos + '%' : ''}` : '—',
-      color: active > 0 ? col : '#fff',
+      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, h)) || (active > 0 ? col : '#fff'),
     };
   }
 
@@ -280,6 +280,7 @@
   /* ── configure ── */
   function configure(cfg, _el, onSave) {
     const c = loadCfg(cfg);
+    let colorCfg = { mode: c.colorMode||'auto', fixed: c.colorFixed||c.color||'#38bdf8', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[] };
     const ents = JSON.parse(JSON.stringify(Array.isArray(c.entities) ? c.entities : []));
     const h = H();
     let expandedAuto = new Set();
@@ -429,6 +430,7 @@
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin:${ents.length?'12px':0} 0 6px">Aggiungi entità</div>
           <input id="gtcfg-add-entity" class="gtcinp" placeholder="🔍 Inizia a scrivere il nome dell'entità…" autocomplete="off">
           <div style="font-size:9px;color:#fff;margin-top:5px">Mostra tutte le entità — cover.* compaiono per prime</div>
+          ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg) : ''}
           <div style="height:16px"></div>
         </div>
 
@@ -449,6 +451,8 @@
 
       ov.innerHTML = renderForm();
       _firstRender = false;
+      const _fcr = window.FratechColorRules;
+      if (_fcr) _fcr.attach(ov.querySelector('#fcr-section'), () => { colorCfg = _fcr.read(ov.querySelector('#fcr-section')) || colorCfg; });
 
       const nb = ov.querySelector('#gtcfg-body');
       if (nb && savedBody > 0) nb.scrollTop = savedBody;
@@ -519,7 +523,9 @@
       }
 
       ov.querySelector('#gtcfg-save').addEventListener('click', () => {
+        const _fcrData = _fcr ? (_fcr.read(ov.querySelector('#fcr-section')) || {}) : {};
         const newCfg = {
+          ..._fcrData,
           label: (ov.querySelector('#gtcfg-label')?.value || 'Tapparelle').trim(),
           icon:  (ov.querySelector('#gtcfg-icon')?.value  || 'mdi:blinds').trim(),
           color: ov.querySelector('#gtcfg-color')?.value  || '#38bdf8',
@@ -541,7 +547,7 @@
     id: ID, name: 'Gruppo Tapparelle', icon: '🪟',
     desc: 'Chip con contatore + posizione media. Popup: Apri/Stop/Chiudi, preset 25/50/75%, slider posizione per entità.',
     version: '2.0', isDistintivo: true,
-    defaultCfg: { label: 'Tapparelle', icon: 'mdi:blinds', color: '#38bdf8', entities: [] },
+    defaultCfg: { label: 'Tapparelle', icon: 'mdi:blinds', color: '#38bdf8', entities: [], colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure,
   };
 
