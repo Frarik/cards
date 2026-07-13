@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.51 — 2026-07-13
+
+### fix(notifiche): PKG nuovo → tab pkg, PKG aggiornato → tab updates
+
+- `pkg-new:filename` per PKG mai installato → naviga a `pkg-non-installati`
+- `pkg-upd:filename` per PKG aggiornato → naviga a `updates`
+- `_ntfClearPkg` aggiornato con helper `_isPkgAction`/`_pkgActionFile` per gestire tutti i prefissi
+
 ## 2.0.50 — 2026-07-13
 
 ### fix(notifiche): nuovi → tab tipo specifico, aggiornamenti → tab "updates"

@@ -1905,7 +1905,7 @@ async function _ghCheckPkg(pkgFiles){
       const _isInst=_pkgIsOnHA(f.name)||_pkgIsOnHA('frarik/'+f.name);
       if(!_isFirstPkgSync&&!_isInst){
         const _nm=f.name.replace(/\.ya?ml$/i,'').replace(/^frarik_/,'');
-        _ntfPushLog('📦 Nuovo PKG disponibile','Il package «'+_nm+'» è disponibile su GitHub — aprilo dallo store per installarlo.','📦','pkg:store');
+        _ntfPushLog('📦 Nuovo PKG disponibile','Il package «'+_nm+'» è disponibile su GitHub — aprilo dallo store per installarlo.','📦','pkg-new:'+f.name);
         any=true;
       }
     }
@@ -1923,7 +1923,7 @@ async function _ghCheckPkg(pkgFiles){
         newPending[f.name]=f.sha;
         const cardId=_pkgFindCardForFile('frarik/'+f.name)||_pkgFindCardForFile(f.name);
         const cardName=(cardId&&_pkgFriendlyName(cardId))||f.name.replace(/\.ya?ml$/i,'').replace(/^frarik_/,'');
-        _ntfPushLog('📦 PKG aggiornato','Il package «'+cardName+'» è stato aggiornato — premi ✓ per aggiornarlo subito.','📦','pkg:'+f.name);
+        _ntfPushLog('📦 PKG aggiornato','Il package «'+cardName+'» è stato aggiornato — premi ✓ per aggiornarlo subito.','📦','pkg-upd:'+f.name);
         g.pkgNotifiedShas[f.name]=f.sha; any=true;
       }
       return;
@@ -1933,7 +1933,7 @@ async function _ghCheckPkg(pkgFiles){
     if(g.pkgNotifiedShas[f.name]===f.sha) return;   // già notificato per questa versione
     const cardId=_pkgFindCardForFile('frarik/'+f.name)||_pkgFindCardForFile(f.name);
     const cardName=(cardId&&_pkgFriendlyName(cardId))||f.name.replace(/\.ya?ml$/i,'').replace(/^frarik_/,'');
-    _ntfPushLog('📦 PKG aggiornato', 'Il package «'+cardName+'» è stato aggiornato — premi ✓ per aggiornarlo subito.', '📦', 'pkg:'+f.name);
+    _ntfPushLog('📦 PKG aggiornato', 'Il package «'+cardName+'» è stato aggiornato — premi ✓ per aggiornarlo subito.', '📦', 'pkg-upd:'+f.name);
     g.pkgNotifiedShas[f.name]=f.sha; any=true;
   });
   // self-heal: rimuovi notifiche per PKG non più in sospeso
@@ -2032,12 +2032,14 @@ function _ntfHandleAction(action){
     try{ openGhStore(); setTimeout(()=>{ try{ ghStoreTab(_tab); }catch(e){} }, 60); }catch(e){}
     return;
   }
-  if(action==='pkg:store'){
+  // PKG aggiornamento → tab updates
+  if(action.indexOf('pkg-upd:')===0){
     try{ closeNotifCenter(); }catch(e){}
-    try{ openGhStore(); setTimeout(()=>{ try{ ghStoreTab('pkg-non-installati'); }catch(e){} }, 60); }catch(e){}
+    try{ openGhStore(); setTimeout(()=>{ try{ ghStoreTab('updates'); }catch(e){} }, 60); }catch(e){}
     return;
   }
-  if(action.indexOf('pkg:')===0){
+  // PKG nuovo → tab pkg-non-installati
+  if(action==='pkg:store'||action.indexOf('pkg-new:')===0||action.indexOf('pkg:')===0){
     try{ closeNotifCenter(); }catch(e){}
     try{ openGhStore(); setTimeout(()=>{ try{ ghStoreTab('pkg-non-installati'); }catch(e){} }, 60); }catch(e){}
     return;

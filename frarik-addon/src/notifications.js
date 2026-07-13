@@ -25,14 +25,16 @@ export function _ntfDismissById(id){
   _ntfSaveLog(); _ntfUpdateBell(); renderNotifCenter();
 }
 
-/* Rimuove le notifiche PKG.
-   - senza argomenti: tutte le 'pkg:...'
+/* Rimuove le notifiche PKG (gestisce tutti i prefissi: pkg:, pkg-new:, pkg-upd:).
+   - senza argomenti: tutte
    - con fileName: solo quella specifica */
+function _isPkgAction(a){ return a&&(a.indexOf('pkg:')===0||a.indexOf('pkg-new:')===0||a.indexOf('pkg-upd:')===0); }
+function _pkgActionFile(a){ return a.indexOf('pkg-new:')===0?a.slice(8):a.indexOf('pkg-upd:')===0?a.slice(8):a.indexOf('pkg:')===0?a.slice(4):null; }
 export function _ntfClearPkg(fileName){
   _ntfLog = _ntfLog.filter(n=>{
-    if(!n.action) return true;
-    if(fileName) return n.action !== 'pkg:'+fileName;
-    return n.action.indexOf('pkg:') !== 0;
+    if(!n.action||!_isPkgAction(n.action)) return true;
+    if(fileName) return _pkgActionFile(n.action) !== fileName;
+    return false; // senza arg: rimuovi tutte
   });
   _ntfSaveLog(); _ntfUpdateBell(); _ntfRenderIfOpen();
 }
