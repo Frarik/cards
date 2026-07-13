@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.39 — 2026-07-13
+
+### fix(vmc-card): aggiunto tasto portata "Max" 100% v1.4
+
+- Aggiunto 4° preset velocità: Max (100%) — in precedenza hardcoded a soli 3 (Bassa/Media/Alta)
+
 ## 2.0.38 — 2026-07-12
 
 ### fix(cards): immagine non tagliata — hero fuori dal container scroll v1.3

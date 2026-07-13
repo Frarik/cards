@@ -1,4 +1,4 @@
-/* frarik-version: 1.3 */
+/* frarik-version: 1.4 */
 (function () {
   'use strict';
 
@@ -180,7 +180,7 @@
                 :'flex:1;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;user-select:none;font-size:11px;font-weight:800;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff';
 
     /* preset velocità */
-    var SPEEDS=[{lbl:'Bassa',pct:25},{lbl:'Media',pct:50},{lbl:'Alta',pct:75}];
+    var SPEEDS=[{lbl:'Bassa',pct:25},{lbl:'Media',pct:50},{lbl:'Alta',pct:75},{lbl:'Max',pct:100}];
     var speedPills=SPEEDS.map(function(sp){
       var active=isOn&&pct!=null&&Math.abs(pct-sp.pct)<13;
       return '<div style="'+(active?bOn:bOff)+'" data-vya="speed" data-pct="'+sp.pct+'">'+sp.lbl+'</div>';
@@ -276,7 +276,7 @@
   }
 
   var CARD={
-    id:'vmc-card',name:'VMC',icon:'🌀',version:'1.3',
+    id:'vmc-card',name:'VMC',icon:'🌀',version:'1.4',
     desc:'Controllo VMC (Ventilazione Meccanica Controllata): CO₂, umidità, portata aria, modalità.',
     colSpan:2,rowSpan:3,frarik_no_edit:true,
     render:function(card){ return render(card); },
