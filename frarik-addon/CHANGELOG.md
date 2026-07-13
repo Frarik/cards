@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.42 — 2026-07-13
+
+### feat(card-distintivi): GruppoPresenza e GruppoAllagamento v1.0
+
+- **GruppoPresenza** (`gruppo-presenza`): chip sensori presenza/movimento — chip ambra (#f59e0b) se presenze rilevate, verde se tutto libero. SVG silhouette persona con anelli pulsanti. Mappa tutti gli stati attivi (on/home/present/detected/active/motion).
+- **GruppoAllagamento** (`gruppo-allagamento`): chip sensori umidità/allagamento — chip verde se asciutto, rosso (#f87171) se qualsiasi sensore bagnato. SVG goccia d'acqua con animazione onde. Mappa stati (on/wet/detected/moisture).
+- Entrambi: chip(), watchEntities(), render(), mount() con polling 1500ms, update(), configure() con autocomplete entità
+- Entrambi: testo 100% bianco #fff, popup con X + click-outside, isDistintivo:true
+
 ## 2.0.41 — 2026-07-13
 
 ### feat(deumidificatore-card): entità companion reali v1.5
