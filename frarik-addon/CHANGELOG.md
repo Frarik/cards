@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.55 — 2026-07-13
+
+### fix(core): FratechColorRules integrato nel panel addon
+
+- Codice colore chip spostato da `_colorRules.js` (card-distintivi) a `src/main.js` (core)
+- Eliminato `_colorRules.js`: non appare più nel tab Distintivi dello store
+- Aggiunto filtro `exclude:/^_/` nello store: file con prefisso `_` non sono elencati
+- Rebuild panel v2.0.55
+
 ## 2.0.54 — 2026-07-13
 
 ### feat(distintivi): sistema colore dinamico per tutti i 14 distintivi
