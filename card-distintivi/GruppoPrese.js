@@ -537,7 +537,7 @@
   /* ── configure ── (stessa struttura v1.0, aggiunto campo maxW) */
   function configure(cfg, _el, onSave) {
     const c = loadCfg(cfg);
-    let colorCfg = { mode: c.colorMode||'auto', fixed: c.colorFixed||c.color||'#fb923c', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[] };
+    let colorCfg = { mode: c.colorMode||'fixed', fixed: c.colorFixed||c.color||'#fb923c', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[], target: c.colorTarget||'all', iconColor: c.iconColor||'#ffffff' };
     const presets = [
       { key: 'any_on',    label: 'Almeno una presa attiva' },
       { key: 'all_off',   label: 'Tutte le prese spente' },

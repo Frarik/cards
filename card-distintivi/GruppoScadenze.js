@@ -279,7 +279,7 @@
   /* ─── configure() ─── */
   function configure(cfg, _el, onSave) {
     const c    = loadCfg(cfg);
-    let colorCfg = { mode: c.colorMode||'auto', fixed: c.colorFixed||c.color||'#f59e0b', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[] };
+    let colorCfg = { mode: c.colorMode||'fixed', fixed: c.colorFixed||c.color||'#f59e0b', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[], target: c.colorTarget||'all', iconColor: c.iconColor||'#ffffff' };
     const presets = [
       { key: 'expired',  label: 'Scaduto o oggi' },
       { key: 'urgent',   label: 'Urgente (entro soglia rossa)' },

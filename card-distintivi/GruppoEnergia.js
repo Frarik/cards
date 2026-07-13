@@ -564,7 +564,7 @@
   /* ════════════════════════════════════════ CONFIGURE ══ */
   function configure(cfg, _el, onSave) {
     const c = loadCfg(cfg);
-    let colorCfg = { mode: c.colorMode||'auto', fixed: c.colorFixed||'#60a5fa', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[] };
+    let colorCfg = { mode: c.colorMode||'fixed', fixed: c.colorFixed||'#60a5fa', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[], target: c.colorTarget||'all', iconColor: c.iconColor||'#ffffff' };
     const presets = [
       { key: 'watts_gt',  label: 'Consumo maggiore di', hasValue: true, unit: 'W' },
       { key: 'watts_lte', label: 'Consumo minore o uguale a', hasValue: true, unit: 'W' },

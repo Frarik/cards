@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.0.57 — 2026-07-13
+
+### feat(distintivi): dropdown custom, rimozione "Automatico", opzione colorTarget
+
+- Rimossa la modalità "Automatico" dal sistema FCR — rimangono solo "Fisso" e "Condizioni"
+- Il menu a tendina delle condizioni è ora un dropdown custom con sfondo scuro, sostituisce il `<select>` nativo che mostrava sfondo bianco del sistema
+- Aggiunta opzione "Applica colore a": scelta tra "Testo, icona e numero" (comportamento precedente) e "Solo bordo" (il bordo del chip segue la condizione/colore, testo e icona usano un colore fisso separato)
+- CSS: variabile `--bbc` aggiunta a `.hbadge` per controllare il colore del bordo indipendentemente dal testo (`--bc`)
+- Tutti i 14 distintivi aggiornati con `colorTarget` e `iconColor` nel configure
+
+---
+
 ## 2.0.56 — 2026-07-13
 
 ### feat(distintivi): sistema condizioni automatico per ogni distintivo

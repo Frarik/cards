@@ -310,7 +310,7 @@
   /* ─── configure() ─── */
   function configure(cfg, _el, onSave) {
     const c    = loadCfg(cfg);
-    let colorCfg = { mode: c.colorMode||'auto', fixed: c.colorFixed||c.color||'#60a5fa', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[] };
+    let colorCfg = { mode: c.colorMode||'fixed', fixed: c.colorFixed||c.color||'#60a5fa', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[], target: c.colorTarget||'all', iconColor: c.iconColor||'#ffffff' };
     const presets = [
       { key: 'event_today', label: 'Evento oggi o in corso' },
       { key: 'event_soon',  label: 'Evento entro', hasValue: true, unit: 'giorni' },

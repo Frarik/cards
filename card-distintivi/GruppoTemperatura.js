@@ -579,7 +579,7 @@
   /* ── configure ──────────────────────────────────────────────── */
   function configure(cfg, _el, onSave) {
     const c    = loadCfg(cfg);
-    let colorCfg = { mode: c.colorMode||'auto', fixed: c.colorFixed||c.color||'#38bdf8', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[] };
+    let colorCfg = { mode: c.colorMode||'fixed', fixed: c.colorFixed||c.color||'#38bdf8', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[], target: c.colorTarget||'all', iconColor: c.iconColor||'#ffffff' };
     const presets = [
       { key: 'temp_gt',  label: 'Temperatura maggiore di', hasValue: true, unit: '°C' },
       { key: 'temp_lte', label: 'Temperatura minore o uguale a', hasValue: true, unit: '°C' },
