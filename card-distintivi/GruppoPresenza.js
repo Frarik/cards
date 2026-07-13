@@ -134,11 +134,14 @@
     const ents = Array.isArray(c.entities) ? c.entities : [];
     const active = h ? ents.filter(e => isOn(h, e.entity)).length : 0;
     const col = c.color || '#f59e0b';
+    const _fcr = window.FratechColorRules;
+    const _cond = { any_detected: active > 0, none_detected: active === 0 };
     return {
       icon: iconHtml(c.icon || 'mdi:motion-sensor'),
       label: c.label || 'Presenza',
       value: ents.length ? `${active}/${ents.length}` : '—',
-      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, { any_detected: active > 0, none_detected: active === 0 })) || (active > 0 ? col : '#fff'),
+      color: (_fcr && _fcr.evalColor(cfg, _cond)) || (active > 0 ? col : '#fff'),
+      borderColor: _fcr && _fcr.evalBorderColor(cfg, _cond),
     };
   }
 
@@ -210,7 +213,7 @@
   /* ── configure ── */
   function configure(cfg, _el, onSave) {
     const c = loadCfg(cfg);
-    let colorCfg = { mode: c.colorMode||'fixed', fixed: c.colorFixed||c.color||'#f59e0b', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[], target: c.colorTarget||'all', iconColor: c.iconColor||'#ffffff' };
+    let colorCfg = { mode: c.colorMode||'fixed', fixed: c.colorFixed||c.color||'#f59e0b', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[], borderMode: c.borderMode||'none', borderFixed: c.borderFixed||'#ffffff', borderRules: Array.isArray(c.borderRules)?JSON.parse(JSON.stringify(c.borderRules)):[] };
     const presets = [
       { key: 'any_detected',  label: 'Presenza rilevata' },
       { key: 'none_detected', label: 'Nessuna presenza' },

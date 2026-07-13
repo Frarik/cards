@@ -188,10 +188,13 @@
     const state = ae && h ? stateOf(h, ae) : 'unknown';
     const def   = alarmDef(state);
     const emo   = STATE_EMO[state] || '🔒';
+    const _fcr = window.FratechColorRules;
+    const _cond = { triggered: state === 'triggered', armed: !!(state && state.startsWith('armed')), pending: state === 'pending', disarmed: state === 'disarmed' };
     return {
       label: c.label || 'Allarme',
       value: `${emo} ${def.lbl}`,
-      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, { triggered: state === 'triggered', armed: !!(state && state.startsWith('armed')), pending: state === 'pending', disarmed: state === 'disarmed' })) || def.col,
+      color: (_fcr && _fcr.evalColor(cfg, _cond)) || def.col,
+      borderColor: _fcr && _fcr.evalBorderColor(cfg, _cond),
       pulse: def.pulse,
     };
   }
@@ -485,7 +488,7 @@
      ════════════════════════════════════════ */
   function configure(cfg, _el, onSave) {
     const c       = loadCfg(cfg);
-    let colorCfg = { mode: c.colorMode||'fixed', fixed: c.colorFixed||'#4ade80', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[], target: c.colorTarget||'all', iconColor: c.iconColor||'#ffffff' };
+    let colorCfg = { mode: c.colorMode||'fixed', fixed: c.colorFixed||'#4ade80', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[], borderMode: c.borderMode||'none', borderFixed: c.borderFixed||'#ffffff', borderRules: Array.isArray(c.borderRules)?JSON.parse(JSON.stringify(c.borderRules)):[] };
     const presets = [
       { key: 'triggered', label: 'Allarme scattato' },
       { key: 'armed',     label: 'Allarme armato' },

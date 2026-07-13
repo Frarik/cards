@@ -283,7 +283,9 @@
   /* ════════════════════════════════════════ CHIP ══ */
   function chip(cfg, rawHass) {
     const c = loadCfg(cfg); const h = liveH(rawHass); const i = _info(cfg, h);
-    return { label: c.label || 'Energia', value: `${i.emo} ${i.label}`, color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, { watts_gt: v => i.w !== null && i.w > parseFloat(v||0), watts_lte: v => i.w !== null && i.w <= parseFloat(v||0) })) || i.col };
+    const _fcr = window.FratechColorRules;
+    const _cond = { watts_gt: v => i.w !== null && i.w > parseFloat(v||0), watts_lte: v => i.w !== null && i.w <= parseFloat(v||0) };
+    return { label: c.label || 'Energia', value: `${i.emo} ${i.label}`, color: (_fcr && _fcr.evalColor(cfg, _cond)) || i.col, borderColor: _fcr && _fcr.evalBorderColor(cfg, _cond) };
   }
 
   function watchEntities(cfg) {
@@ -564,7 +566,7 @@
   /* ════════════════════════════════════════ CONFIGURE ══ */
   function configure(cfg, _el, onSave) {
     const c = loadCfg(cfg);
-    let colorCfg = { mode: c.colorMode||'fixed', fixed: c.colorFixed||'#60a5fa', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[], target: c.colorTarget||'all', iconColor: c.iconColor||'#ffffff' };
+    let colorCfg = { mode: c.colorMode||'fixed', fixed: c.colorFixed||'#60a5fa', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[], borderMode: c.borderMode||'none', borderFixed: c.borderFixed||'#ffffff', borderRules: Array.isArray(c.borderRules)?JSON.parse(JSON.stringify(c.borderRules)):[] };
     const presets = [
       { key: 'watts_gt',  label: 'Consumo maggiore di', hasValue: true, unit: 'W' },
       { key: 'watts_lte', label: 'Consumo minore o uguale a', hasValue: true, unit: 'W' },

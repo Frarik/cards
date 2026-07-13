@@ -98,11 +98,14 @@
       : days === 1               ? `${count} dom.`
       : `${count} fra ${days}gg`;
 
+    const _fcr = window.FratechColorRules;
+    const _cond = { event_today: days === 0 || isActive, event_soon: v => days !== null && days >= 0 && days <= parseFloat(v||7), no_event: days === null };
     return {
       icon: _chipSvg(days, count, isActive),
       label: c.label || 'Calendario',
       value,
-      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, { event_today: days === 0 || isActive, event_soon: v => days !== null && days >= 0 && days <= parseFloat(v||7), no_event: days === null })) || color,
+      color: (_fcr && _fcr.evalColor(cfg, _cond)) || color,
+      borderColor: _fcr && _fcr.evalBorderColor(cfg, _cond),
     };
   }
 
@@ -310,7 +313,7 @@
   /* ─── configure() ─── */
   function configure(cfg, _el, onSave) {
     const c    = loadCfg(cfg);
-    let colorCfg = { mode: c.colorMode||'fixed', fixed: c.colorFixed||c.color||'#60a5fa', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[], target: c.colorTarget||'all', iconColor: c.iconColor||'#ffffff' };
+    let colorCfg = { mode: c.colorMode||'fixed', fixed: c.colorFixed||c.color||'#60a5fa', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[], borderMode: c.borderMode||'none', borderFixed: c.borderFixed||'#ffffff', borderRules: Array.isArray(c.borderRules)?JSON.parse(JSON.stringify(c.borderRules)):[] };
     const presets = [
       { key: 'event_today', label: 'Evento oggi o in corso' },
       { key: 'event_soon',  label: 'Evento entro', hasValue: true, unit: 'giorni' },

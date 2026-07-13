@@ -84,11 +84,14 @@
     const positions = h ? ents.map(e => coverPos(h, e.entity)).filter(p => p !== null) : [];
     const avgPos = positions.length ? Math.round(positions.reduce((a, b) => a + b, 0) / positions.length) : null;
     const col = c.color || '#38bdf8';
+    const _fcr = window.FratechColorRules;
+    const _cond = { any_open: active > 0, all_closed: active === 0 };
     return {
       icon: iconHtml(_dynIcon(c.icon||'mdi:blinds', active > 0)),
       label: c.label || 'Tapparelle',
       value: ents.length ? `${active}/${ents.length}${avgPos !== null ? ' · ' + avgPos + '%' : ''}` : '—',
-      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, { any_open: active > 0, all_closed: active === 0 })) || (active > 0 ? col : '#fff'),
+      color: (_fcr && _fcr.evalColor(cfg, _cond)) || (active > 0 ? col : '#fff'),
+      borderColor: _fcr && _fcr.evalBorderColor(cfg, _cond),
     };
   }
 
@@ -280,7 +283,7 @@
   /* ── configure ── */
   function configure(cfg, _el, onSave) {
     const c = loadCfg(cfg);
-    let colorCfg = { mode: c.colorMode||'fixed', fixed: c.colorFixed||c.color||'#38bdf8', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[], target: c.colorTarget||'all', iconColor: c.iconColor||'#ffffff' };
+    let colorCfg = { mode: c.colorMode||'fixed', fixed: c.colorFixed||c.color||'#38bdf8', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[], borderMode: c.borderMode||'none', borderFixed: c.borderFixed||'#ffffff', borderRules: Array.isArray(c.borderRules)?JSON.parse(JSON.stringify(c.borderRules)):[] };
     const presets = [
       { key: 'any_open',   label: 'Almeno una tapparella aperta' },
       { key: 'all_closed', label: 'Tutte chiuse' },

@@ -103,11 +103,14 @@
     const active = h ? ents.filter(e => isOn(h, e.entity)).length : 0;
     const col = c.color || '#fb923c';
     const anyOpen = active > 0;
+    const _fcr = window.FratechColorRules;
+    const _cond = { any_open: active > 0, all_closed: active === 0 };
     return {
       icon: iconHtml(_dynIcon(c.icon||'🚪', anyOpen)),
       label: c.label || 'Porte',
       value: ents.length ? `${active}/${ents.length}` : '—',
-      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, { any_open: active > 0, all_closed: active === 0 })) || (active > 0 ? col : '#fff'),
+      color: (_fcr && _fcr.evalColor(cfg, _cond)) || (active > 0 ? col : '#fff'),
+      borderColor: _fcr && _fcr.evalBorderColor(cfg, _cond),
     };
   }
 
@@ -262,7 +265,7 @@
   /* ── configure ── */
   function configure(cfg, _el, onSave) {
     const c = loadCfg(cfg);
-    let colorCfg = { mode: c.colorMode||'fixed', fixed: c.colorFixed||c.color||'#fb923c', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[], target: c.colorTarget||'all', iconColor: c.iconColor||'#ffffff' };
+    let colorCfg = { mode: c.colorMode||'fixed', fixed: c.colorFixed||c.color||'#fb923c', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[], borderMode: c.borderMode||'none', borderFixed: c.borderFixed||'#ffffff', borderRules: Array.isArray(c.borderRules)?JSON.parse(JSON.stringify(c.borderRules)):[] };
     const presets = [
       { key: 'any_open',   label: 'Almeno una porta aperta' },
       { key: 'all_closed', label: 'Tutte le porte chiuse' },

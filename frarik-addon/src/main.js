@@ -6960,13 +6960,11 @@ function _badgeItemHTML(b, cls='hbadge', sepCls='badge-sep'){
     let chip={};
     try{ if(def&&def.chip) chip=def.chip(b.cfg||{},{states:hs})||{}; }catch(e){}
     const col=chip.color||'rgba(255,255,255,0.38)';
-    const cfg_=b.cfg||{};
-    const isBorder=cfg_.colorTarget==='border';
-    const textCol=isBorder&&cfg_.iconColor?cfg_.iconColor:col;
+    const bbc=chip.borderColor||null;
     const ico=chip.icon!=null?`${chip.icon} `:(def?.icon?def.icon+' ':'📦 ');
     const lbl=chip.label?`<span class="badge-lbl">${eh(chip.label)}: </span>`:'';
     const val=chip.value!=null?`<span class="badge-val" id="bgcnt-${b.id}">${chip.value}</span>`:'';
-    const bStyle=isBorder?`cursor:pointer;--bc:${textCol};--bbc:${col}`:`cursor:pointer;--bc:${col}`;
+    const bStyle=bbc?`cursor:pointer;--bc:${col};--bbc:${bbc}`:`cursor:pointer;--bc:${col}`;
     return `<span class="${cls}" id="bchip-${b.id}" style="${bStyle}" data-action="_badgeClick" data-action-arg="${b.id}">${ico}${lbl}${val}</span>`;
   }
   const col=_badgeColor(b);
@@ -7529,10 +7527,9 @@ function _liveUpdateBadges(entityId){
           const cel=document.getElementById('bchip-'+b.id);
           if(vel&&chip.value!=null) vel.textContent=String(chip.value);
           if(cel&&chip.color!=null){
-            const _cfg=b.cfg||{};
-            const _isBorder=_cfg.colorTarget==='border';
-            cel.style.setProperty('--bc',_isBorder&&_cfg.iconColor?_cfg.iconColor:chip.color);
-            if(_isBorder) cel.style.setProperty('--bbc',chip.color);
+            cel.style.setProperty('--bc',chip.color);
+            if(chip.borderColor) cel.style.setProperty('--bbc',chip.borderColor);
+            else cel.style.removeProperty('--bbc');
           }
         }
       }
@@ -19133,7 +19130,7 @@ if (!window.FratechColorRules) {
           }).join('')
         + '</div></div>';
     }
-    function _ruleHtml(rule, presets, i) {
+    function _ruleHtml(rule, presets, i, pfx) {
       var condKey   = rule.condKey || (presets[0] && presets[0].key) || 'fallback';
       var condValue = rule.condValue != null ? rule.condValue : '';
       var color     = rule.color || '#4ade80';
@@ -19141,50 +19138,81 @@ if (!window.FratechColorRules) {
       for (var pi = 0; pi < presets.length; pi++) { if (presets[pi].key === condKey) { preset = presets[pi]; break; } }
       if (!preset) preset = presets[0] || {};
       var valueHtml = preset.hasValue
-        ? '<input data-fcr-cval type="number" value="' + eh(String(condValue)) + '" placeholder="0" style="width:60px;padding:4px 6px;border-radius:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:11px;flex-shrink:0">'
+        ? '<input data-' + pfx + '-cval type="number" value="' + eh(String(condValue)) + '" placeholder="0" style="width:60px;padding:4px 6px;border-radius:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:11px;flex-shrink:0">'
           + (preset.unit ? '<span style="font-size:10px;color:rgba(255,255,255,.5);white-space:nowrap;flex-shrink:0">' + eh(preset.unit) + '</span>' : '')
         : '';
-      return '<div data-fcr-rule="' + i + '" style="display:flex;align-items:center;gap:5px;margin-bottom:5px;flex-wrap:nowrap">'
+      return '<div data-' + pfx + '-rule="' + i + '" style="display:flex;align-items:center;gap:5px;margin-bottom:5px;flex-wrap:nowrap">'
         + _ddHtml(condKey, presets) + valueHtml
-        + '<input type="color" data-fcr-rcolor value="' + eh(color) + '" style="width:28px;height:28px;border:none;cursor:pointer;border-radius:4px;background:transparent;padding:0;flex-shrink:0">'
-        + '<button data-fcr-del style="flex-shrink:0;width:22px;height:22px;padding:0;border-radius:4px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);color:#f87171;font-size:12px;cursor:pointer;line-height:1">✕</button>'
+        + '<input type="color" data-' + pfx + '-rcolor value="' + eh(color) + '" style="width:28px;height:28px;border:none;cursor:pointer;border-radius:4px;background:transparent;padding:0;flex-shrink:0">'
+        + '<button data-' + pfx + '-del style="flex-shrink:0;width:22px;height:22px;padding:0;border-radius:4px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);color:#f87171;font-size:12px;cursor:pointer;line-height:1">✕</button>'
         + '</div>';
     }
-    function html(colorCfg, presets) {
-      var mode   = (colorCfg && colorCfg.mode)      || 'fixed';
-      if (mode === 'auto') mode = 'fixed';
-      var fixed  = (colorCfg && colorCfg.fixed)     || '#60a5fa';
-      var target = (colorCfg && colorCfg.target)    || 'all';
-      var icoCol = (colorCfg && colorCfg.iconColor) || '#ffffff';
-      var rules  = (colorCfg && Array.isArray(colorCfg.rules)) ? colorCfg.rules : [];
-      var ps     = Array.isArray(presets) ? presets : [];
-      var showFixed = mode === 'fixed'       ? 'flex'  : 'none';
+    function _secHtml(title, pfx, mode, fixed, rules, ps, hasNone) {
+      var showFixed = mode === 'fixed' ? 'flex' : 'none';
       var showCond  = mode === 'conditional' ? 'block' : 'none';
+      return '<div style="margin-bottom:4px">'
+        + '<div style="font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.5px;margin-bottom:5px">' + title + '</div>'
+        + '<div style="display:flex;gap:4px;margin-bottom:6px">'
+        + (hasNone ? '<button data-' + pfx + '-mode="none" style="' + _btnSt(mode === 'none') + '">Nessuno</button>' : '')
+        + '<button data-' + pfx + '-mode="fixed" style="' + _btnSt(mode === 'fixed') + '">Fisso</button>'
+        + (ps.length ? '<button data-' + pfx + '-mode="conditional" style="' + _btnSt(mode === 'conditional') + '">Condizioni</button>' : '')
+        + '</div>'
+        + '<div id="' + pfx + '-fixed-wrap" style="display:' + showFixed + ';align-items:center;gap:8px;margin-bottom:4px">'
+        + '<input type="color" id="' + pfx + '-fixed-inp" value="' + eh(fixed) + '" style="width:34px;height:34px;border:none;cursor:pointer;border-radius:6px;background:transparent;padding:0">'
+        + '</div>'
+        + '<div id="' + pfx + '-cond-wrap" style="display:' + showCond + '">'
+        + '<div id="' + pfx + '-rules-list">' + rules.map(function(r, i) { return _ruleHtml(r, ps, i, pfx); }).join('') + '</div>'
+        + '<button id="' + pfx + '-add-rule" style="margin-top:6px;padding:4px 10px;font-size:11px;border-radius:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;cursor:pointer">+ Aggiungi condizione</button>'
+        + '</div></div>';
+    }
+    function html(colorCfg, presets) {
+      var mode        = (colorCfg && colorCfg.mode)        || 'fixed';
+      if (mode === 'auto') mode = 'fixed';
+      var fixed       = (colorCfg && colorCfg.fixed)       || '#60a5fa';
+      var rules       = (colorCfg && Array.isArray(colorCfg.rules))       ? colorCfg.rules       : [];
+      var borderMode  = (colorCfg && colorCfg.borderMode)  || 'none';
+      var borderFixed = (colorCfg && colorCfg.borderFixed) || '#ffffff';
+      var borderRules = (colorCfg && Array.isArray(colorCfg.borderRules)) ? colorCfg.borderRules : [];
+      var ps = Array.isArray(presets) ? presets : [];
       return '<div id="fcr-section" style="margin:8px 0;padding:12px;background:rgba(255,255,255,.05);border-radius:10px;border:1px solid rgba(255,255,255,.1)">'
-        + '<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.8px;margin-bottom:7px">🎨 COLORE CHIP</div>'
-        + '<div style="display:flex;gap:4px;margin-bottom:8px">'
-        + '<button data-fcr-mode="fixed" style="' + _btnSt(mode === 'fixed') + '">Fisso</button>'
-        + (ps.length ? '<button data-fcr-mode="conditional" style="' + _btnSt(mode === 'conditional') + '">Condizioni</button>' : '')
-        + '</div>'
-        + '<div id="fcr-fixed-wrap" style="display:' + showFixed + ';align-items:center;gap:8px">'
-        + '<input type="color" id="fcr-fixed-inp" value="' + eh(fixed) + '" style="width:34px;height:34px;border:none;cursor:pointer;border-radius:6px;background:transparent;padding:0">'
-        + '<span style="font-size:11px;color:#fff">Colore fisso del chip</span></div>'
-        + '<div id="fcr-cond-wrap" style="display:' + showCond + '">'
-        + '<div id="fcr-rules-list">' + rules.map(function(r, i) { return _ruleHtml(r, ps, i); }).join('') + '</div>'
-        + '<button id="fcr-add-rule" style="margin-top:6px;padding:4px 10px;font-size:11px;border-radius:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;cursor:pointer">+ Aggiungi condizione</button>'
-        + '</div>'
-        + '<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08)">'
-        + '<div style="font-size:10px;color:rgba(255,255,255,.45);margin-bottom:6px">Applica colore a:</div>'
-        + '<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">'
-        + '<label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:11px;color:#fff">'
-        + '<input type="radio" name="fcr-target" id="fcr-target-all" value="all"' + (target !== 'border' ? ' checked' : '') + ' style="cursor:pointer;accent-color:#60a5fa"> Testo, icona e numero</label>'
-        + '<label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:11px;color:#fff">'
-        + '<input type="radio" name="fcr-target" id="fcr-target-border" value="border"' + (target === 'border' ? ' checked' : '') + ' style="cursor:pointer;accent-color:#60a5fa"> Solo bordo</label>'
-        + '<div id="fcr-ico-wrap" style="display:' + (target === 'border' ? 'flex' : 'none') + ';align-items:center;gap:6px">'
-        + '<span style="font-size:10px;color:rgba(255,255,255,.55)">Icona/testo:</span>'
-        + '<input type="color" id="fcr-ico-inp" value="' + eh(icoCol) + '" style="width:26px;height:26px;border:none;cursor:pointer;border-radius:4px;background:transparent;padding:0">'
-        + '</div></div></div>'
+        + '<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.8px;margin-bottom:10px">🎨 COLORE CHIP</div>'
+        + _secHtml('Contenuto (testo, icona, numeri)', 'fcr', mode, fixed, rules, ps, false)
+        + '<div style="height:1px;background:rgba(255,255,255,.08);margin:8px 0"></div>'
+        + _secHtml('Bordo', 'fcrb', borderMode, borderFixed, borderRules, ps, true)
         + '</div>';
+    }
+    function _attachSection(sec, pfx, ps, onChange) {
+      function _setMode(m) {
+        var fw = sec.querySelector('#' + pfx + '-fixed-wrap');
+        var cw = sec.querySelector('#' + pfx + '-cond-wrap');
+        if (fw) fw.style.display = m === 'fixed' ? 'flex' : 'none';
+        if (cw) cw.style.display = m === 'conditional' ? 'block' : 'none';
+        sec.querySelectorAll('[data-' + pfx + '-mode]').forEach(function(b) {
+          var a = b.getAttribute('data-' + pfx + '-mode') === m;
+          b.style.background = a ? 'rgba(255,255,255,.18)' : 'rgba(255,255,255,.05)';
+          b.style.border     = a ? '1px solid rgba(255,255,255,.3)' : '1px solid rgba(255,255,255,.1)';
+          b.style.color      = a ? '#fff' : 'rgba(255,255,255,.5)';
+          b.style.fontWeight = a ? '700' : '600';
+        });
+        if (onChange) onChange();
+      }
+      sec.querySelectorAll('[data-' + pfx + '-mode]').forEach(function(btn) {
+        btn.addEventListener('click', function() { _setMode(btn.getAttribute('data-' + pfx + '-mode')); });
+      });
+      var addBtn = sec.querySelector('#' + pfx + '-add-rule');
+      if (addBtn) {
+        addBtn.addEventListener('click', function() {
+          var rulesEl = sec.querySelector('#' + pfx + '-rules-list');
+          var idx = rulesEl.querySelectorAll('[data-' + pfx + '-rule]').length;
+          var tmp = document.createElement('div');
+          tmp.innerHTML = _ruleHtml({ color: '#4ade80' }, ps, idx, pfx);
+          var ruleEl = tmp.firstElementChild;
+          rulesEl.appendChild(ruleEl);
+          _attachRule(sec, ruleEl, ps, onChange, pfx);
+          if (onChange) onChange();
+        });
+      }
+      sec.querySelectorAll('[data-' + pfx + '-rule]').forEach(function(ruleEl) { _attachRule(sec, ruleEl, ps, onChange, pfx); });
     }
     function attach(sec, presets, onChange) {
       if (!sec) return;
@@ -19197,46 +19225,10 @@ if (!window.FratechColorRules) {
           }
         }, true);
       }
-      function _setMode(m) {
-        var fixedEl = sec.querySelector('#fcr-fixed-wrap');
-        var condEl  = sec.querySelector('#fcr-cond-wrap');
-        if (fixedEl) fixedEl.style.display = m === 'fixed'       ? 'flex'  : 'none';
-        if (condEl)  condEl.style.display  = m === 'conditional' ? 'block' : 'none';
-        sec.querySelectorAll('[data-fcr-mode]').forEach(function(b) {
-          var a = b.dataset.fcrMode === m;
-          b.style.background = a ? 'rgba(255,255,255,.18)' : 'rgba(255,255,255,.05)';
-          b.style.border     = a ? '1px solid rgba(255,255,255,.3)' : '1px solid rgba(255,255,255,.1)';
-          b.style.color      = a ? '#fff' : 'rgba(255,255,255,.5)';
-          b.style.fontWeight = a ? '700' : '600';
-        });
-        if (onChange) onChange();
-      }
-      sec.querySelectorAll('[data-fcr-mode]').forEach(function(btn) {
-        btn.addEventListener('click', function() { _setMode(btn.dataset.fcrMode); });
-      });
-      var icoWrap = sec.querySelector('#fcr-ico-wrap');
-      sec.querySelectorAll('input[name="fcr-target"]').forEach(function(r) {
-        r.addEventListener('change', function() {
-          if (icoWrap) icoWrap.style.display = r.value === 'border' && r.checked ? 'flex' : 'none';
-          if (onChange) onChange();
-        });
-      });
-      var addBtn = sec.querySelector('#fcr-add-rule');
-      if (addBtn) {
-        addBtn.addEventListener('click', function() {
-          var rulesEl = sec.querySelector('#fcr-rules-list');
-          var idx = rulesEl.querySelectorAll('[data-fcr-rule]').length;
-          var tmp = document.createElement('div');
-          tmp.innerHTML = _ruleHtml({ color: '#4ade80' }, ps, idx);
-          var ruleEl = tmp.firstElementChild;
-          rulesEl.appendChild(ruleEl);
-          _attachRule(sec, ruleEl, ps, onChange);
-          if (onChange) onChange();
-        });
-      }
-      sec.querySelectorAll('[data-fcr-rule]').forEach(function(ruleEl) { _attachRule(sec, ruleEl, ps, onChange); });
+      _attachSection(sec, 'fcr',  ps, onChange);
+      _attachSection(sec, 'fcrb', ps, onChange);
     }
-    function _attachRule(sec, ruleEl, ps, onChange) {
+    function _attachRule(sec, ruleEl, ps, onChange, pfx) {
       var ddWrap = ruleEl.querySelector('.fcr-dd-wrap');
       if (ddWrap) {
         var ddBtn  = ddWrap.querySelector('[data-fcr-ctype]');
@@ -19258,11 +19250,12 @@ if (!window.FratechColorRules) {
               ddList.style.display = 'none';
               var preset = null;
               for (var pi = 0; pi < ps.length; pi++) { if (ps[pi].key === key) { preset = ps[pi]; break; } }
-              var valEl = ruleEl.querySelector('[data-fcr-cval]');
+              var cvalAttr = 'data-' + pfx + '-cval';
+              var valEl = ruleEl.querySelector('[' + cvalAttr + ']');
               if (preset && preset.hasValue) {
                 if (!valEl) {
                   var inp = document.createElement('input');
-                  inp.setAttribute('data-fcr-cval', ''); inp.type = 'number'; inp.placeholder = '0';
+                  inp.setAttribute(cvalAttr, ''); inp.type = 'number'; inp.placeholder = '0';
                   inp.style.cssText = 'width:60px;padding:4px 6px;border-radius:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:11px;flex-shrink:0';
                   ddWrap.insertAdjacentElement('afterend', inp);
                   valEl = inp;
@@ -19288,35 +19281,44 @@ if (!window.FratechColorRules) {
           });
         }
       }
-      var delBtn = ruleEl.querySelector('[data-fcr-del]');
+      var delBtn = ruleEl.querySelector('[data-' + pfx + '-del]');
       if (delBtn) {
         delBtn.addEventListener('click', function() {
           ruleEl.remove();
-          sec.querySelectorAll('[data-fcr-rule]').forEach(function(el, i) { el.dataset.fcrRule = i; });
+          sec.querySelectorAll('[data-' + pfx + '-rule]').forEach(function(el, i) { el.setAttribute('data-' + pfx + '-rule', i); });
           if (onChange) onChange();
         });
       }
     }
-    function read(sec) {
-      if (!sec) return { colorMode: 'fixed', colorFixed: '#60a5fa', colorRules: [], colorTarget: 'all', iconColor: '#ffffff' };
-      var mode = 'fixed';
-      var fw = sec.querySelector('#fcr-fixed-wrap'), cw = sec.querySelector('#fcr-cond-wrap');
-      if (fw && fw.style.display !== 'none') mode = 'fixed';
-      else if (cw && cw.style.display !== 'none') mode = 'conditional';
-      var colorFixed = (sec.querySelector('#fcr-fixed-inp') || {}).value || '#60a5fa';
+    function _readMode(sec, pfx) {
+      var fw = sec.querySelector('#' + pfx + '-fixed-wrap');
+      var cw = sec.querySelector('#' + pfx + '-cond-wrap');
+      if (fw && fw.style.display !== 'none') return 'fixed';
+      if (cw && cw.style.display !== 'none') return 'conditional';
+      return 'none';
+    }
+    function _readRules(sec, pfx) {
       var rules = [];
-      sec.querySelectorAll('[data-fcr-rule]').forEach(function(ruleEl) {
-        var ddBtn     = ruleEl.querySelector('[data-fcr-ctype]');
-        var condKey   = ddBtn ? (ddBtn.getAttribute('data-fcr-ctype') || 'fallback') : 'fallback';
-        var valEl     = ruleEl.querySelector('[data-fcr-cval]');
-        var condValue = valEl ? valEl.value : null;
-        var color     = (ruleEl.querySelector('[data-fcr-rcolor]') || {}).value || '#4ade80';
-        rules.push({ condKey: condKey, condValue: condValue, color: color });
+      sec.querySelectorAll('[data-' + pfx + '-rule]').forEach(function(ruleEl) {
+        var ddBtn   = ruleEl.querySelector('[data-fcr-ctype]');
+        var condKey = ddBtn ? (ddBtn.getAttribute('data-fcr-ctype') || 'fallback') : 'fallback';
+        var valEl   = ruleEl.querySelector('[data-' + pfx + '-cval]');
+        var color   = (ruleEl.querySelector('[data-' + pfx + '-rcolor]') || {}).value || '#4ade80';
+        rules.push({ condKey: condKey, condValue: valEl ? valEl.value : null, color: color });
       });
-      var targetAllEl  = sec.querySelector('#fcr-target-all');
-      var colorTarget  = (targetAllEl && targetAllEl.checked) ? 'all' : 'border';
-      var iconColor    = (sec.querySelector('#fcr-ico-inp') || {}).value || '#ffffff';
-      return { colorMode: mode, colorFixed: colorFixed, colorRules: rules, colorTarget: colorTarget, iconColor: iconColor };
+      return rules;
+    }
+    function read(sec) {
+      if (!sec) return { colorMode: 'fixed', colorFixed: '#60a5fa', colorRules: [], borderMode: 'none', borderFixed: '#ffffff', borderRules: [] };
+      var mode = _readMode(sec, 'fcr'); if (mode === 'none') mode = 'fixed';
+      return {
+        colorMode:   mode,
+        colorFixed:  (sec.querySelector('#fcr-fixed-inp')  || {}).value || '#60a5fa',
+        colorRules:  _readRules(sec, 'fcr'),
+        borderMode:  _readMode(sec, 'fcrb'),
+        borderFixed: (sec.querySelector('#fcrb-fixed-inp') || {}).value || '#ffffff',
+        borderRules: _readRules(sec, 'fcrb'),
+      };
     }
     function evalColor(cfg, condResults) {
       if (!cfg || !cfg.colorMode || cfg.colorMode === 'auto') return null;
@@ -19334,6 +19336,10 @@ if (!window.FratechColorRules) {
       }
       return null;
     }
-    window.FratechColorRules = { html: html, attach: attach, read: read, evalColor: evalColor };
+    function evalBorderColor(cfg, condResults) {
+      if (!cfg || !cfg.borderMode || cfg.borderMode === 'none') return null;
+      return evalColor({ colorMode: cfg.borderMode, colorFixed: cfg.borderFixed, colorRules: cfg.borderRules }, condResults);
+    }
+    window.FratechColorRules = { html: html, attach: attach, read: read, evalColor: evalColor, evalBorderColor: evalBorderColor };
   })();
 }

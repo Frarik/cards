@@ -348,6 +348,7 @@
       label: c.label || 'Temperatura',
       value: chipVal,
       color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, (() => { const _t = c.avgTempEntity && h ? parseFloat(stateOf(h, c.avgTempEntity)) : (h && ents.length ? (ts => ts.length ? ts.reduce((a,b)=>a+b,0)/ts.length : NaN)(ents.map(e=>parseFloat(stateOf(h, e.tempEntity))).filter(v=>!isNaN(v))) : NaN); return { temp_gt: v => !isNaN(_t) && _t > parseFloat(v||0), temp_lte: v => !isNaN(_t) && _t <= parseFloat(v||0) }; })())) || chipCol,
+      borderColor: (window.FratechColorRules && window.FratechColorRules.evalBorderColor(cfg, (() => { const _t = c.avgTempEntity && h ? parseFloat(stateOf(h, c.avgTempEntity)) : (h && ents.length ? (ts => ts.length ? ts.reduce((a,b)=>a+b,0)/ts.length : NaN)(ents.map(e=>parseFloat(stateOf(h, e.tempEntity))).filter(v=>!isNaN(v))) : NaN); return { temp_gt: v => !isNaN(_t) && _t > parseFloat(v||0), temp_lte: v => !isNaN(_t) && _t <= parseFloat(v||0) }; })())) || null,
     };
   }
 
@@ -579,7 +580,7 @@
   /* ── configure ──────────────────────────────────────────────── */
   function configure(cfg, _el, onSave) {
     const c    = loadCfg(cfg);
-    let colorCfg = { mode: c.colorMode||'fixed', fixed: c.colorFixed||c.color||'#38bdf8', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[], target: c.colorTarget||'all', iconColor: c.iconColor||'#ffffff' };
+    let colorCfg = { mode: c.colorMode||'fixed', fixed: c.colorFixed||c.color||'#38bdf8', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[], borderMode: c.borderMode||'none', borderFixed: c.borderFixed||'#ffffff', borderRules: Array.isArray(c.borderRules)?JSON.parse(JSON.stringify(c.borderRules)):[] };
     const presets = [
       { key: 'temp_gt',  label: 'Temperatura maggiore di', hasValue: true, unit: '°C' },
       { key: 'temp_lte', label: 'Temperatura minore o uguale a', hasValue: true, unit: '°C' },

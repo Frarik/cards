@@ -118,7 +118,8 @@
     const rd   = c.urgent_days  != null ? +c.urgent_days  : DEF_RED;
     const od   = c.warning_days != null ? +c.warning_days : DEF_ORANGE;
 
-    if (!ents.length || !h) return { icon: _chipSvg('#94a3b8'), label: c.label||'Scadenze', value:'—', color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, {})) || '#94a3b8' };
+    const _fcr = window.FratechColorRules;
+    if (!ents.length || !h) return { icon: _chipSvg('#94a3b8'), label: c.label||'Scadenze', value:'—', color: (_fcr && _fcr.evalColor(cfg, {})) || '#94a3b8', borderColor: _fcr && _fcr.evalBorderColor(cfg, {}) };
 
     let minDays = null, minStatus = 'unknown';
     ents.forEach(e => {
@@ -138,7 +139,8 @@
       icon:  _chipSvg(color),
       label: c.label || 'Scadenze',
       value,
-      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, { expired: minDays !== null && minDays <= 0, urgent: minStatus === 'urgent', warning: minStatus === 'warning', ok: minStatus === 'ok' })) || color,
+      color: (_fcr && _fcr.evalColor(cfg, { expired: minDays !== null && minDays <= 0, urgent: minStatus === 'urgent', warning: minStatus === 'warning', ok: minStatus === 'ok' })) || color,
+      borderColor: _fcr && _fcr.evalBorderColor(cfg, { expired: minDays !== null && minDays <= 0, urgent: minStatus === 'urgent', warning: minStatus === 'warning', ok: minStatus === 'ok' }),
     };
   }
 
@@ -279,7 +281,7 @@
   /* ─── configure() ─── */
   function configure(cfg, _el, onSave) {
     const c    = loadCfg(cfg);
-    let colorCfg = { mode: c.colorMode||'fixed', fixed: c.colorFixed||c.color||'#f59e0b', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[], target: c.colorTarget||'all', iconColor: c.iconColor||'#ffffff' };
+    let colorCfg = { mode: c.colorMode||'fixed', fixed: c.colorFixed||c.color||'#f59e0b', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[], borderMode: c.borderMode||'none', borderFixed: c.borderFixed||'#ffffff', borderRules: Array.isArray(c.borderRules)?JSON.parse(JSON.stringify(c.borderRules)):[] };
     const presets = [
       { key: 'expired',  label: 'Scaduto o oggi' },
       { key: 'urgent',   label: 'Urgente (entro soglia rossa)' },

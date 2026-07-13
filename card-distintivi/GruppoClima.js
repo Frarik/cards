@@ -148,11 +148,14 @@
     const ents = Array.isArray(c.entities) ? c.entities : [];
     const active = h ? ents.filter(e => climaIsActive(h, e.entity)).length : 0;
     const col = c.color || '#f97316';
+    const _fcr = window.FratechColorRules;
+    const _cond = { any_on: active > 0, all_off: active === 0 };
     return {
       icon: iconHtml(_dynIcon(c.icon||'🌡️', active > 0)),
       label: c.label || 'Clima',
       value: ents.length ? `${active}/${ents.length}` : '—',
-      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, { any_on: active > 0, all_off: active === 0 })) || (active > 0 ? col : '#fff'),
+      color: (_fcr && _fcr.evalColor(cfg, _cond)) || (active > 0 ? col : '#fff'),
+      borderColor: _fcr && _fcr.evalBorderColor(cfg, _cond),
     };
   }
 
@@ -491,7 +494,7 @@
   /* ── configure ── */
   function configure(cfg, _el, onSave) {
     const c = loadCfg(cfg);
-    let colorCfg = { mode: c.colorMode||'fixed', fixed: c.colorFixed||c.color||'#f97316', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[], target: c.colorTarget||'all', iconColor: c.iconColor||'#ffffff' };
+    let colorCfg = { mode: c.colorMode||'fixed', fixed: c.colorFixed||c.color||'#f97316', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[], borderMode: c.borderMode||'none', borderFixed: c.borderFixed||'#ffffff', borderRules: Array.isArray(c.borderRules)?JSON.parse(JSON.stringify(c.borderRules)):[] };
     const presets = [
       { key: 'any_on',   label: 'Almeno un clima acceso' },
       { key: 'all_off',  label: 'Tutti i clima spenti' },

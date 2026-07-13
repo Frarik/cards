@@ -77,11 +77,14 @@
       value = `${wetCount}/${ents.length}`;
     }
 
+    const _fcr = window.FratechColorRules;
+    const _cond = { alert: isAlert, ok: !isAlert };
     return {
       icon: _chipSvg(isAlert),
       label: c.label || 'Allagamento',
       value,
-      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, { alert: isAlert, ok: !isAlert })) || (isAlert ? '#f87171' : '#4ade80'),
+      color: (_fcr && _fcr.evalColor(cfg, _cond)) || (isAlert ? '#f87171' : '#4ade80'),
+      borderColor: _fcr && _fcr.evalBorderColor(cfg, _cond),
     };
   }
 
@@ -325,7 +328,7 @@
   /* ─── configure ─── */
   function configure(cfg, _el, onSave) {
     const c = loadCfg(cfg);
-    let colorCfg = { mode: c.colorMode||'fixed', fixed: c.colorFixed||c.color||'#38bdf8', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[], target: c.colorTarget||'all', iconColor: c.iconColor||'#ffffff' };
+    let colorCfg = { mode: c.colorMode||'fixed', fixed: c.colorFixed||c.color||'#38bdf8', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[], borderMode: c.borderMode||'none', borderFixed: c.borderFixed||'#ffffff', borderRules: Array.isArray(c.borderRules)?JSON.parse(JSON.stringify(c.borderRules)):[] };
     const presets = [
       { key: 'alert',    label: 'Allarme allagamento attivo' },
       { key: 'ok',       label: 'Nessun allagamento (OK)' },

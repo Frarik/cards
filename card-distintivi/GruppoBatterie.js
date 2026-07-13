@@ -111,10 +111,13 @@
       value = parts.join(' ');
     }
 
+    const _fcr = window.FratechColorRules;
+    const _cond = { has_offline: offline > 0, has_critical: critical > 0, has_low: low > 0, all_ok: worstStatus === 'ok' };
     return {
       label: c.label || 'Batterie',
       value,
-      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, { has_offline: offline > 0, has_critical: critical > 0, has_low: low > 0, all_ok: worstStatus === 'ok' })) || STATUS_COL[worstStatus],
+      color: (_fcr && _fcr.evalColor(cfg, _cond)) || STATUS_COL[worstStatus],
+      borderColor: _fcr && _fcr.evalBorderColor(cfg, _cond),
       pulse: worstStatus === 'offline' || worstStatus === 'critical',
     };
   }
@@ -264,7 +267,7 @@
   /* ════════════════════════════════════════ CONFIGURE ══ */
   function configure(cfg, _el, onSave) {
     const c = loadCfg(cfg);
-    let colorCfg = { mode: c.colorMode||'fixed', fixed: c.colorFixed||'#4ade80', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[], target: c.colorTarget||'all', iconColor: c.iconColor||'#ffffff' };
+    let colorCfg = { mode: c.colorMode||'fixed', fixed: c.colorFixed||'#4ade80', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[], borderMode: c.borderMode||'none', borderFixed: c.borderFixed||'#ffffff', borderRules: Array.isArray(c.borderRules)?JSON.parse(JSON.stringify(c.borderRules)):[] };
     const presets = [
       { key: 'has_offline',  label: 'Batteria non raggiungibile' },
       { key: 'has_critical', label: 'Batteria critica' },

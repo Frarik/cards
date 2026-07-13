@@ -129,7 +129,9 @@
       ? (totalW!==null ? `${active}/${ents.length} · ${fmtW(totalW)}` : `${active}/${ents.length}`)
       : '—';
     const chipCol = hasUnavail && active===0 ? COL_UNAVL : active>0 ? COL_ON : '#fff';
-    return { icon: iconHtml(c.icon||'🔌'), label: c.label||'Prese', value, color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, { any_on: active > 0, all_off: active === 0, watts_gt: v => totalW !== null && totalW > parseFloat(v||0), watts_lte: v => totalW !== null && totalW <= parseFloat(v||0) })) || chipCol };
+    const _fcr = window.FratechColorRules;
+    const _cond = { any_on: active > 0, all_off: active === 0, watts_gt: v => totalW !== null && totalW > parseFloat(v||0), watts_lte: v => totalW !== null && totalW <= parseFloat(v||0) };
+    return { icon: iconHtml(c.icon||'🔌'), label: c.label||'Prese', value, color: (_fcr && _fcr.evalColor(cfg, _cond)) || chipCol, borderColor: _fcr && _fcr.evalBorderColor(cfg, _cond) };
   }
 
   function watchEntities(cfg) {
@@ -537,7 +539,7 @@
   /* ── configure ── (stessa struttura v1.0, aggiunto campo maxW) */
   function configure(cfg, _el, onSave) {
     const c = loadCfg(cfg);
-    let colorCfg = { mode: c.colorMode||'fixed', fixed: c.colorFixed||c.color||'#fb923c', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[], target: c.colorTarget||'all', iconColor: c.iconColor||'#ffffff' };
+    let colorCfg = { mode: c.colorMode||'fixed', fixed: c.colorFixed||c.color||'#fb923c', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[], borderMode: c.borderMode||'none', borderFixed: c.borderFixed||'#ffffff', borderRules: Array.isArray(c.borderRules)?JSON.parse(JSON.stringify(c.borderRules)):[] };
     const presets = [
       { key: 'any_on',    label: 'Almeno una presa attiva' },
       { key: 'all_off',   label: 'Tutte le prese spente' },

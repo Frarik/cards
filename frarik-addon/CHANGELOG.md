@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.0.58 — 2026-07-13
+
+### fix(distintivi): riprogettazione colore chip — due sezioni separate Contenuto e Bordo
+
+- Rimossa la sezione "Applica colore a" (confusionaria): sostituita da due controlli completamente indipendenti
+- **Contenuto (testo, icona, numeri)**: Fisso | Condizioni — controlla `--bc` (colore testo/icona)
+- **Bordo**: Nessuno | Fisso | Condizioni — controlla `--bbc` (colore bordo del chip via CSS var)
+- Ogni sezione ha il proprio set di regole/condizioni con dropdown custom
+- Tutti i 14 chip() aggiornati per calcolare e restituire `borderColor` separato tramite `evalBorderColor()`
+- `evalBorderColor()` aggiunto al modulo FCR: legge `borderMode/borderFixed/borderRules` dal cfg
+
+---
+
 ## 2.0.57 — 2026-07-13
 
 ### feat(distintivi): dropdown custom, rimozione "Automatico", opzione colorTarget
