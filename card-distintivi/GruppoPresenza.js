@@ -1,4 +1,4 @@
-/* frarik-version: 1.1 */
+/* frarik-version: 1.2 */
 /**
  * GruppoPresenza.js — Distintivo FratechStore v1.1
  * Chip contatore sensori presenza/movimento attivi + popup con dettaglio e SVG animato
@@ -68,46 +68,45 @@
       </svg>`;
     }
 
+    /* persona che cammina — gambe e braccia pivotano sulle articolazioni */
     return `<style>
-      @keyframes ${s}Rg{0%{transform:scale(.45);opacity:.9}100%{transform:scale(1.7);opacity:0}}
-      @keyframes ${s}Gw{0%,100%{filter:drop-shadow(0 0 4px rgba(245,158,11,.45))}50%{filter:drop-shadow(0 0 13px rgba(245,158,11,.95))}}
-      @keyframes ${s}P1{0%{transform:translate(0,0);opacity:.9}100%{transform:translate(-8px,-15px);opacity:0}}
-      @keyframes ${s}P2{0%{transform:translate(0,0);opacity:.8}100%{transform:translate(7px,-13px);opacity:0}}
-      @keyframes ${s}P3{0%{transform:translate(0,0);opacity:.7}100%{transform:translate(-3px,-18px);opacity:0}}
+      @keyframes ${s}Ll{0%,100%{transform:rotate(-32deg)}50%{transform:rotate(32deg)}}
+      @keyframes ${s}Rl{0%,100%{transform:rotate(32deg)}50%{transform:rotate(-32deg)}}
+      @keyframes ${s}La{0%,100%{transform:rotate(26deg)}50%{transform:rotate(-26deg)}}
+      @keyframes ${s}Ra{0%,100%{transform:rotate(-26deg)}50%{transform:rotate(26deg)}}
+      @keyframes ${s}Gw{0%,100%{filter:drop-shadow(0 0 4px rgba(245,158,11,.4))}50%{filter:drop-shadow(0 0 11px rgba(245,158,11,.9))}}
     </style>
     <svg viewBox="0 0 56 80" width="42" height="60" style="display:block;overflow:visible">
       <defs>
         <linearGradient id="${s}hg" x1="25%" y1="15%" x2="75%" y2="85%">
-          <stop offset="0%" stop-color="#fcd34d" stop-opacity=".95"/>
+          <stop offset="0%" stop-color="#fcd34d" stop-opacity=".9"/>
           <stop offset="100%" stop-color="#d97706" stop-opacity=".7"/>
         </linearGradient>
       </defs>
-      <!-- anelli radar espandenti centrati sul corpo -->
-      <circle cx="28" cy="30" r="24" fill="none" stroke="rgba(245,158,11,.6)" stroke-width="2" style="animation:${s}Rg 2.3s ease-out infinite"/>
-      <circle cx="28" cy="30" r="24" fill="none" stroke="rgba(245,158,11,.42)" stroke-width="2" style="animation:${s}Rg 2.3s ease-out infinite .75s"/>
-      <circle cx="28" cy="30" r="24" fill="none" stroke="rgba(245,158,11,.25)" stroke-width="1.5" style="animation:${s}Rg 2.3s ease-out infinite 1.5s"/>
-      <!-- alone corpo -->
-      <ellipse cx="28" cy="33" rx="15" ry="22" fill="rgba(245,158,11,.07)"/>
-      <!-- ombra calda -->
-      <ellipse cx="28" cy="72" rx="14" ry="3.5" fill="rgba(245,158,11,.15)"/>
+      <ellipse cx="28" cy="74" rx="13" ry="3" fill="rgba(245,158,11,.15)"/>
       <!-- testa -->
-      <circle cx="28" cy="11" r="8" fill="url(#${s}hg)" stroke="#f59e0b" stroke-width="1.5" style="animation:${s}Gw 1.6s ease-in-out infinite"/>
-      <!-- riflesso fronte -->
-      <circle cx="25" cy="9" r="2.2" fill="rgba(255,255,255,.3)"/>
+      <circle cx="28" cy="11" r="7.5" fill="url(#${s}hg)" stroke="#f59e0b" stroke-width="1.4" style="animation:${s}Gw 1.6s ease-in-out infinite"/>
+      <circle cx="25" cy="9" r="2" fill="rgba(255,255,255,.28)"/>
       <!-- collo -->
-      <rect x="25.5" y="18.5" width="5" height="4" rx="1" fill="rgba(245,158,11,.65)"/>
-      <!-- torso -->
-      <path d="M15,47C15,29 21,22 28,22C35,22 41,29 41,47L36,52L28,54L20,52Z" fill="rgba(245,158,11,.55)" stroke="#f59e0b" stroke-width="1.4" style="animation:${s}Gw 1.6s ease-in-out infinite"/>
-      <!-- braccia -->
-      <line x1="15" y1="33" x2="5" y2="47" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
-      <line x1="41" y1="33" x2="51" y2="47" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
-      <!-- gambe -->
-      <line x1="22" y1="52" x2="20" y2="72" stroke="#f59e0b" stroke-width="4.5" stroke-linecap="round"/>
-      <line x1="34" y1="52" x2="36" y2="72" stroke="#f59e0b" stroke-width="4.5" stroke-linecap="round"/>
-      <!-- particelle moto -->
-      <circle cx="6" cy="42" r="2.8" fill="rgba(245,158,11,.88)" style="animation:${s}P1 2s ease-in-out infinite"/>
-      <circle cx="50" cy="37" r="2.2" fill="rgba(245,158,11,.75)" style="animation:${s}P2 2s ease-in-out infinite .7s"/>
-      <circle cx="13" cy="20" r="2" fill="rgba(245,158,11,.65)" style="animation:${s}P3 2s ease-in-out infinite 1.4s"/>
+      <rect x="25.5" y="18.5" width="5" height="4" rx="1" fill="rgba(245,158,11,.6)"/>
+      <!-- torso statico -->
+      <path d="M17,47C17,30 21,22 28,22C35,22 39,30 39,47L35,51L28,53L21,51Z" fill="rgba(245,158,11,.5)" stroke="#f59e0b" stroke-width="1.3"/>
+      <!-- braccio sinistro — pivot spalla (17,32) -->
+      <g style="transform-origin:17px 32px;animation:${s}La .55s ease-in-out infinite">
+        <line x1="17" y1="32" x2="7" y2="47" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
+      </g>
+      <!-- braccio destro — pivot spalla (39,32) -->
+      <g style="transform-origin:39px 32px;animation:${s}Ra .55s ease-in-out infinite">
+        <line x1="39" y1="32" x2="49" y2="47" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
+      </g>
+      <!-- gamba sinistra — pivot anca (21,51) -->
+      <g style="transform-origin:21px 51px;animation:${s}Ll .55s ease-in-out infinite">
+        <line x1="21" y1="51" x2="19" y2="74" stroke="#f59e0b" stroke-width="4.5" stroke-linecap="round"/>
+      </g>
+      <!-- gamba destra — pivot anca (35,51) -->
+      <g style="transform-origin:35px 51px;animation:${s}Rl .55s ease-in-out infinite">
+        <line x1="35" y1="51" x2="37" y2="74" stroke="#f59e0b" stroke-width="4.5" stroke-linecap="round"/>
+      </g>
     </svg>`;
   }
 
@@ -158,19 +157,11 @@
       const stCol = on ? '#f59e0b' : '#4ade80';
       const stBg  = on ? 'rgba(245,158,11,.14)' : 'rgba(74,222,128,.12)';
       const stBdr = on ? 'rgba(245,158,11,.35)'  : 'rgba(74,222,128,.28)';
-      const lastChanged = h && h.states && h.states[e.entity] && h.states[e.entity].last_changed;
-      const timeStr = lastChanged ? _timeAgo(lastChanged) : '';
-      const timeLabel = on
-        ? (timeStr === 'adesso' ? 'Appena rilevato' : `Rilevato da ${timeStr}`)
-        : (timeStr ? `Libero da ${timeStr}` : '');
-      const timeColor = on ? 'rgba(245,158,11,.8)' : 'rgba(255,255,255,.42)';
-
       return `<div style="border-bottom:1px solid rgba(255,255,255,.04);${on ? 'background:rgba(245,158,11,.03)' : ''}">
         <div style="display:flex;align-items:center;gap:12px;padding:10px 16px">
           <div style="flex-shrink:0">${_presenceSvg(on, i)}</div>
           <div style="flex:1;min-width:0">
             <div style="font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
-            ${timeLabel ? `<div style="font-size:10px;color:${timeColor};margin-top:2px;font-weight:${on?'600':'400'}">${eh(timeLabel)}</div>` : ''}
           </div>
           <div style="padding:4px 12px;border-radius:20px;background:${stBg};border:1px solid ${stBdr};font-size:11px;font-weight:700;color:${stCol};white-space:nowrap;flex-shrink:0">${stLbl}</div>
         </div>
@@ -387,7 +378,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Presenza', icon: 'mdi:motion-sensor',
     desc: 'Chip contatore sensori presenza/movimento attivi. Clic → stato rilevato/libero per ogni zona.',
-    version: '1.1', isDistintivo: true,
+    version: '1.2', isDistintivo: true,
     defaultCfg: { label: 'Presenza', icon: 'mdi:motion-sensor', color: '#f59e0b', entities: [] },
     chip, watchEntities, render, mount, update, configure,
   };

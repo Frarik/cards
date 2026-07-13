@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.46 — 2026-07-13
+
+### feat(GruppoPresenza): v1.2 — persona che cammina animata, rimossa scritta tempo
+
+- **SVG persona che cammina**: gambe e braccia animate CSS con pivot sulle articolazioni (spalle e anche). Gamba sx/braccio dx in fase, gamba dx/braccio sx in controfase — ciclo 0.55s
+- Stato libero: silhouette grigio-ardesia ferma, nessuna animazione
+- Stato rilevato: silhouette ambra con gambe e braccia oscillanti + glow pulsante sulla testa
+- Rimossa riga "Rilevato da / Libero da" sotto il nome del sensore
+
 ## 2.0.45 — 2026-07-13
 
 ### feat(GruppoPresenza): v1.1 — SVG persona ridisegnata, sottotitolo nascosto
