@@ -1,5 +1,25 @@
 # Changelog
 
+## 2.0.48 — 2026-07-13
+
+### feat: 2 nuovi distintivi — GruppoScadenze e GruppoCalendario
+
+**GruppoScadenze v1.0** (`card-distintivi/GruppoScadenze.js`):
+- Chip scadenze/date con clessidra animata per ogni voce
+- Stato expired (rosso, clessidra vuota+pulsante), urgent (arancio, sabbia cadente), ok (verde, clessidra piena)
+- Parsing automatico date: ISO (YYYY-MM-DD), DD/MM/YYYY, numero giorni rimanenti
+- Ricerca attributo data: `expiry_date`, `due_date`, `end_date`, `valid_until`, `scadenza` + campo libero `date_attr`
+- Soglia urgente configurabile (default 7gg), ordinamento popup expired→urgent→ok
+- Configure con autocomplete sensori + hint utile
+
+**GruppoCalendario v1.0** (`card-distintivi/GruppoCalendario.js`):
+- Chip calendari HA — entità `calendar.*` (Google Calendar, locale, ecc.)
+- Chip mostra eventi attivi ora (viola pulsante) o totale calendari configurati (blu)
+- Popup: una riga per calendario con SVG pagina calendario animata, titolo evento, orario, durata, luogo
+- Dot rosso pulsante su chip e SVG quando evento in corso
+- Configure con autocomplete che mostra prima tutte le entità `calendar.*`
+- `_hideSubtitle()` in mount(), polling 30s
+
 ## 2.0.47 — 2026-07-13
 
 ### fix(GruppoPresenza): v1.3 — omino profilo laterale, cammina avanti/indietro
