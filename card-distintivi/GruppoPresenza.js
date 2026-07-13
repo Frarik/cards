@@ -138,7 +138,7 @@
       icon: iconHtml(c.icon || 'mdi:motion-sensor'),
       label: c.label || 'Presenza',
       value: ents.length ? `${active}/${ents.length}` : '—',
-      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, h)) || (active > 0 ? col : '#fff'),
+      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, { any_detected: active > 0, none_detected: active === 0 })) || (active > 0 ? col : '#fff'),
     };
   }
 
@@ -211,6 +211,11 @@
   function configure(cfg, _el, onSave) {
     const c = loadCfg(cfg);
     let colorCfg = { mode: c.colorMode||'auto', fixed: c.colorFixed||c.color||'#f59e0b', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[] };
+    const presets = [
+      { key: 'any_detected',  label: 'Presenza rilevata' },
+      { key: 'none_detected', label: 'Nessuna presenza' },
+      { key: 'fallback',      label: 'Sempre (fallback)' },
+    ];
     const ents = JSON.parse(JSON.stringify(Array.isArray(c.entities) ? c.entities : []));
     const h = H();
     let _firstRender = true;
@@ -328,7 +333,7 @@
 
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin:${ents.length?'12px':0} 0 6px">Aggiungi sensore</div>
           <input id="gpcfg-add-entity" class="gpcinp" placeholder="🔍 Cerca binary_sensor.* o sensor.*…" autocomplete="off">
-          ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg) : ''}
+          ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg, presets) : ''}
           <div style="height:16px"></div>
         </div>
 
@@ -346,7 +351,7 @@
       ov.innerHTML = renderForm();
       _firstRender = false;
       const _fcr = window.FratechColorRules;
-      if (_fcr) _fcr.attach(ov.querySelector('#fcr-section'), () => { colorCfg = _fcr.read(ov.querySelector('#fcr-section')) || colorCfg; });
+      if (_fcr) _fcr.attach(ov.querySelector('#fcr-section'), presets, () => { colorCfg = _fcr.read(ov.querySelector('#fcr-section')) || colorCfg; });
       const nb = ov.querySelector('#gpcfg-body');
       if (nb && savedBody > 0) nb.scrollTop = savedBody;
 

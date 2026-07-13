@@ -129,7 +129,7 @@
       ? (totalW!==null ? `${active}/${ents.length} · ${fmtW(totalW)}` : `${active}/${ents.length}`)
       : '—';
     const chipCol = hasUnavail && active===0 ? COL_UNAVL : active>0 ? COL_ON : '#fff';
-    return { icon: iconHtml(c.icon||'🔌'), label: c.label||'Prese', value, color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, h)) || chipCol };
+    return { icon: iconHtml(c.icon||'🔌'), label: c.label||'Prese', value, color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, { any_on: active > 0, all_off: active === 0, watts_gt: v => totalW !== null && totalW > parseFloat(v||0), watts_lte: v => totalW !== null && totalW <= parseFloat(v||0) })) || chipCol };
   }
 
   function watchEntities(cfg) {
@@ -538,6 +538,13 @@
   function configure(cfg, _el, onSave) {
     const c = loadCfg(cfg);
     let colorCfg = { mode: c.colorMode||'auto', fixed: c.colorFixed||c.color||'#fb923c', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[] };
+    const presets = [
+      { key: 'any_on',    label: 'Almeno una presa attiva' },
+      { key: 'all_off',   label: 'Tutte le prese spente' },
+      { key: 'watts_gt',  label: 'Watt maggiore di', hasValue: true, unit: 'W' },
+      { key: 'watts_lte', label: 'Watt minore o uguale a', hasValue: true, unit: 'W' },
+      { key: 'fallback',  label: 'Sempre (fallback)' },
+    ];
     const ents = JSON.parse(JSON.stringify(Array.isArray(c.entities) ? c.entities : []));
     const h = H();
     let expandedFields = new Set();
@@ -713,7 +720,7 @@
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin:${ents.length?'12px':0} 0 6px">Aggiungi presa</div>
           <input id="gpcfg-add-entity" class="gpcinp" placeholder="🔍 Inizia a scrivere il nome della presa…" autocomplete="off">
           <div style="font-size:9px;color:#fff;margin-top:5px">switch.* compaiono per prime · inserisci watt + sensore energia direttamente · ▾ = icona + automazione</div>
-          ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg) : ''}
+          ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg, presets) : ''}
           <div style="height:16px"></div>
         </div>
         <div style="display:flex;gap:8px;padding:12px 14px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0">
@@ -732,7 +739,7 @@
       const curColor=ov.querySelector('#gpcfg-color')?.value;
       ov.innerHTML=renderForm(); _firstRender=false;
       const _fcr = window.FratechColorRules;
-      if (_fcr) _fcr.attach(ov.querySelector('#fcr-section'), () => { colorCfg = _fcr.read(ov.querySelector('#fcr-section')) || colorCfg; });
+      if (_fcr) _fcr.attach(ov.querySelector('#fcr-section'), presets, () => { colorCfg = _fcr.read(ov.querySelector('#fcr-section')) || colorCfg; });
       const nb=ov.querySelector('#gpcfg-body'); if(nb&&savedScroll>0) nb.scrollTop=savedScroll;
       if(curLabel!==undefined){const f=ov.querySelector('#gpcfg-label');if(f)f.value=curLabel;}
       if(curIcon!==undefined){const f=ov.querySelector('#gpcfg-icon');if(f)f.value=curIcon;const b=ov.querySelector('#gpcfg-icon-btn');if(b)b.innerHTML=iconHtml(curIcon,22);}

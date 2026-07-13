@@ -102,7 +102,7 @@
       icon: _chipSvg(days, count, isActive),
       label: c.label || 'Calendario',
       value,
-      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, h)) || color,
+      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, { event_today: days === 0 || isActive, event_soon: v => days !== null && days >= 0 && days <= parseFloat(v||7), no_event: days === null })) || color,
     };
   }
 
@@ -311,6 +311,12 @@
   function configure(cfg, _el, onSave) {
     const c    = loadCfg(cfg);
     let colorCfg = { mode: c.colorMode||'auto', fixed: c.colorFixed||c.color||'#60a5fa', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[] };
+    const presets = [
+      { key: 'event_today', label: 'Evento oggi o in corso' },
+      { key: 'event_soon',  label: 'Evento entro', hasValue: true, unit: 'giorni' },
+      { key: 'no_event',    label: 'Nessun evento' },
+      { key: 'fallback',    label: 'Sempre (fallback)' },
+    ];
     const ents = JSON.parse(JSON.stringify(Array.isArray(c.entities) ? c.entities : []));
     const h    = H();
     let _firstRender = true, _acDrop = null;
@@ -411,7 +417,7 @@
           <div style="margin-top:5px;padding:7px 10px;border-radius:8px;background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.15);font-size:10px;color:rgba(255,255,255,.7)">
             💡 Usa entità <strong style="color:#60a5fa">calendar.*</strong>. Il popup mostra tutti gli eventi dei prossimi 7 giorni tramite API HA.
           </div>
-          ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg) : ''}
+          ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg, presets) : ''}
           <div style="height:18px"></div>
         </div>
         <div style="display:flex;gap:8px;padding:12px 14px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0">
@@ -428,7 +434,7 @@
       ov.innerHTML = renderForm();
       _firstRender = false;
       const _fcr = window.FratechColorRules;
-      if (_fcr) _fcr.attach(ov.querySelector('#fcr-section'), () => { colorCfg = _fcr.read(ov.querySelector('#fcr-section')) || colorCfg; });
+      if (_fcr) _fcr.attach(ov.querySelector('#fcr-section'), presets, () => { colorCfg = _fcr.read(ov.querySelector('#fcr-section')) || colorCfg; });
       const nb = ov.querySelector('#gcalcfg-body'); if (nb && saved > 0) nb.scrollTop = saved;
       if (ov._ovClick) ov.removeEventListener('click', ov._ovClick);
       ov._ovClick = ev => { if (ev.target === ov) closeOv(); };

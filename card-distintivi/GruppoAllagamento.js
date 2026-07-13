@@ -81,7 +81,7 @@
       icon: _chipSvg(isAlert),
       label: c.label || 'Allagamento',
       value,
-      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, h)) || (isAlert ? '#f87171' : '#4ade80'),
+      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, { alert: isAlert, ok: !isAlert })) || (isAlert ? '#f87171' : '#4ade80'),
     };
   }
 
@@ -326,6 +326,11 @@
   function configure(cfg, _el, onSave) {
     const c = loadCfg(cfg);
     let colorCfg = { mode: c.colorMode||'auto', fixed: c.colorFixed||c.color||'#38bdf8', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[] };
+    const presets = [
+      { key: 'alert',    label: 'Allarme allagamento attivo' },
+      { key: 'ok',       label: 'Nessun allagamento (OK)' },
+      { key: 'fallback', label: 'Sempre (fallback)' },
+    ];
     let pkGroup = c.pk_group || '';
     const ents = JSON.parse(JSON.stringify(Array.isArray(c.entities) ? c.entities : []));
     const h = H();
@@ -462,7 +467,7 @@
             💡 Seleziona il <strong style="color:#38bdf8">group binary_sensor</strong> che aggrega tutti i sensori allagamento
           </div>
 
-          ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg) : ''}
+          ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg, presets) : ''}
           <!-- sensori individuali -->
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.5);margin-bottom:6px">Sensori individuali${ents.length ? ` (${ents.length})` : ''}</div>
           ${ents.length ? `<div style="margin-bottom:10px">${selRows}</div>` : ''}
@@ -484,7 +489,7 @@
       ov.innerHTML = renderForm();
       _firstRender = false;
       const _fcr = window.FratechColorRules;
-      if (_fcr) _fcr.attach(ov.querySelector('#fcr-section'), () => { colorCfg = _fcr.read(ov.querySelector('#fcr-section')) || colorCfg; });
+      if (_fcr) _fcr.attach(ov.querySelector('#fcr-section'), presets, () => { colorCfg = _fcr.read(ov.querySelector('#fcr-section')) || colorCfg; });
       const nb = ov.querySelector('#gaacfg-body');
       if (nb && savedScroll > 0) nb.scrollTop = savedScroll;
 

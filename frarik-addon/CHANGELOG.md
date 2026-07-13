@@ -1,5 +1,26 @@
 # Changelog
 
+## 2.0.56 — 2026-07-13
+
+### feat(distintivi): sistema condizioni automatico per ogni distintivo
+
+- Sezione "Condizioni" completamente ridisegnata: non richiede più l'inserimento manuale di entity_id
+- Ogni distintivo fornisce ora un menu di condizioni preimpostato, specifico per il suo tipo:
+  - **Luci**: "Almeno una luce accesa" / "Tutte le luci spente"
+  - **Porte / Finestre / Tapparelle**: "Almeno una aperta" / "Tutte chiuse"
+  - **Presenza**: "Presenza rilevata" / "Nessuna presenza"
+  - **Allagamento**: "Allarme attivo" / "Nessun allagamento"
+  - **Prese**: stato on/off + soglie watt configurabili
+  - **Clima**: "Almeno un clima acceso" / "Tutti spenti"
+  - **Temperatura**: soglie °C (maggiore di / minore o uguale a)
+  - **Calendario**: "Oggi/in corso", "Entro N giorni", "Nessun evento"
+  - **Scadenze**: "Scaduto", "Urgente", "In avvicinamento", "OK"
+  - **Allarme**: "Scattato", "Armato", "Pending", "Disarmato"
+  - **Energia**: soglie watt (consumo >W / ≤W)
+  - **Batterie**: "Offline", "Critica", "Bassa", "Tutte OK"
+- L'utente sceglie solo la condizione dal menu e il colore, senza inserire nulla manualmente
+- Rebuild panel v2.0.56
+
 ## 2.0.55 — 2026-07-13
 
 ### fix(core): FratechColorRules integrato nel panel addon

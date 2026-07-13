@@ -65,7 +65,7 @@
       icon: iconHtml(c.icon || '💡'),
       label: c.label || 'Luci',
       value: ents.length ? `${active}/${ents.length}` : '—',
-      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, h)) || (active > 0 ? col : '#fff'),
+      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, { any_on: active > 0, all_off: active === 0 })) || (active > 0 ? col : '#fff'),
     };
   }
 
@@ -234,6 +234,11 @@
   function configure(cfg, _el, onSave) {
     const c = loadCfg(cfg);
     let colorCfg = { mode: c.colorMode||'auto', fixed: c.colorFixed||c.color||'#fbbf24', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[] };
+    const presets = [
+      { key: 'any_on',   label: 'Almeno una luce accesa' },
+      { key: 'all_off',  label: 'Tutte le luci spente' },
+      { key: 'fallback', label: 'Sempre (fallback)' },
+    ];
     const ents = JSON.parse(JSON.stringify(Array.isArray(c.entities) ? c.entities : []));
     const h = H();
     let expandedAuto = new Set();
@@ -398,7 +403,7 @@
           <input id="glcfg-add-entity" class="glcinp" placeholder="🔍 Inizia a scrivere il nome dell'entità…" autocomplete="off">
           <div style="font-size:9px;color:#fff;margin-top:5px">Mostra tutte le entità — light.* compaiono per prime</div>
 
-          ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg) : ''}
+          ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg, presets) : ''}
           <div style="height:16px"></div>
         </div>
 
@@ -423,7 +428,7 @@
       ov.innerHTML = renderForm();
       _firstRender = false;
       const _fcr = window.FratechColorRules;
-      if (_fcr) _fcr.attach(ov.querySelector('#fcr-section'), () => { colorCfg = _fcr.read(ov.querySelector('#fcr-section')) || colorCfg; });
+      if (_fcr) _fcr.attach(ov.querySelector('#fcr-section'), presets, () => { colorCfg = _fcr.read(ov.querySelector('#fcr-section')) || colorCfg; });
 
       // ripristina scroll del body — sincrono: funziona subito dopo innerHTML
       const nb = ov.querySelector('#glcfg-body');

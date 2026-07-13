@@ -283,7 +283,7 @@
   /* ════════════════════════════════════════ CHIP ══ */
   function chip(cfg, rawHass) {
     const c = loadCfg(cfg); const h = liveH(rawHass); const i = _info(cfg, h);
-    return { label: c.label || 'Energia', value: `${i.emo} ${i.label}`, color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, h)) || i.col };
+    return { label: c.label || 'Energia', value: `${i.emo} ${i.label}`, color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, { watts_gt: v => i.w !== null && i.w > parseFloat(v||0), watts_lte: v => i.w !== null && i.w <= parseFloat(v||0) })) || i.col };
   }
 
   function watchEntities(cfg) {
@@ -565,6 +565,11 @@
   function configure(cfg, _el, onSave) {
     const c = loadCfg(cfg);
     let colorCfg = { mode: c.colorMode||'auto', fixed: c.colorFixed||'#60a5fa', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[] };
+    const presets = [
+      { key: 'watts_gt',  label: 'Consumo maggiore di', hasValue: true, unit: 'W' },
+      { key: 'watts_lte', label: 'Consumo minore o uguale a', hasValue: true, unit: 'W' },
+      { key: 'fallback',  label: 'Sempre (fallback)' },
+    ];
     const h = H();
 
     let _ac = null;
@@ -648,7 +653,7 @@
         <input id="ecfg-kwh" style="${sinp};margin-bottom:4px" value="${eh(c.kwhEntity || '')}" placeholder="🔍 sensor.energia_oggi…" autocomplete="off">
         <div style="font-size:9px;color:#fff;margin-bottom:14px">Se configurato usa il dato reale del contatore; altrimenti stima (~) dall'integrazione della potenza</div>
 
-        ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg) : ''}
+        ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg, presets) : ''}
         <div style="height:10px"></div>
       </div>
       <div style="display:flex;gap:8px;padding:12px 14px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0">
@@ -658,7 +663,7 @@
     </div>`;
 
     const _fcr = window.FratechColorRules;
-    if (_fcr) _fcr.attach(ov.querySelector('#fcr-section'), () => { colorCfg = _fcr.read(ov.querySelector('#fcr-section')) || colorCfg; });
+    if (_fcr) _fcr.attach(ov.querySelector('#fcr-section'), presets, () => { colorCfg = _fcr.read(ov.querySelector('#fcr-section')) || colorCfg; });
     ov.querySelector('#ecfg-close').onclick  = closeOv;
     ov.querySelector('#ecfg-cancel').onclick = closeOv;
     ov.onclick = ev => { if (ev.target === ov) closeOv(); };

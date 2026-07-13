@@ -118,7 +118,7 @@
     const rd   = c.urgent_days  != null ? +c.urgent_days  : DEF_RED;
     const od   = c.warning_days != null ? +c.warning_days : DEF_ORANGE;
 
-    if (!ents.length || !h) return { icon: _chipSvg('#94a3b8'), label: c.label||'Scadenze', value:'—', color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, h)) || '#94a3b8' };
+    if (!ents.length || !h) return { icon: _chipSvg('#94a3b8'), label: c.label||'Scadenze', value:'—', color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, {})) || '#94a3b8' };
 
     let minDays = null, minStatus = 'unknown';
     ents.forEach(e => {
@@ -138,7 +138,7 @@
       icon:  _chipSvg(color),
       label: c.label || 'Scadenze',
       value,
-      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, h)) || color,
+      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, { expired: minDays !== null && minDays <= 0, urgent: minStatus === 'urgent', warning: minStatus === 'warning', ok: minStatus === 'ok' })) || color,
     };
   }
 
@@ -280,6 +280,13 @@
   function configure(cfg, _el, onSave) {
     const c    = loadCfg(cfg);
     let colorCfg = { mode: c.colorMode||'auto', fixed: c.colorFixed||c.color||'#f59e0b', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[] };
+    const presets = [
+      { key: 'expired',  label: 'Scaduto o oggi' },
+      { key: 'urgent',   label: 'Urgente (entro soglia rossa)' },
+      { key: 'warning',  label: 'In avvicinamento (soglia arancio)' },
+      { key: 'ok',       label: 'Tutto OK' },
+      { key: 'fallback', label: 'Sempre (fallback)' },
+    ];
     const ents = JSON.parse(JSON.stringify(Array.isArray(c.entities) ? c.entities : []));
     const h    = H();
     let _firstRender = true, _acDrop = null;
@@ -390,7 +397,7 @@
           <div style="margin-top:5px;padding:7px 10px;border-radius:8px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);font-size:10px;color:rgba(255,255,255,.7)">
             💡 Supporta <strong style="color:#f59e0b">sensor.*</strong> con attributo <code>giorni_mancanti</code> (intero), oppure state/attributo con data (<code>2026-09-15</code>). Il costo appare se l'entità ha attributo <code>costo_previsto</code>.
           </div>
-          ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg) : ''}
+          ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg, presets) : ''}
           <div style="height:18px"></div>
         </div>
         <div style="display:flex;gap:8px;padding:12px 14px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0">
@@ -407,7 +414,7 @@
       ov.innerHTML = renderForm();
       _firstRender = false;
       const _fcr = window.FratechColorRules;
-      if (_fcr) _fcr.attach(ov.querySelector('#fcr-section'), () => { colorCfg = _fcr.read(ov.querySelector('#fcr-section')) || colorCfg; });
+      if (_fcr) _fcr.attach(ov.querySelector('#fcr-section'), presets, () => { colorCfg = _fcr.read(ov.querySelector('#fcr-section')) || colorCfg; });
       const nb = ov.querySelector('#gsccfg-body'); if (nb && saved>0) nb.scrollTop = saved;
       if (ov._ovClick) ov.removeEventListener('click', ov._ovClick);
       ov._ovClick = ev => { if (ev.target===ov) closeOv(); };

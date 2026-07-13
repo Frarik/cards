@@ -347,7 +347,7 @@
       icon:  `<span class="mdi mdi-thermometer" style="font-size:16px;line-height:1;color:inherit"></span>`,
       label: c.label || 'Temperatura',
       value: chipVal,
-      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, h)) || chipCol,
+      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, (() => { const _t = c.avgTempEntity && h ? parseFloat(stateOf(h, c.avgTempEntity)) : (h && ents.length ? (ts => ts.length ? ts.reduce((a,b)=>a+b,0)/ts.length : NaN)(ents.map(e=>parseFloat(stateOf(h, e.tempEntity))).filter(v=>!isNaN(v))) : NaN); return { temp_gt: v => !isNaN(_t) && _t > parseFloat(v||0), temp_lte: v => !isNaN(_t) && _t <= parseFloat(v||0) }; })())) || chipCol,
     };
   }
 
@@ -580,6 +580,11 @@
   function configure(cfg, _el, onSave) {
     const c    = loadCfg(cfg);
     let colorCfg = { mode: c.colorMode||'auto', fixed: c.colorFixed||c.color||'#38bdf8', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[] };
+    const presets = [
+      { key: 'temp_gt',  label: 'Temperatura maggiore di', hasValue: true, unit: '°C' },
+      { key: 'temp_lte', label: 'Temperatura minore o uguale a', hasValue: true, unit: '°C' },
+      { key: 'fallback', label: 'Sempre (fallback)' },
+    ];
     const ents = JSON.parse(JSON.stringify(Array.isArray(c.entities) ? c.entities : []));
     const h    = H();
     let _firstRender = true;
@@ -722,7 +727,7 @@
           <div class="gtsec" style="margin-top:${ents.length?'14px':0}">Aggiungi stanza</div>
           <input id="gtcfg-add" class="gtinp" placeholder="🔍 Cerca sensore temperatura…" autocomplete="off">
           <div style="font-size:9px;color:#fff;margin-top:5px">Digita il nome o l'entity_id del sensore temperatura</div>
-          ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg) : ''}
+          ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg, presets) : ''}
           <div style="height:18px"></div>
         </div>
 
@@ -745,7 +750,7 @@
       ov.innerHTML = renderForm();
       _firstRender = false;
       const _fcr = window.FratechColorRules;
-      if (_fcr) _fcr.attach(ov.querySelector('#fcr-section'), () => { colorCfg = _fcr.read(ov.querySelector('#fcr-section')) || colorCfg; });
+      if (_fcr) _fcr.attach(ov.querySelector('#fcr-section'), presets, () => { colorCfg = _fcr.read(ov.querySelector('#fcr-section')) || colorCfg; });
 
       const nb = ov.querySelector('#gtcfg-body');
       if (nb && savedScroll > 0) nb.scrollTop = savedScroll;

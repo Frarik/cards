@@ -114,7 +114,7 @@
     return {
       label: c.label || 'Batterie',
       value,
-      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, h)) || STATUS_COL[worstStatus],
+      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, { has_offline: offline > 0, has_critical: critical > 0, has_low: low > 0, all_ok: worstStatus === 'ok' })) || STATUS_COL[worstStatus],
       pulse: worstStatus === 'offline' || worstStatus === 'critical',
     };
   }
@@ -265,6 +265,13 @@
   function configure(cfg, _el, onSave) {
     const c = loadCfg(cfg);
     let colorCfg = { mode: c.colorMode||'auto', fixed: c.colorFixed||'#4ade80', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[] };
+    const presets = [
+      { key: 'has_offline',  label: 'Batteria non raggiungibile' },
+      { key: 'has_critical', label: 'Batteria critica' },
+      { key: 'has_low',      label: 'Batteria bassa' },
+      { key: 'all_ok',       label: 'Tutte le batterie OK' },
+      { key: 'fallback',     label: 'Sempre (fallback)' },
+    ];
 
     const ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;z-index:100001;display:flex;align-items:flex-end;background:rgba(0,0,0,.78);backdrop-filter:blur(7px);font-family:system-ui,sans-serif';
@@ -317,7 +324,7 @@
         </div>
         <div style="font-size:9px;color:#fff;margin-bottom:14px">Le entità <b>unavailable</b> o <b>unknown</b> vengono sempre segnalate come offline</div>
 
-        ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg) : ''}
+        ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg, presets) : ''}
         <div style="height:6px"></div>
       </div>
 
@@ -328,7 +335,7 @@
     </div>`;
 
     const _fcr = window.FratechColorRules;
-    if (_fcr) _fcr.attach(ov.querySelector('#fcr-section'), () => { colorCfg = _fcr.read(ov.querySelector('#fcr-section')) || colorCfg; });
+    if (_fcr) _fcr.attach(ov.querySelector('#fcr-section'), presets, () => { colorCfg = _fcr.read(ov.querySelector('#fcr-section')) || colorCfg; });
     ov.querySelector('#bcfg-close').onclick  = closeOv;
     ov.querySelector('#bcfg-cancel').onclick = closeOv;
     ov.onclick = ev => { if (ev.target === ov) closeOv(); };

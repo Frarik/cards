@@ -107,7 +107,7 @@
       icon: iconHtml(_dynIcon(c.icon||'🚪', anyOpen)),
       label: c.label || 'Porte',
       value: ents.length ? `${active}/${ents.length}` : '—',
-      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, h)) || (active > 0 ? col : '#fff'),
+      color: (window.FratechColorRules && window.FratechColorRules.evalColor(cfg, { any_open: active > 0, all_closed: active === 0 })) || (active > 0 ? col : '#fff'),
     };
   }
 
@@ -263,6 +263,11 @@
   function configure(cfg, _el, onSave) {
     const c = loadCfg(cfg);
     let colorCfg = { mode: c.colorMode||'auto', fixed: c.colorFixed||c.color||'#fb923c', rules: Array.isArray(c.colorRules)?JSON.parse(JSON.stringify(c.colorRules)):[] };
+    const presets = [
+      { key: 'any_open',   label: 'Almeno una porta aperta' },
+      { key: 'all_closed', label: 'Tutte le porte chiuse' },
+      { key: 'fallback',   label: 'Sempre (fallback)' },
+    ];
     const ents = JSON.parse(JSON.stringify(Array.isArray(c.entities) ? c.entities : []));
     const h = H();
     let expandedAuto = new Set();
@@ -413,7 +418,7 @@
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin:${ents.length?'12px':0} 0 6px">Aggiungi entità</div>
           <input id="gpcfg-add-entity" class="gpcinp" placeholder="🔍 Inizia a scrivere il nome dell'entità…" autocomplete="off">
           <div style="font-size:9px;color:#fff;margin-top:5px">Mostra tutte le entità — binary_sensor.* compaiono per prime</div>
-          ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg) : ''}
+          ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg, presets) : ''}
           <div style="height:16px"></div>
         </div>
 
@@ -435,7 +440,7 @@
       ov.innerHTML = renderForm();
       _firstRender = false;
       const _fcr = window.FratechColorRules;
-      if (_fcr) _fcr.attach(ov.querySelector('#fcr-section'), () => { colorCfg = _fcr.read(ov.querySelector('#fcr-section')) || colorCfg; });
+      if (_fcr) _fcr.attach(ov.querySelector('#fcr-section'), presets, () => { colorCfg = _fcr.read(ov.querySelector('#fcr-section')) || colorCfg; });
 
       const nb = ov.querySelector('#gpcfg-body');
       if (nb && savedBody > 0) nb.scrollTop = savedBody;
