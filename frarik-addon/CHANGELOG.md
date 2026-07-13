@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.0.52 — 2026-07-13
+
+### feat(distintivi): GruppoCalendario v2.0 + GruppoScadenze v2.0 — redesign completo
+
+**GruppoCalendario v2.0:**
+- Chip: mostra eventi del giorno più vicino (conteggio + colore: verde/>5gg, arancio/≤4gg, rosso/oggi-attivo)
+- Popup: fetch 7 giorni via `callApi GET /api/calendars/{id}?start=...&end=...`, raggruppamento per giorno con header colorato e contatore
+- Ogni evento mostra: orario, titolo, nome calendario (colorato), location se presente
+- mount() con spinner loading → fetch asincrona → risultati, poll ogni 5 minuti
+
+**GruppoScadenze v2.0:**
+- Chip: mostra giorni della scadenza più urgente ("SCADUTO", "OGGI", "DOMANI", "3gg") con colore dinamico
+- Popup: clessidra animata per ogni voce, badge giorni, visualizzazione `costo_previsto` in EUR
+- Soglie: ≤0gg=scaduto (rosso), 1-10gg=urgente (arancio), 11-30gg=in arrivo (arancio), >30gg=ok (verde)
+- Priorità lettura giorni: `giorni_mancanti` (int diretto) → `date_attr` config → attributi standard → state
+- Display name: usa `state` se testo leggibile (es. nome scadenza), altrimenti `friendly_name`
+
 ## 2.0.51 — 2026-07-13
 
 ### fix(notifiche): PKG nuovo → tab pkg, PKG aggiornato → tab updates
