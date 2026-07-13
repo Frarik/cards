@@ -1,4 +1,4 @@
-/* frarik-version: 1.1 */
+/* frarik-version: 1.2 */
 /**
  * GruppoAllagamento.js — Distintivo FratechStore v1.1
  * Chip sensori allagamento/umidità — verde/blu se asciutto, rosso animato se allagamento
@@ -294,7 +294,17 @@
   }
 
   /* ─── mount ─── */
+  function _hideSubtitle(el) {
+    try {
+      const hdr = el.previousElementSibling; if (!hdr) return;
+      const textWrap = hdr.children && hdr.children[1]; if (!textWrap) return;
+      const subEl = textWrap.children && textWrap.children[1]; if (!subEl) return;
+      subEl.style.display = 'none';
+    } catch(e) {}
+  }
+
   function mount(cfg, rawHass, el) {
+    setTimeout(() => _hideSubtitle(el), 0);
     if (el._gaaPoll) return;
     el._gaaPoll = setInterval(() => {
       if (!el.isConnected) { clearInterval(el._gaaPoll); delete el._gaaPoll; return; }
@@ -302,6 +312,7 @@
         const h = H(); if (!h) return;
         const sp = el.parentElement, st = sp ? sp.scrollTop : 0;
         el.innerHTML = render(cfg, h);
+        _hideSubtitle(el);
         if (sp && st > 0) sp.scrollTop = st;
       } catch(e) {}
     }, 1500);
@@ -524,7 +535,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Allagamento', icon: 'mdi:water-alert',
     desc: 'Chip sensori allagamento. Chip blu/verde = asciutto, rosso pulsante = allarme. Popup con vista gruppo + sensori individuali.',
-    version: '1.1', isDistintivo: true,
+    version: '1.2', isDistintivo: true,
     defaultCfg: { label: 'Allagamento', icon: 'mdi:water-alert', color: '#38bdf8', pk_group: '', entities: [] },
     chip, watchEntities, render, mount, update, configure,
   };

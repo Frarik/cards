@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.44 — 2026-07-13
+
+### fix(GruppoAllagamento): v1.2 — nasconde sottotitolo popup
+
+- Aggiunto `_hideSubtitle()` in mount(): nasconde `textWrap.children[1]` nel header popup del framework (stesso pattern di GruppoPorte)
+
 ## 2.0.43 — 2026-07-13
 
 ### feat(GruppoAllagamento): v1.1 — pk_group, SVG animati, chip dinamico
