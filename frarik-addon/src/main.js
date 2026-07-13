@@ -1840,10 +1840,10 @@ async function _ghCheck(force){
       const _kindIco=_isDist?'🏷️':_isChip?'🔹':'⚡';
       const _kindArt=_isDist||_isChip?'o':'a';
       if(!g.shas[f.name]){
-        _ntfPushLog('➕ Nuov'+_kindArt+' '+_kindLabel, 'È present'+_kindArt+' un'+(_isDist||_isChip?'':'a')+' nuov'+_kindArt+' '+_kindLabel+' «'+nm+'» — premi ✓ per aprire lo store.', _kindIco, 'gh:'+_fp);
+        _ntfPushLog('➕ Nuov'+_kindArt+' '+_kindLabel, 'È present'+_kindArt+' un'+(_isDist||_isChip?'':'a')+' nuov'+_kindArt+' '+_kindLabel+' «'+nm+'» — premi ✓ per aprire lo store.', _kindIco, 'gh-new:'+_fp);
       } else {
         const oldV=_ghFileVersion(g, f.name);
-        _ntfPushLog('🔄 '+_kindLabel.charAt(0).toUpperCase()+_kindLabel.slice(1)+' aggiornata', 'Il '+_kindLabel+' «'+nm+'» è stato aggiornato su GitHub (avevi la v'+oldV+') — premi ✓ per aprire lo store.', '🔄', 'gh:'+_fp);
+        _ntfPushLog('🔄 '+_kindLabel.charAt(0).toUpperCase()+_kindLabel.slice(1)+' aggiornata', 'Il '+_kindLabel+' «'+nm+'» è stato aggiornato su GitHub (avevi la v'+oldV+') — premi ✓ per aprire lo store e aggiornarlo.', '🔄', 'gh-upd:'+_fp);
       }
       g.notifiedShas[f.name]=f.sha; any=true;
     });
@@ -2014,9 +2014,16 @@ function _ghAskInstall(fileName){
    Il tab viene scelto in base alla cartella del file (card-js, card-chips, card-distintivi…). */
 function _ntfHandleAction(action){
   if(!action) return;
-  if(action==='gh' || action.indexOf('gh:')===0){
+  // aggiornamenti → sempre tab "updates" (qualsiasi tipo)
+  if(action.indexOf('gh-upd:')===0){
     try{ closeNotifCenter(); }catch(e){}
-    const _fp=action.slice(3); // es. 'card-js/Lavatrice.js' o 'Lavatrice.js' (legacy)
+    try{ openGhStore(); setTimeout(()=>{ try{ ghStoreTab('updates'); }catch(e){} }, 60); }catch(e){}
+    return;
+  }
+  // nuovi → tab specifico del tipo
+  if(action==='gh' || action.indexOf('gh:')===0 || action.indexOf('gh-new:')===0){
+    try{ closeNotifCenter(); }catch(e){}
+    const _fp = action.indexOf('gh-new:')===0 ? action.slice(7) : action.slice(3);
     const _tab=_fp.startsWith('card-chips/')      ? 'chips-non-installate'
               :_fp.startsWith('card-distintivi/') ? 'distintivi-non-installate'
               :_fp.startsWith('card-yaml/')        ? 'yaml'

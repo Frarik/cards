@@ -37,20 +37,32 @@ export function _ntfClearPkg(fileName){
   _ntfSaveLog(); _ntfUpdateBell(); _ntfRenderIfOpen();
 }
 
+/* Helper: estrae il path dal campo action (gestisce tutti i prefissi: gh:, gh-new:, gh-upd:) */
+function _ghActionPath(a){
+  if(!a) return null;
+  if(a.indexOf('gh-new:')===0) return a.slice(7);
+  if(a.indexOf('gh-upd:')===0) return a.slice(7);
+  if(a.indexOf('gh:')===0)     return a.slice(3);
+  return null;
+}
+function _isGhAction(a){ return a==='gh'||a.indexOf('gh:')===0||a.indexOf('gh-new:')===0||a.indexOf('gh-upd:')===0; }
+
 /* Rimuove le notifiche relative alle card GitHub.
-   - senza argomenti: tutte (action 'gh' legacy + 'gh:<file>')
-   - con filePath: solo quella voce (accetta sia 'card-js/Lavatrice.js' che 'Lavatrice.js' legacy) */
+   - senza argomenti: tutte le notifiche gh
+   - con filePath: solo quella voce (gestisce tutti i prefissi e il vecchio formato solo-filename) */
 export function _ntfClearGh(filePath){
   _ntfLog = _ntfLog.filter(n=>{
     if(!n.action) return true;
+    if(!_isGhAction(n.action)) return true;
     if(n.action==='gh') return false;
     if(filePath){
-      if(n.action === 'gh:'+filePath) return false;         // match esatto (nuovo formato path)
+      const _np = _ghActionPath(n.action);
+      if(_np === filePath) return false;                        // match esatto (path completo)
       const _base = filePath.includes('/') ? filePath.split('/').pop() : filePath;
-      if(n.action === 'gh:'+_base) return false;            // match su vecchie notifiche (solo filename)
+      if(_np === _base || _np === filePath) return false;       // match filename legacy
       return true;
     }
-    return n.action.indexOf('gh:') !== 0;
+    return false; // senza arg: rimuovi tutte
   });
   _ntfSaveLog(); _ntfUpdateBell(); _ntfRenderIfOpen();
 }
@@ -59,15 +71,17 @@ export function _ntfClearGh(filePath){
    le altre (card ormai installate/aggiornate). Una sola passata, niente flicker.
    keepFiles può contenere path completi ('card-js/Lavatrice.js') o solo filename (legacy). */
 export function _ntfClearGhExcept(keepFiles){
-  const keep = new Set((keepFiles||[]).map(n=>'gh:'+n));
-  // set dei soli filename per gestire notifiche nel vecchio formato ('gh:Lavatrice.js')
-  const keepBase = new Set((keepFiles||[]).map(n=>{ const p=String(n); return 'gh:'+(p.includes('/')?p.split('/').pop():p); }));
+  // set di tutti i path/filename da conservare
+  const keepPaths = new Set(keepFiles||[]);
+  const keepBase  = new Set((keepFiles||[]).map(p=>{ const s=String(p); return s.includes('/')?s.split('/').pop():s; }));
   let changed=false;
   const next = _ntfLog.filter(n=>{
     if(!n.action) return true;
-    if(n.action==='gh'){ changed=true; return false; }                       // formato legacy
-    if(n.action.indexOf('gh:')===0 && !keep.has(n.action) && !keepBase.has(n.action)){ changed=true; return false; }
-    return true;
+    if(!_isGhAction(n.action)) return true;
+    if(n.action==='gh'){ changed=true; return false; }   // formato legacy senza file
+    const _np = _ghActionPath(n.action);
+    if(_np && (keepPaths.has(_np) || keepBase.has(_np))) return true;
+    changed=true; return false;
   });
   if(changed){ _ntfLog=next; _ntfSaveLog(); _ntfUpdateBell(); _ntfRenderIfOpen(); }
 }

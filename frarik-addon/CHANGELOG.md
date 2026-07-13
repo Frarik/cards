@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.50 — 2026-07-13
+
+### fix(notifiche): nuovi → tab tipo specifico, aggiornamenti → tab "updates"
+
+- Action string differenziata: `gh-new:folder/file.js` per nuovi, `gh-upd:folder/file.js` per aggiornamenti
+- `_ntfHandleAction`: `gh-upd:*` → sempre tab `updates`; `gh-new:*` → tab specifico del tipo (card/chip/distintivi/…)
+- `_ntfClearGh` e `_ntfClearGhExcept` refactored con helper `_ghActionPath`/`_isGhAction` per gestire tutti i prefissi (gh:, gh-new:, gh-upd:) + backward compat legacy
+
 ## 2.0.49 — 2026-07-13
 
 ### fix(notifiche): navigazione al tab corretto in base al tipo di contenuto
