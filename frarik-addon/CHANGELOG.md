@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.45 — 2026-07-13
+
+### feat(GruppoPresenza): v1.1 — SVG persona ridisegnata, sottotitolo nascosto
+
+- **SVG persona ridisegnata**: silhouette anatomica reale (testa+collo+torso+braccia+gambe) con gradiente
+  - Stato libero: silhouette grigio-ardesia spenta, nessuna animazione
+  - Stato rilevato: persona ambra (#f59e0b) luminosa + 3 anelli radar espandenti centrati sul corpo + 3 particelle di moto che si allontanano + glow drop-shadow pulsante
+- **Popup**: rimossa sezione summary (badge conteggio); riga di sfondo ambra tenue quando rilevato
+- **mount()**: aggiunto `_hideSubtitle()` — nasconde sottotitolo framework nel header popup
+
 ## 2.0.44 — 2026-07-13
 
 ### fix(GruppoAllagamento): v1.2 — nasconde sottotitolo popup
