@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.40 — 2026-07-13
+
+### feat(deumidificatore-card): ventola, conto alla rovescia, tutte le modalità v1.4
+
+- Aggiunto controllo **Ventola** (Bassa/Alta) da `attrs.fan_modes` + `attrs.fan_mode` → chiama `humidifier.set_fan_mode`
+- Aggiunto display **Conto alla rovescia** da `attrs.timer_time_remaining`
+- Rimosso limite a 4 modalità (`slice(0,4)` eliminato) — ora mostra tutte inclusa "Lavanderia"
+- Ventola attiva mostrata anche nella sezione info hero (chip colorato)
+- Aggiornata firma update() per includere `fan_mode` e `timer_time_remaining`
+
 ## 2.0.39 — 2026-07-13
 
 ### fix(vmc-card): aggiunto tasto portata "Max" 100% v1.4
