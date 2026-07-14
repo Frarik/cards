@@ -123,10 +123,12 @@ app.post('/api/frarik/config', async (req, res) => {
   if (!lic.valid) { res.status(403).json({ error: 'Licenza non valida o revocata' }); return; }
   try {
     const txt = (await readBody(req)).toString('utf8');
-    JSON.parse(txt); // valida: se non è JSON valido → 400 (non sovrascrive il file buono)
+    const data = JSON.parse(txt); // valida: se non è JSON valido → 400
+    data._ts = Date.now(); // timestamp assegnato dal server → elimina clock skew tra dispositivi
+    const out = JSON.stringify(data);
     fs.mkdirSync(CFG_DIR, { recursive: true });
-    fs.writeFileSync(CFG_FILE, txt);
-    res.json({ ok: true });
+    fs.writeFileSync(CFG_FILE, out);
+    res.json({ ok: true, _ts: data._ts }); // restituisce il ts canonico al client
   } catch (e) {
     res.status(400).json({ ok: false, error: String(e && e.message || e) });
   }

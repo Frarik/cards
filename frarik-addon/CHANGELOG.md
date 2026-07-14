@@ -1,5 +1,24 @@
 # Changelog
 
+## 2.0.60 — 2026-07-14
+
+### fix(sync): timestamp canonico lato server — elimina clock skew tra dispositivi
+
+**Causa radice del problema di sincronizzazione**: il timestamp `_ts` veniva assegnato da ogni
+dispositivo con `Date.now()` locale. Se il cell aveva l'orologio anche solo qualche secondo avanti
+rispetto al PC, i suoi `_ts` erano sempre più alti → le sue modifiche "vincevano" sempre nel
+confronto, e il sistema continuava a sovrascrivere la config del PC con quella del cell.
+
+**Fix lato server** (`server.js`):
+- Il POST `/api/frarik/config` ora assegna `_ts = Date.now()` **server-side** prima di salvare
+- Il `_ts` canonico viene restituito nella risposta `{ ok: true, _ts: ... }`
+
+**Fix lato client** (`main.js`):
+- `_haSaveCfg()` legge il `_ts` dalla risposta del server e aggiorna `cfg._ts` + localStorage
+- Da questo momento tutti i confronti usano il clock del server, non quello del dispositivo → nessuno sfasamento possibile
+
+---
+
 ## 2.0.59 — 2026-07-14
 
 ### fix(sync): protezione perdita config remota + refresh badge al sync + hint watt distintivo energia

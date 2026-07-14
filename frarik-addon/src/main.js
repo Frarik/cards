@@ -1285,16 +1285,14 @@ function _haSaveCfg(manual){
     const _licHdr=localStorage.getItem(LIC_KEY)||'';
     fetch(ADDON_BASE+'/api/frarik/config', {
       method:'POST', headers:{'Content-Type':'application/json', 'X-Frarik-Key':_licHdr}, body:JSON.stringify(payload)
-    }).then(r=>{
-      if(r.ok){
-        if(manual){
-          const np=(cfg.pages||[]).length, nj=(typeof _jsStoreList==='function'?_jsStoreList().length:0);
-          showToast('💾 Plancia salvata nell\'add-on — '+np+' pagine, '+nj+' card');
-        }
-      } else if(manual){
-        showToast('⚠️ Salvataggio non riuscito ('+r.status+')');
+    }).then(r=>r.ok?r.json():Promise.reject(r.status)).then(resp=>{
+      // Il server assegna il _ts canonico → adottarlo elimina il clock skew tra dispositivi
+      if(resp&&resp._ts){ cfg._ts=resp._ts; _saveCfgLocalOnly(); }
+      if(manual){
+        const np=(cfg.pages||[]).length, nj=(typeof _jsStoreList==='function'?_jsStoreList().length:0);
+        showToast('💾 Plancia salvata nell\'add-on — '+np+' pagine, '+nj+' card');
       }
-    }).catch(()=>{ if(manual) showToast('⚠️ Backend non raggiungibile'); });
+    }).catch(e=>{ if(manual) showToast('⚠️ Salvataggio non riuscito ('+(typeof e==='number'?e:'network')+')'); });
     return true;
   }catch(e){ return false; }
 }
