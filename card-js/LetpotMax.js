@@ -226,16 +226,8 @@
     { key:'refillErrorEntity',    label:'🔄 Errore ricarica (binary)',   domains:['binary_sensor'] },
   ];
 
-  function renderConfig(card, rawHass) {
-    const h = liveH(rawHass) || H();
+  function renderConfig(card) {
     const ent = getEnt(card);
-    const allKeys = h ? Object.keys(h.states).sort() : [];
-    function opts(domains, cur) {
-      const filtered = allKeys.filter(k => domains.some(d => k.startsWith(d+'.')));
-      return `<option value="">— nessuna —</option>` +
-        filtered.map(k=>`<option value="${eh(k)}"${k===cur?' selected':''}>${eh(k)}</option>`).join('');
-    }
-
     return `<div style="background:linear-gradient(165deg,#04101e 0%,#081828 50%,#050d18 100%);border-radius:14px;overflow:hidden;color:#fff;font-family:inherit;user-select:none;height:100%;display:flex;flex-direction:column">
 
   <!-- TAB BAR -->
@@ -249,17 +241,19 @@
     <span style="font-size:18px">🌿</span>
     <div>
       <div style="font-size:12px;font-weight:800">${eh(card.label||'LetPot Max')} — Impostazioni</div>
-      <div style="font-size:9px;color:rgba(255,255,255,.35)">Seleziona le entità da Home Assistant</div>
+      <div style="font-size:9px;color:rgba(255,255,255,.35)">Scrivi il nome dell'entità — i suggerimenti appaiono mentre digiti</div>
     </div>
   </div>
 
   <!-- FORM ENTITÀ -->
-  <div style="flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:7px;scrollbar-width:thin">
-    ${FIELDS.map(f=>`<div>
+  <div style="flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px;scrollbar-width:thin">
+    ${FIELDS.map(f=>`<div style="position:relative">
       <div style="font-size:9px;color:rgba(255,255,255,.5);margin-bottom:3px;font-weight:600">${f.label}</div>
-      <select id="lp-sel-${f.key}" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:#0d1a2e;color:#fff;font-size:11px;box-sizing:border-box;outline:none;cursor:pointer">
-        ${opts(f.domains, ent[f.key]||'')}
-      </select>
+      <input data-lp-field="${f.key}" data-lp-domains="${f.domains.join(',')}" value="${eh(ent[f.key]||'')}"
+        placeholder="${f.domains[0]}.*"
+        autocomplete="off" spellcheck="false"
+        style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:#0d1a2e;color:#fff;font-size:11px;box-sizing:border-box;outline:none">
+      <div data-lp-list="${f.key}" style="display:none;position:absolute;left:0;right:0;top:100%;background:#0d1a2e;border:1px solid rgba(129,140,248,.35);border-top:none;border-radius:0 0 8px 8px;max-height:140px;overflow-y:auto;z-index:500;scrollbar-width:thin"></div>
     </div>`).join('')}
   </div>
 
@@ -271,29 +265,101 @@
 </div>`;
   }
 
+  /* ── Autocomplete helpers ── */
+  function _getSuggestions(domains, typed) {
+    const h = H(); if(!h) return [];
+    const q = typed.toLowerCase();
+    return Object.keys(h.states)
+      .filter(k => domains.some(d => k.startsWith(d+'.')) && (!q || k.toLowerCase().includes(q)))
+      .sort((a,b) => {
+        // exact prefix match prima
+        const ap = a.toLowerCase().startsWith(q), bp = b.toLowerCase().startsWith(q);
+        if(ap && !bp) return -1; if(!ap && bp) return 1;
+        return a.localeCompare(b);
+      })
+      .slice(0, 12);
+  }
+  function _showList(el, key, items) {
+    const list = el.querySelector(`[data-lp-list="${key}"]`); if(!list) return;
+    if(!items.length) { list.style.display='none'; list.innerHTML=''; return; }
+    list.innerHTML = items.map(s=>`<div data-lp-sugg="${eh(s)}" style="padding:7px 10px;font-size:11px;color:#e2e8f0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(s)}</div>`).join('');
+    list.style.display = 'block';
+  }
+  function _hideList(el, key) {
+    const list = el.querySelector(`[data-lp-list="${key}"]`); if(list){ list.style.display='none'; }
+  }
+
   /* ── MOUNT — delegated events, sopravvivono al re-render dei figli ── */
   function _mountHandlers(card, el) {
     if(_mounted.has(el)) return;
     _mounted.add(el);
+
+    /* Click: tab switch / suggestion click / save */
     el.addEventListener('click', function(e) {
+      // Tab switch
       const tab = e.target.closest('[data-lp-tab]');
       if(tab) {
         _tab[card.id] = tab.dataset.lpTab;
         el.innerHTML = render(card, window.frarikHass?.() || null);
         return;
       }
+      // Suggestion click
+      const sugg = e.target.closest('[data-lp-sugg]');
+      if(sugg) {
+        const val = sugg.dataset.lpSugg;
+        const list = sugg.closest('[data-lp-list]');
+        const key = list?.dataset.lpList;
+        const inp = key ? el.querySelector(`[data-lp-field="${key}"]`) : null;
+        if(inp) inp.value = val;
+        if(list) list.style.display = 'none';
+        return;
+      }
+      // Save
       const save = e.target.closest('[data-lp-save]');
       if(save) {
         const newEnt = {};
         FIELDS.forEach(f => {
-          const sel = el.querySelector('#lp-sel-'+f.key);
-          if(sel) newEnt[f.key] = sel.value.trim();
+          const inp = el.querySelector(`[data-lp-field="${f.key}"]`);
+          if(inp) newEnt[f.key] = inp.value.trim();
         });
         saveEnt(card, newEnt);
         _tab[card.id] = 'main';
         el.innerHTML = render(card, window.frarikHass?.() || null);
         try { window.showToast?.('✅ Impostazioni LetPot Max salvate'); } catch(_) {}
       }
+    });
+
+    /* Input: filtra suggerimenti mentre si digita */
+    el.addEventListener('input', function(e) {
+      const inp = e.target.closest('[data-lp-field]'); if(!inp) return;
+      const key = inp.dataset.lpField;
+      const domains = (inp.dataset.lpDomains||'').split(',').filter(Boolean);
+      _showList(el, key, _getSuggestions(domains, inp.value));
+    });
+
+    /* Focus: mostra subito i suggerimenti filtrati per dominio */
+    el.addEventListener('focusin', function(e) {
+      const inp = e.target.closest('[data-lp-field]'); if(!inp) return;
+      const key = inp.dataset.lpField;
+      const domains = (inp.dataset.lpDomains||'').split(',').filter(Boolean);
+      _showList(el, key, _getSuggestions(domains, inp.value));
+    });
+
+    /* Blur: nascondi con delay (serve tempo per il click sul suggerimento) */
+    el.addEventListener('focusout', function(e) {
+      const inp = e.target.closest('[data-lp-field]'); if(!inp) return;
+      const key = inp.dataset.lpField;
+      setTimeout(() => _hideList(el, key), 180);
+    });
+
+    /* Hover sui suggerimenti: highlight */
+    el.addEventListener('mouseover', function(e) {
+      const sugg = e.target.closest('[data-lp-sugg]'); if(!sugg) return;
+      sugg.style.background = 'rgba(129,140,248,.15)';
+    });
+    el.addEventListener('mouseout', function(e) {
+      const sugg = e.target.closest('[data-lp-sugg]'); if(!sugg) return;
+      sugg.style.background = '';
     });
   }
 

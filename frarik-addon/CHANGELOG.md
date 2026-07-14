@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.0.64 — 2026-07-14
+
+### feat(card): LetPot Max — autocomplete entità live negli input
+
+- Sostituiti i `<select>` con `<input>` + dropdown autocomplete live
+- Mentre si digita filtra le entità HA per dominio E per testo inserito (incluso testo a metà nome)
+- Al focus mostra subito tutti i suggerimenti per quel dominio
+- Click sul suggerimento compila l'input e chiude il dropdown
+- Blur nasconde il dropdown con delay di 180ms (tempo per il click)
+- Hover con highlight viola sui suggerimenti
+- I suggerimenti si ordinano: prima i match con prefisso esatto, poi alfabetici
+
+---
+
 ## 2.0.63 — 2026-07-14
 
 ### feat(card): LetPot Max — tab Impostazioni interno + fix re-render animazioni
