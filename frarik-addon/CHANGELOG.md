@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.0.71 — 2026-07-15
+
+### feat(card): LetPot Max v4.1 — fascio luminoso reale, pompa dentro l'acqua con ricircolo, luce real-time
+
+- **Fascio luminoso reale (light beam)**: cono trapezoidale `clip-path:polygon(22% 0%,78% 0%,98% 100%,2% 100%)` con gradiente viola/porpora che proietta dalla base del pannello LED verso le piante; 4 raggi sottili angolati (skewX) sovrapposti; alone ambientale radiale sulle piante; glow spesso 18px che si riversa dalla base del pannello verso il basso
+- **Riflesso luce sull'acqua**: quando la luce è ON, 4 "shimmer spots" animati (`lp-shimmer`) sulla superficie dell'acqua con colori viola (`rgba(195,60,255,...)`)  
+- **Pompa disegnata dentro l'acqua**: corpo pompa (`PUMP` label + impeller ⚙ rotante) posizionato `position:absolute;bottom:3px` dentro il serbatoio d'acqua; tubo di mandata da 5px sopra la pompa con gocce animate che salgono (`lp-flowUp`); inlet/outlet pipe laterali; glow quando attiva
+- **Ricircolo acqua visivo**: lato DX = acqua che sale (pompa→pod) con 3 segmenti `lp-flowUp` a delay scaglionati; lato SX = acqua che scende (pod→serbatoio, ritorno per gravità) con 3 segmenti `lp-dropDown`
+- **Nuovi keyframes**: `lp-flowUp` (sale da 14px→-2px, opacity 0→.75→0), `lp-dropDown` (scende da -2px→14px), `lp-shimmer` (opacity .55→1→.55 per riflessi)
+- **Luce real-time**: `_lastOn` tracking in `update()` — quando `on` (lightActive&&power) cambia, re-render completo immediato; l'utente vede il pannello LED accendersi/spegnersi e il fascio apparire/scomparire senza delay
+- **Re-render unificato**: `stageDiff||onDiff` → full re-render in un unico check, poi targeted updates per tutti gli altri stati
+
+---
+
 ## 2.0.70 — 2026-07-15
 
 ### feat(card): LetPot Max v4.0 — layout fedele al device reale (palo telescopico + LCD + 21 pod)
