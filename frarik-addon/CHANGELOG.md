@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.0.69 — 2026-07-14
+
+### fix(card): LetPot Max — riscrittura layout, fix timer reale, fix luminosità, fix chips, testo bianco
+
+- **Pannello LED riposizionato**: ora è un pannello piatto orizzontale con due bracci laterali che lo collegano al tank, visivamente identico alla foto del LetPot Max; non più barra in cima alla card
+- **Bracci laterali**: due colonne metalliche (`#777→#444` gradient) collegano il pannello LED al corpo del tank, con le piante che crescono nello spazio centrale tra i bracci
+- **Timer 30min in tempo reale**: `setInterval` di 1 secondo aggiorna la barra e il label MM:SS ogni secondo senza aspettare aggiornamenti HA
+- **Luminosità fix**: local state `_localBr` per 5 secondi dopo ogni modifica; i bottoni [−] e [+] accumulano correttamente i valori senza swap; `update()` non sovrascrive il valore locale finché HA non ha confermato
+- **Pompa basata sul sensore**: l'animazione (⚙️ rotante, ripple, bolle, testo POMPA ATTIVA/FERMA) è controllata dallo stato di `pumpEntity` in tempo reale; se `pumpEntity` è uno switch, l'area pompa è cliccabile
+- **Chips Auto e Ciclo in tempo reale**: local state `_localSw` (5 secondi) per il feedback ottimistico istantaneo; update() usa lo stesso stato locale per evitare flip-flop visivi
+- **`doToggle()` e `localSwState()`**: helper centralizzati per tutti i toggle switch con pending state tracking
+- **Tutto il testo `#fff`**: rimossi TUTTI i `rgba(255,255,255,.X)` dai testi; label secondary con font-size ridotto ma colore pieno
+- **`data-lp-update="xxx"`** su tutti gli elementi aggiornabili: selezione unambigua in `update()` separata dai selettori di click (`data-lp-action`)
+- Ristrutturato `update()` per usare i nuovi selettori `data-lp-update` con funzioni helper `_updateChip()` e `_updateAlert()`
+
+---
+
 ## 2.0.68 — 2026-07-14
 
 ### feat(card): LetPot Max — controlli interattivi diretti sulla card
