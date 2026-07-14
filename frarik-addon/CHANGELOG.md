@@ -1,5 +1,24 @@
 # Changelog
 
+## 2.0.61 — 2026-07-14
+
+### feat(card): nuovo distintivo LetPot Max — sistema idroponico animato
+
+- Distintivo `letpot-max` con visualizzazione realistica del sistema idroponico
+- LED grow light bar animata (pulsazione viola/rossa quando luce attiva)
+- 5 piante SVG con animazione di ondeggiamento (sway) indipendente
+- Tank dell'acqua con onda animata SVG e livello dinamico (riflette water level %)
+- Bolle CSS animate quando la pompa è in funzione
+- Stats in tempo reale: livello acqua, temperatura, età piante
+- Diagnostica alert: nutrienti, acqua bassa, errore ricarica
+- Stato pompa, auto mode, pump cycling
+- Orario luce (accensione/spegnimento) con rilevamento automatico se luce è ON
+- chip() per il badge bar con colore dinamico (verde/arancio/rosso in base agli alert)
+- configure() con tutti i 15 entity ID configurabili
+- preview() con dati mock per anteprima Store
+
+---
+
 ## 2.0.60 — 2026-07-14
 
 ### fix(sync): timestamp canonico lato server — elimina clock skew tra dispositivi
