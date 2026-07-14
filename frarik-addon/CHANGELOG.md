@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.0.63 — 2026-07-14
+
+### feat(card): LetPot Max — tab Impostazioni interno + fix re-render animazioni
+
+- Tab interno alla card: 📊 Dashboard / ⚙️ Impostazioni (nessun popup esterno)
+- Tab Impostazioni mostra select dropdown per ogni entità, popolati automaticamente dalle entità HA disponibili filtrate per dominio (switch, sensor, binary_sensor, time, number, select)
+- Config salvata in localStorage (chiave `frarik_letpot_<cardId>`), sincronizzata tra dispositivi dal sistema Frarik come tutte le altre card
+- `configure(card, el)` apre il tab Impostazioni direttamente dentro la card (accessibile anche dal menu modifica)
+- Fix re-render: `update()` ora aggiorna i valori in modo mirato via `data-lp-*` senza ricreare il DOM — le animazioni (onda acqua, piante, LED, bolle) non si interrompono mai più
+- Stili CSS `@keyframes` iniettati una volta sola nel `<head>` con id `lp-kf`
+- Event delegation su `el` in `mount()` — i handler sopravvivono al cambio tab
+
+---
+
 ## 2.0.62 — 2026-07-14
 
 ### refactor(card): LetPot Max convertita da distintivo a card dashboard completa
