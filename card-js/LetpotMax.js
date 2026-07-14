@@ -10,7 +10,6 @@
   function eh(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function isOn(s) { return s==='on'||s==='true'||s==='1'; }
 
-  const _tab = {};      // cardId → 'main'|'config'
   const _mounted = new WeakSet();
 
   function getEnt(card) {
@@ -54,7 +53,7 @@
              tempCol,waterCol,tankH,waterH };
   }
 
-  /* ── Stili (iniettati una volta sola nel <head>) ── */
+  /* ── Stili animazioni iniettati nel <head> una sola volta ── */
   function injectStyles() {
     if(document.getElementById('lp-kf')) return;
     const s=document.createElement('style'); s.id='lp-kf';
@@ -68,7 +67,7 @@
     document.head.appendChild(s);
   }
 
-  /* ── SVG piante (statico, calcolato una volta) ── */
+  /* ── SVG piante ── */
   function plantSvg(h, delay) {
     const hh=Math.max(40,h);
     return `<svg width="32" height="${hh+10}" viewBox="0 0 36 ${hh+10}" style="animation:lp-sway ${2.5+delay*0.4}s ease-in-out ${delay*0.6}s infinite;transform-origin:18px ${hh+10}px;flex-shrink:0">
@@ -87,7 +86,6 @@
 
   /* ── RENDER DASHBOARD ── */
   function render(card, rawHass) {
-    if(_tab[card.id]==='config') return renderConfig(card, rawHass);
     const v=computeValues(card, rawHass);
     const { power,autoMode,pumpCycl,pumpRun,lightBr,lightOnT,lightOffT,lightModeS,
             lowWater,lowNutr,refillErr,waterPct,tempVal,plantsAge,lightActive,
@@ -102,14 +100,8 @@
 
     return `<div style="background:linear-gradient(165deg,#04101e 0%,#081828 50%,#050d18 100%);border-radius:14px;overflow:hidden;color:#fff;font-family:inherit;user-select:none;height:100%;display:flex;flex-direction:column">
 
-  <!-- TAB BAR -->
-  <div style="display:flex;gap:6px;padding:10px 12px 0;flex-shrink:0">
-    <button data-lp-tab="main" style="flex:1;padding:6px;border-radius:8px 8px 0 0;border:none;background:rgba(74,222,128,.12);border-bottom:2px solid #4ade80;color:#4ade80;font-size:11px;font-weight:700;cursor:pointer">📊 Dashboard</button>
-    <button data-lp-tab="config" style="flex:1;padding:6px;border-radius:8px 8px 0 0;border:none;background:rgba(255,255,255,.04);border-bottom:2px solid transparent;color:rgba(255,255,255,.4);font-size:11px;font-weight:600;cursor:pointer">⚙️ Impostazioni</button>
-  </div>
-
   <!-- HEADER -->
-  <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:linear-gradient(90deg,rgba(6,30,60,.7),rgba(4,15,30,.3));flex-shrink:0">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px 8px;background:linear-gradient(90deg,rgba(6,30,60,.7),rgba(4,15,30,.3));flex-shrink:0">
     <div style="display:flex;align-items:center;gap:8px">
       <div style="width:30px;height:30px;border-radius:8px;background:${power?'rgba(74,222,128,.15)':'rgba(255,255,255,.06)'};border:1px solid ${power?'rgba(74,222,128,.35)':'rgba(255,255,255,.1)'};display:flex;align-items:center;justify-content:center;font-size:16px">🌿</div>
       <div>
@@ -208,7 +200,79 @@
 </div>`;
   }
 
-  /* ── RENDER CONFIG TAB ── */
+  function mount(card, rawHass, el) {
+    injectStyles();
+    if(_mounted.has(el)) return;
+    _mounted.add(el);
+  }
+
+  /* ── UPDATE mirato — non ricrea il DOM, aggiorna solo i valori ── */
+  function update(card, rawHass, el) {
+    try {
+      const v = computeValues(card, rawHass);
+      const { power,autoMode,pumpCycl,pumpRun,lightBr,lightActive,
+              lowWater,lowNutr,refillErr,waterPct,tempVal,plantsAge,tempCol,waterCol,waterH } = v;
+      const q = s => el.querySelector(`[data-lp-${s}]`);
+
+      const fill=q('fill'); if(fill) fill.style.height=waterH+'px';
+      const wt=q('wtext'); if(wt){wt.textContent='💧 '+waterPct+'%';wt.style.color=waterCol;}
+      const tp=q('temp'); if(tp){tp.textContent='🌡️ '+tempVal.toFixed(1)+'°C';tp.style.color=tempCol;}
+      const ag=q('age'); if(ag) ag.textContent=plantsAge&&plantsAge!=='unknown'?`🌱 ${plantsAge}g`:'';
+      const pw=q('power'); if(pw){
+        pw.textContent=power?'● ATTIVO':'○ SPENTO'; pw.style.color=power?'#4ade80':'#f87171';
+        pw.style.background=power?'rgba(74,222,128,.15)':'rgba(248,113,113,.12)';
+        pw.style.borderColor=power?'rgba(74,222,128,.35)':'rgba(248,113,113,.3)';
+      }
+      const pm=q('pump'); if(pm){
+        pm.style.background=pumpRun&&power?'#4ade80':'#6b7280';
+        pm.style.animation=pumpRun&&power?'lp-pump 1s ease-in-out infinite':'';
+        pm.style.boxShadow=pumpRun&&power?'0 0 8px rgba(74,222,128,.7)':'';
+      }
+      const pmtxt=q('pumptxt'); if(pmtxt) pmtxt.textContent='POMPA '+(pumpRun&&power?'ON':'OFF');
+      [8,18,30,44,55,65,75,88].forEach((_,i)=>{
+        const b=el.querySelector(`[data-lp-bub="${i}"]`); if(b) b.style.display=pumpRun&&power?'block':'none';
+      });
+      LED_PATTERN.forEach((t,i)=>{
+        const d=el.querySelector(`[data-lp-led="${i}"]`); if(!d) return;
+        if(lightActive&&power){
+          d.style.opacity='';
+          d.style.boxShadow=`0 0 ${t==='white'?4:8}px 1px ${t==='red'?'rgba(255,50,80,.9)':t==='blue'?'rgba(80,50,255,.9)':'rgba(200,200,255,.7)'}`;
+          d.style.animation=`lp-glow ${1.5+(i%3)*0.3}s ease-in-out infinite`;
+        } else { d.style.opacity='0.25'; d.style.boxShadow=''; d.style.animation=''; }
+      });
+      const lb=q('ledbg'); if(lb){
+        lb.style.background=lightActive&&power?'linear-gradient(90deg,rgba(200,40,255,.08),rgba(255,40,100,.08),rgba(200,40,255,.08))':'transparent';
+        lb.style.animation=lightActive&&power?'lp-glow 2.5s ease-in-out infinite':'';
+      }
+      const lt=q('ledtxt'); if(lt) lt.textContent=(lightActive&&power?'☀️ ON':'🌑 OFF')+' · '+(v.lightBr!=='unknown'?v.lightBr+'/10':'—');
+      function updStat(attr, val, col) {
+        const c=q(attr); if(!c) return;
+        const d=c.querySelector('[style*="font-size:16px"]'); if(d){d.textContent=val; if(col) d.style.color=col;}
+      }
+      updStat('sw', waterPct+'%', waterCol);
+      updStat('st', tempVal.toFixed(1)+'°', tempCol);
+      updStat('sa', plantsAge!=='unknown'?plantsAge+'g':'—', null);
+      function updChip(attr, on) {
+        const c=q(attr); if(!c) return;
+        c.style.background=on?'rgba(74,222,128,.1)':'rgba(255,255,255,.04)';
+        c.style.borderColor=on?'rgba(74,222,128,.3)':'rgba(255,255,255,.08)';
+        const b=c.querySelector('b'); if(b){b.textContent=on?'ON':'OFF';b.style.color=on?'#4ade80':'rgba(255,255,255,.3)';}
+      }
+      updChip('auto', autoMode);
+      updChip('cycl', pumpCycl);
+      function updAlert(attr, bad) {
+        const a=q(attr); if(!a) return;
+        a.style.background=bad?'rgba(248,113,113,.12)':'rgba(74,222,128,.07)';
+        a.style.borderColor=bad?'rgba(248,113,113,.35)':'rgba(74,222,128,.18)';
+        const b=a.querySelector('[style*="font-weight:800"]'); if(b){b.textContent=bad?'⚠️ Alert':'✓ OK';b.style.color=bad?'#f87171':'#4ade80';}
+      }
+      updAlert('antr', lowNutr);
+      updAlert('awtr', lowWater);
+      updAlert('aref', refillErr);
+    } catch(e) {}
+  }
+
+  /* ── CONFIGURE — popup dal basso con input + autocomplete live ── */
   const FIELDS = [
     { key:'powerEntity',          label:'💡 Power (switch)',             domains:['switch'] },
     { key:'autoModeEntity',       label:'🤖 Auto mode (switch)',         domains:['switch'] },
@@ -226,236 +290,115 @@
     { key:'refillErrorEntity',    label:'🔄 Errore ricarica (binary)',   domains:['binary_sensor'] },
   ];
 
-  function renderConfig(card) {
+  function configure(card) {
     const ent = getEnt(card);
-    return `<div style="background:linear-gradient(165deg,#04101e 0%,#081828 50%,#050d18 100%);border-radius:14px;overflow:hidden;color:#fff;font-family:inherit;user-select:none;height:100%;display:flex;flex-direction:column">
+    const h = H();
+    const allEntities = h ? Object.keys(h.states).sort() : [];
 
-  <!-- TAB BAR -->
-  <div style="display:flex;gap:6px;padding:10px 12px 0;flex-shrink:0">
-    <button data-lp-tab="main" style="flex:1;padding:6px;border-radius:8px 8px 0 0;border:none;background:rgba(255,255,255,.04);border-bottom:2px solid transparent;color:rgba(255,255,255,.4);font-size:11px;font-weight:600;cursor:pointer">📊 Dashboard</button>
-    <button data-lp-tab="config" style="flex:1;padding:6px;border-radius:8px 8px 0 0;border:none;background:rgba(129,140,248,.12);border-bottom:2px solid #818cf8;color:#818cf8;font-size:11px;font-weight:700;cursor:pointer">⚙️ Impostazioni</button>
-  </div>
+    /* Overlay + bottom sheet */
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);display:flex;align-items:flex-end';
 
-  <!-- HEADER CONFIG -->
-  <div style="display:flex;align-items:center;gap:8px;padding:10px 12px 8px;background:rgba(0,0,0,.3);border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">
-    <span style="font-size:18px">🌿</span>
-    <div>
-      <div style="font-size:12px;font-weight:800">${eh(card.label||'LetPot Max')} — Impostazioni</div>
-      <div style="font-size:9px;color:rgba(255,255,255,.35)">Scrivi il nome dell'entità — i suggerimenti appaiono mentre digiti</div>
-    </div>
-  </div>
+    const sheet = document.createElement('div');
+    sheet.style.cssText = 'width:100%;max-height:88vh;display:flex;flex-direction:column;background:#0a0d1a;border:1px solid rgba(255,255,255,.1);border-bottom:none;border-radius:20px 20px 0 0;color:#fff;overflow:hidden';
+    ov.appendChild(sheet);
 
-  <!-- FORM ENTITÀ -->
-  <div style="flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px;scrollbar-width:thin">
-    ${FIELDS.map(f=>`<div style="position:relative">
-      <div style="font-size:9px;color:rgba(255,255,255,.5);margin-bottom:3px;font-weight:600">${f.label}</div>
-      <input data-lp-field="${f.key}" data-lp-domains="${f.domains.join(',')}" value="${eh(ent[f.key]||'')}"
-        placeholder="${f.domains[0]}.*"
-        autocomplete="off" spellcheck="false"
-        style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:#0d1a2e;color:#fff;font-size:11px;box-sizing:border-box;outline:none">
-      <div data-lp-list="${f.key}" style="display:none;position:absolute;left:0;right:0;top:100%;background:#0d1a2e;border:1px solid rgba(129,140,248,.35);border-top:none;border-radius:0 0 8px 8px;max-height:140px;overflow-y:auto;z-index:500;scrollbar-width:thin"></div>
-    </div>`).join('')}
-  </div>
+    /* Header */
+    sheet.innerHTML = `
+      <div style="display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;gap:10px">
+        <span style="font-size:20px">🌿</span>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:800">Configura LetPot Max</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.4)">Scrivi il nome dell'entità — i suggerimenti appaiono mentre digiti</div>
+        </div>
+        <button id="lp-close" style="width:30px;height:30px;border:none;border-radius:8px;background:rgba(255,255,255,.1);color:#fff;cursor:pointer;font-size:14px;flex-shrink:0">✕</button>
+      </div>
+      <div id="lp-body" style="flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin"></div>
+      <div style="display:flex;gap:8px;padding:12px 14px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0">
+        <button id="lp-save" style="flex:1;padding:11px;border-radius:11px;border:none;background:linear-gradient(90deg,#16a34a,#4ade80);color:#fff;font-weight:800;cursor:pointer;font-size:13px">💾 Salva</button>
+        <button id="lp-cancel" style="flex:0 0 80px;padding:11px;border-radius:11px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);color:#fff;cursor:pointer;font-size:13px">Annulla</button>
+      </div>`;
 
-  <!-- FOOTER SALVA -->
-  <div style="padding:10px 12px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0">
-    <button data-lp-save style="width:100%;padding:10px;border-radius:10px;border:none;background:linear-gradient(90deg,#16a34a,#4ade80);color:#fff;font-weight:800;cursor:pointer;font-size:12px">💾 Salva impostazioni</button>
-  </div>
+    /* Crea i campi con input + dropdown autocomplete */
+    const body = sheet.querySelector('#lp-body');
+    const inputs = {};
 
-</div>`;
-  }
+    FIELDS.forEach(f => {
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'position:relative';
 
-  /* ── Autocomplete helpers ── */
-  function _getSuggestions(domains, typed) {
-    const h = H(); if(!h) return [];
-    const q = typed.toLowerCase();
-    return Object.keys(h.states)
-      .filter(k => domains.some(d => k.startsWith(d+'.')) && (!q || k.toLowerCase().includes(q)))
-      .sort((a,b) => {
-        // exact prefix match prima
-        const ap = a.toLowerCase().startsWith(q), bp = b.toLowerCase().startsWith(q);
-        if(ap && !bp) return -1; if(!ap && bp) return 1;
-        return a.localeCompare(b);
-      })
-      .slice(0, 12);
-  }
-  function _showList(el, key, items) {
-    const list = el.querySelector(`[data-lp-list="${key}"]`); if(!list) return;
-    if(!items.length) { list.style.display='none'; list.innerHTML=''; return; }
-    list.innerHTML = items.map(s=>`<div data-lp-sugg="${eh(s)}" style="padding:7px 10px;font-size:11px;color:#e2e8f0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(s)}</div>`).join('');
-    list.style.display = 'block';
-  }
-  function _hideList(el, key) {
-    const list = el.querySelector(`[data-lp-list="${key}"]`); if(list){ list.style.display='none'; }
-  }
+      const label = document.createElement('div');
+      label.style.cssText = 'font-size:10px;color:rgba(255,255,255,.45);margin-bottom:4px;font-weight:600';
+      label.textContent = f.label;
 
-  /* ── MOUNT — delegated events, sopravvivono al re-render dei figli ── */
-  function _mountHandlers(card, el) {
-    if(_mounted.has(el)) return;
-    _mounted.add(el);
+      const inp = document.createElement('input');
+      inp.value = ent[f.key] || '';
+      inp.placeholder = f.domains[0] + '.*';
+      inp.autocomplete = 'off';
+      inp.spellcheck = false;
+      inp.style.cssText = 'width:100%;padding:9px 11px;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#fff;font-size:12px;box-sizing:border-box;outline:none';
+      inputs[f.key] = inp;
 
-    /* Click: tab switch / suggestion click / save */
-    el.addEventListener('click', function(e) {
-      // Tab switch
-      const tab = e.target.closest('[data-lp-tab]');
-      if(tab) {
-        _tab[card.id] = tab.dataset.lpTab;
-        el.innerHTML = render(card, window.frarikHass?.() || null);
-        return;
-      }
-      // Suggestion click
-      const sugg = e.target.closest('[data-lp-sugg]');
-      if(sugg) {
-        const val = sugg.dataset.lpSugg;
-        const list = sugg.closest('[data-lp-list]');
-        const key = list?.dataset.lpList;
-        const inp = key ? el.querySelector(`[data-lp-field="${key}"]`) : null;
-        if(inp) inp.value = val;
-        if(list) list.style.display = 'none';
-        return;
-      }
-      // Save
-      const save = e.target.closest('[data-lp-save]');
-      if(save) {
-        const newEnt = {};
-        FIELDS.forEach(f => {
-          const inp = el.querySelector(`[data-lp-field="${f.key}"]`);
-          if(inp) newEnt[f.key] = inp.value.trim();
+      const drop = document.createElement('div');
+      drop.style.cssText = 'display:none;position:absolute;left:0;right:0;top:100%;background:#0d1a2e;border:1px solid rgba(129,140,248,.4);border-top:none;border-radius:0 0 10px 10px;max-height:160px;overflow-y:auto;z-index:500;scrollbar-width:thin';
+
+      function showSuggestions(typed) {
+        const q = typed.toLowerCase();
+        const results = allEntities
+          .filter(k => f.domains.some(d => k.startsWith(d+'.')) && (!q || k.toLowerCase().includes(q)))
+          .sort((a,b) => {
+            const ap=a.toLowerCase().startsWith(q), bp=b.toLowerCase().startsWith(q);
+            if(ap&&!bp) return -1; if(!ap&&bp) return 1; return a.localeCompare(b);
+          })
+          .slice(0, 10);
+        if(!results.length) { drop.style.display='none'; return; }
+        drop.innerHTML = '';
+        results.forEach(s => {
+          const item = document.createElement('div');
+          item.textContent = s;
+          item.style.cssText = 'padding:8px 11px;font-size:11px;color:#e2e8f0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04)';
+          item.addEventListener('mouseenter', () => item.style.background='rgba(129,140,248,.15)');
+          item.addEventListener('mouseleave', () => item.style.background='');
+          item.addEventListener('mousedown', e => {
+            e.preventDefault(); // evita blur sull'input
+            inp.value = s;
+            drop.style.display = 'none';
+          });
+          drop.appendChild(item);
         });
-        saveEnt(card, newEnt);
-        _tab[card.id] = 'main';
-        el.innerHTML = render(card, window.frarikHass?.() || null);
-        try { window.showToast?.('✅ Impostazioni LetPot Max salvate'); } catch(_) {}
+        drop.style.display = 'block';
       }
+
+      inp.addEventListener('input', () => showSuggestions(inp.value));
+      inp.addEventListener('focus', () => showSuggestions(inp.value));
+      inp.addEventListener('blur', () => setTimeout(() => { drop.style.display='none'; }, 150));
+
+      wrap.appendChild(label);
+      wrap.appendChild(inp);
+      wrap.appendChild(drop);
+      body.appendChild(wrap);
     });
 
-    /* Input: filtra suggerimenti mentre si digita */
-    el.addEventListener('input', function(e) {
-      const inp = e.target.closest('[data-lp-field]'); if(!inp) return;
-      const key = inp.dataset.lpField;
-      const domains = (inp.dataset.lpDomains||'').split(',').filter(Boolean);
-      _showList(el, key, _getSuggestions(domains, inp.value));
-    });
+    /* Chiusura */
+    const close = () => ov.remove();
+    sheet.querySelector('#lp-close').onclick = close;
+    sheet.querySelector('#lp-cancel').onclick = close;
+    ov.addEventListener('click', e => { if(e.target===ov) close(); });
+    document.addEventListener('keydown', function esc(e){ if(e.key==='Escape'){ close(); document.removeEventListener('keydown',esc); } });
 
-    /* Focus: mostra subito i suggerimenti filtrati per dominio */
-    el.addEventListener('focusin', function(e) {
-      const inp = e.target.closest('[data-lp-field]'); if(!inp) return;
-      const key = inp.dataset.lpField;
-      const domains = (inp.dataset.lpDomains||'').split(',').filter(Boolean);
-      _showList(el, key, _getSuggestions(domains, inp.value));
-    });
+    /* Salva */
+    sheet.querySelector('#lp-save').onclick = () => {
+      const newEnt = {};
+      FIELDS.forEach(f => { newEnt[f.key] = inputs[f.key].value.trim(); });
+      saveEnt(card, newEnt);
+      close();
+      try { window.showToast?.('✅ Impostazioni LetPot Max salvate'); } catch(_){}
+    };
 
-    /* Blur: nascondi con delay (serve tempo per il click sul suggerimento) */
-    el.addEventListener('focusout', function(e) {
-      const inp = e.target.closest('[data-lp-field]'); if(!inp) return;
-      const key = inp.dataset.lpField;
-      setTimeout(() => _hideList(el, key), 180);
-    });
-
-    /* Hover sui suggerimenti: highlight */
-    el.addEventListener('mouseover', function(e) {
-      const sugg = e.target.closest('[data-lp-sugg]'); if(!sugg) return;
-      sugg.style.background = 'rgba(129,140,248,.15)';
-    });
-    el.addEventListener('mouseout', function(e) {
-      const sugg = e.target.closest('[data-lp-sugg]'); if(!sugg) return;
-      sugg.style.background = '';
-    });
-  }
-
-  function mount(card, rawHass, el) {
-    injectStyles();
-    _mountHandlers(card, el);
-  }
-
-  /* ── UPDATE mirato — non ricrea il DOM, aggiorna solo i valori ── */
-  function update(card, rawHass, el) {
-    if(_tab[card.id]==='config') return;
-    try {
-      const v = computeValues(card, rawHass);
-      const { power,autoMode,pumpCycl,pumpRun,lightBr,lightActive,
-              lowWater,lowNutr,refillErr,waterPct,tempVal,plantsAge,tempCol,waterCol,waterH } = v;
-      const q = s => el.querySelector(`[data-lp-${s}]`);
-
-      // Tank fill height — CSS transition lo anima senza restart
-      const fill=q('fill'); if(fill) fill.style.height=waterH+'px';
-
-      // Testi e colori
-      const wt=q('wtext'); if(wt){wt.textContent='💧 '+waterPct+'%';wt.style.color=waterCol;}
-      const tp=q('temp'); if(tp){tp.textContent='🌡️ '+tempVal.toFixed(1)+'°C';tp.style.color=tempCol;}
-      const ag=q('age'); if(ag) ag.textContent=plantsAge&&plantsAge!=='unknown'?`🌱 ${plantsAge}g`:'';
-
-      // Power badge
-      const pw=q('power'); if(pw){
-        pw.textContent=power?'● ATTIVO':'○ SPENTO'; pw.style.color=power?'#4ade80':'#f87171';
-        pw.style.background=power?'rgba(74,222,128,.15)':'rgba(248,113,113,.12)';
-        pw.style.borderColor=power?'rgba(74,222,128,.35)':'rgba(248,113,113,.3)';
-      }
-
-      // Pompa
-      const pm=q('pump'); if(pm){
-        pm.style.background=pumpRun&&power?'#4ade80':'#6b7280';
-        pm.style.animation=pumpRun&&power?'lp-pump 1s ease-in-out infinite':'';
-        pm.style.boxShadow=pumpRun&&power?'0 0 8px rgba(74,222,128,.7)':'';
-      }
-      const pmtxt=q('pumptxt'); if(pmtxt) pmtxt.textContent='POMPA '+(pumpRun&&power?'ON':'OFF');
-
-      // Bolle
-      [8,18,30,44,55,65,75,88].forEach((_,i)=>{
-        const b=el.querySelector(`[data-lp-bub="${i}"]`); if(b) b.style.display=pumpRun&&power?'block':'none';
-      });
-
-      // LED
-      LED_PATTERN.forEach((t,i)=>{
-        const d=el.querySelector(`[data-lp-led="${i}"]`); if(!d) return;
-        if(lightActive&&power){
-          d.style.opacity='';
-          d.style.boxShadow=`0 0 ${t==='white'?4:8}px 1px ${t==='red'?'rgba(255,50,80,.9)':t==='blue'?'rgba(80,50,255,.9)':'rgba(200,200,255,.7)'}`;
-          d.style.animation=`lp-glow ${1.5+(i%3)*0.3}s ease-in-out infinite`;
-        } else { d.style.opacity='0.25'; d.style.boxShadow=''; d.style.animation=''; }
-      });
-      const lb=q('ledbg'); if(lb){
-        lb.style.background=lightActive&&power?'linear-gradient(90deg,rgba(200,40,255,.08),rgba(255,40,100,.08),rgba(200,40,255,.08))':'transparent';
-        lb.style.animation=lightActive&&power?'lp-glow 2.5s ease-in-out infinite':'';
-      }
-      const lt=q('ledtxt'); if(lt) lt.textContent=(lightActive&&power?'☀️ ON':'🌑 OFF')+' · '+(v.lightBr!=='unknown'?v.lightBr+'/10':'—');
-
-      // Stats
-      function updStat(attr, val, col) {
-        const c=q(attr); if(!c) return;
-        const d=c.querySelector('[style*="font-size:16px"]'); if(d){d.textContent=val; if(col) d.style.color=col;}
-      }
-      updStat('sw', waterPct+'%', waterCol);
-      updStat('st', tempVal.toFixed(1)+'°', tempCol);
-      updStat('sa', plantsAge!=='unknown'?plantsAge+'g':'—', null);
-
-      // Chips
-      function updChip(attr, on) {
-        const c=q(attr); if(!c) return;
-        c.style.background=on?'rgba(74,222,128,.1)':'rgba(255,255,255,.04)';
-        c.style.borderColor=on?'rgba(74,222,128,.3)':'rgba(255,255,255,.08)';
-        const b=c.querySelector('b'); if(b){b.textContent=on?'ON':'OFF';b.style.color=on?'#4ade80':'rgba(255,255,255,.3)';}
-      }
-      updChip('auto', autoMode);
-      updChip('cycl', pumpCycl);
-
-      // Alert
-      function updAlert(attr, bad) {
-        const a=q(attr); if(!a) return;
-        a.style.background=bad?'rgba(248,113,113,.12)':'rgba(74,222,128,.07)';
-        a.style.borderColor=bad?'rgba(248,113,113,.35)':'rgba(74,222,128,.18)';
-        const b=a.querySelector('[style*="font-weight:800"]'); if(b){b.textContent=bad?'⚠️ Alert':'✓ OK';b.style.color=bad?'#f87171':'#4ade80';}
-      }
-      updAlert('antr', lowNutr);
-      updAlert('awtr', lowWater);
-      updAlert('aref', refillErr);
-    } catch(e) {}
-  }
-
-  /* ── CONFIGURE — apre il tab impostazioni nella card ── */
-  function configure(card, el) {
-    _tab[card.id] = 'config';
-    if(el) el.innerHTML = render(card, window.frarikHass?.() || null);
+    document.body.appendChild(ov);
+    /* Focus sul primo campo vuoto */
+    const firstEmpty = FIELDS.find(f => !ent[f.key]);
+    if(firstEmpty) inputs[firstEmpty.key].focus();
   }
 
   /* ── PREVIEW ── */

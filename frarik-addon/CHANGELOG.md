@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.0.65 — 2026-07-14
+
+### fix(card): LetPot Max — configure come popup dal basso, rimosso tab interno
+
+- `configure()` ora apre un popup bottom-sheet esattamente come le altre card
+- Input di testo libero per ogni entità con dropdown autocomplete live
+- Mentre si digita filtra le entità HA per dominio + testo (match parziale)
+- Al focus sul campo mostra subito i suggerimenti del dominio corretto
+- `mousedown` sul suggerimento evita il blur sull'input (niente chiusura prematura)
+- Risultati ordinati: prima i match con prefisso, poi alfabetici, max 10
+- Focus automatico sul primo campo vuoto all'apertura
+- Rimosso completamente il tab interno dalla card (render pulito, solo dashboard)
+
+---
+
 ## 2.0.64 — 2026-07-14
 
 ### feat(card): LetPot Max — autocomplete entità live negli input
