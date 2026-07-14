@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.0.62 — 2026-07-14
+
+### refactor(card): LetPot Max convertita da distintivo a card dashboard completa
+
+- `LetpotMax.js` riscritto come full JS dashboard card (`type: js-custom`)
+- Rimossi `isDistintivo`, `chip()`, `watchEntities()` — non è più un badge
+- `render(card, rawHass)` — primo argomento è ora il card object completo
+- `configure(card, el, onSave)` — `onSave` riceve il card object aggiornato con le entity
+- Entity ID ora memorizzati come proprietà del card object: `powerEntity`, `waterLevelEntity`, ecc.
+- Registrazione con `colSpan: 2, rowSpan: 3` per il grid layout
+- Tutte le animazioni originali mantenute: LED bar, 5 piante SVG sway, onda acqua, bolle pompa
+- Layout flex verticale per riempire correttamente l'altezza della card
+
+---
+
 ## 2.0.61 — 2026-07-14
 
 ### feat(card): nuovo distintivo LetPot Max — sistema idroponico animato
