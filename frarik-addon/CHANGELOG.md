@@ -1,5 +1,27 @@
 # Changelog
 
+## 2.0.67 — 2026-07-14
+
+### feat(card): LetPot Max — LED full-spectrum, fasi crescita piante, pompa animata, barra 30min
+
+- **Pannello LED full-spectrum realistico**: griglia 8×4 LED con rosso (660nm), blu (450nm) e bianco caldo; glow animato per ogni LED quando acceso; cono di luce viola/porpora verso le piante
+- **Luce on/off basata su orario**: il pannello si illumina automaticamente tra `lightOnEntity` e `lightOffEntity`; testo stato "💜 Full Spectrum ON" / "⬛ Luce spenta"
+- **6 fasi di crescita automatiche** basate su `plantsAgeEntity` (giorni):
+  - 0-3g: Germinazione (piccoli germogli con 2 cotiledoni)
+  - 4-10g: Piantina (piantine con prime foglie)
+  - 11-21g: Vegetativa (piante medie con più coppie di foglie)
+  - 22-40g: Crescita (piante alte e rigogliose)
+  - 41-60g: Pre-raccolta (piante grandi con testa formata)
+  - 60+g: Raccolta (piante mature con testa lattuga completa, dettagli densi)
+- **SVG piante parametrizzate**: altezza, numero foglie, colori e forma testa cambiano progressivamente per ogni fase; re-render completo automatico solo al cambio di fase
+- **Pompa nel tank con ingranaggio**: ⚙️ rotante via CSS animation quando pompa attiva; frecce di circolazione ← ◆ → con glow; 3 cerchi ripple concentrici che si espandono
+- **Barra countdown 30 minuti**: calcolata su `Date.now() % 1800000`, mostra il tempo rimanente al prossimo ciclo; verde > 60%, giallo 25-60%, arancione < 25%; visibile solo se `pumpCyclingEntity` è attivo
+- **Effetto luce sulle piante**: quando la luce è attiva, overlay viola/porpora gradient su piante e superficie acqua
+- **Tutto il testo a #fff**: rimossi tutti i `rgba(255,255,255,.X)` dal testo; solo colori solidi o bianchi puri
+- `update()` gestisce barra ciclo pompa in tempo reale; se la fase di crescita cambia fa re-render completo automatico
+
+---
+
 ## 2.0.66 — 2026-07-14
 
 ### feat(card): LetPot Max — bottone ⚙️ nell'header apre il popup impostazioni
