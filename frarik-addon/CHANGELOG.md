@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.0.70 — 2026-07-15
+
+### feat(card): LetPot Max v4.0 — layout fedele al device reale (palo telescopico + LCD + 21 pod)
+
+- **Struttura device corretta**: pannello LED orizzontale in cima a un palo telescopico verticale centrale (come il vero LetPot Max LPH-MAX), non più bracci laterali
+- **Palo telescopico**: colonna metallica (#bbb→#888→#bbb gradient) tra pannello LED e corpo del tank
+- **21 pod sul coperchio**: 7 fori circolari visibili in prima fila sul coperchio superiore del tank, si "illuminano" leggermente quando la pompa è attiva
+- **Display LCD 4.8"**: display scuro con bordo verde sul fronte del corpo in acciaio — mostra livello acqua con barra, temperatura, fase di crescita + giorno, modalità attiva, stato pompa con blink animato
+- **Corpo tank scuro/acciaio**: `linear-gradient(#181a28,#121420)` con bordo sottile metallico e ombra perimetrale
+- **Piante più dense e realistiche**: fino a 9 piante per la fase raccolta; stage 5 aggiunge frutti rossi (fragole/pomodori) con cerchi SVG su piante alternate
+- **Serbatoio acqua separato**: finestra acqua nella parte bassa del tank body, con onda animata, bolle, ripple pompa
+- **Pompa come pulsante rotondo** sul fianco del tank: cerchio con ⚙️ rotante + label ATTIVA/FERMA, cliccabile se pumpEntity è uno switch
+- Mantenuti: timer 30min real-time (setInterval 1s), local state per luminosità e switch, controlli interattivi orari/mode/brightness
+
+---
+
 ## 2.0.69 — 2026-07-14
 
 ### fix(card): LetPot Max — riscrittura layout, fix timer reale, fix luminosità, fix chips, testo bianco
