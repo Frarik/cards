@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.0.68 — 2026-07-14
+
+### feat(card): LetPot Max — controlli interattivi diretti sulla card
+
+- **Power toggle**: badge "● ATTIVO / ○ SPENTO" nell'header cliccabile → toggle `powerEntity` con aggiornamento ottimistico immediato
+- **Pompa toggle**: area pompa nel tank cliccabile se `pumpEntity` è uno switch → turn_on/turn_off diretto
+- **Auto mode** e **Pump cycling**: chip nella barra stato cliccabili → toggle con aggiornamento ottimistico
+- **Orari luce**: input `<input type="time">` nativi per accensione (🌅) e spegnimento (🌙) nella strip sotto il pannello LED → `time.set_value` / `input_datetime.set_datetime`
+- **Luminosità**: bottoni [−] e [+] a fianco del valore corrente → `number.set_value` / `input_number.set_value`; min/max/step letti dagli attributi dell'entità; aggiornamento ottimistico immediato
+- **Modalità luce**: `<select>` nativo popolato con le opzioni reali da `attributes.options` dell'entità select → `select.select_option` / `input_select.select_option`
+- **Helper `svc()`**: chiama `hass.callService(domain, service, data)` via `window.frarikHass()` con fallback silenzioso
+- Tutti gli aggiornamenti ottimistici (prima che arrivi il nuovo stato da HA) per UX istantanea
+- Feedback visivo su tutti i bottoni: `opacity + scale` sull'`:active` via CSS
+- `update()` non sovrascrive i controlli mentre l'utente sta interagendo (check `document.activeElement`)
+
+---
+
 ## 2.0.67 — 2026-07-14
 
 ### feat(card): LetPot Max — LED full-spectrum, fasi crescita piante, pompa animata, barra 30min
