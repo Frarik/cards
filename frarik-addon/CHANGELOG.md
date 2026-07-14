@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.59 — 2026-07-14
+
+### fix(sync): protezione perdita config remota + refresh badge al sync + hint watt distintivo energia
+
+- **Bug sync config**: aggiunto guard `v !== null` in `_haLoadCfg` — prima, se il server rispondeva con errore HTTP (`r.ok = false`), `v = null` veniva trattato come "server vuoto" e la config locale (del cell) veniva pushata al server sovrascrivendo le condizioni salvate da PC
+- **Refresh badge mancante**: aggiunto `renderBadgesAll()` in `_applyRemoteCfg` — dopo aver applicato la config remota le badge ora si ridisegnano correttamente con le nuove condizioni
+- **GruppoEnergia configure**: aggiunto pannello informativo con consumo attuale in W + suggerimento "aggiungi una regola Fallback" per evitare che il chip torni al colore automatico quando nessuna soglia watt è soddisfatta
+
+---
+
 ## 2.0.58 — 2026-07-13
 
 ### fix(distintivi): riprogettazione colore chip — due sezioni separate Contenuto e Bordo

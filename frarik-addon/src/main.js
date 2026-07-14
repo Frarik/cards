@@ -1313,7 +1313,7 @@ function _haLoadCfg(force){
       // il server è la fonte di verità. Sui poll successivi usiamo i timestamp normali.
       _applyRemoteCfg(v, _isFirstLoad);
       const hasRemote = v && ((v.cfg&&v.cfg.pages)||v.pages);
-      if(!hasRemote && cfg && (cfg.pages||[]).length){
+      if(!hasRemote && v !== null && cfg && (cfg.pages||[]).length){
         _haSaveCfg(); // server vuoto → scrivi la plancia locale
       } else if(hasRemote && _localTs>_remoteTs && !_isFirstLoad){
         // Push solo sui poll successivi (non al primo caricamento):
@@ -1347,7 +1347,7 @@ function _applyRemoteCfg(v, force){
     cfg.activePage=Math.min(_localActivePage,(cfg.pages.length||1)-1);
     _saveCfgLocalOnly();
     try{ applyTheme(cfg.theme); }catch(e){}
-    renderDash(); renderPageTabs();
+    renderDash(); renderPageTabs(); try{ renderBadgesAll(); }catch(e){}
     _cfgSyncing=false;
     try{ _histInit(); }catch(e){}
     try{ _ghSchedule(); }catch(e){}
