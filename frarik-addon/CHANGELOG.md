@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.66 — 2026-07-14
+
+### feat(card): LetPot Max — bottone ⚙️ nell'header apre il popup impostazioni
+
+- Aggiunto bottone ⚙️ nell'header della card (sempre visibile, senza entrare in modalità modifica)
+- Click → apre direttamente il popup bottom-sheet con i campi entità e autocomplete live
+
+---
+
 ## 2.0.65 — 2026-07-14
 
 ### fix(card): LetPot Max — configure come popup dal basso, rimosso tab interno

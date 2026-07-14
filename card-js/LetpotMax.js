@@ -109,9 +109,12 @@
         <div style="font-size:9px;color:rgba(255,255,255,.4)">Sistema idroponico</div>
       </div>
     </div>
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
-      <div data-lp-power style="background:${power?'rgba(74,222,128,.15)':'rgba(248,113,113,.12)'};border:1px solid ${power?'rgba(74,222,128,.35)':'rgba(248,113,113,.3)'};border-radius:6px;padding:2px 7px;font-size:9px;font-weight:700;color:${power?'#4ade80':'#f87171'}">${power?'● ATTIVO':'○ SPENTO'}</div>
-      <div data-lp-age style="font-size:9px;color:rgba(255,255,255,.4)">${plantsAge&&plantsAge!=='unknown'?`🌱 ${plantsAge}g`:''}</div>
+    <div style="display:flex;align-items:center;gap:7px">
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+        <div data-lp-power style="background:${power?'rgba(74,222,128,.15)':'rgba(248,113,113,.12)'};border:1px solid ${power?'rgba(74,222,128,.35)':'rgba(248,113,113,.3)'};border-radius:6px;padding:2px 7px;font-size:9px;font-weight:700;color:${power?'#4ade80':'#f87171'}">${power?'● ATTIVO':'○ SPENTO'}</div>
+        <div data-lp-age style="font-size:9px;color:rgba(255,255,255,.4)">${plantsAge&&plantsAge!=='unknown'?`🌱 ${plantsAge}g`:''}</div>
+      </div>
+      <button data-lp-opencfg title="Impostazioni" style="width:28px;height:28px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">⚙️</button>
     </div>
   </div>
 
@@ -204,6 +207,9 @@
     injectStyles();
     if(_mounted.has(el)) return;
     _mounted.add(el);
+    el.addEventListener('click', function(e) {
+      if(e.target.closest('[data-lp-opencfg]')) configure(card);
+    });
   }
 
   /* ── UPDATE mirato — non ricrea il DOM, aggiorna solo i valori ── */
