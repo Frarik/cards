@@ -212,6 +212,22 @@
     </div>`;
   }
 
+  /* ── Sensore (sonda al centro) + fili che collegano pompa e vaschetta nutrienti ── */
+  function sensorProbe(){
+    return `
+    <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:3px;height:15px;background:linear-gradient(to bottom,#c8ccd2,#8b9099);z-index:6"></div>
+    <div style="position:absolute;top:12px;left:50%;transform:translateX(-50%);width:9px;height:13px;background:linear-gradient(180deg,#eef1f4,#a7adb6);border-radius:3px 3px 4px 4px;box-shadow:0 0 5px rgba(255,255,255,.35),0 1px 3px rgba(0,0,0,.3);z-index:6">
+      <div style="position:absolute;bottom:1px;left:50%;transform:translateX(-50%);width:3px;height:3px;border-radius:50%;background:#22c55e;box-shadow:0 0 4px rgba(34,197,94,.85)"></div>
+    </div>`;
+  }
+  function sensorWires(){
+    return `
+    <svg style="position:absolute;inset:0;width:100%;height:100%;z-index:5;pointer-events:none" viewBox="0 0 100 100" preserveAspectRatio="none">
+      <path d="M50,10 Q34,32 22,58" stroke="rgba(190,205,225,.5)" stroke-width="1" fill="none" stroke-dasharray="2,2"/>
+      <path d="M50,10 Q66,30 78,52" stroke="rgba(190,205,225,.5)" stroke-width="1" fill="none" stroke-dasharray="2,2"/>
+    </svg>`;
+  }
+
   /* ── Stili ── */
   function injectStyles(){
     if(document.getElementById('lp-kf')) return;
@@ -285,7 +301,7 @@
           lowWater,lowNutr,refillErr,waterPct,tempVal,plantsAge,
           tempCol,waterCol,waterH,stage,cb}=v;
     const stageInfo=STAGES[stage];
-    const plantAreaH=[30,44,62,78,94,108][stage]||78;
+    const plantAreaH=[56,82,118,148,178,206][stage]||148;
     const plants=plantsSvg(stage,pumpRun&&power,on);
 
     // Bolle acqua (quando pompa attiva, lato sx)
@@ -348,10 +364,6 @@
     <div style="background:${on?'linear-gradient(180deg,#1c0e3a,#12082a)':'linear-gradient(180deg,#101020,#0c0c18)'};border:2px solid ${on?'rgba(175,48,255,.6)':'rgba(55,55,85,.5)'};border-radius:50px;height:13px;position:relative;overflow:hidden;box-shadow:${on?'0 0 28px rgba(160,20,255,.4),0 0 60px rgba(160,20,255,.12)':'none'};display:flex;align-items:flex-end;justify-content:center;padding-bottom:2px">
       <div style="width:86%;height:3px;border-radius:2px;${lightBar(on)}"></div>
     </div>
-    <div style="display:flex;justify-content:space-between;margin-top:2px;padding:0 3px">
-      <span style="font-size:7px;color:#fff;font-weight:600">${on?'💜 36W Full Spectrum':'⬛ Spenta'}</span>
-      <span style="font-size:7px;color:#fff">✨ <span data-lp-update="bval2">${lightBr!=='unknown'?lightBr:'—'}</span>/${brMax}</span>
-    </div>
     <!-- Alone luce verso il basso dal pannello -->
     ${on?`<div style="position:absolute;left:10%;right:10%;top:100%;height:18px;background:linear-gradient(180deg,rgba(185,35,255,.28),transparent);pointer-events:none"></div>`:''}
   </div>
@@ -373,14 +385,19 @@
     <!-- SERBATOIO ACQUA (vista interna) con pompa, vaschetta nutrienti e ricircolo -->
     <div style="position:relative;height:92px;background:#030c15;overflow:hidden">
       <!-- Acqua animata -->
-      <div data-lp-update="fill" style="position:absolute;bottom:0;left:0;right:0;height:${waterH}px;transition:height 1.4s ease;z-index:2">
-        <svg style="position:absolute;top:-16px;left:0;width:200%;animation:lp-wave ${pumpRun&&power?'1.6s':'3.2s'} linear infinite" viewBox="0 0 800 18" preserveAspectRatio="none">
+      <div data-lp-update="fill" style="position:absolute;bottom:0;left:0;right:0;height:${waterH}px;transition:height 1.4s ease;z-index:2;overflow:hidden">
+        <!-- Corpo acqua pieno (nessun buco sotto l'onda) -->
+        <div style="position:absolute;inset:0;background:linear-gradient(rgba(14,75,152,.9),rgba(5,42,100,.97))"></div>
+        <svg style="position:absolute;top:-5px;left:0;width:200%;height:16px;animation:lp-wave ${pumpRun&&power?'1.6s':'3.2s'} linear infinite" viewBox="0 0 800 18" preserveAspectRatio="none">
           <path d="M0,9C60,0 120,18 180,9C240,0 300,18 360,9C420,0 480,18 540,9C600,0 660,18 720,9C780,0 800,18 800,9L800,18L0,18Z" fill="rgba(16,76,155,.92)"/>
           <path d="M0,13C80,4 160,18 240,13C320,4 400,18 480,13C560,4 640,18 720,13L800,13L800,18L0,18Z" fill="rgba(8,48,108,.78)"/>
         </svg>
-        <div style="position:absolute;top:16px;left:0;right:0;bottom:0;background:linear-gradient(rgba(14,75,152,.9),rgba(5,42,100,.97))"></div>
         <!-- Riflesso luce sulla superficie dell'acqua -->
         ${waterShimmer}
+        <!-- Fili di collegamento pompa/vaschetta al sensore -->
+        ${sensorWires()}
+        <!-- Sonda sensore -->
+        ${sensorProbe()}
         <!-- Bolle salita -->
         <div style="position:absolute;inset:0;z-index:3">${bubs}</div>
         <!-- POMPA e RICIRCOLO dentro l'acqua -->
@@ -565,7 +582,7 @@ ${pumpCycl&&cb?`
       const lbr=_localBr[card.id];
       if(!lbr||Date.now()-lbr.ts>5000){
         if(lbr) delete _localBr[card.id];
-        el.querySelectorAll('[data-lp-update="bval"],[data-lp-update="bval2"]').forEach(b=>{if(b)b.textContent=lightBr!=='unknown'?lightBr:'—';});
+        el.querySelectorAll('[data-lp-update="bval"]').forEach(b=>{if(b)b.textContent=lightBr!=='unknown'?lightBr:'—';});
       }
       _updateChip(el,'chip-auto',autoMode);
       _updateChip(el,'chip-cycl',pumpCycl);
@@ -626,8 +643,8 @@ ${pumpCycl&&cb?`
     return render(mc,{states:{'switch.letpot_max_power':{state:'on'},'switch.letpot_max_auto_mode':{state:'on'},'switch.letpot_max_pump_cycling':{state:'on'},'sensor.letpot_max_water_level':{state:'78'},'sensor.letpot_max_temperatura':{state:'26.5'},'sensor.letpot_max_plants_age':{state:'45'},'switch.letpot_max_pump':{state:'on'},'time.letpot_max_light_on':{state:'06:00:00'},'time.letpot_max_light_off':{state:'22:00:00'},'number.letpot_max_light_brightness':{state:'7',attributes:{min:1,max:10,step:1}},'select.letpot_max_modalita_luce':{state:'Verdure/Erbe',attributes:{options:['Verdure/Erbe','Frutti','Fiori','Erbe aromatiche','Personalizzato']}},'binary_sensor.letpot_max_low_water':{state:'off'},'binary_sensor.letpot_max_low_nutrients':{state:'off'},'binary_sensor.letpot_max_refill_error':{state:'off'}}});
   }
 
-  const CARD={id:ID,name:'LetPot Max',icon:'🌿',desc:'Sistema idroponico LPH-MAX 21 pod — vasca essenziale (acqua, pompa, nutrienti), piu spazio sotto la luce',version:'4.5',colSpan:2,rowSpan:3,render,mount,update,configure,preview};
+  const CARD={id:ID,name:'LetPot Max',icon:'🌿',desc:'Sistema idroponico LPH-MAX 21 pod — sonda sensore collegata a pompa e vaschetta nutrienti',version:'4.6',colSpan:2,rowSpan:3,render,mount,update,configure,preview};
   window.FratechCardRegistry=window.FratechCardRegistry||{};window.FratechCardRegistry[ID]=CARD;
   window.FratechCards=window.FratechCards||{};window.FratechCards[ID]=CARD;
-  try{console.log('[FratechStore] letpot-max v4.5');}catch(e){}
+  try{console.log('[FratechStore] letpot-max v4.6');}catch(e){}
 })();

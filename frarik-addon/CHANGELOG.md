@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.0.76 — 2026-07-15
+
+### fix(card): LetPot Max v4.6 — piu spazio sopra la vasca, niente riga nera, sensore collegato
+
+- **Spazio raddoppiato** tra pannello luce e vasca: `plantAreaH` da [30,44,62,78,94,108] a [56,82,118,148,178,206]px
+- **Fix riga nera sotto le onde**: il corpo dell'acqua ora è un `inset:0` pieno disegnato PRIMA dell'onda (che aveva altezza implicita/non dichiarata e lasciava un varco verso lo sfondo nero del contenitore); l'SVG dell'onda ha ora un'altezza esplicita (16px) e nessun gap è più possibile
+- **Sonda sensore**: nuovo elemento centrale (asta + capsula con LED verde) che scende nell'acqua dal bordo vasca, con due fili tratteggiati che collegano pompa e vaschetta nutrienti alla sonda — non più elementi isolati/scollegati
+- **Rimossa la scritta sotto il pannello luce** ("💜 36W Full Spectrum" / luminosità), ridondante con i controlli già presenti sopra
+
+---
+
 ## 2.0.75 — 2026-07-15
 
 ### fix(card): LetPot Max v4.5 — vasca essenziale, piu spazio sotto la luce, angoli meno estremi
