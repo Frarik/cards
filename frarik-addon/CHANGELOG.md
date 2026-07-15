@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.77 — 2026-07-15
+
+### fix(card): LetPot Max v4.7 — vaschetta collegata al sensore, onda in superficie
+
+- **Rimossa la "sonda sensore" decorativa** con i fili tratteggiati introdotta per errore in v4.6: non era quello richiesto
+- **Vaschetta nutrienti collegata al sensore reale**: `nutrientBox()` ora riceve `lowNutr` (dal `lowNutrientsEntity` configurato in ⚙️) invece dello stato della pompa — se il sensore segnala nutrienti bassi, la vaschetta si mostra scarica/spenta con bordo rosso e label "NUTR. BASSI"; la pompa era già correttamente pilotata dal `pumpEntity` configurato
+- **Fix onda "sotto" l'acqua ferma**: lo sfondo del serbatoio era `#030c15`, quasi identico al colore dell'acqua, per cui la zona vuota sopra il livello (acciaio interno vasca) veniva scambiata per acqua ferma. Ora lo sfondo vuoto è grigio acciaio (`#1b1f27`→`#14171d`) nettamente diverso dal blu dell'acqua, e l'onda è disegnata con `z-index` sopra il corpo acqua così la superficie ondulata è sempre visibile in cima
+
+---
+
 ## 2.0.76 — 2026-07-15
 
 ### fix(card): LetPot Max v4.6 — piu spazio sopra la vasca, niente riga nera, sensore collegato

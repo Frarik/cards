@@ -198,34 +198,19 @@
     </div>`;
   }
 
-  /* ── Vaschetta nutrienti (DESTRA, più grande) ── */
-  function nutrientBox(active){
+  /* ── Vaschetta nutrienti (DESTRA, più grande) — riflette il sensore "nutrienti bassi" configurato ── */
+  function nutrientBox(lowNutr){
+    const ok=!lowNutr;
     return `
     <div style="position:absolute;bottom:4px;right:10%;z-index:6;display:flex;flex-direction:column;align-items:center;gap:2px">
-      <div style="width:34px;height:24px;background:linear-gradient(180deg,rgba(20,26,36,.95),rgba(10,14,22,.95));border:1.5px solid rgba(90,110,140,.6);border-radius:5px;position:relative;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.45)">
-        <div style="position:absolute;top:3px;left:3px;right:3px;height:3px;border-radius:1px;background:linear-gradient(90deg,#ff5a5a,#ffd15a,#5affa0,#5ab0ff);opacity:${active?'.95':'.35'}"></div>
+      <div style="width:34px;height:24px;background:linear-gradient(180deg,rgba(20,26,36,.95),rgba(10,14,22,.95));border:1.5px solid ${ok?'rgba(90,110,140,.6)':'rgba(248,113,113,.6)'};border-radius:5px;position:relative;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.45)${ok?'':',0 0 8px rgba(248,113,113,.3)'}">
+        <div style="position:absolute;top:3px;left:3px;right:3px;height:3px;border-radius:1px;background:${ok?'linear-gradient(90deg,#ff5a5a,#ffd15a,#5affa0,#5ab0ff)':'rgba(140,145,155,.5)'};opacity:${ok?'.95':'.6'}"></div>
         <div style="position:absolute;bottom:3px;left:0;right:0;display:flex;justify-content:center;gap:3px">
-          ${[0,1,2].map(()=>`<div style="width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.15)"></div>`).join('')}
+          ${[0,1,2].map(()=>`<div style="width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,${ok?'.22':'.12'});border:1px solid rgba(255,255,255,.15)"></div>`).join('')}
         </div>
       </div>
-      <span style="font-size:5px;color:#fff;font-weight:700;background:rgba(10,14,20,.55);border-radius:3px;padding:0 3px">NUTRIENTI</span>
+      <span style="font-size:5px;color:${ok?'#fff':'#f87171'};font-weight:700;background:rgba(10,14,20,.55);border-radius:3px;padding:0 3px">${ok?'NUTRIENTI':'NUTR. BASSI'}</span>
     </div>`;
-  }
-
-  /* ── Sensore (sonda al centro) + fili che collegano pompa e vaschetta nutrienti ── */
-  function sensorProbe(){
-    return `
-    <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:3px;height:15px;background:linear-gradient(to bottom,#c8ccd2,#8b9099);z-index:6"></div>
-    <div style="position:absolute;top:12px;left:50%;transform:translateX(-50%);width:9px;height:13px;background:linear-gradient(180deg,#eef1f4,#a7adb6);border-radius:3px 3px 4px 4px;box-shadow:0 0 5px rgba(255,255,255,.35),0 1px 3px rgba(0,0,0,.3);z-index:6">
-      <div style="position:absolute;bottom:1px;left:50%;transform:translateX(-50%);width:3px;height:3px;border-radius:50%;background:#22c55e;box-shadow:0 0 4px rgba(34,197,94,.85)"></div>
-    </div>`;
-  }
-  function sensorWires(){
-    return `
-    <svg style="position:absolute;inset:0;width:100%;height:100%;z-index:5;pointer-events:none" viewBox="0 0 100 100" preserveAspectRatio="none">
-      <path d="M50,10 Q34,32 22,58" stroke="rgba(190,205,225,.5)" stroke-width="1" fill="none" stroke-dasharray="2,2"/>
-      <path d="M50,10 Q66,30 78,52" stroke="rgba(190,205,225,.5)" stroke-width="1" fill="none" stroke-dasharray="2,2"/>
-    </svg>`;
   }
 
   /* ── Stili ── */
@@ -382,28 +367,25 @@
   <!-- TANK BODY: vasca in acciaio — solo acqua, pompa, vaschetta nutrienti -->
   <div style="width:100%;border-radius:20px 20px 16px 16px;overflow:hidden;border:1.5px solid rgba(255,255,255,.4);box-shadow:0 6px 20px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.5)">
 
-    <!-- SERBATOIO ACQUA (vista interna) con pompa, vaschetta nutrienti e ricircolo -->
-    <div style="position:relative;height:92px;background:#030c15;overflow:hidden">
-      <!-- Acqua animata -->
-      <div data-lp-update="fill" style="position:absolute;bottom:0;left:0;right:0;height:${waterH}px;transition:height 1.4s ease;z-index:2;overflow:hidden">
-        <!-- Corpo acqua pieno (nessun buco sotto l'onda) -->
-        <div style="position:absolute;inset:0;background:linear-gradient(rgba(14,75,152,.9),rgba(5,42,100,.97))"></div>
-        <svg style="position:absolute;top:-5px;left:0;width:200%;height:16px;animation:lp-wave ${pumpRun&&power?'1.6s':'3.2s'} linear infinite" viewBox="0 0 800 18" preserveAspectRatio="none">
+    <!-- SERBATOIO: sopra al livello acqua = interno vasca (acciaio), sotto = acqua con onda in superficie -->
+    <div style="position:relative;height:92px;background:linear-gradient(180deg,#1b1f27,#14171d);overflow:hidden">
+      <!-- Acqua animata: l'onda segna la superficie, sopra di essa c'è solo l'interno vuoto della vasca -->
+      <div data-lp-update="fill" style="position:absolute;bottom:0;left:0;right:0;height:${waterH}px;transition:height 1.4s ease;z-index:2;overflow:visible">
+        <!-- Onda: superficie dell'acqua, disegnata per prima e in cima a tutto il resto -->
+        <svg style="position:absolute;top:-6px;left:0;width:200%;height:16px;z-index:4;animation:lp-wave ${pumpRun&&power?'1.6s':'3.2s'} linear infinite" viewBox="0 0 800 18" preserveAspectRatio="none">
           <path d="M0,9C60,0 120,18 180,9C240,0 300,18 360,9C420,0 480,18 540,9C600,0 660,18 720,9C780,0 800,18 800,9L800,18L0,18Z" fill="rgba(16,76,155,.92)"/>
           <path d="M0,13C80,4 160,18 240,13C320,4 400,18 480,13C560,4 640,18 720,13L800,13L800,18L0,18Z" fill="rgba(8,48,108,.78)"/>
         </svg>
+        <!-- Corpo acqua pieno (copre tutta l'area, l'onda sta sempre sopra per z-index) -->
+        <div style="position:absolute;inset:0;background:linear-gradient(rgba(14,75,152,.9),rgba(5,42,100,.97))"></div>
         <!-- Riflesso luce sulla superficie dell'acqua -->
         ${waterShimmer}
-        <!-- Fili di collegamento pompa/vaschetta al sensore -->
-        ${sensorWires()}
-        <!-- Sonda sensore -->
-        ${sensorProbe()}
         <!-- Bolle salita -->
         <div style="position:absolute;inset:0;z-index:3">${bubs}</div>
         <!-- POMPA e RICIRCOLO dentro l'acqua -->
         ${pumpInWater(pumpRun,power)}
         <!-- Vaschetta nutrienti galleggiante -->
-        ${nutrientBox(pumpRun&&power)}
+        ${nutrientBox(lowNutr)}
       </div>
     </div>
 
@@ -643,8 +625,8 @@ ${pumpCycl&&cb?`
     return render(mc,{states:{'switch.letpot_max_power':{state:'on'},'switch.letpot_max_auto_mode':{state:'on'},'switch.letpot_max_pump_cycling':{state:'on'},'sensor.letpot_max_water_level':{state:'78'},'sensor.letpot_max_temperatura':{state:'26.5'},'sensor.letpot_max_plants_age':{state:'45'},'switch.letpot_max_pump':{state:'on'},'time.letpot_max_light_on':{state:'06:00:00'},'time.letpot_max_light_off':{state:'22:00:00'},'number.letpot_max_light_brightness':{state:'7',attributes:{min:1,max:10,step:1}},'select.letpot_max_modalita_luce':{state:'Verdure/Erbe',attributes:{options:['Verdure/Erbe','Frutti','Fiori','Erbe aromatiche','Personalizzato']}},'binary_sensor.letpot_max_low_water':{state:'off'},'binary_sensor.letpot_max_low_nutrients':{state:'off'},'binary_sensor.letpot_max_refill_error':{state:'off'}}});
   }
 
-  const CARD={id:ID,name:'LetPot Max',icon:'🌿',desc:'Sistema idroponico LPH-MAX 21 pod — sonda sensore collegata a pompa e vaschetta nutrienti',version:'4.6',colSpan:2,rowSpan:3,render,mount,update,configure,preview};
+  const CARD={id:ID,name:'LetPot Max',icon:'🌿',desc:'Sistema idroponico LPH-MAX 21 pod — vaschetta nutrienti collegata al sensore, onda in superficie',version:'4.7',colSpan:2,rowSpan:3,render,mount,update,configure,preview};
   window.FratechCardRegistry=window.FratechCardRegistry||{};window.FratechCardRegistry[ID]=CARD;
   window.FratechCards=window.FratechCards||{};window.FratechCards[ID]=CARD;
-  try{console.log('[FratechStore] letpot-max v4.6');}catch(e){}
+  try{console.log('[FratechStore] letpot-max v4.7');}catch(e){}
 })();
