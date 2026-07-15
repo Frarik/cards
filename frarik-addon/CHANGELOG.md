@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.0.74 — 2026-07-15
+
+### fix(card): LetPot Max v4.4 — rimosso pannello acciaio, serbatoio più alto, fascio luminoso più bello
+
+- **Rimosso il pannello acciaio LCD+pompa** sopra il serbatoio (era ridondante: acqua/temp/fase/giorno sono già mostrati negli overlay del serbatoio e nella griglia STATS in basso). Il pulsante pompa è ora un piccolo overlay circolare in alto al centro del serbatoio (stesso `data-lp-action="pump"`, stesso `data-lp-update="pump-side-gear"`)
+- **Serbatoio acqua più alto**: da 68px a 92px, formula `waterH` riscalata di conseguenza
+- **Fascio luminoso volumetrico**: alone diffuso alla sorgente (blur), doppio strato di fascio con bordi sfumati (`filter:blur`) invece del trapezio a bordo netto, nuova animazione `lp-beam-pulse` (respiro leggero), raggi sottili più luminosi
+- **Riga del pannello LED monocolore**: rimosso il gradiente arcobaleno (rosso/giallo/blu) sulla riga emettitrice, ora colore lilla pieno con glow
+
+---
+
 ## 2.0.73 — 2026-07-15
 
 ### fix(card): LetPot Max v4.3 — pannello luce a taglio, palo a contatto, pompa sx/nutrienti dx

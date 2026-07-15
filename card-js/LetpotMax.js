@@ -133,29 +133,36 @@
     return svgs;
   }
 
-  /* ── Fascio luminoso ── */
+  /* ── Fascio luminoso volumetrico ── */
   function lightBeam(){
     return `
     <!-- CONO DI LUCE principale -->
     <div style="position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden">
-      <div style="position:absolute;left:5%;right:5%;top:0;bottom:0;
-        background:linear-gradient(180deg,rgba(195,50,255,.32) 0%,rgba(155,28,210,.17) 40%,rgba(100,15,165,.07) 72%,transparent 100%);
-        clip-path:polygon(22% 0%,78% 0%,98% 100%,2% 100%)">
+      <!-- Alone diffuso alla sorgente -->
+      <div style="position:absolute;left:12%;right:12%;top:-8px;height:24px;background:radial-gradient(ellipse at 50% 0%,rgba(215,110,255,.6) 0%,transparent 75%);filter:blur(3px)"></div>
+      <!-- Fascio volumetrico, bordi sfumati, respira leggermente -->
+      <div style="position:absolute;left:6%;right:6%;top:0;bottom:0;
+        background:linear-gradient(180deg,rgba(205,90,255,.4) 0%,rgba(165,40,220,.2) 40%,rgba(110,20,175,.08) 72%,transparent 100%);
+        clip-path:polygon(23% 0%,77% 0%,97% 100%,3% 100%);filter:blur(2px);transform-origin:top center;animation:lp-beam-pulse 3.4s ease-in-out infinite">
       </div>
-      <!-- Raggi sottili -->
-      <div style="position:absolute;left:28%;top:0;width:1.5px;height:65%;background:linear-gradient(180deg,rgba(215,75,255,.22),transparent);transform:skewX(7deg);transform-origin:top center"></div>
-      <div style="position:absolute;right:28%;top:0;width:1.5px;height:65%;background:linear-gradient(180deg,rgba(215,75,255,.22),transparent);transform:skewX(-7deg);transform-origin:top center"></div>
-      <div style="position:absolute;left:46%;top:0;width:1px;height:50%;background:linear-gradient(180deg,rgba(195,60,255,.15),transparent)"></div>
-      <div style="position:absolute;right:46%;top:0;width:1px;height:50%;background:linear-gradient(180deg,rgba(195,60,255,.15),transparent)"></div>
+      <div style="position:absolute;left:22%;right:22%;top:0;bottom:0;
+        background:linear-gradient(180deg,rgba(235,160,255,.5) 0%,transparent 55%);
+        clip-path:polygon(30% 0%,70% 0%,86% 100%,14% 100%);mix-blend-mode:screen;filter:blur(1px)">
+      </div>
+      <!-- Raggi sottili animati -->
+      <div style="position:absolute;left:29%;top:0;width:1.4px;height:68%;background:linear-gradient(180deg,rgba(235,165,255,.6),transparent);transform:skewX(6deg);transform-origin:top center;animation:lp-shimmer 2.6s ease-in-out infinite"></div>
+      <div style="position:absolute;right:29%;top:0;width:1.4px;height:68%;background:linear-gradient(180deg,rgba(235,165,255,.6),transparent);transform:skewX(-6deg);transform-origin:top center;animation:lp-shimmer 2.6s ease-in-out .5s infinite"></div>
+      <div style="position:absolute;left:47%;top:0;width:1px;height:52%;background:linear-gradient(180deg,rgba(215,120,255,.4),transparent);animation:lp-shimmer 2.2s ease-in-out .3s infinite"></div>
+      <div style="position:absolute;right:47%;top:0;width:1px;height:52%;background:linear-gradient(180deg,rgba(215,120,255,.4),transparent);animation:lp-shimmer 2.2s ease-in-out .8s infinite"></div>
       <!-- Alone ambientale sulle piante -->
-      <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% -5%,rgba(180,40,255,.12) 0%,transparent 70%)"></div>
+      <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% -5%,rgba(190,70,255,.16) 0%,transparent 72%)"></div>
     </div>`;
   }
 
-  /* ── Riga luminosa del pannello (vista frontale a taglio: si vede solo il bordo emettitore) ── */
+  /* ── Riga luminosa del pannello (vista frontale a taglio: si vede solo il bordo emettitore, colore unico) ── */
   function lightBar(on){
     return on
-      ? `background:linear-gradient(90deg,#ff1a3c,#ffe9b0,#2055ff,#ffe9b0,#ff1a3c);box-shadow:0 0 10px 2px rgba(190,60,255,.65),0 0 22px 4px rgba(190,60,255,.3)`
+      ? `background:#dda6ff;box-shadow:0 0 10px 2px rgba(190,60,255,.7),0 0 24px 5px rgba(190,60,255,.35)`
       : `background:rgba(255,255,255,.1);box-shadow:none`;
   }
 
@@ -217,6 +224,7 @@
       @keyframes lp-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
       @keyframes lp-ripple{0%{opacity:.55;transform:translate(-50%,-50%) scale(.7)}100%{opacity:0;transform:translate(-50%,-50%) scale(2.8)}}
       @keyframes lp-shimmer{0%,100%{opacity:.55}50%{opacity:1}}
+      @keyframes lp-beam-pulse{0%,100%{opacity:.85;transform:scaleY(1)}50%{opacity:1;transform:scaleY(1.03)}}
       @keyframes lp-flowUp{0%{transform:translateY(14px);opacity:0}15%{opacity:.75}80%{opacity:.6}100%{transform:translateY(-2px);opacity:0}}
       @keyframes lp-dropDown{0%{transform:translateY(-2px);opacity:0}15%{opacity:.55}80%{opacity:.4}100%{transform:translateY(14px);opacity:0}}
       @keyframes lp-lcd-blink{0%,88%,100%{opacity:1}92%,96%{opacity:.5}}
@@ -262,7 +270,7 @@
     const waterCol=waterPct<30?'#f97316':waterPct<60?'#facc15':'#4ade80';
     const stage=getStage(plantsAge);
     const cb=pumpCycl?cycleBarData():null;
-    const waterH=Math.round(68*(waterPct/100)*0.8+6);
+    const waterH=Math.round(92*(waterPct/100)*0.8+6);
     return{power,autoMode,pumpCycl,pumpRun,pumpIsSwitch,lightBr,brMin,brMax,brStep,
            lightOnVal,lightOffVal,currentMode,modeOptions,on,
            lowWater,lowNutr,refillErr,waterPct,tempVal,plantsAge,
@@ -369,34 +377,8 @@
       ${[...Array(9)].map(()=>`<div style="width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.16);flex-shrink:0;position:relative;z-index:1"></div>`).join('')}
     </div>
 
-    <!-- PANNELLO ACCIAIO SPAZZOLATO: LCD + pompa -->
-    <div style="background:linear-gradient(100deg,#eef1f5 0%,#c7ced6 14%,#f6f8fa 28%,#aab2bd 42%,#e2e6ea 58%,#9aa2ad 72%,#eef1f5 88%,#c0c7d0 100%);padding:6px 8px;display:flex;align-items:center;gap:8px">
-      <!-- LCD -->
-      <div style="flex:1;background:#030b07;border:1.5px solid rgba(74,222,128,.28);border-radius:7px;padding:5px 7px;box-shadow:inset 0 0 12px rgba(0,255,70,.04),0 2px 5px rgba(0,0,0,.35)">
-        <div style="display:flex;justify-content:space-between;margin-bottom:2px">
-          <span style="font-size:9px;font-weight:700;color:#fff">💧 <span data-lp-update="lcd-w">${waterPct}%</span></span>
-          <span style="font-size:9px;font-weight:700;color:#fff">🌡️ <span data-lp-update="lcd-t">${tempVal.toFixed(1)}°</span></span>
-        </div>
-        <div style="height:4px;background:rgba(0,0,0,.6);border-radius:2px;margin-bottom:3px;overflow:hidden">
-          <div data-lp-update="lcd-bar" style="height:100%;width:${waterPct}%;background:${waterCol};border-radius:2px;transition:width 1.4s ease"></div>
-        </div>
-        <div style="margin-bottom:2px"><span style="font-size:8px;font-weight:700;color:${stageInfo.col}">${stageInfo.icon} ${stageInfo.name}</span>${plantsAge&&plantsAge!=='unknown'?`<span style="font-size:7px;color:#fff;margin-left:3px">· G.${plantsAge}</span>`:''}</div>
-        <div style="display:flex;justify-content:space-between">
-          <span style="font-size:7px;color:#fff">${currentMode&&currentMode!=='unknown'?currentMode.slice(0,12):''}</span>
-          <span data-lp-update="lcd-pump" style="font-size:7px;font-weight:700;color:${pumpRun&&power?'#4ade80':'#fff'};animation:${pumpRun&&power?'lp-lcd-blink 2s infinite':''}">${pumpRun&&power?'⚙ PUMP ON':''}</span>
-        </div>
-      </div>
-      <!-- Pulsante pompa rotondo -->
-      <div data-lp-action="${pumpIsSwitch?'pump':''}" style="display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0">
-        <div style="width:34px;height:34px;border-radius:50%;background:${pumpRun&&power?'rgba(20,45,25,.88)':'rgba(20,22,28,.85)'};border:2px solid ${pumpRun&&power?'rgba(74,222,128,.55)':'rgba(255,255,255,.35)'};display:flex;align-items:center;justify-content:center;box-shadow:${pumpRun&&power?'0 0 12px rgba(74,222,128,.35)':'0 2px 5px rgba(0,0,0,.35)'}">
-          <span data-lp-update="pump-side-gear" style="font-size:15px;display:inline-block;${pumpRun&&power?'animation:lp-spin 1s linear infinite':'opacity:.4'}">⚙️</span>
-        </div>
-        <span style="font-size:6px;color:#fff;font-weight:600;background:rgba(10,14,20,.55);border-radius:4px;padding:0 4px">${pumpRun&&power?'ATTIVA':'FERMA'}</span>
-      </div>
-    </div>
-
     <!-- SERBATOIO ACQUA (vista interna) con pompa, vaschetta nutrienti e ricircolo -->
-    <div style="position:relative;height:68px;background:#030c15;border-top:2px solid rgba(200,206,214,.55);overflow:hidden">
+    <div style="position:relative;height:92px;background:#030c15;overflow:hidden">
       <!-- Acqua animata -->
       <div data-lp-update="fill" style="position:absolute;bottom:0;left:0;right:0;height:${waterH}px;transition:height 1.4s ease;z-index:2">
         <svg style="position:absolute;top:-16px;left:0;width:200%;animation:lp-wave ${pumpRun&&power?'1.6s':'3.2s'} linear infinite" viewBox="0 0 800 18" preserveAspectRatio="none">
@@ -416,6 +398,10 @@
       <!-- Label acqua/temp in overlay -->
       <div data-lp-update="wtext" style="position:absolute;top:3px;left:7px;font-size:8px;font-weight:800;color:${waterCol};z-index:7">💧 ${waterPct}%</div>
       <div data-lp-update="temp" style="position:absolute;top:3px;right:7px;font-size:8px;font-weight:700;color:${tempCol};z-index:7">🌡️ ${tempVal.toFixed(1)}°</div>
+      <!-- Pulsante pompa (piccolo, in alto al centro) -->
+      <div data-lp-action="${pumpIsSwitch?'pump':''}" style="position:absolute;top:2px;left:50%;transform:translateX(-50%);z-index:8;width:20px;height:20px;border-radius:50%;background:${pumpRun&&power?'rgba(20,45,25,.88)':'rgba(20,22,28,.85)'};border:1.5px solid ${pumpRun&&power?'rgba(74,222,128,.55)':'rgba(255,255,255,.35)'};display:flex;align-items:center;justify-content:center;box-shadow:${pumpRun&&power?'0 0 10px rgba(74,222,128,.35)':'0 1px 4px rgba(0,0,0,.35)'}">
+        <span data-lp-update="pump-side-gear" style="font-size:11px;line-height:1;display:inline-block;${pumpRun&&power?'animation:lp-spin 1s linear infinite':'opacity:.4'}">⚙️</span>
+      </div>
     </div>
 
   </div>
@@ -562,7 +548,7 @@ ${pumpCycl&&cb?`
       const v=computeValues(card,rawHass);
       const{power,autoMode,pumpCycl,pumpRun,lightBr,on,
             lowWater,lowNutr,refillErr,waterPct,tempVal,plantsAge,
-            tempCol,waterCol,waterH,stage,cb,currentMode}=v;
+            tempCol,waterCol,waterH,stage,cb}=v;
 
       // Re-render se luce o fase cambiata (impatta visual completo)
       const stageDiff=_lastStage[card.id]!==undefined&&_lastStage[card.id]!==stage;
@@ -582,17 +568,13 @@ ${pumpCycl&&cb?`
       const fill=qu('fill');if(fill)fill.style.height=waterH+'px';
       const wt=qu('wtext');if(wt){wt.textContent='💧 '+waterPct+'%';wt.style.color=waterCol;}
       const wv=qu('wval');if(wv){wv.textContent=waterPct+'%';wv.style.color=waterCol;}
-      const lw=qu('lcd-w');if(lw)lw.textContent=waterPct+'%';
-      const lb=qu('lcd-bar');if(lb){lb.style.width=waterPct+'%';lb.style.background=waterCol;}
       // Temp
       const tp=qu('temp');if(tp){tp.textContent='🌡️ '+tempVal.toFixed(1)+'°';tp.style.color=tempCol;}
       const tv=qu('tval');if(tv){tv.textContent=tempVal.toFixed(1)+'°';tv.style.color=tempCol;}
-      const lt=qu('lcd-t');if(lt){lt.textContent=tempVal.toFixed(1)+'°';lt.style.color=tempCol;}
       // Età
       const av=qu('aval');if(av)av.textContent=plantsAge!=='unknown'?plantsAge:'—';
       // Pompa gear (sia quello interno che quello sul fianco)
       ['pump-gear','pump-side-gear'].forEach(n=>{const g=qu(n);if(g){g.style.animation=pumpRun&&power?'lp-spin 0.8s linear infinite':'';g.style.opacity=pumpRun&&power?'1':'0.3';}});
-      const lcp=qu('lcd-pump');if(lcp){lcp.textContent=pumpRun&&power?'⚙ PUMP ON':'';lcp.style.color=pumpRun&&power?'#4ade80':'#fff';lcp.style.animation=pumpRun&&power?'lp-lcd-blink 2s infinite':'';}
       // Bolle
       [15,28,40,52,65,78,88].forEach((_,i)=>{const b=el.querySelector(`[data-lp-bub="${i}"]`);if(b)b.style.display=pumpRun&&power?'block':'none';});
       // Luminosità
@@ -660,8 +642,8 @@ ${pumpCycl&&cb?`
     return render(mc,{states:{'switch.letpot_max_power':{state:'on'},'switch.letpot_max_auto_mode':{state:'on'},'switch.letpot_max_pump_cycling':{state:'on'},'sensor.letpot_max_water_level':{state:'78'},'sensor.letpot_max_temperatura':{state:'26.5'},'sensor.letpot_max_plants_age':{state:'45'},'switch.letpot_max_pump':{state:'on'},'time.letpot_max_light_on':{state:'06:00:00'},'time.letpot_max_light_off':{state:'22:00:00'},'number.letpot_max_light_brightness':{state:'7',attributes:{min:1,max:10,step:1}},'select.letpot_max_modalita_luce':{state:'Verdure/Erbe',attributes:{options:['Verdure/Erbe','Frutti','Fiori','Erbe aromatiche','Personalizzato']}},'binary_sensor.letpot_max_low_water':{state:'off'},'binary_sensor.letpot_max_low_nutrients':{state:'off'},'binary_sensor.letpot_max_refill_error':{state:'off'}}});
   }
 
-  const CARD={id:ID,name:'LetPot Max',icon:'🌿',desc:'Sistema idroponico LPH-MAX 21 pod — vasca ovale in acciaio, pannello luce a taglio, pompa a sinistra e vaschetta nutrienti a destra',version:'4.3',colSpan:2,rowSpan:3,render,mount,update,configure,preview};
+  const CARD={id:ID,name:'LetPot Max',icon:'🌿',desc:'Sistema idroponico LPH-MAX 21 pod — vasca ovale in acciaio, serbatoio piu alto, fascio luminoso volumetrico',version:'4.4',colSpan:2,rowSpan:3,render,mount,update,configure,preview};
   window.FratechCardRegistry=window.FratechCardRegistry||{};window.FratechCardRegistry[ID]=CARD;
   window.FratechCards=window.FratechCards||{};window.FratechCards[ID]=CARD;
-  try{console.log('[FratechStore] letpot-max v4.3');}catch(e){}
+  try{console.log('[FratechStore] letpot-max v4.4');}catch(e){}
 })();
