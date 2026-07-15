@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.0.72 — 2026-07-15
+
+### feat(card): LetPot Max v4.2 — vasca ovale in acciaio, aspetto realistico
+
+- **Vasca ovale in acciaio spazzolato**: il tank body passa da rettangolo scuro (radius 8px) a forma ovale in alto / arrotondata in basso (`border-radius:46px 46px 20px 20px`), gradiente acciaio spazzolato multi-banda invece del blu navy
+- **Rim pod discreto**: la barra con 7 cerchi grandi "21 pod" diventa un rim sottile (11px) con 9 puntini appena accennati, fedele alle foto reali dove i pod si vedono a malapena sotto le piante
+- **Pannello LCD+pompa su acciaio**: sfondo del pannello controlli da blu navy a gradiente acciaio; pulsante pompa ridisegnato (base scura/plastica, glow verde quando attiva) per restare leggibile sul nuovo sfondo chiaro
+- **Pannello LED ovale**: da rettangolo con angoli smussati (10px) a forma "pill" ovale (50px), come il vero pannello sospeso LetPot
+- **Vaschetta nutrienti**: nuova `nutrientBox()` — rettangolino nero con striscia LED multicolore, galleggiante accanto alla pompa nel serbatoio acqua, come nella foto della vasca aperta
+
+---
+
 ## 2.0.71 — 2026-07-15
 
 ### feat(card): LetPot Max v4.1 — fascio luminoso reale, pompa dentro l'acqua con ricircolo, luce real-time

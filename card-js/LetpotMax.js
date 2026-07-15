@@ -216,6 +216,17 @@
     </div>`;
   }
 
+  /* ── Vaschetta nutrienti (galleggia in acqua accanto alla pompa) ── */
+  function nutrientBox(active){
+    return `
+    <div style="position:absolute;bottom:6px;right:22%;z-index:6;display:flex;flex-direction:column;align-items:center;gap:2px">
+      <div style="width:20px;height:13px;background:rgba(14,18,26,.9);border:1px solid rgba(90,110,140,.55);border-radius:3px;position:relative;overflow:hidden;box-shadow:0 2px 5px rgba(0,0,0,.4)">
+        <div style="position:absolute;top:2px;left:2px;right:2px;height:2px;border-radius:1px;background:linear-gradient(90deg,#ff5a5a,#ffd15a,#5affa0,#5ab0ff);opacity:${active?'.95':'.35'}"></div>
+      </div>
+      <span style="font-size:5px;color:#fff;font-weight:700;background:rgba(10,14,20,.55);border-radius:3px;padding:0 3px">NUTR</span>
+    </div>`;
+  }
+
   /* ── Stili ── */
   function injectStyles(){
     if(document.getElementById('lp-kf')) return;
@@ -346,9 +357,9 @@
 <!-- ══════════════════════════════════════════════ -->
 <div style="margin:3px 8px 0;flex-shrink:0;display:flex;flex-direction:column;align-items:center">
 
-  <!-- PANNELLO LED (orizzontale, in cima al palo) -->
+  <!-- PANNELLO LED ovale (in cima al palo, come il vero pannello LetPot) -->
   <div style="width:94%;position:relative">
-    <div style="background:${on?'linear-gradient(180deg,#12082a,#1c0e3a)':'linear-gradient(180deg,#0c0c18,#101020)'};border:2px solid ${on?'rgba(175,48,255,.6)':'rgba(55,55,85,.5)'};border-radius:10px;padding:6px 10px 5px;position:relative;overflow:hidden;box-shadow:${on?'0 0 28px rgba(160,20,255,.4),0 0 60px rgba(160,20,255,.12)':'none'}">
+    <div style="background:${on?'linear-gradient(180deg,#12082a,#1c0e3a)':'linear-gradient(180deg,#0c0c18,#101020)'};border:2px solid ${on?'rgba(175,48,255,.6)':'rgba(55,55,85,.5)'};border-radius:50px;padding:6px 22px 5px;position:relative;overflow:hidden;box-shadow:${on?'0 0 28px rgba(160,20,255,.4),0 0 60px rgba(160,20,255,.12)':'none'}">
       ${on?`<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(185,35,255,.25) 0%,transparent 68%)"></div>`:''}
       <div style="position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:3px;justify-content:center">${buildLeds(on)}</div>
       <div style="display:flex;justify-content:space-between;margin-top:3px;position:relative;z-index:1">
@@ -372,20 +383,20 @@
     </div>
   </div>
 
-  <!-- TANK BODY -->
-  <div style="width:100%;border-radius:8px;overflow:hidden;border:1.5px solid rgba(140,155,190,.28);box-shadow:0 4px 18px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.06)">
+  <!-- TANK BODY: vasca ovale in acciaio spazzolato -->
+  <div style="width:100%;border-radius:46px 46px 20px 20px;overflow:hidden;border:1.5px solid rgba(255,255,255,.4);box-shadow:0 6px 20px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.5)">
 
-    <!-- COPERCHIO 21 POD -->
-    <div style="background:linear-gradient(180deg,#18222e,#101820);height:22px;display:flex;align-items:center;justify-content:center;gap:5px;padding:0 8px;border-bottom:1px solid rgba(35,95,175,.38)">
-      <!-- Fascio che "entra" nel coperchio -->
-      ${on?`<div style="position:absolute;left:20%;right:20%;top:0;height:22px;background:linear-gradient(180deg,rgba(180,30,255,.14),transparent);pointer-events:none;z-index:0"></div>`:''}
-      ${[...Array(7)].map((_,i)=>`<div style="width:11px;height:11px;border-radius:50%;background:rgba(${pumpRun&&power?'28,72,155':'15,45,110'},.7);border:1.5px solid rgba(${pumpRun&&power?'75,145,230':'50,110,195'},.45);position:relative;z-index:1;${on?'box-shadow:0 0 4px rgba(170,30,255,.18)':''}"></div>`).join('')}
+    <!-- RIM ovale sotto le piante (pod appena accennati, come nella vasca reale) -->
+    <div style="background:linear-gradient(180deg,#232a33,#161b21);height:11px;display:flex;align-items:center;justify-content:center;gap:4px;padding:0 8px;border-bottom:1px solid rgba(210,216,224,.35);position:relative">
+      <!-- Fascio che "entra" nel rim -->
+      ${on?`<div style="position:absolute;left:20%;right:20%;top:0;height:11px;background:linear-gradient(180deg,rgba(180,30,255,.16),transparent);pointer-events:none;z-index:0"></div>`:''}
+      ${[...Array(9)].map(()=>`<div style="width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.16);flex-shrink:0;position:relative;z-index:1"></div>`).join('')}
     </div>
 
-    <!-- CORPO ACCIAIO: LCD + pompa -->
-    <div style="background:linear-gradient(180deg,#181a28,#121420);padding:6px 8px;display:flex;align-items:center;gap:8px">
+    <!-- PANNELLO ACCIAIO SPAZZOLATO: LCD + pompa -->
+    <div style="background:linear-gradient(100deg,#eef1f5 0%,#c7ced6 14%,#f6f8fa 28%,#aab2bd 42%,#e2e6ea 58%,#9aa2ad 72%,#eef1f5 88%,#c0c7d0 100%);padding:6px 8px;display:flex;align-items:center;gap:8px">
       <!-- LCD -->
-      <div style="flex:1;background:#030b07;border:1.5px solid rgba(74,222,128,.28);border-radius:7px;padding:5px 7px;box-shadow:inset 0 0 12px rgba(0,255,70,.04)">
+      <div style="flex:1;background:#030b07;border:1.5px solid rgba(74,222,128,.28);border-radius:7px;padding:5px 7px;box-shadow:inset 0 0 12px rgba(0,255,70,.04),0 2px 5px rgba(0,0,0,.35)">
         <div style="display:flex;justify-content:space-between;margin-bottom:2px">
           <span style="font-size:9px;font-weight:700;color:#fff">💧 <span data-lp-update="lcd-w">${waterPct}%</span></span>
           <span style="font-size:9px;font-weight:700;color:#fff">🌡️ <span data-lp-update="lcd-t">${tempVal.toFixed(1)}°</span></span>
@@ -401,15 +412,15 @@
       </div>
       <!-- Pulsante pompa rotondo -->
       <div data-lp-action="${pumpIsSwitch?'pump':''}" style="display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0">
-        <div style="width:34px;height:34px;border-radius:50%;background:${pumpRun&&power?'rgba(74,222,128,.14)':'rgba(255,255,255,.05)'};border:2px solid ${pumpRun&&power?'rgba(74,222,128,.42)':'rgba(255,255,255,.12)'};display:flex;align-items:center;justify-content:center;box-shadow:${pumpRun&&power?'0 0 12px rgba(74,222,128,.2)':'none'}">
-          <span data-lp-update="pump-side-gear" style="font-size:15px;display:inline-block;${pumpRun&&power?'animation:lp-spin 1s linear infinite':'opacity:.3'}">⚙️</span>
+        <div style="width:34px;height:34px;border-radius:50%;background:${pumpRun&&power?'rgba(20,45,25,.88)':'rgba(20,22,28,.85)'};border:2px solid ${pumpRun&&power?'rgba(74,222,128,.55)':'rgba(255,255,255,.35)'};display:flex;align-items:center;justify-content:center;box-shadow:${pumpRun&&power?'0 0 12px rgba(74,222,128,.35)':'0 2px 5px rgba(0,0,0,.35)'}">
+          <span data-lp-update="pump-side-gear" style="font-size:15px;display:inline-block;${pumpRun&&power?'animation:lp-spin 1s linear infinite':'opacity:.4'}">⚙️</span>
         </div>
-        <span style="font-size:6px;color:#fff;font-weight:600">${pumpRun&&power?'ATTIVA':'FERMA'}</span>
+        <span style="font-size:6px;color:#fff;font-weight:600;background:rgba(10,14,20,.55);border-radius:4px;padding:0 4px">${pumpRun&&power?'ATTIVA':'FERMA'}</span>
       </div>
     </div>
 
-    <!-- SERBATOIO ACQUA con pompa interna e ricircolo -->
-    <div style="position:relative;height:68px;background:#030c15;border-top:1px solid rgba(18,75,155,.32);overflow:hidden">
+    <!-- SERBATOIO ACQUA (vista interna) con pompa, vaschetta nutrienti e ricircolo -->
+    <div style="position:relative;height:68px;background:#030c15;border-top:2px solid rgba(200,206,214,.55);overflow:hidden">
       <!-- Acqua animata -->
       <div data-lp-update="fill" style="position:absolute;bottom:0;left:0;right:0;height:${waterH}px;transition:height 1.4s ease;z-index:2">
         <svg style="position:absolute;top:-16px;left:0;width:200%;animation:lp-wave ${pumpRun&&power?'1.6s':'3.2s'} linear infinite" viewBox="0 0 800 18" preserveAspectRatio="none">
@@ -423,6 +434,8 @@
         <div style="position:absolute;inset:0;z-index:3">${bubs}</div>
         <!-- POMPA e RICIRCOLO dentro l'acqua -->
         ${pumpInWater(pumpRun,power)}
+        <!-- Vaschetta nutrienti galleggiante -->
+        ${nutrientBox(pumpRun&&power)}
       </div>
       <!-- Label acqua/temp in overlay -->
       <div data-lp-update="wtext" style="position:absolute;top:3px;left:7px;font-size:8px;font-weight:800;color:${waterCol};z-index:7">💧 ${waterPct}%</div>
@@ -671,8 +684,8 @@ ${pumpCycl&&cb?`
     return render(mc,{states:{'switch.letpot_max_power':{state:'on'},'switch.letpot_max_auto_mode':{state:'on'},'switch.letpot_max_pump_cycling':{state:'on'},'sensor.letpot_max_water_level':{state:'78'},'sensor.letpot_max_temperatura':{state:'26.5'},'sensor.letpot_max_plants_age':{state:'45'},'switch.letpot_max_pump':{state:'on'},'time.letpot_max_light_on':{state:'06:00:00'},'time.letpot_max_light_off':{state:'22:00:00'},'number.letpot_max_light_brightness':{state:'7',attributes:{min:1,max:10,step:1}},'select.letpot_max_modalita_luce':{state:'Verdure/Erbe',attributes:{options:['Verdure/Erbe','Frutti','Fiori','Erbe aromatiche','Personalizzato']}},'binary_sensor.letpot_max_low_water':{state:'off'},'binary_sensor.letpot_max_low_nutrients':{state:'off'},'binary_sensor.letpot_max_refill_error':{state:'off'}}});
   }
 
-  const CARD={id:ID,name:'LetPot Max',icon:'🌿',desc:'Sistema idroponico LPH-MAX 21 pod — fascio luminoso reale, pompa con ricircolo',version:'4.1',colSpan:2,rowSpan:3,render,mount,update,configure,preview};
+  const CARD={id:ID,name:'LetPot Max',icon:'🌿',desc:'Sistema idroponico LPH-MAX 21 pod — vasca ovale in acciaio, fascio luminoso reale, pompa con ricircolo e vaschetta nutrienti',version:'4.2',colSpan:2,rowSpan:3,render,mount,update,configure,preview};
   window.FratechCardRegistry=window.FratechCardRegistry||{};window.FratechCardRegistry[ID]=CARD;
   window.FratechCards=window.FratechCards||{};window.FratechCards[ID]=CARD;
-  try{console.log('[FratechStore] letpot-max v4.1');}catch(e){}
+  try{console.log('[FratechStore] letpot-max v4.2');}catch(e){}
 })();
