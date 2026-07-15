@@ -280,12 +280,12 @@
   /* ── RENDER ── */
   function render(card, rawHass){
     const v=computeValues(card,rawHass);
-    const{power,autoMode,pumpCycl,pumpRun,pumpIsSwitch,lightBr,brMax,
+    const{power,autoMode,pumpCycl,pumpRun,lightBr,brMax,
           lightOnVal,lightOffVal,currentMode,modeOptions,on,
           lowWater,lowNutr,refillErr,waterPct,tempVal,plantsAge,
           tempCol,waterCol,waterH,stage,cb}=v;
     const stageInfo=STAGES[stage];
-    const plantAreaH=[12,26,44,60,76,90][stage]||60;
+    const plantAreaH=[30,44,62,78,94,108][stage]||78;
     const plants=plantsSvg(stage,pumpRun&&power,on);
 
     // Bolle acqua (quando pompa attiva, lato sx)
@@ -367,15 +367,8 @@
     </div>
   </div>
 
-  <!-- TANK BODY: vasca ovale in acciaio spazzolato -->
-  <div style="width:100%;border-radius:46px 46px 20px 20px;overflow:hidden;border:1.5px solid rgba(255,255,255,.4);box-shadow:0 6px 20px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.5)">
-
-    <!-- RIM ovale sotto le piante (pod appena accennati, come nella vasca reale) -->
-    <div style="background:linear-gradient(180deg,#232a33,#161b21);height:11px;display:flex;align-items:center;justify-content:center;gap:4px;padding:0 8px;border-bottom:1px solid rgba(210,216,224,.35);position:relative">
-      <!-- Fascio che "entra" nel rim -->
-      ${on?`<div style="position:absolute;left:20%;right:20%;top:0;height:11px;background:linear-gradient(180deg,rgba(180,30,255,.16),transparent);pointer-events:none;z-index:0"></div>`:''}
-      ${[...Array(9)].map(()=>`<div style="width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.16);flex-shrink:0;position:relative;z-index:1"></div>`).join('')}
-    </div>
+  <!-- TANK BODY: vasca in acciaio — solo acqua, pompa, vaschetta nutrienti -->
+  <div style="width:100%;border-radius:20px 20px 16px 16px;overflow:hidden;border:1.5px solid rgba(255,255,255,.4);box-shadow:0 6px 20px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.5)">
 
     <!-- SERBATOIO ACQUA (vista interna) con pompa, vaschetta nutrienti e ricircolo -->
     <div style="position:relative;height:92px;background:#030c15;overflow:hidden">
@@ -394,13 +387,6 @@
         ${pumpInWater(pumpRun,power)}
         <!-- Vaschetta nutrienti galleggiante -->
         ${nutrientBox(pumpRun&&power)}
-      </div>
-      <!-- Label acqua/temp in overlay -->
-      <div data-lp-update="wtext" style="position:absolute;top:3px;left:7px;font-size:8px;font-weight:800;color:${waterCol};z-index:7">💧 ${waterPct}%</div>
-      <div data-lp-update="temp" style="position:absolute;top:3px;right:7px;font-size:8px;font-weight:700;color:${tempCol};z-index:7">🌡️ ${tempVal.toFixed(1)}°</div>
-      <!-- Pulsante pompa (piccolo, in alto al centro) -->
-      <div data-lp-action="${pumpIsSwitch?'pump':''}" style="position:absolute;top:2px;left:50%;transform:translateX(-50%);z-index:8;width:20px;height:20px;border-radius:50%;background:${pumpRun&&power?'rgba(20,45,25,.88)':'rgba(20,22,28,.85)'};border:1.5px solid ${pumpRun&&power?'rgba(74,222,128,.55)':'rgba(255,255,255,.35)'};display:flex;align-items:center;justify-content:center;box-shadow:${pumpRun&&power?'0 0 10px rgba(74,222,128,.35)':'0 1px 4px rgba(0,0,0,.35)'}">
-        <span data-lp-update="pump-side-gear" style="font-size:11px;line-height:1;display:inline-block;${pumpRun&&power?'animation:lp-spin 1s linear infinite':'opacity:.4'}">⚙️</span>
       </div>
     </div>
 
@@ -566,15 +552,13 @@ ${pumpCycl&&cb?`
       if(pw){pw.textContent=power?'● ON':'○ OFF';pw.style.color=power?'#4ade80':'#f87171';pw.style.background=power?'rgba(74,222,128,.15)':'rgba(248,113,113,.12)';pw.style.borderColor=power?'rgba(74,222,128,.3)':'rgba(248,113,113,.28)';}
       // Acqua
       const fill=qu('fill');if(fill)fill.style.height=waterH+'px';
-      const wt=qu('wtext');if(wt){wt.textContent='💧 '+waterPct+'%';wt.style.color=waterCol;}
       const wv=qu('wval');if(wv){wv.textContent=waterPct+'%';wv.style.color=waterCol;}
       // Temp
-      const tp=qu('temp');if(tp){tp.textContent='🌡️ '+tempVal.toFixed(1)+'°';tp.style.color=tempCol;}
       const tv=qu('tval');if(tv){tv.textContent=tempVal.toFixed(1)+'°';tv.style.color=tempCol;}
       // Età
       const av=qu('aval');if(av)av.textContent=plantsAge!=='unknown'?plantsAge:'—';
-      // Pompa gear (sia quello interno che quello sul fianco)
-      ['pump-gear','pump-side-gear'].forEach(n=>{const g=qu(n);if(g){g.style.animation=pumpRun&&power?'lp-spin 0.8s linear infinite':'';g.style.opacity=pumpRun&&power?'1':'0.3';}});
+      // Pompa gear
+      const pg=qu('pump-gear');if(pg){pg.style.animation=pumpRun&&power?'lp-spin 0.8s linear infinite':'';pg.style.opacity=pumpRun&&power?'1':'0.3';}
       // Bolle
       [15,28,40,52,65,78,88].forEach((_,i)=>{const b=el.querySelector(`[data-lp-bub="${i}"]`);if(b)b.style.display=pumpRun&&power?'block':'none';});
       // Luminosità
@@ -642,8 +626,8 @@ ${pumpCycl&&cb?`
     return render(mc,{states:{'switch.letpot_max_power':{state:'on'},'switch.letpot_max_auto_mode':{state:'on'},'switch.letpot_max_pump_cycling':{state:'on'},'sensor.letpot_max_water_level':{state:'78'},'sensor.letpot_max_temperatura':{state:'26.5'},'sensor.letpot_max_plants_age':{state:'45'},'switch.letpot_max_pump':{state:'on'},'time.letpot_max_light_on':{state:'06:00:00'},'time.letpot_max_light_off':{state:'22:00:00'},'number.letpot_max_light_brightness':{state:'7',attributes:{min:1,max:10,step:1}},'select.letpot_max_modalita_luce':{state:'Verdure/Erbe',attributes:{options:['Verdure/Erbe','Frutti','Fiori','Erbe aromatiche','Personalizzato']}},'binary_sensor.letpot_max_low_water':{state:'off'},'binary_sensor.letpot_max_low_nutrients':{state:'off'},'binary_sensor.letpot_max_refill_error':{state:'off'}}});
   }
 
-  const CARD={id:ID,name:'LetPot Max',icon:'🌿',desc:'Sistema idroponico LPH-MAX 21 pod — vasca ovale in acciaio, serbatoio piu alto, fascio luminoso volumetrico',version:'4.4',colSpan:2,rowSpan:3,render,mount,update,configure,preview};
+  const CARD={id:ID,name:'LetPot Max',icon:'🌿',desc:'Sistema idroponico LPH-MAX 21 pod — vasca essenziale (acqua, pompa, nutrienti), piu spazio sotto la luce',version:'4.5',colSpan:2,rowSpan:3,render,mount,update,configure,preview};
   window.FratechCardRegistry=window.FratechCardRegistry||{};window.FratechCardRegistry[ID]=CARD;
   window.FratechCards=window.FratechCards||{};window.FratechCards[ID]=CARD;
-  try{console.log('[FratechStore] letpot-max v4.4');}catch(e){}
+  try{console.log('[FratechStore] letpot-max v4.5');}catch(e){}
 })();

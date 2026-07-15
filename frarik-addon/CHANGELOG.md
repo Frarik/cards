@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.0.75 — 2026-07-15
+
+### fix(card): LetPot Max v4.5 — vasca essenziale, piu spazio sotto la luce, angoli meno estremi
+
+- **Più spazio tra pannello luce e vasca**: `plantAreaH` per fase alzato (da [12,26,44,60,76,90] a [30,44,62,78,94,108]px), il gambo continua ad attraversare tutta la zona e a toccare il bordo vasca
+- **Vasca ridotta all'essenziale**: rimossi il rim scuro con i puntini pod (la "riga nera orizzontale"), le due label overlay acqua/temperatura dentro la vasca (duplicate con la griglia STATS) e il pulsante pompa con rotellina in alto — dentro la vasca restano solo acqua, pompa sommersa e vaschetta nutrienti
+- **Angoli vasca meno estremi**: border-radius da `46px 46px 20px 20px` (oval flare) a `20px 20px 16px 16px` (rettangolo arrotondato, meno "a goccia")
+- Pulita `update()` dai riferimenti a elementi rimossi (`wtext`, `temp`, `pump-side-gear`)
+
+---
+
 ## 2.0.74 — 2026-07-15
 
 ### fix(card): LetPot Max v4.4 — rimosso pannello acciaio, serbatoio più alto, fascio luminoso più bello
