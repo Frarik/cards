@@ -152,78 +152,56 @@
     </div>`;
   }
 
-  /* ── LED Matrix ── */
-  const LED_MAP=[
-    ['R','B','R','B','R','B','R','B','R'],
-    ['B','W','B','R','B','W','B','R','B'],
-    ['R','B','R','B','W','B','R','B','R'],
-  ];
-  const LC={R:'#ff1a3c',B:'#2055ff',W:'#ffe9b0'};
-  const LG={R:'rgba(255,26,60,.9)',B:'rgba(32,85,255,.9)',W:'rgba(255,233,176,.7)'};
-  function buildLeds(on){
-    let d='';
-    for(let r=0;r<3;r++) for(let c=0;c<9;c++){
-      const t=LED_MAP[r][c];
-      const st=on ? `background:${LC[t]};box-shadow:0 0 ${t==='W'?5:11}px 2px ${LG[t]};animation:lp-glow ${1.4+(c*r%3)*.28}s ease-in-out ${(c*.09).toFixed(2)}s infinite` : `background:${LC[t]};opacity:.12`;
-      d+=`<div style="width:7px;height:7px;border-radius:50%;${st};flex-shrink:0"></div>`;
-    }
-    return d;
+  /* ── Riga luminosa del pannello (vista frontale a taglio: si vede solo il bordo emettitore) ── */
+  function lightBar(on){
+    return on
+      ? `background:linear-gradient(90deg,#ff1a3c,#ffe9b0,#2055ff,#ffe9b0,#ff1a3c);box-shadow:0 0 10px 2px rgba(190,60,255,.65),0 0 22px 4px rgba(190,60,255,.3)`
+      : `background:rgba(255,255,255,.1);box-shadow:none`;
   }
 
-  /* ── Pompa dentro l'acqua ── */
+  /* ── Pompa sommersa (SINISTRA): corpo con griglia di aspirazione + impeller ── */
   function pumpInWater(pumpRun, power){
     const active=pumpRun&&power;
     const tuboColor=active?'rgba(55,120,210,.85)':'rgba(25,60,120,.4)';
-    const bodyBg=active?'rgba(18,52,120,.92)':'rgba(10,28,70,.7)';
-    const bodyBorder=active?'rgba(65,138,255,.55)':'rgba(28,65,135,.32)';
-    const bodyGlow=active?'0 0 12px rgba(40,120,255,.28)':'none';
-    const pipeColor=active?'rgba(50,118,220,.65)':'rgba(22,55,120,.32)';
+    const bodyBg=active?'linear-gradient(180deg,rgba(35,80,160,.95),rgba(15,40,95,.95))':'linear-gradient(180deg,rgba(20,45,90,.75),rgba(10,25,60,.75))';
+    const bodyBorder=active?'rgba(65,138,255,.6)':'rgba(28,65,135,.35)';
+    const bodyGlow=active?'0 0 12px rgba(40,120,255,.3)':'none';
 
-    // Gocce che salgono nel tubo (animate)
+    // Gocce che salgono nel tubo di mandata (animate)
     const flowDrops=active?[0,.4,.8].map(d=>`<div style="position:absolute;left:0;right:0;margin:auto;width:3px;height:5px;background:rgba(110,195,255,.8);border-radius:2px;animation:lp-flowUp .9s ease-in ${d}s infinite"></div>`).join(''):'';
-
-    // Circolazione: frecce sx (discesa) e dx (salita)
-    const flowLeft=active?[0,.5,1].map(d=>`<div style="position:absolute;width:2.5px;height:7px;background:rgba(90,190,255,.45);border-radius:1px;animation:lp-dropDown 1.4s ease-in ${d}s infinite"></div>`).join(''):'';
-    const flowRight=active?[0,.45,.9].map(d=>`<div style="position:absolute;width:2.5px;height:7px;background:rgba(90,190,255,.55);border-radius:1px;animation:lp-flowUp 1.1s ease-in ${d}s infinite"></div>`).join(''):'';
+    // Risalita verso i pod
+    const flowUp=active?[0,.5,1].map(d=>`<div style="position:absolute;width:2.5px;height:7px;background:rgba(90,190,255,.5);border-radius:1px;animation:lp-flowUp 1.1s ease-in ${d}s infinite"></div>`).join(''):'';
 
     return `
-    <!-- POMPA IDROPONICA nell'acqua -->
-    <div style="position:absolute;bottom:3px;left:50%;transform:translateX(-50%);z-index:6;display:flex;flex-direction:column;align-items:center;gap:0">
+    <!-- POMPA sommersa -->
+    <div style="position:absolute;bottom:4px;left:16%;z-index:6;display:flex;flex-direction:column;align-items:center;gap:0">
       <!-- Tubo di mandata (va verso i pod) -->
-      <div style="width:5px;height:16px;background:${tuboColor};border-radius:2px 2px 0 0;position:relative;overflow:hidden">
+      <div style="width:4px;height:15px;background:${tuboColor};border-radius:2px 2px 0 0;position:relative;overflow:hidden">
         ${flowDrops}
       </div>
-      <!-- Corpo pompa -->
-      <div style="width:38px;height:24px;background:${bodyBg};border:1.5px solid ${bodyBorder};border-radius:6px;display:flex;align-items:center;justify-content:center;position:relative;box-shadow:${bodyGlow}">
-        <!-- Label -->
-        <div style="font-size:8px;color:#fff;font-weight:700;opacity:${active?.9:.3}">PUMP</div>
-        <!-- Impeller che gira -->
-        <div data-lp-update="pump-gear" style="position:absolute;right:3px;font-size:10px;display:inline-block;${active?'animation:lp-spin .7s linear infinite':'opacity:.2'}">⚙</div>
-        <!-- Ingresso acqua (sx) -->
-        <div style="position:absolute;left:-6px;top:50%;transform:translateY(-50%);width:6px;height:5px;background:${pipeColor};border-radius:2px 0 0 2px"></div>
-        <!-- Uscita (dx) — passa al tubo di mandata -->
-        <div style="position:absolute;right:-6px;top:50%;transform:translateY(-50%);width:6px;height:5px;background:${pipeColor};border-radius:0 2px 2px 0"></div>
+      <!-- Corpo pompa: griglia di aspirazione in basso + impeller -->
+      <div style="width:20px;height:24px;background:${bodyBg};border:1.5px solid ${bodyBorder};border-radius:4px 4px 9px 9px;position:relative;box-shadow:${bodyGlow};display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:2px;gap:1.5px">
+        ${[0,1,2].map(()=>`<div style="width:12px;height:1.5px;background:rgba(255,255,255,.4);border-radius:1px;flex-shrink:0"></div>`).join('')}
+        <div data-lp-update="pump-gear" style="font-size:8px;line-height:1;${active?'animation:lp-spin .7s linear infinite':'opacity:.3'}">⚙</div>
       </div>
     </div>
-
-    <!-- RICIRCOLO: lato DX salita (pompa → pod) -->
-    <div style="position:absolute;right:10px;top:6px;bottom:28px;z-index:5;display:flex;flex-direction:column;justify-content:space-evenly;align-items:center;width:8px">
-      ${flowRight}
-    </div>
-    <!-- RICIRCOLO: lato SX discesa (pod → serbatoio) -->
-    <div style="position:absolute;left:10px;top:6px;bottom:28px;z-index:5;display:flex;flex-direction:column;justify-content:space-evenly;align-items:center;width:8px">
-      ${flowLeft}
+    <!-- Risalita acqua verso i pod -->
+    <div style="position:absolute;left:32%;top:6px;bottom:30px;z-index:5;display:flex;flex-direction:column;justify-content:space-evenly;align-items:center;width:8px">
+      ${flowUp}
     </div>`;
   }
 
-  /* ── Vaschetta nutrienti (galleggia in acqua accanto alla pompa) ── */
+  /* ── Vaschetta nutrienti (DESTRA, più grande) ── */
   function nutrientBox(active){
     return `
-    <div style="position:absolute;bottom:6px;right:22%;z-index:6;display:flex;flex-direction:column;align-items:center;gap:2px">
-      <div style="width:20px;height:13px;background:rgba(14,18,26,.9);border:1px solid rgba(90,110,140,.55);border-radius:3px;position:relative;overflow:hidden;box-shadow:0 2px 5px rgba(0,0,0,.4)">
-        <div style="position:absolute;top:2px;left:2px;right:2px;height:2px;border-radius:1px;background:linear-gradient(90deg,#ff5a5a,#ffd15a,#5affa0,#5ab0ff);opacity:${active?'.95':'.35'}"></div>
+    <div style="position:absolute;bottom:4px;right:10%;z-index:6;display:flex;flex-direction:column;align-items:center;gap:2px">
+      <div style="width:34px;height:24px;background:linear-gradient(180deg,rgba(20,26,36,.95),rgba(10,14,22,.95));border:1.5px solid rgba(90,110,140,.6);border-radius:5px;position:relative;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.45)">
+        <div style="position:absolute;top:3px;left:3px;right:3px;height:3px;border-radius:1px;background:linear-gradient(90deg,#ff5a5a,#ffd15a,#5affa0,#5ab0ff);opacity:${active?'.95':'.35'}"></div>
+        <div style="position:absolute;bottom:3px;left:0;right:0;display:flex;justify-content:center;gap:3px">
+          ${[0,1,2].map(()=>`<div style="width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.15)"></div>`).join('')}
+        </div>
       </div>
-      <span style="font-size:5px;color:#fff;font-weight:700;background:rgba(10,14,20,.55);border-radius:3px;padding:0 3px">NUTR</span>
+      <span style="font-size:5px;color:#fff;font-weight:700;background:rgba(10,14,20,.55);border-radius:3px;padding:0 3px">NUTRIENTI</span>
     </div>`;
   }
 
@@ -357,27 +335,25 @@
 <!-- ══════════════════════════════════════════════ -->
 <div style="margin:3px 8px 0;flex-shrink:0;display:flex;flex-direction:column;align-items:center">
 
-  <!-- PANNELLO LED ovale (in cima al palo, come il vero pannello LetPot) -->
+  <!-- PANNELLO LED: vista frontale a taglio — si vede solo la riga emettitrice, il fascio parte da sotto -->
   <div style="width:94%;position:relative">
-    <div style="background:${on?'linear-gradient(180deg,#12082a,#1c0e3a)':'linear-gradient(180deg,#0c0c18,#101020)'};border:2px solid ${on?'rgba(175,48,255,.6)':'rgba(55,55,85,.5)'};border-radius:50px;padding:6px 22px 5px;position:relative;overflow:hidden;box-shadow:${on?'0 0 28px rgba(160,20,255,.4),0 0 60px rgba(160,20,255,.12)':'none'}">
-      ${on?`<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(185,35,255,.25) 0%,transparent 68%)"></div>`:''}
-      <div style="position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:3px;justify-content:center">${buildLeds(on)}</div>
-      <div style="display:flex;justify-content:space-between;margin-top:3px;position:relative;z-index:1">
-        <span style="font-size:7px;color:#fff;font-weight:600">${on?'💜 36W Full Spectrum':'⬛ Spenta'}</span>
-        <span style="font-size:7px;color:#fff">✨ <span data-lp-update="bval2">${lightBr!=='unknown'?lightBr:'—'}</span>/${brMax}</span>
-      </div>
+    <div style="background:${on?'linear-gradient(180deg,#1c0e3a,#12082a)':'linear-gradient(180deg,#101020,#0c0c18)'};border:2px solid ${on?'rgba(175,48,255,.6)':'rgba(55,55,85,.5)'};border-radius:50px;height:13px;position:relative;overflow:hidden;box-shadow:${on?'0 0 28px rgba(160,20,255,.4),0 0 60px rgba(160,20,255,.12)':'none'};display:flex;align-items:flex-end;justify-content:center;padding-bottom:2px">
+      <div style="width:86%;height:3px;border-radius:2px;${lightBar(on)}"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:2px;padding:0 3px">
+      <span style="font-size:7px;color:#fff;font-weight:600">${on?'💜 36W Full Spectrum':'⬛ Spenta'}</span>
+      <span style="font-size:7px;color:#fff">✨ <span data-lp-update="bval2">${lightBr!=='unknown'?lightBr:'—'}</span>/${brMax}</span>
     </div>
     <!-- Alone luce verso il basso dal pannello -->
     ${on?`<div style="position:absolute;left:10%;right:10%;top:100%;height:18px;background:linear-gradient(180deg,rgba(185,35,255,.28),transparent);pointer-events:none"></div>`:''}
   </div>
 
-  <!-- PALO TELESCOPICO -->
-  <div style="width:10px;height:18px;background:linear-gradient(to right,#c0c0c0,#888,#c0c0c0);border-radius:0 0 3px 3px;box-shadow:0 2px 5px rgba(0,0,0,.5);flex-shrink:0;z-index:1"></div>
-
-  <!-- ZONA PIANTE con FASCIO LUMINOSO -->
+  <!-- GAMBO + ZONA PIANTE: il palo attraversa tutta la zona e tocca sempre il bordo della vasca -->
   <div style="width:100%;position:relative;display:flex;align-items:flex-end;justify-content:center;gap:2px;min-height:${plantAreaH}px;padding:0 4px;overflow:hidden">
+    <!-- Palo telescopico: dal pannello fino al bordo vasca, mai "nel vuoto" -->
+    <div style="position:absolute;left:50%;top:0;bottom:0;width:9px;transform:translateX(-50%);background:linear-gradient(to right,#c0c0c0,#888,#c0c0c0);box-shadow:0 0 4px rgba(0,0,0,.4);z-index:0"></div>
     ${on ? lightBeam() : ''}
-    <!-- Piante (sopra il fascio) -->
+    <!-- Piante (sopra il fascio e il palo) -->
     <div style="position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:center;gap:2px;width:100%;height:100%">
       ${plants}
     </div>
@@ -684,8 +660,8 @@ ${pumpCycl&&cb?`
     return render(mc,{states:{'switch.letpot_max_power':{state:'on'},'switch.letpot_max_auto_mode':{state:'on'},'switch.letpot_max_pump_cycling':{state:'on'},'sensor.letpot_max_water_level':{state:'78'},'sensor.letpot_max_temperatura':{state:'26.5'},'sensor.letpot_max_plants_age':{state:'45'},'switch.letpot_max_pump':{state:'on'},'time.letpot_max_light_on':{state:'06:00:00'},'time.letpot_max_light_off':{state:'22:00:00'},'number.letpot_max_light_brightness':{state:'7',attributes:{min:1,max:10,step:1}},'select.letpot_max_modalita_luce':{state:'Verdure/Erbe',attributes:{options:['Verdure/Erbe','Frutti','Fiori','Erbe aromatiche','Personalizzato']}},'binary_sensor.letpot_max_low_water':{state:'off'},'binary_sensor.letpot_max_low_nutrients':{state:'off'},'binary_sensor.letpot_max_refill_error':{state:'off'}}});
   }
 
-  const CARD={id:ID,name:'LetPot Max',icon:'🌿',desc:'Sistema idroponico LPH-MAX 21 pod — vasca ovale in acciaio, fascio luminoso reale, pompa con ricircolo e vaschetta nutrienti',version:'4.2',colSpan:2,rowSpan:3,render,mount,update,configure,preview};
+  const CARD={id:ID,name:'LetPot Max',icon:'🌿',desc:'Sistema idroponico LPH-MAX 21 pod — vasca ovale in acciaio, pannello luce a taglio, pompa a sinistra e vaschetta nutrienti a destra',version:'4.3',colSpan:2,rowSpan:3,render,mount,update,configure,preview};
   window.FratechCardRegistry=window.FratechCardRegistry||{};window.FratechCardRegistry[ID]=CARD;
   window.FratechCards=window.FratechCards||{};window.FratechCards[ID]=CARD;
-  try{console.log('[FratechStore] letpot-max v4.2');}catch(e){}
+  try{console.log('[FratechStore] letpot-max v4.3');}catch(e){}
 })();

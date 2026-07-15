@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.0.73 — 2026-07-15
+
+### fix(card): LetPot Max v4.3 — pannello luce a taglio, palo a contatto, pompa sx/nutrienti dx
+
+- **Pannello LED corretto**: da griglia di pallini colorati sempre visibili a una vista frontale realistica — si vede solo una sottile riga emettitrice sul bordo inferiore del pannello, dalla quale parte il fascio di luce verso le piante (rimossi `buildLeds`/`LED_MAP` inutilizzati)
+- **Palo sempre a contatto**: il gambo non è più un blocco fisso da 18px seguito da uno spazio vuoto — ora è un elemento che attraversa in verticale tutta la zona piante (altezza variabile per fase di crescita) e tocca sempre il bordo della vasca, eliminando il "buco" visibile nelle fasi con poche piante
+- **Pompa ridisegnata**: forma più simile a una pompa reale (corpo con griglia di aspirazione + impeller, non più un rettangolo con scritta "PUMP"), spostata a **sinistra** nel serbatoio
+- **Vaschetta nutrienti ingrandita e spostata a destra**: da 20×13px a 34×24px, con striscia LED e indicatori, posizionata sul lato opposto alla pompa
+
+---
+
 ## 2.0.72 — 2026-07-15
 
 ### feat(card): LetPot Max v4.2 — vasca ovale in acciaio, aspetto realistico
