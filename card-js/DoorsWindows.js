@@ -142,7 +142,10 @@
     </div>`;
 
     document.body.appendChild(ov);
-    const close = () => { try { document.body.removeChild(ov); } catch (e) {} };
+    const close = () => { try { document.body.removeChild(ov); } catch (e) {} document.removeEventListener('keydown', esc); };
+    const esc = (e) => { if (e.key === 'Escape') close(); };
+    document.addEventListener('keydown', esc);
+    ov.addEventListener('click', (e) => { if (e.target === ov) close(); });
     ov.querySelector('#dw-cancel').addEventListener('click', close);
     ov.querySelector('#dw-hdr-close').addEventListener('click', close);
     ov.querySelector('#dw-auto').addEventListener('click', () => { ov.querySelector('#dw-ents').value = ''; schedPrev(); });
@@ -173,7 +176,7 @@
       pickDrop.style.display = 'block';
       pickDrop.innerHTML = hits.map(id => {
         const fn = states[id]?.attributes?.friendly_name || '';
-        return `<div data-pick="${id}" style="padding:6px 11px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04)"><span style="color:#e2e8f0">${id}</span>${fn?`<span style="color:#475569;margin-left:7px;font-family:system-ui;font-size:10px">${fn}</span>`:''}</div>`;
+        return `<div data-pick="${id}" style="padding:6px 11px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04)"><span style="color:#fff">${id}</span>${fn?`<span style="color:#fff;margin-left:7px;font-family:system-ui;font-size:10px">${fn}</span>`:''}</div>`;
       }).join('');
       pickDrop.querySelectorAll('[data-pick]').forEach(row => {
         row.addEventListener('mousedown', ev => {

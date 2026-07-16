@@ -251,7 +251,9 @@
     ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:flex-end;background:rgba(0,0,0,.6);backdrop-filter:blur(4px)';
     ov.innerHTML = html;
     document.body.appendChild(ov);
-    const close = function () { try { document.body.removeChild(ov); } catch (e) {} };
+    const close = function () { try { document.body.removeChild(ov); } catch (e) {} document.removeEventListener('keydown', esc); };
+    const esc = function (e) { if (e.key === 'Escape') close(); };
+    document.addEventListener('keydown', esc);
     const btn = ov.querySelector('#'+closeId); if (btn) btn.addEventListener('click', close);
     ov.addEventListener('click', function (e) { if (e.target===ov) close(); });
     ov._close = close;
@@ -287,7 +289,7 @@
 
     const allFieldIds = ['fsc-dl','fsc-ul','fsc-ping','fsc-jitter','fsc-grade','fsc-isp','fsc-server','fsc-button'];
     const formHtml = '<div style="margin-bottom:10px"><label style="'+stLbl+'">Nome card</label><input id="fsc-name" type="text" value="'+(cf.name||'').replace(/"/g,'&quot;')+'" placeholder="es. Speedtest casa" style="'+stInp.replace('monospace','system-ui')+'"></div>'
-      +'<div style="margin-bottom:9px"><label style="'+stLbl+'">Velocità massima (Mbit/s)<span style="font-weight:400;color:#475569;margin-left:6px;font-family:monospace;text-transform:none">es. 500</span></label><input id="fsc-maxspeed" type="number" value="'+(cf.max_speed||500)+'" min="1" max="10000" style="'+stInp+'"></div>'
+      +'<div style="margin-bottom:9px"><label style="'+stLbl+'">Velocità massima (Mbit/s)<span style="font-weight:400;color:#fff;margin-left:6px;font-family:monospace;text-transform:none">es. 500</span></label><input id="fsc-maxspeed" type="number" value="'+(cf.max_speed||500)+'" min="1" max="10000" style="'+stInp+'"></div>'
       +'<div style="'+stSec+'">Scaricamento / Caricamento</div>'
       +field('fsc-dl',   'Scaricamento (Mbit/s)', cf.pk_download,'sensor.speedtest_download')
       +field('fsc-ul',   'Caricamento (Mbit/s)',  cf.pk_upload,  'sensor.speedtest_upload')
