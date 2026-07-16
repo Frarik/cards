@@ -986,6 +986,7 @@ class MeteoCard extends HTMLElement {
 
   // ── Click ─────────────────────────────────────────────────────────────────
   _onClick(e){
+    if(e.target.classList && e.target.classList.contains('stov')){ this._destroyStationPopup(); return }
     if(this._modalHost){
       const sr=this._modalHost.shadowRoot
       const inDrop=e.target.closest('.esr[data-dropdown]')||e.target.closest('input[data-f]')
@@ -1911,6 +1912,7 @@ class MeteoCard extends HTMLElement {
   _destroyStationPopup(){
     if(!this._stationModalHost) return
     this._stationModalHost.shadowRoot.removeEventListener('click',this._click)
+    if(this._stationEsc){ document.removeEventListener('keydown',this._stationEsc); this._stationEsc=null }
     this._stationModalHost.remove(); this._stationModalHost=null
   }
 
@@ -1921,12 +1923,14 @@ class MeteoCard extends HTMLElement {
     this._stationModalHost.shadowRoot.addEventListener('click',this._click)
     document.body.appendChild(this._stationModalHost)
     this._stationModalHost.shadowRoot.innerHTML=`<style>${_CSS}${this._stationCSS()}</style>${this._stationHTML()}`
+    this._stationEsc=(e)=>{ if(e.key==='Escape') this._destroyStationPopup() }
+    document.addEventListener('keydown',this._stationEsc)
   }
 
   _stationCSS(){
     return `
-.stov{position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.9);backdrop-filter:blur(12px);display:flex;flex-direction:column;font-family:var(--primary-font-family,system-ui,sans-serif);overflow:hidden;}
-.stov-modal{width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden;}
+.stov{position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);display:flex;flex-direction:column;justify-content:flex-end;font-family:var(--primary-font-family,system-ui,sans-serif);overflow:hidden;}
+.stov-modal{width:100%;max-height:92vh;background:#0a0d1a;border:1px solid rgba(255,255,255,.1);border-bottom:none;border-radius:20px 20px 0 0;display:flex;flex-direction:column;overflow:hidden;}
 .stov-scroll{flex:1;overflow-y:auto;padding:16px;scrollbar-width:none;-ms-overflow-style:none;}
 .stov-scroll::-webkit-scrollbar{display:none;}
 .stov-map-wrap{width:100%;margin-bottom:18px;}
