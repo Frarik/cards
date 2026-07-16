@@ -649,7 +649,7 @@
         <input id="ecfg-kwh" style="${sinp};margin-bottom:4px" value="${eh(c.kwhEntity || '')}" placeholder="🔍 sensor.energia_oggi…" autocomplete="off">
         <div style="font-size:9px;color:#fff;margin-bottom:14px">Se configurato usa il dato reale del contatore; altrimenti stima (~) dall'integrazione della potenza</div>
 
-        <div style="font-size:9px;color:rgba(255,255,255,.55);background:rgba(255,255,255,.05);border-radius:7px;padding:7px 9px;margin-bottom:8px;line-height:1.5">
+        <div style="font-size:9px;color:#fff;background:rgba(255,255,255,.05);border-radius:7px;padding:7px 9px;margin-bottom:8px;line-height:1.5">
           ⚡ Consumo ora: <b style="color:#fff">${_liveWLabel}</b> — le soglie si inseriscono sempre in <b style="color:#fff">Watt (W)</b>.<br>
           💡 Aggiungi sempre una regola <b style="color:#fff">Sempre (fallback)</b> alla fine per il colore di default.
         </div>

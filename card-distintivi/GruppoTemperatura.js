@@ -681,7 +681,7 @@
           @keyframes gtCfgUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
           .gtinp{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;font-size:12px;outline:none;font-family:inherit;transition:border-color .15s}
           .gtinp:focus{border-color:rgba(56,189,248,.5);background:rgba(56,189,248,.04)}
-          .gtinp::placeholder{color:rgba(255,255,255,.55)}
+          .gtinp::placeholder{color:#fff}
           #gtcfg-body::-webkit-scrollbar{display:none}
           .gtsec{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:7px}
         </style>

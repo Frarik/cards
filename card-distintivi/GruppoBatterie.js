@@ -170,7 +170,7 @@
         <div style="width:38px;height:38px;border-radius:11px;background:${col}18;border:1px solid ${col}35;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🔋</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:700;color:#fff;line-height:1.3">${heroTitle}</div>
-          <div style="font-size:10px;color:rgba(255,255,255,.45);margin-top:2px">${heroSub}</div>
+          <div style="font-size:10px;color:#fff;margin-top:2px">${heroSub}</div>
         </div>
       </div>
       <div style="display:flex;gap:6px">
@@ -179,7 +179,7 @@
         ${statCell('🟡', low,      '#facc15', 'Basse')}
         ${statCell('✅', okCount,  '#4ade80', 'OK')}
       </div>
-      <div style="font-size:9px;color:rgba(255,255,255,.3);margin-top:10px;text-align:center">Soglie: bassa &lt;${thrL}% · critica &lt;${thrC}%</div>
+      <div style="font-size:9px;color:#fff;margin-top:10px;text-align:center">Soglie: bassa &lt;${thrL}% · critica &lt;${thrC}%</div>
     </div>`;
 
     /* ── riga singola ── */

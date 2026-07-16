@@ -290,7 +290,7 @@
     }).join('');
 
     const empty = !c.pk_group && !ents.length
-      ? `<div style="padding:36px 20px;text-align:center;color:#fff;font-size:12px">Nessun sensore configurato.<br><span style="font-size:10px;color:rgba(255,255,255,.5)">Clicca ✏️ sulla chip per configurare.</span></div>`
+      ? `<div style="padding:36px 20px;text-align:center;color:#fff;font-size:12px">Nessun sensore configurato.<br><span style="font-size:10px;color:#fff">Clicca ✏️ sulla chip per configurare.</span></div>`
       : '';
 
     return `<div id="gpall-popup-body">${groupSection}<div>${rows}${empty}</div></div>`;
@@ -359,7 +359,7 @@
           <span style="font-size:13px;flex-shrink:0">${m.icon||'📦'}</span>
           <div style="flex:1;min-width:0">
             <div style="font-size:11px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(m.name)}</div>
-            <div style="font-size:9px;color:rgba(255,255,255,.6)">${eh(m.id)}</div>
+            <div style="font-size:9px;color:#fff">${eh(m.id)}</div>
           </div>
         </div>`;
         r.addEventListener('mouseover', () => r.style.background='rgba(56,189,248,.08)');
@@ -419,7 +419,7 @@
             <span style="font-size:15px;flex-shrink:0">${wet?'🚨':'💧'}</span>
             <div style="flex:1;min-width:0">
               <div style="font-size:12px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
-              <div style="font-size:9px;color:rgba(255,255,255,.5)">${eh(e.entity)}</div>
+              <div style="font-size:9px;color:#fff">${eh(e.entity)}</div>
             </div>
             <button data-del="${i}" style="width:22px;height:22px;border:none;border-radius:5px;background:rgba(248,113,113,.15);color:#f87171;cursor:pointer;font-size:11px;flex-shrink:0">✕</button>
           </div>
@@ -431,7 +431,7 @@
         <style>
           @keyframes gaaCfgUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
           .gaainp{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;font-size:12px;outline:none;font-family:inherit}
-          .gaainp::placeholder{color:rgba(255,255,255,.45)}
+          .gaainp::placeholder{color:#fff}
           #gaacfg-body::-webkit-scrollbar{display:none}
         </style>
 
@@ -447,32 +447,32 @@
         <div id="gaacfg-body" style="flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;padding:14px 14px 4px">
 
           <!-- nome e colore chip -->
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.5);margin-bottom:6px">Chip</div>
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Chip</div>
           <div style="display:flex;gap:7px;margin-bottom:16px">
-            <div style="flex:1"><div style="font-size:9px;color:rgba(255,255,255,.6);margin-bottom:3px">Nome</div><input id="gaacfg-label" class="gaainp" placeholder="Allagamento" value="${eh(c.label||'Allagamento')}"></div>
-            <div style="flex:0 0 50px"><div style="font-size:9px;color:rgba(255,255,255,.6);margin-bottom:3px">Colore</div><input type="color" id="gaacfg-color" value="${(c.color||'#38bdf8').match(/^#[0-9a-f]{6}$/i)?c.color:'#38bdf8'}" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:none;cursor:pointer;padding:2px"></div>
+            <div style="flex:1"><div style="font-size:9px;color:#fff;margin-bottom:3px">Nome</div><input id="gaacfg-label" class="gaainp" placeholder="Allagamento" value="${eh(c.label||'Allagamento')}"></div>
+            <div style="flex:0 0 50px"><div style="font-size:9px;color:#fff;margin-bottom:3px">Colore</div><input type="color" id="gaacfg-color" value="${(c.color||'#38bdf8').match(/^#[0-9a-f]{6}$/i)?c.color:'#38bdf8'}" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:none;cursor:pointer;padding:2px"></div>
           </div>
 
           <!-- sensore gruppo principale -->
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.5);margin-bottom:6px">Sensore gruppo principale</div>
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Sensore gruppo principale</div>
           ${pkGroup ? `
             <div style="padding:9px 11px;border-radius:9px;background:rgba(56,189,248,.06);border:1px solid ${pkGroupWet?'rgba(248,113,113,.4)':'rgba(56,189,248,.25)'};margin-bottom:8px;display:flex;align-items:center;gap:8px">
               <span style="font-size:16px">${pkGroupWet?'🚨':'🔗'}</span>
               <div style="flex:1;min-width:0">
                 <div style="font-size:12px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(pkGroupName||pkGroup)}</div>
-                <div style="font-size:9px;color:rgba(255,255,255,.5)">${eh(pkGroup)}</div>
+                <div style="font-size:9px;color:#fff">${eh(pkGroup)}</div>
               </div>
               <button id="gaacfg-del-group" style="width:22px;height:22px;border:none;border-radius:5px;background:rgba(248,113,113,.15);color:#f87171;cursor:pointer;font-size:11px;flex-shrink:0">✕</button>
             </div>
           ` : ''}
           <input id="gaacfg-add-group" class="gaainp" placeholder="🔍 Cerca group.* o binary_sensor.*…" autocomplete="off" value="${pkGroup&&!pkGroup?eh(pkGroup):''}">
-          <div style="margin-top:5px;margin-bottom:16px;padding:7px 10px;border-radius:8px;background:rgba(56,189,248,.05);border:1px solid rgba(56,189,248,.14);font-size:10px;color:rgba(255,255,255,.7)">
+          <div style="margin-top:5px;margin-bottom:16px;padding:7px 10px;border-radius:8px;background:rgba(56,189,248,.05);border:1px solid rgba(56,189,248,.14);font-size:10px;color:#fff">
             💡 Seleziona il <strong style="color:#38bdf8">group binary_sensor</strong> che aggrega tutti i sensori allagamento
           </div>
 
           ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg, presets) : ''}
           <!-- sensori individuali -->
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.5);margin-bottom:6px">Sensori individuali${ents.length ? ` (${ents.length})` : ''}</div>
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Sensori individuali${ents.length ? ` (${ents.length})` : ''}</div>
           ${ents.length ? `<div style="margin-bottom:10px">${selRows}</div>` : ''}
           <input id="gaacfg-add-entity" class="gaainp" placeholder="🔍 Cerca binary_sensor.*…" autocomplete="off">
           <div style="height:18px"></div>
