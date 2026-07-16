@@ -148,8 +148,8 @@
   function baseCss(rid) {
     return `
 #${rid}.pc-root{position:relative;width:100%;height:100%;min-height:64px;border-radius:18px;overflow:hidden;
-  font-family:var(--primary-font-family,'Inter',system-ui,-apple-system,sans-serif);color:#f1f5f9;
-  background:#0b1220;border:1px solid rgba(255,255,255,.10);}
+  font-family:var(--primary-font-family,'Inter',system-ui,-apple-system,sans-serif);color:#fff;
+  background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border:1px solid rgba(255,255,255,.10);}
 /* mappa estesa e ritagliata (44px sopra+sotto) per nascondere barra Google + controlli, segnaposto centrato */
 #${rid} .pc-map{position:absolute;left:0;right:0;top:-44px;width:100%;height:calc(100% + 88px);border:0;z-index:0;pointer-events:none;filter:saturate(1.05);}
 #${rid} .pc-map-empty{background:radial-gradient(120% 120% at 75% 30%,#27364b,#0b1220);}
@@ -363,7 +363,7 @@
         drop.innerHTML = hits.map(id => {
           const fn = states[id]?.attributes?.friendly_name || '';
           return `<div data-pick="${id}" style="padding:6px 11px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04)">
-            <span style="color:#e2e8f0">${id}</span>${fn ? `<span style="color:#475569;margin-left:7px;font-family:system-ui;font-size:10px">${fn}</span>` : ''}
+            <span style="color:#fff">${id}</span>${fn ? `<span style="color:#fff;margin-left:7px;font-family:system-ui;font-size:10px">${fn}</span>` : ''}
           </div>`;
         }).join('');
         drop.querySelectorAll('[data-pick]').forEach(row => {
@@ -420,13 +420,13 @@
     ov.innerHTML = `<style>@keyframes pcMapSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style>
       <div style="position:relative;width:100%;height:92vh;border-radius:20px 20px 0 0;overflow:hidden;
         background:#0a0816;border:1px solid rgba(139,92,246,.32);border-bottom:none;box-shadow:0 -12px 60px rgba(0,0,0,.8);display:flex;flex-direction:column;animation:pcMapSlideUp .22s cubic-bezier(.32,1.12,.56,1)">
-        <div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.08);color:#f1f5f9">
+        <div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.08);color:#fff">
           <span style="font-size:18px">🗺️</span>
           <div style="flex:1;min-width:0">
             <div style="font-size:15px;font-weight:800">${nm} — spostamenti 24h</div>
             <div style="font-size:11px;opacity:.6" id="pc-hist-sub">Caricamento percorso…</div>
           </div>
-          <button id="pc-hist-x" style="width:34px;height:34px;border-radius:10px;border:none;cursor:pointer;background:rgba(255,255,255,.08);color:#e2e8f0;font-size:18px">✕</button>
+          <button id="pc-hist-x" style="width:34px;height:34px;border-radius:10px;border:none;cursor:pointer;background:rgba(255,255,255,.08);color:#fff;font-size:18px">✕</button>
         </div>
         <div id="pc-hist-map" style="flex:1;min-height:0;background:#0b1220"></div>
       </div>`;

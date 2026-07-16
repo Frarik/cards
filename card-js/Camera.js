@@ -337,10 +337,10 @@
 
     if (!cams.length) {
       return '<div id="'+rid+'" style="display:flex;flex-direction:column;align-items:center;justify-content:center;'
-        +'height:100%;gap:12px;padding:20px;text-align:center;color:#fff">'
+        +'height:100%;gap:12px;padding:20px;text-align:center;color:#fff;box-sizing:border-box;position:relative;border-radius:18px;overflow:hidden;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%)">'
         +'<div style="font-size:40px;opacity:.35">📷</div>'
         +'<div style="font-size:13px;font-weight:700">Nessuna telecamera</div>'
-        +'<div style="font-size:11px;line-height:1.6;opacity:.7">Attiva modifica → ✏️ per aggiungere le telecamere</div>'
+        +'<div style="font-size:11px;line-height:1.6">Attiva modifica → ✏️ per aggiungere le telecamere</div>'
         +'</div>';
     }
 
@@ -405,7 +405,7 @@
               )
             +'</div></div>'
             +'<div style="background:rgba(0,0,0,.82);backdrop-filter:blur(6px);padding:3px 5px 4px">'
-              +'<div style="font-size:8px;font-weight:700;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+eh(cam.name||cam.entity.split('.').pop())+'</div>'
+              +'<div style="font-size:8px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+eh(cam.name||cam.entity.split('.').pop())+'</div>'
               +'<div data-cam-bat-thumb="'+i+'" style="font-size:8px;margin-top:1px">'+battHtml(pct, cam.battery)+'</div>'
             +'</div>'
           +'</div>';
@@ -413,7 +413,7 @@
         +'</div>';
     }
 
-    return '<div id="'+rid+'" style="display:flex;flex-direction:column;height:100%;padding:8px;gap:6px;box-sizing:border-box">'
+    return '<div id="'+rid+'" style="display:flex;flex-direction:column;height:100%;padding:8px;gap:6px;box-sizing:border-box;position:relative;border-radius:18px;overflow:hidden;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%)">'
       +mainView+thumbsHtml+'</div>';
   }
 
@@ -457,7 +457,7 @@
 
     var stInp = 'width:100%;padding:8px 10px;border-radius:8px;background:#0f1830;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:11px;font-family:monospace;box-sizing:border-box;outline:none';
     var stDrop = 'position:absolute;left:0;right:0;top:100%;z-index:20;max-height:130px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 8px 8px;display:none';
-    var stLbl  = 'font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin-bottom:2px;display:block';
+    var stLbl  = 'font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#fff;margin-bottom:2px;display:block';
 
     function buildRow(cam, i) {
       return '<div data-cam-row="'+i+'" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:11px;padding:11px 13px">'
@@ -471,7 +471,7 @@
           +'<div style="position:relative"><label style="'+stLbl+'">Entità camera</label>'
             +'<input data-cam-ent="'+i+'" type="text" value="'+eh(cam.entity||'')+'" autocomplete="off" placeholder="camera.xxx" style="'+stInp+'">'
             +'<div data-cam-ent-drop="'+i+'" style="'+stDrop+'"></div></div>'
-          +'<div style="position:relative;grid-column:1/-1"><label style="'+stLbl+'">Sensore batteria <span style="font-weight:400;color:#475569;text-transform:none;letter-spacing:0">— vuoto se a corrente</span></label>'
+          +'<div style="position:relative;grid-column:1/-1"><label style="'+stLbl+'">Sensore batteria <span style="font-weight:400;color:#fff;text-transform:none;letter-spacing:0">— vuoto se a corrente</span></label>'
             +'<input data-cam-bat="'+i+'" type="text" value="'+eh(cam.battery||'')+'" autocomplete="off" placeholder="sensor.camera_batteria" style="'+stInp+'">'
             +'<div data-cam-bat-drop="'+i+'" style="'+stDrop+'"></div></div>'
         +'</div></div>';
@@ -574,7 +574,7 @@
         drop.style.display='block';
         drop.innerHTML=hits.map(function(id){var fn=((states[id]||{}).attributes||{}).friendly_name||'';
           return '<div data-pick="'+id+'" style="padding:5px 10px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04)">'
-            +'<span style="color:#e2e8f0">'+id+'</span>'+(fn?'<span style="color:#475569;margin-left:6px;font-family:system-ui;font-size:10px">'+fn+'</span>':'')+'</div>';
+            +'<span style="color:#fff">'+id+'</span>'+(fn?'<span style="color:#fff;margin-left:6px;font-family:system-ui;font-size:10px">'+fn+'</span>':'')+'</div>';
         }).join('');
         drop.querySelectorAll('[data-pick]').forEach(function(row){
           row.addEventListener('mousedown',function(ev){ev.preventDefault();inp.value=row.getAttribute('data-pick');drop.style.display='none';});
