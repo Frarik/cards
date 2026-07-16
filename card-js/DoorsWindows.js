@@ -53,24 +53,25 @@
         <span class="dwc-t">${elapsed(h, id)}</span>
       </div>`).join('');
     return `<style>${css(rid)}</style><div id="${rid}" class="dwc-root">
-      <div class="dwc-hdr"><div class="dwc-ico">🚪</div><div class="dwc-tit">Porte e Finestre</div></div>
+      <div class="dwc-hdr"><div class="dwc-ico">🚪</div><div class="dwc-tit">Porte e Finestre</div><button class="dwc-cfg" data-a="cfg" title="Impostazioni">⚙️</button></div>
       <div class="dwc-status" style="--c:${col}">
         <div class="dwc-big">${allClosed ? '✅' : open.length}</div>
         <div class="dwc-lbl">${allClosed ? 'Tutto chiuso' : (open.length === 1 ? '1 aperta' : open.length + ' aperte') + ' · su ' + list.length}</div>
       </div>
       ${allClosed ? '' : `<div class="dwc-list">${rows}</div>`}
-      ${list.length ? '' : '<div class="dwc-empty">Nessun sensore apertura rilevato. Attiva modifica → ✏️ per configurare.</div>'}
+      ${list.length ? '' : '<div class="dwc-empty">Nessun sensore apertura rilevato. Tocca ⚙️ per configurare.</div>'}
     </div>`;
   }
 
   function css(rid) {
     return `
 #${rid}.dwc-root{position:relative;width:100%;height:100%;min-height:120px;border-radius:18px;overflow:auto;padding:14px 16px;box-sizing:border-box;
-  font-family:var(--primary-font-family,'Inter',system-ui,sans-serif);color:#e8ebf5;display:flex;flex-direction:column;gap:12px;
+  font-family:var(--primary-font-family,'Inter',system-ui,sans-serif);color:#fff;display:flex;flex-direction:column;gap:12px;
   background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border:1px solid rgba(56,189,248,.15);box-shadow:0 10px 40px rgba(0,0,0,.45);}
 #${rid} .dwc-hdr{display:flex;align-items:center;gap:9px;}
 #${rid} .dwc-ico{font-size:18px;}
 #${rid} .dwc-tit{flex:1;font-size:14px;font-weight:800;}
+#${rid} .dwc-cfg{width:24px;height:24px;border-radius:7px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 #${rid} .dwc-status{display:flex;align-items:center;gap:12px;}
 #${rid} .dwc-big{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;
   background:color-mix(in srgb,var(--c) 18%,transparent);border:1px solid var(--c);color:var(--c);flex-shrink:0;}
@@ -84,7 +85,11 @@
 `;
   }
 
-  function mount(card, hass, el) {}
+  function mount(card, hass, el) {
+    if (el._dwcHandler) el.removeEventListener('click', el._dwcHandler);
+    el._dwcHandler = function (e) { if (e.target.closest('[data-a="cfg"]')) openCfg(card, el); };
+    el.addEventListener('click', el._dwcHandler);
+  }
   function update(card, hass, el) { try { el.innerHTML = render(card); } catch (e) {} }
 
   function openCfg(card, el) {

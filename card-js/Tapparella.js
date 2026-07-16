@@ -54,7 +54,10 @@
   ];
   function coverIcon(type) { const t = COVER_TYPES.find(x => x.id === type); return t ? t.icon : '🪟'; }
   function header(nm, type) {
-    return `<div style="flex-shrink:0;text-align:center;font-size:26px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nm}</div>`;
+    return `<div style="flex-shrink:0;display:flex;align-items:center;gap:6px">
+      <div style="flex:1;text-align:center;font-size:26px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-left:24px">${nm}</div>
+      <button data-a="cfg" title="Impostazioni" style="width:24px;height:24px;border-radius:7px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:#fff;font-size:12px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center">⚙️</button>
+    </div>`;
   }
 
 
@@ -454,6 +457,7 @@
     if (!el._tapWired) {
       el._tapWired = true;
       el.addEventListener('click', e => {
+        if (e.target.closest('[data-a="cfg"]')) { openCfg(card, el); return; }
         const b = e.target.closest('[data-cov]'); if (!b) return;
         const id = entOf(card); if (!id) { openCfg(card, el); return; }
         const act = b.getAttribute('data-cov');
@@ -719,6 +723,7 @@
     if (!el._pWired) {
       el._pWired = true;
       el.addEventListener('click', e => {
+        if (e.target.closest('[data-a="cfg"]')) { openCfgPorta(card, el); return; }
         const b = e.target.closest('[data-cov]'); if (!b) return;
         const id = entOf(card); if (!id) { openCfgPorta(card, el); return; }
         const act = b.getAttribute('data-cov');

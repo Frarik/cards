@@ -397,6 +397,7 @@
       +'<button class="tog" data-action="toggle" data-sec="mode" style="width:34px;height:34px;padding:0;border-radius:10px;font-size:17px;flex:none"><span>'+mIcon(mode)+'</span></button>'
       +'<button class="tog" data-action="toggle" data-sec="fan" style="width:34px;height:34px;padding:0;border-radius:10px;font-size:17px;flex:none"><span>💨</span></button>'
       +(swingModes.length>1?'<button class="tog" data-action="toggle" data-sec="swing" style="width:34px;height:34px;padding:0;border-radius:10px;font-size:17px;flex:none"><span>↕</span></button>':'')
+      +'<button data-action="cfg" title="Impostazioni" style="width:34px;height:34px;padding:0;border-radius:10px;font-size:15px;flex:none;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center">⚙️</button>'
     +'</div>';
     var airSection=isOn?'<div style="position:relative;height:28px;overflow:hidden;pointer-events:none;margin:2px 20px 0">'+airStreams(rid,'#38bdf8',true)+'</div>':'<div style="height:4px"></div>';
     return css
@@ -510,6 +511,7 @@
           +(syncCol?'<div style="width:6px;height:6px;border-radius:50%;background:'+syncCol+';box-shadow:0 0 5px '+syncCol+'"></div>':'')
           +(sensorT?'<div data-a="stat" data-eid="'+tempEntity+'" data-attr="" data-lbl="Temperatura" style="cursor:pointer;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:4px 9px;font-size:11px;font-weight:700;font-family:\'Courier New\',monospace;color:#fff">🌡 '+sensorT+'°</div>':'')
           +(sensorH?'<div data-a="stat" data-eid="'+humEntity+'" data-attr="" data-lbl="Umidità" style="cursor:pointer;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:4px 9px;font-size:11px;font-weight:700;font-family:\'Courier New\',monospace;color:#fff">💧 '+sensorH+'%</div>':'')
+          +'<button data-action="cfg" title="Impostazioni" style="width:28px;height:28px;padding:0;border-radius:9px;font-size:13px;flex-shrink:0;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center">⚙️</button>'
         +'</div>'
       +'</div>'
       // main inset display
@@ -587,6 +589,7 @@
         +(syncCol?'<div style="width:6px;height:6px;border-radius:50%;flex-shrink:0;background:'+syncCol+';box-shadow:0 0 5px '+syncCol+'"></div>':'')
         +(sensorT?'<div data-a="stat" data-eid="'+tempEntity+'" data-attr="" data-lbl="Temperatura" style="cursor:pointer;flex-shrink:0;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:3px 8px;font-size:10px;font-weight:700;font-family:\'Courier New\',monospace;color:#fff">🌡 '+sensorT+'°</div>':'')
         +(sensorH?'<div data-a="stat" data-eid="'+humEntity+'" data-attr="" data-lbl="Umidità" style="cursor:pointer;flex-shrink:0;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:3px 8px;font-size:10px;font-weight:700;font-family:\'Courier New\',monospace;color:#fff">💧 '+sensorH+'%</div>':'')
+        +'<button data-action="cfg" title="Impostazioni" style="width:24px;height:24px;padding:0;border-radius:8px;font-size:12px;flex-shrink:0;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center">⚙️</button>'
       +'</div>'
       // main pill: power + display + expand
       +'<div style="border-radius:999px;background:rgba(255,255,255,.05);'
@@ -866,7 +869,10 @@
         +'display:flex;flex-direction:column;gap:9px;overflow:hidden;'
         +'background:linear-gradient(150deg,#0c1322 0%,#0a0f1c 60%,#0c1626 100%);'
         +'border:1px solid rgba(99,102,241,.22);box-shadow:0 10px 40px rgba(0,0,0,.45);">'
-        +'<div style="text-align:center;font-size:19px;font-weight:800;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+nm+'</div>'
+        +'<div style="display:flex;align-items:center;gap:6px">'
+          +'<div style="flex:1;text-align:center;font-size:19px;font-weight:800;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-left:24px">'+nm+'</div>'
+          +'<button data-action="cfg" title="Impostazioni" style="width:24px;height:24px;border-radius:7px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:#fff;font-size:12px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center">⚙️</button>'
+        +'</div>'
         +acBody+airSection+tempRow+togRow
         +_panels(rid,entityId,mode,fanMode,swingMode,hvacModes,fanModes,swingModes,pw,selBtn)
       +'</div>';
@@ -888,6 +894,8 @@
       e.stopPropagation(); e.preventDefault();
 
       const action = btn.getAttribute('data-action');
+
+      if (action === 'cfg') { openCfg(card, el); return; }
 
       if (action === 'toggle') {
         const sec   = btn.getAttribute('data-sec');
