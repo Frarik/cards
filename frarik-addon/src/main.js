@@ -6382,7 +6382,6 @@ function buildCard(card){
     el.innerHTML=`
       <div class="card-inner">${inner}</div>
       <div class="hbar-ctrl">
-        <button class="ovb ovb-edit ovb-menu" data-action="cardMenu" data-action-arg="${card.id}" title="Modifica card">✏️</button>
         <button class="ovb ovb-dots" data-action="cardDotMenu" data-action-args='["${card.id}"]' data-action-el="true" title="Azioni card"><i class="mdi mdi-dots-vertical"></i></button>
       </div>
       <div class="resize-handle" id="rh-${card.id}"></div>`;
@@ -6400,11 +6399,9 @@ function buildCard(card){
   if(t==='yaml-card'||t==='js-custom'){
     el.classList.add('card-jsc');
     el.style.cssText+='padding:0;cursor:default;';
-    const _jscNoEdit=t==='js-custom'&&card.jsCardId&&(window.FratechCardRegistry||{})[card.jsCardId]?.frarik_no_edit;
     el.innerHTML=`
       ${inner}
       <div class="card-ov" style="z-index:30"><div class="ov-row">
-          ${_jscNoEdit?'':'<button class="ovb ovb-edit ovb-menu" data-action="cardMenu" data-action-arg="'+card.id+'" title="Modifica card">✏️</button>'}
           <button class="ovb ovb-dots" data-action="cardDotMenu" data-action-args='["${card.id}"]' data-action-el="true" title="Azioni card"><i class="mdi mdi-dots-vertical"></i></button>
         </div></div>
       <div class="resize-handle" id="rh-${card.id}"></div>`;
@@ -6426,7 +6423,6 @@ function buildCard(card){
     el.innerHTML=`
       ${inner}${_renderCardBadgesHTML(card)}
       <div class="card-ov" style="z-index:30"><div class="ov-row">
-          <button class="ovb ovb-edit ovb-menu" data-action="cardMenu" data-action-arg="${card.id}" title="Modifica card">✏️</button>
           <button class="ovb ovb-dots" data-action="cardDotMenu" data-action-args='["${card.id}"]' data-action-el="true" title="Azioni card"><i class="mdi mdi-dots-vertical"></i></button>
         </div></div>
       <div class="resize-handle" id="rh-${card.id}"></div>`;
@@ -6449,7 +6445,6 @@ function buildCard(card){
     <div class="card-inner">${inner}${_renderCardBadgesHTML(card)}</div>
     <div class="card-ov">
       <div class="ov-row">
-        ${(()=>{ const _nr=t==='js-custom'&&card.jsCardId&&(window.FratechCardRegistry||{})[card.jsCardId]?.frarik_no_edit; return _nr?'':(`<button class="ovb ovb-edit ovb-menu" data-action="cardMenu" data-action-arg="${card.id}" title="${t==='free'?'Modifica Canvas':'Modifica card'}">${t==='free'?'🎨':'✏️'}</button>`); })()}
         <button class="ovb ovb-dots" data-action="cardDotMenu" data-action-args='["${card.id}"]' data-action-el="true" title="Azioni card"><i class="mdi mdi-dots-vertical"></i></button>
       </div>
     </div>
@@ -8080,6 +8075,8 @@ function cardDotMenu(cardId, el, e){
   let card2=null; for(const pg of cfg.pages||[]) for(const c of pg.cards||[]) if(c.id===cardId){card2=c;break;}
   const isJsCard=!!(card2&&card2.jsCardId);
   menu.innerHTML=
+    (card2&&card2.type==='free'?it('cfg','🎨','Modifica Canvas'):it('cfg','⚙️','Configura'))+
+    '<div style="height:1px;background:rgba(255,255,255,.09);margin:2px 0"></div>'+
     it('dup','⧉','Duplica')+
     it('copy','📋','Copia')+
     it('cut','✂️','Taglia')+
@@ -8099,7 +8096,8 @@ function cardDotMenu(cardId, el, e){
     const b=ev.target.closest('[data-cdmact]'); if(!b) return;
     const a=b.getAttribute('data-cdmact');
     menu.remove();
-    if(a==='dup') dupCard(cardId);
+    if(a==='cfg') cardMenu(cardId);
+    else if(a==='dup') dupCard(cardId);
     else if(a==='copy') copyCard(cardId);
     else if(a==='cut') cutCard(cardId);
     else if(a==='page') copyCardToPage(cardId);
