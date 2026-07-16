@@ -1720,7 +1720,7 @@ automation:
     function dNum(entity, lbl, unit, mn, mx, step) {
       var val = ns(entity);
       rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);gap:10px">'
-        + '<span style="font-size:13px;color:#fff;flex:1">' + lbl + (unit ? ' <span style="font-size:10px;color:rgba(255,255,255,.6)">(' + unit + ')</span>' : '') + '</span>'
+        + '<span style="font-size:13px;color:#fff;flex:1">' + lbl + (unit ? ' <span style="font-size:10px;color:#fff">(' + unit + ')</span>' : '') + '</span>'
         + '<input type="number" class="irr-inp" data-entity="' + entity + '" data-svctype="number" value="' + val + '" min="' + (mn||0) + '" max="' + (mx||9999) + '" step="' + (step||1) + '" style="' + iBase + ';width:90px;padding:6px 8px;text-align:right">'
         + '</div>');
     }
@@ -1749,12 +1749,12 @@ automation:
       + '</style>';
     var saveBtn = '<button id="irr-ha-save" style="width:100%;margin-top:12px;padding:13px;border-radius:12px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.4);color:#38bdf8;font-size:14px;font-weight:700;cursor:pointer">💾 Salva impostazioni</button>';
     var closeId = 'irr-ha-' + Math.random().toString(36).slice(2,6);
-    var html = '<div id="' + closeId + '-bd" style="position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;pointer-events:auto">'
-      + '<div style="background:#0d1627;border-radius:18px;border:1px solid rgba(56,189,248,.3);width:min(96vw,430px);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.7)">'
-      + '<div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.07)">'
+    var html = '<div id="' + closeId + '-bd" style="position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);display:flex;align-items:flex-end;pointer-events:auto">'
+      + '<div style="background:#0a0d1a;border-radius:20px 20px 0 0;border:1px solid rgba(255,255,255,.1);border-bottom:none;width:100%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.7)">'
+      + '<div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">'
       + '<span style="font-size:20px">⚙</span>'
       + '<span style="font-size:15px;font-weight:800;color:#fff;flex:1">Impostazioni Irrigazione</span>'
-      + '<button id="' + closeId + '" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:20px;cursor:pointer;padding:4px">✕</button>'
+      + '<button id="' + closeId + '" style="width:30px;height:30px;border:none;border-radius:8px;background:rgba(255,255,255,.1);color:#fff;font-size:14px;cursor:pointer">✕</button>'
       + '</div>'
       + '<div style="overflow-y:auto;padding:14px 16px;flex:1">'
       + swCss + rows.join('') + saveBtn
@@ -1764,8 +1764,11 @@ automation:
     var host = document.createElement('div');
     host.innerHTML = html;
     var ov = host.firstChild;
-    ov.querySelector('#' + closeId).addEventListener('click', function() { if (ov.parentNode) ov.parentNode.removeChild(ov); });
-    ov.addEventListener('click', function(e) { if (e.target.id === closeId + '-bd') { if (ov.parentNode) ov.parentNode.removeChild(ov); } });
+    function _irrClose() { if (ov.parentNode) ov.parentNode.removeChild(ov); document.removeEventListener('keydown', _irrEsc); }
+    function _irrEsc(e) { if (e.key === 'Escape') _irrClose(); }
+    ov.querySelector('#' + closeId).addEventListener('click', _irrClose);
+    ov.addEventListener('click', function(e) { if (e.target.id === closeId + '-bd') _irrClose(); });
+    document.addEventListener('keydown', _irrEsc);
     ov.querySelectorAll('.irr-sw').forEach(function(sw) {
       sw.addEventListener('click', function() { sw.classList.toggle('on'); sw.classList.toggle('off'); });
     });
@@ -1835,12 +1838,12 @@ automation:
         + '@keyframes wUp{from{transform:translateY(100%)}to{transform:translateY(0)}}'
         + '.wd-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}'
         + '.wd-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.3);flex-shrink:0}'
-        + '.wd-tit{font-size:14px;font-weight:800}.wd-sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:1px}'
+        + '.wd-tit{font-size:14px;font-weight:800}.wd-sub{font-size:11px;color:#fff;margin-top:1px}'
         + '.wd-x{margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none}'
         + '.wd-body{flex:1;overflow-y:auto;padding:16px;scrollbar-width:none;display:flex;flex-direction:column;gap:14px}'
         + '.wd-body::-webkit-scrollbar{display:none}'
         + '.wd-sec{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding-bottom:5px;border-bottom:1px solid rgba(56,189,248,.18);margin-bottom:10px}'
-        + '.wd-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px}'
+        + '.wd-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#fff;margin-bottom:3px}'
         + '.wd-frow{position:relative;margin-bottom:10px}'
         + '.wd-inp{width:100%;padding:9px 11px;border-radius:10px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none}'
         + '.wd-inp:focus{border-color:rgba(56,189,248,.5)}'
@@ -1849,7 +1852,7 @@ automation:
         + '.wd-push-row{display:flex;gap:6px;margin-bottom:6px}'
         + '.wd-rm{width:30px;height:38px;border-radius:8px;background:rgba(255,255,255,.07);border:none;color:#fff;cursor:pointer;font-size:14px;flex-shrink:0}'
         + '.wd-add{padding:6px 12px;border-radius:8px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.25);color:#38bdf8;font-size:11px;font-weight:700;cursor:pointer}'
-        + '.wd-note{font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;margin:0 0 10px}'
+        + '.wd-note{font-size:11px;color:#fff;line-height:1.5;margin:0 0 10px}'
         + '.wd-foot{padding:12px 16px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:8px;flex-shrink:0}'
         + '.wd-cancel{flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:rgba(255,255,255,.1);color:#fff}'
         + '.wd-install{flex:2;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#38bdf8;color:#060d14}'
@@ -2065,7 +2068,7 @@ automation:
       + '#' + rid + ' .fc-met-lbl{font-size:11px;font-weight:700;color:#fff;flex-shrink:0}'
       + '#' + rid + ' .fc-met-v{font-size:15px;font-weight:800;color:#fff;text-align:right}'
       + '#' + rid + ' .fc-tmr{display:flex;flex-direction:column;align-items:flex-end;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06)}'
-      + '#' + rid + ' .fc-tmr-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:rgba(255,255,255,.4)}'
+      + '#' + rid + ' .fc-tmr-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#fff}'
       + '#' + rid + ' .fc-tmr-v{font-size:22px;font-weight:900;color:' + col + ';font-variant-numeric:tabular-nums;letter-spacing:-.02em}'
       + '#' + rid + ' .fc-pwfull{margin:0 14px 10px}'
       + '#' + rid + ' .fc-pwfull-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}'
@@ -2185,8 +2188,8 @@ automation:
         + '<div style="flex:1;min-width:0">'
         + (isOn
           ? '<span style="font-size:11px;color:#38bdf8;font-weight:700">' + nC + ' cicli</span>'
-          + (t1 ? '<span style="font-size:10px;color:rgba(255,255,255,.4)"> · ' + t1.slice(0,5) + '</span>' : '')
-          : '<span style="font-size:10px;color:rgba(255,255,255,.28)">Disattivato</span>')
+          + (t1 ? '<span style="font-size:10px;color:#fff"> · ' + t1.slice(0,5) + '</span>' : '')
+          : '<span style="font-size:10px;color:#fff">Disattivato</span>')
         + '</div>'
         + '<button class="irr-dedit" data-day="' + d + '" style="padding:4px 9px;border-radius:7px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);font-size:10px;color:#fff;cursor:pointer;flex-shrink:0">✏ Cicli</button>'
         + '</div>';
@@ -2199,13 +2202,13 @@ automation:
       + '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding-bottom:5px;border-bottom:1px solid rgba(56,189,248,.2);margin:16px 0 10px">Impostazioni globali</div>'
       + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:9px"><span style="font-size:11px;color:#fff;flex:1">Durata manuale</span>'
       + '<input id="irrpm-dur" type="number" min="10" max="7200" step="10" value="' + durM + '" style="width:80px;padding:6px 9px;border-radius:7px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:12px;outline:none;text-align:right">'
-      + '<span style="font-size:10px;color:rgba(255,255,255,.4);flex-shrink:0">sec</span></div>'
+      + '<span style="font-size:10px;color:#fff;flex-shrink:0">sec</span></div>'
       + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:9px"><span style="font-size:11px;color:#fff;flex:1">Soglia blocco pioggia</span>'
       + '<input id="irrpm-sog" type="number" min="0" max="100" step="5" value="' + soglia + '" style="width:80px;padding:6px 9px;border-radius:7px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:12px;outline:none;text-align:right">'
-      + '<span style="font-size:10px;color:rgba(255,255,255,.4);flex-shrink:0">%</span></div>'
+      + '<span style="font-size:10px;color:#fff;flex-shrink:0">%</span></div>'
       + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><span style="font-size:11px;color:#fff;flex:1">Target cicli mensili</span>'
       + '<input id="irrpm-tar" type="number" min="1" max="999" step="1" value="' + tarMens + '" style="width:80px;padding:6px 9px;border-radius:7px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:12px;outline:none;text-align:right">'
-      + '<span style="font-size:10px;color:rgba(255,255,255,.4);flex-shrink:0">cicli</span></div>'
+      + '<span style="font-size:10px;color:#fff;flex-shrink:0">cicli</span></div>'
       + '<button id="irrpm-save" style="width:100%;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#38bdf8;color:#04111a">💾 Salva impostazioni globali</button>';
     var ov = _iMkOv(_iPopShell('📅','56,189,248','Programma settimanale','Giorni attivi e impostazioni','irr-pm-cl',content),'irr-pm-cl');
     ov.querySelectorAll('.irr-dtog').forEach(function(tog) {
@@ -2245,7 +2248,7 @@ automation:
         + '<div style="font-size:11px;font-weight:900;color:#38bdf8;width:22px;flex-shrink:0">C' + i + '</div>'
         + '<input type="time" value="' + tv.slice(0,5) + '" id="irrdd-t' + i + '" style="flex:1;padding:7px 9px;border-radius:8px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:13px;outline:none">'
         + '<input type="number" value="' + dv + '" id="irrdd-d' + i + '" min="10" max="7200" step="10" style="width:70px;padding:7px 8px;border-radius:8px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:12px;outline:none;text-align:right">'
-        + '<span style="font-size:9px;color:rgba(255,255,255,.4);flex-shrink:0">sec</span></div>';
+        + '<span style="font-size:9px;color:#fff;flex-shrink:0">sec</span></div>';
     }
     var content = '<div style="display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:12px">'
       + '<span style="font-size:12px;color:#fff;flex:1">Cicli attivi (0-5)</span>'
@@ -2272,12 +2275,12 @@ automation:
     var c = _iCfgFor(card);
     function fld(key, label, ph) {
       return '<div style="margin-bottom:10px">'
-        + '<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px">' + label + '</div>'
+        + '<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#fff;margin-bottom:3px">' + label + '</div>'
         + '<input id="irrf-' + key + '" type="text" autocomplete="off" placeholder="' + ph + '" value="' + (c[key]||'').replace(/"/g,'&quot;') + '" style="width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:11px;font-family:monospace;box-sizing:border-box;outline:none">'
         + '</div>';
     }
     function sec(t) { return '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding-bottom:4px;border-bottom:1px solid rgba(56,189,248,.18);margin:14px 0 10px">' + t + '</div>'; }
-    var content = '<div style="margin-bottom:10px"><div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px">Nome card</div>'
+    var content = '<div style="margin-bottom:10px"><div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#fff;margin-bottom:3px">Nome card</div>'
       + '<input id="irrf-name" type="text" placeholder="Irrigazione Smart" value="' + (c.name||'').replace(/"/g,'&quot;') + '" style="width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:11px;box-sizing:border-box;outline:none"></div>'
       + sec('Prefisso entità PKG')
       + fld('pk_prefix','Prefisso schedule','irrigazione')

@@ -3866,7 +3866,7 @@ automation:
     function dNum(entity, lbl, unit, mn, mx, step) {
       var val = ns(entity);
       rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);gap:10px">'
-        + '<span style="font-size:13px;color:#fff;flex:1">' + lbl + (unit ? ' <span style="font-size:10px;color:rgba(255,255,255,.6)">(' + unit + ')</span>' : '') + '</span>'
+        + '<span style="font-size:13px;color:#fff;flex:1">' + lbl + (unit ? ' <span style="font-size:10px;color:#fff">(' + unit + ')</span>' : '') + '</span>'
         + '<input type="number" class="az-inp" data-entity="' + entity + '" data-svctype="number" value="' + val + '" min="' + (mn||0) + '" max="' + (mx||9999) + '" step="' + (step||1) + '" style="' + iBase + ';width:90px;padding:6px 8px;text-align:right">'
         + '</div>');
     }
@@ -3918,12 +3918,12 @@ automation:
 
     /* build overlay using the page-level overlay helper if available */
     var ov;
-    var html = '<div id="' + closeId + '-bd" style="position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;pointer-events:auto">'
-      + '<div style="background:#0d1627;border-radius:18px;border:1px solid rgba(6,182,212,.3);width:min(96vw,430px);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.7)">'
-      + '<div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.07)">'
+    var html = '<div id="' + closeId + '-bd" style="position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);display:flex;align-items:flex-end;pointer-events:auto">'
+      + '<div style="background:#0a0d1a;border-radius:20px 20px 0 0;border:1px solid rgba(255,255,255,.1);border-bottom:none;width:100%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.7)">'
+      + '<div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">'
       + '<span style="font-size:20px">⚙</span>'
       + '<span style="font-size:15px;font-weight:800;color:#fff;flex:1">Impostazioni Anti Zanzare</span>'
-      + '<button id="' + closeId + '" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:20px;cursor:pointer;padding:4px">✕</button>'
+      + '<button id="' + closeId + '" style="width:30px;height:30px;border:none;border-radius:8px;background:rgba(255,255,255,.1);color:#fff;font-size:14px;cursor:pointer">✕</button>'
       + '</div>'
       + '<div style="overflow-y:auto;padding:14px 16px;flex:1">'
       + swCss + rows.join('') + saveBtn
@@ -3935,8 +3935,11 @@ automation:
     host.innerHTML = html;
     ov = host.firstChild;
     var closeEl = ov.querySelector ? ov.querySelector('#' + closeId) : null;
-    if (closeEl) closeEl.addEventListener('click', function() { if (ov.parentNode) ov.parentNode.removeChild(ov); });
-    ov.addEventListener('click', function(e) { if (e.target.id === closeId + '-bd') { if (ov.parentNode) ov.parentNode.removeChild(ov); } });
+    function _azClose() { if (ov.parentNode) ov.parentNode.removeChild(ov); document.removeEventListener('keydown', _azEsc); }
+    function _azEsc(e) { if (e.key === 'Escape') _azClose(); }
+    if (closeEl) closeEl.addEventListener('click', _azClose);
+    ov.addEventListener('click', function(e) { if (e.target.id === closeId + '-bd') _azClose(); });
+    document.addEventListener('keydown', _azEsc);
 
     ov.querySelectorAll('.az-sw').forEach(function(sw) {
       sw.addEventListener('click', function() { sw.classList.toggle('on'); sw.classList.toggle('off'); });
@@ -4025,12 +4028,12 @@ automation:
         + '@keyframes wUp{from{transform:translateY(100%)}to{transform:translateY(0)}}'
         + '.wd-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}'
         + '.wd-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.3);flex-shrink:0}'
-        + '.wd-tit{font-size:14px;font-weight:800}.wd-sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:1px}'
+        + '.wd-tit{font-size:14px;font-weight:800}.wd-sub{font-size:11px;color:#fff;margin-top:1px}'
         + '.wd-x{margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none}'
         + '.wd-body{flex:1;overflow-y:auto;padding:16px;scrollbar-width:none;display:flex;flex-direction:column;gap:14px}'
         + '.wd-body::-webkit-scrollbar{display:none}'
         + '.wd-sec{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding-bottom:5px;border-bottom:1px solid rgba(56,189,248,.18);margin-bottom:10px}'
-        + '.wd-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px}'
+        + '.wd-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#fff;margin-bottom:3px}'
         + '.wd-frow{position:relative;margin-bottom:10px}'
         + '.wd-inp{width:100%;padding:9px 11px;border-radius:10px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none}'
         + '.wd-inp:focus{border-color:rgba(56,189,248,.5)}'
@@ -4039,7 +4042,7 @@ automation:
         + '.wd-push-row{display:flex;gap:6px;margin-bottom:6px}'
         + '.wd-rm{width:30px;height:38px;border-radius:8px;background:rgba(255,255,255,.07);border:none;color:#fff;cursor:pointer;font-size:14px;flex-shrink:0}'
         + '.wd-add{padding:6px 12px;border-radius:8px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.25);color:#38bdf8;font-size:11px;font-weight:700;cursor:pointer}'
-        + '.wd-note{font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;margin:0 0 10px}'
+        + '.wd-note{font-size:11px;color:#fff;line-height:1.5;margin:0 0 10px}'
         + '.wd-foot{padding:12px 16px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:8px;flex-shrink:0}'
         + '.wd-cancel{flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:rgba(255,255,255,.1);color:#fff}'
         + '.wd-install{flex:2;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#38bdf8;color:#060d14}'
@@ -4392,13 +4395,13 @@ automation:
       var ncAutoOff = nextCycleInfo && !autoOn;
       var ncBg = ncAutoOff ? 'rgba(245,158,11,.07)' : (nextCycleInfo ? 'rgba(6,182,212,.08)' : 'rgba(255,255,255,.03)');
       var ncBd = ncAutoOff ? 'rgba(245,158,11,.3)' : (nextCycleInfo ? 'rgba(6,182,212,.28)' : 'rgba(255,255,255,.07)');
-      var ncCol = ncAutoOff ? '#f59e0b' : (nextCycleInfo ? '#06b6d4' : '#475569');
+      var ncCol = ncAutoOff ? '#f59e0b' : '#fff';
       nextCycleHtml = '<div style="margin:0 10px 7px;padding:9px 12px;border-radius:11px;background:' + ncBg + ';border:1px solid ' + ncBd + '">'
         + '<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:' + ncCol + ';margin-bottom:3px">📅 PROSSIMO CICLO</div>'
         + (nextCycleInfo
           ? '<div style="font-size:13px;font-weight:800;color:#fff">' + nextCycleInfo.day + ' alle ' + nextCycleInfo.time + '</div>'
             + (ncAutoOff ? '<div style="font-size:10px;font-weight:600;color:#f59e0b;margin-top:2px">⚠ Automazione disattivata — il ciclo non partirà</div>' : '')
-          : '<div style="font-size:11px;font-weight:600;color:#475569">Nessun ciclo programmato</div>')
+          : '<div style="font-size:11px;font-weight:600;color:#fff">Nessun ciclo programmato</div>')
         + '</div>';
     }
 
@@ -4571,7 +4574,7 @@ automation:
       var pillBd = isOn && nC > 0 ? 'rgba(' + rgb + ',.22)' : 'rgba(255,255,255,.07)';
       var badge = nC > 0
         ? '<span style="background:rgba(' + rgb + ',.15);border:1px solid rgba(' + rgb + ',.3);border-radius:10px;padding:2px 8px;font-size:10px;font-weight:800;color:' + col + '">' + nC + ' cicl' + (nC===1?'o':'i') + '</span>'
-        : '<span style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:2px 8px;font-size:10px;font-weight:600;color:#475569">nessuno</span>';
+        : '<span style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:2px 8px;font-size:10px;font-weight:600;color:#fff">nessuno</span>';
       return '<div style="background:' + pillBg + ';border:1px solid ' + pillBd + ';border-radius:14px;padding:10px 12px;margin-bottom:7px">'
         + '<div style="display:flex;align-items:center;gap:8px">'
         + '<span style="font-size:12px;font-weight:700;color:#fff;flex:1">' + dayLabels[i] + '</span>'
@@ -4582,7 +4585,7 @@ automation:
         + '</div>'
         + '</div>'
         + (isOn ? '<div style="display:flex;align-items:center;gap:6px;margin-top:7px">'
-          + (times.length ? '<span style="font-size:10px;color:rgba(255,255,255,.45);flex:1">' + times.join(' · ') + '</span>' : '<span style="flex:1"></span>')
+          + (times.length ? '<span style="font-size:10px;color:#fff;flex:1">' + times.join(' · ') + '</span>' : '<span style="flex:1"></span>')
           + '<button class="az-dedit" data-day="' + d + '" style="padding:4px 10px;border-radius:8px;border:1px solid rgba(' + rgb + ',.3);background:rgba(' + rgb + ',.1);font-size:10px;font-weight:700;color:' + col + ';cursor:pointer">✏ Modifica cicli</button>'
           + '</div>' : '')
         + '</div>';
@@ -4710,7 +4713,7 @@ automation:
         + '<span style="font-size:12px;color:#fff;flex:1">' + label + '</span>'
         + '<input id="azuc-' + id + '" type="number" min="' + min + '" max="' + max + '" step="' + step + '" value="' + val + '"'
         + ' style="width:72px;padding:6px 8px;border-radius:8px;background:#0d1a2b;color:#f1f5f9;border:1px solid rgba(255,255,255,.15);font-size:13px;font-weight:700;outline:none;text-align:right">'
-        + '<span style="font-size:10px;color:rgba(255,255,255,.4);width:28px;flex-shrink:0">' + unit + '</span>'
+        + '<span style="font-size:10px;color:#fff;width:28px;flex-shrink:0">' + unit + '</span>'
         + '</div>';
     }
 
@@ -4720,7 +4723,7 @@ automation:
         + '<div style="font-size:19px;width:26px;text-align:center;flex-shrink:0">' + ico + '</div>'
         + '<div style="flex:1;min-width:0">'
         + '<div style="font-size:12px;font-weight:700;color:#fff">' + label + '</div>'
-        + '<div style="font-size:10px;color:rgba(255,255,255,.38);margin-top:2px;line-height:1.3">' + desc + '</div>'
+        + '<div style="font-size:10px;color:#fff;margin-top:2px;line-height:1.3">' + desc + '</div>'
         + '</div>'
         + '<div id="' + id + '" data-on="' + (isOn?'1':'0') + '"'
         + ' style="width:46px;height:26px;border-radius:13px;flex-shrink:0;cursor:pointer;'
@@ -4758,12 +4761,12 @@ automation:
         + '<span id="azs-ncv-' + d + '" style="font-size:15px;font-weight:800;color:#22c55e;min-width:20px;text-align:center">' + nc + '</span>'
         + '<input type="hidden" id="azs-nc-' + d + '" value="' + nc + '">'
         + '<button id="azs-ncp-' + d + '" style="width:24px;height:24px;border-radius:7px;border:none;background:rgba(255,255,255,.08);color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;line-height:1">+</button>'
-        + '<span style="font-size:10px;color:rgba(255,255,255,.3);margin-left:2px">cicli</span>'
+        + '<span style="font-size:10px;color:#fff;margin-left:2px">cicli</span>'
         + '</div></div>'
         + '<div id="azs-times-' + d + '" style="display:' + (nc===0?'none':'block') + '">'
-        + '<div style="font-size:9px;color:rgba(255,255,255,.3);margin-bottom:2px">⏰ Orari</div>'
+        + '<div style="font-size:9px;color:#fff;margin-bottom:2px">⏰ Orari</div>'
         + '<div style="display:flex;gap:4px">' + timeInputs + '</div>'
-        + '<div style="font-size:9px;color:rgba(255,255,255,.3);margin:5px 0 2px">⏱ Durate (sec)</div>'
+        + '<div style="font-size:9px;color:#fff;margin:5px 0 2px">⏱ Durate (sec)</div>'
         + '<div style="display:flex;gap:4px">' + durInputs + '</div>'
         + '</div>'
         + '</div>';
@@ -4777,11 +4780,11 @@ automation:
       + togRow('azuc-tog-nalexa', '🔊', 'Annunci Alexa', 'Annunci vocali tramite dispositivi Alexa configurati', notifyAlexaOn, '251,146,60')
       + '<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
       + '<div style="flex:1">'
-      + '<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:rgba(255,255,255,.38);margin-bottom:4px">Dalle</div>'
+      + '<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#fff;margin-bottom:4px">Dalle</div>'
       + '<input id="azuc-ntf-start" type="time" value="' + inizioNtf + '" style="width:100%;padding:8px 10px;border-radius:9px;background:#0d1a2b;color:#f1f5f9;border:1px solid rgba(255,255,255,.14);font-size:13px;box-sizing:border-box;outline:none">'
       + '</div>'
       + '<div style="flex:1">'
-      + '<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:rgba(255,255,255,.38);margin-bottom:4px">Alle</div>'
+      + '<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#fff;margin-bottom:4px">Alle</div>'
       + '<input id="azuc-ntf-end" type="time" value="' + fineNtf + '" style="width:100%;padding:8px 10px;border-radius:9px;background:#0d1a2b;color:#f1f5f9;border:1px solid rgba(255,255,255,.14);font-size:13px;box-sizing:border-box;outline:none">'
       + '</div></div>'
       + sec('📅', 'Programma Settimanale')

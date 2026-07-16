@@ -663,12 +663,12 @@ if(!customElements.get('posta-card')){
       + '</style>';
     const saveBtn = '<button id="po-save" style="width:100%;margin-top:12px;padding:13px;border-radius:12px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.4);color:#38bdf8;font-size:14px;font-weight:700;cursor:pointer">💾 Salva impostazioni</button>';
     const closeId = 'po-imp-' + Math.random().toString(36).slice(2,6);
-    const html = '<div id="' + closeId + '-bd" style="position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;pointer-events:auto">'
-      + '<div style="background:#0d1627;border-radius:18px;border:1px solid rgba(56,189,248,.3);width:min(96vw,430px);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.7)">'
-      + '<div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.07)">'
+    const html = '<div id="' + closeId + '-bd" style="position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);display:flex;align-items:flex-end;pointer-events:auto">'
+      + '<div style="background:#0a0d1a;border-radius:20px 20px 0 0;border:1px solid rgba(255,255,255,.1);border-bottom:none;width:100%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.7)">'
+      + '<div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">'
       + '<span style="font-size:20px">📬</span>'
       + '<span style="font-size:15px;font-weight:800;color:#fff;flex:1">Impostazioni Posta</span>'
-      + '<button id="' + closeId + '" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:20px;cursor:pointer;padding:4px">✕</button>'
+      + '<button id="' + closeId + '" style="width:30px;height:30px;border:none;border-radius:8px;background:rgba(255,255,255,.1);color:#fff;font-size:14px;cursor:pointer">✕</button>'
       + '</div>'
       + '<div style="overflow-y:auto;padding:14px 16px;flex:1">'
       + swCss + rows.join('') + saveBtn
@@ -678,8 +678,11 @@ if(!customElements.get('posta-card')){
     const host = document.createElement('div');
     host.innerHTML = html;
     const ov = host.firstChild;
-    ov.querySelector('#' + closeId).addEventListener('click', () => { ov.remove(); });
-    ov.addEventListener('click', e => { if (e.target.id === closeId + '-bd') ov.remove(); });
+    const _poClose = () => { ov.remove(); document.removeEventListener('keydown', _poEsc); };
+    const _poEsc = e => { if (e.key === 'Escape') _poClose(); };
+    ov.querySelector('#' + closeId).addEventListener('click', _poClose);
+    ov.addEventListener('click', e => { if (e.target.id === closeId + '-bd') _poClose(); });
+    document.addEventListener('keydown', _poEsc);
     ov.querySelectorAll('.po-sw').forEach(sw => {
       sw.addEventListener('click', () => { sw.classList.toggle('on'); sw.classList.toggle('off'); });
     });
@@ -900,7 +903,7 @@ if(!customElements.get('posta-card')){
         .mico{width:36px;height:36px;border-radius:10px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
         .mtit{flex:1;font-size:15px;font-weight:800;color:#fff;font-family:system-ui,sans-serif}
         .mxbtn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:6px 12px;color:#fff;font-size:13px;cursor:pointer;font-family:system-ui,sans-serif}
-        p{font-family:system-ui,sans-serif;font-size:13px;color:rgba(255,255,255,.65);line-height:1.7;padding:14px 18px 8px}
+        p{font-family:system-ui,sans-serif;font-size:13px;color:#fff;line-height:1.7;padding:14px 18px 8px}
         .btns{display:flex;gap:10px;padding:8px 18px 28px}
         button{flex:1;padding:13px;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:system-ui,sans-serif;color:#fff;border:none}
         .bconf{background:rgba(239,68,68,.7);border:1.5px solid rgba(239,68,68,.5)}
@@ -936,11 +939,11 @@ if(!customElements.get('posta-card')){
         .mtit{flex:1;font-size:16px;font-weight:900;color:#fff;font-family:system-ui,sans-serif}
         .mxbtn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:6px 14px;color:#fff;font-size:13px;cursor:pointer;font-family:system-ui,sans-serif}
         .mbody{overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px;scrollbar-width:none}
-        .flbl{font-size:11px;font-weight:800;color:rgba(255,255,255,.45);letter-spacing:.7px;text-transform:uppercase;font-family:system-ui,sans-serif;margin-bottom:6px;display:flex;align-items:center;gap:6px}
-        .fopt{font-size:10px;font-weight:700;background:rgba(255,255,255,.07);color:rgba(255,255,255,.4);padding:2px 6px;border-radius:5px;text-transform:none;letter-spacing:0}
+        .flbl{font-size:11px;font-weight:800;color:#fff;letter-spacing:.7px;text-transform:uppercase;font-family:system-ui,sans-serif;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+        .fopt{font-size:10px;font-weight:700;background:rgba(255,255,255,.07);color:#fff;padding:2px 6px;border-radius:5px;text-transform:none;letter-spacing:0}
         .finp{width:100%;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.11);border-radius:10px;padding:11px 13px;color:#fff;font-size:13px;font-family:system-ui,sans-serif;outline:none;transition:border-color .15s}
         .finp:focus{border-color:rgba(251,191,36,.5)}
-        .fhint{font-size:11px;color:rgba(255,255,255,.32);margin-top:5px;font-family:system-ui,sans-serif;line-height:1.5}
+        .fhint{font-size:11px;color:#fff;margin-top:5px;font-family:system-ui,sans-serif;line-height:1.5}
         .fsave{width:100%;padding:14px;border-radius:13px;background:#fbbf24;border:none;color:#1a1a2e;font-size:14px;font-weight:900;cursor:pointer;font-family:system-ui,sans-serif}
       </style>
       <div class="ov"><div class="mo">
@@ -1005,18 +1008,18 @@ if(!customElements.get('posta-card')){
 .hero{display:flex;align-items:center;gap:14px;padding:14px 15px 12px}
 .hero-env{flex:0 0 42%;max-width:120px;aspect-ratio:100/68}
 .hero-info{flex:1;display:flex;flex-direction:column;gap:2px}
-.hero-n{font-size:54px;font-weight:900;color:rgba(255,255,255,.14);line-height:1;letter-spacing:-3px;transition:color .35s,text-shadow .35s}
+.hero-n{font-size:54px;font-weight:900;color:#fff;line-height:1;letter-spacing:-3px;transition:color .35s,text-shadow .35s}
 .hero-n.hero-n-act{color:#38bdf8;text-shadow:0 0 28px rgba(56,189,248,.35)}
 .hero-n.hero-n-open{color:#34d399;text-shadow:0 0 28px rgba(56,189,248,.35)}
-.hero-lbl{font-size:10px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.7px;margin-top:1px}
-.hero-last{display:flex;align-items:center;gap:5px;margin-top:8px;padding:5px 9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;font-size:11px;color:rgba(255,255,255,.55);font-weight:600;line-height:1.3;animation:fade-up .2s ease}
+.hero-lbl{font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.7px;margin-top:1px}
+.hero-last{display:flex;align-items:center;gap:5px;margin-top:8px;padding:5px 9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;font-size:11px;color:#fff;font-weight:600;line-height:1.3;animation:fade-up .2s ease}
 .open-pill{display:inline-flex;align-items:center;gap:4px;margin-top:6px;padding:4px 9px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.25);border-radius:18px;font-size:10px;color:#34d399;font-weight:800;letter-spacing:.2px;animation:pulse 2.5s ease infinite}
 
 /* section */
 .sec{padding:0 15px 10px}
 .sec-hdr{display:flex;align-items:center;gap:7px;margin-bottom:8px}
 .sec-ln{flex:1;height:1px;background:rgba(255,255,255,.05)}
-.sec-lb{font-size:9px;font-weight:800;color:rgba(255,255,255,.22);text-transform:uppercase;letter-spacing:1px;white-space:nowrap}
+.sec-lb{font-size:9px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:1px;white-space:nowrap}
 
 /* timeline */
 .tl{display:flex;flex-direction:column}
@@ -1028,25 +1031,25 @@ if(!customElements.get('posta-card')){
 .tl-time{flex:1;font-size:17px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:.5px;line-height:1;padding-top:2px;padding-bottom:14px}
 .tl-last .tl-time{color:#38bdf8;padding-bottom:6px}
 .tl-badge{align-self:flex-start;margin-top:3px;font-size:9px;font-weight:800;padding:2px 7px;border-radius:10px;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.25);color:#38bdf8;text-transform:uppercase;letter-spacing:.5px}
-.tl-empty{padding:13px;text-align:center;font-size:11px;color:rgba(255,255,255,.2);background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.06);border-radius:10px}
+.tl-empty{padding:13px;text-align:center;font-size:11px;color:#fff;background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.06);border-radius:10px}
 
 /* stats */
 .stats{display:flex;align-items:stretch;margin:0 15px 10px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden}
 .stat-box{flex:1;display:flex;flex-direction:column;align-items:center;padding:9px 6px;gap:2px}
 .stat-sep{width:1px;background:rgba(255,255,255,.06)}
 .stat-n{font-size:20px;font-weight:900;color:#fff;line-height:1}
-.stat-l{font-size:9px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px}
+.stat-l{font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.5px}
 
 /* drawer toggle */
 .drw-toggle{display:flex;align-items:center;gap:8px;padding:10px 15px;background:rgba(255,255,255,.025);border-top:1px solid rgba(255,255,255,.06);cursor:pointer;user-select:none;transition:background .15s;flex-shrink:0}
 .drw-toggle:active{background:rgba(255,255,255,.06)}
 .drw-ico{font-size:13px}
-.drw-lbl{flex:1;font-size:11px;font-weight:700;color:rgba(255,255,255,.45);letter-spacing:.2px}
-.drw-chev{font-size:10px;color:rgba(255,255,255,.25)}
+.drw-lbl{flex:1;font-size:11px;font-weight:700;color:#fff;letter-spacing:.2px}
+.drw-chev{font-size:10px;color:#fff}
 
 /* drawer */
 .drw{padding:10px 15px 16px;display:flex;flex-direction:column;gap:5px;animation:fade-up .15s ease}
-.drw-sec{font-size:9px;font-weight:800;color:rgba(255,255,255,.22);text-transform:uppercase;letter-spacing:1px;margin-top:5px;margin-bottom:3px}
+.drw-sec{font-size:9px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:1px;margin-top:5px;margin-bottom:3px}
 .drw-row{display:flex;align-items:center;gap:9px;padding:9px 11px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:10px;cursor:pointer;user-select:none;transition:background .15s}
 .drw-row:active{background:rgba(255,255,255,.08)}
 .dri{font-size:15px;flex-shrink:0}
@@ -1062,20 +1065,20 @@ if(!customElements.get('posta-card')){
 
 /* time row */
 .time-row{display:flex;align-items:center;gap:6px;padding:7px 11px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:10px}
-.tl-lbl{font-size:10px;color:rgba(255,255,255,.38);min-width:26px}
+.tl-lbl{font-size:10px;color:#fff;min-width:26px}
 .ti{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:#fff;font-size:12px;font-weight:700;padding:4px 6px;font-family:system-ui,sans-serif;appearance:none;text-align:center;outline:none}
 .ti:focus{border-color:rgba(56,189,248,.5);background:rgba(56,189,248,.07)}
 
 /* reset */
 .rst-row{display:flex;gap:6px}
-.rst-btn{flex:1;padding:9px 2px;border-radius:9px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.18);color:rgba(255,255,255,.7);font-size:11px;font-weight:800;cursor:pointer;font-family:system-ui,sans-serif;transition:all .15s;letter-spacing:.1px}
+.rst-btn{flex:1;padding:9px 2px;border-radius:9px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.18);color:#fff;font-size:11px;font-weight:800;cursor:pointer;font-family:system-ui,sans-serif;transition:all .15s;letter-spacing:.1px}
 .rst-btn:active{background:rgba(239,68,68,.22)}
 
 /* not installed */
 .ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:26px 18px}
 .ni-env{width:80px;height:54px;opacity:.4}
 .ni-title{font-size:16px;font-weight:900;color:#fff}
-.ni-sub{font-size:12px;color:rgba(255,255,255,.4);line-height:1.8;max-width:240px}
+.ni-sub{font-size:12px;color:#fff;line-height:1.8;max-width:240px}
 .ni-sub strong{color:#38bdf8;opacity:1}
 `;}
   };
@@ -1105,7 +1108,7 @@ PostaCard.openWizard=function(hass,onDone,_tpl,opts){
     .mhdr{display:flex;align-items:center;gap:12px;padding:18px 18px 14px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
     .mico{width:40px;height:40px;border-radius:12px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
     .mtxt{flex:1}.mtit{font-size:15px;font-weight:900;color:#fff;font-family:system-ui,sans-serif}
-    .msub{font-size:11px;color:rgba(255,255,255,.4);font-family:system-ui,sans-serif;margin-top:2px}
+    .msub{font-size:11px;color:#fff;font-family:system-ui,sans-serif;margin-top:2px}
     .mxbtn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:6px 12px;color:#fff;font-size:13px;cursor:pointer;font-family:system-ui,sans-serif}
     .mbody{flex:1;overflow-y:auto;padding:16px 18px 4px;display:flex;flex-direction:column;gap:18px;scrollbar-width:none}
     .mbody::-webkit-scrollbar{display:none}
@@ -1115,8 +1118,8 @@ PostaCard.openWizard=function(hass,onDone,_tpl,opts){
     .wsec-ttl{font-size:12px;font-weight:900;color:#fff;letter-spacing:.6px;text-transform:uppercase;font-family:system-ui,sans-serif}
     .tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;font-family:system-ui,sans-serif}
     .req{background:rgba(239,68,68,.2);color:#fca5a5;border:1px solid rgba(239,68,68,.3)}
-    .opt{background:rgba(255,255,255,.07);color:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.12)}
-    .wsec-hint{font-size:11px;color:rgba(255,255,255,.42);font-family:system-ui,sans-serif;line-height:1.6}
+    .opt{background:rgba(255,255,255,.07);color:#fff;border:1px solid rgba(255,255,255,.12)}
+    .wsec-hint{font-size:11px;color:#fff;font-family:system-ui,sans-serif;line-height:1.6}
     .wsec-hint code{background:rgba(255,255,255,.1);padding:1px 5px;border-radius:4px;font-size:10px;color:#fbbf24;font-family:monospace}
     .wlist{display:flex;flex-direction:column;gap:6px}
     .wrow{display:flex;gap:6px;align-items:center}
@@ -1124,7 +1127,7 @@ PostaCard.openWizard=function(hass,onDone,_tpl,opts){
     .winp:focus{border-color:rgba(251,191,36,.55);background:rgba(255,255,255,.09)}
     .winp.err{border-color:rgba(239,68,68,.6)!important}
     .wrem{width:32px;height:32px;flex-shrink:0;border-radius:8px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.22);color:#fca5a5;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;font-family:system-ui,sans-serif}
-    .wadd{align-self:flex-start;background:none;border:1px dashed rgba(255,255,255,.18);border-radius:9px;padding:7px 16px;color:rgba(255,255,255,.55);font-size:12px;font-weight:600;cursor:pointer;font-family:system-ui,sans-serif;transition:all .15s}
+    .wadd{align-self:flex-start;background:none;border:1px dashed rgba(255,255,255,.18);border-radius:9px;padding:7px 16px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:system-ui,sans-serif;transition:all .15s}
     .wadd:hover{opacity:.9;border-color:rgba(251,191,36,.45);color:#fbbf24}
     .werr{font-size:11px;color:#fca5a5;font-family:system-ui,sans-serif}
     .wdiv{height:1px;background:rgba(255,255,255,.06)}
@@ -1261,7 +1264,7 @@ PostaCard.openWizard=function(hass,onDone,_tpl,opts){
           <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 20px;gap:16px;text-align:center">
             <div style="font-size:52px">✅</div>
             <div style="font-size:16px;font-weight:900;color:#fff;font-family:system-ui,sans-serif">Package installato!</div>
-            <div style="font-size:13px;color:rgba(255,255,255,.6);font-family:system-ui,sans-serif;line-height:1.8">
+            <div style="font-size:13px;color:#fff;font-family:system-ui,sans-serif;line-height:1.8">
               Riavvia <strong style="color:#fbbf24;opacity:1">Home Assistant</strong> per attivare le entità.<br>
               Poi torna nello Store e aggiungi la card alla dashboard.
             </div>
