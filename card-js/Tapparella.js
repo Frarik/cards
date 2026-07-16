@@ -54,7 +54,7 @@
   ];
   function coverIcon(type) { const t = COVER_TYPES.find(x => x.id === type); return t ? t.icon : '🪟'; }
   function header(nm, type) {
-    return `<div style="flex-shrink:0;text-align:center;font-size:26px;font-weight:800;color:#e8ebf5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nm}</div>`;
+    return `<div style="flex-shrink:0;text-align:center;font-size:26px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nm}</div>`;
   }
 
 
@@ -316,7 +316,7 @@
   function render(card) {
     const h = H(), id = entOf(card), acc = card.color || '#38bdf8', nm = nameOf(card, h), type = typeOf(card);
     if (!id || id.split('.')[0] !== 'cover') {
-      return `<div style="height:100%;display:flex;flex-direction:column;min-height:0;gap:8px">${header(nm, type)}
+      return `<div style="height:100%;display:flex;flex-direction:column;min-height:0;gap:8px;padding:10px;box-sizing:border-box;position:relative;border-radius:18px;overflow:hidden;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%)">${header(nm, type)}
         <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#fff;text-align:center;padding:10px">
           <div style="font-size:34px">${coverIcon(type)}</div>
           <div style="font-size:11px">Tocca <b style="color:${acc}">✏️ Configura</b> per scegliere l'entità <b style="color:${acc}">cover</b></div>
@@ -332,7 +332,7 @@
         color:#fff;font-size:16px;line-height:1;transition:background .12s"
         onmouseover="this.style.background='rgba(255,255,255,.11)'"
         onmouseout="this.style.background='rgba(0,0,0,.32)'">${ico}</button>`;
-    return `<div style="height:100%;display:flex;flex-direction:column;min-height:0;gap:8px">${header(nm, type)}
+    return `<div style="height:100%;display:flex;flex-direction:column;min-height:0;gap:8px;padding:10px;box-sizing:border-box;position:relative;border-radius:18px;overflow:hidden;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%)">${header(nm, type)}
       ${draw}
       <div style="display:flex;align-items:baseline;justify-content:space-between;padding:0 2px">
         <span data-pct style="font-size:24px;font-weight:800;color:${acc}">${pos == null ? '—' : pos + '%'}</span>
@@ -582,7 +582,7 @@
       entDrop.innerHTML = hits.map(id => {
         const fn = states[id]?.attributes?.friendly_name || '';
         return `<div data-pick="${id}" style="padding:7px 11px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04)">
-          <span style="color:#e2e8f0">${id}</span>${fn ? `<span style="color:#475569;margin-left:7px;font-family:system-ui;font-size:10px">${fn}</span>` : ''}
+          <span style="color:#fff">${id}</span>${fn ? `<span style="color:#fff;margin-left:7px;font-family:system-ui;font-size:10px">${fn}</span>` : ''}
         </div>`;
       }).join('');
       entDrop.querySelectorAll('[data-pick]').forEach(row => {
@@ -741,9 +741,9 @@
     const inp = 'width:100%;padding:11px;border-radius:11px;background:#0f1830;color:#f1f5f9;border:1px solid rgba(255,255,255,.2);font-size:13px;box-sizing:border-box';
     ov.innerHTML = `<style>@keyframes ppSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style><div style="width:100%;background:#0a0816;border:1px solid rgba(139,92,246,.32);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.8);padding:20px;color:#fff;animation:ppSlideUp .22s cubic-bezier(.32,1.12,.56,1);scrollbar-width:none">
       <div style="font-size:16px;font-weight:800;margin-bottom:14px">🚪 Tapparella porta finestra</div>
-      <div style="font-size:11px;color:#94a3b8;margin-bottom:5px">Nome</div>
+      <div style="font-size:11px;color:#fff;margin-bottom:5px">Nome</div>
       <input id="pp-name" placeholder="es. Tapparella portafinestra" value="${(load(card).name || '').replace(/"/g, '&quot;')}" style="${inp};margin-bottom:12px">
-      <div style="font-size:11px;color:#94a3b8;margin-bottom:5px">Entità cover (${covers.length} trovate)</div>
+      <div style="font-size:11px;color:#fff;margin-bottom:5px">Entità cover (${covers.length} trovate)</div>
       <select id="pp-sel" style="${inp};margin-bottom:8px">${opts}</select>
       <input id="pp-man" placeholder="oppure: cover.porta_finestra_salotto" value="${cur}" style="${inp};font-size:12px;font-family:monospace">
       <div style="display:flex;gap:10px;margin-top:16px">
