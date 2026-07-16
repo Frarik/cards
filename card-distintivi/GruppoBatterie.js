@@ -9,14 +9,6 @@
 
   const ID = 'gruppo-batterie';
 
-  (function injectBadgeStyle() {
-    if (document.getElementById('cc-badge-border-fix')) return;
-    const s = document.createElement('style');
-    s.id = 'cc-badge-border-fix';
-    s.textContent = '.hbadge{background:transparent!important;border-color:var(--bc,rgba(255,255,255,.35))!important;border-width:1.5px!important}';
-    (document.head || document.documentElement).appendChild(s);
-  })();
-
   /* ── helpers ── */
   function H() {
     try { const h = window.frarikHass?.(); if (h?.states) return h; } catch (e) {}
@@ -277,7 +269,7 @@
     ];
 
     const ov = document.createElement('div');
-    ov.style.cssText = 'position:fixed;inset:0;z-index:100001;display:flex;align-items:flex-end;background:rgba(0,0,0,.78);backdrop-filter:blur(7px);font-family:system-ui,sans-serif';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:100001;display:flex;align-items:flex-end;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);font-family:system-ui,sans-serif';
 
     function closeOv() { try { document.body.removeChild(ov); } catch (e) {} document.removeEventListener('keydown', escFn); }
     function escFn(ev) { if (ev.key === 'Escape') closeOv(); }
@@ -298,7 +290,7 @@
            Nessun sensore con <code style="font-size:10px">device_class: battery</code> trovato al momento
          </div>`;
 
-    ov.innerHTML = `<div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);color:#fff;animation:bcfgUp .22s cubic-bezier(.32,1.12,.56,1)">
+    ov.innerHTML = `<div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0a0d1a;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);color:#fff;animation:bcfgUp .22s cubic-bezier(.32,1.12,.56,1)">
       <style>@keyframes bcfgUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style>
 
       <div style="display:flex;align-items:center;gap:10px;padding:14px 18px 12px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">
