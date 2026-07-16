@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.0.78 — 2026-07-16
+
+### feat(card): LetPot Max v4.8 — vista minimale, impostazioni a comparsa, luce per modalità, timer reale, onda corretta
+
+- **Vista principale ridotta all'essenziale**: solo l'immagine animata del dispositivo + i 3 valori richiesti (acqua, temperatura, giorno pianta). Tutti i controlli (power, orari luce, luminosità, modalità, auto, ricircolo pompa) sono stati spostati in un nuovo pannello **Impostazioni** che si apre dal basso (⚙️ in header), con toggle in stile switch e collegamento diretto al setup entità
+- **Luce che cambia tonalità in base alla modalità**: nuove palette per Frutti (rosso/rosa), Fiori (viola), Verdure/Erbe (blu vegetativo), Erbe aromatiche (verde acqua), Personalizzato (bianco neutro) — cambiano fascio, riga LED e riflessi sull'acqua in tempo reale quando il sensore modalità cambia
+- **Timer pompa reale**: non più un countdown globale agganciato all'orologio, ma un countdown di 30 minuti che parte nel momento esatto in cui la pompa si attiva davvero (`pumpEntity`), e la barra è visibile solo mentre la pompa è accesa
+- **Fix onda "sotto" il pelo dell'acqua**: la cresta dell'onda ora è disegnata ben sopra il livello (strip -14px/+14px, viewBox più alto), invece di restare quasi del tutto assorbita dal corpo d'acqua sottostante come nella v4.7
+- **Vortice/bolle quando la pompa parte**: oltre alle bolle già presenti, ora compaiono anelli di ripple attorno alla pompa per dare la sensazione di ricircolo attivo
+- **Luce sincronizzata anche senza push da HA**: aggiunto un controllo periodico (ogni 20s) che ricalcola l'accensione/spegnimento in base agli orari programmati, cosi la card reagisce all'orario anche se nessuna entità cambia stato nel momento esatto
+- **Allarmi come badge sull'immagine**: acqua bassa / nutrienti bassi / errore ricarica non occupano più una riga fissa nella card, appaiono solo quando attivi come badge pulsanti sovrapposti alla vasca
+
 ## 2.0.77 — 2026-07-15
 
 ### fix(card): LetPot Max v4.7 — vaschetta collegata al sensore, onda in superficie

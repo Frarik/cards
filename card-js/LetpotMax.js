@@ -14,8 +14,11 @@
   const _intervals = new WeakMap();
   const _lastStage = {};
   const _lastOn    = {};   // track light state for re-render
+  const _lastMode  = {};   // track light mode (tonalita') for re-render
+  const _lastPumpActive = {}; // track pump running state for re-render
   const _localBr   = {};
   const _localSw   = {};
+  const _pumpStart = {};   // timestamp di accensione pompa, per il countdown reale 30min
 
   function getEnt(card) { try { return JSON.parse(localStorage.getItem(LS(card.id))||'{}'); } catch(e){ return {}; } }
   function saveEnt(card, ent) { try { localStorage.setItem(LS(card.id), JSON.stringify(ent)); } catch(e){} }
@@ -71,10 +74,14 @@
   ];
   function getStage(a){const d=parseInt(a)||0;return d<=3?0:d<=10?1:d<=21?2:d<=40?3:d<=60?4:5;}
 
-  /* ── Timer 30min ── */
-  function cycleBarData(){
-    const C=30*60*1000,rem=C-(Date.now()%C);
-    const pct=Math.round(rem/C*100),col=pct>60?'#4ade80':pct>25?'#facc15':'#f97316';
+  /* ── Timer pompa: countdown reale di 30 minuti dal momento in cui la pompa si attiva ── */
+  function pumpTimerData(cardId, active){
+    const CYCLE=30*60*1000;
+    if(!active){ delete _pumpStart[cardId]; return null; }
+    if(!_pumpStart[cardId]) _pumpStart[cardId]=Date.now();
+    const rem=CYCLE-(Date.now()-_pumpStart[cardId]);
+    if(rem<=0){ delete _pumpStart[cardId]; return null; }
+    const pct=Math.max(1,Math.round(rem/CYCLE*100)),col=pct>60?'#4ade80':pct>25?'#facc15':'#f97316';
     const m=Math.floor(rem/60000),s=Math.floor((rem%60000)/1000);
     return{pct,col,label:`${m}:${String(s).padStart(2,'0')}`};
   }
@@ -133,37 +140,62 @@
     return svgs;
   }
 
-  /* ── Fascio luminoso volumetrico ── */
-  function lightBeam(){
+  /* ── Tonalita' luce in base alla modalita' (sensore modalita' luce) ── */
+  const LIGHT_PALETTES = {
+    bloom :{bright:[255,105,170],mid:[230,60,150],deep:[150,20,95]},   // Frutti — rosso/rosa
+    flower:{bright:[215,110,255],mid:[165,40,220],deep:[110,20,175]},  // Fiori — viola (storico)
+    veg   :{bright:[125,195,255],mid:[70,145,235],deep:[20,90,175]},   // Verdure/Erbe — blu vegetativo
+    herb  :{bright:[125,255,205],mid:[55,205,160],deep:[15,140,105]},  // Erbe aromatiche — verde acqua
+    white :{bright:[255,255,255],mid:[225,228,235],deep:[175,178,190]},// Personalizzato — bianco neutro
+  };
+  function rgbaC(rgb,a){return `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${a})`;}
+  function modeColor(mode){
+    const m=String(mode||'').toLowerCase();
+    if(/frutt/.test(m))  return LIGHT_PALETTES.bloom;
+    if(/fior/.test(m))   return LIGHT_PALETTES.flower;
+    if(/aromat/.test(m)) return LIGHT_PALETTES.herb;
+    if(/verdur|veg/.test(m)) return LIGHT_PALETTES.veg;
+    if(/personal|custom/.test(m)) return LIGHT_PALETTES.white;
+    return LIGHT_PALETTES.flower;
+  }
+
+  /* ── Fascio luminoso volumetrico (colore in base alla modalita') ── */
+  function lightBeam(pal){
     return `
     <!-- CONO DI LUCE principale -->
     <div style="position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden">
       <!-- Alone diffuso alla sorgente -->
-      <div style="position:absolute;left:12%;right:12%;top:-8px;height:24px;background:radial-gradient(ellipse at 50% 0%,rgba(215,110,255,.6) 0%,transparent 75%);filter:blur(3px)"></div>
+      <div style="position:absolute;left:12%;right:12%;top:-8px;height:24px;background:radial-gradient(ellipse at 50% 0%,${rgbaC(pal.bright,.6)} 0%,transparent 75%);filter:blur(3px)"></div>
       <!-- Fascio volumetrico, bordi sfumati, respira leggermente -->
       <div style="position:absolute;left:6%;right:6%;top:0;bottom:0;
-        background:linear-gradient(180deg,rgba(205,90,255,.4) 0%,rgba(165,40,220,.2) 40%,rgba(110,20,175,.08) 72%,transparent 100%);
+        background:linear-gradient(180deg,${rgbaC(pal.mid,.4)} 0%,${rgbaC(pal.mid,.2)} 40%,${rgbaC(pal.deep,.08)} 72%,transparent 100%);
         clip-path:polygon(23% 0%,77% 0%,97% 100%,3% 100%);filter:blur(2px);transform-origin:top center;animation:lp-beam-pulse 3.4s ease-in-out infinite">
       </div>
       <div style="position:absolute;left:22%;right:22%;top:0;bottom:0;
-        background:linear-gradient(180deg,rgba(235,160,255,.5) 0%,transparent 55%);
+        background:linear-gradient(180deg,${rgbaC(pal.bright,.5)} 0%,transparent 55%);
         clip-path:polygon(30% 0%,70% 0%,86% 100%,14% 100%);mix-blend-mode:screen;filter:blur(1px)">
       </div>
       <!-- Raggi sottili animati -->
-      <div style="position:absolute;left:29%;top:0;width:1.4px;height:68%;background:linear-gradient(180deg,rgba(235,165,255,.6),transparent);transform:skewX(6deg);transform-origin:top center;animation:lp-shimmer 2.6s ease-in-out infinite"></div>
-      <div style="position:absolute;right:29%;top:0;width:1.4px;height:68%;background:linear-gradient(180deg,rgba(235,165,255,.6),transparent);transform:skewX(-6deg);transform-origin:top center;animation:lp-shimmer 2.6s ease-in-out .5s infinite"></div>
-      <div style="position:absolute;left:47%;top:0;width:1px;height:52%;background:linear-gradient(180deg,rgba(215,120,255,.4),transparent);animation:lp-shimmer 2.2s ease-in-out .3s infinite"></div>
-      <div style="position:absolute;right:47%;top:0;width:1px;height:52%;background:linear-gradient(180deg,rgba(215,120,255,.4),transparent);animation:lp-shimmer 2.2s ease-in-out .8s infinite"></div>
+      <div style="position:absolute;left:29%;top:0;width:1.4px;height:68%;background:linear-gradient(180deg,${rgbaC(pal.bright,.6)},transparent);transform:skewX(6deg);transform-origin:top center;animation:lp-shimmer 2.6s ease-in-out infinite"></div>
+      <div style="position:absolute;right:29%;top:0;width:1.4px;height:68%;background:linear-gradient(180deg,${rgbaC(pal.bright,.6)},transparent);transform:skewX(-6deg);transform-origin:top center;animation:lp-shimmer 2.6s ease-in-out .5s infinite"></div>
+      <div style="position:absolute;left:47%;top:0;width:1px;height:52%;background:linear-gradient(180deg,${rgbaC(pal.mid,.4)},transparent);animation:lp-shimmer 2.2s ease-in-out .3s infinite"></div>
+      <div style="position:absolute;right:47%;top:0;width:1px;height:52%;background:linear-gradient(180deg,${rgbaC(pal.mid,.4)},transparent);animation:lp-shimmer 2.2s ease-in-out .8s infinite"></div>
       <!-- Alone ambientale sulle piante -->
-      <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% -5%,rgba(190,70,255,.16) 0%,transparent 72%)"></div>
+      <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% -5%,${rgbaC(pal.mid,.16)} 0%,transparent 72%)"></div>
     </div>`;
   }
 
-  /* ── Riga luminosa del pannello (vista frontale a taglio: si vede solo il bordo emettitore, colore unico) ── */
-  function lightBar(on){
+  /* ── Riga luminosa del pannello (colore in base alla modalita') ── */
+  function lightBar(on,pal){
     return on
-      ? `background:#dda6ff;box-shadow:0 0 10px 2px rgba(190,60,255,.7),0 0 24px 5px rgba(190,60,255,.35)`
+      ? `background:${rgbaC(pal.bright,1)};box-shadow:0 0 10px 2px ${rgbaC(pal.mid,.7)},0 0 24px 5px ${rgbaC(pal.mid,.35)}`
       : `background:rgba(255,255,255,.1);box-shadow:none`;
+  }
+
+  /* ── Vortice/ripple quando la pompa e' attiva (sempre nel DOM, visibilita' via display) ── */
+  function pumpVortex(active){
+    const rings=[0,0.6,1.2].map(d=>`<div style="position:absolute;left:16%;bottom:26px;width:10px;height:10px;margin-left:-5px;border-radius:50%;border:1.5px solid rgba(120,200,255,.55);animation:lp-ripple 1.8s ease-out ${d}s infinite"></div>`).join('');
+    return `<div data-lp-vortex style="display:${active?'block':'none'};position:absolute;inset:0;z-index:4;pointer-events:none">${rings}</div>`;
   }
 
   /* ── Pompa sommersa (SINISTRA): corpo con griglia di aspirazione + impeller ── */
@@ -223,14 +255,18 @@
       @keyframes lp-sway{0%,100%{transform:rotate(-3.5deg)}50%{transform:rotate(3.5deg)}}
       @keyframes lp-glow{0%,100%{opacity:.38;filter:brightness(.6)}50%{opacity:1;filter:brightness(1.8)}}
       @keyframes lp-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-      @keyframes lp-ripple{0%{opacity:.55;transform:translate(-50%,-50%) scale(.7)}100%{opacity:0;transform:translate(-50%,-50%) scale(2.8)}}
+      @keyframes lp-ripple{0%{opacity:.55;transform:scale(.5)}100%{opacity:0;transform:scale(2.6)}}
       @keyframes lp-shimmer{0%,100%{opacity:.55}50%{opacity:1}}
       @keyframes lp-beam-pulse{0%,100%{opacity:.85;transform:scaleY(1)}50%{opacity:1;transform:scaleY(1.03)}}
       @keyframes lp-flowUp{0%{transform:translateY(14px);opacity:0}15%{opacity:.75}80%{opacity:.6}100%{transform:translateY(-2px);opacity:0}}
-      @keyframes lp-dropDown{0%{transform:translateY(-2px);opacity:0}15%{opacity:.55}80%{opacity:.4}100%{transform:translateY(14px);opacity:0}}
       @keyframes lp-lcd-blink{0%,88%,100%{opacity:1}92%,96%{opacity:.5}}
       [data-lp-action]:not(input):not(select){cursor:pointer}
       [data-lp-action]:not(input):not(select):active{opacity:.6;transform:scale(.92)}
+      [data-lp-opensettings]:active{opacity:.6;transform:scale(.92)}
+      .lp-sw{width:38px;height:22px;border-radius:11px;background:rgba(255,255,255,.15);position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+      .lp-sw::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s}
+      .lp-sw.on{background:#4ade80}
+      .lp-sw.on::after{transform:translateX(16px)}
     `;
     document.head.appendChild(s);
   }
@@ -242,19 +278,12 @@
     const autoMode =isOn(localSwState(card,e.autoModeEntity,stateOf(h,e.autoModeEntity)));
     const pumpCycl =isOn(localSwState(card,e.pumpCyclingEntity,stateOf(h,e.pumpCyclingEntity)));
     const pumpRun  =isOn(stateOf(h,e.pumpEntity));
-    const pumpIsSwitch=e.pumpEntity?.split('.')?.[0]==='switch';
     const brHA=stateOf(h,e.lightBrightnessEntity);
     const lbr=_localBr[card.id];
     const lightBr=(lbr&&Date.now()-lbr.ts<5000)?lbr.v:brHA;
-    const brMin=parseFloat(attrOf(h,e.lightBrightnessEntity,'min'))||1;
-    const brMax=parseFloat(attrOf(h,e.lightBrightnessEntity,'max'))||10;
-    const brStep=parseFloat(attrOf(h,e.lightBrightnessEntity,'step'))||1;
     const lightOnT =stateOf(h,e.lightOnEntity);
     const lightOffT=stateOf(h,e.lightOffEntity);
     const currentMode=stateOf(h,e.lightModeEntity);
-    const modeOptions=attrOf(h,e.lightModeEntity,'options')||[];
-    const lightOnVal =lightOnT !=='unknown'?String(lightOnT).slice(0,5):'';
-    const lightOffVal=lightOffT!=='unknown'?String(lightOffT).slice(0,5):'';
     const now=new Date(),nowMin=now.getHours()*60+now.getMinutes();
     function parseT(t){if(!t||t==='unknown')return null;const p=String(t).split(':');return parseInt(p[0]||0)*60+parseInt(p[1]||0);}
     const onMin=parseT(lightOnT),offMin=parseT(lightOffT);
@@ -270,10 +299,11 @@
     const tempCol =tempVal>30?'#f97316':tempVal>26?'#4ade80':'#60a5fa';
     const waterCol=waterPct<30?'#f97316':waterPct<60?'#facc15':'#4ade80';
     const stage=getStage(plantsAge);
-    const cb=pumpCycl?cycleBarData():null;
+    const pumpActive=pumpRun&&power;
+    const cb=pumpTimerData(card.id,pumpActive);
     const waterH=Math.round(92*(waterPct/100)*0.8+6);
-    return{power,autoMode,pumpCycl,pumpRun,pumpIsSwitch,lightBr,brMin,brMax,brStep,
-           lightOnVal,lightOffVal,currentMode,modeOptions,on,
+    return{power,autoMode,pumpCycl,pumpRun,pumpActive,lightBr,
+           currentMode,on,
            lowWater,lowNutr,refillErr,waterPct,tempVal,plantsAge,
            tempCol,waterCol,waterH,stage,cb};
   }
@@ -281,83 +311,59 @@
   /* ── RENDER ── */
   function render(card, rawHass){
     const v=computeValues(card,rawHass);
-    const{power,autoMode,pumpCycl,pumpRun,lightBr,brMax,
-          lightOnVal,lightOffVal,currentMode,modeOptions,on,
+    const{power,pumpRun,pumpActive,on,
           lowWater,lowNutr,refillErr,waterPct,tempVal,plantsAge,
-          tempCol,waterCol,waterH,stage,cb}=v;
+          tempCol,waterCol,waterH,stage,cb,currentMode}=v;
+    const pal=modeColor(currentMode);
     const stageInfo=STAGES[stage];
     const plantAreaH=[56,82,118,148,178,206][stage]||148;
-    const plants=plantsSvg(stage,pumpRun&&power,on);
+    const plants=plantsSvg(stage,pumpActive,on);
 
     // Bolle acqua (quando pompa attiva, lato sx)
     const bubs=[15,28,40,52,65,78,88].map((_,i)=>{
       const sz=2+(i%3)*1.5;
-      return `<div data-lp-bub="${i}" style="position:absolute;bottom:${24+(i%2)*4}px;left:${_}%;width:${sz}px;height:${sz}px;border-radius:50%;background:rgba(120,200,255,.5);border:1px solid rgba(160,230,255,.4);animation:lp-bubble ${1.4+i*.18}s ease-in ${(i*.28).toFixed(1)}s infinite;display:${pumpRun&&power?'block':'none'}"></div>`;
+      return `<div data-lp-bub="${i}" style="position:absolute;bottom:${24+(i%2)*4}px;left:${_}%;width:${sz}px;height:${sz}px;border-radius:50%;background:rgba(120,200,255,.5);border:1px solid rgba(160,230,255,.4);animation:lp-bubble ${1.4+i*.18}s ease-in ${(i*.28).toFixed(1)}s infinite;display:${pumpActive?'block':'none'}"></div>`;
     }).join('');
 
-    // Riflessi shimmer sull'acqua (quando luce accesa)
-    const waterShimmer=on?[20,42,65,82].map((l,i)=>`<div style="position:absolute;top:2px;left:${l}%;width:${6+i*2}px;height:3px;border-radius:2px;background:rgba(195,60,255,.28);animation:lp-shimmer ${2+i*.4}s ease-in-out ${i*.35}s infinite;z-index:4"></div>`).join(''):'';
-
-    // Mode options
-    const modeOpts=modeOptions.length
-      ?modeOptions.map(o=>`<option value="${eh(o)}" ${o===currentMode?'selected':''}>${eh(o)}</option>`).join('')
-      :(currentMode&&currentMode!=='unknown'?`<option value="${eh(currentMode)}" selected>${eh(currentMode)}</option>`:'<option value="">—</option>');
-
-    const btnS=`width:24px;height:24px;border-radius:6px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;line-height:1`;
+    // Riflessi shimmer sull'acqua (quando luce accesa, colore in base alla modalita')
+    const waterShimmer=on?[20,42,65,82].map((l,i)=>`<div style="position:absolute;top:-6px;left:${l}%;width:${6+i*2}px;height:3px;border-radius:2px;background:${rgbaC(pal.bright,.28)};animation:lp-shimmer ${2+i*.4}s ease-in-out ${i*.35}s infinite;z-index:4"></div>`).join(''):'';
 
     return `<div style="background:linear-gradient(170deg,#04101e 0%,#081828 55%,#050d18 100%);border-radius:14px;overflow:hidden;color:#fff;font-family:inherit;user-select:none;height:100%;display:flex;flex-direction:column">
 
 <!-- HEADER -->
-<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px 5px;background:linear-gradient(90deg,rgba(6,30,60,.75),rgba(4,15,30,.3));flex-shrink:0">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:linear-gradient(90deg,rgba(6,30,60,.75),rgba(4,15,30,.3));flex-shrink:0">
   <div style="display:flex;align-items:center;gap:6px">
-    <div style="width:24px;height:24px;border-radius:7px;background:${power?'rgba(74,222,128,.15)':'rgba(255,255,255,.05)'};border:1px solid ${power?'rgba(74,222,128,.3)':'rgba(255,255,255,.1)'};display:flex;align-items:center;justify-content:center;font-size:13px">🌿</div>
+    <div style="width:26px;height:26px;border-radius:8px;background:rgba(74,222,128,.1);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:14px;position:relative">
+      🌿
+      <span data-lp-update="powerdot" style="position:absolute;bottom:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:${power?'#4ade80':'#64748b'};border:1.5px solid #04101e"></span>
+    </div>
     <div>
       <div style="font-size:11px;font-weight:800;color:#fff">${eh(card.label||'LetPot Max')}</div>
-      <div style="font-size:7px;color:#fff">${stageInfo.icon} ${stageInfo.name}${plantsAge&&plantsAge!=='unknown'?' · G.'+plantsAge:''}</div>
+      <div data-lp-update="stagetxt" style="font-size:7px;color:#fff">${stageInfo.icon} ${stageInfo.name}${plantsAge&&plantsAge!=='unknown'?' · Giorno '+plantsAge:''}</div>
     </div>
   </div>
-  <div style="display:flex;align-items:center;gap:5px">
-    <div data-lp-update="power" data-lp-action="power" style="background:${power?'rgba(74,222,128,.15)':'rgba(248,113,113,.12)'};border:1px solid ${power?'rgba(74,222,128,.3)':'rgba(248,113,113,.28)'};border-radius:5px;padding:2px 7px;font-size:8px;font-weight:700;color:${power?'#4ade80':'#f87171'}">${power?'● ON':'○ OFF'}</div>
-    <button data-lp-opencfg style="width:22px;height:22px;border-radius:6px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center">⚙️</button>
-  </div>
-</div>
-
-<!-- CONTROLLI LUCE -->
-<div style="display:flex;align-items:center;gap:4px;padding:4px 8px;background:rgba(0,0,0,.3);flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.04)">
-  <span style="font-size:9px">🌅</span>
-  <input type="time" data-lp-action="ton" value="${lightOnVal}" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:5px;color:#fff;font-size:8px;padding:2px 4px;color-scheme:dark;width:58px;flex-shrink:0">
-  <span style="font-size:7px;color:#fff">→</span>
-  <span style="font-size:9px">🌙</span>
-  <input type="time" data-lp-action="toff" value="${lightOffVal}" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:5px;color:#fff;font-size:8px;padding:2px 4px;color-scheme:dark;width:58px;flex-shrink:0">
-  <div style="flex:1"></div>
-  <button data-lp-action="br-dn" style="${btnS}">−</button>
-  <span data-lp-update="bval" style="font-size:10px;color:#fff;font-weight:800;min-width:14px;text-align:center">${lightBr!=='unknown'?lightBr:'—'}</span>
-  <span style="font-size:7px;color:#fff">/${brMax}</span>
-  <button data-lp-action="br-up" style="${btnS}">+</button>
-</div>
-<div style="padding:3px 8px;background:rgba(0,0,0,.2);flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.04)">
-  <select data-lp-action="mode" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:6px;color:#fff;font-size:9px;padding:3px 6px;color-scheme:dark">${modeOpts}</select>
+  <button data-lp-opensettings style="width:26px;height:26px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">⚙️</button>
 </div>
 
 <!-- ══════════════════════════════════════════════ -->
 <!-- DEVICE: LetPot Max — LED ▸ palo ▸ piante ▸ tank -->
 <!-- ══════════════════════════════════════════════ -->
-<div style="margin:3px 8px 0;flex-shrink:0;display:flex;flex-direction:column;align-items:center">
+<div style="margin:6px 8px 0;flex-shrink:0;display:flex;flex-direction:column;align-items:center">
 
-  <!-- PANNELLO LED: vista frontale a taglio — si vede solo la riga emettitrice, il fascio parte da sotto -->
+  <!-- PANNELLO LED: vista frontale a taglio, colore in base alla modalita' luce -->
   <div style="width:94%;position:relative">
-    <div style="background:${on?'linear-gradient(180deg,#1c0e3a,#12082a)':'linear-gradient(180deg,#101020,#0c0c18)'};border:2px solid ${on?'rgba(175,48,255,.6)':'rgba(55,55,85,.5)'};border-radius:50px;height:13px;position:relative;overflow:hidden;box-shadow:${on?'0 0 28px rgba(160,20,255,.4),0 0 60px rgba(160,20,255,.12)':'none'};display:flex;align-items:flex-end;justify-content:center;padding-bottom:2px">
-      <div style="width:86%;height:3px;border-radius:2px;${lightBar(on)}"></div>
+    <div style="background:${on?'linear-gradient(180deg,#171126,#100b1e)':'linear-gradient(180deg,#101020,#0c0c18)'};border:2px solid ${on?rgbaC(pal.mid,.6):'rgba(55,55,85,.5)'};border-radius:50px;height:13px;position:relative;overflow:hidden;box-shadow:${on?`0 0 28px ${rgbaC(pal.mid,.4)},0 0 60px ${rgbaC(pal.mid,.12)}`:'none'};display:flex;align-items:flex-end;justify-content:center;padding-bottom:2px">
+      <div style="width:86%;height:3px;border-radius:2px;${lightBar(on,pal)}"></div>
     </div>
     <!-- Alone luce verso il basso dal pannello -->
-    ${on?`<div style="position:absolute;left:10%;right:10%;top:100%;height:18px;background:linear-gradient(180deg,rgba(185,35,255,.28),transparent);pointer-events:none"></div>`:''}
+    ${on?`<div style="position:absolute;left:10%;right:10%;top:100%;height:18px;background:linear-gradient(180deg,${rgbaC(pal.mid,.28)},transparent);pointer-events:none"></div>`:''}
   </div>
 
   <!-- GAMBO + ZONA PIANTE: il palo attraversa tutta la zona e tocca sempre il bordo della vasca -->
   <div style="width:100%;position:relative;display:flex;align-items:flex-end;justify-content:center;gap:2px;min-height:${plantAreaH}px;padding:0 4px;overflow:hidden">
     <!-- Palo telescopico: dal pannello fino al bordo vasca, mai "nel vuoto" -->
     <div style="position:absolute;left:50%;top:0;bottom:0;width:9px;transform:translateX(-50%);background:linear-gradient(to right,#c0c0c0,#888,#c0c0c0);box-shadow:0 0 4px rgba(0,0,0,.4);z-index:0"></div>
-    ${on ? lightBeam() : ''}
+    ${on ? lightBeam(pal) : ''}
     <!-- Piante (sopra il fascio e il palo) -->
     <div style="position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:center;gap:2px;width:100%;height:100%">
       ${plants}
@@ -367,21 +373,28 @@
   <!-- TANK BODY: vasca in acciaio — solo acqua, pompa, vaschetta nutrienti -->
   <div style="width:100%;border-radius:20px 20px 16px 16px;overflow:hidden;border:1.5px solid rgba(255,255,255,.4);box-shadow:0 6px 20px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.5)">
 
-    <!-- SERBATOIO: sopra al livello acqua = interno vasca (acciaio), sotto = acqua con onda in superficie -->
+    <!-- SERBATOIO -->
     <div style="position:relative;height:92px;background:linear-gradient(180deg,#1b1f27,#14171d);overflow:hidden">
-      <!-- Acqua animata: l'onda segna la superficie, sopra di essa c'è solo l'interno vuoto della vasca -->
+      <!-- Alert overlay: visibili SOLO se il sensore collegato segnala un problema -->
+      <div data-lp-update="al-water" title="Acqua bassa" style="display:${lowWater?'flex':'none'};position:absolute;top:4px;left:4px;z-index:10;width:16px;height:16px;border-radius:50%;background:rgba(248,113,113,.9);align-items:center;justify-content:center;font-size:9px;box-shadow:0 0 8px rgba(248,113,113,.6);animation:lp-glow 1.6s ease-in-out infinite">💧</div>
+      <div data-lp-update="al-nutr" title="Nutrienti bassi" style="display:${lowNutr?'flex':'none'};position:absolute;top:4px;right:4px;z-index:10;width:16px;height:16px;border-radius:50%;background:rgba(248,113,113,.9);align-items:center;justify-content:center;font-size:9px;box-shadow:0 0 8px rgba(248,113,113,.6);animation:lp-glow 1.6s ease-in-out infinite">🧪</div>
+      <div data-lp-update="al-refill" title="Errore ricarica" style="display:${refillErr?'flex':'none'};position:absolute;bottom:4px;left:4px;z-index:10;width:16px;height:16px;border-radius:50%;background:rgba(248,113,113,.9);align-items:center;justify-content:center;font-size:9px;box-shadow:0 0 8px rgba(248,113,113,.6);animation:lp-glow 1.6s ease-in-out infinite">🔄</div>
+
+      <!-- Acqua animata: l'onda e' la superficie reale, sempre visibile SOPRA il livello -->
       <div data-lp-update="fill" style="position:absolute;bottom:0;left:0;right:0;height:${waterH}px;transition:height 1.4s ease;z-index:2;overflow:visible">
-        <!-- Onda: superficie dell'acqua, disegnata per prima e in cima a tutto il resto -->
-        <svg style="position:absolute;top:-6px;left:0;width:200%;height:16px;z-index:4;animation:lp-wave ${pumpRun&&power?'1.6s':'3.2s'} linear infinite" viewBox="0 0 800 18" preserveAspectRatio="none">
-          <path d="M0,9C60,0 120,18 180,9C240,0 300,18 360,9C420,0 480,18 540,9C600,0 660,18 720,9C780,0 800,18 800,9L800,18L0,18Z" fill="rgba(16,76,155,.92)"/>
-          <path d="M0,13C80,4 160,18 240,13C320,4 400,18 480,13C560,4 640,18 720,13L800,13L800,18L0,18Z" fill="rgba(8,48,108,.78)"/>
+        <!-- Corpo acqua: il pieno inizia SOTTO la cresta dell'onda (mai a filo piatto) -->
+        <div style="position:absolute;left:0;right:0;top:14px;bottom:0;background:linear-gradient(rgba(14,75,152,.9),rgba(5,42,100,.97))"></div>
+        <!-- Onda: cresta ben sopra il pelo dell'acqua, disegnata per prima e in cima a tutto -->
+        <svg style="position:absolute;top:-14px;left:0;width:200%;height:28px;z-index:4;animation:lp-wave ${pumpActive?'1.6s':'3.2s'} linear infinite" viewBox="0 0 800 40" preserveAspectRatio="none">
+          <path d="M0,20C60,4 120,36 180,20C240,4 300,36 360,20C420,4 480,36 540,20C600,4 660,36 720,20C780,4 800,36 800,20L800,40L0,40Z" fill="rgba(16,76,155,.92)"/>
+          <path d="M0,26C80,10 160,36 240,26C320,10 400,36 480,26C560,10 640,36 720,26L800,26L800,40L0,40Z" fill="rgba(8,48,108,.85)"/>
         </svg>
-        <!-- Corpo acqua pieno (copre tutta l'area, l'onda sta sempre sopra per z-index) -->
-        <div style="position:absolute;inset:0;background:linear-gradient(rgba(14,75,152,.9),rgba(5,42,100,.97))"></div>
-        <!-- Riflesso luce sulla superficie dell'acqua -->
+        <!-- Riflesso luce sulla superficie dell'acqua (colore in base alla modalita') -->
         ${waterShimmer}
-        <!-- Bolle salita -->
+        <!-- Bolle di risalita -->
         <div style="position:absolute;inset:0;z-index:3">${bubs}</div>
+        <!-- Vortice/ripple quando la pompa e' attiva -->
+        ${pumpVortex(pumpActive)}
         <!-- POMPA e RICIRCOLO dentro l'acqua -->
         ${pumpInWater(pumpRun,power)}
         <!-- Vaschetta nutrienti galleggiante -->
@@ -392,53 +405,30 @@
   </div>
 </div><!-- /device -->
 
-<!-- BARRA CICLO POMPA 30min -->
-${pumpCycl&&cb?`
-<div style="display:flex;align-items:center;gap:5px;padding:3px 10px;flex-shrink:0">
-  <span style="font-size:8px;color:#fff;font-weight:700;flex-shrink:0">♻️ <span data-lp-update="cyctxt">${cb.label}</span></span>
+<!-- TIMER POMPA: visibile SOLO mentre la pompa e' realmente attiva, countdown reale di 30 minuti -->
+<div data-lp-timerwrap style="display:${cb?'flex':'none'};align-items:center;gap:5px;padding:4px 10px 0;flex-shrink:0">
+  <span style="font-size:8px;color:#fff;font-weight:700;flex-shrink:0">⏱️ <span data-lp-update="cyctxt">${cb?cb.label:''}</span></span>
   <div style="flex:1;height:5px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden">
-    <div data-lp-update="cycbar" style="height:100%;width:${cb.pct}%;background:${cb.col};border-radius:3px;transition:width .4s linear"></div>
-  </div>
-  <span style="font-size:7px;color:#fff;flex-shrink:0">30m</span>
-</div>`:''}
-
-<!-- STATS -->
-<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px 10px;flex-shrink:0">
-  <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:7px;padding:4px;text-align:center">
-    <div style="font-size:6px;color:#fff;text-transform:uppercase;letter-spacing:.5px">Acqua</div>
-    <div data-lp-update="wval" style="font-size:13px;font-weight:900;color:${waterCol}">${waterPct}%</div>
-    <div style="font-size:9px">💧</div>
-  </div>
-  <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:7px;padding:4px;text-align:center">
-    <div style="font-size:6px;color:#fff;text-transform:uppercase;letter-spacing:.5px">Temp</div>
-    <div data-lp-update="tval" style="font-size:13px;font-weight:900;color:${tempCol}">${tempVal.toFixed(1)}°</div>
-    <div style="font-size:9px">🌡️</div>
-  </div>
-  <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:7px;padding:4px;text-align:center">
-    <div style="font-size:6px;color:#fff;text-transform:uppercase;letter-spacing:.5px">Giorno</div>
-    <div data-lp-update="aval" style="font-size:13px;font-weight:900;color:#86efac">${plantsAge!=='unknown'?plantsAge:'—'}</div>
-    <div style="font-size:9px">🌱</div>
+    <div data-lp-update="cycbar" style="height:100%;width:${cb?cb.pct:0}%;background:${cb?cb.col:'#4ade80'};border-radius:3px;transition:width .4s linear"></div>
   </div>
 </div>
 
-<!-- CHIPS + ALERT -->
-<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:4px;padding:0 10px 8px;flex:1;align-content:end">
-  <div data-lp-action="auto" data-lp-update="chip-auto" style="background:${autoMode?'rgba(74,222,128,.12)':'rgba(255,255,255,.05)'};border:1px solid ${autoMode?'rgba(74,222,128,.3)':'rgba(255,255,255,.1)'};border-radius:7px;padding:4px 2px;text-align:center">
-    <div style="font-size:6px;color:#fff">Auto</div>
-    <b style="font-size:8px;color:${autoMode?'#4ade80':'#fff'}">${autoMode?'ON':'OFF'}</b>
+<!-- STATS: solo cio' che l'utente vuole vedere a colpo d'occhio -->
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;padding:6px 10px 10px;flex:1;align-content:end">
+  <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:5px;text-align:center">
+    <div style="font-size:6px;color:#fff;text-transform:uppercase;letter-spacing:.5px">Acqua</div>
+    <div data-lp-update="wval" style="font-size:14px;font-weight:900;color:${waterCol}">${waterPct}%</div>
+    <div style="font-size:10px">💧</div>
   </div>
-  <div data-lp-action="cycl" data-lp-update="chip-cycl" style="background:${pumpCycl?'rgba(74,222,128,.12)':'rgba(255,255,255,.05)'};border:1px solid ${pumpCycl?'rgba(74,222,128,.3)':'rgba(255,255,255,.1)'};border-radius:7px;padding:4px 2px;text-align:center">
-    <div style="font-size:6px;color:#fff">Ciclo</div>
-    <b style="font-size:8px;color:${pumpCycl?'#4ade80':'#fff'}">${pumpCycl?'ON':'OFF'}</b>
+  <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:5px;text-align:center">
+    <div style="font-size:6px;color:#fff;text-transform:uppercase;letter-spacing:.5px">Temp</div>
+    <div data-lp-update="tval" style="font-size:14px;font-weight:900;color:${tempCol}">${tempVal.toFixed(1)}°</div>
+    <div style="font-size:10px">🌡️</div>
   </div>
-  <div data-lp-update="al-nutr" style="background:${lowNutr?'rgba(248,113,113,.12)':'rgba(74,222,128,.07)'};border:1px solid ${lowNutr?'rgba(248,113,113,.3)':'rgba(74,222,128,.16)'};border-radius:7px;padding:4px 2px;text-align:center">
-    <div style="font-size:10px">🧪</div><div style="font-size:7px;font-weight:700;color:${lowNutr?'#f87171':'#4ade80'}">${lowNutr?'⚠️':'✓'}</div>
-  </div>
-  <div data-lp-update="al-water" style="background:${lowWater?'rgba(248,113,113,.12)':'rgba(74,222,128,.07)'};border:1px solid ${lowWater?'rgba(248,113,113,.3)':'rgba(74,222,128,.16)'};border-radius:7px;padding:4px 2px;text-align:center">
-    <div style="font-size:10px">💧</div><div style="font-size:7px;font-weight:700;color:${lowWater?'#f87171':'#4ade80'}">${lowWater?'⚠️':'✓'}</div>
-  </div>
-  <div data-lp-update="al-refill" style="background:${refillErr?'rgba(248,113,113,.12)':'rgba(74,222,128,.07)'};border:1px solid ${refillErr?'rgba(248,113,113,.3)':'rgba(74,222,128,.16)'};border-radius:7px;padding:4px 2px;text-align:center">
-    <div style="font-size:10px">🔄</div><div style="font-size:7px;font-weight:700;color:${refillErr?'#f87171':'#4ade80'}">${refillErr?'⚠️':'✓'}</div>
+  <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:5px;text-align:center">
+    <div style="font-size:6px;color:#fff;text-transform:uppercase;letter-spacing:.5px">Giorno</div>
+    <div data-lp-update="aval" style="font-size:14px;font-weight:900;color:#86efac">${plantsAge!=='unknown'?plantsAge:'—'}</div>
+    <div style="font-size:10px">🌱</div>
   </div>
 </div>
 
@@ -451,130 +441,181 @@ ${pumpCycl&&cb?`
     if(_mounted.has(el)) return;
     _mounted.add(el);
 
+    // Tick veloce: countdown pompa (secondo per secondo)
     const tid=setInterval(()=>{
-      if(!document.body.contains(el)){clearInterval(tid);_intervals.delete(el);return;}
+      if(!document.body.contains(el)){clearInterval(tid);clearInterval(tidClock);_intervals.delete(el);return;}
       const ent=getEnt(card),h=H();
-      const pumpCycl=isOn(localSwState(card,ent.pumpCyclingEntity,stateOf(h,ent.pumpCyclingEntity)));
-      if(!pumpCycl) return;
-      const cb=cycleBarData();
-      const bar=el.querySelector('[data-lp-update="cycbar"]');
-      const txt=el.querySelector('[data-lp-update="cyctxt"]');
-      if(bar){bar.style.width=cb.pct+'%';bar.style.background=cb.col;}
-      if(txt) txt.textContent=cb.label;
+      const power=isOn(localSwState(card,ent.powerEntity,stateOf(h,ent.powerEntity)));
+      const pumpRun=isOn(stateOf(h,ent.pumpEntity));
+      const active=pumpRun&&power;
+      const cb=pumpTimerData(card.id,active);
+      const wrap=el.querySelector('[data-lp-timerwrap]');
+      if(wrap) wrap.style.display=cb?'flex':'none';
+      if(cb){
+        const bar=el.querySelector('[data-lp-update="cycbar"]');
+        const txt=el.querySelector('[data-lp-update="cyctxt"]');
+        if(bar){bar.style.width=cb.pct+'%';bar.style.background=cb.col;}
+        if(txt) txt.textContent=cb.label;
+      }
     },1000);
+    // Tick lento: ricontrolla l'orario programmato della luce anche senza aggiornamenti HA
+    const tidClock=setInterval(()=>{
+      if(!document.body.contains(el)) return;
+      update(card,rawHass,el);
+    },20000);
     _intervals.set(el,tid);
 
     el.addEventListener('click',function(e){
-      if(e.target.closest('[data-lp-opencfg]')){configure(card);return;}
-      const tgt=e.target.closest('[data-lp-action]');
-      if(!tgt) return;
-      const action=tgt.dataset.lpAction;
-      if(!action) return;
-      const ent=getEnt(card),h=H();
-
-      if(action==='power'){
-        if(!ent.powerEntity) return;
-        const next=doToggle(card,ent.powerEntity);
-        const pw=el.querySelector('[data-lp-update="power"]');
-        if(pw&&next!==null){const on=next==='on';pw.textContent=on?'● ON':'○ OFF';pw.style.color=on?'#4ade80':'#f87171';pw.style.background=on?'rgba(74,222,128,.15)':'rgba(248,113,113,.12)';pw.style.borderColor=on?'rgba(74,222,128,.3)':'rgba(248,113,113,.28)';}
-      }
-      else if(action==='pump'){
-        if(!ent.pumpEntity||!ent.pumpEntity.startsWith('switch.')) return;
-        doToggle(card,ent.pumpEntity);
-      }
-      else if(action==='auto'){
-        if(!ent.autoModeEntity) return;
-        _updateChip(el,'chip-auto',doToggle(card,ent.autoModeEntity)==='on');
-      }
-      else if(action==='cycl'){
-        if(!ent.pumpCyclingEntity) return;
-        _updateChip(el,'chip-cycl',doToggle(card,ent.pumpCyclingEntity)==='on');
-      }
-      else if(action==='br-up'||action==='br-dn'){
-        if(!ent.lightBrightnessEntity) return;
-        const attrs=h?.states?.[ent.lightBrightnessEntity]?.attributes||{};
-        const haVal=parseFloat(stateOf(h,ent.lightBrightnessEntity))||5;
-        const lbr=_localBr[card.id];
-        const cur=(lbr&&Date.now()-lbr.ts<5000)?lbr.v:haVal;
-        const step=parseFloat(attrs.step)||1,min=parseFloat(attrs.min)||1,max=parseFloat(attrs.max)||10;
-        const nv=Math.min(max,Math.max(min,cur+(action==='br-up'?step:-step)));
-        _localBr[card.id]={v:nv,ts:Date.now()};
-        setNumberEnt(ent.lightBrightnessEntity,nv);
-        el.querySelectorAll('[data-lp-update="bval"],[data-lp-update="bval2"]').forEach(b=>{if(b)b.textContent=nv;});
-      }
-    });
-
-    el.addEventListener('change',function(e){
-      const tgt=e.target.closest('[data-lp-action]');
-      if(!tgt) return;
-      const action=tgt.dataset.lpAction,ent=getEnt(card);
-      if(action==='ton' &&ent.lightOnEntity)  setTimeEnt(ent.lightOnEntity,tgt.value);
-      if(action==='toff'&&ent.lightOffEntity) setTimeEnt(ent.lightOffEntity,tgt.value);
-      if(action==='mode'&&ent.lightModeEntity) setSelectEnt(ent.lightModeEntity,tgt.value);
+      if(e.target.closest('[data-lp-opensettings]')){openSettings(card,el);return;}
     });
   }
 
-  function _updateChip(el,upd,on){
-    const c=el.querySelector(`[data-lp-update="${upd}"]`);if(!c)return;
-    c.style.background=on?'rgba(74,222,128,.12)':'rgba(255,255,255,.05)';
-    c.style.borderColor=on?'rgba(74,222,128,.3)':'rgba(255,255,255,.1)';
-    const b=c.querySelector('b');if(b){b.textContent=on?'ON':'OFF';b.style.color=on?'#4ade80':'#fff';}
-  }
   function _updateAlert(el,upd,bad){
     const a=el.querySelector(`[data-lp-update="${upd}"]`);if(!a)return;
-    a.style.background=bad?'rgba(248,113,113,.12)':'rgba(74,222,128,.07)';
-    a.style.borderColor=bad?'rgba(248,113,113,.3)':'rgba(74,222,128,.16)';
-    const d=a.querySelector('[style*="font-weight:700"]');if(d){d.textContent=bad?'⚠️':'✓';d.style.color=bad?'#f87171':'#4ade80';}
+    a.style.display=bad?'flex':'none';
   }
 
   /* ── UPDATE ── */
   function update(card, rawHass, el){
     try{
       const v=computeValues(card,rawHass);
-      const{power,autoMode,pumpCycl,pumpRun,lightBr,on,
+      const{power,on,pumpActive,
             lowWater,lowNutr,refillErr,waterPct,tempVal,plantsAge,
-            tempCol,waterCol,waterH,stage,cb}=v;
+            tempCol,waterCol,waterH,stage,currentMode}=v;
 
-      // Re-render se luce o fase cambiata (impatta visual completo)
+      // Re-render se cambia luce/fase/modalita'/pompa (impattano il visual completo)
       const stageDiff=_lastStage[card.id]!==undefined&&_lastStage[card.id]!==stage;
       const onDiff=_lastOn[card.id]!==undefined&&_lastOn[card.id]!==on;
-      if(stageDiff||onDiff){
-        _lastStage[card.id]=stage; _lastOn[card.id]=on;
+      const modeDiff=_lastMode[card.id]!==undefined&&_lastMode[card.id]!==currentMode;
+      const pumpDiff=_lastPumpActive[card.id]!==undefined&&_lastPumpActive[card.id]!==pumpActive;
+      if(stageDiff||onDiff||modeDiff||pumpDiff){
+        _lastStage[card.id]=stage;_lastOn[card.id]=on;_lastMode[card.id]=currentMode;_lastPumpActive[card.id]=pumpActive;
         el.innerHTML=render(card,rawHass); return;
       }
-      _lastStage[card.id]=stage; _lastOn[card.id]=on;
+      _lastStage[card.id]=stage;_lastOn[card.id]=on;_lastMode[card.id]=currentMode;_lastPumpActive[card.id]=pumpActive;
 
       const qu=n=>el.querySelector(`[data-lp-update="${n}"]`);
 
-      // Power badge
-      const pw=qu('power');
-      if(pw){pw.textContent=power?'● ON':'○ OFF';pw.style.color=power?'#4ade80':'#f87171';pw.style.background=power?'rgba(74,222,128,.15)':'rgba(248,113,113,.12)';pw.style.borderColor=power?'rgba(74,222,128,.3)':'rgba(248,113,113,.28)';}
-      // Acqua
+      const pd=qu('powerdot'); if(pd) pd.style.background=power?'#4ade80':'#64748b';
       const fill=qu('fill');if(fill)fill.style.height=waterH+'px';
       const wv=qu('wval');if(wv){wv.textContent=waterPct+'%';wv.style.color=waterCol;}
-      // Temp
       const tv=qu('tval');if(tv){tv.textContent=tempVal.toFixed(1)+'°';tv.style.color=tempCol;}
-      // Età
       const av=qu('aval');if(av)av.textContent=plantsAge!=='unknown'?plantsAge:'—';
-      // Pompa gear
-      const pg=qu('pump-gear');if(pg){pg.style.animation=pumpRun&&power?'lp-spin 0.8s linear infinite':'';pg.style.opacity=pumpRun&&power?'1':'0.3';}
-      // Bolle
-      [15,28,40,52,65,78,88].forEach((_,i)=>{const b=el.querySelector(`[data-lp-bub="${i}"]`);if(b)b.style.display=pumpRun&&power?'block':'none';});
-      // Luminosità
-      const lbr=_localBr[card.id];
-      if(!lbr||Date.now()-lbr.ts>5000){
-        if(lbr) delete _localBr[card.id];
-        el.querySelectorAll('[data-lp-update="bval"]').forEach(b=>{if(b)b.textContent=lightBr!=='unknown'?lightBr:'—';});
-      }
-      _updateChip(el,'chip-auto',autoMode);
-      _updateChip(el,'chip-cycl',pumpCycl);
+      const st=qu('stagetxt');if(st){const si=STAGES[stage];st.textContent=`${si.icon} ${si.name}${plantsAge&&plantsAge!=='unknown'?' · Giorno '+plantsAge:''}`;}
       _updateAlert(el,'al-nutr',lowNutr);
       _updateAlert(el,'al-water',lowWater);
       _updateAlert(el,'al-refill',refillErr);
     }catch(e){}
   }
 
-  /* ── CONFIGURE ── */
+  /* ── IMPOSTAZIONI operative (pannello a comparsa dal basso) ── */
+  function openSettings(card, el){
+    const ent=getEnt(card), h=H();
+    const power   =isOn(localSwState(card,ent.powerEntity,stateOf(h,ent.powerEntity)));
+    const autoMode=isOn(localSwState(card,ent.autoModeEntity,stateOf(h,ent.autoModeEntity)));
+    const pumpCycl=isOn(localSwState(card,ent.pumpCyclingEntity,stateOf(h,ent.pumpCyclingEntity)));
+    const pumpRun =isOn(localSwState(card,ent.pumpEntity,stateOf(h,ent.pumpEntity)));
+    const pumpIsSwitch=ent.pumpEntity?.split('.')?.[0]==='switch';
+    const lightOnT=stateOf(h,ent.lightOnEntity), lightOffT=stateOf(h,ent.lightOffEntity);
+    const lightOnVal =lightOnT !=='unknown'?String(lightOnT).slice(0,5):'';
+    const lightOffVal=lightOffT!=='unknown'?String(lightOffT).slice(0,5):'';
+    const brHA=stateOf(h,ent.lightBrightnessEntity);
+    const lbrLocal=_localBr[card.id];
+    let brCur=(lbrLocal&&Date.now()-lbrLocal.ts<5000)?lbrLocal.v:brHA;
+    const brMax=parseFloat(attrOf(h,ent.lightBrightnessEntity,'max'))||10;
+    const currentMode=stateOf(h,ent.lightModeEntity);
+    const modeOptions=attrOf(h,ent.lightModeEntity,'options')||[];
+    const modeOpts=modeOptions.length
+      ?modeOptions.map(o=>`<option value="${eh(o)}" ${o===currentMode?'selected':''}>${eh(o)}</option>`).join('')
+      :(currentMode&&currentMode!=='unknown'?`<option value="${eh(currentMode)}" selected>${eh(currentMode)}</option>`:'<option value="">—</option>');
+
+    const ov=document.createElement('div');ov.style.cssText='position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);display:flex;align-items:flex-end';
+    const sh=document.createElement('div');sh.style.cssText='width:100%;max-height:88vh;display:flex;flex-direction:column;background:#0a0d1a;border:1px solid rgba(255,255,255,.1);border-bottom:none;border-radius:20px 20px 0 0;color:#fff;overflow:hidden';
+    ov.appendChild(sh);
+
+    function swRow(label,icon,checked,action){
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 2px;border-bottom:1px solid rgba(255,255,255,.06)">
+        <span style="font-size:12px;font-weight:600;color:#fff">${icon} ${label}</span>
+        <div class="lp-sw ${checked?'on':''}" data-sw-action="${action}"></div>
+      </div>`;
+    }
+
+    sh.innerHTML=`<div style="display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;gap:10px">
+      <span style="font-size:20px">⚙️</span>
+      <div style="flex:1"><div style="font-size:14px;font-weight:800;color:#fff">Impostazioni LetPot</div><div style="font-size:10px;color:#fff">Luce, orari e controlli</div></div>
+      <button id="lps-x" style="width:30px;height:30px;border:none;border-radius:8px;background:rgba(255,255,255,.1);color:#fff;cursor:pointer;font-size:14px;flex-shrink:0">✕</button>
+    </div>
+    <div id="lps-body" style="flex:1;overflow-y:auto;padding:4px 16px 12px;scrollbar-width:thin">
+      ${swRow('Alimentazione','🔌',power,'power')}
+      ${pumpIsSwitch?swRow('Pompa','⚙️',pumpRun,'pump'):''}
+      ${swRow('Modalità automatica','🤖',autoMode,'auto')}
+      ${swRow('Ricircolo a cicli','♻️',pumpCycl,'cycl')}
+      <div style="padding:14px 0 6px;font-size:10px;color:#fff;font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.7">Illuminazione</div>
+      <div style="display:flex;align-items:center;gap:8px;padding:6px 0">
+        <span style="font-size:11px;color:#fff;width:78px;flex-shrink:0">🌅 Accensione</span>
+        <input type="time" id="lps-ton" value="${lightOnVal}" style="flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:#fff;font-size:12px;padding:6px 8px;color-scheme:dark">
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:6px 0 14px">
+        <span style="font-size:11px;color:#fff;width:78px;flex-shrink:0">🌙 Spegnimento</span>
+        <input type="time" id="lps-toff" value="${lightOffVal}" style="flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:#fff;font-size:12px;padding:6px 8px;color-scheme:dark">
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:6px 0 14px">
+        <span style="font-size:11px;color:#fff;flex:1">✨ Luminosità</span>
+        <button id="lps-brdn" style="width:28px;height:28px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#fff;font-size:16px;cursor:pointer">−</button>
+        <span id="lps-brval" style="font-size:13px;font-weight:800;min-width:22px;text-align:center">${brCur!=='unknown'&&brCur!==undefined?brCur:'—'}</span>
+        <span style="font-size:10px;opacity:.7">/${brMax}</span>
+        <button id="lps-brup" style="width:28px;height:28px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#fff;font-size:16px;cursor:pointer">+</button>
+      </div>
+      <div style="padding-bottom:16px">
+        <span style="font-size:11px;color:#fff;display:block;margin-bottom:5px">🎛️ Modalità luce</span>
+        <select id="lps-mode" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:9px;color:#fff;font-size:12px;padding:8px 10px;color-scheme:dark">${modeOpts}</select>
+      </div>
+      <button id="lps-cfg" style="width:100%;padding:9px;border-radius:10px;border:1px dashed rgba(255,255,255,.2);background:transparent;color:#fff;opacity:.6;font-size:11px;cursor:pointer;margin-bottom:6px">🔧 Collega entità (setup avanzato)</button>
+    </div>
+    <div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0">
+      <button id="lps-close" style="width:100%;padding:11px;border-radius:11px;border:none;background:linear-gradient(90deg,#16a34a,#4ade80);color:#fff;font-weight:800;cursor:pointer;font-size:13px">Chiudi</button>
+    </div>`;
+
+    const close=()=>ov.remove();
+    sh.querySelector('#lps-x').onclick=close;
+    sh.querySelector('#lps-close').onclick=close;
+    ov.addEventListener('click',e=>{if(e.target===ov)close();});
+    document.addEventListener('keydown',function esc(e){if(e.key==='Escape'){close();document.removeEventListener('keydown',esc);}});
+
+    const keyMap={power:'powerEntity',pump:'pumpEntity',auto:'autoModeEntity',cycl:'pumpCyclingEntity'};
+    sh.querySelectorAll('.lp-sw').forEach(sw=>{
+      sw.addEventListener('click',()=>{
+        const action=sw.dataset.swAction, id=ent[keyMap[action]];
+        if(!id) return;
+        const next=doToggle(card,id);
+        if(next!==null) sw.classList.toggle('on',next==='on');
+      });
+    });
+
+    sh.querySelector('#lps-ton').addEventListener('change',e=>{if(ent.lightOnEntity) setTimeEnt(ent.lightOnEntity,e.target.value);});
+    sh.querySelector('#lps-toff').addEventListener('change',e=>{if(ent.lightOffEntity) setTimeEnt(ent.lightOffEntity,e.target.value);});
+    sh.querySelector('#lps-mode').addEventListener('change',e=>{if(ent.lightModeEntity) setSelectEnt(ent.lightModeEntity,e.target.value);});
+
+    function stepBr(dir){
+      if(!ent.lightBrightnessEntity) return;
+      const attrs=h?.states?.[ent.lightBrightnessEntity]?.attributes||{};
+      const step=parseFloat(attrs.step)||1,min=parseFloat(attrs.min)||1,max=parseFloat(attrs.max)||10;
+      const base=parseFloat(brCur)||min;
+      const nv=Math.min(max,Math.max(min,base+(dir*step)));
+      brCur=nv;
+      _localBr[card.id]={v:nv,ts:Date.now()};
+      setNumberEnt(ent.lightBrightnessEntity,nv);
+      sh.querySelector('#lps-brval').textContent=nv;
+    }
+    sh.querySelector('#lps-brup').onclick=()=>stepBr(1);
+    sh.querySelector('#lps-brdn').onclick=()=>stepBr(-1);
+
+    sh.querySelector('#lps-cfg').onclick=()=>{close();configure(card);};
+
+    document.body.appendChild(ov);
+  }
+
+  /* ── CONFIGURE (collegamento entita', invocato dalla piattaforma o dal pannello impostazioni) ── */
   const FIELDS=[
     {key:'powerEntity',          label:'💡 Power (switch)',              domains:['switch']},
     {key:'autoModeEntity',       label:'🤖 Auto mode (switch)',          domains:['switch']},
@@ -625,8 +666,8 @@ ${pumpCycl&&cb?`
     return render(mc,{states:{'switch.letpot_max_power':{state:'on'},'switch.letpot_max_auto_mode':{state:'on'},'switch.letpot_max_pump_cycling':{state:'on'},'sensor.letpot_max_water_level':{state:'78'},'sensor.letpot_max_temperatura':{state:'26.5'},'sensor.letpot_max_plants_age':{state:'45'},'switch.letpot_max_pump':{state:'on'},'time.letpot_max_light_on':{state:'06:00:00'},'time.letpot_max_light_off':{state:'22:00:00'},'number.letpot_max_light_brightness':{state:'7',attributes:{min:1,max:10,step:1}},'select.letpot_max_modalita_luce':{state:'Verdure/Erbe',attributes:{options:['Verdure/Erbe','Frutti','Fiori','Erbe aromatiche','Personalizzato']}},'binary_sensor.letpot_max_low_water':{state:'off'},'binary_sensor.letpot_max_low_nutrients':{state:'off'},'binary_sensor.letpot_max_refill_error':{state:'off'}}});
   }
 
-  const CARD={id:ID,name:'LetPot Max',icon:'🌿',desc:'Sistema idroponico LPH-MAX 21 pod — vaschetta nutrienti collegata al sensore, onda in superficie',version:'4.7',colSpan:2,rowSpan:3,render,mount,update,configure,preview};
+  const CARD={id:ID,name:'LetPot Max',icon:'🌿',desc:'Sistema idroponico LPH-MAX 21 pod — luce che cambia tonalità in base alla modalità, timer pompa reale 30min, impostazioni in un pannello dedicato',version:'4.8',colSpan:2,rowSpan:3,render,mount,update,configure,preview};
   window.FratechCardRegistry=window.FratechCardRegistry||{};window.FratechCardRegistry[ID]=CARD;
   window.FratechCards=window.FratechCards||{};window.FratechCards[ID]=CARD;
-  try{console.log('[FratechStore] letpot-max v4.7');}catch(e){}
+  try{console.log('[FratechStore] letpot-max v4.8');}catch(e){}
 })();
