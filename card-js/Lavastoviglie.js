@@ -238,7 +238,9 @@
     ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:flex-end;background:rgba(0,0,0,.6);backdrop-filter:blur(4px)';
     ov.innerHTML = html;
     document.body.appendChild(ov);
-    const close = function () { try { document.body.removeChild(ov); } catch (e) {} };
+    const close = function () { try { document.body.removeChild(ov); } catch (e) {} document.removeEventListener('keydown', esc); };
+    const esc = function (e) { if (e.key === 'Escape') close(); };
+    document.addEventListener('keydown', esc);
     const btn = ov.querySelector('#' + closeId); if (btn) btn.addEventListener('click', close);
     ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
     ov._close = close;
@@ -343,11 +345,11 @@
     const allIds = Object.keys(states).sort();
     const stInp = 'width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none';
     const stDrop = 'position:absolute;left:0;right:0;top:calc(100% + 2px);z-index:200;max-height:160px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-radius:9px;display:none;scrollbar-width:none';
-    const stLbl = 'font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px;display:block';
+    const stLbl = 'font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#fff;margin-bottom:3px;display:block';
     const stSec = 'font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid rgba(56,189,248,.2)';
 
     function field(fid, lbl2, val, hint) {
-      return '<div style="margin-bottom:9px;position:relative"><label style="' + stLbl + '">' + lbl2 + (hint ? '<span style="font-weight:400;color:#475569;margin-left:6px;font-family:monospace;text-transform:none;letter-spacing:0">' + hint + '</span>' : '') + '</label><input id="' + fid + '" type="text" value="' + (val || '').replace(/"/g, '&quot;') + '" autocomplete="off" placeholder="Cerca entità…" style="' + stInp + '"><div id="' + fid + '-d" style="' + stDrop + '"></div></div>';
+      return '<div style="margin-bottom:9px;position:relative"><label style="' + stLbl + '">' + lbl2 + (hint ? '<span style="font-weight:400;color:#fff;margin-left:6px;font-family:monospace;text-transform:none;letter-spacing:0">' + hint + '</span>' : '') + '</label><input id="' + fid + '" type="text" value="' + (val || '').replace(/"/g, '&quot;') + '" autocomplete="off" placeholder="Cerca entità…" style="' + stInp + '"><div id="' + fid + '-d" style="' + stDrop + '"></div></div>';
     }
 
     const formHtml = '<div style="margin-bottom:10px"><label style="' + stLbl + '">Nome card</label><input id="fc-name" type="text" value="' + (cf.name || '').replace(/"/g, '&quot;') + '" placeholder="es. Lavastoviglie cucina" style="' + stInp.replace('monospace', 'system-ui') + '"></div>'
@@ -442,7 +444,7 @@
     function dNum(entity, lbl, unit, mn, mx, step, _ov) {
       const val = (_ov !== undefined && _ov !== null) ? _ov : ns(entity);
       rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);gap:10px">'
-        + '<span style="font-size:13px;color:#fff;flex:1">' + lbl + (unit ? ' <span style="font-size:10px;color:rgba(255,255,255,.6)">(' + unit + ')</span>' : '') + '</span>'
+        + '<span style="font-size:13px;color:#fff;flex:1">' + lbl + (unit ? ' <span style="font-size:10px;color:#fff">(' + unit + ')</span>' : '') + '</span>'
         + '<input type="number" class="fi-inp" data-entity="' + entity + '" data-svctype="number" value="' + (val != null ? val : '') + '" min="' + (mn != null ? mn : 0) + '" max="' + (mx != null ? mx : 9999) + '" step="' + (step || 1) + '" style="' + iBase + ';width:90px;padding:6px 8px;text-align:right">'
         + '</div>');
     }
@@ -455,7 +457,7 @@
     }
     function dInfo(lbl, val) {
       rows.push('<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
-        + '<span style="font-size:12px;color:rgba(255,255,255,.7)">' + lbl + '</span>'
+        + '<span style="font-size:12px;color:#fff">' + lbl + '</span>'
         + '<span style="font-size:12px;font-weight:700;color:#fff">' + (val || '—') + '</span>'
         + '</div>');
     }
@@ -1447,7 +1449,9 @@ automation:
     var host = document.createElement('div');
     var sr = host.attachShadow({mode: 'open'});
     document.body.appendChild(host);
-    function destroy() { try { document.body.removeChild(host); } catch(e) {} }
+    function destroy() { try { document.body.removeChild(host); } catch(e) {} document.removeEventListener('keydown', wdEsc); }
+    function wdEsc(e) { if (e.key === 'Escape') destroy(); }
+    document.addEventListener('keydown', wdEsc);
 
     function setupAC(inp, drop, ids) {
       if (!inp || !drop) return;
@@ -1483,12 +1487,12 @@ automation:
         + '.wd-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}'
         + '.wd-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.3);flex-shrink:0}'
         + '.wd-tit{font-size:14px;font-weight:800}'
-        + '.wd-sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:1px}'
+        + '.wd-sub{font-size:11px;color:#fff;margin-top:1px}'
         + '.wd-x{margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none}'
         + '.wd-body{flex:1;overflow-y:auto;padding:16px;scrollbar-width:none;display:flex;flex-direction:column;gap:14px}'
         + '.wd-body::-webkit-scrollbar{display:none}'
         + '.wd-sec{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding-bottom:5px;border-bottom:1px solid rgba(56,189,248,.18);margin-bottom:10px}'
-        + '.wd-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px}'
+        + '.wd-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#fff;margin-bottom:3px}'
         + '.wd-frow{position:relative;margin-bottom:10px}'
         + '.wd-inp{width:100%;padding:9px 11px;border-radius:10px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none}'
         + '.wd-inp:focus{border-color:rgba(56,189,248,.5)}'
@@ -1498,7 +1502,7 @@ automation:
         + '.wd-push-row .wd-inp{flex:1}'
         + '.wd-rm{width:30px;height:38px;border-radius:8px;background:rgba(255,255,255,.07);border:none;color:#fff;cursor:pointer;font-size:14px;flex-shrink:0}'
         + '.wd-add{padding:6px 12px;border-radius:8px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.25);color:#38bdf8;font-size:11px;font-weight:700;cursor:pointer}'
-        + '.wd-note{font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;margin:0 0 10px}'
+        + '.wd-note{font-size:11px;color:#fff;line-height:1.5;margin:0 0 10px}'
         + '.wd-foot{padding:12px 16px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:8px;flex-shrink:0}'
         + '.wd-cancel{flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:rgba(255,255,255,.1);color:#fff}'
         + '.wd-install{flex:2;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#38bdf8;color:#060d14}'
