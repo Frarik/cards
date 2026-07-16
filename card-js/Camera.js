@@ -340,7 +340,8 @@
         +'height:100%;gap:12px;padding:20px;text-align:center;color:#fff;box-sizing:border-box;position:relative;border-radius:18px;overflow:hidden;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%)">'
         +'<div style="font-size:40px;opacity:.35">📷</div>'
         +'<div style="font-size:13px;font-weight:700">Nessuna telecamera</div>'
-        +'<div style="font-size:11px;line-height:1.6">Attiva modifica → ✏️ per aggiungere le telecamere</div>'
+        +'<div style="font-size:11px;line-height:1.6">Aggiungi una telecamera dalle impostazioni</div>'
+        +'<button data-a="cfgcam" style="margin-top:4px;padding:8px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#fff;font-size:12px;font-weight:700;cursor:pointer">⚙️ Configura telecamere</button>'
         +'</div>';
     }
 
@@ -414,6 +415,7 @@
     }
 
     return '<div id="'+rid+'" style="display:flex;flex-direction:column;height:100%;padding:8px;gap:6px;box-sizing:border-box;position:relative;border-radius:18px;overflow:hidden;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%)">'
+      +'<button data-a="cfgcam" title="Impostazioni" style="position:absolute;top:14px;right:14px;z-index:5;width:26px;height:26px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.45);backdrop-filter:blur(4px);color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center">⚙️</button>'
       +mainView+thumbsHtml+'</div>';
   }
 
@@ -421,6 +423,8 @@
   function mount(card, hass, el) {
     el.removeEventListener('click', el._camHandler);
     el._camHandler = function(ev) {
+      var cfgBtn = ev.target.closest('[data-a="cfgcam"]');
+      if (cfgBtn) { openCfg(card, el); return; }
       var t = ev.target.closest('[data-action="selcam"]'); if (!t) return;
       _switchCam(card, el, parseInt(t.getAttribute('data-val')));
     };

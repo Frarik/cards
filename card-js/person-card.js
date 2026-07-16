@@ -123,6 +123,7 @@
       <div class="pc-scrim"></div>
       <div class="pc-mapmask"></div>
       <div class="pc-mapmask-tr"></div>
+      <button data-pc-cfg title="Impostazioni" style="position:absolute;top:8px;right:8px;z-index:5;width:26px;height:26px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.4);color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;pointer-events:auto">⚙️</button>
       <div class="pc-stage"><div class="pc-content">
         <div class="pc-ava" style="${avaStyle}">${avaInner}</div>
         <div class="pc-info">
@@ -213,6 +214,7 @@
       if (!el._pcBound) {
         el._pcBound = true;
         el.addEventListener('click', (e) => {
+          if (e.target.closest('[data-pc-cfg]')) { e.stopPropagation(); openConfig(card, el, hass); return; }
           const t = e.target.closest('[data-pc]');
           const act = t && t.getAttribute('data-pc');
           if (getPerson(card)) openHistory(card); else openConfig(card, el, hass);

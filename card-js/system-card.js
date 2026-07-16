@@ -284,6 +284,7 @@
             +'<div style="flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+nm+'</div>'
             +(anyUpd?'<div style="padding:2px 7px;border-radius:8px;font-size:9px;font-weight:800;background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.25);color:#f97316;white-space:nowrap;margin-right:4px">↑ Update</div>':'')
             +'<div style="padding:3px 9px;border-radius:20px;font-size:9px;font-weight:800;background:'+(anyWarn?'rgba(249,115,22,.12)':'rgba(34,197,94,.08)')+';border:1px solid '+(anyWarn?'rgba(249,115,22,.3)':'rgba(34,197,94,.25)')+';color:'+(anyWarn?'#f97316':'#22c55e')+';white-space:nowrap">'+statusText+'</div>'
+            +'<button data-sya="cfg" title="Impostazioni" style="width:24px;height:24px;border-radius:7px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">⚙️</button>'
           +'</div>'
           +'<div class="sc-scroll">'
             +'<div class="sc-hero">'
@@ -682,6 +683,7 @@
       if(a==='popup-energia'){ openEnergiaPopup(cfgFor(card)); return; }
       if(a==='popup-ha'){ openHAPopup(cfgFor(card)); return; }
       if(a==='popup-notif'){ openNotifPopup(card,el); return; }
+      if(a==='cfg'){ openCfg(card,el); return; }
     };
     el.addEventListener('click',el._scHandler);
     el._scBound=CARD.version;
