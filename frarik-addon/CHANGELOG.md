@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.0.79 — 2026-07-17
+
+### fix: notifiche di aggiornamento card/distintivi solo se la versione cambia davvero
+
+Il controllo automatico (`_ghCheck`) segnalava "aggiornamento disponibile" appena cambiava
+lo sha (hash del contenuto) di un file su GitHub, anche se il campo `version:` dichiarato
+nel file restava identico (es. un fix di stile senza bump di versione). Ora, per i file
+già installati, prima di segnalarli come pending viene scaricato e confrontato il numero
+di versione reale (`_verGt`) — se non è aumentato, lo sha noto viene allineato in silenzio
+senza generare notifica ne' comparire nella lista "da aggiornare". I file nuovi (mai
+installati) continuano a essere segnalati subito, senza bisogno di confronto versione.
+
 ## 2.0.78 — 2026-07-16
 
 ### feat(card): LetPot Max v4.8 — vista minimale, impostazioni a comparsa, luce per modalità, timer reale, onda corretta

@@ -1816,7 +1816,33 @@ async function _ghCheck(force){
   try{ result=await _ghApiListAllWithPkgs(); }
   catch(e){ if(force){ _ghStatus('⚠️ '+e.message); showToast('⚠️ GitHub: '+e.message);} return; }
   const files=result.cards;
-  _ghPending = files.filter(f=> !g.shas[f.name] || g.shas[f.name]!==f.sha);
+  const shaChanged = files.filter(f=> !g.shas[f.name] || g.shas[f.name]!==f.sha);
+  // Un file con sha diverso è un aggiornamento REALE solo se la versione dichiarata
+  // (campo `version:`) è aumentata rispetto a quella installata — un file può cambiare
+  // (refactor, fix minori) senza bump di versione: in quel caso niente notifica/pending,
+  // si allinea solo silenziosamente lo sha noto (unica fonte di verità = versione nel file).
+  const _known=shaChanged.filter(f=>g.shas[f.name]);
+  let _silentAligned=false;
+  if(_known.length){
+    let _vi=0; const _VCONC=5;
+    async function _verWorker(){
+      while(_vi<_known.length){
+        const f=_known[_vi++];
+        let newVer=_ghVerCache[f.sha];
+        if(newVer===undefined){
+          try{ newVer=_parseCardVersion(await _ghDownload(f))||''; }catch(e){ newVer=''; }
+          _ghVerCache[f.sha]=newVer;
+        }
+        const oldVer=g.fileVersions[f.name]||'';
+        if(newVer&&oldVer&&!_verGt(newVer,oldVer)){
+          g.shas[f.name]=f.sha; g.notifiedShas[f.name]=f.sha; f._silentSkip=true; _silentAligned=true;
+        }
+      }
+    }
+    await Promise.all(Array.from({length:Math.min(_VCONC,_known.length)}, _verWorker));
+  }
+  _ghPending = shaChanged.filter(f=>!f._silentSkip);
+  if(_silentAligned){ try{ saveCfg(); }catch(e){} }
   try{ _ghsUpdBadge(); }catch(e){}
   if(force) _ghStatus(files.length+' card nel repo · '+_ghPending.length+' da aggiornare');
   // self-heal: togli le notifiche di card non più in sospeso (installate/aggiornate altrove)
