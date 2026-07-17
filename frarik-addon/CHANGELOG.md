@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.0.84 — 2026-07-18
+
+### fix: alcuni chip sembravano meno "grassetto" di altri a parità di peso font
+
+- `style.css`: non era un bug di font-weight (già a 900 ovunque da v2.0.83) ma un
+  effetto ottico — stringhe corte con lettere/cifre sottili (es. "LUCI: 1": L, U,
+  I, ":", "1" hanno poca massa) risultano visivamente più "magre" di stringhe con
+  lettere larghe/tonde (es. "ARMATO · FUORI": A, R, M, O, U) anche a peso identico.
+  Aggiunto un filo di `-webkit-text-stroke` (0.35px, stesso colore del testo) su
+  `.badge-val`/`.badge-title`/`.badge-lbl` per ispessire uniformemente i glifi e
+  ridurre questa differenza percepita tra chip diversi.
+
 ## 2.0.83 — 2026-07-18
 
 ### fix: chip dei distintivi ancora poco in grassetto nonostante il fix precedente
