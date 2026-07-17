@@ -1,6 +1,6 @@
-/* frarik-version: 3.2 */
+/* frarik-version: 3.3 */
 /**
- * GruppoAllarme.js — Distintivo FratechStore v3.2
+ * GruppoAllarme.js — Distintivo FratechStore v3.3
  * Chip stato allarme Alarmo + popup sensori/bypass + overlay triggered automatico
  *
  * v2.3: fix bypass — azzera solo sulla transizione armato→disarmato, non mentre è già disarmato
@@ -30,6 +30,8 @@
  * v3.2: sensori — griglia di quadrati (2 per riga) invece di righe orizzontali: ogni
  *       quadrato è cliccabile e attiva/disattiva l'esclusione direttamente (rimosso il
  *       pulsante separato), cambia colore in base allo stato (verde/rosso/giallo)
+ * v3.3: sensori — quadrati molto più piccoli e compatti, tanti per riga in base allo
+ *       spazio disponibile invece di soli 2 giganti
  */
 (function () {
   'use strict';
@@ -274,10 +276,10 @@
       if (isBypassed) { sIcoCol = '#facc15'; statusTxt = 'ESCLUSO'; }
       else if (open)  { sIcoCol = '#f87171'; statusTxt = 'APERTO'; }
 
-      return `<button data-ca-bypass="${i}" data-entity="${eh(s.entity)}" style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border-radius:16px;background:${hex2rgba(sIcoCol,.14)};border:1.5px solid ${hex2rgba(sIcoCol,.42)};box-shadow:0 0 14px ${hex2rgba(sIcoCol,.16)};cursor:pointer;padding:10px 6px;outline:none;transition:all .15s">
-        <span style="font-size:23px;color:${sIcoCol}">${mdi(sIco, 23)}</span>
-        <span style="font-size:11px;font-weight:900;text-transform:uppercase;color:#fff;text-align:center;line-height:1.25;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(sLbl)}</span>
-        <span style="font-size:9px;font-weight:900;text-transform:uppercase;color:${sIcoCol};letter-spacing:.4px">${statusTxt}</span>
+      return `<button data-ca-bypass="${i}" data-entity="${eh(s.entity)}" style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border-radius:11px;background:${hex2rgba(sIcoCol,.14)};border:1px solid ${hex2rgba(sIcoCol,.4)};cursor:pointer;padding:5px 3px;outline:none;transition:all .15s">
+        <span style="font-size:15px;color:${sIcoCol}">${mdi(sIco, 15)}</span>
+        <span style="font-size:8.5px;font-weight:900;text-transform:uppercase;color:#fff;text-align:center;line-height:1.15;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(sLbl)}</span>
+        <span style="font-size:7px;font-weight:900;text-transform:uppercase;color:${sIcoCol};letter-spacing:.3px">${statusTxt}</span>
       </button>`;
     }).join('');
 
@@ -351,7 +353,7 @@
 
       ${openWarn}
 
-      ${sensors.length ? `<div style="${secLbl}">Sensori (${sensors.length})</div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">${sensorRows}</div>` : ''}
+      ${sensors.length ? `<div style="${secLbl}">Sensori (${sensors.length})</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px">${sensorRows}</div>` : ''}
 
       ${sirenRow}
       <div style="height:14px"></div>
@@ -740,7 +742,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Allarme', icon: '🔒',
     desc: '',
-    version: '3.2', isDistintivo: true,
+    version: '3.3', isDistintivo: true,
     defaultCfg: { label: 'Allarme', alarmEntity: '', code: '', modes: ['armed_away'], sensors: [], siren: '', colorMode: 'auto', colorRules: [] },
     chip,
     watchEntities,
@@ -754,5 +756,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v3.2'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v3.3'); } catch (e) {}
 })();
