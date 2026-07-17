@@ -1,6 +1,6 @@
-/* frarik-version: 2.6 */
+/* frarik-version: 2.7 */
 /**
- * GruppoAllarme.js — Distintivo FratechStore v2.6
+ * GruppoAllarme.js — Distintivo FratechStore v2.7
  * Chip stato allarme Alarmo + popup sensori/bypass + overlay triggered automatico
  *
  * v2.3: fix bypass — azzera solo sulla transizione armato→disarmato, non mentre è già disarmato
@@ -8,6 +8,8 @@
  * v2.5: chip e popup con testo maiuscolo e in grassetto (label, stato, sensori, sirena, pulsanti)
  * v2.6: fix chip — l'aggiornamento live usa textContent (non innerHTML), quindi il valore del
  *       chip non può contenere tag HTML: ora è testo semplice già in maiuscolo
+ * v2.7: chip con icona a scudo (cambia forma/colore per stato) al posto dell'emoji, rimossa la
+ *       label fissa "Allarme:" — richiede l'aggiornamento live dell'icona aggiunto in main.js
  */
 (function () {
   'use strict';
@@ -17,29 +19,17 @@
   /* bypass state persistente tra aperture del popup, per alarmEntity */
   const _bypassedState = {};
 
+  /* icona = sempre uno scudo, la forma/colore cambia in base allo stato */
   const ALARM_DEF = {
-    disarmed:            { lbl: 'Disarmato',        col: '#4ade80', ico: 'mdi:lock-open-variant', pulse: false },
-    armed_away:          { lbl: 'Armato · Fuori',   col: '#ef4444', ico: 'mdi:lock',              pulse: false },
-    armed_home:          { lbl: 'Armato · Casa',    col: '#f97316', ico: 'mdi:home-lock',         pulse: false },
-    armed_night:         { lbl: 'Armato · Notte',   col: '#a78bfa', ico: 'mdi:weather-night',     pulse: false },
-    armed_vacation:      { lbl: 'Armato · Vacanza', col: '#facc15', ico: 'mdi:airplane',          pulse: false },
-    armed_custom_bypass: { lbl: 'Armato · Bypass',  col: '#34d399', ico: 'mdi:shield-half-full',  pulse: false },
-    pending:             { lbl: 'In ingresso…',     col: '#facc15', ico: 'mdi:timer-outline',     pulse: true  },
-    arming:              { lbl: 'Attivazione…',     col: '#facc15', ico: 'mdi:timer-sand',        pulse: true  },
-    triggered:           { lbl: '⚠ ALLARME',        col: '#f87171', ico: 'mdi:alarm-light',       pulse: true  },
-  };
-
-  /* emoji per stato — usate in chip.value che viene aggiornato live */
-  const STATE_EMO = {
-    disarmed:            '🔓',
-    armed_away:          '🔒',
-    armed_home:          '🏠',
-    armed_night:         '🌙',
-    armed_vacation:      '✈️',
-    armed_custom_bypass: '🛡️',
-    pending:             '⏳',
-    arming:              '⌛',
-    triggered:           '🚨',
+    disarmed:            { lbl: 'Disarmato',        col: '#4ade80', ico: 'mdi:shield-off-outline', pulse: false },
+    armed_away:          { lbl: 'Armato · Fuori',   col: '#ef4444', ico: 'mdi:shield-lock',        pulse: false },
+    armed_home:          { lbl: 'Armato · Casa',    col: '#f97316', ico: 'mdi:shield-home',        pulse: false },
+    armed_night:         { lbl: 'Armato · Notte',   col: '#a78bfa', ico: 'mdi:shield-moon',        pulse: false },
+    armed_vacation:      { lbl: 'Armato · Vacanza', col: '#facc15', ico: 'mdi:shield-airplane',    pulse: false },
+    armed_custom_bypass: { lbl: 'Armato · Bypass',  col: '#34d399', ico: 'mdi:shield-half-full',   pulse: false },
+    pending:             { lbl: 'In ingresso…',     col: '#facc15', ico: 'mdi:shield-sync-outline',pulse: true  },
+    arming:              { lbl: 'Attivazione…',     col: '#facc15', ico: 'mdi:shield-sync-outline',pulse: true  },
+    triggered:           { lbl: 'ALLARME',          col: '#f87171', ico: 'mdi:shield-alert',       pulse: true  },
   };
 
   const ALL_MODES = [
@@ -182,7 +172,8 @@
   /* ════════════════════════════════════════
      CHIP
      chip.value contiene l'emoji di stato → si aggiorna live
-     chip.icon non restituito → usa l'icona default '🔒' del CARD
+     chip.icon = scudo MDI che cambia forma/colore in base allo stato (vedi ALARM_DEF),
+     nessuna label fissa "Allarme:" — solo icona + stato
      ════════════════════════════════════════ */
   function chip(cfg, rawHass) {
     const c     = loadCfg(cfg);
@@ -190,12 +181,11 @@
     const ae    = c.alarmEntity;
     const state = ae && h ? stateOf(h, ae) : 'unknown';
     const def   = alarmDef(state);
-    const emo   = STATE_EMO[state] || '🔒';
     const _fcr = window.FratechColorRules;
     const _cond = { triggered: state === 'triggered', armed: !!(state && state.startsWith('armed')), pending: state === 'pending', disarmed: state === 'disarmed' };
     return {
-      label: (c.label || 'Allarme').toUpperCase(),
-      value: `${emo} ${def.lbl}`.toUpperCase(),
+      icon: mdi(def.ico, 15),
+      value: def.lbl.toUpperCase(),
       color: (_fcr && _fcr.evalColor(cfg, _cond)) || def.col,
       borderColor: _fcr && _fcr.evalBorderColor(cfg, _cond),
       pulse: def.pulse,
@@ -719,7 +709,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Allarme', icon: '🔒',
     desc: '',
-    version: '2.6', isDistintivo: true,
+    version: '2.7', isDistintivo: true,
     defaultCfg: { label: 'Allarme', alarmEntity: '', code: '', modes: ['armed_away'], sensors: [], siren: '', colorMode: 'auto', colorRules: [] },
     chip,
     watchEntities,
@@ -733,5 +723,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v2.6'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v2.7'); } catch (e) {}
 })();

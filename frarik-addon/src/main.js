@@ -6985,7 +6985,7 @@ function _badgeItemHTML(b, cls='hbadge', sepCls='badge-sep'){
     try{ if(def&&def.chip) chip=def.chip(b.cfg||{},{states:hs})||{}; }catch(e){}
     const col=chip.color||'rgba(255,255,255,0.38)';
     const bbc=chip.borderColor||null;
-    const ico=chip.icon!=null?`${chip.icon} `:(def?.icon?def.icon+' ':'📦 ');
+    const ico=`<span id="bgico-${b.id}">${chip.icon!=null?chip.icon:(def?.icon?def.icon:'📦')}</span> `;
     const lbl=chip.label?`<span class="badge-lbl">${eh(chip.label)}: </span>`:'';
     const val=chip.value!=null?`<span class="badge-val" id="bgcnt-${b.id}">${chip.value}</span>`:'';
     const bStyle=bbc?`cursor:pointer;--bc:${col};--bbc:${bbc}`:`cursor:pointer;--bc:${col}`;
@@ -7549,7 +7549,9 @@ function _liveUpdateBadges(entityId){
           let chip={}; try{ chip=def.chip(b.cfg||{},{states:hs})||{}; }catch(e){}
           const vel=document.getElementById('bgcnt-'+b.id);
           const cel=document.getElementById('bchip-'+b.id);
+          const iel=document.getElementById('bgico-'+b.id);
           if(vel&&chip.value!=null) vel.textContent=String(chip.value);
+          if(iel&&chip.icon!=null) iel.innerHTML=chip.icon;
           if(cel&&chip.color!=null){
             cel.style.setProperty('--bc',chip.color);
             if(chip.borderColor) cel.style.setProperty('--bbc',chip.borderColor);

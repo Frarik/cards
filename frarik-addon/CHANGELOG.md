@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.0.80 — 2026-07-17
+
+### feat: aggiornamento live dell'icona dei distintivi (chip) + GruppoAllarme con scudo di stato
+
+- `main.js`: il chip di un distintivo (`_badgeItemHTML`, ramo `jsd`) ora aggiorna anche l'icona
+  dal vivo quando l'entità cambia stato, non solo il testo — prima l'icona veniva scritta solo
+  al primo render. Cambiamento retrocompatibile: i distintivi che non impostano `chip.icon`
+  dinamicamente non sono toccati.
+- `GruppoAllarme.js` (v2.7): il chip ora mostra un'icona a scudo che cambia forma e colore in
+  base allo stato (disarmato/armato fuori/casa/notte/vacanza/bypass/in ingresso/allarme), al
+  posto dell'emoji fissa; rimossa la label fissa "Allarme:" — resta solo icona + stato.
+
 ## 2.0.79 — 2026-07-17
 
 ### fix: notifiche di aggiornamento card/distintivi solo se la versione cambia davvero
