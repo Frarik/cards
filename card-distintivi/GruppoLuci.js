@@ -1,7 +1,9 @@
-/* frarik-version: 1.8 */
+/* frarik-version: 1.9 */
 /**
- * GruppoLuci.js — Distintivo FratechStore v1.7
+ * GruppoLuci.js — Distintivo FratechStore v1.9
  * Fix: icona configurabile (preserve su re-render), sottotitolo popup nascosto
+ * v1.9: testi maiuscolo+grassetto (chip e popup), layout popup a stile "glass"
+ *       (hero riepilogo + tasti accendi/spegni a medaglione + righe luci glass)
  */
 (function () {
   'use strict';
@@ -64,9 +66,9 @@
     const _fcr = window.FratechColorRules;
     const _cond = { any_on: active > 0, all_off: active === 0 };
     return {
-      icon: iconHtml(c.icon || '💡'),
-      label: c.label || 'Luci',
-      value: ents.length ? `${active}/${ents.length}` : '—',
+      icon: iconHtml(_dynIcon(c.icon || '💡', active > 0)),
+      label: (c.label || 'Luci').toUpperCase(),
+      value: (ents.length ? `${active}/${ents.length}` : '—').toUpperCase(),
       color: (_fcr && _fcr.evalColor(cfg, _cond)) || (active > 0 ? col : '#fff'),
       borderColor: _fcr && _fcr.evalBorderColor(cfg, _cond),
     };
@@ -87,11 +89,37 @@
     const ents = Array.isArray(c.entities) ? c.entities : [];
     const col = c.color || '#fbbf24';
     const active = h ? ents.filter(e => isOn(h, e.entity)).length : 0;
+    const anyOn = active > 0;
+    const heroCol = anyOn ? col : '#fff';
+    const heroTxt = !ents.length ? 'NESSUNA LUCE'
+      : active === 0 ? 'TUTTE SPENTE'
+      : active === ents.length ? 'TUTTE ACCESE'
+      : `${active}/${ents.length} ACCESE`;
+
+    const hero = `<div style="position:relative;overflow:hidden;display:flex;align-items:center;gap:14px;padding:16px;border-radius:18px;background:linear-gradient(155deg,${hex2rgba(heroCol,.16)},${hex2rgba(heroCol,.04)});border:1px solid ${hex2rgba(heroCol,.32)};margin:0 14px 14px">
+      <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 18% 15%,${hex2rgba(heroCol,.22)},transparent 62%);pointer-events:none"></div>
+      <div style="position:relative;width:56px;height:56px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${hex2rgba(heroCol,.18)};border:1.5px solid ${hex2rgba(heroCol,.45)};box-shadow:0 0 18px ${hex2rgba(heroCol,.35)}">
+        <span style="font-size:26px;color:${heroCol}">${iconHtml(_dynIcon(c.icon||'💡', anyOn), 26)}</span>
+      </div>
+      <div style="position:relative;flex:1;min-width:0">
+        <div style="font-size:19px;font-weight:900;color:${heroCol};letter-spacing:.3px;text-transform:uppercase">${heroTxt}</div>
+      </div>
+    </div>`;
 
     const ctrlBar = ents.length ? `
-      <div style="display:flex;gap:8px;padding:4px 14px 8px">
-        <button data-gl-all="on" style="flex:1;padding:7px;border-radius:8px;border:1px solid ${hex2rgba(col,.4)};background:${hex2rgba(col,.12)};color:${col};font-size:11px;font-weight:700;cursor:pointer">☀ Accendi tutte</button>
-        <button data-gl-all="off" style="flex:1;padding:7px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff;font-size:11px;font-weight:700;cursor:pointer">⏻ Spegni tutte</button>
+      <div style="display:flex;gap:20px;justify-content:center;margin:0 14px 16px">
+        <button data-gl-all="on" style="background:none;border:none;padding:4px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px;outline:none">
+          <span style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(155deg,${hex2rgba(col,.3)},${hex2rgba(col,.08)});border:1.5px solid ${hex2rgba(col,.55)};box-shadow:0 0 16px ${hex2rgba(col,.35)}">
+            <span style="font-size:21px;color:${col}">${iconHtml('mdi:lightbulb-on', 21)}</span>
+          </span>
+          <span style="white-space:nowrap;color:${col};text-transform:uppercase;font-weight:900;font-size:10px">Accendi tutte</span>
+        </button>
+        <button data-gl-all="off" style="background:none;border:none;padding:4px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px;outline:none">
+          <span style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.12)">
+            <span style="font-size:21px;color:#fff">${iconHtml('mdi:lightbulb-off-outline', 21)}</span>
+          </span>
+          <span style="white-space:nowrap;color:#fff;text-transform:uppercase;font-weight:900;font-size:10px">Spegni tutte</span>
+        </button>
       </div>` : '';
 
     const rows = ents.map((e, i) => {
@@ -108,30 +136,30 @@
         const aBg  = autoOn ? 'rgba(74,222,128,.13)'  : 'rgba(248,113,113,.13)';
         const aBdr = autoOn ? 'rgba(74,222,128,.38)'  : 'rgba(248,113,113,.38)';
         const aCol = autoOn ? '#4ade80'               : '#f87171';
-        const aTxt = autoOn ? '🟢 Attiva'             : '🔴 Disattiva';
-        autoBadge = `<button data-jsd-auto="${i}" style="padding:3px 8px;border-radius:6px;border:1px solid ${aBdr};background:${aBg};color:${aCol};cursor:pointer;font-size:9px;font-weight:700;white-space:nowrap;outline:none">${aTxt}</button>`;
+        const aTxt = autoOn ? 'Attiva'                : 'Disattiva';
+        autoBadge = `<button data-jsd-auto="${i}" style="padding:3px 8px;border-radius:6px;border:1px solid ${aBdr};background:${aBg};color:${aCol};cursor:pointer;font-size:9px;font-weight:900;text-transform:uppercase;white-space:nowrap;outline:none">${aTxt}</button>`;
       }
 
-      return `<div style="border-bottom:1px solid rgba(255,255,255,.04)">
-        <div style="display:flex;align-items:center;gap:12px;padding:11px 16px">
-          <div style="width:36px;height:36px;border-radius:50%;background:${on?hex2rgba(col,.15):'rgba(255,255,255,.05)'};border:1px solid ${on?hex2rgba(col,.3):'rgba(255,255,255,.1)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${on?col:'#fff'}">${iconHtml(_dynIcon(c.icon||'💡',on),18)}</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
-            <div style="font-size:11px;color:${on?col:'#fff'};margin-top:1px;font-weight:${on?600:400}">${on?'Accesa':'Spenta'}</div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
-            <button data-jsd-toggle="${i}" style="width:46px;height:26px;border-radius:13px;border:none;cursor:pointer;position:relative;background:${swBg};transition:background .2s;outline:none">
-              <div style="position:absolute;top:3px;left:${thumbL};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3);transition:left .18s;pointer-events:none"></div>
-            </button>
-            ${autoBadge}
-          </div>
-        </div>
+      return `<div style="position:relative;overflow:hidden;display:flex;align-items:center;gap:12px;border-radius:16px;background:linear-gradient(155deg,${on?hex2rgba(col,.18):hex2rgba('#ffffff',.05)},${on?hex2rgba(col,.03):hex2rgba('#ffffff',.01)});border:1px solid ${on?hex2rgba(col,.4):'rgba(255,255,255,.1)'};padding:12px 14px;margin:0 14px 8px">
+        ${on?`<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 10%,${hex2rgba(col,.2)},transparent 62%);pointer-events:none"></div>`:''}
+        <span style="position:relative;width:38px;height:38px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${on?hex2rgba(col,.22):'rgba(255,255,255,.06)'};border:1px solid ${on?hex2rgba(col,.5):'rgba(255,255,255,.14)'};${on?`box-shadow:0 0 12px ${hex2rgba(col,.3)};`:''}color:${on?col:'#fff'}">${iconHtml(_dynIcon(c.icon||'💡',on),19)}</span>
+        <span style="position:relative;flex:1;min-width:0">
+          <span style="display:block;font-size:13px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</span>
+          <span style="display:block;font-size:9.5px;font-weight:900;text-transform:uppercase;color:${on?col:'#fff'};letter-spacing:.3px;margin-top:2px">${on?'Accesa':'Spenta'}</span>
+        </span>
+        <span style="position:relative;display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+          <button data-jsd-toggle="${i}" style="width:46px;height:26px;border-radius:13px;border:none;cursor:pointer;position:relative;background:${swBg};transition:background .2s;outline:none">
+            <div style="position:absolute;top:3px;left:${thumbL};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3);transition:left .18s;pointer-events:none"></div>
+          </button>
+          ${autoBadge}
+        </span>
       </div>`;
     }).join('');
 
     return `<div id="gl-popup-body">
+      ${hero}
       ${ctrlBar}
-      <div>${rows||'<div style="padding:32px 20px;text-align:center;color:#fff;font-size:12px">Nessuna luce configurata.<br><span style="font-size:10px;">Clicca ✏️ sulla chip per configurare.</span></div>'}</div>
+      <div>${rows||'<div style="padding:32px 20px;text-align:center;color:#fff;font-size:12px;font-weight:900;text-transform:uppercase">Nessuna luce configurata<br><span style="font-size:10px;font-weight:700;text-transform:none;opacity:.7">Clicca ✏️ sulla chip per configurare</span></div>'}</div>
     </div>`;
   }
 
@@ -208,6 +236,8 @@
         const active = h ? ents.filter(e => isOn(h, e.entity)).length : 0;
         const col = c.color || '#fbbf24';
         titleEl.style.color = active > 0 ? col : '';
+        titleEl.style.fontWeight = '900';
+        titleEl.style.textTransform = 'uppercase';
         titleEl.textContent = active === 1 ? '1 luce accesa' : `${active} luci accese`;
       } catch(e) {}
     }
@@ -548,7 +578,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Luci', icon: '💡',
     desc: 'Chip con contatore luci accese. Clic → pannello toggle + Accendi/Spegni tutte.',
-    version: '1.8', isDistintivo: true,
+    version: '1.9', isDistintivo: true,
     defaultCfg: { label: 'Luci', icon: '💡', color: '#fbbf24', entities: [], colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -557,5 +587,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-luci v1.8'); } catch(e){}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-luci v1.9'); } catch(e){}
 })();
