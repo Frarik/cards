@@ -1,6 +1,6 @@
-/* frarik-version: 2.2 */
+/* frarik-version: 2.3 */
 /**
- * GruppoLuci.js — Distintivo FratechStore v2.2
+ * GruppoLuci.js — Distintivo FratechStore v2.3
  * Fix: icona configurabile (preserve su re-render), sottotitolo popup nascosto
  * v1.9: testi maiuscolo+grassetto (chip e popup), layout popup a stile "glass"
  *       (hero riepilogo + tasti accendi/spegni a medaglione + righe luci glass)
@@ -12,6 +12,11 @@
  * v2.2: fix colore del popup sempre bianco (acceso e spento) — render() usava solo il
  *       campo colore base, ignorando le eventuali color-rule condizionali già usate dal
  *       chip; ora popup e chip mostrano sempre lo stesso colore effettivo
+ * v2.3: chip allineato al pattern di GruppoAllarme — "LUCI: N" è un unico value in
+ *       grassetto pieno (niente più label separata a opacità ridotta, che si leggeva
+ *       come "non grassetto"). Riquadro luce più corto; il controllo automazione è
+ *       uscito dal riquadro: ora è un pallino colorato (verde/rosso, senza scritte,
+ *       icona robot) separato a destra della card della luce.
  */
 (function () {
   'use strict';
@@ -75,8 +80,7 @@
     const _cond = { any_on: active > 0, all_off: active === 0 };
     return {
       icon: iconHtml(_dynIcon(c.icon || '💡', active > 0)),
-      label: (c.label || 'Luci').toUpperCase(),
-      value: ents.length ? String(active) : '—',
+      value: `${(c.label || 'Luci').toUpperCase()}: ${ents.length ? active : '—'}`,
       color: (_fcr && _fcr.evalColor(cfg, _cond)) || (active > 0 ? col : '#fff'),
       borderColor: _fcr && _fcr.evalBorderColor(cfg, _cond),
     };
@@ -143,31 +147,27 @@
       const swBg = on ? col : 'rgba(255,255,255,0.14)';
       const thumbL = on ? '22px' : '2px';
 
-      // badge automazione — sotto il toggle, senza nome, solo stato cliccabile
-      let autoBadge = '';
+      // pallino automazione — separato, fuori dal riquadro luce, senza scritte: solo colore stato
+      let autoDot = '';
       if (e.automation) {
         const autoOn = h ? isOn(h, e.automation) : false;
-        const aBg  = autoOn ? 'rgba(74,222,128,.13)'  : 'rgba(248,113,113,.13)';
-        const aBdr = autoOn ? 'rgba(74,222,128,.38)'  : 'rgba(248,113,113,.38)';
-        const aCol = autoOn ? '#4ade80'               : '#f87171';
-        const aTxt = autoOn ? 'Attiva'                : 'Disattiva';
-        autoBadge = `<button data-jsd-auto="${i}" style="padding:3px 8px;border-radius:6px;border:1px solid ${aBdr};background:${aBg};color:${aCol};cursor:pointer;font-size:9px;font-weight:900;text-transform:uppercase;white-space:nowrap;outline:none">${aTxt}</button>`;
+        const aCol = autoOn ? '#4ade80' : '#f87171';
+        autoDot = `<button data-jsd-auto="${i}" style="flex-shrink:0;width:38px;height:38px;border-radius:50%;border:1.5px solid ${hex2rgba(aCol,.55)};background:linear-gradient(155deg,${hex2rgba(aCol,.32)},${hex2rgba(aCol,.08)});box-shadow:0 0 12px ${hex2rgba(aCol,.35)};display:flex;align-items:center;justify-content:center;cursor:pointer;outline:none;color:${aCol}">${iconHtml('mdi:robot', 18)}</button>`;
       }
 
-      return `<div style="position:relative;overflow:hidden;display:flex;align-items:center;gap:12px;border-radius:16px;background:linear-gradient(155deg,${on?hex2rgba(col,.18):hex2rgba('#ffffff',.05)},${on?hex2rgba(col,.03):hex2rgba('#ffffff',.01)});border:1px solid ${on?hex2rgba(col,.4):'rgba(255,255,255,.1)'};padding:12px 14px;margin:0 14px 8px">
+      const tile = `<div style="position:relative;overflow:hidden;flex:1;min-width:0;display:flex;align-items:center;gap:12px;border-radius:16px;background:linear-gradient(155deg,${on?hex2rgba(col,.18):hex2rgba('#ffffff',.05)},${on?hex2rgba(col,.03):hex2rgba('#ffffff',.01)});border:1px solid ${on?hex2rgba(col,.4):'rgba(255,255,255,.1)'};padding:8px 14px">
         ${on?`<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 10%,${hex2rgba(col,.2)},transparent 62%);pointer-events:none"></div>`:''}
         <span style="position:relative;width:38px;height:38px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${on?hex2rgba(col,.22):'rgba(255,255,255,.06)'};border:1px solid ${on?hex2rgba(col,.5):'rgba(255,255,255,.14)'};${on?`box-shadow:0 0 12px ${hex2rgba(col,.3)};`:''}color:${on?col:'#fff'}">${iconHtml(_dynIcon(c.icon||'💡',on),19)}</span>
         <span style="position:relative;flex:1;min-width:0">
           <span style="display:block;font-size:13px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</span>
           <span style="display:block;font-size:9.5px;font-weight:900;text-transform:uppercase;color:${on?col:'#fff'};letter-spacing:.3px;margin-top:2px">${on?'Accesa':'Spenta'}</span>
         </span>
-        <span style="position:relative;display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
-          <button data-jsd-toggle="${i}" style="width:46px;height:26px;border-radius:13px;border:none;cursor:pointer;position:relative;background:${swBg};transition:background .2s;outline:none">
-            <div style="position:absolute;top:3px;left:${thumbL};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3);transition:left .18s;pointer-events:none"></div>
-          </button>
-          ${autoBadge}
-        </span>
+        <button data-jsd-toggle="${i}" style="position:relative;flex-shrink:0;width:46px;height:26px;border-radius:13px;border:none;cursor:pointer;background:${swBg};transition:background .2s;outline:none">
+          <div style="position:absolute;top:3px;left:${thumbL};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3);transition:left .18s;pointer-events:none"></div>
+        </button>
       </div>`;
+
+      return `<div style="display:flex;align-items:center;gap:8px;margin:0 14px 8px">${tile}${autoDot}</div>`;
     }).join('');
 
     return `<div id="gl-popup-body">
@@ -205,10 +205,10 @@
         const autoOn = isOn(H(), e.automation);
         const nextOn = !autoOn;
         const newCol = nextOn ? '#4ade80' : '#f87171';
-        const newBdr = nextOn ? 'rgba(74,222,128,.38)' : 'rgba(248,113,113,.38)';
-        const newBg  = nextOn ? 'rgba(74,222,128,.13)' : 'rgba(248,113,113,.13)';
-        auto.textContent = nextOn ? '🟢 Attiva' : '🔴 Disattiva';
-        auto.style.color = newCol; auto.style.borderColor = newBdr; auto.style.background = newBg;
+        auto.style.color = newCol;
+        auto.style.borderColor = hex2rgba(newCol, .55);
+        auto.style.background = `linear-gradient(155deg,${hex2rgba(newCol,.32)},${hex2rgba(newCol,.08)})`;
+        auto.style.boxShadow = `0 0 12px ${hex2rgba(newCol,.35)}`;
         callSvc('automation', autoOn ? 'turn_off' : 'turn_on', e.automation);
         ev.stopPropagation(); return;
       }
@@ -590,7 +590,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Luci', icon: '💡',
     desc: 'Chip con contatore luci accese. Clic → pannello toggle + Accendi/Spegni tutte.',
-    version: '2.2', isDistintivo: true,
+    version: '2.3', isDistintivo: true,
     defaultCfg: { label: 'Luci', icon: '💡', color: '#fbbf24', entities: [], colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -599,5 +599,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-luci v2.2'); } catch(e){}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-luci v2.3'); } catch(e){}
 })();
