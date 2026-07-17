@@ -1,6 +1,6 @@
-/* frarik-version: 3.0 */
+/* frarik-version: 3.1 */
 /**
- * GruppoAllarme.js — Distintivo FratechStore v3.0
+ * GruppoAllarme.js — Distintivo FratechStore v3.1
  * Chip stato allarme Alarmo + popup sensori/bypass + overlay triggered automatico
  *
  * v2.3: fix bypass — azzera solo sulla transizione armato→disarmato, non mentre è già disarmato
@@ -24,6 +24,9 @@
  * v3.0: sensori — tolto il "riquadro" colorato per ogni riga: ora è una lista pulita
  *       dentro un unico contenitore, righe separate da un divisore sottile, stato
  *       mostrato con un pallino colorato + testo invece del tag a pillola piena
+ * v3.1: sensori — tornati a un riquadro per ogni sensore, ma piccolo e sobrio: sfondo
+ *       neutro leggero + solo un accento colorato sottile a sinistra per lo stato,
+ *       card distanziate tra loro invece che in un'unica lista con divisori
  */
 (function () {
   'use strict';
@@ -260,7 +263,6 @@
       const isBypassed  = bypassed.has(s.entity);
       const sIco        = sensorDcIco(h, s.entity, open);
       const sLbl        = s.label || nameOf(h, s.entity);
-      const isLast      = i === sensors.length - 1;
 
       let sIcoCol = '#4ade80', statusTxt = 'OK';
       if (isBypassed) { sIcoCol = '#facc15'; statusTxt = 'ESCLUSO'; }
@@ -270,8 +272,10 @@
         ? `<button data-ca-bypass="${i}" data-entity="${eh(s.entity)}" style="background:none;border:none;color:#facc15;cursor:pointer;font-size:10px;font-weight:900;text-transform:uppercase;white-space:nowrap;outline:none;flex-shrink:0;padding:6px 4px">✕ Includi</button>`
         : `<button data-ca-bypass="${i}" data-entity="${eh(s.entity)}" style="background:none;border:none;color:rgba(255,255,255,.55);cursor:pointer;font-size:10px;font-weight:900;text-transform:uppercase;white-space:nowrap;outline:none;flex-shrink:0;padding:6px 4px">🛡 Escludi</button>`;
 
-      return `<div style="display:flex;align-items:center;gap:10px;padding:11px 2px;${isLast ? '' : 'border-bottom:1px solid rgba(255,255,255,.06);'}">
-        <span style="width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${hex2rgba(sIcoCol,.14)};color:${sIcoCol}">${mdi(sIco, 15)}</span>
+      /* riquadro piccolo e sobrio: sfondo neutro leggero, solo un accento colorato
+         sottile a sinistra per indicare lo stato — niente più gradiente/bordo pieno colorato */
+      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:11px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);border-left:3px solid ${sIcoCol}">
+        <span style="width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${hex2rgba(sIcoCol,.14)};color:${sIcoCol}">${mdi(sIco, 14)}</span>
         <span style="flex:1;font-size:13px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(sLbl)}</span>
         <span style="display:flex;align-items:center;gap:5px;flex-shrink:0">
           <span style="width:6px;height:6px;border-radius:50%;background:${sIcoCol};box-shadow:0 0 6px ${sIcoCol}"></span>
@@ -351,7 +355,7 @@
 
       ${openWarn}
 
-      ${sensors.length ? `<div style="${secLbl}">Sensori (${sensors.length})</div><div style="display:flex;flex-direction:column;padding:2px 12px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07)">${sensorRows}</div>` : ''}
+      ${sensors.length ? `<div style="${secLbl}">Sensori (${sensors.length})</div><div style="display:flex;flex-direction:column;gap:6px">${sensorRows}</div>` : ''}
 
       ${sirenRow}
       <div style="height:14px"></div>
@@ -740,7 +744,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Allarme', icon: '🔒',
     desc: '',
-    version: '3.0', isDistintivo: true,
+    version: '3.1', isDistintivo: true,
     defaultCfg: { label: 'Allarme', alarmEntity: '', code: '', modes: ['armed_away'], sensors: [], siren: '', colorMode: 'auto', colorRules: [] },
     chip,
     watchEntities,
@@ -754,5 +758,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v3.0'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v3.1'); } catch (e) {}
 })();
