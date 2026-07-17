@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.87 — 2026-07-18
+
+### feat: valore dei chip più spesso (senza ingrandirlo)
+
+- `style.css`: `.badge-val` (il valore del chip, es. "LUCI: 1", "ARMATO · FUORI")
+  con `-webkit-text-stroke` portato da `.35px` a `.7px` — più spessore percepito
+  a parità di font-size.
+
 ## 2.0.86 — 2026-07-18
 
 ### feat: testo dei chip ulteriormente ingrandito
