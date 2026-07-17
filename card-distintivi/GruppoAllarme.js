@@ -1,6 +1,6 @@
-/* frarik-version: 3.4 */
+/* frarik-version: 3.5 */
 /**
- * GruppoAllarme.js — Distintivo FratechStore v3.4
+ * GruppoAllarme.js — Distintivo FratechStore v3.5
  * Chip stato allarme Alarmo + popup sensori/bypass + overlay triggered automatico
  *
  * v2.3: fix bypass — azzera solo sulla transizione armato→disarmato, non mentre è già disarmato
@@ -34,6 +34,9 @@
  *       spazio disponibile invece di soli 2 giganti
  * v3.4: sensori — 2 per riga fisse, larghe quanto meta' popup ciascuna (non quadrate):
  *       icona+nome+stato in riga dentro una tile bassa, non più alta come un quadrato
+ * v3.5: sensori — tile più grandi/alte con lo stesso stile "vetro" (gradiente+alone)
+ *       dell'header, e riportato il pulsante Escludi/Includi visibile dentro la tile
+ *       (prima si doveva toccare tutta la tile senza un'azione esplicita)
  */
 (function () {
   'use strict';
@@ -277,13 +280,20 @@
       if (isBypassed) { sIcoCol = '#facc15'; statusTxt = 'ESCLUSO'; }
       else if (open)  { sIcoCol = '#f87171'; statusTxt = 'APERTO'; }
 
-      return `<button data-ca-bypass="${i}" data-entity="${eh(s.entity)}" style="display:flex;align-items:center;gap:8px;border-radius:12px;background:${hex2rgba(sIcoCol,.14)};border:1px solid ${hex2rgba(sIcoCol,.4)};cursor:pointer;padding:9px 10px;outline:none;transition:all .15s;min-width:0">
-        <span style="width:26px;height:26px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${hex2rgba(sIcoCol,.2)};color:${sIcoCol}">${mdi(sIco, 14)}</span>
-        <span style="flex:1;min-width:0;text-align:left">
-          <span style="display:block;font-size:11px;font-weight:900;text-transform:uppercase;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(sLbl)}</span>
-          <span style="display:block;font-size:9px;font-weight:900;text-transform:uppercase;color:${sIcoCol};letter-spacing:.3px">${statusTxt}</span>
+      const bypassBtn = isBypassed
+        ? `<button data-ca-bypass="${i}" data-entity="${eh(s.entity)}" style="position:relative;flex-shrink:0;padding:8px 11px;border-radius:10px;border:1px solid rgba(250,204,21,.5);background:rgba(250,204,21,.16);color:#facc15;cursor:pointer;font-size:10px;font-weight:900;text-transform:uppercase;white-space:nowrap;outline:none">✕ Includi</button>`
+        : `<button data-ca-bypass="${i}" data-entity="${eh(s.entity)}" style="position:relative;flex-shrink:0;padding:8px 11px;border-radius:10px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff;cursor:pointer;font-size:10px;font-weight:900;text-transform:uppercase;white-space:nowrap;outline:none">🛡 Escludi</button>`;
+
+      /* stesso linguaggio "vetro" dell'header: gradiente + alone, ma col colore di stato del sensore */
+      return `<div style="position:relative;overflow:hidden;display:flex;align-items:center;gap:12px;border-radius:16px;background:linear-gradient(155deg,${hex2rgba(sIcoCol,.2)},${hex2rgba(sIcoCol,.05)});border:1px solid ${hex2rgba(sIcoCol,.4)};padding:14px 14px;min-width:0">
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 10%,${hex2rgba(sIcoCol,.22)},transparent 62%);pointer-events:none"></div>
+        <span style="position:relative;width:40px;height:40px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${hex2rgba(sIcoCol,.22)};border:1px solid ${hex2rgba(sIcoCol,.5)};box-shadow:0 0 12px ${hex2rgba(sIcoCol,.3)};color:${sIcoCol}">${mdi(sIco, 20)}</span>
+        <span style="position:relative;flex:1;min-width:0;text-align:left">
+          <span style="display:block;font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(sLbl)}</span>
+          <span style="display:block;font-size:9.5px;font-weight:900;text-transform:uppercase;color:${sIcoCol};letter-spacing:.3px;margin-top:2px">${statusTxt}</span>
         </span>
-      </button>`;
+        ${bypassBtn}
+      </div>`;
     }).join('');
 
     /* bottoni modalità — medaglione circolare come lo scudo dell'header */
@@ -745,7 +755,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Allarme', icon: '🔒',
     desc: '',
-    version: '3.4', isDistintivo: true,
+    version: '3.5', isDistintivo: true,
     defaultCfg: { label: 'Allarme', alarmEntity: '', code: '', modes: ['armed_away'], sensors: [], siren: '', colorMode: 'auto', colorRules: [] },
     chip,
     watchEntities,
@@ -759,5 +769,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v3.4'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v3.5'); } catch (e) {}
 })();
