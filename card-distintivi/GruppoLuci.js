@@ -1,6 +1,6 @@
-/* frarik-version: 2.3 */
+/* frarik-version: 2.4 */
 /**
- * GruppoLuci.js — Distintivo FratechStore v2.3
+ * GruppoLuci.js — Distintivo FratechStore v2.4
  * Fix: icona configurabile (preserve su re-render), sottotitolo popup nascosto
  * v1.9: testi maiuscolo+grassetto (chip e popup), layout popup a stile "glass"
  *       (hero riepilogo + tasti accendi/spegni a medaglione + righe luci glass)
@@ -17,6 +17,9 @@
  *       come "non grassetto"). Riquadro luce più corto; il controllo automazione è
  *       uscito dal riquadro: ora è un pallino colorato (verde/rosso, senza scritte,
  *       icona robot) separato a destra della card della luce.
+ * v2.4: riquadro luce e pallino automazione ingranditi; riservato lo spazio del
+ *       pallino anche quando l'entità non ha automazione, così tutti i riquadri
+ *       restano della stessa larghezza
  */
 (function () {
   'use strict';
@@ -145,25 +148,27 @@
       const on = isEntOn(e.entity);
       const lbl = e.label || nameOf(h, e.entity);
       const swBg = on ? col : 'rgba(255,255,255,0.14)';
-      const thumbL = on ? '22px' : '2px';
+      const thumbL = on ? '26px' : '3px';
 
       // pallino automazione — separato, fuori dal riquadro luce, senza scritte: solo colore stato
-      let autoDot = '';
+      // sempre riservato uno spazio della stessa larghezza (visibile o no) così i riquadri
+      // restano tutti della stessa larghezza indipendentemente dalla presenza dell'automazione
+      let autoDot = `<span style="flex-shrink:0;width:46px;height:46px"></span>`;
       if (e.automation) {
         const autoOn = h ? isOn(h, e.automation) : false;
         const aCol = autoOn ? '#4ade80' : '#f87171';
-        autoDot = `<button data-jsd-auto="${i}" style="flex-shrink:0;width:38px;height:38px;border-radius:50%;border:1.5px solid ${hex2rgba(aCol,.55)};background:linear-gradient(155deg,${hex2rgba(aCol,.32)},${hex2rgba(aCol,.08)});box-shadow:0 0 12px ${hex2rgba(aCol,.35)};display:flex;align-items:center;justify-content:center;cursor:pointer;outline:none;color:${aCol}">${iconHtml('mdi:robot', 18)}</button>`;
+        autoDot = `<button data-jsd-auto="${i}" style="flex-shrink:0;width:46px;height:46px;border-radius:50%;border:1.5px solid ${hex2rgba(aCol,.55)};background:linear-gradient(155deg,${hex2rgba(aCol,.32)},${hex2rgba(aCol,.08)});box-shadow:0 0 12px ${hex2rgba(aCol,.35)};display:flex;align-items:center;justify-content:center;cursor:pointer;outline:none;color:${aCol}">${iconHtml('mdi:robot', 22)}</button>`;
       }
 
-      const tile = `<div style="position:relative;overflow:hidden;flex:1;min-width:0;display:flex;align-items:center;gap:12px;border-radius:16px;background:linear-gradient(155deg,${on?hex2rgba(col,.18):hex2rgba('#ffffff',.05)},${on?hex2rgba(col,.03):hex2rgba('#ffffff',.01)});border:1px solid ${on?hex2rgba(col,.4):'rgba(255,255,255,.1)'};padding:8px 14px">
+      const tile = `<div style="position:relative;overflow:hidden;flex:1;min-width:0;display:flex;align-items:center;gap:13px;border-radius:18px;background:linear-gradient(155deg,${on?hex2rgba(col,.18):hex2rgba('#ffffff',.05)},${on?hex2rgba(col,.03):hex2rgba('#ffffff',.01)});border:1px solid ${on?hex2rgba(col,.4):'rgba(255,255,255,.1)'};padding:10px 16px">
         ${on?`<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 10%,${hex2rgba(col,.2)},transparent 62%);pointer-events:none"></div>`:''}
-        <span style="position:relative;width:38px;height:38px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${on?hex2rgba(col,.22):'rgba(255,255,255,.06)'};border:1px solid ${on?hex2rgba(col,.5):'rgba(255,255,255,.14)'};${on?`box-shadow:0 0 12px ${hex2rgba(col,.3)};`:''}color:${on?col:'#fff'}">${iconHtml(_dynIcon(c.icon||'💡',on),19)}</span>
+        <span style="position:relative;width:44px;height:44px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${on?hex2rgba(col,.22):'rgba(255,255,255,.06)'};border:1px solid ${on?hex2rgba(col,.5):'rgba(255,255,255,.14)'};${on?`box-shadow:0 0 12px ${hex2rgba(col,.3)};`:''}color:${on?col:'#fff'}">${iconHtml(_dynIcon(c.icon||'💡',on),22)}</span>
         <span style="position:relative;flex:1;min-width:0">
-          <span style="display:block;font-size:13px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</span>
-          <span style="display:block;font-size:9.5px;font-weight:900;text-transform:uppercase;color:${on?col:'#fff'};letter-spacing:.3px;margin-top:2px">${on?'Accesa':'Spenta'}</span>
+          <span style="display:block;font-size:14.5px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</span>
+          <span style="display:block;font-size:10.5px;font-weight:900;text-transform:uppercase;color:${on?col:'#fff'};letter-spacing:.3px;margin-top:2px">${on?'Accesa':'Spenta'}</span>
         </span>
-        <button data-jsd-toggle="${i}" style="position:relative;flex-shrink:0;width:46px;height:26px;border-radius:13px;border:none;cursor:pointer;background:${swBg};transition:background .2s;outline:none">
-          <div style="position:absolute;top:3px;left:${thumbL};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3);transition:left .18s;pointer-events:none"></div>
+        <button data-jsd-toggle="${i}" style="position:relative;flex-shrink:0;width:52px;height:29px;border-radius:15px;border:none;cursor:pointer;background:${swBg};transition:background .2s;outline:none">
+          <div style="position:absolute;top:3px;left:${thumbL};width:23px;height:23px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3);transition:left .18s;pointer-events:none"></div>
         </button>
       </div>`;
 
@@ -590,7 +595,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Luci', icon: '💡',
     desc: 'Chip con contatore luci accese. Clic → pannello toggle + Accendi/Spegni tutte.',
-    version: '2.3', isDistintivo: true,
+    version: '2.4', isDistintivo: true,
     defaultCfg: { label: 'Luci', icon: '💡', color: '#fbbf24', entities: [], colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -599,5 +604,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-luci v2.3'); } catch(e){}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-luci v2.4'); } catch(e){}
 })();
