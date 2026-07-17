@@ -1,6 +1,6 @@
-/* frarik-version: 2.1 */
+/* frarik-version: 2.2 */
 /**
- * GruppoLuci.js — Distintivo FratechStore v2.1
+ * GruppoLuci.js — Distintivo FratechStore v2.2
  * Fix: icona configurabile (preserve su re-render), sottotitolo popup nascosto
  * v1.9: testi maiuscolo+grassetto (chip e popup), layout popup a stile "glass"
  *       (hero riepilogo + tasti accendi/spegni a medaglione + righe luci glass)
@@ -9,6 +9,9 @@
  *       "spenti" alla riaccensione — toggle/accendi-tutte ora ridisegnano subito
  *       l'intera riga in ottimistico invece di aspettare il polling; update()
  *       non scartava più lo stato live ricevuto
+ * v2.2: fix colore del popup sempre bianco (acceso e spento) — render() usava solo il
+ *       campo colore base, ignorando le eventuali color-rule condizionali già usate dal
+ *       chip; ora popup e chip mostrano sempre lo stesso colore effettivo
  */
 (function () {
   'use strict';
@@ -94,9 +97,13 @@
     const ov = overrides || {};
     const isEntOn = (ent) => Object.prototype.hasOwnProperty.call(ov, ent) ? ov[ent] : (h ? isOn(h, ent) : false);
     const ents = Array.isArray(c.entities) ? c.entities : [];
-    const col = c.color || '#fbbf24';
     const active = ents.filter(e => isEntOn(e.entity)).length;
     const anyOn = active > 0;
+    // stesso colore effettivo mostrato dal chip (rispetta eventuali regole colore configurate),
+    // non solo il colore base — altrimenti il popup può apparire "bianco" se l'accento reale
+    // vive nelle color-rule e non nel semplice campo c.color
+    const _fcr = window.FratechColorRules;
+    const col = (_fcr && _fcr.evalColor(cfg, { any_on: anyOn, all_off: !anyOn })) || c.color || '#fbbf24';
     const heroCol = anyOn ? col : '#fff';
     const heroTxt = !ents.length ? 'NESSUNA LUCE'
       : active === 0 ? 'TUTTE SPENTE'
@@ -583,7 +590,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Luci', icon: '💡',
     desc: 'Chip con contatore luci accese. Clic → pannello toggle + Accendi/Spegni tutte.',
-    version: '2.1', isDistintivo: true,
+    version: '2.2', isDistintivo: true,
     defaultCfg: { label: 'Luci', icon: '💡', color: '#fbbf24', entities: [], colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -592,5 +599,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-luci v2.1'); } catch(e){}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-luci v2.2'); } catch(e){}
 })();
