@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.85 — 2026-07-18
+
+### feat: chip dei distintivi ingranditi
+
+- `style.css`: `.hbadge` (pillola del chip) portata da `font-size:10px` a `12px`,
+  con padding/gap leggermente aumentati per accompagnare il testo più grande;
+  `.badge-title` allineato a 12px. Riguarda tutti i 14 distintivi.
+
 ## 2.0.84 — 2026-07-18
 
 ### fix: alcuni chip sembravano meno "grassetto" di altri a parità di peso font
