@@ -1,6 +1,6 @@
-/* frarik-version: 3.1 */
+/* frarik-version: 3.2 */
 /**
- * GruppoAllarme.js — Distintivo FratechStore v3.1
+ * GruppoAllarme.js — Distintivo FratechStore v3.2
  * Chip stato allarme Alarmo + popup sensori/bypass + overlay triggered automatico
  *
  * v2.3: fix bypass — azzera solo sulla transizione armato→disarmato, non mentre è già disarmato
@@ -27,6 +27,9 @@
  * v3.1: sensori — tornati a un riquadro per ogni sensore, ma piccolo e sobrio: sfondo
  *       neutro leggero + solo un accento colorato sottile a sinistra per lo stato,
  *       card distanziate tra loro invece che in un'unica lista con divisori
+ * v3.2: sensori — griglia di quadrati (2 per riga) invece di righe orizzontali: ogni
+ *       quadrato è cliccabile e attiva/disattiva l'esclusione direttamente (rimosso il
+ *       pulsante separato), cambia colore in base allo stato (verde/rosso/giallo)
  */
 (function () {
   'use strict';
@@ -256,6 +259,9 @@
 
     const secLbl = 'font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:8px';
 
+    /* griglia 2 colonne: ogni sensore è un quadrato cliccabile che attiva/disattiva
+       l'esclusione direttamente (niente più pulsante separato) e cambia colore in
+       base allo stato: verde=ok, rosso=aperto, giallo=escluso */
     const sensorRows = sensors.map((s, i) => {
       if (!s.entity) return '';
       const ss          = h ? stateOf(h, s.entity) : 'unknown';
@@ -268,21 +274,11 @@
       if (isBypassed) { sIcoCol = '#facc15'; statusTxt = 'ESCLUSO'; }
       else if (open)  { sIcoCol = '#f87171'; statusTxt = 'APERTO'; }
 
-      const bypassBtn = isBypassed
-        ? `<button data-ca-bypass="${i}" data-entity="${eh(s.entity)}" style="background:none;border:none;color:#facc15;cursor:pointer;font-size:10px;font-weight:900;text-transform:uppercase;white-space:nowrap;outline:none;flex-shrink:0;padding:6px 4px">✕ Includi</button>`
-        : `<button data-ca-bypass="${i}" data-entity="${eh(s.entity)}" style="background:none;border:none;color:rgba(255,255,255,.55);cursor:pointer;font-size:10px;font-weight:900;text-transform:uppercase;white-space:nowrap;outline:none;flex-shrink:0;padding:6px 4px">🛡 Escludi</button>`;
-
-      /* riquadro piccolo e sobrio: sfondo neutro leggero, solo un accento colorato
-         sottile a sinistra per indicare lo stato — niente più gradiente/bordo pieno colorato */
-      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:11px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);border-left:3px solid ${sIcoCol}">
-        <span style="width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${hex2rgba(sIcoCol,.14)};color:${sIcoCol}">${mdi(sIco, 14)}</span>
-        <span style="flex:1;font-size:13px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(sLbl)}</span>
-        <span style="display:flex;align-items:center;gap:5px;flex-shrink:0">
-          <span style="width:6px;height:6px;border-radius:50%;background:${sIcoCol};box-shadow:0 0 6px ${sIcoCol}"></span>
-          <span style="font-size:10px;font-weight:900;text-transform:uppercase;color:${sIcoCol}">${statusTxt}</span>
-        </span>
-        ${bypassBtn}
-      </div>`;
+      return `<button data-ca-bypass="${i}" data-entity="${eh(s.entity)}" style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border-radius:16px;background:${hex2rgba(sIcoCol,.14)};border:1.5px solid ${hex2rgba(sIcoCol,.42)};box-shadow:0 0 14px ${hex2rgba(sIcoCol,.16)};cursor:pointer;padding:10px 6px;outline:none;transition:all .15s">
+        <span style="font-size:23px;color:${sIcoCol}">${mdi(sIco, 23)}</span>
+        <span style="font-size:11px;font-weight:900;text-transform:uppercase;color:#fff;text-align:center;line-height:1.25;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(sLbl)}</span>
+        <span style="font-size:9px;font-weight:900;text-transform:uppercase;color:${sIcoCol};letter-spacing:.4px">${statusTxt}</span>
+      </button>`;
     }).join('');
 
     /* bottoni modalità — medaglione circolare come lo scudo dell'header */
@@ -355,7 +351,7 @@
 
       ${openWarn}
 
-      ${sensors.length ? `<div style="${secLbl}">Sensori (${sensors.length})</div><div style="display:flex;flex-direction:column;gap:6px">${sensorRows}</div>` : ''}
+      ${sensors.length ? `<div style="${secLbl}">Sensori (${sensors.length})</div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">${sensorRows}</div>` : ''}
 
       ${sirenRow}
       <div style="height:14px"></div>
@@ -744,7 +740,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Allarme', icon: '🔒',
     desc: '',
-    version: '3.1', isDistintivo: true,
+    version: '3.2', isDistintivo: true,
     defaultCfg: { label: 'Allarme', alarmEntity: '', code: '', modes: ['armed_away'], sensors: [], siren: '', colorMode: 'auto', colorRules: [] },
     chip,
     watchEntities,
@@ -758,5 +754,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v3.1'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v3.2'); } catch (e) {}
 })();
