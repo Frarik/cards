@@ -1,9 +1,11 @@
-/* frarik-version: 1.9 */
+/* frarik-version: 2.0 */
 /**
- * GruppoLuci.js — Distintivo FratechStore v1.9
+ * GruppoLuci.js — Distintivo FratechStore v2.0
  * Fix: icona configurabile (preserve su re-render), sottotitolo popup nascosto
  * v1.9: testi maiuscolo+grassetto (chip e popup), layout popup a stile "glass"
  *       (hero riepilogo + tasti accendi/spegni a medaglione + righe luci glass)
+ * v2.0: chip senza label (niente "Luci:"), valore = solo n. luci accese (non più X/Y);
+ *       tutto il testo del popup ora in grassetto pieno (900)
  */
 (function () {
   'use strict';
@@ -67,8 +69,7 @@
     const _cond = { any_on: active > 0, all_off: active === 0 };
     return {
       icon: iconHtml(_dynIcon(c.icon || '💡', active > 0)),
-      label: (c.label || 'Luci').toUpperCase(),
-      value: (ents.length ? `${active}/${ents.length}` : '—').toUpperCase(),
+      value: ents.length ? String(active) : '—',
       color: (_fcr && _fcr.evalColor(cfg, _cond)) || (active > 0 ? col : '#fff'),
       borderColor: _fcr && _fcr.evalBorderColor(cfg, _cond),
     };
@@ -159,7 +160,7 @@
     return `<div id="gl-popup-body">
       ${hero}
       ${ctrlBar}
-      <div>${rows||'<div style="padding:32px 20px;text-align:center;color:#fff;font-size:12px;font-weight:900;text-transform:uppercase">Nessuna luce configurata<br><span style="font-size:10px;font-weight:700;text-transform:none;opacity:.7">Clicca ✏️ sulla chip per configurare</span></div>'}</div>
+      <div>${rows||'<div style="padding:32px 20px;text-align:center;color:#fff;font-size:12px;font-weight:900;text-transform:uppercase">Nessuna luce configurata<br><span style="font-size:10px;font-weight:900;text-transform:uppercase;opacity:.7">Clicca ✏️ sulla chip per configurare</span></div>'}</div>
     </div>`;
   }
 
@@ -578,7 +579,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Luci', icon: '💡',
     desc: 'Chip con contatore luci accese. Clic → pannello toggle + Accendi/Spegni tutte.',
-    version: '1.9', isDistintivo: true,
+    version: '2.0', isDistintivo: true,
     defaultCfg: { label: 'Luci', icon: '💡', color: '#fbbf24', entities: [], colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -587,5 +588,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-luci v1.9'); } catch(e){}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-luci v2.0'); } catch(e){}
 })();
