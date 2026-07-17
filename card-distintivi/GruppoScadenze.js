@@ -311,7 +311,7 @@
           <span style="font-size:14px">${m.icon||'📦'}</span>
           <div style="flex:1;min-width:0">
             <div style="font-size:11px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(m.name)}</div>
-            <div style="font-size:9px;color:#fff">${eh(m.id)}</div>
+            <div style="font-size:9px;color:rgba(255,255,255,.5)">${eh(m.id)}</div>
           </div>
         </div>`;
         r.addEventListener('mouseover', () => r.style.background='rgba(245,158,11,.08)');
@@ -345,7 +345,7 @@
     }
 
     const ov = document.createElement('div');
-    ov.style.cssText = 'position:fixed;inset:0;z-index:100001;display:flex;align-items:flex-end;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);font-family:system-ui,sans-serif';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:100001;display:flex;align-items:flex-end;background:rgba(0,0,0,.8);backdrop-filter:blur(7px);font-family:system-ui,sans-serif';
 
     function closeOv() { _closeAc(); try{document.body.removeChild(ov);}catch(e){} document.removeEventListener('keydown',escFn); }
     function escFn(ev) { if(ev.key==='Escape') closeOv(); }
@@ -365,7 +365,7 @@
             <span style="font-size:8px;color:${col}">⬤</span>
             <div style="flex:1;min-width:0">
               <div style="font-size:12px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(nm)}</div>
-              <div style="font-size:9px;color:#fff">${eh(e.entity)}${e.date_attr?` · attr:${e.date_attr}`:''}</div>
+              <div style="font-size:9px;color:rgba(255,255,255,.5)">${eh(e.entity)}${e.date_attr?` · attr:${e.date_attr}`:''}</div>
             </div>
             <div style="font-size:10px;color:${col};font-weight:700;flex-shrink:0">${days!==null?_daysLabel(days):'—'}</div>
             <button data-del="${i}" style="width:22px;height:22px;border:none;border-radius:5px;background:rgba(248,113,113,.15);color:#f87171;cursor:pointer;font-size:11px;margin-left:4px">✕</button>
@@ -374,11 +374,11 @@
       }).join('');
 
       const anim = _firstRender ? 'animation:gscCfgUp .22s cubic-bezier(.32,1.12,.56,1)' : '';
-      return `<div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0a0d1a;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);color:#fff;${anim}">
+      return `<div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#060d14;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);color:#fff;${anim}">
         <style>
           @keyframes gscCfgUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
           .gscinp{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;font-size:12px;outline:none;font-family:inherit}
-          .gscinp::placeholder{color:#fff}
+          .gscinp::placeholder{color:rgba(255,255,255,.4)}
           #gsccfg-body::-webkit-scrollbar{display:none}
         </style>
         <div style="display:flex;align-items:center;gap:10px;padding:14px 18px 12px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">
@@ -388,15 +388,15 @@
         </div>
         <div id="gsccfg-body" style="flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;padding:14px 14px 4px">
           <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap">
-            <div style="flex:1;min-width:110px"><div style="font-size:9px;color:#fff;margin-bottom:3px">Nome chip</div><input id="gsccfg-label" class="gscinp" placeholder="Scadenze" value="${eh(c.label||'Scadenze')}"></div>
-            <div style="flex:0 0 50px"><div style="font-size:9px;color:#fff;margin-bottom:3px">Colore</div><input type="color" id="gsccfg-color" value="${(c.color||'#f59e0b').match(/^#[0-9a-f]{6}$/i)?c.color:'#f59e0b'}" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:none;cursor:pointer;padding:2px"></div>
-            <div style="flex:0 0 58px"><div style="font-size:9px;color:#fff;margin-bottom:3px">🔴 Rosso (gg)</div><input type="number" id="gsccfg-red" class="gscinp" style="padding:8px 6px;text-align:center" value="${rd}" min="1" max="365"></div>
-            <div style="flex:0 0 66px"><div style="font-size:9px;color:#fff;margin-bottom:3px">🟠 Arancio (gg)</div><input type="number" id="gsccfg-orange" class="gscinp" style="padding:8px 6px;text-align:center" value="${od}" min="1" max="365"></div>
+            <div style="flex:1;min-width:110px"><div style="font-size:9px;color:rgba(255,255,255,.55);margin-bottom:3px">Nome chip</div><input id="gsccfg-label" class="gscinp" placeholder="Scadenze" value="${eh(c.label||'Scadenze')}"></div>
+            <div style="flex:0 0 50px"><div style="font-size:9px;color:rgba(255,255,255,.55);margin-bottom:3px">Colore</div><input type="color" id="gsccfg-color" value="${(c.color||'#f59e0b').match(/^#[0-9a-f]{6}$/i)?c.color:'#f59e0b'}" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:none;cursor:pointer;padding:2px"></div>
+            <div style="flex:0 0 58px"><div style="font-size:9px;color:rgba(255,255,255,.55);margin-bottom:3px">🔴 Rosso (gg)</div><input type="number" id="gsccfg-red" class="gscinp" style="padding:8px 6px;text-align:center" value="${rd}" min="1" max="365"></div>
+            <div style="flex:0 0 66px"><div style="font-size:9px;color:rgba(255,255,255,.55);margin-bottom:3px">🟠 Arancio (gg)</div><input type="number" id="gsccfg-orange" class="gscinp" style="padding:8px 6px;text-align:center" value="${od}" min="1" max="365"></div>
           </div>
-          ${ents.length ? `<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Scadenze (${ents.length})</div><div style="margin-bottom:12px">${selRows}</div>` : ''}
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Aggiungi sensore</div>
+          ${ents.length ? `<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.5);margin-bottom:6px">Scadenze (${ents.length})</div><div style="margin-bottom:12px">${selRows}</div>` : ''}
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.5);margin-bottom:6px">Aggiungi sensore</div>
           <input id="gsccfg-add" class="gscinp" placeholder="🔍 Cerca sensor.* o input_datetime.*…" autocomplete="off">
-          <div style="margin-top:5px;padding:7px 10px;border-radius:8px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);font-size:10px;color:#fff">
+          <div style="margin-top:5px;padding:7px 10px;border-radius:8px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);font-size:10px;color:rgba(255,255,255,.7)">
             💡 Supporta <strong style="color:#f59e0b">sensor.*</strong> con attributo <code>giorni_mancanti</code> (intero), oppure state/attributo con data (<code>2026-09-15</code>). Il costo appare se l'entità ha attributo <code>costo_previsto</code>.
           </div>
           ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg, presets) : ''}

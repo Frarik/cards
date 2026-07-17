@@ -131,14 +131,14 @@
     return POP_CSS + '<div style="width:100%;max-height:82vh;display:flex;flex-direction:column;background:#060d14;border:1px solid rgba(' + rgb + ',.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:fcUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
       + '<div style="display:flex;align-items:center;gap:10px;padding:13px 15px 11px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
       + '<div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(' + rgb + ',.15);border:1px solid rgba(' + rgb + ',.3)">' + icon + '</div>'
-      + '<div><div style="font-size:14px;font-weight:800;color:#fff">' + title + '</div><div style="font-size:11px;color:#fff;margin-top:1px">' + sub + '</div></div>'
+      + '<div><div style="font-size:14px;font-weight:800;color:#fff">' + title + '</div><div style="font-size:11px;color:rgba(255,255,255,.55);margin-top:1px">' + sub + '</div></div>'
       + '<button id="' + closeId + '" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none">✕</button>'
       + '</div>'
       + '<div class="fcpc" style="flex:1;overflow-y:auto;padding:13px 15px;display:flex;flex-direction:column;gap:0">' + content + '</div>'
       + '</div>';
   }
   function sttl(t) {
-    return '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#fff;margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid rgba(255,255,255,.06)">' + t + '</div>';
+    return '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.45);margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid rgba(255,255,255,.06)">' + t + '</div>';
   }
 
   /* ── RENDER ── */
@@ -191,15 +191,14 @@
     }
     var tonightRows = hasPickup
       ? todayWastes.map(wasteRow).join('')
-      : '<div class="fc-met"><span class="fc-met-lbl" style="color:#fff">Niente da esporre</span></div>';
+      : '<div class="fc-met"><span class="fc-met-lbl" style="color:rgba(255,255,255,.3)">Niente da esporre</span></div>';
     var tmrRows = tmrWastes.length
       ? tmrWastes.map(wasteRow).join('')
-      : '<div class="fc-met"><span class="fc-met-lbl" style="color:#fff">Nessun ritiro</span></div>';
+      : '<div class="fc-met"><span class="fc-met-lbl" style="color:rgba(255,255,255,.3)">Nessun ritiro</span></div>';
 
     const css = '<style>'
       + '#' + rid + '{position:relative;width:100%;height:100%;min-height:280px;font-family:system-ui,sans-serif;display:block;background:#070d18;border-radius:var(--card-r,20px);overflow:hidden}'
-      + '#' + rid + ' .fc-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
-      + '#' + rid + ' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(' + ACC_RGB + ',.08) 0%,transparent 65%);pointer-events:none}'
+      + '#' + rid + ' .fc-card{display:flex;flex-direction:column;height:100%;background:transparent;border-radius:0;overflow:hidden;position:relative}'
       + '#' + rid + ' .fc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
       + '#' + rid + ' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;background:rgba(' + ACC_RGB + ',.1);border:1px solid rgba(' + ACC_RGB + ',.2)}'
       + '#' + rid + ' .fc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
@@ -302,7 +301,7 @@
               + '<span style="font-size:12px;font-weight:700;color:#fff">' + (t ? t.label : id) + '</span>'
               + '</div>';
           }).join('')
-        : '<span style="font-size:11px;color:#fff">Nessun ritiro</span>';
+        : '<span style="font-size:11px;color:rgba(255,255,255,.3)">Nessun ritiro</span>';
       return '<div style="padding:10px;border-radius:10px;border:1px solid ' + (isToday ? 'rgba(74,222,128,.3)' : 'rgba(255,255,255,.06)') + ';background:' + (isToday ? 'rgba(74,222,128,.05)' : 'rgba(255,255,255,.02)') + ';margin-bottom:6px">'
         + '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:' + (isToday ? '#4ade80' : 'rgba(255,255,255,.45)') + ';margin-bottom:6px">'
         + DFULL[i] + (isToday ? ' — OGGI' : '') + '</div>'
@@ -375,7 +374,7 @@
       var knob = on ? 'left:22px' : 'left:3px';
       return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
         + '<div><div style="font-size:13px;font-weight:700;color:#fff">' + lbl + '</div>'
-        + '<div style="font-size:10px;color:#fff;margin-top:1px">' + sub + '</div></div>'
+        + '<div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:1px">' + sub + '</div></div>'
         + '<div data-tg="' + id + '" style="width:44px;height:26px;border-radius:13px;background:' + bg + ';cursor:pointer;position:relative;flex-shrink:0;transition:background .18s">'
         + '<div style="position:absolute;top:3px;' + knob + ';width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.4);transition:left .18s"></div>'
         + '</div>'
@@ -394,7 +393,7 @@
       + tog('google', googleOn, '🔊 Google', 'Annuncio vocale Google')
       + '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0">'
       + '<div><div style="font-size:13px;font-weight:700;color:#fff">⏰ Orario</div>'
-      + '<div style="font-size:10px;color:#fff;margin-top:1px">Il giorno della raccolta</div></div>'
+      + '<div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:1px">Il giorno della raccolta</div></div>'
       + '<input type="time" id="dd-time" value="' + notifT + '" style="height:32px;padding:0 10px;border-radius:9px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:#fff;font-size:13px;font-family:system-ui">'
       + '</div>'
       + saveBtn;
@@ -842,12 +841,12 @@ automation:
         + '.wd-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}'
         + '.wd-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.3);flex-shrink:0}'
         + '.wd-tit{font-size:14px;font-weight:800}'
-        + '.wd-sub{font-size:11px;color:#fff;margin-top:1px}'
+        + '.wd-sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:1px}'
         + '.wd-x{margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none}'
         + '.wd-body{flex:1;overflow-y:auto;padding:16px;scrollbar-width:none;display:flex;flex-direction:column;gap:14px}'
         + '.wd-body::-webkit-scrollbar{display:none}'
         + '.wd-sec{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding-bottom:5px;border-bottom:1px solid rgba(56,189,248,.18);margin-bottom:10px}'
-        + '.wd-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#fff;margin-bottom:3px}'
+        + '.wd-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px}'
         + '.wd-inp{width:100%;padding:9px 11px;border-radius:10px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none}'
         + '.wd-inp:focus{border-color:rgba(56,189,248,.5)}'
         + '.wd-drop{position:absolute;left:0;right:0;top:100%;z-index:10;max-height:150px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 9px 9px;display:none}'
@@ -856,7 +855,7 @@ automation:
         + '.wd-push-row .wd-inp{flex:1}'
         + '.wd-rm{width:30px;height:38px;border-radius:8px;background:rgba(255,255,255,.07);border:none;color:#fff;cursor:pointer;font-size:14px;flex-shrink:0}'
         + '.wd-add{padding:6px 12px;border-radius:8px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.25);color:#38bdf8;font-size:11px;font-weight:700;cursor:pointer}'
-        + '.wd-note{font-size:11px;color:#fff;line-height:1.5;margin:0 0 10px}'
+        + '.wd-note{font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;margin:0 0 10px}'
         + '.wd-foot{padding:12px 16px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:8px;flex-shrink:0}'
         + '.wd-cancel{flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:rgba(255,255,255,.1);color:#fff}'
         + '.wd-install{flex:2;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#38bdf8;color:#060d14}'

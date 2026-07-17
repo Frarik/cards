@@ -23,9 +23,7 @@
     ov.style.cssText = 'position:fixed;inset:0;z-index:100000;display:flex;align-items:flex-end;background:rgba(0,0,0,.6);backdrop-filter:blur(4px)';
     ov.innerHTML = html;
     document.body.appendChild(ov);
-    var close = function() { try { document.body.removeChild(ov); } catch(e) {} document.removeEventListener('keydown', esc); };
-    var esc = function(e) { if (e.key === 'Escape') close(); };
-    document.addEventListener('keydown', esc);
+    var close = function() { try { document.body.removeChild(ov); } catch(e) {} };
     var btn = ov.querySelector('#' + closeId); if (btn) btn.addEventListener('click', close);
     ov.addEventListener('click', function(e) { if (e.target === ov) close(); });
     ov._close = close;
@@ -39,7 +37,7 @@
       + '<div style="width:100%;max-height:86vh;display:flex;flex-direction:column;background:#060d14;border:1px solid rgba(' + RGB + ',.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:fcUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
       + '<div style="display:flex;align-items:center;gap:10px;padding:13px 15px 11px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
       + '<div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(' + RGB + ',.15);border:1px solid rgba(' + RGB + ',.3)">' + icon + '</div>'
-      + '<div><div style="font-size:14px;font-weight:800;color:#fff">' + title + '</div><div style="font-size:11px;color:#fff;margin-top:1px">' + sub + '</div></div>'
+      + '<div><div style="font-size:14px;font-weight:800;color:#fff">' + title + '</div><div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:1px">' + sub + '</div></div>'
       + '<button id="' + closeId + '" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none;flex-shrink:0">✕</button>'
       + '</div>'
       + '<div class="fcpc" style="flex:1;overflow-y:auto;padding:13px 15px;display:flex;flex-direction:column;gap:0">' + content + '</div>'
@@ -135,7 +133,7 @@
     var battInit  = haBatt ? N(S(h, 'input_number.frarik_bolletta_autoconsumo_batt')) : 0;
 
     var iSt = 'width:100%;padding:10px 13px;border-radius:10px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:15px;font-family:monospace;box-sizing:border-box;outline:none;text-align:right';
-    var lSt = 'font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px';
+    var lSt = 'font-size:11px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px';
 
     function simRow(lbl, val, col, small) {
       return '<div style="display:flex;justify-content:space-between;align-items:center;padding:' + (small ? '5px' : '7px') + ' 0;border-bottom:1px solid rgba(255,255,255,.05)">'
@@ -177,7 +175,7 @@
       /* Canone RAI */
       + '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:14px">'
       + '<div><div style="font-size:13px;font-weight:700;color:#fff">📺 Canone RAI</div>'
-      + '<div style="font-size:10px;color:#fff;margin-top:2px">Auto: ' + (canoneAutoOn ? 'incluso (mesi gen–ott)' : 'escluso (mesi nov–dic)') + ' · ' + canone.toFixed(2) + ' €</div></div>'
+      + '<div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:2px">Auto: ' + (canoneAutoOn ? 'incluso (mesi gen–ott)' : 'escluso (mesi nov–dic)') + ' · ' + canone.toFixed(2) + ' €</div></div>'
       + '<button id="sim-canone-tog" style="' + togSt(canOn) + '">' + (canOn ? '✅ Incluso' : 'Escluso') + '</button>'
       + '</div>'
       /* FV */
@@ -204,11 +202,11 @@
       res.innerHTML = '<div style="background:rgba(' + RGB + ',.08);border:1px solid rgba(' + RGB + ',.2);border-radius:16px;padding:18px 16px;margin-top:4px">'
         /* Big total */
         + '<div style="text-align:center;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.08)">'
-        + '<div style="font-size:10px;color:#fff;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Bolletta Simulata</div>'
+        + '<div style="font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Bolletta Simulata</div>'
         + '<div style="font-size:52px;font-weight:900;color:' + totColor + ';line-height:1;letter-spacing:-2px">'
         + r.totale.toFixed(2).replace('.', ',')
         + '<span style="font-size:20px;font-weight:600;color:rgba(251,191,36,.6);margin-left:4px">€</span></div>'
-        + (kwh > 0 ? '<div style="font-size:11px;color:#fff;margin-top:6px">Costo effettivo: <strong style="color:' + COL + '">' + (r.cEff * 100).toFixed(3) + ' c€/kWh</strong></div>' : '')
+        + (kwh > 0 ? '<div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:6px">Costo effettivo: <strong style="color:' + COL + '">' + (r.cEff * 100).toFixed(3) + ' c€/kWh</strong></div>' : '')
         + '</div>'
         /* Breakdown */
         + simRow('⚡ Energia variabile (' + r.kwhRete.toFixed(0) + ' kWh × ' + pKwh.toFixed(4) + ' €)', r.compVar.toFixed(2) + ' €', COL)
@@ -266,7 +264,7 @@
     function barH(v, col) {
       var pct = Math.max(4, Math.round((v / maxV) * 90));
       return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0">'
-        + '<div style="font-size:8px;color:#fff;height:12px;display:flex;align-items:flex-end">' + (v > 0 ? v.toFixed(0) : '') + '</div>'
+        + '<div style="font-size:8px;color:rgba(255,255,255,.45);height:12px;display:flex;align-items:flex-end">' + (v > 0 ? v.toFixed(0) : '') + '</div>'
         + '<div style="width:100%;border-radius:3px 3px 0 0;background:' + col + ';height:' + pct + 'px;min-height:3px"></div>'
         + '</div>';
     }
@@ -284,8 +282,8 @@
     }
     barsHtml += '</div>';
     barsHtml += '<div style="display:flex;gap:14px;margin-top:5px;padding:6px 0;border-top:1px solid rgba(255,255,255,.06)">'
-      + '<div style="display:flex;align-items:center;gap:5px"><div style="width:9px;height:9px;background:rgba(255,255,255,.18);border-radius:2px"></div><span style="font-size:10px;color:#fff">' + (yr - 1) + '</span></div>'
-      + '<div style="display:flex;align-items:center;gap:5px"><div style="width:9px;height:9px;background:' + COL + ';border-radius:2px"></div><span style="font-size:10px;color:#fff">' + yr + '</span></div>'
+      + '<div style="display:flex;align-items:center;gap:5px"><div style="width:9px;height:9px;background:rgba(255,255,255,.18);border-radius:2px"></div><span style="font-size:10px;color:rgba(255,255,255,.45)">' + (yr - 1) + '</span></div>'
+      + '<div style="display:flex;align-items:center;gap:5px"><div style="width:9px;height:9px;background:' + COL + ';border-radius:2px"></div><span style="font-size:10px;color:rgba(255,255,255,.7)">' + yr + '</span></div>'
       + '</div>';
 
     /* Monthly detail list */
@@ -295,13 +293,13 @@
       var diff = cE - pE, diffC = diff >= 0 ? '#f87171' : '#4ade80';
       listHtml += '<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05)">'
         + '<div><div style="font-size:13px;color:#fff;font-weight:600">' + MESIL[k] + '</div>'
-        + '<div style="font-size:10px;color:#fff;margin-top:1px">' + cK.toFixed(1) + ' kWh' + (pK > 0 ? ' · prec. ' + pK.toFixed(1) + ' kWh' : '') + '</div></div>'
+        + '<div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:1px">' + cK.toFixed(1) + ' kWh' + (pK > 0 ? ' · prec. ' + pK.toFixed(1) + ' kWh' : '') + '</div></div>'
         + '<div style="text-align:right"><div style="font-size:14px;color:#fff;font-weight:700">' + cE.toFixed(2) + ' €</div>'
         + (pE > 0 ? '<div style="font-size:10px;color:' + diffC + ';margin-top:1px">' + (diff >= 0 ? '+' : '') + diff.toFixed(2) + ' € vs ' + (yr - 1) + '</div>' : '')
         + '</div></div>';
     }
     listHtml += '<div style="display:flex;justify-content:space-between;align-items:center;background:rgba(' + RGB + ',.1);border-radius:10px;padding:11px 13px;margin-top:8px">'
-      + '<div><div style="font-size:13px;font-weight:800;color:' + COL + '">Totale Anno ' + yr + '</div><div style="font-size:10px;color:#fff;margin-top:2px">' + annoKwh.toFixed(1) + ' kWh</div></div>'
+      + '<div><div style="font-size:13px;font-weight:800;color:' + COL + '">Totale Anno ' + yr + '</div><div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px">' + annoKwh.toFixed(1) + ' kWh</div></div>'
       + '<span style="font-size:16px;font-weight:900;color:' + COL + '">' + annoEur.toFixed(2) + ' €</span>'
       + '</div>';
 
@@ -319,13 +317,13 @@
       var isToday = d === todayIdx;
       var pct2 = Math.max(4, Math.round((weekKwh[d] / maxWk) * 60));
       weekHtml += '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">'
-        + '<div style="font-size:8px;color:#fff">' + (weekKwh[d] > 0 ? weekKwh[d].toFixed(1) : '') + '</div>'
+        + '<div style="font-size:8px;color:rgba(255,255,255,.45)">' + (weekKwh[d] > 0 ? weekKwh[d].toFixed(1) : '') + '</div>'
         + '<div style="width:100%;border-radius:3px 3px 0 0;height:' + pct2 + 'px;background:' + (isToday ? COL : 'rgba(' + RGB + ',.35)') + '"></div>'
         + '<div style="font-size:8px;color:rgba(255,255,255,' + (isToday ? '1' : '.4') + ');font-weight:' + (isToday ? '700' : '400') + '">' + GIORNIL[d] + '</div>'
         + '</div>';
     }
     weekHtml += '</div>';
-    weekHtml += '<div style="display:flex;justify-content:space-between;font-size:10px;color:#fff;padding:4px 0">'
+    weekHtml += '<div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.35);padding:4px 0">'
       + '<span>Media settimana: ' + N(S(h, 'sensor.frarik_bolletta_media_settimanale_kwh')).toFixed(2) + ' kWh/g</span>'
       + '<span>' + N(S(h, 'sensor.frarik_bolletta_media_settimanale_eur')).toFixed(2) + ' €/g</span>'
       + '</div>';
@@ -350,7 +348,7 @@
         + '</div>';
     }
 
-    var tabCSS = '<style>.bp-tab{flex:1;padding:8px 4px;text-align:center;font-size:11px;font-weight:700;cursor:pointer;border-radius:8px;transition:all .15s;color:#fff;border:none;background:transparent}.bp-tab.active{background:rgba(' + RGB + ',.18);color:' + COL + ';border:1px solid rgba(' + RGB + ',.3)}.bp-panel{display:none}.bp-panel.active{display:block}</style>';
+    var tabCSS = '<style>.bp-tab{flex:1;padding:8px 4px;text-align:center;font-size:11px;font-weight:700;cursor:pointer;border-radius:8px;transition:all .15s;color:rgba(255,255,255,.5);border:none;background:transparent}.bp-tab.active{background:rgba(' + RGB + ',.18);color:' + COL + ';border:1px solid rgba(' + RGB + ',.3)}.bp-panel{display:none}.bp-panel.active{display:block}</style>';
     var tabs = '<div style="display:flex;gap:4px;background:rgba(255,255,255,.04);border-radius:10px;padding:3px;margin-bottom:12px">'
       + '<button class="bp-tab active" data-tab="notifiche">🔔 Notifiche</button>'
       + '<button class="bp-tab" data-tab="prezzi">💰 Prezzi</button>'
@@ -412,7 +410,7 @@
       return '<button class="bp-tog" data-eid="' + eid + '" style="padding:4px 14px;border-radius:20px;border:none;cursor:pointer;font-size:11px;font-weight:800;background:' + (on ? 'rgba(74,222,128,.2)' : 'rgba(255,255,255,.07)') + ';color:' + (on ? '#4ade80' : 'rgba(255,255,255,.4)') + '">' + (on ? '✅ ON' : 'OFF') + '</button>';
     }
     function statRow(label, val, unit, col) {
-      return '<div style="text-align:center"><div style="font-size:9px;color:#fff;margin-bottom:3px">' + label + '</div>'
+      return '<div style="text-align:center"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">' + label + '</div>'
         + '<div style="font-size:15px;font-weight:800;color:' + col + '">' + val + '<span style="font-size:9px;color:' + col + ';opacity:.55;margin-left:2px">' + unit + '</span></div></div>';
     }
 
@@ -424,7 +422,7 @@
       + '</div>'
       + '<div style="margin-top:6px;height:3px;background:rgba(255,255,255,.06);border-radius:2px"><div style="height:100%;width:' + fvPctV + '%;background:#fbbf24;border-radius:2px;opacity:.55;min-width:' + (fvPctV > 0 ? '6' : '0') + 'px"></div></div>'
       + '</div>';
-    var fvPhHtml = '<div id="bp-fv-placeholder" style="margin:10px 0;padding:8px;border:1px dashed rgba(251,191,36,.2);border-radius:10px;text-align:center;font-size:11px;color:#fff;display:' + (haFV ? 'none' : 'block') + '">Pannelli non attivi</div>';
+    var fvPhHtml = '<div id="bp-fv-placeholder" style="margin:10px 0;padding:8px;border:1px dashed rgba(251,191,36,.2);border-radius:10px;text-align:center;font-size:11px;color:rgba(255,255,255,.3);display:' + (haFV ? 'none' : 'block') + '">Pannelli non attivi</div>';
 
     var batStatHtml = '<div id="bp-batt-stats" style="margin:10px 0;display:' + (haBatt ? 'block' : 'none') + '">'
       + '<div style="background:rgba(74,222,128,.07);border-radius:10px;padding:9px 6px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px">'
@@ -434,7 +432,7 @@
       + '</div>'
       + '<div style="margin-top:6px;height:3px;background:rgba(255,255,255,.06);border-radius:2px"><div style="height:100%;width:' + batPctV + '%;background:#4ade80;border-radius:2px;opacity:.55;min-width:' + (batPctV > 0 ? '6' : '0') + 'px"></div></div>'
       + '</div>';
-    var batPhHtml = '<div id="bp-batt-placeholder" style="margin:10px 0;padding:8px;border:1px dashed rgba(74,222,128,.15);border-radius:10px;text-align:center;font-size:11px;color:#fff;display:' + (haBatt ? 'none' : 'block') + '">Batteria non attiva</div>';
+    var batPhHtml = '<div id="bp-batt-placeholder" style="margin:10px 0;padding:8px;border:1px dashed rgba(74,222,128,.15);border-radius:10px;text-align:center;font-size:11px;color:rgba(255,255,255,.3);display:' + (haBatt ? 'none' : 'block') + '">Batteria non attiva</div>';
 
     var pFV = '<div class="bp-panel" id="bp-p-fv">'
       + '<div style="background:rgba(251,191,36,.04);border:1px solid rgba(251,191,36,.15);border-radius:14px;padding:12px;margin-bottom:10px">'
@@ -564,9 +562,9 @@
       + '#' + rid + ' .fb-hero{padding:10px 14px 4px}'
       + '#' + rid + ' .fb-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:6px 14px}'
       + '#' + rid + ' .fb-stat{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:11px;padding:8px 6px;text-align:center}'
-      + '#' + rid + ' .fb-stat-lbl{font-size:9px;color:#fff;text-transform:uppercase;letter-spacing:.04em}'
+      + '#' + rid + ' .fb-stat-lbl{font-size:9px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.04em}'
       + '#' + rid + ' .fb-stat-val{font-size:14px;font-weight:800;color:#fff;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
-      + '#' + rid + ' .fb-stat-sub{font-size:9px;color:#fff;margin-top:2px}'
+      + '#' + rid + ' .fb-stat-sub{font-size:9px;color:rgba(255,255,255,.4);margin-top:2px}'
       + '#' + rid + ' .fb-btns{display:flex;gap:5px;padding:0 14px 12px}'
       + '#' + rid + ' .fb-btn{flex:1;padding:9px 2px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);font-size:9.5px;font-weight:700;color:#fff;text-align:center;cursor:pointer}'
       + '#' + rid + ' .fb-btn:hover{background:rgba(' + RGB + ',.12);border-color:rgba(' + RGB + ',.3);color:' + COL + '}'
@@ -577,11 +575,11 @@
       /* Two-column hero */
       + '<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:8px">'
       + '<div style="text-align:left;flex:1;min-width:0">'
-      + '<div style="font-size:9px;color:#fff;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;font-weight:700">Consumo Mese</div>'
-      + '<div style="font-size:42px;font-weight:900;color:#fff;line-height:1;letter-spacing:-2px;white-space:nowrap">' + kwhM.toFixed(0) + '<span style="font-size:16px;font-weight:600;color:#fff;margin-left:3px">kWh</span></div>'
+      + '<div style="font-size:9px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;font-weight:700">Consumo Mese</div>'
+      + '<div style="font-size:42px;font-weight:900;color:#fff;line-height:1;letter-spacing:-2px;white-space:nowrap">' + kwhM.toFixed(0) + '<span style="font-size:16px;font-weight:600;color:rgba(255,255,255,.5);margin-left:3px">kWh</span></div>'
       + '</div>'
       + '<div style="text-align:right;flex:1;min-width:0">'
-      + '<div style="font-size:9px;color:#fff;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;font-weight:700">Costo Mese</div>'
+      + '<div style="font-size:9px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;font-weight:700">Costo Mese</div>'
       + '<div style="font-size:42px;font-weight:900;color:' + COL + ';line-height:1;letter-spacing:-2px;white-space:nowrap">' + costoM.toFixed(2).replace('.', ',') + '<span style="font-size:16px;font-weight:600;color:rgba(251,191,36,.5);margin-left:3px">€</span></div>'
       + '</div>'
       + '</div>'
@@ -589,7 +587,7 @@
       + '<div style="margin-top:10px">'
       + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
       + '<span style="font-size:10px;font-weight:700;color:' + wCol + '">⚡ ' + wFmt + '</span>'
-      + '<span style="font-size:9px;color:#fff">soglia ' + (soglia / 1000).toFixed(1) + ' kW</span>'
+      + '<span style="font-size:9px;color:rgba(255,255,255,.35)">soglia ' + (soglia / 1000).toFixed(1) + ' kW</span>'
       + '</div>'
       + '<div style="height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden">'
       + '<div style="height:100%;width:' + wPct + '%;background:' + wCol + ';border-radius:3px;transition:width .4s;box-shadow:0 0 8px ' + wCol + '"></div>'
@@ -604,7 +602,7 @@
 
     var statsHtml = '<div class="fb-stats">'
       + '<div class="fb-stat"><div class="fb-stat-lbl">📅 Oggi</div>'
-      + '<div style="font-size:14px;font-weight:800;color:#fff;margin-top:3px;white-space:nowrap">' + kwhG.toFixed(2) + '<span style="font-size:9px;font-weight:600;color:#fff;margin-left:2px">kWh</span></div>'
+      + '<div style="font-size:14px;font-weight:800;color:#fff;margin-top:3px;white-space:nowrap">' + kwhG.toFixed(2) + '<span style="font-size:9px;font-weight:600;color:rgba(255,255,255,.45);margin-left:2px">kWh</span></div>'
       + '<div style="font-size:14px;font-weight:800;color:' + COL + ';margin-top:2px;white-space:nowrap">' + costoG.toFixed(2) + '<span style="font-size:9px;font-weight:600;color:rgba(251,191,36,.45);margin-left:2px">€</span></div>'
       + '</div>'
       + '<div class="fb-stat"><div class="fb-stat-lbl">🔮 Fine Mese</div><div class="fb-stat-val" style="color:#fb923c">' + prevM.toFixed(0) + ' €</div><div class="fb-stat-sub">previsione</div></div>'
@@ -622,19 +620,19 @@
       var fvCardH = haFV
         ? '<div style="background:linear-gradient(135deg,rgba(251,191,36,.09),rgba(251,191,36,.04));border:1px solid rgba(251,191,36,.22);border-radius:13px;padding:10px 12px">'
         + '<div style="font-size:10px;font-weight:800;color:#fbbf24;margin-bottom:7px;letter-spacing:.03em">☀️ Fotovoltaico</div>'
-        + '<div style="font-size:26px;font-weight:900;color:#fff;line-height:1;letter-spacing:-1px">' + fvKwh.toFixed(1).replace('.', ',') + '<span style="font-size:11px;font-weight:600;color:#fff;margin-left:3px">kWh</span></div>'
+        + '<div style="font-size:26px;font-weight:900;color:#fff;line-height:1;letter-spacing:-1px">' + fvKwh.toFixed(1).replace('.', ',') + '<span style="font-size:11px;font-weight:600;color:rgba(255,255,255,.5);margin-left:3px">kWh</span></div>'
         + '<div style="font-size:11px;font-weight:700;color:#fbbf24;margin-top:5px">' + fvRisp.toFixed(2).replace('.', ',') + ' € <span style="font-weight:500;color:rgba(251,191,36,.65);font-size:9px">stima risp.</span></div>'
         + '<div style="margin-top:6px;height:4px;background:rgba(255,255,255,.06);border-radius:2px"><div style="height:100%;width:' + fvPct + '%;background:#fbbf24;border-radius:2px;opacity:.65;min-width:' + (fvPct > 0 ? '6' : '0') + 'px"></div></div>'
-        + '<div style="font-size:9px;color:#fff;margin-top:3px">' + fvPct + '% del consumo totale</div>'
+        + '<div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:3px">' + fvPct + '% del consumo totale</div>'
         + '</div>' : '';
 
       var battCardH = haBatt
         ? '<div style="background:linear-gradient(135deg,rgba(74,222,128,.08),rgba(74,222,128,.03));border:1px solid rgba(74,222,128,.2);border-radius:13px;padding:10px 12px">'
         + '<div style="font-size:10px;font-weight:800;color:#4ade80;margin-bottom:7px;letter-spacing:.03em">🔋 Batteria</div>'
-        + '<div style="font-size:26px;font-weight:900;color:#fff;line-height:1;letter-spacing:-1px">' + battKwh.toFixed(1).replace('.', ',') + '<span style="font-size:11px;font-weight:600;color:#fff;margin-left:3px">kWh</span></div>'
+        + '<div style="font-size:26px;font-weight:900;color:#fff;line-height:1;letter-spacing:-1px">' + battKwh.toFixed(1).replace('.', ',') + '<span style="font-size:11px;font-weight:600;color:rgba(255,255,255,.5);margin-left:3px">kWh</span></div>'
         + '<div style="font-size:11px;font-weight:700;color:#4ade80;margin-top:5px">' + battRisp.toFixed(2).replace('.', ',') + ' € <span style="font-weight:500;color:rgba(74,222,128,.6);font-size:9px">stima risp.</span></div>'
         + '<div style="margin-top:6px;height:4px;background:rgba(255,255,255,.06);border-radius:2px"><div style="height:100%;width:' + battPct + '%;background:#4ade80;border-radius:2px;opacity:.65;min-width:' + (battPct > 0 ? '6' : '0') + 'px"></div></div>'
-        + '<div style="font-size:9px;color:#fff;margin-top:3px">' + battPct + '% del consumo totale</div>'
+        + '<div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:3px">' + battPct + '% del consumo totale</div>'
         + '</div>' : '';
 
       var eCols = (haFV && haBatt) ? '1fr 1fr' : '1fr';
@@ -644,7 +642,7 @@
 
     var progHtml = '<div style="margin:2px 14px 10px">'
       + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
-      + '<span style="font-size:10px;color:#fff;font-weight:600">Giorno ' + dayNow + ' di ' + daysInMonth + '</span>'
+      + '<span style="font-size:10px;color:rgba(255,255,255,.5);font-weight:600">Giorno ' + dayNow + ' di ' + daysInMonth + '</span>'
       + '<span style="font-size:11px;color:' + COL + ';font-weight:800">' + percMese + '%</span>'
       + '</div>'
       + '<div style="height:7px;background:rgba(255,255,255,.07);border-radius:4px;position:relative">'
@@ -742,9 +740,7 @@
       var host = document.createElement('div');
       var sr = host.attachShadow({mode: 'open'});
       document.body.appendChild(host);
-      function destroy() { try { document.body.removeChild(host); } catch(e) {} document.removeEventListener('keydown', wdEsc); }
-      function wdEsc(e) { if (e.key === 'Escape') destroy(); }
-      document.addEventListener('keydown', wdEsc);
+      function destroy() { try { document.body.removeChild(host); } catch(e) {} }
 
       function setupAC(inp, drop, ids) {
         if (!inp || !drop) return;
@@ -777,18 +773,18 @@
           + '@keyframes wUp{from{transform:translateY(100%)}to{transform:translateY(0)}}'
           + '.wd-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}'
           + '.wd-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.3);flex-shrink:0}'
-          + '.wd-tit{font-size:14px;font-weight:800}.wd-sub{font-size:11px;color:#fff;margin-top:1px}'
+          + '.wd-tit{font-size:14px;font-weight:800}.wd-sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:1px}'
           + '.wd-x{margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none}'
           + '.wd-body{flex:1;overflow-y:auto;padding:16px;scrollbar-width:none;display:flex;flex-direction:column;gap:14px}'
           + '.wd-body::-webkit-scrollbar{display:none}'
           + '.wd-sec{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#38bdf8;padding-bottom:5px;border-bottom:1px solid rgba(56,189,248,.18);margin-bottom:10px}'
-          + '.wd-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#fff;margin-bottom:3px}'
+          + '.wd-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:3px}'
           + '.wd-frow{position:relative;margin-bottom:10px}'
           + '.wd-inp{width:100%;padding:9px 11px;border-radius:10px;background:#0b1422;color:#f1f5f9;border:1px solid rgba(255,255,255,.18);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none}'
           + '.wd-inp:focus{border-color:rgba(56,189,248,.5)}'
           + '.wd-drop{position:absolute;left:0;right:0;top:100%;z-index:10;max-height:150px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 9px 9px;display:none}'
           + '.wd-item{padding:5px 10px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04);color:#e2e8f0}'
-          + '.wd-note{font-size:11px;color:#fff;line-height:1.5;margin:0 0 10px}'
+          + '.wd-note{font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;margin:0 0 10px}'
           + '.wd-foot{padding:12px 16px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:8px;flex-shrink:0}'
           + '.wd-cancel{flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:rgba(255,255,255,.1);color:#fff}'
           + '.wd-install{flex:2;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#38bdf8;color:#060d14}'

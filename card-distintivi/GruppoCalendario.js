@@ -182,7 +182,7 @@
   function _renderLoading() {
     return `<div style="padding:44px 20px;text-align:center">
       <div style="font-size:26px;display:inline-block;animation:gcalSpin 1.1s linear infinite">📅</div>
-      <div style="font-size:11px;color:#fff;margin-top:10px">Caricamento eventi…</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:10px">Caricamento eventi…</div>
       <style>@keyframes gcalSpin{to{transform:rotate(20deg)translateY(-2px)rotate(-20deg)}}</style>
     </div>`;
   }
@@ -250,7 +250,7 @@
     const c    = loadCfg(cfg);
     const ents = Array.isArray(c.entities) ? c.entities : [];
     if (!ents.length) {
-      return `<div id="gcal-popup-body"><div style="padding:36px 20px;text-align:center;color:#fff;font-size:12px">Nessun calendario configurato.<br><span style="font-size:10px;color:#fff">Clicca ✏️ sulla chip per configurare.</span></div></div>`;
+      return `<div id="gcal-popup-body"><div style="padding:36px 20px;text-align:center;color:#fff;font-size:12px">Nessun calendario configurato.<br><span style="font-size:10px;color:rgba(255,255,255,.5)">Clicca ✏️ sulla chip per configurare.</span></div></div>`;
     }
     return _renderLoading();
   }
@@ -276,7 +276,7 @@
         el.innerHTML = render(cfg, h); _hideSubtitle(el); return;
       }
       if (!h || typeof h.callApi !== 'function') {
-        el.innerHTML = `<div style="padding:24px;text-align:center;color:#fff;font-size:11px">⚠️ API HA non disponibile — usa la modalità add-on</div>`;
+        el.innerHTML = `<div style="padding:24px;text-align:center;color:rgba(255,255,255,.5);font-size:11px">⚠️ API HA non disponibile — usa la modalità add-on</div>`;
         _hideSubtitle(el); return;
       }
       el.innerHTML = _renderLoading(); _hideSubtitle(el);
@@ -343,7 +343,7 @@
           <div style="width:8px;height:8px;border-radius:50%;background:${m.isCalendar?calColor:'#94a3b8'};flex-shrink:0"></div>
           <div style="flex:1;min-width:0">
             <div style="font-size:11px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(m.name)}</div>
-            <div style="font-size:9px;color:#fff">${eh(m.id)}</div>
+            <div style="font-size:9px;color:rgba(255,255,255,.5)">${eh(m.id)}</div>
           </div>
           ${m.active?'<span style="font-size:9px;color:#f87171;font-weight:700">● ora</span>':''}
         </div>`;
@@ -371,7 +371,7 @@
     }
 
     const ov = document.createElement('div');
-    ov.style.cssText = 'position:fixed;inset:0;z-index:100001;display:flex;align-items:flex-end;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);font-family:system-ui,sans-serif';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:100001;display:flex;align-items:flex-end;background:rgba(0,0,0,.8);backdrop-filter:blur(7px);font-family:system-ui,sans-serif';
 
     function closeOv() { _closeAc(); try{document.body.removeChild(ov);}catch(e){} document.removeEventListener('keydown',escFn); }
     function escFn(ev) { if(ev.key==='Escape') closeOv(); }
@@ -388,7 +388,7 @@
             <div style="width:10px;height:10px;border-radius:50%;background:${calColor};flex-shrink:0"></div>
             <div style="flex:1;min-width:0">
               <div style="font-size:12px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
-              <div style="font-size:9px;color:#fff">${eh(id)}</div>
+              <div style="font-size:9px;color:rgba(255,255,255,.5)">${eh(id)}</div>
             </div>
             ${active?'<span style="font-size:9px;color:#f87171;font-weight:700">● ora</span>':''}
             <button data-del="${i}" style="width:22px;height:22px;border:none;border-radius:5px;background:rgba(248,113,113,.15);color:#f87171;cursor:pointer;font-size:11px">✕</button>
@@ -397,11 +397,11 @@
       }).join('');
 
       const anim = _firstRender ? 'animation:gcalCfgUp .22s cubic-bezier(.32,1.12,.56,1)' : '';
-      return `<div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0a0d1a;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);color:#fff;${anim}">
+      return `<div style="width:100%;max-height:92vh;display:flex;flex-direction:column;background:#060d14;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);color:#fff;${anim}">
         <style>
           @keyframes gcalCfgUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
           .gcalinp{width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;font-size:12px;outline:none;font-family:inherit}
-          .gcalinp::placeholder{color:#fff}
+          .gcalinp::placeholder{color:rgba(255,255,255,.4)}
           #gcalcfg-body::-webkit-scrollbar{display:none}
         </style>
         <div style="display:flex;align-items:center;gap:10px;padding:14px 18px 12px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">
@@ -411,13 +411,13 @@
         </div>
         <div id="gcalcfg-body" style="flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;padding:14px 14px 4px">
           <div style="display:flex;gap:7px;margin-bottom:14px">
-            <div style="flex:1"><div style="font-size:9px;color:#fff;margin-bottom:3px">Nome chip</div><input id="gcalcfg-label" class="gcalinp" placeholder="Calendario" value="${eh(c.label||'Calendario')}"></div>
-            <div style="flex:0 0 50px"><div style="font-size:9px;color:#fff;margin-bottom:3px">Colore</div><input type="color" id="gcalcfg-color" value="${(c.color||'#60a5fa').match(/^#[0-9a-f]{6}$/i)?c.color:'#60a5fa'}" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:none;cursor:pointer;padding:2px"></div>
+            <div style="flex:1"><div style="font-size:9px;color:rgba(255,255,255,.55);margin-bottom:3px">Nome chip</div><input id="gcalcfg-label" class="gcalinp" placeholder="Calendario" value="${eh(c.label||'Calendario')}"></div>
+            <div style="flex:0 0 50px"><div style="font-size:9px;color:rgba(255,255,255,.55);margin-bottom:3px">Colore</div><input type="color" id="gcalcfg-color" value="${(c.color||'#60a5fa').match(/^#[0-9a-f]{6}$/i)?c.color:'#60a5fa'}" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:none;cursor:pointer;padding:2px"></div>
           </div>
-          ${ents.length ? `<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Calendari (${ents.length})</div><div style="margin-bottom:12px">${selRows}</div>` : ''}
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Aggiungi calendario</div>
+          ${ents.length ? `<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.5);margin-bottom:6px">Calendari (${ents.length})</div><div style="margin-bottom:12px">${selRows}</div>` : ''}
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.5);margin-bottom:6px">Aggiungi calendario</div>
           <input id="gcalcfg-add" class="gcalinp" placeholder="🔍 Cerca calendar.*…" autocomplete="off">
-          <div style="margin-top:5px;padding:7px 10px;border-radius:8px;background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.15);font-size:10px;color:#fff">
+          <div style="margin-top:5px;padding:7px 10px;border-radius:8px;background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.15);font-size:10px;color:rgba(255,255,255,.7)">
             💡 Usa entità <strong style="color:#60a5fa">calendar.*</strong>. Il popup mostra tutti gli eventi dei prossimi 7 giorni tramite API HA.
           </div>
           ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg, presets) : ''}

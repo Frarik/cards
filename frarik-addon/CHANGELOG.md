@@ -1,27 +1,5 @@
 # Changelog
 
-## 2.0.80 — 2026-07-17
-
-### feat: distintivi con label e valore in maiuscolo
-
-Il chip di ogni distintivo (`card-distintivi/*.js`) mostra ora label e valore in maiuscolo.
-Modificato un solo punto condiviso in `frarik-addon/src/main.js` (`_badgeItemHTML`, ramo
-`type==='jsd'`) invece di toccare i 14 file dei distintivi uno per uno — l'icona (spesso SVG)
-non è toccata, solo il testo di label e valore.
-
-## 2.0.79 — 2026-07-16
-
-### fix: standardizzazione trasversale a tutte le card e ai distintivi
-
-Audit completo di tutte le 31 card in `card-js/`, i 14 distintivi in `card-distintivi/` e il chrome edit-mode del dashboard, per allineare tutto a 4 standard: testi sempre bianco puro, popup identici tra loro, sfondo/stile coerente, niente icona matita in edit-mode.
-
-- **Testi bianco puro**: rimossi tutti i colori di testo diversi da `#fff` (grigi tipo `#94a3b8`/`#64748b`/`#475569`/`#e2e8f0`, o bianco con opacità ridotta) in popup di configurazione, wizard pkg, hint e label — praticamente ogni file di `card-js/` e tutti i 14 `card-distintivi/`
-- **Popup uniformi**: 3 popup erano centrati invece che a comparsa dal basso (Antizanzare, Irrigazione, posta-card, stesso blocco copiato 3 volte); il popup "Stazione Meteo" era a schermo intero; i 14 distintivi avevano ciascuno un overlay leggermente diverso dal riferimento (opacità/blur/colore sheet). Tutti ora usano lo stesso pattern (backdrop `rgba(0,0,0,.65)`+blur 4px, sheet `#0a0d1a`, radius `20px 20px 0 0`) con chiusura click-fuori + ✕ + Escape (mancava spesso una o più di queste)
-- **Sfondo coerente**: Differenziata, Tapparella, Camera, person-card avevano sfondo mancante o piatto invece del gradiente glass di riferimento; Clima.js aveva 3 varianti di stile "telecomando" completamente neumorfiche (pannelli opachi, ombre a rilievo) — riconvertite in stile glass mantenendo controlli e animazioni
-- **Badge distintivi incoerenti**: rimossa un'iniezione CSS globale condivisa (stesso id) tra 3 file (`GruppoAllarme`/`GruppoBatterie`/`GruppoEnergia`) che rendeva "outline" TUTTI i badge della dashboard in modo non deterministico a seconda dell'ordine di caricamento script — ora tutti i 14 distintivi usano lo stesso stile "filled" di default
-- **Icona matita rimossa dall'edit-mode**: in `frarik-addon/src/main.js` l'edit-mode di ogni card mostrava sia l'icona ✏️ (apre il config) sia il menu ⋮ (copia/duplica/elimina). Ora resta solo il menu ⋮, con una nuova voce "⚙️ Configura" (o "🎨 Modifica Canvas" per il canvas libero) in cima al menu che richiama la stessa funzione di prima — nessuna perdita di funzionalità per nessun tipo di card (custom JS, standard, canvas libero)
-- Prima di rimuovere la matita, aggiunta un'icona ⚙️ interna a Clima, Tapparella, DoorsWindows, person-card, system-card e Camera: erano le uniche 6 card senza alcun accesso interno al proprio `configure()`
-
 ## 2.0.78 — 2026-07-16
 
 ### feat(card): LetPot Max v4.8 — vista minimale, impostazioni a comparsa, luce per modalità, timer reale, onda corretta

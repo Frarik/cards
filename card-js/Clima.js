@@ -219,8 +219,6 @@
 
     host.shadowRoot.querySelector('.scls').addEventListener('click', function(){ _destroyHistModal(cid); });
     host.shadowRoot.querySelector('.hov').addEventListener('click', function(e){ if(e.target===this) _destroyHistModal(cid); });
-    function histEsc(e){ if(e.key==='Escape'){ _destroyHistModal(cid); document.removeEventListener('keydown', histEsc); } }
-    document.addEventListener('keydown', histEsc);
 
     if (!hassObj || !hassObj.callApi) {
       host.shadowRoot.querySelector('.hw').innerHTML = '<div class="hload">API non disponibile</div>';
@@ -337,7 +335,7 @@
       var se = el.querySelector('[data-secpanel="'+os+'"]');
       var tb = el.querySelector('[data-action="toggle"][data-sec="'+os+'"]');
       if (se) se.style.display = 'flex';
-      if (tb) { tb.style.background='rgba(255,255,255,.16)'; tb.style.color='#fff'; tb.style.borderColor='rgba(255,255,255,.22)'; }
+      if (tb) { tb.style.background='rgba(255,255,255,.16)'; tb.style.color='#e2e8f0'; tb.style.borderColor='rgba(255,255,255,.22)'; }
     }
   }
 
@@ -365,48 +363,48 @@
     return modePanel+(fanPanel||'')+(swingPanel||'');
   }
 
-  /* ── FUTURISTIC: telecomando orizzontale, stile glass ── */
+  /* ── FUTURISTIC: telecomando orizzontale neumorfismo scuro ── */
   function _renderFuturistic(rid, d) {
     var entityId=d.entityId, nm=d.nm, mode=d.mode, fanMode=d.fanMode, swingMode=d.swingMode,
         isOn=d.isOn, swingOn=d.swingOn, mCol=d.mCol, targetTemp=d.targetTemp,
         sensorT=d.sensorT, sensorH=d.sensorH, syncCol=d.syncCol, flapInitTransform=d.flapInitTransform,
         hvacModes=d.hvacModes, fanModes=d.fanModes, swingModes=d.swingModes,
         tempEntity=d.tempEntity, humEntity=d.humEntity;
-    var LED=isOn?'#38bdf8':'rgba(255,255,255,.2)';
+    var LED=isOn?'#38bdf8':'#1a2535';
     var css='<style id="'+rid+'-css">'
       +'@keyframes '+rid+'mist{0%{opacity:0;transform:translateY(-6px)}15%{opacity:.6}80%{opacity:.15}100%{opacity:0;transform:translateY(50px)}}'
       +'@keyframes '+rid+'glow{0%,100%{opacity:.7}50%{opacity:1}}'
       +'#'+rid+' .cb{border:none;cursor:pointer;font-weight:700;transition:all .15s;background:transparent;}'
       +'#'+rid+' .cb:active{filter:brightness(.8);transform:scale(.94);}'
-      +'#'+rid+' .tog{flex:1;padding:8px 5px;border-radius:12px;border:1px solid rgba(255,255,255,.1);cursor:pointer;font-size:9.5px;'
+      +'#'+rid+' .tog{flex:1;padding:8px 5px;border-radius:12px;border:none;cursor:pointer;font-size:9.5px;'
         +'font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;'
-        +'background:rgba(255,255,255,.06);color:#fff;'
+        +'background:#222226;color:#fff;'
+        +'box-shadow:3px 3px 8px rgba(0,0,0,.5),-1px -1px 4px rgba(255,255,255,.025);'
         +'transition:all .18s;}'
-      +'#'+rid+' .tog:hover{background:rgba(255,255,255,.11);}'
+      +'#'+rid+' .tog:hover{color:#fff;}'
       +'</style>';
     function selBtn(eId,action,val,label,active,col2){
       var bs=active
-        ?'background:'+col2+'22;color:'+col2+';border:1px solid '+col2+'55;box-shadow:0 0 10px '+col2+'33;'
-        :'background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.1);';
+        ?'background:'+col2+'22;color:'+col2+';border:1px solid '+col2+'44;box-shadow:0 0 10px '+col2+'33,inset 0 1px 0 rgba(255,255,255,.05);'
+        :'background:#1e1e22;color:#fff;border:1px solid rgba(255,255,255,.06);box-shadow:2px 2px 6px rgba(0,0,0,.45),-1px -1px 3px rgba(255,255,255,.02);';
       return '<button class="cb" data-cid="'+eId+'" data-action="'+action+'" data-val="'+val+'" style="padding:5px 10px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;'+bs+'">'+label+'</button>';
     }
-    var pw='display:none;flex-direction:column;gap:6px;background:rgba(255,255,255,.04);border-radius:12px;padding:10px;border:1px solid rgba(255,255,255,.08);';
+    var pw='display:none;flex-direction:column;gap:6px;background:#1a1a1e;border-radius:12px;padding:10px;border:1px solid rgba(255,255,255,.06);box-shadow:inset 2px 2px 8px rgba(0,0,0,.5);';
     // toggle icon buttons (top right)
     var iconTogs='<div style="display:flex;gap:7px;align-items:center">'
       +(syncCol?'<div style="width:7px;height:7px;border-radius:50%;background:'+syncCol+';box-shadow:0 0 5px '+syncCol+'"></div>':'')
       +'<button class="tog" data-action="toggle" data-sec="mode" style="width:34px;height:34px;padding:0;border-radius:10px;font-size:17px;flex:none"><span>'+mIcon(mode)+'</span></button>'
       +'<button class="tog" data-action="toggle" data-sec="fan" style="width:34px;height:34px;padding:0;border-radius:10px;font-size:17px;flex:none"><span>💨</span></button>'
       +(swingModes.length>1?'<button class="tog" data-action="toggle" data-sec="swing" style="width:34px;height:34px;padding:0;border-radius:10px;font-size:17px;flex:none"><span>↕</span></button>':'')
-      +'<button data-action="cfg" title="Impostazioni" style="width:34px;height:34px;padding:0;border-radius:10px;font-size:15px;flex:none;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center">⚙️</button>'
     +'</div>';
     var airSection=isOn?'<div style="position:relative;height:28px;overflow:hidden;pointer-events:none;margin:2px 20px 0">'+airStreams(rid,'#38bdf8',true)+'</div>':'<div style="height:4px"></div>';
     return css
       +'<div id="'+rid+'" style="position:relative;width:100%;height:100%;min-height:260px;border-radius:20px;'
         +'padding:14px 14px 12px;box-sizing:border-box;font-family:system-ui,sans-serif;'
         +'display:flex;flex-direction:column;gap:10px;overflow:hidden;'
-        +'background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);'
-        +'border:1px solid rgba(255,255,255,.09);'
-        +'box-shadow:0 10px 40px rgba(0,0,0,.5);">'
+        +'background:#18181b;'
+        +'border:1px solid rgba(255,255,255,.055);'
+        +'box-shadow:0 20px 60px rgba(0,0,0,.75);">'
       // flap hidden
       +'<div data-clm-flap data-rid="'+rid+'" style="position:absolute;width:0;height:0;overflow:hidden;transform:'+flapInitTransform+'"></div>'
       // top row
@@ -415,24 +413,25 @@
         +iconTogs
       +'</div>'
       // main pill
-      +'<div style="border-radius:999px;background:rgba(255,255,255,.05);'
-        +'border:1px solid rgba(255,255,255,.08);'
+      +'<div style="border-radius:999px;background:#242428;'
+        +'box-shadow:6px 6px 18px rgba(0,0,0,.65),-2px -2px 8px rgba(255,255,255,.03);'
         +'padding:9px 14px;display:flex;align-items:center;gap:10px">'
         // power button
         +'<div style="width:44px;height:44px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;'
-          +'background:'+(isOn?'rgba(74,222,128,.15)':'rgba(248,113,113,.12)')+';'
-          +'border:1px solid '+(isOn?'rgba(74,222,128,.3)':'rgba(248,113,113,.28)')+';'
-          +'box-shadow:'+(isOn?'0 0 14px rgba(34,197,94,.3)':'none')+';'
-          +'color:'+(isOn?'#4ade80':'#f87171')+'">'
+          +'background:'+(isOn?'#14532d':'#1c1418')+';'
+          +'box-shadow:'+(isOn?'0 0 14px rgba(34,197,94,.35),inset 0 1px 0 rgba(255,255,255,.08)':'inset 2px 2px 8px rgba(0,0,0,.6),inset -1px -1px 3px rgba(255,255,255,.03)')+';'
+          +'color:'+(isOn?'#4ade80':'#7f1d1d')+'">'
           +'⏻'
         +'</div>'
         // sensor temp pill
         +(sensorT
-          ?'<div data-a="stat" data-eid="'+tempEntity+'" data-attr="" data-lbl="Temperatura" style="cursor:pointer;flex-shrink:0;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:5px 10px;'
+          ?'<div data-a="stat" data-eid="'+tempEntity+'" data-attr="" data-lbl="Temperatura" style="cursor:pointer;flex-shrink:0;background:#0e0e11;border-radius:20px;padding:5px 10px;'
+            +'box-shadow:inset 2px 2px 7px rgba(0,0,0,.65),inset -1px -1px 3px rgba(255,255,255,.02);'
             +'font-size:12px;font-weight:700;font-family:\'Courier New\',monospace;color:#fff">'+sensorT+'°</div>'
           :'')
         // LED display + controls (flex:1)
-        +'<div style="flex:1;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:7px 12px;'
+        +'<div style="flex:1;background:#0d0d10;border-radius:14px;padding:7px 12px;'
+          +'box-shadow:inset 3px 3px 10px rgba(0,0,0,.7),inset -1px -1px 3px rgba(255,255,255,.02);'
           +'display:flex;align-items:center;justify-content:space-between;gap:6px">'
           +'<button class="cb" data-cid="'+entityId+'" data-action="temp-down" style="font-size:26px;color:#fff;line-height:1;padding:0 4px">−</button>'
           +'<div data-clm-led data-clm-temp style="flex:1;text-align:center;font-family:\'Courier New\',monospace;font-size:26px;font-weight:700;letter-spacing:2px;'
@@ -442,51 +441,52 @@
         +'</div>'
         // humidity pill
         +(sensorH
-          ?'<div data-a="stat" data-eid="'+humEntity+'" data-attr="" data-lbl="Umidità" style="cursor:pointer;flex-shrink:0;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:5px 9px;'
-            +'font-size:11px;font-weight:700;font-family:\'Courier New\',monospace;color:#fff">'+sensorH+'%</div>'
+          ?'<div data-a="stat" data-eid="'+humEntity+'" data-attr="" data-lbl="Umidità" style="cursor:pointer;flex-shrink:0;background:#0e0e11;border-radius:20px;padding:5px 9px;'
+            +'box-shadow:inset 2px 2px 7px rgba(0,0,0,.65);font-size:11px;font-weight:700;font-family:\'Courier New\',monospace;color:#fff">'+sensorH+'%</div>'
           :'')
       +'</div>'
       // ambient glow
       +airSection
       +(isOn?'<div style="height:10px;background:radial-gradient(ellipse at 50% 100%,rgba(56,189,248,.28) 0%,transparent 68%);pointer-events:none;animation:'+rid+'glow 2.5s ease-in-out infinite;margin:0 14px -6px"></div>':'')
       // mode label
-      +'<div style="text-align:center;font-size:10px;font-weight:700;color:'+(isOn?mCol:'#fff')+';letter-spacing:.08em;'+(isOn?'text-shadow:0 0 8px '+mCol+';':'')+'">'+( isOn?mLabel(mode).toUpperCase()+' — 💨 '+fLabel(fanMode)+(swingOn?' — ↕':''):'— spento —')+'</div>'
+      +'<div style="text-align:center;font-size:10px;font-weight:700;color:'+(isOn?mCol:'rgba(255,255,255,.18)')+';letter-spacing:.08em;'+(isOn?'text-shadow:0 0 8px '+mCol+';':'')+'">'+( isOn?mLabel(mode).toUpperCase()+' — 💨 '+fLabel(fanMode)+(swingOn?' — ↕':''):'— spento —')+'</div>'
       // panels
       +'<div>'+_panels(rid,entityId,mode,fanMode,swingMode,hvacModes,fanModes,swingModes,pw,selBtn)+'</div>'
     +'</div>';
   }
 
-  /* ── CLASSIC: telecomando verticale, stile glass ── */
+  /* ── CLASSIC: telecomando verticale neumorfismo scuro ── */
   function _renderClassic(rid, d) {
     var entityId=d.entityId, nm=d.nm, mode=d.mode, fanMode=d.fanMode, swingMode=d.swingMode,
         isOn=d.isOn, swingOn=d.swingOn, mCol=d.mCol, targetTemp=d.targetTemp,
         sensorT=d.sensorT, sensorH=d.sensorH, syncCol=d.syncCol, flapInitTransform=d.flapInitTransform,
         hvacModes=d.hvacModes, fanModes=d.fanModes, swingModes=d.swingModes,
         tempEntity=d.tempEntity, humEntity=d.humEntity;
-    var LED=isOn?mCol:'rgba(255,255,255,.2)';
+    var LED=isOn?mCol:'#1e2535';
     var css='<style id="'+rid+'-css">'
       +'@keyframes '+rid+'ind{0%,100%{box-shadow:0 0 8px '+mCol+'88}50%{box-shadow:0 0 18px '+mCol+',0 0 36px '+mCol+'44}}'
       +'#'+rid+' .cb{border:none;cursor:pointer;font-weight:700;transition:all .15s;background:transparent;}'
       +'#'+rid+' .cb:active{transform:scale(.93);}'
-      +'#'+rid+' .tog{flex:1;padding:8px 4px;border-radius:12px;border:1px solid rgba(255,255,255,.1);cursor:pointer;font-size:10px;'
+      +'#'+rid+' .tog{flex:1;padding:8px 4px;border-radius:12px;border:none;cursor:pointer;font-size:10px;'
         +'font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;'
-        +'background:rgba(255,255,255,.06);color:#fff;'
+        +'background:#222226;color:#fff;'
+        +'box-shadow:3px 3px 9px rgba(0,0,0,.55),-1px -1px 4px rgba(255,255,255,.025);'
         +'transition:all .18s;}'
-      +'#'+rid+' .tog:hover{background:rgba(255,255,255,.11);}'
+      +'#'+rid+' .tog:hover{color:#fff;}'
       +'</style>';
     function selBtn(eId,action,val,label,active,col2){
       var bs=active
-        ?'background:'+col2+'1e;color:'+col2+';border:1px solid '+col2+'55;box-shadow:0 0 10px '+col2+'33;'
-        :'background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.1);';
+        ?'background:'+col2+'1e;color:'+col2+';border:1px solid '+col2+'44;box-shadow:0 0 10px '+col2+'33,3px 3px 8px rgba(0,0,0,.4);'
+        :'background:#1e1e22;color:#fff;border:1px solid rgba(255,255,255,.06);box-shadow:2px 2px 7px rgba(0,0,0,.5),-1px -1px 3px rgba(255,255,255,.02);';
       return '<button class="cb" data-cid="'+eId+'" data-action="'+action+'" data-val="'+val+'" style="padding:6px 10px;border-radius:9px;font-size:11px;font-weight:700;cursor:pointer;'+bs+'">'+label+'</button>';
     }
-    var pw='display:none;flex-direction:column;gap:6px;background:rgba(255,255,255,.04);border-radius:12px;padding:10px;border:1px solid rgba(255,255,255,.08);';
+    var pw='display:none;flex-direction:column;gap:6px;background:#1a1a1e;border-radius:12px;padding:10px;border:1px solid rgba(255,255,255,.05);box-shadow:inset 2px 2px 8px rgba(0,0,0,.5);';
     // mode selection buttons always visible under the tog row
     var modeBtns='<div style="display:flex;gap:6px;flex-wrap:wrap">'
       +hvacModes.map(function(m){
         var act=mode===m, c2=mColor(m);
         return '<button class="cb" data-cid="'+entityId+'" data-action="mode" data-val="'+m+'" style="flex:1;min-width:0;padding:8px 4px;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;'
-          +(act?'background:'+c2+'1e;color:'+c2+';border:1px solid '+c2+'55;box-shadow:0 0 10px '+c2+'33;':'background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.1);')
+          +(act?'background:'+c2+'1e;color:'+c2+';border:1px solid '+c2+'44;box-shadow:0 0 10px '+c2+'33,3px 3px 8px rgba(0,0,0,.4);':'background:#1e1e22;color:#fff;border:1px solid rgba(255,255,255,.06);box-shadow:2px 2px 7px rgba(0,0,0,.5);')
           +'"><span style="font-size:16px">'+mIcon(m)+'</span><span>'+mLabel(m)+'</span></button>';
       }).join('')
     +'</div>';
@@ -494,28 +494,27 @@
       +'<div id="'+rid+'" style="position:relative;width:100%;height:100%;min-height:260px;border-radius:20px;'
         +'padding:13px 13px 11px;box-sizing:border-box;font-family:system-ui,sans-serif;'
         +'display:flex;flex-direction:column;gap:10px;overflow:hidden;'
-        +'background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);'
-        +'border:1px solid rgba(255,255,255,.09);'
-        +'box-shadow:0 10px 40px rgba(0,0,0,.5);">'
+        +'background:#1a1a1e;'
+        +'border:1px solid rgba(255,255,255,.055);'
+        +'box-shadow:0 20px 60px rgba(0,0,0,.7);">'
       // hidden flap
       +'<div data-clm-flap data-rid="'+rid+'" style="position:absolute;width:0;height:0;overflow:hidden;transform:'+flapInitTransform+'"></div>'
       // top strip: power circle + name + sensor pills
       +'<div style="display:flex;align-items:center;gap:10px">'
         +'<div style="width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;'
-          +'background:'+(isOn?'rgba(74,222,128,.15)':'rgba(248,113,113,.12)')+';'
-          +'border:1px solid '+(isOn?'rgba(74,222,128,.3)':'rgba(248,113,113,.28)')+';'
-          +'box-shadow:'+(isOn?'0 0 14px rgba(34,197,94,.35)':'none')+';'
-          +'color:'+(isOn?'#4ade80':'#f87171')+'">⏻</div>'
+          +'background:'+(isOn?'#14532d':'#1e1a1e')+';'
+          +'box-shadow:'+(isOn?'0 0 14px rgba(34,197,94,.4),3px 3px 8px rgba(0,0,0,.5)':'inset 2px 2px 7px rgba(0,0,0,.6),-1px -1px 3px rgba(255,255,255,.025)')+';'
+          +'color:'+(isOn?'#4ade80':'rgba(239,68,68,.6)')+'">⏻</div>'
         +'<div style="flex:1;font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+nm+'</div>'
         +'<div style="display:flex;gap:5px;align-items:center;flex-shrink:0">'
           +(syncCol?'<div style="width:6px;height:6px;border-radius:50%;background:'+syncCol+';box-shadow:0 0 5px '+syncCol+'"></div>':'')
-          +(sensorT?'<div data-a="stat" data-eid="'+tempEntity+'" data-attr="" data-lbl="Temperatura" style="cursor:pointer;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:4px 9px;font-size:11px;font-weight:700;font-family:\'Courier New\',monospace;color:#fff">🌡 '+sensorT+'°</div>':'')
-          +(sensorH?'<div data-a="stat" data-eid="'+humEntity+'" data-attr="" data-lbl="Umidità" style="cursor:pointer;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:4px 9px;font-size:11px;font-weight:700;font-family:\'Courier New\',monospace;color:#fff">💧 '+sensorH+'%</div>':'')
-          +'<button data-action="cfg" title="Impostazioni" style="width:28px;height:28px;padding:0;border-radius:9px;font-size:13px;flex-shrink:0;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center">⚙️</button>'
+          +(sensorT?'<div data-a="stat" data-eid="'+tempEntity+'" data-attr="" data-lbl="Temperatura" style="cursor:pointer;background:#0e0e11;border-radius:20px;padding:4px 9px;box-shadow:inset 2px 2px 6px rgba(0,0,0,.6);font-size:11px;font-weight:700;font-family:\'Courier New\',monospace;color:#fff">🌡 '+sensorT+'°</div>':'')
+          +(sensorH?'<div data-a="stat" data-eid="'+humEntity+'" data-attr="" data-lbl="Umidità" style="cursor:pointer;background:#0e0e11;border-radius:20px;padding:4px 9px;box-shadow:inset 2px 2px 6px rgba(0,0,0,.6);font-size:11px;font-weight:700;font-family:\'Courier New\',monospace;color:#fff">💧 '+sensorH+'%</div>':'')
         +'</div>'
       +'</div>'
       // main inset display
-      +'<div style="background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.06);border-radius:16px;'
+      +'<div style="background:#0d0d10;border-radius:16px;'
+        +'box-shadow:inset 4px 4px 14px rgba(0,0,0,.72),inset -1px -1px 4px rgba(255,255,255,.02);'
         +'padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px">'
         +'<button class="cb" data-cid="'+entityId+'" data-action="temp-down" style="font-size:30px;font-weight:300;color:#fff;line-height:1;padding:0 6px">−</button>'
         +'<div data-clm-led data-clm-temp style="flex:1;text-align:center;font-family:\'Courier New\',monospace;font-size:32px;font-weight:700;letter-spacing:3px;'
@@ -544,7 +543,7 @@
     +'</div>';
   }
 
-  /* ── MINIMAL: smart remote compatto, stile glass ── */
+  /* ── MINIMAL: smart remote compatto neumorfismo scuro ── */
   function _renderMinimal(rid, d) {
     var entityId=d.entityId, nm=d.nm, mode=d.mode, fanMode=d.fanMode, swingMode=d.swingMode,
         isOn=d.isOn, swingOn=d.swingOn, mCol=d.mCol, targetTemp=d.targetTemp,
@@ -555,19 +554,20 @@
       +'@keyframes '+rid+'pulse{0%,100%{opacity:.7}50%{opacity:1}}'
       +'#'+rid+' .cb{border:none;cursor:pointer;font-weight:700;transition:all .15s;background:transparent;}'
       +'#'+rid+' .cb:active{transform:scale(.92);}'
-      +'#'+rid+' .tog{flex:1;padding:8px 5px;border-radius:11px;border:1px solid rgba(255,255,255,.1);cursor:pointer;font-size:9.5px;'
+      +'#'+rid+' .tog{flex:1;padding:8px 5px;border-radius:11px;border:none;cursor:pointer;font-size:9.5px;'
         +'font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;'
-        +'background:rgba(255,255,255,.06);color:#fff;'
+        +'background:#1e1e22;color:#fff;'
+        +'box-shadow:3px 3px 8px rgba(0,0,0,.5),-1px -1px 4px rgba(255,255,255,.025);'
         +'transition:all .18s;}'
-      +'#'+rid+' .tog:hover{background:rgba(255,255,255,.11);}'
+      +'#'+rid+' .tog:hover{color:#fff;}'
       +'</style>';
     function selBtn(eId,action,val,label,active,col2){
       var bs=active
-        ?'background:'+col2+'1e;color:'+col2+';border:1px solid '+col2+'55;box-shadow:0 0 10px '+col2+'33;'
-        :'background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.1);';
+        ?'background:'+col2+'1e;color:'+col2+';border:1px solid '+col2+'44;box-shadow:0 0 10px '+col2+'33,3px 3px 8px rgba(0,0,0,.4);'
+        :'background:#1e1e22;color:#fff;border:1px solid rgba(255,255,255,.06);box-shadow:2px 2px 7px rgba(0,0,0,.5),-1px -1px 3px rgba(255,255,255,.02);';
       return '<button class="cb" data-cid="'+eId+'" data-action="'+action+'" data-val="'+val+'" style="padding:5px 9px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;'+bs+'">'+label+'</button>';
     }
-    var pw='display:none;flex-direction:column;gap:6px;background:rgba(255,255,255,.04);border-radius:12px;padding:10px;border:1px solid rgba(255,255,255,.08);';
+    var pw='display:none;flex-direction:column;gap:6px;background:#1a1a1e;border-radius:12px;padding:10px;border:1px solid rgba(255,255,255,.05);box-shadow:inset 2px 2px 8px rgba(0,0,0,.5);';
     var togRow='<div style="display:flex;gap:6px">'
       +'<button class="tog" data-action="toggle" data-sec="mode"><span style="font-size:15px">'+mIcon(mode)+'</span><span>Modalità</span></button>'
       +'<button class="tog" data-action="toggle" data-sec="fan"><span style="font-size:15px">💨</span><span>Ventola</span></button>'
@@ -577,44 +577,43 @@
       +'<div id="'+rid+'" style="position:relative;width:100%;height:100%;min-height:260px;border-radius:20px;'
         +'padding:13px;box-sizing:border-box;font-family:system-ui,sans-serif;'
         +'display:flex;flex-direction:column;gap:9px;overflow:hidden;'
-        +'background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);'
-        +'border:1px solid rgba(255,255,255,.08);'
-        +'box-shadow:0 10px 40px rgba(0,0,0,.5);">'
+        +'background:#18181b;'
+        +'border:1px solid rgba(255,255,255,.05);'
+        +'box-shadow:0 20px 60px rgba(0,0,0,.75);">'
       // hidden flap
       +'<div data-clm-flap data-rid="'+rid+'" style="position:absolute;width:0;height:0;overflow:hidden;transform:'+flapInitTransform+'"></div>'
       // top: name + status dot + sensors
       +'<div style="display:flex;align-items:center;gap:8px">'
-        +'<div style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:'+(isOn?mCol:'rgba(255,255,255,.2)')+';'+(isOn?'box-shadow:0 0 8px '+mCol+';animation:'+rid+'pulse 2s ease-in-out infinite;':'')+'"></div>'
+        +'<div style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:'+(isOn?mCol:'rgba(255,255,255,.15)')+';'+(isOn?'box-shadow:0 0 8px '+mCol+';animation:'+rid+'pulse 2s ease-in-out infinite;':'')+'"></div>'
         +'<div style="flex:1;font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+nm+'</div>'
         +(syncCol?'<div style="width:6px;height:6px;border-radius:50%;flex-shrink:0;background:'+syncCol+';box-shadow:0 0 5px '+syncCol+'"></div>':'')
-        +(sensorT?'<div data-a="stat" data-eid="'+tempEntity+'" data-attr="" data-lbl="Temperatura" style="cursor:pointer;flex-shrink:0;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:3px 8px;font-size:10px;font-weight:700;font-family:\'Courier New\',monospace;color:#fff">🌡 '+sensorT+'°</div>':'')
-        +(sensorH?'<div data-a="stat" data-eid="'+humEntity+'" data-attr="" data-lbl="Umidità" style="cursor:pointer;flex-shrink:0;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:3px 8px;font-size:10px;font-weight:700;font-family:\'Courier New\',monospace;color:#fff">💧 '+sensorH+'%</div>':'')
-        +'<button data-action="cfg" title="Impostazioni" style="width:24px;height:24px;padding:0;border-radius:8px;font-size:12px;flex-shrink:0;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center">⚙️</button>'
+        +(sensorT?'<div data-a="stat" data-eid="'+tempEntity+'" data-attr="" data-lbl="Temperatura" style="cursor:pointer;flex-shrink:0;background:#0e0e11;border-radius:20px;padding:3px 8px;box-shadow:inset 2px 2px 6px rgba(0,0,0,.6);font-size:10px;font-weight:700;font-family:\'Courier New\',monospace;color:#fff">🌡 '+sensorT+'°</div>':'')
+        +(sensorH?'<div data-a="stat" data-eid="'+humEntity+'" data-attr="" data-lbl="Umidità" style="cursor:pointer;flex-shrink:0;background:#0e0e11;border-radius:20px;padding:3px 8px;box-shadow:inset 2px 2px 6px rgba(0,0,0,.6);font-size:10px;font-weight:700;font-family:\'Courier New\',monospace;color:#fff">💧 '+sensorH+'%</div>':'')
       +'</div>'
       // main pill: power + display + expand
-      +'<div style="border-radius:999px;background:rgba(255,255,255,.05);'
-        +'border:1px solid rgba(255,255,255,.08);'
+      +'<div style="border-radius:999px;background:#222226;'
+        +'box-shadow:6px 6px 18px rgba(0,0,0,.65),-2px -2px 8px rgba(255,255,255,.025);'
         +'padding:8px 10px;display:flex;align-items:center;gap:8px">'
         // power
         +'<div style="width:40px;height:40px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:17px;'
-          +'background:'+(isOn?'rgba(74,222,128,.15)':'rgba(248,113,113,.12)')+';'
-          +'border:1px solid '+(isOn?'rgba(74,222,128,.3)':'rgba(248,113,113,.28)')+';'
-          +'box-shadow:'+(isOn?'0 0 12px rgba(34,197,94,.3)':'none')+';'
-          +'color:'+(isOn?'#4ade80':'#f87171')+'">⏻</div>'
+          +'background:'+(isOn?'#14532d':'#1c1418')+';'
+          +'box-shadow:'+(isOn?'0 0 12px rgba(34,197,94,.35),inset 0 1px 0 rgba(255,255,255,.07)':'inset 2px 2px 7px rgba(0,0,0,.6),-1px -1px 3px rgba(255,255,255,.02)')+';'
+          +'color:'+(isOn?'#4ade80':'rgba(239,68,68,.55)')+'">⏻</div>'
         // sensor temp small
-        +(sensorT?'<div style="flex-shrink:0;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:4px 8px;font-size:11px;font-weight:700;font-family:\'Courier New\',monospace;color:#fff">'+sensorT+'°</div>':'')
+        +(sensorT?'<div style="flex-shrink:0;background:#0e0e11;border-radius:16px;padding:4px 8px;box-shadow:inset 2px 2px 6px rgba(0,0,0,.65);font-size:11px;font-weight:700;font-family:\'Courier New\',monospace;color:#fff">'+sensorT+'°</div>':'')
         // LED display
-        +'<div style="flex:1;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:6px 10px;'
+        +'<div style="flex:1;background:#0d0d10;border-radius:14px;padding:6px 10px;'
+          +'box-shadow:inset 3px 3px 10px rgba(0,0,0,.7),inset -1px -1px 3px rgba(255,255,255,.018);'
           +'display:flex;align-items:center;justify-content:space-between">'
           +'<button class="cb" data-cid="'+entityId+'" data-action="temp-down" style="font-size:24px;color:#fff;line-height:1;padding:0 3px">−</button>'
           +'<div data-clm-led data-clm-temp style="flex:1;text-align:center;font-family:\'Courier New\',monospace;font-size:24px;font-weight:700;letter-spacing:2px;'
-            +'color:'+(isOn?mCol:'rgba(255,255,255,.2)')+';text-shadow:'+(isOn?'0 0 16px '+mCol+',0 0 36px '+mCol+'44':'none')+'">'+( isOn?targetTemp+'°':'──')
+            +'color:'+(isOn?mCol:'#1a2535')+';text-shadow:'+(isOn?'0 0 16px '+mCol+',0 0 36px '+mCol+'44':'none')+'">'+( isOn?targetTemp+'°':'──')
           +'</div>'
           +'<button class="cb" data-cid="'+entityId+'" data-action="temp-up" style="font-size:24px;color:#fff;line-height:1;padding:0 3px">+</button>'
         +'</div>'
       +'</div>'
       // mode/fan info strip
-      +'<div style="text-align:center;font-size:10px;font-weight:600;color:'+(isOn?mCol:'#fff')+';letter-spacing:.06em;'+(isOn?'text-shadow:0 0 8px '+mCol+'55;':'')+'">'+( isOn?mIcon(mode)+' '+mLabel(mode).toUpperCase()+(fanMode?' · 💨 '+fLabel(fanMode):'')+(swingOn?' · ↕':''):'— climatizzatore spento —')+'</div>'
+      +'<div style="text-align:center;font-size:10px;font-weight:600;color:'+(isOn?mCol:'rgba(255,255,255,.15)')+';letter-spacing:.06em;'+(isOn?'text-shadow:0 0 8px '+mCol+'55;':'')+'">'+( isOn?mIcon(mode)+' '+mLabel(mode).toUpperCase()+(fanMode?' · 💨 '+fLabel(fanMode):'')+(swingOn?' · ↕':''):'— climatizzatore spento —')+'</div>'
       // toggles
       +togRow
       // panels
@@ -806,9 +805,9 @@
       +'#'+rid+' .cb:hover{filter:brightness(1.3);}'
       +'#'+rid+' .tog{flex:1;padding:8px 4px;border-radius:14px;border:none;cursor:pointer;font-size:10px;'
         +'font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;'
-        +'background:#060c18;color:#fff;transition:color .2s,box-shadow .2s;'
+        +'background:#060c18;color:#94a3b8;transition:color .2s,box-shadow .2s;'
         +'box-shadow:inset 2px 3px 8px rgba(0,0,0,.65),inset -1px -2px 5px rgba(255,255,255,.04);}'
-      +'#'+rid+' .tog:hover{color:#fff;}'
+      +'#'+rid+' .tog:hover{color:#e2e8f0;}'
       +'</style>';
     const indRight = '<div style="display:flex;gap:5px;align-items:center">'
       +(syncCol ? '<div title="Sync aletta" style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:'+syncCol+';box-shadow:0 0 6px '+syncCol+'cc"></div>' : '')
@@ -849,9 +848,9 @@
     +'</div>';
     const airSection = '<div style="position:relative;height:'+(isOn?'86px':'10px')+';overflow:hidden;transition:height .7s ease;margin-top:6px;pointer-events:none">'+airStreams(rid,mCol,isOn)+'</div>';
     const tempRow = '<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:7px 14px">'
-      +'<button class="cb" data-cid="'+entityId+'" data-action="temp-down" style="width:34px;height:34px;border-radius:11px;border:none;background:#060c18;color:#fff;box-shadow:inset 2px 3px 8px rgba(0,0,0,.65),inset -1px -2px 5px rgba(255,255,255,.04);font-size:22px;font-weight:700;line-height:1;padding:0;display:flex;align-items:center;justify-content:center">−</button>'
+      +'<button class="cb" data-cid="'+entityId+'" data-action="temp-down" style="width:34px;height:34px;border-radius:11px;border:none;background:#060c18;color:#e2e8f0;box-shadow:inset 2px 3px 8px rgba(0,0,0,.65),inset -1px -2px 5px rgba(255,255,255,.04);font-size:22px;font-weight:700;line-height:1;padding:0;display:flex;align-items:center;justify-content:center">−</button>'
       +'<div data-clm-temp style="font-size:26px;font-weight:800;min-width:80px;text-align:center;color:'+(isOn?mCol:'#334155')+';text-shadow:'+(isOn?'0 0 10px '+mCol:'none')+';">'+(isOn?targetTemp+'°':'—')+'</div>'
-      +'<button class="cb" data-cid="'+entityId+'" data-action="temp-up" style="width:34px;height:34px;border-radius:11px;border:none;background:#060c18;color:#fff;box-shadow:inset 2px 3px 8px rgba(0,0,0,.65),inset -1px -2px 5px rgba(255,255,255,.04);font-size:22px;font-weight:700;line-height:1;padding:0;display:flex;align-items:center;justify-content:center">+</button>'
+      +'<button class="cb" data-cid="'+entityId+'" data-action="temp-up" style="width:34px;height:34px;border-radius:11px;border:none;background:#060c18;color:#e2e8f0;box-shadow:inset 2px 3px 8px rgba(0,0,0,.65),inset -1px -2px 5px rgba(255,255,255,.04);font-size:22px;font-weight:700;line-height:1;padding:0;display:flex;align-items:center;justify-content:center">+</button>'
     +'</div>';
     const togRow = '<div style="display:flex;gap:7px">'
       +'<button class="tog" data-action="toggle" data-sec="mode"><span style="font-size:17px">'+mIcon(mode)+'</span><span>Modalità</span></button>'
@@ -859,20 +858,17 @@
       +(swingModes.length>1?'<button class="tog" data-action="toggle" data-sec="swing"><span style="font-size:17px">↕</span><span>Alette</span></button>':'')
     +'</div>';
     function selBtn(eId,action,val,label,active,col2){
-      const bs=active?'background:'+col2+'33;color:'+col2+';border:1px solid '+col2+'55;box-shadow:0 0 9px '+col2+'44;':'background:rgba(255,255,255,.07);color:#fff;border:1px solid rgba(255,255,255,.1);';
+      const bs=active?'background:'+col2+'33;color:'+col2+';border:1px solid '+col2+'55;box-shadow:0 0 9px '+col2+'44;':'background:rgba(255,255,255,.07);color:#64748b;border:1px solid rgba(255,255,255,.1);';
       return '<button class="cb" data-cid="'+eId+'" data-action="'+action+'" data-val="'+val+'" style="'+bs+'">'+label+'</button>';
     }
     const pw='display:none;flex-direction:column;gap:6px;background:rgba(255,255,255,.04);border-radius:13px;padding:10px;border:1px solid rgba(255,255,255,.08);';
     return css
       +'<div id="'+rid+'" style="position:relative;width:100%;height:100%;min-height:260px;border-radius:18px;'
-        +'padding:14px;box-sizing:border-box;font-family:system-ui,sans-serif;color:#fff;'
+        +'padding:14px;box-sizing:border-box;font-family:system-ui,sans-serif;color:#e8ebf5;'
         +'display:flex;flex-direction:column;gap:9px;overflow:hidden;'
         +'background:linear-gradient(150deg,#0c1322 0%,#0a0f1c 60%,#0c1626 100%);'
         +'border:1px solid rgba(99,102,241,.22);box-shadow:0 10px 40px rgba(0,0,0,.45);">'
-        +'<div style="display:flex;align-items:center;gap:6px">'
-          +'<div style="flex:1;text-align:center;font-size:19px;font-weight:800;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-left:24px">'+nm+'</div>'
-          +'<button data-action="cfg" title="Impostazioni" style="width:24px;height:24px;border-radius:7px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:#fff;font-size:12px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center">⚙️</button>'
-        +'</div>'
+        +'<div style="text-align:center;font-size:19px;font-weight:800;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+nm+'</div>'
         +acBody+airSection+tempRow+togRow
         +_panels(rid,entityId,mode,fanMode,swingMode,hvacModes,fanModes,swingModes,pw,selBtn)
       +'</div>';
@@ -895,8 +891,6 @@
 
       const action = btn.getAttribute('data-action');
 
-      if (action === 'cfg') { openCfg(card, el); return; }
-
       if (action === 'toggle') {
         const sec   = btn.getAttribute('data-sec');
         const secEl = el.querySelector('[data-secpanel="'+sec+'"]');
@@ -904,15 +898,13 @@
         const wasOpen = secEl.style.display === 'flex';
         el.querySelectorAll('[data-secpanel]').forEach(function(s){ s.style.display='none'; });
         el.querySelectorAll('.tog').forEach(function(b){
-          b.style.background='rgba(255,255,255,.06)';
-          b.style.borderColor='rgba(255,255,255,.1)';
-          b.style.color='#fff';
+          b.style.boxShadow='inset 2px 3px 8px rgba(0,0,0,.65),inset -1px -2px 5px rgba(255,255,255,.04)';
+          b.style.color='#94a3b8';
         });
         if (!wasOpen) {
           secEl.style.display='flex';
-          btn.style.background='rgba(255,255,255,.16)';
-          btn.style.borderColor='rgba(255,255,255,.28)';
-          btn.style.color='#fff';
+          btn.style.boxShadow='inset 2px 3px 8px rgba(0,0,0,.65),inset -1px -2px 5px rgba(255,255,255,.04),0 0 0 1.5px rgba(255,255,255,.18)';
+          btn.style.color='#e2e8f0';
           _openSecs[card.id]=sec;
         } else { _openSecs[card.id]=null; }
         return;
@@ -956,7 +948,7 @@
         el.querySelectorAll('[data-secpanel="swing"] .cb').forEach(function(b){
           const active = b.getAttribute('data-val')===val;
           b.style.background  = active?'#a78bfa33':'rgba(255,255,255,.07)';
-          b.style.color       = active?'#a78bfa':'#fff';
+          b.style.color       = active?'#a78bfa':'#64748b';
           b.style.border      = active?'1px solid #a78bfa55':'1px solid rgba(255,255,255,.1)';
           b.style.boxShadow   = active?'0 0 9px #a78bfa44':'';
         });
@@ -1139,10 +1131,7 @@
     +'</div>';
 
     document.body.appendChild(ov);
-    const close=function(){try{document.body.removeChild(ov);}catch(e){} document.removeEventListener('keydown',escHandler);};
-    function escHandler(e){ if(e.key==='Escape') close(); }
-    document.addEventListener('keydown',escHandler);
-    ov.addEventListener('click',function(e){ if(e.target===ov) close(); });
+    const close=function(){try{document.body.removeChild(ov);}catch(e){}};
     ov.querySelector('#cl-cancel').addEventListener('click',close);
     ov.querySelector('#cl-hdr-close').addEventListener('click',close);
 
@@ -1197,7 +1186,7 @@
         drop.style.display='block';
         drop.innerHTML=hits.map(function(id){var fn=(((states[id]||{}).attributes)||{}).friendly_name||'';
           return '<div data-pick="'+id+'" style="padding:5px 11px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04)">'
-            +'<span style="color:#fff">'+id+'</span>'+(fn?'<span style="color:#fff;margin-left:7px;font-family:system-ui;font-size:10px">'+fn+'</span>':'')+'</div>';
+            +'<span style="color:#e2e8f0">'+id+'</span>'+(fn?'<span style="color:#475569;margin-left:7px;font-family:system-ui;font-size:10px">'+fn+'</span>':'')+'</div>';
         }).join('');
         drop.querySelectorAll('[data-pick]').forEach(function(row){
           row.addEventListener('mousedown',function(ev){ev.preventDefault();inp.value=row.getAttribute('data-pick');drop.style.display='none';schedPrev();});
