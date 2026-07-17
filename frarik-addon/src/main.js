@@ -6955,8 +6955,8 @@ function _badgeItemHTML(b, cls='hbadge', sepCls='badge-sep'){
     const col=chip.color||'rgba(255,255,255,0.38)';
     const bbc=chip.borderColor||null;
     const ico=chip.icon!=null?`${chip.icon} `:(def?.icon?def.icon+' ':'📦 ');
-    const lbl=chip.label?`<span class="badge-lbl">${eh(chip.label)}: </span>`:'';
-    const val=chip.value!=null?`<span class="badge-val" id="bgcnt-${b.id}">${chip.value}</span>`:'';
+    const lbl=chip.label?`<span class="badge-lbl">${eh(String(chip.label).toUpperCase())}: </span>`:'';
+    const val=chip.value!=null?`<span class="badge-val" id="bgcnt-${b.id}">${String(chip.value).toUpperCase()}</span>`:'';
     const bStyle=bbc?`cursor:pointer;--bc:${col};--bbc:${bbc}`:`cursor:pointer;--bc:${col}`;
     return `<span class="${cls}" id="bchip-${b.id}" style="${bStyle}" data-action="_badgeClick" data-action-arg="${b.id}">${ico}${lbl}${val}</span>`;
   }

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.80 — 2026-07-17
+
+### feat: distintivi con label e valore in maiuscolo
+
+Il chip di ogni distintivo (`card-distintivi/*.js`) mostra ora label e valore in maiuscolo.
+Modificato un solo punto condiviso in `frarik-addon/src/main.js` (`_badgeItemHTML`, ramo
+`type==='jsd'`) invece di toccare i 14 file dei distintivi uno per uno — l'icona (spesso SVG)
+non è toccata, solo il testo di label e valore.
+
 ## 2.0.79 — 2026-07-16
 
 ### fix: standardizzazione trasversale a tutte le card e ai distintivi
