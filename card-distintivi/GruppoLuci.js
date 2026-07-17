@@ -1,11 +1,14 @@
-/* frarik-version: 2.0 */
+/* frarik-version: 2.1 */
 /**
- * GruppoLuci.js — Distintivo FratechStore v2.0
+ * GruppoLuci.js — Distintivo FratechStore v2.1
  * Fix: icona configurabile (preserve su re-render), sottotitolo popup nascosto
  * v1.9: testi maiuscolo+grassetto (chip e popup), layout popup a stile "glass"
  *       (hero riepilogo + tasti accendi/spegni a medaglione + righe luci glass)
- * v2.0: chip senza label (niente "Luci:"), valore = solo n. luci accese (non più X/Y);
- *       tutto il testo del popup ora in grassetto pieno (900)
+ * v2.0: chip senza label (niente "Luci:"), valore = solo n. luci accese (non più X/Y)
+ * v2.1: ripristinata la scritta "Luci" nel distintivo; fix riquadri che restavano
+ *       "spenti" alla riaccensione — toggle/accendi-tutte ora ridisegnano subito
+ *       l'intera riga in ottimistico invece di aspettare il polling; update()
+ *       non scartava più lo stato live ricevuto
  */
 (function () {
   'use strict';
@@ -69,6 +72,7 @@
     const _cond = { any_on: active > 0, all_off: active === 0 };
     return {
       icon: iconHtml(_dynIcon(c.icon || '💡', active > 0)),
+      label: (c.label || 'Luci').toUpperCase(),
       value: ents.length ? String(active) : '—',
       color: (_fcr && _fcr.evalColor(cfg, _cond)) || (active > 0 ? col : '#fff'),
       borderColor: _fcr && _fcr.evalBorderColor(cfg, _cond),
@@ -84,12 +88,14 @@
   }
 
   /* ── render popup — usa H() live ── */
-  function render(cfg, rawHass) {
+  function render(cfg, rawHass, overrides) {
     const c = loadCfg(cfg);
     const h = liveH(rawHass);
+    const ov = overrides || {};
+    const isEntOn = (ent) => Object.prototype.hasOwnProperty.call(ov, ent) ? ov[ent] : (h ? isOn(h, ent) : false);
     const ents = Array.isArray(c.entities) ? c.entities : [];
     const col = c.color || '#fbbf24';
-    const active = h ? ents.filter(e => isOn(h, e.entity)).length : 0;
+    const active = ents.filter(e => isEntOn(e.entity)).length;
     const anyOn = active > 0;
     const heroCol = anyOn ? col : '#fff';
     const heroTxt = !ents.length ? 'NESSUNA LUCE'
@@ -125,7 +131,7 @@
 
     const rows = ents.map((e, i) => {
       if (!e.entity) return '';
-      const on = h ? isOn(h, e.entity) : false;
+      const on = isEntOn(e.entity);
       const lbl = e.label || nameOf(h, e.entity);
       const swBg = on ? col : 'rgba(255,255,255,0.14)';
       const thumbL = on ? '22px' : '2px';
@@ -179,13 +185,11 @@
       if (tog) {
         const e = ents[parseInt(tog.dataset.jsdToggle)]; if (!e) return;
         const on = isOn(H(), e.entity);
-        // ottimistico immediato: sposta toggle visivamente senza aspettare HA
-        tog.style.background = on ? 'rgba(255,255,255,0.14)' : col;
-        const thumb = tog.querySelector('div');
-        if (thumb) { thumb.style.transition = 'left .18s'; thumb.style.left = on ? '2px' : '22px'; }
         callSvc(e.entity.split('.')[0], on ? 'turn_off' : 'turn_on', e.entity);
-        // nessun re-render ritardato: il polling a 1.5s aggiorna lo stato reale
-        // (evita il flicker causato dal re-render prima che HA abbia processato il comando)
+        // ottimistico immediato: ridisegna tutta la riga (icona/sfondo/testo) col nuovo stato atteso,
+        // senza aspettare il polling — evita che il riquadro resti "spento" mentre HA processa il comando
+        el.innerHTML = render(cfg, H(), { [e.entity]: !on });
+        _mountHandlers(cfg, el);
         ev.stopPropagation(); return;
       }
       const auto = ev.target.closest('[data-jsd-auto]');
@@ -203,13 +207,13 @@
       }
       const allBtn = ev.target.closest('[data-gl-all]');
       if (allBtn) {
-        const svc = allBtn.dataset.glAll === 'on' ? 'turn_on' : 'turn_off';
-        ents.forEach(e => { if (e.entity) callSvc(e.entity.split('.')[0], svc, e.entity); });
-        // "accendi/spegni tutte" → aspetta 1s per HA poi re-render
-        setTimeout(() => {
-          if (!el.isConnected) return;
-          el.innerHTML = render(cfg, null); _mountHandlers(cfg, el);
-        }, 1000);
+        const wantOn = allBtn.dataset.glAll === 'on';
+        const svc = wantOn ? 'turn_on' : 'turn_off';
+        const overrides = {};
+        ents.forEach(e => { if (e.entity) { callSvc(e.entity.split('.')[0], svc, e.entity); overrides[e.entity] = wantOn; } });
+        // ottimistico immediato, come per il toggle singolo
+        el.innerHTML = render(cfg, H(), overrides);
+        _mountHandlers(cfg, el);
         ev.stopPropagation(); return;
       }
     }
@@ -261,7 +265,7 @@
   }
 
   function update(cfg, rawHass, el) {
-    try { el.innerHTML = render(cfg, null); _mountHandlers(cfg, el); } catch(e){}
+    try { el.innerHTML = render(cfg, rawHass); _mountHandlers(cfg, el); } catch(e){}
   }
 
   /* ── configure ── */
@@ -579,7 +583,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Luci', icon: '💡',
     desc: 'Chip con contatore luci accese. Clic → pannello toggle + Accendi/Spegni tutte.',
-    version: '2.0', isDistintivo: true,
+    version: '2.1', isDistintivo: true,
     defaultCfg: { label: 'Luci', icon: '💡', color: '#fbbf24', entities: [], colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -588,5 +592,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-luci v2.0'); } catch(e){}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-luci v2.1'); } catch(e){}
 })();
