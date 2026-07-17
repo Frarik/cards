@@ -1,6 +1,6 @@
-/* frarik-version: 3.5 */
+/* frarik-version: 3.6 */
 /**
- * GruppoAllarme.js — Distintivo FratechStore v3.5
+ * GruppoAllarme.js — Distintivo FratechStore v3.6
  * Chip stato allarme Alarmo + popup sensori/bypass + overlay triggered automatico
  *
  * v2.3: fix bypass — azzera solo sulla transizione armato→disarmato, non mentre è già disarmato
@@ -37,6 +37,9 @@
  * v3.5: sensori — tile più grandi/alte con lo stesso stile "vetro" (gradiente+alone)
  *       dell'header, e riportato il pulsante Escludi/Includi visibile dentro la tile
  *       (prima si doveva toccare tutta la tile senza un'azione esplicita)
+ * v3.6: sirena — separata chiaramente dai sensori: divisore sopra + più spazio, tile
+ *       ingrandita con lo stesso stile vetro, icona diversa (altoparlante) e label
+ *       "🔊 Sirena" per non sembrare "un sensore in più"
  */
 (function () {
   'use strict';
@@ -324,20 +327,24 @@
       </div>
     </div>` : '';
 
-    /* sirena */
+    /* sirena — separata chiaramente dai sensori: divisore sopra, tile piena larghezza
+       più grande, icona diversa (altoparlante) per non sembrare "un sensore in più" */
     let sirenRow = '';
     if (c.siren) {
       const ss      = h ? stateOf(h, c.siren) : 'unknown';
       const sirenOn = ss === 'on';
       const sName   = nameOf(h, c.siren);
       const sirenCol = sirenOn ? '#f87171' : '#4ade80';
-      sirenRow = `<div style="margin-top:14px">
-        <div style="${secLbl}">Sirena</div>
-        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:13px;background:linear-gradient(155deg,${hex2rgba(sirenCol, sirenOn ? .16 : .07)},${hex2rgba(sirenCol,.03)});border:1px solid ${hex2rgba(sirenCol, sirenOn ? .34 : .2)}${sirenOn ? `;box-shadow:0 0 12px ${hex2rgba(sirenCol,.14)}` : ''}">
-          <span style="width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${hex2rgba(sirenCol,.18)};border:1px solid ${hex2rgba(sirenCol,.45)};color:${sirenCol}">${mdi('mdi:bullhorn', 16)}</span>
-          <span style="flex:1;font-size:13px;font-weight:900;text-transform:uppercase;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(sName)}</span>
-          <span style="font-size:10px;padding:3px 10px;border-radius:6px;background:${hex2rgba(sirenCol,.2)};color:${sirenCol};font-weight:900;text-transform:uppercase;flex-shrink:0">${sirenOn ? 'ATTIVA' : 'SPENTA'}</span>
-          ${sirenOn ? `<button data-ca-siren-off style="padding:5px 12px;border-radius:8px;border:1px solid rgba(248,113,113,.38);background:rgba(248,113,113,.12);color:#f87171;cursor:pointer;font-size:10px;font-weight:900;text-transform:uppercase;outline:none;flex-shrink:0">Spegni</button>` : ''}
+      sirenRow = `<div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08)">
+        <div style="${secLbl}">🔊 Sirena</div>
+        <div style="position:relative;overflow:hidden;display:flex;align-items:center;gap:12px;padding:14px 14px;border-radius:16px;background:linear-gradient(155deg,${hex2rgba(sirenCol, sirenOn ? .2 : .1)},${hex2rgba(sirenCol,.04)});border:1px solid ${hex2rgba(sirenCol, sirenOn ? .42 : .25)}${sirenOn ? `;box-shadow:0 0 14px ${hex2rgba(sirenCol,.18)}` : ''}">
+          <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 10%,${hex2rgba(sirenCol,.2)},transparent 62%);pointer-events:none"></div>
+          <span style="position:relative;width:42px;height:42px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${hex2rgba(sirenCol,.22)};border:1px solid ${hex2rgba(sirenCol,.5)};box-shadow:0 0 12px ${hex2rgba(sirenCol,.3)};color:${sirenCol}">${mdi('mdi:bullhorn-outline', 21)}</span>
+          <span style="position:relative;flex:1;min-width:0">
+            <span style="display:block;font-size:13px;font-weight:900;text-transform:uppercase;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(sName)}</span>
+            <span style="display:block;font-size:9.5px;font-weight:900;text-transform:uppercase;color:${sirenCol};letter-spacing:.3px;margin-top:2px">${sirenOn ? 'ATTIVA' : 'SPENTA'}</span>
+          </span>
+          ${sirenOn ? `<button data-ca-siren-off style="position:relative;flex-shrink:0;padding:8px 12px;border-radius:10px;border:1px solid rgba(248,113,113,.42);background:rgba(248,113,113,.14);color:#f87171;cursor:pointer;font-size:10px;font-weight:900;text-transform:uppercase;outline:none">Spegni</button>` : ''}
         </div>
       </div>`;
     }
@@ -755,7 +762,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Allarme', icon: '🔒',
     desc: '',
-    version: '3.5', isDistintivo: true,
+    version: '3.6', isDistintivo: true,
     defaultCfg: { label: 'Allarme', alarmEntity: '', code: '', modes: ['armed_away'], sensors: [], siren: '', colorMode: 'auto', colorRules: [] },
     chip,
     watchEntities,
@@ -769,5 +776,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v3.5'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v3.6'); } catch (e) {}
 })();
