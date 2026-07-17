@@ -1363,8 +1363,8 @@ html,body{font-family:var(--font-family)}
 [data-theme="light"] .sect-align-btn.on,[data-theme="light"] .sect-size-btn.on{background:rgba(99,102,241,0.1);border-color:var(--acc);color:var(--acc)}
 
 /* ═══ BADGE SYSTEM ═══ */
-.hbadge{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:900;white-space:nowrap;background:rgba(255,255,255,0.07);border:1px solid var(--bbc,rgba(255,255,255,0.1));color:var(--bc,rgba(255,255,255,0.88));line-height:1.5}
-.badge-title{font-size:12px;font-weight:900;white-space:nowrap;padding:0 4px;color:var(--bc,#fff);-webkit-text-stroke:.35px currentColor}
+.hbadge{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:20px;font-size:14px;font-weight:900;white-space:nowrap;background:rgba(255,255,255,0.07);border:1px solid var(--bbc,rgba(255,255,255,0.1));color:var(--bc,rgba(255,255,255,0.88));line-height:1.5}
+.badge-title{font-size:14px;font-weight:900;white-space:nowrap;padding:0 4px;color:var(--bc,#fff);-webkit-text-stroke:.35px currentColor}
 .badge-lbl{opacity:.75;font-weight:900;margin-right:1px;-webkit-text-stroke:.35px currentColor}
 .badge-sfx{opacity:.5;font-size:9px;font-weight:700;margin-left:1px}
 .badge-val{font-weight:900;-webkit-text-stroke:.35px currentColor}

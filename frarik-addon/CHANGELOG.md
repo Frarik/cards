@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.86 — 2026-07-18
+
+### feat: testo dei chip ulteriormente ingrandito
+
+- `style.css`: `.hbadge`/`.badge-title` da `font-size:12px` a `14px` (richiesta
+  esplicita di testo ancora più grande, non solo la pillola nel complesso).
+
 ## 2.0.85 — 2026-07-18
 
 ### feat: chip dei distintivi ingranditi
