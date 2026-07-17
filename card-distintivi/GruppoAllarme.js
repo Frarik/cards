@@ -1,6 +1,6 @@
-/* frarik-version: 2.7 */
+/* frarik-version: 2.8 */
 /**
- * GruppoAllarme.js — Distintivo FratechStore v2.7
+ * GruppoAllarme.js — Distintivo FratechStore v2.8
  * Chip stato allarme Alarmo + popup sensori/bypass + overlay triggered automatico
  *
  * v2.3: fix bypass — azzera solo sulla transizione armato→disarmato, non mentre è già disarmato
@@ -10,6 +10,13 @@
  *       chip non può contenere tag HTML: ora è testo semplice già in maiuscolo
  * v2.7: chip con icona a scudo (cambia forma/colore per stato) al posto dell'emoji, rimossa la
  *       label fissa "Allarme:" — richiede l'aggiornamento live dell'icona aggiunto in main.js
+ * v2.8: popup — restyle hero (medaglione scudo con alone), sensori con icona in badge
+ *       circolare, testo rimanente maiuscolo/grassetto; fix bug bypass: il ri-arm dopo
+ *       un'esclusione scattava anche durante pending/arming/triggered (rischio di
+ *       silenziare la sirena/disarmare per errore) — ora solo se davvero armato; la
+ *       modalità "armed_custom_bypass" non viene più assunta sempre come "away" ma usa
+ *       l'ultima modalità scelta; ritardata la chiamata bypass all'armamento per evitare
+ *       che la chiamata standard (senza bypass) sovrascriva quella con l'esclusione
  */
 (function () {
   'use strict';
@@ -18,6 +25,10 @@
 
   /* bypass state persistente tra aperture del popup, per alarmEntity */
   const _bypassedState = {};
+  /* ultima modalità di arm scelta dall'utente per ogni alarmEntity — serve per sapere
+     quale modalità ri-applicare se si tocca il bypass mentre lo stato è
+     "armed_custom_bypass" (quello stato da solo non dice qual era la modalità originale) */
+  const _lastArmMode = {};
 
   /* icona = sempre uno scudo, la forma/colore cambia in base allo stato */
   const ALARM_DEF = {
@@ -210,7 +221,7 @@
     bypassed = bypassed instanceof Set ? bypassed : new Set();
 
     if (!c.alarmEntity) {
-      return `<div style="padding:40px 20px;text-align:center;color:#fff;font-size:13px;font-family:system-ui,sans-serif">
+      return `<div style="padding:40px 20px;text-align:center;color:#fff;font-size:13px;font-weight:900;text-transform:uppercase;font-family:system-ui,sans-serif">
         Nessuna entità allarme configurata.<br>
         <span style="font-size:11px;">Clicca ✏️ sulla chip per configurare.</span>
       </div>`;
@@ -233,7 +244,7 @@
     }).length;
     const bypassedCount = bypassed.size;
 
-    const secLbl = 'font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:8px';
+    const secLbl = 'font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:8px';
 
     const sensorRows = sensors.map((s, i) => {
       if (!s.entity) return '';
@@ -244,25 +255,28 @@
       const sLbl        = s.label || nameOf(h, s.entity);
 
       let rowBg = 'rgba(255,255,255,.04)', rowBdr = 'rgba(255,255,255,.08)', tag = '', bypassBtn = '';
+      let sIcoCol = '#4ade80';
 
       if (isBypassed) {
         rowBg  = 'rgba(250,204,21,.07)';
         rowBdr = 'rgba(250,204,21,.24)';
-        tag    = `<span style="font-size:10px;padding:3px 10px;border-radius:6px;background:rgba(250,204,21,.2);color:#facc15;font-weight:700;flex-shrink:0">ESCLUSO</span>`;
+        sIcoCol = '#facc15';
+        tag    = `<span style="font-size:10px;padding:3px 10px;border-radius:6px;background:rgba(250,204,21,.2);color:#facc15;font-weight:900;text-transform:uppercase;flex-shrink:0">ESCLUSO</span>`;
       } else if (open) {
         rowBg  = 'rgba(248,113,113,.09)';
         rowBdr = 'rgba(248,113,113,.28)';
-        tag    = `<span style="font-size:10px;padding:3px 10px;border-radius:6px;background:rgba(248,113,113,.2);color:#f87171;font-weight:700;flex-shrink:0">APERTO</span>`;
+        sIcoCol = '#f87171';
+        tag    = `<span style="font-size:10px;padding:3px 10px;border-radius:6px;background:rgba(248,113,113,.2);color:#f87171;font-weight:900;text-transform:uppercase;flex-shrink:0">APERTO</span>`;
       } else {
-        tag = `<span style="font-size:10px;padding:3px 10px;border-radius:6px;background:rgba(74,222,128,.15);color:#4ade80;font-weight:700;flex-shrink:0">OK</span>`;
+        tag = `<span style="font-size:10px;padding:3px 10px;border-radius:6px;background:rgba(74,222,128,.15);color:#4ade80;font-weight:900;text-transform:uppercase;flex-shrink:0">OK</span>`;
       }
 
       bypassBtn = isBypassed
-        ? `<button data-ca-bypass="${i}" data-entity="${eh(s.entity)}" style="padding:5px 12px;border-radius:8px;border:1px solid rgba(250,204,21,.42);background:rgba(250,204,21,.14);color:#facc15;cursor:pointer;font-size:10px;font-weight:700;white-space:nowrap;outline:none;flex-shrink:0">✕ Includi</button>`
-        : `<button data-ca-bypass="${i}" data-entity="${eh(s.entity)}" style="padding:5px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.07);color:#fff;cursor:pointer;font-size:10px;font-weight:700;white-space:nowrap;outline:none;flex-shrink:0">🛡 Escludi</button>`;
+        ? `<button data-ca-bypass="${i}" data-entity="${eh(s.entity)}" style="padding:5px 12px;border-radius:8px;border:1px solid rgba(250,204,21,.42);background:rgba(250,204,21,.14);color:#facc15;cursor:pointer;font-size:10px;font-weight:900;text-transform:uppercase;white-space:nowrap;outline:none;flex-shrink:0">✕ Includi</button>`
+        : `<button data-ca-bypass="${i}" data-entity="${eh(s.entity)}" style="padding:5px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.07);color:#fff;cursor:pointer;font-size:10px;font-weight:900;text-transform:uppercase;white-space:nowrap;outline:none;flex-shrink:0">🛡 Escludi</button>`;
 
       return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:11px;background:${rowBg};border:1px solid ${rowBdr}">
-        <span style="color:${open && !isBypassed ? '#f87171' : isBypassed ? '#facc15' : '#4ade80'};flex-shrink:0">${mdi(sIco, 20)}</span>
+        <span style="width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${hex2rgba(sIcoCol,.16)};border:1px solid ${hex2rgba(sIcoCol,.4)};color:${sIcoCol}">${mdi(sIco, 16)}</span>
         <span style="flex:1;font-size:13px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(sLbl)}</span>
         ${tag}
         ${bypassBtn}
@@ -273,13 +287,13 @@
     const modeBtns = visibleModes.map(m => {
       const isCur = state === m.key;
       const mCol  = ALARM_DEF[m.key]?.col || '#f97316';
-      return `<button data-ca-arm="${m.svc}" style="flex:1;padding:13px 4px;border-radius:13px;border:1px solid ${isCur ? hex2rgba(mCol,.4) : 'rgba(255,255,255,.12)'};background:${isCur ? hex2rgba(mCol,.18) : 'rgba(255,255,255,.06)'};color:${isCur ? mCol : '#fff'};cursor:pointer;font-size:11px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:5px;outline:none;min-width:0;transition:background .15s">
+      return `<button data-ca-arm="${m.svc}" style="flex:1;padding:13px 4px;border-radius:13px;border:1px solid ${isCur ? hex2rgba(mCol,.5) : 'rgba(255,255,255,.12)'};background:${isCur ? hex2rgba(mCol,.2) : 'rgba(255,255,255,.06)'};color:${isCur ? mCol : '#fff'};cursor:pointer;font-size:11px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:5px;outline:none;min-width:0;transition:background .15s${isCur ? `;box-shadow:0 0 14px ${hex2rgba(mCol,.3)}` : ''}">
         <span style="color:inherit">${mdi(m.ico, 24)}</span>
         <span style="white-space:nowrap;color:inherit;text-transform:uppercase;font-weight:900">${eh(m.lbl)}</span>
       </button>`;
     }).join('');
 
-    const disarmBtn = `<button data-ca-disarm style="flex:1;padding:13px 4px;border-radius:13px;border:1px solid ${state==='disarmed'?'rgba(74,222,128,.38)':'rgba(255,255,255,.12)'};background:${state==='disarmed'?'rgba(74,222,128,.15)':'rgba(255,255,255,.06)'};color:${state==='disarmed'?'#4ade80':'#fff'};cursor:pointer;font-size:11px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:5px;outline:none;min-width:0">
+    const disarmBtn = `<button data-ca-disarm style="flex:1;padding:13px 4px;border-radius:13px;border:1px solid ${state==='disarmed'?'rgba(74,222,128,.5)':'rgba(255,255,255,.12)'};background:${state==='disarmed'?'rgba(74,222,128,.18)':'rgba(255,255,255,.06)'};color:${state==='disarmed'?'#4ade80':'#fff'};cursor:pointer;font-size:11px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:5px;outline:none;min-width:0${state==='disarmed'?';box-shadow:0 0 14px rgba(74,222,128,.3)':''}">
       <span style="color:inherit">${mdi('mdi:lock-open-variant', 24)}</span>
       <span style="white-space:nowrap;color:inherit;text-transform:uppercase;font-weight:900">Disarma</span>
     </button>`;
@@ -288,8 +302,8 @@
     const openWarn = (openActive > 0 && !armed) ? `<div style="display:flex;align-items:center;gap:10px;padding:10px 13px;border-radius:11px;background:rgba(250,204,21,.08);border:1px solid rgba(250,204,21,.26);margin-bottom:12px">
       <span style="font-size:18px;flex-shrink:0">⚠️</span>
       <div style="flex:1">
-        <div style="font-size:12px;color:#facc15;font-weight:700">${openActive} sensore${openActive > 1 ? 'i aperti' : ' aperto'}</div>
-        <div style="font-size:10px;color:#fff;margin-top:1px">Escludi i sensori che vuoi ignorare, poi premi un tasto di attivazione</div>
+        <div style="font-size:12px;color:#facc15;font-weight:900;text-transform:uppercase">${openActive} sensore${openActive > 1 ? 'i aperti' : ' aperto'}</div>
+        <div style="font-size:10px;color:#fff;margin-top:1px;font-weight:900;text-transform:uppercase">Escludi i sensori che vuoi ignorare, poi premi un tasto di attivazione</div>
       </div>
     </div>` : '';
 
@@ -305,7 +319,7 @@
           <span style="color:${sirenOn ? '#f87171' : '#4ade80'}">${mdi('mdi:bullhorn', 20)}</span>
           <span style="flex:1;font-size:13px;font-weight:900;text-transform:uppercase;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(sName)}</span>
           <span style="font-size:10px;padding:3px 10px;border-radius:6px;background:${sirenOn ? 'rgba(248,113,113,.2)' : 'rgba(74,222,128,.15)'};color:${sirenOn ? '#f87171' : '#4ade80'};font-weight:700;flex-shrink:0">${sirenOn ? 'ATTIVA' : 'SPENTA'}</span>
-          ${sirenOn ? `<button data-ca-siren-off style="padding:5px 12px;border-radius:8px;border:1px solid rgba(248,113,113,.38);background:rgba(248,113,113,.12);color:#f87171;cursor:pointer;font-size:10px;font-weight:700;outline:none;flex-shrink:0">Spegni</button>` : ''}
+          ${sirenOn ? `<button data-ca-siren-off style="padding:5px 12px;border-radius:8px;border:1px solid rgba(248,113,113,.38);background:rgba(248,113,113,.12);color:#f87171;cursor:pointer;font-size:10px;font-weight:900;text-transform:uppercase;outline:none;flex-shrink:0">Spegni</button>` : ''}
         </div>
       </div>`;
     }
@@ -316,11 +330,14 @@
         .cc-alm-pulse { animation: ccAlmPulse .85s ease-in-out infinite alternate }
       </style>
 
-      <div class="${def.pulse ? 'cc-alm-pulse' : ''}" style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:16px;background:${hex2rgba(col,.1)};border:1px solid ${hex2rgba(col,.3)};margin-bottom:14px">
-        <span style="font-size:40px;color:${col};flex-shrink:0">${mdi(def.ico, 40)}</span>
-        <div style="flex:1;min-width:0">
+      <div class="${def.pulse ? 'cc-alm-pulse' : ''}" style="position:relative;overflow:hidden;display:flex;align-items:center;gap:14px;padding:16px;border-radius:18px;background:linear-gradient(155deg,${hex2rgba(col,.16)},${hex2rgba(col,.04)});border:1px solid ${hex2rgba(col,.32)};margin-bottom:14px">
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 18% 15%,${hex2rgba(col,.22)},transparent 62%);pointer-events:none"></div>
+        <div style="position:relative;width:56px;height:56px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${hex2rgba(col,.18)};border:1.5px solid ${hex2rgba(col,.45)};box-shadow:0 0 18px ${hex2rgba(col,.35)}">
+          <span style="font-size:28px;color:${col}">${mdi(def.ico, 28)}</span>
+        </div>
+        <div style="position:relative;flex:1;min-width:0">
           <div style="font-size:20px;font-weight:900;color:${col};letter-spacing:.3px;text-transform:uppercase">${def.lbl}</div>
-          ${bypassedCount > 0 && armed ? `<div style="font-size:11px;color:#facc15;margin-top:3px">🛡 ${bypassedCount} sensore${bypassedCount>1?'i esclusi':' escluso'}</div>` : ''}
+          ${bypassedCount > 0 && armed ? `<div style="font-size:11px;font-weight:900;text-transform:uppercase;color:#facc15;margin-top:3px">🛡 ${bypassedCount} sensore${bypassedCount>1?'i esclusi':' escluso'}</div>` : ''}
         </div>
       </div>
 
@@ -354,13 +371,19 @@
         if (!el._bypassed) el._bypassed = _bypassedState[ae] || (_bypassedState[ae] = new Set());
         if (el._bypassed.has(entityId)) el._bypassed.delete(entityId);
         else el._bypassed.add(entityId);
-        /* se l'allarme è già armato, aggiorna subito il bypass in Alarmo */
+        /* se l'allarme è REALMENTE armato, aggiorna subito il bypass in Alarmo.
+           IMPORTANTE: usare curState.startsWith('armed'), non isArmed() — isArmed()
+           include anche 'pending'/'arming'/'triggered', e forzare qui un ri-arm mentre
+           l'allarme sta scattando (sirena in corso) o sta contando alla rovescia lo
+           disarmerebbe/cambierebbe modalità nel momento sbagliato. */
         const hNow = H();
         if (hNow && ae) {
           const curState = stateOf(hNow, ae);
-          if (isArmed(curState)) {
-            const stateToMode = { armed_away:'away', armed_home:'home', armed_night:'night', armed_vacation:'vacation', armed_custom_bypass:'away' };
-            const mode = stateToMode[curState] || 'away';
+          if (curState.startsWith('armed')) {
+            const stateToMode = { armed_away:'away', armed_home:'home', armed_night:'night', armed_vacation:'vacation' };
+            // armed_custom_bypass non dice da solo la modalità originale: usa l'ultima
+            // modalità scelta dall'utente invece di assumere sempre 'away'
+            const mode = stateToMode[curState] || _lastArmMode[ae] || 'away';
             const code = c.code ? String(c.code) : undefined;
             const p = { entity_id: ae, mode, force: true, bypassed_sensors: [...el._bypassed] };
             if (code) p.code = code;
@@ -379,6 +402,8 @@
         const code   = c.code ? String(c.code) : undefined;
         const bypSet = el._bypassed instanceof Set ? el._bypassed : new Set();
         const modeMap = { alarm_arm_away:'away', alarm_arm_home:'home', alarm_arm_night:'night', alarm_arm_vacation:'vacation' };
+        const mode = modeMap[svc] || 'away';
+        if (ae) _lastArmMode[ae] = mode;   // ricorda la modalità per un eventuale bypass successivo
 
         /* chiama SEMPRE il servizio standard HA — funziona nei casi normali */
         const stdPayload = { entity_id: ae };
@@ -386,11 +411,14 @@
         callEx('alarm_control_panel', svc, stdPayload);
 
         /* se ci sono sensori esclusi, chiama ANCHE alarmo.arm con force:true +
-           bypassed_sensors → i sensori esclusi non triggerano mentre è armato */
+           bypassed_sensors → i sensori esclusi non triggerano mentre è armato.
+           Ritardata leggermente rispetto alla chiamata standard qui sopra: le due
+           chiamate sulla stessa entità in parallelo possono sovrapporsi ed è la
+           standard (senza bypass) a "vincere", annullando di fatto l'esclusione. */
         if (bypSet.size > 0) {
-          const alarmoPayload = { entity_id: ae, mode: modeMap[svc] || 'away', force: true, bypassed_sensors: [...bypSet] };
+          const alarmoPayload = { entity_id: ae, mode, force: true, bypassed_sensors: [...bypSet] };
           if (code) alarmoPayload.code = code;
-          callEx('alarmo', 'arm', alarmoPayload);
+          setTimeout(() => callEx('alarmo', 'arm', alarmoPayload), 700);
         }
         ev.stopPropagation(); return;
       }
@@ -709,7 +737,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Allarme', icon: '🔒',
     desc: '',
-    version: '2.7', isDistintivo: true,
+    version: '2.8', isDistintivo: true,
     defaultCfg: { label: 'Allarme', alarmEntity: '', code: '', modes: ['armed_away'], sensors: [], siren: '', colorMode: 'auto', colorRules: [] },
     chip,
     watchEntities,
@@ -723,5 +751,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v2.7'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v2.8'); } catch (e) {}
 })();

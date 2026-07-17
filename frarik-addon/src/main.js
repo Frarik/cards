@@ -7063,11 +7063,11 @@ function _openJsdPopup(b, ev){
   const def=(window.FratechCardRegistry||{})[b.jsCardId]; if(!def) return;
   const col=def.color||b.color||'#6366f1';
   const ov=document.createElement('div');
-  ov.style.cssText='position:fixed;inset:0;z-index:99997;background:rgba(0,0,0,.6);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);display:flex;align-items:flex-end';
+  ov.style.cssText='position:fixed;inset:0;z-index:99997;background:rgba(0,0,0,.65);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);display:flex;align-items:flex-end';
   const sty=document.createElement('style');
   sty.textContent='@keyframes jsdSlUp{from{transform:translateY(100%)}to{transform:translateY(0)}}';
   const panel=document.createElement('div');
-  panel.style.cssText=`width:100%;height:88vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.8);color:#fff;animation:jsdSlUp .22s cubic-bezier(.32,1.12,.56,1)`;
+  panel.style.cssText=`width:100%;height:88vh;display:flex;flex-direction:column;background:#0a0d1a;border:1px solid rgba(255,255,255,.1);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.8);color:#fff;animation:jsdSlUp .22s cubic-bezier(.32,1.12,.56,1)`;
   const hdr=document.createElement('div');
   hdr.style.cssText=`display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0`;
   let chip={}; try{ if(def.chip) chip=def.chip(b.cfg||{},{states:hs})||{}; }catch(e){}

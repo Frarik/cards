@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.0.81 — 2026-07-17
+
+### fix: popup distintivi allineato allo standard + GruppoAllarme restyle e fix bug bypass
+
+- `main.js`: sfondo/backdrop del popup dei distintivi (`_openJsdPopup`, usato da tutti e 14)
+  allineato allo standard degli altri popup (bg `#0a0d1a`, backdrop `rgba(0,0,0,.65)`).
+- `GruppoAllarme.js` (v2.8): restyle del popup di stato (medaglione a scudo con alone nella
+  card principale, sensori con icona in badge circolare colorato, tutto il testo rimanente
+  in maiuscolo/grassetto). Corretti 3 bug nella logica di bypass/riarmo:
+  1. Escludere un sensore mentre l'allarme è in "pending"/"arming"/"triggered" (non solo
+     "armed") forzava comunque un ri-arm — rischiando di interferire con un allarme già
+     scattato o col conto alla rovescia. Ora scatta solo se davvero armato.
+  2. In stato "armed_custom_bypass" la modalità di riarmo veniva sempre assunta "away";
+     ora si usa l'ultima modalità scelta dall'utente.
+  3. All'armamento con sensori esclusi, la chiamata di bypass a volte veniva sovrascritta
+     dalla chiamata standard (nessuna garanzia d'ordine tra le due) — ora la chiamata di
+     bypass è ritardata di 700ms per evitare la sovrapposizione.
+
 ## 2.0.80 — 2026-07-17
 
 ### feat: aggiornamento live dell'icona dei distintivi (chip) + GruppoAllarme con scudo di stato
