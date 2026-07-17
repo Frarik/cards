@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.83 — 2026-07-18
+
+### fix: chip dei distintivi ancora poco in grassetto nonostante il fix precedente
+
+- `style.css`: il peso 700 di `.hbadge` (il contenitore del chip) restava comunque
+  visibile a fianco di label/valore già a 900/800 — a font-size 10px la differenza
+  tra 700 e 900 è troppo sottile per essere percepita come "grassetto". Portato
+  l'intero chip (`.hbadge`, `.badge-title`, `.badge-val`) a `font-weight:900` così
+  tutto il testo del badge (icona esclusa) risulta uniformemente in grassetto pieno.
+
 ## 2.0.82 — 2026-07-17
 
 ### fix: etichetta del chip distintivi non era in grassetto
