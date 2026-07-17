@@ -1,11 +1,13 @@
-/* frarik-version: 2.5 */
+/* frarik-version: 2.6 */
 /**
- * GruppoAllarme.js — Distintivo FratechStore v2.5
+ * GruppoAllarme.js — Distintivo FratechStore v2.6
  * Chip stato allarme Alarmo + popup sensori/bypass + overlay triggered automatico
  *
  * v2.3: fix bypass — azzera solo sulla transizione armato→disarmato, non mentre è già disarmato
  * v2.4: bypass disponibile anche quando l'allarme è già armato; ri-arma Alarmo con il nuovo set
  * v2.5: chip e popup con testo maiuscolo e in grassetto (label, stato, sensori, sirena, pulsanti)
+ * v2.6: fix chip — l'aggiornamento live usa textContent (non innerHTML), quindi il valore del
+ *       chip non può contenere tag HTML: ora è testo semplice già in maiuscolo
  */
 (function () {
   'use strict';
@@ -193,7 +195,7 @@
     const _cond = { triggered: state === 'triggered', armed: !!(state && state.startsWith('armed')), pending: state === 'pending', disarmed: state === 'disarmed' };
     return {
       label: (c.label || 'Allarme').toUpperCase(),
-      value: `<span style="font-weight:900;text-transform:uppercase">${emo} ${eh(def.lbl)}</span>`,
+      value: `${emo} ${def.lbl}`.toUpperCase(),
       color: (_fcr && _fcr.evalColor(cfg, _cond)) || def.col,
       borderColor: _fcr && _fcr.evalBorderColor(cfg, _cond),
       pulse: def.pulse,
@@ -717,7 +719,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Allarme', icon: '🔒',
     desc: '',
-    version: '2.5', isDistintivo: true,
+    version: '2.6', isDistintivo: true,
     defaultCfg: { label: 'Allarme', alarmEntity: '', code: '', modes: ['armed_away'], sensors: [], siren: '', colorMode: 'auto', colorRules: [] },
     chip,
     watchEntities,
@@ -731,5 +733,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v2.5'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v2.6'); } catch (e) {}
 })();
