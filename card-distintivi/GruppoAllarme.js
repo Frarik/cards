@@ -1,10 +1,11 @@
-/* frarik-version: 2.4 */
+/* frarik-version: 2.5 */
 /**
- * GruppoAllarme.js — Distintivo FratechStore v2.4
+ * GruppoAllarme.js — Distintivo FratechStore v2.5
  * Chip stato allarme Alarmo + popup sensori/bypass + overlay triggered automatico
  *
  * v2.3: fix bypass — azzera solo sulla transizione armato→disarmato, non mentre è già disarmato
  * v2.4: bypass disponibile anche quando l'allarme è già armato; ri-arma Alarmo con il nuovo set
+ * v2.5: chip e popup con testo maiuscolo e in grassetto (label, stato, sensori, sirena, pulsanti)
  */
 (function () {
   'use strict';
@@ -191,8 +192,8 @@
     const _fcr = window.FratechColorRules;
     const _cond = { triggered: state === 'triggered', armed: !!(state && state.startsWith('armed')), pending: state === 'pending', disarmed: state === 'disarmed' };
     return {
-      label: c.label || 'Allarme',
-      value: `${emo} ${def.lbl}`,
+      label: (c.label || 'Allarme').toUpperCase(),
+      value: `<span style="font-weight:900;text-transform:uppercase">${emo} ${eh(def.lbl)}</span>`,
       color: (_fcr && _fcr.evalColor(cfg, _cond)) || def.col,
       borderColor: _fcr && _fcr.evalBorderColor(cfg, _cond),
       pulse: def.pulse,
@@ -270,7 +271,7 @@
 
       return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:11px;background:${rowBg};border:1px solid ${rowBdr}">
         <span style="color:${open && !isBypassed ? '#f87171' : isBypassed ? '#facc15' : '#4ade80'};flex-shrink:0">${mdi(sIco, 20)}</span>
-        <span style="flex:1;font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(sLbl)}</span>
+        <span style="flex:1;font-size:13px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(sLbl)}</span>
         ${tag}
         ${bypassBtn}
       </div>`;
@@ -282,13 +283,13 @@
       const mCol  = ALARM_DEF[m.key]?.col || '#f97316';
       return `<button data-ca-arm="${m.svc}" style="flex:1;padding:13px 4px;border-radius:13px;border:1px solid ${isCur ? hex2rgba(mCol,.4) : 'rgba(255,255,255,.12)'};background:${isCur ? hex2rgba(mCol,.18) : 'rgba(255,255,255,.06)'};color:${isCur ? mCol : '#fff'};cursor:pointer;font-size:11px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:5px;outline:none;min-width:0;transition:background .15s">
         <span style="color:inherit">${mdi(m.ico, 24)}</span>
-        <span style="white-space:nowrap;color:inherit">${eh(m.lbl)}</span>
+        <span style="white-space:nowrap;color:inherit;text-transform:uppercase;font-weight:900">${eh(m.lbl)}</span>
       </button>`;
     }).join('');
 
     const disarmBtn = `<button data-ca-disarm style="flex:1;padding:13px 4px;border-radius:13px;border:1px solid ${state==='disarmed'?'rgba(74,222,128,.38)':'rgba(255,255,255,.12)'};background:${state==='disarmed'?'rgba(74,222,128,.15)':'rgba(255,255,255,.06)'};color:${state==='disarmed'?'#4ade80':'#fff'};cursor:pointer;font-size:11px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:5px;outline:none;min-width:0">
       <span style="color:inherit">${mdi('mdi:lock-open-variant', 24)}</span>
-      <span style="white-space:nowrap;color:inherit">Disarma</span>
+      <span style="white-space:nowrap;color:inherit;text-transform:uppercase;font-weight:900">Disarma</span>
     </button>`;
 
     /* warning sensori aperti */
@@ -310,7 +311,7 @@
         <div style="${secLbl}">Sirena</div>
         <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:11px;background:${sirenOn ? 'rgba(248,113,113,.09)' : 'rgba(74,222,128,.06)'};border:1px solid ${sirenOn ? 'rgba(248,113,113,.28)' : 'rgba(74,222,128,.18)'}">
           <span style="color:${sirenOn ? '#f87171' : '#4ade80'}">${mdi('mdi:bullhorn', 20)}</span>
-          <span style="flex:1;font-size:13px;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(sName)}</span>
+          <span style="flex:1;font-size:13px;font-weight:900;text-transform:uppercase;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(sName)}</span>
           <span style="font-size:10px;padding:3px 10px;border-radius:6px;background:${sirenOn ? 'rgba(248,113,113,.2)' : 'rgba(74,222,128,.15)'};color:${sirenOn ? '#f87171' : '#4ade80'};font-weight:700;flex-shrink:0">${sirenOn ? 'ATTIVA' : 'SPENTA'}</span>
           ${sirenOn ? `<button data-ca-siren-off style="padding:5px 12px;border-radius:8px;border:1px solid rgba(248,113,113,.38);background:rgba(248,113,113,.12);color:#f87171;cursor:pointer;font-size:10px;font-weight:700;outline:none;flex-shrink:0">Spegni</button>` : ''}
         </div>
@@ -326,7 +327,7 @@
       <div class="${def.pulse ? 'cc-alm-pulse' : ''}" style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:16px;background:${hex2rgba(col,.1)};border:1px solid ${hex2rgba(col,.3)};margin-bottom:14px">
         <span style="font-size:40px;color:${col};flex-shrink:0">${mdi(def.ico, 40)}</span>
         <div style="flex:1;min-width:0">
-          <div style="font-size:20px;font-weight:900;color:${col};letter-spacing:.3px">${def.lbl}</div>
+          <div style="font-size:20px;font-weight:900;color:${col};letter-spacing:.3px;text-transform:uppercase">${def.lbl}</div>
           ${bypassedCount > 0 && armed ? `<div style="font-size:11px;color:#facc15;margin-top:3px">🛡 ${bypassedCount} sensore${bypassedCount>1?'i esclusi':' escluso'}</div>` : ''}
         </div>
       </div>
@@ -716,7 +717,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Allarme', icon: '🔒',
     desc: '',
-    version: '2.2', isDistintivo: true,
+    version: '2.5', isDistintivo: true,
     defaultCfg: { label: 'Allarme', alarmEntity: '', code: '', modes: ['armed_away'], sensors: [], siren: '', colorMode: 'auto', colorRules: [] },
     chip,
     watchEntities,
@@ -730,5 +731,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v2.2'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-allarme v2.5'); } catch (e) {}
 })();
