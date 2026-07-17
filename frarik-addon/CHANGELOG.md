@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.82 — 2026-07-17
+
+### fix: etichetta del chip distintivi non era in grassetto
+
+- `style.css`: `.badge-lbl` (l'etichetta testuale mostrata prima del valore in tutti i chip
+  dei distintivi, es. "Luci" in GruppoLuci) era a `font-weight:600` — visibilmente meno
+  grassetto del valore accanto (`.badge-val`, peso 800). Portato a `font-weight:900` per
+  coerenza con la richiesta di testo maiuscolo/grassetto in tutti i distintivi.
+
 ## 2.0.81 — 2026-07-17
 
 ### fix: popup distintivi allineato allo standard + GruppoAllarme restyle e fix bug bypass
