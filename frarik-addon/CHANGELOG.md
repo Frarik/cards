@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.0.89 — 2026-07-18
+
+### fix: rimosso "Nessuno/Fisso/Condizioni" anche dal colore del bordo chip
+
+- `main.js` (`FratechColorRules`): come già fatto per il "Contenuto", anche la
+  sezione "Bordo" del popup "🎨 Colore chip" (condivisa da tutti i 14
+  distintivi) non mostra più i pulsanti "Nessuno"/"Fisso" — resta solo la
+  logica a condizioni. Senza regole configurate il bordo non viene forzato
+  (comportamento identico al precedente "Nessuno"); con regole cambia colore
+  in base alla condizione.
+
 ## 2.0.88 — 2026-07-18
 
 ### fix: rimosso "Fisso" dal colore del contenuto chip in tutte le configurazioni

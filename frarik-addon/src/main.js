@@ -19208,7 +19208,7 @@ if (!window.FratechColorRules) {
         + '<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.8px;margin-bottom:10px">🎨 COLORE CHIP</div>'
         + _secHtml('Contenuto (testo, icona, numeri)', 'fcr', mode, fixed, rules, ps, false, false)
         + '<div style="height:1px;background:rgba(255,255,255,.08);margin:8px 0"></div>'
-        + _secHtml('Bordo', 'fcrb', borderMode, borderFixed, borderRules, ps, true)
+        + _secHtml('Bordo', 'fcrb', borderMode, borderFixed, borderRules, ps, false, false)
         + '</div>';
     }
     function _attachSection(sec, pfx, ps, onChange) {
