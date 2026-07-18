@@ -1,6 +1,6 @@
-/* frarik-version: 2.9 */
+/* frarik-version: 3.0 */
 /**
- * GruppoLuci.js — Distintivo FratechStore v2.9
+ * GruppoLuci.js — Distintivo FratechStore v3.0
  * Fix: icona configurabile (preserve su re-render), sottotitolo popup nascosto
  * v1.9: testi maiuscolo+grassetto (chip e popup), layout popup a stile "glass"
  *       (hero riepilogo + tasti accendi/spegni a medaglione + righe luci glass)
@@ -32,6 +32,8 @@
  *       verde canonico (#4ade80) usato ovunque altrove per lo stato "on/positivo" —
  *       ora usa lo stesso verde del resto dell'app
  * v2.9: titolo dell'header del popup sempre bianco (era colorato con l'accento della luce)
+ * v3.0: contorno del riquadro luce sempre bianco (rgba(255,255,255,.25)) per distinguerlo
+ *       meglio, invece del bordo quasi invisibile a opacità .1 quando spenta
  */
 (function () {
   'use strict';
@@ -171,7 +173,7 @@
       }
 
       // tutto il riquadro è cliccabile per accendere/spegnere la luce (niente più interruttore interno)
-      const tile = `<div data-jsd-toggle="${i}" style="position:relative;overflow:hidden;flex:1;min-width:0;max-width:calc(100% - 78px);display:flex;align-items:center;gap:13px;border-radius:18px;cursor:pointer;background:linear-gradient(155deg,${on?hex2rgba(col,.18):hex2rgba('#ffffff',.05)},${on?hex2rgba(col,.03):hex2rgba('#ffffff',.01)});border:1px solid ${on?hex2rgba(col,.4):'rgba(255,255,255,.1)'};padding:16px 16px">
+      const tile = `<div data-jsd-toggle="${i}" style="position:relative;overflow:hidden;flex:1;min-width:0;max-width:calc(100% - 78px);display:flex;align-items:center;gap:13px;border-radius:18px;cursor:pointer;background:linear-gradient(155deg,${on?hex2rgba(col,.18):hex2rgba('#ffffff',.05)},${on?hex2rgba(col,.03):hex2rgba('#ffffff',.01)});border:1px solid rgba(255,255,255,.25);padding:16px 16px">
         ${on?`<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 10%,${hex2rgba(col,.2)},transparent 62%);pointer-events:none"></div>`:''}
         <span style="position:relative;width:44px;height:44px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${on?hex2rgba(col,.22):'rgba(255,255,255,.06)'};border:1px solid ${on?hex2rgba(col,.5):'rgba(255,255,255,.14)'};${on?`box-shadow:0 0 12px ${hex2rgba(col,.3)};`:''}color:${on?col:'#fff'}">${iconHtml(_dynIcon(c.icon||'💡',on),22)}</span>
         <span style="position:relative;flex:1;min-width:0">
@@ -602,7 +604,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Luci', icon: '💡',
     desc: 'Chip con contatore luci accese. Clic → pannello toggle + Accendi/Spegni tutte.',
-    version: '2.9', isDistintivo: true,
+    version: '3.0', isDistintivo: true,
     defaultCfg: { label: 'Luci', icon: '💡', color: '#fbbf24', entities: [], colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -611,5 +613,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-luci v2.9'); } catch(e){}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-luci v3.0'); } catch(e){}
 })();
