@@ -1,6 +1,9 @@
-/* frarik-version: 2.0 */
+/* frarik-version: 2.1 */
 /**
- * GruppoClima.js — Distintivo FratechStore v2.0
+ * GruppoClima.js — Distintivo FratechStore v2.1
+ * v2.1: popup config — riquadro unico (Chip/Entità/Aggiungi) con contorno
+ *       bianco; righe entità a stile "glass" (badge icona rotondo, nome/
+ *       entity-id distinti, sensori temp/umidità e automazione distinti)
  * Chip climi attivi + popup con temp/umidità da sensore, controlli HVAC/ventola/alette
  * v2.0: stesso trattamento di GruppoAllarme/GruppoLuci/GruppoFinestre/GruppoPorte/
  *       GruppoTapparelle — chip "CLIMA: N" (unico value maiuscolo/grassetto); popup
@@ -637,39 +640,42 @@
         const active = stStr !== 'off' && stStr !== 'unknown' && stStr !== 'unavailable';
         const hasAuto = !!(e.automation && e.automation.trim());
         const autoExpanded = expandedAuto.has(i);
+        const rc = active ? col : '#7a7f8c';
+
         const autoSection = hasAuto
-          ? `<div style="display:flex;align-items:center;gap:6px;margin-top:5px;padding:5px 7px;border-radius:7px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.22)">
-              <span style="font-size:10px;">🤖</span>
-              <span style="flex:1;font-size:10px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(e.automation)}</span>
-              <button data-rmauto="${i}" style="font-size:9px;padding:2px 6px;border-radius:4px;border:1px solid rgba(248,113,113,.3);background:rgba(248,113,113,.1);color:#f87171;cursor:pointer">✕</button>
+          ? `<div style="display:flex;align-items:center;gap:8px;margin-top:10px;padding:7px 10px;border-radius:10px;background:${hex2rgba('#38bdf8',.12)};border:1px solid ${hex2rgba('#38bdf8',.3)}">
+              <span style="font-size:12px;flex-shrink:0">🤖</span>
+              <span style="flex:1;min-width:0;font-size:10px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(e.automation)}</span>
+              <button data-rmauto="${i}" style="width:20px;height:20px;flex-shrink:0;border:none;border-radius:50%;background:rgba(248,113,113,.18);color:#f87171;cursor:pointer;font-size:10px;line-height:1">✕</button>
             </div>`
           : autoExpanded
-            ? `<div style="display:flex;gap:5px;margin-top:5px">
-                <input data-auto-idx="${i}" placeholder="🔍 Cerca automazione…" value="${eh(e.automation||'')}" style="flex:1;padding:6px 9px;border-radius:7px;border:1px solid rgba(56,189,248,.35);background:rgba(56,189,248,.08);color:#fff;font-size:11px;outline:none;font-family:inherit">
-                <button data-saveauto="${i}" style="padding:6px 10px;border-radius:7px;border:none;background:#38bdf8;color:#fff;cursor:pointer;font-size:11px;font-weight:700">OK</button>
+            ? `<div style="display:flex;gap:6px;margin-top:10px">
+                <input data-auto-idx="${i}" placeholder="🔍 Cerca automazione…" value="${eh(e.automation||'')}" style="flex:1;padding:8px 10px;border-radius:9px;border:1px solid ${hex2rgba('#38bdf8',.35)};background:${hex2rgba('#38bdf8',.08)};color:#fff;font-size:11px;outline:none;font-family:inherit">
+                <button data-saveauto="${i}" style="padding:8px 14px;border-radius:9px;border:none;background:#38bdf8;color:#fff;cursor:pointer;font-size:11px;font-weight:700">OK</button>
               </div>`
-            : `<button data-addauto="${i}" style="margin-top:4px;font-size:9px;padding:3px 8px;border-radius:5px;border:1px dashed rgba(255,255,255,.2);background:transparent;color:#fff;cursor:pointer">🤖 + Automazione (opz.)</button>`;
+            : `<button data-addauto="${i}" style="margin-top:10px;font-size:10px;font-weight:700;padding:6px 12px;border-radius:20px;border:1px dashed rgba(255,255,255,.28);background:transparent;color:rgba(255,255,255,.75);cursor:pointer">🤖 + Collega automazione</button>`;
 
-        return `<div style="padding:8px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid ${active?hex2rgba(col,.25):'rgba(255,255,255,.08)'};margin-bottom:6px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:15px;flex-shrink:0;filter:${active?'none':'grayscale(1) opacity(.4)'}">🌡️</span>
+        return `<div style="position:relative;overflow:hidden;padding:12px;border-radius:14px;background:linear-gradient(155deg,${hex2rgba(rc,active?.16:.06)},${hex2rgba(rc,active?.03:.02)});border:1px solid ${hex2rgba(rc,active?.35:.16)};margin-bottom:10px">
+          ${active ? `<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 10%,${hex2rgba(col,.16)},transparent 62%);pointer-events:none"></div>` : ''}
+          <div style="position:relative;display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;background:${hex2rgba(rc,active?.22:.08)};border:1px solid ${hex2rgba(rc,active?.4:.16)};filter:${active?'none':'grayscale(1) opacity(.5)'}">🌡️</div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
-              <div style="font-size:9px;color:#fff">${eh(e.entity)}</div>
+              <div style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
+              <div style="font-size:10px;font-weight:700;color:#fff;opacity:.55;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px">${eh(e.entity)}</div>
             </div>
-            <button data-del="${i}" style="width:22px;height:22px;border:none;border-radius:5px;background:rgba(248,113,113,.15);color:#f87171;cursor:pointer;font-size:11px;flex-shrink:0">✕</button>
+            <button data-del="${i}" style="width:26px;height:26px;flex-shrink:0;border:none;border-radius:50%;background:rgba(248,113,113,.15);color:#f87171;cursor:pointer;font-size:12px">✕</button>
           </div>
-          <div style="display:flex;flex-direction:column;gap:5px;margin-top:7px;padding-top:7px;border-top:1px solid rgba(255,255,255,.06)">
+          <div style="position:relative;display:flex;flex-direction:column;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid ${hex2rgba(rc,.18)}">
             <div style="display:flex;align-items:center;gap:6px">
-              <span style="font-size:9px;color:#fff;width:56px;flex-shrink:0">🌡 Temp.</span>
+              <span style="font-size:9px;font-weight:700;color:#fff;opacity:.65;width:56px;flex-shrink:0">🌡 Temp.</span>
               <input data-tempsensor-idx="${i}" value="${eh(e.tempSensor||'')}" placeholder="sensor.temperatura… (opz.)" style="${sinpSt}">
             </div>
             <div style="display:flex;align-items:center;gap:6px">
-              <span style="font-size:9px;color:#fff;width:56px;flex-shrink:0">💧 Umidità</span>
+              <span style="font-size:9px;font-weight:700;color:#fff;opacity:.65;width:56px;flex-shrink:0">💧 Umidità</span>
               <input data-humsensor-idx="${i}" value="${eh(e.humSensor||'')}" placeholder="sensor.umidita… (opz.)" style="${sinpSt}">
             </div>
           </div>
-          ${autoSection}
+          <div style="position:relative">${autoSection}</div>
         </div>`;
       }).join('');
 
@@ -687,21 +693,30 @@
         </div>
 
         <div id="cccfg-body" style="flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;padding:14px 14px 4px">
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Chip</div>
-          <div style="display:flex;gap:7px;margin-bottom:14px">
-            <div style="flex:1"><div style="font-size:9px;color:#fff;margin-bottom:3px">Nome chip</div><input id="cccfg-label" class="cccinp" placeholder="Clima" value="${eh(c.label||'Clima')}"></div>
-            <div style="flex:0 0 56px"><div style="font-size:9px;color:#fff;margin-bottom:3px">Icona</div><button id="cccfg-icon-btn" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);cursor:pointer;display:flex;align-items:center;justify-content:center;outline:none;color:#fff">${iconHtml(c.icon||'🌡️',22)}</button><input type="hidden" id="cccfg-icon" value="${eh(c.icon||'🌡️')}"></div>
-            <div style="flex:0 0 50px"><div style="font-size:9px;color:#fff;margin-bottom:3px">Colore</div><input type="color" id="cccfg-color" value="${(c.color||'#f97316').match(/^#[0-9a-f]{6}$/i)?c.color:'#f97316'}" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:none;cursor:pointer;padding:2px"></div>
+
+          <div style="margin:0 0 14px;padding:14px;background:rgba(255,255,255,.05);border-radius:12px;border:1px solid #fff">
+
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Chip</div>
+            <div style="display:flex;gap:7px">
+              <div style="flex:1"><div style="font-size:9px;color:#fff;margin-bottom:3px">Nome chip</div><input id="cccfg-label" class="cccinp" placeholder="Clima" value="${eh(c.label||'Clima')}"></div>
+              <div style="flex:0 0 56px"><div style="font-size:9px;color:#fff;margin-bottom:3px">Icona</div><button id="cccfg-icon-btn" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);cursor:pointer;display:flex;align-items:center;justify-content:center;outline:none;color:#fff">${iconHtml(c.icon||'🌡️',22)}</button><input type="hidden" id="cccfg-icon" value="${eh(c.icon||'🌡️')}"></div>
+              <div style="flex:0 0 50px"><div style="font-size:9px;color:#fff;margin-bottom:3px">Colore</div><input type="color" id="cccfg-color" value="${(c.color||'#f97316').match(/^#[0-9a-f]{6}$/i)?c.color:'#f97316'}" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:none;cursor:pointer;padding:2px"></div>
+            </div>
+
+            ${ents.length ? `
+              <div style="height:1px;background:rgba(255,255,255,.1);margin:12px 0"></div>
+              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Entità selezionate (${ents.length})</div>
+              <div>${selRows}</div>
+            ` : ''}
+
+            <div style="height:1px;background:rgba(255,255,255,.1);margin:12px 0"></div>
+
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Aggiungi entità</div>
+            <input id="cccfg-add-entity" class="cccinp" placeholder="🔍 Inizia a scrivere il nome dell'entità…" autocomplete="off">
+            <div style="font-size:9px;color:#fff;margin-top:5px">Mostra tutte le entità — climate.* compaiono per prime</div>
+
           </div>
 
-          ${ents.length ? `
-            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Entità selezionate (${ents.length})</div>
-            <div>${selRows}</div>
-          ` : ''}
-
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin:${ents.length?'12px':0} 0 6px">Aggiungi entità</div>
-          <input id="cccfg-add-entity" class="cccinp" placeholder="🔍 Inizia a scrivere il nome dell'entità…" autocomplete="off">
-          <div style="font-size:9px;color:#fff;margin-top:5px">Mostra tutte le entità — climate.* compaiono per prime</div>
           ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg, presets) : ''}
           <div style="height:16px"></div>
         </div>
@@ -834,7 +849,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Clima', icon: '🌡️',
     desc: 'Chip climi attivi. Clic → temp/umidità da sensore, ±1°, ON/OFF, modalità HVAC, ventola, alette per ogni clima.',
-    version: '2.0', isDistintivo: true,
+    version: '2.1', isDistintivo: true,
     defaultCfg: { label: 'Clima', icon: '🌡️', color: '#f97316', entities: [], colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -843,5 +858,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-clima v2.0'); } catch(e){}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-clima v2.1'); } catch(e){}
 })();
