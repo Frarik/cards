@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.0.96 — 2026-07-18
+
+### fix: errore JS su "+ Header" al primo utilizzo + chip distintivo piccolo nella barra orologio
+
+- `closeHBM()` leggeva `.classList` su `#hbmod` senza controllare che esistesse:
+  quel modale viene creato solo al primo utilizzo del "Header Personalizzato",
+  quindi cliccare "+ Header" su un distintivo (es. SOS) PRIMA di aver mai
+  aperto quel modale lanciava `Cannot read properties of null (reading
+  'classList')`. Aggiunto controllo null.
+- Il chip di un distintivo nella barra orologio/SOS usava la dimensione
+  font di default della barra (10px) invece di quella della riga
+  distintivi (14px) — impostata esplicitamente per coerenza visiva.
+
 ## 2.0.95 — 2026-07-18
 
 ### feat: SOS ora compare anche nella tab "Distintivi" dello store, come gli altri

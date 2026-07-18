@@ -5640,7 +5640,7 @@ function hbarInner(card){
       const ico=chip.icon!=null?chip.icon:(def?.icon||'📦');
       const lbl=chip.label?`<span class="badge-lbl">${eh(chip.label)}: </span>`:'';
       const val=chip.value!=null?`<span class="badge-val" id="bgcnt-${item.id}">${chip.value}</span>`:'';
-      return `<span class="hbar-chip tap" id="bchip-${item.id}" style="background:color-mix(in srgb, var(--bc) 18%, transparent);border-color:color-mix(in srgb, var(--bbc, var(--bc)) 55%, transparent);color:var(--bc);--bc:${col};--bbc:${bbc}" data-action="_badgeClick" data-action-arg="${item.id}"><span id="bgico-${item.id}">${ico}</span> ${lbl}${val}</span>`;
+      return `<span class="hbar-chip tap" id="bchip-${item.id}" style="--hbfs:14px;background:color-mix(in srgb, var(--bc) 18%, transparent);border-color:color-mix(in srgb, var(--bbc, var(--bc)) 55%, transparent);color:var(--bc);--bc:${col};--bbc:${bbc}" data-action="_badgeClick" data-action-arg="${item.id}"><span id="bgico-${item.id}">${ico}</span> ${lbl}${val}</span>`;
     }
     if(item.type==='clock'){
       const style=item.clockStyle||'default';
@@ -9091,7 +9091,7 @@ function openHBM(cardId){
   document.getElementById('hbmod').classList.remove('off');
 }
 function closeHBM(){
-  document.getElementById('hbmod').classList.add('off');
+  document.getElementById('hbmod')?.classList.add('off');
   const cardSect=document.getElementById('hb-card-settings');
   if(cardSect) cardSect.style.display='';
   _hbCardId=null;
