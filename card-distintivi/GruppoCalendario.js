@@ -1,8 +1,11 @@
-/* frarik-version: 2.1 */
+/* frarik-version: 2.2 */
 /**
- * GruppoCalendario.js — Distintivo FratechStore v2.1
+ * GruppoCalendario.js — Distintivo FratechStore v2.2
  * Chip: count eventi nel giorno più vicino + colore giorni mancanti
  * Popup: lista eventi 7 giorni (via HA callApi), raggruppata per giorno
+ * v2.2: popup config — riquadro unico (Chip/Calendari/Aggiungi) con
+ *       contorno bianco; righe calendario a stile "glass" (badge icona
+ *       rotondo con pallino colore calendario)
  * v2.1: chip label+value uniti, righe evento stile glass, titolo popup dinamico
  */
 (function () {
@@ -400,15 +403,18 @@
         const lbl = e.label || nameOf(h,id);
         const active = stateOf(h,id).toLowerCase()==='on';
         const calColor = CAL_COLORS[i % CAL_COLORS.length];
-        return `<div style="padding:8px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);margin-bottom:6px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <div style="width:10px;height:10px;border-radius:50%;background:${calColor};flex-shrink:0"></div>
-            <div style="flex:1;min-width:0">
-              <div style="font-size:12px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
-              <div style="font-size:9px;color:rgba(255,255,255,.5)">${eh(id)}</div>
+        return `<div style="position:relative;overflow:hidden;padding:12px;border-radius:14px;background:linear-gradient(155deg,${hex2rgba(calColor,.16)},${hex2rgba(calColor,.03)});border:1px solid ${hex2rgba(calColor,.35)};margin-bottom:10px">
+          <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 10%,${hex2rgba(calColor,.16)},transparent 62%);pointer-events:none"></div>
+          <div style="position:relative;display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${hex2rgba(calColor,.22)};border:1px solid ${hex2rgba(calColor,.4)}">
+              <div style="width:10px;height:10px;border-radius:50%;background:${calColor}"></div>
             </div>
-            ${active?'<span style="font-size:9px;color:#f87171;font-weight:700">● ora</span>':''}
-            <button data-del="${i}" style="width:22px;height:22px;border:none;border-radius:5px;background:rgba(248,113,113,.15);color:#f87171;cursor:pointer;font-size:11px">✕</button>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
+              <div style="font-size:10px;font-weight:700;color:#fff;opacity:.55;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px">${eh(id)}</div>
+            </div>
+            ${active?'<span style="font-size:10px;font-weight:900;text-transform:uppercase;color:#f87171;flex-shrink:0">● ora</span>':''}
+            <button data-del="${i}" style="width:26px;height:26px;flex-shrink:0;border:none;border-radius:50%;background:rgba(248,113,113,.15);color:#f87171;cursor:pointer;font-size:12px">✕</button>
           </div>
         </div>`;
       }).join('');
@@ -427,16 +433,25 @@
           <button id="gcalcfg-close" style="width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,255,255,.07);color:#fff;cursor:pointer;font-size:14px">✕</button>
         </div>
         <div id="gcalcfg-body" style="flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;padding:14px 14px 4px">
-          <div style="display:flex;gap:7px;margin-bottom:14px">
-            <div style="flex:1"><div style="font-size:9px;color:rgba(255,255,255,.55);margin-bottom:3px">Nome chip</div><input id="gcalcfg-label" class="gcalinp" placeholder="Calendario" value="${eh(c.label||'Calendario')}"></div>
-            <div style="flex:0 0 50px"><div style="font-size:9px;color:rgba(255,255,255,.55);margin-bottom:3px">Colore</div><input type="color" id="gcalcfg-color" value="${(c.color||'#60a5fa').match(/^#[0-9a-f]{6}$/i)?c.color:'#60a5fa'}" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:none;cursor:pointer;padding:2px"></div>
+
+          <div style="margin:0 0 14px;padding:14px;background:rgba(255,255,255,.05);border-radius:12px;border:1px solid #fff">
+
+            <div style="display:flex;gap:7px">
+              <div style="flex:1"><div style="font-size:9px;color:#fff;margin-bottom:3px">Nome chip</div><input id="gcalcfg-label" class="gcalinp" placeholder="Calendario" value="${eh(c.label||'Calendario')}"></div>
+              <div style="flex:0 0 50px"><div style="font-size:9px;color:#fff;margin-bottom:3px">Colore</div><input type="color" id="gcalcfg-color" value="${(c.color||'#60a5fa').match(/^#[0-9a-f]{6}$/i)?c.color:'#60a5fa'}" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:none;cursor:pointer;padding:2px"></div>
+            </div>
+
+            <div style="height:1px;background:rgba(255,255,255,.1);margin:12px 0"></div>
+
+            ${ents.length ? `<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Calendari (${ents.length})</div><div>${selRows}</div>` : ''}
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Aggiungi calendario</div>
+            <input id="gcalcfg-add" class="gcalinp" placeholder="🔍 Cerca calendar.*…" autocomplete="off">
+            <div style="margin-top:5px;padding:7px 10px;border-radius:8px;background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.15);font-size:10px;color:#fff">
+              💡 Usa entità <strong style="color:#60a5fa">calendar.*</strong>. Il popup mostra tutti gli eventi dei prossimi 7 giorni tramite API HA.
+            </div>
+
           </div>
-          ${ents.length ? `<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.5);margin-bottom:6px">Calendari (${ents.length})</div><div style="margin-bottom:12px">${selRows}</div>` : ''}
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.5);margin-bottom:6px">Aggiungi calendario</div>
-          <input id="gcalcfg-add" class="gcalinp" placeholder="🔍 Cerca calendar.*…" autocomplete="off">
-          <div style="margin-top:5px;padding:7px 10px;border-radius:8px;background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.15);font-size:10px;color:rgba(255,255,255,.7)">
-            💡 Usa entità <strong style="color:#60a5fa">calendar.*</strong>. Il popup mostra tutti gli eventi dei prossimi 7 giorni tramite API HA.
-          </div>
+
           ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg, presets) : ''}
           <div style="height:18px"></div>
         </div>
@@ -491,7 +506,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Calendario', icon: 'mdi:calendar',
     desc: 'Chip con count eventi del giorno più vicino + colore per giorni mancanti. Popup: 7 giorni di eventi via API HA.',
-    version: '2.1', isDistintivo: true,
+    version: '2.2', isDistintivo: true,
     defaultCfg: { label:'Calendario', icon:'mdi:calendar', color:'#60a5fa', entities:[], colorMode:'auto', colorRules:[] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -500,5 +515,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-calendario v2.1'); } catch(e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-calendario v2.2'); } catch(e) {}
 })();
