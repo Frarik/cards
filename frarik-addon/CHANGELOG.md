@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.0.98 — 2026-07-18
+
+### feat: card normali — inizia il riallineamento allo standard, parte da Meteo
+
+- Aggiunto un meccanismo generico (`frarik_no_edit` nell'annuncio
+  `window.customCards`) perché una card Lovelace con una propria icona di
+  configurazione interna possa nascondere la matita ✏️ esterna in modalità
+  modifica — riutilizzabile per le prossime card, non solo Meteo.
+- `Meteo.js` (v1.42): applicato il flag (resta solo l'ingranaggio interno);
+  popup impostazioni riallineato allo standard dei distintivi — testi
+  sempre bianchi, 12px/900 uniforme su etichette e nomi entità, riquadro
+  con contorno neutro (non più viola), pulsante Salva blu invece
+  dell'accento ambra. Anteprima live e controlli dimensione card invariati.
+
 ## 2.0.97 — 2026-07-18
 
 ### fix: chip distintivo nella barra orologio ora identico a quello nella riga distintivi

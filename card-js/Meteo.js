@@ -1,4 +1,8 @@
-﻿/* frarik-version: 1.41 */
+﻿/* frarik-version: 1.42 */
+/* v1.42: matita esterna in modifica rimossa (frarik_no_edit, resta solo l'ingranaggio
+   interno); popup impostazioni riallineato allo standard dei distintivi — testi
+   bianchi, 12px/900 uniforme su etichette/nomi entità, riquadro con contorno neutro,
+   pulsante Salva blu. Anteprima live e controlli dimensione card invariati. */
 
 // ── Lookup tables ─────────────────────────────────────────────────────────────
 const _WI = {
@@ -278,36 +282,36 @@ button[data-a="gear"]{display:var(--fgear,none);}
 .fb{width:75%;height:3px;border-radius:99px;margin:2px 0 2px;}
 .fmi{font-size:11px;color:#fff;font-weight:600;}
 .fr{font-size:8px;color:#fff;margin-top:1px;}
-/* settings */
-.sov{position:fixed;inset:0;z-index:99999;display:none;align-items:flex-end;background:rgba(0,0,0,.68);backdrop-filter:blur(6px);color:#f1f5f9;font-family:var(--primary-font-family,system-ui,sans-serif);}
+/* settings — stesso standard visivo dei popup distintivi: testi bianchi, 12px/900 uniforme, riquadri neutri */
+.sov{position:fixed;inset:0;z-index:99999;display:none;align-items:flex-end;background:rgba(0,0,0,.68);backdrop-filter:blur(6px);color:#fff;font-family:var(--primary-font-family,system-ui,sans-serif);}
 .sov.open{display:flex;}
 @keyframes slideUpSov{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.sov-modal{width:100%;max-height:92vh;display:flex;flex-direction:column;background:rgba(10,8,20,.98);border:1px solid rgba(139,92,246,.32);border-bottom:none;border-radius:20px 20px 0 0;overflow:hidden;box-shadow:0 -12px 60px rgba(0,0,0,.8);animation:slideUpSov .22s cubic-bezier(.32,1.12,.56,1);}
-.shdr{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;}
-.sico{width:34px;height:34px;border-radius:9px;flex-shrink:0;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);display:flex;align-items:center;justify-content:center;color:#fbbf24;}
-.stit{font-size:14px;font-weight:700;}
-.ssub{font-size:10px;color:#fff;margin-top:1px;}
-.scls{margin-left:auto;width:28px;height:28px;border-radius:7px;border:none;background:rgba(255,255,255,.06);cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;}
+.sov-modal{width:100%;max-height:92vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;overflow:hidden;box-shadow:0 -12px 60px rgba(0,0,0,.9);animation:slideUpSov .22s cubic-bezier(.32,1.12,.56,1);}
+.shdr{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;}
+.sico{width:36px;height:36px;border-radius:10px;flex-shrink:0;background:rgba(251,191,36,.13);border:1px solid rgba(251,191,36,.28);display:flex;align-items:center;justify-content:center;color:#fbbf24;}
+.stit{font-size:14px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px;}
+.ssub{font-size:10px;font-weight:700;color:#fff;opacity:.55;margin-top:1px;}
+.scls{margin-left:auto;width:28px;height:28px;border-radius:8px;border:none;background:rgba(255,255,255,.07);cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;}
 .scls:hover{background:rgba(255,255,255,.12);}
 .sov-2col{display:flex;flex:1;overflow:hidden;min-height:0;}
-.sbdy{width:400px;flex-shrink:0;overflow-y:auto;padding:14px 16px;border-right:1px solid rgba(255,255,255,.07);scrollbar-width:none;-ms-overflow-style:none;}
+.sbdy{width:400px;flex-shrink:0;overflow-y:auto;padding:14px 16px;border-right:1px solid rgba(255,255,255,.06);scrollbar-width:none;-ms-overflow-style:none;}
 .sbdy::-webkit-scrollbar{display:none;}
 .sov-prev{flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px;padding:14px 16px;overflow-y:auto;background:rgba(0,0,0,.15);scrollbar-width:none;-ms-overflow-style:none;}
 .sov-prev::-webkit-scrollbar{display:none;}
-.prev-ttl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#fff;}
+.prev-ttl{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.07em;color:#fff;}
 .prev-wrap{border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08);}
 .lsect{padding-top:12px;border-top:1px solid rgba(255,255,255,.08);}
 .layout-row{display:flex;align-items:center;gap:8px;margin-top:10px;}
-.layout-lbl{font-size:11px;font-weight:700;color:#fff;width:72px;flex-shrink:0;}
-.layout-val{font-size:12px;font-weight:800;color:#fbbf24;width:54px;text-align:right;flex-shrink:0;}
+.layout-lbl{font-size:12px;font-weight:900;color:#fff;width:72px;flex-shrink:0;}
+.layout-val{font-size:12px;font-weight:900;color:#fbbf24;width:54px;text-align:right;flex-shrink:0;}
 input[type=range].lslider{flex:1;cursor:pointer;accent-color:#fbbf24;height:4px;}
 @media(max-width:620px){.sov-2col{flex-direction:column!important;overflow-y:auto!important;overflow-x:hidden!important}.sbdy{width:100%!important;border-right:none!important;border-bottom:1px solid rgba(255,255,255,.07)!important;overflow-y:visible!important;flex-shrink:0!important}.sov-prev{min-width:0!important;overflow-y:visible!important}}
-.fl{font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;margin-top:12px;}
+.fl{font-size:12px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;margin-top:12px;}
 .fl:first-child{margin-top:0;}
 .er{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);}
 .ei{flex:1;min-width:0;}
-.en{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff;}
-.eid{font-size:10px;color:#fff;margin-top:1px;}
+.en{font-size:12px;font-weight:900;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff;}
+.eid{font-size:10px;font-weight:700;color:#fff;opacity:.55;margin-top:1px;}
 .cbtn{padding:5px 12px;border-radius:7px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;}
 .cbtn:hover{background:rgba(255,255,255,.18);}
 .esr{display:none;margin-top:6px;border-radius:10px;border:1px solid rgba(255,255,255,.12);overflow:hidden;background:rgba(10,8,22,1);}
@@ -320,10 +324,10 @@ input[type=range].lslider{flex:1;cursor:pointer;accent-color:#fbbf24;height:4px;
 .ci{width:100%;padding:9px 12px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#fff;font-size:13px;font-family:inherit;outline:none;}
 .ci:focus{border-color:#fff;}
 .ci::placeholder{color:#fff;}
-.ht{font-size:10px;color:#fff;margin-top:4px;}
+.ht{font-size:10px;color:#fff;opacity:.65;margin-top:4px;}
 .inp-grp{position:relative;}
-.sft{padding:12px 16px;border-top:1px solid rgba(255,255,255,.08);flex-shrink:0;}
-.sav{width:100%;height:38px;border-radius:10px;border:none;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#000;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
+.sft{padding:12px 16px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0;}
+.sav{width:100%;height:38px;border-radius:11px;border:none;background:#38bdf8;color:#fff;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
 .sav:hover{opacity:.88;}
 .ph{padding:32px 20px;text-align:center;color:#fff;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:10px;}
 .phi{font-size:38px;opacity:.3;}
@@ -2263,6 +2267,6 @@ setTimeout(function(){
   try{
     window.customCards=window.customCards||[]
     window.customCards=window.customCards.filter(function(c){return c&&c.type!=='meteo-card'})
-    window.customCards.push({type:'meteo-card',name:'Meteo + Previsioni',description:'Card meteo con cielo animato, sole/luna in tempo reale, fasi lunari, pioggia, neve, fulmini.',preview:false})
+    window.customCards.push({type:'meteo-card',name:'Meteo + Previsioni',description:'Card meteo con cielo animato, sole/luna in tempo reale, fasi lunari, pioggia, neve, fulmini.',preview:false,frarik_no_edit:true})
   }catch(e){}
 },0)

@@ -11140,6 +11140,9 @@ async function _loadLovelaceResources(){
     // Registra le card che si sono auto-annunciate via window.customCards
     (window.customCards||[]).forEach(c=>{
       if(c&&c.type&&!window.FratechCardRegistry[c.type]) _registerLovelaceCard(c.type,c);
+      // Card che hanno già una config interna (icona ingranaggio propria) possono dichiarare
+      // frarik_no_edit:true nell'annuncio customCards per nascondere la matita esterna in modifica.
+      if(c&&c.type&&c.frarik_no_edit&&window.FratechCardRegistry[c.type]) window.FratechCardRegistry[c.type].frarik_no_edit=true;
     });
     _lovelaceResCount=(window.customCards||[]).length;
     console.info('[Frarik] Lovelace resources: '+loaded+' script caricati, '+_lovelaceResCount+' card custom disponibili');
