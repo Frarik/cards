@@ -8,7 +8,7 @@
 #   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝            #
 #                                                             #
 #   Package: Centro Controllo Posta                           #
-#   Versione: 2.0  |  Frarik / Fratech                       #
+#   Versione: 2.1  |  Frarik / Fratech                       #
 #                                                             #
 ###############################################################
 #
@@ -18,14 +18,16 @@
 #
 #  ▸ Contatore consegne giornaliero (reset a mezzanotte)
 #  ▸ Contatore consegne settimanale (reset ogni lunedì)
+#  ▸ Contatore consegne mensile (reset il primo del mese)
 #  ▸ Data e ora dell'ultima consegna ricevuta
 #  ▸ Storico testuale delle ultime consegne
 #  ▸ Notifiche push su smartphone (richissime di info)
 #  ▸ Annunci vocali Google Home / Nest
 #  ▸ Annunci vocali Amazon Alexa / Echo
-#  ▸ Finestra oraria per TTS (evita annunci di notte)
+#  ▸ Finestre orarie separate per push e annunci vocali
 #  ▸ Interruttore master per silenziare tutto
 #  ▸ Protezione anti-rimbalzo sul sensore fisico
+#  ▸ Reset manuali separati (oggi/settimana/mese)
 #
 ###############################################################
 #
@@ -71,16 +73,17 @@
 #  binary_sensor.frarik_posta_ricevuta_oggi  ← posta oggi?
 #  counter.frarik_posta_oggi                 ← consegne oggi
 #  counter.frarik_posta_settimana            ← consegne settimana
+#  counter.frarik_posta_mese                 ← consegne mese
 #  input_datetime.frarik_posta_ultima_consegna
-#  input_datetime.frarik_posta_notifiche_inizio
-#  input_datetime.frarik_posta_notifiche_fine
+#  input_datetime.frarik_posta_notifiche_media_inizio/fine  (Google/Alexa)
+#  input_datetime.frarik_posta_notifiche_push_inizio/fine   (push smartphone)
 #  input_boolean.frarik_posta_notifiche_attive  ← master switch
 #  input_boolean.frarik_posta_notifica_push
 #  input_boolean.frarik_posta_notifica_google
 #  input_boolean.frarik_posta_notifica_alexa
 #  input_text.frarik_posta_storico           ← ultime consegne
 #  notify.frarik_posta                       ← gruppo push
-#  script.frarik_posta_reset                 ← reset manuale
+#  script.frarik_posta_reset_oggi/_settimana/_mese  ← reset manuali
 #  automation: Frarik — Posta (eventi)
 #  automation: Frarik — Posta (reset)
 #
@@ -100,7 +103,7 @@ homeassistant:
       customize: &customize
         package: 'Frarik — Centro Controllo Posta'
         author: 'Frarik / Fratech'
-        version: '2.0'
+        version: '2.1'
 
       setting:
 
@@ -178,6 +181,10 @@ counter:
     name: "Posta — Consegne Settimana"
     icon: mdi:calendar-week
 
+  frarik_posta_mese:
+    name: "Posta — Consegne Mese"
+    icon: mdi:calendar-month
+
 
 ####################################################
 #                                                  #
@@ -192,16 +199,32 @@ input_datetime:
     has_time: true
     icon: mdi:clock-check-outline
 
-  frarik_posta_notifiche_inizio:
-    name: "Posta — Inizio Notifiche TTS"
+  frarik_posta_notifiche_media_inizio:
+    name: "Posta — Inizio Notifiche Google/Alexa"
     has_date: false
     has_time: true
+    initial: "08:00:00"
     icon: mdi:bell-ring-outline
 
-  frarik_posta_notifiche_fine:
-    name: "Posta — Fine Notifiche TTS"
+  frarik_posta_notifiche_media_fine:
+    name: "Posta — Fine Notifiche Google/Alexa"
     has_date: false
     has_time: true
+    initial: "22:00:00"
+    icon: mdi:bell-off-outline
+
+  frarik_posta_notifiche_push_inizio:
+    name: "Posta — Inizio Notifiche Push"
+    has_date: false
+    has_time: true
+    initial: "07:00:00"
+    icon: mdi:bell-ring-outline
+
+  frarik_posta_notifiche_push_fine:
+    name: "Posta — Fine Notifiche Push"
+    has_date: false
+    has_time: true
+    initial: "23:00:00"
     icon: mdi:bell-off-outline
 
 
@@ -252,7 +275,7 @@ template:
   - sensor:
       - name: "Frarik Posta Versione"
         unique_id: frarik_posta_versione
-        state: "2.0"
+        state: "2.1"
         icon: mdi:package-variant-closed
 
   - binary_sensor:
@@ -270,8 +293,8 @@ template:
 ####################################################
 
 script:
-  frarik_posta_reset:
-    alias: "Frarik — Reset Contatore Posta"
+  frarik_posta_reset_oggi:
+    alias: "Frarik — Reset Contatore Posta (oggi)"
     icon: mdi:restart
     sequence:
       - service: counter.reset
@@ -282,6 +305,22 @@ script:
           entity_id: input_text.frarik_posta_storico
         data:
           value: ""
+
+  frarik_posta_reset_settimana:
+    alias: "Frarik — Reset Contatore Posta (settimana)"
+    icon: mdi:restart
+    sequence:
+      - service: counter.reset
+        target:
+          entity_id: counter.frarik_posta_settimana
+
+  frarik_posta_reset_mese:
+    alias: "Frarik — Reset Contatore Posta (mese)"
+    icon: mdi:restart
+    sequence:
+      - service: counter.reset
+        target:
+          entity_id: counter.frarik_posta_mese
 
 
 ####################################################
@@ -329,6 +368,11 @@ automation:
         target:
           entity_id: counter.frarik_posta_settimana
 
+      # Aggiorna contatore mensile
+      - service: counter.increment
+        target:
+          entity_id: counter.frarik_posta_mese
+
       # Salva data e ora ultima consegna
       - service: input_datetime.set_datetime
         target:
@@ -364,6 +408,9 @@ automation:
               - condition: state
                 entity_id: input_boolean.frarik_posta_notifica_push
                 state: 'on'
+              - condition: time
+                after: input_datetime.frarik_posta_notifiche_push_inizio
+                before: input_datetime.frarik_posta_notifiche_push_fine
               sequence:
               - repeat:
                   for_each: *push
@@ -385,8 +432,8 @@ automation:
                 entity_id: input_boolean.frarik_posta_notifica_google
                 state: 'on'
               - condition: time
-                after: input_datetime.frarik_posta_notifiche_inizio
-                before: input_datetime.frarik_posta_notifiche_fine
+                after: input_datetime.frarik_posta_notifiche_media_inizio
+                before: input_datetime.frarik_posta_notifiche_media_fine
               sequence:
               - service: tts.google_translate_say
                 data:
@@ -405,8 +452,8 @@ automation:
                 entity_id: input_boolean.frarik_posta_notifica_alexa
                 state: 'on'
               - condition: time
-                after: input_datetime.frarik_posta_notifiche_inizio
-                before: input_datetime.frarik_posta_notifiche_fine
+                after: input_datetime.frarik_posta_notifiche_media_inizio
+                before: input_datetime.frarik_posta_notifiche_media_fine
               sequence:
               - service: notify.alexa_media
                 data:
@@ -425,7 +472,7 @@ automation:
 
   - alias: "Frarik — Posta (reset)"
     id: frarik_posta_reset
-    description: "Reset giornaliero e settimanale dei contatori posta"
+    description: "Reset giornaliero, settimanale e mensile dei contatori posta"
     mode: single
 
     trigger:
@@ -451,6 +498,16 @@ automation:
             target:
               entity_id: counter.frarik_posta_settimana
 
+      # Reset mensile — solo il primo del mese
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: "{{ now().day == 1 }}"
+          sequence:
+          - service: counter.reset
+            target:
+              entity_id: counter.frarik_posta_mese
+
 ###############################################################
-#  Fine package — Frarik Centro Controllo Posta v2.0
+#  Fine package — Frarik Centro Controllo Posta v2.1
 ###############################################################
