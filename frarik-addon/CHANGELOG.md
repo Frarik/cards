@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.0.99 — 2026-07-18
+
+### fix: notifiche di aggiornamento card non arrivavano per file con un campo "version:" incorporato
+
+- `_parseCardVersion()` cercava prima un campo generico `version: '...'`/`"..."`
+  ovunque nel file, PRIMA di controllare il marcatore esplicito
+  `/* frarik-version: X.X */`. Per card come `posta-card.js`, che incorpora
+  un template YAML con una propria voce `version: '2.0'` (la versione del
+  package HA, non della card), quella voce veniva letta per errore al posto
+  della vera versione della card — il controllo "la versione è aumentata?"
+  falliva sempre e l'aggiornamento veniva allineato in silenzio senza mai
+  notificare.
+- Il marcatore `frarik-version:` ha ora sempre la priorità quando presente,
+  eliminando questa classe di falsi negativi per qualunque card con
+  contenuti incorporati (YAML, config) che usano la parola "version" a
+  loro volta.
+
 ## 2.0.98 — 2026-07-18
 
 ### feat: card normali — inizia il riallineamento allo standard, parte da Meteo

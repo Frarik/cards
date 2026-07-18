@@ -1695,10 +1695,15 @@ async function _ghDownload(file){
    • INSTALL / STORE: leggono la versione dichiarata nel file (quella su GitHub) */
 function _parseCardVersion(code){
   const s=String(code||'');
-  // 1) campo version: '...' / "..." (preferito)
-  let m=s.match(/version\s*:\s*['"]([^'"]+)['"]/);
+  // 0) marcatore esplicito /* frarik-version: X.X */ — SEMPRE prioritario se presente,
+  //    per evitare falsi positivi da altri campi "version:" incorporati nel file
+  //    (es. un template YAML con una propria voce version:, non legata alla card)
+  let m=s.match(/frarik-version\s*:\s*([0-9]+(?:\.[0-9]+)+)/i);
+  if(m) return m[1].trim();
+  // 1) campo version: '...' / "..." (preferito per le card senza marcatore frarik-version)
+  m=s.match(/version\s*:\s*['"]([^'"]+)['"]/);
   if(m && /\d/.test(m[1])) return m[1].trim();
-  // 2) marcatore/commento "version: 1.2.3" senza apici (es. /* frarik-version: 1.1 */)
+  // 2) marcatore/commento "version: 1.2.3" senza apici, generico
   m=s.match(/version\s*[:=]\s*v?([0-9]+(?:\.[0-9]+)+)/i);
   if(m) return m[1].trim();
   return null;
