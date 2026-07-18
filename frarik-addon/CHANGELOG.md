@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.0.95 — 2026-07-18
+
+### feat: SOS ora compare anche nella tab "Distintivi" dello store, come gli altri
+
+- SOS resta protetta da licenza (non disinstallabile senza chiave admin,
+  come già in "Predefinite"), ma ora ha una voce anche nella tab
+  **Distintivi → Installati**, iniettata accanto ai distintivi veri
+  scaricati da GitHub — stessa card, stessi due pulsanti Dashboard/Header,
+  stesso posto in cui si trovano e si aggiungono tutti gli altri.
+  Il lucchetto 🔐 al posto del cestino segnala che resta protetta.
+
 ## 2.0.94 — 2026-07-18
 
 ### feat: SOS ora è un distintivo come gli altri (invece del vecchio chip statico)

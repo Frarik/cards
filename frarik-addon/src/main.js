@@ -3069,8 +3069,38 @@ function _ghStoreRenderFolderInstallate(q, cacheKey){
   let files=(_ghsCache[cacheKey]||[]).filter(f=>g.shas[f.name]&&g.shas[f.name]===f.sha);
   if(q) files=files.filter(f=>f.name.toLowerCase().includes(q));
   const sorted=files.slice().sort((a,b)=>a.name.localeCompare(b.name));
-  status.textContent=sorted.length+' installate'+(q?' trovate':'');
-  if(!sorted.length){
+
+  // ── SOS: distintivo di sistema protetto da licenza, iniettato solo nella tab Distintivi ──
+  let sosTileHtml='';
+  if(cacheKey==='distintivi'){
+    const sosReg=window.FratechCardRegistry?.['sos-card'];
+    const sosMatches=!q||'sos'.includes(q)||(sosReg?.name||'').toLowerCase().includes(q);
+    if(sosReg&&sosMatches){
+      const inPillRowSos=usedInPillRow.has('sos-card');
+      const inClockBarSos=usedInClockBar.has('sos-card');
+      const inCurPageSos=inPillRowSos||inClockBarSos;
+      const bdgLabelSos=inPillRowSos&&inClockBarSos?'In dashboard + header':inPillRowSos?'In dashboard':inClockBarSos?'In header':'';
+      const bdgSos=inCurPageSos
+        ?`<span class="ghc-bdg cur">✓ ${bdgLabelSos}</span>`
+        :`<span class="ghc-bdg" style="background:rgba(139,92,246,.2);color:#c4b5fd;border-color:rgba(139,92,246,.4)">🔐 Sistema</span>`;
+      const dashPartSos=inPillRowSos
+        ?`<span class="ghc-indash" style="flex:1"><i class="mdi mdi-check-circle-outline"></i> Dashboard</span>`
+        :`<button class="ghc-btn ghc-btn-add" style="flex:1" data-action="_jsStoreAddToHeaderAndRefresh" data-action-args='["sos-card"]'><i class="mdi mdi-view-dashboard-outline"></i> Dashboard</button>`;
+      const headerPartSos=inClockBarSos
+        ?`<span class="ghc-indash" style="flex:1"><i class="mdi mdi-check-circle-outline"></i> Header</span>`
+        :`<button class="ghc-btn ghc-btn-add" style="flex:1" data-action="_jsStoreAddToClockBarAndRefresh" data-action-args='["sos-card"]'><i class="mdi mdi-flag-outline"></i> Header</button>`;
+      const addBtnSos=`<div style="display:flex;gap:6px;flex:1">${dashPartSos}${headerPartSos}</div>`;
+      const lockBtnSos=`<button class="ghc-btn-del" title="Protetta da licenza" style="opacity:.35;cursor:default"><i class="mdi mdi-lock-outline"></i></button>`;
+      sosTileHtml=`<div class="ghc-tile st-ok"><div class="ghc-strip ok"></div>
+        <div class="ghc-prev"><div class="ghc-prev-inner" data-prev-id="sos-card"></div><div class="ghc-prev-fade"></div>${bdgSos}</div>
+        <div class="ghc-body"><div class="ghc-head"><div class="ghc-ico">${_iconHtml(sosReg.icon||'🆘')}</div><div class="ghc-meta"><div class="ghc-name">${eh(sosReg.name||'SOS Emergenza')}</div><div class="ghc-ver">v${eh(sosReg.version||'1.0')}</div></div></div>
+        <div class="ghc-desc">${eh(sosReg.desc||'')}</div>
+        <div class="ghc-acts">${addBtnSos}${lockBtnSos}</div></div></div>`;
+    }
+  }
+
+  status.textContent=(sorted.length+(sosTileHtml?1:0))+' installate'+(q?' trovate':'');
+  if(!sorted.length&&!sosTileHtml){
     list.innerHTML=`<div style="grid-column:1/-1"><div class="ghs-empty">${q?`Nessun risultato per "${eh(q)}"`: 'Nessuna card installata. Vai su "Non installate" per installarne.'}</div></div>`;
     return;
   }
@@ -3111,7 +3141,7 @@ function _ghStoreRenderFolderInstallate(q, cacheKey){
       ${desc?`<div class="ghc-desc">${eh(desc)}</div>`:''}
       <div class="ghc-acts">${addBtn}${delBtn}</div></div></div>`;
   };
-  list.innerHTML='<div class="ghc-grid">'+sorted.map(tile).join('')+'</div>';
+  list.innerHTML='<div class="ghc-grid">'+sosTileHtml+sorted.map(tile).join('')+'</div>';
   requestAnimationFrame(()=>{
     list.querySelectorAll('[data-prev-id]').forEach(el=>{ _ghcLivePrev(el, el.dataset.prevId); });
     list.querySelectorAll('[data-prev-sha]').forEach(el=>{ _ghcLivePrevBySha(el, el.dataset.prevSha); });
