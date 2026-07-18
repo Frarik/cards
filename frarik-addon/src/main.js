@@ -1050,34 +1050,38 @@ function _epRenderJsStore(){
     return;
   }
 
-  // Quali card sono già nella vista corrente / intestazione (solo informativo, non blocca l'aggiunta)
+  // Quali card sono già nella vista corrente / riga distintivi / barra orologio (solo informativo, non blocca l'aggiunta)
   const curCards = (curPage()||{cards:[]}).cards||[];
   const usedInPage = new Set();
   curCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId) usedInPage.add(c.jsCardId); });
-  const usedInHeader = new Set();
-  ((curPage()||{}).headerBadges||[]).forEach(b=>{ if(b.type==='jsd'&&b.jsCardId) usedInHeader.add(b.jsCardId); });
+  const usedInPillRow = new Set();
+  ((curPage()||{}).headerBadges||[]).forEach(b=>{ if(b.type==='jsd'&&b.jsCardId) usedInPillRow.add(b.jsCardId); });
+  const usedInClockBar = new Set();
+  const _hb0=cfg.hdrBar||{};
+  [...(_hb0.left||[]),...(_hb0.center||[]),...(_hb0.right||[])].forEach(it=>{ if(it&&it.type==='jsd'&&it.jsCardId) usedInClockBar.add(it.jsCardId); });
 
   listEl.innerHTML = items.map(item=>{
     const m = item.meta||{};
     const isDist = !!window.FratechCardRegistry?.[m.id]?.isDistintivo;
     const inPage = usedInPage.has(m.id);
-    const inHeader = usedInHeader.has(m.id);
+    const inPillRow = usedInPillRow.has(m.id);
+    const inClockBar = usedInClockBar.has(m.id);
     let actionsHtml;
     if(isDist){
-      const hBtn = inHeader
-        ? '<span style="font-size:9px;font-weight:700;color:#4ade80" title="Già in intestazione"><i class="mdi mdi-check-circle-outline"></i> Header</span>'
-        : `<button data-action="_jsStoreAddToHeaderAndRefresh" data-action-arg="${m.id||''}" title="Aggiungi all'intestazione" style="padding:4px 8px;border-radius:7px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#a5b4fc;font-size:9px;font-weight:700;cursor:pointer;white-space:nowrap"><i class="mdi mdi-flag-outline"></i> Header</button>`;
-      const dBtn = inPage
+      const dBtn = inPillRow
         ? '<span style="font-size:9px;font-weight:700;color:#4ade80" title="Già in dashboard"><i class="mdi mdi-check-circle-outline"></i> Dash</span>'
-        : `<button data-action="_jsStoreAddToDashboardAndRefresh" data-action-arg="${m.id||''}" title="Aggiungi alla dashboard" style="padding:4px 8px;border-radius:7px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#a5b4fc;font-size:9px;font-weight:700;cursor:pointer;white-space:nowrap"><i class="mdi mdi-view-dashboard-outline"></i> Dash</button>`;
-      actionsHtml = `<div style="display:flex;gap:4px;flex-shrink:0">${hBtn}${dBtn}</div>`;
+        : `<button data-action="_jsStoreAddToHeaderAndRefresh" data-action-arg="${m.id||''}" title="Aggiungi alla dashboard (riga distintivi)" style="padding:4px 8px;border-radius:7px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#a5b4fc;font-size:9px;font-weight:700;cursor:pointer;white-space:nowrap"><i class="mdi mdi-view-dashboard-outline"></i> Dash</button>`;
+      const hBtn = inClockBar
+        ? '<span style="font-size:9px;font-weight:700;color:#4ade80" title="Già nella barra in alto"><i class="mdi mdi-check-circle-outline"></i> Header</span>'
+        : `<button data-action="_jsStoreAddToClockBarAndRefresh" data-action-arg="${m.id||''}" title="Aggiungi alla barra in alto (vicino a SOS)" style="padding:4px 8px;border-radius:7px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#a5b4fc;font-size:9px;font-weight:700;cursor:pointer;white-space:nowrap"><i class="mdi mdi-flag-outline"></i> Header</button>`;
+      actionsHtml = `<div style="display:flex;gap:4px;flex-shrink:0">${dBtn}${hBtn}</div>`;
     } else {
       actionsHtml = inPage
         ? '<span style="flex-shrink:0;font-size:10px;font-weight:700;color:#4ade80;background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);border-radius:7px;padding:4px 9px;white-space:nowrap">✓ In vista</span>'
         : `<button data-action="jsStoreAddCard" data-action-arg="${m.id||''}" style="flex-shrink:0;padding:4px 9px;border-radius:7px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#a5b4fc;font-size:10px;font-weight:700;cursor:pointer">➕</button>`;
     }
     const statusTxt = isDist
-      ? [inHeader?'✓ header':null, inPage?'✓ dashboard':null].filter(Boolean).join(' · ')
+      ? [inPillRow?'✓ dashboard':null, inClockBar?'✓ header':null].filter(Boolean).join(' · ')
       : (inPage?'✓ in questa vista':'');
     return `<div style="display:flex;align-items:center;gap:8px;padding:7px 6px;border-bottom:1px solid rgba(255,255,255,.04)">
       <span style="font-size:18px;flex-shrink:0">${m.icon||'📦'}</span>
@@ -3032,8 +3036,11 @@ function _ghStoreRenderFolderInstallate(q, cacheKey){
   const list=document.getElementById('ghs-list'), status=document.getElementById('ghs-status');
   const g=_ghCfg(); const idFile=g.idFile||{};
   const _cpCards=(curPage()||{cards:[]}).cards||[];
-  const usedInHeader=new Set();
-  ((curPage()||{}).headerBadges||[]).forEach(b=>{ if(b.type==='jsd'&&b.jsCardId) usedInHeader.add(b.jsCardId); });
+  const usedInPillRow=new Set();
+  ((curPage()||{}).headerBadges||[]).forEach(b=>{ if(b.type==='jsd'&&b.jsCardId) usedInPillRow.add(b.jsCardId); });
+  const usedInClockBar=new Set();
+  const _hb=cfg.hdrBar||{};
+  [...(_hb.left||[]),...(_hb.center||[]),...(_hb.right||[])].forEach(it=>{ if(it&&it.type==='jsd'&&it.jsCardId) usedInClockBar.add(it.jsCardId); });
   const usedInDash=new Set();
   _cpCards.forEach(c=>{ if(c.type==='js-custom'&&c.jsCardId&&!(window.FratechCardRegistry?.[c.jsCardId]?.allowMultiple)) usedInDash.add(c.jsCardId); });
   let files=(_ghsCache[cacheKey]||[]).filter(f=>g.shas[f.name]&&g.shas[f.name]===f.sha);
@@ -3050,26 +3057,27 @@ function _ghStoreRenderFolderInstallate(q, cacheKey){
     const verGH=_ghVerCache[f.sha]||g.fileVersions[f.name]||(cardId&&_curStoreVersion(cardId))||'';
     const reg=cardId?window.FratechCardRegistry?.[cardId]:null;
     const isDist=!!reg?.isDistintivo;
-    const inHeader=!!(cardId&&usedInHeader.has(cardId));
+    const inPillRow=!!(cardId&&usedInPillRow.has(cardId));
+    const inClockBar=!!(cardId&&usedInClockBar.has(cardId));
     const inDash=!!(cardId&&usedInDash.has(cardId));
-    const inCurPage=isDist?(inHeader||inDash):inDash;
+    const inCurPage=isDist?(inPillRow||inClockBar):inDash;
     const icon=(reg?.icon)||(_jsStoreList().find(i=>(i.meta||{}).id===cardId)?.meta?.icon)||'📦';
     const desc=_ghcDesc(cardId,f.sha);
     const bdgLabel=isDist
-      ?(inHeader&&inDash?'In intestazione + dashboard':inHeader?'In intestazione':inDash?'In dashboard':'')
+      ?(inPillRow&&inClockBar?'In dashboard + header':inPillRow?'In dashboard':inClockBar?'In header':'')
       :(inDash?'In vista':'');
     const bdg=inCurPage?`<span class="ghc-bdg cur">✓ ${bdgLabel}</span>`:`<span class="ghc-bdg ok">● Installata</span>`;
     const prevHtml=cardId&&reg?`<div class="ghc-prev-inner" data-prev-id="${eh(cardId)}"></div>`:`<div class="ghc-prev-inner" data-prev-sha="${eh(f.sha)}"></div>`;
     const pkgBdgInst=_pkgBadgeHtml(cardId?_pkgInfoForInstalledCard(cardId):(_ghPkgCache[f.sha]||null));
     let addBtn='';
     if(cardId&&isDist){
-      const headerPart=inHeader
-        ?`<span class="ghc-indash" style="flex:1"><i class="mdi mdi-check-circle-outline"></i> Header</span>`
-        :`<button class="ghc-btn ghc-btn-add" style="flex:1" data-action="_jsStoreAddToHeaderAndRefresh" data-action-args='["${cardId}"]'><i class="mdi mdi-flag-outline"></i> Header</button>`;
-      const dashPart=inDash
+      const dashPart=inPillRow
         ?`<span class="ghc-indash" style="flex:1"><i class="mdi mdi-check-circle-outline"></i> Dashboard</span>`
-        :`<button class="ghc-btn ghc-btn-add" style="flex:1" data-action="_jsStoreAddToDashboardAndRefresh" data-action-args='["${cardId}"]'><i class="mdi mdi-view-dashboard-outline"></i> Dashboard</button>`;
-      addBtn=`<div style="display:flex;gap:6px;flex:1">${headerPart}${dashPart}</div>`;
+        :`<button class="ghc-btn ghc-btn-add" style="flex:1" data-action="_jsStoreAddToHeaderAndRefresh" data-action-args='["${cardId}"]'><i class="mdi mdi-view-dashboard-outline"></i> Dashboard</button>`;
+      const headerPart=inClockBar
+        ?`<span class="ghc-indash" style="flex:1"><i class="mdi mdi-check-circle-outline"></i> Header</span>`
+        :`<button class="ghc-btn ghc-btn-add" style="flex:1" data-action="_jsStoreAddToClockBarAndRefresh" data-action-args='["${cardId}"]'><i class="mdi mdi-flag-outline"></i> Header</button>`;
+      addBtn=`<div style="display:flex;gap:6px;flex:1">${dashPart}${headerPart}</div>`;
     } else if(cardId){
       addBtn=inDash?`<span class="ghc-indash"><i class="mdi mdi-check-circle-outline"></i> In vista</span>`:`<button class="ghc-btn ghc-btn-add" data-action="_jsStoreAddAndRefresh" data-action-args='["${cardId}"]'><i class="mdi mdi-plus"></i> Aggiungi</button>`;
     }
@@ -5570,6 +5578,17 @@ function hbarInner(card){
       const lbl=item.label||meta.name||item.cardId||'Card';
       return `<span class="hbar-chip" style="background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.35);color:#fbbf24">${_renderIcon(ico,11,'#fbbf24')} <span style="font-weight:700">${eh(lbl)}</span></span>`;
     }
+    if(item.type==='jsd'){
+      // distintivo live: stesso motore chip() del jsd nella riga distintivi, ma dentro la barra orologio/SOS
+      const def=(window.FratechCardRegistry||{})[item.jsCardId];
+      let chip={}; try{ if(def&&def.chip) chip=def.chip(item.cfg||{},{states:hs})||{}; }catch(e){}
+      const col=chip.color||'#818cf8';
+      const bbc=chip.borderColor||col;
+      const ico=chip.icon!=null?chip.icon:(def?.icon||'📦');
+      const lbl=chip.label?`<span class="badge-lbl">${eh(chip.label)}: </span>`:'';
+      const val=chip.value!=null?`<span class="badge-val" id="bgcnt-${item.id}">${chip.value}</span>`:'';
+      return `<span class="hbar-chip tap" id="bchip-${item.id}" style="background:color-mix(in srgb, var(--bc) 18%, transparent);border-color:color-mix(in srgb, var(--bbc, var(--bc)) 55%, transparent);color:var(--bc);--bc:${col};--bbc:${bbc}" data-action="_badgeClick" data-action-arg="${item.id}"><span id="bgico-${item.id}">${ico}</span> ${lbl}${val}</span>`;
+    }
     if(item.type==='clock'){
       const style=item.clockStyle||'default';
       const sz=item.clockSizeName||'md';
@@ -6965,6 +6984,8 @@ function _findBadge(id){
   const p=curPage(); if(!p) return null;
   let arr=(p.headerBadges||[]).concat(p.footerBadges||[]);
   (p.cards||[]).forEach(c=>{ if(c.cardBadges) arr=arr.concat(c.cardBadges); });
+  const hb=cfg.hdrBar||{};
+  arr=arr.concat(hb.left||[],hb.center||[],hb.right||[]);
   return arr.find(x=>x&&x.id===id)||null;
 }
 function _badgeClick(id, ev){
@@ -7114,6 +7135,7 @@ function _editJsdBadge(b, idx, zone){
     /* aggiorna anche la cfg salvata in modo che sia aggiornata al re-inserimento */
     if(b.jsCardId){ if(!cfg.savedJsdCfgs) cfg.savedJsdCfgs={}; cfg.savedJsdCfgs[b.jsCardId]=JSON.parse(JSON.stringify(b.cfg)); }
     saveCfg(); renderBadgesAll();
+    if(typeof renderHdrChips==='function') try{ renderHdrChips(); }catch(e){}
     try{ _updateCMBadgePreview(); }catch(e){}
   });
 }
@@ -7549,7 +7571,8 @@ function _renderCardBadgesHTML(card){
 
 function _liveUpdateBadges(entityId){
   const page=curPage();
-  const allB=[...(page.headerBadges||[]),...(page.footerBadges||[]),...page.cards.flatMap(c=>c.cardBadges||[])];
+  const _hb=cfg.hdrBar||{};
+  const allB=[...(page.headerBadges||[]),...(page.footerBadges||[]),...page.cards.flatMap(c=>c.cardBadges||[]),...(_hb.left||[]),...(_hb.center||[]),...(_hb.right||[])];
   const editing=(typeof editMode!=='undefined'&&editMode);
   let visChanged=false;
   allB.forEach(b=>{
@@ -9138,6 +9161,13 @@ function _hbChipPreview(item){
   if(item.type==='sos')   return `<span class="hb-chip-prev" style="background:rgba(239,68,68,.3);border-color:rgba(248,113,113,.6);color:#fff">🆘 ${item.label||'SOS'}</span>`;
   if(item.type==='kiosk') return `<span class="hb-chip-prev" style="background:rgba(99,102,241,.25);border-color:rgba(129,140,248,.5);color:#a5b4fc">⛶ ${item.label||'Kiosk'}</span>`;
   if(item.type==='conn')  return `<span class="hb-chip-prev" style="background:rgba(74,222,128,.2);border-color:rgba(74,222,128,.4);color:#4ade80">📶 Stato connessione</span>`;
+  if(item.type==='jsd'){
+    const def=(window.FratechCardRegistry||{})[item.jsCardId];
+    let chip={}; try{ if(def&&def.chip) chip=def.chip(item.cfg||{},{states:hs})||{}; }catch(e){}
+    const ico=chip.icon!=null?chip.icon:(def?.icon||'📦');
+    const lbl=chip.label||def?.name||item.jsCardId||'Distintivo';
+    return `<span class="hb-chip-prev" style="background:rgba(99,102,241,.2);border-color:rgba(129,140,248,.4);color:#a5b4fc">${ico} ${eh(lbl)}${chip.value!=null?': '+eh(String(chip.value)):''}</span>`;
+  }
   const bg=item.bg||'rgba(255,255,255,0.12)';
   const col=item.color||'#fff';
   const iconH=item.icon?_renderIcon(item.icon,10,col):'';
@@ -9181,6 +9211,8 @@ function hbAddChip(zone){
 function hbEditChip(zone,i){
   _hbEditZone=zone; _hbEditIdx=i;
   const item=_hbChips[zone][i]; if(!item) return;
+  // distintivo: apri il suo editor configure() dedicato invece del form generico entità/testo
+  if(item.type==='jsd'){ _editJsdBadge(item); return; }
   _hbBg=item.bg||''; _hbTxt=item.color||'#ffffff';
   document.getElementById('hb-form-title').textContent='Modifica elemento';
   document.getElementById('hbf-save-btn').textContent='✅ Salva elemento';
@@ -9910,11 +9942,16 @@ function _hbSelTxt(c){ _hbTxt=c; const el=document.getElementById('hbf-text-cust
 
 function hbSaveChip(){
   const t=['entity','text','clock','sep','sos','kiosk','conn','store'].find(x=>document.getElementById('hbft-'+x)?.classList.contains('on'))||'entity';
-  // Tipo store: salva la card selezionata
+  // Tipo store: il picker mostra solo distintivi → crea un item "jsd" live (stesso motore chip() della riga distintivi)
   if(t==='store'){
     const sel=document.getElementById('hbf-store-selected');
-    if(!sel?.value){ showToast('Seleziona una card dallo store'); return; }
-    const item={id:(_hbEditIdx>=0?_hbChips[_hbEditZone][_hbEditIdx]?.id:null)||uid(), type:'store', cardId:sel.value, label:sel.dataset.name||sel.value, icon:sel.dataset.icon||'📦', hidden:false};
+    if(!sel?.value){ showToast('Seleziona un distintivo dallo store'); return; }
+    const jsCardId=sel.value;
+    const def=(window.FratechCardRegistry||{})[jsCardId];
+    const existing=_hbEditIdx>=0?_hbChips[_hbEditZone][_hbEditIdx]:null;
+    const savedCfg=(cfg.savedJsdCfgs||{})[jsCardId];
+    const initCfg=existing&&existing.type==='jsd'?existing.cfg:(savedCfg?JSON.parse(JSON.stringify(savedCfg)):(def?.defaultCfg?JSON.parse(JSON.stringify(def.defaultCfg)):{}));
+    const item={id:existing?.id||uid(), type:'jsd', jsCardId, cfg:initCfg, hidden:false};
     if(_hbEditIdx>=0) _hbChips[_hbEditZone][_hbEditIdx]=item;
     else _hbChips[_hbEditZone].push(item);
     hbRenderAllLists(); hbCancelChip(); return;
@@ -12502,17 +12539,39 @@ function jsStoreAddCard(id){
   _jsStoreAddToDashboard(id, regCard);
 }
 
-/* ── Distintivi: due destinazioni indipendenti (intestazione / dashboard) ── */
+/* ── Distintivi: due destinazioni indipendenti (riga distintivi / barra orologio) ──
+   "Dashboard" = riga distintivi (page.headerBadges, invariata rispetto a prima).
+   "Header" = dentro la barra in alto con l'orologio/SOS (cfg.hdrBar, globale). ── */
 function _jsStoreAddToHeaderAndRefresh(id){
   const regCard = window.FratechCardRegistry[id];
   if(!regCard){ showToast('⚠️ Card non trovata nel registry. Ricarica la pagina.'); return; }
   _jsdAddToHeader(id, regCard);
   setTimeout(_ghStoreRender,50);
 }
-function _jsStoreAddToDashboardAndRefresh(id){
+function _jsdAddToClockBar(id, def){
+  if(!cfg.hdrBar) cfg.hdrBar={left:[{id:uid(),type:'clock'}],center:[],right:[]};
+  if(!cfg.hdrBar.center) cfg.hdrBar.center=[];
+  const savedCfg=(cfg.savedJsdCfgs||{})[id];
+  const initCfg=savedCfg?JSON.parse(JSON.stringify(savedCfg)):(def.defaultCfg?JSON.parse(JSON.stringify(def.defaultCfg)):{});
+  const newItem = { id: uid(), type: 'jsd', jsCardId: id, cfg: initCfg };
+  cfg.hdrBar.center.push(newItem);
+  saveCfg();
+  if(typeof renderHdrChips==='function') renderHdrChips();
+  closeJsStore();
+  if(typeof _epRenderJsStore==='function') _epRenderJsStore();
+  if(typeof _jsStoreRenderList==='function') _jsStoreRenderList();
+  /* apri configure solo se non c'è una cfg salvata (prima volta), come nel picker rapido dell'header */
+  if(def.configure&&!savedCfg){
+    showToast('✅ Distintivo aggiunto alla barra in alto!');
+    setTimeout(()=>_editJsdBadge(newItem),150);
+  } else {
+    showToast('✅ Distintivo aggiunto alla barra in alto — clicca ✏️ per configurare!');
+  }
+}
+function _jsStoreAddToClockBarAndRefresh(id){
   const regCard = window.FratechCardRegistry[id];
   if(!regCard){ showToast('⚠️ Card non trovata nel registry. Ricarica la pagina.'); return; }
-  _jsStoreAddToDashboard(id, regCard);
+  _jsdAddToClockBar(id, regCard);
   setTimeout(_ghStoreRender,50);
 }
 
@@ -19122,7 +19181,7 @@ Object.assign(window, {
   moveViewUp, moveViewDown,
   _acpOpenInstalled, _acpOpenYaml, _acpAddSaved, _acpDeleteSaved, _ghsDeleteSaved,
   _openGhStoreClean, _pasteCardToClean, _closeViewsAndOpenTM, _closeViewsAndSetPage,
-  _jsStoreAddAndRefresh, _jsStoreAddToHeaderAndRefresh, _jsStoreAddToDashboardAndRefresh, _jsRename, _jsRenameDo, _jsRenameInline, openRenameStore, closeRenameStore,
+  _jsStoreAddAndRefresh, _jsStoreAddToHeaderAndRefresh, _jsStoreAddToClockBarAndRefresh, _jsRename, _jsRenameDo, _jsRenameInline, openRenameStore, closeRenameStore,
   _deleteSavedAt, _appChipPopupAt, _setActivePageAndSync,
   _pgWarnClose, _sendCallSvc,
   _appItemPickIcon, _appItemPickColor, _appGroupPickColor,

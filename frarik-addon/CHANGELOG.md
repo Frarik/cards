@@ -1,5 +1,25 @@
 # Changelog
 
+## 2.0.93 — 2026-07-18
+
+### fix: le due destinazioni dei distintivi erano scambiate + nuova destinazione "barra orologio/SOS" live
+
+- Corretta la terminologia: la riga distintivi esistente (quella sotto/sopra
+  la griglia, dove sono già tutti i distintivi) è "**Dashboard**" — non
+  "Header" come etichettato prima. Il pulsante che la popola resta lo
+  stesso di prima (`page.headerBadges`), solo l'etichetta era sbagliata.
+- **"Header" ora è la vera barra in alto con l'orologio/SOS** (`cfg.hdrBar`,
+  globale): un distintivo aggiunto lì è **live** quanto in dashboard —
+  valore che si aggiorna da solo, colore in base allo stato, click che apre
+  il popup del distintivo — non la vecchia versione statica icona+etichetta
+  del tipo "store" già esistente in quella barra.
+- Estesi `_findBadge`, `_liveUpdateBadges` e il render della barra orologio
+  (`hbarInner`) per gestire il nuovo tipo `jsd` al suo interno; il picker
+  "aggiungi elemento" del form della barra (che ora mostra solo distintivi)
+  crea item live invece dei vecchi item statici "store"; l'editor di un
+  distintivo nella barra apre direttamente il suo `configure()` dedicato
+  invece del form generico entità/testo.
+
 ## 2.0.92 — 2026-07-18
 
 ### feat: rimossa la categoria "Chips" dallo store + distintivi in header O dashboard
