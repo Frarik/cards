@@ -1,8 +1,14 @@
-/* frarik-version: 1.7 */
+/* frarik-version: 2.0 */
 /**
- * GruppoBatterie.js — Distintivo FratechStore v1.2
+ * GruppoBatterie.js — Distintivo FratechStore v2.0
  * Rileva automaticamente TUTTE le entità con device_class: battery
  * Critica <threshold_critical% · Bassa <threshold_low% · OK
+ * v2.0: stesso trattamento degli altri distintivi — chip con unico value
+ *       maiuscolo/grassetto; hero e righe batteria rifatte a stile "glass"
+ *       (gradiente + alone + badge icona circolare, coerente col resto);
+ *       tutto il testo del popup a dimensione unica (12px/900); niente più
+ *       testo con opacità ridotta (era illeggibile su alcuni schermi);
+ *       aggiunto titolo popup bianco/maiuscolo/grassetto (mancava del tutto)
  */
 (function () {
   'use strict';
@@ -31,6 +37,12 @@
   }
   function liveH(raw) { return H() || (raw?.states ? raw : null); }
   function eh(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function hex2rgba(hex, a) {
+    let h = (hex || '').replace('#', '');
+    if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+    if (h.length !== 6) return `rgba(255,255,255,${a})`;
+    return `rgba(${parseInt(h.slice(0,2),16)},${parseInt(h.slice(2,4),16)},${parseInt(h.slice(4,6),16)},${a})`;
+  }
 
   /* ── auto-detect entities with device_class: battery ── */
   function _getBatteryEntities(h) {
@@ -95,27 +107,27 @@
   function chip(cfg, rawHass) {
     const c = loadCfg(cfg);
     const h = liveH(rawHass);
+    const lbl = (c.label || 'Batterie').toUpperCase();
 
-    if (!h) return { label: c.label || 'Batterie', value: '🔋 —', color: '#4ade80' };
+    if (!h) return { value: `${lbl}: —`, color: '#4ade80' };
 
     const { offline, critical, low, worstStatus } = _analyze(cfg, h);
 
-    let value;
+    let status;
     if (worstStatus === 'ok') {
-      value = '🔋 OK';
+      status = 'OK';
     } else {
       const parts = [];
-      if (offline  > 0) parts.push(`📴 ${offline}`);
-      if (critical > 0) parts.push(`🔴 ${critical}`);
-      if (low      > 0) parts.push(`🟡 ${low}`);
-      value = parts.join(' ');
+      if (offline  > 0) parts.push(`📴${offline}`);
+      if (critical > 0) parts.push(`🔴${critical}`);
+      if (low      > 0) parts.push(`🟡${low}`);
+      status = parts.join(' ');
     }
 
     const _fcr = window.FratechColorRules;
     const _cond = { has_offline: offline > 0, has_critical: critical > 0, has_low: low > 0, all_ok: worstStatus === 'ok' };
     return {
-      label: c.label || 'Batterie',
-      value,
+      value: `${lbl}: ${status}`,
       color: (_fcr && _fcr.evalColor(cfg, _cond)) || STATUS_COL[worstStatus],
       borderColor: _fcr && _fcr.evalBorderColor(cfg, _cond),
       pulse: worstStatus === 'offline' || worstStatus === 'critical',
@@ -133,7 +145,7 @@
     const h = liveH(rawHass);
 
     if (!h) {
-      return `<div style="padding:24px 20px;text-align:center;color:#fff;font-size:12px;font-family:system-ui,sans-serif">Caricamento…</div>`;
+      return `<div style="padding:24px 20px;text-align:center;color:#fff;font-size:12px;font-weight:900;text-transform:uppercase;font-family:system-ui,sans-serif">Caricamento…</div>`;
     }
 
     const { items, offline, critical, low, worstStatus, thrL, thrC, total } = _analyze(cfg, h);
@@ -142,85 +154,86 @@
     if (total === 0) {
       return `<div style="padding:48px 20px;text-align:center;font-family:system-ui,sans-serif">
         <div style="font-size:42px;margin-bottom:12px">🔋</div>
-        <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:6px">Nessun sensore batteria trovato</div>
-        <div style="font-size:10px;color:#fff">Verifica che le entità abbiano <code style="background:rgba(255,255,255,.08);padding:1px 4px;border-radius:3px">device_class: battery</code></div>
+        <div style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;margin-bottom:6px">Nessun sensore batteria trovato</div>
+        <div style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;opacity:.7">Verifica che le entità abbiano <code style="background:rgba(255,255,255,.08);padding:1px 4px;border-radius:3px;text-transform:none">device_class: battery</code></div>
       </div>`;
     }
 
     const okCount = total - offline - critical - low;
 
-    /* ── hero card unica ── */
+    /* ── hero card unica — stesso stile "glass" degli altri distintivi ── */
     const heroTitle = worstStatus === 'ok'
-      ? 'Tutte le batterie sono OK'
-      : (() => {
-          const pcs = [];
-          if (offline  > 0) pcs.push(`${offline} offline`);
-          if (critical > 0) pcs.push(`${critical} critica/e`);
-          if (low      > 0) pcs.push(`${low} bassa/e`);
-          return pcs.join(' · ');
-        })();
+      ? 'TUTTE OK'
+      : [
+          offline  > 0 ? `${offline} OFFLINE`  : '',
+          critical > 0 ? `${critical} CRITICHE` : '',
+          low      > 0 ? `${low} BASSE`        : '',
+        ].filter(Boolean).join(' · ');
     const heroSub = worstStatus === 'ok'
-      ? `${total} dispositivi monitorati`
-      : `su ${total} dispositivi totali`;
+      ? `${total} DISPOSITIVI MONITORATI`
+      : `SU ${total} DISPOSITIVI TOTALI`;
 
     const statCell = (emo, n, sc, label) => {
       const on = n > 0;
-      const tc = on ? sc : 'rgba(255,255,255,.2)';
-      return `<div style="flex:1;text-align:center;padding:8px 4px;border-radius:10px;background:${on ? sc+'12' : 'rgba(255,255,255,.03)'};border:1px solid ${on ? sc+'35' : 'rgba(255,255,255,.07)'}">
+      const tc = on ? sc : '#6b7280';
+      return `<div style="flex:1;text-align:center;padding:8px 4px;border-radius:10px;background:${on ? hex2rgba(sc,.14) : 'rgba(255,255,255,.03)'};border:1px solid ${on ? hex2rgba(sc,.4) : 'rgba(255,255,255,.08)'}">
         <div style="font-size:14px;line-height:1;margin-bottom:3px">${emo}</div>
         <div style="font-size:18px;font-weight:900;color:${tc};line-height:1;margin-bottom:2px">${n}</div>
-        <div style="font-size:8px;font-weight:700;color:${tc};text-transform:uppercase;letter-spacing:.4px;opacity:${on?1:.6}">${label}</div>
+        <div style="font-size:12px;font-weight:900;color:${tc};text-transform:uppercase;letter-spacing:.4px">${label}</div>
       </div>`;
     };
 
-    const hero = `<div style="background:${col}0a;border:1px solid ${col}35;border-radius:14px;padding:14px 14px 12px;margin-bottom:12px">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-        <div style="width:38px;height:38px;border-radius:11px;background:${col}18;border:1px solid ${col}35;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🔋</div>
+    const hero = `<div style="position:relative;overflow:hidden;border-radius:18px;background:linear-gradient(155deg,${hex2rgba(col,.16)},${hex2rgba(col,.04)});border:1px solid ${hex2rgba(col,.32)};padding:16px;margin-bottom:12px">
+      <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 18% 15%,${hex2rgba(col,.22)},transparent 62%);pointer-events:none"></div>
+      <div style="position:relative;display:flex;align-items:center;gap:14px;margin-bottom:12px">
+        <div style="width:56px;height:56px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${hex2rgba(col,.18)};border:1.5px solid ${hex2rgba(col,.45)};box-shadow:0 0 18px ${hex2rgba(col,.35)}">
+          <span style="font-size:26px;color:${col}">🔋</span>
+        </div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:700;color:#fff;line-height:1.3">${heroTitle}</div>
-          <div style="font-size:10px;color:rgba(255,255,255,.45);margin-top:2px">${heroSub}</div>
+          <div style="font-size:19px;font-weight:900;color:${col};letter-spacing:.3px;text-transform:uppercase">${heroTitle}</div>
+          <div style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;margin-top:3px">${heroSub}</div>
         </div>
       </div>
-      <div style="display:flex;gap:6px">
+      <div style="position:relative;display:flex;gap:6px">
         ${statCell('📴', offline,  '#ef4444', 'Offline')}
         ${statCell('🔴', critical, '#f97316', 'Critiche')}
         ${statCell('🟡', low,      '#facc15', 'Basse')}
         ${statCell('✅', okCount,  '#4ade80', 'OK')}
       </div>
-      <div style="font-size:9px;color:rgba(255,255,255,.3);margin-top:10px;text-align:center">Soglie: bassa &lt;${thrL}% · critica &lt;${thrC}%</div>
+      <div style="position:relative;font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;margin-top:10px;text-align:center">Soglie: bassa &lt;${thrL}% · critica &lt;${thrC}%</div>
     </div>`;
 
-    /* ── riga singola ── */
-    function _row(item, compact) {
+    /* ── riga singola — stesso stile "glass" degli altri distintivi, in versione compatta
+       (niente controlli interattivi qui, solo lettura, e la lista può essere lunga) ── */
+    function _row(item) {
       const sc = STATUS_COL[item.status];
       const ico = { offline:'📴', critical:'🔴', low:'🟡', ok:'✅' }[item.status] || '🔋';
       const barW = item.level !== null ? Math.max(3, Math.round(item.level)) : 0;
       const barHtml = item.level !== null
-        ? `<div style="position:relative;height:4px;border-radius:2px;background:rgba(255,255,255,.08);width:80px;flex-shrink:0">
+        ? `<div style="position:relative;height:4px;border-radius:2px;background:rgba(255,255,255,.12);width:60px;flex-shrink:0">
              <div style="position:absolute;top:0;left:0;height:100%;width:${barW}%;background:${sc};border-radius:2px"></div>
            </div>
-           <span style="font-size:${compact?'11':'12'}px;font-weight:700;color:${sc};min-width:30px;text-align:right">${Math.round(item.level)}%</span>`
-        : `<span style="font-size:10px;color:${sc};min-width:110px;text-align:right">—</span>`;
+           <span style="font-size:12px;font-weight:900;color:${sc};min-width:34px;text-align:right">${Math.round(item.level)}%</span>`
+        : `<span style="font-size:12px;font-weight:900;text-transform:uppercase;color:${sc};text-align:right">—</span>`;
 
-      const bg = compact ? '' : `background:${sc}0d;border:1px solid ${sc}22;`;
-      return `<div style="display:flex;align-items:center;gap:10px;padding:${compact?'6px 8px':'9px 10px'};border-radius:10px;${bg}margin-bottom:4px">
-        <span style="font-size:${compact?'12':'14'}px;flex-shrink:0">${ico}</span>
-        <span style="font-size:${compact?'11':'12'}px;font-weight:${compact?'500':'600'};color:#fff;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(item.name)}</span>
+      return `<div style="position:relative;overflow:hidden;display:flex;align-items:center;gap:10px;border-radius:14px;background:linear-gradient(155deg,${hex2rgba(sc,.16)},${hex2rgba(sc,.03)});border:1px solid ${hex2rgba(sc,.35)};padding:10px 12px;margin-bottom:6px">
+        <span style="width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${hex2rgba(sc,.22)};border:1px solid ${hex2rgba(sc,.5)};font-size:15px">${ico}</span>
+        <span style="flex:1;min-width:0;font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${eh(item.name)}</span>
         ${barHtml}
       </div>`;
     }
 
     /* ── sezione con header ── */
-    function _section(emo, label, sc, sItems, compact) {
+    function _section(emo, label, sc, sItems) {
       if (!sItems.length) return '';
       return `<div style="margin-bottom:12px">
-        <div style="display:flex;align-items:center;gap:6px;padding:6px 4px 5px">
-          <span style="font-size:11px">${emo}</span>
-          <span style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:${sc}">${label}</span>
-          <span style="font-size:9px;font-weight:700;color:${sc};background:${sc}18;border-radius:8px;padding:1px 6px">${sItems.length}</span>
-          <div style="flex:1;height:1px;background:${sc}25;margin-left:2px"></div>
+        <div style="display:flex;align-items:center;gap:6px;padding:6px 4px 8px">
+          <span style="font-size:12px">${emo}</span>
+          <span style="font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.6px;color:${sc}">${label}</span>
+          <span style="font-size:12px;font-weight:900;color:${sc};background:${hex2rgba(sc,.16)};border-radius:8px;padding:1px 7px">${sItems.length}</span>
+          <div style="flex:1;height:1px;background:${hex2rgba(sc,.25)};margin-left:2px"></div>
         </div>
-        ${sItems.map(i => _row(i, compact)).join('')}
+        ${sItems.map(i => _row(i)).join('')}
       </div>`;
     }
 
@@ -235,10 +248,10 @@
 
       <style>.batt-scroll::-webkit-scrollbar{display:none}</style>
       <div class="batt-scroll" style="max-height:55vh;overflow-y:auto;scrollbar-width:none;padding-bottom:10px">
-        ${_section('📴', 'Offline',   '#ef4444', offlineItems,  false)}
-        ${_section('🔴', 'Critiche',  '#f97316', criticalItems, false)}
-        ${_section('🟡', 'Basse',     '#facc15', lowItems,      false)}
-        ${_section('✅', 'OK',        '#4ade80', okItems,       false)}
+        ${_section('📴', 'Offline',   '#ef4444', offlineItems)}
+        ${_section('🔴', 'Critiche',  '#f97316', criticalItems)}
+        ${_section('🟡', 'Basse',     '#facc15', lowItems)}
+        ${_section('✅', 'OK',        '#4ade80', okItems)}
       </div>
     </div>`;
   }
@@ -251,12 +264,30 @@
     if (st > 0) { const ns = el.querySelector('.batt-scroll'); if (ns) ns.scrollTop = st; }
   }
 
+  function _syncTitle(cfg, el) {
+    try {
+      const hdr = el.previousElementSibling; if (!hdr) return;
+      const textWrap = hdr.children?.[1]; if (!textWrap) return;
+      const titleEl = textWrap.firstElementChild; if (!titleEl) return;
+      const subEl = textWrap.children?.[1]; if (subEl) subEl.style.display = 'none';
+      const h = H();
+      const { offline, critical, low, worstStatus, total } = _analyze(cfg, h);
+      titleEl.style.color = '#fff';
+      titleEl.style.fontWeight = '900';
+      titleEl.style.textTransform = 'uppercase';
+      titleEl.textContent = worstStatus === 'ok'
+        ? (total === 1 ? '1 batteria OK' : `${total} batterie OK`)
+        : `${offline + critical + low} da controllare`;
+    } catch (e) {}
+  }
+
   function mount(cfg, rawHass, el) {
     el.innerHTML = render(cfg, rawHass);
+    setTimeout(() => _syncTitle(cfg, el), 0);
     if (el._bPoll) return;
     el._bPoll = setInterval(() => {
       if (!el.isConnected) { clearInterval(el._bPoll); delete el._bPoll; return; }
-      try { const h = H(); if (h) _rerender(cfg, h, el); } catch (e) {}
+      try { const h = H(); if (h) { _rerender(cfg, h, el); _syncTitle(cfg, el); } } catch (e) {}
     }, 3000);
   }
 
@@ -362,7 +393,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Batterie', icon: '🔋',
     desc: '',
-    version: '1.7', isDistintivo: true,
+    version: '2.0', isDistintivo: true,
     defaultCfg: { label: 'Batterie', threshLow: 20, threshCrit: 10, colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -371,5 +402,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-batterie v1.7'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-batterie v2.0'); } catch (e) {}
 })();
