@@ -1,4 +1,4 @@
-/* frarik-version: 5.25 */
+/* frarik-version: 5.26 */
 /* v5.15: aggiunta anteprima live + slider dimensione card (altezza/larghezza)
    nel popup Impostazioni, stesso meccanismo di Meteo.js/posta-card
    (localStorage _frk_layout_ + evento frarik-card-layout); aggiunto
@@ -67,6 +67,10 @@
 /* v5.25: bidoni ingranditi (90/70/56 → 140/108/84px), colonna immagine
    più larga rispetto al testo (flex 1.3 invece di 1), simbolo di riciclo
    più prominente (scala 0.85 → 1.05). */
+/* v5.26: aggiunto il bagliore radiale blu in alto a sinistra sullo sfondo
+   della card (::before), lo stesso di posta-card — il gradiente di base
+   era già identico ma mancava questo overlay, che dava alla card della
+   posta un tono visivo leggermente diverso. */
 ;(function () {
   'use strict';
 
@@ -238,6 +242,7 @@
 
     const css = '<style>'
       + '#' + rid + '{position:relative;width:100%;height:100%;min-height:280px;font-family:system-ui,sans-serif;display:block;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:var(--card-r,20px);overflow:hidden}'
+      + '#' + rid + '::before{content:"";position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(56,189,248,.08) 0%,transparent 65%);pointer-events:none}'
       + '#' + rid + ' .fc-card{display:flex;flex-direction:column;height:100%;background:transparent;border-radius:0;overflow:hidden;position:relative}'
       + '#' + rid + ' .fc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
       + '#' + rid + ' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;background:rgba(' + ACC_RGB + ',.1);border:1px solid rgba(' + ACC_RGB + ',.2)}'
@@ -1076,7 +1081,7 @@ automation:
     name: 'Raccolta Differenziata',
     description: 'Card rifiuti differenziata con multi-selezione per giorno, bidoni realistici e colori personalizzabili.',
     icon: 'mdi:recycle',
-    version: '5.25',
+    version: '5.26',
     frarik_pkg_check: 'sensor.frarik_differenziata_versione',
     frarik_pkg_id: 'frarik_differenziata',
     frarik_pkg_version: '2.0',
