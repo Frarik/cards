@@ -1,6 +1,8 @@
-/* frarik-version: 2.0 */
+/* frarik-version: 2.1 */
 /**
- * GruppoPresenza.js — Distintivo FratechStore v2.0
+ * GruppoPresenza.js — Distintivo FratechStore v2.1
+ * v2.1: popup config — riquadro unico (Chip/Sensori/Aggiungi) con contorno
+ *       bianco; righe sensore a stile "glass" (badge icona rotondo)
  * Chip contatore sensori presenza/movimento attivi + popup con dettaglio e SVG animato
  * v2.0: stesso trattamento degli altri distintivi — chip "PRESENZA: N" (solo numero
  *       rilevati, non più X/Y, unico value maiuscolo/grassetto); righe sensore
@@ -309,14 +311,16 @@
       const selRows = ents.map((e, i) => {
         const lbl = e.label || nameOf(h, e.entity);
         const on  = h ? isOn(h, e.entity) : false;
-        return `<div style="padding:8px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid ${on?hex2rgba(col,.25):'rgba(255,255,255,.08)'};margin-bottom:6px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:15px;flex-shrink:0">${on?'🚶':'🧍'}</span>
+        const rc = on ? col : '#7a7f8c';
+        return `<div style="position:relative;overflow:hidden;padding:12px;border-radius:14px;background:linear-gradient(155deg,${hex2rgba(rc,on?.16:.06)},${hex2rgba(rc,on?.03:.02)});border:1px solid ${hex2rgba(rc,on?.35:.16)};margin-bottom:10px">
+          ${on ? `<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 10%,${hex2rgba(col,.16)},transparent 62%);pointer-events:none"></div>` : ''}
+          <div style="position:relative;display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;background:${hex2rgba(rc,on?.22:.08)};border:1px solid ${hex2rgba(rc,on?.4:.16)}">${on?'🚶':'🧍'}</div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:12px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
-              <div style="font-size:9px;color:#fff">${eh(e.entity)}</div>
+              <div style="font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
+              <div style="font-size:10px;font-weight:700;color:#fff;opacity:.55;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px">${eh(e.entity)}</div>
             </div>
-            <button data-del="${i}" style="width:22px;height:22px;border:none;border-radius:5px;background:rgba(248,113,113,.15);color:#f87171;cursor:pointer;font-size:11px;flex-shrink:0">✕</button>
+            <button data-del="${i}" style="width:26px;height:26px;flex-shrink:0;border:none;border-radius:50%;background:rgba(248,113,113,.15);color:#f87171;cursor:pointer;font-size:12px">✕</button>
           </div>
         </div>`;
       }).join('');
@@ -335,19 +339,28 @@
         </div>
 
         <div id="gpcfg-body" style="flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;padding:14px 14px 4px">
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Chip</div>
-          <div style="display:flex;gap:7px;margin-bottom:14px">
-            <div style="flex:1"><div style="font-size:9px;color:#fff;margin-bottom:3px">Nome chip</div><input id="gpcfg-label" class="gpcinp" placeholder="Presenza" value="${eh(c.label||'Presenza')}"></div>
-            <div style="flex:0 0 50px"><div style="font-size:9px;color:#fff;margin-bottom:3px">Colore</div><input type="color" id="gpcfg-color" value="${(c.color||'#f59e0b').match(/^#[0-9a-f]{6}$/i)?c.color:'#f59e0b'}" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:none;cursor:pointer;padding:2px"></div>
+
+          <div style="margin:0 0 14px;padding:14px;background:rgba(255,255,255,.05);border-radius:12px;border:1px solid #fff">
+
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Chip</div>
+            <div style="display:flex;gap:7px">
+              <div style="flex:1"><div style="font-size:9px;color:#fff;margin-bottom:3px">Nome chip</div><input id="gpcfg-label" class="gpcinp" placeholder="Presenza" value="${eh(c.label||'Presenza')}"></div>
+              <div style="flex:0 0 50px"><div style="font-size:9px;color:#fff;margin-bottom:3px">Colore</div><input type="color" id="gpcfg-color" value="${(c.color||'#f59e0b').match(/^#[0-9a-f]{6}$/i)?c.color:'#f59e0b'}" style="width:100%;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:none;cursor:pointer;padding:2px"></div>
+            </div>
+
+            ${ents.length ? `
+              <div style="height:1px;background:rgba(255,255,255,.1);margin:12px 0"></div>
+              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Sensori selezionati (${ents.length})</div>
+              <div>${selRows}</div>
+            ` : ''}
+
+            <div style="height:1px;background:rgba(255,255,255,.1);margin:12px 0"></div>
+
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Aggiungi sensore</div>
+            <input id="gpcfg-add-entity" class="gpcinp" placeholder="🔍 Cerca binary_sensor.* o sensor.*…" autocomplete="off">
+
           </div>
 
-          ${ents.length ? `
-            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin-bottom:6px">Sensori selezionati (${ents.length})</div>
-            <div>${selRows}</div>
-          ` : ''}
-
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;margin:${ents.length?'12px':0} 0 6px">Aggiungi sensore</div>
-          <input id="gpcfg-add-entity" class="gpcinp" placeholder="🔍 Cerca binary_sensor.* o sensor.*…" autocomplete="off">
           ${window.FratechColorRules ? window.FratechColorRules.html(colorCfg, presets) : ''}
           <div style="height:16px"></div>
         </div>
@@ -409,7 +422,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Presenza', icon: 'mdi:motion-sensor',
     desc: 'Chip contatore sensori presenza/movimento attivi. Clic → stato rilevato/libero per ogni zona.',
-    version: '2.0', isDistintivo: true,
+    version: '2.1', isDistintivo: true,
     defaultCfg: { label: 'Presenza', icon: 'mdi:motion-sensor', color: '#f59e0b', entities: [], colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -418,5 +431,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-presenza v2.0'); } catch(e){}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-presenza v2.1'); } catch(e){}
 })();
