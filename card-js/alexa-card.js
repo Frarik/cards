@@ -1,4 +1,15 @@
-/* frarik-version: 2.1 */
+/* frarik-version: 2.2 */
+/* v2.2: allineata allo standard Frarik (posta-card/Meteo/Differenziata).
+   Popup unificati: stesso sfondo #0a0816, icona neutra (era colorata a
+   tema), titolo maiuscolo 16px/900, rimossa la sottotitolo sotto al
+   titolo in entrambi i popup (sorgente audio, configurazione — quest'ultima
+   mostrava persino l'id interno della card come sottotitolo). Sezioni del
+   popup Configura ora in riquadri con contorno bianco; etichette sezione
+   bianche invece di rosa fisso; pulsante Salva blu #38bdf8 invece di rosa
+   (colore non universale). Aggiunta anteprima live + slider dimensione
+   card (stesso meccanismo _frk_layout_ di Meteo/posta-card/Differenziata).
+   Bagliore radiale della card allineato (era ambrato/dosaggio diverso a
+   seconda del colore scelto, ora blu fisso .16 come le altre card). */
 (function () {
   'use strict';
 
@@ -223,7 +234,7 @@
       +'@keyframes alDot{0%,100%{opacity:.5}50%{opacity:1}}'
       +'#'+rid+'{position:relative;width:100%;height:100%;min-height:375px;font-family:system-ui,sans-serif;display:block}'
       +'#'+rid+' .fc-card{display:flex;flex-direction:column;height:100%;min-height:375px;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
-      +'#'+rid+' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:220px;background:radial-gradient(ellipse at 30% 0%,rgba('+rgb+',.1) 0%,transparent 65%);pointer-events:none}'
+      +'#'+rid+' .fc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(56,189,248,.16) 0%,transparent 65%);pointer-events:none}'
       +'#'+rid+' .fc-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
       +'#'+rid+' .fc-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;background:rgba('+rgb+',.12);border:1px solid rgba('+rgb+',.25)}'
       +'#'+rid+' .fc-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:text}'
@@ -295,12 +306,12 @@
 
   var POP_CSS='<style>@keyframes fcUP{from{transform:translateY(100%)}to{transform:translateY(0)}}.fcpc2{overflow-y:auto;scrollbar-width:none}.fcpc2::-webkit-scrollbar{display:none}</style>';
 
-  function popShell(icon,rgb,title,sub,closeId,content){
-    return POP_CSS+'<div style="width:100%;max-height:76vh;display:flex;flex-direction:column;background:#060d14;border:1px solid rgba('+rgb+',.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:fcUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
-      +'<div style="display:flex;align-items:center;gap:10px;padding:13px 15px 11px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
-      +'<div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba('+rgb+',.15);border:1px solid rgba('+rgb+',.3)">'+icon+'</div>'
-      +'<div><div style="font-size:14px;font-weight:800;color:#fff">'+title+'</div><div style="font-size:11px;color:#fff;margin-top:1px">'+sub+'</div></div>'
-      +'<button id="'+closeId+'" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none">✕</button>'
+  function popShell(icon,title,closeId,content){
+    return POP_CSS+'<div style="width:100%;max-height:88vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -16px 60px rgba(0,0,0,.9);animation:fcUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
+      +'<div style="display:flex;align-items:center;gap:12px;padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">'
+      +'<div style="width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff;flex-shrink:0">'+icon+'</div>'
+      +'<div style="flex:1;font-size:16px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px">'+title+'</div>'
+      +'<button id="'+closeId+'" style="width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18)">✕</button>'
       +'</div>'
       +'<div class="fcpc2" style="flex:1;overflow-y:auto;padding:0;display:flex;flex-direction:column">'+content+'</div>'
       +'</div>';
@@ -311,6 +322,7 @@
     var h=H(),c=cfgFor(card),eid=c.pk_player;
     var attrs=(h&&h.states&&h.states[eid]&&h.states[eid].attributes)||{};
     var sources=attrs.source_list||[], curSrc=attrs.source||'', col=c.color, rgb=hexRgb(col);
+    var curHtml='<div style="padding:12px 16px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#fff;border-bottom:1px solid rgba(255,255,255,.06)">Attuale: '+_esc(curSrc||'—')+'</div>';
     var listHtml=sources.length
       ?sources.map(function(src){
           var active=src===curSrc;
@@ -321,7 +333,7 @@
         }).join('')
         +'<div style="padding:10px 16px;font-size:10px;color:#fff;border-top:1px solid rgba(255,255,255,.05)">Le sorgenti disponibili dipendono dai servizi collegati al tuo account Amazon.</div>'
       :'<div style="padding:20px;text-align:center;color:#fff;font-size:12px">Nessuna sorgente disponibile</div>';
-    var ov=mkOv(popShell('🎵',rgb,'Sorgente audio',_esc(curSrc||'—'),'axsrc-close',listHtml),'axsrc-close');
+    var ov=mkOv(popShell('🎵','Sorgente audio','axsrc-close',curHtml+listHtml),'axsrc-close');
     ov.querySelectorAll('[data-src]').forEach(function(row){
       row.addEventListener('mouseover',function(){row.style.background='rgba(255,255,255,.06)';});
       row.addEventListener('mouseout', function(){row.style.background=(row.getAttribute('data-src')===curSrc?'rgba('+rgb+',.1)':'');});
@@ -336,32 +348,84 @@
     var mpIds=Object.keys(states).filter(function(id){return id.startsWith('media_player.');}).sort();
     var stInp='width:100%;padding:8px 10px;border-radius:9px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:12px;font-family:monospace;box-sizing:border-box;outline:none';
     var stLbl='font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#fff;margin-bottom:3px;display:block';
-    var stSec='font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#f472b6;margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid rgba(244,114,182,.2)';
+    var stSec='font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#fff;margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid rgba(255,255,255,.06)';
+    var boxOpen='<div style="padding:14px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid #fff">';
+    var boxClose='</div>';
     var COLORS=['#f472b6','#818cf8','#38bdf8','#4ade80','#fb923c','#f87171','#facc15','#c084fc'];
-    var colorPicker='<div style="margin-bottom:10px"><label style="'+stLbl+'">Colore accent</label>'
+    var colorPicker='<div><label style="'+stLbl+'">Colore accent</label>'
       +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
       +COLORS.map(function(clr){return '<div data-axcol="'+clr+'" style="width:24px;height:24px;border-radius:7px;cursor:pointer;background:'+clr+';border:2px solid '+(c.color===clr?'#fff':'transparent')+';transition:border-color .1s"></div>';}).join('')
       +'</div></div>';
     function fldAC(fid,lbl,val,ph){
-      return '<div style="margin-bottom:9px;position:relative"><label style="'+stLbl+'">'+lbl+'</label>'
+      return '<div style="position:relative"><label style="'+stLbl+'">'+lbl+'</label>'
         +'<input id="'+fid+'" type="text" value="'+_esc(val||'')+'" autocomplete="off" placeholder="'+ph+'" style="'+stInp+'">'
         +'<div id="'+fid+'-d" style="position:absolute;left:0;right:0;top:calc(100% + 2px);z-index:200;max-height:140px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-radius:9px;display:none;scrollbar-width:none"></div>'
         +'</div>';
     }
-    var formHtml='<div style="margin-bottom:10px"><label style="'+stLbl+'">Nome card</label>'
+
+    /* dimensione card — stesso meccanismo di Meteo/posta-card/Differenziata */
+    var cardId=card&&card.id||'';
+    var _ll={}; try{_ll=JSON.parse(localStorage.getItem('_frk_layout_'+cardId)||'{}');}catch(e){}
+    var tScale=_ll.cardScale!=null?_ll.cardScale:100;
+    var tW=_ll.cardW!=null?_ll.cardW:100;
+    function layoutRow(lbl,id,val){
+      var vLbl=val>=100?'Auto (100%)':val+'%';
+      return '<div style="display:flex;align-items:center;gap:8px;margin-top:10px">'
+        +'<span style="font-size:12px;font-weight:900;color:#fff;width:72px;flex-shrink:0">'+lbl+'</span>'
+        +'<input type="range" id="'+id+'" min="20" max="100" step="5" value="'+val+'" style="flex:1;accent-color:#fff;cursor:pointer">'
+        +'<span id="'+id+'-lbl" style="font-size:12px;font-weight:900;color:#fff;width:54px;text-align:right;flex-shrink:0">'+vLbl+'</span>'
+        +'</div>';
+    }
+
+    var settingsHtml='<div style="margin-bottom:10px"><label style="'+stLbl+'">Nome card</label>'
       +'<input id="axc-name" type="text" value="'+_esc(c.name||'')+'" placeholder="es. Alexa Cucina" style="'+stInp.replace('monospace','system-ui')+'"></div>'
       +'<div style="'+stSec+'">Entità</div>'
-      +fldAC('axc-player','Media Player',c.pk_player,'media_player.sfera_piano_terra')
+      +boxOpen+fldAC('axc-player','Media Player',c.pk_player,'media_player.sfera_piano_terra')+boxClose
       +'<div style="'+stSec+'">TTS</div>'
-      +fldAC('axc-notify','Servizio notify Alexa',c.pk_notify,'es. alexa_media')
-      +'<div style="font-size:10px;color:#fff;margin-top:-5px;margin-bottom:10px">Solitamente <code style="background:rgba(255,255,255,.08);padding:1px 5px;border-radius:4px">alexa_media</code></div>'
+      +boxOpen+fldAC('axc-notify','Servizio notify Alexa',c.pk_notify,'es. alexa_media')
+      +'<div style="font-size:10px;color:#fff;opacity:.6;margin-top:8px">Solitamente <code style="background:rgba(255,255,255,.08);padding:1px 5px;border-radius:4px">alexa_media</code></div>'
+      +boxClose
       +'<div style="'+stSec+'">Aspetto</div>'
-      +colorPicker
+      +boxOpen+colorPicker+boxClose
       +'<div style="display:flex;gap:8px;margin-top:16px">'
-      +'<button id="axc-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button>'
-      +'<button id="axc-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#f472b6;color:#0a0614">Salva</button>'
+      +'<button id="axc-cancel" style="flex:1;padding:14px;border-radius:13px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.1);color:#fff">Annulla</button>'
+      +'<button id="axc-save" style="flex:2;padding:14px;border-radius:13px;border:none;cursor:pointer;font-weight:900;background:#38bdf8;color:#fff">💾 Salva</button>'
       +'</div>';
-    var ov=mkOv(popShell('🔊','244,114,182','Configura Alexa',card.id||'','axc-cfg-close','<div style="padding:13px 15px">'+formHtml+'</div>'),'axc-cfg-close');
+
+    var previewHtml='<div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.07em;color:#fff">Anteprima live</div>'
+      +'<div id="axc-prev-wrap" style="border-radius:14px;overflow:hidden;background:rgba(255,255,255,.02);margin-top:8px;padding:10px;display:flex;justify-content:center"></div>'
+      +'<div style="margin-top:14px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08)">'
+      +'<div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.07em;color:#fff">Dimensione card</div>'
+      +layoutRow('Altezza','axc-scale',tScale)
+      +layoutRow('Larghezza','axc-w',tW)
+      +'</div>';
+
+    var content='<div style="display:flex;gap:16px;align-items:stretch;padding:20px">'
+      +'<div style="flex:1;min-width:0;display:flex;flex-direction:column">'+settingsHtml+'</div>'
+      +'<div style="flex:1;min-width:0;display:flex;flex-direction:column;padding-left:16px;border-left:1px solid rgba(255,255,255,.07)">'+previewHtml+'</div>'
+      +'</div>';
+
+    var ov=mkOv(popShell('🔊','Configura Alexa','axc-cfg-close',content),'axc-cfg-close');
+
+    function updatePreview(){
+      var wrap=ov.querySelector('#axc-prev-wrap'); if(!wrap) return;
+      var previewRid='alx-'+cardId+'-prev';
+      try{ wrap.innerHTML=render(card).split('alx-'+cardId).join(previewRid); }catch(e){}
+      var elp=wrap.querySelector('#'+previewRid);
+      if(elp){ elp.style.width=tW<100?tW+'%':''; elp.style.zoom=tScale<100?tScale+'%':''; }
+    }
+    updatePreview();
+    ov.querySelector('#axc-scale').addEventListener('input',function(e){
+      tScale=Math.max(20,Math.min(100,parseInt(e.target.value,10)||100));
+      var lbl=ov.querySelector('#axc-scale-lbl'); if(lbl) lbl.textContent=tScale>=100?'Auto (100%)':tScale+'%';
+      updatePreview();
+    });
+    ov.querySelector('#axc-w').addEventListener('input',function(e){
+      tW=Math.max(20,Math.min(100,parseInt(e.target.value,10)||100));
+      var lbl=ov.querySelector('#axc-w-lbl'); if(lbl) lbl.textContent=tW>=100?'Auto (100%)':tW+'%';
+      updatePreview();
+    });
+
     ov.querySelector('#axc-cancel').addEventListener('click',function(){ov._close();});
     var selColor=c.color||'#f472b6';
     ov.querySelectorAll('[data-axcol]').forEach(function(dot){
@@ -389,6 +453,10 @@
     ov.querySelector('#axc-save').addEventListener('click',function(){
       var n=ov.querySelector('#axc-name'),p=ov.querySelector('#axc-player'),nt=ov.querySelector('#axc-notify');
       save(card,{name:n?n.value.trim():c.name,pk_player:p?p.value.trim():c.pk_player,pk_notify:nt?nt.value.trim():c.pk_notify,color:selColor});
+      if(cardId){
+        try{ localStorage.setItem('_frk_layout_'+cardId,JSON.stringify({cardScale:tScale,cardW:tW})); }catch(e){}
+        document.dispatchEvent(new CustomEvent('frarik-card-layout',{bubbles:true,detail:{cardId:cardId,cardScale:tScale,cardW:tW}}));
+      }
       ov._close(); try{el._axSig='';el._axBound=null;el.innerHTML=render(card);mount(card,null,el);}catch(e){}
     });
   }
@@ -551,5 +619,5 @@
   window.FratechCardRegistry[CARD.id]=CARD;
   window.FratechCards=window.FratechCards||{};
   window.FratechCards[CARD.id]=CARD;
-  try{console.log('[FratechStore] Card registrata: alexa-card v1.8');}catch(e){}
+  try{console.log('[FratechStore] Card registrata: alexa-card v2.2');}catch(e){}
 })();
