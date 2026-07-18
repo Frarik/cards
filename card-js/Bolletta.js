@@ -1,4 +1,13 @@
-/* frarik-version: 5.5 */
+/* frarik-version: 5.6 */
+/* v5.6: allineati i popup allo standard delle altre card (posta/differenziata/
+   alexa): sfondo neutro #0a0816, bordo neutro, icona header neutra, titolo
+   16px/900/maiuscolo, niente sottotitolo separato (info piegate nel titolo
+   dove utile). Bagliore card fisso blu (56,189,248) come le altre card,
+   invece del bagliore giallo tema. Pulsante "Salva su Home Assistant" ora
+   blu universale invece che giallo. Eliminate tutte le scritte sbiadite
+   (opacità ridotta) in card, popup e wizard: ora sempre bianco pieno.
+   Aggiunta tab "Aspetto" nel popup Impostazioni con zoom/larghezza card e
+   anteprima live, come nelle altre card. */
 (function () {
   'use strict';
 
@@ -32,15 +41,15 @@
 
   var POP_CSS = '<style>@keyframes fcUP{from{transform:translateY(100%)}to{transform:translateY(0)}}.fcpc{overflow-y:auto;scrollbar-width:none}.fcpc::-webkit-scrollbar{display:none}</style>';
 
-  function popShell(icon, title, sub, closeId, content) {
+  function popShell(icon, title, closeId, content) {
     return POP_CSS
-      + '<div style="width:100%;max-height:86vh;display:flex;flex-direction:column;background:#060d14;border:1px solid rgba(' + RGB + ',.25);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:fcUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
-      + '<div style="display:flex;align-items:center;gap:10px;padding:13px 15px 11px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">'
-      + '<div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(' + RGB + ',.15);border:1px solid rgba(' + RGB + ',.3)">' + icon + '</div>'
-      + '<div><div style="font-size:14px;font-weight:800;color:#fff">' + title + '</div><div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:1px">' + sub + '</div></div>'
-      + '<button id="' + closeId + '" style="margin-left:auto;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.07);border:none;flex-shrink:0">✕</button>'
+      + '<div style="width:100%;max-height:88vh;display:flex;flex-direction:column;background:#0a0816;border:1px solid rgba(255,255,255,.12);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.7);animation:fcUP .22s cubic-bezier(.32,1.12,.56,1);overflow:hidden">'
+      + '<div style="display:flex;align-items:center;gap:12px;padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0">'
+      + '<div style="width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff;flex-shrink:0">' + icon + '</div>'
+      + '<div style="flex:1;font-size:16px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:.3px">' + title + '</div>'
+      + '<button id="' + closeId + '" style="width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);flex-shrink:0">✕</button>'
       + '</div>'
-      + '<div class="fcpc" style="flex:1;overflow-y:auto;padding:13px 15px;display:flex;flex-direction:column;gap:0">' + content + '</div>'
+      + '<div class="fcpc" style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:0">' + content + '</div>'
       + '</div>';
   }
 
@@ -110,7 +119,7 @@
       + row('⚡ kWh totali anno', kwhAnno.toFixed(1) + ' kWh')
       + row('💰 Spesa totale anno', totAnno.toFixed(2) + ' €', COL);
 
-    mkOv(popShell('🧾', 'Dettaglio Bolletta', MESIL[now.getMonth()] + ' ' + now.getFullYear(), 'bp-det-close', content), 'bp-det-close');
+    mkOv(popShell('🧾', 'Dettaglio Bolletta – ' + MESIL[now.getMonth()] + ' ' + now.getFullYear(), 'bp-det-close', content), 'bp-det-close');
   }
 
   /* ── POPUP: SIMULATORE ── */
@@ -133,7 +142,7 @@
     var battInit  = haBatt ? N(S(h, 'input_number.frarik_bolletta_autoconsumo_batt')) : 0;
 
     var iSt = 'width:100%;padding:10px 13px;border-radius:10px;background:#0b1422;color:#fff;border:1px solid rgba(255,255,255,.18);font-size:15px;font-family:monospace;box-sizing:border-box;outline:none;text-align:right';
-    var lSt = 'font-size:11px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px';
+    var lSt = 'font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px';
 
     function simRow(lbl, val, col, small) {
       return '<div style="display:flex;justify-content:space-between;align-items:center;padding:' + (small ? '5px' : '7px') + ' 0;border-bottom:1px solid rgba(255,255,255,.05)">'
@@ -185,7 +194,7 @@
 
     var resultPlaceholder = '<div id="sim-result"></div>';
 
-    var ov = mkOv(popShell('🧮', 'Simulatore Bolletta', 'Stima costo mensile in tempo reale', 'bp-sim-close', inputsHtml + resultPlaceholder), 'bp-sim-close');
+    var ov = mkOv(popShell('🧮', 'Simulatore Bolletta', 'bp-sim-close', inputsHtml + resultPlaceholder), 'bp-sim-close');
 
     function g(id) { var e = ov.querySelector('#' + id); return e ? parseFloat(e.value) || 0 : 0; }
 
@@ -202,7 +211,7 @@
       res.innerHTML = '<div style="background:rgba(' + RGB + ',.08);border:1px solid rgba(' + RGB + ',.2);border-radius:16px;padding:18px 16px;margin-top:4px">'
         /* Big total */
         + '<div style="text-align:center;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.08)">'
-        + '<div style="font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Bolletta Simulata</div>'
+        + '<div style="font-size:10px;color:#fff;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Bolletta Simulata</div>'
         + '<div style="font-size:52px;font-weight:900;color:' + totColor + ';line-height:1;letter-spacing:-2px">'
         + r.totale.toFixed(2).replace('.', ',')
         + '<span style="font-size:20px;font-weight:600;color:rgba(251,191,36,.6);margin-left:4px">€</span></div>'
@@ -211,9 +220,9 @@
         /* Breakdown */
         + simRow('⚡ Energia variabile (' + r.kwhRete.toFixed(0) + ' kWh × ' + pKwh.toFixed(4) + ' €)', r.compVar.toFixed(2) + ' €', COL)
         + simRow('📋 Costi fissi mensili', r.impon > 0 ? fissi.toFixed(2) + ' €' : '—')
-        + simRow('📊 Imponibile totale', r.impon.toFixed(2) + ' €', 'rgba(255,255,255,.7)')
+        + simRow('📊 Imponibile totale', r.impon.toFixed(2) + ' €', '#fff')
         + simRow('💸 IVA ' + ivaPerc.toFixed(0) + '%', r.iva.toFixed(2) + ' €')
-        + (canOn ? simRow('📺 Canone RAI', r.canEff.toFixed(2) + ' €') : simRow('📺 Canone RAI', 'escluso', 'rgba(255,255,255,.3)', true))
+        + (canOn ? simRow('📺 Canone RAI', r.canEff.toFixed(2) + ' €') : simRow('📺 Canone RAI', 'escluso', '#fff', true))
         + (bonus > 0 ? simRow('🎁 Bonus / Sconto', '− ' + bonus.toFixed(2) + ' €', '#4ade80') : '')
         + ((haFV && fvKwh > 0) ? simRow('☀️ kWh FV (rete risparmiata)', '− ' + fvKwh.toFixed(0) + ' kWh', '#fbbf24', true) : '')
         + ((haBatt && bKwh > 0) ? simRow('🔋 kWh Batteria', '− ' + bKwh.toFixed(0) + ' kWh', '#4ade80', true) : '')
@@ -282,8 +291,8 @@
     }
     barsHtml += '</div>';
     barsHtml += '<div style="display:flex;gap:14px;margin-top:5px;padding:6px 0;border-top:1px solid rgba(255,255,255,.06)">'
-      + '<div style="display:flex;align-items:center;gap:5px"><div style="width:9px;height:9px;background:rgba(255,255,255,.18);border-radius:2px"></div><span style="font-size:10px;color:rgba(255,255,255,.45)">' + (yr - 1) + '</span></div>'
-      + '<div style="display:flex;align-items:center;gap:5px"><div style="width:9px;height:9px;background:' + COL + ';border-radius:2px"></div><span style="font-size:10px;color:rgba(255,255,255,.7)">' + yr + '</span></div>'
+      + '<div style="display:flex;align-items:center;gap:5px"><div style="width:9px;height:9px;background:rgba(255,255,255,.18);border-radius:2px"></div><span style="font-size:10px;color:#fff">' + (yr - 1) + '</span></div>'
+      + '<div style="display:flex;align-items:center;gap:5px"><div style="width:9px;height:9px;background:' + COL + ';border-radius:2px"></div><span style="font-size:10px;color:#fff">' + yr + '</span></div>'
       + '</div>';
 
     /* Monthly detail list */
@@ -299,7 +308,7 @@
         + '</div></div>';
     }
     listHtml += '<div style="display:flex;justify-content:space-between;align-items:center;background:rgba(' + RGB + ',.1);border-radius:10px;padding:11px 13px;margin-top:8px">'
-      + '<div><div style="font-size:13px;font-weight:800;color:' + COL + '">Totale Anno ' + yr + '</div><div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px">' + annoKwh.toFixed(1) + ' kWh</div></div>'
+      + '<div><div style="font-size:13px;font-weight:800;color:' + COL + '">Totale Anno ' + yr + '</div><div style="font-size:10px;color:#fff;margin-top:2px">' + annoKwh.toFixed(1) + ' kWh</div></div>'
       + '<span style="font-size:16px;font-weight:900;color:' + COL + '">' + annoEur.toFixed(2) + ' €</span>'
       + '</div>';
 
@@ -328,7 +337,7 @@
       + '<span>' + N(S(h, 'sensor.frarik_bolletta_media_settimanale_eur')).toFixed(2) + ' €/g</span>'
       + '</div>';
 
-    mkOv(popShell('📊', 'Storico Bollette', 'Anno corrente vs precedente', 'bp-stor-close', barsHtml + listHtml + weekHtml), 'bp-stor-close');
+    mkOv(popShell('📊', 'Storico Bollette', 'bp-stor-close', barsHtml + listHtml + weekHtml), 'bp-stor-close');
   }
 
   /* ── POPUP: IMPOSTAZIONI ── */
@@ -348,11 +357,25 @@
         + '</div>';
     }
 
-    var tabCSS = '<style>.bp-tab{flex:1;padding:8px 4px;text-align:center;font-size:11px;font-weight:700;cursor:pointer;border-radius:8px;transition:all .15s;color:rgba(255,255,255,.5);border:none;background:transparent}.bp-tab.active{background:rgba(' + RGB + ',.18);color:' + COL + ';border:1px solid rgba(' + RGB + ',.3)}.bp-panel{display:none}.bp-panel.active{display:block}</style>';
+    var cardId = (card && card.id) || '';
+    var _ll = null; try { _ll = JSON.parse(localStorage.getItem('_frk_layout_' + cardId) || 'null'); } catch(e) {}
+    var tScale = (_ll && _ll.cardScale) || 100;
+    var tW     = (_ll && _ll.cardW) || 100;
+
+    function layoutRow(label, id, val) {
+      return '<div style="margin-bottom:16px"><label style="' + lSt + '">' + label + '</label>'
+        + '<div style="display:flex;align-items:center;gap:10px;margin-top:4px">'
+        + '<input id="' + id + '" type="range" min="20" max="100" step="5" value="' + val + '" style="flex:1;accent-color:#38bdf8;cursor:pointer">'
+        + '<span id="' + id + '-lbl" style="font-size:11px;font-weight:800;color:#fff;width:78px;text-align:right">' + (val >= 100 ? 'Auto (100%)' : val + '%') + '</span>'
+        + '</div></div>';
+    }
+
+    var tabCSS = '<style>.bp-tab{flex:1;padding:8px 4px;text-align:center;font-size:11px;font-weight:700;cursor:pointer;border-radius:8px;transition:all .15s;color:#fff;border:none;background:transparent}.bp-tab.active{background:rgba(' + RGB + ',.18);color:' + COL + ';border:1px solid rgba(' + RGB + ',.3)}.bp-panel{display:none}.bp-panel.active{display:block}</style>';
     var tabs = '<div style="display:flex;gap:4px;background:rgba(255,255,255,.04);border-radius:10px;padding:3px;margin-bottom:12px">'
       + '<button class="bp-tab active" data-tab="notifiche">🔔 Notifiche</button>'
       + '<button class="bp-tab" data-tab="prezzi">💰 Prezzi</button>'
       + '<button class="bp-tab" data-tab="fv">☀️ FV/Batt</button>'
+      + '<button class="bp-tab" data-tab="aspetto">📐 Aspetto</button>'
       + '</div>';
 
     /* TAB NOTIFICHE */
@@ -410,8 +433,8 @@
       return '<button class="bp-tog" data-eid="' + eid + '" style="padding:4px 14px;border-radius:20px;border:none;cursor:pointer;font-size:11px;font-weight:800;background:' + (on ? 'rgba(74,222,128,.2)' : 'rgba(255,255,255,.07)') + ';color:' + (on ? '#4ade80' : 'rgba(255,255,255,.4)') + '">' + (on ? '✅ ON' : 'OFF') + '</button>';
     }
     function statRow(label, val, unit, col) {
-      return '<div style="text-align:center"><div style="font-size:9px;color:rgba(255,255,255,.4);margin-bottom:3px">' + label + '</div>'
-        + '<div style="font-size:15px;font-weight:800;color:' + col + '">' + val + '<span style="font-size:9px;color:' + col + ';opacity:.55;margin-left:2px">' + unit + '</span></div></div>';
+      return '<div style="text-align:center"><div style="font-size:9px;color:#fff;margin-bottom:3px">' + label + '</div>'
+        + '<div style="font-size:15px;font-weight:800;color:' + col + '">' + val + '<span style="font-size:9px;color:' + col + ';margin-left:2px">' + unit + '</span></div></div>';
     }
 
     var fvStatHtml = '<div id="bp-fv-stats" style="margin:10px 0;display:' + (haFV ? 'block' : 'none') + '">'
@@ -422,7 +445,7 @@
       + '</div>'
       + '<div style="margin-top:6px;height:3px;background:rgba(255,255,255,.06);border-radius:2px"><div style="height:100%;width:' + fvPctV + '%;background:#fbbf24;border-radius:2px;opacity:.55;min-width:' + (fvPctV > 0 ? '6' : '0') + 'px"></div></div>'
       + '</div>';
-    var fvPhHtml = '<div id="bp-fv-placeholder" style="margin:10px 0;padding:8px;border:1px dashed rgba(251,191,36,.2);border-radius:10px;text-align:center;font-size:11px;color:rgba(255,255,255,.3);display:' + (haFV ? 'none' : 'block') + '">Pannelli non attivi</div>';
+    var fvPhHtml = '<div id="bp-fv-placeholder" style="margin:10px 0;padding:8px;border:1px dashed rgba(251,191,36,.2);border-radius:10px;text-align:center;font-size:11px;color:#fff;display:' + (haFV ? 'none' : 'block') + '">Pannelli non attivi</div>';
 
     var batStatHtml = '<div id="bp-batt-stats" style="margin:10px 0;display:' + (haBatt ? 'block' : 'none') + '">'
       + '<div style="background:rgba(74,222,128,.07);border-radius:10px;padding:9px 6px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px">'
@@ -432,7 +455,7 @@
       + '</div>'
       + '<div style="margin-top:6px;height:3px;background:rgba(255,255,255,.06);border-radius:2px"><div style="height:100%;width:' + batPctV + '%;background:#4ade80;border-radius:2px;opacity:.55;min-width:' + (batPctV > 0 ? '6' : '0') + 'px"></div></div>'
       + '</div>';
-    var batPhHtml = '<div id="bp-batt-placeholder" style="margin:10px 0;padding:8px;border:1px dashed rgba(74,222,128,.15);border-radius:10px;text-align:center;font-size:11px;color:rgba(255,255,255,.3);display:' + (haBatt ? 'none' : 'block') + '">Batteria non attiva</div>';
+    var batPhHtml = '<div id="bp-batt-placeholder" style="margin:10px 0;padding:8px;border:1px dashed rgba(74,222,128,.15);border-radius:10px;text-align:center;font-size:11px;color:#fff;display:' + (haBatt ? 'none' : 'block') + '">Batteria non attiva</div>';
 
     var pFV = '<div class="bp-panel" id="bp-p-fv">'
       + '<div style="background:rgba(251,191,36,.04);border:1px solid rgba(251,191,36,.15);border-radius:14px;padding:12px;margin-bottom:10px">'
@@ -457,13 +480,42 @@
       + '</div>'
       + '</div>';
 
-    var saveBtn = '<div style="display:flex;gap:8px;margin-top:14px">'
-      + '<button id="bp-imp-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.08);color:#fff">Annulla</button>'
-      + '<button id="bp-imp-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:' + COL + ';color:#000">Salva su Home Assistant</button>'
+    /* TAB ASPETTO (dimensione card + anteprima live) */
+    var pAspetto = '<div class="bp-panel" id="bp-p-aspetto">'
+      + sec('Dimensione Card')
+      + layoutRow('🔍 Zoom', 'bp-scale', tScale)
+      + layoutRow('↔ Larghezza', 'bp-w', tW)
+      + '<div style="border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);padding:10px;overflow:auto;max-height:360px;margin-top:6px">'
+      + '<div id="bp-prev-wrap" style="transform-origin:top left"></div>'
+      + '</div>'
       + '</div>';
 
-    var ov = mkOv(popShell('⚙', 'Impostazioni Bolletta', 'Notifiche · Prezzi · FV/Batteria', 'bp-imp-close',
-      tabCSS + tabs + pNotifiche + pPrezzi + pFV + saveBtn), 'bp-imp-close');
+    var saveBtn = '<div style="display:flex;gap:8px;margin-top:14px">'
+      + '<button id="bp-imp-cancel" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;background:rgba(255,255,255,.08);color:#fff">Annulla</button>'
+      + '<button id="bp-imp-save" style="flex:2;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#38bdf8;color:#fff">Salva su Home Assistant</button>'
+      + '</div>';
+
+    var ov = mkOv(popShell('⚙', 'Impostazioni Bolletta', 'bp-imp-close',
+      tabCSS + tabs + pNotifiche + pPrezzi + pFV + pAspetto + saveBtn), 'bp-imp-close');
+
+    function updatePreview() {
+      var wrap = ov.querySelector('#bp-prev-wrap'); if (!wrap) return;
+      try { wrap.innerHTML = render(card); } catch(e) {}
+      var elp = wrap.querySelector('div[id^="fboll"]');
+      if (elp) { elp.style.width = tW < 100 ? tW + '%' : ''; elp.style.zoom = tScale < 100 ? tScale + '%' : ''; }
+    }
+    var scaleInp = ov.querySelector('#bp-scale'), wInp = ov.querySelector('#bp-w');
+    if (scaleInp) scaleInp.addEventListener('input', function() {
+      tScale = parseInt(scaleInp.value, 10);
+      var l = ov.querySelector('#bp-scale-lbl'); if (l) l.textContent = tScale >= 100 ? 'Auto (100%)' : tScale + '%';
+      updatePreview();
+    });
+    if (wInp) wInp.addEventListener('input', function() {
+      tW = parseInt(wInp.value, 10);
+      var l = ov.querySelector('#bp-w-lbl'); if (l) l.textContent = tW >= 100 ? 'Auto (100%)' : tW + '%';
+      updatePreview();
+    });
+    updatePreview();
 
     /* tab switching */
     ov.querySelectorAll('.bp-tab').forEach(function(t) {
@@ -519,6 +571,10 @@
       setNum('input_number.frarik_bolletta_ritardo_soglia',           g('bp-p-ritardo'));
       setNum('input_number.frarik_bolletta_autoconsumo_fv',           g('bp-fv-kwh'));
       setNum('input_number.frarik_bolletta_autoconsumo_batt',         g('bp-batt-kwh'));
+      try {
+        localStorage.setItem('_frk_layout_' + cardId, JSON.stringify({cardScale: tScale, cardW: tW}));
+        document.dispatchEvent(new CustomEvent('frarik-card-layout', {bubbles: true, detail: {cardId: cardId, cardScale: tScale, cardW: tW}}));
+      } catch(e) {}
       ov._close();
     });
     ov.querySelector('#bp-imp-cancel').addEventListener('click', function() { ov._close(); });
@@ -553,7 +609,7 @@
     var css = '<style>'
       + '#' + rid + '{position:relative;width:100%;height:100%;min-height:290px;font-family:system-ui,sans-serif;display:block}'
       + '#' + rid + ' .fb-card{display:flex;flex-direction:column;height:100%;background:linear-gradient(155deg,#060d14 0%,#080f18 55%,#060d14 100%);border-radius:18px;overflow:hidden;position:relative}'
-      + '#' + rid + ' .fb-card::before{content:"";position:absolute;top:0;left:0;right:0;height:260px;background:radial-gradient(ellipse at 50% 0%,rgba(' + RGB + ',.07) 0%,transparent 65%);pointer-events:none}'
+      + '#' + rid + ' .fb-card::before{content:"";position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 20% 0%,rgba(56,189,248,.16) 0%,transparent 65%);pointer-events:none}'
       + '#' + rid + ' .fb-hdr{display:flex;align-items:center;gap:9px;padding:11px 14px 9px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;position:relative;z-index:1}'
       + '#' + rid + ' .fb-hdr-iw{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;background:rgba(' + RGB + ',.12);border:1px solid rgba(' + RGB + ',.25)}'
       + '#' + rid + ' .fb-hdr-tit{flex:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
@@ -562,9 +618,9 @@
       + '#' + rid + ' .fb-hero{padding:10px 14px 4px}'
       + '#' + rid + ' .fb-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:6px 14px}'
       + '#' + rid + ' .fb-stat{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:11px;padding:8px 6px;text-align:center}'
-      + '#' + rid + ' .fb-stat-lbl{font-size:9px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.04em}'
+      + '#' + rid + ' .fb-stat-lbl{font-size:9px;color:#fff;text-transform:uppercase;letter-spacing:.04em}'
       + '#' + rid + ' .fb-stat-val{font-size:14px;font-weight:800;color:#fff;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
-      + '#' + rid + ' .fb-stat-sub{font-size:9px;color:rgba(255,255,255,.4);margin-top:2px}'
+      + '#' + rid + ' .fb-stat-sub{font-size:9px;color:#fff;margin-top:2px}'
       + '#' + rid + ' .fb-btns{display:flex;gap:5px;padding:0 14px 12px}'
       + '#' + rid + ' .fb-btn{flex:1;padding:9px 2px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);font-size:9.5px;font-weight:700;color:#fff;text-align:center;cursor:pointer}'
       + '#' + rid + ' .fb-btn:hover{background:rgba(' + RGB + ',.12);border-color:rgba(' + RGB + ',.3);color:' + COL + '}'
@@ -575,12 +631,12 @@
       /* Two-column hero */
       + '<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:8px">'
       + '<div style="text-align:left;flex:1;min-width:0">'
-      + '<div style="font-size:9px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;font-weight:700">Consumo Mese</div>'
-      + '<div style="font-size:42px;font-weight:900;color:#fff;line-height:1;letter-spacing:-2px;white-space:nowrap">' + kwhM.toFixed(0) + '<span style="font-size:16px;font-weight:600;color:rgba(255,255,255,.5);margin-left:3px">kWh</span></div>'
+      + '<div style="font-size:9px;color:#fff;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;font-weight:700">Consumo Mese</div>'
+      + '<div style="font-size:42px;font-weight:900;color:#fff;line-height:1;letter-spacing:-2px;white-space:nowrap">' + kwhM.toFixed(0) + '<span style="font-size:16px;font-weight:600;color:#fff;margin-left:3px">kWh</span></div>'
       + '</div>'
       + '<div style="text-align:right;flex:1;min-width:0">'
-      + '<div style="font-size:9px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;font-weight:700">Costo Mese</div>'
-      + '<div style="font-size:42px;font-weight:900;color:' + COL + ';line-height:1;letter-spacing:-2px;white-space:nowrap">' + costoM.toFixed(2).replace('.', ',') + '<span style="font-size:16px;font-weight:600;color:rgba(251,191,36,.5);margin-left:3px">€</span></div>'
+      + '<div style="font-size:9px;color:#fff;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;font-weight:700">Costo Mese</div>'
+      + '<div style="font-size:42px;font-weight:900;color:' + COL + ';line-height:1;letter-spacing:-2px;white-space:nowrap">' + costoM.toFixed(2).replace('.', ',') + '<span style="font-size:16px;font-weight:600;color:' + COL + ';margin-left:3px">€</span></div>'
       + '</div>'
       + '</div>'
       /* Power bar */
@@ -602,8 +658,8 @@
 
     var statsHtml = '<div class="fb-stats">'
       + '<div class="fb-stat"><div class="fb-stat-lbl">📅 Oggi</div>'
-      + '<div style="font-size:14px;font-weight:800;color:#fff;margin-top:3px;white-space:nowrap">' + kwhG.toFixed(2) + '<span style="font-size:9px;font-weight:600;color:rgba(255,255,255,.45);margin-left:2px">kWh</span></div>'
-      + '<div style="font-size:14px;font-weight:800;color:' + COL + ';margin-top:2px;white-space:nowrap">' + costoG.toFixed(2) + '<span style="font-size:9px;font-weight:600;color:rgba(251,191,36,.45);margin-left:2px">€</span></div>'
+      + '<div style="font-size:14px;font-weight:800;color:#fff;margin-top:3px;white-space:nowrap">' + kwhG.toFixed(2) + '<span style="font-size:9px;font-weight:600;color:#fff;margin-left:2px">kWh</span></div>'
+      + '<div style="font-size:14px;font-weight:800;color:' + COL + ';margin-top:2px;white-space:nowrap">' + costoG.toFixed(2) + '<span style="font-size:9px;font-weight:600;color:' + COL + ';margin-left:2px">€</span></div>'
       + '</div>'
       + '<div class="fb-stat"><div class="fb-stat-lbl">🔮 Fine Mese</div><div class="fb-stat-val" style="color:#fb923c">' + prevM.toFixed(0) + ' €</div><div class="fb-stat-sub">previsione</div></div>'
       + '<div class="fb-stat"><div class="fb-stat-lbl">💰 €/kWh</div><div class="fb-stat-val" style="color:' + COL + '">' + pKwh.toFixed(4) + '</div><div class="fb-stat-sub">prezzo kwh</div></div>'
@@ -620,19 +676,19 @@
       var fvCardH = haFV
         ? '<div style="background:linear-gradient(135deg,rgba(251,191,36,.09),rgba(251,191,36,.04));border:1px solid rgba(251,191,36,.22);border-radius:13px;padding:10px 12px">'
         + '<div style="font-size:10px;font-weight:800;color:#fbbf24;margin-bottom:7px;letter-spacing:.03em">☀️ Fotovoltaico</div>'
-        + '<div style="font-size:26px;font-weight:900;color:#fff;line-height:1;letter-spacing:-1px">' + fvKwh.toFixed(1).replace('.', ',') + '<span style="font-size:11px;font-weight:600;color:rgba(255,255,255,.5);margin-left:3px">kWh</span></div>'
-        + '<div style="font-size:11px;font-weight:700;color:#fbbf24;margin-top:5px">' + fvRisp.toFixed(2).replace('.', ',') + ' € <span style="font-weight:500;color:rgba(251,191,36,.65);font-size:9px">stima risp.</span></div>'
+        + '<div style="font-size:26px;font-weight:900;color:#fff;line-height:1;letter-spacing:-1px">' + fvKwh.toFixed(1).replace('.', ',') + '<span style="font-size:11px;font-weight:600;color:#fff;margin-left:3px">kWh</span></div>'
+        + '<div style="font-size:11px;font-weight:700;color:#fbbf24;margin-top:5px">' + fvRisp.toFixed(2).replace('.', ',') + ' € <span style="font-weight:500;color:#fbbf24;font-size:9px">stima risp.</span></div>'
         + '<div style="margin-top:6px;height:4px;background:rgba(255,255,255,.06);border-radius:2px"><div style="height:100%;width:' + fvPct + '%;background:#fbbf24;border-radius:2px;opacity:.65;min-width:' + (fvPct > 0 ? '6' : '0') + 'px"></div></div>'
-        + '<div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:3px">' + fvPct + '% del consumo totale</div>'
+        + '<div style="font-size:9px;color:#fff;margin-top:3px">' + fvPct + '% del consumo totale</div>'
         + '</div>' : '';
 
       var battCardH = haBatt
         ? '<div style="background:linear-gradient(135deg,rgba(74,222,128,.08),rgba(74,222,128,.03));border:1px solid rgba(74,222,128,.2);border-radius:13px;padding:10px 12px">'
         + '<div style="font-size:10px;font-weight:800;color:#4ade80;margin-bottom:7px;letter-spacing:.03em">🔋 Batteria</div>'
-        + '<div style="font-size:26px;font-weight:900;color:#fff;line-height:1;letter-spacing:-1px">' + battKwh.toFixed(1).replace('.', ',') + '<span style="font-size:11px;font-weight:600;color:rgba(255,255,255,.5);margin-left:3px">kWh</span></div>'
-        + '<div style="font-size:11px;font-weight:700;color:#4ade80;margin-top:5px">' + battRisp.toFixed(2).replace('.', ',') + ' € <span style="font-weight:500;color:rgba(74,222,128,.6);font-size:9px">stima risp.</span></div>'
+        + '<div style="font-size:26px;font-weight:900;color:#fff;line-height:1;letter-spacing:-1px">' + battKwh.toFixed(1).replace('.', ',') + '<span style="font-size:11px;font-weight:600;color:#fff;margin-left:3px">kWh</span></div>'
+        + '<div style="font-size:11px;font-weight:700;color:#4ade80;margin-top:5px">' + battRisp.toFixed(2).replace('.', ',') + ' € <span style="font-weight:500;color:#4ade80;font-size:9px">stima risp.</span></div>'
         + '<div style="margin-top:6px;height:4px;background:rgba(255,255,255,.06);border-radius:2px"><div style="height:100%;width:' + battPct + '%;background:#4ade80;border-radius:2px;opacity:.65;min-width:' + (battPct > 0 ? '6' : '0') + 'px"></div></div>'
-        + '<div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:3px">' + battPct + '% del consumo totale</div>'
+        + '<div style="font-size:9px;color:#fff;margin-top:3px">' + battPct + '% del consumo totale</div>'
         + '</div>' : '';
 
       var eCols = (haFV && haBatt) ? '1fr 1fr' : '1fr';
@@ -642,7 +698,7 @@
 
     var progHtml = '<div style="margin:2px 14px 10px">'
       + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
-      + '<span style="font-size:10px;color:rgba(255,255,255,.5);font-weight:600">Giorno ' + dayNow + ' di ' + daysInMonth + '</span>'
+      + '<span style="font-size:10px;color:#fff;font-weight:600">Giorno ' + dayNow + ' di ' + daysInMonth + '</span>'
       + '<span style="font-size:11px;color:' + COL + ';font-weight:800">' + percMese + '%</span>'
       + '</div>'
       + '<div style="height:7px;background:rgba(255,255,255,.07);border-radius:4px;position:relative">'
@@ -678,7 +734,7 @@
   function update(card, hass, el) {
     var h = hass || H();
     var sig = [
-      '5.3',
+      '5.6',
       S(h, 'sensor.frarik_bolletta_mese_corrente'),
       S(h, 'sensor.frarik_bolletta_consumo_mensile'),
       S(h, 'sensor.frarik_bolletta_potenza_casa'),
@@ -701,8 +757,8 @@
   }
 
   function mount(card, hass, el) {
-    if (el._fcBound === '5.3') return;
-    el._fcBound = '5.3';
+    if (el._fcBound === '5.6') return;
+    el._fcBound = '5.6';
     if (el._fcHandler) el.removeEventListener('click', el._fcHandler);
     el._fcHandler = function(e) {
       var sya = e.target.closest('[data-sya]'); if (!sya) return;
@@ -784,7 +840,7 @@
           + '.wd-inp:focus{border-color:rgba(56,189,248,.5)}'
           + '.wd-drop{position:absolute;left:0;right:0;top:100%;z-index:10;max-height:150px;overflow-y:auto;background:#0d1627;border:1px solid rgba(255,255,255,.18);border-top:none;border-radius:0 0 9px 9px;display:none}'
           + '.wd-item{padding:5px 10px;cursor:pointer;font-size:11px;font-family:monospace;border-bottom:1px solid rgba(255,255,255,.04);color:#e2e8f0}'
-          + '.wd-note{font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;margin:0 0 10px}'
+          + '.wd-note{font-size:11px;color:#fff;line-height:1.5;margin:0 0 10px}'
           + '.wd-foot{padding:12px 16px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:8px;flex-shrink:0}'
           + '.wd-cancel{flex:1;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:rgba(255,255,255,.1);color:#fff}'
           + '.wd-install{flex:2;padding:11px;border-radius:11px;border:none;cursor:pointer;font-weight:800;font-size:13px;background:#38bdf8;color:#060d14}'
@@ -859,7 +915,7 @@
   }
 
   var CARD = {
-    id: 'bolletta', name: 'Bolletta Elettrica', icon: '⚡', version: '5.3',
+    id: 'bolletta', name: 'Bolletta Elettrica', icon: '⚡', version: '5.6',
     desc: 'Monitoraggio consumi, costi e previsioni bolletta elettrica. Richiede PKG Frarik Bolletta.',
     render: render, mount: mount, update: update, configure: null, frarik_no_edit: true,
     frarik_pkg_check: 'sensor.frarik_bolletta_versione',
