@@ -1,4 +1,4 @@
-/* frarik-version: 5.0 */
+/* frarik-version: 5.1 */
 /* Centro Controllo Posta — Frarik card standalone */
 /* v4.4: aggiunta icona ingranaggio interna (la card non ne aveva una) e
    frarik_no_edit per nascondere la matita esterna in modifica; eliminato
@@ -40,6 +40,11 @@
    Corpo della card semplificato: colonna destra ora mostra solo i 3
    numeri oggi/settimana/mese (niente più chip orari), con un riquadro
    a piena larghezza sotto per data/ora dell'ultima consegna. */
+/* v5.1: cassetta ridisegnata in chiave "smart moderna" — colori scuri
+   minimal, angoli del corpo arrotondati, maniglia a incasso al posto
+   della manopola, barra LED di stato luminosa sul fronte invece del
+   pallino. Colonne corpo card ora esattamente uguali (50/50, era 40/60).
+   Rimossa la mini-chip "N oggi/Aperta" nell'header accanto all'ingranaggio. */
 (function(){
 'use strict';
 
@@ -593,62 +598,60 @@ function _acShow(inputEl,hass,domain){
 function _acHide(){ document.getElementById('__frk_posta_ac__')?.remove(); }
 
 /* ══════════════════════════════════════════════════════════════
-   PostaCard v5.0 — cassetta smart isometrica (volume 3D reale)
+   PostaCard v5.1 — cassetta smart moderna (minimal, barra LED)
    ══════════════════════════════════════════════════════════════ */
 
 function _svgMailbox(count, isOpen){
   const active=isOpen||count>0;
-  const led=isOpen?'#34d399':count>0?'#38bdf8':'rgba(255,255,255,.18)';
+  const led=isOpen?'#34d399':count>0?'#38bdf8':'rgba(255,255,255,.16)';
 
   const envelope=count>0?`<g class="mbx-env" style="transform-origin:74px 70.5px">
       <rect x="64" y="64" width="20" height="13" rx="1.5" fill="#f8fafc" stroke="#cbd5e1" stroke-width=".8" transform="rotate(-32.6 74 70.5)"/>
       <path d="M64 65 L74 72 L84 65" stroke="#cbd5e1" stroke-width=".8" fill="none" transform="rotate(-32.6 74 70.5)"/>
     </g>`:'';
 
-  return `<svg viewBox="0 0 140 190" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;overflow:visible">
+  return `<svg viewBox="0 50 140 120" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;overflow:visible">
     <defs>
       <linearGradient id="mbxTop" x1="0" y1="1" x2="0" y2="0">
-        <stop offset="0%" stop-color="#7c8792"/>
-        <stop offset="100%" stop-color="#aeb8c2"/>
+        <stop offset="0%" stop-color="#3a4048"/>
+        <stop offset="100%" stop-color="#585f68"/>
       </linearGradient>
       <linearGradient id="mbxFront" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#5b6672"/>
-        <stop offset="100%" stop-color="#333c46"/>
+        <stop offset="0%" stop-color="#2c3138"/>
+        <stop offset="100%" stop-color="#181b20"/>
       </linearGradient>
       <linearGradient id="mbxSide" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#333c46"/>
-        <stop offset="100%" stop-color="#1b2129"/>
+        <stop offset="0%" stop-color="#20242a"/>
+        <stop offset="100%" stop-color="#101216"/>
       </linearGradient>
       <linearGradient id="mbxDoor" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#454e5a"/>
-        <stop offset="100%" stop-color="#262d36"/>
+        <stop offset="0%" stop-color="#363c44"/>
+        <stop offset="100%" stop-color="#20242a"/>
       </linearGradient>
-      <filter id="mbx-ledblur" x="-150%" y="-150%" width="400%" height="400%"><feGaussianBlur stdDeviation="2.2"/></filter>
+      <filter id="mbx-ledblur" x="-150%" y="-150%" width="400%" height="400%"><feGaussianBlur stdDeviation="2.4"/></filter>
       <filter id="mbx-shblur" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3"/></filter>
     </defs>
 
     <ellipse cx="75" cy="150" rx="58" ry="8" fill="#000" opacity=".35" filter="url(#mbx-shblur)"/>
+    <rect x="25" y="141" width="100" height="8" rx="4" fill="#101216"/>
 
-    <rect x="36" y="138" width="7" height="9" rx="1.5" fill="#14181e"/>
-    <rect x="73" y="138" width="7" height="9" rx="1.5" fill="#14181e"/>
+    <polygon points="86,90 86,138 112,125 112,77" fill="url(#mbxSide)" stroke="#05070a" stroke-width="1.2"/>
+    <rect x="97" y="95" width="3" height="36" rx="1.5" fill="${led}" opacity=".3"/>
 
-    <polygon points="86,90 86,140 112,127 112,77" fill="url(#mbxSide)" stroke="#0b0f14" stroke-width="1.2"/>
-    <rect x="97" y="95" width="3" height="38" fill="${led}" opacity=".3"/>
-
-    <polygon points="30,90 86,90 112,77 56,77" fill="url(#mbxTop)" stroke="#0b0f14" stroke-width="1.2"/>
+    <polygon points="30,90 86,90 112,77 56,77" fill="url(#mbxTop)" stroke="#05070a" stroke-width="1.2"/>
     <rect x="60" y="81.5" width="22" height="4" rx="2" fill="#05070a" opacity=".75" transform="rotate(-26.6 71 83.5)"/>
     ${envelope}
 
-    <rect x="30" y="90" width="56" height="50" fill="url(#mbxFront)" stroke="#0b0f14" stroke-width="1.4"/>
-    <rect x="30" y="90" width="56" height="5" fill="#fff" opacity=".1"/>
+    <path d="M30,90 L86,90 L86,130 Q86,138 78,138 L38,138 Q30,138 30,130 Z" fill="url(#mbxFront)" stroke="#05070a" stroke-width="1.4"/>
+    <rect x="30" y="90" width="56" height="5" fill="#fff" opacity=".08"/>
 
-    <g class="mbx-door${isOpen?' open':''}" style="transform-origin:55px 130px">
-      <rect x="38" y="98" width="34" height="32" rx="4" fill="url(#mbxDoor)" stroke="#0b0f14" stroke-width="1.2"/>
-      <circle cx="67" cy="114" r="2.3" fill="#cbd5e1" stroke="#475569" stroke-width=".5"/>
+    <g class="mbx-door${isOpen?' open':''}" style="transform-origin:55px 128px">
+      <rect x="38" y="98" width="34" height="30" rx="8" fill="url(#mbxDoor)" stroke="#05070a" stroke-width="1.2"/>
+      <rect x="46" y="118" width="18" height="3" rx="1.5" fill="#05070a" opacity=".6"/>
     </g>
 
-    <circle cx="74" cy="104" r="5" fill="${led}" opacity=".25" filter="url(#mbx-ledblur)"/>
-    <circle class="mbx-led${active?' active':''}" cx="74" cy="104" r="2.4" fill="${led}"/>
+    <rect x="33" y="130.5" width="50" height="6" rx="3" fill="${led}" opacity=".22" filter="url(#mbx-ledblur)"/>
+    <rect class="mbx-led${active?' active':''}" x="36" y="132" width="44" height="3" rx="1.5" fill="${led}"/>
   </svg>`;
 }
 
@@ -765,7 +768,6 @@ if(!customElements.get('posta-card')){
         <div class="hdr">
           <div class="hdr-icon-wrap"><svg viewBox="0 0 24 24" fill="none" style="width:18px;height:18px"><path d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="${acc}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <div class="hdr-tit">${this._c.label||'Centro Posta'}</div>
-          ${today>0||isOpen?`<div class="hdr-pill${isOpen?' hdr-pill-open':''}">${isOpen?'Aperta':today+' oggi'}</div>`:''}
           <button class="gbtn" data-a="gear" title="Impostazioni">⚙️</button>
         </div>
 
@@ -1081,8 +1083,6 @@ if(!customElements.get('posta-card')){
 .gbtn{width:26px;height:26px;border-radius:8px;border:none;background:rgba(255,255,255,.06);cursor:pointer;align-items:center;justify-content:center;color:#fff;flex-shrink:0;font-size:13px;transition:background .15s;display:var(--fgear,flex)}
 .gbtn:hover{background:rgba(255,255,255,.12)}
 .hdr-tit{flex:1;font-size:14px;font-weight:800;color:#fff;letter-spacing:.2px}
-.hdr-pill{font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3);color:#38bdf8;letter-spacing:.2px;animation:fade-up .2s ease}
-.hdr-pill.hdr-pill-open{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.3);color:#34d399}
 
 /* body scroll */
 .bscroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:none;position:relative;z-index:1}
@@ -1090,7 +1090,7 @@ if(!customElements.get('posta-card')){
 
 /* corpo a 2 colonne: immagine a sinistra, numeri a destra */
 .body2col{display:flex;gap:14px;padding:14px 15px 10px;align-items:stretch}
-.img-col{flex:0 0 40%;max-width:132px;aspect-ratio:140/190}
+.img-col{flex:1;min-width:0;aspect-ratio:140/120}
 .info-col{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
 .num-row{display:flex;align-items:baseline;gap:9px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06)}
 .num-row:last-child{border-bottom:none}
@@ -1117,7 +1117,7 @@ if(!customElements.get('posta-card')){
 
 /* not installed */
 .ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:26px 18px}
-.ni-env{width:74px;height:100px;opacity:.4}
+.ni-env{width:112px;height:96px;opacity:.4}
 .ni-title{font-size:16px;font-weight:900;color:#fff}
 .ni-sub{font-size:12px;color:rgba(255,255,255,.4);line-height:1.8;max-width:240px}
 .ni-sub strong{color:#38bdf8;opacity:1}
