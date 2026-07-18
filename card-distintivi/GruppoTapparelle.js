@@ -1,8 +1,17 @@
-/* frarik-version: 2.0 */
+/* frarik-version: 3.0 */
 /**
- * GruppoTapparelle.js — Distintivo FratechStore v2.0
- * Chip: contatore + posizione media
+ * GruppoTapparelle.js — Distintivo FratechStore v3.0
+ * Chip: contatore tapparelle aperte
  * Popup: Apri/Stop/Chiudi + preset globali 25/50/75% + slider posizione per entità
+ * v3.0: stesso trattamento di GruppoAllarme/GruppoLuci/GruppoFinestre/GruppoPorte —
+ *       chip "TAPPARELLE: N" (solo numero aperte, maiuscolo/grassetto, colore
+ *       rosso/verde canonico, niente più posizione media); popup rifatto a stile
+ *       "glass" con hero riepilogo, riquadri con lo stesso sfondo/colore/altezza degli
+ *       altri distintivi (icona + nome + stato + pulsanti apri/stop/chiudi + slider),
+ *       automazione come badge nell'angolo (verde/rosso, senza scritte, icona robot);
+ *       Apri/Chiudi tutte come medaglioni circolari, preset 25/50/75% sotto; titolo
+ *       popup bianco/maiuscolo/grassetto; tutto il testo a dimensione unica (12px);
+ *       fix update() che scartava lo stato hass live
  */
 (function () {
   'use strict';
@@ -81,16 +90,15 @@
     const h = liveH(rawHass);
     const ents = Array.isArray(c.entities) ? c.entities : [];
     const active = h ? ents.filter(e => isOn(h, e.entity)).length : 0;
-    const positions = h ? ents.map(e => coverPos(h, e.entity)).filter(p => p !== null) : [];
-    const avgPos = positions.length ? Math.round(positions.reduce((a, b) => a + b, 0) / positions.length) : null;
-    const col = c.color || '#38bdf8';
+    const anyOpen = active > 0;
     const _fcr = window.FratechColorRules;
     const _cond = { any_open: active > 0, all_closed: active === 0 };
     return {
-      icon: iconHtml(_dynIcon(c.icon||'mdi:blinds', active > 0)),
-      label: c.label || 'Tapparelle',
-      value: ents.length ? `${active}/${ents.length}${avgPos !== null ? ' · ' + avgPos + '%' : ''}` : '—',
-      color: (_fcr && _fcr.evalColor(cfg, _cond)) || (active > 0 ? col : '#fff'),
+      icon: iconHtml(_dynIcon(c.icon||'mdi:blinds', anyOpen)),
+      value: `${(c.label || 'Tapparelle').toUpperCase()}: ${ents.length ? active : '—'}`,
+      // stesso rosso/verde canonico del popup (aperta=rosso, chiusa=verde), non l'accento
+      // configurabile — altrimenti il chip mostrava un colore diverso dal popup
+      color: (_fcr && _fcr.evalColor(cfg, _cond)) || (anyOpen ? '#f87171' : '#4ade80'),
       borderColor: _fcr && _fcr.evalBorderColor(cfg, _cond),
     };
   }
@@ -108,16 +116,44 @@
     const c = loadCfg(cfg);
     const h = liveH(rawHass);
     const ents = Array.isArray(c.entities) ? c.entities : [];
-    const col = c.color || '#38bdf8';
 
-    const bBase = `padding:7px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid`;
+    const openCount = h ? ents.filter(e => isOn(h, e.entity)).length : 0;
+    const anyOpen = openCount > 0;
+    const heroCol = anyOpen ? '#f87171' : '#4ade80';
+    const heroTxt = !ents.length ? 'NESSUNA TAPPARELLA'
+      : openCount === 0 ? 'TUTTE CHIUSE'
+      : openCount === ents.length ? 'TUTTE APERTE'
+      : `${openCount}/${ents.length} APERTE`;
+
+    const hero = `<div style="position:relative;overflow:hidden;display:flex;align-items:center;gap:14px;padding:16px;border-radius:18px;background:linear-gradient(155deg,${hex2rgba(heroCol,.16)},${hex2rgba(heroCol,.04)});border:1px solid ${hex2rgba(heroCol,.32)};margin:0 14px 14px">
+      <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 18% 15%,${hex2rgba(heroCol,.22)},transparent 62%);pointer-events:none"></div>
+      <div style="position:relative;width:56px;height:56px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${hex2rgba(heroCol,.18)};border:1.5px solid ${hex2rgba(heroCol,.45)};box-shadow:0 0 18px ${hex2rgba(heroCol,.35)}">
+        <span style="font-size:26px;color:${heroCol}">${iconHtml(_dynIcon(c.icon||'mdi:blinds', anyOpen), 26)}</span>
+      </div>
+      <div style="position:relative;flex:1;min-width:0">
+        <div style="font-size:19px;font-weight:900;color:${heroCol};letter-spacing:.3px;text-transform:uppercase">${heroTxt}</div>
+      </div>
+    </div>`;
+
     const ctrlBar = ents.length ? `
-      <div style="display:flex;gap:6px;padding:4px 14px 8px;flex-wrap:wrap">
-        <button data-gt-all="open"  style="flex:1;min-width:60px;${bBase} ${hex2rgba(col,.4)};background:${hex2rgba(col,.12)};color:${col}">↑ Apri</button>
-        <button data-gt-preset="25" style="flex:1;min-width:40px;${bBase} rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff">25%</button>
-        <button data-gt-preset="50" style="flex:1;min-width:40px;${bBase} rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff">50%</button>
-        <button data-gt-preset="75" style="flex:1;min-width:40px;${bBase} rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff">75%</button>
-        <button data-gt-all="close" style="flex:1;min-width:60px;${bBase} rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff">↓ Chiudi</button>
+      <div style="display:flex;gap:20px;justify-content:center;margin:0 14px 12px">
+        <button data-gt-all="open" style="background:none;border:none;padding:4px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px;outline:none">
+          <span style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(155deg,${hex2rgba('#4ade80',.3)},${hex2rgba('#4ade80',.08)});border:1.5px solid ${hex2rgba('#4ade80',.55)};box-shadow:0 0 16px ${hex2rgba('#4ade80',.35)}">
+            <span style="font-size:21px;color:#4ade80">${iconHtml('mdi:arrow-up-bold', 21)}</span>
+          </span>
+          <span style="white-space:nowrap;color:#4ade80;text-transform:uppercase;font-weight:900;font-size:12px">Apri tutte</span>
+        </button>
+        <button data-gt-all="close" style="background:none;border:none;padding:4px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px;outline:none">
+          <span style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.12)">
+            <span style="font-size:21px;color:#fff">${iconHtml('mdi:arrow-down-bold', 21)}</span>
+          </span>
+          <span style="white-space:nowrap;color:#fff;text-transform:uppercase;font-weight:900;font-size:12px">Chiudi tutte</span>
+        </button>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:center;margin:0 14px 16px">
+        <button data-gt-preset="25" style="flex:0 0 auto;padding:9px 18px;border-radius:11px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;outline:none">25%</button>
+        <button data-gt-preset="50" style="flex:0 0 auto;padding:9px 18px;border-radius:11px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;outline:none">50%</button>
+        <button data-gt-preset="75" style="flex:0 0 auto;padding:9px 18px;border-radius:11px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;font-size:12px;font-weight:900;text-transform:uppercase;cursor:pointer;outline:none">75%</button>
       </div>` : '';
 
     const rows = ents.map((e, i) => {
@@ -128,50 +164,48 @@
       const lbl = e.label || nameOf(h, e.entity);
       const pos = h ? coverPos(h, e.entity) : null;
       const stLbl = coverStateLbl(st);
-      const stCol = on ? col : moving ? '#fbbf24' : '#fff';
+      const rCol = on ? '#f87171' : moving ? '#fbbf24' : '#4ade80';
 
-      const slider = pos !== null ? `
-        <div style="display:flex;align-items:center;gap:7px">
-          <input type="range" data-gt-pos="${i}" data-entity="${eh(e.entity)}" min="0" max="100" value="${pos}"
-            style="flex:1;accent-color:${col};cursor:pointer;outline:none;border:none;background:transparent">
-          <span data-gt-poslbl="${i}" style="font-size:10px;color:#fff;flex-shrink:0;width:30px;text-align:right;font-weight:600">${pos}%</span>
-        </div>` : '';
-
-      let autoBadge = '';
+      // pallino automazione — piccolo badge nell'angolo del riquadro, senza scritte: solo colore stato
+      let autoDot = '';
       if (e.automation) {
         const autoOn = h ? isOn(h, e.automation) : false;
-        const aBg  = autoOn ? 'rgba(74,222,128,.13)'  : 'rgba(248,113,113,.13)';
-        const aBdr = autoOn ? 'rgba(74,222,128,.38)'  : 'rgba(248,113,113,.38)';
-        const aCol = autoOn ? '#4ade80'               : '#f87171';
-        const aTxt = autoOn ? '🟢 Attiva'             : '🔴 Disattiva';
-        autoBadge = `<button data-gt-auto="${i}" style="padding:3px 8px;border-radius:6px;border:1px solid ${aBdr};background:${aBg};color:${aCol};cursor:pointer;font-size:9px;font-weight:700;white-space:nowrap;outline:none">${aTxt}</button>`;
+        const aCol = autoOn ? '#4ade80' : '#f87171';
+        autoDot = `<button data-gt-auto="${i}" style="position:absolute;top:8px;right:8px;z-index:1;width:26px;height:26px;border-radius:50%;border:1.5px solid ${hex2rgba(aCol,.55)};background:linear-gradient(155deg,${hex2rgba(aCol,.4)},${hex2rgba(aCol,.12)});box-shadow:0 0 8px ${hex2rgba(aCol,.35)};display:flex;align-items:center;justify-content:center;cursor:pointer;outline:none;color:${aCol}">${iconHtml('mdi:robot', 13)}</button>`;
       }
 
-      const btnBase = 'width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;outline:none;flex-shrink:0';
+      const btnBase = 'width:34px;height:34px;border-radius:10px;cursor:pointer;outline:none;flex-shrink:0;display:flex;align-items:center;justify-content:center';
       const ctrlBtns = `
-        <button data-gt-open="${i}"  title="Apri"  style="${btnBase};background:${hex2rgba(col,.15)};color:${col};border:1px solid ${hex2rgba(col,.3)}">↑</button>
-        <button data-gt-stop="${i}"  title="Stop"  style="${btnBase};background:rgba(255,255,255,.07);color:#fff;border:1px solid rgba(255,255,255,.15)">■</button>
-        <button data-gt-close="${i}" title="Chiudi" style="${btnBase};background:rgba(255,255,255,.07);color:#fff;border:1px solid rgba(255,255,255,.15)">↓</button>`;
+        <button data-gt-open="${i}"  title="Apri"  style="${btnBase};background:${hex2rgba('#4ade80',.15)};color:#4ade80;border:1px solid ${hex2rgba('#4ade80',.35)}">${iconHtml('mdi:chevron-up', 18)}</button>
+        <button data-gt-stop="${i}"  title="Stop"  style="${btnBase};background:rgba(255,255,255,.07);color:#fff;border:1px solid rgba(255,255,255,.15)">${iconHtml('mdi:stop', 15)}</button>
+        <button data-gt-close="${i}" title="Chiudi" style="${btnBase};background:rgba(255,255,255,.07);color:#fff;border:1px solid rgba(255,255,255,.15)">${iconHtml('mdi:chevron-down', 18)}</button>`;
 
-      return `<div style="border-bottom:1px solid rgba(255,255,255,.04)">
-        <div style="display:flex;align-items:center;gap:12px;padding:11px 16px 6px">
-          <div style="width:36px;height:36px;border-radius:50%;background:${on?hex2rgba(col,.15):'rgba(255,255,255,.05)'};border:1px solid ${on?hex2rgba(col,.3):'rgba(255,255,255,.1)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${on||moving?col:'#fff'}">${iconHtml(_dynIcon(c.icon||'mdi:blinds',on||moving),18)}</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</div>
-            <div style="font-size:11px;color:${stCol};margin-top:1px;font-weight:${on||moving?600:400}">${stLbl}</div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
-            <div style="display:flex;gap:4px">${ctrlBtns}</div>
-            ${autoBadge}
-          </div>
+      const slider = pos !== null ? `
+        <div style="position:relative;display:flex;align-items:center;gap:10px;margin-top:12px">
+          <input type="range" data-gt-pos="${i}" data-entity="${eh(e.entity)}" min="0" max="100" value="${pos}"
+            style="flex:1;accent-color:${rCol};cursor:pointer;outline:none;border:none;background:transparent">
+          <span data-gt-poslbl="${i}" style="font-size:12px;color:#fff;flex-shrink:0;width:36px;text-align:right;font-weight:900">${pos}%</span>
+        </div>` : '';
+
+      return `<div style="position:relative;overflow:hidden;border-radius:18px;background:linear-gradient(155deg,${hex2rgba(rCol,.18)},${hex2rgba(rCol,.03)});border:1px solid ${hex2rgba(rCol,.4)};padding:16px;margin:0 14px 8px">
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 15% 10%,${hex2rgba(rCol,.2)},transparent 62%);pointer-events:none"></div>
+        ${autoDot}
+        <div style="position:relative;display:flex;align-items:center;gap:12px">
+          <span style="width:44px;height:44px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${hex2rgba(rCol,.22)};border:1px solid ${hex2rgba(rCol,.5)};box-shadow:0 0 12px ${hex2rgba(rCol,.3)};color:${rCol}">${iconHtml(_dynIcon(c.icon||'mdi:blinds', on||moving), 22)}</span>
+          <span style="flex:1;min-width:0">
+            <span style="display:block;font-size:12px;font-weight:900;text-transform:uppercase;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${eh(lbl)}</span>
+            <span style="display:block;font-size:12px;font-weight:900;text-transform:uppercase;color:${rCol};letter-spacing:.3px;margin-top:2px">${stLbl}</span>
+          </span>
+          <span style="display:flex;gap:6px;flex-shrink:0">${ctrlBtns}</span>
         </div>
-        ${slider ? `<div style="padding:0 16px 10px 64px">${slider}</div>` : '<div style="height:4px"></div>'}
+        ${slider}
       </div>`;
     }).join('');
 
     return `<div id="gta-popup-body">
+      ${hero}
       ${ctrlBar}
-      <div>${rows||'<div style="padding:32px 20px;text-align:center;color:#fff;font-size:12px">Nessuna tapparella configurata.<br><span style="font-size:10px;">Clicca ✏️ sulla chip per configurare.</span></div>'}</div>
+      <div>${rows||'<div style="padding:32px 20px;text-align:center;color:#fff;font-size:12px;font-weight:900;text-transform:uppercase">Nessuna tapparella configurata<br><span style="font-size:12px;font-weight:900;text-transform:uppercase;opacity:.7">Clicca ✏️ sulla chip per configurare</span></div>'}</div>
     </div>`;
   }
 
@@ -196,10 +230,11 @@
         const e = ents[parseInt(auto.dataset.gtAuto)]; if (!e||!e.automation) return;
         const autoOn = isOn(H(), e.automation);
         const nextOn = !autoOn;
-        auto.textContent = nextOn ? '🟢 Attiva' : '🔴 Disattiva';
-        auto.style.color       = nextOn ? '#4ade80' : '#f87171';
-        auto.style.borderColor = nextOn ? 'rgba(74,222,128,.38)' : 'rgba(248,113,113,.38)';
-        auto.style.background  = nextOn ? 'rgba(74,222,128,.13)' : 'rgba(248,113,113,.13)';
+        const newCol = nextOn ? '#4ade80' : '#f87171';
+        auto.style.color = newCol;
+        auto.style.borderColor = hex2rgba(newCol, .55);
+        auto.style.background = `linear-gradient(155deg,${hex2rgba(newCol,.4)},${hex2rgba(newCol,.12)})`;
+        auto.style.boxShadow = `0 0 8px ${hex2rgba(newCol,.35)}`;
         callSvc('automation', autoOn ? 'turn_off' : 'turn_on', e.automation);
         ev.stopPropagation(); return;
       }
@@ -254,8 +289,9 @@
         const ents = Array.isArray(c.entities) ? c.entities : [];
         const h = H();
         const active = h ? ents.filter(e => isOn(h, e.entity)).length : 0;
-        const col = c.color || '#38bdf8';
-        titleEl.style.color = active > 0 ? col : '';
+        titleEl.style.color = '#fff';
+        titleEl.style.fontWeight = '900';
+        titleEl.style.textTransform = 'uppercase';
         titleEl.textContent = active === 1 ? '1 tapparella aperta' : `${active} tapparelle aperte`;
       } catch(e) {}
     }
@@ -277,7 +313,7 @@
   }
 
   function update(cfg, rawHass, el) {
-    try { el.innerHTML = render(cfg, null); _mountHandlers(cfg, el); } catch(e){}
+    try { el.innerHTML = render(cfg, rawHass); _mountHandlers(cfg, el); } catch(e){}
   }
 
   /* ── configure ── */
@@ -554,7 +590,7 @@
   const CARD = {
     id: ID, name: 'Gruppo Tapparelle', icon: '🪟',
     desc: 'Chip con contatore + posizione media. Popup: Apri/Stop/Chiudi, preset 25/50/75%, slider posizione per entità.',
-    version: '2.0', isDistintivo: true,
+    version: '3.0', isDistintivo: true,
     defaultCfg: { label: 'Tapparelle', icon: 'mdi:blinds', color: '#38bdf8', entities: [], colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure,
   };
@@ -563,5 +599,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-tapparelle v2.0'); } catch(e){}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-tapparelle v3.0'); } catch(e){}
 })();
