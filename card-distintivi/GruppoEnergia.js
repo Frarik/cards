@@ -1,6 +1,9 @@
-/* frarik-version: 5.0 */
+/* frarik-version: 5.1 */
 /**
- * GruppoEnergia.js — Distintivo FratechStore v5.0
+ * GruppoEnergia.js — Distintivo FratechStore v5.1
+ * v5.1: popup config — campi extra (sensore rete/soglie/solare/batteria/kWh)
+ *       raggruppati in un unico riquadro con contorno bianco, suddiviso
+ *       per tipologia con separatori sottili
  * Flow shimmer · tralicio img data-URI · nodi uguali · speed reattiva
  * v5.0: chip allineato al pattern degli altri distintivi (unico value maiuscolo/
  *       grassetto invece di label separata a peso inferiore); testo del popup
@@ -713,37 +716,45 @@
       </div>
       <div id="ecfg-body" style="flex:1;overflow-y:auto;scrollbar-width:none;padding:14px 14px 4px">
 
-        <div style="${secL}">Nome chip</div>
-        <input id="ecfg-label" style="${sinp};margin-bottom:14px" value="${eh(c.label || 'Energia')}" placeholder="Nome chip">
+        <div style="margin:0 0 14px;padding:14px;background:rgba(255,255,255,.05);border-radius:12px;border:1px solid #fff">
 
-        <div style="${secL}">Sensore consumo / importazione rete (W o kW)</div>
-        <input id="ecfg-entity" style="${sinp};margin-bottom:14px" value="${eh(c.entity || '')}" placeholder="🔍 sensor.consumo_potenza…" autocomplete="off">
+          <div style="${secL}">Nome chip</div>
+          <input id="ecfg-label" style="${sinp}" value="${eh(c.label || 'Energia')}" placeholder="Nome chip">
 
-        <div style="${secL}">Potenza massima contratto (kW)</div>
-        <input id="ecfg-maxkw" type="number" step="0.5" min="0.5" max="200" style="${sinp};margin-bottom:14px" value="${eh(String(c.maxKw || '3'))}" placeholder="es. 4.5">
+          <div style="height:1px;background:rgba(255,255,255,.1);margin:12px 0"></div>
 
-        <div style="${secL}">Prezzo energia (€/kWh)</div>
-        <input id="ecfg-price" type="number" step="0.001" min="0" max="5" style="${sinp};margin-bottom:4px" value="${eh(String(c.priceKwh || ''))}" placeholder="es. 0.254">
-        <div style="font-size:9px;color:#fff;margin-bottom:14px">Necessario per calcolare il costo giornaliero in €</div>
+          <div style="${secL}">Sensore consumo / importazione rete (W o kW)</div>
+          <input id="ecfg-entity" style="${sinp};margin-bottom:10px" value="${eh(c.entity || '')}" placeholder="🔍 sensor.consumo_potenza…" autocomplete="off">
 
-        <div style="${secL}">Soglia alert (kW) — 0 = disabilitata</div>
-        <input id="ecfg-alert" type="number" step="0.1" min="0" max="200" style="${sinp};margin-bottom:4px" value="${eh(String(c.alertKw || '0'))}" placeholder="es. 3.0">
-        <div style="font-size:9px;color:#fff;margin-bottom:14px">Quando il consumo supera questa soglia il flow diventa rosso e appare un banner</div>
+          <div style="${secL}">Potenza massima contratto (kW)</div>
+          <input id="ecfg-maxkw" type="number" step="0.5" min="0.5" max="200" style="${sinp};margin-bottom:10px" value="${eh(String(c.maxKw || '3'))}" placeholder="es. 4.5">
 
-        <div style="${secL}">Produzione solare (opzionale)</div>
-        <input id="ecfg-solar" style="${sinp};margin-bottom:14px" value="${eh(c.solarEntity || '')}" placeholder="🔍 sensor.fotovoltaico…" autocomplete="off">
+          <div style="${secL}">Prezzo energia (€/kWh)</div>
+          <input id="ecfg-price" type="number" step="0.001" min="0" max="5" style="${sinp};margin-bottom:4px" value="${eh(String(c.priceKwh || ''))}" placeholder="es. 0.254">
+          <div style="font-size:9px;color:#fff;margin-bottom:10px">Necessario per calcolare il costo giornaliero in €</div>
 
-        <div style="${secL}">Potenza batteria (opzionale)</div>
-        <input id="ecfg-batt" style="${sinp};margin-bottom:4px" value="${eh(c.batteryEntity || '')}" placeholder="🔍 sensor.batteria_potenza…" autocomplete="off">
-        <div style="font-size:9px;color:#fff;margin-bottom:14px">Positiva = in carica, negativa = in scarica (convenzione standard integrazioni batteria)</div>
+          <div style="${secL}">Soglia alert (kW) — 0 = disabilitata</div>
+          <input id="ecfg-alert" type="number" step="0.1" min="0" max="200" style="${sinp};margin-bottom:4px" value="${eh(String(c.alertKw || '0'))}" placeholder="es. 3.0">
+          <div style="font-size:9px;color:#fff">Quando il consumo supera questa soglia il flow diventa rosso e appare un banner</div>
 
-        <div style="${secL}">Livello carica batteria % (opzionale)</div>
-        <input id="ecfg-battsoc" style="${sinp};margin-bottom:4px" value="${eh(c.batterySocEntity || '')}" placeholder="🔍 sensor.batteria_percentuale…" autocomplete="off">
-        <div style="font-size:9px;color:#fff;margin-bottom:14px">Se configurato mostra la % di carica invece della potenza istantanea</div>
+          <div style="height:1px;background:rgba(255,255,255,.1);margin:12px 0"></div>
 
-        <div style="${secL}">Sensore kWh oggi diretto (opzionale)</div>
-        <input id="ecfg-kwh" style="${sinp};margin-bottom:4px" value="${eh(c.kwhEntity || '')}" placeholder="🔍 sensor.energia_oggi…" autocomplete="off">
-        <div style="font-size:9px;color:#fff;margin-bottom:14px">Se configurato usa il dato reale del contatore; altrimenti stima (~) dall'integrazione della potenza</div>
+          <div style="${secL}">Produzione solare (opzionale)</div>
+          <input id="ecfg-solar" style="${sinp};margin-bottom:10px" value="${eh(c.solarEntity || '')}" placeholder="🔍 sensor.fotovoltaico…" autocomplete="off">
+
+          <div style="${secL}">Potenza batteria (opzionale)</div>
+          <input id="ecfg-batt" style="${sinp};margin-bottom:4px" value="${eh(c.batteryEntity || '')}" placeholder="🔍 sensor.batteria_potenza…" autocomplete="off">
+          <div style="font-size:9px;color:#fff;margin-bottom:10px">Positiva = in carica, negativa = in scarica (convenzione standard integrazioni batteria)</div>
+
+          <div style="${secL}">Livello carica batteria % (opzionale)</div>
+          <input id="ecfg-battsoc" style="${sinp};margin-bottom:4px" value="${eh(c.batterySocEntity || '')}" placeholder="🔍 sensor.batteria_percentuale…" autocomplete="off">
+          <div style="font-size:9px;color:#fff;margin-bottom:10px">Se configurato mostra la % di carica invece della potenza istantanea</div>
+
+          <div style="${secL}">Sensore kWh oggi diretto (opzionale)</div>
+          <input id="ecfg-kwh" style="${sinp};margin-bottom:4px" value="${eh(c.kwhEntity || '')}" placeholder="🔍 sensor.energia_oggi…" autocomplete="off">
+          <div style="font-size:9px;color:#fff">Se configurato usa il dato reale del contatore; altrimenti stima (~) dall'integrazione della potenza</div>
+
+        </div>
 
         <div style="font-size:9px;color:rgba(255,255,255,.55);background:rgba(255,255,255,.05);border-radius:7px;padding:7px 9px;margin-bottom:8px;line-height:1.5">
           ⚡ Consumo ora: <b style="color:#fff">${_liveWLabel}</b> — le soglie si inseriscono sempre in <b style="color:#fff">Watt (W)</b>.<br>
@@ -816,7 +827,7 @@
   /* ════════════════════════════════════════ REGISTRAZIONE ══ */
   const CARD = {
     id: ID, name: 'Gruppo Energia', icon: '⚡', desc: '',
-    version: '5.0', isDistintivo: true,
+    version: '5.1', isDistintivo: true,
     defaultCfg: { label: 'Energia', entity: '', maxKw: 3, priceKwh: 0, alertKw: 0, solarEntity: '', batteryEntity: '', batterySocEntity: '', kwhEntity: '', colorMode: 'auto', colorRules: [] },
     chip, watchEntities, render, mount, update, configure, preview,
   };
@@ -824,5 +835,5 @@
   window.FratechCardRegistry[CARD.id] = CARD;
   window.FratechCards = window.FratechCards || {};
   window.FratechCards[CARD.id] = CARD;
-  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v5.0'); } catch (e) {}
+  try { console.log('[FratechStore] Distintivo registrato: gruppo-energia v5.1'); } catch (e) {}
 })();
